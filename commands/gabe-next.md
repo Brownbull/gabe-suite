@@ -67,7 +67,14 @@ Apply this decision table, top-to-bottom. First match wins.
   NEXT:  /gabe-execute
   REASON: Tasks not yet implemented
   ```
-- Else → print the one-line summary, then execute the chosen command. Pass through any remaining `$ARGUMENTS` after `--dry-run` is stripped.
+- Else → print the one-line summary, then dispatch the chosen command. Pass through any remaining `$ARGUMENTS` after `--dry-run` is stripped.
+
+**Downstream command contract.**
+
+1. Prefer the host's native slash-command invocation for the chosen command, e.g. run `/gabe-commit` as a command when that is available.
+2. If the host cannot directly invoke nested slash commands, load the chosen command spec from the active install (`~/.claude/commands/<command>.md` in Claude Code, `~/.agents/commands/<command>.md` in Codex, or this repository's `commands/<command>.md` as a source fallback) and follow its Procedure exactly.
+3. Do not replace the chosen command with a hand-rolled equivalent. In particular, when `NEXT` is `/gabe-commit`, do not stop after running raw `git commit`; the `/gabe-commit` normal-flow output contract must still be satisfied, including the visible `**Gabe-Lens brief**`, `/gabe-teach` suggestion, PLAN auto-tick output, and existing LEDGER behavior.
+4. `/gabe-next` owns only routing and phase advancement. Commit message generation, verification, ledger writes, briefs, pushes, and other side effects belong to the downstream command.
 
 ### Step 4: Legacy plan compatibility
 
@@ -128,9 +135,10 @@ REASON: Tasks not yet implemented (mockup dispatch via project_type)
 ## Non-goals
 
 - Does NOT run lints, tests, type checks — those belong to `gabe-review`/`gabe-commit`
-- Does NOT generate commit messages or code — those belong to `gabe-execute`/`gabe-commit`
+- Does NOT generate commit messages, briefs, or code — those belong to `gabe-execute`/`gabe-commit`
 - Does NOT read git state — decisions come purely from PLAN.md cells
 - Does NOT modify LEDGER.md, PENDING.md, KNOWLEDGE.md
+- Does NOT emulate downstream command internals after routing
 - Does NOT call LLMs under any circumstance
 
 $ARGUMENTS
