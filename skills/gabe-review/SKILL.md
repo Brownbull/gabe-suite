@@ -551,6 +551,27 @@ Resolution per finding:
 
 If 5a produced output OR 5c produced output OR 5b produced a candidate OR 5d produced a TIER_DRIFT finding, wrap in a single "Plan Alignment" block under Step 4.75's heading. Order: 5a, 5c, 5b, 5d. If all four are empty, skip the block entirely (don't render an empty heading).
 
+### Step 4.9: Gabe-Lens Block (output-only)
+
+For normal result-producing modes — default/no-arg review, `brief`, `inbox`, `post-review`, and explicit file/folder targets — print one full Gabe Block after findings, verdict, and confidence are known. Skip this step for `deferred`, `resume`, `close`, `discard`, and `fix`.
+
+Render:
+
+```
+**Gabe-Lens block**
+
+[one full Gabe Block generated with the active gabe-lens cognitive suit]
+```
+
+Block focus:
+
+- Explain what the review discovered or validated.
+- Map the top findings to concrete system risk: data loss, security exposure, broken flow, drift, maintainability load, or confidence gap.
+- If there are no findings, map the validated coverage to reduced risk instead of inventing concerns.
+- Tie the signal to the verdict/confidence: why APPROVE, WARNING, or BLOCK follows from the evidence.
+
+Persistence rule: this block is output-only. Do not write it to `.kdbp/REVIEW.md`, `.kdbp/PLAN.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, commits, or docs. It is a command-time understanding aid; `/gabe-teach` remains the durable knowledge consolidation path.
+
 ### Step 5: Triage
 
 After the verdict and session estimate, present the triage prompt. This closes the gap between "here's what's wrong" and "let's fix it."
@@ -944,11 +965,13 @@ Fixing [CRITICAL+HIGH]: ~Nh | Fixing all: ~Nh | Deferring [count]: risk exposure
 N findings to resolve. Enter triage? [Y/n]
 ```
 
+After the verdict/confidence material above and before triage, render Step 4.9's output-only Gabe-Lens block for modes where that step applies.
+
 **Verdict finalization:** The verdict shown before triage is PROVISIONAL. After triage completes, restate the **Final Verdict** incorporating triage outcomes (fixed items removed, dismissed at 50% weight, deferred at full weight). If the user declines triage, auto-defer findings above the maturity gate and restate the final verdict. If the user declines to track deferred items, the verdict cannot be APPROVE — downgrade to WARNING with note: "Deferred items not tracked — risk of invisible debt."
 
 ### Brief Mode (`/gabe-review brief`)
 
-Only the findings table + headline confidence score + verdict. No projection table, no interpretation guide, no dashboard, no session estimate, no triage. Format: `Score: 62 / 100 | Verdict: WARNING — [reason]`. In brief mode the verdict is **final** (not provisional) since triage is not offered.
+Only the findings table + headline confidence score + verdict, followed by the output-only Gabe-Lens block from Step 4.9. No projection table, no interpretation guide, no dashboard, no session estimate, no triage. Format: `Score: 62 / 100 | Verdict: WARNING — [reason]`. In brief mode the verdict is **final** (not provisional) since triage is not offered.
 
 ### Fix Mode (`/gabe-review fix`)
 

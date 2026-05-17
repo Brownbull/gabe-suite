@@ -13,6 +13,10 @@ Executes phase tasks from `.kdbp/PLAN.md`. Complements `/gabe-plan` (write plan)
 
 > **Rendering note.** Output templates in this spec wrapped in bare triple-backtick fences are spec-meta delimiters — render their contents as plain markdown at runtime. See `gabe-docs/SKILL.md` § "Runtime output rendering convention".
 
+## Gabe-Lens Output Rule
+
+`**Gabe-Lens block**` is an output-only command-time explanation. It is never written to `.kdbp/PLAN.md`, `.kdbp/REVIEW.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, commits, or docs unless another command already owns that write. These blocks help the user understand the current command result; `/gabe-teach` remains the durable knowledge consolidation path.
+
 ## Procedure
 
 ### Step 0: Parse args + validate
@@ -358,7 +362,18 @@ When last task T_K commits successfully:
    TASKS: [K] tasks, [K] commits
    DEVIATIONS: [N structural, M minor] (see DEVIATIONS.md if any)
    ```
-5. **Teach nudge (phase-level).** Deterministic heuristic, zero LLM cost. Suggest `/gabe-teach topics` before `/gabe-next` if ANY of:
+5. Print phase-complete summary:
+   ```
+   ✅ GABE EXECUTE — Phase N complete
+   EXEC: ✅  REVIEW: ⬜  COMMIT: ✅  PUSH: ⬜
+   ```
+6. **Print the Gabe-Lens block (output only).** Runs after the normal phase-complete summary and before final teach/routing notes.
+   - Header line: `**Gabe-Lens block**`
+   - Use the active `gabe-lens` cognitive suit and the full Gabe Block format: THE PROBLEM or WHAT IT ENABLES, THE ANALOGY, HOW IT MAPS, THE MAP, CONSTRAINT BOX, EASY TO CONFUSE WITH when helpful, ONE-LINE HANDLE, ANALOGY LIMITS, SIGNAL.
+   - Explain what was implemented in the phase, how the changed pieces now connect, and why the next route is review.
+   - Base the block only on the completed phase, task/commit summary, changed-file categories, verification outcomes, deviations, and current PLAN state.
+   - Keep the block output-only per the Gabe-Lens Output Rule. Do not append it to PLAN, LEDGER, PENDING, REVIEW, commits, or docs.
+7. **Teach nudge (phase-level).** Deterministic heuristic, zero LLM cost. Suggest `/gabe-teach topics` before `/gabe-next` if ANY of:
    - Phase added ≥2 new files in a new folder (matches `/gabe-commit` Step 6.5 trigger at phase scope)
    - Phase introduced new top-level imports in changed files (e.g. `pydantic-ai`, `langchain`, `ai-sdk`, auth libs — any dep not present before the phase)
    - Phase modified `.kdbp/DECISIONS.md`
@@ -369,11 +384,8 @@ When last task T_K commits successfully:
    ℹ Phase N introduced new architectural concepts. Run /gabe-teach topics before /gabe-next to consolidate them into KNOWLEDGE.md.
    ```
    This is a redundant safety net — per-commit `/gabe-commit` Step 6.5 already suggests teach, but scroll-loss in bulk commits can lose it.
-6. If scope arg was `all` → advance Current Phase to N+1 and re-enter Step 1. Else → print summary and exit:
+8. If scope arg was `all` → advance Current Phase to N+1 and re-enter Step 1. Else → print final route and exit:
    ```
-   ✅ GABE EXECUTE — Phase N complete
-   EXEC: ✅  REVIEW: ⬜  COMMIT: ✅  PUSH: ⬜
-
    Next: /gabe-review (unreviewed code) or /gabe-next to route automatically.
    ```
 

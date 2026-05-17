@@ -9,6 +9,10 @@ KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.
 
 > **Rendering note.** Output templates in this spec wrapped in bare triple-backtick fences are spec-meta delimiters — render their contents as plain markdown at runtime. Tagged fences (```yaml, ```json, ```bash) stay fenced. See `gabe-docs/SKILL.md` § "Runtime output rendering convention".
 
+## Gabe-Lens Output Rule
+
+`**Gabe-Lens block**` is an output-only command-time explanation. It is never written to `.kdbp/PLAN.md`, `.kdbp/REVIEW.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, commits, or docs unless another command already owns that write. These blocks help the user understand the current command result; `/gabe-teach` remains the durable knowledge consolidation path.
+
 **Flags:**
 
 | Flag | Meaning |
@@ -505,6 +509,14 @@ Next steps:
   3. Escalate mid-phase via /gabe-execute if tier underscoped (logged to DECISIONS.md).
   4. Run /gabe-plan when done to archive as completed.
 ```
+
+After the normal result block above, print one full Gabe Block:
+
+- Header line: `**Gabe-Lens block**`
+- Use the active `gabe-lens` cognitive suit and the full Gabe Block format: THE PROBLEM or WHAT IT ENABLES, THE ANALOGY, HOW IT MAPS, THE MAP, CONSTRAINT BOX, EASY TO CONFUSE WITH when helpful, ONE-LINE HANDLE, ANALOGY LIMITS, SIGNAL.
+- Explain what the plan is going to build, why the phase structure matters, and what the user should mentally track as execution proceeds.
+- Base the block only on the goal, phase list, tier choices, dependencies, risks, and next step already produced in this run.
+- Keep the block output-only per the Gabe-Lens Output Rule. Do not append it to PLAN, LEDGER, PENDING, REVIEW, commits, or docs.
 
 ### Step CHK — Structural compliance check + retrofit (`/gabe-plan check`)
 

@@ -16,6 +16,15 @@ Arguments:
 - `discard`: archive active REVIEW.md as cancelled, skip LEDGER write.
 - `[file or folder]`: review specific target (writes REVIEW.md as usual).
 
+Gabe-Lens output block:
+
+- For normal result-producing modes — no args/default, `brief`, `inbox`, `post-review`, and `[file or folder]` targets — print one full Gabe Block after findings, verdict, and confidence are known.
+- Skip the block for `deferred`, `resume`, `close`, `discard`, and `fix`.
+- Header line: `**Gabe-Lens block**`
+- Use the active `gabe-lens` cognitive suit and the full Gabe Block format: THE PROBLEM or WHAT IT ENABLES, THE ANALOGY, HOW IT MAPS, THE MAP, CONSTRAINT BOX, EASY TO CONFUSE WITH when helpful, ONE-LINE HANDLE, ANALOGY LIMITS, SIGNAL.
+- Explain what the review discovered or validated and map findings to system risk. If there are no findings, map the validated coverage to reduced risk instead of inventing concerns.
+- This is an output-only command-time understanding aid. Do not write it to `.kdbp/REVIEW.md`, `.kdbp/PLAN.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, commits, or docs. `/gabe-teach` remains the durable knowledge consolidation path.
+
 All write-producing invocations (default, `fix`, `post-review`, `inbox`, `[file/folder]`) first run their analysis **blind** to any existing `.kdbp/REVIEW.md`. After analysis completes, the skill reconciles:
 
 - **No existing REVIEW.md** → write fresh.

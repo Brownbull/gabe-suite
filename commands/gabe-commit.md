@@ -9,6 +9,10 @@ Deterministic commit quality gate. Runs checks, shows findings, lets you act on 
 
 > **Rendering note.** Output templates in this spec wrapped in bare triple-backtick fences (without a language tag) are **spec-meta delimiters**, not runtime code blocks. Render their contents as plain markdown at runtime — markdown tables render as tables, not as monospace code. Tagged fences (```bash, ```json, etc.) and ```mermaid fences ARE runtime code blocks, keep them fenced. See `gabe-docs/SKILL.md` § "Runtime output rendering convention" for the decision rule.
 
+## Gabe-Lens Output Rule
+
+The normal commit flow prints `**Gabe-Lens brief**`, the commit-shaped member of the shared output-only Gabe-Lens explanation family. It is never written to `.kdbp/PLAN.md`, `.kdbp/REVIEW.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, or docs, and it is only included in a commit body when the commit-message generator already owns that body. This is a command-time understanding aid; `/gabe-teach` remains the durable knowledge consolidation path.
+
 ## Procedure
 
 ### Step 0: Subcommand dispatch
@@ -264,7 +268,8 @@ DEFERRED: +D8 (coverage classify.py)
    - If Step 1 generated the commit message body and produced a `gabe-lens brief`, reuse that brief text for this output.
    - If the user supplied the commit message, generate the visible brief from the final commit subject plus the committed diff/changed-file list. Do not amend the commit, rewrite the commit body, or ask for another message.
    - Every commit gets a brief. Use a light physical analogy only for conceptual changes (new pattern, abstraction, architecture, or workflow boundary). For mechanical changes, use direct plain-language mapping.
-   - Do not write this brief to `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, the commit body, or any other persistence target.
+   - Do not write this brief to `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, docs, or any other persistence target. Only reuse it in the commit body when the generated commit-message path already produced that body.
+   - This brief does not replace `/gabe-teach`; it is a command-time understanding aid, while `/gabe-teach` remains the durable knowledge consolidation path.
 
 6. If `.kdbp/KNOWLEDGE.md` exists, suggest `/gabe-teach` when the commit likely introduces new topics. Heuristic (deterministic, zero cost):
    - Commit message starts with `feat:` or `refactor:` → suggest
