@@ -173,8 +173,12 @@ Deterministic thresholds, not LLM judgment:
 > No findings. Committing...
 >
 > `[main abc1234] feat: update triage prompt`
+>
+> **Gabe-Lens brief**
+>
+> This commit tightens the triage prompt so the next review has clearer rails. Think of it like adding labels to a control panel: the switches were already there, but now the operator can see what each one does before acting.
 
-Stage all changes, commit, done.
+Stage all changes, commit, print the Gabe-Lens brief, done.
 
 **If findings exist but no CRITICAL:**
 
@@ -253,14 +257,23 @@ DEFERRED: +D8 (coverage classify.py)
    - If item already exists in PENDING.md, increment `Times Deferred`
    - If `Times Deferred` reaches 3, auto-escalate priority one level
 
-5. If `.kdbp/KNOWLEDGE.md` exists, suggest `/gabe-teach` when the commit likely introduces new topics. Heuristic (deterministic, zero cost):
+5. **Print the Gabe-Lens brief (output only).** Runs for every normal `/gabe-commit` after the commit and audit writes succeed; skipped for `docs-audit`.
+   - Render as plain markdown:
+     - `**Gabe-Lens brief**`
+     - 1-2 concise sentences explaining what changed and why it matters.
+   - If Step 1 generated the commit message body and produced a `gabe-lens brief`, reuse that brief text for this output.
+   - If the user supplied the commit message, generate the visible brief from the final commit subject plus the committed diff/changed-file list. Do not amend the commit, rewrite the commit body, or ask for another message.
+   - Every commit gets a brief. Use a light physical analogy only for conceptual changes (new pattern, abstraction, architecture, or workflow boundary). For mechanical changes, use direct plain-language mapping.
+   - Do not write this brief to `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, the commit body, or any other persistence target.
+
+6. If `.kdbp/KNOWLEDGE.md` exists, suggest `/gabe-teach` when the commit likely introduces new topics. Heuristic (deterministic, zero cost):
    - Commit message starts with `feat:` or `refactor:` → suggest
    - Commit added new file(s) in a new folder → suggest
    - Commit modified `.kdbp/DECISIONS.md` → suggest
    - Otherwise: skip suggestion
    - Message: `ℹ New topics likely introduced. Run /gabe-teach topics to consolidate understanding.`
 
-6. **Auto-tick Commit column in PLAN.md** (silent no-op on any mismatch). Only runs when the `git commit` in step 6.2 returned 0.
+7. **Auto-tick Commit column in PLAN.md** (silent no-op on any mismatch). Only runs when the `git commit` in step 6.2 returned 0.
    - Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick phase column"
    - Target column: `Commit`
    - Preconditions: `.kdbp/PLAN.md` exists, contains `status: active`, has a `## Current Phase` section, and Phases table includes a `Commit` column
@@ -622,6 +635,7 @@ Task: T[i]/[K] — [task description]
 - 1-2 sentences, plain language, explains the *why* + *how it maps*
 - Use analogy style from `gabe-lens` skill only when the change is **conceptual** (introduces a new pattern, abstraction, or architectural shift)
 - Skip analogy for **mechanical** changes (renames, moves, typo fixes, dependency bumps, formatting)
+- The normal commit flow also prints a visible `**Gabe-Lens brief**` after commit success. If this generated body already contains a brief, reuse it there; if the user supplied a message, generate only the visible brief from the final commit and do not rewrite the commit.
 
 **Before / After**
 
