@@ -7,7 +7,16 @@ Start here.
 | Doc | For |
 |-----|-----|
 | [WORKFLOW.md](WORKFLOW.md) | the state machine + command flow — read this first |
+| [workflows/README.md](workflows/README.md) | choosing greenfield or brownfield project-start flow |
+| [suite-state-audit.md](suite-state-audit.md) | current suite inventory, AP integration state, and doc/install gaps |
 | [GAPS.md](GAPS.md) | where the workflow has holes + options to close each |
+
+## Project-start workflows
+
+| Doc | For |
+|-----|-----|
+| [workflows/greenfield.md](workflows/greenfield.md) | starting a new app from an idea |
+| [workflows/brownfield.md](workflows/brownfield.md) | adopting an existing codebase without treating it as greenfield |
 
 ## Deeper reference
 
@@ -31,3 +40,12 @@ Command and skill specs live outside `docs/` (they are runtime artifacts, not do
 - `templates/` — files copied into `.kdbp/` at init
 - `prompts/` — `/gabe-scope` prompt library
 - `schemas/` — JSON schemas for scope artifacts
+
+## Local install
+
+`install.sh` mirrors this curated docs set to:
+
+- `~/.claude/docs/gabe-suite/`
+- `~/.agents/docs/gabe-suite/`
+
+The archive folder is intentionally not installed.

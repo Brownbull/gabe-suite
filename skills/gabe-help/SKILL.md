@@ -44,7 +44,8 @@ Based on the scan, classify into one of these situations:
 | Situation | Conditions | Primary recommendation |
 |-----------|------------|----------------------|
 | **New machine** | No `~/.kdbp/VALUES.md`, no `~/.claude/gabe-lens-profile.md` | Set up user-level tools first |
-| **New project** | Git repo exists, no `.kdbp/` | Initialize alignment |
+| **Greenfield project** | Git repo exists, no `.kdbp/`, idea/new app context | Run deep alignment, then initialize KDBP |
+| **Brownfield project** | Git repo exists, no `.kdbp/`, existing code/docs/tests | Inventory first, then cautious KDBP adoption |
 | **Configured, idle** | `.kdbp/` exists, no uncommitted changes, no active phase | Start work or run health check |
 | **Mid-work** | Uncommitted changes exist | Review before committing |
 | **Pre-PR** | Changes staged or branch ahead of main | Review + prepare to ship |
@@ -91,13 +92,31 @@ Suggested next:
 3. /gabe-align init [name]  — Initialize this project (if in a project)
 ```
 
-### New Project (no .kdbp/)
+### Greenfield Project (new app, no .kdbp/)
 
 ```
-1. /gabe-align init [name]  — Set values + behavior + maturity for this project
-2. /gabe-health             — Baseline: know where the fragile spots are
-3. /gabe-lens annotate [key-file] — Gabe Blocks for the hardest parts (optional)
+1. /gabe-align deep "<idea>" — Stress the idea against values, scenarios, and AP1-AP13
+2. /gabe-init [name]         — Create .kdbp/, hooks, behavior, values, and maturity baseline
+3. /gabe-scope               — Turn the idea into SCOPE.md + ROADMAP.md
+4. /gabe-plan "first slice"  — Write the first phase plan with explicit decisions
+5. /gabe-next                — Start the phase loop
 ```
+
+Reference: `docs/workflows/greenfield.md`.
+
+### Brownfield Project (existing codebase, no .kdbp/)
+
+```
+1. Read-only inventory       — Inspect layout, tests, CI, docs, git history, and risks before writing
+2. /gabe-health              — Map structural hotspots and coupling before planning changes
+3. /gabe-debt brief          — Capture evidence-backed decision debt and AP concerns
+4. /gabe-init [name]         — Create a cautious KDBP baseline only after inventory
+5. /gabe-scope               — Document current reality before proposing change phases
+```
+
+If `.kdbp/` already exists in the brownfield repo, prefer `/gabe-init update`, `/gabe-plan check`, and `/gabe-next` instead of starting from scratch.
+
+Reference: `docs/workflows/brownfield.md`.
 
 ### Configured, Idle
 
@@ -154,26 +173,45 @@ Suggested next:
 1. **Read-only.** gabe-help never modifies files, creates directories, or writes output files. It only reads and recommends.
 2. **Fast.** The scan should take < 5 seconds. Don't read file contents unless needed (e.g., maturity from BEHAVIOR.md frontmatter, suit from profile).
 3. **No redundancy.** If the user just ran `/gabe-review`, don't suggest `/gabe-review` again. Check the conversation context.
-4. **Honest gaps.** If something isn't set up, say so directly. Don't hedge with "you might want to consider." Say: "Not initialized. Run `/gabe-align init`."
+4. **Honest gaps.** If something isn't set up, say so directly. Don't hedge with "you might want to consider." Say: "Not initialized. For greenfield, run `/gabe-align deep` then `/gabe-init`; for brownfield, follow `docs/workflows/brownfield.md` first."
 5. **Max 5 suggestions.** More than 5 is noise. Pick the highest-value actions for the current state.
 6. **Show the full suite on request.** If the user asks "what tools are available?" or similar, show the complete list:
 
 ```
-The Gabe Suite — 10 tools (7 skills + 3 commands):
+The Gabe Suite — 20 command wrappers, 11 skills:
 
 | Tool | Command | What it does |
 |------|---------|-------------|
 | gabe-help | /gabe-help | You are here. Context-aware guide. |
-| gabe-lens | /gabe-lens [concept] | Cognitive translation — analogies, maps, constraint boxes |
 | gabe-align | /gabe-align [mode] | Alignment guardian — values check + auto-checkpoint |
 | gabe-assess | /gabe-assess [change] | Change impact — blast radius, maturity scope, prerequisites |
-| gabe-roast | /gabe-roast [perspective] [target] | Adversarial gap review from a specific viewpoint |
-| gabe-review | /gabe-review [target] | Code review with risk pricing + confidence score + triage |
+| gabe-commit | /gabe-commit [msg] | Commit quality gate — deterministic checks, triage |
+| gabe-debt | /gabe-debt [brief\|dry-run\|target] | Architecture decision-debt scan with AP evidence citations |
+| gabe-execute | /gabe-execute | Execute the current PLAN.md phase |
 | gabe-health | /gabe-health [focus] | Codebase structural health — gods, churn, coupling, bugs |
 | gabe-init | /gabe-init [name] | Project setup — .kdbp/, hooks, project type, maturity |
-| gabe-commit | /gabe-commit [msg] | Commit quality gate — deterministic checks, triage |
+| gabe-lens | /gabe-lens [concept] | Cognitive translation — analogies, maps, constraint boxes |
+| gabe-mockup | /gabe-mockup [mode] | Mockup, React Storybook, and design-ref workflows |
+| gabe-next | /gabe-next | Zero-logic router for the current phase state |
+| gabe-plan | /gabe-plan [goal] | KDBP planning + per-phase tier decision |
 | gabe-push | /gabe-push | Push, create PR, watch CI, branch promotion |
+| gabe-review | /gabe-review [target] | Code review with risk pricing + confidence score + triage |
+| gabe-roast | /gabe-roast [perspective] [target] | Adversarial gap review from a specific viewpoint |
+| gabe-scope | /gabe-scope | Scope authoring into SCOPE.md + ROADMAP.md |
+| gabe-scope-addition | /gabe-scope-addition | Additive scope evolution |
+| gabe-scope-change | /gabe-scope-change | Route a scope change to addition or pivot |
+| gabe-scope-pivot | /gabe-scope-pivot | Direction-changing scope rewrite |
+| gabe-teach | /gabe-teach | Consolidate architect-level knowledge |
 ```
+
+Installed workflow docs:
+
+- `docs/workflows/README.md` — quick chooser.
+- `docs/workflows/greenfield.md` — new app from idea to first phase.
+- `docs/workflows/brownfield.md` — existing codebase adoption.
+- `docs/suite-state-audit.md` — current inventory, install state, and known gaps.
+
+Skills installed behind those commands: `gabe-align`, `gabe-arch`, `gabe-assess`, `gabe-debt`, `gabe-docs`, `gabe-health`, `gabe-help`, `gabe-lens`, `gabe-mockup`, `gabe-review`, `gabe-roast`.
 
 ---
 

@@ -4,7 +4,7 @@
 
 # Gabe Suite
 
-**Development suite for Claude Code**
+**Development suite for Claude Code and Codex**
 
 Skills, commands, and hooks for understanding, reviewing, deciding, and shipping — with a knowledge system (KDBP) that tracks values, decisions, and deferred work across sessions.
 
@@ -21,7 +21,7 @@ Skills, commands, and hooks for understanding, reviewing, deciding, and shipping
 
 ## The Suite
 
-### Skills (9)
+### Skills (11)
 
 | Skill | Command | What it does |
 |---|---|---|
@@ -30,27 +30,38 @@ Skills, commands, and hooks for understanding, reviewing, deciding, and shipping
 | **Gabe Review** | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items, tier drift |
 | **Gabe Roast** | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
 | **Gabe Assess** | `/gabe-assess` | Change impact — blast radius, maturity scope, prerequisites, alternatives |
+| **Gabe Debt** | `/gabe-debt` | Architecture decision-debt scanner — missing decisions, rule violations, AP citations |
 | **Gabe Health** | `/gabe-health` | Codebase health — god files, churn hotspots, coupling, deferred items, maintenance |
 | **Gabe Help** | `/gabe-help` | Context-aware guide — scans environment, suggests the right tool |
+| **Gabe Mockup** | `/gabe-mockup` | UX/mockup execution — legacy HTML recipes plus React-first Storybook modes |
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-teach`, `/gabe-init`, `/gabe-commit`) |
 | **Gabe Arch** | _(consulted)_ | Architecture curriculum — concept library organized by tier × specialization (used by `/gabe-teach`) |
 
-### Commands (11)
+### Command Wrappers (20)
 
-Commands that don't map 1:1 to a skill — the full KDBP lifecycle from project init through ship:
+The installed command surface includes direct skill commands plus the full KDBP lifecycle from project init through ship:
 
 | Command | What it does |
 |---|---|
+| `/gabe-align` | Alignment guardian — shallow, standard, and deep checks; standard/deep include AP1-AP13 advisory checks |
+| `/gabe-assess` | Change impact assessment — blast radius, maturity scope, prerequisites |
+| `/gabe-commit` | Commit quality gate — deterministic checks, interactive triage, defer/accept/fix |
+| `/gabe-debt` | Architecture decision-debt scanner — decisions, rules, open questions, AP citations |
+| `/gabe-execute` | Phase execution — tier-cap task breakdown, mid-phase escalation gate |
+| `/gabe-health` | Codebase structural health — god files, churn hotspots, coupling, bugs |
+| `/gabe-help` | Context-aware guide — scans environment and suggests the right workflow |
 | `/gabe-init` | Project setup — creates `.kdbp/`, installs hooks, selects project type + maturity |
+| `/gabe-lens` | Cognitive translation — analogies, constraint boxes, Gabe Blocks |
+| `/gabe-mockup` | Mockup/UX workflow — legacy static mockups plus React-first Storybook and `design-ref` |
+| `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
+| `/gabe-plan` | KDBP-aware planning + per-phase tier decision (MVP / Enterprise / Scale) with trade-off matrix |
+| `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
+| `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |
+| `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
 | `/gabe-scope` | Authors SCOPE.md (stable premise) + ROADMAP.md (phase plan). Multi-step, checkpoint-gated, Opus-heavy |
 | `/gabe-scope-change` | Scope-change router. Classifies your intended change → routes to `-addition` or `-pivot` |
 | `/gabe-scope-addition` | Additive scope change — inserts new REQs / phases / refs without changing premise |
 | `/gabe-scope-pivot` | Scope pivot — direction change, archives v{N} and creates v{N+1} |
-| `/gabe-plan` | KDBP-aware planning + per-phase tier decision (MVP / Enterprise / Scale) with trade-off matrix |
-| `/gabe-execute` | Phase execution — tier-cap task breakdown, mid-phase escalation gate, auto-ticks Exec column |
-| `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command (Exec → Review → Commit → Push) |
-| `/gabe-commit` | Commit quality gate — deterministic checks, interactive triage, defer/accept/fix per finding |
-| `/gabe-push` | Push, create PR, watch CI, promote branches — the post-commit shipping workflow |
 | `/gabe-teach` | Human knowledge consolidation — tracks WHY/WHEN/WHERE topics from recent commits with Socratic verification |
 
 ### KDBP System
@@ -88,6 +99,8 @@ User-level values at `~/.kdbp/VALUES.md` apply across all projects.
 | I need to... | Use |
 |---|---|
 | Start a new project | `/gabe-init [name]` |
+| Start from a fresh idea | `/gabe-align deep "idea"` then `/gabe-init`, `/gabe-scope`, `/gabe-plan` |
+| Adopt an existing codebase | read [docs/workflows/brownfield.md](docs/workflows/brownfield.md), then use `/gabe-init` or `/gabe-init update` |
 | Scope a new project (SCOPE.md + ROADMAP.md) | `/gabe-scope` |
 | Change project scope | `/gabe-scope-change "description of change"` |
 | Check values alignment | `/gabe-align [shallow/standard/deep]` |
@@ -96,8 +109,10 @@ User-level values at `~/.kdbp/VALUES.md` apply across all projects.
 | Assess a change | `/gabe-assess [change]` |
 | Create or manage a plan (with tier picker) | `/gabe-plan [goal]` |
 | Execute the current phase | `/gabe-execute` |
+| Execute mockup or React Storybook UI work | `/gabe-mockup` |
 | Advance automatically to next step | `/gabe-next` |
 | Review code | `/gabe-review` |
+| Scan architecture decision debt | `/gabe-debt [brief|dry-run]` |
 | Check codebase health | `/gabe-health` |
 | Commit with quality checks | `/gabe-commit [message]` |
 | Push, create PR, watch CI | `/gabe-push` |
@@ -109,6 +124,10 @@ User-level values at `~/.kdbp/VALUES.md` apply across all projects.
 | Doc | Purpose |
 |-----|---------|
 | [docs/WORKFLOW.md](docs/WORKFLOW.md) | State machine + command flow — start here |
+| [docs/workflows/README.md](docs/workflows/README.md) | Greenfield vs brownfield workflow chooser |
+| [docs/workflows/greenfield.md](docs/workflows/greenfield.md) | Idea-to-first-phase workflow for new apps |
+| [docs/workflows/brownfield.md](docs/workflows/brownfield.md) | Adoption guide for existing codebases |
+| [docs/suite-state-audit.md](docs/suite-state-audit.md) | Current suite inventory and gap audit |
 | [docs/GAPS.md](docs/GAPS.md) | Remaining workflow gaps + options |
 | [docs/architecture/requirements.md](docs/architecture/requirements.md) | Design invariants + non-goals |
 | [docs/architecture/diagram-standards.md](docs/architecture/diagram-standards.md) | Mermaid conventions for suite docs |
@@ -122,7 +141,7 @@ User-level values at `~/.kdbp/VALUES.md` apply across all projects.
 ```bash
 git clone https://github.com/khujta/gabe-suite.git
 cd gabe-suite
-./install.sh              # Install all skills + commands
+./install.sh              # Install skills, commands, templates, and docs
 ./install.sh --dry-run    # Show what would be done
 ./install.sh --uninstall  # Remove everything
 ```

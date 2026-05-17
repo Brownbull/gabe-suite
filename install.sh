@@ -7,7 +7,7 @@
 #   ./install.sh --claude-only   # Install only to ~/.claude
 #   ./install.sh --codex-only    # Install only to ~/.agents (skills + templates + command reference docs)
 #   ./install.sh --dry-run       # Show what would be done
-#   ./install.sh --uninstall     # Remove all gabe-* skills + command files from both homes
+#   ./install.sh --uninstall     # Remove gabe-* skills, command files, templates, and installed docs
 
 set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -66,9 +66,11 @@ if $UNINSTALL; then
         run "rm -rf ~/.claude/templates/gabe"
         run "rm -rf ~/.claude/prompts/gabe-scope"
         run "rm -rf ~/.claude/schemas/gabe-scope"
+        run "rm -rf ~/.claude/docs/gabe-suite"
     fi
     if $INSTALL_AGENTS; then
         run "rm -rf ~/.agents/templates/gabe"
+        run "rm -rf ~/.agents/docs/gabe-suite"
     fi
     echo "Done."
     exit 0
@@ -170,6 +172,43 @@ install_templates_to() {
 if [ -d "$SCRIPT_DIR/templates" ]; then
     $INSTALL_CLAUDE && install_templates_to "$HOME/.claude" "~/.claude"
     $INSTALL_AGENTS && install_templates_to "$HOME/.agents" "~/.agents"
+fi
+
+# Curated docs — installed as local reference material for Claude Code and Codex.
+# docs/archive/ is intentionally excluded; it contains historical design notes, not runtime guidance.
+install_docs_to() {
+    local home_root="$1"   # e.g. ~/.claude or ~/.agents
+    local label="$2"       # display label
+    local docs_root="$home_root/docs/gabe-suite"
+
+    run "rm -rf \"$docs_root\""
+    run "mkdir -p \"$docs_root/docs/workflows\""
+    run "mkdir -p \"$docs_root/docs/architecture\""
+
+    run "cp \"$SCRIPT_DIR/README.md\" \"$docs_root/README.md\""
+    run "cp \"$SCRIPT_DIR/docs/README.md\" \"$docs_root/docs/README.md\""
+    run "cp \"$SCRIPT_DIR/docs/WORKFLOW.md\" \"$docs_root/docs/WORKFLOW.md\""
+    run "cp \"$SCRIPT_DIR/docs/GAPS.md\" \"$docs_root/docs/GAPS.md\""
+    run "cp \"$SCRIPT_DIR/docs/suite-state-audit.md\" \"$docs_root/docs/suite-state-audit.md\""
+    run "cp \"$SCRIPT_DIR/docs/workflows/\"*.md \"$docs_root/docs/workflows/\" 2>/dev/null || true"
+    run "cp \"$SCRIPT_DIR/docs/architecture/\"*.md \"$docs_root/docs/architecture/\" 2>/dev/null || true"
+
+    local doc_count=5
+    local workflow_count=0
+    local architecture_count=0
+    if [ -d "$SCRIPT_DIR/docs/workflows" ]; then
+        workflow_count=$(find "$SCRIPT_DIR/docs/workflows" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')
+    fi
+    if [ -d "$SCRIPT_DIR/docs/architecture" ]; then
+        architecture_count=$(find "$SCRIPT_DIR/docs/architecture" -maxdepth 1 -type f -name '*.md' | wc -l | tr -d ' ')
+    fi
+    doc_count=$((doc_count + workflow_count + architecture_count))
+    echo "  OK: $doc_count docs → $label/docs/gabe-suite/ (archive excluded)"
+}
+
+if [ -d "$SCRIPT_DIR/docs" ]; then
+    $INSTALL_CLAUDE && install_docs_to "$HOME/.claude" "~/.claude"
+    $INSTALL_AGENTS && install_docs_to "$HOME/.agents" "~/.agents"
 fi
 
 # Prompts (Option A — ship to runtime) — consumed by /gabe-scope family at execution time.

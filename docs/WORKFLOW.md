@@ -3,7 +3,7 @@
 **Audience:** anyone using the Gabe Suite to build a project.
 **Purpose:** single source of truth for how the commands connect, what state they read/write, and when to run each one.
 
-This doc is the map. For depth on any single piece, follow the links to `architecture/`, to the command's own spec under `commands/`, or to the skill spec under `skills/`.
+This doc is the map. For depth on any single piece, follow the links to `architecture/`, to the command's own spec under `commands/`, or to the skill spec under `skills/`. For project starts, use [workflows/greenfield.md](workflows/greenfield.md) for new apps and [workflows/brownfield.md](workflows/brownfield.md) for existing codebases.
 
 ---
 
@@ -16,6 +16,18 @@ Three layers:
 3. **Phase execution loop** — repeats per phase until plan is complete
 
 The suite is **serial** by design (post-rollback): one active plan at a time, phases run in order, no parallel lanes. The primary router is `/gabe-next` — it reads `.kdbp/PLAN.md` state and dispatches to the next command.
+
+---
+
+## Project-start modes
+
+| Mode | Use when | First command | Guide |
+|------|----------|---------------|-------|
+| Greenfield | You are starting from an idea or empty repo | `/gabe-align deep "<idea>"` | [workflows/greenfield.md](workflows/greenfield.md) |
+| Brownfield | You are adopting an existing codebase | read-only inventory first | [workflows/brownfield.md](workflows/brownfield.md) |
+| Active KDBP | `.kdbp/PLAN.md` already exists | `/gabe-help`, then `/gabe-next` | this doc |
+
+Architecture Principles AP1-AP13 are advisory checks inside `/gabe-align`, `/gabe-debt`, and `/gabe-review`. They provide `CONCERN`/review/debt context; they do not block phase execution by themselves.
 
 ---
 
@@ -154,6 +166,8 @@ Direct entry points: you can call `/gabe-scope-addition` or `/gabe-scope-pivot` 
 | `/gabe-assess [change]` | blast radius + maturity scope + prerequisites for a proposed change |
 | `/gabe-roast [perspective] [target]` | adversarial gap review from a specific viewpoint |
 | `/gabe-health [focus]` | codebase structural health — god files, churn, coupling, bugs |
+| `/gabe-debt [brief\|dry-run\|target]` | architecture decision-debt scan with AP evidence citations |
+| `/gabe-mockup [mode]` | mockup, React Storybook, and design-reference workflows |
 | `/gabe-teach` | consolidate architect-level understanding post-commit (into `KNOWLEDGE.md`) |
 | `/gabe-lens [concept]` | cognitive translation — analogies, constraint boxes, Gabe Blocks |
 
@@ -207,9 +221,11 @@ User-level (cross-project):
 
 ## Common scenarios
 
-### Scenario 1 — fresh project, first plan
+### Scenario 1 — greenfield project, first plan
 
 ```text
+user: /gabe-align deep "idea for the app"
+  -> values, scenarios, and AP1-AP13 concerns surfaced before setup
 user: /gabe-init my-project
   -> .kdbp/ scaffolded, CLAUDE.md at root
 user: /gabe-scope
@@ -222,7 +238,27 @@ user: /gabe-next
 user: /gabe-next (loop until all phases done)
 ```
 
-### Scenario 2 — continuing existing project
+### Scenario 2 — brownfield adoption
+
+```text
+user: inspect repo layout, tests, CI, docs, and git history without modifying files
+  -> inventory confirms whether .kdbp/ exists and what the adoption risk is
+user: /gabe-init update
+  -> refreshes existing KDBP state when .kdbp/ is already present
+  OR
+user: /gabe-init existing-project
+  -> starts a cautious KDBP baseline when no .kdbp/ exists
+user: /gabe-health
+  -> maps structural hotspots before planning changes
+user: /gabe-debt brief
+  -> records evidence-backed decision debt and AP concerns
+user: /gabe-plan check
+  -> verifies active plan mappings when a plan already exists
+```
+
+See [workflows/brownfield.md](workflows/brownfield.md) for the full adoption order.
+
+### Scenario 3 — continuing existing KDBP project
 
 ```text
 user: /gabe-help
@@ -231,7 +267,7 @@ user: /gabe-next
   -> dispatches to /gabe-review
 ```
 
-### Scenario 3 — scope evolved mid-plan
+### Scenario 4 — scope evolved mid-plan
 
 ```text
 user: realizes new REQ needed
@@ -244,7 +280,7 @@ user: /gabe-plan check
 user: retrofit or start new plan
 ```
 
-### Scenario 4 — plan complete
+### Scenario 5 — plan complete
 
 ```text
 user: /gabe-next
@@ -255,7 +291,7 @@ user: /gabe-plan "next milestone goal" (new plan)
 user: /gabe-scope-change (scope evolution)
 ```
 
-### Scenario 5 — hotfix / out-of-band
+### Scenario 6 — hotfix / out-of-band
 
 Not natively supported at time of writing. See [GAPS.md](GAPS.md) gap W4 for options.
 
@@ -277,6 +313,10 @@ Not natively supported at time of writing. See [GAPS.md](GAPS.md) gap W4 for opt
 ## Related docs
 
 - **[GAPS.md](GAPS.md)** — remaining workflow gaps + options to close each
+- **[workflows/README.md](workflows/README.md)** — quick chooser for greenfield, brownfield, and active KDBP starts
+- **[workflows/greenfield.md](workflows/greenfield.md)** — idea-to-first-phase flow for new apps
+- **[workflows/brownfield.md](workflows/brownfield.md)** — adoption guide for existing codebases
+- **[suite-state-audit.md](suite-state-audit.md)** — current suite inventory, install state, and known documentation gaps
 - **[architecture/stack.md](architecture/stack.md)** — recommended application stack for projects built with the suite
 - **[architecture/scope-data-contracts.md](architecture/scope-data-contracts.md)** — authoritative field-by-field contract for SCOPE/ROADMAP/scope-references
 - **[architecture/diagram-standards.md](architecture/diagram-standards.md)** — diagram conventions for docs in this repo

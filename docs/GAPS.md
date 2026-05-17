@@ -237,6 +237,27 @@ Gaps are numbered `W1..Wn`. Numbering stable across revisions — new gaps appen
 
 ---
 
+## W14 — Brownfield adoption is guide-only, not command-backed
+
+**What's missing.** Existing-codebase adoption now has a documented workflow in [workflows/brownfield.md](workflows/brownfield.md), but there is no dedicated command that performs the inventory, staged KDBP adoption, plan retrofit checks, and decision-debt baseline as one guided flow.
+
+**Why it matters.** Brownfield work is where surprise is highest: existing architecture, undocumented decisions, partial tests, implicit state, and stale plans can all hide behind a clean working tree. A guide helps, but a command-backed adoption path would reduce missed steps and make the first KDBP baseline more repeatable.
+
+**Current workaround.** Follow [workflows/brownfield.md](workflows/brownfield.md): run read-only inventory first, use `/gabe-init update` when `.kdbp/` already exists, use cautious `/gabe-init` when it does not, then run `/gabe-health`, `/gabe-debt brief`, `/gabe-scope`, and `/gabe-plan check` as applicable.
+
+### Options
+
+| Option | Approach | Cost | Risk |
+|--------|----------|------|------|
+| **A** — New `/gabe-adopt` command | Guided brownfield flow: inventory, KDBP presence check, health/debt baseline, scope capture, plan retrofit prompt | medium | low if read-only by default |
+| **B** — `/gabe-init --adopt` mode | Extend init with brownfield-specific prompts and baseline docs | medium | medium — init grows beyond setup |
+| **C** — Smarter `/gabe-help` detection | Detect brownfield signals and recommend the exact guide/order before any writes | low | low — advisory only |
+| **D** — Docs-only | Keep [workflows/brownfield.md](workflows/brownfield.md) as the adoption contract | zero | medium — easy to skip under pressure |
+
+**Recommend.** C first, then A if repeated usage shows the same missed steps. Keep automatic migration out of scope until the read-only adoption path proves stable.
+
+---
+
 ## Priority stack (recommended close-order)
 
 | # | Gap | Size | Impact |
@@ -248,10 +269,11 @@ Gaps are numbered `W1..Wn`. Numbering stable across revisions — new gaps appen
 | 5 | W4 hotfix | medium | medium (stops invariant bypass under pressure) |
 | 6 | W3 phase reset | small | medium (quality-of-life) |
 | 7 | W8 plan complete docs | tiny | low (UX polish) |
-| 8 | W2, W6, W7 cadence flags | medium (bundled) | medium (structural drift prevention) |
-| 9 | W12 standards enforcement | medium | low (invisible until it bites) |
+| 8 | W14 brownfield adoption | small-to-medium | medium (reduces onboarding surprise) |
+| 9 | W2, W6, W7 cadence flags | medium (bundled) | medium (structural drift prevention) |
+| 10 | W12 standards enforcement | medium | low (invisible until it bites) |
 
-Ship order: close small high-impact gaps first (W1, W9) then tackle cadence bundle (W2 + W6 + W7 share BEHAVIOR config surface).
+Ship order: close small high-impact gaps first (W1, W9), strengthen brownfield detection (W14-C), then tackle cadence bundle (W2 + W6 + W7 share BEHAVIOR config surface).
 
 ---
 

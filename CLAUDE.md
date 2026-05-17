@@ -1,107 +1,120 @@
 # Gabe Suite — Project Context
 
-Development suite for Claude Code. A growing collection of skills, commands, and hooks that transform how you understand, review, decide, and ship. One of the skills inside this suite is called `/gabe-lens` (cognitive translation) — do **not** confuse the suite name (Gabe Suite) with that skill name (Gabe Lens).
+Development suite for Claude Code and Codex. A growing collection of skills, command wrappers, templates, hooks, and docs that transform how you understand, review, decide, and ship. One of the skills inside this suite is called `/gabe-lens` (cognitive translation) — do **not** confuse the suite name (Gabe Suite) with that skill name (Gabe Lens).
 
 **Repos:**
 - Brownbull: https://github.com/Brownbull/gabe-suite
-- khujta:    https://github.com/khujta/gabe-suite
+- khujta: https://github.com/khujta/gabe-suite
 
 **Local folder:** `gabe_lens/` (legacy name; rename deferred — safe to rename to `gabe-suite/` later).
 
 ## Project Structure
 
-```
+```text
 gabe-suite/                   # current local folder: gabe_lens/ (rename deferred)
   skills/
-    gabe-lens/                # cognitive translation skill (name stays)
-      SKILL.md                — Cognitive translation (Gabe Blocks)
-      SUITS.md                — 4 cognitive suit definitions for calibration
-    gabe-roast/               — Adversarial gap review
-    gabe-align/               — Pre-flight alignment check + VALUES.md
-    gabe-assess/              — Change impact assessment
-    gabe-review/              — Code review with risk pricing
-    gabe-health/              — Codebase health analysis
-    gabe-help/                — Context-aware guide
-    gabe-docs/                — Documentation standards + diagrams library
-    gabe-arch/                — Architecture curriculum layer
+    gabe-align/               # Alignment guardian + AP advisory checks
+    gabe-arch/                # Architecture curriculum layer
+    gabe-assess/              # Change impact assessment
+    gabe-debt/                # Architecture decision-debt scanner
+    gabe-docs/                # Documentation standards + diagrams library
+    gabe-health/              # Codebase health analysis
+    gabe-help/                # Context-aware guide
+    gabe-lens/                # Cognitive translation skill (name stays)
+    gabe-mockup/              # Mockup, React Storybook, and design-ref workflow
+    gabe-review/              # Code review with risk pricing
+    gabe-roast/               # Adversarial gap review
   commands/
-    gabe-lens.md              — /gabe-lens command (the skill's command — name stays)
-    gabe-lens-calibrate.md    — /gabe-lens-calibrate command
-    gabe-roast.md, gabe-align.md, gabe-assess.md, gabe-review.md
-    gabe-health.md, gabe-help.md
-    gabe-init.md              — Project setup
-    gabe-commit.md            — Commit quality gate
-    gabe-push.md              — Push + PR + CI + promote
-    gabe-plan.md              — KDBP planning with per-phase tier decision
-    gabe-execute.md           — Phase execution
-    gabe-next.md              — Zero-logic router
-    gabe-teach.md             — Human knowledge consolidation
-    gabe-scope.md + gabe-scope-{change,addition,pivot}.md
+    gabe-align.md, gabe-assess.md, gabe-commit.md, gabe-debt.md
+    gabe-execute.md, gabe-health.md, gabe-help.md, gabe-init.md
+    gabe-lens.md, gabe-mockup.md, gabe-next.md, gabe-plan.md
+    gabe-push.md, gabe-review.md, gabe-roast.md, gabe-scope.md
+    gabe-scope-addition.md, gabe-scope-change.md, gabe-scope-pivot.md
+    gabe-teach.md
   templates/
-    *.md, *.yaml, *.json      — .kdbp/ init files (SCOPE, ROADMAP, PLAN, etc.)
-    tier-sections/*.md        — 14 tier trade-off section files + rubric + index
-  prompts/*.md                — /gabe-scope prompt library
-  schemas/*.json              — JSON Schemas for scope-session + scope-references
-  assets/                     — Images for README
-  docs/                       — User docs (start at docs/WORKFLOW.md)
-    README.md                 — Doc index
-    WORKFLOW.md               — State machine + command flow (primary)
-    GAPS.md                   — Remaining workflow gaps + options
-    architecture/             — Requirements, diagram standards, data contracts, stack ref
-    archive/                  — Retired dogfood + historical design docs
-  README.md                   — Public-facing documentation
-  CLAUDE.md                   — This file
-  install.sh                  — Install suite to ~/.claude/
+    *.md, *.yaml, *.json      # .kdbp/ init files, including architecture-principles.md
+    tier-sections/*.md        # tier trade-off section files + rubric + index
+    mockup/                   # mockup and Storybook workflow templates
+    debt-patterns/            # decision-debt pattern catalog
+  prompts/*.md                # /gabe-scope prompt library
+  schemas/*.json              # JSON Schemas for scope-session + scope-references
+  assets/                     # Images for README
+  docs/                       # User docs (start at docs/WORKFLOW.md)
+    README.md                 # Doc index
+    WORKFLOW.md               # State machine + command flow
+    GAPS.md                   # Remaining workflow gaps + options
+    suite-state-audit.md      # Current inventory, install state, and doc gaps
+    workflows/                # Greenfield and brownfield start guides
+    architecture/             # Requirements, diagram standards, data contracts, stack ref
+    archive/                  # Retired dogfood + historical design docs
+  README.md                   # Public-facing documentation
+  CLAUDE.md                   # This file
+  install.sh                  # Install suite to ~/.claude/ and ~/.agents/
 ```
 
 ## User Profile
 
-`~/.claude/gabe-lens-profile.md` — stores user's chosen cognitive suit for the `/gabe-lens` skill. Created by `/gabe-lens-calibrate`. Default suit (Spatial-Analogical) used if absent. File name kept as-is — it's a skill-level artifact, not a suite-level one.
+`~/.claude/gabe-lens-profile.md` stores the user's chosen cognitive suit for the `/gabe-lens` skill. Created by `/gabe-lens calibrate`. Default suit (Spatial-Analogical) is used if absent. File name stays skill-level because it belongs to Gabe Lens, not the whole suite.
 
 ## Conventions
 
-- Each skill has its own directory under `skills/` with a `SKILL.md`
-- Each skill has a matching command file under `commands/`
-- Command files are lean — they reference the SKILL.md for rules, not duplicate them
-- Skills are independent but may reference each other (gabe-roast uses gabe-lens one-liner format)
+- Each skill has its own directory under `skills/` with a `SKILL.md`.
+- Each user-facing slash command has a matching command wrapper under `commands/`.
+- Command files are lean — they reference the skill or workflow spec for rules instead of duplicating them.
+- Architecture Principles AP1-AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
+- Workflow docs are installed locally under `~/.claude/docs/gabe-suite/` and `~/.agents/docs/gabe-suite/`.
 
-## Current Skills
+## Current Skills (11)
 
 | Skill | Version | Purpose |
 |---|---|---|
-| **gabe-lens** | 2.1.0 | Cognitive translation — analogies, maps, constraint boxes, handles. Adapts to cognitive suit. |
-| **gabe-roast** | 1.0.0 | Adversarial gap review from a required perspective, classified by maturity + importance |
-| **gabe-align** | 1.0.0 | Pre-flight alignment check against curated values. Three modes: shadow, standard, deep |
-| **gabe-assess** | 1.0.0 | Rapid change impact assessment. Blast radius, maturity scope, prerequisites, alternatives |
-| **gabe-review** | 1.4.x | Code review — risk pricing, confidence scoring, tier drift, triage, deferred items |
-| **gabe-health** | 1.0.0 | Codebase health — god files, churn hotspots, coupling, deferred items |
-| **gabe-help** | 1.0.0 | Context-aware guide — detects project state, suggests the right tool |
+| **gabe-align** | 1.0.0 | Alignment guardian — shallow/standard/deep values and AP advisory checks |
+| **gabe-arch** | 1.0.0 | Architecture curriculum layer used by `/gabe-teach` |
+| **gabe-assess** | 1.0.0 | Rapid change impact assessment: blast radius, maturity scope, prerequisites |
+| **gabe-debt** | 1.0.0 | Architecture decision-debt scanner with AP evidence citations |
 | **gabe-docs** | 1.0.0 | Documentation standards + Mermaid diagrams library |
+| **gabe-health** | 1.0.0 | Codebase health — god files, churn hotspots, coupling, deferred items |
+| **gabe-help** | 1.0.0 | Context-aware guide — detects project state, suggests the right workflow |
+| **gabe-lens** | 2.3.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
+| **gabe-mockup** | 1.0.0 | Legacy mockups plus React Storybook and design-ref workflows |
+| **gabe-review** | 1.4.x | Code review — risk pricing, confidence scoring, plan/AP drift, triage |
+| **gabe-roast** | 1.0.0 | Adversarial gap review from a required perspective |
 
-## Commands
+## Command Wrappers (20)
 
 | Command | Skill/owner | Purpose |
 |---|---|---|
-| `/gabe-lens` | gabe-lens | Explain a concept (full, brief, oneliner, annotate) |
-| `/gabe-lens-calibrate` | gabe-lens | Discover your cognitive suit (interactive, one-time) |
-| `/gabe-roast` | gabe-roast | Adversarial gap review (full, brief) |
 | `/gabe-align` | gabe-align | Pre-flight alignment check (shallow, standard, deep) |
-| `/gabe-assess` | gabe-assess | Change impact assessment (full, brief, inline, batch) |
-| `/gabe-review` | gabe-review | Code review with risk pricing + tier drift |
+| `/gabe-assess` | gabe-assess | Change impact assessment |
+| `/gabe-commit` | KDBP core | Commit quality gate |
+| `/gabe-debt` | gabe-debt | Architecture decision-debt scan |
+| `/gabe-execute` | KDBP core | Phase execution with tier cap + escalation gate |
 | `/gabe-health` | gabe-health | Codebase health analysis |
 | `/gabe-help` | gabe-help | Context-aware guide |
-| `/gabe-init` | — | Project setup — .kdbp/, hooks, project type, maturity |
-| `/gabe-commit` | — | Commit quality gate — deterministic checks, interactive triage |
-| `/gabe-push` | — | Push, create PR, watch CI, branch promotion |
-| `/gabe-plan` | — | KDBP planning + per-phase tier decision (MVP/Enterprise/Scale) |
-| `/gabe-execute` | — | Phase execution with tier cap + escalation gate |
-| `/gabe-next` | — | Zero-logic router |
-| `/gabe-teach` | — | Human knowledge consolidation |
-| `/gabe-scope`, `/gabe-scope-{change,addition,pivot}` | — | Scope authoring + evolution |
+| `/gabe-init` | KDBP core | Project setup — `.kdbp/`, hooks, project type, maturity |
+| `/gabe-lens` | gabe-lens | Explain concepts, annotate files, calibrate cognitive suit |
+| `/gabe-mockup` | gabe-mockup | Mockup, React Storybook, and design-ref workflows |
+| `/gabe-next` | KDBP core | Zero-logic router |
+| `/gabe-plan` | KDBP core | KDBP planning + per-phase tier decision |
+| `/gabe-push` | KDBP core | Push, create PR, watch CI, branch promotion |
+| `/gabe-review` | gabe-review | Code review with risk pricing + tier drift |
+| `/gabe-roast` | gabe-roast | Adversarial gap review |
+| `/gabe-scope` | KDBP core | Scope authoring |
+| `/gabe-scope-addition` | KDBP core | Additive scope evolution |
+| `/gabe-scope-change` | KDBP core | Scope-change router |
+| `/gabe-scope-pivot` | KDBP core | Direction-change scope rewrite |
+| `/gabe-teach` | gabe-arch/docs | Human knowledge consolidation |
+
+## Workflow Docs
+
+- [docs/workflows/README.md](docs/workflows/README.md) — quick chooser.
+- [docs/workflows/greenfield.md](docs/workflows/greenfield.md) — new app from idea to first phase.
+- [docs/workflows/brownfield.md](docs/workflows/brownfield.md) — existing codebase adoption.
+- [docs/suite-state-audit.md](docs/suite-state-audit.md) — current runtime inventory, install state, and known docs gaps.
 
 ## Adding a New Skill
 
-1. Create `skills/<skill-name>/SKILL.md` with frontmatter (name, description, version)
-2. Create `commands/<skill-name>.md` with frontmatter (name, description)
-3. Add to the Skills table in README.md
-4. Update this CLAUDE.md
+1. Create `skills/<skill-name>/SKILL.md` with frontmatter (name, description, version).
+2. Create `commands/<skill-name>.md` with frontmatter (name, description) when it needs a user-facing command.
+3. Add it to README.md, CLAUDE.md, and `skills/gabe-help/SKILL.md`.
+4. Update install and validation tests if the inventory count changes.

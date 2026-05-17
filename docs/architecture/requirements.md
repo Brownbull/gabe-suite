@@ -67,6 +67,10 @@ Side-channel commands (`/gabe-align`, `/gabe-assess`, `/gabe-roast`, `/gabe-heal
 
 Each command does one thing. `/gabe-commit` commits. `/gabe-push` pushes. `/gabe-next` routes. No omnibus commands. Cross-cutting concerns (values, knowledge, health) live in side-channel skills, not shoved into core flow commands.
 
+### R13 — Project-start mode is explicit
+
+Greenfield and brownfield starts are different workflows. New apps begin with idea alignment and KDBP creation. Existing codebases begin with read-only inventory, then cautious KDBP adoption. The suite must document that fork before asking users to plan or execute code changes.
+
 ---
 
 ## Non-goals
@@ -79,7 +83,7 @@ Each command does one thing. `/gabe-commit` commits. `/gabe-push` pushes. `/gabe
 - **N4 — Multi-repo monorepo coordination.** One project per `.kdbp/`. Monorepo with cross-package plans not in scope.
 - **N5 — Parallelism.** See R7.
 - **N6 — Team workflow.** Optimized for solo + small team. Multi-developer concurrent editing on the same plan is not a target.
-- **N7 — Retroactive retrofit on non-KDBP projects.** `/gabe-init` on a project without priors is the path. Drift-detection and incremental migration off-scope.
+- **N7 — Fully automatic brownfield migration.** Documented brownfield KDBP adoption is in scope. Automatically inferring and rewriting complete KDBP state from arbitrary existing repositories remains out of scope.
 
 ---
 
@@ -96,6 +100,7 @@ Revisions update this file in place. Prior versions recoverable via git history.
 ## Related
 
 - **[../WORKFLOW.md](../WORKFLOW.md)** — how requirements manifest as concrete state machine + commands
+- **[../workflows/greenfield.md](../workflows/greenfield.md)** and **[../workflows/brownfield.md](../workflows/brownfield.md)** — explicit project-start workflows
 - **[../GAPS.md](../GAPS.md)** — where requirements are satisfied partially or not at all
 - **[stack.md](stack.md)** — application stack the suite recommends downstream
 - **[scope-data-contracts.md](scope-data-contracts.md)** — field-level contracts for SCOPE/ROADMAP
