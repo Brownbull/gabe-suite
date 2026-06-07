@@ -1,6 +1,6 @@
 ---
 name: gabe-mockup
-description: "Mockup/UX workflow command — peer to /gabe-execute, handles legacy HTML mockup phases and React + Storybook mockup work for React-first apps. On empty project: dispatches to /gabe-plan --preset=mockup-project. On active mockup plan: executes current phase via gabe-mockup skill playbook. Mutually redirects with /gabe-execute for wrong plan type. Usage: /gabe-mockup [goal|react-story <screen-or-batch>|design-ref] [--reconfigure] [--dry-run] [--platforms=web,mobile-web,native-mobile] [--themes=N]"
+description: "Mockup/UX workflow command — peer to /gabe-execute, handles legacy HTML mockup phases and React + Storybook mockup work for React-first apps. On empty project: dispatches to /gabe-plan --preset=mockup-project. On active mockup plan: executes current phase via gabe-mockup skill playbook. Mutually redirects with /gabe-execute for wrong plan type. Usage: /gabe-mockup [goal|react-story <screen-or-batch>|design-ref|refine <screen>] [--reconfigure] [--dry-run] [--platforms=web,mobile-web,native-mobile] [--themes=N]"
 ---
 
 # Gabe Mockup
@@ -25,6 +25,7 @@ Parse `$ARGUMENTS`:
 | `--themes=N` | Number of candidate themes in M1. Default 3. Used by preset emission |
 | `react-story <screen-or-batch>` | Implement a React-first screen or batch in `apps/web` with Storybook stories instead of new static HTML |
 | `design-ref [--refresh\|--force]` | Generate or refresh `docs/rebuild/ux/DESIGN.md` for a React-first Storybook project |
+| `refine <screen>` | Hone an ALREADY-WIRED live screen's layout/spacing/UX to spec vs its canonical mockup — the analyze → policy-test → verify → fix loop (gabe-mockup skill `refine` recipe) |
 
 **Preconditions:**
 
@@ -89,12 +90,13 @@ If `docs/rebuild/ux/REACT-STORYBOOK-WORKFLOW.md` and `apps/web/package.json` bot
 
 The skill playbook defines recipes keyed by phase `types`. Dispatch table:
 
-Named modes such as `react-story`, `design-ref`, `spike`, and `validate` bypass the legacy phase ladder after context loading and use the matching mode recipe in `gabe-mockup/SKILL.md`.
+Named modes such as `react-story`, `design-ref`, `spike`, `validate`, and `refine` bypass the legacy phase ladder after context loading and use the matching mode recipe in `gabe-mockup/SKILL.md`.
 
 | Phase types contain | Recipe | Output location |
 |---------------------|--------|-----------------|
 | React-first workflow marker + `apps/web/package.json` | React + Storybook recipe (`react-story`) | `apps/web/src/design-system/**`, `apps/web/src/features/**`, `*.stories.tsx`, Storybook config/scripts, browser-check evidence |
 | First positional arg `design-ref` | React-first design reference recipe (`design-ref`) | `docs/rebuild/ux/DESIGN.md` plus short workflow/Storybook doc links |
+| First positional arg `refine <screen>` | Live-screen layout/UX refinement loop (`refine` — analyze → policy-test → verify-vs-mockup → fix) | live-mode seams in `apps/web/src/**` (additive, story-safe), the layout-policy doc + layout E2E harness, screenshot evidence + a per-screen LEDGER trace |
 | `design-system` (M1) | Tokens + stress-test matrix recipe | `docs/mockups/{tokens.css, explorations/, stress-*.html}` |
 | `design-system` + `ui-kit` (M2/M3) | Atoms / molecules recipe | `docs/mockups/{atoms,molecules}/` |
 | `mockup-flows` + `mockup-index` (M4) | Flows + INDEX seed recipe | `docs/mockups/{flows/, INDEX.md}` + populate ENTITIES.md CRUD |

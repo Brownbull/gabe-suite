@@ -219,6 +219,48 @@ Frame rules above are honored either by **discipline** (author writes within the
 | `design-ref` | `/gabe-mockup design-ref [--refresh\|--force]` | Generate or refresh `docs/rebuild/ux/DESIGN.md` for React-first Storybook projects |
 | `spike` | `/gabe-mockup spike <component>` | Translate one live mockup into a working React component |
 | `validate` | `/gabe-mockup validate [<screen>\|--all]` | Run layout sanity checks (C1-C4) over screens × phone/tablet/desktop viewports |
+| `refine` | `/gabe-mockup refine <screen>` | Hone an ALREADY-WIRED live screen's layout/spacing/UX to spec vs its canonical mockup — the analyze → policy-test → verify → fix loop |
+
+### Mode: `refine`
+
+`/gabe-mockup refine <screen>` — hone an ALREADY-IMPLEMENTED screen's layout, spacing, and UX into spec against its CANONICAL mockup, via a test-first **analyze → verify-vs-mockup → fix** loop. This packages the "find the gaps, test them, verify against the mockup we implemented, then fix" modus operandi so you don't hand-walk those steps per screen. Use it AFTER a screen is wired (by `react-story` or data-wiring) when its deployed layout drifts from the reference — edge-to-edge margins, a nav that drifts / sits behind content, half-empty desktop, mock data leaking, mis-placed bottom CTAs. Distinct from `validate` (detect-only sanity on STATIC mockups): `refine` analyzes a LIVE screen against the canonical design AND fixes it.
+
+**Preconditions.** React-first project (`apps/web/package.json`) with the screen already implemented; a canonical screen/mockup reference — a screen map (e.g. `docs/rebuild/WEB-SCREEN-MAP.md`) or the mockup index. If `<screen>` is not mapped to a CANONICAL (non-archived, non-deprecated) mockup, STOP and ask — never refine against a guessed or archived reference.
+
+**The loop (RF1–RF6):**
+
+1. **RF1 — Resolve the canonical reference (no guessing).** Read the project's screen map / mockup index to find `<screen>`'s CANONICAL mockup + the active implementation/showcase. NEVER use an archived (`**/archive/**`) or deprecated (hub-matrix strikethrough) mockup. If unmapped → stop + ask.
+
+2. **RF2 — Locate or scaffold the layout-policy oracle.** Read the project's layout policy doc (e.g. `docs/rebuild/WEB-LAYOUT-POLICY.md`). If none exists, scaffold one from the policy below and record a KDBP decision. The policy (P1–P6) is the machine-checked oracle:
+   - **P1 Edge gutters (mobile/tablet):** content is NOT flush — left/right ≥ ~12px, header top ≥ ~8px.
+   - **P2/P3 Fixed nav, no over-scroll:** the bottom-nav box is identical at scroll-top and after scrolling to the end (Δ ≤ 1px) and pinned to the viewport bottom; the page does not drag-scroll.
+   - **P4 Desktop full-viewport:** content REACHES the right edge (`contentRight ≥ 0.92 × innerWidth`); a left side-rail is fine — measure right-edge REACH, not width-span (so the rail isn't penalised).
+   - **P5 Bottom-CTA placement:** a primary/sticky CTA sits ABOVE the nav (with a gap) when a nav is present, or pinned at the viewport bottom on a full-screen sheet — never behind the nav / never requiring a scroll to reach.
+   - **P6 No mock/default data in live:** counts, badges, and lists reflect real data or hide when zero — never the showcase's placeholder rows/counts.
+
+3. **RF3 — Analyze: record the LIVE screen at each breakpoint.** Run (or scaffold) the recorded layout E2E harness — Playwright projects at mobile/tablet/desktop that sign in, navigate to `<screen>`, scroll to the end, record video + screenshots, and SOFT-assert P1–P6 so ONE run surfaces the FULL gap list (not just the first). Compare the screenshots against the canonical mockup for design-token / spacing / UX fidelity, locale-correct copy, and the loading/empty/error states the mockup defines.
+
+4. **RF4 — Verify-vs-mockup (faithfulness).** Confirm the screen RENDERS the canonical showcase/design, not a simpler rebuild ("wire, don't rebuild"). Flag any re-authored layout/markup — fix by reuse, not divergence.
+
+5. **RF5 — Fix: apply the live-mode layout recipe.** For each failing policy, apply the proven recipe. Gate EVERY change on a `live`/`chromeless` (or equivalent) flag that defaults OFF so the Storybook stories stay byte-identical:
+   - **De-chrome additively** — the live screen renders the showcase with the device-frame chrome off; never rebuild.
+   - **Mobile/tablet gutters + top inset** — side gutters (`px-16`-equiv) on header + scroll region; a safe-area top inset (`pt-[max(env(safe-area-inset-top),12px)]`) on the header.
+   - **Definite-height device layout + internal scroll** — container `h-[100dvh] flex-col overflow-hidden`; content region `min-h-0 flex-1 overflow-y-auto overscroll-contain` (drop any fixed `max-h`); the nav is the last flex child.
+   - **Full-width pinned nav** — the bottom-nav drops the framed negative-margin bleed in live (full-width in the no-padding chromeless container).
+   - **Desktop fills the viewport** — drop the showcase's centered `max-w-*` content cap in live so content reaches the right edge; fill height (`min-h-[100dvh]`).
+   - **No mock data** — gate every default/mock list to `live ? [] : mock`; wire badges/counts to real values or hide when zero.
+   - **Shared frame (do ONCE, project-wide):** the app-shell host is a FIXED `h-[100dvh] overflow-hidden` frame on mobile/tablet so the PAGE ITSELF can't drag-scroll (desktop keeps window-scroll since its panes clip); global `html,body { overscroll-behavior: none }` + `body { min-height: 100dvh }` (NOT `100vh` — the large mobile viewport exceeds the visible screen); `viewport-fit=cover` in `index.html`.
+
+6. **RF6 — Re-verify + ship.** Re-run the harness to GREEN (P1–P6) + the app gate (typecheck, build, storybook — stories byte-identical) + a **MANDATORY real-device over-scroll check** (drag at the scroll-end on a phone/emulator — headless Chromium CANNOT reproduce mobile overscroll, so this check is manual and required) + deploy + save mobile/desktop screenshot evidence. Record a per-screen LEDGER trace and DEFER residual data-correctness items (P6) explicitly rather than half-fixing them.
+
+**Output.** The screen brought GREEN against the layout policy + faithful to the canonical mockup; the policy doc + harness updated (the screen added to the harness's section list); a per-screen trace.
+
+**Proven on.** Gustify web — Perfil → Despensa (2026-06-07), codified as project decision D92 + `docs/rebuild/WEB-LAYOUT-POLICY.md` (recipe + per-screen review gate).
+
+**Error surfaces.**
+- React marker / `apps/web/package.json` missing → `⚠ refine requires a React-first apps/web project.`
+- `<screen>` not in the screen map / mockup index → `⚠ <screen> is not mapped to a canonical mockup. Map it (or run /gabe-mockup react-story to build it) before refining.`
+- No layout-policy doc + user declines to scaffold one → proceed with the inline P1–P6 oracle and warn that findings are not persisted.
 
 ### Mode: `design-ref`
 
