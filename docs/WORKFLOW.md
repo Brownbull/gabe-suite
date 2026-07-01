@@ -17,7 +17,7 @@ Three layers:
 
 The suite is **serial** by design (post-rollback): one active plan at a time, phases run in order, no parallel lanes. The primary router is `/gabe-next` — it reads `.kdbp/PLAN.md` state and dispatches to the next command.
 
-For complex planning work, `/gabe-plan` can create a self-contained HTML review artifact as the human entrypoint. The artifact is useful for phase maps, ownership diagrams, workflow traces, and risk summaries, but it is not canonical state: `.kdbp/PLAN.md`, `.kdbp/DECISIONS.md`, and `.kdbp/LEDGER.md` remain the source of truth.
+For complex planning work, `/gabe-plan` can create a self-contained HTML review artifact as the human entrypoint. The artifact is useful for phase maps, ownership diagrams, workflow traces, and risk summaries, but it is not canonical state: `.kdbp/PLAN.md`, `.kdbp/DECISIONS.md`, and `.kdbp/LEDGER.md` remain the source of truth. Each complex HTML artifact should also include a visible detail-link section that points to the Markdown/README files where deeper implementation details live.
 
 ---
 

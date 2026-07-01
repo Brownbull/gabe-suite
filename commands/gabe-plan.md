@@ -398,6 +398,7 @@ Do not create the HTML artifact when `--no-html-artifact` was passed or when the
 - Uniform visual scale: consistent cards, diagrams, spacing, side navigation, tables, section widths, and typography rhythm.
 - Top banner text must include exactly: `HTML review artifact; .kdbp/PLAN.md and .kdbp/DECISIONS.md remain canonical.`
 - Include provenance: generated date, command (`/gabe-plan`), source plan path, decision entry range, ledger entry title, and links/paths to canonical Markdown.
+- Include a visible `Detail paths`, `More detail`, or equivalent section that maps every major HTML section to the Markdown/README files that hold deeper details. Use relative links when the target is in the repo; use clear path text when the target may not render in a browser. HTML should summarize and orient, not trap critical detail inside cards.
 - Recommended sections: summary, phase map, ownership/data-flow diagram where relevant, tier decision digest, risks/bottlenecks, verification checklist, and Phase 3/open questions.
 - Prefer inline SVG for domain maps and state/data-flow diagrams when Mermaid would require a runtime dependency. Mermaid fences may appear only as static source examples, not as required rendering dependencies.
 
@@ -603,6 +604,7 @@ For each phase row in the Phases table, evaluate:
 | C9 | DECISIONS.md has a `D[N]` entry for each phase with `Phase: [N]` frontmatter OR a `## D[N] — Phase [N] tier:` heading | v2.10 | Phase row has no matching DECISION |
 | C10 | `## Review Artifacts` exists and any listed HTML artifact path exists | v7.2 | Section missing, path missing, or path under `docs/mockups/` |
 | C11 | Listed HTML artifact contains `HTML review artifact; .kdbp/PLAN.md and .kdbp/DECISIONS.md remain canonical.` | v7.2 | Missing canonical-source banner |
+| C12 | Listed HTML artifact has a visible detail-link section pointing to canonical Markdown/README sources | v7.3 | Missing `Detail paths` / `More detail` equivalent or no links/paths to deeper docs |
 
 Collect results per phase. Aggregate into a single compliance matrix.
 
@@ -612,11 +614,11 @@ Render as a markdown table (plain markdown, per `gabe-docs/SKILL.md` rendering c
 
 **PLAN compliance report — `<N>` phases checked**
 
-| Phase | # | Name | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9 | C10 | C11 | Verdict |
-|-------|---|------|----|----|----|----|----|----|----|----|----|-----|-----|---------|
-| 1 | Scaffold + DB | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠ prose-only | — | ✅ | ❌ | ❌ | **RETROFIT** |
-| 2 | Money + FX + i18n | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | — | — | ✅ | ✅ | ✅ | **RETROFIT** |
-| 5 | Observability | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠ prose-only | YAML absent | ✅ | ✅ | ✅ | **RETROFIT** |
+| Phase | # | Name | C1 | C2 | C3 | C4 | C5 | C6 | C7 | C8 | C9 | C10 | C11 | C12 | Verdict |
+|-------|---|------|----|----|----|----|----|----|----|----|----|-----|-----|-----|---------|
+| 1 | Scaffold + DB | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠ prose-only | — | ✅ | ❌ | ❌ | ❌ | **RETROFIT** |
+| 2 | Money + FX + i18n | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | — | — | ✅ | ✅ | ✅ | ✅ | **RETROFIT** |
+| 5 | Observability | ✅ | ✅ | ✅ | ✅ | ❌ | ❌ | ⚠ prose-only | YAML absent | ✅ | ✅ | ✅ | ✅ | **RETROFIT** |
 
 Legend:
 
@@ -641,7 +643,7 @@ When ≥1 phase has a non-compliant verdict, offer a retrofit menu. Bulk options
 - `[yaml]` — generate `## Phase Details` YAML block for all phases missing one, seeded from existing prose
 - `[overrides]` — for each phase with prose-only override signals (C8), run LLM to extract `dim_overrides` list into YAML with reason; confirm per-phase before writing
 - `[decisions]` — backfill missing `DECISIONS.md D[N]` entries (skip silently if already present)
-- `[html]` — create or refresh the HTML review artifact per Step 3.75, then add/update `## Review Artifacts` and the `LEDGER.md` `HTML_ARTIFACT` line
+- `[html]` — create or refresh the HTML review artifact per Step 3.75, including the detail-link section, then add/update `## Review Artifacts` and the `LEDGER.md` `HTML_ARTIFACT` line
 - `[N]` — pick a single phase number to retrofit (runs all applicable gaps for that phase)
 - `[report-only]` — keep report, write nothing, exit
 - `[abort]` — exit without writing
@@ -660,7 +662,7 @@ For each accepted gap:
 3. **Tier cell format (C7).** Normalize to bare tier or compact override notation based on YAML `dim_overrides`.
 4. **Prose-only overrides (C8).** Invoke Haiku LLM per phase with the prose Phase Details + section tier-cap files → extract structured `dim_overrides` list with reasons → ADD to YAML block. Never infer overrides from silence — only from explicit prose mentions. Present each extraction for per-phase approval before writing.
 5. **DECISIONS backfill (C9).** Append a minimal `D[N]` row per missing phase with a note: `Backfilled via /gabe-plan check on <date>. Tier chosen: <from PLAN tier cell>. Reason: auto-backfill (no original decision recorded; review at next update).` Status stays `accepted` but flagged for review.
-6. **HTML artifact (C10-C11).** Generate or refresh the artifact using the current `PLAN.md` and `DECISIONS.md`. Add `## Review Artifacts` if absent. Reject `docs/mockups/**/*.html` and require the canonical-source banner.
+6. **HTML artifact (C10-C12).** Generate or refresh the artifact using the current `PLAN.md` and `DECISIONS.md`. Add `## Review Artifacts` if absent. Reject `docs/mockups/**/*.html`, require the canonical-source banner, and include a detail-link section pointing readers to the deeper Markdown/README sources.
 
 Each write is path-scoped. No `git add -A`. On completion, stage the touched files and print a single `[commit]` prompt: `Retrofit complete. Stage and /gabe-commit "chore(kdbp): retrofit PLAN to spec v<ver>"? [y/N]`.
 
