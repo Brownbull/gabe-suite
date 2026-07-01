@@ -1,6 +1,7 @@
 # Gabe Suite State Audit
 
 **Date:** 2026-05-12
+**Updated:** 2026-07-01 — added `gabe-myopic` (short-sighted-user planning-horizon walkthrough); counts now 21 command wrappers / 12 skills.
 **Purpose:** Snapshot the current Gabe Suite surface so workflow docs and local installs can be checked against reality.
 
 ## Current Runtime Surface
@@ -9,8 +10,8 @@ The source tree currently exposes:
 
 | Surface | Count | Source |
 |---------|-------|--------|
-| Command wrappers | 20 | `commands/gabe-*.md` |
-| Skills | 11 | `skills/gabe-*` |
+| Command wrappers | 21 | `commands/gabe-*.md` |
+| Skills | 12 | `skills/gabe-*` |
 | Root templates | 23 | `templates/*.{md,yaml,json}` |
 | Tier-section templates | 22 | `templates/tier-sections/*.md` |
 | Mockup template files | 34 | `templates/mockup/**` |
@@ -69,7 +70,7 @@ Existing codebase adoption was the largest blind spot. `commands/gabe-init.md` a
 
 ### Public Doc Drift
 
-Primary docs described older command and skill counts. The source tree currently has `20` command wrappers and `11` skills. Drift here is dangerous because `/gabe-help` and README are the first surfaces a user sees.
+Primary docs described older command and skill counts. The source tree currently has `21` command wrappers and `12` skills. Drift here is dangerous because `/gabe-help` and README are the first surfaces a user sees.
 
 ### Local Docs Missing
 

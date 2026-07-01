@@ -23,6 +23,7 @@ EXPECTED_COMMANDS = [
     "gabe-init",
     "gabe-lens",
     "gabe-mockup",
+    "gabe-myopic",
     "gabe-next",
     "gabe-plan",
     "gabe-push",
@@ -45,6 +46,7 @@ EXPECTED_CORE_SKILLS = [
     "gabe-help",
     "gabe-lens",
     "gabe-mockup",
+    "gabe-myopic",
     "gabe-review",
     "gabe-roast",
 ]
@@ -117,10 +119,10 @@ def check_inventory() -> None:
 
 def check_public_references() -> None:
     readme = read("README.md")
-    if "Skills (11)" not in readme:
-        fail("README.md missing Skills (11)")
-    if "Command Wrappers (20)" not in readme:
-        fail("README.md missing Command Wrappers (20)")
+    if "Skills (12)" not in readme:
+        fail("README.md missing Skills (12)")
+    if "Command Wrappers (21)" not in readme:
+        fail("README.md missing Command Wrappers (21)")
     if "AP1-AP13" not in readme:
         fail("README.md missing AP1-AP13 guidance")
     if "HTML review artifact" not in readme:
@@ -130,10 +132,10 @@ def check_public_references() -> None:
             fail(f"README.md missing /{command}")
 
     claude = read("CLAUDE.md")
-    if "Current Skills (11)" not in claude:
-        fail("CLAUDE.md missing Current Skills (11)")
-    if "Command Wrappers (20)" not in claude:
-        fail("CLAUDE.md missing Command Wrappers (20)")
+    if "Current Skills (12)" not in claude:
+        fail("CLAUDE.md missing Current Skills (12)")
+    if "Command Wrappers (21)" not in claude:
+        fail("CLAUDE.md missing Command Wrappers (21)")
     for skill in EXPECTED_CORE_SKILLS:
         if skill not in claude:
             fail(f"CLAUDE.md missing skill {skill}")
@@ -142,7 +144,7 @@ def check_public_references() -> None:
             fail(f"CLAUDE.md missing /{command}")
 
     help_text = read("skills/gabe-help/SKILL.md")
-    if "20 command wrappers, 11 skills" not in help_text:
+    if "21 command wrappers, 12 skills" not in help_text:
         fail("gabe-help missing current inventory summary")
     for skill in EXPECTED_CORE_SKILLS:
         if skill not in help_text:
@@ -234,6 +236,9 @@ def check_html_artifact_guidance() -> None:
         "docs/gabe/plans/YYYY-MM-DD-<slug>/index.html",
         "HTML review artifact; .kdbp/PLAN.md and .kdbp/DECISIONS.md remain canonical.",
         "docs/mockups/**/*.html",
+        "Detail paths",
+        "More detail",
+        "canonical Markdown/README sources",
         "## Review Artifacts",
         "HTML_ARTIFACT:",
     ):
@@ -246,6 +251,8 @@ def check_html_artifact_guidance() -> None:
         "single self-contained `.html` file",
         "no network dependencies",
         "HTML review artifact; .kdbp/PLAN.md and .kdbp/DECISIONS.md remain canonical.",
+        "Detail paths",
+        "Markdown/README files containing deeper details",
         "Do not write Gabe Plan HTML artifacts under `docs/mockups/**/*.html`",
     ):
         if needle not in gabe_docs:
@@ -258,6 +265,8 @@ def check_html_artifact_guidance() -> None:
     workflow = read("docs/WORKFLOW.md")
     if "self-contained HTML review artifact" not in workflow:
         fail("docs/WORKFLOW.md missing HTML review artifact workflow guidance")
+    if "detail-link section" not in workflow:
+        fail("docs/WORKFLOW.md missing HTML detail-link workflow guidance")
 
 
 def check_temp_home_docs_install() -> None:

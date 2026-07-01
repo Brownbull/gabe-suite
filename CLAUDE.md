@@ -22,6 +22,7 @@ gabe-suite/                   # current local folder: gabe_lens/ (rename deferre
     gabe-help/                # Context-aware guide
     gabe-lens/                # Cognitive translation skill (name stays)
     gabe-mockup/              # Mockup, React Storybook, and design-ref workflow
+    gabe-myopic/              # Short-sighted-user planning-horizon walkthrough
     gabe-review/              # Code review with risk pricing
     gabe-roast/               # Adversarial gap review
     gabe-{next,plan,execute,commit,push}/
@@ -29,7 +30,7 @@ gabe-suite/                   # current local folder: gabe_lens/ (rename deferre
   commands/
     gabe-align.md, gabe-assess.md, gabe-commit.md, gabe-debt.md
     gabe-execute.md, gabe-health.md, gabe-help.md, gabe-init.md
-    gabe-lens.md, gabe-mockup.md, gabe-next.md, gabe-plan.md
+    gabe-lens.md, gabe-mockup.md, gabe-myopic.md, gabe-next.md, gabe-plan.md
     gabe-push.md, gabe-review.md, gabe-roast.md, gabe-scope.md
     gabe-scope-addition.md, gabe-scope-change.md, gabe-scope-pivot.md
     gabe-teach.md
@@ -66,7 +67,7 @@ gabe-suite/                   # current local folder: gabe_lens/ (rename deferre
 - Architecture Principles AP1-AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
 - Workflow docs are installed locally under `~/.claude/docs/gabe-suite/` and `~/.agents/docs/gabe-suite/`.
 
-## Current Skills (11)
+## Current Skills (12)
 
 | Skill | Version | Purpose |
 |---|---|---|
@@ -79,6 +80,7 @@ gabe-suite/                   # current local folder: gabe_lens/ (rename deferre
 | **gabe-help** | 1.0.0 | Context-aware guide — detects project state, suggests the right workflow |
 | **gabe-lens** | 2.3.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
 | **gabe-mockup** | 1.0.0 | Legacy mockups plus React Storybook and design-ref workflows |
+| **gabe-myopic** | 1.0.0 | Short-sighted-user walkthrough — panel of 3 planning horizons flags foresight traps, overwhelm, recall, no-undo |
 | **gabe-review** | 1.4.x | Code review — risk pricing, confidence scoring, plan/AP drift, triage |
 | **gabe-roast** | 1.0.0 | Adversarial gap review from a required perspective |
 
@@ -87,7 +89,7 @@ Claude Code and Codex both install five thin lifecycle command-wrapper skills
 Code also has native slash commands; the wrappers preserve skill-style handoff
 parity and load the same lifecycle command specs from the active local home.
 
-## Command Wrappers (20)
+## Command Wrappers (21)
 
 | Command | Skill/owner | Purpose |
 |---|---|---|
@@ -101,6 +103,7 @@ parity and load the same lifecycle command specs from the active local home.
 | `/gabe-init` | KDBP core | Project setup — `.kdbp/`, hooks, project type, maturity |
 | `/gabe-lens` | gabe-lens | Explain concepts, annotate files, calibrate cognitive suit |
 | `/gabe-mockup` | gabe-mockup | Mockup, React Storybook, and design-ref workflows |
+| `/gabe-myopic` | gabe-myopic | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo |
 | `/gabe-next` | KDBP core | Zero-logic router |
 | `/gabe-plan` | KDBP core | KDBP planning + per-phase tier decision |
 | `/gabe-push` | KDBP core | Push, create PR, watch CI, branch promotion |

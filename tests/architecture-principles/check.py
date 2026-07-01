@@ -138,8 +138,8 @@ def check_temp_home_install() -> None:
         if result.returncode != 0:
             fail(f"install.sh failed in temp HOME:\n{result.stdout}")
 
-        if "Installed 36/36 components." not in result.stdout:
-            fail("install.sh did not report Installed 36/36 components")
+        if "Installed 38/38 components." not in result.stdout:
+            fail("install.sh did not report Installed 38/38 components")
 
         home_root = Path(temp_home)
         for home in ("claude", "agents"):

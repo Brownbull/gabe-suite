@@ -140,6 +140,7 @@ Reference: `docs/workflows/brownfield.md`.
 1. /gabe-review             — Full review with confidence score + triage
 2. /gabe-push               — Push, create PR, watch CI, promote
 3. /gabe-roast [perspective] [target] — Stress-test from a specific angle
+4. /gabe-myopic [target]    — Walk a UI flow as a short-sighted user before it ships
 ```
 
 ### Post-Commit (committed, not pushed)
@@ -178,7 +179,7 @@ Reference: `docs/workflows/brownfield.md`.
 6. **Show the full suite on request.** If the user asks "what tools are available?" or similar, show the complete list:
 
 ```
-The Gabe Suite — 20 command wrappers, 11 skills:
+The Gabe Suite — 21 command wrappers, 12 skills:
 
 | Tool | Command | What it does |
 |------|---------|-------------|
@@ -192,6 +193,7 @@ The Gabe Suite — 20 command wrappers, 11 skills:
 | gabe-init | /gabe-init [name] | Project setup — .kdbp/, hooks, project type, maturity |
 | gabe-lens | /gabe-lens [concept] | Cognitive translation — analogies, maps, constraint boxes |
 | gabe-mockup | /gabe-mockup [mode] | Mockup, React Storybook, and design-ref workflows |
+| gabe-myopic | /gabe-myopic [mode] [target] | Short-sighted-user walkthrough — flags foresight traps, overwhelm, recall, no-undo |
 | gabe-next | /gabe-next | Zero-logic router for the current phase state |
 | gabe-plan | /gabe-plan [goal] | KDBP planning + per-phase tier decision |
 | gabe-push | /gabe-push | Push, create PR, watch CI, branch promotion |
@@ -211,7 +213,7 @@ Installed workflow docs:
 - `docs/workflows/brownfield.md` — existing codebase adoption.
 - `docs/suite-state-audit.md` — current inventory, install state, and known gaps.
 
-Skills installed behind those commands: `gabe-align`, `gabe-arch`, `gabe-assess`, `gabe-debt`, `gabe-docs`, `gabe-health`, `gabe-help`, `gabe-lens`, `gabe-mockup`, `gabe-review`, `gabe-roast`.
+Skills installed behind those commands: `gabe-align`, `gabe-arch`, `gabe-assess`, `gabe-debt`, `gabe-docs`, `gabe-health`, `gabe-help`, `gabe-lens`, `gabe-mockup`, `gabe-myopic`, `gabe-review`, `gabe-roast`.
 
 ---
 

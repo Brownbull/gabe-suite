@@ -10,7 +10,7 @@ Skills, commands, and hooks for understanding, reviewing, deciding, and shipping
 
 [![MIT License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Claude Code Plugin](https://img.shields.io/badge/Claude_Code-Plugin-blueviolet.svg?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiPjxwYXRoIGQ9Ik0xMiAyTDIgN2wxMCA1IDEwLTUtMTAtNXoiLz48cGF0aCBkPSJNMiAxN2wxMCA1IDEwLTUiLz48cGF0aCBkPSJNMiAxMmwxMCA1IDEwLTUiLz48L3N2Zz4=)](https://github.com/khujta/gabe-suite)
-[![Version](https://img.shields.io/badge/version-2.2.0-green.svg?style=flat-square)](https://github.com/khujta/gabe-suite)
+[![Version](https://img.shields.io/badge/version-2.3.0-green.svg?style=flat-square)](https://github.com/khujta/gabe-suite)
 [![GitHub Stars](https://img.shields.io/github/stars/khujta/gabe-suite?style=flat-square&color=yellow)](https://github.com/khujta/gabe-suite/stargazers)
 
 *Not a prompt template. Built from empirical self-observation.*
@@ -21,7 +21,7 @@ Skills, commands, and hooks for understanding, reviewing, deciding, and shipping
 
 ## The Suite
 
-### Skills (11)
+### Skills (12)
 
 | Skill | Command | What it does |
 |---|---|---|
@@ -29,6 +29,7 @@ Skills, commands, and hooks for understanding, reviewing, deciding, and shipping
 | **Gabe Align** | `/gabe-align` | Values enforcement — pre-flight checks + auto-checkpoint at commit/PR |
 | **Gabe Review** | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items, tier drift |
 | **Gabe Roast** | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
+| **Gabe Myopic** | `/gabe-myopic` | Short-sighted-user walkthrough — simulates a shallow planning horizon (1/1.5/2 steps) to flag foresight traps, overwhelm, recall demands, no-undo dead-ends |
 | **Gabe Assess** | `/gabe-assess` | Change impact — blast radius, maturity scope, prerequisites, alternatives |
 | **Gabe Debt** | `/gabe-debt` | Architecture decision-debt scanner — missing decisions, rule violations, AP citations |
 | **Gabe Health** | `/gabe-health` | Codebase health — god files, churn hotspots, coupling, deferred items, maintenance |
@@ -37,7 +38,7 @@ Skills, commands, and hooks for understanding, reviewing, deciding, and shipping
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-teach`, `/gabe-init`, `/gabe-commit`) |
 | **Gabe Arch** | _(consulted)_ | Architecture curriculum — concept library organized by tier × specialization (used by `/gabe-teach`) |
 
-### Command Wrappers (20)
+### Command Wrappers (21)
 
 The installed command surface includes direct skill commands plus the full KDBP lifecycle from project init through ship:
 
@@ -58,6 +59,7 @@ parity and load the same command specs mirrored under each local home.
 | `/gabe-init` | Project setup — creates `.kdbp/`, installs hooks, selects project type + maturity |
 | `/gabe-lens` | Cognitive translation — analogies, constraint boxes, Gabe Blocks |
 | `/gabe-mockup` | Mockup/UX workflow — legacy static mockups plus React-first Storybook and `design-ref` |
+| `/gabe-myopic` | Short-sighted-user walkthrough — panel of 3 planning horizons flags foresight traps, overwhelm, recall demands, no-undo dead-ends |
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
 | `/gabe-plan` | KDBP-aware planning + per-phase tier decision with optional HTML review artifact for complex decisions |
 | `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
@@ -88,7 +90,7 @@ The Knowledge, Decisions, Behavior, and Pending system tracks project state acro
 
 User-level values at `~/.kdbp/VALUES.md` apply across all projects.
 
-For complex plans, `/gabe-plan` may also create a self-contained HTML review artifact under `docs/gabe/plans/...`. That HTML is the human-facing entrypoint for dense decisions, diagrams, phase maps, and bottleneck summaries; `.kdbp/PLAN.md`, `.kdbp/DECISIONS.md`, and `.kdbp/LEDGER.md` remain canonical for automation and lifecycle state.
+For complex plans, `/gabe-plan` may also create a self-contained HTML review artifact under `docs/gabe/plans/...`. That HTML is the human-facing entrypoint for dense decisions, diagrams, phase maps, and bottleneck summaries; `.kdbp/PLAN.md`, `.kdbp/DECISIONS.md`, and `.kdbp/LEDGER.md` remain canonical for automation and lifecycle state. Every complex HTML artifact should include a visible detail-link section that points readers to the Markdown/README files where deeper implementation details live.
 
 ### Hooks (6, installed to `~/.claude/settings.json`)
 
@@ -113,6 +115,7 @@ For complex plans, `/gabe-plan` may also create a self-contained HTML review art
 | Check values alignment | `/gabe-align [shallow/standard/deep]` |
 | Understand a concept | `/gabe-lens [concept]` |
 | Find gaps in a design | `/gabe-roast [perspective] [target]` |
+| Find where short-sighted users get lost or trapped | `/gabe-myopic [target]` |
 | Assess a change | `/gabe-assess [change]` |
 | Create or manage a plan (with tier picker) | `/gabe-plan [goal]` |
 | Execute the current phase | `/gabe-execute` |
@@ -409,6 +412,66 @@ ONE-LINER: "Bucket knob and guest list — don't redecorate the shared house"
 | **D2 Maturity Scope** | Is this the right level of fix for where we are? (MVP / Enterprise / Scale) |
 | **D3 Prerequisites** | What must be true before this change is safe? |
 | **D4 Alternatives** | Is there a simpler, cheaper, or more appropriate path? |
+
+---
+
+## Gabe Myopic (skill)
+
+Role-plays a **short-sighted user** — someone whose planning horizon is 1 to 2 steps, never 3+ —
+and walks a flow to find where the design demands foresight a normal person doesn't have. It's the
+inverse of an expert design panel: not *"what would a master notice?"* but *"what would a beginner
+fail to see coming?"* The signature catch is the **mattress trap** — a choice whose real
+consequence lands two or more steps later, invisible at the moment you make it.
+
+### See it in action
+
+Ask `/gabe-myopic checkout-flow` and get:
+
+```
+# Myopic Walk: checkout-flow
+> Simulated short-sighted users — findings are hypotheses to validate, not proof.
+
+## Panel result
+| User  | Fatal step | What breaks them                                  |
+|-------|-----------|----------------------------------------------------|
+| @1    | 2         | two decisions before any progress shows            |
+| @1.5  | 4         | shipping methods pruned by a country picked step 2 |
+| @2    | 5         | discount field is on payment, total is on review   |
+
+## Findings (most severe first)
+### [CRITICAL] 🛏️ Step 2 → bites at Step 4 — country silently prunes shipping
+- What the myopic user does: picks a country reactively; at step 4 half the
+  shipping options are gone with no message tying it back.
+- Fix: show "ships to {country}: 2 of 4 methods" on the address step itself.
+
+## The handle
+"Braces for the total — the discount door was two rooms back, already locked."
+```
+
+### Usage
+
+```
+/gabe-myopic [target]            # WALK — full panel of 3 horizons (default)
+/gabe-myopic trap [target]       # only foresight traps (the mattress)
+/gabe-myopic step [target]       # interactive, first-person, one step per turn
+/gabe-myopic fix [target]        # propose horizon-collapsing design changes
+/gabe-myopic horizon [feature]   # 30-second triage: how many steps of foresight?
+```
+
+The **target** is anything that represents the flow: a described workflow, a spec/PRD, UI code,
+screenshots, or a live app.
+
+### The four flags
+
+| Flag | Fires when… |
+|---|---|
+| 🛏️ **Foresight trap** | a choice's consequence lands ≥2 steps later, unseen now |
+| 🌊 **Overwhelm point** | one step demands more simultaneous decisions than working memory holds |
+| 🧠 **Recall demand** | the user must carry info from an earlier step in their head |
+| 🚪 **No-undo dead-end** | the myopic path went wrong and there's no cheap way back |
+
+Grounded in the **Cognitive Walkthrough** method, tuned by bounded planning horizon and present-bias
+myopia — see `skills/gabe-myopic/reference.md`.
 
 ---
 

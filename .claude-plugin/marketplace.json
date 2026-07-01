@@ -5,7 +5,7 @@
     "email": "khujta@users.noreply.github.com"
   },
   "metadata": {
-    "description": "Development suite for Claude Code. Cognitive translation (gabe-lens), adversarial gap review (gabe-roast), risk-priced code review (gabe-review), alignment (gabe-align), impact assessment (gabe-assess), health audit (gabe-health), context-aware guide (gabe-help), planning + execute + commit + push lifecycle, and the KDBP knowledge system."
+    "description": "Development suite for Claude Code. Cognitive translation (gabe-lens), adversarial gap review (gabe-roast), short-sighted-user UX walkthrough (gabe-myopic), risk-priced code review (gabe-review), alignment (gabe-align), impact assessment (gabe-assess), health audit (gabe-health), context-aware guide (gabe-help), planning + execute + commit + push lifecycle, and the KDBP knowledge system."
   },
   "plugins": [
     {
@@ -19,7 +19,7 @@
       "repository": "https://github.com/khujta/gabe-suite",
       "license": "MIT",
       "category": "development",
-      "tags": ["learning", "cognitive", "analogies", "adversarial-review", "code-review", "kdbp", "planning"]
+      "tags": ["learning", "cognitive", "analogies", "adversarial-review", "code-review", "usability", "ux-review", "kdbp", "planning"]
     }
   ]
 }
