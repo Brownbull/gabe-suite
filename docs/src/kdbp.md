@@ -31,19 +31,39 @@ flowchart TD
   K -->|"next session reads fresh state"| A2["🤖 Next agent session<br>(same project, new visitor —<br>could be a different model)"]
 ```
 
+:::note Scope of this diagram
+The diagram shows the four highest-churn files; the fuller inventory (SCOPE, ROADMAP, KNOWLEDGE, and the standing-law files) is in the next section.
+:::
+
 ## What each file is for
 
-Different kinds of memory change at different speeds, so KDBP splits them into separate files instead of one giant notebook. Some files change every phase; some change only when a real decision is made; some almost never change at all.
+Different kinds of memory change at different speeds, so KDBP splits them into separate files instead of one giant notebook. Some files change every phase; some change only when a real decision is made; some almost never change at all. The table below groups every file into one of three churn tiers.
+
+:::note Phase lifecycle
+Each phase moves through four gates: Exec → Review → Commit → Push. `PLAN.md` tracks per-phase state against exactly these four gates.
+:::
+
+### ![Change-every-phase](assets/icons/tier-fast.png) Change-every-phase
 
 | File | Holds | Changes |
 | --- | --- | --- |
 | `PLAN.md` | The active goal and a phase table (what's being built, and its Exec/Review/Commit/Push state per phase). | Every phase |
-| `DECISIONS.md` | Ratified forks in the road — the option chosen, the rationale, the alternatives considered, and the trigger that would reopen the question. | On each real decision |
 | `PENDING.md` | Priced technical debt — a 10-column table (id, date, source, finding, file, scale tier, priority, impact, times-deferred, status) so deferred work doesn't vanish into vague TODOs. | On each deferral or resolution |
 | `LEDGER.md` | Append-only session history — what shipped, what was reviewed, gate results, with proof (command output, file:line, artifact path) attached to every claim. | Every session, append-only |
+
+### ![Change-slowly](assets/icons/tier-slow.png) Change-slowly
+
+| File | Holds | Changes |
+| --- | --- | --- |
+| `DECISIONS.md` | Ratified forks in the road — the option chosen, the rationale, the alternatives considered, and the trigger that would reopen the question. | On each real decision |
 | `KNOWLEDGE.md` | What the human has verifiably come to understand — topics taught and confirmed, so the suite stops re-explaining things already learned. | As understanding is verified |
-| `SCOPE.md` | The stable premise — who this is for, what it does, the hard constraints. High-inertia; edited only through an explicit scope-change process. | Rarely — only on a real pivot |
 | `ROADMAP.md` | The phase plan derived from SCOPE — medium-inertia, updated as phases complete, split, or get added. | Occasionally, on scope change or phase completion |
+
+### ![Standing law](assets/icons/tier-law.png) Standing law
+
+| File | Holds | Changes |
+| --- | --- | --- |
+| `SCOPE.md` | The stable premise — who this is for, what it does, the hard constraints. High-inertia; edited only through an explicit scope-change process. | Rarely — only on a real pivot |
 | `VALUES.md` / `STRUCTURE.md` / `BEHAVIOR.md` | Standing constraints — project values, allowed file locations, behavior rules — that outrank the model's own defaults. | Rarely — standing law for the project |
 
 :::note Not a filing cabinet
@@ -59,3 +79,5 @@ The alternative — relying on a long chat history, or on the model "remembering
 - **It can't be audited.** A decision buried in a chat transcript is hard to find and easy to silently contradict later. A decision in `DECISIONS.md`, with its rationale and its review trigger written down, is something a future session — or a human — can check against before doing something that conflicts with it.
 
 Files are slower to update than a thought, but they are the only kind of memory that outlives the session that had the thought. That trade is the whole bet KDBP makes.
+
+Next: the [command reference](commands.html) — how a session actually reads and writes these files.

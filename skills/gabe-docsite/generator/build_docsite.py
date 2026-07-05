@@ -182,6 +182,18 @@ def copy_assets(out_dir: Path) -> list[str]:
             continue
         shutil.copyfile(src, assets_out / name)
         copied.append(name)
+    # Optional project assets (e.g. generated icons): a sibling `assets/` dir next to
+    # the output dir is merged into <out_dir>/assets/ on every build. Skips the manifest/ledger.
+    proj_assets = out_dir.parent / "assets"
+    if proj_assets.is_dir() and proj_assets.resolve() != assets_out.resolve():
+        for src in proj_assets.rglob("*"):
+            if src.is_dir() or src.name in ("manifest.json", "ledger.json"):
+                continue
+            rel = src.relative_to(proj_assets)
+            dst = assets_out / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(src, dst)
+            copied.append(str(rel))
     if missing:
         raise SystemExit(
             "ERROR: missing vendored asset(s) under %s: %s"

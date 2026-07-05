@@ -1,0 +1,141 @@
+{
+ "generations_used": 34,
+ "jobs": {
+  "e1": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "e2": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "e3": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "e4": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "e5": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "e6": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "fam-evidence": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "e7": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "fam-verification": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "fam-state": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "fam-reuse": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-plan": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "fam-antifab": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-scope": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-next": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-execute": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-commit": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-review": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-push": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-teach": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "cmd-init": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "tier-fast": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "tier-law": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "tier-slow": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "flag-overwhelm": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "flag-recall": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "flag-deadend": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "idea-replaceable": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "flag-foresight": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "idea-evidence": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "idea-decision": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "h15": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "h1": {
+   "status": "ok",
+   "attempts": 1
+  },
+  "h2": {
+   "status": "ok",
+   "attempts": 1
+  }
+ }
+}

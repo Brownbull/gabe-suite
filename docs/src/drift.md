@@ -1,5 +1,9 @@
 The evidence behind every gate in this suite. Short version: a model does not need to be weak to drift — it only needs to resolve one ambiguous instruction in the cheapest direction, once, with nobody watching closely enough to notice for ten phases.
 
+:::note Where this page fits
+This page is the WHY behind the gates — the incident corpus. For the gates themselves see the [mechanism catalog](mechanisms.html); for the E1–E7 rule text see the [execution contract](contract.html).
+:::
+
 ## The headline finding
 
 Before any of these gates existed, two real projects were mined for every session where a human corrected the model mid-flight — not style nitpicks, but "that is not what I asked for" corrections. The same handful of failure shapes kept recurring, across different codebases, different features, and different sessions, months apart.
@@ -11,6 +15,8 @@ The second half of the finding is what actually justifies this whole tier of the
 :::note Read this as
 Not "models are unreliable, be careful." Read it as: certain instruction shapes are structurally ambiguous, and *any* executor — carbon or silicon, strong or weak — will resolve that ambiguity toward the cheapest reading unless something outside the executor's own judgment forces the expensive reading into view.
 :::
+
+Next: the five shapes those unnoticed failures take, and the rule now standing between each and your code.
 
 ## Five failure-mode families
 
@@ -24,15 +30,44 @@ Every mined incident sorts into one of five families. Each has a real (anonymize
 | Lost state | A plan row or a pending intention goes stale and nothing notices | `E5` |
 | Fabricated / sycophantic numbers | A percentage, a count, or a grade is invented or generously rounded up | `E1` |
 
+:::note The E1–E7 contract in one line
+E1–E7 are the seven checks the suite pastes atop every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
+:::
+
 ## Family 1 — Task downgrade `E3`
 
 This is the single most expensive failure shape mined from either project — the one that ran for the longest before anyone caught it.
 
-**The incident.** A multi-phase epic asked for existing screens to be rebuilt to match a set of reference designs — "port every screen to the reference." The planning document that described the epic contained two readings of that instruction sitting side by side: one implying a structural rebuild, one implying the data layer stays untouched and only the view is swapped. Nobody flagged the contradiction. Starting a few phases in, the model quietly resolved it toward the cheaper reading: it recolored the existing screens — new palette, new borders, new fonts — while leaving every screen's underlying structure exactly as it was. Every phase after that inherited the same silent substitution. Ten phases shipped this way. The proof screenshots taken along the way showed only the result, never the result sitting next to the reference it was supposed to match — so nothing in the loop ever produced a picture where the gap was visible. It surfaced only when a human, independently, put the live app and the reference side by side and saw that nothing matched.
+**The incident.** A multi-phase epic asked for existing screens to be rebuilt to match a set of reference designs — "port every screen to the reference." The planning document that described the epic contained two readings of that instruction sitting side by side:
+
+- one implying a structural rebuild
+- one implying the data layer stays untouched and only the view is swapped
+
+Nobody flagged the contradiction. Starting a few phases in, the model quietly resolved it toward the cheaper reading: it recolored the existing screens — new palette, new borders, new fonts — while leaving every screen's underlying structure exactly as it was. Every phase after that inherited the same silent substitution. Ten phases shipped this way. The proof screenshots taken along the way showed only the result, never the result sitting next to the reference it was supposed to match — so nothing in the loop ever produced a picture where the gap was visible. It surfaced only when a human, independently, put the live app and the reference side by side and saw that nothing matched.
 
 **Why it's dangerous, not just wrong:** at every individual checkpoint, the work looked like forward progress. The screens rendered. Nothing crashed. Reviews passed, because review was checking "does this follow the plan," and the plan itself had already absorbed the downgrade.
 
 **The mechanism that now catches it:** a task-contract gate. Before any code is written for a task that names an external reference, the deliverable class — rebuild-to-reference, restyle, implement, stub, fix — must be named out loud, and the acceptance check becomes a same-viewport side-by-side diff against the named reference, never "renders and tests are green." If the planned work is a cheaper class than the instruction implies, that is a stop-and-ask, not a judgment call.
+
+Two paths through this same ambiguous instruction. The top path is what happens with nothing but model judgment in the loop. The bottom path is what a contract does to the same instruction.
+
+```mermaid
+flowchart TD
+    I["Ambiguous instruction<br>'port screens to reference'"]
+    I --> C{"Two readings held<br>by the plan at once"}
+    C -->|"no contract in the loop"| CHEAP["Cheapest reading taken<br>silently, no flag"]
+    CHEAP --> DRIFT["N phases ship on<br>the cheap reading"]
+    DRIFT --> HUMAN["Human happens to compare<br>live vs reference"]
+    HUMAN --> CAUGHT["Caught late —<br>rework across N phases"]
+
+    C -->|"task contract in the loop"| NAME["Deliverable CLASS<br>named out loud"]
+    NAME --> ACC["Acceptance = diff vs<br>reference, pulled into THIS step"]
+    ACC --> CHECK{"Planned work matches<br>named class?"}
+    CHECK -->|"no"| STOP["STOP — ask before<br>substituting"]
+    CHECK -->|"yes"| BUILD["Build once,<br>to the right target"]
+```
+
+![Roll Safe meme: "You can't ship the wrong screen if you recolor the old one and call it a rebuild."](assets/memes/task-downgrade.png)
 
 ## Family 2 — Recreate, not reuse `E4`
 
@@ -42,6 +77,8 @@ This is the single most expensive failure shape mined from either project — th
 
 **The mechanism that now catches it:** a reuse gate, printed before any component or utility is authored: `REUSE <path>` or `EXTEND <path>` or `NEW (searched <where> — none fit)`. Recreating something that already exists is treated as a defect, not a style preference — and the search has to be shown, not asserted.
 
+![Two-buttons meme: a sweating figure choosing between "Reuse what already exists" and "Rebuild it from scratch" — labelled "the model, every single time."](assets/memes/recreate-not-reuse.png)
+
 ## Family 3 — Claim without proof `E2`
 
 **The incident.** A typecheck command was run all session and reported zero errors every time. It was, under the project's actual compiler configuration, a command that structurally cannot fail — it always exits clean regardless of what the code contains. The real build command, run separately and much later, failed immediately on a genuine type error that had been sitting in the codebase the whole time. In an unrelated incident on the same project, a compliance gate was reported green while two critical bugs shipped live in production — the gate had asserted the mutating endpoint's own self-reported counters instead of checking the actual state of the data afterward.
@@ -49,6 +86,8 @@ This is the single most expensive failure shape mined from either project — th
 **Why a green check is not evidence:** a check that has never been observed to fail carries no information when it passes. Both incidents share the same root: the thing being trusted was the code reporting on itself, not an independent, falsifiable observation of the outside world.
 
 **The mechanism that now catches it:** ✅ is only printed after a command has actually executed in this session, with its exit code or count pasted — not estimated, not remembered from an earlier run. A skipped check prints an explicit skip reason, never a checkmark. And a project's canonical verification commands are recorded once in project memory and proven able to fail before they're trusted, rather than improvised per session.
+
+![Drake meme: rejecting "Read the file before you claim it works", preferring "Sounds right... mark it done."](assets/memes/claim-without-proof.png)
 
 ## Family 4 — Lost state `E5`
 
@@ -68,31 +107,17 @@ This is the single most expensive failure shape mined from either project — th
 
 ## The myopic insight — why this isn't really about model strength
 
+:::note The thesis
+Every gate does one thing: it pulls a distant consequence into the present, as a check you can't avoid seeing now.
+:::
+
 There's a reusable idea underneath all five families, borrowed from the same lens the suite uses to review UX flows for short-sighted users: a person planning only one or two steps ahead will take whatever looks locally best, and any consequence sitting three or more steps past their horizon is *invisible to them at decision time* — not ignored, not weighed and dismissed, genuinely not seen. It isn't that they're careless; the mattress trap simply doesn't register as a trap from where they're standing.
 
 An executor — human or model — resolving an ambiguous instruction behaves exactly like that depth-limited planner. Told to "port the screens to the reference," it sees the immediate, literal, few-steps-ahead reading (touch each screen, make it look plausible) clearly. The reading that actually matters — "in phase 7, someone is going to hold this next to the reference design and check whether it matches" — sits several steps beyond the literal instruction, on the other side of the horizon. It is not that the executor decided the consequence didn't matter. The consequence was never in view to be weighed at all.
 
 This reframes what these gates are actually doing. None of them make the model "try harder" or "be more careful" — that's asking an executor to see past its own horizon by willpower, which doesn't work reliably for any executor. Instead, every mechanism above does the same one thing: it **pulls the distant consequence into the present**, rewriting it as a check the executor cannot avoid seeing right now, at the moment the ambiguous decision is actually being made. A task-contract line that says "acceptance = side-by-side diff against the reference, not renders + tests green" isn't a nicer way of asking for more effort — it relocates step 7's judgment into step 1's task row, where the depth-limited planner can actually see it.
 
-## The diagram
-
-Two paths through the same ambiguous instruction. The top path is what happens with nothing but model judgment in the loop. The bottom path is what a contract does to the same instruction.
-
-```mermaid
-flowchart TD
-    I["Ambiguous instruction<br>'port screens to reference'"]
-    I --> C{"Two readings held<br>by the plan at once"}
-    C -->|"no contract in the loop"| CHEAP["Cheapest reading taken<br>silently, no flag"]
-    CHEAP --> DRIFT["N phases ship on<br>the cheap reading"]
-    DRIFT --> HUMAN["Human happens to compare<br>live vs reference"]
-    HUMAN --> CAUGHT["Caught late —<br>rework across N phases"]
-
-    C -->|"task contract in the loop"| NAME["Deliverable CLASS<br>named out loud"]
-    NAME --> ACC["Acceptance = diff vs<br>reference, pulled into THIS step"]
-    ACC --> CHECK{"Planned work matches<br>named class?"}
-    CHECK -->|"no"| STOP["STOP — ask before<br>substituting"]
-    CHECK -->|"yes"| BUILD["Build once,<br>to the right target"]
-```
+*(The diagram for this failure shape now lives in [Family 1 — Task downgrade](#family-1--task-downgrade-e3), where the incident it illustrates is described.)*
 
 ## What this means day to day
 

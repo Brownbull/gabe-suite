@@ -19,7 +19,61 @@ The sweep had one deliberate exception. Four files are thin command *shims* — 
 | Files carrying the full E1–E7 block | 38 | Every gabe-* command + skill file except the four shims below |
 | Files with the preamble intentionally removed | 4 | `commands/gabe-{debt,health,help,review}.md` — auto-derived description corruption; SKILL.md counterpart carries it instead |
 
+:::note The E1–E7 contract in one line
+E1–E7 are the seven checks the suite pastes atop every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
+:::
+
+:::note Where waves 1–5 went
+Wave 0 (the preamble sweep, above) is the only wave with its own section on this page. Waves 1–5 — core loop, gates, init/mockup, analysis skills, and authoring/teaching — are folded into the file-by-file index below, grouped there by file rather than by wave.
+:::
+
 ## File-by-file: what each skill got
+
+The six waves land on these files. This groups the same 22 rows below by wave, so you can see the shape before reading the dense table.
+
+```mermaid
+flowchart TD
+    W0["Wave 0<br>Preamble sweep<br>(38 files, above)"]
+
+    subgraph C["Wave 1 — Core loop"]
+        C1["gabe-execute"]
+        C2["gabe-plan"]
+        C3["gabe-next"]
+        C4["gabe-commit"]
+        C5["gabe-push"]
+    end
+
+    subgraph G["Wave 2 — Gates"]
+        G1["gabe-review"]
+        G2["gabe-align"]
+    end
+
+    subgraph I["Wave 3 — Init / mockup"]
+        I1["gabe-init"]
+        I2["gabe-mockup"]
+    end
+
+    subgraph A["Wave 4 — Analysis skills"]
+        A1["gabe-myopic"]
+        A2["gabe-roast"]
+        A3["gabe-debt"]
+        A4["gabe-health"]
+        A5["gabe-assess"]
+    end
+
+    subgraph T["Wave 5 — Authoring / teaching"]
+        T1["gabe-scope /<br>scope-change"]
+        T2["gabe-teach"]
+        T3["gabe-docs"]
+        T4["gabe-lens"]
+    end
+
+    W0 --> C
+    W0 --> G
+    W0 --> I
+    W0 --> A
+    W0 --> T
+```
 
 This is the flat index. Each row names the file, the proposal IDs that landed on it, and a one-line description of the gate in plain language. Full wording for any row lives in the file itself — grep the file for the bolded gate name.
 
@@ -66,6 +120,22 @@ Several of the gates above are actually the same mechanism appearing in more tha
 #19 (the canonical PENDING.md schema) had to land before #12 (commit's deferred-scan line) and #24 (align's checkpoint handoff), since both of those read the schema it defines. #25 (init's hook STOP) required `templates/gabe/hooks.json` to exist first. #22 (review's relocation) landed in the same change as #17/#20/#21 so the review file's total line count still nets negative even after the new gates were added.
 :::
 
+```mermaid
+flowchart LR
+    P19["#19<br>PENDING.md schema"]
+    P12["#12<br>commit deferred-scan line"]
+    P24["#24<br>align checkpoint handoff"]
+    HOOKS["templates/gabe/<br>hooks.json exists"]
+    P25["#25<br>init hook STOP"]
+    P1720["#17 / #20 / #21<br>review new gates"]
+    P22["#22<br>review relocation"]
+
+    P19 --> P12
+    P19 --> P24
+    HOOKS --> P25
+    P1720 -- "same change as" --> P22
+```
+
 ## What the 5 REVISE proposals changed from the original plan
 
 Five proposals shipped with a correction from the judge rather than exactly as first drafted. In every case the correction made the gate more honest or more generic, never weaker.
@@ -111,8 +181,12 @@ The runbook is designed so any model, in any single session, can pick up exactly
 1. Read `APPLY-STATUS.md` first — it is the single source of truth for what's done versus pending, not this page.
 2. Read that group's packet(s) under `~/.claude/gabe-hardening/packets/packet__*.md` in full — each packet holds the anchor quote, the exact change text, the judge's verdict (KEEP/REVISE with its correction), and any paired trim.
 3. Locate each anchor **by its quoted text**, not by line number — line numbers drift as earlier proposals land. A REVISE note always overrides the packet's original change text.
-4. Use the canonical shared strings (§04 above) byte-identical — never paraphrase them, even for a "clearer" wording.
+4. Use the canonical shared strings from [Shared strings — why wording had to stay byte-identical](#shared-strings-why-wording-had-to-stay-byte-identical) byte-identical — never paraphrase them, even for a "clearer" wording.
 5. After editing: confirm every proposal in the packet is present in the file, headings and numbering are still coherent, and no project-specific names crept in — anonymize examples as `:<port>`, `src/routes/...`, never a real project's port or path.
 6. Update the status table in `APPLY-STATUS.md` in the same session — this is itself an application of the E5 state-sync rule the pass exists to enforce.
 
 For the two groups still marked verification-pending: the next session that picks up **commit** or **push** should do step 4 of that procedure — a direct packet-vs-file comparison — before touching anything else, then flip the status cell from "verification pending" to a confirmed date.
+
+:::note Takeaway
+All 47 proposals are applied: 42 KEEP, 5 REVISE, 0 KILL. The only work still open is verification — a line-by-line packet-vs-file check — for the **commit** and **push** groups. For the full anchor quotes and packet-level detail behind every row on this page, read `~/.claude/gabe-hardening/final-plan.md` and `~/.claude/gabe-hardening/APPLY-STATUS.md` directly. See also: [the loop](the-loop.html) for how these commands chain together, and [the execution contract](contract.html) for the full E1–E7 text.
+:::

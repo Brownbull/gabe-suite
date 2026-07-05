@@ -8,7 +8,20 @@ The catalog's job is to close that gap by turning each unwritten habit into a sh
 Several mechanisms don't live once — they live as an exact block of text, reused **byte-identical** across every skill that carries them. The E1–E7 contract itself is the flagship example: the same seven lines, pasted verbatim into every `gabe-*` skill and command, rather than seven similar-but-slightly-different paraphrases. This matters because a weak model is good at following an exact recipe and bad at reconstructing one from a vague memory of "we did something like this before." Where a mechanism below says its cost is "shared" or points at a shared preamble, that is this pattern: write the block once, copy it verbatim everywhere it applies, and never let two skills drift into two different wordings of the same rule.
 :::
 
+:::note The E1–E7 contract in one line
+E1–E7 are the seven checks the suite pastes atop every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
+:::
+
 The 24 mechanisms group into five families by what kind of drift they stop. Jump to whichever family matches the problem you're chasing, or read straight through — they build on each other.
+
+```mermaid
+flowchart TD
+    EV["🔍 Evidence<br>4 mechanisms"] --> EVd["stops: claims never<br>actually checked this session"]
+    VF["🔁 Verification<br>3 mechanisms"] --> VFd["stops: plausible findings<br>never re-tested"]
+    RU["♻️ Reuse<br>4 mechanisms"] --> RUd["stops: cheap substitutes<br>shipped silently"]
+    SI["🗄️ State integrity<br>9 mechanisms"] --> SId["stops: plan/decision files<br>drifting from reality"]
+    AF["🚫 Anti-fabrication<br>4 mechanisms"] --> AFd["stops: invented numbers,<br>scores, proofs"]
+```
 
 | Family | Stops drift in… | Mechanisms |
 |---|---|---|
@@ -20,11 +33,13 @@ The 24 mechanisms group into five families by what kind of drift they stop. Jump
 
 (24th mechanism, Progressive Disclosure Budget, is the odd one out — it doesn't stop a drift, it *funds* every gate above by cutting the dead weight elsewhere in the skill files. It closes the page.)
 
-## Family: Evidence
+## ![Evidence](assets/icons/fam-evidence.png) Family: Evidence
 
 *family · claims must trace to something actually read or run*
 
 These four mechanisms share one root rule: nothing gets stated as fact, marked ✅, or printed as a number unless it traces to a file the model opened or a command it ran *this session*. That single constraint is what E1 and E2 of the core contract compress down from.
+
+**In this family:** the four mechanisms below, previewed here and detailed in their own subsections further down.
 
 - **Evidence-Line Contract** — Every finding ends with a citation to something read this session, in a fixed format per source type.
 - **Executed-Evidence Gate** — ✅ only after its command ran via the tool this session; skips get a named reason, never a hidden pass.
@@ -98,11 +113,13 @@ A proof artifact counts only if it passes FOUR checks:
 
 carried by: gabe-execute, gabe-review, gabe-mockup
 
-## Family: Verification
+## ![Verification](assets/icons/fam-verification.png) Family: Verification
 
 *family · plausible is not the same as tested*
 
 Drafting a finding is easy; a model can produce a plausible-sounding bug report about almost anything. This family forces a second, adversarial pass over each draft *before* it's allowed to reach the human — the same skepticism a careful senior reviewer applies to their own first draft.
+
+**In this family:** the three mechanisms below, previewed here and detailed in their own subsections further down.
 
 - **Adversarial Verify/Kill Pass** — Every drafted finding is re-tested against three kill questions before it's allowed to render.
 - **Falsifiable-Checker Rule** — A verification command is trusted only after it's been seen to actually fail at least once.
@@ -160,11 +177,13 @@ No vibes verdicts:
 
 carried by: gabe-align, gabe-review (confidence worksheet), gabe-teach (answer-key grading), gabe-health (threshold legend)
 
-## Family: Reuse & anti-downgrade
+## ![Reuse & anti-downgrade](assets/icons/fam-reuse.png) Family: Reuse & anti-downgrade
 
 *family · resolving ambiguity in the cheap direction is a defect, not a style choice*
 
 Every mechanism in this family targets the same underlying temptation: when a task is even slightly ambiguous, the cheap interpretation is easier to produce than the expensive one, and a model under time pressure will drift toward "close enough" without ever flagging that a substitution happened. This is the family with the best track record — the one place it was already written down (the mockup reuse gate) demonstrably held.
+
+**In this family:** the four mechanisms below, previewed here and detailed in their own subsections further down.
 
 - **Task Contract Gate** — Restate the task and its deliverable class before writing code; a cheaper class requires an explicit user decision.
 - **Reference-Fidelity Acceptance** — A named reference is resolved from a map file and rebuilt to a structural checklist, not eyeballed.
@@ -235,11 +254,36 @@ carried by: gabe-execute, gabe-mockup (already partial), gabe-commit (scans new 
 This is E3 in the shared preamble (see [the E1–E7 contract](contract.html)): "quote the task text verbatim before implementing; if your plan delivers a cheaper class (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask." The longer Task Contract Gate and Reference-Fidelity Acceptance mechanisms above are the expanded versions that fire in the skills doing the heaviest implementation work.
 :::
 
-## Family: State integrity
+## ![State integrity](assets/icons/fam-state.png) Family: State integrity
 
 *family · plan and decision files must always be re-read, never trusted from memory*
 
 This is the largest family because state drift has the most different failure shapes — a stale pointer, a merged PR nobody recorded, a schema two commands quietly disagree about, a deferred item deferred forever. The unifying principle across all nine: **recognition over recall**. The model always re-reads the state file and reconciles it against reality; it never trusts what it remembers from earlier in the session.
+
+The nine mechanisms cluster under four failure shapes:
+
+```mermaid
+flowchart TD
+    subgraph P["📍 Pointer / routing"]
+        P1["Same-Turn<br>State Write"]
+        P2["State Freshness<br>Sweep"]
+    end
+    subgraph S["🧬 Schema / checklist"]
+        S1["Canonical<br>Schema Anchor"]
+        S2["Persistent Task<br>Checklist"]
+        S3["Verified/Assumed<br>Claim Markers"]
+    end
+    subgraph D["⏳ Deferral"]
+        D1["Deferral Escalation<br>Triggers"]
+        D2["Non-Interactive<br>Defaults Table"]
+    end
+    subgraph SC["🚧 Scope / decision"]
+        SC1["Decision-Drift<br>Scan"]
+        SC2["Scope Fence +<br>Typed Deviation Row"]
+    end
+```
+
+**In this family:** the nine mechanisms below, previewed here and detailed in their own subsections further down.
 
 - **Same-Turn State Write** — Actions that change plan reality write their row in the same turn, or print an enumerated skip code.
 - **State Freshness Sweep** — Before routing from state, sweep prior rows, quote the Status column, and reconcile against git/PR truth.
@@ -400,11 +444,23 @@ that state.
 
 carried by: gabe-execute (checkpoint), gabe-commit (staging check)
 
-## Family: Anti-fabrication
+## ![Anti-fabrication](assets/icons/fam-antifab.png) Family: Anti-fabrication
 
 *family · numbers and recipes must be produced, not invented*
 
 The last family closes off the places where a model, asked for a number or a code example it doesn't have, will confidently supply a plausible-looking one instead of admitting it wasn't computed — plus the two mechanisms that keep templates from being reconstructed from memory when the real one is missing.
+
+Two of these four are specializations of mechanisms defined earlier on this page, not new roots:
+
+```mermaid
+flowchart LR
+    EE["Executed-Evidence<br>Gate"] -.specializes to.-> RR["Runnable Recipes,<br>Not Placeholders"]
+    DV["Deterministic Verdicts<br>& Visible Arithmetic"] -.specializes to.-> AK["Answer-Key<br>Grading"]
+    VK["Verify/Kill Pass<br>accounting"] -.specializes to.-> OA["Observable-Only<br>Accounting"]
+    MA["Missing-Anchor STOP"]
+```
+
+**In this family:** the four mechanisms below, previewed here and detailed in their own subsections further down.
 
 - **Runnable Recipes, Not Placeholders** — Worked examples in reference docs must be commands that actually run, not `[compute this]` stand-ins.
 - **Answer-Key Grading** — Grading a human's answer requires a fixed rubric printed before the answer is seen — never a sycophantic eyeball score.
@@ -416,7 +472,7 @@ The last family closes off the places where a model, asked for a number or a cod
 **Behavior:** worked examples inside reference and analysis docs are concrete, runnable commands with real output shape — not a bracketed placeholder like `[compute co-change frequency]` sitting next to invented-looking percentages that imply the computation already happened.
 
 :::note Where this shows up
-This is the corrective half of the [Executed-Evidence Gate](#run-before) above, applied to documentation rather than live runs: `gabe-health`'s worked examples had a literal `[compute co-change frequency]` placeholder sitting next to concrete example percentages, which reads as "this was measured" when it wasn't. The fix is the same rule as E2 applied to docs — a recipe in a skill file must be copy-pasteable and actually produce the shape of output it claims, or it's marked explicitly as illustrative, never left ambiguous.
+This is the corrective half of the **Executed-Evidence Gate** (see that section under [Family: Evidence](#family-evidence) above), applied to documentation rather than live runs: `gabe-health`'s worked examples had a literal `[compute co-change frequency]` placeholder sitting next to concrete example percentages, which reads as "this was measured" when it wasn't. The fix is the same rule as E2 applied to docs — a recipe in a skill file must be copy-pasteable and actually produce the shape of output it claims, or it's marked explicitly as illustrative, never left ambiguous.
 :::
 
 carried by: gabe-health, gabe-debt (pattern catalog worked examples)
@@ -426,7 +482,7 @@ carried by: gabe-health, gabe-debt (pattern catalog worked examples)
 **Behavior:** grading a human's answer to a comprehension check requires a rubric printed before the grading happens, so the model can't drift toward inflating a score to be encouraging. This is one arm of the Deterministic Verdicts mechanism above, specialized to the one place a model grades a person instead of code.
 
 :::note Where this shows up
-`gabe-teach` grades human answers to its Socratic questions with no rubric, which produces sycophantic inflation (a vague or partially-wrong answer scored full marks) that then poisons the durable knowledge record with false "verified" topics. See [Deterministic Verdicts & Visible Arithmetic](#deterministic-verdicts) — rule 4 (score the lower band when uncertain) is exactly the guard this needs.
+`gabe-teach` grades human answers to its Socratic questions with no rubric, which produces sycophantic inflation (a vague or partially-wrong answer scored full marks) that then poisons the durable knowledge record with false "verified" topics. See the **Deterministic Verdicts & Visible Arithmetic** section above (under [Family: Verification](#family-verification)) — rule 4 (score the lower band when uncertain) is exactly the guard this needs.
 :::
 
 carried by: gabe-teach
@@ -436,7 +492,7 @@ carried by: gabe-teach
 **Behavior:** every count that appears in a report — findings raw/killed/downgraded/survived, lines of context saved by a refactor, items checked in a scan — is arithmetic performed on numbers the model actually produced this run, never a rounded-sounding estimate offered because the real count wasn't computed.
 
 :::note Where this shows up
-This is the accounting half of the [Verify/Kill Pass](#verify-kill) ("Header MUST print: raw N → killed X → downgraded Y → survived Z") generalized to every other place the suite prints a count: the Deferred Scan's `N checked, M matched, K at ≥3` line, and the Progressive Disclosure Budget's line-count savings (see §07) which must be a real diff of before/after line counts, not a guessed round number.
+This is the accounting half of the **Adversarial Verify/Kill Pass** ("Header MUST print: raw N → killed X → downgraded Y → survived Z" — see that section under [Family: Verification](#family-verification) above) generalized to every other place the suite prints a count: the Deferred Scan's `N checked, M matched, K at ≥3` line, and the [Progressive Disclosure Budget](#the-mechanism-that-pays-for-all-the-others)'s line-count savings, which must be a real diff of before/after line counts, not a guessed round number.
 :::
 
 carried by: gabe-review, gabe-myopic, gabe-roast, gabe-debt, gabe-health

@@ -27,6 +27,7 @@ import re
 
 _BOLD_RE = re.compile(r"\*\*(.+?)\*\*")
 _EM_RE = re.compile(r"(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])")
+_IMG_RE = re.compile(r"!\[([^\]]*)\]\(([^)]+)\)")
 _LINK_RE = re.compile(r"\[([^\]]+)\]\(([^)]+)\)")
 _HTML_COMMENT_RE = re.compile(r"<!--.*?-->", re.DOTALL)
 
@@ -49,6 +50,12 @@ def render_inline(text: str) -> str:
 
     text = re.sub(r"`([^`]+)`", _stash_code, text)
     text = esc(text)
+    text = _IMG_RE.sub(
+        lambda m: _stash('<img class="%s" src="%s" alt="%s">' % (
+            "doc-meme" if "/memes/" in m.group(2) else "doc-icon",
+            m.group(2).replace("&", "&amp;"), esc(m.group(1)))),
+        text,
+    )
     text = _LINK_RE.sub(
         lambda m: '<a href="%s">%s</a>' % (m.group(2).replace("&", "&amp;"), m.group(1)),
         text,

@@ -435,3 +435,25 @@ h1 .chip, h2 .chip, h3 .chip { position: relative; top: -1px; }
   overflow-x: auto;
 }
 .mermaid-fig svg { max-width: 100%; height: auto; display: inline-block; }
+
+/* ── Inline pixel-art concept icons (generated via PixelLab; ![alt](assets/icons/x.png)) ── */
+.doc-icon {
+  image-rendering: pixelated;      /* keep pixel art crisp when downscaled */
+  width: 1.15em; height: 1.15em;
+  vertical-align: -0.22em;
+  display: inline-block;
+  margin-right: 0.12em;
+}
+h1 .doc-icon, h2 .doc-icon, h3 .doc-icon { width: 1em; height: 1em; vertical-align: -0.12em; margin-right: 0.28em; }
+td .doc-icon, .card .doc-icon { width: 1.05em; height: 1.05em; }
+.mermaid-fig .doc-icon { display: none; }  /* diagrams carry their own labels */
+
+/* ── Memes (memegen.link, self-hosted; ![alt](assets/memes/x.png)) ── */
+.doc-meme {
+  display: block;
+  max-width: 380px; width: 100%; height: auto;
+  margin: 18px auto;
+  border: 1px solid var(--faint);
+  border-radius: 10px;
+  box-shadow: 0 1px 0 var(--faint2);
+}

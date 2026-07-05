@@ -1,4 +1,4 @@
-Seven commands take an idea from "we should build X" to a shipped, verified commit: `/gabe-scope` → `/gabe-plan` → `/gabe-next` → `/gabe-execute` → `/gabe-review` → `/gabe-commit` → `/gabe-push`. Each one reads a bit of `.kdbp/` state, does one job, and writes the next command's inputs back to disk. Nobody has to remember what happened three sessions ago — the files remember for you.
+Seven commands take an idea from "we should build X" to a shipped, verified commit: `/gabe-scope` → `/gabe-plan` → `/gabe-next` → `/gabe-execute` → `/gabe-review` → `/gabe-commit` → `/gabe-push`. Each one reads a bit of `.kdbp/` state (the project's on-disk memory — see [What KDBP is](kdbp.html)), does one job, and writes the next command's inputs back to disk. Nobody has to remember what happened three sessions ago — the files remember for you.
 
 ## The idea in one paragraph
 
@@ -10,12 +10,28 @@ Models don't reliably remember what happened last session, and even within a ses
 
 ## The loop, step by step
 
+Before the detail, here's the map in miniature — which file each command owns:
+
+```mermaid
+flowchart LR
+  SC["/gabe-scope"] --> F1["SCOPE.md<br>ROADMAP.md"]
+  PL["/gabe-plan"] --> F2["PLAN.md<br>DECISIONS.md"]
+  NX["/gabe-next"] --> F3["reads PLAN.md<br>(no writes)"]
+  EX["/gabe-execute"] --> F4["LEDGER.md"]
+  RV["/gabe-review"] --> F5["findings"]
+  CM["/gabe-commit"] --> F6["the commit"]
+  PU["/gabe-push"] --> F7["DEPLOYMENTS.md"]
+```
+
+:::note **Status glyphs:** ⬜ not started · 🔄 in progress · ✅ done — the four columns a phase moves through are Exec · Review · Commit · Push.
+:::
+
 Read this table left to right: each step's whole job, what it needs to already be true on disk before it can run, and what it leaves behind for the next step to find.
 
 | Step | What it does | Reads | Writes |
 |---|---|---|---|
 | `/gabe-scope` | Turns a raw idea into a stable premise: problem, users, success criteria, requirements, constraints. Runs once per project (or once per pivot) with a checkpoint after every step — nothing here ships without your explicit sign-off. | Your answers to its intake questions; existing docs it finds as reference material | `SCOPE.md` (the premise) + `ROADMAP.md` (the phase-level plan derived from it) |
-| `/gabe-plan` | Breaks a goal (often one ROADMAP phase) into concrete phases, and for each phase runs a short "how much rigor does this deserve?" decision — MVP, Enterprise, or Scale — so nobody quietly over- or under-builds. | `BEHAVIOR.md` (project maturity/tech), `SCOPE.md`/`ROADMAP.md` if present, `PENDING.md` for related open items | `PLAN.md` (phases table + per-phase tier/scope/acceptance), a tier-decision entry in `DECISIONS.md` per phase, a line in `LEDGER.md` |
+| `/gabe-plan` | Breaks a goal (often one ROADMAP phase) into concrete phases, and for each phase runs a short "how much rigor does this deserve?" decision — a **tier** pick of MVP, Enterprise, or Scale (tier = how much rigor a phase gets — MVP is minimal, Enterprise is hardened, Scale is built to grow) — so nobody quietly over- or under-builds. | `BEHAVIOR.md` (project maturity/tech), `SCOPE.md`/`ROADMAP.md` if present, `PENDING.md` for related open items | `PLAN.md` (phases table + per-phase tier/scope/acceptance), a tier-decision entry in `DECISIONS.md` per phase, a line in `LEDGER.md` |
 | `/gabe-next` | Zero-reasoning router. Looks at the current phase's four status cells and dispatches to whichever command owns the first unfinished one. Never writes code, never judges quality — it's a lookup table with a phase pointer. | `PLAN.md` (Current Phase pointer + the Exec/Review/Commit/Push cells) | Nothing of its own — advances the Current Phase pointer in `PLAN.md` only when a phase's four cells are already all ✅ |
 | `/gabe-execute` | Implements the current phase's tasks one at a time, under a strict task contract (quote the task text, reuse before creating, commit at boundaries), checkpointing after each one rather than dumping the whole phase as one uninspectable diff. | `PLAN.md` (phase Description/Scope/References/Acceptance) | Ticks Exec to 🔄 then ✅ in `PLAN.md`, a task checklist under Phase Details, proof lines + token cost in `LEDGER.md` — and invokes `/gabe-commit` at each checkpoint rather than raw `git commit` |
 | `/gabe-review` | Reviews the diff for the phase and prices each finding by risk — what it costs if you ship it anyway, not just "this is bad." Ends in an interactive triage so you decide what gets fixed now versus deferred. | `PLAN.md` (which phase needs review), `LEDGER.md` (files touched), the actual diff | `REVIEW.md` (findings + triage record), ticks Review to ✅ in `PLAN.md` when triage completes |
@@ -43,6 +59,8 @@ flowchart TD
   H -.->|picks tier| PL
   H -.->|triages findings| RV
 ```
+
+The dotted arrow back to `/gabe-next` is the loop — finishing push on one phase routes you into the next.
 
 ## The router in practice
 

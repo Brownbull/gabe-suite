@@ -2,16 +2,6 @@
 
 The core loop — plan, execute, review, commit — is the path every change travels. The satellites are the other tools: not on that path, called on demand, each one built to attack the work from an angle the loop doesn't naturally take. You reach for one when something needs to be stress-tested before, during, or after the loop, not as a step the loop makes you take.
 
-## What a "satellite" is, and why they're separate from the loop
-
-The loop tools (`/gabe-plan`, `/gabe-execute`, `/gabe-review`, `/gabe-commit`) run in a fixed order because each one needs what the previous one produced — you can't execute a phase that was never planned. The six tools on this page don't work that way. Nothing forces you to run `/gabe-myopic` before a commit, or `/gabe-health` every sprint. They're satellites: they orbit the loop, get pulled in when a specific kind of risk is in the air, and hand their findings back into the same places the loop already reads — `.kdbp/PENDING.md`, `.kdbp/DECISIONS.md`, `.kdbp/RULES.md`. Nothing a satellite finds is a dead end; it always has somewhere to land.
-
-Each satellite is **adversarial on purpose**. It doesn't ask "does this work?" the way a test suite does — it asks "what does this miss, and who does it hurt?" from a specific, named angle: a user who can't plan ahead, an expert perspective you chose, a codebase's structural history, a decision nobody actually made, an "obvious yes" that isn't, a value you said you'd hold to. Six angles, six different kinds of blind spot.
-
-:::note The one thing every satellite now shares
-Since the suite's hardening pass, every satellite in this list carries two non-negotiable habits on top of whatever else it does: an **Evidence line** on every finding (a real file:line, a quoted sentence, or a recorded search with its result — never a claim floating free of a source opened this session), and a **verify/kill pass** run on the full draft before anything is shown to you. Findings that fail verification are deleted, not softened to a lower severity. See 04 below for exactly how that pass works.
-:::
-
 ## The six at a glance
 
 Skim this table to find the tool that matches the risk you're worried about right now, then read its own section for the detail.
@@ -25,6 +15,32 @@ Skim this table to find the tool that matches the risk you're worried about righ
 | `/gabe-assess` | Hidden weight behind an "obvious" change — blast radius, right-sized scope, prerequisites | Five-dimension assessment ending in a recommendation + one-liner |
 | `/gabe-align` | Drift from stated values (yours + the project's) and, at commit time, untested realistic scenarios | Per-value PASS/CONCERN/FAIL + a deterministic PROCEED verdict |
 
+## The shared hardening: Evidence line + verify/kill pass
+
+:::note The one thing every satellite shares
+Since the suite's hardening pass, every satellite in this list carries two non-negotiable habits on top of whatever else it does: an **Evidence line** on every finding (a real file:line, a quoted sentence, or a recorded search with its result — never a claim floating free of a source opened this session), and a **verify/kill pass** run on the full draft before anything is shown to you. Findings that fail verification are deleted, not softened to a lower severity. This section explains exactly how that pass works — every per-tool section below just points back here.
+:::
+
+Before the hardening pass, a satellite could hand back a finding that sounded right but was never actually checked against the thing it claimed to describe — a plausible-sounding gap instead of a proven one. Every satellite skill now carries two shared habits that close that gap, on top of the suite-wide [E1–E7 execution contract](contract.html) every gabe-* file already inherits.
+
+**The Evidence line.** Every finding, from every satellite, must cite something opened this session: a `path:line` with a quoted snippet for code, a section name with a quoted sentence for a spec or doc, a quoted visible string for a screenshot or mockup, or — for a claim that something is *missing* — the exact search that was run and its empty result (for example, `grep -rn useBlocker src/ → 0 hits`). A finding with no Evidence line, or one that doesn't actually quote a source, does not get downgraded to a lower severity — it is deleted before you ever see it.
+
+**The verify/kill pass.** After a satellite drafts every finding, it re-opens the cited source and asks three kill questions before anything is printed:
+
+| Question | Checks |
+| --- | --- |
+| K1 — Beyond-horizon / real | Is the consequence actually as far out, or as real, as the finding claims? Re-check against the walk or the code. |
+| K2 — Evidence | Does the cited source actually say what the finding claims it says? Re-open it and re-read. |
+| K3 — Guard | Does an existing safeguard (an undo, a warning, a "what NOT to flag" rule) already cover this, making the finding moot? |
+
+Each drafted finding is stamped `CONFIRMED`, `DOWNGRADED(<reason>)`, or `KILLED(K1|K2|K3)` — "plausible but unverified" counts as killed, not confirmed. The report header always prints the full funnel so nothing is hidden: `raw N → killed X → downgraded Y → survived Z`. This is the same discipline `/gabe-roast`'s kill-gate and `/gabe-debt`'s evidence floor apply in their own words — the mechanism generalizes across every satellite, not just `/gabe-myopic`.
+
+## What a "satellite" is, and why they're separate from the loop
+
+The loop tools (`/gabe-plan`, `/gabe-execute`, `/gabe-review`, `/gabe-commit`) run in a fixed order because each one needs what the previous one produced — you can't execute a phase that was never planned. The six tools on this page don't work that way. Nothing forces you to run `/gabe-myopic` before a commit, or `/gabe-health` every sprint. They're satellites: they orbit the loop, get pulled in when a specific kind of risk is in the air, and hand their findings back into the same places the loop already reads — `.kdbp/PENDING.md`, `.kdbp/DECISIONS.md`, `.kdbp/RULES.md`. Nothing a satellite finds is a dead end; it always has somewhere to land.
+
+Each satellite is **adversarial on purpose**. It doesn't ask "does this work?" the way a test suite does — it asks "what does this miss, and who does it hurt?" from a specific, named angle: a user who can't plan ahead, an expert perspective you chose, a codebase's structural history, a decision nobody actually made, an "obvious yes" that isn't, a value you said you'd hold to. Six angles, six different kinds of blind spot.
+
 ## `/gabe-myopic` — the short-sighted user, simulated
 
 Every other satellite on this page attacks from an *expert's* vantage point — someone who knows what to look for. `/gabe-myopic` does the opposite, and that inversion is what makes it worth the extra room here. It asks: *what would a beginner fail to see coming?* Real people do not plan far ahead. They run a greedy, shallow search over the next step or two, optimize for that, and get blindsided by anything that only pays off — or costs — three or more steps later. The skill's own handle for this is vivid on purpose: *a chess beginner who sees one move ahead grabs the free pawn and walks straight into mate in two.* The board never warned them. The trap was legal, quiet, and from the inside felt entirely like their own fault.
@@ -37,9 +53,9 @@ Instead of simulating one generic "confused user," the skill runs three bounded-
 
 | Horizon | Sees ahead | Can hold in head | Breaks when… |
 | --- | --- | --- | --- |
-| **@1** | This step + the very next action | Nothing pending | Asked to prep for a later step |
-| **@1.5** | This step + next + one fuzzy step after | Exactly one pending intention | A second pending thing shows up and evicts the first |
-| **@2** | Two concrete moves ahead | A short 2-step sequence | The payoff is three or more steps out |
+| ![h1](assets/icons/h1.png) **@1** | This step + the very next action | Nothing pending | Asked to prep for a later step |
+| ![h15](assets/icons/h15.png) **@1.5** | This step + next + one fuzzy step after | Exactly one pending intention | A second pending thing shows up and evicts the first |
+| ![h2](assets/icons/h2.png) **@2** | Two concrete moves ahead | A short 2-step sequence | The payoff is three or more steps out |
 
 **@1.5 is "the normal person"** — treat a finding that traps @1.5 as the headline result, because that's most of your users. @1 is the fragility stress-test (what breaks the least patient users first); @2 is the generous floor (what even a fairly careful user still misses).
 
@@ -65,12 +81,12 @@ The primary lens is foresight; the other three are what a short-sighted user run
 
 | Flag | Fires when… |
 | --- | --- |
-| 🛏️ Foresight trap (the mattress) | A choice's real cost or consequence lands two or more steps later, invisible right now — irreversible commits, path-dependency, "you should've set that earlier" |
-| 🌊 Overwhelm point | One step demands more than roughly four simultaneous decisions or options — working memory holds about four chunks, not seven |
-| 🧠 Recall demand | The user must carry a value or decision from an earlier step in their head to do this step correctly |
-| 🚪 No-undo dead-end | The myopic path went wrong and there is no cheap way back |
+| ![Foresight trap](assets/icons/flag-foresight.png) **Foresight trap** (the mattress) | A choice's real cost or consequence lands two or more steps later, invisible right now — irreversible commits, path-dependency, "you should've set that earlier" |
+| ![Overwhelm point](assets/icons/flag-overwhelm.png) **Overwhelm point** | One step demands more than roughly four simultaneous decisions or options — working memory holds about four chunks, not seven |
+| ![Recall demand](assets/icons/flag-recall.png) **Recall demand** | The user must carry a value or decision from an earlier step in their head to do this step correctly |
+| ![No-undo dead-end](assets/icons/flag-deadend.png) **No-undo dead-end** | The myopic path went wrong and there is no cheap way back |
 
-This is the clearest illustration in the whole suite of the **"adversarially verified, evidence-cited" pattern** the hardening pass installed everywhere: a finding only survives if it names the exact step, quotes what the screen (or spec, or code) actually said at that step, and then gets run back through three kill questions before it's allowed in the report — see 04.
+This is the clearest illustration in the whole suite of the **"adversarially verified, evidence-cited" pattern** the hardening pass installed everywhere: a finding only survives if it names the exact step, quotes what the screen (or spec, or code) actually said at that step, and then gets run back through three kill questions before it's allowed in the report — see [The shared hardening: Evidence line + verify/kill pass](#the-shared-hardening-evidence-line-verifykill-pass) above.
 
 ### Verbs
 
@@ -89,22 +105,6 @@ A myopic walk reports a **Panel result** (the fatal step per horizon — the fir
 :::note Use it when
 Reviewing a UX flow, onboarding, checkout, wizard, form, or settings screen for whether normal people will get confused, overwhelmed, or trapped; when a flow "feels fine to us but users keep dropping off"; before shipping a multi-step flow; or to sanity-check a spec/PRD before anything gets built.
 :::
-
-## The shared hardening: Evidence line + verify/kill pass
-
-Before the hardening pass, a satellite could hand back a finding that sounded right but was never actually checked against the thing it claimed to describe — a plausible-sounding gap instead of a proven one. Every satellite skill now carries two shared habits that close that gap, on top of the suite-wide [E1–E7 execution contract](contract.html) every gabe-* file already inherits.
-
-**The Evidence line.** Every finding, from every satellite, must cite something opened this session: a `path:line` with a quoted snippet for code, a `§section` with a quoted sentence for a spec or doc, a quoted visible string for a screenshot or mockup, or — for a claim that something is *missing* — the exact search that was run and its empty result (for example, `grep -rn useBlocker src/ → 0 hits`). A finding with no Evidence line, or one that doesn't actually quote a source, does not get downgraded to a lower severity — it is deleted before you ever see it.
-
-**The verify/kill pass.** After a satellite drafts every finding, it re-opens the cited source and asks three kill questions before anything is printed:
-
-| Question | Checks |
-| --- | --- |
-| K1 — Beyond-horizon / real | Is the consequence actually as far out, or as real, as the finding claims? Re-check against the walk or the code. |
-| K2 — Evidence | Does the cited source actually say what the finding claims it says? Re-open it and re-read. |
-| K3 — Guard | Does an existing safeguard (an undo, a warning, a "what NOT to flag" rule) already cover this, making the finding moot? |
-
-Each drafted finding is stamped `CONFIRMED`, `DOWNGRADED(<reason>)`, or `KILLED(K1|K2|K3)` — "plausible but unverified" counts as killed, not confirmed. The report header always prints the full funnel so nothing is hidden: `raw N → killed X → downgraded Y → survived Z`. This is the same discipline `/gabe-roast`'s kill-gate and `/gabe-debt`'s evidence floor apply in their own words — the mechanism generalizes across every satellite, not just `/gabe-myopic`.
 
 ## `/gabe-roast [perspective]` — adversarial gap review from a chosen angle
 

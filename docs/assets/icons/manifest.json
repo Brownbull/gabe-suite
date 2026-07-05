@@ -1,0 +1,42 @@
+[
+  {"id":"e1","out":"e1.png","prompt":"magnifying glass over a paper document with a checkmark, flat pixel art icon","width":64,"height":64},
+  {"id":"e2","out":"e2.png","prompt":"green check mark on a computer terminal window, flat pixel art icon","width":64,"height":64},
+  {"id":"e3","out":"e3.png","prompt":"blue shield blocking a red downward arrow, flat pixel art icon","width":64,"height":64},
+  {"id":"e4","out":"e4.png","prompt":"green circular recycling arrows loop, flat pixel art icon","width":64,"height":64},
+  {"id":"e5","out":"e5.png","prompt":"two blue circular synchronization arrows, flat pixel art icon","width":64,"height":64},
+  {"id":"e6","out":"e6.png","prompt":"red octagonal stop sign, flat pixel art icon","width":64,"height":64},
+  {"id":"e7","out":"e7.png","prompt":"red teardrop map location pin, flat pixel art icon","width":64,"height":64},
+
+  {"id":"fam-evidence","out":"fam-evidence.png","prompt":"magnifying glass inspecting a document, flat pixel art icon","width":64,"height":64},
+  {"id":"fam-verification","out":"fam-verification.png","prompt":"circular retest loop arrow around a green checkmark, flat pixel art icon","width":64,"height":64},
+  {"id":"fam-reuse","out":"fam-reuse.png","prompt":"green recycling bin with arrows, flat pixel art icon","width":64,"height":64},
+  {"id":"fam-state","out":"fam-state.png","prompt":"metal filing cabinet with drawers, flat pixel art icon","width":64,"height":64},
+  {"id":"fam-antifab","out":"fam-antifab.png","prompt":"banknote with a red prohibition circle cross, flat pixel art icon","width":64,"height":64},
+
+  {"id":"cmd-scope","out":"cmd-scope.png","prompt":"a flag on a checkpoint post, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-plan","out":"cmd-plan.png","prompt":"rolled blueprint scroll with a ruler, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-next","out":"cmd-next.png","prompt":"wooden signpost with directional arrows, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-execute","out":"cmd-execute.png","prompt":"crossed wrench and gear, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-review","out":"cmd-review.png","prompt":"magnifying glass over lines of code, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-commit","out":"cmd-commit.png","prompt":"closed padlock with a small green checkmark, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-push","out":"cmd-push.png","prompt":"rocket launching upward with flame, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-init","out":"cmd-init.png","prompt":"stacked foundation stone blocks, flat pixel art icon","width":64,"height":64},
+  {"id":"cmd-teach","out":"cmd-teach.png","prompt":"black graduation mortarboard cap, flat pixel art icon","width":64,"height":64},
+
+  {"id":"tier-fast","out":"tier-fast.png","prompt":"circular refresh arrow, flat pixel art icon","width":64,"height":64},
+  {"id":"tier-slow","out":"tier-slow.png","prompt":"green tortoise walking, flat pixel art icon","width":64,"height":64},
+  {"id":"tier-law","out":"tier-law.png","prompt":"heavy iron ship anchor, flat pixel art icon","width":64,"height":64},
+
+  {"id":"flag-foresight","out":"flag-foresight.png","prompt":"rolled up mattress, flat pixel art icon","width":64,"height":64},
+  {"id":"flag-overwhelm","out":"flag-overwhelm.png","prompt":"large curling ocean wave, flat pixel art icon","width":64,"height":64},
+  {"id":"flag-recall","out":"flag-recall.png","prompt":"pink human brain, flat pixel art icon","width":64,"height":64},
+  {"id":"flag-deadend","out":"flag-deadend.png","prompt":"closed wooden door, flat pixel art icon","width":64,"height":64},
+
+  {"id":"idea-replaceable","out":"idea-replaceable.png","prompt":"two arrows swapping two chips, flat pixel art icon","width":64,"height":64},
+  {"id":"idea-evidence","out":"idea-evidence.png","prompt":"rubber stamp pressing a document, flat pixel art icon","width":64,"height":64},
+  {"id":"idea-decision","out":"idea-decision.png","prompt":"wooden judge gavel, flat pixel art icon","width":64,"height":64},
+
+  {"id":"h1","out":"h1.png","prompt":"a single open eye, flat pixel art icon","width":64,"height":64},
+  {"id":"h15","out":"h15.png","prompt":"an eye next to a small question mark, flat pixel art icon","width":64,"height":64},
+  {"id":"h2","out":"h2.png","prompt":"black binoculars, flat pixel art icon","width":64,"height":64}
+]
