@@ -4,7 +4,7 @@
 
 ## Per-finding card format
 
-When the runner emits findings into `.kdbp/MOCKUP-VALIDATION.md`, each pending entry shows as:
+When the runner emits findings into `docs/mockups/MOCKUP-VALIDATION.md`, each pending entry shows as:
 
 ```
 - [ ] **[abc1234567]** <ruleId> / <severity> / <viewport> — <message>

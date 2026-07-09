@@ -6,7 +6,7 @@
 **Project:** [name]
 **Last updated:** [YYYY-MM-DD]
 **Active plan:** `../../.kdbp/PLAN.md`
-**Entities source:** `../../.kdbp/ENTITIES.md`
+**Entities source:** `../../.kdbp/SCOPE.md` (REQs / data model)
 
 ---
 
@@ -62,7 +62,7 @@
 
 ## 4. CRUD × entity matrix
 
-<!-- Source: .kdbp/ENTITIES.md entity list. Each entity row: 4 columns (Create/Read/Update/Delete). -->
+<!-- Source: the SCOPE.md entity list (REQs / data model). Each entity row: 4 columns (Create/Read/Update/Delete). -->
 <!-- Populated progressively through P5-P12. Blank cells mean coverage gap. -->
 
 | Entity | Created by | Viewed on | Modified by | Deleted by |

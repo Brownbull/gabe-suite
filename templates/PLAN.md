@@ -4,6 +4,7 @@
 <!-- project_type: code | mockup | hybrid    (default: code when absent) -->
 <!-- When no plan is active, this file stays as-is. gabe-plan writes here. -->
 <!-- Archived plans go to .kdbp/archive/ with prefix: completed_, defer_, cancelled_ -->
+<!-- PLAN.json (machine mirror) is written by /gabe-plan alongside this file — do not create it by hand -->
 <!-- Active plans use this Phases table schema: -->
 <!-- | # | Phase | Description | Complexity | Exec | Review | Commit | Push | -->
 <!-- Exec: ⬜ not started, 🔄 in progress, ✅ complete (written by /gabe-execute or /gabe-mockup) -->

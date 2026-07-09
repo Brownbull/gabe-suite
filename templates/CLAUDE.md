@@ -20,7 +20,6 @@ Maturity: **{MATURITY}** · Stack: {TECH}
 | Before architectural changes | `.kdbp/DECISIONS.md` | Prior decisions + rationale |
 | Before creating files | `.kdbp/STRUCTURE.md` | Folder conventions (enforced by gabe-commit CHECK 9) |
 | Before editing source | `.kdbp/DOCS.md` | Source → doc drift mappings |
-| Explaining concepts | `.kdbp/KNOWLEDGE.md` | Gravity wells + verified topics |
 | Pre-commit | `.kdbp/PENDING.md` | Deferred review findings + escalation |
 | Incident / audit | `.kdbp/LEDGER.md` | Checkpoint + commit + review history |
 
@@ -43,12 +42,12 @@ Maturity: **{MATURITY}** · Stack: {TECH}
 2. **PLAN before code.** Check `.kdbp/PLAN.md` phase state (✅/⬜/🔄) before implementing — `/gabe-execute` enforces the Commit-column invariant.
 3. **STRUCTURE before placement.** New files must match a pattern in `.kdbp/STRUCTURE.md` — PostToolUse hook warns on drift.
 4. **VALUES override defaults.** Project `.kdbp/VALUES.md` + user `~/.kdbp/VALUES.md` outrank model priors.
-5. **Verified topics trump re-derivation.** If `.kdbp/KNOWLEDGE.md` marks a topic verified, honor that explanation rather than re-explaining from scratch.
+5. **Verified topics trump re-derivation.** If a topic has already been verified via `/gabe-teach`, honor that explanation rather than re-explaining from scratch.
+6. **Orchestration restraint:** before any multi-agent design/mockup fan-out, run the premise past the human with ONE cheap single-agent spike — orchestrate to verify, not to generate taste.
 
 ### Full reference
 
 - Suite skills — `~/.claude/skills/gabe-*/SKILL.md`
-- Suite commands — `~/.claude/commands/gabe-*.md`
 - Documentation standards — `~/.claude/skills/gabe-docs/SKILL.md`
 - User values — `~/.kdbp/VALUES.md` (cross-project)
 - Project docs — `docs/` (if present)

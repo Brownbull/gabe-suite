@@ -13,7 +13,7 @@ Gastify `docs/rebuild/LESSONS.md` §2 Seam C → rules R4, R6. BoletApp's Gemini
 ## Detection — doc pass
 
 - `.kdbp/DECISIONS.md`: ADR on boundary validation (Pydantic `output_type`, Zod, JSON Schema, protobuf).
-- `.kdbp/ENTITIES.md`: canonical entity definitions. If fields are also defined in code without derivation, flag drift risk.
+- Canonical entity definitions (SCOPE.md / the shared schema source; legacy projects: `.kdbp/archive/retired/ENTITIES.md`). If fields are also defined in code without derivation, flag drift risk.
 - `shared/` or `packages/common/` folder present? If field lists are duplicated in TS and Python without codegen, flag.
 
 ## Detection — code pass

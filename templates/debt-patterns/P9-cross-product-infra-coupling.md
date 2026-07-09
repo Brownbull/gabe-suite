@@ -14,7 +14,7 @@ BoletApp `CLAUDE.md` INC-001: BoletApp and Gustify share the same Firebase proje
 
 - Grep for `INC-\d+` identifiers in `CLAUDE.md`, `README.md`, `.kdbp/DECISIONS.md`, `.kdbp/BEHAVIOR.md`.
 - Grep for "shared" / "same" / "both" combined with Firebase / Supabase / Terraform / AWS / GCP / database names.
-- `.kdbp/ENTITIES.md` or `.kdbp/STRUCTURE.md`: infrastructure topology diagram or list.
+- `.kdbp/STRUCTURE.md`: infrastructure topology diagram or list.
 
 ## Detection — code pass
 

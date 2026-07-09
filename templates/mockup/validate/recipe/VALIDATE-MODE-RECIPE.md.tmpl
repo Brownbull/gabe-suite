@@ -32,7 +32,7 @@ The runner checks BEHAVIOR.md before falling back to the heuristic.
 | `tests/mockups/validate/runner.mjs` | Orchestrator: detects architecture, walks screens, builds manifest, invokes Playwright, aggregates findings into MOCKUP-VALIDATION.md |
 | `tests/mockups/validate/screen-validator.spec.ts` | Playwright spec — data-driven from manifest, runs 4 categories of checks per (screen × viewport) |
 | `tests/mockups/validate/rules.json` | Rule catalog + viewport widths + min-column threshold + skip patterns + KDBP rules cache |
-| `.kdbp/MOCKUP-VALIDATION.md` | Live findings document (stable-IDs, Status column, resumable triage) |
+| `docs/mockups/MOCKUP-VALIDATION.md` | Live findings document (stable-IDs, Status column, resumable triage) |
 
 ## Quick reference
 
@@ -49,7 +49,7 @@ node tests/mockups/validate/runner.mjs --severity=block
 node tests/mockups/validate/runner.mjs --skip-kdbp
 ```
 
-After the runner completes, open `.kdbp/MOCKUP-VALIDATION.md` and triage findings inline. Triage action keys (f / d / x / s / e / q) are documented in `~/.claude/templates/gabe/mockup/validate/validate-checklist.md`.
+After the runner completes, open `docs/mockups/MOCKUP-VALIDATION.md` and triage findings inline. Triage action keys (f / d / x / s / e / q) are documented in `~/.claude/templates/gabe/mockup/validate/validate-checklist.md`.
 
 ## Run history
 

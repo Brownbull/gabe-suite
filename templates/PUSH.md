@@ -11,6 +11,10 @@ Edit values directly or rerun `/gabe-push --reconfigure` to redo the interview.
 | default_env | production |
 | pr_template | none |
 
+## Notes
+
+- **CI babysitting:** long CI runs can be watched with /loop (e.g. "/loop 4m check CI on <branch> and report") — watch-and-report only; auto-fix loops only where the phase has runtime-journey proof in place (PLAN.json proof).
+
 ## Environments
 
 <!-- One block per env. `/gabe-push <name>` targets the env named below. -->

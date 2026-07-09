@@ -29,14 +29,13 @@ Run the equivalent of `/gabe-align init [project-name]`:
 4. Ask: "Maturity level?" → `mvp` (default) | `enterprise` | `scale`
 4.5. Ask: "Project type?" → `code` (default) | `mockup` | `hybrid`
    - `code` — standard software project. `/gabe-execute` owns Exec. No mockup-specific artifacts.
-   - `mockup` — design / UX project. `/gabe-mockup` owns Exec. Creates `.kdbp/ENTITIES.md` + enables `/gabe-plan --preset=mockup-project`.
+   - `mockup` — design / UX project. `/gabe-mockup` owns Exec. Enables `/gabe-plan --preset=mockup-project` (the mockup preset reads its entity list from `SCOPE.md` / the project's data model — no dedicated entity file is scaffolded).
    - `hybrid` — both. PLAN phases dispatch per-type tags (`/gabe-mockup` for design-system/ui-kit/mockup-* phases, `/gabe-execute` otherwise).
    - If `mockup` or `hybrid`: prompt `Install ui-ux-pro-max catalog (67 styles / 162 palettes / 74 font pairings)? [Y/n]`. Default Y. If yes, run in background:
      ```bash
      npx --yes uipro-cli init --ai claude 2>/dev/null || echo "⚠ uipro install skipped (npm unavailable or install failed — skill still works without it)"
      ```
    - Persist to BEHAVIOR.md frontmatter as `project_type: <answer>`.
-   - If `mockup` or `hybrid`: create `.kdbp/ENTITIES.md` from `~/.claude/templates/gabe/ENTITIES.md` (copied during install.sh).
 5. Ask: "Tech stack?" (comma-separated, e.g., "python, fastapi, react")
 6. Create `.kdbp/` with these files **and `CLAUDE.md` at the project root** (see Step 1.7 for CLAUDE.md generation):
 
@@ -47,11 +46,10 @@ Run the equivalent of `/gabe-align init [project-name]`:
 ├── DECISIONS.md     # Append-only architecture decision table
 ├── RULES.md         # Scar-tissue constraints (R-rules) maintained by /gabe-debt
 ├── PENDING.md       # Deferred items (empty)
-├── LEDGER.md        # Checkpoint history (empty)
-├── MAINTENANCE.md   # Quarterly human checklist
+├── LEDGER.md        # Thin session index (one row per checkpoint)
 ├── DOCS.md          # Doc drift mappings (from project type, used by CHECK 7)
 ├── PLAN.md          # Active plan (empty template — populated by /gabe-plan)
-├── KNOWLEDGE.md     # Human knowledge map (topics tracked by /gabe-teach)
+├── PLAN.json        # machine mirror — created by /gabe-plan, not by init
 ├── STRUCTURE.md     # Per-project folder conventions (checked by gabe-commit CHECK 9)
 └── archive/         # Archived plans (completed_, defer_, cancelled_)
 ```
@@ -73,7 +71,7 @@ created: [today's date]
 **Trigger phrases:** "can we work on", "should we", "I'm wondering", "explore the possibility", "what do you think about", "how can we approach", "is it possible to". Treat as diagnose-prompts, not build-prompts.
 
 **Mandatory inventory before any proposal:**
-1. Read existing project state: `.kdbp/PLAN.md`, `.kdbp/SCOPE.md`, `.kdbp/STRUCTURE.md`, `.kdbp/ROADMAP.md`, `.kdbp/AUDIT.md` (if present)
+1. Read existing project state: `.kdbp/PLAN.md`, `.kdbp/SCOPE.md`, `.kdbp/STRUCTURE.md`, `.kdbp/AUDIT.md` (if present) — the phase arc lives in `SCOPE.md` §Phases
 2. Read suite skill(s) being extended: `~/.claude/skills/gabe-*/SKILL.md`
 3. Read relevant catalog: `~/.claude/templates/gabe/tier-sections/*.md`
 4. If proposing external dep: clone repo, verify license + actual surface (not just README)
@@ -111,16 +109,17 @@ created: [today's date]
 |---|------|--------|---------|------|-------|----------|--------|----------------|--------|
 ```
 
-**LEDGER.md** — start empty:
+**LEDGER.md** — create with the thin-index header:
 ```markdown
-# Session Ledger
+# Session Ledger — thin index
+
+<!-- One row per command checkpoint, newest first. Detail lives in git commit messages; per-phase proof lives in PLAN.json. -->
+
+| Date | Entry | Theme / scope | Commits | Gates / results |
+|---|---|---|---|---|
 ```
 
-**MAINTENANCE.md** — use template from `~/.claude/templates/gabe/MAINTENANCE.md`
-
-**PLAN.md** — use template from `~/.claude/templates/gabe/PLAN.md`
-
-**KNOWLEDGE.md** — use template from `~/.claude/templates/gabe/KNOWLEDGE.md`
+**PLAN.md** — use template from `~/.claude/templates/gabe/PLAN.md`. (`PLAN.json`, the machine mirror, is written later by `/gabe-plan` — not scaffolded here.)
 
 **STRUCTURE.md** — use template from `~/.claude/templates/gabe/STRUCTURE.md`:
 - The base template has MVP patterns + disallowed patterns active
@@ -186,7 +185,7 @@ Display a single line at the end: `✅ .gitignore: reviews-archive entry [added 
 Non-destructive top-up of an existing `.kdbp/` directory. Never overwrites, never deletes.
 
 1. **Scan what's missing.** Compare the existing `.kdbp/` contents against the current template set:
-   - Expected files: `BEHAVIOR.md`, `VALUES.md`, `DECISIONS.md`, `RULES.md`, `PENDING.md`, `LEDGER.md`, `MAINTENANCE.md`, `DOCS.md`, `PLAN.md`, `KNOWLEDGE.md`, `STRUCTURE.md`
+   - Expected files: `BEHAVIOR.md`, `VALUES.md`, `DECISIONS.md`, `RULES.md`, `PENDING.md`, `LEDGER.md`, `DOCS.md`, `PLAN.md`, `STRUCTURE.md`
    - Expected directory: `archive/`
    - Expected at **project root** (not `.kdbp/`): `CLAUDE.md` — scanned separately; rules in Step 1.7
    - Note: project-specific files like `PUSH.md` or historical `PLAN-PHASE-N.md` are NOT in the expected set — leave them untouched.
@@ -195,8 +194,8 @@ Non-destructive top-up of an existing `.kdbp/` directory. Never overwrites, neve
    ```
    UPDATE MODE — [project name]
 
-   Present (9):    BEHAVIOR, VALUES, DECISIONS, PENDING, LEDGER, MAINTENANCE, DOCS, PUSH, PLAN-PHASE-1
-   Missing (3):    PLAN.md, KNOWLEDGE.md, archive/
+   Present (8):    BEHAVIOR, VALUES, DECISIONS, RULES, PENDING, LEDGER, DOCS, PUSH
+   Missing (3):    PLAN.md, STRUCTURE.md, archive/
    Root-level:     CLAUDE.md [missing | managed | unmanaged]
    Unrecognized:   PLAN-PHASE-1.md (not in template set — will keep as-is)
 
@@ -242,40 +241,10 @@ Template files can evolve with new columns. Existing `.kdbp/` files predating th
 
 | Target | Old shape | New shape | Detection |
 |--------|-----------|-----------|-----------|
-| `.kdbp/KNOWLEDGE.md` Gravity Wells table | 4-6 columns (any subset of new cols missing) | 7 columns: `# \| Name \| Description \| Analogy \| Paths \| Docs \| Topics` | Header row missing any of `Analogy`, `Paths`, or `Docs` between `Description` and `Topics` |
-| `.kdbp/KNOWLEDGE.md` Topics table | 10 columns (no ArchConcepts) | 11 columns: `# \| Well \| Class \| Topic \| Status \| Tags \| ArchConcepts \| Last Touched \| Verified Date \| Score \| Source` | Header row missing `ArchConcepts` between `Tags` and `Last Touched` |
 | `~/.claude/gabe-arch/STATE.md` | Missing | Present | File doesn't exist at `~/.claude/gabe-arch/STATE.md` |
 | `~/.claude/gabe-arch/HISTORY.md` | Missing | Present | File doesn't exist at `~/.claude/gabe-arch/HISTORY.md` |
 
-**Procedure for KNOWLEDGE.md wells migration:**
-
-1. **Backup first:** copy file to `.kdbp/archive/KNOWLEDGE.md.pre-migrate-YYYYMMDD-HHMM.md`
-2. **Preview the change:**
-   ```
-   SCHEMA MIGRATION — .kdbp/KNOWLEDGE.md
-     Wells table: [current] cols → 7 cols (adds [list of missing: Analogy, Paths, Docs])
-     Rows affected: [N]
-     Backup: .kdbp/archive/KNOWLEDGE.md.pre-migrate-20260417-1805.md
-   
-     Proceed? (y/n)
-   ```
-3. **On confirm:** rewrite the wells table header AND each row with empty cells inserted for whichever columns are missing (Analogy, Paths, Docs). Preserve the `#`, `Name`, `Description`, `Topics` cells exactly.
-4. **On skip/decline:** leave file as-is; warn that `/gabe-teach brief` may show "paths not set" / "no doc" and will backfill Analogy on first run.
-5. **Follow-up hint** after successful migration: `ℹ Run /gabe-teach brief to backfill Analogy (via gabe-lens) and Paths (heuristic) for existing wells. Then /gabe-teach wells → [docs N] to assign doc paths, or /gabe-teach init-wells to rerun the full wizard including doc-stub scaffolding.`
-
-**Procedure for KNOWLEDGE.md Topics table migration (ArchConcepts):**
-
-1. Backup (same archive path as the wells migration — single backup per `update` run is fine).
-2. **Preview:**
-   ```
-   SCHEMA MIGRATION — .kdbp/KNOWLEDGE.md
-     Topics table: 10 cols → 11 cols (adds ArchConcepts between Tags and Last Touched)
-     Topic rows affected: [N]
-     Proceed? (y/n)
-   ```
-3. **On confirm:** rewrite the Topics header AND each existing topic row with an empty `ArchConcepts` cell inserted between `Tags` and `Last Touched`. Preserve all other cells exactly.
-4. **On skip/decline:** leave file as-is; `/gabe-teach topics` will still function, just without architecture tagging for this project until the column is added.
-5. Follow-up hint: `ℹ Existing topics were not retroactively tagged with arch concepts — only new topics surfaced after migration get tags. Run /gabe-teach topics to start building the architecture knowledge graph.`
+`.kdbp/KNOWLEDGE.md` is retired as of A2 KDBP-lite — no longer scaffolded, migrated, or scanned by `/gabe-init`. Legacy projects that already have one keep it untouched wherever it sits; `update` mode does not move, migrate, or delete it.
 
 **Procedure for ~/.claude/gabe-arch/ global state:**
 
@@ -285,25 +254,25 @@ Template files can evolve with new columns. Existing `.kdbp/` files predating th
 4. These files are user-global (all projects share them), created lazily — never overwritten if already present.
 5. During `reset` mode, do NOT touch `~/.claude/gabe-arch/` — the user's cross-project learning state is never lost by a per-project reset.
 
-**No LLM calls during migration** — purely structural rewrite. Backfill happens later, on first brief run.
+**No LLM calls during migration** — purely structural rewrite (template file copy for `~/.claude/gabe-arch/`).
 
 ### Step 2: Check hooks
 
-Check `~/.claude/settings.json` for these hooks:
+Check `~/.claude/settings.json` for these hooks — the five markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
 - SessionStart hook (contains `KDBP Active`)
 - SessionStart plan awareness (contains `ACTIVE PLAN` or `gabe-plan`)
-- SessionStart knowledge awareness (contains `KNOWLEDGE:` or `gabe-teach`)
 - PreToolUse checkpoint hook (contains `KDBP CHECKPOINT`)
-- PostToolUse ledger writer (contains `LEDGER.md`)
 - PostToolUse structure warning (contains `STRUCTURE:` — new-file placement)
 - Stop session-end reminder (contains `SESSION-END REMINDER`)
+
+Hook scripts themselves ship from the suite repo (`scripts/hooks/kdbp/`) via `install.sh` to `~/.claude/scripts/hooks/kdbp/` — this spec only wires the `settings.json` entries pointing at them.
 
 For each missing hook:
 - Read the hook object VERBATIM from `~/.claude/templates/gabe/hooks.json` (one object per hook, keyed by the marker string above — e.g. `"KDBP CHECKPOINT"`).
 - If that file is missing or a key is absent: STOP hook installation and print `⛔ hook template missing at ~/.claude/templates/gabe/hooks.json — reinstall the suite. Not composing hook JSON from memory.` Continue init WITHOUT touching settings.json (degraded mode: report `Hooks installed: skipped (template missing)` in Step 4).
 - Otherwise show the exact JSON, ask `Install? [Y/n]`, and on yes append it to the appropriate array (never overwrite existing entries).
 
-If all hooks present: "All 7 KDBP hooks installed."
+If all hooks present: "All 5 KDBP hooks installed."
 
 ### Step 3: Project type
 
@@ -364,9 +333,9 @@ api/services/, api/observability/). Stages 1-5 are MVP; 6-9 are Enterprise.
 ### Step 4: Show readiness report
 
 ```
-✅ .kdbp/ initialized (10 files + archive/)
+✅ .kdbp/ initialized (9 files + archive/)
 ✅ CLAUDE.md: [created | merged | preserved | backed-up-and-replaced | ⚠ skipped]
-✅ Hooks installed (7/7)
+✅ Hooks installed (5/5)
 ✅ Project type: [type]
 ✅ Maturity: [mvp|enterprise|scale]
 ✅ DOCS.md: [N] mappings loaded for [project-type]

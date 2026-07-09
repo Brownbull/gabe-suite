@@ -15,7 +15,7 @@ Patterns this project has adopted, with rationale and where they're applied. Aut
 ## How this file relates to other docs
 
 - **Per-well docs (`docs/wells/N-*.md`)** — each well doc has its own `## Architecture patterns` section listing only the patterns relevant to that well. This file is the aggregate view.
-- **`.kdbp/KNOWLEDGE.md`** — the Topics table's `ArchConcepts` column is the source of truth for which topics touch which concepts. This file reads from there; don't edit the column from here.
+- **Topic → concept tagging (owned by `/gabe-teach`)** — previously tracked in `.kdbp/KNOWLEDGE.md`'s Topics table `ArchConcepts` column; that file is retired from the standard scaffold as of A2 KDBP-lite, so see the `/gabe-teach` migration for its per-project storage. This file reads from whatever `/gabe-teach` designates as source of truth; don't edit the tagging from here.
 - **`.kdbp/DECISIONS.md`** — the decision log. Rows citing a concept ID are surfaced in the "Decisions around this pattern" block below each section.
 
 ---

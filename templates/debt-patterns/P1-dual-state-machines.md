@@ -13,7 +13,7 @@ Gastify `docs/rebuild/LESSONS.md` §1.1 → rule R1. BoletApp `useScanOverlaySta
 ## Detection — doc pass
 
 - `.kdbp/DECISIONS.md`: look for ADRs declaring a state-ownership model (e.g. "Zustand is source of truth for scan phase"). Absence = implicit.
-- `.kdbp/ROADMAP.md`: Why-paragraphs mentioning "sync local with store" / "keep in sync" → smell.
+- `.kdbp/SCOPE.md` §Phases: Why-paragraphs mentioning "sync local with store" / "keep in sync" → smell.
 - `.kdbp/SCOPE.md §14`: open questions about state ownership.
 - Gastify-shape projects: check `docs/rebuild/LESSONS.md` or `RULES.md` for an existing "one concept → one store" rule.
 

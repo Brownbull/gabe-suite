@@ -6,8 +6,10 @@
 <!-- and by /gabe-teach arch verify / show / next. -->
 <!-- -->
 <!-- This file lives at ~/.claude/gabe-arch/STATE.md and aggregates learning -->
-<!-- across all projects. Per-project tagging happens in .kdbp/KNOWLEDGE.md -->
-<!-- Topics table (ArchConcepts column). Both stay in sync via gabe-teach. -->
+<!-- across all projects. Per-project tagging is owned by /gabe-teach — as of -->
+<!-- A2 KDBP-lite, .kdbp/KNOWLEDGE.md is retired from the standard scaffold, -->
+<!-- so see the gabe-teach migration for its per-project storage. Both stay -->
+<!-- in sync via gabe-teach. -->
 <!-- -->
 <!-- Multi-machine note: sync this directory across machines via git or your -->
 <!-- preferred dotfile sync — state will diverge otherwise. -->

@@ -12,7 +12,7 @@ BoletApp `docs/sprint-artifacts/epic-14c-retro-2026-01-20.md` §1. Delta sync (f
 
 ## Detection — doc pass
 
-- `.kdbp/ENTITIES.md`: entities with sync / multi-user semantics — do they have a `deleted_at` / `tombstone_at` / `removed_at` field?
+- Entity definitions (SCOPE.md / the schema source): entities with sync / multi-user semantics — do they have a `deleted_at` / `tombstone_at` / `removed_at` field?
 - `.kdbp/DECISIONS.md`: ADR on deletion semantics for sync (hard vs soft, tombstone TTL, GC policy).
 - `.kdbp/SCOPE.md §14`: open questions about multi-user consistency.
 
