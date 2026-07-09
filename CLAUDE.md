@@ -54,31 +54,31 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 
 | Skill | Version | Purpose |
 |---|---|---|
-| **gabe-align** | 1.1.0 | Alignment guardian — shallow/standard/deep values and AP advisory checks |
-| **gabe-arch** | 1.1.0 | Architecture curriculum layer used by `/gabe-teach` (background; not user-invocable) |
-| **gabe-assess** | 1.1.0 | Rapid change impact assessment: blast radius, maturity scope, prerequisites |
-| **gabe-commit** | 2.0.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit |
-| **gabe-debt** | 1.1.0 | Architecture decision-debt scanner with AP evidence citations (fork/read-only) |
-| **gabe-docs** | 1.1.0 | Documentation standards + diagrams library + the suite execution contract (background) |
+| **gabe-align** | 1.1.1 | Alignment guardian — shallow/standard/deep values and AP advisory checks |
+| **gabe-arch** | 1.1.1 | Architecture curriculum layer used by `/gabe-teach` (background; not user-invocable) |
+| **gabe-assess** | 1.1.1 | Rapid change impact assessment: blast radius, maturity scope, prerequisites |
+| **gabe-commit** | 2.1.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit |
+| **gabe-debt** | 1.1.1 | Architecture decision-debt scanner with AP evidence citations (fork/read-only) |
+| **gabe-docs** | 1.1.1 | Documentation standards + diagrams library + the suite execution contract (background) |
 | **gabe-docsite** | 1.0.0 | Publish docs onto the generated HTML docs site |
-| **gabe-execute** | 2.0.0 | Phase execution with tier cap, escalation gate, checkpoint commits |
-| **gabe-handoff** | 2.0.0 | Session handoff — paste-able resume prompt + KDBP state sync |
-| **gabe-health** | 1.1.0 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
-| **gabe-help** | 1.1.0 | Context-aware guide + the P14 cross-project tool registry |
-| **gabe-init** | 2.0.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
+| **gabe-execute** | 2.1.0 | Phase execution with tier cap, escalation gate, checkpoint commits |
+| **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
+| **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
+| **gabe-help** | 1.1.1 | Context-aware guide + the P14 cross-project tool registry |
+| **gabe-init** | 2.1.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
 | **gabe-lens** | 2.4.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
-| **gabe-mockup** | 2.0.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
+| **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
 | **gabe-myopic** | 1.1.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork) |
 | **gabe-next** | 2.0.0 | Zero-logic lifecycle router over PLAN.md state |
-| **gabe-plan** | 2.0.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale) |
-| **gabe-push** | 2.0.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md` |
-| **gabe-review** | 1.5.0 | Code review — risk pricing, confidence scoring, plan alignment, triage |
+| **gabe-plan** | 2.1.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale) |
+| **gabe-push** | 2.1.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md` |
+| **gabe-review** | 1.6.0 | Code review — risk pricing, confidence scoring, plan alignment, triage |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
-| **gabe-scope** | 2.0.0 | Scope authoring — SCOPE.md + ROADMAP.md for a new project |
-| **gabe-scope-addition** | 2.0.0 | Additive scope evolution (routed from /gabe-scope-change) |
-| **gabe-scope-change** | 2.0.0 | Scope-change router — pivot vs addition classifier |
-| **gabe-scope-pivot** | 2.0.0 | Direction-change scope rewrite (human/router-initiated only) |
-| **gabe-teach** | 2.0.0 | Human knowledge consolidation — lessons from commits under gravity wells |
+| **gabe-scope** | 2.1.0 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |
+| **gabe-scope-addition** | 2.1.0 | Additive scope evolution (routed from /gabe-scope-change) |
+| **gabe-scope-change** | 2.1.0 | Scope-change router — pivot vs addition classifier |
+| **gabe-scope-pivot** | 2.1.0 | Direction-change scope rewrite (human/router-initiated only) |
+| **gabe-teach** | 2.0.1 | Human knowledge consolidation — lessons from commits under gravity wells |
 
 ## Workflow Docs
 

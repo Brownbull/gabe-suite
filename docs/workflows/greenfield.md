@@ -66,8 +66,7 @@ Run:
 
 The scope command writes:
 
-- `.kdbp/SCOPE.md`
-- `.kdbp/ROADMAP.md`
+- `.kdbp/SCOPE.md` (stable premise plus the phase arc in its `## Phases` section)
 - `.kdbp/scope-references.yaml`
 - research artifacts when research is used
 
@@ -128,7 +127,7 @@ Do this before spreading visual/layout work across Storybook. It creates `docs/r
 
 A greenfield project is ready for first implementation when:
 
-- `.kdbp/BEHAVIOR.md`, `SCOPE.md`, `ROADMAP.md`, `PLAN.md`, and `DECISIONS.md` exist.
+- `.kdbp/BEHAVIOR.md`, `SCOPE.md`, `PLAN.md`, `PLAN.json`, and `DECISIONS.md` exist.
 - The first phase has a clear tier and testable acceptance signal.
 - AP concerns from `/gabe-align deep` are either resolved, recorded as decisions, or accepted as explicit tradeoffs.
 - `/gabe-next` can identify the first phase and dispatch to the right execution command.

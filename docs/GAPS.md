@@ -31,7 +31,7 @@ Gaps are numbered `W1..Wn`. Numbering stable across revisions — new gaps appen
 
 ## W2 — `/gabe-teach` is optional post-commit, no enforcement
 
-**What's missing.** `/gabe-teach` consolidates architect-level understanding into `KNOWLEDGE.md`. It's not in the phase state columns, not dispatched by `/gabe-next`, not required before advancing. Users skip it, knowledge rots.
+**What's missing.** `/gabe-teach` consolidates architect-level understanding, but since the A2 KDBP-lite migration it renders lessons statelessly — it no longer writes to `KNOWLEDGE.md` by default (that file is legacy-only now, honored if a project still has one, never created fresh). It's not in the phase state columns, not dispatched by `/gabe-next`, not required before advancing. Nothing tracks whether a topic was ever taught.
 
 **Why it matters.** Gravity wells drift from reality. Future `/gabe-commit` Notable Updates digest has less context. Human architect model becomes shallow.
 

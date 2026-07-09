@@ -113,14 +113,14 @@ flowchart TD
 
 ## Scope evolution paths
 
-SCOPE.md and ROADMAP.md are written by the `/gabe-scope` family only. No other command edits them. The family branches by intent:
+SCOPE.md — including its `## Phases` section, which holds the phase arc — is written by the `/gabe-scope` family only. No other command edits it. The family branches by intent:
 
 ```mermaid
 flowchart LR
     Entry["/gabe-scope-change<br/>(meta-router)"] --> Classify{"Intent?"}
     Classify -->|Additive: new REQ /<br/>new phase / new ref| Addition["/gabe-scope-addition"]
     Classify -->|Direction shift| Pivot["/gabe-scope-pivot"]
-    Addition --> AddResult["SCOPE v&lcub;N&rcub;.1 written<br/>ROADMAP updated in place"]
+    Addition --> AddResult["SCOPE.md phases_version bumped<br/>Phases section updated in place"]
     Pivot --> PivotResult["SCOPE vN archived to<br/>.kdbp/archive/scope-vN.md<br/>SCOPE v&lcub;N+1&rcub; written fresh"]
 ```
 
@@ -135,10 +135,10 @@ Direct entry points: you can call `/gabe-scope-addition` or `/gabe-scope-pivot` 
 | Command | When | Reads | Writes | LLM? |
 |---------|------|-------|--------|------|
 | `/gabe-init [name]` | project setup (once) | project dir | `.kdbp/` + `CLAUDE.md` + hooks | yes (interview) |
-| `/gabe-scope` | after init, before plan | existing refs | `SCOPE.md`, `ROADMAP.md`, `scope-references.yaml`, tombstones | yes |
-| `/gabe-plan [goal]` | after scope | `SCOPE.md`, `ROADMAP.md`, `VALUES.md` | `PLAN.md`, `DECISIONS.md`, optional HTML review artifact | yes |
+| `/gabe-scope` | after init, before plan | existing refs | `SCOPE.md` (incl. `## Phases`), `scope-references.yaml`, tombstones | yes |
+| `/gabe-plan [goal]` | after scope | `SCOPE.md` (incl. `## Phases`), `VALUES.md` | `PLAN.md`, `PLAN.json`, `DECISIONS.md`, optional HTML review artifact | yes |
 | `/gabe-next` | every phase step | `PLAN.md` | `PLAN.md` (Current Phase advance only) | **no** |
-| `/gabe-execute` | phase has Exec=⬜/🔄 | `PLAN.md`, `STRUCTURE.md` | code + `PLAN.md` Exec col + `PENDING.md` (maybe) | yes |
+| `/gabe-execute` | phase has Exec=⬜/🔄 | `PLAN.md`, `STRUCTURE.md` | code + `PLAN.md` Exec col + `PLAN.json` proof field + `PENDING.md` (maybe) | yes |
 | `/gabe-review` | phase has Exec=✅, Review=⬜ | git diff, `PLAN.md`, `VALUES.md`, tier sections | `PLAN.md` Review col + `PENDING.md` (maybe) | yes |
 | `/gabe-commit [msg]` | phase has Review=✅, Commit=⬜ | git staged, `DOCS.md`, `STRUCTURE.md` | git commit, `LEDGER.md`, `PLAN.md` Commit col | deterministic + targeted LLM |
 | `/gabe-push` | phase has Commit=✅, Push=⬜ | git, `PUSH.md`, `DEPLOYMENTS.md` | remote, PR, `PLAN.md` Push col, `DEPLOYMENTS.md`, `LEDGER.md` | minimal |
@@ -148,7 +148,7 @@ Direct entry points: you can call `/gabe-scope-addition` or `/gabe-scope-pivot` 
 | Command | When | Writes |
 |---------|------|--------|
 | `/gabe-scope-change` | scope shift of unclear kind | routes only (no direct writes) |
-| `/gabe-scope-addition` | additive: new REQ / phase / ref | `SCOPE.md` v{N}.1, `ROADMAP.md`, `scope-references.yaml` |
+| `/gabe-scope-addition` | additive: new REQ / phase / ref | `SCOPE.md` (`phases_version` bump, `## Phases` updated in place), `scope-references.yaml` |
 | `/gabe-scope-pivot` | direction change | archives vN, writes v{N+1} |
 
 ### Plan family
@@ -170,7 +170,7 @@ Direct entry points: you can call `/gabe-scope-addition` or `/gabe-scope-pivot` 
 | `/gabe-health [focus]` | codebase structural health — god files, churn, coupling, bugs |
 | `/gabe-debt [brief\|dry-run\|target]` | architecture decision-debt scan with AP evidence citations |
 | `/gabe-mockup [mode]` | mockup, React Storybook, and design-reference workflows |
-| `/gabe-teach` | consolidate architect-level understanding post-commit (into `KNOWLEDGE.md`) |
+| `/gabe-teach` | consolidate architect-level understanding post-commit — stateless lesson rendering (honors a legacy `KNOWLEDGE.md` if one already exists, never creates one) |
 | `/gabe-lens [concept]` | cognitive translation — analogies, constraint boxes, Gabe Blocks |
 
 ---
@@ -181,23 +181,21 @@ All project state lives under `.kdbp/` at the project root. Flat layout — no s
 
 | File | Purpose | Who writes | Shape |
 |------|---------|-----------|-------|
-| `BEHAVIOR.md` | project identity + maturity + stack | `/gabe-init` | prose + frontmatter |
+| `BEHAVIOR.md` | project identity + maturity + stack + mockup manifest | `/gabe-init` | prose + frontmatter |
 | `VALUES.md` | project values (cross-stack: `~/.kdbp/VALUES.md`) | `/gabe-init`, `/gabe-align evolve` | prose |
-| `SCOPE.md` | REQs + reference frame + pillars | `/gabe-scope` family | structured sections + frontmatter |
-| `ROADMAP.md` | phases + dependencies | `/gabe-scope` family | phase list + YAML |
+| `SCOPE.md` | REQs + reference frame + pillars + phase arc (`## Phases`) | `/gabe-scope` family | structured sections + frontmatter |
 | `scope-references.yaml` | reference frame refs | `/gabe-scope` family | YAML |
 | `PLAN.md` | **active plan** — Phases table + Phase Details | `/gabe-plan`, `/gabe-next`, `/gabe-execute`, `/gabe-review`, `/gabe-commit`, `/gabe-push` (column ticks) | markdown table + YAML per phase |
+| `PLAN.json` | machine mirror of `PLAN.md` — phases, cells, tier, per-phase `proof` field | `/gabe-plan`, auto-tick helper, `/gabe-execute` (proof field) | JSON |
 | `DECISIONS.md` | ADR log — one entry per phase tier decision + operational decisions | `/gabe-plan`, `/gabe-scope`, `/gabe-push` (operational classifier) | numbered sections |
-| `KNOWLEDGE.md` | gravity wells + verified topics | `/gabe-teach` | wells → topics |
 | `STRUCTURE.md` | folder pattern conventions | `/gabe-init`, manual | pattern list |
 | `DOCS.md` | source → doc drift map | `/gabe-commit docs-audit` | mapping table |
-| `MAINTENANCE.md` | maintenance config | `/gabe-init` | yaml-ish |
 | `DEPLOYMENTS.md` | per-phase push/deploy bookkeeping | `/gabe-push` | table per phase |
 | `PUSH.md` | remote + strategy config | `/gabe-push` (first run) | yaml-ish |
 | `PENDING.md` | deferred findings | `/gabe-review`, `/gabe-commit`, `/gabe-roast`, `/gabe-health` | table |
-| `LEDGER.md` | session audit log | `/gabe-align`, `/gabe-commit`, `/gabe-push`, post-commit hook | append-only log |
+| `LEDGER.md` | thin session index — one row per command checkpoint | `/gabe-plan`, `/gabe-execute`, `/gabe-commit`, `/gabe-review`, `/gabe-push`, `/gabe-handoff` (+ SCOPE/ALIGN/TEACH/MOCKUP satellite tags) | append-only table |
 | `CHANGES.jsonl` | structured event log | all commands that emit events | JSON lines |
-| `archive/` | archived plans + scope tombstones | `/gabe-plan complete`, `/gabe-scope-pivot` | nested files |
+| `archive/` | archived plans + scope tombstones + retired legacy files (`retired/`) | `/gabe-plan complete`, `/gabe-scope-pivot` | nested files |
 | `research/` | scope research artifacts | `/gabe-scope` step 8 | nested files |
 
 User-level (cross-project):
@@ -215,8 +213,8 @@ User-level (cross-project):
 2. **PLAN before code.** `/gabe-execute` reads `.kdbp/PLAN.md` state column before implementing. No implementation without a phase row.
 3. **STRUCTURE before placement.** New files must match a pattern in `.kdbp/STRUCTURE.md`. PostToolUse hook warns on drift; CHECK 9 escalates at commit.
 4. **VALUES override defaults.** Project `.kdbp/VALUES.md` + user `~/.kdbp/VALUES.md` outrank model priors. `/gabe-align` audits.
-5. **Verified KNOWLEDGE topics trump re-derivation.** If `.kdbp/KNOWLEDGE.md` marks a topic `verified`, honor that explanation rather than re-deriving.
-6. **SCOPE.md + ROADMAP.md writes only by the `/gabe-scope` family.** `/gabe-commit` warns on direct edits.
+5. **Verified KNOWLEDGE topics trump re-derivation, when present.** `.kdbp/KNOWLEDGE.md` is legacy-only — `/gabe-teach` never creates one, but if a project still has one and it marks a topic `verified`, honor that explanation rather than re-deriving.
+6. **SCOPE.md writes only by the `/gabe-scope` family.** That includes its `## Phases` section. `/gabe-commit` warns on direct edits.
 7. **`/gabe-next` is read-only except for `## Current Phase` advancement.** No other state mutation. Zero LLM.
 
 ---
@@ -231,7 +229,7 @@ user: /gabe-align deep "idea for the app"
 user: /gabe-init my-project
   -> .kdbp/ scaffolded, CLAUDE.md at root
 user: /gabe-scope
-  -> SCOPE.md v1 + ROADMAP.md v1 written
+  -> SCOPE.md v1 written (incl. `## Phases`)
 user: /gabe-plan "build the foundation"
   -> PLAN.md written with 6 phases, DECISIONS D1-D6 logged
 user: /gabe-next
@@ -320,7 +318,7 @@ Not natively supported at time of writing. See [GAPS.md](GAPS.md) gap W4 for opt
 - **[workflows/brownfield.md](workflows/brownfield.md)** — adoption guide for existing codebases
 - **[suite-state-audit.md](suite-state-audit.md)** — current suite inventory, install state, and known documentation gaps
 - **[architecture/stack.md](architecture/stack.md)** — recommended application stack for projects built with the suite
-- **[architecture/scope-data-contracts.md](architecture/scope-data-contracts.md)** — authoritative field-by-field contract for SCOPE/ROADMAP/scope-references
+- **[architecture/scope-data-contracts.md](architecture/scope-data-contracts.md)** — authoritative field-by-field contract for SCOPE.md (incl. its `## Phases` section) + scope-references
 - **[architecture/diagram-standards.md](architecture/diagram-standards.md)** — diagram conventions for docs in this repo
 - **[architecture/requirements.md](architecture/requirements.md)** — suite-level design requirements + non-goals
 - **[archive/](archive/)** — retired dogfood + historical design docs

@@ -64,11 +64,11 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |
 | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
-| `/gabe-scope` | Authors SCOPE.md (stable premise) + ROADMAP.md (phase plan). Multi-step, checkpoint-gated, Opus-heavy |
+| `/gabe-scope` | Authors SCOPE.md — stable premise plus the phase arc in its `## Phases` section — and `scope-references.yaml`. Multi-step, checkpoint-gated, Opus-heavy |
 | `/gabe-scope-change` | Scope-change router. Classifies your intended change → routes to `-addition` or `-pivot` |
 | `/gabe-scope-addition` | Additive scope change — inserts new REQs / phases / refs without changing premise |
 | `/gabe-scope-pivot` | Scope pivot — direction change, archives v{N} and creates v{N+1} |
-| `/gabe-teach` | Human knowledge consolidation — tracks WHY/WHEN/WHERE topics from recent commits with Socratic verification |
+| `/gabe-teach` | Human knowledge consolidation — renders lessons from recent commits with Socratic verification; runs stateless (no persistent topic tracking) unless a legacy `KNOWLEDGE.md` already exists |
 
 ### KDBP System
 
@@ -80,27 +80,25 @@ The Knowledge, Decisions, Behavior, and Pending system tracks project state acro
 ├── VALUES.md        # 3-7 project-specific values (checked at commit)
 ├── DECISIONS.md     # Append-only architecture decision table
 ├── PENDING.md       # Deferred items with priority and escalation
-├── LEDGER.md        # Session checkpoint history (auto-appended)
-├── MAINTENANCE.md   # Quarterly human checklist
+├── LEDGER.md        # Thin session index — one row per command checkpoint
 ├── PLAN.md          # Active plan (written by /gabe-plan)
-├── KNOWLEDGE.md     # Human knowledge map (managed by /gabe-teach)
-└── archive/         # Archived plans (completed_, defer_, cancelled_)
+├── PLAN.json        # Machine mirror of PLAN.md (phases, tier, per-phase proof) — read by session hooks
+└── archive/         # Archived plans (completed_, defer_, cancelled_) + retired legacy files
 ```
 
 User-level values at `~/.kdbp/VALUES.md` apply across all projects.
 
 For complex plans, `/gabe-plan` may also create a self-contained HTML review artifact under `docs/gabe/plans/...`. That HTML is the human-facing entrypoint for dense decisions, diagrams, phase maps, and bottleneck summaries; `.kdbp/PLAN.md`, `.kdbp/DECISIONS.md`, and `.kdbp/LEDGER.md` remain canonical for automation and lifecycle state. Every complex HTML artifact should include a visible detail-link section that points readers to the Markdown/README files where deeper implementation details live.
 
-### Hooks (6, installed to `~/.claude/settings.json`)
+### Hooks (5, installed to `~/.claude/settings.json`)
 
 | Hook | Event | What it does |
 |---|---|---|
-| KDBP values loader | SessionStart | Loads user + project values into context |
-| Plan awareness | SessionStart | Surfaces active plan goal, phase, and staleness |
-| Knowledge awareness | SessionStart | Surfaces pending and stale KNOWLEDGE.md topics |
-| Commit gate | PreToolUse (Bash) | Runs deterministic checks on `git commit`, blocks on CRITICAL |
-| Ledger writer | PostToolUse (Bash) | Auto-appends commit entries to `.kdbp/LEDGER.md` |
-| Session-end reminder | Stop | Reminds about deferred items, scope changes, and active plan |
+| KDBP Active | SessionStart | Loads project name, maturity, and stack from `.kdbp/BEHAVIOR.md` |
+| ACTIVE PLAN | SessionStart | Surfaces current phase + state cells — reads `.kdbp/PLAN.json` first, falls back to `PLAN.md` |
+| KDBP CHECKPOINT | PreToolUse (Bash) | Warns on raw `git commit`, points to `/gabe-commit` |
+| STRUCTURE: warning | PostToolUse (Write) | Warns when a new file doesn't match a pattern in `.kdbp/STRUCTURE.md` |
+| SESSION-END REMINDER | Stop | Reminds about deferred items, `/gabe-teach`, and uncommitted changes |
 
 ### Workflows
 
@@ -109,7 +107,7 @@ For complex plans, `/gabe-plan` may also create a self-contained HTML review art
 | Start a new project | `/gabe-init [name]` |
 | Start from a fresh idea | `/gabe-align deep "idea"` then `/gabe-init`, `/gabe-scope`, `/gabe-plan` |
 | Adopt an existing codebase | read [docs/workflows/brownfield.md](docs/workflows/brownfield.md), then use `/gabe-init` or `/gabe-init update` |
-| Scope a new project (SCOPE.md + ROADMAP.md) | `/gabe-scope` |
+| Scope a new project (SCOPE.md, incl. its `## Phases` section) | `/gabe-scope` |
 | Change project scope | `/gabe-scope-change "description of change"` |
 | Check values alignment | `/gabe-align [shallow/standard/deep]` |
 | Understand a concept | `/gabe-lens [concept]` |

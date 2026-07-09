@@ -103,4 +103,4 @@ Revisions update this file in place. Prior versions recoverable via git history.
 - **[../workflows/greenfield.md](../workflows/greenfield.md)** and **[../workflows/brownfield.md](../workflows/brownfield.md)** — explicit project-start workflows
 - **[../GAPS.md](../GAPS.md)** — where requirements are satisfied partially or not at all
 - **[stack.md](stack.md)** — application stack the suite recommends downstream
-- **[scope-data-contracts.md](scope-data-contracts.md)** — field-level contracts for SCOPE/ROADMAP
+- **[scope-data-contracts.md](scope-data-contracts.md)** — field-level contract for SCOPE.md, including its `## Phases` section

@@ -1,7 +1,7 @@
 # Gabe Suite State Audit
 
 **Date:** 2026-05-12
-**Updated:** 2026-07-09 — B2 skills-only migration landed: `commands/` retired (specs re-homed into `skills/<name>/references/`), 25 skills, Codex support dropped (Claude Code only — `~/.agents` is no longer an install target). Counts and surfaces below predate this and are historical. Prior: 2026-07-05 — added `gabe-handoff` (session handoff: resume prompt + evidence-gated KDBP state sync); counts now 22 command wrappers / 12 skills. (2026-07-01 — added `gabe-myopic`.)
+**Updated:** 2026-07-09 — A2 "KDBP-lite" migration landed: per-project ROADMAP.md/KNOWLEDGE.md/ENTITIES.md/MAINTENANCE.md/MOCKUP-VALIDATION.md/DEVIATIONS.md retired (never scaffolded; legacy copies live under `.kdbp/archive/retired/`), the phase arc moved into SCOPE.md's `## Phases` section, `.kdbp/PLAN.json` added as a machine mirror of PLAN.md, `.kdbp/LEDGER.md` became a thin session index, and session hooks dropped from 6 to 5 (ledger-writer and knowledge-awareness hooks retired). Also same-day: B2 skills-only migration landed: `commands/` retired (specs re-homed into `skills/<name>/references/`), 25 skills, Codex support dropped (Claude Code only — `~/.agents` is no longer an install target). Counts and surfaces below predate both migrations and are historical. Prior: 2026-07-05 — added `gabe-handoff` (session handoff: resume prompt + evidence-gated KDBP state sync); counts now 22 command wrappers / 12 skills. (2026-07-01 — added `gabe-myopic`.)
 **Purpose:** Snapshot the current Gabe Suite surface so workflow docs and local installs can be checked against reality.
 
 ## Current Runtime Surface
