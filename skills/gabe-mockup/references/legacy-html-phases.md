@@ -1,5 +1,5 @@
 # Gabe Mockup — legacy-html-phases
-> Split from skills/gabe-mockup/SKILL.md (B2 migration, 2026-07-09). Binding for this mode.
+> Binding spec for this mode; the SKILL.md core routes here.
 
 Per-phase recipes for `/gabe-mockup` execute step. Covers the canonical 13-phase `mockup-project` preset. Each recipe assumes PLAN.md is already written; this skill only governs HOW each Exec step runs.
 
@@ -92,7 +92,7 @@ Per-phase recipes for `/gabe-mockup` execute step. Covers the canonical 13-phase
 | `validate` | `/gabe-mockup validate [<screen>\|--all]` | Run layout sanity checks (C1-C4) over screens × phone/tablet/desktop viewports |
 | `refine` | `/gabe-mockup refine <screen>` | Hone an ALREADY-WIRED live screen's layout/spacing/UX to spec vs its canonical mockup — the analyze → policy-test → verify → fix loop |
 
-Per the B2 migration, the `react-story`/`design-ref`/`spike`/`validate`/`refine` mode recipes now live in their own reference files (`references/react-story.md`, `references/spike.md`, `references/validate.md`, `references/refine.md`) — this file retains only the dispatch table above plus the legacy phase-ladder recipes (M0–M13) below.
+The `react-story`/`design-ref`/`spike`/`validate`/`refine` mode recipes now live in their own reference files (`references/react-story.md`, `references/spike.md`, `references/validate.md`, `references/refine.md`) — this file retains only the dispatch table above plus the legacy phase-ladder recipes (M0–M13) below.
 
 ---
 

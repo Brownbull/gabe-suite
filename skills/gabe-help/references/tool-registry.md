@@ -1,11 +1,9 @@
 # Cross-project tool registry (P14)
 
 > Read this BEFORE building any tooling, harness, generator, or pipeline. E4 REUSE FIRST
-> applies **across projects**, not just within one repo: ~8 incidents in the 2026-07
-> investigation corpus were rebuilds of tooling that already existed somewhere else — a
-> docsite generator rebuilt for 1.5 h while the sibling repo had one, an ad-hoc proof
-> harness built beside an existing prompt-lab, a hand-written handoff doc beside
-> /gabe-handoff, a meme pipeline reinvented instead of pointed at by path.
+> applies **across projects**, not just within one repo — recorded incidents include a docsite
+> generator rebuilt from scratch while the sibling repo had one, an ad-hoc proof harness built
+> beside an existing prompt-lab, and a hand-written handoff doc beside /gabe-handoff.
 
 ## Suite-owned tooling (ships with the suite)
 

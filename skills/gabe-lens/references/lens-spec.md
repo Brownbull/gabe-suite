@@ -1,7 +1,7 @@
-# Gabe Lens — full spec (split)
+# Gabe Lens — full spec
 
-> Split from this skill's SKILL.md (B2 skills-only migration, 2026-07-09). This file is the
-> binding spec; the SKILL.md core is a summary. E1–E7: see `../../gabe-docs/references/execution-contract.md`.
+> This file is the binding spec; the SKILL.md core is a summary.
+> E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 ## Cognitive Profile (Default Suit: Spatial-Analogical)
 

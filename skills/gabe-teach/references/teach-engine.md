@@ -1,6 +1,5 @@
-# Gabe Teach — engine (re-homed)
+# Gabe Teach — engine
 
-> Re-homed verbatim from `commands/gabe-teach.md` (B2 skills-only migration, 2026-07-09).
 > This file is the binding spec; the SKILL.md core is a thin summary. E1–E7 contract:
 > see `../../gabe-docs/references/execution-contract.md`.
 

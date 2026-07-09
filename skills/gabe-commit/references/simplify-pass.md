@@ -1,12 +1,7 @@
 # Simplify tier — size budget + triggered quality pass (gabe-commit)
 
-> Provenance: investigation 2026-07-07, deliverable 10 §2 (step 0.5a verdict). The standalone
-> `/gabe-simplify` wrapper was rejected — demand-side evidence was zero; a new always-loaded
-> surface stays unjustified. The supply-side evidence (one twin material-accumulated-complexity;
-> monoliths growing at high churn; helpers re-implemented instead of shared) justifies this
-> **tiered gate inside gabe-commit** instead: zero new always-loaded surface.
-> **Re-open trigger:** if Wave-2 re-measurement shows the tier firing constantly, promote it to
-> its own skill — with usage numbers.
+> A tier inside the commit gate by design — deliberately NOT a standalone always-loaded skill.
+> Evidence-triggered, never every commit.
 
 ## Tier 1 — deterministic size-budget check (every commit)
 

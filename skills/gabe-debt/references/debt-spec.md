@@ -1,7 +1,7 @@
-# Gabe Debt — full spec (split)
+# Gabe Debt — full spec
 
-> Split from this skill's SKILL.md (B2 skills-only migration, 2026-07-09). This file is the
-> binding spec; the SKILL.md core is a summary. E1–E7: see `../../gabe-docs/references/execution-contract.md`.
+> This file is the binding spec; the SKILL.md core is a summary.
+> E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 > **Rendering note.** Output templates wrapped in bare triple-backtick fences are spec-meta delimiters — render contents as plain markdown at runtime so findings tables display as tables. Tagged fences (```bash, ```diff, etc.) stay fenced at runtime. See `gabe-docs/SKILL.md` § "Runtime output rendering convention".
 

@@ -1,7 +1,7 @@
-# Gabe Myopic — full spec (split)
+# Gabe Myopic — full spec
 
-> Split from this skill's SKILL.md (B2 skills-only migration, 2026-07-09). This file is the
-> binding spec; the SKILL.md core is a summary. E1–E7: see `../../gabe-docs/references/execution-contract.md`.
+> This file is the binding spec; the SKILL.md core is a summary.
+> E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 > **Rendering note.** Triple-backtick blocks below that hold tables/skeletons are spec material —
 > render their contents as plain markdown when you present them, not as literal code.

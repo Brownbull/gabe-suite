@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# size-budget — deterministic gabe-commit gate check (B2 migration; deliverable 10 §2, 0.5a).
+# size-budget — deterministic gabe-commit gate check.
 #
 # WARNs when a touched first-party file is, or newly crosses, >800 lines. Generated files
 # (identified by header markers) are exempt. Where the project's .kdbp/RULES.md or

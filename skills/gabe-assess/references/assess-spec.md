@@ -1,7 +1,7 @@
-# Gabe Assess — full spec (split)
+# Gabe Assess — full spec
 
-> Split from this skill's SKILL.md (B2 skills-only migration, 2026-07-09). This file is the
-> binding spec; the SKILL.md core is a summary. E1–E7: see `../../gabe-docs/references/execution-contract.md`.
+> This file is the binding spec; the SKILL.md core is a summary.
+> E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 > **Rendering note.** Output templates in this spec wrapped in bare triple-backtick fences are spec-meta delimiters — render their contents as plain markdown at runtime so blast-radius tables display as tables, not monospace code. See `gabe-docs/SKILL.md` § "Runtime output rendering convention".
 

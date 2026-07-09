@@ -1,8 +1,7 @@
-# Gabe Scope — full spec (re-homed)
+# Gabe Scope — full spec
 
-> Re-homed verbatim from `commands/gabe-scope.md` (B2 skills-only migration, 2026-07-09;
-> one personal-path rule removed — see migration log). This file is the binding spec;
-> the SKILL.md core is a summary. E1–E7: see `../../gabe-docs/references/execution-contract.md`.
+> This file is the binding spec; the SKILL.md core is a summary.
+> E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
 The backbone authoring command. Produces two linked artifacts for a new project:
 

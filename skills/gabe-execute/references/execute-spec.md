@@ -1,6 +1,5 @@
-# Gabe Execute — full spec (re-homed)
+# Gabe Execute — full spec
 
-> Re-homed verbatim from `commands/gabe-execute.md` (B2 skills-only migration, 2026-07-09).
 > This file is the binding spec; the SKILL.md core is a summary. E1–E7 contract:
 > see `../../gabe-docs/references/execution-contract.md`.
 

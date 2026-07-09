@@ -1,13 +1,8 @@
 # Suite conventions — the Gabe execution contract
 
-> **Stated once, here, for the whole suite** (investigation 2026-07-07, migration rule B2.2-1).
-> Every gabe skill carries a one-line pointer to this file instead of a pasted copy — do not
-> re-add the full block to individual skills or commands.
->
-> Installed with the suite in both homes:
-> `~/.claude/skills/gabe-docs/references/execution-contract.md` (Claude Code) and
-> `~/.agents/skills/gabe-docs/references/execution-contract.md` (Codex). From a sibling
-> skill directory the relative path is `../gabe-docs/references/execution-contract.md`.
+> **Stated once, here, for the whole suite.** Every gabe skill carries a one-line pointer to
+> this file instead of a pasted copy — do not re-add the full block to individual skills or
+> commands.
 
 ## Gabe execution contract (E1–E7)
 

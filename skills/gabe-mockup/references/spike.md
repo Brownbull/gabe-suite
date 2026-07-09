@@ -1,5 +1,5 @@
 # Gabe Mockup — spike
-> Split from skills/gabe-mockup/SKILL.md (B2 migration, 2026-07-09). Binding for this mode.
+> Binding spec for this mode; the SKILL.md core routes here.
 
 ### React port (shared convention for `spike` mode)
 

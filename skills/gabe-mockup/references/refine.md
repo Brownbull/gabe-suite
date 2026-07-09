@@ -1,5 +1,5 @@
 # Gabe Mockup — refine
-> Split from skills/gabe-mockup/SKILL.md (B2 migration, 2026-07-09). Binding for this mode.
+> Binding spec for this mode; the SKILL.md core routes here.
 
 > Project bindings — scheduled to move to the owning project's RULES.md/DESIGN.md in migration phase A2. This mode's P7 sheet-inset recipe, D86/D92/D100 decision citations, `WEB-LAYOUT-POLICY.md` path, and the "gustify pantry add-ingredient sheet" reference example are gustify-project facts carried here verbatim from the pre-split SKILL.md.
 

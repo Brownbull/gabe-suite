@@ -1,5 +1,5 @@
 # Gabe Mockup — react-story
-> Split from skills/gabe-mockup/SKILL.md (B2 migration, 2026-07-09). Binding for this mode.
+> Binding spec for this mode; the SKILL.md core routes here.
 
 ### React + Storybook discipline
 
