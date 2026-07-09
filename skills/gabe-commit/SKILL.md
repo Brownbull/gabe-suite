@@ -1,47 +1,41 @@
 ---
 name: gabe-commit
-description: "Command wrapper for /gabe-commit. Use when the user invokes Gabe Commit, /gabe-commit, or asks to run the Gabe commit quality gate."
+description: "Commit quality gate — deterministic checks (incl. the >800-line size-budget check), interactive triage, defer/accept/fix per finding, evidence-triggered simplify pass, and retroactive docs-audit mode for accumulated documentation drift. Usage: /gabe-commit [commit message] | /gabe-commit docs-audit"
+when_to_use: "Commit, save, checkpoint, ship this work, run the quality gate before committing — any request to record completed work in git in a KDBP project; also docs-audit for accumulated documentation drift."
+metadata:
+  version: 2.0.0
 ---
 
-# Gabe Commit - Command Wrapper
+# Gabe Commit — commit quality gate
 
 ## Gabe execution contract (E1–E7)
 
-These are floors, not ceilings — a skill's own gate may be stricter, never looser.
+This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEFORE-✅ · E3 NO SILENT DOWNGRADE · E4 REUSE FIRST · E5 STATE SYNC · E6 MISSING ANCHOR = STOP · E7 REPORT WHERE — floors, not ceilings; a skill's own gate may be stricter, never looser. Full text: `../gabe-docs/references/execution-contract.md` (if that file is missing, E6 applies — STOP).
 
-- **E1 EVIDENCE** — every claim about code/state cites file:line or a command run THIS session; no citation → mark it `(assumed)` and verify before building on it. Absence claims ("no X exists") require a recorded search → 0 hits.
-- **E2 RUN-BEFORE-✅** — ✅ only after the command executed here (paste cmd + exit/count). Skipped = `⤫ skipped(<reason>)`, never ✅. Every printed number is copied from this run's output — never estimated.
-- **E3 NO SILENT DOWNGRADE** — quote the task text verbatim before implementing; if your plan delivers a cheaper class (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask. Substitution requires an explicit user decision line.
-- **E4 REUSE FIRST** — before creating anything, print: `REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)`. Recreating an existing artifact is a defect.
-- **E5 STATE SYNC** — actions that change reality (commit/merge/defer/pivot) write their state row in the SAME turn; a skipped write prints an enumerated skip code, never silence.
-- **E6 MISSING ANCHOR = STOP** — referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.
-- **E7 REPORT WHERE** — end user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.
+## What this does
 
-## Purpose
-
-Expose `/gabe-commit` as a selectable skill in agents that use skills instead
-of native slash-command routing. The command markdown remains the source of
-truth; this wrapper only tells the host how to find and execute it.
+Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, shape, deferred items, doc drift, structure), shows findings by severity, and lets the human act on each — defer, accept, or fix. Most actions cost zero tokens; LLM involvement (commit-message generation, simplify pass) is explicit and opt-in. Also supports a retroactive `docs-audit` subcommand for accumulated documentation drift that per-diff checks missed.
 
 ## Procedure
 
 1. Treat any text after the invocation as `$ARGUMENTS`.
-2. Load the first existing command spec:
-   - `.claude/commands/gabe-commit.md` from the current project, if present
-   - `.agents/commands/gabe-commit.md` from the current project, if present
-   - `~/.claude/commands/gabe-commit.md`
-   - `~/.agents/commands/gabe-commit.md`
-   - `~/projects/gabe_lens/commands/gabe-commit.md`
-3. Follow that command spec exactly, including deterministic checks, commit
-   message rules, PLAN auto-tick, LEDGER behavior, and the visible
-   `Gabe-Lens brief`.
-4. If the command dispatches another Gabe command and the host cannot invoke it as a
-   native slash command, load that command's spec from the same search order and
-   follow its output contract exactly.
-5. Do not stop after raw `git commit`; the command's visible output contract is
-   part of the command.
-6. Do not replace the command with a hand-rolled equivalent.
+2. Read `references/gate-spec.md` (in this skill directory) IN FULL before executing — it is the binding spec: deterministic checks, triage flow, commit message rules, PLAN auto-tick, LEDGER writes, and the docs-audit subcommand. If it is missing, E6 applies — STOP.
+3. Summary of the spec's main flow:
+   - **Step 0** — dispatch: `$ARGUMENTS` starting with `docs-audit` jumps to Step A (docs-audit mode); otherwise `$ARGUMENTS` is the commit message and normal flow (Steps 1–6) runs.
+   - **Step 1 / 1b** — validate git context; surface the active plan (context only).
+   - **Step 2** — run deterministic checks: CHECK 1 Lint, CHECK 2 Types, CHECK 3 Tests (commands resolved via Step 2.0, never guessed), CHECK 4 Coverage (enterprise/scale maturity only), CHECK 5 Shape (active when >30 source files AND >2000 lines), CHECK 6 Deferred, CHECK 7 Doc Drift (4 layers: universal safe cards, DOCS.md pattern matching, gravity-well docs drift, mockup INDEX freshness), CHECK 8 Structure (requires STRUCTURE.md).
+   - **Step 3** — assign severity to findings.
+   - **Step 4** — present results.
+   - **Step 5** — execute actions per finding (defer/accept/fix).
+   - **Step 6** — commit + record to LEDGER.md; maturity-driven check selection governs which checks apply.
+   - **Step A (docs-audit)** — A1 gather universe, A2 DOCS.md audit, A3 well-docs audit, A4 orphaned-doc detection, A5 source-coverage gap detection, A6 render report + interactive triage, A7 action handlers, A8 log to LEDGER.md, A8.5 notable-updates digest, A9 closing summary.
+   - Commit message body structure, generation rules, model routing (Sonnet for conceptual changes, Haiku for mechanical/dep-bump), and override; scope-edit audit when SCOPE.md/ROADMAP.md are in the diff.
 
-When both Claude and Codex installed assets exist, prefer the path for the active
-host. Claude Code should use `~/.claude`; Codex should use `~/.agents`;
-repo-local `.claude`/`.agents` mirrors outrank home installs when present.
+## Simplify tier (runs with the gate)
+
+- Alongside the gate's deterministic checks, run `scripts/size-budget.sh` (this skill): WARN when a touched file is, or newly crosses, >800 first-party lines; generated files (by header) exempt; recorded split seams from `.kdbp/RULES.md`/`.kdbp/PENDING.md` printed with the WARN. Exit 2 = warnings present. A WARN never blocks the commit by itself — it enters triage like any other finding.
+- When the check WARNs, when the phase touched a known monolith, or on request: OFFER the quality-only simplify pass per `references/simplify-pass.md` (reuse · simplification · efficiency — never bug-hunting).
+
+## Output contract (summary)
+
+Present findings grouped by severity with a clear per-finding action prompt (defer/accept/fix); never silently skip a check — a skipped check prints an enumerated reason, not silence. On commit, write the LEDGER.md entry and any PLAN auto-tick in the same turn (E5). Emit the visible `**Gabe-Lens brief**` (commit-shaped, output-only — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/docs, except when the commit-message generator already owns that body). Docs-audit mode is read-only for git and leaves any proposed file changes unstaged for the human to commit normally. The full output contract in the spec is binding.

@@ -1,46 +1,41 @@
 ---
 name: gabe-plan
-description: "Command wrapper for /gabe-plan. Use when the user invokes Gabe Plan, /gabe-plan, or asks to create, update, check, complete, defer, cancel, or replace a KDBP plan."
+description: "KDBP-aware planning with lifecycle management + tier decision per phase (MVP/enterprise/scale) and optional HTML review artifacts for complex decisions. Usage: /gabe-plan [goal] [--full-catalog] [--html-artifact|--no-html-artifact]"
+when_to_use: "Plan, phases, KDBP plan, tier decision, break down this goal — create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md."
+metadata:
+  version: 2.0.0
 ---
 
-# Gabe Plan - Command Wrapper
+# Gabe Plan — KDBP-aware planner
 
 ## Gabe execution contract (E1–E7)
 
-These are floors, not ceilings — a skill's own gate may be stricter, never looser.
+This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEFORE-✅ · E3 NO SILENT DOWNGRADE · E4 REUSE FIRST · E5 STATE SYNC · E6 MISSING ANCHOR = STOP · E7 REPORT WHERE — floors, not ceilings; a skill's own gate may be stricter, never looser. Full text: `../gabe-docs/references/execution-contract.md` (if that file is missing, E6 applies — STOP).
 
-- **E1 EVIDENCE** — every claim about code/state cites file:line or a command run THIS session; no citation → mark it `(assumed)` and verify before building on it. Absence claims ("no X exists") require a recorded search → 0 hits.
-- **E2 RUN-BEFORE-✅** — ✅ only after the command executed here (paste cmd + exit/count). Skipped = `⤫ skipped(<reason>)`, never ✅. Every printed number is copied from this run's output — never estimated.
-- **E3 NO SILENT DOWNGRADE** — quote the task text verbatim before implementing; if your plan delivers a cheaper class (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask. Substitution requires an explicit user decision line.
-- **E4 REUSE FIRST** — before creating anything, print: `REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)`. Recreating an existing artifact is a defect.
-- **E5 STATE SYNC** — actions that change reality (commit/merge/defer/pivot) write their state row in the SAME turn; a skipped write prints an enumerated skip code, never silence.
-- **E6 MISSING ANCHOR = STOP** — referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.
-- **E7 REPORT WHERE** — end user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.
+## What this does
 
-## Purpose
-
-Expose `/gabe-plan` as a selectable skill in agents that use skills instead of
-native slash-command routing. The command markdown remains the source of truth;
-this wrapper only tells the host how to find and execute it.
+KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.md` with lifecycle management plus a per-phase tier decision (MVP / Enterprise / Scale) rendered as a trade-off matrix. For complex plans it also creates a self-contained HTML review artifact as the human-facing entrypoint, while `.kdbp/PLAN.md` stays canonical. Pending (phase A2 of the migration plan): this skill will also write a PLAN.json machine mirror (phases, cells, tier, proof field) — not yet implemented.
 
 ## Procedure
 
 1. Treat any text after the invocation as `$ARGUMENTS`.
-2. Load the first existing command spec:
-   - `.claude/commands/gabe-plan.md` from the current project, if present
-   - `.agents/commands/gabe-plan.md` from the current project, if present
-   - `~/.claude/commands/gabe-plan.md`
-   - `~/.agents/commands/gabe-plan.md`
-   - `~/projects/gabe_lens/commands/gabe-plan.md`
-3. Follow that command spec exactly, including lifecycle, tier, PLAN, DECISIONS,
-   LEDGER, optional HTML review artifacts, and Gabe-Lens output rules.
-4. If the command dispatches another Gabe command and the host cannot invoke it as a
-   native slash command, load that command's spec from the same search order and
-   follow its output contract exactly.
-5. Preserve visible command-time output requirements such as `Gabe-Lens block`,
-   PLAN writes, LEDGER writes, HTML artifact status, and follow-up routing notes.
-6. Do not replace the command with a hand-rolled equivalent.
+2. Read `references/plan-spec.md` (in this skill directory) IN FULL before executing — it is the binding spec: subcommand dispatch, tier-decision flow, PLAN.md write format, DECISIONS/LEDGER writes, and the shared auto-tick helper. If it is missing, E6 applies — STOP.
+3. Summary of the spec's main flow:
+   - **Step 0** — subcommand dispatch on first token of `$ARGUMENTS`: `check` → Step CHK (structural compliance + retrofit); `update` → Step UPD (modify active plan in place); `complete`/`defer`/`cancel`/`replace` → Step 1 branches; anything else is treated as a goal.
+   - **Step 0 (validate KDBP)** — require `.kdbp/`, ensure `archive/` and `PLAN.md` exist.
+   - **Step 0.5 (preset dispatch)** — parses `--html-artifact`/`--no-html-artifact`/`--html-path`; `--preset=mockup-project` emits the canonical 13-phase mockup template (Step 3.PRESET) instead of free-form planning, then still runs the per-phase tier decision.
+   - **Step 1** — if an active plan exists, offer complete/defer/cancel/continue/replace; `continue` stops here.
+   - **Step 2** — gather context from `.kdbp/BEHAVIOR.md` (maturity, domain, tech); ask for the goal if none given.
+   - **Step 3** — draft the phase list; user confirms.
+   - **Step 3.5** — tier decision per phase (MVP/Enterprise/Scale): assemble the trade-off matrix from `templates/gabe/tier-sections/*` (Core always renders unfiltered; `--full-catalog` skips the Layer-2 LLM dimension filter), render the decision prompt, user picks a tier, log to DECISIONS.md (including per-dim tier overrides and suppressed dimensions), store tier + overrides in PLAN.md.
+   - **Step 3.75** — decide whether to create the HTML review artifact (`--html-artifact` forces, `--no-html-artifact` disables, otherwise complexity heuristics decide).
+   - **Step 4** — write `.kdbp/PLAN.md` (Goal, Context, Phases table, Phase Details, Current Phase, Dependencies, Risks, Notes, Review Artifacts, Runtime Evidence Checkpoints).
+   - **Step 5** — log PLAN CREATED to LEDGER.md.
+   - **Step 6** — archive mechanics for complete/defer/cancel/replace.
+   - **Step 7** — show the result.
+   - **Step CHK** (`/gabe-plan check`) — zero-LLM structural compliance check of the active plan against the current spec shape, with a retrofit offer (LLM only fires if retrofit needs content generation).
+   - **Shared auto-tick helper** — used by `/gabe-execute`, `/gabe-review`, `/gabe-commit`, `/gabe-push` to tick the Phases table's Exec/Review/Commit/Push column; idempotent, never silent on mismatch, always prints an enumerated skip code on precondition failure.
 
-When both Claude and Codex installed assets exist, prefer the path for the active
-host. Claude Code should use `~/.claude`; Codex should use `~/.agents`;
-repo-local `.claude`/`.agents` mirrors outrank home installs when present.
+## Output contract (summary)
+
+Write `.kdbp/PLAN.md` with the full section set (Goal/Context/Phases/Phase Details/Current Phase/Dependencies/Risks/Notes/Review Artifacts/Runtime Evidence Checkpoints) and log the corresponding LEDGER.md entry in the same turn (E5). Tier decisions, per-dim overrides, and suppressed dimensions get a DECISIONS.md entry with a stated reason. Emit the output-only `**Gabe-Lens block**` — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/commits/docs unless another command already owns that write. When an HTML review artifact is created or refreshed, report its path. The full output contract in the spec is binding.
