@@ -3,7 +3,7 @@ name: gabe-plan
 description: "KDBP-aware planning with lifecycle management + tier decision per phase (MVP/enterprise/scale) and optional HTML review artifacts for complex decisions. Usage: /gabe-plan [goal] [--full-catalog] [--html-artifact|--no-html-artifact]"
 when_to_use: "Plan, phases, KDBP plan, tier decision, break down this goal — create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Gabe Plan — KDBP-aware planner
@@ -14,7 +14,7 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 ## What this does
 
-KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.md` with lifecycle management plus a per-phase tier decision (MVP / Enterprise / Scale) rendered as a trade-off matrix. For complex plans it also creates a self-contained HTML review artifact as the human-facing entrypoint, while `.kdbp/PLAN.md` stays canonical. Pending (phase A2 of the migration plan): this skill will also write a PLAN.json machine mirror (phases, cells, tier, proof field) — not yet implemented.
+KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.md` with lifecycle management plus a per-phase tier decision (MVP / Enterprise / Scale) rendered as a trade-off matrix. Every PLAN.md write also writes the `.kdbp/PLAN.json` machine mirror (phases, cells, tier, per-phase `proof:` field) in the same turn — read by session hooks and deterministic tooling. For complex plans it also creates a self-contained HTML review artifact as the human-facing entrypoint, while `.kdbp/PLAN.md` stays canonical.
 
 ## Procedure
 
@@ -29,8 +29,8 @@ KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.
    - **Step 3** — draft the phase list; user confirms.
    - **Step 3.5** — tier decision per phase (MVP/Enterprise/Scale): assemble the trade-off matrix from `templates/gabe/tier-sections/*` (Core always renders unfiltered; `--full-catalog` skips the Layer-2 LLM dimension filter), render the decision prompt, user picks a tier, log to DECISIONS.md (including per-dim tier overrides and suppressed dimensions), store tier + overrides in PLAN.md.
    - **Step 3.75** — decide whether to create the HTML review artifact (`--html-artifact` forces, `--no-html-artifact` disables, otherwise complexity heuristics decide).
-   - **Step 4** — write `.kdbp/PLAN.md` (Goal, Context, Phases table, Phase Details, Current Phase, Dependencies, Risks, Notes, Review Artifacts, Runtime Evidence Checkpoints).
-   - **Step 5** — log PLAN CREATED to LEDGER.md.
+   - **Step 4** — write `.kdbp/PLAN.md` (Goal, Context, Phases table, Phase Details, Current Phase, Dependencies, Risks, Notes, Review Artifacts, Runtime Evidence Checkpoints); **Step 4b** — write the `.kdbp/PLAN.json` machine mirror in the same turn.
+   - **Step 5** — append one PLAN row to the LEDGER.md thin session index.
    - **Step 6** — archive mechanics for complete/defer/cancel/replace.
    - **Step 7** — show the result.
    - **Step CHK** (`/gabe-plan check`) — zero-LLM structural compliance check of the active plan against the current spec shape, with a retrofit offer (LLM only fires if retrofit needs content generation).
@@ -38,4 +38,4 @@ KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.
 
 ## Output contract (summary)
 
-Write `.kdbp/PLAN.md` with the full section set (Goal/Context/Phases/Phase Details/Current Phase/Dependencies/Risks/Notes/Review Artifacts/Runtime Evidence Checkpoints) and log the corresponding LEDGER.md entry in the same turn (E5). Tier decisions, per-dim overrides, and suppressed dimensions get a DECISIONS.md entry with a stated reason. Emit the output-only `**Gabe-Lens block**` — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/commits/docs unless another command already owns that write. When an HTML review artifact is created or refreshed, report its path. The full output contract in the spec is binding.
+Write `.kdbp/PLAN.md` with the full section set (Goal/Context/Phases/Phase Details/Current Phase/Dependencies/Risks/Notes/Review Artifacts/Runtime Evidence Checkpoints), the `.kdbp/PLAN.json` machine mirror, and the corresponding LEDGER.md thin-index row in the same turn (E5). Tier decisions, per-dim overrides, and suppressed dimensions get a DECISIONS.md entry with a stated reason. Emit the output-only `**Gabe-Lens block**` — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/commits/docs unless another command already owns that write. When an HTML review artifact is created or refreshed, report its path. The full output contract in the spec is binding.

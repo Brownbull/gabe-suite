@@ -74,7 +74,7 @@ Emitted by `--preset=mockup-project`. Phases + canonical types + scope hints:
 | 1 | Design language + tokens | `design-system` | high | Theme matrix + stress-test render across `--platforms` + token lock → `tokens.css` |
 | 2 | Atomic components | `design-system, ui-kit` | low | Button / input / pill / badge / avatar / chip / skeleton / progress / spinner |
 | 3 | Molecular components | `design-system, ui-kit` | med | Cards / modals / toast / banner / nav / FAB / filters / sheets / drawers / forms / state-tabs |
-| 4 | Flow map + INDEX + CRUD×entity | `mockup-flows, mockup-index` | med | Enumerate flows, seed `docs/mockups/INDEX.md` (4 tables), populate CRUD from `.kdbp/ENTITIES.md` |
+| 4 | Flow map + INDEX + CRUD×entity | `mockup-flows, mockup-index` | med | Enumerate flows, seed `docs/mockups/INDEX.md` (4 tables), populate CRUD from the entity list in `SCOPE.md` (or the project's data model) |
 | 5 | Auth + onboarding + consent | `user-facing, auth` | med | Login / register / forgot / verify / welcome / jurisdiction consent / PWA install / push |
 | 6 | Core capture/primary loop | `user-facing` | high | Dashboard + primary interaction + 5-state variants (idle / processing / reviewing / saving / error) |
 | 7 | Batch / bulk flows | `user-facing` | high | Batch capture + review + reconciliation |
@@ -437,7 +437,7 @@ Only after user confirms. Write with this structure:
 <!-- /gabe-next routes to the next command based on column state (Exec → Review → Commit → Push → advance phase) -->
 <!-- Tier column values: mvp | ent | scale. Read by /gabe-execute (tier-cap) and /gabe-review (TIER_DRIFT finding). -->
 <!-- User-facing/runtime phase types require journey evidence artifacts before Exec can be ✅. -->
-<!-- Manual override is fine — edit cells by hand any time -->
+<!-- Manual override is fine — edit cells by hand any time (then /gabe-plan update regenerates the PLAN.json mirror) -->
 <!-- Legacy plans with a single Status column still work; auto-tick is a silent no-op -->
 <!-- Legacy plans without Tier column: /gabe-execute reads tier=mvp default; /gabe-review skips TIER_DRIFT silently -->
 
@@ -489,16 +489,49 @@ Phase 1: [name]
 - For each user-facing/runtime phase, name the required journey command(s), target device/browser, and artifact directory before `/gabe-execute` starts.
 ```
 
+### Step 4b: Write the PLAN.json machine mirror
+
+Whenever this skill writes `.kdbp/PLAN.md` (Step 4, Step UPD, Step 6 archive mechanics), write the sibling `.kdbp/PLAN.json` in the same turn (E5). PLAN.md stays canonical for humans; PLAN.json is the machine mirror — read by session hooks and deterministic tooling (the planned `next.mjs`), written only by this skill and the shared auto-tick helper. It is never hand-edited; if it drifts or goes missing, regenerate from the Phases table.
+
+Schema (v1):
+
+```json
+{
+  "version": 1,
+  "status": "active",
+  "goal": "<one-line goal>",
+  "maturity": "<from Context>",
+  "created": "YYYY-MM-DD",
+  "last_updated": "YYYY-MM-DD",
+  "current_phase": "<phase id as string>",
+  "phases": [
+    {
+      "id": "<first table column, as string — supports H6, U1, 2.1>",
+      "name": "<Phase cell>",
+      "tier": "mvp",
+      "complexity": "med",
+      "types": ["<from the Types cell or the Phase Details YAML>"],
+      "cells": { "exec": "todo", "review": "todo", "commit": "todo", "push": "todo" },
+      "proof": null
+    }
+  ]
+}
+```
+
+Rules:
+
+- `status` mirrors the `<!-- status: ... -->` comment: `active | none | completed | defer | cancelled`.
+- Cell tokens mirror the table glyphs 1:1: ⬜ `todo` · 🔄 `in_progress` · ✅ `done` · ⏸ `deferred` · ⚰️ `obsolete`.
+- `proof` is the per-phase runtime-evidence field (Evidence Doctrine): at plan time, the required journey command / spec path / artifact dir from `## Runtime Evidence Checkpoints` (or `null` for phases with no runtime requirement); `/gabe-execute` overwrites it with the actual evidence line (command → runtime → artifact paths) when the evidence lands.
+- On archive (Step 6b), after resetting PLAN.md to the empty template, write `{"version": 1, "status": "none", "phases": []}`. The archived `.md` copy is the durable record; the mirror is regenerable, so it is not archived.
+- Legacy plans: if PLAN.md exists without PLAN.json, regenerate the mirror from the Phases table on the next write that touches plan state.
+
 ### Step 5: Log to LEDGER.md
 
-Append to `.kdbp/LEDGER.md`:
+Append one row to `.kdbp/LEDGER.md` per the thin session index (house format below):
 
 ```
-## [YYYY-MM-DD HH:MM] — PLAN CREATED: [goal]
-PHASES: [N] | COMPLEXITY: [overall] | MATURITY: [project-level from BEHAVIOR.md]
-TIERS: mvp × [n], ent × [n], scale × [n] | PROTOTYPES: [n]
-DECISIONS: D[first] → D[last] ([N] phase tier decisions logged)
-HTML_ARTIFACT: [path, or "none"]
+| [YYYY-MM-DD] | PLAN | created: [goal, ≤8 words] — [N] phases (mvp×a ent×b scale×c) | — | D[first]–D[last] · html: [path or none] |
 ```
 
 Tier distribution gives a quick read on "how much we're trying to do." A plan of 6 phases with 5 scale + 1 ent is a warning sign — over-scoping detectable at plan creation, before code hits.
@@ -535,6 +568,7 @@ When archiving a plan (from Step 1 or when completing later):
 
   No active plan. Run `/gabe-plan [goal]` to create one.
   ```
+- Reset `.kdbp/PLAN.json` to `{"version": 1, "status": "none", "phases": []}` (Step 4b).
 
 **6c. For `defer` only — add to PENDING.md:**
 
@@ -544,12 +578,10 @@ Add a row to `.kdbp/PENDING.md`:
 |---|------|--------|---------|------|-------|----------|--------|----------------|--------|
 | P[N] | [date] | gabe-plan | Plan deferred: "[goal]" | .kdbp/archive/defer_PLAN_...md | [maturity] | [ask user: high/medium/low, default medium] | [ask user: high/moderate/low, default moderate] | 1 | open |
 
-**6d. Log to LEDGER.md:**
+**6d. Log to LEDGER.md** — one thin-index row:
 
 ```
-## [YYYY-MM-DD HH:MM] — PLAN {COMPLETED|DEFERRED|CANCELLED}: [goal]
-ARCHIVE: .kdbp/archive/{filename}
-PHASES COMPLETED: [N of M]
+| [YYYY-MM-DD] | PLAN | {completed|deferred|cancelled}: [goal, ≤8 words] — [N of M] phases done | — | archive: .kdbp/archive/{filename} |
 ```
 
 ### Step 7: Show result
@@ -557,7 +589,7 @@ PHASES COMPLETED: [N of M]
 ```
 GABE PLAN: [goal]
 
-STATUS: ✅ Plan written to .kdbp/PLAN.md
+STATUS: ✅ Plan written to .kdbp/PLAN.md (+ PLAN.json mirror)
 PHASES: [N] phases | Current: Phase 1 — [name] (tier: [mvp/ent/scale])
 TRACKERS: Exec ⬜ | Review ⬜ | Commit ⬜ | Push ⬜ (auto-ticked as phases advance)
 TIERS: mvp × [n], ent × [n], scale × [n] | PROTOTYPES: [n]
@@ -684,7 +716,7 @@ After write (or report-only), show:
 
 - Does NOT re-run Step 3.5 tier decisions. User's existing tier choices are authoritative; backfill only generates the structure around them.
 - Does NOT add phases, remove phases, or change REQ coverage. Structural fix only.
-- Does NOT touch SCOPE.md or ROADMAP.md. Those have their own change commands.
+- Does NOT touch SCOPE.md. Scope (including its §Phases arc) has its own change commands.
 - Does NOT call LLM unless `[overrides]` or `[all]` is picked AND the phase has prose-only override signals.
 
 ### Updating an active plan mid-work
@@ -698,11 +730,9 @@ If the user runs `/gabe-plan update` or `/gabe-plan status`:
   3. NEVER delete DECISIONS.md references.
   Allowed edits menu: [add-phase] [edit-description] [edit-scope/acceptance] [re-tier via 3.5] [move-pointer] [edit-risks].
   ```
-  Read `.kdbp/PLAN.md`, ask what changed, update the plan in-place, bump `Last Updated` date, log to LEDGER:
+  Read `.kdbp/PLAN.md`, ask what changed, update the plan in-place, bump `Last Updated` date, rewrite the `.kdbp/PLAN.json` mirror (Step 4b), and log one thin-index row to LEDGER:
   ```
-  ## [date] [time] — PLAN UPDATED: [goal]
-  CHANGE: [brief description of what changed]
-  HTML_ARTIFACT: [refreshed path, existing path, or none]
+  | [YYYY-MM-DD] | PLAN | updated: [what changed, ≤10 words] | — | html: [refreshed path, existing path, or none] |
   ```
   If `## Review Artifacts` lists an HTML artifact, refresh it from the updated plan. If no artifact exists but the updated plan now matches Step 3.75 complexity heuristics, offer to create one unless `--no-html-artifact` is present.
 
@@ -743,6 +773,8 @@ This logic is invoked by the four trigger commands to update the Phases table in
 4. **Bump Last Updated:**
    - In the Context section, replace the `- **Last Updated:** ...` line with today's date (`YYYY-MM-DD`)
 
+4b. **Mirror the tick into `.kdbp/PLAN.json`** (Step 4b schema): set `phases[id==N].cells.<col>` to the matching token (⬜ `todo` · 🔄 `in_progress` · ✅ `done`) and `last_updated` to today. Use a small `python3 -c`/`node -e` one-liner — never sed on JSON. If PLAN.json is missing or unparseable, print `ℹ PLAN.json: mirror skipped (missing|invalid) — run /gabe-plan update to regenerate` and continue (the .md tick still lands; never block on the mirror).
+
 5. **Cross-check the phase footer.** If the triggering commit message carries a `Phase: M` footer and M ≠ N (Current Phase): do NOT tick. Print `⚠ Phase footer M ≠ Current Phase N — fix the pointer or the footer before ticking.` (one deterministic string compare; /gabe-execute Step 5 already generates the footer).
 
 6. **Skip codes.** On any precondition failure or footer mismatch, print exactly one line: `ℹ PLAN: <col> tick skipped (no-plan | not-active | phase-not-found | column-missing | legacy-format | footer-mismatch)`. Callers surface this line verbatim in their output.
@@ -754,7 +786,29 @@ This logic is invoked by the four trigger commands to update the Phases table in
 
 ### Implementation note
 
-Keep this logic local to each command (short awk/sed block ~15 lines). Duplication is clearer than indirection here. A shared shell script would need to be installed alongside the commands, which adds install complexity for a small benefit.
+Keep this logic local to each command (short awk/sed block ~15 lines for the .md cell, plus the step-4b one-liner for the mirror). Duplication is clearer than indirection here. A shared shell script would need to be installed alongside the commands, which adds install complexity for a small benefit.
+
+---
+
+## Shared: LEDGER.md thin session index (house format)
+
+`.kdbp/LEDGER.md` is a **thin session index** — one table row per command checkpoint, appended directly under the header (newest first). Git commits (rich messages via /gabe-commit) and transcripts hold the detail; PLAN.json holds per-phase proof. Never append multi-line entries, per-tool-call logs, or file lists.
+
+File shape:
+
+```markdown
+# Session Ledger — thin index
+
+<!-- One row per command checkpoint, newest first. Detail lives in git commit messages; per-phase proof lives in PLAN.json. -->
+
+| Date | Entry | Theme / scope | Commits | Gates / results |
+|---|---|---|---|---|
+```
+
+- `Entry` is the writing command's tag: `PLAN` · `EXEC` · `COMMIT` · `REVIEW` · `PUSH` · `HANDOFF` (satellite commands that log use their own tag, e.g. `SCOPE`, `ALIGN`, `MOCKUP`).
+- `Commits` carries the short sha(s) the row is about (`—` when none). This column is how scope is later resolved — `git show --name-only <sha>` replaces the old in-ledger file lists.
+- Each writing command's own spec defines its row content; every writer appends exactly ONE row per checkpoint.
+- If LEDGER.md is missing, create it with the header above. Legacy multi-entry ledgers are rotated to `archive/` per the KDBP-lite migration — never converted in place.
 
 ---
 
@@ -765,11 +819,11 @@ When reading PLAN.md at Step 1, also check `Last Updated`:
 - >30 days: show `⚠ STALE PLAN — last updated [N] days ago. Consider: [complete] [defer] [cancel] [update]`
 - Row-state consistency: any row < Current Phase N with a non-✅ cell → `⚠ INCOMPLETE PRIOR PHASES: [<phase>: <columns>]` (always print, never block).
 
-### Scope integration (if SCOPE.md + ROADMAP.md exist)
+### Scope integration (if SCOPE.md exists)
 
-When `.kdbp/SCOPE.md` and `.kdbp/ROADMAP.md` exist (project scoped via `/gabe-scope`):
+When `.kdbp/SCOPE.md` exists (project scoped via `/gabe-scope`):
 
-1. **Read ROADMAP.md first.** Find target phase by ID (integer or decimal). Extract `Goal`, `Why (business intent)`, `Depends-on`, `Parallel-with`, `Covers REQs`.
+1. **Read SCOPE.md `## Phases` first.** Find target phase by ID (integer or decimal). Extract `Goal`, `Why (business intent)`, `Depends-on`, `Parallel-with`, `Covers REQs`. (Pre-A2 projects that still carry a separate `.kdbp/ROADMAP.md` — or its archived copy under `.kdbp/archive/retired/` — read the same fields there.)
 2. **Read SCOPE.md REQ blocks.** For each REQ-NN in Covers REQs, read `Description` + `Acceptance signal` at anchor `{#req-NN}`.
 3. **Use as plan context.** Each REQ's Acceptance signal becomes a mandatory verification item in the Current Phase's plan. Goal-backward: plan must produce evidence satisfying every Covers REQ's acceptance.
 4. **Constraint check.** Read SCOPE.md §9 Constraints + §10 Architecture Posture. Plan must align with declared tech stack, budget, topology.
@@ -777,8 +831,8 @@ When `.kdbp/SCOPE.md` and `.kdbp/ROADMAP.md` exist (project scoped via `/gabe-sc
 
 **Refusal cases:**
 - SCOPE.md `status: pivoted` — confirm which version to target before planning.
-- ROADMAP.md references a phase ID absent from SCOPE.md — stale roadmap, suggest `/gabe-scope-change`.
+- SCOPE.md §Phases references a REQ ID absent from §Requirements — stale arc, suggest `/gabe-scope-change`.
 
-**Never write** to SCOPE.md or ROADMAP.md. PLAN.md is the only write target.
+**Never write** to SCOPE.md. PLAN.md (+ its PLAN.json mirror) is the only write target.
 
 $ARGUMENTS
