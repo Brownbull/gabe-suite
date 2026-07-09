@@ -3,7 +3,7 @@ name: gabe-review
 description: "Code review with risk pricing, confidence scoring, interactive triage, and deferred item tracking. Also checks plan alignment (is this diff on-scope?), detects stale verified topics, and proposes DECISIONS.md entries for architectural changes. Surfaces the cost of NOT fixing each finding. Usage: /gabe-review [target] or /gabe-review deferred"
 when_to_use: "Review this diff/PR/phase/commit before merging — risk-priced findings with triage; also plan alignment ('is this on-scope?'), stale verified topics, deferred-item follow-up."
 metadata:
-  version: 1.5.0
+  version: 1.6.0
 ---
 
 # Gabe Review — Code Review with Risk Pricing
@@ -40,7 +40,7 @@ This is NOT a generic checklist review. Every finding gets a **Defer Risk** (con
 2. Read `references/review-spec.md` IN FULL before executing — the binding spec for target resolution, dimension scoring, tier-drift detection, plan alignment, confidence scoring, and triage. If missing, E6 applies — STOP.
 3. Resolve target (KDBP-plan-first, git-diff fallback) and maturity, then score the diff across review dimensions (security, data integrity, error handling, test coverage, runtime evidence, logic, tier drift, performance, style), pricing each finding with Fix Cost + Defer Risk + Maturity Gate + churn annotation.
 4. Compute the Review Confidence Score (0-100) with fix-tier projections. When a KDBP plan is active, render the Plan Alignment sub-checks (phase compliance, stale verified topics, architectural-decision candidates, tier drift), then render the output-only Gabe-Lens block.
-5. Offer Triage (severity × maturity matrix, shared next-action menu, custom expressions, one-by-one loop) — skipped in `brief`/`inbox`/`deferred`/`close`/`discard` modes. Persist deferred items to `.kdbp/PENDING.md`; archive `.kdbp/REVIEW.md` and always append a LEDGER trace on completion.
+5. Offer Triage (severity × maturity matrix, shared next-action menu, custom expressions, one-by-one loop) — skipped in `brief`/`inbox`/`deferred`/`close`/`discard` modes. Persist deferred items to `.kdbp/PENDING.md`; archive `.kdbp/REVIEW.md` and always append one LEDGER row on completion.
 6. `post-review` arg → read `references/post-review.md` now.
 
 ## Output contract (summary)

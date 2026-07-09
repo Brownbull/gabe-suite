@@ -3,7 +3,7 @@ name: gabe-commit
 description: "Commit quality gate — deterministic checks (incl. the >800-line size-budget check), interactive triage, defer/accept/fix per finding, evidence-triggered simplify pass, and retroactive docs-audit mode for accumulated documentation drift. Usage: /gabe-commit [commit message] | /gabe-commit docs-audit"
 when_to_use: "Commit, save, checkpoint, ship this work, run the quality gate before committing — any request to record completed work in git in a KDBP project; also docs-audit for accumulated documentation drift."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Gabe Commit — commit quality gate
@@ -29,7 +29,7 @@ Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, sh
    - **Step 5** — execute actions per finding (defer/accept/fix).
    - **Step 6** — commit + record to LEDGER.md; maturity-driven check selection governs which checks apply.
    - **Step A (docs-audit)** — A1 gather universe, A2 DOCS.md audit, A3 well-docs audit, A4 orphaned-doc detection, A5 source-coverage gap detection, A6 render report + interactive triage, A7 action handlers, A8 log to LEDGER.md, A8.5 notable-updates digest, A9 closing summary.
-   - Commit message body structure, generation rules, model routing (Sonnet for conceptual changes, Haiku for mechanical/dep-bump), and override; scope-edit audit when SCOPE.md/ROADMAP.md are in the diff.
+   - Commit message body structure, generation rules, model routing (Sonnet for conceptual changes, Haiku for mechanical/dep-bump), and override; scope-edit audit when SCOPE.md (including its `## Phases` section) is in the diff.
 
 ## Simplify tier (runs with the gate)
 
@@ -38,4 +38,4 @@ Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, sh
 
 ## Output contract (summary)
 
-Present findings grouped by severity with a clear per-finding action prompt (defer/accept/fix); never silently skip a check — a skipped check prints an enumerated reason, not silence. On commit, write the LEDGER.md entry and any PLAN auto-tick in the same turn (E5). Emit the visible `**Gabe-Lens brief**` (commit-shaped, output-only — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/docs, except when the commit-message generator already owns that body). Docs-audit mode is read-only for git and leaves any proposed file changes unstaged for the human to commit normally. The full output contract in the spec is binding.
+Present findings grouped by severity with a clear per-finding action prompt (defer/accept/fix); never silently skip a check — a skipped check prints an enumerated reason, not silence. On commit, write the LEDGER.md thin-index row and any PLAN auto-tick (with its PLAN.json mirror) in the same turn (E5). Emit the visible `**Gabe-Lens brief**` (commit-shaped, output-only — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/docs, except when the commit-message generator already owns that body). Docs-audit mode is read-only for git and leaves any proposed file changes unstaged for the human to commit normally. The full output contract in the spec is binding.

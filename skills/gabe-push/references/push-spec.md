@@ -190,6 +190,8 @@ Skipped when `push_source = HEAD` AND `current_branch = env.target_branch` (dire
    - `[ignore]` — continue without fixing
 6. Timeout (75s): "CI still running. Check later: `gh pr checks`."
 
+**Long CI runs** can be babysat with `/loop` (e.g. `/loop 4m check CI on <branch> and report`) — use watch-and-report only; auto-fix loops are appropriate only where the phase has runtime-journey proof in place (PLAN.json `proof`).
+
 ### Step 6.7: Deploy verify
 
 Runs when the target env deploys an artifact — deploy provider configured in PUSH.md, or the env is `production`. Otherwise skip.
@@ -292,7 +294,7 @@ Read `.kdbp/PENDING.md`. For every row where `Source` column = `classifier` AND 
 | Deployment config | Diff modifies `docker-compose*.yml`, `Dockerfile*`, `fly.toml`, `railway.toml`, `render.yaml`, `vercel.json`, `netlify.toml` |
 | Auto-fix config change | Step 6 auto-fix path fired AND it modified a config file (lint config, type config, CI workflow) |
 | Rollback/revert | Any commit in the pushed range has a subject starting with `revert:` or `rollback:` |
-| Trunk-first push | Push target is the repo's default branch AND PUSH.md promotion chain has `trunk-based: true` AND this is the first such push in LEDGER.md (rare — captures the "why direct to main" moment) |
+| Trunk-first push | Push target is the repo's default branch AND PUSH.md promotion chain has `trunk-based: true` AND no prior PUSH row in the LEDGER.md thin index targets the default branch (rare — captures the "why direct to main" moment) |
 | Promotion skipped when chain existed | Step 7 prompted to promote and user chose `n` (deliberate non-advance — worth capturing why) |
 
 **Classifier layer** (LLM, cheap model, fires only when trigger hits AND no `operational`-tagged DECISIONS.md row covers this event):
@@ -355,19 +357,23 @@ Humans can disable the classifier entirely by adding `push_operational_classifie
 
 **Race handling with `/gabe-review` 5b:** both commands append to DECISIONS.md. Dedup is by case-insensitive title match. Edit-tool collisions retry with fresh read. `operational` tag in Status column lets downstream readers (notably `/gabe-teach` Loop L6) filter cleanly.
 
-**Explicit non-goal:** this step NEVER touches `docs/architecture.md`, `docs/AGENTS_USE.md`, `docs/SCALING.md`, `docs/api.md`, `README.md`, `docs/wells/*.md`, `KNOWLEDGE.md`, or `STRUCTURE.md`. Push is operational-only. If deployment issues trigger code fixes, those flow through a separate `/gabe-commit` invocation that runs CHECK 7 normally.
+**Explicit non-goal:** this step NEVER touches `docs/architecture.md`, `docs/AGENTS_USE.md`, `docs/SCALING.md`, `docs/api.md`, `README.md`, `docs/wells/*.md`, or `STRUCTURE.md`. Push is operational-only. If deployment issues trigger code fixes, those flow through a separate `/gabe-commit` invocation that runs CHECK 7 normally.
 
 ### Step 8: Record to ledger
 
-Append to `.kdbp/LEDGER.md`:
+Append one row to `.kdbp/LEDGER.md` per the thin-index house format (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"):
 
-```markdown
-## [date] [time] — PUSH [branch] -> [target]
-PR: [url]
-CI: [all passed | N failed | skipped | no CI]
-PROMOTION: [promoted to X | skipped | N/A]
-DEPLOYMENTS: P[N]  (added row to .kdbp/DEPLOYMENTS.md)
 ```
+| [YYYY-MM-DD] | PUSH | [env] ← [branch] @ [short sha] | [short sha] | push ✓ · CI [result/none] · promotion [state] |
+```
+
+- `[env]` — the resolved env name (e.g., `production`).
+- `[branch]` — `source_label` from Step 3 (the branch or `promote_from` ref that was pushed).
+- `[short sha]` — the sha now on `env.target_branch` after push (used in both the Theme/scope cell and the Commits column).
+- `CI [result/none]` — `all passed` / `N failed` / `skipped` / `no CI`, from Step 6's outcome.
+- `promotion [state]` — `promoted to X` / `skipped` / `N/A`.
+
+The DEPLOYMENTS.md row (P[N], Step 7.5) carries the richer detail — PR, CI codes, notes, decisions; this LEDGER row is the thin pointer into it.
 
 ### Step 8.5: Auto-commit post-push bookkeeping (**zero user ceremony**)
 
@@ -414,7 +420,7 @@ This step commits those writes automatically and returns the working tree to a c
    chore(kdbp): record push bookkeeping for P7
 
    - DEPLOYMENTS.md: appended P7 row (main → main, direct)
-   - lanes/<active>/LEDGER.md: PUSH entry for [date] [time]
+   - lanes/<active>/LEDGER.md: PUSH row for [date]
    - PUSH.md: first-run config (trunk-based, github-actions)     # only if created
    - DECISIONS.md: D2 operational (trunk-based flow)              # only if 7.5b accept
    ```
@@ -432,6 +438,8 @@ This step commits those writes automatically and returns the working tree to a c
 **What this replaces:** the previous behavior left these files dirty and the user had to remember to run `/gabe-commit` again for audit bookkeeping. This step removes that requirement entirely. `/gabe-push` finishes with a clean working tree.
 
 ### Step 9: Suggest /gabe-teach (if applicable)
+
+(legacy — KNOWLEDGE.md is retired from the default KDBP inventory; this check no-ops when the file is absent)
 
 If `.kdbp/KNOWLEDGE.md` exists, count rows with status `pending`:
 - If pending count >= 2: show `ℹ [N] pending topics in KNOWLEDGE.md. Run /gabe-teach topics to review.`
@@ -489,7 +497,7 @@ Otherwise:
    - Switch off the branch first: `git checkout <env.target_branch>` (fallback to `default_branch` if the env's target branch isn't checked out locally)
    - `git branch -d <current_branch>` (safe delete) → on failure (`not fully merged`), offer `[force]` (`git branch -D`) or `[abort]`
    - `git push origin --delete <current_branch>` (remote)
-   - Log a one-liner to `.kdbp/LEDGER.md` via the same mechanism as Step 8 (appended; will sweep into the next bookkeeping commit on the next push).
+   - Log one row to `.kdbp/LEDGER.md` using the same PUSH row template as Step 8 (Entry `PUSH`, Gates/results carrying the CI outcome) — appended; will sweep into the next bookkeeping commit on the next push.
 
 ### Output examples
 
@@ -530,20 +538,20 @@ All three render as plain markdown at runtime — the bare fences here are spec-
 - Failed: test
 - Actions: `[details]` · `[logs]` · `[auto-fix]` · `[assess]` · `[ignore]`
 
-### Scope traceability (if SCOPE.md + ROADMAP.md exist)
+### Scope traceability (if SCOPE.md exists)
 
 When writing a DEPLOYMENTS.md row for this push, enrich with scope linkage:
 
 1. Read PLAN.md `## Current Phase` → extract phase ID N.
-2. Read ROADMAP.md phase N row → extract `Covers REQs`.
+2. Read SCOPE.md `## Phases` phase N row → extract `Covers REQs`. (Pre-A2 projects that still carry a separate `.kdbp/ROADMAP.md` — or its archived copy under `.kdbp/archive/retired/` — read the same field there.)
 3. DEPLOYMENTS.md row gets extra columns: `Phase: {N}` and `REQs: {REQ-01, REQ-02, ...}`.
-4. If CI passes AND the current phase's Exit criteria were satisfied in this push, propose marking Phase {N} as `complete` in ROADMAP.md — but route the write through `/gabe-scope-change` (never write ROADMAP.md directly from gabe-push).
+4. If CI passes AND the current phase's Exit criteria were satisfied in this push, propose flipping Phase {N}'s status to `complete` in SCOPE.md `## Phases` — but route the write through `/gabe-scope-change` (never write SCOPE.md directly from gabe-push).
 
 Prompt at end:
 
 Phase `{N}` Covers REQs appear satisfied by this deployment. Mark phase complete?
 
 - `[y]` Run `/gabe-scope-change "mark phase {N} complete"`
-- `[n]` Leave roadmap alone (will surface again next push)
+- `[n]` Leave the phase status alone (will surface again next push)
 
 $ARGUMENTS

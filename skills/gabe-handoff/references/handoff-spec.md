@@ -59,15 +59,15 @@ Record: branch, HEAD sha + subject, uncommitted/untracked files, unpushed commit
 **KDBP state (read):**
 - `.kdbp/PLAN.md` — `## Current Phase` pointer + the `## Phases` table (columns `# | Phase | Description | Tier | Complexity | Exec | Review | Commit | Push`; symbols ⬜ not started · 🔄 in progress · ✅ complete). Identify the active phase row(s) touched this session.
 - `.kdbp/PENDING.md` — open deferred items (table; `Status != resolved/closed`).
-- `.kdbp/LEDGER.md` — the most recent entry (for continuity + to avoid duplicating).
-- `.kdbp/ROADMAP.md` (if present) — the larger arc the session sits inside.
+- `.kdbp/LEDGER.md` — the most recent row (for continuity + to avoid duplicating).
+- `.kdbp/SCOPE.md` `## Phases` (if present) — the larger arc the session sits inside. (Pre-A2 projects that still carry a separate `.kdbp/ROADMAP.md` — or its archived copy under `.kdbp/archive/retired/` — read the same field there.)
 
 **This session's work (from the conversation, cited):**
 - What landed — features/files changed, each tied to a commit sha or a file:line.
 - Verification actually run this session — build/typecheck/test/lint commands + their exit codes/counts (E2). If none ran, say so.
 - Decisions made this session (approach chosen, scope confirmed, forks resolved) — these belong in the prompt AND may warrant a `DECISIONS.md`/`LEDGER` note.
 - In-flight work — the exact task underway, how far it got, which files are partially done.
-- Agreed-but-not-started next steps — quoted from the user or from PLAN/ROADMAP (E3: quote verbatim, don't paraphrase into a cheaper task).
+- Agreed-but-not-started next steps — quoted from the user or from PLAN/SCOPE §Phases (E3: quote verbatim, don't paraphrase into a cheaper task).
 
 ### Step 2: Classify each work item → state
 
@@ -97,18 +97,17 @@ Never bump a cell past reality. If the work is genuinely done + verified but not
 
 Also refresh: `## Current Phase` pointer (if the session advanced/retreated the active phase) and `Last Updated` in `## Context` → today's date.
 
-**3b — LEDGER.md.** Append ONE reverse-chronological entry at the top of the entry list, matching the house format:
+Any cell fixed here also mirrors into `.kdbp/PLAN.json` (`phases[id==N].cells.<col>`, plus `current_phase` / `last_updated` when those changed) per the `gabe-plan` "Shared: auto-tick phase column" Step 4b mirror step. If PLAN.json is missing or unparseable, note `ℹ PLAN.json: mirror skipped (missing|invalid) — run /gabe-plan update to regenerate` in the sync report and continue — the .md write still lands.
+
+**3b — LEDGER.md.** Append ONE row to the thin session index (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"), directly under the header, newest first:
 
 ```
-## <YYYY-MM-DD> — HANDOFF: <session theme>
-DONE: <landed work, each with a sha or file:line>.
-IN-FLIGHT: <the exact task underway + how far + which files>.
-GATES: <verification run this session — cmd + exit/count, or "none run">.
-PLAN SYNC: <cells changed this run, e.g. "Phase 19 Exec ⬜→🔄 (ScanResult.tsx trust fix shipped, 5f804d0)">.
-DEFERRED: <new PENDING rows, or "none">.
-NEXT: <the single next command/task the resume prompt points at>.
-HANDOFF: .kdbp/HANDOFF.md refreshed.
+| [YYYY-MM-DD] | HANDOFF | [focus, ≤8 words] | HEAD [short sha] | resume → HANDOFF.md |
 ```
+
+- `[focus, ≤8 words]` — the session theme (what was being worked on).
+- `HEAD [short sha]` — the current HEAD sha at handoff time (cites where the repo stood, not necessarily new work).
+- Richer detail — landed work, in-flight task, gates run this session, PLAN cells changed, new PENDING rows, the next command — lives in the resume prompt (Step 4) and `.kdbp/HANDOFF.md` (Step 5), not in this thin row.
 
 **3c — PENDING.md.** For each IN-FLIGHT-that-could-be-dropped or DEFERRED item not already tracked, add a row (respect the existing table columns; don't duplicate an open row — match by file + finding overlap, as `/gabe-review` does).
 
@@ -118,7 +117,7 @@ HANDOFF: .kdbp/HANDOFF.md refreshed.
 KDBP SYNC
 PLAN:    Phase N [name] — Exec ⬜→🔄 · Commit ⬜ (uncommitted: 3 files)   [evidence: npm run build exit 0; git status]
          Current Phase → N (unchanged) · Last Updated → <date>
-LEDGER:  + HANDOFF entry appended
+LEDGER:  + HANDOFF row appended
 PENDING: + P<n> <one-line>   (or "no change")
 ```
 
@@ -139,12 +138,12 @@ STATE
 - In-flight: <the exact task + how far it got + the partially-touched files with paths>.
 
 TASK (do this next)
-<The single next step, quoted verbatim from the user/PLAN/ROADMAP — no silent downgrade (E3). Include the APPROACH CONSTRAINT (e.g. "adopt the real design-lab component, don't reconstruct"). Fold in the <focus note> arg if given.>
+<The single next step, quoted verbatim from the user/PLAN/SCOPE §Phases — no silent downgrade (E3). Include the APPROACH CONSTRAINT (e.g. "adopt the real design-lab component, don't reconstruct"). Fold in the <focus note> arg if given.>
 
 RUNBOOK
 - Start: <server/dev commands with flags + ports>.
 - Verify: <the real typecheck/test/e2e commands for this repo>.
-- Gotchas: <traps from LEDGER/KNOWLEDGE/memory that would bite a fresh session>.
+- Gotchas: <traps from LEDGER rows/DECISIONS/memory that would bite a fresh session>.
 
 AFTER THAT
 <the queued follow-ups, in order, one line each>.
@@ -163,7 +162,7 @@ Rules for the prompt:
 # Handoff — <session theme>
 
 > Generated <YYYY-MM-DD> · branch `<branch>` · HEAD `<sha>` · Phase <N · name>
-> Singleton — each /gabe-handoff overwrites this. Durable state lives in PLAN/LEDGER/PENDING.
+> Singleton — each /gabe-handoff overwrites this. Durable state lives in PLAN(+PLAN.json)/LEDGER/PENDING.
 
 ## Resume prompt
 
@@ -193,7 +192,7 @@ Print, in order:
 - Does NOT fabricate PLAN ✅ without evidence. A cell with no supporting citation is left untouched and noted.
 - Does NOT write a per-session `docs/*-HANDOFF.md`. The durable record is PLAN/LEDGER/PENDING; the ephemeral resume vehicle is the singleton `.kdbp/HANDOFF.md` + the printed prompt.
 - Does NOT replace the automatic `ECC:SUMMARY` (session-end hook). It supersedes it in fidelity; both can coexist.
-- Does NOT modify KNOWLEDGE.md, VALUES.md, DECISIONS.md, or hooks. (Recording a *decision* is `/gabe-teach` / a DECISIONS edit; handoff only points at in-flight work.)
+- Does NOT modify VALUES.md, DECISIONS.md, or hooks. (Recording a *decision* is `/gabe-teach` / a DECISIONS edit; handoff only points at in-flight work.)
 
 ## Integration
 

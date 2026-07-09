@@ -3,7 +3,7 @@ name: gabe-push
 description: "Push, create PR, watch CI, promote — env-aware shipping workflow reading .kdbp/PUSH.md (production, staging, custom envs). Detects remote branch drift, offers branch cleanup after success; first run interviews for envs. Usage: /gabe-push [env-name] [--reconfigure]"
 when_to_use: "Push, PR, deploy, promote, watch CI, ship to staging/production — any request to publish committed work or babysit a pipeline after committing."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Gabe Push — env-aware shipping workflow
@@ -34,13 +34,13 @@ Env-aware shipping. One command pushes local work to the configured target env, 
    - **Step 7.5 / 7.5b** — append a row to `.kdbp/DEPLOYMENTS.md` (deterministic aggregation, zero LLM) and run the operational-decision classifier (Haiku, trigger-gated on CI-config/infra/deploy-config changes, rollback commits, trunk-first pushes, skipped promotions) with interactive triage.
    - **Step 8** — record to `.kdbp/LEDGER.md`.
    - **Step 8.5** — auto-commit post-push bookkeeping (PUSH.md/DEPLOYMENTS.md/LEDGER.md/DECISIONS.md/PENDING.md writes) as a local, unpushed commit through the normal hook chain — never `git add -A`, never a hook bypass.
-   - **Step 9** — non-blocking suggestion to run `/gabe-teach topics` when KNOWLEDGE.md has ≥2 pending topics.
+   - **Step 9** — non-blocking suggestion to run `/gabe-teach topics` when KNOWLEDGE.md has ≥2 pending topics (legacy — KNOWLEDGE.md is retired from the default KDBP inventory; no-ops when the file is absent).
    - **Step 10** — auto-tick the `Push` column in PLAN.md via the shared auto-tick helper (`/gabe-plan`'s "Shared: auto-tick phase column"), only when push succeeded, CI is green, the env is the configured final environment, and promotion reached the final link; prints the decision record before ticking or skipping.
    - **Step 10.5** — branch cleanup prompt (delete/keep/always/never) after a successful push, skipped for promotion pushes and direct-to-target pushes.
 
 ## CI babysitting (runbook)
 
-For long CI runs after push, a mechanical watch loop (e.g. `/loop` re-invoking the project's CI status check on an interval) may babysit the pipeline instead of holding the session open — ONLY where the project's verification gates are in place; unattended auto-mode without verification is not allowed.
+For long CI runs after push, a mechanical watch loop may babysit the pipeline instead of holding the session open — ONLY where the project's verification gates are in place; unattended auto-mode without verification is not allowed. Use `/loop` (e.g. `/loop 4m check CI on <branch> and report`) for watch-and-report only; auto-fix loops are appropriate only where the phase has runtime-journey proof in place (PLAN.json `proof`).
 
 ## Output contract (summary)
 

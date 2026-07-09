@@ -95,7 +95,7 @@ Three layers, all deterministic:
     - If Doc Target NOT in diff → create finding at pattern's Priority
 - Deduplicate: one finding per unique Doc Target (use highest priority among matches)
 
-**Layer 3 — Gravity-well docs drift** (active only when `.kdbp/KNOWLEDGE.md` has a Gravity Wells table with at least one row whose Docs column is non-empty):
+**Layer 3 — Gravity-well docs drift** (legacy — KNOWLEDGE.md is retired from the default KDBP inventory; these checks no-op when it is absent) (active only when `.kdbp/KNOWLEDGE.md` has a Gravity Wells table with at least one row whose Docs column is non-empty):
 - Read wells table from `.kdbp/KNOWLEDGE.md`
 - For each changed file in `git diff --staged --name-only`:
   - For each well row where `Paths` is non-empty AND `Docs` is non-empty:
@@ -251,7 +251,7 @@ Actions prompt (prose): `Actions? (e.g., "1:defer 2:keep 3:skip") or "all:commit
 | | `accept` | Appends to Exceptions Log, commits | No | 0 |
 | | `defer` | Adds to PENDING.md | No | 0 |
 
-**Blocked-commit rule:** `skip-to-pending` on a test failure records the item but the commit REMAINS BLOCKED unless the user types `force-commit: <one-line justification>`; the justification is appended to the LEDGER entry as `FORCED: <reason>`. (Mirrors review's force-defer-critical.)
+**Blocked-commit rule:** `skip-to-pending` on a test failure records the item but the commit REMAINS BLOCKED unless the user types `force-commit: <one-line justification>`; the justification is appended to the LEDGER thin-index row's Gates column as `· FORCED: <reason>` (see Step 6). (Mirrors review's force-defer-critical.)
 
 ### Step 6: Commit + record
 
@@ -259,13 +259,11 @@ After all actions resolved:
 
 1. Stage changes: `git add` the relevant files
 2. Commit: `git commit -m "[message]"`
-3. Append to `.kdbp/LEDGER.md`:
+3. Log to `.kdbp/LEDGER.md` — one thin-index row:
 ```
-## 2026-04-14 09:30 — [abc1234] feat: add classification pipeline stage
-FINDINGS: 2 (0 critical, 1 medium, 1 low)
-ACTIONS: 1:defer 2:keep
-DEFERRED: +D8 (coverage classify.py)
+| [YYYY-MM-DD] | COMMIT | [commit subject, ≤8 words] | [short hash] | findings [raw]→[survived] · deferred [n] · size-budget [ok/warn] |
 ```
+If the commit went through `force-commit: <reason>` (Blocked-commit rule above), append `· FORCED: [reason]` to this row's Gates column.
 
 4. If any items deferred, update `.kdbp/PENDING.md`:
    - Add new row with date, source=`gabe-commit`, finding, file, scale (from BEHAVIOR.md maturity), priority, impact, times_deferred=1, status=open
@@ -283,7 +281,7 @@ DEFERRED: +D8 (coverage classify.py)
    - Do not write this brief to `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, docs, or any other persistence target. Only reuse it in the commit body when the generated commit-message path already produced that body.
    - This brief does not replace `/gabe-teach`; it is a command-time understanding aid, while `/gabe-teach` remains the durable knowledge consolidation path.
 
-6. If `.kdbp/KNOWLEDGE.md` exists, suggest `/gabe-teach` when the commit likely introduces new topics. Heuristic (deterministic, zero cost):
+6. (legacy — KNOWLEDGE.md is retired from the default KDBP inventory; these checks no-op when it is absent) If `.kdbp/KNOWLEDGE.md` exists, suggest `/gabe-teach` when the commit likely introduces new topics. Heuristic (deterministic, zero cost):
    - Commit message starts with `feat:` or `refactor:` → suggest
    - Commit added new file(s) in a new folder → suggest
    - Commit modified `.kdbp/DECISIONS.md` → suggest
@@ -291,7 +289,7 @@ DEFERRED: +D8 (coverage classify.py)
    - Message: `ℹ New topics likely introduced. Run /gabe-teach topics to consolidate understanding.`
 
 7. **Auto-tick Commit column in PLAN.md** (never silent: on mismatch print `ℹ PLAN: commit tick skipped (no-plan | phase-not-found | legacy-format | column-missing | footer-mismatch)` — one line, non-blocking). Only runs when the `git commit` in step 6.2 returned 0.
-   - Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick phase column" — including its precondition 5 (footer cross-check)
+   - Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick phase column" — including its precondition 5 (footer cross-check) and its step 4b, which also mirrors the tick into `.kdbp/PLAN.json`; this command does not restate that logic
    - Target column: `Commit`
    - Preconditions: `.kdbp/PLAN.md` exists, contains `status: active`, has a `## Current Phase` section, and Phases table includes a `Commit` column
    - On mismatch or legacy Status-column format: print the skip line above with the matching enum code
@@ -319,7 +317,7 @@ Retroactive tree-wide audit against `.kdbp/DOCS.md` + wells' `Docs` paths. Runs 
 **Preconditions:**
 
 - `.kdbp/` directory exists. If not → print `⚠ No .kdbp/ — run /gabe-init first.` and exit.
-- At least ONE of: `.kdbp/DOCS.md` has non-skip mappings OR `.kdbp/KNOWLEDGE.md` Gravity Wells table has ≥1 well with a non-empty `Docs` column. If neither → print `ℹ Nothing to audit against. Populate DOCS.md mappings or run /gabe-teach init-wells with Docs paths.` and exit.
+- At least ONE of: `.kdbp/DOCS.md` has non-skip mappings OR `.kdbp/KNOWLEDGE.md` Gravity Wells table has ≥1 well with a non-empty `Docs` column (legacy — KNOWLEDGE.md is retired from the default KDBP inventory; these checks no-op when it is absent). If neither → print `ℹ Nothing to audit against. Populate DOCS.md mappings or run /gabe-teach init-wells with Docs paths.` and exit.
 
 ### Step A1: Gather universe
 
@@ -539,18 +537,13 @@ Execute each user action in order:
 
 ### Step A8: Log to LEDGER.md
 
-Always (even if no actions taken). Append to `.kdbp/LEDGER.md` — this IS file content, keep fenced with ```markdown to signal literal write target (not runtime display):
+Always (even if no actions taken). Log one thin-index row:
 
-```markdown
-## {YYYY-MM-DD HH:MM} — docs-audit
-UNIVERSE: {N} files, {N} docs, {N} wells, {N} mappings
-FINDINGS: {total} ({critical_count} critical, {high_count} high, {medium_count} medium, {low_count} low)
-ACTIONS: {1:create 2:update-docs 3:insert-heading 4:archive 5:skip}
-DEFERRED: {count} (→ PENDING.md)
-NOTABLE: {N_notable} notable, {N_minor} minor (see Step A8.5 digest)
+```
+| [YYYY-MM-DD] | COMMIT | docs-audit: [scope] | — | actions [n] · drift [n] |
 ```
 
-`NOTABLE` line omitted entirely if both counts are zero (nothing written).
+`[scope]` is a short description of what was audited (e.g. `full tree` or the mapping/well subset checked). `actions [n]` is the count of actions applied; `drift [n]` is the total findings count. See Step A8.5 for the human-facing Notable/Minor digest (command-time output, not persisted to LEDGER).
 
 ### Step A8.5: Notable Updates digest
 
@@ -743,15 +736,15 @@ User can pass a pre-written message via `$ARGUMENTS`. In that case:
 - Body enrichment is skipped (user owns the message)
 - Phase/Task footer is still appended if plan is active (opt-out: `$ARGUMENTS` ending with `--no-footer`)
 
-### Scope-edit audit (if SCOPE.md or ROADMAP.md in diff)
+### Scope-edit audit (if SCOPE.md in diff)
 
-When a commit modifies `.kdbp/SCOPE.md` or `.kdbp/ROADMAP.md` directly:
+When a commit modifies `.kdbp/SCOPE.md` directly (including its `## Phases` section):
 
 1. **Bypass warning.** Surface before proceeding:
    ```
-   ⚠ Direct SCOPE.md / ROADMAP.md edit detected.
+   ⚠ Direct SCOPE.md edit detected.
 
-   These files should change only through /gabe-scope-change (which routes to
+   This file should change only through /gabe-scope-change (which routes to
    /gabe-scope-addition or /gabe-scope-pivot with classifier + Change Log).
 
    Direct edits skip the classifier, Change Log entry, and version bump.

@@ -58,7 +58,7 @@ Never auto-detect from test count or CI presence. Maturity is a human decision.
 
 This step only fires when `/gabe-review` is invoked with no arguments — no explicit path, no folder, no mode keyword. Skip entirely if `$ARGUMENTS` resolves to any of: a file path, a folder path, `brief`, `fix`, `deferred`, `post-review`, `inbox`, `resume`, `close`, `discard`.
 
-**Why this step exists.** The authoritative "what's pending review" signal in a Gabe project lives in `.kdbp/PLAN.md` (phase row with `Exec=✅ Review=⬜`) plus `.kdbp/LEDGER.md` (artifact lists written by exec/commit hooks). A raw `git diff HEAD` misses the target when code is already committed (HEAD clean), includes unrelated WIP, or ignores the plan-declared scope. Step 0.3 consults the plan first, falls back to git-diff only when no KDBP context resolves.
+**Why this step exists.** The authoritative "what's pending review" signal in a Gabe project lives in `.kdbp/PLAN.md` (phase row with `Exec=✅ Review=⬜`) plus `.kdbp/LEDGER.md` (checkpoint rows whose Commits column resolves scope via git). A raw `git diff HEAD` misses the target when code is already committed (HEAD clean), includes unrelated WIP, or ignores the plan-declared scope. Step 0.3 consults the plan first, falls back to git-diff only when no KDBP context resolves.
 
 **Procedure (zero-LLM, deterministic — mirrors `/gabe-next`'s PLAN-parse approach):**
 
@@ -68,16 +68,14 @@ This step only fires when `/gabe-review` is invoked with no arguments — no exp
    - No row satisfies the Review=⬜ condition (all reviewed) → print `ℹ No phase pending review. Pass an explicit target to review something else.` and exit 0.
    - Target row has `Exec=⬜` (Review pending but work not started) → print `⚠ Phase N Exec not complete — run /gabe-next to finish Exec before reviewing.` and exit 0.
    - Target row has `Exec=🔄` and phase types include any runtime-gated type (`user-facing`, `native-mobile`, `web`, `upload`, `realtime`, `streaming`, `file-media`, `auth`, `session`, `notifications`, `DB`) OR `.kdbp/BEHAVIOR.md` contains a runtime staging proof rule → print `⚠ Phase N staging proof still pending — run /gabe-next to finish /gabe-execute before reviewing.` and exit 0.
-4. **Collect scope from LEDGER.md.** Read `.kdbp/LEDGER.md`. Find entries that reference phase N. Accept any of these patterns (case-insensitive):
-   - `phase-N-exec`, `phase N exec`, `Phase N —`, `phase: N`, `Phase N:`.
+4. **Collect scope from LEDGER.md.** Read `.kdbp/LEDGER.md`. Find thin-index rows referencing phase N — `EXEC`/`COMMIT` rows whose `Theme / scope` column names Phase N (`Phase N`, `Phase N —`, `phase: N`), or `COMMIT` rows dated since the phase's Exec start. Collect the short shas from those rows' `Commits` column.
 
-   Extract file paths from those entries (typically listed as bullet items, code-fenced file lists, or paths after `files:` / `artifacts:` keys).
+   For each collected sha, run `git show --name-only <sha>` and union the resulting file lists across all shas, minus any file that was deleted or renamed away (no longer present under that path at HEAD).
 5. **Resolve scope:**
-   - Filter extracted paths to those that still exist on disk.
    - If ≥1 file remains → target = that set. Print banner:
      `ℹ Reviewing Phase N ([name]) per PLAN.md — scope: <count> files from LEDGER`.
      Proceed with that scope as the review target.
-   - If 0 files remain (LEDGER empty, all renamed/deleted, or parser couldn't extract paths) → print banner:
+   - If 0 files remain (no matching rows, matching rows carry no Commits shas, or every resolved file was deleted/renamed away) → print banner:
      `ℹ Phase N Review pending; no LEDGER scope resolved — falling back to git diff HEAD.`
      Target = `git diff HEAD`.
 
@@ -87,11 +85,11 @@ Once target is resolved, continue with Step 0.5 (LEDGER prior-CONCERN scan) and 
 
 ### Step 0.5: Load KDBP Context (if available)
 
-If `.kdbp/LEDGER.md` exists, read the last 5 checkpoint entries. For each:
-- If a value was CONCERN on a file that's in the current diff → note it as prior signal
-- If a scenario was ❌ on a file that's in the current diff → pre-seed as expected finding
+If `.kdbp/LEDGER.md` exists, read the last 5 thin-index rows. For each row whose `Commits` column resolves (via `git show --name-only <sha>`) to a file in the current diff:
+- If the `Gates / results` column contains `CONCERN` → note it as prior signal
+- If the `Gates / results` column contains a ❌ marker → pre-seed as expected finding
 
-This means gabe-review knows what the automatic checkpoints already flagged. Prior signals add a `FLAGGED (Nx)` annotation to the finding (where N = number of checkpoint flags). If flagged 3+ times, bump severity by one tier (LOW→MEDIUM, MEDIUM→HIGH, HIGH→CRITICAL). Do not bump findings already at CRITICAL.
+This means gabe-review knows what a recent checkpoint already flagged. Prior signals add a `FLAGGED (Nx)` annotation to the finding (where N = number of rows carrying that signal). If flagged 3+ times, bump severity by one tier (LOW→MEDIUM, MEDIUM→HIGH, HIGH→CRITICAL). Do not bump findings already at CRITICAL.
 
 If no `.kdbp/LEDGER.md` exists, skip this step silently.
 
@@ -150,28 +148,28 @@ For each modified source file:
 
 ### Step 3.2: Runtime Journey Evidence Gap Detection
 
-When reviewing a KDBP phase, inspect `.kdbp/PLAN.md` and `.kdbp/LEDGER.md` before pricing findings:
+When reviewing a KDBP phase, inspect `.kdbp/PLAN.md` and `.kdbp/PLAN.json` before pricing findings:
 
 1. Parse the target phase `types`.
-2. If types include any of `{user-facing, native-mobile, mobile-web, web, upload, realtime, streaming, file-media, auth, session, notifications}`, require LEDGER evidence for the changed journey.
+2. If types include any of `{user-facing, native-mobile, mobile-web, web, upload, realtime, streaming, file-media, auth, session, notifications}`, require a non-null `.kdbp/PLAN.json` `phases[id==N].proof` entry naming the command and artifact path(s) for the changed journey (per `gabe-plan/references/plan-spec.md` Step 4b — the per-phase runtime-evidence field written by `/gabe-execute`).
 3. Evidence must include:
    - Exact command(s) run.
    - Target runtime: physical device/emulator/simulator or browser.
    - Build id/version when native mobile or installed app behavior changed.
    - Artifact path(s): screenshots, report, video, logs, or trace.
    - At least one relevant edge-case artifact when the phase added error/recovery behavior.
-4. If the phase has `Exec=✅` or is being reviewed with `Exec=🔄` and only static/unit/API checks are logged, emit a HIGH finding:
+4. If the phase has `Exec=✅` or is being reviewed with `Exec=🔄`, and `phases[id==N].proof` in PLAN.json is `null` or names only static/unit/API checks (no command + artifact path pair), emit a HIGH finding:
 
 ```
-⚠️ RUNTIME EVIDENCE GAP: Phase N changes [type list] but LEDGER lacks target-runtime journey artifacts.
+⚠️ RUNTIME EVIDENCE GAP: Phase N changes [type list] but PLAN.json lacks a proof entry for the phase.
    Defer Risk: BUILT BUT NOT PROVEN ON USER RUNTIME — P(high), Impact(high)
 ```
 
 Do not accept "tests pass" as a substitute for this check. Unit tests can satisfy branch coverage; they cannot satisfy runtime journey evidence.
 
-**Pass criteria (hard gate — ALL four or the HIGH finding stands):** (a) an exact command is present; (b) a named runtime (device/browser/viewport); (c) a repo-relative artifact path; (d) `ls <path>` succeeds NOW — run it via Bash this session.
-PASS: `PROOF: npx playwright test scan.spec --project=mobile → chromium mobile-390 → e2e/proof/scan-mobile.png` (ls → exists)
-FAIL: ":<port> desktop+mobile proof" — a claim with no artifact path.
+**Pass criteria (hard gate — ALL four or the HIGH finding stands):** (a) `proof` names an exact command; (b) `proof` names a target runtime (device/browser/viewport); (c) `proof` names a repo-relative artifact path; (d) `ls <path>` succeeds NOW — run it via Bash this session.
+PASS: `proof: "npx playwright test scan.spec --project=mobile → chromium mobile-390 → e2e/proof/scan-mobile.png"` (ls → exists)
+FAIL: `proof: ":<port> desktop+mobile proof"` — a claim with no artifact path.
 
 ### Step 3.5: Churn Annotation
 
@@ -379,6 +377,8 @@ Informational only — no auto-action. Does NOT write to PLAN.md.
 
 #### Sub-check 5c — Stale Verified Topic Detection
 
+(legacy — KNOWLEDGE.md is retired from the default KDBP inventory; this check no-ops when the file is absent)
+
 Purpose: "Are verified KNOWLEDGE.md topics now stale because the code they reference changed?"
 
 Skip silently if `.kdbp/KNOWLEDGE.md` doesn't exist OR has no verified topics.
@@ -577,7 +577,7 @@ Resolution per finding:
 | Action | Behavior |
 |--------|----------|
 | `downgrade` | Informational. No auto-rip. User expected to remove code in follow-up commit. Finding stays open, re-surfaces next `/gabe-review` until code is gone. |
-| `amend-tier` | Prompt: "Why promote Phase N from [current] to [new]? (one sentence)". Update PLAN.md Tier cell. Append `### Tier escalation` block to the phase's DECISIONS.md D-entry. Log LEDGER: `TIER ESCALATION: Phase N from [old] to [new] — via review`. Finding resolved (removed from current run). |
+| `amend-tier` | Prompt: "Why promote Phase N from [current] to [new]? (one sentence)". Update PLAN.md Tier cell, and mirror the same tier into `.kdbp/PLAN.json` `phases[id==N].tier` (per the `gabe-plan` auto-tick mirror step). Append `### Tier escalation` block to the phase's DECISIONS.md D-entry. Log one LEDGER row: `\| [YYYY-MM-DD] \| REVIEW \| tier escalation Phase [N] [old]→[new] \| — \| via review \|`. Finding resolved (removed from current run). |
 | `accept-drift` | Adds a `drift-accepted` note to the phase's DECISIONS.md D-entry with date + pattern. Finding resolved for this run. Re-surfaces next run if the pattern pops up elsewhere (prevents silent permanent drift). |
 | `defer` | Append to PENDING.md: `\| P[N] \| today \| gabe-review \| TIER_DRIFT: [section.dim] at [file] \| [file] \| [tier] \| medium \| moderate \| 0 \| open \|`. Source = `gabe-review`. |
 
@@ -918,13 +918,13 @@ CRITICAL findings during one-by-one triage **cannot be silently deferred**. The 
 
 ### Step 6: Archive REVIEW.md + auto-tick PLAN.md + LEDGER trace
 
-After triage completes (Final Verdict produced), archive the live review document, tick the Review column of the current phase if the review passed, and **always** append a LEDGER entry so every run leaves an audit trail — regardless of verdict or tick outcome.
+After triage completes (Final Verdict produced), archive the live review document, tick the Review column of the current phase if the review passed, and **always** append a LEDGER row so every run leaves an audit trail — regardless of verdict or tick outcome.
 
 **Archive the live REVIEW.md (auto, no prompt).** If `.kdbp/REVIEW.md` exists and every finding has a non-pending `Status`:
 1. Flip frontmatter `status: active` → `status: resolved`.
 2. Move the file to `.kdbp/reviews-archive/REVIEW_<YYYY-MM-DD-HHMMSS>_resolved.md` (the `<timestamp>` is the REVIEW.md frontmatter timestamp for traceability; if missing, use now).
 3. Ensure `.kdbp/reviews-archive/` is in the project `.gitignore` — grep-before-append pattern; a new line `.kdbp/reviews-archive/` is added once and only once.
-4. On `discard` (user explicit cancel) or `stale` / `superseded` (from the collision prompt), same move happens with the appropriate `<status>` suffix in the filename. `discard` SKIPS the subsequent PLAN tick and LEDGER trace; `stale` / `superseded` proceed to LEDGER with a `DISPOSITION: stale` or `superseded` line.
+4. On `discard` (user explicit cancel) or `stale` / `superseded` (from the collision prompt), same move happens with the appropriate `<status>` suffix in the filename. `discard` SKIPS the subsequent PLAN tick and LEDGER row entirely. `stale` / `superseded` proceed to the LEDGER row below with a `· disposition: stale` or `· disposition: superseded` suffix on the Gates/results cell.
 
 **Pass condition for Review column:**
 - Final Verdict is APPROVE or WARNING (not BLOCK)
@@ -932,7 +932,7 @@ After triage completes (Final Verdict produced), archive the live review documen
 - No unresolved HIGH findings ABOVE the maturity gate (deferred = OK)
 - **Step 4.75 Sub-check 5a did NOT return `MISALIGNED`** (added Phase 2/6 of doc-lifecycle work — a MISALIGNED diff shouldn't auto-advance the phase just because code review passed). `ALIGNED`, `DRIFTED`, and `SKIP` all satisfy this condition. If MISALIGNED, silently skip the tick and log `ℹ PLAN: phase tick skipped (diff MISALIGNED with current phase scope)` to the output.
 
-Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick phase column":
+Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick phase column" — including its step 4b, which mirrors the tick into `.kdbp/PLAN.json` (`phases[id==N].cells.review`) in the same turn:
 - Target column: `Review`
 - Preconditions: `.kdbp/PLAN.md` exists, contains `status: active`, has `## Current Phase`, and Phases table includes a `Review` column
 - On mismatch or legacy Status-column format: exit silently
@@ -940,31 +940,29 @@ Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick 
 
 If the pass condition is not met (BLOCK verdict or unresolved issues above gate), do NOT tick — but do not emit a warning either. The user knows they blocked.
 
-**LEDGER trace — always append** (runs whether tick fires or skips; runs whether PLAN.md exists or not):
+**LEDGER row — always append** (runs whether tick fires or skips; runs whether PLAN.md exists or not; SKIPPED on `discard`):
 
 1. Preconditions: `.kdbp/LEDGER.md` exists. If missing, skip silently (non-KDBP repo or pre-init state).
 2. Compute `tick_outcome`:
    - `✅` if Review column was ticked by the block above
-   - `skip(BLOCK)` if Final Verdict is BLOCK
-   - `skip(unresolved-HIGH)` if HIGH finding above maturity gate remains un-deferred
-   - `skip(MISALIGNED)` if Sub-check 5a returned MISALIGNED
-   - `skip(no-plan)` if `.kdbp/PLAN.md` missing or legacy
-   - `skip(phase-not-found)` if Current Phase row not found
-3. Append to `.kdbp/LEDGER.md`:
+   - `skipped(BLOCK)` if Final Verdict is BLOCK
+   - `skipped(unresolved-HIGH)` if HIGH finding above maturity gate remains un-deferred
+   - `skipped(MISALIGNED)` if Sub-check 5a returned MISALIGNED
+   - `skipped(no-plan)` if `.kdbp/PLAN.md` missing or legacy
+   - `skipped(phase-not-found)` if Current Phase row not found
+3. Append one row to `.kdbp/LEDGER.md` per the thin-index house format (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"):
    ```
-   ## YYYY-MM-DD HH:MM — PHASE N REVIEW: [phase name, or "ad-hoc" if no plan]
-   VERDICT: [APPROVE | WARNING | BLOCK]
-   FINDINGS: N total (C critical, H high, M medium, L low)
-   COVERAGE: [HIGH | MEDIUM | LOW | VERY LOW] — [one-line reason if not HIGH]
-   CONFIDENCE: [score]/100
-   DEFERRED: [list of IDs added to PENDING.md, or "none"]
-   ALIGNMENT: [ALIGNED | DRIFTED | MISALIGNED | SKIP]
-   TIER: [mvp | ent | scale | unset] | DRIFT: [none | N findings (escalated X, accepted Y, deferred Z)]
-   TICK: [tick_outcome from step 2]
+   | [YYYY-MM-DD] | REVIEW | Phase [N] — [verdict] | — | raw [R]→survived [S] · confidence [C]/100 · tick [tick_outcome] |
    ```
-4. This LEDGER entry is the single audit artifact for `/gabe-review` runs. Do NOT duplicate into another file (KNOWLEDGE.md, session files, etc.). `/gabe-next` and humans read LEDGER to answer "did review run? what did it say? why didn't it tick?".
+   - `[N]` — phase number, or "ad-hoc" if no active plan.
+   - `[verdict]` — `APPROVE` \| `WARNING` \| `BLOCK`.
+   - `[R]` / `[S]` — the raw/survived counts from Step 4.4's `raw N → killed X → downgraded Y → survived Z` summary.
+   - `[C]` — the Review Confidence Score.
+   - `[tick_outcome]` — from step 2 above, rendered `✅` or `skipped(<code>)`.
+   - On `stale` / `superseded` disposition (see archive step 4 above), append `· disposition: stale` or `· disposition: superseded` to the Gates/results cell.
+4. This LEDGER row is the single audit artifact for `/gabe-review` runs. Do NOT duplicate into another file (session files, etc.). `/gabe-next` and humans read LEDGER to answer "did review run? what did it say? why didn't it tick?". Deeper detail (coverage, alignment, tier drift, deferred item IDs) lives in the review transcript and `.kdbp/PENDING.md`, not in the thin row.
 
-Rationale: the silent-no-op-on-tick-failure behavior leaves no record when a review runs but doesn't advance phase state (e.g., MISALIGNED skip or BLOCK verdict). Without the LEDGER trace, `/gabe-next` cannot distinguish "review never ran" from "review ran and blocked" — both present as Review=⬜. The trace makes the state machine auditable.
+Rationale: the silent-no-op-on-tick-failure behavior leaves no record when a review runs but doesn't advance phase state (e.g., MISALIGNED skip or BLOCK verdict). Without the LEDGER row, `/gabe-next` cannot distinguish "review never ran" from "review ran and blocked" — both present as Review=⬜. The row makes the state machine auditable.
 
 ---
 
