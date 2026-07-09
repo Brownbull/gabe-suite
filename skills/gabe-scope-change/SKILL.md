@@ -3,7 +3,7 @@ name: gabe-scope-change
 description: "Scope-change meta-router. User describes intended change; Opus classifier decides pivot vs addition per 9 pivot-trigger rules, then routes to /gabe-scope-addition or /gabe-scope-pivot with rationale. Override with --force-addition or --force-pivot. Usage: /gabe-scope-change [--force-addition | --force-pivot] <description>"
 when_to_use: "The scope needs to change — add, drop, or switch direction on an existing SCOPE.md; classifies pivot vs addition and routes. Entry point for all scope evolution."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Gabe Scope Change — pivot-vs-addition router
@@ -12,7 +12,7 @@ metadata:
 
 This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEFORE-✅ · E3 NO SILENT DOWNGRADE · E4 REUSE FIRST · E5 STATE SYNC · E6 MISSING ANCHOR = STOP · E7 REPORT WHERE — floors, not ceilings; a skill's own gate may be stricter, never looser. Full text: `../gabe-docs/references/execution-contract.md` (if that file is missing, E6 applies — STOP).
 
-Single entry point for modifying a finalized SCOPE.md or ROADMAP.md. Classifies the requested change and routes to the right machinery. Never writes directly — routes to `/gabe-scope-addition` (additive) or `/gabe-scope-pivot` (direction shift).
+Single entry point for modifying a finalized SCOPE.md — its premise sections or its `## Phases` section alike. Classifies the requested change and routes to the right machinery. Never writes directly — routes to `/gabe-scope-addition` (additive) or `/gabe-scope-pivot` (direction shift).
 
 **Why a router and not two commands the user picks from?** Because misclassifying a pivot as an addition corrupts version history. The classifier uses the declared 9 rules + Opus reasoning + rationale, so the user sees *why* it routed each way. User can override with a flag, but the default is classifier-driven to prevent silent scope corruption.
 

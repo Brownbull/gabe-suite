@@ -1,9 +1,9 @@
 ---
 name: gabe-scope-addition
-description: "Additive scope change. Inserts new REQs / phases / refs / constraints without changing SCOPE.md direction. Phases use decimal IDs (e.g., 2.1). SCOPE.md version does NOT bump; ROADMAP.md version bumps. Usage (direct): /gabe-scope-addition <description>"
+description: "Additive scope change. Inserts new REQs / phases / refs / constraints without changing SCOPE.md direction. Phases use decimal IDs (e.g., 2.1). SCOPE.md scope_version does NOT bump; phases_version bumps. Usage (direct): /gabe-scope-addition <description>"
 when_to_use: "Additive scope evolution routed from /gabe-scope-change — new REQs/phases/refs without changing direction. Normally reached via the router, not invoked directly."
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Gabe Scope Addition — additive scope evolution
@@ -15,10 +15,10 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 Handles additive scope changes. Inserts new content without touching primary user, success criteria, non-goals, architecture posture, or authoritative refs. All of those changes route to `/gabe-scope-pivot` instead.
 
 **Invariants:**
-- SCOPE.md `version:` frontmatter stays the same (additions don't bump major version).
+- SCOPE.md `scope_version:` frontmatter stays the same (additions don't bump major version).
 - SCOPE.md `last_scope_event:` updates to today.
-- ROADMAP.md `roadmap_version:` bumps by 1 (any `-change` bumps roadmap version).
-- Change Log appends `addition` row — never rewrites existing rows.
+- SCOPE.md `phases_version:` bumps by 1 (any `-change` bumps phases_version).
+- Change Log (§15) appends `addition` row — never rewrites existing rows. One log for both premise and phase-arc changes.
 - Prior phase IDs are immutable. New phases use decimal IDs (e.g., `2.1` between `2` and `3`).
 - Prior REQ IDs are immutable. New REQs append with the next sequential ID.
 
@@ -30,7 +30,7 @@ Handles additive scope changes. Inserts new content without touching primary use
 
 Same as `/gabe-scope-change` pre-flight — SCOPE.md must exist, no active session.
 
-Read current SCOPE.md + ROADMAP.md + scope-references.yaml. Parse into structured state for drafting.
+Read current SCOPE.md (including its `## Phases` section) + scope-references.yaml. Parse into structured state for drafting.
 
 ### Step 2: Detect addition type
 
@@ -54,10 +54,9 @@ Invoke `prompts/users-and-non-users-drafter` or `prompts/non-goals-generator` or
 **Write targets (all appends, never rewrites):**
 
 - `.kdbp/SCOPE.md` — add the new entity with its anchor (`{#req-NN}`, `{#sc-NN}`, etc.)
-- `.kdbp/ROADMAP.md` — if new phase, insert with decimal ID + update Phase Table + Dependency Graph
+- `.kdbp/SCOPE.md` `## Phases` — if new phase, insert with decimal ID + update Phase Table + Dependency Graph
 - `.kdbp/scope-references.yaml` — if new ref
-- `.kdbp/SCOPE.md` §15 Change Log — append `addition` row
-- `.kdbp/ROADMAP.md` §6 Roadmap Change Log — append row if roadmap touched
+- `.kdbp/SCOPE.md` §15 Change Log — append `addition` row (covers phase-arc changes too — no separate roadmap change log)
 
 ### Step 4: Coverage re-check
 
@@ -74,7 +73,7 @@ Show diff preview. User approves → write files. Offer git-commit prompt (same 
 Append to CHANGES.jsonl:
 
 ```jsonl
-{"ts":"2026-04-21T15:30:00Z","event":"scope_addition","scope_version":1,"roadmap_version":2,"addition_type":"new_phase","entity_ids":["2.1"]}
+{"ts":"2026-04-21T15:30:00Z","event":"scope_addition","scope_version":1,"phases_version":2,"addition_type":"new_phase","entity_ids":["2.1"]}
 ```
 
 ## Decimal ID rules
@@ -94,7 +93,7 @@ Append to CHANGES.jsonl:
 
 **Addition that implicitly becomes a pivot** (e.g., "add REQ" but the REQ text changes an SC's observable truth). Detect via a mini-classifier call on the drafted output. If detected, abort with: "This addition appears to modify existing SC semantics. Pivot recommended. Re-run as `/gabe-scope-change` or `--force-addition` to override."
 
-**Roadmap decimal ID collision.** If `2.1` already exists, new insert gets `2.2`. Auto-assign.
+**Phase decimal ID collision.** If `2.1` already exists, new insert gets `2.2`. Auto-assign.
 
 **No argument given.** Prompt for description; exit if empty.
 

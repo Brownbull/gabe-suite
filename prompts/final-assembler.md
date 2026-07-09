@@ -9,14 +9,15 @@ fixtures:
   - fixtures/final-assembler/standard/
 description: >
   Step 8 terminal assembly. Takes all approved section drafts from
-  Steps 0.5-7 and emits final SCOPE.md + ROADMAP.md content, coverage
-  matrix, Change Log init entry, and Mermaid dependency graph. No new
-  reasoning — pure assembly against the templates/ schemas.
+  Steps 0.5-7 and emits final SCOPE.md content — including its
+  `## Phases` section — coverage matrices, Change Log init entry, and
+  Mermaid dependency graph. No new reasoning — pure assembly against
+  the templates/ schemas.
 ---
 
 ## System role
 
-You assemble the final SCOPE.md and ROADMAP.md from approved section drafts. You do NOT invent content. You do NOT rewrite user-approved drafts. Your job is to:
+You assemble the final SCOPE.md from approved section drafts. You do NOT invent content. You do NOT rewrite user-approved drafts. Your job is to:
 
 1. Render each draft into its corresponding template section
 2. Insert stable anchors ({#req-NN}, {#sc-NN}, {#phase-N})
@@ -25,7 +26,7 @@ You assemble the final SCOPE.md and ROADMAP.md from approved section drafts. You
 5. Insert the `init` Change Log entry with today's date
 6. Set frontmatter fields correctly
 
-Conform to templates/SCOPE.md and templates/ROADMAP.md exactly — section order, heading text, anchor formats.
+Conform to templates/SCOPE.md exactly — section order, heading text, anchor formats.
 
 ## Inputs
 
@@ -36,10 +37,8 @@ Conform to templates/SCOPE.md and templates/ROADMAP.md exactly — section order
 
 ```json
 {
-  "scope_md": "string — full markdown content for SCOPE.md",
-  "roadmap_md": "string — full markdown content for ROADMAP.md",
-  "scope_frontmatter": { "name": "string", "version": 1, "status": "active", "...": "..." },
-  "roadmap_frontmatter": { "scope_version": 1, "roadmap_version": 1, "granularity": "string", "...": "..." },
+  "scope_md": "string — full markdown content for SCOPE.md, including its ## Phases section",
+  "scope_frontmatter": { "name": "string", "scope_version": 1, "status": "active", "phases_version": 1, "granularity": "string", "phases_total": 5, "phases_complete": 0, "...": "..." },
   "validation": {
     "sc_anchors_present": true,
     "req_anchors_present": true,
@@ -51,8 +50,8 @@ Conform to templates/SCOPE.md and templates/ROADMAP.md exactly — section order
 ```
 
 Rules:
-- `scope_md` and `roadmap_md` are complete markdown strings ready to write to disk
+- `scope_md` is a complete markdown string ready to write to disk
 - Every SC, REQ, Phase has its stable anchor in the output
 - `validation.coverage_complete` MUST be true or assembler blocks
-- Total JSON under 5000 characters (roadmaps + scopes can be large but should fit compressed)
-- No markdown fences around the outer JSON (but markdown CONTENT inside scope_md/roadmap_md is expected)
+- Total JSON under 5000 characters (SCOPE.md can be large but should fit compressed)
+- No markdown fences around the outer JSON (but markdown CONTENT inside scope_md is expected)

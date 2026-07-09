@@ -1,19 +1,22 @@
 ---
 name: bookmark-manager
-version: 1
+scope_version: 1
 status: active
 created: 2026-04-21
 last_scope_event: 2026-04-21
 primary_user: solo knowledge workers who accumulate 500+ bookmarks
 project_kind: web-app
 custom_sections: []
-roadmap_file: .kdbp/ROADMAP.md
+phases_version: 1
+granularity: standard
+phases_total: 5
+phases_complete: 0
 reference_frame_file: .kdbp/scope-references.yaml
 ---
 
 # SCOPE — bookmark-manager
 
-> **This is the stable backbone.** Changes to this document flow exclusively through `/gabe-scope-change`.
+> **This is the stable backbone.** Changes to this document — premise and phase arc alike — flow exclusively through `/gabe-scope-change`.
 
 ## 0. Reference Frame {#reference-frame}
 
@@ -118,6 +121,145 @@ In 1–3 years: an ambient tool that watches what you're working on and surfaces
 | SC-02 | REQ-02 |
 | SC-03 | REQ-03 |
 
+## Phases {#phases}
+
+### Granularity
+
+- **Chosen:** standard (5 phases, sprint-sized)
+- **Alternatives considered:** coarse (3 phases), fine (8 phases)
+
+### Phase Table (at a glance)
+
+| ID | Name | Status | Depends-on | Parallel-with | Covers REQs |
+|---|---|---|---|---|---|
+| 1 | Foundation + storage | pending | — | — | — |
+| 2 | Clipboard quick-save | pending | 1 | — | [REQ-01](#req-01) |
+| 3 | Semantic re-find | pending | 1 | 2 | [REQ-02](#req-02) |
+| 4 | Browser extensions | pending | 2 | — | — |
+| 5 | Ambient surfacing | pending | 3, 4 | — | [REQ-03](#req-03) |
+
+#### Status vocabulary
+- **pending** — not started
+- **in-progress** — at least one task checked off in per-phase PLAN.md
+- **blocked** — dependency or external blocker
+- **complete** — all Covers REQs satisfied; validated by `/gabe-align`
+- **deferred** — moved out of the current arc (retained for audit)
+
+#### ID conventions
+- **Integer IDs** (1, 2, 3, …) are root phases from the initial `/gabe-scope` authoring.
+- **Decimal IDs** (1.1, 2.3, …) are `/gabe-scope-addition` insertions between root phases.
+
+### Phase Detail
+
+#### Phase 1 — Foundation + storage {#phase-1}
+
+**Status:** pending
+**Goal:** By end of this phase, the Tauri app boots with an empty SQLite database, ready to accept bookmark CRUD via an internal API.
+
+**Why (business intent):** Every downstream phase needs local storage. Without a working SQLite layer + app shell, nothing else can be tested end-to-end. This phase exists to de-risk the infrastructure assumption (Tauri + SQLite on macOS + Linux) before any user-facing features are built.
+
+**Covers REQs:** —
+**Depends-on:** —
+**Parallel-with:** —
+
+**Exit criteria:**
+- App builds and runs on macOS + Linux
+- SQLite schema migrations run clean
+- Internal CRUD API has ≥80% test coverage
+
+---
+
+#### Phase 2 — Clipboard quick-save {#phase-2}
+
+**Status:** pending
+**Goal:** By end of this phase, a user can press a global hotkey and save a URL with one-line context in under 3 seconds.
+
+**Why (business intent):** This is the gravitational center of the product — if saving isn't faster than a browser bookmark, no user ever adopts the workflow. The rest of the arc leans on this habit being cheap.
+
+**Covers REQs:** [REQ-01](#req-01)
+**Depends-on:** 1
+**Parallel-with:** —
+
+**Exit criteria:**
+- REQ-01 acceptance signal: p95 ≤ 3s across 10 saves
+- Global hotkey works on macOS + Linux
+- Tauri system tray shows last-saved
+
+---
+
+#### Phase 3 — Semantic re-find {#phase-3}
+
+**Status:** pending
+**Goal:** By end of this phase, a user can type an approximate topic and retrieve matching bookmarks without exact-string matches.
+
+**Why (business intent):** The promise of the product is "I don't have to remember it." Without semantic retrieval, the product degrades to a faster browser bookmark, which is not worth switching for. This phase crosses the value threshold.
+
+**Covers REQs:** [REQ-02](#req-02)
+**Depends-on:** 1
+**Parallel-with:** 2
+
+**Exit criteria:**
+- REQ-02 acceptance signal: re-find under 30s for a 60+-day-old bookmark
+- Local embedding model runs under 500ms per query
+- Search UI renders results incrementally
+
+---
+
+#### Phase 4 — Browser extensions {#phase-4}
+
+**Status:** pending
+**Goal:** Chrome + Firefox extensions can save the active tab to the local app via native messaging.
+
+**Why (business intent):** Clipboard is the MVP save path, but real user habit is "right-click → save." Extensions close that gap and are required before inviting anyone else to try the app.
+
+**Covers REQs:** —
+**Depends-on:** 2
+**Parallel-with:** —
+
+**Exit criteria:**
+- Both extensions submit saves that land in SQLite
+- Extensions handle permission prompts gracefully
+
+---
+
+#### Phase 5 — Ambient surfacing {#phase-5}
+
+**Status:** pending
+**Goal:** On app open, 3–5 bookmarks are surfaced that the user is likely to find useful now, based on recent browsing + calendar context.
+
+**Why (business intent):** The vision (north star) lives here. Without ambient surfacing the product is a well-built storage tool; with it, the product is a memory prosthetic. Shipping this last lets us validate saving + re-find first, so the surfacing layer has real data to reason over.
+
+**Covers REQs:** [REQ-03](#req-03)
+**Depends-on:** 3, 4
+**Parallel-with:** —
+
+**Exit criteria:**
+- REQ-03 acceptance signal: ≥1 surprise-useful surfacing per week for 4 weeks
+- Feature flag allows disable
+- No personal data leaves the device
+
+---
+
+### Dependency Graph
+
+```mermaid
+graph LR
+  P1[Phase 1: Foundation] --> P2[Phase 2: Quick-save]
+  P1 --> P3[Phase 3: Re-find]
+  P2 --> P4[Phase 4: Extensions]
+  P3 --> P5[Phase 5: Surfacing]
+  P4 --> P5
+  P2 -.parallel.- P3
+```
+
+### Coverage Matrix
+
+| REQ | Phase |
+|---|---|
+| [REQ-01](#req-01) | [Phase 2](#phase-2) |
+| [REQ-02](#req-02) | [Phase 3](#phase-3) |
+| [REQ-03](#req-03) | [Phase 5](#phase-5) |
+
 ## 13. Strategic Risks {#strategic-risks}
 
 ### SR-01 — Ambient surfacing rejection {#sr-01}
@@ -152,4 +294,4 @@ In 1–3 years: an ambient tool that watches what you're working on and surfaces
 
 | Date | Type | Summary |
 |---|---|---|
-| 2026-04-21 | init | Initial scope authored via `/gabe-scope`. |
+| 2026-04-21 | init | Initial scope authored via `/gabe-scope`. 5-phase arc at standard granularity. |

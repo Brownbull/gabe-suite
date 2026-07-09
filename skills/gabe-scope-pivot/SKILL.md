@@ -1,10 +1,10 @@
 ---
 name: gabe-scope-pivot
-description: "Scope pivot — direction change. Archives SCOPE.md v{N} and ROADMAP.md v{N} to archive/, re-derives v{N+1} from the new premise, records pivot rationale in Change Log. Triggered by the 9 pivot rules. Usage (direct): /gabe-scope-pivot <description>"
+description: "Scope pivot — direction change. Archives SCOPE.md v{N} (and any legacy ROADMAP.md, if present) to archive/, re-derives v{N+1} from the new premise, records pivot rationale in Change Log. Triggered by the 9 pivot rules. Usage (direct): /gabe-scope-pivot <description>"
 when_to_use: "Direction-changing scope rewrite (archive + re-derive SCOPE.md) — destructive; only via /gabe-scope-change routing or an explicit human request."
 disable-model-invocation: true
 metadata:
-  version: 2.0.0
+  version: 2.1.0
 ---
 
 # Gabe Scope Pivot — direction-change rewrite
@@ -16,9 +16,9 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 Handles direction-shifting scope changes. Unlike addition, a pivot restructures the premise — downstream SCs, REQs, phases, and refs all need re-evaluation. The old SCOPE is archived (never deleted); a new v{N+1} is derived.
 
 **Invariants:**
-- Old SCOPE.md v{N} + ROADMAP.md v{N} + scope-references.yaml v{N} archived to `.kdbp/archive/vN/`
-- New SCOPE.md `version:` bumps to {N+1}; `last_scope_event:` updates
-- New ROADMAP.md `roadmap_version:` resets to 1 (new scope = new roadmap history)
+- Old SCOPE.md v{N} + scope-references.yaml v{N} archived to `.kdbp/archive/vN/` (a legacy standalone `.kdbp/ROADMAP.md`, if the project still has one from before A2, is archived alongside it)
+- New SCOPE.md `scope_version:` bumps to {N+1}; `last_scope_event:` updates
+- New SCOPE.md `phases_version:` resets to 1 (new scope = new phase-arc history)
 - Pivot rationale recorded in Change Log with reference to archived v{N}
 - Research directory re-archived if regenerating (optional prompt)
 
@@ -35,8 +35,9 @@ Announce the pivot intent:
 ```
 PIVOT WARNING
 
-This will archive SCOPE.md v{N} (created {date}) and ROADMAP.md v{N} to
-.kdbp/archive/v{N}/. A new v{N+1} will be derived from the changed premise.
+This will archive SCOPE.md v{N} (created {date}) to .kdbp/archive/v{N}/
+(a legacy standalone ROADMAP.md, if present, is archived alongside it).
+A new v{N+1} will be derived from the changed premise.
 
 Pivot reason: {description}
 Trigger rule: {from classifier}
@@ -54,8 +55,11 @@ Typed confirm (exact match, case-insensitive). Any other response → abort.
 ```bash
 mkdir -p .kdbp/archive/v{N}/
 cp .kdbp/SCOPE.md .kdbp/archive/v{N}/SCOPE.md
-cp .kdbp/ROADMAP.md .kdbp/archive/v{N}/ROADMAP.md
 cp .kdbp/scope-references.yaml .kdbp/archive/v{N}/scope-references.yaml
+# Legacy projects (pre-A2) may still carry a standalone ROADMAP.md — archive it too if present.
+if [ -f .kdbp/ROADMAP.md ]; then
+  cp .kdbp/ROADMAP.md .kdbp/archive/v{N}/ROADMAP.md
+fi
 # Research: archive the live tree; new pivot session will regenerate
 if [ -d .kdbp/research ]; then
   mv .kdbp/research .kdbp/archive/v{N}/research
@@ -126,7 +130,7 @@ Same as `/gabe-scope` Step 8 — write files, archive research (of the new sessi
 
 Called by `/gabe-scope-change` (routed) or directly (not recommended without classifier rationale).
 
-`/gabe-plan` warned on next invocation if ROADMAP.md version changed: "Roadmap regenerated. Re-read phase context?"
+`/gabe-plan` warned on next invocation if SCOPE.md `phases_version` changed: "Phase arc regenerated. Re-read phase context?"
 
 ## Command version
 

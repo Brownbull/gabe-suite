@@ -3,10 +3,9 @@
 > This file is the binding spec; the SKILL.md core is a summary.
 > E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
-The backbone authoring command. Produces two linked artifacts for a new project:
+The backbone authoring command. Produces ONE linked artifact for a new project:
 
-1. **`.kdbp/SCOPE.md`** — high-inertia premise. Problem, users, success criteria, requirements, constraints, posture. Changes only through `/gabe-scope-change`.
-2. **`.kdbp/ROADMAP.md`** — medium-inertia phase plan. Derived from SCOPE.md. Changes as phases complete, split, or get inserted.
+**`.kdbp/SCOPE.md`** — high-inertia premise (problem, users, success criteria, requirements, constraints, posture) plus a `## Phases` section holding the medium-inertia phase arc derived from that premise. The premise changes only through `/gabe-scope-change`; the phase arc evolves within the same file as phases complete, split, or get inserted.
 
 **Design principles** (see `docs/gabe-scope-design.md` for full spec):
 - **Strict checkpoint gating.** Every step ends with explicit user approval before the next runs. No auto-ship mode.
@@ -36,12 +35,12 @@ Parse `$ARGUMENTS` for flags: `--resume` forces resume path; `--start-over` forc
 |---|---|---|
 | absent | absent | Proceed to Step 0.5 fresh |
 | absent | present | Prompt: **R**esume (default) / **S**tart-fresh (archive session as tombstone) / **A**bort |
-| present | absent | Prompt: **C**ontinue-to-planning (run `/gabe-plan`) / **H**ange-scope (run `/gabe-scope-change`) / **S**tart-over (typed confirm, archive SCOPE.md + ROADMAP.md) / **A**bort |
+| present | absent | Prompt: **C**ontinue-to-planning (run `/gabe-plan`) / **H**ange-scope (run `/gabe-scope-change`) / **S**tart-over (typed confirm, archive SCOPE.md, plus a legacy `ROADMAP.md` if present) / **A**bort |
 | present | present | Same as row above + resume option for session |
 
 **Start-over flow:**
-1. Emit one-line summary of what will be archived: "`SCOPE.md v1 (created 2026-04-21) + ROADMAP.md v1 + scope-references.yaml will move to .kdbp/archive/.` Type `start over` to confirm."
-2. On typed confirm (exact match, case-insensitive), `mkdir -p .kdbp/archive/tombstones/{timestamp}/` and `mv` SCOPE.md + ROADMAP.md + scope-references.yaml + scope-session.json into it.
+1. Emit one-line summary of what will be archived: "`SCOPE.md v1 (created 2026-04-21) + scope-references.yaml will move to .kdbp/archive/. (A legacy ROADMAP.md, if present, moves too.)` Type `start over` to confirm."
+2. On typed confirm (exact match, case-insensitive), `mkdir -p .kdbp/archive/tombstones/{timestamp}/` and `mv` SCOPE.md + scope-references.yaml + scope-session.json (+ a legacy `ROADMAP.md` if present) into it.
 3. Never delete. Tombstones are permanent audit trail.
 
 **Resume flow:**
@@ -248,7 +247,7 @@ Output: 2–8 NGs, each with `{id: NG-NN, statement, rationale}`. Statement begi
 
 **Checkpoint 6:** approve → advance `current_step: step-7.1-requirements`.
 
-### Step 7: Requirements → Phase Split → Roadmap (hybrid, per D6)
+### Step 7: Requirements → Phase Split → Phases (hybrid, per D6)
 
 Step 7 has four sub-steps with two user checkpoints sandwiched. This is the most complex step — the one decomposing success into shippable units.
 
@@ -315,7 +314,7 @@ Options:
 - `[a]` Accept anyway — proceed with 4 phases
 - `[c]` Change granularity — back to Step 7.2
 
-**Write:** draft §3 Phase Detail sections of ROADMAP.md with `{#phase-N}` anchors. Each phase section has Name, Goal, Why paragraph. Status `pending`. Depends-on / Parallel-with / Covers REQs fields present but empty `—`. Marker `[PENDING APPROVAL — step-7.3]`.
+**Write:** draft the Phase Detail sub-section of SCOPE.md's `## Phases` section with `{#phase-N}` anchors. Each phase entry has Name, Goal, Why paragraph. Status `pending`. Depends-on / Parallel-with / Covers REQs fields present but empty `—`. Marker `[PENDING APPROVAL — step-7.3]`.
 
 **Checkpoint 7.3:** user reviews skeleton. Can edit name/goal/why in-file. Can request regen with different granularity. On approve, advance.
 
@@ -331,7 +330,7 @@ Invoke same prompt with `{mode: populate, skeleton: approved_skeleton, requireme
 - Every REQ must appear in exactly one phase's `covers_reqs`. Orphans → `reqs_uncovered`. Duplicates → `reqs_duplicated`.
 - If either non-empty → same 4-option prompt as Step 7.1 (r / a / f / b).
 
-**Write:** fill Phase Detail fields + §2 Phase Table at-a-glance + §5 Coverage Matrix. Generate §4 Dependency Graph (Mermaid) deterministically from depends_on + parallel_with columns — no LLM needed:
+**Write:** fill Phase Detail fields + the Phase Table (at a glance) + the Coverage Matrix, all inside SCOPE.md's `## Phases` section. Generate the Dependency Graph (Mermaid) deterministically from depends_on + parallel_with columns — no LLM needed:
 
 ```mermaid
 graph LR
@@ -342,7 +341,7 @@ graph LR
 
 Marker `[PENDING APPROVAL — step-7.4]`.
 
-**Checkpoint 7.4:** user reviews populated roadmap. Can move REQs between phases, reorder, adjust dependencies. Coverage check re-runs on every edit (deterministic; fast). Approve advances to Step 8.
+**Checkpoint 7.4:** user reviews the populated `## Phases` section. Can move REQs between phases, reorder, adjust dependencies. Coverage check re-runs on every edit (deterministic; fast). Approve advances to Step 8.
 
 ### Step 8: Finalize
 
@@ -350,9 +349,9 @@ Marker `[PENDING APPROVAL — step-7.4]`.
 
 **(a) Final assembly.** Invoke `prompts/final-assembler.md` with all approved section drafts + `session_metadata`.
 
-**Output:** `{scope_md, roadmap_md, scope_frontmatter, roadmap_frontmatter, validation}`.
+**Output:** `{scope_md, scope_frontmatter, validation}`.
 
-Assembly input = the CURRENT on-disk `.kdbp/SCOPE.md` / `ROADMAP.md` — Read both files NOW, immediately before assembly: the user may have edited content outside `[PENDING APPROVAL]` markers, and anything outside markers is FINAL (see marker convention below). Session drafts are fallback only for sections still inside pending markers. Before (b) writes, show the on-disk → assembled diff and get approval (reuse the 8(f) `[s]how diff` affordance) — never overwrite user edits sight-unseen.
+Assembly input = the CURRENT on-disk `.kdbp/SCOPE.md` — Read it NOW, immediately before assembly: the user may have edited content outside `[PENDING APPROVAL]` markers, and anything outside markers is FINAL (see marker convention below). Session drafts are fallback only for sections still inside pending markers. Before (b) writes, show the on-disk → assembled diff and get approval (reuse the 8(f) `[s]how diff` affordance) — never overwrite user edits sight-unseen.
 
 **Validation gate:** the `validation` object must show:
 - `sc_anchors_present: true`
@@ -362,14 +361,13 @@ Assembly input = the CURRENT on-disk `.kdbp/SCOPE.md` / `ROADMAP.md` — Read bo
 
 Any false → abort with specific remediation. Also run the `markdown_anchors_resolve` check (same logic as rubric) on `scope_md` to verify every `[link](#x)` has a `{#x}` definition.
 
-**(b) Write finalized files.**
+**(b) Write finalized file.**
 
-- `.kdbp/SCOPE.md` — replaces any prior draft
-- `.kdbp/ROADMAP.md` — replaces any prior draft
+- `.kdbp/SCOPE.md` — replaces any prior draft, including its `## Phases` section
 
-Remove ALL `[PENDING APPROVAL — step-N]` markers. Append `init` row to §15 Change Log and §6 Roadmap Change Log with today's date.
+Remove ALL `[PENDING APPROVAL — step-N]` markers. Append `init` row to §15 Change Log with today's date (one log covers both premise and phase-arc — there is no separate roadmap change log).
 
-Validate emitted SCOPE.md against the template's expected section order via regex check — section numbering 1→15 must appear in order (§0 Reference Frame only if scope-references.yaml is non-empty).
+Validate emitted SCOPE.md against the template's expected section order via regex check — numbered sections 1→10, 12→15 must appear in order (§0 Reference Frame only if scope-references.yaml is non-empty), with the unnumbered `## Phases` section appearing between §12 Requirements and §13 Strategic Risks.
 
 **(c) Archive research.**
 
@@ -389,16 +387,15 @@ mv .kdbp/scope-session.json .kdbp/archive/tombstones/scope-session-{timestamp}.j
 Append tombstone row to `.kdbp/CHANGES.jsonl`:
 
 ```jsonl
-{"ts":"2026-04-21T14:32:00Z","event":"scope_init","scope_version":1,"roadmap_version":1,"tombstone":".kdbp/archive/tombstones/scope-session-{ts}.json"}
+{"ts":"2026-04-21T14:32:00Z","event":"scope_init","scope_version":1,"phases_version":1,"tombstone":".kdbp/archive/tombstones/scope-session-{ts}.json"}
 ```
 
-**(e) Update KNOWLEDGE.md.** Add or update a "Root artifacts" section pointing to SCOPE.md + ROADMAP.md:
+**(e) Update KNOWLEDGE.md.** Add or update a "Root artifacts" section pointing to SCOPE.md:
 
 ```markdown
 ## Root artifacts
 
-- [`.kdbp/SCOPE.md`](SCOPE.md) — project premise (stable backbone, changed via `/gabe-scope-change`)
-- [`.kdbp/ROADMAP.md`](ROADMAP.md) — phase plan (updated on any `-change`; read by `/gabe-plan`)
+- [`.kdbp/SCOPE.md`](SCOPE.md) — project premise + phase arc (`## Phases`); stable backbone, changed via `/gabe-scope-change`; read by `/gabe-plan`
 ```
 
 **(f) Git-commit prompt.** Surface suggested commit message:
@@ -406,10 +403,10 @@ Append tombstone row to `.kdbp/CHANGES.jsonl`:
 Suggested git commit:
 
 ```text
-feat(scope): initial scope + roadmap for {project name}
+feat(scope): initial scope + phase arc for {project name}
 
-Adds .kdbp/SCOPE.md v1 (premise) and .kdbp/ROADMAP.md v1
-({phases_total} phases at {granularity} granularity).
+Adds .kdbp/SCOPE.md v1 (premise + {phases_total}-phase arc at
+{granularity} granularity).
 Reference Frame: {N} refs declared ({counts by weight}).
 ```
 
@@ -516,7 +513,7 @@ Accounting is observable-only: after every LLM call, count it (`llm_calls += 1`)
 ## Integration with the suite
 
 - **`/gabe-plan <phase-id>`** is called AFTER `/gabe-scope` finalizes (Step 8 in next phase). Does not interact with in-progress scope sessions.
-- **`/gabe-align`, `/gabe-review`, `/gabe-commit`** read SCOPE.md + ROADMAP.md for drift detection. None write. `/gabe-commit` audit warns on direct edits (bypass of `-change`).
+- **`/gabe-align`, `/gabe-review`, `/gabe-commit`** read SCOPE.md — including its `## Phases` section — for drift detection. None write. `/gabe-commit` audit warns on direct edits (bypass of `-change`).
 - **`/gabe-teach`** (SCOPE mode, future Phase 7) re-reads sections for lessons.
 - **`/gabe-scope-change`** is the only write path post-finalize. Runs from any step — if invoked mid-session, tells user to finish or abort the in-progress session first.
 

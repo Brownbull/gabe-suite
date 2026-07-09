@@ -127,12 +127,12 @@
 
     "pending_approval_markers": {
       "type": "array",
-      "description": "List of in-file [PENDING APPROVAL] markers currently present in the draft SCOPE.md or ROADMAP.md",
+      "description": "List of in-file [PENDING APPROVAL] markers currently present in the draft SCOPE.md",
       "items": {
         "type": "object",
         "required": ["file", "section", "marker_id"],
         "properties": {
-          "file": { "type": "string", "enum": ["SCOPE.md", "ROADMAP.md"] },
+          "file": { "type": "string", "enum": ["SCOPE.md"] },
           "section": { "type": "string" },
           "marker_id": { "type": "string" }
         }
