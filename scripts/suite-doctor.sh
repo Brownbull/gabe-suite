@@ -48,15 +48,25 @@ check_home() { # home label
       done < <(find "$home/skills/$name" -type f ! -path '*__pycache__*')
     fi
   done
-  # commands
+  # commands (both directions — in-place patching of commands was the original disease)
   for f in "$REPO"/commands/gabe-*.md; do
     check_pair "$f" "$home/commands/$(basename "$f")" "$label"
   done
-  # templates (repo templates/* → <home>/templates/gabe/*)
+  for f in "$home"/commands/gabe-*.md; do
+    [ -e "$f" ] || continue
+    [ -f "$REPO/commands/$(basename "$f")" ] || report "$label" "exists only in install (never committed): $f"
+  done
+  # templates (repo templates/* → <home>/templates/gabe/*, both directions)
   while IFS= read -r f; do
     rel="${f#"$REPO"/templates/}"
     check_pair "$f" "$home/templates/gabe/$rel" "$label"
   done < <(find "$REPO/templates" -type f)
+  if [ -d "$home/templates/gabe" ]; then
+    while IFS= read -r f; do
+      rel="${f#"$home"/templates/gabe/}"
+      [ -f "$REPO/templates/$rel" ] || report "$label" "exists only in install (never committed): $f"
+    done < <(find "$home/templates/gabe" -type f)
+  fi
 }
 
 check_home "$HOME/.claude" "claude"
