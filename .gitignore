@@ -1,1 +1,8 @@
 __pycache__/
+
+# Investigations: the .md record is committed; heavy generated artifacts stay local
+docs/investigations/**/assets/
+docs/investigations/**/mockups/
+docs/investigations/**/raw/
+docs/investigations/**/site/
+docs/investigations/**/*.html
