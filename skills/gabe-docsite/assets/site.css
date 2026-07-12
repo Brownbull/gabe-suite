@@ -487,3 +487,15 @@ td .doc-icon, .card .doc-icon { width: 1.05em; height: 1.05em; }
   border-radius: 10px;
   box-shadow: 0 1px 0 var(--faint2);
 }
+
+/* ── Full-width figures: pre-rendered .svg diagrams (![alt](path/x.svg)) ── */
+.doc-fig {
+  display: block;
+  max-width: 100%; width: 100%; height: auto;
+  margin: 20px auto;
+  padding: 14px;
+  background: var(--panel, #f5f0e2);
+  border: 1px solid var(--faint);
+  border-radius: 12px;
+  box-shadow: 0 1px 0 var(--faint2);
+}

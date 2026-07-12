@@ -66,9 +66,46 @@ def esc(text: str) -> str:
     return _html.escape(text, quote=False)
 
 
-def render_inline(text: str) -> str:
+class RenderContext:
+    """Optional per-page hooks that resolve relative link/asset paths against
+    the source file's own directory. ``link_resolver`` maps a link ``href`` to
+    a (possibly rewritten) href; ``asset_resolver`` maps an image ``src`` the
+    same way (and typically records the file so the build can copy it). Both
+    default to identity, so ``ctx=None`` reproduces the plain pass-through the
+    generator had before — pages authored for the site (``.html`` links,
+    already-copied ``assets/`` icons) are unaffected."""
+
+    __slots__ = ("link_resolver", "asset_resolver")
+
+    def __init__(self, link_resolver=None, asset_resolver=None) -> None:
+        self.link_resolver = link_resolver
+        self.asset_resolver = asset_resolver
+
+    def link(self, href: str) -> str:
+        return self.link_resolver(href) if self.link_resolver else href
+
+    def asset(self, src: str) -> str:
+        return self.asset_resolver(src) if self.asset_resolver else src
+
+
+def _img_class(src: str) -> str:
+    """CSS class for a markdown image by its path: memes render as a mid-width
+    block (``doc-meme``), pre-rendered ``.svg`` diagrams as a full figure
+    (``doc-fig``), everything else as a small inline glyph (``doc-icon``) — the
+    shape the gabe-suite tier icons rely on."""
+    low = src.lower()
+    if "/memes/" in low or "-meme." in low:
+        return "doc-meme"
+    if low.endswith(".svg"):
+        return "doc-fig"
+    return "doc-icon"
+
+
+def render_inline(text: str, ctx: "RenderContext | None" = None) -> str:
     """Inline markdown -> HTML. Code spans are tokenized out first so their
-    contents are escaped but never re-parsed for bold/em/links."""
+    contents are escaped but never re-parsed for bold/em/links. When ``ctx`` is
+    supplied, relative link hrefs and image srcs are resolved against the source
+    file's location (see RenderContext); without it they pass through verbatim."""
     placeholders: list[str] = []
 
     def _stash(html_frag: str) -> str:
@@ -81,18 +118,19 @@ def render_inline(text: str) -> str:
         tag = '<code class="%s">' % cls if cls else "<code>"
         return _stash(tag + esc(content) + "</code>")
 
+    def _img_sub(m: re.Match[str]) -> str:
+        src = ctx.asset(m.group(2)) if ctx else m.group(2)
+        return _stash('<img class="%s" src="%s" alt="%s">' % (
+            _img_class(src), src.replace("&", "&amp;"), esc(m.group(1))))
+
+    def _link_sub(m: re.Match[str]) -> str:
+        href = ctx.link(m.group(2)) if ctx else m.group(2)
+        return '<a href="%s">%s</a>' % (href.replace("&", "&amp;"), m.group(1))
+
     text = re.sub(r"`([^`]+)`", _stash_code, text)
     text = esc(text)
-    text = _IMG_RE.sub(
-        lambda m: _stash('<img class="%s" src="%s" alt="%s">' % (
-            "doc-meme" if "/memes/" in m.group(2) else "doc-icon",
-            m.group(2).replace("&", "&amp;"), esc(m.group(1)))),
-        text,
-    )
-    text = _LINK_RE.sub(
-        lambda m: '<a href="%s">%s</a>' % (m.group(2).replace("&", "&amp;"), m.group(1)),
-        text,
-    )
+    text = _IMG_RE.sub(_img_sub, text)
+    text = _LINK_RE.sub(_link_sub, text)
     text = _BOLD_RE.sub(r"<strong>\1</strong>", text)
     text = _EM_RE.sub(r"<em>\1</em>", text)
     # Pill bare KDBP filenames left in prose (backticked ones are already stashed
@@ -125,10 +163,10 @@ class _Numbering:
         return "%02d" % self.count
 
 
-def _heading_html(level: int, raw: str, numbering: _Numbering) -> str:
+def _heading_html(level: int, raw: str, numbering: _Numbering, ctx: "RenderContext | None" = None) -> str:
     text = raw.strip()
     if level == 1:
-        return "<h1>%s</h1>" % render_inline(text)
+        return "<h1>%s</h1>" % render_inline(text, ctx)
     if level == 2:
         m = re.match(r"^(\d+)\.?\s+(.*)$", text)
         auto_num = numbering.next()  # always advance, even when the heading supplies its own number
@@ -142,10 +180,10 @@ def _heading_html(level: int, raw: str, numbering: _Numbering) -> str:
         return '<h2 id="%s"><span class="num">%s</span>%s</h2>' % (
             slug,
             num,
-            render_inline(title),
+            render_inline(title, ctx),
         )
     slug = slugify(text)
-    return '<h3 id="%s">%s</h3>' % (slug, render_inline(text))
+    return '<h3 id="%s">%s</h3>' % (slug, render_inline(text, ctx))
 
 
 def _split_table_row(line: str) -> list[str]:
@@ -162,18 +200,18 @@ def _is_table_divider(line: str) -> bool:
     return bool(cells) and all(re.fullmatch(r":?-{1,}:?", c) for c in cells if c != "")
 
 
-def _render_table(rows: list[str]) -> str:
+def _render_table(rows: list[str], ctx: "RenderContext | None" = None) -> str:
     header = _split_table_row(rows[0])
     body = [_split_table_row(r) for r in rows[2:]]
     out = ['<div class="table-wrap"><table>']
     out.append("<thead><tr>")
-    out.extend("<th>%s</th>" % render_inline(c) for c in header)
+    out.extend("<th>%s</th>" % render_inline(c, ctx) for c in header)
     out.append("</tr></thead>")
     if body:
         out.append("<tbody>")
         for r in body:
             cells = (r + [""] * len(header))[: len(header)]
-            out.append("<tr>" + "".join("<td>%s</td>" % render_inline(c) for c in cells) + "</tr>")
+            out.append("<tr>" + "".join("<td>%s</td>" % render_inline(c, ctx) for c in cells) + "</tr>")
         out.append("</tbody>")
     out.append("</table></div>")
     return "".join(out)
@@ -233,11 +271,15 @@ def _render_list_items(items: list[tuple[int, str, str]]) -> str:
     return "".join(out)
 
 
-def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
+def markdown_to_html(
+    md: str, numbering: _Numbering | None = None, ctx: "RenderContext | None" = None
+) -> str:
     """Convert a markdown document body to an HTML fragment.
 
     ``numbering`` carries the sequential ``##`` counter across recursive
     calls (e.g. blockquotes); a fresh one is created for a top-level call.
+    ``ctx`` (optional) resolves relative links/asset paths against the source
+    file's location and is threaded through every nested render.
     """
     if numbering is None:
         numbering = _Numbering()
@@ -252,7 +294,7 @@ def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
         if para:
             text = " ".join(s.strip() for s in para).strip()
             if text:
-                out.append("<p>%s</p>" % render_inline(text))
+                out.append("<p>%s</p>" % render_inline(text, ctx))
             para.clear()
 
     while i < n:
@@ -270,7 +312,7 @@ def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
                 buf.append(lines[i])
                 i += 1
             i += 1  # skip closing :::
-            inner = markdown_to_html("\n".join(buf), numbering)
+            inner = markdown_to_html("\n".join(buf), numbering, ctx)
             lbl_html = '<span class="lbl">%s</span>' % esc(label) if label else ""
             out.append('<div class="note">%s%s</div>' % (lbl_html, inner))
             continue
@@ -311,7 +353,7 @@ def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
         m = re.match(r"^(#{1,3})\s+(.*)$", line)
         if m:
             flush_para()
-            out.append(_heading_html(len(m.group(1)), m.group(2), numbering))
+            out.append(_heading_html(len(m.group(1)), m.group(2), numbering, ctx))
             i += 1
             continue
 
@@ -323,7 +365,7 @@ def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
             while i < n and lines[i].strip() != "" and "|" in lines[i]:
                 tbl.append(lines[i])
                 i += 1
-            out.append(_render_table(tbl))
+            out.append(_render_table(tbl, ctx))
             continue
 
         # blockquote
@@ -333,7 +375,7 @@ def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
             while i < n and lines[i].strip().startswith(">"):
                 quote.append(re.sub(r"^\s*>\s?", "", lines[i]))
                 i += 1
-            inner = markdown_to_html("\n".join(quote), numbering)
+            inner = markdown_to_html("\n".join(quote), numbering, ctx)
             out.append("<blockquote>%s</blockquote>" % inner)
             continue
 
@@ -351,13 +393,13 @@ def markdown_to_html(md: str, numbering: _Numbering | None = None) -> str:
                     if tm:
                         done = tm.group(1).lower() == "x"
                         cls = "done" if done else "todo"
-                        content = '<li class="%s">%s' % (cls, render_inline(tm.group(2)))
+                        content = '<li class="%s">%s' % (cls, render_inline(tm.group(2), ctx))
                         items.append((depth, "ul-task", content))
                     else:
-                        items.append((depth, "ul", "<li>" + render_inline(content_raw)))
+                        items.append((depth, "ul", "<li>" + render_inline(content_raw, ctx)))
                 elif om:
                     depth = _indent_level(om.group(1))
-                    items.append((depth, "ol", "<li>" + render_inline(om.group(2))))
+                    items.append((depth, "ol", "<li>" + render_inline(om.group(2), ctx)))
                 elif lines[i].strip() == "":
                     if i + 1 < n and (_BULLET_RE.match(lines[i + 1]) or _ORDERED_RE.match(lines[i + 1])):
                         i += 1
