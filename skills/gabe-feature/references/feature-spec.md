@@ -29,6 +29,17 @@ never drift from the truth.
 | DIAGRAM USERFLOW / DATAFLOW / WORKFLOW | flowchart / sequenceDiagram / stateDiagram-v2 — types, node shapes, and the change-highlight rule are BINDING per `gabe-docs/references/docs-spec.md` §Mermaid (shapes-per-operation table + `classDef changed` / sequence `rect` blocks; validate highlight targets — mermaid silently ignores misses) | drawing the whole system; highlighting everything |
 | REVIEWED | date + who, stamped ONLY after the human reviewed the BUILT pages | stamping a TODO-free draft |
 
+## The verification changelog (machine — but fed by commits[])
+
+Run results are replaced on every refresh BY DESIGN; the durable memory is
+git, rendered: each testing page carries a verification changelog (per
+registry commit: what it did to the test surface), and suite sections say
+when each file entered the corpus. This makes `commits[]` double as the
+changelog SOURCE: list every commit that grew or reshaped the feature's
+tests — not just the headline product commits. A pruning conversation years
+later starts from this record ("these tests exist because…"), never from
+run counts.
+
 ## Narration (proof manifests)
 
 Authored by the session that creates the evidence, in the manifest's
