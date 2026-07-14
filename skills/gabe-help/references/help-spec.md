@@ -113,6 +113,7 @@ The Gabe Suite — 22 command wrappers, 12 skills:
 | gabe-health | /gabe-health [focus] | Codebase structural health — gods, churn, coupling, bugs |
 | gabe-init | /gabe-init [name] | Project setup — .kdbp/, hooks, project type, maturity |
 | gabe-lens | /gabe-lens [concept] | Cognitive translation — analogies, maps, constraint boxes |
+| gabe-meme | /gabe-meme [subject] [count] | Oblique-meme generation — persona-matched templates via memegen.link, verified PNGs, punch-up only |
 | gabe-mockup | /gabe-mockup [mode] | Mockup, React Storybook, and design-ref workflows |
 | gabe-myopic | /gabe-myopic [mode] [target] | Short-sighted-user walkthrough — flags foresight traps, overwhelm, recall, no-undo |
 | gabe-next | /gabe-next | Zero-logic router for the current phase state |
