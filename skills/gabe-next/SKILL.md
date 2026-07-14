@@ -3,7 +3,7 @@ name: gabe-next
 description: "Zero-logic router — deterministic scripts/next.mjs over .kdbp/PLAN.json (prose PLAN.md fallback) dispatches to the next gabe command (review/commit/push/execute/plan). No LLM decisions, no side effects beyond the command it routes to. Usage: /gabe-next [--dry-run]"
 when_to_use: "What's next, where were we, continue the lifecycle — route to the next gabe step from PLAN.md state without re-deciding anything."
 metadata:
-  version: 2.1.0
+  version: 2.2.0
 ---
 
 # Gabe Next — zero-logic lifecycle router
@@ -36,7 +36,7 @@ Run `node <this skill dir>/scripts/next.mjs` (add `--json` for machine output). 
 Read `.kdbp/PLAN.md`. Extract:
 
 1. **Current Phase pointer.** Line matching `## Current Phase` → next non-blank line → leading integer `N` from `Phase N: ...`. If missing or unparseable → print `⚠ PLAN.md: Current Phase section missing or malformed.` and exit.
-2. **Phases table columns.** Detect column names from header row. Expected: `# | Phase | Description | Types | Tier | Complexity | Exec | Review | Commit | Push`. Legacy plans may lack `Exec` — treat missing column as always-✅ (skip that step).
+2. **Phases table columns.** Detect column names from header row. Expected: `# | Phase | Description | Types | Tier | Complexity | Exec | Review | Commit | Push | Center`. Two columns are optional: legacy plans may lack `Exec`, and only projects with a command center carry `Center` — treat either **missing column as always-✅** (skip that step). `Center` present-and-⬜ means the shipped phase is not yet covered in the command center.
 3. **Target row.** Row where first data column equals `N`.
 4. **Project type.** Parse top-of-file HTML comment `<!-- project_type: code | mockup | hybrid -->`. If absent → default `code`. Used by Step 1.5 Exec dispatch.
 5. **Target row types.** Parse `Types` column (or `## Phase Details → Phase N → types:` YAML) for target row. List like `[design-system, ui-kit]`. Empty → `[]`. Used by Step 1.5 hybrid dispatch.
@@ -58,8 +58,8 @@ Store the resolved command as `EXEC_CMD` for Step 2 use. Review / Commit / Push 
 
 ### Step 1.7: Prior-row sweep (always print, never block)
 
-Scan Phases rows `1..N-1`. If any Exec/Review/Commit/Push cell ≠ ✅, print before the routing decision:
-`⚠ INCOMPLETE PRIOR PHASES: [12: Review ⬜, Push ⬜] — routing continues on Phase N; clear the debt with /gabe-review or /gabe-push on the listed phases.`
+Scan Phases rows `1..N-1`. If any Exec/Review/Commit/Push/Center cell ≠ ✅ (a `Center` cell counts as debt only when the column is present), print before the routing decision:
+`⚠ INCOMPLETE PRIOR PHASES: [12: Review ⬜, Push ⬜ · 34: Center ⬜] — routing continues on Phase N; clear the debt with /gabe-review, /gabe-push, or /gabe-feature on the listed phases.`
 
 ### Step 2: Decide next action (zero LLM)
 
@@ -72,8 +72,11 @@ Apply this decision table, top-to-bottom. First match wins.
 | Target row's `Review` = ⬜ | `/gabe-review` | Code written and Exec gate complete; runtime-gated phases should only reach this after staging proof |
 | Target row's `Commit` = ⬜ | `/gabe-commit` | Reviewed, not committed |
 | Target row's `Push` = ⬜ | `/gabe-push` | Committed, not pushed |
-| All 4 = ✅ on target row AND more phases below | Advance `Current Phase` to `N+1`, re-run Step 2 | Phase done, move on |
-| All 4 = ✅ on target row AND no phases below | `/gabe-plan complete` | Plan complete — prompt archive |
+| Target row's `Center` = ⬜ (column present only) | `/gabe-feature <N>` | Shipped, not yet covered in the command center |
+| All lifecycle cells = ✅ on target row AND more phases below | Advance `Current Phase` to `N+1`, re-run Step 2 | Phase done, move on |
+| All lifecycle cells = ✅ on target row AND no phases below | `/gabe-plan complete` | Plan complete — prompt archive |
+
+The lifecycle cells are `Exec · Review · Commit · Push` plus `Center` **when the column is present** (command-center projects). `Center` is the router's read of the board's fifth `L · card` cell: `/gabe-feature` flips it ✅ when it stamps the feature card reviewed (E5). A phase with the column absent has a four-cell lifecycle, exactly as before.
 
 **Advance mechanics.** When advancing Current Phase, do NOT write any other file. Only rewrite the `## Current Phase` section to point to `N+1` and bump `Last Updated` in Context to today's date. Advancing past a non-✅ prior row is allowed but MUST re-print the Step 1.7 sweep warning — never advance silently over owed Review/Push work.
 
@@ -96,14 +99,12 @@ Apply this decision table, top-to-bottom. First match wins.
 3. Do not replace the chosen command with a hand-rolled equivalent. In particular, when `NEXT` is `/gabe-commit`, do not stop after running raw `git commit`; the `/gabe-commit` normal-flow output contract must still be satisfied, including the visible `**Gabe-Lens brief**`, `/gabe-teach` suggestion, PLAN auto-tick output, and existing LEDGER behavior.
 4. `/gabe-next` owns only routing and phase advancement. Commit message generation, verification, ledger writes, briefs, pushes, and other side effects belong to the downstream command.
 
-### Step 4: Legacy plan compatibility
+### Step 4: Optional-column compatibility
 
-If the Phases table lacks an `Exec` column (legacy plans pre-v2.9):
+Two columns are optional; a missing one is treated as always-✅ and its routing branch is silently skipped. Never auto-migrate — human migration only.
 
-1. Exec branch is silently skipped (treat as ✅)
-2. Decision table collapses to Review → Commit → Push → advance
-3. Print one-line notice: `ℹ Legacy plan schema — Exec column missing. Add manually or recreate plan via /gabe-plan to adopt it.`
-4. Do not auto-migrate. Human migration only.
+- **`Exec` absent** (legacy plans pre-v2.9): decision table collapses to Review → Commit → Push → advance. Print `ℹ Legacy plan schema — Exec column missing. Add manually or recreate plan via /gabe-plan to adopt it.`
+- **`Center` absent** (any project without a command center, the common case): the lifecycle is the classic four cells and `/gabe-feature` is never routed. No notice — absence is normal, not a defect. A command-center project adopts routed coverage by adding the `Center` column (`/gabe-plan update`, or by hand); until then the router simply never nags for coverage.
 
 ### Step 5: Error surfaces
 
@@ -150,6 +151,15 @@ TYPES: design-system, ui-kit
 STATE: Exec ⬜ | Review ⬜ | Commit ⬜ | Push ⬜
 NEXT:  /gabe-mockup
 REASON: Tasks not yet implemented (mockup dispatch via project_type)
+```
+
+```
+$ /gabe-next --dry-run     # command-center project: shipped phase not yet covered
+GABE NEXT (dry-run)
+PHASE: 35 — CE · Consent honesty
+STATE: Exec ✅ | Review ✅ | Commit ✅ | Push ✅ | Center ⬜
+NEXT:  /gabe-feature 35
+REASON: Shipped, not yet covered in the command center
 ```
 
 ## Non-goals

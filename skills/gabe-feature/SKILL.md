@@ -3,7 +3,7 @@ name: gabe-feature
 description: "Feature coverage for a project's Testing Command Center — translate a shipped feature into its lens card, diagrams, and evidence narration over machine-derived facts, and keep the center regenerating green. Usage: /gabe-feature [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…>"
 when_to_use: "Cover a shipped feature in the command center, center status, backfill the center feature-by-feature, curate proof + narration after a green run — ONLY in projects that have docs/site/center/center.config.json (elsewhere: STOP with the bootstrap pointer)."
 metadata:
-  version: 1.2.1
+  version: 1.3.0
 ---
 
 # Gabe Feature — the command center's per-feature ritual
@@ -44,7 +44,7 @@ Any binding missing → E6 STOP, name it, done. Format authority: the project's 
 2. Insert the entry into `features[]` and author the card. The card contract — sections and their EXACT headings, entity primacy, the five angle ids and their verdict endings, diagram rules — lives ONCE in `references/feature-spec.md`: read it before writing; the gate flags deviations. Two principles the registry adds: `commits[]` lists every commit that grew or reshaped this feature's TESTS (it feeds the verification changelog); junit globs claim the tests that VERIFY the promise — which may predate the phase (authorship is the changelog's job, not the glob's). Ground every line in commits/code you actually read.
 3. Regenerate (`refresh_center.sh regen`). Read the built feature page's **resolved match list** — trim any over-claiming glob, then delete the `TODO(verify-glob)` marker. Gate must be green (WARNs for THIS feature cleared).
 4. Evidence, when it exists or one run away: journey run → `curate` mode below. When it doesn't: the ANGLES reasons carry the absence honestly.
-5. Present the built pages (feature + docs) to the human for THE review. On approval, stamp the card `# REVIEWED` (date + who). One feature per invocation; report what remains.
+5. Present the built pages (feature + docs) to the human for THE review. On approval, stamp the card `# REVIEWED` (date + who) **and close the lifecycle loop (E5):** if the phase has a PLAN row whose Phases table carries a `Center` column, set that phase's `Center` cell to ✅ in `.kdbp/PLAN.md` **and** mirror `cells.center = "done"` into `.kdbp/PLAN.json` (same turn) — this is the cell `/gabe-next` reads to stop routing coverage. If the PLAN has no `Center` column, print one line: `ℹ PLAN has no Center column — run /gabe-plan update to adopt routed command-center coverage` and continue (never mutate the schema here; that is /gabe-plan's job). One feature per invocation; report what remains.
 
 ### `/gabe-feature status`
 
@@ -60,4 +60,4 @@ After a green journey run: pick the shots that PROVE the claims (selection is th
 
 ## Output contract
 
-Per feature, on completion: a validated `features[]` entry with human-confirmed globs · a card with zero TODO markers and a `# REVIEWED` stamp · 3 diagrams (or the card states why fewer) · narration wherever a proof set exists · gate green with this feature contributing zero WARNs. Card-only tier: the same minus evidence (ANGLES carry the reasons). Skip: one disposition line with a reason. E7: report page paths + the gate's closing line.
+Per feature, on completion: a validated `features[]` entry with human-confirmed globs · a card with zero TODO markers and a `# REVIEWED` stamp · 3 diagrams (or the card states why fewer) · narration wherever a proof set exists · gate green with this feature contributing zero WARNs · the phase's PLAN `Center` cell flipped ✅ (PLAN.md + PLAN.json) where that column exists, else the one-line adopt-the-column pointer. Card-only tier: the same minus evidence (ANGLES carry the reasons). Skip: one disposition line with a reason. E7: report page paths + the gate's closing line.

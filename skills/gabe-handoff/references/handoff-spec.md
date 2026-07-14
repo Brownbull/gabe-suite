@@ -57,7 +57,7 @@ git rev-list --count HEAD..@{u} 2>/dev/null   # commits behind (drift)
 Record: branch, HEAD sha + subject, uncommitted/untracked files, unpushed commit count, upstream drift.
 
 **KDBP state (read):**
-- `.kdbp/PLAN.md` — `## Current Phase` pointer + the `## Phases` table (columns `# | Phase | Description | Tier | Complexity | Exec | Review | Commit | Push`; symbols ⬜ not started · 🔄 in progress · ✅ complete). Identify the active phase row(s) touched this session.
+- `.kdbp/PLAN.md` — `## Current Phase` pointer + the `## Phases` table (columns `# | Phase | Description | Tier | Complexity | Exec | Review | Commit | Push`, plus an optional `Center` column in command-center projects; symbols ⬜ not started · 🔄 in progress · ✅ complete). Identify the active phase row(s) touched this session.
 - `.kdbp/PENDING.md` — open deferred items (table; `Status != resolved/closed`).
 - `.kdbp/LEDGER.md` — the most recent row (for continuity + to avoid duplicating).
 - `.kdbp/SCOPE.md` `## Phases` (if present) — the larger arc the session sits inside. (Pre-A2 projects that still carry a separate `.kdbp/ROADMAP.md` — or its archived copy under `.kdbp/archive/retired/` — read the same field there.)

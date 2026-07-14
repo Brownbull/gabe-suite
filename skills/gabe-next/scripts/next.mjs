@@ -55,13 +55,15 @@ const debt = [];
 for (let i = 0; i < idx; i++) {
   const c = phases[i].cells ?? {};
   if (c.exec === "deferred" || c.exec === "obsolete") continue; // parked rows owe nothing
-  const owed = ["exec", "review", "commit", "push"]
+  // center = optional 5th lifecycle cell (command-center coverage). Undefined never matches
+  // todo/in_progress, so projects without the column never accrue center debt (E-precedent).
+  const owed = ["exec", "review", "commit", "push", "center"]
     .filter((k) => c[k] === "todo" || c[k] === "in_progress")
     .map((k) => `${k[0].toUpperCase()}${k.slice(1)} ${GLYPH[c[k]]}`);
   if (owed.length) debt.push(`${phases[i].id}: ${owed.join(", ")}`);
 }
 const warnings = debt.length
-  ? [`⚠ INCOMPLETE PRIOR PHASES: [${debt.join(" · ")}] — routing continues on Phase ${cur}; clear the debt with /gabe-review or /gabe-push on the listed phases.`]
+  ? [`⚠ INCOMPLETE PRIOR PHASES: [${debt.join(" · ")}] — routing continues on Phase ${cur}; clear the debt with /gabe-review, /gabe-push, or /gabe-feature on the listed phases.`]
   : [];
 
 // Decision table (first match wins), walking forward from the current phase over
@@ -72,9 +74,14 @@ for (let i = idx; i < phases.length; i++) {
   const c = ph.cells ?? {};
   // A deferred/obsolete Exec parks the whole phase (⏸/⚰️ rows like a deferred VAR chain):
   // never route review/commit/push for work that was never executed.
+  // `center` joins the lifecycle only when the project defines it (has a command center);
+  // absent → not this project's concern, so it never blocks settle/advance.
+  const lifecycle = c.center === undefined
+    ? ["exec", "review", "commit", "push"]
+    : ["exec", "review", "commit", "push", "center"];
   const settled =
     c.exec === "deferred" || c.exec === "obsolete" ||
-    ["exec", "review", "commit", "push"].every(
+    lifecycle.every(
       (k) => c[k] === "done" || c[k] === "deferred" || c[k] === "obsolete"
     );
   if (settled) {
@@ -87,8 +94,9 @@ for (let i = idx; i < phases.length; i++) {
   else if (c.review === "todo") { next = "/gabe-review"; reason = "Code written and Exec gate complete"; }
   else if (c.commit === "todo") { next = "/gabe-commit"; reason = "Reviewed, not committed"; }
   else if (c.push === "todo") { next = "/gabe-push"; reason = "Committed, not pushed"; }
+  else if (c.center === "todo" || c.center === "in_progress") { next = `/gabe-feature ${ph.id}`; reason = "Shipped, not yet covered in the command center"; }
   else { advanceChain.push(String(ph.id)); continue; } // deferred/obsolete tail cells
-  const state = ["exec", "review", "commit", "push"]
+  const state = lifecycle
     .map((k) => `${k[0].toUpperCase()}${k.slice(1)} ${GLYPH[c[k]] ?? "?"}`).join(" | ");
   const advance = advanceChain.length && String(ph.id) !== cur ? String(ph.id) : null;
   out(

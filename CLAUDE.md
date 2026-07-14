@@ -62,7 +62,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-docs** | 1.1.1 | Documentation standards + diagrams library + the suite execution contract (background) |
 | **gabe-docsite** | 1.0.0 | Publish docs onto the generated HTML docs site |
 | **gabe-execute** | 2.1.0 | Phase execution with tier cap, escalation gate, checkpoint commits |
-| **gabe-feature** | 1.2.1 | Command-center feature coverage — card/diagrams/narration over machine facts; absent-angle verdict-as-label + grow-it prompt; status, backfill, curate |
+| **gabe-feature** | 1.3.0 | Command-center feature coverage — card/diagrams/narration over machine facts; absent-angle verdict-as-label + grow-it prompt; closes the PLAN `Center` cell on review (routed lifecycle step); status, backfill, curate |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
 | **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
 | **gabe-help** | 1.1.1 | Context-aware guide + the P14 cross-project tool registry |
@@ -71,8 +71,8 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-meme** | 1.1.0 | Oblique-meme generation — per-project tone setup + template-persona-matched visual metaphors via memegen.link; verified PNGs, punch-up (ported from chiless meme-hilo) |
 | **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
 | **gabe-myopic** | 1.1.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork) |
-| **gabe-next** | 2.0.0 | Zero-logic lifecycle router over PLAN.md state |
-| **gabe-plan** | 2.1.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale) |
+| **gabe-next** | 2.2.0 | Zero-logic lifecycle router over PLAN.md state — Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
+| **gabe-plan** | 2.2.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); optional `Center` column for command-center projects |
 | **gabe-push** | 2.1.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md` |
 | **gabe-quip** | 1.1.0 | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts surfacing pain points; one engagement lever, proposes not rewrites, dosed (sibling of gabe-meme) |
 | **gabe-review** | 1.6.0 | Code review — risk pricing, confidence scoring, plan alignment, triage |

@@ -9,6 +9,7 @@
 <!-- | # | Phase | Description | Complexity | Exec | Review | Commit | Push | -->
 <!-- Exec: ⬜ not started, 🔄 in progress, ✅ complete (written by /gabe-execute or /gabe-mockup) -->
 <!-- Review/Commit/Push: ⬜ → ✅ (written by /gabe-review, /gabe-commit, /gabe-push) -->
+<!-- Optional Center column (command-center projects only): append `| Center |`; ⬜ → ✅ written by /gabe-feature when it covers the shipped phase. Absent → /gabe-next treats it as ✅. -->
 <!-- /gabe-next routes to the next gabe command based on column state + project_type. -->
 <!-- project_type dispatch: code → /gabe-execute, mockup → /gabe-mockup, hybrid → per-phase types tag. -->
 

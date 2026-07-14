@@ -433,8 +433,9 @@ Only after user confirms. Write with this structure:
 
 <!-- Exec is written by /gabe-execute: ⬜ not started, 🔄 in progress, ✅ complete -->
 <!-- Review/Commit/Push auto-ticked by /gabe-review, /gabe-commit, /gabe-push -->
-<!-- A phase is complete when all four status columns are ✅ -->
+<!-- A phase is complete when all status columns are ✅ -->
 <!-- /gabe-next routes to the next command based on column state (Exec → Review → Commit → Push → advance phase) -->
+<!-- Center column (OPTIONAL, command-center projects only): add `| Center |` after Push; auto-ticked ✅ by /gabe-feature when it covers the shipped phase. Absent → /gabe-next skips it (treated as ✅). -->
 <!-- Tier column values: mvp | ent | scale. Read by /gabe-execute (tier-cap) and /gabe-review (TIER_DRIFT finding). -->
 <!-- User-facing/runtime phase types require journey evidence artifacts before Exec can be ✅. -->
 <!-- Manual override is fine — edit cells by hand any time (then /gabe-plan update regenerates the PLAN.json mirror) -->
@@ -514,6 +515,7 @@ Schema (v1):
       "types": ["<from the Types cell or the Phase Details YAML>"],
       "cells": { "exec": "todo", "review": "todo", "commit": "todo", "push": "todo" },
       "proof": null
+      // command-center projects only: cells also carries "center": "todo" (5th lifecycle cell)
     }
   ]
 }
@@ -523,6 +525,7 @@ Rules:
 
 - `status` mirrors the `<!-- status: ... -->` comment: `active | none | completed | defer | cancelled`. `project_type` mirrors the `<!-- project_type: ... -->` comment (`code | mockup | hybrid`); readers default a missing field to `code`.
 - Cell tokens mirror the table glyphs 1:1: ⬜ `todo` · 🔄 `in_progress` · ✅ `done` · ⏸ `deferred` · ⚰️ `obsolete`.
+- **`center` cell (optional, command-center projects only).** Projects with a `docs/site/center/` Testing Command Center carry a fifth cell/`Center` column: ✅ once `/gabe-feature` has covered the shipped phase (it writes the cell when it stamps the feature card reviewed, E5). Absent in every other project — `/gabe-next` treats a missing `center` as always-✅, so non-center plans keep the classic four-cell lifecycle. Seed it (⬜) only when the project has a command center.
 - `proof` is the per-phase runtime-evidence field (Evidence Doctrine): at plan time, the required journey command / spec path / artifact dir from `## Runtime Evidence Checkpoints` (or `null` for phases with no runtime requirement); `/gabe-execute` overwrites it with the actual evidence line (command → runtime → artifact paths) when the evidence lands.
 - On archive (Step 6b), after resetting PLAN.md to the empty template, write `{"version": 1, "status": "none", "phases": []}`. The archived `.md` copy is the durable record; the mirror is regenerable, so it is not archived.
 - Legacy plans: if PLAN.md exists without PLAN.json, regenerate the mirror from the Phases table on the next write that touches plan state.
@@ -726,7 +729,7 @@ If the user runs `/gabe-plan update` or `/gabe-plan status`:
 
 - **`update`**: Scope fence (check before ANY edit):
   ```
-  1. NEVER edit Exec/Review/Commit/Push cells — those belong to their commands.
+  1. NEVER edit Exec/Review/Commit/Push/Center cells — those belong to their commands (Center → /gabe-feature). `update` MAY add the `Center` column itself (⬜ for every phase) when a project has adopted a command center — that is a schema edit, not a cell tick.
   2. NEVER renumber existing phases — append, or use decimal IDs (N.5); renumbering orphans the Current Phase pointer and DECISIONS D-links.
   3. NEVER delete DECISIONS.md references.
   Allowed edits menu: [add-phase] [edit-description] [edit-scope/acceptance] [re-tier via 3.5] [move-pointer] [edit-risks].
