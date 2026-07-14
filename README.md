@@ -59,6 +59,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-init` | Project setup — creates `.kdbp/`, installs hooks, selects project type + maturity |
 | `/gabe-lens` | Cognitive translation — analogies, constraint boxes, Gabe Blocks |
 | `/gabe-meme` | Oblique-meme generation — template-persona-matched visual metaphors rendered via memegen.link, verified PNGs, punch-up only |
+| `/gabe-quip` | Sarcastic doc-wit — titles/hooks/asides that surface the pain point and name the obvious-but-unsaid; proposes, dosed with restraint, punch-up |
 | `/gabe-mockup` | Mockup/UX workflow — legacy static mockups plus React-first Storybook and `design-ref` |
 | `/gabe-myopic` | Short-sighted-user walkthrough — panel of 3 planning horizons flags foresight traps, overwhelm, recall demands, no-undo dead-ends |
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |

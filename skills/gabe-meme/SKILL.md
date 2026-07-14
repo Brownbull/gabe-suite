@@ -26,15 +26,16 @@ every run after.
    then the repo root. If it exists, read it: `tone` + `tone_note` steer every
    concept (thread them into the writing prompt, step 2), `output_dir` is where
    PNGs land, `real_subjects` says whether the Ethics gate engages hard.
-2. **If it does NOT exist, this is first use here — seed it, do not guess the
-   tone.** Ask the human with AskUserQuestion, offering the tone menu from
-   `references/meme-craft.md` §Setup — present each option with its concrete
-   example meme (as option previews) so they feel the difference on one shared
-   subject; "Other" lets them describe their own voice. Then WRITE
-   `<output_dir>/meme.config.json` (default `output_dir` = `docs/memes/`;
-   `real_subjects` defaults true so ethics stays on unless the project is clearly
-   abstract/dev-only) and proceed to the pipeline. One-time; later runs read it
-   silently. The schema lives once in `references/meme-craft.md` §Setup.
+2. **If it does NOT exist, this is first use here — seed it, do not guess.** Ask
+   the human with ONE AskUserQuestion carrying TWO questions: (a) **tone** — the
+   menu from `references/meme-craft.md` §Setup, each option shown with its concrete
+   example meme as a preview on one shared subject so they feel the difference
+   ("Other" = describe your own voice); (b) **output dir** — where PNGs + the
+   config live (`docs/memes/` recommended · `public/memes/` · Other). Then WRITE
+   `<output_dir>/meme.config.json` (`real_subjects` defaults true so ethics stays
+   on unless the project is clearly abstract/dev-only) and proceed to the pipeline.
+   One-time; later runs read it silently. The schema lives once in
+   `references/meme-craft.md` §Setup.
 
 ## The four rules (the craft in one screen)
 

@@ -50,7 +50,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - Architecture Principles AP1–AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
 - Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible. Never patch `~/.claude` in place.
 
-## Capabilities (27 skills)
+## Capabilities (28 skills)
 
 | Skill | Version | Purpose |
 |---|---|---|
@@ -74,6 +74,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-next** | 2.0.0 | Zero-logic lifecycle router over PLAN.md state |
 | **gabe-plan** | 2.1.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale) |
 | **gabe-push** | 2.1.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md` |
+| **gabe-quip** | 1.0.0 | Sarcastic doc-wit — titles/hooks/asides that surface pain points; proposes not rewrites, dosed, punch-up (prose sibling of gabe-meme) |
 | **gabe-review** | 1.6.0 | Code review — risk pricing, confidence scoring, plan alignment, triage |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.0 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |
