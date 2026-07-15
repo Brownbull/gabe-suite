@@ -1,0 +1,262 @@
+<title>Final map — site ⟷ files ⟷ suite</title>
+<style>
+  :root{
+    --ground:#eef1f4;--paper:#ffffff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;
+    --accent:#0d6e78;--accent2:#0a565e;
+    --h-now:#0d7a84;--h-board:#1f6feb;--h-ent:#0a7d6b;--h-docs:#8e4585;--h-test:#3f6d4c;--h-ledger:#9a5a00;--h-rel:#7a5a8a;--h-leaf:#8494a4;
+    --c-scope:#0a7d6b;--c-plan:#1f6feb;--c-red:#c0392b;--c-exec:#2f8f57;--c-review:#b5771a;--c-commit:#5a53a8;
+    --c-push:#0d7a84;--c-walk:#c2461e;--c-feature:#8e4585;--c-init:#7b8698;--c-guard:#9c2350;
+    --gap:#b5771a;
+    --shadow:0 1px 2px rgba(20,33,46,.06),0 6px 22px rgba(20,33,46,.05);
+    --fb:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --fm:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0b0f15;--paper:#141d28;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;
+    --accent:#3bb3bd;--accent2:#5cc7cf;
+    --h-now:#3bb3bd;--h-board:#6aa6f5;--h-ent:#4fc3a8;--h-docs:#c98bbb;--h-test:#6fa77d;--h-ledger:#d79a3c;--h-rel:#b795c9;--h-leaf:#8494a4;
+    --c-scope:#4fc3a8;--c-plan:#6aa6f5;--c-red:#e0736a;--c-exec:#6fa77d;--c-review:#d79a3c;--c-commit:#9b93e6;
+    --c-push:#3bb3bd;--c-walk:#e8825e;--c-feature:#c98bbb;--c-init:#7d8b9a;--c-guard:#d9707c;
+    --gap:#d79a3c;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.28);
+  }}
+  :root[data-theme="light"]{--ground:#eef1f4;--paper:#fff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--accent:#0d6e78;--accent2:#0a565e;--h-now:#0d7a84;--h-board:#1f6feb;--h-ent:#0a7d6b;--h-docs:#8e4585;--h-test:#3f6d4c;--h-ledger:#9a5a00;--h-rel:#7a5a8a;--h-leaf:#8494a4;--c-scope:#0a7d6b;--c-plan:#1f6feb;--c-red:#c0392b;--c-exec:#2f8f57;--c-review:#b5771a;--c-commit:#5a53a8;--c-push:#0d7a84;--c-walk:#c2461e;--c-feature:#8e4585;--c-init:#7b8698;--c-guard:#9c2350;--gap:#b5771a}
+  :root[data-theme="dark"]{--ground:#0b0f15;--paper:#141d28;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--accent:#3bb3bd;--accent2:#5cc7cf;--h-now:#3bb3bd;--h-board:#6aa6f5;--h-ent:#4fc3a8;--h-docs:#c98bbb;--h-test:#6fa77d;--h-ledger:#d79a3c;--h-rel:#b795c9;--h-leaf:#8494a4;--c-scope:#4fc3a8;--c-plan:#6aa6f5;--c-red:#e0736a;--c-exec:#6fa77d;--c-review:#d79a3c;--c-commit:#9b93e6;--c-push:#3bb3bd;--c-walk:#e8825e;--c-feature:#c98bbb;--c-init:#7d8b9a;--c-guard:#d9707c;--gap:#d79a3c}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1260px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(10px,2.5vw,24px) 56px}
+  h1{font-size:clamp(1.4rem,3.2vw,2rem);letter-spacing:-.02em;font-weight:750;margin:.2em 0 .12em}
+  .lede{color:var(--ink2);font-size:.98rem;max-width:78ch;margin:0}
+  .kicker{font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .kicker b{color:var(--accent)}
+  .bar{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;margin:13px 0 4px}
+  .chip{font-family:var(--fm);font-size:.6rem;font-weight:700;letter-spacing:.02em;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .k-scope{background:color-mix(in srgb,var(--c-scope) 16%,transparent);color:var(--c-scope)}
+  .k-plan{background:color-mix(in srgb,var(--c-plan) 16%,transparent);color:var(--c-plan)}
+  .k-red{background:color-mix(in srgb,var(--c-red) 16%,transparent);color:var(--c-red)}
+  .k-exec{background:color-mix(in srgb,var(--c-exec) 16%,transparent);color:var(--c-exec)}
+  .k-review{background:color-mix(in srgb,var(--c-review) 16%,transparent);color:var(--c-review)}
+  .k-commit{background:color-mix(in srgb,var(--c-commit) 16%,transparent);color:var(--c-commit)}
+  .k-push{background:color-mix(in srgb,var(--c-push) 16%,transparent);color:var(--c-push)}
+  .k-walk{background:color-mix(in srgb,var(--c-walk) 16%,transparent);color:var(--c-walk)}
+  .k-feature{background:color-mix(in srgb,var(--c-feature) 16%,transparent);color:var(--c-feature)}
+  .k-init{background:color-mix(in srgb,var(--c-init) 16%,transparent);color:var(--c-init)}
+  .k-guard{background:color-mix(in srgb,var(--c-guard) 16%,transparent);color:var(--c-guard);border:1px dashed var(--c-guard)}
+  .pinbox{margin-left:auto;font-family:var(--fm);font-size:.7rem;color:var(--ink3)}
+  .pinbox b{color:var(--accent2)}
+  .modes{display:flex;gap:12px;margin:2px 0 6px;font-family:var(--fm);font-size:.66rem;color:var(--ink3);align-items:center}
+  .modes svg{vertical-align:middle}
+
+  .frame{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--paper);box-shadow:var(--shadow);margin-top:8px}
+  .maphead{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);font-family:var(--fm);font-size:.64rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;min-width:900px;padding:11px 20px}
+  .maphead .l{color:var(--accent2)} .maphead .m{color:var(--ink3)} .maphead .r{color:var(--c-commit)}
+  .map{position:relative;display:grid;grid-template-columns:300px 250px 210px;justify-content:space-between;min-width:900px;padding:20px 20px 24px}
+  .wires{position:absolute;inset:0;pointer-events:none;z-index:1}
+  .col{position:relative;z-index:2;display:flex;flex-direction:column}
+  .col.mid{gap:7px;justify-content:center} .col.right{gap:8px;justify-content:center}
+  .navsec{margin-bottom:7px}
+  .navsec .sh{font-family:var(--fm);font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--hc,var(--ink3));padding:4px 2px 4px 10px;border-left:3px solid var(--hc,var(--line))}
+  .navitem{display:flex;align-items:center;gap:8px;margin-left:14px;padding:4px 10px;border-radius:8px;border:1px solid transparent;cursor:pointer;transition:opacity .12s,background .12s}
+  .navitem .dot{width:7px;height:7px;border-radius:50%;background:var(--hc,var(--ink3));flex:none}
+  .navitem .t{font-size:.8rem;font-weight:600;color:var(--ink)}
+  .navitem:hover{background:color-mix(in srgb,var(--hc,#888) 12%,transparent)}
+  .navitem.newi .t::after{content:" •new";font-family:var(--fm);font-size:.6rem;color:var(--c-red);font-weight:700}
+  .node{background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:5px 10px;cursor:pointer;transition:opacity .12s,border-color .12s,transform .12s}
+  .col.mid .node{border-left:4px solid var(--hc,var(--line))}
+  .col.mid .node .t{font-family:var(--fm);font-size:.74rem;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .col.mid .node.newf{border-style:dashed}
+  .col.mid .node.newf .t::after{content:" •";color:var(--c-red)}
+  .col.right .node{border-right:4px solid var(--cc,var(--c-init));text-align:right}
+  .col.right .node .t{font-family:var(--fm);font-size:.76rem;color:var(--cc,var(--ink))}
+  .col.right .node.newc{border-style:dashed}
+  .node:hover{transform:translateY(-1px);box-shadow:var(--shadow)}
+  .map.dim .navitem:not(.lit),.map.dim .col.mid .node:not(.lit),.map.dim .col.right .node:not(.lit){opacity:.18}
+  .map.dim .navsec:not(.lit) .sh{opacity:.3}
+  .lit{border-color:var(--accent)!important}
+  .navitem.lit{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+  .wires path{stroke-linecap:round;fill:none}
+  .caption{font-size:.82rem;color:var(--ink2);margin-top:14px;max-width:80ch}
+  .caption b{color:var(--ink)} .caption code{font-family:var(--fm);font-size:.85em;background:color-mix(in srgb,var(--accent) 12%,transparent);padding:1px 4px;border-radius:4px}
+  .foot{margin-top:20px;font-family:var(--fm);font-size:.7rem;color:var(--ink3);display:flex;flex-wrap:wrap;gap:6px 16px}
+</style>
+
+<div class="wrap">
+  <div class="kicker">Gabe Suite · <b>the final map</b> · all decisions D1–D7 · click to pin · hover to peek</div>
+  <h1>Site ⟷ files ⟷ suite — the final structure, connected</h1>
+  <p class="lede"><b>Left</b> = the center's pages and sections. <b>Middle</b> = the files the suite's execution generates. <b>Right</b> = the commands, skills and hooks that write them — each in its own colour. Pin a file to see it feed <em>several</em> page sections at once; pin a command to see everything it produces.</p>
+
+  <div class="bar">
+    <span class="chip k-scope">/gabe-scope</span><span class="chip k-plan">/gabe-plan·next</span><span class="chip k-red">/gabe-red</span>
+    <span class="chip k-exec">/gabe-execute</span><span class="chip k-review">/gabe-review</span><span class="chip k-commit">/gabe-commit</span>
+    <span class="chip k-push">/gabe-push</span><span class="chip k-walk">/walk</span><span class="chip k-feature">/gabe-feature (+release)</span>
+    <span class="chip k-init">/gabe-init</span><span class="chip k-guard">hooks · guard</span>
+    <span class="pinbox">pinned: <b id="pinlbl">—</b></span>
+  </div>
+  <div class="modes">
+    <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="2.4"/></svg> writes (create·append·tick)</span>
+    <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/></svg> verifies / blocks lies</span>
+    <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1.5 3.5"/></svg> reads</span>
+    <span style="color:var(--c-red)">• = new this design</span>
+  </div>
+
+  <div class="frame">
+    <div class="maphead"><span class="l">◀ The center (pages · sections)</span><span class="m">the files — generated by execution</span><span class="r">the suite (commands · skills · hooks) ▶</span></div>
+    <div class="map" id="map">
+      <svg class="wires" id="wires" preserveAspectRatio="none"></svg>
+      <div class="col left" id="colNav"></div>
+      <div class="col mid" id="colFiles"></div>
+      <div class="col right" id="colCmds"></div>
+    </div>
+  </div>
+
+  <p class="caption"><b>Reading it:</b> the default pin is <code>PLAN.md · PLAN.json</code> — the tasks JSON: written by six commands, <b>verified by the guard hook</b> (dashed crimson = blocks a ✓ whose proof doesn't exist, D7), and rendered into <em>three</em> different page sections (Board rail, Now, the Ledger pages). Pin <code>walks.jsonl</code> to see one file feed the manual angles <em>and</em> needs-you. Pin <code>/gabe-red</code> to see the new beat's whole footprint: the test corpus (C-ids), a RED: commit, and the plan's red cell.</p>
+
+  <div class="foot"><span>final structure · D1–D7 folded in · new nodes marked •</span><span>the pre-go map — say go and the suite edits land</span></div>
+</div>
+
+<script>
+(function(){
+  const HC={now:'--h-now',board:'--h-board',ent:'--h-ent',docs:'--h-docs',test:'--h-test',ledger:'--h-ledger',rel:'--h-rel',leaf:'--h-leaf'};
+  const CC={scope:'--c-scope',plan:'--c-plan',red:'--c-red',exec:'--c-exec',review:'--c-review',commit:'--c-commit',push:'--c-push',walk:'--c-walk',feature:'--c-feature',init:'--c-init',guard:'--c-guard'};
+
+  const nav=[
+    {sec:'Now',hc:'now',items:[
+      {id:'n-recent',label:'Recent changes',files:['f-ledgerf','f-git','f-deploy','f-digest']},
+      {id:'n-needs',label:'Needs-you',files:['f-pending','f-walks','f-plan']},
+    ]},
+    {sec:'Board',hc:'board',items:[
+      {id:'n-rail',label:'Rail · red→exec→review→commit→push',files:['f-plan','f-git'],newi:1},
+      {id:'n-backlog',label:'Backlog',files:['f-scope','f-plan']},
+      {id:'n-nonphase',label:'Non-phase lane',files:['f-git','f-ledgerf']},
+      {id:'n-rdebt',label:'Review-debt lane',files:['f-pending']},
+    ]},
+    {sec:'Entities',hc:'ent',items:[
+      {id:'n-entidx',label:'Entity index',files:['f-config']},
+    ]},
+    {sec:'Docs',hc:'docs',items:[
+      {id:'n-fdocs',label:'Feature docs (accumulator)',files:['f-cards','f-config','f-decisions']},
+      {id:'n-found',label:'Foundations',files:['f-scope','f-decisions','f-rules','f-behavior']},
+    ]},
+    {sec:'Testing',hc:'test',items:[
+      {id:'n-matrix',label:'Matrix · id · ever-red?',files:['f-corpus','f-digest','f-git'],newi:1},
+      {id:'n-fproof',label:'Feature proof (accumulator)',files:['f-digest','f-proof','f-pending','f-git','f-corpus']},
+      {id:'n-manual',label:'· manual angles (walks)',files:['f-walks','f-behavior'],newi:1},
+      {id:'n-demo',label:'· demo shelf',files:['f-proof']},
+    ]},
+    {sec:'Ledger',hc:'ledger',items:[
+      {id:'n-change',label:'Change pages (ephemeral)',files:['f-git','f-plan']},
+    ]},
+    {sec:'Releases',hc:'rel',items:[
+      {id:'n-release',label:'Release showcase',files:['f-deploy','f-proof','f-cards'],newi:1},
+    ]},
+    {sec:'Leaf',hc:'leaf',items:[
+      {id:'n-leaf',label:'OSS reports (linked)',files:['f-leafr']},
+    ]},
+  ];
+  const files=[
+    {id:'f-git',label:'git · RED:/Cases: trailers',hc:'ledger'},
+    {id:'f-corpus',label:'test corpus (C-ids)',hc:'test',newf:1},
+    {id:'f-digest',label:'junit · coverage · digest',hc:'test',newf:1},
+    {id:'f-scope',label:'SCOPE.md',hc:'docs'},
+    {id:'f-plan',label:'PLAN.md · PLAN.json',hc:'board'},
+    {id:'f-pending',label:'PENDING.md',hc:'board'},
+    {id:'f-behavior',label:'BEHAVIOR.md',hc:'docs',newf:1},
+    {id:'f-walks',label:'walks.jsonl',hc:'test',newf:1},
+    {id:'f-deploy',label:'DEPLOYMENTS.md',hc:'now'},
+    {id:'f-ledgerf',label:'LEDGER.md',hc:'now'},
+    {id:'f-decisions',label:'DECISIONS · RULES',hc:'docs'},
+    {id:'f-rules',label:'RULES.md',hc:'docs'},
+    {id:'f-config',label:'center.config.json',hc:'ent'},
+    {id:'f-cards',label:'cards/*.md',hc:'docs'},
+    {id:'f-proof',label:'proof/ shots+manifests',hc:'test'},
+    {id:'f-leafr',label:'htmlcov · playwright',hc:'leaf'},
+  ];
+  const cmds=[
+    {id:'c-scope',label:'/gabe-scope',cc:'scope'},
+    {id:'c-plan',label:'/gabe-plan · next',cc:'plan'},
+    {id:'c-red',label:'/gabe-red',cc:'red',newc:1},
+    {id:'c-exec',label:'/gabe-execute',cc:'exec'},
+    {id:'c-review',label:'/gabe-review',cc:'review'},
+    {id:'c-commit',label:'/gabe-commit',cc:'commit'},
+    {id:'c-push',label:'/gabe-push',cc:'push'},
+    {id:'c-walk',label:'/walk',cc:'walk',newc:1},
+    {id:'c-feature',label:'/gabe-feature +release',cc:'feature'},
+    {id:'c-init',label:'/gabe-init',cc:'init'},
+    {id:'c-guard',label:'hooks · plan-guard',cc:'guard',newc:1},
+  ];
+  // [cmd, file, mode] mode: w=write(solid) v=verify(dashed) r=read(dotted)
+  const edges=[
+    ['c-scope','f-scope','w'],
+    ['c-plan','f-plan','w'],['c-plan','f-decisions','w'],
+    ['c-red','f-corpus','w'],['c-red','f-git','w'],['c-red','f-plan','w'],
+    ['c-exec','f-git','w'],['c-exec','f-plan','w'],['c-exec','f-proof','w'],['c-exec','f-corpus','w'],
+    ['c-review','f-pending','w'],['c-review','f-plan','w'],['c-review','f-decisions','w'],
+    ['c-commit','f-git','w'],['c-commit','f-digest','w'],['c-commit','f-ledgerf','w'],['c-commit','f-plan','w'],
+    ['c-push','f-deploy','w'],['c-push','f-plan','w'],['c-push','f-leafr','w'],
+    ['c-walk','f-walks','w'],
+    ['c-feature','f-cards','w'],['c-feature','f-config','w'],['c-feature','f-proof','w'],
+    ['c-init','f-behavior','w'],['c-init','f-scope','w'],['c-init','f-rules','w'],
+    ['c-guard','f-plan','v'],['c-guard','f-git','v'],['c-guard','f-proof','r'],['c-guard','f-corpus','r'],
+  ];
+
+  const cs=getComputedStyle(document.documentElement); const cv=v=>cs.getPropertyValue(v).trim();
+  const colNav=document.getElementById('colNav'),colFiles=document.getElementById('colFiles'),colCmds=document.getElementById('colCmds');
+  const map=document.getElementById('map'),svg=document.getElementById('wires'),pinlbl=document.getElementById('pinlbl');
+  const els={},secEls={},navFiles={},fileNavs={},navHc={},fileCmds={},cmdFiles={},cmdColor={};
+
+  edges.forEach(([c,f,m])=>{(fileCmds[f]=fileCmds[f]||[]).push([c,m]);(cmdFiles[c]=cmdFiles[c]||[]).push([f,m]);});
+  nav.forEach(s=>s.items.forEach(it=>{navFiles[it.id]=it.files;navHc[it.id]=s.hc;it.files.forEach(f=>{(fileNavs[f]=fileNavs[f]||[]).push(it.id);});}));
+  cmds.forEach(c=>cmdColor[c.id]=c.cc);
+
+  nav.forEach(s=>{
+    const sd=document.createElement('div');sd.className='navsec';sd.style.setProperty('--hc','var('+HC[s.hc]+')');
+    const sh=document.createElement('div');sh.className='sh';sh.textContent=s.sec;sd.appendChild(sh);secEls[s.sec]=sd;
+    s.items.forEach(it=>{
+      const d=document.createElement('div');d.className='navitem'+(it.newi?' newi':'');d.id=it.id;d.dataset.id=it.id;d.dataset.type='nav';
+      d.style.setProperty('--hc','var('+HC[s.hc]+')');
+      d.innerHTML='<span class="dot"></span><span class="t">'+it.label+'</span>';sd.appendChild(d);els[it.id]=d;
+    });
+    colNav.appendChild(sd);
+  });
+  files.forEach(f=>{const d=document.createElement('div');d.className='node'+(f.newf?' newf':'');d.id=f.id;d.dataset.id=f.id;d.dataset.type='file';d.style.setProperty('--hc','var('+HC[f.hc]+')');d.innerHTML='<div class="t">'+f.label+'</div>';colFiles.appendChild(d);els[f.id]=d;});
+  cmds.forEach(c=>{const d=document.createElement('div');d.className='node'+(c.newc?' newc':'');d.id=c.id;d.dataset.id=c.id;d.dataset.type='cmd';d.style.setProperty('--cc','var('+CC[c.cc]+')');d.innerHTML='<div class="t">'+c.label+'</div>';colCmds.appendChild(d);els[c.id]=d;});
+
+  function pt(el,side){const m=map.getBoundingClientRect(),r=el.getBoundingClientRect();return{x:(side==='r'?r.right:r.left)-m.left,y:r.top-m.top+r.height/2};}
+  function drawSeg(a,b,color,mode){const dx=Math.max(28,Math.abs(b.x-a.x)*0.45);
+    const d='M'+a.x+','+a.y+' C'+(a.x+dx)+','+a.y+' '+(b.x-dx)+','+b.y+' '+b.x+','+b.y;
+    const p=document.createElementNS('http://www.w3.org/2000/svg','path');p.setAttribute('d',d);p.setAttribute('stroke',color);
+    p.setAttribute('stroke-width',mode==='r'?1.6:2.2);p.setAttribute('opacity',.92);
+    if(mode==='v')p.setAttribute('stroke-dasharray','5 4');if(mode==='r')p.setAttribute('stroke-dasharray','1.5 3.5');
+    svg.appendChild(p);}
+  function secOf(nid){for(const s of nav)if(s.items.some(i=>i.id===nid))return s.sec;return null;}
+
+  function segsFor(id,type){
+    const lit=new Set([id]),secs=new Set(),segs=[];
+    function navFile(nid,fid){segs.push({a:els[nid],as:'r',b:els[fid],bs:'l',color:cv(HC[navHc[nid]]),mode:'w'});lit.add(nid);lit.add(fid);secs.add(secOf(nid));}
+    function fileCmd(fid,cid,m){segs.push({a:els[fid],as:'r',b:els[cid],bs:'l',color:cv(CC[cmdColor[cid]]),mode:m});lit.add(fid);lit.add(cid);}
+    if(type==='nav'){(navFiles[id]||[]).forEach(f=>{navFile(id,f);(fileCmds[f]||[]).forEach(([c,m])=>fileCmd(f,c,m));});}
+    else if(type==='file'){(fileNavs[id]||[]).forEach(n=>navFile(n,id));(fileCmds[id]||[]).forEach(([c,m])=>fileCmd(id,c,m));}
+    else{(cmdFiles[id]||[]).forEach(([f,m])=>{fileCmd(f,id,m);(fileNavs[f]||[]).forEach(n=>navFile(n,f));});}
+    return{segs,lit,secs};
+  }
+
+  let pinned={id:'f-plan',type:'file'};
+  function render(id,type){
+    svg.innerHTML='';const mr=map.getBoundingClientRect();svg.setAttribute('viewBox','0 0 '+mr.width+' '+mr.height);svg.setAttribute('width',mr.width);svg.setAttribute('height',mr.height);
+    Object.values(els).forEach(e=>e.classList.remove('lit'));Object.values(secEls).forEach(e=>e.classList.remove('lit'));map.classList.add('dim');
+    const{segs,lit,secs}=segsFor(id,type);
+    lit.forEach(x=>els[x]&&els[x].classList.add('lit'));secs.forEach(s=>secEls[s]&&secEls[s].classList.add('lit'));
+    segs.forEach(s=>drawSeg(pt(s.a,s.as),pt(s.b,s.bs),s.color,s.mode));
+    const lbl=(els[id]&&els[id].querySelector('.t'))?els[id].querySelector('.t').textContent:id;pinlbl.textContent=lbl;
+  }
+  Object.values(els).forEach(n=>{
+    n.addEventListener('mouseenter',()=>render(n.dataset.id,n.dataset.type));
+    n.addEventListener('mouseleave',()=>render(pinned.id,pinned.type));
+    n.addEventListener('click',()=>{pinned={id:n.dataset.id,type:n.dataset.type};render(pinned.id,pinned.type);});
+  });
+  function redraw(){requestAnimationFrame(()=>render(pinned.id,pinned.type));}
+  window.addEventListener('resize',redraw);if(window.ResizeObserver)new ResizeObserver(redraw).observe(map);
+  new MutationObserver(redraw).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+  setTimeout(()=>render(pinned.id,pinned.type),80);setTimeout(redraw,320);
+})();
+</script>

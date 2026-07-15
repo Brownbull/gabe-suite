@@ -1,0 +1,268 @@
+<title>Left · Middle · Right — the consolidated map</title>
+<style>
+  :root{
+    --ground:#eef1f4;--paper:#ffffff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--guide:#c9d2dc;
+    --accent:#0d6e78;--accent2:#0a565e;--accent-soft:#e0eff0;
+    --op:#1f6feb;--doc:#8e4585;--proof:#3f6d4c;--link:#8494a4;--source:#9a5a00;--idx:#0d6e78;--man:#b5771a;
+    --red:#c0392b;--red-soft:#f9e6e3;
+    --crit:#0d6e78;--high:#3f6d4c;--med:#8494a4;--low:#a9b4c0;
+    --auth:#5a53a8;--auth-soft:#ecebf6;--der:#7b8698;--der-soft:#e9edf1;--mach:#1f6feb;--mach-soft:#e5eefc;--hum:#b5771a;--hum-soft:#f6ecd9;
+    --shadow:0 1px 2px rgba(20,33,46,.06),0 6px 22px rgba(20,33,46,.05);
+    --fb:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --fm:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0b0f15;--paper:#131b25;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--guide:#2c3a48;
+    --accent:#3bb3bd;--accent2:#5cc7cf;--accent-soft:#123138;
+    --op:#6aa6f5;--doc:#c98bbb;--proof:#6fa77d;--link:#8494a4;--source:#d79a3c;--idx:#3bb3bd;--man:#d79a3c;
+    --red:#e0736a;--red-soft:#2a1512;
+    --crit:#3bb3bd;--high:#6fa77d;--med:#7d8b9a;--low:#5a6775;
+    --auth:#9b93e6;--auth-soft:#1c1a33;--der:#7d8b9a;--der-soft:#1a232e;--mach:#6aa6f5;--mach-soft:#13233a;--hum:#d79a3c;--hum-soft:#2a2213;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.28);
+  }}
+  :root[data-theme="light"]{--ground:#eef1f4;--paper:#fff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--guide:#c9d2dc;--accent:#0d6e78;--accent2:#0a565e;--accent-soft:#e0eff0;--op:#1f6feb;--doc:#8e4585;--proof:#3f6d4c;--link:#8494a4;--source:#9a5a00;--idx:#0d6e78;--man:#b5771a;--red:#c0392b;--red-soft:#f9e6e3;--crit:#0d6e78;--high:#3f6d4c;--med:#8494a4;--low:#a9b4c0;--auth:#5a53a8;--auth-soft:#ecebf6;--der:#7b8698;--der-soft:#e9edf1;--mach:#1f6feb;--mach-soft:#e5eefc;--hum:#b5771a;--hum-soft:#f6ecd9}
+  :root[data-theme="dark"]{--ground:#0b0f15;--paper:#131b25;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--guide:#2c3a48;--accent:#3bb3bd;--accent2:#5cc7cf;--accent-soft:#123138;--op:#6aa6f5;--doc:#c98bbb;--proof:#6fa77d;--link:#8494a4;--source:#d79a3c;--idx:#3bb3bd;--man:#d79a3c;--red:#e0736a;--red-soft:#2a1512;--crit:#3bb3bd;--high:#6fa77d;--med:#7d8b9a;--low:#5a6775;--auth:#9b93e6;--auth-soft:#1c1a33;--der:#7d8b9a;--der-soft:#1a232e;--mach:#6aa6f5;--mach-soft:#13233a;--hum:#d79a3c;--hum-soft:#2a2213}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased;font-size:15px;line-height:1.5}
+  .wrap{max-width:1040px;margin:0 auto;padding:clamp(18px,3vw,46px) clamp(12px,3vw,30px) 76px}
+  code{font-family:var(--fm);font-size:.85em;background:color-mix(in srgb,var(--accent) 12%,transparent);padding:1px 5px;border-radius:4px}
+  .kicker{font-family:var(--fm);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .kicker b{color:var(--accent)}
+  h1{font-size:clamp(1.7rem,4.2vw,2.5rem);line-height:1.06;letter-spacing:-.022em;font-weight:750;text-wrap:balance;margin:.4em 0 .2em}
+  .lede{font-size:clamp(1rem,2vw,1.18rem);color:var(--ink2);max-width:70ch;margin:.2em 0 0}
+
+  .decs{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:9px;margin-top:20px}
+  .dl{background:var(--paper);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:9px;padding:9px 13px;font-size:.8rem;color:var(--ink2)}
+  .dl b{color:var(--accent2);font-family:var(--fm);font-size:.72rem}
+
+  section{margin-top:42px}
+  .eyebrow{font-family:var(--fm);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;font-weight:600;display:flex;align-items:center;gap:.7em}
+  .eyebrow::before{content:"";width:22px;height:1px;background:currentColor;opacity:.5}
+  .e-l{color:var(--accent)} .e-m{color:var(--source)} .e-r{color:var(--auth)}
+  h2.sec{font-size:clamp(1.25rem,2.7vw,1.6rem);letter-spacing:-.015em;font-weight:700;margin:.35em 0 .1em}
+  .sub{color:var(--ink2);max-width:76ch;margin:.3em 0 12px;font-size:.9rem}
+
+  .legend{display:flex;flex-wrap:wrap;gap:7px 12px;margin:6px 0 10px;align-items:center}
+  .mchip{font-family:var(--fm);font-size:.58rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .m-auth{background:var(--auth-soft);color:var(--auth)} .m-der{background:var(--der-soft);color:var(--der)}
+  .m-mach{background:var(--mach-soft);color:var(--mach)} .m-hum{background:var(--hum-soft);color:var(--hum)}
+  .m-new{background:var(--red-soft);color:var(--red)}
+  .lk{font-size:.74rem;color:var(--ink2);display:inline-flex;align-items:center;gap:5px}
+  .meter{display:inline-flex;gap:2px;vertical-align:middle}
+  .pip{width:5px;height:11px;border-radius:2px;background:var(--line)}
+  .pip.on{background:var(--g,var(--crit))}
+
+  .tree{background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 6px 12px;box-shadow:var(--shadow);overflow-x:auto}
+  .row{display:flex;align-items:center;min-height:28px;border-radius:7px;padding:2px 8px;white-space:nowrap}
+  .row.folder{cursor:pointer}.row:hover{background:var(--line2)}
+  .indent{width:17px;flex:none;align-self:stretch;position:relative}
+  .indent.guide::before{content:"";position:absolute;left:8px;top:0;bottom:0;width:1px;background:var(--guide)}
+  .chev{width:14px;flex:none;color:var(--ink3);font-size:.56rem;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+  .chev.spacer{visibility:hidden}.row.collapsed .chev{transform:rotate(-90deg)}
+  .ico{width:15px;height:15px;flex:none;margin-right:7px;color:var(--pc,var(--ink3))}
+  .nm{font-family:var(--fm);font-size:.8rem;font-weight:600;color:var(--ink)}
+  .row.folder .nm{color:var(--pc,var(--ink))}
+  .row.field .nm{font-family:var(--fb);font-weight:500;font-size:.83rem;color:var(--ink2)}
+  .tag{font-family:var(--fm);font-size:.55rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:1px 6px;border-radius:20px;margin-left:8px;flex:none}
+  .tag.acc{background:color-mix(in srgb,var(--proof) 18%,transparent);color:var(--proof)}
+  .tag.eph{background:color-mix(in srgb,var(--source) 18%,transparent);color:var(--source)}
+  .tag.index{background:color-mix(in srgb,var(--idx) 18%,transparent);color:var(--idx)}
+  .tag.newt{background:var(--red-soft);color:var(--red)}
+  .acct{font-size:.77rem;color:var(--ink3);margin-left:10px;overflow:hidden;text-overflow:ellipsis}
+  .side{margin-left:auto;padding-left:12px;flex:none;display:flex;gap:5px;align-items:center}
+  .kids.hidden{display:none}
+  @media(max-width:760px){.acct{display:none}}
+  .ctrls{display:flex;gap:8px;margin:0 0 8px}
+  .btn{font-family:var(--fm);font-size:.7rem;font-weight:600;padding:5px 12px;border-radius:8px;border:1px solid var(--line);background:var(--paper);color:var(--ink2);cursor:pointer}
+  .btn:hover{border-color:var(--accent);color:var(--accent)}
+  .foot{margin-top:46px;padding-top:16px;border-top:1px solid var(--line);font-family:var(--fm);font-size:.71rem;color:var(--ink3);display:flex;flex-wrap:wrap;gap:6px 16px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker"><span>Gabe Suite · Command Center</span> · <b>the consolidated map</b> · all decisions folded in · 2026-07-15</div>
+    <h1>Left · Middle · Right — the whole system, leveled</h1>
+    <p class="lede"><b>Left</b> = the site the stakeholder reads. <b>Middle</b> = the files that carry the truth. <b>Right</b> = the lifecycle that builds the software — and emits the rest as a byproduct. Verification-first: every development produces visible proof.</p>
+  </header>
+
+  <div class="decs">
+    <div class="dl"><b>D1</b> report-never-gate at MVP — red + full reporting everywhere; gates unchanged</div>
+    <div class="dl"><b>D2</b> /walk added — the manual-witness carrier (~40 lines)</div>
+    <div class="dl"><b>D3</b> release page v1 = shots + diagrams; video custody deferred to first release</div>
+    <div class="dl"><b>D4</b> templates/BEHAVIOR.md ships; results_out default-on for greenfield</div>
+    <div class="dl"><b>D5</b> C-id backfill sweep — mechanical-only, blame-ignored, no fake reds</div>
+    <div class="dl"><b>D6</b> ratified: red-as-commit · drift→review · growth cap 7 · feature shrunk-in-place</div>
+  </div>
+
+  <section>
+    <div class="eyebrow e-r">▶ Right · the suite — the lifecycle that builds software</div>
+    <h2 class="sec">Twelve beats, one mode</h2>
+    <p class="sub">Each justified by its software job; the doc byproduct rides along. <span class="mchip m-new">new</span> = born this pass.</p>
+    <div class="ctrls"><button class="btn" data-x="rt">expand</button><button class="btn" data-c="rt">collapse</button></div>
+    <div class="tree" id="rt"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow e-m">◆ Middle · the files — where the truth lives</div>
+    <h2 class="sec">The carriers</h2>
+    <p class="sub"><span class="mchip m-mach">machine</span> asserted by tools/git · <span class="mchip m-auth">authored</span> human translation · <span class="mchip m-hum">human record</span> witnessed events · <span class="mchip m-der">derived</span> computed, never stored.</p>
+    <div class="ctrls"><button class="btn" data-x="mt">expand</button><button class="btn" data-c="mt">collapse</button></div>
+    <div class="tree" id="mt"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow e-l">◀ Left · the site — what a reader navigates</div>
+    <h2 class="sec">The center, final structure</h2>
+    <p class="sub">Accumulators + ephemeral pages, nested by entity. Board rail now carries the <b>red</b> cell (glyphs, not letters — Red/Review collide on "R"). The matrix gains <b>ever-red?</b> per test.</p>
+    <div class="ctrls"><button class="btn" data-x="lt">expand</button><button class="btn" data-c="lt">collapse</button></div>
+    <div class="tree" id="lt"></div>
+  </section>
+
+  <div class="foot"><span>decisions D1–D6 locked 2026-07-15 · verification-first ratified</span><span>next: land the suite edits (gabe-red · /walk · plan proof-type · BEHAVIOR.md · backfill sweeps)</span></div>
+</div>
+
+<script>
+(function(){
+  const F={folder:'<path d="M3 7a2 2 0 0 1 2-2h3.5l2 2H19a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
+    file:'<path d="M6 2h8l4 4v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2z"/><path d="M14 2v4h4"/>',
+    ent:'<circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 0 0 18M3 12h18"/>',
+    cmd:'<path d="m7 8-4 4 4 4M17 8l4 4-4 4M14 5l-4 14"/>',
+    field:'<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>',
+    test:'<path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="9"/>',
+    grid:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18M15 3v18M3 9h18M3 15h18"/>',
+    hand:'<path d="M18 11V6a2 2 0 0 0-4 0M14 10V4a2 2 0 0 0-4 0v6M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.9-6-2.3L3 17"/>',
+    red:'<circle cx="12" cy="12" r="6"/>',
+    chg:'<path d="M12 3v6l4 2"/><circle cx="12" cy="12" r="9"/>',
+    link:'<path d="M10 13a5 5 0 0 0 7 0l2-2a5 5 0 0 0-7-7l-1 1"/><path d="M14 11a5 5 0 0 0-7 0l-2 2a5 5 0 0 0 7 7l1-1"/>'};
+  function ico(k){return '<svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">'+(F[k]||F.file)+'</svg>';}
+  const GR={critical:4,high:3,medium:2,low:1};
+  const PC={op:'--op',doc:'--doc',proof:'--proof',link:'--link',source:'--source',idx:'--idx',man:'--man',red:'--red',accent:'--accent',fld:'--der',auth:'--auth'};
+
+  function meter(g){if(!g)return'';const n=GR[g]||1;let s='<span class="meter" style="--g:var(--'+({critical:'crit',high:'high',medium:'med',low:'low'})[g]+')">';
+    for(let i=1;i<=4;i++)s+='<i class="pip'+(i<=n?' on':'')+'"></i>';return s+'</span>';}
+
+  function render(node,depth,container,rows){
+    const hasKids=node.c&&node.c.length;
+    const row=document.createElement('div');
+    row.className='row'+(hasKids?' folder':'')+(node.k==='field'?' field':'');
+    row.style.setProperty('--pc','var('+(PC[node.p]||'--der')+')');
+    for(let i=0;i<depth;i++){const ind=document.createElement('span');ind.className='indent guide';row.appendChild(ind);}
+    const chev=document.createElement('span');chev.className='chev'+(hasKids?'':' spacer');chev.textContent='▾';row.appendChild(chev);
+    const iw=document.createElement('span');iw.innerHTML=ico(node.k||'file');row.appendChild(iw.firstChild);
+    const nm=document.createElement('span');nm.className='nm';nm.textContent=node.n;row.appendChild(nm);
+    if(node.t){const t=document.createElement('span');t.className='tag '+node.t[0];t.textContent=node.t[1];row.appendChild(t);}
+    if(node.a){const ac=document.createElement('span');ac.className='acct';ac.textContent='· '+node.a;row.appendChild(ac);}
+    const side=document.createElement('span');side.className='side';
+    if(node.m){const m=document.createElement('span');m.className='mchip m-'+node.m[0];m.textContent=node.m[1];side.appendChild(m);}
+    if(node.g){const g=document.createElement('span');g.innerHTML=meter(node.g);side.appendChild(g.firstChild);}
+    if(side.children.length)row.appendChild(side);
+    container.appendChild(row);
+    if(hasKids){
+      const kids=document.createElement('div');kids.className='kids'+(node.open?'':' hidden');if(!node.open)row.classList.add('collapsed');
+      row._kids=kids;row._depth=depth;rows.push(row);
+      node.c.forEach(ch=>render(ch,depth+1,kids,rows));container.appendChild(kids);
+      row.addEventListener('click',e=>{e.stopPropagation();kids.classList.toggle('hidden');row.classList.toggle('collapsed');});
+    }
+  }
+  function mount(id,data){const rows=[];render(data,0,document.getElementById(id),rows);
+    document.querySelector('[data-x="'+id+'"]').addEventListener('click',()=>rows.forEach(r=>{r._kids.classList.remove('hidden');r.classList.remove('collapsed');}));
+    document.querySelector('[data-c="'+id+'"]').addEventListener('click',()=>rows.forEach(r=>{if(r._depth>=1){r._kids.classList.add('hidden');r.classList.add('collapsed');}}));}
+
+  /* ============ RIGHT — the suite ============ */
+  const RT={n:'the lifecycle',k:'folder',p:'auth',open:1,c:[
+    {n:'1 · /gabe-scope',k:'cmd',p:'auth',a:'decide what we build — premise + phase arc',g:'critical',c:[
+      {n:'emits: SCOPE.md §9–10 → foundations/architecture · §Phases → backlog',k:'field',p:'fld'}]},
+    {n:'2 · /gabe-plan',k:'cmd',p:'auth',a:'phases + tier call + proof declared before code',g:'critical',c:[
+      {n:'proof gains a TYPE: test | visual | journey',k:'field',p:'fld',t:['newt','extended']},
+      {n:'emits: PLAN.json (board rail) · D-entry per tier call',k:'field',p:'fld'}]},
+    {n:'3 · /gabe-red [phase]',k:'red',p:'red',a:'THE TDD BEAT — cases before code',g:'critical',t:['newt','new'],c:[
+      {n:'scan corpus → REUSE(id, maybe v-bump) vs NEW(id)',k:'field',p:'fld'},
+      {n:'write cases · stub RETURNS (never raises) · run',k:'field',p:'fld'},
+      {n:'3 outcomes: RED ✓ · NOT-RED (import fail = non-evidence) · TAUTOLOGY (halt)',k:'field',p:'fld'},
+      {n:'deliverable: a COMMIT with a RED: trailer — addressable, re-runnable',k:'field',p:'fld'},
+      {n:'refactor → GUARD: list (no fake red) · un-testable → enumerated skip code',k:'field',p:'fld'},
+      {n:'min_cases: 1 @MVP · 3–6 @ent · +fuzz/load @scale (tier IS the verification level)',k:'field',p:'fld'}]},
+    {n:'4 · /gabe-execute',k:'cmd',p:'auth',a:'BUILD — turn the red set green under the tier cap',g:'critical',c:[
+      {n:'TASK CONTRACT gains CASES: line (C147v2, C148 red@sha · guards)',k:'field',p:'fld',t:['newt','extended']},
+      {n:'narration legs authored hot (pointer to §Narration)',k:'field',p:'fld'},
+      {n:'emits: checkpoint commits + lens brief · proof artifacts',k:'field',p:'fld'}]},
+    {n:'5 · /gabe-review',k:'cmd',p:'auth',a:'price the diff — fix cost × defer risk × maturity gate',g:'critical',c:[
+      {n:'2nd accumulation point: NEW CASE / BUMP finding subjects',k:'field',p:'fld',t:['newt','extended']},
+      {n:'owns CASE DRIFT (judgment-shaped check in a judgment-shaped beat)',k:'field',p:'fld'},
+      {n:'growth triage: absent-angle verdicts priced on the SAME machinery · cap 7',k:'field',p:'fld'},
+      {n:'emits: PENDING.md rows (review-debt lane + reserved case ids)',k:'field',p:'fld'}]},
+    {n:'6 · /gabe-commit',k:'cmd',p:'auth',a:'the chokepoint — every path crosses it',g:'critical',c:[
+      {n:'C-id check on NEW test files (deterministic: grep ≥1)',k:'field',p:'fld',t:['newt','extended']},
+      {n:'results_out digest — REPORT at all tiers, never gate @MVP (D1)',k:'field',p:'fld',t:['newt','extended']},
+      {n:'center regen CHECK when docs/site/center/** staged (WARN-only)',k:'field',p:'fld'}]},
+    {n:'7 · /gabe-push',k:'cmd',p:'auth',a:'ship — PR, CI, deploy-verify, promote',g:'critical',c:[
+      {n:'terminal-env write = the release trigger (derived, no flag)',k:'field',p:'fld',t:['newt','extended']},
+      {n:'emits: DEPLOYMENTS.md row · deployed angle · leaf links',k:'field',p:'fld'}]},
+    {n:'8 · /walk <feature|procedure>',k:'hand',p:'man',a:'record a human walking the build — the witness',g:'high',t:['newt','new'],c:[
+      {n:'4 questions → one append to walks.jsonl (who·when·result·evidence)',k:'field',p:'fld'},
+      {n:'records, never judges · NEVER-walked stays red until walked',k:'field',p:'fld'}]},
+    {n:'9 · /gabe-feature <phase>',k:'cmd',p:'doc',a:'the translation — card + curate; shrunk',g:'critical',c:[
+      {n:'verdicts RENDERED from review triage (no second judgment)',k:'field',p:'fld',t:['newt','extended']},
+      {n:'identity from C-ids — path globs retired',k:'field',p:'fld'},
+      {n:'wired via the Center cell (gabe-next 2.2.0) · stays LAST · revisit @n=3',k:'field',p:'fld'}]},
+    {n:'10 · /gabe-feature release',k:'chg',p:'doc',a:'MODE not a beat — stakeholder showcase',g:'medium',t:['newt','new'],c:[
+      {n:'trigger: terminal-env promotion (derived) · staging fires nothing',k:'field',p:'fld'},
+      {n:'v1 = shots + diagrams + narration · video = named gap (D3)',k:'field',p:'fld'}]},
+    {n:'11 · /gabe-next',k:'cmd',p:'auth',a:'zero-logic router over PLAN cells',g:'high',c:[
+      {n:'holds red-before-execute as a machine PREDICATE',k:'field',p:'fld',t:['newt','extended']},
+      {n:'routes the Center cell · prior-row debt sweep',k:'field',p:'fld'}]},
+    {n:'12 · scope-change · mockup · handoff · init',k:'cmd',p:'auth',a:'evolve premise · design-first UI · resume · birth (init writes BEHAVIOR.md w/ results_out on)',g:'high'},
+    {n:'advisors: align · assess · debt · health · myopic · roast (+lens · meme · quip)',k:'cmd',p:'link',a:'quality judgment on demand — outside the beat loop, unchanged',g:'medium'},
+  ]};
+
+  /* ============ MIDDLE — the files ============ */
+  const MT={n:'the carriers',k:'folder',p:'source',open:1,c:[
+    {n:'git — the machine spine',k:'folder',p:'proof',open:1,c:[
+      {n:'commits + trailers  RED: · Cases: · lens brief in body',k:'field',p:'fld',m:['mach','machine'],g:'critical'},
+      {n:'the test corpus — C-ids IN test names (the corpus IS the registry)',k:'test',p:'proof',m:['mach','machine'],g:'critical',c:[
+        {n:'backfill sweep (D5): mechanical, one commit/repo, blame-ignored, NO fake reds',k:'field',p:'fld',t:['newt','new']}]},
+      {n:'junit · coverage · results_out digest (committed — the manifest is the memory)',k:'field',p:'fld',m:['mach','machine'],g:'critical'}]},
+    {n:'.kdbp/ — the state',k:'folder',p:'op',open:1,c:[
+      {n:'SCOPE.md',k:'file',p:'doc',m:['auth','authored'],g:'critical'},
+      {n:'PLAN.md · PLAN.json',k:'file',p:'op',a:'+ proof.type · + red cell · Cases: in Phase Details',m:['auth','authored'],g:'critical'},
+      {n:'PENDING.md',k:'file',p:'op',a:'review-debt + growth triage outcomes + reserved ids',m:['auth','authored'],g:'critical'},
+      {n:'BEHAVIOR.md',k:'file',p:'op',a:'NEW template (D4): verify commands · results_out · critical_paths',m:['auth','authored'],g:'high',t:['newt','new']},
+      {n:'walks.jsonl',k:'file',p:'man',a:'append-only walk records (one file, n=1)',m:['hum','human record'],g:'high',t:['newt','new']},
+      {n:'LEDGER · DEPLOYMENTS · DECISIONS · RULES · PUSH · HANDOFF · DOCS',k:'file',p:'op',m:['auth','authored'],g:'high'}]},
+    {n:'center inputs',k:'folder',p:'doc',open:1,c:[
+      {n:'center.config.json — the ONE overlay (entities · tiers · areas · features)',k:'file',p:'doc',m:['auth','authored'],g:'critical'},
+      {n:'cards/<slug>.md — the per-feature translation (the only prose)',k:'file',p:'doc',m:['auth','authored'],g:'critical'},
+      {n:'proof/ manifests + curated shots (+ legs narration, authored hot)',k:'file',p:'proof',m:['auth','authored'],g:'critical'}]},
+    {n:'never stored — always derived',k:'folder',p:'link',c:[
+      {n:'ledger pages · changelogs · regression relationships · ever-red? · scope joins · non-phase lane',k:'field',p:'fld',m:['der','derived'],g:'high'}]},
+  ]};
+
+  /* ============ LEFT — the site ============ */
+  const LT={n:'docs/site/center/',k:'folder',p:'accent',open:1,c:[
+    {n:'now.html',k:'file',p:'op',a:'present — feed · needs-you · on-the-burner · freshness',g:'critical',m:['der','derived']},
+    {n:'board.html',k:'file',p:'op',a:'in-flight — ticket per change',g:'critical',m:['der','derived'],c:[
+      {n:'rail: ● red → exec → review → commit → push (+ center) — glyphs, not letters',k:'field',p:'fld',t:['newt','new']},
+      {n:'lanes: backlog · non-phase · review-debt',k:'field',p:'fld'}]},
+    {n:'entities.html',k:'ent',p:'doc',a:'the subject spine',g:'high',m:['der','derived']},
+    {n:'docs/  — accumulators by entity → feature',k:'folder',p:'doc',open:1,g:'critical',c:[
+      {n:'<entity>/<feature>.html',k:'file',p:'doc',t:['acc','accumulates'],m:['auth','authored'],c:[
+        {n:'handle · analogy lead · what&why · for-whom · flows · is/is-not · decided · diagrams',k:'field',p:'fld'},
+        {n:'changelog — one entry per change (derived join)',k:'chg',p:'doc'}]},
+      {n:'foundations/ — decisions · rules · architecture · procedures',k:'folder',p:'doc',g:'high'}]},
+    {n:'testing/  — ONE section, all proof',k:'folder',p:'proof',open:1,g:'critical',c:[
+      {n:'matrix.html',k:'grid',p:'idx',t:['index','index'],m:['der','derived'],c:[
+        {n:'by entity × level · per test: id · EVER-RED? · status · source · last-run',k:'field',p:'fld',t:['newt','new']},
+        {n:'buckets: unclaimed · untyped · id-less (labeled during adoption)',k:'field',p:'fld'}]},
+      {n:'<entity>/<feature>.html',k:'file',p:'proof',t:['acc','accumulates'],c:[
+        {n:'statline · ANGLES-AUTOMATED (unit·integration·e2e·motion) w/ C-id@red-sha',k:'field',p:'fld'},
+        {n:'ANGLES-MANUAL — steps · last walk (who·when·result·evidence) · staleness',k:'hand',p:'man',t:['newt','fed by /walk']},
+        {n:'verdict-as-label RENDERED from review triage · verification changelog (red→green per case)',k:'field',p:'fld'},
+        {n:'demo shelf — curated shots + one CLAIM per leg',k:'field',p:'fld'}]}]},
+    {n:'ledger/<change-id>.html',k:'chg',p:'source',a:'ephemeral · 100% derived · analogy from commit brief',g:'medium',m:['der','derived'],t:['eph','ephemeral']},
+    {n:'releases/<id>.html',k:'file',p:'doc',a:'stakeholder showcase — shots + diagrams · video = named gap (v1)',g:'medium',m:['der','derived'],t:['newt','new']},
+    {n:'leaf/ — OSS reports, linked never rebuilt',k:'link',p:'link',g:'medium',m:['der','derived']},
+  ]};
+
+  mount('rt',RT); mount('mt',MT); mount('lt',LT);
+})();
+</script>

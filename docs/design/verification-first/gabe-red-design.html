@@ -1,0 +1,235 @@
+<title>/gabe-red — why test-first never landed, and the beat that lands it</title>
+<style>
+  :root{
+    --ground:#eef1f4;--paper:#ffffff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;
+    --accent:#0d6e78;--accent2:#0a565e;--accent-soft:#e0eff0;
+    --red:#c0392b;--red-soft:#f9e6e3;--green:#2f8f57;--green-soft:#e6f3ea;--amber:#b5771a;--amber-soft:#f8efdc;
+    --new:#c0392b;--ext:#0d6e78;--unch:#8494a4;--mode:#5a53a8;
+    --shadow:0 1px 2px rgba(20,33,46,.06),0 6px 22px rgba(20,33,46,.05);
+    --fb:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --fm:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0b0f15;--paper:#131b25;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;
+    --accent:#3bb3bd;--accent2:#5cc7cf;--accent-soft:#123138;
+    --red:#e0736a;--red-soft:#2a1512;--green:#6fa77d;--green-soft:#16241a;--amber:#d79a3c;--amber-soft:#2a2213;
+    --new:#e0736a;--ext:#3bb3bd;--unch:#6a7c8d;--mode:#9b93e6;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.28);
+  }}
+  :root[data-theme="light"]{--ground:#eef1f4;--paper:#fff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--accent:#0d6e78;--accent2:#0a565e;--accent-soft:#e0eff0;--red:#c0392b;--red-soft:#f9e6e3;--green:#2f8f57;--green-soft:#e6f3ea;--amber:#b5771a;--amber-soft:#f8efdc;--new:#c0392b;--ext:#0d6e78;--unch:#8494a4;--mode:#5a53a8}
+  :root[data-theme="dark"]{--ground:#0b0f15;--paper:#131b25;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--accent:#3bb3bd;--accent2:#5cc7cf;--accent-soft:#123138;--red:#e0736a;--red-soft:#2a1512;--green:#6fa77d;--green-soft:#16241a;--amber:#d79a3c;--amber-soft:#2a2213;--new:#e0736a;--ext:#3bb3bd;--unch:#6a7c8d;--mode:#9b93e6}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--fb);line-height:1.5;-webkit-font-smoothing:antialiased;font-size:15px}
+  .wrap{max-width:1020px;margin:0 auto;padding:clamp(18px,3vw,48px) clamp(13px,3vw,32px) 80px}
+  code{font-family:var(--fm);font-size:.85em;background:color-mix(in srgb,var(--accent) 12%,transparent);padding:1px 5px;border-radius:4px}
+  pre{font-family:var(--fm);font-size:.78rem;background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:11px 14px;overflow-x:auto;margin:.6em 0;color:var(--ink2)}
+  .kicker{font-family:var(--fm);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .kicker b{color:var(--red)}
+  h1{font-size:clamp(1.8rem,4.4vw,2.7rem);line-height:1.05;letter-spacing:-.022em;font-weight:750;text-wrap:balance;margin:.45em 0 .2em}
+  .lede{font-size:clamp(1.02rem,2.1vw,1.22rem);color:var(--ink2);max-width:68ch;margin:.2em 0 0}
+  section{margin-top:44px}
+  .eyebrow{font-family:var(--fm);font-size:.72rem;letter-spacing:.13em;text-transform:uppercase;color:var(--accent);font-weight:600;display:flex;align-items:center;gap:.7em}
+  .eyebrow::before{content:"";width:22px;height:1px;background:var(--accent);opacity:.5}
+  h2.sec{font-size:clamp(1.3rem,2.8vw,1.65rem);letter-spacing:-.015em;font-weight:700;margin:.35em 0 .1em;text-wrap:balance}
+  .sub{color:var(--ink2);max-width:74ch;margin:.3em 0 0;font-size:.93rem}
+
+  .why{margin-top:20px;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:12px;padding:18px 21px;box-shadow:var(--shadow)}
+  .why .q{font-family:var(--fm);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--red);font-weight:700}
+  .why .big{font-size:1.12rem;font-weight:650;color:var(--ink);margin:.5em 0 .6em;line-height:1.4}
+  .why p{margin:.5em 0 0;color:var(--ink2);font-size:.9rem} .why b{color:var(--ink)}
+
+  .layers{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:11px;margin-top:16px}
+  .ly{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:14px 16px;border-top:3px solid var(--red)}
+  .ly h4{margin:0 0 .35em;font-size:.88rem;color:var(--red)}
+  .ly p{margin:0;font-size:.83rem;color:var(--ink2)} .ly b{color:var(--ink)}
+
+  .beat{margin-top:20px;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:12px;padding:18px 21px;box-shadow:var(--shadow)}
+  .beat h3{margin:0;font-family:var(--fm);font-size:1.15rem;font-weight:750;color:var(--red)}
+  .beat .dl{font-size:1rem;color:var(--ink);margin:.5em 0 0;font-weight:600}
+  .beat p{font-size:.88rem;color:var(--ink2);margin:.6em 0 0} .beat b{color:var(--ink)}
+
+  .outs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:9px;margin-top:14px}
+  .out{border-radius:9px;padding:11px 13px;font-size:.82rem;border:1px solid var(--line)}
+  .out.r{background:var(--red-soft);border-left:3px solid var(--red)} .out.n{background:var(--ground);border-left:3px solid var(--ink3)} .out.t{background:var(--amber-soft);border-left:3px solid var(--amber)}
+  .out b{display:block;font-family:var(--fm);font-size:.7rem;letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+  .out.r b{color:var(--red)} .out.n b{color:var(--ink3)} .out.t b{color:var(--amber)}
+
+  .life{margin-top:18px;display:flex;flex-direction:column;gap:7px}
+  .lb{background:var(--paper);border:1px solid var(--line);border-radius:9px;padding:10px 14px;border-left:4px solid var(--g);display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+  .lb .n{font-family:var(--fm);font-weight:750;font-size:.82rem;color:var(--g);min-width:20px}
+  .lb .nm{font-family:var(--fm);font-weight:700;font-size:.84rem;color:var(--ink)}
+  .lb .jb{font-size:.79rem;color:var(--ink3);flex:1;min-width:200px}
+  .lb .cg{font-family:var(--fm);font-size:.56rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 8px;border-radius:20px;background:color-mix(in srgb,var(--g) 16%,transparent);color:var(--g);margin-left:auto}
+
+  .asks{margin-top:18px;display:flex;flex-direction:column;gap:10px}
+  .ak{background:var(--paper);border:1px solid var(--line);border-radius:11px;padding:13px 16px;border-left:3px solid var(--accent)}
+  .ak h4{margin:0 0 .3em;font-size:.88rem;color:var(--accent2);display:flex;gap:8px}
+  .ak h4 .t{font-family:var(--fm);font-size:.6rem;background:var(--accent-soft);padding:2px 7px;border-radius:20px;font-weight:700}
+  .ak p{margin:0;font-size:.84rem;color:var(--ink2)} .ak b{color:var(--ink)}
+
+  .cost{margin-top:18px;background:var(--paper);border:1px solid var(--line);border-left:4px solid var(--amber);border-radius:12px;padding:16px 19px}
+  .cost h4{margin:0 0 .4em;font-family:var(--fm);font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--amber)}
+  .cost p{margin:.35em 0;font-size:.87rem;color:var(--ink2)} .cost b{color:var(--ink)}
+
+  .warn{margin-top:16px;background:var(--red-soft);border:1px solid color-mix(in srgb,var(--red) 30%,transparent);border-radius:11px;padding:14px 17px}
+  .warn h4{margin:0 0 .3em;font-size:.88rem;color:var(--red)} .warn p{margin:.3em 0 0;font-size:.85rem;color:var(--ink)}
+
+  .decs{margin-top:16px;display:flex;flex-direction:column;gap:8px}
+  .dc{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:11px 14px}
+  .dc .q{font-weight:650;font-size:.86rem;display:flex;gap:.6em}
+  .dc .q .d{font-family:var(--fm);color:var(--accent);font-weight:700}
+  .dc .r{margin-top:.35em;font-size:.8rem;background:var(--accent-soft);border-radius:7px;padding:5px 10px;color:var(--ink)}
+  .foot{margin-top:48px;padding-top:18px;border-top:1px solid var(--line);font-family:var(--fm);font-size:.72rem;color:var(--ink3);display:flex;flex-wrap:wrap;gap:6px 16px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker"><span>Gabe Suite</span> · <span>the lifecycle mutation</span> · <b>test-first, finally</b></div>
+    <h1>Why it never landed — and the one beat that lands it</h1>
+    <p class="lede">You've asked for this many times. It bounced off for a <b>structural</b> reason, not a political one. The fix is <b>one new beat</b>: <code>/gabe-red</code>, between plan and execute. Nothing is split. Nothing that works is deleted.</p>
+  </header>
+
+  <section>
+    <div class="eyebrow">The diagnosis</div>
+    <h2 class="sec">Three loops killed every previous attempt</h2>
+    <div class="why">
+      <div class="q">the structural reason — this is the one</div>
+      <div class="big">A beat asserts <b>one</b> terminal state. TDD has <b>two contradictory terminal states of the same measurement.</b></div>
+      <p>One command cannot end with <em>"the tests fail"</em> <b>and</b> <em>"the tests pass."</em> So inside a merged execute, red is <b>swallowed by the act that produced it</b> — the only observable at the boundary is green, which is exactly the self-graded evidence the suite already refuses (<em>"the verifier of the evidence is not its author"</em>).</p>
+      <p><b>Merged execute yields theatre by construction.</b> That's why <code>3. Implement</code> precedes <code>4. Run verification</code> — and why nobody ever had to <em>refuse</em> test-first. <b>The ordinal did it.</b> No wording inside execute could ever have fixed a missing boundary.</p>
+    </div>
+    <div class="layers">
+      <div class="ly"><h4>The economic loop</h4><p>Every test signal is <b>derived from files that already exist</b> — commit reports "84 passed"; review grades by <b>file adjacency</b>; feature claims by <b>path glob</b>. So a <em>promised</em> test has <b>no reader</b> — and a promise with no reader is never written, which means no reader is ever justified.</p></div>
+      <div class="ly"><h4>The political loop</h4><p>Every prior attempt proposed a test <b>beat justified by its artifact</b> — which the standing correction correctly deletes as ceremony. A test-first mutation survives <b>only</b> as a development act that authors no doc. <em>(The <code>/gabe-execute</code> deletion is the precedent FOR this beat, not against it.)</em></p></div>
+      <div class="ly"><h4>Nothing owned identity</h4><p>Tests are the <b>only durable artifact the lifecycle creates with no command present at their birth.</b> Decisions get <code>D[N]</code>. Deferred items get <code>P[N]</code>. Phases get ids. Cards get slugs. Tests get nothing — born inside <code>3. Implement</code>, a step with no registry write.</p></div>
+    </div>
+    <div class="warn" style="background:var(--amber-soft);border-color:color-mix(in srgb,var(--amber) 30%,transparent)">
+      <h4 style="color:var(--amber)">⚑ The live orphan — your contract is already written</h4>
+      <p><code>evidence-doctrine.md:21</code> has said this for months: <b>"failing-then-passing test (fails on base, passes on fix)"</b> — and <code>:15</code> defines a <code>proof: test</code> type. <b>The red-green contract already exists in the suite.</b> PLAN.json's schema simply never modeled the proof <em>type</em>, and execute only ever wrote the runtime shape. It has <b>no schema slot and no reader</b>. This isn't a new idea — it's a branch that never grew.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The beat</div>
+    <h2 class="sec">/gabe-red — its deliverable is a commit that fails</h2>
+    <div class="beat">
+      <h3>/gabe-red [phase]</h3>
+      <div class="dl">Deliverable: <b>a commit whose declared cases fail by assertion.</b> It authors no doc — it writes test code and produces a commit.</div>
+      <p><b>Red is not perishable — it is <em>unaddressable</em>. A commit gives it an address.</b> That reframe is what makes this real: <code>git worktree add /tmp/x &lt;red-sha&gt; && pytest -k C147</code> re-derives the failure, by a stranger, months later. Re-runnability is why it counts as evidence.</p>
+      <p>And it buys something free that nothing else in the suite can answer about a single test:</p>
+      <pre>git log -S "C147" → first commit → did it carry a RED: trailer?
+     → <b>has this case ever been observed failing?</b></pre>
+      <p style="color:var(--red)"><b>A test that has never been red is not known to test anything.</b></p>
+      <div class="outs">
+        <div class="out r"><b>fails by assertion</b>RED — real evidence.</div>
+        <div class="out n"><b>fails by import/collection</b>NOT RED — non-evidence. A broken test isn't a failing test.</div>
+        <div class="out t"><b>passes on unchanged code</b>TAUTOLOGY — halt. The case asserts nothing.</div>
+      </div>
+      <p style="margin-top:14px"><b>The subtlety that makes the tautology guard actually fire:</b> the stub <b>returns</b> — it never <em>raises</em>. A raising stub makes every case fail, so every case looks red and the guard is dead. A returning stub lets the assertion execute against a real wrong value, so <code>assert True</code> gets caught. <b>The stub is what enables the guard.</b></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Test identity — the gap closes</div>
+    <h2 class="sec">The id lives inside the test's own text</h2>
+    <p class="sub">Not a path. Not a registry file. Not scoped to a phase (a case outlives its phase, and PLAN.json resets to <code>{"phases": []}</code> on archive).</p>
+    <pre>it('<b>C147v2</b> · clamps a negative quantity to zero', ...)
+def test_clamps_negative_quantity_<b>C147v2</b>():</pre>
+    <p class="sub"><b>In the NAME, not a comment</b> — so it rides the existing junit pipeline with zero new plumbing: <code>&lt;testcase name="test_clamps_negative_quantity_C147v2"&gt;</code> carries identity into every report the suite already parses, and <code>-k C147v2</code> selects it. <b>This is what finally retires <code>/gabe-feature</code>'s identity-by-path globs</b> — identity-by-location is exactly what a rename breaks. <b>The corpus IS the registry:</b> grep it; <code>max+1</code> allocates.</p>
+    <p class="sub" style="margin-top:10px;color:var(--green)"><b>The earlier "no command can own the id" finding was half wrong.</b> It's true of a <b>path</b> — not of an <b>id</b>.</p>
+  </section>
+
+  <section>
+    <div class="eyebrow">The mutated lifecycle</div>
+    <h2 class="sec">Ten beats — one new, one mode, nothing split</h2>
+    <div class="life" id="life"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Your six asks</div>
+    <h2 class="sec">Answered</h2>
+    <div class="asks" id="asks"></div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Not everything is TDD-able</div>
+    <h2 class="sec">The refactor — the one everybody gets wrong</h2>
+    <div class="beat" style="border-left-color:var(--green)">
+      <p style="margin:0"><b>A refactor is not "not TDD-able."</b> A refactor's test contract is that <b>the existing cases stay green.</b> So red doesn't skip — it declares <b>guards</b>, with no NEW and no BUMP:</p>
+      <pre>CASES: — · GUARD: C091, C147, C203 (behavior unchanged; these must stay green)
+RED: n/a (guard-only — no new claim)</pre>
+      <p style="margin:.5em 0 0">Machine-checkable, correct, and <b>not a fake red</b> — it's the true statement of what the change promises. Anything genuinely un-testable self-skips with an <b>enumerated code</b> that lands in the phase's record. <b>Red never fakes a red.</b></p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">The bill</div>
+    <h2 class="sec">TDD is not free — stated plainly</h2>
+    <div class="cost">
+      <h4>developer cost</h4>
+      <p><b>MVP (min_cases = 1): +10–25 min</b> before any product code. <b>Enterprise: +45–90 min. Scale: hours</b> — correctly; the tier call bought it.</p>
+      <p><b>The dominant cost isn't writing the case — it's the corpus search</b> (5–15 min on a mature corpus). <em>That is precisely the work you asked for, and precisely the work that gets skipped when nobody makes you print it.</em></p>
+      <p><b>Net add is smaller than gross:</b> execute already writes tests post-hoc at step 4. Red <b>moves</b> most of that time rather than adding it. Honest net: <b>+10–15% phase time at MVP, +20–30% at Enterprise.</b></p>
+      <p style="color:var(--amber)"><b>The real cost isn't minutes.</b> Red asks the hardest judgment — <em>"what behavior makes this change necessary?"</em> — <b>at the moment of least information</b>. On an unsettled design you'll rewrite the cases. Expect <b>2–3 version bumps per case on early greenfield phases</b>. That's TDD's known failure mode, not a flaw in this design.</p>
+    </div>
+    <div class="warn">
+      <h4>⚠ The over-claim to name out loud</h4>
+      <p><b>This does not close the human-witness gap.</b> No case id, no red commit, and no fresh-context evaluator is a human walking the build — that evaluator is an <b>agent</b>. The release page will <em>look</em> like it closes it: diagrams, videos, proof shots, a stakeholder audience — <b>and not one human witness in the chain.</b> That over-claim is the most likely way this gets mistaken for finished.</p>
+      <p style="margin-top:.5em"><b>The tripwire:</b> if <code>/gabe-red</code> ever prints <em>a summary a developer reads</em> instead of <em>a failure a developer must fix</em>, it has become the ceremony the correction deletes — and it should go.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="eyebrow">Open choices</div>
+    <h2 class="sec">Six decisions</h2>
+    <div class="decs" id="decs"></div>
+  </section>
+
+  <div class="foot"><span>7-agent pass · grounded in the specs → 3 mutations → TDD-theatre critic → synthesis</span><span>every claim line-referenced</span><span>on paper — nothing built</span></div>
+</div>
+
+<script>
+(function(){
+  const V={new:'--new',extended:'--ext',unchanged:'--unch',mode:'--mode'};
+  const life=[
+    [1,'Scope','/gabe-scope','Fix the premise + the phase arc before anything is built','unchanged'],
+    [2,'Plan','/gabe-plan','Tier call + declare per phase WHAT must be proven — proof gains a TYPE (test | visual | journey)','extended'],
+    [3,'Red','/gabe-red [phase]','THE NEW BEAT — decide what the change must be TRUE OF while the answer can still change the design','new'],
+    [4,'Execute','/gabe-execute','Implement under the tier cap; turn the declared red set green. TASK CONTRACT gains a CASES: line','extended'],
+    [5,'Review','/gabe-review','Price findings; now also the 2nd accumulation point (NEW CASE / BUMP) + the growth triage','extended'],
+    [6,'Commit','/gabe-commit','The chokepoint every path crosses — red\'s checkpoint, execute\'s, and bypass hotfixes','extended'],
+    [7,'Push','/gabe-push','Ship. Gains one guard line on a terminal-env write','extended'],
+    [8,'Center','/gabe-feature <phase>','Comprehension — translate a shipped phase. Already wired to the Center cell (6a639d1)','extended'],
+    [9,'Release','/gabe-feature release','NOT A BEAT — a mode. A pure re-runnable join over git-committed data','mode'],
+    [10,'Router','/gabe-next','Holds the test-first ORDERING as a machine predicate rather than a plea','extended'],
+  ];
+  const lf=document.getElementById('life');
+  life.forEach(b=>{const d=document.createElement('div');d.className='lb';d.style.setProperty('--g','var('+V[b[4]]+')');
+    d.innerHTML='<span class="n">'+b[0]+'</span><span class="nm">'+b[2]+'</span><span class="jb">'+b[3]+'</span><span class="cg">'+b[4]+'</span>';
+    lf.appendChild(d);});
+
+  const asks=[
+    ['ASK 1','A test-first beat','<b>Landed as <code>/gabe-red</code></b> — named for the software act (red-green-refactor), joining the verb family. <em>Rejected <code>/gabe-cases</code>: naming the artifact is exactly what got prior attempts deleted.</em> It scans the corpus, decides REUSE(id, maybe bump) vs NEW(id), writes the cases, runs them, and commits the failure.'],
+    ['ASK 2','Develop → pass → prove → review','TASK CONTRACT gains one <code>CASES:</code> line beside REUSE — <b>no new CLASS member</b>: tests aren\'t a task class, they\'re the contract <em>on</em> tasks. The existing <code>tests:</code> verify line becomes case-scoped and inherits its rules verbatim.'],
+    ['ASK 3','Review surfaces more tests','Three new finding <b>subjects</b> on existing steps — <b>zero new pricing machinery, no new steps</b> (review already carries nine jobs in a 1166-line spec). Step 3\'s Branch-Test Gap gets a known subject instead of an inferred one.'],
+    ['ASK 4','Growth gets review\'s pricing','<b>The mapping was already exact — which is the tell.</b> The card requires every absent angle to end in <em>"Worth growing: what adding tests would buy, at what cost."</em> <b>What it buys IS Defer Risk. At what cost IS Fix Cost.</b> The card\'s vocabulary has always been review\'s two fields wearing editorial clothes. The verdict stops being <em>authored</em> and starts being <em>rendered</em> from a triage outcome.'],
+    ['ASK 5','Is /gabe-feature still needed?','<b>Survives — smaller, honest, already wired.</b> Its position needs no re-solving: <code>/gabe-next</code> 2.2.0 already routes the Center cell to it (<code>6a639d1</code>, HEAD) — the dangling you diagnosed is already closed. It stays <b>last</b>, because it needs the green run, the proof shots, <em>and</em> the PENDING triage outcomes — none of which exist earlier.'],
+    ['ASK 6','The demo / release page','<b>Not a beat — a mode.</b> The critic was decisive: <em>"name the development decision a developer makes by producing it. There isn\'t one."</em> It owns no time window, makes no perishable observation, gates nothing. <b>Trigger: derived</b> — promotion to the terminal env in PUSH.md, which push already detects. <b>No new config, no <code>--release</code> flag, nobody asked "is this a release?"</b> Staging fires nothing.'],
+  ];
+  const ac=document.getElementById('asks');
+  asks.forEach(a=>{const d=document.createElement('div');d.className='ak';
+    d.innerHTML='<h4><span class="t">'+a[0]+'</span>'+a[1]+'</h4><p>'+a[2]+'</p>';ac.appendChild(d);});
+
+  const decs=[
+    ['D1','Red as a <b>commit</b> vs a stored string (<code>proof.red_run</code>)?','<b>red-as-commit</b>, with squash named and printed. The reframe: red isn\'t perishable, it\'s <em>unaddressable</em> — a commit gives it an address.'],
+    ['D2','Where does the version-bump / spec-laundering check live?','<b>The middle — kill the bash gate.</b> "Did this edit change the case\'s CLAIM?" is AST-and-intent judgment; bash ships it as a false-positive cannon on the one gate nobody can route around. <b>Judgment-shaped checks go in judgment-shaped beats</b> → review owns CASE DRIFT; commit keeps only the deterministic part.'],
+    ['D3','Growth findings are unbounded — 4 angles × N features could out-number the real findings.','<b>Cap at 7, revisit from the log.</b> The kill pass bounds survivors, not the raw count.'],
+    ['D4','<code>templates/BEHAVIOR.md</code> doesn\'t exist — yet execute references it at runtime.','<b>Ship the template.</b> Load-bearing three times over; without it the hotfix arm is a checker that cannot fail.'],
+    ['D5','Keep /gabe-feature (shrunk) or delete by absorption?','<b>Keep shrunk now; revisit at n=3.</b> The absorption case is the best opposing argument in the set, but it over-reaches.'],
+    ['D6','Run /gabe-red at all tiers, or only enterprise/scale?','<b>All tiers, <code>min_cases = 1</code> at MVP</b> + WARN-and-log on skip codes. MVP is plan\'s default — shipping only at ent/scale means shipping to nobody.'],
+  ];
+  const dc=document.getElementById('decs');
+  decs.forEach(d=>{const e=document.createElement('div');e.className='dc';
+    e.innerHTML='<div class="q"><span class="d">'+d[0]+'</span>'+d[1]+'</div><div class="r"><b>rec →</b> '+d[2]+'</div>';dc.appendChild(e);});
+})();
+</script>

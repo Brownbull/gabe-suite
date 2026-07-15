@@ -85,6 +85,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 
 ## Workflow Docs
 
+- **[docs/design/verification-first/README.md](docs/design/verification-first/README.md) — the suite's design record (read BEFORE restructuring the suite):** the one-picture model (lifecycle produces · structure shapes · growth accrues), the mutated lifecycle incl. `/gabe-red` + `/gabe-walk`, the C-id test-identity scheme, decisions D1–D7 (block-lies/warn-debts hooks, report-never-gate MVP), and the landing plan.
 - [docs/workflows/README.md](docs/workflows/README.md) — quick chooser.
 - [docs/workflows/greenfield.md](docs/workflows/greenfield.md) — new app from idea to first phase.
 - [docs/workflows/brownfield.md](docs/workflows/brownfield.md) — existing codebase adoption.
