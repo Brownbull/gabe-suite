@@ -69,8 +69,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
 | `/gabe-walk` | Record a human walking the build — the witness: who·when·result·evidence to walks.jsonl; the manual angles' one input |
 | `/gabe-scope` | Authors SCOPE.md — stable premise plus the phase arc in its `## Phases` section — and `scope-references.yaml`. Multi-step, checkpoint-gated, Opus-heavy |
-| `/gabe-scope-change` | Scope-change router. Classifies your intended change → routes to `-addition` or `-pivot` |
-| `/gabe-scope-addition` | Additive scope change — inserts new REQs / phases / refs without changing premise |
+| `/gabe-scope-change` | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline, pivots route to `-pivot` |
 | `/gabe-scope-pivot` | Scope pivot — direction change, archives v{N} and creates v{N+1} |
 
 ### KDBP System

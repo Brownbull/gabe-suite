@@ -9,6 +9,7 @@ not an archaeology dig.
 |---|---|---|
 | `gabe-teach` (2.0.1) + `_templates/gabe-lens-learning.md` | 2026-07-15 | The 2,554-line reference corpus served ~2 observed real uses across both dogfood projects (trim-matrix audit). Capability parked, not judged worthless. |
 | `gabe-arch` (1.1.1) + `_templates/gabe-arch-{STATE,HISTORY}.md` | 2026-07-15 | Existed solely to feed `gabe-teach` — rides its fate. |
+| `gabe-scope-addition` (2.1.0) | 2026-07-15 | Absorbed into `/gabe-scope-change` Step 5 (the Addition path) — it was only ever reached through the router. `/gabe-scope-pivot` stays standalone for its `disable-model-invocation` safety flag. |
 
 ## Reinstate
 

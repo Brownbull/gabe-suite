@@ -51,7 +51,7 @@ You never refuse to classify. You never say "ambiguous" without picking. If genu
   "rationale": "one or two sentences naming which rule fired and why",
   "confidence": "high" | "medium" | "low",
   "user_intent_matches_classification": true | false,
-  "suggested_next_command": "/gabe-scope-pivot" | "/gabe-scope-addition"
+  "suggested_next_command": "/gabe-scope-pivot" | "/gabe-scope-change (Addition path — executes inline)"
 }
 ```
 
