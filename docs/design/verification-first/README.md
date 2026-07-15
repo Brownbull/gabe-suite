@@ -7,7 +7,7 @@
 > (pin/hover the site⟷files⟷suite connections) · [`consolidated-trees.html`](consolidated-trees.html)
 > (the three leveled trees) · [`gabe-red-design.html`](gabe-red-design.html) (the TDD beat's design brief).
 
-**Status:** decisions locked 2026-07-15 (D1–D7 below). Landing in slices (plan at the end).
+**Status:** decisions locked 2026-07-15 (D1–D7 below). Suite-side slices 1–4 LANDED 2026-07-15 (commits `fcb471f` red spine · `4dfbb8f` enforcement arm · `5d49c0e` small set). Slice 5 (app repos: gastify first, then gustify) awaits the operator's session-stop signal.
 
 ---
 
