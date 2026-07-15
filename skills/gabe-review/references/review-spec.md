@@ -146,6 +146,11 @@ For each modified source file:
         Defer Risk: UNTESTED PRODUCTION PATH — P(high), Impact(high)
 ```
 
+Red-beat projects (PLAN phases carry `cases` records): emit the gap as a KNOWN subject with a
+RESERVED id — `NEW CASE C[next] — <behavior> — no case asserts this` (allocate per gabe-red
+`references/red-spec.md`: corpus `max(grep)+1`). A triage **fix** then lands as a real case under
+the reserved id; a **defer** lands the id in PENDING so the promise has a reader.
+
 ### Step 3.2: Runtime Journey Evidence Gap Detection
 
 When reviewing a KDBP phase, inspect `.kdbp/PLAN.md` and `.kdbp/PLAN.json` before pricing findings:
@@ -172,6 +177,27 @@ PASS: `proof: "npx playwright test scan.spec --project=mobile → chromium mobil
 FAIL: `proof: ":<port> desktop+mobile proof"` — a claim with no artifact path.
 
 **Fresh-context evaluation (visual/journey proof — the verifier is not the author).** When the proof entry is visual or journey-shaped (screenshots/video/side-by-side artifacts), do not grade the artifacts inline: dispatch ONE read-only evaluator agent (Explore — no Write/Edit) with exactly (a) the phase's acceptance criteria (Phase Details `Acceptance:` / Runtime Evidence Checkpoints line) and (b) the proof folder path. It returns `PASS` or `NEEDS_WORK: <artifact> — <what fails>`. Plausibility is not correctness — a reasonable diff plus a broken screenshot is NEEDS_WORK, and NEEDS_WORK converts to a HIGH finding priced like the evidence gap above. The executing session never grades its own screenshots. Convention: `../../gabe-docs/references/evidence-doctrine.md` §5.
+
+### Step 3.4: Case-estate subjects & growth triage (red-beat / command-center projects)
+
+Active only when PLAN phases carry `cases` records or the project has a command center with
+absent-angle verdicts. **Zero new pricing machinery** — every subject below is priced with the
+standard Fix Cost × Defer Risk × Maturity Gate fields and rides the normal Step 5 triage.
+
+- **NEW CASE C[next]** — Step 3's gap under a reserved id (above).
+- **CASE BUMP C[n]→v[k+1]** — the diff changes what an existing case CLAIMS. Fix = bump the
+  version in the test's name alongside the change (a re-run or mechanical edit never bumps).
+- **CASE DRIFT** — a test edit that silently launders a claim (assertion weakened/removed while
+  the id stays put). Judgment-shaped by design — this check lives HERE, deliberately not in a
+  commit-gate grep (design record D6).
+- **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
+  triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
+  cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;
+  print `growth: showing 7 of N` when capped). The TRIAGE OUTCOME is authoritative — the center
+  RENDERS the angle's verdict from it (fix → the case lands under a reserved id · defer → the
+  PENDING row the feature page cites · dismiss → SETTLED with the stated reason). `/gabe-feature`
+  never re-authors this judgment; its hand-authored verdict remains only the fallback for angles
+  no review has priced.
 
 ### Step 3.5: Churn Annotation
 
@@ -1135,6 +1161,8 @@ When a finding is **fixed** during triage:
 When a finding is **deferred** during triage:
 - If new: add row with `Times Deferred: 1`, `Status: Deferred`
 - If recurring: increment `Times Deferred`, apply escalation rules (existing logic)
+- Case-estate findings (Step 3.4) keep their reserved `C[n]` in the row — the id is the join the
+  center's testing pages and the pre-checkpoint hook read
 
 When a finding is **dismissed** during triage:
 - NOT written to deferred backlog (dismissals are session-only)

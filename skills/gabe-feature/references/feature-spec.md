@@ -32,7 +32,7 @@ never drift from the truth.
 | IS / IS NOT | shipped behaviors / deliberate non-goals + known gaps, plainly | IS NOT as excuses; hiding gaps |
 | DECIDED | D-refs + one-line rulings that shaped it | re-arguing decisions |
 | ENTITIES | ids from config `entities[]` (validator enforces), ORDERED BY PRIMACY — the FIRST entity is the feature's home cluster on the hub/docs groupings, and it must be the MOST SPECIFIC entity the feature is about ('user' is almost never primary; a photos feature homes under photos, not under the person holding the camera). The list MAY grow: a genuinely new domain entity is added to config `entities[]` (id + label + a NEW distinct color) in the same authoring pass — part of the card review; the validator's hard-fail is the prompt, not a wall | 'user' first by default; inventing entities inline; splitting hairs (a variant of an existing entity is that entity) |
-| ANGLES | one REASON line per absent angle ("not yet mapped/run", never 'untested'-sounding words), ENDING IN A VERDICT: either "Worth growing: <what adding tests would buy, at what cost>" or "Nothing (further) to gain: <why>". The verdict IS the summary label — the renderer replaces the generic ABSENT chip with **GROWTH OPPORTUNITY** (amber, pops; on "Worth growing:") · **SETTLED** (quiet grey; on any "nothing … to gain" phrasing — plain / more / (further)) · **VERDICT MISSING** (red — the reason has no such call, fix the card); a growth angle's body also gets a generated angle-typed "grow it →" next-action (the HOW to the reason's WHAT — the reason carries the specifics). Notes on partial angles render as footnotes | justifying instead of recording; reasons with no call (renders red) |
+| ANGLES | one REASON line per absent angle ("not yet mapped/run", never 'untested'-sounding words), ENDING IN A VERDICT: either "Worth growing: <what adding tests would buy, at what cost>" or "Nothing (further) to gain: <why>". The verdict IS the summary label — the renderer replaces the generic ABSENT chip with **GROWTH OPPORTUNITY** (amber, pops; on "Worth growing:") · **SETTLED** (quiet grey; on any "nothing … to gain" phrasing — plain / more / (further)) · **VERDICT MISSING** (red — the reason has no such call, fix the card); a growth angle's body also gets a generated angle-typed "grow it →" next-action (the HOW to the reason's WHAT — the reason carries the specifics). **Verdict precedence (D6/ASK-4):** when a review triage outcome exists for the angle (review-spec Step 3.4 — implemented case / PENDING row / dismissed-with-reason), the verdict is RENDERED from that outcome and the card only translates; the hand-authored verdict is the fallback for angles no review has priced; VERDICT MISSING = neither exists. Notes on partial angles render as footnotes | justifying instead of recording; reasons with no call (renders red) |
 | DIAGRAM USERFLOW / DATAFLOW / WORKFLOW | flowchart / sequenceDiagram / stateDiagram-v2 — types, node shapes, and the change-highlight rule are BINDING per `gabe-docs/references/docs-spec.md` §Mermaid (shapes-per-operation table + `classDef changed` / sequence `rect` blocks; validate highlight targets — mermaid silently ignores misses) | drawing the whole system; highlighting everything |
 | REVIEWED | date + who, stamped ONLY after the human reviewed the BUILT pages — the stamp flips the board's fifth lifecycle cell (L · card) green and clears the rail's card-review filter; every lifecycle cell on the feature page shows its trigger command, struck through once done. The SAME stamp closes the PLAN loop (E5): the phase's `Center` cell → ✅ in PLAN.md + PLAN.json, so `/gabe-next` stops routing to `/gabe-feature` for it (SKILL.md §Modes step 5) | stamping a TODO-free draft; leaving the PLAN Center cell ⬜ after review |
 
@@ -77,6 +77,17 @@ Copy from the reference implementation (gustify), then adapt the config:
 areas/entities/future_stations). Wire the refresh commands to the project's
 test runners. This is a COPY, priced as one — real generator promotion to the
 suite is D7, decided at n=2 evidence, not assumed.
+
+## Release (the stakeholder showcase — a MODE, not a beat)
+
+`/gabe-feature release [--since <deployments-row>]` renders `releases/<id>.html` for
+stakeholders: the covered set = phases whose `Center` cell went ✅ since the last TERMINAL-env
+row in `.kdbp/DEPLOYMENTS.md` (the trigger is derived — `/gabe-push` detects the terminal-env
+ship and prints the pointer; staging ships fire nothing; projects without a center: silent skip).
+Contents v1 (design record D3): curated proof shots + diagrams + each feature's summary/narration
+— **video slots render as named gaps** ("capture available on the build machine") until video
+custody is decided at the first real release. Pure re-runnable join over committed data: no new
+state, no config key, nobody is asked "is this a release?".
 
 ## Wave-2 notes (recorded, not built)
 

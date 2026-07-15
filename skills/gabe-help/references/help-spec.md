@@ -120,6 +120,7 @@ The Gabe Suite — 22 command wrappers, 12 skills:
 | gabe-plan | /gabe-plan [goal] | KDBP planning + per-phase tier decision |
 | gabe-quip | /gabe-quip [surface] [title\|hook\|aside\|pass] | Sarcastic wit on human-facing HTML surfaces — titles/hooks/callouts; proposes, dosed, punch-up |
 | gabe-red | /gabe-red [phase] | TDD beat — failing cases committed before code (C-ids, RED: trailer); guards for refactors |
+| gabe-walk | /gabe-walk <subject> [result] | Record a human walk — who·when·result·evidence → walks.jsonl |
 | gabe-push | /gabe-push | Push, create PR, watch CI, branch promotion |
 | gabe-review | /gabe-review [target] | Code review with risk pricing + confidence score + triage |
 | gabe-roast | /gabe-roast [perspective] [target] | Adversarial gap review from a specific viewpoint |

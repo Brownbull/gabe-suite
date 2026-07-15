@@ -222,6 +222,7 @@ Only runs when Step 4 (push) completed successfully. Otherwise skip silently —
 
 - `.kdbp/` exists (required for all of push anyway).
 - If `.kdbp/DEPLOYMENTS.md` doesn't exist: copy it from `~/.claude/templates/gabe/DEPLOYMENTS.md` before appending. Never overwrite existing.
+- **Terminal-env pointer (non-blocking, one line):** when this row's env is the TERMINAL env (no `promote_from` chain continues past it) AND the project has a command center (`docs/site/center/center.config.json`), print: `release: terminal-env ship → /gabe-feature release --since <previous terminal row>`. No center → print nothing. Never a gate, never a question.
 
 **Assemble the row** (pure deterministic aggregation of data push already collected — zero LLM):
 

@@ -68,6 +68,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-red` | TDD's first half as a beat — declare the failing cases before code (C-ids born in test names), commit the red checkpoint; guards for refactors, enumerated skips |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |
 | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
+| `/gabe-walk` | Record a human walking the build — the witness: who·when·result·evidence to walks.jsonl; the manual angles' one input |
 | `/gabe-scope` | Authors SCOPE.md — stable premise plus the phase arc in its `## Phases` section — and `scope-references.yaml`. Multi-step, checkpoint-gated, Opus-heavy |
 | `/gabe-scope-change` | Scope-change router. Classifies your intended change → routes to `-addition` or `-pivot` |
 | `/gabe-scope-addition` | Additive scope change — inserts new REQs / phases / refs without changing premise |

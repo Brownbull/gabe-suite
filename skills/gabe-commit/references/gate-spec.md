@@ -55,6 +55,8 @@ Every printed number is copy-pasted from this run's output — never composed. S
 
 A checker that cannot fail (exit-0 no-op, 0 tests collected, continue-on-error) is NON-EVIDENCE → report `⤫ skipped(non-evidence: <reason>)`. When resolved via (b), offer to write the binding into BEHAVIOR.md `## Verify Commands` so it is never re-derived.
 
+**Optional `results_out:` key** in `## Verify Commands` (design record D1/D4 — report, never gate). Honored ONLY when the author wrote it beside a tests command THEY configured to emit a machine report there (e.g. `--junitxml=…`). NEVER append a reporter flag to a resolved command — that guesses a CLI surface and could fail a commit for a documentation feature. When present and CHECK 3 ran: write a small COMMITTED digest beside it (`<results_out>.digest.json` — command, exit, passed/failed/skipped counts, duration, `partial: true` on non-zero exit since `-x` truncates the run, HEAD sha, UTC timestamp). Committed, not gitignored: a gitignored run-manifest was once cleaned away and every doc page reverted to "not run" — the manifest is the memory. Absent the key: emit nothing; downstream renders `⤫ skipped(no reporter)`. **This digest reports at every tier and gates at none.**
+
 **CHECK 1 — Lint · CHECK 2 — Types · CHECK 3 — Tests** — fallback commands, used only via Step 2.0 (c):
 
 | Check | Python fallback | TypeScript fallback | Skip when |

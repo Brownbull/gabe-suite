@@ -1,9 +1,9 @@
 ---
 name: gabe-feature
-description: "Feature coverage for a project's Testing Command Center — translate a shipped feature into its lens card, diagrams, and evidence narration over machine-derived facts, and keep the center regenerating green. Usage: /gabe-feature [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…>"
+description: "Feature coverage for a project's Testing Command Center — translate a shipped feature into its lens card, diagrams, and evidence narration over machine-derived facts, and keep the center regenerating green. Usage: /gabe-feature [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…> | release [--since <row>]"
 when_to_use: "Cover a shipped feature in the command center, center status, backfill the center feature-by-feature, curate proof + narration after a green run — ONLY in projects that have docs/site/center/center.config.json (elsewhere: STOP with the bootstrap pointer)."
 metadata:
-  version: 1.3.0
+  version: 1.4.0
 ---
 
 # Gabe Feature — the command center's per-feature ritual
@@ -53,6 +53,10 @@ Run `refresh_center.sh regen`; read the gate output verbatim. Report: dead links
 ### `/gabe-feature backfill`
 
 Run `next_feature.py`. For the next pending phase, ask the human for the TIER — **full** (evidence + narration; recent work) · **card-only** (registry + card; history without runnable evidence) · **skip** (record the reason in `backfill_dispositions`; dropped work never gets a fake page). Then run the default mode at that tier. One phase per invocation.
+
+### `/gabe-feature release [--since <deployments-row>]`
+
+The stakeholder showcase — a MODE, not a lifecycle beat (it owns no time window, observes nothing perishable, gates nothing). Triggered by `/gabe-push`'s terminal-env pointer; renders `releases/<id>.html` from the phases whose `Center` cell went ✅ since the last terminal-env DEPLOYMENTS row. Contents + the video-slots-as-named-gaps rule: `references/feature-spec.md` §Release (binding).
 
 ### `/gabe-feature curate <artifact-subdir> <shot-nums…>`
 
