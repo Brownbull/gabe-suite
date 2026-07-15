@@ -52,6 +52,19 @@
       ]
     }
   },
+  "PLAN-PROOF-GUARD": {
+    "event": "PostToolUse",
+    "entry": {
+      "matcher": "Write|Edit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/plan-proof-guard.sh\"",
+          "timeout": 10
+        }
+      ]
+    }
+  },
   "SESSION-END REMINDER": {
     "event": "Stop",
     "entry": {

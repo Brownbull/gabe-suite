@@ -516,9 +516,12 @@ Schema (v1):
       "types": ["<from the Types cell or the Phase Details YAML>"],
       "cells": { "exec": "todo", "review": "todo", "commit": "todo", "push": "todo" },
       "proof": null,
-      "proof_type": null
+      "proof_type": null,
+      "cases": null
       // command-center projects only: cells also carries "center": "todo" (5th lifecycle cell)
       // TDD-adopting projects: cells also carries "red": "todo" (routed to /gabe-red BEFORE Exec)
+      // and "cases" mirrors the Phase Details Cases: record (written by /gabe-red, E5) —
+      // the plan-proof-guard hook reads it: Red ✅ without a cases record is BLOCKED (D7)
     }
   ]
 }

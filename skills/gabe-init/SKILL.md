@@ -4,7 +4,7 @@ description: "Initialize a project with the KDBP stack — creates .kdbp/, insta
 when_to_use: "Set up KDBP in a project, initialize the Gabe stack, scaffold .kdbp/ — human-initiated only; never auto-invoke."
 disable-model-invocation: true
 metadata:
-  version: 2.1.0
+  version: 2.2.0
 ---
 
 # Gabe Init — KDBP project scaffolder

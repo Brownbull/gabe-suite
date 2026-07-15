@@ -66,7 +66,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
 | **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
 | **gabe-help** | 1.1.1 | Context-aware guide + the P14 cross-project tool registry |
-| **gabe-init** | 2.1.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
+| **gabe-init** | 2.2.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
 | **gabe-lens** | 2.4.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
 | **gabe-meme** | 1.1.0 | Oblique-meme generation — per-project tone setup + template-persona-matched visual metaphors via memegen.link; verified PNGs, punch-up (ported from chiless meme-hilo) |
 | **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |

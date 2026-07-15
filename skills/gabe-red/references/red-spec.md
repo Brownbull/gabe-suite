@@ -55,7 +55,8 @@ Cases: NEW C148 · BUMP C147→v2 · GUARD C091, C120
 
 ## The `Cases:` record (PLAN.md Phase Details)
 
-Written by this skill under the phase's details; mirrored to PLAN.json phase record (E5):
+Written by this skill under the phase's details; mirrored to the PLAN.json phase's `cases` field
+(E5) — the field the `plan-proof-guard` hook reads (Red ✅ without a cases record is BLOCKED, D7):
 
 ```
 - **Cases:** NEW C148 · BUMP C147→v2 (red@a1b2c3d) · GUARD C091, C120

@@ -258,11 +258,12 @@ Template files can evolve with new columns. Existing `.kdbp/` files predating th
 
 ### Step 2: Check hooks
 
-Check `~/.claude/settings.json` for these hooks — the five markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
+Check `~/.claude/settings.json` for these hooks — the six markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
 - SessionStart hook (contains `KDBP Active`)
 - SessionStart plan awareness (contains `ACTIVE PLAN` or `gabe-plan`)
 - PreToolUse checkpoint hook (contains `KDBP CHECKPOINT`)
 - PostToolUse structure warning (contains `STRUCTURE:` — new-file placement)
+- PostToolUse plan-proof guard (contains `PLAN-PROOF-GUARD` — D7: blocks a ✅ cell whose evidence doesn't exist; debts warn, lies block)
 - Stop session-end reminder (contains `SESSION-END REMINDER`)
 
 Hook scripts themselves ship from the suite repo (`scripts/hooks/kdbp/`) via `install.sh` to `~/.claude/scripts/hooks/kdbp/` — this spec only wires the `settings.json` entries pointing at them.
@@ -272,7 +273,7 @@ For each missing hook:
 - If that file is missing or a key is absent: STOP hook installation and print `⛔ hook template missing at ~/.claude/templates/gabe/hooks.json — reinstall the suite. Not composing hook JSON from memory.` Continue init WITHOUT touching settings.json (degraded mode: report `Hooks installed: skipped (template missing)` in Step 4).
 - Otherwise show the exact JSON, ask `Install? [Y/n]`, and on yes append it to the appropriate array (never overwrite existing entries).
 
-If all hooks present: "All 5 KDBP hooks installed."
+If all hooks present: "All 6 KDBP hooks installed."
 
 ### Step 3: Project type
 
@@ -335,7 +336,7 @@ api/services/, api/observability/). Stages 1-5 are MVP; 6-9 are Enterprise.
 ```
 ✅ .kdbp/ initialized (9 files + archive/)
 ✅ CLAUDE.md: [created | merged | preserved | backed-up-and-replaced | ⚠ skipped]
-✅ Hooks installed (5/5)
+✅ Hooks installed (6/6)
 ✅ Project type: [type]
 ✅ Maturity: [mvp|enterprise|scale]
 ✅ DOCS.md: [N] mappings loaded for [project-type]
