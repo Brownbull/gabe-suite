@@ -16,7 +16,7 @@
 ## When to Use
 
 **Use when:**
-- Before closing a SCOPE change (/gabe-scope-addition / pivot) — verify new scope doesn't introduce CRITICAL decision gaps
+- Before closing a SCOPE change (/gabe-scope-change addition path / pivot) — verify new scope doesn't introduce CRITICAL decision gaps
 - After /gabe-plan drafts a phase — verify phase doesn't violate existing RULES.md
 - Before merging a feature PR touching cross-cutting concerns (state, sync, RBAC, real-time, cost-metered resources)
 - Periodically (monthly or per milestone) — scan for drift in well-trodden areas

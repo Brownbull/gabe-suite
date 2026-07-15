@@ -749,7 +749,7 @@ When a commit modifies `.kdbp/SCOPE.md` directly (including its `## Phases` sect
    ⚠ Direct SCOPE.md edit detected.
 
    This file should change only through /gabe-scope-change (which routes to
-   /gabe-scope-addition or /gabe-scope-pivot with classifier + Change Log).
+   /gabe-scope-change — addition inline, pivot routed — with classifier + Change Log).
 
    Direct edits skip the classifier, Change Log entry, and version bump.
 

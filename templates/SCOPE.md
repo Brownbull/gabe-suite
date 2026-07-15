@@ -16,7 +16,7 @@ reference_frame_file: .kdbp/scope-references.yaml
 
 # SCOPE — <project name>
 
-> **This is the stable backbone.** Changes to this document — premise and phase arc alike — flow exclusively through `/gabe-scope-change` (which routes to `/gabe-scope-addition` or `/gabe-scope-pivot`). Direct edits are flagged by `/gabe-commit` audit.
+> **This is the stable backbone.** Changes to this document — premise and phase arc alike — flow exclusively through `/gabe-scope-change` (additions execute inline; pivots route to `/gabe-scope-pivot`). Direct edits are flagged by `/gabe-commit` audit.
 
 ## 0. Reference Frame {#reference-frame}
 
@@ -137,7 +137,7 @@ Every SC must have ≥1 REQ. Finalize blocks if the matrix is incomplete.
 
 ## Phases {#phases}
 
-<!-- Populated via /gabe-scope Step 7 (Requirements → Phase Split → Phases). Evolves via /gabe-scope-addition (phases_version bump, decimal-ID inserts) and /gabe-scope-pivot (phases_version reset, full re-derivation). Direct edits are flagged by `/gabe-commit` audit. -->
+<!-- Populated via /gabe-scope Step 7 (Requirements → Phase Split → Phases). Evolves via /gabe-scope-change's Addition path (phases_version bump, decimal-ID inserts) and /gabe-scope-pivot (phases_version reset, full re-derivation). Direct edits are flagged by `/gabe-commit` audit. -->
 
 The phase arc derived from §12 Requirements. Unnumbered by design — it sits between Requirements and Strategic Risks and evolves independently of the premise sections above it.
 
@@ -163,7 +163,7 @@ The phase arc derived from §12 Requirements. Unnumbered by design — it sits b
 
 #### ID conventions
 - **Integer IDs** (1, 2, 3, …) are root phases from the initial `/gabe-scope` authoring.
-- **Decimal IDs** (1.1, 2.3, …) are `/gabe-scope-addition` insertions between root phases.
+- **Decimal IDs** (1.1, 2.3, …) are `/gabe-scope-change` Addition-path insertions between root phases.
 
 ### Phase Detail
 
@@ -257,7 +257,7 @@ Unresolved items from scoping. Items marked `[UNRESOLVED — brainstorm exit]` c
 
 ## 15. Change Log {#change-log}
 
-Append-only. Each entry: date, type (`init | addition | pivot | debt-scan`), summary, diff pointer (optional). Phase-arc changes (new/split/inserted phases from `/gabe-scope-addition`, or a full re-derivation from `/gabe-scope-pivot`) log here too — there is no separate phase change log. `debt-scan` entries are written by `/gabe-debt` when it appends Open Questions to §14 and/or rules to `.kdbp/RULES.md`.
+Append-only. Each entry: date, type (`init | addition | pivot | debt-scan`), summary, diff pointer (optional). Phase-arc changes (new/split/inserted phases from `/gabe-scope-change`'s Addition path, or a full re-derivation from `/gabe-scope-pivot`) log here too — there is no separate phase change log. `debt-scan` entries are written by `/gabe-debt` when it appends Open Questions to §14 and/or rules to `.kdbp/RULES.md`.
 
 | Date | Type | Summary |
 |---|---|---|

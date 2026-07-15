@@ -147,7 +147,7 @@ In 1–3 years: an ambient tool that watches what you're working on and surfaces
 
 #### ID conventions
 - **Integer IDs** (1, 2, 3, …) are root phases from the initial `/gabe-scope` authoring.
-- **Decimal IDs** (1.1, 2.3, …) are `/gabe-scope-addition` insertions between root phases.
+- **Decimal IDs** (1.1, 2.3, …) are `/gabe-scope-change` Addition-path insertions between root phases.
 
 ### Phase Detail
 
