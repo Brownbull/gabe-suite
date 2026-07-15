@@ -50,7 +50,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - Architecture Principles AP1–AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
 - Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible. Never patch `~/.claude` in place.
 
-## Capabilities (28 skills)
+## Capabilities (27 skills)
 
 | Skill | Version | Purpose |
 |---|---|---|
@@ -64,7 +64,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-feature** | 1.4.0 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release (stakeholder showcase) |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
 | **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
-| **gabe-help** | 1.1.1 | Context-aware guide + the P14 cross-project tool registry |
+| **gabe-help** | 1.2.0 | Context-aware guide + the P14 cross-project tool registry; Full Suite Catalog is GENERATED from skill frontmatter (scripts/gen-help-catalog.py, run by install.sh) |
 | **gabe-init** | 2.2.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
 | **gabe-lens** | 2.4.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
 | **gabe-meme** | 1.1.0 | Oblique-meme generation — per-project tone setup + template-persona-matched visual metaphors via memegen.link; verified PNGs, punch-up (ported from chiless meme-hilo) |
@@ -78,15 +78,14 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-review** | 1.7.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.0 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |
-| **gabe-scope-addition** | 2.1.0 | Additive scope evolution (routed from /gabe-scope-change) |
-| **gabe-scope-change** | 2.1.0 | Scope-change router — pivot vs addition classifier |
+| **gabe-scope-change** | 2.2.0 | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline (absorbed gabe-scope-addition), pivots route to the safety-flagged gabe-scope-pivot |
 | **gabe-scope-pivot** | 2.1.0 | Direction-change scope rewrite (human/router-initiated only) |
 | **gabe-walk** | 1.0.0 | Record a human walking the build — who·when·result·evidence appended to walks.jsonl; records never judges; NEVER-walked renders red until walked |
 
 ## Archived skills
 
 Decommissioned-not-deleted skills live in `skills/_archive/` (outside the install/doctor glob) with a
-README covering why + how to reinstate. Currently: **gabe-teach** + **gabe-arch** (archived 2026-07-15 —
+README covering why + how to reinstate; rulings in [docs/design/trim-ledger.md](docs/design/trim-ledger.md). Currently: **gabe-teach** + **gabe-arch** + **gabe-scope-addition** (archived 2026-07-15 —
 2,740 lines serving ~2 observed uses; trim-matrix audit). `~/.claude/gabe-arch/` user state is never
 touched by decommission.
 

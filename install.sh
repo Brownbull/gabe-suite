@@ -26,6 +26,12 @@ run() {
     fi
 }
 
+# Regenerate gabe-help's Full Suite Catalog from skill frontmatter (trim #2 —
+# kills the hand-kept-catalog drift class). Warn-not-fail; skipped on dry-run.
+if ! $DRY_RUN && command -v python3 >/dev/null 2>&1; then
+    python3 "$SCRIPT_DIR/scripts/gen-help-catalog.py" || echo "  WARN: help catalog regeneration failed (continuing)"
+fi
+
 # One skill per capability (B2 skills-only migration) — auto-discovered so new
 # skill directories ship without list maintenance.
 GABE_SKILLS=()
