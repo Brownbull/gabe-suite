@@ -457,6 +457,7 @@ Only after user confirms. Write with this structure:
 - **Trade-offs accepted:** See DECISIONS.md [D-id]
 
 <!-- #### Phase N Tasks block is written by /gabe-execute Step 3 and ticked per task at Step 4.5 — do not author it here -->
+<!-- - **Cases:** line is written by /gabe-red (NEW/BUMP/GUARD C-ids + red@sha, or an enumerated skip code) — do not author it here -->
 
 ### Phase 2 — [name]
 ...
@@ -514,8 +515,10 @@ Schema (v1):
       "complexity": "med",
       "types": ["<from the Types cell or the Phase Details YAML>"],
       "cells": { "exec": "todo", "review": "todo", "commit": "todo", "push": "todo" },
-      "proof": null
+      "proof": null,
+      "proof_type": null
       // command-center projects only: cells also carries "center": "todo" (5th lifecycle cell)
+      // TDD-adopting projects: cells also carries "red": "todo" (routed to /gabe-red BEFORE Exec)
     }
   ]
 }
@@ -525,6 +528,8 @@ Rules:
 
 - `status` mirrors the `<!-- status: ... -->` comment: `active | none | completed | defer | cancelled`. `project_type` mirrors the `<!-- project_type: ... -->` comment (`code | mockup | hybrid`); readers default a missing field to `code`.
 - Cell tokens mirror the table glyphs 1:1: ⬜ `todo` · 🔄 `in_progress` · ✅ `done` · ⏸ `deferred` · ⚰️ `obsolete`.
+- **`proof_type` (optional).** Declared at plan time alongside `proof`, typing what evidence the phase owes: `test | visual | journey` (or `null`). `test` is the TDD form — the evidence doctrine's "failing-then-passing test (fails on base, passes on fix)" — consumed by `/gabe-red`; `visual`/`journey` keep today's runtime-artifact meaning. Readers default a missing field to the runtime shape.
+- **`red` cell (optional, TDD-adopting projects only).** A phase row MAY carry a `Red` cell BEFORE `Exec`: ✅ once `/gabe-red` committed the phase's red checkpoint (or recorded a guard-only / enumerated skip). `/gabe-next` routes `red ⬜ → /gabe-red` ahead of Exec; a missing column is treated as always-✅ (same degradation as `Center`). Seed it (⬜) only when the project has adopted the red beat.
 - **`center` cell (optional, command-center projects only).** Projects with a `docs/site/center/` Testing Command Center carry a fifth cell/`Center` column: ✅ once `/gabe-feature` has covered the shipped phase (it writes the cell when it stamps the feature card reviewed, E5). Absent in every other project — `/gabe-next` treats a missing `center` as always-✅, so non-center plans keep the classic four-cell lifecycle. Seed it (⬜) only when the project has a command center.
 - `proof` is the per-phase runtime-evidence field (Evidence Doctrine): at plan time, the required journey command / spec path / artifact dir from `## Runtime Evidence Checkpoints` (or `null` for phases with no runtime requirement); `/gabe-execute` overwrites it with the actual evidence line (command → runtime → artifact paths) when the evidence lands.
 - On archive (Step 6b), after resetting PLAN.md to the empty template, write `{"version": 1, "status": "none", "phases": []}`. The archived `.md` copy is the durable record; the mirror is regenerable, so it is not archived.
@@ -729,7 +734,7 @@ If the user runs `/gabe-plan update` or `/gabe-plan status`:
 
 - **`update`**: Scope fence (check before ANY edit):
   ```
-  1. NEVER edit Exec/Review/Commit/Push/Center cells — those belong to their commands (Center → /gabe-feature). `update` MAY add the `Center` column itself (⬜ for every phase) when a project has adopted a command center — that is a schema edit, not a cell tick.
+  1. NEVER edit Red/Exec/Review/Commit/Push/Center cells — those belong to their commands (Red → /gabe-red, Center → /gabe-feature). `update` MAY add the `Red` or `Center` column itself (⬜ for every phase) when a project adopts the red beat / a command center — that is a schema edit, not a cell tick.
   2. NEVER renumber existing phases — append, or use decimal IDs (N.5); renumbering orphans the Current Phase pointer and DECISIONS D-links.
   3. NEVER delete DECISIONS.md references.
   Allowed edits menu: [add-phase] [edit-description] [edit-scope/acceptance] [re-tier via 3.5] [move-pointer] [edit-risks].

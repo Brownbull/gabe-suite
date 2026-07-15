@@ -65,6 +65,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
 | `/gabe-plan` | KDBP-aware planning + per-phase tier decision with optional HTML review artifact for complex decisions |
 | `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
+| `/gabe-red` | TDD's first half as a beat — declare the failing cases before code (C-ids born in test names), commit the red checkpoint; guards for refactors, enumerated skips |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |
 | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
 | `/gabe-scope` | Authors SCOPE.md — stable premise plus the phase arc in its `## Phases` section — and `scope-references.yaml`. Multi-step, checkpoint-gated, Opus-heavy |

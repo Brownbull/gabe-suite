@@ -171,8 +171,9 @@ For each task T_i in order:
    CLASS: rebuild-to-reference | restyle | implement | stub | fix | wire
    REUSE: REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)
           Searched: <globs/greps/stories checked>
+   CASES: <C-ids this task turns green (red@<sha>)> · GUARD: <ids that must stay green> — from the phase's Cases: record, or "none declared (no /gabe-red record)"
    ```
-   Rules: (a) if the intended CLASS is cheaper than the quoted text implies (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask — substitution requires an explicit user decision line; (b) if the task names a reference (mockup/story/spec/legacy screen), CLASS must be rebuild-to-reference and ACCEPTANCE must name the reference; (c) an empty Searched line invalidates the REUSE verdict — re-authoring a lookalike of an existing artifact is a DEFECT, not a style choice.
+   Rules: (a) if the intended CLASS is cheaper than the quoted text implies (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask — substitution requires an explicit user decision line; (b) if the task names a reference (mockup/story/spec/legacy screen), CLASS must be rebuild-to-reference and ACCEPTANCE must name the reference; (c) an empty Searched line invalidates the REUSE verdict — re-authoring a lookalike of an existing artifact is a DEFECT, not a style choice; (d) when the phase carries a `Cases:` record (written by /gabe-red — see that skill's `references/red-spec.md`), each task lists the ids it advances, and the phase may not finish until every declared case is green AND every guard is still green. Tests are not a task CLASS — they are the contract ON tasks.
 
 3. **Implement:**
    - Write/edit files per task scope; follow project conventions (CLAUDE.md, existing patterns)
@@ -188,6 +189,7 @@ For each task T_i in order:
    - Upload/realtime/auth/session paths: prove the real transport/auth/runtime boundary, including terminal success and at least one relevant edge case when the phase adds error/recovery behavior.
      - If `staging_proof_required=true`: commit the candidate through `/gabe-commit`, push it to the configured staging branch or deploy it through the project's Railway CLI fallback, wait for staging readiness, then run the journey against the deployed staging URL.
    - Write the exact commands, target device/browser, build id when applicable, and artifact paths into the `.kdbp/PLAN.json` mirror as the phase's evidence record: set `phases[id==N].proof` to `PROOF: <exact command> → <runtime/device/browser> → <repo-relative artifact path>` — one line per platform in the declared matrix (e.g. mobile-390 | desktop-1280), joined with " · " when there are multiple platform lines; a missing cell = task not done.
+   - When the journey produced proof artifacts, fill the manifest's `narration.legs` NOW — one plain sentence per leg, authored by this session because it is the one looking at the shots (shape + the "describes, never asserts" constraint are binding per `../../gabe-feature/references/feature-spec.md` §Narration). Deferring captions to curate reconstructs them cold, weeks later, by a session that never saw the run.
    - If verification fails → fix in-loop, retry up to 2 times, then halt with `[retry] / [skip-task] / [abort]`
 
    If runtime journey evidence is required but cannot be run, halt with Exec left `🔄`. Record the blocker and missing artifacts in the EXEC thin-index row's Gates column (see Step 7 log format). Do not mark Exec `✅`.
@@ -200,7 +202,7 @@ For each task T_i in order:
    tests: `<cmd>` → exit <code>, "<copied count>"
    journey: `<cmd>` → <artifact path>   (when required)
    ```
-   Rules: a line may be printed only after its command ran; a missing tool prints `lint: none configured (BEHAVIOR.md)` — never omit the line; a skipped check renders `⤫ skipped(<reason>)`, never ✅; every number is copy-pasted from this run's output, never estimated.
+   Rules: a line may be printed only after its command ran; a missing tool prints `lint: none configured (BEHAVIOR.md)` — never omit the line; a skipped check renders `⤫ skipped(<reason>)`, never ✅; every number is copy-pasted from this run's output, never estimated. When the phase carries a `Cases:` record, the `tests:` line MUST be case-scoped (e.g. `pytest -k "C147v2 or C148"`) so the copied count speaks for the declared ids — declared-red cases now green, guards still green.
 
 5. **Checkpoint (D2 decision):**
    - At every checkpoint, run `git diff --name-only` and compare against the phase Scope list. Any file outside Scope forces a classification NOW: structural → Step 6 halt menu; minor → record the deviation immediately, pre-filled with the file names, as a `deviation(minor): <path> — <1-line note>` line for the checkpoint commit body (Step 6). If no Scope list exists, print `Scope unfenced — deviation check skipped` so the omission is visible. Staging at Step 4.5 is an explicit path list — never `git add -A` when status shows out-of-scope files; print `excluded (other-track): <files>`.

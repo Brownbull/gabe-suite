@@ -50,7 +50,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - Architecture Principles AP1–AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
 - Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible. Never patch `~/.claude` in place.
 
-## Capabilities (28 skills)
+## Capabilities (29 skills)
 
 | Skill | Version | Purpose |
 |---|---|---|
@@ -61,7 +61,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-debt** | 1.1.1 | Architecture decision-debt scanner with AP evidence citations (fork/read-only) |
 | **gabe-docs** | 1.1.1 | Documentation standards + diagrams library + the suite execution contract (background) |
 | **gabe-docsite** | 1.0.0 | Publish docs onto the generated HTML docs site |
-| **gabe-execute** | 2.1.0 | Phase execution with tier cap, escalation gate, checkpoint commits |
+| **gabe-execute** | 2.2.0 | Phase execution with tier cap, escalation gate, checkpoint commits; TASK CONTRACT carries the phase's `CASES:` (C-ids from /gabe-red) + case-scoped verify; narration legs authored hot |
 | **gabe-feature** | 1.3.0 | Command-center feature coverage — card/diagrams/narration over machine facts; absent-angle verdict-as-label + grow-it prompt; closes the PLAN `Center` cell on review (routed lifecycle step); status, backfill, curate |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
 | **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
@@ -71,10 +71,11 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-meme** | 1.1.0 | Oblique-meme generation — per-project tone setup + template-persona-matched visual metaphors via memegen.link; verified PNGs, punch-up (ported from chiless meme-hilo) |
 | **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
 | **gabe-myopic** | 1.1.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork) |
-| **gabe-next** | 2.2.0 | Zero-logic lifecycle router over PLAN.md state — Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
-| **gabe-plan** | 2.2.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); optional `Center` column for command-center projects |
+| **gabe-next** | 2.3.0 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
+| **gabe-plan** | 2.3.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns |
 | **gabe-push** | 2.1.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md` |
 | **gabe-quip** | 1.1.0 | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts surfacing pain points; one engagement lever, proposes not rewrites, dosed (sibling of gabe-meme) |
+| **gabe-red** | 1.0.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips |
 | **gabe-review** | 1.6.0 | Code review — risk pricing, confidence scoring, plan alignment, triage |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.0 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |

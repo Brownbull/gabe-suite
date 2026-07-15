@@ -3,7 +3,7 @@ name: gabe-execute
 description: "Execute the current phase of .kdbp/PLAN.md — implement tasks, checkpoint at commits, write Exec column state. Interactive commit checkpoints by default; auto mode with --auto-commit. Usage: /gabe-execute [task|all|<phase-number>] [--auto-commit] [--dry-run]"
 when_to_use: "Implement the phase, continue the plan, keep going, do task N — execute the current KDBP phase's tasks under its tier cap with checkpoint commits and the escalation gate."
 metadata:
-  version: 2.1.0
+  version: 2.2.0
 ---
 
 # Gabe Execute — phase implementation runner
