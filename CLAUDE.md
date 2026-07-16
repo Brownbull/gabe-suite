@@ -49,7 +49,9 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - The execution contract E1–E7 is stated ONCE in `skills/gabe-docs/references/execution-contract.md`; every SKILL.md carries a one-line pointer, never a pasted copy.
 - Provenance lives in git, not in runtime files — no migration notes, dates, or "moved from X" headers in skills (see the ledger rationale in the migration log).
 - Architecture Principles AP1–AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
-- Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible. Never patch `~/.claude` in place.
+- Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible (incl. the suite invariants: hook harness green, version/count parity, portability lint, docsite staleness). Never patch `~/.claude` in place.
+- A deterministic script that will run against real project data ships only after a dry-run against a COPY of that data — record the run's numbers in the commit message (meta-review P1: template-derived fixtures validate the template, not reality).
+- Every hook/checker ships fixture cases in `tests/` proving it can both FIRE and stay silent; behavior edits update the battery in the same commit (`tests/hooks/run.sh` — meta-review P2/P4: a checker that cannot fail is non-evidence, and fixtures that live in session transcripts protect nothing).
 
 ## Capabilities (28 skills)
 
@@ -60,7 +62,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-assess** | 1.1.1 | Rapid change impact assessment: blast radius, maturity scope, prerequisites |
 | **gabe-commit** | 2.4.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit; optional results_out digest, path or list (reports every tier, gates none) |
 | **gabe-debt** | 1.1.1 | Architecture decision-debt scanner with AP evidence citations (fork/read-only) |
-| **gabe-docs** | 1.1.1 | Documentation standards + diagrams library + the suite execution contract (background) |
+| **gabe-docs** | 1.2.0 | Documentation standards + diagrams library + the suite execution contract (background) |
 | **gabe-docsite** | 1.0.2 | Publish docs onto the generated HTML docs site |
 | **gabe-execute** | 2.2.1 | Phase execution with tier cap, escalation gate, checkpoint commits; TASK CONTRACT carries the phase's `CASES:` (C-ids from /gabe-red) + case-scoped verify; narration legs authored hot |
 | **gabe-feature** | 1.4.1 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-adopt |
@@ -77,7 +79,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-push** | 2.2.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env ship prints the /gabe-feature release pointer |
 | **gabe-quip** | 1.1.0 | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts surfacing pain points; one engagement lever, proposes not rewrites, dosed (sibling of gabe-meme) |
 | **gabe-red** | 1.3.1 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips |
-| **gabe-review** | 1.7.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
+| **gabe-review** | 1.8.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.0 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |
 | **gabe-scope-change** | 2.2.0 | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline (absorbed gabe-scope-addition), pivots route to the safety-flagged gabe-scope-pivot |
@@ -104,6 +106,7 @@ Workflow docs are installed locally under `~/.claude/docs/gabe-suite/`.
 ## Adding a New Skill
 
 1. Create `skills/<skill-name>/SKILL.md` with frontmatter (name, description, `when_to_use`, metadata.version) — lean core ≤200 lines with the E1–E7 pointer; deep spec goes in `skills/<skill-name>/references/`.
-2. Add it to README.md, CLAUDE.md, and `skills/gabe-help/SKILL.md`.
-3. Run `./install.sh` then `scripts/suite-doctor.sh` (must be CLEAN).
-4. Update install/validation tests if the inventory count changes. (`install.sh` auto-discovers `skills/gabe-*/` — no list maintenance.)
+2. **Handshake walk:** read the ADJACENT beats' specs for seam contradictions — what this skill emits, do its neighbors accept, and vice versa? (Meta-review P5: the gate once blocked the very commit /gabe-red must produce; two specs disagreed on where `proof` lives. Seams break where each spec is written from its own seat.) Same walk applies to any spec change that alters a beat's inputs/outputs.
+3. Add it to README.md and CLAUDE.md (the gabe-help catalog is generated at install).
+4. Run `./install.sh` then `scripts/suite-doctor.sh` (must be CLEAN — the doctor also checks version/count parity, so a missed CLAUDE.md row fails here).
+5. Update install/validation tests if the inventory count changes. (`install.sh` auto-discovers `skills/gabe-*/` — no list maintenance.)

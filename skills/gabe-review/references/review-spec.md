@@ -17,6 +17,26 @@
 - You're assessing a proposed change before implementing (use /gabe-assess)
 - You're looking for structural gaps in design (use /gabe-roast)
 
+## Repeat reviews — the realism ladder
+
+A review angle exhausts in ONE pass: re-reviewing the same artifact from the same altitude
+finds noise, not defects. When an artifact earns another round (high stakes, prior rounds kept
+finding things), ESCALATE REALISM instead of repeating:
+
+1. **Static read** — the artifact against its own spec.
+2. **Cross-reference sweep** — every other doc/spec that states the same facts (drift class).
+3. **Adversarial POV panel** — hostile inputs, literal-minded executor, fresh-machine user,
+   3am operator; each persona attacks what the authors assumed.
+4. **Rehearsal on a synthetic copy** — actually EXECUTE the plan/tool against a fixture that
+   replicates the target's known pathologies.
+5. **Dry-run on a copy of the REAL target** — the only rung that catches what the synthetic
+   fixture didn't think to model (empirical: rung 5 found the largest defects of a five-round
+   arc AFTER rungs 1–4 had all reported diminishing returns).
+
+Rungs 4–5 also apply to fixes: a fix verified only by the finder's own fixture is one rung too
+low — three consecutive rounds of that produced three regressions. Codify the fixtures
+(`tests/`), then climb.
+
 ---
 
 ## Required Inputs

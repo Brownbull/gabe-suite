@@ -20,7 +20,7 @@
  *
  * Never hardcode hex / rgb literals in screen HTML. Always var().
  *
- * Source of truth: /home/khujta/projects/gabe_lens/templates/mockup/tokens.css
+ * Source of truth: <suite-repo>/templates/mockup/tokens.css
  */
 
 /* ========== Baseline: neutral / fallback theme ========== */

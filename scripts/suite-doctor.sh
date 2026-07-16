@@ -86,6 +86,44 @@ check_home() { # home label
 
 check_home "$HOME/.claude" "claude"
 
+# ---- suite invariants (meta-review 2026-07-16: the five review rounds' recurring classes) ----
+check_invariants() {
+  # P2/P4 — the enforcement layer's executable contract must stay green
+  if [ -f "$REPO/tests/hooks/run.sh" ] && ! bash "$REPO/tests/hooks/run.sh" >/dev/null 2>&1; then
+    report "invariant" "hook harness FAILING — run: bash tests/hooks/run.sh"
+  fi
+  # P3 — version parity: SKILL.md metadata.version must match the CLAUDE.md Capabilities row
+  for d in "$REPO"/skills/gabe-*/; do
+    name=$(basename "$d")
+    sv=$(sed -n 's/^  version: \([0-9.]*\)$/\1/p' "$d/SKILL.md" | head -1)
+    cv=$(sed -n "s/^| \*\*$name\*\* | \([0-9.]*\) |.*/\1/p" "$REPO/CLAUDE.md" | head -1)
+    [ -n "$sv" ] && [ "$sv" != "$cv" ] && report "invariant" "version drift: $name SKILL.md=$sv vs CLAUDE.md=${cv:-NO ROW}"
+  done
+  # P3 — skill-count claims in the two hand-kept indexes vs the directory truth
+  n=$(ls -d "$REPO"/skills/gabe-*/ 2>/dev/null | wc -l)
+  for f in CLAUDE.md README.md; do
+    while IFS= read -r claim; do
+      [ "$claim" = "$n" ] || report "invariant" "$f claims ($claim skills) but skills/gabe-*/ has $n"
+    done < <(grep -oE '\([0-9]+ skills\)' "$REPO/$f" | grep -oE '[0-9]+')
+  done
+  # P6 — portability: shipped surfaces must not couple to one machine
+  # (pattern split so this script never matches itself; bytecode caches excluded)
+  op_path="/home/""khujta"
+  hits=$(grep -rl "$op_path" "$REPO"/skills "$REPO"/templates "$REPO"/scripts "$REPO"/prompts "$REPO"/schemas "$REPO/install.sh" 2>/dev/null | grep -vE '_archive|__pycache__|\.pyc$' || true)
+  [ -n "$hits" ] && report "invariant" "operator-machine path in shipped surface(s): $(echo "$hits" | tr '\n' ' ')"
+  bare=$(grep -rn '\$ECC_ROOT' "$REPO"/templates "$REPO"/skills 2>/dev/null | grep -v 'ECC_ROOT:-' || true)
+  [ -n "$bare" ] && report "invariant" "bare \$ECC_ROOT (no :-\$HOME/.claude fallback): $(echo "$bare" | cut -d: -f1-2 | tr '\n' ' ')"
+  # P3/P4 — docsite: markdown source newer than its generated page means the site is stale
+  for src in "$REPO"/docs/src/*.md; do
+    [ -f "$src" ] || continue
+    page="$REPO/docs/site/$(basename "${src%.md}").html"
+    if [ -f "$page" ] && [ "$src" -nt "$page" ]; then
+      report "invariant" "docsite stale: docs/src/$(basename "$src") is newer than its generated page — rebuild (build_docsite.py)"
+    fi
+  done
+}
+check_invariants
+
 if [ "$drift" -eq 0 ]; then
   [ "$QUIET" = "--quiet" ] || echo "suite-doctor: CLEAN — repo and ~/.claude are in sync."
   exit 0

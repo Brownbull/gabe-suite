@@ -375,6 +375,7 @@ Pull **composition ideas** from the library — not domain content. The library 
 - **One idea per sentence.** Split compound sentences.
 - **Examples after explanations.** Rationale first, snippet second.
 - **Accessibility.** Descriptive link text (not "click here"), alt text for diagrams (describe what the diagram shows in one sentence before the fence).
+- **Failure messages carry the move, not just the diagnosis.** Every STOP / block / refusal / warn a skill or hook emits names the ONE next action — a command to run or a file to edit — in the message itself. "Red ✅ cites red@abc but that commit is unreachable" is a diagnosis; "…re-point red@<sha> in the Cases record (.kdbp/PLAN.md Phase Details + PLAN.json phases[].cases)" is a message. The reader is at their worst exactly when these fire (meta-review P7: a seven-item class of stops that named the problem and left the operator to invent the fix).
 
 ## Quality checklist (for auto-append and handwritten additions)
 

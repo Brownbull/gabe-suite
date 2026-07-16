@@ -13,7 +13,7 @@
  *   (a) ARIA:   <div role="tablist" class="state-tabs"><button role="tab">...</button></div>
  *   (b) Legacy: <div class="state-tabs"><button class="state-tab" data-state="...">...</button></div>
  *
- * Source of truth: /home/khujta/projects/gabe_lens/templates/mockup/tweaks.js
+ * Source of truth: <suite-repo>/templates/mockup/tweaks.js
  */
 
 (function () {

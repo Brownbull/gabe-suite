@@ -468,7 +468,7 @@ Override: `--full` flag surfaces all findings regardless of tier. Useful for qua
 ## Cross-references
 
 - Plan that designed this skill: `~/.claude/plans/peppy-drifting-flame.md`
-- Gastify LESSONS (reference for RULES.md format): `/home/khujta/projects/apps/gastify/docs/rebuild/LESSONS.md`
-- BoletApp Epic 14c retro (P6/P7/P8/P10/P11 source): `/home/khujta/projects/bmad/boletapp/docs/sprint-artifacts/epic-14c-retro-2026-01-20.md`
+- Gastify LESSONS (reference for RULES.md format): `<reference-project>/docs/rebuild/LESSONS.md` (example: the gastify rebuild LESSONS)
+- BoletApp Epic 14c retro (P6/P7/P8/P10/P11 source): `<reference-project>/docs/sprint-artifacts/<retro>.md` (example: the BoletApp Epic 14c retro)
 - Pattern catalog root: `~/.claude/templates/gabe/debt-patterns/`
 - Skill: `~/.claude/skills/gabe-debt/SKILL.md` (+ `references/debt-spec.md`)

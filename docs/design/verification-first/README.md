@@ -170,6 +170,19 @@ under negative controls) — its two prototyped tools ship in the suite
 | R6 | **Mechanical honesty fixes:** mirror regeneration reads Phase Details, not just the table (a table-only regen drops `cases` and turns the next write into a guard-blocked lie); the PLAN template documents the Red column; pre-checkpoint's C-id warns can actually fire (`.kdbp` excluded from the corpus grep — the PLAN that declares an id no longer satisfies its own check; tokens bounded). |
 | R7 | **`/gabe-adopt` approved** — brownfield command-center adoption as its own skill (`init` archives existing docs — never deletes — and bootstraps the center from suite templates · `rank` machine-derives the critical/high shortlist for operator approval · `section <entity>` ingests one entity at a time, checklist-gated, human approval recorded as a walk · `status` shows the board). The adoption tracker lives OUTSIDE PLAN.md: the main plan keeps shipping features through the normal lifecycle; the two tracks meet in the same center. |
 
+**Meta-review (2026-07-16).** After five review rounds, the rounds themselves were audited for
+recurring miss-classes. Seven patterns; the integrations landed suite-side: `suite-doctor` now
+enforces the SUITE INVARIANTS (hook harness green · SKILL↔CLAUDE version parity · skill-count
+claims · portability lint · docsite staleness) — the suite's own laws, applied to itself;
+CLAUDE.md conventions gained dry-run-on-copy (P1 — template-derived fixtures validate the
+template, not reality) and the fixture-battery rule (P2/P4 — `tests/hooks/run.sh` is the
+enforcement layer's executable contract); the skill procedure gained the handshake walk (P5 —
+seams break where each spec is written from its own seat); docs-spec gained the
+failure-messages-carry-the-move rule (P7); review-spec documents the REALISM LADDER (the
+meta-lesson: a review angle exhausts in one pass — escalate static → cross-ref → adversarial
+POV → synthetic rehearsal → real-data dry-run; the fifth rung found the largest defects after
+the first four reported diminishing returns).
+
 ## 6 · The landing plan
 
 Suite-first (this repo), install regenerates `~/.claude`, doctor must be CLEAN per slice.
