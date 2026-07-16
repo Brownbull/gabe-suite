@@ -154,7 +154,11 @@ developer must fix, it has become ceremony — delete it.
 ### Addendum — pre-rollout rulings (2026-07-15, R1–R7)
 
 The pre-slice-5 gap review (fixture-verified against `next.mjs`, the plan-proof-guard, and both
-twins' live state) produced seven rulings, all landed suite-side the same day:
+twins' live state) produced seven rulings, all landed suite-side the same day. A subsequent
+four-POV panel hardened the enforcement scripts, and a full REHEARSAL on a synthetic twin
+replicating gastify's pathologies validated chunks 0–3 end-to-end (guard/router/R1-R2-R6 held
+under negative controls) — its two prototyped tools ship in the suite
+(`gabe-plan/scripts/regen-mirror.py`, `gabe-red/scripts/backfill-sweep.py`):
 
 | # | Ruling |
 |---|--------|
@@ -181,17 +185,27 @@ Suite-first (this repo), install regenerates `~/.claude`, doctor must be CLEAN p
 5. **Slice 5 — app repos, ON OPERATOR SIGNAL (sessions stopped):** **gastify FIRST, in chunks,
    verified progressively**, THEN propagate to gustify.
    - chunk 0: repair gastify's PLAN.md (malformed separator row, split table, the 24.1 md↔json
-     drift) · normalize the two shorthand proof strings (R2 hygiene) · retrofit BEHAVIOR.md to
-     the D4 template shape (`## Verify Commands` + `results_out` list; gustify's pass adds the
-     `!*.digest.json` negation) · THEN wire the 6th hook marker via `/gabe-init update` — the
-     guard goes live globally only after the state is honest.
-   - chunk 1: C-id backfill sweep per red-spec §Backfill — explicit roots (gastify excludes
-     `frontend/`+`mobile/`), anchored pattern, blame-ignore file + local git config, M-renames
-     (gustify). Mechanical-only, one commit per repo.
-   - chunk 2: add the Red column (R1 seeding: ⬜ only where Exec ≠ ✅) + PLAN.json mirror ·
-     verify `next.mjs` routing.
-   - chunk 3: `/gabe-red` for real on the next phase → execute turns it green — verified via
+     drift — regenerate via `gabe-plan/scripts/regen-mirror.py`, whose drift print is the
+     detector) · normalize the two shorthand proof strings to the rehearsed normal form
+     (concrete dir + strippable annotation: `proof/<dir> (N shots, …)`) · retrofit BEHAVIOR.md
+     to the D4 template shape (`## Verify Commands` + `results_out` list; legacy B-rules kept as
+     a trailing section, legacy frontmatter dropped; gustify's pass adds the `!*.digest.json`
+     negation). TWO OPERATOR INPUTS here: author the real Verify Commands (gates never guess),
+     and resolve gastify's `project_type: mockup` (BEHAVIOR) vs `code` (PLAN) contradiction ·
+     THEN wire the 6th hook marker via `/gabe-init update` — the guard goes live globally only
+     after the state is honest.
+   - chunk 1: C-id backfill sweep — the tested tool ships at `gabe-red/scripts/backfill-sweep.py`
+     (rehearsed end-to-end; idempotent; runbook in its header). Explicit roots (gastify excludes
+     `frontend/`+`mobile/`; pre-scan for it.each/template-literal titles first), enumerated
+     `--myopic-labels` (gustify C1–C11), SWEEP commit staged by explicit file list + an
+     immediately following chore commit registering the sha in `.git-blame-ignore-revs` +
+     `git config blame.ignoreRevsFile`.
+   - chunk 2: add the Red column (R1 seeding as amended: ⬜ only where Exec is ⬜; 🔄/✅ rows
+     get `—` and no mirror key) + PLAN.json mirror · verify `next.mjs` routing.
+   - chunk 3: `/gabe-red` for real on the next Red-⬜ phase (the pointer advances via normal
+     mechanics — the current phase may still be 🔄) → execute turns it green — verified via
      junit names + `Cases:` record + `RED:` trailer (ever-red waits for the adopt rebuild, R5).
+     The Red ✅ tick rides its own chore commit (the red@sha exists only after the red commit).
    Then `/gabe-adopt init` on gastify: archive the hand-built center, rebuild section-by-section
    at human speed. Afterward the align/assess re-measure marker fires (trim-ledger #5).
 

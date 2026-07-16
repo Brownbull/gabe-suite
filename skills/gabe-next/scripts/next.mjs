@@ -37,6 +37,10 @@ if (plan.phases != null && !Array.isArray(plan.phases)) {
   process.exit(2);
 }
 const phases = plan.phases ?? [];
+if (phases.some((p) => p == null)) {
+  console.log("⚠ PLAN.json phases[] contains a null entry — mirror damage. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.");
+  process.exit(2);
+}
 // A mistyped cell token ("Done", "complete") is neither todo nor done — it would silently
 // route wrong (settle unfinished work, or skip the red/exec gate). Refuse the mirror instead.
 for (const p of phases) {

@@ -3,7 +3,7 @@ name: gabe-next
 description: "Zero-logic router — deterministic scripts/next.mjs over .kdbp/PLAN.json (prose PLAN.md fallback) dispatches to the next gabe command (review/commit/push/execute/plan). No LLM decisions, no side effects beyond the command it routes to. Usage: /gabe-next [--dry-run]"
 when_to_use: "What's next, where were we, continue the lifecycle — route to the next gabe step from PLAN.md state without re-deciding anything."
 metadata:
-  version: 2.4.0
+  version: 2.4.1
 ---
 
 # Gabe Next — zero-logic lifecycle router

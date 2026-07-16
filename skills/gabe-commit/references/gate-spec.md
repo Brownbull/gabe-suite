@@ -170,6 +170,9 @@ Deterministic thresholds, not LLM judgment:
 | Doc drift (DOCS.md high) | Doc target in diff | `high` |
 | Doc drift (DOCS.md medium) | Doc target in diff | `medium` |
 | Doc drift (DOCS.md low) | Doc target in diff | `low` |
+| Doc drift (Layer 3 wells Docs) | Well's Docs file in diff | `low` (always) |
+| Structure (disallowed pattern) | N/A (always fail) | `critical` |
+| Structure (no pattern match) | Match at/below current maturity | `medium` |
 
 **Red-checkpoint carve-out (gabe-red — the failing state IS the deliverable).** When the commit
 message being gated carries a `RED:` trailer, CHECK 3's "all pass" rule inverts for exactly the
@@ -178,9 +181,6 @@ import/collection error is NOT red — block as usual), and (b) no test OUTSIDE 
 fails. Both hold → the failures are the checkpoint's evidence, not a `critical` finding; anything
 else blocks normally. Without this carve-out the gate would block the very commit `/gabe-red`
 exists to produce — or teach users `force-commit`, which is worse.
-| Doc drift (Layer 3 wells Docs) | Well's Docs file in diff | `low` (always) |
-| Structure (disallowed pattern) | N/A (always fail) | `critical` |
-| Structure (no pattern match) | Match at/below current maturity | `medium` |
 
 ### Step 4: Present results
 

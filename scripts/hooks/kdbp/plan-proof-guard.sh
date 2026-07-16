@@ -46,10 +46,17 @@ def brace_expand(tok):
         work.extend(head + part + tail for part in m.group(1).split(","))
     return done + work  # cap hit → partial expansion; fine for an existence probe
 
+def concrete_parent(tok):
+    # deepest brace/glob-free leading directory — a cap-tripped multi-brace token still gets a
+    # fair non-empty-parent probe (dirname of the raw token would still contain the braces)
+    prefix = re.split(r"[*?\[\]{]", tok)[0]
+    parent = prefix if prefix.endswith("/") else os.path.dirname(prefix)
+    return parent.rstrip("/")
+
 def evidence_exists(tok):
-    # R2: literal path → brace-expanded glob → non-empty parent dir (human shorthand tolerated;
-    # a missing or empty evidence dir still fails). Reject tokens with no concrete path
-    # component first — a bare */**/{..} matches everything and proves nothing.
+    # R2: literal path → brace-expanded glob → non-empty concrete parent dir (human shorthand
+    # tolerated; a missing or empty evidence dir still fails). Reject tokens with no concrete
+    # path component first — a bare */**/{..} matches everything and proves nothing.
     if os.path.exists(tok):
         return True
     if not re.sub(r"[*?\[\]{},]|\.\.|/|\.", "", tok).strip():
@@ -57,7 +64,7 @@ def evidence_exists(tok):
     for cand in brace_expand(tok):
         if globmod.glob(cand):
             return True
-    parent = os.path.dirname(tok)
+    parent = concrete_parent(tok)
     return bool(parent) and os.path.isdir(parent) and bool(os.listdir(parent))
 
 try:

@@ -458,6 +458,7 @@ Only after user confirms. Write with this structure:
 
 <!-- #### Phase N Tasks block is written by /gabe-execute Step 3 and ticked per task at Step 4.5 — do not author it here -->
 <!-- - **Cases:** line is written by /gabe-red (NEW/BUMP/GUARD C-ids + red@sha, or an enumerated skip code) — do not author it here -->
+<!-- - **Proof:** line — the phase's runtime-evidence record; seeded from ## Runtime Evidence Checkpoints at plan time, OVERWRITTEN by /gabe-execute with the actual evidence line. This bullet is what the PLAN.json mirror's `proof` field regenerates from (scripts/regen-mirror.py parses it) — proof lives HERE, never in the table -->
 
 ### Phase 2 — [name]
 ...
@@ -493,7 +494,7 @@ Phase 1: [name]
 
 ### Step 4b: Write the PLAN.json machine mirror
 
-Whenever this skill writes `.kdbp/PLAN.md` (Step 4, Step UPD, Step 6 archive mechanics), write the sibling `.kdbp/PLAN.json` in the same turn (E5). PLAN.md stays canonical for humans; PLAN.json is the machine mirror — read by session hooks and deterministic tooling (the planned `next.mjs`), written only by this skill and the shared auto-tick helper. It is never hand-edited; if it drifts or goes missing, regenerate from the Phases table PLUS each phase's Phase Details block — the `Cases:` line and proof/proof_type live in the details, not the table, and a regeneration that drops a Red-✅ phase's `cases` record turns the next PLAN write into a guard-blocked lie.
+Whenever this skill writes `.kdbp/PLAN.md` (Step 4, Step UPD, Step 6 archive mechanics), write the sibling `.kdbp/PLAN.json` in the same turn (E5). PLAN.md stays canonical for humans; PLAN.json is the machine mirror — read by session hooks and deterministic tooling (the planned `next.mjs`), written only by this skill and the shared auto-tick helper. It is never hand-edited; if it drifts or goes missing, regenerate from the Phases table PLUS each phase's Phase Details block — the `Cases:` line and proof/proof_type live in the details, not the table, and a regeneration that drops a Red-✅ phase's `cases` record turns the next PLAN write into a guard-blocked lie. The deterministic helper is `scripts/regen-mirror.py` (run from the repo root): it parses table + details, maps `—` Red cells to omitted keys, and prints the md↔json row drift (`rows added/dropped`) — today the ONLY detector for a table row missing from the mirror.
 
 Schema (v1):
 

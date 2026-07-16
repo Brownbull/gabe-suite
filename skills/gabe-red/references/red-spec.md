@@ -77,6 +77,14 @@ Red is outside the helper's four-column set by design):
 - **Cases:** NEW C148 · BUMP C147→v2 (red@a1b2c3d) · GUARD C091, C120
 ```
 
+NEW-only form: `- **Cases:** NEW C148 (red@a1b2c3d)` — the `red@sha` attaches wherever a red
+commit exists, not only to BUMPs. Because the sha exists only after the red commit lands, the
+Red ✅ tick + Cases write is necessarily a SEPARATE follow-up write — give it its own chore
+commit (or the next checkpoint). Guard scope, stated plainly: the plan-proof-guard validates
+that a cases record EXISTS and that every sha it CITES is reachable — a record citing no sha
+passes; the hook never re-runs tests or verifies the failure itself (that is the gate's
+carve-out at commit time and review's CASE DRIFT afterward).
+
 Refactor form: `- **Cases:** — · GUARD: C091, C147, C203 (behavior unchanged; must stay green)`
 with `RED: n/a (guard-only — no new claim)` in the report.
 
@@ -109,17 +117,25 @@ bumps per case on early greenfield phases; that is TDD's known cost, not a failu
 
 ## Backfill (existing corpora — one-time, per design decision D5)
 
-Mechanical sweep, one commit per repo: stamp `C[N]` into every existing test name; register the
-commit in `.git-blame-ignore-revs` AND set `git config blame.ignoreRevsFile .git-blame-ignore-revs`
-locally (the file alone only helps GitHub's UI); **never** rewrite a claim; **no fake reds** —
-backfilled cases carry ids but their ever-red stays empty until a genuine red is ever observed.
-New test files after the sweep: the commit-gate check requires an id at birth.
+Mechanical sweep — the tested tool ships at `scripts/backfill-sweep.py` (explicit roots,
+`--myopic-labels=`, idempotent; its header carries the rehearsed runbook). One SWEEP commit per
+repo, staged by explicit file list (never by directory — a stray `__pycache__/` rides a
+dir-scoped add); the sweep sha then goes into `.git-blame-ignore-revs` + `git config
+blame.ignoreRevsFile .git-blame-ignore-revs` in an immediately following chore commit — the sha
+cannot ride its own commit, and the file alone only helps GitHub's UI. **Never** rewrite a
+claim; **no fake reds** — backfilled cases carry ids but their ever-red stays empty until a
+genuine red is ever observed. New test files after the sweep: the commit-gate check requires an
+id at birth.
 
-Sweep mechanics (rulings R2/R3): roots are EXPLICIT arguments, never inferred (legacy trees and
-generated artifact dirs must stay out); id detection/allocation uses the anchored token pattern
-`(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])` (shell greps use the ERE equivalent
-`(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)` — no PCRE dependency) — the bare `C[0-9]+` grep
-over-matches (`RFC1234` would start allocation at C1235). Pre-existing id-LIKE conventions colliding with `C[N]` (e.g. scenario
-labels in test titles) are renamed to their own family in the same sweep — scenario labels take
-`M[N]` (see gabe-myopic) — and every prose reference to them (PLAN risks, docs) is updated in the
-same commit. Case ids own the `C` prefix outright.
+Sweep mechanics (rulings R2/R3, rehearsal-hardened): roots are EXPLICIT arguments, never
+inferred (legacy trees and generated artifact dirs must stay out); id detection/allocation uses
+the anchored token pattern `(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])` (shell greps use the ERE
+equivalent `(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)` — no PCRE dependency) — the bare `C[0-9]+`
+grep over-matches (`RFC1234` would start allocation at C1235). Pre-existing id-LIKE conventions
+colliding with `C[N]` (e.g. scenario labels in test titles) are renamed to `M[N]` (see
+gabe-myopic) in the same sweep, with three rehearsal-proven rules: the colliding set is
+**ENUMERATED at sweep time**, never pattern-derived (post-sweep C-id title prefixes are
+indistinguishable from labels — an open pattern eats fresh ids on re-run); renames run **BEFORE
+allocation** (frees the label numbers); relabeled tests still receive a fresh C-id like every
+other test (dual-token titles, e.g. `it("C26 · M1 · …")`). Every prose reference to the old
+labels (PLAN risks, docs) is updated in the sweep commit. Case ids own the `C` prefix outright.

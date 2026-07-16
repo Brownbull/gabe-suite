@@ -23,8 +23,14 @@ except Exception:
     cmd=$(printf '%s' "$input" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/"command"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//' || true)
   fi
   # Match the trigger on the command with quoted regions removed — a `git commit` inside a
-  # quoted argument (git log --grep "; git commit") is data, not an invocation.
-  cmd_bare=$(printf '%s' "$cmd" | sed 's/"[^"]*"//g' | sed "s/'[^']*'//g" || true)
+  # quoted argument (git log --grep "; git commit") is data, not an invocation. Strip a quote
+  # type ONLY when its count is even: an unterminated quote (typo) would pair across command
+  # boundaries and eat a real `git commit` — false-warn is acceptable, false-silence is not.
+  cmd_bare="$cmd"
+  dq=$(printf '%s' "$cmd_bare" | tr -cd '"' | wc -c)
+  [ $((dq % 2)) -eq 0 ] && cmd_bare=$(printf '%s' "$cmd_bare" | sed 's/"[^"]*"//g' || true)
+  sq=$(printf '%s' "$cmd_bare" | tr -cd "'" | wc -c)
+  [ $((sq % 2)) -eq 0 ] && cmd_bare=$(printf '%s' "$cmd_bare" | sed "s/'[^']*'//g" || true)
   if [ -n "$cmd" ] && printf '%s' "$cmd_bare" | grep -qE '(^|&&[[:space:]]*|;[[:space:]]*)git commit' 2>/dev/null; then
       echo "[WARN] KDBP CHECKPOINT: Use /gabe-commit instead of raw git commit"
 
