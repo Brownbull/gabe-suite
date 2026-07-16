@@ -52,14 +52,26 @@ Cases: NEW C148 · BUMP C147→v2 · GUARD C091, C120
 
 - The `RED:` trailer marks the commit as the failure's address: re-derivable by a stranger via
   `git worktree add /tmp/x <red-sha> && <runner> -k "C147v2 or C148"`.
+- **The gate expects this commit to fail its tests.** `/gabe-commit` recognizes the `RED:`
+  trailer (gate-spec Step 3, red-checkpoint carve-out): the DECLARED ids' assertion-failures are
+  the evidence, not a blocker; any import/collection error or out-of-set failure blocks as usual.
+  Never `force-commit` a red checkpoint — if the gate blocks it, the red is not clean.
 - Squash warning (print it whenever the project squash-merges): squashing eats the red commit —
-  the trailer must survive on SOME reachable commit or ever-red? goes dark for those ids.
+  carry the `RED:` trailer into the squash-merge commit message, or tag the red sha
+  (`git tag red/C148 <sha>`), so it stays reachable; otherwise ever-red goes dark for those ids.
 - Guard-only (refactor) records need no red commit — the `Cases:` line in PLAN carries the record.
 
 ## The `Cases:` record (PLAN.md Phase Details)
 
 Written by this skill under the phase's details; mirrored to the PLAN.json phase's `cases` field
-(E5) — the field the `plan-proof-guard` hook reads (Red ✅ without a cases record is BLOCKED, D7):
+(E5) — the field the `plan-proof-guard` hook reads (Red ✅ without a cases record is BLOCKED, D7).
+**If the phase has no Phase Details block** (brownfield table-only plans), create it first:
+`### Phase <id> — <name>` under `## Phase Details`, then the `- **Cases:**` bullet inside it —
+that exact heading is what the PLAN.json mirror regeneration parses; a Cases line anywhere else
+is invisible to the mirror and the guard blocks the Red ✅ as record-less. Cell writes: this
+skill ticks its own `Red` cell in PLAN.md AND mirrors `cells.red`/`cases` into PLAN.json the
+same turn (E5) — edit the JSON with a real parser, never `sed` (the auto-tick helper's rule;
+Red is outside the helper's four-column set by design):
 
 ```
 - **Cases:** NEW C148 · BUMP C147→v2 (red@a1b2c3d) · GUARD C091, C120

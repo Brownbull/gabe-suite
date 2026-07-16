@@ -37,8 +37,11 @@ def summarize(desc: str) -> tuple[str, str]:
 def main() -> int:
     rows, archived = [], []
     for d in sorted(ROOT.glob("skills/gabe-*")):
+        if not (d / "SKILL.md").is_file():  # a stray dir must not abort install.sh
+            print(f"gen-help-catalog: WARNING — {d.name}/ has no SKILL.md, skipped", file=sys.stderr)
+            continue
         text = (d / "SKILL.md").read_text(encoding="utf-8")
-        name = frontmatter_field(text, "name") or d.name
+        name = (frontmatter_field(text, "name") or d.name).replace("|", "\\|")
         usage, summary = summarize(frontmatter_field(text, "description"))
         cmd = usage if usage.startswith("/") else f"/{name}"
         rows.append(f"| {name} | {cmd} | {summary} |")

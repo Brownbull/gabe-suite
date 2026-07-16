@@ -54,13 +54,13 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 
 | Skill | Version | Purpose |
 |---|---|---|
-| **gabe-adopt** | 1.0.0 | Brownfield command-center adoption — archive-never-delete init, machine-ranked shortlist, one section per run at human speed, walk-recorded approval; tracker lives outside PLAN.md (human-initiated only) |
+| **gabe-adopt** | 1.0.1 | Brownfield command-center adoption — archive-never-delete init, machine-ranked shortlist, one section per run at human speed, walk-recorded approval; tracker lives outside PLAN.md (human-initiated only) |
 | **gabe-align** | 1.1.1 | Alignment guardian — shallow/standard/deep values and AP advisory checks |
 | **gabe-assess** | 1.1.1 | Rapid change impact assessment: blast radius, maturity scope, prerequisites |
-| **gabe-commit** | 2.3.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit; optional results_out digest, path or list (reports every tier, gates none) |
+| **gabe-commit** | 2.4.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit; optional results_out digest, path or list (reports every tier, gates none) |
 | **gabe-debt** | 1.1.1 | Architecture decision-debt scanner with AP evidence citations (fork/read-only) |
 | **gabe-docs** | 1.1.1 | Documentation standards + diagrams library + the suite execution contract (background) |
-| **gabe-docsite** | 1.0.1 | Publish docs onto the generated HTML docs site |
+| **gabe-docsite** | 1.0.2 | Publish docs onto the generated HTML docs site |
 | **gabe-execute** | 2.2.1 | Phase execution with tier cap, escalation gate, checkpoint commits; TASK CONTRACT carries the phase's `CASES:` (C-ids from /gabe-red) + case-scoped verify; narration legs authored hot |
 | **gabe-feature** | 1.4.1 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-adopt |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
@@ -71,11 +71,11 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-meme** | 1.1.0 | Oblique-meme generation — per-project tone setup + template-persona-matched visual metaphors via memegen.link; verified PNGs, punch-up (ported from chiless meme-hilo) |
 | **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
 | **gabe-myopic** | 1.2.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork); findings labeled M[N], never C[N] |
-| **gabe-next** | 2.3.0 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
-| **gabe-plan** | 2.4.0 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec ≠ ✅) |
+| **gabe-next** | 2.4.0 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
+| **gabe-plan** | 2.4.1 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
 | **gabe-push** | 2.2.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env ship prints the /gabe-feature release pointer |
 | **gabe-quip** | 1.1.0 | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts surfacing pain points; one engagement lever, proposes not rewrites, dosed (sibling of gabe-meme) |
-| **gabe-red** | 1.1.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips |
+| **gabe-red** | 1.2.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips |
 | **gabe-review** | 1.7.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.0 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |

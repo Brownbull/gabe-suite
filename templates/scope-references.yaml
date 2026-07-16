@@ -14,7 +14,7 @@
 references:
   # Example: authoritative AI-stack commitments — full read into every call.
   - id: ref-01
-    path: /home/khujta/projects/refrepos/setup/ai-stack/README.md
+    path: <ABSOLUTE-PATH-TO>/your-reference-repo/README.md   # replace — example only
     role: "AI stack commitments (Claude models, PydanticAI, Langfuse, SSE progress)"
     weight: authoritative
     load_mode: full_read
@@ -25,7 +25,7 @@ references:
 
   # Example: authoritative practices index — large directory, use index_only.
   - id: ref-02
-    path: /home/khujta/projects/refrepos/docs/hackathon-analysis/agent-engineering/
+    path: <ABSOLUTE-PATH-TO>/your-practices-index/   # replace — example only
     role: "Agent engineering maturity model and practices we follow"
     weight: authoritative
     load_mode: index_only

@@ -32,11 +32,25 @@ if (plan.status !== "active") {
   process.exit(1);
 }
 
+if (plan.phases != null && !Array.isArray(plan.phases)) {
+  console.log("ℹ PLAN.json `phases` is not an array — mirror damage. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.");
+  process.exit(2);
+}
 const phases = plan.phases ?? [];
+// A mistyped cell token ("Done", "complete") is neither todo nor done — it would silently
+// route wrong (settle unfinished work, or skip the red/exec gate). Refuse the mirror instead.
+for (const p of phases) {
+  for (const [k, v] of Object.entries((p && p.cells) || {})) {
+    if (!(v in GLYPH)) {
+      console.log(`⚠ PLAN.json phase ${p.id}: cell ${k}="${v}" is not a valid token (${Object.keys(GLYPH).join("/")}) — mirror drift. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.`);
+      process.exit(2);
+    }
+  }
+}
 const cur = String(plan.current_phase ?? "");
 const idx = phases.findIndex((p) => String(p.id) === cur);
 if (idx === -1) {
-  console.log(`⚠ Current Phase ${cur} has no matching entry in PLAN.json phases.`);
+  console.log(`⚠ Current Phase ${cur} has no matching entry in PLAN.json phases — mirror desync. Run /gabe-plan update to regenerate (or fix current_phase); falling back to prose PLAN.md routing.`);
   process.exit(2);
 }
 
@@ -63,7 +77,7 @@ for (let i = 0; i < idx; i++) {
   if (owed.length) debt.push(`${phases[i].id}: ${owed.join(", ")}`);
 }
 const warnings = debt.length
-  ? [`⚠ INCOMPLETE PRIOR PHASES: [${debt.join(" · ")}] — routing continues on Phase ${cur}; clear the debt with /gabe-red, /gabe-review, /gabe-push, or /gabe-feature on the listed phases.`]
+  ? [`⚠ INCOMPLETE PRIOR PHASES: [${debt.join(" · ")}] — routing continues on Phase ${cur}; clear each cell on its phase: Red→/gabe-red · Exec→/gabe-execute · Review→/gabe-review · Commit→/gabe-commit · Push→/gabe-push · Center→/gabe-feature.`]
   : [];
 
 // Decision table (first match wins), walking forward from the current phase over

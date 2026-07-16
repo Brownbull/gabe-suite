@@ -158,6 +158,7 @@ Deterministic thresholds, not LLM judgment:
 | Lint errors | 0 errors | `critical` (errors) / `low` (warnings only) |
 | Type errors | 0 errors | `high` |
 | Test failures | All pass | `critical` |
+| Test failures — RED checkpoint (see carve-out below) | Declared ids fail BY ASSERTION; everything else passes | expected evidence, not a failure |
 | Coverage <80% on changed file | >=80% | `medium` (50-79%) / `high` (<50%) |
 | File >800 lines (code only) | <=800 | `high` |
 | File >600 lines (code only) | <=600 | `medium` |
@@ -169,6 +170,14 @@ Deterministic thresholds, not LLM judgment:
 | Doc drift (DOCS.md high) | Doc target in diff | `high` |
 | Doc drift (DOCS.md medium) | Doc target in diff | `medium` |
 | Doc drift (DOCS.md low) | Doc target in diff | `low` |
+
+**Red-checkpoint carve-out (gabe-red — the failing state IS the deliverable).** When the commit
+message being gated carries a `RED:` trailer, CHECK 3's "all pass" rule inverts for exactly the
+declared set: verify (a) every C-id named in the trailer fails **by assertion** (an
+import/collection error is NOT red — block as usual), and (b) no test OUTSIDE the declared set
+fails. Both hold → the failures are the checkpoint's evidence, not a `critical` finding; anything
+else blocks normally. Without this carve-out the gate would block the very commit `/gabe-red`
+exists to produce — or teach users `force-commit`, which is worse.
 | Doc drift (Layer 3 wells Docs) | Well's Docs file in diff | `low` (always) |
 | Structure (disallowed pattern) | N/A (always fail) | `critical` |
 | Structure (no pattern match) | Match at/below current maturity | `medium` |

@@ -8,6 +8,7 @@
 #     Real proof lines use shorthand (globs, {a,b}.png braces, 01..06 ranges — ruling R2): a token
 #     passes if the literal path exists, a brace-expanded glob matches, or its parent dir is
 #     non-empty. An empty/missing evidence dir still blocks — that is the lie being caught.
+#     A token with NO concrete path component (a bare *, ../../**) is never evidence — blocked.
 # Exit 2 + stderr = blocking feedback to the model. Parse errors exit 0 (a malformed mirror is
 # next.mjs's exit-2 concern, not a lie — never brick edits from a hook).
 set -uo pipefail
@@ -22,21 +23,37 @@ case "$fp" in
   *) exit 0 ;;
 esac
 
+# The guard's whole job is blocking — an invisible no-op would fail open silently.
+if ! command -v python3 >/dev/null 2>&1; then
+  echo "[WARN] plan-proof-guard INERT: python3 not on PATH — PLAN honesty checks were NOT run" >&2
+  exit 0
+fi
+
 viol=$(python3 - <<'PY' 2>/dev/null
-import glob as globmod, itertools, json, os, re, subprocess, sys
+import glob as globmod, json, os, re, subprocess, sys
+
+MAX_BRACE = 256  # expansion cap — a runaway brace product must not hang past the hook timeout
 
 def brace_expand(tok):
-    m = re.search(r"\{([^{}]*)\}", tok)
-    if not m:
-        return [tok]
-    head, tail = tok[: m.start()], tok[m.end():]
-    return [v for part in m.group(1).split(",") for v in brace_expand(head + part + tail)]
+    done, work = [], [tok]
+    while work and len(done) + len(work) <= MAX_BRACE:
+        t = work.pop()
+        m = re.search(r"\{([^{}]*)\}", t)
+        if not m:
+            done.append(t)
+            continue
+        head, tail = t[: m.start()], t[m.end():]
+        work.extend(head + part + tail for part in m.group(1).split(","))
+    return done + work  # cap hit → partial expansion; fine for an existence probe
 
 def evidence_exists(tok):
     # R2: literal path → brace-expanded glob → non-empty parent dir (human shorthand tolerated;
-    # a missing or empty evidence dir still fails)
+    # a missing or empty evidence dir still fails). Reject tokens with no concrete path
+    # component first — a bare */**/{..} matches everything and proves nothing.
     if os.path.exists(tok):
         return True
+    if not re.sub(r"[*?\[\]{},]|\.\.|/|\.", "", tok).strip():
+        return False
     for cand in brace_expand(tok):
         if globmod.glob(cand):
             return True
@@ -48,6 +65,15 @@ try:
 except Exception:
     sys.exit(0)  # malformed mirror = not a lie; other tooling reports it
 out = []
+sha_cache = {}  # dedupe: verify each distinct sha once (a 5k-phase plan must not fork 5k gits)
+def sha_reachable(sha):
+    if sha not in sha_cache:
+        if len(sha_cache) >= 200:  # pathological plan — stop forking, past-cap shas pass
+            return True
+        r = subprocess.run(["git", "cat-file", "-e", sha + "^{commit}"], capture_output=True)
+        sha_cache[sha] = (r.returncode == 0)
+    return sha_cache[sha]
+
 for ph in plan.get("phases", []) or []:
     pid = str(ph.get("id", "?")); c = ph.get("cells") or {}
     # --- red ✅ without its record / with an unreachable red commit ---
@@ -57,9 +83,7 @@ for ph in plan.get("phases", []) or []:
             out.append(f"phase {pid}: Red ✅ but no `cases` record (PLAN.json phases[].cases — written by /gabe-red)")
         else:
             for sha in re.findall(r"red@([0-9a-f]{7,40})", cases):
-                r = subprocess.run(["git", "cat-file", "-e", sha + "^{commit}"],
-                                   capture_output=True)
-                if r.returncode != 0:
+                if not sha_reachable(sha):
                     out.append(f"phase {pid}: Red ✅ cites red@{sha} but that commit is unreachable")
     # --- exec ✅ with a declared proof whose artifact is missing on disk ---
     if c.get("exec") == "done":
@@ -68,7 +92,8 @@ for ph in plan.get("phases", []) or []:
             for seg in proof.split(" · "):
                 parts = [p.strip() for p in seg.split("→")]
                 if len(parts) >= 3 and parts[0].upper().startswith("PROOF"):
-                    path = parts[-1].split()[0].strip()
+                    # strip a trailing "(3 shots)"-style annotation; keep paths with spaces intact
+                    path = re.sub(r"\s*\([^)]*\)\s*$", "", parts[-1]).strip()
                     if path and not evidence_exists(path):
                         out.append(f"phase {pid}: Exec ✅ but declared proof artifact missing on disk: {path}")
 print("\n".join(out))
@@ -79,7 +104,7 @@ if [ -n "${viol:-}" ]; then
   {
     echo "⛔ PLAN-PROOF-GUARD blocked this PLAN write (D7 — a ✅ without its evidence is a lie):"
     echo "$viol"
-    echo "Fix: restore the evidence (re-run and land the artifact / re-point red@sha), or set the cell back to its honest state. Debts warn; lies block."
+    echo "Fix: re-run the phase's proof step and land the artifact at the printed path, OR re-point red@<sha> in the Cases record to a reachable red commit (.kdbp/PLAN.md Phase Details + PLAN.json phases[].cases), OR set that phase's cells.red/cells.exec back to its honest state in BOTH mirrors. Debts warn; lies block."
   } >&2
   exit 2
 fi

@@ -7,7 +7,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/session-kdbp-active.sh\"",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/session-kdbp-active.sh\"",
           "timeout": 5
         }
       ]
@@ -20,7 +20,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/session-plan-awareness.sh\"",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/session-plan-awareness.sh\"",
           "timeout": 5
         }
       ]
@@ -33,7 +33,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/pre-checkpoint.sh\"",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/pre-checkpoint.sh\"",
           "timeout": 5
         }
       ]
@@ -46,7 +46,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/post-structure-warning.sh\"",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/post-structure-warning.sh\"",
           "timeout": 5
         }
       ]
@@ -59,7 +59,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/plan-proof-guard.sh\"",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/plan-proof-guard.sh\"",
           "timeout": 10
         }
       ]
@@ -72,7 +72,7 @@
       "hooks": [
         {
           "type": "command",
-          "command": "bash \"$ECC_ROOT/scripts/hooks/kdbp/stop-session-reminder.sh\"",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/stop-session-reminder.sh\"",
           "timeout": 10
         }
       ]

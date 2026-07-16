@@ -71,12 +71,21 @@ Small, append-only in spirit: rows change status, never vanish.
      executed at n=3 with purpose): port the most mature existing center implementation
      (gustify `scripts/_center_*.py`, `refresh_center.sh`, `check_center_links.py`),
      generalize hard-coded paths into `center.config.json` bindings, land them in the SUITE
-     repo as `templates/center/`, reinstall, and only then bootstrap the project. E6: never
-     compose generators from memory; if the reference implementation is unreachable, STOP.
+     repo as `templates/center/`, run the suite's `./install.sh`, and only then bootstrap the
+     project. **The promotion writes to the suite REPO, never the app repo:** resolve the suite
+     checkout by asking the operator (or the project CLAUDE.md's suite pointer); if the suite
+     repo is not present and writable on this machine, STOP —
+     `⛔ generator promotion needs the suite repo checked out (templates/center/ does not exist
+     yet). Clone the suite, or run init on the machine that has it.` E6: never compose
+     generators from memory; if the reference implementation (gustify's scripts) is also
+     unreachable, STOP and name both missing anchors.
    - Promoted-generator floor (what the templates must support): C-id extraction from junit
      test names via the anchored token pattern (red-spec §Backfill); **ever-red** per id
      (`git log -S "C<id>"` → first commit → `RED:` trailer present?); `walks.jsonl` → manual
-     angles + staleness; honest-gap rendering (`⤫ skipped(no reporter)`, NEVER-walked red).
+     angles + staleness; honest-gap rendering (`⤫ skipped(no reporter)`, NEVER-walked red);
+     **the link/orphan gate ignores `adoption.json`** — it is the adoption tracker, not a
+     center-derived page (a gate that WARNs on it would teach sections to delete their own
+     state to get green).
 5. **Write the tracker** (`sections: []`, `shortlist_approved: null`) and report (E7): archive
    manifest, bootstrapped paths, the `rank` pointer.
 
@@ -92,19 +101,26 @@ Small, append-only in spirit: rows change status, never vanish.
    evidence per column · what a section would contain (tests found y/n, legacy docs found y/n,
    proofs found y/n). No signal, no row — an entity the machine cannot see is proposed only by
    the operator.
-3. **Checkpoint:** the operator trims, re-ranks, adds, drops. On approval: write `sections[]`
-   rows (status `pending`, signals recorded), stamp `shortlist_approved`, report. Re-running
-   `rank` later APPENDS new candidates; approved rows are never re-ranked silently.
+3. **Checkpoint:** the operator trims, re-ranks, adds, drops. On approval: write one
+   `sections[]` row per shortlisted entity — `status: "pending"`, `rank`, `signals` (the
+   evidence string), `checklist` with ALL SEVEN keys `false`, `approved_walk: null`,
+   `notes: ""` — and set `shortlist_approved` to today's ISO date (that date IS the truth test
+   `section`/`status` check). Report. Re-running `rank` later APPENDS new candidates;
+   approved rows are never re-ranked silently.
 
 ## Mode `section <entity>`
 
 **One entity per run — refuse batching** (`⛔ one section per run — human-speed review is the
-point`). Preconditions: shortlist approved, entity row exists and is `pending`/`building`.
+point`). Preconditions: shortlist approved — else exit
+`⛔ Shortlist not approved. Run /gabe-adopt rank and approve it before building a section.` —
+and the entity row exists and is `pending`/`building`.
 
-1. **Testing inventory** (machine): corpus tests matching the entity (grep + junit), counts per
-   corpus (api/web/e2e), angle classification (automated angles present; manual angles from
-   `walks.jsonl`; **absent angles NAMED** — the gap list is content, not shame). Tick
-   `testing_inventory`.
+1. **Testing inventory** (machine): on entering the build, set the row's `status: "building"`
+   (and persist every checklist tick to `adoption.json` AS IT FLIPS — an aborted run must leave
+   honest partial state, not a `pending` row with invisible progress). Then: corpus tests
+   matching the entity (grep + junit), counts per corpus (api/web/e2e), angle classification
+   (automated angles present; manual angles from `walks.jsonl`; **absent angles NAMED** — the
+   gap list is content, not shame). Tick `testing_inventory`.
 2. **Legacy mining:** read the archived docs for this entity (`archived_to` + git history).
    Every claim carried forward is RE-VERIFIED against current code/tests before it enters the
    center; claims that no longer verify go to a `Not carried forward` list on the section page
