@@ -82,7 +82,7 @@ The installer copied runtime specs and templates but not suite docs. That made i
 - Add a docs-first brownfield adoption guide.
 - Install the curated docs set into both local homes.
 - Add validation so docs inventory and install behavior are checked deterministically.
-- Do not add a new `/gabe-adopt` command in this batch.
+- Do not add a new `/gabe-adopt` command in this batch. *(Superseded 2026-07-15: `/gabe-adopt` landed via verification-first ruling R7 — see `docs/design/verification-first/README.md` §5 addendum.)*
 
 ## Verification Targets
 

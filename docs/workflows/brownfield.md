@@ -114,8 +114,9 @@ Expected loop:
 
 Run `/gabe-review` tightly on changed areas and include untracked files that are clearly part of the same change set.
 
-**Understanding what already shipped:** if the project has (or bootstraps) a Testing
-Command Center, `/gabe-feature backfill` is a first-class brownfield tool — it walks
+**Understanding what already shipped:** if the project has no Testing Command Center yet,
+`/gabe-adopt` bootstraps one (archive-never-delete init, machine-ranked shortlist, one approved
+section per run). Once a center exists, `/gabe-feature backfill` is a first-class brownfield tool — it walks
 served phases newest-first and turns each into an explainable page (card + diagrams +
 test angles + evidence), with honest tiers for history: `full` for recent work,
 `card-only` when evidence can't be re-run, `skip(reason)` for dropped work. New

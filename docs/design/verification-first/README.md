@@ -181,8 +181,10 @@ Suite-first (this repo), install regenerates `~/.claude`, doctor must be CLEAN p
 5. **Slice 5 — app repos, ON OPERATOR SIGNAL (sessions stopped):** **gastify FIRST, in chunks,
    verified progressively**, THEN propagate to gustify.
    - chunk 0: repair gastify's PLAN.md (malformed separator row, split table, the 24.1 md↔json
-     drift) · normalize the two shorthand proof strings (R2 hygiene) · THEN wire the 6th hook
-     marker via `/gabe-init update` — the guard goes live globally only after the state is honest.
+     drift) · normalize the two shorthand proof strings (R2 hygiene) · retrofit BEHAVIOR.md to
+     the D4 template shape (`## Verify Commands` + `results_out` list; gustify's pass adds the
+     `!*.digest.json` negation) · THEN wire the 6th hook marker via `/gabe-init update` — the
+     guard goes live globally only after the state is honest.
    - chunk 1: C-id backfill sweep per red-spec §Backfill — explicit roots (gastify excludes
      `frontend/`+`mobile/`), anchored pattern, blame-ignore file + local git config, M-renames
      (gustify). Mechanical-only, one commit per repo.

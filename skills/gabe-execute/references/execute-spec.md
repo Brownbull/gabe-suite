@@ -194,7 +194,7 @@ For each task T_i in order:
 
    If runtime journey evidence is required but cannot be run, halt with Exec left `🔄`. Record the blocker and missing artifacts in the EXEC thin-index row's Gates column (see Step 7 log format). Do not mark Exec `✅`.
 
-   Structural backstop (D7 — block lies, warn debts): the `plan-proof-guard` PostToolUse hook validates every PLAN write — Exec `✅` with a declared PROOF artifact missing on disk, or Red `✅` without its `cases` record, is BLOCKED by the harness, not by this spec being remembered.
+   Structural backstop (D7 — block lies, warn debts): the `plan-proof-guard` PostToolUse hook validates every PLAN write — Exec `✅` with a declared PROOF artifact missing on disk, or Red `✅` without its `cases` record, is BLOCKED by the harness, not by this spec being remembered. (The guard is shorthand-tolerant per ruling R2 — a proof token passes by literal path, brace-expanded glob, or non-empty parent dir; an empty or missing evidence dir still blocks.)
 
    Before printing `T[i] verification ✅`, print one evidence row per check, populated ONLY from commands executed via the Bash tool this session:
    ```

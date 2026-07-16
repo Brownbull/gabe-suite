@@ -16,8 +16,9 @@ if [ -f ".kdbp/BEHAVIOR.md" ]; then
       newtests=$(git diff --cached --name-only --diff-filter=A 2>/dev/null \
         | grep -E '(^|/)tests?/|(^|/)test_[^/]+\.|\.(test|spec)\.[a-zA-Z]+$' || true)
       for f in $newtests; do
-        # token must not ride inside another word (SEC101, RFC1234, UTC2024 are not case ids)
-        if [ -f "$f" ] && ! grep -qP '(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])' "$f" 2>/dev/null; then
+        # token must not ride inside another word (SEC101, RFC1234, UTC2024 are not case ids);
+        # ERE form of red-spec's anchored pattern — portable, no grep -P dependency
+        if [ -f "$f" ] && ! grep -qE '(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)' "$f" 2>/dev/null; then
           echo "[WARN] C-ID: new test file $f carries no C[N] case id (gabe-red red-spec — ids are born in test names)"
         fi
       done

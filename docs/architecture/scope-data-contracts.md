@@ -10,8 +10,8 @@ This doc is the authoritative contract between `/gabe-scope` (the producer) and 
 | Artifact | Inertia | Writable by | Readable by |
 |---|---|---|---|
 | `.kdbp/SCOPE.md` — premise sections (§0–§10, §12–§15) | high | `/gabe-scope`, `/gabe-scope-pivot` | all gabe-* commands (read-only) |
-| `.kdbp/SCOPE.md` — `## Phases` section | medium | `/gabe-scope`, `/gabe-scope-addition`, `/gabe-scope-pivot` | all gabe-* commands (read-only) |
-| `.kdbp/scope-references.yaml` | medium | `/gabe-scope`, `/gabe-scope-addition`, `/gabe-scope-pivot` | `/gabe-scope` family only |
+| `.kdbp/SCOPE.md` — `## Phases` section | medium | `/gabe-scope`, `/gabe-scope-change` (Addition path), `/gabe-scope-pivot` | all gabe-* commands (read-only) |
+| `.kdbp/scope-references.yaml` | medium | `/gabe-scope`, `/gabe-scope-change` (Addition path), `/gabe-scope-pivot` | `/gabe-scope` family only |
 | `.kdbp/scope-session.json` | transient | `/gabe-scope` | `/gabe-scope --resume` |
 | `.kdbp/research/archive/*.md` | terminal | `/gabe-scope` Step 8 | `/gabe-scope-pivot` (regenerate on pivot) |
 | `.kdbp/archive/tombstones/*.json` | terminal | `/gabe-scope` Step 0 start-over | none (audit only) |
@@ -27,8 +27,8 @@ This doc is the authoritative contract between `/gabe-scope` (the producer) and 
 | Frontmatter: `version`, `last_scope_event`, `status` | Step 8 finalize, updated on any `-change` | all | — |
 | Frontmatter: `primary_user` | Step 4 | `/gabe-teach` SCOPE mode | — |
 | Frontmatter: `custom_sections` | Optional, user-set | `/gabe-scope`, `/gabe-scope-pivot` | — |
-| Frontmatter: `phases_version` | Step 8 finalize; bumped by `/gabe-scope-addition`, reset by `/gabe-scope-pivot` | `/gabe-plan`, `/gabe-align` | — |
-| Frontmatter: `granularity` | Step 7.2 | `/gabe-scope-addition` (when inserting phases) | — |
+| Frontmatter: `phases_version` | Step 8 finalize; bumped by `/gabe-scope-change` (Addition path), reset by `/gabe-scope-pivot` | `/gabe-plan`, `/gabe-align` | — |
+| Frontmatter: `granularity` | Step 7.2 | `/gabe-scope-change` (Addition path) (when inserting phases) | — |
 | Frontmatter: `phases_total`, `phases_complete` | Step 8, updated by `/gabe-align` | `/gabe-plan`, `/gabe-teach` | — |
 | §0 Reference Frame | Step 0.5 | `/gabe-scope` family only | `{#reference-frame}` |
 | §1 One-liner | Step 3 | `/gabe-teach` SCOPE mode, `/gabe-align` | `{#one-liner}` |
@@ -64,7 +64,7 @@ Anchors are mandatory. `/gabe-plan` and `/gabe-teach` deep-link to them; missing
 
 ## SCOPE.md `## Phases` section — step-by-step production
 
-The phase arc lives inside SCOPE.md, not a separate ROADMAP.md. It is an unnumbered section that sits between §12 Requirements and §13 Strategic Risks, and evolves independently of the premise sections above it — via `/gabe-scope-addition` (`phases_version` bump, decimal-ID inserts) or `/gabe-scope-pivot` (`phases_version` reset, full re-derivation). Its own frontmatter fields (`phases_version`, `granularity`, `phases_total`, `phases_complete`) are listed in the SCOPE.md fields table above; the sub-fields below all live inside the `## Phases` section itself.
+The phase arc lives inside SCOPE.md, not a separate ROADMAP.md. It is an unnumbered section that sits between §12 Requirements and §13 Strategic Risks, and evolves independently of the premise sections above it — via `/gabe-scope-change` (Addition path) (`phases_version` bump, decimal-ID inserts) or `/gabe-scope-pivot` (`phases_version` reset, full re-derivation). Its own frontmatter fields (`phases_version`, `granularity`, `phases_total`, `phases_complete`) are listed in the SCOPE.md fields table above; the sub-fields below all live inside the `## Phases` section itself.
 
 | Sub-section | Written at step | Read by | Stable anchor |
 |---|---|---|---|
@@ -74,7 +74,7 @@ The phase arc lives inside SCOPE.md, not a separate ROADMAP.md. It is an unnumbe
 | Dependency Graph (Mermaid) | Step 8 auto-gen | docs only | — |
 | Coverage Matrix | Step 7.4 | `/gabe-scope` finalize blocker, `/gabe-align` drift | — |
 
-There is no separate phase change log. Phase-arc changes (new/split/inserted phases from `/gabe-scope-addition`, or a full re-derivation from `/gabe-scope-pivot`) log into SCOPE.md's own §15 Change Log alongside premise changes.
+There is no separate phase change log. Phase-arc changes (new/split/inserted phases from `/gabe-scope-change` (Addition path), or a full re-derivation from `/gabe-scope-pivot`) log into SCOPE.md's own §15 Change Log alongside premise changes.
 
 ### Phase Table row columns (for /gabe-plan consumption)
 
@@ -168,8 +168,8 @@ Downstream tools that deep-link to anchors should ALSO record which SCOPE.md ver
 | Artifact | Version bump trigger | Where recorded |
 |---|---|---|
 | SCOPE.md premise | `/gabe-scope-pivot` only | Frontmatter `version:` |
-| SCOPE.md `## Phases` | `/gabe-scope-addition` (insert/split) — bump; `/gabe-scope-pivot` — reset + full re-derivation | Frontmatter `phases_version:` |
+| SCOPE.md `## Phases` | `/gabe-scope-change` (Addition path) (insert/split) — bump; `/gabe-scope-pivot` — reset + full re-derivation | Frontmatter `phases_version:` |
 | scope-references.yaml | Any add/remove/weight-change | No explicit version; Change Log in SCOPE.md tracks |
 | Prompts (`prompts/*.md`) | Semantic change | Frontmatter `version:` |
 
-`/gabe-scope-addition` never bumps `version:` (that would imply a premise change); `/gabe-scope-pivot` always bumps `version:` and resets `phases_version:` to 1, since the old phase arc does not carry forward into the new premise.
+`/gabe-scope-change` (Addition path) never bumps `version:` (that would imply a premise change); `/gabe-scope-pivot` always bumps `version:` and resets `phases_version:` to 1, since the old phase arc does not carry forward into the new premise.

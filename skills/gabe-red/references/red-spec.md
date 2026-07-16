@@ -14,7 +14,10 @@
   - ts/js:  `it('C147v2 · clamps a negative quantity to zero', …)`
   Rationale: survives file renames/moves (identity-by-location is what refactors break); rides the
   junit pipeline with zero plumbing (`<testcase name=…C147v2…>`); selectable (`-k C147v2`).
-- **The corpus IS the registry.** Allocation = `max(grep -rhoE 'C[0-9]+' <test roots>) + 1`.
+- **The corpus IS the registry.** Allocation = max of the ANCHORED token pattern across
+  `<test roots>` + 1 (PCRE `(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])`; ERE shell form
+  `(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)` — never the bare `C[0-9]+`, which over-matches
+  `RFC1234`/`SEC101` and inflates allocation).
   History = `git log -S "C147"` → first commit → did it carry a `RED:` trailer → has this case
   ever been observed failing?
 - **Version bumps:** bump ONLY when the case's CLAIM changes (asserting something different).
@@ -102,8 +105,9 @@ New test files after the sweep: the commit-gate check requires an id at birth.
 
 Sweep mechanics (rulings R2/R3): roots are EXPLICIT arguments, never inferred (legacy trees and
 generated artifact dirs must stay out); id detection/allocation uses the anchored token pattern
-`(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])` — the bare `C[0-9]+` grep over-matches (`RFC1234` would
-start allocation at C1235). Pre-existing id-LIKE conventions colliding with `C[N]` (e.g. scenario
+`(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])` (shell greps use the ERE equivalent
+`(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)` — no PCRE dependency) — the bare `C[0-9]+` grep
+over-matches (`RFC1234` would start allocation at C1235). Pre-existing id-LIKE conventions colliding with `C[N]` (e.g. scenario
 labels in test titles) are renamed to their own family in the same sweep — scenario labels take
 `M[N]` (see gabe-myopic) — and every prose reference to them (PLAN risks, docs) is updated in the
 same commit. Case ids own the `C` prefix outright.

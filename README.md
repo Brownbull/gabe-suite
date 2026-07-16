@@ -21,7 +21,7 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 
 ## The Suite
 
-### Skills (12)
+### Skill Highlights
 
 | Skill | Command | What it does |
 |---|---|---|
@@ -37,7 +37,7 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 | **Gabe Mockup** | `/gabe-mockup` | UX/mockup execution — legacy HTML recipes plus React-first Storybook modes |
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-init`, `/gabe-commit`) |
 
-### Command Surface (25 skills)
+### Command Surface (28 skills)
 
 Every capability is one skill under `skills/<name>/` — the skill name gives the slash
 invocation (`skills/gabe-plan/` ⇒ `/gabe-plan`). Each SKILL.md is a lean core that loads
@@ -51,6 +51,8 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-assess` | Change impact assessment — blast radius, maturity scope, prerequisites |
 | `/gabe-commit` | Commit quality gate — deterministic checks, interactive triage, defer/accept/fix |
 | `/gabe-debt` | Architecture decision-debt scanner — decisions, rules, open questions, AP citations |
+| `gabe-docs` *(background)* | Documentation standards + the suite execution contract — consulted by other skills, not invoked directly |
+| `/gabe-docsite` | Publish docs onto the generated HTML docs site — place, wire the nav, render with working diagrams |
 | `/gabe-execute` | Phase execution — tier-cap task breakdown, mid-phase escalation gate |
 | `/gabe-feature` | Testing-command-center feature coverage — lens card + diagrams + evidence narration over machine facts; status/backfill/curate (projects with `docs/site/center/`) |
 | `/gabe-handoff` | Session handoff — paste-able next-session resume prompt + evidence-gated KDBP state sync (PLAN/LEDGER/PENDING) into `.kdbp/HANDOFF.md` |

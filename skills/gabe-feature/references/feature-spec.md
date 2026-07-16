@@ -67,16 +67,15 @@ runner); committed proof = the curated shots. The pages state both.
 Queue denominator honesty: `next_feature.py` covers the CURRENT PLAN.json
 generation; prior-plan phases are a separately-agreed pass.
 
-## Bootstrap (a project without a center — e.g. gastify at its window)
+## Bootstrap (a project without a center)
 
-Copy from the reference implementation (gustify), then adapt the config:
-`scripts/{build_center_docs,check_center_links,scaffold_feature,curate_proof,next_feature}.py`,
-`scripts/{_center_data,_center_pages,_center_matrix,_center_docs}.py`,
-`scripts/refresh_center.sh`, `docs/site/center/assets/` (center.css + icons),
-`docs/site/center/center.config.json` (EMPTY features[]; project's own tiers/
-areas/entities/future_stations). Wire the refresh commands to the project's
-test runners. This is a COPY, priced as one — real generator promotion to the
-suite is D7, decided at n=2 evidence, not assumed.
+Owned by `/gabe-adopt` (ruling R7 — its own skill, its own spec): `init` archives existing
+docs (never deletes) and bootstraps the shell from suite `templates/center/` — whose
+first-ever run IS the generator promotion (port the reference implementation, gustify's
+`scripts/_center_*.py` + `refresh_center.sh` + `check_center_links.py`, into the suite as
+templates); `rank`/`section` then ingest the back-catalog one approved section at a time.
+This spec owns the FORWARD track only: covering shipped phases in a center that already
+exists.
 
 ## Release (the stakeholder showcase — a MODE, not a beat)
 

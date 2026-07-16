@@ -64,6 +64,21 @@ tech: [from answer]
 created: [today's date]
 ---
 
+## Verify Commands
+
+<!-- The binding section shapes come from ~/.claude/templates/gabe/BEHAVIOR.md (E6 if missing) —
+     the commands the gates trust (gate-spec Step 2.0), authored from the interview, never guessed. -->
+- lint: [from tech interview]
+- types: [from tech interview]
+- tests: [from tech interview — greenfield: author the reporter flag in, e.g. --junitxml=tests/results/junit.xml]
+- results_out: [GREENFIELD: default-ON (design record D4) — the report path(s) the tests command
+  emits, a single path or a YAML list (one per corpus). BROWNFIELD (`update` mode never rewrites
+  an existing BEHAVIOR.md): omitted until the human opts in per gate-spec.]
+
+## Critical Paths
+
+- [globs whose changes are hotfix-sensitive — ad-hoc work touching them inherits proof: test]
+
 # Project Behavior Rules
 
 ## B1 — Inventory before proposing (architecture / exploratory questions)

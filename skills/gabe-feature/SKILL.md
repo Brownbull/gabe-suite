@@ -1,9 +1,9 @@
 ---
 name: gabe-feature
 description: "Feature coverage for a project's Testing Command Center — translate a shipped feature into its lens card, diagrams, and evidence narration over machine-derived facts, and keep the center regenerating green. Usage: /gabe-feature [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…> | release [--since <row>]"
-when_to_use: "Cover a shipped feature in the command center, center status, backfill the center feature-by-feature, curate proof + narration after a green run — ONLY in projects that have docs/site/center/center.config.json (elsewhere: STOP with the bootstrap pointer)."
+when_to_use: "Cover a shipped feature in the command center, center status, backfill the center feature-by-feature, curate proof + narration after a green run — ONLY in projects that have docs/site/center/center.config.json (elsewhere: STOP → /gabe-adopt bootstraps the center)."
 metadata:
-  version: 1.4.0
+  version: 1.4.1
 ---
 
 # Gabe Feature — the command center's per-feature ritual
@@ -20,7 +20,7 @@ The scripts do everything deterministic. The judgment that remains, and is ALL t
 
 ## Scope gate (run FIRST, every invocation)
 
-`docs/site/center/center.config.json` must exist in the project. If it does not: **STOP** — this project has no command center. Point the human at the bootstrap procedure in `references/feature-spec.md` §Bootstrap (copy the reference implementation from gustify) and end.
+`docs/site/center/center.config.json` must exist in the project. If it does not: **STOP** — this project has no command center. Point the human at `/gabe-adopt` (brownfield center adoption — its `init` mode archives existing docs and bootstraps the center; `rank`/`section` ingest the back-catalog) and end.
 
 ## Bindings (the project provides; verify before each mode)
 

@@ -10,7 +10,7 @@ Gaps are numbered `W1..Wn`. Numbering stable across revisions — new gaps appen
 
 ## W1 — No scope-drift auto-detection
 
-**What's missing.** `SCOPE.md` can evolve mid-plan via `/gabe-scope-addition`. Downstream commands (`/gabe-plan`, `/gabe-execute`, `/gabe-review`) read SCOPE at start of their run, but none detect that SCOPE changed AFTER the active plan was authored.
+**What's missing.** `SCOPE.md` can evolve mid-plan via `/gabe-scope-change` (Addition path). Downstream commands (`/gabe-plan`, `/gabe-execute`, `/gabe-review`) read SCOPE at start of their run, but none detect that SCOPE changed AFTER the active plan was authored.
 
 **Why it matters.** Plan phases silently map to REQ numbers that may have been renumbered or removed. Users discover at `/gabe-review` via `TIER_DRIFT` findings — late, noisy.
 

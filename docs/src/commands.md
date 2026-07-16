@@ -1,8 +1,12 @@
 ## How they fit together
 
-Ten commands, four groups. The **core loop** (scope → plan → next → execute → review → commit → push) is the spine a project rides from first idea to shipped commit — `/gabe-next` is a pure router that reads `.kdbp/PLAN.md` and tells you which of the others to run next, so in practice you rarely choose manually. **Setup** is `/gabe-init`, run once per project to lay down `.kdbp/` and the hooks that make the rest of the suite legible. **Learning** is `/gabe-teach`, run after commits to turn the diff into understanding the human can actually recall later, rather than a blob of code they approved and forgot. **Session continuity** is `/gabe-handoff`, run when a session ends or context fills up — it writes the next-session resume prompt and syncs `.kdbp/` so the work picks up mid-phase without loss. Every command in all four groups sits under the same E1–E7 execution contract (see [The E1–E7 contract](contract.html)) — the gates below are each command's specific tightening of that shared floor.
+The **core loop** (scope → plan → red → next → execute → review → commit → push) is the spine a project rides from first idea to shipped commit — `/gabe-red` puts the failing test cases on the record before code, and `/gabe-next` is a pure router that reads `.kdbp/PLAN.md` and tells you which of the others to run next, so in practice you rarely choose manually. **Setup** is `/gabe-init`, run once per project to lay down `.kdbp/` and the hooks — plus `/gabe-adopt` for brownfield projects adopting the Testing Command Center. **Session continuity** is `/gabe-handoff`, run when a session ends or context fills up — it writes the next-session resume prompt and syncs `.kdbp/` so the work picks up mid-phase without loss. Every command sits under the same E1–E7 execution contract (see [The E1–E7 contract](contract.html)) — the gates below are each command's specific tightening of that shared floor.
 
-The deep-dives below cover these workflow commands. The suite's other half — the on-demand **analysis satellites** (roast, health, debt, assess, align, myopic) — has its own page, [Analysis satellites](satellites.html), because those tools run *outside* the loop rather than as steps in it. A complete index of **all 22 commands** (workflow, satellites, scope authoring, and utilities) closes this page.
+:::note Refresh in progress
+Parts of this page's long-form write-ups predate the 2026-07 suite reshape: `/gabe-teach` is archived (`skills/_archive/`), `ROADMAP.md` folded into SCOPE's `## Phases`, and `/gabe-scope-addition` was absorbed into `/gabe-scope-change`. The **tables** on this page are current; the prose deep-dives are being refreshed.
+:::
+
+The deep-dives below cover these workflow commands. The suite's other half — the on-demand **analysis satellites** (roast, health, debt, assess, align, myopic) — has its own page, [Analysis satellites](satellites.html), because those tools run *outside* the loop rather than as steps in it. A complete index of **all 28 skills** (workflow, verification, command center, satellites, scope authoring, and utilities) closes this page.
 
 ```mermaid
 flowchart TD
@@ -70,29 +74,35 @@ The loop's four-column tick is already a checkpoint (see [The development loop](
 
 ## Every command at a glance
 
-The full surface — all 22 commands, grouped. The **core loop**, **setup**, **learning**, and **session-continuity** commands are detailed above; the **analysis satellites** have their own [page](satellites.html); the **scope-evolution** and **utility** rows are documented by this index line (their full specs live in the command files themselves).
+The full surface — all 28 skills, grouped. The **core loop**, **setup**, and **session-continuity** commands are detailed above; the **analysis satellites** have their own [page](satellites.html); the remaining rows are documented by this index line (their full specs live in each skill's `SKILL.md` + `references/`).
 
 | Command | Group | What it does | Full write-up |
 | --- | --- | --- | --- |
-| `/gabe-scope` | Core loop | Authors `SCOPE.md` + `ROADMAP.md` — the stable premise and the phase plan | above |
-| `/gabe-plan` | Core loop | Breaks a goal into phases, each with a tier decision, into `PLAN.md` | above |
+| `/gabe-scope` | Core loop | Authors `SCOPE.md` — the stable premise plus the `## Phases` arc | above |
+| `/gabe-plan` | Core loop | Breaks a goal into phases, each with a tier decision + declared proof type, into `PLAN.md` | above |
+| `/gabe-red` | Core loop | TDD's first half — declare the failing cases (C-ids born in test names), commit the red checkpoint | this index |
 | `/gabe-next` | Core loop | Zero-logic router over the `PLAN.md` status cells | above |
 | `/gabe-execute` | Core loop | Implements the phase's tasks under the task + reuse contract | above |
-| `/gabe-review` | Core loop | Risk-priced review with interactive triage | above |
-| `/gabe-commit` | Core loop | The commit quality gate — CHECK 1–9 | above |
+| `/gabe-review` | Core loop | Risk-priced review with interactive triage + growth triage | above |
+| `/gabe-commit` | Core loop | The commit quality gate — CHECK 1–9 + results digest | above |
 | `/gabe-push` | Core loop | Push, PR, CI watch, deploy-verify | above |
-| `/gabe-init` | Setup | Lays down `.kdbp/` + the hooks, by project type | above |
-| `/gabe-teach` | Learning | Consolidates understanding into `KNOWLEDGE.md` | above |
+| `/gabe-init` | Setup | Lays down `.kdbp/` + the 6 hooks, by project type | above |
+| `/gabe-adopt` | Setup | Brownfield command-center adoption — archive, bootstrap, rank, ingest one section per run | this index |
 | `/gabe-handoff` | Session continuity | Resume prompt + evidence-gated `.kdbp/` sync | above |
+| `/gabe-walk` | Verification | Records a human walking the build — who·when·result·evidence to `walks.jsonl` | this index |
+| `/gabe-feature` | Command center | Covers a shipped feature — card, diagrams, evidence narration; status/backfill/curate/release | this index |
 | `/gabe-roast` | Analysis satellite | Adversarial gap review from a chosen perspective | [satellites](satellites.html) |
 | `/gabe-myopic` | Analysis satellite | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo | [satellites](satellites.html) |
 | `/gabe-health` | Analysis satellite | Structural health — god files, churn, coupling, bugs | [satellites](satellites.html) |
 | `/gabe-debt` | Analysis satellite | Architecture decision-debt scan with AP citations | [satellites](satellites.html) |
 | `/gabe-assess` | Analysis satellite | Change impact — blast radius, maturity scope, prerequisites | [satellites](satellites.html) |
 | `/gabe-align` | Analysis satellite | Values guardian — pre-flight checks + auto-checkpoint | [satellites](satellites.html) |
-| `/gabe-scope-change` | Scope evolution | Router — classifies a scope change → addition or pivot | this index |
-| `/gabe-scope-addition` | Scope evolution | Additive scope — new REQs / phases / refs, same premise | this index |
+| `/gabe-scope-change` | Scope evolution | One entry point — classifies; additions execute inline, pivots route to `-pivot` | this index |
 | `/gabe-scope-pivot` | Scope evolution | Direction change — archives `SCOPE.md` v{N}, opens v{N+1} | this index |
 | `/gabe-help` | Utility | Context-aware guide — scans state, suggests the next command | this index |
 | `/gabe-lens` | Utility | Cognitive translation — analogies, maps, constraint boxes | this index |
 | `/gabe-mockup` | Utility | Mockup / UX workflow — static, React Storybook, and design-ref modes | this index |
+| `/gabe-docsite` | Utility | Publishes and updates pages on this docs site — placement, nav, rendered diagrams | this index |
+| `/gabe-meme` | Utility | Oblique memes — visual metaphors rendered via memegen.link, verified PNGs | this index |
+| `/gabe-quip` | Utility | Witty titles/hooks/callouts for human-facing HTML surfaces — dosed, punch-up | this index |
+| `gabe-docs` | Background | Documentation standards + the E1–E7 execution contract — consulted by other skills, not invoked | this index |

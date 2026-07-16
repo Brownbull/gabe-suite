@@ -40,7 +40,7 @@ stateDiagram-v2
     [*] --> NoProject
     NoProject --> Initialized: /gabe-init
     Initialized --> Scoped: /gabe-scope
-    Scoped --> Scoped: /gabe-scope-addition
+    Scoped --> Scoped: /gabe-scope-change (addition inline)
     Scoped --> Scoped: /gabe-scope-pivot
     Scoped --> Planned: /gabe-plan
     Planned --> Planned: /gabe-plan check (retrofit)
@@ -118,13 +118,13 @@ SCOPE.md — including its `## Phases` section, which holds the phase arc — is
 ```mermaid
 flowchart LR
     Entry["/gabe-scope-change<br/>(meta-router)"] --> Classify{"Intent?"}
-    Classify -->|Additive: new REQ /<br/>new phase / new ref| Addition["/gabe-scope-addition"]
+    Classify -->|Additive: new REQ /<br/>new phase / new ref| Addition["Addition path<br/>(inline — Step 5)"]
     Classify -->|Direction shift| Pivot["/gabe-scope-pivot"]
     Addition --> AddResult["SCOPE.md phases_version bumped<br/>Phases section updated in place"]
     Pivot --> PivotResult["SCOPE vN archived to<br/>.kdbp/archive/scope-vN.md<br/>SCOPE v&lcub;N+1&rcub; written fresh"]
 ```
 
-Direct entry points: you can call `/gabe-scope-addition` or `/gabe-scope-pivot` explicitly when you already know which one applies. `/gabe-scope-change` just saves you that choice.
+Direct entry points: `/gabe-scope-pivot` can be invoked directly when you already know it's a pivot. Additions always run inside `/gabe-scope-change` (its Step 5 — use `--force-addition` to skip the classifier); the former standalone `/gabe-scope-addition` is archived.
 
 ---
 
@@ -147,9 +147,8 @@ Direct entry points: you can call `/gabe-scope-addition` or `/gabe-scope-pivot` 
 
 | Command | When | Writes |
 |---------|------|--------|
-| `/gabe-scope-change` | scope shift of unclear kind | routes only (no direct writes) |
-| `/gabe-scope-addition` | additive: new REQ / phase / ref | `SCOPE.md` (`phases_version` bump, `## Phases` updated in place), `scope-references.yaml` |
-| `/gabe-scope-pivot` | direction change | archives vN, writes v{N+1} |
+| `/gabe-scope-change` | any scope evolution (entry point) | classifies; additions execute INLINE — `SCOPE.md` (`phases_version` bump, `## Phases` updated in place), `scope-references.yaml`; pivots route to `-pivot` |
+| `/gabe-scope-pivot` | direction change (or routed from `-change`) | archives vN, writes v{N+1} |
 
 ### Plan family
 
@@ -272,9 +271,8 @@ user: /gabe-next
 ```text
 user: realizes new REQ needed
 user: /gabe-scope-change "add REQ-28 for jurisdiction support"
-  -> classifier routes to /gabe-scope-addition
-user: /gabe-scope-addition
-  -> SCOPE v1.1 written, new REQ appended
+  -> classifier: addition — executes inline (Step 5)
+  -> SCOPE phases_version bumped, new REQ appended
 user: /gabe-plan check
   -> flags PLAN.md phases that now need a new REQ mapping
 user: retrofit or start new plan
@@ -303,7 +301,7 @@ Not natively supported at time of writing. See [GAPS.md](GAPS.md) gap W4 for opt
 |--------------|---------------|-----|
 | Raw `git commit` | Bypasses CHECK 1–9 + deferred scan + doc drift + invariant 1 | Always `/gabe-commit` |
 | Editing `PLAN.md` state columns manually | Commands become source-of-truth mismatch | Use `/gabe-execute`, `/gabe-review`, `/gabe-commit`, `/gabe-push` |
-| Editing `SCOPE.md` directly | Invariant 6; `/gabe-commit` warns | Use `/gabe-scope-addition` or `/gabe-scope-pivot` |
+| Editing `SCOPE.md` directly | Invariant 6; `/gabe-commit` warns | Use `/gabe-scope-change` (additions inline; pivots route to `/gabe-scope-pivot`) |
 | Skipping `/gabe-review` between execute and commit | Tier-drift + risk pricing never runs | Always run `/gabe-review` |
 | Running commands on `.kdbp/lanes/<lane>/` paths | Lane layout retired; those paths don't exist | Use root `.kdbp/*.md` |
 | Creating `.worktrees/` directories | Lane feature retired | Serial plan only |

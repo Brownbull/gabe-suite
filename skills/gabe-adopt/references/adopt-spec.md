@@ -129,7 +129,10 @@ point`). Preconditions: shortlist approved, entity row exists and is `pending`/`
 
 Read tracker + `walks.jsonl`; render the board: per-section status/checklist glyphs, approved
 n/of-shortlist convergence, stalest approved section (walk age), suggested next entity (highest
-rank still pending). Read-only — writes nothing.
+rank still pending). **Reconciliation with the forward track:** a `pending`/`building` section
+whose entity already carries a `# REVIEWED`-stamped center card (built by `/gabe-feature`) is
+listed with an offer to mark it `covered-by-feature` (phase id into `notes`) — reuse, never
+rebuild (E4). That offer is the ONLY write `status` may make, and only on explicit accept.
 
 ## Non-goals
 

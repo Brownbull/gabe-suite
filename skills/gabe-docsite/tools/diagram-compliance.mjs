@@ -15,7 +15,9 @@ import { pathToFileURL } from 'node:url';
 import { readdirSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
-const siteDir = resolve(process.argv[2] || join(process.cwd(), 'site'));
+// default = the project's docs/site under the CWD — matches the SKILL's documented
+// no-arg invocation from a project root (the old `<cwd>/site` default matched nothing)
+const siteDir = resolve(process.argv[2] || join(process.cwd(), 'docs/site'));
 const pages = readdirSync(siteDir).filter(f => f.endsWith('.html'));
 if (!pages.length) { console.error(`No .html pages in ${siteDir}`); process.exit(1); }
 

@@ -47,7 +47,7 @@ stateDiagram-v2
 
 Do not label with prose. Do not abbreviate command names. If multiple commands can drive a transition, list them on separate edges rather than as "or" text.
 
-**Self-transitions.** Use for same-state evolutions like `Scoped --> Scoped: /gabe-scope-addition`.
+**Self-transitions.** Use for same-state evolutions like `Scoped --> Scoped: /gabe-scope-change (addition)`.
 
 ### Command dispatch diagrams
 
