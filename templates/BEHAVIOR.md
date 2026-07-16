@@ -17,12 +17,15 @@
 - lint: `{LINT_CMD}`
 - types: `{TYPES_CMD}`
 - tests: `{TESTS_CMD}`
-- results_out: `{RESULTS_PATH}`   <!-- OPTIONAL (D1/D4 — report, never gate). Set ONLY if your
+- results_out: `{RESULTS_PATH}`   <!-- OPTIONAL (D1/D4 — report, never gate). One path or a YAML
+     list (multi-corpus repos: one report per corpus, e.g. api + web junit). Set ONLY if your
      tests command above is authored to emit a machine report there (e.g. pytest
      --junitxml=tests/results/junit.xml). When present, /gabe-commit writes a small COMMITTED
-     digest beside it that the command center reads; absent, the center renders
-     ⤫ skipped(no reporter) — an honest gap. Greenfield init sets this by default; brownfield
-     opts in by adding the reporter flag to a command YOU own, never by letting a tool guess. -->
+     digest beside each path that the command center reads; absent, the center renders
+     ⤫ skipped(no reporter) — an honest gap. If the reports dir is gitignored by design, add a
+     `!<dir>/*.digest.json` negation so the digest stays committable. Greenfield init sets this
+     by default; brownfield opts in by adding the reporter flag to a command YOU own, never by
+     letting a tool guess. -->
 
 ## Critical Paths
 

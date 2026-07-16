@@ -4,7 +4,7 @@ description: "Role-play a short-sighted user with a shallow planning horizon (1 
 when_to_use: "Review a UX flow / onboarding / checkout / wizard / form for whether normal people get confused, overwhelmed, or trapped; 'feels fine to us but users drop off'; sanity-check a spec before building; before shipping any multi-step flow."
 context: fork
 metadata:
-  version: 1.1.0
+  version: 1.2.0
   origin: "Neo case 20260701_myopic-user-skill"
   method: "Cognitive Walkthrough (NN/g) tuned by bounded planning horizon / present-bias myopia"
 ---
@@ -40,6 +40,8 @@ The panel — 3 horizons run together, none sees 3+ steps ahead:
 | **horizon** | Fast triage — "how many steps of foresight does this demand?" (30s gut-check) |
 
 Four flag types: 🛏️ foresight trap, 🌊 overwhelm point, 🧠 recall demand, 🚪 no-undo dead-end. Severity combines how deep the panel is caught with the blast radius of the consequence (CRITICAL: even @2 is trapped or the consequence is irreversible/money/data; HIGH: @1.5 is trapped; MEDIUM: only @1 falls; LOW: all three recover).
+
+Finding labels: when findings are numbered — in the report, in PLAN/PENDING prose, or carried into regression-test titles — they take the `M[N]` family (`M1`, `M2`, …). Never `C[N]`: that prefix is reserved corpus-wide for case ids (gabe-red red-spec), and scenario labels are per-report, so a `C`-labeled scenario collides with the global case family on the next walk.
 
 ## Procedure
 

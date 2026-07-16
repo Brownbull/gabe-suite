@@ -493,7 +493,7 @@ Phase 1: [name]
 
 ### Step 4b: Write the PLAN.json machine mirror
 
-Whenever this skill writes `.kdbp/PLAN.md` (Step 4, Step UPD, Step 6 archive mechanics), write the sibling `.kdbp/PLAN.json` in the same turn (E5). PLAN.md stays canonical for humans; PLAN.json is the machine mirror — read by session hooks and deterministic tooling (the planned `next.mjs`), written only by this skill and the shared auto-tick helper. It is never hand-edited; if it drifts or goes missing, regenerate from the Phases table.
+Whenever this skill writes `.kdbp/PLAN.md` (Step 4, Step UPD, Step 6 archive mechanics), write the sibling `.kdbp/PLAN.json` in the same turn (E5). PLAN.md stays canonical for humans; PLAN.json is the machine mirror — read by session hooks and deterministic tooling (the planned `next.mjs`), written only by this skill and the shared auto-tick helper. It is never hand-edited; if it drifts or goes missing, regenerate from the Phases table PLUS each phase's Phase Details block — the `Cases:` line and proof/proof_type live in the details, not the table, and a regeneration that drops a Red-✅ phase's `cases` record turns the next PLAN write into a guard-blocked lie.
 
 Schema (v1):
 
@@ -530,9 +530,9 @@ Schema (v1):
 Rules:
 
 - `status` mirrors the `<!-- status: ... -->` comment: `active | none | completed | defer | cancelled`. `project_type` mirrors the `<!-- project_type: ... -->` comment (`code | mockup | hybrid`); readers default a missing field to `code`.
-- Cell tokens mirror the table glyphs 1:1: ⬜ `todo` · 🔄 `in_progress` · ✅ `done` · ⏸ `deferred` · ⚰️ `obsolete`.
+- Cell tokens mirror the table glyphs 1:1: ⬜ `todo` · 🔄 `in_progress` · ✅ `done` · ⏸ `deferred` · ⚰️ `obsolete`. One render-only glyph exists: `—` in a Red cell means "predates the red beat" and maps to NO token — the mirror omits the `red` key for that phase (readers treat a missing key as not this phase's concern; verified `next.mjs` behavior).
 - **`proof_type` (optional).** Declared at plan time alongside `proof`, typing what evidence the phase owes: `test | visual | journey` (or `null`). `test` is the TDD form — the evidence doctrine's "failing-then-passing test (fails on base, passes on fix)" — consumed by `/gabe-red`; `visual`/`journey` keep today's runtime-artifact meaning. Readers default a missing field to the runtime shape.
-- **`red` cell (optional, TDD-adopting projects only).** A phase row MAY carry a `Red` cell BEFORE `Exec`: ✅ once `/gabe-red` committed the phase's red checkpoint (or recorded a guard-only / enumerated skip). `/gabe-next` routes `red ⬜ → /gabe-red` ahead of Exec; a missing column is treated as always-✅ (same degradation as `Center`). Seed it (⬜) only when the project has adopted the red beat.
+- **`red` cell (optional, TDD-adopting projects only).** A phase row MAY carry a `Red` cell BEFORE `Exec`: ✅ once `/gabe-red` committed the phase's red checkpoint (or recorded a guard-only / enumerated skip). `/gabe-next` routes `red ⬜ → /gabe-red` ahead of Exec; a missing column is treated as always-✅ (same degradation as `Center`). Seed it (⬜) only when the project has adopted the red beat, and only on phases whose Exec is not ✅ — shipped rows render `—` and omit the key (ruling R1, see the update scope fence).
 - **`center` cell (optional, command-center projects only).** Projects with a `docs/site/center/` Testing Command Center carry a fifth cell/`Center` column: ✅ once `/gabe-feature` has covered the shipped phase (it writes the cell when it stamps the feature card reviewed, E5). Absent in every other project — `/gabe-next` treats a missing `center` as always-✅, so non-center plans keep the classic four-cell lifecycle. Seed it (⬜) only when the project has a command center.
 - `proof` is the per-phase runtime-evidence field (Evidence Doctrine): at plan time, the required journey command / spec path / artifact dir from `## Runtime Evidence Checkpoints` (or `null` for phases with no runtime requirement); `/gabe-execute` overwrites it with the actual evidence line (command → runtime → artifact paths) when the evidence lands.
 - On archive (Step 6b), after resetting PLAN.md to the empty template, write `{"version": 1, "status": "none", "phases": []}`. The archived `.md` copy is the durable record; the mirror is regenerable, so it is not archived.
@@ -737,7 +737,7 @@ If the user runs `/gabe-plan update` or `/gabe-plan status`:
 
 - **`update`**: Scope fence (check before ANY edit):
   ```
-  1. NEVER edit Red/Exec/Review/Commit/Push/Center cells — those belong to their commands (Red → /gabe-red, Center → /gabe-feature). `update` MAY add the `Red` or `Center` column itself (⬜ for every phase) when a project adopts the red beat / a command center — that is a schema edit, not a cell tick.
+  1. NEVER edit Red/Exec/Review/Commit/Push/Center cells — those belong to their commands (Red → /gabe-red, Center → /gabe-feature). `update` MAY add the `Red` or `Center` column itself when a project adopts the red beat / a command center — that is a schema edit, not a cell tick. Red seeding (ruling R1): seed ⬜ ONLY on phases whose Exec is not ✅; already-shipped rows render `—` and their PLAN.json phase OMITS the `red` key. Never ⬜ on shipped rows (the router re-opens shipped work and demands a fake red — D5 violation) and never ✅ (a Red ✅ without a cases record is a lie the plan-proof-guard blocks). Center seeds ⬜ everywhere as before: shipped phases genuinely owe coverage.
   2. NEVER renumber existing phases — append, or use decimal IDs (N.5); renumbering orphans the Current Phase pointer and DECISIONS D-links.
   3. NEVER delete DECISIONS.md references.
   Allowed edits menu: [add-phase] [edit-description] [edit-scope/acceptance] [re-tier via 3.5] [move-pointer] [edit-risks].

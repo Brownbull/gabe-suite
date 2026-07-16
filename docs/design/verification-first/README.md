@@ -7,7 +7,7 @@
 > (pin/hover the site⟷files⟷suite connections) · [`consolidated-trees.html`](consolidated-trees.html)
 > (the three leveled trees) · [`gabe-red-design.html`](gabe-red-design.html) (the TDD beat's design brief).
 
-**Status:** decisions locked 2026-07-15 (D1–D7 below). Suite-side slices 1–4 LANDED 2026-07-15 (commits `fcb471f` red spine · `4dfbb8f` enforcement arm · `5d49c0e` small set). Slice 5 (app repos: gastify first, then gustify) awaits the operator's session-stop signal.
+**Status:** decisions locked 2026-07-15 (D1–D7 below). Suite-side slices 1–4 LANDED 2026-07-15 (commits `fcb471f` red spine · `4dfbb8f` enforcement arm · `5d49c0e` small set). Pre-rollout gap review rulings R1–R7 landed 2026-07-15 (§5 addendum) — including `/gabe-adopt` (brownfield center adoption, suite 27 → 28). Slice 5 (app repos: gastify first, then gustify) awaits the operator's session-stop signal.
 
 ---
 
@@ -151,6 +151,21 @@ at n=2 — it must return to suite-doctor's radar).
 **Tripwire:** if `/gabe-red` ever prints a summary a developer reads instead of a failure a
 developer must fix, it has become ceremony — delete it.
 
+### Addendum — pre-rollout rulings (2026-07-15, R1–R7)
+
+The pre-slice-5 gap review (fixture-verified against `next.mjs`, the plan-proof-guard, and both
+twins' live state) produced seven rulings, all landed suite-side the same day:
+
+| # | Ruling |
+|---|--------|
+| R1 | **Red-column retrofits seed honestly.** Adding `Red` to an existing plan seeds ⬜ only where Exec ≠ ✅; shipped rows render `—` and the mirror OMITS the `red` key. Verified: an omitted key settles in `next.mjs`; ⬜ re-opens shipped work and demands a fake red; ✅ is guard-blocked. |
+| R2 | **The guard tolerates evidence shorthand.** A proof token passes by literal path, brace-expanded glob, or non-empty parent dir; empty/missing dirs still block. Both twins' first PLAN writes would otherwise have been false-positive-blocked (`01..06-*.png` / `{…}.png` tokens). The two live shorthand strings still get normalized in slice-5 chunk 0 (hygiene). |
+| R3 | **`C` belongs to cases; scenario labels take `M`.** Sweeps use the anchored token pattern (bare `C[0-9]+` over-matches — `RFC1234` → C1235) and rename colliding label families in the same commit: gustify's myopic C1–C11 → M1–M11 + its PLAN "C4" reference. gabe-myopic labels findings `M[N]` from now on. |
+| R4 | **`results_out` is a path or a LIST** (one report per corpus); digest per entry; a report the run didn't refresh is named `stale`, never digested as current; a gitignored reports dir gets a `!*.digest.json` negation (gustify) rather than un-ignoring junit. |
+| R5 | **Ever-red ships with the rebuilt center, not as a patch.** Slice-5 chunk 3's promise reduces to junit names + `Cases:` record + `RED:` trailer; ever-red rendering lands in `/gabe-adopt`'s suite-owned generator templates — the n=2→3 generator-promotion moment §5 already flagged as ripe. |
+| R6 | **Mechanical honesty fixes:** mirror regeneration reads Phase Details, not just the table (a table-only regen drops `cases` and turns the next write into a guard-blocked lie); the PLAN template documents the Red column; pre-checkpoint's C-id warns can actually fire (`.kdbp` excluded from the corpus grep — the PLAN that declares an id no longer satisfies its own check; tokens bounded). |
+| R7 | **`/gabe-adopt` approved** — brownfield command-center adoption as its own skill (`init` archives existing docs — never deletes — and bootstraps the center from suite templates · `rank` machine-derives the critical/high shortlist for operator approval · `section <entity>` ingests one entity at a time, checklist-gated, human approval recorded as a walk · `status` shows the board). The adoption tracker lives OUTSIDE PLAN.md: the main plan keeps shipping features through the normal lifecycle; the two tracks meet in the same center. |
+
 ## 6 · The landing plan
 
 Suite-first (this repo), install regenerates `~/.claude`, doctor must be CLEAN per slice.
@@ -164,8 +179,19 @@ Suite-first (this repo), install regenerates `~/.claude`, doctor must be CLEAN p
    CASE/BUMP + growth triage · commit digest emission · feature rendered-verdicts · release mode.
 4. **Slice 4 — cascade:** CLAUDE.md/README/help rows · COMMS · final doctor.
 5. **Slice 5 — app repos, ON OPERATOR SIGNAL (sessions stopped):** **gastify FIRST, in chunks,
-   verified progressively** (C-id sweep · red on its next phase · center re-render), THEN
-   propagate to gustify. Sweeps: mechanical-only, one commit per repo, blame-ignored.
+   verified progressively**, THEN propagate to gustify.
+   - chunk 0: repair gastify's PLAN.md (malformed separator row, split table, the 24.1 md↔json
+     drift) · normalize the two shorthand proof strings (R2 hygiene) · THEN wire the 6th hook
+     marker via `/gabe-init update` — the guard goes live globally only after the state is honest.
+   - chunk 1: C-id backfill sweep per red-spec §Backfill — explicit roots (gastify excludes
+     `frontend/`+`mobile/`), anchored pattern, blame-ignore file + local git config, M-renames
+     (gustify). Mechanical-only, one commit per repo.
+   - chunk 2: add the Red column (R1 seeding: ⬜ only where Exec ≠ ✅) + PLAN.json mirror ·
+     verify `next.mjs` routing.
+   - chunk 3: `/gabe-red` for real on the next phase → execute turns it green — verified via
+     junit names + `Cases:` record + `RED:` trailer (ever-red waits for the adopt rebuild, R5).
+   Then `/gabe-adopt init` on gastify: archive the hand-built center, rebuild section-by-section
+   at human speed. Afterward the align/assess re-measure marker fires (trim-ledger #5).
 
 ## 7 · Provenance
 

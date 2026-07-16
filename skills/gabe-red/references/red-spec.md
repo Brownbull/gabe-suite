@@ -95,6 +95,15 @@ bumps per case on early greenfield phases; that is TDD's known cost, not a failu
 ## Backfill (existing corpora — one-time, per design decision D5)
 
 Mechanical sweep, one commit per repo: stamp `C[N]` into every existing test name; register the
-commit in `.git-blame-ignore-revs`; **never** rewrite a claim; **no fake reds** — backfilled cases
-carry ids but their ever-red stays empty until a genuine red is ever observed. New test files
-after the sweep: the commit-gate check requires an id at birth.
+commit in `.git-blame-ignore-revs` AND set `git config blame.ignoreRevsFile .git-blame-ignore-revs`
+locally (the file alone only helps GitHub's UI); **never** rewrite a claim; **no fake reds** —
+backfilled cases carry ids but their ever-red stays empty until a genuine red is ever observed.
+New test files after the sweep: the commit-gate check requires an id at birth.
+
+Sweep mechanics (rulings R2/R3): roots are EXPLICIT arguments, never inferred (legacy trees and
+generated artifact dirs must stay out); id detection/allocation uses the anchored token pattern
+`(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])` — the bare `C[0-9]+` grep over-matches (`RFC1234` would
+start allocation at C1235). Pre-existing id-LIKE conventions colliding with `C[N]` (e.g. scenario
+labels in test titles) are renamed to their own family in the same sweep — scenario labels take
+`M[N]` (see gabe-myopic) — and every prose reference to them (PLAN risks, docs) is updated in the
+same commit. Case ids own the `C` prefix outright.
