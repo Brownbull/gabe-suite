@@ -4,8 +4,13 @@
 > 2026-07-14/15 design arc: how the suite, its files, and the command center relate;
 > why each decision fell the way it did; and the traps already found and priced.
 > Human-facing visuals (same content, navigable): [`map-site-files-suite.html`](map-site-files-suite.html)
-> (pin/hover the site⟷files⟷suite connections) · [`consolidated-trees.html`](consolidated-trees.html)
-> (the three leveled trees) · [`gabe-red-design.html`](gabe-red-design.html) (the TDD beat's design brief).
+> (pin/hover the site⟷files⟷suite connections — updated 2026-07-16 to the LANDED structure:
+> `/gabe-adopt` + its `adoption.json` tracker, the shipped `regen-mirror`/`backfill-sweep`
+> scripts, `/gabe-walk`, the guard+warn hook pair) · [`example-testing-page.html`](example-testing-page.html)
+> (**how the Testing page will look after slice 5** — illustrative preview over the real
+> dry-run numbers: the C-id matrix, ever-red, walks, verification changelog) ·
+> [`consolidated-trees.html`](consolidated-trees.html) (the three leveled trees) ·
+> [`gabe-red-design.html`](gabe-red-design.html) (the TDD beat's design brief).
 
 **Status:** decisions locked 2026-07-15 (D1–D7 below). Suite-side slices 1–4 LANDED 2026-07-15 (commits `fcb471f` red spine · `4dfbb8f` enforcement arm · `5d49c0e` small set). Pre-rollout gap review rulings R1–R7 landed 2026-07-15 (§5 addendum) — including `/gabe-adopt` (brownfield center adoption, suite 27 → 28). Slice 5 (app repos: gastify first, then gustify) awaits the operator's session-stop signal.
 

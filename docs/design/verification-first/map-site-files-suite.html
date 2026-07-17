@@ -5,7 +5,7 @@
     --accent:#0d6e78;--accent2:#0a565e;
     --h-now:#0d7a84;--h-board:#1f6feb;--h-ent:#0a7d6b;--h-docs:#8e4585;--h-test:#3f6d4c;--h-ledger:#9a5a00;--h-rel:#7a5a8a;--h-leaf:#8494a4;
     --c-scope:#0a7d6b;--c-plan:#1f6feb;--c-red:#c0392b;--c-exec:#2f8f57;--c-review:#b5771a;--c-commit:#5a53a8;
-    --c-push:#0d7a84;--c-walk:#c2461e;--c-feature:#8e4585;--c-init:#7b8698;--c-guard:#9c2350;
+    --c-push:#0d7a84;--c-walk:#c2461e;--c-feature:#8e4585;--c-init:#7b8698;--c-guard:#9c2350;--c-adopt:#5f7d2e;
     --gap:#b5771a;
     --shadow:0 1px 2px rgba(20,33,46,.06),0 6px 22px rgba(20,33,46,.05);
     --fb:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
@@ -16,12 +16,12 @@
     --accent:#3bb3bd;--accent2:#5cc7cf;
     --h-now:#3bb3bd;--h-board:#6aa6f5;--h-ent:#4fc3a8;--h-docs:#c98bbb;--h-test:#6fa77d;--h-ledger:#d79a3c;--h-rel:#b795c9;--h-leaf:#8494a4;
     --c-scope:#4fc3a8;--c-plan:#6aa6f5;--c-red:#e0736a;--c-exec:#6fa77d;--c-review:#d79a3c;--c-commit:#9b93e6;
-    --c-push:#3bb3bd;--c-walk:#e8825e;--c-feature:#c98bbb;--c-init:#7d8b9a;--c-guard:#d9707c;
+    --c-push:#3bb3bd;--c-walk:#e8825e;--c-feature:#c98bbb;--c-init:#7d8b9a;--c-guard:#d9707c;--c-adopt:#9ab86a;
     --gap:#d79a3c;
     --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.28);
   }}
-  :root[data-theme="light"]{--ground:#eef1f4;--paper:#fff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--accent:#0d6e78;--accent2:#0a565e;--h-now:#0d7a84;--h-board:#1f6feb;--h-ent:#0a7d6b;--h-docs:#8e4585;--h-test:#3f6d4c;--h-ledger:#9a5a00;--h-rel:#7a5a8a;--h-leaf:#8494a4;--c-scope:#0a7d6b;--c-plan:#1f6feb;--c-red:#c0392b;--c-exec:#2f8f57;--c-review:#b5771a;--c-commit:#5a53a8;--c-push:#0d7a84;--c-walk:#c2461e;--c-feature:#8e4585;--c-init:#7b8698;--c-guard:#9c2350;--gap:#b5771a}
-  :root[data-theme="dark"]{--ground:#0b0f15;--paper:#141d28;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--accent:#3bb3bd;--accent2:#5cc7cf;--h-now:#3bb3bd;--h-board:#6aa6f5;--h-ent:#4fc3a8;--h-docs:#c98bbb;--h-test:#6fa77d;--h-ledger:#d79a3c;--h-rel:#b795c9;--h-leaf:#8494a4;--c-scope:#4fc3a8;--c-plan:#6aa6f5;--c-red:#e0736a;--c-exec:#6fa77d;--c-review:#d79a3c;--c-commit:#9b93e6;--c-push:#3bb3bd;--c-walk:#e8825e;--c-feature:#c98bbb;--c-init:#7d8b9a;--c-guard:#d9707c;--gap:#d79a3c}
+  :root[data-theme="light"]{--ground:#eef1f4;--paper:#fff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--accent:#0d6e78;--accent2:#0a565e;--h-now:#0d7a84;--h-board:#1f6feb;--h-ent:#0a7d6b;--h-docs:#8e4585;--h-test:#3f6d4c;--h-ledger:#9a5a00;--h-rel:#7a5a8a;--h-leaf:#8494a4;--c-scope:#0a7d6b;--c-plan:#1f6feb;--c-red:#c0392b;--c-exec:#2f8f57;--c-review:#b5771a;--c-commit:#5a53a8;--c-push:#0d7a84;--c-walk:#c2461e;--c-feature:#8e4585;--c-init:#7b8698;--c-guard:#9c2350;--c-adopt:#5f7d2e;--gap:#b5771a}
+  :root[data-theme="dark"]{--ground:#0b0f15;--paper:#141d28;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--accent:#3bb3bd;--accent2:#5cc7cf;--h-now:#3bb3bd;--h-board:#6aa6f5;--h-ent:#4fc3a8;--h-docs:#c98bbb;--h-test:#6fa77d;--h-ledger:#d79a3c;--h-rel:#b795c9;--h-leaf:#8494a4;--c-scope:#4fc3a8;--c-plan:#6aa6f5;--c-red:#e0736a;--c-exec:#6fa77d;--c-review:#d79a3c;--c-commit:#9b93e6;--c-push:#3bb3bd;--c-walk:#e8825e;--c-feature:#c98bbb;--c-init:#7d8b9a;--c-guard:#d9707c;--c-adopt:#9ab86a;--gap:#d79a3c}
   *{box-sizing:border-box}
   body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased}
   .wrap{max-width:1260px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(10px,2.5vw,24px) 56px}
@@ -42,6 +42,7 @@
   .k-feature{background:color-mix(in srgb,var(--c-feature) 16%,transparent);color:var(--c-feature)}
   .k-init{background:color-mix(in srgb,var(--c-init) 16%,transparent);color:var(--c-init)}
   .k-guard{background:color-mix(in srgb,var(--c-guard) 16%,transparent);color:var(--c-guard);border:1px dashed var(--c-guard)}
+  .k-adopt{background:color-mix(in srgb,var(--c-adopt) 16%,transparent);color:var(--c-adopt)}
   .pinbox{margin-left:auto;font-family:var(--fm);font-size:.7rem;color:var(--ink3)}
   .pinbox b{color:var(--accent2)}
   .modes{display:flex;gap:12px;margin:2px 0 6px;font-family:var(--fm);font-size:.66rem;color:var(--ink3);align-items:center}
@@ -81,22 +82,22 @@
 </style>
 
 <div class="wrap">
-  <div class="kicker">Gabe Suite · <b>the final map</b> · all decisions D1–D7 · click to pin · hover to peek</div>
-  <h1>Site ⟷ files ⟷ suite — the final structure, connected</h1>
+  <div class="kicker">Gabe Suite · <b>the landed map</b> · D1–D7 + rulings R1–R7 · click to pin · hover to peek</div>
+  <h1>Site ⟷ files ⟷ suite — the landed structure, connected</h1>
   <p class="lede"><b>Left</b> = the center's pages and sections. <b>Middle</b> = the files the suite's execution generates. <b>Right</b> = the commands, skills and hooks that write them — each in its own colour. Pin a file to see it feed <em>several</em> page sections at once; pin a command to see everything it produces.</p>
 
   <div class="bar">
-    <span class="chip k-scope">/gabe-scope</span><span class="chip k-plan">/gabe-plan·next</span><span class="chip k-red">/gabe-red</span>
+    <span class="chip k-scope">/gabe-scope</span><span class="chip k-plan">/gabe-plan·next·regen</span><span class="chip k-red">/gabe-red·sweep</span>
     <span class="chip k-exec">/gabe-execute</span><span class="chip k-review">/gabe-review</span><span class="chip k-commit">/gabe-commit</span>
-    <span class="chip k-push">/gabe-push</span><span class="chip k-walk">/walk</span><span class="chip k-feature">/gabe-feature (+release)</span>
-    <span class="chip k-init">/gabe-init</span><span class="chip k-guard">hooks · guard</span>
+    <span class="chip k-push">/gabe-push</span><span class="chip k-walk">/gabe-walk</span><span class="chip k-feature">/gabe-feature (+release)</span>
+    <span class="chip k-adopt">/gabe-adopt</span><span class="chip k-init">/gabe-init</span><span class="chip k-guard">hooks · guard+warns</span>
     <span class="pinbox">pinned: <b id="pinlbl">—</b></span>
   </div>
   <div class="modes">
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="2.4"/></svg> writes (create·append·tick)</span>
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="2" stroke-dasharray="5 4"/></svg> verifies / blocks lies</span>
     <span><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="currentColor" stroke-width="1.6" stroke-dasharray="1.5 3.5"/></svg> reads</span>
-    <span style="color:var(--c-red)">• = new this design</span>
+    <span style="color:var(--c-red)">• = the verification-first additions (landed)</span>
   </div>
 
   <div class="frame">
@@ -109,15 +110,15 @@
     </div>
   </div>
 
-  <p class="caption"><b>Reading it:</b> the default pin is <code>PLAN.md · PLAN.json</code> — the tasks JSON: written by six commands, <b>verified by the guard hook</b> (dashed crimson = blocks a ✓ whose proof doesn't exist, D7), and rendered into <em>three</em> different page sections (Board rail, Now, the Ledger pages). Pin <code>walks.jsonl</code> to see one file feed the manual angles <em>and</em> needs-you. Pin <code>/gabe-red</code> to see the new beat's whole footprint: the test corpus (C-ids), a RED: commit, and the plan's red cell.</p>
+  <p class="caption"><b>Reading it:</b> the default pin is <code>PLAN.md · PLAN.json</code> — the tasks JSON: written by six commands (incl. the shipped <code>regen-mirror.py</code>, which also PRESERVES mirror-only proof/cases on regeneration), <b>verified by the guard hook</b> (dashed crimson = blocks a ✓ whose proof doesn't exist, D7 — shorthand-tolerant per R2), and rendered into <em>three</em> different page sections. Pin <code>walks.jsonl</code> to see one file feed the manual angles, needs-you, <em>and</em> adopt's approval reads. Pin <code>/gabe-red · sweep</code> for the red beat's whole footprint: the C-id corpus (backfilled by <code>backfill-sweep.py</code>), a RED: commit, the plan's red cell. Pin <code>/gabe-adopt</code> for the back-catalog track: cards, config, proof, and its own tracker (<code>adoption.json</code> — deliberately outside PLAN.md, and gate-ignored, so a section can never delete its own state to get green).</p>
 
-  <div class="foot"><span>final structure · D1–D7 folded in · new nodes marked •</span><span>the pre-go map — say go and the suite edits land</span></div>
+  <div class="foot"><span>landed structure · D1–D7 + R1–R7 · verification-first additions marked •</span><span>updated 2026-07-16 — suite landed · rehearsed on a synthetic twin · dry-run on real-twin copies · slice 5 next</span></div>
 </div>
 
 <script>
 (function(){
   const HC={now:'--h-now',board:'--h-board',ent:'--h-ent',docs:'--h-docs',test:'--h-test',ledger:'--h-ledger',rel:'--h-rel',leaf:'--h-leaf'};
-  const CC={scope:'--c-scope',plan:'--c-plan',red:'--c-red',exec:'--c-exec',review:'--c-review',commit:'--c-commit',push:'--c-push',walk:'--c-walk',feature:'--c-feature',init:'--c-init',guard:'--c-guard'};
+  const CC={scope:'--c-scope',plan:'--c-plan',red:'--c-red',exec:'--c-exec',review:'--c-review',commit:'--c-commit',push:'--c-push',walk:'--c-walk',feature:'--c-feature',adopt:'--c-adopt',init:'--c-init',guard:'--c-guard'};
 
   const nav=[
     {sec:'Now',hc:'now',items:[
@@ -169,20 +170,22 @@
     {id:'f-config',label:'center.config.json',hc:'ent'},
     {id:'f-cards',label:'cards/*.md',hc:'docs'},
     {id:'f-proof',label:'proof/ shots+manifests',hc:'test'},
+    {id:'f-adoption',label:'adoption.json (tracker)',hc:'docs',newf:1},
     {id:'f-leafr',label:'htmlcov · playwright',hc:'leaf'},
   ];
   const cmds=[
     {id:'c-scope',label:'/gabe-scope',cc:'scope'},
-    {id:'c-plan',label:'/gabe-plan · next',cc:'plan'},
-    {id:'c-red',label:'/gabe-red',cc:'red',newc:1},
+    {id:'c-plan',label:'/gabe-plan · next · regen',cc:'plan'},
+    {id:'c-red',label:'/gabe-red · sweep',cc:'red',newc:1},
     {id:'c-exec',label:'/gabe-execute',cc:'exec'},
     {id:'c-review',label:'/gabe-review',cc:'review'},
     {id:'c-commit',label:'/gabe-commit',cc:'commit'},
     {id:'c-push',label:'/gabe-push',cc:'push'},
-    {id:'c-walk',label:'/walk',cc:'walk',newc:1},
+    {id:'c-walk',label:'/gabe-walk',cc:'walk',newc:1},
     {id:'c-feature',label:'/gabe-feature +release',cc:'feature'},
+    {id:'c-adopt',label:'/gabe-adopt',cc:'adopt',newc:1},
     {id:'c-init',label:'/gabe-init',cc:'init'},
-    {id:'c-guard',label:'hooks · plan-guard',cc:'guard',newc:1},
+    {id:'c-guard',label:'hooks · guard + warns',cc:'guard',newc:1},
   ];
   // [cmd, file, mode] mode: w=write(solid) v=verify(dashed) r=read(dotted)
   const edges=[
@@ -195,6 +198,7 @@
     ['c-push','f-deploy','w'],['c-push','f-plan','w'],['c-push','f-leafr','w'],
     ['c-walk','f-walks','w'],
     ['c-feature','f-cards','w'],['c-feature','f-config','w'],['c-feature','f-proof','w'],
+    ['c-adopt','f-adoption','w'],['c-adopt','f-cards','w'],['c-adopt','f-config','w'],['c-adopt','f-proof','w'],['c-adopt','f-walks','r'],
     ['c-init','f-behavior','w'],['c-init','f-scope','w'],['c-init','f-rules','w'],
     ['c-guard','f-plan','v'],['c-guard','f-git','v'],['c-guard','f-proof','r'],['c-guard','f-corpus','r'],
   ];

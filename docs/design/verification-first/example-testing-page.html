@@ -1,0 +1,166 @@
+<title>Example — the Testing page after slice 5 (illustrative)</title>
+<style>
+  :root{
+    --ground:#eef1f4;--paper:#ffffff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;
+    --accent:#0d6e78;--accent2:#0a565e;--test:#3f6d4c;
+    --pass:#2f8f57;--fail:#c0392b;--warn:#b5771a;--empty:#8494a4;
+    --shadow:0 1px 2px rgba(20,33,46,.06),0 6px 22px rgba(20,33,46,.05);
+    --fb:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --fm:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){:root{
+    --ground:#0b0f15;--paper:#141d28;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;
+    --accent:#3bb3bd;--accent2:#5cc7cf;--test:#6fa77d;
+    --pass:#6fa77d;--fail:#e0736a;--warn:#d79a3c;--empty:#6a7c8d;
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.28);
+  }}
+  :root[data-theme="light"]{--ground:#eef1f4;--paper:#fff;--ink:#16212e;--ink2:#5a6b7b;--ink3:#8494a4;--line:#d8dee6;--line2:#e7ebf0;--accent:#0d6e78;--accent2:#0a565e;--test:#3f6d4c;--pass:#2f8f57;--fail:#c0392b;--warn:#b5771a;--empty:#8494a4;--shadow:0 1px 2px rgba(20,33,46,.06),0 6px 22px rgba(20,33,46,.05)}
+  :root[data-theme="dark"]{--ground:#0b0f15;--paper:#141d28;--ink:#e7eef5;--ink2:#94a5b6;--ink3:#6a7c8d;--line:#243440;--line2:#1c2732;--accent:#3bb3bd;--accent2:#5cc7cf;--test:#6fa77d;--pass:#6fa77d;--fail:#e0736a;--warn:#d79a3c;--empty:#6a7c8d;--shadow:0 1px 2px rgba(0,0,0,.3),0 8px 26px rgba(0,0,0,.28)}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--fb);-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(10px,2.5vw,24px) 64px}
+  .kicker{font-family:var(--fm);font-size:.68rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ink3)}
+  .kicker b{color:var(--accent)}
+  h1{font-size:clamp(1.35rem,3vw,1.9rem);letter-spacing:-.02em;font-weight:750;margin:.18em 0 .1em;text-wrap:balance}
+  .lede{color:var(--ink2);font-size:.95rem;max-width:82ch;margin:0}
+  .mockbar{margin:14px 0 0;border:1.5px dashed var(--warn);border-radius:10px;padding:9px 14px;font-size:.82rem;color:var(--ink2);background:color-mix(in srgb,var(--warn) 7%,transparent)}
+  .mockbar b{color:var(--warn);font-family:var(--fm);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase}
+
+  .stats{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
+  .stat{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px 16px;min-width:128px}
+  .stat .n{font-family:var(--fm);font-variant-numeric:tabular-nums;font-size:1.32rem;font-weight:700;color:var(--ink)}
+  .stat .n.acc{color:var(--accent)} .stat .n.warnc{color:var(--warn)} .stat .n.failc{color:var(--fail)}
+  .stat .l{font-size:.72rem;color:var(--ink3);margin-top:2px}
+  .stat .s{font-family:var(--fm);font-size:.64rem;color:var(--ink3);margin-top:4px}
+
+  section{margin-top:26px}
+  .sh{display:flex;align-items:baseline;gap:10px;border-left:3px solid var(--test);padding-left:11px;margin-bottom:10px}
+  .sh h2{font-size:1.02rem;margin:0;letter-spacing:-.01em}
+  .sh .src{font-family:var(--fm);font-size:.64rem;color:var(--ink3)}
+  .panelrow{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media (max-width:840px){.panelrow{grid-template-columns:1fr}}
+  .panel{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px}
+  .panel h3{margin:0 0 8px;font-size:.9rem}
+  .panel p{margin:.35em 0;font-size:.84rem;color:var(--ink2)}
+  .panel code,.tblwrap code{font-family:var(--fm);font-size:.84em;background:color-mix(in srgb,var(--accent) 10%,transparent);padding:1px 4px;border-radius:4px}
+
+  .tblwrap{background:var(--paper);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow-x:auto}
+  table{border-collapse:collapse;width:100%;min-width:880px;font-size:.82rem}
+  th{font-family:var(--fm);font-size:.62rem;letter-spacing:.09em;text-transform:uppercase;color:var(--ink3);text-align:left;padding:10px 12px;border-bottom:1px solid var(--line)}
+  td{padding:8px 12px;border-bottom:1px solid var(--line2);vertical-align:middle}
+  tr:last-child td{border-bottom:none}
+  td.mono{font-family:var(--fm);font-variant-numeric:tabular-nums;white-space:nowrap}
+  td.name{max-width:380px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .pill{display:inline-block;font-family:var(--fm);font-size:.62rem;font-weight:700;padding:2px 9px;border-radius:20px;white-space:nowrap}
+  .p-pass{background:color-mix(in srgb,var(--pass) 15%,transparent);color:var(--pass)}
+  .p-fail{background:color-mix(in srgb,var(--fail) 15%,transparent);color:var(--fail)}
+  .p-red{background:color-mix(in srgb,var(--fail) 13%,transparent);color:var(--fail);border:1px dashed var(--fail)}
+  .p-empty{background:color-mix(in srgb,var(--empty) 14%,transparent);color:var(--empty)}
+  .p-warn{background:color-mix(in srgb,var(--warn) 15%,transparent);color:var(--warn)}
+  .p-walk{background:color-mix(in srgb,var(--accent) 13%,transparent);color:var(--accent)}
+  .rowfocus td{background:color-mix(in srgb,var(--pass) 5%,transparent)}
+
+  .chg{display:flex;flex-direction:column;gap:0}
+  .chg .row{display:flex;gap:12px;align-items:baseline;padding:7px 4px;border-bottom:1px solid var(--line2);font-size:.82rem}
+  .chg .row:last-child{border-bottom:none}
+  .chg .sha{font-family:var(--fm);font-size:.72rem;color:var(--accent2);white-space:nowrap}
+  .chg .what{color:var(--ink2)}
+  .chg .what b{color:var(--ink);font-weight:650}
+
+  .foot{margin-top:30px;padding-top:12px;border-top:1px solid var(--line);font-family:var(--fm);font-size:.68rem;color:var(--ink3);line-height:1.9}
+  .foot b{color:var(--ink2)}
+</style>
+
+<div class="wrap">
+  <div class="kicker">gastify · command center · <b>Testing</b> — station: corpus &amp; matrix</div>
+  <h1>Testing — the corpus, its identities, and what has actually been seen failing</h1>
+  <p class="lede">Every number on this page is machine-derived and names its source. Authored prose only translates; gaps render as gaps — an empty ever-red is a fact about history, never a defect to hide.</p>
+  <div class="mockbar"><b>Illustrative example</b> — this page previews the post–slice-5 Testing station. Counts come from the 2026-07-16 dry-run against a <em>copy</em> of gastify (sweep + regen + one rehearsed red); the C38 row and run timestamps are illustrative. The live page is generated by the center scripts — this file is a design-record preview, not output.</div>
+
+  <div class="stats">
+    <div class="stat"><div class="n">1,589</div><div class="l">tests in corpus</div><div class="s">grep · junit ×3</div></div>
+    <div class="stat"><div class="n acc">1,562</div><div class="l">carry a C-id (98.3%)</div><div class="s">backfill-sweep 2026-07-16</div></div>
+    <div class="stat"><div class="n warnc">27</div><div class="l">unstamped — backtick titles</div><div class="s">known limit · manual follow-up</div></div>
+    <div class="stat"><div class="n failc">1</div><div class="l">ever-red observed</div><div class="s">git log -S · RED: trailer</div></div>
+    <div class="stat"><div class="n">3</div><div class="l">junit sources, digested</div><div class="s">results_out list · digest ✓ committed</div></div>
+  </div>
+
+  <section>
+    <div class="sh"><h2>The matrix</h2><span class="src">source: tests/results/*-junit.xml · corpus grep · git log -S "C&lt;id&gt;"</span></div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>C-id</th><th>test</th><th>corpus</th><th>status</th><th>ever-red?</th><th>last run</th></tr></thead>
+        <tbody>
+          <tr class="rowfocus">
+            <td class="mono">C38</td>
+            <td class="name">test_invite_deep_link_survives_auth_redirect_C38</td>
+            <td class="mono">api</td>
+            <td><span class="pill p-pass">pass</span></td>
+            <td><span class="pill p-red">RED seen · red@c6dd185</span></td>
+            <td class="mono">2026-07-16 09:41</td>
+          </tr>
+          <tr>
+            <td class="mono">C187</td>
+            <td class="name">test_list_consents_empty_C187 <span style="color:var(--ink3)">(async)</span></td>
+            <td class="mono">api</td>
+            <td><span class="pill p-pass">pass</span></td>
+            <td><span class="pill p-empty">— backfilled, no red observed</span></td>
+            <td class="mono">2026-07-16 09:41</td>
+          </tr>
+          <tr>
+            <td class="mono">C926</td>
+            <td class="name">C926 · SharedGroupsCard renders owner chip before members</td>
+            <td class="mono">web</td>
+            <td><span class="pill p-fail">fail</span></td>
+            <td><span class="pill p-empty">— backfilled, no red observed</span></td>
+            <td class="mono">2026-07-16 09:43</td>
+          </tr>
+          <tr>
+            <td class="mono">C1104</td>
+            <td class="name">C1104 · gs1 detail share — journey completes on mobile-390</td>
+            <td class="mono">e2e</td>
+            <td><span class="pill p-pass">pass</span></td>
+            <td><span class="pill p-empty">— backfilled, no red observed</span></td>
+            <td class="mono">2026-07-15 18:02</td>
+          </tr>
+          <tr>
+            <td class="mono">—</td>
+            <td class="name">it(`shows ${count} scans`) — template-literal title</td>
+            <td class="mono">web</td>
+            <td><span class="pill p-warn">no id — unstamped</span></td>
+            <td><span class="pill p-empty">n/a</span></td>
+            <td class="mono">2026-07-16 09:43</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="lede" style="font-size:.8rem;margin-top:8px">Five row states, all real classes: a case whose failure is on the record (<code>red@sha</code> links to the checkpoint commit) · backfilled cases whose ever-red is <em>honestly empty</em> (D5: no fake reds) · a current failure · a green journey · and the named residue the sweep could not stamp. Filter chips and the per-id history view are cut from this preview.</p>
+  </section>
+
+  <section class="panelrow">
+    <div class="panel">
+      <h3>Ever-red — has this case ever been seen failing?</h3>
+      <p>A test that has never failed proves nothing about its own teeth. <b>1</b> case carries an observed red (<code>git log -S "C38"</code> → first commit carries the <code>RED:</code> trailer; re-derivable by a stranger via a worktree at <code>c6dd185</code>).</p>
+      <p><b>1,561</b> backfilled cases render <span class="pill p-empty">—</span> until a genuine red is ever observed — the column fills from real work, never from ceremony. New cases born through <code>/gabe-red</code> arrive with their red already on the record.</p>
+    </div>
+    <div class="panel">
+      <h3>Manual angles — walks.jsonl</h3>
+      <p><span class="pill p-walk">walked</span> <code>gs1-detail-share</code> — pass · 2026-07-15 · khujta · evidence: <code>tests/web-e2e/proof/gs1-detail-share/</code></p>
+      <p><span class="pill p-fail">NEVER walked</span> <code>deploy-rollback</code> — no record in <code>walks.jsonl</code>; renders red until a human walks it. The one verification input with no machine source stays visibly human-shaped.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="sh"><h2>Verification changelog</h2><span class="src">source: git — commits that grew or reshaped the corpus</span></div>
+    <div class="panel chg">
+      <div class="row"><span class="sha">c6dd185</span><span class="what"><b>RED: C38</b> — fail by assertion @ invite deep-link loses token on auth redirect · Cases: NEW C38</span></div>
+      <div class="row"><span class="sha">8b21f04</span><span class="what"><b>chore(git):</b> register sweep sha in .git-blame-ignore-revs + blame.ignoreRevsFile</span></div>
+      <div class="row"><span class="sha">4e77c21</span><span class="what"><b>sweep:</b> stamp C1–C1577 into 227 files — 1,562 stamped · 0 renames · counts preserved (1061 py / 528 ts openers) · idempotent re-run: 0</span></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    <b>sources, in full (anti-curation):</b> corpus counts — grep over backend/tests · web/src · tests/web-e2e; status — tests/results/{api,web,e2e}-junit.xml + committed digests; ever-red — git log -S per id, RED: trailer check; manual angles — .kdbp/walks.jsonl; changelog — git log over test roots.<br>
+    <b>gaps are content:</b> 27 unstamped backtick titles named above · ever-red empty on all backfilled ids until reality fills it · e2e junit older than api/web this run (2026-07-15 vs 07-16) — shown, not smoothed.
+  </div>
+</div>
