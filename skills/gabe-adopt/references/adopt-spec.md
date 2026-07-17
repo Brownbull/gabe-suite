@@ -86,6 +86,15 @@ Small, append-only in spirit: rows change status, never vanish.
      **the link/orphan gate ignores `adoption.json`** — it is the adoption tracker, not a
      center-derived page (a gate that WARNs on it would teach sections to delete their own
      state to get green).
+   - **Shell / layout contract (the ruled layout — A3 · Tabbed, layout-lab convergence
+     2026-07-14):** the bootstrapped shell is the A3-Tabbed shape — a persistent LEFT SIDEBAR
+     of section/entity nouns (`class="side"`) + a per-feature four-tab bar (`nav.tabbar`), the
+     hub with its own shell (tabs fit a feature, not the hub). Reference implementation:
+     suite repo `docs/investigations/2026-07-14-center-layout-lab/directions/A3-tabbed/`
+     (`a3.css`, `index.html`, `tests.html`, `feature.html`); decision record in that lab's
+     README. **Restoring the archived project's legacy shell/css violates the clean-slate
+     ruling — the archive is testimony to re-verify, never a source of chrome.** The sidebar's
+     nouns come from the approved entity baseline (rank), not from the archived nav.
 5. **Write the tracker** (`sections: []`, `shortlist_approved: null`) and report (E7): archive
    manifest, bootstrapped paths, the `rank` pointer.
 
