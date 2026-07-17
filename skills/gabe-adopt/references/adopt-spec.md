@@ -89,12 +89,16 @@ Small, append-only in spirit: rows change status, never vanish.
    - **Shell / layout contract (the ruled layout — A3 · Tabbed, layout-lab convergence
      2026-07-14):** the bootstrapped shell is the A3-Tabbed shape — a persistent LEFT SIDEBAR
      of section/entity nouns (`class="side"`) + a per-feature four-tab bar (`nav.tabbar`), the
-     hub with its own shell (tabs fit a feature, not the hub). Reference implementation:
-     suite repo `docs/investigations/2026-07-14-center-layout-lab/directions/A3-tabbed/`
-     (`a3.css`, `index.html`, `tests.html`, `feature.html`); decision record in that lab's
-     README. **Restoring the archived project's legacy shell/css violates the clean-slate
-     ruling — the archive is testimony to re-verify, never a source of chrome.** The sidebar's
-     nouns come from the approved entity baseline (rank), not from the archived nav.
+     hub with its own shell (tabs fit a feature, not the hub). **The shell SHIPS as suite
+     templates: `templates/center/shell/` (installed at `~/.claude/templates/gabe/center/shell/`)
+     — `a3.css` verbatim + `index.html`/`feature.html` skeletons with the placeholder contract
+     in that dir's README.** Init copies the shell and wires the project's generators to fill
+     its slots; the shell is independent of the generator promotion (a project's own generators
+     may emit into it before the python promotion happens). Decision record: the layout lab's
+     README (`docs/investigations/2026-07-14-center-layout-lab/`). **Restoring the archived
+     project's legacy shell/css violates the clean-slate ruling — the archive is testimony to
+     re-verify, never a source of chrome.** The sidebar's nouns come from the approved entity
+     baseline (rank), not from the archived nav.
 5. **Write the tracker** (`sections: []`, `shortlist_approved: null`) and report (E7): archive
    manifest, bootstrapped paths, the `rank` pointer.
 

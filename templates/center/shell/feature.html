@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{SUBJECT_TITLE}} · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<div class="app">
+
+{{SIDEBAR}}  <!-- identical shell to index.html's aside.side, current subject's .navitem gets class "on" -->
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>{{SUBJECT_TITLE}}</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{SUBJECT_TITLE}}</h1>
+        <p>{{SUBJECT_LEDE}}</p>
+      </div>
+      {{SUBJECT_HEADLINE_STATS}}
+    </div>
+
+    <!-- The four-tab set is the SAME on every subject page — the shell's self-similarity is
+         the navigation contract: Overview at a glance · Tests · Evidence · Risk. -->
+    <nav class="tabbar">
+      <a class="tab on" href="#tab-overview">Overview</a>
+      <a class="tab" href="#tab-tests">Tests</a>
+      <a class="tab" href="#tab-evidence">Evidence</a>
+      <a class="tab" href="#tab-risk">Risk</a>
+    </nav>
+
+    <section id="tab-overview" class="tabpanel on">{{TAB_OVERVIEW}}</section>
+    <section id="tab-tests" class="tabpanel">{{TAB_TESTS}}</section>
+    <section id="tab-evidence" class="tabpanel">{{TAB_EVIDENCE}}</section>
+    <section id="tab-risk" class="tabpanel">{{TAB_RISK}}</section>
+  </div>
+</main>
+
+</div>
+{{TAB_SCRIPT}}
+</body>
+</html>

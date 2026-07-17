@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Overview · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<div class="app">
+
+<!-- ============ SIDEBAR — picks a subject. Nouns come from the APPROVED entity baseline
+     (adopt rank), never from an archived nav. Generators fill {{SIDEBAR_NAV}} with
+     .navlabel group headers + .navitem links (+ optional .navsub sublists, .count badges). -->
+<aside class="side">
+  <div class="brand">
+    <span class="logo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg></span>
+    <span><b>{{PROJECT_NAME}}</b><small>Command Center</small></span>
+  </div>
+  <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Search features, tests…<kbd>⌘K</kbd></div>
+
+  {{SIDEBAR_NAV}}
+  <!-- slot shape (example, one group):
+  <div class="navlabel">Verification</div>
+  <a class="navitem" href="tests.html">Tests <span class="count">{{TESTS_TOTAL}}</span></a>
+  <div class="navsub">
+    <a href="tests.html#journeys">Journeys · {{N}}</a>
+  </div>
+  -->
+
+  <div class="foot">regen {{REGEN_STAMP}}<br>HEAD {{HEAD_SHA}} · {{GENERATOR_NAME}}</div>
+</aside>
+
+<!-- ============ MAIN — the hub as the self-similar tabbed subject (tabs fit a feature;
+     the hub gets its OWN shell: this page). Four tabs re-lens the same subject. -->
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><b>Overview</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{HUB_TITLE}}</h1>
+        <p>{{HUB_LEDE}}</p>
+      </div>
+      {{HUB_HEADLINE_STATS}}
+    </div>
+
+    <nav class="tabbar">
+      <a class="tab on" href="#tab-overview">Overview</a>
+      <a class="tab" href="#tab-tests">Tests</a>
+      <a class="tab" href="#tab-evidence">Evidence</a>
+      <a class="tab" href="#tab-risk">Risk</a>
+    </nav>
+
+    <section id="tab-overview" class="tabpanel on">{{TAB_OVERVIEW}}</section>
+    <section id="tab-tests" class="tabpanel">{{TAB_TESTS}}</section>
+    <section id="tab-evidence" class="tabpanel">{{TAB_EVIDENCE}}</section>
+    <section id="tab-risk" class="tabpanel">{{TAB_RISK}}</section>
+  </div>
+</main>
+
+</div>
+{{TAB_SCRIPT}}
+</body>
+</html>

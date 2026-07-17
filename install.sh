@@ -84,27 +84,16 @@ if [ -d "$SCRIPT_DIR/templates" ]; then
     TPL_COUNT=$(ls -1 "$SCRIPT_DIR/templates/" 2>/dev/null | grep -v '^tier-sections$' | grep -v '^mockup$' | grep -v '^debt-patterns$' | wc -l)
     echo "  OK: $TPL_COUNT templates → ~/.claude/templates/gabe/"
 
-    if [ -d "$SCRIPT_DIR/templates/tier-sections" ]; then
-        run "mkdir -p ~/.claude/templates/gabe/tier-sections"
-        run "cp \"$SCRIPT_DIR/templates/tier-sections/\"*.md ~/.claude/templates/gabe/tier-sections/ 2>/dev/null || true"
-        SEC_COUNT=$(ls -1 "$SCRIPT_DIR/templates/tier-sections/"*.md 2>/dev/null | wc -l)
-        echo "  OK: $SEC_COUNT tier-sections → ~/.claude/templates/gabe/tier-sections/"
-    fi
-
-    if [ -d "$SCRIPT_DIR/templates/mockup" ]; then
-        run "mkdir -p ~/.claude/templates/gabe/mockup"
-        # Recursive copy — picks up tests/mockups/ subtree (hub.spec.ts, tweaks.spec.ts, section-smoke.spec.ts.tmpl)
-        run "cp -r \"$SCRIPT_DIR/templates/mockup/\"* ~/.claude/templates/gabe/mockup/ 2>/dev/null || true"
-        MK_COUNT=$(find "$SCRIPT_DIR/templates/mockup/" -type f 2>/dev/null | wc -l)
-        echo "  OK: $MK_COUNT mockup template files → ~/.claude/templates/gabe/mockup/ (incl. tests/mockups/)"
-    fi
-
-    if [ -d "$SCRIPT_DIR/templates/debt-patterns" ]; then
-        run "mkdir -p ~/.claude/templates/gabe/debt-patterns"
-        run "cp \"$SCRIPT_DIR/templates/debt-patterns/\"*.md ~/.claude/templates/gabe/debt-patterns/ 2>/dev/null || true"
-        DP_COUNT=$(ls -1 "$SCRIPT_DIR/templates/debt-patterns/"*.md 2>/dev/null | wc -l)
-        echo "  OK: $DP_COUNT debt-pattern files → ~/.claude/templates/gabe/debt-patterns/"
-    fi
+    # ALL template subdirectories, recursively — a new subdir must never need its own stanza
+    # (that per-name pattern is how templates/center/ silently failed to install; meta-review P3)
+    for sub in "$SCRIPT_DIR"/templates/*/; do
+        [ -d "$sub" ] || continue
+        subname=$(basename "$sub")
+        run "mkdir -p ~/.claude/templates/gabe/$subname"
+        run "cp -r \"$sub\"* ~/.claude/templates/gabe/$subname/ 2>/dev/null || true"
+        SUB_COUNT=$(find "$sub" -type f 2>/dev/null | wc -l)
+        echo "  OK: $SUB_COUNT files → ~/.claude/templates/gabe/$subname/"
+    done
 fi
 
 # Session hooks — kdbp hook scripts referenced by settings.json entries (templates/hooks.json markers).
