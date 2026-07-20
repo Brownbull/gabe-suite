@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tests · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<!-- STATION: Testing — the map's left column "Testing" section.
+     SOURCES (middle column): test corpus C-ids (grep) · junit + committed digests (results_out)
+     · git log -S "C<id>" + RED: trailers (ever-red) · .kdbp/walks.jsonl (manual angles)
+     · tests/**/proof/ shots+manifests (demo shelf). A SUBJECT page: carries the four tabs. -->
+<div class="app">
+
+{{SIDEBAR}}
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Tests</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{TESTS_TITLE}}</h1>
+        <p>{{TESTS_LEDE}}</p>
+      </div>
+      <div class="kpis">{{TESTS_KPIS}}</div>  <!-- .kpi cells: corpus total · C-id'd % · ever-red count · digest state · unstamped residue -->
+    </div>
+
+    <nav class="tabbar">
+      <a href="#tab-overview">Overview</a>
+      <a href="#tab-tests">Tests</a>
+      <a href="#tab-evidence">Evidence</a>
+      <a href="#tab-risk">Risk</a>
+    </nav>
+
+    <div class="tabbody">
+      <section class="tabpane" id="tab-overview">
+        {{BUCKETS}}          <!-- per-corpus buckets (api/web/e2e counts, junit freshness) — .panel + .tbl -->
+        {{VERIFICATION_CHANGELOG}} <!-- git-derived: commits that grew/reshaped the corpus incl. RED: entries — .tlist -->
+      </section>
+      <section class="tabpane" id="tab-tests">
+        {{MATRIX}}           <!-- THE matrix: C-id · test · corpus · status · ever-red? · last run — .tbl;
+                                  ever-red cells: red@sha link when observed, honest — when backfilled-empty -->
+      </section>
+      <section class="tabpane" id="tab-evidence">
+        {{MANUAL_ANGLES}}    <!-- walks.jsonl: walked (who·when·result·evidence) + NEVER-walked red — .panel -->
+        {{DEMO_SHELF}}       <!-- curated proof shots/manifests — .gal + .shot -->
+      </section>
+      <section class="tabpane" id="tab-risk">
+        {{GATES}}            <!-- gate states, flaky/quarantine, skipped(no reporter) honest gaps — .panel -->
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

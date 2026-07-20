@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{CHANGE_TITLE}} · Ledger · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<!-- STATION: Ledger — the map's left column "Ledger" section; ONE page per change, ephemeral
+     (regenerated, superseded by the next change — never accumulates).
+     SOURCES: git (the commit/PR: diff stats, message, trailers incl. RED:/Cases:) ·
+     .kdbp/PLAN.md cells the change flipped · .kdbp/LEDGER.md row. -->
+<div class="app">
+
+{{SIDEBAR}}
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › Ledger › <b>{{CHANGE_TITLE}}</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{CHANGE_TITLE}}</h1>
+        <p>{{CHANGE_LEDE}}</p>  <!-- what changed, in reader terms — translated from the commit, never invented -->
+      </div>
+      <div class="kpis">{{CHANGE_KPIS}}</div>  <!-- files · +/− lines · phases touched · cells flipped -->
+    </div>
+
+    <div class="tabbody">
+      <section class="tabpane" id="change" style="display:block">
+        {{CHANGE_COMMITS}}   <!-- the commit list with shas, trailers (RED:/Cases:), PR link — .tlist -->
+        {{CHANGE_CELLS}}     <!-- PLAN cells this change flipped (before→after glyphs) — .tbl -->
+        {{CHANGE_VERIFY}}    <!-- what verified it: tests run, digests, proofs landed — .panel -->
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Board · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<!-- STATION: Board — the map's left column "Board" section. Single-lens station page
+     (the four tabs re-lens subjects; a station shows ONE thing well).
+     SOURCES: .kdbp/PLAN.md + PLAN.json (rail cells, backlog) · git (non-phase lane)
+     · .kdbp/PENDING.md (review-debt lane) · .kdbp/SCOPE.md (backlog framing). -->
+<div class="app">
+
+{{SIDEBAR}}
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Board</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{BOARD_TITLE}}</h1>
+        <p>{{BOARD_LEDE}}</p>
+      </div>
+      <div class="kpis">{{BOARD_KPIS}}</div>  <!-- phases done/total · current phase · owed cells by kind -->
+    </div>
+
+    <div class="tabbody">
+      <section class="tabpane" id="board" style="display:block">
+        {{RAIL}}             <!-- the lifecycle rail: red→exec→review→commit→push(→center) per phase,
+                                  glyphs 1:1 from PLAN.json cells — .tbl (one row per phase) -->
+        {{REVIEW_DEBT_LANE}} <!-- PENDING.md open items, escalation ages — .panel + .tlist -->
+        {{NONPHASE_LANE}}    <!-- git/LEDGER work outside phases — .panel + .tlist -->
+        {{BACKLOG}}          <!-- unstarted phases + SCOPE arc remainder — .panel -->
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

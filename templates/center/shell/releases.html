@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Releases · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<!-- STATION: Releases — the map's left column "Releases" section; the stakeholder showcase
+     (gabe-feature release MODE renders per-release pages; this is the index + latest).
+     SOURCES: .kdbp/DEPLOYMENTS.md (terminal-env rows) · covered phases since last release
+     (Center cells) · curated proof (shots; video slots as NAMED GAPS, never staged). -->
+<div class="app">
+
+{{SIDEBAR}}
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Releases</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{RELEASES_TITLE}}</h1>
+        <p>{{RELEASES_LEDE}}</p>
+      </div>
+      <div class="kpis">{{RELEASES_KPIS}}</div>  <!-- releases total · latest env/date · features in latest -->
+    </div>
+
+    <div class="tabbody">
+      <section class="tabpane" id="releases" style="display:block">
+        {{LATEST_RELEASE}}   <!-- the newest showcase: covered features, hero proof shots — .panel + .gal/.shot -->
+        {{RELEASE_INDEX}}    <!-- prior releases: date · env · features · link — .tbl -->
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

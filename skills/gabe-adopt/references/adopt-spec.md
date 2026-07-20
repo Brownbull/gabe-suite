@@ -91,8 +91,11 @@ Small, append-only in spirit: rows change status, never vanish.
      of section/entity nouns (`class="side"`) + a per-feature four-tab bar (`nav.tabbar`), the
      hub with its own shell (tabs fit a feature, not the hub). **The shell SHIPS as suite
      templates: `templates/center/shell/` (installed at `~/.claude/templates/gabe/center/shell/`)
-     — `a3.css` verbatim + `index.html`/`feature.html` skeletons with the placeholder contract
-     in that dir's README.** Init copies the shell and wires the project's generators to fill
+     — `a3.css` verbatim + the FULL station set (`index`/`feature`/`tests`/`board`/
+     `entity-index`/`docs`/`ledger`/`releases`.html) with the placeholder contract + the
+     station↔sources mapping table in that dir's README. Every crucial section is generated
+     FROM its skeleton — a section page built from scratch instead of its template is a
+     defect.** Init copies the shell and wires the project's generators to fill
      its slots; the shell is independent of the generator promotion (a project's own generators
      may emit into it before the python promotion happens). Decision record: the layout lab's
      README (`docs/investigations/2026-07-14-center-layout-lab/`). **Restoring the archived

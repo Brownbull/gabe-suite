@@ -10,12 +10,25 @@ a four-tab bar (`nav.tabbar`: Overview · Tests · Evidence · Risk). Tabs re-le
 the sidebar changes subjects. The hub gets its own shell (`index.html`), features get
 `feature.html`.
 
-## Files
+## Files — the full station set (the connection map's left column, as templates)
 
-- `a3.css` — the shell's skin + layout, verbatim from the lab's converged direction. Projects
-  copy it to `docs/site/center/assets/a3.css`. Do not fork it per-project; layout evolution
-  happens HERE (suite repo) and re-installs.
-- `index.html` — hub skeleton. `feature.html` — subject skeleton.
+Every crucial section of the center has a skeleton here, pre-wired (in comments, per slot) to
+the FILES that feed it — so generators fill structure, never invent it. Two page models:
+**subjects** (hub · feature · tests) carry the invariant four-tab bar; **stations** (board ·
+entities · docs · ledger · releases) are single-lens pages — a station shows one thing well.
+
+| Template | Map section | Fed by (the map's middle column) |
+|---|---|---|
+| `a3.css` | the shell itself | — (verbatim from the lab; evolve HERE, never per-project) |
+| `index.html` | Hub + **Now** (Overview tab = recent changes + needs-you) | LEDGER.md · git · DEPLOYMENTS.md · digests · PENDING.md · walks.jsonl · PLAN |
+| `feature.html` | Feature/entity subject | cards/*.md · center.config.json · junit globs · proof/ · git |
+| `tests.html` | **Testing** — matrix · ever-red · manual angles · demo shelf | corpus C-ids · junit+digests · git `RED:` trailers · walks.jsonl · proof/ |
+| `board.html` | **Board** — rail · review-debt · non-phase · backlog | PLAN.md/PLAN.json cells · PENDING.md · git/LEDGER · SCOPE arc |
+| `entity-index.html` | **Entities** | center.config.json entities[]/features[] · adoption.json |
+| `docs.html` | **Docs** — feature-docs accumulator · foundations | cards/*.md · SCOPE · DECISIONS · RULES · BEHAVIOR |
+| `ledger.html` | **Ledger** — one page per change, ephemeral | git (commit/PR, trailers) · PLAN cells flipped · LEDGER row |
+| `releases.html` | **Releases** — stakeholder showcase | DEPLOYMENTS.md · Center-covered phases · curated proof |
+| *(no template)* | **Leaf** — OSS reports | external links in `{{SIDEBAR_NAV}}` (htmlcov, playwright report) |
 
 ## Placeholder contract (what a generator must fill)
 

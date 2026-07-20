@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Entities · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<!-- STATION: Entities — the map's left column "Entities" section. Single-lens station page.
+     SOURCES: center.config.json entities[] + features[] (which cards touch each entity)
+     · adoption.json (baseline/section status during adoption). -->
+<div class="app">
+
+{{SIDEBAR}}
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Entities</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{ENTITIES_TITLE}}</h1>
+        <p>{{ENTITIES_LEDE}}</p>
+      </div>
+      <div class="kpis">{{ENTITIES_KPIS}}</div>  <!-- entities total · covered · in-adoption · parked -->
+    </div>
+
+    <div class="tabbody">
+      <section class="tabpane" id="entities" style="display:block">
+        {{ENTITY_GRID}}   <!-- one block per entity: name, one-liner, its cards (.echips + .echip),
+                               test counts by corpus, coverage/adoption state — .catalog or .panel grid;
+                               each entity links to its feature.html-shaped subject page -->
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Docs · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+</head>
+<body>
+<!-- STATION: Docs — the map's left column "Docs" section. Single-lens station page.
+     SOURCES: cards/*.md + center.config.json (feature docs accumulator) ·
+     .kdbp/{SCOPE.md,DECISIONS.md,RULES.md,BEHAVIOR.md} (foundations — authored, human-owned). -->
+<div class="app">
+
+{{SIDEBAR}}
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Docs</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">synced · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>{{DOCS_TITLE}}</h1>
+        <p>{{DOCS_LEDE}}</p>
+      </div>
+      <div class="kpis">{{DOCS_KPIS}}</div>  <!-- cards total · reviewed · TODO-marked · foundations count -->
+    </div>
+
+    <div class="tabbody">
+      <section class="tabpane" id="docs" style="display:block">
+        {{FEATURE_DOCS}}  <!-- the accumulator: every card with entity chips, review stamp, freshness — .catalog/.tbl -->
+        {{FOUNDATIONS}}   <!-- SCOPE premise · DECISIONS · RULES · BEHAVIOR — .panel per foundation, links out -->
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>
