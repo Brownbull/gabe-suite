@@ -6,7 +6,7 @@ from pathlib import Path
 OUT = Path(__file__).resolve().parent
 REPO = OUT.parents[2]
 (OUT / 'assets').mkdir(parents=True, exist_ok=True)
-shutil.copy(REPO / 'templates/center/shell/a3.css', OUT / 'assets/a3.css')
+shutil.copy(REPO / 'templates/center/shell/assets/a3.css', OUT / 'assets/a3.css')
 
 IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg>'
 

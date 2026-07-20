@@ -259,3 +259,20 @@ h2.sec .more:hover{text-decoration:underline}
   .subjecthead,.tabbar,.tabpane{padding-left:18px;padding-right:18px}
   .tabbar{top:0;position:static}
 }
+
+/* ---------- identity layer — the landed-map palette shipped with the shell ----------
+   Group colors (--g-*) and command colors mirror the connection-map artifact's CSS vars.
+   Section banners (.sechead) make every map section identifiable wherever it renders:
+   wrap in <section data-sec="<id>" style="--gc:<group color>"> — shipped in the skeletons. */
+:root{--g-now:#0d7a84;--g-board:#1f6feb;--g-ent:#0a7d6b;--g-docs:#8e4585;--g-test:#3f6d4c;--g-ledger:#9a5a00;--g-rel:#7a5a8a;--g-leaf:#8494a4}
+.navlabel.g-now{color:#3bb3bd}.navlabel.g-board{color:#6aa6f5}.navlabel.g-ent{color:#4fc3a8}.navlabel.g-docs{color:#c98bbb}
+.navlabel.g-test{color:#6fa77d}.navlabel.g-ledger{color:#d79a3c}.navlabel.g-rel{color:#b795c9}.navlabel.g-leaf{color:#8494a4}
+section[data-sec]{margin:0 0 22px}
+.sechead{display:flex;gap:12px;align-items:flex-start;background:color-mix(in srgb,var(--gc,var(--accent)) 9%,var(--surface));border:1px solid color-mix(in srgb,var(--gc,var(--accent)) 30%,transparent);border-radius:var(--radius);padding:12px 14px;margin:0 0 12px;box-shadow:var(--shadow)}
+.secic{width:36px;height:36px;flex:none;border-radius:9px;background:var(--gc,var(--accent));color:#fff;display:grid;place-items:center}
+.secic svg{width:18px;height:18px}
+.sechead h2{margin:0;font-size:.98rem;font-weight:700;letter-spacing:-.01em;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.sechead .gtag{font-size:.64rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gc,var(--accent))}
+.sechead p{margin:3px 0 0;color:var(--muted);font-size:.78rem}
+.tabbar a{display:inline-flex;align-items:center;gap:7px}
+.tabbar a svg{width:15px;height:15px}

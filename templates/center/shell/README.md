@@ -19,7 +19,7 @@ entities · docs · ledger · releases) are single-lens pages — a station show
 
 | Template | Map section | Fed by (the map's middle column) |
 |---|---|---|
-| `a3.css` | the shell itself | — (verbatim from the lab; evolve HERE, never per-project) |
+| `assets/a3.css` | the shell itself + the identity layer | — (lab css + the landed-map palette; evolve HERE, never per-project) |
 | `index.html` | Hub + **Now** (Overview tab = recent changes + needs-you) | LEDGER.md · git · DEPLOYMENTS.md · digests · PENDING.md · walks.jsonl · PLAN |
 | `feature.html` | Feature/entity subject | cards/*.md · center.config.json · junit globs · proof/ · git |
 | `tests.html` | **Testing** — matrix · ever-red · manual angles · demo shelf | corpus C-ids · junit+digests · git `RED:` trailers · walks.jsonl · proof/ |
@@ -30,16 +30,37 @@ entities · docs · ledger · releases) are single-lens pages — a station show
 | `releases.html` | **Releases** — stakeholder showcase | DEPLOYMENTS.md · Center-covered phases · curated proof |
 | *(no template)* | **Leaf** — OSS reports | external links in `{{SIDEBAR_NAV}}` (htmlcov, playwright report) |
 
+## The identity layer (ships IN the skeletons — never regenerated per project)
+
+- **Sidebar**: the STATION SET is static in every skeleton — colored group labels
+  (`.navlabel.g-now/.g-board/.g-ent/.g-docs/.g-test/.g-ledger/.g-rel/.g-leaf`, the landed-map
+  palette) + one exclusive icon per station (home · trello · layers · book · check-circle ·
+  archive · award). Generators fill only the project-specific parts (see contract below).
+- **Tab bar**: the four tabs carry exclusive icons (eye · check-square · paperclip · shield),
+  static in the skeletons.
+- **Section banners**: every map section renders under a `<section data-sec="<id>"
+  style="--gc:<group color>">` + `.sechead` banner (tinted, iconed) — SHIPPED in the skeletons,
+  so sections are identifiable wherever they appear (the matrix banner is the same on tests.html
+  and, entity-scoped, on feature.html). Exclusive section icons: clock · bell · list ·
+  alert-triangle · git-branch · inbox · box · file-text · book-open · table · camera ·
+  user-check · image · git-commit · tag. Aux slots (buckets/gates) reuse their parent
+  section's banner identity — same `data-sec`, same icon.
+
 ## Placeholder contract (what a generator must fill)
 
-`{{PROJECT_NAME}}` `{{LANG}}` · `{{SIDEBAR_NAV}}` (navlabel groups + navitem links + optional
-navsub/count — nouns come from the APPROVED adopt baseline, never an archived nav) ·
+`{{PROJECT_NAME}}` `{{LANG}}` · sidebar slots: `{{SIDEBAR_ENTITIES}}` (one `.navitem` per
+APPROVED-baseline entity — box icon, link to its feature page, class `on` when current; never
+from an archived nav) `{{ENTITY_COUNT}}` `{{TESTS_COUNT}}` `{{SIDEBAR_TESTS_SUB}}` (`.navsub`)
+`{{SIDEBAR_LEAF}}` (external `.navitem` links: htmlcov, playwright report) ·
 `{{REGEN_STAMP}}` `{{HEAD_SHA}}` `{{GENERATOR_NAME}}` (the foot is machine truth) ·
-`{{STATUS_PILLS}}` `{{SYNC_AGE}}` · `{{HUB_TITLE}}` `{{HUB_LEDE}}` `{{HUB_HEADLINE_STATS}}` /
-`{{SUBJECT_TITLE}}` `{{SUBJECT_LEDE}}` `{{SUBJECT_HEADLINE_STATS}}` `{{SIDEBAR}}` ·
-`{{TAB_OVERVIEW}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}`. Tabs are pure-CSS
-`:target` (`.tabbar` anchors → `.tabbody > .tabpane#tab-*`) — deep-linkable, no script;
-the Overview pane shows by default when nothing is targeted.
+`{{STATUS_PILLS}}` `{{SYNC_AGE}}` · `{{HUB_TITLE}}` `{{HUB_LEDE}}` `{{HUB_HEADLINE_STATS}}` +
+hub Overview subsections `{{RECENT_CHANGES}}` `{{NEEDS_YOU}}` (under their shipped banners) /
+`{{SUBJECT_TITLE}}` `{{SUBJECT_LEDE}}` `{{SUBJECT_HEADLINE_STATS}}` ·
+`{{TAB_OVERVIEW}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}` (content only — the
+banners above them are static). Tabs are pure-CSS `:target` (`.tabbar` anchors →
+`.tabbody > .tabpane#tab-*`) — deep-linkable, no script; the Overview pane shows by default
+when nothing is targeted. Raw skeletons render styled in place (`assets/a3.css` resolves in
+this dir) — unfilled slots show as literal `{{TOKEN}}` text inside the styled chrome.
 
 ## Rules
 
