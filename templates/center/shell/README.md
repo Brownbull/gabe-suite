@@ -24,8 +24,9 @@ navsub/count — nouns come from the APPROVED adopt baseline, never an archived 
 `{{REGEN_STAMP}}` `{{HEAD_SHA}}` `{{GENERATOR_NAME}}` (the foot is machine truth) ·
 `{{STATUS_PILLS}}` `{{SYNC_AGE}}` · `{{HUB_TITLE}}` `{{HUB_LEDE}}` `{{HUB_HEADLINE_STATS}}` /
 `{{SUBJECT_TITLE}}` `{{SUBJECT_LEDE}}` `{{SUBJECT_HEADLINE_STATS}}` `{{SIDEBAR}}` ·
-`{{TAB_OVERVIEW}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}` · `{{TAB_SCRIPT}}` (the
-tab-switching script the generator emits — no external JS).
+`{{TAB_OVERVIEW}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}`. Tabs are pure-CSS
+`:target` (`.tabbar` anchors → `.tabbody > .tabpane#tab-*`) — deep-linkable, no script;
+the Overview pane shows by default when nothing is targeted.
 
 ## Rules
 

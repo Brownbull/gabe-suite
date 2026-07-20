@@ -8,7 +8,7 @@
 <body>
 <div class="app">
 
-{{SIDEBAR}}  <!-- identical shell to index.html's aside.side, current subject's .navitem gets class "on" -->
+{{SIDEBAR}}  <!-- identical shell to index.html's aside.side; the current subject's .navitem carries class "on" -->
 
 <main class="main">
   <div class="topbar">
@@ -28,22 +28,23 @@
     </div>
 
     <!-- The four-tab set is the SAME on every subject page — the shell's self-similarity is
-         the navigation contract: Overview at a glance · Tests · Evidence · Risk. -->
+         the navigation contract. Pure-CSS :target tabs — no script. -->
     <nav class="tabbar">
-      <a class="tab on" href="#tab-overview">Overview</a>
-      <a class="tab" href="#tab-tests">Tests</a>
-      <a class="tab" href="#tab-evidence">Evidence</a>
-      <a class="tab" href="#tab-risk">Risk</a>
+      <a href="#tab-overview">Overview</a>
+      <a href="#tab-tests">Tests</a>
+      <a href="#tab-evidence">Evidence</a>
+      <a href="#tab-risk">Risk</a>
     </nav>
 
-    <section id="tab-overview" class="tabpanel on">{{TAB_OVERVIEW}}</section>
-    <section id="tab-tests" class="tabpanel">{{TAB_TESTS}}</section>
-    <section id="tab-evidence" class="tabpanel">{{TAB_EVIDENCE}}</section>
-    <section id="tab-risk" class="tabpanel">{{TAB_RISK}}</section>
+    <div class="tabbody">
+      <section class="tabpane" id="tab-overview">{{TAB_OVERVIEW}}</section>
+      <section class="tabpane" id="tab-tests">{{TAB_TESTS}}</section>
+      <section class="tabpane" id="tab-evidence">{{TAB_EVIDENCE}}</section>
+      <section class="tabpane" id="tab-risk">{{TAB_RISK}}</section>
+    </div>
   </div>
 </main>
 
 </div>
-{{TAB_SCRIPT}}
 </body>
 </html>

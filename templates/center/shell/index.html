@@ -10,7 +10,8 @@
 
 <!-- ============ SIDEBAR — picks a subject. Nouns come from the APPROVED entity baseline
      (adopt rank), never from an archived nav. Generators fill {{SIDEBAR_NAV}} with
-     .navlabel group headers + .navitem links (+ optional .navsub sublists, .count badges). -->
+     .navlabel group headers + .navitem links (+ optional .navsub sublists, .count badges);
+     the current page's .navitem carries class "on". -->
 <aside class="side">
   <div class="brand">
     <span class="logo"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h7v7H3zM14 3h7v7h-7zM14 14h7v7h-7zM3 14h7v7H3z"/></svg></span>
@@ -19,19 +20,13 @@
   <div class="search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg> Search features, tests…<kbd>⌘K</kbd></div>
 
   {{SIDEBAR_NAV}}
-  <!-- slot shape (example, one group):
-  <div class="navlabel">Verification</div>
-  <a class="navitem" href="tests.html">Tests <span class="count">{{TESTS_TOTAL}}</span></a>
-  <div class="navsub">
-    <a href="tests.html#journeys">Journeys · {{N}}</a>
-  </div>
-  -->
 
   <div class="foot">regen {{REGEN_STAMP}}<br>HEAD {{HEAD_SHA}} · {{GENERATOR_NAME}}</div>
 </aside>
 
 <!-- ============ MAIN — the hub as the self-similar tabbed subject (tabs fit a feature;
-     the hub gets its OWN shell: this page). Four tabs re-lens the same subject. -->
+     the hub gets its OWN shell: this page). Pure-CSS :target tabs — no script; the
+     Overview pane is the default when nothing is targeted. -->
 <main class="main">
   <div class="topbar">
     <div class="crumb"><b>Overview</b></div>
@@ -50,20 +45,21 @@
     </div>
 
     <nav class="tabbar">
-      <a class="tab on" href="#tab-overview">Overview</a>
-      <a class="tab" href="#tab-tests">Tests</a>
-      <a class="tab" href="#tab-evidence">Evidence</a>
-      <a class="tab" href="#tab-risk">Risk</a>
+      <a href="#tab-overview">Overview</a>
+      <a href="#tab-tests">Tests</a>
+      <a href="#tab-evidence">Evidence</a>
+      <a href="#tab-risk">Risk</a>
     </nav>
 
-    <section id="tab-overview" class="tabpanel on">{{TAB_OVERVIEW}}</section>
-    <section id="tab-tests" class="tabpanel">{{TAB_TESTS}}</section>
-    <section id="tab-evidence" class="tabpanel">{{TAB_EVIDENCE}}</section>
-    <section id="tab-risk" class="tabpanel">{{TAB_RISK}}</section>
+    <div class="tabbody">
+      <section class="tabpane" id="tab-overview">{{TAB_OVERVIEW}}</section>
+      <section class="tabpane" id="tab-tests">{{TAB_TESTS}}</section>
+      <section class="tabpane" id="tab-evidence">{{TAB_EVIDENCE}}</section>
+      <section class="tabpane" id="tab-risk">{{TAB_RISK}}</section>
+    </div>
   </div>
 </main>
 
 </div>
-{{TAB_SCRIPT}}
 </body>
 </html>
