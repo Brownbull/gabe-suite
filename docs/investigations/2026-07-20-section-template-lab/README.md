@@ -46,5 +46,18 @@ Directions rendered, awaiting operator picks (one per section). On picks: fragme
 shell README's contract table grows a sections column, `./install.sh` + doctor. Nothing is
 binding until picked — this dir is exploration, like the layout lab before its convergence.
 
-Regenerator: session scratchpad `gen-section-lab.py` (illustrative fill; not promoted — the lab
-is a decision record, not a build tool).
+**What git carries (correction of the two earlier commit messages here):** per the repo policy
+(`.gitignore`: "the .md record is committed; heavy generated artifacts stay local"), the lab's
+`*.html` + `assets/` are UNTRACKED working-tree — the earlier commits carried only this README.
+The committed, reproducible form is `generate.py`: run `python3 generate.py` from anywhere to
+rebuild every page (it copies `a3.css` from `templates/center/shell/` and writes beside itself).
+Same policy kept the 2026-07-14 layout lab local; the durable outcome of THIS lab will be the
+picked fragments landing in `templates/center/shell/sections/` — repo-first, as always.
+
+**Titles/subtitles treatment (operator ask, 2026-07-20):** every section head is a group-tinted
+banner (color-mix of the group color over the surface) so titles stand off the content
+background; hosts strips and direction heads inherit the tint, direction badges wear the group
+color; page titles get the same banner treatment. 24 exclusive icons, no repeats: 16 sections
+(clock · bell · list · alert-triangle · git-branch · inbox · box · file-text · book-open ·
+table · camera · user-check · image · git-commit · tag · external-link) + 8 pages (map · zap ·
+trello · layers · book · check-circle · archive · award), carried in the sidebar too.
