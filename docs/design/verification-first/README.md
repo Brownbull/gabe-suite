@@ -133,7 +133,10 @@ ledger pages, changelogs, regression relationships, ever-red, scope joins, the n
 
 **Naming (locked earlier):** Docs · Foundations · Ledger · Testing (matrix inside; automated +
 manual as angle groups on ONE feature page) · the accumulator/ephemeral split; A3 "tabbed subject"
-is the working layout (lab: `docs/investigations/2026-07-14-center-layout-lab/`).
+is the BINDING layout (lab: `docs/investigations/2026-07-14-center-layout-lab/`; contract:
+adopt-spec §init step 4; skeletons: `templates/center/shell/`). A filled, interlinked render of
+every station lives at [`shell-preview/`](shell-preview/index.html) — open it to SEE the shape;
+the raw templates show `{{SLOT}}` tokens by design.
 
 ## 5 · The decisions (2026-07-15, all locked)
 
