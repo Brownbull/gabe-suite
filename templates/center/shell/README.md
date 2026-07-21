@@ -1,76 +1,117 @@
-# Center shell templates — A3 · Tabbed (the ruled layout)
+# Center shell templates — A3 · Tabbed (the ruled layout, post-trial contract)
 
-The command-center SHELL every `/gabe-adopt init` bootstraps from — the layout-lab convergence
-(2026-07-14; decision record: `docs/investigations/2026-07-14-center-layout-lab/README.md`,
-archetypes on the claude.ai/design project "Gabe Center — Layout Directions").
+The command-center SHELL every adoption builds from. Field-tested end-to-end by the gastify
+transaction trial (2026-07-20/21, absorbed at suite `55918c4`); nav contract merged per the
+landed map v3. Distribution: this dir installs to `~/.claude/templates/gabe/center/shell/`;
+projects VENDOR a copy (their `templates/center/shell/`) as the build input — reproducible per
+commit — and improvements loop back HERE via export handoffs. The suite is the source of truth
+and the distributor; a vendored copy is never edited ahead of a handoff.
 
-**The shape, in one line:** a persistent left sidebar of section/entity nouns (`aside.side`)
-picks a SUBJECT; every subject — the hub included — renders as the same self-similar page with
-a four-tab bar (`nav.tabbar`: Overview · Tests · Evidence · Risk). Tabs re-lens one subject;
-the sidebar changes subjects. The hub gets its own shell (`index.html`), features get
-`feature.html`.
+**The shape:** a persistent left sidebar of stations + entity nouns picks a SUBJECT; feature
+pages carry the invariant FIVE-tab bar (Overview · Code · Tests · Evidence · Risk); stations are
+single-lens pages. Pure-CSS `:target` tabs (`:has(:target)` variant so in-page anchors and
+subnav links do not collapse the pane).
 
-## Files — the full station set (the connection map's left column, as templates)
+## The ownership rule (binding)
 
-Every crucial section of the center has a skeleton here, pre-wired (in comments, per slot) to
-the FILES that feed it — so generators fill structure, never invent it. Two page models:
-**subjects** (hub · feature · tests) carry the invariant four-tab bar; **stations** (board ·
-entities · docs · ledger · releases) are single-lens pages — a station shows one thing well.
+**The skeleton owns the TAB SET and the NAV GROUPS; the generator owns the sections inside a
+pane.** Overview, Tests and Evidence panes ship BARE (`{{TAB_*}}` only) because their internal
+sectioning (order, subnavs, expanders) is generator logic. Every generator-emitted section MUST
+carry its identity: `sechead(…, sec_id=)` emits `data-sec="<id>"` on the wrapper — the same
+section is identifiable on its station page and, entity-scoped, on feature pages. A section
+page built from scratch instead of its template is a defect (adopt-spec).
 
-| Template | Map section | Fed by (the map's middle column) |
+## Files — the station set
+
+| Template | Role | Tabs |
 |---|---|---|
-| `assets/a3.css` | the shell itself + the identity layer | — (lab css + the landed-map palette; evolve HERE, never per-project) |
-| `index.html` | Hub + **Now** (Overview tab = recent changes + needs-you) | LEDGER.md · git · DEPLOYMENTS.md · digests · PENDING.md · walks.jsonl · PLAN |
-| `feature.html` | Feature/entity subject | cards/*.md · center.config.json · junit globs · proof/ · git |
-| `tests.html` | **Testing** — matrix · ever-red · manual angles · demo shelf | corpus C-ids · junit+digests · git `RED:` trailers · walks.jsonl · proof/ |
-| `board.html` | **Board** — rail · review-debt · non-phase · backlog | PLAN.md/PLAN.json cells · PENDING.md · git/LEDGER · SCOPE arc |
-| `entity-index.html` | **Entities** | center.config.json entities[]/features[] · adoption.json |
-| `docs.html` | **Docs** — feature-docs accumulator · foundations | cards/*.md · SCOPE · DECISIONS · RULES · BEHAVIOR |
-| `ledger.html` | **Ledger** — one page per change, ephemeral | git (commit/PR, trailers) · PLAN cells flipped · LEDGER row |
-| `releases.html` | **Releases** — stakeholder showcase | DEPLOYMENTS.md · Center-covered phases · curated proof |
-| *(no template)* | **Leaf** — OSS reports | external links in `{{SIDEBAR_NAV}}` (htmlcov, playwright report) |
+| `index.html` | hub SUBJECT — Overview tab contains `now.recent-changes` + `now.needs-you` | 4 (no Code) |
+| `feature.html` | entity SUBJECT — one per adopted entity, generated from registration data | **5** |
+| `tests.html` | Testing SUBJECT — buckets/changelog · matrix · walks+shelf · gates | 4 |
+| `board.html` `entity-index.html` `docs.html` `ledger.html` `releases.html` | single-lens STATIONS | 1 |
+| *(spec'd, next loop)* `architecture.html` | app-wide Architecture STATION rendered from `archmap.json` | 1 |
+| `assets/a3.css` | the skin + identity layer + trial vocabulary (evolve via the loop, never per-project) | — |
+| `assets/slots.js` | raw-skeleton affordance: unfilled `{{TOKEN}}`s render as labeled chips + a notice bar; inert on generated pages | — |
+| `assets/a3-settings.js` | viewer settings (cog in `.brand`): 10 content fonts, size S–XL, compact, rail, Light/Dark — localStorage | — |
+| `assets/a3-lightbox.js` | proof viewer + expander cascade; delegated on `a[data-lb]`, progressive (anchors resolve with JS off) | — |
 
-## The identity layer (ships IN the skeletons — never regenerated per project)
+## The ruled nav (landed map v3 — merged 2026-07-21)
 
-- **Sidebar**: the STATION SET is static in every skeleton — colored group labels
-  (`.navlabel.g-now/.g-board/.g-ent/.g-docs/.g-test/.g-ledger/.g-rel/.g-leaf`, the landed-map
-  palette) + one exclusive icon per station (home · trello · layers · book · check-circle ·
-  archive · award). Generators fill only the project-specific parts (see contract below).
-- **Tab bar**: the four tabs carry exclusive icons (eye · check-square · paperclip · shield),
-  static in the skeletons.
-- **Section banners**: every map section renders under a `<section data-sec="<id>"
-  style="--gc:<group color>">` + `.sechead` banner (tinted, iconed) — SHIPPED in the skeletons,
-  so sections are identifiable wherever they appear (the matrix banner is the same on tests.html
-  and, entity-scoped, on feature.html). Exclusive section icons: clock · bell · list ·
-  alert-triangle · git-branch · inbox · box · file-text · book-open · table · camera ·
-  user-check · image · git-commit · tag. Aux slots (buckets/gates) reuse their parent
-  section's banner identity — same `data-sec`, same icon.
+Static in the skeletons: the station items (Overview · Board · Entity index · Docs · Tests ·
+Latest change · Releases), the colored group labels (`g-now/g-board/g-ent/g-docs/g-code/g-test/
+g-ledger/g-rel/g-leaf`), and the Testing navsub (`matrix · evidence · gates` — deep links to the
+tests page's own tabs; never authored, so it cannot drift). Generator-filled:
 
-## Placeholder contract (what a generator must fill)
+- `{{SIDEBAR_ENTITIES}}` — **adoption.json is THE registry and drives this list** (D123):
+  adopted rows link their feature pages; pending rows render MUTED with their tracker state
+  chip (pending/building/awaiting-approval), linking the entity index. Labels come from the
+  registry row's `display_name` — one fact, one word, on every surface.
+- `{{SIDEBAR_CODE}}` — the Architecture item: render it ONLY when `architecture.html` exists;
+  else a muted "not built yet" line. The per-feature Code TAB deliberately has no nav item.
+- `{{SIDEBAR_LEAF}}` — each known OSS report (htmlcov, playwright) WHEN its file exists on
+  disk; else a muted "none wired yet" line. Never a dead link.
+- `{{ENTITY_COUNT}}` `{{TESTS_COUNT}}` — live counts; every chrome number must be traceable to
+  a section that leads with it (pills are links).
 
-`{{PROJECT_NAME}}` `{{LANG}}` · sidebar slots: `{{SIDEBAR_ENTITIES}}` (one `.navitem` per
-APPROVED-baseline entity — box icon, link to its feature page, class `on` when current; never
-from an archived nav) `{{ENTITY_COUNT}}` `{{TESTS_COUNT}}` `{{SIDEBAR_TESTS_SUB}}` (`.navsub`)
-`{{SIDEBAR_LEAF}}` (external `.navitem` links: htmlcov, playwright report) ·
-`{{REGEN_STAMP}}` `{{HEAD_SHA}}` `{{GENERATOR_NAME}}` (the foot is machine truth) ·
-`{{STATUS_PILLS}}` `{{SYNC_AGE}}` · `{{HUB_TITLE}}` `{{HUB_LEDE}}` `{{HUB_HEADLINE_STATS}}` +
-hub Overview subsections `{{RECENT_CHANGES}}` `{{NEEDS_YOU}}` (under their shipped banners) /
-`{{SUBJECT_TITLE}}` `{{SUBJECT_LEDE}}` `{{SUBJECT_HEADLINE_STATS}}` ·
-`{{TAB_OVERVIEW}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}` (content only — the
-banners above them are static). Tabs are pure-CSS `:target` (`.tabbar` anchors →
-`.tabbody > .tabpane#tab-*`) — deep-linkable, no script; the Overview pane shows by default
-when nothing is targeted. Raw skeletons render styled in place (`assets/a3.css` resolves in
-this dir), and `assets/slots.js` renders any unfilled `{{TOKEN}}` as a labeled dashed chip
-plus a "template skeleton" notice bar — so a raw open reads as a template awaiting its
-generator, never as a broken page. On generated pages no tokens remain and the script is a
-no-op (tab navigation stays pure CSS either way). Generators copy `assets/` wholesale.
+**Containment rule:** a nav item opens a PAGE; the page may hold several map sections
+(Overview → recent-changes + needs-you; Board → rail + three lanes). One item per station —
+sections are not nav entries.
+
+## Placeholder contract
+
+`{{PROJECT_NAME}}` `{{LANG}}` · sidebar: `{{SIDEBAR_ENTITIES}}` `{{SIDEBAR_CODE}}`
+`{{SIDEBAR_LEAF}}` `{{ENTITY_COUNT}}` `{{TESTS_COUNT}}` · foot: `{{REGEN_STAMP}}`
+`{{HEAD_SHA}}` `{{GENERATOR_NAME}}` · chrome: `{{STATUS_PILLS}}` `{{SYNC_AGE}}` (the pills
+cluster rides IN the tabbar — `.tpills`; the topbar crumb scrolls away, the tabbar is sticky) ·
+hub: `{{HUB_TITLE}}` `{{HUB_LEDE}}` `{{HUB_HEADLINE_STATS}}` `{{RECENT_CHANGES}}`
+`{{NEEDS_YOU}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}` · feature:
+`{{SUBJECT_TITLE}}` `{{SUBJECT_LEDE}}` `{{SUBJECT_HEADLINE_STATS}}` `{{TAB_OVERVIEW}}`
+`{{TAB_CODE}}` `{{TAB_TESTS}}` `{{TAB_EVIDENCE}}` `{{TAB_RISK}}` · station pages keep their
+named slots (see each file's comments). A generator may add slots but must fill every listed
+one or render an honest named gap — **a false gap is as dishonest as a false pass.**
+
+## Section inventory per tab (feature pages — the five-tab contract)
+
+| Tab | Sections (generator-owned) | Audience |
+|---|---|---|
+| Overview | card (lens block leads) · diagrams (picker) · growth · decisions changelog | everyone |
+| Code | endpoints · code map · data model — ALL from `archmap.json`, the read-once code map | developers |
+| Tests | kinds & coverage · matrix (rows expand to cases) | "is it tested?" |
+| Evidence | proof sets (rows → legs → galleries; reference files HELD OUT, stated) · not proven here | business |
+| Risk | register (4-field grammar, GAP rows link growth) · not carried forward | whoever prices it |
+
+Every tab pairs an accumulator with an ephemeral half (adopt-spec §ephemeral/accumulator):
+card / card `# CODE` / **testing claim card (spec'd)** / `manifest.json` per set / card `# RISKS`.
+
+## CSS vocabulary (the trial's additions — legend where used, always)
+
+`.tpills` tabbar cluster · `.subnav` sticky per-tab nav · `details.secinfo` (⊕ legend beside a
+section title; tables never hide) · `details.pmore` (word-boundary truncation carrying its own
+⊕ — every truncation must) · `details.proofset` + `details.legset` (proof rows → legs; NOT
+`.leg`, which is the legend row) · `.tbl tr.exp` expander rows + open-highlight · `.dgm`
+diagram picker · `.lens*` + `details.more` (card folds) · `.tag.m-*` HTTP verbs · `.l-*`
+layers · `.s-*` severities · `.fm-*` font-only verb links · `.ty-*` type families (deeper =
+wider type; uncolored = domain alias, say so) · `.meter` (bar + count in one cell) · `.cid`
+case-id chip (`.cid.none` = `—`, never "un-run") · `.tag.e-*`/`.st-*` effort/stage pricing ·
+dark theme via `[data-theme="dark"]` (mermaid SVGs get an honest light plate) · viewer vars
+`--root-size`/`--font-content`/`--side-w`, `data-compact` (vertical density) ≠ `data-rail`
+(icon collapse). Chrome uses damped `calc()`, not pure rem — it must hold one line at every
+viewer setting; under width pressure scroll, never wrap, never truncate.
+
+## Behaviour contract (the JS layer — guard required)
+
+Viewer: click opens the artifact IN the page; ←/→ run the WHOLE set leg by leg; ↑/↓ change
+SET (fold current, unfold next); no wrap at the ends (wrapping silently changes subject); top
+line = leg + position, bottom = set. Expanders CASCADE to sub-sections — one toggle, one
+decision (`toggle` doesn't bubble: capture phase, and tests must wait a tick). Tab navigation
+itself stays script-free. **This layer ships only with its committed harness** (the 360-combo
+chrome proof was rebuilt as tests after the trial deleted it — do not regress this).
 
 ## Rules
 
-- **The archived project's legacy shell/css is never a source of chrome** (adopt-spec shell
-  contract) — the archive is testimony to re-verify, not styling to restore.
-- The four-tab set is invariant across subjects — self-similarity IS the navigation model.
-- Content in every tab is generated from machine sources (junit, git, walks.jsonl, digests);
-  authored prose only translates (anti-curation).
-- Generators consume these skeletons by slot substitution; a project's generator may add
-  slots but must fill every listed one or render an honest gap.
+- The archived project's legacy shell/css is never a source of chrome.
+- Content is generated from machine sources; authored prose only translates; a card must not
+  restate a number the build can read.
+- Raw skeletons render styled in place; `slots.js` labels unfilled slots — a template awaiting
+  its generator, never a broken page.
+- Generators copy `assets/` wholesale; the vendored copy is the build input (never `$HOME`).

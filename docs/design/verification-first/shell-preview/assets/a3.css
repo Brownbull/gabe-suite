@@ -313,9 +313,9 @@ h2.sec .more:hover{text-decoration:underline}
    Group colors (--g-*) and command colors mirror the connection-map artifact's CSS vars.
    Section banners (.sechead) make every map section identifiable wherever it renders:
    wrap in <section data-sec="<id>" style="--gc:<group color>"> — shipped in the skeletons. */
-:root{--g-now:#0d7a84;--g-board:#1f6feb;--g-ent:#0a7d6b;--g-docs:#8e4585;--g-test:#3f6d4c;--g-ledger:#9a5a00;--g-rel:#7a5a8a;--g-leaf:#8494a4}
+:root{--g-now:#0d7a84;--g-board:#1f6feb;--g-ent:#0a7d6b;--g-docs:#8e4585;--g-code:#5a53a8;--g-test:#3f6d4c;--g-ledger:#9a5a00;--g-rel:#7a5a8a;--g-leaf:#8494a4}
 .navlabel.g-now{color:#3bb3bd}.navlabel.g-board{color:#6aa6f5}.navlabel.g-ent{color:#4fc3a8}.navlabel.g-docs{color:#c98bbb}
-.navlabel.g-test{color:#6fa77d}.navlabel.g-ledger{color:#d79a3c}.navlabel.g-rel{color:#b795c9}.navlabel.g-leaf{color:#8494a4}
+.navlabel.g-code{color:#9b93e6}.navlabel.g-test{color:#6fa77d}.navlabel.g-ledger{color:#d79a3c}.navlabel.g-rel{color:#b795c9}.navlabel.g-leaf{color:#8494a4}
 section[data-sec]{margin:0 0 22px}
 /* Section banners are TITLES over their rows — never cards beside them. The
    tint HUGS the label (inline-flex + fit-content); the card signals (full-width

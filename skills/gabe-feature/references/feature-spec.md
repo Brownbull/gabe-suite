@@ -36,6 +36,25 @@ never drift from the truth.
 | DIAGRAM USERFLOW / DATAFLOW / WORKFLOW | flowchart / sequenceDiagram / stateDiagram-v2 — types, node shapes, and the change-highlight rule are BINDING per `gabe-docs/references/docs-spec.md` §Mermaid (shapes-per-operation table + `classDef changed` / sequence `rect` blocks; validate highlight targets — mermaid silently ignores misses) | drawing the whole system; highlighting everything |
 | REVIEWED | date + who, stamped ONLY after the human reviewed the BUILT pages — the stamp flips the board's fifth lifecycle cell (L · card) green and clears the rail's card-review filter; every lifecycle cell on the feature page shows its trigger command, struck through once done. The SAME stamp closes the PLAN loop (E5): the phase's `Center` cell → ✅ in PLAN.md + PLAN.json, so `/gabe-next` stops routing to `/gabe-feature` for it (SKILL.md §Modes step 5) | stamping a TODO-free draft; leaving the PLAN Center cell ⬜ after review |
 
+## Post-trial card additions (transaction trial, absorbed 2026-07-21)
+
+Binding alongside the table above; the five-tab section inventory lives in the shell README.
+
+- `# LENS` — gabe-lens fields (handle · analogy · is · is not · decides · map · confuse ·
+  limits) LEADS the feature page; the full card folds behind `details.more`.
+- `# CODE` — the Code tab's authored intro, rendered at the END of the tab (the machine half —
+  endpoints · code map · data model — renders from archmap, never from prose).
+- `# RISKS` — structured 4-field grammar: `SEV · status · Kind · what is at stake — detail`
+  (three-field lines still parse; a missing stake renders as a named gap). A severity with no
+  consequence is a number nobody can argue with.
+- `# NOT CARRIED FORWARD` — dropped legacy claims with one-line reasons (visible on the page).
+- `# ANGLES` — per-kind INTENT only, inside the section's ⊕ toggle; hand-written counts are
+  FORBIDDEN (the card says WHAT FOR; the machine says HOW MUCH).
+- `# REVIEWED` supersede flow — a material rewrite after a walk flips the tracker back to
+  `awaiting-approval`: **a walk approves a SCOPE, not a slug.**
+- Feature pages are generated from registration data (config + registry + card + machine
+  sources) — per-entity page code is a defect.
+
 ## The verification changelog (machine — but fed by commits[])
 
 Run results are replaced on every refresh BY DESIGN; the durable memory is

@@ -71,7 +71,9 @@ Small, append-only in spirit: rows change status, never vanish.
      this — shell and generators are independent, and the shell landed first, 2026-07-20),
      init's first job IS the promotion (design record §5: ripe at n=2,
      executed at n=3 with purpose): port the most mature existing center implementation
-     (gustify `scripts/_center_*.py`, `refresh_center.sh`, `check_center_links.py`),
+     — **gastify** (`scripts/build_center_a3.py`, `_a3_render/_a3_feature/_a3_code/
+     _a3_evidence.py`, `_center_data.py`, `_center_mermaid.py`, `check_center_links.py`,
+     `refresh_center.sh`; it superseded gustify as the reference at the transaction trial) —
      generalize hard-coded paths into `center.config.json` bindings, land them in the SUITE
      repo as `templates/center/`, run the suite's `./install.sh`, and only then bootstrap the
      project. **The promotion writes to the suite REPO, never the app repo:** resolve the suite
@@ -79,7 +81,7 @@ Small, append-only in spirit: rows change status, never vanish.
      repo is not present and writable on this machine, STOP —
      `⛔ generator promotion needs the suite repo checked out (templates/center/ does not exist
      yet). Clone the suite, or run init on the machine that has it.` E6: never compose
-     generators from memory; if the reference implementation (gustify's scripts) is also
+     generators from memory; if the reference implementation (gastify's scripts) is also
      unreachable, STOP and name both missing anchors.
    - Promoted-generator floor (what the templates must support): C-id extraction from junit
      test names via the anchored token pattern (red-spec §Backfill); **ever-red** per id
@@ -90,7 +92,7 @@ Small, append-only in spirit: rows change status, never vanish.
      state to get green).
    - **Shell / layout contract (the ruled layout — A3 · Tabbed, layout-lab convergence
      2026-07-14):** the bootstrapped shell is the A3-Tabbed shape — a persistent LEFT SIDEBAR
-     of section/entity nouns (`class="side"`) + a per-feature four-tab bar (`nav.tabbar`), the
+     of section/entity nouns (`class="side"`) + a per-feature FIVE-tab bar (`nav.tabbar`: Overview · Code · Tests · Evidence · Risk — trial-ratified 2026-07-21), the
      hub with its own shell (tabs fit a feature, not the hub). **The shell SHIPS as suite
      templates: `templates/center/shell/` (installed at `~/.claude/templates/gabe/center/shell/`)
      — `assets/` (a3.css incl. the IDENTITY LAYER: landed-map group colors, `.sechead` section
@@ -98,7 +100,7 @@ Small, append-only in spirit: rows change status, never vanish.
      generated pages) + the FULL station set (`index`/`feature`/`tests`/`board`/
      `entity-index`/`docs`/`ledger`/`releases`.html) with the placeholder contract + the
      station↔sources mapping table in that dir's README. The INVARIANT chrome ships in the
-     skeletons (colored+iconed station sidebar, four-tab icons, `data-sec` section banners);
+     skeletons (colored+iconed station sidebar per the RULED NAV — map v3, merged 2026-07-21 —, tab icons, `data-sec` section identity);
      generators fill only the project-specific slots the README lists. Every crucial section is
      generated FROM its skeleton — a section page built from scratch instead of its template is a
      defect.** Init copies the shell (incl. `assets/`) and wires the project's generators to fill
@@ -171,6 +173,46 @@ rank still pending). **Reconciliation with the forward track:** a `pending`/`bui
 whose entity already carries a `# REVIEWED`-stamped center card (built by `/gabe-feature`) is
 listed with an offer to mark it `covered-by-feature` (phase id into `notes`) — reuse, never
 rebuild (E4). That offer is the ONLY write `status` may make, and only on explicit accept.
+
+## The post-trial contract (transaction trial, absorbed 2026-07-21)
+
+The gastify trial carried one entity end-to-end; these rulings now BIND every section build.
+Deep homes: the shell README (tab set, nav contract, css/behaviour vocabulary) and
+feature-spec (card contract). This section states what adoption must OBEY.
+
+- **Ownership rule:** the skeleton owns the tab set and nav groups; the generator owns the
+  sections inside a pane — and every generator-emitted section carries `data-sec` (via
+  `sechead(sec_id=)`). Feature pages are generated from REGISTRATION DATA (config + registry +
+  card + machine sources); entity #2 is data, never new page code.
+- **D123 — `adoption.json` is THE entity registry.** One vocabulary: rows carry `display_name`
+  (rendered on nav, pages, and the map — one fact, one word); every per-entity mapping keys on
+  a registry slug and the build ABORTS on unknown slugs; the sidebar is driven from the
+  registry (adopted → feature-page link; pending → muted + tracker state chip).
+- **archmap — the read-once rule.** The build reads the whole application ONCE per run (ast,
+  no LLM; context reads are expensive) into committed `archmap.json`; every consumer — the
+  Code tab, the app-wide **Architecture station** (`architecture.html`, spec'd; first build =
+  next loop iteration), any section needing architecture facts — reads the MAP, never the
+  codebase. Committed so a PR diff of it IS the architecture change.
+- **Ephemeral/accumulator is a REQUIREMENT per tab:** Overview=card/growth · Code=card
+  `# CODE`/archmap renders · Tests=**testing claim card (spec'd — case classes with intent +
+  C-id anchors the build VALIDATES against junit; claimed-but-not-running renders as drift;
+  build next loop)**/matrix · Evidence=`manifest.json` per set/disk walk · Risk=card
+  `# RISKS`/derived GAP rows. The CENTER's own accumulator is `run-history.jsonl` (one line
+  per build: ts · source · totals — writer lands next loop; reader + named gap exist).
+- **Machine-surface-first section builds:** a section starts from endpoints + models + junit
+  inventory; legacy cards are supporting testimony (the six-card reorganize method produced a
+  page narrower than its own evidence).
+- **Anti-curation additions:** reference material is NOT evidence (path-matched `ref/`,
+  `storybook`, `mockup`, `design` — held out per FILE and SAID: "N reference artifact(s) held
+  out"); a false gap is as dishonest as a false pass (verify the CLAIM against disk, not the
+  render); every angle carries BOTH prices (growth = cost to close; risk = cost to leave
+  open; GAP rows link their growth row); a severity needs its stake (4-field RISKS grammar);
+  a card must not restate a number the build can read; every truncation carries its expander;
+  every chrome number links to a section that leads with it; one fact, one word.
+- **Verification reach:** BEHAVIOR.md Verify Commands MUST include the center's own tests
+  (e.g. `uv run pytest ../tests/center --junitxml=../tests/results/center-junit.xml` +
+  results_out entry) — the trial shipped 49 tests reachable by neither the local gate nor
+  push-to-main CI. The shell JS layer ships only with its committed harness.
 
 ## Non-goals
 

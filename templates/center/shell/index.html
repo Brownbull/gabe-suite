@@ -17,7 +17,7 @@
      exclusive icons, the landed-map palette). Generators fill ONLY the project-specific
      parts: {{SIDEBAR_ENTITIES}} = one .navitem per APPROVED-baseline entity (box icon,
      link to its feature page, class "on" when current; never from an archived nav) ·
-     {{ENTITY_COUNT}} · {{TESTS_COUNT}} · {{SIDEBAR_TESTS_SUB}} (.navsub: corpora/matrix
+     {{ENTITY_COUNT}} · {{TESTS_COUNT}} · <div class="navsub"><a href="tests.html#tab-tests">matrix</a><a href="tests.html#tab-evidence">evidence</a><a href="tests.html#tab-risk">gates</a></div> (.navsub: corpora/matrix
      links) · {{SIDEBAR_LEAF}} = external .navitem links (htmlcov, playwright report). -->
 <aside class="side">
   <div class="brand">
@@ -34,9 +34,11 @@
   {{SIDEBAR_ENTITIES}}
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
+  <div class="navlabel g-code">Code</div>
+  {{SIDEBAR_CODE}}
   <div class="navlabel g-test">Testing</div>
   <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">{{TESTS_COUNT}}</span></a>
-  {{SIDEBAR_TESTS_SUB}}
+  <div class="navsub"><a href="tests.html#tab-tests">matrix</a><a href="tests.html#tab-evidence">evidence</a><a href="tests.html#tab-risk">gates</a></div>
   <div class="navlabel g-ledger">Ledger</div>
   <a class="navitem" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
   <div class="navlabel g-rel">Releases</div>

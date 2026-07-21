@@ -32,16 +32,22 @@ def panel(title, body):
 NOTE = '<div class="panel" style="padding:10px 14px;margin-bottom:14px"><b>Illustrative preview</b> — the shipped skeleton filled by hand (gastify baseline; sweep numbers real, rows illustrative). Real pages are generator-emitted.</div>'
 
 def common(on_entity=None):
-    ents = ''.join(
-        f'<a class="navitem{" on" if n == on_entity else ""}" href="feature.html">{BOX} {n} <span class="count">{c}</span></a>'
-        for n, c in ENTITIES)
+    # ruled nav (map v3): adopted entities link their pages; pending render muted + tracker state
+    ents = []
+    for n, c in ENTITIES:
+        if n == 'Card aliases':
+            on = ' on' if n == on_entity else ''
+            ents.append(f'<a class="navitem{on}" href="feature.html">{BOX} {n} <span class="count">{c}</span></a>')
+        else:
+            ents.append(f'<a class="navitem" href="entity-index.html" style="opacity:.55">{BOX} {n} '
+                        f'<span class="count" style="background:rgba(215,154,60,.18);color:#d79a3c">pending</span></a>')
     return {'LANG': 'en', 'PROJECT_NAME': 'Gastify', 'REGEN_STAMP': '2026-07-17 (preview)',
         'HEAD_SHA': '44a3ecd', 'GENERATOR_NAME': 'preview-fill',
         'STATUS_PILLS': '<span class="statuspill warn"><span class="dot"></span> preview</span>',
         'SYNC_AGE': 'preview', 'ENTITY_COUNT': '7', 'TESTS_COUNT': '1,585',
-        'SIDEBAR_ENTITIES': ents,
-        'SIDEBAR_TESTS_SUB': ('<div class="navsub"><a href="tests.html#tab-tests">Matrix</a>'
-            '<a href="tests.html#tab-evidence">Walks · shelf</a><a href="tests.html#tab-risk">Gates</a></div>'),
+        'SIDEBAR_ENTITIES': ''.join(ents),
+        'SIDEBAR_CODE': (f'<a class="navitem" href="#" style="opacity:.55">{BOX} Architecture '
+                         '<span class="count" style="background:rgba(155,147,230,.18);color:#9b93e6">next loop</span></a>'),
         'SIDEBAR_LEAF': (f'<a class="navitem" href="#">{EXT} htmlcov</a>'
                          f'<a class="navitem" href="#">{EXT} playwright report</a>')}
 
