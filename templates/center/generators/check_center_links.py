@@ -6,8 +6,11 @@
   2. every #anchor resolves to an id= in its target page,
   3. every local asset src exists,
 and WARNs (non-fatal) when
-  4. a PLAN phase has no features[] registry entry (the ritual's forgotten-step
-     nudge), or a registry feature's card has no DIAGRAM sections.
+  4. an ADOPTED entity (adoption.json — the D123 registry) has no card yet (the
+     forgotten-step nudge), or an entity's card lacks canonical DIAGRAM sections /
+     a reviewed stamp / carries an unfinished TODO. Completeness is checked on the
+     ENTITY axis the center renders from, not the PLAN-phase axis (build waves
+     live in PLAN/LEDGER/git — they were never per-phase feature cards).
 
 Live-probe references (../tests/web-e2e/**) are exempt by doctrine — they
 resolve at view time. Dead links are a FAILURE (exit 1): a regen that ships
@@ -66,47 +69,74 @@ def run_checks() -> int:
 
     warns: list[str] = []
     try:
-        import _center_data as D
         config = json.loads((CENTER / "center.config.json").read_text())
-        plan = D.load_plan()
-        mapped = {f.get("phase") for f in config.get("features", [])}
-        dispositions = config.get("backfill_dispositions", {})
-        unmapped = [p["id"] for p in plan["phases"]
-                    if p["id"] not in mapped and p["id"] not in dispositions
-                    and all(v == "done" for v in p["cells"].values())]
-        if unmapped:
-            warns.append(f"{len(unmapped)} fully-served phases have no features[] entry "
-                         f"(not yet mapped, NOT untested): {' '.join(unmapped[:12])}"
-                         + (" …" if len(unmapped) > 12 else ""))
+        # Documentation completeness is checked against the ENTITY registry
+        # (adoption.json — D123), not PLAN phases: the center's feature pages are
+        # per ADOPTED ENTITY, so both the forgotten-step nudge and the card-quality
+        # checks read the registry the pages actually render from. This reframes
+        # the old features[]/phase check, which measured an axis the center no
+        # longer documents per-phase (build waves live in PLAN / LEDGER / git).
+        adoption: dict = {}
+        apath = CENTER / "adoption.json"
+        if apath.exists():
+            adoption = json.loads(apath.read_text())
+        sections = adoption.get("sections", [])
+        entities_cfg = config.get("entities", {})
+        cards_dir = CENTER / "cards"
+        proof_root = REPO_ROOT / config.get("paths", {}).get(
+            "proof", "tests/web-e2e/proof")
+
+        # Forgotten-step nudge: an entity the registry treats as ADOPTED (any
+        # non-pending status) but with no card on disk — the registry claims it,
+        # the documentation is missing. Pending entities legitimately have none.
+        missing = [s["entity"] for s in sections
+                   if s.get("entity")
+                   and (s.get("status") or "pending") != "pending"
+                   and not (cards_dir / f"{s['entity']}.md").exists()]
+        if missing:
+            warns.append(f"{len(missing)} adopted entity(ies) have no card yet "
+                         f"(registry adopted, cards/ empty): {' '.join(missing[:12])}"
+                         + (" …" if len(missing) > 12 else ""))
         # S5 completeness + review detection: incompleteness is machine-visible.
         if "TODO(verify-glob)" in json.dumps(config):
             warns.append("registry carries TODO(verify-glob) — scaffolded globs unconfirmed")
-        for f in config.get("features", []):
-            card = CENTER / f["card"]
+
+        # Per-entity card quality — every entity that HAS a card is held to the
+        # same bar the phase-feature cards used to be: canonical diagrams, a
+        # reviewed stamp, no unfinished TODO(author), and proof-set narration.
+        for s in sections:
+            slug = s.get("entity")
+            if not slug:
+                continue
+            card = cards_dir / f"{slug}.md"
             if not card.exists():
                 continue
             text = card.read_text()
             if "TODO(author)" in text:
-                warns.append(f"feature '{f['slug']}': card has TODO(author) sections")
+                warns.append(f"entity '{slug}': card has TODO(author) sections")
             # Canonical names only — "# DIAGRAMS — types"-style improvisations
             # render NOWHERE (the H4 lesson: substring checks hide silent loss).
             canonical = ("# DIAGRAM USERFLOW", "# DIAGRAM DATAFLOW", "# DIAGRAM WORKFLOW")
             if not any(c in text for c in canonical):
-                warns.append(f"feature '{f['slug']}': no canonical DIAGRAM sections "
+                warns.append(f"entity '{slug}': no canonical DIAGRAM sections "
                              "(# DIAGRAM USERFLOW / DATAFLOW / WORKFLOW) — anything "
                              "else renders nowhere")
             low = text.lower()
             if "reviewed:" not in low and "# reviewed" not in low:
-                warns.append(f"feature '{f['slug']}': card lacks a reviewed: stamp "
+                warns.append(f"entity '{slug}': card lacks a reviewed: stamp "
                              "(a TODO-free draft is not a reviewed card)")
-            if f.get("proof_dir"):
-                manifest = REPO_ROOT / "tests" / "web-e2e" / "proof" / f["proof_dir"] / "manifest.json"
+            # The entity's declared proof sets carry their narration (config
+            # entities.<slug>.proofs, resolved under the configured proof path).
+            for pname in entities_cfg.get(slug, {}).get("proofs", []):
+                manifest = proof_root / pname / "manifest.json"
                 if manifest.exists():
                     mtext = manifest.read_text()
                     if '"narration"' not in mtext:
-                        warns.append(f"feature '{f['slug']}': proof manifest has no narration block")
+                        warns.append(f"entity '{slug}': proof set '{pname}' "
+                                     "manifest has no narration block")
                     elif "TODO(narration)" in mtext:
-                        warns.append(f"feature '{f['slug']}': narration carries TODO(narration)")
+                        warns.append(f"entity '{slug}': proof set '{pname}' "
+                                     "narration carries TODO(narration)")
     except (OSError, json.JSONDecodeError, KeyError) as exc:
         warns.append(f"registry checks skipped: {exc}")
 
