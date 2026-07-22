@@ -32,7 +32,16 @@
    tab bar, so the status pills (which live in the tab bar) align to the content
    edge instead of floating into the old wider "subject" box; the top bar tracks
    the same centered box; a minimized (rail) nav hands the reclaimed width to all
-   of it. Base keeps a readable measure; rail widens for the tables. */
+   of it. Base keeps a readable measure; rail widens for the tables.
+
+   RETROFIT (do this, do not just append): the base a3.css sets
+   .subject{max-width:1400px} .tabbody{max-width:1060px}
+   .subjecthead{max-width:1060px} at the SAME specificity as the rule below.
+   When folding this file in, (1) put this block at the END of a3.css so it wins
+   on source order, and (2) DELETE those three base width declarations — leaving
+   them makes width live in two places, so editing the dead 1400px line does
+   nothing (the "I changed it and nothing happened" trap). Hoist width to
+   --content-max in ONE place. */
 :root{--content-max:1120px}
 :root[data-rail="1"]{--content-max:1440px}
 .subject,.subjecthead,.tabbody,.tabbar{max-width:var(--content-max)}
@@ -40,3 +49,16 @@
         padding-right:max(30px,calc((100% - var(--content-max)) / 2 + 30px))}
 :root[data-rail="1"] .wrap{max-width:1300px}
 .tbl.wcol .tag{white-space:nowrap;word-break:keep-all}
+/* narrow-screen escape for the wide fixed-layout ledger/risk tables — on the
+   phone/tablet widths the center already writes @media rules for, let the wide
+   table SCROLL sideways inside its panel instead of crushing 8 columns into a
+   wall of stacked characters (base .panel clips with overflow:hidden). The .xtbl
+   tables already drop columns at this breakpoint; .tbl.wcol keeps them and
+   scrolls. */
+@media(max-width:760px){
+  .panel:has(.tbl.wcol){overflow-x:auto}
+  .tbl.wcol{min-width:700px}
+}
+/* a targeted xrow (jumped-to via a #dm-… cross-reference link) — rowclick.js
+   opens it; this flags where the reader landed. */
+.xrow:target>summary{background:var(--accent-soft)}

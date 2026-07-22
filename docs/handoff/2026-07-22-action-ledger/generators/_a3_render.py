@@ -75,18 +75,30 @@ def pmore(text: str, n: int, small: bool = False) -> str:
     return f'<details class="pmore"><summary>{inner}</summary></details>'
 
 
-def kpi(label: str, value: str, sub: str = "", alert: bool = False,
-        icon: str = "") -> str:
-    """A KPI card. `icon` is optional feather-style path/polyline glyph markup;
-    the shell already styles `.kpi .lab svg` (14px, --faint) so an icon needs no
-    CSS. Omitted -> byte-identical to the icon-less card."""
+def kpi(label: str, value: str, sub: str = "", alert: bool = False) -> str:
+    """A KPI card."""
     cls = "kpi alert" if alert else "kpi"
     sub_html = f'<div class="sub">{E(sub)}</div>' if sub else ""
-    ic = (f'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
-          f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-          f'{icon}</svg>') if icon else ""
-    return (f'<div class="{cls}"><div class="lab">{ic}{E(label)}</div>'
+    return (f'<div class="{cls}"><div class="lab">{E(label)}</div>'
             f'<div class="val">{E(value)}</div>{sub_html}</div>')
+
+
+def lines_grade(n: int, thousands: bool = False) -> str:
+    """The 800-line budget as colour — green at/below the cap, deepening red
+    toward 2,000, capped there. The number IS the flag.
+
+    ONE definition, shared by the code map (`thousands=False` → `812`) and the
+    structure move (`thousands=True` → `1,293`) so the two Lines columns cannot
+    drift on threshold or curve — only on the digit-grouping the caller asks
+    for. Move the 800 budget here and both surfaces move together."""
+    fmt = f"{n:,}" if thousands else f"{n}"
+    if n <= 800:
+        return f'<b style="color:var(--good)">{fmt}</b>'
+    frac = min((n - 800) / 1200, 1.0)
+    r = int(0xE5 + (0xB7 - 0xE5) * frac)
+    g = int(0x73 + (0x1C - 0x73) * frac)
+    b = int(0x73 + (0x1C - 0x73) * frac)
+    return f'<b style="color:rgb({r},{g},{b})">{fmt}</b>'
 
 
 def frow(name: str, desc: str, meta: str, href: str | None = None) -> str:

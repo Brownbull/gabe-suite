@@ -60,6 +60,9 @@ E2E = CFG.get("e2e", {})
 _PROJECT = CFG.get("project", {})
 PROJECT_NAME = _PROJECT.get("name", REPO_ROOT.name)
 PROJECT_DISPLAY = _PROJECT.get("display_name", PROJECT_NAME)
+# Project maturity is READ from .kdbp/BEHAVIOR.md, not assumed. "" when absent —
+# the feature pages render an honest "not declared" rather than a fabricated tier.
+MATURITY = D.load_maturity()
 # This generator emits the app-wide Architecture station every run (rendered
 # from archmap.json — the read-once rule), so its Code-group nav item is always
 # lit. A binding a project has not wired yet would flip this False and get the
@@ -1143,6 +1146,13 @@ def main() -> int:
     if not SHELL_SRC.exists():
         print(f"⛔ shell templates missing: {SHELL_SRC}")
         return 2
+    # GABE_CENTER_OUT is a lab override — if it is set, SAY SO loudly, so a leaked
+    # env var can never silently write the whole center to a scratch dir while
+    # printing "regen OK" (its sibling GABE_SHELL_SRC already announces itself).
+    if CENTER_OUT != CENTER:
+        print(f"  ⚠ WRITE redirected to {CENTER_OUT} (GABE_CENTER_OUT set) — "
+              f"reads still come from {CENTER}. LAB run: the real center was "
+              f"NOT touched.")
     CENTER_OUT.mkdir(parents=True, exist_ok=True)
     (CENTER_OUT / "assets").mkdir(exist_ok=True)
     for asset in (SHELL_SRC / "assets").iterdir():
@@ -1163,6 +1173,7 @@ def main() -> int:
         repo_root=REPO_ROOT, sections=sections, labels=LABELS,
         junit_by=junit_by, corpora=CORPORA, e2e=E2E, proof_root=proof_root,
         cfg=CFG, walks=walks, shared=SHARED, parse_card=D.parse_card,
+        maturity=MATURITY,
     )
     for name in build_feature_pages(ctx):
         wrote.append((name, 0))
@@ -1190,6 +1201,23 @@ def main() -> int:
     for name, left in wrote:
         state = "filled" if left == 0 else f"{left} slot(s) awaiting generator"
         print(f"    wrote docs/site/center/{name} — {state}")
+
+    # Asset↔markup guard. The pages emit expandable-row tables (.xtbl/.xrow) for
+    # the data model, the test matrix, Claimed coverage and the proof shelf. If
+    # the a3.css that was COPIED lacks the .xtbl rule, every one of those renders
+    # as unstyled stacked cells — the exact "regenerated with the new generators
+    # over a stale a3.css" failure. Refuse to report success, don't ship it quiet.
+    _css = CENTER_OUT / "assets" / "a3.css"
+    _css_text = _css.read_text() if _css.exists() else ""
+    if ".xtbl" not in _css_text:
+        print("  ⛔ assets/a3.css has NO .xtbl rule — the expandable tables (data "
+              "model · matrix · claims · proof shelf) will render UNSTYLED. Fold "
+              "proposed-a3css-additions.css into a3.css (at the END, after the "
+              "base rules) before regenerating. Refusing to report success.")
+        return 3
+    if not (CENTER_OUT / "assets" / "rowclick.js").exists():
+        print("  ⚠ assets/rowclick.js is missing — row-click-to-expand and the "
+              "targeted-row (#dm-…) opener degrade; wire it into the skeletons.")
     return 0
 
 

@@ -186,6 +186,22 @@ def load_plan() -> dict:
             "phases": phases}
 
 
+def load_maturity() -> str:
+    """The project's declared maturity tier from `.kdbp/BEHAVIOR.md`'s
+    `maturity:` line (mvp | enterprise | scale), lowercased. Returns "" when the
+    file or the line is absent — the caller renders an HONEST "not declared", it
+    never fabricates a tier or a provenance for one. This is the single read of
+    the value the Action Ledger's ripe-now/later split is computed against."""
+    path = KDBP / "BEHAVIOR.md"
+    if not path.exists():
+        return ""
+    for ln in path.read_text().splitlines():
+        m = re.match(r"\s*maturity\s*:\s*([A-Za-z]+)", ln, re.I)
+        if m:
+            return m.group(1).lower()
+    return ""
+
+
 def load_pending() -> list[dict]:
     """Tolerant PENDING.md row parser. A row is open when its Status cell
     CONTAINS 'open' (status strings carry suffixes like 'open — parked: …')."""

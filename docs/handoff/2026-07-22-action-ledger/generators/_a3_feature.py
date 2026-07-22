@@ -25,6 +25,7 @@ from _a3_render import (
     gap,
     kpi,
     legend,
+    lines_grade,
     md,
     meter,
     pmore,
@@ -60,10 +61,6 @@ _IC_SEED = ('<path d="M12 22V12"/><path d="M12 12c0-4 3-7 8-7 0 5-3 8-8 8z"/>'
             '<path d="M12 16c0-3-2.5-5.5-6-5.5 0 3.5 2.5 6 6 6z"/>')
 _SEV_CLS = {"high": "s-high", "medium": "s-med", "low": "s-low",
             "gap": "s-gap", "mitigated": "s-ok", "malformed": "s-high"}
-# A malformed line sorts FIRST: an unreadable risk row is the most urgent thing
-# on a register, because nobody can tell what it was meant to say.
-_SEV_ORDER = {"malformed": -1, "high": 0, "medium": 1, "low": 2, "gap": 3,
-              "mitigated": 4}
 
 # Which test files belong to an entity (broad on purpose: an over-match shows up
 # as a visible row, an under-match silently hides coverage) and which proof sets
@@ -90,6 +87,12 @@ def entity_corpus(rx: str, junit_by: dict, corpora: list) -> dict:
             "cases": sum(r["tests"] for r in hits.values()),
             "failed": sum(r["failed"] for r in hits.values()),
             "skipped": sum(r["skipped"] for r in hits.values()),
+            # Provenance: whether a junit was loaded for this corpus at all, and
+            # WHEN it was captured — so the page can say "captured <time>" instead
+            # of asserting a currency ("at HEAD") nobody verified, and can tell a
+            # missing file apart from a removed test.
+            "present": j is not None,
+            "ran_at": (j or {}).get("mtime") or (j or {}).get("ranAt") or "",
         }
     return out
 
@@ -142,7 +145,9 @@ def kind_state(c: dict) -> str:
         return f'<span class="tag s-high">{c["failed"]} failing</span>'
     if c["skipped"]:
         return f'<span class="tag s-med">{c["skipped"]} skipped</span>'
-    return '<span class="tag s-ok">captured at HEAD</span>'
+    when = str(c.get("ran_at") or "")[:16]
+    return (f'<span class="tag s-ok">captured {E(when)}</span>' if when
+            else '<span class="tag s-ok">captured · time unknown</span>')
 
 
 # The Kinds table says HOW MUCH; the card says WHAT FOR. Same vocabulary, same
@@ -223,79 +228,6 @@ _EFFORT_CLS = {"XS": "e-xs", "S": "e-s", "M": "e-m", "L": "e-l"}
 _STAGE_CLS = {"mvp": "st-mvp", "enterprise": "st-ent", "scale": "st-scale"}
 
 
-def growth_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
-                section: dict, proof_root, corpora: list, e2e: dict) -> list[list[str]]:
-    """What would RAISE this entity's verification, priced.
-
-    Every row is derived from a gap the page already shows — the growth list is
-    the gap list stated as work, never a wish list. Alongside the gap it prints
-    the cost to close, the maturity stage it belongs to, what it buys, and what
-    it then costs on every run afterwards: an opportunity without its recurring
-    cost is a sales pitch."""
-    rows: list[list[str]] = []
-
-    def row(kind: str, what: str) -> None:
-        eff, hours, stage, gain, cost = _GROWTH_PRICE[kind]
-        rows.append([
-            f'<span class="tag {_KIND_CLS.get(kind, "s-gap")}">{E(kind)}</span>',
-            pmore(what, 130),
-            f'<span class="tag {_EFFORT_CLS[eff]}">{eff}</span>'
-            f"<br><small>{E(hours)}</small>",
-            f'<span class="tag {_STAGE_CLS[stage]}">{E(stage)}</span>',
-            pmore(gain, 110),
-            pmore(cost, 110)])
-
-    for c in corpora:
-        corpus, kind = c["key"], c["kind"]
-        if not inv[corpus]["cases"]:
-            row(kind, f"no {kind} case matches this entity — the corpus has "
-                      f"nothing filed under its name")
-        if inv[corpus]["skipped"]:
-            row(kind, f'{inv[corpus]["skipped"]} skipped case(s) — claimed '
-                      f"coverage that does not execute; a skip is a gap wearing "
-                      f"a green row")
-
-    _gate = e2e.get("coverage_gate", "the coverage gate")
-    row("coverage", f"no per-entity coverage number exists — the repo gate "
-                    f"({_gate}) passes but is not sliced by path, so this entity's "
-                    f"own executed-line share is unknown")
-    _local = e2e.get("local_only_note", "web e2e is local-only")
-    if specs:
-        row("journey", f"{len(specs)} spec(s) walk this entity in a real "
-                       f"browser but leave no machine record — {_local}, so the "
-                       f"page cannot show their verdict")
-    else:
-        row("journey", "no browser spec walks this entity end to end")
-
-    mine = [w for w in walks if w.get("subject") == f"adopt:{slug}"]
-    if not mine:
-        row("manual", "no human has walked this entity and recorded the verdict "
-                      "— the one input on this page with no machine source")
-    elif section.get("status") == "awaiting-approval":
-        row("manual", f"the recorded walk approved an earlier scope; the "
-                      f'tracker reads {section.get("status")} — a walk approves '
-                      f"a SCOPE, not a slug")
-
-    row("deployed", "nothing machine-readable probes the deployed surfaces of "
-                    "this entity — every artifact on the Evidence tab is a "
-                    "capture from a run, not a live check")
-
-    declared = ENTITY_PROOFS.get(slug, [])
-    if not declared:
-        # No registration at all: the Evidence tab renders a named gap while
-        # BOTH price columns stayed silent — the emptiest shelf had no tag.
-        row("evidence", "no proof set is registered for this entity — nothing "
-                        "on the Evidence tab, and nothing anywhere a reader "
-                        "outside the team could look at")
-    for name in declared:
-        s = collect_set(name, proof_root / name)
-        if s["shots"] or s["videos"]:
-            continue
-        row("evidence", f"proof set `{name}` is declared for this entity but "
-                        f'has {"no artifacts on disk" if s["exists"] else "no directory"}')
-    return rows
-
-
 def parse_risks(lines: list[str]) -> list[tuple[str, str, str, str, str]]:
     """Card grammar: `SEV · status · Kind · what is at stake · detail`.
 
@@ -331,14 +263,6 @@ def parse_risks(lines: list[str]) -> list[tuple[str, str, str, str, str]]:
     return out
 
 
-def risk_cells(sev: str, status: str, kind: str, stake: str, detail: str,
-               link: str = "") -> list[str]:
-    stake_cell = (md(stake) if stake
-                  else '<span class="tag s-gap">stake not stated</span>')
-    return [f'<span class="tag {_SEV_CLS.get(sev.lower(), "")}">{E(sev)}</span>',
-            f"<b>{E(kind)}</b>{link}", stake_cell, E(status), md(detail)]
-
-
 # What each unverified angle actually puts at risk. The gap itself is machine-
 # derived; this names the consequence of leaving it open, which is the only
 # thing that makes it belong on a risk register.
@@ -354,55 +278,6 @@ _GAP_STAKE = {
     "evidence": "nobody outside the team can check the claim — there is "
                 "nothing to look at, only prose to be believed",
 }
-_GROWTH_LINK = ('<br><small><a class="dlink" href="#sec-ov-growth">'
-                "priced on the Overview tab → Growth ↗</a></small>")
-
-
-def unverified_risks(slug: str, inv: dict, specs: list[str], walks: list[dict],
-                     section: dict, e2e: dict) -> list[tuple[int, list[str]]]:
-    """The angles nothing verifies, as GAP rows on the register.
-
-    They used to sit in their own list beside the table, which said the same
-    thing twice without ever saying what was risked. Here each one carries its
-    consequence and a link to what closing it would cost."""
-    order = _SEV_ORDER["gap"]
-    rows: list[tuple[int, list[str]]] = []
-
-    def add(kind: str, status: str, detail: str) -> None:
-        rows.append((order, risk_cells("GAP", status, kind, _GAP_STAKE[kind],
-                                       detail, _GROWTH_LINK)))
-
-    _local = e2e.get("local_only_note", "web e2e is local-only")
-    _gate = e2e.get("coverage_gate", "the coverage gate")
-    if specs:
-        add("journey", "not captured",
-            f"{len(specs)} spec(s) walk this entity in a real browser, but "
-            f"{_local} — no junit lands, so the page can show "
-            f"the specs and never their verdict.")
-    else:
-        # Blaming the capture policy for a walk nobody wrote reads as an
-        # infrastructure problem and hides an absence. Growth already branched
-        # here; the register has to agree with it or one of them is lying.
-        add("journey", "never written",
-            "no browser spec walks this entity end to end — this is an absent "
-            "test, not an absent capture.")
-    add("coverage", "not sliced",
-        f"the repo `pytest --cov` gate ({_gate}) passes, but it is not sliced by "
-        f"path — this entity's own executed-line share is unknown.")
-    mine = [w for w in walks if w.get("subject") == f"adopt:{slug}"]
-    if not mine:
-        add("manual", "never walked",
-            "no walk is on record for this entity — the one input on this page "
-            "with no machine source is missing entirely.")
-    elif section.get("status") == "awaiting-approval":
-        add("manual", "walk superseded",
-            f"the recorded walk approved an earlier scope; the tracker reads "
-            f'`{section.get("status")}`. A walk approves a SCOPE, not a slug.')
-    add("deployed", "absent",
-        "nothing machine-readable probes the deployed surfaces — every "
-        "artifact on the Evidence tab is a capture from a run, not a live "
-        "check of what users are on.")
-    return rows
 
 
 def shared_owners(fname: str, slug: str) -> list[str]:
@@ -504,14 +379,14 @@ def lens_block(card: dict) -> str:
 _EFFORT_ORD = {"XS": 0, "S": 1, "M": 2, "L": 3}
 _MATURITY_ORD = {"mvp": 0, "enterprise": 1, "scale": 2}
 
-# KPI glyphs (feather-style). The shell already styles `.kpi .lab svg`.
-_KPI_SEED = ('<path d="M12 22V12"/><path d="M12 12c0-4 3-7 8-7 0 5-3 8-8 8z"/>'
-             '<path d="M12 16c0-3-2.5-5.5-6-5.5 0 3.5 2.5 6 6 6z"/>')
+# Stat-strip glyphs. Seed + check REUSE the _IC_ definitions at the top of this
+# file — they were byte-identical duplicates, so one source cannot drift from the
+# other; only the clock and trend are new here.
+_KPI_SEED = _IC_SEED
 _KPI_CLOCK = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
 _KPI_TREND = ('<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>'
               '<polyline points="17 6 23 6 23 12"/>')
-_KPI_CHECK = ('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>'
-              '<polyline points="22 4 12 14.01 9 11.01"/>')
+_KPI_CHECK = _IC_CHECK
 
 # structure move: pricing for the 800-line ruled budget (effort scales with the
 # overage in _struct_effort; buys/cost are fixed).
@@ -537,19 +412,6 @@ def _struct_effort(lines: int) -> tuple[str, str]:
     if over <= 800:
         return "M", "~half a day"
     return "L", "~2 days"
-
-
-def _lines_grade(n: int) -> str:
-    """The 800-line budget as colour — the SAME grade the code map's Lines column
-    uses: green at/below the cap, deepening red toward 2,000. The number IS the
-    flag."""
-    if n <= 800:
-        return f'<b style="color:var(--good)">{n:,}</b>'
-    frac = min((n - 800) / 1200, 1.0)
-    r = int(0xE5 + (0xB7 - 0xE5) * frac)
-    g = int(0x73 + (0x1C - 0x73) * frac)
-    b = int(0x73 + (0x1C - 0x73) * frac)
-    return f'<b style="color:rgb({r},{g},{b})">{n:,}</b>'
 
 
 def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
@@ -581,6 +443,12 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
         if not inv[key]["cases"]:
             add(kind, f"no {kind} case matches this entity",
                 f"author the first {kind} cases", eff, hours, stage)
+        elif inv[key]["failed"]:
+            # A red corpus is the single most urgent move on the entity and is
+            # ripe NOW whatever the maturity — it must never reach the green
+            # "closed" branch below and get stamped as passing.
+            add(kind, f'{inv[key]["failed"]} failing case(s) — the suite is red',
+                "fix the failing cases", eff, hours, "mvp")
         elif inv[key]["skipped"]:
             add(kind, f'{inv[key]["skipped"]} skipped case(s) — claimed coverage '
                       f"that does not execute",
@@ -599,9 +467,14 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
             "author the first end-to-end spec", eff, hours, stage)
 
     eff, hours, stage, _, _ = _GROWTH_PRICE["coverage"]
-    add("coverage", f'repo gate ({e2e.get("coverage_gate", "coverage")}) passes, '
-                    f"not sliced by path",
-        "slice the coverage report per entity path", eff, hours, stage)
+    if e2e.get("coverage_sliced"):
+        # The capability is wired — the move CLOSES. A move that can never reach
+        # this branch is decoration, not an action item.
+        closed.append("coverage — sliced per entity")
+    else:
+        add("coverage", f'repo gate ({e2e.get("coverage_gate", "coverage")}) '
+                        f"passes, not sliced by path",
+            "slice the coverage report per entity path", eff, hours, stage)
 
     eff, hours, stage, _, _ = _GROWTH_PRICE["manual"]
     mine = [w for w in walks if w.get("subject") == f"adopt:{slug}"]
@@ -615,8 +488,11 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
         closed.append(f'manual — walked {str(mine[-1].get("when", ""))[:10]}')
 
     eff, hours, stage, _, _ = _GROWTH_PRICE["deployed"]
-    add("deployed", "nothing machine-readable probes the deployed surfaces",
-        "stand up a read-only probe suite", eff, hours, stage)
+    if e2e.get("deployed_probes"):
+        closed.append("deployed — probes on record")
+    else:
+        add("deployed", "nothing machine-readable probes the deployed surfaces",
+            "stand up a read-only probe suite", eff, hours, stage)
 
     eff, hours, stage, _, _ = _GROWTH_PRICE["evidence"]
     declared = ENTITY_PROOFS.get(slug, [])
@@ -638,8 +514,8 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
         pct = round(n * 100 / 800)
         add("structure", f"`{fpath}` · {n:,} lines ({pct}% of budget)",
             "split at its natural seam", eff, hours, "mvp",
-            now_html=(f'<code>{E(fpath)}</code> · {_lines_grade(n)} lines '
-                      f'({pct}% of budget)'))
+            now_html=(f'<code>{E(fpath)}</code> · {lines_grade(n, thousands=True)} '
+                      f'lines ({pct}% of budget)'))
 
     rows.sort(key=lambda r: (not r["ripe"], _EFFORT_ORD[r["eff"]], r["kind"]))
     return rows, closed
@@ -690,6 +566,14 @@ _DOMAIN_META = {
     "other": ("Other", "sec-ov-act-other", "moves with no single section home"),
 }
 _DOMAIN_ORDER = ("code", "tests", "evidence", "risk", "other")
+# The buckets a machine-derived ledger row can land in — DERIVED from the domains
+# _ACTION_DOMAIN actually maps to (in _DOMAIN_ORDER), never a hand-kept tuple, so
+# adding a move-domain cannot silently drop its rows from every table. 'risk' is
+# not here: risks come from the card, not angle_rows.
+_LEDGER_DOMAINS = tuple(d for d in _DOMAIN_ORDER
+                        if d in set(_ACTION_DOMAIN.values()))
+assert set(_ACTION_DOMAIN.values()) <= set(_LEDGER_DOMAINS), (
+    "every _ACTION_DOMAIN value needs a _DOMAIN_ORDER bucket")
 _LEDGER_COLS = ["Kind", "Now — the machine fact", "The move", "Effort",
                 "Stage · ripe?", "If we do", "If we don't", "Cost / run after"]
 # Risk uses the ledger shape MINUS Effort + Cost/run-after — a risk is not
@@ -780,13 +664,21 @@ def action_table(title: str, rows: list, *, id_: str, link_label: str,
     return head + table(columns, render(rows), note=note, widths=widths)
 
 
-def claim_verdicts(claims: list[str], inv: dict, corpora: list) -> dict:
+def claim_verdicts(claims: list[str], inv: dict, corpora: list,
+                   junit_complete: bool = True) -> dict:
     """The Tests-tab ACCUMULATOR: the card's `# CLAIMS` (one line per test class
-    with its intent) joined to the RUN by the C-id anchors the cases carry. A
-    claimed class no longer in junit renders as DRIFT — a promise the test
-    surface stopped keeping. Authored WHAT-FOR meets machine HOW-MUCH; the card
-    never restates a count. Rows are xtable (cells, detail) tuples: a running
-    claim expands to its full case list (all C-ids); a drifted claim is flat."""
+    with its intent) joined to the run by the class's NAME — the build checks the
+    claimed class still runs. The C-ids are read from the matched cases and
+    DISPLAYED (they identify the individual cases), but they are NOT the join key:
+    the join is the class name the card names, so renaming a claimed class
+    correctly reads as DRIFT — the claim's referent is gone until the card is
+    updated. A short-name-only or multi-class match is flagged AMBIGUOUS rather
+    than silently counted running. DRIFT is asserted ONLY when junit is COMPLETE
+    (`junit_complete` — every corpus loaded); if any corpus's junit is missing, a
+    no-match claim reads "drift unknown" instead, never a blanket red DRIFT caused
+    by a missing file — including the partial case (pytest ran, vitest didn't).
+    Rows are xtable (cells, detail) tuples, always 5 cells; running/ambiguous
+    expand to the case list, drift/unknown are flat."""
     # corpus -> (kind, colour class) so each claim carries the SAME kind tag the
     # Kinds & coverage table uses (api → integration/l-api, web → unit/l-web).
     kindmap = {c["key"]: (c["kind"], c["tag_class"]) for c in corpora}
@@ -806,12 +698,23 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list) -> dict:
                 if m:
                     o["cids"].add("C" + m.group(1))
 
-    def _match(key: str) -> list[str]:
-        return [cls for cls in observed
-                if cls == key or cls.endswith("." + key)
-                or cls.rsplit("/", 1)[-1] == key]
+    def _match(key: str) -> tuple[list[str], str]:
+        """(matched observed classes, quality). 'exact' = a full or dotted-
+        qualified name matched (a pytest class); 'base' = the path basename
+        matched (vitest, where the test FILE is the unit and its name — e.g.
+        `Foo.test.tsx` — is the identity). A UNIQUE match either way is a clean
+        join; only a name matching MORE THAN ONE observed class is a collision."""
+        exact = sorted(cls for cls in observed
+                       if cls == key or cls.endswith("." + key))
+        if exact:
+            return exact, "exact"
+        base = sorted(cls for cls in observed if cls.rsplit("/", 1)[-1] == key)
+        return base, ("base" if base else "none")
 
-    rows, claimed, drift, verified = [], set(), 0, 0
+    rows, claimed = [], set()
+    tally = {"running": 0, "ambiguous": 0, "drift": 0, "unknown": 0}
+    _none_kind = '<span class="sub">—</span>'
+    _none_cid = '<span class="cid none">—</span>'
     for ln in claims:
         s = ln.strip()
         if not s.startswith("- "):
@@ -820,35 +723,54 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list) -> dict:
         key, intent = key.strip(), intent.strip()
         if not key:
             continue
-        hits = _match(key)
-        claimed.update(hits)
+        matches, quality = _match(key)
+        claimed.update(matches)
         intent_cell = md(intent) if intent else '<span class="sub">—</span>'
-        if hits:
-            verified += 1
-            n = sum(observed[c]["n"] for c in hits)
-            cids = sorted({x for c in hits for x in observed[c]["cids"]},
-                          key=lambda x: int(x[1:]))
-            # The first few C-ids ride the summary; the row EXPANDS to the full
-            # case list — replacing the old "+N" truncation with a real read.
-            shown = " ".join(f'<span class="cid">{E(x)}</span>' for x in cids[:6])
-            cases_cell = (f"{n} · {shown}" if shown
-                          else f'{n} · <span class="cid none">—</span>')
-            cases = [cc for c in hits for cc in observed[c]["cases"]]
-            _corpus = observed[hits[0]]["corpus"]
-            detail = case_rows({"cases": cases}, _corpus)
-            _kind, _kcls = kindmap.get(_corpus, ("—", ""))
-            kind_cell = (f'<span class="tag {_kcls}">{E(_kind)}</span>' if _kcls
-                         else '<span class="sub">—</span>')
-            rows.append(([kind_cell, f"<code>{E(key)}</code>", intent_cell,
-                          cases_cell, '<span class="tag s-ok">running</span>'],
-                         detail))
+        key_cell = f"<code>{E(key)}</code>"
+        if not matches:
+            # DRIFT — "the class was removed" — may ONLY be asserted when junit is
+            # COMPLETE. If ANY corpus's junit is missing (pytest ran, vitest
+            # didn't) the no-match could be that missing file, not a removed
+            # class, so the honest verdict is withheld. A matched claim still
+            # reads running whatever the completeness — a match is a match.
+            if junit_complete:
+                tally["drift"] += 1
+                rows.append(([_none_kind, key_cell, intent_cell, _none_cid,
+                              '<span class="tag s-gap">DRIFT — claimed class not '
+                              'running</span>'], ""))
+            else:
+                tally["unknown"] += 1
+                rows.append(([_none_kind, key_cell, intent_cell, _none_cid,
+                              '<span class="tag s-med">drift unknown — junit '
+                              'incomplete</span>'], ""))
+            continue
+        # Match found — build the case list once, then grade it.
+        n = sum(observed[c]["n"] for c in matches)
+        cids = sorted({x for c in matches for x in observed[c]["cids"]},
+                      key=lambda x: int(x[1:]))
+        # The first few C-ids ride the summary; the row EXPANDS to the full case
+        # list — replacing the old "+N" truncation with a real read.
+        shown = " ".join(f'<span class="cid">{E(x)}</span>' for x in cids[:6])
+        cases_cell = (f"{n} · {shown}" if shown
+                      else f'{n} · <span class="cid none">—</span>')
+        cases = [cc for c in matches for cc in observed[c]["cases"]]
+        _corpus = observed[matches[0]]["corpus"]
+        detail = case_rows({"cases": cases}, _corpus)
+        _kind, _kcls = kindmap.get(_corpus, ("—", ""))
+        kind_cell = (f'<span class="tag {_kcls}">{E(_kind)}</span>' if _kcls
+                     else _none_kind)
+        if len(matches) > 1:
+            tally["ambiguous"] += 1
+            state = (f'<span class="tag s-med">ambiguous — the name matches '
+                     f"{len(matches)} classes; qualify the claim</span>")
         else:
-            drift += 1
-            rows.append(([f'<span class="sub">—</span>', f"<code>{E(key)}</code>",
-                          intent_cell, '<span class="cid none">—</span>',
-                          '<span class="tag s-gap">DRIFT — claimed, not '
-                          'running</span>'], ""))
-    return {"rows": rows, "verified": verified, "drift": drift,
+            tally["running"] += 1
+            state = '<span class="tag s-ok">running</span>'
+        rows.append(([kind_cell, key_cell, intent_cell, cases_cell, state],
+                     detail))
+    return {"rows": rows, "verified": tally["running"],
+            "running": tally["running"], "ambiguous": tally["ambiguous"],
+            "drift": tally["drift"], "unknown": tally["unknown"],
             "unclaimed": len(set(observed) - claimed)}
 
 
@@ -900,24 +822,45 @@ def build_feature_pages(ctx) -> list[str]:
         # entity's files (measured on the archmap — read once).
         _emap = collect_entity_map(slug, ctx.repo_root) or {}
         over_files = [(f, n) for _lyr, f, n in _emap.get("files", []) if n > 800]
+        # Project maturity is READ (BEHAVIOR.md, via ctx), never assumed. When it
+        # is not declared the ripe split falls back to mvp AND every surface says
+        # so — the page never invents a "from BEHAVIOR.md" provenance it did not
+        # read.
+        _mat_raw = (getattr(ctx, "maturity", "") or "").lower()
+        _mat_declared = _mat_raw in _MATURITY_ORD
+        maturity = _mat_raw if _mat_declared else "mvp"
         ledger_rows, ledger_closed = angle_rows(
             slug, inv, specs, ctx.walks, s, proof_root, ctx.corpora, ctx.e2e,
-            over_files)
+            over_files, maturity)
         ledger_ripe = sum(1 for r in ledger_rows if r["ripe"])
         _lw = [w for w in ctx.walks if w.get("subject") == f"adopt:{slug}"]
 
-        # Partition moves by the section that owns them (each appears once);
-        # the Risk domain's actions are the card's OPEN authored risks. These
-        # five groups drive both the in-section action tables and the Overview
-        # ledger's clones + summary.
+        # Partition moves by the section that owns them (each appears once). The
+        # bucket set is DERIVED (_LEDGER_DOMAINS); a row whose domain has no
+        # bucket RAISES rather than vanishing from every table while still being
+        # counted. The Risk domain's actions are the card's OPEN authored risks.
         _dom_rows = {d: [r for r in ledger_rows if r["domain"] == d]
-                     for d in ("code", "tests", "evidence", "other")}
+                     for d in _LEDGER_DOMAINS}
+        _unbucketed = sorted({r["kind"] for r in ledger_rows
+                              if r["domain"] not in _LEDGER_DOMAINS})
+        if _unbucketed:
+            raise ValueError(
+                f"ledger move(s) with no action-table bucket: {_unbucketed} — "
+                f"map the kind in _ACTION_DOMAIN, or add the domain to "
+                f"_DOMAIN_META / _DOMAIN_ORDER")
         _all_risks = parse_risks(card.get("RISKS", []))
         _dom_count = {**{d: len(v) for d, v in _dom_rows.items()},
                       "risk": len(_all_risks)}
         _dom_ripe = {d: sum(1 for r in v if r["ripe"]) for d, v in _dom_rows.items()}
         _dom_ripe["risk"] = sum(1 for r in _all_risks
                                 if r[0].lower() in ("high", "medium"))
+        # ONE universe of moves: machine moves + authored risks. The stat strip,
+        # the status pill AND the dashboard note all read THIS total and THIS
+        # ripe count, so the page can never show 6 in one place and 10 in
+        # another. (Each ledger row is bucketed exactly once above, so this sum
+        # equals the dashboard's sum of _dom_count by construction.)
+        _moves_total = len(ledger_rows) + len(_all_risks)
+        _moves_ripe = ledger_ripe + _dom_ripe["risk"]
 
         def _action_block(domain: str, id_: str, link_label: str,
                           link_href: str) -> str:
@@ -943,7 +886,10 @@ def build_feature_pages(ctx) -> list[str]:
         _ledger_block = sechead(
             "Action", "Action Ledger", "#b45309", _IC_SEED,
             sub="the dashboard of what to do next on this entity — grouped by the "
-                "section that owns each move (project maturity: mvp)",
+                "section that owns each move (project maturity: "
+                + (maturity if _mat_declared
+                   else f"{maturity} — assumed; not declared in BEHAVIOR.md")
+                + ")",
             id_="sec-ov-actions",
             info='<div class="leg">Every move lives in exactly ONE area. The '
                  "summary below counts each area and jumps to it; each area's "
@@ -967,14 +913,17 @@ def build_feature_pages(ctx) -> list[str]:
                       "visible, never urgent")]))
         _adopt = s["status"]
         _ledger_block += _stat_strip([
-            (_KPI_SEED, str(len(ledger_rows)), "open moves", f"{ledger_ripe} ripe now"),
-            (_KPI_CLOCK, str(len(ledger_rows) - ledger_ripe), "later",
+            (_KPI_SEED, str(_moves_total), "open moves", f"{_moves_ripe} ripe now"),
+            (_KPI_CLOCK, str(_moves_total - _moves_ripe), "later",
              "stage above maturity"),
-            (_KPI_TREND, "mvp", "maturity", "from BEHAVIOR.md"),
+            (_KPI_TREND, maturity if _mat_declared else "not set", "maturity",
+             "from BEHAVIOR.md" if _mat_declared
+             else "not declared · assuming mvp"),
             (_KPI_CHECK, _STATUS_SHORT.get(_adopt, _adopt), "adoption",
              f"{_adopt} · {len(_lw)} walk(s)"),
         ])
-        _total = sum(_dom_count.values())
+        # == sum(_dom_count.values()); the bucketing guard above makes them equal.
+        _total = _moves_total
         _dash = []
         for d in _DOMAIN_ORDER:
             label, anchor, covers = _DOMAIN_META[d]
@@ -1118,10 +1067,18 @@ def build_feature_pages(ctx) -> list[str]:
                 f"cases:</p>"
                 + xtable(["File", "Cases", "Passing", "Ran", "Flags"], _rows,
                          widths=["2.4fr", "0.7fr", "1fr", "0.8fr", "1.3fr"]))
-        # Claimed coverage — the accumulator that LEADS the tab: what the entity
-        # claims to test (card # CLAIMS) joined to the run by C-id, drift and all.
-        cv = claim_verdicts(card.get("CLAIMS", []), inv, ctx.corpora)
+        # Claimed coverage — the accumulator that LEADS the tab: card # CLAIMS
+        # joined to the run by the class NAME. DRIFT is asserted only when junit
+        # is COMPLETE — EVERY corpus loaded (using the per-corpus `present` field
+        # entity_corpus carries). A partial outage (pytest ran, vitest didn't)
+        # makes no-match claims "drift unknown", never a blanket false DRIFT.
+        _junit_complete = all(inv[c["key"]]["present"] for c in ctx.corpora)
+        cv = claim_verdicts(card.get("CLAIMS", []), inv, ctx.corpora,
+                            _junit_complete)
         if cv["rows"]:
+            _amb = (f' · {cv["ambiguous"]} ambiguous' if cv["ambiguous"] else "")
+            _unk = (f' · {cv["unknown"]} unknown (junit incomplete)'
+                    if cv["unknown"] else "")
             claim_section = (
                 sechead("Testing", "Claimed coverage", "#0d9488", _IC_CHECK,
                         sub="the case classes this entity claims to test, and "
@@ -1130,22 +1087,26 @@ def build_feature_pages(ctx) -> list[str]:
                         id_="sec-tests-claims",
                         info='<div class="leg">Authored in the card '
                              "<code># CLAIMS</code> — one line per test class with "
-                             "its intent. The build joins each claim to the RUN by "
-                             "C-id; a claimed class no longer in junit is DRIFT. "
-                             "The card says WHAT FOR; the cases and C-ids are read "
-                             "from junit. Click a running claim to read its "
-                             "cases.</div>"
+                             "its intent. The build joins each claim to the run by "
+                             "the class NAME (the C-ids are read from the matched "
+                             "cases and shown, not the join key); a claimed class "
+                             "no longer running is DRIFT, a match by short name or "
+                             "to several classes is AMBIGUOUS, and if no junit "
+                             "loaded at all the verdict is withheld. Click a "
+                             "running claim to read its cases.</div>"
                              + legend("Claim state:", [
                                  ("s-ok", "running", "the class is in junit ·"),
+                                 ("s-med", "ambiguous / unknown",
+                                  "short-name match, or junit absent ·"),
                                  ("s-gap", "DRIFT", "claimed, not running")]))
                 + xtable(["Kind", "Class", "Intent", "Cases · C-ids", "State"],
                          cv["rows"],
                          widths=["0.9fr", "1.3fr", "2fr", "1.7fr", "1fr"],
-                         note=f'{cv["verified"]} claim(s) running · {cv["drift"]} '
-                              f'drifted · {cv["unclaimed"]} running class(es) not '
-                              f'yet claimed — click a claim to read its cases. A '
-                              f'drifted claim is a test that was promised and is '
-                              f'gone.'))
+                         note=f'{cv["running"]} claim(s) running · {cv["drift"]} '
+                              f'drifted{_amb}{_unk} · {cv["unclaimed"]} running '
+                              f'class(es) not yet claimed — click a claim to read '
+                              f'its cases. A drifted claim is a test that was '
+                              f'promised and is gone.'))
         else:
             claim_section = (
                 sechead("Testing", "Claimed coverage", "#0d9488", _IC_CHECK,
@@ -1203,10 +1164,20 @@ def build_feature_pages(ctx) -> list[str]:
         # Evidence — a header table of the entity's proof sets, each row opening
         # onto its own galleries; artifacts open in the in-page viewer. Built
         # from disk + each set's manifest.json (see _a3_evidence).
-        evidence = build_evidence_tab(
-            ENTITY_PROOFS.get(slug, []),
-            ctx.proof_root,
-            ctx.labels.get(slug, slug).lower())
+        # Every risky manifest read lives in build_evidence_tab; the leaf-value
+        # coercions in _a3_evidence handle the known bad shapes, and this backstop
+        # catches any I did not enumerate — a malformed proof manifest degrades
+        # ONE entity's Evidence tab to a named gap, never aborts the whole build.
+        try:
+            evidence = build_evidence_tab(
+                ENTITY_PROOFS.get(slug, []),
+                ctx.proof_root,
+                ctx.labels.get(slug, slug).lower())
+        except Exception as _ev_err:                       # noqa: BLE001
+            print(f"    ⚠ feature-{slug}.html Evidence tab degraded to a gap: "
+                  f"{type(_ev_err).__name__}: {_ev_err}")
+            evidence = gap("Proof sets", f"proof manifest unreadable "
+                                         f"({type(_ev_err).__name__})")
         if not evidence:
             evidence = gap("Proof sets", f"_a3_feature.ENTITY_PROOFS['{slug}']")
         evidence = _action_block("evidence", "sec-ev-actions",
@@ -1261,17 +1232,26 @@ def build_feature_pages(ctx) -> list[str]:
         # shared pill (repo totals) read as an entity verdict on an entity page
         # — a reader who saw "1,448 tests · 0 failed" beside KPIs of 87/141/7
         # formed the verdict there and never opened the tabs that qualify it.
-        n_moves = len(ledger_rows)
         # Each pill LINKS to the section that owns its number, and the number is
         # a landmark there — not a footnote. The moves pill goes to the Action
-        # Ledger (what to do next); the status pill to the Risk register.
+        # Ledger (what to do next); the status pill to the Risk register. The
+        # moves pill reads the SAME total the ledger's stat strip and dashboard
+        # do, so the three never disagree.
+        # A card with zero matching cases is NOT a pass — a green "0 cases · 0
+        # failed" is the loudest false-pass a not-yet-built entity can wear, so
+        # own==0 gets its own amber "no cases yet" state.
+        if own == 0:
+            _cases_cls, _cases_txt = "warn", "no cases yet"
+        else:
+            _cases_cls = "warn" if own_failed else "ok"
+            _cases_txt = f'{own:,} cases · {own_failed} failed'
         entity_pills = (
-            f'<a class="statuspill {"warn" if own_failed else "ok"}" '
+            f'<a class="statuspill {_cases_cls}" '
             f'href="#sec-tests-kinds" title="Tests → Kinds &amp; coverage">'
-            f'{own:,} cases · {own_failed} failed</a> '
-            f'<a class="statuspill {"warn" if ledger_ripe else "ok"}" '
+            f'{_cases_txt}</a> '
+            f'<a class="statuspill {"warn" if _moves_ripe else "ok"}" '
             f'href="#sec-ov-actions" title="Overview → Action Ledger">'
-            f'{n_moves} moves · {ledger_ripe} ripe</a> '
+            f'{_moves_total} moves · {_moves_ripe} ripe</a> '
             f'<a class="statuspill {"warn" if s["status"] != "approved" else "ok"}" '
             f'href="#sec-risk-register" title="Risk → register">'
             f'{E(s["status"])}</a>')

@@ -49,4 +49,28 @@
     tr.classList.toggle('rowopen', o);
     if (next && next.classList.contains('exp')) next.classList.toggle('rowopen', o);
   });
+
+  /* Cross-reference targets. The data model, matrix and proof shelf are now
+     xtable rows whose id sits on a CLOSED <details class="xrow">. A link like
+     "returns TransactionDetail" (href="#dm-…") scrolls the row into view but,
+     without this, lands on a row that is still folded — the reader clicks to
+     SEE the type and sees a summary. Open the targeted row (and any ancestor
+     xrow) so the thing they navigated to is actually revealed. The :target tab
+     CSS already unfolds the enclosing tab. */
+  function openTarget() {
+    var h = location.hash ? location.hash.slice(1) : '';
+    if (!h) return;
+    var el = document.getElementById(h);
+    while (el) {
+      if (el.tagName === 'DETAILS' && el.classList.contains('xrow')) el.open = true;
+      el = el.parentElement && el.parentElement.closest
+        ? el.parentElement.closest('details.xrow') : null;
+    }
+    var t = document.getElementById(h);
+    if (t && t.scrollIntoView) t.scrollIntoView({ block: 'center' });
+  }
+  window.addEventListener('hashchange', openTarget);
+  if (document.readyState === 'loading')
+    document.addEventListener('DOMContentLoaded', openTarget);
+  else openTarget();
 })();

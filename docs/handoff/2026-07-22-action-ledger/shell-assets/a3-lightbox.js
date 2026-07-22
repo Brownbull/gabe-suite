@@ -104,26 +104,19 @@
      with none has no expander row, so it is skipped without a special case. */
   function siblings() {
     if (!scope || !scope.closest) return scope ? [scope] : [];
-    // xtable proof shelf: sets are .xrow within the same .xtbl.
+    // Proof sets are .xrow within the same .xtbl — the only producer of
+    // data-lb anchors, so there is no other structure to walk.
     var xt = scope.closest('.xtbl');
     if (xt) return Array.prototype.filter.call(
       xt.querySelectorAll('.xrow'),
       function (r) { return r.querySelector('a[data-lb]'); });
-    // legacy table: sets are tr.exp within the tbody.
-    var body = scope.closest('tbody');
-    if (!body) return [scope];
-    return Array.prototype.filter.call(
-      body.querySelectorAll('tr.exp'),
-      function (tr) { return tr.querySelector('a[data-lb]'); });
+    return [scope];
   }
 
-  // Open/close a SET across both structures: an .xrow opens itself; a legacy
-  // tr.exp opens its inner details.more. Either way the toggle handler below
-  // cascades the set's legs.
+  // Open/close a proof SET — an .xrow opens itself, and the toggle handler below
+  // cascades its legs.
   function setOpen(el, v) {
-    if (!el) return;
-    if (el.classList.contains('xrow')) el.open = v;
-    else { var m = el.querySelector('details.more'); if (m) m.open = v; }
+    if (el && el.classList.contains('xrow')) el.open = v;
   }
 
   /* Up / down move between SETS, not artifacts: the set on screen folds shut,
@@ -148,7 +141,7 @@
     // The navigable group is the whole PROOF SET (the row expander), not the
     // one gallery clicked: a reader arrowing through evidence expects the next
     // leg to follow, not a dead end at the end of the current one.
-    scope = a.closest('.xrow') || a.closest('tr.exp') || a.closest('.gal') || a.parentElement;
+    scope = a.closest('.xrow') || a.closest('.gal') || a.parentElement;
     group = Array.prototype.slice.call(scope.querySelectorAll('a[data-lb]'));
     at = Math.max(0, group.indexOf(a));
     opener = a;
@@ -198,11 +191,9 @@
   document.addEventListener('toggle', function (e) {
     var d = e.target;
     if (!d || d.tagName !== 'DETAILS') return;
-    // A set container is an .xrow (proof shelf) or a details.more inside tr.exp
-    // (legacy). Only those cascade their legs — not the ⊕ truncation toggles.
-    var isSet = d.classList.contains('xrow') ||
-                (d.classList.contains('more') && d.closest('tr.exp'));
-    if (!isSet) return;
+    // A set container is an .xrow (the proof shelf). Only it cascades its legs —
+    // not the ⊕ truncation toggles inside the row.
+    if (!d.classList.contains('xrow')) return;
     var kids = d.querySelectorAll('details[data-sub]');
     for (var i = 0; i < kids.length; i++) kids[i].open = d.open;
   }, true);

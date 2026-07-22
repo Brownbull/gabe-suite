@@ -17,7 +17,7 @@ import glob as _glob
 from pathlib import Path
 
 import _center_data as _cd
-from _a3_render import E, legend, sechead, subnav, table, xtable
+from _a3_render import E, legend, lines_grade, sechead, subnav, table, xtable
 
 # The layers a code map is organized by, in render order. Semantic names, not
 # paths: api=endpoints (FastAPI), models=SQLAlchemy, schemas=Pydantic, the rest
@@ -302,18 +302,6 @@ def code_map(repo: Path, layers: dict) -> list[tuple[str, str, int]]:
     return rows
 
 
-def _lines_cell(n: int) -> str:
-    """The 800-line budget as color: green at/below the cap; 801->2000 ramps to
-    the most intense red; beyond 2000 stays maxed. The number IS the flag."""
-    if n <= 800:
-        return f'<b style="color:var(--good)">{n}</b>'
-    frac = min((n - 800) / 1200, 1.0)
-    r = int(0xE5 + (0xB7 - 0xE5) * frac)
-    g = int(0x73 + (0x1C - 0x73) * frac)
-    b = int(0x73 + (0x1C - 0x73) * frac)
-    return f'<b style="color:rgb({r},{g},{b})">{n}</b>'
-
-
 def collect_entity_map(slug: str, repo: Path) -> dict | None:
     """The entity's architecture map, gathered ONCE per build: endpoints (with
     the documented types each handler touches), models (columns/FKs/relationship
@@ -464,7 +452,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         ["Layer", "File", "Lines", "Defines"],
         [[f'<span class="tag {_LAYER_CLS.get(layer, "")}" '
           f'title="{E(layer_desc.get(layer, ""))}">{E(layer)}</span>',
-          f'<code id="{_anchor("cm", slug, f)}">{E(f)}</code>', _lines_cell(n),
+          f'<code id="{_anchor("cm", slug, f)}">{E(f)}</code>', lines_grade(n),
           defines_cell(layer, f)] for layer, f, n in files],
         num={2},
         note=f"{len(files)} file(s) · {sum(n for _, _, n in files):,} lines measured "

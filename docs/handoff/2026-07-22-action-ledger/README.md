@@ -30,9 +30,13 @@ proposed shell additions). Open them directly in a browser.
    Used by the **data model** (grouped models/schemas), the **test matrix**
    (grouped by corpus), and the **proof shelf**.
 4. **Claimed coverage** (absorbed from gastify's live generator, which had grown
-   past our promotion) — the card's `# CLAIMS` joined to junit by C-id; a claimed
-   class no longer running renders **DRIFT**. Leads with a colour-coded **Kind**
-   column; the old `+N` C-id overflow is replaced by row-click-to-expand.
+   past our promotion) — the card's `# CLAIMS` joined to the run by the test-class
+   **NAME** the card names (a pytest class, or a vitest test-file basename); the
+   C-ids are read from the matched cases and shown, **not** the join key. A claimed
+   class no longer running renders **DRIFT**; a name matching more than one class
+   renders **ambiguous**; and if no junit loaded at all the verdict is withheld
+   (**drift unknown**) rather than a blanket false DRIFT. Leads with a colour-coded
+   **Kind** column; the old `+N` C-id overflow is replaced by row-click-to-expand.
    Tests-tab order: **Pending → Kinds & coverage → Claims → Matrix**.
 5. **Risk consolidated** to one table in the ledger columns (Severity · exposure ·
    move · ripe · if-we-do · stake); Effort/Cost dropped (a risk isn't machine-priced).
