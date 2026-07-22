@@ -76,6 +76,143 @@ def _resolve_single(pdir: Path) -> Path | None:
 is_reference = _is_reference
 
 
+# --------------------------------------------------------------------------- #
+# Flow coverage — which proof sets are the MAIN workflow and which are edge
+# cases, derived, never interviewed. The card's `# FLOWS` section is the flow
+# registry (authored once, per entity); each set is classified from its own
+# manifest: explicit `role:` / `flows:` fields win, otherwise the role is
+# INFERRED from the set's identity text and labeled as inferred, and a set the
+# build cannot read renders UNCLASSIFIED — a clarification action item, never a
+# silent guess. A card flow no classified set covers is UNPROVEN — a placeholder
+# row and an action item ("the golden path has no proof" is a finding, not a
+# blank). A reference set never covers a flow: what the screen was built to
+# match is not proof of the workflow.
+# --------------------------------------------------------------------------- #
+
+_ROLE_TAG = {
+    "principal": ("s-ok", "the main workflow"),
+    "edge": ("s-med", "guards · degraded · destructive paths"),
+    # violet, NOT the teal l-services — beside the green principal badge the two
+    # read as the same colour, and reference is the one role that is NOT proof.
+    "reference": ("l-models", "design-lab fidelity — not workflow proof"),
+    "supporting": ("l-schemas", "context around the main flows"),
+}
+# Role signals are read from the set's IDENTITY (name · feature · proof_form),
+# never from legs/story — one degrade leg must not flip a journey set to edge.
+_EDGE_SIG_RX = re.compile(
+    r"guard|destruct|degrade|dirty|denied|invalid|reject|fallback|edge", re.I)
+_REF_SIG_RX = re.compile(r"fidelity|reference\s*⟷\s*live|reference.live", re.I)
+_JOURNEY_SIG_RX = re.compile(r"journey|recorded", re.I)
+_FLOW_STOP = frozenset(
+    "the and with into that this from for its are post get put delete patch "
+    "http mode same one works even inside past whole any clears".split())
+
+
+def parse_flows(lines: list[str]) -> list[tuple[str, str, bool]]:
+    """Card `# FLOWS` grammar: `- <key> [★] → <description>` — the key is the
+    flow's one-word name (scan, manual, browse…), the description its path. A
+    `★` (or `(golden)`) after the key marks the flow as part of THIS feature's
+    GOLDEN PATH — the authored judgment of which flows are the main journey, so
+    the build can rank an unproven golden flow above an ordinary gap."""
+    out: list[tuple[str, str, bool]] = []
+    for ln in lines or []:
+        s = ln.strip().removeprefix("- ")
+        if not s:
+            continue
+        key, _, desc = s.partition("→")
+        golden = "★" in key or bool(re.search(r"\(golden\)", key, re.I))
+        key = re.sub(r"★|\(golden\)", "", key, flags=re.I)
+        key = key.strip().strip("`").lower()
+        if key and " " not in key:
+            out.append((key, desc.strip(), golden))
+    return out
+
+
+def _flow_tokens(desc: str) -> set[str]:
+    return {w for w in re.findall(r"[a-zA-Z]{4,}", desc.lower())
+            if w not in _FLOW_STOP}
+
+
+def _classify(s: dict, flows: list[tuple[str, str]]) -> dict:
+    """One set's role + matched flows. Explicit manifest fields win; inference
+    is labeled; no manifest / no signal → unclassified (role "")."""
+    man = s["man"]
+    identity = " ".join(str(man.get(k, "")) for k in ("feature", "proof_form"))
+    identity = f'{s["name"]} {identity}'.lower()
+    narr = man.get("narration") if isinstance(man.get("narration"), dict) else {}
+    story = narr.get("story", "") if isinstance(narr.get("story", ""), str) else ""
+    text = " ".join([identity, story.lower(),
+                     " ".join(leg["name"] for leg in s["legs"])]).lower()
+
+    _fl = man.get("flows")
+    explicit_flows = [f.lower() for f in _fl
+                      if isinstance(f, str)] if isinstance(_fl, list) else []
+    if explicit_flows:
+        matched = [k for k, _, _g in flows if k in explicit_flows]
+    else:
+        matched = []
+        for key, desc, _g in flows:
+            if re.search(rf"(?<![a-z]){re.escape(key)}(?![a-z])", text):
+                matched.append(key)
+            elif len([t for t in _flow_tokens(desc) if t in text]) >= 2:
+                matched.append(key)
+    golden = bool(set(matched) & {k for k, _, g in flows if g})
+
+    def _out(role: str, inferred: bool, m: list[str]) -> dict:
+        return {"role": role, "inferred": inferred, "flows": m,
+                "golden": golden and bool(m)}
+
+    explicit_role = man.get("role") if isinstance(man.get("role"), str) else ""
+    if explicit_role in _ROLE_TAG:
+        return _out(explicit_role, False, matched)
+    if not man:
+        return _out("", False, matched)
+    if _REF_SIG_RX.search(identity) and not _JOURNEY_SIG_RX.search(identity):
+        return _out("reference", True, matched)
+    if _EDGE_SIG_RX.search(identity):
+        return _out("edge", True, matched)
+    if matched:
+        return _out("principal", True, matched)
+    return _out("", False, [])
+
+
+def collect_coverage(names: list[str], proof_root: Path,
+                     flows: list[tuple[str, str]]) -> dict:
+    """All of an entity's proof sets, classified, plus the coverage verdicts:
+    which card flows are UNPROVEN and which sets are UNCLEAR. The single source
+    the Evidence tab, the placeholders, and the action moves read."""
+    sets = [collect_set(n, proof_root / n) for n in names]
+    for s in sets:
+        s["cls"] = _classify(s, flows)
+    covered: set[str] = set()
+    for s in sets:
+        if s["cls"]["role"] in ("principal", "edge", "supporting"):
+            covered.update(s["cls"]["flows"])
+    return {"sets": sets, "flows": flows,
+            "unproven": [(k, d, g) for k, d, g in flows if k not in covered],
+            "unclear": [s["name"] for s in sets if not s["cls"]["role"]]}
+
+
+def _role_cell(cls: dict) -> str:
+    if not cls["role"]:
+        return ('<span class="tag s-gap">unclassified</span>'
+                '<br><small>clarify — see Pending above</small>')
+    tag, _ = _ROLE_TAG[cls["role"]]
+    # ★ only on roles that COUNT as coverage — a reference set touching a golden
+    # flow is still not proof of it, so it never wears the star.
+    star = (" ★" if cls.get("golden")
+            and cls["role"] in ("principal", "edge", "supporting") else "")
+    small = []
+    if star:
+        small.append("golden path")
+    if cls["inferred"]:
+        small.append("inferred")
+    if cls["flows"]:
+        small.append("flow: " + " · ".join(cls["flows"][:3]))
+    return (f'<span class="tag {tag}">{E(cls["role"])}{star}</span>'
+            + (f'<br><small>{E(" — ".join(small))}</small>' if small else ""))
+
+
 def _rel_days(ts: float) -> str:
     days = (_dt.datetime.now().timestamp() - ts) / 86400
     if days < 1:
@@ -278,14 +415,16 @@ def _set_detail(s: dict, story: str = "") -> str:
     return out
 
 
-def build_evidence_tab(names: list[str], proof_root: Path,
-                       label: str = "this entity") -> str:
-    """The Evidence tab for one entity: a header table of its proof sets, each
-    row opening onto its own galleries. A declared set with nothing on disk
-    keeps its row and reads as a named gap."""
-    if not names:
+def build_evidence_tab(cov: dict, label: str = "this entity") -> str:
+    """The Evidence tab for one entity, rendered from collect_coverage(): a
+    header table of its proof sets — each row carrying its ROLE (principal ·
+    edge · reference · supporting, or unclassified) and opening onto its own
+    galleries — followed by one PLACEHOLDER row per card flow no classified set
+    covers. A declared set with nothing on disk keeps its row and reads as a
+    named gap; an uncovered flow reads as an unproven one."""
+    sets = cov["sets"]
+    if not sets and not cov["unproven"]:
         return ""
-    sets = [collect_set(n, proof_root / n) for n in names]
     rows = []
     for s in sets:
         n_media = len(s["shots"]) + len(s["videos"])
@@ -309,8 +448,6 @@ def build_evidence_tab(names: list[str], proof_root: Path,
         _story = _narr.get("story", "") if isinstance(_narr, dict) else ""
         if not isinstance(_story, str):        # story authored as a list/dict
             _story = ""
-        story_cell = (E(trunc(_story, 150)) if _story
-                      else '<span class="sub">—</span>')
         counts = " ".join(filter(None, [
             f'{len(s["shots"])} shot(s)' if s["shots"] else "",
             f'{len(s["videos"])} video(s)' if s["videos"] else "",
@@ -318,17 +455,49 @@ def build_evidence_tab(names: list[str], proof_root: Path,
         captured = (f'{_rel_days(s["newest"])}<br>'
                     f'<small>{E(trunc(str(man.get("source_run", "run not recorded")), 42))}</small>'
                     if s["newest"] else '<span class="sub">—</span>')
+        # The story is NOT a column — it reads in full inside the opened row
+        # (_set_detail), so the table stays scannable instead of repeating a
+        # truncated copy of what the expansion already shows.
         cells = [
             f'<b>{E(s["name"])}</b><br>'
             f'<small>{E(trunc(str(man.get("feature", "no manifest")), 60))}</small>',
-            story_cell, counts, captured, state]
+            _role_cell(s["cls"]), counts, captured, state]
         # Click the row to open the galleries in place (no separate button); a
         # set with nothing on disk stays a flat, un-expandable row.
         rows.append((cells, _set_detail(s, _story) if n_media else ""))
 
+    # One placeholder per UNPROVEN card flow — the golden path with no proof is
+    # a visible row and an action item, never a blank between the rows above.
+    # The SAME flow also rides the Pending action table (angle_rows): the
+    # placeholder marks WHERE the proof will live, the Pending row is the move
+    # that fills it — the state cell links the two.
+    for key, desc, golden in cov["unproven"]:
+        star = " ★" if golden else ""
+        gap_txt = ("<b>GOLDEN PATH</b> — no proof set" if golden
+                   else "no proof set — placeholder")
+        rows.append(([f'<span class="sub">flow</span> <b>{E(key)}{star}</b><br>'
+                      f'<small>{E(trunc(desc, 90))}</small>',
+                      '<span class="tag s-gap">unproven</span>',
+                      "—", "—",
+                      f'<span class="tag s-gap">{gap_txt}</span><br>'
+                      f'<small><a class="dlink" href="#sec-ev-actions">'
+                      f'the move → Pending ↑</a></small>'],
+                     ""))
+
     n_sets = sum(1 for s in sets if s["shots"] or s["videos"])
     n_shots = sum(len(s["shots"]) for s in sets)
     n_vids = sum(len(s["videos"]) for s in sets)
+    flows = cov["flows"]
+    _gold_all = [k for k, _, g in flows if g]
+    _gold_open = [k for k, _, g in cov["unproven"] if g]
+    _cover_note = (f" · {len(flows) - len(cov['unproven'])}/{len(flows)} card "
+                   f"flows covered ({len(cov['unproven'])} unproven)"
+                   if flows else "")
+    if _gold_all:
+        _cover_note += (f" · golden path "
+                        f"{len(_gold_all) - len(_gold_open)}/{len(_gold_all)}")
+    _unclear_note = (f" · {len(cov['unclear'])} set(s) unclassified"
+                     if cov["unclear"] else "")
     # `spec` authored as a list/dict is unhashable — guard the set membership on
     # str-ness so one mis-typed field cannot raise mid-tab.
     specs = sorted({s["man"]["spec"] for s in sets
@@ -341,28 +510,47 @@ def build_evidence_tab(names: list[str], proof_root: Path,
         sub="what a person can look at and judge — captured by the e2e runs, "
             "never staged for the page",
         id_="sec-ev-sets", open_=True,   # carries the viewer's keyboard contract
+        note=f"{n_sets} set(s) with evidence · {n_shots} shot(s) · {n_vids} "
+             f"video(s){_cover_note}{_unclear_note} · click a row to open its "
+             f"galleries · walked recursively from `{_PROOF_REL}/` at build time.",
         info='<div class="leg">A set is one directory under '
              f'<code>{_PROOF_REL}/</code>; its <code>manifest.json</code> '
              "supplies the story and the leg names, the file counts are walked "
-             "off disk. Open a row to see its legs, then click any artifact "
+             "off disk. The ROLE column says where each set sits in the entity's "
+             "story — derived from the card's <code># FLOWS</code> and the "
+             "manifest (an explicit <code>role:</code>/<code>flows:</code> in "
+             "the manifest overrides the inference; an inferred role says so). "
+             "A <code>★</code> in the card's FLOWS marks the GOLDEN PATH — this "
+             "feature's own main journey; a set covering a ★ flow wears the "
+             "star, and an unproven ★ flow is the loudest gap on the shelf. "
+             "Open a row to see its legs, then click any artifact "
              "to open the viewer — <b>←</b> / <b>→</b> or the side arrows "
              "run through the WHOLE set, leg by leg; <b>↑</b> / <b>↓</b> move to "
              "the previous or next set (folding this one shut and "
              "unfolding that one); <b>Esc</b> closes. Opening or closing "
              "a set cascades to its legs.</div>"
+             + legend("Role:", [
+                 ("s-ok", "principal ★", "main workflow · ★ = golden path ·"),
+                 ("s-med", "edge", "guards · degraded · destructive ·"),
+                 ("l-models", "reference", "design-lab fidelity, not proof ·"),
+                 ("l-schemas", "supporting", "context ·"),
+                 ("s-gap", "unclassified / unproven",
+                  "needs clarification, or a flow with no set — both feed "
+                  "Pending")])
              + legend("Row states:", [
                  ("s-ok", "artifacts", "on disk this build ·"),
                  ("s-gap", "empty / absent",
                   "declared for this entity but nothing to show — a named gap")]))
     html += xtable(
-        ["Proof set", "What it shows", "Artifacts", "Captured", "State"],
-        rows, widths=["1.5fr", "2.4fr", "0.9fr", "1.3fr", "1.2fr"],
-        note=f"{n_sets} set(s) with evidence · {n_shots} shot(s) · {n_vids} "
-             f"video(s) · click a row to open its galleries · walked recursively "
-             f"from `{_PROOF_REL}/` at build time.")
+        ["Proof set", "Role", "Artifacts", "Captured", "State"],
+        rows, widths=["2fr", "1.4fr", "1fr", "1.2fr", "1.4fr"])
     html += sechead("Evidence", "Not proven here", "#8a6d1a", _IC_INBOX,
                     sub="the evidence kinds this entity does not have",
-                    id_="sec-ev-gaps")
+                    id_="sec-ev-gaps",
+                    note="Absent evidence is named, never zeroed. Specs behind "
+                         "the sets above: "
+                         + (", ".join(f"`{s}`" for s in specs)
+                            or "none recorded in the manifests."))
     html += table(
         ["Kind", "Why"],
         [["deployed probes", f"no machine-readable probe watches the deployed "
@@ -374,8 +562,5 @@ def build_evidence_tab(names: list[str], proof_root: Path,
          ["a junit record of these runs",
           "D121 keeps web e2e local-only, so the shots above exist without a "
           "pass/fail record beside them — the pre-push local gate is where "
-          "they are enforced"]],
-        note="Absent evidence is named, never zeroed. Specs behind the sets "
-             "above: " + (", ".join(f"`{s}`" for s in specs)
-                          or "none recorded in the manifests."))
+          "they are enforced"]])
     return html

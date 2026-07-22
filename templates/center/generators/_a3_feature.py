@@ -18,7 +18,13 @@ from pathlib import Path
 import _center_data as _cd
 import _center_mermaid as M
 from _a3_code import build_code_tab, collect_entity_map
-from _a3_evidence import build_evidence_tab, collect_set, is_reference
+from _a3_evidence import (
+    build_evidence_tab,
+    collect_coverage,
+    collect_set,
+    is_reference,
+    parse_flows,
+)
 from _a3_render import (
     E,
     card_html,
@@ -416,7 +422,8 @@ def _struct_effort(lines: int) -> tuple[str, str]:
 
 def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
                section: dict, proof_root, corpora: list, e2e: dict,
-               over_files: list, maturity: str = "mvp") -> tuple[list[dict], list[str]]:
+               over_files: list, maturity: str = "mvp",
+               flow_gaps: list = (), unclear_sets: list = ()) -> tuple[list[dict], list[str]]:
     """Every OPEN move on the entity (one dict per row, both prices) plus the
     CLOSED-angle labels (a green / walked / proven angle emits no row). The
     single source the ledger, the Risk residual and the hub rollup read."""
@@ -508,6 +515,22 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
                 "capture it, or retire the declaration", eff, hours, stage)
     else:
         closed.append(f"evidence — {len(declared)} set(s) on disk")
+    # Flow coverage (from collect_coverage over the card's # FLOWS): a card flow
+    # no classified set covers, and a set the build cannot classify, are both
+    # OPEN evidence moves — the golden path with no proof is work, not a blank.
+    for key, _desc, golden in flow_gaps:
+        if golden:
+            add("evidence", f"GOLDEN PATH flow `{key}` has no proof",
+                "capture the feature's main path — the first proof to have",
+                eff, hours, "mvp")
+        else:
+            add("evidence", f"card flow `{key}` has no covering proof set",
+                "capture the flow's proof, or mark the covering set's `flows:`",
+                eff, hours, stage)
+    for name in unclear_sets:
+        add("evidence", f"proof set `{name}` — unclear what it proves",
+            "add `role:` / `flows:` to its manifest (author it if missing)",
+            "XS", "~10 min", "mvp")
 
     for fpath, n in over_files:
         eff, hours = _struct_effort(n)
@@ -642,7 +665,7 @@ def _stat_strip(items: list) -> str:
 # Column widths (fixed layout) so the text-heavy columns get room and the tag
 # columns stay tight — an 8-col ledger table and the 6-col risk table. Kind gets
 # enough room that "structure" / "machine" stay on one line.
-_LEDGER_W = ["11%", "19%", "11%", "6%", "8%", "15%", "16%", "14%"]
+_LEDGER_W = ["10%", "17%", "16%", "7%", "8%", "14%", "14%", "14%"]
 _RISK_W = ["11%", "29%", "18%", "10%", "14%", "18%"]
 
 
@@ -657,11 +680,12 @@ def action_table(title: str, rows: list, *, id_: str, link_label: str,
     widths = widths or _LEDGER_W
     info = (f'<div class="leg"><a class="dlink" href="#{link_href}">'
             f'{E(link_label)} ↗</a></div>')
-    head = sechead("Action", title, "#b45309", _IC_SEED, id_=id_, info=info)
+    head = sechead("Action", title, "#b45309", _IC_SEED, id_=id_, info=info,
+                   note=note)
     if not rows:
         return head + ('<p class="sub">Nothing pending in this area — it is '
                        "clear this build.</p>")
-    return head + table(columns, render(rows), note=note, widths=widths)
+    return head + table(columns, render(rows), widths=widths)
 
 
 def claim_verdicts(claims: list[str], inv: dict, corpora: list,
@@ -829,9 +853,23 @@ def build_feature_pages(ctx) -> list[str]:
         _mat_raw = (getattr(ctx, "maturity", "") or "").lower()
         _mat_declared = _mat_raw in _MATURITY_ORD
         maturity = _mat_raw if _mat_declared else "mvp"
+        # Flow coverage — the card's # FLOWS joined to the proof sets on disk
+        # (classified in _a3_evidence: explicit manifest role/flows win, inferred
+        # roles say so, no signal = unclassified). Computed BEFORE the ledger so
+        # unproven flows and unclassified sets become evidence moves; a broken
+        # manifest degrades to "no coverage verdicts", never a dead build.
+        _flows = parse_flows(card.get("FLOWS", []))
+        try:
+            _cov = collect_coverage(ENTITY_PROOFS.get(slug, []), proof_root,
+                                    _flows)
+        except Exception as _cov_err:                      # noqa: BLE001
+            print(f"    ⚠ feature-{slug}.html flow coverage skipped: "
+                  f"{type(_cov_err).__name__}: {_cov_err}")
+            _cov = {"sets": [], "flows": _flows, "unproven": [], "unclear": []}
         ledger_rows, ledger_closed = angle_rows(
             slug, inv, specs, ctx.walks, s, proof_root, ctx.corpora, ctx.e2e,
-            over_files, maturity)
+            over_files, maturity,
+            flow_gaps=_cov["unproven"], unclear_sets=_cov["unclear"])
         ledger_ripe = sum(1 for r in ledger_rows if r["ripe"])
         _lw = [w for w in ctx.walks if w.get("subject") == f"adopt:{slug}"]
 
@@ -891,6 +929,10 @@ def build_feature_pages(ctx) -> list[str]:
                    else f"{maturity} — assumed; not declared in BEHAVIOR.md")
                 + ")",
             id_="sec-ov-actions",
+            note=f"{_moves_total} pending move(s) across {len(_DOMAIN_ORDER)} "
+                 f"areas. Each area's full table sits at the TOP of its own "
+                 f"section — use Jump. Only “Other” (no section home) has its "
+                 f"table here.",
             info='<div class="leg">Every move lives in exactly ONE area. The '
                  "summary below counts each area and jumps to it; each area's "
                  "full table is at the TOP of its own section (Code · Tests · "
@@ -922,8 +964,6 @@ def build_feature_pages(ctx) -> list[str]:
             (_KPI_CHECK, _STATUS_SHORT.get(_adopt, _adopt), "adoption",
              f"{_adopt} · {len(_lw)} walk(s)"),
         ])
-        # == sum(_dom_count.values()); the bucketing guard above makes them equal.
-        _total = _moves_total
         _dash = []
         for d in _DOMAIN_ORDER:
             label, anchor, covers = _DOMAIN_META[d]
@@ -938,10 +978,7 @@ def build_feature_pages(ctx) -> list[str]:
                 E(covers), jump])
         _ledger_block += table(
             ["Area", "Pending", "Ripe", "What it covers", "Jump"], _dash,
-            num={1},
-            note=f"{_total} pending move(s) across {len(_DOMAIN_ORDER)} areas. "
-                 f"Each area's full table sits at the TOP of its own section — "
-                 f"use Jump. Only “Other” (no section home) has its table here.")
+            num={1})
         _ledger_block += _action_block("other", "sec-ov-act-other",
                                        "top of the ledger", "sec-ov-actions")
         if ledger_closed:
@@ -981,7 +1018,10 @@ def build_feature_pages(ctx) -> list[str]:
         # 4 · Changelog block --------------------------------------------------
         _changelog_block = sechead(
             "Docs", "Changelog — decisions that shaped it", "#8a6d1a", _IC_COMMIT,
-            sub="why the entity behaves the way it does", id_="sec-ov-changelog")
+            sub="why the entity behaves the way it does", id_="sec-ov-changelog",
+            note="Source: the entity card's DECIDED section. A decision here is "
+                 "a rule the code obeys, not a plan — the ones with ids are in "
+                 "`.kdbp/DECISIONS.md`.")
         dec_rows = []
         for ln in card.get("DECIDED", []):
             t = ln.strip().removeprefix("- ")
@@ -991,10 +1031,7 @@ def build_feature_pages(ctx) -> list[str]:
             elif t:
                 dec_rows.append(['<span class="sub">—</span>', md(t)])
         _changelog_block += table(
-            ["Decision", "What it settles"], dec_rows,
-            note="Source: the entity card's DECIDED section. A decision here is "
-                 "a rule the code obeys, not a plan — the ones with ids are in "
-                 "`.kdbp/DECISIONS.md`.")
+            ["Decision", "What it settles"], dec_rows)
 
         overview = (subnav(nav) + _ledger_block + _card_block
                     + _diagrams_block + _changelog_block)
@@ -1085,6 +1122,11 @@ def build_feature_pages(ctx) -> list[str]:
                             "whether each still runs — the accumulator the matrix "
                             "is measured against",
                         id_="sec-tests-claims",
+                        note=f'{cv["running"]} claim(s) running · {cv["drift"]} '
+                             f'drifted{_amb}{_unk} · {cv["unclaimed"]} running '
+                             f'class(es) not yet claimed — click a claim to read '
+                             f'its cases. A drifted claim is a test that was '
+                             f'promised and is gone.',
                         info='<div class="leg">Authored in the card '
                              "<code># CLAIMS</code> — one line per test class with "
                              "its intent. The build joins each claim to the run by "
@@ -1101,12 +1143,7 @@ def build_feature_pages(ctx) -> list[str]:
                                  ("s-gap", "DRIFT", "claimed, not running")]))
                 + xtable(["Kind", "Class", "Intent", "Cases · C-ids", "State"],
                          cv["rows"],
-                         widths=["0.9fr", "1.3fr", "2fr", "1.7fr", "1fr"],
-                         note=f'{cv["running"]} claim(s) running · {cv["drift"]} '
-                              f'drifted{_amb}{_unk} · {cv["unclaimed"]} running '
-                              f'class(es) not yet claimed — click a claim to read '
-                              f'its cases. A drifted claim is a test that was '
-                              f'promised and is gone.'))
+                         widths=["0.9fr", "1.3fr", "2fr", "1.7fr", "1fr"]))
         else:
             claim_section = (
                 sechead("Testing", "Claimed coverage", "#0d9488", _IC_CHECK,
@@ -1127,6 +1164,10 @@ def build_feature_pages(ctx) -> list[str]:
                           f"what verifies this entity, "
                           f"how much of it runs, and what each kind is for",
                       id_="sec-tests-kinds",
+                      note="Cases, files and the passing proportion are read from "
+                           "the junit capture at build time. A kind with no "
+                           "machine record shows its gap instead of a zero — "
+                           "open ⊕ above for what each kind is for here.",
                       info=legend("Kind colors:", [
                           ("l-api", "integration", "API through HTTP ·"),
                           ("l-web", "unit", "components in isolation ·"),
@@ -1136,16 +1177,15 @@ def build_feature_pages(ctx) -> list[str]:
                           ("l-schemas", "deployed", "probes against the live app")])
                       + angles_html(card.get("ANGLES", [])))
             + table(["Kind", "Runner", "Cases", "Where", "Passing", "State"],
-                    _kind_rows, num={2},
-                    note="Cases, files and the passing proportion are read from "
-                         "the junit capture at build time. A kind with no "
-                         "machine record shows its gap instead of a zero — "
-                         "open ⊕ above for what each kind is for here.")
+                    _kind_rows, num={2})
             + claim_section
             + sechead("Testing", "Matrix — per file", "#4f46e5", _IC_GRID,
                       sub="every test file touching this entity — open a row "
                           "to read its cases",
                       id_="sec-tests-matrix",
+                      note=f"{own} automated case(s) across {_matrix_nfiles} "
+                           "file(s), grouped by corpus, all read from the junit "
+                           "capture — never hand-listed.",
                       info='<div class="leg">Passing = cases that did not fail. '
                            "Ran = cases that were not skipped (a skipped case "
                            "is claimed coverage that did not execute). Flags "
@@ -1156,10 +1196,7 @@ def build_feature_pages(ctx) -> list[str]:
                       + legend("Line coverage is NOT on this table:", [
                           ("s-gap", "named gap",
                            "the repo --cov gate is not sliced per entity")]))
-            + _matrix_groups
-            + f'<p class="sub">{own} automated case(s) across {_matrix_nfiles} '
-              f"file(s), grouped by corpus, all read from the junit capture — "
-              f"never hand-listed.</p>")
+            + _matrix_groups)
 
         # Evidence — a header table of the entity's proof sets, each row opening
         # onto its own galleries; artifacts open in the in-page viewer. Built
@@ -1170,9 +1207,7 @@ def build_feature_pages(ctx) -> list[str]:
         # ONE entity's Evidence tab to a named gap, never aborts the whole build.
         try:
             evidence = build_evidence_tab(
-                ENTITY_PROOFS.get(slug, []),
-                ctx.proof_root,
-                ctx.labels.get(slug, slug).lower())
+                _cov, ctx.labels.get(slug, slug).lower())
         except Exception as _ev_err:                       # noqa: BLE001
             print(f"    ⚠ feature-{slug}.html Evidence tab degraded to a gap: "
                   f"{type(_ev_err).__name__}: {_ev_err}")
@@ -1202,6 +1237,9 @@ def build_feature_pages(ctx) -> list[str]:
                           "now, the move to close it, and the stake if we don't; "
                           "matched to the Code/Tests columns",
                       id_="sec-risk-register",
+                      note=f"{len(_all_risks)} authored risk(s). The move is "
+                           "derived from each risk's status. ⊕ expands the "
+                           "exposure or the stake.",
                       info='<div class="leg">One row per authored risk (the '
                            "card's RISKS section, re-verified prose), in the "
                            "action shape the other sections use — minus Effort "
@@ -1213,10 +1251,7 @@ def build_feature_pages(ctx) -> list[str]:
                                ("s-med", "MEDIUM", "watch / tracked ·"),
                                ("s-low", "LOW", "mitigated, tripwired")]))
             + table(_RISK_LEDGER_COLS, _risk_ledger_render(_all_risks),
-                    widths=_RISK_W,
-                    note=f"{len(_all_risks)} authored risk(s). The move is derived "
-                         f"from each risk's status. ⊕ expands the exposure or the "
-                         f"stake.")
+                    widths=_RISK_W)
             + sechead("Risk", "Not carried forward", "#8a6d1a", _IC_INBOX,
                       sub="claims the legacy pages made that this page refuses "
                           "to repeat, and why", id_="sec-risk-dropped")

@@ -221,23 +221,25 @@ def _sec_slug(text: str) -> str:
 
 def sechead(gtag: str, title: str, color: str, icon: str, sub: str = "",
             id_: str = "", info: str = "", open_: bool = False,
-            sec_id: str = "") -> str:
-    """A tinted, iconed section banner. When a description or legend exists it
-    collapses behind a ⊕ beside the title (the title row IS the toggle) — the
-    reader opts into the explanation; tables never hide.
+            sec_id: str = "", note: str = "") -> str:
+    """A tinted, iconed section banner. Everything explanatory — the description,
+    the color legend, AND the note that used to trail the table — collapses behind
+    a ⊕ beside the title (the title row IS the toggle), so a table is flanked only
+    by its data: the stat cards above it and the rows below (operator declutter
+    ruling 2026-07-22, reversing the earlier "legend always outside" rule — the
+    prose around tables read as noise). Tables themselves never hide. A section
+    whose banner defines an INTERACTION CONTRACT passes open_=True so its keyboard
+    map is visible by default rather than shipped closed.
 
-    Two exceptions, both from the myopic walk: a `legend()` COLOR KEY always
-    renders outside the disclosure (a key nobody can see explains nothing), and
-    a section whose banner defines an INTERACTION CONTRACT passes open_=True —
-    the viewer's keyboard map shipped closed and the readers who most needed it
-    never found it.
+    `note` is the table's trailing prose, folded into the disclosure (after the
+    legend): pass it HERE instead of to table()/xtable() so nothing renders below
+    the rows.
 
     `sec_id` stamps `data-sec="<id>"` on the banner — the section-identity marker
-    map v3 requires on EVERY generator-owned section (the station shells carry it
-    on their `<section>` wrapper; the generator's feature-tab sections had lost
-    it). It is auto-derived from `id_` (dropping the page-anchor `sec-` prefix)
-    or, failing that, the title — so no section renders without an identity, but
-    passing sec_id explicitly is how two pages name the SAME section the same way."""
+    map v3 requires on EVERY generator-owned section. It is auto-derived from
+    `id_` (dropping the page-anchor `sec-` prefix) or the title, so no section
+    renders without an identity; passing sec_id explicitly is how two pages name
+    the SAME section the same way."""
     sec_id = sec_id or (id_.removeprefix("sec-") if id_ else _sec_slug(title))
     id_attr = f' id="{id_}"' if id_ else ""
     sec_attr = f' data-sec="{E(sec_id)}"' if sec_id else ""
@@ -246,14 +248,10 @@ def sechead(gtag: str, title: str, color: str, icon: str, sub: str = "",
             f'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
             f"{icon}</svg></span><div>")
     title_h2 = f'<h2><span class="gtag">{E(gtag)}</span> {E(title)}'
-    # A LEGEND is the key to colors the table below is already using — it has to
-    # be readable without opening anything. Prose explanation stays behind the ⊕.
-    # All 13 of these shipped closed, so a reader met colored tags with no key
-    # and never learned the viewer's own keyboard contract. legend() is the only
-    # producer of `<div class="leg">`, so the split is deterministic.
-    legends = "".join(re.findall(r'<div class="leg key">.*?</div>', info, re.S))
-    prose = re.sub(r'<div class="leg key">.*?</div>', "", info, flags=re.S).strip()
-    body = (f"<p>{E(sub)}</p>" if sub else "") + prose
+    # Description, color legend (info), and the former after-table note all live
+    # inside the ⊕ — a reader opts into every word; the table keeps only its rows.
+    body = ((f"<p>{E(sub)}</p>" if sub else "") + info
+            + (f'<p class="sub tnote">{md(note)}</p>' if note else ""))
     if body:
         head += (f'<details class="secinfo"{" open" if open_ else ""}>'
                  f'<summary>{title_h2} '
@@ -261,7 +259,7 @@ def sechead(gtag: str, title: str, color: str, icon: str, sub: str = "",
                  f'<div class="secbody">{body}</div></details>')
     else:
         head += f"{title_h2}</h2>"
-    return f"{head}</div></div>{legends}"
+    return f"{head}</div></div>"
 
 
 def legend(intro: str, items: list[tuple[str, str, str]]) -> str:

@@ -745,3 +745,10 @@ details.legset .gal{margin:8px 0 4px}
 /* a targeted xrow (jumped-to via a #dm-… cross-reference link) — rowclick.js
    opens it; this flags where the reader landed. */
 .xrow:target>summary{background:var(--accent-soft)}
+/* SECTION SEPARATION — a section title never sits flush against the content
+   above it. The trailing table notes used to provide this gap; they folded into
+   the ⊕, so the gap is now structural: any sechead that FOLLOWS content gets
+   breathing room. A sechead after the subnav (first in its tab) stays tight —
+   the subnav spaces itself. */
+.panel+.sechead,.xtbl+.sechead,p+.sechead,details+.sechead,ul+.sechead,
+.dgm+.sechead,.lens+.sechead,.kpis+.sechead,table+.sechead{margin-top:34px}

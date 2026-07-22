@@ -60,14 +60,28 @@
   function openTarget() {
     var h = location.hash ? location.hash.slice(1) : '';
     if (!h) return;
-    var el = document.getElementById(h);
+    if (h.indexOf('tab-') === 0) {
+      // A TAB switch, not a deep link: the reader expects the top of the page,
+      // not wherever the browser left the scroll (or the pane's middle).
+      window.scrollTo(0, 0);
+      return;
+    }
+    var t = document.getElementById(h);
+    if (!t) return;
+    var opened = false;
+    var el = t;
     while (el) {
-      if (el.tagName === 'DETAILS' && el.classList.contains('xrow')) el.open = true;
+      if (el.tagName === 'DETAILS' && el.classList.contains('xrow')) {
+        el.open = true;
+        opened = true;
+      }
       el = el.parentElement && el.parentElement.closest
         ? el.parentElement.closest('details.xrow') : null;
     }
-    var t = document.getElementById(h);
-    if (t && t.scrollIntoView) t.scrollIntoView({ block: 'center' });
+    // Center-scroll ONLY when an xrow was actually opened (a cross-reference
+    // jump); every other anchor keeps the browser's native scroll — centering
+    // on arbitrary targets is what dropped tab clicks into mid-content.
+    if (opened && t.scrollIntoView) t.scrollIntoView({ block: 'center' });
   }
   window.addEventListener('hashchange', openTarget);
   if (document.readyState === 'loading')

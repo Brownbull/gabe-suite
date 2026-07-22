@@ -391,6 +391,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         "Code", "Endpoints", "#4f46e5", _IC_ZAP,
         sub="the HTTP surface, parsed from the FastAPI decorators",
         id_="sec-code-endpoints",
+        note=f"{len(eps)} endpoint(s) — method, path, docstring, response model "
+             f"and handler are read from source at build time, never hand-listed.",
         info=legend("Verb colors:", [
             ("m-get", "GET", "reads — no state change ·"),
             ("m-post", "POST", "creates ·"),
@@ -408,9 +410,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
           f'href="#{_anchor("cm", slug, e["file"])}">'
           f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
           purpose_cell(e["doc"]), returns_cell(e)]
-         for e in eps],
-        note=f"{len(eps)} endpoint(s) — method, path, docstring, response model "
-             f"and handler are read from source at build time, never hand-listed.")
+         for e in eps])
 
     # --- Code map: one table PER LAYER, each with an honest Defines column --
     _map_info = ('<div class="leg">Defines per layer: api → its endpoints '
@@ -444,6 +444,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         "Code", "Code map", "#0f766e", _IC_FOLDER,
         sub="every file this entity lives in, measured on disk",
         id_="sec-code-map",
+        note=f"{len(files)} file(s) · {sum(n for _, _, n in files):,} lines "
+             f"measured on disk this build · {over} file(s) over the 800-line "
+             f"budget. A moved file drops out of this table visibly.",
         info=_map_info + legend("Lines encode the 800-line budget:", [
             ("s-ok", "≤ 800", "within budget ·"),
             ("s-med", "801+", "refactor candidate — red deepens toward 2,000 ·"),
@@ -454,10 +457,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
           f'title="{E(layer_desc.get(layer, ""))}">{E(layer)}</span>',
           f'<code id="{_anchor("cm", slug, f)}">{E(f)}</code>', lines_grade(n),
           defines_cell(layer, f)] for layer, f, n in files],
-        num={2},
-        note=f"{len(files)} file(s) · {sum(n for _, _, n in files):,} lines measured "
-             f"on disk this build · {over} file(s) over the 800-line budget. "
-             f"A moved file drops out of this table visibly.")
+        num={2})
 
     # --- Data model: header-table cards; compositions LINK, never repeat ----
     def link_types(typ: str) -> str:
@@ -553,7 +553,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                '<span class="ty ty-json">list · dict · Literal</span> '
                'structured · <span class="ty ty-id">UUID</span> identity · '
                '<span class="ty ty-null">None</span> nullable. An uncolored '
-               "token is a domain alias (an enum defined in this codebase).</div>")
+               "token is a domain alias (an enum defined in this codebase).</div>"
+             + (f'<p class="sub"><b>About this section</b></p>{intro_html}'
+                if intro_html else ""))
     html += (f'<p class="sub"><span class="tag l-models">models</span> '
              f"{len(models)} DB entity class(es) — click a row to open its "
              f"columns:</p>")
@@ -580,9 +582,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         _srows.append((cells, _dm_detail(s_["cls"], s_["fields"]),
                        _anchor("dm", slug, s_["cls"])))
     html += xtable(["Class", "Kind", "File", "Used by"], _srows, widths=_DM_W)
-
-    # Methodology prose LAST — the reader meets the tables first, the "how this
-    # page is built" explanation after (operator: intros at the end).
-    if intro_html:
-        html += f'<h3>About this section</h3>{intro_html}'
+    # The "About this section" methodology prose used to trail the tables; the
+    # declutter ruling folds it into the section's ⊕ (info above) instead.
     return html
