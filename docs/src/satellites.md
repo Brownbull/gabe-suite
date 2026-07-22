@@ -106,6 +106,8 @@ This is the clearest illustration in the whole suite of the **"adversarially ver
 
 A myopic walk reports a **Panel result** (the fatal step per horizon — the first step where each user gets overwhelmed, lost, or trapped), a **Step ledger** (every step, what the user must do, which flags fire, and the worst horizon each catches), then the findings themselves, most severe first, each with what the myopic user actually does in first person, why the consequence sits beyond that horizon, who it catches, its Evidence line, and the horizon-collapsing fix.
 
+![This Is Fine meme: "the onboarding feels fine to us" while the room burns — "everyone left by step four."](assets/memes/myopic-foresight.png)
+
 :::note Use it when
 Reviewing a UX flow, onboarding, checkout, wizard, form, or settings screen for whether normal people will get confused, overwhelmed, or trapped; when a flow "feels fine to us but users keep dropping off"; before shipping a multi-step flow; or to sanity-check a spec/PRD before anything gets built.
 :::
@@ -115,6 +117,8 @@ Reviewing a UX flow, onboarding, checkout, wizard, form, or settings screen for 
 Where `/gabe-myopic` refuses to be the expert, `/gabe-roast` *requires* you to name one. You pick a perspective — architect, security auditor, UX designer, QA lead, DevOps engineer, domain expert, end user — and the skill reads the target fully, then attacks it the way that specific kind of professional would, worrying about exactly what they'd worry about and ignoring what they wouldn't. An architect never flags a typo; a UX designer never flags a missing database index.
 
 Findings are classified along two independent axes: **maturity** (MVP — must fix before first use; Enterprise — must fix before real load and paying customers; Scale — must fix before 10x growth) and **importance** (Critical / High / Medium / Low). Each finding carries a Gap ID prefixed by its maturity bucket (M1, E1, S1…), a concrete description, a memorable Gabe Lens one-liner, a T-shirt effort estimate with a confidence note, a specific "what we lose" consequence, its Evidence line, and an optional suggested fix.
+
+![Hide the Pain Harold meme: "reviewed my own design — found nothing wrong."](assets/memes/roast-selfreview.png)
 
 :::note Use it when
 Self-reviewing your own design before building (the most effective use — you already know what you intended, the roast finds what you missed), stress-testing an architecture proposal, or validating a plan from a stakeholder perspective you don't naturally think from. Roasting the same target from several perspectives in sequence gives a 360-degree view; each pass tags its findings `NEW` or `covered by <ID>` against the prior roast.
@@ -126,6 +130,8 @@ The four satellites above read a flow, a target, or a decision. `/gabe-health` r
 
 Every number in the output is copy-pasted from a git command run in that same session — a churn count or a coupling percentage that wasn't produced by an actual command this run prints `<analysis> skipped` rather than an estimate. Severity uses a fixed threshold legend (🔴/⚠️/✅) so two runs are comparable.
 
+![One Does Not Simply meme: "one does not simply notice the god file forming."](assets/memes/health-godfile.png)
+
 :::note Use it when
 Starting a new epic (know where the minefields are before walking in), during a retrospective ("why did this sprint feel fragile?" — now with data), after an incident (was this area inherently unstable, or a one-off?), or before a major refactor (which files need splitting first?). Not a per-commit tool — run it periodically for strategic insight, not on every diff.
 :::
@@ -135,6 +141,8 @@ Starting a new epic (know where the minefields are before walking in), during a 
 Some of the worst bugs in a project's life didn't come from bad code — they came from a decision that was never made explicitly ("we'll figure out state ownership later") or one that quietly contradicts an earlier one (the scope doc says one thing, the plan's current phase assumes another, the code assumes a third). `/gabe-debt` scans for exactly that pattern using a catalog of evidence-anchored patterns distilled from real incidents, plus any project-local rules the team has already written down from its own retrospectives.
 
 Every finding gets four scores — **severity** (tier-adjusted, elevated if it violates an existing rule), **confidence** (confident / uncertain-depends / weak-signal, based on how many independent sources agree), **blast radius** (how many phases, requirements, and files it touches), and a **status** (missing / implicit / contradictory / violating-existing-rule) — then gets triaged interactively into exactly one of four homes: a new architectural decision record, an open question for later, a codified rule, or a deferred item.
+
+![Spider-Man Pointing meme: "what the scope decided" and "what the code assumed" point at each other.](assets/memes/debt-contradiction.png)
 
 :::note Use it when
 Before closing a scope change (verify it didn't introduce a critical decision gap), after a plan drafts a new phase (verify it doesn't violate an existing rule), before merging a feature that touches state, sync, permissions, or real-time behavior, or periodically as a drift check on well-trodden areas of the codebase.
@@ -146,6 +154,8 @@ Someone proposes a fix mid-task and it feels quick. `/gabe-assess` is the pause 
 
 It closes on one recommendation and a memorable one-liner — never a gate, always a suggestion the human decides on. A "Contained, no prerequisites" verdict can also be the honest answer: "this is trivial after all, no assessment needed."
 
+![Panik Kalm Panik meme: "just a quick five-minute fix" / "only one file" / "the file is the auth layer."](assets/memes/assess-blastradius.png)
+
 :::note Use it when
 You're about to say "yes" reflexively to a tangent that emerged mid-task, a fix outside your current scope, or an "obvious" unblock with unclear downstream consequences. Not for trivially scoped changes (a variable rename, a typo) — the pause only earns its keep when the weight is actually hidden.
 :::
@@ -155,6 +165,8 @@ You're about to say "yes" reflexively to a tangent that emerged mid-task, a fix 
 Every other satellite attacks from outside the project's stated intentions. `/gabe-align` checks the work *against* them — the values you and the project already wrote down. It runs at two different moments: a manual pre-flight check (shallow, standard, or deep, depending on how much is riding on the decision) before you build something, and an automatic checkpoint that fires at every `git commit` or `gh pr create` without you asking for it.
 
 Values load from three stacking sources — universal structural guards built into the skill (A1-A7), your own cross-project values in `~/.kdbp/VALUES.md`, and this project's values in `.kdbp/VALUES.md` — and each gets an independent verdict: PASS, CONCERN, or FAIL, with any FAIL forcing a `DO NOT PROCEED` verdict and any CONCERN (with no FAIL) forcing `PROCEED WITH CONCERNS`. The automatic checkpoint adds a second layer standard/deep mode doesn't: for every changed source file, it names three realistic scenarios a real user would hit — including error states and empty data — and reports whether each one actually has a test. Untested scenarios a user proceeds past anyway get written straight into `PENDING.md` as deferred items, so the next `/gabe-review` finds them waiting.
+
+![Disaster Girl meme: "the values we wrote down" and "the PR that quietly ignores them."](assets/memes/align-drift.png)
 
 :::note Use it when
 Manually: before a new architecture or greenfield decision (deep mode), or as a quick sanity check before a roast or a non-trivial task (shallow/standard). Automatically: you don't invoke it at all — it fires on its own at every commit and PR, which is exactly the point. It's the one satellite in this list that isn't purely "on demand."
