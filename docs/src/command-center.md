@@ -74,6 +74,22 @@ Ledger pages, changelogs, regression relationships, the ever-red column, scope j
 
 ![Woman Yelling at Cat meme: "update the docs after every change" versus the calm cat, "the docs recount themselves."](assets/memes/derived-vs-handkept.png)
 
+## Flow coverage — the golden path, proven or loudly not
+
+Each entity card carries a `# FLOWS` section — one line per user-visible flow, `` - <key> [★] → <description> ``, with a single `★` marking the **golden path**. Every proof set's manifest may declare `role:` (`principal | edge | reference | supporting`) and `flows:` (the card keys it walks). The build joins the two into a per-entity verdict that renders on the Evidence tab and rides `archmap.json` as a machine-readable `coverage` block — covered/total, golden covered/total, and the unproven keys by name, so agents read numbers, never scrape HTML.
+
+The honesty rules do the real work:
+
+- **Explicit beats inference.** With no manifest signal the build may *infer* a match from the set's identity text — but the topline says how many covered flows rest on inference alone ("confirm with `flows:`"), and each rides the ledger as an XS confirm-move.
+- **A malformed signal is never guessed over.** A typo'd role, a `flows:` that isn't a list, a key the card doesn't have — the set renders **unclassified with its reason** and feeds a clarify move. Guessing over a broken declaration is how a reference set becomes golden coverage.
+- **A reference set never covers.** What the screen was built to match is not proof of the workflow.
+- **A malformed `FLOWS` line surfaces** — build warning, coverage-note count, ledger move — never a silent drop: a shrunken denominator lies about the card.
+- **An unproven `★` is the loudest gap on the shelf** — a placeholder row where the proof will live, plus a Pending move reading "GOLDEN PATH — no proof".
+
+The first real run proved the design: when explicit `flows:` landed on gastify's manifests, transaction's coverage went **down** — 6/9 to 4/9 — because two flows had been "covered" only by token-noise inference (one of them matched the literal text "**no** delete"). The lower number is the true one, and the center now says so itself.
+
+![Drake meme: rejecting "the coverage number that flatters us", approving "the smaller one with receipts."](assets/memes/coverage-honest-drop.png)
+
 ## Getting a center onto a project
 
 Two skills feed the center from opposite ends, and a third reads it:

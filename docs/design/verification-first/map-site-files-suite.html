@@ -151,14 +151,14 @@
 
   <div class="gsec twocol">
     <div>
-      <h2>Nav ⟷ structure gaps — RULED 2026-07-21 (merged as recommended; templates updated @ 0c8a307)</h2>
-      <p class="sub">Every mismatch between the sidebar as gastify renders it TODAY and the ruled structure. The operator merged all recommendations; the suite templates + specs now carry them (suite 0c8a307, awaiting operator template approval before propagation). The fourth column will match the mock once gastify re-vendors in the next loop iteration.</p>
+      <h2>Nav ⟷ structure gaps — RULED 2026-07-21 · LANDED 2026-07-23 (alignment-review propagation)</h2>
+      <p class="sub">Every mismatch between the sidebar as gastify rendered it on ruling day and the ruled structure. The operator merged all recommendations (suite 0c8a307); the 2026-07-23 propagation (suite a77cb41..7790f56 → gastify 8090514 · gustify 9abb629d) re-vendored both twins — the rulings below now RENDER: Architecture sits in the nav on its own skeleton, the registry drives the sidebar (adopted entities link their pages, pending render muted with their tracker chip), and the run-history writer + flow-coverage layer (# FLOWS ★ / role: / flows: / archmap coverage) are live. Leaf remains the one honest ∅.</p>
       <div class="gtbl"><table>
         <tr><th></th><th>Finding</th><th>Options → <span class="rec">REC</span></th></tr>
         <tr><td><span class="gk ok">ok</span></td><td><b>Overview contains Recent changes + Needs-you; Board contains its four lanes.</b> Page-level containment — nav stays one item per station.</td><td>Record as the containment rule in the README. No nav change.</td></tr>
         <tr><td><span class="gk ok">ok</span></td><td><b>The Code tab has no nav item — deliberately.</b> Reachable inside each feature page; a tab, not a station.</td><td>Record the ruling so it is never "fixed".</td></tr>
-        <tr><td><span class="gk miss">missing</span></td><td><b>Architecture has no nav presence.</b> Ruled to exist (app-wide, from archmap), not yet built.</td><td><b>A <span class="rec">REC</span></b>: template ships a CODE group + Architecture item; generator renders it only once the station page exists (absent until built — honest). <b>B</b>: keep nav silent until built (nobody discovers it).</td></tr>
-        <tr><td><span class="gk drift">drift</span></td><td><b>6 pending entities are indistinguishable from the adopted one.</b> All link to the index as fallback; Transaction alone has a page.</td><td><b>A <span class="rec">REC</span></b>: adoption.json (THE registry) drives the sidebar — adopted entities link their pages; pending render muted with their tracker state chip, linking the index. <b>B</b>: hide pending entities — loses the roadmap at a glance.</td></tr>
+        <tr><td><span class="gk ok">landed</span></td><td><b>Architecture has no nav presence.</b> Ruled to exist (app-wide, from archmap), not yet built. <em>2026-07-23: in the nav, rendered from its OWN shell skeleton (M38) — no longer borrowed chrome.</em></td><td><b>A <span class="rec">REC</span></b> shipped: CODE group + Architecture item; the generator renders it whenever <code>build_architecture</code> is on.</td></tr>
+        <tr><td><span class="gk ok">landed</span></td><td><b>6 pending entities are indistinguishable from the adopted one.</b> <em>2026-07-23: the registry drives the sidebar — Transaction AND Scan/Receipt link their pages; the 5 pending render muted with their tracker chip.</em></td><td><b>A <span class="rec">REC</span></b> shipped: adoption.json (THE registry) drives the sidebar; <code>display_name</code> now also required by the adopt-spec schema (M18).</td></tr>
         <tr><td><span class="gk drift">drift</span></td><td><b>Testing navsub reads "matrix · corpora";</b> the suite skeleton shipped Matrix / Walks · shelf / Gates.</td><td><b>A <span class="rec">REC</span></b>: navsub mirrors the tests page's own tabs — matrix · evidence (walks + shelf) · gates — deep links to <code>#tab-*</code>. <b>B</b>: keep "matrix · corpora" (corpora already lead the page's Overview tab).</td></tr>
         <tr><td><span class="gk miss">missing</span></td><td><b>Leaf: "none wired yet"</b> — htmlcov and the playwright report exist as tools but are not linked.</td><td><b>A <span class="rec">REC</span></b>: generator wires each known leaf report WHEN its file exists on disk; honest-empty otherwise (today's state stays legitimate). <b>B</b>: hardcode the links — dead until reports land.</td></tr>
         <tr><td><span class="gk drift">drift</span></td><td><b>Naming drifts:</b> "Latest change" (nav) vs "Change pages" (map); "Card alias" / "Analytics" vs the baseline's "Card aliases" / "Analytics drill-down".</td><td><b>A <span class="rec">REC</span></b>: one-fact-one-word — the registry rows carry a <code>display_name</code>; nav, pages, and THIS map all render it. Nav-facing forms win ("Latest change" stays). <b>B</b>: leave labels per-surface — the three-vocabulary defect returns.</td></tr>
@@ -243,7 +243,7 @@
     {id:'f-git',label:'git · RED:/Cases: trailers',hc:'ledger'},
     {id:'f-corpus',label:'test corpus (C-ids)',hc:'test',newf:1},
     {id:'f-digest',label:'junit · coverage · digest',hc:'test',newf:1},
-    {id:'f-archmap',label:'archmap.json · read-once code map',hc:'code',newt:1},
+    {id:'f-archmap',label:'archmap.json · code map + flow coverage',hc:'code',newt:1},
     {id:'f-scope',label:'SCOPE.md',hc:'docs'},
     {id:'f-plan',label:'PLAN.md · PLAN.json',hc:'board'},
     {id:'f-pending',label:'PENDING.md',hc:'board'},
@@ -251,13 +251,13 @@
     {id:'f-walks',label:'walks.jsonl',hc:'test',newf:1},
     {id:'f-deploy',label:'DEPLOYMENTS.md',hc:'now'},
     {id:'f-ledgerf',label:'LEDGER.md',hc:'now'},
-    {id:'f-runhist',label:'run-history.jsonl (writer pending)',hc:'now',newt:1},
+    {id:'f-runhist',label:'run-history.jsonl (self-written per regen)',hc:'now',newt:1},
     {id:'f-decisions',label:'DECISIONS · RULES',hc:'docs'},
     {id:'f-rules',label:'RULES.md',hc:'docs'},
     {id:'f-config',label:'center.config.json (editorial)',hc:'ent'},
-    {id:'f-cards',label:'cards/*.md',hc:'docs'},
+    {id:'f-cards',label:'cards/*.md (# FLOWS · ★ golden)',hc:'docs'},
     {id:'f-proof',label:'proof/ shots+manifests',hc:'test'},
-    {id:'f-manifest',label:'manifest.json (per proof set)',hc:'test',newt:1},
+    {id:'f-manifest',label:'manifest.json (role: · flows: · narration)',hc:'test',newt:1},
     {id:'f-adoption',label:'adoption.json · THE registry (D123)',hc:'docs',newf:1},
     {id:'f-leafr',label:'htmlcov · playwright',hc:'leaf'},
   ];
@@ -272,7 +272,7 @@
     {id:'c-walk',label:'/gabe-walk',cc:'walk',newc:1},
     {id:'c-feature',label:'/gabe-feature +release',cc:'feature'},
     {id:'c-adopt',label:'/gabe-adopt',cc:'adopt',newc:1},
-    {id:'c-build',label:'A3 generator · Center CI',cc:'init',newt:1},
+    {id:'c-build',label:'A3 generator · gates · chrome harness',cc:'init',newt:1},
     {id:'c-init',label:'/gabe-init',cc:'init'},
     {id:'c-guard',label:'hooks · guard + warns',cc:'guard',newc:1},
   ];
@@ -288,25 +288,27 @@
     ['c-walk','f-walks','w'],
     ['c-feature','f-cards','w'],['c-feature','f-config','w'],['c-feature','f-proof','w'],['c-feature','f-manifest','w'],
     ['c-adopt','f-adoption','w'],['c-adopt','f-cards','w'],['c-adopt','f-config','w'],['c-adopt','f-proof','w'],['c-adopt','f-walks','r'],
-    ['c-build','f-archmap','w'],['c-build','f-runhist','w'],['c-build','f-corpus','r'],['c-build','f-digest','r'],['c-build','f-walks','r'],['c-build','f-config','r'],['c-build','f-adoption','r'],['c-build','f-cards','r'],
+    ['c-build','f-archmap','w'],['c-build','f-runhist','w'],['c-build','f-corpus','r'],['c-build','f-digest','r'],['c-build','f-walks','r'],['c-build','f-config','r'],['c-build','f-adoption','r'],['c-build','f-cards','r'],['c-build','f-manifest','r'],['c-build','f-proof','r'],
     ['c-init','f-behavior','w'],['c-init','f-scope','w'],['c-init','f-rules','w'],
     ['c-guard','f-plan','v'],['c-guard','f-git','v'],['c-guard','f-proof','r'],['c-guard','f-corpus','r'],
   ];
 
-  // the ACTUAL sidebar, extracted from gastify's generated index.html (2026-07-21)
+  // the ACTUAL sidebar, re-extracted from gastify's generated index.html
+  // (2026-07-23, post alignment-review propagation 8090514)
   const sidebar=[
     {group:'Now',hc:'now',items:[{id:'s-overview',label:'Overview',secs:['n-recent','n-needs']}]},
     {group:'Board',hc:'board',items:[{id:'s-board',label:'Board',secs:['n-rail','n-backlog','n-nonphase','n-rdebt']}]},
     {group:'Entities',hc:'ent',items:[
       {id:'s-entidx',label:'Entity index · 7',secs:['n-entidx']},
       {id:'s-enttx',label:'Transaction → feature page',secs:['n-fdocs','n-codetab','n-matrix','n-fproof']},
-      {id:'s-entrest',label:'6 pending → index fallback',secs:['n-entidx'],gap:1},
+      {id:'s-entsc',label:'Scan/Receipt → feature page',secs:['n-fdocs','n-codetab','n-matrix','n-fproof']},
+      {id:'s-entrest',label:'5 pending → muted + tracker chip',secs:['n-entidx']},
     ]},
     {group:'Docs',hc:'docs',items:[{id:'s-docs',label:'Docs',secs:['n-fdocs','n-found']}]},
-    {group:'Code',hc:'code',items:[{id:'s-arch',label:'∅ Architecture — not in nav',secs:['n-arch'],gap:1,ghost:1}]},
-    {group:'Testing',hc:'test',items:[{id:'s-tests',label:'Tests · 1,458 ▸ matrix · corpora',secs:['n-matrix','n-fproof','n-manual','n-demo']}]},
+    {group:'Code',hc:'code',items:[{id:'s-arch',label:'Architecture (in nav, own skeleton)',secs:['n-arch']}]},
+    {group:'Testing',hc:'test',items:[{id:'s-tests',label:'Tests · 1,458 ▸ matrix · evidence · gates',secs:['n-matrix','n-fproof','n-manual','n-demo']}]},
     {group:'Ledger',hc:'ledger',items:[{id:'s-ledger',label:'Latest change',secs:['n-change']}]},
-    {group:'Releases',hc:'rel',items:[{id:'s-rel',label:'Releases',secs:['n-release']}]},
+    {group:'Releases',hc:'rel',items:[{id:'s-rel',label:'Releases + Decisions col',secs:['n-release']}]},
     {group:'Leaf',hc:'leaf',items:[{id:'s-leaf',label:'∅ none wired yet',secs:['n-leaf'],gap:1,ghost:1}]},
   ];
 
