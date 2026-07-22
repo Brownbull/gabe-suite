@@ -1,6 +1,6 @@
 # What KDBP is
 
-KDBP stands for **Khujta Deep Behavioural Protocol**. It is not a database and it is not a framework — it is a folder *and a discipline*. A project's plan, decisions, values, knowledge, and deferred work live in plain files under `.kdbp/`, and every agent session reads them at startup before doing anything else. The *protocol* part is what those files are for: they give an agent the context and the standing values it needs to align with the **intent** behind a prompt — what should happen in this codebase, and how it should behave while doing it — not just the literal words. Carrying that alignment in files instead of in the model's head is the whole idea.
+KDBP stands for **Khujta Deep Behavioural Protocol**. It is not a database and it is not a framework — it is a folder *and a discipline*. A project's plan, decisions, values, proof, and deferred work live in plain files under `.kdbp/`, and every agent session reads them at startup before doing anything else. The *protocol* part is what those files are for: they give an agent the context and the standing values it needs to align with the **intent** behind a prompt — what should happen in this codebase, and how it should behave while doing it — not just the literal words. Carrying that alignment in files instead of in the model's head is the whole idea.
 
 ## The one idea
 
@@ -32,7 +32,7 @@ flowchart TD
 ```
 
 :::note Scope of this diagram
-The diagram shows the four highest-churn files; the fuller inventory (SCOPE, ROADMAP, KNOWLEDGE, and the standing-law files) is in the next section.
+The diagram shows the four highest-churn files; the fuller inventory (SCOPE, the standing-law files, and the append-only walk record) is in the next section.
 :::
 
 ## What each file is for
@@ -40,7 +40,7 @@ The diagram shows the four highest-churn files; the fuller inventory (SCOPE, ROA
 Different kinds of memory change at different speeds, so KDBP splits them into separate files instead of one giant notebook. Some files change every phase; some change only when a real decision is made; some almost never change at all. The table below groups every file into one of three churn tiers.
 
 :::note Phase lifecycle
-Each phase moves through four gates: Exec → Review → Commit → Push. `PLAN.md` tracks per-phase state against exactly these four gates.
+Each phase moves through a row of status cells — **Red · Exec · Review · Commit · Push** (Red and a Center cell are optional columns a plan can carry). `PLAN.md` tracks per-phase state against those cells; see [The development loop](the-loop.html) for how they route.
 :::
 
 ### ![Change-every-phase](assets/icons/tier-fast.png) Change-every-phase
@@ -48,16 +48,17 @@ Each phase moves through four gates: Exec → Review → Commit → Push. `PLAN.
 | File | Holds | Changes |
 | --- | --- | --- |
 | `PLAN.md` | The active goal and a phase table (what's being built, and its Exec/Review/Commit/Push state per phase). | Every phase |
-| `PENDING.md` | Priced technical debt — a 10-column table (id, date, source, finding, file, scale tier, priority, impact, times-deferred, status) so deferred work doesn't vanish into vague TODOs. | On each deferral or resolution |
+| `PENDING.md` | Priced technical debt — one canonical row per deferred finding (source, file, scale tier, priority, times-deferred, status) so deferred work doesn't vanish into vague TODOs. | On each deferral or resolution |
 | `LEDGER.md` | Append-only session history — what shipped, what was reviewed, gate results, with proof (command output, file:line, artifact path) attached to every claim. | Every session, append-only |
+| `walks.jsonl` | A human's walk record — who · when · result · evidence, one line per walk; the one verification input with no machine source (see [`/gabe-walk`](commands.html)). | On each human walk, append-only |
 
 ### ![Change-slowly](assets/icons/tier-slow.png) Change-slowly
 
 | File | Holds | Changes |
 | --- | --- | --- |
 | `DECISIONS.md` | Ratified forks in the road — the option chosen, the rationale, the alternatives considered, and the trigger that would reopen the question. | On each real decision |
-| `KNOWLEDGE.md` | What the human has verifiably come to understand — topics taught and confirmed, so the suite stops re-explaining things already learned. | As understanding is verified |
-| `ROADMAP.md` | The phase plan derived from SCOPE — medium-inertia, updated as phases complete, split, or get added. | Occasionally, on scope change or phase completion |
+| `DEPLOYMENTS.md` | Deploy events — what shipped to which environment, with the proof the live target was healthy afterward, written by `/gabe-push`. | On each deploy |
+| `RULES.md` | Project-local rules codified from the team's own retrospectives — cited by the alignment and decision-debt advisors. | On each new rule |
 
 ### ![Standing law](assets/icons/tier-law.png) Standing law
 
@@ -80,4 +81,4 @@ The alternative — relying on a long chat history, or on the model "remembering
 
 Files are slower to update than a thought, but they are the only kind of memory that outlives the session that had the thought. That trade is the whole bet KDBP makes.
 
-Next: the [command reference](commands.html) — how a session actually reads and writes these files.
+Next: [Beats & commands](commands.html) — how a session actually reads and writes these files.

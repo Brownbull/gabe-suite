@@ -1,4 +1,4 @@
-**The Gabe Suite** is a file-based development discipline for building software with AI coding agents. Its one idea: **judgment should live in files, not in the model**. The plan, the decisions, the deferred debt, and the proof of every step are written down in the project's `.kdbp/` — Khujta Deep Behavioural Protocol — folder, so any agent — strong or weak, this session or the next — picks up exactly where the last one left off. This site documents the suite and the 2026-07 hardening that made its discipline mechanical rather than model-dependent.
+**The Gabe Suite** is a file-based development discipline for building software with AI coding agents. Its one idea: **judgment should live in files, not in the model**. The plan, the decisions, the deferred debt, and the proof of every step are written down in the project's `.kdbp/` — Khujta Deep Behavioural Protocol — folder, so any agent — strong or weak, this session or the next — picks up exactly where the last one left off. The organizing principle is **[verification-first](verification-first.html)**: a project's confidence is assembled from machine facts — a test that failed then passed, a commit at a SHA, a human who walked it — never asserted by whoever is talking.
 
 ## The system at a glance
 
@@ -9,7 +9,7 @@ flowchart TD
   H["👤 HUMAN — decides · accepts side-by-sides · triages findings"]
   subgraph LOOP["The develop loop · every step wrapped by the E1–E7 contract"]
     direction LR
-    SC["scope"] --> PL["plan"] --> NX["next"] --> EX["execute"] --> RV["review"] --> CM["commit"] --> PU["push"]
+    SC["scope"] --> PL["plan"] --> RD["red"] --> EX["execute"] --> RV["review"] --> CM["commit"] --> PU["push"]
   end
   KDBP["🗄️ .kdbp/ — the memory files<br>agents are stateless visitors"]
   SAT["🛰️ analysis satellites<br>on demand, adversarially verified"]
@@ -22,7 +22,7 @@ flowchart TD
 Four parts: the human decides, the loop grinds, the files remember, the satellites investigate.
 
 :::note The E1–E7 contract in one line
-E1–E7 are the seven checks the suite pastes atop every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
+E1–E7 are the seven floors under every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
 :::
 
 :::note The three load-bearing ideas

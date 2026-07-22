@@ -1,7 +1,7 @@
 The evidence behind every gate in this suite. Short version: a model does not need to be weak to drift — it only needs to resolve one ambiguous instruction in the cheapest direction, once, with nobody watching closely enough to notice for ten phases.
 
 :::note Where this page fits
-This page is the WHY behind the gates — the incident corpus. For the gates themselves see the [mechanism catalog](mechanisms.html); for the E1–E7 rule text see the [execution contract](contract.html).
+This page is the WHY behind the gates — the incident corpus. For the gates themselves see the [mechanism catalog](mechanisms.html); for the E1–E7 rule text see the [execution contract](contract.html); and for the bet these incidents justify, see [the one picture & the four laws](verification-first.html).
 :::
 
 ## The headline finding
@@ -30,8 +30,8 @@ Every mined incident sorts into one of five families. Each has a real (anonymize
 | Lost state | A plan row or a pending intention goes stale and nothing notices | `E5` |
 | Fabricated / sycophantic numbers | A percentage, a count, or a grade is invented or generously rounded up | `E1` |
 
-:::note The E1–E7 contract in one line
-E1–E7 are the seven checks the suite pastes atop every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
+:::note Reading the E-tags
+**E1** evidence · **E2** run-before-✅ · **E3** no silent downgrade · **E4** reuse-first · **E5** state-sync · **E6** stop on a missing anchor · **E7** report-where. The full rule text and a before/after for each lives once on [the execution contract](contract.html).
 :::
 
 ## Family 1 — Task downgrade `E3`
@@ -97,6 +97,8 @@ flowchart TD
 
 **The mechanism that now catches it:** any action that changes phase reality writes its state row in the same turn, with an enumerated skip code if it genuinely can't (never silence). At commit and review time, the diff's touched routes and architecture are scanned against the decision log; a contradiction blocks until it's either reconciled or recorded as an amendment.
 
+![Who Killed Hannibal meme: the model that already merged stands over the plan still marked "in progress" and asks, "who lets the state drift?"](assets/memes/lost-state.png)
+
 ## Family 5 — Fabricated or sycophantic numbers `E1`
 
 **The incident.** During an unrelated extraction task, a model invented CSS class names, a navigation tab count, and toast-notification style variants that did not exist anywhere in the source it was supposedly extracting from — all plausible-sounding, all fabricated. In a separate case, a whole plan phase and a formal decision record were built on the claim that a particular service did not exist in production, when the very state file being read to reach that conclusion already recorded, in its status column, that the issue was resolved. The model read the finding text and skipped the status column.
@@ -104,6 +106,8 @@ flowchart TD
 **Why this is the hardest family to self-catch:** a fabricated number and a real one are typographically indistinguishable. Nothing about "27%" or "4 tabs" signals whether it came from a grep or from a plausible guess — the only way to tell the difference is to demand the citation at the moment the number is produced, not after.
 
 **The mechanism that now catches it:** every claim about code or state must cite a file:line or a command run this session; uncited claims are marked `(assumed)` and must be verified before anything is built on them. Claims that something does *not* exist require a recorded search with its empty result shown, not just asserted.
+
+![Anakin and Padmé meme: "coverage is 87%" / "you ran the tool, right?" / silence / "you ran the tool, right?"](assets/memes/fabricated-numbers.png)
 
 ## The myopic insight — why this isn't really about model strength
 
@@ -117,7 +121,7 @@ An executor — human or model — resolving an ambiguous instruction behaves ex
 
 This reframes what these gates are actually doing. None of them make the model "try harder" or "be more careful" — that's asking an executor to see past its own horizon by willpower, which doesn't work reliably for any executor. Instead, every mechanism above does the same one thing: it **pulls the distant consequence into the present**, rewriting it as a check the executor cannot avoid seeing right now, at the moment the ambiguous decision is actually being made. A task-contract line that says "acceptance = side-by-side diff against the reference, not renders + tests green" isn't a nicer way of asking for more effort — it relocates step 7's judgment into step 1's task row, where the depth-limited planner can actually see it.
 
-*(The diagram for this failure shape now lives in [Family 1 — Task downgrade](#family-1--task-downgrade-e3), where the incident it illustrates is described.)*
+*(The diagram for this failure shape now lives in [Family 1 — Task downgrade](#family-1-task-downgrade-e3), where the incident it illustrates is described.)*
 
 ## What this means day to day
 

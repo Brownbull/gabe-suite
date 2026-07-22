@@ -90,13 +90,13 @@ class RenderContext:
 
 def _img_class(src: str) -> str:
     """CSS class for a markdown image by its path: memes render as a mid-width
-    block (``doc-meme``), pre-rendered ``.svg`` diagrams as a full figure
-    (``doc-fig``), everything else as a small inline glyph (``doc-icon``) — the
-    shape the gabe-suite tier icons rely on."""
+    block (``doc-meme``), pre-rendered ``.svg`` diagrams and ``-fig.*`` raster
+    figures as a full-width figure (``doc-fig``), everything else as a small
+    inline glyph (``doc-icon``) — the shape the gabe-suite tier icons rely on."""
     low = src.lower()
     if "/memes/" in low or "-meme." in low:
         return "doc-meme"
-    if low.endswith(".svg"):
+    if low.endswith(".svg") or "-fig." in low or "/fig/" in low:
         return "doc-fig"
     return "doc-icon"
 
@@ -145,6 +145,12 @@ def render_inline(text: str, ctx: "RenderContext | None" = None) -> str:
 
 
 def slugify(text: str) -> str:
+    # Strip inline markdown that must not leak into the anchor slug — an
+    # image or link in a heading (e.g. "![Evidence](icons/x.png) Family: …")
+    # would otherwise fold the alt text and file path into the id.
+    text = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", text)     # images: drop entirely
+    text = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", text)  # links: keep the visible text
+    text = text.replace("`", "")                          # inline-code backticks
     text = re.sub(r"<[^>]+>", "", text).lower()
     text = re.sub(r"[^a-z0-9\s-]", "", text)
     text = re.sub(r"\s+", "-", text.strip())

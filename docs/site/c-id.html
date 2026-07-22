@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gabe suite — The C-id test-identity scheme</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <a class="top-brand" href="index.html">🔧 GABE<span class="dot">.</span>docs <span class="sub">the KDBP development suite</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Hub</a> <span class="crumb-sep">›</span> <span class="crumb-here">The C-id scheme</span></nav>
+  <button class="adhd-toggle" id="adhd-toggle" type="button" aria-pressed="false" aria-label="Toggle bionic reading" title="Bionic reading"><span class="adhd-dot"></span></button>
+</header>
+<aside class="sidebar" id="sidebar">
+  <button class="side-collapse" id="side-collapse" type="button" aria-pressed="false" aria-label="Collapse navigation" title="Collapse navigation"><span class="side-collapse-glyph">«</span></button>
+  <nav class="sidenav">
+    <a class="side-link side-hub" href="index.html"><span class="sw" style="background:#6e6757"></span><span class="side-label">Hub</span></a>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 1 · Foundations <span class="chip basic">basic</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="kdbp.html" title="What KDBP is"><span class="sw" style="background:#3a6b3a"></span><span class="side-label">What KDBP is</span></a>
+        <a class="side-link" href="the-loop.html" title="The development loop"><span class="sw" style="background:#3a6b7a"></span><span class="side-label">The development loop</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
+        <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
+        <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
+      </div>
+    </details>
+    <details class="side-group" open>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · Verification-first <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="verification-first.html" title="The one picture"><span class="sw" style="background:#1f7a5a"></span><span class="side-label">The one picture</span></a>
+        <a class="side-link" href="gabe-red.html" title="/gabe-red"><span class="sw" style="background:#b63a3a"></span><span class="side-label">/gabe-red</span></a>
+        <a class="side-link active" href="c-id.html" title="The C-id scheme"><span class="sw" style="background:#7a6a2b"></span><span class="side-label">The C-id scheme</span></a>
+        <a class="side-link" href="command-center.html" title="The command center"><span class="sw" style="background:#2b5a8a"></span><span class="side-label">The command center</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 4 · The mechanism corpus <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="mechanisms.html" title="The mechanism catalog"><span class="sw" style="background:#a04030"></span><span class="side-label">The mechanism catalog</span></a>
+        <a class="side-link" href="drift.html" title="Why weak models drift"><span class="sw" style="background:#d97a3d"></span><span class="side-label">Why weak models drift</span></a>
+        <a class="side-link" href="decisions.html" title="Design decisions"><span class="sw" style="background:#6e6757"></span><span class="side-label">Design decisions</span></a>
+      </div>
+    </details>
+  </nav>
+</aside>
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<div class="wrap"><main>
+  <header class="masthead">
+    <div class="kicker">Tier 3 · Identity</div>
+    <h1>The C-id test-identity scheme</h1>
+    <p class="lede">How a test earns a durable name: a C-id token inside the test's own text, project-global and monotonic, where the corpus itself is the registry.</p>
+  </header>
+<p>A <strong>C-id</strong> is the durable name a test carries for its whole life. When <a href="gabe-red.html"><code>/gabe-red</code></a> declares a case, it gives it an id like <code>C147</code> — and that id then rides the test through every run, every report, and every future session, so a claim like "this behavior is covered" becomes something a machine can check instead of something a person asserts.</p>
+<h2 id="the-id-lives-inside-the-tests-own-name"><span class="num">01</span>The id lives inside the test's own name</h2>
+<p>The C-id is not metadata in a sidecar file. It is a token <em>inside the test's own text or name</em>, where the test itself carries its identity everywhere it goes:</p>
+<pre><code>def test_clamps_negative_quantity_C147v2():
+    ...</code></pre>
+<pre><code>it('C147v2 · clamps negative quantity to zero', () =&gt; { ... })</code></pre>
+<p>Ids are <strong>project-global and monotonic</strong> — <code>C1</code>, <code>C2</code>, … <code>C147</code> — allocated once and never reused. Because the id is in the name, it appears automatically in the junit report the test runner already produces, with zero extra plumbing.</p>
+<h2 id="the-corpus-is-the-registry"><span class="num">02</span>The corpus is the registry</h2>
+<p>There is no <code>test-registry.json</code> to keep in sync — and that absence is the whole point. The body of test files <em>is</em> the registry:</p>
+<ul><li><strong>Allocation</strong> is a <code>grep</code> — the next free id is one past the highest <code>C[0-9]+</code> in the corpus.</li><li><strong>History</strong> is <code>git log -S "C147"</code> — the full story of when a case was born, changed, or moved, recovered straight from version control.</li><li><strong>Reporting</strong> is free — the id is already in the junit output, so the <a href="command-center.html">command center's test matrix</a> stitches every run to its case with no export step.</li></ul>
+<p>A registry <em>file</em> would drift the moment someone forgot to update it; the corpus can't drift from itself.</p>
+<p><img class="doc-meme" src="assets/memes/registry-drift.png" alt="Gru's Plan meme: "give every test an identity → keep it in a registry file → someone renames a test → someone renames a test" — the plan backfires."></p>
+<h2 id="when-the-id-bumps"><span class="num">03</span>When the id bumps</h2>
+<p>A revision suffix (<code>v2</code>) is added when the <strong>claim</strong> the test makes changes — not when the test is merely re-run or refactored internally:</p>
+<div class="table-wrap"><table><thead><tr><th>Situation</th><th>Id</th></tr></thead><tbody><tr><td>Same test, run again</td><td><code>C147</code> — unchanged</td></tr><tr><td>Test tidied, same assertion</td><td><code>C147</code> — unchanged</td></tr><tr><td>The asserted behavior itself changes</td><td><code>C147</code> → <code>C147v2</code></td></tr></tbody></table></div>
+<div class="note"><span class="lbl">The one known cost</span><p>A bump renames the test, so its junit history shows a discontinuity at the rename. The matrix stitches across it by the shared stem (<code>C147</code>), but the discontinuity is real and deliberate — a changed claim <em>should</em> read as a new chapter, not a silent edit of the old one.</p></div>
+<h2 id="what-a-c-id-is-never"><span class="num">04</span>What a C-id is never</h2>
+<p>Three tempting schemes were rejected, each because it drifts:</p>
+<ul><li><strong>Never path-keyed</strong> (<code>tests/auth/test_token.py::test_expired</code>) — renaming or moving the file silently orphans the identity.</li><li><strong>Never phase-scoped</strong> (<code>phase-7-case-3</code>) — phases archive when they complete, taking the id with them.</li><li><strong>Never a separate registry file</strong> — the one artifact you must remember to update is the one that goes stale.</li></ul>
+<p>The id belongs to the <em>claim</em>, so it must live where the claim lives: in the test.</p>
+<h2 id="c-is-for-cases-m-is-for-findings"><span class="num">05</span>C is for cases, M is for findings</h2>
+<p>Sweeps that allocate ids use an <strong>anchored token pattern</strong>, because a bare <code>C[0-9]+</code> over-matches — it would turn <code>RFC1234</code> into a phantom <code>C1235</code>. And one neighbor gets its own letter to avoid a collision: <code>/gabe-myopic</code> labels its short-sighted-user findings <code>M[N]</code>, not <code>C[N]</code>, so a myopic finding is never mistaken for a test case. (See <a href="satellites.html">Analysis satellites</a> for what <code>/gabe-myopic</code> produces.)</p>
+<div class="note"><span class="lbl">Next</span><ul><li><a href="gabe-red.html">/gabe-red</a> — the beat where a case is born and gets its C-id.</li><li><a href="command-center.html">The command center</a> — where C-ids become the test matrix: per case, its ever-red history, status, and last run.</li><li><a href="verification-first.html">The one picture &amp; the four laws</a> — why identity-that-can't-drift is a precondition for anti-curation.</li></ul></div>
+</main></div>
+
+<footer class="stamp">
+  <b>GABE</b> · the KDBP development suite · documentation<br>
+  Source of truth: <b>docs/src/*.md</b> + <b>docs/docsite.config.py</b> · generated — do not edit the HTML by hand<br>
+  Visual system: Cifra · Chile editorial palette
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

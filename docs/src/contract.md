@@ -14,12 +14,12 @@ Gabe's skills are run by models of varying strength — sometimes a careful one,
 - Always saying exactly where to go look at the result
 :::
 
-Those seven habits were *unwritten* — present only because a capable model happened to supply them on its own initiative. A weaker model does not supply them on its own initiative. So the fix was to stop relying on model judgment and write the habits down as seven short, literal rules, then paste that exact same block of text at the top of every skill and command file in the suite.
+Those seven habits were *unwritten* — present only because a capable model happened to supply them on its own initiative. A weaker model does not supply them on its own initiative. So the fix was to stop relying on model judgment and write the habits down as seven short, literal rules, stated **once** in a canonical contract file that every skill points to.
 
-That's the whole mechanism: **the same 7 rules, byte-identical, in every gabe-* file** — so the strongest model's disciplined defaults become the floor every model runs on, not a lucky bonus a strong model happened to bring.
+That's the whole mechanism: **one authoritative statement of the seven rules, inherited by every gabe-* skill** — so the strongest model's disciplined defaults become the floor every model runs on, not a lucky bonus a strong model happened to bring.
 
 :::note Where it lives
-Read the raw text at `~/.claude/gabe-hardening/PREAMBLE.txt` — that file is the single source of truth. It gets copied verbatim into the top of each skill's `SKILL.md` and each command's markdown file; nobody hand-retypes it per file.
+The contract lives **once**, at `skills/gabe-docs/references/execution-contract.md` — the single source of truth. Every skill's `SKILL.md` carries a one-line *pointer* to it, not a pasted copy, so there is exactly one place to edit and nothing to drift between files. (If that file is ever missing, rule **E6** applies — a skill stops rather than reconstructing the contract from memory.)
 :::
 
 ## The seven rules at a glance
@@ -142,10 +142,10 @@ E1–E7 are the universal minimum every gabe-* file inherits — they are **floo
 
 ## Why this is the centerpiece
 
-Every other document in this suite — the command reference, the mechanism catalog, the per-skill hardening notes — describes machinery that sits *on top of* this contract. The mechanism catalog exists because someone traced a set of real incidents (a ten-phase rebuild that quietly became a recolor, a proof screenshot of the wrong running app, a typecheck command that was a silent no-op, a decision reversed without anyone recording the amendment) back to one root cause each time: one of these seven habits was missing from that run. The fix wasn't seven different patches to seven different skills — it was one short, shared block of text, repeated verbatim everywhere, so that no gabe-* skill or command ever runs without it. That's what makes a weaker model behave, on the habits that matter most, like the strongest model that ever ran the suite.
+Every other document in this suite — the [beat reference](commands.html), the [mechanism catalog](mechanisms.html), the [decision record](decisions.html) — describes machinery that sits *on top of* this contract. The mechanism catalog exists because someone traced a set of real incidents (a ten-phase rebuild that quietly became a recolor, a proof screenshot of the wrong running app, a typecheck command that was a silent no-op, a decision reversed without anyone recording the amendment) back to one root cause each time: one of these seven habits was missing from that run. The fix wasn't seven different patches to seven different skills — it was one short, shared contract every gabe-* skill inherits, so that none ever runs without it. That's what makes a weaker model behave, on the habits that matter most, like the strongest model that ever ran the suite.
 
 :::note Next
-- [Command reference](commands.html) — every gabe-* command, one page each
-- [Mechanism catalog](mechanisms.html) — the incidents that led to E1–E7 and the fixes they became
-- [Per-skill reference](satellites.html) — where each skill adds its own stricter gate on top of this floor
+- [Beats & commands](commands.html) — every command, and the specific gate each one adds on top of this floor
+- [The mechanism catalog](mechanisms.html) — the incidents that led to E1–E7 and the fixes they became
+- [The one picture & the four laws](verification-first.html) — why moving judgment into files is the whole strategy
 :::

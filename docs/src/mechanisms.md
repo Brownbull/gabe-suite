@@ -9,10 +9,10 @@ Several mechanisms don't live once — they live as an exact block of text, reus
 :::
 
 :::note The E1–E7 contract in one line
-E1–E7 are the seven checks the suite pastes atop every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
+E1–E7 are the seven floors under every command (full text on the [execution contract](contract.html)): **E1** cite evidence · **E2** run before you tick ✅ · **E3** no silent downgrade of the task · **E4** reuse before you build · **E5** sync state the same turn · **E6** stop on a missing anchor · **E7** report where. When a page tags something "E3" or "E6", it means that rule.
 :::
 
-The 24 mechanisms group into five families by what kind of drift they stop. Jump to whichever family matches the problem you're chasing, or read straight through — they build on each other.
+The 23 mechanisms group into five families by what kind of drift they stop. Jump to whichever family matches the problem you're chasing, or read straight through — they build on each other. Two cross-cutting concerns bracket the families: a set of **byte-identical shared strings** that keep the mechanisms in sync across skills (below the family list), and a single **budget** mechanism that funds all the others (the page's last section).
 
 ```mermaid
 flowchart TD
@@ -20,7 +20,7 @@ flowchart TD
     VF["🔁 Verification<br>3 mechanisms"] --> VFd["stops: plausible findings<br>never re-tested"]
     RU["♻️ Reuse<br>4 mechanisms"] --> RUd["stops: cheap substitutes<br>shipped silently"]
     SI["🗄️ State integrity<br>9 mechanisms"] --> SId["stops: plan/decision files<br>drifting from reality"]
-    AF["🚫 Anti-fabrication<br>4 mechanisms"] --> AFd["stops: invented numbers,<br>scores, proofs"]
+    AF["🚫 Anti-fabrication<br>3 mechanisms"] --> AFd["stops: invented numbers,<br>scores, proofs"]
 ```
 
 | Family | Stops drift in… | Mechanisms |
@@ -29,9 +29,28 @@ flowchart TD
 | **Verification** | Findings that sound plausible but were never re-tested | 3 |
 | **Reuse & anti-downgrade** | Cheaper substitutes shipped silently in place of what was asked | 4 |
 | **State integrity** | Plan/decision files drifting away from what actually happened | 9 |
-| **Anti-fabrication** | Numbers, scores, and proofs that were invented rather than produced | 4 |
+| **Anti-fabrication** | Numbers, scores, and proofs that were invented rather than produced | 3 |
 
 (24th mechanism, Progressive Disclosure Budget, is the odd one out — it doesn't stop a drift, it *funds* every gate above by cutting the dead weight elsewhere in the skill files. It closes the page.)
+
+## The strings that stay byte-identical
+
+Several mechanisms above are the *same* mechanism appearing in more than one skill — a proof line that `/gabe-execute` produces and `/gabe-review` later consumes, a skip code three commands print. If the wording drifted even slightly between two files, a literal-minded model reading only one of them would treat it as a different, unrelated format, and the two beats would silently fall out of sync. So these are contracts: written once, copied **byte-identical** wherever they appear, never paraphrased for a "clearer" wording.
+
+| Shared string | The producer ≡ consumer it keeps in sync |
+| --- | --- |
+| REUSE LEDGER block | gabe-execute ≡ gabe-mockup ≡ the E4 preamble |
+| `PROOF: <cmd> → <runtime> → <artifact>` | gabe-execute (produces) → gabe-review (consumes) |
+| Evidence row — `<check>: \`<cmd>\` → exit <code>, "<count>"` | gabe-execute ≡ gabe-commit |
+| Verify-pass header — `raw N → killed X → downgraded Y → survived Z` | gabe-review ≡ gabe-myopic ≡ gabe-roast |
+| Skip code — `ℹ PLAN: <col> tick skipped (<enum>)` | gabe-plan ≡ gabe-commit ≡ gabe-execute |
+| Prior-phase warning — `⚠ INCOMPLETE PRIOR PHASES: [...]` | gabe-plan ≡ gabe-next |
+| 3-state glyphs — `✅ / ❌ / ⤫ skipped(<reason>)` | gabe-commit ≡ gabe-execute ≡ the E2 preamble |
+| Canonical PENDING schema | gabe-review ≡ gabe-commit ≡ gabe-align |
+
+:::note Why this is a mechanism, not a coincidence
+A weak model is good at following an exact recipe and bad at reconstructing one from a vague memory of "we did something like this before." Byte-identical reuse turns a cross-file agreement into something a plain-text diff can verify — the same reason the [E1–E7 contract](contract.html) itself is pasted verbatim rather than paraphrased per file. When a mechanism below says its cost is "shared," this is the pattern it means: one canonical string, copied everywhere, ordering dependencies respected (the PENDING schema is defined before the commands that append to it).
+:::
 
 ## ![Evidence](assets/icons/fam-evidence.png) Family: Evidence
 
@@ -175,7 +194,7 @@ No vibes verdicts:
    uncertain, score the LOWER band, never up.
 ```
 
-carried by: gabe-align, gabe-review (confidence worksheet), gabe-teach (answer-key grading), gabe-health (threshold legend)
+carried by: gabe-align, gabe-review (confidence worksheet), gabe-health (threshold legend)
 
 ## ![Reuse & anti-downgrade](assets/icons/fam-reuse.png) Family: Reuse & anti-downgrade
 
@@ -450,20 +469,18 @@ carried by: gabe-execute (checkpoint), gabe-commit (staging check)
 
 The last family closes off the places where a model, asked for a number or a code example it doesn't have, will confidently supply a plausible-looking one instead of admitting it wasn't computed — plus the two mechanisms that keep templates from being reconstructed from memory when the real one is missing.
 
-Two of these four are specializations of mechanisms defined earlier on this page, not new roots:
+Two of these three are specializations of mechanisms defined earlier on this page, not new roots:
 
 ```mermaid
 flowchart LR
     EE["Executed-Evidence<br>Gate"] -.specializes to.-> RR["Runnable Recipes,<br>Not Placeholders"]
-    DV["Deterministic Verdicts<br>& Visible Arithmetic"] -.specializes to.-> AK["Answer-Key<br>Grading"]
     VK["Verify/Kill Pass<br>accounting"] -.specializes to.-> OA["Observable-Only<br>Accounting"]
     MA["Missing-Anchor STOP"]
 ```
 
-**In this family:** the four mechanisms below, previewed here and detailed in their own subsections further down.
+**In this family:** the three mechanisms below, previewed here and detailed in their own subsections further down.
 
 - **Runnable Recipes, Not Placeholders** — Worked examples in reference docs must be commands that actually run, not `[compute this]` stand-ins.
-- **Answer-Key Grading** — Grading a human's answer requires a fixed rubric printed before the answer is seen — never a sycophantic eyeball score.
 - **Observable-Only Accounting** — Every count in a report (raw/killed/survived, lines saved) is arithmetic on numbers the model actually produced.
 - **Missing-Anchor STOP** — A referenced template, catalog, or spec that can't be read stops the skill loudly — never reconstructed from memory.
 
@@ -476,16 +493,6 @@ This is the corrective half of the **Executed-Evidence Gate** (see that section 
 :::
 
 carried by: gabe-health, gabe-debt (pattern catalog worked examples)
-
-### Answer-Key Grading
-
-**Behavior:** grading a human's answer to a comprehension check requires a rubric printed before the grading happens, so the model can't drift toward inflating a score to be encouraging. This is one arm of the Deterministic Verdicts mechanism above, specialized to the one place a model grades a person instead of code.
-
-:::note Where this shows up
-`gabe-teach` grades human answers to its Socratic questions with no rubric, which produces sycophantic inflation (a vague or partially-wrong answer scored full marks) that then poisons the durable knowledge record with false "verified" topics. See the **Deterministic Verdicts & Visible Arithmetic** section above (under [Family: Verification](#family-verification)) — rule 4 (score the lower band when uncertain) is exactly the guard this needs.
-:::
-
-carried by: gabe-teach
 
 ### Observable-Only Accounting
 
@@ -534,12 +541,10 @@ the main thread. New gates are paid for by relocating prose, not by
 growing the file.
 ```
 
-Applied to two of the suite's largest skills, this refactor freed roughly 800 lines from the code-review skill and over 2,000 from the teaching skill — far more context than all the other mechanisms in this catalog add back in, combined. That's the trade this catalog is built on: every gate above earns its keep because this mechanism clears room for it first.
+Applied to the suite's largest skills, this refactor has freed many hundreds of lines from a single skill file — far more context than all the other mechanisms in this catalog add back in, combined. That's the trade this catalog is built on: every gate above earns its keep because this mechanism clears room for it first.
 
-carried by: gabe-review, gabe-teach, gabe-mockup, gabe-scope (structural refactor) — rule stated once in the suite authoring guide
+carried by: gabe-review, gabe-mockup, gabe-scope (structural refactor) — rule stated once in the suite authoring guide
 
 ## Where this connects
 
-This catalog is the detail layer underneath two other pages: [the E1–E7 contract](contract.html) is the compressed, always-loaded summary that seven of these mechanisms distill down into, and [why weak models drift](drift.html) explains the underlying failure pattern that makes all 24 mechanisms necessary in the first place. The [per-skill hardening reference](reference.html) flips the lens the other way — instead of "mechanism → which skills carry it," it answers "this skill → which mechanisms does it carry."
-</content>
-</invoke>
+This catalog is the detail layer underneath the rest of the suite's rationale: [the E1–E7 contract](contract.html) is the compressed, always-loaded summary that seven of these mechanisms distill down into; [why weak models drift](drift.html) explains the underlying failure pattern that makes them necessary in the first place; and [the one picture & the four laws](verification-first.html) shows how the same discipline scales up from a single per-skill gate to the whole derived-view model.

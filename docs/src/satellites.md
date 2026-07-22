@@ -1,6 +1,10 @@
 ## Analysis satellites
 
-The core loop — plan, execute, review, commit — is the path every change travels. The satellites are the other tools: not on that path, called on demand, each one built to attack the work from an angle the loop doesn't naturally take. You reach for one when something needs to be stress-tested before, during, or after the loop, not as a step the loop makes you take.
+The core loop — scope → plan → red → execute → review → commit → push — is the path every change travels. The satellites are the other tools: not on that path, called on demand, each one built to attack the work from an angle the loop doesn't naturally take. You reach for one when something needs to be stress-tested before, during, or after the loop, not as a step the loop makes you take.
+
+:::note The witness is a beat, not a satellite
+A *human* actually using the build is recorded by [`/gabe-walk`](commands.html) — a lifecycle verification beat, not one of the six advisors below. It records who walked what, when, and with what result; it never judges. The satellites on this page are agents attacking the work adversarially; the walk is the one input no agent can supply.
+:::
 
 ## The six at a glance
 
@@ -15,13 +19,13 @@ Skim this table to find the tool that matches the risk you're worried about righ
 | `/gabe-assess` | Hidden weight behind an "obvious" change — blast radius, right-sized scope, prerequisites | Five-dimension assessment ending in a recommendation + one-liner |
 | `/gabe-align` | Drift from stated values (yours + the project's) and, at commit time, untested realistic scenarios | Per-value PASS/CONCERN/FAIL + a deterministic PROCEED verdict |
 
-## The shared hardening: Evidence line + verify/kill pass
+## The shared discipline: Evidence line + verify/kill pass
 
 :::note The one thing every satellite shares
-Since the suite's hardening pass, every satellite in this list carries two non-negotiable habits on top of whatever else it does: an **Evidence line** on every finding (a real file:line, a quoted sentence, or a recorded search with its result — never a claim floating free of a source opened this session), and a **verify/kill pass** run on the full draft before anything is shown to you. Findings that fail verification are deleted, not softened to a lower severity. This section explains exactly how that pass works — every per-tool section below just points back here.
+Every satellite in this list carries two non-negotiable habits on top of whatever else it does: an **Evidence line** on every finding (a real file:line, a quoted sentence, or a recorded search with its result — never a claim floating free of a source opened this session), and a **verify/kill pass** run on the full draft before anything is shown to you. Findings that fail verification are deleted, not softened to a lower severity. This section explains exactly how that pass works — every per-tool section below just points back here.
 :::
 
-Before the hardening pass, a satellite could hand back a finding that sounded right but was never actually checked against the thing it claimed to describe — a plausible-sounding gap instead of a proven one. Every satellite skill now carries two shared habits that close that gap, on top of the suite-wide [E1–E7 execution contract](contract.html) every gabe-* file already inherits.
+Without this discipline, a satellite could hand back a finding that sounded right but was never actually checked against the thing it claimed to describe — a plausible-sounding gap instead of a proven one. Every satellite skill carries two shared habits that close that gap, on top of the suite-wide [E1–E7 execution contract](contract.html) every gabe-* skill already inherits. The generic form of this pass — and its cost — lives in the [mechanism catalog](mechanisms.html) (the Verification family); this section is how the satellites apply it.
 
 **The Evidence line.** Every finding, from every satellite, must cite something opened this session: a `path:line` with a quoted snippet for code, a section name with a quoted sentence for a spec or doc, a quoted visible string for a screenshot or mockup, or — for a claim that something is *missing* — the exact search that was run and its empty result (for example, `grep -rn useBlocker src/ → 0 hits`). A finding with no Evidence line, or one that doesn't actually quote a source, does not get downgraded to a lower severity — it is deleted before you ever see it.
 
@@ -86,7 +90,7 @@ The primary lens is foresight; the other three are what a short-sighted user run
 | ![Recall demand](assets/icons/flag-recall.png) **Recall demand** | The user must carry a value or decision from an earlier step in their head to do this step correctly |
 | ![No-undo dead-end](assets/icons/flag-deadend.png) **No-undo dead-end** | The myopic path went wrong and there is no cheap way back |
 
-This is the clearest illustration in the whole suite of the **"adversarially verified, evidence-cited" pattern** the hardening pass installed everywhere: a finding only survives if it names the exact step, quotes what the screen (or spec, or code) actually said at that step, and then gets run back through three kill questions before it's allowed in the report — see [The shared hardening: Evidence line + verify/kill pass](#the-shared-hardening-evidence-line-verifykill-pass) above.
+This is the clearest illustration in the whole suite of the **"adversarially verified, evidence-cited" pattern** the suite installs everywhere: a finding only survives if it names the exact step, quotes what the screen (or spec, or code) actually said at that step, and then gets run back through three kill questions before it's allowed in the report — see [The shared discipline: Evidence line + verify/kill pass](#the-shared-discipline-evidence-line-verifykill-pass) above.
 
 ### Verbs
 

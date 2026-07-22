@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gabe suite — The one picture &amp; the four laws</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <a class="top-brand" href="index.html">🔧 GABE<span class="dot">.</span>docs <span class="sub">the KDBP development suite</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Hub</a> <span class="crumb-sep">›</span> <span class="crumb-here">The one picture</span></nav>
+  <button class="adhd-toggle" id="adhd-toggle" type="button" aria-pressed="false" aria-label="Toggle bionic reading" title="Bionic reading"><span class="adhd-dot"></span></button>
+</header>
+<aside class="sidebar" id="sidebar">
+  <button class="side-collapse" id="side-collapse" type="button" aria-pressed="false" aria-label="Collapse navigation" title="Collapse navigation"><span class="side-collapse-glyph">«</span></button>
+  <nav class="sidenav">
+    <a class="side-link side-hub" href="index.html"><span class="sw" style="background:#6e6757"></span><span class="side-label">Hub</span></a>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 1 · Foundations <span class="chip basic">basic</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="kdbp.html" title="What KDBP is"><span class="sw" style="background:#3a6b3a"></span><span class="side-label">What KDBP is</span></a>
+        <a class="side-link" href="the-loop.html" title="The development loop"><span class="sw" style="background:#3a6b7a"></span><span class="side-label">The development loop</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
+        <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
+        <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
+      </div>
+    </details>
+    <details class="side-group" open>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · Verification-first <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link active" href="verification-first.html" title="The one picture"><span class="sw" style="background:#1f7a5a"></span><span class="side-label">The one picture</span></a>
+        <a class="side-link" href="gabe-red.html" title="/gabe-red"><span class="sw" style="background:#b63a3a"></span><span class="side-label">/gabe-red</span></a>
+        <a class="side-link" href="c-id.html" title="The C-id scheme"><span class="sw" style="background:#7a6a2b"></span><span class="side-label">The C-id scheme</span></a>
+        <a class="side-link" href="command-center.html" title="The command center"><span class="sw" style="background:#2b5a8a"></span><span class="side-label">The command center</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 4 · The mechanism corpus <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="mechanisms.html" title="The mechanism catalog"><span class="sw" style="background:#a04030"></span><span class="side-label">The mechanism catalog</span></a>
+        <a class="side-link" href="drift.html" title="Why weak models drift"><span class="sw" style="background:#d97a3d"></span><span class="side-label">Why weak models drift</span></a>
+        <a class="side-link" href="decisions.html" title="Design decisions"><span class="sw" style="background:#6e6757"></span><span class="side-label">Design decisions</span></a>
+      </div>
+    </details>
+  </nav>
+</aside>
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<div class="wrap"><main>
+  <header class="masthead">
+    <div class="kicker">Tier 3 · The model</div>
+    <h1>The one picture &amp; the four laws</h1>
+    <p class="lede">The organizing idea: the command center is a derived view of the software lifecycle, read along three cuts — lifecycle produces, structure shapes, growth accrues — held together by four laws.</p>
+  </header>
+<p>Everything in this suite is downstream of one bet: <strong>a project's confidence should be assembled from machine facts, not asserted by whoever is talking.</strong> A test either failed on the old code and passes on the new — or it didn't. A commit exists at a SHA — or it doesn't. A human walked the feature on a date — or nobody has. <em>Verification-first</em> is the name for organizing the whole development loop around producing those facts as it goes, so that "is this done?" is answered by reading disk, never by trusting a claim.</p>
+<h2 id="why-the-suite-is-shaped-this-way"><span class="num">01</span>Why the suite is shaped this way</h2>
+<p>Picture a strong, careful engineer working next to a junior one. The strong engineer double-checks the file path, runs the command before saying it passed, and asks before quietly shipping a cheaper version of the ticket — not because the ticket said to, but because years of habit made those moves automatic. The junior hasn't built those habits yet, and will write "done ✅" after skimming code instead of running it, in total sincerity.</p>
+<p>Gabe's skills are run by models of varying strength — sometimes the careful one, sometimes a fast, literal one. The entire suite is the answer to a single observation: <strong>the disciplined behavior lived in the strong model's judgment, not in the instructions.</strong> So the design goal is always to move judgment <em>out</em> of the model and <em>into</em> files, gates, and derived views — where a weak model inherits the strong model's floor for free, and a strong model can't quietly skip a step either. The <a href="contract.html">E1–E7 contract</a> is the smallest version of that move; the <a href="mechanisms.html">mechanism catalog</a> is the full library; this page is the shape they add up to.</p>
+<h2 id="the-one-picture"><span class="num">02</span>The one picture</h2>
+<p>Start with the thing that looks like the product but isn't. The <a href="command-center.html">Testing Command Center</a> — the browsable site that shows a project's features, tests, coverage, and releases — is <strong>not a thing anyone builds or maintains. It is a derived view of the software lifecycle's execution.</strong> Nobody writes its pages; the lifecycle writes them as a byproduct of doing the work. Read that one object along three cuts:</p>
+<figure class="mermaid-fig"><pre class="mermaid">flowchart LR
+  subgraph PROD["Lifecycle — the producer"]
+    L["scope · plan · red · execute&lt;br&gt;review · commit · push · walk"]
+  end
+  subgraph SHAPE["Structure — the shape"]
+    S["one subject spine&lt;br&gt;entity × altitude"]
+  end
+  subgraph MOT["Growth — the motion"]
+    G["ship a feature →&lt;br&gt;it walks the spine itself"]
+  end
+  L --&gt;|"emits facts as byproducts"| S
+  S --&gt;|"each view recounts&lt;br&gt;from machine sources"| G</pre></figure>
+<ul><li><strong>Lifecycle = the producer.</strong> The suite's real job is <em>developing software</em>. Every command earns its place by its value to the developer building the thing — never by the docs it emits. The doc points fall out of the beats as byproducts, which is why deleting a command for "authoring no doc" is a category error (see the third law below).</li><li><strong>Structure = the shape.</strong> One subject spine — Now · Board · Entities · Docs · Testing · Ledger · Releases — read along two axes: <strong>entity</strong> (which subject, horizontal) and <strong>altitude</strong> (docs high, tests low, vertical). Docs and tests are two lenses at the same altitude, meeting at the feature card. Time is an <em>overlay</em>, never a fourth wing.</li><li><strong>Growth = the motion.</strong> Ship a feature and it walks the spine by itself: the ticket closes, the commit lands, and every view recounts from the same machine sources. Two clocks run at once — the <strong>present is replaced</strong> on each refresh, so it can't drift; the <strong>past accrues in git</strong>, so it's never hand-kept.</li></ul>
+<h2 id="the-four-laws"><span class="num">03</span>The four laws</h2>
+<p>These are not style preferences. Each one has been violated in a real session and reverted, which is why they read as hard rules rather than suggestions.</p>
+<div class="table-wrap"><table><thead><tr><th>Law</th><th>What it forbids</th><th>Why</th></tr></thead><tbody><tr><td><strong>1 · Anti-curation</strong></td><td>A count, verdict, or pass/fail that a human typed in.</td><td>Machine sources <em>assert</em> every number (git, junit, coverage, PLAN, PENDING); authored artifacts only <em>translate</em> them. A gap is <strong>named</strong>, never faked green.</td></tr><tr><td><strong>2 · Anti-bloat</strong></td><td>Storing anything you can derive; any view that needs refresh-discipline.</td><td>If it can be recomputed from git and the corpus, it is recomputed — never saved. Deriving <em>narrative</em> from git is the exception: that's fabrication, not projection, and is forbidden too.</td></tr><tr><td><strong>3 · The Standing Correction</strong></td><td>Judging a command by whether it emits a doc artifact.</td><td>A prior pass deleted <code>/gabe-execute</code> for "authoring no doc" — the canonical error. A command is justified by its value to the <em>build</em>, full stop.</td></tr><tr><td><strong>4 · Block lies, warn debts</strong></td><td>A harness that blocks honest incompleteness, or lets a dishonest state through.</td><td>Hooks <strong>block</strong> a dishonest state — a ✅ whose proof doesn't exist on disk. Everything else — thin coverage, un-walked stations, absent angles — is <strong>reported, never blocked.</strong> This is decision <a href="decisions.html">D7</a>; the walk witness is <a href="decisions.html">D2</a>.</td></tr></tbody></table></div>
+<p><img class="doc-meme" src="assets/memes/self-graded-evidence.png" alt="Same Picture meme: "the code that says it works" and "the check that it works" — same picture."></p>
+<div class="note"><span class="lbl">The tripwire built into the model</span><p>The suite is allowed to add verification, never ceremony. The standing test: if a verification beat ever prints a <em>summary a developer reads</em> instead of producing a <em>failure a developer must fix</em>, it has become theatre — delete it. <code>/gabe-red</code> carries this tripwire explicitly.</p></div>
+<h2 id="where-this-lands-in-the-loop"><span class="num">04</span>Where this lands in the loop</h2>
+<p>The abstract model becomes concrete at three specific beats, each of which has its own page:</p>
+<ul><li><strong><a href="gabe-red.html">/gabe-red</a></strong> puts the failing test on the record <em>before</em> any source is written — the beat that finally made test-first land, and the one that produces "ever-red" honesty.</li><li><strong><a href="c-id.html">The C-id scheme</a></strong> gives every test a durable identity so a claim of coverage can be checked, recovered, and counted mechanically.</li><li><strong><a href="command-center.html">The command center</a></strong> is the derived view itself — the eight sections, the two clocks, and how a shipped feature walks the spine (with an <a href="map.html">interactive map</a> of the whole nav → files → commands chain).</li></ul>
+<div class="note"><span class="lbl">Where to go next</span><p>If you're here to understand <em>why the gates exist at all</em>, read <a href="drift.html">Why weak models drift</a> (the incident corpus) and <a href="mechanisms.html">the mechanism catalog</a> (the fixes). If you're here to understand <em>how the loop runs day to day</em>, read <a href="the-loop.html">The development loop</a> and <a href="commands.html">Beats &amp; commands</a>. The rulings that fixed this architecture — including block-lies-warn-debts — are on <a href="decisions.html">Design decisions</a>.</p></div>
+</main></div>
+
+<footer class="stamp">
+  <b>GABE</b> · the KDBP development suite · documentation<br>
+  Source of truth: <b>docs/src/*.md</b> + <b>docs/docsite.config.py</b> · generated — do not edit the HTML by hand<br>
+  Visual system: Cifra · Chile editorial palette
+</footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true, theme: "base", themeVariables: {background: "#ece6d8", primaryColor: "#f5f0e2", primaryBorderColor: "#b65a2b", primaryTextColor: "#1b1a17", secondaryColor: "#e6dec8", tertiaryColor: "#ece6d8", lineColor: "#6e6757", fontFamily: "Space Grotesk, system-ui, sans-serif", fontSize: "13px"}, flowchart: {curve: "basis", htmlLabels: true, useMaxWidth: true}});</script>
+</body>
+</html>

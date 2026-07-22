@@ -29,19 +29,28 @@
       </div>
     </details>
     <details class="side-group" open>
-      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · Contract &amp; Commands <span class="chip core">core</span></span></summary>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
       <div class="side-panel">
         <a class="side-link active" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
-        <a class="side-link" href="commands.html" title="Command reference"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Command reference</span></a>
+        <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
         <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
       </div>
     </details>
     <details class="side-group">
-      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · The Hardening <span class="chip advanced">advanced</span></span></summary>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · Verification-first <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="verification-first.html" title="The one picture"><span class="sw" style="background:#1f7a5a"></span><span class="side-label">The one picture</span></a>
+        <a class="side-link" href="gabe-red.html" title="/gabe-red"><span class="sw" style="background:#b63a3a"></span><span class="side-label">/gabe-red</span></a>
+        <a class="side-link" href="c-id.html" title="The C-id scheme"><span class="sw" style="background:#7a6a2b"></span><span class="side-label">The C-id scheme</span></a>
+        <a class="side-link" href="command-center.html" title="The command center"><span class="sw" style="background:#2b5a8a"></span><span class="side-label">The command center</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 4 · The mechanism corpus <span class="chip advanced">advanced</span></span></summary>
       <div class="side-panel">
         <a class="side-link" href="mechanisms.html" title="The mechanism catalog"><span class="sw" style="background:#a04030"></span><span class="side-label">The mechanism catalog</span></a>
         <a class="side-link" href="drift.html" title="Why weak models drift"><span class="sw" style="background:#d97a3d"></span><span class="side-label">Why weak models drift</span></a>
-        <a class="side-link" href="reference.html" title="Per-skill reference"><span class="sw" style="background:#6e6757"></span><span class="side-label">Per-skill reference</span></a>
+        <a class="side-link" href="decisions.html" title="Design decisions"><span class="sw" style="background:#6e6757"></span><span class="side-label">Design decisions</span></a>
       </div>
     </details>
   </nav>
@@ -52,15 +61,15 @@
   <header class="masthead">
     <div class="kicker">Tier 2 · The contract</div>
     <h1>The E1–E7 execution contract</h1>
-    <p class="lede">Seven floors under every command — each with the exact failure it prevents.</p>
+    <p class="lede">Seven floors under every command — each with the exact failure it prevents. The single home of the E1–E7 rule text.</p>
   </header>
 <h2 id="what-the-contract-actually-is"><span class="num">01</span>What the contract actually is</h2>
 <p>Picture a strong, careful engineer working alongside a junior one. The strong engineer doesn't just happen to double-check file paths, run the command before claiming it passed, and ask before quietly doing a cheaper version of the ticket — they've internalized those habits over years. The junior engineer hasn't. Put them on the same task and the junior will, with total sincerity, write "done ✅" after skimming the code instead of running it.</p>
 <p>Gabe's skills are run by models of varying strength — sometimes a careful one, sometimes a fast, literal-minded one. The E1–E7 contract is what happens when the suite's authors noticed that the strong-model runs were quietly doing seven things the skill text never actually asked for.</p>
 <div class="note"><span class="lbl">The seven unwritten habits (before they had names)</span><ul><li>Citing the exact file and line for every claim</li><li>Pasting real command output before checking a box</li><li>Asking before delivering a cheaper version of the task</li><li>Searching before building something new</li><li>Writing state changes down immediately</li><li>Stopping instead of guessing when a reference file was missing</li><li>Always saying exactly where to go look at the result</li></ul></div>
-<p>Those seven habits were <em>unwritten</em> — present only because a capable model happened to supply them on its own initiative. A weaker model does not supply them on its own initiative. So the fix was to stop relying on model judgment and write the habits down as seven short, literal rules, then paste that exact same block of text at the top of every skill and command file in the suite.</p>
-<p>That's the whole mechanism: <strong>the same 7 rules, byte-identical, in every gabe-* file</strong> — so the strongest model's disciplined defaults become the floor every model runs on, not a lucky bonus a strong model happened to bring.</p>
-<div class="note"><span class="lbl">Where it lives</span><p>Read the raw text at <code>~/.claude/gabe-hardening/PREAMBLE.txt</code> — that file is the single source of truth. It gets copied verbatim into the top of each skill's <code>SKILL.md</code> and each command's markdown file; nobody hand-retypes it per file.</p></div>
+<p>Those seven habits were <em>unwritten</em> — present only because a capable model happened to supply them on its own initiative. A weaker model does not supply them on its own initiative. So the fix was to stop relying on model judgment and write the habits down as seven short, literal rules, stated <strong>once</strong> in a canonical contract file that every skill points to.</p>
+<p>That's the whole mechanism: <strong>one authoritative statement of the seven rules, inherited by every gabe-* skill</strong> — so the strongest model's disciplined defaults become the floor every model runs on, not a lucky bonus a strong model happened to bring.</p>
+<div class="note"><span class="lbl">Where it lives</span><p>The contract lives <strong>once</strong>, at <code>skills/gabe-docs/references/execution-contract.md</code> — the single source of truth. Every skill's <code>SKILL.md</code> carries a one-line <em>pointer</em> to it, not a pasted copy, so there is exactly one place to edit and nothing to drift between files. (If that file is ever missing, rule <strong>E6</strong> applies — a skill stops rather than reconstructing the contract from memory.)</p></div>
 <h2 id="the-seven-rules-at-a-glance"><span class="num">02</span>The seven rules at a glance</h2>
 <p>Each rule targets one specific way that "I did the work" quietly becomes untrue.</p>
 <figure class="mermaid-fig"><pre class="mermaid">flowchart TD
@@ -81,37 +90,37 @@
     E7 --- D7[Lost location]</pre></figure>
 <p>Scan the table below first, then read the detail sections for the exact wording and a before/after example.</p>
 <div class="table-wrap"><table><thead><tr><th>Rule</th><th>One-word name</th><th>The drift it stops</th></tr></thead><tbody><tr><td><strong>E1</strong></td><td>Evidence</td><td>Claiming something about the code without having opened it this session</td></tr><tr><td><strong>E2</strong></td><td>Run-before-✅</td><td>Marking a check passed without actually running its command</td></tr><tr><td><strong>E3</strong></td><td>No silent downgrade</td><td>Quietly delivering a cheaper version of the task than the text asked for</td></tr><tr><td><strong>E4</strong></td><td>Reuse first</td><td>Building something new that already exists somewhere in the codebase</td></tr><tr><td><strong>E5</strong></td><td>State sync</td><td>Changing reality (a commit, a merge) without recording it in the same turn</td></tr><tr><td><strong>E6</strong></td><td>Missing anchor = stop</td><td>Inventing the contents of a template or spec file that couldn't be found</td></tr><tr><td><strong>E7</strong></td><td>Report where</td><td>Announcing "done" without saying exactly where a human can go check it</td></tr></tbody></table></div>
-<h2 id="e1-e1assetsiconse1png-evidence"><span class="num">03</span>E1 <img class="doc-icon" src="assets/icons/e1.png" alt="E1"> — Evidence</h2>
+<h2 id="e1-evidence"><span class="num">03</span>E1 <img class="doc-icon" src="assets/icons/e1.png" alt="E1"> — Evidence</h2>
 <blockquote><p>Every claim about code/state cites file:line or a command run THIS session; no citation → mark it <code>(assumed)</code> and verify before building on it. Absence claims ("no X exists") require a recorded search → 0 hits.</p></blockquote>
 <p><strong>Failure it prevents, in one sentence:</strong> a model states something confidently sounding true about the codebase — "this function already validates input," "there's no existing retry logic" — because it sounds plausible, not because it was actually checked this session.</p>
 <p><strong>Before → after:</strong></p>
 <ul><li>Before (no E1): "The API already handles rate limiting."</li><li>After (E1 applied): "The API already handles rate limiting — <code>api/middleware.py:41</code>, <code>@limiter.limit("10/minute")</code>." Or, if it wasn't actually opened: "The API probably already handles rate limiting <em>(assumed)</em> — verifying before I build on it." And a claim of absence — "no retry logic exists" — must show the search: <code>grep -rn "retry" api/</code> → 0 hits.</li></ul>
-<h2 id="e2-e2assetsiconse2png-run-before-"><span class="num">04</span>E2 <img class="doc-icon" src="assets/icons/e2.png" alt="E2"> — Run-before-✅</h2>
+<h2 id="e2-run-before-"><span class="num">04</span>E2 <img class="doc-icon" src="assets/icons/e2.png" alt="E2"> — Run-before-✅</h2>
 <blockquote><p>✅ only after the command executed here (paste cmd + exit/count). Skipped = <code>⤫ skipped(&lt;reason&gt;)</code>, never ✅. Every printed number is copied from this run's output — never estimated.</p></blockquote>
 <p><strong>Failure it prevents, in one sentence:</strong> a checklist that looks fully green even though half its checks were never executed — skimmed, guessed, or remembered from an earlier session instead of run right now.</p>
 <p><strong>Before → after:</strong></p>
 <ul><li>Before (no E2): "Tests: ✅ · Typecheck: ✅ · Lint: ✅"</li><li>After (E2 applied): "Tests: ✅ <code>npm test</code> → exit 0, 42 passed · Typecheck: ⤫ skipped(no tsconfig for this package) · Lint: ✅ <code>npm run lint</code> → exit 0, 0 problems." Nothing gets a checkmark it didn't earn this run, and a skip says why instead of hiding as a pass.</li></ul>
-<h2 id="e3-e3assetsiconse3png-no-silent-downgrade"><span class="num">05</span>E3 <img class="doc-icon" src="assets/icons/e3.png" alt="E3"> — No silent downgrade</h2>
+<h2 id="e3-no-silent-downgrade"><span class="num">05</span>E3 <img class="doc-icon" src="assets/icons/e3.png" alt="E3"> — No silent downgrade</h2>
 <blockquote><p>Quote the task text verbatim before implementing; if your plan delivers a cheaper class (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask. Substitution requires an explicit user decision line.</p></blockquote>
 <p><strong>Failure it prevents, in one sentence:</strong> a task asking for a full rebuild-to-reference quietly becomes a coat of paint on the existing screen, because the cheaper interpretation was easier and nobody flagged the swap.</p>
 <p><strong>Before → after:</strong></p>
 <ul><li>Before (no E3): task said "rebuild the groups screen to match the design-lab reference"; delivered result: existing screen recolored to match the palette, structure unchanged, reported as "done."</li><li>After (E3 applied): "Task (verbatim): 'rebuild the groups screen to match the design-lab reference.' Deliverable class: <strong>rebuild-to-reference</strong>. My plan currently only restyles the existing component — that's a cheaper class than the text asks for. Confirm restyle is acceptable, or I proceed with the full rebuild?"</li></ul>
-<h2 id="e4-e4assetsiconse4png-reuse-first"><span class="num">06</span>E4 <img class="doc-icon" src="assets/icons/e4.png" alt="E4"> — Reuse first</h2>
+<h2 id="e4-reuse-first"><span class="num">06</span>E4 <img class="doc-icon" src="assets/icons/e4.png" alt="E4"> — Reuse first</h2>
 <div class="table-wrap"><table><thead><tr><th>&gt; Before creating anything, print: `REUSE &lt;path&gt;</th><th>EXTEND &lt;path&gt;</th><th>NEW (searched &lt;where&gt; — none fit)`. Recreating an existing artifact is a defect.</th></tr></thead></table></div>
 <p><strong>Failure it prevents, in one sentence:</strong> hand-rolling a new dropdown, toggle, or header component that duplicates one already sitting in the shared component library, quietly forking behavior that will now drift out of sync.</p>
 <p><strong>Before → after:</strong></p>
 <ul><li>Before (no E4): builds a new <code>PeriodSelector</code> component from scratch for a report screen.</li><li>After (E4 applied): "REUSE <code>src/components/SegmentedToggle.tsx</code> — searched <code>src/components/**/*.tsx</code> for existing period/segment selectors; this one already covers the exact interaction, extending it with an optional <code>periods</code> prop."</li></ul>
-<h2 id="e5-e5assetsiconse5png-state-sync"><span class="num">07</span>E5 <img class="doc-icon" src="assets/icons/e5.png" alt="E5"> — State sync</h2>
+<h2 id="e5-state-sync"><span class="num">07</span>E5 <img class="doc-icon" src="assets/icons/e5.png" alt="E5"> — State sync</h2>
 <blockquote><p>Actions that change reality (commit/merge/defer/pivot) write their state row in the SAME turn; a skipped write prints an enumerated skip code, never silence.</p></blockquote>
 <p><strong>Failure it prevents, in one sentence:</strong> a merged PR or a deferred review finding that never gets logged, so the plan file quietly diverges from what actually happened until someone stumbles on the mismatch days later.</p>
 <p><strong>Before → after:</strong></p>
 <ul><li>Before (no E5): a PR merges; the plan file's phase row stays stuck on "in progress" for days because updating it fell out of scope of the merge conversation.</li><li>After (E5 applied): the same turn that merges the PR also flips the plan row to <code>✅</code> with the commit hash — or, if the plan file can't be found, prints <code>ℹ PLAN.md: Exec tick skipped (no-plan)</code> instead of just moving on.</li></ul>
-<h2 id="e6-e6assetsiconse6png-missing-anchor-stop"><span class="num">08</span>E6 <img class="doc-icon" src="assets/icons/e6.png" alt="E6"> — Missing anchor = stop</h2>
+<h2 id="e6-missing-anchor-stop"><span class="num">08</span>E6 <img class="doc-icon" src="assets/icons/e6.png" alt="E6"> — Missing anchor = stop</h2>
 <blockquote><p>Referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.</p></blockquote>
 <p><strong>Failure it prevents, in one sentence:</strong> a skill references a template or schema file, can't find it, and — rather than stopping — reconstructs "probably what it contained" from memory, silently drifting from whatever the real file actually specified.</p>
 <p><strong>Before → after:</strong></p>
 <ul><li>Before (no E6): a hook's JSON payload is referenced by a setup skill but the file that defines it is missing; the skill writes a plausible-looking JSON blob into <code>settings.json</code> from general knowledge of "what hooks usually look like."</li><li>After (E6 applied): "⛔ <code>hooks/pre-commit.json</code> missing at <code>.claude/hooks/</code> — reinstall the suite or create it first. Not improvising from memory."</li></ul>
-<h2 id="e7-e7assetsiconse7png-report-where"><span class="num">09</span>E7 <img class="doc-icon" src="assets/icons/e7.png" alt="E7"> — Report where</h2>
+<h2 id="e7-report-where"><span class="num">09</span>E7 <img class="doc-icon" src="assets/icons/e7.png" alt="E7"> — Report where</h2>
 <blockquote><p>End user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.</p></blockquote>
 <p><strong>Failure it prevents, in one sentence:</strong> a "the feature is done" message that leaves the human hunting for which screen, which port, and which environment actually shows the change — the same clarifying question asked over and over across sessions.</p>
 <p><strong>Before → after:</strong></p>
@@ -119,8 +128,8 @@
 <h2 id="floors-not-ceilings"><span class="num">10</span>Floors, not ceilings</h2>
 <div class="note"><span class="lbl">Precedence rule</span><p>E1–E7 are the universal minimum every gabe-* file inherits — they are <strong>floors, not ceilings</strong>. An individual skill's own gate is always allowed to be stricter than the shared contract (for example, gabe-mockup's reference-fidelity checklist adds requirements on top of E3), but it may never be looser — no skill can quietly opt out of citing evidence, running before ✅, or reporting where. If a skill-specific rule and the shared contract ever seem to conflict, the shared contract wins as the non-negotiable baseline; the skill's rule can only add, never subtract.</p></div>
 <h2 id="why-this-is-the-centerpiece"><span class="num">11</span>Why this is the centerpiece</h2>
-<p>Every other document in this suite — the command reference, the mechanism catalog, the per-skill hardening notes — describes machinery that sits <em>on top of</em> this contract. The mechanism catalog exists because someone traced a set of real incidents (a ten-phase rebuild that quietly became a recolor, a proof screenshot of the wrong running app, a typecheck command that was a silent no-op, a decision reversed without anyone recording the amendment) back to one root cause each time: one of these seven habits was missing from that run. The fix wasn't seven different patches to seven different skills — it was one short, shared block of text, repeated verbatim everywhere, so that no gabe-* skill or command ever runs without it. That's what makes a weaker model behave, on the habits that matter most, like the strongest model that ever ran the suite.</p>
-<div class="note"><span class="lbl">Next</span><ul><li><a href="commands.html">Command reference</a> — every gabe-* command, one page each</li><li><a href="mechanisms.html">Mechanism catalog</a> — the incidents that led to E1–E7 and the fixes they became</li><li><a href="satellites.html">Per-skill reference</a> — where each skill adds its own stricter gate on top of this floor</li></ul></div>
+<p>Every other document in this suite — the <a href="commands.html">beat reference</a>, the <a href="mechanisms.html">mechanism catalog</a>, the <a href="decisions.html">decision record</a> — describes machinery that sits <em>on top of</em> this contract. The mechanism catalog exists because someone traced a set of real incidents (a ten-phase rebuild that quietly became a recolor, a proof screenshot of the wrong running app, a typecheck command that was a silent no-op, a decision reversed without anyone recording the amendment) back to one root cause each time: one of these seven habits was missing from that run. The fix wasn't seven different patches to seven different skills — it was one short, shared contract every gabe-* skill inherits, so that none ever runs without it. That's what makes a weaker model behave, on the habits that matter most, like the strongest model that ever ran the suite.</p>
+<div class="note"><span class="lbl">Next</span><ul><li><a href="commands.html">Beats &amp; commands</a> — every command, and the specific gate each one adds on top of this floor</li><li><a href="mechanisms.html">The mechanism catalog</a> — the incidents that led to E1–E7 and the fixes they became</li><li><a href="verification-first.html">The one picture &amp; the four laws</a> — why moving judgment into files is the whole strategy</li></ul></div>
 </main></div>
 
 <footer class="stamp">

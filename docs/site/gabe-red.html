@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gabe suite — /gabe-red — the RED-commit beat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <a class="top-brand" href="index.html">🔧 GABE<span class="dot">.</span>docs <span class="sub">the KDBP development suite</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Hub</a> <span class="crumb-sep">›</span> <span class="crumb-here">/gabe-red</span></nav>
+  <button class="adhd-toggle" id="adhd-toggle" type="button" aria-pressed="false" aria-label="Toggle bionic reading" title="Bionic reading"><span class="adhd-dot"></span></button>
+</header>
+<aside class="sidebar" id="sidebar">
+  <button class="side-collapse" id="side-collapse" type="button" aria-pressed="false" aria-label="Collapse navigation" title="Collapse navigation"><span class="side-collapse-glyph">«</span></button>
+  <nav class="sidenav">
+    <a class="side-link side-hub" href="index.html"><span class="sw" style="background:#6e6757"></span><span class="side-label">Hub</span></a>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 1 · Foundations <span class="chip basic">basic</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="kdbp.html" title="What KDBP is"><span class="sw" style="background:#3a6b3a"></span><span class="side-label">What KDBP is</span></a>
+        <a class="side-link" href="the-loop.html" title="The development loop"><span class="sw" style="background:#3a6b7a"></span><span class="side-label">The development loop</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
+        <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
+        <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
+      </div>
+    </details>
+    <details class="side-group" open>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · Verification-first <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="verification-first.html" title="The one picture"><span class="sw" style="background:#1f7a5a"></span><span class="side-label">The one picture</span></a>
+        <a class="side-link active" href="gabe-red.html" title="/gabe-red"><span class="sw" style="background:#b63a3a"></span><span class="side-label">/gabe-red</span></a>
+        <a class="side-link" href="c-id.html" title="The C-id scheme"><span class="sw" style="background:#7a6a2b"></span><span class="side-label">The C-id scheme</span></a>
+        <a class="side-link" href="command-center.html" title="The command center"><span class="sw" style="background:#2b5a8a"></span><span class="side-label">The command center</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 4 · The mechanism corpus <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="mechanisms.html" title="The mechanism catalog"><span class="sw" style="background:#a04030"></span><span class="side-label">The mechanism catalog</span></a>
+        <a class="side-link" href="drift.html" title="Why weak models drift"><span class="sw" style="background:#d97a3d"></span><span class="side-label">Why weak models drift</span></a>
+        <a class="side-link" href="decisions.html" title="Design decisions"><span class="sw" style="background:#6e6757"></span><span class="side-label">Design decisions</span></a>
+      </div>
+    </details>
+  </nav>
+</aside>
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<div class="wrap"><main>
+  <header class="masthead">
+    <div class="kicker">Tier 3 · The beat</div>
+    <h1>/gabe-red — the RED-commit beat</h1>
+    <p class="lede">Why test-first never landed before, and the dedicated beat that lands it: a commit whose declared cases fail by assertion, born before any source is written.</p>
+  </header>
+<p><code>/gabe-red</code> is a lifecycle beat that runs after <a href="commands.html"><code>/gabe-plan</code></a> and before any source is written: inspect the test corpus, declare the cases that make this change <em>necessary</em>, write them against a stub, run them, and <strong>commit the failure</strong>. Its deliverable is not a report — it's a commit whose declared cases fail by assertion. It is the first half of TDD, finally given a beat of its own.</p>
+<h2 id="why-test-first-never-landed-before"><span class="num">01</span>Why test-first never landed before</h2>
+<p>The operator asked for test-first development repeatedly, for a long time, and it never stuck. That failure was structural, not a discipline problem — and understanding the three reasons is most of understanding the fix.</p>
+<ul><li><strong>A beat asserts one terminal state; TDD has two contradictory ones.</strong> Every command in the suite ends by asserting a single state of the world — "the tests pass," "the diff is reviewed." But TDD needs two opposite terminal states of the <em>same</em> measurement: first the tests fail, then they pass. One command cannot honestly end with both. Inside a merged execute step, the red is swallowed by the same act that produced the green, so the only boundary anyone can observe is the green — which is self-graded evidence. <strong>A merged execute yields theatre by construction.</strong> The fix is a dedicated beat whose entire deliverable <em>is</em> the failing state.</li><li><strong>Every test signal had no reader.</strong> Each existing verification in the suite reads a file that already exists — commit counts, a diff's touched files, a path glob. A <em>promised</em> test had no such reader: a promise with nothing that consumes it is never actually written, and no reader is ever built to justify one. <code>/gabe-red</code> breaks the loop by giving the promise a schema slot (<code>proof.type: test</code>, a <code>Cases:</code> line) and a reader (<code>/gabe-execute</code> plus the plan-proof guard).</li><li><strong>Nothing owned test identity.</strong> Tests were the only durable artifact born with no command present — created inside a nameless "implement" step. Decisions get D-ids, deferred items get P-ids, phases get numbers; tests got nothing. <code>/gabe-red</code> is the birth moment where a test gets its <a href="c-id.html">C-id</a>.</li></ul>
+<h2 id="the-deliverable-is-a-commit-that-fails"><span class="num">02</span>The deliverable is a commit that fails</h2>
+<p>Red isn't <em>perishable</em> — it's <em>unaddressable</em>. A failing test that flashes red in a terminal and is immediately made green leaves no trace anyone can point at later. Committing the failure gives it an address:</p>
+<pre><code>git commit -m "red(auth): C412 rejects expired token
+
+RED: C412 fails by assertion on returning stub"</code></pre>
+<p>Anyone can re-derive that failure months later — <code>git worktree add … &lt;red-sha&gt; &amp;&amp; pytest -k C412</code> — because the commit, not a memory, holds it. The <code>RED:</code> trailer is the machine-readable record that this checkpoint is a declared, honest failure.</p>
+<h2 id="the-three-outcomes"><span class="num">03</span>The three outcomes</h2>
+<p>When the new cases run against the stub, exactly one of three things is true — and only the first is evidence:</p>
+<div class="table-wrap"><table><thead><tr><th>Outcome</th><th>Meaning</th><th>What to do</th></tr></thead><tbody><tr><td><strong>Fails by assertion</strong></td><td>The case ran, reached its <code>assert</code>, and the assert was false.</td><td>✅ This is RED. Commit it.</td></tr><tr><td><strong>Fails by import / collection</strong></td><td>The test couldn't even load — a missing symbol, a syntax error.</td><td>❌ NOT RED. This is non-evidence: it proves nothing about behavior. Fix the wiring first.</td></tr><tr><td><strong>Passes on unchanged code</strong></td><td>The case is green before you've built anything.</td><td>⛔ TAUTOLOGY. Halt — the case asserts nothing the code doesn't already do.</td></tr></tbody></table></div>
+<p><img class="doc-meme" src="assets/memes/tautology-green.png" alt="Futurama Fry meme: "not sure if the test passed — or it never checked anything.""></p>
+<div class="note"><span class="lbl">The stub returns, it never raises</span><p>The stub the cases run against must <strong>return</strong> a value, never <code>raise NotImplementedError</code>. A raising stub makes <em>every</em> case look red for the same boring reason (the exception), which destroys the tautology guard — you can no longer tell a real <code>assert False</code> from a case that would have passed anyway. A returning stub lets a tautology surface as a green, so the guard can catch it.</p></div>
+<h2 id="refactors-and-the-genuinely-un-testable"><span class="num">04</span>Refactors and the genuinely un-testable</h2>
+<p>A refactor has no new behavior to fail on, so demanding a fake red would be dishonest. Its contract is a <strong>guard</strong> instead: <code>GUARD: C091, C147</code> — the named existing cases must <em>stay</em> green across the change. That's machine-checkable and honest, with no theatre. And a phase that genuinely cannot be tested (a pure config bump, a dependency pin) <strong>self-skips with an enumerated code</strong> recorded on the phase, rather than being forced through a ceremony that would produce a meaningless commit.</p>
+<h2 id="what-it-costs-honestly"><span class="num">05</span>What it costs, honestly</h2>
+<p>Verification level rides the phase's existing <strong>tier</strong> — there is no parallel level system. <code>min_cases</code> is 1 at MVP, 3–6 at Enterprise, plus fuzz/load at Scale. The honest price is <strong>+10–15% phase time at MVP, +20–30% at Enterprise</strong> — but most of that isn't new work, it's test-writing <em>moved earlier</em>. The one genuinely new cost is the corpus search that reuse demands — which is exactly the reuse discipline the operator wanted forced into the open, not a tax to apologize for.</p>
+<div class="note"><span class="lbl">The tripwire</span><p><code>/gabe-red</code> exists to produce a <em>failure a developer must fix</em>, not a <em>summary a developer reads</em>. The day it starts printing ceremony instead of surfacing a real red, it has stopped earning its place — delete it. This is the <a href="verification-first.html">verification-first</a> tripwire made concrete.</p></div>
+<div class="note"><span class="lbl">Next</span><ul><li><a href="c-id.html">The C-id scheme</a> — how the cases <code>/gabe-red</code> declares earn durable, recoverable names.</li><li><a href="commands.html">Beats &amp; commands</a> — where red sits in the full lifecycle (beat 3, before execute).</li><li><a href="decisions.html">Design decisions</a> — D1 (report-never-gate) and D6 (red-as-commit) ratify this beat's shape.</li></ul></div>
+</main></div>
+
+<footer class="stamp">
+  <b>GABE</b> · the KDBP development suite · documentation<br>
+  Source of truth: <b>docs/src/*.md</b> + <b>docs/docsite.config.py</b> · generated — do not edit the HTML by hand<br>
+  Visual system: Cifra · Chile editorial palette
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

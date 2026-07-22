@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gabe suite — The Testing Command Center</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <a class="top-brand" href="index.html">🔧 GABE<span class="dot">.</span>docs <span class="sub">the KDBP development suite</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Hub</a> <span class="crumb-sep">›</span> <span class="crumb-here">The command center</span></nav>
+  <button class="adhd-toggle" id="adhd-toggle" type="button" aria-pressed="false" aria-label="Toggle bionic reading" title="Bionic reading"><span class="adhd-dot"></span></button>
+</header>
+<aside class="sidebar" id="sidebar">
+  <button class="side-collapse" id="side-collapse" type="button" aria-pressed="false" aria-label="Collapse navigation" title="Collapse navigation"><span class="side-collapse-glyph">«</span></button>
+  <nav class="sidenav">
+    <a class="side-link side-hub" href="index.html"><span class="sw" style="background:#6e6757"></span><span class="side-label">Hub</span></a>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 1 · Foundations <span class="chip basic">basic</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="kdbp.html" title="What KDBP is"><span class="sw" style="background:#3a6b3a"></span><span class="side-label">What KDBP is</span></a>
+        <a class="side-link" href="the-loop.html" title="The development loop"><span class="sw" style="background:#3a6b7a"></span><span class="side-label">The development loop</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
+        <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
+        <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
+      </div>
+    </details>
+    <details class="side-group" open>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · Verification-first <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="verification-first.html" title="The one picture"><span class="sw" style="background:#1f7a5a"></span><span class="side-label">The one picture</span></a>
+        <a class="side-link" href="gabe-red.html" title="/gabe-red"><span class="sw" style="background:#b63a3a"></span><span class="side-label">/gabe-red</span></a>
+        <a class="side-link" href="c-id.html" title="The C-id scheme"><span class="sw" style="background:#7a6a2b"></span><span class="side-label">The C-id scheme</span></a>
+        <a class="side-link active" href="command-center.html" title="The command center"><span class="sw" style="background:#2b5a8a"></span><span class="side-label">The command center</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 4 · The mechanism corpus <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="mechanisms.html" title="The mechanism catalog"><span class="sw" style="background:#a04030"></span><span class="side-label">The mechanism catalog</span></a>
+        <a class="side-link" href="drift.html" title="Why weak models drift"><span class="sw" style="background:#d97a3d"></span><span class="side-label">Why weak models drift</span></a>
+        <a class="side-link" href="decisions.html" title="Design decisions"><span class="sw" style="background:#6e6757"></span><span class="side-label">Design decisions</span></a>
+      </div>
+    </details>
+  </nav>
+</aside>
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<div class="wrap"><main>
+  <header class="masthead">
+    <div class="kicker">Tier 3 · The derived view</div>
+    <h1>The Testing Command Center</h1>
+    <p class="lede">The subject spine read along entity × altitude — now, board, entities, docs, testing, ledger, releases — built separately from machine sources, never hand-kept.</p>
+  </header>
+<p>The <strong>Testing Command Center</strong> is the browsable site that shows a project's features, tests, coverage, and releases in one place. The thing to hold onto — the claim the whole <a href="verification-first.html">verification-first</a> model rests on — is that it is <strong>not a document anyone writes. It is a derived view of the lifecycle's execution.</strong> Ship a feature and the center recounts itself from git, the test corpus, and the plan; nobody hand-updates a page.</p>
+<h2 id="built-separately-never-hosted-here"><span class="num">01</span>Built separately, never hosted here</h2>
+<p>One boundary matters before anything else. The command center is a <em>different site</em> from this documentation site:</p>
+<ul><li><strong>This docs site</strong> (<code>docs/site/</code>) is prose about the suite — the pages you're reading now. Markdown is its source of truth.</li><li><strong>The command center</strong> (<code>docs/site/center/</code>) is a machine-truth build about <em>one project's</em> features and tests. Its source of truth is git, junit, coverage, and the <code class="kdbp-file kf-dir">.kdbp/</code> state — never hand-authored HTML.</li></ul>
+<p>They are never mixed. This page <em>describes</em> the command center; it does not host it. The center is generated per project by its own skills, from that project's own machine sources.</p>
+<h2 id="the-subject-spine"><span class="num">02</span>The subject spine</h2>
+<p>The center is one subject spine — seven stations plus a leaf for external reports — read top to bottom:</p>
+<figure class="mermaid-fig"><pre class="mermaid">flowchart TD
+  NOW["Now&lt;br&gt;present: feed · needs-you · freshness"]
+  BOARD["Board&lt;br&gt;the rail: red → exec → review → commit → push"]
+  ENT["Entities&lt;br&gt;the subjects the software is about"]
+  DOCS["Docs&lt;br&gt;per feature: handle · what &amp; why · flows · decided"]
+  TEST["Testing&lt;br&gt;the C-id matrix + walk-fed manual angles"]
+  LED["Ledger&lt;br&gt;per change — ephemeral, 100% derived"]
+  REL["Releases&lt;br&gt;shots + diagrams per shipped version"]
+  LEAF["Leaf&lt;br&gt;OSS / external reports — linked, never rebuilt"]
+  NOW --&gt; BOARD --&gt; ENT --&gt; DOCS --&gt; TEST --&gt; LED --&gt; REL --&gt; LEAF</pre></figure>
+<p>Each station answers a different question a person actually asks: <em>what needs me right now</em> (Now), <em>where is everything in the pipeline</em> (Board), <em>what is this software about</em> (Entities), <em>what does feature X do and why</em> (Docs), <em>what has actually been seen to work or fail</em> (Testing), <em>what changed in this one change</em> (Ledger), <em>what shipped</em> (Releases).</p>
+<h2 id="the-whole-chain-mapped"><span class="num">03</span>The whole chain, mapped</h2>
+<p>The spine above is the vertical skeleton. The real payoff is seeing how <em>one</em> sidebar item connects all the way through to the commands that produce it. The map below traces it end to end — <strong>the nav as a project renders it today → the center's sections → the files execution writes → the suite commands that write them</strong> — colour-coded by beat, with a gap table underneath that prices every mismatch between the nav and the ruled structure.</p>
+<p><a href="map.html"><img class="doc-fig" src="assets/map-fig.png" alt="The site ⟷ files ⟷ suite map — a preview of the interactive diagram"></a></p>
+<div class="note"><span class="lbl">This is a snapshot — open the live version</span><p><strong><a href="map.html">Open the interactive map →</a></strong> to pin any node and trace its full chain: pin <code>PLAN.md · PLAN.json</code> to see the six writers a guard hook verifies (dashed crimson = it blocks a ✓ whose proof doesn't exist, D7), pin <code>walks.jsonl</code> to watch one file feed manual angles <em>and</em> adopt's approval reads, pin the <code>A3 generator</code> for the build's whole footprint. It traces the structure over one project's real data — the shape is what generalizes.</p></div>
+<h2 id="two-axes-entity-altitude"><span class="num">04</span>Two axes: entity × altitude</h2>
+<p>The spine is read along two axes at once. <strong>Entity</strong> is horizontal — which subject (Transaction, Account, …). <strong>Altitude</strong> is vertical — docs sit high (the human-facing "what &amp; why"), tests sit low (the machine-facing "what was proven"). They are two lenses on the <em>same</em> subject at different altitudes, and they meet at the <strong>feature card</strong>: one feature's doc page and its test page are the same subject seen from two heights. Time — past, present, future — is an <strong>overlay</strong> on this grid, never a fourth wing.</p>
+<h2 id="the-accumulator-ephemeral-split-and-the-two-clocks"><span class="num">05</span>The accumulator / ephemeral split, and the two clocks</h2>
+<p>Not every page ages the same way, and the split is deliberate:</p>
+<ul><li><strong>Accumulator pages</strong> <em>accrue</em> over a feature's life — the docs page for a feature and its testing page gather handle, flows, decisions, automated angles, walk-fed manual angles, and a verification changelog as the feature matures.</li><li><strong>Ephemeral pages</strong> are <strong>100% derived and disposable</strong> — a ledger page for one change is rebuilt from git every refresh and owes nothing to memory.</li></ul>
+<p>That's the <strong>two clocks</strong> from the verification-first model made concrete: the <strong>present is replaced</strong> on every refresh (so it can't drift), while the <strong>past accrues in git</strong> (so it's never hand-kept). The testing station is the clearest example — its matrix is one row per test:</p>
+<div class="table-wrap"><table><thead><tr><th>Case</th><th>Ever red?</th><th>Status</th><th>Source</th><th>Last run</th></tr></thead><tbody><tr><td><code>C147</code></td><td>✅ born red</td><td>pass</td><td>unit</td><td>this build</td></tr><tr><td><code>C201</code></td><td>✅ born red</td><td>fail</td><td>integration</td><td>this build</td></tr><tr><td><code>C088</code></td><td>— backfilled</td><td>pass</td><td>unit</td><td>this build</td></tr></tbody></table></div>
+<p><strong>Ever-red</strong> is the honesty column: a case that was born through <a href="gabe-red.html"><code>/gabe-red</code></a> carries proof it once failed on purpose; a case backfilled with a <a href="c-id.html">C-id</a> after the fact gets the id but its ever-red stays honestly empty. Nothing here is typed by a human — every cell is stitched from junit and the <code>RED:</code> trailers by C-id.</p>
+<h2 id="where-the-facts-come-from-and-what-is-never-stored"><span class="num">06</span>Where the facts come from — and what is never stored</h2>
+<p>Three machine spines feed the center, and one thin seam of authored prose translates them:</p>
+<ul><li><strong>git</strong> — commits, <code>RED:</code>/<code>Cases:</code> trailers, and lens briefs.</li><li><strong>the C-id'd corpus</strong> — every test, its identity, and (via junit) its status.</li><li><strong><code class="kdbp-file kf-dir">.kdbp/</code></strong> — the authored project state: SCOPE, PLAN, PENDING, walks.jsonl, DECISIONS, and the rest.</li><li><strong>center inputs</strong> — the <em>only</em> prose the center holds: <code>center.config.json</code>, the feature cards, and proof manifests. Authored artifacts only <em>translate</em>; they never assert a count.</li></ul>
+<div class="note"><span class="lbl">Never stored, always derived</span><p>Ledger pages, changelogs, regression relationships, the ever-red column, scope joins, and the non-phase lane are <strong>never</strong> written to disk — they are recomputed on every build. Storing any of them would violate the anti-bloat law and invite drift. (See <a href="verification-first.html">the four laws</a>.)</p></div>
+<p><img class="doc-meme" src="assets/memes/derived-vs-handkept.png" alt="Woman Yelling at Cat meme: "update the docs after every change" versus the calm cat, "the docs recount themselves.""></p>
+<h2 id="getting-a-center-onto-a-project"><span class="num">07</span>Getting a center onto a project</h2>
+<p>Two skills feed the center from opposite ends, and a third reads it:</p>
+<ul><li><strong><a href="commands.html"><code>/gabe-feature</code></a></strong> is the forward track: each shipped feature is translated into its card, diagrams, and evidence narration over the machine facts, and the center regenerates green.</li><li><strong><code>/gabe-adopt</code></strong> is the brownfield on-ramp for a project that already has code but no center. It <strong>archives existing docs — never deletes them</strong> — and bootstraps the center from suite templates, then machine-ranks a critical/high shortlist for the operator, and ingests <strong>one entity per run at human speed</strong>, with each approval recorded as a <a href="commands.html">walk</a>. The adoption tracker lives <em>outside</em> <code class="kdbp-file kf-plan">PLAN.md</code>, so the main plan keeps shipping features through the normal loop while adoption proceeds on its own track — the two meet in the same center. (This is decision <a href="decisions.html">R7</a>.)</li><li><strong><code>/gabe-entity</code></strong> is the reader: it assembles one entity's slice — its code map, registry, and bindings — into a context pack from the center's committed data, without re-reading the codebase.</li></ul>
+<div class="note"><span class="lbl">Next</span><ul><li><a href="verification-first.html">The one picture &amp; the four laws</a> — the model this page is the flagship instance of.</li><li><a href="c-id.html">The C-id scheme</a> — the identity that makes the test matrix stitchable.</li><li><a href="decisions.html">Design decisions</a> — D2 (the walk witness feeding manual angles), D3 (release-page media), and R7 (<code>/gabe-adopt</code>).</li></ul></div>
+</main></div>
+
+<footer class="stamp">
+  <b>GABE</b> · the KDBP development suite · documentation<br>
+  Source of truth: <b>docs/src/*.md</b> + <b>docs/docsite.config.py</b> · generated — do not edit the HTML by hand<br>
+  Visual system: Cifra · Chile editorial palette
+</footer>
+
+<script src="assets/site.js"></script>
+<script src="assets/mermaid.min.js"></script>
+<script>mermaid.initialize({startOnLoad: true, theme: "base", themeVariables: {background: "#ece6d8", primaryColor: "#f5f0e2", primaryBorderColor: "#b65a2b", primaryTextColor: "#1b1a17", secondaryColor: "#e6dec8", tertiaryColor: "#ece6d8", lineColor: "#6e6757", fontFamily: "Space Grotesk, system-ui, sans-serif", fontSize: "13px"}, flowchart: {curve: "basis", htmlLabels: true, useMaxWidth: true}});</script>
+</body>
+</html>
