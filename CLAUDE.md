@@ -53,6 +53,8 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible (incl. the suite invariants: hook harness green, version/count parity, portability lint, docsite staleness). Never patch `~/.claude` in place.
 - A deterministic script that will run against real project data ships only after a dry-run against a COPY of that data — record the run's numbers in the commit message (meta-review P1: template-derived fixtures validate the template, not reality).
 - Every hook/checker ships fixture cases in `tests/` proving it can both FIRE and stay silent; behavior edits update the battery in the same commit (`tests/hooks/run.sh` — meta-review P2/P4: a checker that cannot fail is non-evidence, and fixtures that live in session transcripts protect nothing).
+- **This repo never carries `.kdbp/`** (operator ruling 2026-07-22, R8 in the [design record §5 addendum](docs/design/verification-first/README.md)): the suite is built with the advisory arm only — suite-doctor (runs every `tests/*/run.sh` battery) + /gabe-roast + adversarial verify + dry-run-on-a-COPY numbers in commit messages. Do not propose dogfooding the KDBP lifecycle here.
+- Size budget: 800 lines is a CODE budget, report-never-gate — state the numbers in any commit that grows a file past it; `references/` deep specs sit outside the cap (ruling R9, same addendum, with the deferral record for the two over-budget generators).
 
 ## Capabilities (29 skills)
 

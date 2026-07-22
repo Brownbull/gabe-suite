@@ -195,6 +195,28 @@ meta-lesson: a review angle exhausts in one pass — escalate static → cross-r
 POV → synthetic rehearsal → real-data dry-run; the fifth rung found the largest defects after
 the first four reported diminishing returns).
 
+### §5 addendum — rulings of 2026-07-22 (the conference-alignment review)
+
+Settled by the operator after the 107-agent adversarial review at `5fb38e3`
+(40 confirmed findings M01–M40 + critic gaps G1–G4; fixes landed as the P1–P5
+commit series):
+
+- **R8 · The suite repo runs the ADVISORY ARM ONLY.** This repo never carries
+  `.kdbp/` and never routes its own work through plan→red→execute; its
+  discipline is `scripts/suite-doctor.sh` (which runs every zero-arg battery
+  under `tests/*/run.sh`), `/gabe-roast` + adversarial verify on substantive
+  changes, and dry-run-on-a-COPY numbers in commit messages. Rationale: a
+  templates-and-specs repo has no runtime app to red-test; its enforcement
+  proof lives in the fixture batteries. (GAPS.md W12 closed by this ruling.)
+- **R9 · Size-budget posture.** The 800-line budget is a CODE budget,
+  report-never-gate (D1), numbers stated in the commit that grows a file.
+  `references/` deep specs sit OUTSIDE it — they are loaded on demand, not
+  always-resident (numbers on ruling day: review-spec 1,214 · plan-spec 851 ·
+  gate-spec 775). The M5 generator split stays DEFERRED, extended to both
+  over-budget generators (ruling-day numbers: `build_center_a3.py` 1,215 ·
+  `_a3_feature.py` 1,343); revisit when a change wants a seam that the size
+  actively obstructs, not before.
+
 ## 6 · The landing plan
 
 Suite-first (this repo), install regenerates `~/.claude`, doctor must be CLEAN per slice.
