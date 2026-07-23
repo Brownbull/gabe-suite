@@ -35,6 +35,13 @@ c = root / center_rel
 # An over-budget file so the Code area's action table has a structure row
 # (the folded-price shape needs rows to render).
 (root / "src" / "big.py").write_text("# filler\n" * 810)
+# Functions for the FUNCTIONS lens: a base helper used same-file, an orphan,
+# and a god-length def.
+(root / "src" / "funcs.py").write_text(
+    "def make_gid():\n    return 'g-1'\n\n\n"
+    "def build_gadget(seed):\n    return make_gid() + seed\n\n\n"
+    "def lonely_helper():\n    return 0\n\n\n"
+    "def sprawler():\n" + "    x = 1\n" * 52 + "    return x\n")
 # A schema whose fields carry machine-readable descriptions (kwarg + trailing
 # comment) for the data-model Description column.
 (root / "src" / "schemas.py").write_text(
@@ -53,7 +60,8 @@ cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "entities": {"gadget": {"test_rx": "gadget",
                                "proofs": ["g1", "solo"],
                                "code": {"api": ["src/api.py"],
-                                        "services": ["src/big.py"],
+                                        "services": ["src/big.py",
+                                                     "src/funcs.py"],
                                         "schemas": ["src/schemas.py"]},
                                "models": []}}}
 # The config ALWAYS lives at the DEFAULT center path — it is where paths.center
@@ -168,6 +176,25 @@ assert "the teal bar is empty" in html or "<th>Endpoint</th>" in html, \
     "api usage table (or its honest-empty line) must render"
 assert "the violet bar is empty" in html or "<th>Referencing function(s)</th>" in html, \
     "internal usage table (or its honest-empty line) must render"
+# The FUNCTIONS lens (sibling section)
+assert 'id="sec-code-fns"' in html, "functions section missing"
+assert 'id="fn-chips"' in html, "functions filter chips missing"
+fn_i = html.find('id="sec-code-fns"')
+fns_html = html[fn_i:]
+assert "make_gid" in fns_html and "sprawler" in fns_html, "fixture defs must list"
+assert 'title="base — calls no other documented function"' in fns_html, \
+    "make_gid must wear the base tag"
+assert "Functions candidates" in fns_html, "functions candidates table missing"
+assert "lonely_helper" in fns_html.split("Functions candidates")[1], \
+    "lonely_helper must be a deprecation candidate"
+assert "52" in fns_html or "53" in fns_html, "sprawler god-length must show"
+assert "Signature" in fns_html and "Calls" in fns_html, \
+    "detail needs Calls + Signature titled blocks"
+fi = json.loads((root / "docs/site/center/archmap.json").read_text())["function_insight"]
+mg = fi["src/funcs.py::make_gid"]
+assert mg["base"] and mg["internal"] >= 1 and not mg["orphan"], mg
+assert fi["src/funcs.py::lonely_helper"]["orphan"]
+assert fi["src/funcs.py::sprawler"]["god"]
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
 assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]

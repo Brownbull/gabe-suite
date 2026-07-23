@@ -393,6 +393,8 @@ _INS_ICONS = {
     "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
     "doc": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
     "zap": '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    "fn": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+    "method": '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="2"/>',
 }
 
 
@@ -504,6 +506,141 @@ def model_insight(repo: Path) -> dict:
     return classes
 
 
+# --------------------------------------------------------------------------- #
+# Function insight — the FUNCTIONS lens, sibling of the data-model lens (same
+# dialect: icon tags · chips · two-bar usage · candidates), with the
+# function-shaped equivalents: kind = function | method | endpoint handler;
+# BASE = calls no other documented function; god = length ≥ _FN_GOD_LINES;
+# twin = body-identifier Jaccard; orphan = served by no endpoint and
+# referenced by no mapped code. Same-file references OUTSIDE the def's own
+# span COUNT as internal usage — a helper called within its module is used
+# (a class merely living in its file is not).
+# --------------------------------------------------------------------------- #
+
+_FN_GOD_LINES = 50
+_FN_SIM_FLOOR = 0.6
+_FN_MERGE_FLOOR = 0.85
+_FN_INSIGHT: dict | None = None
+_PY_TEXTS: dict[str, str] = {}
+_PY_KEYWORDS = frozenset(
+    "self None True False return yield await async lambda pass break continue "
+    "import from raise assert global nonlocal print range list dict set tuple "
+    "type isinstance issubclass super property staticmethod classmethod".split())
+
+
+def function_insight(repo: Path) -> dict:
+    """{'<file>::<qual>': signals} for every def in the mapped backend files,
+    computed once per build. Serialized into archmap.json as
+    `function_insight`."""
+    global _FN_INSIGHT
+    if _FN_INSIGHT is not None:
+        return _FN_INSIGHT
+    file_layer: dict[str, str] = {}
+    file_entity: dict[str, str] = {}
+    handlers: set = set()
+    for slug in ENTITY_CODE:
+        v = collect_entity_map(slug, repo)
+        if not v:
+            continue
+        for layer, f, _n in v["files"]:
+            if f.endswith(".py"):
+                file_layer.setdefault(f, layer)
+                file_entity.setdefault(f, slug)
+        for e in v["endpoints"]:
+            handlers.add((e["fn"], e["file"]))
+    texts = {f: (repo / f).read_text() for f in sorted(file_layer)
+             if (repo / f).exists()}
+    _PY_TEXTS.update(texts)
+    fns: dict[str, dict] = {}
+    for f, text in texts.items():
+        try:
+            tree = ast.parse(text)
+        except SyntaxError:
+            continue
+        lines = text.splitlines()
+
+        def _add(node, cls: str | None):
+            if node.name.startswith("__") or len(node.name) < 3:
+                return
+            qual = f"{cls}.{node.name}" if cls else node.name
+            span = (node.lineno, node.end_lineno or node.lineno)
+            body = "\n".join(lines[span[0] - 1:span[1]])
+            fns[f"{f}::{qual}"] = {
+                "fn": qual, "name": node.name, "method": bool(cls),
+                "file": f, "entity": file_entity.get(f, ""),
+                "layer": file_layer.get(f, ""),
+                "handler": (node.name, f) in handlers,
+                "async": isinstance(node, ast.AsyncFunctionDef),
+                "lines": span[1] - span[0] + 1, "span": span,
+                "params": [(a.arg,
+                            ast.unparse(a.annotation) if a.annotation else "")
+                           for a in node.args.args if a.arg != "self"],
+                "doc": _first_sentence(ast.get_docstring(node)),
+                "ids": {i for i in _re_mod.findall(
+                    r"[A-Za-z_][A-Za-z0-9_]{3,}", body)} - _PY_KEYWORDS,
+            }
+
+        for node in tree.body:
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                _add(node, None)
+            elif isinstance(node, ast.ClassDef):
+                for sub in node.body:
+                    if isinstance(sub, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                        _add(sub, node.name)
+    plain_names = {c["name"] for c in fns.values()
+                   if not c["method"] and len(c["name"]) >= 4}
+    for c in fns.values():
+        rx = (_re_mod.compile(rf"\.{_re_mod.escape(c['name'])}\b")
+              if c["method"] else
+              _re_mod.compile(rf"\b{_re_mod.escape(c['name'])}\b"))
+        refs = []
+        for f, text in texts.items():
+            if f == c["file"]:
+                # blank the def's own span — self-reference is not usage
+                ls = text.splitlines()
+                s, e = c["span"]
+                probe = "\n".join(ls[:s - 1] + [""] * (e - s + 1) + ls[e:])
+            else:
+                probe = text
+            if rx.search(probe):
+                refs.append(f)
+        c["api"] = (sum(1 for h, hf in handlers
+                        if h == c["name"] and hf == c["file"])
+                    + sum(1 for f in refs
+                          if file_layer.get(f) == "api" and f != c["file"]))
+        c["internal"] = sum(1 for f in refs if file_layer.get(f) != "api"
+                            or f == c["file"])
+        c["ref_files"] = refs
+        c["base"] = not any(n != c["name"] and n in c["ids"]
+                            for n in plain_names)
+        c["god"] = c["lines"] >= _FN_GOD_LINES
+        c["orphan"] = not c["handler"] and not refs
+        c["usage"] = c["api"]
+    sizable = [c for c in fns.values() if len(c["ids"]) >= 8]
+    for c in fns.values():
+        c["sim"] = None
+    for c in sizable:
+        best, best_j, shared = "", 0.0, 0
+        for o in sizable:
+            if o is c:
+                continue
+            union = c["ids"] | o["ids"]
+            j = len(c["ids"] & o["ids"]) / len(union) if union else 0.0
+            if j > best_j:
+                best, best_j, shared = o["fn"], j, len(c["ids"] & o["ids"])
+        if best_j >= _FN_SIM_FLOOR:
+            c["sim"] = {"cls": best, "j": round(best_j, 2), "shared": shared,
+                        "of": len(c["ids"])}
+    _FN_INSIGHT = fns
+    return fns
+
+
+def fn_insight_serial(repo: Path) -> dict:
+    return {k: {kk: vv for kk, vv in v.items()
+                if kk not in ("ids", "span", "params", "ref_files")}
+            for k, v in function_insight(repo).items()}
+
+
 def insight_serial(repo: Path) -> dict:
     """The archmap-ready view: signals only, never the field lists (those
     already ride models/schemas)."""
@@ -612,7 +749,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
     # --- Endpoints ---------------------------------------------------------
     html = subnav([("sec-code-endpoints", "Endpoints", _IC_ZAP),
                    ("sec-code-map", "Code map", _IC_FOLDER),
-                   ("sec-code-model", "Data model", _IC_DB)])
+                   ("sec-code-model", "Data model", _IC_DB),
+                   ("sec-code-fns", "Functions", _INS_ICONS["fn"])])
     html += sechead(
         "Code", "Endpoints", "#4f46e5", _IC_ZAP,
         sub="the HTTP surface, parsed from the FastAPI decorators",
@@ -945,19 +1083,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         _srows.append((cells, _dm_detail(s_["cls"], s_["fields"], meta),
                        _anchor("dm", slug, s_["cls"])))
     html += xtable(["Class", "Entity", "File", "Usage"], _srows, widths=_DM_W)
-    # Filter chips act on the two class tables above (any .xrow after the
-    # chips in this pane); the candidates table below uses plain rows and is
-    # deliberately outside the filter.
-    html += (
-        "<script>(function(){var c=document.getElementById('dm-chips');"
-        "if(!c)return;var rows=[];var n=c.nextElementSibling;"
-        "while(n){rows.push.apply(rows,n.querySelectorAll('.xrow'));"
-        "n=n.nextElementSibling;}c.addEventListener('click',function(ev){"
-        "var b=ev.target.closest('.chip');if(!b)return;"
-        "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
-        "b.classList.add('on');var f=b.dataset.f;rows.forEach(function(r){"
-        "r.style.display=(f==='all'||r.querySelector('summary .'+f))?'':'none'});"
-        "});c.querySelector('.chip').classList.add('on');})();</script>")
 
     # -- Data-model candidates: named by the machine, ruled by judgment ------
     own = {m["cls"] for m in models} | {s_["cls"] for s_ in schemas}
@@ -1014,6 +1139,272 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             "<table class=\"tbl\"><thead><tr><th>Candidate</th><th>Classes</th>"
             "<th>Why the machine flags it</th></tr></thead>"
             f"<tbody>{cands}</tbody></table>")
+    # ---- Functions — the FUNCTIONS lens (sibling of the data model) --------
+    fins = function_insight(repo)
+    page_py = {f for _layer, f, _n in files if f.endswith(".py")}
+    frows_src = sorted((c for c in fins.values() if c["file"] in page_py),
+                       key=lambda c: (-(c["api"] + c["internal"]), c["fn"]))
+    plain_names = {c["name"] for c in fins.values()
+                   if not c["method"] and len(c["name"]) >= 4}
+    qual_by_name = {}
+    for c in fins.values():
+        qual_by_name.setdefault(c["name"], c)
+    if frows_src:
+        html += sechead(
+            "Code", "Functions", "#b45309", _INS_ICONS["fn"],
+            sub="every def in this entity's mapped backend files — the "
+                "FUNCTIONS lens, sibling of the data model above",
+            id_="sec-code-fns",
+            note=f"{len(frows_src)} def(s) · click a row for its usage "
+                 f"receipts, calls and signature · same dialect as the data "
+                 f"model: tags · filters · two-bar usage · candidates.",
+            info='<div class="leg"><b>Insight icons</b> — the FUNCTIONS lens:'
+                 '<ul class="iclist">'
+                 f"<li>{itag('l-services', 'fn', 'function')} <b>function</b> "
+                 "— a module-level def.</li>"
+                 f"<li>{itag('l-models', 'method', 'method')} <b>method</b> — "
+                 "a def bound to a class.</li>"
+                 f"<li>{itag('l-api', 'zap', 'endpoint handler')} <b>endpoint "
+                 "handler</b> — a route decorator serves it.</li>"
+                 f"<li>{itag('t-base', 'base', 'base function')} <b>base</b> — "
+                 "calls no other documented function; a foundation others "
+                 "build on.</li>"
+                 f"<li>{itag('t-god', 'fields', 'god-function flag', 'N')} "
+                 f"<b>god-function flag</b> — length ≥ {_FN_GOD_LINES} lines; "
+                 f"makes it a {itag('t-god', 'split', 'split candidate')} "
+                 "split candidate below.</li>"
+                 f"<li>{itag('t-sim', 'sim', 'structural twin', 'fn N%')} "
+                 "<b>closest structural twin</b> — body-identifier overlap "
+                 f"(Jaccard); a ≥{int(_FN_MERGE_FLOOR * 100)}% pair becomes a "
+                 f"{itag('t-sim', 'merge', 'merge candidate')} merge candidate "
+                 "below.</li>"
+                 f"<li>{itag('t-orph', 'orphan', 'orphan')} <b>orphan</b> — "
+                 "served by no endpoint, referenced by no mapped code; becomes "
+                 f"a {itag('t-orph', 'archive', 'deprecation candidate')} "
+                 "deprecation candidate below.</li>"
+                 "<li>Usage bars: teal = api (endpoints served + api-layer "
+                 "files referencing) · violet = internal (mapped files "
+                 "referencing — same-file calls outside the def count: a "
+                 "helper used within its module is used).</li></ul></div>")
+        html += ('<div class="dmchips" id="fn-chips">'
+                 + "".join(f'<button class="chip" data-f="{k}">{lbl}</button>'
+                           for k, lbl in (("all", "All"), ("t-base", "base"),
+                                          ("t-sim", "≈ similar"),
+                                          ("t-orph", "orphan"),
+                                          ("t-god", "god"))) + "</div>")
+
+        def _fn_tags(c: dict) -> str:
+            out = (itag("l-models", "method", "method — bound to a class")
+                   if c["method"] else
+                   itag("l-services", "fn", "function — module-level def"))
+            if c["handler"]:
+                out += " " + itag("l-api", "zap",
+                                  "endpoint handler — a route serves it")
+            if c["base"]:
+                out += " " + itag("t-base", "base",
+                                  "base — calls no other documented function")
+            if c["god"]:
+                out += " " + itag("t-god", "fields",
+                                  f"god-function flag — {c['lines']} lines",
+                                  str(c["lines"]))
+            if c["sim"]:
+                s = c["sim"]
+                out += " " + itag("t-sim", "sim",
+                                  f"closest structural twin — {s['shared']}/"
+                                  f"{s['of']} shared identifiers",
+                                  f'{E(s["cls"])} {int(s["j"] * 100)}%')
+            if c["orphan"]:
+                out += " " + itag("t-orph", "orphan",
+                                  "orphan — no endpoint serves it, no mapped "
+                                  "code references it")
+            return out
+
+        def _fn_usage_cell(c: dict) -> str:
+            w_api = max(2, min(60, c["api"] * 11))
+            w_int = max(2, min(60, c["internal"] * 11))
+            return (f'<span class="ubar" style="width:{w_api}px"></span>'
+                    f'<b>{c["api"]}</b> <small>api</small><br>'
+                    f'<span class="ubar u-int" style="width:{w_int}px"></span>'
+                    f'<b>{c["internal"]}</b> <small>internal</small>')
+
+        def _fn_refs_rx(c: dict):
+            return (_re_mod.compile(rf"\.{_re_mod.escape(c['name'])}\b")
+                    if c["method"] else
+                    _re_mod.compile(rf"\b{_re_mod.escape(c['name'])}\b"))
+
+        def _fn_detail(c: dict) -> str:
+            kind = ("endpoint handler" if c["handler"]
+                    else "method" if c["method"] else "function")
+            kind += " · async" if c["async"] else ""
+            kind += f' · {c["lines"]} lines · layer {E(c["layer"] or "—")}'
+            meta_rows = [(f'{_ins_ic("fn")} KIND', "#b45309", E(kind))]
+            if c["doc"] and c["doc"] != "—":
+                meta_rows.append((f'{_ins_ic("doc")} DOCSTRING', "#64748b",
+                                  E(c["doc"])))
+            meta = ('<table class="tbl dm-meta"><tbody>' + "".join(
+                f'<tr><td class="metak" style="color:{col}">{k}</td>'
+                f"<td>{v}</td></tr>" for k, col, v in meta_rows)
+                + "</tbody></table>")
+            # Usage by API
+            bar = (f'<span class="ubar" style="width:'
+                   f'{max(2, min(60, c["api"] * 11))}px"></span><b>{c["api"]}</b>')
+            api_head = _dmh("#0d6e78", "zap", "Usage by API", f" {bar}")
+            served = [e for e in eps
+                      if e["fn"] == c["name"] and e["file"] == c["file"]]
+            api_files = [f for f in c["ref_files"] if f != c["file"]]
+            api_html = api_head
+            if served:
+                api_html += ('<table class="tbl"><thead><tr><th>Endpoint</th>'
+                             "<th>Status</th></tr></thead><tbody>"
+                             + "".join(f"<tr><td>{ep_chip(e)}</td>"
+                                       f'<td><code>{E(e["status"])}</code></td>'
+                                       f"</tr>" for e in served)
+                             + "</tbody></table>")
+            elif c["api"]:
+                api_html += ('<p class="sub">referenced from api-layer '
+                             "file(s): " + " · ".join(
+                                 _fchip(f) for f in api_files) + "</p>")
+            else:
+                api_html += ('<p class="sub">no endpoint serves it, no '
+                             "api-layer file references it — the teal bar is "
+                             "empty.</p>")
+            # Usage by internal
+            ibar = (f'<span class="ubar u-int" style="width:'
+                    f'{max(2, min(60, c["internal"] * 11))}px"></span>'
+                    f'<b>{c["internal"]}</b>')
+            int_head = _dmh("#7c3aed", "schema", "Usage by internal", f" {ibar}")
+            rx = _fn_refs_rx(c)
+            int_rows = ""
+            for f in c["ref_files"]:
+                txt = _PY_TEXTS.get(f, "")
+                if not txt:
+                    continue
+                if f == c["file"]:
+                    ls = txt.splitlines()
+                    s, e_ = c["span"]
+                    txt_probe = "\n".join(ls[:s - 1] + [""] * (e_ - s + 1)
+                                          + ls[e_:])
+                else:
+                    txt_probe = txt
+                lines_f = txt_probe.splitlines()
+                defs = [name for name, s2, e2 in _def_spans(f, txt)
+                        if rx.search("\n".join(lines_f[s2 - 1:e2]))]
+                defs = list(dict.fromkeys(defs))[:6]
+                int_rows += (f"<tr><td>{_fchip(f)}"
+                             + (" <small>(own file)</small>"
+                                if f == c["file"] else "")
+                             + "</td><td>"
+                             + (" · ".join(f"<code>{E(d)}</code>"
+                                           for d in defs)
+                                or "<span class='sub'>module level</span>")
+                             + "</td></tr>")
+            int_html = int_head + (
+                ('<table class="tbl"><thead><tr><th>File</th>'
+                 "<th>Referencing function(s)</th></tr></thead>"
+                 f"<tbody>{int_rows}</tbody></table>") if int_rows else
+                '<p class="sub">no references across the mapped files — the '
+                "violet bar is empty.</p>")
+            # Calls — documented functions this body references
+            calls = sorted(n for n in plain_names
+                           if n != c["name"] and n in c["ids"])
+            call_chips = []
+            for n in calls[:12]:
+                tgt = qual_by_name.get(n)
+                if tgt and tgt["file"] in page_py:
+                    call_chips.append(
+                        f'<a class="dlink" href="#{_anchor("fn", slug, tgt["fn"])}">'
+                        f"<code>{E(n)}</code></a>")
+                else:
+                    call_chips.append(f"<code>{E(n)}</code>")
+            calls_html = (_dmh("#0f766e", "merge", "Calls",
+                               f' <span class="sub">{len(calls)} documented '
+                               f"function(s)</span>")
+                          + ('<p class="sub">' + " · ".join(call_chips)
+                             + ("…" if len(calls) > 12 else "") + "</p>"
+                             if calls else
+                             '<p class="sub">calls no other documented '
+                             "function — a base.</p>"))
+            # Signature
+            sig_head = _dmh("#b3403a", "fields", "Signature",
+                            f' <span class="sub">{len(c["params"])} '
+                            f"param(s)</span>")
+            if c["params"]:
+                sig = ('<table class="tbl"><thead><tr><th>Param</th>'
+                       "<th>Type</th></tr></thead><tbody>"
+                       + "".join(f"<tr><td><code>{E(p)}</code></td>"
+                                 f"<td>{link_types(t) if t else '—'}</td></tr>"
+                                 for p, t in c["params"])
+                       + "</tbody></table>")
+            else:
+                sig = '<p class="sub">takes nothing beyond self/defaults.</p>'
+            return meta + api_html + int_html + calls_html + sig_head + sig
+
+        _frows = []
+        for c in frows_src:
+            cells = [f'<b><code>{E(c["fn"])}</code></b><br>{_fn_tags(c)}',
+                     E(c["entity"]),
+                     f'<code>{E(c["file"])}</code>',
+                     _fn_usage_cell(c)]
+            _frows.append((cells, _fn_detail(c), _anchor("fn", slug, c["fn"])))
+        html += xtable(["Function", "Entity", "File", "Usage"], _frows,
+                       widths=_DM_W)
+
+        # Functions candidates — same dialect, function-scoped.
+        fcands = ""
+        seen_fp: set = set()
+        for c in frows_src:
+            s = c["sim"]
+            if not s or s["j"] < _FN_MERGE_FLOOR:
+                continue
+            key = tuple(sorted((c["fn"], s["cls"])))
+            if key in seen_fp:
+                continue
+            seen_fp.add(key)
+            fcands += (f'<tr><td>{itag("t-sim", "merge", "merge candidate")}'
+                       f"</td><td><code>{E(key[0])}</code> ≈ "
+                       f'<code>{E(key[1])}</code></td>'
+                       f'<td>{int(s["j"] * 100)}% identifier twin '
+                       f'({s["shared"]}/{s["of"]}) — same job twice, or a '
+                       f"justified pattern? Rule it.</td></tr>")
+        for c in frows_src:
+            if c["orphan"]:
+                fcands += (f'<tr><td>{itag("t-orph", "archive", "deprecation candidate")}'
+                           f'</td><td><code>{E(c["fn"])}</code></td>'
+                           f"<td>no endpoint serves it, no mapped code "
+                           f"references it — if nothing outside the map calls "
+                           f"it either, file for removal.</td></tr>")
+        for c in sorted(frows_src, key=lambda x: -x["lines"]):
+            if c["god"]:
+                fcands += (f'<tr><td>{itag("t-god", "split", "split candidate")}'
+                           f'</td><td><code>{E(c["fn"])}</code></td>'
+                           f'<td>{c["lines"]} lines — past the '
+                           f"{_FN_GOD_LINES}-line function budget; the number "
+                           f"names it, judgment rules it.</td></tr>")
+        if fcands:
+            html += (
+                '<p class="sub" style="margin-top:18px"><b>Functions '
+                "candidates — named by the machine, ruled by judgment.</b> "
+                "Same color-lock as the data-model candidates: each wears the "
+                "flag that triggered it.</p>"
+                "<table class=\"tbl\"><thead><tr><th>Candidate</th>"
+                "<th>Functions</th><th>Why the machine flags it</th></tr>"
+                f"</thead><tbody>{fcands}</tbody></table>")
+
+    # ONE generic chips script for every insight table on the pane: each
+    # .dmchips filters the .xrow rows between itself and the next section
+    # head or chips strip (never a candidates table — those use plain rows).
+    html += (
+        "<script>(function(){document.querySelectorAll('.dmchips').forEach("
+        "function(c){var rows=[];var n=c.nextElementSibling;"
+        "while(n&&!(n.classList&&(n.classList.contains('sechead')||"
+        "n.classList.contains('dmchips')))){"
+        "rows.push.apply(rows,n.querySelectorAll('.xrow'));"
+        "n=n.nextElementSibling;}c.addEventListener('click',function(ev){"
+        "var b=ev.target.closest('.chip');if(!b)return;"
+        "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
+        "b.classList.add('on');var f=b.dataset.f;rows.forEach(function(r){"
+        "r.style.display=(f==='all'||r.querySelector('summary .'+f))?'':'none'});"
+        "});c.querySelector('.chip').classList.add('on');});})();</script>")
     # The "About this section" methodology prose used to trail the tables; the
     # declutter ruling folds it into the section's ⊕ (info above) instead.
     return html

@@ -1201,6 +1201,7 @@ def main() -> int:
     amap = {"version": 1, "head": HEAD_SHA, "generated": STAMP,
             "coverage": ctx.flow_coverage,
             "model_insight": _a3_code.insight_serial(REPO_ROOT),
+            "function_insight": _a3_code.fn_insight_serial(REPO_ROOT),
             "entities": {s: collect_entity_map(s, REPO_ROOT) for s in ENTITY_CODE}}
     (CENTER_OUT / "archmap.json").write_text(
         json.dumps(amap, indent=1, ensure_ascii=False) + "\n")
