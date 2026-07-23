@@ -146,6 +146,7 @@ border-radius:11px;letter-spacing:.03em}
 .t-schema{background:color-mix(in srgb,var(--acc) 14%,transparent);color:var(--acc)}
 .t-god{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
 .t-sim{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.t-orph{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--muted)}
 .bar{display:inline-block;height:8px;border-radius:4px;background:var(--acc);
 vertical-align:middle;margin-right:6px}
 a{color:var(--acc)}.card{background:var(--paper);border:1px solid var(--line);
@@ -249,7 +250,7 @@ def ruled_page(classes: dict, intro: str) -> str:
             tags += (f' <span class="tag t-sim" title="{s["shared"]}/{s["of"]} '
                      f'fields shared">≈ {E(s["cls"])} {int(s["j"] * 100)}%</span>')
         if c["orphan"]:
-            tags += (' <span class="tag t-god" title="zero API usage AND zero '
+            tags += (' <span class="tag t-orph" title="zero API usage AND zero '
                      'internal references in the mapped backend files">orphan</span>')
         w_api = min(70, c["usage"] * 12)
         w_int = min(70, c["internal"] * 12)
@@ -262,7 +263,27 @@ def ruled_page(classes: dict, intro: str) -> str:
                  f'<td>{E(c["entity"])}</td>'
                  f'<td><code>{E(c["file"].rsplit("/", 1)[-1])}</code></td>'
                  f'<td>{usage}</td></tr>')
-    tbl = ('<div class="chips">' + chips + "</div>"
+    legend = ("""<details class="card"><summary style="cursor:pointer">
+<b>⊕ What the labels mean</b></summary><ul class="sub" style="line-height:2">
+<li><span class="tag t-model">model</span> a persisted DB entity (SQLAlchemy) —
+lives in a table, owns FKs.</li>
+<li><span class="tag t-schema">schema</span> an API / pipeline shape (pydantic)
+— crosses a boundary, owns no storage.</li>
+<li><span class="tag t-base">base</span> derives from NOTHING: no FK out, no
+field typed with another documented class — a foundation others build on.</li>
+<li><span class="tag t-god">N fields</span> god-class size flag (≥ 15 fields)
+— the number that makes it a split candidate below.</li>
+<li><span class="tag t-sim">≈ Class N%</span> closest structural twin — % =
+shared fields over the union (Jaccard); the flag that makes a ≥80% pair a
+merge candidate below.</li>
+<li><span class="tag t-orph">orphan</span> zero API usage AND zero internal
+references across the mapped backend files — the flag that makes it a
+deprecation candidate below.</li>
+<li>Usage bars: <span style="color:var(--acc)">api</span> = endpoint touches +
+FK in-degree · <span style="color:var(--vio)">internal</span> = mapped backend
+files referencing the class. A class can be api-silent and still load-bearing —
+the second bar is why only true orphans read as dead.</li></ul></details>""")
+    tbl = (legend + '<div class="chips">' + chips + "</div>"
            "<table><thead><tr><th>Class</th><th>Entity</th><th>File</th>"
            '<th>Usage — <span style="color:var(--acc)">api</span> · '
            '<span style="color:var(--vio)">internal</span></th></tr></thead>'
@@ -279,12 +300,6 @@ def ruled_page(classes: dict, intro: str) -> str:
            "cursor:pointer}.chip.on{background:var(--acc);color:#fff;"
            "border-color:var(--acc)}</style>")
     cands = ""
-    for c in sorted(classes.values(), key=lambda x: -len(x["fields"])):
-        if c["god"]:
-            cands += (f'<tr><td><span class="tag t-god">split candidate</span></td>'
-                      f'<td><code>{E(c["cls"])}</code></td>'
-                      f'<td>{len(c["fields"])} fields — past the {GOD_FIELDS}-field '
-                      f'line; the number names it, judgment rules it.</td></tr>')
     seen = set()
     for c in sorted(classes.values(), key=lambda x: -(x["sim"]["j"] if x["sim"] else 0)):
         s = c["sim"]
@@ -299,11 +314,27 @@ def ruled_page(classes: dict, intro: str) -> str:
                   f'<td>{int(s["j"] * 100)}% structural twin '
                   f'({s["shared"]}/{s["of"]} fields) — justified echo, or '
                   f'duplication waiting to drift? Rule it.</td></tr>')
+    for c in sorted(classes.values(), key=lambda x: x["cls"]):
+        if c["orphan"]:
+            cands += (f'<tr><td><span class="tag t-orph">deprecation candidate'
+                      f'</span></td><td><code>{E(c["cls"])}</code></td>'
+                      f"<td>zero API usage · zero internal references across "
+                      f"the mapped backend files — if nothing outside the map "
+                      f"uses it either, file for removal.</td></tr>")
+    for c in sorted(classes.values(), key=lambda x: -len(x["fields"])):
+        if c["god"]:
+            cands += (f'<tr><td><span class="tag t-god">split candidate</span></td>'
+                      f'<td><code>{E(c["cls"])}</code></td>'
+                      f'<td>{len(c["fields"])} fields — past the {GOD_FIELDS}-field '
+                      f'line; the number names it, judgment rules it.</td></tr>')
     cand_tbl = ("<h2>Candidates — named by the machine, ruled by judgment</h2>"
-                '<p class="sub">Split candidates (god classes) and merge '
-                "candidates (structural twins ≥ 80%). The generator NAMES; the "
-                "verdict lands in DECISIONS/PENDING via review or a health "
-                "pass — never authored here.</p>"
+                '<p class="sub">Each candidate wears the COLOR of the flag '
+                "that triggered it in the table above: merge ↔ the ≈similarity "
+                "tag · deprecation ↔ the orphan tag · split ↔ the fields tag. "
+                "Merge = structural twins ≥ 80% · deprecation = true orphans "
+                "(both usage bars at zero) · split = god classes. The "
+                "generator NAMES; the verdict lands in DECISIONS/PENDING via "
+                "review or a health pass — never authored here.</p>"
                 "<table><thead><tr><th>Candidate</th><th>Classes</th>"
                 f"<th>Why the machine flags it</th></tr></thead><tbody>{cands}"
                 "</tbody></table>")
