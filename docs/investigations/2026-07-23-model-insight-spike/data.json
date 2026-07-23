@@ -1,0 +1,1012 @@
+{
+ "Transaction": {
+  "cls": "Transaction",
+  "kind": "model",
+  "entity": "transaction",
+  "file": "backend/app/models/transaction.py",
+  "fks_out": {
+   "ownership_scope_id": "ownership_scopes.id",
+   "shared_by_user_id": "users.id",
+   "store_category_id": "store_categories.id",
+   "store_category_mapping_id": "merchant_mappings.id",
+   "currency": "currencies.code"
+  },
+  "touches": 5,
+  "fk_in": 3,
+  "refs_out": [],
+  "base": false,
+  "god": true,
+  "usage": 8,
+  "sim": {
+   "cls": "TransactionDetail",
+   "j": 0.83,
+   "shared": 44,
+   "of": 50
+  }
+ },
+ "TransactionItem": {
+  "cls": "TransactionItem",
+  "kind": "model",
+  "entity": "transaction",
+  "file": "backend/app/models/transaction.py",
+  "fks_out": {
+   "transaction_id": "transactions.id",
+   "item_category_id": "item_categories.id"
+  },
+  "touches": 1,
+  "fk_in": 1,
+  "refs_out": [],
+  "base": false,
+  "god": true,
+  "usage": 2,
+  "sim": {
+   "cls": "TransactionItemResponse",
+   "j": 0.78,
+   "shared": 14,
+   "of": 17
+  }
+ },
+ "TransactionItemFlag": {
+  "cls": "TransactionItemFlag",
+  "kind": "model",
+  "entity": "transaction",
+  "file": "backend/app/models/transaction.py",
+  "fks_out": {
+   "ownership_scope_id": "ownership_scopes.id",
+   "transaction_item_id": "transaction_items.id",
+   "user_id": "users.id"
+  },
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": false,
+  "god": false,
+  "usage": 1,
+  "sim": {
+   "cls": "TransactionDraft",
+   "j": 0.62,
+   "shared": 5,
+   "of": 7
+  }
+ },
+ "TransactionImage": {
+  "cls": "TransactionImage",
+  "kind": "model",
+  "entity": "transaction",
+  "file": "backend/app/models/transaction.py",
+  "fks_out": {
+   "transaction_id": "transactions.id"
+  },
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "TransactionImageResponse",
+   "j": 0.5,
+   "shared": 4,
+   "of": 8
+  }
+ },
+ "TransactionDraft": {
+  "cls": "TransactionDraft",
+  "kind": "model",
+  "entity": "transaction",
+  "file": "backend/app/models/draft.py",
+  "fks_out": {
+   "user_id": "users.id",
+   "ownership_scope_id": "ownership_scopes.id"
+  },
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": false,
+  "god": false,
+  "usage": 1,
+  "sim": {
+   "cls": "TransactionItemFlag",
+   "j": 0.62,
+   "shared": 5,
+   "of": 6
+  }
+ },
+ "TransactionItemCreate": {
+  "cls": "TransactionItemCreate",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "TransactionItemUpdate",
+   "j": 0.83,
+   "shared": 10,
+   "of": 11
+  }
+ },
+ "TransactionItemUpdate": {
+  "cls": "TransactionItemUpdate",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "TransactionItemCreate",
+   "j": 0.83,
+   "shared": 10,
+   "of": 11
+  }
+ },
+ "TransactionItemResponse": {
+  "cls": "TransactionItemResponse",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": true,
+  "usage": 0,
+  "sim": {
+   "cls": "TransactionItem",
+   "j": 0.78,
+   "shared": 14,
+   "of": 15
+  }
+ },
+ "TransactionImageResponse": {
+  "cls": "TransactionImageResponse",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "TransactionImage",
+   "j": 0.5,
+   "shared": 4,
+   "of": 4
+  }
+ },
+ "TransactionCreate": {
+  "cls": "TransactionCreate",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [
+   "Transaction",
+   "TransactionItem",
+   "TransactionItemCreate"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 1,
+  "sim": {
+   "cls": "TransactionUpdate",
+   "j": 0.64,
+   "shared": 21,
+   "of": 33
+  }
+ },
+ "TransactionUpdate": {
+  "cls": "TransactionUpdate",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [
+   "Transaction",
+   "TransactionItem",
+   "TransactionItemUpdate"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 1,
+  "sim": {
+   "cls": "TransactionCreate",
+   "j": 0.64,
+   "shared": 21,
+   "of": 21
+  }
+ },
+ "TransactionItemFlagsUpdate": {
+  "cls": "TransactionItemFlagsUpdate",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 1,
+  "sim": null
+ },
+ "TransactionListItem": {
+  "cls": "TransactionListItem",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": true,
+  "usage": 1,
+  "sim": {
+   "cls": "TransactionDetail",
+   "j": 0.75,
+   "shared": 36,
+   "of": 37
+  }
+ },
+ "TransactionDetail": {
+  "cls": "TransactionDetail",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 3,
+  "fk_in": 0,
+  "refs_out": [
+   "Transaction",
+   "TransactionImage",
+   "TransactionImageResponse",
+   "TransactionItem",
+   "TransactionItemResponse"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 3,
+  "sim": {
+   "cls": "Transaction",
+   "j": 0.83,
+   "shared": 44,
+   "of": 47
+  }
+ },
+ "MatchedLockLink": {
+  "cls": "MatchedLockLink",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "SharedLockLink": {
+  "cls": "SharedLockLink",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 1,
+  "sim": null
+ },
+ "TransactionLockLinks": {
+  "cls": "TransactionLockLinks",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [
+   "MatchedLockLink",
+   "SharedLockLink"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 1,
+  "sim": null
+ },
+ "BatchUpdateFields": {
+  "cls": "BatchUpdateFields",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "BatchUpdateRequest": {
+  "cls": "BatchUpdateRequest",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [
+   "BatchUpdateFields"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 1,
+  "sim": {
+   "cls": "BatchDeleteRequest",
+   "j": 0.5,
+   "shared": 1,
+   "of": 2
+  }
+ },
+ "BatchDeleteRequest": {
+  "cls": "BatchDeleteRequest",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 1,
+  "sim": {
+   "cls": "BatchUpdateRequest",
+   "j": 0.5,
+   "shared": 1,
+   "of": 1
+  }
+ },
+ "BatchResult": {
+  "cls": "BatchResult",
+  "kind": "schema",
+  "entity": "transaction",
+  "file": "backend/app/schemas/transaction.py",
+  "fks_out": {},
+  "touches": 2,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 2,
+  "sim": null
+ },
+ "CardAlias": {
+  "cls": "CardAlias",
+  "kind": "model",
+  "entity": "statement",
+  "file": "backend/app/models/statement.py",
+  "fks_out": {
+   "ownership_scope_id": "ownership_scopes.id"
+  },
+  "touches": 0,
+  "fk_in": 1,
+  "refs_out": [],
+  "base": false,
+  "god": false,
+  "usage": 1,
+  "sim": null
+ },
+ "Statement": {
+  "cls": "Statement",
+  "kind": "model",
+  "entity": "statement",
+  "file": "backend/app/models/statement.py",
+  "fks_out": {
+   "ownership_scope_id": "ownership_scopes.id",
+   "card_alias_id": "card_aliases.id",
+   "currency": "currencies.code"
+  },
+  "touches": 3,
+  "fk_in": 1,
+  "refs_out": [],
+  "base": false,
+  "god": true,
+  "usage": 4,
+  "sim": {
+   "cls": "StatementRecordResponse",
+   "j": 0.62,
+   "shared": 28,
+   "of": 43
+  }
+ },
+ "StatementLine": {
+  "cls": "StatementLine",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 1,
+  "refs_out": [
+   "Statement",
+   "StatementAmountCandidate"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 2,
+  "sim": {
+   "cls": "StatementLineRecordResponse",
+   "j": 0.83,
+   "shared": 19,
+   "of": 20
+  }
+ },
+ "StatementReconciliationRun": {
+  "cls": "StatementReconciliationRun",
+  "kind": "model",
+  "entity": "statement",
+  "file": "backend/app/models/statement.py",
+  "fks_out": {
+   "ownership_scope_id": "ownership_scopes.id",
+   "statement_id": "statements.id"
+  },
+  "touches": 1,
+  "fk_in": 1,
+  "refs_out": [],
+  "base": false,
+  "god": true,
+  "usage": 2,
+  "sim": {
+   "cls": "StatementReconciliationRunResponse",
+   "j": 0.94,
+   "shared": 15,
+   "of": 16
+  }
+ },
+ "StatementReconciliationVerdict": {
+  "cls": "StatementReconciliationVerdict",
+  "kind": "model",
+  "entity": "statement",
+  "file": "backend/app/models/statement.py",
+  "fks_out": {
+   "run_id": "statement_reconciliation_runs.id",
+   "statement_line_id": "statement_lines.id",
+   "receipt_transaction_id": "transactions.id"
+  },
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementReconciliationVerdictResponse",
+   "j": 1.0,
+   "shared": 8,
+   "of": 8
+  }
+ },
+ "StatementPdfMetadata": {
+  "cls": "StatementPdfMetadata",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementInfo": {
+  "cls": "StatementInfo",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementAmountCandidate": {
+  "cls": "StatementAmountCandidate",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementProcessingMetadata": {
+  "cls": "StatementProcessingMetadata",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": true,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementExtractionOutput": {
+  "cls": "StatementExtractionOutput",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementInfo",
+   "StatementLine",
+   "StatementProcessingMetadata"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementReconciliationResult": {
+  "cls": "StatementReconciliationResult",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementReconciliationVerdict"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementReconciliationVerdict",
+   "j": 0.62,
+   "shared": 5,
+   "of": 5
+  }
+ },
+ "StatementRecordResponse": {
+  "cls": "StatementRecordResponse",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 4,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 4,
+  "sim": {
+   "cls": "Statement",
+   "j": 0.62,
+   "shared": 28,
+   "of": 30
+  }
+ },
+ "StatementUploadResponse": {
+  "cls": "StatementUploadResponse",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementRecordResponse"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 1,
+  "sim": null
+ },
+ "StatementProcessRequest": {
+  "cls": "StatementProcessRequest",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 1,
+  "sim": null
+ },
+ "StatementEvent": {
+  "cls": "StatementEvent",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementLineRecordResponse": {
+  "cls": "StatementLineRecordResponse",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 1,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementAmountCandidate",
+   "StatementLine"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 1,
+  "sim": {
+   "cls": "StatementLine",
+   "j": 0.83,
+   "shared": 19,
+   "of": 22
+  }
+ },
+ "StatementReconciliationRunResponse": {
+  "cls": "StatementReconciliationRunResponse",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementReconciliationRun"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementReconciliationRun",
+   "j": 0.94,
+   "shared": 15,
+   "of": 15
+  }
+ },
+ "StatementReconciliationVerdictResponse": {
+  "cls": "StatementReconciliationVerdictResponse",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementReconciliationVerdict"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementReconciliationVerdict",
+   "j": 1.0,
+   "shared": 8,
+   "of": 8
+  }
+ },
+ "StatementReconciliationLineSummary": {
+  "cls": "StatementReconciliationLineSummary",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementLine"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementLineRecordResponse",
+   "j": 0.59,
+   "shared": 13,
+   "of": 13
+  }
+ },
+ "StatementReconciliationReceiptSummary": {
+  "cls": "StatementReconciliationReceiptSummary",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementReconciliationBucketItem": {
+  "cls": "StatementReconciliationBucketItem",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementReconciliationLineSummary",
+   "StatementReconciliationReceiptSummary",
+   "StatementReconciliationVerdict",
+   "StatementReconciliationVerdictResponse",
+   "Transaction"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementReconciliationResponse": {
+  "cls": "StatementReconciliationResponse",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement.py",
+  "fks_out": {},
+  "touches": 2,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementReconciliationBucketItem",
+   "StatementReconciliationRun",
+   "StatementReconciliationRunResponse"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 2,
+  "sim": null
+ },
+ "StatementWordToken": {
+  "cls": "StatementWordToken",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementDateToken": {
+  "cls": "StatementDateToken",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementInstallmentToken",
+   "j": 0.5,
+   "shared": 3,
+   "of": 4
+  }
+ },
+ "StatementAmountToken": {
+  "cls": "StatementAmountToken",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementInstallmentToken": {
+  "cls": "StatementInstallmentToken",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": {
+   "cls": "StatementDateToken",
+   "j": 0.5,
+   "shared": 3,
+   "of": 5
+  }
+ },
+ "StatementRowCandidate": {
+  "cls": "StatementRowCandidate",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementAmountToken",
+   "StatementDateToken",
+   "StatementInstallmentToken",
+   "StatementWordToken"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementCompactEvidence": {
+  "cls": "StatementCompactEvidence",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementRowCandidate"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementRowRange": {
+  "cls": "StatementRowRange",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementColumnProfile": {
+  "cls": "StatementColumnProfile",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [],
+  "base": true,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementAmountColumnProfile": {
+  "cls": "StatementAmountColumnProfile",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementLayoutProfile": {
+  "cls": "StatementLayoutProfile",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementAmountColumnProfile",
+   "StatementColumnProfile",
+   "StatementRowRange"
+  ],
+  "base": false,
+  "god": true,
+  "usage": 0,
+  "sim": null
+ },
+ "StatementProfileApplicationResult": {
+  "cls": "StatementProfileApplicationResult",
+  "kind": "schema",
+  "entity": "statement",
+  "file": "backend/app/schemas/statement_profile.py",
+  "fks_out": {},
+  "touches": 0,
+  "fk_in": 0,
+  "refs_out": [
+   "Statement",
+   "StatementCompactEvidence",
+   "StatementExtractionOutput",
+   "StatementLayoutProfile",
+   "StatementRowCandidate"
+  ],
+  "base": false,
+  "god": false,
+  "usage": 0,
+  "sim": null
+ }
+}
