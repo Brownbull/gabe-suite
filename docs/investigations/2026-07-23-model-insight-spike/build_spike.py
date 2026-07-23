@@ -329,7 +329,12 @@ below.</li>
 FK in-degree · <span style="color:var(--vio)">internal</span> = mapped backend
 files referencing the class. A class can be api-silent and still load-bearing —
 the second bar is why only true orphans read as dead.</li></ul></details>""")
-    tbl = (legend + '<div class="chips">' + chips + "</div>"
+    scope_head = ('<h2>Data model — classes</h2><p class="sub">Scope: the '
+                  "DATA-MODEL lens (documented classes). The same shape — tags "
+                  "· filters · two-bar usage · candidates — is built to run "
+                  "over other member kinds next (functions · methods), each as "
+                  "its own scoped table, never mixed into this one.</p>")
+    tbl = (scope_head + legend + '<div class="chips">' + chips + "</div>"
            "<table><thead><tr><th>Class</th><th>Entity</th><th>File</th>"
            '<th>Usage — <span style="color:var(--acc)">api</span> · '
            '<span style="color:var(--vio)">internal</span></th></tr></thead>'
@@ -373,14 +378,26 @@ the second bar is why only true orphans read as dead.</li></ul></details>""")
                       f'<td><code>{E(c["cls"])}</code></td>'
                       f'<td>{len(c["fields"])} fields — past the {GOD_FIELDS}-field '
                       f'line; the number names it, judgment rules it.</td></tr>')
-    cand_tbl = ("<h2>Candidates — named by the machine, ruled by judgment</h2>"
-                '<p class="sub">Each candidate wears the COLOR of the flag '
-                "that triggered it in the table above: merge ↔ the ≈similarity "
-                "tag · deprecation ↔ the orphan tag · split ↔ the fields tag. "
-                "Merge = structural twins ≥ 80% · deprecation = true orphans "
-                "(both usage bars at zero) · split = god classes. The "
-                "generator NAMES; the verdict lands in DECISIONS/PENDING via "
-                "review or a health pass — never authored here.</p>"
+    cand_legend = (f"""<details class="card"><summary style="cursor:pointer">
+<b>⊕ What the icons mean</b></summary><ul class="sub" style="line-height:2.2">
+<li>{itag("t-sim", "merge", "merge candidate")} <b>merge candidate</b> —
+structural twins ≥ 80%; wears the color of the
+{itag("t-sim", "sim", "similarity flag")} similarity flag that triggered it.</li>
+<li>{itag("t-orph", "archive", "deprecation candidate")} <b>deprecation
+candidate</b> — a true orphan (both usage bars at zero); wears the color of
+the {itag("t-orph", "orphan", "orphan flag")} orphan flag.</li>
+<li>{itag("t-god", "split", "split candidate")} <b>split candidate</b> — a
+god class (≥ {GOD_FIELDS} fields); wears the color of the
+{itag("t-god", "fields", "fields flag", "N")} fields flag.</li>
+<li>The generator NAMES candidates; the verdict lands in DECISIONS/PENDING
+via review or a health pass — never authored here.</li></ul></details>""")
+    cand_tbl = ("<h2>Data-model candidates — named by the machine, ruled by "
+                "judgment</h2>"
+                '<p class="sub">Scope: the same DATA-MODEL lens — each '
+                "candidate wears the color and dialect of the flag that "
+                "triggered it in the classes table above. A functions/methods "
+                "lens would carry its own candidates table in this same "
+                "shape.</p>" + cand_legend +
                 "<table><thead><tr><th>Candidate</th><th>Classes</th>"
                 f"<th>Why the machine flags it</th></tr></thead><tbody>{cands}"
                 "</tbody></table>")
