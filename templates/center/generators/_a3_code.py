@@ -984,7 +984,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             if t in documented or t in ins]
         for t in resp_toks:
             if t in documented:
-                href, chip = f'#{_anchor("dm", slug, t)}', ""
+                href, chip = _href("dm", _anchor("dm", slug, t)), ""
             else:
                 href, chip = _xref("dm", t, ins[t].get("entity", ""))
             models_used.append(

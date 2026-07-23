@@ -31,7 +31,17 @@ root, center_rel = Path(sys.argv[1]), sys.argv[2]
 c = root / center_rel
 (c / "cards").mkdir(parents=True)
 (root / "src").mkdir(parents=True)
-(root / "src" / "api.py").write_text("def handler():\n    return 1\n")
+# A real FastAPI endpoint so the endpoints lens has rows: MODELS USED links
+# must route through the xpage map on the architecture pages (parsed via ast,
+# never imported, so no fastapi dependency needed).
+(root / "src" / "api.py").write_text(
+    "from src.schemas import GadgetOut\n\n"
+    'router = APIRouter(prefix="/gadgets")\n\n\n'
+    '@router.get("/one", response_model=GadgetOut)\n'
+    "def get_gadget():\n"
+    '    """Fetch one gadget."""\n'
+    "    return GadgetOut()\n\n\n"
+    "def handler():\n    return 1\n")
 # An over-budget file so the Code area's action table has a structure row
 # (the folded-price shape needs rows to render).
 (root / "src" / "big.py").write_text("# filler\n" * 810)
@@ -225,7 +235,10 @@ assert "<span>Defines</span>" not in html, \
 assert "BUDGET" in html, "code-map detail needs the budget row"
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
-assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]
+assert mi["GadgetOut"]["base"] and not mi["GadgetOut"]["orphan"], mi["GadgetOut"]
+assert mi["GadgetOut"]["internal_refs"][0]["file"] == "src/api.py", \
+    "endpoint handler must appear as a usage receipt"
+assert mi["GadgetIn"]["orphan"], mi["GadgetIn"]
 assert mi["GadgetOut"]["sim"]["cls"] == "GadgetIn" and mi["GadgetOut"]["sim"]["j"] == 1.0
 assert mi["GadgetIn"]["kind"] == "schema"
 PY
@@ -421,6 +434,13 @@ for fname, anchor in pages.items():
 h = (c / "arch-data-model.html").read_text()
 assert 'class="entb ent-gadget"' in h, "icon-only entity column missing"
 assert "dm-app-" in h, "app-scoped anchors missing"
+# Cross-section links must route to the OWNING page — a bare same-page
+# #dm-app-… anchor on the endpoints page is a dead link (gastify dry-run
+# caught exactly this on 2026-07-23).
+h = (c / "arch-endpoints.html").read_text()
+assert 'href="arch-data-model.html#dm-app-' in h, \
+    "endpoint model links must route via the xpage map"
+assert 'href="#dm-app-' not in h, "unrouted same-page dm anchor on endpoints page"
 PY2
 
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.
