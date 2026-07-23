@@ -32,13 +32,25 @@ c = root / center_rel
 (c / "cards").mkdir(parents=True)
 (root / "src").mkdir(parents=True)
 (root / "src" / "api.py").write_text("def handler():\n    return 1\n")
+# An over-budget file so the Code area's action table has a structure row
+# (the folded-price shape needs rows to render).
+(root / "src" / "big.py").write_text("# filler\n" * 810)
+# A schema whose fields carry machine-readable descriptions (kwarg + trailing
+# comment) for the data-model Description column.
+(root / "src" / "schemas.py").write_text(
+    "class GadgetOut:\n"
+    "    gid: str  # the gadget's public identifier\n"
+    "    size: int = Field(description=\"measured footprint in mm\")\n"
+    "    raw: bytes\n")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
                  "results": "tests/results", "proof": "tests/web-e2e/proof"},
        "corpora": [],
        "entities": {"gadget": {"test_rx": "gadget",
                                "proofs": ["g1", "solo"],
-                               "code": {"api": ["src/api.py"]},
+                               "code": {"api": ["src/api.py"],
+                                        "services": ["src/big.py"],
+                                        "schemas": ["src/schemas.py"]},
                                "models": []}}}
 # The config ALWAYS lives at the DEFAULT center path — it is where paths.center
 # itself is read from (_center_data: "CENTER_DIR is where config lives, so it
@@ -97,6 +109,30 @@ gate() { # $1 = fixture root; echoes exit code
 FIX="$T/fix"; mk_fixture "$FIX"
 [ "$(build "$FIX" "$SHELL_SRC")" = 0 ] && ok || { bad "builder: happy fixture must build (see $T/build.out)"; cat "$T/build.out"; }
 [ -f "$FIX/docs/site/center/feature-gadget.html" ] && ok || bad "builder: feature page written for carded entity"
+# Data-model Description column: kwarg + trailing-comment sources render,
+# a bare field stays an em dash (never invented).
+grep -q '<th>Description</th>' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "dm: Description column header renders"
+grep -q "the gadget&#x27;s public identifier\|the gadget's public identifier" "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "dm: trailing-# comment becomes the field description"
+grep -q 'measured footprint in mm' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "dm: Field(description=) becomes the field description"
+# Folded prices: Code + Evidence area tables drop the three price columns and
+# state the shared price once under ⊕; Tests/Other keep the full shape.
+python3 - "$FIX/docs/site/center/feature-gadget.html" <<'PY' && ok || bad "fold: Code/Evidence lean tables + shared-price info (see above)"
+import re, sys
+html = open(sys.argv[1]).read()
+def section(anchor):
+    i = html.find(f'id="{anchor}"')
+    assert i != -1, anchor
+    j = html.find('class="sechead"', i + 1)
+    return html[i:j if j != -1 else len(html)]
+code, ev = section("sec-code-actions"), section("sec-ev-actions")
+for name, sec in (("code", code), ("evidence", ev)):
+    assert "Cost / run after" not in sec, f"{name}: price column survived"
+    assert "Shared price for every move here" in sec, f"{name}: shared price missing from info"
+assert "Cost / run after" in html, "full-shape tables (Tests/Other) lost their price columns"
+PY
 # M04: the single-file set's href carries NO set-name segment.
 grep -q 'proof/solo.png"' "$FIX/docs/site/center/feature-gadget.html" \
   && ok || bad "single-file set: href must be proof-root relative"

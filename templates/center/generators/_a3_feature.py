@@ -611,6 +611,19 @@ assert set(_ACTION_DOMAIN.values()) <= set(_LEDGER_DOMAINS), (
     "every _ACTION_DOMAIN value needs a _DOMAIN_ORDER bucket")
 _LEDGER_COLS = ["Kind", "Now — the machine fact", "The move", "Effort",
                 "Stage · ripe?", "If we do", "If we don't", "Cost / run after"]
+# Single-kind areas (Code = structure, Evidence = evidence) repeat the SAME
+# three price cells on every row — decoration, not information. Their tables
+# drop the price columns and the area's shared price folds into the ⊕ info
+# (operator ruling 2026-07-23). Mixed-kind areas (Tests, Other) and Risk keep
+# the full shape: their prices genuinely vary per row.
+_LEDGER_COLS_LEAN = _LEDGER_COLS[:5]
+_LEDGER_W_LEAN = ["13%", "34%", "31%", "9%", "13%"]
+
+
+def _ledger_render_lean(rows: list[dict]) -> list[list[str]]:
+    """The lean ledger body — the fold_prices twin of _ledger_render: same
+    first five cells, no per-row price columns."""
+    return [r[:5] for r in _ledger_render(rows)]
 # Risk uses the ledger shape MINUS Effort + Cost/run-after — a risk is not
 # machine-priced like a test or refactor; its weight is severity + the stake.
 _RISK_LEDGER_COLS = ["Severity", "Now — the exposure", "The move",
@@ -683,15 +696,25 @@ _RISK_W = ["11%", "29%", "18%", "10%", "14%", "18%"]
 
 def action_table(title: str, rows: list, *, id_: str, link_label: str,
                  link_href: str, note: str, columns=None, render=None,
-                 widths=None) -> str:
+                 widths=None, fold_prices: bool = False) -> str:
     """The reusable action-table component — a tinted Action sechead carrying a
     jump link, then the table (same treatment fronting a record section and
-    cloned on the ledger). Empty -> an honest 'clear' line, never a fake row."""
-    columns = columns or _LEDGER_COLS
-    render = render or _ledger_render
-    widths = widths or _LEDGER_W
+    cloned on the ledger). Empty -> an honest 'clear' line, never a fake row.
+
+    fold_prices: single-kind areas drop the three price columns and state the
+    area's shared price ONCE in the ⊕ info — derived from the rows themselves
+    (a second kind ever landing in the area lists its price too, never lost)."""
+    columns = columns or (_LEDGER_COLS_LEAN if fold_prices else _LEDGER_COLS)
+    render = render or (_ledger_render_lean if fold_prices else _ledger_render)
+    widths = widths or (_LEDGER_W_LEAN if fold_prices else _LEDGER_W)
     info = (f'<div class="leg"><a class="dlink" href="#{link_href}">'
             f'{E(link_label)} ↗</a></div>')
+    if fold_prices and rows:
+        for buys, stake, cost in sorted({(r["buys"], r["stake"], r["cost"])
+                                         for r in rows}):
+            info += ('<div class="leg"><b>Shared price for every move here</b>'
+                     f" — if we do: {E(buys)} · if we don't: {E(stake)} · "
+                     f"cost / run after: {E(cost)}</div>")
     head = sechead("Action", title, "#b45309", _IC_SEED, id_=id_, info=info,
                    note=note)
     if not rows:
@@ -939,12 +962,15 @@ def build_feature_pages(ctx) -> list[str]:
                           link_href: str) -> str:
             label, _a, covers = _DOMAIN_META[domain]
             rows = _dom_rows[domain]
+            fold = domain in ("code", "evidence")
+            price_note = ("the area's shared price sits under ⊕ above" if fold
+                          else "Both prices ride the row; the record is below. "
+                               "⊕ expands a cut cell")
             return action_table(
                 f"Pending — {covers}", rows, id_=id_, link_label=link_label,
-                link_href=link_href,
+                link_href=link_href, fold_prices=fold,
                 note=f"{len(rows)} pending {label} move(s) · ripe-first, then "
-                     f"cheapest. Both prices ride the row; the record is below. "
-                     f"⊕ expands a cut cell.")
+                     f"cheapest. {price_note}.")
 
         picker = diagram_picker(slug, card)
         # --- Overview order: the ACTION LEDGER leads (action items on top),
@@ -971,8 +997,11 @@ def build_feature_pages(ctx) -> list[str]:
             info='<div class="leg">Every move lives in exactly ONE area. The '
                  "summary below counts each area and jumps to it; each area's "
                  "full table is at the TOP of its own section (Code · Tests · "
-                 "Evidence · Risk). Both prices ride each row — what it buys if "
-                 "we do, what it risks if we don't — plus the recurring cost. "
+                 "Evidence · Risk). Prices — what a move buys if we do, what "
+                 "it risks if we don't, plus the recurring cost — ride each "
+                 "row where they VARY (Tests · Other); Code and Evidence are "
+                 "single-kind areas, so their shared price is stated once "
+                 "under their table's ⊕ instead of repeated per row. "
                  "“Other” has no section, so its table lives here. The record "
                  "tabs below say only what already exists.</div>"
                  + legend("Kind:", [

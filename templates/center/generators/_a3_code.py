@@ -14,10 +14,27 @@ from __future__ import annotations
 
 import ast
 import glob as _glob
+import re as _re_mod
 from pathlib import Path
 
 import _center_data as _cd
-from _a3_render import E, legend, lines_grade, sechead, subnav, table, xtable
+from _a3_render import E, legend, lines_grade, sechead, subnav, table, trunc, xtable
+
+
+def _field_desc(item: ast.AnnAssign, src_lines: list[str]) -> str:
+    """One-line field description, MACHINE-DERIVED only: a description=/comment=
+    string kwarg on the field's value call (pydantic Field / mapped_column),
+    else the field line's own trailing `# comment`. Absent stays absent —
+    the page renders an em dash, never an invented sentence."""
+    if isinstance(item.value, ast.Call):
+        for kw in item.value.keywords:
+            if (kw.arg in ("description", "comment")
+                    and isinstance(kw.value, ast.Constant)
+                    and isinstance(kw.value.value, str)):
+                return " ".join(kw.value.value.split())
+    line = src_lines[item.lineno - 1] if 0 < item.lineno <= len(src_lines) else ""
+    m = _re_mod.search(r"#\s*(.+?)\s*$", line)
+    return " ".join(m.group(1).split()) if m else ""
 
 # The layers a code map is organized by, in render order. Semantic names, not
 # paths: api=endpoints (FastAPI), models=SQLAlchemy, schemas=Pydantic, the rest
@@ -129,10 +146,13 @@ def parse_schemas(repo: Path, files: list[str]) -> list[dict]:
         path = repo / rel
         if not path.exists():
             continue
-        for node in ast.parse(path.read_text()).body:
+        src = path.read_text()
+        src_lines = src.splitlines()
+        for node in ast.parse(src).body:
             if not isinstance(node, ast.ClassDef):
                 continue
-            fields = [(i.target.id, ast.unparse(i.annotation))
+            fields = [(i.target.id, ast.unparse(i.annotation),
+                       _field_desc(i, src_lines))
                       for i in node.body
                       if isinstance(i, ast.AnnAssign) and isinstance(i.target, ast.Name)]
             if fields:
@@ -232,7 +252,9 @@ def parse_models(repo: Path, files: list[str], only: list[str] | None) -> list[d
         path = repo / rel
         if not path.exists():
             continue
-        tree = ast.parse(path.read_text())
+        _src = path.read_text()
+        _src_lines = _src.splitlines()
+        tree = ast.parse(_src)
         for node in tree.body:
             if not isinstance(node, ast.ClassDef):
                 continue
@@ -273,7 +295,8 @@ def parse_models(repo: Path, files: list[str], only: list[str] | None) -> list[d
                                      "back": kw.get("back_populates", ""),
                                      "cascade": kw.get("cascade", "")})
                         continue
-                    cols.append((item.target.id, inner))
+                    cols.append((item.target.id, inner,
+                                 _field_desc(item, _src_lines)))
                     if call is not None:
                         for sub in ast.walk(call):
                             if (isinstance(sub, ast.Call)
@@ -519,16 +542,22 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 f"<th>Stored as (the FK)</th><th>Paired via</th></tr></thead>"
                 f"<tbody>{rows}</tbody></table>")
 
-    def _dm_detail(cls: str, fields: list[tuple[str, str]], extra_html: str = "",
+    def _dm_detail(cls: str, fields: list, extra_html: str = "",
                    rels: list[dict] | None = None) -> str:
         """The in-place expansion for one class: its columns (Column/Type/
-        Example), then relationships, then any UNIQUE constraints."""
-        body = "".join(
-            f"<tr><td><code>{E(n)}</code></td><td>{link_types(t)}</td>"
-            f"<td><code>{E(_example(n, t))}</code></td></tr>"
-            for n, t in fields)
+        Example/Description), then relationships, then any UNIQUE constraints.
+        Descriptions are read from source (description=/comment= kwargs or the
+        field line's own # comment — see _field_desc); a field without one
+        renders an em dash. Older 2-tuple archmaps stay renderable."""
+        body = ""
+        for f in fields:
+            n, t = f[0], f[1]
+            d = f[2] if len(f) > 2 and f[2] else "—"
+            body += (f"<tr><td><code>{E(n)}</code></td><td>{link_types(t)}</td>"
+                     f"<td><code>{E(_example(n, t))}</code></td>"
+                     f"<td>{E(trunc(d, 96))}</td></tr>")
         return (f'<table class="tbl"><thead><tr><th>Column</th><th>Type</th>'
-                f"<th>Example (synthetic)</th></tr></thead>"
+                f"<th>Example (synthetic)</th><th>Description</th></tr></thead>"
                 f"<tbody>{body}</tbody></table>"
                 f"{rel_rows(cls, rels or [])}{extra_html}")
 
