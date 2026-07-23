@@ -87,6 +87,14 @@ def run_checks() -> int:
                 dead.append(f"{name}: #{anchor} — same-page anchor missing")
 
     warns: list[str] = []
+    # To-be-designed sweep (2026-07-23): pending type links are counted
+    # per page so /gabe-feature sees exactly where documentation debt
+    # sits — the sweep the operator asked to ride every regen.
+    for name, html in pages.items():
+        n_tbd = html.count('class="tag ic t-tbd"')
+        if n_tbd:
+            warns.append(f"{name}: {n_tbd} to-be-designed reference(s) "
+                         "— app types not documented in any entity map yet")
     try:
         # The same config the builder used (honors GABE_CONFIG); {} = no
         # config, which the registry checks below must SAY, not skip silently.

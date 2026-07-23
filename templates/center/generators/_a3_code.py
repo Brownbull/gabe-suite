@@ -19,8 +19,8 @@ import re as _re_mod
 from pathlib import Path
 
 import _center_data as _cd
-from _a3_render import (E, entity_icon, legend, lines_grade, sechead, subnav,
-                        table, trunc, xtable)
+from _a3_render import (E, entity_icon, legend, lines_grade, md, sechead,
+                        subnav, table, trunc, xtable)
 
 _ADOPT_NAMES: dict | None = None
 
@@ -544,6 +544,37 @@ _FN_SIM_FLOOR = 0.6
 _FN_MERGE_FLOOR = 0.85
 _FN_INSIGHT: dict | None = None
 _PY_TEXTS: dict[str, str] = {}
+_FILE_IMPORTS: dict[str, dict] = {}
+
+
+def _file_imports(f: str) -> dict:
+    """{imported local name: app-internal?} for one mapped file — the machine
+    rule behind the 'to be designed' label: a CamelCase name imported from
+    THIS app's own packages (or relatively) is ours to document someday; a
+    third-party import never is."""
+    if f in _FILE_IMPORTS:
+        return _FILE_IMPORTS[f]
+    text = _PY_TEXTS.get(f, "")
+    # App-internal = the module's root is any DIRECTORY segment of the mapped
+    # paths (the disk root and the import root often differ — apps/api/… on
+    # disk imports as api.…, so the first-segment-only rule missed everything).
+    tops = {seg for p in _PY_TEXTS for seg in p.split("/")[:-1]}
+    out: dict = {}
+    try:
+        for node in ast.walk(ast.parse(text)):
+            if isinstance(node, ast.ImportFrom):
+                app = (node.level or 0) > 0 or \
+                      (node.module or "").split(".")[0] in tops
+                for a in node.names:
+                    out[a.asname or a.name] = app
+            elif isinstance(node, ast.Import):
+                for a in node.names:
+                    out[(a.asname or a.name).split(".")[0]] = \
+                        a.name.split(".")[0] in tops
+    except SyntaxError:
+        pass
+    _FILE_IMPORTS[f] = out
+    return out
 _PY_KEYWORDS = frozenset(
     "self None True False return yield await async lambda pass break continue "
     "import from raise assert global nonlocal print range list dict set tuple "
@@ -724,6 +755,70 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
     eps, models, schemas = amap["endpoints"], amap["models"], amap["schemas"]
     files = [tuple(row) for row in amap["files"]]
 
+    _page_files = {f for _layer, f, _n in files}
+    model_names = {m["cls"] for m in models}
+    schema_names = {s["cls"] for s in schemas}
+    documented = model_names | schema_names
+    # Both insights are needed EARLY: endpoints/code-map/data-model details
+    # all link into them (cached — later sections reuse).
+    fins = function_insight(repo)
+    ins = model_insight(repo)
+    _fn_by_filename: dict = {}
+    for _c in fins.values():
+        _fn_by_filename.setdefault((_c["file"], _c["name"]), _c)
+
+    def _entity_chip(owner: str, pending: bool) -> str:
+        """The cross-entity label: the owner's stable icon + display name;
+        pending owners say so (their page is not built yet)."""
+        name = _adopt_name(owner)
+        title = f"entity: {name}" + (" — pending, page not built yet"
+                                     if pending else "")
+        return (f' <span class="tag ic t-ent" title="{E(title)}">'
+                f"{entity_icon(owner, 11)} {E(name)}</span>")
+
+    def _xref(kind: str, ident: str, owner: str) -> tuple[str, str]:
+        """(href, entity-chip) for a function ('fn') or class ('dm')
+        reference. Same page → plain anchor. Another CARDED entity → its
+        feature page's anchor + the entity chip. A PENDING entity (no page
+        yet) → the entity index, the placeholder home for everything whose
+        page is not built, + the chip marked pending."""
+        if not owner or owner == slug:
+            return f'#{_anchor(kind, slug, ident)}', ""
+        if (_cd.CENTER_DIR / "cards" / f"{owner}.md").exists():
+            return (f'feature-{owner}.html#{_anchor(kind, owner, ident)}',
+                    _entity_chip(owner, False))
+        return "entity-index.html", _entity_chip(owner, True)
+
+    def _io_label(fentry: dict, cls: str) -> str:
+        """in / out / in·out — where the class sits in the function's
+        signature (param annotation vs return annotation); empty when it is
+        only used in the body."""
+        pin = any(cls in (t or "") for _p, t in fentry.get("params", []))
+        pout = cls in (fentry.get("returns") or "")
+        if pin and pout:
+            return ' <span class="tag t-io" title="parameter AND return type">in·out</span>'
+        if pin:
+            return ' <span class="tag t-in" title="parameter type">in</span>'
+        if pout:
+            return ' <span class="tag t-out" title="return type">out</span>'
+        return ""
+
+    def _fn_link(fentry: dict, io_cls: str = "") -> str:
+        """A linked function chip (+ optional in/out label vs io_cls)."""
+        href, chip = _xref("fn", fentry["fn"], fentry.get("entity", ""))
+        io = _io_label(fentry, io_cls) if io_cls else ""
+        return (f'<a class="dlink" href="{href}"><code>{E(fentry["fn"])}'
+                f"</code></a>{io}{chip}")
+
+    def _fchip(f: str) -> str:
+        """A file mention LINKS to its code-map row when the file is on this
+        page; a file mapped by another entity stays plain."""
+        name = E(f.rsplit("/", 1)[-1])
+        if f in _page_files:
+            return f'<a class="dlink" href="#{_anchor("cm", slug, f)}"><code>{name}</code></a>'
+        return f"<code>{name}</code>"
+
+
     # The link graph: file colors, endpoint↔file, endpoint↔type — every id is
     # derived so the three tables cross-reference without hand-kept indexes.
     file_color = {f: _FILE_PALETTE[i % len(_FILE_PALETTE)]
@@ -791,23 +886,58 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             ("m-del", "DELETE", "removes")])
         + '<div class="leg">Links: the file name jumps to its code-map row; '
           'a violet return type jumps to its definition in the data model. '
-          '⊕ expands a cut-off purpose.</div>')
-    html += table(
-        ["Endpoint", "Purpose", "Returns"],
-        [[f'<span id="{_anchor("ep", slug, e["fn"])}" class="tag '
-          f'{_METHOD_CLS.get(e["method"], "")}">{E(e["method"])}</span> '
-          f'<code>{E(e["path"])}</code><br><small>{E(e["fn"])} · '
-          f'<a class="flink" style="color:{file_color[e["file"]]}" '
-          f'href="#{_anchor("cm", slug, e["file"])}">'
-          f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
-          purpose_cell(e["doc"]), returns_cell(e)]
-         for e in eps])
+          'Click a row for the purpose, the handler function and the models '
+          'it uses.</div>')
+    _ep_rows = []
+    for e in eps:
+        fe = _fn_by_filename.get((e["file"], e["fn"]))
+        handler = _fn_link(fe) if fe else f'<code>{E(e["fn"])}</code>'
+        models_used = []
+        resp_toks = [t for t in dict.fromkeys(
+            _re_mod.findall(r"[A-Za-z_]\w+", e["resp"]))
+            if t in documented or t in ins]
+        for t in resp_toks:
+            if t in documented:
+                href, chip = f'#{_anchor("dm", slug, t)}', ""
+            else:
+                href, chip = _xref("dm", t, ins[t].get("entity", ""))
+            models_used.append(
+                f'<a class="dlink" href="{href}">{E(t)}</a>'
+                f'<span class="tag t-out" title="response model">out</span>'
+                + chip)
+        for t in e["touches"]:
+            if t not in resp_toks:
+                models_used.append(
+                    f'<a class="dlink" href="#{_anchor("dm", slug, t)}">'
+                    f"{E(t)}</a>")
+        meta_rows = [
+            (f'{_ins_ic("doc")} PURPOSE', "#64748b",
+             md(e["doc"]) if e["doc"] != "—" else "—"),
+            (f'{_ins_ic("fn")} HANDLER', "#b45309", handler),
+            (f'{_ins_ic("model")} MODELS USED', "#7c3aed",
+             " · ".join(models_used) or "—"),
+        ]
+        detail = ('<table class="tbl dm-meta"><tbody>' + "".join(
+            f'<tr><td class="metak" style="color:{col}">{k}</td>'
+            f"<td>{v}</td></tr>" for k, col, v in meta_rows)
+            + "</tbody></table>")
+        cells = [
+            f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
+            f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
+            f'<small>{E(e["fn"])} · '
+            f'<a class="flink" style="color:{file_color[e["file"]]}" '
+            f'href="#{_anchor("cm", slug, e["file"])}">'
+            f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
+            returns_cell(e)]
+        _ep_rows.append((cells, detail, _anchor("ep", slug, e["fn"])))
+    html += xtable(["Endpoint", "Returns"], _ep_rows,
+                   widths=["2.8fr", "1.2fr"])
 
     # --- Code map: one table PER LAYER, each with an honest Defines column --
-    _map_info = ('<div class="leg">Defines per layer: api → its endpoints '
-                 "(verb-colored, clickable) · models/schemas → their classes "
-                 "(violet links into the data model) · services → public "
-                 "functions · web/mobile → exported symbols.</div>")
+    _map_info = ('<div class="leg">Click a row: layer · line budget · what '
+                 "the file DEFINES — endpoints (verb-colored) · functions "
+                 "(linked to the Functions section) · classes (linked to the "
+                 "data model) · other exported symbols.</div>")
     layer_desc = {"api": "HTTP routes", "services": "business logic",
                    "models": "DB tables", "schemas": "request/response shapes",
                    "web": "browser UI", "mobile": "native app"}
@@ -842,21 +972,70 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             ("s-ok", "≤ 800", "within budget ·"),
             ("s-med", "801+", "refactor candidate — red deepens toward 2,000 ·"),
             ("s-high", "≥ 2000", "most intense red")]))
-    html += table(
-        ["Layer", "File", "Lines", "Defines"],
-        [[f'<span class="tag {_LAYER_CLS.get(layer, "")}" '
-          f'title="{E(layer_desc.get(layer, ""))}">{E(layer)}</span>',
-          f'<code id="{_anchor("cm", slug, f)}">{E(f)}</code>', lines_grade(n),
-          defines_cell(layer, f)] for layer, f, n in files],
-        num={2})
+    _cm_rows = []
+    for layer, f, n in files:
+        if layer == "api":
+            fns_c = [ep_chip(e) for e in eps_by_file.get(f, [])]
+            cls_c: list[str] = []
+            other: list[str] = []
+        else:
+            fns_c, cls_c, other = [], [], []
+            for nm in amap["defines"].get(f, []):
+                # parse_defines marks functions with a () suffix; the insight
+                # keys are bare names.
+                fe = _fn_by_filename.get((f, nm.removesuffix("()")))
+                if fe:
+                    fns_c.append(_fn_link(fe))
+                elif nm in documented:
+                    cls_c.append(f'<a class="dlink" '
+                                 f'href="#{_anchor("dm", slug, nm)}">{E(nm)}</a>')
+                elif nm in ins:
+                    href, chip = _xref("dm", nm, ins[nm].get("entity", ""))
+                    cls_c.append(f'<a class="dlink" href="{href}">{E(nm)}</a>'
+                                 + chip)
+                else:
+                    other.append(f"<code>{E(nm)}</code>")
+        budget = ("within the 800-line budget" if n <= 800 else
+                  f"{round(n * 100 / 800)}% of the budget — split candidate")
+        meta_rows = [
+            (f'{_ins_ic("doc")} LAYER', "#0f766e",
+             f'{E(layer)} — {E(layer_desc.get(layer, ""))}'),
+            (f'{_ins_ic("fields")} BUDGET', "#b3403a",
+             f"{n:,} lines · {E(budget)}"),
+        ]
+        if fns_c:
+            meta_rows.append((f'{_ins_ic("fn")} '
+                              + ("ENDPOINTS" if layer == "api"
+                                 else "FUNCTIONS DEFINED"), "#b45309",
+                              " · ".join(fns_c[:12])
+                              + ("…" if len(fns_c) > 12 else "")))
+        if cls_c:
+            meta_rows.append((f'{_ins_ic("model")} CLASSES DEFINED', "#7c3aed",
+                              " · ".join(cls_c[:12])
+                              + ("…" if len(cls_c) > 12 else "")))
+        if other:
+            meta_rows.append((f'{_ins_ic("doc")} OTHER SYMBOLS', "#64748b",
+                              " · ".join(other[:12])
+                              + ("…" if len(other) > 12 else "")))
+        detail = ('<table class="tbl dm-meta"><tbody>' + "".join(
+            f'<tr><td class="metak" style="color:{col}">{k}</td>'
+            f"<td>{v}</td></tr>" for k, col, v in meta_rows)
+            + "</tbody></table>")
+        cells = [f'<span class="tag {_LAYER_CLS.get(layer, "")}" '
+                 f'title="{E(layer_desc.get(layer, ""))}">{E(layer)}</span>',
+                 f"<code>{E(f)}</code>", lines_grade(n)]
+        _cm_rows.append((cells, detail, _anchor("cm", slug, f)))
+    html += xtable(["Layer", "File", "Lines"], _cm_rows,
+                   widths=["0.9fr", "2.6fr", "0.9fr"])
 
     # --- Data model: header-table cards; compositions LINK, never repeat ----
-    def link_types(typ: str) -> str:
+    def link_types(typ: str, src_file: str = "") -> str:
         """A field typed with another documented class links to that class's
-        card instead of repeating its structure — composition by reference.
-        Every OTHER identifier is colored by its type family (see _TYPE_CLS):
-        one pass over the tokens, so a documented class is never re-matched
-        inside the markup a previous pass inserted."""
+        card — on THIS page, or cross-entity via _xref (with the entity
+        label). A CamelCase name that is app-internal by import but documented
+        NOWHERE renders the 'to be designed' pending link (entity-index is the
+        placeholder home; the crawl gate counts these per page). Every OTHER
+        identifier is colored by its type family."""
         import re as _re
 
         def one(m: _re.Match) -> str:
@@ -864,6 +1043,17 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             if tok in documented:
                 return (f'<a class="dlink" href="#{_anchor("dm", slug, tok)}">'
                         f"{tok}</a>")
+            o = ins.get(tok)
+            if o:
+                href, chip = _xref("dm", tok, o.get("entity", ""))
+                return f'<a class="dlink" href="{href}">{tok}</a>{chip}'
+            if (src_file and tok[:1].isupper()
+                    and _file_imports(src_file).get(tok)):
+                return ('<a class="dlink" href="entity-index.html" '
+                        'title="to be designed — an app type not documented '
+                        'in any entity map yet; the entity index is its '
+                        f'placeholder home">{tok}'
+                        '<span class="tag ic t-tbd">tbd</span></a>')
             cls = _TYPE_CLS.get(tok)
             return f'<span class="ty {cls}">{tok}</span>' if cls else tok
 
@@ -909,65 +1099,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 f'<table class="tbl"><thead><tr><th>Attribute</th><th>Target</th>'
                 f"<th>Stored as (the FK)</th><th>Paired via</th></tr></thead>"
                 f"<tbody>{rows}</tbody></table>")
-
-    _page_files = {f for _layer, f, _n in files}
-    # Function insight is needed EARLY: the data-model detail links its
-    # referencing functions (cached — the Functions section reuses it).
-    fins = function_insight(repo)
-    _fn_by_filename: dict = {}
-    for _c in fins.values():
-        _fn_by_filename.setdefault((_c["file"], _c["name"]), _c)
-
-    def _entity_chip(owner: str, pending: bool) -> str:
-        """The cross-entity label: the owner's stable icon + display name;
-        pending owners say so (their page is not built yet)."""
-        name = _adopt_name(owner)
-        title = f"entity: {name}" + (" — pending, page not built yet"
-                                     if pending else "")
-        return (f' <span class="tag ic t-ent" title="{E(title)}">'
-                f"{entity_icon(owner, 11)} {E(name)}</span>")
-
-    def _xref(kind: str, ident: str, owner: str) -> tuple[str, str]:
-        """(href, entity-chip) for a function ('fn') or class ('dm')
-        reference. Same page → plain anchor. Another CARDED entity → its
-        feature page's anchor + the entity chip. A PENDING entity (no page
-        yet) → the entity index, the placeholder home for everything whose
-        page is not built, + the chip marked pending."""
-        if not owner or owner == slug:
-            return f'#{_anchor(kind, slug, ident)}', ""
-        if (_cd.CENTER_DIR / "cards" / f"{owner}.md").exists():
-            return (f'feature-{owner}.html#{_anchor(kind, owner, ident)}',
-                    _entity_chip(owner, False))
-        return "entity-index.html", _entity_chip(owner, True)
-
-    def _io_label(fentry: dict, cls: str) -> str:
-        """in / out / in·out — where the class sits in the function's
-        signature (param annotation vs return annotation); empty when it is
-        only used in the body."""
-        pin = any(cls in (t or "") for _p, t in fentry.get("params", []))
-        pout = cls in (fentry.get("returns") or "")
-        if pin and pout:
-            return ' <span class="tag t-io" title="parameter AND return type">in·out</span>'
-        if pin:
-            return ' <span class="tag t-in" title="parameter type">in</span>'
-        if pout:
-            return ' <span class="tag t-out" title="return type">out</span>'
-        return ""
-
-    def _fn_link(fentry: dict, io_cls: str = "") -> str:
-        """A linked function chip (+ optional in/out label vs io_cls)."""
-        href, chip = _xref("fn", fentry["fn"], fentry.get("entity", ""))
-        io = _io_label(fentry, io_cls) if io_cls else ""
-        return (f'<a class="dlink" href="{href}"><code>{E(fentry["fn"])}'
-                f"</code></a>{io}{chip}")
-
-    def _fchip(f: str) -> str:
-        """A file mention LINKS to its code-map row when the file is on this
-        page; a file mapped by another entity stays plain."""
-        name = E(f.rsplit("/", 1)[-1])
-        if f in _page_files:
-            return f'<a class="dlink" href="#{_anchor("cm", slug, f)}"><code>{name}</code></a>'
-        return f"<code>{name}</code>"
 
     def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
         """A titled subsection head inside the row detail — icon + colored
@@ -1044,7 +1175,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
 
     def _dm_detail(cls: str, fields: list, meta_html: str = "",
                    rels: list[dict] | None = None, is_schema: bool = True,
-                   uqs: list | None = None) -> str:
+                   uqs: list | None = None, src_file: str = "") -> str:
         """The in-place expansion, in titled blocks (operator polish
         2026-07-23): metadata (kind · docstring) → Usage by API → Usage by
         internal → relationships → Structure (columns, with unique-constraint
@@ -1066,7 +1197,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             uq_chip = (' <span class="tag t-uq" title="part of a UNIQUE '
                        'constraint">unique</span>' if n in uq_cols else "")
             body += (f"<tr><td><code>{E(n)}</code>{uq_chip}</td>"
-                     f"<td>{link_types(t)}</td>"
+                     f"<td>{link_types(t, src_file)}</td>"
                      f"<td><code>{E(_example(n, t))}</code></td>"
                      f"<td>{E(trunc(d, 96))}</td></tr>")
         struct_head = _dmh("#b3403a", "fields", "Structure",
@@ -1154,7 +1285,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                  _ins_usage(m["cls"], ins)]
         _mrows.append((cells,
                        _dm_detail(m["cls"], m["cols"], meta, m["rels"],
-                                  is_schema=False, uqs=m["uqs"]),
+                                  is_schema=False, uqs=m["uqs"],
+                                  src_file=m["file"]),
                        _anchor("dm", slug, m["cls"])))
     html += xtable(["Class", "Entity", "File", "Usage"], _mrows, widths=_DM_W)
     html += (f'<p class="sub" style="margin-top:14px">'
@@ -1167,7 +1299,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                  E(slug),
                  f'<code>{E(s_["file"])}</code>',
                  _ins_usage(s_["cls"], ins)]
-        _srows.append((cells, _dm_detail(s_["cls"], s_["fields"], meta),
+        _srows.append((cells,
+                       _dm_detail(s_["cls"], s_["fields"], meta,
+                                  src_file=s_["file"]),
                        _anchor("dm", slug, s_["cls"])))
     html += xtable(["Class", "Entity", "File", "Usage"], _srows, widths=_DM_W)
 
@@ -1431,11 +1565,11 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             # the return is OUT — the same in/out dialect the class pages use.
             srows = "".join(
                 f"<tr><td><code>{E(p)}</code></td>"
-                f"<td>{link_types(t) if t else '—'}</td>"
+                f"<td>{link_types(t, c['file']) if t else '—'}</td>"
                 f'<td><span class="tag t-in">in</span></td></tr>'
                 for p, t in c["params"])
             srows += ("<tr><td><i>returns</i></td>"
-                      f"<td>{link_types(c['returns']) if c.get('returns') else '—'}</td>"
+                      f"<td>{link_types(c['returns'], c['file']) if c.get('returns') else '—'}</td>"
                       f'<td><span class="tag t-out">out</span></td></tr>')
             sig = ('<table class="tbl"><thead><tr><th>Param</th>'
                    "<th>Type</th><th>Role</th></tr></thead><tbody>"

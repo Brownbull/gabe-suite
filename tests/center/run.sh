@@ -38,6 +38,8 @@ c = root / center_rel
 # Functions for the FUNCTIONS lens: a base helper used same-file, an orphan,
 # and a god-length def.
 (root / "src" / "funcs.py").write_text(
+    "from src.widgets import PendingThing\n\n\n"
+    "def plan_widget(p: PendingThing) -> PendingThing:\n    return p\n\n\n"
     "def make_gid():\n    return 'g-1'\n\n\n"
     "def build_gadget(seed):\n    return make_gid() + seed\n\n\n"
     "def lonely_helper():\n    return 0\n\n\n"
@@ -210,6 +212,17 @@ assert 'class="tag t-io"' in html, \
 assert "<i>returns</i>" in html and 'class="tag t-out"' in html, \
     "Signature must state the return with its out role"
 assert 'class="tag t-in"' in html, "params must carry the in role"
+# to-be-designed pending links (app-internal import, documented nowhere)
+assert 'class="tag ic t-tbd"' in html, \
+    "PendingThing must render the to-be-designed pending link"
+assert "AsyncSession" not in html or 't-tbd">tbd</span></a>' in html  # sanity
+# endpoints + code map row details (the dm dialect everywhere)
+assert "MODELS USED" not in html or "PURPOSE" in html
+assert "FUNCTIONS DEFINED" in html and "CLASSES DEFINED" in html, \
+    "code-map details must split defines into linked functions/classes"
+assert "<span>Defines</span>" not in html, \
+    "the Defines column must move into the row detail"
+assert "BUDGET" in html, "code-map detail needs the budget row"
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
 assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]
@@ -268,6 +281,8 @@ grep -q "FLOWS line(s) did not parse" "$M5/docs/site/center/feature-gadget.html"
 # --- crawl gate: SILENT + every FIRE --------------------------------------
 [ "$(gate "$FIX")" = 0 ] && ok || { bad "gate: clean center must pass"; cat "$T/gate.out"; }
 grep -q " 0 dead" "$T/gate.out" && ok || bad "gate: clean center reports 0 dead"
+grep -q "to-be-designed reference" "$T/gate.out" \
+  && ok || bad "gate: the pending-links sweep must WARN on t-tbd references"
 
 # Dead internal href → exit 1.
 DEAD="$T/dead"; mk_fixture "$DEAD"
