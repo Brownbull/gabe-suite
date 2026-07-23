@@ -147,6 +147,8 @@ border-radius:11px;letter-spacing:.03em}
 .t-god{background:color-mix(in srgb,var(--bad) 14%,transparent);color:var(--bad)}
 .t-sim{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
 .t-orph{background:color-mix(in srgb,var(--muted) 18%,transparent);color:var(--muted)}
+.tag.ic{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;
+padding:2px 7px}.tag.ic svg{flex:none}
 .bar{display:inline-block;height:8px;border-radius:4px;background:var(--acc);
 vertical-align:middle;margin-right:6px}
 a{color:var(--acc)}.card{background:var(--paper);border:1px solid var(--line);
@@ -227,6 +229,33 @@ def page(title: str, body: str, crumb: str = "") -> str:
             f" › {E(crumb or title)}</div><h1>{E(title)}</h1>{body}</div></body></html>")
 
 
+# Icon chips (operator experiment round 3): the tag COLOR pair stays, the
+# word becomes a stroke icon — tooltips carry the words, the ⊕ legend is the
+# dictionary. Data (field count, twin class + %) stays beside its icon.
+_ICONS = {
+    "model": '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    "schema": '<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+    "base": '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+    "fields": '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>',
+    "sim": '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    "orphan": '<path d="m18.84 12.25 1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/>',
+    "merge": '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+    "split": '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+    "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
+}
+
+
+def _ic(name: str) -> str:
+    return ('<svg viewBox="0 0 24 24" width="13" height="13" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+            f'stroke-linejoin="round">{_ICONS[name]}</svg>')
+
+
+def itag(color_cls: str, icon: str, title: str, text: str = "") -> str:
+    body = _ic(icon) + (f" {text}" if text else "")
+    return (f'<span class="tag ic {color_cls}" title="{E(title)}">{body}</span>')
+
+
 def ruled_page(classes: dict, intro: str) -> str:
     """The ruled composite (operator, 2026-07-23): ONE principal table — tags
     for every classification on the Class cell, filter chips, a two-color
@@ -244,14 +273,28 @@ def ruled_page(classes: dict, intro: str) -> str:
                                           ("similar", bool(c["sim"])),
                                           ("orphan", c["orphan"]),
                                           ("god", c["god"])) if v]
-        tags = cls_cell(c)
+        tags = f'<b><code>{E(c["cls"])}</code></b><br>'
+        tags += itag(f't-{c["kind"]}', c["kind"],
+                     "model — a persisted DB entity" if c["kind"] == "model"
+                     else "schema — an API / pipeline shape")
+        if c["base"]:
+            tags += " " + itag("t-base", "base",
+                               "base class — derives from nothing: no FK out, "
+                               "no field typed by another documented class")
+        if c["god"]:
+            tags += " " + itag("t-god", "fields",
+                               f"god-class flag — {len(c['fields'])} fields",
+                               str(len(c["fields"])))
         if c["sim"]:
             s = c["sim"]
-            tags += (f' <span class="tag t-sim" title="{s["shared"]}/{s["of"]} '
-                     f'fields shared">≈ {E(s["cls"])} {int(s["j"] * 100)}%</span>')
+            tags += " " + itag("t-sim", "sim",
+                               f"closest structural twin — {s['shared']}/"
+                               f"{s['of']} fields shared",
+                               f'{E(s["cls"])} {int(s["j"] * 100)}%')
         if c["orphan"]:
-            tags += (' <span class="tag t-orph" title="zero API usage AND zero '
-                     'internal references in the mapped backend files">orphan</span>')
+            tags += " " + itag("t-orph", "orphan",
+                               "orphan — zero API usage AND zero internal "
+                               "references in the mapped backend files")
         w_api = min(70, c["usage"] * 12)
         w_int = min(70, c["internal"] * 12)
         usage = (f'<span class="bar" style="width:{max(2, w_api)}px"></span>'
@@ -263,22 +306,25 @@ def ruled_page(classes: dict, intro: str) -> str:
                  f'<td>{E(c["entity"])}</td>'
                  f'<td><code>{E(c["file"].rsplit("/", 1)[-1])}</code></td>'
                  f'<td>{usage}</td></tr>')
-    legend = ("""<details class="card"><summary style="cursor:pointer">
-<b>⊕ What the labels mean</b></summary><ul class="sub" style="line-height:2">
-<li><span class="tag t-model">model</span> a persisted DB entity (SQLAlchemy) —
-lives in a table, owns FKs.</li>
-<li><span class="tag t-schema">schema</span> an API / pipeline shape (pydantic)
-— crosses a boundary, owns no storage.</li>
-<li><span class="tag t-base">base</span> derives from NOTHING: no FK out, no
-field typed with another documented class — a foundation others build on.</li>
-<li><span class="tag t-god">N fields</span> god-class size flag (≥ 15 fields)
-— the number that makes it a split candidate below.</li>
-<li><span class="tag t-sim">≈ Class N%</span> closest structural twin — % =
-shared fields over the union (Jaccard); the flag that makes a ≥80% pair a
-merge candidate below.</li>
-<li><span class="tag t-orph">orphan</span> zero API usage AND zero internal
-references across the mapped backend files — the flag that makes it a
-deprecation candidate below.</li>
+    legend = (f"""<details class="card"><summary style="cursor:pointer">
+<b>⊕ What the icons mean</b></summary><ul class="sub" style="line-height:2.2">
+<li>{itag("t-model", "model", "model")} <b>model</b> — a persisted DB entity
+(SQLAlchemy): lives in a table, owns FKs.</li>
+<li>{itag("t-schema", "schema", "schema")} <b>schema</b> — an API / pipeline
+shape (pydantic): crosses a boundary, owns no storage.</li>
+<li>{itag("t-base", "base", "base")} <b>base</b> — derives from NOTHING: no FK
+out, no field typed with another documented class; a foundation others build
+on.</li>
+<li>{itag("t-god", "fields", "god-class flag", "N")} <b>god-class flag</b> —
+field count ≥ {GOD_FIELDS}; the number that makes it a
+{itag("t-god", "split", "split candidate")} split candidate below.</li>
+<li>{itag("t-sim", "sim", "structural twin", "Class N%")} <b>closest structural
+twin</b> — % = shared fields over the union (Jaccard); a ≥80% pair becomes a
+{itag("t-sim", "merge", "merge candidate")} merge candidate below.</li>
+<li>{itag("t-orph", "orphan", "orphan")} <b>orphan</b> — zero API usage AND
+zero internal references across the mapped backend files; becomes a
+{itag("t-orph", "archive", "deprecation candidate")} deprecation candidate
+below.</li>
 <li>Usage bars: <span style="color:var(--acc)">api</span> = endpoint touches +
 FK in-degree · <span style="color:var(--vio)">internal</span> = mapped backend
 files referencing the class. A class can be api-silent and still load-bearing —
@@ -309,21 +355,21 @@ the second bar is why only true orphans read as dead.</li></ul></details>""")
         if key in seen:
             continue
         seen.add(key)
-        cands += (f'<tr><td><span class="tag t-sim">merge candidate</span></td>'
+        cands += (f'<tr><td>{itag("t-sim", "merge", "merge candidate")}</td>'
                   f'<td><code>{E(key[0])}</code> ≈ <code>{E(key[1])}</code></td>'
                   f'<td>{int(s["j"] * 100)}% structural twin '
                   f'({s["shared"]}/{s["of"]} fields) — justified echo, or '
                   f'duplication waiting to drift? Rule it.</td></tr>')
     for c in sorted(classes.values(), key=lambda x: x["cls"]):
         if c["orphan"]:
-            cands += (f'<tr><td><span class="tag t-orph">deprecation candidate'
-                      f'</span></td><td><code>{E(c["cls"])}</code></td>'
+            cands += (f'<tr><td>{itag("t-orph", "archive", "deprecation candidate")}'
+                      f'</td><td><code>{E(c["cls"])}</code></td>'
                       f"<td>zero API usage · zero internal references across "
                       f"the mapped backend files — if nothing outside the map "
                       f"uses it either, file for removal.</td></tr>")
     for c in sorted(classes.values(), key=lambda x: -len(x["fields"])):
         if c["god"]:
-            cands += (f'<tr><td><span class="tag t-god">split candidate</span></td>'
+            cands += (f'<tr><td>{itag("t-god", "split", "split candidate")}</td>'
                       f'<td><code>{E(c["cls"])}</code></td>'
                       f'<td>{len(c["fields"])} fields — past the {GOD_FIELDS}-field '
                       f'line; the number names it, judgment rules it.</td></tr>')
