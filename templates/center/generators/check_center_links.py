@@ -55,6 +55,17 @@ def run_checks() -> int:
         return 1
     dead: list[str] = []
     checked = 0
+    # Duplicate ids are FAILURES: a #href resolves to the FIRST DOM match, so
+    # a second id silently hijacks every deep link to it — and the set-based
+    # anchor check below is structurally blind to it (review H1).
+    from collections import Counter
+    for name, html in pages.items():
+        counts = Counter(ID_RX.findall(html))
+        dup = sorted(i for i, n in counts.items() if n > 1)
+        if dup:
+            dead.append(f"{name}: duplicate id(s) — deep links land on the "
+                        f"first match: {' '.join(dup[:6])}"
+                        + (" …" if len(dup) > 6 else ""))
     for name, html in pages.items():
         here = posixpath.dirname(name)
         for ref in HREF_RX.findall(html):

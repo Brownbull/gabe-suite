@@ -290,6 +290,17 @@ build "$DEAD" "$SHELL_SRC" >/dev/null
 echo '<a href="nope-missing.html">x</a>' >> "$DEAD/docs/site/center/index.html"
 [ "$(gate "$DEAD")" = 1 ] && ok || bad "gate: dead internal href must exit 1"
 
+# Duplicate ids are DEAD (review H1): the set-based anchor check is blind to
+# them, so the gate counts occurrences per page.
+DUP="$T/dup"; mk_fixture "$DUP"
+build "$DUP" "$SHELL_SRC" >/dev/null
+printf '<i id="dm-chips"></i>' >> "$DUP/docs/site/center/feature-gadget.html"
+[ "$(gate "$DUP")" = 1 ] && ok || bad "gate: a duplicated id must FAIL the crawl"
+grep -q "duplicate id" "$T/gate.out" && ok || bad "gate: dup-id failure names itself"
+# File-qualified fn anchors (H1): same-named defs in different files can't collide.
+grep -q 'id="fn-gadget-src-funcs-py-make-gid"' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "fn anchors must carry the defining file"
+
 # Estate (../) ref probed on disk → missing target is DEAD, not exempt (M04).
 EST="$T/est"; mk_fixture "$EST"
 build "$EST" "$SHELL_SRC" >/dev/null

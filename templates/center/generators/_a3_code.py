@@ -429,7 +429,8 @@ def _ins_ic(name: str) -> str:
 def itag(color_cls: str, icon: str, title: str, text: str = "") -> str:
     """An icon chip: the tag COLOR pair stays, the word lives in the tooltip
     and the section's ⊕ dictionary; data (a count, a twin + %) rides beside
-    the icon."""
+    the icon. CONTRACT: `title` is escaped here; `text` must arrive
+    PRE-ESCAPED html (call sites pass E()'d names) — do not double-escape."""
     body = _ins_ic(icon) + (f" {text}" if text else "")
     return f'<span class="tag ic {color_cls}" title="{E(title)}">{body}</span>'
 
@@ -470,16 +471,27 @@ def model_insight(repo: Path) -> dict:
         for _layer, f, _n in v["files"]:
             if f.endswith(".py"):
                 py_files.add(f)
+        # FIRST registration wins, matching merge_amaps' setdefault rule — a
+        # last-wins here once let the Entity column name the WRONG owner for
+        # a class's own row (review H2). A same-named class in a DIFFERENT
+        # file is a collision: recorded, warned once per build, first owner
+        # kept deterministically (config entity order).
         for m in v["models"]:
-            classes[m["cls"]] = {
+            prev = classes.get(m["cls"])
+            if prev and prev["file"] != m["file"]:
+                prev.setdefault("collides", []).append(m["file"])
+            classes.setdefault(m["cls"], {
                 "cls": m["cls"], "kind": "model", "entity": slug,
                 "file": m["file"], "fields": m["cols"],
-                "fks_out": m.get("fks", {})}
-            table_owner[m.get("table", "")] = m["cls"]
+                "fks_out": m.get("fks", {})})
+            table_owner.setdefault(m.get("table", ""), m["cls"])
         for s in v["schemas"]:
-            classes[s["cls"]] = {
+            prev = classes.get(s["cls"])
+            if prev and prev["file"] != s["file"]:
+                prev.setdefault("collides", []).append(s["file"])
+            classes.setdefault(s["cls"], {
                 "cls": s["cls"], "kind": "schema", "entity": slug,
-                "file": s["file"], "fields": s["fields"], "fks_out": {}}
+                "file": s["file"], "fields": s["fields"], "fks_out": {}})
     texts = {}
     for f in sorted(py_files):
         p = repo / f
@@ -524,6 +536,12 @@ def model_insight(repo: Path) -> dict:
                 best, best_j, shared = o["cls"], j, len(mine & theirs)
         c["sim"] = ({"cls": best, "j": round(best_j, 2), "shared": shared,
                      "of": len(mine)} if best_j >= _SIM_FLOOR else None)
+    _collided = sorted(c["cls"] for c in classes.values() if c.get("collides"))
+    if _collided:
+        print(f"    ⚠ class name collision(s) across entities — first owner "
+              f"wins, cross-references may under-resolve: "
+              + " · ".join(_collided[:8])
+              + (" …" if len(_collided) > 8 else ""))
     _INSIGHT = classes
     return classes
 
@@ -554,7 +572,9 @@ def _file_imports(f: str) -> dict:
     third-party import never is."""
     if f in _FILE_IMPORTS:
         return _FILE_IMPORTS[f]
-    text = _PY_TEXTS.get(f, "")
+    if f not in _PY_TEXTS:
+        return {}   # unknown text: DON'T cache emptiness (fill order, M5)
+    text = _PY_TEXTS[f]
     # App-internal = the module's root is any DIRECTORY segment of the mapped
     # paths (the disk root and the import root often differ — apps/api/… on
     # disk imports as api.…, so the first-segment-only rule missed everything).
@@ -839,7 +859,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     def _fn_link(fentry: dict, io_cls: str = "") -> str:
         """A linked function chip (+ optional in/out label vs io_cls)."""
-        href, chip = _xref("fn", fentry["fn"], fentry.get("entity", ""))
+        href, chip = _xref("fn", fentry["file"] + "-" + fentry["fn"],
+                           fentry.get("entity", ""))
         io = _io_label(fentry, io_cls) if io_cls else ""
         return (f'<a class="dlink" href="{href}"><code>{E(fentry["fn"])}'
                 f"</code></a>{io}{chip}")
@@ -878,7 +899,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         """Font-colored, background-free endpoint link back to its row."""
         short = (e["path"].removeprefix(_common) if _common else e["path"]) or "/"
         return (f'<a class="{_VERB_FONT.get(e["method"], "")}" '
-                f'href="#{_anchor("ep", slug, e["fn"])}">{E(e["method"])} '
+                f'href="#{_anchor("ep", slug, e["file"] + "-" + e["fn"])}">{E(e["method"])} '
                 f"{E(short)}</a>")
 
     def purpose_cell(doc: str) -> str:
@@ -963,7 +984,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f'href="#{_anchor("cm", slug, e["file"])}">'
             f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
             returns_cell(e)]
-        _ep_rows.append((cells, detail, _anchor("ep", slug, e["fn"])))
+        _ep_rows.append((cells, detail,
+                         _anchor("ep", slug, e["file"] + "-" + e["fn"])))
     html += xtable(["Endpoint", "Returns"], _ep_rows,
                    widths=["2.8fr", "1.2fr"])
 
@@ -1616,7 +1638,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                      E(c["entity"]),
                      f'<code>{E(c["file"])}</code>',
                      _fn_usage_cell(c)]
-            _frows.append((cells, _fn_detail(c), _anchor("fn", slug, c["fn"])))
+            _frows.append((cells, _fn_detail(c),
+                           _anchor("fn", slug, c["file"] + "-" + c["fn"])))
         html += xtable(["Function", "Entity", "File", "Usage"], _frows,
                        widths=_DM_W)
 
