@@ -17,6 +17,8 @@
   "base": false,
   "god": true,
   "usage": 8,
+  "internal": 8,
+  "orphan": false,
   "sim": {
    "cls": "TransactionDetail",
    "j": 0.83,
@@ -39,6 +41,8 @@
   "base": false,
   "god": true,
   "usage": 2,
+  "internal": 3,
+  "orphan": false,
   "sim": {
    "cls": "TransactionItemResponse",
    "j": 0.78,
@@ -62,6 +66,8 @@
   "base": false,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "TransactionDraft",
    "j": 0.62,
@@ -83,6 +89,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 3,
+  "orphan": false,
   "sim": {
    "cls": "TransactionImageResponse",
    "j": 0.5,
@@ -105,6 +113,8 @@
   "base": false,
   "god": false,
   "usage": 1,
+  "internal": 3,
+  "orphan": false,
   "sim": {
    "cls": "TransactionItemFlag",
    "j": 0.62,
@@ -124,6 +134,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 2,
+  "orphan": false,
   "sim": {
    "cls": "TransactionItemUpdate",
    "j": 0.83,
@@ -143,6 +155,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": {
    "cls": "TransactionItemCreate",
    "j": 0.83,
@@ -162,6 +176,8 @@
   "base": true,
   "god": true,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": {
    "cls": "TransactionItem",
    "j": 0.78,
@@ -181,6 +197,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": {
    "cls": "TransactionImage",
    "j": 0.5,
@@ -204,6 +222,8 @@
   "base": false,
   "god": true,
   "usage": 1,
+  "internal": 4,
+  "orphan": false,
   "sim": {
    "cls": "TransactionUpdate",
    "j": 0.64,
@@ -227,6 +247,8 @@
   "base": false,
   "god": true,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "TransactionCreate",
    "j": 0.64,
@@ -246,6 +268,8 @@
   "base": true,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "TransactionListItem": {
@@ -260,6 +284,8 @@
   "base": true,
   "god": true,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "TransactionDetail",
    "j": 0.75,
@@ -285,6 +311,8 @@
   "base": false,
   "god": true,
   "usage": 3,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "Transaction",
    "j": 0.83,
@@ -304,6 +332,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "SharedLockLink": {
@@ -318,6 +348,8 @@
   "base": true,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "TransactionLockLinks": {
@@ -335,6 +367,8 @@
   "base": false,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "BatchUpdateFields": {
@@ -349,6 +383,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": null
  },
  "BatchUpdateRequest": {
@@ -365,6 +401,8 @@
   "base": false,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "BatchDeleteRequest",
    "j": 0.5,
@@ -384,6 +422,8 @@
   "base": true,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "BatchUpdateRequest",
    "j": 0.5,
@@ -403,6 +443,8 @@
   "base": true,
   "god": false,
   "usage": 2,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "CardAlias": {
@@ -419,6 +461,8 @@
   "base": false,
   "god": false,
   "usage": 1,
+  "internal": 2,
+  "orphan": false,
   "sim": null
  },
  "Statement": {
@@ -437,6 +481,8 @@
   "base": false,
   "god": true,
   "usage": 4,
+  "internal": 7,
+  "orphan": false,
   "sim": {
    "cls": "StatementRecordResponse",
    "j": 0.62,
@@ -459,6 +505,8 @@
   "base": false,
   "god": true,
   "usage": 2,
+  "internal": 9,
+  "orphan": false,
   "sim": {
    "cls": "StatementLineRecordResponse",
    "j": 0.83,
@@ -481,6 +529,8 @@
   "base": false,
   "god": true,
   "usage": 2,
+  "internal": 4,
+  "orphan": false,
   "sim": {
    "cls": "StatementReconciliationRunResponse",
    "j": 0.94,
@@ -504,6 +554,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 4,
+  "orphan": false,
   "sim": {
    "cls": "StatementReconciliationVerdictResponse",
    "j": 1.0,
@@ -525,6 +577,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": null
  },
  "StatementInfo": {
@@ -539,6 +593,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 4,
+  "orphan": false,
   "sim": null
  },
  "StatementAmountCandidate": {
@@ -555,6 +611,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 3,
+  "orphan": false,
   "sim": null
  },
  "StatementProcessingMetadata": {
@@ -569,6 +627,8 @@
   "base": true,
   "god": true,
   "usage": 0,
+  "internal": 4,
+  "orphan": false,
   "sim": null
  },
  "StatementExtractionOutput": {
@@ -588,6 +648,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 6,
+  "orphan": false,
   "sim": null
  },
  "StatementReconciliationResult": {
@@ -605,6 +667,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": {
    "cls": "StatementReconciliationVerdict",
    "j": 0.62,
@@ -626,6 +690,8 @@
   "base": false,
   "god": true,
   "usage": 4,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "Statement",
    "j": 0.62,
@@ -648,6 +714,8 @@
   "base": false,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementProcessRequest": {
@@ -662,6 +730,8 @@
   "base": true,
   "god": false,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementEvent": {
@@ -676,6 +746,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 3,
+  "orphan": false,
   "sim": null
  },
  "StatementLineRecordResponse": {
@@ -694,6 +766,8 @@
   "base": false,
   "god": true,
   "usage": 1,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "StatementLine",
    "j": 0.83,
@@ -716,6 +790,8 @@
   "base": false,
   "god": true,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "StatementReconciliationRun",
    "j": 0.94,
@@ -738,6 +814,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "StatementReconciliationVerdict",
    "j": 1.0,
@@ -760,6 +838,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "StatementLineRecordResponse",
    "j": 0.59,
@@ -779,6 +859,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementReconciliationBucketItem": {
@@ -800,6 +882,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementReconciliationResponse": {
@@ -819,6 +903,8 @@
   "base": false,
   "god": false,
   "usage": 2,
+  "internal": 2,
+  "orphan": false,
   "sim": null
  },
  "StatementWordToken": {
@@ -833,6 +919,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementDateToken": {
@@ -847,6 +935,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "StatementInstallmentToken",
    "j": 0.5,
@@ -868,6 +958,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementInstallmentToken": {
@@ -882,6 +974,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": {
    "cls": "StatementDateToken",
    "j": 0.5,
@@ -907,6 +1001,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementCompactEvidence": {
@@ -924,6 +1020,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementRowRange": {
@@ -938,6 +1036,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 0,
+  "orphan": true,
   "sim": null
  },
  "StatementColumnProfile": {
@@ -952,6 +1052,8 @@
   "base": true,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementAmountColumnProfile": {
@@ -968,6 +1070,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementLayoutProfile": {
@@ -987,6 +1091,8 @@
   "base": false,
   "god": true,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  },
  "StatementProfileApplicationResult": {
@@ -1007,6 +1113,8 @@
   "base": false,
   "god": false,
   "usage": 0,
+  "internal": 1,
+  "orphan": false,
   "sim": null
  }
 }

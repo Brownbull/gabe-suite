@@ -36,7 +36,17 @@ SIM_FLOOR = 0.5
 
 
 def collect() -> dict:
+    import re
     amap = json.loads(ARCHMAP.read_text())
+    # Internal usage: word-boundary references to the class name across the
+    # mapped BACKEND files (.py), excluding the defining file — the second
+    # usage kind (operator ruling: API-only bars read real service vocabulary
+    # as dead). Read-only scan of the twin's mapped files.
+    _root = ARCHMAP.parents[3]
+    _pyfiles = sorted({f for v in (amap.get("entities") or {}).values() if v
+                       for _l, f, _n in v.get("files", []) if f.endswith(".py")})
+    _texts = {f: (_root / f).read_text() for f in _pyfiles
+              if (_root / f).exists()}
     classes: dict[str, dict] = {}
     table_owner: dict[str, str] = {}
     for slug, v in (amap.get("entities") or {}).items():
@@ -87,6 +97,10 @@ def collect() -> dict:
         c["base"] = not c["fks_out"] and not c["refs_out"]
         c["god"] = len(c["fields"]) >= GOD_FIELDS
         c["usage"] = c["touches"] + c["fk_in"]
+        _rx = re.compile(rf"\b{re.escape(c['cls'])}\b")
+        c["internal"] = sum(1 for f, t in _texts.items()
+                            if f != c["file"] and _rx.search(t))
+        c["orphan"] = c["usage"] == 0 and c["internal"] == 0
     # Similarity: Jaccard over field-name sets, best match per class.
     for c in classes.values():
         mine = {n for n, _, _ in c["fields"]}
@@ -212,6 +226,97 @@ def page(title: str, body: str, crumb: str = "") -> str:
             f" › {E(crumb or title)}</div><h1>{E(title)}</h1>{body}</div></body></html>")
 
 
+def ruled_page(classes: dict, intro: str) -> str:
+    """The ruled composite (operator, 2026-07-23): ONE principal table — tags
+    for every classification on the Class cell, filter chips, a two-color
+    usage bar (API + internal) — then the machine-NAMED candidates table in
+    the Option-D shape. No separate health lists: most-used reads off the
+    sorted Usage column; base/similar/orphan live as filterable tags."""
+    chips = "".join(
+        f'<button class="chip" data-f="{k}">{lbl}</button>'
+        for k, lbl in (("all", "All"), ("base", "base"), ("similar", "≈ similar"),
+                       ("orphan", "orphan"), ("god", "god")))
+    rows = ""
+    for c in sorted(classes.values(),
+                    key=lambda x: -(x["usage"] + x["internal"])):
+        flags = ["all"] + [k for k, v in (("base", c["base"]),
+                                          ("similar", bool(c["sim"])),
+                                          ("orphan", c["orphan"]),
+                                          ("god", c["god"])) if v]
+        tags = cls_cell(c)
+        if c["sim"]:
+            s = c["sim"]
+            tags += (f' <span class="tag t-sim" title="{s["shared"]}/{s["of"]} '
+                     f'fields shared">≈ {E(s["cls"])} {int(s["j"] * 100)}%</span>')
+        if c["orphan"]:
+            tags += (' <span class="tag t-god" title="zero API usage AND zero '
+                     'internal references in the mapped backend files">orphan</span>')
+        w_api = min(70, c["usage"] * 12)
+        w_int = min(70, c["internal"] * 12)
+        usage = (f'<span class="bar" style="width:{max(2, w_api)}px"></span>'
+                 f'<b>{c["usage"]}</b> <span class="sub">api</span><br>'
+                 f'<span class="bar" style="width:{max(2, w_int)}px;'
+                 f'background:var(--vio)"></span><b>{c["internal"]}</b> '
+                 f'<span class="sub">internal</span>')
+        rows += (f'<tr data-flags="{" ".join(flags)}"><td>{tags}</td>'
+                 f'<td>{E(c["entity"])}</td>'
+                 f'<td><code>{E(c["file"].rsplit("/", 1)[-1])}</code></td>'
+                 f'<td>{usage}</td></tr>')
+    tbl = ('<div class="chips">' + chips + "</div>"
+           "<table><thead><tr><th>Class</th><th>Entity</th><th>File</th>"
+           '<th>Usage — <span style="color:var(--acc)">api</span> · '
+           '<span style="color:var(--vio)">internal</span></th></tr></thead>'
+           f"<tbody id='ptbl'>{rows}</tbody></table>"
+           "<script>document.querySelectorAll('.chip').forEach(b=>"
+           "b.addEventListener('click',()=>{document.querySelectorAll('.chip')"
+           ".forEach(x=>x.classList.remove('on'));b.classList.add('on');"
+           "const f=b.dataset.f;document.querySelectorAll('#ptbl tr').forEach("
+           "r=>r.style.display=r.dataset.flags.split(' ').includes(f)?'':'none');"
+           "}));document.querySelector('.chip').classList.add('on');</script>"
+           "<style>.chips{margin:8px 0}.chip{font:inherit;font-size:.74rem;"
+           "font-weight:600;padding:3px 12px;border-radius:14px;margin-right:6px;"
+           "border:1px solid var(--line);background:var(--paper);color:var(--muted);"
+           "cursor:pointer}.chip.on{background:var(--acc);color:#fff;"
+           "border-color:var(--acc)}</style>")
+    cands = ""
+    for c in sorted(classes.values(), key=lambda x: -len(x["fields"])):
+        if c["god"]:
+            cands += (f'<tr><td><span class="tag t-god">split candidate</span></td>'
+                      f'<td><code>{E(c["cls"])}</code></td>'
+                      f'<td>{len(c["fields"])} fields — past the {GOD_FIELDS}-field '
+                      f'line; the number names it, judgment rules it.</td></tr>')
+    seen = set()
+    for c in sorted(classes.values(), key=lambda x: -(x["sim"]["j"] if x["sim"] else 0)):
+        s = c["sim"]
+        if not s or s["j"] < 0.8:
+            continue
+        key = tuple(sorted((c["cls"], s["cls"])))
+        if key in seen:
+            continue
+        seen.add(key)
+        cands += (f'<tr><td><span class="tag t-sim">merge candidate</span></td>'
+                  f'<td><code>{E(key[0])}</code> ≈ <code>{E(key[1])}</code></td>'
+                  f'<td>{int(s["j"] * 100)}% structural twin '
+                  f'({s["shared"]}/{s["of"]} fields) — justified echo, or '
+                  f'duplication waiting to drift? Rule it.</td></tr>')
+    cand_tbl = ("<h2>Candidates — named by the machine, ruled by judgment</h2>"
+                '<p class="sub">Split candidates (god classes) and merge '
+                "candidates (structural twins ≥ 80%). The generator NAMES; the "
+                "verdict lands in DECISIONS/PENDING via review or a health "
+                "pass — never authored here.</p>"
+                "<table><thead><tr><th>Candidate</th><th>Classes</th>"
+                f"<th>Why the machine flags it</th></tr></thead><tbody>{cands}"
+                "</tbody></table>")
+    return page("RULED — the composite the templates would ship",
+                intro + '<p>One principal table: every classification is a '
+                'filterable tag on the Class cell; usage carries TWO bars '
+                '(<span style="color:var(--acc)">api</span> = endpoint touches '
+                '+ FK in · <span style="color:var(--vio)">internal</span> = '
+                'mapped backend files referencing the class). Below it, the '
+                'candidates table in the Option-D shape.</p>' + tbl + cand_tbl,
+                crumb="ruled composite")
+
+
 def main() -> int:
     data = collect()
     classes = data["classes"]
@@ -255,11 +360,16 @@ def main() -> int:
         "Option D — the judgment pass (what a satellite would file)",
         intro + d_body))
 
+    (HERE / "ruled.html").write_text(ruled_page(classes, intro))
+
     n_base = sum(1 for c in classes.values() if c["base"])
     n_sim = sum(1 for c in classes.values() if c["sim"])
+    n_orph = sum(1 for c in classes.values() if c.get("orphan"))
     (HERE / "index.html").write_text(page(
         "Model-insight spike — four options over real data",
         intro + f"""
+<div class="card" style="border-color:var(--acc)"><b><a href="ruled.html">RULED composite — walk this one</a></b>
+<p class="sub">The operator's 2026-07-23 direction: one principal table with filterable classification tags (base · ≈similar · orphan · god), a TWO-bar usage cell (api + internal — the second bar kills the false zeros: only {n_orph} true orphan(s) remain), and the machine-named candidates table in the Option-D shape below it.</p></div>
 <div class="card"><b><a href="option-a.html">A — derived columns</a></b>
 <p class="sub">Usage + Similar-to in the per-entity tables; base classes tagged in place. Cheapest; insight stays local to each entity page.</p></div>
 <div class="card"><b><a href="option-b.html">B — model-health block</a></b>
