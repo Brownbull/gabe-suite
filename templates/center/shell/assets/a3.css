@@ -797,3 +797,8 @@ details.legset .gal{margin:8px 0 4px}
 .archcard svg{flex:none;margin-top:2px;color:var(--accent,#0d6e78)}
 .archcard b{display:block;font-size:.88rem}
 .archcard .sub{font-size:.72rem}
+/* The test↔code thread (2026-07-23): kind chips + tier labels on code rows.
+   .tk rides .tag; t-tgap = named gap (dashed), t-via = composed tier (T2). */
+.tag.tk{border-radius:11px;font-weight:700}
+.tag.t-tgap{background:transparent;color:var(--muted,#64748b);border:1px dashed #c6ccd6}
+.tag.t-via{background:transparent;color:#4f46e5;border:1px solid #c7c2f2}

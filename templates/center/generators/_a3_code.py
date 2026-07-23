@@ -19,6 +19,7 @@ import re as _re_mod
 from pathlib import Path
 
 import _center_data as _cd
+import _a3_tests
 from _a3_render import (E, entity_badge, entity_icon, legend, lines_grade,
                         md, sechead, subnav, table, trunc, xtable)
 
@@ -826,6 +827,89 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     def _ent_cell(ent: str) -> str:
         return entity_badge(ent, _adopt_name(ent), 13)
+
+    # --- the test↔code thread (spike ruling 2026-07-23): every element row
+    # answers "is this tested, and by what KIND?" — kind chips + tier-labeled
+    # receipts, gaps named, nothing gated (D1).
+    _ti = _a3_tests.test_insight(repo)
+    _corpora_cfg = _cd.CFG.get("corpora", [])
+    _ckind = {c2["key"]: c2.get("kind", c2["key"]) for c2 in _corpora_cfg}
+    _kcls = {c2.get("kind", c2["key"]): c2.get("tag_class", "")
+             for c2 in _corpora_cfg}
+    _has_journey = "journey" in _ckind.values()
+
+    def _tchip(kind: str, n, title: str) -> str:
+        return (f'<span class="tag tk {_kcls.get(kind, "")}" '
+                f'title="{E(title)}">{E(kind)} · {n}</span>')
+
+    def _tgap(label: str, title: str) -> str:
+        return (f'<span class="tag tk t-tgap" title="{E(title)}">'
+                f"{E(label)}</span>")
+
+    def _ref_label(r: dict) -> str:
+        nm = _a3_tests._CID_RX.sub("", r["name"]).strip(" ·-_[]")
+        return nm.replace("_", " ")[:64]
+
+    def _ref_frag(refs: list) -> str:
+        return " · ".join(
+            (f'<span class="cid">{E(r["cid"])}</span> ' if r["cid"] else "")
+            + f'<small>{E(_ref_label(r))}</small>' for r in refs[:6])             + (" …" if len(refs) > 6 else "")
+
+    def _ep_tcell(e: dict) -> str:
+        refs = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
+        chips = [_tchip(_ckind.get(c2, c2), len(r),
+                        f"{len(r)} {c2} receipt(s) match this route's path — "
+                        "an api receipt is a case driving it, a web receipt "
+                        "is a file encoding it (T1)")
+                 for c2, r in sorted(refs.items())]
+        if not chips:
+            return _tgap("untested",
+                         "no case or spec matches this route's path")
+        if _has_journey and not any(
+                _ckind.get(c2) == "journey" for c2 in refs):
+            chips.append(_tgap("journey —",
+                               "no browser spec drives this route"))
+        return " ".join(chips)
+
+    def _tb_meta(e: dict) -> list:
+        rows = []
+        refs_by = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
+        for c2, refs in sorted(refs_by.items()):
+            rows.append((f'{_ins_ic("fn")} TESTED BY — '
+                         f'{_ckind.get(c2, c2).upper()}', "#15803d",
+                         _ref_frag(refs)
+                         + f' <span class="sub">({len(refs)})</span>'))
+        return rows
+
+    def _duo_tcell(rec: dict | None, what: str) -> str:
+        rec = rec or {}
+        d, v = rec.get("direct") or [], rec.get("via_route") or []
+        chips = []
+        if d:
+            chips.append(_tchip(_ckind.get(d[0]["corpus"], "unit"), len(d),
+                                f"cases that import and use this {what} "
+                                "by name (T1)"))
+        if v:
+            chips.append(f'<span class="tag tk t-via" title="composed '
+                         f"through the endpoint join — cases driving a "
+                         f'route that serves this {what} (T2)">'
+                         f"via route · {len(v)}</span>")
+        return " ".join(chips) or _tgap(
+            "no case", f"no case reaches this {what} by name or via a route")
+
+    def _cm_tcell(f: str) -> str:
+        rec = _ti["by_file"].get(f) or {}
+        reach, cov = rec.get("reach") or [], rec.get("coverage")
+        bits = [(f'<span class="tag tk" title="test file(s) whose imports '
+                 f'reach this file (T3)">reach · {len(reach)}</span>')
+                if reach else
+                _tgap("no reach", "no test file's imports reach this file")]
+        bits.append(
+            f'<span class="tag tk l-models" title="line coverage, captured '
+            f'{E(str(cov["age"])[:16])}">cov {cov["pct"]}%</span>' if cov
+            else _tgap("cov —", "line coverage not captured — wire the "
+                       "coverage block and run capture --with-coverage"))
+        return " ".join(bits)
     _rid_seen: set = set()
 
     def _rid(base: str) -> str:
@@ -1002,6 +1086,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             (f'{_ins_ic("fn")} HANDLER', "#b45309", handler),
             (f'{_ins_ic("model")} MODELS USED', "#7c3aed",
              " · ".join(models_used) or "—"),
+            *_tb_meta(e),
         ]
         detail = ('<table class="tbl dm-meta"><tbody>' + "".join(
             f'<tr><td class="metak" style="color:{col}">{k}</td>'
@@ -1014,15 +1099,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f'<a class="flink" style="color:{file_color[e["file"]]}" '
             f'href="{_href("cm", _anchor("cm", slug, e["file"]))}">'
             f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
-            returns_cell(e)]
+            returns_cell(e), _ep_tcell(e)]
         if entity_col:
             cells.insert(0, _ent_cell(_file_ent.get(e["file"], slug)))
         _ep_rows.append((cells, detail,
                          _rid(_anchor("ep", slug, e["file"] + "-" + e["fn"]))))
-    html += xtable((["", "Endpoint", "Returns"] if entity_col
-                    else ["Endpoint", "Returns"]), _ep_rows,
-                   widths=(["34px", "2.8fr", "1.2fr"] if entity_col
-                           else ["2.8fr", "1.2fr"]))
+    html += xtable((["", "Endpoint", "Returns", "Tests"] if entity_col
+                    else ["Endpoint", "Returns", "Tests"]), _ep_rows,
+                   widths=(["34px", "2.4fr", "1.1fr", "1.2fr"] if entity_col
+                           else ["2.4fr", "1.1fr", "1.2fr"]))
 
     # --- Code map: one table PER LAYER, each with an honest Defines column --
     _map_info = ('<div class="leg">Click a row: layer · line budget · what '
@@ -1114,14 +1199,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             + "</tbody></table>")
         cells = [f'<span class="tag {_LAYER_CLS.get(layer, "")}" '
                  f'title="{E(layer_desc.get(layer, ""))}">{E(layer)}</span>',
-                 f"<code>{E(f)}</code>", lines_grade(n)]
+                 f"<code>{E(f)}</code>", lines_grade(n), _cm_tcell(f)]
         if entity_col:
             cells.insert(0, _ent_cell(_file_ent.get(f, slug)))
         _cm_rows.append((cells, detail, _rid(_anchor("cm", slug, f))))
-    html += xtable((["", "Layer", "File", "Lines"] if entity_col
-                    else ["Layer", "File", "Lines"]), _cm_rows,
-                   widths=(["34px", "0.9fr", "2.4fr", "0.9fr"] if entity_col
-                           else ["0.9fr", "2.6fr", "0.9fr"]))
+    html += xtable((["", "Layer", "File", "Lines", "Tests"] if entity_col
+                    else ["Layer", "File", "Lines", "Tests"]), _cm_rows,
+                   widths=(["34px", "0.8fr", "2.1fr", "0.8fr", "1.2fr"]
+                           if entity_col
+                           else ["0.8fr", "2.2fr", "0.8fr", "1.2fr"]))
 
     # --- Data model: header-table cards; compositions LINK, never repeat ----
     def link_types(typ: str, src_file: str = "") -> str:
@@ -1379,15 +1465,17 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}'] + \
                 ([] if entity_col else [E(_own)]) + [
                  f'<code>{E(m["file"])}</code>',
-                 _ins_usage(m["cls"], ins)]
+                 _ins_usage(m["cls"], ins),
+                 _duo_tcell(_ti["by_model"].get(m["cls"]), "class")]
         _mrows.append((cells,
                        _dm_detail(m["cls"], m["cols"], meta, m["rels"],
                                   is_schema=False, uqs=m["uqs"],
                                   src_file=m["file"]),
                        _rid(_anchor("dm", slug, m["cls"]))))
-    _dm_head = (["", "Class", "File", "Usage"] if entity_col
-                else ["Class", "Entity", "File", "Usage"])
-    _dm_w = (["34px", "2.2fr", "1.7fr", "1.2fr"] if entity_col else _DM_W)
+    _dm_head = (["", "Class", "File", "Usage", "Tests"] if entity_col
+                else ["Class", "Entity", "File", "Usage", "Tests"])
+    _dm_w = (["34px", "2fr", "1.5fr", "1.1fr", "1.2fr"] if entity_col
+             else [*_DM_W, "1.2fr"])
     html += xtable(_dm_head, _mrows, widths=_dm_w)
     html += (f'<p class="sub" style="margin-top:14px">'
              f'<span class="tag l-schemas">schemas</span> {len(schemas)} API '
@@ -1400,7 +1488,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}'] + \
                 ([] if entity_col else [E(_own)]) + [
                  f'<code>{E(s_["file"])}</code>',
-                 _ins_usage(s_["cls"], ins)]
+                 _ins_usage(s_["cls"], ins),
+                 _duo_tcell(_ti["by_model"].get(s_["cls"]), "schema")]
         _srows.append((cells,
                        _dm_detail(s_["cls"], s_["fields"], meta,
                                   src_file=s_["file"]),
@@ -1664,6 +1753,17 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                              if calls else
                              '<p class="sub">calls no other documented '
                              "function — a base.</p>"))
+            # Tested by — the thread's receipts (T1 direct / T2 via route)
+            _tb = _ti["by_function"].get(f'{c["file"]}::{c["fn"]}') or {}
+            tb_html = ""
+            for _lbl, _refs in (("direct", _tb.get("direct") or []),
+                                ("via route", _tb.get("via_route") or [])):
+                if _refs:
+                    tb_html += (f'<p class="sub"><b>{_lbl}</b> '
+                                f"({len(_refs)}) — " + _ref_frag(_refs)
+                                + "</p>")
+            if tb_html:
+                tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
             # Signature
             sig_head = _dmh("#b3403a", "fields", "Signature",
                             f' <span class="sub">{len(c["params"])} param(s) '
@@ -1684,7 +1784,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             sig = ('<table class="tbl"><thead><tr><th>Param</th>'
                    "<th>Type</th><th>Role</th></tr></thead><tbody>"
                    + srows + "</tbody></table>")
-            return meta + api_html + int_html + calls_html + sig_head + sig
+            return (meta + api_html + int_html + calls_html + tb_html
+                    + sig_head + sig)
 
         _frows = []
         for c in frows_src:
@@ -1692,14 +1793,20 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                      f'<b><code>{E(c["fn"])}</code></b><br>{_fn_tags(c)}'] + \
                     ([] if entity_col else [E(c["entity"])]) + [
                      f'<code>{E(c["file"])}</code>',
-                     _fn_usage_cell(c)]
+                     _fn_usage_cell(c),
+                     _duo_tcell(_ti["by_function"].get(
+                         f'{c["file"]}::{c["fn"]}'), "function")]
             _frows.append((cells, _fn_detail(c),
                            _rid(_anchor("fn", slug,
                                         c["file"] + "-" + c["fn"]))))
-        html += xtable((["", "Function", "File", "Usage"] if entity_col
-                        else ["Function", "Entity", "File", "Usage"]), _frows,
-                       widths=(["34px", "2.2fr", "1.7fr", "1.2fr"]
-                               if entity_col else _DM_W))
+        html += xtable((["", "Function", "File", "Usage", "Tests"]
+                        if entity_col
+                        else ["Function", "Entity", "File", "Usage",
+                              "Tests"]), _frows,
+                       widths=(["34px", "2fr", "1.5fr", "1.1fr", "1.2fr"]
+                               if entity_col
+                               else ["2fr", "0.9fr", "1.5fr", "1.1fr",
+                                     "1.2fr"]))
 
         # Functions candidates — same dialect, function-scoped.
         fcands = ""

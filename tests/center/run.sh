@@ -69,10 +69,28 @@ c = root / center_rel
     "\n\nclass GadgetDraft:  # used by emit_gadget as param AND return -> in-out\n"
     "    gid: str\n"
     "    note: str\n")
+(root / "tests" / "results").mkdir(parents=True, exist_ok=True)
+(root / "tests" / "test_gadgets.py").write_text(
+    "from src.schemas import GadgetOut\n"
+    "from src.funcs import make_gid\n\n\n"
+    "def test_lists_gadgets_C11(client):\n"
+    '    client.get("/gadgets/one")\n\n\n'
+    "def test_gid_format_C12():\n"
+    "    make_gid()\n"
+    "    GadgetOut()\n")
+(root / "tests" / "results" / "api-junit.xml").write_text(
+    '<testsuites><testsuite name="pytest" timestamp="2026-07-23T00:00:00">'
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_lists_gadgets_C11" time="0.1"/>'
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_gid_format_C12" time="0.1"/>'
+    "</testsuite></testsuites>")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
                  "results": "tests/results", "proof": "tests/web-e2e/proof"},
-       "corpora": [],
+       "corpora": [{"key": "api", "runner": "pytest",
+                    "kind": "integration", "kind_detail": "HTTP surface",
+                    "tag_class": "l-api", "kpi_detail": "pytest"}],
        "entities": {"gadget": {"test_rx": "gadget",
                                "proofs": ["g1", "solo"],
                                "code": {"api": ["src/api.py"],
@@ -456,6 +474,23 @@ assert "position:sticky" in css.split(".entchips{", 1)[1].split("}")[0], \
     "the entity bar must stick while the page scrolls"
 assert ".xrow.khide,.xrow.ehide" in css, "filter compose rule missing from css"
 PY2
+
+# The test↔code thread (spike ruling 2026-07-23): kind chips + tier-labeled
+# receipts on code rows, from the fixture's junit + AST joins. FIRE proof:
+# the endpoint chip, the handler's via-route credit, the C-id receipts, the
+# named gaps (untested fn, coverage not captured), file reach, 4+ Tests cols.
+python3 - "$FIX/docs/site/center/feature-gadget.html" <<'PY3' && ok || bad "thread: code rows carry kind chips + receipts (see above)"
+import sys
+html = open(sys.argv[1]).read()
+assert "integration · 1" in html, "endpoint kind chip missing"
+assert "TESTED BY — INTEGRATION" in html, "endpoint TESTED BY block missing"
+assert "via route · 1" in html, "handler via-route credit missing"
+assert ">C11</span>" in html and ">C12</span>" in html, "C-id receipts missing"
+assert "no case" in html, "untested-function gap chip missing"
+assert "cov —" in html, "coverage named-gap chip missing"
+assert "reach · " in html, "file reach chip missing"
+assert html.count(">Tests</span>") >= 4, "Tests column missing from a table"
+PY3
 
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.
 grep -q "gabe-icon.png" "$FIX/docs/site/center/index.html" \
