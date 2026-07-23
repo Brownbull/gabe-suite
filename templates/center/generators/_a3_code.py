@@ -391,6 +391,8 @@ _INS_ICONS = {
     "merge": '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
     "split": '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
     "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
+    "doc": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    "zap": '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
 }
 
 
@@ -409,6 +411,20 @@ def itag(color_cls: str, icon: str, title: str, text: str = "") -> str:
 
 
 _INSIGHT: dict | None = None
+_DEF_SPANS: dict[str, list] = {}
+
+
+def _def_spans(f: str, text: str) -> list:
+    """Per-file (def name, start, end) spans, parsed once per build."""
+    if f not in _DEF_SPANS:
+        try:
+            _DEF_SPANS[f] = [
+                (n.name, n.lineno, n.end_lineno or n.lineno)
+                for n in ast.walk(ast.parse(text))
+                if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))]
+        except SyntaxError:
+            _DEF_SPANS[f] = []
+    return _DEF_SPANS[f]
 
 
 def model_insight(repo: Path) -> dict:
@@ -461,6 +477,15 @@ def model_insight(repo: Path) -> dict:
         c["internal_files"] = sorted(f for f, t in texts.items()
                                      if f != c["file"] and rx.search(t))
         c["internal"] = len(c["internal_files"])
+        # WHICH defs in each referencing file mention the class — for the
+        # detail's "Usage by internal" table (file · functions).
+        c["internal_refs"] = []
+        for f in c["internal_files"]:
+            lines = texts[f].splitlines()
+            defs = [name for name, s, e in _def_spans(f, texts[f])
+                    if rx.search("\n".join(lines[s - 1:e]))]
+            c["internal_refs"].append(
+                {"file": f, "defs": list(dict.fromkeys(defs))[:6]})
         c["orphan"] = c["usage"] == 0 and c["internal"] == 0
     for c in classes.values():
         mine = {n for n, *_ in c["fields"]}
@@ -483,7 +508,7 @@ def insight_serial(repo: Path) -> dict:
     """The archmap-ready view: signals only, never the field lists (those
     already ride models/schemas)."""
     return {k: {kk: vv for kk, vv in v.items()
-                if kk not in ("fields", "fks_out")}
+                if kk not in ("fields", "fks_out", "internal_files")}
             for k, v in model_insight(repo).items()}
 
 
@@ -720,46 +745,112 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 f"<th>Stored as (the FK)</th><th>Paired via</th></tr></thead>"
                 f"<tbody>{rows}</tbody></table>")
 
-    def _dm_meta(cls: str, kind_html: str, is_schema: bool,
-                 uqs: list | None = None, doc: str = "") -> str:
-        """The class-METADATA block that leads the expansion (operator ruling
-        2026-07-23): kind · uniqueness · api Touched-by · internal
-        Referenced-by · docstring — everything that used to crowd the table
-        columns lives here, shown only when the row opens."""
-        c = ins.get(cls, {})
-        api = " · ".join(
-            ep_chip(e) for e in eps
-            if cls in e["touches"] or (is_schema and cls in e["resp"])) or "—"
-        ints = c.get("internal_files") or []
-        int_html = (" · ".join(f"<code>{E(f.rsplit('/', 1)[-1])}</code>"
-                               for f in ints) or "—")
-        rows = [("Kind", kind_html),
-                ("Touched by (api)", api),
-                ("Referenced by (internal)", int_html)]
+    _page_files = {f for _layer, f, _n in files}
+
+    def _fchip(f: str) -> str:
+        """A file mention LINKS to its code-map row when the file is on this
+        page; a file mapped by another entity stays plain."""
+        name = E(f.rsplit("/", 1)[-1])
+        if f in _page_files:
+            return f'<a class="dlink" href="#{_anchor("cm", slug, f)}"><code>{name}</code></a>'
+        return f"<code>{name}</code>"
+
+    def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
+        """A titled subsection head inside the row detail — icon + colored
+        label, so each block (usage · structure) is identifiable at a
+        glance (operator polish 2026-07-23)."""
+        return (f'<p class="dmh" style="--dc:{color}">{_ins_ic(icon)}'
+                f"<b>{E(label)}</b>{extra}</p>")
+
+    def _dm_meta(cls: str, kind_html: str, doc: str = "") -> str:
+        """Kind + docstring only — the usage facts are titled TABLES now."""
+        rows = [(f'{_ins_ic("model" if "model" in kind_html else "schema")} KIND',
+                 "#7c3aed", kind_html)]
         if doc:
-            rows.append(("Docstring", E(doc)))
-        for u in (uqs or []):
-            rows.append(("Unique", f"<code>{E(u)}</code>"))
-        body = "".join(f'<tr><td class="metak">{E(k)}</td><td>{v}</td></tr>'
-                       for k, v in rows)
-        return (f'<table class="tbl dm-meta"><tbody>{body}</tbody></table>')
+            rows.append((f'{_ins_ic("doc")} DOCSTRING', "#64748b", E(doc)))
+        body = "".join(
+            f'<tr><td class="metak" style="color:{col}">{k}</td>'
+            f"<td>{v}</td></tr>" for k, col, v in rows)
+        return f'<table class="tbl dm-meta"><tbody>{body}</tbody></table>'
+
+    def _dm_api_tbl(cls: str, is_schema: bool) -> str:
+        """Usage by API — the teal bar's receipts: one row per endpoint that
+        touches the class, linked to its endpoint row."""
+        c = ins.get(cls, {})
+        n = c.get("usage", 0)
+        bar = (f'<span class="ubar" style="width:{max(2, min(60, n * 11))}px">'
+               f"</span><b>{n}</b>")
+        head = _dmh("#0d6e78", "zap", "Usage by API", f" {bar}")
+        hits = [e for e in eps
+                if cls in e["touches"] or (is_schema and cls in e["resp"])]
+        fk = (f'<p class="sub">+ {c["fk_in"]} FK in-degree (other models '
+              f"pointing at this table) also rides the teal bar.</p>"
+              if c.get("fk_in") else "")
+        if not hits:
+            return head + (fk or '<p class="sub">no API usage on record — '
+                                 "the teal bar is empty.</p>")
+        body = "".join(
+            f"<tr><td>{ep_chip(e)}</td><td><code>{E(e['fn'])}</code></td>"
+            f"<td>{_fchip(e['file'])}</td></tr>" for e in hits)
+        return (head + '<table class="tbl"><thead><tr><th>Endpoint</th>'
+                "<th>Handler</th><th>Defined in</th></tr></thead>"
+                f"<tbody>{body}</tbody></table>" + fk)
+
+    def _dm_int_tbl(cls: str) -> str:
+        """Usage by internal — the violet bar's receipts: one row per mapped
+        backend file referencing the class, with the functions that do."""
+        c = ins.get(cls, {})
+        n = c.get("internal", 0)
+        bar = (f'<span class="ubar u-int" style="width:'
+               f'{max(2, min(60, n * 11))}px"></span><b>{n}</b>')
+        head = _dmh("#7c3aed", "schema", "Usage by internal", f" {bar}")
+        refs = c.get("internal_refs") or []
+        if not refs:
+            return head + ('<p class="sub">no internal references across the '
+                           "mapped backend files — the violet bar is empty.</p>")
+        body = "".join(
+            f"<tr><td>{_fchip(r['file'])}</td><td>"
+            + (" · ".join(f"<code>{E(d)}</code>" for d in r["defs"]) or
+               "<span class='sub'>module level</span>")
+            + "</td></tr>" for r in refs)
+        return (head + '<table class="tbl"><thead><tr><th>File</th>'
+                "<th>Referencing function(s)</th></tr></thead>"
+                f"<tbody>{body}</tbody></table>")
 
     def _dm_detail(cls: str, fields: list, meta_html: str = "",
-                   rels: list[dict] | None = None) -> str:
-        """The in-place expansion for one class: the METADATA block first
-        (kind · unique · touched-by · referenced-by), then relationships,
-        then the columns table (Column/Type/Example/Description).
-        Descriptions are read from source (description=/comment= kwargs or the
-        field line's own # comment — see _field_desc); a field without one
+                   rels: list[dict] | None = None, is_schema: bool = True,
+                   uqs: list | None = None) -> str:
+        """The in-place expansion, in titled blocks (operator polish
+        2026-07-23): metadata (kind · docstring) → Usage by API → Usage by
+        internal → relationships → Structure (columns, with unique-constraint
+        chips packed onto their rows). Descriptions read from source; absent
         renders an em dash. Older 2-tuple archmaps stay renderable."""
+        uq_cols: set = set()
+        leftover_uqs = []
+        fnames = {str(f[0]) for f in fields}
+        for u in (uqs or []):
+            named = set(_re_mod.findall(r"'([A-Za-z_][A-Za-z0-9_]*)'", u)) & fnames
+            if named:
+                uq_cols |= named
+            else:
+                leftover_uqs.append(u)
         body = ""
         for f in fields:
             n, t = f[0], f[1]
             d = f[2] if len(f) > 2 and f[2] else "—"
-            body += (f"<tr><td><code>{E(n)}</code></td><td>{link_types(t)}</td>"
+            uq_chip = (' <span class="tag t-uq" title="part of a UNIQUE '
+                       'constraint">unique</span>' if n in uq_cols else "")
+            body += (f"<tr><td><code>{E(n)}</code>{uq_chip}</td>"
+                     f"<td>{link_types(t)}</td>"
                      f"<td><code>{E(_example(n, t))}</code></td>"
                      f"<td>{E(trunc(d, 96))}</td></tr>")
-        return (f"{meta_html}{rel_rows(cls, rels or [])}"
+        struct_head = _dmh("#b3403a", "fields", "Structure",
+                           f' <span class="sub">{len(fields)} column(s)</span>')
+        leftover = "".join(
+            f'<p class="sub">Constraint: <code>{E(u)}</code></p>'
+            for u in leftover_uqs)
+        return (f"{meta_html}{_dm_api_tbl(cls, is_schema)}{_dm_int_tbl(cls)}"
+                f"{rel_rows(cls, rels or [])}{struct_head}{leftover}"
                 f'<table class="tbl"><thead><tr><th>Column</th><th>Type</th>'
                 f"<th>Example (synthetic)</th><th>Description</th></tr></thead>"
                 f"<tbody>{body}</tbody></table>")
@@ -831,12 +922,14 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
     for m in models:
         meta = _dm_meta(m["cls"],
                         f'model — table <code>{E(m["table"])}</code>',
-                        False, uqs=m["uqs"], doc=m.get("doc") or "")
+                        doc=m.get("doc") or "")
         cells = [f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}',
                  E(slug),
                  f'<code>{E(m["file"])}</code>',
                  _ins_usage(m["cls"], ins)]
-        _mrows.append((cells, _dm_detail(m["cls"], m["cols"], meta, m["rels"]),
+        _mrows.append((cells,
+                       _dm_detail(m["cls"], m["cols"], meta, m["rels"],
+                                  is_schema=False, uqs=m["uqs"]),
                        _anchor("dm", slug, m["cls"])))
     html += xtable(["Class", "Entity", "File", "Usage"], _mrows, widths=_DM_W)
     html += (f'<p class="sub" style="margin-top:14px">'
@@ -844,7 +937,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
              f"schema(s) — the shapes the Returns column links to:</p>")
     _srows = []
     for s_ in schemas:
-        meta = _dm_meta(s_["cls"], "API schema", True, doc=s_.get("doc") or "")
+        meta = _dm_meta(s_["cls"], "API schema", doc=s_.get("doc") or "")
         cells = [f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}',
                  E(slug),
                  f'<code>{E(s_["file"])}</code>',

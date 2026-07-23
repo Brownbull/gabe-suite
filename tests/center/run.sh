@@ -158,9 +158,16 @@ assert '<ul class="iclist">' in html, "icon dictionary must render as a LIST"
 assert "<span>Entity</span>" in html, "consolidated tables need the Entity column"
 assert "<span>Touched by</span>" not in html and "<span>Used by</span>" not in html, \
     "touched-by/used-by columns must move into the row detail"
-assert "dm-meta" in html and "Referenced by (internal)" in html, \
-    "row detail must lead with the metadata block"
-assert "Touched by (api)" in html, "api touched-by must live in the metadata block"
+assert "dm-meta" in html, "row detail must lead with the metadata block"
+assert "Usage by API" in html and "Usage by internal" in html, \
+    "usage facts must render as TITLED tables in the detail"
+assert 'class="dmh"' in html, "detail subsections need their iconed titles"
+assert "Structure" in html and html.count('class="dmh"') >= 3, \
+    "structure needs its own titled block"
+assert "the teal bar is empty" in html or "<th>Endpoint</th>" in html, \
+    "api usage table (or its honest-empty line) must render"
+assert "the violet bar is empty" in html or "<th>Referencing function(s)</th>" in html, \
+    "internal usage table (or its honest-empty line) must render"
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
 assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]
