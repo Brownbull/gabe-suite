@@ -375,6 +375,13 @@ grep -q '78.3% api' "$DEP/docs/site/center/tests.html" \
 # -> no decisions cell invented.
 grep -q 'no reporter wired' "$FIX/docs/site/center/tests.html" \
   && ok || bad "M40: no reporter must stay the honest named gap"
+# Gabe Center branding: the suite icon + subtitle ship in every skeleton.
+grep -q "gabe-icon.png" "$FIX/docs/site/center/index.html" \
+  && ok || bad "brand: the Gabe icon must ride the sidebar logo tile"
+grep -q "Gabe Center" "$FIX/docs/site/center/index.html" \
+  && ok || bad "brand: the subtitle must read Gabe Center"
+[ -f "$FIX/docs/site/center/assets/gabe-icon.png" ] \
+  && ok || bad "brand: gabe-icon.png must copy with the shell assets"
 # M38: the architecture station fills its OWN skeleton, completely.
 [ -f "$SHELL_SRC/architecture.html" ] && ok || bad "M38: shell/architecture.html skeleton must ship"
 grep -q '<h1>Architecture</h1>' "$FIX/docs/site/center/architecture.html" \

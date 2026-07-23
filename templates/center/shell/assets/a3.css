@@ -32,7 +32,7 @@ svg{flex:none}
 .app{display:grid;grid-template-columns:var(--side-w) 1fr;min-height:100vh}
 .side{background:var(--sidebar);color:var(--sidebar-ink);padding:16px 12px;position:sticky;top:0;height:100vh;overflow:auto;display:flex;flex-direction:column;gap:4px}
 .brand{display:flex;align-items:center;gap:10px;padding:6px 8px 12px}
-.brand .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:grid;place-items:center;color:#fff;flex:none}
+.brand .logo{width:30px;height:30px;border-radius:8px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 0 0 1px rgba(255,255,255,.14)}
 .brand b{font-size:.92rem;color:#fff;letter-spacing:-.01em;display:block;line-height:1.2}
 .brand small{font-size:.66rem;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:.08em}
 .navlabel{font-size:.62rem;text-transform:uppercase;letter-spacing:.11em;color:var(--sidebar-muted);padding:12px 10px 4px;font-weight:600}
