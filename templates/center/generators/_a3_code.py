@@ -14,11 +14,33 @@ from __future__ import annotations
 
 import ast
 import glob as _glob
+import json as _json
 import re as _re_mod
 from pathlib import Path
 
 import _center_data as _cd
-from _a3_render import E, legend, lines_grade, sechead, subnav, table, trunc, xtable
+from _a3_render import (E, entity_icon, legend, lines_grade, sechead, subnav,
+                        table, trunc, xtable)
+
+_ADOPT_NAMES: dict | None = None
+
+
+def _adopt_name(slug_: str) -> str:
+    """The entity's display name from the registry (label fallback), cached."""
+    global _ADOPT_NAMES
+    if _ADOPT_NAMES is None:
+        _ADOPT_NAMES = {}
+        p = _cd.CENTER_DIR / "adoption.json"
+        if p.exists():
+            try:
+                for s in _json.loads(p.read_text()).get("sections", []):
+                    if s.get("entity"):
+                        _ADOPT_NAMES[s["entity"]] = (s.get("display_name")
+                                                     or s.get("label")
+                                                     or s["entity"])
+            except (ValueError, OSError):
+                pass
+    return _ADOPT_NAMES.get(slug_, slug_)
 
 
 def _field_desc(item: ast.AnnAssign, src_lines: list[str]) -> str:
@@ -575,6 +597,7 @@ def function_insight(repo: Path) -> dict:
                 "params": [(a.arg,
                             ast.unparse(a.annotation) if a.annotation else "")
                            for a in node.args.args if a.arg != "self"],
+                "returns": ast.unparse(node.returns) if node.returns else "",
                 "doc": _first_sentence(ast.get_docstring(node)),
                 "ids": {i for i in _re_mod.findall(
                     r"[A-Za-z_][A-Za-z0-9_]{3,}", body)} - _PY_KEYWORDS,
@@ -888,6 +911,55 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 f"<tbody>{rows}</tbody></table>")
 
     _page_files = {f for _layer, f, _n in files}
+    # Function insight is needed EARLY: the data-model detail links its
+    # referencing functions (cached — the Functions section reuses it).
+    fins = function_insight(repo)
+    _fn_by_filename: dict = {}
+    for _c in fins.values():
+        _fn_by_filename.setdefault((_c["file"], _c["name"]), _c)
+
+    def _entity_chip(owner: str, pending: bool) -> str:
+        """The cross-entity label: the owner's stable icon + display name;
+        pending owners say so (their page is not built yet)."""
+        name = _adopt_name(owner)
+        title = f"entity: {name}" + (" — pending, page not built yet"
+                                     if pending else "")
+        return (f' <span class="tag ic t-ent" title="{E(title)}">'
+                f"{entity_icon(owner, 11)} {E(name)}</span>")
+
+    def _xref(kind: str, ident: str, owner: str) -> tuple[str, str]:
+        """(href, entity-chip) for a function ('fn') or class ('dm')
+        reference. Same page → plain anchor. Another CARDED entity → its
+        feature page's anchor + the entity chip. A PENDING entity (no page
+        yet) → the entity index, the placeholder home for everything whose
+        page is not built, + the chip marked pending."""
+        if not owner or owner == slug:
+            return f'#{_anchor(kind, slug, ident)}', ""
+        if (_cd.CENTER_DIR / "cards" / f"{owner}.md").exists():
+            return (f'feature-{owner}.html#{_anchor(kind, owner, ident)}',
+                    _entity_chip(owner, False))
+        return "entity-index.html", _entity_chip(owner, True)
+
+    def _io_label(fentry: dict, cls: str) -> str:
+        """in / out / in·out — where the class sits in the function's
+        signature (param annotation vs return annotation); empty when it is
+        only used in the body."""
+        pin = any(cls in (t or "") for _p, t in fentry.get("params", []))
+        pout = cls in (fentry.get("returns") or "")
+        if pin and pout:
+            return ' <span class="tag t-io" title="parameter AND return type">in·out</span>'
+        if pin:
+            return ' <span class="tag t-in" title="parameter type">in</span>'
+        if pout:
+            return ' <span class="tag t-out" title="return type">out</span>'
+        return ""
+
+    def _fn_link(fentry: dict, io_cls: str = "") -> str:
+        """A linked function chip (+ optional in/out label vs io_cls)."""
+        href, chip = _xref("fn", fentry["fn"], fentry.get("entity", ""))
+        io = _io_label(fentry, io_cls) if io_cls else ""
+        return (f'<a class="dlink" href="{href}"><code>{E(fentry["fn"])}'
+                f"</code></a>{io}{chip}")
 
     def _fchip(f: str) -> str:
         """A file mention LINKS to its code-map row when the file is on this
@@ -950,11 +1022,22 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         if not refs:
             return head + ('<p class="sub">no internal references across the '
                            "mapped backend files — the violet bar is empty.</p>")
-        body = "".join(
-            f"<tr><td>{_fchip(r['file'])}</td><td>"
-            + (" · ".join(f"<code>{E(d)}</code>" for d in r["defs"]) or
-               "<span class='sub'>module level</span>")
-            + "</td></tr>" for r in refs)
+        # Functions are documented now — each referencing def LINKS to its
+        # Functions row (here or on its owner's page) and carries the in/out
+        # label: where this class sits in that function's signature. A ref
+        # with no def is module level (imports, constants) — which is why the
+        # axis stays "internal", not "functions".
+        body = ""
+        for r in refs:
+            fdefs = []
+            for d in r["defs"]:
+                fe = _fn_by_filename.get((r["file"], d))
+                fdefs.append(_fn_link(fe, io_cls=cls) if fe
+                             else f"<code>{E(d)}</code>")
+            body += (f"<tr><td>{_fchip(r['file'])}</td><td>"
+                     + (" · ".join(fdefs)
+                        or "<span class='sub'>module level</span>")
+                     + "</td></tr>")
         return (head + '<table class="tbl"><thead><tr><th>File</th>'
                 "<th>Referencing function(s)</th></tr></thead>"
                 f"<tbody>{body}</tbody></table>")
@@ -1304,12 +1387,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 defs = [name for name, s2, e2 in _def_spans(f, txt)
                         if rx.search("\n".join(lines_f[s2 - 1:e2]))]
                 defs = list(dict.fromkeys(defs))[:6]
+                linked = []
+                for d in defs:
+                    fe = _fn_by_filename.get((f, d))
+                    linked.append(_fn_link(fe) if fe else f"<code>{E(d)}</code>")
                 int_rows += (f"<tr><td>{_fchip(f)}"
                              + (" <small>(own file)</small>"
                                 if f == c["file"] else "")
                              + "</td><td>"
-                             + (" · ".join(f"<code>{E(d)}</code>"
-                                           for d in defs)
+                             + (" · ".join(linked)
                                 or "<span class='sub'>module level</span>")
                              + "</td></tr>")
             int_html = int_head + (
@@ -1324,12 +1410,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             call_chips = []
             for n in calls[:12]:
                 tgt = qual_by_name.get(n)
-                if tgt and tgt["file"] in page_py:
-                    call_chips.append(
-                        f'<a class="dlink" href="#{_anchor("fn", slug, tgt["fn"])}">'
-                        f"<code>{E(n)}</code></a>")
-                else:
-                    call_chips.append(f"<code>{E(n)}</code>")
+                call_chips.append(_fn_link(tgt) if tgt
+                                  else f"<code>{E(n)}</code>")
             calls_html = (_dmh("#0f766e", "merge", "Calls",
                                f' <span class="sub">{len(calls)} documented '
                                f"function(s)</span>")
@@ -1340,17 +1422,24 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                              "function — a base.</p>"))
             # Signature
             sig_head = _dmh("#b3403a", "fields", "Signature",
-                            f' <span class="sub">{len(c["params"])} '
-                            f"param(s)</span>")
-            if c["params"]:
-                sig = ('<table class="tbl"><thead><tr><th>Param</th>'
-                       "<th>Type</th></tr></thead><tbody>"
-                       + "".join(f"<tr><td><code>{E(p)}</code></td>"
-                                 f"<td>{link_types(t) if t else '—'}</td></tr>"
-                                 for p, t in c["params"])
-                       + "</tbody></table>")
-            else:
-                sig = '<p class="sub">takes nothing beyond self/defaults.</p>'
+                            f' <span class="sub">{len(c["params"])} param(s) '
+                            f"in · "
+                            + ("1 return out" if c.get("returns") else
+                               "return unannotated") + "</span>")
+            # Every documented class in a type LINKS (link_types), and each
+            # row says which side of the function it sits on: params are IN,
+            # the return is OUT — the same in/out dialect the class pages use.
+            srows = "".join(
+                f"<tr><td><code>{E(p)}</code></td>"
+                f"<td>{link_types(t) if t else '—'}</td>"
+                f'<td><span class="tag t-in">in</span></td></tr>'
+                for p, t in c["params"])
+            srows += ("<tr><td><i>returns</i></td>"
+                      f"<td>{link_types(c['returns']) if c.get('returns') else '—'}</td>"
+                      f'<td><span class="tag t-out">out</span></td></tr>')
+            sig = ('<table class="tbl"><thead><tr><th>Param</th>'
+                   "<th>Type</th><th>Role</th></tr></thead><tbody>"
+                   + srows + "</tbody></table>")
             return meta + api_html + int_html + calls_html + sig_head + sig
 
         _frows = []

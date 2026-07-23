@@ -41,6 +41,7 @@ c = root / center_rel
     "def make_gid():\n    return 'g-1'\n\n\n"
     "def build_gadget(seed):\n    return make_gid() + seed\n\n\n"
     "def lonely_helper():\n    return 0\n\n\n"
+    "def emit_gadget(d: GadgetDraft) -> GadgetDraft:\n    return d\n\n\n"
     "def sprawler():\n" + "    x = 1\n" * 52 + "    return x\n")
 # A schema whose fields carry machine-readable descriptions (kwarg + trailing
 # comment) for the data-model Description column.
@@ -52,7 +53,10 @@ c = root / center_rel
     "\n\nclass GadgetIn:  # 100% structural twin of GadgetOut -> merge candidate\n"
     "    gid: str\n"
     "    size: int\n"
-    "    raw: bytes\n")
+    "    raw: bytes\n"
+    "\n\nclass GadgetDraft:  # used by emit_gadget as param AND return -> in-out\n"
+    "    gid: str\n"
+    "    note: str\n")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
                  "results": "tests/results", "proof": "tests/web-e2e/proof"},
@@ -199,6 +203,13 @@ mg = fi["src/funcs.py::make_gid"]
 assert mg["base"] and mg["internal"] >= 1 and not mg["orphan"], mg
 assert fi["src/funcs.py::lonely_helper"]["orphan"]
 assert fi["src/funcs.py::sprawler"]["god"]
+# in/out dialect + linked references (entity-icons round)
+assert fi["src/funcs.py::emit_gadget"]["returns"] == "GadgetDraft"
+assert 'class="tag t-io"' in html, \
+    "GadgetDraft's referencing fn must wear in·out (param AND return)"
+assert "<i>returns</i>" in html and 'class="tag t-out"' in html, \
+    "Signature must state the return with its out role"
+assert 'class="tag t-in"' in html, "params must carry the in role"
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
 assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]

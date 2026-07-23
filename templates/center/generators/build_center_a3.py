@@ -121,6 +121,7 @@ SHELL_SRC, SHELL_NOTE = resolve_shell()
 import _a3_render as R_MARKS  # noqa: E402  (rowmarks lifecycle — init + snapshot)
 from _a3_render import (  # noqa: E402  (helpers live beside this module)
     E,
+    entity_icon,
     legend,
     meter,
     sechead,
@@ -336,8 +337,10 @@ def _sidebar_entity(s: dict) -> str:
     chip = "" if approved else f' <span class="count">{E(status)}</span>'
     style = "" if has_card else ' style="opacity:.55"'
     href = f"feature-{slug}.html" if has_card else "entity-index.html"
+    # The entity's stable hash-picked icon (R: entity icons, 2026-07-23) —
+    # the same glyph represents it across the center: nav, index, xref labels.
     return (f'<a class="navitem"{style} href="{href}" '
-            f'title="{E(s["rank"])} · {E(status)}">{BOX} '
+            f'title="{E(s["rank"])} · {E(status)}">{entity_icon(slug)} '
             f'{E(LABELS.get(slug, slug))}{chip}</a>')
 
 

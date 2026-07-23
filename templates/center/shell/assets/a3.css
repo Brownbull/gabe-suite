@@ -773,3 +773,8 @@ details.legset .gal{margin:8px 0 4px}
 .dmh b{font-weight:750}
 .dmh svg{flex:none}
 .t-uq{background:color-mix(in srgb,#0d6e78 14%,transparent);color:#0d6e78}
+.t-in{background:color-mix(in srgb,#0d6e78 14%,transparent);color:#0d6e78}
+.t-out{background:color-mix(in srgb,#b45309 15%,transparent);color:#b45309}
+.t-io{background:color-mix(in srgb,#5a53a8 14%,transparent);color:#5a53a8}
+.t-ent{background:color-mix(in srgb,#0a7d6b 12%,transparent);color:#0a7d6b}
+.navitem>svg{flex:none;opacity:.85}
