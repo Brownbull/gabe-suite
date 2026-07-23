@@ -160,7 +160,7 @@ assert "u-int" in html and "ubar" in html, "two-bar usage missing"
 assert "Data-model candidates" in html, "candidates table missing"
 assert 'title="merge candidate"' in html, "twin pair must yield a merge candidate"
 assert 'title="deprecation candidate"' in html, "orphan must yield a deprecation candidate"
-assert "what the candidate icons mean" in html, "candidates icon dictionary missing"
+assert "What the candidate icons mean" in html, "candidates icon dictionary missing"
 assert "Insight icons" in html, "section icon dictionary missing"
 assert '<ul class="iclist">' in html, "icon dictionary must render as a LIST"
 assert "<span>Entity</span>" in html, "consolidated tables need the Entity column"
@@ -184,8 +184,12 @@ fns_html = html[fn_i:]
 assert "make_gid" in fns_html and "sprawler" in fns_html, "fixture defs must list"
 assert 'title="base — calls no other documented function"' in fns_html, \
     "make_gid must wear the base tag"
-assert "Functions candidates" in fns_html, "functions candidates table missing"
-assert "lonely_helper" in fns_html.split("Functions candidates")[1], \
+assert 'id="sec-code-model-cands"' in html and 'id="sec-code-fn-cands"' in html, \
+    "both candidates sections need their own anchored secheads"
+assert html.count("What the candidate icons mean") >= 2, \
+    "both candidates sections need their icon dictionary in the section info"
+assert "Function candidates" in fns_html, "function candidates section missing"
+assert "lonely_helper" in fns_html.split("Function candidates")[1], \
     "lonely_helper must be a deprecation candidate"
 assert "52" in fns_html or "53" in fns_html, "sprawler god-length must show"
 assert "Signature" in fns_html and "Calls" in fns_html, \

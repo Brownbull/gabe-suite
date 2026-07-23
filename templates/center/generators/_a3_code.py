@@ -750,7 +750,11 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
     html = subnav([("sec-code-endpoints", "Endpoints", _IC_ZAP),
                    ("sec-code-map", "Code map", _IC_FOLDER),
                    ("sec-code-model", "Data model", _IC_DB),
-                   ("sec-code-fns", "Functions", _INS_ICONS["fn"])])
+                   ("sec-code-model-cands", "Data-model candidates",
+                    _INS_ICONS["merge"]),
+                   ("sec-code-fns", "Functions", _INS_ICONS["fn"]),
+                   ("sec-code-fn-cands", "Function candidates",
+                    _INS_ICONS["merge"])])
     html += sechead(
         "Code", "Endpoints", "#4f46e5", _IC_ZAP,
         sub="the HTTP surface, parsed from the FastAPI decorators",
@@ -1118,27 +1122,37 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                       f'<td>{len(c["fields"])} fields — past the {_GOD_FIELDS}-'
                       f"field line; the number names it, judgment rules it."
                       f"</td></tr>")
+    _n_cands = cands.count("<tr>")
+    html += sechead(
+        "Code", "Data-model candidates", "#7c3aed", _INS_ICONS["merge"],
+        sub="named by the machine, ruled by judgment — the verdict lands in "
+            "DECISIONS/PENDING via review or a health pass, never here",
+        id_="sec-code-model-cands",
+        note=f"{_n_cands} candidate(s) this build · each wears the color and "
+             f"icon dialect of the flag that triggered it in the Data model "
+             f"tables above.",
+        info='<div class="leg"><b>What the candidate icons mean</b>'
+             '<ul class="iclist">'
+             f"<li>{itag('t-sim', 'merge', 'merge candidate')} <b>merge</b> — "
+             f"structural twins ≥ {int(_MERGE_FLOOR * 100)}% (from the "
+             f"{itag('t-sim', 'sim', 'similarity flag')} similarity flag).</li>"
+             f"<li>{itag('t-orph', 'archive', 'deprecation candidate')} "
+             "<b>deprecation</b> — a true orphan, zero on both usage axes "
+             f"(from the {itag('t-orph', 'orphan', 'orphan flag')} orphan "
+             "flag).</li>"
+             f"<li>{itag('t-god', 'split', 'split candidate')} <b>split</b> — "
+             f"a god class ≥ {_GOD_FIELDS} fields (from the "
+             f"{itag('t-god', 'fields', 'fields flag', 'N')} fields flag)."
+             "</li></ul></div>")
     if cands:
         html += (
-            '<p class="sub" style="margin-top:18px"><b>Data-model candidates '
-            "— named by the machine, ruled by judgment.</b> Each wears the "
-            "color and icon dialect of the flag that triggered it above; the "
-            "verdict lands in DECISIONS/PENDING via review or a health pass, "
-            "never here.</p>"
-            "<details><summary class=\"sub\" style=\"cursor:pointer\">⊕ what "
-            "the candidate icons mean</summary><div class=\"leg\">"
-            + itag("t-sim", "merge", "merge candidate")
-            + f" merge — structural twins ≥ {int(_MERGE_FLOOR * 100)}% (from "
-            + itag("t-sim", "sim", "similarity flag") + ") · "
-            + itag("t-orph", "archive", "deprecation candidate")
-            + " deprecation — a true orphan (from "
-            + itag("t-orph", "orphan", "orphan flag") + ") · "
-            + itag("t-god", "split", "split candidate")
-            + f" split — a god class ≥ {_GOD_FIELDS} fields (from "
-            + itag("t-god", "fields", "fields flag", "N") + ")</div></details>"
             "<table class=\"tbl\"><thead><tr><th>Candidate</th><th>Classes</th>"
             "<th>Why the machine flags it</th></tr></thead>"
             f"<tbody>{cands}</tbody></table>")
+    else:
+        html += ('<p class="sub">No data-model candidates this build — no '
+                 "twins past the merge line, no true orphans, no god "
+                 "classes.</p>")
     # ---- Functions — the FUNCTIONS lens (sibling of the data model) --------
     fins = function_insight(repo)
     page_py = {f for _layer, f, _n in files if f.endswith(".py")}
@@ -1380,15 +1394,52 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                            f'<td>{c["lines"]} lines — past the '
                            f"{_FN_GOD_LINES}-line function budget; the number "
                            f"names it, judgment rules it.</td></tr>")
+        _n_fcands = fcands.count("<tr>")
+        html += sechead(
+            "Code", "Function candidates", "#b45309", _INS_ICONS["merge"],
+            sub="named by the machine, ruled by judgment — same contract as "
+                "the data-model candidates, function-scoped",
+            id_="sec-code-fn-cands",
+            note=f"{_n_fcands} candidate(s) this build · each wears the color "
+                 f"and icon dialect of the flag that triggered it in the "
+                 f"Functions table above.",
+            info='<div class="leg"><b>What the candidate icons mean</b>'
+                 '<ul class="iclist">'
+                 f"<li>{itag('t-sim', 'merge', 'merge candidate')} <b>merge</b>"
+                 f" — identifier twins ≥ {int(_FN_MERGE_FLOOR * 100)}% (from "
+                 f"the {itag('t-sim', 'sim', 'similarity flag')} similarity "
+                 "flag).</li>"
+                 f"<li>{itag('t-orph', 'archive', 'deprecation candidate')} "
+                 "<b>deprecation</b> — served by no endpoint, referenced by "
+                 f"no mapped code (from the "
+                 f"{itag('t-orph', 'orphan', 'orphan flag')} orphan flag).</li>"
+                 f"<li>{itag('t-god', 'split', 'split candidate')} <b>split</b>"
+                 f" — a god function ≥ {_FN_GOD_LINES} lines (from the "
+                 f"{itag('t-god', 'fields', 'length flag', 'N')} length flag)."
+                 "</li></ul></div>")
         if fcands:
             html += (
-                '<p class="sub" style="margin-top:18px"><b>Functions '
-                "candidates — named by the machine, ruled by judgment.</b> "
-                "Same color-lock as the data-model candidates: each wears the "
-                "flag that triggered it.</p>"
                 "<table class=\"tbl\"><thead><tr><th>Candidate</th>"
                 "<th>Functions</th><th>Why the machine flags it</th></tr>"
                 f"</thead><tbody>{fcands}</tbody></table>")
+        else:
+            html += ('<p class="sub">No function candidates this build — no '
+                     "identifier twins past the merge line, no orphans, no "
+                     "god functions.</p>")
+    else:
+        # The subnav always lists both sections — a pill pointing at a
+        # missing anchor is a dead link the crawl gate rightly fails, so an
+        # entity with no mapped defs renders both as honest-empty.
+        html += sechead(
+            "Code", "Functions", "#b45309", _INS_ICONS["fn"],
+            sub="every def in this entity's mapped backend files",
+            id_="sec-code-fns",
+            note="no defs in this entity's mapped backend files this build.")
+        html += sechead(
+            "Code", "Function candidates", "#b45309", _INS_ICONS["merge"],
+            sub="named by the machine, ruled by judgment",
+            id_="sec-code-fn-cands",
+            note="no defs — no candidates.")
 
     # ONE generic chips script for every insight table on the pane: each
     # .dmchips filters the .xrow rows between itself and the next section

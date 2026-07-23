@@ -201,7 +201,12 @@ feature-spec (card contract). This section states what adoption must OBEY.
   `center.config.json` sets `build_architecture: true` — `render_architecture()` in
   `build_center_a3.py` renders it straight from archmap.json), any section needing
   architecture facts — reads the MAP, never the codebase. Committed so a PR diff of it IS
-  the architecture change. `rows-seen.json` sits beside it as the second committed
+  the architecture change. The map also carries the two INSIGHT blocks — `model_insight`
+  (per documented class: usage on both axes, base/god/orphan flags, closest structural
+  twin) and `function_insight` (the same signals function-shaped, per mapped def) —
+  computed by the same build pass off the same cached parses: no extra step, no authored
+  input; agents read the signals here instead of re-deriving them. `rows-seen.json` sits
+  beside it as the second committed
   machine-state file: the per-row snapshot the NEW-badge layer diffs against (baseline =
   the snapshot at HEAD, so iteration boundary = commit boundary; regens inside one
   iteration badge identically, and the commit landing the snapshot wipes-and-restamps by
