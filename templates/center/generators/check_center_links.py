@@ -59,8 +59,12 @@ def run_checks() -> int:
     # a second id silently hijacks every deep link to it — and the set-based
     # anchor check below is structurally blind to it (review H1).
     from collections import Counter
+    _SVG_RX = re.compile(r"<svg.*?</svg>", re.S)
     for name, html in pages.items():
-        counts = Counter(ID_RX.findall(html))
+        # Mermaid SVGs legitimately reuse node ids per diagram — the dup
+        # check reads the page with svg blocks stripped; anchor RESOLUTION
+        # below still reads the full page.
+        counts = Counter(ID_RX.findall(_SVG_RX.sub("", html)))
         dup = sorted(i for i, n in counts.items() if n > 1)
         if dup:
             dead.append(f"{name}: duplicate id(s) — deep links land on the "

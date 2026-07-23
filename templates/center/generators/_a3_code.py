@@ -810,6 +810,21 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     files = [tuple(row) for row in amap["files"]]
 
     _page_files = {f for _layer, f, _n in files}
+    _rid_seen: set = set()
+
+    def _rid(base: str) -> str:
+        """Per-page-unique row id: the FIRST occurrence keeps the bare anchor
+        (every link targets it — consistent with first-wins ownership); a
+        sanitizer collision (get_statement vs _get_statement, a model+schema
+        name pair on the app page) gets a numeric suffix instead of silently
+        hijacking deep links (review H1, proven on gastify data)."""
+        rid, n = base, 1
+        while rid in _rid_seen:
+            n += 1
+            rid = f"{base}-{n}"
+        _rid_seen.add(rid)
+        return rid
+
     model_names = {m["cls"] for m in models}
     schema_names = {s["cls"] for s in schemas}
     documented = model_names | schema_names
@@ -985,7 +1000,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
             returns_cell(e)]
         _ep_rows.append((cells, detail,
-                         _anchor("ep", slug, e["file"] + "-" + e["fn"])))
+                         _rid(_anchor("ep", slug, e["file"] + "-" + e["fn"]))))
     html += xtable(["Endpoint", "Returns"], _ep_rows,
                    widths=["2.8fr", "1.2fr"])
 
@@ -1343,7 +1358,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        _dm_detail(m["cls"], m["cols"], meta, m["rels"],
                                   is_schema=False, uqs=m["uqs"],
                                   src_file=m["file"]),
-                       _anchor("dm", slug, m["cls"])))
+                       _rid(_anchor("dm", slug, m["cls"]))))
     html += xtable(["Class", "Entity", "File", "Usage"], _mrows, widths=_DM_W)
     html += (f'<p class="sub" style="margin-top:14px">'
              f'<span class="tag l-schemas">schemas</span> {len(schemas)} API '
@@ -1358,7 +1373,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         _srows.append((cells,
                        _dm_detail(s_["cls"], s_["fields"], meta,
                                   src_file=s_["file"]),
-                       _anchor("dm", slug, s_["cls"])))
+                       _rid(_anchor("dm", slug, s_["cls"]))))
     html += xtable(["Class", "Entity", "File", "Usage"], _srows, widths=_DM_W)
 
     # -- Data-model candidates: named by the machine, ruled by judgment ------
@@ -1639,7 +1654,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                      f'<code>{E(c["file"])}</code>',
                      _fn_usage_cell(c)]
             _frows.append((cells, _fn_detail(c),
-                           _anchor("fn", slug, c["file"] + "-" + c["fn"])))
+                           _rid(_anchor("fn", slug,
+                                        c["file"] + "-" + c["fn"]))))
         html += xtable(["Function", "Entity", "File", "Usage"], _frows,
                        widths=_DM_W)
 
