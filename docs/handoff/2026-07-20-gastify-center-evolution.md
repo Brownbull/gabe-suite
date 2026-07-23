@@ -503,3 +503,24 @@ export) degrades to bootstrap, which is the safe direction. (c) case_rows()
 and other hand-built nested tables deliberately do NOT badge (detail-level
 noise); only the two row renderers speak it. (d) `rows-seen.json` is committed
 state the crawl gate ignores; adopt-spec should name it beside archmap.json.
+
+## 9. Evidence classifier — two findings from the scan-receipt shelving (2026-07-22, commit 6ed1292)
+
+- **Fix applied in gastify's trial copy (`_a3_evidence._classify`):** an
+  explicit `flows: []` now wins like any explicit list. Before, the falsy
+  `if explicit_flows:` check treated an empty list as ABSENT and re-opened
+  inference — ca0 (supporting context, deliberately covering nothing) had
+  five flows inferred from its story text ("Escanear boleta…"), and
+  scan-receipt read 8/8 with boleta+review resting on inference alone — the
+  same false-positive class the 2026-07-22 alignment review killed on
+  transaction (`direct`/`delete`). Unit test:
+  `test_explicit_empty_flows_list_suppresses_inference`. An empty list is
+  the only way a context set can DECLARE "covers nothing"; absorb the fix.
+- **Spec/code drift to rule on:** feature-spec §Flow coverage says absent
+  fields are inferred from the set's identity "(name · feature · proof_form —
+  never from legs/story)", but `_classify` builds its flow-matching `text`
+  from identity + narration STORY + LEG NAMES. The ca0 false positive came
+  through the story. Either the spec's letter wins (drop story/legs from the
+  flow-match text) or the spec should say what the code does — a suite
+  ruling, not a project patch; gastify left the behavior as-is and fixed
+  only the empty-list semantics.

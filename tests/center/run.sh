@@ -417,6 +417,17 @@ c = ev._classify(S({"feature": "the scan journey", "proof_form": "recorded"},
 assert c["role"] == "principal" and c["inferred"] and not c["explicit_match"]
 c = ev._classify(S({}), F)
 assert c["role"] == "" and c["reason"] == "no manifest"
+# explicit EMPTY flows: [] declares "covers nothing" — inference stays shut
+# (gastify 6ed1292: ca0's story once inferred five phantom flows)
+c = ev._classify(S({"role": "supporting", "flows": [],
+                    "narration": {"story": "the scan and manual paths"}}), F)
+assert c["role"] == "supporting" and c["flows"] == []
+# inference reads IDENTITY ONLY — a story mentioning a flow must not match
+# (suite ruling 2026-07-23, handoff §9)
+c = ev._classify(S({"feature": "context shots", "proof_form": "stills",
+                    "narration": {"story": "user runs the scan pipeline"}},
+                   name="ctx-set"), F)
+assert c["flows"] == [], c
 sys.exit(0)
 PY
 ) >"$T/py.out" 2>&1; then ok; else bad "flow grammar/classifier unit asserts (see below)"; cat "$T/py.out"; fi

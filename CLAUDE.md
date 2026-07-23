@@ -69,7 +69,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-docsite** | 1.0.2 | Publish docs onto the generated HTML docs site |
 | **gabe-entity** | 1.0.1 | Entity-context reader — assembles one entity's slice (code map + registry + bindings) into a context pack from the center's committed data (archmap/adoption/config), joined on slug; a DATA lens not a per-entity skill (D7); brief or `--json`, plus `list` mode |
 | **gabe-execute** | 2.2.1 | Phase execution with tier cap, escalation gate, checkpoint commits; TASK CONTRACT carries the phase's `CASES:` (C-ids from /gabe-red) + case-scoped verify; narration legs authored hot |
-| **gabe-feature** | 1.6.0 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-adopt |
+| **gabe-feature** | 1.6.1 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-adopt |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
 | **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
 | **gabe-help** | 1.2.1 | Context-aware guide + the P14 cross-project tool registry; Full Suite Catalog is GENERATED from skill frontmatter (scripts/gen-help-catalog.py, run by install.sh) |

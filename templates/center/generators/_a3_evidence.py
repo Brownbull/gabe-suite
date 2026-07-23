@@ -151,12 +151,13 @@ def _classify(s: dict, flows: list[tuple[str, str]]) -> dict:
     also lands on unclassified WITH ITS REASON. Guessing over a broken
     declaration is how a typo'd reference set becomes golden coverage."""
     man = s["man"]
+    # Inference reads the set's IDENTITY ONLY (name · feature · proof_form) —
+    # never the narration story or leg names (suite ruling 2026-07-23,
+    # evolution handoff §9): both observed false positives (ca0's five
+    # phantom flows, scan-receipt's boleta/review) arrived through story
+    # text. Narration DESCRIBES; it must not classify.
     identity = " ".join(str(man.get(k, "")) for k in ("feature", "proof_form"))
     identity = f'{s["name"]} {identity}'.lower()
-    narr = man.get("narration") if isinstance(man.get("narration"), dict) else {}
-    story = narr.get("story", "") if isinstance(narr.get("story", ""), str) else ""
-    text = " ".join([identity, story.lower(),
-                     " ".join(leg["name"] for leg in s["legs"])]).lower()
 
     known = {k for k, _, _g in flows}
 
@@ -179,14 +180,18 @@ def _classify(s: dict, flows: list[tuple[str, str]]) -> dict:
         return _bad("manifest `flows:` names key(s) the card's # FLOWS does "
                     "not have: " + " · ".join(unknown[:4]))
 
-    if explicit_flows:
+    if isinstance(_fl, list):
+        # An explicit list wins OUTRIGHT — including the empty list, which is
+        # the only way a supporting/context set can declare "covers nothing":
+        # treating [] as absent re-opens the inference door its author closed
+        # (ca0's story text inferred five flows before this held).
         matched = [k for k, _, _g in flows if k in explicit_flows]
     else:
         matched = []
         for key, desc, _g in flows:
-            if re.search(rf"(?<![a-z]){re.escape(key)}(?![a-z])", text):
+            if re.search(rf"(?<![a-z]){re.escape(key)}(?![a-z])", identity):
                 matched.append(key)
-            elif len([t for t in _flow_tokens(desc) if t in text]) >= 2:
+            elif len([t for t in _flow_tokens(desc) if t in identity]) >= 2:
                 matched.append(key)
     golden = bool(set(matched) & {k for k, _, g in flows if g})
 

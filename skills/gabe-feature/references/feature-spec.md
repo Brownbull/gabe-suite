@@ -121,11 +121,15 @@ quietly shrunken denominator makes the coverage note lie about the card.
 - `role:` — one of `principal` (the main workflow) · `edge` (guards ·
   degraded · destructive paths) · `reference` (design-lab fidelity — NOT
   workflow proof) · `supporting` (context around the main flows).
-- `flows:` — a LIST of keys the card's `# FLOWS` actually declares.
+- `flows:` — a LIST of keys the card's `# FLOWS` actually declares. An
+  explicit EMPTY list is a declaration too — "this set covers nothing" —
+  and suppresses inference outright (the only way a supporting/context set
+  can close the inference door).
 
-Explicit fields win. Absent fields are INFERRED from the set's identity
-(name · feature · proof_form — never from legs/story: one degrade leg must not
-flip a journey set to edge) and labeled "inferred". A MALFORMED explicit
+Explicit fields win. Absent fields are INFERRED from the set's IDENTITY
+ONLY (name · feature · proof_form — never from narration story or leg names:
+narration DESCRIBES, it must not classify, and one degrade leg must not flip
+a journey set to edge) and labeled "inferred". A MALFORMED explicit
 signal — a `role:` outside the four, a `flows:` that is not a list, a key the
 card does not have — renders the set UNCLASSIFIED with its reason: guessing
 over a broken declaration is how a typo'd reference set becomes golden
