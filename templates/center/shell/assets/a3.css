@@ -35,8 +35,6 @@ svg{flex:none}
 .brand .logo{width:30px;height:30px;border-radius:8px;background:linear-gradient(135deg,var(--accent),#7c3aed);display:grid;place-items:center;color:#fff;flex:none}
 .brand b{font-size:.92rem;color:#fff;letter-spacing:-.01em;display:block;line-height:1.2}
 .brand small{font-size:.66rem;color:var(--sidebar-muted);text-transform:uppercase;letter-spacing:.08em}
-.side .search{display:flex;align-items:center;gap:8px;background:var(--sidebar-2);border:1px solid #26314a;border-radius:8px;padding:7px 10px;margin:2px 4px 10px;color:var(--sidebar-muted);font-size:.8rem}
-.side .search kbd{margin-left:auto;font:var(--mono);font-size:.62rem;background:#0c1220;border:1px solid #2b3650;border-radius:4px;padding:1px 5px;color:var(--sidebar-muted)}
 .navlabel{font-size:.62rem;text-transform:uppercase;letter-spacing:.11em;color:var(--sidebar-muted);padding:12px 10px 4px;font-weight:600}
 .navitem{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:8px;color:var(--sidebar-ink);text-decoration:none;font-size:.84rem;font-weight:500}
 .navitem:hover{background:var(--sidebar-2);color:#fff}
@@ -340,7 +338,6 @@ section[data-sec]{margin:0 0 22px}
    without changing what any row says. */
 :root[data-compact="1"] .side{padding:8px 10px;gap:1px}
 :root[data-compact="1"] .brand{padding:2px 8px 7px}
-:root[data-compact="1"] .side .search{padding:5px 10px;margin:1px 4px 6px}
 :root[data-compact="1"] .navlabel{padding:7px 10px 2px}
 :root[data-compact="1"] .navitem{padding:4px 10px}
 :root[data-compact="1"] .navsub a{padding:2px 10px}
@@ -351,7 +348,6 @@ section[data-sec]{margin:0 0 22px}
 :root[data-rail="1"]{--side-w:64px}
 :root[data-rail="1"] .navlabel,
 :root[data-rail="1"] .navsub,
-:root[data-rail="1"] .side .search,
 :root[data-rail="1"] .side .foot,
 :root[data-rail="1"] .brand small,
 :root[data-rail="1"] .brand b,
