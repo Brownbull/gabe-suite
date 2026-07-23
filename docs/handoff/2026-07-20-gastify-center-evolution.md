@@ -460,3 +460,46 @@ spec first, and gastify then implements the spec rather than the reverse.
    C-id join stops being optional.
 4. Take §7.4's rulings as spec candidates; take §7.5 as retro material.
 5. Only then hand a spec back to gastify and adopt entity #2 against it.
+
+---
+
+## 8. NEW-row badges — per-iteration change marking (gastify trial 2026-07-22, commit 824bf7e)
+
+**What it is.** Every `table()`/`xtable()` row wears a solid-accent `NEW` tag
+next to its first cell when it was added or touched THIS iteration. Operator
+ask verbatim: wipe all NEW labels at each command-center modification pass and
+restamp only what that pass touched, so the Evidence shelf (etc.) reads
+"what changed" at a glance.
+
+**Mechanism (all in the generator, zero authored state).**
+- `_a3_render.py` rowmarks engine: per-row stable key (`tbl|`/`xtbl|` +
+  columns + first-cell text, tags stripped + occurrence counter for duplicate
+  first cells) → content hash of all cells (tags stripped, volatile
+  relative-time vocabulary normalized: `T−\d+[hm]`, `\d+[dhm] ago`,
+  today/yesterday/hoy/ayer — a clock tick never re-badges).
+- Baseline = `git show HEAD:docs/site/center/rows-seen.json` — the LAST
+  COMMITTED build's row map, loaded once before any render. Row absent from
+  baseline OR hash moved → badge. Baseline missing (bootstrap) → badge
+  nothing, record only.
+- Builder writes `rows-seen.json` LAST (after the architecture station), one
+  sorted `{key: hash}` map, committed beside the pages.
+- **Wipe-and-restamp is emergent, not coded:** regens inside one iteration
+  diff against the same HEAD → idempotent badges; the commit that lands the
+  snapshot becomes the next baseline → old badges vanish by construction.
+  Iteration boundary = commit boundary.
+- CSS: `.tag.t-new` — the ONE solid-fill tag (accent bg, white text); every
+  taxonomy tag stays soft-background so "look here first" cannot blend.
+
+**Proof in the trial.** Bootstrap regen tracked 647 rows, zero badges;
+post-commit, a single appended LEDGER row produced exactly ONE badge on
+ledger.html across all 11 pages; second regen idempotent; chrome 207/207;
+7 unit cases (bootstrap · new · unchanged · touched · volatile-tick · xtable ·
+duplicate first cells) in tests/center — suite 94/94.
+
+**Suite absorption notes.** (a) `templates/center/shell/assets/a3.css` gained
+`.tag.t-new` — vendored-wins drift vs the installed copy until absorbed.
+(b) The baseline read shells out to git — a clone without history (shallow,
+export) degrades to bootstrap, which is the safe direction. (c) case_rows()
+and other hand-built nested tables deliberately do NOT badge (detail-level
+noise); only the two row renderers speak it. (d) `rows-seen.json` is committed
+state the crawl gate ignores; adopt-spec should name it beside archmap.json.

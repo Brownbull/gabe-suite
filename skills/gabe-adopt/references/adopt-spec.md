@@ -201,7 +201,11 @@ feature-spec (card contract). This section states what adoption must OBEY.
   `center.config.json` sets `build_architecture: true` — `render_architecture()` in
   `build_center_a3.py` renders it straight from archmap.json), any section needing
   architecture facts — reads the MAP, never the codebase. Committed so a PR diff of it IS
-  the architecture change.
+  the architecture change. `rows-seen.json` sits beside it as the second committed
+  machine-state file: the per-row snapshot the NEW-badge layer diffs against (baseline =
+  the snapshot at HEAD, so iteration boundary = commit boundary; regens inside one
+  iteration badge identically, and the commit landing the snapshot wipes-and-restamps by
+  construction). Both are generator-owned — never hand-edited.
 - **Ephemeral/accumulator is a REQUIREMENT per tab:** Overview=card/growth · Code=card
   `# CODE`/archmap renders · Tests=**testing claim card (`# CLAIMS`, one
   `class — intent` line each; `claim_verdicts()` in `_a3_feature.py` joins each claim by the

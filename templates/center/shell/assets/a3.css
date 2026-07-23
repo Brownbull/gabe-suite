@@ -752,3 +752,7 @@ details.legset .gal{margin:8px 0 4px}
    the subnav spaces itself. */
 .panel+.sechead,.xtbl+.sechead,p+.sechead,details+.sechead,ul+.sechead,
 .dgm+.sechead,.lens+.sechead,.kpis+.sechead,table+.sechead{margin-top:34px}
+/* NEW — rows touched THIS iteration (diff vs the last committed rows-seen
+   snapshot). Solid fill on purpose: every other tag is soft-background, so
+   the one badge that means "look here first" cannot be mistaken for taxonomy. */
+.tag.t-new{background:var(--accent);color:#fff;font-weight:800;letter-spacing:.06em}

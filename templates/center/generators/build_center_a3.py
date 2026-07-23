@@ -117,6 +117,7 @@ def resolve_shell() -> tuple[Path, str]:
 
 SHELL_SRC, SHELL_NOTE = resolve_shell()
 
+import _a3_render as R_MARKS  # noqa: E402  (rowmarks lifecycle — init + snapshot)
 from _a3_render import (  # noqa: E402  (helpers live beside this module)
     E,
     legend,
@@ -137,6 +138,33 @@ def sh(*args: str) -> str:
                               cwd=REPO_ROOT).stdout.strip()
     except OSError:
         return ""
+
+
+# NEW-row badging baseline — the rows-seen snapshot of the LAST COMMITTED
+# build. Read from HEAD (not the working tree) so every regen inside one
+# iteration diffs against the same anchor: badges are stable until the
+# snapshot lands in a commit, then wipe-and-restamp happens by construction.
+# Missing/unparseable → None: bootstrap builds badge nothing, record only.
+def _rowmarks_baseline() -> dict | None:
+    # The snapshot path follows paths.center (a hardcoded default here would
+    # silently disarm badging on any retargeted center — the crawl gate's M02
+    # lesson applies to every HEAD-anchored read).
+    try:
+        _center_rel = CENTER.relative_to(REPO_ROOT).as_posix()
+    except ValueError:
+        _center_rel = "docs/site/center"
+    raw = sh("git", "show", f"HEAD:{_center_rel}/rows-seen.json")
+    if not raw:
+        return None
+    try:
+        data = json.loads(raw)
+    except ValueError:
+        return None
+    rows = data.get("rows") if isinstance(data, dict) else None
+    return rows if isinstance(rows, dict) else None
+
+
+R_MARKS.init_rowmarks(_rowmarks_baseline())
 
 
 # --------------------------------------------------------------------------- #
@@ -1185,6 +1213,19 @@ def main() -> int:
         arch_html = render_architecture(amap)
         (CENTER_OUT / "architecture.html").write_text(arch_html)
         wrote.append(("architecture.html", arch_html.count("{{")))
+
+    # NEW-row snapshot — every table row this build rendered, keyed + hashed.
+    # Committed beside the pages: the next iteration's baseline. Written LAST
+    # so the architecture station's tables are in it too.
+    marks = R_MARKS.rowmarks_seen()
+    (CENTER_OUT / "rows-seen.json").write_text(
+        json.dumps({"version": 1, "rows": dict(sorted(marks.items()))},
+                   indent=1, ensure_ascii=False) + "\n")
+    armed = R_MARKS._ROWMARKS["baseline"] is not None
+    state = ("badging armed" if armed
+             else "bootstrap — badges off until this snapshot is committed")
+    print(f"    wrote docs/site/center/rows-seen.json — {len(marks)} row(s) "
+          f"tracked ({state})")
 
     print(f"  A3 regen @ {STAMP} · HEAD {HEAD_SHA}")
     print(f"  {SHELL_NOTE}")

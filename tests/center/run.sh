@@ -300,6 +300,94 @@ build "$WK" "$SHELL_SRC" >/dev/null
 grep -q 'no walk on record' "$WK/docs/site/center/feature-gadget.html" \
   && ok || bad "walk: an unrelated subject must NOT credit the entity"
 
+# --- NEW-row badges: the rowmarks engine (gastify trial 824bf7e, absorbed) --
+if (cd "$GEN" && python3 - <<'PY'
+import _a3_render as R
+
+def snapshot_of(render):
+    R.init_rowmarks(None)
+    render()
+    return R.rowmarks_seen()
+
+# bootstrap: no baseline at HEAD -> record only, badge nothing
+R.init_rowmarks(None)
+assert "t-new" not in R.table(["A"], [["brand-new row"]])
+# armed empty baseline -> everything badges
+R.init_rowmarks({})
+assert 'class="tag t-new">NEW</span>' in R.table(["A"], [["fresh row"]])
+# known unchanged row stays clean
+base = snapshot_of(lambda: R.table(["A", "B"], [["row-1", "same"]]))
+R.init_rowmarks(base)
+assert "t-new" not in R.table(["A", "B"], [["row-1", "same"]])
+# touched row re-badges
+base = snapshot_of(lambda: R.table(["A", "B"], [["row-1", "before"]]))
+R.init_rowmarks(base)
+assert "t-new" in R.table(["A", "B"], [["row-1", "after"]])
+# a relative-time tick is the clock moving, not the row
+base = snapshot_of(lambda: R.table(["Corpus", "Last run"],
+                                   [["api", "T−27h"], ["proof", "47d ago"]]))
+R.init_rowmarks(base)
+assert "t-new" not in R.table(["Corpus", "Last run"],
+                              [["api", "T−28h"], ["proof", "48d ago"]])
+# xtable rows badge too — exactly the new one
+base = snapshot_of(lambda: R.xtable(["Set", "Role"], [(["old-set", "principal"], "")]))
+R.init_rowmarks(base)
+out = R.xtable(["Set", "Role"], [(["old-set", "principal"], ""),
+                                 (["new-set", "edge"], "<p>detail</p>")])
+assert out.count("t-new") == 1
+# duplicate first cells (LEDGER dates) key apart via the occurrence counter
+rows = [["2026-07-22", "first"], ["2026-07-22", "second"]]
+base = snapshot_of(lambda: R.table(["Date", "What"], rows))
+R.init_rowmarks(base)
+assert "t-new" not in R.table(["Date", "What"], rows)
+PY
+) >"$T/rowmarks.out" 2>&1; then ok; else bad "rowmarks unit cases (see below)"; cat "$T/rowmarks.out"; fi
+
+# End to end: iteration boundary = commit boundary. Bootstrap badges nothing;
+# committing the snapshot arms it; one appended LEDGER row badges exactly once;
+# a same-iteration regen is idempotent.
+RM="$T/rowmark-e2e"; mk_fixture "$RM"
+(cd "$RM" && git init -q && git config user.email t@t && git config user.name t)
+mkdir -p "$RM/.kdbp"
+printf '| Date | What | Phase | Review | Push |\n|---|---|---|---|---|\n| 2026-07-22 | first row | 1 | ok | — |\n' > "$RM/.kdbp/LEDGER.md"
+[ "$(build "$RM" "$SHELL_SRC")" = 0 ] && ok || bad "rowmark-e2e: bootstrap build"
+grep -q "bootstrap — badges off" "$T/build.out" && ok || bad "rowmark-e2e: bootstrap says badges off"
+grep -rl "t-new\">NEW" "$RM/docs/site/center" --include="*.html" >/dev/null \
+  && bad "rowmark-e2e: bootstrap must badge NOTHING" || ok
+(cd "$RM" && git add -A >/dev/null && git commit -qm baseline)
+printf '| 2026-07-23 | second row | 2 | ok | — |\n' >> "$RM/.kdbp/LEDGER.md"
+build "$RM" "$SHELL_SRC" >/dev/null
+# The appended row may legitimately render (and badge) in more than one table;
+# the contract is: badges exist, and EVERY badge in the estate belongs to the
+# one changed row — nothing untouched lights up.
+python3 - "$RM/docs/site/center" <<'PY' && ok || bad "rowmark-e2e: badges must mark ONLY the appended row (see above)"
+import sys
+from pathlib import Path
+total, stray = 0, 0
+for p in Path(sys.argv[1]).glob("*.html"):
+    html = p.read_text()
+    i = 0
+    while (i := html.find('t-new">NEW', i)) != -1:
+        total += 1
+        # the badge sits IN the first cell — row context spans both sides
+        around = html[max(0, i - 400):i + 400]
+        # legitimate NEW content this iteration: the appended LEDGER row, and
+        # the baseline COMMIT itself (git-derived tables see new history too)
+        if not any(m in around for m in ("second row", "2026-07-23", "baseline")):
+            stray += 1
+            print(f"STRAY badge in {p.name}: …{around[-120:]!r}")
+        i += 1
+assert total >= 1, "no badge rendered at all"
+assert stray == 0, f"{stray} stray badge(s) of {total}"
+print(f"{total} badge(s), all on the appended row")
+PY
+cp "$RM/docs/site/center/rows-seen.json" "$T/rows-seen.1"
+build "$RM" "$SHELL_SRC" >/dev/null
+diff -q "$T/rows-seen.1" "$RM/docs/site/center/rows-seen.json" >/dev/null \
+  && ok || bad "rowmark-e2e: same-iteration regen must be idempotent"
+grep -q 't-new">NEW' "$RM/docs/site/center/ledger.html" \
+  && ok || bad "rowmark-e2e: badges stable across same-iteration regens"
+
 # --- flow grammar + classifier honesty (M05/M12/M03) -----------------------
 if (cd "$GEN" && python3 - <<'PY'
 import sys

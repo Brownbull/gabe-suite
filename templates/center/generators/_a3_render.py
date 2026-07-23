@@ -14,10 +14,68 @@ Every helper enforces one of the center's rendering rules:
 
 from __future__ import annotations
 
+import hashlib
 import html
 import re
 
 E = html.escape
+
+
+# --------------------------------------------------------------------------- #
+# NEW-row marking — what changed THIS iteration, badged in place.
+#
+# Every table/xtable row gets a stable key (table columns + first-cell text +
+# occurrence counter) and a content hash (all cells, tags stripped, volatile
+# relative-time text normalized out). The builder arms a BASELINE — the
+# rows-seen map of the last COMMITTED build (git show HEAD:…/rows-seen.json) —
+# and any row whose key is absent or whose hash moved wears a NEW badge.
+# Anchoring on HEAD makes the wipe-and-restamp fall out for free: regens
+# within one iteration are idempotent, and the moment the snapshot lands in a
+# commit the next build's baseline includes it, so old badges vanish and only
+# that iteration's touches light up. Baseline None (bootstrap: no snapshot at
+# HEAD yet) badges nothing but still records, so the FIRST commit seeds the
+# cycle instead of painting the whole estate NEW.
+# --------------------------------------------------------------------------- #
+
+NEW_BADGE = ' <span class="tag t-new">NEW</span>'
+_TAG_RX = re.compile(r"<[^>]+>")
+# Relative-time vocabulary that moves between builds without the row itself
+# changing — hashed as a placeholder so a T−27h → T−28h tick never re-badges.
+_VOLATILE_RX = re.compile(
+    r"T−\d+\s*[hm]|\b\d+\s*[dhm]\s+ago\b|\btoday\b|\byesterday\b|\bhoy\b|\bayer\b",
+    re.IGNORECASE)
+_ROWMARKS: dict = {"baseline": None, "seen": {}, "counts": {}}
+
+
+def init_rowmarks(baseline: dict | None) -> None:
+    """Arm the marker for one build: `baseline` maps row key → content hash
+    from the last committed build, or None to disarm badging (bootstrap)."""
+    _ROWMARKS["baseline"] = baseline
+    _ROWMARKS["seen"] = {}
+    _ROWMARKS["counts"] = {}
+
+
+def rowmarks_seen() -> dict:
+    """This build's row key → content hash map — the next snapshot."""
+    return dict(_ROWMARKS["seen"])
+
+
+def _row_mark(context: str, cells: list) -> str:
+    """Record one rendered row; return the NEW badge when it was not in the
+    baseline with this exact (normalized) content, else an empty string."""
+    texts = [_TAG_RX.sub("", str(c)).strip() for c in cells]
+    ident = texts[0] or " ".join(t for t in texts if t)[:80]
+    base_key = f"{context}|{ident}"
+    n = _ROWMARKS["counts"].get(base_key, 0)
+    _ROWMARKS["counts"][base_key] = n + 1
+    key = f"{base_key}#{n}"
+    norm = _VOLATILE_RX.sub("·", " ".join(texts))
+    digest = hashlib.sha1(norm.encode("utf-8")).hexdigest()[:12]
+    _ROWMARKS["seen"][key] = digest
+    baseline = _ROWMARKS["baseline"]
+    if baseline is None:
+        return ""
+    return "" if baseline.get(key) == digest else NEW_BADGE
 
 
 def strip_slot_doc_comments(text: str) -> str:
@@ -133,11 +191,14 @@ def table(headers: list[str], rows: list[list[str]],
                          f"expander(s) — the lists must be parallel")
     head = "".join(f'<th class="num">{E(h)}</th>' if i in num else f"<th>{E(h)}</th>"
                    for i, h in enumerate(headers))
+    ctxkey = "tbl|" + "|".join(headers)
     body = ""
     for i, r in enumerate(rows):
+        mark = _row_mark(ctxkey, r)
+        cells = [f"{r[0]}{mark}", *r[1:]] if mark else list(r)
         body += ("<tr>" + "".join(
             f'<td class="num">{c}</td>' if j in num else f"<td>{c}</td>"
-            for j, c in enumerate(r)) + "</tr>")
+            for j, c in enumerate(cells)) + "</tr>")
         summary, inner = (expand[i] if expand and i < len(expand) else ("", ""))
         if summary and inner:
             body += (f'<tr class="exp"><td colspan="{len(headers)}">'
@@ -170,11 +231,14 @@ def xtable(columns: list[str], rows: list, widths: list[str] | None = None,
     head = ('<div class="xhead">'
             + "".join(f"<span>{E(c)}</span>" for c in columns)
             + "<span></span></div>")
+    ctxkey = "xtbl|" + "|".join(columns)
     body = []
     for row in rows:
         cells, detail = row[0], row[1]
         rid = row[2] if len(row) > 2 else ""
         idattr = f' id="{rid}"' if rid else ""
+        mark = _row_mark(ctxkey, cells)
+        cells = [f"{cells[0]}{mark}", *cells[1:]] if mark else cells
         summ = ("".join(f"<span>{c}</span>" for c in cells)
                 + '<span class="xtgl"></span>')
         if detail:
