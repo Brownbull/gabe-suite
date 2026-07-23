@@ -774,7 +774,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
         title = f"entity: {name}" + (" — pending, page not built yet"
                                      if pending else "")
         return (f' <span class="tag ic t-ent" title="{E(title)}">'
-                f"{entity_icon(owner, 11)} {E(name)}</span>")
+                f"{entity_icon(owner, 11, label=name)} {E(name)}</span>")
 
     def _xref(kind: str, ident: str, owner: str) -> tuple[str, str]:
         """(href, entity-chip) for a function ('fn') or class ('dm')

@@ -375,6 +375,17 @@ grep -q '78.3% api' "$DEP/docs/site/center/tests.html" \
 # -> no decisions cell invented.
 grep -q 'no reporter wired' "$FIX/docs/site/center/tests.html" \
   && ok || bad "M40: no reporter must stay the honest named gap"
+# Entity icons: semantic keyword match first, hash pool only as fallback.
+(cd "$GEN" && python3 -c "
+import _a3_render as R
+assert R.entity_glyph_name('transaction') == 'card'
+assert R.entity_glyph_name('allergen') == 'alert'
+assert R.entity_glyph_name('card-alias') == 'tag'   # alias beats card — order
+assert R.entity_glyph_name('auth') == 'lock'
+assert R.entity_glyph_name('zzz-mystery') == ''      # fallback path
+assert '<svg' in R.entity_icon('zzz-mystery')
+") && ok || bad "entity icons: semantic map must fit the twins' vocabulary"
+
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.
 grep -q "gabe-icon.png" "$FIX/docs/site/center/index.html" \
   && ok || bad "brand: the Gabe icon must ride the sidebar logo tile"

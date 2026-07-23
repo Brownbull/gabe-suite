@@ -72,14 +72,73 @@ ENTITY_ICON_POOL = [
 ]
 
 
-def entity_icon(slug: str, size: int = 13) -> str:
-    """The entity's stable icon svg — hash-picked, never authored."""
-    idx = int(_hashlib.sha1(slug.encode("utf-8")).hexdigest(), 16) \
-        % len(ENTITY_ICON_POOL)
+# Named glyphs for the SEMANTIC layer (operator ruling 2026-07-23: icons must
+# SUIT the entity, hash-luck is the fallback, not the rule). Keys are stable
+# names; the keyword map below picks by slug/display-name substring.
+ENTITY_GLYPHS = {
+    "card": '<rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/>',
+    "scan": '<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/>',
+    "filetext": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    "tag": '<path d="M12.6 2.9 21 11.4a2 2 0 0 1 0 2.8l-6.8 6.8a2 2 0 0 1-2.8 0L2.9 12.6A2 2 0 0 1 2.3 11V4.3a2 2 0 0 1 2-2H11a2 2 0 0 1 1.6.6z"/><circle cx="7.5" cy="7.5" r="1"/>',
+    "users": '<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    "shield": '<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+    "pie": '<path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>',
+    "book": '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    "alert": '<path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+    "basket": '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
+    "flame": '<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+    "lock": '<rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>',
+    "trend": '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+    "box": '<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+}
+
+# First hit wins; ORDER MATTERS (alias before card — "card-alias" is a naming
+# concept, not a payment card). Matched against "<slug> <display name>".
+ENTITY_ICON_KEYWORDS = [
+    (("alias",), "tag"),
+    (("transac", "payment", "card"), "card"),
+    (("scan", "receipt", "capture"), "scan"),
+    (("statement", "bank", "ledger"), "filetext"),
+    (("share", "group", "member", "social"), "users"),
+    (("consent", "privacy", "legal", "policy"), "shield"),
+    (("analytic", "report", "insight", "drill"), "pie"),
+    (("recipe", "catalog"), "book"),
+    (("allerg", "hazard", "warn"), "alert"),
+    (("pantry", "stock", "inventory", "grocer"), "basket"),
+    (("cook", "kitchen", "meal"), "flame"),
+    (("auth", "login", "account", "session"), "lock"),
+    (("progress", "level", "achiev", "streak"), "trend"),
+    (("order", "purchase", "checkout"), "basket"),
+    (("notif", "alert-inbox",), "alert"),
+    (("doc", "note", "content"), "filetext"),
+]
+
+
+def entity_glyph_name(slug: str, label: str = "") -> str:
+    """Which glyph an entity gets: semantic keyword match on slug+label,
+    hash-pool fallback. Exposed for the battery."""
+    text = f"{slug} {label}".lower()
+    for keys, name in ENTITY_ICON_KEYWORDS:
+        if any(k in text for k in keys):
+            return name
+    return ""
+
+
+def entity_icon(slug: str, size: int = 13, label: str = "") -> str:
+    """The entity's stable icon svg — semantically matched when a keyword
+    fits (transaction→card, allergen→alert…), hash-picked from the pool
+    otherwise. Never authored, same glyph every build."""
+    name = entity_glyph_name(slug, label)
+    if name:
+        path = ENTITY_GLYPHS[name]
+    else:
+        idx = int(_hashlib.sha1(slug.encode("utf-8")).hexdigest(), 16) \
+            % len(ENTITY_ICON_POOL)
+        path = ENTITY_ICON_POOL[idx]
     return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" '
             'fill="none" stroke="currentColor" stroke-width="2" '
             'stroke-linecap="round" stroke-linejoin="round">'
-            f"{ENTITY_ICON_POOL[idx]}</svg>")
+            f"{path}</svg>")
 
 
 NEW_BADGE = ' <span class="tag t-new">NEW</span>'

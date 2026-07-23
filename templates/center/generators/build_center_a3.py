@@ -340,7 +340,8 @@ def _sidebar_entity(s: dict) -> str:
     # The entity's stable hash-picked icon (R: entity icons, 2026-07-23) —
     # the same glyph represents it across the center: nav, index, xref labels.
     return (f'<a class="navitem"{style} href="{href}" '
-            f'title="{E(s["rank"])} · {E(status)}">{entity_icon(slug)} '
+            f'title="{E(s["rank"])} · {E(status)}">'
+            f'{entity_icon(slug, label=LABELS.get(slug, ""))} '
             f'{E(LABELS.get(slug, slug))}{chip}</a>')
 
 
