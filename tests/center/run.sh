@@ -386,6 +386,17 @@ assert R.entity_glyph_name('zzz-mystery') == ''      # fallback path
 assert '<svg' in R.entity_icon('zzz-mystery')
 ") && ok || bad "entity icons: semantic map must fit the twins' vocabulary"
 
+# Architecture station: the same six sections as the entity Code tab,
+# app-wide under the pseudo-slug 'app' (one dialect, two altitudes).
+python3 - "$FIX/docs/site/center/architecture.html" <<'PY2' && ok || bad "architecture: six app-wide sections (see above)"
+import sys
+html = open(sys.argv[1]).read()
+for a in ("sec-code-endpoints", "sec-code-map", "sec-code-model",
+          "sec-code-model-cands", "sec-code-fns", "sec-code-fn-cands"):
+    assert f'id="{a}"' in html, f"missing {a}"
+assert "dm-app-" in html, "app-scoped anchors missing"
+PY2
+
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.
 grep -q "gabe-icon.png" "$FIX/docs/site/center/index.html" \
   && ok || bad "brand: the Gabe icon must ride the sidebar logo tile"

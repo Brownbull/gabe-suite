@@ -1150,6 +1150,16 @@ def render_architecture(amap: dict) -> str:
                 note=f"{len(seen)} file(s) · {loc:,} lines. A file over the 800 "
                      f"budget is a split candidate."))
 
+    # The station body is the SAME six sections as every entity's Code tab
+    # (operator ruling 2026-07-23: one dialect, two altitudes) — rendered by
+    # the same builder over the merged app-wide map under the pseudo-slug
+    # 'app'. Duplication with the entity pages is deliberate; on this altitude
+    # every reference carries its owner's entity chip and links back to the
+    # entity pages. The legacy per-map tables above remain as the lead-in
+    # rollup; the six sections follow.
+    body += _a3_code.build_code_tab("app", REPO_ROOT, "",
+                                    amap=_a3_code.merge_amaps(REPO_ROOT))
+
     base = strip_slot_doc_comments((SHELL_SRC / "architecture.html").read_text())
     fills = {**SHARED, "{{SIDEBAR_CODE}}": _sidebar_code(current=True),
              "{{ARCH_KPIS}}": kpis, "{{ARCH_BODY}}": body}

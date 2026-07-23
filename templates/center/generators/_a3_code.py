@@ -746,10 +746,44 @@ def _ins_usage(cls: str, ins: dict) -> str:
             f'<b>{c["internal"]}</b> <small>internal</small>')
 
 
-def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
-    """The Code tab: endpoints · code map · data model. Returns "" for entities
-    with no ENTITY_CODE mapping yet — rendered as a named gap by the caller."""
-    amap = collect_entity_map(slug, repo)
+def merge_amaps(repo: Path) -> dict:
+    """The APP-WIDE map: every entity's cached map merged (endpoints deduped
+    by method+path+handler, classes by name, files by layer+path). Feeding it
+    to build_code_tab under the pseudo-slug 'app' renders the architecture
+    station with the SAME six sections as every entity's Code tab — one
+    dialect, two altitudes (operator ruling 2026-07-23)."""
+    eps, models, schemas, files, defines = [], {}, {}, {}, {}
+    seen_ep = set()
+    for s in ENTITY_CODE:
+        v = collect_entity_map(s, repo)
+        if not v:
+            continue
+        for e in v["endpoints"]:
+            k = (e["method"], e["path"], e["fn"], e["file"])
+            if k not in seen_ep:
+                seen_ep.add(k)
+                eps.append(e)
+        for m in v["models"]:
+            models.setdefault(m["cls"], m)
+        for sc in v["schemas"]:
+            schemas.setdefault(sc["cls"], sc)
+        for layer, f, n in v["files"]:
+            files.setdefault((layer, f), n)
+        defines.update(v["defines"])
+    return {"endpoints": eps, "models": list(models.values()),
+            "schemas": list(schemas.values()),
+            "files": [[layer, f, n] for (layer, f), n in files.items()],
+            "defines": defines}
+
+
+def build_code_tab(slug: str, repo: Path, intro_html: str,
+                   amap: dict | None = None) -> str:
+    """The Code tab: endpoints · code map · data model (+ candidates) ·
+    functions (+ candidates). Returns "" for entities with no ENTITY_CODE
+    mapping yet — rendered as a named gap by the caller. With an explicit
+    `amap` (merge_amaps) it renders the APP-WIDE view for the architecture
+    station under the caller's pseudo-slug."""
+    amap = amap or collect_entity_map(slug, repo)
     if not amap:
         return ""
     eps, models, schemas = amap["endpoints"], amap["models"], amap["schemas"]
@@ -1280,7 +1314,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                         f'model — table <code>{E(m["table"])}</code>',
                         doc=m.get("doc") or "")
         cells = [f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}',
-                 E(slug),
+                 E(ins.get(m["cls"], {}).get("entity", slug)),
                  f'<code>{E(m["file"])}</code>',
                  _ins_usage(m["cls"], ins)]
         _mrows.append((cells,
@@ -1296,7 +1330,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
     for s_ in schemas:
         meta = _dm_meta(s_["cls"], "API schema", doc=s_.get("doc") or "")
         cells = [f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}',
-                 E(slug),
+                 E(ins.get(s_["cls"], {}).get("entity", slug)),
                  f'<code>{E(s_["file"])}</code>',
                  _ins_usage(s_["cls"], ins)]
         _srows.append((cells,

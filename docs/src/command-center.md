@@ -90,6 +90,20 @@ The first real run proved the design: when explicit `flows:` landed on gastify's
 
 ![Drake meme: rejecting "the coverage number that flatters us", approving "the smaller one with receipts."](assets/memes/coverage-honest-drop.png)
 
+## The insight lenses — data model and functions
+
+The Code tab runs two **scoped lenses in one dialect**: the DATA-MODEL lens (every documented class) and the FUNCTIONS lens (every def in the mapped backend files). Each renders the same way — icon tags on the name cell, filter chips (base · ≈similar · orphan · god), a **two-bar usage cell** (api = endpoint touches + FK in · internal = mapped files referencing), a titled row detail (usage receipts as tables, calls, signature/structure), and a first-class **candidates section** where the machine *names* merge / deprecation / split candidates and judgment rules them. The signals ride `archmap.json` as `model_insight` and `function_insight` — computed in the same build pass off the same cached parses, no extra step, no authored input.
+
+Three honesty rules carry the lenses:
+
+- **Two bars, because one lies.** A class or function with zero endpoint touches can still be load-bearing service vocabulary — the violet internal bar is why only a *true* orphan (zero on both axes) reads as dead.
+- **References are directional and navigable.** Where a class meets a function, the link says `in`, `out`, or `in·out` (parameter vs return annotation); cross-entity references resolve to the owner's page wearing its **entity icon + name**, and a pending entity's references park at the entity index until its page exists.
+- **Undocumented app types surface as debt.** A CamelCase type that is app-internal *by import* but documented in no entity's map renders a dashed **`tbd`** pending link, and the crawl gate sweeps every page and warns with per-page counts — the exact work-list the next `/gabe-adopt` section retires.
+
+:::note The same shape, more member kinds
+The lens dialect is deliberately member-kind-generic: functions and classes today, methods or endpoints-as-members tomorrow — each as its own scoped table, never mixed.
+:::
+
 ## Getting a center onto a project
 
 Two skills feed the center from opposite ends, and a third reads it:
