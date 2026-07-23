@@ -397,15 +397,30 @@ assert R.entity_glyph_name('zzz-mystery') == ''      # fallback path
 assert '<svg' in R.entity_icon('zzz-mystery')
 ") && ok || bad "entity icons: semantic map must fit the twins' vocabulary"
 
-# Architecture station: the same six sections as the entity Code tab,
-# app-wide under the pseudo-slug 'app' (one dialect, two altitudes).
-python3 - "$FIX/docs/site/center/architecture.html" <<'PY2' && ok || bad "architecture: six app-wide sections (see above)"
+# Architecture ESTATE (2026-07-23): a dashboard + six subpages, each running
+# its entity-dialect section app-wide with the entity filter bar + icon-only
+# entity column; nav lists every subpage.
+python3 - "$FIX/docs/site/center" <<'PY2' && ok || bad "architecture estate: dashboard + six subpages (see above)"
 import sys
-html = open(sys.argv[1]).read()
-for a in ("sec-code-endpoints", "sec-code-map", "sec-code-model",
-          "sec-code-model-cands", "sec-code-fns", "sec-code-fn-cands"):
-    assert f'id="{a}"' in html, f"missing {a}"
-assert "dm-app-" in html, "app-scoped anchors missing"
+from pathlib import Path
+c = Path(sys.argv[1])
+dash = (c / "architecture.html").read_text()
+assert "archgrid" in dash and 'href="arch-endpoints.html"' in dash, "dashboard cards missing"
+assert 'id="sec-code-endpoints"' not in dash, "dashboard must not inline the sections"
+pages = {"arch-endpoints.html": "sec-code-endpoints",
+         "arch-code-map.html": "sec-code-map",
+         "arch-data-model.html": "sec-code-model",
+         "arch-dm-candidates.html": "sec-code-model-cands",
+         "arch-functions.html": "sec-code-fns",
+         "arch-fn-candidates.html": "sec-code-fn-cands"}
+for fname, anchor in pages.items():
+    h = (c / fname).read_text()
+    assert f'id="{anchor}"' in h, f"{fname}: missing {anchor}"
+    assert 'class="entchips"' in h, f"{fname}: entity filter bar missing"
+    assert "navsubitem" in h, f"{fname}: nav subpages missing"
+h = (c / "arch-data-model.html").read_text()
+assert 'class="entb ent-gadget"' in h, "icon-only entity column missing"
+assert "dm-app-" in h, "app-scoped anchors missing"
 PY2
 
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.

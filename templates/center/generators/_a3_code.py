@@ -19,8 +19,8 @@ import re as _re_mod
 from pathlib import Path
 
 import _center_data as _cd
-from _a3_render import (E, entity_icon, legend, lines_grade, md, sechead,
-                        subnav, table, trunc, xtable)
+from _a3_render import (E, entity_badge, entity_icon, legend, lines_grade,
+                        md, sechead, subnav, table, trunc, xtable)
 
 _ADOPT_NAMES: dict | None = None
 
@@ -773,6 +773,7 @@ def merge_amaps(repo: Path) -> dict:
     station with the SAME six sections as every entity's Code tab — one
     dialect, two altitudes (operator ruling 2026-07-23)."""
     eps, models, schemas, files, defines = [], {}, {}, {}, {}
+    file_entity: dict = {}
     seen_ep = set()
     for s in ENTITY_CODE:
         v = collect_entity_map(s, repo)
@@ -789,15 +790,18 @@ def merge_amaps(repo: Path) -> dict:
             schemas.setdefault(sc["cls"], sc)
         for layer, f, n in v["files"]:
             files.setdefault((layer, f), n)
+            file_entity.setdefault(f, s)
         defines.update(v["defines"])
     return {"endpoints": eps, "models": list(models.values()),
+            "_file_entity": file_entity,
             "schemas": list(schemas.values()),
             "files": [[layer, f, n] for (layer, f), n in files.items()],
             "defines": defines}
 
 
 def build_code_tab(slug: str, repo: Path, intro_html: str,
-                   amap: dict | None = None) -> str:
+                   amap: dict | None = None, entity_col: bool = False,
+                   xpage: dict | None = None) -> str:
     """The Code tab: endpoints · code map · data model (+ candidates) ·
     functions (+ candidates). Returns "" for entities with no ENTITY_CODE
     mapping yet — rendered as a named gap by the caller. With an explicit
@@ -810,6 +814,18 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     files = [tuple(row) for row in amap["files"]]
 
     _page_files = {f for _layer, f, _n in files}
+    # xpage maps an anchor kind to the PAGE that carries it, so section-crossing
+    # links stay alive when the sections live on separate pages; entity_col
+    # prepends the icon-only entity identity column (operator 2026-07-23).
+    xpage = xpage or {}
+
+    def _href(kind: str, anchor: str) -> str:
+        return f"{xpage.get(kind, '')}#{anchor}"
+
+    _file_ent = dict(amap.get("_file_entity", {})) if entity_col else {}
+
+    def _ent_cell(ent: str) -> str:
+        return entity_badge(ent, _adopt_name(ent), 13)
     _rid_seen: set = set()
 
     def _rid(base: str) -> str:
@@ -885,7 +901,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         page; a file mapped by another entity stays plain."""
         name = E(f.rsplit("/", 1)[-1])
         if f in _page_files:
-            return f'<a class="dlink" href="#{_anchor("cm", slug, f)}"><code>{name}</code></a>'
+            return f'<a class="dlink" href="{_href("cm", _anchor("cm", slug, f))}"><code>{name}</code></a>'
         return f"<code>{name}</code>"
 
 
@@ -914,7 +930,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         """Font-colored, background-free endpoint link back to its row."""
         short = (e["path"].removeprefix(_common) if _common else e["path"]) or "/"
         return (f'<a class="{_VERB_FONT.get(e["method"], "")}" '
-                f'href="#{_anchor("ep", slug, e["file"] + "-" + e["fn"])}">{E(e["method"])} '
+                f'href="{_href("ep", _anchor("ep", slug, e["file"] + "-" + e["fn"]))}">{E(e["method"])} '
                 f"{E(short)}</a>")
 
     def purpose_cell(doc: str) -> str:
@@ -929,13 +945,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         parts = []
         for tok in dict.fromkeys(_re.findall(r"[A-Za-z_]\w+", e["resp"])):
             if tok in schema_names:
-                parts.append(f'<a class="dlink" href="#{_anchor("dm", slug, tok)}">'
+                parts.append(f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, tok))}">'
                              f"{E(tok)}</a>")
         body = " ".join(parts) or f'<code>{E(e["resp"])}</code>'
         return f'{body}<br><small>{E(e["status"])}</small>'
 
     # --- Endpoints ---------------------------------------------------------
-    html = subnav([("sec-code-endpoints", "Endpoints", _IC_ZAP),
+    html = "" if entity_col else subnav([("sec-code-endpoints", "Endpoints", _IC_ZAP),
                    ("sec-code-map", "Code map", _IC_FOLDER),
                    ("sec-code-model", "Data model", _IC_DB),
                    ("sec-code-model-cands", "Data-model candidates",
@@ -978,7 +994,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         for t in e["touches"]:
             if t not in resp_toks:
                 models_used.append(
-                    f'<a class="dlink" href="#{_anchor("dm", slug, t)}">'
+                    f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, t))}">'
                     f"{E(t)}</a>")
         meta_rows = [
             (f'{_ins_ic("doc")} PURPOSE', "#64748b",
@@ -996,13 +1012,17 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
             f'<small>{E(e["fn"])} · '
             f'<a class="flink" style="color:{file_color[e["file"]]}" '
-            f'href="#{_anchor("cm", slug, e["file"])}">'
+            f'href="{_href("cm", _anchor("cm", slug, e["file"]))}">'
             f'{E(e["file"].rsplit("/", 1)[-1])}</a></small>',
             returns_cell(e)]
+        if entity_col:
+            cells.insert(0, _ent_cell(_file_ent.get(e["file"], slug)))
         _ep_rows.append((cells, detail,
                          _rid(_anchor("ep", slug, e["file"] + "-" + e["fn"]))))
-    html += xtable(["Endpoint", "Returns"], _ep_rows,
-                   widths=["2.8fr", "1.2fr"])
+    html += xtable((["", "Endpoint", "Returns"] if entity_col
+                    else ["Endpoint", "Returns"]), _ep_rows,
+                   widths=(["34px", "2.8fr", "1.2fr"] if entity_col
+                           else ["2.8fr", "1.2fr"]))
 
     # --- Code map: one table PER LAYER, each with an honest Defines column --
     _map_info = ('<div class="leg">Click a row: layer · line budget · what '
@@ -1024,7 +1044,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         chips = []
         for n in shown:
             if n in documented:
-                chips.append(f'<a class="dlink" href="#{_anchor("dm", slug, n)}">'
+                chips.append(f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, n))}">'
                              f"{E(n)}</a>")
             else:
                 chips.append(f"<code>{E(n)}</code>")
@@ -1059,7 +1079,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                     fns_c.append(_fn_link(fe))
                 elif nm in documented:
                     cls_c.append(f'<a class="dlink" '
-                                 f'href="#{_anchor("dm", slug, nm)}">{E(nm)}</a>')
+                                 f'href="{_href("dm", _anchor("dm", slug, nm))}">{E(nm)}</a>')
                 elif nm in ins:
                     href, chip = _xref("dm", nm, ins[nm].get("entity", ""))
                     cls_c.append(f'<a class="dlink" href="{href}">{E(nm)}</a>'
@@ -1095,9 +1115,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         cells = [f'<span class="tag {_LAYER_CLS.get(layer, "")}" '
                  f'title="{E(layer_desc.get(layer, ""))}">{E(layer)}</span>',
                  f"<code>{E(f)}</code>", lines_grade(n)]
-        _cm_rows.append((cells, detail, _anchor("cm", slug, f)))
-    html += xtable(["Layer", "File", "Lines"], _cm_rows,
-                   widths=["0.9fr", "2.6fr", "0.9fr"])
+        if entity_col:
+            cells.insert(0, _ent_cell(_file_ent.get(f, slug)))
+        _cm_rows.append((cells, detail, _rid(_anchor("cm", slug, f))))
+    html += xtable((["", "Layer", "File", "Lines"] if entity_col
+                    else ["Layer", "File", "Lines"]), _cm_rows,
+                   widths=(["34px", "0.9fr", "2.4fr", "0.9fr"] if entity_col
+                           else ["0.9fr", "2.6fr", "0.9fr"]))
 
     # --- Data model: header-table cards; compositions LINK, never repeat ----
     def link_types(typ: str, src_file: str = "") -> str:
@@ -1112,7 +1136,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         def one(m: _re.Match) -> str:
             tok = m.group(0)
             if tok in documented:
-                return (f'<a class="dlink" href="#{_anchor("dm", slug, tok)}">'
+                return (f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, tok))}">'
                         f"{tok}</a>")
             o = ins.get(tok)
             if o:
@@ -1145,7 +1169,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         rows = ""
         for r in rels:
             tgt = by_cls.get(r["target"])
-            link = (f'<a class="dlink" href="#{_anchor("dm", slug, r["target"])}">'
+            link = (f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, r["target"]))}">'
                     f'{E(r["target"])}</a>')
             if r["many"]:
                 kind = "one → many"
@@ -1350,8 +1374,10 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         meta = _dm_meta(m["cls"],
                         f'model — table <code>{E(m["table"])}</code>',
                         doc=m.get("doc") or "")
-        cells = [f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}',
-                 E(ins.get(m["cls"], {}).get("entity", slug)),
+        _own = ins.get(m["cls"], {}).get("entity", slug)
+        cells = ([_ent_cell(_own)] if entity_col else []) + [
+                 f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}'] + \
+                ([] if entity_col else [E(_own)]) + [
                  f'<code>{E(m["file"])}</code>',
                  _ins_usage(m["cls"], ins)]
         _mrows.append((cells,
@@ -1359,22 +1385,27 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                   is_schema=False, uqs=m["uqs"],
                                   src_file=m["file"]),
                        _rid(_anchor("dm", slug, m["cls"]))))
-    html += xtable(["Class", "Entity", "File", "Usage"], _mrows, widths=_DM_W)
+    _dm_head = (["", "Class", "File", "Usage"] if entity_col
+                else ["Class", "Entity", "File", "Usage"])
+    _dm_w = (["34px", "2.2fr", "1.7fr", "1.2fr"] if entity_col else _DM_W)
+    html += xtable(_dm_head, _mrows, widths=_dm_w)
     html += (f'<p class="sub" style="margin-top:14px">'
              f'<span class="tag l-schemas">schemas</span> {len(schemas)} API '
              f"schema(s) — the shapes the Returns column links to:</p>")
     _srows = []
     for s_ in schemas:
         meta = _dm_meta(s_["cls"], "API schema", doc=s_.get("doc") or "")
-        cells = [f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}',
-                 E(ins.get(s_["cls"], {}).get("entity", slug)),
+        _own = ins.get(s_["cls"], {}).get("entity", slug)
+        cells = ([_ent_cell(_own)] if entity_col else []) + [
+                 f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}'] + \
+                ([] if entity_col else [E(_own)]) + [
                  f'<code>{E(s_["file"])}</code>',
                  _ins_usage(s_["cls"], ins)]
         _srows.append((cells,
                        _dm_detail(s_["cls"], s_["fields"], meta,
                                   src_file=s_["file"]),
                        _rid(_anchor("dm", slug, s_["cls"]))))
-    html += xtable(["Class", "Entity", "File", "Usage"], _srows, widths=_DM_W)
+    html += xtable(_dm_head, _srows, widths=_dm_w)
 
     # -- Data-model candidates: named by the machine, ruled by judgment ------
     own = {m["cls"] for m in models} | {s_["cls"] for s_ in schemas}
@@ -1389,7 +1420,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             continue
         seen_pairs.add(key)
         s = c["sim"]
-        cands += (f'<tr><td>{itag("t-sim", "merge", "merge candidate")}</td>'
+        _ec = (f"<td>{_ent_cell(ins.get(key[0], {}).get('entity', slug))}</td>"
+               if entity_col else "")
+        cands += (f'<tr>{_ec}<td>{itag("t-sim", "merge", "merge candidate")}</td>'
                   f'<td><code>{E(key[0])}</code> ≈ <code>{E(key[1])}</code></td>'
                   f'<td>{int(s["j"] * 100)}% structural twin ({s["shared"]}/'
                   f'{s["of"]} fields) — justified echo, or duplication waiting '
@@ -1397,7 +1430,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     for cls in sorted(own):
         c = ins.get(cls)
         if c and c["orphan"]:
-            cands += (f'<tr><td>{itag("t-orph", "archive", "deprecation candidate")}'
+            _ec = (f"<td>{_ent_cell(ins.get(cls, {}).get('entity', slug))}</td>"
+                   if entity_col else "")
+            cands += (f'<tr>{_ec}<td>{itag("t-orph", "archive", "deprecation candidate")}'
                       f'</td><td><code>{E(cls)}</code></td>'
                       f"<td>zero API usage · zero internal references across "
                       f"the mapped backend files — if nothing outside the map "
@@ -1405,7 +1440,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     for cls in sorted(own, key=lambda k: -len(ins[k]["fields"]) if k in ins else 0):
         c = ins.get(cls)
         if c and c["god"]:
-            cands += (f'<tr><td>{itag("t-god", "split", "split candidate")}</td>'
+            _ec = (f"<td>{_ent_cell(ins.get(cls, {}).get('entity', slug))}</td>"
+                   if entity_col else "")
+            cands += (f'<tr>{_ec}<td>{itag("t-god", "split", "split candidate")}</td>'
                       f'<td><code>{E(cls)}</code></td>'
                       f'<td>{len(c["fields"])} fields — past the {_GOD_FIELDS}-'
                       f"field line; the number names it, judgment rules it."
@@ -1434,7 +1471,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
              "</li></ul></div>")
     if cands:
         html += (
-            "<table class=\"tbl\"><thead><tr><th>Candidate</th><th>Classes</th>"
+            "<table class=\"tbl\"><thead><tr>"
+            + ("<th></th>" if entity_col else "")
+            + "<th>Candidate</th><th>Classes</th>"
             "<th>Why the machine flags it</th></tr></thead>"
             f"<tbody>{cands}</tbody></table>")
     else:
@@ -1649,15 +1688,18 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
         _frows = []
         for c in frows_src:
-            cells = [f'<b><code>{E(c["fn"])}</code></b><br>{_fn_tags(c)}',
-                     E(c["entity"]),
+            cells = ([_ent_cell(c["entity"])] if entity_col else []) + [
+                     f'<b><code>{E(c["fn"])}</code></b><br>{_fn_tags(c)}'] + \
+                    ([] if entity_col else [E(c["entity"])]) + [
                      f'<code>{E(c["file"])}</code>',
                      _fn_usage_cell(c)]
             _frows.append((cells, _fn_detail(c),
                            _rid(_anchor("fn", slug,
                                         c["file"] + "-" + c["fn"]))))
-        html += xtable(["Function", "Entity", "File", "Usage"], _frows,
-                       widths=_DM_W)
+        html += xtable((["", "Function", "File", "Usage"] if entity_col
+                        else ["Function", "Entity", "File", "Usage"]), _frows,
+                       widths=(["34px", "2.2fr", "1.7fr", "1.2fr"]
+                               if entity_col else _DM_W))
 
         # Functions candidates — same dialect, function-scoped.
         fcands = ""
@@ -1670,7 +1712,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             if key in seen_fp:
                 continue
             seen_fp.add(key)
-            fcands += (f'<tr><td>{itag("t-sim", "merge", "merge candidate")}'
+            _ec = f"<td>{_ent_cell(c['entity'])}</td>" if entity_col else ""
+            fcands += (f'<tr>{_ec}<td>{itag("t-sim", "merge", "merge candidate")}'
                        f"</td><td><code>{E(key[0])}</code> ≈ "
                        f'<code>{E(key[1])}</code></td>'
                        f'<td>{int(s["j"] * 100)}% identifier twin '
@@ -1678,14 +1721,16 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        f"justified pattern? Rule it.</td></tr>")
         for c in frows_src:
             if c["orphan"]:
-                fcands += (f'<tr><td>{itag("t-orph", "archive", "deprecation candidate")}'
+                _ec = f"<td>{_ent_cell(c['entity'])}</td>" if entity_col else ""
+                fcands += (f'<tr>{_ec}<td>{itag("t-orph", "archive", "deprecation candidate")}'
                            f'</td><td><code>{E(c["fn"])}</code></td>'
                            f"<td>no endpoint serves it, no mapped code "
                            f"references it — if nothing outside the map calls "
                            f"it either, file for removal.</td></tr>")
         for c in sorted(frows_src, key=lambda x: -x["lines"]):
             if c["god"]:
-                fcands += (f'<tr><td>{itag("t-god", "split", "split candidate")}'
+                _ec = f"<td>{_ent_cell(c['entity'])}</td>" if entity_col else ""
+                fcands += (f'<tr>{_ec}<td>{itag("t-god", "split", "split candidate")}'
                            f'</td><td><code>{E(c["fn"])}</code></td>'
                            f'<td>{c["lines"]} lines — past the '
                            f"{_FN_GOD_LINES}-line function budget; the number "
@@ -1715,7 +1760,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  "</li></ul></div>")
         if fcands:
             html += (
-                "<table class=\"tbl\"><thead><tr><th>Candidate</th>"
+                "<table class=\"tbl\"><thead><tr>"
+                + ("<th></th>" if entity_col else "")
+                + "<th>Candidate</th>"
                 "<th>Functions</th><th>Why the machine flags it</th></tr>"
                 f"</thead><tbody>{fcands}</tbody></table>")
         else:

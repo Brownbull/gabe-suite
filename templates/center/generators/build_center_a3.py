@@ -121,6 +121,7 @@ SHELL_SRC, SHELL_NOTE = resolve_shell()
 import _a3_render as R_MARKS  # noqa: E402  (rowmarks lifecycle — init + snapshot)
 from _a3_render import (  # noqa: E402  (helpers live beside this module)
     E,
+    entity_badge,
     entity_icon,
     legend,
     meter,
@@ -358,11 +359,43 @@ _ARCH_IC = ('<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
             '<polyline points="8 6 2 12 8 18"/></svg>')
 
 
-def _sidebar_code(current: bool = False) -> str:
-    if (CENTER / "architecture.html").exists() or BUILD_ARCHITECTURE:
-        on = " on" if current else ""
-        return f'<a class="navitem{on}" href="architecture.html">{_ARCH_IC} Architecture</a>'
-    return '<span class="navsub" style="opacity:.5">not built yet</span>'
+_ARCH_PAGES = [
+    ("arch-endpoints.html", "Endpoints", "sec-code-endpoints", "zap",
+     "the HTTP surface, app-wide"),
+    ("arch-code-map.html", "Code map", "sec-code-map", "doc",
+     "every mapped file, app-wide"),
+    ("arch-data-model.html", "Data model", "sec-code-model", "model",
+     "every documented class, app-wide"),
+    ("arch-dm-candidates.html", "Data-model candidates", "sec-code-model-cands",
+     "merge", "merge · deprecation · split, named by the machine"),
+    ("arch-functions.html", "Functions", "sec-code-fns", "fn",
+     "every mapped def, app-wide"),
+    ("arch-fn-candidates.html", "Function candidates", "sec-code-fn-cands",
+     "split", "merge · deprecation · split, function-scoped"),
+]
+
+
+def _mini_ic(name: str) -> str:
+    return ('<svg viewBox="0 0 24 24" width="14" height="14" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+            'stroke-linejoin="round">'
+            + _a3_code._INS_ICONS[name] + "</svg>")
+
+
+def _sidebar_code(current: str = "") -> str:
+    """The CODE nav group: Architecture (dashboard) + one subitem per
+    architecture page, each with its own icon (operator ruling 2026-07-23).
+    `current` names the page to highlight."""
+    if not ((CENTER / "architecture.html").exists() or BUILD_ARCHITECTURE):
+        return '<span class="navsub" style="opacity:.5">not built yet</span>'
+    on = " on" if current == "architecture.html" else ""
+    out = [f'<a class="navitem{on}" href="architecture.html">'
+           f"{_ARCH_IC} Architecture</a>"]
+    for fname, title, _anchor, icon, _sub in _ARCH_PAGES:
+        on = " on" if current == fname else ""
+        out.append(f'<a class="navitem navsubitem{on}" href="{fname}">'
+                   f"{_mini_ic(icon)} {title}</a>")
+    return "\n  ".join(out)
 
 
 # {{SIDEBAR_LEAF}} — each known OSS report gets a link WHEN its file is on disk
@@ -1059,113 +1092,116 @@ PER_FILE = {
 }
 
 
-def render_architecture(amap: dict) -> str:
-    """The app-wide Architecture STATION, rendered FROM archmap.json (the
-    read-once map: the whole application parsed once per build into a committed
-    file, so a PR diff of it IS the architecture change). Every row here is a
-    consumer of the map — this station never re-reads the codebase. Fills its
-    OWN shell skeleton (shell/architecture.html — {{ARCH_KPIS}}/{{ARCH_BODY}})
-    like every other station.  SIDEBAR_CODE lights and marks itself current."""
-    ents = amap.get("entities", {})
-    mapped = {k: v for k, v in ents.items() if v}
+def render_architecture(amap: dict) -> dict[str, str]:
+    """The Architecture ESTATE (operator ruling 2026-07-23): a DASHBOARD page
+    plus SIX subpages — the same sections as every entity's Code tab, rendered
+    app-wide by the same builder (merged maps, pseudo-slug 'app'), each table
+    carrying the icon-only entity column and an entity FILTER bar where the
+    six-pill subnav used to float. All pages fill the architecture skeleton;
+    cross-section links route to the page that owns the anchor."""
+    merged = _a3_code.merge_amaps(REPO_ROOT)
+    xpage = {"ep": "arch-endpoints.html", "cm": "arch-code-map.html",
+             "dm": "arch-data-model.html", "fn": "arch-functions.html"}
+    full = _a3_code.build_code_tab("app", REPO_ROOT, "", amap=merged,
+                                   entity_col=True, xpage=xpage)
+    # Slice the six sections apart on their sechead roots.
+    marks = []
+    for fname, _t, anchor, _ic, _s in _ARCH_PAGES:
+        k = full.find(f'id="{anchor}"')
+        marks.append((full.rfind('<div class="sechead"', 0, k), fname))
+    script_i = full.find(
+        "<script>(function(){document.querySelectorAll('.dmchips')")
+    chips_script = full[script_i:] if script_i != -1 else ""
+    slices = {}
+    for n, (start, fname) in enumerate(marks):
+        end = marks[n + 1][0] if n + 1 < len(marks) else (
+            script_i if script_i != -1 else len(full))
+        slices[fname] = full[start:end]
 
-    def _chip(slug: str) -> str:
-        return (f'<a class="dlink" href="{_entity_href(slug)}">'
-                f'{E(LABELS.get(slug, slug))}</a>')
+    # The entity FILTER bar — replaces the floating subnav on these pages.
+    ents = sorted(set(merged.get("_file_entity", {}).values()),
+                  key=lambda s: LABELS.get(s, s))
+    bar = ('<div class="entchips"><button class="chip on" data-ent="all">All'
+           "</button>"
+           + "".join(
+               f'<button class="chip" data-ent="{s}">'
+               + entity_badge(s, LABELS.get(s, s), 12, show_name=True)
+               + "</button>" for s in ents)
+           + "</div>"
+           "<script>(function(){var c=document.querySelector('.entchips');"
+           "if(!c)return;var rows=[].slice.call(document.querySelectorAll("
+           "'.xrow, table.tbl tbody tr'));"
+           "c.addEventListener('click',function(ev){"
+           "var b=ev.target.closest('.chip');if(!b)return;"
+           "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
+           "b.classList.add('on');var s=b.dataset.ent;"
+           "rows.forEach(function(r){var q=r.querySelector("
+           "':scope > summary > span:first-child .ent-'+s+"
+           "', :scope > td:first-child .ent-'+s);"
+           "r.style.display=(s==='all'||q)?'':'none'});});})();</script>")
 
-    ep_rows = []
-    for slug, v in mapped.items():
-        for e in v.get("endpoints", []):
-            ep_rows.append([
-                f'<span class="tag {_VERB_CLS.get(e["method"], "m-mut")}">'
-                f'{E(e["method"])}</span>',
-                f'<code>{E(e["path"])}</code>', f'<code>{E(e["fn"])}()</code>',
-                f'<code>{E(e["file"].rsplit("/", 1)[-1])}</code>', _chip(slug)])
-    ep_rows.sort(key=lambda r: r[1])
+    base_skel = strip_slot_doc_comments(
+        (SHELL_SRC / "architecture.html").read_text())
 
-    md_rows, md_exp = [], []
-    for slug, v in mapped.items():
-        for m in v.get("models", []):
-            cols = m.get("cols", [])
-            md_rows.append([
-                f'<b>{E(m["cls"])}</b>', f'<code>{E(m["table"])}</code>',
-                f'<code>{E(m["file"].rsplit("/", 1)[-1])}</code>',
-                str(len(cols)), _chip(slug)])
-            md_exp.append((
-                f'The {len(cols)} column(s) of <code>{E(m["cls"])}</code>',
-                '<p class="sub">' + ", ".join(
-                    f"{E(c[0])}: <code>{E(str(c[1]))}</code>" for c in cols)
-                + "</p>"))
+    def _page(fname: str, title: str, kpis: str, body: str) -> str:
+        h = base_skel
+        fills = {**SHARED, "{{SIDEBAR_CODE}}": _sidebar_code(current=fname),
+                 "{{ARCH_KPIS}}": kpis, "{{ARCH_BODY}}": body}
+        for tok, val in fills.items():
+            h = h.replace(tok, val)
+        if fname != "architecture.html":
+            h = h.replace("<title>Architecture ·", f"<title>{title} ·")
+            h = h.replace("<b>Architecture</b>",
+                          '<a href="architecture.html">Architecture</a> › '
+                          f"<b>{title}</b>")
+            h = h.replace("<h1>Architecture</h1>", f"<h1>{title}</h1>")
+        return h
 
-    seen: dict[str, dict] = {}
-    for slug, v in mapped.items():
-        for layer, path, lines in v.get("files", []):
-            rec = seen.setdefault(path, {"layer": layer, "lines": lines,
-                                         "ents": set()})
-            rec["ents"].add(slug)
-    file_rows = [
-        [f'<span class="tag l-{E(info["layer"])}">{E(info["layer"])}</span>',
-         f"<code>{E(path)}</code>", str(info["lines"]),
-         " ".join(_chip(s) for s in sorted(info["ents"]))]
-        for path, info in sorted(seen.items(), key=lambda x: -x[1]["lines"])]
+    pages: dict[str, str] = {}
+    for fname, title, _anchor, _ic, _sub in _ARCH_PAGES:
+        body = bar + slices[fname]
+        if fname in ("arch-data-model.html", "arch-functions.html"):
+            body += chips_script
+        pages[fname] = _page(fname, title, "", body)
 
-    n_ep = sum(len(v.get("endpoints", [])) for v in mapped.values())
-    n_md = sum(len(v.get("models", [])) for v in mapped.values())
-    n_sc = sum(len(v.get("schemas", [])) for v in mapped.values())
-    loc = sum(i["lines"] for i in seen.values())
+    # Dashboard: KPIs + one card per subpage.
+    ins = _a3_code.model_insight(REPO_ROOT)
+    fins = _a3_code.function_insight(REPO_ROOT)
+    n_files = len(merged["files"])
+    n_lines = sum(n for _l, _f, n in merged["files"])
+    n_cls = len(merged["models"]) + len(merged["schemas"])
+    n_dmc = sum(1 for c in ins.values()
+                if c.get("orphan") or c.get("god")
+                or (c.get("sim") and c["sim"]["j"] >= 0.8))
+    n_fnc = sum(1 for c in fins.values()
+                if c.get("orphan") or c.get("god")
+                or (c.get("sim") and c["sim"]["j"] >= 0.85))
     kpis = '<div class="kpis">' + "".join([
-        kpi("entities mapped", str(len(mapped)), f"of {len(ents)} registered",
-            alert=(len(mapped) < len(ents))),
-        kpi("endpoints", str(n_ep)), kpi("models", str(n_md)),
-        kpi("schemas", str(n_sc)),
-        kpi("files", str(len(seen)), f"{loc:,} lines read"),
+        kpi("entities", str(len(ents)), "mapped"),
+        kpi("endpoints", str(len(merged["endpoints"])), "HTTP surface"),
+        kpi("classes", str(n_cls), "models + schemas"),
+        kpi("defs", str(len(fins)), "functions + methods"),
+        kpi("files", f"{n_files}", f"{n_lines:,} lines"),
     ]) + "</div>"
-
-    body = (
-        sechead("Code", "Endpoints", "#4f46e5", _IC_CODE,
-                sub="every HTTP entry point the map found, across all mapped "
-                    "entities", id_="sec-arch-endpoints", sec_id="architecture.endpoints",
-                info='<div class="leg">Parsed from FastAPI decorators + '
-                     "docstrings (ast) into archmap.json — this table renders the "
-                     "map, never the source. Click an entity to open its "
-                     "feature page.</div>")
-        + table(["Method", "Path", "Handler", "File", "Entity"], ep_rows, num={},
-                note=f"{len(ep_rows)} endpoint(s) across {len(mapped)} mapped "
-                     f"entity(ies).")
-        + sechead("Code", "Data model", "#7c3aed", _IC_DB,
-                  sub="ORM tables the map found — open a row for its columns",
-                  id_="sec-arch-models", sec_id="architecture.models",
-                  info='<div class="leg">SQLAlchemy Mapped columns, parsed by '
-                       "ast. Column types are as declared in the model.</div>")
-        + table(["Model", "Table", "File", "Columns", "Entity"], md_rows,
-                num={3}, expand=md_exp,
-                note=f"{len(md_rows)} model(s).")
-        + sechead("Code", "Files & code map", "#0f766e", _IC_FILES,
-                  sub="the source files the map touched, largest first",
-                  id_="sec-arch-files", sec_id="architecture.files",
-                  info='<div class="leg">Line counts are measured off disk. A '
-                       "file claimed by more than one entity lists each — the map "
-                       "is a view over the code, not a partition of it.</div>")
-        + table(["Layer", "File", "Lines", "Entity"], file_rows, num={2},
-                note=f"{len(seen)} file(s) · {loc:,} lines. A file over the 800 "
-                     f"budget is a split candidate."))
-
-    # The station body is the SAME six sections as every entity's Code tab
-    # (operator ruling 2026-07-23: one dialect, two altitudes) — rendered by
-    # the same builder over the merged app-wide map under the pseudo-slug
-    # 'app'. Duplication with the entity pages is deliberate; on this altitude
-    # every reference carries its owner's entity chip and links back to the
-    # entity pages. The legacy per-map tables above remain as the lead-in
-    # rollup; the six sections follow.
-    body += _a3_code.build_code_tab("app", REPO_ROOT, "",
-                                    amap=_a3_code.merge_amaps(REPO_ROOT))
-
-    base = strip_slot_doc_comments((SHELL_SRC / "architecture.html").read_text())
-    fills = {**SHARED, "{{SIDEBAR_CODE}}": _sidebar_code(current=True),
-             "{{ARCH_KPIS}}": kpis, "{{ARCH_BODY}}": body}
-    for tok, val in fills.items():
-        base = base.replace(tok, val)
-    return base
+    counts = {"arch-endpoints.html": f'{len(merged["endpoints"])} endpoint(s)',
+              "arch-code-map.html": f"{n_files} file(s) · {n_lines:,} lines",
+              "arch-data-model.html": f"{n_cls} class(es)",
+              "arch-dm-candidates.html": f"{n_dmc} candidate(s)",
+              "arch-functions.html": f"{len(fins)} def(s)",
+              "arch-fn-candidates.html": f"{n_fnc} candidate(s)"}
+    cards = "".join(
+        f'<a class="archcard" href="{fname}">{_mini_ic(icon)}'
+        f"<div><b>{E(title)}</b>"
+        f'<span class="sub">{E(counts[fname])} — {E(sub)}</span></div></a>'
+        for fname, title, _a, icon, sub in _ARCH_PAGES)
+    dash = ('<p class="sub">The whole application read once per build into '
+            "<code>archmap.json</code>; each page below runs the SAME "
+            "sections as an entity's Code tab, app-wide, filterable by "
+            "entity.</p>"
+            f'<div class="archgrid">{cards}</div>')
+    pages["architecture.html"] = _page("architecture.html", "Architecture",
+                                       kpis, dash)
+    return pages
 
 
 def main() -> int:
@@ -1227,9 +1263,9 @@ def main() -> int:
     # The app-wide Architecture station — a consumer of the read-once map, not a
     # second read of the code. Lights up {{SIDEBAR_CODE}} across the estate.
     if BUILD_ARCHITECTURE:
-        arch_html = render_architecture(amap)
-        (CENTER_OUT / "architecture.html").write_text(arch_html)
-        wrote.append(("architecture.html", arch_html.count("{{")))
+        for _aname, _ahtml in render_architecture(amap).items():
+            (CENTER_OUT / _aname).write_text(_ahtml)
+            wrote.append((_aname, _ahtml.count("{{")))
 
     # NEW-row snapshot — every table row this build rendered, keyed + hashed.
     # Committed beside the pages: the next iteration's baseline. Written LAST

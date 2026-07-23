@@ -124,6 +124,34 @@ def entity_glyph_name(slug: str, label: str = "") -> str:
     return ""
 
 
+# Entity COLORS (operator ruling 2026-07-23): each entity gets a stable
+# color beside its icon — hash-picked like the icon, carried everywhere the
+# entity is represented (nav, entity columns, cross-entity chips).
+ENTITY_COLOR_POOL = [
+    "#0d6e78", "#7c3aed", "#b45309", "#0a7d6b", "#b3403a", "#1f6feb",
+    "#8e4585", "#3f6d4c", "#9a5a00", "#5a53a8", "#c2461e", "#0f766e",
+]
+
+
+def entity_color(slug: str) -> str:
+    idx = int(_hashlib.sha1(("c:" + slug).encode("utf-8")).hexdigest(), 16) \
+        % len(ENTITY_COLOR_POOL)
+    return ENTITY_COLOR_POOL[idx]
+
+
+def entity_badge(slug: str, label: str = "", size: int = 13,
+                 show_name: bool = False) -> str:
+    """The entity's icon in ITS color — the compact identity used in entity
+    columns (icon-only, tooltip carries the name) and, with show_name, in
+    chips. Carries ent-<slug> so entity filter bars can match rows."""
+    name = label or slug
+    body = entity_icon(slug, size, label=name)
+    if show_name:
+        body += f" {E(name)}"
+    return (f'<span class="entb ent-{slug}" style="color:{entity_color(slug)}"'
+            f' title="entity: {E(name)}">{body}</span>')
+
+
 def entity_icon(slug: str, size: int = 13, label: str = "") -> str:
     """The entity's stable icon svg — semantically matched when a keyword
     fits (transaction→card, allergen→alert…), hash-picked from the pool
