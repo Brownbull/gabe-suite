@@ -32,6 +32,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
+import _a3_code  # noqa: E402  (model_insight serialization into archmap)
 from _a3_code import ENTITY_CODE, ENTITY_MODELS, collect_entity_map  # noqa: E402
 from _a3_feature import (  # noqa: E402
     ENTITY_PROOFS,
@@ -1199,6 +1200,7 @@ def main() -> int:
     # read the machine numbers here instead of scraping the Evidence tab.
     amap = {"version": 1, "head": HEAD_SHA, "generated": STAMP,
             "coverage": ctx.flow_coverage,
+            "model_insight": _a3_code.insight_serial(REPO_ROOT),
             "entities": {s: collect_entity_map(s, REPO_ROOT) for s in ENTITY_CODE}}
     (CENTER_OUT / "archmap.json").write_text(
         json.dumps(amap, indent=1, ensure_ascii=False) + "\n")

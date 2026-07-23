@@ -41,6 +41,10 @@ c = root / center_rel
     "class GadgetOut:\n"
     "    gid: str  # the gadget's public identifier\n"
     "    size: int = Field(description=\"measured footprint in mm\")\n"
+    "    raw: bytes\n"
+    "\n\nclass GadgetIn:  # 100% structural twin of GadgetOut -> merge candidate\n"
+    "    gid: str\n"
+    "    size: int\n"
     "    raw: bytes\n")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
@@ -133,6 +137,30 @@ for name, sec in (("code", code), ("evidence", ev)):
     assert "Shared price for every move here" in sec, f"{name}: shared price missing from info"
 assert "Cost / run after" in html, "full-shape tables (Tests/Other) lost their price columns"
 PY
+# Model-insight lens (operator ruling 2026-07-23): icon tags, filter chips,
+# two-bar usage, candidates table, archmap serialization.
+python3 - "$FIX" <<'PY' && ok || bad "model insight: page + archmap signals (see above)"
+import json, sys
+from pathlib import Path
+root = Path(sys.argv[1])
+html = (root / "docs/site/center/feature-gadget.html").read_text()
+assert 'id="dm-chips"' in html, "filter chips missing"
+assert html.count('class="tag ic') >= 6, "icon chips missing"
+assert 'title="base class' in html, "base tag missing (GadgetOut is base)"
+assert 'title="orphan' in html, "orphan tag missing"
+assert "u-int" in html and "ubar" in html, "two-bar usage missing"
+assert "Data-model candidates" in html, "candidates table missing"
+assert 'title="merge candidate"' in html, "twin pair must yield a merge candidate"
+assert 'title="deprecation candidate"' in html, "orphan must yield a deprecation candidate"
+assert "what the candidate icons mean" in html, "candidates icon dictionary missing"
+assert "Insight icons" in html, "section icon dictionary missing"
+a = json.loads((root / "docs/site/center/archmap.json").read_text())
+mi = a["model_insight"]
+assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]
+assert mi["GadgetOut"]["sim"]["cls"] == "GadgetIn" and mi["GadgetOut"]["sim"]["j"] == 1.0
+assert mi["GadgetIn"]["kind"] == "schema"
+PY
+
 # M04: the single-file set's href carries NO set-name segment.
 grep -q 'proof/solo.png"' "$FIX/docs/site/center/feature-gadget.html" \
   && ok || bad "single-file set: href must be proof-root relative"

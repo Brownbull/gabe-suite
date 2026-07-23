@@ -752,3 +752,16 @@ details.legset .gal{margin:8px 0 4px}
    snapshot). Solid fill on purpose: every other tag is soft-background, so
    the one badge that means "look here first" cannot be mistaken for taxonomy. */
 .tag.t-new{background:var(--accent);color:#fff;font-weight:800;letter-spacing:.06em}
+/* Model-insight lens (data-model tables): icon chips keep each flag's color
+   pair; words live in tooltips + the section's ⊕ dictionary. */
+.tag.ic{display:inline-flex;align-items:center;gap:4px;vertical-align:middle;padding:2px 7px}
+.tag.ic svg{flex:none}
+.t-base{background:color-mix(in srgb,#0a7d6b 16%,transparent);color:#0a7d6b}
+.t-god{background:color-mix(in srgb,#b3403a 14%,transparent);color:#b3403a}
+.t-sim{background:color-mix(in srgb,#b5771a 16%,transparent);color:#b5771a}
+.t-orph{background:color-mix(in srgb,#64748b 18%,transparent);color:#64748b}
+.ubar{display:inline-block;height:7px;border-radius:4px;background:var(--accent,#0d6e78);vertical-align:middle;margin-right:5px}
+.ubar.u-int{background:#7c3aed}
+.dmchips{margin:10px 0 4px}
+.dmchips .chip{font:inherit;font-size:.72rem;font-weight:600;padding:3px 12px;border-radius:14px;margin-right:6px;border:1px solid var(--line,#d8dee6);background:var(--surface,#fff);color:var(--muted,#64748b);cursor:pointer}
+.dmchips .chip.on{background:var(--accent,#0d6e78);color:#fff;border-color:var(--accent,#0d6e78)}

@@ -325,7 +325,20 @@ def code_map(repo: Path, layers: dict) -> list[tuple[str, str, int]]:
     return rows
 
 
+# One parse per entity per build: the Code tab, the archmap serialization and
+# the model-insight pass all read THIS cache (before it, the tree was parsed
+# twice per entity; the insight pass would have made it three).
+_EMAP_CACHE: dict[str, dict | None] = {}
+
+
 def collect_entity_map(slug: str, repo: Path) -> dict | None:
+    if slug in _EMAP_CACHE:
+        return _EMAP_CACHE[slug]
+    _EMAP_CACHE[slug] = _collect_entity_map(slug, repo)
+    return _EMAP_CACHE[slug]
+
+
+def _collect_entity_map(slug: str, repo: Path) -> dict | None:
     """The entity's architecture map, gathered ONCE per build: endpoints (with
     the documented types each handler touches), models (columns/FKs/relationship
     edges), schemas, files-with-lines, and per-file defines.
@@ -350,6 +363,170 @@ def collect_entity_map(slug: str, repo: Path) -> dict | None:
         "defines": {f: parse_defines(repo, f)
                     for layer, f, _ in files if layer != "api"},
     }
+
+
+# --------------------------------------------------------------------------- #
+# Model insight — the DATA-MODEL lens (operator ruling 2026-07-23, spike at
+# docs/investigations/2026-07-23-model-insight-spike/): every documented class
+# app-wide gets machine-derived signals — usage on TWO axes (api = endpoint
+# touches + FK in-degree · internal = mapped backend files referencing it),
+# a BASE flag (derives from nothing), a god-class flag, its closest structural
+# twin, and the orphan verdict (zero on BOTH usage axes). The same shape is
+# built to run over other member kinds later (functions · methods) — scoped
+# tables, never mixed. The generator NAMES candidates; verdicts stay with
+# judgment (review / a health pass), never authored here.
+# --------------------------------------------------------------------------- #
+
+_GOD_FIELDS = 15
+_SIM_FLOOR = 0.5
+_MERGE_FLOOR = 0.8
+
+_INS_ICONS = {
+    "model": '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    "schema": '<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+    "base": '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
+    "fields": '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>',
+    "sim": '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+    "orphan": '<path d="m18.84 12.25 1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/>',
+    "merge": '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+    "split": '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
+    "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
+}
+
+
+def _ins_ic(name: str) -> str:
+    return ('<svg viewBox="0 0 24 24" width="13" height="13" fill="none" '
+            'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+            f'stroke-linejoin="round">{_INS_ICONS[name]}</svg>')
+
+
+def itag(color_cls: str, icon: str, title: str, text: str = "") -> str:
+    """An icon chip: the tag COLOR pair stays, the word lives in the tooltip
+    and the section's ⊕ dictionary; data (a count, a twin + %) rides beside
+    the icon."""
+    body = _ins_ic(icon) + (f" {text}" if text else "")
+    return f'<span class="tag ic {color_cls}" title="{E(title)}">{body}</span>'
+
+
+_INSIGHT: dict | None = None
+
+
+def model_insight(repo: Path) -> dict:
+    """{cls: signals} across EVERY documented class app-wide — computed once
+    per build off the cached entity maps + one word-boundary scan of the
+    mapped backend files. Serialized into archmap.json as `model_insight`."""
+    global _INSIGHT
+    if _INSIGHT is not None:
+        return _INSIGHT
+    classes: dict[str, dict] = {}
+    table_owner: dict[str, str] = {}
+    all_eps: list[dict] = []
+    py_files: set[str] = set()
+    for slug in ENTITY_CODE:
+        v = collect_entity_map(slug, repo)
+        if not v:
+            continue
+        all_eps.extend(v["endpoints"])
+        for _layer, f, _n in v["files"]:
+            if f.endswith(".py"):
+                py_files.add(f)
+        for m in v["models"]:
+            classes[m["cls"]] = {
+                "cls": m["cls"], "kind": "model", "entity": slug,
+                "file": m["file"], "fields": m["cols"],
+                "fks_out": m.get("fks", {})}
+            table_owner[m.get("table", "")] = m["cls"]
+        for s in v["schemas"]:
+            classes[s["cls"]] = {
+                "cls": s["cls"], "kind": "schema", "entity": slug,
+                "file": s["file"], "fields": s["fields"], "fks_out": {}}
+    texts = {}
+    for f in sorted(py_files):
+        p = repo / f
+        if p.exists():
+            texts[f] = p.read_text()
+    names = set(classes)
+    for c in classes.values():
+        c["touches"] = sum(1 for e in all_eps if c["cls"] in e.get("touches", []))
+        tgt = {t for t, owner in table_owner.items() if owner == c["cls"]}
+        c["fk_in"] = sum(1 for o in classes.values() if o is not c
+                         for ref in o["fks_out"].values()
+                         if str(ref).split(".")[0] in tgt)
+        refs_out = {n for n in names if n != c["cls"]
+                    and any(n in str(t) for _f in [c["fields"]] for _n, t, *_ in _f)}
+        c["base"] = not c["fks_out"] and not refs_out
+        c["god"] = len(c["fields"]) >= _GOD_FIELDS
+        c["usage"] = c["touches"] + c["fk_in"]
+        rx = _re_mod.compile(rf"\b{_re_mod.escape(c['cls'])}\b")
+        c["internal"] = sum(1 for f, t in texts.items()
+                            if f != c["file"] and rx.search(t))
+        c["orphan"] = c["usage"] == 0 and c["internal"] == 0
+    for c in classes.values():
+        mine = {n for n, *_ in c["fields"]}
+        best, best_j, shared = "", 0.0, 0
+        for o in classes.values():
+            if o is c:
+                continue
+            theirs = {n for n, *_ in o["fields"]}
+            union = mine | theirs
+            j = len(mine & theirs) / len(union) if union else 0.0
+            if j > best_j:
+                best, best_j, shared = o["cls"], j, len(mine & theirs)
+        c["sim"] = ({"cls": best, "j": round(best_j, 2), "shared": shared,
+                     "of": len(mine)} if best_j >= _SIM_FLOOR else None)
+    _INSIGHT = classes
+    return classes
+
+
+def insight_serial(repo: Path) -> dict:
+    """The archmap-ready view: signals only, never the field lists (those
+    already ride models/schemas)."""
+    return {k: {kk: vv for kk, vv in v.items()
+                if kk not in ("fields", "fks_out")}
+            for k, v in model_insight(repo).items()}
+
+
+def _ins_tags(cls: str, ins: dict) -> str:
+    """The icon chips for one class cell — dialect + colors per the ruling:
+    kind (violet model / teal schema) · base green · fields-count red ·
+    twin+% amber · orphan slate."""
+    c = ins.get(cls)
+    if not c:
+        return ""
+    out = itag("l-models" if c["kind"] == "model" else "l-schemas", c["kind"],
+               "model — a persisted DB entity" if c["kind"] == "model"
+               else "schema — an API / pipeline shape")
+    if c["base"]:
+        out += " " + itag("t-base", "base",
+                          "base class — derives from nothing: no FK out, no "
+                          "field typed by another documented class")
+    if c["god"]:
+        out += " " + itag("t-god", "fields",
+                          f"god-class flag — {len(c['fields'])} fields",
+                          str(len(c["fields"])))
+    if c["sim"]:
+        s = c["sim"]
+        out += " " + itag("t-sim", "sim",
+                          f"closest structural twin — {s['shared']}/{s['of']} "
+                          f"fields shared",
+                          f'{E(s["cls"])} {int(s["j"] * 100)}%')
+    if c["orphan"]:
+        out += " " + itag("t-orph", "orphan",
+                          "orphan — zero API usage AND zero internal "
+                          "references in the mapped backend files")
+    return out
+
+
+def _ins_usage(cls: str, ins: dict) -> str:
+    c = ins.get(cls)
+    if not c:
+        return "—"
+    w_api = max(2, min(60, c["usage"] * 11))
+    w_int = max(2, min(60, c["internal"] * 11))
+    return (f'<span class="ubar" style="width:{w_api}px"></span>'
+            f'<b>{c["usage"]}</b> <small>api</small><br>'
+            f'<span class="ubar u-int" style="width:{w_int}px"></span>'
+            f'<b>{c["internal"]}</b> <small>internal</small>')
 
 
 def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
@@ -561,7 +738,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 f"<tbody>{body}</tbody></table>"
                 f"{rel_rows(cls, rels or [])}{extra_html}")
 
-    _DM_W = ["1.5fr", "1.4fr", "1.8fr", "2fr"]
+    _DM_W = ["1.9fr", "1.1fr", "1.6fr", "1fr", "1.6fr"]
 
     html += sechead(
         "Code", "Data model", "#7c3aed", _IC_DB,
@@ -583,34 +760,132 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                'structured · <span class="ty ty-id">UUID</span> identity · '
                '<span class="ty ty-null">None</span> nullable. An uncolored '
                "token is a domain alias (an enum defined in this codebase).</div>"
+             + '<div class="leg"><b>Insight icons</b> (the DATA-MODEL lens — '
+               "the same shape runs over other member kinds later, scoped, "
+               "never mixed): "
+               + itag("l-models", "model", "model") + " persisted DB entity · "
+               + itag("l-schemas", "schema", "schema") + " API/pipeline shape · "
+               + itag("t-base", "base", "base class")
+               + " BASE — derives from nothing (no FK out, no field typed by "
+                 "another documented class) · "
+               + itag("t-god", "fields", "god-class flag", "N")
+               + f" god-class field count (≥ {_GOD_FIELDS}) · "
+               + itag("t-sim", "sim", "structural twin", "Class N%")
+               + " closest structural twin (shared fields / union) · "
+               + itag("t-orph", "orphan", "orphan")
+               + " orphan — zero on BOTH usage axes. Usage bars: teal = api "
+                 "(endpoint touches + FK in) · violet = internal (mapped "
+                 "backend files referencing the class) — api-silent is not "
+                 "dead; only a true orphan is.</div>"
              + (f'<p class="sub"><b>About this section</b></p>{intro_html}'
                 if intro_html else ""))
+    ins = model_insight(repo)
+    html += ('<div class="dmchips" id="dm-chips">'
+             + "".join(f'<button class="chip" data-f="{k}">{lbl}</button>'
+                       for k, lbl in (("all", "All"), ("t-base", "base"),
+                                      ("t-sim", "≈ similar"),
+                                      ("t-orph", "orphan"),
+                                      ("t-god", "god"))) + "</div>")
     html += (f'<p class="sub"><span class="tag l-models">models</span> '
              f"{len(models)} DB entity class(es) — click a row to open its "
              f"columns:</p>")
     _mrows = []
     for m in models:
         uq = "".join(f'<p class="sub">UNIQUE: <code>{E(u)}</code></p>' for u in m["uqs"])
-        cells = [f'<b>{E(m["cls"])}</b>',
+        cells = [f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}',
                  f'<code>{E(m["table"])}</code> <small>table</small>',
                  f'<code>{E(m["file"])}</code>',
+                 _ins_usage(m["cls"], ins),
                  " · ".join(ep_chip(e) for e in eps if m["cls"] in e["touches"]) or "—"]
         _mrows.append((cells, _dm_detail(m["cls"], m["cols"], uq, m["rels"]),
                        _anchor("dm", slug, m["cls"])))
-    html += xtable(["Class", "Kind", "File", "Touched by"], _mrows, widths=_DM_W)
+    html += xtable(["Class", "Kind", "File", "Usage", "Touched by"], _mrows,
+                   widths=_DM_W)
     html += (f'<p class="sub" style="margin-top:14px">'
              f'<span class="tag l-schemas">schemas</span> {len(schemas)} API '
              f"schema(s) — the shapes the Returns column links to:</p>")
     _srows = []
     for s_ in schemas:
-        cells = [f'<b>{E(s_["cls"])}</b>', "<small>API schema</small>",
+        cells = [f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}',
+                 "<small>API schema</small>",
                  f'<code>{E(s_["file"])}</code>',
+                 _ins_usage(s_["cls"], ins),
                  " · ".join(ep_chip(e) for e in eps
                             if s_["cls"] in e["resp"] or s_["cls"] in e["touches"])
                  or "—"]
         _srows.append((cells, _dm_detail(s_["cls"], s_["fields"]),
                        _anchor("dm", slug, s_["cls"])))
-    html += xtable(["Class", "Kind", "File", "Used by"], _srows, widths=_DM_W)
+    html += xtable(["Class", "Kind", "File", "Usage", "Used by"], _srows,
+                   widths=_DM_W)
+    # Filter chips act on the two class tables above (any .xrow after the
+    # chips in this pane); the candidates table below uses plain rows and is
+    # deliberately outside the filter.
+    html += (
+        "<script>(function(){var c=document.getElementById('dm-chips');"
+        "if(!c)return;var rows=[];var n=c.nextElementSibling;"
+        "while(n){rows.push.apply(rows,n.querySelectorAll('.xrow'));"
+        "n=n.nextElementSibling;}c.addEventListener('click',function(ev){"
+        "var b=ev.target.closest('.chip');if(!b)return;"
+        "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
+        "b.classList.add('on');var f=b.dataset.f;rows.forEach(function(r){"
+        "r.style.display=(f==='all'||r.querySelector('summary .'+f))?'':'none'});"
+        "});c.querySelector('.chip').classList.add('on');})();</script>")
+
+    # -- Data-model candidates: named by the machine, ruled by judgment ------
+    own = {m["cls"] for m in models} | {s_["cls"] for s_ in schemas}
+    cands = ""
+    seen_pairs: set = set()
+    for cls in sorted(own):
+        c = ins.get(cls)
+        if not c or not c["sim"] or c["sim"]["j"] < _MERGE_FLOOR:
+            continue
+        key = tuple(sorted((cls, c["sim"]["cls"])))
+        if key in seen_pairs:
+            continue
+        seen_pairs.add(key)
+        s = c["sim"]
+        cands += (f'<tr><td>{itag("t-sim", "merge", "merge candidate")}</td>'
+                  f'<td><code>{E(key[0])}</code> ≈ <code>{E(key[1])}</code></td>'
+                  f'<td>{int(s["j"] * 100)}% structural twin ({s["shared"]}/'
+                  f'{s["of"]} fields) — justified echo, or duplication waiting '
+                  f"to drift? Rule it.</td></tr>")
+    for cls in sorted(own):
+        c = ins.get(cls)
+        if c and c["orphan"]:
+            cands += (f'<tr><td>{itag("t-orph", "archive", "deprecation candidate")}'
+                      f'</td><td><code>{E(cls)}</code></td>'
+                      f"<td>zero API usage · zero internal references across "
+                      f"the mapped backend files — if nothing outside the map "
+                      f"uses it either, file for removal.</td></tr>")
+    for cls in sorted(own, key=lambda k: -len(ins[k]["fields"]) if k in ins else 0):
+        c = ins.get(cls)
+        if c and c["god"]:
+            cands += (f'<tr><td>{itag("t-god", "split", "split candidate")}</td>'
+                      f'<td><code>{E(cls)}</code></td>'
+                      f'<td>{len(c["fields"])} fields — past the {_GOD_FIELDS}-'
+                      f"field line; the number names it, judgment rules it."
+                      f"</td></tr>")
+    if cands:
+        html += (
+            '<p class="sub" style="margin-top:18px"><b>Data-model candidates '
+            "— named by the machine, ruled by judgment.</b> Each wears the "
+            "color and icon dialect of the flag that triggered it above; the "
+            "verdict lands in DECISIONS/PENDING via review or a health pass, "
+            "never here.</p>"
+            "<details><summary class=\"sub\" style=\"cursor:pointer\">⊕ what "
+            "the candidate icons mean</summary><div class=\"leg\">"
+            + itag("t-sim", "merge", "merge candidate")
+            + f" merge — structural twins ≥ {int(_MERGE_FLOOR * 100)}% (from "
+            + itag("t-sim", "sim", "similarity flag") + ") · "
+            + itag("t-orph", "archive", "deprecation candidate")
+            + " deprecation — a true orphan (from "
+            + itag("t-orph", "orphan", "orphan flag") + ") · "
+            + itag("t-god", "split", "split candidate")
+            + f" split — a god class ≥ {_GOD_FIELDS} fields (from "
+            + itag("t-god", "fields", "fields flag", "N") + ")</div></details>"
+            "<table class=\"tbl\"><thead><tr><th>Candidate</th><th>Classes</th>"
+            "<th>Why the machine flags it</th></tr></thead>"
+            f"<tbody>{cands}</tbody></table>")
     # The "About this section" methodology prose used to trail the tables; the
     # declutter ruling folds it into the section's ⊕ (info above) instead.
     return html
