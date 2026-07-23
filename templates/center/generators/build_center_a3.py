@@ -1128,17 +1128,23 @@ def render_architecture(amap: dict) -> dict[str, str]:
                + entity_badge(s, LABELS.get(s, s), 12, show_name=True)
                + "</button>" for s in ents)
            + "</div>"
+           # Rows are collected AT CLICK TIME (this script precedes the tables
+           # in the document — an eager query would bind an empty list), only
+           # rows whose identity cell carries an entity badge are touched
+           # (dictionary + row-detail tables have none), and hiding rides an
+           # 'ehide' class so it composes with the kind filter's 'khide'.
            "<script>(function(){var c=document.querySelector('.entchips');"
-           "if(!c)return;var rows=[].slice.call(document.querySelectorAll("
-           "'.xrow, table.tbl tbody tr'));"
-           "c.addEventListener('click',function(ev){"
+           "if(!c)return;c.addEventListener('click',function(ev){"
            "var b=ev.target.closest('.chip');if(!b)return;"
            "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
            "b.classList.add('on');var s=b.dataset.ent;"
-           "rows.forEach(function(r){var q=r.querySelector("
-           "':scope > summary > span:first-child .ent-'+s+"
-           "', :scope > td:first-child .ent-'+s);"
-           "r.style.display=(s==='all'||q)?'':'none'});});})();</script>")
+           "[].slice.call(document.querySelectorAll('.xrow, table.tbl tbody tr'))"
+           ".forEach(function(r){var cell=r.querySelector("
+           "':scope > summary > span:first-child, "
+           ":scope > .xsummary > span:first-child, :scope > td:first-child');"
+           "if(!cell||!cell.querySelector('.entb'))return;"
+           "r.classList.toggle('ehide',"
+           "!(s==='all'||cell.querySelector('.ent-'+s)))});});})();</script>")
 
     base_skel = strip_slot_doc_comments(
         (SHELL_SRC / "architecture.html").read_text())

@@ -1797,7 +1797,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         "var b=ev.target.closest('.chip');if(!b)return;"
         "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
         "b.classList.add('on');var f=b.dataset.f;rows.forEach(function(r){"
-        "r.style.display=(f==='all'||r.querySelector('summary .'+f))?'':'none'});"
+        "r.classList.toggle('khide',!(f==='all'||r.querySelector('summary .'+f)))});"
         "});c.querySelector('.chip').classList.add('on');});})();</script>")
     # The "About this section" methodology prose used to trail the tables; the
     # declutter ruling folds it into the section's ⊕ (info above) instead.

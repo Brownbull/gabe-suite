@@ -441,6 +441,20 @@ h = (c / "arch-endpoints.html").read_text()
 assert 'href="arch-data-model.html#dm-app-' in h, \
     "endpoint model links must route via the xpage map"
 assert 'href="#dm-app-' not in h, "unrouted same-page dm anchor on endpoints page"
+# The filter must actually FIRE (2026-07-23 operator catch: the script bound
+# rows before the tables existed, so clicking filtered nothing) and compose
+# with the kind filter via classes, never a display-style tug-of-war.
+for fname in pages:
+    h = (c / fname).read_text()
+    assert "classList.toggle('ehide'" in h, f"{fname}: entity filter not class-based"
+    assert "var rows=[].slice.call" not in h.split("</h1>")[-1].split("sechead")[0], \
+        f"{fname}: bar script must collect rows at click time, not eagerly"
+h = (c / "arch-data-model.html").read_text()
+assert "classList.toggle('khide'" in h, "kind filter must compose via khide"
+css = (c / "assets" / "a3.css").read_text()
+assert "position:sticky" in css.split(".entchips{", 1)[1].split("}")[0], \
+    "the entity bar must stick while the page scrolls"
+assert ".xrow.khide,.xrow.ehide" in css, "filter compose rule missing from css"
 PY2
 
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.

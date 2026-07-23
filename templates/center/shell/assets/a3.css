@@ -782,7 +782,11 @@ details.legset .gal{margin:8px 0 4px}
 /* Architecture estate (2026-07-23): entity filter bar, colored entity badges,
    nav subpages, dashboard cards. */
 .entb{display:inline-flex;align-items:center;gap:5px;vertical-align:middle}
-.entchips{margin:2px 0 14px}
+/* The bar STICKS so the filter is reachable however deep the page scrolls;
+   the kind (khide) and entity (ehide) filters compose — a row shows only
+   when neither hides it. */
+.entchips{margin:2px 0 14px;position:sticky;top:0;z-index:40;background:var(--bg);padding:10px 0 6px;border-bottom:1px solid var(--line)}
+.xrow.khide,.xrow.ehide,tr.khide,tr.ehide{display:none!important}
 .entchips .chip{font:inherit;font-size:.72rem;font-weight:600;padding:3px 10px;border-radius:14px;margin:0 6px 6px 0;border:1px solid var(--line,#d8dee6);background:var(--surface,#fff);color:var(--muted,#64748b);cursor:pointer;display:inline-flex;align-items:center;gap:5px}
 .entchips .chip.on{background:var(--accent,#0d6e78);color:#fff;border-color:var(--accent,#0d6e78)}
 .entchips .chip.on .entb{color:#fff!important}
