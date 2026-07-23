@@ -154,6 +154,13 @@ assert 'title="merge candidate"' in html, "twin pair must yield a merge candidat
 assert 'title="deprecation candidate"' in html, "orphan must yield a deprecation candidate"
 assert "what the candidate icons mean" in html, "candidates icon dictionary missing"
 assert "Insight icons" in html, "section icon dictionary missing"
+assert '<ul class="iclist">' in html, "icon dictionary must render as a LIST"
+assert "<span>Entity</span>" in html, "consolidated tables need the Entity column"
+assert "<span>Touched by</span>" not in html and "<span>Used by</span>" not in html, \
+    "touched-by/used-by columns must move into the row detail"
+assert "dm-meta" in html and "Referenced by (internal)" in html, \
+    "row detail must lead with the metadata block"
+assert "Touched by (api)" in html, "api touched-by must live in the metadata block"
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
 assert mi["GadgetOut"]["base"] and mi["GadgetOut"]["orphan"], mi["GadgetOut"]

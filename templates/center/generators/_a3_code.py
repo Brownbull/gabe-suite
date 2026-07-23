@@ -458,8 +458,9 @@ def model_insight(repo: Path) -> dict:
         c["god"] = len(c["fields"]) >= _GOD_FIELDS
         c["usage"] = c["touches"] + c["fk_in"]
         rx = _re_mod.compile(rf"\b{_re_mod.escape(c['cls'])}\b")
-        c["internal"] = sum(1 for f, t in texts.items()
-                            if f != c["file"] and rx.search(t))
+        c["internal_files"] = sorted(f for f, t in texts.items()
+                                     if f != c["file"] and rx.search(t))
+        c["internal"] = len(c["internal_files"])
         c["orphan"] = c["usage"] == 0 and c["internal"] == 0
     for c in classes.values():
         mine = {n for n, *_ in c["fields"]}
@@ -719,10 +720,35 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                 f"<th>Stored as (the FK)</th><th>Paired via</th></tr></thead>"
                 f"<tbody>{rows}</tbody></table>")
 
-    def _dm_detail(cls: str, fields: list, extra_html: str = "",
+    def _dm_meta(cls: str, kind_html: str, is_schema: bool,
+                 uqs: list | None = None, doc: str = "") -> str:
+        """The class-METADATA block that leads the expansion (operator ruling
+        2026-07-23): kind · uniqueness · api Touched-by · internal
+        Referenced-by · docstring — everything that used to crowd the table
+        columns lives here, shown only when the row opens."""
+        c = ins.get(cls, {})
+        api = " · ".join(
+            ep_chip(e) for e in eps
+            if cls in e["touches"] or (is_schema and cls in e["resp"])) or "—"
+        ints = c.get("internal_files") or []
+        int_html = (" · ".join(f"<code>{E(f.rsplit('/', 1)[-1])}</code>"
+                               for f in ints) or "—")
+        rows = [("Kind", kind_html),
+                ("Touched by (api)", api),
+                ("Referenced by (internal)", int_html)]
+        if doc:
+            rows.append(("Docstring", E(doc)))
+        for u in (uqs or []):
+            rows.append(("Unique", f"<code>{E(u)}</code>"))
+        body = "".join(f'<tr><td class="metak">{E(k)}</td><td>{v}</td></tr>'
+                       for k, v in rows)
+        return (f'<table class="tbl dm-meta"><tbody>{body}</tbody></table>')
+
+    def _dm_detail(cls: str, fields: list, meta_html: str = "",
                    rels: list[dict] | None = None) -> str:
-        """The in-place expansion for one class: its columns (Column/Type/
-        Example/Description), then relationships, then any UNIQUE constraints.
+        """The in-place expansion for one class: the METADATA block first
+        (kind · unique · touched-by · referenced-by), then relationships,
+        then the columns table (Column/Type/Example/Description).
         Descriptions are read from source (description=/comment= kwargs or the
         field line's own # comment — see _field_desc); a field without one
         renders an em dash. Older 2-tuple archmaps stay renderable."""
@@ -733,12 +759,12 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
             body += (f"<tr><td><code>{E(n)}</code></td><td>{link_types(t)}</td>"
                      f"<td><code>{E(_example(n, t))}</code></td>"
                      f"<td>{E(trunc(d, 96))}</td></tr>")
-        return (f'<table class="tbl"><thead><tr><th>Column</th><th>Type</th>'
+        return (f"{meta_html}{rel_rows(cls, rels or [])}"
+                f'<table class="tbl"><thead><tr><th>Column</th><th>Type</th>'
                 f"<th>Example (synthetic)</th><th>Description</th></tr></thead>"
-                f"<tbody>{body}</tbody></table>"
-                f"{rel_rows(cls, rels or [])}{extra_html}")
+                f"<tbody>{body}</tbody></table>")
 
-    _DM_W = ["1.9fr", "1.1fr", "1.6fr", "1fr", "1.6fr"]
+    _DM_W = ["2.2fr", "0.9fr", "1.7fr", "1.2fr"]
 
     html += sechead(
         "Code", "Data model", "#7c3aed", _IC_DB,
@@ -760,23 +786,35 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
                'structured · <span class="ty ty-id">UUID</span> identity · '
                '<span class="ty ty-null">None</span> nullable. An uncolored '
                "token is a domain alias (an enum defined in this codebase).</div>"
-             + '<div class="leg"><b>Insight icons</b> (the DATA-MODEL lens — '
-               "the same shape runs over other member kinds later, scoped, "
-               "never mixed): "
-               + itag("l-models", "model", "model") + " persisted DB entity · "
-               + itag("l-schemas", "schema", "schema") + " API/pipeline shape · "
-               + itag("t-base", "base", "base class")
-               + " BASE — derives from nothing (no FK out, no field typed by "
-                 "another documented class) · "
-               + itag("t-god", "fields", "god-class flag", "N")
-               + f" god-class field count (≥ {_GOD_FIELDS}) · "
-               + itag("t-sim", "sim", "structural twin", "Class N%")
-               + " closest structural twin (shared fields / union) · "
-               + itag("t-orph", "orphan", "orphan")
-               + " orphan — zero on BOTH usage axes. Usage bars: teal = api "
-                 "(endpoint touches + FK in) · violet = internal (mapped "
-                 "backend files referencing the class) — api-silent is not "
-                 "dead; only a true orphan is.</div>"
+             + '<div class="leg"><b>Insight icons</b> — the DATA-MODEL lens; '
+               "the same shape runs over other member kinds later (functions "
+               "· methods), scoped, never mixed:"
+               '<ul class="iclist">'
+               f"<li>{itag('l-models', 'model', 'model')} <b>model</b> — a "
+               "persisted DB entity: lives in a table, owns FKs.</li>"
+               f"<li>{itag('l-schemas', 'schema', 'schema')} <b>schema</b> — "
+               "an API / pipeline shape: crosses a boundary, owns no "
+               "storage.</li>"
+               f"<li>{itag('t-base', 'base', 'base class')} <b>base</b> — "
+               "derives from NOTHING: no FK out, no field typed by another "
+               "documented class; a foundation others build on.</li>"
+               f"<li>{itag('t-god', 'fields', 'god-class flag', 'N')} "
+               f"<b>god-class flag</b> — field count ≥ {_GOD_FIELDS}; the "
+               f"number that makes it a {itag('t-god', 'split', 'split candidate')} "
+               "split candidate below.</li>"
+               f"<li>{itag('t-sim', 'sim', 'structural twin', 'Class N%')} "
+               "<b>closest structural twin</b> — % = shared fields over the "
+               f"union (Jaccard); a ≥{int(_MERGE_FLOOR * 100)}% pair becomes "
+               f"a {itag('t-sim', 'merge', 'merge candidate')} merge candidate "
+               "below.</li>"
+               f"<li>{itag('t-orph', 'orphan', 'orphan')} <b>orphan</b> — zero "
+               "API usage AND zero internal references; becomes a "
+               f"{itag('t-orph', 'archive', 'deprecation candidate')} "
+               "deprecation candidate below.</li>"
+               "<li>Usage bars: teal = api (endpoint touches + FK in) · "
+               "violet = internal (mapped backend files referencing the "
+               "class). Api-silent is not dead; only a true orphan is.</li>"
+               "</ul></div>"
              + (f'<p class="sub"><b>About this section</b></p>{intro_html}'
                 if intro_html else ""))
     ins = model_insight(repo)
@@ -791,32 +829,29 @@ def build_code_tab(slug: str, repo: Path, intro_html: str) -> str:
              f"columns:</p>")
     _mrows = []
     for m in models:
-        uq = "".join(f'<p class="sub">UNIQUE: <code>{E(u)}</code></p>' for u in m["uqs"])
+        meta = _dm_meta(m["cls"],
+                        f'model — table <code>{E(m["table"])}</code>',
+                        False, uqs=m["uqs"], doc=m.get("doc") or "")
         cells = [f'<b>{E(m["cls"])}</b><br>{_ins_tags(m["cls"], ins)}',
-                 f'<code>{E(m["table"])}</code> <small>table</small>',
+                 E(slug),
                  f'<code>{E(m["file"])}</code>',
-                 _ins_usage(m["cls"], ins),
-                 " · ".join(ep_chip(e) for e in eps if m["cls"] in e["touches"]) or "—"]
-        _mrows.append((cells, _dm_detail(m["cls"], m["cols"], uq, m["rels"]),
+                 _ins_usage(m["cls"], ins)]
+        _mrows.append((cells, _dm_detail(m["cls"], m["cols"], meta, m["rels"]),
                        _anchor("dm", slug, m["cls"])))
-    html += xtable(["Class", "Kind", "File", "Usage", "Touched by"], _mrows,
-                   widths=_DM_W)
+    html += xtable(["Class", "Entity", "File", "Usage"], _mrows, widths=_DM_W)
     html += (f'<p class="sub" style="margin-top:14px">'
              f'<span class="tag l-schemas">schemas</span> {len(schemas)} API '
              f"schema(s) — the shapes the Returns column links to:</p>")
     _srows = []
     for s_ in schemas:
+        meta = _dm_meta(s_["cls"], "API schema", True, doc=s_.get("doc") or "")
         cells = [f'<b>{E(s_["cls"])}</b><br>{_ins_tags(s_["cls"], ins)}',
-                 "<small>API schema</small>",
+                 E(slug),
                  f'<code>{E(s_["file"])}</code>',
-                 _ins_usage(s_["cls"], ins),
-                 " · ".join(ep_chip(e) for e in eps
-                            if s_["cls"] in e["resp"] or s_["cls"] in e["touches"])
-                 or "—"]
-        _srows.append((cells, _dm_detail(s_["cls"], s_["fields"]),
+                 _ins_usage(s_["cls"], ins)]
+        _srows.append((cells, _dm_detail(s_["cls"], s_["fields"], meta),
                        _anchor("dm", slug, s_["cls"])))
-    html += xtable(["Class", "Kind", "File", "Usage", "Used by"], _srows,
-                   widths=_DM_W)
+    html += xtable(["Class", "Entity", "File", "Usage"], _srows, widths=_DM_W)
     # Filter chips act on the two class tables above (any .xrow after the
     # chips in this pane); the candidates table below uses plain rows and is
     # deliberately outside the filter.
