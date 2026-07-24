@@ -56,3 +56,12 @@ echo "── regenerate + gates"
 # facts; the crawl gate then proves every internal link resolves.
 python3 scripts/build_center_a3.py
 python3 scripts/check_center_links.py
+
+# The chrome harness proves the shipped JS behaves in a REAL browser
+# (rowclick · lightbox · expander cascade) — the third gate of the loop.
+# Skipped only when node or the harness is absent, and it says so.
+if command -v node >/dev/null 2>&1 && [ -f scripts/verify_center_chrome.mjs ]; then
+  node scripts/verify_center_chrome.mjs docs/site/center
+else
+  echo "── chrome harness: node or scripts/verify_center_chrome.mjs absent — skipped"
+fi

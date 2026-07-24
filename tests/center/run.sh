@@ -941,6 +941,13 @@ grep -q "Gabe Center" "$FIX/docs/site/center/index.html" \
   && ok || bad "brand: the subtitle must read Gabe Center"
 [ -f "$FIX/docs/site/center/assets/gabe-icon.png" ] \
   && ok || bad "brand: gabe-icon.png must copy with the shell assets"
+# The chrome harness ships with the generators and rides the refresh loop
+# (operator ruling 2026-07-24) — regen · crawl gate · browser behavior are
+# the three gates every center refresh runs.
+[ -f "$GEN/verify_center_chrome.mjs" ] \
+  && ok || bad "verify_center_chrome.mjs must ship with the generators"
+grep -q "verify_center_chrome.mjs docs/site/center" "$GEN/refresh_center.sh" \
+  && ok || bad "the chrome harness must ride refresh_center.sh"
 # M38: the architecture station fills its OWN skeleton, completely.
 [ -f "$SHELL_SRC/architecture.html" ] && ok || bad "M38: shell/architecture.html skeleton must ship"
 grep -q '<h1>Architecture</h1>' "$FIX/docs/site/center/architecture.html" \
