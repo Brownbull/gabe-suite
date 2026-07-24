@@ -376,10 +376,19 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
     rows.append(("corpus", E(g["corpus"])))
     rows.append(("time",
                  f'{g["time"]:.2f}s · {len(g["variants"])} execution(s)'))
+    # The fold SPINE is invariant (operator ruling 2026-07-24: the app fold
+    # must read like the entity fold) — an element with nothing to show
+    # renders its named gap, never disappears: a thin fold used to read as
+    # "this page shows less" when the truth was "this case touches nothing".
     if ents:
         rows.append(("entities", " ".join(
             entity_badge(s, labels.get(s, s), 13, show_name=True)
             for s in ents)))
+    else:
+        rows.append(("entities", '<span class="tag s-gap">unclaimed</span>',
+                     "no adopted entity claims this case's file and the "
+                     "test↔code thread joins it to none — registry surface "
+                     "area, not failure."))
 
     own = g["own"] or {}
     inh = g["inh"] or {}
@@ -429,6 +438,15 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
             rows.append(("via file", "".join(vf),
                          "file-tier — the case's FILE carries these facts; "
                          "the runner cannot attribute them to one case."))
+    if not any(own.values()) and not any(
+            inh.get(k) for k in ("endpoints", "functions", "models",
+                                 "uses", "reaches")):
+        rows.append(("exercises",
+                     '<span class="tag s-gap">no app joins</span>',
+                     "neither this case nor its file drives a mapped route, "
+                     "calls a mapped function, imports app symbols, or "
+                     "reaches a mapped file — infrastructure and tooling "
+                     "tests read like this."))
 
     uses = inh.get("uses") or []
     if uses:

@@ -86,6 +86,12 @@ c = root / center_rel
     # so it cannot inherit the file's endpoint hits and skew via-route.
     "def test_retry_backoff_C15():\n"
     "    assert True\n")
+# A CI/tooling test NO entity claims and NO app import reaches (the gastify
+# C1710 shape): its fold must render the named gaps (entities: unclaimed ·
+# exercises: no app joins) instead of a silently thinner spine.
+(root / "tests" / "test_ci_gate.py").write_text(
+    "def test_pipeline_shape_C16():\n"
+    "    assert True\n")
 # A WEB corpus slice: a ts source in the entity's code map + a vitest-shaped
 # junit whose describe carries provenance tokens — FIRES the tag facet
 # (DF3/W1 -> data-tag + .ltag pills + the tag filter) and the uses·T3 chips
@@ -131,6 +137,8 @@ c = root / center_rel
     'name="test_retry_backoff_C15[&lt;lambda&gt; at 0xbeef&gt;-0]" time="0.1"/>'
     '<testcase classname="tests.test_gadgets" '
     'name="test_retry_backoff_C15[&lt;lambda&gt; at 0xbeef&gt;-1]" time="0.1"/>'
+    '<testcase classname="tests.test_ci_gate" '
+    'name="test_pipeline_shape_C16" time="0.1"/>'
     "</testsuite></testsuites>")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
@@ -658,6 +666,16 @@ assert 'href="test-matrix.html#C15"' in tf and 'id="C15"' in m, \
     "a pytest '>' parametrize id must keep its C-id and its ledger anchor"
 assert "×2</small>" in m[m.find('id="C15"'):][:2000], \
     "C15's two executions must group under one ledger row"
+# The fold SPINE is invariant (the C1710 confusion): a case with no entity
+# and no app joins names both gaps instead of shipping a thinner fold —
+# and exactly once (C16 is the only such case in the fixture).
+_c16 = m[m.find('id="C16"'):][:4000]
+assert ">unclaimed<" in _c16 and ">no app joins<" in _c16, \
+    "an unclaimed joinless case must name both fold gaps"
+assert m.count(">no app joins<") == 1, \
+    "joined cases must NOT carry the no-app-joins gap"
+assert 'class="k">entities<' in m[m.find('id="C11"'):][:4000], \
+    "a claimed case keeps its real entities row"
 assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
 assert 'in reach<details class="tinfo"' in m and "lonely_helper()" in m, \
