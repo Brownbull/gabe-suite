@@ -122,3 +122,37 @@ as the corpus-registry truth. **B** — Exercises as a visible matrix column
 (surfaces the weak side: ~77% empty cells). **C** — full inversion (breaks
 corpus-as-registry; not viable alone). Open: altitude (section on
 test-matrix.html vs own test-elements.html page) and untested-row policy.
+
+## v3 — Shape A REJECTED; the case ledger (rulings 2026-07-24)
+
+Operator, next morning: Shape A copied the code inventory into the Tests
+surfaces — "the test section should be about the testing we do." The v2
+asymmetry was measured at the wrong granularity: 23% is the per-CASE attach
+rate, but per-FILE the test→code joins run 86–100%, so a test-led table
+fills honestly once file facts are allowed to ride the rows. Iteration ran
+on a private artifact (two rounds); the rulings, all landed:
+
+- **R1 — the C-id is the row.** One ledger row per case IDENTITY; the test
+  file demotes to a metadata line; the ledger row is the canonical anchor
+  every C-id pill in the center lands on (`test-matrix.html#C<n>`).
+- **R2 — filters are dropdowns**, and endpoint / model / function are each
+  their own filter (datalist type-aheads; entity/kind/state as selects).
+- **R3 — the fold adapts to the kind** (integration: T1 routes + T2
+  via-route credits; py unit: calls + reach; vitest: file-tier reach only;
+  journey: routes driven; parametrize variants nest under their id).
+- **Q1A** inherit file facts onto bare case rows as dashed `via file`
+  chips; filters match inherited too. **Q2A** cases without a C-id render
+  with an `unminted` tag (+ addendum: mint them in BOTH twins at
+  propagation time — the tag should read zero there from day one).
+  **Q3A** the file altitude survives as a flat Files table after the
+  ledger. **Q4A** failing first, then C-id descending. **Q5A** free-text
+  search ships. **Q6A** test-elements.html repurposed as the GAPS page —
+  untested rows only; the Shape-A roster is deleted everywhere (a tested
+  element's receipts live on its Code rows; only gaps have no case row to
+  carry them).
+
+Landed suite-side in `420f822` (engine `case_own`, new `_a3_ledger.py`,
+entity tab Kinds → Cases → Files → Claims → Untested, estate Cases/Gaps
+pages, battery + fixture growth). Lab numbers: gastify 1,424 identities
+(1,421 anchored + 3 unminted, 265 gaps) · gustify 1,679 (1,644 + 35, 89
+gaps) · 0 dead anchored refs on either twin's lab output.
