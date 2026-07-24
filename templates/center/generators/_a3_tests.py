@@ -230,9 +230,12 @@ def test_insight(repo: Path) -> dict:
     case_own: dict[str, dict] = {}   # "tfile::def" -> the case's OWN T1 chips
 
     def _ex(tfile: str) -> dict:
+        # `unmapped`: imports that resolve to a REAL repo file no entity's
+        # code map registers — the actionable half of a joinless verdict
+        # (the join is waiting on adoption, not absent from the app).
         return exercises.setdefault(
             tfile, {"corpus": "", "endpoints": [], "functions": [],
-                    "models": [], "reaches": [], "uses": []})
+                    "models": [], "reaches": [], "uses": [], "unmapped": []})
 
     seen: set = set()
 
@@ -295,6 +298,11 @@ def test_insight(repo: Path) -> dict:
                         by_file[cand]["reach"].append(tfile)
                         if cand not in ex["reaches"]:
                             ex["reaches"].append(cand)
+                    elif (repo / cand).is_file() \
+                            and cand not in ex["unmapped"]:
+                        # A real repo module outside every entity's map —
+                        # third-party imports never exist on this path.
+                        ex["unmapped"].append(cand)
                 for case in rec["cases"]:
                     dn = re.sub(r"\[.*\]$", "", case["name"])
                     located = pf.defs.get(dn)
@@ -350,6 +358,7 @@ def test_insight(repo: Path) -> dict:
                                 break
                     if tgt is None:
                         return ""
+                    fallback = ""
                     for suf in ("",) + _TS_EXTS + tuple(
                             f"/index{e2}" for e2 in _TS_EXTS):
                         cand = str(Path(str(tgt) + suf)).replace("\\", "/")
@@ -361,6 +370,12 @@ def test_insight(repo: Path) -> dict:
                         cand = _pp.normpath(cand)
                         if cand in by_file:
                             return cand
+                        if not fallback and (repo / cand).is_file():
+                            fallback = cand
+                    # Resolved on disk, registered nowhere: the actionable
+                    # gap — record it, return no mapped target.
+                    if fallback and fallback not in ex["unmapped"]:
+                        ex["unmapped"].append(fallback)
                     return ""
 
                 for spec in _IMPORT_RX.findall(src):

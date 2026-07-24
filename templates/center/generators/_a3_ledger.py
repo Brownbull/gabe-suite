@@ -440,13 +440,14 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
                          "the runner cannot attribute them to one case."))
     if not any(own.values()) and not any(
             inh.get(k) for k in ("endpoints", "functions", "models",
-                                 "uses", "reaches")):
+                                 "uses", "reaches", "unmapped")):
         rows.append(("exercises",
                      '<span class="tag s-gap">no app joins</span>',
                      "neither this case nor its file drives a mapped route, "
                      "calls a mapped function, imports app symbols, or "
-                     "reaches a mapped file — infrastructure and tooling "
-                     "tests read like this."))
+                     "reaches a mapped file — and no import lands on an "
+                     "unregistered app file either. Infrastructure and "
+                     "tooling tests read like this."))
 
     uses = inh.get("uses") or []
     if uses:
@@ -548,6 +549,23 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
         rows.append(("in reach", "".join(ir),
                      "T3 — what the reached files define, from the code "
                      "registries; not a case-level proof."))
+    unmapped = inh.get("unmapped") or []
+    if unmapped:
+        # The TBD dialect (same as an undocumented type on the arch pages):
+        # the import resolved to a REAL repo file, no entity registers it —
+        # the join is waiting on adoption, and the entity index is the
+        # placeholder home.
+        chips = " ".join(
+            '<a class="dlink" href="entity-index.html" '
+            'title="resolves to a real app file no entity\'s code map '
+            'registers yet — adopting its entity lights this join">'
+            f"<code>{E(f2)}</code>"
+            '<span class="tag ic t-tbd">tbd</span></a>' for f2 in unmapped)
+        rows.append(("unmapped imports", chips,
+                     "the test imports these app files, but no entity's "
+                     "code map registers them yet — the join lights up the "
+                     "moment the file is adopted; until then the entity "
+                     "index is the placeholder home.", True))
     html = _kv(rows)
     if len(g["variants"]) > 1:
         vr = "".join(

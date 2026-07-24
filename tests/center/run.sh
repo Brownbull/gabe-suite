@@ -92,6 +92,15 @@ c = root / center_rel
 (root / "tests" / "test_ci_gate.py").write_text(
     "def test_pipeline_shape_C16():\n"
     "    assert True\n")
+# The gastify C1599 shape: the test imports a REAL repo file that NO entity's
+# code map registers — the fold must render the actionable TBD gap
+# ("unmapped imports"), never the infra-flavored "no app joins".
+(root / "tools").mkdir(exist_ok=True)
+(root / "tools" / "ci_helper.py").write_text("VALUE = 1\n")
+(root / "tests" / "test_tooling.py").write_text(
+    "import tools.ci_helper\n\n\n"
+    "def test_shape_check_C17():\n"
+    "    assert True\n")
 # A WEB corpus slice: a ts source in the entity's code map + a vitest-shaped
 # junit whose describe carries provenance tokens — FIRES the tag facet
 # (DF3/W1 -> data-tag + .ltag pills + the tag filter) and the uses·T3 chips
@@ -106,12 +115,19 @@ c = root / center_rel
     "export function planWidget(seed: WSeed): GadgetOut {\n"
     "  return { gid: seed.gid } as GadgetOut;\n}\n"
     'export const WIDGET_KIND = "w";\n')
+# On disk, exports fine — but NOT in the gadget entity's code registration:
+# the web test's import of it must surface as the unmapped-imports TBD gap.
+(root / "src" / "fmt.ts").write_text(
+    "export const fmt = (n: string): string => n;\n")
 (root / "tests" / "widget.test.ts").write_text(
-    'import { planWidget, WIDGET_KIND } from "../src/widget";\n\n'
+    'import { planWidget, WIDGET_KIND } from "../src/widget";\n'
+    # An import that resolves to a real ts file OUTSIDE the entity's code
+    # registration: the web-corpus half of the unmapped-imports TBD gap.
+    'import { fmt } from "../src/fmt";\n\n'
     # A route literal: the endpoint gains a FILE-level web receipt, so the
     # fold's arithmetic rows (N file(s) · M case(s)) have a FIRE case.
     'const url = "/gadgets/one";\n\n'
-    'it("arms", () => planWidget(WIDGET_KIND));\n')
+    'it("arms", () => planWidget(fmt(WIDGET_KIND)));\n')
 (root / "tests" / "results" / "web-junit.xml").write_text(
     '<testsuites><testsuite name="vitest" timestamp="2026-07-23T00:00:00">'
     '<testcase classname="tests/widget.test.ts" '
@@ -139,6 +155,8 @@ c = root / center_rel
     'name="test_retry_backoff_C15[&lt;lambda&gt; at 0xbeef&gt;-1]" time="0.1"/>'
     '<testcase classname="tests.test_ci_gate" '
     'name="test_pipeline_shape_C16" time="0.1"/>'
+    '<testcase classname="tests.test_tooling" '
+    'name="test_shape_check_C17" time="0.1"/>'
     "</testsuite></testsuites>")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
@@ -513,6 +531,12 @@ for fname, anchor in pages.items():
     assert f'id="{anchor}"' in h, f"{fname}: missing {anchor}"
     assert 'class="entchips"' in h, f"{fname}: entity filter bar missing"
     assert "navsubitem" in h, f"{fname}: nav subpages missing"
+    # Round 21: the architecture estate carries the same sticky menu the
+    # testing estate does — overview + siblings, current marked, stacked
+    # with the entity bar as ONE sticky unit.
+    assert f'class="on" href="{fname}"' in h \
+        and 'href="architecture.html"' in h, f"{fname}: estate menu missing"
+    assert 'class="stickstack"' in h, f"{fname}: menu+bar must stack sticky"
 h = (c / "arch-data-model.html").read_text()
 assert 'class="entb ent-gadget"' in h, "icon-only entity column missing"
 assert "dm-app-" in h, "app-scoped anchors missing"
@@ -676,6 +700,19 @@ assert m.count(">no app joins<") == 1, \
     "joined cases must NOT carry the no-app-joins gap"
 assert 'class="k">entities<' in m[m.find('id="C11"'):][:4000], \
     "a claimed case keeps its real entities row"
+# The C1599 confusion, resolved (round 21): an import landing on a REAL but
+# UNREGISTERED repo file renders the actionable TBD gap — python (C17,
+# tools/ci_helper.py) and web (C14's file imports src/fmt.ts) — and such a
+# case never reads as infra ("no app joins" stays C16-only, above).
+_c17 = m[m.find('id="C17"'):][:4000]
+assert "unmapped imports" in _c17 and "tools/ci_helper.py" in _c17 \
+    and 't-tbd">tbd<' in _c17, \
+    "an unmapped python import must render the TBD gap row"
+assert ">no app joins<" not in _c17, \
+    "an unmapped-import case is awaiting adoption, not infra"
+_c14 = m[m.find('id="C14"'):][:6000]
+assert "src/fmt.ts" in _c14 and 't-tbd">tbd<' in _c14, \
+    "an unmapped web import must render the TBD gap row"
 assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
 assert 'in reach<details class="tinfo"' in m and "lonely_helper()" in m, \

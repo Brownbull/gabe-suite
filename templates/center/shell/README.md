@@ -109,7 +109,11 @@ wider type; uncolored = domain alias, say so) · `.meter` (bar + count in one ce
 case-id chip (`.cid.none` = `—`, never "un-run"; a ledger row's `id="C<n>"` is the canonical
 anchor every C-id pill lands on — cross-page pills prefix it `test-matrix.html#C<n>`) · every
 icon-only entity COLUMN heads with the Entity-index layers glyph (generator `ENT_COL`), never
-an empty header · `.subnav a.on` marks the current estate page in the sticky testing menu · `.ledbar`/`.lchip`/`.ledmeta`/`.tinfo`/`.ltag` (the case
+an empty header · `.subnav a.on` marks the current page in the sticky estate menu (testing AND
+architecture subpages — overview first, then every sibling) · `.stickstack` stacks the menu
+above the sticky entity bar as one unit · `.t-tbd` marks a to-be-designed reference — on the
+arch pages an undocumented type, in a case fold an `unmapped imports` row naming the real repo
+file no entity's code map registers yet (entity-index.html is the placeholder home) · `.ledbar`/`.lchip`/`.ledmeta`/`.tinfo`/`.ltag` (the case
 ledger: filter bar with per-control clear ×, tiered chips solid=own/dashed=via-file, labeled
 fold grid, ⓘ tier popovers, provenance-token pills) · `.tag.e-*`/`.st-*` effort/stage pricing ·
 dark theme via `[data-theme="dark"]` (mermaid SVGs get an honest light plate) · viewer vars

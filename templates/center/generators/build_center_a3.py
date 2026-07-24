@@ -410,6 +410,28 @@ _ARCH_PAGES = [
 ]
 
 
+def estate_menu(items: list[tuple[str, str, str]], current: str) -> str:
+    """The STICKY estate menu (operator rulings 2026-07-24): every estate
+    subpage carries the same cross-page subnav — back to its overview plus
+    every sibling page, current marked. Inline top:0 because these pages
+    have no sticky tabbar for the shared .subnav offset to sit under.
+    `items` = (fname, label, icon-path)."""
+    links = "".join(
+        f'<a{" class=\"on\"" if fn == current else ""} href="{fn}">'
+        '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+        'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+        f"{ic}</svg>{E(lbl)}</a>" for fn, lbl, ic in items)
+    return f'<nav class="subnav" style="top:0">{links}</nav>'
+
+
+def sticky_stack(*parts: str) -> str:
+    """Sticky chrome stacked as ONE unit (the estate menu above the entity
+    filter bar) — two independent top:0 sticky bars overlap on scroll, the
+    later one covering the earlier (.stickstack neutralizes the parts' own
+    stickiness)."""
+    return '<div class="stickstack">' + "".join(parts) + "</div>"
+
+
 def _mini_ic(name: str) -> str:
     return ('<svg viewBox="0 0 24 24" width="14" height="14" fill="none" '
             'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
@@ -1363,9 +1385,16 @@ def render_architecture(amap: dict) -> dict[str, str]:
             h = h.replace("<h1>Architecture</h1>", f"<h1>{title}</h1>")
         return h
 
+    # The architecture estate's menu (operator ruling 2026-07-24: the same
+    # sticky cross-page menu the testing estate carries) — overview first,
+    # then every subpage with its own icon.
+    _arch_items = ([("architecture.html", "Architecture overview", _IC_CODE)]
+                   + [(fname, title, _a3_code._INS_ICONS[icon])
+                      for fname, title, _a, icon, _s in _ARCH_PAGES])
+
     pages: dict[str, str] = {}
     for fname, title, _anchor, _ic, _sub in _ARCH_PAGES:
-        body = bar + slices[fname]
+        body = sticky_stack(estate_menu(_arch_items, fname), bar) + slices[fname]
         if fname in ("arch-data-model.html", "arch-functions.html"):
             body += chips_script
         pages[fname] = _page(fname, title, "", body)
@@ -1564,11 +1593,7 @@ def render_testing() -> dict[str, str]:
                      "render; a row disappears by itself the moment a case "
                      "or spec touches its element.")
         + _a3_tests.untested_surface(REPO_ROOT, "app", app=True))
-    # The estate menu (operator ruling 2026-07-24): a STICKY subnav on every
-    # estate page — back to the Testing overview + across the sections —
-    # so a reader deep in a long table keeps the map. Inline top:0 because
-    # these pages have no sticky tabbar for the shared .subnav offset to
-    # sit under; the current page is marked.
+    # The testing estate's menu items — rendered by the shared estate_menu().
     _est_items = [("tests.html", "Testing overview", _IC_KCHECK),
                   ("test-matrix.html", "Cases", _IC_GRID4),
                   ("test-files.html", "Files", _IC_DOCP),
@@ -1577,19 +1602,14 @@ def render_testing() -> dict[str, str]:
                   ("test-corpora.html", "Corpora & gates", _IC_SHIELD)]
 
     def _esub(current: str) -> str:
-        links = "".join(
-            f'<a{" class=\"on\"" if fn == current else ""} href="{fn}">'
-            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
-            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
-            f"{ic}</svg>{E(lbl)}</a>" for fn, lbl, ic in _est_items)
-        return f'<nav class="subnav" style="top:0">{links}</nav>'
+        return estate_menu(_est_items, current)
 
     return {
         "test-elements.html": _tpage(
             "Untested", "Untested",
             "the untested surface: endpoints, models and functions no case "
             "or spec touches, entity-filterable",
-            _esub("test-elements.html") + bar + gaps_body),
+            sticky_stack(_esub("test-elements.html"), bar) + gaps_body),
         "test-matrix.html": _tpage(
             "Cases", "Cases",
             "the case ledger — every identity with its C-id anchor and "
@@ -1604,7 +1624,7 @@ def render_testing() -> dict[str, str]:
             "the file altitude — every test file with its ratios, flags "
             "and claim state, entity-filterable; open a row to read the "
             "cases inside it",
-            _esub("test-files.html") + bar + files_section),
+            sticky_stack(_esub("test-files.html"), bar) + files_section),
         "test-claims.html": _tpage(
             "Test claims", "Claims",
             "the authored coverage, verified app-wide — open a claim to "
