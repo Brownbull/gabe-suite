@@ -827,3 +827,8 @@ details.legset .gal{margin:8px 0 4px}
 .ledmeta .v{font-size:.78rem;min-width:0}
 /* Provenance tokens (DF3, W1, #8) inside group names — the tag facet. */
 .ltag{display:inline-block;font:var(--mono);font-size:.62rem;font-weight:600;padding:0 5px;border-radius:4px;background:var(--accent-soft,#e0f2f4);color:var(--accent-ink,#0d6e78)}
+/* Per-filter clear × — lights up when its column holds a value. */
+.ledbar .lwrap{display:flex;align-items:center;gap:1px}
+.ledbar .lx{border:0;background:none;color:var(--muted,#64748b);cursor:pointer;font-size:.82rem;line-height:1;padding:0 2px;visibility:hidden}
+.ledbar .lx.on{visibility:visible}
+.ledbar .lx:hover{color:var(--bad,#b3403a)}

@@ -376,17 +376,25 @@ def _bar(app: bool, ents: list, labels: dict, kinds: list, tags: list,
          feeds: dict, total: int) -> str:
     """The dropdown filter bar (R2): selects for the small vocabularies,
     datalist type-aheads for the element filters, free text last (Q5).
-    One line always — controls shrink and the bar scrolls before wrapping."""
+    One line always — controls shrink and the bar scrolls before wrapping.
+    Every control carries a clear ×: it lights up when that column holds a
+    value and resets ONLY that column (a filtered-to-zero ledger must never
+    strand the reader)."""
+    def ctl(id_: str, lab: str, control: str) -> str:
+        return (f'<label>{E(lab)}<span class="lwrap">{control}'
+                f'<button type="button" class="lx" data-for="{id_}" '
+                f'aria-label="clear {E(lab)} filter">×</button></span></label>')
+
     def sel(id_: str, lab: str, opts: list[tuple[str, str]]) -> str:
         o = "".join(f'<option value="{E(v)}">{E(t)}</option>' for v, t in opts)
-        return (f'<label>{E(lab)}<select id="{id_}">'
-                f'<option value="all">all</option>{o}</select></label>')
+        return ctl(id_, lab, f'<select id="{id_}">'
+                             f'<option value="all">all</option>{o}</select>')
 
     def dl(id_: str, lab: str, opts: list) -> str:
         o = "".join(f'<option value="{E(v)}"></option>' for v in opts)
-        return (f'<label>{E(lab)}<input id="{id_}" list="{id_}-dl" '
-                f'placeholder="any" size="10"><datalist id="{id_}-dl">{o}'
-                "</datalist></label>")
+        return ctl(id_, lab,
+                   f'<input id="{id_}" list="{id_}-dl" placeholder="any" '
+                   f'size="10"><datalist id="{id_}-dl">{o}</datalist>')
 
     parts = []
     if app:
@@ -400,8 +408,9 @@ def _bar(app: bool, ents: list, labels: dict, kinds: list, tags: list,
     parts.append(dl("led-ep", "endpoint", sorted(set(feeds["ep"]))))
     parts.append(dl("led-mdl", "model", sorted(set(feeds["mdl"]))))
     parts.append(dl("led-fn", "function", sorted(set(feeds["fn"]))))
-    parts.append('<label>search<input id="led-q" size="12" '
-                 'placeholder="name · C-id · chip"></label>')
+    parts.append(ctl("led-q", "search",
+                     '<input id="led-q" size="12" '
+                     'placeholder="name · C-id · chip">'))
     return (f'<div class="ledbar" id="ledbar">{"".join(parts)}'
             f'<span class="sub" id="ledcount">{total} case(s)</span></div>')
 
@@ -410,8 +419,11 @@ _JS = """<script>(function(){var bar=document.getElementById('ledbar');
 var led=document.getElementById('ledger');if(!bar||!led)return;
 var rows=[].slice.call(led.querySelectorAll('.xrow'));
 var note=document.getElementById('ledcount');
-function v(id){var el=document.getElementById(id);
-return el?el.value.trim().toLowerCase():'';}
+function el(id){return document.getElementById(id);}
+function v(id){var e=el(id);return e?e.value.trim().toLowerCase():'';}
+function sync(){[].slice.call(bar.querySelectorAll('.lx')).forEach(
+function(b){var e=el(b.dataset.for),val=e?e.value.trim():'';
+b.classList.toggle('on',!!val&&val!=='all');});}
 function apply(){var ent=v('led-ent'),kind=v('led-kind'),st=v('led-state'),
 tg=v('led-tag'),ep=v('led-ep'),mdl=v('led-mdl'),fn=v('led-fn'),
 q=v('led-q'),n=0;
@@ -426,8 +438,11 @@ if(ok&&fn)ok=((d.fn||'').indexOf(fn)>=0);
 if(ok&&q)ok=((r.textContent+' '+(d.ep||'')+' '+(d.mdl||'')+' '+(d.fn||''))
 .toLowerCase().indexOf(q)>=0);
 r.classList.toggle('lhide',!ok);if(ok)n++;});
-if(note)note.textContent=n+' of '+rows.length+' case(s)';}
+if(note)note.textContent=n+' of '+rows.length+' case(s)';sync();}
 bar.addEventListener('input',apply);bar.addEventListener('change',apply);
+bar.addEventListener('click',function(e){var b=e.target.closest('.lx');
+if(!b)return;var t=el(b.dataset.for);if(!t)return;
+t.value=(t.tagName==='SELECT')?'all':'';apply();});
 })();</script>"""
 
 

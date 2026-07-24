@@ -558,6 +558,8 @@ assert "in reach · T3" in m and "lonely_helper()" in m, \
     "in-reach chips (what reached files define) missing from the fold"
 assert 'id="led-tag"' in m and 'data-tag="df3 w1"' in m, \
     "tag facet missing (tokens from the group name must be filterable)"
+assert 'data-for="led-ep"' in m and "closest('.lx')" in m, \
+    "per-filter clear × missing (a filtered-to-zero ledger must never strand)"
 assert 'class="ltag">DF3</span>' in m, "group tokens must render highlighted"
 assert "uses · T3" in m and ">planWidget<" in m, \
     "uses chips (imported symbols) missing for the web case"
