@@ -483,8 +483,9 @@ python3 - "$FIX/docs/site/center/feature-gadget.html" <<'PY3' && ok || bad "thre
 import sys
 html = open(sys.argv[1]).read()
 assert "integration · 1" in html, "endpoint kind chip missing"
-assert "TESTS" in html and "What it asserts" in html, \
-    "endpoint TESTS section with receipts table missing"
+assert "<b>Tests</b>" in html and "What it asserts" in html, \
+    "endpoint Tests titled section with receipts table missing"
+assert "<b>Models used</b>" in html, "Models-used titled section missing"
 assert '<th>Model</th><th>Role</th>' in html, "MODELS USED must be a table"
 assert 'l-api">' in html and "</svg> integration" in html, \
     "kind chip must carry its center-wide icon + color"

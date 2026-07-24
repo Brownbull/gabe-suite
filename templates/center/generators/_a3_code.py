@@ -882,6 +882,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f' <span class="sub">({len(refs)})</span></p>' + _ref_table(refs)
             for c2, refs in sorted(refs_by.items()))
 
+    def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
+        """A titled subsection head inside the row detail — icon + colored
+        label, so each block (usage · structure) is identifiable at a
+        glance (operator polish 2026-07-23)."""
+        return (f'<p class="dmh" style="--dc:{color}">{_ins_ic(icon)}'
+                f"<b>{E(label)}</b>{extra}</p>")
+
     def _ep_tcell(e: dict) -> str:
         refs = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
         chips = [_tchip(_ckind.get(c2, c2), len(r),
@@ -897,12 +904,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             chips.append(_tgap("journey —",
                                "no browser spec drives this route"))
         return " ".join(chips)
-
-    def _tb_meta(e: dict) -> list:
-        refs_by = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
-        if not refs_by:
-            return []
-        return [(f'{_ins_ic("fn")} TESTS', "#15803d", _kind_blocks(refs_by))]
 
     def _duo_tcell(rec: dict | None, what: str) -> str:
         rec = rec or {}
@@ -1114,13 +1115,21 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             (f'{_ins_ic("doc")} PURPOSE', "#64748b",
              md(e["doc"]) if e["doc"] != "—" else "—"),
             (f'{_ins_ic("fn")} HANDLER', "#b45309", handler),
-            (f'{_ins_ic("model")} MODELS USED', "#7c3aed", models_tbl),
-            *_tb_meta(e),
         ]
         detail = ('<table class="tbl dm-meta"><tbody>' + "".join(
             f'<tr><td class="metak" style="color:{col}">{k}</td>'
             f"<td>{v}</td></tr>" for k, col, v in meta_rows)
             + "</tbody></table>")
+        # List-valued facts are full-width titled sections (operator ruling
+        # 2026-07-23): title line first, table spanning the whole row.
+        if models_used:
+            detail += (_dmh("#7c3aed", "model", "Models used",
+                            f' <span class="sub">({len(models_used)})</span>')
+                       + models_tbl)
+        _refs_by = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
+        if _refs_by:
+            detail += _dmh("#15803d", "fn", "Tests", "") \
+                + _kind_blocks(_refs_by)
         cells = [
             f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
@@ -1303,19 +1312,12 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             rows += (f"<tr><td><code>{E(r['name'])}</code></td><td>{link} "
                      f"<small>{kind}</small></td>"
                      f"<td><code>{E(via)}</code></td><td>{back}{casc}</td></tr>")
-        return (f'<p class="sub" style="margin-top:10px">Relationships — ORM '
-                f"navigation, not stored columns; each is a view over ONE "
-                f"ForeignKey:</p>"
-                f'<table class="tbl"><thead><tr><th>Attribute</th><th>Target</th>'
+        return (_dmh("#b45309", "fields", "Relationships",
+                     ' <span class="sub">ORM navigation, not stored columns '
+                     "— each is a view over ONE ForeignKey</span>")
+                + f'<table class="tbl"><thead><tr><th>Attribute</th><th>Target</th>'
                 f"<th>Stored as (the FK)</th><th>Paired via</th></tr></thead>"
                 f"<tbody>{rows}</tbody></table>")
-
-    def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
-        """A titled subsection head inside the row detail — icon + colored
-        label, so each block (usage · structure) is identifiable at a
-        glance (operator polish 2026-07-23)."""
-        return (f'<p class="dmh" style="--dc:{color}">{_ins_ic(icon)}'
-                f"<b>{E(label)}</b>{extra}</p>")
 
     def _dm_meta(cls: str, kind_html: str, doc: str = "") -> str:
         """Kind + docstring only — the usage facts are titled TABLES now."""
@@ -1335,21 +1337,21 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         n = c.get("usage", 0)
         bar = (f'<span class="ubar" style="width:{max(2, min(60, n * 11))}px">'
                f"</span><b>{n}</b>")
-        head = _dmh("#0d6e78", "zap", "Usage by API", f" {bar}")
+        fk_note = (f' <span class="sub">incl. {c["fk_in"]} FK in-degree — '
+                   f"other models pointing at this table</span>"
+                   if c.get("fk_in") else "")
+        head = _dmh("#0d6e78", "zap", "Usage by API", f" {bar}{fk_note}")
         hits = [e for e in eps
                 if cls in e["touches"] or (is_schema and cls in e["resp"])]
-        fk = (f'<p class="sub">+ {c["fk_in"]} FK in-degree (other models '
-              f"pointing at this table) also rides the teal bar.</p>"
-              if c.get("fk_in") else "")
         if not hits:
-            return head + (fk or '<p class="sub">no API usage on record — '
-                                 "the teal bar is empty.</p>")
+            return head + ('<p class="sub">no API usage on record — '
+                           "the teal bar is empty.</p>" if not fk_note else "")
         body = "".join(
             f"<tr><td>{ep_chip(e)}</td><td><code>{E(e['fn'])}</code></td>"
             f"<td>{_fchip(e['file'])}</td></tr>" for e in hits)
         return (head + '<table class="tbl"><thead><tr><th>Endpoint</th>'
                 "<th>Handler</th><th>Defined in</th></tr></thead>"
-                f"<tbody>{body}</tbody></table>" + fk)
+                f"<tbody>{body}</tbody></table>")
 
     def _dm_int_tbl(cls: str) -> str:
         """Usage by internal — the violet bar's receipts: one row per mapped
