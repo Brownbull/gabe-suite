@@ -1134,7 +1134,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                              if len(refs) - npass else ""))
                 _srows += (f"<tr><td>{kind_tag(kind, _kcls.get(kind, ''))}"
                            f"</td><td>{vol}</td><td>{st}</td></tr>")
-            _tm = ("tests.html#sec-tests-files" if entity_col
+            _tm = ("test-matrix.html#sec-tests-files" if entity_col
                    else "#sec-tests-matrix")
             detail += (_dmh("#15803d", "fn", "Tests", "")
                        + '<table class="tbl"><thead><tr><th>Kind</th>'

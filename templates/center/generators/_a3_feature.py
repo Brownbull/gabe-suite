@@ -111,7 +111,7 @@ _STATE_CHIP = {"pass": ('<span class="tag s-ok">pass</span>'),
                "skip": ('<span class="tag s-gap">skip</span>')}
 
 
-def case_rows(rec: dict, corpus: str) -> str:
+def case_rows(rec: dict, corpus: str, anchors: bool = False) -> str:
     """One file's cases, with the characteristics junit actually carries:
     the C-id that joins it to a claim, the group it belongs to (pytest class /
     vitest describe), its own name, runtime and state."""
@@ -131,8 +131,9 @@ def case_rows(rec: dict, corpus: str) -> str:
                     else '<span class="cid none">—</span>')
         # The id is shown as an id, then stripped from the prose it prefixes.
         label = _CID_RX.sub("", name).strip(" ·-_[]").replace("_", " ")
+        _aid = f' id="C{cid.group(1)}"' if (anchors and cid) else ""
         rows += (
-            f'<tr><td class="num">{i}</td>'
+            f'<tr{_aid}><td class="num">{i}</td>'
             f"<td>{cid_cell}</td>"
             f"<td>{E(label) or E(name)}</td>"
             f'<td><small>{E(group) or "—"}</small></td>'

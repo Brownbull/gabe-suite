@@ -497,6 +497,23 @@ assert "reach · " in html, "file reach chip missing"
 assert html.count(">Tests</span>") >= 4, "Tests column missing from a table"
 PY3
 
+# The TESTING ESTATE (ruling Q2): tests.html dashboards (cards + grid), the
+# corpus lives on test-matrix.html with the entity filter, per-case C-id
+# anchors and Exercises receipts; claims + corpora pages exist and are linked.
+python3 - "$FIX/docs/site/center" <<'PY4' && ok || bad "testing estate: dashboard + matrix/claims/corpora pages (see above)"
+import sys
+from pathlib import Path
+c = Path(sys.argv[1])
+dash = (c / "tests.html").read_text()
+assert 'href="test-matrix.html"' in dash and "archgrid" in dash, "dashboard cards missing"
+m = (c / "test-matrix.html").read_text()
+assert 'class="entchips"' in m, "entity filter bar missing on the matrix page"
+assert 'id="C11"' in m, "per-case C-id anchor missing"
+assert "Exercises" in m and "/gadgets/one" in m, "Exercises receipts missing"
+assert 'class="entb ent-gadget"' in m, "entity badge column missing"
+assert (c / "test-claims.html").exists() and (c / "test-corpora.html").exists()
+PY4
+
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.
 grep -q "gabe-icon.png" "$FIX/docs/site/center/index.html" \
   && ok || bad "brand: the Gabe icon must ride the sidebar logo tile"

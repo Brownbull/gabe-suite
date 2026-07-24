@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tests · gastify Command Center</title>
+<link rel="stylesheet" href="../assets/a3.css">
+<script src="../assets/slots.js" defer></script>
+<script src="../assets/a3-settings.js" defer></script>
+<script src="../assets/a3-lightbox.js" defer></script>
+<script src="../assets/rowclick.js" defer></script>
+</head>
+<body>
+<!-- SUBJECT: Testing — the map's Testing sections, each under its data-sec banner.
+     SOURCES: corpus C-ids (grep) · junit + committed digests (results_out) · git log -S
+     "C<id>" + RED: trailers (ever-red) · .kdbp/walks.jsonl · tests/**/proof/. -->
+<div class="app">
+
+
+<aside class="side">
+  <div class="brand">
+    <span class="logo"><img src="../assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>gastify</b><small>Gabe Center</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board</a>
+  <div class="navlabel g-ent">Entities</div>
+  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
+  <a class="navitem" href="feature-transaction.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Transaction</a>
+  <a class="navitem" href="feature-scan-receipt.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg> Scan / Receipt</a>
+  <a class="navitem" href="feature-statement.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Statement</a>
+  <a class="navitem" style="opacity:.55" href="entity-index.html" title="high · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 2.9 21 11.4a2 2 0 0 1 0 2.8l-6.8 6.8a2 2 0 0 1-2.8 0L2.9 12.6A2 2 0 0 1 2.3 11V4.3a2 2 0 0 1 2-2H11a2 2 0 0 1 1.6.6z"/><circle cx="7.5" cy="7.5" r="1"/></svg> Card alias <span class="count">pending</span></a>
+  <a class="navitem" style="opacity:.55" href="entity-index.html" title="high · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg> Group / Share <span class="count">pending</span></a>
+  <a class="navitem" style="opacity:.55" href="entity-index.html" title="high · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Consent / Privacy <span class="count">pending</span></a>
+  <a class="navitem" style="opacity:.55" href="entity-index.html" title="high · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg> Analytics <span class="count">pending</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
+  <div class="navlabel g-code">Code</div>
+  <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+  <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
+  <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
+  <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
+  <a class="navitem navsubitem" href="arch-dm-candidates.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg> Data-model candidates</a>
+  <a class="navitem navsubitem" href="arch-functions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/></svg> Functions</a>
+  <a class="navitem navsubitem" href="arch-fn-candidates.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg> Function candidates</a>
+  <div class="navlabel g-test">Testing</div>
+  <a class="navitem on" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">1,458</span></a>
+  <div class="navsub"><a href="tests.html#tab-tests">matrix</a><a href="tests.html#tab-evidence">evidence</a><a href="tests.html#tab-risk">gates</a></div>
+  <div class="navlabel g-ledger">Ledger</div>
+  <a class="navitem" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
+  <div class="navlabel g-rel">Releases</div>
+  <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
+  <div class="navlabel g-leaf">Leaf</div>
+  <span class="navsub" style="opacity:.5">none wired yet</span>
+  <div class="foot">regen 2026-07-24 00:36Z<br>HEAD f7b9ef3 · build_center_a3.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Tests</b></div>
+    <div class="spacer"></div>
+    <span class="statuspill ok">repo · 1,458 tests · 0 failed</span> <span class="statuspill warn">phase 16 · DF5</span>
+    <span class="stamp">regen · 2026-07-24 00:36Z</span>
+  </div>
+
+  <div class="subject">
+    <div class="subjecthead">
+      <div class="pagehead">
+        <h1>Testing</h1>
+        <p>The whole test estate — 1,458 junit cases (1,114 api + 344 web), 0 failed. Absent sources are named, not zeroed.</p>
+      </div>
+      <div class="kpis"><div class="kpis"><div class="kpi"><div class="lab">total</div><div class="val">1,458</div><div class="sub">146 files</div></div><div class="kpi"><div class="lab">api</div><div class="val">1,114</div><div class="sub">92 files · pytest</div></div><div class="kpi"><div class="lab">web</div><div class="val">344</div><div class="sub">54 files · vitest</div></div><div class="kpi"><div class="lab">failed</div><div class="val">0</div><div class="sub">17 skipped</div></div><div class="kpi"><div class="lab">coverage</div><div class="val">—</div><div class="sub">no reporter wired</div></div></div></div>  <!-- corpus total · C-id'd % · ever-red count · digest state -->
+    </div>
+
+    <!-- The four-tab set is invariant across subjects — self-similarity IS the navigation
+         contract. Pure-CSS :target tabs, no script; exclusive tab icons ship here. -->
+    <nav class="tabbar">
+      <a href="#tab-overview"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> Overview</a>
+      <a href="#tab-tests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg> Tests</a>
+      <a href="#tab-evidence"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg> Evidence</a>
+      <a href="#tab-risk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Risk</a>
+    </nav>
+
+    <div class="tabbody">
+      <section class="tabpane" id="tab-overview">
+        <section data-sec="testing.matrix" style="--gc:#3f6d4c">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg></span><div><h2><span class="gtag">Testing</span> Corpus buckets</h2><p>aux of the matrix — same identity</p></div></div>
+        <div class="archgrid"><a class="archcard" href="test-matrix.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/></svg><span><b>Matrix — the corpus, file by file</b><span class="sub">146 file(s) · every case with its C-id · entity-filterable</span></span></a><a class="archcard" href="test-claims.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><span><b>Claims</b><span class="sub">7 entity(ies)' authored coverage, verified by class name</span></span></a><a class="archcard" href="test-corpora.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span><b>Corpora & gates</b><span class="sub">2 corpus(es) · report sources · pre-commit + CI gates · run history</span></span></a></div>          <!-- per-corpus counts + junit freshness — .panel + .tbl -->
+        </section>
+        <section data-sec="now.recent-changes" style="--gc:#0d7a84">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><div><h2><span class="gtag">Now</span> Verification changelog</h2><p>recent-changes scoped to commits that reshaped the corpus (incl. RED:)</p></div></div>
+        <p class="sub">The verification changelog moved to <a class="dlink" href="test-corpora.html">Corpora &amp; gates</a>.</p>
+        </section>
+      </section>
+      <section class="tabpane" id="tab-tests">
+        <section data-sec="testing.matrix" style="--gc:#3f6d4c">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg></span><div><h2><span class="gtag">Testing</span> Matrix · id · ever-red?</h2></div></div>
+        <table class="riskgrid"><tr><th class="area"></th><th>api</th><th>web</th></tr><tr><th class="area"><a href="feature-transaction.html">Transaction</a></th><td><span class="cell"><b>87</b> <small>6 files</small></span></td><td><span class="cell"><b>141</b> <small>15 files</small></span></td></tr><tr><th class="area"><a href="feature-scan-receipt.html">Scan / Receipt</a></th><td><span class="cell"><b>207</b> <small>12 files</small></span></td><td><span class="cell"><b>48</b> <small>8 files</small></span></td></tr><tr><th class="area"><a href="feature-statement.html">Statement</a></th><td><span class="cell"><b>117</b> <small>8 files</small></span></td><td><span class="cell"><b>2</b> <small>1 files</small></span></td></tr><tr><th class="area"><a href="entity-index.html">Card alias</a></th><td><span class="cell"><b>10</b> <small>1 files</small></span></td><td class="void">—</td></tr><tr><th class="area"><a href="entity-index.html">Group / Share</a></th><td><span class="cell"><b>95</b> <small>12 files</small></span></td><td><span class="cell"><b>8</b> <small>2 files</small></span></td></tr><tr><th class="area"><a href="entity-index.html">Consent / Privacy</a></th><td><span class="cell"><b>45</b> <small>6 files</small></span></td><td class="void">—</td></tr><tr><th class="area"><a href="entity-index.html">Analytics</a></th><td><span class="cell"><b>75</b> <small>9 files</small></span></td><td><span class="cell"><b>61</b> <small>10 files</small></span></td></tr><tr><th class="area">unclaimed</th><td><span class="cell"><b>487</b> <small>40 files</small></span></td><td><span class="cell"><b>125</b> <small>22 files</small></span></td></tr></table><p class="sub">Files are claimed by the ENTITY REGISTRY (adoption.json) through the same regexes the feature pages count with — click an entity to open its page. The regexes overlap by design, so 6 file(s) are claimed by more than one entity and counted on each row: these are views over the corpus, not a partition of it, and the rows do not sum to the total. "unclaimed" is honest surface area, not failure.</p><p class="sub">The corpus itself lives file by file on <a class="dlink" href="test-matrix.html">the Matrix page</a> — entity-filterable, every case with its C-id anchor.</p>           <!-- C-id · test · corpus · status · ever-red? · last run — .tbl;
+                                  ever-red: red@sha link when observed, honest — when backfilled -->
+        </section>
+      </section>
+      <section class="tabpane" id="tab-evidence">
+        <section data-sec="testing.walks" style="--gc:#3f6d4c">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/></svg></span><div><h2><span class="gtag">Testing</span> Manual angles (walks)</h2></div></div>
+        <div class="panel"><table class="tbl"><thead><tr><th>Subject</th><th>Who</th><th>When</th><th>Result</th><th>Evidence</th></tr></thead><tbody><tr><td><b>adopt:statement</b></td><td>brownbull</td><td>2026-07-23</td><td>pass</td><td>docs/site/center/feature-statement.html</td></tr><tr><td><b>adopt:transaction</b></td><td>brownbull</td><td>2026-07-22</td><td>pass</td><td>docs/site/center/feature-transaction.html</td></tr><tr><td><b>adopt:scan-receipt</b></td><td>brownbull</td><td>2026-07-22</td><td>pass</td><td>docs/site/center/feature-scan-receipt.html</td></tr><tr><td><b>adopt:transaction</b></td><td>brownbull</td><td>2026-07-20</td><td>pass</td><td>docs/site/center/feature-transaction.html</td></tr></tbody></table></div><p class="sub">4 recorded walk(s) — the one verification input with no machine source (.kdbp/walks.jsonl, append-only).</p>    <!-- walks.jsonl: who·when·result·evidence + NEVER-walked red -->
+        </section>
+        <section data-sec="testing.shelf" style="--gc:#3f6d4c">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg></span><div><h2><span class="gtag">Testing</span> Demo shelf</h2></div></div>
+        <p class="sub">The demo shelf moved to <a class="dlink" href="test-corpora.html">Corpora &amp; gates</a>.</p>       <!-- curated proof shots/manifests — .gal + .shot -->
+        </section>
+      </section>
+      <section class="tabpane" id="tab-risk">
+        <section data-sec="testing.matrix" style="--gc:#3f6d4c">
+        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg></span><div><h2><span class="gtag">Testing</span> Gates</h2><p>aux of the matrix — same identity</p></div></div>
+        <p class="sub">Gates moved to <a class="dlink" href="test-corpora.html">Corpora &amp; gates</a>.</p>            <!-- gate states, flaky/quarantine, skipped(no reporter) honest gaps -->
+        </section>
+      </section>
+    </div>
+  </div>
+</main>
+
+</div>
+</body>
+</html>

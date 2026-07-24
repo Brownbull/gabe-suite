@@ -610,6 +610,16 @@ matrix = (f'<table class="riskgrid"><tr><th class="area"></th>{_hdr}</tr>{_rows}
 # --- the corpus, file by file: the reverse index the archive had and the A3
 # center dropped. A reader on a feature page can reach its files; nobody could
 # go the other way, and the 608 unclaimed cases had no surface at all.
+_ti_station = _a3_tests.test_insight(REPO_ROOT)
+
+
+def _ti_ex_for(junit_key: str) -> dict | None:
+    for _k, _v in _ti_station["exercises"].items():
+        if _k.endswith(junit_key):
+            return _v
+    return None
+
+
 _file_rows, _file_exp = [], []
 for _corpus, _j in corpora.items():
     for _f, _rec in sorted((_j or {}).get("files", {}).items(),
@@ -619,15 +629,35 @@ for _corpus, _j in corpora.items():
             f'<a class="dlink" href="{_entity_href(o)}">{E(LABELS[o])}</a>'
             for o in _owners) or '<span class="tag s-gap">unclaimed</span>'
         _file_rows.append([
+            " ".join(entity_badge(o, LABELS.get(o, o), 13) for o in _owners),
             f'<span class="tag {"l-api" if _corpus == "api" else "l-web"}">'
             f"{E(_corpus)}</span>",
             f"<code>{E(_f)}</code>", str(_rec["tests"]),
             meter(_rec["tests"] - _rec["failed"], _rec["tests"]), _claim])
+        _ex = _ti_ex_for(_f)
+        _ex_html = ""
+        if _ex:
+            _bits = []
+            for _lbl, _vals in (("endpoints", _ex.get("endpoints")),
+                                ("functions", _ex.get("functions")),
+                                ("models", _ex.get("models")),
+                                ("reaches", _ex.get("reaches"))):
+                if _vals:
+                    _bits.append(
+                        f'<p class="sub" style="margin:6px 0 2px"><b>'
+                        f"{_lbl}</b> — " + " · ".join(
+                            f"<code>{E(v)}</code>" for v in _vals[:8])
+                        + ("…" if len(_vals) > 8 else "") + "</p>")
+            if _bits:
+                _ex_html = ('<p class="sub" style="margin-top:8px"><b>'
+                            "Exercises</b> (what this file provably touches "
+                            "— T1 literals/imports, T3 reach):</p>"
+                            + "".join(_bits))
         _file_exp.append((f'The {_rec["tests"]} case(s) in '
                           f'<code>{E(_f.rsplit("/", 1)[-1])}</code>',
-                          case_rows(_rec, _corpus)))
-_unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[4])
-matrix += (
+                          case_rows(_rec, _corpus, anchors=True) + _ex_html))
+_unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[5])
+files_section = (
     sechead("Testing", "The corpus, file by file", "#0f766e", _IC_LIST,
             sub="every test file in the estate, what claims it, and its cases",
             id_="sec-tests-files",
@@ -639,11 +669,30 @@ matrix += (
                      ("s-gap", "unclaimed",
                       "no adopted entity names this file yet — surface area, "
                       "not failure")]))
-    + table(["Corpus", "File", "Cases", "Passing", "Claimed by"],
-            _file_rows, num={2}, expand=_file_exp,
+    + table(["", "Corpus", "File", "Cases", "Passing", "Claimed by"],
+            _file_rows, num={3}, expand=_file_exp,
             note=f"{len(_file_rows)} file(s) · {_unclaimed_files} unclaimed. "
                  f"Read from the junit capture at build time; a file that stops "
                  f"running disappears from this table by itself."))
+
+testing_cards = ('<div class="archgrid">'
+                 + "".join(
+                     f'<a class="archcard" href="{fn}">{_mini_ic(ic)}'
+                     f"<span><b>{ttl}</b>"
+                     f'<span class="sub">{sub2}</span></span></a>'
+                     for fn, ttl, ic, sub2 in [
+                         ("test-matrix.html",
+                          "Matrix — the corpus, file by file", "fields",
+                          f"{len(_file_rows)} file(s) · every case with its "
+                          f"C-id · entity-filterable"),
+                         ("test-claims.html", "Claims", "doc",
+                          f"{len(sections)} entity(ies)' authored coverage, "
+                          "verified by class name"),
+                         ("test-corpora.html", "Corpora & gates", "zap",
+                          f"{len(CORPORA)} corpus(es) · report sources · "
+                          "pre-commit + CI gates · run history"),
+                     ])
+                 + "</div>")
 
 _results_rel = CFG.get("paths", {}).get("results", "tests/results")
 _bucket_rows = [
@@ -1066,12 +1115,22 @@ PER_FILE = {
                            f"({_corpus_breakdown}), "
                            f"{t_failed} failed. Absent sources are named, not zeroed."),
         "{{TESTS_KPIS}}": tests_kpis,
-        "{{BUCKETS}}": buckets,
-        "{{MATRIX}}": matrix,
-        "{{GATES}}": gates,
-        "{{DEMO_SHELF}}": demo_shelf,
+        "{{BUCKETS}}": testing_cards,
+        "{{MATRIX}}": matrix
+        + '<p class="sub">The corpus itself lives file by file on '
+          '<a class="dlink" href="test-matrix.html">the Matrix page</a> — '
+          "entity-filterable, every case with its C-id anchor.</p>",
+        "{{GATES}}": '<p class="sub">Gates moved to '
+                     '<a class="dlink" href="test-corpora.html">Corpora '
+                     "&amp; gates</a>.</p>",
+        "{{DEMO_SHELF}}": '<p class="sub">The demo shelf moved to '
+                          '<a class="dlink" href="test-corpora.html">'
+                          "Corpora &amp; gates</a>.</p>",
         "{{MANUAL_ANGLES}}": manual_angles,
-        "{{VERIFICATION_CHANGELOG}}": verification_changelog,
+        "{{VERIFICATION_CHANGELOG}}":
+            '<p class="sub">The verification changelog moved to '
+            '<a class="dlink" href="test-corpora.html">Corpora &amp; '
+            "gates</a>.</p>",
     },
     "ledger.html": {
         "{{CHANGE_TITLE}}": f"Latest change · {HEAD_SHA}",
@@ -1211,6 +1270,88 @@ def render_architecture(amap: dict) -> dict[str, str]:
     return pages
 
 
+def render_testing() -> dict[str, str]:
+    """The TESTING ESTATE (operator ruling Q2, 2026-07-23): tests.html is the
+    dashboard (KPIs · entity×corpus grid · estate cards); the corpus lives
+    file-by-file on test-matrix.html (entity-filterable, per-case C-id
+    anchors, Exercises receipts), claims and corpora/gates get their own
+    pages. Same slicing idea as the architecture estate: one skeleton, one
+    dialect, subpages own the anchors cross-links land on."""
+    base_skel = strip_slot_doc_comments(
+        (SHELL_SRC / "architecture.html").read_text())
+
+    def _tpage(fname: str, title: str, sub: str, body: str) -> str:
+        h = base_skel
+        fills = {**SHARED, "{{SIDEBAR_CODE}}": _sidebar_code(),
+                 "{{ARCH_KPIS}}": "", "{{ARCH_BODY}}": body}
+        for tok, val in fills.items():
+            h = h.replace(tok, val)
+        h = h.replace("<title>Architecture ·", f"<title>{title} ·")
+        h = h.replace("<b>Architecture</b>",
+                      f'<a href="tests.html">Testing</a> › <b>{title}</b>')
+        h = h.replace("<h1>Architecture</h1>",
+                      f"<h1>{title}</h1>"
+                      f'<p class="sub" style="margin-top:2px">{sub}</p>')
+        return h
+
+    ents = [s["entity"] for s in sections]
+    bar = ('<div class="entchips"><button class="chip on" data-ent="all">All'
+           "</button>"
+           + "".join(f'<button class="chip" data-ent="{s}">'
+                     + entity_badge(s, LABELS.get(s, s), 12, show_name=True)
+                     + "</button>" for s in ents)
+           + "</div>"
+           "<script>(function(){var c=document.querySelector('.entchips');"
+           "if(!c)return;c.addEventListener('click',function(ev){"
+           "var b=ev.target.closest('.chip');if(!b)return;"
+           "c.querySelectorAll('.chip').forEach(function(x){x.classList.remove('on')});"
+           "b.classList.add('on');var s=b.dataset.ent;"
+           "[].slice.call(document.querySelectorAll('.xrow, table.tbl tbody tr'))"
+           ".forEach(function(r){var cell=r.querySelector("
+           "':scope > summary > span:first-child, "
+           ":scope > .xsummary > span:first-child, :scope > td:first-child');"
+           "if(!cell||!cell.querySelector('.entb'))return;"
+           "r.classList.toggle('ehide',"
+           "!(s==='all'||cell.querySelector('.ent-'+s)))});});})();</script>")
+
+    claims_rows = []
+    for s in sections:
+        slug = s["entity"]
+        cnts = " · ".join(f"{grid[slug][c][0]} {c}" for c in corpora
+                          if grid[slug][c][0])
+        claims_rows.append(
+            [entity_badge(slug, LABELS.get(slug, slug), 13, show_name=True),
+             cnts or "—",
+             f'<a class="dlink" href="{_entity_href(slug)}#sec-tests-claims">'
+             f"its claimed coverage</a>"])
+    claims_body = (
+        sechead("Testing", "Claims — by entity", "#0d9488", _IC_LIST,
+                sub="claims are AUTHORED per entity (card # CLAIMS) and "
+                    "verified against junit by class name",
+                id_="sec-tests-claims-idx",
+                note="This page indexes them; each entity's claim verdicts "
+                     "(running · ambiguous · DRIFT) render on its own page.")
+        + table(["Entity", "Cases claimed into", "Claims"], claims_rows))
+
+    corpora_body = (buckets + gates + verification_changelog + demo_shelf)
+
+    return {
+        "test-matrix.html": _tpage(
+            "Test matrix", "Matrix",
+            "every test file in the estate — filter by entity, open a row "
+            "to read its cases (C-id anchors) and what it exercises",
+            bar + files_section),
+        "test-claims.html": _tpage(
+            "Test claims", "Claims",
+            "the authored coverage accumulator, indexed app-wide",
+            claims_body),
+        "test-corpora.html": _tpage(
+            "Corpora & gates", "Corpora & gates",
+            "the report sources, the gates in front of a commit, and the "
+            "run history", corpora_body),
+    }
+
+
 def main() -> int:
     if not SHELL_SRC.exists():
         print(f"⛔ shell templates missing: {SHELL_SRC}")
@@ -1271,6 +1412,10 @@ def main() -> int:
     # The app-wide Architecture station — a consumer of the read-once map, not a
     # second read of the code. Lights up {{SIDEBAR_CODE}} across the estate.
     if BUILD_ARCHITECTURE:
+        _testing = render_testing()
+        for _tname, _thtml in _testing.items():
+            (CENTER_OUT / _tname).write_text(_thtml)
+            wrote.append((_tname, _thtml.count("{{")))
         for _aname, _ahtml in render_architecture(amap).items():
             (CENTER_OUT / _aname).write_text(_ahtml)
             wrote.append((_aname, _ahtml.count("{{")))
