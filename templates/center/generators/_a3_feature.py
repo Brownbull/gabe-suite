@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 
 import _center_data as _cd
+import _a3_tests
 import _center_mermaid as M
 from _a3_code import build_code_tab, collect_entity_map
 from _a3_evidence import (
@@ -25,7 +26,7 @@ from _a3_evidence import (
     is_reference,
     parse_flows,
 )
-from _a3_render import (kind_ic, 
+from _a3_render import (kind_ic, kind_tag, 
     E,
     card_html,
     gap,
@@ -831,7 +832,34 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
     return {"rows": rows, "verified": tally["running"],
             "running": tally["running"], "ambiguous": tally["ambiguous"],
             "drift": tally["drift"], "unknown": tally["unknown"],
-            "unclaimed": len(set(observed) - claimed)}
+            "unclaimed": len(set(observed) - claimed),
+            "unclaimed_names": sorted(set(observed) - claimed)}
+
+
+def _exercises_html(repo, junit_key: str) -> str:
+    """What this test file provably touches (T1 literals/imports, T3 reach) —
+    appended to its case list on the entity matrix, same as the estate's
+    Matrix page."""
+    ti = _a3_tests.test_insight(repo)
+    ex = next((v for k, v in ti["exercises"].items()
+               if k.endswith(junit_key)), None)
+    if not ex:
+        return ""
+    bits = []
+    for lbl, vals in (("endpoints", ex.get("endpoints")),
+                      ("functions", ex.get("functions")),
+                      ("models", ex.get("models")),
+                      ("reaches", ex.get("reaches"))):
+        if vals:
+            bits.append(f'<p class="sub" style="margin:6px 0 2px"><b>{lbl}'
+                        f"</b> — " + " · ".join(
+                            f"<code>{E(v)}</code>" for v in vals[:8])
+                        + ("…" if len(vals) > 8 else "") + "</p>")
+    if not bits:
+        return ""
+    return ('<p class="sub" style="margin-top:8px"><b>Exercises</b> (what '
+            "this file provably touches — T1 literals/imports, T3 reach):"
+            "</p>" + "".join(bits))
 
 
 def build_feature_pages(ctx) -> list[str]:
@@ -1163,11 +1191,13 @@ def build_feature_pages(ctx) -> list[str]:
                          meter(rec["tests"] - rec["failed"], rec["tests"]),
                          f'<span class="pct">{ran}/{rec["tests"]}</span>',
                          file_flags(rec, shared_owners(fname, slug))]
-                _rows.append((cells, case_rows(rec, corpus)))
+                _rows.append((cells,
+                              case_rows(rec, corpus, anchors=True)
+                              + _exercises_html(ctx.repo_root, fname)))
             _matrix_groups += (
-                f'<p class="sub"><span class="tag {kcls}">{E(kind)}</span> '
-                f"{len(files)} {E(corpus)} file(s) — click a row to read its "
-                f"cases:</p>"
+                f'<p class="sub">{kind_tag(kind, kcls)} — {len(files)} '
+                f"file(s) in the <code>{E(corpus)}</code> corpus; click a "
+                f"row to read its cases:</p>"
                 + xtable(["File", "Cases", "Passing", "Ran", "Flags"], _rows,
                          widths=["2.4fr", "0.7fr", "1fr", "0.8fr", "1.3fr"]))
         # Claimed coverage — the accumulator that LEADS the tab: card # CLAIMS
@@ -1209,7 +1239,14 @@ def build_feature_pages(ctx) -> list[str]:
                                  ("s-gap", "DRIFT", "claimed, not running")]))
                 + xtable(["Kind", "Class", "Intent", "Cases · C-ids", "State"],
                          cv["rows"],
-                         widths=["0.9fr", "1.3fr", "2fr", "1.7fr", "1fr"]))
+                         widths=["0.9fr", "1.3fr", "2fr", "1.7fr", "1fr"])
+                + (('<p class="sub" style="margin-top:8px"><b>Running but '
+                    "not yet claimed</b> — classes junit knows that no card "
+                    "line names: "
+                    + " · ".join(f"<code>{E(n)}</code>"
+                                 for n in cv["unclaimed_names"][:12])
+                    + ("…" if len(cv["unclaimed_names"]) > 12 else "")
+                    + "</p>") if cv["unclaimed_names"] else ""))
         else:
             claim_section = (
                 sechead("Testing", "Claimed coverage", "#0d9488", _IC_CHECK,
