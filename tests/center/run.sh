@@ -109,10 +109,11 @@ c = root / center_rel
     '<testsuites><testsuite name="pytest" timestamp="2026-07-23T00:00:00">'
     '<testcase classname="tests.test_gadgets" '
     'name="test_lists_gadgets_C11" time="0.1"/>'
-    # C12 ran as two parametrize executions: ONE identity, one ledger row.
-    '<testcase classname="tests.test_gadgets" '
+    # C12 ran as two parametrize executions: ONE identity, one ledger row —
+    # inside a pytest class so the card's # CLAIMS line can join it by NAME.
+    '<testcase classname="tests.test_gadgets.TestGadgets" '
     'name="test_gid_format_C12[a]" time="0.1"/>'
-    '<testcase classname="tests.test_gadgets" '
+    '<testcase classname="tests.test_gadgets.TestGadgets" '
     'name="test_gid_format_C12[b]" time="0.1"/>'
     '<testcase classname="tests.test_gadgets" '
     'name="test_unlabeled" time="0.1"/>'
@@ -160,6 +161,8 @@ The gadget slice.
 Everything else.
 # DECIDED
 - D1 fixture ruling.
+# CLAIMS
+- TestGadgets — gid format keeps its shape
 """)
 png = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk"
@@ -589,6 +592,14 @@ assert 'class="entb ent-gadget"' in m, "entity icon must lead the ledger row"
 f = (c / "feature-gadget.html").read_text()
 assert 'id="sec-tests-cases"' in f and 'id="C11"' in f, \
     "entity tab must carry the scoped ledger with C-id anchors"
+assert 'title="integration · api corpus"' in f, \
+    "Files kind cell must be icon-only (kind + corpus ride the title)"
+assert '<a class="cid" href="#C11">' in f, \
+    "Files rows must open onto their cases with C-ids linking the ledger"
+assert ">running<" in f and "Cases · C-ids" not in f, \
+    "claims must join the fixture class and drop the cases column"
+assert '<a class="cid" href="#C12">' in f, \
+    "claim fold C-ids must link their ledger rows"
 assert 'id="sec-tests-gaps"' in f and "lonely_helper" in f, \
     "entity Untested-surface section missing"
 assert 'id="sec-tests-elements"' not in f, \

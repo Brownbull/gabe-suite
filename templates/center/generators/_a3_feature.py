@@ -113,10 +113,13 @@ _STATE_CHIP = {"pass": ('<span class="tag s-ok">pass</span>'),
                "skip": ('<span class="tag s-gap">skip</span>')}
 
 
-def case_rows(rec: dict, corpus: str, anchors: bool = False) -> str:
+def case_rows(rec: dict, corpus: str, anchors: bool = False,
+              link_cids: bool = False) -> str:
     """One file's cases, with the characteristics junit actually carries:
     the C-id that joins it to a claim, the group it belongs to (pytest class /
-    vitest describe), its own name, runtime and state."""
+    vitest describe), its own name, runtime and state. `link_cids` renders
+    each C-id as a link to its ledger row on the same page — the canonical
+    anchor of the identity."""
     rows = ""
     # Junit order IS the order the suite ran them; sorting by name replaced a
     # real fact with an alphabetical one that reads exactly like it.
@@ -129,8 +132,13 @@ def case_rows(rec: dict, corpus: str, anchors: bool = False) -> str:
         elif ">" in name:                       # vitest: "Describe > case name"
             group, _, name = (p.strip() for p in name.rpartition(">"))
         cid = _CID_RX.search(name)
-        cid_cell = (f'<span class="cid">C{cid.group(1)}</span>' if cid
-                    else '<span class="cid none">—</span>')
+        if cid and link_cids:
+            cid_cell = (f'<a class="cid" href="#C{cid.group(1)}">'
+                        f"C{cid.group(1)}</a>")
+        elif cid:
+            cid_cell = f'<span class="cid">C{cid.group(1)}</span>'
+        else:
+            cid_cell = '<span class="cid none">—</span>' 
         # The id is shown as an id, then stripped from the prose it prefixes.
         label = _CID_RX.sub("", name).strip(" ·-_[]").replace("_", " ")
         _aid = f' id="C{cid.group(1)}"' if (anchors and cid) else ""
@@ -739,8 +747,10 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
     (`junit_complete` — every corpus loaded); if any corpus's junit is missing, a
     no-match claim reads "drift unknown" instead, never a blanket red DRIFT caused
     by a missing file — including the partial case (pytest ran, vitest didn't).
-    Rows are xtable (cells, detail) tuples, always 5 cells; running/ambiguous
-    expand to the case list, drift/unknown are flat."""
+    Rows are xtable (cells, detail) tuples, always 4 cells — no cases
+    column: the row EXPANDS to its full case list (C-ids linked to their
+    ledger rows), and Intent keeps the width; running/ambiguous expand,
+    drift/unknown are flat."""
     # corpus -> (kind, colour class) so each claim carries the SAME kind tag the
     # Kinds & coverage table uses (api → integration/l-api, web → unit/l-web).
     kindmap = {c["key"]: (c["kind"], c["tag_class"]) for c in corpora}
@@ -776,7 +786,6 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
     rows, claimed = [], set()
     tally = {"running": 0, "ambiguous": 0, "drift": 0, "unknown": 0}
     _none_kind = '<span class="sub">—</span>'
-    _none_cid = '<span class="cid none">—</span>'
     for ln in claims:
         s = ln.strip()
         if not s.startswith("- "):
@@ -797,27 +806,20 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
             # reads running whatever the completeness — a match is a match.
             if junit_complete:
                 tally["drift"] += 1
-                rows.append(([_none_kind, key_cell, intent_cell, _none_cid,
+                rows.append(([_none_kind, key_cell, intent_cell,
                               '<span class="tag s-gap">DRIFT — claimed class not '
                               'running</span>'], ""))
             else:
                 tally["unknown"] += 1
-                rows.append(([_none_kind, key_cell, intent_cell, _none_cid,
+                rows.append(([_none_kind, key_cell, intent_cell,
                               '<span class="tag s-med">drift unknown — junit '
                               'incomplete</span>'], ""))
             continue
-        # Match found — build the case list once, then grade it.
-        n = sum(observed[c]["n"] for c in matches)
-        cids = sorted({x for c in matches for x in observed[c]["cids"]},
-                      key=lambda x: int(x[1:]))
-        # The first few C-ids ride the summary; the row EXPANDS to the full case
-        # list — replacing the old "+N" truncation with a real read.
-        shown = " ".join(f'<span class="cid">{E(x)}</span>' for x in cids[:6])
-        cases_cell = (f"{n} · {shown}" if shown
-                      else f'{n} · <span class="cid none">—</span>')
+        # Match found — the row EXPANDS to the full case list (C-ids
+        # linked to their ledger rows); no cases column to repeat it.
         cases = [cc for c in matches for cc in observed[c]["cases"]]
         _corpus = observed[matches[0]]["corpus"]
-        detail = case_rows({"cases": cases}, _corpus)
+        detail = case_rows({"cases": cases}, _corpus, link_cids=True)
         _kind, _kcls = kindmap.get(_corpus, ("—", ""))
         kind_cell = (f'<span class="tag {_kcls}" title="{E(_kind)}">'
                      f"{kind_ic(_kind, 14)}</span>" if _kcls
@@ -829,7 +831,7 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
         else:
             tally["running"] += 1
             state = '<span class="tag s-ok">running</span>'
-        rows.append(([kind_cell, key_cell, intent_cell, cases_cell, state],
+        rows.append(([kind_cell, key_cell, intent_cell, state],
                      detail))
     return {"rows": rows, "verified": tally["running"],
             "running": tally["running"], "ambiguous": tally["ambiguous"],
@@ -1162,15 +1164,17 @@ def build_feature_pages(ctx) -> list[str]:
             for fname, rec in files:
                 ran = rec["tests"] - rec["skipped"]
                 _files_rows.append((
-                    [f'<span class="tag {kcls}" title="{E(corpus)} corpus">'
-                     f"{kind_ic(kind)} {E(kind)}</span>",
+                    [f'<span class="tag {kcls} ic" '
+                     f'title="{E(kind)} · {E(corpus)} corpus">'
+                     f"{kind_ic(kind, 14)}</span>",
                      f"<code>{E(fname)}</code>", str(rec["tests"]),
                      meter(rec["tests"] - rec["failed"], rec["tests"]),
                      f'<span class="pct">{ran}/{rec["tests"]}</span>',
-                     file_flags(rec, shared_owners(fname, slug))], ""))
+                     file_flags(rec, shared_owners(fname, slug))],
+                    case_rows(rec, corpus, link_cids=True)))
         _files_table = xtable(
             ["Kind", "File", "Cases", "Passing", "Ran", "Flags"], _files_rows,
-            widths=["0.9fr", "2.4fr", "0.6fr", "1fr", "0.7fr", "1.2fr"])
+            widths=["44px", "2.6fr", "0.6fr", "1fr", "0.7fr", "1.2fr"])
         # Claimed coverage — the accumulator that LEADS the tab: card # CLAIMS
         # joined to the run by the class NAME. DRIFT is asserted only when junit
         # is COMPLETE — EVERY corpus loaded (using the per-corpus `present` field
@@ -1208,9 +1212,9 @@ def build_feature_pages(ctx) -> list[str]:
                                  ("s-med", "ambiguous / unknown",
                                   "short-name match, or junit absent ·"),
                                  ("s-gap", "DRIFT", "claimed, not running")]))
-                + xtable(["Kind", "Class", "Intent", "Cases · C-ids", "State"],
+                + xtable(["Kind", "Class", "Intent", "State"],
                          cv["rows"],
-                         widths=["0.9fr", "1.3fr", "2fr", "1.7fr", "1fr"])
+                         widths=["0.9fr", "1.3fr", "3.7fr", "1fr"])
                 + (('<p class="sub" style="margin-top:8px"><b>Running but '
                     "not yet claimed</b> — classes junit knows that no card "
                     "line names: "
@@ -1276,13 +1280,17 @@ def build_feature_pages(ctx) -> list[str]:
                 ctx.corpora, labels=ctx.labels, slug=slug)
             + sechead("Testing", "Files", "#4f46e5", _IC_DOC,
                       sub="the file altitude — per-file flags and ratios; "
-                          "the cases themselves live on the ledger above",
+                          "open a row to read the cases inside it",
                       id_="sec-tests-files",
                       note=f"{own} automated case(s) across {_matrix_nfiles} "
                            "file(s), read from the junit capture — never "
                            "hand-listed. Flags name a file's issues; a file "
-                           "with none reads clean.",
-                      info=legend("Line coverage is NOT on this table:", [
+                           "with none reads clean. Each C-id links its "
+                           "ledger row above.",
+                      info=legend("Kind icons:", [
+                          (c["tag_class"], c["kind"], f'{c["runner"]} ·')
+                          for c in ctx.corpora])
+                      + legend("Line coverage is NOT on this table:", [
                           ("s-gap", "named gap",
                            "the repo --cov gate is not sliced per entity")]))
             + _files_table
