@@ -20,10 +20,14 @@ so "which tests touch X" returns every case in files that touch X, not the
 sequential minting makes the top of the ledger the newest verification work
 (Q4); unminted rows close their state band.
 
-Every chip links the APP estate (arch-*.html anchors) — those pages render
-every element, so a chip can never point at an anchor an entity page chose
-not to render. The ledger row is the canonical anchor of its C-id: every
-C-id pill elsewhere in the center lands on `test-matrix.html#C<n>`.
+The fold is a LABELED metadata grid (`.ledmeta`), and it deepens the
+relation a file-tier corpus can honestly state: reached source files carry
+their ENTITY, and what those files DEFINE (registry functions and model
+classes) renders as `in reach · T3` chips — so a vitest case still answers
+"what entity / model / function is this about" without dressing file facts
+as case-level proof. Every chip links the APP estate (arch-*.html anchors).
+The ledger row is the canonical anchor of its C-id: every C-id pill
+elsewhere in the center lands on `test-matrix.html#C<n>`.
 """
 
 from __future__ import annotations
@@ -121,6 +125,22 @@ _XP = {"ep": "arch-endpoints.html", "dm": "arch-data-model.html",
        "fn": "arch-functions.html", "cm": "arch-code-map.html"}
 
 
+def _ep_chip(c: dict, cls: str, title: str) -> str:
+    return _chip(
+        f'{_XP["ep"]}#{_anchor("ep", "app", c["file"] + "-" + c["fn"])}',
+        c["label"], cls, title)
+
+
+def _fn_chip(file: str, name: str, cls: str, title: str) -> str:
+    return _chip(
+        f'{_XP["fn"]}#{_anchor("fn", "app", file + "-" + name)}',
+        name + "()", cls, title)
+
+
+def _dm_chip(nm: str, cls: str, title: str) -> str:
+    return _chip(f'{_XP["dm"]}#{_anchor("dm", "app", nm)}', nm, cls, title)
+
+
 def _row_chips(g: dict, cap: int = 4) -> tuple[str, dict]:
     """The Exercises cell + this row's filterable element labels. Own facts
     (T1) render solid; a row without any inherits its file's facts dashed —
@@ -131,37 +151,31 @@ def _row_chips(g: dict, cap: int = 4) -> tuple[str, dict]:
     if any(own.values()):
         for c in own.get("endpoints", []):
             feed["ep"].append(c["label"])
-            chips.append(_chip(
-                f'{_XP["ep"]}#{_anchor("ep", "app", c["file"] + "-" + c["fn"])}',
-                c["label"], "lc-ep", "T1 — this case drives the route"))
+            chips.append(_ep_chip(c, "lc-ep",
+                                  "T1 — this case drives the route"))
         for c in own.get("functions", []):
             feed["fn"].append(c["name"] + "()")
-            chips.append(_chip(
-                f'{_XP["fn"]}#{_anchor("fn", "app", c["file"] + "-" + c["name"])}',
-                c["name"] + "()", "lc-fn", "T1 — this case calls it by name"))
+            chips.append(_fn_chip(c["file"], c["name"], "lc-fn",
+                                  "T1 — this case calls it by name"))
         for nm in own.get("models", []):
             feed["mdl"].append(nm)
-            chips.append(_chip(
-                f'{_XP["dm"]}#{_anchor("dm", "app", nm)}',
-                nm, "lc-mdl", "T1 — this case uses the class by name"))
+            chips.append(_dm_chip(nm, "lc-mdl",
+                                  "T1 — this case uses the class by name"))
     elif g["inh"]:
         inh = g["inh"]
         for c in inh.get("endpoints", []):
             feed["ep"].append(c["label"])
-            chips.append(_chip(
-                f'{_XP["ep"]}#{_anchor("ep", "app", c["file"] + "-" + c["fn"])}',
-                c["label"], "lc-ep lc-via",
+            chips.append(_ep_chip(
+                c, "lc-ep lc-via",
                 "via file — the case's FILE touches this route (file-tier)"))
         for c in inh.get("functions", []):
             feed["fn"].append(c["name"] + "()")
-            chips.append(_chip(
-                f'{_XP["fn"]}#{_anchor("fn", "app", c["file"] + "-" + c["name"])}',
-                c["name"] + "()", "lc-fn lc-via",
+            chips.append(_fn_chip(
+                c["file"], c["name"], "lc-fn lc-via",
                 "via file — imported and called somewhere in the file"))
         for nm in inh.get("models", []):
             feed["mdl"].append(nm)
-            chips.append(_chip(
-                f'{_XP["dm"]}#{_anchor("dm", "app", nm)}',
+            chips.append(_dm_chip(
                 nm, "lc-mdl lc-via",
                 "via file — the class is used somewhere in the file"))
         if not chips:
@@ -177,63 +191,149 @@ def _row_chips(g: dict, cap: int = 4) -> tuple[str, dict]:
     return cell, feed
 
 
-def _fold(g: dict, ep_meta: dict, mi: dict) -> str:
-    """What opens under the row — the metadata spine every kind shares, the
-    kind's own facts (R3), and the variant table when one identity ran as
-    many executions."""
-    out = []
-    if len(g["variants"]) > 1:
-        vr = "".join(
-            f"<tr><td><code>{E(n)}</code></td><td>{_STATE_CHIP.get(s, '')}"
-            f'</td><td class="num">{t:.2f}s</td></tr>'
-            for n, s, t in g["variants"])
-        out.append(
-            f'<p class="sub" style="margin:2px 0"><b>{len(g["variants"])} '
-            "execution(s)</b> of this identity (parametrize)</p>"
-            '<table class="tbl"><thead><tr><th>Execution</th><th>State</th>'
-            f'<th class="num">Time</th></tr></thead><tbody>{vr}</tbody></table>')
+def _in_reach(g: dict, fn_by_file: dict, mdl_by_file: dict) -> tuple:
+    """What the case's reached source files DEFINE, from the registries —
+    the deepest honest join a file-tier corpus gives (T3 `in reach`).
+    Returns ([{file, fn}], [model class]) deduped, registry order."""
+    fns: list[dict] = []
+    mdls: list[str] = []
+    for f2 in (g["inh"] or {}).get("reaches") or []:
+        for c in fn_by_file.get(f2, []):
+            if c not in fns:
+                fns.append(c)
+        for cls in mdl_by_file.get(f2, []):
+            if cls not in mdls:
+                mdls.append(cls)
+    return fns, mdls
+
+
+_SHOW_REACH = 6      # visible chips per fold row; the note carries the rest
+_SHOW_INREACH = 8
+
+
+def _kv(rows: list[tuple[str, str]]) -> str:
+    return ('<div class="ledmeta">' + "".join(
+        f'<span class="k">{E(k)}</span><span class="v">{v}</span>'
+        for k, v in rows) + "</div>")
+
+
+def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
+          labels: dict, reach_fns: list, reach_mdls: list) -> str:
+    """What opens under the row: the metadata spine as LABELED rows, the
+    kind's own facts (R3) tier by tier, the entities the case relates to
+    through the thread, and the variant table when one identity ran as many
+    executions."""
+    rows: list[tuple[str, str]] = [
+        ("file", f'<code>{E(g["file"])}</code>')]
+    if g["group"]:
+        rows.append(("group", E(g["group"])))
+    rows.append(("corpus", f'{E(g["corpus"])} · {E(g["kind"])}'))
+    rows.append(("time",
+                 f'{g["time"]:.2f}s · {len(g["variants"])} execution(s)'))
+    spine_n = len(rows)
+
+    ents: list[str] = []
+
+    def _tag(f2: str) -> None:
+        o = fent.get(f2, "")
+        if o and o not in ents:
+            ents.append(o)
+
     own = g["own"] or {}
+    inh = g["inh"] or {}
     if any(own.values()):
-        # T2: what the driven routes credit — handler, schema, models.
+        t1 = []
+        for c in own.get("endpoints", []):
+            _tag(c["file"])
+            t1.append(_ep_chip(c, "lc-ep", "this case drives the route"))
+        for c in own.get("functions", []):
+            _tag(c["file"])
+            t1.append(_fn_chip(c["file"], c["name"], "lc-fn",
+                               "this case calls it by name"))
+        for nm in own.get("models", []):
+            _tag(mdl_file.get(nm, ""))
+            t1.append(_dm_chip(nm, "lc-mdl",
+                               "this case uses the class by name"))
+        rows.append(("exercises · T1", "".join(t1)))
         via = []
         for c in own.get("endpoints", []):
             e = ep_meta.get((c["file"], c["fn"]))
             if not e:
                 continue
-            via.append(_chip(
-                f'{_XP["fn"]}#{_anchor("fn", "app", e["file"] + "-" + e["fn"])}',
-                e["fn"] + "()", "lc-fn", "T2 — the route's handler"))
+            via.append(_fn_chip(e["file"], e["fn"], "lc-fn",
+                                "the route's handler"))
             toks = set(re.findall(r"[A-Za-z_]\w+", e.get("resp") or ""))
             toks.update(e.get("touches", []))
             for tok in sorted(toks):
                 if tok in mi:
-                    via.append(_chip(
-                        f'{_XP["dm"]}#{_anchor("dm", "app", tok)}', tok,
-                        "lc-mdl", "T2 — credited through the route"))
+                    via.append(_dm_chip(tok, "lc-mdl",
+                                        "credited through the route"))
         if via:
-            out.append('<p class="sub" style="margin:6px 0 2px"><b>via route'
-                       "</b> (T2 — credited through the endpoints this case "
-                       f'drives): {"".join(via)}</p>')
-    elif g["inh"] and g["inh"].get("reaches"):
-        reaches = "".join(
-            _chip(f'{_XP["cm"]}#{_anchor("cm", "app", f2)}', f2,
-                  "lc-file lc-via", "T3 — file-level import reach")
-            for f2 in g["inh"]["reaches"][:8])
-        out.append('<p class="sub" style="margin:6px 0 2px"><b>file reach</b> '
-                   f"(T3 — what the case's file imports): {reaches}"
-                   + ("…" if len(g["inh"]["reaches"]) > 8 else "") + "</p>")
-    out.append(
-        f'<p class="sub" style="margin:6px 0 2px"><b>file</b> '
-        f'<code>{E(g["file"])}</code>'
-        + (f' · <b>group</b> {E(g["group"])}' if g["group"] else "")
-        + f' · <b>corpus</b> {E(g["corpus"])} · {g["time"]:.2f}s</p>')
-    return "".join(out)
+            rows.append(("via route · T2", "".join(via)))
+    else:
+        vf = []
+        for c in inh.get("endpoints", []):
+            _tag(c["file"])
+            vf.append(_ep_chip(c, "lc-ep lc-via",
+                               "the case's FILE touches this route"))
+        for c in inh.get("functions", []):
+            _tag(c["file"])
+            vf.append(_fn_chip(c["file"], c["name"], "lc-fn lc-via",
+                               "imported and called somewhere in the file"))
+        for nm in inh.get("models", []):
+            _tag(mdl_file.get(nm, ""))
+            vf.append(_dm_chip(nm, "lc-mdl lc-via",
+                               "the class is used somewhere in the file"))
+        if vf:
+            rows.append(("via file", "".join(vf)))
+    reaches = inh.get("reaches") or []
+    if reaches:
+        for f2 in reaches:
+            _tag(f2)
+        rc = "".join(_chip(f'{_XP["cm"]}#{_anchor("cm", "app", f2)}', f2,
+                           "lc-file lc-via", "file-level import reach")
+                     for f2 in reaches[:_SHOW_REACH])
+        if len(reaches) > _SHOW_REACH:
+            rc += (f'<span class="lchip lc-more">+'
+                   f"{len(reaches) - _SHOW_REACH} more</span>")
+        rows.append(("file reach · T3", rc))
+    if reach_fns or reach_mdls:
+        ir = [_dm_chip(nm, "lc-mdl lc-via", "defined in a reached file")
+              for nm in reach_mdls[:_SHOW_INREACH]]
+        ir += [_fn_chip(c["file"], c["fn"], "lc-fn lc-via",
+                        "defined in a reached file")
+               for c in reach_fns[:_SHOW_INREACH]]
+        hidden = (max(0, len(reach_mdls) - _SHOW_INREACH)
+                  + max(0, len(reach_fns) - _SHOW_INREACH))
+        note = (f'<span class="lchip lc-more">+{hidden} more defined '
+                "there</span>" if hidden else "")
+        rows.append(("in reach · T3",
+                     "".join(ir) + note
+                     + ' <span class="sub">what the reached files define '
+                       "— not a case-level proof</span>"))
+    if ents:
+        rows.insert(spine_n, ("entities", " ".join(
+            entity_badge(s, labels.get(s, s), 13, show_name=True)
+            for s in ents)))
+    html = _kv(rows)
+    if len(g["variants"]) > 1:
+        vr = "".join(
+            f"<tr><td><code>{E(n)}</code></td><td>{_STATE_CHIP.get(s, '')}"
+            f'</td><td class="num">{t:.2f}s</td></tr>'
+            for n, s, t in g["variants"])
+        html += (
+            '<table class="tbl" style="margin-top:6px"><thead><tr>'
+            "<th>Execution</th><th>State</th>"
+            f'<th class="num">Time</th></tr></thead><tbody>{vr}</tbody>'
+            "</table>")
+    return html
 
 
 def _bar(app: bool, ents: list, labels: dict, kinds: list,
          feeds: dict, total: int) -> str:
     """The dropdown filter bar (R2): selects for the small vocabularies,
-    datalist type-aheads for the element filters, free text last (Q5)."""
+    datalist type-aheads for the element filters, free text last (Q5).
+    One line always — controls shrink and the bar scrolls before wrapping."""
     def sel(id_: str, lab: str, opts: list[tuple[str, str]]) -> str:
         o = "".join(f'<option value="{E(v)}">{E(t)}</option>' for v, t in opts)
         return (f'<label>{E(lab)}<select id="{id_}">'
@@ -242,7 +342,7 @@ def _bar(app: bool, ents: list, labels: dict, kinds: list,
     def dl(id_: str, lab: str, opts: list) -> str:
         o = "".join(f'<option value="{E(v)}"></option>' for v in opts)
         return (f'<label>{E(lab)}<input id="{id_}" list="{id_}-dl" '
-                f'placeholder="any" size="14"><datalist id="{id_}-dl">{o}'
+                f'placeholder="any" size="10"><datalist id="{id_}-dl">{o}'
                 "</datalist></label>")
 
     parts = []
@@ -255,7 +355,7 @@ def _bar(app: bool, ents: list, labels: dict, kinds: list,
     parts.append(dl("led-ep", "endpoint", sorted(set(feeds["ep"]))))
     parts.append(dl("led-mdl", "model", sorted(set(feeds["mdl"]))))
     parts.append(dl("led-fn", "function", sorted(set(feeds["fn"]))))
-    parts.append('<label>search<input id="led-q" size="16" '
+    parts.append('<label>search<input id="led-q" size="12" '
                  'placeholder="name · C-id · chip"></label>')
     return (f'<div class="ledbar" id="ledbar">{"".join(parts)}'
             f'<span class="sub" id="ledcount">{total} case(s)</span></div>')
@@ -298,6 +398,15 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
     amap = _a3_code.merge_amaps(repo)
     ep_meta = {(e["file"], e["fn"]): e for e in amap.get("endpoints", [])}
     mi = _a3_code.model_insight(repo)
+    fent = amap.get("_file_entity") or {}
+    fn_by_file: dict[str, list] = {}
+    for c in _a3_code.function_insight(repo).values():
+        fn_by_file.setdefault(c["file"], []).append(c)
+    mdl_by_file: dict[str, list] = {}
+    mdl_file: dict[str, str] = {}
+    for m in (amap.get("models", []) + amap.get("schemas", [])):
+        mdl_by_file.setdefault(m.get("file", ""), []).append(m["cls"])
+        mdl_file.setdefault(m["cls"], m.get("file", ""))
     kinds = sorted({g["kind"] for g in cases})
     feeds: dict[str, list] = {"ep": [], "mdl": [], "fn": []}
     ents_seen: list[str] = []
@@ -330,6 +439,11 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         cells.append(f'<span class="tag {g["kcls"]}" title="{E(g["corpus"])} '
                      f'corpus">{kind_ic(g["kind"])} {E(g["kind"])}</span>')
         chip_cell, feed = _row_chips(g)
+        reach_fns, reach_mdls = _in_reach(g, fn_by_file, mdl_by_file)
+        # In-reach names join the FILTER surface too (tier-honest: they are
+        # what the reached files define, and the fold labels them T3).
+        feed["fn"].extend(c["fn"] + "()" for c in reach_fns)
+        feed["mdl"].extend(reach_mdls)
         for k2 in feeds:
             feeds[k2].extend(feed[k2])
         cells.append(chip_cell)
@@ -348,9 +462,11 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
                  f' data-fn="{E("|".join(feed["fn"]).lower())}"')
         summ = ("".join(f"<span>{c}</span>" for c in cells)
                 + '<span class="xtgl"></span>')
+        detail = _fold(g, ep_meta, mi, fent, mdl_file, labels,
+                       reach_fns, reach_mdls)
         body.append(f'<details class="xrow"{idattr}{attrs}>'
                     f"<summary>{summ}</summary>"
-                    f'<div class="xbody">{_fold(g, ep_meta, mi)}</div>'
+                    f'<div class="xbody">{detail}</div>'
                     "</details>")
     head = ('<div class="xhead">'
             + "".join(f"<span>{E(c)}</span>" for c in cols)
@@ -361,7 +477,8 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
     note = (f"{len(cases)} case identity(ies) · {n_fail} failing · "
             f"{n_unminted} unminted — failing first, then newest C-id; "
             "solid chips are the case's own facts (T1), dashed chips ride "
-            "in from its file (`via file`); filters match both.")
+            "in from its file (`via file` / `in reach`); filters match "
+            "all tiers.")
     return (_bar(app, sorted(ents_seen, key=lambda s: labels.get(s, s)),
                  labels, kinds, feeds, len(cases))
             + f'<div class="xtbl" id="ledger" style="--xcols:{tmpl}">{head}'

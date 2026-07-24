@@ -531,6 +531,10 @@ assert "×2</small>" in m, "parametrize executions must group under C12"
 assert 'href="arch-endpoints.html#ep-app-' in m, "chips must LINK the code estate"
 assert 'data-ent="gadget"' in m, "entity data attribute missing"
 assert 'id="sec-tests-files"' in m, "file-altitude table missing below the ledger"
+assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
+assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
+assert "in reach · T3" in m and "lonely_helper()" in m, \
+    "in-reach chips (what reached files define) missing from the fold"
 f = (c / "feature-gadget.html").read_text()
 assert 'id="sec-tests-cases"' in f and 'id="C11"' in f, \
     "entity tab must carry the scoped ledger with C-id anchors"

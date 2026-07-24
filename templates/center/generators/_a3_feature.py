@@ -1273,7 +1273,7 @@ def build_feature_pages(ctx) -> list[str]:
             + _a3_ledger.ledger_html(
                 ctx.repo_root,
                 {c["key"]: inv[c["key"]]["files"] for c in ctx.corpora},
-                ctx.corpora)
+                ctx.corpora, labels=ctx.labels)
             + sechead("Testing", "Files", "#4f46e5", _IC_DOC,
                       sub="the file altitude — per-file flags and ratios; "
                           "the cases themselves live on the ledger above",
