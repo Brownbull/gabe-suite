@@ -170,6 +170,26 @@ def kind_tag(kind: str, cls: str = "", suffix: str = "") -> str:
             f"{kind_ic(kind)} {E(kind)}{suffix}</span>")
 
 
+# The entity-column HEADER label (operator ruling 2026-07-24): a table whose
+# icon-only entity column shipped an EMPTY header now labels it with the
+# Entity-index layers glyph. Pass ENT_COL as the header string — table(),
+# xtable() and the ledger render it as the raw icon; every other header
+# stays E()'d. The sentinel can never collide with authored header text.
+ENT_COL = "\x00entity\x00"
+_ENT_TH = ('<svg viewBox="0 0 24 24" width="13" height="13" fill="none" '
+           'stroke="currentColor" stroke-width="2" stroke-linecap="round" '
+           'stroke-linejoin="round" style="vertical-align:-2px">'
+           "<title>entity</title>"
+           '<polygon points="12 2 2 7 12 12 22 7 12 2"/>'
+           '<polyline points="2 17 12 22 22 17"/>'
+           '<polyline points="2 12 12 17 22 12"/></svg>')
+
+
+def th_label(h: str) -> str:
+    """Header-cell content: the ENT_COL sentinel renders the entity glyph."""
+    return _ENT_TH if h == ENT_COL else E(h)
+
+
 def entity_badge(slug: str, label: str = "", size: int = 13,
                  show_name: bool = False) -> str:
     """The entity's icon in ITS color — the compact identity used in entity
@@ -352,7 +372,8 @@ def table(headers: list[str], rows: list[list[str]],
     if expand is not None and len(expand) != len(rows):
         raise ValueError(f"table(): {len(rows)} row(s) but {len(expand)} "
                          f"expander(s) — the lists must be parallel")
-    head = "".join(f'<th class="num">{E(h)}</th>' if i in num else f"<th>{E(h)}</th>"
+    head = "".join(f'<th class="num">{E(h)}</th>' if i in num
+                   else f"<th>{th_label(h)}</th>"
                    for i, h in enumerate(headers))
     ctxkey = "tbl|" + "|".join(headers)
     body = ""
@@ -392,7 +413,7 @@ def xtable(columns: list[str], rows: list, widths: list[str] | None = None,
     widths = widths or (["1fr"] * len(columns))
     tmpl = " ".join(widths) + " 20px"
     head = ('<div class="xhead">'
-            + "".join(f"<span>{E(c)}</span>" for c in columns)
+            + "".join(f"<span>{th_label(c)}</span>" for c in columns)
             + "<span></span></div>")
     ctxkey = "xtbl|" + "|".join(columns)
     body = []

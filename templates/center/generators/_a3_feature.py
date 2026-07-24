@@ -114,12 +114,13 @@ _STATE_CHIP = {"pass": ('<span class="tag s-ok">pass</span>'),
 
 
 def case_rows(rec: dict, corpus: str, anchors: bool = False,
-              link_cids: bool = False) -> str:
+              link_cids: bool = False, cid_base: str = "") -> str:
     """One file's cases, with the characteristics junit actually carries:
     the C-id that joins it to a claim, the group it belongs to (pytest class /
     vitest describe), its own name, runtime and state. `link_cids` renders
-    each C-id as a link to its ledger row on the same page — the canonical
-    anchor of the identity."""
+    each C-id as a link to its ledger row — same-page by default; an app
+    estate page passes `cid_base` (the Cases page) so the canonical anchor
+    stays canonical across pages."""
     rows = ""
     # Junit order IS the order the suite ran them; sorting by name replaced a
     # real fact with an alphabetical one that reads exactly like it.
@@ -133,7 +134,7 @@ def case_rows(rec: dict, corpus: str, anchors: bool = False,
             group, _, name = (p.strip() for p in name.rpartition(">"))
         cid = _CID_RX.search(name)
         if cid and link_cids:
-            cid_cell = (f'<a class="cid" href="#C{cid.group(1)}">'
+            cid_cell = (f'<a class="cid" href="{cid_base}#C{cid.group(1)}">'
                         f"C{cid.group(1)}</a>")
         elif cid:
             cid_cell = f'<span class="cid">C{cid.group(1)}</span>'
@@ -735,7 +736,8 @@ def action_table(title: str, rows: list, *, id_: str, link_label: str,
 
 
 def claim_verdicts(claims: list[str], inv: dict, corpora: list,
-                   junit_complete: bool = True) -> dict:
+                   junit_complete: bool = True,
+                   cid_base: str = "") -> dict:
     """The Tests-tab ACCUMULATOR: the card's `# CLAIMS` (one line per test class
     with its intent) joined to the run by the class's NAME — the build checks the
     claimed class still runs. The C-ids are read from the matched cases and
@@ -819,7 +821,8 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
         # linked to their ledger rows); no cases column to repeat it.
         cases = [cc for c in matches for cc in observed[c]["cases"]]
         _corpus = observed[matches[0]]["corpus"]
-        detail = case_rows({"cases": cases}, _corpus, link_cids=True)
+        detail = case_rows({"cases": cases}, _corpus, link_cids=True,
+                           cid_base=cid_base)
         _kind, _kcls = kindmap.get(_corpus, ("—", ""))
         kind_cell = (f'<span class="tag {_kcls}" title="{E(_kind)}">'
                      f"{kind_ic(_kind, 14)}</span>" if _kcls

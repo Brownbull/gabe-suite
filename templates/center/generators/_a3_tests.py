@@ -423,7 +423,7 @@ def untested_surface(repo: Path, slug: str, app: bool = False) -> str:
     app mode is the Gaps page — every entity's gaps, entity-filterable."""
     import _a3_code
     from _a3_code import _anchor
-    from _a3_render import E, entity_badge, table
+    from _a3_render import E, ENT_COL, entity_badge, table
     ti = test_insight(repo)
     if app:
         amap = _a3_code.merge_amaps(repo)
@@ -477,7 +477,7 @@ def untested_surface(repo: Path, slug: str, app: bool = False) -> str:
     if not rows:
         return ('<p class="sub">No untested elements at this altitude — every '
                 "endpoint, model and function has at least one receipt.</p>")
-    cols = (["", "Element", "Type", "Why it shows here"] if app
+    cols = ([ENT_COL, "Element", "Type", "Why it shows here"] if app
             else ["Element", "Type", "Why it shows here"])
     return table(cols, rows,
                  note=f"{len(rows)} element(s) untouched by any case or spec "

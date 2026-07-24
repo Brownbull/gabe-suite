@@ -81,6 +81,10 @@ c = root / center_rel
     # No own facts and no C-id: FIRES the ledger's via-file inherited chips
     # (Q1) and the unminted honesty tag (Q2).
     "def test_unlabeled():\n"
+    "    assert True\n\n\n"
+    # Located def for the '>'-parametrize case (C15) — no facts of its own,
+    # so it cannot inherit the file's endpoint hits and skew via-route.
+    "def test_retry_backoff_C15():\n"
     "    assert True\n")
 # A WEB corpus slice: a ts source in the entity's code map + a vitest-shaped
 # junit whose describe carries provenance tokens — FIRES the tag facet
@@ -120,6 +124,13 @@ c = root / center_rel
     'name="test_gid_format_C12[b]" time="0.1"/>'
     '<testcase classname="tests.test_gadgets" '
     'name="test_unlabeled" time="0.1"/>'
+    # A pytest parametrize whose id carries ">" (a lambda repr — the gustify
+    # C494 shape): the ledger must NOT read it as a vitest "Describe > case"
+    # split, or the C-id is dropped and the row loses its anchor.
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_retry_backoff_C15[&lt;lambda&gt; at 0xbeef&gt;-0]" time="0.1"/>'
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_retry_backoff_C15[&lt;lambda&gt; at 0xbeef&gt;-1]" time="0.1"/>'
     "</testsuite></testsuites>")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
@@ -597,6 +608,30 @@ assert 'id="sec-tests-gates"' in co and 'id="sec-tests-corpora"' in co \
     "machinery-page sections must each carry a sechead anchor"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
+# Round 19 (operator verdicts 2026-07-24): the entity column HEADER carries
+# the Entity-index layers glyph on every table that has the icon-only
+# column; the estate pages carry a sticky section menu (overview + the
+# five estate pages, current marked); Gaps is renamed Untested; app rows
+# OPEN like their entity-tab counterparts (files -> cases, claims -> cases)
+# with C-ids linking the Cases page across pages.
+assert "<title>entity</title>" in dash, \
+    "the entity x kind matrix must label its entity column with the glyph"
+cl = (c / "test-claims.html").read_text()
+assert 'class="entb ent-gadget"' in cl and ">running<" in cl, \
+    "the app claims page must carry the real per-claim rows, entity first"
+assert 'href="test-matrix.html#C12"' in cl, \
+    "an app claim fold's C-ids must link the Cases page"
+assert "<title>entity</title>" in cl, "claims entity column needs its glyph"
+for est, cur in (("test-matrix.html", "Cases"),
+                 ("test-files.html", "Files"),
+                 ("test-claims.html", "Claims"),
+                 ("test-elements.html", "Untested"),
+                 ("test-corpora.html", "Corpora")):
+    eh = (c / est).read_text()
+    assert 'class="subnav"' in eh and 'href="tests.html"' in eh, \
+        f"{est}: estate menu with the overview link missing"
+    assert f'class="on" href="{est}"' in eh, \
+        f"{est}: the menu must mark the current page"
 m = (c / "test-matrix.html").read_text()
 assert 'id="ledbar"' in m and "<select" in m and "<datalist" in m, \
     "dropdown filter bar missing (R2)"
@@ -609,9 +644,20 @@ assert 'href="arch-endpoints.html#ep-app-' in m, "chips must LINK the code estat
 assert 'data-ent="gadget"' in m, "entity data attribute missing"
 assert 'id="sec-tests-files"' not in m, \
     "the file altitude moved to its own page — no second home on the ledger"
+assert "<title>entity</title>" in m, "the ledger entity column needs its glyph"
 tf = (c / "test-files.html").read_text()
 assert 'id="sec-tests-files"' in tf and 'class="entchips"' in tf, \
     "test-files.html must carry the file altitude with the entity filter bar"
+assert 'href="test-matrix.html#C11"' in tf, \
+    "an app file row must OPEN to its cases, C-ids linking the Cases page"
+assert "<title>entity</title>" in tf, "files entity column needs its glyph"
+# The gustify C494 regression pair: the files fold and the ledger must agree
+# on a parametrized pytest id carrying ">" — the fold links C15, the ledger
+# owns the anchor with both executions grouped under it.
+assert 'href="test-matrix.html#C15"' in tf and 'id="C15"' in m, \
+    "a pytest '>' parametrize id must keep its C-id and its ledger anchor"
+assert "×2</small>" in m[m.find('id="C15"'):][:2000], \
+    "C15's two executions must group under one ledger row"
 assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
 assert 'in reach<details class="tinfo"' in m and "lonely_helper()" in m, \
@@ -707,7 +753,9 @@ assert 'id="sec-tests-gaps"' in f and "lonely_helper" in f, \
 assert 'id="sec-tests-elements"' not in f, \
     "Shape A element roster must be GONE from the entity tab"
 el = (c / "test-elements.html").read_text()
-assert 'class="entchips"' in el and "Untested surface" in el, "Gaps page missing"
+assert 'class="entchips"' in el and "Untested surface" in el, "Untested page missing"
+assert "<h1>Untested</h1>" in el, "the page is named Untested now, not Gaps"
+assert "<title>entity</title>" in el, "untested entity column needs its glyph"
 assert "lonely_helper" in el, "untested function gap row must FIRE"
 assert "/gadgets/one" not in el, "tested endpoint must stay SILENT on the Gaps page"
 assert (c / "test-claims.html").exists() and (c / "test-corpora.html").exists()

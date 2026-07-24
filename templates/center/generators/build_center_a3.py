@@ -42,6 +42,9 @@ from _a3_feature import (  # noqa: E402
     ENTITY_PROOFS,
     ENTITY_RX,
     build_feature_pages,
+    case_rows,
+    claim_verdicts,
+    entity_corpus,
     kind_state,
 )
 
@@ -149,6 +152,7 @@ SHELL_SRC, SHELL_NOTE = resolve_shell()
 import _a3_render as R_MARKS  # noqa: E402  (rowmarks lifecycle — init + snapshot)
 from _a3_render import (  # noqa: E402  (helpers live beside this module)
     E,
+    ENT_COL,
     entity_badge,
     entity_icon,
     legend,
@@ -159,6 +163,7 @@ from _a3_render import (  # noqa: E402  (helpers live beside this module)
     md,
     strip_slot_doc_comments,
     table,
+    th_label,
     trunc,
     xtable,
     kind_ic,
@@ -657,7 +662,8 @@ _rows += ('<tr><th class="area">unclaimed</th>'
                     for k, kind in _kind_cols) + "</tr>")
 # The grid alone — its claimed-by prose folds into the station sechead's ⊕
 # (declutter ruling 2026-07-22: a table is flanked only by its data).
-matrix = f'<table class="riskgrid"><tr><th class="area"></th>{_hdr}</tr>{_rows}</table>'
+matrix = (f'<table class="riskgrid"><tr><th class="area">'
+          f"{th_label(ENT_COL)}</th>{_hdr}</tr>{_rows}</table>")
 _matrix_note = (
     f"Files are claimed by the ENTITY REGISTRY (adoption.json) through the "
     f"same regexes the feature pages count with — click an entity to open "
@@ -685,9 +691,12 @@ for _corpus, _j in corpora.items():
             f"{E(_corpus)}</span>",
             f"<code>{E(_f)}</code>", str(_rec["tests"]),
             meter(_rec["tests"] - _rec["failed"], _rec["tests"]), _claim]
-        # FLAT rows (ruling Q3, 2026-07-24): the file altitude keeps flags,
-        # ratios and claim state; the cases themselves live on the ledger.
-        _file_rows.append((_cells, ""))
+        # Rows OPEN to their cases (operator ruling 2026-07-24, superseding
+        # Q3's flat rows): the app file altitude expands exactly like the
+        # entity tab's, C-ids linking the Cases page — the row's identity
+        # stays the file, the fold is the reading view.
+        _file_rows.append((_cells, case_rows(_rec, _corpus, link_cids=True,
+                                             cid_base="test-matrix.html")))
 _unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[0][5])
 files_section = (
     sechead("Testing", "Files", "#0f766e", _IC_DOCP,
@@ -701,7 +710,7 @@ files_section = (
                      ("s-gap", "unclaimed",
                       "no adopted entity names this file yet — surface area, "
                       "not failure")]))
-    + xtable(["", "Corpus", "File", "Cases", "Passing", "Claimed by"],
+    + xtable([ENT_COL, "Corpus", "File", "Cases", "Passing", "Claimed by"],
              _file_rows,
              widths=["40px", "0.9fr", "2.6fr", "0.6fr", "1fr", "1.4fr"],
             note=f"{len(_file_rows)} file(s) · {_unclaimed_files} unclaimed. "
@@ -1445,28 +1454,57 @@ def render_testing() -> dict[str, str]:
            "r.classList.toggle('ehide',"
            "!(s==='all'||cell.querySelector('.ent-'+s)))});});})();</script>")
 
-    claims_rows = []
+    # The app-wide CLAIMS table (operator ruling 2026-07-24: the estate page
+    # carries the SAME expandable record the entity tab renders — a claim
+    # row opens to its cases — not an index of links). Entity column first;
+    # C-ids inside the folds link the Cases page.
+    _cl_rows = []
+    _cl_tally = {"running": 0, "ambiguous": 0, "drift": 0, "unknown": 0}
+    _cardless = []
     for s in sections:
         slug = s["entity"]
-        cnts = " · ".join(f"{grid[slug][c][0]} {c}" for c in corpora
-                          if grid[slug][c][0])
-        # An entity without a feature page has no claims section to anchor
-        # into — the row says so instead of shipping a dead deep link.
-        _href = _entity_href(slug)
-        claims_rows.append(
-            [entity_badge(slug, LABELS.get(slug, slug), 13, show_name=True),
-             cnts or "—",
-             (f'<a class="dlink" href="{_href}#sec-tests-claims">'
-              f"its claimed coverage</a>" if _href.startswith("feature-")
-              else '<span class="sub">no feature page yet</span>')])
+        card_path = CENTER / "cards" / f"{slug}.md"
+        if not card_path.exists():
+            _cardless.append(LABELS.get(slug, slug))
+            continue
+        card = D.parse_card(card_path)
+        rx = ENTITY_RX.get(slug, re.escape(slug))
+        inv = entity_corpus(rx, junit_by, CORPORA)
+        complete = all(inv[c["key"]]["present"] for c in CORPORA)
+        cv = claim_verdicts(card.get("CLAIMS", []), inv, CORPORA, complete,
+                            cid_base="test-matrix.html")
+        ebadge = (f'<a href="{_entity_href(slug)}">'
+                  + entity_badge(slug, LABELS.get(slug, slug), 13) + "</a>")
+        for cells, detail in cv["rows"]:
+            _cl_rows.append(([ebadge, *cells], detail))
+        for k in _cl_tally:
+            _cl_tally[k] += cv[k]
+    _cl_note = (f'{_cl_tally["running"]} claim(s) running · '
+                f'{_cl_tally["drift"]} drifted · {_cl_tally["ambiguous"]} '
+                f'ambiguous · {_cl_tally["unknown"]} unknown. A drifted '
+                "claim is a test that was promised and is gone; per-entity "
+                "verdicts (incl. running-but-unclaimed classes) render on "
+                "each entity's Tests tab."
+                + (" No claims card yet: " + ", ".join(map(E, _cardless))
+                   + "." if _cardless else ""))
     claims_body = (
-        sechead("Testing", "Claims — by entity", "#0d9488", _IC_KCHECK,
-                sub="claims are AUTHORED per entity (card # CLAIMS) and "
-                    "verified against junit by class name",
-                id_="sec-tests-claims-idx",
-                note="This page indexes them; each entity's claim verdicts "
-                     "(running · ambiguous · DRIFT) render on its own page.")
-        + table(["Entity", "Cases claimed into", "Claims"], claims_rows))
+        sechead("Testing", "Claims — the authored coverage", "#0d9488",
+                _IC_KCHECK,
+                sub="every entity's claimed test classes, joined to the run "
+                    "by class name — open a claim to read its cases",
+                id_="sec-tests-claims",
+                note=_cl_note,
+                info=legend("Claim state:", [
+                    ("s-ok", "running", "the class is in junit ·"),
+                    ("s-med", "ambiguous / unknown",
+                     "short-name match, or junit absent ·"),
+                    ("s-gap", "DRIFT", "claimed, not running")]))
+        + (xtable([ENT_COL, "Kind", "Class", "Intent", "State"], _cl_rows,
+                  widths=["40px", "0.9fr", "1.3fr", "3.4fr", "1fr"])
+           if _cl_rows else
+           '<p class="sub">No <code># CLAIMS</code> authored on any card '
+           "yet — each entity's card can declare the test classes it "
+           "promises, and the build verifies them here.</p>"))
 
     # The machinery page: sources · gates · history · walks · shelf — every
     # piece under its own sechead so the station's deep links (the manual
@@ -1526,33 +1564,57 @@ def render_testing() -> dict[str, str]:
                      "render; a row disappears by itself the moment a case "
                      "or spec touches its element.")
         + _a3_tests.untested_surface(REPO_ROOT, "app", app=True))
+    # The estate menu (operator ruling 2026-07-24): a STICKY subnav on every
+    # estate page — back to the Testing overview + across the sections —
+    # so a reader deep in a long table keeps the map. Inline top:0 because
+    # these pages have no sticky tabbar for the shared .subnav offset to
+    # sit under; the current page is marked.
+    _est_items = [("tests.html", "Testing overview", _IC_KCHECK),
+                  ("test-matrix.html", "Cases", _IC_GRID4),
+                  ("test-files.html", "Files", _IC_DOCP),
+                  ("test-claims.html", "Claims", _IC_KCHECK),
+                  ("test-elements.html", "Untested", _IC_ALERTP),
+                  ("test-corpora.html", "Corpora & gates", _IC_SHIELD)]
+
+    def _esub(current: str) -> str:
+        links = "".join(
+            f'<a{" class=\"on\"" if fn == current else ""} href="{fn}">'
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" '
+            'stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'
+            f"{ic}</svg>{E(lbl)}</a>" for fn, lbl, ic in _est_items)
+        return f'<nav class="subnav" style="top:0">{links}</nav>'
+
     return {
         "test-elements.html": _tpage(
-            "Gaps", "Gaps",
+            "Untested", "Untested",
             "the untested surface: endpoints, models and functions no case "
-            "or spec touches, entity-filterable", bar + gaps_body),
+            "or spec touches, entity-filterable",
+            _esub("test-elements.html") + bar + gaps_body),
         "test-matrix.html": _tpage(
             "Cases", "Cases",
             "the case ledger — every identity with its C-id anchor and "
             "exercises chips, element-filterable; the file altitude lives "
-            "on the Files page", ledger_body),
+            "on the Files page",
+            _esub("test-matrix.html") + ledger_body),
         # Files gets its OWN page (operator ruling 2026-07-24: one page per
         # estate section, the Code-group treatment) — the entity filter bar
         # rides on top, the anchor keeps its sec-tests-files identity.
         "test-files.html": _tpage(
             "Test files", "Files",
             "the file altitude — every test file with its ratios, flags "
-            "and claim state, entity-filterable; the cases themselves live "
-            "on the Cases ledger", bar + files_section),
+            "and claim state, entity-filterable; open a row to read the "
+            "cases inside it",
+            _esub("test-files.html") + bar + files_section),
         "test-claims.html": _tpage(
             "Test claims", "Claims",
-            "the authored coverage accumulator, indexed app-wide",
-            claims_body),
+            "the authored coverage, verified app-wide — open a claim to "
+            "read its cases",
+            _esub("test-claims.html") + claims_body),
         "test-corpora.html": _tpage(
             "Corpora & gates", "Corpora & gates",
             "the machinery — report sources, the gates in front of a "
             "commit, the run history, the recorded walks, and the demo "
-            "shelf", corpora_body),
+            "shelf", _esub("test-corpora.html") + corpora_body),
     }
 
 

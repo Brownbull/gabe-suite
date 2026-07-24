@@ -21,8 +21,8 @@ from pathlib import Path
 
 import _center_data as _cd
 import _a3_tests
-from _a3_render import (E, entity_badge, kind_ic, kind_tag, entity_icon, legend, lines_grade,
-                        md, sechead, subnav, table, trunc, xtable)
+from _a3_render import (E, ENT_COL, entity_badge, kind_ic, kind_tag, entity_icon, legend,
+                        lines_grade, md, sechead, subnav, table, th_label, trunc, xtable)
 
 _ADOPT_NAMES: dict | None = None
 
@@ -1206,7 +1206,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             cells.insert(0, _ent_cell(_file_ent.get(e["file"], slug)))
         _ep_rows.append((cells, detail,
                          _rid(_anchor("ep", slug, e["file"] + "-" + e["fn"]))))
-    html += xtable((["", "Endpoint", "Returns", "Tests"] if entity_col
+    html += xtable(([ENT_COL, "Endpoint", "Returns", "Tests"] if entity_col
                     else ["Endpoint", "Returns", "Tests"]), _ep_rows,
                    widths=(["34px", "2.4fr", "1.1fr", "1.2fr"] if entity_col
                            else ["2.4fr", "1.1fr", "1.2fr"]))
@@ -1300,7 +1300,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         if entity_col:
             cells.insert(0, _ent_cell(_file_ent.get(f, slug)))
         _cm_rows.append((cells, detail, _rid(_anchor("cm", slug, f))))
-    html += xtable((["", "Layer", "File", "Lines", "Tests"] if entity_col
+    html += xtable(([ENT_COL, "Layer", "File", "Lines", "Tests"] if entity_col
                     else ["Layer", "File", "Lines", "Tests"]), _cm_rows,
                    widths=(["34px", "0.8fr", "2.1fr", "0.8fr", "1.2fr"]
                            if entity_col
@@ -1611,7 +1611,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                   is_schema=False, uqs=m["uqs"],
                                   src_file=m["file"]),
                        _rid(_anchor("dm", slug, m["cls"]))))
-    _dm_head = (["", "Class", "File", "Usage", "Tests"] if entity_col
+    _dm_head = ([ENT_COL, "Class", "File", "Usage", "Tests"] if entity_col
                 else ["Class", "Entity", "File", "Usage", "Tests"])
     _dm_w = (["34px", "2fr", "1.5fr", "1.1fr", "1.2fr"] if entity_col
              else [*_DM_W, "1.2fr"])
@@ -1700,7 +1700,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     if cands:
         html += (
             "<table class=\"tbl\"><thead><tr>"
-            + ("<th></th>" if entity_col else "")
+            + (f"<th>{th_label(ENT_COL)}</th>" if entity_col else "")
             + "<th>Candidate</th><th>Classes</th>"
             "<th>Why the machine flags it</th></tr></thead>"
             f"<tbody>{cands}</tbody></table>")
@@ -1943,7 +1943,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             _frows.append((cells, _fn_detail(c),
                            _rid(_anchor("fn", slug,
                                         c["file"] + "-" + c["fn"]))))
-        html += xtable((["", "Function", "File", "Usage", "Tests"]
+        html += xtable(([ENT_COL, "Function", "File", "Usage", "Tests"]
                         if entity_col
                         else ["Function", "Entity", "File", "Usage",
                               "Tests"]), _frows,
@@ -2012,7 +2012,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         if fcands:
             html += (
                 "<table class=\"tbl\"><thead><tr>"
-                + ("<th></th>" if entity_col else "")
+                + (f"<th>{th_label(ENT_COL)}</th>" if entity_col else "")
                 + "<th>Candidate</th>"
                 "<th>Functions</th><th>Why the machine flags it</th></tr>"
                 f"</thead><tbody>{fcands}</tbody></table>")

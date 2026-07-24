@@ -514,6 +514,8 @@ details.pmore[open] i::after{content:"⊖ less"}
 .subnav a{font-size:.74rem;font-weight:600;color:var(--muted);text-decoration:none;
   padding:4px 11px;border-radius:7px}
 .subnav a:hover{background:var(--panel);color:var(--ink)}
+.subnav a.on{background:var(--panel);color:var(--ink)}
+.subnav a.on svg{color:var(--accent)}
 [id^="sec-"]{scroll-margin-top:118px}
 [id^="ep-"],[id^="cm-"],[id^="dm-"]{scroll-margin-top:150px}
 

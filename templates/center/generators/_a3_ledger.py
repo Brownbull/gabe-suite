@@ -38,7 +38,7 @@ from pathlib import Path
 import _a3_code
 import _a3_tests
 from _a3_code import _anchor
-from _a3_render import E, _row_mark, entity_badge, kind_ic
+from _a3_render import E, ENT_COL, _row_mark, entity_badge, kind_ic, th_label
 
 _CID_RX = _a3_tests._CID_RX
 _STATE_CHIP = {"pass": '<span class="tag s-ok">pass</span>',
@@ -95,7 +95,12 @@ def build_cases(repo: Path, inv_files: dict, corpora: list) -> list[dict]:
             for c in rec["cases"]:
                 name = c["name"]
                 group = ""
-                if ">" in name:                 # vitest: "Describe > case"
+                # ">" means "Describe > case" ONLY in a js corpus — a pytest
+                # parametrize id can carry one too (`C494[<lambda> at …]`,
+                # gustify), and splitting there mangled the name, dropped the
+                # C-id, and left the case unminted with no ledger anchor.
+                # The junit FILE's suffix is the honest discriminator.
+                if ">" in name and not jf.endswith(".py"):
                     group, _, name = (p.strip() for p in name.rpartition(">"))
                 else:
                     tail = c.get("cls", "").rsplit(".", 1)[-1]
@@ -813,7 +818,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
     feeds: dict[str, list] = {"ep": [], "mdl": [], "fn": []}
     ents_seen: list[str] = []
     seen_ids: set[str] = set()
-    cols = ["", "Kind", "Case", "Asserts", "State"]
+    cols = [ENT_COL, "Kind", "Case", "Asserts", "State"]
     widths = ["48px", "40px", "0.8fr", "3.4fr", "0.7fr"]
     ctxkey = "xtbl|" + "|".join(cols)
     body = []
@@ -889,7 +894,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
                     f'<div class="xbody">{detail}</div>'
                     "</details>")
     head = ('<div class="xhead">'
-            + "".join(f"<span>{E(c)}</span>" for c in cols)
+            + "".join(f"<span>{th_label(c)}</span>" for c in cols)
             + "<span></span></div>")
     tmpl = " ".join(widths) + " 20px"
     n_unminted = sum(1 for g in cases if not g["cid"])
