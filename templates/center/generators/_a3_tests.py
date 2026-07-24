@@ -528,8 +528,8 @@ def coverage_by_element(repo: Path, slug: str, app: bool = False) -> str:
             if app:
                 continue
         cell = (f'<a class="dlink" href="{xp["fn"]}#'
-                f'{_anchor("fn", "app" if app else slug, c["file"] + "-" + c["name"])}">'
-                f'<code>{E(c["name"])}()</code></a>')
+                f'{_anchor("fn", "app" if app else slug, c["file"] + "-" + c["fn"])}">'
+                f'<code>{E(c["fn"])}()</code></a>')
         chips = " ".join(filter(None, [
             chip(ckind.get(d[0]["corpus"], "unit"), len(d),
                  "cases calling this function (T1)") if d else "",
