@@ -460,11 +460,11 @@ def _set_detail(s: dict, story: str = "") -> str:
                           for i, (f, lab) in enumerate(zip(leg["files"], labels), 1))
                 + "</div></details>")
     if s["traces"]:
-        names = ", ".join(sorted(t.name for t in s["traces"])[:6])
+        names = ", ".join(sorted(t.name for t in s["traces"]))
         out += (f'<p class="sub">{len(s["traces"])} playwright trace(s) kept for '
                 f"forensics — not viewable here, opened with "
                 f"<code>npx playwright show-trace</code>: {E(names)}"
-                f'{"…" if len(s["traces"]) > 6 else ""}</p>')
+                "</p>")
     return out
 
 

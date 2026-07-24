@@ -1227,8 +1227,7 @@ def build_feature_pages(ctx) -> list[str]:
                     "not yet claimed</b> — classes junit knows that no card "
                     "line names: "
                     + " · ".join(f"<code>{E(n)}</code>"
-                                 for n in cv["unclaimed_names"][:12])
-                    + ("…" if len(cv["unclaimed_names"]) > 12 else "")
+                                 for n in cv["unclaimed_names"])
                     + "</p>") if cv["unclaimed_names"] else ""))
         else:
             claim_section = (

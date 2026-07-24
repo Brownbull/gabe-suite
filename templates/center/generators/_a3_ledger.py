@@ -455,17 +455,15 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
             buckets[key2].append((u, kind, href, rec))
 
         def _tbl(title: str, head: str, rows2: list, total: int) -> str:
-            more = (f'<p class="sub">… {total - len(rows2)} more</p>'
-                    if total > len(rows2) else "")
             return (f'<p class="sub" style="margin:8px 0 2px"><b>{title}</b>'
                     f" ({total})</p>"
                     f'<table class="tbl"><thead><tr>{head}</tr></thead>'
-                    f'<tbody>{"".join(rows2)}</tbody></table>{more}')
+                    f'<tbody>{"".join(rows2)}</tbody></table>')
 
         parts = []
         if buckets["function"]:
             rows2 = []
-            for u, _k2, href, rec in buckets["function"][:_SHOW_INREACH]:
+            for u, _k2, href, rec in buckets["function"]:
                 sig = "(" + ", ".join(
                     (f"{E(n2)}: {_ty(t2)}" if t2 else E(n2))
                     for n2, t2 in rec.get("params", [])) + ")"
@@ -486,7 +484,7 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
                 f'<code>{E(u["name"])}</code></a></td>'
                 f'<td><code>{E(rec.get("init") or "—")}</code></td>'
                 f'<td><code>{E(u["file"])}</code></td></tr>'
-                for u, _k2, href, rec in buckets["const"][:_SHOW_INREACH]]
+                for u, _k2, href, rec in buckets["const"]]
             parts.append(_tbl("constants",
                               "<th>Symbol</th><th>Declared as</th>"
                               "<th>Imported from</th>", rows2,
@@ -497,7 +495,7 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
                 f'<code>{E(u["name"])}</code></a></td>'
                 f"<td>{E(k2)}</td>"
                 f'<td><code>{E(u["file"])}</code></td></tr>'
-                for u, k2, href, rec in buckets["other"][:_SHOW_INREACH]]
+                for u, k2, href, rec in buckets["other"]]
             parts.append(_tbl("types & models",
                               "<th>Symbol</th><th>Kind</th>"
                               "<th>Imported from</th>", rows2,
@@ -513,24 +511,17 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
     if reaches:
         rc = "".join(_chip(f'{_XP["cm"]}#{_anchor("cm", "app", f2)}', f2,
                            "lc-file lc-via", "file-level import reach")
-                     for f2 in reaches[:_SHOW_REACH])
-        if len(reaches) > _SHOW_REACH:
-            rc += (f'<span class="lchip lc-more">+'
-                   f"{len(reaches) - _SHOW_REACH} more</span>")
+                     for f2 in reaches)
         rows.append(("file reach", rc,
                      "T3 — the source files the test file imports, "
                      "resolved on disk."))
     if reach_fns or reach_mdls:
         ir = [_dm_chip(nm, "lc-mdl lc-via", "defined in a reached file")
-              for nm in reach_mdls[:_SHOW_INREACH]]
+              for nm in reach_mdls]
         ir += [_fn_chip(c["file"], c["fn"], "lc-fn lc-via",
                         "defined in a reached file")
-               for c in reach_fns[:_SHOW_INREACH]]
-        hidden = (max(0, len(reach_mdls) - _SHOW_INREACH)
-                  + max(0, len(reach_fns) - _SHOW_INREACH))
-        note = (f'<span class="lchip lc-more">+{hidden} more defined '
-                "there</span>" if hidden else "")
-        rows.append(("in reach", "".join(ir) + note,
+               for c in reach_fns]
+        rows.append(("in reach", "".join(ir),
                      "T3 — what the reached files define, from the code "
                      "registries; not a case-level proof."))
     html = _kv(rows)
@@ -606,24 +597,22 @@ def proof_verification_html(repo: Path, spec_val, corpora: list) -> str:
         return ('<p class="sub" style="margin:2px 0 8px"><b>Verified by</b> '
                 "— no spec pointer joins the corpus record (the manifest "
                 "names no captured test file).</p>")
+    from urllib.parse import quote as _uq2
+    _all = ("test-matrix.html?led-q=" + _uq2(pv["tok"], safe="")
+            + "#sec-tests-cases")
     pills = " ".join(f'<a class="cid" href="#C{x[1:]}">{E(x)}</a>'
                      for x in pv["cids"][:12])
-    if len(pv["cids"]) > 12:
-        pills += f' <span class="sub">+{len(pv["cids"]) - 12} more</span>'
+    pills += (f' <a class="dlink" href="{_all}">all {pv["cases"]} in the '
+              "case ledger →</a>")
     chips = "".join(_ep_chip(c, "lc-ep lc-via",
                              "the spec's file touches this route (file-tier)")
-                    for c in pv["endpoints"][:6])
+                    for c in pv["endpoints"])
     chips += "".join(_dm_chip(nm, "lc-mdl lc-via",
                               "used somewhere in the spec's file")
-                     for nm in pv["models"][:6])
-    hidden = (max(0, len(pv["endpoints"]) - 6)
-              + max(0, len(pv["models"]) - 6))
-    if hidden:
-        chips += f'<span class="lchip lc-more">+{hidden} more</span>'
+                     for nm in pv["models"])
     return (f'<p class="sub" style="margin:2px 0 8px"><b>Verified by</b> '
             f'<code>{E(pv["tok"])}</code> — {pv["cases"]} case(s) in '
-            f'{pv["files"]} file(s): '
-            + (pills or "no C-ids minted")
+            f'{pv["files"]} file(s): ' + pills
             + (f"<br><b>touches</b> {chips}" if chips else "") + "</p>")
 
 
@@ -694,6 +683,11 @@ if(ok&&q)ok=((r.textContent+' '+(d.ep||'')+' '+(d.mdl||'')+' '+(d.fn||''))
 .toLowerCase().indexOf(q)>=0);
 r.classList.toggle('lhide',!ok);if(ok)n++;});
 if(note)note.textContent=n+' of '+rows.length+' case(s)';sync();}
+var qs=new URLSearchParams(location.search),pre=false;
+['led-ent','led-kind','led-state','led-tag','led-ep','led-mdl','led-fn',
+'led-q'].forEach(function(id){var val=qs.get(id);
+if(val){var e=el(id);if(e){e.value=val;pre=true;}}});
+if(pre)apply();
 bar.addEventListener('input',apply);bar.addEventListener('change',apply);
 bar.addEventListener('click',function(e){var b=e.target.closest('.lx');
 if(!b)return;var t=el(b.dataset.for);if(!t)return;
@@ -789,6 +783,14 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
                      f'corpus">{kind_ic(g["kind"])} {E(g["kind"])}</span>')
         cells.append(_STATE_CHIP.get(g["state"], ""))
         feed = _row_feed(g)
+        for c in (g["own"] or {}).get("endpoints", []):
+            e = ep_meta.get((c["file"], c["fn"]))
+            if not e:
+                continue
+            feed["fn"].append(e["fn"] + "()")
+            toks = set(re.findall(r"[A-Za-z_]\w+", e.get("resp") or ""))
+            toks.update(e.get("touches", []))
+            feed["mdl"].extend(sorted(t for t in toks if t in mi))
         reach_fns, reach_mdls = _in_reach(g, fn_by_file, mdl_by_file)
         feed["fn"].extend(c["fn"] + "()" for c in reach_fns)
         feed["mdl"].extend(reach_mdls)

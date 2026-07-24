@@ -16,6 +16,7 @@ import ast
 import glob as _glob
 import json as _json
 import re as _re_mod
+from urllib.parse import quote as _uq
 from pathlib import Path
 
 import _center_data as _cd
@@ -872,7 +873,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     _STATE_CHIP = {"pass": "s-ok", "fail": "s-high", "skip": "s-gap"}
 
-    def _ref_table(refs: list) -> str:
+    def _ref_table(refs: list, see_all: str = "") -> str:
         if refs and refs[0]["state"] == "file":
             rows = "".join(
                 f'<tr><td><code>{E(r["tfile"].rsplit("/", 1)[-1])}</code></td>'
@@ -885,8 +886,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 f'<td><span class="tag {_STATE_CHIP.get(r["state"], "")}">'
                 f'{E(r["state"])}</span></td></tr>' for r in refs[:10])
             head = "<th>Case</th><th>What it asserts</th><th>State</th>"
-        more = (f'<p class="sub">… {len(refs) - 10} more</p>'
-                if len(refs) > 10 else "")
+        # A truncated receipts list ALWAYS links its complete, filtered
+        # view (operator ruling 2026-07-25: never "N more" with no path).
+        if not see_all and len(refs) > 10:
+            see_all = "test-matrix.html#sec-tests-cases"
+        more = (f'<p class="sub"><a class="dlink" href="{see_all}">'
+                f"open all {len(refs)} in the case ledger →</a></p>"
+                if see_all else "")
         return (f'<table class="tbl"><thead><tr>{head}</tr></thead>'
                 f"<tbody>{rows}</tbody></table>{more}")
 
@@ -1151,8 +1157,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                            f'{_kcls.get(kind, "")}" title="{E(kind)}">'
                            f"{kind_ic(kind, 14)}</span>"
                            f"</td><td>{vol}</td><td>{st}</td></tr>")
-            _tm = ("test-matrix.html#sec-tests-cases" if entity_col
-                   else "#sec-tests-cases")
+            _tm = ("test-matrix.html?led-ep="
+                   + _uq(f'{e["method"]} {e["path"]}', safe="")
+                   + "#sec-tests-cases")
             detail += (_dmh("#15803d", "fn", "Tests", "")
                        + '<table class="tbl"><thead><tr><th>Kind</th>'
                          "<th>Volume</th><th>State</th></tr></thead><tbody>"
@@ -1193,16 +1200,14 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         names = amap["defines"].get(f, [])
         if not names:
             return "—"
-        shown, extra = names[:8], len(names) - 8
         chips = []
-        for n in shown:
+        for n in names:
             if n in documented:
                 chips.append(f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, n))}">'
                              f"{E(n)}</a>")
             else:
                 chips.append(f"<code>{E(n)}</code>")
-        return (" · ".join(chips)
-                + (f" · <small>+{extra} more</small>" if extra > 0 else ""))
+        return " · ".join(chips)
 
     over = sum(1 for _, _, n in files if n > 800)
     html += sechead(
@@ -1251,16 +1256,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             meta_rows.append((f'{_ins_ic("fn")} '
                               + ("ENDPOINTS" if layer == "api"
                                  else "FUNCTIONS DEFINED"), "#b45309",
-                              " · ".join(fns_c[:12])
-                              + ("…" if len(fns_c) > 12 else "")))
+                              " · ".join(fns_c)))
         if cls_c:
             meta_rows.append((f'{_ins_ic("model")} CLASSES DEFINED', "#7c3aed",
-                              " · ".join(cls_c[:12])
-                              + ("…" if len(cls_c) > 12 else "")))
+                              " · ".join(cls_c)))
         if other:
             meta_rows.append((f'{_ins_ic("doc")} OTHER SYMBOLS', "#64748b",
-                              " · ".join(other[:12])
-                              + ("…" if len(other) > 12 else "")))
+                              " · ".join(other)))
         detail = ('<table class="tbl dm-meta"><tbody>' + "".join(
             f'<tr><td class="metak" style="color:{col}">{k}</td>'
             f"<td>{v}</td></tr>" for k, col, v in meta_rows)
@@ -1487,7 +1489,10 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             if _refs:
                 tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
                             f"<b>{_lbl}</b> ({len(_refs)})</p>"
-                            + _ref_table(_refs))
+                            + _ref_table(_refs,
+                                         "test-matrix.html?led-mdl="
+                                         + _uq(cls, safe="")
+                                         + "#sec-tests-cases"))
         if tb_html:
             tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
         return (f"{meta_html}{_dm_api_tbl(cls, is_schema)}{_dm_int_tbl(cls)}"
@@ -1848,7 +1853,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             calls = sorted(n for n in plain_names
                            if n != c["name"] and n in c["ids"])
             call_chips = []
-            for n in calls[:12]:
+            for n in calls:
                 tgt = qual_by_name.get(n)
                 call_chips.append(_fn_link(tgt) if tgt
                                   else f"<code>{E(n)}</code>")
@@ -1856,19 +1861,21 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                f' <span class="sub">{len(calls)} documented '
                                f"function(s)</span>")
                           + ('<p class="sub">' + " · ".join(call_chips)
-                             + ("…" if len(calls) > 12 else "") + "</p>"
+                             + "</p>"
                              if calls else
                              '<p class="sub">calls no other documented '
                              "function — a base.</p>"))
             # Tested by — the thread's receipts (T1 direct / T2 via route)
             _tb = _ti["by_function"].get(f'{c["file"]}::{c["fn"]}') or {}
             tb_html = ""
+            _seeall = ("test-matrix.html?led-fn="
+                       + _uq(c["name"] + "()", safe="") + "#sec-tests-cases")
             for _lbl, _refs in (("direct", _tb.get("direct") or []),
                                 ("via route", _tb.get("via_route") or [])):
                 if _refs:
                     tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
                                 f"<b>{_lbl}</b> ({len(_refs)})</p>"
-                                + _ref_table(_refs))
+                                + _ref_table(_refs, _seeall))
             if tb_html:
                 tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
             # Signature

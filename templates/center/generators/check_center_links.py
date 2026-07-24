@@ -76,6 +76,10 @@ def run_checks() -> int:
             if ref.startswith(("http://", "https://", "mailto:", "data:")):
                 continue
             target, _, anchor = ref.partition("#")
+            # Standard URL semantics: the query string parameterizes the page
+            # (the ledger's pre-applied filters), it is not part of the file
+            # name on disk.
+            target = target.partition("?")[0]
             resolved = posixpath.normpath(posixpath.join(here, target)) if target else ""
             if resolved.startswith(".."):
                 # Estate refs (proof shots, spec files) leave the center but

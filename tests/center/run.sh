@@ -616,6 +616,24 @@ assert f.count("Tested by") >= 2, "dm fold must carry Tested-by receipts"
 af = (c / "arch-functions.html").read_text()
 assert 'href="test-matrix.html#C12"' in af, \
     "arch-estate receipts must link the Cases page ledger row"
+# The truncation BAN (operator ruling 2026-07-25): never "… N more" with no
+# reference — every receipts block links its FILTERED ledger view, and the
+# ledger pre-applies filters arriving as URL params.
+import re as _re2
+for _pg, _h in (("feature", f), ("matrix", m), ("arch-fn", af)):
+    assert not _re2.search(r"… \d+ more", _h) and \
+        not _re2.search(r"\+\d+ more<", _h), f"dangling truncation on {_pg}"
+assert "test-matrix.html?led-mdl=GadgetOut#sec-tests-cases" in f, \
+    "dm Tested-by must link the model-filtered ledger"
+assert "test-matrix.html?led-fn=make_gid%28%29#sec-tests-cases" in f, \
+    "fn Tested-by must link the function-filtered ledger"
+assert "test-matrix.html?led-ep=GET%20%2Fgadgets%2Fone#sec-tests-cases" in f, \
+    "endpoint fold must link the route-filtered ledger"
+assert "URLSearchParams" in m, "the ledger must pre-apply URL-param filters"
+assert _re2.search(r'id="C11"[^>]*data-mdl="[^"]*gadgetout', m), \
+    "T2 route credits must join the filter surface (C11 -> GadgetOut)"
+assert "test-matrix.html?led-q=" in f, \
+    "the evidence Verified-by must link the spec-filtered ledger"
 assert 'id="sec-tests-gaps"' in f and "lonely_helper" in f, \
     "entity Untested-surface section missing"
 assert 'id="sec-tests-elements"' not in f, \
