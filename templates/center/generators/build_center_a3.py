@@ -947,7 +947,9 @@ gates = table(
          f'{sum(len(j) for j in ci_jobs.values())} CI job(s).')
 
 proof_root = D.PROOF_DIR
-pdirs = sorted((d for d in proof_root.iterdir() if d.is_dir()),
+# Dot-dirs are tool residue (.ruff_cache landed on the shelf), not proof.
+pdirs = sorted((d for d in proof_root.iterdir()
+                if d.is_dir() and not d.name.startswith(".")),
                key=lambda d: d.name) if proof_root.exists() else []
 # The shelf explains itself (operator ruling 2026-07-24: "I don't understand
 # anything happening there"): every set shows WHO claims it (entity column)
@@ -1022,7 +1024,10 @@ demo_shelf = (table(
     [ENT_COL, "Proof set", "What it shows", "Shots", "Newest",
      "Where it lands"],
     _shelf_rows, num={3},
-    widths=["44px", "1.2fr", "2.4fr", "0.5fr", "0.8fr", "1.6fr"],
+    # What-it-shows carries the prose — give it the room; Shots and the
+    # fixed-format date sit in narrow px columns (operator ruling
+    # 2026-07-24: the description was cramped while fixed cells sprawled).
+    widths=["44px", "1.1fr", "3.4fr", "52px", "88px", "1.5fr"],
     note=f"{len(pdirs)} proof set(s) under tests/web-e2e/proof/ — "
          "screenshots a human CURATED after a green run (/gabe-feature "
          "curate). A set is claimed by entities[].proofs in "

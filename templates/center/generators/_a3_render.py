@@ -392,6 +392,17 @@ def table(headers: list[str], rows: list[list[str]],
     # span or a literal <code> tag reads as corrupted output).
     tail = f'<p class="sub">{md(note)}</p>' if note else ""
     cls = "tbl wcol" if widths else "tbl"
+    # Callers speak the xtable fr dialect, but a real <col> knows no fr —
+    # the browser silently ignored it and every "pinned" table rendered
+    # EQUAL columns. Convert: px passes through, fr becomes its share of
+    # the width (a few % held back per px column).
+    if widths:
+        _frs = [float(w[:-2]) for w in widths if w.endswith("fr")]
+        _tot = sum(_frs) or 1.0
+        _avail = 100 - 4 * (len(widths) - len(_frs))
+        widths = [w if not w.endswith("fr")
+                  else f"{float(w[:-2]) / _tot * _avail:.1f}%"
+                  for w in widths]
     colgroup = ("<colgroup>"
                 + "".join(f'<col style="width:{w}">' for w in widths)
                 + "</colgroup>") if widths else ""

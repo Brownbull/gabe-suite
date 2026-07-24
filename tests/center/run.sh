@@ -226,6 +226,11 @@ g1.mkdir(parents=True)
 stray = root / "tests/web-e2e/proof/stray"
 stray.mkdir()
 (stray / "01-x.png").write_bytes(png)
+# Tool residue inside the proof root (.ruff_cache landed on the gastify
+# shelf): dot-dirs are never proof sets.
+cache = root / "tests/web-e2e/proof/.some_cache"
+cache.mkdir()
+(cache / "junk.png").write_bytes(png)
 # Pre-commit gates: a well-known id (curated one-liner) + a local hook that
 # describes itself through its own `name:` line.
 (root / ".pre-commit-config.yaml").write_text(
@@ -683,6 +688,16 @@ assert 'class="tinfo"' in co[co.find(">stray</b>"):][:900], \
     "the unclaimed/no-manifest prose must ride the ⓘ popover, not the row"
 assert 'class="tclose"' in co and "d2._t=setTimeout" in co, \
     "the shelf page must ship the ⓘ close/auto-dismiss behavior"
+# Round 25: pinned widths must reach the browser — fr is grid vocabulary,
+# a real <col> needs px/% (equal-column fallback was the cramped shelf);
+# dot-dirs are tool residue, never proof sets.
+import re as _re3
+assert not _re3.search(r'col style="width:[0-9.]+fr"', co), \
+    "table col widths must never ship fr units"
+assert 'style="width:44px"' in co and _re3.search(
+    r'col style="width:[0-9.]+%"', co), \
+    "the shelf colgroup must mix px (icons/dates) with % (prose)"
+assert ">.some_cache</b>" not in co, "a dot-dir must never render as a set"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
 # Round 19 (operator verdicts 2026-07-24): the entity column HEADER carries
