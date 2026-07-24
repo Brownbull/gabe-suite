@@ -164,8 +164,6 @@ from _a3_render import (  # noqa: E402  (helpers live beside this module)
     strip_slot_doc_comments,
     table,
     th_label,
-    tinfo,
-    TINFO_SCRIPT,
     trunc,
     xtable,
     kind_ic,
@@ -1003,13 +1001,7 @@ for _d in pdirs:
     _man = _manifest_of(_d)
     _legacy = not _man
     _name_cell = f"<b>{E(_d.name)}</b>" + (
-        ('<br><span class="tag s-med">legacy</span>'
-         + tinfo("predates the center's curate flow — no manifest, no "
-                 "authored description. To integrate: add the set to "
-                 "entities[].proofs in center.config.json (it then renders "
-                 "on that entity's Evidence tab) and author its "
-                 "manifest.json — /gabe-feature curate writes one on the "
-                 "next green run.")) if _legacy else "")
+        '<br><span class="tag s-med t-lg">legacy</span>' if _legacy else "")
     _feat = str(_man.get("feature") or "")
     _story = str((_man.get("narration") or {}).get("story") or "")
     if _feat or _story:
@@ -1022,11 +1014,6 @@ for _d in pdirs:
                  f"tests/web-e2e/proof/{E(_d.name)}/)"
                  if len(_shots) > 3 else "")
         _what = ('<span class="tag s-gap">no manifest</span>'
-                 + tinfo("this set carries no manifest.json, so it has no "
-                         "authored description — /gabe-feature curate "
-                         "writes one (feature · story · legs) after a "
-                         "green run; until then its shot names are the "
-                         "only narration.")
                  + (f'<br><small>shots: {_peek}{_rest}</small>'
                     if _shots else ""))
     _carded = next((o for o in _owners
@@ -1037,19 +1024,11 @@ for _d in pdirs:
                  f"{E(LABELS.get(_carded, _carded))}'s Evidence tab — "
                  "legs + galleries</a>")
     elif _owners:
-        _land = ('<span class="tag s-med">no feature page yet</span>'
-                 + tinfo("the claiming entity is registered but not carded "
-                         "— its Evidence tab appears when the entity is "
-                         "adopted (/gabe-adopt section).", flip=True))
+        _land = '<span class="tag s-med">no feature page yet</span>'
+
     else:
-        _land = ('<span class="tag s-gap">unclaimed</span>'
-                 + tinfo("no entity's proofs list names this set — add it "
-                         "to entities[].proofs in center.config.json and "
-                         "it renders on that entity's Evidence tab with "
-                         "its legs and galleries. A LIKELY badge beside "
-                         "this is a name-pattern guess (the entity's "
-                         "test_rx matched the folder name), never a claim.",
-                         flip=True))
+        _land = '<span class="tag s-gap t-uncl">unclaimed</span>'
+
         _g = _guess_owner(_d.name)
         if _g:
             _land += (' <span class="sub">likely</span> '
@@ -1058,7 +1037,43 @@ for _d in pdirs:
                                      show_name=True) + "</a>")
     _shelf_rows.append([_ecell, _name_cell, _what,
                         str(len(list(_d.glob("*.png")))), _when, _land])
-demo_shelf = (table(
+# The shelf FILTER bar (operator ruling 2026-07-24): entity (owners AND
+# likely guesses — both carry the ent- badge class) · set state
+# (legacy/curated) · claim state. Same select dialect as the ledger bar;
+# hidden rows ride the shared ehide class.
+_shelf_bar = (
+    '<div class="ledbar" id="shelfbar">'
+    '<label><span class="ltit">entity</span><select id="sh-ent">'
+    '<option value="all">all</option>'
+    + "".join(f'<option value="{s["entity"]}">'
+              f'{E(LABELS.get(s["entity"], s["entity"]))}</option>'
+              for s in sections)
+    + "</select></label>"
+    '<label><span class="ltit">set</span><select id="sh-set">'
+    '<option value="all">all</option>'
+    '<option value="legacy">legacy</option>'
+    '<option value="curated">curated</option></select></label>'
+    '<label><span class="ltit">claim</span><select id="sh-claim">'
+    '<option value="all">all</option>'
+    '<option value="claimed">claimed</option>'
+    '<option value="unclaimed">unclaimed</option></select></label>'
+    f'<span class="sub" id="sh-count">{len(pdirs)} set(s)</span></div>')
+_shelf_script = (
+    "<script>(function(){var bar=document.getElementById('shelfbar');"
+    "if(!bar)return;function apply(){"
+    "var ent=document.getElementById('sh-ent').value,"
+    "st=document.getElementById('sh-set').value,"
+    "cl=document.getElementById('sh-claim').value,n=0;"
+    "[].slice.call(document.querySelectorAll("
+    "'#shelf table.tbl tbody tr')).forEach(function(r){"
+    "var ok=(ent==='all'||!!r.querySelector('.ent-'+ent))"
+    "&&(st==='all'||((st==='legacy')===!!r.querySelector('.t-lg')))"
+    "&&(cl==='all'||((cl==='unclaimed')===!!r.querySelector('.t-uncl')));"
+    "r.classList.toggle('ehide',!ok);if(ok)n++;});"
+    "var c=document.getElementById('sh-count');"
+    "if(c)c.textContent=n+' set(s)';}"
+    "bar.addEventListener('change',apply);})();</script>")
+demo_shelf = (_shelf_bar + '<div id="shelf">' + table(
     [ENT_COL, "Proof set", "What it shows", "Shots", "Newest",
      "Where it lands"],
     _shelf_rows, num={3},
@@ -1071,7 +1086,7 @@ demo_shelf = (table(
          "curate). A set is claimed by entities[].proofs in "
          "center.config.json and renders in full on its entity's Evidence "
          "tab; an unclaimed set is surface area for the next adoption.")
-    + TINFO_SCRIPT
+    + "</div>" + _shelf_script
 ) if pdirs else gap("Demo shelf", "tests/web-e2e/proof/")
 
 # --------------------------------------------------------------------------- #
@@ -1737,7 +1752,26 @@ def render_testing() -> dict[str, str]:
                   sub="human-curated proof of the journey kind — each set "
                       "is claimed by an entity and renders in full on that "
                       "entity's Evidence tab",
-                  id_="sec-tests-shelf")
+                  id_="sec-tests-shelf",
+                  info=legend("Row vocabulary:", [
+                      ("s-med", "legacy",
+                       "no manifest — the set predates the curate flow ·"),
+                      ("s-gap", "no manifest",
+                       "no authored description; the shot names are the "
+                       "only narration ·"),
+                      ("s-gap", "unclaimed",
+                       "no entity's proofs list names this set")])
+                  + '<div class="leg">To INTEGRATE a legacy set: add it '
+                    "to <code>entities[].proofs</code> in "
+                    "center.config.json — it then renders on that "
+                    "entity's Evidence tab with its legs and galleries — "
+                    "and author its manifest.json (/gabe-feature curate "
+                    "writes one on the next green run). A <b>likely</b> "
+                    "badge is a name-pattern guess (the entity's test_rx "
+                    "matched the folder name), never a claim. The entity "
+                    "filter matches owners and likely guesses alike; a "
+                    "set with no feature page yet lights up when its "
+                    "entity is adopted.</div>")
         + demo_shelf)
 
     # The case LEDGER (rulings R1–R3, 2026-07-24): the C-id is the row and

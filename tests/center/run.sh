@@ -691,10 +691,21 @@ assert "What it shows" in co and "Gadget scan walk" in co \
     "a curated set must show its manifest's feature + story"
 assert ">no manifest<" in co[co.find(">stray</b>"):][:900], \
     "a manifest-less set must name that gap in What-it-shows"
-assert 'class="tinfo"' in co[co.find(">stray</b>"):][:900], \
-    "the unclaimed/no-manifest prose must ride the ⓘ popover, not the row"
-assert 'class="tclose"' in co and "d2._t=setTimeout" in co, \
-    "the shelf page must ship the ⓘ close/auto-dismiss behavior"
+# Round 28: row popovers RETIRED on the shelf (three open ⓘs covered each
+# other) — the vocabulary + integration recipe live in the sechead ⊕, rows
+# keep bare tags with filter marker classes, and the bar filters by
+# entity · set state · claim state via the shared ehide class.
+assert 'class="tinfo"' not in co, \
+    "shelf rows must not carry popovers — the ⊕ holds the vocabulary"
+assert "entities[].proofs" in co and "never a claim" in co, \
+    "the ⊕ must carry the integration recipe + the likely-badge honesty"
+assert 'id="shelfbar"' in co and 'id="sh-ent"' in co \
+    and 'id="sh-set"' in co and 'id="sh-claim"' in co, \
+    "shelf filter bar (entity · set · claim) missing"
+assert 't-lg">legacy<' in co and 't-uncl">unclaimed<' in co, \
+    "filter marker classes must ride the tags"
+assert "classList.toggle('ehide'" in co and 'id="sh-count"' in co, \
+    "the shelf filter must hide via ehide and keep the live count"
 # Round 25: pinned widths must reach the browser — fr is grid vocabulary,
 # a real <col> needs px/% (equal-column fallback was the cramped shelf);
 # dot-dirs are tool residue, never proof sets.
@@ -705,10 +716,8 @@ assert 'style="width:44px"' in co and _re3.search(
     r'col style="width:[0-9.]+%"', co), \
     "the shelf colgroup must mix px (icons/dates) with % (prose)"
 assert ">.some_cache</b>" not in co, "a dot-dir must never render as a set"
-# Round 26: a right-edge ⓘ opens bottom-LEFT (tflip) so the table edge
-# cannot clip it; the css must carry the flip rule.
-assert 'class="tinfo tflip"' in co[co.find(">stray</b>"):][:2400], \
-    "the Where-it-lands popover must open leftward (tflip)"
+# The tflip capability stays in the css for the ledger's right-edge ⓘs
+# (the shelf itself no longer carries popovers — round 28).
 assert ".tinfo.tflip .tx" in (c / "assets" / "a3.css").read_text(), \
     "a3.css must ship the tflip rule"
 # Round 27: legacy sets are IDENTIFIED and made legible for integration —
@@ -724,7 +733,8 @@ assert ">likely</span>" in _wlw and "ent-gadget" in _wlw, \
     "the name-pattern owner guess must render as the labeled LIKELY badge"
 assert ">legacy<" not in co[co.find(">g1</b>"):co.find(">stray</b>")], \
     "a curated set must never wear the legacy tag"
-assert ">likely</span>" not in co[co.find(">stray</b>"):][:900], \
+assert ">likely</span>" not in \
+    co[co.find(">stray</b>"):co.find(">widget-legacy-walk</b>")], \
     "no guess when no entity pattern matches the name"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
