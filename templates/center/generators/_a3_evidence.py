@@ -18,6 +18,7 @@ import re
 from pathlib import Path
 
 import _center_data as _cd
+import re as _re
 from _a3_render import E, legend, md, pmore, sechead, subnav, table, trunc, xtable
 
 _CENTER_REL = _cd._PATHS.get("center", "docs/site/center")
@@ -467,7 +468,8 @@ def _set_detail(s: dict, story: str = "") -> str:
     return out
 
 
-def build_evidence_tab(cov: dict, label: str = "this entity") -> str:
+def build_evidence_tab(cov: dict, label: str = "this entity",
+                       repo=None, corpora: list | None = None) -> str:
     """The Evidence tab for one entity, rendered from collect_coverage(): a
     header table of its proof sets — each row carrying its ROLE (principal ·
     edge · reference · supporting, or unclassified) and opening onto its own
@@ -515,8 +517,17 @@ def build_evidence_tab(cov: dict, label: str = "this entity") -> str:
             f'<small>{E(trunc(str(man.get("feature", "no manifest")), 60))}</small>',
             _role_cell(s["cls"]), counts, captured, state]
         # Click the row to open the galleries in place (no separate button); a
-        # set with nothing on disk stays a flat, un-expandable row.
-        rows.append((cells, _set_detail(s, _story) if n_media else ""))
+        # set with nothing on disk stays a flat, un-expandable row. The
+        # EVIDENCE SEAM leads the detail: the spec's C-ids (ledger rows on
+        # this page) and what its files touch — or the named gap.
+        _verify = ""
+        if repo is not None and corpora and n_media:
+            import _a3_ledger
+            _verify = _a3_ledger.proof_verification_html(
+                repo, man.get("spec"), corpora)
+        _rid = "ev-" + _re.sub(r"[^A-Za-z0-9]+", "-", s["name"]).strip("-")
+        rows.append((cells, (_verify + _set_detail(s, _story))
+                     if n_media else "", _rid))
 
     # One placeholder per UNPROVEN card flow — the golden path with no proof is
     # a visible row and an action item, never a blank between the rows above.

@@ -1314,7 +1314,8 @@ def build_feature_pages(ctx) -> list[str]:
         # ONE entity's Evidence tab to a named gap, never aborts the whole build.
         try:
             evidence = build_evidence_tab(
-                _cov, ctx.labels.get(slug, slug).lower())
+                _cov, ctx.labels.get(slug, slug).lower(),
+                repo=ctx.repo_root, corpora=ctx.corpora)
         except Exception as _ev_err:                       # noqa: BLE001
             print(f"    ⚠ feature-{slug}.html Evidence tab degraded to a gap: "
                   f"{type(_ev_err).__name__}: {_ev_err}")

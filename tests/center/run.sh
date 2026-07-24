@@ -170,8 +170,10 @@ png = base64.b64decode(
 g1 = root / "tests/web-e2e/proof/g1"
 g1.mkdir(parents=True)
 (g1 / "01-walk.png").write_bytes(png)
+# The spec points at a CAPTURED test file — the evidence seam joins it to
+# the corpus record (C14) and renders the Verified-by line.
 (g1 / "manifest.json").write_text(json.dumps(
-    {"feature": "Gadget scan walk", "spec": "g1.spec.ts",
+    {"feature": "Gadget scan walk", "spec": "tests/widget.test.ts",
      "proof_form": "recorded journey", "source_run": "local 2026-07-22",
      "role": "principal", "flows": ["scan"],
      "legs": {"walk": ["01"]},
@@ -600,6 +602,13 @@ assert ">running<" in f and "Cases · C-ids" not in f, \
     "claims must join the fixture class and drop the cases column"
 assert '<a class="cid" href="#C12">' in f, \
     "claim fold C-ids must link their ledger rows"
+# The EVIDENCE SEAM: g1's spec joins the corpus (C14 pill -> ledger row);
+# the manifest-less solo set reads its named gap; sets carry anchors.
+assert "<b>Verified by</b> <code>tests/widget.test.ts</code>" in f \
+    and 'href="#C14"' in f, "evidence seam: spec must join its C-ids"
+assert "no spec pointer joins the corpus record" in f, \
+    "a set without a joinable spec must read its named gap"
+assert 'id="ev-g1"' in f, "proof sets need anchors (the reverse link's target)"
 assert 'id="sec-tests-gaps"' in f and "lonely_helper" in f, \
     "entity Untested-surface section missing"
 assert 'id="sec-tests-elements"' not in f, \

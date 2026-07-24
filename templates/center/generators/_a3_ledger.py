@@ -547,6 +547,86 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
     return html
 
 
+def proof_verification(repo: Path, spec_val, corpora: list) -> dict | None:
+    """The EVIDENCE SEAM (stage 3, operator go 2026-07-25): a proof-set
+    manifest's `spec` joined to the corpus record. Tolerant of prose around
+    the pointer — the first path-looking token is the join key; a FILE
+    matches junit keys by suffix, a DIRECTORY matches every junit file under
+    it. None when nothing joins (the caller renders the named gap)."""
+    if not isinstance(spec_val, str) or not spec_val.strip():
+        return None
+    m = re.search(r"[A-Za-z0-9_][A-Za-z0-9_./-]*", spec_val)
+    if not m:
+        return None
+    tok = m.group(0).rstrip("/.")
+    import _center_data as D
+    ti = _a3_tests.test_insight(repo)
+    cids: list[str] = []
+    eps: list[dict] = []
+    mdls: list[str] = []
+    nfiles = ncases = 0
+    for c in corpora:
+        j = D.load_junit(c["key"])
+        if not j:
+            continue
+        for jf, rec in j["files"].items():
+            if not (jf == tok or jf.endswith("/" + tok)
+                    or jf.startswith(tok + "/") or f"/{tok}/" in jf):
+                continue
+            nfiles += 1
+            ncases += rec["tests"]
+            for case in rec["cases"]:
+                mm = _CID_RX.search(case["name"])
+                if mm and f"C{mm.group(1)}" not in cids:
+                    cids.append(f"C{mm.group(1)}")
+            tfile = _tfile_of(jf, ti["exercises"])
+            ex = ti["exercises"].get(tfile) if tfile else None
+            if ex:
+                for ch in ex.get("endpoints", []):
+                    if ch not in eps:
+                        eps.append(ch)
+                for nm in ex.get("models", []):
+                    if nm not in mdls:
+                        mdls.append(nm)
+    if not nfiles:
+        return None
+    cids.sort(key=lambda x: int(x[1:]))
+    return {"tok": tok, "files": nfiles, "cases": ncases,
+            "cids": cids, "endpoints": eps, "models": mdls}
+
+
+def proof_verification_html(repo: Path, spec_val, corpora: list) -> str:
+    """The `Verified by` line for a proof-set row: the spec's C-id pills
+    landing on the ledger rows of the SAME page, plus the endpoints/models
+    the spec's files touch (file-tier chips into the code estate). A set
+    whose manifest names no joinable spec reads its named gap — evidence
+    without a corpus record is narrative, and says so."""
+    pv = proof_verification(repo, spec_val, corpora)
+    if pv is None:
+        return ('<p class="sub" style="margin:2px 0 8px"><b>Verified by</b> '
+                "— no spec pointer joins the corpus record (the manifest "
+                "names no captured test file).</p>")
+    pills = " ".join(f'<a class="cid" href="#C{x[1:]}">{E(x)}</a>'
+                     for x in pv["cids"][:12])
+    if len(pv["cids"]) > 12:
+        pills += f' <span class="sub">+{len(pv["cids"]) - 12} more</span>'
+    chips = "".join(_ep_chip(c, "lc-ep lc-via",
+                             "the spec's file touches this route (file-tier)")
+                    for c in pv["endpoints"][:6])
+    chips += "".join(_dm_chip(nm, "lc-mdl lc-via",
+                              "used somewhere in the spec's file")
+                     for nm in pv["models"][:6])
+    hidden = (max(0, len(pv["endpoints"]) - 6)
+              + max(0, len(pv["models"]) - 6))
+    if hidden:
+        chips += f'<span class="lchip lc-more">+{hidden} more</span>'
+    return (f'<p class="sub" style="margin:2px 0 8px"><b>Verified by</b> '
+            f'<code>{E(pv["tok"])}</code> — {pv["cases"]} case(s) in '
+            f'{pv["files"]} file(s): '
+            + (pills or "no C-ids minted")
+            + (f"<br><b>touches</b> {chips}" if chips else "") + "</p>")
+
+
 def _bar(app: bool, ents: list, labels: dict, kinds: list, tags: list,
          feeds: dict, total: int) -> str:
     """The dropdown filter bar (R2): selects for the small vocabularies,
