@@ -231,6 +231,13 @@ stray.mkdir()
 cache = root / "tests/web-e2e/proof/.some_cache"
 cache.mkdir()
 (cache / "junk.png").write_bytes(png)
+# A LEGACY set whose folder name matches an entity's test_rx: the shelf
+# must wear the legacy tag, narrate through its shot names (3 + the
+# named-path rest), and suggest the LIKELY owner.
+wlw = root / "tests/web-e2e/proof/widget-legacy-walk"
+wlw.mkdir()
+for _i, _nm in enumerate(["01-open", "02-fill", "03-save", "04-done"]):
+    (wlw / f"{_nm}.png").write_bytes(png)
 # Pre-commit gates: a well-known id (curated one-liner) + a local hook that
 # describes itself through its own `name:` line.
 (root / ".pre-commit-config.yaml").write_text(
@@ -673,7 +680,7 @@ assert "What it does" in co \
     "gates must describe themselves (curated id + yaml name fallback)"
 assert 'href="feature-gadget.html#ev-g1"' in co, \
     "a claimed proof set must link its entity's Evidence anchor"
-assert ">stray</b>" in co and ">unclaimed<" in co[co.find(">stray</b>"):][:600], \
+assert ">stray</b>" in co and ">unclaimed<" in co[co.find(">stray</b>"):][:2400], \
     "an unclaimed proof set must be NAMED unclaimed on the shelf"
 assert "<title>entity</title>" in co, "the shelf entity column needs its glyph"
 # Round 24: the shelf explains each SET (What it shows = the manifest's own
@@ -700,10 +707,25 @@ assert 'style="width:44px"' in co and _re3.search(
 assert ">.some_cache</b>" not in co, "a dot-dir must never render as a set"
 # Round 26: a right-edge ⓘ opens bottom-LEFT (tflip) so the table edge
 # cannot clip it; the css must carry the flip rule.
-assert 'class="tinfo tflip"' in co[co.find(">stray</b>"):][:900], \
+assert 'class="tinfo tflip"' in co[co.find(">stray</b>"):][:2400], \
     "the Where-it-lands popover must open leftward (tflip)"
 assert ".tinfo.tflip .tx" in (c / "assets" / "a3.css").read_text(), \
     "a3.css must ship the tflip rule"
+# Round 27: legacy sets are IDENTIFIED and made legible for integration —
+# the legacy tag, the shot-name narration (3 + named-path rest), and the
+# LIKELY owner guessed from the entity test_rx (a labeled guess, never a
+# claim). A curated set (g1) must NOT wear the tag.
+_wlw = co[co.find(">widget-legacy-walk</b>"):][:2400]
+assert ">legacy<" in _wlw, "a manifest-less set must wear the legacy tag"
+assert "shots: 01-open · 02-fill · 03-save" in _wlw \
+    and "(+1 more in tests/web-e2e/proof/widget-legacy-walk/)" in _wlw, \
+    "legacy narration must peek the shot names and NAME where the rest live"
+assert ">likely</span>" in _wlw and "ent-gadget" in _wlw, \
+    "the name-pattern owner guess must render as the labeled LIKELY badge"
+assert ">legacy<" not in co[co.find(">g1</b>"):co.find(">stray</b>")], \
+    "a curated set must never wear the legacy tag"
+assert ">likely</span>" not in co[co.find(">stray</b>"):][:900], \
+    "no guess when no entity pattern matches the name"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
 # Round 19 (operator verdicts 2026-07-24): the entity column HEADER carries

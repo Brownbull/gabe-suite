@@ -975,6 +975,17 @@ def _manifest_of(d: Path) -> dict:
     return {}
 
 
+def _guess_owner(name: str) -> str:
+    """The LIKELY entity for an unclaimed set — its folder name run through
+    the SAME registry regexes that claim test files. A machine guess for
+    the integration pass, always labeled as one, never dressed as a claim."""
+    for _gs, _grx in ENTITY_RX.items():
+        with contextlib.suppress(re.error):
+            if re.search(_grx, name, re.I):
+                return _gs
+    return ""
+
+
 _shelf_rows = []
 for _d in pdirs:
     _owners = _set_owners.get(_d.name, [])
@@ -985,21 +996,39 @@ for _d in pdirs:
         f'<a href="{_entity_href(o)}">'
         + entity_badge(o, LABELS.get(o, o), 13) + "</a>" for o in _owners)
     # WHAT the set shows — the manifest's own words (feature + story),
-    # written by /gabe-feature curate after the green run. No manifest =
-    # the folder name is all there is, and the row says so.
+    # written by /gabe-feature curate after the green run. A set with NO
+    # manifest predates the flow: it wears the LEGACY identifier, and the
+    # closest thing it has to a story — its own numbered shot names — is
+    # shown so the integration pass knows what it is looking at.
     _man = _manifest_of(_d)
+    _legacy = not _man
+    _name_cell = f"<b>{E(_d.name)}</b>" + (
+        ('<br><span class="tag s-med">legacy</span>'
+         + tinfo("predates the center's curate flow — no manifest, no "
+                 "authored description. To integrate: add the set to "
+                 "entities[].proofs in center.config.json (it then renders "
+                 "on that entity's Evidence tab) and author its "
+                 "manifest.json — /gabe-feature curate writes one on the "
+                 "next green run.")) if _legacy else "")
     _feat = str(_man.get("feature") or "")
     _story = str((_man.get("narration") or {}).get("story") or "")
     if _feat or _story:
         _what = ((f"<b>{E(_feat)}</b>" if _feat else "")
                  + (f"<br><small>{E(_story)}</small>" if _story else ""))
     else:
+        _shots = sorted(p.stem for p in _d.glob("*.png"))
+        _peek = " · ".join(E(s) for s in _shots[:3])
+        _rest = (f" (+{len(_shots) - 3} more in "
+                 f"tests/web-e2e/proof/{E(_d.name)}/)"
+                 if len(_shots) > 3 else "")
         _what = ('<span class="tag s-gap">no manifest</span>'
                  + tinfo("this set carries no manifest.json, so it has no "
                          "authored description — /gabe-feature curate "
                          "writes one (feature · story · legs) after a "
-                         "green run; until then the folder name is all "
-                         "there is."))
+                         "green run; until then its shot names are the "
+                         "only narration.")
+                 + (f'<br><small>shots: {_peek}{_rest}</small>'
+                    if _shots else ""))
     _carded = next((o for o in _owners
                     if _entity_href(o).startswith("feature-")), "")
     if _carded:
@@ -1017,8 +1046,17 @@ for _d in pdirs:
                  + tinfo("no entity's proofs list names this set — add it "
                          "to entities[].proofs in center.config.json and "
                          "it renders on that entity's Evidence tab with "
-                         "its legs and galleries.", flip=True))
-    _shelf_rows.append([_ecell, f"<b>{E(_d.name)}</b>", _what,
+                         "its legs and galleries. A LIKELY badge beside "
+                         "this is a name-pattern guess (the entity's "
+                         "test_rx matched the folder name), never a claim.",
+                         flip=True))
+        _g = _guess_owner(_d.name)
+        if _g:
+            _land += (' <span class="sub">likely</span> '
+                      f'<a href="{_entity_href(_g)}">'
+                      + entity_badge(_g, LABELS.get(_g, _g), 13,
+                                     show_name=True) + "</a>")
+    _shelf_rows.append([_ecell, _name_cell, _what,
                         str(len(list(_d.glob("*.png")))), _when, _land])
 demo_shelf = (table(
     [ENT_COL, "Proof set", "What it shows", "Shots", "Newest",
