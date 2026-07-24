@@ -387,7 +387,8 @@ def test_insight(repo: Path) -> dict:
                         if u not in ex["uses"]:
                             ex["uses"].append(u)
                 fref = {"cid": "", "name": f"{len(rec['cases'])} case(s)",
-                        "state": "file", "corpus": corpus, "tfile": tfile}
+                        "state": "file", "corpus": corpus, "tfile": tfile,
+                        "n": len(rec["cases"])}
                 for lit in set(_ROUTE_RX.findall(src)):
                     segs = ["*" if ("{" in s or "$" in s) else s
                             for s in _segs(lit)]

@@ -98,6 +98,9 @@ c = root / center_rel
     'export const WIDGET_KIND = "w";\n')
 (root / "tests" / "widget.test.ts").write_text(
     'import { planWidget, WIDGET_KIND } from "../src/widget";\n\n'
+    # A route literal: the endpoint gains a FILE-level web receipt, so the
+    # fold's arithmetic rows (N file(s) · M case(s)) have a FIRE case.
+    'const url = "/gadgets/one";\n\n'
     'it("arms", () => planWidget(WIDGET_KIND));\n')
 (root / "tests" / "results" / "web-junit.xml").write_text(
     '<testsuites><testsuite name="vitest" timestamp="2026-07-23T00:00:00">'
@@ -532,7 +535,8 @@ assert "<b>Models used</b>" in html, "Models-used titled section missing"
 assert '<th>Model</th><th>Role</th>' in html, "MODELS USED must be a table"
 assert 'l-api">' in html and "</svg> integration" in html, \
     "kind chip must carry its center-wide icon + color"
-assert "via route · 1" in html, "handler via-route credit missing"
+assert "via route · 2" in html, \
+    "handler via-route credit missing (C11 + the web file receipt)"
 assert ">C11</span>" in html and ">C12</span>" in html, "C-id receipts missing"
 assert "no case" in html, "untested-function gap chip missing"
 assert "cov —" in html, "coverage named-gap chip missing"
@@ -631,6 +635,12 @@ assert "test-matrix.html?led-fn=make_gid%28%29#sec-tests-cases" in f, \
     "fn Tested-by must link the function-filtered ledger"
 assert "test-matrix.html?led-ep=GET%20%2Fgadgets%2Fone#sec-tests-cases" in f, \
     "endpoint fold must link the route-filtered ledger"
+# The receipts ARITHMETIC stays visible (operator, round 13): file-level
+# rows carry their case counts, the Tests title totals them.
+assert "1 file(s) · 1 case(s)" in f, \
+    "file-level receipt rows must state their case count"
+assert "(2 case(s))</span>" in f, \
+    "the endpoint Tests title must total its receipts in parenthesis"
 assert "URLSearchParams" in m, "the ledger must pre-apply URL-param filters"
 assert _re2.search(r'id="C11"[^>]*data-mdl="[^"]*gadgetout', m), \
     "T2 route credits must join the filter surface (C11 -> GadgetOut)"

@@ -873,6 +873,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     _STATE_CHIP = {"pass": "s-ok", "fail": "s-high", "skip": "s-gap"}
 
+    def _ref_count(refs: list) -> str:
+        """Receipts arithmetic for a tier label: case counts always visible,
+        file-level rows counted in BOTH units (operator, round 13)."""
+        if refs and refs[0]["state"] == "file":
+            n = sum(r.get("n") or 0 for r in refs)
+            return (f"{len(refs)} file(s)"
+                    + (f" · {n} case(s)" if n else ""))
+        return f"{len(refs)} case(s)"
+
     def _ref_table(refs: list, see_all: str = "") -> str:
         if refs and refs[0]["state"] == "file":
             rows = "".join(
@@ -1142,13 +1151,20 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        + models_tbl)
         _refs_by = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
         if _refs_by:
-            _srows = ""
+            _srows, _tot = "", 0
             for c2, refs in sorted(_refs_by.items()):
                 kind = _ckind.get(c2, c2)
                 if refs and refs[0]["state"] == "file":
-                    vol, st = f"{len(refs)} file(s)", "file-level receipts"
+                    # File-level receipts carry their CASE counts too — the
+                    # arithmetic the filtered ledger lands on stays visible.
+                    _fn_cases = sum(r.get("n") or 0 for r in refs)
+                    _tot += _fn_cases
+                    vol = (f"{len(refs)} file(s)"
+                           + (f" · {_fn_cases} case(s)" if _fn_cases else ""))
+                    st = "file-level receipts"
                 else:
                     npass = sum(1 for r in refs if r["state"] == "pass")
+                    _tot += len(refs)
                     vol = f"{len(refs)} case(s)"
                     st = (f"{npass} pass"
                           + (f" · {len(refs) - npass} not passing"
@@ -1160,7 +1176,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             _tm = ("test-matrix.html?led-ep="
                    + _uq(f'{e["method"]} {e["path"]}', safe="")
                    + "#sec-tests-cases")
-            detail += (_dmh("#15803d", "fn", "Tests", "")
+            detail += (_dmh("#15803d", "fn", "Tests",
+                            f' <span class="sub">({_tot} case(s))</span>')
                        + '<table class="tbl"><thead><tr><th>Kind</th>'
                          "<th>Volume</th><th>State</th></tr></thead><tbody>"
                        + _srows + "</tbody></table>"
@@ -1490,7 +1507,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                             ("via route", _tb.get("via_route") or [])):
             if _refs:
                 tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
-                            f"<b>{_lbl}</b> ({len(_refs)})</p>"
+                            f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
                             + _ref_table(_refs,
                                          "test-matrix.html?led-mdl="
                                          + _uq(cls, safe="")
@@ -1876,7 +1893,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                 ("via route", _tb.get("via_route") or [])):
                 if _refs:
                     tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
-                                f"<b>{_lbl}</b> ({len(_refs)})</p>"
+                                f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
                                 + _ref_table(_refs, _seeall))
             if tb_html:
                 tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
