@@ -177,3 +177,55 @@ NEXT (ruled at wrap-up): the app-wide tests.html STATION still carries the
 old matrix · evidence · gates tabs — replace with: overview + kinds &
 coverage + an entity × testing-kind matrix, and estate sections mirroring
 the entity tabs (cases · files · claims · untested).
+
+## v5 — the TESTING ESTATE (rounds 17–29 + wrap-up, 2026-07-24)
+
+The station rework ruled at v4's wrap-up, grown through thirteen
+operator-verdict rounds (`8b74f78`..wrap-up) into the estate every Gabe
+Suite project now generates:
+
+- **tests.html = the estate DASHBOARD** (single-lens): estate cards
+  (Cases · Files · Claims · Untested · Corpora & gates) · app-wide Kinds
+  & coverage (the coverage row shows wired-reporter repo percentages) ·
+  the entity × kind riskgrid. One `test-*` page per section; the sidebar
+  Testing group carries five icon'd navsubitems (Code-group layout,
+  entity-tab icons); every estate page wears the sticky estate MENU
+  (current marked, `.stickstack` above the entity bar) and marks its
+  sidebar subitem. The same menu treatment covers the six architecture
+  pages.
+- **Parity app ↔ entity**: Files rows open to their cases, Claims is the
+  real app-wide claim table (entity col + folds), C-id pills cross pages
+  via `cid_base` onto the canonical `test-matrix.html#C<n>`; the fold
+  SPINE is invariant (named gaps: `unclaimed` · `no app joins`); every
+  icon-only entity column heads with the Entity-index glyph (`ENT_COL`).
+- **The honesty upgrades**: "unmapped imports" TBD row (an import
+  resolving to a real repo file no entity registers — gastify: 1,209
+  actionable vs 31 true-infra "no app joins"); pytest `>`-parametrize
+  identity fix (C494); corpora "What it verifies" + gates "What it does"
+  (curated ids / the hook's own yaml name / CI job names); the demo
+  shelf knows its owners (Evidence-tab links), describes each set from its
+  manifest (feature + story), tags `legacy`, narrates through shot
+  names, guesses the `likely` owner via ENTITY_RX, and filters by
+  entity · set · claim. Component fixes en route: table() fr→% col
+  widths (every pinned table had rendered equal columns), tinfo/tflip
+  shared ⓘ, dot-dir filter.
+- **Verification per round**: battery 73/73 (fixture grew C15/C16/C17,
+  stray/legacy/cache proof dirs, pre-commit yaml) · chrome 10/10 ·
+  doctor CLEAN · twin-lab regens + the LAB SWEEP (ad-hoc crawler — the
+  argv-less check_center_links sweeps the COMMITTED center, a r18
+  finding; the lab sweep caught C494) · 16 example snapshots + the
+  curated exemplar, fully self-navigating.
+
+### Twin-propagation checklist (ruled READY, not yet pushed)
+
+1. Regenerate both centers with the landed generators (gastify
+   `center/loop2-post-trial-contract`, gustify `staging`).
+2. Q2 addendum: mint C-ids into unminted cases (gastify 3, gustify 35).
+3. gustify `corpora[].aliases` (lights uses·T3: 7 rows vs gastify 148).
+4. gastify e2e junit capture (lights the evidence seam's 20 named gaps).
+5. Entity CODE registration (gastify: 2/7 entities registered, archmap
+   knows 31/180 web files) — burns the 1,209 unmapped-import TBD rows.
+6. Proof-set claiming (`entities[].proofs`) + manifest backfill: 55
+   legacy sets (30 pre-routed by the likely badge), 8 claim-only wins.
+7. Handshake spec deep-work: CLAIMS grammar, red-spec downstream
+   readers, adopt-spec floor.

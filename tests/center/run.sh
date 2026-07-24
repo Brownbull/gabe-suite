@@ -664,6 +664,13 @@ for pg, lbl in (("test-matrix.html", "Cases"), ("test-files.html", "Files"),
 assert 'class="navsub"><a href="test-' not in idx, \
     "the plain-text navsub is retired for the Code-group layout"
 assert "tests.html#tab-" not in idx, "the old tab navsub must be gone"
+# Wrap-up sweep: the hub lens tabs must not point at retired homes — the
+# shelf lives on the machinery page, the old matrix/gates/angles wording
+# is gone from the Tests rollup.
+assert 'href="test-corpora.html#sec-tests-shelf"' in idx, \
+    "the hub Evidence lens must point the shelf at its machinery home"
+assert "gates and angles" not in idx and "Tests → Evidence" not in idx, \
+    "stale old-station prose must be gone from the hub lenses"
 co = (c / "test-corpora.html").read_text()
 assert 'id="sec-tests-walks"' in co, \
     "walks need their anchored home on the machinery page (the manual kind row lands here)"
@@ -764,6 +771,8 @@ for est, cur in (("test-matrix.html", "Cases"),
         f"{est}: estate menu with the overview link missing"
     assert f'class="on" href="{est}"' in eh, \
         f"{est}: the menu must mark the current page"
+    assert f'class="navitem navsubitem on" href="{est}"' in eh, \
+        f"{est}: the SIDEBAR subitem must mark the current page too"
 m = (c / "test-matrix.html").read_text()
 assert 'id="ledbar"' in m and "<select" in m and "<datalist" in m, \
     "dropdown filter bar missing (R2)"

@@ -1120,8 +1120,9 @@ entity_grid = table(
 
 _corpus_meta = [(c["key"], c["runner"], junit_by.get(c["key"])) for c in CORPORA]
 tab_tests = (
-    '<p class="sub">Corpus rollup — one row per corpus. The full matrix, gates '
-    'and angles live on <a href="tests.html">Tests</a>.</p>'
+    '<p class="sub">Corpus rollup — one row per corpus. The estate dashboard '
+    '(kinds &amp; coverage, the entity × kind matrix, the estate cards) '
+    'lives on <a href="tests.html">Tests</a>.</p>'
     + table(["Corpus", "Runner", "Files", "Tests", "Failed", "Skipped", "Last run"],
             [[f"<b>{E(n)}</b>", E(runner), str(len(j["files"])), f'{j["total"]:,}',
               str(j["failed"]), str(j["skipped"]), E(D.rel_age(j.get("ranAt")))]
@@ -1166,8 +1167,10 @@ tab_evidence = (
               E(str(d.get("timestamp_utc", ""))[:16].replace("T", " "))] for n, d in digests],
             num={1, 2, 3, 4, 5},
             note="Absent digest = the run left no machine record.")
-    + '<p class="sub">Latest proof sets — newest first. Full shelf on '
-      '<a href="tests.html">Tests → Evidence</a>.</p>'
+    + '<p class="sub">Latest proof sets — newest first. The full shelf '
+      '(owners, descriptions, filters) lives on '
+      '<a href="test-corpora.html#sec-tests-shelf">Corpora &amp; gates → '
+      "Demo shelf</a>.</p>"
     + table(["Proof set", "Shots", "Newest"], _proof_rows, num={1},
             note=f"{len(pdirs)} proof set(s) on disk · showing {len(_proof_rows)}."))
 
@@ -1637,7 +1640,8 @@ def render_testing() -> dict[str, str]:
     base_skel = strip_slot_doc_comments(
         (SHELL_SRC / "architecture.html").read_text())
 
-    def _tpage(fname: str, title: str, sub: str, body: str) -> str:
+    def _tpage(fname: str, title: str, sub: str, body: str,
+               current: str = "") -> str:
         h = base_skel
         fills = {**SHARED, "{{SIDEBAR_CODE}}": _sidebar_code(),
                  "{{ARCH_KPIS}}": "", "{{ARCH_BODY}}": body}
@@ -1649,6 +1653,13 @@ def render_testing() -> dict[str, str]:
         h = h.replace("<h1>Architecture</h1>",
                       f"<h1>{title}</h1>"
                       f'<p class="sub" style="margin-top:2px">{sub}</p>')
+        # The sidebar marks the page you are ON — the arch estate already
+        # does this through _sidebar_code(current=...); the Testing
+        # subitems are static, so the mark lands here.
+        if current:
+            h = h.replace(
+                f'class="navitem navsubitem" href="{current}"',
+                f'class="navitem navsubitem on" href="{current}"')
         return h
 
     ents = [s["entity"] for s in sections]
@@ -1818,13 +1829,15 @@ def render_testing() -> dict[str, str]:
             "Untested", "Untested",
             "the untested surface: endpoints, models and functions no case "
             "or spec touches, entity-filterable",
-            sticky_stack(_esub("test-elements.html"), bar) + gaps_body),
+            sticky_stack(_esub("test-elements.html"), bar) + gaps_body,
+            current="test-elements.html"),
         "test-matrix.html": _tpage(
             "Cases", "Cases",
             "the case ledger — every identity with its C-id anchor and "
             "exercises chips, element-filterable; the file altitude lives "
             "on the Files page",
-            _esub("test-matrix.html") + ledger_body),
+            _esub("test-matrix.html") + ledger_body,
+            current="test-matrix.html"),
         # Files gets its OWN page (operator ruling 2026-07-24: one page per
         # estate section, the Code-group treatment) — the entity filter bar
         # rides on top, the anchor keeps its sec-tests-files identity.
@@ -1833,17 +1846,20 @@ def render_testing() -> dict[str, str]:
             "the file altitude — every test file with its ratios, flags "
             "and claim state, entity-filterable; open a row to read the "
             "cases inside it",
-            sticky_stack(_esub("test-files.html"), bar) + files_section),
+            sticky_stack(_esub("test-files.html"), bar) + files_section,
+            current="test-files.html"),
         "test-claims.html": _tpage(
             "Test claims", "Claims",
             "the authored coverage, verified app-wide — open a claim to "
             "read its cases, filter by entity",
-            sticky_stack(_esub("test-claims.html"), bar) + claims_body),
+            sticky_stack(_esub("test-claims.html"), bar) + claims_body,
+            current="test-claims.html"),
         "test-corpora.html": _tpage(
             "Corpora & gates", "Corpora & gates",
             "the machinery — report sources, the gates in front of a "
             "commit, the run history, the recorded walks, and the demo "
-            "shelf", _esub("test-corpora.html") + corpora_body),
+            "shelf", _esub("test-corpora.html") + corpora_body,
+            current="test-corpora.html"),
     }
 
 
