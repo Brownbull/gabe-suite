@@ -875,13 +875,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         return (f'<table class="tbl"><thead><tr>{head}</tr></thead>'
                 f"<tbody>{rows}</tbody></table>{more}")
 
-    def _kind_blocks(refs_by: dict) -> str:
-        return "".join(
-            f'<p class="sub" style="margin:8px 0 4px">'
-            f'{kind_tag(_ckind.get(c2, c2), _kcls.get(_ckind.get(c2, c2), ""))}'
-            f' <span class="sub">({len(refs)})</span></p>' + _ref_table(refs)
-            for c2, refs in sorted(refs_by.items()))
-
     def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
         """A titled subsection head inside the row detail — icon + colored
         label, so each block (usage · structure) is identifiable at a
@@ -1128,8 +1121,28 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        + models_tbl)
         _refs_by = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
         if _refs_by:
-            detail += _dmh("#15803d", "fn", "Tests", "") \
-                + _kind_blocks(_refs_by)
+            _srows = ""
+            for c2, refs in sorted(_refs_by.items()):
+                kind = _ckind.get(c2, c2)
+                if refs and refs[0]["state"] == "file":
+                    vol, st = f"{len(refs)} file(s)", "file-level receipts"
+                else:
+                    npass = sum(1 for r in refs if r["state"] == "pass")
+                    vol = f"{len(refs)} case(s)"
+                    st = (f"{npass} pass"
+                          + (f" · {len(refs) - npass} not passing"
+                             if len(refs) - npass else ""))
+                _srows += (f"<tr><td>{kind_tag(kind, _kcls.get(kind, ''))}"
+                           f"</td><td>{vol}</td><td>{st}</td></tr>")
+            _tm = ("tests.html#sec-tests-files" if entity_col
+                   else "#sec-tests-matrix")
+            detail += (_dmh("#15803d", "fn", "Tests", "")
+                       + '<table class="tbl"><thead><tr><th>Kind</th>'
+                         "<th>Volume</th><th>State</th></tr></thead><tbody>"
+                       + _srows + "</tbody></table>"
+                       + f'<p class="sub">Full receipts live in the Tests '
+                         f'section — <a class="dlink" href="{_tm}">open the '
+                         f"matrix</a>.</p>")
         cells = [
             f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
@@ -1284,6 +1297,37 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     by_cls = {m["cls"]: m for m in models}
 
+    def _incoming_fk_tbl(cls: str) -> str:
+        """Referenced by — the STORED side of the in-degree: every ForeignKey
+        column in another model that points at this table (was the unlabeled
+        '+N FK in-degree' line; operator ruling 2026-07-23: structure facts
+        live in the structure, labeled)."""
+        me = by_cls.get(cls)
+        if not me:
+            return ""
+        rows = ""
+        for other, rec in by_cls.items():
+            if other == cls:
+                continue
+            for col, tgt2 in rec.get("fks", {}).items():
+                if tgt2.split(".")[0] == me["table"]:
+                    _oent = ins.get(other, {}).get("entity", "")
+                    rows += (f'<tr><td><a class="dlink" href="'
+                             f'{_href("dm", _anchor("dm", slug, other))}">'
+                             f"{E(other)}</a>"
+                             + (" " + entity_badge(_oent, _adopt_name(_oent),
+                                                   12) if _oent else "")
+                             + f"</td><td><code>{E(other)}.{E(col)}</code>"
+                             f"</td><td><code>{E(tgt2)}</code></td></tr>")
+        if not rows:
+            return ""
+        return (_dmh("#0d6e78", "fields", "Referenced by",
+                     ' <span class="sub">ForeignKey columns in other models '
+                     "pointing at this table</span>")
+                + '<table class="tbl"><thead><tr><th>Model</th>'
+                  "<th>FK column</th><th>Points at</th></tr></thead>"
+                  f"<tbody>{rows}</tbody></table>")
+
     def rel_rows(cls: str, rels: list[dict]) -> str:
         """ORM navigation properties, rendered APART from columns — with the
         one stored direction (the ForeignKey) named for each. A back_populates
@@ -1293,8 +1337,11 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         rows = ""
         for r in rels:
             tgt = by_cls.get(r["target"])
+            _tent = ins.get(r["target"], {}).get("entity", "")
             link = (f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, r["target"]))}">'
-                    f'{E(r["target"])}</a>')
+                    f'{E(r["target"])}</a>'
+                    + (" " + entity_badge(_tent, _adopt_name(_tent), 12)
+                       if _tent else ""))
             if r["many"]:
                 kind = "one → many"
                 via = next((f'{r["target"]}.{c} → {t2}'
@@ -1337,15 +1384,12 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         n = c.get("usage", 0)
         bar = (f'<span class="ubar" style="width:{max(2, min(60, n * 11))}px">'
                f"</span><b>{n}</b>")
-        fk_note = (f' <span class="sub">incl. {c["fk_in"]} FK in-degree — '
-                   f"other models pointing at this table</span>"
-                   if c.get("fk_in") else "")
-        head = _dmh("#0d6e78", "zap", "Usage by API", f" {bar}{fk_note}")
+        head = _dmh("#0d6e78", "zap", "Usage by API", f" {bar}")
         hits = [e for e in eps
                 if cls in e["touches"] or (is_schema and cls in e["resp"])]
         if not hits:
             return head + ('<p class="sub">no API usage on record — '
-                           "the teal bar is empty.</p>" if not fk_note else "")
+                           "the teal bar is empty.</p>")
         body = "".join(
             f"<tr><td>{ep_chip(e)}</td><td><code>{E(e['fn'])}</code></td>"
             f"<td>{_fchip(e['file'])}</td></tr>" for e in hits)
@@ -1418,7 +1462,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f'<p class="sub">Constraint: <code>{E(u)}</code></p>'
             for u in leftover_uqs)
         return (f"{meta_html}{_dm_api_tbl(cls, is_schema)}{_dm_int_tbl(cls)}"
-                f"{rel_rows(cls, rels or [])}{struct_head}{leftover}"
+                f"{rel_rows(cls, rels or [])}"
+                f"{_incoming_fk_tbl(cls) if not is_schema else ''}"
+                f"{struct_head}{leftover}"
                 f'<table class="tbl"><thead><tr><th>Column</th><th>Type</th>'
                 f"<th>Example (synthetic)</th><th>Description</th></tr></thead>"
                 f"<tbody>{body}</tbody></table>")
