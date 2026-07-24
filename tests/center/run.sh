@@ -527,15 +527,15 @@ PY2
 python3 - "$FIX/docs/site/center/feature-gadget.html" <<'PY3' && ok || bad "thread: code rows carry kind chips + receipts (see above)"
 import sys
 html = open(sys.argv[1]).read()
-assert 'title="integration' in html and "· 1" in html, \
-    "endpoint kind chip (icon-only + count) missing"
+assert 'title="integration' in html and "</svg> 1<" in html, \
+    "endpoint kind chip (icon + count, no separator) missing"
 assert "<b>Tests</b>" in html and "What it asserts" in html, \
     "endpoint Tests titled section with receipts table missing"
 assert "<b>Models used</b>" in html, "Models-used titled section missing"
 assert '<th>Model</th><th>Role</th>' in html, "MODELS USED must be a table"
 assert 'l-api">' in html and "</svg> integration" in html, \
     "kind chip must carry its center-wide icon + color"
-assert "via route · 2" in html, \
+assert "via route 2" in html, \
     "handler via-route credit missing (C11 + the web file receipt)"
 assert ">C11</span>" in html and ">C12</span>" in html, "C-id receipts missing"
 assert "no case" in html, "untested-function gap chip missing"
@@ -643,14 +643,14 @@ assert _re2.search(r'id="C14"[^>]*data-epr="get /gadgets/one"', m), \
     "C14 (web file receipt) must carry the endpoint receipt attr"
 assert "led-strict" in m and "strictVals" in m, \
     "the ledger JS must honor the strict receipts mode"
-assert '">= 2</b>' in f, \
-    "the endpoint Tests cell must total its receipt cases (1 api + 1 web)"
+assert '">= 2</b>' not in f and 'class="ttot"' not in f, \
+    "the = total chip is retired from the Tests cells"
 # The receipts ARITHMETIC stays visible (operator, round 13): file-level
 # rows carry their case counts, the Tests title totals them.
 assert "1 file(s) · 1 case(s)" in f, \
     "file-level receipt rows must state their case count"
-assert "(2 case(s))</span>" in f, \
-    "the endpoint Tests title must total its receipts in parenthesis"
+assert "(2 case(s)) <svg" in f, \
+    "the endpoint Tests title count must be the link (with its icon)"
 assert "URLSearchParams" in m, "the ledger must pre-apply URL-param filters"
 assert _re2.search(r'id="C11"[^>]*data-mdl="[^"]*gadgetout', m), \
     "T2 route credits must join the filter surface (C11 -> GadgetOut)"

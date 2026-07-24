@@ -801,6 +801,15 @@ def merge_amaps(repo: Path) -> dict:
             "defines": defines}
 
 
+_IC_LINK_SM = ('<svg viewBox="0 0 24 24" width="12" height="12" '
+               'fill="none" stroke="currentColor" stroke-width="2" '
+               'stroke-linecap="round" stroke-linejoin="round">'
+               '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 '
+               '0-7.07-7.07l-1.72 1.71"/>'
+               '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 '
+               '7.07l1.71-1.71"/></svg>')
+
+
 def build_code_tab(slug: str, repo: Path, intro_html: str,
                    amap: dict | None = None, entity_col: bool = False,
                    xpage: dict | None = None,
@@ -842,7 +851,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     def _tchip(kind: str, n, title: str) -> str:
         return (f'<span class="tag tk {_kcls.get(kind, "")}" '
-                f'title="{E(kind)}: {E(title)}">{kind_ic(kind)} · {n}'
+                f'title="{E(kind)}: {E(title)}">{kind_ic(kind)} {n}'
                 f"</span>")
 
     def _tgap(label: str, title: str) -> str:
@@ -882,7 +891,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                     + (f" · {n} case(s)" if n else ""))
         return f"{len(refs)} case(s)"
 
-    def _ref_table(refs: list, see_all: str = "") -> str:
+    def _ref_table(refs: list) -> str:
         if refs and refs[0]["state"] == "file":
             rows = "".join(
                 f'<tr><td><code>{E(r["tfile"].rsplit("/", 1)[-1])}</code></td>'
@@ -895,13 +904,10 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 f'<td><span class="tag {_STATE_CHIP.get(r["state"], "")}">'
                 f'{E(r["state"])}</span></td></tr>' for r in refs[:10])
             head = "<th>Case</th><th>What it asserts</th><th>State</th>"
-        # A truncated receipts list ALWAYS links its complete, filtered
-        # view (operator ruling 2026-07-25: never "N more" with no path).
-        if not see_all and len(refs) > 10:
-            see_all = "test-matrix.html#sec-tests-cases"
-        more = (f'<p class="sub"><a class="dlink" href="{see_all}">'
-                f"open all {len(refs)} in the case ledger →</a></p>"
-                if see_all else "")
+        # The fold TITLE carries the complete filtered view (the count is
+        # the link) — a truncated tier table's reference is one line up in
+        # the same fold, never a dangling "N more".
+        more = ""
         return (f'<table class="tbl"><thead><tr>{head}</tr></thead>'
                 f"<tbody>{rows}</tbody></table>{more}")
 
@@ -920,10 +926,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     def _ep_tcell(e: dict) -> str:
         refs = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
-        chips, tot = [], 0
+        chips = []
         for c2, r in sorted(refs.items()):
             n = _rcnt(r)
-            tot += n
             chips.append(_tchip(_ckind.get(c2, c2), n,
                                 f"{n} {c2} receipt case(s) — api: cases "
                                 "driving this route; web: cases in files "
@@ -931,8 +936,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         if not chips:
             return _tgap("untested",
                          "no case or spec matches this route's path")
-        chips.append(f'<b class="ttot" title="total receipt case(s) — '
-                     f'the number the filtered ledger lands on">= {tot}</b>')
         if _has_journey and not any(
                 _ckind.get(c2) == "journey" for c2 in refs):
             chips.append(_tgap("journey —",
@@ -952,10 +955,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             chips.append(f'<span class="tag tk t-via" title="composed '
                          f"through the endpoint join — cases driving a "
                          f'route that serves this {what} (T2)">'
-                         f"via route · {nv}</span>")
-        if chips:
-            chips.append(f'<b class="ttot" title="total receipt case(s)">'
-                         f"= {nd + nv}</b>")
+                         f"via route {nv}</span>")
         return " ".join(chips) or _tgap(
             "no case", f"no case reaches this {what} by name or via a route")
 
@@ -1192,14 +1192,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                    + _uq(f'{e["method"]} {e["path"]}', safe="")
                    + "&led-strict=1#sec-tests-cases")
             detail += (_dmh("#15803d", "fn", "Tests",
-                            f' <span class="sub">({_tot} case(s))</span>')
+                            f' <a class="sub dlink" href="{_tm}" '
+                            f'title="open the case ledger filtered to this '
+                            f'route — lands on exactly these receipt '
+                            f'case(s)">({_tot} case(s)) {_IC_LINK_SM}</a>')
                        + '<table class="tbl"><thead><tr><th>Kind</th>'
                          "<th>Volume</th><th>State</th></tr></thead><tbody>"
-                       + _srows + "</tbody></table>"
-                       + f'<p class="sub">Full receipts live in the Tests '
-                         f'section — <a class="dlink" href="{_tm}">open the '
-                         f"case ledger filtered to this route</a> — it "
-                         f"lands on exactly these receipt case(s).</p>")
+                       + _srows + "</tbody></table>")
         cells = [
             f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
@@ -1522,16 +1521,17 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             if _refs:
                 tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
                             f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
-                            + _ref_table(_refs,
-                                         "test-matrix.html?led-mdl="
-                                         + _uq(cls, safe="")
-                                         + "&led-strict=1"
-                                           "#sec-tests-cases"))
+                            + _ref_table(_refs))
         if tb_html:
             _tbtot = _rcnt((_tb.get("direct") or [])
                            + (_tb.get("via_route") or []))
+            _tbsee = ("test-matrix.html?led-mdl=" + _uq(cls, safe="")
+                      + "&led-strict=1#sec-tests-cases")
             tb_html = _dmh("#15803d", "fn", "Tested by",
-                           f' <span class="sub">({_tbtot} case(s))</span>'
+                           f' <a class="sub dlink" href="{_tbsee}" '
+                           f'title="open the case ledger filtered to this '
+                           f'class — lands on exactly these receipt '
+                           f'case(s)">({_tbtot} case(s)) {_IC_LINK_SM}</a>'
                            ) + tb_html
         return (f"{meta_html}{_dm_api_tbl(cls, is_schema)}{_dm_int_tbl(cls)}"
                 f"{rel_rows(cls, rels or [])}"
@@ -1914,13 +1914,16 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 if _refs:
                     tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
                                 f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
-                                + _ref_table(_refs, _seeall))
+                                + _ref_table(_refs))
             if tb_html:
                 _tbtot = _rcnt((_tb.get("direct") or [])
                                + (_tb.get("via_route") or []))
                 tb_html = _dmh("#15803d", "fn", "Tested by",
-                               f' <span class="sub">({_tbtot} case(s))</span>'
-                               ) + tb_html
+                               f' <a class="sub dlink" href="{_seeall}" '
+                               f'title="open the case ledger filtered to '
+                               f'this function — lands on exactly these '
+                               f'receipt case(s)">({_tbtot} case(s)) '
+                               f"{_IC_LINK_SM}</a>") + tb_html
             # Signature
             sig_head = _dmh("#b3403a", "fields", "Signature",
                             f' <span class="sub">{len(c["params"])} param(s) '
