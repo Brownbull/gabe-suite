@@ -1109,16 +1109,8 @@ def build_feature_pages(ctx) -> list[str]:
 
         # Code tab — the technical decode. Card intro (authored) + AST-parsed
         # endpoints / code map / data model. No mapping yet -> a named gap.
-        # The C-ids present on THIS page's ledger — the code receipts link
-        # in-page for these, the Cases page for everything else.
-        _page_cids = {f"C{m.group(1)}"
-                      for c in ctx.corpora
-                      for rec in inv[c["key"]]["files"].values()
-                      for case in rec["cases"]
-                      if (m := _CID_RX.search(case["name"]))}
         code_tab = build_code_tab(slug, ctx.repo_root,
-                                  card_html(card.get("CODE", [])),
-                                  page_cids=_page_cids)
+                                  card_html(card.get("CODE", [])))
         if not code_tab:
             code_tab = gap("Code decode", f"_a3_code.ENTITY_CODE['{slug}'] mapping")
         # Action table at the TOP of the section, then the record decode.

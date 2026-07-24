@@ -804,16 +804,14 @@ def merge_amaps(repo: Path) -> dict:
 _IC_LINK_SM = ('<svg viewBox="0 0 24 24" width="12" height="12" '
                'fill="none" stroke="currentColor" stroke-width="2" '
                'stroke-linecap="round" stroke-linejoin="round">'
-               '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 '
-               '0-7.07-7.07l-1.72 1.71"/>'
-               '<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 '
-               '7.07l1.71-1.71"/></svg>')
+               '<path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 '
+               '0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/>'
+               '<line x1="10" y1="14" x2="21" y2="3"/></svg>')
 
 
 def build_code_tab(slug: str, repo: Path, intro_html: str,
                    amap: dict | None = None, entity_col: bool = False,
-                   xpage: dict | None = None,
-                   page_cids: set | None = None) -> str:
+                   xpage: dict | None = None) -> str:
     """The Code tab: endpoints · code map · data model (+ candidates) ·
     functions (+ candidates). Returns "" for entities with no ENTITY_CODE
     mapping yet — rendered as a named gap by the caller. With an explicit
@@ -858,29 +856,14 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         return (f'<span class="tag tk t-tgap" title="{E(title)}">'
                 f"{E(label)}</span>")
 
-    def _ref_label(r: dict) -> str:
-        nm = _a3_tests._CID_RX.sub("", r["name"]).strip(" ·-_[]")
-        return nm.replace("_", " ")[:64]
-
-    def _cid_pill(r: dict) -> str:
-        # A C-id receipt LINKS to its case's LEDGER row. On an entity page
-        # the row lives in the Tests pane of the SAME file (the :has(:target)
-        # tab mechanism opens it) — but ONLY for cases the entity's test_rx
-        # claims; a receipt from an unclaimed file (the thread is app-wide)
-        # links the Cases page, where every case has its anchor.
-        if not r["cid"]:
-            return ""
-        _pg = ("" if (page_cids is not None and r["cid"] in page_cids)
-               else "test-matrix.html")
-        return (f'<a class="cid" href="{_pg}#{E(r["cid"])}">'
-                f'{E(r["cid"])}</a> ')
-
-    def _ref_frag(refs: list) -> str:
-        return " · ".join(
-            _cid_pill(r) + f'<small>{E(_ref_label(r))}</small>'
-            for r in refs[:6]) + (" …" if len(refs) > 6 else "")
-
     _STATE_CHIP = {"pass": "s-ok", "fail": "s-high", "skip": "s-gap"}
+
+    def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
+        """A titled subsection head inside the row detail — icon + colored
+        label, so each block (usage · structure) is identifiable at a
+        glance (operator polish 2026-07-23)."""
+        return (f'<p class="dmh" style="--dc:{color}">{_ins_ic(icon)}'
+                f"<b>{E(label)}</b>{extra}</p>")
 
     def _ref_count(refs: list) -> str:
         """Receipts arithmetic for a tier label: case counts always visible,
@@ -891,32 +874,44 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                     + (f" · {n} case(s)" if n else ""))
         return f"{len(refs)} case(s)"
 
-    def _ref_table(refs: list) -> str:
-        if refs and refs[0]["state"] == "file":
-            rows = "".join(
-                f'<tr><td><code>{E(r["tfile"].rsplit("/", 1)[-1])}</code></td>'
-                f"<td>{E(r['name'])}</td></tr>" for r in refs[:10])
-            head = "<th>File</th><th>Cases</th>"
-        else:
-            rows = "".join(
-                f'<tr><td>{_cid_pill(r) or "—"}</td>'
-                f"<td>{E(_ref_label(r))}</td>"
-                f'<td><span class="tag {_STATE_CHIP.get(r["state"], "")}">'
-                f'{E(r["state"])}</span></td></tr>' for r in refs[:10])
-            head = "<th>Case</th><th>What it asserts</th><th>State</th>"
-        # The fold TITLE carries the complete filtered view (the count is
-        # the link) — a truncated tier table's reference is one line up in
-        # the same fold, never a dangling "N more".
-        more = ""
-        return (f'<table class="tbl"><thead><tr>{head}</tr></thead>'
-                f"<tbody>{rows}</tbody></table>{more}")
-
-    def _dmh(color: str, icon: str, label: str, extra: str = "") -> str:
-        """A titled subsection head inside the row detail — icon + colored
-        label, so each block (usage · structure) is identifiable at a
-        glance (operator polish 2026-07-23)."""
-        return (f'<p class="dmh" style="--dc:{color}">{_ins_ic(icon)}'
-                f"<b>{E(label)}</b>{extra}</p>")
+    def _tb_summary(tb: dict) -> str:
+        """Tested-by as the ENDPOINT-style aggregation table — Kind · Tier ·
+        Volume · State rows, never a per-case listing (operator, round 16).
+        The fold title's count-link opens the actual cases in the filtered
+        ledger."""
+        rows2 = ""
+        for tier, refs in (("direct", tb.get("direct") or []),
+                           ("via route", tb.get("via_route") or [])):
+            by_c: dict[str, list] = {}
+            for r in refs:
+                by_c.setdefault(r["corpus"], []).append(r)
+            for c2, rs in sorted(by_c.items()):
+                kind = _ckind.get(c2, c2)
+                for is_file, rs2 in (
+                        (False, [r for r in rs if r["state"] != "file"]),
+                        (True, [r for r in rs if r["state"] == "file"])):
+                    if not rs2:
+                        continue
+                    if is_file:
+                        n2 = sum(r.get("n") or 0 for r in rs2)
+                        vol = f"{len(rs2)} file(s) · {n2} case(s)"
+                        st = "file-level receipts"
+                    else:
+                        vol = f"{len(rs2)} case(s)"
+                        npass = sum(1 for r in rs2 if r["state"] == "pass")
+                        nbad = len(rs2) - npass
+                        st = (f"{npass} pass"
+                              + (f" · {nbad} not passing" if nbad else ""))
+                    rows2 += (f'<tr><td><span class="tag '
+                              f'{_kcls.get(kind, "")}" title="{E(kind)}">'
+                              f"{kind_ic(kind, 14)}</span></td>"
+                              f"<td>{tier}</td><td>{vol}</td>"
+                              f"<td>{st}</td></tr>")
+        if not rows2:
+            return ""
+        return ('<table class="tbl"><thead><tr><th>Kind</th><th>Tier</th>'
+                "<th>Volume</th><th>State</th></tr></thead>"
+                f"<tbody>{rows2}</tbody></table>")
 
     def _rcnt(refs: list) -> int:
         """Receipt CASE count — file-level refs contribute their case
@@ -1512,16 +1507,10 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         leftover = "".join(
             f'<p class="sub">Constraint: <code>{E(u)}</code></p>'
             for u in leftover_uqs)
-        # Tested by — the thread's receipts, mirroring the functions fold:
-        # the same C-id pills the Tests cell counts, opened in place.
+        # Tested by — the ENDPOINT-style aggregation; the count-link title
+        # opens the actual cases in the filtered ledger.
         _tb = _ti["by_model"].get(cls) or {}
-        tb_html = ""
-        for _lbl, _refs in (("direct", _tb.get("direct") or []),
-                            ("via route", _tb.get("via_route") or [])):
-            if _refs:
-                tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
-                            f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
-                            + _ref_table(_refs))
+        tb_html = _tb_summary(_tb)
         if tb_html:
             _tbtot = _rcnt((_tb.get("direct") or [])
                            + (_tb.get("via_route") or []))
@@ -1903,18 +1892,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                              if calls else
                              '<p class="sub">calls no other documented '
                              "function — a base.</p>"))
-            # Tested by — the thread's receipts (T1 direct / T2 via route)
+            # Tested by — the ENDPOINT-style aggregation; the count-link
+            # title opens the actual cases in the filtered ledger.
             _tb = _ti["by_function"].get(f'{c["file"]}::{c["fn"]}') or {}
-            tb_html = ""
             _seeall = ("test-matrix.html?led-fn="
                        + _uq(c["name"] + "()", safe="")
                        + "&led-strict=1#sec-tests-cases")
-            for _lbl, _refs in (("direct", _tb.get("direct") or []),
-                                ("via route", _tb.get("via_route") or [])):
-                if _refs:
-                    tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
-                                f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
-                                + _ref_table(_refs))
+            tb_html = _tb_summary(_tb)
             if tb_html:
                 _tbtot = _rcnt((_tb.get("direct") or [])
                                + (_tb.get("via_route") or []))

@@ -619,9 +619,11 @@ assert 'id="ev-g1"' in f, "proof sets need anchors (the reverse link's target)"
 # folds already did → count ≥ 2), and code-side C-id pills stay in-page on
 # entity pages while the arch estate keeps the Cases-page link.
 assert f.count("Tested by") >= 2, "dm fold must carry Tested-by receipts"
+assert "<th>Tier</th>" in f, \
+    "Tested-by folds must be the endpoint-style aggregation (Kind·Tier·…)"
 af = (c / "arch-functions.html").read_text()
-assert 'href="test-matrix.html#C12"' in af, \
-    "arch-estate receipts must link the Cases page ledger row"
+assert "led-fn=make_gid%28%29&led-strict=1" in af, \
+    "arch-estate Tested-by titles must link the strict-filtered ledger"
 # The truncation BAN (operator ruling 2026-07-25): never "… N more" with no
 # reference — every receipts block links its FILTERED ledger view, and the
 # ledger pre-applies filters arriving as URL params.
