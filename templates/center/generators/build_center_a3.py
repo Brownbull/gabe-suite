@@ -869,36 +869,133 @@ tests_body = (
     + matrix)
 
 _results_rel = CFG.get("paths", {}).get("results", "tests/results")
+# What a corpus VERIFIES (operator ruling 2026-07-24) — config
+# corpora[].description wins; else the kind's one-liner carries it.
+_KIND_WHAT = {
+    "integration": "drives the API through real HTTP — every endpoint "
+                   "receipt in the center traces back to this corpus",
+    "unit": "components and hooks in isolation — file-tier facts "
+            "(imports + route literals), never dressed as case proof",
+    "journey": "real browser flows through the product — the demo "
+               "shelf's proof shots come from these runs",
+}
+
+
+def _corpus_what(c: dict) -> str:
+    return E(c.get("description")
+             or _KIND_WHAT.get(c.get("kind", ""), c.get("kind_detail", "")))
+
+
 _bucket_rows = [
     [f'<b>{E(c["key"])}</b>', E(c["runner"]),
      str(len((junit_by.get(c["key"]) or {}).get("files", {}))),
      f'{(junit_by.get(c["key"]) or {}).get("total", 0):,}',
-     f'{_results_rel}/{c["key"]}-junit.xml'] for c in CORPORA]
+     f'{_results_rel}/{c["key"]}-junit.xml',
+     _corpus_what(c)] for c in CORPORA]
 if E2E:
     _bucket_rows.append(
         ["<b>e2e</b>", E(E2E.get("runner", "playwright")), "—", "—",
-         f'<span class="tag">not wired</span> {E(E2E.get("not_wired_note", ""))}'])
+         f'<span class="tag">not wired</span> {E(E2E.get("not_wired_note", ""))}',
+         E(E2E.get("description") or _KIND_WHAT["journey"])])
 buckets = table(
-    ["Corpus", "Runner", "Files", "Tests", "Report source"],
+    ["Corpus", "Runner", "Files", "Tests", "Report source",
+     "What it verifies"],
     _bucket_rows, num={2, 3})
 
 hooks = D.load_precommit_hooks()
 ci_jobs = D.load_ci_jobs()
+# What each gate DOES (operator ruling 2026-07-24): well-known hook ids get
+# the curated one-liner; a local hook speaks through its own yaml `name:`;
+# anything else stays the honest pointer. CI rows list their actual jobs.
+_HOOK_DESC = {
+    "ruff": "python linter — style + bug patterns before the commit lands",
+    "ruff-format": "python formatter — one layout, no debates",
+    "black": "python formatter",
+    "isort": "python import sorter",
+    "mypy": "python static type checker",
+    "gitleaks": "secret scanner — blocks credentials from entering git "
+                "history",
+    "prettier": "js/ts/css formatter",
+    "eslint": "js/ts linter",
+    "trailing-whitespace": "strips trailing whitespace",
+    "end-of-file-fixer": "ensures files end with a newline",
+    "check-yaml": "yaml syntax check",
+    "check-added-large-files": "blocks oversized files",
+}
+
+
+def _hook_what(hid: str, name: str) -> str:
+    if hid in _HOOK_DESC:
+        return E(_HOOK_DESC[hid])
+    if name and name != hid:
+        return f"{E(name)} <small>(its own name line)</small>"
+    return ('<span class="sub">local hook — defined in '
+            ".pre-commit-config.yaml</span>")
+
+
 gates = table(
-    ["Gate", "Kind", "Detail"],
-    [[f"<b>{E(h)}</b>", "pre-commit", ".pre-commit-config.yaml"] for h in hooks]
-    + [[f"<b>{E(wf)}</b>", "ci", f"{len(js)} job(s)"] for wf, js in ci_jobs.items()],
+    ["Gate", "Kind", "Detail", "What it does"],
+    [[f"<b>{E(h)}</b>", "pre-commit", ".pre-commit-config.yaml",
+      _hook_what(h, nm)] for h, nm in hooks]
+    + [[f"<b>{E(wf)}</b>", "ci", f"{len(js)} job(s)",
+        E(" · ".join(str(j.get("name") or j.get("id") or "?")
+                     for j in js))]
+       for wf, js in ci_jobs.items()],
     note=f'{len(hooks)} pre-commit hook(s) · '
          f'{sum(len(j) for j in ci_jobs.values())} CI job(s).')
 
 proof_root = D.PROOF_DIR
 pdirs = sorted((d for d in proof_root.iterdir() if d.is_dir()),
                key=lambda d: d.name) if proof_root.exists() else []
+# The shelf explains itself (operator ruling 2026-07-24: "I don't understand
+# anything happening there"): every set shows WHO claims it (entity column)
+# and WHERE it lands — the claiming entity's Evidence tab, where the legs
+# and galleries render. Ownership = center.config.json entities[].proofs;
+# an unclaimed set is named surface area, not noise. All sets render (the
+# old top-14 cap was a silent truncation).
+_set_owners: dict[str, list[str]] = {}
+for _pslug, _pnames in ENTITY_PROOFS.items():
+    for _pn in _pnames:
+        _set_owners.setdefault(_pn, []).append(_pslug)
+
+
+def _ev_anchor(name: str) -> str:
+    return "ev-" + re.sub(r"[^A-Za-z0-9]+", "-", name).strip("-")
+
+
+_shelf_rows = []
+for _d in pdirs:
+    _owners = _set_owners.get(_d.name, [])
+    _mt = max((p.stat().st_mtime for p in _d.glob("*.png")), default=0)
+    _when = (_dt.datetime.fromtimestamp(_mt, _dt.timezone.utc)
+             .strftime("%Y-%m-%d") if _mt else "—")
+    _ecell = " ".join(
+        f'<a href="{_entity_href(o)}">'
+        + entity_badge(o, LABELS.get(o, o), 13) + "</a>" for o in _owners)
+    _carded = next((o for o in _owners
+                    if _entity_href(o).startswith("feature-")), "")
+    if _carded:
+        _land = (f'<a class="dlink" href="{_entity_href(_carded)}'
+                 f'#{_ev_anchor(_d.name)}">'
+                 f"{E(LABELS.get(_carded, _carded))}'s Evidence tab — "
+                 "legs + galleries</a>")
+    elif _owners:
+        _land = ('<span class="sub">claimed, but the entity has no '
+                 "feature page yet</span>")
+    else:
+        _land = ('<span class="tag s-gap">unclaimed</span> '
+                 '<span class="sub">no entity\'s proofs list names this '
+                 "set — claim it in center.config.json</span>")
+    _shelf_rows.append([_ecell, f"<b>{E(_d.name)}</b>",
+                        str(len(list(_d.glob("*.png")))), _when, _land])
 demo_shelf = table(
-    ["Proof set", "Shots"],
-    [[f"<b>{E(d.name)}</b>", str(len(list(d.glob("*.png"))))] for d in pdirs[:14]],
-    num={1},
-    note=f"{len(pdirs)} proof set(s) on disk · showing {min(len(pdirs), 14)}."
+    [ENT_COL, "Proof set", "Shots", "Newest", "Where it lands"],
+    _shelf_rows, num={2},
+    note=f"{len(pdirs)} proof set(s) under tests/web-e2e/proof/ — "
+         "screenshots a human CURATED after a green run (/gabe-feature "
+         "curate). A set is claimed by entities[].proofs in "
+         "center.config.json and renders in full on its entity's Evidence "
+         "tab; an unclaimed set is surface area for the next adoption."
 ) if pdirs else gap("Demo shelf", "tests/web-e2e/proof/")
 
 # --------------------------------------------------------------------------- #
@@ -1561,7 +1658,9 @@ def render_testing() -> dict[str, str]:
                   id_="sec-tests-walks")
         + manual_angles
         + sechead("Testing", "Demo shelf", "#3f6d4c", _IC_SHELF,
-                  sub="curated proof sets on disk",
+                  sub="human-curated proof of the journey kind — each set "
+                      "is claimed by an entity and renders in full on that "
+                      "entity's Evidence tab",
                   id_="sec-tests-shelf")
         + demo_shelf)
 

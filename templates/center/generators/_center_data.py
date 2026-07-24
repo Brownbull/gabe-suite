@@ -250,11 +250,23 @@ def load_ledger(n: int = 5) -> list[list[str]]:
 # Gates layer — parsed from the REAL configs, never hand-listed
 # --------------------------------------------------------------------------- #
 
-def load_precommit_hooks() -> list[str]:
+def load_precommit_hooks() -> list[tuple[str, str]]:
+    """[(hook id, its own `name:` when the config declares one)] — the
+    yaml's words, machine-read, so a local hook can describe itself."""
     path = REPO_ROOT / ".pre-commit-config.yaml"
     if not path.exists():
         return []
-    return re.findall(r"^\s*-\s*id:\s*(\S+)", path.read_text(), re.M)
+    text = path.read_text()
+    out: list[tuple[str, str]] = []
+    for m in re.finditer(r"^\s*-\s*id:\s*(\S+)", text, re.M):
+        block = text[m.end():]
+        nxt = re.search(r"^\s*-\s*(?:id|repo):", block, re.M)
+        if nxt:
+            block = block[:nxt.start()]
+        nm = re.search(r"^\s*name:\s*(.+)$", block, re.M)
+        out.append((m.group(1),
+                    nm.group(1).strip().strip("'\"") if nm else ""))
+    return out
 
 
 def load_ci_jobs() -> dict[str, list[dict]]:

@@ -221,6 +221,25 @@ g1.mkdir(parents=True)
                    "legs": {"walk": "start to finish"}}}, indent=1))
 # A single-FILE proof set: loose at the proof root (M04's exact case).
 (root / "tests/web-e2e/proof/solo.png").write_bytes(png)
+# A proof set NO entity claims: the shelf must name it unclaimed, never
+# render it as an anonymous row.
+stray = root / "tests/web-e2e/proof/stray"
+stray.mkdir()
+(stray / "01-x.png").write_bytes(png)
+# Pre-commit gates: a well-known id (curated one-liner) + a local hook that
+# describes itself through its own `name:` line.
+(root / ".pre-commit-config.yaml").write_text(
+    "repos:\n"
+    "  - repo: https://github.com/astral-sh/ruff-pre-commit\n"
+    "    rev: v0.4.0\n"
+    "    hooks:\n"
+    "      - id: ruff\n"
+    "  - repo: local\n"
+    "    hooks:\n"
+    "      - id: size-budget\n"
+    "        name: size budget report\n"
+    "        entry: bash scripts/size.sh\n"
+    "        language: system\n")
 PY
 }
 
@@ -626,7 +645,8 @@ idx = (c / "index.html").read_text()
 # Architecture subitems, same icons as the entity Tests tab sections.
 for pg, lbl in (("test-matrix.html", "Cases"), ("test-files.html", "Files"),
                 ("test-claims.html", "Claims"),
-                ("test-elements.html", "Untested")):
+                ("test-elements.html", "Untested"),
+                ("test-corpora.html", "Corpora &amp; gates")):
     assert f'class="navitem navsubitem" href="{pg}"' in idx \
         and f"</svg> {lbl}</a>" in idx, f"Testing navsubitem {lbl} missing"
 assert 'class="navsub"><a href="test-' not in idx, \
@@ -638,6 +658,19 @@ assert 'id="sec-tests-walks"' in co, \
 assert 'id="sec-tests-gates"' in co and 'id="sec-tests-corpora"' in co \
     and 'id="sec-tests-changelog"' in co and 'id="sec-tests-shelf"' in co, \
     "machinery-page sections must each carry a sechead anchor"
+# Round 23: the machinery explains itself — corpora say WHAT they verify,
+# gates say WHAT they do (curated id / the hook's own name line), and the
+# demo shelf shows WHO claims each set and WHERE it lands.
+assert "What it verifies" in co and "drives the API through real HTTP" in co, \
+    "corpora table must carry the what-it-verifies column"
+assert "What it does" in co \
+    and "python linter" in co and "size budget report" in co, \
+    "gates must describe themselves (curated id + yaml name fallback)"
+assert 'href="feature-gadget.html#ev-g1"' in co, \
+    "a claimed proof set must link its entity's Evidence anchor"
+assert ">stray</b>" in co and ">unclaimed<" in co[co.find(">stray</b>"):][:600], \
+    "an unclaimed proof set must be NAMED unclaimed on the shelf"
+assert "<title>entity</title>" in co, "the shelf entity column needs its glyph"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
 # Round 19 (operator verdicts 2026-07-24): the entity column HEADER carries
