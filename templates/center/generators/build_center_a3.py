@@ -1011,13 +1011,13 @@ for _d in pdirs:
         _land = ('<span class="tag s-med">no feature page yet</span>'
                  + tinfo("the claiming entity is registered but not carded "
                          "— its Evidence tab appears when the entity is "
-                         "adopted (/gabe-adopt section)."))
+                         "adopted (/gabe-adopt section).", flip=True))
     else:
         _land = ('<span class="tag s-gap">unclaimed</span>'
                  + tinfo("no entity's proofs list names this set — add it "
                          "to entities[].proofs in center.config.json and "
                          "it renders on that entity's Evidence tab with "
-                         "its legs and galleries."))
+                         "its legs and galleries.", flip=True))
     _shelf_rows.append([_ecell, f"<b>{E(_d.name)}</b>", _what,
                         str(len(list(_d.glob("*.png")))), _when, _land])
 demo_shelf = (table(
@@ -1027,7 +1027,7 @@ demo_shelf = (table(
     # What-it-shows carries the prose — give it the room; Shots and the
     # fixed-format date sit in narrow px columns (operator ruling
     # 2026-07-24: the description was cramped while fixed cells sprawled).
-    widths=["44px", "1.1fr", "3.4fr", "52px", "88px", "1.5fr"],
+    widths=["44px", "1.1fr", "3.4fr", "58px", "100px", "1.5fr"],
     note=f"{len(pdirs)} proof set(s) under tests/web-e2e/proof/ — "
          "screenshots a human CURATED after a green run (/gabe-feature "
          "curate). A set is claimed by entities[].proofs in "

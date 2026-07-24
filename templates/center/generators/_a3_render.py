@@ -521,12 +521,15 @@ def sechead(gtag: str, title: str, color: str, icon: str, sub: str = "",
     return f"{head}</div></div>"
 
 
-def tinfo(text: str) -> str:
+def tinfo(text: str, flip: bool = False) -> str:
     """The ⓘ popover — a small window of prose anchored to the icon, an × to
     close, auto-dismissed by the page script after a few seconds. The one
     way explanatory text rides a value anywhere in the center (ledger fold
-    labels, shelf state tags) — never a line of prose repeated per row."""
-    return ('<details class="tinfo"><summary aria-label="more about this">'
+    labels, shelf state tags) — never a line of prose repeated per row.
+    `flip` opens it to the bottom-LEFT — for icons in a table's rightmost
+    column, where the default bottom-right runs off the edge."""
+    cls = "tinfo tflip" if flip else "tinfo"
+    return (f'<details class="{cls}"><summary aria-label="more about this">'
             'ⓘ</summary><div class="tx">'
             '<button type="button" class="tclose" aria-label="close">×'
             f"</button>{E(text)}</div></details>")

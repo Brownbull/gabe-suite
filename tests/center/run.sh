@@ -698,6 +698,12 @@ assert 'style="width:44px"' in co and _re3.search(
     r'col style="width:[0-9.]+%"', co), \
     "the shelf colgroup must mix px (icons/dates) with % (prose)"
 assert ">.some_cache</b>" not in co, "a dot-dir must never render as a set"
+# Round 26: a right-edge ⓘ opens bottom-LEFT (tflip) so the table edge
+# cannot clip it; the css must carry the flip rule.
+assert 'class="tinfo tflip"' in co[co.find(">stray</b>"):][:900], \
+    "the Where-it-lands popover must open leftward (tflip)"
+assert ".tinfo.tflip .tx" in (c / "assets" / "a3.css").read_text(), \
+    "a3.css must ship the tflip rule"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
 # Round 19 (operator verdicts 2026-07-24): the entity column HEADER carries

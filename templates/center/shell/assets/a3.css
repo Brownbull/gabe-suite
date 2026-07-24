@@ -846,6 +846,7 @@ details.legset .gal{margin:8px 0 4px}
 .tinfo summary{list-style:none;cursor:pointer;color:var(--muted,#64748b);font-size:.68rem;border:1px solid var(--line,#d8dee6);border-radius:50%;width:15px;height:15px;display:inline-flex;align-items:center;justify-content:center}
 .tinfo summary::-webkit-details-marker{display:none}
 .tinfo[open] summary{color:var(--accent-ink,#0d6e78);border-color:var(--accent,#0d6e78)}
+.tinfo.tflip .tx{left:auto;right:-6px}
 .tinfo .tx{position:absolute;left:-6px;top:20px;z-index:60;background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);border-radius:8px;box-shadow:var(--shadow,0 8px 24px rgba(15,40,60,.14));padding:8px 26px 8px 11px;width:max-content;max-width:min(46ch,72vw);white-space:normal;overflow-wrap:break-word;font-family:var(--font-content,system-ui);font-size:.72rem;font-weight:400;line-height:1.5;letter-spacing:0;text-transform:none;color:var(--ink,#22313a)}
 .tinfo .tclose{position:absolute;top:3px;right:5px;border:0;background:none;color:var(--muted,#64748b);cursor:pointer;font-size:.85rem;line-height:1;padding:2px}
 .tinfo .tclose:hover{color:var(--bad,#b3403a)}
