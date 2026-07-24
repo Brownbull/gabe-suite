@@ -100,6 +100,16 @@ _IC_WALK = ('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
 _IC_SHELF = ('<rect x="3" y="3" width="18" height="18" rx="2"/>'
              '<circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>')
 _IC_SHIELD = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
+# The entity Tests tab's section icons (subnav parity: the estate page a
+# sidebar subitem opens leads with the SAME glyph the entity tab uses).
+_IC_DOCP = ('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 '
+            '2-2V8z"/><polyline points="14 2 14 8 20 8"/>'
+            '<line x1="16" y1="13" x2="8" y2="13"/>'
+            '<line x1="16" y1="17" x2="8" y2="17"/>')
+_IC_ALERTP = ('<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 '
+              '1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
+              '<line x1="12" y1="9" x2="12" y2="13"/>'
+              '<line x1="12" y1="17" x2="12.01" y2="17"/>')
 _VERB_CLS = {"GET": "m-get", "POST": "m-post", "DELETE": "m-del",
              "PUT": "m-mut", "PATCH": "m-mut"}
 # The shell is a build INPUT, so it is vendored IN THE REPO. It used to be read
@@ -680,9 +690,9 @@ for _corpus, _j in corpora.items():
         _file_rows.append((_cells, ""))
 _unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[0][5])
 files_section = (
-    sechead("Testing", "Files", "#0f766e", _IC_LIST,
+    sechead("Testing", "Files", "#0f766e", _IC_DOCP,
             sub="the file altitude — every test file, its ratios, and what "
-                "claims it; the cases live on the ledger above",
+                "claims it; the cases live on the Cases ledger",
             id_="sec-tests-files",
             info='<div class="leg">Claimed by = the registry entities whose '
                  "file pattern matches. A file may be claimed twice — the "
@@ -713,7 +723,7 @@ testing_cards = ('<div class="archgrid">'
                           f"{t_total:,} case(s) in {len(_file_rows)} file(s) "
                           f"· C-id anchors · filter by entity, kind, or the "
                           f"element a case exercises"),
-                         ("test-matrix.html#sec-tests-files", "Files",
+                         ("test-files.html", "Files",
                           "archive",
                           f"{len(_file_rows)} file(s) · {_unclaimed_files} "
                           f"unclaimed · per-file flags, ratios and claim "
@@ -1450,7 +1460,7 @@ def render_testing() -> dict[str, str]:
               f"its claimed coverage</a>" if _href.startswith("feature-")
               else '<span class="sub">no feature page yet</span>')])
     claims_body = (
-        sechead("Testing", "Claims — by entity", "#0d9488", _IC_LIST,
+        sechead("Testing", "Claims — by entity", "#0d9488", _IC_KCHECK,
                 sub="claims are AUTHORED per entity (card # CLAIMS) and "
                     "verified against junit by class name",
                 id_="sec-tests-claims-idx",
@@ -1493,7 +1503,7 @@ def render_testing() -> dict[str, str]:
     app_inv = {c["key"]: (junit_by.get(c["key"]) or {}).get("files", {})
                for c in CORPORA}
     ledger_body = (
-        sechead("Testing", "Cases — the ledger", "#0d6e78", _IC_LIST,
+        sechead("Testing", "Cases — the ledger", "#0d6e78", _IC_GRID4,
                 sub="every case identity in the estate — filter by entity, "
                     "kind, state, or the element it exercises; C-id pills "
                     "everywhere in the center land on these rows",
@@ -1507,7 +1517,7 @@ def render_testing() -> dict[str, str]:
                                  owners_of=entities_of, labels=LABELS,
                                  app=True))
     gaps_body = (
-        sechead("Testing", "Untested surface — app-wide", "#b45309", _IC_LIST,
+        sechead("Testing", "Untested surface — app-wide", "#b45309", _IC_ALERTP,
                 sub="every element no case or spec touches — gaps only; the "
                     "tested roster lives on the architecture pages with its "
                     "receipts",
@@ -1524,8 +1534,16 @@ def render_testing() -> dict[str, str]:
         "test-matrix.html": _tpage(
             "Cases", "Cases",
             "the case ledger — every identity with its C-id anchor and "
-            "exercises chips, element-filterable; the file altitude below",
-            ledger_body + files_section),
+            "exercises chips, element-filterable; the file altitude lives "
+            "on the Files page", ledger_body),
+        # Files gets its OWN page (operator ruling 2026-07-24: one page per
+        # estate section, the Code-group treatment) — the entity filter bar
+        # rides on top, the anchor keeps its sec-tests-files identity.
+        "test-files.html": _tpage(
+            "Test files", "Files",
+            "the file altitude — every test file with its ratios, flags "
+            "and claim state, entity-filterable; the cases themselves live "
+            "on the Cases ledger", bar + files_section),
         "test-claims.html": _tpage(
             "Test claims", "Claims",
             "the authored coverage accumulator, indexed app-wide",

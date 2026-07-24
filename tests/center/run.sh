@@ -565,8 +565,8 @@ assert "Untested surface" in dash and 'href="test-elements.html"' in dash, \
 # set is GONE, and the sidebar navsub now names the estate pages.
 assert 'id="tab-tests"' not in dash and 'class="tabbar"' not in dash, \
     "the old tab set must be gone from the testing station"
-assert 'href="test-matrix.html#sec-tests-files"' in dash, \
-    "the Files card must land on the file altitude"
+assert 'href="test-files.html"' in dash, \
+    "the Files card must land on its own estate page"
 assert 'href="test-claims.html"' in dash and 'href="test-corpora.html"' in dash, \
     "estate cards must cover claims + the machinery page"
 assert 'id="sec-tests-kinds"' in dash and "Kinds &amp; coverage" in dash, \
@@ -578,8 +578,16 @@ assert "no reporter wired" in dash or "% " in dash, \
 assert 'id="sec-tests-matrix"' in dash and 'class="riskgrid"' in dash, \
     "entity × kind matrix section missing"
 idx = (c / "index.html").read_text()
-assert 'test-claims.html">claims' in idx and 'test-elements.html">untested' in idx \
-    and 'test-matrix.html">cases' in idx, "sidebar navsub must name the estate pages"
+# The Code-group treatment (operator ruling 2026-07-24): the Testing group
+# lists one icon'd navsubitem per estate PAGE — same layout as the
+# Architecture subitems, same icons as the entity Tests tab sections.
+for pg, lbl in (("test-matrix.html", "Cases"), ("test-files.html", "Files"),
+                ("test-claims.html", "Claims"),
+                ("test-elements.html", "Untested")):
+    assert f'class="navitem navsubitem" href="{pg}"' in idx \
+        and f"</svg> {lbl}</a>" in idx, f"Testing navsubitem {lbl} missing"
+assert 'class="navsub"><a href="test-' not in idx, \
+    "the plain-text navsub is retired for the Code-group layout"
 assert "tests.html#tab-" not in idx, "the old tab navsub must be gone"
 co = (c / "test-corpora.html").read_text()
 assert 'id="sec-tests-walks"' in co, \
@@ -599,7 +607,11 @@ assert ">unminted<" in m, "unminted honesty tag missing (Q2)"
 assert "×2</small>" in m, "parametrize executions must group under C12"
 assert 'href="arch-endpoints.html#ep-app-' in m, "chips must LINK the code estate"
 assert 'data-ent="gadget"' in m, "entity data attribute missing"
-assert 'id="sec-tests-files"' in m, "file-altitude table missing below the ledger"
+assert 'id="sec-tests-files"' not in m, \
+    "the file altitude moved to its own page — no second home on the ledger"
+tf = (c / "test-files.html").read_text()
+assert 'id="sec-tests-files"' in tf and 'class="entchips"' in tf, \
+    "test-files.html must carry the file altitude with the entity filter bar"
 assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
 assert 'in reach<details class="tinfo"' in m and "lonely_helper()" in m, \
