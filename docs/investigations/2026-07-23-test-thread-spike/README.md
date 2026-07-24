@@ -156,3 +156,24 @@ entity tab Kinds → Cases → Files → Claims → Untested, estate Cases/Gaps
 pages, battery + fixture growth). Lab numbers: gastify 1,424 identities
 (1,421 anchored + 3 unminted, 265 gaps) · gustify 1,679 (1,644 + 35, 89
 gaps) · 0 dead anchored refs on either twin's lab output.
+
+## v4 — the ledger hardened on operator verdicts (rounds 2–16, 2026-07-24/25)
+
+Fifteen shipped-surface iterations after §v3, each battery-pinned: one-line
+sticky bars · labeled fold grids · tag facet (provenance tokens = the
+composite index over groups) · uses·T3 (imported symbols; kind subsections
+with typed, type-linked signatures via a global ts-export index) · per-filter
+clear × (title-line) · ⓘ tier popovers · icon-only Kind column · the
+EVIDENCE SEAM (proof-set `spec` → Verified-by C-id pills; named gap when no
+junit joins — all 20 gastify sets until its e2e capture is wired) · the
+truncation BAN (no "… N more" without a link; ledger filters accept URL
+params) · token-exact filters (substring over-match 312→164 on GET
+/transactions) · RECEIPTS reconcile end-to-end (cell = fold title = strict-
+filtered landing = 77; carriers stay the hand-typed net) · count-link titles
+(external-arrow icon) · Tested-by as the endpoint-dialect aggregation table
+(Kind · Tier · Volume · State), per-case listings retired.
+
+NEXT (ruled at wrap-up): the app-wide tests.html STATION still carries the
+old matrix · evidence · gates tabs — replace with: overview + kinds &
+coverage + an entity × testing-kind matrix, and estate sections mirroring
+the entity tabs (cases · files · claims · untested).

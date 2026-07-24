@@ -88,7 +88,7 @@ one or render an honest named gap — **a false gap is as dishonest as a false p
 |---|---|---|
 | Overview | card (lens block leads) · diagrams (picker) · growth · decisions changelog | everyone |
 | Code | endpoints · code map · data model — ALL from `archmap.json`, the read-once code map | developers |
-| Tests | kinds & coverage · matrix (rows expand to cases) | "is it tested?" |
+| Tests | actions · kinds & coverage · cases (the C-id LEDGER: entity/kind icons, dropdown filters incl. tag/endpoint/model/function, URL-param pre-apply + `led-strict` receipts mode, per-kind folds) · files (icon kinds; rows open to cases, C-ids link the ledger) · claims (no cases column — the fold lists them) · untested surface (gaps only) | "is it tested?" |
 | Evidence | proof sets (rows → legs → galleries; reference files HELD OUT, stated) · not proven here | business |
 | Risk | register (4-field grammar, GAP rows link growth) · not carried forward | whoever prices it |
 
@@ -104,7 +104,10 @@ section title; tables never hide) · `details.pmore` (word-boundary truncation c
 diagram picker · `.lens*` + `details.more` (card folds) · `.tag.m-*` HTTP verbs · `.l-*`
 layers · `.s-*` severities · `.fm-*` font-only verb links · `.ty-*` type families (deeper =
 wider type; uncolored = domain alias, say so) · `.meter` (bar + count in one cell) · `.cid`
-case-id chip (`.cid.none` = `—`, never "un-run") · `.tag.e-*`/`.st-*` effort/stage pricing ·
+case-id chip (`.cid.none` = `—`, never "un-run"; a ledger row's `id="C<n>"` is the canonical
+anchor every C-id pill lands on) · `.ledbar`/`.lchip`/`.ledmeta`/`.tinfo`/`.ltag` (the case
+ledger: filter bar with per-control clear ×, tiered chips solid=own/dashed=via-file, labeled
+fold grid, ⓘ tier popovers, provenance-token pills) · `.tag.e-*`/`.st-*` effort/stage pricing ·
 dark theme via `[data-theme="dark"]` (mermaid SVGs get an honest light plate) · viewer vars
 `--root-size`/`--font-content`/`--side-w`, `data-compact` (vertical density) ≠ `data-rail`
 (icon collapse). Chrome uses damped `calc()`, not pure rem — it must hold one line at every

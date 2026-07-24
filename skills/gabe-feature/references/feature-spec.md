@@ -33,6 +33,12 @@ at build time, so they can never drift from the truth.
 - `corpora[]` — one per test suite: `key` · `runner` · `kind` · `kind_detail` ·
   `tag_class` · `kpi_detail`. Drives junit loading, the estate totals, the
   corpus matrix, the per-entity Tests tab, and run-history sources.
+  The Tests surfaces are CASE-LED (rulings 2026-07-24/25): the C-id is the
+  row and `test-matrix.html#C<n>` is the canonical anchor every C-id pill
+  lands on; code-side Tested-by folds aggregate (Kind · Tier · Volume ·
+  State) and their count-link titles open the ledger pre-filtered via URL
+  params (`?led-ep|led-mdl|led-fn=…&led-strict=1` — strict mode lands on
+  exactly the element's receipt cases).
 - `e2e` — runner + the local-only / coverage-gate notes the prose interpolates.
 - `commands` — `junit[]` · `coverage[]` · `e2e[]`: the shell lines
   `scripts/refresh_center.sh <mode>` runs, one line each, from the repo root
