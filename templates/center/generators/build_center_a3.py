@@ -592,7 +592,7 @@ _kind_by_corpus = {c["key"]: c.get("kind", c["key"]) for c in CORPORA}
 _kind_cols = ([(k, _kind_by_corpus[k]) for k in corpora]
               + [("", "journey"), ("", "coverage"), ("", "manual"),
                  ("", "deployed")])
-_hdr = "".join(f"<th>{kind_ic(kind)} {E(kind)}</th>"
+_hdr = "".join(f'<th title="{E(kind)}">{kind_ic(kind, 14)}</th>'
                for _k, kind in _kind_cols)
 
 
@@ -640,16 +640,6 @@ matrix = (f'<table class="riskgrid"><tr><th class="area"></th>{_hdr}</tr>{_rows}
 # --- the corpus, file by file: the reverse index the archive had and the A3
 # center dropped. A reader on a feature page can reach its files; nobody could
 # go the other way, and the 608 unclaimed cases had no surface at all.
-_ti_station = _a3_tests.test_insight(REPO_ROOT)
-
-
-def _ti_ex_for(junit_key: str) -> dict | None:
-    for _k, _v in _ti_station["exercises"].items():
-        if _k.endswith(junit_key):
-            return _v
-    return None
-
-
 _file_rows, _file_exp = [], []
 for _corpus, _j in corpora.items():
     for _f, _rec in sorted((_j or {}).get("files", {}).items(),
@@ -666,25 +656,7 @@ for _corpus, _j in corpora.items():
             f"{E(_corpus)}</span>",
             f"<code>{E(_f)}</code>", str(_rec["tests"]),
             meter(_rec["tests"] - _rec["failed"], _rec["tests"]), _claim]
-        _ex = _ti_ex_for(_f)
-        _ex_html = ""
-        if _ex:
-            _bits = []
-            for _lbl, _vals in (("endpoints", _ex.get("endpoints")),
-                                ("functions", _ex.get("functions")),
-                                ("models", _ex.get("models")),
-                                ("reaches", _ex.get("reaches"))):
-                if _vals:
-                    _bits.append(
-                        f'<p class="sub" style="margin:6px 0 2px"><b>'
-                        f"{_lbl}</b> — " + " · ".join(
-                            f"<code>{E(v)}</code>" for v in _vals[:8])
-                        + ("…" if len(_vals) > 8 else "") + "</p>")
-            if _bits:
-                _ex_html = ('<p class="sub" style="margin-top:8px"><b>'
-                            "Exercises</b> (what this file provably touches "
-                            "— T1 literals/imports, T3 reach):</p>"
-                            + "".join(_bits))
+        _ex_html = _a3_tests.exercises_html(REPO_ROOT, _f)
         _file_rows.append(
             (_cells, case_rows(_rec, _corpus, anchors=True) + _ex_html))
 _unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[0][5])

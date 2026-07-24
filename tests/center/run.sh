@@ -482,7 +482,8 @@ PY2
 python3 - "$FIX/docs/site/center/feature-gadget.html" <<'PY3' && ok || bad "thread: code rows carry kind chips + receipts (see above)"
 import sys
 html = open(sys.argv[1]).read()
-assert "integration · 1" in html, "endpoint kind chip missing"
+assert 'title="integration' in html and "· 1" in html, \
+    "endpoint kind chip (icon-only + count) missing"
 assert "<b>Tests</b>" in html and "What it asserts" in html, \
     "endpoint Tests titled section with receipts table missing"
 assert "<b>Models used</b>" in html, "Models-used titled section missing"
@@ -510,6 +511,7 @@ m = (c / "test-matrix.html").read_text()
 assert 'class="entchips"' in m, "entity filter bar missing on the matrix page"
 assert 'id="C11"' in m, "per-case C-id anchor missing"
 assert "Exercises" in m and "/gadgets/one" in m, "Exercises receipts missing"
+assert 'href="arch-endpoints.html#ep-app-' in m, "Exercises must LINK the code estate"
 assert 'class="entb ent-gadget"' in m, "entity badge column missing"
 assert (c / "test-claims.html").exists() and (c / "test-corpora.html").exists()
 PY4

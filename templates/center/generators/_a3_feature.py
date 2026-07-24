@@ -818,7 +818,8 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
         _corpus = observed[matches[0]]["corpus"]
         detail = case_rows({"cases": cases}, _corpus)
         _kind, _kcls = kindmap.get(_corpus, ("—", ""))
-        kind_cell = (f'<span class="tag {_kcls}">{E(_kind)}</span>' if _kcls
+        kind_cell = (f'<span class="tag {_kcls}" title="{E(_kind)}">'
+                     f"{kind_ic(_kind, 14)}</span>" if _kcls
                      else _none_kind)
         if len(matches) > 1:
             tally["ambiguous"] += 1
@@ -837,29 +838,7 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
 
 
 def _exercises_html(repo, junit_key: str) -> str:
-    """What this test file provably touches (T1 literals/imports, T3 reach) —
-    appended to its case list on the entity matrix, same as the estate's
-    Matrix page."""
-    ti = _a3_tests.test_insight(repo)
-    ex = next((v for k, v in ti["exercises"].items()
-               if k.endswith(junit_key)), None)
-    if not ex:
-        return ""
-    bits = []
-    for lbl, vals in (("endpoints", ex.get("endpoints")),
-                      ("functions", ex.get("functions")),
-                      ("models", ex.get("models")),
-                      ("reaches", ex.get("reaches"))):
-        if vals:
-            bits.append(f'<p class="sub" style="margin:6px 0 2px"><b>{lbl}'
-                        f"</b> — " + " · ".join(
-                            f"<code>{E(v)}</code>" for v in vals[:8])
-                        + ("…" if len(vals) > 8 else "") + "</p>")
-    if not bits:
-        return ""
-    return ('<p class="sub" style="margin-top:8px"><b>Exercises</b> (what '
-            "this file provably touches — T1 literals/imports, T3 reach):"
-            "</p>" + "".join(bits))
+    return _a3_tests.exercises_html(repo, junit_key)
 
 
 def build_feature_pages(ctx) -> list[str]:
@@ -1195,9 +1174,10 @@ def build_feature_pages(ctx) -> list[str]:
                               case_rows(rec, corpus, anchors=True)
                               + _exercises_html(ctx.repo_root, fname)))
             _matrix_groups += (
-                f'<p class="sub">{kind_tag(kind, kcls)} — {len(files)} '
-                f"file(s) in the <code>{E(corpus)}</code> corpus; click a "
-                f"row to read its cases:</p>"
+                f'<p class="sub"><span class="tag {kcls}" '
+                f'title="{E(kind)}">{kind_ic(kind, 14)}</span> — '
+                f"{len(files)} file(s) in the <code>{E(corpus)}</code> "
+                f"corpus; click a row to read its cases:</p>"
                 + xtable(["File", "Cases", "Passing", "Ran", "Flags"], _rows,
                          widths=["2.4fr", "0.7fr", "1fr", "0.8fr", "1.3fr"]))
         # Claimed coverage — the accumulator that LEADS the tab: card # CLAIMS

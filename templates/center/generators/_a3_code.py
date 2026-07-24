@@ -840,7 +840,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     def _tchip(kind: str, n, title: str) -> str:
         return (f'<span class="tag tk {_kcls.get(kind, "")}" '
-                f'title="{E(title)}">{kind_ic(kind)} {E(kind)} · {n}</span>')
+                f'title="{E(kind)}: {E(title)}">{kind_ic(kind)} · {n}'
+                f"</span>")
 
     def _tgap(label: str, title: str) -> str:
         return (f'<span class="tag tk t-tgap" title="{E(title)}">'
@@ -850,10 +851,18 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         nm = _a3_tests._CID_RX.sub("", r["name"]).strip(" ·-_[]")
         return nm.replace("_", " ")[:64]
 
+    def _cid_pill(r: dict) -> str:
+        # A C-id receipt LINKS to its case row on the estate matrix — the
+        # anchor exists for every C-id'd case app-wide (test-matrix.html).
+        if not r["cid"]:
+            return ""
+        return (f'<a class="cid" href="test-matrix.html#{E(r["cid"])}">'
+                f'{E(r["cid"])}</a> ')
+
     def _ref_frag(refs: list) -> str:
         return " · ".join(
-            (f'<span class="cid">{E(r["cid"])}</span> ' if r["cid"] else "")
-            + f'<small>{E(_ref_label(r))}</small>' for r in refs[:6])             + (" …" if len(refs) > 6 else "")
+            _cid_pill(r) + f'<small>{E(_ref_label(r))}</small>'
+            for r in refs[:6]) + (" …" if len(refs) > 6 else "")
 
     _STATE_CHIP = {"pass": "s-ok", "fail": "s-high", "skip": "s-gap"}
 
@@ -865,7 +874,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             head = "<th>File</th><th>Cases</th>"
         else:
             rows = "".join(
-                f'<tr><td><span class="cid">{E(r["cid"]) or "—"}</span></td>'
+                f'<tr><td>{_cid_pill(r) or "—"}</td>'
                 f"<td>{E(_ref_label(r))}</td>"
                 f'<td><span class="tag {_STATE_CHIP.get(r["state"], "")}">'
                 f'{E(r["state"])}</span></td></tr>' for r in refs[:10])
@@ -1132,7 +1141,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                     st = (f"{npass} pass"
                           + (f" · {len(refs) - npass} not passing"
                              if len(refs) - npass else ""))
-                _srows += (f"<tr><td>{kind_tag(kind, _kcls.get(kind, ''))}"
+                _srows += (f'<tr><td><span class="tag '
+                           f'{_kcls.get(kind, "")}" title="{E(kind)}">'
+                           f"{kind_ic(kind, 14)}</span>"
                            f"</td><td>{vol}</td><td>{st}</td></tr>")
             _tm = ("test-matrix.html#sec-tests-files" if entity_col
                    else "#sec-tests-matrix")

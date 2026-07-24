@@ -244,7 +244,8 @@ def test_insight(repo: Path) -> dict:
         k = f'{e["file"]}::{e["fn"]}'
         _once(by_ep.setdefault(k, {}).setdefault(corpus, []), "ep:" + k, ref)
         ex = _ex(tfile)
-        chip = f'{e["method"]} {e["path"]}'
+        chip = {"label": f'{e["method"]} {e["path"]}',
+                "file": e["file"], "fn": e["fn"]}
         if chip not in ex["endpoints"]:
             ex["endpoints"].append(chip)
         # T2: the route's handler, response schema and touched models
@@ -303,8 +304,9 @@ def test_insight(repo: Path) -> dict:
                         for k2 in fn_by_name.get(nm, []):
                             _once(by_fn.setdefault(k2, {}).setdefault(
                                 "direct", []), "fnd:" + k2, ref)
-                            if nm not in ex["functions"]:
-                                ex["functions"].append(nm)
+                            _fc = {"name": nm, "file": k2.split("::")[0]}
+                            if _fc not in ex["functions"]:
+                                ex["functions"].append(_fc)
                         if nm in mi:
                             _once(by_model.setdefault(nm, {}).setdefault(
                                 "direct", []), "mdd:" + nm, ref)
@@ -361,3 +363,51 @@ def test_insight(repo: Path) -> dict:
             out["by_file"][f]["coverage"] = cov
     _CACHE[key] = out
     return out
+
+
+def exercises_html(repo: Path, junit_key: str) -> str:
+    """What a test file provably touches, as LINKS into the code estate —
+    the connection the spike promised (T1 literals/imports, T3 reach).
+    Suffix-joins the junit file key to the engine's disk-keyed receipts."""
+    from _a3_code import _anchor
+    from _a3_render import E
+    ti = test_insight(repo)
+    ex = next((v for k, v in ti["exercises"].items()
+               if k.endswith(junit_key)), None)
+    if not ex:
+        return ""
+
+    def _lnk(page: str, aid: str, label: str) -> str:
+        return (f'<a class="dlink" href="{page}#{aid}">'
+                f"<code>{E(label)}</code></a>")
+
+    bits = []
+    if ex.get("endpoints"):
+        bits.append(("endpoints", " · ".join(
+            _lnk("arch-endpoints.html",
+                 _anchor("ep", "app", c["file"] + "-" + c["fn"]), c["label"])
+            for c in ex["endpoints"][:8])
+            + ("…" if len(ex["endpoints"]) > 8 else "")))
+    if ex.get("functions"):
+        bits.append(("functions", " · ".join(
+            _lnk("arch-functions.html",
+                 _anchor("fn", "app", c["file"] + "-" + c["name"]), c["name"])
+            for c in ex["functions"][:8])
+            + ("…" if len(ex["functions"]) > 8 else "")))
+    if ex.get("models"):
+        bits.append(("models", " · ".join(
+            _lnk("arch-data-model.html", _anchor("dm", "app", m), m)
+            for m in ex["models"][:8])
+            + ("…" if len(ex["models"]) > 8 else "")))
+    if ex.get("reaches"):
+        bits.append(("reaches", " · ".join(
+            _lnk("arch-code-map.html", _anchor("cm", "app", f), f)
+            for f in ex["reaches"][:8])
+            + ("…" if len(ex["reaches"]) > 8 else "")))
+    if not bits:
+        return ""
+    return ('<p class="sub" style="margin-top:8px"><b>Exercises</b> (what '
+            "this file provably touches — T1 literals/imports, T3 reach):"
+            "</p>" + "".join(
+                f'<p class="sub" style="margin:6px 0 2px"><b>{lbl}</b> — '
+                f"{body}</p>" for lbl, body in bits))
