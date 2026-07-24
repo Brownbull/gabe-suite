@@ -839,3 +839,7 @@ details.legset .gal{margin:8px 0 4px}
 .tinfo summary::-webkit-details-marker{display:none}
 .tinfo[open] summary{color:var(--accent-ink,#0d6e78);border-color:var(--accent,#0d6e78)}
 .tinfo .tx{font-size:.7rem;color:var(--muted,#64748b);max-width:56ch;padding:4px 0 2px}
+/* Wide fold rows (uses): label line first, content spans the full fold. */
+.ledmeta .kwide,.ledmeta .vwide{grid-column:1/-1}
+.ledmeta .kwide{margin-top:2px}
+.lsig{white-space:normal}

@@ -218,9 +218,9 @@ def _related(g: dict, fent: dict, mdl_file: dict) -> list[str]:
     return ents
 
 
-# TS/JS export grammar — classifies what an imported symbol IS in its
-# defining file (the uses table's Kind column). Grammar-read, never guessed
-# from casing.
+# TS/JS export grammar — what an imported symbol IS in its defining file,
+# plus what the grammar can read about it: a function's parameter list and
+# return type, a const's initializer head. Grammar-read, never guessed.
 _TS_EXPORT_RX = re.compile(
     r"export\s+(?:default\s+)?"
     r"(async\s+function|function|class|const|let|var|type|interface|enum)"
@@ -229,19 +229,96 @@ _TS_KIND = {"async function": "function", "function": "function",
             "class": "class", "const": "const", "let": "const",
             "var": "const", "type": "type", "interface": "type",
             "enum": "enum"}
-_TSK_CACHE: dict[str, dict] = {}
+_TSX_CACHE: dict[str, dict] = {}
 
 
-def _ts_kinds(repo: Path, rel: str) -> dict:
-    if rel not in _TSK_CACHE:
-        kinds: dict[str, str] = {}
+def _match_paren(src: str, i: int) -> int:
+    depth = 0
+    for j in range(i, min(len(src), i + 4000)):
+        if src[j] == "(":
+            depth += 1
+        elif src[j] == ")":
+            depth -= 1
+            if depth == 0:
+                return j
+    return -1
+
+
+def _split_params(raw: str) -> list[tuple[str, str]]:
+    """Top-level comma split of a TS parameter list -> (name, type) pairs.
+    Defaults are stripped; a destructured param keeps its braces as the
+    name. Best-effort grammar, never a guess beyond it."""
+    parts, depth, cur = [], 0, ""
+    for ch in raw:
+        if ch in "([{<":
+            depth += 1
+        elif ch in ")]}>":
+            depth -= 1
+        if ch == "," and depth == 0:
+            parts.append(cur)
+            cur = ""
+        else:
+            cur += ch
+    if cur.strip():
+        parts.append(cur)
+    out = []
+    for part in parts:
+        part = part.strip()
+        if not part:
+            continue
+        # strip a top-level default value
+        d, cut = 0, len(part)
+        for i2, ch in enumerate(part):
+            if ch in "([{<":
+                d += 1
+            elif ch in ")]}>":
+                d -= 1
+            elif ch == "=" and d == 0 and part[i2:i2 + 2] != "=>":
+                cut = i2
+                break
+        part = part[:cut].strip()
+        d = 0
+        for i2, ch in enumerate(part):
+            if ch in "([{<":
+                d += 1
+            elif ch in ")]}>":
+                d -= 1
+            elif ch == ":" and d == 0:
+                out.append((part[:i2].strip().rstrip("?"),
+                            part[i2 + 1:].strip()))
+                break
+        else:
+            out.append((part.rstrip("?"), ""))
+    return out
+
+
+def _ts_exports(repo: Path, rel: str) -> dict:
+    """{exported name: {kind, params, ret, init}} for a ts/js file."""
+    if rel not in _TSX_CACHE:
+        recs: dict[str, dict] = {}
         p = repo / rel
         if p.suffix in (".ts", ".tsx", ".js", ".jsx") and p.exists():
-            for kw, nm in _TS_EXPORT_RX.findall(
-                    p.read_text(errors="replace")):
-                kinds.setdefault(nm, _TS_KIND.get(kw.strip(), "export"))
-        _TSK_CACHE[rel] = kinds
-    return _TSK_CACHE[rel]
+            src = p.read_text(errors="replace")
+            for m in _TS_EXPORT_RX.finditer(src):
+                kw, nm = m.group(1).strip(), m.group(2)
+                rec = {"kind": _TS_KIND.get(kw, "export"),
+                       "params": [], "ret": "", "init": ""}
+                if rec["kind"] == "function":
+                    i = src.find("(", m.end())
+                    j = _match_paren(src, i) if i != -1 else -1
+                    if j != -1:
+                        rec["params"] = _split_params(src[i + 1:j])
+                        mt = re.match(r"\s*:\s*([^{]+?)\s*\{",
+                                      src[j + 1:j + 200])
+                        if mt:
+                            rec["ret"] = mt.group(1).strip()
+                elif rec["kind"] == "const":
+                    mt = re.search(r"=\s*(.+)", src[m.end():m.end() + 160])
+                    if mt:
+                        rec["init"] = mt.group(1).split("\n")[0].strip()[:56]
+                recs.setdefault(nm, rec)
+        _TSX_CACHE[rel] = recs
+    return _TSX_CACHE[rel]
 
 
 _SHOW_REACH = 6      # visible chips per fold row; the note carries the rest
@@ -255,19 +332,35 @@ def _tinfo(text: str) -> str:
             f'means">ⓘ</summary><div class="tx">{E(text)}</div></details>')
 
 
-def _kv(rows: list[tuple[str, str]]) -> str:
-    return ('<div class="ledmeta">' + "".join(
-        f'<span class="k">{E(k)}</span><span class="v">{v}</span>'
-        for k, v in rows) + "</div>")
+def _kv(rows: list) -> str:
+    """(label, value[, info[, wide]]) rows. The ⓘ rides the LABEL — next to
+    the name, never below the content; a wide row's value spans the full
+    fold width under its label line."""
+    out = ['<div class="ledmeta">']
+    for r in rows:
+        k, v = r[0], r[1]
+        info = r[2] if len(r) > 2 else ""
+        wide = r[3] if len(r) > 3 else False
+        lab = E(k) + (_tinfo(info) if info else "")
+        if wide:
+            out.append(f'<span class="k kwide">{lab}</span>'
+                       f'<div class="v vwide">{v}</div>')
+        else:
+            out.append(f'<span class="k">{lab}</span>'
+                       f'<span class="v">{v}</span>')
+    out.append("</div>")
+    return "".join(out)
 
 
 def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
-          reach_fns: list, reach_mdls: list, classify) -> str:
+          reach_fns: list, reach_mdls: list, classify, exports_of) -> str:
     """What opens under the row: the metadata spine as LABELED rows, the
-    kind's facts tier by tier (each with its ⓘ explainer), the uses TABLE,
-    and the variant table when one identity ran as many executions."""
-    rows: list[tuple[str, str]] = [
-        ("file", f'<code>{E(g["file"])}</code>')]
+    kind's facts tier by tier (each label carrying its ⓘ explainer), the
+    uses block split by symbol kind — functions with their typed signatures
+    (param/return types linked into the estate), constants with their
+    declared value, types & models — and the variant table when one
+    identity ran as many executions."""
+    rows: list = [("file", f'<code>{E(g["file"])}</code>')]
     if g["group"]:
         rows.append(("group", _hl(g["group"])))
     rows.append(("corpus", E(g["corpus"])))
@@ -290,9 +383,9 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
         for nm in own.get("models", []):
             t1.append(_dm_chip(nm, "lc-mdl",
                                "this case uses the class by name"))
-        rows.append(("exercises", "".join(t1) + _tinfo(
-            "T1 — the case's own facts: its def drives the route, calls "
-            "the function, or uses the class directly.")))
+        rows.append(("exercises", "".join(t1),
+                     "T1 — the case's own facts: its def drives the route, "
+                     "calls the function, or uses the class directly."))
         via = []
         for c in own.get("endpoints", []):
             e = ep_meta.get((c["file"], c["fn"]))
@@ -307,9 +400,10 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
                     via.append(_dm_chip(tok, "lc-mdl",
                                         "credited through the route"))
         if via:
-            rows.append(("via route", "".join(via) + _tinfo(
-                "T2 — credited through the endpoint the case drives: the "
-                "route's handler, response schema and touched models.")))
+            rows.append(("via route", "".join(via),
+                         "T2 — credited through the endpoint the case "
+                         "drives: the route's handler, response schema and "
+                         "touched models."))
     else:
         vf = []
         for c in inh.get("endpoints", []):
@@ -322,29 +416,95 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
             vf.append(_dm_chip(nm, "lc-mdl lc-via",
                                "the class is used somewhere in the file"))
         if vf:
-            rows.append(("via file", "".join(vf) + _tinfo(
-                "file-tier — the case's FILE carries these facts; the "
-                "runner cannot attribute them to one case.")))
+            rows.append(("via file", "".join(vf),
+                         "file-tier — the case's FILE carries these facts; "
+                         "the runner cannot attribute them to one case."))
+
     uses = inh.get("uses") or []
     if uses:
-        urows = ""
-        for u in uses[:_SHOW_INREACH]:
+        # Type-link index: every export of the files this test imports or
+        # reaches — a signature's param/return types link their home.
+        tsindex: dict[str, str] = {}
+        for f2 in sorted({u["file"] for u in uses}
+                         | set(inh.get("reaches") or [])):
+            for nm2 in exports_of(f2):
+                tsindex.setdefault(nm2, f2)
+
+        def _ty(t: str) -> str:
+            def one(mm: re.Match) -> str:
+                tok = mm.group(0)
+                if tok in mi:
+                    return (f'<a class="dlink" href="{_XP["dm"]}#'
+                            f'{_anchor("dm", "app", tok)}">{tok}</a>')
+                f3 = tsindex.get(tok)
+                if f3:
+                    return (f'<a class="dlink" href="{_XP["cm"]}#'
+                            f'{_anchor("cm", "app", f3)}">{tok}</a>')
+                return tok
+            return re.sub(r"[A-Za-z_$][\w$]*", one, E(t))
+
+        buckets: dict[str, list] = {"function": [], "const": [], "other": []}
+        for u in uses:
             kind, href = classify(u)
-            urows += (f'<tr><td><a class="dlink" href="{href}">'
-                      f'<code>{E(u["name"])}</code></a></td>'
-                      f"<td>{E(kind)}</td>"
-                      f'<td><code>{E(u["file"])}</code></td></tr>')
-        more = (f'<p class="sub">… {len(uses) - _SHOW_INREACH} more '
-                "import(s)</p>" if len(uses) > _SHOW_INREACH else "")
-        rows.append(("uses",
-                     '<table class="tbl"><thead><tr><th>Symbol</th>'
-                     "<th>Kind</th><th>Imported from</th></tr></thead>"
-                     f"<tbody>{urows}</tbody></table>{more}" + _tinfo(
-                         "T3 (file-tier) — the symbols the test file "
-                         "imports from the app; the closest a web corpus "
-                         "gets to naming what is under test. Kind is read "
-                         "from the defining file's export grammar and the "
-                         "code registries.")))
+            rec = exports_of(u["file"]).get(u["name"]) or {}
+            key2 = kind if kind in ("function", "const") else "other"
+            buckets[key2].append((u, kind, href, rec))
+
+        def _tbl(title: str, head: str, rows2: list, total: int) -> str:
+            more = (f'<p class="sub">… {total - len(rows2)} more</p>'
+                    if total > len(rows2) else "")
+            return (f'<p class="sub" style="margin:8px 0 2px"><b>{title}</b>'
+                    f" ({total})</p>"
+                    f'<table class="tbl"><thead><tr>{head}</tr></thead>'
+                    f'<tbody>{"".join(rows2)}</tbody></table>{more}')
+
+        parts = []
+        if buckets["function"]:
+            rows2 = []
+            for u, _k2, href, rec in buckets["function"][:_SHOW_INREACH]:
+                sig = "(" + ", ".join(
+                    (f"{E(n2)}: {_ty(t2)}" if t2 else E(n2))
+                    for n2, t2 in rec.get("params", [])) + ")"
+                if rec.get("ret"):
+                    sig += " → " + _ty(rec["ret"])
+                rows2.append(
+                    f'<tr><td><a class="dlink" href="{href}">'
+                    f'<code>{E(u["name"])}</code></a></td>'
+                    f'<td><code class="lsig">{sig}</code></td>'
+                    f'<td><code>{E(u["file"])}</code></td></tr>')
+            parts.append(_tbl("functions",
+                              "<th>Symbol</th><th>Signature</th>"
+                              "<th>Imported from</th>", rows2,
+                              len(buckets["function"])))
+        if buckets["const"]:
+            rows2 = [
+                f'<tr><td><a class="dlink" href="{href}">'
+                f'<code>{E(u["name"])}</code></a></td>'
+                f'<td><code>{E(rec.get("init") or "—")}</code></td>'
+                f'<td><code>{E(u["file"])}</code></td></tr>'
+                for u, _k2, href, rec in buckets["const"][:_SHOW_INREACH]]
+            parts.append(_tbl("constants",
+                              "<th>Symbol</th><th>Declared as</th>"
+                              "<th>Imported from</th>", rows2,
+                              len(buckets["const"])))
+        if buckets["other"]:
+            rows2 = [
+                f'<tr><td><a class="dlink" href="{href}">'
+                f'<code>{E(u["name"])}</code></a></td>'
+                f"<td>{E(k2)}</td>"
+                f'<td><code>{E(u["file"])}</code></td></tr>'
+                for u, k2, href, rec in buckets["other"][:_SHOW_INREACH]]
+            parts.append(_tbl("types & models",
+                              "<th>Symbol</th><th>Kind</th>"
+                              "<th>Imported from</th>", rows2,
+                              len(buckets["other"])))
+        rows.append(("uses", "".join(parts),
+                     "T3 (file-tier) — the symbols the test file imports "
+                     "from the app, split by what each IS: signatures and "
+                     "kinds are read from the defining file's export "
+                     "grammar and the code registries; param and return "
+                     "types link their data-model or code-map home.", True))
+
     reaches = inh.get("reaches") or []
     if reaches:
         rc = "".join(_chip(f'{_XP["cm"]}#{_anchor("cm", "app", f2)}', f2,
@@ -353,9 +513,9 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
         if len(reaches) > _SHOW_REACH:
             rc += (f'<span class="lchip lc-more">+'
                    f"{len(reaches) - _SHOW_REACH} more</span>")
-        rows.append(("file reach", rc + _tinfo(
-            "T3 — the source files the test file imports, resolved on "
-            "disk.")))
+        rows.append(("file reach", rc,
+                     "T3 — the source files the test file imports, "
+                     "resolved on disk."))
     if reach_fns or reach_mdls:
         ir = [_dm_chip(nm, "lc-mdl lc-via", "defined in a reached file")
               for nm in reach_mdls[:_SHOW_INREACH]]
@@ -366,9 +526,9 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
                   + max(0, len(reach_fns) - _SHOW_INREACH))
         note = (f'<span class="lchip lc-more">+{hidden} more defined '
                 "there</span>" if hidden else "")
-        rows.append(("in reach", "".join(ir) + note + _tinfo(
-            "T3 — what the reached files define, from the code "
-            "registries; not a case-level proof.")))
+        rows.append(("in reach", "".join(ir) + note,
+                     "T3 — what the reached files define, from the code "
+                     "registries; not a case-level proof."))
     html = _kv(rows)
     if len(g["variants"]) > 1:
         vr = "".join(
@@ -490,8 +650,12 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
             return ("function",
                     f'{_XP["fn"]}#'
                     f'{_anchor("fn", "app", u["file"] + "-" + u["name"])}')
-        k = _ts_kinds(repo, u["file"]).get(u["name"], "export")
-        return (k, f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}')
+        rec = _ts_exports(repo, u["file"]).get(u["name"]) or {}
+        return (rec.get("kind", "export"),
+                f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}')
+
+    def exports_of(f2: str) -> dict:
+        return _ts_exports(repo, f2)
 
     kinds = sorted({g["kind"] for g in cases})
     tags_all: set[str] = set()
@@ -548,7 +712,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         summ = ("".join(f"<span>{c}</span>" for c in cells)
                 + '<span class="xtgl"></span>')
         detail = _fold(g, ep_meta, mi, labels, ents,
-                       reach_fns, reach_mdls, classify)
+                       reach_fns, reach_mdls, classify, exports_of)
         body.append(f'<details class="xrow"{idattr}{attrs}>'
                     f"<summary>{summ}</summary>"
                     f'<div class="xbody">{detail}</div>'

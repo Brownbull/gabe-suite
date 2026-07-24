@@ -88,11 +88,12 @@ c = root / center_rel
 # (imported symbols are the closest file-tier gets to naming what is under
 # test).
 (root / "src" / "widget.ts").write_text(
-    "export function planWidget() {\n  return 1;\n}\n"
+    "export function planWidget(seed: GadgetOut): GadgetOut {\n"
+    "  return seed;\n}\n"
     'export const WIDGET_KIND = "w";\n')
 (root / "tests" / "widget.test.ts").write_text(
-    'import { planWidget } from "../src/widget";\n\n'
-    'it("arms", () => planWidget());\n')
+    'import { planWidget, WIDGET_KIND } from "../src/widget";\n\n'
+    'it("arms", () => planWidget(WIDGET_KIND));\n')
 (root / "tests" / "results" / "web-junit.xml").write_text(
     '<testsuites><testsuite name="vitest" timestamp="2026-07-23T00:00:00">'
     '<testcase classname="tests/widget.test.ts" '
@@ -554,7 +555,7 @@ assert 'data-ent="gadget"' in m, "entity data attribute missing"
 assert 'id="sec-tests-files"' in m, "file-altitude table missing below the ledger"
 assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
-assert 'class="k">in reach<' in m and "lonely_helper()" in m, \
+assert 'in reach<details class="tinfo"' in m and "lonely_helper()" in m, \
     "in-reach chips (what reached files define) missing from the fold"
 assert 'id="led-tag"' in m and 'data-tag="df3 w1"' in m, \
     "tag facet missing (tokens from the group name must be filterable)"
@@ -566,9 +567,14 @@ assert "<span>Exercises</span>" not in m, \
     "Exercises column retired — the fold carries what a case exercises"
 assert 'class="tinfo"' in m and 'class="k">uses · T3<' not in m, \
     "tier codes must move off the labels into the ⓘ explainer"
-assert 'class="k">uses<' in m and "<th>Symbol</th>" in m \
-    and ">planWidget<" in m and "<td>function</td>" in m, \
-    "uses must be a table identifying Symbol · Kind · Imported from"
+assert 'uses<details class="tinfo"' in m and 'class="k kwide"' in m, \
+    "the uses ⓘ must ride the label and the block must span the fold width"
+assert "<b>functions</b>" in m and "<th>Signature</th>" in m \
+    and ">planWidget<" in m and "seed: <a" in m, \
+    "functions subsection must show typed signatures with linked types"
+assert "<b>constants</b>" in m and ">WIDGET_KIND<" in m \
+    and "<th>Declared as</th>" in m, \
+    "constants subsection missing its declared-as column"
 assert 'class="entb ent-gadget"' in m, "entity icon must lead the ledger row"
 f = (c / "feature-gadget.html").read_text()
 assert 'id="sec-tests-cases"' in f and 'id="C11"' in f, \
