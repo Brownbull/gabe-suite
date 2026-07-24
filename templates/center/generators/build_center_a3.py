@@ -685,6 +685,10 @@ testing_cards = ('<div class="archgrid">'
                      f"<span><b>{ttl}</b>"
                      f'<span class="sub">{sub2}</span></span></a>'
                      for fn, ttl, ic, sub2 in [
+                         ("test-elements.html", "Coverage by element",
+                          "fields",
+                          "the element lens — endpoints/models/functions "
+                          "with their receipts, entity-filterable"),
                          ("test-matrix.html",
                           "Matrix — the corpus, file by file", "fields",
                           f"{len(_file_rows)} file(s) · every case with its "
@@ -1339,7 +1343,21 @@ def render_testing() -> dict[str, str]:
 
     corpora_body = (buckets + gates + verification_changelog + demo_shelf)
 
+    elements_body = (
+        sechead("Testing", "Coverage by element — app-wide", "#0d6e78",
+                _IC_LIST,
+                sub="every tested code element with its receipts; untested "
+                    "counts per element type (each entity page lists its "
+                    "own in full)",
+                id_="sec-tests-elements",
+                note="Same joins as the entity pages, merged app-wide — "
+                     "filter by entity above.")
+        + _a3_tests.coverage_by_element(REPO_ROOT, "app", app=True))
     return {
+        "test-elements.html": _tpage(
+            "Coverage by element", "By element",
+            "the element lens: what of the CODE the corpus touches, "
+            "app-wide", bar + elements_body),
         "test-matrix.html": _tpage(
             "Test matrix", "Matrix",
             "every test file in the estate — filter by entity, open a row "

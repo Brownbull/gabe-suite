@@ -514,6 +514,16 @@ assert "Exercises" in m and "/gadgets/one" in m, "Exercises receipts missing"
 assert 'href="arch-endpoints.html#ep-app-' in m, "Exercises must LINK the code estate"
 assert 'class="entb ent-gadget"' in m, "entity badge column missing"
 assert (c / "test-claims.html").exists() and (c / "test-corpora.html").exists()
+# Shape A (ruling 2026-07-23): Coverage by element leads the record
+f = (c / "feature-gadget.html").read_text()
+assert 'id="sec-tests-elements"' in f, "entity Coverage-by-element section missing"
+assert 'href="#ep-gadget-src-api-py-get-gadget"' in f, \
+    "element row must link its Code-tab home"
+assert ">untested<" in f, "untested gap rows missing on the entity page"
+el = (c / "test-elements.html").read_text()
+assert 'class="entchips"' in el and "Coverage by element" in el, \
+    "app-wide element page missing"
+assert 'href="test-elements.html"' in dash, "dashboard must card the element page"
 PY4
 
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.

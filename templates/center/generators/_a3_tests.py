@@ -411,3 +411,142 @@ def exercises_html(repo: Path, junit_key: str) -> str:
             "</p>" + "".join(
                 f'<p class="sub" style="margin:6px 0 2px"><b>{lbl}</b> — '
                 f"{body}</p>" for lbl, body in bits))
+
+
+def coverage_by_element(repo: Path, slug: str, app: bool = False) -> str:
+    """Shape A (ruling 2026-07-23): the entity's code elements as ROWS —
+    the strong side of the thread. Every row links its Code-page home; kind
+    chips carry the receipts; an untested element is a VISIBLE gap row
+    (all of them on entity pages, a count line at the app altitude)."""
+    import _a3_code
+    from _a3_code import _anchor
+    from _a3_render import E, entity_badge, kind_ic, xtable
+    ti = test_insight(repo)
+    if app:
+        amap = _a3_code.merge_amaps(repo)
+        fent = amap.get("_file_entity") or {}
+        xp = {"ep": "arch-endpoints.html", "dm": "arch-data-model.html",
+              "fn": "arch-functions.html"}
+    else:
+        amap = _a3_code.collect_entity_map(slug, repo) or {}
+        fent = {}
+        xp = {"ep": "", "dm": "", "fn": ""}
+    ckind = {c["key"]: c.get("kind", c["key"])
+             for c in D.CFG.get("corpora", [])}
+    kcls = {c.get("kind", c["key"]): c.get("tag_class", "")
+            for c in D.CFG.get("corpora", [])}
+    _st = {"pass": "s-ok", "fail": "s-high", "skip": "s-gap"}
+
+    def chip(kind, n, title):
+        return (f'<span class="tag tk {kcls.get(kind, "")}" '
+                f'title="{E(kind)}: {E(title)}">{kind_ic(kind)} · {n}</span>')
+
+    def gapchip(msg):
+        return f'<span class="tag tk t-tgap" title="{E(msg)}">untested</span>'
+
+    def receipts(groups):  # [(label, refs)] -> detail html
+        out = ""
+        for lbl, refs in groups:
+            if not refs:
+                continue
+            rows = "".join(
+                "<tr><td>"
+                + (f'<a class="cid" href="test-matrix.html#{E(r["cid"])}">'
+                   f'{E(r["cid"])}</a>' if r["cid"] else "—")
+                + f"</td><td>{E(_CID_RX.sub('', r['name']).strip(' ·-_[]')[:70])}"
+                f'</td><td><span class="tag {_st.get(r["state"], "")}">'
+                f'{E(r["state"])}</span></td></tr>' for r in refs[:10])
+            out += (f'<p class="sub" style="margin:6px 0 2px"><b>{E(lbl)}</b>'
+                    f" ({len(refs)})</p>"
+                    '<table class="tbl"><thead><tr><th>Case</th>'
+                    "<th>What it asserts</th><th>State</th></tr></thead>"
+                    f"<tbody>{rows}</tbody></table>"
+                    + (f'<p class="sub">… {len(refs) - 10} more</p>'
+                       if len(refs) > 10 else ""))
+        return out
+
+    def _state(all_refs):
+        if not all_refs:
+            return "—"
+        fails = sum(1 for r in all_refs if r["state"] == "fail")
+        filelevel = all(r["state"] == "file" for r in all_refs)
+        if filelevel:
+            return "file-level"
+        return (f'<span style="color:#b3403a">{fails} failing</span>'
+                if fails else "all pass")
+
+    rows, untested = [], {"endpoint": 0, "model": 0, "function": 0}
+
+    def _ent(f):
+        o = fent.get(f, "")
+        return ([entity_badge(o, o, 13)] if app else [])
+
+    for e in amap.get("endpoints", []):
+        key = f'{e["file"]}::{e["fn"]}'
+        refs_by = ti["by_endpoint"].get(key) or {}
+        allr = [r for rs in refs_by.values() for r in rs]
+        if not allr and app:
+            untested["endpoint"] += 1
+            continue
+        cell = (f'<a class="dlink" href="{xp["ep"]}#'
+                f'{_anchor("ep", "app" if app else slug, e["file"] + "-" + e["fn"])}">'
+                f'<b>{E(e["method"])}</b> <code>{E(e["path"])}</code></a>')
+        chips = " ".join(chip(ckind.get(c2, c2), len(rs),
+                              "receipts matching this route (T1)")
+                         for c2, rs in sorted(refs_by.items()))             or gapchip("no case or spec matches this route")
+        rows.append(([*_ent(e["file"]), cell, chips,
+                      str(len(allr)) if allr else "—", _state(allr)],
+                     receipts([(ckind.get(c2, c2), rs)
+                               for c2, rs in sorted(refs_by.items())])))
+    for m in (amap.get("models", []) + amap.get("schemas", [])):
+        cls = m["cls"]
+        rec = ti["by_model"].get(cls) or {}
+        d, v = rec.get("direct") or [], rec.get("via_route") or []
+        if not (d or v) and app:
+            untested["model"] += 1
+            continue
+        cell = (f'<a class="dlink" href="{xp["dm"]}#'
+                f'{_anchor("dm", "app" if app else slug, cls)}">'
+                f"<code>{E(cls)}</code></a> <small>{'schema' if m in amap.get('schemas', []) else 'model'}</small>")
+        chips = " ".join(filter(None, [
+            chip(ckind.get(d[0]["corpus"], "unit"), len(d),
+                 "cases using this class by name (T1)") if d else "",
+            (f'<span class="tag tk t-via" title="via route (T2)">'
+             f"via route · {len(v)}</span>") if v else ""]))             or gapchip("never touched by name nor via any route")
+        rows.append(([*_ent(m.get("file", "")), cell, chips,
+                      str(len(d) + len(v)) if (d or v) else "—",
+                      _state(d + v)],
+                     receipts([("direct", d), ("via route", v)])))
+    fi = _a3_code.function_insight(repo)
+    for key, c in fi.items():
+        if not app and c.get("entity") != slug:
+            continue
+        rec = ti["by_function"].get(key) or {}
+        d, v = rec.get("direct") or [], rec.get("via_route") or []
+        if not (d or v):
+            untested["function"] += 1
+            if app:
+                continue
+        cell = (f'<a class="dlink" href="{xp["fn"]}#'
+                f'{_anchor("fn", "app" if app else slug, c["file"] + "-" + c["name"])}">'
+                f'<code>{E(c["name"])}()</code></a>')
+        chips = " ".join(filter(None, [
+            chip(ckind.get(d[0]["corpus"], "unit"), len(d),
+                 "cases calling this function (T1)") if d else "",
+            (f'<span class="tag tk t-via" title="via route (T2)">'
+             f"via route · {len(v)}</span>") if v else ""]))             or gapchip("no case calls it, no route serves it")
+        rows.append(([*_ent(c["file"]), cell, chips,
+                      str(len(d) + len(v)) if (d or v) else "—",
+                      _state(d + v)],
+                     receipts([("direct", d), ("via route", v)])))
+
+    cols = (["", "Element", "Kinds", "Cases", "State"] if app
+            else ["Element", "Kinds", "Cases", "State"])
+    w = (["40px", "2.4fr", "1.4fr", "0.6fr", "0.9fr"] if app
+         else ["2.4fr", "1.4fr", "0.6fr", "0.9fr"])
+    note = ""
+    if app and any(untested.values()):
+        note = ("Untested at this altitude (counted, not listed): "
+                + " · ".join(f"{n} {k}(s)" for k, n in untested.items() if n)
+                + " — each entity page lists ITS untested elements in full.")
+    return xtable(cols, rows, widths=w, note=note)

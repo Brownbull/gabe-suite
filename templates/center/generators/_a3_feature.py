@@ -1240,6 +1240,7 @@ def build_feature_pages(ctx) -> list[str]:
         # Matrix (per file).
         tests_tab = (
             subnav([("sec-tests-kinds", "Kinds & coverage", _IC_CHECK),
+                    ("sec-tests-elements", "By element", _IC_GRID),
                     ("sec-tests-claims", "Claims", _IC_CHECK),
                     ("sec-tests-matrix", "Matrix", _IC_GRID)])
             + sechead("Testing", "Kinds & coverage", "#15803d", _IC_CHECK,
@@ -1261,6 +1262,19 @@ def build_feature_pages(ctx) -> list[str]:
                       + angles_html(card.get("ANGLES", [])))
             + table(["Kind", "Runner", "Cases", "Where", "Passing", "State"],
                     _kind_rows, num={2})
+            # Shape A (ruling 2026-07-23): the element lens LEADS the record —
+            # this entity's endpoints/models/functions as rows, receipts in
+            # the fold, untested elements as visible gap rows.
+            + sechead("Testing", "Coverage by element", "#0d6e78", _IC_GRID,
+                      sub="what of this entity's CODE the corpus touches — "
+                          "every row links its Code-tab home; untested "
+                          "elements are visible gap rows",
+                      id_="sec-tests-elements",
+                      note="Rows come from the same AST map the Code tab "
+                           "renders; receipts come from the junit corpus "
+                           "joined at build time (T1 literals/imports, T2 "
+                           "via route). Click a row for its cases.")
+            + _a3_tests.coverage_by_element(ctx.repo_root, slug)
             + claim_section
             + sechead("Testing", "Matrix — per file", "#4f46e5", _IC_GRID,
                       sub="every test file touching this entity — open a row "
