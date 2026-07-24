@@ -609,6 +609,13 @@ assert "<b>Verified by</b> <code>tests/widget.test.ts</code>" in f \
 assert "no spec pointer joins the corpus record" in f, \
     "a set without a joinable spec must read its named gap"
 assert 'id="ev-g1"' in f, "proof sets need anchors (the reverse link's target)"
+# The triangle's last leg: dm card folds carry Tested-by receipts (the fn
+# folds already did → count ≥ 2), and code-side C-id pills stay in-page on
+# entity pages while the arch estate keeps the Cases-page link.
+assert f.count("Tested by") >= 2, "dm fold must carry Tested-by receipts"
+af = (c / "arch-functions.html").read_text()
+assert 'href="test-matrix.html#C12"' in af, \
+    "arch-estate receipts must link the Cases page ledger row"
 assert 'id="sec-tests-gaps"' in f and "lonely_helper" in f, \
     "entity Untested-surface section missing"
 assert 'id="sec-tests-elements"' not in f, \

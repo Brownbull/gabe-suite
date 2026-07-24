@@ -802,7 +802,8 @@ def merge_amaps(repo: Path) -> dict:
 
 def build_code_tab(slug: str, repo: Path, intro_html: str,
                    amap: dict | None = None, entity_col: bool = False,
-                   xpage: dict | None = None) -> str:
+                   xpage: dict | None = None,
+                   page_cids: set | None = None) -> str:
     """The Code tab: endpoints · code map · data model (+ candidates) ·
     functions (+ candidates). Returns "" for entities with no ENTITY_CODE
     mapping yet — rendered as a named gap by the caller. With an explicit
@@ -852,11 +853,16 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         return nm.replace("_", " ")[:64]
 
     def _cid_pill(r: dict) -> str:
-        # A C-id receipt LINKS to its case row on the estate matrix — the
-        # anchor exists for every C-id'd case app-wide (test-matrix.html).
+        # A C-id receipt LINKS to its case's LEDGER row. On an entity page
+        # the row lives in the Tests pane of the SAME file (the :has(:target)
+        # tab mechanism opens it) — but ONLY for cases the entity's test_rx
+        # claims; a receipt from an unclaimed file (the thread is app-wide)
+        # links the Cases page, where every case has its anchor.
         if not r["cid"]:
             return ""
-        return (f'<a class="cid" href="test-matrix.html#{E(r["cid"])}">'
+        _pg = ("" if (page_cids is not None and r["cid"] in page_cids)
+               else "test-matrix.html")
+        return (f'<a class="cid" href="{_pg}#{E(r["cid"])}">'
                 f'{E(r["cid"])}</a> ')
 
     def _ref_frag(refs: list) -> str:
@@ -1472,9 +1478,22 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         leftover = "".join(
             f'<p class="sub">Constraint: <code>{E(u)}</code></p>'
             for u in leftover_uqs)
+        # Tested by — the thread's receipts, mirroring the functions fold:
+        # the same C-id pills the Tests cell counts, opened in place.
+        _tb = _ti["by_model"].get(cls) or {}
+        tb_html = ""
+        for _lbl, _refs in (("direct", _tb.get("direct") or []),
+                            ("via route", _tb.get("via_route") or [])):
+            if _refs:
+                tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
+                            f"<b>{_lbl}</b> ({len(_refs)})</p>"
+                            + _ref_table(_refs))
+        if tb_html:
+            tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
         return (f"{meta_html}{_dm_api_tbl(cls, is_schema)}{_dm_int_tbl(cls)}"
                 f"{rel_rows(cls, rels or [])}"
                 f"{_incoming_fk_tbl(cls) if not is_schema else ''}"
+                f"{tb_html}"
                 f"{struct_head}{leftover}"
                 f'<table class="tbl"><thead><tr><th>Column</th><th>Type</th>'
                 f"<th>Example (synthetic)</th><th>Description</th></tr></thead>"
