@@ -16,6 +16,7 @@ import re
 from pathlib import Path
 
 import _center_data as _cd
+import _a3_ledger
 import _a3_tests
 import _center_mermaid as M
 from _a3_code import build_code_tab, collect_entity_map
@@ -837,10 +838,6 @@ def claim_verdicts(claims: list[str], inv: dict, corpora: list,
             "unclaimed_names": sorted(set(observed) - claimed)}
 
 
-def _exercises_html(repo, junit_key: str) -> str:
-    return _a3_tests.exercises_html(repo, junit_key)
-
-
 def build_feature_pages(ctx) -> list[str]:
     """One page per baseline entity that has a card. Entities without a card are
     skipped — a feature page is never invented ahead of its section."""
@@ -1153,33 +1150,27 @@ def build_feature_pages(ctx) -> list[str]:
              "nothing probes the deployed surface", meter(0, 0),
              '<span class="tag s-gap">absent</span>'],
         ]
-        # Matrix — GROUPED by corpus (like the data model's models/schemas),
-        # each an expandable-row table: click a file row to read its cases in
-        # place. The Kind column is retired into the coloured group title.
-        _matrix_groups, _matrix_nfiles = "", 0
+        # Files — the file ALTITUDE only (ruling Q3, 2026-07-24): flags,
+        # ratios and shared-owner facts junit carries per file, as FLAT rows.
+        # The cases themselves live on the ledger above — a second case
+        # listing here would be the duplication this rework exists to kill.
+        _files_rows, _matrix_nfiles = [], 0
         for c in ctx.corpora:
             corpus, kind, kcls = c["key"], c["kind"], c["tag_class"]
             files = sorted(inv[corpus]["files"].items(), key=lambda x: -x[1]["tests"])
-            if not files:
-                continue
             _matrix_nfiles += len(files)
-            _rows = []
             for fname, rec in files:
                 ran = rec["tests"] - rec["skipped"]
-                cells = [f"<code>{E(fname)}</code>", str(rec["tests"]),
-                         meter(rec["tests"] - rec["failed"], rec["tests"]),
-                         f'<span class="pct">{ran}/{rec["tests"]}</span>',
-                         file_flags(rec, shared_owners(fname, slug))]
-                _rows.append((cells,
-                              case_rows(rec, corpus, anchors=True)
-                              + _exercises_html(ctx.repo_root, fname)))
-            _matrix_groups += (
-                f'<p class="sub"><span class="tag {kcls}" '
-                f'title="{E(kind)}">{kind_ic(kind, 14)}</span> — '
-                f"{len(files)} file(s) in the <code>{E(corpus)}</code> "
-                f"corpus; click a row to read its cases:</p>"
-                + xtable(["File", "Cases", "Passing", "Ran", "Flags"], _rows,
-                         widths=["2.4fr", "0.7fr", "1fr", "0.8fr", "1.3fr"]))
+                _files_rows.append((
+                    [f'<span class="tag {kcls}" title="{E(corpus)} corpus">'
+                     f"{kind_ic(kind)} {E(kind)}</span>",
+                     f"<code>{E(fname)}</code>", str(rec["tests"]),
+                     meter(rec["tests"] - rec["failed"], rec["tests"]),
+                     f'<span class="pct">{ran}/{rec["tests"]}</span>',
+                     file_flags(rec, shared_owners(fname, slug))], ""))
+        _files_table = xtable(
+            ["Kind", "File", "Cases", "Passing", "Ran", "Flags"], _files_rows,
+            widths=["0.9fr", "2.4fr", "0.6fr", "1fr", "0.7fr", "1.2fr"])
         # Claimed coverage — the accumulator that LEADS the tab: card # CLAIMS
         # joined to the run by the class NAME. DRIFT is asserted only when junit
         # is COMPLETE — EVERY corpus loaded (using the per-corpus `present` field
@@ -1238,11 +1229,16 @@ def build_feature_pages(ctx) -> list[str]:
         # Order (after the Pending action table, which is prepended below):
         # Kinds & coverage (the fast testing snapshot) → Claimed coverage →
         # Matrix (per file).
+        # The case LEDGER leads the record (rulings R1–R3, 2026-07-24): the
+        # C-id is the row, the file is metadata, exercises chips carry the
+        # test→code direction. The Shape-A element roster is GONE — tested
+        # elements' receipts live on their Code rows; only the gaps remain.
         tests_tab = (
             subnav([("sec-tests-kinds", "Kinds & coverage", _IC_CHECK),
-                    ("sec-tests-elements", "By element", _IC_GRID),
+                    ("sec-tests-cases", "Cases", _IC_GRID),
+                    ("sec-tests-files", "Files", _IC_DOC),
                     ("sec-tests-claims", "Claims", _IC_CHECK),
-                    ("sec-tests-matrix", "Matrix", _IC_GRID)])
+                    ("sec-tests-gaps", "Untested", _IC_ALERT)])
             + sechead("Testing", "Kinds & coverage", "#15803d", _IC_CHECK,
                       sub=f"{own:,} automated case(s) · {own_failed} failed — "
                           f"what verifies this entity, "
@@ -1262,38 +1258,44 @@ def build_feature_pages(ctx) -> list[str]:
                       + angles_html(card.get("ANGLES", [])))
             + table(["Kind", "Runner", "Cases", "Where", "Passing", "State"],
                     _kind_rows, num={2})
-            # Shape A (ruling 2026-07-23): the element lens LEADS the record —
-            # this entity's endpoints/models/functions as rows, receipts in
-            # the fold, untested elements as visible gap rows.
-            + sechead("Testing", "Coverage by element", "#0d6e78", _IC_GRID,
-                      sub="what of this entity's CODE the corpus touches — "
-                          "every row links its Code-tab home; untested "
-                          "elements are visible gap rows",
-                      id_="sec-tests-elements",
-                      note="Rows come from the same AST map the Code tab "
-                           "renders; receipts come from the junit corpus "
-                           "joined at build time (T1 literals/imports, T2 "
-                           "via route). Click a row for its cases.")
-            + _a3_tests.coverage_by_element(ctx.repo_root, slug)
-            + claim_section
-            + sechead("Testing", "Matrix — per file", "#4f46e5", _IC_GRID,
-                      sub="every test file touching this entity — open a row "
-                          "to read its cases",
-                      id_="sec-tests-matrix",
+            + sechead("Testing", "Cases — the ledger", "#0d6e78", _IC_GRID,
+                      sub="every case this entity claims, C-id first — filter "
+                          "by kind, state, or the element it exercises; open "
+                          "a row for its executions and what rides its route",
+                      id_="sec-tests-cases",
+                      note="Rows are case IDENTITIES: the C-id is the anchor "
+                           "claims and Code-row receipts land on, parametrize "
+                           "executions group under their id, and the test "
+                           "file is the metadata line under the assertion. "
+                           "Solid chips are the case's own facts (T1); dashed "
+                           "chips ride in from its file (via file) — the "
+                           "filters match both.")
+            + _a3_ledger.ledger_html(
+                ctx.repo_root,
+                {c["key"]: inv[c["key"]]["files"] for c in ctx.corpora},
+                ctx.corpora)
+            + sechead("Testing", "Files", "#4f46e5", _IC_DOC,
+                      sub="the file altitude — per-file flags and ratios; "
+                          "the cases themselves live on the ledger above",
+                      id_="sec-tests-files",
                       note=f"{own} automated case(s) across {_matrix_nfiles} "
-                           "file(s), grouped by corpus, all read from the junit "
-                           "capture — never hand-listed.",
-                      info='<div class="leg">Passing = cases that did not fail. '
-                           "Ran = cases that were not skipped (a skipped case "
-                           "is claimed coverage that did not execute). Flags "
-                           "name a file's issues; a file with none reads "
-                           '<span class="tag s-ok">clean</span>. Opening a row '
-                           "lists its cases with the C-id that joins each one "
-                           "to a claim.</div>"
-                      + legend("Line coverage is NOT on this table:", [
+                           "file(s), read from the junit capture — never "
+                           "hand-listed. Flags name a file's issues; a file "
+                           "with none reads clean.",
+                      info=legend("Line coverage is NOT on this table:", [
                           ("s-gap", "named gap",
                            "the repo --cov gate is not sliced per entity")]))
-            + _matrix_groups)
+            + _files_table
+            + claim_section
+            + sechead("Testing", "Untested surface", "#b45309", _IC_ALERT,
+                      sub="this entity's elements no case or spec touches — "
+                          "gaps only, never the tested roster",
+                      id_="sec-tests-gaps",
+                      note="An untested element has no case row to carry it, "
+                           "so it gets a row here; a tested element's "
+                           "receipts already live on its Code rows. A row "
+                           "disappears by itself when a receipt lands.")
+            + _a3_tests.untested_surface(ctx.repo_root, slug))
 
         # Evidence — a header table of the entity's proof sets, each row opening
         # onto its own galleries; artifacts open in the in-page viewer. Built

@@ -33,13 +33,13 @@ from types import SimpleNamespace
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
 import _a3_code
+import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
 from _a3_code import ENTITY_CODE, ENTITY_MODELS, collect_entity_map  # noqa: E402
 from _a3_feature import (  # noqa: E402
     ENTITY_PROOFS,
     ENTITY_RX,
     build_feature_pages,
-    case_rows,
 )
 
 REPO_ROOT = D.REPO_ROOT
@@ -656,18 +656,18 @@ for _corpus, _j in corpora.items():
             f"{E(_corpus)}</span>",
             f"<code>{E(_f)}</code>", str(_rec["tests"]),
             meter(_rec["tests"] - _rec["failed"], _rec["tests"]), _claim]
-        _ex_html = _a3_tests.exercises_html(REPO_ROOT, _f)
-        _file_rows.append(
-            (_cells, case_rows(_rec, _corpus, anchors=True) + _ex_html))
+        # FLAT rows (ruling Q3, 2026-07-24): the file altitude keeps flags,
+        # ratios and claim state; the cases themselves live on the ledger.
+        _file_rows.append((_cells, ""))
 _unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[0][5])
 files_section = (
-    sechead("Testing", "The corpus, file by file", "#0f766e", _IC_LIST,
-            sub="every test file in the estate, what claims it, and its cases",
+    sechead("Testing", "Files", "#0f766e", _IC_LIST,
+            sub="the file altitude — every test file, its ratios, and what "
+                "claims it; the cases live on the ledger above",
             id_="sec-tests-files",
             info='<div class="leg">Claimed by = the registry entities whose '
-                 "file pattern matches; open a row to read the cases without "
-                 "leaving this page. A file may be claimed twice — the counts "
-                 "are views, not a partition.</div>"
+                 "file pattern matches. A file may be claimed twice — the "
+                 "counts are views, not a partition.</div>"
                  + legend("Claim state:", [
                      ("s-gap", "unclaimed",
                       "no adopted entity names this file yet — surface area, "
@@ -679,20 +679,25 @@ files_section = (
                  f"Read from the junit capture at build time; a file that stops "
                  f"running disappears from this table by itself."))
 
+# The Gaps card's numbers — same joins as the Gaps page rows (Q6).
+_unt_counts = _a3_tests.untested_counts(REPO_ROOT)
 testing_cards = ('<div class="archgrid">'
                  + "".join(
                      f'<a class="archcard" href="{fn}">{_mini_ic(ic)}'
                      f"<span><b>{ttl}</b>"
                      f'<span class="sub">{sub2}</span></span></a>'
                      for fn, ttl, ic, sub2 in [
-                         ("test-elements.html", "Coverage by element",
-                          "fields",
-                          "the element lens — endpoints/models/functions "
-                          "with their receipts, entity-filterable"),
                          ("test-matrix.html",
-                          "Matrix — the corpus, file by file", "fields",
-                          f"{len(_file_rows)} file(s) · every case with its "
-                          f"C-id · entity-filterable"),
+                          "Cases — the ledger", "fields",
+                          f"{t_total:,} case(s) in {len(_file_rows)} file(s) "
+                          f"· C-id anchors · filter by entity, kind, or the "
+                          f"element a case exercises"),
+                         ("test-elements.html", "Gaps — the untested surface",
+                          "fields",
+                          f"{sum(_unt_counts.values())} element(s) no case "
+                          f"or spec touches ({_unt_counts['endpoint']} "
+                          f"endpoint · {_unt_counts['model']} model · "
+                          f"{_unt_counts['function']} function)"),
                          ("test-claims.html", "Claims", "doc",
                           f"{len(sections)} entity(ies)' authored coverage, "
                           "verified by class name"),
@@ -1125,9 +1130,11 @@ PER_FILE = {
         "{{TESTS_KPIS}}": tests_kpis,
         "{{BUCKETS}}": testing_cards,
         "{{MATRIX}}": matrix
-        + '<p class="sub">The corpus itself lives file by file on '
-          '<a class="dlink" href="test-matrix.html">the Matrix page</a> — '
-          "entity-filterable, every case with its C-id anchor.</p>",
+        + '<p class="sub">The corpus itself lives case by case on '
+          '<a class="dlink" href="test-matrix.html">the Cases ledger</a> — '
+          "C-id anchors, exercises chips, element filters; its untested "
+          'complement is <a class="dlink" href="test-elements.html">the '
+          "Gaps page</a>.</p>",
         "{{GATES}}": '<p class="sub">Gates moved to '
                      '<a class="dlink" href="test-corpora.html">Corpora '
                      "&amp; gates</a>.</p>",
@@ -1327,11 +1334,15 @@ def render_testing() -> dict[str, str]:
         slug = s["entity"]
         cnts = " · ".join(f"{grid[slug][c][0]} {c}" for c in corpora
                           if grid[slug][c][0])
+        # An entity without a feature page has no claims section to anchor
+        # into — the row says so instead of shipping a dead deep link.
+        _href = _entity_href(slug)
         claims_rows.append(
             [entity_badge(slug, LABELS.get(slug, slug), 13, show_name=True),
              cnts or "—",
-             f'<a class="dlink" href="{_entity_href(slug)}#sec-tests-claims">'
-             f"its claimed coverage</a>"])
+             (f'<a class="dlink" href="{_href}#sec-tests-claims">'
+              f"its claimed coverage</a>" if _href.startswith("feature-")
+              else '<span class="sub">no feature page yet</span>')])
     claims_body = (
         sechead("Testing", "Claims — by entity", "#0d9488", _IC_LIST,
                 sub="claims are AUTHORED per entity (card # CLAIMS) and "
@@ -1343,26 +1354,44 @@ def render_testing() -> dict[str, str]:
 
     corpora_body = (buckets + gates + verification_changelog + demo_shelf)
 
-    elements_body = (
-        sechead("Testing", "Coverage by element — app-wide", "#0d6e78",
-                _IC_LIST,
-                sub="every tested code element with its receipts; untested "
-                    "counts per element type (each entity page lists its "
-                    "own in full)",
-                id_="sec-tests-elements",
-                note="Same joins as the entity pages, merged app-wide — "
-                     "filter by entity above.")
-        + _a3_tests.coverage_by_element(REPO_ROOT, "app", app=True))
+    # The case LEDGER (rulings R1–R3, 2026-07-24): the C-id is the row and
+    # the canonical anchor; its own dropdown bar replaces the chip bar here.
+    app_inv = {c["key"]: (junit_by.get(c["key"]) or {}).get("files", {})
+               for c in CORPORA}
+    ledger_body = (
+        sechead("Testing", "Cases — the ledger", "#0d6e78", _IC_LIST,
+                sub="every case identity in the estate — filter by entity, "
+                    "kind, state, or the element it exercises; C-id pills "
+                    "everywhere in the center land on these rows",
+                id_="sec-tests-cases",
+                note="Rows are case IDENTITIES: parametrize executions group "
+                     "under their C-id, the test file is the metadata line "
+                     "under the assertion. Solid chips are a case's own "
+                     "facts (T1); dashed chips ride in from its file "
+                     "(via file) — the filters match both.")
+        + _a3_ledger.ledger_html(REPO_ROOT, app_inv, CORPORA,
+                                 owners_of=entities_of, labels=LABELS,
+                                 app=True))
+    gaps_body = (
+        sechead("Testing", "Untested surface — app-wide", "#b45309", _IC_LIST,
+                sub="every element no case or spec touches — gaps only; the "
+                    "tested roster lives on the architecture pages with its "
+                    "receipts",
+                id_="sec-tests-gaps",
+                note="Rows come from the same AST map the architecture pages "
+                     "render; a row disappears by itself the moment a case "
+                     "or spec touches its element.")
+        + _a3_tests.untested_surface(REPO_ROOT, "app", app=True))
     return {
         "test-elements.html": _tpage(
-            "Coverage by element", "By element",
-            "the element lens: what of the CODE the corpus touches, "
-            "app-wide", bar + elements_body),
+            "Gaps", "Gaps",
+            "the untested surface: endpoints, models and functions no case "
+            "or spec touches, entity-filterable", bar + gaps_body),
         "test-matrix.html": _tpage(
-            "Test matrix", "Matrix",
-            "every test file in the estate — filter by entity, open a row "
-            "to read its cases (C-id anchors) and what it exercises",
-            bar + files_section),
+            "Cases", "Cases",
+            "the case ledger — every identity with its C-id anchor and "
+            "exercises chips, element-filterable; the file altitude below",
+            ledger_body + files_section),
         "test-claims.html": _tpage(
             "Test claims", "Claims",
             "the authored coverage accumulator, indexed app-wide",

@@ -77,13 +77,22 @@ c = root / center_rel
     '    client.get("/gadgets/one")\n\n\n'
     "def test_gid_format_C12():\n"
     "    make_gid()\n"
-    "    GadgetOut()\n")
+    "    GadgetOut()\n\n\n"
+    # No own facts and no C-id: FIRES the ledger's via-file inherited chips
+    # (Q1) and the unminted honesty tag (Q2).
+    "def test_unlabeled():\n"
+    "    assert True\n")
 (root / "tests" / "results" / "api-junit.xml").write_text(
     '<testsuites><testsuite name="pytest" timestamp="2026-07-23T00:00:00">'
     '<testcase classname="tests.test_gadgets" '
     'name="test_lists_gadgets_C11" time="0.1"/>'
+    # C12 ran as two parametrize executions: ONE identity, one ledger row.
     '<testcase classname="tests.test_gadgets" '
-    'name="test_gid_format_C12" time="0.1"/>'
+    'name="test_gid_format_C12[a]" time="0.1"/>'
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_gid_format_C12[b]" time="0.1"/>'
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_unlabeled" time="0.1"/>'
     "</testsuite></testsuites>")
 cfg = {"project": {"name": "Fixture", "domain": "battery"},
        "paths": {"center": center_rel, "kdbp": ".kdbp",
@@ -498,32 +507,42 @@ assert "reach · " in html, "file reach chip missing"
 assert html.count(">Tests</span>") >= 4, "Tests column missing from a table"
 PY3
 
-# The TESTING ESTATE (ruling Q2): tests.html dashboards (cards + grid), the
-# corpus lives on test-matrix.html with the entity filter, per-case C-id
-# anchors and Exercises receipts; claims + corpora pages exist and are linked.
-python3 - "$FIX/docs/site/center" <<'PY4' && ok || bad "testing estate: dashboard + matrix/claims/corpora pages (see above)"
+# The case LEDGER (rulings R1–R3 + Q1–Q6, 2026-07-24): the C-id is the row
+# and the canonical anchor; dropdown filters (R2) incl. per-element datalists;
+# solid T1 chips vs dashed via-file inheritance (Q1); the unminted honesty
+# tag (Q2); parametrize variants grouped under their id; test-elements.html
+# is the GAPS page — untested rows FIRE, tested elements stay SILENT — and
+# the Shape-A element roster is gone from the entity tab.
+python3 - "$FIX/docs/site/center" <<'PY4' && ok || bad "testing estate: case ledger + gaps page (see above)"
 import sys
 from pathlib import Path
 c = Path(sys.argv[1])
 dash = (c / "tests.html").read_text()
 assert 'href="test-matrix.html"' in dash and "archgrid" in dash, "dashboard cards missing"
+assert "Gaps" in dash and 'href="test-elements.html"' in dash, "Gaps card missing"
 m = (c / "test-matrix.html").read_text()
-assert 'class="entchips"' in m, "entity filter bar missing on the matrix page"
-assert 'id="C11"' in m, "per-case C-id anchor missing"
-assert "Exercises" in m and "/gadgets/one" in m, "Exercises receipts missing"
-assert 'href="arch-endpoints.html#ep-app-' in m, "Exercises must LINK the code estate"
-assert 'class="entb ent-gadget"' in m, "entity badge column missing"
-assert (c / "test-claims.html").exists() and (c / "test-corpora.html").exists()
-# Shape A (ruling 2026-07-23): Coverage by element leads the record
+assert 'id="ledbar"' in m and "<select" in m and "<datalist" in m, \
+    "dropdown filter bar missing (R2)"
+assert 'id="C11"' in m, "C-id row anchor missing (the canonical anchor)"
+assert 'data-ep="get /gadgets/one"' in m, "own T1 endpoint fact missing on C11"
+assert "lc-via" in m, "inherited via-file chip missing (Q1: test_unlabeled)"
+assert ">unminted<" in m, "unminted honesty tag missing (Q2)"
+assert "×2</small>" in m, "parametrize executions must group under C12"
+assert 'href="arch-endpoints.html#ep-app-' in m, "chips must LINK the code estate"
+assert 'data-ent="gadget"' in m, "entity data attribute missing"
+assert 'id="sec-tests-files"' in m, "file-altitude table missing below the ledger"
 f = (c / "feature-gadget.html").read_text()
-assert 'id="sec-tests-elements"' in f, "entity Coverage-by-element section missing"
-assert 'href="#ep-gadget-src-api-py-get-gadget"' in f, \
-    "element row must link its Code-tab home"
-assert ">untested<" in f, "untested gap rows missing on the entity page"
+assert 'id="sec-tests-cases"' in f and 'id="C11"' in f, \
+    "entity tab must carry the scoped ledger with C-id anchors"
+assert 'id="sec-tests-gaps"' in f and "lonely_helper" in f, \
+    "entity Untested-surface section missing"
+assert 'id="sec-tests-elements"' not in f, \
+    "Shape A element roster must be GONE from the entity tab"
 el = (c / "test-elements.html").read_text()
-assert 'class="entchips"' in el and "Coverage by element" in el, \
-    "app-wide element page missing"
-assert 'href="test-elements.html"' in dash, "dashboard must card the element page"
+assert 'class="entchips"' in el and "Untested surface" in el, "Gaps page missing"
+assert "lonely_helper" in el, "untested function gap row must FIRE"
+assert "/gadgets/one" not in el, "tested endpoint must stay SILENT on the Gaps page"
+assert (c / "test-claims.html").exists() and (c / "test-corpora.html").exists()
 PY4
 
 # Gabe Center branding: the suite icon + subtitle ship in every skeleton.

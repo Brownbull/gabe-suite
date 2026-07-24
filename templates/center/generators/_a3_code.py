@@ -1145,15 +1145,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                            f'{_kcls.get(kind, "")}" title="{E(kind)}">'
                            f"{kind_ic(kind, 14)}</span>"
                            f"</td><td>{vol}</td><td>{st}</td></tr>")
-            _tm = ("test-matrix.html#sec-tests-files" if entity_col
-                   else "#sec-tests-matrix")
+            _tm = ("test-matrix.html#sec-tests-cases" if entity_col
+                   else "#sec-tests-cases")
             detail += (_dmh("#15803d", "fn", "Tests", "")
                        + '<table class="tbl"><thead><tr><th>Kind</th>'
                          "<th>Volume</th><th>State</th></tr></thead><tbody>"
                        + _srows + "</tbody></table>"
                        + f'<p class="sub">Full receipts live in the Tests '
                          f'section — <a class="dlink" href="{_tm}">open the '
-                         f"matrix</a>.</p>")
+                         f"case ledger</a>.</p>")
         cells = [
             f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'

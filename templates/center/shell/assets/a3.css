@@ -802,3 +802,18 @@ details.legset .gal{margin:8px 0 4px}
 .tag.tk{border-radius:11px;font-weight:700}
 .tag.t-tgap{background:transparent;color:var(--muted,#64748b);border:1px dashed #c6ccd6}
 .tag.t-via{background:transparent;color:#4f46e5;border:1px solid #c7c2f2}
+/* The case LEDGER (2026-07-24): C-id rows, dropdown filters (R2), tiered
+   exercises chips — solid = the case's own T1 facts, dashed = via file. */
+.ledbar{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:2px 0 14px;position:sticky;top:0;z-index:40;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--line)}
+.ledbar label{display:flex;flex-direction:column;gap:2px;font-size:.62rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted,#64748b)}
+.ledbar select,.ledbar input{font:var(--mono,ui-monospace);font-size:.72rem;padding:3px 8px;border:1px solid var(--line,#d8dee6);border-radius:7px;background:var(--surface,#fff);color:inherit}
+.ledbar #ledcount{align-self:center;margin-left:auto}
+.lchip{display:inline-block;font:var(--mono);font-size:.66rem;border:1px solid var(--line,#d8dee6);border-radius:5px;padding:0 6px;margin:1px 4px 1px 0;text-decoration:none;color:inherit;white-space:nowrap}
+.lchip:hover{border-color:var(--accent,#0d6e78)}
+.lc-ep{border-color:color-mix(in srgb,#4f46e5 40%,transparent)}
+.lc-mdl{border-color:color-mix(in srgb,#8e4585 40%,transparent)}
+.lc-fn{border-color:color-mix(in srgb,#0d6e78 45%,transparent)}
+.lc-via{border-style:dashed;opacity:.75}
+.lc-more,.lc-file{color:var(--muted,#64748b)}
+.lfile{display:block;font-size:.66rem;color:var(--muted,#64748b);margin-top:2px}
+.xrow.lhide{display:none!important}
