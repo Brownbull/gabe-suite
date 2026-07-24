@@ -164,6 +164,8 @@ from _a3_render import (  # noqa: E402  (helpers live beside this module)
     strip_slot_doc_comments,
     table,
     th_label,
+    tinfo,
+    TINFO_SCRIPT,
     trunc,
     xtable,
     kind_ic,
@@ -963,6 +965,14 @@ def _ev_anchor(name: str) -> str:
     return "ev-" + re.sub(r"[^A-Za-z0-9]+", "-", name).strip("-")
 
 
+def _manifest_of(d: Path) -> dict:
+    p = d / "manifest.json"
+    if p.exists():
+        with contextlib.suppress(json.JSONDecodeError):
+            return json.loads(p.read_text())
+    return {}
+
+
 _shelf_rows = []
 for _d in pdirs:
     _owners = _set_owners.get(_d.name, [])
@@ -972,6 +982,22 @@ for _d in pdirs:
     _ecell = " ".join(
         f'<a href="{_entity_href(o)}">'
         + entity_badge(o, LABELS.get(o, o), 13) + "</a>" for o in _owners)
+    # WHAT the set shows — the manifest's own words (feature + story),
+    # written by /gabe-feature curate after the green run. No manifest =
+    # the folder name is all there is, and the row says so.
+    _man = _manifest_of(_d)
+    _feat = str(_man.get("feature") or "")
+    _story = str((_man.get("narration") or {}).get("story") or "")
+    if _feat or _story:
+        _what = ((f"<b>{E(_feat)}</b>" if _feat else "")
+                 + (f"<br><small>{E(_story)}</small>" if _story else ""))
+    else:
+        _what = ('<span class="tag s-gap">no manifest</span>'
+                 + tinfo("this set carries no manifest.json, so it has no "
+                         "authored description — /gabe-feature curate "
+                         "writes one (feature · story · legs) after a "
+                         "green run; until then the folder name is all "
+                         "there is."))
     _carded = next((o for o in _owners
                     if _entity_href(o).startswith("feature-")), "")
     if _carded:
@@ -980,22 +1006,29 @@ for _d in pdirs:
                  f"{E(LABELS.get(_carded, _carded))}'s Evidence tab — "
                  "legs + galleries</a>")
     elif _owners:
-        _land = ('<span class="sub">claimed, but the entity has no '
-                 "feature page yet</span>")
+        _land = ('<span class="tag s-med">no feature page yet</span>'
+                 + tinfo("the claiming entity is registered but not carded "
+                         "— its Evidence tab appears when the entity is "
+                         "adopted (/gabe-adopt section)."))
     else:
-        _land = ('<span class="tag s-gap">unclaimed</span> '
-                 '<span class="sub">no entity\'s proofs list names this '
-                 "set — claim it in center.config.json</span>")
-    _shelf_rows.append([_ecell, f"<b>{E(_d.name)}</b>",
+        _land = ('<span class="tag s-gap">unclaimed</span>'
+                 + tinfo("no entity's proofs list names this set — add it "
+                         "to entities[].proofs in center.config.json and "
+                         "it renders on that entity's Evidence tab with "
+                         "its legs and galleries."))
+    _shelf_rows.append([_ecell, f"<b>{E(_d.name)}</b>", _what,
                         str(len(list(_d.glob("*.png")))), _when, _land])
-demo_shelf = table(
-    [ENT_COL, "Proof set", "Shots", "Newest", "Where it lands"],
-    _shelf_rows, num={2},
+demo_shelf = (table(
+    [ENT_COL, "Proof set", "What it shows", "Shots", "Newest",
+     "Where it lands"],
+    _shelf_rows, num={3},
+    widths=["44px", "1.2fr", "2.4fr", "0.5fr", "0.8fr", "1.6fr"],
     note=f"{len(pdirs)} proof set(s) under tests/web-e2e/proof/ — "
          "screenshots a human CURATED after a green run (/gabe-feature "
          "curate). A set is claimed by entities[].proofs in "
          "center.config.json and renders in full on its entity's Evidence "
-         "tab; an unclaimed set is surface area for the next adoption."
+         "tab; an unclaimed set is surface area for the next adoption.")
+    + TINFO_SCRIPT
 ) if pdirs else gap("Demo shelf", "tests/web-e2e/proof/")
 
 # --------------------------------------------------------------------------- #

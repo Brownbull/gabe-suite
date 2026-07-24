@@ -671,6 +671,18 @@ assert 'href="feature-gadget.html#ev-g1"' in co, \
 assert ">stray</b>" in co and ">unclaimed<" in co[co.find(">stray</b>"):][:600], \
     "an unclaimed proof set must be NAMED unclaimed on the shelf"
 assert "<title>entity</title>" in co, "the shelf entity column needs its glyph"
+# Round 24: the shelf explains each SET (What it shows = the manifest's own
+# feature + story; no manifest = named gap), and repeated state prose moves
+# behind the ledger-dialect ⓘ popover (tag + tinfo, script included).
+assert "What it shows" in co and "Gadget scan walk" in co \
+    and "One pass through the scan flow." in co, \
+    "a curated set must show its manifest's feature + story"
+assert ">no manifest<" in co[co.find(">stray</b>"):][:900], \
+    "a manifest-less set must name that gap in What-it-shows"
+assert 'class="tinfo"' in co[co.find(">stray</b>"):][:900], \
+    "the unclaimed/no-manifest prose must ride the ⓘ popover, not the row"
+assert 'class="tclose"' in co and "d2._t=setTimeout" in co, \
+    "the shelf page must ship the ⓘ close/auto-dismiss behavior"
 assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
     "the manual kind row must link the walks record"
 # Round 19 (operator verdicts 2026-07-24): the entity column HEADER carries

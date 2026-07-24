@@ -510,6 +510,29 @@ def sechead(gtag: str, title: str, color: str, icon: str, sub: str = "",
     return f"{head}</div></div>"
 
 
+def tinfo(text: str) -> str:
+    """The ⓘ popover — a small window of prose anchored to the icon, an × to
+    close, auto-dismissed by the page script after a few seconds. The one
+    way explanatory text rides a value anywhere in the center (ledger fold
+    labels, shelf state tags) — never a line of prose repeated per row."""
+    return ('<details class="tinfo"><summary aria-label="more about this">'
+            'ⓘ</summary><div class="tx">'
+            '<button type="button" class="tclose" aria-label="close">×'
+            f"</button>{E(text)}</div></details>")
+
+
+# The ⓘ behavior for pages that do NOT ship the ledger script (which carries
+# the same handler): × closes, opening arms a 6s auto-dismiss.
+TINFO_SCRIPT = (
+    "<script>(function(){document.addEventListener('click',function(e){"
+    "var x=e.target.closest('.tclose');"
+    "if(x){e.preventDefault();x.closest('details').removeAttribute('open');return;}"
+    "var s2=e.target.closest('.tinfo>summary');"
+    "if(s2){var d2=s2.parentNode;clearTimeout(d2._t);"
+    "d2._t=setTimeout(function(){d2.removeAttribute('open');},6000);}});"
+    "})();</script>")
+
+
 def legend(intro: str, items: list[tuple[str, str, str]]) -> str:
     """A color legend line: (css-class, label, meaning) chips after a title —
     a color that isn't explained right where it's used is decoration."""

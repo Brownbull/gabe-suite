@@ -331,14 +331,10 @@ _SHOW_REACH = 6      # visible chips per fold row; the note carries the rest
 _SHOW_INREACH = 8
 
 
-def _tinfo(text: str) -> str:
-    """The tier explainer — an ⓘ opening a small POPOVER (round 7): normal
-    prose anchored to the icon, an × to close, auto-dismissed by the ledger
-    script after a few seconds. Never a line riding the label."""
-    return ('<details class="tinfo"><summary aria-label="what this tier '
-            'means">ⓘ</summary><div class="tx">'
-            '<button type="button" class="tclose" aria-label="close">×'
-            f"</button>{E(text)}</div></details>")
+# The tier explainer ⓘ popover moved to _a3_render.tinfo (round 24: the
+# shelf's state tags speak the same dialect); this alias keeps the ledger's
+# call sites unchanged.
+from _a3_render import tinfo as _tinfo  # noqa: E402
 
 
 def _kv(rows: list) -> str:
