@@ -326,10 +326,13 @@ _SHOW_INREACH = 8
 
 
 def _tinfo(text: str) -> str:
-    """The tier explainer — an ⓘ the reader opens on demand instead of a
-    T1/T2/T3 code riding the label (operator, round 5)."""
+    """The tier explainer — an ⓘ opening a small POPOVER (round 7): normal
+    prose anchored to the icon, an × to close, auto-dismissed by the ledger
+    script after a few seconds. Never a line riding the label."""
     return ('<details class="tinfo"><summary aria-label="what this tier '
-            f'means">ⓘ</summary><div class="tx">{E(text)}</div></details>')
+            'means">ⓘ</summary><div class="tx">'
+            '<button type="button" class="tclose" aria-label="close">×'
+            f"</button>{E(text)}</div></details>")
 
 
 def _kv(rows: list) -> str:
@@ -353,7 +356,8 @@ def _kv(rows: list) -> str:
 
 
 def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
-          reach_fns: list, reach_mdls: list, classify, exports_of) -> str:
+          reach_fns: list, reach_mdls: list, classify, exports_of,
+          ts_global: dict) -> str:
     """What opens under the row: the metadata spine as LABELED rows, the
     kind's facts tier by tier (each label carrying its ⓘ explainer), the
     uses block split by symbol kind — functions with their typed signatures
@@ -436,7 +440,7 @@ def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
                 if tok in mi:
                     return (f'<a class="dlink" href="{_XP["dm"]}#'
                             f'{_anchor("dm", "app", tok)}">{tok}</a>')
-                f3 = tsindex.get(tok)
+                f3 = tsindex.get(tok) or ts_global.get(tok)
                 if f3:
                     return (f'<a class="dlink" href="{_XP["cm"]}#'
                             f'{_anchor("cm", "app", f3)}">{tok}</a>')
@@ -614,6 +618,12 @@ bar.addEventListener('input',apply);bar.addEventListener('change',apply);
 bar.addEventListener('click',function(e){var b=e.target.closest('.lx');
 if(!b)return;var t=el(b.dataset.for);if(!t)return;
 t.value=(t.tagName==='SELECT')?'all':'';apply();});
+document.addEventListener('click',function(e){
+var x=e.target.closest('.tclose');
+if(x){e.preventDefault();x.closest('details').removeAttribute('open');return;}
+var s2=e.target.closest('.tinfo>summary');
+if(s2){var d2=s2.parentNode;clearTimeout(d2._t);
+d2._t=setTimeout(function(){d2.removeAttribute('open');},6000);}});
 })();</script>"""
 
 
@@ -656,6 +666,15 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
 
     def exports_of(f2: str) -> dict:
         return _ts_exports(repo, f2)
+
+    # The GLOBAL ts-export index: every mapped web file's exports, name ->
+    # defining file (first owner wins) — so a signature's type links home
+    # even when the test file never imports the type's module directly.
+    ts_global: dict[str, str] = {}
+    for f2 in sorted(fent):
+        if f2.endswith(_a3_tests._TS_EXTS):
+            for nm2 in _ts_exports(repo, f2):
+                ts_global.setdefault(nm2, f2)
 
     kinds = sorted({g["kind"] for g in cases})
     tags_all: set[str] = set()
@@ -712,7 +731,8 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         summ = ("".join(f"<span>{c}</span>" for c in cells)
                 + '<span class="xtgl"></span>')
         detail = _fold(g, ep_meta, mi, labels, ents,
-                       reach_fns, reach_mdls, classify, exports_of)
+                       reach_fns, reach_mdls, classify, exports_of,
+                       ts_global)
         body.append(f'<details class="xrow"{idattr}{attrs}>'
                     f"<summary>{summ}</summary>"
                     f'<div class="xbody">{detail}</div>'

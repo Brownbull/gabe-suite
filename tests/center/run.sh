@@ -87,9 +87,14 @@ c = root / center_rel
 # (DF3/W1 -> data-tag + .ltag pills + the tag filter) and the uses·T3 chips
 # (imported symbols are the closest file-tier gets to naming what is under
 # test).
+# WSeed lives in a file the TEST never imports — its link in planWidget's
+# signature must resolve through the GLOBAL ts-export index.
+(root / "src" / "kinds.ts").write_text(
+    "export type WSeed = { gid: string };\n")
 (root / "src" / "widget.ts").write_text(
-    "export function planWidget(seed: GadgetOut): GadgetOut {\n"
-    "  return seed;\n}\n"
+    'import type { WSeed } from "./kinds";\n\n'
+    "export function planWidget(seed: WSeed): GadgetOut {\n"
+    "  return { gid: seed.gid } as GadgetOut;\n}\n"
     'export const WIDGET_KIND = "w";\n')
 (root / "tests" / "widget.test.ts").write_text(
     'import { planWidget, WIDGET_KIND } from "../src/widget";\n\n'
@@ -127,7 +132,8 @@ cfg = {"project": {"name": "Fixture", "domain": "battery"},
                                         "services": ["src/big.py",
                                                      "src/funcs.py"],
                                         "schemas": ["src/schemas.py"],
-                                        "web": ["src/widget.ts"]},
+                                        "web": ["src/widget.ts",
+                                                "src/kinds.ts"]},
                                "models": []}}}
 # The config ALWAYS lives at the DEFAULT center path — it is where paths.center
 # itself is read from (_center_data: "CENTER_DIR is where config lives, so it
@@ -572,6 +578,10 @@ assert 'uses<details class="tinfo"' in m and 'class="k kwide"' in m, \
 assert "<b>functions</b>" in m and "<th>Signature</th>" in m \
     and ">planWidget<" in m and "seed: <a" in m, \
     "functions subsection must show typed signatures with linked types"
+assert 'href="arch-code-map.html#cm-app-src-kinds-ts">WSeed</a>' in m, \
+    "a signature type must link home via the GLOBAL ts-export index"
+assert 'class="tclose"' in m and "d2._t=setTimeout" in m, \
+    "the ⓘ popover needs its × and the auto-dismiss timer"
 assert "<b>constants</b>" in m and ">WIDGET_KIND<" in m \
     and "<th>Declared as</th>" in m, \
     "constants subsection missing its declared-as column"
