@@ -110,6 +110,7 @@ def build_cases(repo: Path, inv_files: dict, corpora: list) -> list[dict]:
                     label = label.replace("_", " ")
                     g = groups[key] = {
                         "cid": cid, "label": label or base, "group": group,
+                        "rkey": cid or f"{tfile or jf}::{base}",
                         "file": tfile or jf, "jfile": jf,
                         "corpus": corpus, "kind": kind,
                         "kcls": kcls, "inh": inh, "variants": [], "time": 0.0,
@@ -673,7 +674,12 @@ return [].slice.call(d.querySelectorAll('option')).map(
 function(o){return o.value.toLowerCase();});}
 var exactOpts={'led-tag':opts('led-tag'),'led-ep':opts('led-ep'),
 'led-mdl':opts('led-mdl'),'led-fn':opts('led-fn')};
-function tokenMatch(id,val,q){if(!q)return true;
+var strictOn=false,strictVals={};
+var attrOf={'led-tag':'tag','led-ep':'ep','led-mdl':'mdl','led-fn':'fn'};
+var rAttr={'led-ep':'epr','led-mdl':'mdlr','led-fn':'fnr'};
+function tokenMatch(id,d,q){if(!q)return true;
+var val=(d[attrOf[id]]||'');
+if(strictOn&&rAttr[id]&&strictVals[id]===q){val=(d[rAttr[id]]||'');}
 if(exactOpts[id]&&exactOpts[id].indexOf(q)>=0){
 return ('|'+val+'|').indexOf('|'+q+'|')>=0;}
 return val.indexOf(q)>=0;}
@@ -684,18 +690,20 @@ rows.forEach(function(r){var d=r.dataset,ok=true;
 if(ent&&ent!=='all')ok=((' '+(d.ent||'')+' ').indexOf(' '+ent+' ')>=0);
 if(ok&&kind&&kind!=='all')ok=(d.kind===kind);
 if(ok&&st&&st!=='all')ok=(d.state===st);
-if(ok&&tg)ok=tokenMatch('led-tag',d.tag||'',tg);
-if(ok&&ep)ok=tokenMatch('led-ep',d.ep||'',ep);
-if(ok&&mdl)ok=tokenMatch('led-mdl',d.mdl||'',mdl);
-if(ok&&fn)ok=tokenMatch('led-fn',d.fn||'',fn);
+if(ok&&tg)ok=tokenMatch('led-tag',d,tg);
+if(ok&&ep)ok=tokenMatch('led-ep',d,ep);
+if(ok&&mdl)ok=tokenMatch('led-mdl',d,mdl);
+if(ok&&fn)ok=tokenMatch('led-fn',d,fn);
 if(ok&&q)ok=((r.textContent+' '+(d.ep||'')+' '+(d.mdl||'')+' '+(d.fn||''))
 .toLowerCase().indexOf(q)>=0);
 r.classList.toggle('lhide',!ok);if(ok)n++;});
 if(note)note.textContent=n+' of '+rows.length+' case(s)';sync();}
 var qs=new URLSearchParams(location.search),pre=false;
+strictOn=qs.get('led-strict')==='1';
 ['led-ent','led-kind','led-state','led-tag','led-ep','led-mdl','led-fn',
 'led-q'].forEach(function(id){var val=qs.get(id);
-if(val){var e=el(id);if(e){e.value=val;pre=true;}}});
+if(val){var e=el(id);if(e){e.value=val;pre=true;
+strictVals[id]=val.trim().toLowerCase();}}});
 if(pre)apply();
 bar.addEventListener('input',apply);bar.addEventListener('change',apply);
 bar.addEventListener('click',function(e){var b=e.target.closest('.lx');
@@ -749,6 +757,47 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
 
     def exports_of(f2: str) -> dict:
         return _ts_exports(repo, f2)
+
+    # RECEIPT maps (strict mode, ruling 2026-07-25): which rows the engine
+    # recorded as an element's receipts — case refs by identity, file-level
+    # refs by test file (every case of that file is part of the receipt).
+    # The see-all links land HERE, so their number is the fold's number.
+    ti = _a3_tests.test_insight(repo)
+    ep_lbl = {f'{e["file"]}::{e["fn"]}': f'{e["method"]} {e["path"]}'
+              for e in amap.get("endpoints", [])}
+    fn_tok = {k: c["name"] + "()"
+              for k, c in _a3_code.function_insight(repo).items()}
+    rec_case: dict[str, dict] = {}
+    rec_file: dict[str, dict] = {}
+
+    def _radd(r: dict, kind2: str, tok: str) -> None:
+        if r["state"] == "file":
+            b = rec_file.setdefault(r["tfile"],
+                                    {"ep": set(), "fn": set(), "mdl": set()})
+        else:
+            rk = r["cid"] or (r["tfile"] + "::"
+                              + re.sub(r"\[.*\]$", "", r["name"]))
+            b = rec_case.setdefault(rk,
+                                    {"ep": set(), "fn": set(), "mdl": set()})
+        b[kind2].add(tok)
+
+    for key2, by_corpus in ti["by_endpoint"].items():
+        lbl2 = ep_lbl.get(key2)
+        if lbl2:
+            for refs2 in by_corpus.values():
+                for r2 in refs2:
+                    _radd(r2, "ep", lbl2)
+    for key2, rec2 in ti["by_function"].items():
+        tok2 = fn_tok.get(key2)
+        if tok2:
+            for refs2 in (rec2.get("direct") or [],
+                          rec2.get("via_route") or []):
+                for r2 in refs2:
+                    _radd(r2, "fn", tok2)
+    for cls2, rec2 in ti["by_model"].items():
+        for refs2 in (rec2.get("direct") or [], rec2.get("via_route") or []):
+            for r2 in refs2:
+                _radd(r2, "mdl", cls2)
 
     # The GLOBAL ts-export index: every mapped web file's exports, name ->
     # defining file (first owner wins) — so a signature's type links home
@@ -816,12 +865,20 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         if g["cid"] and g["cid"] not in seen_ids:
             seen_ids.add(g["cid"])
             idattr = f' id="{E(g["cid"])}"'
+        rc2 = rec_case.get(g["rkey"]) or {}
+        rf2 = rec_file.get(g["file"]) or {}
+        r_ep = sorted(set(rc2.get("ep") or []) | set(rf2.get("ep") or []))
+        r_fn = sorted(set(rc2.get("fn") or []) | set(rf2.get("fn") or []))
+        r_mdl = sorted(set(rc2.get("mdl") or []) | set(rf2.get("mdl") or []))
         attrs = (f' data-ent="{E(" ".join(ents))}"'
                  f' data-tag="{E("|".join(g["tags"]))}"'
                  f' data-kind="{E(g["kind"])}" data-state="{E(g["state"])}"'
                  f' data-ep="{E("|".join(feed["ep"]).lower())}"'
                  f' data-mdl="{E("|".join(feed["mdl"]).lower())}"'
-                 f' data-fn="{E("|".join(feed["fn"]).lower())}"')
+                 f' data-fn="{E("|".join(feed["fn"]).lower())}"'
+                 f' data-epr="{E("|".join(r_ep).lower())}"'
+                 f' data-mdlr="{E("|".join(r_mdl).lower())}"'
+                 f' data-fnr="{E("|".join(r_fn).lower())}"')
         summ = ("".join(f"<span>{c}</span>" for c in cells)
                 + '<span class="xtgl"></span>')
         detail = _fold(g, ep_meta, mi, labels, ents,

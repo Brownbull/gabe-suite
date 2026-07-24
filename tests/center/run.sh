@@ -629,12 +629,22 @@ import re as _re2
 for _pg, _h in (("feature", f), ("matrix", m), ("arch-fn", af)):
     assert not _re2.search(r"… \d+ more", _h) and \
         not _re2.search(r"\+\d+ more<", _h), f"dangling truncation on {_pg}"
-assert "test-matrix.html?led-mdl=GadgetOut#sec-tests-cases" in f, \
-    "dm Tested-by must link the model-filtered ledger"
-assert "test-matrix.html?led-fn=make_gid%28%29#sec-tests-cases" in f, \
-    "fn Tested-by must link the function-filtered ledger"
-assert "test-matrix.html?led-ep=GET%20%2Fgadgets%2Fone#sec-tests-cases" in f, \
-    "endpoint fold must link the route-filtered ledger"
+assert "test-matrix.html?led-mdl=GadgetOut&led-strict=1#sec-tests-cases" in f, \
+    "dm Tested-by must link the receipts-strict model-filtered ledger"
+assert "test-matrix.html?led-fn=make_gid%28%29&led-strict=1#sec-tests-cases" in f, \
+    "fn Tested-by must link the receipts-strict function-filtered ledger"
+assert "test-matrix.html?led-ep=GET%20%2Fgadgets%2Fone&led-strict=1#sec-tests-cases" in f, \
+    "endpoint fold must link the receipts-strict route-filtered ledger"
+# Strict mode's landing contract: rows carry RECEIPT attrs the engine
+# recorded, and the JS honors led-strict while the URL value is untouched.
+assert _re2.search(r'id="C11"[^>]*data-epr="get /gadgets/one"', m), \
+    "C11 must carry its endpoint receipt attr"
+assert _re2.search(r'id="C14"[^>]*data-epr="get /gadgets/one"', m), \
+    "C14 (web file receipt) must carry the endpoint receipt attr"
+assert "led-strict" in m and "strictVals" in m, \
+    "the ledger JS must honor the strict receipts mode"
+assert '">= 2</b>' in f, \
+    "the endpoint Tests cell must total its receipt cases (1 api + 1 web)"
 # The receipts ARITHMETIC stays visible (operator, round 13): file-level
 # rows carry their case counts, the Tests title totals them.
 assert "1 file(s) · 1 case(s)" in f, \

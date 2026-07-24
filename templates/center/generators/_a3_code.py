@@ -912,16 +912,27 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         return (f'<p class="dmh" style="--dc:{color}">{_ins_ic(icon)}'
                 f"<b>{E(label)}</b>{extra}</p>")
 
+    def _rcnt(refs: list) -> int:
+        """Receipt CASE count — file-level refs contribute their case
+        counts, so every number is in one unit and the chips ADD UP."""
+        return sum((x.get("n") or 1) if x["state"] == "file" else 1
+                   for x in refs)
+
     def _ep_tcell(e: dict) -> str:
         refs = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
-        chips = [_tchip(_ckind.get(c2, c2), len(r),
-                        f"{len(r)} {c2} receipt(s) match this route's path — "
-                        "an api receipt is a case driving it, a web receipt "
-                        "is a file encoding it (T1)")
-                 for c2, r in sorted(refs.items())]
+        chips, tot = [], 0
+        for c2, r in sorted(refs.items()):
+            n = _rcnt(r)
+            tot += n
+            chips.append(_tchip(_ckind.get(c2, c2), n,
+                                f"{n} {c2} receipt case(s) — api: cases "
+                                "driving this route; web: cases in files "
+                                "encoding it (T1)"))
         if not chips:
             return _tgap("untested",
                          "no case or spec matches this route's path")
+        chips.append(f'<b class="ttot" title="total receipt case(s) — '
+                     f'the number the filtered ledger lands on">= {tot}</b>')
         if _has_journey and not any(
                 _ckind.get(c2) == "journey" for c2 in refs):
             chips.append(_tgap("journey —",
@@ -931,16 +942,20 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     def _duo_tcell(rec: dict | None, what: str) -> str:
         rec = rec or {}
         d, v = rec.get("direct") or [], rec.get("via_route") or []
+        nd, nv = _rcnt(d), _rcnt(v)
         chips = []
         if d:
-            chips.append(_tchip(_ckind.get(d[0]["corpus"], "unit"), len(d),
+            chips.append(_tchip(_ckind.get(d[0]["corpus"], "unit"), nd,
                                 f"cases that import and use this {what} "
                                 "by name (T1)"))
         if v:
             chips.append(f'<span class="tag tk t-via" title="composed '
                          f"through the endpoint join — cases driving a "
                          f'route that serves this {what} (T2)">'
-                         f"via route · {len(v)}</span>")
+                         f"via route · {nv}</span>")
+        if chips:
+            chips.append(f'<b class="ttot" title="total receipt case(s)">'
+                         f"= {nd + nv}</b>")
         return " ".join(chips) or _tgap(
             "no case", f"no case reaches this {what} by name or via a route")
 
@@ -1175,7 +1190,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                            f"</td><td>{vol}</td><td>{st}</td></tr>")
             _tm = ("test-matrix.html?led-ep="
                    + _uq(f'{e["method"]} {e["path"]}', safe="")
-                   + "#sec-tests-cases")
+                   + "&led-strict=1#sec-tests-cases")
             detail += (_dmh("#15803d", "fn", "Tests",
                             f' <span class="sub">({_tot} case(s))</span>')
                        + '<table class="tbl"><thead><tr><th>Kind</th>'
@@ -1183,9 +1198,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        + _srows + "</tbody></table>"
                        + f'<p class="sub">Full receipts live in the Tests '
                          f'section — <a class="dlink" href="{_tm}">open the '
-                         f"case ledger filtered to this route</a> (its direct "
-                         f"drivers plus every case in files that touch it)."
-                         f"</p>")
+                         f"case ledger filtered to this route</a> — it "
+                         f"lands on exactly these receipt case(s).</p>")
         cells = [
             f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
@@ -1511,9 +1525,14 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                             + _ref_table(_refs,
                                          "test-matrix.html?led-mdl="
                                          + _uq(cls, safe="")
-                                         + "#sec-tests-cases"))
+                                         + "&led-strict=1"
+                                           "#sec-tests-cases"))
         if tb_html:
-            tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
+            _tbtot = _rcnt((_tb.get("direct") or [])
+                           + (_tb.get("via_route") or []))
+            tb_html = _dmh("#15803d", "fn", "Tested by",
+                           f' <span class="sub">({_tbtot} case(s))</span>'
+                           ) + tb_html
         return (f"{meta_html}{_dm_api_tbl(cls, is_schema)}{_dm_int_tbl(cls)}"
                 f"{rel_rows(cls, rels or [])}"
                 f"{_incoming_fk_tbl(cls) if not is_schema else ''}"
@@ -1888,7 +1907,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             _tb = _ti["by_function"].get(f'{c["file"]}::{c["fn"]}') or {}
             tb_html = ""
             _seeall = ("test-matrix.html?led-fn="
-                       + _uq(c["name"] + "()", safe="") + "#sec-tests-cases")
+                       + _uq(c["name"] + "()", safe="")
+                       + "&led-strict=1#sec-tests-cases")
             for _lbl, _refs in (("direct", _tb.get("direct") or []),
                                 ("via route", _tb.get("via_route") or [])):
                 if _refs:
@@ -1896,7 +1916,11 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                 f"<b>{_lbl}</b> ({_ref_count(_refs)})</p>"
                                 + _ref_table(_refs, _seeall))
             if tb_html:
-                tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
+                _tbtot = _rcnt((_tb.get("direct") or [])
+                               + (_tb.get("via_route") or []))
+                tb_html = _dmh("#15803d", "fn", "Tested by",
+                               f' <span class="sub">({_tbtot} case(s))</span>'
+                               ) + tb_html
             # Signature
             sig_head = _dmh("#b3403a", "fields", "Signature",
                             f' <span class="sub">{len(c["params"])} param(s) '
