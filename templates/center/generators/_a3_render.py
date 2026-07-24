@@ -139,6 +139,37 @@ def entity_color(slug: str) -> str:
     return ENTITY_COLOR_POOL[idx]
 
 
+# --- test-kind identity: ONE icon + color per kind, used throughout the
+# center (chips, Kinds & coverage, detail tables) — operator ruling 2026-07-23.
+KIND_GLYPHS = {
+    "integration": '<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    "unit": '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+    "journey": '<circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/>',
+    "coverage": '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    "manual": '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    "deployed": '<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+}
+KIND_CLS = {"integration": "l-api", "unit": "l-web", "journey": "l-mobile",
+            "coverage": "l-models", "manual": "l-services",
+            "deployed": "l-schemas"}
+
+
+def kind_ic(kind: str, size: int = 12) -> str:
+    g = KIND_GLYPHS.get(kind, "")
+    if not g:
+        return ""
+    return (f'<svg viewBox="0 0 24 24" width="{size}" height="{size}" '
+            f'fill="none" stroke="currentColor" stroke-width="2" '
+            f'stroke-linecap="round" stroke-linejoin="round" '
+            f'style="vertical-align:-2px">{g}</svg>')
+
+
+def kind_tag(kind: str, cls: str = "", suffix: str = "") -> str:
+    """The one way a test kind is named anywhere on the center."""
+    return (f'<span class="tag {cls or KIND_CLS.get(kind, "")}">'
+            f"{kind_ic(kind)} {E(kind)}{suffix}</span>")
+
+
 def entity_badge(slug: str, label: str = "", size: int = 13,
                  show_name: bool = False) -> str:
     """The entity's icon in ITS color — the compact identity used in entity

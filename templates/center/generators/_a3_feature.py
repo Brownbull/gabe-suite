@@ -25,7 +25,7 @@ from _a3_evidence import (
     is_reference,
     parse_flows,
 )
-from _a3_render import (
+from _a3_render import (kind_ic, 
     E,
     card_html,
     gap,
@@ -1119,13 +1119,14 @@ def build_feature_pages(ctx) -> list[str]:
         _gap_tag = ctx.e2e.get("junit_gap_tag", "local-only")
         _cov_gate = ctx.e2e.get("coverage_gate", "the coverage gate")
         _corpus_kind_rows = [
-            [f'<span class="tag {c["tag_class"]}">{c["kind"]}</span>',
+            [f'<span class="tag {c["tag_class"]}">{kind_ic(c["kind"])} '
+             f'{c["kind"]}</span>',
              f'{c["runner"]} ({c["kind_detail"]})',
              str(inv[c["key"]]["cases"]), f'{len(inv[c["key"]]["files"])} file(s)',
              meter(inv[c["key"]]["cases"] - inv[c["key"]]["failed"], inv[c["key"]]["cases"]),
              kind_state(inv[c["key"]])] for c in ctx.corpora]
         _kind_rows = _corpus_kind_rows + [
-            ['<span class="tag l-mobile">journey</span>', f"{_e2e_runner} (e2e)",
+            [f'<span class="tag l-mobile">{kind_ic("journey")} journey</span>', f"{_e2e_runner} (e2e)",
              "—",
              f"{len(specs)} spec(s) on disk"
              + (f'<br><small>+{len(ref_specs)} reference-capture spec(s) held '
@@ -1133,14 +1134,14 @@ def build_feature_pages(ctx) -> list[str]:
                 if ref_specs else ""),
              meter(0, 0),
              f'<span class="tag s-gap">no junit capture ({_gap_tag})</span>'],
-            ['<span class="tag l-models">coverage</span>',
+            [f'<span class="tag l-models">{kind_ic("coverage")} coverage</span>',
              f"pytest --cov (repo gate {_cov_gate})", "—", "not sliced per entity",
              meter(0, 0), '<span class="tag s-gap">named gap</span>'],
-            ['<span class="tag l-services">manual</span>', "operator walks",
+            [f'<span class="tag l-services">{kind_ic("manual")} manual</span>', "operator walks",
              str(len(walks_here)), "walks.jsonl", meter(0, 0),
              ('<span class="tag s-ok">recorded</span>' if walks_here
               else '<span class="tag s-gap">none on record</span>')],
-            ['<span class="tag l-schemas">deployed</span>', "probes", "—",
+            [f'<span class="tag l-schemas">{kind_ic("deployed")} deployed</span>', "probes", "—",
              "nothing probes the deployed surface", meter(0, 0),
              '<span class="tag s-gap">absent</span>'],
         ]

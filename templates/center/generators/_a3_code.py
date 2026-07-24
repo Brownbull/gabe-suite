@@ -20,7 +20,7 @@ from pathlib import Path
 
 import _center_data as _cd
 import _a3_tests
-from _a3_render import (E, entity_badge, entity_icon, legend, lines_grade,
+from _a3_render import (E, entity_badge, kind_ic, kind_tag, entity_icon, legend, lines_grade,
                         md, sechead, subnav, table, trunc, xtable)
 
 _ADOPT_NAMES: dict | None = None
@@ -840,7 +840,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
 
     def _tchip(kind: str, n, title: str) -> str:
         return (f'<span class="tag tk {_kcls.get(kind, "")}" '
-                f'title="{E(title)}">{E(kind)} · {n}</span>')
+                f'title="{E(title)}">{kind_ic(kind)} {E(kind)} · {n}</span>')
 
     def _tgap(label: str, title: str) -> str:
         return (f'<span class="tag tk t-tgap" title="{E(title)}">'
@@ -854,6 +854,33 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         return " · ".join(
             (f'<span class="cid">{E(r["cid"])}</span> ' if r["cid"] else "")
             + f'<small>{E(_ref_label(r))}</small>' for r in refs[:6])             + (" …" if len(refs) > 6 else "")
+
+    _STATE_CHIP = {"pass": "s-ok", "fail": "s-high", "skip": "s-gap"}
+
+    def _ref_table(refs: list) -> str:
+        if refs and refs[0]["state"] == "file":
+            rows = "".join(
+                f'<tr><td><code>{E(r["tfile"].rsplit("/", 1)[-1])}</code></td>'
+                f"<td>{E(r['name'])}</td></tr>" for r in refs[:10])
+            head = "<th>File</th><th>Cases</th>"
+        else:
+            rows = "".join(
+                f'<tr><td><span class="cid">{E(r["cid"]) or "—"}</span></td>'
+                f"<td>{E(_ref_label(r))}</td>"
+                f'<td><span class="tag {_STATE_CHIP.get(r["state"], "")}">'
+                f'{E(r["state"])}</span></td></tr>' for r in refs[:10])
+            head = "<th>Case</th><th>What it asserts</th><th>State</th>"
+        more = (f'<p class="sub">… {len(refs) - 10} more</p>'
+                if len(refs) > 10 else "")
+        return (f'<table class="tbl"><thead><tr>{head}</tr></thead>'
+                f"<tbody>{rows}</tbody></table>{more}")
+
+    def _kind_blocks(refs_by: dict) -> str:
+        return "".join(
+            f'<p class="sub" style="margin:8px 0 4px">'
+            f'{kind_tag(_ckind.get(c2, c2), _kcls.get(_ckind.get(c2, c2), ""))}'
+            f' <span class="sub">({len(refs)})</span></p>' + _ref_table(refs)
+            for c2, refs in sorted(refs_by.items()))
 
     def _ep_tcell(e: dict) -> str:
         refs = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
@@ -872,14 +899,10 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         return " ".join(chips)
 
     def _tb_meta(e: dict) -> list:
-        rows = []
         refs_by = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
-        for c2, refs in sorted(refs_by.items()):
-            rows.append((f'{_ins_ic("fn")} TESTED BY — '
-                         f'{_ckind.get(c2, c2).upper()}', "#15803d",
-                         _ref_frag(refs)
-                         + f' <span class="sub">({len(refs)})</span>'))
-        return rows
+        if not refs_by:
+            return []
+        return [(f'{_ins_ic("fn")} TESTS', "#15803d", _kind_blocks(refs_by))]
 
     def _duo_tcell(rec: dict | None, what: str) -> str:
         rec = rec or {}
@@ -1072,20 +1095,26 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             else:
                 href, chip = _xref("dm", t, ins[t].get("entity", ""))
             models_used.append(
-                f'<a class="dlink" href="{href}">{E(t)}</a>'
-                f'<span class="tag t-out" title="response model">out</span>'
-                + chip)
+                f'<tr><td><a class="dlink" href="{href}">{E(t)}</a>{chip}'
+                f'</td><td><span class="tag t-out" title="response model">'
+                f"out</span></td></tr>")
         for t in e["touches"]:
             if t not in resp_toks:
                 models_used.append(
-                    f'<a class="dlink" href="{_href("dm", _anchor("dm", slug, t))}">'
-                    f"{E(t)}</a>")
+                    f'<tr><td><a class="dlink" '
+                    f'href="{_href("dm", _anchor("dm", slug, t))}">'
+                    f'{E(t)}</a></td><td><span class="tag t-in" '
+                    f'title="read or written by the handler">touched'
+                    f"</span></td></tr>")
+        models_tbl = (
+            '<table class="tbl"><thead><tr><th>Model</th><th>Role</th>'
+            "</tr></thead><tbody>" + "".join(models_used)
+            + "</tbody></table>") if models_used else "—"
         meta_rows = [
             (f'{_ins_ic("doc")} PURPOSE', "#64748b",
              md(e["doc"]) if e["doc"] != "—" else "—"),
             (f'{_ins_ic("fn")} HANDLER', "#b45309", handler),
-            (f'{_ins_ic("model")} MODELS USED', "#7c3aed",
-             " · ".join(models_used) or "—"),
+            (f'{_ins_ic("model")} MODELS USED', "#7c3aed", models_tbl),
             *_tb_meta(e),
         ]
         detail = ('<table class="tbl dm-meta"><tbody>' + "".join(
@@ -1759,9 +1788,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             for _lbl, _refs in (("direct", _tb.get("direct") or []),
                                 ("via route", _tb.get("via_route") or [])):
                 if _refs:
-                    tb_html += (f'<p class="sub"><b>{_lbl}</b> '
-                                f"({len(_refs)}) — " + _ref_frag(_refs)
-                                + "</p>")
+                    tb_html += (f'<p class="sub" style="margin:8px 0 4px">'
+                                f"<b>{_lbl}</b> ({len(_refs)})</p>"
+                                + _ref_table(_refs))
             if tb_html:
                 tb_html = _dmh("#15803d", "fn", "Tested by", "") + tb_html
             # Signature
