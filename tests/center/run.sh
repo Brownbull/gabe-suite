@@ -554,15 +554,22 @@ assert 'data-ent="gadget"' in m, "entity data attribute missing"
 assert 'id="sec-tests-files"' in m, "file-altitude table missing below the ledger"
 assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
-assert "in reach · T3" in m and "lonely_helper()" in m, \
+assert 'class="k">in reach<' in m and "lonely_helper()" in m, \
     "in-reach chips (what reached files define) missing from the fold"
 assert 'id="led-tag"' in m and 'data-tag="df3 w1"' in m, \
     "tag facet missing (tokens from the group name must be filterable)"
 assert 'data-for="led-ep"' in m and "closest('.lx')" in m, \
     "per-filter clear × missing (a filtered-to-zero ledger must never strand)"
+assert 'class="ltit"' in m, "clear × must ride the title line, not the control"
 assert 'class="ltag">DF3</span>' in m, "group tokens must render highlighted"
-assert "uses · T3" in m and ">planWidget<" in m, \
-    "uses chips (imported symbols) missing for the web case"
+assert "<span>Exercises</span>" not in m, \
+    "Exercises column retired — the fold carries what a case exercises"
+assert 'class="tinfo"' in m and 'class="k">uses · T3<' not in m, \
+    "tier codes must move off the labels into the ⓘ explainer"
+assert 'class="k">uses<' in m and "<th>Symbol</th>" in m \
+    and ">planWidget<" in m and "<td>function</td>" in m, \
+    "uses must be a table identifying Symbol · Kind · Imported from"
+assert 'class="entb ent-gadget"' in m, "entity icon must lead the ledger row"
 f = (c / "feature-gadget.html").read_text()
 assert 'id="sec-tests-cases"' in f and 'id="C11"' in f, \
     "entity tab must carry the scoped ledger with C-id anchors"

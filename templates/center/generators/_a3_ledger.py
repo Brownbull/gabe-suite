@@ -1,33 +1,33 @@
 """Testing Command Center — the case LEDGER (operator rulings R1–R3 + Q1–Q6,
-2026-07-24; the tests-section artifact, iteration 2, is the design record).
+2026-07-24; the tests-section artifact, iteration 2, is the design record;
+rounds 2–5 are operator verdicts applied on the shipped surface).
 
 The C-id is the row: one entry per case IDENTITY, the test file demoted to a
 metadata line under the assertion, parametrize variants grouped under their id
-(one identity, N executions — any failing variant fails the row). Exercises
-chips ride the row: a case's OWN facts (T1, from its located def) render
-solid; a case with none inherits its FILE's facts rendered dashed and titled
-`via file` — ~23% of cases carry own facts while files join at 86–100%, and
-the tier stays visible instead of the cell lying empty (Q1). A junit case
-without a C-id renders with its name as identity and an `unminted` tag —
-the honesty check that should read zero once /gabe-red mints them (Q2).
+(one identity, N executions — any failing variant fails the row). The row
+leads with the ENTITY icon (claiming entity first, thread-related entities
+after); the full names live in the fold's ENTITIES row. What a case exercises
+lives entirely in the FOLD — a labeled metadata grid (`.ledmeta`) with one
+row per evidence tier. Tier codes (T1/T2/T3) never ride the labels: each tier
+row ends in an ⓘ toggle that explains the tier on demand.
 
-Filters are DROPDOWNS (R2): entity / kind / state as selects; endpoint /
-model / function each a datalist type-ahead listing only elements at least
-one chip names; plus free text over names, C-ids and chip labels (Q5).
-Filtering reads each row's data-* attributes — inherited chips match too,
-so "which tests touch X" returns every case in files that touch X, not the
-6-row T1 sliver. Default order: failing rows first, then C-id descending —
-sequential minting makes the top of the ledger the newest verification work
-(Q4); unminted rows close their state band.
+The fold's `uses` row is a TABLE (Symbol · Kind · Imported from): the symbols
+a web test file imports from the app, classified by the export grammar of the
+defining file (function / class / const / type / enum), by the model registry
+(model), or by the function registry (function). A junit case without a C-id
+renders with its name as identity and an `unminted` tag — the honesty check
+that should read zero once /gabe-red mints them (Q2).
 
-The fold is a LABELED metadata grid (`.ledmeta`), and it deepens the
-relation a file-tier corpus can honestly state: reached source files carry
-their ENTITY, and what those files DEFINE (registry functions and model
-classes) renders as `in reach · T3` chips — so a vitest case still answers
-"what entity / model / function is this about" without dressing file facts
-as case-level proof. Every chip links the APP estate (arch-*.html anchors).
-The ledger row is the canonical anchor of its C-id: every C-id pill
-elsewhere in the center lands on `test-matrix.html#C<n>`.
+Filters are DROPDOWNS (R2): entity / kind / state as selects; tag (provenance
+tokens like DF3 / W1 extracted from group names — the composite index over
+groups) / endpoint / model / function as datalist type-aheads; free text last
+(Q5). Filtering reads each row's data-* attributes — inherited and in-reach
+facts match too. Every control's clear × sits in its TITLE line (no extra
+bar width) and lights up only while that column holds a value. Default order:
+failing first, then C-id descending (Q4); unminted rows close their band.
+Every chip links the APP estate (arch-*.html anchors). The ledger row is the
+canonical anchor of its C-id: every C-id pill elsewhere in the center lands
+on `test-matrix.html#C<n>`.
 """
 
 from __future__ import annotations
@@ -162,66 +162,23 @@ def _dm_chip(nm: str, cls: str, title: str) -> str:
     return _chip(f'{_XP["dm"]}#{_anchor("dm", "app", nm)}', nm, cls, title)
 
 
-def _row_chips(g: dict, cap: int = 4) -> tuple[str, dict]:
-    """The Exercises cell + this row's filterable element labels. Own facts
-    (T1) render solid; a row without any inherits its file's facts dashed —
-    the tier distinction survives at row level (Q1)."""
+def _row_feed(g: dict) -> dict:
+    """This row's filterable element labels — own facts when the case has
+    them, else the file's (Q1: filters match all tiers)."""
     feed: dict[str, list] = {"ep": [], "mdl": [], "fn": []}
-    chips: list[str] = []
     own = g["own"] or {}
-    if any(own.values()):
-        for c in own.get("endpoints", []):
-            feed["ep"].append(c["label"])
-            chips.append(_ep_chip(c, "lc-ep",
-                                  "T1 — this case drives the route"))
-        for c in own.get("functions", []):
-            feed["fn"].append(c["name"] + "()")
-            chips.append(_fn_chip(c["file"], c["name"], "lc-fn",
-                                  "T1 — this case calls it by name"))
-        for nm in own.get("models", []):
-            feed["mdl"].append(nm)
-            chips.append(_dm_chip(nm, "lc-mdl",
-                                  "T1 — this case uses the class by name"))
-    elif g["inh"]:
-        inh = g["inh"]
-        for c in inh.get("endpoints", []):
-            feed["ep"].append(c["label"])
-            chips.append(_ep_chip(
-                c, "lc-ep lc-via",
-                "via file — the case's FILE touches this route (file-tier)"))
-        for c in inh.get("functions", []):
-            feed["fn"].append(c["name"] + "()")
-            chips.append(_fn_chip(
-                c["file"], c["name"], "lc-fn lc-via",
-                "via file — imported and called somewhere in the file"))
-        for nm in inh.get("models", []):
-            feed["mdl"].append(nm)
-            chips.append(_dm_chip(
-                nm, "lc-mdl lc-via",
-                "via file — the class is used somewhere in the file"))
-        if not chips:
-            for u in inh.get("uses", []):
-                feed["fn"].append(u["name"])
-                chips.append(_chip(
-                    f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}',
-                    u["name"], "lc-fn lc-via",
-                    f"uses — the file imports this symbol from {u['file']} (T3)"))
-        if not chips:
-            for f2 in inh.get("reaches", []):
-                chips.append(_chip(
-                    f'{_XP["cm"]}#{_anchor("cm", "app", f2)}',
-                    "reach: " + f2.rsplit("/", 1)[-1], "lc-file lc-via",
-                    f"via file — imports reach {f2} (T3)"))
-    shown = chips[:cap]
-    more = (f'<span class="lchip lc-more">+{len(chips) - cap}</span>'
-            if len(chips) > cap else "")
-    cell = ("".join(shown) + more) if chips else '<span class="sub">—</span>'
-    return cell, feed
+    inh = g["inh"] or {}
+    src = own if any(own.values()) else inh
+    feed["ep"] = [c["label"] for c in src.get("endpoints", [])]
+    feed["fn"] = [c["name"] + "()" for c in src.get("functions", [])]
+    feed["mdl"] = list(src.get("models", []))
+    feed["fn"] += [u["name"] for u in inh.get("uses", [])]
+    return feed
 
 
 def _in_reach(g: dict, fn_by_file: dict, mdl_by_file: dict) -> tuple:
     """What the case's reached source files DEFINE, from the registries —
-    the deepest honest join a file-tier corpus gives (T3 `in reach`).
+    the deepest honest join a file-tier corpus gives (`in reach`).
     Returns ([{file, fn}], [model class]) deduped, registry order."""
     fns: list[dict] = []
     mdls: list[str] = []
@@ -235,31 +192,9 @@ def _in_reach(g: dict, fn_by_file: dict, mdl_by_file: dict) -> tuple:
     return fns, mdls
 
 
-_SHOW_REACH = 6      # visible chips per fold row; the note carries the rest
-_SHOW_INREACH = 8
-
-
-def _kv(rows: list[tuple[str, str]]) -> str:
-    return ('<div class="ledmeta">' + "".join(
-        f'<span class="k">{E(k)}</span><span class="v">{v}</span>'
-        for k, v in rows) + "</div>")
-
-
-def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
-          labels: dict, reach_fns: list, reach_mdls: list) -> str:
-    """What opens under the row: the metadata spine as LABELED rows, the
-    kind's own facts (R3) tier by tier, the entities the case relates to
-    through the thread, and the variant table when one identity ran as many
-    executions."""
-    rows: list[tuple[str, str]] = [
-        ("file", f'<code>{E(g["file"])}</code>')]
-    if g["group"]:
-        rows.append(("group", _hl(g["group"])))
-    rows.append(("corpus", f'{E(g["corpus"])} · {E(g["kind"])}'))
-    rows.append(("time",
-                 f'{g["time"]:.2f}s · {len(g["variants"])} execution(s)'))
-    spine_n = len(rows)
-
+def _related(g: dict, fent: dict, mdl_file: dict) -> list[str]:
+    """The entities this case relates to through the thread — the files of
+    its exercised / used / reached elements, mapped by the archmap."""
     ents: list[str] = []
 
     def _tag(f2: str) -> None:
@@ -269,20 +204,95 @@ def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
 
     own = g["own"] or {}
     inh = g["inh"] or {}
+    src = own if any(own.values()) else inh
+    for c in src.get("endpoints", []):
+        _tag(c["file"])
+    for c in src.get("functions", []):
+        _tag(c["file"])
+    for nm in src.get("models", []):
+        _tag(mdl_file.get(nm, ""))
+    for u in inh.get("uses", []):
+        _tag(u["file"])
+    for f2 in inh.get("reaches", []):
+        _tag(f2)
+    return ents
+
+
+# TS/JS export grammar — classifies what an imported symbol IS in its
+# defining file (the uses table's Kind column). Grammar-read, never guessed
+# from casing.
+_TS_EXPORT_RX = re.compile(
+    r"export\s+(?:default\s+)?"
+    r"(async\s+function|function|class|const|let|var|type|interface|enum)"
+    r"\s+([A-Za-z_$][\w$]*)")
+_TS_KIND = {"async function": "function", "function": "function",
+            "class": "class", "const": "const", "let": "const",
+            "var": "const", "type": "type", "interface": "type",
+            "enum": "enum"}
+_TSK_CACHE: dict[str, dict] = {}
+
+
+def _ts_kinds(repo: Path, rel: str) -> dict:
+    if rel not in _TSK_CACHE:
+        kinds: dict[str, str] = {}
+        p = repo / rel
+        if p.suffix in (".ts", ".tsx", ".js", ".jsx") and p.exists():
+            for kw, nm in _TS_EXPORT_RX.findall(
+                    p.read_text(errors="replace")):
+                kinds.setdefault(nm, _TS_KIND.get(kw.strip(), "export"))
+        _TSK_CACHE[rel] = kinds
+    return _TSK_CACHE[rel]
+
+
+_SHOW_REACH = 6      # visible chips per fold row; the note carries the rest
+_SHOW_INREACH = 8
+
+
+def _tinfo(text: str) -> str:
+    """The tier explainer — an ⓘ the reader opens on demand instead of a
+    T1/T2/T3 code riding the label (operator, round 5)."""
+    return ('<details class="tinfo"><summary aria-label="what this tier '
+            f'means">ⓘ</summary><div class="tx">{E(text)}</div></details>')
+
+
+def _kv(rows: list[tuple[str, str]]) -> str:
+    return ('<div class="ledmeta">' + "".join(
+        f'<span class="k">{E(k)}</span><span class="v">{v}</span>'
+        for k, v in rows) + "</div>")
+
+
+def _fold(g: dict, ep_meta: dict, mi: dict, labels: dict, ents: list,
+          reach_fns: list, reach_mdls: list, classify) -> str:
+    """What opens under the row: the metadata spine as LABELED rows, the
+    kind's facts tier by tier (each with its ⓘ explainer), the uses TABLE,
+    and the variant table when one identity ran as many executions."""
+    rows: list[tuple[str, str]] = [
+        ("file", f'<code>{E(g["file"])}</code>')]
+    if g["group"]:
+        rows.append(("group", _hl(g["group"])))
+    rows.append(("corpus", E(g["corpus"])))
+    rows.append(("time",
+                 f'{g["time"]:.2f}s · {len(g["variants"])} execution(s)'))
+    if ents:
+        rows.append(("entities", " ".join(
+            entity_badge(s, labels.get(s, s), 13, show_name=True)
+            for s in ents)))
+
+    own = g["own"] or {}
+    inh = g["inh"] or {}
     if any(own.values()):
         t1 = []
         for c in own.get("endpoints", []):
-            _tag(c["file"])
             t1.append(_ep_chip(c, "lc-ep", "this case drives the route"))
         for c in own.get("functions", []):
-            _tag(c["file"])
             t1.append(_fn_chip(c["file"], c["name"], "lc-fn",
                                "this case calls it by name"))
         for nm in own.get("models", []):
-            _tag(mdl_file.get(nm, ""))
             t1.append(_dm_chip(nm, "lc-mdl",
                                "this case uses the class by name"))
-        rows.append(("exercises · T1", "".join(t1)))
+        rows.append(("exercises", "".join(t1) + _tinfo(
+            "T1 — the case's own facts: its def drives the route, calls "
+            "the function, or uses the class directly.")))
         via = []
         for c in own.get("endpoints", []):
             e = ep_meta.get((c["file"], c["fn"]))
@@ -297,49 +307,55 @@ def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
                     via.append(_dm_chip(tok, "lc-mdl",
                                         "credited through the route"))
         if via:
-            rows.append(("via route · T2", "".join(via)))
+            rows.append(("via route", "".join(via) + _tinfo(
+                "T2 — credited through the endpoint the case drives: the "
+                "route's handler, response schema and touched models.")))
     else:
         vf = []
         for c in inh.get("endpoints", []):
-            _tag(c["file"])
             vf.append(_ep_chip(c, "lc-ep lc-via",
                                "the case's FILE touches this route"))
         for c in inh.get("functions", []):
-            _tag(c["file"])
             vf.append(_fn_chip(c["file"], c["name"], "lc-fn lc-via",
                                "imported and called somewhere in the file"))
         for nm in inh.get("models", []):
-            _tag(mdl_file.get(nm, ""))
             vf.append(_dm_chip(nm, "lc-mdl lc-via",
                                "the class is used somewhere in the file"))
         if vf:
-            rows.append(("via file", "".join(vf)))
+            rows.append(("via file", "".join(vf) + _tinfo(
+                "file-tier — the case's FILE carries these facts; the "
+                "runner cannot attribute them to one case.")))
     uses = inh.get("uses") or []
     if uses:
-        for u in uses:
-            _tag(u["file"])
-        uc = "".join(_chip(f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}',
-                           u["name"], "lc-fn lc-via",
-                           f"imported from {u['file']}")
-                     for u in uses[:_SHOW_INREACH])
-        if len(uses) > _SHOW_INREACH:
-            uc += (f'<span class="lchip lc-more">+'
-                   f"{len(uses) - _SHOW_INREACH} more</span>")
-        rows.append(("uses · T3",
-                     uc + ' <span class="sub">symbols the file imports '
-                          "from the app — the closest file-tier gets to "
-                          "naming what is under test</span>"))
+        urows = ""
+        for u in uses[:_SHOW_INREACH]:
+            kind, href = classify(u)
+            urows += (f'<tr><td><a class="dlink" href="{href}">'
+                      f'<code>{E(u["name"])}</code></a></td>'
+                      f"<td>{E(kind)}</td>"
+                      f'<td><code>{E(u["file"])}</code></td></tr>')
+        more = (f'<p class="sub">… {len(uses) - _SHOW_INREACH} more '
+                "import(s)</p>" if len(uses) > _SHOW_INREACH else "")
+        rows.append(("uses",
+                     '<table class="tbl"><thead><tr><th>Symbol</th>'
+                     "<th>Kind</th><th>Imported from</th></tr></thead>"
+                     f"<tbody>{urows}</tbody></table>{more}" + _tinfo(
+                         "T3 (file-tier) — the symbols the test file "
+                         "imports from the app; the closest a web corpus "
+                         "gets to naming what is under test. Kind is read "
+                         "from the defining file's export grammar and the "
+                         "code registries.")))
     reaches = inh.get("reaches") or []
     if reaches:
-        for f2 in reaches:
-            _tag(f2)
         rc = "".join(_chip(f'{_XP["cm"]}#{_anchor("cm", "app", f2)}', f2,
                            "lc-file lc-via", "file-level import reach")
                      for f2 in reaches[:_SHOW_REACH])
         if len(reaches) > _SHOW_REACH:
             rc += (f'<span class="lchip lc-more">+'
                    f"{len(reaches) - _SHOW_REACH} more</span>")
-        rows.append(("file reach · T3", rc))
+        rows.append(("file reach", rc + _tinfo(
+            "T3 — the source files the test file imports, resolved on "
+            "disk.")))
     if reach_fns or reach_mdls:
         ir = [_dm_chip(nm, "lc-mdl lc-via", "defined in a reached file")
               for nm in reach_mdls[:_SHOW_INREACH]]
@@ -350,14 +366,9 @@ def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
                   + max(0, len(reach_fns) - _SHOW_INREACH))
         note = (f'<span class="lchip lc-more">+{hidden} more defined '
                 "there</span>" if hidden else "")
-        rows.append(("in reach · T3",
-                     "".join(ir) + note
-                     + ' <span class="sub">what the reached files define '
-                       "— not a case-level proof</span>"))
-    if ents:
-        rows.insert(spine_n, ("entities", " ".join(
-            entity_badge(s, labels.get(s, s), 13, show_name=True)
-            for s in ents)))
+        rows.append(("in reach", "".join(ir) + note + _tinfo(
+            "T3 — what the reached files define, from the code "
+            "registries; not a case-level proof.")))
     html = _kv(rows)
     if len(g["variants"]) > 1:
         vr = "".join(
@@ -377,13 +388,13 @@ def _bar(app: bool, ents: list, labels: dict, kinds: list, tags: list,
     """The dropdown filter bar (R2): selects for the small vocabularies,
     datalist type-aheads for the element filters, free text last (Q5).
     One line always — controls shrink and the bar scrolls before wrapping.
-    Every control carries a clear ×: it lights up when that column holds a
-    value and resets ONLY that column (a filtered-to-zero ledger must never
-    strand the reader)."""
+    Each control's clear × rides its TITLE line (zero extra bar width),
+    lights up while the column holds a value, and resets only that column."""
     def ctl(id_: str, lab: str, control: str) -> str:
-        return (f'<label>{E(lab)}<span class="lwrap">{control}'
+        return (f'<label><span class="ltit">{E(lab)}'
                 f'<button type="button" class="lx" data-for="{id_}" '
-                f'aria-label="clear {E(lab)} filter">×</button></span></label>')
+                f'aria-label="clear {E(lab)} filter">×</button></span>'
+                f"{control}</label>")
 
     def sel(id_: str, lab: str, opts: list[tuple[str, str]]) -> str:
         o = "".join(f'<option value="{E(v)}">{E(t)}</option>' for v, t in opts)
@@ -448,10 +459,10 @@ t.value=(t.tagName==='SELECT')?'all':'';apply();});
 
 def ledger_html(repo: Path, inv_files: dict, corpora: list,
                 owners_of=None, labels: dict | None = None,
-                app: bool = False) -> str:
+                app: bool = False, slug: str = "") -> str:
     """The whole component: bar + xtbl + script. Entity pages pass their
-    rx-scoped junit files (no entity column); the estate passes the full
-    corpus with `owners_of` (registry regexes) for the badge column."""
+    rx-scoped junit files + their slug (the claiming icon); the estate
+    passes the full corpus with `owners_of` (registry regexes)."""
     labels = labels or {}
     cases = build_cases(repo, inv_files, corpora)
     if not cases:
@@ -469,27 +480,39 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
     for m in (amap.get("models", []) + amap.get("schemas", [])):
         mdl_by_file.setdefault(m.get("file", ""), []).append(m["cls"])
         mdl_file.setdefault(m["cls"], m.get("file", ""))
+
+    def classify(u: dict) -> tuple[str, str]:
+        """A uses symbol -> (what it is, where its page row lives)."""
+        if u["name"] in mi:
+            return ("model",
+                    f'{_XP["dm"]}#{_anchor("dm", "app", u["name"])}')
+        if any(c["fn"] == u["name"] for c in fn_by_file.get(u["file"], [])):
+            return ("function",
+                    f'{_XP["fn"]}#'
+                    f'{_anchor("fn", "app", u["file"] + "-" + u["name"])}')
+        k = _ts_kinds(repo, u["file"]).get(u["name"], "export")
+        return (k, f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}')
+
     kinds = sorted({g["kind"] for g in cases})
     tags_all: set[str] = set()
     feeds: dict[str, list] = {"ep": [], "mdl": [], "fn": []}
     ents_seen: list[str] = []
     seen_ids: set[str] = set()
-    cols = (["", "Case", "Asserts", "Kind", "Exercises", "State"] if app
-            else ["Case", "Asserts", "Kind", "Exercises", "State"])
-    widths = (["44px", "0.8fr", "2.4fr", "0.8fr", "2fr", "0.6fr"] if app
-              else ["0.8fr", "2.4fr", "0.8fr", "2fr", "0.6fr"])
+    cols = ["", "Case", "Asserts", "Kind", "State"]
+    widths = ["48px", "0.8fr", "3.1fr", "0.9fr", "0.7fr"]
     ctxkey = "xtbl|" + "|".join(cols)
     body = []
     for g in cases:
-        ents: list[str] = []
-        cells: list[str] = []
+        claim = ((owners_of(g["jfile"]) if owners_of else []) or []) if app \
+            else ([slug] if slug else [])
+        related = _related(g, fent, mdl_file)
+        ents = claim + [e for e in related if e not in claim]
         if app:
-            ents = (owners_of(g["jfile"]) if owners_of else []) or []
-            for o in ents:
+            for o in claim:
                 if o not in ents_seen:
                     ents_seen.append(o)
-            cells.append(" ".join(
-                entity_badge(o, labels.get(o, o), 13) for o in ents))
+        cells = [" ".join(entity_badge(o, labels.get(o, o), 13)
+                          for o in ents) or ""]
         nvar = (f' <small>×{len(g["variants"])}</small>'
                 if len(g["variants"]) > 1 else "")
         cells.append(
@@ -501,18 +524,14 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
             + (f' · {_hl(g["group"])}' if g["group"] else "") + "</span>")
         cells.append(f'<span class="tag {g["kcls"]}" title="{E(g["corpus"])} '
                      f'corpus">{kind_ic(g["kind"])} {E(g["kind"])}</span>')
-        chip_cell, feed = _row_chips(g)
+        cells.append(_STATE_CHIP.get(g["state"], ""))
+        feed = _row_feed(g)
         reach_fns, reach_mdls = _in_reach(g, fn_by_file, mdl_by_file)
-        # In-reach names join the FILTER surface too (tier-honest: they are
-        # what the reached files define, and the fold labels them T3).
         feed["fn"].extend(c["fn"] + "()" for c in reach_fns)
-        feed["fn"].extend(u["name"] for u in (g["inh"] or {}).get("uses", []))
         feed["mdl"].extend(reach_mdls)
         tags_all.update(g["tags"])
         for k2 in feeds:
             feeds[k2].extend(feed[k2])
-        cells.append(chip_cell)
-        cells.append(_STATE_CHIP.get(g["state"], ""))
         mark = _row_mark(ctxkey, cells)
         if mark:
             cells = [f"{cells[0]}{mark}", *cells[1:]]
@@ -528,8 +547,8 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
                  f' data-fn="{E("|".join(feed["fn"]).lower())}"')
         summ = ("".join(f"<span>{c}</span>" for c in cells)
                 + '<span class="xtgl"></span>')
-        detail = _fold(g, ep_meta, mi, fent, mdl_file, labels,
-                       reach_fns, reach_mdls)
+        detail = _fold(g, ep_meta, mi, labels, ents,
+                       reach_fns, reach_mdls, classify)
         body.append(f'<details class="xrow"{idattr}{attrs}>'
                     f"<summary>{summ}</summary>"
                     f'<div class="xbody">{detail}</div>'
@@ -541,10 +560,10 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
     n_unminted = sum(1 for g in cases if not g["cid"])
     n_fail = sum(1 for g in cases if g["state"] == "fail")
     note = (f"{len(cases)} case identity(ies) · {n_fail} failing · "
-            f"{n_unminted} unminted — failing first, then newest C-id; "
-            "solid chips are the case's own facts (T1), dashed chips ride "
-            "in from its file (`via file` / `in reach`); filters match "
-            "all tiers.")
+            f"{n_unminted} unminted — failing first, then newest C-id. "
+            "Open a row for what it exercises, tier by tier (ⓘ explains "
+            "each tier); the entity icons lead the row, full names ride "
+            "the fold.")
     return (_bar(app, sorted(ents_seen, key=lambda s: labels.get(s, s)),
                  labels, kinds, sorted(tags_all), feeds, len(cases))
             + f'<div class="xtbl" id="ledger" style="--xcols:{tmpl}">{head}'
