@@ -102,3 +102,23 @@ hooks fixture battery (same-commit rule). Full list in the workflow output.
   same thread.
 
 Decision + iteration happen on `analysis.html` (the human-facing page).
+
+## v2 re-analysis (2026-07-23 evening) — the asymmetry diagnosis
+
+Operator: the tests page still reads disconnected. Measured why (both twins,
+live archmaps): only **23% of cases attach to any code element** (identical:
+336/1,423 · 385/1,667) while **81–91% of endpoints and 63–87% of models have
+receipts** — the thread is strong element→cases, weak case→element, and every
+current table is junit-container-shaped with the links buried in ⊕ expansions
+(zero visible code links above the fold).
+
+Three shapes proposed in `tests-page-v2.html` (untracked, sandbox rule) for
+what follows the SETTLED sections (Action Pending first · Kinds & coverage
+second): **A (recommended)** — a new "Coverage by element" section leads:
+the entity's endpoints/models/functions as rows (linked to their Code rows,
+kind chips, case receipts in ⊕, untested elements as visible gap rows);
+Claims stays after it as the promise accumulator; the file Matrix stays last
+as the corpus-registry truth. **B** — Exercises as a visible matrix column
+(surfaces the weak side: ~77% empty cells). **C** — full inversion (breaks
+corpus-as-registry; not viable alone). Open: altitude (section on
+test-matrix.html vs own test-elements.html page) and untested-row policy.
