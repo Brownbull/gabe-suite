@@ -869,6 +869,15 @@ assert "<th>Tier</th>" in f, \
 af = (c / "arch-functions.html").read_text()
 assert "led-fn=make_gid%28%29&led-strict=1" in af, \
     "arch-estate Tested-by titles must link the strict-filtered ledger"
+# The whole-app parity contract (operator, round 29): every arch element
+# page carries the SAME test sections + ledger links its entity twin does.
+aep = (c / "arch-endpoints.html").read_text()
+assert "test-matrix.html?led-ep=" in aep and "led-strict=1" in aep \
+    and "<b>Tests</b>" in aep, \
+    "arch endpoints must carry Tests sections linking the strict ledger"
+adm = (c / "arch-data-model.html").read_text()
+assert "test-matrix.html?led-mdl=" in adm and "Tested by" in adm, \
+    "arch data model must carry Tested-by linking the strict ledger"
 # The truncation BAN (operator ruling 2026-07-25): never "… N more" with no
 # reference — every receipts block links its FILTERED ledger view, and the
 # ledger pre-applies filters arriving as URL params.
