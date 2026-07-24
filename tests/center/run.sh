@@ -82,6 +82,23 @@ c = root / center_rel
     # (Q1) and the unminted honesty tag (Q2).
     "def test_unlabeled():\n"
     "    assert True\n")
+# A WEB corpus slice: a ts source in the entity's code map + a vitest-shaped
+# junit whose describe carries provenance tokens — FIRES the tag facet
+# (DF3/W1 -> data-tag + .ltag pills + the tag filter) and the uses·T3 chips
+# (imported symbols are the closest file-tier gets to naming what is under
+# test).
+(root / "src" / "widget.ts").write_text(
+    "export function planWidget() {\n  return 1;\n}\n"
+    'export const WIDGET_KIND = "w";\n')
+(root / "tests" / "widget.test.ts").write_text(
+    'import { planWidget } from "../src/widget";\n\n'
+    'it("arms", () => planWidget());\n')
+(root / "tests" / "results" / "web-junit.xml").write_text(
+    '<testsuites><testsuite name="vitest" timestamp="2026-07-23T00:00:00">'
+    '<testcase classname="tests/widget.test.ts" '
+    'name="DF3 widget guard (review W1) &gt; C14 · arms on edit" '
+    'time="0.01"/>'
+    "</testsuite></testsuites>")
 (root / "tests" / "results" / "api-junit.xml").write_text(
     '<testsuites><testsuite name="pytest" timestamp="2026-07-23T00:00:00">'
     '<testcase classname="tests.test_gadgets" '
@@ -99,13 +116,17 @@ cfg = {"project": {"name": "Fixture", "domain": "battery"},
                  "results": "tests/results", "proof": "tests/web-e2e/proof"},
        "corpora": [{"key": "api", "runner": "pytest",
                     "kind": "integration", "kind_detail": "HTTP surface",
-                    "tag_class": "l-api", "kpi_detail": "pytest"}],
-       "entities": {"gadget": {"test_rx": "gadget",
+                    "tag_class": "l-api", "kpi_detail": "pytest"},
+                   {"key": "web", "runner": "vitest",
+                    "kind": "unit", "kind_detail": "components",
+                    "tag_class": "l-web", "kpi_detail": "vitest"}],
+       "entities": {"gadget": {"test_rx": "gadget|widget",
                                "proofs": ["g1", "solo"],
                                "code": {"api": ["src/api.py"],
                                         "services": ["src/big.py",
                                                      "src/funcs.py"],
-                                        "schemas": ["src/schemas.py"]},
+                                        "schemas": ["src/schemas.py"],
+                                        "web": ["src/widget.ts"]},
                                "models": []}}}
 # The config ALWAYS lives at the DEFAULT center path — it is where paths.center
 # itself is read from (_center_data: "CENTER_DIR is where config lives, so it
@@ -535,6 +556,11 @@ assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
 assert "in reach · T3" in m and "lonely_helper()" in m, \
     "in-reach chips (what reached files define) missing from the fold"
+assert 'id="led-tag"' in m and 'data-tag="df3 w1"' in m, \
+    "tag facet missing (tokens from the group name must be filterable)"
+assert 'class="ltag">DF3</span>' in m, "group tokens must render highlighted"
+assert "uses · T3" in m and ">planWidget<" in m, \
+    "uses chips (imported symbols) missing for the web case"
 f = (c / "feature-gadget.html").read_text()
 assert 'id="sec-tests-cases"' in f and 'id="C11"' in f, \
     "entity tab must carry the scoped ledger with C-id anchors"

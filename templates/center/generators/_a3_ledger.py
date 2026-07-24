@@ -45,6 +45,26 @@ _STATE_CHIP = {"pass": '<span class="tag s-ok">pass</span>',
                "fail": '<span class="tag s-high">fail</span>',
                "skip": '<span class="tag s-gap">skip</span>'}
 
+# Provenance TOKENS in group names — decision/review/issue ids like DF3, W1,
+# CA10, TX2b, #8. They are the composite index over groups: a handful of
+# tokens span many describe blocks, so the filter stays small while full
+# group names remain reachable through free-text search. C-ids are excluded
+# (they are the row identity, not a tag).
+_TAG_RX = re.compile(r"(?<![A-Za-z0-9])(#\d+|[A-Z]{1,4}\d+[a-z]?)(?![A-Za-z0-9])")
+
+
+def _tags_of(group: str) -> list[str]:
+    return sorted({t.lower() for t in _TAG_RX.findall(group)
+                   if not re.fullmatch(r"C\d+", t)})
+
+
+def _hl(group: str) -> str:
+    """Escaped group text with its provenance tokens wrapped as .ltag pills."""
+    return _TAG_RX.sub(
+        lambda m: (m.group(0) if re.fullmatch(r"C\d+", m.group(0))
+                   else f'<span class="ltag">{m.group(0)}</span>'),
+        E(group))
+
 
 def _tfile_of(jf: str, exercises: dict) -> str:
     """Suffix-join a runner-cwd-relative junit key to the engine's disk-keyed
@@ -95,6 +115,7 @@ def build_cases(repo: Path, inv_files: dict, corpora: list) -> list[dict]:
                         "kcls": kcls, "inh": inh, "variants": [], "time": 0.0,
                         "own": (ti["case_own"].get(f"{tfile}::{base}")
                                 if tfile else None),
+                        "tags": _tags_of(group),
                     }
                     order.append(key)
                 g["variants"].append((c["name"], c["state"], c["time"]))
@@ -179,6 +200,13 @@ def _row_chips(g: dict, cap: int = 4) -> tuple[str, dict]:
                 nm, "lc-mdl lc-via",
                 "via file — the class is used somewhere in the file"))
         if not chips:
+            for u in inh.get("uses", []):
+                feed["fn"].append(u["name"])
+                chips.append(_chip(
+                    f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}',
+                    u["name"], "lc-fn lc-via",
+                    f"uses — the file imports this symbol from {u['file']} (T3)"))
+        if not chips:
             for f2 in inh.get("reaches", []):
                 chips.append(_chip(
                     f'{_XP["cm"]}#{_anchor("cm", "app", f2)}',
@@ -226,7 +254,7 @@ def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
     rows: list[tuple[str, str]] = [
         ("file", f'<code>{E(g["file"])}</code>')]
     if g["group"]:
-        rows.append(("group", E(g["group"])))
+        rows.append(("group", _hl(g["group"])))
     rows.append(("corpus", f'{E(g["corpus"])} · {E(g["kind"])}'))
     rows.append(("time",
                  f'{g["time"]:.2f}s · {len(g["variants"])} execution(s)'))
@@ -286,6 +314,21 @@ def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
                                "the class is used somewhere in the file"))
         if vf:
             rows.append(("via file", "".join(vf)))
+    uses = inh.get("uses") or []
+    if uses:
+        for u in uses:
+            _tag(u["file"])
+        uc = "".join(_chip(f'{_XP["cm"]}#{_anchor("cm", "app", u["file"])}',
+                           u["name"], "lc-fn lc-via",
+                           f"imported from {u['file']}")
+                     for u in uses[:_SHOW_INREACH])
+        if len(uses) > _SHOW_INREACH:
+            uc += (f'<span class="lchip lc-more">+'
+                   f"{len(uses) - _SHOW_INREACH} more</span>")
+        rows.append(("uses · T3",
+                     uc + ' <span class="sub">symbols the file imports '
+                          "from the app — the closest file-tier gets to "
+                          "naming what is under test</span>"))
     reaches = inh.get("reaches") or []
     if reaches:
         for f2 in reaches:
@@ -329,7 +372,7 @@ def _fold(g: dict, ep_meta: dict, mi: dict, fent: dict, mdl_file: dict,
     return html
 
 
-def _bar(app: bool, ents: list, labels: dict, kinds: list,
+def _bar(app: bool, ents: list, labels: dict, kinds: list, tags: list,
          feeds: dict, total: int) -> str:
     """The dropdown filter bar (R2): selects for the small vocabularies,
     datalist type-aheads for the element filters, free text last (Q5).
@@ -352,6 +395,8 @@ def _bar(app: bool, ents: list, labels: dict, kinds: list,
     parts.append(sel("led-kind", "kind", [(k, k) for k in kinds]))
     parts.append(sel("led-state", "state",
                      [("pass", "pass"), ("fail", "fail"), ("skip", "skip")]))
+    if tags:
+        parts.append(dl("led-tag", "tag", tags))
     parts.append(dl("led-ep", "endpoint", sorted(set(feeds["ep"]))))
     parts.append(dl("led-mdl", "model", sorted(set(feeds["mdl"]))))
     parts.append(dl("led-fn", "function", sorted(set(feeds["fn"]))))
@@ -368,11 +413,13 @@ var note=document.getElementById('ledcount');
 function v(id){var el=document.getElementById(id);
 return el?el.value.trim().toLowerCase():'';}
 function apply(){var ent=v('led-ent'),kind=v('led-kind'),st=v('led-state'),
-ep=v('led-ep'),mdl=v('led-mdl'),fn=v('led-fn'),q=v('led-q'),n=0;
+tg=v('led-tag'),ep=v('led-ep'),mdl=v('led-mdl'),fn=v('led-fn'),
+q=v('led-q'),n=0;
 rows.forEach(function(r){var d=r.dataset,ok=true;
 if(ent&&ent!=='all')ok=((' '+(d.ent||'')+' ').indexOf(' '+ent+' ')>=0);
 if(ok&&kind&&kind!=='all')ok=(d.kind===kind);
 if(ok&&st&&st!=='all')ok=(d.state===st);
+if(ok&&tg)ok=((d.tag||'').indexOf(tg)>=0);
 if(ok&&ep)ok=((d.ep||'').indexOf(ep)>=0);
 if(ok&&mdl)ok=((d.mdl||'').indexOf(mdl)>=0);
 if(ok&&fn)ok=((d.fn||'').indexOf(fn)>=0);
@@ -408,6 +455,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         mdl_by_file.setdefault(m.get("file", ""), []).append(m["cls"])
         mdl_file.setdefault(m["cls"], m.get("file", ""))
     kinds = sorted({g["kind"] for g in cases})
+    tags_all: set[str] = set()
     feeds: dict[str, list] = {"ep": [], "mdl": [], "fn": []}
     ents_seen: list[str] = []
     seen_ids: set[str] = set()
@@ -435,7 +483,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
              '/gabe-red mints one">unminted</span>') + nvar)
         cells.append(
             f'{E(g["label"])}<span class="lfile"><code>{E(g["file"])}</code>'
-            + (f' · {E(g["group"])}' if g["group"] else "") + "</span>")
+            + (f' · {_hl(g["group"])}' if g["group"] else "") + "</span>")
         cells.append(f'<span class="tag {g["kcls"]}" title="{E(g["corpus"])} '
                      f'corpus">{kind_ic(g["kind"])} {E(g["kind"])}</span>')
         chip_cell, feed = _row_chips(g)
@@ -443,7 +491,9 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         # In-reach names join the FILTER surface too (tier-honest: they are
         # what the reached files define, and the fold labels them T3).
         feed["fn"].extend(c["fn"] + "()" for c in reach_fns)
+        feed["fn"].extend(u["name"] for u in (g["inh"] or {}).get("uses", []))
         feed["mdl"].extend(reach_mdls)
+        tags_all.update(g["tags"])
         for k2 in feeds:
             feeds[k2].extend(feed[k2])
         cells.append(chip_cell)
@@ -456,6 +506,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
             seen_ids.add(g["cid"])
             idattr = f' id="{E(g["cid"])}"'
         attrs = (f' data-ent="{E(" ".join(ents))}"'
+                 f' data-tag="{E(" ".join(g["tags"]))}"'
                  f' data-kind="{E(g["kind"])}" data-state="{E(g["state"])}"'
                  f' data-ep="{E("|".join(feed["ep"]).lower())}"'
                  f' data-mdl="{E("|".join(feed["mdl"]).lower())}"'
@@ -480,7 +531,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
             "in from its file (`via file` / `in reach`); filters match "
             "all tiers.")
     return (_bar(app, sorted(ents_seen, key=lambda s: labels.get(s, s)),
-                 labels, kinds, feeds, len(cases))
+                 labels, kinds, sorted(tags_all), feeds, len(cases))
             + f'<div class="xtbl" id="ledger" style="--xcols:{tmpl}">{head}'
             + "".join(body) + "</div>"
             + f'<p class="sub">{E(note)}</p>' + _JS)

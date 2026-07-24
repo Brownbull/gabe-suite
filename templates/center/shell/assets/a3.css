@@ -825,3 +825,5 @@ details.legset .gal{margin:8px 0 4px}
 .ledmeta{display:grid;grid-template-columns:max-content 1fr;gap:6px 14px;margin:2px 0 6px;align-items:baseline}
 .ledmeta .k{font:var(--mono);font-size:.6rem;text-transform:uppercase;letter-spacing:.06em;color:var(--muted,#64748b);white-space:nowrap}
 .ledmeta .v{font-size:.78rem;min-width:0}
+/* Provenance tokens (DF3, W1, #8) inside group names — the tag facet. */
+.ltag{display:inline-block;font:var(--mono);font-size:.62rem;font-weight:600;padding:0 5px;border-radius:4px;background:var(--accent-soft,#e0f2f4);color:var(--accent-ink,#0d6e78)}

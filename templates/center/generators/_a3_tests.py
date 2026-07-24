@@ -31,6 +31,7 @@ from __future__ import annotations
 import ast
 import datetime as _dt
 import json
+import posixpath as _pp
 import re
 from pathlib import Path
 
@@ -39,6 +40,8 @@ import _center_data as D
 _CID_RX = re.compile(r"(?<![A-Za-z0-9])C([0-9]{1,5})(?![0-9])")
 _VERBS = {"get", "post", "put", "patch", "delete"}
 _IMPORT_RX = re.compile(r"""(?:from|import)\s*\(?\s*['"]([^'"]+)['"]""")
+_IMPORT_CLAUSE_RX = re.compile(
+    r"""import\s+([^;'"]+?)\s+from\s*['"]([^'"]+)['"]""")
 _ROUTE_RX = re.compile(r"""['"](/[A-Za-z0-9_\-./{}$]{2,})['"]""")
 _TS_EXTS = (".ts", ".tsx", ".js", ".jsx")
 
@@ -229,7 +232,7 @@ def test_insight(repo: Path) -> dict:
     def _ex(tfile: str) -> dict:
         return exercises.setdefault(
             tfile, {"corpus": "", "endpoints": [], "functions": [],
-                    "models": [], "reaches": []})
+                    "models": [], "reaches": [], "uses": []})
 
     seen: set = set()
 
@@ -335,29 +338,54 @@ def test_insight(repo: Path) -> dict:
                 # Web corpus: file-level import reach + route literals
                 src = (repo / disk).read_text(errors="replace")
                 aliases = c.get("aliases", {})
-                for spec in _IMPORT_RX.findall(src):
+
+                def _resolve(spec: str) -> str:
                     tgt = None
                     if spec.startswith("."):
-                        tgt = (disk.parent / spec)
+                        tgt = disk.parent / spec
                     else:
                         for al, base in aliases.items():
                             if spec.startswith(al):
                                 tgt = Path(base) / spec[len(al):].lstrip("/")
                                 break
                     if tgt is None:
-                        continue
+                        return ""
                     for suf in ("",) + _TS_EXTS + tuple(
                             f"/index{e2}" for e2 in _TS_EXTS):
                         cand = str(Path(str(tgt) + suf)).replace("\\", "/")
                         cand = str(Path(cand).resolve()).replace(
                             str(repo.resolve()) + "/", "") \
                             if cand.startswith("/") else cand
-                        cand = re.sub(r"(^|/)\./", r"\1", cand)
+                        # normpath collapses ./ AND ../ segments — a parent-
+                        # relative import used to silently miss its target.
+                        cand = _pp.normpath(cand)
                         if cand in by_file:
-                            by_file[cand]["reach"].append(tfile)
-                            if cand not in ex["reaches"]:
-                                ex["reaches"].append(cand)
-                            break
+                            return cand
+                    return ""
+
+                for spec in _IMPORT_RX.findall(src):
+                    cand = _resolve(spec)
+                    if cand:
+                        by_file[cand]["reach"].append(tfile)
+                        if cand not in ex["reaches"]:
+                            ex["reaches"].append(cand)
+                # The SYMBOLS the file imports from the app — the closest a
+                # file-tier corpus gets to naming the function/class under
+                # test. Rendered `uses · T3`, never dressed as case facts.
+                for clause, spec in _IMPORT_CLAUSE_RX.findall(src):
+                    cand = _resolve(spec)
+                    if not cand:
+                        continue
+                    for nm in re.split(r"[,{}]", clause):
+                        nm = nm.strip()
+                        if nm.startswith("type "):
+                            nm = nm[5:].strip()
+                        nm = nm.split(" as ")[0].strip()
+                        if not nm or not re.match(r"^[A-Za-z_$][\w$]*$", nm):
+                            continue
+                        u = {"name": nm, "file": cand}
+                        if u not in ex["uses"]:
+                            ex["uses"].append(u)
                 fref = {"cid": "", "name": f"{len(rec['cases'])} case(s)",
                         "state": "file", "corpus": corpus, "tfile": tfile}
                 for lit in set(_ROUTE_RX.findall(src)):
