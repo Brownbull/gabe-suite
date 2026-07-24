@@ -133,6 +133,8 @@ from _a3_render import (  # noqa: E402  (helpers live beside this module)
     strip_slot_doc_comments,
     table,
     trunc,
+    xtable,
+    kind_ic,
 )
 
 
@@ -545,8 +547,8 @@ def entities_of(path: str) -> list[str]:
 
 corpora = {c["key"]: junit_by.get(c["key"]) for c in CORPORA}
 grid: dict[str, dict[str, list[int]]] = {
-    s["entity"]: {c: [0, 0] for c in corpora} for s in sections}
-unmapped = {c: [0, 0] for c in corpora}
+    s["entity"]: {c: [0, 0, 0] for c in corpora} for s in sections}
+unmapped = {c: [0, 0, 0] for c in corpora}
 shared_files = 0
 for corpus, j in corpora.items():
     for fpath, rec in (j or {}).get("files", {}).items():
@@ -557,6 +559,7 @@ for corpus, j in corpora.items():
             row = grid[slug] if slug in grid else unmapped
             row[corpus][0] += rec["tests"]
             row[corpus][1] += 1
+            row[corpus][2] += rec["failed"]
 
 n_files = sum(len((j or {}).get("files", {})) for j in junit_by.values())
 _corpus_kpis = [
@@ -581,23 +584,50 @@ tests_kpis = '<div class="kpis">' + "".join([
 _corpus_breakdown = " + ".join(
     f"{(junit_by.get(c['key']) or {}).get('total', 0):,} {c['key']}" for c in CORPORA)
 
-_hdr = "".join(f"<th>{E(c)}</th>" for c in corpora)
+# The dashboard MATRIX: entity × KIND health grid — every entity's testing
+# state in one look (the old command set's shape, rebuilt on kind identity;
+# operator ruling 2026-07-23). Junit-backed kinds show counts + pass state,
+# the rest show their honest gap per entity (walks = manual).
+_kind_by_corpus = {c["key"]: c.get("kind", c["key"]) for c in CORPORA}
+_kind_cols = ([(k, _kind_by_corpus[k]) for k in corpora]
+              + [("", "journey"), ("", "coverage"), ("", "manual"),
+                 ("", "deployed")])
+_hdr = "".join(f"<th>{kind_ic(kind)} {E(kind)}</th>"
+               for _k, kind in _kind_cols)
+
+
+def _kind_cell(slug2, corpus, kind):
+    if corpus:
+        n, nf, failed = (grid[slug2] if slug2 else unmapped)[corpus]
+        if not n:
+            return '<td class="void">—</td>'
+        state = (f'<small style="color:#b3403a">{failed} failing</small>'
+                 if failed else "<small>all pass</small>")
+        return (f'<td><span class="cell"><b>{n}</b> {state}<br>'
+                f"<small>{nf} file(s)</small></span></td>")
+    if kind == "manual" and slug2:
+        wn = sum(1 for w in walks
+                 if w.get("subject") in (slug2, f"adopt:{slug2}"))
+        return (f'<td><span class="cell"><b>{wn}</b> '
+                f"<small>walk(s)</small></span></td>" if wn
+                else '<td class="void">never walked</td>')
+    if kind == "journey":
+        return '<td class="void">not wired</td>'
+    if kind == "coverage":
+        return '<td class="void">not sliced</td>'
+    return '<td class="void">—</td>'
+
+
 _rows = ""
 for a in [{"id": s["entity"], "label": LABELS[s["entity"]]} for s in sections]:
-    # .cell is display:block and belongs on an element INSIDE the <td> — putting
-    # it on the <td> drops the cell out of table layout and stacks the columns.
-    cells = "".join(
-        f'<td><span class="cell"><b>{grid[a["id"]][c][0]}</b> '
-        f'<small>{grid[a["id"]][c][1]} files</small></span></td>' if grid[a["id"]][c][0]
-        else '<td class="void">—</td>'
-        for c in corpora)
+    cells = "".join(_kind_cell(a["id"], k, kind) for k, kind in _kind_cols)
     _rows += (f'<tr><th class="area"><a href="{_entity_href(a["id"])}">'
-              f'{E(a["label"])}</a></th>{cells}</tr>')
-_um = "".join(
-    f'<td><span class="cell"><b>{unmapped[c][0]}</b> '
-    f'<small>{unmapped[c][1]} files</small></span></td>'
-    for c in corpora)
-_rows += f'<tr><th class="area">unclaimed</th>{_um}</tr>'
+              + entity_badge(a["id"], a["label"], 13) + f' {E(a["label"])}'
+              f"</a></th>{cells}</tr>")
+_rows += ('<tr><th class="area">unclaimed</th>'
+          + "".join(_kind_cell(None, k, kind) if k
+                    else '<td class="void">—</td>'
+                    for k, kind in _kind_cols) + "</tr>")
 matrix = (f'<table class="riskgrid"><tr><th class="area"></th>{_hdr}</tr>{_rows}</table>'
           f'<p class="sub">Files are claimed by the ENTITY REGISTRY '
           f'(adoption.json) through the same regexes the feature pages count '
@@ -628,12 +658,14 @@ for _corpus, _j in corpora.items():
         _claim = " ".join(
             f'<a class="dlink" href="{_entity_href(o)}">{E(LABELS[o])}</a>'
             for o in _owners) or '<span class="tag s-gap">unclaimed</span>'
-        _file_rows.append([
-            " ".join(entity_badge(o, LABELS.get(o, o), 13) for o in _owners),
+        _cells = [
+            " ".join(f'<a href="{_entity_href(o)}">'
+                     + entity_badge(o, LABELS.get(o, o), 13) + "</a>"
+                     for o in _owners),
             f'<span class="tag {"l-api" if _corpus == "api" else "l-web"}">'
             f"{E(_corpus)}</span>",
             f"<code>{E(_f)}</code>", str(_rec["tests"]),
-            meter(_rec["tests"] - _rec["failed"], _rec["tests"]), _claim])
+            meter(_rec["tests"] - _rec["failed"], _rec["tests"]), _claim]
         _ex = _ti_ex_for(_f)
         _ex_html = ""
         if _ex:
@@ -653,10 +685,9 @@ for _corpus, _j in corpora.items():
                             "Exercises</b> (what this file provably touches "
                             "— T1 literals/imports, T3 reach):</p>"
                             + "".join(_bits))
-        _file_exp.append((f'The {_rec["tests"]} case(s) in '
-                          f'<code>{E(_f.rsplit("/", 1)[-1])}</code>',
-                          case_rows(_rec, _corpus, anchors=True) + _ex_html))
-_unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[5])
+        _file_rows.append(
+            (_cells, case_rows(_rec, _corpus, anchors=True) + _ex_html))
+_unclaimed_files = sum(1 for r in _file_rows if "unclaimed" in r[0][5])
 files_section = (
     sechead("Testing", "The corpus, file by file", "#0f766e", _IC_LIST,
             sub="every test file in the estate, what claims it, and its cases",
@@ -669,8 +700,9 @@ files_section = (
                      ("s-gap", "unclaimed",
                       "no adopted entity names this file yet — surface area, "
                       "not failure")]))
-    + table(["", "Corpus", "File", "Cases", "Passing", "Claimed by"],
-            _file_rows, num={3}, expand=_file_exp,
+    + xtable(["", "Corpus", "File", "Cases", "Passing", "Claimed by"],
+             _file_rows,
+             widths=["40px", "0.9fr", "2.6fr", "0.6fr", "1fr", "1.4fr"],
             note=f"{len(_file_rows)} file(s) · {_unclaimed_files} unclaimed. "
                  f"Read from the junit capture at build time; a file that stops "
                  f"running disappears from this table by itself."))
