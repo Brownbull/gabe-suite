@@ -651,6 +651,8 @@ assert "<title>entity</title>" in dash, \
 cl = (c / "test-claims.html").read_text()
 assert 'class="entb ent-gadget"' in cl and ">running<" in cl, \
     "the app claims page must carry the real per-claim rows, entity first"
+assert 'class="entchips"' in cl and 'class="stickstack"' in cl, \
+    "claims must carry the entity filter bar, stacked with the menu"
 assert 'href="test-matrix.html#C12"' in cl, \
     "an app claim fold's C-ids must link the Cases page"
 assert "<title>entity</title>" in cl, "claims entity column needs its glyph"

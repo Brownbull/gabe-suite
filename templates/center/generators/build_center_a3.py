@@ -1628,8 +1628,8 @@ def render_testing() -> dict[str, str]:
         "test-claims.html": _tpage(
             "Test claims", "Claims",
             "the authored coverage, verified app-wide — open a claim to "
-            "read its cases",
-            _esub("test-claims.html") + claims_body),
+            "read its cases, filter by entity",
+            sticky_stack(_esub("test-claims.html"), bar) + claims_body),
         "test-corpora.html": _tpage(
             "Corpora & gates", "Corpora & gates",
             "the machinery — report sources, the gates in front of a "
