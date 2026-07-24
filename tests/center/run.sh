@@ -556,7 +556,39 @@ from pathlib import Path
 c = Path(sys.argv[1])
 dash = (c / "tests.html").read_text()
 assert 'href="test-matrix.html"' in dash and "archgrid" in dash, "dashboard cards missing"
-assert "Gaps" in dash and 'href="test-elements.html"' in dash, "Gaps card missing"
+assert "Untested surface" in dash and 'href="test-elements.html"' in dash, \
+    "Untested-surface card missing"
+# The STATION REWORK (2026-07-25): tests.html is a single-lens dashboard —
+# estate cards mirror the entity Tests tab (cases · files · claims ·
+# untested + the machinery page), kinds & coverage runs app-wide, the
+# entity × kind matrix keeps the grid. The old matrix/evidence/gates tab
+# set is GONE, and the sidebar navsub now names the estate pages.
+assert 'id="tab-tests"' not in dash and 'class="tabbar"' not in dash, \
+    "the old tab set must be gone from the testing station"
+assert 'href="test-matrix.html#sec-tests-files"' in dash, \
+    "the Files card must land on the file altitude"
+assert 'href="test-claims.html"' in dash and 'href="test-corpora.html"' in dash, \
+    "estate cards must cover claims + the machinery page"
+assert 'id="sec-tests-kinds"' in dash and "Kinds &amp; coverage" in dash, \
+    "app-wide Kinds & coverage section missing"
+assert "</svg> integration" in dash and "</svg> journey" in dash \
+    and "</svg> deployed" in dash, "app kind rows must carry their kind chips"
+assert "no reporter wired" in dash or "% " in dash, \
+    "the coverage kind row must state the reporter fact"
+assert 'id="sec-tests-matrix"' in dash and 'class="riskgrid"' in dash, \
+    "entity × kind matrix section missing"
+idx = (c / "index.html").read_text()
+assert 'test-claims.html">claims' in idx and 'test-elements.html">untested' in idx \
+    and 'test-matrix.html">cases' in idx, "sidebar navsub must name the estate pages"
+assert "tests.html#tab-" not in idx, "the old tab navsub must be gone"
+co = (c / "test-corpora.html").read_text()
+assert 'id="sec-tests-walks"' in co, \
+    "walks need their anchored home on the machinery page (the manual kind row lands here)"
+assert 'id="sec-tests-gates"' in co and 'id="sec-tests-corpora"' in co \
+    and 'id="sec-tests-changelog"' in co and 'id="sec-tests-shelf"' in co, \
+    "machinery-page sections must each carry a sechead anchor"
+assert 'href="test-corpora.html#sec-tests-walks"' in dash, \
+    "the manual kind row must link the walks record"
 m = (c / "test-matrix.html").read_text()
 assert 'id="ledbar"' in m and "<select" in m and "<datalist" in m, \
     "dropdown filter bar missing (R2)"

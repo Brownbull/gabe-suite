@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import contextlib
 import datetime as _dt
+import glob
 import json
 import os
 import re
@@ -36,10 +37,12 @@ import _a3_code
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
 from _a3_code import ENTITY_CODE, ENTITY_MODELS, collect_entity_map  # noqa: E402
+from _a3_evidence import is_reference  # noqa: E402
 from _a3_feature import (  # noqa: E402
     ENTITY_PROOFS,
     ENTITY_RX,
     build_feature_pages,
+    kind_state,
 )
 
 REPO_ROOT = D.REPO_ROOT
@@ -83,6 +86,20 @@ _IC_DB = ('<ellipse cx="12" cy="5" rx="9" ry="3"/>'
           '<path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>')
 _IC_FILES = ('<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 '
              '3h9a2 2 0 0 1 2 2z"/>')
+# Testing-station section icons (the old skeleton's hand-carried svgs — the
+# station pane is generator-owned now, so the paths live here).
+_IC_GRID4 = ('<rect x="3" y="3" width="18" height="18" rx="2"/>'
+             '<line x1="3" y1="9" x2="21" y2="9"/>'
+             '<line x1="3" y1="15" x2="21" y2="15"/>'
+             '<line x1="12" y1="3" x2="12" y2="21"/>')
+_IC_KCHECK = ('<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>'
+              '<polyline points="22 4 12 14.01 9 11.01"/>')
+_IC_CLOCK = '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>'
+_IC_WALK = ('<path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>'
+            '<circle cx="8.5" cy="7" r="4"/><polyline points="17 11 19 13 23 9"/>')
+_IC_SHELF = ('<rect x="3" y="3" width="18" height="18" rx="2"/>'
+             '<circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>')
+_IC_SHIELD = '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>'
 _VERB_CLS = {"GET": "m-get", "POST": "m-post", "DELETE": "m-del",
              "PUT": "m-mut", "PATCH": "m-mut"}
 # The shell is a build INPUT, so it is vendored IN THE REPO. It used to be read
@@ -628,14 +645,16 @@ _rows += ('<tr><th class="area">unclaimed</th>'
           + "".join(_kind_cell(None, k, kind) if k
                     else '<td class="void">—</td>'
                     for k, kind in _kind_cols) + "</tr>")
-matrix = (f'<table class="riskgrid"><tr><th class="area"></th>{_hdr}</tr>{_rows}</table>'
-          f'<p class="sub">Files are claimed by the ENTITY REGISTRY '
-          f'(adoption.json) through the same regexes the feature pages count '
-          f'with — click an entity to open its page. The regexes overlap by '
-          f'design, so {shared_files} file(s) are claimed by more than one '
-          f'entity and counted on each row: these are views over the corpus, '
-          f'not a partition of it, and the rows do not sum to the total. '
-          f'"unclaimed" is honest surface area, not failure.</p>')
+# The grid alone — its claimed-by prose folds into the station sechead's ⊕
+# (declutter ruling 2026-07-22: a table is flanked only by its data).
+matrix = f'<table class="riskgrid"><tr><th class="area"></th>{_hdr}</tr>{_rows}</table>'
+_matrix_note = (
+    f"Files are claimed by the ENTITY REGISTRY (adoption.json) through the "
+    f"same regexes the feature pages count with — click an entity to open "
+    f"its page. The regexes overlap by design, so {shared_files} file(s) "
+    f"are claimed by more than one entity and counted on each row: these "
+    f"are views over the corpus, not a partition of it, and the rows do "
+    f'not sum to the total. "unclaimed" is honest surface area, not failure.')
 
 # --- the corpus, file by file: the reverse index the archive had and the A3
 # center dropped. A reader on a feature page can reach its files; nobody could
@@ -679,7 +698,9 @@ files_section = (
                  f"Read from the junit capture at build time; a file that stops "
                  f"running disappears from this table by itself."))
 
-# The Gaps card's numbers — same joins as the Gaps page rows (Q6).
+# The estate cards — the station's overview, mirroring the entity Tests tab's
+# section set (cases · files · claims · untested) plus the machinery page.
+# Every count is the same variable its landing section leads with.
 _unt_counts = _a3_tests.untested_counts(REPO_ROOT)
 testing_cards = ('<div class="archgrid">'
                  + "".join(
@@ -692,20 +713,119 @@ testing_cards = ('<div class="archgrid">'
                           f"{t_total:,} case(s) in {len(_file_rows)} file(s) "
                           f"· C-id anchors · filter by entity, kind, or the "
                           f"element a case exercises"),
-                         ("test-elements.html", "Gaps — the untested surface",
-                          "fields",
+                         ("test-matrix.html#sec-tests-files", "Files",
+                          "archive",
+                          f"{len(_file_rows)} file(s) · {_unclaimed_files} "
+                          f"unclaimed · per-file flags, ratios and claim "
+                          f"state at the file altitude"),
+                         ("test-claims.html", "Claims", "doc",
+                          f"{len(sections)} entity(ies)' authored coverage, "
+                          "verified by class name"),
+                         ("test-elements.html", "Untested surface", "fields",
                           f"{sum(_unt_counts.values())} element(s) no case "
                           f"or spec touches ({_unt_counts['endpoint']} "
                           f"endpoint · {_unt_counts['model']} model · "
                           f"{_unt_counts['function']} function)"),
-                         ("test-claims.html", "Claims", "doc",
-                          f"{len(sections)} entity(ies)' authored coverage, "
-                          "verified by class name"),
                          ("test-corpora.html", "Corpora & gates", "zap",
                           f"{len(CORPORA)} corpus(es) · report sources · "
-                          "pre-commit + CI gates · run history"),
+                          "pre-commit + CI gates · run history · walks · "
+                          "demo shelf"),
                      ])
                  + "</div>")
+
+# --- Kinds & coverage, app-wide — the entity Tests tab's fast snapshot at the
+# application altitude: junit-backed kinds carry real counts, the rest their
+# honest gap. The coverage row is the one place the app does BETTER than an
+# entity: the wired reporters' repo-wide percentages are a machine fact here,
+# while per-entity slicing stays a named gap.
+_e2e_runner = E2E.get("runner", "playwright")
+_e2e_gap_tag = E2E.get("junit_gap_tag", "local-only")
+_spec_glob = CFG.get("paths", {}).get(
+    "e2e_spec_glob", "tests/web-e2e/**/*.spec.ts")
+# Anchored to the REPO, not the process cwd — a lab regen runs from the
+# generators dir and a cwd-relative glob would count zero specs there.
+_all_specs = sorted(glob.glob(str(REPO_ROOT / _spec_glob), recursive=True))
+_ref_specs = [p for p in _all_specs if is_reference(Path(p).name)]
+_app_specs = [p for p in _all_specs if p not in _ref_specs]
+_app_kind_rows = []
+for _c in CORPORA:
+    _j = junit_by.get(_c["key"]) or {}
+    _krec = {"cases": _j.get("total", 0), "failed": _j.get("failed", 0),
+             "skipped": _j.get("skipped", 0), "ran_at": _j.get("ranAt")}
+    _app_kind_rows.append(
+        [f'<span class="tag {_c["tag_class"]}">{kind_ic(_c["kind"])} '
+         f'{_c["kind"]}</span>',
+         f'{_c["runner"]} ({_c["kind_detail"]})',
+         f'{_krec["cases"]:,}',
+         f'{len(_j.get("files", {}))} file(s)',
+         meter(_krec["cases"] - _krec["failed"], _krec["cases"]),
+         kind_state(_krec)])
+_app_kind_rows += [
+    [f'<span class="tag l-mobile">{kind_ic("journey")} journey</span>',
+     f"{_e2e_runner} (e2e)", "—",
+     f"{len(_app_specs)} spec(s) on disk"
+     + (f'<br><small>+{len(_ref_specs)} reference-capture spec(s) held out '
+        f"— they run the design lab, not the product</small>"
+        if _ref_specs else ""),
+     meter(0, 0),
+     f'<span class="tag s-gap">no junit capture ({E(_e2e_gap_tag)})</span>'],
+    [f'<span class="tag l-models">{kind_ic("coverage")} coverage</span>',
+     "lines, from the wired reporter(s)", "—",
+     (" · ".join(f"{v['percent']}% {k}" for k, v in _covd.items())
+      if _covd else "no reporter wired"),
+     meter(0, 0),
+     ('<span class="tag s-ok">captured</span>' if _covd
+      else '<span class="tag s-gap">named gap</span>')],
+    [f'<span class="tag l-services">{kind_ic("manual")} manual</span>',
+     "operator walks", str(len(walks)),
+     '<a class="dlink" href="test-corpora.html#sec-tests-walks">'
+     "walks.jsonl</a>",
+     meter(0, 0),
+     ('<span class="tag s-ok">recorded</span>' if walks
+      else '<span class="tag s-gap">none on record</span>')],
+    [f'<span class="tag l-schemas">{kind_ic("deployed")} deployed</span>',
+     "probes", "—", "nothing probes the deployed surface", meter(0, 0),
+     '<span class="tag s-gap">absent</span>'],
+]
+app_kinds = table(["Kind", "Runner", "Cases", "Where", "Passing", "State"],
+                  _app_kind_rows, num={2})
+
+# The STATION BODY (rework ruling 2026-07-25): tests.html is a single-lens
+# dashboard — the estate cards (the entity-tab mirror), kinds & coverage
+# app-wide, and the entity × kind matrix. Full views live on the estate pages.
+tests_body = (
+    sechead("Testing", "The estate", "#3f6d4c", _IC_LIST,
+            sub="the app-wide testing surfaces, one card each — the same "
+                "sections every entity's Tests tab carries",
+            id_="sec-tests-estate",
+            note="Cases · Files · Claims · Untested surface mirror the "
+                 "entity Tests tab at the application altitude; Corpora & "
+                 "gates is the machinery — report sources, commit gates, "
+                 "run history, recorded walks, and the demo shelf.")
+    + testing_cards
+    + sechead("Testing", "Kinds & coverage", "#15803d", _IC_KCHECK,
+              sub=f"{t_total:,} automated case(s) · {t_failed} failed — "
+                  "what verifies this application, how much of it runs, "
+                  "and what each kind is for",
+              id_="sec-tests-kinds",
+              note="Cases, files and the passing proportion are read from "
+                   "the junit capture at build time. A kind with no machine "
+                   "record shows its gap instead of a zero.",
+              info=legend("Kind colors:", [
+                  ("l-api", "integration", "API through HTTP ·"),
+                  ("l-web", "unit", "components in isolation ·"),
+                  ("l-mobile", "journey", "real browser flows ·"),
+                  ("l-models", "coverage", "lines executed ·"),
+                  ("l-services", "manual", "a human walked it ·"),
+                  ("l-schemas", "deployed", "probes against the live app")]))
+    + app_kinds
+    + sechead("Testing", "Entity × kind", "#3f6d4c", _IC_GRID4,
+              sub="every entity's testing state in one look — counts and "
+                  "pass state where a kind has a machine record, the honest "
+                  "gap where it has none",
+              id_="sec-tests-matrix",
+              note=_matrix_note)
+    + matrix)
 
 _results_rel = CFG.get("paths", {}).get("results", "tests/results")
 _bucket_rows = [
@@ -1061,8 +1181,9 @@ SHARED = {
     "{{ENTITY_COUNT}}": str(len(sections)),
     "{{TESTS_COUNT}}": f"{t_total:,}",
     "{{SIDEBAR_ENTITIES}}": sidebar_entities,
-    # {{SIDEBAR_TESTS_SUB}} is retired — the Testing navsub (matrix · evidence ·
-    # gates) is now STATIC in the skeletons (map v3), so it cannot drift.
+    # {{SIDEBAR_TESTS_SUB}} is retired — the Testing navsub (cases · files ·
+    # claims · untested, the estate pages) is STATIC in the skeletons (map v3),
+    # so it cannot drift.
     "{{SIDEBAR_CODE}}": _sidebar_code(),
     "{{SIDEBAR_LEAF}}": sidebar_leaf,
     # Repo-wide totals. On an ENTITY page these are overridden with that
@@ -1124,28 +1245,13 @@ PER_FILE = {
     },
     "tests.html": {
         "{{TESTS_TITLE}}": "Testing",
-        "{{TESTS_LEDE}}": (f"The whole test estate — {t_total:,} junit cases "
-                           f"({_corpus_breakdown}), "
-                           f"{t_failed} failed. Absent sources are named, not zeroed."),
+        "{{TESTS_LEDE}}": (f"The estate dashboard — {t_total:,} junit cases "
+                           f"({_corpus_breakdown}), {t_failed} failed. Full "
+                           "views live on the estate pages: cases · files · "
+                           "claims · untested. Absent sources are named, "
+                           "not zeroed."),
         "{{TESTS_KPIS}}": tests_kpis,
-        "{{BUCKETS}}": testing_cards,
-        "{{MATRIX}}": matrix
-        + '<p class="sub">The corpus itself lives case by case on '
-          '<a class="dlink" href="test-matrix.html">the Cases ledger</a> — '
-          "C-id anchors, exercises chips, element filters; its untested "
-          'complement is <a class="dlink" href="test-elements.html">the '
-          "Gaps page</a>.</p>",
-        "{{GATES}}": '<p class="sub">Gates moved to '
-                     '<a class="dlink" href="test-corpora.html">Corpora '
-                     "&amp; gates</a>.</p>",
-        "{{DEMO_SHELF}}": '<p class="sub">The demo shelf moved to '
-                          '<a class="dlink" href="test-corpora.html">'
-                          "Corpora &amp; gates</a>.</p>",
-        "{{MANUAL_ANGLES}}": manual_angles,
-        "{{VERIFICATION_CHANGELOG}}":
-            '<p class="sub">The verification changelog moved to '
-            '<a class="dlink" href="test-corpora.html">Corpora &amp; '
-            "gates</a>.</p>",
+        "{{TESTS_BODY}}": tests_body,
     },
     "ledger.html": {
         "{{CHANGE_TITLE}}": f"Latest change · {HEAD_SHA}",
@@ -1352,7 +1458,35 @@ def render_testing() -> dict[str, str]:
                      "(running · ambiguous · DRIFT) render on its own page.")
         + table(["Entity", "Cases claimed into", "Claims"], claims_rows))
 
-    corpora_body = (buckets + gates + verification_changelog + demo_shelf)
+    # The machinery page: sources · gates · history · walks · shelf — every
+    # piece under its own sechead so the station's deep links (the manual
+    # kind row lands on #sec-tests-walks) have an anchor to arrive at.
+    corpora_body = (
+        sechead("Testing", "Corpora — the report sources", "#3f6d4c",
+                _IC_LIST,
+                sub="one row per corpus: the runner, its junit capture, "
+                    "and where the report lands",
+                id_="sec-tests-corpora")
+        + buckets
+        + sechead("Testing", "Gates", "#3f6d4c", _IC_SHIELD,
+                  sub="what stands in front of a commit — pre-commit hooks "
+                      "and CI jobs",
+                  id_="sec-tests-gates")
+        + gates
+        + sechead("Now", "Verification changelog", "#0d7a84", _IC_CLOCK,
+                  sub="run history — one row per source whose recorded "
+                      "totals moved",
+                  id_="sec-tests-changelog")
+        + verification_changelog
+        + sechead("Testing", "Manual angles (walks)", "#3f6d4c", _IC_WALK,
+                  sub="the one verification input with no machine source — "
+                      "who walked what, when, with what verdict",
+                  id_="sec-tests-walks")
+        + manual_angles
+        + sechead("Testing", "Demo shelf", "#3f6d4c", _IC_SHELF,
+                  sub="curated proof sets on disk",
+                  id_="sec-tests-shelf")
+        + demo_shelf)
 
     # The case LEDGER (rulings R1–R3, 2026-07-24): the C-id is the row and
     # the canonical anchor; its own dropdown bar replaces the chip bar here.
@@ -1398,8 +1532,9 @@ def render_testing() -> dict[str, str]:
             claims_body),
         "test-corpora.html": _tpage(
             "Corpora & gates", "Corpora & gates",
-            "the report sources, the gates in front of a commit, and the "
-            "run history", corpora_body),
+            "the machinery — report sources, the gates in front of a "
+            "commit, the run history, the recorded walks, and the demo "
+            "shelf", corpora_body),
     }
 
 

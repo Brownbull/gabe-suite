@@ -18,8 +18,8 @@
      exclusive icons, the landed-map palette). Generators fill ONLY the project-specific
      parts: {{SIDEBAR_ENTITIES}} = one .navitem per APPROVED-baseline entity (box icon,
      link to its feature page, class "on" when current; never from an archived nav) ·
-     {{ENTITY_COUNT}} · {{TESTS_COUNT}} · <div class="navsub"><a href="tests.html#tab-tests">matrix</a><a href="tests.html#tab-evidence">evidence</a><a href="tests.html#tab-risk">gates</a></div> (.navsub: corpora/matrix
-     links) · {{SIDEBAR_LEAF}} = external .navitem links (htmlcov, playwright report). -->
+     {{ENTITY_COUNT}} · {{TESTS_COUNT}} · <div class="navsub"><a href="test-matrix.html">cases</a><a href="test-matrix.html#sec-tests-files">files</a><a href="test-claims.html">claims</a><a href="test-elements.html">untested</a></div> (.navsub: the estate
+     pages) · {{SIDEBAR_LEAF}} = external .navitem links (htmlcov, playwright report). -->
 <aside class="side">
   <div class="brand">
     <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
@@ -38,7 +38,7 @@
   {{SIDEBAR_CODE}}
   <div class="navlabel g-test">Testing</div>
   <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">{{TESTS_COUNT}}</span></a>
-  <div class="navsub"><a href="tests.html#tab-tests">matrix</a><a href="tests.html#tab-evidence">evidence</a><a href="tests.html#tab-risk">gates</a></div>
+  <div class="navsub"><a href="test-matrix.html">cases</a><a href="test-matrix.html#sec-tests-files">files</a><a href="test-claims.html">claims</a><a href="test-elements.html">untested</a></div>
   <div class="navlabel g-ledger">Ledger</div>
   <a class="navitem on" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
   <div class="navlabel g-rel">Releases</div>

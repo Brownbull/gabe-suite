@@ -39,7 +39,7 @@ page built from scratch instead of its template is a defect (adopt-spec).
 |---|---|---|
 | `index.html` | hub SUBJECT — Overview tab contains `now.recent-changes` + `now.needs-you` | 4 (no Code) |
 | `feature.html` | entity SUBJECT — one per adopted entity, generated from registration data | **5** |
-| `tests.html` | Testing SUBJECT — buckets/changelog · matrix · walks+shelf · gates | 4 |
+| `tests.html` | Testing STATION — estate dashboard: cards (cases · files · claims · untested · corpora & gates) · kinds & coverage app-wide · entity × kind matrix; full views on the `test-*` estate pages | 1 |
 | `board.html` `entity-index.html` `docs.html` `ledger.html` `releases.html` | single-lens STATIONS | 1 |
 | *(spec'd, next loop)* `architecture.html` | app-wide Architecture STATION rendered from `archmap.json` | 1 |
 | `assets/a3.css` | the skin + identity layer + trial vocabulary (evolve via the loop, never per-project) | — |
@@ -51,8 +51,8 @@ page built from scratch instead of its template is a defect (adopt-spec).
 
 Static in the skeletons: the station items (Overview · Board · Entity index · Docs · Tests ·
 Latest change · Releases), the colored group labels (`g-now/g-board/g-ent/g-docs/g-code/g-test/
-g-ledger/g-rel/g-leaf`), and the Testing navsub (`matrix · evidence · gates` — deep links to the
-tests page's own tabs; never authored, so it cannot drift). Generator-filled:
+g-ledger/g-rel/g-leaf`), and the Testing navsub (`cases · files · claims · untested` — links to
+the estate pages, mirroring the entity Tests tab; never authored, so it cannot drift). Generator-filled:
 
 - `{{SIDEBAR_ENTITIES}}` — **adoption.json is THE registry and drives this list** (D123):
   adopted rows link their feature pages; pending rows render MUTED with their tracker state

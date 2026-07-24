@@ -862,7 +862,13 @@ def build_feature_pages(ctx) -> list[str]:
         own_failed = sum(inv[c["key"]]["failed"] for c in ctx.corpora)
         _spec_glob = ctx.cfg.get("paths", {}).get(
             "e2e_spec_glob", "tests/web-e2e/**/*.spec.ts")
-        matched = [p for p in sorted(glob.glob(_spec_glob, recursive=True))
+        # Anchored to the REPO, then relpath'd back so the entity regex sees
+        # repo-relative paths (a cwd-relative glob counted zero specs in lab
+        # regens, and an abs path could false-match rx on the repo's prefix).
+        _found = sorted(glob.glob(str(ctx.repo_root / _spec_glob),
+                                  recursive=True))
+        matched = [p for p in
+                   (str(Path(q).relative_to(ctx.repo_root)) for q in _found)
                    if re.search(rx, p, re.I)]
         # A `*-ref-capture.spec.ts` runs the DESIGN LAB, not the product.
         # Counting it as journey verification is the same mistake as counting a
