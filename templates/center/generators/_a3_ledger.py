@@ -668,6 +668,15 @@ function v(id){var e=el(id);return e?e.value.trim().toLowerCase():'';}
 function sync(){[].slice.call(bar.querySelectorAll('.lx')).forEach(
 function(b){var e=el(b.dataset.for),val=e?e.value.trim():'';
 b.classList.toggle('on',!!val&&val!=='all');});}
+function opts(id){var d=el(id+'-dl');if(!d)return[];
+return [].slice.call(d.querySelectorAll('option')).map(
+function(o){return o.value.toLowerCase();});}
+var exactOpts={'led-tag':opts('led-tag'),'led-ep':opts('led-ep'),
+'led-mdl':opts('led-mdl'),'led-fn':opts('led-fn')};
+function tokenMatch(id,val,q){if(!q)return true;
+if(exactOpts[id]&&exactOpts[id].indexOf(q)>=0){
+return ('|'+val+'|').indexOf('|'+q+'|')>=0;}
+return val.indexOf(q)>=0;}
 function apply(){var ent=v('led-ent'),kind=v('led-kind'),st=v('led-state'),
 tg=v('led-tag'),ep=v('led-ep'),mdl=v('led-mdl'),fn=v('led-fn'),
 q=v('led-q'),n=0;
@@ -675,10 +684,10 @@ rows.forEach(function(r){var d=r.dataset,ok=true;
 if(ent&&ent!=='all')ok=((' '+(d.ent||'')+' ').indexOf(' '+ent+' ')>=0);
 if(ok&&kind&&kind!=='all')ok=(d.kind===kind);
 if(ok&&st&&st!=='all')ok=(d.state===st);
-if(ok&&tg)ok=((d.tag||'').indexOf(tg)>=0);
-if(ok&&ep)ok=((d.ep||'').indexOf(ep)>=0);
-if(ok&&mdl)ok=((d.mdl||'').indexOf(mdl)>=0);
-if(ok&&fn)ok=((d.fn||'').indexOf(fn)>=0);
+if(ok&&tg)ok=tokenMatch('led-tag',d.tag||'',tg);
+if(ok&&ep)ok=tokenMatch('led-ep',d.ep||'',ep);
+if(ok&&mdl)ok=tokenMatch('led-mdl',d.mdl||'',mdl);
+if(ok&&fn)ok=tokenMatch('led-fn',d.fn||'',fn);
 if(ok&&q)ok=((r.textContent+' '+(d.ep||'')+' '+(d.mdl||'')+' '+(d.fn||''))
 .toLowerCase().indexOf(q)>=0);
 r.classList.toggle('lhide',!ok);if(ok)n++;});
@@ -755,8 +764,8 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
     feeds: dict[str, list] = {"ep": [], "mdl": [], "fn": []}
     ents_seen: list[str] = []
     seen_ids: set[str] = set()
-    cols = ["", "Case", "Asserts", "Kind", "State"]
-    widths = ["48px", "0.8fr", "3.1fr", "0.9fr", "0.7fr"]
+    cols = ["", "Kind", "Case", "Asserts", "State"]
+    widths = ["48px", "40px", "0.8fr", "3.4fr", "0.7fr"]
     ctxkey = "xtbl|" + "|".join(cols)
     body = []
     for g in cases:
@@ -772,6 +781,11 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
                           for o in ents) or ""]
         nvar = (f' <small>×{len(g["variants"])}</small>'
                 if len(g["variants"]) > 1 else "")
+        # Kind is ICON-ONLY, second column — name + corpus ride the hover
+        # title, the same dialect as the endpoints table.
+        cells.append(f'<span class="tag {g["kcls"]} ic" '
+                     f'title="{E(g["kind"])} · {E(g["corpus"])} corpus">'
+                     f'{kind_ic(g["kind"], 14)}</span>')
         cells.append(
             (f'<span class="cid">{E(g["cid"])}</span>' if g["cid"] else
              '<span class="tag s-gap" title="junit carries no C-id — '
@@ -779,8 +793,6 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
         cells.append(
             f'{E(g["label"])}<span class="lfile"><code>{E(g["file"])}</code>'
             + (f' · {_hl(g["group"])}' if g["group"] else "") + "</span>")
-        cells.append(f'<span class="tag {g["kcls"]}" title="{E(g["corpus"])} '
-                     f'corpus">{kind_ic(g["kind"])} {E(g["kind"])}</span>')
         cells.append(_STATE_CHIP.get(g["state"], ""))
         feed = _row_feed(g)
         for c in (g["own"] or {}).get("endpoints", []):
@@ -805,7 +817,7 @@ def ledger_html(repo: Path, inv_files: dict, corpora: list,
             seen_ids.add(g["cid"])
             idattr = f' id="{E(g["cid"])}"'
         attrs = (f' data-ent="{E(" ".join(ents))}"'
-                 f' data-tag="{E(" ".join(g["tags"]))}"'
+                 f' data-tag="{E("|".join(g["tags"]))}"'
                  f' data-kind="{E(g["kind"])}" data-state="{E(g["state"])}"'
                  f' data-ep="{E("|".join(feed["ep"]).lower())}"'
                  f' data-mdl="{E("|".join(feed["mdl"]).lower())}"'

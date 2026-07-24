@@ -568,8 +568,10 @@ assert 'class="ledmeta"' in m, "fold must be the labeled metadata grid"
 assert 'class="k">entities<' in m, "fold must name the entities the case relates to"
 assert 'in reach<details class="tinfo"' in m and "lonely_helper()" in m, \
     "in-reach chips (what reached files define) missing from the fold"
-assert 'id="led-tag"' in m and 'data-tag="df3 w1"' in m, \
+assert 'id="led-tag"' in m and 'data-tag="df3|w1"' in m, \
     "tag facet missing (tokens from the group name must be filterable)"
+assert "tokenMatch" in m, \
+    "exact-option inputs must token-match (GET /x must not catch GET /x/{id})"
 assert 'data-for="led-ep"' in m and "closest('.lx')" in m, \
     "per-filter clear × missing (a filtered-to-zero ledger must never strand)"
 assert 'class="ltit"' in m, "clear × must ride the title line, not the control"

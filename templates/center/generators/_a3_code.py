@@ -1166,7 +1166,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        + _srows + "</tbody></table>"
                        + f'<p class="sub">Full receipts live in the Tests '
                          f'section — <a class="dlink" href="{_tm}">open the '
-                         f"case ledger</a>.</p>")
+                         f"case ledger filtered to this route</a> (its direct "
+                         f"drivers plus every case in files that touch it)."
+                         f"</p>")
         cells = [
             f'<span class="tag {_METHOD_CLS.get(e["method"], "")}">'
             f'{E(e["method"])}</span> <code>{E(e["path"])}</code><br>'
