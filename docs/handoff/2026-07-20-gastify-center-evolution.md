@@ -524,3 +524,50 @@ state the crawl gate ignores; adopt-spec should name it beside archmap.json.
   flow-match text) or the spec should say what the code does — a suite
   ruling, not a project patch; gastify left the behavior as-is and fixed
   only the empty-list semantics.
+
+## 10. Describe-splitter mangles C-ids at prose ">"s (2026-07-24)
+
+- **Fix applied in gastify's trial copies** (`_a3_ledger.build_cases`,
+  `_a3_feature` case-table renderer): the vitest describe/case split is now
+  `name.partition(" > ")` — separator WITH spaces, cut at the FIRST.
+  Before: `rpartition(">")` cut at the LAST bare `>`, which also matches a
+  prose arrow (`same key -> same token`) and a title's own comparison
+  (`colours by trend: last > first is up (red)`). Both existed in the web
+  corpus: C1472 (chartData) and C1269 (Sparkline) rendered **unminted**
+  with the C-id stranded in the group half, while their junit carried the
+  id all along. Rationale for first-split: C-ids ride case titles, never
+  describe blocks, so everything after the first separator must stay in
+  the name half; nested describes degrade gracefully (their tail rides the
+  label). The pytest guard (junit file suffix ≠ .py) is unchanged.
+- **Absorb into the suite**: both split sites; any other consumer of junit
+  names that splits on bare ">" has the same false-unminted class.
+
+## 11. E2E junit wiring — the journey corpus lands (2026-07-24)
+
+- **Pattern applied in gastify (absorb as the wiring recipe):** the e2e
+  corpus is opt-in at three layers. (a) playwright.config gains a
+  `suite`/`capture` project split — `_`-prefixed live-capture utilities
+  (they seed/delete prod data and re-shoot proof sets) never ride a corpus
+  run, yet stay CLI-invocable (a named `_` file matches only the capture
+  project). (b) The junit reporter is gated on `E2E_JUNIT=1` — junit
+  replaces wholesale per run, so an always-on reporter would let a
+  single-spec capture run shrink the committed corpus to one file.
+  (c) corpora[] gains `{key: e2e, kind: journey}` and `e2e.junit_wired:
+  true`; every "not wired" debt display (bucket rows, static journey
+  kind rows, the entity journey growth move, the e2e-specs KPI) now
+  stands down when a corpus already carries the journey kind — they were
+  unconditional and would have double-spoken beside the live corpus.
+- **Seam fix (`_a3_ledger.proof_verification`):** the manifest-spec ↔
+  junit join now suffix-matches BOTH ways — playwright junit keys are
+  testDir-relative ("analytics-bars.spec.ts") while manifests name
+  repo-relative paths ("tests/web-e2e/…"); one-directional matching left
+  every e2e proof set joinless.
+- **Anchor fix (`proof_verification_html`):** Verified-by C-id pills now
+  anchor the canonical case ledger (test-matrix.html#C…) instead of the
+  same page — a set's spec can carry cases the entity's regex never
+  claims, and those same-page anchors were dead links (crawl gate caught
+  19).
+- **Capture discipline:** a corpus run re-shoots tracked proof PNGs as a
+  side effect (suite specs write proof frames); those were RESTORED, not
+  committed — proof re-curation stays a human-eyed /gabe-feature curate
+  pass, the corpus run only owns the junit.
