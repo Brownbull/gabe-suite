@@ -40,12 +40,14 @@ page built from scratch instead of its template is a defect (adopt-spec).
 | `index.html` | hub SUBJECT — Overview tab contains `now.recent-changes` + `now.needs-you` | 4 (no Code) |
 | `feature.html` | entity SUBJECT — one per adopted entity, generated from registration data | **5** |
 | `tests.html` | Testing STATION — estate dashboard: cards (cases · files · claims · untested · corpora & gates) · kinds & coverage app-wide · entity × kind matrix; one `test-*` estate page per section (matrix=cases · files · claims · elements=untested · corpora=machinery) | 1 |
-| `board.html` `entity-index.html` `docs.html` `ledger.html` `releases.html` | single-lens STATIONS | 1 |
+| `board.html` | Board STATION — every open move as a card (tracks: verify · prove · build · debt · arc) re-columned six ways (state · track · entity · effort · age · done) + the clickable phase-sequence strip. Slots: `{{BOARD_KPIS}}` `{{PHASE_STRIP}}` `{{PHASE_JSON}}` `{{BOARD_MODES}}` `{{BOARD_FILTERS}}` `{{BOARD_BOARDS}}`. Rendered in a SECOND pass (after archmap) so cards are priced against this build, not the last one; behaviour in `assets/board.js` | 1 |
+| `entity-index.html` `docs.html` `ledger.html` `releases.html` | single-lens STATIONS | 1 |
 | *(spec'd, next loop)* `architecture.html` | app-wide Architecture STATION rendered from `archmap.json` | 1 |
 | `assets/a3.css` | the skin + identity layer + trial vocabulary (evolve via the loop, never per-project) | — |
 | `assets/slots.js` | raw-skeleton affordance: unfilled `{{TOKEN}}`s render as labeled chips + a notice bar; inert on generated pages | — |
 | `assets/a3-settings.js` | viewer settings (cog in `.brand`): 10 content fonts, size S–XL, compact, rail, Light/Dark — localStorage | — |
 | `assets/a3-lightbox.js` | proof viewer + expander cascade; delegated on `a[data-lb]`, progressive (anchors resolve with JS off) | — |
+| `assets/board.js` | board station only: framing switch (remembered per browser), cross-framing dropdown filters, column folds, phase-detail panel. SHOWS and HIDES what the generator rendered — it never writes card state, because a card the viewer can move becomes a second source of truth | — |
 
 ## The ruled nav (landed map v3 — merged 2026-07-21)
 

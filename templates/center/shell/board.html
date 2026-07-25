@@ -8,10 +8,17 @@
 <script src="assets/a3-settings.js" defer></script>
 <script src="assets/a3-lightbox.js" defer></script>
 <script src="assets/rowclick.js" defer></script>
+<script src="assets/board.js" defer></script>
 </head>
 <body>
-<!-- STATION: Board — single-lens page; its four map sections each under a data-sec banner.
-     SOURCES: .kdbp/PLAN.md + PLAN.json · git · .kdbp/PENDING.md · .kdbp/SCOPE.md. -->
+<!-- STATION: Board — every OPEN move in the project as a card, re-columned six ways,
+     plus the closed ones newest-first under Done. A PROJECTION of repo truth: cards move
+     when the files move, nothing is draggable, nothing is stored (operator ruling
+     2026-07-25). Generators fill {{BOARD_KPIS}} · {{PHASE_STRIP}} + {{PHASE_JSON}} (the
+     click-for-detail payload) · {{BOARD_MODES}} · {{BOARD_FILTERS}} · {{BOARD_BOARDS}}
+     (one .bboard per framing; assets/board.js shows one and filters across all).
+     SOURCES: .kdbp/PLAN.md · PENDING.md + archive/PENDING-resolved_*.md · LEDGER.md ·
+     walks.jsonl · SCOPE.md §Phases | ROADMAP.md · adoption.json · archmap.json. -->
 <div class="app">
 
 <!-- ============ SIDEBAR — the STATION SET is invariant and ships here (colored groups +
@@ -69,26 +76,13 @@
       <div class="kpis">{{BOARD_KPIS}}</div>  <!-- phases done/total · current phase · owed cells by kind -->
     </div>
 
-    <div class="tabbody">
-      <section class="tabpane" id="board" style="display:block">
-        <section data-sec="board.rail" style="--gc:#1f6feb">
-        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span><div><h2><span class="gtag">Board</span> Rail · red→exec→review→commit→push</h2></div></div>
-        {{RAIL}}             <!-- glyphs 1:1 from PLAN.json cells — .tbl, one row per phase -->
-        </section>
-        <section data-sec="board.review-debt" style="--gc:#1f6feb">
-        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><div><h2><span class="gtag">Board</span> Review-debt lane</h2></div></div>
-        {{REVIEW_DEBT_LANE}} <!-- PENDING.md open items, escalation ages — .panel + .tlist -->
-        </section>
-        <section data-sec="board.nonphase" style="--gc:#1f6feb">
-        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg></span><div><h2><span class="gtag">Board</span> Non-phase lane</h2></div></div>
-        {{NONPHASE_LANE}}    <!-- git/LEDGER work outside phases — .panel + .tlist -->
-        </section>
-        <section data-sec="board.backlog" style="--gc:#1f6feb">
-        <div class="sechead"><span class="secic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span><div><h2><span class="gtag">Board</span> Backlog</h2></div></div>
-        {{BACKLOG}}          <!-- unstarted phases + SCOPE arc remainder — .panel -->
-        </section>
-      </section>
+    <div class="bwrap">
+      {{PHASE_STRIP}}
+      {{BOARD_MODES}}
+      {{BOARD_FILTERS}}
+      {{BOARD_BOARDS}}
     </div>
+    <script type="application/json" id="phase-seq">{{PHASE_JSON}}</script>
   </div>
 </main>
 

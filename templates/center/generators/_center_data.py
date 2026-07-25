@@ -96,6 +96,95 @@ def rel_age(iso: str | None) -> str:
 
 
 # --------------------------------------------------------------------------- #
+# Markdown-table layer — the ONE table reader every KDBP source goes through.
+#
+# Two rules, both learned the hard way against real twin data:
+#
+#   1. Resolve columns BY HEADER NAME. The twins do not share a schema — one
+#      PLAN carries a `Types` column and a `Verified`, the other neither; one
+#      writes phase ids `P1`, the other `1`. A position-keyed parser reads one
+#      project perfectly and returns NOTHING for the other, which is the worst
+#      failure mode available: a clean exit and an empty page.
+#   2. A header is a row FOLLOWED BY a `|---|` separator — nothing else is a
+#      reliable signal. Ending a table at the first non-table line broke
+#      PENDING.md at row 45 of 85 (its rows are interleaved with HTML comments)
+#      and promoted the row after the comment to a header.
+# --------------------------------------------------------------------------- #
+
+def md_tables(text: str) -> list[tuple[list[str], list[dict]]]:
+    """Every markdown table in `text` as (headers, [row-dicts])."""
+    lines = text.split("\n")
+
+    def _is_row(i: int) -> bool:
+        s = lines[i].strip()
+        return s.startswith("|") and s.endswith("|") and len(s) > 1
+
+    def _is_sep(i: int) -> bool:
+        if not (0 <= i < len(lines)) or not _is_row(i):
+            return False
+        cells = lines[i].strip().strip("|").split("|")
+        return all(c.strip() and set(c.strip()) <= set("-:") for c in cells)
+
+    tables: list[tuple[list[str], list[dict]]] = []
+    hdr: list[str] | None = None
+    rows: list[dict] = []
+    for i in range(len(lines)):
+        if not _is_row(i) or _is_sep(i):
+            continue
+        guarded = lines[i].strip().strip("|").replace("\\|", "\x00")
+        cells = [c.strip().replace("\x00", "|") for c in guarded.split("|")]
+        if _is_sep(i + 1):
+            if hdr:
+                tables.append((hdr, rows))
+            hdr, rows = cells, []
+            continue
+        if hdr is None:
+            continue
+        rows.append(dict(zip(hdr, cells + [""] * (len(hdr) - len(cells)))))
+    if hdr:
+        tables.append((hdr, rows))
+    return tables
+
+
+def pick_table(text: str, *required: str) -> list[dict]:
+    """Rows of the first table whose header carries every required column."""
+    for hdr, rows in md_tables(text):
+        low = [h.strip().lower() for h in hdr]
+        if all(r.lower() in low for r in required):
+            return rows
+    return []
+
+
+def col(row: dict, *names: str) -> str:
+    """First present column among `names` — the same table is spelled
+    `ID | Name | Depends-on` in a folded SCOPE and `# | Phase | Depends on` in a
+    standalone ROADMAP, and both are current in the wild."""
+    for n in names:
+        for k, v in row.items():
+            if k.strip().lower() == n.lower():
+                return v.strip()
+    return ""
+
+
+def as_date(stamp) -> _dt.date | None:
+    """The first ISO date inside `stamp`, whatever prose surrounds it."""
+    if not stamp:
+        return None
+    m = re.search(r"(20\d\d)-(\d\d)-(\d\d)", str(stamp))
+    if not m:
+        return None
+    try:
+        return _dt.date(int(m[1]), int(m[2]), int(m[3]))
+    except ValueError:
+        return None
+
+
+def days_since(stamp) -> int | None:
+    d = as_date(stamp)
+    return (NOW.date() - d).days if d else None
+
+
+# --------------------------------------------------------------------------- #
 # KDBP layer
 # --------------------------------------------------------------------------- #
 
@@ -145,6 +234,9 @@ def load_plan() -> dict:
     i_marks = [_idx(k, d) for k, d in
                (("exec", 5), ("review", 6), ("commit", 7), ("push", 8))]
     i_red, i_center = _idx("red", None), _idx("center", None)
+    # `_idx(...) or -1` would be wrong here: column 0 is falsy, and _at() must
+    # receive None (not -1) to mean "absent column" rather than "last cell".
+    i_desc, i_types = _idx("description", None), _idx("types", None)
 
     for line in lines:
         if not line.startswith("|") or line.startswith("|--") or line.startswith("|---"):
@@ -161,7 +253,12 @@ def load_plan() -> dict:
             "num": cells[0],
             "id": pid.strip() or cells[0], "name": pname.strip() or cells[1],
             "tier": _at(cells, i_tier), "complexity": _at(cells, i_cplx),
-            "types": [],
+            # Description and Types were previously dropped. The board's phase
+            # panel renders the description verbatim (it is where a phase's
+            # founder rulings and file inventories actually live), and Types
+            # is the only signal saying whether a phase is web or api work.
+            "desc": re.sub(r"[`*]", "", _at(cells, i_desc)),
+            "types": [t.strip() for t in _at(cells, i_types).split(",") if t.strip()],
             "cells": {k: _CELL_MARK.get(m, "todo")
                       for k, m in zip(("exec", "review", "commit", "push"), marks)},
             "red": _CELL_MARK.get(_at(cells, i_red)) if i_red is not None else None,
@@ -204,29 +301,114 @@ def load_maturity() -> str:
     return ""
 
 
+_CLOSERS = ("CLOSED", "RESOLVED", "WONT-DO", "WON'T-DO", "SUPERSEDED")
+
+
+def _verdict_closed(status: str) -> bool:
+    """Is this Status cell's VERDICT a closing one?
+
+    The verdict is the LEADING token, not any token anywhere. A reconciled row
+    records its history inline —
+
+        RESOLVED @ 19f1e220 2026-07-23 — … · prior: STILL-REAL @ e37dccc5 …
+
+    — so a substring test sees both verdicts and has to guess. Two real rows
+    (#101, #47) were shipped-and-verified yet still counted as open debt
+    because their history clause mentioned STILL-REAL. Read the head of the
+    cell; the tail is provenance.
+
+    Projects still on the older lowercase vocabulary ("open — parked: …") have
+    no leading all-caps verdict, so they fall through to the substring rule
+    that vocabulary was written for. An empty Status is NOT closed.
+    """
+    su = (status or "").strip().upper()
+    if not su:
+        return False
+    m = re.match(r"^[^A-Z]*([A-Z][A-Z\-']*)", su)
+    verdict = m[1] if m else ""
+    if verdict:
+        # Prefix, not equality: real cells carry compounds. RESOLVED-OBSOLETE
+        # is closed; PART-RESOLVED is not, and only a prefix test separates
+        # them. Anything else — STILL-REAL, ACCEPTED-TRADEOFF, FOUNDER-GATED,
+        # or a verdict this vocabulary has not met — stays OPEN. Closing a row
+        # on a token we do not recognise hides live work; leaving it open only
+        # costs a card. (An explicit open-verdict list lived here briefly and
+        # was removed: no such verdict starts with a closer, so the branch
+        # could never change an outcome and no fixture could make it fail.)
+        return any(verdict.startswith(t) for t in _CLOSERS)
+    # Older lowercase vocabulary ("open — parked: …") has no leading verdict.
+    return "OPEN" not in su and any(t in su for t in _CLOSERS)
+
+
+def load_pending_rows(include_archive: bool = True) -> list[dict]:
+    """Every deferred-finding row the project keeps — OPEN and CLOSED alike.
+
+    Header-resolved, and closure-aware in BOTH conventions the twins use:
+    a verdict token in the `Status` cell, or an HTML comment on the line after
+    the row (`<!-- P1 resolved 2026-06-11: obsolete … -->`) for projects whose
+    Status cell stays empty. An empty Status therefore means NOT CLOSED, never
+    "unknown, skip it".
+
+    Resolved rows are lifted out of the live file into
+    `.kdbp/archive/PENDING-resolved_*.md`, so reading only the live file
+    undercounts finished work badly — one twin showed 11 closed instead of 64.
+    """
+    out: list[dict] = []
+    seen: set[str] = set()
+
+    def _harvest(text: str, src: str, archived: bool) -> None:
+        # gate ids come from the optional index table; absent = ungated
+        gates = {}
+        for r in pick_table(text, "#", "Gate", "Finding"):
+            g = col(r, "Gate")
+            gates[col(r, "#").lstrip("#")] = g if g not in ("—", "-", "") else ""
+        resolved = {}
+        for m in re.finditer(
+                r"<!--\s*([A-Za-z]?\d+)\s+(?:resolved|closed|done)\b([^>]*)-->",
+                text, re.I):
+            resolved[m[1]] = as_date(m[2])
+        for r in pick_table(text, "#", "Finding", "Priority"):
+            num = col(r, "#").lstrip("#")
+            if not re.match(r"^[A-Za-z]?\d+$", num) or num in seen:
+                continue
+            seen.add(num)
+            status = col(r, "Status")
+            closed = bool(archived or num in resolved
+                          or _verdict_closed(status))
+            closed_on = (as_date(col(r, "Verified")) if closed else None) \
+                or (as_date(status) if closed else None) \
+                or (resolved.get(num) if closed else None) \
+                or (as_date(src) if closed else None)
+            out.append({
+                "num": num, "date": col(r, "Date"), "source": col(r, "Source"),
+                "finding": col(r, "Finding"), "file": col(r, "File"),
+                "scale": col(r, "Scale"), "priority": col(r, "Priority").lower(),
+                "impact": col(r, "Impact"),
+                "deferred": col(r, "Times Deferred"), "status": status,
+                "verified": col(r, "Verified"), "gate": gates.get(num, ""),
+                "open": not closed, "closed": closed,
+                "closed_on": closed_on.isoformat() if closed_on else "",
+                "parked": "parked" in status.lower() or "far" in status.lower(),
+                "origin_file": src,
+            })
+
+    live = KDBP / "PENDING.md"
+    if live.exists():
+        _harvest(live.read_text(), ".kdbp/PENDING.md", archived=False)
+    if include_archive and (KDBP / "archive").is_dir():
+        for p in sorted((KDBP / "archive").glob("PENDING-resolved*.md")):
+            _harvest(p.read_text(), f".kdbp/archive/{p.name}", archived=True)
+    return out
+
+
 def load_pending() -> list[dict]:
-    """Tolerant PENDING.md row parser. A row is open when its Status cell
-    CONTAINS 'open' (status strings carry suffixes like 'open — parked: …')."""
-    rows: list[dict] = []
-    path = KDBP / "PENDING.md"
-    if not path.exists():
-        return rows
-    for line in path.read_text().splitlines():
-        if not line.startswith("|") or line.startswith("|--") or line.startswith("| #"):
-            continue
-        guarded = line.strip().strip("|").replace("\\|", "\x00")
-        cells = [c.strip().replace("\x00", "|") for c in guarded.split("|")]
-        if len(cells) < 10 or not cells[0]:
-            continue
-        rows.append({
-            "num": cells[0], "date": cells[1], "source": cells[2],
-            "finding": cells[3], "file": cells[4], "scale": cells[5],
-            "priority": cells[6].lower(), "impact": cells[7],
-            "deferred": cells[8], "status": cells[9],
-            "open": "open" in cells[9].lower(),
-            "parked": "parked" in cells[9].lower() or "far" in cells[9].lower(),
-        })
-    return rows
+    """The OPEN deferred rows — the shape every existing station consumes.
+
+    Openness is now decided by the closure verdict, not by whether the Status
+    prose happens to contain the substring "open" (a row reading "reopened" or
+    "no longer open" scored the same as a live one). Delegating to the one
+    parser also keeps the center from carrying two readers that disagree."""
+    return [r for r in load_pending_rows(include_archive=False) if r["open"]]
 
 
 def load_ledger(n: int = 5) -> list[list[str]]:
@@ -244,6 +426,94 @@ def load_ledger(n: int = 5) -> list[list[str]]:
         if len(rows) >= n:
             break
     return rows
+
+
+def load_ledger_events() -> list[dict]:
+    """Every dated LEDGER row, live file + archived halves.
+
+    PLAN.md records what a phase IS and which cells are ticked; it records no
+    dates anywhere. LEDGER.md is the only per-phase clock either twin keeps —
+    one dated row per command checkpoint, many of them naming their phase."""
+    out: list[dict] = []
+    paths = [KDBP / "LEDGER.md"]
+    if (KDBP / "archive").is_dir():
+        paths += sorted((KDBP / "archive").glob("LEDGER*.md"))
+    for p in paths:
+        if not p.exists():
+            continue
+        for line in p.read_text().splitlines():
+            if not re.match(r"^\|\s*20\d\d-\d\d-\d\d\s*\|", line):
+                continue
+            cells = [c.strip() for c in line.strip().strip("|").split("|")]
+            d = as_date(cells[0])
+            if d:
+                out.append({"date": d.isoformat(),
+                            "kind": cells[1] if len(cells) > 1 else "",
+                            "text": " ".join(cells[2:4])})
+    return out
+
+
+def phase_clock(events: list[dict] | None = None) -> dict[str, dict]:
+    """phase id -> {'first','last'} activity dates, from the ledger's own words.
+    Ids are matched in both twin styles (`P4` and bare `4`)."""
+    clock: dict[str, dict] = {}
+    for ev in (events if events is not None else load_ledger_events()):
+        for m in re.finditer(r"\b(?:Phase\s+)?(P\d+(?:\.\d+)?|\b\d{1,2}(?:\.\d+)?\b)",
+                             ev["text"]):
+            slot = clock.setdefault(m[1], {"first": ev["date"], "last": ev["date"]})
+            slot["first"] = min(slot["first"], ev["date"])
+            slot["last"] = max(slot["last"], ev["date"])
+    return clock
+
+
+def load_walks() -> list[dict]:
+    """The human verification record — who looked, when, what they concluded.
+    adoption.json says an entity is approved; walks.jsonl says who approved it."""
+    path = KDBP / "walks.jsonl"
+    if not path.exists():
+        return []
+    out = []
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except ValueError:
+            continue          # a hand-edited line must not kill the build
+    return out
+
+
+def load_scope_arc() -> tuple[list[dict], str]:
+    """The long-horizon phase arc + the file it came from.
+
+    Lives in SCOPE.md §Phases once a project folds its roadmap in, and in a
+    standalone ROADMAP.md until then. Both are current across the twins, so
+    read whichever exists rather than reporting "no long horizon" for the older
+    shape."""
+    scope = KDBP / "SCOPE.md"
+    text, src = "", ""
+    if scope.exists() and "## Phases" in scope.read_text():
+        text = scope.read_text().split("## Phases", 1)[1]
+        src = ".kdbp/SCOPE.md §Phases"
+    elif (KDBP / "ROADMAP.md").exists():
+        text, src = (KDBP / "ROADMAP.md").read_text(), ".kdbp/ROADMAP.md"
+    if not text:
+        return [], ""
+    rows = []
+    for r in pick_table(text, "Status"):
+        aid = col(r, "ID", "#").lstrip("P")
+        if not re.match(r"^[\d.]+$", aid):
+            continue
+        rows.append({
+            "id": aid,
+            "name": re.sub(r"[*`]", "", col(r, "Name", "Phase")),
+            "status": col(r, "Status").lower(),
+            "depends": col(r, "Depends-on", "Depends on") or "—",
+            "parallel": col(r, "Parallel-with", "Parallel with") or "—",
+            "reqs": len(re.findall(r"REQ-\d+", col(r, "Covers REQs", "REQs"))),
+        })
+    return rows, src
 
 
 # --------------------------------------------------------------------------- #

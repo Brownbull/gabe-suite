@@ -33,6 +33,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
+import _a3_board
 import _a3_code
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -210,7 +211,8 @@ R_MARKS.init_rowmarks(_rowmarks_baseline())
 # --------------------------------------------------------------------------- #
 
 plan = D.load_plan()
-pending = D.load_pending()
+pending_all = D.load_pending_rows()   # open AND closed (board Done view)
+pending = [r for r in pending_all if r['open']]
 ledger = D.load_ledger(8)
 # One junit read per declared corpus — keyed by the corpus key, so nothing
 # downstream names a specific suite; it iterates CORPORA.
@@ -537,51 +539,43 @@ if plan.get("authored_phase") and plan["first_owed"] not in plan["authored_phase
         f'<span class="tag">{E(unticked)}</span></a></div></div>')
 
 # --------------------------------------------------------------------------- #
-# Board content
+# Board content — the card board (_a3_board). The rail-plus-three-lanes page it
+# replaces could only ever show ONE phase as current, so every other live
+# thread (owed walks, ripening fixes, priced debt, the scope arc) stayed in the
+# operator's head. The lanes are gone; the phase SEQUENCE survives as a strip,
+# because a card exists only while a phase still owes a cell and finished
+# phases would otherwise leave no trace.
 # --------------------------------------------------------------------------- #
 
-board_kpis = '<div class="kpis">' + "".join([
-    kpi("phases done", f"{len(done_phases)}/{len(phases)}"),
-    kpi("current", plan["current_phase"], "authored (PLAN.json)"),
-    kpi("first owed", plan["first_owed"], "earliest unticked cell"),
-    kpi("owed", str(len(owed)), "any cell not done", alert=bool(owed)),
-    kpi("open debt", str(len(open_pending)), f"{len(crit_pending)} critical/high"),
-]) + "</div>"
-
-GLYPH = {"done": "✅", "in_progress": "🔄", "todo": "⬜"}
-_rail_src = owed[:14] or phases[-14:]
-rail = table(
-    ["Phase", "Tier", "Complexity", "Red", "Exec", "Review", "Commit", "Push"],
-    [[f'<b>{E(p["id"])}</b> {E(trunc(p["name"], 46))}', E(p["tier"]), E(p["complexity"]),
-      GLYPH.get(p["red"] or "", "—"), GLYPH[p["cells"]["exec"]],
-      GLYPH[p["cells"]["review"]], GLYPH[p["cells"]["commit"]],
-      GLYPH[p["cells"]["push"]]] for p in _rail_src],
-    note=f"{len(owed)} of {len(phases)} phases owe at least one cell · "
-         f"showing {len(_rail_src)}. ✅ done · 🔄 in progress · ⬜ todo · — n/a.")
-
-review_debt = [r for r in open_pending if "review" in r["source"].lower()]
-review_lane = table(
-    ["#", "Finding", "Priority", "File"],
-    [[f'<b>P{E(r["num"])}</b>', md(trunc(r["finding"], 68)), E(r["priority"]),
-      md(r["file"][:46])] for r in review_debt[:10]],
-    note=f"{len(review_debt)} open review-sourced row(s).")
-
-nonphase = [r for r in open_pending if "review" not in r["source"].lower()]
-nonphase_lane = table(
-    ["#", "Finding", "Source", "Priority"],
-    [[f'<b>P{E(r["num"])}</b>', md(trunc(r["finding"], 64)), E(r["source"]),
-      E(r["priority"])] for r in nonphase[:10]],
-    note=f"{len(nonphase)} open non-review row(s).")
-
-_backlog_src = sorted(open_pending,
-                      key=lambda r: {"critical": 0, "high": 1, "medium": 2}.get(
-                          r["priority"], 3))[:12]
-backlog = table(
-    ["#", "Finding", "Priority", "Deferred", "File"],
-    [[f'<b>P{E(r["num"])}</b>', md(trunc(r["finding"], 60)), E(r["priority"]),
-      f'{E(r["deferred"])}×', md(r["file"][:40])] for r in _backlog_src],
-    num={3},
-    note=f"{len(open_pending)} open · showing {len(_backlog_src)} by priority.")
+def render_board(archmap: dict) -> dict:
+    """board.html's slots. Called in the SECOND render pass (like the
+    architecture station) because the board reads archmap coverage and per-file
+    line counts, and archmap is assembled only after the feature pages run.
+    Rendering it eagerly would price every card against the PREVIOUS build."""
+    cards = _a3_board.build_cards(
+        plan=plan, sections=sections, archmap=archmap, adoption=adoption,
+        labels=LABELS, entity_href=_entity_href, pending=pending_all)
+    n_open = sum(1 for c in cards if not c["done"])
+    n_done = len(cards) - n_open
+    strip, seq_json = _a3_board.phase_strip(plan)
+    return {
+        "{{BOARD_TITLE}}": "Board",
+        "{{BOARD_LEDE}}": (
+            f"Every open move in the project on one surface — so \u201cwhat\u2019s "
+            f"next?\u201d is a choice instead of a question. {n_open} open cards "
+            f"across five tracks, each carrying what it costs, how long it has sat, "
+            f"and the command that starts it, plus {n_done} already closed under "
+            f"Done. Derived from PLAN.md, PENDING.md, LEDGER.md, walks.jsonl and "
+            f"adoption.json — a projection, never a second source of truth."),
+        "{{BOARD_KPIS}}": _a3_board.kpis(cards),
+        "{{PHASE_STRIP}}": strip,
+        "{{PHASE_JSON}}": seq_json,
+        "{{BOARD_MODES}}": _a3_board.modebar(),
+        "{{BOARD_FILTERS}}": _a3_board.filter_bar(cards, LABELS),
+        "{{BOARD_BOARDS}}": "".join(
+            _a3_board.board_html(m, cards, LABELS)
+            for m, _l, _s in _a3_board.MODES),
+    }
 
 # --------------------------------------------------------------------------- #
 # Tests station
@@ -1448,16 +1442,6 @@ PER_FILE = {
         "{{TAB_EVIDENCE}}": tab_evidence,
         "{{TAB_RISK}}": tab_risk,
     },
-    "board.html": {
-        "{{BOARD_TITLE}}": "Board",
-        "{{BOARD_LEDE}}": ("Phase rail · review-debt · backlog — from PLAN.md cells and "
-                           "PENDING.md rows, parsed never interpreted."),
-        "{{BOARD_KPIS}}": board_kpis,
-        "{{RAIL}}": rail,
-        "{{REVIEW_DEBT_LANE}}": review_lane,
-        "{{NONPHASE_LANE}}": nonphase_lane,
-        "{{BACKLOG}}": backlog,
-    },
     "entity-index.html": {
         "{{ENTITIES_TITLE}}": "Entity index",
         "{{ENTITIES_LEDE}}": (f"The approved adoption baseline — {len(sections)} entities, "
@@ -1881,9 +1865,10 @@ def main() -> int:
 
     wrote = []
     for src in sorted(SHELL_SRC.glob("*.html")):
-        # architecture.html is owned by render_architecture below — the generic
-        # pass would ship it slot-empty (or at all when build_architecture off).
-        if src.name == "architecture.html":
+        # architecture.html and board.html are owned by later passes —
+        # render_architecture and render_board both need the archmap, which is
+        # assembled after this loop. The generic pass would ship them slot-empty.
+        if src.name in ("architecture.html", "board.html"):
             continue
         text = strip_slot_doc_comments(src.read_text())
         for tok, val in SHARED.items():
@@ -1919,6 +1904,13 @@ def main() -> int:
     n_models = sum(len(v["models"]) for v in amap["entities"].values() if v)
     print(f"    wrote docs/site/center/archmap.json — {len(amap['entities'])} "
           f"entity(ies) · {n_eps} endpoints · {n_models} models")
+
+    # The board — second pass, now that archmap can price every card.
+    _btext = strip_slot_doc_comments((SHELL_SRC / "board.html").read_text())
+    for _tok, _val in {**SHARED, **render_board(amap)}.items():
+        _btext = _btext.replace(_tok, _val)
+    (CENTER_OUT / "board.html").write_text(_btext)
+    wrote.append(("board.html", _btext.count("{{")))
 
     # The app-wide Architecture station — a consumer of the read-once map, not a
     # second read of the code. Lights up {{SIDEBAR_CODE}} across the estate.

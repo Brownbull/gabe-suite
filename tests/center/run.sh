@@ -1140,6 +1140,173 @@ sys.exit(0)
 PY
 ) >"$T/py.out" 2>&1; then ok; else bad "flow grammar/classifier unit asserts (see below)"; cat "$T/py.out"; fi
 
+# --- BOARD station (2026-07-25): card model + the closure verdict ----------
+# The board is a projection of PLAN/PENDING/LEDGER/walks/SCOPE. Each rule below
+# is proven able to BOTH fire and stay silent, because a checker that cannot
+# fail is non-evidence.
+if (cd "$GEN" && python3 - <<'BOARDPY'
+import sys
+sys.path.insert(0, ".")
+import _center_data as D
+import _a3_board as B
+
+# ---- closure verdict: the LEADING token decides, the tail is provenance ----
+# A reconciled row records its history inline; a substring test sees both
+# verdicts and guesses. FIRE (closed) and SILENT (still open) both proven.
+for text, want in [
+    ("RESOLVED @ abc123 2026-07-23 - fixed . prior: STILL-REAL @ old", True),
+    ("STILL-REAL @ e37dccc5 - undecidable statically", False),
+    ("PART-RESOLVED - only half shipped", False),
+    ("RESOLVED-OBSOLETE", True),
+    ("ACCEPTED-TRADEOFF against D72-A", False),
+    ("FOUNDER-GATED pre-launch", False),
+    ("open - parked: later", False),
+    ("CLOSED 2026-07-21 (reconcile)", True),
+    ("", False),                       # empty Status is NOT closed
+    ("rebuild-only note", False),      # unknown lowercase verdict stays open
+]:
+    got = D._verdict_closed(text)
+    assert got == want, "verdict %r: got %s want %s" % (text, got, want)
+
+# ---- md_tables: a header is a row FOLLOWED BY a |---| separator -----------
+# Rows interleaved with HTML comments must NOT split the table, and the row
+# after a comment must NOT be promoted to a header.
+doc = "\n".join([
+    "| # | Finding | Priority | Status |",
+    "|---|---------|----------|--------|",
+    "| 1 | first   | low      | OPEN   |",
+    "<!-- an aside between rows -->",
+    "| 2 | second  | high     | OPEN   |",
+])
+rows = D.pick_table(doc, "#", "Finding", "Priority")
+assert len(rows) == 2, "comment split the table: %d rows" % len(rows)
+assert rows[1]["Finding"] == "second", rows
+
+# ---- col(): the arc table is spelled two ways in the wild -----------------
+assert D.col({"ID": "3"}, "ID", "#") == "3"
+assert D.col({"#": "3"}, "ID", "#") == "3"
+assert D.col({"Depends on": "1"}, "Depends-on", "Depends on") == "1"
+
+# ---- area_of: SEGMENTS, not prefixes -------------------------------------
+# Rules written as apps/api|apps/web once labelled a whole codebase "tooling".
+assert B.area_of("apps/api/api/recipes.py") == "api"
+assert B.area_of("backend/app/main.py") == "api", "gastify layout must resolve"
+assert B.area_of("web/src/routes/scan.tsx") == "web"
+assert B.area_of("scripts/build.py") == "tooling"
+assert B.area_of("tests/web-e2e/a.spec.ts") == "e2e"
+assert B.area_of("") is None and B.area_of("-") is None
+
+# ---- brace expansion + attribution: path-derived or ABSENT ----------------
+assert sorted(B.cite_tokens("f/{a,b}/**")) == ["f/a", "f/b"]
+# A five-entity registry, because the sweep guard is RELATIVE: a citation is
+# only "not discriminating" once it covers more than half the registry, and a
+# two-entity fixture could never exercise it.
+amap = {"entities": {
+    "recipe": {"files": [["api", "apps/api/recipes.py", 900]]},
+    "pantry": {"files": [["api", "apps/api/pantry.py", 120]]},
+    "auth": {"files": [["api", "apps/api/auth.py", 200]]},
+    "cooking": {"files": [["api", "apps/api/cooking.py", 200]]},
+    "billing": {"files": [["api", "apps/api/billing.py", 200]]}}}
+ENT = {"recipe": "Recipe", "pantry": "Pantry", "auth": "Auth",
+       "cooking": "Cooking", "billing": "Billing"}
+att = B.Attributor(amap, ENT)
+slugs, matched = att("apps/api/recipes.py")
+assert slugs == ["recipe"] and matched, (slugs, matched)           # FIRE
+slugs, _ = att("scripts/_center_data.py")
+assert slugs == [], "a tooling path must read cross-cutting, never guess"
+slugs, _ = att("apps/api/recipes.py + apps/api/pantry.py")
+assert sorted(slugs) == ["pantry", "recipe"], slugs                # SET not one
+slugs, _ = att("apps/api")
+assert slugs == [], "a whole-tree citation must collapse to cross-cutting"
+assert len(att("apps/api/recipes.py")[0]) == 1, "a precise path still resolves"
+
+def prow(**kw):
+    row = {"num": "1", "date": "2026-01-01", "source": "review",
+           "finding": "f", "file": "", "scale": "mvp", "priority": "low",
+           "impact": "", "deferred": "0", "status": "OPEN", "verified": "",
+           "gate": "", "open": True, "closed": False, "closed_on": "",
+           "parked": False, "origin_file": ".kdbp/PENDING.md"}
+    row.update(kw)
+    return row
+
+def cards(pending, sections=(), plan=None):
+    return B.build_cards(plan=plan or {"phases": []}, sections=list(sections),
+                         archmap=amap, adoption={},
+                         labels=ENT, entity_href=lambda s: "f-%s.html" % s,
+                         pending=pending)
+
+# ---- effort is priced from RECORDED line counts --------------------------
+big = [c for c in cards([prow(file="apps/api/recipes.py")])
+       if c["track"] == "debt"][0]
+assert big["effort"] == "L" and "900 lines" in big["effort_basis"], big
+assert big["inferred"] == [], "a recorded line count is not an inference"
+assert big["ripe"] is False, "an L-sized row is never ripe"
+
+# ---- the ripe predicate: prerequisites met AND cheap ---------------------
+sm = [c for c in cards([prow(num="2", file="apps/api/pantry.py")])
+      if c["track"] == "debt"][0]
+assert sm["ripe"] is True and sm["effort"] == "S", sm
+
+# ---- a gated row is BLOCKED, not ready, and never ripe ------------------
+g = [c for c in cards([prow(num="3", file="apps/api/pantry.py",
+                            gate="founder")]) if c["track"] == "debt"][0]
+assert g["state"] == "blocked" and g["ripe"] is False, g
+
+# ---- verify cards route to the RIGHT beat -------------------------------
+# 6/7 with only the walk owed -> /gabe-walk; 0/7 -> /gabe-adopt. Naming the
+# wrong command sends the operator to a beat whose preconditions are not met.
+full = dict.fromkeys(("testing_inventory", "legacy_reverified", "card",
+                      "diagrams", "proofs", "gate_green"), True)
+secs = [{"entity": "recipe", "display_name": "Recipe",
+         "status": "awaiting-approval",
+         "checklist": dict(full, walk_recorded=False)},
+        {"entity": "pantry", "display_name": "Pantry",
+         "status": "awaiting-approval",
+         "checklist": dict.fromkeys(list(full) + ["walk_recorded"], False)}]
+by = {c["id"]: c for c in cards([], secs) if c["track"] == "verify"}
+assert by["verify:recipe"]["cmd"] == "/gabe-walk recipe", by["verify:recipe"]
+assert by["verify:recipe"]["ripe"] is True
+assert by["verify:pantry"]["cmd"] == "/gabe-adopt section pantry", by["verify:pantry"]
+assert by["verify:pantry"]["ripe"] is False
+# both are OWED TO YOU - nobody but the operator can clear either
+assert set(c["state"] for c in by.values()) == set(["owed_to_you"])
+
+# ---- an APPROVED, fully-checked section emits NO verify card (silent) ----
+done_sec = [{"entity": "recipe", "display_name": "Recipe",
+             "status": "approved", "checklist": dict(full, walk_recorded=True)}]
+assert not [c for c in cards([], done_sec) if c["track"] == "verify"], \
+    "an approved section must not owe a walk"
+
+# ---- phase_id: the `#` column wins when Phase carries no separator -------
+assert B.phase_id({"num": "P4", "id": "God files", "name": "God files"}) == "P4"
+assert B.phase_id({"num": "1", "id": "W1", "name": "Token foundation"}) == "W1"
+
+# ---- every framing renders, and `done` switches population --------------
+mixed = cards([prow(num="9", file="apps/api/pantry.py", open=False,
+                    closed=True, status="CLOSED 2026-02-01",
+                    closed_on="2026-02-01")], secs)
+labels = ENT
+for mode, _l, _s in B.MODES:
+    html = B.board_html(mode, mixed, labels)
+    assert 'class="bboard"' in html, mode
+    assert 'data-mode="%s"' % mode in html, mode
+open_n = sum(1 for c in mixed if not c["done"])
+done_n = len(mixed) - open_n
+assert done_n == 1 and open_n >= 2, (open_n, done_n)
+assert B.board_html("done", mixed, labels).count('class="bcard"') == done_n
+assert B.board_html("state", mixed, labels).count('class="bcard"') == open_n
+
+# ---- KPI reconciliation: 0 is a real number, not "missing" --------------
+# `closed_days or 999` once made every same-day close count as ancient, so the
+# KPI contradicted the column beside it.
+k = B.kpis([B._card(id="x", track="debt", title="t", detail="", state="done",
+                    done=True, created="2026-07-25", closed="2026-07-25",
+                    source="s")])
+assert "1 in the last 7" in k, k
+sys.exit(0)
+BOARDPY
+) >"$T/py.out" 2>&1; then ok; else bad "board card model + closure verdict (see below)"; cat "$T/py.out"; fi
+
 echo
 echo "center battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1
