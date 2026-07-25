@@ -19,13 +19,13 @@ and surface when remembered.
 
 ## What was built
 
-Two static pages, one per twin, each rendering that project's real cards re-columned four
-ways with cross-cutting filters:
+Two static lab pages, one per twin, re-columning each project's real cards.
 
-- `templates/center/shell/example/board-lab.html` — **106 gustify cards**
-- `templates/center/shell/example/board-lab-gastify.html` — **136 gastify cards**
-
-Reproduce either with:
+**Both have since been RETIRED** — the board shipped, so the example folder now carries the
+GENERATED pages instead (`example/board.html` gastify · `example/board-gustify.html` gustify ·
+`example/arch-code-map.html` with the guard chips). Keeping lab artifacts that no longer match
+the shipped page is drift. The record of the spike is this document plus the two scripts beside
+it, which still run:
 
 ```bash
 python3 extract_board_cards.py /path/to/project > cards.json   # read-only
