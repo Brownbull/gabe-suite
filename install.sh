@@ -77,6 +77,14 @@ done
 
 # Templates — bundled source of truth for .kdbp/ files created by /gabe-init and other skills.
 if [ -d "$SCRIPT_DIR/templates" ]; then
+    # MIRROR, don't accumulate. The copies below are additive, so a template
+    # DELETED or RENAMED in the repo used to live on in every install forever —
+    # suite-doctor then reported "exists only in install" on every run until
+    # someone removed it by hand, which trains people to ignore the doctor.
+    # templates/gabe is entirely repo-derived (the --uninstall branch already
+    # removes the whole tree, and nothing writes user state into it), so a
+    # clean replace is both safe and idempotent.
+    run "rm -rf ~/.claude/templates/gabe"
     run "mkdir -p ~/.claude/templates/gabe"
     run "cp \"$SCRIPT_DIR/templates/\"*.md ~/.claude/templates/gabe/ 2>/dev/null || true"
     run "cp \"$SCRIPT_DIR/templates/\"*.yaml ~/.claude/templates/gabe/ 2>/dev/null || true"
