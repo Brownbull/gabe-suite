@@ -118,11 +118,14 @@ Condensed; the full leveled trees live in [`consolidated-trees.html`](consolidat
 the connection map in [`map-site-files-suite.html`](map-site-files-suite.html).
 
 **Site** (`docs/site/center/`): `now` (present: feed · needs-you · freshness) · `board`
-(every OPEN move as a card across five tracks — verify · prove · build · debt · arc — re-columned
+(every OPEN move as a card across six tracks — verify · prove · **guard** · build · debt · arc — re-columned
 six ways: state · track · entity · effort · age · done; the **red**→exec→review→commit→push rail
 survives as a clickable phase-sequence strip. A PROJECTION of PLAN/PENDING/LEDGER/walks/SCOPE,
 never a second source of truth; the old backlog · non-phase · review-debt lanes are absorbed into
-the debt and arc tracks) · `entities` · `docs/<entity>/<feature>` **accumulator** (handle ·
+the debt and arc tracks. **`guard`** is the used-but-unwatched lens — code no test NAMES, joined
+from `function_insight`+`by_function`/`by_endpoint` (python, exact) and `defines`+web `uses`
+(ts/tsx, a name-matched FLOOR); the same numbers chip the code map's Tests column, where reach
+and coverage answer "was it run" and neither answers "would anything go red") · `entities` · `docs/<entity>/<feature>` **accumulator** (handle ·
 Gabe-Lens analogy lead · what&why · for-whom · flows · is/is-not · decided · diagrams · derived
 changelog) + `docs/foundations/` (decisions · rules · architecture · procedures) · `testing/`
 ONE section: `matrix` (index; per test: id · **ever-red?** · status · source · last-run; buckets:

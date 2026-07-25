@@ -35,6 +35,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
 import _a3_board
 import _a3_code
+import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
 from _a3_code import ENTITY_CODE, ENTITY_MODELS, collect_entity_map  # noqa: E402
@@ -563,7 +564,7 @@ def render_board(archmap: dict) -> dict:
         "{{BOARD_LEDE}}": (
             f"Every open move in the project on one surface — so \u201cwhat\u2019s "
             f"next?\u201d is a choice instead of a question. {n_open} open cards "
-            f"across five tracks, each carrying what it costs, how long it has sat, "
+            f"across six tracks, each carrying what it costs, how long it has sat, "
             f"and the command that starts it, plus {n_done} already closed under "
             f"Done. Derived from PLAN.md, PENDING.md, LEDGER.md, walks.jsonl and "
             f"adoption.json — a projection, never a second source of truth."),
@@ -1898,6 +1899,14 @@ def main() -> int:
             "test_insight": _a3_tests.test_insight(REPO_ROOT),
             "function_insight": _a3_code.fn_insight_serial(REPO_ROOT),
             "entities": {s: collect_entity_map(s, REPO_ROOT) for s in ENTITY_CODE}}
+    # The GUARD lens — "if I change this, would anything tell me?" Joined from
+    # the three maps above, so it costs one pass and re-reads no source.
+    amap["guard_insight"] = _a3_guard.guard_insight(
+        function_insight=amap["function_insight"],
+        by_function=amap["test_insight"].get("by_function", {}),
+        by_endpoint=amap["test_insight"].get("by_endpoint", {}),
+        exercises=amap["test_insight"].get("exercises", {}),
+        entities=amap["entities"])
     (CENTER_OUT / "archmap.json").write_text(
         json.dumps(amap, indent=1, ensure_ascii=False) + "\n")
     n_eps = sum(len(v["endpoints"]) for v in amap["entities"].values() if v)

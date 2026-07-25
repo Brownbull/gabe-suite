@@ -20,6 +20,7 @@ from urllib.parse import quote as _uq
 from pathlib import Path
 
 import _center_data as _cd
+import _a3_guard
 import _a3_tests
 from _a3_render import (E, ENT_COL, entity_badge, kind_ic, kind_tag, entity_icon, legend,
                         lines_grade, md, sechead, subnav, table, th_label, trunc, xtable)
@@ -809,6 +810,28 @@ _IC_LINK_SM = ('<svg viewBox="0 0 24 24" width="12" height="12" '
                '<line x1="10" y1="14" x2="21" y2="3"/></svg>')
 
 
+_GUARD_LENS: dict | None = None
+
+
+def guard_lens(repo: Path) -> dict:
+    """The guard lens for this repo, computed once per build.
+
+    Lives here rather than being threaded through every caller because the
+    code map renders from a per-ENTITY amap while the lens is app-wide: an
+    entity slice must still be able to say "this file has 12 unguarded defs",
+    and that number cannot come from the slice it is rendering."""
+    global _GUARD_LENS
+    if _GUARD_LENS is None:
+        ti = _a3_tests.test_insight(repo)
+        _GUARD_LENS = _a3_guard.guard_insight(
+            function_insight=fn_insight_serial(repo),
+            by_function=ti.get("by_function", {}),
+            by_endpoint=ti.get("by_endpoint", {}),
+            exercises=ti.get("exercises", {}),
+            entities={s_: collect_entity_map(s_, repo) for s_ in ENTITY_CODE})
+    return _GUARD_LENS
+
+
 def build_code_tab(slug: str, repo: Path, intro_html: str,
                    amap: dict | None = None, entity_col: bool = False,
                    xpage: dict | None = None) -> str:
@@ -841,6 +864,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     # answers "is this tested, and by what KIND?" — kind chips + tier-labeled
     # receipts, gaps named, nothing gated (D1).
     _ti = _a3_tests.test_insight(repo)
+    _GUARD = guard_lens(repo)
     _corpora_cfg = _cd.CFG.get("corpora", [])
     _ckind = {c2["key"]: c2.get("kind", c2["key"]) for c2 in _corpora_cfg}
     _kcls = {c2.get("kind", c2["key"]): c2.get("tag_class", "")
@@ -966,6 +990,28 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f'{E(str(cov["age"])[:16])}">cov {cov["pct"]}%</span>' if cov
             else _tgap("cov —", "line coverage not captured — wire the "
                        "coverage block and run capture --with-coverage"))
+        # THE GUARD CHIP. reach and coverage both answer "was this file's code
+        # RUN"; neither answers "does any test NAME what it declares". A file
+        # can sit at 90% coverage because something upstream imports it and
+        # still have nothing that fails when its exports change. That is the
+        # gap a refactor falls into, so it gets its own chip.
+        g = (_GUARD.get("files") or {}).get(f)
+        if g and g["declared"]:
+            n_un, n_all = g["unguarded"], g["declared"]
+            if not n_un:
+                bits.append(f'<span class="tag tk s-ok" title="every one of '
+                            f'the {n_all} defs this file declares is named by '
+                            f'at least one test">guarded {n_all}/{n_all}</span>')
+            else:
+                floor = ("" if g["exact"] else
+                         " Name-matched against the symbols web tests import, "
+                         "so this is a floor, not a coverage figure.")
+                sev = "s-high" if g["share"] >= 0.8 else "s-med"
+                bits.append(
+                    f'<span class="tag tk {sev}" title="{n_un} of {n_all} '
+                    f'declared defs are named by NO test — change them and '
+                    f'nothing goes red.{E(floor)}">unguarded '
+                    f'{n_un}/{n_all}</span>')
         return " ".join(bits)
     _rid_seen: set = set()
 

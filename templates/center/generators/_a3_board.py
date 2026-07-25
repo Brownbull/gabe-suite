@@ -37,6 +37,7 @@ from __future__ import annotations
 
 import re
 
+import _a3_guard
 import _center_data as D
 from _a3_render import E, entity_color, kpi, trunc
 
@@ -52,10 +53,13 @@ TRACKS = {
               "A planned phase with lifecycle cells still unticked."),
     "debt": ("Debt", "#b3403a",
              "An open deferred finding, priced and dated."),
+    "guard": ("Guard", "#c2461e",
+              "Code that is used but that no test names — change it and "
+              "nothing goes red."),
     "arc": ("Arc", "#5a53a8",
             "A scope phase not yet pulled into a plan — the long horizon."),
 }
-TRACK_ORDER = ["verify", "prove", "build", "debt", "arc"]
+TRACK_ORDER = ["verify", "prove", "guard", "build", "debt", "arc"]
 
 STATES = [
     ("owed_to_you", "Owed to you", "#b45309",
@@ -468,6 +472,37 @@ def build_cards(*, plan, sections, archmap, adoption, labels, entity_href,
             cmd=f"fix #{r['num']} · /gabe-review deferred",
             href="board.html", source=r["origin_file"]))
 
+    # --- guard: used, but nothing would go red -------------------------------
+    # The two halves know different things, so the cards say which: a python
+    # function is an EXACT ast-to-C-id join, a web file is a name-matched FLOOR.
+    for m in _a3_guard.guard_moves(
+            archmap.get("guard_insight")
+            or _a3_guard.guard_insight(
+                function_insight=archmap.get("function_insight") or {},
+                by_function=(archmap.get("test_insight") or {}).get(
+                    "by_function", {}),
+                by_endpoint=(archmap.get("test_insight") or {}).get(
+                    "by_endpoint", {}),
+                exercises=(archmap.get("test_insight") or {}).get(
+                    "exercises", {}),
+                entities=archmap.get("entities") or {})):
+        cards.append(_card(
+            id=m["id"], track="guard",
+            entities=[m["entity"]] if m["entity"] in labels else [],
+            entity_how="the entity that owns this file",
+            title=m["title"], detail=m["detail"],
+            state="ready",
+            area=area_of(m["file"]),
+            file=m["file"], unguarded=m["unguarded"], declared=m["declared"],
+            usage=m.get("usage"),
+            effort=m["effort"], effort_basis=m["effort_basis"],
+            # the web half is a name match, and a card that hides that is
+            # inviting the reader to treat a floor as a coverage number
+            inferred=([] if m["exact"] else ["name-matched (a floor)"]),
+            cmd=f"/gabe-red  → write a guard for {m['file'].rsplit('/', 1)[-1]}",
+            href="arch-code-map.html",
+            source="archmap.json §guard_insight"))
+
     # --- arc: scope phases not yet planned ----------------------------------
     arc, arc_src = D.load_scope_arc()
     for a in arc:
@@ -742,7 +777,7 @@ def kpis(cards) -> str:
                 if c.get("age_days") is not None and c["age_days"] > 90)
     cyc = sorted(c["cycle_days"] for c in done if c.get("cycle_days") is not None)
     out = [
-        kpi("open cards", str(len(open_)), "across 5 tracks"),
+        kpi("open cards", str(len(open_)), "across 6 tracks"),
         kpi("owed to you", str(owed), "only a human can clear these",
             alert=bool(owed)),
         kpi("ripe now", str(sum(1 for c in open_ if c["ripe"])),

@@ -1307,6 +1307,110 @@ sys.exit(0)
 BOARDPY
 ) >"$T/py.out" 2>&1; then ok; else bad "board card model + closure verdict (see below)"; cat "$T/py.out"; fi
 
+# --- GUARD lens (2026-07-25): used-but-unguarded, and the by_endpoint trap ---
+if (cd "$GEN" && python3 - <<'GUARDPY'
+import sys
+sys.path.insert(0, ".")
+import _a3_guard as G
+
+FI = {
+    # guarded by a direct function binding
+    "api/a.py::alpha": {"fn": "alpha", "file": "api/a.py", "entity": "e1",
+                        "usage": 5, "lines": 10, "api": False},
+    # guarded ONLY by a route test -> by_endpoint, same file::fn key shape
+    "api/a.py::route_h": {"fn": "route_h", "file": "api/a.py", "entity": "e1",
+                          "usage": 1, "lines": 10, "api": True,
+                          "handler": True},
+    # genuinely unguarded and load-bearing
+    "api/a.py::hot": {"fn": "hot", "file": "api/a.py", "entity": "e1",
+                      "usage": 4, "lines": 12, "api": False},
+    # unguarded, used once, internal -> NOT a card (noise)
+    "api/a.py::cold": {"fn": "cold", "file": "api/a.py", "entity": "e1",
+                       "usage": 1, "lines": 8, "api": False},
+}
+ENTS = {"e1": {"files": [["api", "api/a.py", 100],
+                         ["web", "web/big.ts", 1200],
+                         ["web", "web/small.ts", 40]],
+               "defines": {"web/big.ts": ["Used"] + [f"Unused{i}"
+                                                     for i in range(12)],
+                           "web/small.ts": ["OnlyThing"]}}}
+EXER = {"t1.test.ts": {"corpus": "web", "uses": [{"name": "Used"}],
+                       "functions": []},
+        "t2.test.ts": {"corpus": "web", "uses": [{"name": "OnlyThing"}],
+                       "functions": []}}
+
+# THE by_endpoint TRAP: a route test credits the handler under by_endpoint, not
+# by_function. Reading only by_function reports every route-tested endpoint as
+# unguarded — the exact false alarm this lens exists to avoid.
+gi = G.guard_insight(function_insight=FI,
+                     by_function={"api/a.py::alpha": [{"cid": "C1"}]},
+                     by_endpoint={"api/a.py::route_h": {"api": [{"cid": "C2"}]}},
+                     exercises=EXER, entities=ENTS)
+assert "api/a.py::alpha" not in gi["functions"], "a bound fn must be guarded"
+assert "api/a.py::route_h" not in gi["functions"], \
+    "a ROUTE-tested handler must count as guarded"
+assert "api/a.py::hot" in gi["functions"] and "api/a.py::cold" in gi["functions"]
+assert gi["totals"]["fn_guarded"] == 2, gi["totals"]
+
+# SILENT the other way: drop by_endpoint and the handler becomes unguarded, so
+# the assertion above is testing something real.
+gi_nb = G.guard_insight(function_insight=FI,
+                        by_function={"api/a.py::alpha": [{"cid": "C1"}]},
+                        by_endpoint={}, exercises=EXER, entities=ENTS)
+assert "api/a.py::route_h" in gi_nb["functions"]
+
+# ---- web: symbols matched by NAME against what tests import ---------------
+big = gi["files"]["web/big.ts"]
+assert big["declared"] == 13 and big["unguarded"] == 12, big
+assert big["exact"] is False, "the web half is a name match — never exact"
+assert "Used" not in big["names"], big["names"]
+small = gi["files"]["web/small.ts"]
+assert small["unguarded"] == 0, "a fully-named file must read guarded"
+
+# ---- python file rollup is EXACT -----------------------------------------
+apy = gi["files"]["api/a.py"]
+assert apy["exact"] is True and apy["declared"] == 4 and apy["unguarded"] == 2, apy
+assert apy["lines"] == 100, "file lines come from the entity map, not the fn"
+
+# ---- moves: hot functions individually, files as one sitting --------------
+mv = G.guard_moves(gi)
+ids = [m["id"] for m in mv]
+assert "guard:api/a.py::hot" in ids, ids           # FIRE: load-bearing
+assert "guard:api/a.py::cold" not in ids, \
+    "used once and internal is a fact, not a to-do"  # SILENT
+assert "guard:web/big.ts" in ids, ids               # 1200 lines, 75% unguarded
+assert "guard:web/small.ts" not in ids, "a fully-guarded file owes nothing"
+byid = {m["id"]: m for m in mv}
+assert byid["guard:web/big.ts"]["kind"] == "file"
+assert byid["guard:web/big.ts"]["exact"] is False
+assert byid["guard:api/a.py::hot"]["kind"] == "function"
+assert byid["guard:api/a.py::hot"]["exact"] is True
+# A hot function outranks even a file whose RAW score is higher: it is
+# specific, small and cheap, so it belongs at the top of a pick-list.
+# (big.ts scores 12*5 + 1200//100 = 72 on its own; the hot fn scores 40.)
+assert ids.index("guard:api/a.py::hot") < ids.index("guard:web/big.ts"), ids
+
+# ---- the cluster cut: a SMALL file with a big pile still earns a card -----
+ENTS2 = {"e1": {"files": [["web", "web/tiny.ts", 60]],
+                "defines": {"web/tiny.ts": [f"S{i}" for i in range(12)]}}}
+gi2 = G.guard_insight(function_insight={}, by_function={}, by_endpoint={},
+                      exercises={}, entities=ENTS2)
+assert G.guard_moves(gi2), "12 unguarded exports is a sitting whatever the size"
+# ... and a small file UNDER the cluster floor stays silent
+ENTS3 = {"e1": {"files": [["web", "web/tiny.ts", 60]],
+                "defines": {"web/tiny.ts": ["A", "B", "C"]}}}
+gi3 = G.guard_insight(function_insight={}, by_function={}, by_endpoint={},
+                      exercises={}, entities=ENTS3)
+assert not G.guard_moves(gi3), "3 unguarded exports in a 60-line file is noise"
+
+# ---- graceful on an empty project ----------------------------------------
+empty = G.guard_insight(function_insight={}, by_function={}, by_endpoint={},
+                        exercises={}, entities={})
+assert empty["files"] == {} and G.guard_moves(empty) == []
+sys.exit(0)
+GUARDPY
+) >"$T/py.out" 2>&1; then ok; else bad "guard lens (see below)"; cat "$T/py.out"; fi
+
 echo
 echo "center battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1
