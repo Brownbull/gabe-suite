@@ -103,6 +103,7 @@ touched by decommission.
 - [docs/workflows/README.md](docs/workflows/README.md) — quick chooser.
 - [docs/workflows/greenfield.md](docs/workflows/greenfield.md) — new app from idea to first phase.
 - [docs/workflows/brownfield.md](docs/workflows/brownfield.md) — existing codebase adoption.
+- [docs/design/suite-backlog.md](docs/design/suite-backlog.md) — considered-but-not-built, with the evidence that made each interesting (read before proposing suite work).
 - [docs/suite-state-audit.md](docs/suite-state-audit.md) — runtime inventory audit (see its Updated line for currency).
 
 Workflow docs are installed locally under `~/.claude/docs/gabe-suite/`.
