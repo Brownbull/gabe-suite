@@ -828,7 +828,9 @@ def guard_lens(repo: Path) -> dict:
             by_function=ti.get("by_function", {}),
             by_endpoint=ti.get("by_endpoint", {}),
             exercises=ti.get("exercises", {}),
-            entities={s_: collect_entity_map(s_, repo) for s_ in ENTITY_CODE})
+            entities={s_: collect_entity_map(s_, repo) for s_ in ENTITY_CODE},
+            by_model=ti.get("by_model", {}),
+            model_insight=insight_serial(repo))
     return _GUARD_LENS
 
 
@@ -944,7 +946,14 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                    for x in refs)
 
     def _ep_tcell(e: dict) -> str:
-        refs = _ti["by_endpoint"].get(f'{e["file"]}::{e["fn"]}') or {}
+        key = f'{e["file"]}::{e["fn"]}'
+        refs = _ti["by_endpoint"].get(key) or {}
+        # The guard verdict unions BOTH bindings, exactly as the lens does. A
+        # route can be reached by a case that names its HANDLER rather than the
+        # path; reading by_endpoint alone would call that endpoint untested.
+        # The two agree on today's twins — which is why it has to be written
+        # down rather than relied on.
+        via_handler = _ti.get("by_function", {}).get(key) or []
         chips = []
         for c2, r in sorted(refs.items()):
             n = _rcnt(r)
@@ -952,9 +961,20 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                 f"{n} {c2} receipt case(s) — api: cases "
                                 "driving this route; web: cases in files "
                                 "encoding it (T1)"))
+        if not chips and via_handler:
+            return (f'<span class="tag tk t-via" title="no case matches this '
+                    f'route\'s path, but {len(via_handler)} case(s) name its '
+                    f'handler by name — the contract is unwatched, the code is '
+                    f'not">via handler {len(via_handler)}</span>')
         if not chips:
-            return _tgap("untested",
-                         "no case or spec matches this route's path")
+            # 21% of endpoints on one twin, 7% on the other — rare enough that
+            # the chip is news. That is the whole reason it lives HERE and not
+            # on the function page, where 60-82% carry it and it reads as
+            # wallpaper.
+            return _tgap("unguarded",
+                         "no case or spec matches this route's path AND no "
+                         "case names its handler — change the contract and "
+                         "nothing goes red")
         if _has_journey and not any(
                 _ckind.get(c2) == "journey" for c2 in refs):
             chips.append(_tgap("journey —",
@@ -975,8 +995,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                          f"through the endpoint join — cases driving a "
                          f'route that serves this {what} (T2)">'
                          f"via route {nv}</span>")
-        return " ".join(chips) or _tgap(
-            "no case", f"no case reaches this {what} by name or via a route")
+        if chips:
+            return " ".join(chips)
+        # `t-unguarded` is the FILTER hook only — it rides the chip that was
+        # already here. At 60-82% unguarded a second visible chip on every row
+        # would be the default state rendered 300 times; the informative move
+        # is to let the reader filter TO them, not to label each one.
+        return (f'<span class="tag tk t-tgap t-unguarded" title="no case '
+                f'reaches this {E(what)} by name or via a route — change it '
+                f'and nothing goes red">no case</span>')
 
     def _cm_tcell(f: str) -> str:
         rec = _ti["by_file"].get(f) or {}
@@ -1137,8 +1164,65 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         body = " ".join(parts) or f'<code>{E(e["resp"])}</code>'
         return f'{body}<br><small>{E(e["status"])}</small>'
 
+    # --- Guard: this entity's action items ---------------------------------
+    # First on the tab on purpose. The rest of the Code tab is REFERENCE (what
+    # exists); this is the only part that asks for a decision, and burying a
+    # call-to-action under four reference tables is how it stops being one.
+    # Same lens, same cut as the board's guard track, so the two agree by
+    # construction rather than by anyone remembering to keep them in step.
+    # ENTITY tabs only. The app-wide roll-up already exists as the board's
+    # Guard track, and a third surface saying the same thing is the redundancy
+    # this lens was designed to avoid. (It is skipped explicitly rather than
+    # left to be dropped by render_architecture's slicer, which would discard
+    # it silently and cost a build's worth of wasted HTML.)
+    _guard_moves = ([] if entity_col else
+                    [m for m in _a3_guard.guard_moves(_GUARD)
+                     if m["entity"] == slug])
+    html = ""
+    if _guard_moves:
+        _gm_rows = [[
+            (f'<span class="tag ic t-hot">{_ins_ic("zap")}</span> '
+             if m["kind"] == "function" else
+             f'<span class="tag ic t-god">{_ins_ic("fields")}</span> '),
+            f'<b>{E(m["title"])}</b><br><small>{E(m["detail"])}</small>',
+            f'<code>{E(m["file"].rsplit("/", 1)[-1])}</code>',
+            (f'<span class="tag e-{m["effort"].lower()}">{E(m["effort"])}</span>'
+             f'<br><small>{E(m["effort_basis"])}</small>'),
+            ('<span class="tag s-ok">exact</span>' if m["exact"]
+             else '<span class="tag t-tbd">floor</span>'),
+        ] for m in _guard_moves[:12]]
+        if entity_col:
+            for row, m in zip(_gm_rows, _guard_moves[:12]):
+                row.insert(0, _ent_cell(m["entity"]))
+        html += sechead(
+            "Code", "Guard \u2014 unwatched code", "#c2461e", _IC_ZAP,
+            sub="what to write a test for before touching this entity again",
+            id_="sec-code-guard",
+            note=f"{len(_guard_moves)} move(s)"
+                 + (f" \u00b7 showing {len(_gm_rows)}"
+                    if len(_guard_moves) > len(_gm_rows) else "")
+                 + ". A move is code that is USED and that no case NAMES \u2014 "
+                   "change it and nothing goes red. Files are one move each "
+                   "(writing guards is a file-sized sitting); a function is "
+                   "named on its own only when it is load-bearing enough that "
+                   "the guard is a single test.",
+            info=legend("Confidence:", [
+                ("s-ok", "exact", "python \u2014 ast defs joined to recorded "
+                                  "case ids \u00b7"),
+                ("t-tbd", "floor", "ts/tsx \u2014 exported symbols matched by "
+                                   "NAME against what web tests import, so the "
+                                   "count is a floor, never a coverage figure")])
+        )
+        html += table(([ENT_COL, "", "Move", "File", "Cost", "Confidence"]
+                       if entity_col else ["", "Move", "File", "Cost",
+                                           "Confidence"]), _gm_rows,
+                      note="Same cut as the board's Guard track.")
+
     # --- Endpoints ---------------------------------------------------------
-    html = "" if entity_col else subnav([("sec-code-endpoints", "Endpoints", _IC_ZAP),
+    html += "" if entity_col else subnav(
+                  ([("sec-code-guard", "Guard", _IC_ZAP)] if _guard_moves else [])
+                  + [
+                   ("sec-code-endpoints", "Endpoints", _IC_ZAP),
                    ("sec-code-map", "Code map", _IC_FOLDER),
                    ("sec-code-model", "Data model", _IC_DB),
                    ("sec-code-model-cands", "Data-model candidates",
@@ -1803,7 +1887,14 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  "helper used within its module is used).</li></ul></div>")
         html += ('<div class="dmchips" id="fn-chips">'
                  + "".join(f'<button class="chip" data-f="{k}">{lbl}</button>'
-                           for k, lbl in (("all", "All"), ("t-base", "base"),
+                           # `unguarded` is a FILTER, not a per-row label: it
+                           # is the majority state, so the useful act is
+                           # narrowing to it, and `hot` narrows further to the
+                           # ones with real callers behind them.
+                           for k, lbl in (("all", "All"), ("t-unguarded",
+                                                           "unguarded"),
+                                          ("t-hot", "hot &amp; unguarded"),
+                                          ("t-base", "base"),
                                           ("t-sim", "≈ similar"),
                                           ("t-orph", "orphan"),
                                           ("t-god", "god"))) + "</div>")
@@ -1822,6 +1913,17 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 out += " " + itag("t-god", "fields",
                                   f"god-function flag — {c['lines']} lines",
                                   str(c["lines"]))
+            # HOT AND UNGUARDED — the only unguarded subset worth a visible
+            # mark: real callers behind it, so a change lands somewhere and
+            # nothing catches it. Everything else is reachable via the filter.
+            _k = f'{c["file"]}::{c["fn"]}'
+            if (not (_ti.get("by_function", {}).get(_k)
+                     or _ti.get("by_endpoint", {}).get(_k))
+                    and (c.get("usage") or 0) >= _a3_guard.HOT_USAGE):
+                out += " " + itag("t-hot", "zap",
+                                  f"hot and unguarded — called from "
+                                  f"{c['usage']} places, named by no case",
+                                  str(c["usage"]))
             if c["sim"]:
                 s = c["sim"]
                 out += " " + itag("t-sim", "sim",

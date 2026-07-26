@@ -58,7 +58,9 @@ def _named_by_tests(exercises: dict) -> set[str]:
 
 def guard_insight(*, function_insight: dict, by_function: dict,
                   exercises: dict, entities: dict,
-                  by_endpoint: dict | None = None) -> dict:
+                  by_endpoint: dict | None = None,
+                  by_model: dict | None = None,
+                  model_insight: dict | None = None) -> dict:
     """Per-file and per-function guard facts. Pure — every input is already
     computed by this build, so the lens costs one pass and no re-parse."""
     named = _named_by_tests(exercises)
@@ -140,7 +142,44 @@ def guard_insight(*, function_insight: dict, by_function: dict,
             "exact": True,
         }
 
+    # ---- classes: ONLY where the file has no function-level chip ----------
+    # A models/ or schemas/ file declares classes and no defs, so it never
+    # entered `py_files` above and rendered NO guard signal at all — 14 files
+    # on one twin, 4 on the other. Those are the rows the data-model level
+    # exists to cover. Where a file already has defs, its function rollup
+    # already speaks and a second class-level number would just restate it.
+    by_model = by_model or {}
+    model_insight = model_insight or {}
+    classes: dict[str, dict] = {}
+    for cls, v in model_insight.items():
+        f = v.get("file", "")
+        if not f or f in files:
+            continue                      # the file already carries a chip
+        slot = classes.setdefault(f, {"path": f, "entity": v.get("entity", ""),
+                                      "kind": "model", "lines": file_lines.get(f, 0),
+                                      "declared": 0, "unguarded": 0,
+                                      "orphan_unguarded": 0, "names": [],
+                                      "exact": True})
+        slot["declared"] += 1
+        if not by_model.get(cls):
+            # An ORPHAN is not a test candidate. Nothing uses it, so the move
+            # is to delete it, not to guard it — counted apart so the two never
+            # get added into one misleading number.
+            if v.get("orphan"):
+                slot["orphan_unguarded"] += 1
+            else:
+                slot["unguarded"] += 1
+                if len(slot["names"]) < 12:
+                    slot["names"].append(cls)
+    for f, slot in classes.items():
+        slot["share"] = (round(slot["unguarded"] / slot["declared"], 3)
+                         if slot["declared"] else 0.0)
+        files[f] = slot
+
     totals = {
+        "cls_files": len(classes),
+        "cls_unguarded": sum(v["unguarded"] for v in classes.values()),
+        "cls_orphan": sum(v["orphan_unguarded"] for v in classes.values()),
         "fn_mapped": len(function_insight or {}),
         "fn_guarded": sum(1 for k in (function_insight or {}) if _guarded(k)),
         "fn_unguarded": len(functions),
@@ -189,7 +228,9 @@ def guard_moves(gi: dict) -> list[dict]:
         if not (v["unguarded"] >= CLUSTER
                 or (v["lines"] >= BIG_FILE and v["share"] >= UNGUARDED_SHARE)):
             continue
-        what = "handlers/defs" if v["kind"] == "api" else "exported symbols"
+        what = ("handlers/defs" if v["kind"] == "api"
+                else "used classes" if v["kind"] == "model"
+                else "exported symbols")
         moves.append({
             "id": f"guard:{path}", "kind": "file", "key": path,
             "title": f"{path.rsplit('/', 1)[-1]} — {v['unguarded']} unguarded "

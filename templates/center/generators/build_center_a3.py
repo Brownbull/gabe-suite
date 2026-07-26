@@ -1906,7 +1906,9 @@ def main() -> int:
         by_function=amap["test_insight"].get("by_function", {}),
         by_endpoint=amap["test_insight"].get("by_endpoint", {}),
         exercises=amap["test_insight"].get("exercises", {}),
-        entities=amap["entities"])
+        entities=amap["entities"],
+        by_model=amap["test_insight"].get("by_model", {}),
+        model_insight=amap["model_insight"])
     (CENTER_OUT / "archmap.json").write_text(
         json.dumps(amap, indent=1, ensure_ascii=False) + "\n")
     n_eps = sum(len(v["endpoints"]) for v in amap["entities"].values() if v)

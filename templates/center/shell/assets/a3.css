@@ -982,3 +982,9 @@ details.legset .gal{margin:8px 0 4px}
 .bc-inf{color:var(--warn);font-style:italic;cursor:help;font-size:.55rem;
   padding:0;background:none}
 .donemode .bcard{border-left-color:var(--good)}
+
+/* GUARD lens chips (2026-07-25) — "would anything go red if I changed this?"
+   t-hot is the one unguarded subset that earns a visible mark on a per-row
+   table; plain unguarded rides the existing gap chip and is reached by filter. */
+.tag.t-hot{background:var(--bad-soft);color:var(--bad)}
+.tag.t-unguarded{}

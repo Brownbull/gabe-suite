@@ -16,7 +16,8 @@ GEN="$REPO/templates/center/generators"
 SHELL_SRC="$REPO/templates/center/shell"
 
 T=$(mktemp -d)
-trap 'rm -rf "$T"' EXIT
+trap '[ -n "${KEEPFIX:-}" ] || rm -rf "$T"' EXIT
+[ -n "${KEEPFIX:-}" ] && echo "fixture kept: $T"
 
 pass=0; fail=0
 ok()  { pass=$((pass+1)); }
@@ -40,6 +41,19 @@ c = root / center_rel
     '@router.get("/one", response_model=GadgetOut)\n'
     "def get_gadget():\n"
     '    """Fetch one gadget."""\n'
+    "    return GadgetOut()\n\n\n"
+    # A SECOND endpoint that NO case touches — the guard chip's FIRE case at
+    # the endpoint altitude (/one stays tested, so the SILENT case survives).
+    '@router.get("/two", response_model=GadgetOut)\n'
+    "def get_other_gadget():\n"
+    '    """Fetch another gadget."""\n'
+    "    return GadgetOut()\n\n\n"
+    # A third endpoint whose HANDLER a case imports and calls, while no case
+    # drives its ROUTE. by_endpoint alone calls this untested; the union does
+    # not. Without this shape the two are indistinguishable in a fixture.
+    '@router.get("/three", response_model=GadgetOut)\n'
+    "def get_third_gadget():\n"
+    '    """Fetch a third gadget."""\n'
     "    return GadgetOut()\n\n\n"
     "def handler():\n    return 1\n")
 # An over-budget file so the Code area's action table has a structure row
@@ -72,7 +86,10 @@ c = root / center_rel
 (root / "tests" / "results").mkdir(parents=True, exist_ok=True)
 (root / "tests" / "test_gadgets.py").write_text(
     "from src.schemas import GadgetOut\n"
-    "from src.funcs import make_gid\n\n\n"
+    "from src.funcs import make_gid\n"
+    "from src.api import get_third_gadget\n\n\n"
+    "def test_handler_direct_C18():\n"
+    "    get_third_gadget()\n\n\n"
     "def test_lists_gadgets_C11(client):\n"
     '    client.get("/gadgets/one")\n\n\n'
     "def test_gid_format_C12():\n"
@@ -138,6 +155,12 @@ c = root / center_rel
     '<testsuites><testsuite name="pytest" timestamp="2026-07-23T00:00:00">'
     '<testcase classname="tests.test_gadgets" '
     'name="test_lists_gadgets_C11" time="0.1"/>'
+    # C18 imports and CALLS an endpoint handler without driving its route —
+    # the shape that separates the guard union (by_endpoint OR by_function)
+    # from by_endpoint alone. The corpus IS the junit: a test def not listed
+    # here is not a case and credits nothing.
+    '<testcase classname="tests.test_gadgets" '
+    'name="test_handler_direct_C18" time="0.1"/>'
     # C12 ran as two parametrize executions: ONE identity, one ledger row —
     # inside a pytest class so the card's # CLAIMS line can join it by NAME.
     '<testcase classname="tests.test_gadgets.TestGadgets" '
@@ -1410,6 +1433,84 @@ assert empty["files"] == {} and G.guard_moves(empty) == []
 sys.exit(0)
 GUARDPY
 ) >"$T/py.out" 2>&1; then ok; else bad "guard lens (see below)"; cat "$T/py.out"; fi
+
+# --- GUARD placement across altitudes (2026-07-25 gap analysis) ------------
+# One fact, four altitudes. Each level gets the form its RATE justifies, and
+# the rendered surfaces are pinned so a refactor cannot quietly swap them.
+if (cd "$GEN" && python3 - <<'PLACEPY'
+import sys
+sys.path.insert(0, ".")
+import _a3_guard as G
+
+# ---- class-only files: the hole the data-model level exists to fill -------
+# A models/ or schemas/ file declares classes and no defs, so it never entered
+# the function rollup and rendered NO guard signal at all.
+ENTS = {"e1": {"files": [["models", "api/models.py", 120],
+                         ["api", "api/svc.py", 90]],
+               "defines": {}}}
+FI = {"api/svc.py::doer": {"fn": "doer", "file": "api/svc.py", "entity": "e1",
+                           "usage": 1, "lines": 5, "api": False}}
+MI = {"Kept":   {"cls": "Kept", "file": "api/models.py", "entity": "e1"},
+      "Naked":  {"cls": "Naked", "file": "api/models.py", "entity": "e1"},
+      "Dead":   {"cls": "Dead", "file": "api/models.py", "entity": "e1",
+                 "orphan": True},
+      # this one lives in a file that ALREADY has a function chip
+      "InSvc":  {"cls": "InSvc", "file": "api/svc.py", "entity": "e1"}}
+gi = G.guard_insight(function_insight=FI, by_function={}, by_endpoint={},
+                     exercises={}, entities=ENTS,
+                     by_model={"Kept": [{"cid": "C1"}]}, model_insight=MI)
+mf = gi["files"]["api/models.py"]
+assert mf["kind"] == "model" and mf["declared"] == 3, mf
+# Naked counts; Dead is an ORPHAN -> a delete candidate, never a test one
+assert mf["unguarded"] == 1 and mf["orphan_unguarded"] == 1, mf
+assert mf["names"] == ["Naked"], mf["names"]
+assert mf["lines"] == 120, "class-file lines come from the entity map"
+# the class in a file that already has a function chip is NOT re-counted
+assert gi["files"]["api/svc.py"]["kind"] == "api", gi["files"]["api/svc.py"]
+assert gi["files"]["api/svc.py"]["declared"] == 1, "no class/def double count"
+assert gi["totals"]["cls_files"] == 1 and gi["totals"]["cls_orphan"] == 1
+
+# SILENT: with no model inputs at all the lens behaves exactly as before
+plain = G.guard_insight(function_insight=FI, by_function={}, by_endpoint={},
+                        exercises={}, entities=ENTS)
+assert "api/models.py" not in plain["files"], "class files need model inputs"
+assert plain["totals"]["cls_files"] == 0
+sys.exit(0)
+PLACEPY
+) >"$T/py.out" 2>&1; then ok; else bad "guard placement: class-only files (see below)"; cat "$T/py.out"; fi
+
+# The RENDERED placement contract, on the built fixture.
+python3 - "$FIX/docs/site/center/feature-gadget.html" <<'PY' && ok || bad "guard placement: rendered surfaces (see above)"
+import sys
+html = open(sys.argv[1]).read()
+
+# ENDPOINT altitude — the chip is `unguarded` (rare: ~21%/7% on the twins), and
+# it unions BOTH bindings, so an endpoint reached only through its handler
+# reads `via handler N` rather than being called untested.
+# Precise: the earlier form matched the FUNCTIONS filter chip whose label is
+# also "unguarded" — a false pass that survived because the fixture had no
+# untested endpoint at all. Anchor on the chip's own tooltip instead.
+assert "no case or spec matches this route" in html and \
+       "no case names its handler" in html, \
+       "the untested endpoint must carry the guard chip, and its tooltip must "\
+       "name the UNION (path OR handler) it was decided by"
+assert "/gadgets/two" in html, "the untested endpoint must render"
+assert ">unguarded</span>" in html, "the endpoint chip's LABEL is part of the "\
+                                    "contract, not just its tooltip"
+# THE UNION, pinned: /three's route is driven by nothing, but a case calls its
+# handler, so it must NOT read as unguarded.
+assert "via handler" in html, "an endpoint reached only through its handler "\
+                              "must say so instead of being called untested"
+
+# FUNCTION altitude — no second per-row chip (60-82% would be wallpaper): the
+# filter hook rides the gap chip that was already there.
+assert "t-tgap t-unguarded" in html, "unguarded fns need the filter hook"
+assert 'data-f="t-unguarded"' in html, "the functions strip needs the filter"
+assert 'data-f="t-hot"' in html, "...and the hot narrowing"
+
+# CODE MAP altitude — the file rollup stays.
+assert "unguarded " in html and "/" in html, "code-map rollup chip missing"
+PY
 
 echo
 echo "center battery: $pass passed, $fail failed"
