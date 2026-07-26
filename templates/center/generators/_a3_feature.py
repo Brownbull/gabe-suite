@@ -41,6 +41,7 @@ from _a3_render import (kind_ic, kind_tag,
     strip_slot_doc_comments,
     subnav,
     table,
+    trunc,
     xtable,
 )
 
@@ -506,7 +507,18 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
         add("manual", "the recorded walk approved an earlier scope",
             "re-walk against the current scope", eff, hours, stage)
     else:
-        closed.append(f'manual — walked {str(mine[-1].get("when", ""))[:10]}')
+        # The walk NOTE is where the walker qualifies what they actually
+        # checked ("Proof section reviewed; founder ruling..."), and dropping
+        # it left the page asserting a bare date while the candour sat
+        # unreachable in walks.jsonl (gustify #151). Who walked it matters too:
+        # a record without an author is not a record.
+        _w = mine[-1]
+        _note = str(_w.get("note") or "").strip()
+        closed.append(
+            f'manual — walked {str(_w.get("when", ""))[:10]}'
+            + (f' by {E(str(_w.get("who")))}' if _w.get("who") else "")
+            + (f' \u2014 <span title="{E(_note)}">{E(trunc(_note, 150))}</span>'
+               if _note else ""))
 
     eff, hours, stage, _, _ = _GROWTH_PRICE["deployed"]
     if e2e.get("deployed_probes"):
@@ -1078,6 +1090,20 @@ def build_feature_pages(ctx) -> list[str]:
                  "from the codebase at build time.</div>")
         _card_block += lens_block(card)
         # ENTITIES is covered by the Code tab's data model — it does not repeat.
+        # REVIEWED is the card's own QUALIFICATION of its evidence — who
+        # looked, on what, and what they explicitly did NOT cover. It was
+        # parsed and then dropped, so a candid source could not reach the
+        # person reading the page: `grep -l REVIEWED docs/site/center/*.html`
+        # returned nothing while all seven cards carried the section
+        # (gustify #151). It renders ABOVE the fold, beside the verdict it
+        # qualifies — inside the collapsed "full card" it would qualify
+        # nothing anyone reads.
+        if card.get("REVIEWED"):
+            _card_block += (
+                '<div class="callout"><h3>Reviewed — what this evidence does '
+                'and does not cover</h3>'
+                + card_html(card.get("REVIEWED", []))
+                + "</div>")
         detail = "".join(
             f"<h3>{E(sec.title())}</h3>{card_html(card.get(sec, []))}"
             for sec in ("WHAT & WHY", "FOR WHOM", "FLOWS", "IS", "IS NOT")

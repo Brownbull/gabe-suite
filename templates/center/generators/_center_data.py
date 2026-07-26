@@ -285,6 +285,32 @@ def load_plan() -> dict:
             "phases": phases}
 
 
+LIFECYCLE = ("red", "exec", "review", "commit", "push", "center")
+
+
+def phase_cells(phase: dict) -> dict:
+    """A phase's lifecycle cells, ALL of them, in order.
+
+    load_plan keeps `red` and `center` at the phase top level because they
+    arrived after the original four and `cells` is what several call sites
+    iterate for "is this phase done". That split is a trap: `next_feature.py`
+    asked for `cells["center"]`, got nothing for every phase, and its Center
+    queue could never report an owed cell — it printed "queue clear" while a
+    served phase's Center was todo (gustify #148). The board hit the same edge
+    independently.
+
+    Read cells THROUGH here. Columns a project's table does not carry are
+    omitted, so `"center" in phase_cells(p)` still distinguishes "no Center
+    column" from "Center owed" — the distinction next_feature.py needs.
+    """
+    out = {}
+    for k in LIFECYCLE:
+        v = phase.get(k) if k in ("red", "center") else (phase.get("cells") or {}).get(k)
+        if v is not None:
+            out[k] = v
+    return out
+
+
 def load_maturity() -> str:
     """The project's declared maturity tier from `.kdbp/BEHAVIOR.md`'s
     `maturity:` line (mvp | enterprise | scale), lowercased. Returns "" when the

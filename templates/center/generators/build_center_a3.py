@@ -1910,7 +1910,11 @@ def main() -> int:
         by_model=amap["test_insight"].get("by_model", {}),
         model_insight=amap["model_insight"])
     (CENTER_OUT / "archmap.json").write_text(
-        json.dumps(amap, indent=1, ensure_ascii=False) + "\n")
+        # sort_keys: without it the archmap re-orders on every regen and a review
+        # diff carries ~1,750 lines of pure churn (gustify #150) — the one
+        # artifact the center's correctness rests on became the least
+        # reviewable. The sibling rows-seen.json dump below already sorts.
+        json.dumps(amap, indent=1, ensure_ascii=False, sort_keys=True) + "\n")
     n_eps = sum(len(v["endpoints"]) for v in amap["entities"].values() if v)
     n_models = sum(len(v["models"]) for v in amap["entities"].values() if v)
     print(f"    wrote docs/site/center/archmap.json — {len(amap['entities'])} "

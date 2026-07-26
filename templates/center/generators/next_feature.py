@@ -28,26 +28,30 @@ import _center_data as D
 
 def main() -> int:
     plan = D.load_plan()
+    # Read cells through D.phase_cells: `center` lives at the phase top level,
+    # so the old `p["cells"]["center"]` matched nothing and every served phase
+    # counted as "pre-Center-column" (gustify #148).
+    cells = {id(p): D.phase_cells(p) for p in plan.get("phases", [])}
     served = [p for p in reversed(plan.get("phases", []))
               if p.get("cells")
-              and all(p["cells"].get(k) == "done"
+              and all(cells[id(p)].get(k) == "done"
                       for k in ("exec", "review", "commit", "push"))]
-    tracked = [p for p in served if "center" in p["cells"]]
+    tracked = [p for p in served if "center" in cells[id(p)]]
     pre_column = len(served) - len(tracked)
     open_q = [p for p in tracked
-              if p["cells"]["center"] in ("todo", "in_progress")]
+              if cells[id(p)]["center"] in ("todo", "in_progress")]
     parked = [p for p in tracked
-              if p["cells"]["center"] in ("deferred", "obsolete")]
+              if cells[id(p)]["center"] in ("deferred", "obsolete")]
 
     print(f"center queue — {len(open_q)} served phase(s) with an open Center "
           f"cell · {len(parked)} parked by their own cell state"
           + (f" · {pre_column} pre-Center-column (opt-in later)"
              if pre_column else "") + ":\n")
     for p in open_q:
-        print(f"  {p['id']:<5} {p['cells']['center']:<12} "
+        print(f"  {p['id']:<5} {cells[id(p)]['center']:<12} "
               f"{(p.get('name') or '')[:60]}")
     for p in parked:
-        print(f"  {p['id']:<5} {p['cells']['center']:<12} "
+        print(f"  {p['id']:<5} {cells[id(p)]['center']:<12} "
               f"{(p.get('name') or '')[:60]}")
 
     adoption: dict = {}

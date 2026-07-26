@@ -211,6 +211,9 @@ cfg_home.mkdir(parents=True, exist_ok=True)
                    "signals": "fixture", "notes": ""}]}, indent=1))
 (c / "cards" / "gadget.md").write_text("""# HANDLE
 The gadget ledger.
+# REVIEWED
+2026-07-25 — fixture operator, on the built pages: the ledger and the proof set.
+Walk of the refreshed page still owed separately.
 # WHAT & WHY
 Tracks gadgets end to end.
 # FOR WHOM
@@ -1015,11 +1018,17 @@ grep -q 'names key(s) the card lacks: scam' "$T/gate.out" \
 #  honest walks invisible on the very page they walked)
 WK="$T/walk"; mk_fixture "$WK"
 mkdir -p "$WK/.kdbp"
-printf '{"subject":"gadget","who":"t","when":"2026-07-23T00:00:00Z","result":"pass","evidence":null,"note":"walked"}\n' \
+printf '{"subject":"gadget","who":"t","when":"2026-07-23T00:00:00Z","result":"pass","evidence":null,"note":"looked at the ledger only"}\n' \
   > "$WK/.kdbp/walks.jsonl"
 [ "$(build "$WK" "$SHELL_SRC")" = 0 ] && ok || bad "walk: fixture builds"
 grep -q 'manual — walked 2026-07-23' "$WK/docs/site/center/feature-gadget.html" \
   && ok || bad "walk: BARE-slug subject must close the manual angle"
+# #151: the walk's NOTE is where the walker qualifies what they checked, and
+# WHO walked it is half the record. A bare date asserts more than it knows.
+grep -q 'walked 2026-07-23 by t' "$WK/docs/site/center/feature-gadget.html" \
+  && ok || bad "walk: the walker must be named beside the date"
+grep -q 'looked at the ledger only' "$WK/docs/site/center/feature-gadget.html" \
+  && ok || bad "walk: the NOTE must render — candour that cannot reach the reader is not disclosure"
 printf '{"subject":"adopt:gadget","who":"t","when":"2026-07-23T00:00:00Z","result":"pass","evidence":null,"note":"approved"}\n' \
   > "$WK/.kdbp/walks.jsonl"
 build "$WK" "$SHELL_SRC" >/dev/null
@@ -1510,6 +1519,68 @@ assert 'data-f="t-hot"' in html, "...and the hot narrowing"
 
 # CODE MAP altitude — the file rollup stays.
 assert "unguarded " in html and "/" in html, "code-map rollup chip missing"
+PY
+
+# --- vendored-fix regressions (gustify #148 · #150 · #151) -----------------
+# Found in a twin's VENDORED copies of these generators. They are pinned here
+# so a propagation carries the fixes upstream instead of a re-sync reverting
+# whatever the twin patched locally.
+if (cd "$GEN" && python3 - <<'VENDPY'
+import sys, json
+sys.path.insert(0, ".")
+import _center_data as D
+
+# ---- #148: the Center queue was structurally blind ------------------------
+# load_plan keeps `red`/`center` at the phase TOP level while `cells` holds the
+# original four. next_feature.py asked for cells["center"], matched nothing for
+# every phase, and could never report an owed Center cell — it printed
+# "queue clear" while a served phase's Center was todo.
+phase = {"id": "P1", "name": "x", "cells": {"exec": "done", "review": "done",
+                                            "commit": "done", "push": "done"},
+         "red": "todo", "center": "todo"}
+c = D.phase_cells(phase)
+assert c["center"] == "todo", "center must be reachable through phase_cells"
+assert c["red"] == "todo", "red too — same split, same trap"
+assert list(c) == ["red", "exec", "review", "commit", "push", "center"], c
+assert "center" not in phase["cells"], "the raw shape is unchanged on purpose"
+# a project whose table carries NO Center column must stay distinguishable
+# from one that owes it — that is the distinction the queue reports on
+bare = {"id": "P2", "cells": {"exec": "done"}, "red": None, "center": None}
+assert "center" not in D.phase_cells(bare), "absent column != owed cell"
+assert D.phase_cells({}) == {}, "graceful on a phase with nothing"
+sys.exit(0)
+VENDPY
+) >"$T/py.out" 2>&1; then ok; else bad "vendored-fix #148: center reachable (see below)"; cat "$T/py.out"; fi
+
+# ---- #150: archmap key order must be STABLE across regens -----------------
+python3 - "$FIX/docs/site/center/archmap.json" <<'PY' && ok || bad "vendored-fix #150: archmap must be sort_keys'd (see above)"
+import json, sys
+raw = open(sys.argv[1]).read()
+d = json.loads(raw)
+assert list(d) == sorted(d), "top-level archmap keys are not sorted"
+for k in ("entities", "function_insight", "model_insight", "guard_insight"):
+    v = d.get(k)
+    if isinstance(v, dict) and len(v) > 1:
+        assert list(v) == sorted(v), f"{k} keys are not sorted"
+# the sibling dump already sorted; the archmap now matches it, so a regen
+# diff carries real change instead of ~1,750 lines of reorder noise
+PY
+
+# ---- #151: the card's own qualification must REACH the page ---------------
+python3 - "$FIX/docs/site/center" <<'PY' && ok || bad "vendored-fix #151: REVIEWED + walk note must render (see above)"
+import pathlib, sys, json
+d = pathlib.Path(sys.argv[1])
+page = (d / "feature-gadget.html").read_text()
+card = (d / "cards" / "gadget.md").read_text()
+assert "# REVIEWED" in card, "the fixture card must carry the section, or this "\
+                             "check proves nothing"
+if True:
+    assert "Reviewed &mdash; what this evidence" in page \
+        or "Reviewed — what this evidence" in page, \
+        "a card carrying # REVIEWED must render it — candour in the source "\
+        "that cannot reach the reader is not disclosure"
+    body = card.split("# REVIEWED", 1)[1].strip().splitlines()[0][:40]
+    assert body[:24] in page, "the REVIEWED text itself must render, not just a heading"
 PY
 
 echo
