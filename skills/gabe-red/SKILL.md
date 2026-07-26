@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: inspect the test corpus, declare the cases that make the change necessary (REUSE an id vs mint a NEW one), write them against returning stubs, run them, and COMMIT the failure. Usage: /gabe-red [phase]"
 when_to_use: "The phase is planned and about to be executed — put the failing test cases in place first: declare case ids, prove RED by assertion, commit the red checkpoint. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.3.1
+  version: 1.4.0
 ---
 
 # Gabe Red — the failing state, given an address
@@ -29,8 +29,24 @@ Runs after `/gabe-plan` (needs the phase row + its `proof_type`) and **before ex
 3. **Decide per case:** REUSE an existing case (cite `C<N>`; bump to `v<K+1>` ONLY if the claim itself must change — a re-run never bumps) vs NEW (allocate `max(grep C-ids)+1`).
 4. **Write the cases** — id inside the test NAME (`test_..._C147v2` / `it('C147v2 · ...')`). Where the subject doesn't exist yet, add a **returning stub** (returns a wrong-but-typed value; NEVER raises — a raising stub blinds the tautology guard).
 5. **Run them.** Classify each case: **RED** (fails by assertion — evidence) · **NOT-RED** (import/collection error — non-evidence, fix before proceeding) · **TAUTOLOGY** (passes on unchanged code — halt; the case asserts nothing).
+   *The tautology check is a MINT-TIME check, and its proof is perishable.* A case that was genuinely red here goes **VOID** later — a refactor severs the assertion, a missing cleanup leaves state that satisfies it, a config change excludes it from the run — and a void guard is indistinguishable from a real one until the day it fails to catch something (a twin measured its own void rate at **1 in 6** while trying not to write one). `scripts/prove-guard.py` is the standing form of this step: it mutates the line a case claims to protect and asserts the case goes red. Re-run it when the claim matters, not only when it is written.
 6. **Commit the red checkpoint** through `/gabe-commit` with the `RED:` trailer + `Cases:` line (formats in the spec). Write the phase's `Cases:` record into PLAN.md Phase Details, tick the `Red` cell ✅, mirror PLAN.json (E5).
 7. **Report** (E7): ids declared (new/reused/bumped/guards), the red run's output line, the red commit sha.
+
+## Scripts
+
+| Script | What it does |
+|---|---|
+| `scripts/prove-guard.py` | **Proves a guard can fail, by making it fail.** Mutates `<file>:<line>`, runs the case, asserts RED, and **always restores the file byte-for-byte** (verified, including on a crashing runner). `PROVEN` exit 0 · `VOID` exit 2 · `INCONCLUSIVE` exit 3 (already-red baseline · no syntax-safe mutation · dirty file). Only operator/literal swaps are applied — a mutation that broke the parse would fail the run for the wrong reason and be reported as proof. Verdicts append to `.kdbp/guard-proofs.jsonl`, which the command center's guard lens reads: an unproven case renders **`named`**, never `guarded`. |
+| `scripts/backfill-sweep.py` | Corpus sweep for un-minted cases. |
+
+```
+python3 ~/.claude/skills/gabe-red/scripts/prove-guard.py apps/api/wall.py:42 \
+    --run "pytest -q tests/test_wall.py::test_excludes_C147" --case C147 \
+    --symbol "apps/api/wall.py::is_allowed"
+```
+
+Narrow `--run` to the single case where the runner allows: a suite-wide run makes an unrelated failure look like proof.
 
 **min_cases by tier** (the tier IS the verification level — no parallel system): `mvp` 1 · `ent` 3–6 (+edges) · `scale` per plan's matrix (+fuzz/load). Refactors: `GUARD:` list, no new cases required.
 

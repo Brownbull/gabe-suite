@@ -1908,7 +1908,8 @@ def main() -> int:
         exercises=amap["test_insight"].get("exercises", {}),
         entities=amap["entities"],
         by_model=amap["test_insight"].get("by_model", {}),
-        model_insight=amap["model_insight"])
+        model_insight=amap["model_insight"],
+        proofs=D.load_guard_proofs())
     (CENTER_OUT / "archmap.json").write_text(
         # sort_keys: without it the archmap re-orders on every regen and a review
         # diff carries ~1,750 lines of pure churn (gustify #150) — the one

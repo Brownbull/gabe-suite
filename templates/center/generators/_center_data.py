@@ -492,6 +492,27 @@ def phase_clock(events: list[dict] | None = None) -> dict[str, dict]:
     return clock
 
 
+def load_guard_proofs() -> list[dict]:
+    """Mutation-proof verdicts written by skills/gabe-red/scripts/prove-guard.py.
+
+    Absent for any project that has not run it — which is the common case and
+    renders as `named`, not as a gap. A guard is only `proven` once a mutation
+    of the code it names was observed to turn it red."""
+    path = KDBP / "guard-proofs.jsonl"
+    if not path.exists():
+        return []
+    out = []
+    for line in path.read_text().splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            out.append(json.loads(line))
+        except ValueError:
+            continue          # a hand-edited line must not kill the build
+    return out
+
+
 def load_walks() -> list[dict]:
     """The human verification record — who looked, when, what they concluded.
     adoption.json says an entity is approved; walks.jsonl says who approved it."""

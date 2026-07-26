@@ -1583,6 +1583,85 @@ if True:
     assert body[:24] in page, "the REVIEWED text itself must render, not just a heading"
 PY
 
+# --- NAMED IS NOT GUARDED: the third state + prove-guard ------------------
+# The guard lens joins NAMES. Whether a naming case can FAIL is a separate
+# fact that only exists once a mutation was observed to turn it red. A twin
+# measured its own void rate at 1 in 6, so rendering "named" as "guarded"
+# overstates safety by exactly that much.
+PG="$T/pg"; mk_fixture "$PG"
+mkdir -p "$PG/.kdbp"
+[ "$(build "$PG" "$SHELL_SRC")" = 0 ] && ok || bad "named: fixture builds"
+# SILENT: with no proofs on record, a fully-named file must read `named`,
+# and the word `guarded` must appear NOWHERE except inside `unguarded`.
+python3 - "$PG/docs/site/center/arch-code-map.html" <<'PY' && ok || bad "named: no proofs must never render 'guarded' (see above)"
+import re, sys
+h = open(sys.argv[1]).read()
+assert re.search(r">named \d+/\d+", h), "a fully-named file must read `named`"
+bare = re.findall(r">guarded \d+/\d+", h)
+assert not bare, f"claimed guarded with zero proofs on record: {bare[:3]}"
+PY
+# FIRE: one recorded PROVEN verdict upgrades that file to `guarded`.
+python3 - "$PG" <<'PY'
+import json, pathlib, re, sys
+root = pathlib.Path(sys.argv[1])
+h = (root / "docs/site/center/arch-code-map.html").read_text()
+amap = json.loads((root / "docs/site/center/archmap.json").read_text())
+target = next(f for f, v in amap["guard_insight"]["files"].items()
+              if v["declared"] and not v["unguarded"])
+(root / ".kdbp/guard-proofs.jsonl").write_text(json.dumps({
+    "case": "C11", "symbol": target, "file": target, "line": 1,
+    "mutation": "cmp ==>!=", "result": "proven",
+    "when": "2026-07-26T00:00:00Z", "head": "fixture"}) + "\n")
+PY
+build "$PG" "$SHELL_SRC" >/dev/null
+grep -qE ">guarded [0-9]+/[0-9]+" "$PG/docs/site/center/arch-code-map.html" \
+  && ok || bad "named: a PROVEN record must upgrade its file to 'guarded'"
+# A recorded VOID is evidence the guard does NOT hold — it must never upgrade.
+python3 - "$PG" <<'PY'
+import json, pathlib, sys
+root = pathlib.Path(sys.argv[1])
+rec = json.loads((root / ".kdbp/guard-proofs.jsonl").read_text().strip())
+rec["result"] = "void"
+(root / ".kdbp/guard-proofs.jsonl").write_text(json.dumps(rec) + "\n")
+PY
+build "$PG" "$SHELL_SRC" >/dev/null
+grep -qE ">guarded [0-9]+/[0-9]+" "$PG/docs/site/center/arch-code-map.html" \
+  && bad "named: a VOID verdict must NOT upgrade anything" || ok
+# a corrupt line must not kill the build (graceful-absent contract)
+printf 'not json\n' >> "$PG/.kdbp/guard-proofs.jsonl"
+[ "$(build "$PG" "$SHELL_SRC")" = 0 ] && ok || bad "named: a malformed proof line must not break the build"
+
+# --- prove-guard itself: PROVEN vs VOID vs refusals ------------------------
+PGS="$REPO/skills/gabe-red/scripts/prove-guard.py"
+PGR="$T/pgrepo"; mkdir -p "$PGR/src" "$PGR/tests"
+(cd "$PGR" && git init -q . && git config user.email t@t && git config user.name t)
+printf 'def is_allowed(age):\n    return age >= 18\n' > "$PGR/src/wall.py"
+printf 'from src.wall import is_allowed\ndef test_real():\n    assert is_allowed(18) is True\n    assert is_allowed(17) is False\n' > "$PGR/tests/test_real.py"
+printf 'from src.wall import is_allowed\ndef test_void():\n    is_allowed(18)\n    assert True\n' > "$PGR/tests/test_void.py"
+(cd "$PGR" && git add -A && git commit -qm init)
+BEFORE=$(md5sum "$PGR/src/wall.py" | cut -d' ' -f1)
+(cd "$PGR" && python3 "$PGS" src/wall.py:2 --run "python3 -m pytest -q tests/test_real.py" --no-record >/dev/null 2>&1)
+[ $? = 0 ] && ok || bad "prove-guard: a real guard must be PROVEN (exit 0)"
+(cd "$PGR" && python3 "$PGS" src/wall.py:2 --run "python3 -m pytest -q tests/test_void.py" --no-record >/dev/null 2>&1)
+[ $? = 2 ] && ok || bad "prove-guard: a guard that names but cannot fail must be VOID (exit 2)"
+# THE property that matters most: the source is byte-identical afterwards.
+[ "$(md5sum "$PGR/src/wall.py" | cut -d' ' -f1)" = "$BEFORE" ] \
+  && ok || bad "prove-guard: MUST restore the mutated file byte-for-byte"
+# ... including when the runner dies without returning a verdict
+(cd "$PGR" && python3 "$PGS" src/wall.py:2 --run "python3 -c 'import os;os._exit(9)'" --no-record >/dev/null 2>&1)
+[ "$(md5sum "$PGR/src/wall.py" | cut -d' ' -f1)" = "$BEFORE" ] \
+  && ok || bad "prove-guard: must restore even when the runner crashes"
+# refusals, each exit 3: already-red baseline · no syntax-safe mutation · dirty file
+printf 'def test_broken():\n    assert False\n' > "$PGR/tests/test_broken.py"
+(cd "$PGR" && python3 "$PGS" src/wall.py:2 --run "python3 -m pytest -q tests/test_broken.py" --no-record >/dev/null 2>&1)
+[ $? = 3 ] && ok || bad "prove-guard: an ALREADY-red guard proves nothing (exit 3)"
+(cd "$PGR" && python3 "$PGS" src/wall.py:1 --run "true" --no-record >/dev/null 2>&1)
+[ $? = 3 ] && ok || bad "prove-guard: a line with no syntax-safe mutation must REFUSE, never mangle"
+printf '# scratch\n' >> "$PGR/src/wall.py"
+(cd "$PGR" && python3 "$PGS" src/wall.py:2 --run "true" --no-record >/dev/null 2>&1)
+[ $? = 3 ] && ok || bad "prove-guard: a dirty file must be refused (the revert would not be exact)"
+(cd "$PGR" && git checkout -- src/wall.py)
+
 echo
 echo "center battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

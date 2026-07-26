@@ -830,7 +830,8 @@ def guard_lens(repo: Path) -> dict:
             exercises=ti.get("exercises", {}),
             entities={s_: collect_entity_map(s_, repo) for s_ in ENTITY_CODE},
             by_model=ti.get("by_model", {}),
-            model_insight=insight_serial(repo))
+            model_insight=insight_serial(repo),
+            proofs=_cd.load_guard_proofs())
     return _GUARD_LENS
 
 
@@ -1026,9 +1027,26 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         if g and g["declared"]:
             n_un, n_all = g["unguarded"], g["declared"]
             if not n_un:
-                bits.append(f'<span class="tag tk s-ok" title="every one of '
-                            f'the {n_all} defs this file declares is named by '
-                            f'at least one test">guarded {n_all}/{n_all}</span>')
+                # NAMED is not GUARDED. Everything here is named by some case;
+                # whether any of those cases can FAIL is a separate fact, and
+                # it only exists once prove-guard has mutated the code and
+                # watched the case go red. Saying "guarded" before that
+                # overstates safety by exactly the void rate (1 in 6 on a real
+                # corpus), so `guarded` is reserved for proven.
+                n_pv = g.get("proven") or 0
+                if n_pv:
+                    bits.append(
+                        f'<span class="tag tk s-ok" title="all {n_all} declared '
+                        f'defs are named by a case, and {n_pv} mutation '
+                        f'proof(s) on this file were observed to turn a case '
+                        f'red">guarded {n_all}/{n_all}</span>')
+                else:
+                    bits.append(
+                        f'<span class="tag tk t-via" title="all {n_all} declared '
+                        f'defs are NAMED by a case — but no case here has been '
+                        f'shown able to fail. Run '
+                        f'skills/gabe-red/scripts/prove-guard.py to turn this '
+                        f'into `guarded`.">named {n_all}/{n_all}</span>')
             else:
                 floor = ("" if g["exact"] else
                          " Name-matched against the symbols web tests import, "

@@ -20,6 +20,23 @@ per-function signal engine is gated on `.py`, so a 2,459-line model file
 carrying 143 exported symbols priced only by LINE COUNT. The bindings to join
 it against were already committed.
 
+NAMED IS NOT GUARDED. A case that NAMES a symbol may still be unable to fail —
+a severed assertion, a missing cleanup, a config exclusion. A twin measured its
+own void rate at 1 in 6 while trying not to write one. This lens joins NAMES,
+so on its own it can only ever say "something claims to watch this", and
+rendering that as "guarded" overstates safety by exactly the void rate.
+
+So there are THREE states, not two, and the middle one is the honest default:
+
+    unguarded   no case names it
+    named       a case names it, and nothing has shown that case can fail
+    proven      a mutation of this code was observed to turn that case red
+                (skills/gabe-red/scripts/prove-guard.py, recorded to
+                .kdbp/guard-proofs.jsonl)
+
+`guarded` is reserved for PROVEN. A project that has never run prove-guard sees
+`named` everywhere, which is the truth about what the center knows.
+
 HONESTY LINE. The web side is EXPORTED SYMBOLS matched BY NAME:
 
   * A symbol a test imports under an alias reads as unguarded.
@@ -60,11 +77,27 @@ def guard_insight(*, function_insight: dict, by_function: dict,
                   exercises: dict, entities: dict,
                   by_endpoint: dict | None = None,
                   by_model: dict | None = None,
-                  model_insight: dict | None = None) -> dict:
+                  model_insight: dict | None = None,
+                  proofs: list | None = None) -> dict:
     """Per-file and per-function guard facts. Pure — every input is already
     computed by this build, so the lens costs one pass and no re-parse."""
     named = _named_by_tests(exercises)
     by_endpoint = by_endpoint or {}
+
+    # A proof names the SYMBOL it mutated ("file::fn") and/or its file. Only a
+    # `proven` result counts — a recorded VOID is evidence the guard does NOT
+    # hold, so it must never upgrade anything.
+    proven_syms: set[str] = set()
+    proven_files: dict[str, int] = {}
+    for pr in (proofs or []):
+        if (pr or {}).get("result") != "proven":
+            continue
+        sym = pr.get("symbol") or ""
+        if sym:
+            proven_syms.add(sym)
+        f = pr.get("file") or (sym.split("::")[0] if "::" in sym else "")
+        if f:
+            proven_files[f] = proven_files.get(f, 0) + 1
 
     def _guarded(key: str) -> bool:
         """Either binding guards a def. A route test credits the handler under
@@ -95,6 +128,11 @@ def guard_insight(*, function_insight: dict, by_function: dict,
             # why THIS one is worth a card, in the order a reader would ask
             "hot": usage >= HOT_USAGE,
         }
+    # A def a case NAMES sits in neither bucket above: it is not unguarded, but
+    # nothing has shown the case can fail. Count it, so the totals can say how
+    # much of the "guarded" population is actually only claimed.
+    named_defs = [k for k in (function_insight or {}) if _guarded(k)]
+    proven_defs = [k for k in named_defs if k in proven_syms]
 
     # ---- per file: python from the fn index, ts/tsx from `defines` --------
     files: dict[str, dict] = {}
@@ -114,6 +152,7 @@ def guard_insight(*, function_insight: dict, by_function: dict,
                 "lines": lines.get(path, 0),
                 "declared": len(declared), "unguarded": len(unguarded),
                 "names": unguarded[:12],
+                "proven": proven_files.get(path, 0),
                 "share": round(len(unguarded) / len(declared), 3),
                 # a name-matched floor, never a coverage number
                 "exact": False,
@@ -137,6 +176,7 @@ def guard_insight(*, function_insight: dict, by_function: dict,
             "path": f, "entity": slot["entity"], "kind": "api",
             "lines": slot["lines"], "declared": slot["declared"],
             "unguarded": slot["unguarded"], "names": slot["names"],
+            "proven": proven_files.get(f, 0),
             "share": round(slot["unguarded"] / slot["declared"], 3)
             if slot["declared"] else 0.0,
             "exact": True,
@@ -159,6 +199,7 @@ def guard_insight(*, function_insight: dict, by_function: dict,
                                       "kind": "model", "lines": file_lines.get(f, 0),
                                       "declared": 0, "unguarded": 0,
                                       "orphan_unguarded": 0, "names": [],
+                                      "proven": proven_files.get(f, 0),
                                       "exact": True})
         slot["declared"] += 1
         if not by_model.get(cls):
@@ -177,6 +218,9 @@ def guard_insight(*, function_insight: dict, by_function: dict,
         files[f] = slot
 
     totals = {
+        "fn_named": len(named_defs),
+        "fn_proven": len(proven_defs),
+        "proofs_seen": len(proofs or []),
         "cls_files": len(classes),
         "cls_unguarded": sum(v["unguarded"] for v in classes.values()),
         "cls_orphan": sum(v["orphan_unguarded"] for v in classes.values()),
