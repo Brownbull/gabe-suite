@@ -37,7 +37,7 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 | **Gabe Mockup** | `/gabe-mockup` | UX/mockup execution — legacy HTML recipes plus React-first Storybook modes |
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-init`, `/gabe-commit`) |
 
-### Command Surface (29 skills)
+### Command Surface (30 skills)
 
 Every capability is one skill under `skills/<name>/` — the skill name gives the slash
 invocation (`skills/gabe-plan/` ⇒ `/gabe-plan`). Each SKILL.md is a lean core that loads
@@ -67,6 +67,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-myopic` | Short-sighted-user walkthrough — panel of 3 planning horizons flags foresight traps, overwhelm, recall demands, no-undo dead-ends |
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
 | `/gabe-plan` | KDBP-aware planning + per-phase tier decision with optional HTML review artifact for complex decisions |
+| `/gabe-pulse` | Read-only completeness sweep — after a stretch of work, is anything important owed? Ten deterministic signals, four bands, every row naming the command that clears it. Writes nothing, dispatches nothing |
 | `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
 | `/gabe-red` | TDD's first half as a beat — declare the failing cases before code (C-ids born in test names), commit the red checkpoint; guards for refactors, enumerated skips |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |

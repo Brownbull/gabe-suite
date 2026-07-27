@@ -117,8 +117,7 @@
         "gabe-align",
         "gabe-lens",
         "gabe-meme",
-        "gabe-quip"
-      ]
+        "gabe-quip", "gabe-pulse"]
     },
     {
       "slug": "cross-cutting",

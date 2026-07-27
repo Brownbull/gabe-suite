@@ -31,12 +31,74 @@ ID_RX = re.compile(r'\sid="([^"]+)"')
 EXTERNAL = ("http://", "https://", "mailto:", "data:", "//")
 
 
+def check_roster(cfg: dict, skills_dir: Path) -> list[str]:
+    """Every skill on disk must sit in exactly one beat group, and every
+    declared skill must exist.
+
+    Why this is a gate and not a nicety: `_suite_data.py` resolves a skill's
+    group with `beats.get(name, "cross-cutting")`. A skill missing from the
+    config is therefore not an error — it is silently relabelled as a
+    cross-cutting contract skill and rendered in the wrong place. Adding
+    gabe-pulse hit exactly that, and nothing reported it (2026-07-26).
+
+    The reverse direction matters too: a declared skill that no longer exists
+    leaves a roster entry pointing at nothing, which is how an archived skill
+    keeps appearing in the estate after it was removed.
+    """
+    problems: list[str] = []
+    seen: dict[str, list[str]] = {}
+    for group in cfg.get("beats", []):
+        for name in group.get("skills", []):
+            seen.setdefault(name, []).append(group.get("slug", "?"))
+
+    ondisk = {d.name for d in skills_dir.glob("gabe-*") if d.is_dir()}
+
+    for name in sorted(ondisk - set(seen)):
+        problems.append(f"roster: {name} is in no beat group — "
+                        f"_suite_data would file it as 'cross-cutting' silently")
+    for name in sorted(set(seen) - ondisk):
+        problems.append(f"roster: {name} is declared in "
+                        f"[{', '.join(seen[name])}] but not on disk")
+    for name, groups in sorted(seen.items()):
+        if len(groups) > 1:
+            problems.append(f"roster: {name} is declared in {len(groups)} groups "
+                            f"[{', '.join(groups)}] — a skill has one home")
+    return problems
+
+
 def main(argv: list[str]) -> int:
-    if len(argv) > 1:
-        target = Path(argv[1]).expanduser().resolve()
+    import json
+    args = list(argv[1:])
+    cfg_path = CENTER_DIR / "suite-center.config.json"
+    skills_dir = REPO_ROOT / "skills"
+    positional: list[str] = []
+    while args:
+        a = args.pop(0)
+        if a == "--config":
+            cfg_path = Path(args.pop(0)).expanduser().resolve()
+        elif a == "--skills-dir":
+            skills_dir = Path(args.pop(0)).expanduser().resolve()
+        elif a == "--roster-only":
+            positional.append("--roster-only")
+        else:
+            positional.append(a)
+
+    cfg = json.loads(cfg_path.read_text())
+
+    roster = check_roster(cfg, skills_dir)
+    for r in roster:
+        print(f"  DRIFT {r}")
+    if "--roster-only" in positional:
+        if roster:
+            print(f"  gate: {len(roster)} roster problem(s)")
+            return 1
+        print("  gate: skill roster complete")
+        return 0
+
+    target_args = [p for p in positional if p != "--roster-only"]
+    if target_args:
+        target = Path(target_args[0]).expanduser().resolve()
     else:
-        import json
-        cfg = json.loads((CENTER_DIR / "suite-center.config.json").read_text())
         target = (REPO_ROOT / cfg["paths"]["center"]).resolve()
 
     if not target.is_dir():
@@ -103,9 +165,13 @@ def main(argv: list[str]) -> int:
     if dead:
         for d in dead:
             print(f"  DEAD  {d}")
-        print(f"  gate: {len(dead)} broken reference(s)")
+        print(f"  gate: {len(dead)} broken reference(s)"
+              + (f" · {len(roster)} roster problem(s)" if roster else ""))
         return 1
-    print("  gate: all internal references resolve")
+    if roster:
+        print(f"  gate: {len(roster)} roster problem(s) — links resolve, the estate does not")
+        return 1
+    print("  gate: all internal references resolve · skill roster complete")
     return 0
 
 

@@ -56,7 +56,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - **This repo never carries `.kdbp/`** (operator ruling 2026-07-22, R8 in the [design record §5 addendum](docs/design/verification-first/README.md)): the suite is built with the advisory arm only — suite-doctor (runs every `tests/*/run.sh` battery) + /gabe-roast + adversarial verify + dry-run-on-a-COPY numbers in commit messages. Do not propose dogfooding the KDBP lifecycle here.
 - Size budget: 800 lines is a CODE budget, report-never-gate — state the numbers in any commit that grows a file past it; `references/` deep specs sit outside the cap (ruling R9, same addendum, with the deferral record for the two over-budget generators).
 
-## Capabilities (29 skills)
+## Capabilities (30 skills)
 
 | Skill | Version | Purpose |
 |---|---|---|
@@ -80,6 +80,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-myopic** | 1.2.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork); findings labeled M[N], never C[N] |
 | **gabe-next** | 2.4.1 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
 | **gabe-plan** | 2.5.2 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
+| **gabe-pulse** | 1.0.0 | Read-only completeness sweep (satellite) — ten deterministic signals in four bands (EVIDENCE/LIFECYCLE/SHIP/AGING); `scripts/ledger-gap.sh` subtracts the LEDGER's Commits column from `git log` to surface work that escaped the record; defers routing to next.mjs, writes nothing, dispatches nothing |
 | **gabe-push** | 2.2.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env ship prints the /gabe-feature release pointer |
 | **gabe-quip** | 1.1.0 | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts surfacing pain points; one engagement lever, proposes not rewrites, dosed (sibling of gabe-meme) |
 | **gabe-red** | 1.4.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips; scripts/prove-guard.py re-proves a guard can still FAIL (mutate → assert red → restore), feeding the center's named-vs-guarded distinction |

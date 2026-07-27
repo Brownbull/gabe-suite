@@ -24,6 +24,8 @@
 | B4 | **A review family for "a green that cannot go red"** | gustify gaps #2 and #7 are one family: framework config that hides reds, and a scheduled guard red so long it is ignored. | #2: no `afterEach(cleanup)` (every component stayed mounted); `__regression__` excluded when `CI=true` → "CI green" ≠ "suite green". #7: nightly watchdog red **5 consecutive nights**. | **NOT STARTED** — split it: the deterministic half (a CI-conditional exclusion is greppable) is a checker; the judgment half ("deliberate or accident?") is one paragraph of review-spec. gustify's own exclusion was DELIBERATE, so automating the verdict would be wrong |
 | B5 | **Per-gate red streaks in the center** | A permanently-red signal is indistinguishable from a real regression, so it stops being read. | `run-history.jsonl` records `{source, totals, ts}` — totals only. The center can say "7 runs recorded" and cannot say "this gate has been red 5 nights". | **NOT STARTED** — cheap; the history file exists, it needs a per-gate field rather than a rollup |
 | B6 | **Option D — widen gastify's entity registry** | Guard/board attribution is capped by the registry, not by the matcher. | Unattributed app-code rows repeatedly name `settings` (7), `groups` (6), `reports` (4), `retention` (3), `items` (3), `insights` (2) — real product domains with no entity. gustify's residual gap is prose in PENDING's `File` column instead, which no adoption fixes. | **EVALUATE AT PROPAGATION** (operator) — recommended for gastify, recommended AGAINST for gustify |
+| B7 | **Uncommitted work is invisible to every git-based detector** | `ledger-gap.sh` subtracts against `git log`, so work that was never committed leaves no trace for it to find — and that is the purest form of the problem it was built for. | Measured 2026-07-26 across 70 sessions: **9 sessions changed 113 files and produced no commit at all**. Archetypes: gustify 2026-07-10 (32 files, 0 commits, *"focus on the match batch. I don't understand…"*), gabe-lens 2026-07-14 (21 files, 0 commits). Only the session transcript sees these. | **NOT STARTED** — the transcript is the only source, and it is the noisier signal (a repo using a different command vocabulary reads as 100% dark; that error was made and corrected the same day) |
+| B8 | **No beat reviews work retrospectively** | `/gabe-review` Step 4.75 aligns a diff against the CURRENT phase. Work from three sessions ago, against a phase that never existed, is not a supported input — so `/gabe-pulse` can surface unregistered work but nothing can assess it after the fact. | Gap G4 of the 2026-07-26 absorb analysis. Compounds with G5 below: even if a phase is retro-fitted, its `Red` cell can never honestly be `✅`. | **NOT STARTED** — deliberately: `/gabe-pulse` v1.0.0 reports and points, and whether it should ever sequence the beats is the question its own use is meant to answer |
 
 ## Live consequences worth remembering
 
@@ -40,6 +42,25 @@ Not tasks — properties of what shipped, which a future session will otherwise 
   to lie.
 - **The first post-propagation diff will be mostly noise.** `sort_keys` reorders the whole
   archmap once (#150) and every `guarded N/N` becomes `named N/N`. Land it on its own.
+- **Retro-absorption can never honestly claim RED (gap G5).** `plan-proof-guard` blocks a phase
+  whose `red` cell is done without a reachable `red@<sha>` and a non-empty cases record.
+  Absorbed work was written *before* its tests by definition, so a retro-fitted phase must record
+  an enumerated skip or a GUARD — never a `✅`. This is the guard working correctly, and it caps
+  what any "absorb into the plan" design can produce. Do not discover this at the first block.
+- **`/gabe-pulse` P1 is unavailable in this repo, by ruling (2026-07-26).** Nothing here would
+  ever write a ledger — `/gabe-commit` writes into `.kdbp/LEDGER.md` and is KDBP-gated, and R8
+  keeps `.kdbp/` out. A declared-but-unwritten `paths.ledger` would flip P1 from `no ledger
+  surface` to `no baseline`: configured-looking, measuring nothing. Accepted as unavailable;
+  pulse resolves P2/P3/P10 here and enumerates the rest.
+- **Half the raw ledger-gap signal is bookkeeping.** A commit that writes a ledger row cannot
+  appear in the ledger it wrote. Measured on real twins: **gustify 73 of 146 flagged, gastify
+  116 of 285**. The detector filters commits touching only lifecycle paths (`--bookkeeping`,
+  default `.kdbp/`) and always prints what it excluded. Twin-specific prefixes differ — gustify
+  also writes `tests/results/*.digest.json` (7 more), gastify does not.
+- **A skill missing from the center's beat roster was silently relabelled, not flagged.**
+  `_suite_data.py` resolves groups with `beats.get(name, "cross-cutting")`, so adding
+  `gabe-pulse` filed it as a contract skill with no error. Now gated by `check_suite_center.py
+  --roster-only` (both directions plus duplicates), proven by 8 fixtures in `tests/suite-center/`.
 
 ## Propagation shape (B2)
 

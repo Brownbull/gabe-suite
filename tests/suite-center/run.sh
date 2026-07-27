@@ -25,6 +25,64 @@ check(){ if [ "$2" = "$3" ]; then ok; else bad "$1 — expected [$3] got [$2]"; 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
+# ---------------------------------------------------------- roster gate
+# _suite_data.py resolves a skill's group with beats.get(name, "cross-cutting"),
+# so a skill missing from the config is SILENTLY relabelled rather than flagged.
+# Adding gabe-pulse hit exactly that and nothing reported it (2026-07-26).
+roster_fixture() {                 # roster_fixture <dir> <declared…>
+  local d="$1"; shift
+  mkdir -p "$d/skills"
+  python3 - "$d/cfg.json" "$@" <<'PY'
+import json, sys
+out, names = sys.argv[1], sys.argv[2:]
+json.dump({"paths": {"center": "site"},
+           "beats": [{"slug": "satellites", "skills": list(names)}]},
+          open(out, "w"))
+PY
+}
+roster_run() {                     # roster_run <dir>
+  python3 "$GEN/check_suite_center.py" --roster-only \
+    --config "$1/cfg.json" --skills-dir "$1/skills" > "$1/out" 2>&1
+  echo $?
+}
+
+# SILENT — config and disk agree
+R="$TMP/roster-ok"; roster_fixture "$R" gabe-alpha gabe-beta
+mkdir -p "$R/skills/gabe-alpha" "$R/skills/gabe-beta"
+check "roster: matching config and disk stays SILENT" "$(roster_run "$R")" "0"
+
+# FIRE — on disk, in no group (the gabe-pulse case)
+R="$TMP/roster-unlisted"; roster_fixture "$R" gabe-alpha
+mkdir -p "$R/skills/gabe-alpha" "$R/skills/gabe-orphan"
+check "roster: unlisted skill FIREs" "$(roster_run "$R")" "1"
+grep -q "gabe-orphan is in no beat group" "$R/out" \
+  && ok || bad "roster: unlisted skill must be named, and the silent relabel explained"
+
+# FIRE — declared but deleted (an archived skill still in the estate)
+R="$TMP/roster-ghost"; roster_fixture "$R" gabe-alpha gabe-ghost
+mkdir -p "$R/skills/gabe-alpha"
+check "roster: declared-but-absent skill FIREs" "$(roster_run "$R")" "1"
+grep -q "gabe-ghost is declared" "$R/out" \
+  && ok || bad "roster: ghost skill must be named"
+
+# FIRE — declared in two groups
+R="$TMP/roster-dup"; mkdir -p "$R/skills/gabe-alpha"
+python3 - "$R/cfg.json" <<'PY'
+import json, sys
+json.dump({"paths": {"center": "site"},
+           "beats": [{"slug": "satellites", "skills": ["gabe-alpha"]},
+                     {"slug": "cross-cutting", "skills": ["gabe-alpha"]}]},
+          open(sys.argv[1], "w"))
+PY
+check "roster: duplicate declaration FIREs" "$(roster_run "$R")" "1"
+grep -q "declared in 2 groups" "$R/out" \
+  && ok || bad "roster: duplicate must name both groups"
+
+# the REAL repo must be clean — this is the assertion that would have caught
+# gabe-pulse before the center was ever regenerated
+check "roster: this repo is complete" \
+  "$(python3 "$GEN/check_suite_center.py" --roster-only >/dev/null 2>&1; echo $?)" "0"
+
 # ---------------------------------------------------------------- fixtures
 
 mkfixture() {                      # mkfixture <dir> <trim-status> <backlog-state>
