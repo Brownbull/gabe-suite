@@ -1,0 +1,47 @@
+{
+  "_comment": "COPY this to docs/site/center/center.config.json at adoption and fill it. This is the ONE file that carries a project's bindings out of the generator source: identity, the paths the loaders read, the test corpora, the leaf reports, the capture commands, and one block per adopted entity. The generators read ONLY from here + adoption.json (the entity registry). Every `entities` key MUST be a slug registered in adoption.json — an unknown slug aborts the build (the D123 rule). See center.config.example.json for a filled-in worked example.",
+  "project": {
+    "name": "PROJECT_SLUG",
+    "display_name": "PROJECT_NAME",
+    "lang": "en"
+  },
+  "paths": {
+    "center": "docs/site/center",
+    "kdbp": ".kdbp",
+    "results": "tests/results",
+    "proof": "tests/web-e2e/proof",
+    "e2e_spec_glob": "tests/web-e2e/**/*.spec.ts",
+    "mermaid_renderer": "scripts/_render_mermaid.mjs"
+  },
+  "corpora": [
+    { "key": "api", "runner": "pytest", "kind": "integration",
+      "kind_detail": "HTTP surface", "tag_class": "l-api", "kpi_detail": "pytest" },
+    { "key": "web", "runner": "vitest", "kind": "unit",
+      "kind_detail": "components/hooks", "tag_class": "l-web", "kpi_detail": "vitest" }
+  ],
+  "e2e": {
+    "runner": "playwright",
+    "junit_wired": false,
+    "junit_gap_tag": "local-only",
+    "not_wired_note": "web e2e is local-only",
+    "local_only_note": "web e2e is local-only",
+    "coverage_gate": "the repo coverage gate"
+  },
+  "leaf_reports": [
+    { "path": "leaf/api-htmlcov/index.html", "label": "API coverage" },
+    { "path": "leaf/web-coverage/index.html", "label": "Web coverage" },
+    { "path": "leaf/playwright-report/index.html", "label": "Playwright report" }
+  ],
+  "_commands_comment": "Capture commands run by scripts/refresh_center.sh <mode>, one shell line per entry, from the repo root. `regen` (the default) never runs a suite.",
+  "commands": {
+    "junit": [],
+    "coverage": [],
+    "e2e": []
+  },
+  "foundations": ["SCOPE", "DECISIONS", "RULES", "BEHAVIOR", "STRUCTURE",
+                  "PLAN", "PENDING", "DOCS", "ENTITIES", "ROADMAP"],
+  "code_layers": ["api", "services", "models", "schemas", "web", "mobile"],
+  "build_architecture": true,
+  "_entities_comment": "One block per entity registered in adoption.json. `test_rx` is required (it claims test files into the corpus matrix even before a section is built); `proofs`/`code`/`models` are added when the entity's section is adopted and its feature page is built.",
+  "entities": {}
+}

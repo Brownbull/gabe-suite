@@ -1,0 +1,263 @@
+{
+  "_comment": "Bindings for the Gabe Suite's OWN command center. This is a FORK of the standard center (templates/center/, copied from HEAD ebfa82b) re-pointed at the suite itself. The suite is not an application: it has no endpoints, no models, no runtime, and per ruling R8 no .kdbp/. So the spine is the LIFECYCLE BEAT, not an application entity, and the lenses are the suite's own material: agents, formats, functions, data structures, hooks, testing, and the enforcement ledger. Nothing here is shared with templates/center/ \u2014 that template stays owned by /gabe-adopt and /gabe-feature for downstream projects.",
+  "project": {
+    "name": "gabe-suite",
+    "display_name": "Gabe Suite",
+    "lang": "en"
+  },
+  "paths": {
+    "center": "docs/site/center",
+    "shell": "docs/center/shell",
+    "data": "docs/center/data",
+    "skills": "skills",
+    "hooks": "scripts/hooks/kdbp",
+    "tests": "tests",
+    "schemas": "schemas",
+    "templates": "templates",
+    "docsite_src": "docs/src"
+  },
+  "_beats_comment": "The filter spine. Nine lifecycle beats + satellites, plus two non-beat homes (cross-cutting, suite-maintenance) so contracts like E1-E7 and the doctor's own invariants have an honest place to sit rather than being forced into a beat they do not belong to.",
+  "beats": [
+    {
+      "slug": "scope",
+      "label": "Scope",
+      "kind": "beat",
+      "order": 1,
+      "skills": [
+        "gabe-scope",
+        "gabe-scope-change",
+        "gabe-scope-pivot"
+      ]
+    },
+    {
+      "slug": "plan",
+      "label": "Plan",
+      "kind": "beat",
+      "order": 2,
+      "skills": [
+        "gabe-plan"
+      ]
+    },
+    {
+      "slug": "red",
+      "label": "Red",
+      "kind": "beat",
+      "order": 3,
+      "skills": [
+        "gabe-red"
+      ]
+    },
+    {
+      "slug": "execute",
+      "label": "Execute",
+      "kind": "beat",
+      "order": 4,
+      "skills": [
+        "gabe-execute"
+      ]
+    },
+    {
+      "slug": "review",
+      "label": "Review",
+      "kind": "beat",
+      "order": 5,
+      "skills": [
+        "gabe-review"
+      ]
+    },
+    {
+      "slug": "commit",
+      "label": "Commit",
+      "kind": "beat",
+      "order": 6,
+      "skills": [
+        "gabe-commit"
+      ]
+    },
+    {
+      "slug": "push",
+      "label": "Push",
+      "kind": "beat",
+      "order": 7,
+      "skills": [
+        "gabe-push"
+      ]
+    },
+    {
+      "slug": "walk",
+      "label": "Walk",
+      "kind": "beat",
+      "order": 8,
+      "skills": [
+        "gabe-walk"
+      ]
+    },
+    {
+      "slug": "center",
+      "label": "Center",
+      "kind": "beat",
+      "order": 9,
+      "skills": [
+        "gabe-feature",
+        "gabe-adopt",
+        "gabe-entity"
+      ]
+    },
+    {
+      "slug": "satellites",
+      "label": "Satellites",
+      "kind": "satellite",
+      "order": 10,
+      "skills": [
+        "gabe-roast",
+        "gabe-myopic",
+        "gabe-health",
+        "gabe-debt",
+        "gabe-assess",
+        "gabe-align",
+        "gabe-lens",
+        "gabe-meme",
+        "gabe-quip"
+      ]
+    },
+    {
+      "slug": "cross-cutting",
+      "label": "Cross-cutting",
+      "kind": "contract",
+      "order": 11,
+      "skills": [
+        "gabe-docs",
+        "gabe-next",
+        "gabe-handoff",
+        "gabe-help",
+        "gabe-docsite",
+        "gabe-mockup"
+      ]
+    },
+    {
+      "slug": "suite-maintenance",
+      "label": "Suite upkeep",
+      "kind": "meta",
+      "order": 12,
+      "skills": [
+        "gabe-init"
+      ]
+    }
+  ],
+  "_buckets_comment": "The accountability taxonomy. Order is the ledger's default sort: what we actually enforce, what we owe, what can only ever be prompted, and what we falsely claim. `payable` marks the two buckets that represent work someone can do.",
+  "buckets": [
+    {
+      "key": "HARD_ENFORCED",
+      "label": "Hard-enforced",
+      "cls": "b-hard",
+      "payable": false,
+      "blurb": "A machine check exists AND runs. Something acts on the non-zero exit, or a build dies."
+    },
+    {
+      "key": "HARDENABLE",
+      "label": "Hardenable",
+      "cls": "b-debt",
+      "payable": true,
+      "blurb": "Could be checked mechanically and isn't. Payable debt \u2014 each one names the check that would close it."
+    },
+    {
+      "key": "PROMPT_ONLY",
+      "label": "Prompt-only",
+      "cls": "b-prompt",
+      "payable": false,
+      "blurb": "A judgment no script can adjudicate. Accountability here is the disclosure carrier: which file states it, at what depth, and is it reachable when the rule must fire?"
+    },
+    {
+      "key": "BROKEN_CLAIM",
+      "label": "Broken claim",
+      "cls": "b-broken",
+      "payable": true,
+      "blurb": "The suite asserts enforcement that does not exist, or a mechanism that describes itself falsely. Highest urgency \u2014 these actively mislead."
+    }
+  ],
+  "_lenses_comment": "The estate. `group` is the nav grouping; `spike` records which cut a lens landed in. Only shipped lenses get a nav entry \u2014 an unshipped one is listed and visibly disabled rather than omitted (absent reads as 'does not exist') or 404ing (reads as broken).",
+  "lenses": [
+    {
+      "slug": "board",
+      "page": "board.html",
+      "label": "Board",
+      "icon": "board",
+      "spike": 1,
+      "group": "Board",
+      "blurb": "Every open move the suite is carrying, projected from five committed sources \u2014 six framings, State is the landing one."
+    },
+    {
+      "slug": "enforcement",
+      "page": "enforcement.html",
+      "label": "Enforcement ledger",
+      "icon": "shield",
+      "spike": 1,
+      "blurb": "Every rule the suite asserts, classified by whether we can enforce it, do enforce it, or only claim to.",
+      "group": "Enforcement"
+    },
+    {
+      "slug": "hooks",
+      "page": "hooks.html",
+      "label": "Hooks",
+      "icon": "zap",
+      "spike": 1,
+      "blurb": "The six shipped hooks: slot, matcher, every reachable exit code, every fail-open path, and fixture coverage.",
+      "group": "Enforcement"
+    },
+    {
+      "slug": "testing",
+      "page": "testing.html",
+      "label": "Testing",
+      "icon": "check",
+      "spike": 1,
+      "blurb": "The fixture batteries that give every other gate its teeth \u2014 and the gates that have no battery at all.",
+      "group": "Enforcement"
+    },
+    {
+      "slug": "agents",
+      "page": "agents.html",
+      "label": "Agents",
+      "icon": "users",
+      "spike": 1,
+      "blurb": "The subagent surface: which beats fork, which run read-only, and what the harness exposes.",
+      "group": "Surfaces"
+    },
+    {
+      "slug": "formats",
+      "page": "formats.html",
+      "label": "Format methods",
+      "icon": "type",
+      "spike": 1,
+      "blurb": "Literal output-string contracts \u2014 the byte-identical strings, E1-E7 output shapes, trailers and glyph sets \u2014 and where they have drifted.",
+      "group": "Surfaces"
+    },
+    {
+      "slug": "functions",
+      "page": "functions.html",
+      "label": "Functions",
+      "icon": "code",
+      "spike": 1,
+      "blurb": "Every function the suite's own scripts define, across python, shell and mjs.",
+      "group": "Surfaces"
+    },
+    {
+      "slug": "structures",
+      "page": "structures.html",
+      "label": "Data structures",
+      "icon": "database",
+      "spike": 1,
+      "blurb": "Every artifact shape the lifecycle reads or writes, and whether a validator stands behind it.",
+      "group": "Surfaces"
+    }
+  ],
+  "_provenance_comment": "Where the fork came from, so drift against the upstream template is answerable. The standard center template is NOT a dependency of this build \u2014 the shell is vendored under docs/center/shell/.",
+  "provenance": {
+    "forked_from": "templates/center",
+    "forked_at_ref": "ebfa82b",
+    "forked_on": "2026-07-25",
+    "excluded": [
+      "shell/example/"
+    ],
+    "reason": "The working tree's center generators were mid-edit in a parallel session and tests/center/run.sh was red; the fork takes the committed, doctor-green baseline."
+  }
+}
