@@ -571,3 +571,116 @@ state the crawl gate ignores; adopt-spec should name it beside archmap.json.
   side effect (suite specs write proof frames); those were RESTORED, not
   committed — proof re-curation stays a human-eyed /gabe-feature curate
   pass, the corpus run only owns the junit.
+
+## 12. **[p1]** PROXY EVIDENCE — the recurring action that keeps costing us (gastify retro, 2026-07-26)
+
+A retrospective over 30 gastify sessions, 1236 commits, and 218 LEDGER rows,
+looking for *a repeated action that led somewhere we had to correct later*.
+One class dominates, and §4's last bullet ("Verify the CLAIM, not just the
+render") turns out to be one facet of it rather than a standalone gotcha.
+
+### The pattern
+
+**We accept a signal that CORRELATES with the property we care about, in place
+of observing the property itself.** The proxy is cheaper, usually agrees, and
+fails silently in exactly the cases that matter. Every correction has the same
+shape: replace the proxy with a direct observation.
+
+It is not carelessness — in each case the proxy is the *obvious* thing to reach
+for, and it is right most of the time. That is what makes it recur.
+
+### Evidence — independent instances, different sessions
+
+| When | Proxy trusted | What it hid |
+|---|---|---|
+| /items 500 (prod bug) | backend tests green | tests ran on **SQLite**, prod is PostgreSQL. `C395` was green for months while page-2 500'd for every user with >50 items. A test that cannot fail on the real engine is not evidence. |
+| PR #85 | `git branch --merged` | blind to **squash-merges** — reported CONFLICTING on a branch whose content was already on main |
+| 2026-07-26 | `--merged` + `git cherry` | same blindness again, on `center/loop2-post-trial-contract`. Resolved by `git diff <squash-commit> <branch>` → empty |
+| center digests | artifact **exists** | digests written *after* regen → the center's table trailed a run by one; fixed by ordering digests → regen → commit |
+| 2026-07-25 | junit/run-status exist | both frozen for ~3h. `--reporter=line` **replaces** the config's reporter array, so every run silently emitted nothing. The center reported cases red that were long since green. |
+| e2e corpus | test exit 0 | `seeded-data-verify` signed in, slept, screenshotted — asserted **nothing**. An empty state photographed just as green. |
+| e2e corpus | "no error appeared" | `stats-react` slept 1500ms then asserted `share-error` count 0 — green when the error was slow *and* green when the mutation did nothing |
+| review (earlier) | a `/Tú/` regex assertion | vacuous — the es label has no accent, so it could never match |
+| audit | `grep -c 'expect('` | reported "30 of 175 cases assert nothing". Resolving helpers transitively: **1**. Token presence ≠ the property. |
+| 2026-07-26 | `newContext()` with no `storageState` | assumed blank; the runner **inherits** the project's. Context silently carried user A. |
+| 2026-07-26 | standalone node probe | said bare contexts were unauthenticated — true *outside* the runner, false inside. Wrong environment, confident answer. |
+| 2026-07-26 | `ctx.storageState()` → 0 origins | does not report IndexedDB unless asked; Firebase lives there. The API answered a narrower question than the one asked. |
+| 2026-07-26 | `.get('data', [])` | read off a **422** body (`limit=300` > max 200) → momentarily concluded both prod users had zero transactions |
+| gs1 / tx1 | specs green | they were green only because ambient **residue rows** happened to carry qty + scan metadata. Reaping residue turned them red — they never had durable ground. |
+
+### Detection finding (this is the part the suite needs)
+
+**Git history does not record this class.** Mining 1236 commits for
+`fix|revert` commits that name the commit they correct yields **9** edges,
+median time-to-catch 0 days (CI caught them). Mining the same project's 30
+session transcripts for self-correction markers yields **663** across 6858
+assistant messages — roughly **10% of turns contain a course correction**, and
+~70× more than the commit record shows.
+
+The corrections that hurt never earn a commit that says what they corrected.
+**So a retro that reads only git will conclude the process is healthy.** The
+signal lives in transcripts and in LEDGER root-cause prose.
+
+Caveat on method: an attempt to auto-classify the 663 contexts by regex came
+out ~34% "freshness", but the marker set and the signature set share words
+(`stale`, `silently`), so the contexts self-select. The regex count is NOT
+load-bearing — the table above is. A real implementation needs an LLM pass over
+sampled contexts, not keyword overlap.
+
+### Proxy → direct registry (portable across projects)
+
+| Proxy | Why it lies | Direct check |
+|---|---|---|
+| `git branch --merged`, `git cherry` | blind to squash-merge | `git diff <squash-commit> <branch>` is empty |
+| test suite green | green ≠ asserting the property | does the case assert it, with a positive anchor **before** any `toHaveCount(0)` / `toBeHidden` |
+| tests pass on a stand-in engine | SQLite ≠ PostgreSQL | at least one case on the real engine for engine-sensitive behaviour |
+| artifact exists | may predate the run | `mtime ≥ run start`, else report `⤫ stale`, never digest it |
+| a CLI reporter/format flag | may **replace** config, not add | assert the artifact actually refreshed |
+| isolated / standalone probe | no project config applied | probe inside the real harness |
+| a parsed JSON field | may be an error body | assert HTTP status first |
+| rollup / header figure | may trail the detail rows | check the underlying rows |
+| passing on ambient data | may be accidental residue | assert against seeded/owned fixtures |
+| a token grep (`expect(`) | presence ≠ semantics | resolve helpers transitively |
+
+### Proposed suite change
+
+1. **Sharpen E1 EVIDENCE** in `execution-contract.md`: evidence must be of the
+   property itself, not a correlate. Name the failure mode *proxy evidence* so
+   it has a handle in reviews. (`/gabe-commit` already does this correctly in
+   one narrow place — `results_out` refuses to digest a report the run did not
+   refresh. Generalize that instinct.)
+2. **Ship the registry above** as `gabe-docs/references/proxy-evidence.md`, and
+   have `/gabe-review` + `/gabe-roast` check findings against it.
+3. **New retro capability** (`/gabe-retro`, or a lens inside `/gabe-health`):
+   mine session transcripts — not git — for correction markers, cluster, and
+   report recurring classes with time-to-catch. Git archaeology alone
+   under-detects by ~70×.
+4. **Close the PENDING class-tag gap:** 65 of 76 open gastify rows are
+   untagged, so the gate's built-in "≥2 open rows share a class → systemic
+   drift" warning can never fire. Either enforce the tag at defer time or drop
+   the mechanism; a check that cannot fire is itself proxy evidence.
+5. Note for §4: the documented `git` + standalone `-n` hook gotcha recurred
+   twice this session. A learning that lives only in prose does not hold —
+   the ones that stick are the ones a gate enforces.
+
+### Convergent evidence — the suite has arrived here three times already
+
+This was not derived top-down; the retro found it, then found the suite had
+independently hit the same wall twice before under different names:
+
+- **§4 above:** "Verify the CLAIM, not just the render."
+- **`f702998 feat(red): prove-guard`** (the most recent suite commit): *"a test
+  that has never been observed red is not known to test anything"* — and
+  crucially, a case proven red once **goes VOID later** when a refactor severs
+  the assertion or a missing `afterEach` leaves state that satisfies it. A twin
+  measured its own void rate at **1 in 6** while actively trying not to write
+  one.
+- **This retro:** the same substitution outside tests entirely — git ancestry,
+  artifact freshness, reporter flags, probe environment, response shape,
+  ambient data.
+
+Three arrivals from three directions is the argument for promoting it from
+scattered gotchas to a named, first-class failure mode. `prove-guard` is the
+template for what the fix looks like in general: **do not ask whether the
+signal is present, perturb the thing and confirm the signal responds.** Every
+row of the registry above is that same move applied to a different proxy.
