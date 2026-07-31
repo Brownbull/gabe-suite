@@ -7,3 +7,4 @@ docs/investigations/**/raw/
 docs/investigations/**/site/
 docs/investigations/**/*.html
 docs/investigations/**/*.pdf
+.claude/settings.local.json

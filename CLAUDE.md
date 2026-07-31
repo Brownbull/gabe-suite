@@ -56,6 +56,10 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - **This repo never carries `.kdbp/`** (operator ruling 2026-07-22, R8 in the [design record §5 addendum](docs/design/verification-first/README.md)): the suite is built with the advisory arm only — suite-doctor (runs every `tests/*/run.sh` battery) + /gabe-roast + adversarial verify + dry-run-on-a-COPY numbers in commit messages. Do not propose dogfooding the KDBP lifecycle here.
 - Size budget: 800 lines is a CODE budget, report-never-gate — state the numbers in any commit that grows a file past it; `references/` deep specs sit outside the cap (ruling R9, same addendum, with the deferral record for the two over-budget generators).
 
+## The Gabe Register (project-scoped trial)
+
+`.claude/output-styles/gabe.md` (movement register: action → consequence → next move; comptroller position-check on direction changes; DECISION blocks with mandatory defer-triggers; actors·elements·effects explanation format — naked chain, cast cards, risk dots) + `.claude/register-core.md` (4-rule payload re-injected by `.claude/settings.json` hooks on every prompt and after compaction). Canary battery: `tests/register/run.sh` — invariants pinned, mutation-proven. KILL/WIDEN conditions live in the style file's header; widen machine-wide only after it survives here. Full scope record: `docs/investigations/2026-07-30-gabe-suite-diet/`.
+
 ## Capabilities (30 skills)
 
 | Skill | Version | Purpose |
