@@ -1,0 +1,1206 @@
+<title>Visual catalog — what an artifact page can draw</title>
+
+<style>
+  /* ── roster vars (gabe-artifact kit, block 1) ───────────────────────── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+
+  :root {
+    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
+    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
+    --rule: #ded8e5; --rule-soft: #ebe6ef;
+    --accent: #c42a64; --accent-soft: #fbe9f0;
+    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+    /* categorical slots 1–5, validated light */
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    /* sequential blue 100→700 */
+    --q1: #cde2fb; --q2: #9ec5f4; --q3: #6da7ec; --q4: #3987e5; --q5: #256abf; --q6: #184f95;
+    /* status (fixed, never themed) */
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #141118; --card: #1d1924; --raised: #241f2e;
+      --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
+      --rule: #322b3e; --rule-soft: #272130;
+      --accent: #f2679e; --accent-soft: #381c2a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+      --q1: #104281; --q2: #184f95; --q3: #256abf; --q4: #2a78d6; --q5: #5598e7; --q6: #86b6ef;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
+    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
+    --rule: #ded8e5; --rule-soft: #ebe6ef;
+    --accent: #c42a64; --accent-soft: #fbe9f0;
+    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    --q1: #cde2fb; --q2: #9ec5f4; --q3: #6da7ec; --q4: #3987e5; --q5: #256abf; --q6: #184f95;
+  }
+  :root[data-theme="dark"] {
+    --ground: #141118; --card: #1d1924; --raised: #241f2e;
+    --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
+    --rule: #322b3e; --rule-soft: #272130;
+    --accent: #f2679e; --accent-soft: #381c2a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --q1: #104281; --q2: #184f95; --q3: #256abf; --q4: #2a78d6; --q5: #5598e7; --q6: #86b6ef;
+  }
+
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  .artifact-page {
+    max-width: 74rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);
+    padding: 32px 24px 48px;
+    display: flex; flex-direction: column; gap: 32px;
+    text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }
+  :is(a, button, select, input, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .eyebrow { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-size: 2.1em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  h2 { font-size: 1.05em; margin: 0; }
+  h3 { font-size: 1em; margin: 0; }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 64ch; margin: 12px 0 0; }
+
+  /* ── section + card grid ────────────────────────────────────────────── */
+  .sec { display: flex; flex-direction: column; gap: 16px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .sec-head .n { margin-left: auto; font-size: .72em; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  .ex { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .ex.wide { grid-column: 1 / -1; }
+  .ex[data-marked="true"] { border-color: var(--accent); }
+  .ex-head { display: flex; flex-direction: column; gap: 4px; }
+  .ex-head .row { display: flex; align-items: center; gap: 8px; }
+  .ex-use { font-size: .78em; color: var(--muted); line-height: 1.45; }
+  .ex-stage { position: relative; border-top: 1px solid var(--rule-soft); padding-top: 12px; min-height: 40px; }
+  .ex-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; border-top: 1px solid var(--rule-soft); padding-top: 10px; }
+  .ex-tag { font-size: .66em; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+  .ex-copy {
+    font-size: .68em; letter-spacing: .06em; text-transform: uppercase;
+    background: transparent; border: 1px solid var(--rule); color: var(--muted);
+    border-radius: 999px; padding: 4px 11px; cursor: pointer; white-space: nowrap;
+    font-family: inherit;
+  }
+  .ex-copy:hover { border-color: var(--accent); color: var(--accent); }
+  .ex[data-marked="true"] .ex-copy { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  /* ── shared viz bits ────────────────────────────────────────────────── */
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .axis-line { stroke: var(--rule); stroke-width: 1; }
+  .grid-line { stroke: var(--rule-soft); stroke-width: 1; }
+  .tick { fill: var(--muted); font-size: 9px; letter-spacing: 0; }
+  .dlabel { fill: var(--ink-soft); font-size: 9px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: .7em; color: var(--muted); letter-spacing: 0; }
+  .legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+  .tip {
+    position: absolute; pointer-events: none; opacity: 0;
+    background: var(--ink); color: var(--ground);
+    font-size: .68em; letter-spacing: 0; line-height: 1.4;
+    padding: 5px 8px; border-radius: 6px; white-space: nowrap; z-index: 5;
+    transition: opacity .12s ease;
+  }
+  .tip[data-show="true"] { opacity: 1; }
+  .scroll-x { overflow-x: auto; }
+
+  /* ── element styles used by the examples ────────────────────────────── */
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 10px; }
+  .tile { background: var(--raised); border: 1px solid var(--rule-soft); border-radius: 8px; padding: 10px; }
+  .tile .v { font-size: 1.6em; line-height: 1; font-variant-numeric: tabular-nums; }
+  .tile .k { font-size: .66em; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-top: 5px; }
+  .tile .d { font-size: .68em; margin-top: 4px; }
+  .up { color: var(--good); } .down { color: var(--critical); }
+
+  .meters { display: flex; flex-direction: column; gap: 10px; }
+  .meter .lab { display: flex; justify-content: space-between; font-size: .72em; color: var(--muted); margin-bottom: 4px; }
+  .meter .track { height: 9px; background: var(--rule-soft); border-radius: 5px; position: relative; overflow: hidden; }
+  .meter .fill { height: 100%; border-radius: 5px; background: var(--s1); }
+  .meter .target { position: absolute; top: -3px; bottom: -3px; width: 2px; background: var(--ink); }
+
+  table { border-collapse: collapse; width: 100%; font-size: .76em; letter-spacing: 0; }
+  th { text-align: left; font-weight: 500; font-size: .82em; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--rule); white-space: nowrap; }
+  td { padding: 6px 8px; border-bottom: 1px solid var(--rule-soft); font-variant-numeric: tabular-nums; }
+  tr:last-child td { border-bottom: 0; }
+  th.sortable { cursor: pointer; user-select: none; }
+  th.sortable:hover { color: var(--accent); }
+  th[data-dir]::after { content: " ▲"; color: var(--accent); }
+  th[data-dir="desc"]::after { content: " ▼"; }
+  .cellbar { height: 7px; border-radius: 4px; background: var(--s1); display: inline-block; vertical-align: middle; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip { font-size: .7em; letter-spacing: .04em; border: 1px solid var(--rule); background: var(--raised); color: var(--muted); border-radius: 999px; padding: 4px 10px; cursor: pointer; font-family: inherit; }
+  .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .badge { font-size: .64em; text-transform: uppercase; letter-spacing: .08em; padding: 2px 7px; border-radius: 999px; border: 1px solid transparent; }
+  .badge.good { color: var(--good); border-color: var(--good); }
+  .badge.warn { color: var(--warning); border-color: var(--warning); }
+  .badge.crit { color: var(--critical); border-color: var(--critical); }
+
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--rule); }
+  .tabs button { font-family: inherit; font-size: .74em; background: transparent; border: 0; border-bottom: 2px solid transparent; color: var(--muted); padding: 7px 10px; cursor: pointer; }
+  .tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+  .tabpanel { padding-top: 10px; font-size: .8em; color: var(--ink-soft); }
+
+  .acc { display: flex; flex-direction: column; }
+  .acc details { border-bottom: 1px solid var(--rule-soft); }
+  .acc summary { cursor: pointer; padding: 8px 0; font-size: .82em; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+  .acc summary::-webkit-details-marker { display: none; }
+  .acc summary::after { content: "+"; color: var(--accent); }
+  .acc details[open] summary::after { content: "−"; }
+  .acc .body { font-size: .78em; color: var(--muted); padding: 0 0 10px; }
+
+  .seg { display: inline-flex; border: 1px solid var(--rule); border-radius: 999px; overflow: hidden; }
+  .seg button { font-family: inherit; font-size: .7em; background: transparent; border: 0; color: var(--muted); padding: 6px 12px; cursor: pointer; }
+  .seg button[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
+
+  .callout { display: flex; gap: 9px; border-radius: 8px; padding: 10px 12px; font-size: .78em; line-height: 1.45; border: 1px solid; align-items: flex-start; }
+  .callout .ico { flex: 0 0 auto; font-size: .9em; }
+  .callout .lbl { text-transform: uppercase; letter-spacing: .08em; font-size: .82em; }
+  .callout.note { border-color: color-mix(in srgb, var(--s1) 45%, transparent); background: color-mix(in srgb, var(--s1) 8%, transparent); }
+  .callout.note .lbl, .callout.note .ico { color: var(--s1); }
+  .callout.warn { border-color: color-mix(in srgb, var(--warning) 55%, transparent); background: color-mix(in srgb, var(--warning) 10%, transparent); }
+  .callout.warn .lbl, .callout.warn .ico { color: var(--warning); }
+  .callout.crit { border-color: color-mix(in srgb, var(--critical) 55%, transparent); background: color-mix(in srgb, var(--critical) 10%, transparent); }
+  .callout.crit .lbl, .callout.crit .ico { color: var(--critical); }
+
+  .timeline { display: flex; flex-direction: column; gap: 0; }
+  .tl { display: grid; grid-template-columns: 68px 16px 1fr; gap: 10px; padding-bottom: 14px; position: relative; }
+  .tl:last-child { padding-bottom: 0; }
+  .tl .when { font-size: .68em; color: var(--muted); text-align: right; padding-top: 2px; font-variant-numeric: tabular-nums; }
+  .tl .rail { position: relative; }
+  .tl .rail::before { content: ""; position: absolute; left: 50%; top: 4px; width: 7px; height: 7px; margin-left: -3.5px; border-radius: 50%; background: var(--accent); }
+  .tl:not(:last-child) .rail::after { content: ""; position: absolute; left: 50%; top: 13px; bottom: -4px; width: 1px; background: var(--rule); }
+  .tl .what { font-size: .8em; }
+  .tl .what small { display: block; color: var(--muted); font-size: .85em; }
+
+  .steps { display: flex; gap: 0; align-items: flex-start; }
+  .step { flex: 1; display: flex; flex-direction: column; gap: 6px; position: relative; padding-right: 8px; }
+  .step .bead { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--rule); display: grid; place-items: center; font-size: .62em; color: var(--muted); background: var(--card); }
+  .step[data-state="done"] .bead { border-color: var(--good); color: var(--good); }
+  .step[data-state="now"] .bead { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .step .t { font-size: .72em; color: var(--muted); }
+  .step[data-state="now"] .t { color: var(--ink); }
+  .step:not(:last-child)::after { content: ""; position: absolute; left: 20px; top: 9px; right: 8px; height: 1px; background: var(--rule); }
+
+  .tree { font-size: .78em; letter-spacing: 0; }
+  .tree ul { list-style: none; margin: 0; padding-left: 16px; border-left: 1px solid var(--rule-soft); }
+  .tree > ul { padding-left: 0; border-left: 0; }
+  .tree li { padding: 3px 0; }
+  .tree .node { color: var(--ink-soft); }
+  .tree .leaf { color: var(--muted); }
+
+  .matrix td.mark { color: var(--good); } .matrix td.no { color: var(--muted); }
+
+  .empty { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding: 18px 0; }
+  .empty .glyph { width: 34px; height: 34px; border-radius: 9px; border: 1px dashed var(--rule); display: grid; place-items: center; color: var(--muted); }
+  .empty .t { font-size: .88em; }
+  .empty .s { font-size: .76em; color: var(--muted); max-width: 40ch; }
+  .empty button { font-family: inherit; font-size: .72em; border: 1px solid var(--accent); background: var(--accent-soft); color: var(--accent); border-radius: 7px; padding: 6px 12px; cursor: pointer; }
+
+  pre.code { background: var(--raised); border: 1px solid var(--rule-soft); border-radius: 8px; padding: 10px 12px; overflow-x: auto; font-size: .74em; line-height: 1.6; letter-spacing: 0; margin: 0; }
+  pre.code .k { color: var(--s5); } pre.code .s { color: var(--s3); } pre.code .c { color: var(--muted); }
+  kbd { font-size: .68em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 2px 6px; background: var(--raised); color: var(--ink-soft); }
+
+  .reveal { opacity: 0; transform: translateY(10px); transition: opacity .5s ease, transform .5s ease; }
+  .reveal[data-in="true"] { opacity: 1; transform: none; }
+  .counter { font-size: 2.2em; line-height: 1; font-variant-numeric: tabular-nums; }
+
+  pre.mermaid { background: transparent; font-size: .8em; color: var(--muted); overflow-x: auto; margin: 0; }
+
+  /* ── keeps list ─────────────────────────────────────────────────────── */
+  .keeps { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .keeps ol { margin: 0; padding-left: 22px; font-size: .82em; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+  .keeps .none { font-size: .8em; color: var(--muted); }
+  .keeps .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .keeps button { font-family: inherit; font-size: .72em; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); border-radius: 7px; padding: 7px 12px; cursor: pointer; }
+  .keeps button.primary { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .keeps textarea { width: 100%; font-family: inherit; font-size: .76em; letter-spacing: 0; background: var(--raised); color: var(--ink); border: 1px solid var(--accent); border-radius: 8px; padding: 10px; display: none; }
+  .keeps textarea[data-open="true"] { display: block; }
+
+  /* ── cog + panel (kit block 1, chrome) ──────────────────────────────── */
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog { display: grid; place-items: center; width: 38px; height: 38px; background: var(--card); color: var(--muted); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease; }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel { position: absolute; top: 46px; right: 0; width: 258px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow); padding: 14px; display: none; flex-direction: column; gap: 12px; }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 8px; }
+  .af-legend { font-size: .62em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; text-align: left; cursor: pointer; background: var(--raised); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; font-family: inherit; }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 10px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 10px; color: var(--muted); margin: 0; letter-spacing: 0; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } .reveal { opacity: 1; transform: none; } }
+</style>
+
+<div class="artifact-page">
+
+  <header>
+    <p class="eyebrow">gabe-artifact · catalog</p>
+    <h1>Everything this page can draw</h1>
+    <p class="lede">Thirty-one visual elements, each one live and built from nothing but inline SVG, CSS and a little JavaScript — no libraries reach past the artifact sandbox. Charts use the validated categorical palette; status colours never carry meaning alone. Press <b>Copy name</b> on the ones worth keeping; they collect in a list at the bottom.</p>
+  </header>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Quantity &amp; comparison</h2><span class="n">8</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Stat tile row">
+        <div class="ex-head"><h3>Stat tile row</h3><p class="ex-use">The headline numbers, before any plot. Often the right answer instead of a chart.</p></div>
+        <div class="ex-stage">
+          <div class="tiles">
+            <div class="tile"><div class="v">248</div><div class="k">recipes</div><div class="d up">▲ 12 this week</div></div>
+            <div class="tile"><div class="v">68%</div><div class="k">pantry match</div><div class="d up">▲ 4 pts</div></div>
+            <div class="tile"><div class="v">3.2</div><div class="k">avg complexity</div><div class="d down">▼ 0.3</div></div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css grid</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Bar chart">
+        <div class="ex-head"><h3>Bar chart</h3><p class="ex-use">One measure across a handful of named things. Hover a bar for its value.</p></div>
+        <div class="ex-stage"><div id="c-bar"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · hover</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Ranked bar list">
+        <div class="ex-head"><h3>Ranked bar list</h3><p class="ex-use">Horizontal bars sorted by size — better than a pie whenever the labels are words.</p></div>
+        <div class="ex-stage"><div id="c-rank"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · direct labels</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Bullet meter">
+        <div class="ex-head"><h3>Bullet meter</h3><p class="ex-use">Progress against a target. The tick is the goal, the fill is reality.</p></div>
+        <div class="ex-stage">
+          <div class="meters">
+            <div class="meter"><div class="lab"><span>Despensa cubierta</span><span>68% / 80%</span></div><div class="track"><div class="fill" style="width:68%"></div><div class="target" style="left:80%"></div></div></div>
+            <div class="meter"><div class="lab"><span>Recetas etiquetadas</span><span>91% / 90%</span></div><div class="track"><div class="fill" style="width:91%;background:var(--good)"></div><div class="target" style="left:90%"></div></div></div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Histogram">
+        <div class="ex-head"><h3>Histogram</h3><p class="ex-use">The shape of a distribution — where the mass sits, and how long the tail runs.</p></div>
+        <div class="ex-stage"><div id="c-hist"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Dumbbell range">
+        <div class="ex-head"><h3>Dumbbell range</h3><p class="ex-use">Two points per row and the gap between them — before/after, min/max, plan/actual.</p></div>
+        <div class="ex-stage"><div id="c-dumb"></div><div class="legend"><span><i style="background:var(--s1)"></i>tiempo activo</span><span><i style="background:var(--s2)"></i>tiempo total</span></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Donut gauge">
+        <div class="ex-head"><h3>Donut gauge</h3><p class="ex-use">One share of one whole. Never more than one wedge — that's what a bar chart is for.</p></div>
+        <div class="ex-stage"><div id="c-donut"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg arc</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Table with inline bars">
+        <div class="ex-head"><h3>Table with inline bars</h3><p class="ex-use">Exact numbers and their proportions in the same glance.</p></div>
+        <div class="ex-stage scroll-x"><table id="t-inline"></table></div>
+        <div class="ex-foot"><span class="ex-tag">html table</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Change over time</h2><span class="n">5</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Line chart">
+        <div class="ex-head"><h3>Line chart</h3><p class="ex-use">Two or more series over a continuous axis. Move across it for a crosshair reading.</p></div>
+        <div class="ex-stage"><div id="c-line"></div><div class="legend"><span><i style="background:var(--s1)"></i>cocinadas</span><span><i style="background:var(--s2)"></i>planificadas</span></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · crosshair</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Area chart">
+        <div class="ex-head"><h3>Area chart</h3><p class="ex-use">A single series where the volume under it means something — cumulative effort, totals.</p></div>
+        <div class="ex-stage"><div id="c-area"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · gradient</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Sparkline">
+        <div class="ex-head"><h3>Sparkline</h3><p class="ex-use">A trend small enough to live inside a sentence or a table cell. No axes, no grid.</p></div>
+        <div class="ex-stage scroll-x"><table id="t-spark"></table></div>
+        <div class="ex-foot"><span class="ex-tag">svg · inline</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Heat calendar">
+        <div class="ex-head"><h3>Heat calendar</h3><p class="ex-use">Magnitude across a date grid — one hue, light to dark. Hover a cell for the day.</p></div>
+        <div class="ex-stage"><div id="c-heat"></div><div class="legend"><span>menos</span><span><i style="background:var(--q1)"></i><i style="background:var(--q2)"></i><i style="background:var(--q3)"></i><i style="background:var(--q4)"></i><i style="background:var(--q5)"></i></span><span>más</span></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · sequential</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Timeline">
+        <div class="ex-head"><h3>Timeline</h3><p class="ex-use">Dated events in order, when the gap between them is narrative rather than numeric.</p></div>
+        <div class="ex-stage">
+          <div class="timeline">
+            <div class="tl"><div class="when">02 jun</div><div class="rail"></div><div class="what">Backend batch 1<small>94 tests green</small></div></div>
+            <div class="tl"><div class="when">11 jun</div><div class="rail"></div><div class="what">Producción en vivo<small>verificada el mismo día</small></div></div>
+            <div class="tl"><div class="when">07 jul</div><div class="rail"></div><div class="what">Señales en el detalle<small>8 ejes de sabor</small></div></div>
+            <div class="tl"><div class="when">24 jul</div><div class="rail"></div><div class="what">Command center<small>seis entidades registradas</small></div></div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css grid</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Relationship &amp; structure</h2><span class="n">7</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Scatter plot">
+        <div class="ex-head"><h3>Scatter plot</h3><p class="ex-use">Two measures against each other, to see whether they move together. Caps at three series.</p></div>
+        <div class="ex-stage"><div id="c-scatter"></div><div class="legend"><span><i style="background:var(--s1);border-radius:50%"></i>principiante</span><span><i style="background:var(--s2);border-radius:50%"></i>intermedio</span><span><i style="background:var(--s3);border-radius:50%"></i>chef</span></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · hover</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Radar polygon">
+        <div class="ex-head"><h3>Radar polygon</h3><p class="ex-use">One entity's profile across fixed axes — comparing two shapes, not reading exact values.</p></div>
+        <div class="ex-stage"><div id="c-radar"></div><div class="legend"><span><i style="background:var(--s1)"></i>Cazuela</span><span><i style="background:var(--s2)"></i>Ceviche</span></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Hierarchy tree">
+        <div class="ex-head"><h3>Hierarchy tree</h3><p class="ex-use">Containment — taxonomies, file trees, an entity and everything it owns.</p></div>
+        <div class="ex-stage">
+          <div class="tree">
+            <ul>
+              <li><span class="node">catalog/</span>
+                <ul>
+                  <li><span class="leaf">canonical_ingredients</span></li>
+                  <li><span class="leaf">recipes</span></li>
+                  <li><span class="node">taxonomy/</span><ul><li><span class="leaf">technique</span></li><li><span class="leaf">cuisine</span></li></ul></li>
+                </ul>
+              </li>
+              <li><span class="node">kitchen/</span><ul><li><span class="leaf">pantry_items</span></li><li><span class="leaf">cooking_sessions</span></li></ul></li>
+            </ul>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">nested lists</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Comparison matrix">
+        <div class="ex-head"><h3>Comparison matrix</h3><p class="ex-use">Options against criteria. Marks, never colour alone, so it survives printing.</p></div>
+        <div class="ex-stage scroll-x">
+          <table class="matrix">
+            <thead><tr><th>Modo</th><th>Novedad</th><th>Despensa</th><th>Tiempo</th></tr></thead>
+            <tbody>
+              <tr><td>Despensa</td><td class="mark">✓</td><td class="mark">✓</td><td class="no">—</td></tr>
+              <tr><td>Técnica</td><td class="mark">✓</td><td class="no">—</td><td class="mark">✓</td></tr>
+              <tr><td>Sabor</td><td class="mark">✓</td><td class="no">—</td><td class="no">—</td></tr>
+              <tr><td>Cultura</td><td class="mark">✓</td><td class="no">—</td><td class="mark">✓</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">html table</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Process stepper">
+        <div class="ex-head"><h3>Process stepper</h3><p class="ex-use">Where you are in a sequence that has a beginning and an end.</p></div>
+        <div class="ex-stage">
+          <div class="steps">
+            <div class="step" data-state="done"><div class="bead">✓</div><div class="t">Despensa</div></div>
+            <div class="step" data-state="done"><div class="bead">✓</div><div class="t">Elegir</div></div>
+            <div class="step" data-state="now"><div class="bead">3</div><div class="t">Cocinar</div></div>
+            <div class="step"><div class="bead">4</div><div class="t">Registrar</div></div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex wide" data-name="Mermaid flowchart">
+        <div class="ex-head"><h3>Mermaid flowchart</h3><p class="ex-use">Boxes and arrows written as text. Artifacts render Mermaid natively — no library ships with the page.</p></div>
+        <div class="ex-stage">
+          <pre class="mermaid">flowchart LR
+  A[Receipt from Gastify] --> B{Resolve canonical_id}
+  B -->|hit| C[Pantry item]
+  B -->|miss| D[Manual add]
+  C --> E[Recipe match]
+  D --> E
+  E --> F{Allergen wall}
+  F -->|clear| G[Suggestion]
+  F -->|blocked| H[Excluded at SQL]</pre>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">mermaid · renders on the published page</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex wide" data-name="Mermaid sequence">
+        <div class="ex-head"><h3>Mermaid sequence</h3><p class="ex-use">Who calls whom, in order — the right diagram for a request path or an event chain.</p></div>
+        <div class="ex-stage">
+          <pre class="mermaid">sequenceDiagram
+  participant U as Cocinero
+  participant W as Web
+  participant A as API
+  participant D as Postgres
+  U->>W: termina la receta
+  W->>A: POST /cooked-meals
+  A->>D: insert cooked_meal
+  D-->>A: CookedMealCreated
+  A->>A: recompute proficiency (last 20)
+  A-->>W: 201 + tier</pre>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">mermaid · renders on the published page</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Interface elements</h2><span class="n">8</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Tabs">
+        <div class="ex-head"><h3>Tabs</h3><p class="ex-use">Peer views of the same subject, when only one matters at a time.</p></div>
+        <div class="ex-stage">
+          <div class="tabs" role="tablist">
+            <button role="tab" aria-selected="true" data-tab="0">Resumen</button>
+            <button role="tab" aria-selected="false" data-tab="1">Ingredientes</button>
+            <button role="tab" aria-selected="false" data-tab="2">Pasos</button>
+          </div>
+          <div class="tabpanel" id="tabpanel">Cazuela de vacuno · 4 porciones · 95 min totales, 25 activos.</div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">js</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Accordion">
+        <div class="ex-head"><h3>Accordion</h3><p class="ex-use">Long reference material collapsed until asked for. Native <code>&lt;details&gt;</code>, no script.</p></div>
+        <div class="ex-stage">
+          <div class="acc">
+            <details open><summary>¿Qué es un ingrediente canónico?</summary><div class="body">La identidad única en la que colapsa cada texto de boleta.</div></details>
+            <details><summary>¿Cómo se calcula el nivel?</summary><div class="body">Promedio de complejidad de las últimas 20 comidas cocinadas.</div></details>
+            <details><summary>¿Y los alérgenos?</summary><div class="body">Exclusión dura en SQL, nunca un filtro de aplicación.</div></details>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">html only</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Segmented control">
+        <div class="ex-head"><h3>Segmented control</h3><p class="ex-use">Two to four mutually exclusive modes, all visible at once.</p></div>
+        <div class="ex-stage">
+          <div class="seg" id="seg-demo"><button aria-pressed="true">Semana</button><button aria-pressed="false">Mes</button><button aria-pressed="false">Año</button></div>
+          <p style="font-size:.76em;color:var(--muted);margin-top:8px" id="seg-out">Mostrando: Semana</p>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">js</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Filter chips">
+        <div class="ex-head"><h3>Filter chips</h3><p class="ex-use">Additive facets. Every chip states what it does, and the count reacts immediately.</p></div>
+        <div class="ex-stage">
+          <div class="chips" id="chips-demo">
+            <button class="chip" aria-pressed="false">Sin gluten</button>
+            <button class="chip" aria-pressed="false">≤ 30 min</button>
+            <button class="chip" aria-pressed="false">Vegetariana</button>
+            <button class="chip" aria-pressed="false">En despensa</button>
+          </div>
+          <p style="font-size:.76em;color:var(--muted);margin-top:9px" id="chips-out">248 recetas</p>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">js</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Sortable table">
+        <div class="ex-head"><h3>Sortable table</h3><p class="ex-use">Any column becomes the question. Click a header; the arrow says which way.</p></div>
+        <div class="ex-stage scroll-x"><table id="t-sort"></table></div>
+        <div class="ex-foot"><span class="ex-tag">js</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Status callouts">
+        <div class="ex-head"><h3>Status callouts</h3><p class="ex-use">Severity that survives colourblindness and print — icon plus word, never hue alone.</p></div>
+        <div class="ex-stage" style="display:flex;flex-direction:column;gap:8px">
+          <div class="callout note"><span class="ico">●</span><div><span class="lbl">Nota</span> — la despensa se sincroniza cada noche.</div></div>
+          <div class="callout warn"><span class="ico">▲</span><div><span class="lbl">Aviso</span> — 12 recetas sin tiempo activo declarado.</div></div>
+          <div class="callout crit"><span class="ico">■</span><div><span class="lbl">Crítico</span> — un alérgeno sin código canónico bloquea el muro SQL.</div></div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css · status palette</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Empty state">
+        <div class="ex-head"><h3>Empty state</h3><p class="ex-use">The screen a new user actually sees first. Says what is missing and offers the one next move.</p></div>
+        <div class="ex-stage">
+          <div class="empty">
+            <div class="glyph">◍</div>
+            <div class="t">Tu despensa está vacía</div>
+            <div class="s">Conecta una boleta de Gastify o agrega ingredientes a mano para ver recetas que puedas cocinar hoy.</div>
+            <button type="button">Agregar manualmente</button>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Code block with keys">
+        <div class="ex-head"><h3>Code block with keys</h3><p class="ex-use">Literal commands and shortcuts, set apart so they can be copied without ambiguity.</p></div>
+        <div class="ex-stage" style="display:flex;flex-direction:column;gap:10px">
+<pre class="code"><span class="c"># regenerate the center</span>
+<span class="k">bash</span> generators/refresh_center.sh <span class="s">all</span>
+<span class="k">node</span> tools/verify-artifact-chrome.mjs <span class="s">page.html</span></pre>
+          <p style="font-size:.76em;color:var(--muted)">Cierra el panel con <kbd>Esc</kbd> · cambia de familia con <kbd>↑</kbd> <kbd>↓</kbd></p>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">css</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Motion &amp; canvas</h2><span class="n">3</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Animated counter">
+        <div class="ex-head"><h3>Animated counter</h3><p class="ex-use">A number that counts up once on arrival. Stops instantly under reduced-motion.</p></div>
+        <div class="ex-stage"><div class="counter" id="counter">0</div><p style="font-size:.72em;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:6px">comidas registradas</p></div>
+        <div class="ex-foot"><span class="ex-tag">js · rAF</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Scroll reveal">
+        <div class="ex-head"><h3>Scroll reveal</h3><p class="ex-use">Content that fades in as it enters view. One shot, never on a loop.</p></div>
+        <div class="ex-stage">
+          <div class="reveal" style="display:flex;flex-direction:column;gap:6px">
+            <div class="tile"><div class="v">9</div><div class="k">esta semana</div></div>
+            <p style="font-size:.74em;color:var(--muted)">Este bloque entró con una transición al hacerse visible.</p>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">IntersectionObserver</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Canvas texture">
+        <div class="ex-head"><h3>Canvas texture</h3><p class="ex-use">Generative background or ornament, drawn in pixels instead of hand-authored paths.</p></div>
+        <div class="ex-stage"><canvas id="tex" style="width:100%;height:110px;display:block;border-radius:8px"></canvas></div>
+        <div class="ex-foot"><span class="ex-tag">canvas 2d</span><button class="ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="keeps" id="keeps">
+    <div class="sec-head" style="border:0;padding:0"><span class="dot"></span><h2>Marked to keep</h2><span class="n" id="keeps-n">0</span></div>
+    <p class="none" id="keeps-none">Nothing marked yet — press <b>Copy name</b> on any example and it lands here.</p>
+    <ol id="keeps-list"></ol>
+    <div class="acts">
+      <button type="button" class="primary" id="keeps-copy">Copy the list</button>
+      <button type="button" id="keeps-clear">Clear</button>
+    </div>
+    <textarea id="keeps-text" rows="8" readonly aria-label="Marked list to copy manually"></textarea>
+  </section>
+
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<script>
+/* ── gabe-artifact kit, block 3 ─────────────────────────────────────────── */
+(function () {
+  "use strict";
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var DEFAULT_ID = "mono";
+  var STORE_KEY = "gabe:artifact:font";
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog");
+  var panel = document.getElementById("af-panel");
+  var host = document.getElementById("af-fonts");
+  var foot = document.getElementById("af-foot");
+
+  function remembered() {
+    try {
+      var id = window.localStorage.getItem(STORE_KEY);
+      return FONTS.some(function (f) { return f.id === id; }) ? id : DEFAULT_ID;
+    } catch (e) { return DEFAULT_ID; }
+  }
+  function remember(id) { try { window.localStorage.setItem(STORE_KEY, id); } catch (e) {} }
+
+  function apply(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    remember(f.id);
+    var opts = host.querySelectorAll(".af-opt");
+    for (var i = 0; i < opts.length; i++) opts[i].setAttribute("aria-checked", String(opts[i].getAttribute("data-id") === f.id));
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+
+  FONTS.forEach(function (f) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", f.id); b.setAttribute("aria-checked", "false");
+    var name = document.createElement("span");
+    name.className = "af-name"; name.style.fontFamily = f.stack; name.textContent = f.label;
+    var spec = document.createElement("span");
+    spec.className = "af-spec"; spec.textContent = f.size + " / " + f.track;
+    b.appendChild(name); b.appendChild(spec);
+    b.addEventListener("click", function () { apply(f.id); });
+    host.appendChild(b);
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+  apply(remembered());
+})();
+
+/* ── the catalog ───────────────────────────────────────────────────────── */
+(function () {
+  "use strict";
+
+  var NS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs, text) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function svg(w, h) {
+    var s = el("svg", { viewBox: "0 0 " + w + " " + h, class: "chart", role: "img" });
+    return s;
+  }
+  /* 4px rounded data-end, anchored to the baseline */
+  function barPath(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h);
+    return "M" + x + "," + (y + h) + " V" + (y + r) +
+           " Q" + x + "," + y + " " + (x + r) + "," + y +
+           " H" + (x + w - r) + " Q" + (x + w) + "," + y + " " + (x + w) + "," + (y + r) +
+           " V" + (y + h) + " Z";
+  }
+  function tipFor(stage) {
+    var t = document.createElement("div");
+    t.className = "tip";
+    stage.appendChild(t);
+    return t;
+  }
+  function showTip(tip, stage, evt, html) {
+    var box = stage.getBoundingClientRect();
+    tip.innerHTML = html;
+    tip.setAttribute("data-show", "true");
+    var x = evt.clientX - box.left + 10;
+    var y = evt.clientY - box.top - 34;
+    tip.style.left = Math.min(x, box.width - tip.offsetWidth - 4) + "px";
+    tip.style.top = Math.max(0, y) + "px";
+  }
+  function hideTip(tip) { tip.setAttribute("data-show", "false"); }
+
+  /* ---------- data ---------- */
+  var WEEKS = ["S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8"];
+  var COOKED = [3, 5, 4, 7, 6, 8, 6, 9];
+  var PLANNED = [5, 6, 6, 8, 7, 9, 8, 10];
+  var MODES = [["Despensa", 42], ["Técnica", 27], ["Sabor", 19], ["Cultura", 12]];
+  var COMPLEXITY = [12, 34, 41, 19, 6];
+  var RECIPES = [
+    { n: "Cazuela", m: 92, min: 95, act: 25, tier: 0 },
+    { n: "Ceviche", m: 81, min: 35, act: 30, tier: 1 },
+    { n: "Pastel de choclo", m: 74, min: 120, act: 45, tier: 2 },
+    { n: "Charquicán", m: 68, min: 60, act: 30, tier: 1 },
+    { n: "Sopaipillas", m: 55, min: 50, act: 40, tier: 0 }
+  ];
+
+  /* ---------- bar chart ---------- */
+  (function () {
+    var stage = document.getElementById("c-bar").parentNode;
+    var s = svg(320, 150), tip = tipFor(stage);
+    var max = 10, x0 = 26, y0 = 118, w = 282;
+    [0, 5, 10].forEach(function (v) {
+      var y = y0 - (v / max) * 100;
+      s.appendChild(el("line", { x1: x0, y1: y, x2: x0 + w, y2: y, class: "grid-line" }));
+      s.appendChild(el("text", { x: x0 - 6, y: y + 3, class: "tick", "text-anchor": "end" }, v));
+    });
+    var bw = w / COOKED.length;
+    COOKED.forEach(function (v, i) {
+      var h = (v / max) * 100, x = x0 + i * bw + 4;
+      var p = el("path", { d: barPath(x, y0 - h, bw - 10, h, 4), fill: "var(--s1)" });
+      p.addEventListener("mousemove", function (e) { showTip(tip, stage, e, WEEKS[i] + " · <b>" + v + "</b> comidas"); });
+      p.addEventListener("mouseleave", function () { hideTip(tip); });
+      s.appendChild(p);
+      s.appendChild(el("text", { x: x + (bw - 10) / 2, y: 132, class: "tick", "text-anchor": "middle" }, WEEKS[i]));
+    });
+    s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, class: "axis-line" }));
+    document.getElementById("c-bar").appendChild(s);
+  })();
+
+  /* ---------- ranked bars ---------- */
+  (function () {
+    var s = svg(320, 128);
+    var max = 42, x0 = 74, w = 200;
+    MODES.forEach(function (m, i) {
+      var y = i * 30 + 8, bw = (m[1] / max) * w;
+      s.appendChild(el("text", { x: x0 - 8, y: y + 12, class: "tick", "text-anchor": "end" }, m[0]));
+      s.appendChild(el("rect", { x: x0, y: y, width: w, height: 16, rx: 4, fill: "var(--rule-soft)" }));
+      s.appendChild(el("path", { d: barPath(x0, y, bw, 16, 4), fill: "var(--s1)", transform: "rotate(0)" }));
+      s.appendChild(el("text", { x: x0 + bw + 7, y: y + 12, class: "dlabel" }, m[1] + "%"));
+    });
+    document.getElementById("c-rank").appendChild(s);
+  })();
+
+  /* ---------- histogram ---------- */
+  (function () {
+    var s = svg(320, 140);
+    var max = 45, x0 = 26, y0 = 108, w = 282, bw = w / COMPLEXITY.length;
+    COMPLEXITY.forEach(function (v, i) {
+      var h = (v / max) * 90, x = x0 + i * bw + 3;
+      s.appendChild(el("path", { d: barPath(x, y0 - h, bw - 8, h, 4), fill: "var(--s1)" }));
+      s.appendChild(el("text", { x: x + (bw - 8) / 2, y: y0 - h - 5, class: "dlabel", "text-anchor": "middle" }, v));
+      s.appendChild(el("text", { x: x + (bw - 8) / 2, y: 124, class: "tick", "text-anchor": "middle" }, "★".repeat(i + 1)));
+    });
+    s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, class: "axis-line" }));
+    document.getElementById("c-hist").appendChild(s);
+  })();
+
+  /* ---------- dumbbell ---------- */
+  (function () {
+    var s = svg(320, 150);
+    var max = 130, x0 = 96, w = 190;
+    RECIPES.forEach(function (r, i) {
+      var y = i * 28 + 14;
+      var xa = x0 + (r.act / max) * w, xt = x0 + (r.min / max) * w;
+      s.appendChild(el("text", { x: x0 - 8, y: y + 4, class: "tick", "text-anchor": "end" }, r.n));
+      s.appendChild(el("line", { x1: xa, y1: y, x2: xt, y2: y, stroke: "var(--rule)", "stroke-width": 2 }));
+      s.appendChild(el("circle", { cx: xa, cy: y, r: 5, fill: "var(--s1)", stroke: "var(--card)", "stroke-width": 2 }));
+      s.appendChild(el("circle", { cx: xt, cy: y, r: 5, fill: "var(--s2)", stroke: "var(--card)", "stroke-width": 2 }));
+      s.appendChild(el("text", { x: xt + 10, y: y + 4, class: "dlabel" }, r.min + "m"));
+    });
+    document.getElementById("c-dumb").appendChild(s);
+  })();
+
+  /* ---------- donut ---------- */
+  (function () {
+    var s = svg(320, 150);
+    var cx = 76, cy = 72, r = 52, th = 16, pct = 0.68;
+    function arc(from, to) {
+      var a0 = from * 2 * Math.PI - Math.PI / 2, a1 = to * 2 * Math.PI - Math.PI / 2;
+      var large = (to - from) > 0.5 ? 1 : 0;
+      return "M" + (cx + r * Math.cos(a0)) + "," + (cy + r * Math.sin(a0)) +
+             " A" + r + "," + r + " 0 " + large + " 1 " + (cx + r * Math.cos(a1)) + "," + (cy + r * Math.sin(a1));
+    }
+    s.appendChild(el("path", { d: arc(0, 0.9999), stroke: "var(--rule-soft)", "stroke-width": th, fill: "none" }));
+    s.appendChild(el("path", { d: arc(0, pct), stroke: "var(--s1)", "stroke-width": th, fill: "none", "stroke-linecap": "round" }));
+    s.appendChild(el("text", { x: cx, y: cy + 2, class: "dlabel", "text-anchor": "middle", "font-size": 22, fill: "var(--ink)" }, "68%"));
+    s.appendChild(el("text", { x: cx, y: cy + 18, class: "tick", "text-anchor": "middle" }, "en despensa"));
+    s.appendChild(el("text", { x: 156, y: 56, class: "dlabel" }, "169 de 248 recetas"));
+    s.appendChild(el("text", { x: 156, y: 74, class: "tick" }, "cocinables ahora mismo"));
+    document.getElementById("c-donut").appendChild(s);
+  })();
+
+  /* ---------- table with inline bars ---------- */
+  (function () {
+    var t = document.getElementById("t-inline");
+    t.innerHTML = "<thead><tr><th>Receta</th><th>Match</th><th></th></tr></thead>";
+    var b = document.createElement("tbody");
+    RECIPES.forEach(function (r) {
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + r.n + "</td><td>" + r.m + "%</td>" +
+        '<td style="width:45%"><span class="cellbar" style="width:' + r.m + '%"></span></td>';
+      b.appendChild(tr);
+    });
+    t.appendChild(b);
+  })();
+
+  /* ---------- line chart with crosshair ---------- */
+  (function () {
+    var stage = document.getElementById("c-line").parentNode;
+    var s = svg(320, 150), tip = tipFor(stage);
+    var max = 12, x0 = 26, y0 = 118, w = 282, h = 100;
+    [0, 6, 12].forEach(function (v) {
+      var y = y0 - (v / max) * h;
+      s.appendChild(el("line", { x1: x0, y1: y, x2: x0 + w, y2: y, class: "grid-line" }));
+      s.appendChild(el("text", { x: x0 - 6, y: y + 3, class: "tick", "text-anchor": "end" }, v));
+    });
+    function pts(data) {
+      return data.map(function (v, i) {
+        return (x0 + (i / (data.length - 1)) * w) + "," + (y0 - (v / max) * h);
+      }).join(" ");
+    }
+    s.appendChild(el("polyline", { points: pts(PLANNED), fill: "none", stroke: "var(--s2)", "stroke-width": 2, "stroke-linejoin": "round" }));
+    s.appendChild(el("polyline", { points: pts(COOKED), fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" }));
+    var cross = el("line", { y1: 18, y2: y0, stroke: "var(--muted)", "stroke-width": 1, opacity: 0 });
+    s.appendChild(cross);
+    var dots = [el("circle", { r: 4, fill: "var(--s1)", stroke: "var(--card)", "stroke-width": 2, opacity: 0 }),
+                el("circle", { r: 4, fill: "var(--s2)", stroke: "var(--card)", "stroke-width": 2, opacity: 0 })];
+    dots.forEach(function (d) { s.appendChild(d); });
+    WEEKS.forEach(function (lbl, i) {
+      s.appendChild(el("text", { x: x0 + (i / (WEEKS.length - 1)) * w, y: 132, class: "tick", "text-anchor": "middle" }, lbl));
+    });
+    s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, class: "axis-line" }));
+    var hit = el("rect", { x: x0, y: 10, width: w, height: y0 - 10, fill: "transparent" });
+    hit.addEventListener("mousemove", function (e) {
+      var box = s.getBoundingClientRect();
+      var rel = (e.clientX - box.left) / box.width * 320;
+      var i = Math.round(((rel - x0) / w) * (WEEKS.length - 1));
+      i = Math.max(0, Math.min(WEEKS.length - 1, i));
+      var x = x0 + (i / (WEEKS.length - 1)) * w;
+      cross.setAttribute("x1", x); cross.setAttribute("x2", x); cross.setAttribute("opacity", 1);
+      dots[0].setAttribute("cx", x); dots[0].setAttribute("cy", y0 - (COOKED[i] / max) * h); dots[0].setAttribute("opacity", 1);
+      dots[1].setAttribute("cx", x); dots[1].setAttribute("cy", y0 - (PLANNED[i] / max) * h); dots[1].setAttribute("opacity", 1);
+      showTip(tip, stage, e, WEEKS[i] + " · cocinadas <b>" + COOKED[i] + "</b> · planificadas <b>" + PLANNED[i] + "</b>");
+    });
+    hit.addEventListener("mouseleave", function () {
+      cross.setAttribute("opacity", 0);
+      dots.forEach(function (d) { d.setAttribute("opacity", 0); });
+      hideTip(tip);
+    });
+    s.appendChild(hit);
+    document.getElementById("c-line").appendChild(s);
+  })();
+
+  /* ---------- area ---------- */
+  (function () {
+    var s = svg(320, 140);
+    var max = 12, x0 = 6, y0 = 112, w = 308, h = 92;
+    var d = "M" + x0 + "," + y0;
+    COOKED.forEach(function (v, i) { d += " L" + (x0 + (i / (COOKED.length - 1)) * w) + "," + (y0 - (v / max) * h); });
+    d += " L" + (x0 + w) + "," + y0 + " Z";
+    var defs = el("defs");
+    var g = el("linearGradient", { id: "areaG", x1: 0, y1: 0, x2: 0, y2: 1 });
+    g.appendChild(el("stop", { offset: "0%", "stop-color": "var(--s1)", "stop-opacity": .38 }));
+    g.appendChild(el("stop", { offset: "100%", "stop-color": "var(--s1)", "stop-opacity": .02 }));
+    defs.appendChild(g); s.appendChild(defs);
+    s.appendChild(el("path", { d: d, fill: "url(#areaG)" }));
+    s.appendChild(el("polyline", {
+      points: COOKED.map(function (v, i) { return (x0 + (i / (COOKED.length - 1)) * w) + "," + (y0 - (v / max) * h); }).join(" "),
+      fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round"
+    }));
+    s.appendChild(el("circle", { cx: x0 + w, cy: y0 - (COOKED[7] / max) * h, r: 4, fill: "var(--s1)", stroke: "var(--card)", "stroke-width": 2 }));
+    s.appendChild(el("text", { x: x0 + w - 4, y: y0 - (COOKED[7] / max) * h - 10, class: "dlabel", "text-anchor": "end" }, "9"));
+    s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, class: "axis-line" }));
+    document.getElementById("c-area").appendChild(s);
+  })();
+
+  /* ---------- sparklines in a table ---------- */
+  (function () {
+    var series = [[2, 4, 3, 6, 5, 7], [5, 4, 4, 3, 2, 2], [1, 2, 4, 4, 6, 8]];
+    var rows = [["Despensa", "+18%", 0], ["Técnica", "−12%", 1], ["Sabor", "+31%", 2]];
+    var t = document.getElementById("t-spark");
+    t.innerHTML = "<thead><tr><th>Modo</th><th>8 semanas</th><th>Δ</th></tr></thead>";
+    var b = document.createElement("tbody");
+    rows.forEach(function (r) {
+      var data = series[r[2]], max = 8;
+      var pts = data.map(function (v, i) { return (i / (data.length - 1)) * 62 + "," + (18 - (v / max) * 16); }).join(" ");
+      var tr = document.createElement("tr");
+      tr.innerHTML = "<td>" + r[0] + "</td>" +
+        '<td><svg viewBox="0 0 62 20" style="width:62px;height:20px;overflow:visible"><polyline points="' + pts +
+        '" fill="none" stroke="var(--s1)" stroke-width="1.6" stroke-linejoin="round"/></svg></td>' +
+        '<td style="color:' + (r[1].charAt(0) === "+" ? "var(--good)" : "var(--critical)") + '">' + r[1] + "</td>";
+      b.appendChild(tr);
+    });
+    t.appendChild(b);
+  })();
+
+  /* ---------- heat calendar ---------- */
+  (function () {
+    var stage = document.getElementById("c-heat").parentNode;
+    var s = svg(320, 108), tip = tipFor(stage);
+    var days = ["L", "M", "M", "J", "V", "S", "D"];
+    var steps = ["var(--q1)", "var(--q2)", "var(--q3)", "var(--q4)", "var(--q5)"];
+    var seed = 7;
+    function rnd() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+    for (var w = 0; w < 14; w++) {
+      for (var d = 0; d < 7; d++) {
+        var v = Math.floor(rnd() * 5);
+        var r = el("rect", { x: 22 + w * 21, y: 8 + d * 13, width: 17, height: 11, rx: 3, fill: v === 0 ? "var(--rule-soft)" : steps[v] });
+        (function (v, w, d) {
+          r.addEventListener("mousemove", function (e) { showTip(tip, stage, e, "Semana " + (w + 1) + " · " + days[d] + " · <b>" + v + "</b>"); });
+          r.addEventListener("mouseleave", function () { hideTip(tip); });
+        })(v, w, d);
+        s.appendChild(r);
+      }
+    }
+    days.forEach(function (d, i) { s.appendChild(el("text", { x: 16, y: 17 + i * 13, class: "tick", "text-anchor": "end" }, d)); });
+    document.getElementById("c-heat").appendChild(s);
+  })();
+
+  /* ---------- scatter ---------- */
+  (function () {
+    var stage = document.getElementById("c-scatter").parentNode;
+    var s = svg(320, 155), tip = tipFor(stage);
+    var x0 = 30, y0 = 118, w = 274, h = 100, cols = ["var(--s1)", "var(--s2)", "var(--s3)"];
+    var names = ["principiante", "intermedio", "chef"];
+    [0, 60, 120].forEach(function (v) {
+      var x = x0 + (v / 130) * w;
+      s.appendChild(el("line", { x1: x, y1: 18, x2: x, y2: y0, class: "grid-line" }));
+      s.appendChild(el("text", { x: x, y: 132, class: "tick", "text-anchor": "middle" }, v + "m"));
+    });
+    [1, 3, 5].forEach(function (v) {
+      var y = y0 - ((v - 1) / 4) * h;
+      s.appendChild(el("text", { x: x0 - 7, y: y + 3, class: "tick", "text-anchor": "end" }, v));
+    });
+    RECIPES.concat([
+      { n: "Empanadas", min: 80, m: 60, act: 50, tier: 2 },
+      { n: "Ensalada chilena", min: 15, m: 88, act: 15, tier: 0 },
+      { n: "Humitas", min: 110, m: 45, act: 60, tier: 2 },
+      { n: "Porotos granados", min: 70, m: 72, act: 25, tier: 1 }
+    ]).forEach(function (r) {
+      var cx = x0 + (r.min / 130) * w;
+      var cy = y0 - ((Math.min(5, 1 + Math.round(r.act / 14)) - 1) / 4) * h;
+      var c = el("circle", { cx: cx, cy: cy, r: 6, fill: cols[r.tier], stroke: "var(--card)", "stroke-width": 2, opacity: .92 });
+      c.addEventListener("mousemove", function (e) { showTip(tip, stage, e, r.n + " · " + r.min + " min · " + names[r.tier]); });
+      c.addEventListener("mouseleave", function () { hideTip(tip); });
+      s.appendChild(c);
+    });
+    s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, class: "axis-line" }));
+    s.appendChild(el("text", { x: x0, y: 12, class: "tick" }, "complejidad ↑ · minutos →"));
+    document.getElementById("c-scatter").appendChild(s);
+  })();
+
+  /* ---------- radar ---------- */
+  (function () {
+    var s = svg(320, 190);
+    var axes = ["dulce", "salado", "ácido", "amargo", "umami", "picante", "graso", "herbal"];
+    var A = [1, 4, 1, 1, 5, 1, 4, 2], B = [2, 3, 5, 1, 2, 3, 1, 4];
+    var cx = 105, cy = 95, R = 72;
+    function pt(i, v) {
+      var a = (i / axes.length) * 2 * Math.PI - Math.PI / 2;
+      return [cx + Math.cos(a) * (v / 5) * R, cy + Math.sin(a) * (v / 5) * R];
+    }
+    [1, 3, 5].forEach(function (ring) {
+      var d = axes.map(function (_, i) { var p = pt(i, ring); return p[0] + "," + p[1]; }).join(" ");
+      s.appendChild(el("polygon", { points: d, fill: "none", stroke: "var(--rule-soft)", "stroke-width": 1 }));
+    });
+    axes.forEach(function (a, i) {
+      var p = pt(i, 5.9);
+      s.appendChild(el("text", { x: p[0], y: p[1] + 3, class: "tick", "text-anchor": p[0] < cx - 6 ? "end" : (p[0] > cx + 6 ? "start" : "middle") }, a));
+    });
+    [[A, "var(--s1)"], [B, "var(--s2)"]].forEach(function (pair) {
+      var d = pair[0].map(function (v, i) { var p = pt(i, v); return p[0] + "," + p[1]; }).join(" ");
+      s.appendChild(el("polygon", { points: d, fill: pair[1], "fill-opacity": .16, stroke: pair[1], "stroke-width": 2 }));
+    });
+    document.getElementById("c-radar").appendChild(s);
+  })();
+
+  /* ---------- tabs ---------- */
+  (function () {
+    var copy = [
+      "Cazuela de vacuno · 4 porciones · 95 min totales, 25 activos.",
+      "Carne, zapallo, choclo, papa, arroz, porotos verdes, cilantro.",
+      "1 · Sellar la carne. 2 · Agregar verduras. 3 · Hervir a fuego bajo 70 min."
+    ];
+    var out = document.getElementById("tabpanel");
+    document.querySelectorAll('[role="tab"]').forEach(function (b) {
+      b.addEventListener("click", function () {
+        document.querySelectorAll('[role="tab"]').forEach(function (x) { x.setAttribute("aria-selected", "false"); });
+        b.setAttribute("aria-selected", "true");
+        out.textContent = copy[Number(b.getAttribute("data-tab"))];
+      });
+    });
+  })();
+
+  /* ---------- segmented ---------- */
+  (function () {
+    var out = document.getElementById("seg-out");
+    document.querySelectorAll("#seg-demo button").forEach(function (b) {
+      b.addEventListener("click", function () {
+        document.querySelectorAll("#seg-demo button").forEach(function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        out.textContent = "Mostrando: " + b.textContent;
+      });
+    });
+  })();
+
+  /* ---------- chips ---------- */
+  (function () {
+    var out = document.getElementById("chips-out");
+    var counts = { "Sin gluten": 96, "≤ 30 min": 74, "Vegetariana": 88, "En despensa": 169 };
+    function recount() {
+      var on = [].slice.call(document.querySelectorAll('#chips-demo .chip[aria-pressed="true"]'));
+      if (!on.length) { out.textContent = "248 recetas"; return; }
+      var n = Math.min.apply(null, on.map(function (c) { return counts[c.textContent]; }));
+      out.textContent = Math.round(n * Math.pow(0.82, on.length - 1)) + " recetas · " + on.length + " filtro" + (on.length > 1 ? "s" : "");
+    }
+    document.querySelectorAll("#chips-demo .chip").forEach(function (c) {
+      c.addEventListener("click", function () {
+        c.setAttribute("aria-pressed", c.getAttribute("aria-pressed") === "true" ? "false" : "true");
+        recount();
+      });
+    });
+  })();
+
+  /* ---------- sortable table ---------- */
+  (function () {
+    var t = document.getElementById("t-sort");
+    var cols = [["n", "Receta"], ["m", "Match"], ["min", "Minutos"], ["act", "Activos"]];
+    var dir = { key: "m", desc: true };
+    function draw() {
+      var rows = RECIPES.slice().sort(function (a, b) {
+        var x = a[dir.key], y = b[dir.key];
+        var c = typeof x === "string" ? x.localeCompare(y) : x - y;
+        return dir.desc ? -c : c;
+      });
+      t.innerHTML = "<thead><tr>" + cols.map(function (c) {
+        return '<th class="sortable" data-k="' + c[0] + '"' + (dir.key === c[0] ? ' data-dir="' + (dir.desc ? "desc" : "asc") + '"' : "") + ">" + c[1] + "</th>";
+      }).join("") + "</tr></thead><tbody>" + rows.map(function (r) {
+        return "<tr><td>" + r.n + "</td><td>" + r.m + "%</td><td>" + r.min + "</td><td>" + r.act + "</td></tr>";
+      }).join("") + "</tbody>";
+      t.querySelectorAll("th.sortable").forEach(function (th) {
+        th.addEventListener("click", function () {
+          var k = th.getAttribute("data-k");
+          if (dir.key === k) dir.desc = !dir.desc; else { dir.key = k; dir.desc = true; }
+          draw();
+        });
+      });
+    }
+    draw();
+  })();
+
+  /* ---------- animated counter ---------- */
+  (function () {
+    var out = document.getElementById("counter");
+    var target = 1284;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { out.textContent = target; return; }
+    var t0 = null;
+    function step(ts) {
+      if (t0 === null) t0 = ts;
+      var k = Math.min(1, (ts - t0) / 1100);
+      out.textContent = Math.round(target * (1 - Math.pow(1 - k, 3)));
+      if (k < 1) requestAnimationFrame(step);
+    }
+    requestAnimationFrame(step);
+  })();
+
+  /* ---------- scroll reveal ---------- */
+  (function () {
+    var targets = document.querySelectorAll(".reveal");
+    if (!("IntersectionObserver" in window)) {
+      targets.forEach(function (t) { t.setAttribute("data-in", "true"); });
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { e.target.setAttribute("data-in", "true"); io.unobserve(e.target); }
+      });
+    }, { threshold: 0.25 });
+    targets.forEach(function (t) { io.observe(t); });
+  })();
+
+  /* ---------- canvas texture ---------- */
+  (function () {
+    var c = document.getElementById("tex");
+    function draw() {
+      var dpr = window.devicePixelRatio || 1;
+      var w = c.clientWidth, h = c.clientHeight;
+      c.width = w * dpr; c.height = h * dpr;
+      var x = c.getContext("2d");
+      x.scale(dpr, dpr);
+      var cs = getComputedStyle(document.body);
+      x.fillStyle = cs.getPropertyValue("--raised").trim() || "#eee";
+      x.fillRect(0, 0, w, h);
+      x.strokeStyle = cs.getPropertyValue("--s1").trim() || "#2a78d6";
+      x.globalAlpha = .5;
+      for (var i = -h; i < w; i += 7) {
+        x.beginPath();
+        x.moveTo(i, h);
+        x.lineTo(i + h * 0.6, 0);
+        x.lineWidth = (i % 21 === 0) ? 1.4 : 0.5;
+        x.stroke();
+      }
+      x.globalAlpha = 1;
+      x.fillStyle = cs.getPropertyValue("--accent").trim();
+      for (var j = 0; j < 40; j++) {
+        var px = (j * 97) % w, py = (j * 53) % h;
+        x.beginPath(); x.arc(px, py, 1.6, 0, Math.PI * 2); x.fill();
+      }
+    }
+    draw();
+    window.addEventListener("resize", draw);
+    if (window.matchMedia) window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", draw);
+  })();
+
+  /* ---------- copy names + keeps list ---------- */
+  (function () {
+    var keeps = [];
+    var list = document.getElementById("keeps-list");
+    var none = document.getElementById("keeps-none");
+    var count = document.getElementById("keeps-n");
+    var text = document.getElementById("keeps-text");
+    var copyBtn = document.getElementById("keeps-copy");
+
+    function render() {
+      list.innerHTML = "";
+      keeps.forEach(function (k) {
+        var li = document.createElement("li");
+        li.textContent = k;
+        list.appendChild(li);
+      });
+      count.textContent = keeps.length;
+      none.style.display = keeps.length ? "none" : "block";
+    }
+
+    function toClipboard(t, onFail) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function () {}, onFail);
+      } else { onFail(); }
+    }
+
+    document.querySelectorAll(".ex-copy").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var card = b.closest(".ex");
+        var name = card.getAttribute("data-name");
+        toClipboard(name, function () { text.value = name; text.setAttribute("data-open", "true"); text.select(); });
+        card.setAttribute("data-marked", "true");
+        if (keeps.indexOf(name) === -1) keeps.push(name);
+        render();
+        var old = b.textContent;
+        b.textContent = "Copied";
+        setTimeout(function () { b.textContent = old; }, 1400);
+      });
+    });
+
+    copyBtn.addEventListener("click", function () {
+      if (text.getAttribute("data-open") === "true") {
+        text.setAttribute("data-open", "false");
+        copyBtn.textContent = "Copy the list";
+        return;
+      }
+      if (!keeps.length) return;
+      var t = keeps.join("\n");
+      toClipboard(t, function () {
+        text.value = t; text.setAttribute("data-open", "true"); text.select();
+        copyBtn.textContent = "Close panel";
+      });
+      copyBtn.textContent = "Copied";
+      setTimeout(function () { if (copyBtn.textContent === "Copied") copyBtn.textContent = "Copy the list"; }, 1600);
+    });
+
+    document.getElementById("keeps-clear").addEventListener("click", function () {
+      keeps = [];
+      document.querySelectorAll('.ex[data-marked="true"]').forEach(function (c) { c.removeAttribute("data-marked"); });
+      text.setAttribute("data-open", "false");
+      copyBtn.textContent = "Copy the list";
+      render();
+    });
+
+    render();
+  })();
+})();
+</script>

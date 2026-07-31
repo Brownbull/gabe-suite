@@ -1,0 +1,263 @@
+<!--
+  gabe-artifact · artifact-chrome kit
+  ────────────────────────────────────────────────────────────────────────
+  Open this file in a browser to see the chrome working. To use it, copy the
+  three marked blocks into a new artifact page:
+
+    BLOCK 1  <style> … </style>   → house tokens + left-anchored column + cog/panel CSS
+    BLOCK 2  markup               → the cog button + options panel (paste last in the body)
+    BLOCK 3  <script> … </script> → the font roster + panel behaviour
+
+  Artifacts are published without <!doctype>/<html>/<head>/<body> — the host
+  wraps the file. Keep <title> and drop this comment when you copy.
+
+  Verify with:  node tools/verify-artifact-chrome.mjs <your-file.html>
+-->
+<title>Artifact chrome kit — gabe-artifact</title>
+
+<!-- ══ BLOCK 1 ══════════════════════════════════════════════════════════ -->
+<style>
+  /* ── font roster: the three families every artifact ships with ─────────
+     Values come from the founder's type-bench selections. The script keeps
+     these vars in sync; nothing else may hard-code a body font-family. */
+  :root {
+    --af-stack: ui-monospace, monospace;
+    --af-size: 15px;
+    --af-track: -0.025em;
+  }
+
+  /* ── house palette (violet-biased neutrals; swap the accent per subject) */
+  :root {
+    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
+    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
+    --rule: #ded8e5; --rule-soft: #ebe6ef;
+    --accent: #c42a64; --accent-soft: #fbe9f0;
+    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #141118; --card: #1d1924; --raised: #241f2e;
+      --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
+      --rule: #322b3e; --rule-soft: #272130;
+      --accent: #f2679e; --accent-soft: #381c2a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
+    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
+    --rule: #ded8e5; --rule-soft: #ebe6ef;
+    --accent: #c42a64; --accent-soft: #fbe9f0;
+    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+  }
+  :root[data-theme="dark"] {
+    --ground: #141118; --card: #1d1924; --raised: #241f2e;
+    --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
+    --rule: #322b3e; --rule-soft: #272130;
+    --accent: #f2679e; --accent-soft: #381c2a;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+
+  /* ── the page: content is anchored LEFT, never centred ──────────────── */
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--af-stack);
+    font-size: var(--af-size);
+    letter-spacing: var(--af-track);
+    line-height: 1.55;
+    text-align: left;
+    -webkit-font-smoothing: antialiased;
+  }
+  .artifact-page {
+    max-width: 74rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);   /* left-anchored, never `margin: 0 auto` */
+    padding: 32px 24px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+    text-align: left;
+  }
+  /* keep the top of the column clear of the fixed cog */
+  .artifact-page > :first-child { padding-right: 56px; }
+
+  :is(a, button, select, input, textarea, summary):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+
+  /* ── the cog + options panel ────────────────────────────────────────── */
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog {
+    display: grid; place-items: center;
+    width: 38px; height: 38px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 10px;
+    box-shadow: var(--shadow); cursor: pointer;
+    transition: color .15s ease, border-color .15s ease, transform .25s ease;
+  }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+
+  .af-panel {
+    position: absolute; top: 46px; right: 0;
+    width: 258px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px;
+    display: none; flex-direction: column; gap: 12px;
+  }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 8px; }
+  .af-legend {
+    font-family: ui-monospace, monospace;
+    font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); margin: 0;
+  }
+  .af-opt {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; cursor: pointer;
+    background: var(--raised); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px;
+    padding: 9px 11px;
+  }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }     /* drawn in its own face */
+  .af-opt .af-spec {
+    font-family: ui-monospace, monospace;
+    font-size: 10px; color: var(--muted); letter-spacing: 0;
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-family: ui-monospace, monospace; font-size: 10px; color: var(--muted); margin: 0; letter-spacing: 0; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p style="font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0;">gabe-artifact · chrome kit</p>
+    <h1 style="font-size: 2.1em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance;">The cog is the only floating thing on the page</h1>
+    <p style="color: var(--muted); max-width: 62ch; margin: 12px 0 0;">Everything else is anchored to the left edge of the column. Open the cog, switch the family, reload — the choice persists.</p>
+  </header>
+
+  <section style="display: flex; flex-direction: column; gap: 12px;">
+    <div style="background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px;">
+      <h2 style="font-size: 1.15em; margin: 0 0 8px;">Sample block</h2>
+      <p style="margin: 0; color: var(--ink-soft);">Ingrediente canónico · 12 recetas · ñÑ ¿0123? — the roster changes family, base size and tracking together, because that is how the settings were chosen.</p>
+    </div>
+  </section>
+</div>
+
+<!-- ══ BLOCK 2 ══════════════════════════════════════════════════════════ -->
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts">
+      <p class="af-legend">Font family</p>
+    </div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<!-- ══ BLOCK 3 ══════════════════════════════════════════════════════════ -->
+<script>
+(function () {
+  "use strict";
+
+  /* The house roster. Add an entry here to add an option — nothing else changes. */
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var DEFAULT_ID = "mono";
+  var STORE_KEY = "gabe:artifact:font";
+
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog");
+  var panel = document.getElementById("af-panel");
+  var host = document.getElementById("af-fonts");
+  var foot = document.getElementById("af-foot");
+
+  function remembered() {
+    try {
+      var id = window.localStorage.getItem(STORE_KEY);
+      return FONTS.some(function (f) { return f.id === id; }) ? id : DEFAULT_ID;
+    } catch (e) { return DEFAULT_ID; }   /* sandboxed frames can throw on storage */
+  }
+
+  function remember(id) {
+    try { window.localStorage.setItem(STORE_KEY, id); } catch (e) { /* no-op */ }
+  }
+
+  var current = remembered();
+
+  function apply(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    current = f.id;
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    remember(f.id);
+    var opts = host.querySelectorAll(".af-opt");
+    for (var i = 0; i < opts.length; i++) {
+      opts[i].setAttribute("aria-checked", String(opts[i].getAttribute("data-id") === f.id));
+    }
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+
+  FONTS.forEach(function (f) {
+    var b = document.createElement("button");
+    b.type = "button";
+    b.className = "af-opt";
+    b.setAttribute("role", "radio");
+    b.setAttribute("data-id", f.id);
+    b.setAttribute("aria-checked", "false");
+
+    var name = document.createElement("span");
+    name.className = "af-name";
+    name.style.fontFamily = f.stack;          /* each option previews its own face */
+    name.textContent = f.label;
+
+    var spec = document.createElement("span");
+    spec.className = "af-spec";
+    spec.textContent = f.size + " / " + f.track;
+
+    b.appendChild(name);
+    b.appendChild(spec);
+    b.addEventListener("click", function () { apply(f.id); });
+    host.appendChild(b);
+  });
+
+  function open(next) {
+    panel.setAttribute("data-open", String(next));
+    cog.setAttribute("aria-expanded", String(next));
+  }
+
+  cog.addEventListener("click", function (e) {
+    e.stopPropagation();
+    open(panel.getAttribute("data-open") !== "true");
+  });
+
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+
+  document.addEventListener("click", function () {
+    if (panel.getAttribute("data-open") === "true") open(false);
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") {
+      open(false);
+      cog.focus();
+    }
+  });
+
+  apply(current);
+})();
+</script>

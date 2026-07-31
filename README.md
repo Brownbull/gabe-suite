@@ -35,7 +35,7 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 | **Gabe Mockup** | `/gabe-mockup` | UX/mockup execution — legacy HTML recipes plus React-first Storybook modes |
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-init`, `/gabe-commit`) |
 
-### Command Surface (26 skills)
+### Command Surface (27 skills)
 
 Every capability is one skill under `skills/<name>/` — the skill name gives the slash
 invocation (`skills/gabe-plan/` ⇒ `/gabe-plan`). Each SKILL.md is a lean core that loads
@@ -44,6 +44,7 @@ covers the full KDBP lifecycle from project init through ship:
 
 | Command | What it does |
 |---|---|
+| `/gabe-artifact` | House chrome for published Artifacts — left-anchored content, one cog panel top-right, the fixed font roster; design pass → kit → render gate → publish → report |
 | `/gabe-cc-init` | Brownfield command-center adoption — archive existing docs (never delete), bootstrap the center, machine-rank the critical entities, ingest one section per run at human speed with checklist + walk-recorded approval |
 | `/gabe-assess` | The direction guard — change impact assessment (blast radius, maturity scope, prerequisites) + the values/AP boundary check at commit/PR boundaries |
 | `/gabe-commit` | Commit quality gate — deterministic checks, interactive triage, defer/accept/fix |

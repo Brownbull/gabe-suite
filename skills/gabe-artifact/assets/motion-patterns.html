@@ -1,0 +1,1325 @@
+<title>Motion catalog — things that move, flow and replay</title>
+
+<style>
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+  :root {
+    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
+    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
+    --rule: #ded8e5; --rule-soft: #ebe6ef;
+    --accent: #c42a64; --accent-soft: #fbe9f0;
+    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    --q1: #cde2fb; --q2: #9ec5f4; --q3: #6da7ec; --q4: #3987e5; --q5: #256abf;
+    --good: #0ca30c; --warning: #fab219; --serious: #ec835a; --critical: #d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground: #141118; --card: #1d1924; --raised: #241f2e;
+      --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
+      --rule: #322b3e; --rule-soft: #272130;
+      --accent: #f2679e; --accent-soft: #381c2a;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+      --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+      --q1: #104281; --q2: #184f95; --q3: #256abf; --q4: #2a78d6; --q5: #5598e7;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
+    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
+    --rule: #ded8e5; --rule-soft: #ebe6ef;
+    --accent: #c42a64; --accent-soft: #fbe9f0;
+    --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4;
+    --q1: #cde2fb; --q2: #9ec5f4; --q3: #6da7ec; --q4: #3987e5; --q5: #256abf;
+    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+  }
+  :root[data-theme="dark"] {
+    --ground: #141118; --card: #1d1924; --raised: #241f2e;
+    --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
+    --rule: #322b3e; --rule-soft: #272130;
+    --accent: #f2679e; --accent-soft: #381c2a;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181;
+    --q1: #104281; --q2: #184f95; --q3: #256abf; --q4: #2a78d6; --q5: #5598e7;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  .artifact-page {
+    max-width: 74rem; margin: 0 auto 0 clamp(16px, 4vw, 56px);
+    padding: 32px 24px 48px; display: flex; flex-direction: column; gap: 32px; text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }
+  :is(a, button, select, input, textarea, summary):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  .eyebrow { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  h1 { font-size: 2.1em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; }
+  h2 { font-size: 1.05em; margin: 0; }
+  h3 { font-size: 1em; margin: 0; }
+  p { margin: 0; }
+  .lede { color: var(--muted); max-width: 64ch; margin: 12px 0 0; }
+
+  .sec { display: flex; flex-direction: column; gap: 16px; }
+  .sec-head { display: flex; align-items: baseline; gap: 12px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); }
+  .sec-head .n { margin-left: auto; font-size: .72em; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 16px; align-items: start; }
+  .ex { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .ex.wide { grid-column: 1 / -1; }
+  .ex[data-marked="true"] { border-color: var(--accent); }
+  .ex-head { display: flex; flex-direction: column; gap: 4px; }
+  .ex-use { font-size: .78em; color: var(--muted); line-height: 1.45; }
+  .ex-stage { position: relative; border-top: 1px solid var(--rule-soft); padding-top: 12px; min-height: 40px; overflow: hidden; }
+  .ex-foot { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--rule-soft); padding-top: 10px; }
+  .ex-tag { font-size: .66em; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin-right: auto; }
+  .ex-btn {
+    font-size: .68em; letter-spacing: .06em; text-transform: uppercase; font-family: inherit;
+    background: transparent; border: 1px solid var(--rule); color: var(--muted);
+    border-radius: 999px; padding: 4px 11px; cursor: pointer; white-space: nowrap;
+  }
+  .ex-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ex[data-marked="true"] .ex-copy { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+
+  svg.chart { width: 100%; height: auto; display: block; overflow: visible; }
+  .tick { fill: var(--muted); font-size: 9px; letter-spacing: 0; }
+  .dlabel { fill: var(--ink-soft); font-size: 9px; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; font-size: .7em; color: var(--muted); letter-spacing: 0; }
+  .legend i { width: 9px; height: 9px; border-radius: 2px; display: inline-block; margin-right: 5px; vertical-align: -1px; }
+
+  /* ══ motion primitives ══════════════════════════════════════════════ */
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before, :root[data-motion="off"] *::after {
+    animation-play-state: paused !important;
+  }
+
+  .node { fill: var(--card); stroke: var(--rule); stroke-width: 1.5; }
+  .node-lit { stroke: var(--accent); }
+  .edge { stroke: var(--rule); stroke-width: 1.5; fill: none; }
+  .nlabel { fill: var(--ink-soft); font-size: 9px; letter-spacing: 0; }
+
+  @keyframes ants { to { stroke-dashoffset: -24; } }
+  .ants { stroke-dasharray: 6 6; animation: ants .9s linear infinite; }
+
+  @keyframes drawin { to { stroke-dashoffset: 0; } }
+  .draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: drawin 1.4s ease forwards; }
+
+  @keyframes pulsering { 0% { r: 6; opacity: .55; } 100% { r: 20; opacity: 0; } }
+  .ring { animation: pulsering 1.8s ease-out infinite; }
+
+  @keyframes blink { 0%, 45% { opacity: 1; } 50%, 100% { opacity: 0; } }
+  .caret { animation: blink 1s step-end infinite; }
+
+  @keyframes shimmer { 0% { background-position: -220px 0; } 100% { background-position: 220px 0; } }
+  .skel {
+    height: 11px; border-radius: 6px;
+    background: linear-gradient(90deg, var(--rule-soft) 0%, var(--rule) 50%, var(--rule-soft) 100%);
+    background-size: 220px 100%; animation: shimmer 1.2s linear infinite;
+  }
+
+  @keyframes fadeup { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+  /* terminal */
+  .term { background: var(--raised); border: 1px solid var(--rule-soft); border-radius: 8px; padding: 10px 12px; font-size: .74em; letter-spacing: 0; line-height: 1.7; min-height: 132px; }
+  .term .ln { white-space: pre-wrap; }
+  .term .cmd { color: var(--accent); }
+  .term .out { color: var(--muted); }
+  .term .ok { color: var(--good); }
+
+  /* trace waterfall */
+  .spans { display: flex; flex-direction: column; gap: 5px; font-size: .72em; letter-spacing: 0; }
+  .span-row { display: grid; grid-template-columns: 108px 1fr 46px; gap: 8px; align-items: center; }
+  .span-row .lab { color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .span-track { background: var(--rule-soft); border-radius: 4px; height: 11px; position: relative; }
+  .span-bar { position: absolute; top: 0; bottom: 0; border-radius: 4px; background: var(--s1); transform-origin: left center; transform: scaleX(0); transition: transform .5s cubic-bezier(.2,.7,.3,1); }
+  .span-row .ms { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* pipeline */
+  .pipe { display: flex; align-items: center; gap: 0; }
+  .pstage { flex: 1; text-align: center; font-size: .68em; color: var(--muted); padding: 8px 4px; border: 1px solid var(--rule); border-radius: 8px; background: var(--raised); transition: border-color .3s ease, color .3s ease, background .3s ease; }
+  .pstage[data-hot="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .parrow { color: var(--rule); padding: 0 5px; font-size: .8em; }
+
+  /* queue */
+  .queue { display: flex; gap: 4px; align-items: flex-end; height: 56px; }
+  .qcell { width: 15px; border-radius: 4px; background: var(--s1); transition: height .35s ease, opacity .35s ease; }
+
+  /* journey */
+  .phone { width: 132px; height: 218px; border: 2px solid var(--rule); border-radius: 16px; padding: 8px; background: var(--raised); position: relative; overflow: hidden; flex: 0 0 auto; }
+  .screen { position: absolute; inset: 8px; display: flex; flex-direction: column; gap: 6px; opacity: 0; transform: translateX(14px); transition: opacity .4s ease, transform .4s ease; }
+  .screen[data-on="true"] { opacity: 1; transform: none; }
+  .screen .bar { height: 9px; border-radius: 4px; background: var(--rule); }
+  .screen .bar.a { background: var(--accent); width: 62%; }
+  .screen .box { flex: 1; border-radius: 8px; border: 1px solid var(--rule); background: var(--card); }
+  .screen .cta { height: 20px; border-radius: 6px; background: var(--accent-soft); border: 1px solid var(--accent); }
+  .jrow { display: flex; gap: 14px; align-items: flex-start; }
+  .jsteps { display: flex; flex-direction: column; gap: 7px; font-size: .74em; }
+  .jstep { display: flex; gap: 8px; align-items: baseline; color: var(--muted); transition: color .3s ease; }
+  .jstep[data-on="true"] { color: var(--ink); }
+  .jstep .b { width: 7px; height: 7px; border-radius: 50%; background: var(--rule); flex: 0 0 auto; transition: background .3s ease, box-shadow .3s ease; }
+  .jstep[data-on="true"] .b { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+  /* ghost cursor */
+  .ghost-stage { position: relative; height: 132px; background: var(--raised); border: 1px solid var(--rule-soft); border-radius: 8px; overflow: hidden; }
+  .ghost-ui { position: absolute; inset: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .ghost-ui div { border: 1px solid var(--rule); border-radius: 6px; background: var(--card); font-size: .64em; color: var(--muted); display: grid; place-items: center; transition: border-color .2s ease, background .2s ease; }
+  .ghost-ui div[data-hit="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .cursor { position: absolute; width: 13px; height: 13px; pointer-events: none; transition: transform .7s cubic-bezier(.4,.1,.2,1); z-index: 3; }
+  .cursor svg { display: block; }
+  .clickring { position: absolute; width: 8px; height: 8px; border-radius: 50%; border: 2px solid var(--accent); opacity: 0; z-index: 2; }
+  @keyframes clickpop { 0% { transform: scale(.4); opacity: .9; } 100% { transform: scale(3.4); opacity: 0; } }
+
+  /* funnel */
+  .funnel { display: flex; flex-direction: column; gap: 6px; }
+  .frow { display: grid; grid-template-columns: 92px 1fr 64px; gap: 8px; align-items: center; font-size: .72em; letter-spacing: 0; }
+  .fbar { height: 15px; border-radius: 4px; background: var(--s1); transform-origin: left center; transform: scaleX(0); transition: transform .7s cubic-bezier(.2,.7,.3,1); }
+  .frow .v { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+  .frow .lab { color: var(--ink-soft); }
+
+  /* bar race */
+  .race { position: relative; height: 148px; }
+  .rrow { position: absolute; left: 0; right: 0; height: 24px; display: grid; grid-template-columns: 88px 1fr 34px; gap: 8px; align-items: center; font-size: .72em; letter-spacing: 0; transition: transform .6s cubic-bezier(.2,.7,.3,1); }
+  .rbar { height: 14px; border-radius: 4px; background: var(--s1); transition: width .6s ease; }
+  .rrow .v { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
+
+  /* state machine */
+  .sm-label { font-size: .72em; color: var(--muted); margin-top: 6px; letter-spacing: 0; }
+
+  /* ticker */
+  .ticker { height: 128px; overflow: hidden; display: flex; flex-direction: column; justify-content: flex-end; gap: 3px; font-size: .7em; letter-spacing: 0; }
+  .ticker .row { display: flex; gap: 8px; animation: fadeup .35s ease both; }
+  .ticker .t { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .ticker .m { color: var(--ink-soft); }
+  .ticker .lvl { width: 42px; text-transform: uppercase; font-size: .88em; }
+
+  /* skeleton→content */
+  .swap { display: flex; flex-direction: column; gap: 8px; min-height: 92px; }
+  .swap .real { animation: fadeup .45s ease both; }
+  .swap .real .h { font-size: .96em; }
+  .swap .real .p { font-size: .74em; color: var(--muted); }
+
+  /* scrubber */
+  input[type="range"] { width: 100%; accent-color: var(--accent); cursor: pointer; margin: 0; }
+  .scrub-out { font-size: .72em; color: var(--muted); letter-spacing: 0; display: flex; justify-content: space-between; }
+
+  /* scrollytelling */
+  .scrolly { height: 168px; overflow-y: auto; border: 1px solid var(--rule-soft); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 60px; font-size: .74em; color: var(--muted); }
+  .scrolly p { padding: 6px 0; transition: color .3s ease; }
+  .scrolly p[data-on="true"] { color: var(--ink); }
+
+  /* keeps */
+  .keeps { background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .keeps ol { margin: 0; padding-left: 22px; font-size: .82em; color: var(--ink-soft); display: flex; flex-direction: column; gap: 3px; }
+  .keeps .none { font-size: .8em; color: var(--muted); }
+  .keeps .acts { display: flex; gap: 8px; flex-wrap: wrap; }
+  .keeps button { font-family: inherit; font-size: .72em; border: 1px solid var(--rule); background: var(--raised); color: var(--ink); border-radius: 7px; padding: 7px 12px; cursor: pointer; }
+  .keeps button.primary { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+  .keeps textarea { width: 100%; font-family: inherit; font-size: .76em; letter-spacing: 0; background: var(--raised); color: var(--ink); border: 1px solid var(--accent); border-radius: 8px; padding: 10px; display: none; }
+  .keeps textarea[data-open="true"] { display: block; }
+
+  /* chrome */
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog { display: grid; place-items: center; width: 38px; height: 38px; background: var(--card); color: var(--muted); border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow); cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease; }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel { position: absolute; top: 46px; right: 0; width: 258px; background: var(--card); border: 1px solid var(--rule); border-radius: 12px; box-shadow: var(--shadow); padding: 14px; display: none; flex-direction: column; gap: 12px; }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 8px; }
+  .af-legend { font-size: .62em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; width: 100%; text-align: left; cursor: pointer; background: var(--raised); color: var(--ink); border: 1px solid var(--rule); border-radius: 8px; padding: 9px 11px; font-family: inherit; }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 10px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 10px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+    .draw { stroke-dashoffset: 0 !important; }
+    .span-bar, .fbar { transform: scaleX(1) !important; }
+  }
+</style>
+
+<div class="artifact-page">
+
+  <header>
+    <p class="eyebrow">gabe-artifact · motion catalog</p>
+    <h1>Twenty things that move</h1>
+    <p class="lede">Flow, trace, architecture, journey. Everything here animates on its own or under your hand — SVG path animation, FLIP reordering, staggered draw-in, scroll and scrub. The cog carries a global <b>Motion</b> switch, every card has its own <b>Replay</b>, and reduced-motion viewers get the finished state with no movement at all.</p>
+  </header>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Flow &amp; trace</h2><span class="n">5</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Animated flow diagram" data-anim="flow">
+        <div class="ex-head"><h3>Animated flow diagram</h3><p class="ex-use">Packets travelling the edges between boxes — the shape of a system plus proof that something is moving through it.</p></div>
+        <div class="ex-stage"><div id="m-flow"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · animateMotion</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Marching-ants flow" data-anim="ants">
+        <div class="ex-head"><h3>Marching-ants flow</h3><p class="ex-use">Direction encoded in the line itself. Cheapest way to say which way the data goes, and it reads at any size.</p></div>
+        <div class="ex-stage"><div id="m-ants"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · dashoffset</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Command trace replay" data-anim="term">
+        <div class="ex-head"><h3>Command trace replay</h3><p class="ex-use">A session retyping itself — commands, their output, the gates that passed. For showing a workflow the way it was actually run.</p></div>
+        <div class="ex-stage"><div class="term" id="m-term"></div></div>
+        <div class="ex-foot"><span class="ex-tag">js · typewriter</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Span trace waterfall" data-anim="spans">
+        <div class="ex-head"><h3>Span trace waterfall</h3><p class="ex-use">Where a request spent its time. Bars land in call order, each starting where its parent did.</p></div>
+        <div class="ex-stage"><div class="spans" id="m-spans"></div></div>
+        <div class="ex-foot"><span class="ex-tag">css · staggered</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Pipeline progression" data-anim="pipe">
+        <div class="ex-head"><h3>Pipeline progression</h3><p class="ex-use">One token advancing stage by stage. The moving thing is the work item, not the pipeline.</p></div>
+        <div class="ex-stage">
+          <div class="pipe" id="m-pipe">
+            <div class="pstage">boleta</div><span class="parrow">→</span>
+            <div class="pstage">canónico</div><span class="parrow">→</span>
+            <div class="pstage">despensa</div><span class="parrow">→</span>
+            <div class="pstage">receta</div><span class="parrow">→</span>
+            <div class="pstage">cocina</div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">js · css transition</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Architecture in motion</h2><span class="n">4</span></div>
+    <div class="grid">
+
+      <article class="ex wide" data-name="Architecture map with live traffic" data-anim="arch">
+        <div class="ex-head"><h3>Architecture map with live traffic</h3><p class="ex-use">The deployment diagram, but the arrows carry traffic. Reads as a system at rest and a system under load at the same time.</p></div>
+        <div class="ex-stage"><div id="m-arch"></div><div class="legend"><span><i style="background:var(--s1)"></i>lectura</span><span><i style="background:var(--s2)"></i>escritura</span><span><i style="background:var(--s3)"></i>evento</span></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · animateMotion</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Event bus fan-out" data-anim="bus">
+        <div class="ex-head"><h3>Event bus fan-out</h3><p class="ex-use">One emit, many listeners, staggered arrival. Makes an asynchronous chain legible.</p></div>
+        <div class="ex-stage"><div id="m-bus"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · js</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Queue fill and drain" data-anim="queue">
+        <div class="ex-head"><h3>Queue fill and drain</h3><p class="ex-use">Backlog as a living quantity — arriving faster than it leaves, then catching up.</p></div>
+        <div class="ex-stage"><div class="queue" id="m-queue"></div><p class="sm-label" id="m-queue-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">js</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Health pulse beacon" data-anim="pulse">
+        <div class="ex-head"><h3>Health pulse beacon</h3><p class="ex-use">A node that is alive. Rings expand on a heartbeat; a stalled node simply stops.</p></div>
+        <div class="ex-stage"><div id="m-pulse"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · css keyframes</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>User journey</h2><span class="n">4</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Screen walkthrough" data-anim="journey">
+        <div class="ex-head"><h3>Screen walkthrough</h3><p class="ex-use">The product advancing screen by screen beside the narration. The closest thing to a demo that fits in a page.</p></div>
+        <div class="ex-stage">
+          <div class="jrow">
+            <div class="phone" id="m-phone"></div>
+            <div class="jsteps" id="m-jsteps"></div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">js · css transition</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Ghost cursor replay" data-anim="ghost">
+        <div class="ex-head"><h3>Ghost cursor replay</h3><p class="ex-use">A recorded path through the interface — where the pointer went and what it clicked.</p></div>
+        <div class="ex-stage">
+          <div class="ghost-stage" id="m-ghost">
+            <div class="ghost-ui">
+              <div data-k="0">Despensa</div><div data-k="1">Explorar</div>
+              <div data-k="2">Receta</div><div data-k="3">Cocinar</div>
+            </div>
+            <div class="clickring" id="m-click"></div>
+            <div class="cursor" id="m-cursor">
+              <svg viewBox="0 0 12 16" width="13" height="16"><path d="M0 0 L0 13 L3.4 10 L5.6 15 L7.8 14 L5.6 9.2 L10 9.2 Z" fill="var(--ink)" stroke="var(--card)" stroke-width=".8"/></svg>
+            </div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">js · transform</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Funnel with drop-off" data-anim="funnel">
+        <div class="ex-head"><h3>Funnel with drop-off</h3><p class="ex-use">Each stage grows to its share while the loss counts up beside it. The shrinking is the message.</p></div>
+        <div class="ex-stage"><div class="funnel" id="m-funnel"></div></div>
+        <div class="ex-foot"><span class="ex-tag">css · staggered</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Scroll-driven steps" data-anim="scrolly">
+        <div class="ex-head"><h3>Scroll-driven steps</h3><p class="ex-use">The reader's scroll is the timeline — each paragraph advances the diagram beside it. Scroll inside the box.</p></div>
+        <div class="ex-stage">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <div id="m-scrolly-viz" style="flex:0 0 118px"></div>
+            <div class="scrolly" id="m-scrolly">
+              <p data-step="0">La boleta llega desde Gastify.</p>
+              <p data-step="1">Cada línea resuelve a un ingrediente canónico.</p>
+              <p data-step="2">La despensa se llena y las recetas se vuelven cocinables.</p>
+              <p data-step="3">La comida cocinada recalcula el nivel.</p>
+            </div>
+          </div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">IntersectionObserver</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Data in motion</h2><span class="n">4</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Bar race" data-anim="race">
+        <div class="ex-head"><h3>Bar race</h3><p class="ex-use">Ranking that reorders as time runs. Rows move with FLIP, so the swap itself is the information.</p></div>
+        <div class="ex-stage"><div class="race" id="m-race"></div><p class="sm-label" id="m-race-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">js · FLIP</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Chart entrance" data-anim="entrance">
+        <div class="ex-head"><h3>Chart entrance</h3><p class="ex-use">The line draws itself while the headline number counts up. One arrival, not two competing ones.</p></div>
+        <div class="ex-stage"><div id="m-entrance"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · dashoffset + rAF</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Chart morph" data-anim="morph">
+        <div class="ex-head"><h3>Chart morph</h3><p class="ex-use">The same values changing form — bars become dots and back — so the reader keeps hold of what they were looking at.</p></div>
+        <div class="ex-stage"><div id="m-morph"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · transition</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Timeline scrubber" data-anim="scrub">
+        <div class="ex-head"><h3>Timeline scrubber</h3><p class="ex-use">Motion the reader owns. Drag the handle and the whole diagram moves to that moment.</p></div>
+        <div class="ex-stage">
+          <div id="m-scrub-viz"></div>
+          <input type="range" id="m-scrub" min="0" max="7" step="1" value="0" aria-label="Semana">
+          <div class="scrub-out"><span id="m-scrub-when">S1</span><span id="m-scrub-what">3 comidas</span></div>
+        </div>
+        <div class="ex-foot"><span class="ex-tag">input · js</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="sec">
+    <div class="sec-head"><span class="dot"></span><h2>Micro-motion</h2><span class="n">3</span></div>
+    <div class="grid">
+
+      <article class="ex" data-name="Skeleton to content" data-anim="swap">
+        <div class="ex-head"><h3>Skeleton to content</h3><p class="ex-use">The shape of the answer before the answer. Shimmer then swap, never a spinner.</p></div>
+        <div class="ex-stage"><div class="swap" id="m-swap"></div></div>
+        <div class="ex-foot"><span class="ex-tag">css · gradient</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Live log ticker" data-anim="ticker">
+        <div class="ex-head"><h3>Live log ticker</h3><p class="ex-use">Events arriving from the bottom, oldest scrolling away. Says "this is happening now" without a chart.</p></div>
+        <div class="ex-stage"><div class="ticker" id="m-ticker"></div></div>
+        <div class="ex-foot"><span class="ex-tag">js · interval</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="State machine transition" data-anim="sm">
+        <div class="ex-head"><h3>State machine transition</h3><p class="ex-use">Which state is current and which edge fired to get there. The transition is animated, the states are not.</p></div>
+        <div class="ex-stage"><div id="m-sm"></div><p class="sm-label" id="m-sm-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">svg · js</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+    </div>
+  </section>
+
+  <section class="keeps" id="keeps">
+    <div class="sec-head" style="border:0;padding:0"><span class="dot"></span><h2>Marked to keep</h2><span class="n" id="keeps-n">0</span></div>
+    <p class="none" id="keeps-none">Nothing marked yet — press <b>Copy name</b> on any example and it lands here.</p>
+    <ol id="keeps-list"></ol>
+    <div class="acts">
+      <button type="button" class="primary" id="keeps-copy">Copy the list</button>
+      <button type="button" id="keeps-clear">Clear</button>
+      <button type="button" id="replay-all">Replay everything</button>
+    </div>
+    <textarea id="keeps-text" rows="8" readonly aria-label="Marked list to copy manually"></textarea>
+  </section>
+
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<script>
+/* ── kit block 3 + a Motion group ──────────────────────────────────────── */
+var MOTION = { on: true };
+
+(function () {
+  "use strict";
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var DEFAULT_ID = "mono", STORE_KEY = "gabe:artifact:font";
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog");
+  var panel = document.getElementById("af-panel");
+  var host = document.getElementById("af-fonts");
+  var mhost = document.getElementById("af-motion");
+  var foot = document.getElementById("af-foot");
+
+  function remembered() {
+    try {
+      var id = window.localStorage.getItem(STORE_KEY);
+      return FONTS.some(function (f) { return f.id === id; }) ? id : DEFAULT_ID;
+    } catch (e) { return DEFAULT_ID; }
+  }
+  function remember(id) { try { window.localStorage.setItem(STORE_KEY, id); } catch (e) {} }
+
+  function apply(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    remember(f.id);
+    var opts = host.querySelectorAll(".af-opt");
+    for (var i = 0; i < opts.length; i++) opts[i].setAttribute("aria-checked", String(opts[i].getAttribute("data-id") === f.id));
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+
+  FONTS.forEach(function (f) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", f.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.style.fontFamily = f.stack; n.textContent = f.label;
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = f.size + " / " + f.track;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { apply(f.id); });
+    host.appendChild(b);
+  });
+
+  /* Motion group — the one global control this catalog needs */
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.unpauseAnimations && s.pauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mhost.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String((o.getAttribute("data-id") === "on") === on));
+    });
+  }
+  [["on", "Playing", "loops + replays"], ["off", "Paused", "frozen in place"]].forEach(function (m) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", m[0]); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span"); n.className = "af-name"; n.textContent = m[1];
+    var s = document.createElement("span"); s.className = "af-spec"; s.textContent = m[2];
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { setMotion(m[0] === "on"); });
+    mhost.appendChild(b);
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+
+  apply(remembered());
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  setMotion(!reduced);
+  window.__setMotion = setMotion;
+})();
+
+/* ── the animations ────────────────────────────────────────────────────── */
+(function () {
+  "use strict";
+  var NS = "http://www.w3.org/2000/svg";
+  var timers = [];
+  function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
+  function el(tag, attrs, text) {
+    var n = document.createElementNS(NS, tag);
+    for (var k in attrs) n.setAttribute(k, attrs[k]);
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function svg(w, h) { return el("svg", { viewBox: "0 0 " + w + " " + h, class: "chart", role: "img" }); }
+  function box(s, x, y, w, h, label, fill) {
+    s.appendChild(el("rect", { x: x, y: y, width: w, height: h, rx: 7, class: "node", fill: fill || "var(--card)" }));
+    s.appendChild(el("text", { x: x + w / 2, y: y + h / 2 + 3, class: "nlabel", "text-anchor": "middle" }, label));
+  }
+  function packet(s, path, color, dur, begin) {
+    var c = el("circle", { r: 3.4, fill: color });
+    var m = el("animateMotion", { dur: dur + "s", repeatCount: "indefinite", path: path, begin: (begin || 0) + "s", rotate: "auto" });
+    c.appendChild(m);
+    s.appendChild(c);
+    return c;
+  }
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* registry: name → replay fn */
+  var REPLAY = {};
+
+  /* ── 1 · animated flow diagram ── */
+  (function () {
+    var host = document.getElementById("m-flow");
+    function build() {
+      host.innerHTML = "";
+      var s = svg(320, 132);
+      var p1 = "M74,40 H150", p2 = "M226,40 V78 H150", p3 = "M74,92 H150";
+      box(s, 14, 26, 60, 28, "boleta");
+      box(s, 150, 26, 76, 28, "canónico");
+      box(s, 150, 78, 76, 28, "despensa");
+      box(s, 246, 26, 60, 28, "receta");
+      s.appendChild(el("path", { d: "M74,40 H150", class: "edge" }));
+      s.appendChild(el("path", { d: "M226,40 H246", class: "edge" }));
+      s.appendChild(el("path", { d: "M188,54 V78", class: "edge" }));
+      s.appendChild(el("path", { d: "M226,92 H276 V54", class: "edge" }));
+      if (!reduced) {
+        packet(s, "M74,40 H150", "var(--s1)", 1.6, 0);
+        packet(s, "M226,40 H246", "var(--s1)", 1.1, 0.9);
+        packet(s, "M188,54 V78", "var(--s3)", 1.2, 0.4);
+        packet(s, "M226,92 H276 V54", "var(--s2)", 1.8, 1.2);
+      }
+      host.appendChild(s);
+    }
+    build();
+    REPLAY["flow"] = build;
+  })();
+
+  /* ── 2 · marching ants ── */
+  (function () {
+    var host = document.getElementById("m-ants");
+    function build() {
+      host.innerHTML = "";
+      var s = svg(320, 116);
+      box(s, 12, 44, 62, 28, "web");
+      box(s, 129, 44, 62, 28, "api");
+      box(s, 246, 44, 62, 28, "db");
+      s.appendChild(el("path", { d: "M74,58 H129", class: "edge ants", stroke: "var(--s1)" }));
+      s.appendChild(el("path", { d: "M191,58 H246", class: "edge ants", stroke: "var(--s1)" }));
+      s.appendChild(el("path", { d: "M246,86 H160 V72", class: "edge ants", stroke: "var(--s2)" }));
+      s.appendChild(el("text", { x: 100, y: 50, class: "tick", "text-anchor": "middle" }, "GET"));
+      s.appendChild(el("text", { x: 217, y: 50, class: "tick", "text-anchor": "middle" }, "SQL"));
+      s.appendChild(el("text", { x: 200, y: 100, class: "tick", "text-anchor": "middle" }, "rows"));
+      host.appendChild(s);
+    }
+    build();
+    REPLAY["ants"] = build;
+  })();
+
+  /* ── 3 · command trace replay ── */
+  (function () {
+    var host = document.getElementById("m-term");
+    var SCRIPT = [
+      { t: "cmd", s: "/gabe-plan  P4 web decomposition" },
+      { t: "out", s: "  phase created · tier mvp · 6 tasks" },
+      { t: "cmd", s: "/gabe-red" },
+      { t: "out", s: "  4 cases declared · RED proven" },
+      { t: "cmd", s: "/gabe-execute" },
+      { t: "ok",  s: "  ✓ 6/6 tasks · checkpoint 3d274a7" },
+      { t: "cmd", s: "/gabe-commit" },
+      { t: "ok",  s: "  ✓ CHECK 1–9 green · size budget ok" }
+    ];
+    var run = 0;
+    function build() {
+      var mine = ++run;
+      host.innerHTML = "";
+      if (reduced || !MOTION.on) {
+        SCRIPT.forEach(function (l) {
+          var d = document.createElement("div");
+          d.className = "ln " + l.t;
+          d.textContent = l.s;
+          host.appendChild(d);
+        });
+        return;
+      }
+      var i = 0;
+      function line() {
+        if (mine !== run || i >= SCRIPT.length) return;
+        var l = SCRIPT[i++];
+        var d = document.createElement("div");
+        d.className = "ln " + l.t;
+        host.appendChild(d);
+        if (host.children.length > 8) host.removeChild(host.firstChild);
+        if (l.t !== "cmd") { d.textContent = l.s; later(line, 320); return; }
+        var j = 0;
+        (function type() {
+          if (mine !== run) return;
+          d.innerHTML = l.s.slice(0, j) + '<span class="caret">▋</span>';
+          if (j++ < l.s.length) later(type, 26); else { d.textContent = l.s; later(line, 220); }
+        })();
+      }
+      line();
+    }
+    build();
+    REPLAY["term"] = build;
+  })();
+
+  /* ── 4 · span trace waterfall ── */
+  (function () {
+    var host = document.getElementById("m-spans");
+    var SPANS = [
+      { n: "POST /cooked", off: 0, w: 100, ms: 212, c: "var(--s1)" },
+      { n: "auth.verify", off: 3, w: 12, ms: 26, c: "var(--s3)" },
+      { n: "insert meal", off: 16, w: 22, ms: 47, c: "var(--s1)" },
+      { n: "event bus", off: 39, w: 9, ms: 19, c: "var(--s3)" },
+      { n: "recompute tier", off: 49, w: 38, ms: 81, c: "var(--s2)" },
+      { n: "  avg last 20", off: 53, w: 26, ms: 55, c: "var(--s2)" },
+      { n: "serialize", off: 88, w: 10, ms: 21, c: "var(--s1)" }
+    ];
+    function build() {
+      host.innerHTML = "";
+      SPANS.forEach(function (sp, i) {
+        var row = document.createElement("div");
+        row.className = "span-row";
+        row.innerHTML = '<span class="lab">' + sp.n + '</span>' +
+          '<span class="span-track"><span class="span-bar" style="left:' + sp.off + '%;width:' + sp.w + '%;background:' + sp.c + '"></span></span>' +
+          '<span class="ms">' + sp.ms + "ms</span>";
+        host.appendChild(row);
+        var bar = row.querySelector(".span-bar");
+        if (reduced || !MOTION.on) { bar.style.transform = "scaleX(1)"; return; }
+        later(function () { bar.style.transform = "scaleX(1)"; }, 90 * i + 40);
+      });
+    }
+    build();
+    REPLAY["spans"] = build;
+  })();
+
+  /* ── 5 · pipeline progression ── */
+  (function () {
+    var stages = [].slice.call(document.querySelectorAll("#m-pipe .pstage"));
+    var loop = null;
+    function build() {
+      if (loop) clearInterval(loop);
+      stages.forEach(function (s) { s.setAttribute("data-hot", "false"); });
+      if (reduced || !MOTION.on) { stages[stages.length - 1].setAttribute("data-hot", "true"); return; }
+      var i = 0;
+      function tick() {
+        stages.forEach(function (s, k) { s.setAttribute("data-hot", String(k === i)); });
+        i = (i + 1) % stages.length;
+      }
+      tick();
+      loop = setInterval(tick, 780);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["pipe"] = build;
+  })();
+
+  /* ── 6 · architecture map with live traffic ── */
+  (function () {
+    var host = document.getElementById("m-arch");
+    function build() {
+      host.innerHTML = "";
+      var s = svg(680, 190);
+      box(s, 16, 78, 88, 34, "web · React");
+      box(s, 16, 20, 88, 34, "mobile · Expo");
+      box(s, 168, 50, 96, 34, "FastAPI");
+      box(s, 168, 116, 96, 34, "rate limit");
+      box(s, 330, 20, 96, 34, "Gemini");
+      box(s, 330, 86, 96, 34, "Postgres");
+      box(s, 330, 146, 96, 34, "event bus");
+      box(s, 492, 86, 96, 34, "proficiency");
+      [["M104,95 H168 V84", "var(--s1)", 2.0, 0],
+       ["M104,37 H136 V67 H168", "var(--s1)", 2.2, .6],
+       ["M264,67 H330 V54", "var(--s2)", 1.8, .2],
+       ["M264,67 H300 V103 H330", "var(--s1)", 2.0, 1.0],
+       ["M264,133 H300 V163 H330", "var(--s3)", 1.9, .4],
+       ["M426,163 H460 V103 H492", "var(--s3)", 1.9, 1.1],
+       ["M492,103 H460 V120 H264 V84", "var(--s2)", 2.6, 1.6]].forEach(function (e) {
+        s.appendChild(el("path", { d: e[0], class: "edge" }));
+        if (!reduced) packet(s, e[0], e[1], e[2], e[3]);
+      });
+      s.appendChild(el("text", { x: 16, y: 178, class: "tick" }, "Railway · staging · staging-e2e · production"));
+      host.appendChild(s);
+    }
+    build();
+    REPLAY["arch"] = build;
+  })();
+
+  /* ── 7 · event bus fan-out ── */
+  (function () {
+    var host = document.getElementById("m-bus");
+    function build() {
+      host.innerHTML = "";
+      var s = svg(320, 148);
+      box(s, 12, 58, 84, 30, "CookedMeal");
+      var targets = [["proficiency", 18], ["notificaciones", 62], ["analítica", 106]];
+      targets.forEach(function (t, i) {
+        var d = "M96,73 C150,73 150," + (t[1] + 15) + " 200," + (t[1] + 15);
+        s.appendChild(el("path", { d: d, class: "edge" }));
+        box(s, 200, t[1], 106, 30, t[0]);
+        if (!reduced) packet(s, d, "var(--s3)", 1.4, i * 0.45);
+      });
+      host.appendChild(s);
+    }
+    build();
+    REPLAY["bus"] = build;
+  })();
+
+  /* ── 8 · queue fill and drain ── */
+  (function () {
+    var host = document.getElementById("m-queue");
+    var lab = document.getElementById("m-queue-lab");
+    var loop = null;
+    var N = 16;
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = "";
+      var cells = [];
+      for (var i = 0; i < N; i++) {
+        var d = document.createElement("div");
+        d.className = "qcell";
+        d.style.height = "6px";
+        d.style.opacity = ".25";
+        host.appendChild(d);
+        cells.push(d);
+      }
+      var depth = reduced || !MOTION.on ? 4 : 0, dir = 1, t = 0;
+      function paint() {
+        cells.forEach(function (c, i) {
+          var on = i < depth;
+          c.style.height = on ? (10 + (i % 4) * 11) + "px" : "6px";
+          c.style.opacity = on ? "1" : ".22";
+          c.style.background = depth > 11 ? "var(--critical)" : depth > 7 ? "var(--warning)" : "var(--s1)";
+        });
+        lab.textContent = "profundidad " + depth + " · " + (depth > 11 ? "saturada" : depth > 7 ? "creciendo" : "al día");
+      }
+      paint();
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(function () {
+        t++;
+        depth += dir * (Math.random() > .35 ? 1 : 0);
+        if (depth >= N - 2) dir = -1;
+        if (depth <= 1) dir = 1;
+        paint();
+      }, 340);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["queue"] = build;
+  })();
+
+  /* ── 9 · health pulse ── */
+  (function () {
+    var host = document.getElementById("m-pulse");
+    function build() {
+      host.innerHTML = "";
+      var s = svg(320, 116);
+      var nodes = [[60, 58, "api", "var(--good)", true], [160, 58, "db", "var(--good)", true], [260, 58, "worker", "var(--critical)", false]];
+      nodes.forEach(function (n) {
+        if (n[4] && !reduced) {
+          var r1 = el("circle", { cx: n[0], cy: n[1], r: 6, fill: "none", stroke: n[3], "stroke-width": 1.5, class: "ring" });
+          var r2 = el("circle", { cx: n[0], cy: n[1], r: 6, fill: "none", stroke: n[3], "stroke-width": 1.5, class: "ring", style: "animation-delay:.9s" });
+          s.appendChild(r1); s.appendChild(r2);
+        }
+        s.appendChild(el("circle", { cx: n[0], cy: n[1], r: 6, fill: n[3] }));
+        s.appendChild(el("text", { x: n[0], y: n[1] + 26, class: "nlabel", "text-anchor": "middle" }, n[2]));
+        s.appendChild(el("text", { x: n[0], y: n[1] + 38, class: "tick", "text-anchor": "middle" }, n[4] ? "latiendo" : "detenido"));
+      });
+      host.appendChild(s);
+    }
+    build();
+    REPLAY["pulse"] = build;
+  })();
+
+  /* ── 10 · screen walkthrough ── */
+  (function () {
+    var phone = document.getElementById("m-phone");
+    var steps = document.getElementById("m-jsteps");
+    var SCREENS = [
+      { t: "Abre la despensa", k: "list" },
+      { t: "Explora recetas", k: "cards" },
+      { t: "Elige una receta", k: "detail" },
+      { t: "Cocina y registra", k: "cta" }
+    ];
+    var loop = null;
+    function build() {
+      if (loop) clearInterval(loop);
+      phone.innerHTML = ""; steps.innerHTML = "";
+      SCREENS.forEach(function (sc, i) {
+        var s = document.createElement("div");
+        s.className = "screen";
+        s.setAttribute("data-i", i);
+        s.innerHTML = '<div class="bar a"></div>' +
+          (sc.k === "list" ? '<div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="box"></div>'
+          : sc.k === "cards" ? '<div class="box"></div><div class="box"></div>'
+          : sc.k === "detail" ? '<div class="box"></div><div class="bar"></div><div class="bar"></div>'
+          : '<div class="box"></div><div class="cta"></div>');
+        phone.appendChild(s);
+        var st = document.createElement("div");
+        st.className = "jstep";
+        st.innerHTML = '<span class="b"></span><span>' + sc.t + "</span>";
+        steps.appendChild(st);
+      });
+      var scr = phone.querySelectorAll(".screen"), sts = steps.querySelectorAll(".jstep");
+      var i = 0;
+      function show(k) {
+        scr.forEach(function (s, n) { s.setAttribute("data-on", String(n === k)); });
+        sts.forEach(function (s, n) { s.setAttribute("data-on", String(n === k)); });
+      }
+      show(0);
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(function () { i = (i + 1) % SCREENS.length; show(i); }, 1500);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["journey"] = build;
+  })();
+
+  /* ── 11 · ghost cursor ── */
+  (function () {
+    var stage = document.getElementById("m-ghost");
+    var cur = document.getElementById("m-cursor");
+    var ring = document.getElementById("m-click");
+    var cells = [].slice.call(stage.querySelectorAll("[data-k]"));
+    var PATH = [0, 1, 3, 2];
+    var loop = null;
+    function build() {
+      if (loop) clearInterval(loop);
+      cells.forEach(function (c) { c.setAttribute("data-hit", "false"); });
+      var i = 0;
+      function move(k) {
+        var cell = cells[PATH[k]];
+        var cb = cell.getBoundingClientRect(), sb = stage.getBoundingClientRect();
+        var x = cb.left - sb.left + cb.width / 2, y = cb.top - sb.top + cb.height / 2;
+        cur.style.transform = "translate(" + x + "px," + y + "px)";
+        later(function () {
+          cells.forEach(function (c) { c.setAttribute("data-hit", "false"); });
+          cell.setAttribute("data-hit", "true");
+          ring.style.left = (x - 4) + "px";
+          ring.style.top = (y - 4) + "px";
+          ring.style.animation = "none";
+          void ring.offsetWidth;
+          ring.style.animation = "clickpop .6s ease-out";
+        }, 700);
+      }
+      move(0);
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(function () { i = (i + 1) % PATH.length; move(i); }, 1400);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["ghost"] = build;
+  })();
+
+  /* ── 12 · funnel ── */
+  (function () {
+    var host = document.getElementById("m-funnel");
+    var STAGES = [["registro", 100, 4820], ["despensa", 71, 3422], ["plan", 44, 2120], ["compra", 29, 1398], ["cocina", 18, 868]];
+    function build() {
+      host.innerHTML = "";
+      STAGES.forEach(function (st, i) {
+        var row = document.createElement("div");
+        row.className = "frow";
+        row.innerHTML = '<span class="lab">' + st[0] + '</span>' +
+          '<span><span class="fbar" style="width:' + st[1] + '%;background:' + (i === 0 ? "var(--s1)" : i === STAGES.length - 1 ? "var(--s2)" : "var(--s1)") + '"></span></span>' +
+          '<span class="v">' + st[2].toLocaleString("es-CL") + "</span>";
+        host.appendChild(row);
+        var bar = row.querySelector(".fbar");
+        if (reduced || !MOTION.on) { bar.style.transform = "scaleX(1)"; return; }
+        later(function () { bar.style.transform = "scaleX(1)"; }, 130 * i + 60);
+      });
+    }
+    build();
+    REPLAY["funnel"] = build;
+  })();
+
+  /* ── 13 · scroll-driven steps ── */
+  (function () {
+    var scroller = document.getElementById("m-scrolly");
+    var viz = document.getElementById("m-scrolly-viz");
+    var paras = [].slice.call(scroller.querySelectorAll("p"));
+    function draw(step) {
+      viz.innerHTML = "";
+      var s = svg(118, 168);
+      var labels = ["boleta", "canónico", "despensa", "nivel"];
+      labels.forEach(function (l, i) {
+        var lit = i <= step;
+        s.appendChild(el("rect", { x: 12, y: 8 + i * 40, width: 94, height: 28, rx: 7, fill: lit ? "var(--accent-soft)" : "var(--raised)", stroke: lit ? "var(--accent)" : "var(--rule)", "stroke-width": 1.5 }));
+        s.appendChild(el("text", { x: 59, y: 26 + i * 40, class: "nlabel", "text-anchor": "middle", fill: lit ? "var(--accent)" : "var(--muted)" }, l));
+        if (i < 3) s.appendChild(el("path", { d: "M59," + (36 + i * 40) + " V" + (48 + i * 40), class: "edge", stroke: i < step ? "var(--accent)" : "var(--rule)" }));
+      });
+      viz.appendChild(s);
+    }
+    function build() {
+      scroller.scrollTop = 0;
+      draw(0);
+      paras.forEach(function (p, i) { p.setAttribute("data-on", String(i === 0)); });
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) {
+          var i = Number(e.target.getAttribute("data-step"));
+          paras.forEach(function (p, k) { p.setAttribute("data-on", String(k === i)); });
+          draw(i);
+        }
+      });
+    }, { root: scroller, threshold: 0.9 });
+    paras.forEach(function (p) { io.observe(p); });
+    build();
+    REPLAY["scrolly"] = build;
+  })();
+
+  /* ── 14 · bar race (FLIP) ── */
+  (function () {
+    var host = document.getElementById("m-race");
+    var lab = document.getElementById("m-race-lab");
+    var NAMES = ["Despensa", "Técnica", "Sabor", "Cultura", "Favoritos"];
+    var FRAMES = [
+      [42, 27, 19, 12, 8], [40, 30, 22, 14, 12], [36, 33, 25, 17, 16],
+      [33, 35, 28, 19, 21], [30, 34, 32, 22, 26], [28, 32, 36, 24, 30]
+    ];
+    var rows = {}, loop = null, f = 0;
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = ""; rows = {};
+      NAMES.forEach(function (n) {
+        var r = document.createElement("div");
+        r.className = "rrow";
+        r.innerHTML = '<span>' + n + '</span><span><span class="rbar"></span></span><span class="v">0</span>';
+        host.appendChild(r);
+        rows[n] = r;
+      });
+      f = 0;
+      paint(reduced || !MOTION.on ? FRAMES.length - 1 : 0);
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(function () { f = (f + 1) % FRAMES.length; paint(f); }, 1100);
+      timers.push(loop);
+    }
+    function paint(k) {
+      var vals = FRAMES[k], max = Math.max.apply(null, vals);
+      var order = NAMES.map(function (n, i) { return { n: n, v: vals[i] }; })
+        .sort(function (a, b) { return b.v - a.v; });
+      order.forEach(function (o, rank) {
+        var r = rows[o.n];
+        r.style.transform = "translateY(" + rank * 26 + "px)";       /* FLIP: position by rank */
+        r.querySelector(".rbar").style.width = Math.round((o.v / max) * 100) + "%";
+        r.querySelector(".v").textContent = o.v;
+      });
+      lab.textContent = "semana " + (k + 1) + " de " + FRAMES.length;
+    }
+    build();
+    REPLAY["race"] = build;
+  })();
+
+  /* ── 15 · chart entrance ── */
+  (function () {
+    var host = document.getElementById("m-entrance");
+    var DATA = [3, 5, 4, 7, 6, 8, 6, 9];
+    function build() {
+      host.innerHTML = "";
+      var s = svg(320, 140);
+      var x0 = 8, y0 = 112, w = 304, h = 88, max = 10;
+      var pts = DATA.map(function (v, i) { return (x0 + (i / (DATA.length - 1)) * w) + "," + (y0 - (v / max) * h); });
+      var d = "M" + pts.join(" L");
+      var path = el("path", { d: d, fill: "none", stroke: "var(--s1)", "stroke-width": 2, "stroke-linejoin": "round" });
+      s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, stroke: "var(--rule)", "stroke-width": 1 }));
+      s.appendChild(path);
+      var num = el("text", { x: x0, y: 26, class: "dlabel", "font-size": 26, fill: "var(--ink)" }, "0");
+      s.appendChild(num);
+      s.appendChild(el("text", { x: x0, y: 42, class: "tick" }, "comidas en 8 semanas"));
+      host.appendChild(s);
+      var len = path.getTotalLength();
+      var total = DATA.reduce(function (a, b) { return a + b; }, 0);
+      if (reduced || !MOTION.on) { num.textContent = total; return; }
+      path.style.setProperty("--len", len);
+      path.setAttribute("class", "draw");
+      var t0 = null;
+      function step(ts) {
+        if (t0 === null) t0 = ts;
+        var k = Math.min(1, (ts - t0) / 1400);
+        num.textContent = Math.round(total * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+    build();
+    REPLAY["entrance"] = build;
+  })();
+
+  /* ── 16 · chart morph ── */
+  (function () {
+    var host = document.getElementById("m-morph");
+    var DATA = [12, 34, 41, 19, 6];
+    var loop = null, asBars = true;
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = "";
+      var s = svg(320, 132);
+      var x0 = 14, y0 = 108, w = 292, max = 45, bw = w / DATA.length;
+      var marks = DATA.map(function (v, i) {
+        var x = x0 + i * bw + 6, h = (v / max) * 84;
+        var r = el("rect", { x: x, y: y0 - h, width: bw - 14, height: h, rx: 4, fill: "var(--s1)" });
+        r.style.transition = "all .6s cubic-bezier(.2,.7,.3,1)";
+        s.appendChild(r);
+        s.appendChild(el("text", { x: x + (bw - 14) / 2, y: 124, class: "tick", "text-anchor": "middle" }, "★".repeat(i + 1)));
+        return { r: r, x: x, h: h, bw: bw - 14, y0: y0 };
+      });
+      s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, stroke: "var(--rule)", "stroke-width": 1 }));
+      host.appendChild(s);
+      function toDots() {
+        marks.forEach(function (m) {
+          m.r.setAttribute("x", m.x + m.bw / 2 - 6);
+          m.r.setAttribute("width", 12);
+          m.r.setAttribute("height", 12);
+          m.r.setAttribute("y", m.y0 - m.h - 6);
+          m.r.setAttribute("rx", 6);
+        });
+      }
+      function toBars() {
+        marks.forEach(function (m) {
+          m.r.setAttribute("x", m.x);
+          m.r.setAttribute("width", m.bw);
+          m.r.setAttribute("height", m.h);
+          m.r.setAttribute("y", m.y0 - m.h);
+          m.r.setAttribute("rx", 4);
+        });
+      }
+      asBars = true;
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(function () { asBars = !asBars; asBars ? toBars() : toDots(); }, 1500);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["morph"] = build;
+  })();
+
+  /* ── 17 · timeline scrubber ── */
+  (function () {
+    var viz = document.getElementById("m-scrub-viz");
+    var input = document.getElementById("m-scrub");
+    var when = document.getElementById("m-scrub-when");
+    var what = document.getElementById("m-scrub-what");
+    var DATA = [3, 5, 4, 7, 6, 8, 6, 9];
+    function draw(k) {
+      viz.innerHTML = "";
+      var s = svg(320, 116);
+      var x0 = 10, y0 = 96, w = 300, max = 10, bw = w / DATA.length;
+      DATA.forEach(function (v, i) {
+        var h = (v / max) * 76;
+        s.appendChild(el("rect", {
+          x: x0 + i * bw + 3, y: y0 - h, width: bw - 8, height: h, rx: 4,
+          fill: i <= k ? "var(--s1)" : "var(--rule-soft)"
+        }));
+      });
+      s.appendChild(el("line", {
+        x1: x0 + k * bw + bw / 2 - 1, y1: 8, x2: x0 + k * bw + bw / 2 - 1, y2: y0,
+        stroke: "var(--accent)", "stroke-width": 1.5
+      }));
+      s.appendChild(el("line", { x1: x0, y1: y0, x2: x0 + w, y2: y0, stroke: "var(--rule)", "stroke-width": 1 }));
+      viz.appendChild(s);
+      when.textContent = "S" + (k + 1);
+      what.textContent = DATA[k] + " comidas";
+    }
+    input.addEventListener("input", function () { draw(Number(input.value)); });
+    function build() { input.value = 0; draw(0); }
+    build();
+    REPLAY["scrub"] = build;
+  })();
+
+  /* ── 18 · skeleton → content ── */
+  (function () {
+    var host = document.getElementById("m-swap");
+    function real() {
+      host.innerHTML = '<div class="real"><div class="h">Cazuela de vacuno</div>' +
+        '<div class="p">92% en despensa · 95 min · complejidad 3</div>' +
+        '<div class="p">Te falta: cilantro, porotos verdes.</div></div>';
+    }
+    function build() {
+      if (reduced || !MOTION.on) { real(); return; }
+      host.innerHTML = '<div class="skel" style="width:62%"></div><div class="skel" style="width:88%"></div><div class="skel" style="width:74%"></div>';
+      later(real, 1500);
+    }
+    build();
+    REPLAY["swap"] = build;
+  })();
+
+  /* ── 19 · live log ticker ── */
+  (function () {
+    var host = document.getElementById("m-ticker");
+    var LINES = [
+      ["info", "pantry.sync · 42 líneas resueltas"],
+      ["ok", "recipe.match · 169 cocinables"],
+      ["info", "cook.start · Cazuela · 4 porciones"],
+      ["warn", "timer.late · paso 3 vencido hace 40s"],
+      ["ok", "cook.done · nivel recalculado 3.2"],
+      ["info", "explore.novel · técnica: confitar"]
+    ];
+    var loop = null, i = 0, clock = 0;
+    function push() {
+      var l = LINES[i % LINES.length]; i++;
+      clock += 3 + (i % 4);
+      var row = document.createElement("div");
+      row.className = "row";
+      var col = l[0] === "ok" ? "var(--good)" : l[0] === "warn" ? "var(--warning)" : "var(--muted)";
+      row.innerHTML = '<span class="t">' + String(Math.floor(clock / 60)).padStart(2, "0") + ":" + String(clock % 60).padStart(2, "0") + '</span>' +
+        '<span class="lvl" style="color:' + col + '">' + l[0] + '</span><span class="m">' + l[1] + "</span>";
+      host.appendChild(row);
+      while (host.children.length > 6) host.removeChild(host.firstChild);
+    }
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = ""; i = 0; clock = 0;
+      for (var k = 0; k < 5; k++) push();
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(push, 1200);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["ticker"] = build;
+  })();
+
+  /* ── 20 · state machine ── */
+  (function () {
+    var host = document.getElementById("m-sm");
+    var lab = document.getElementById("m-sm-lab");
+    var STATES = ["planificada", "en curso", "pausada", "completada"];
+    var EDGES = [[0, 1, "iniciar"], [1, 2, "pausar"], [2, 1, "reanudar"], [1, 3, "registrar"]];
+    var loop = null, step = 0;
+    function build() {
+      if (loop) clearInterval(loop);
+      function draw(k) {
+        host.innerHTML = "";
+        var s = svg(320, 124);
+        var pos = [[46, 30], [160, 30], [160, 96], [274, 30]];
+        var e = EDGES[k % EDGES.length];
+        EDGES.forEach(function (ed, i) {
+          var a = pos[ed[0]], b = pos[ed[1]];
+          var hot = i === (k % EDGES.length);
+          var d = "M" + a[0] + "," + a[1] + " L" + b[0] + "," + b[1];
+          s.appendChild(el("path", {
+            d: d, class: "edge" + (hot && !reduced ? " ants" : ""),
+            stroke: hot ? "var(--accent)" : "var(--rule)"
+          }));
+        });
+        pos.forEach(function (p, i) {
+          var active = i === EDGES[k % EDGES.length][1];
+          s.appendChild(el("circle", {
+            cx: p[0], cy: p[1], r: 15,
+            fill: active ? "var(--accent-soft)" : "var(--raised)",
+            stroke: active ? "var(--accent)" : "var(--rule)", "stroke-width": 1.5
+          }));
+          s.appendChild(el("text", { x: p[0], y: p[1] + 30, class: "nlabel", "text-anchor": "middle", fill: active ? "var(--accent)" : "var(--muted)" }, STATES[i]));
+        });
+        host.appendChild(s);
+        lab.textContent = "transición: " + e[2] + " → " + STATES[e[1]];
+      }
+      step = 0;
+      draw(0);
+      if (reduced || !MOTION.on) return;
+      loop = setInterval(function () { step++; draw(step); }, 1600);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["sm"] = build;
+  })();
+
+  /* ── replay wiring ── */
+  document.querySelectorAll(".ex-replay").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var card = b.closest(".ex");
+      var fn = REPLAY[card.getAttribute("data-anim")];
+      if (fn) fn();
+      var old = b.textContent;
+      b.textContent = "…";
+      setTimeout(function () { b.textContent = old; }, 500);
+    });
+  });
+  document.getElementById("replay-all").addEventListener("click", function () {
+    Object.keys(REPLAY).forEach(function (k) { REPLAY[k](); });
+  });
+  window.__replayAll = function () { Object.keys(REPLAY).forEach(function (k) { REPLAY[k](); }); };
+
+  /* ── copy names + keeps ── */
+  (function () {
+    var keeps = [];
+    var list = document.getElementById("keeps-list");
+    var none = document.getElementById("keeps-none");
+    var count = document.getElementById("keeps-n");
+    var text = document.getElementById("keeps-text");
+    var copyBtn = document.getElementById("keeps-copy");
+
+    function render() {
+      list.innerHTML = "";
+      keeps.forEach(function (k) {
+        var li = document.createElement("li");
+        li.textContent = k;
+        list.appendChild(li);
+      });
+      count.textContent = keeps.length;
+      none.style.display = keeps.length ? "none" : "block";
+    }
+    function toClipboard(t, onFail) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(t).then(function () {}, onFail);
+      } else { onFail(); }
+    }
+    document.querySelectorAll(".ex-copy").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var card = b.closest(".ex"), name = card.getAttribute("data-name");
+        toClipboard(name, function () { text.value = name; text.setAttribute("data-open", "true"); text.select(); });
+        card.setAttribute("data-marked", "true");
+        if (keeps.indexOf(name) === -1) keeps.push(name);
+        render();
+        var old = b.textContent;
+        b.textContent = "Copied";
+        setTimeout(function () { b.textContent = old; }, 1400);
+      });
+    });
+    copyBtn.addEventListener("click", function () {
+      if (text.getAttribute("data-open") === "true") {
+        text.setAttribute("data-open", "false");
+        copyBtn.textContent = "Copy the list";
+        return;
+      }
+      if (!keeps.length) return;
+      var t = keeps.join("\n");
+      toClipboard(t, function () {
+        text.value = t; text.setAttribute("data-open", "true"); text.select();
+        copyBtn.textContent = "Close panel";
+      });
+      copyBtn.textContent = "Copied";
+      setTimeout(function () { if (copyBtn.textContent === "Copied") copyBtn.textContent = "Copy the list"; }, 1600);
+    });
+    document.getElementById("keeps-clear").addEventListener("click", function () {
+      keeps = [];
+      document.querySelectorAll('.ex[data-marked="true"]').forEach(function (c) { c.removeAttribute("data-marked"); });
+      text.setAttribute("data-open", "false");
+      copyBtn.textContent = "Copy the list";
+      render();
+    });
+    render();
+  })();
+})();
+</script>

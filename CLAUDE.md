@@ -60,10 +60,11 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 
 `.claude/output-styles/gabe.md` (movement register: action → consequence → next move; comptroller position-check on direction changes; DECISION blocks with mandatory defer-triggers; actors·elements·effects explanation format — naked chain, cast cards, risk dots) + `.claude/register-core.md` (4-rule payload re-injected by `.claude/settings.json` hooks on every prompt and after compaction). Canary battery: `tests/register/run.sh` — invariants pinned, mutation-proven. KILL/WIDEN conditions live in the style file's header; widen machine-wide only after it survives here. Full scope record: `docs/investigations/2026-07-30-gabe-suite-diet/`.
 
-## Capabilities (26 skills)
+## Capabilities (27 skills)
 
 | Skill | Version | Purpose |
 |---|---|---|
+| **gabe-artifact** | 1.1.0 | House chrome for published Artifacts — left-anchored content, one cog panel top-right, the fixed font roster (Mono default · Segoe UI), and H4 motion-first: flows/traces/journeys ship moving, replayable, pausable, reduced-motion safe; two gated pattern libraries (20 motion + 31 static) as assets |
 | **gabe-cc-init** | 1.2.4 | Brownfield command-center adoption — archive-never-delete init, machine-ranked shortlist, one section per run at human speed, walk-recorded approval; tracker lives outside PLAN.md (human-initiated only) |
 | **gabe-assess** | 1.2.0 | The direction guard — rapid impact assessment (blast radius, maturity scope, prerequisites) + the boundary check absorbed from gabe-align (values/AP advisory at commit/PR boundaries); ruled to auto-trigger on direction steers (rework pending) |
 | **gabe-commit** | 2.4.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit; optional results_out digest, path or list (reports every tier, gates none) |
