@@ -1,5 +1,5 @@
 {
-  "_source": "Each key is the marker string gabe-init Step 2 greps for. Each value is the exact hook-array entry to append under the matching settings.json event array (SessionStart / PreToolUse / PostToolUse / Stop). Hook scripts ship from the suite repo (scripts/hooks/kdbp/) via install.sh. Never edit the command strings by hand \u2014 reinstall via the suite if a hook needs to change. Retired in A2 KDBP-lite: the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook.",
+  "_source": "Each key is the marker string gabe-init Step 2 greps for. Each value is the exact hook-array entry to append under the matching settings.json event array (SessionStart / PreToolUse / PostToolUse / Stop). Hook scripts ship from the suite repo (scripts/hooks/kdbp/) via install.sh. Never edit the command strings by hand — reinstall via the suite if a hook needs to change. Retired in A2 KDBP-lite: the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook.",
   "KDBP Active": {
     "event": "SessionStart",
     "entry": {
@@ -74,6 +74,18 @@
           "type": "command",
           "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/stop-session-reminder.sh\"",
           "timeout": 10
+        }
+      ]
+    }
+  },
+  "DIRECTION GUARD": {
+    "event": "UserPromptSubmit",
+    "entry": {
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/direction-guard.sh\"",
+          "timeout": 5
         }
       ]
     }

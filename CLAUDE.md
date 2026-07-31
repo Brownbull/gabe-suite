@@ -66,7 +66,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 |---|---|---|
 | **gabe-artifact** | 1.1.0 | House chrome for published Artifacts — left-anchored content, one cog panel top-right, the fixed font roster (Mono default · Segoe UI), and H4 motion-first: flows/traces/journeys ship moving, replayable, pausable, reduced-motion safe; two gated pattern libraries (20 motion + 31 static) as assets |
 | **gabe-cc-init** | 1.2.4 | Brownfield command-center adoption — archive-never-delete init, machine-ranked shortlist, one section per run at human speed, walk-recorded approval; tracker lives outside PLAN.md (human-initiated only) |
-| **gabe-assess** | 1.2.0 | The direction guard — rapid impact assessment (blast radius, maturity scope, prerequisites) + the boundary check absorbed from gabe-align (values/AP advisory at commit/PR boundaries); ruled to auto-trigger on direction steers (rework pending) |
+| **gabe-assess** | 1.3.0 | The direction guard — rapid impact assessment (blast radius, maturity scope, prerequisites) + the boundary check absorbed from gabe-align; auto-trigger LIVE: direction-guard.sh (UserPromptSubmit, KDBP projects) injects the steer rule → /gabe-assess brief before building |
 | **gabe-commit** | 2.4.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit; optional results_out digest, path or list (reports every tier, gates none) |
 | **gabe-docs** | 1.2.0 | Documentation standards + diagrams library + the suite execution contract (background) |
 | **gabe-docsite** | 1.0.2 | Publish docs onto the generated HTML docs site |
@@ -74,7 +74,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-execute** | 2.2.1 | Phase execution with tier cap, escalation gate, checkpoint commits; TASK CONTRACT carries the phase's `CASES:` (C-ids from /gabe-red) + case-scoped verify; narration legs authored hot |
 | **gabe-cc-update** | 1.6.1 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-cc-init |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
-| **gabe-health** | 1.2.0 | The suite scanner, three lenses (fork/read-only) — codebase health (god files, churn, coupling), decision-debt (absorbed from gabe-debt, AP citations), and the ask-first skill-estate sweep (promote/archive by usage); ruled production-push gate |
+| **gabe-health** | 1.2.0 | The suite scanner, three lenses (fork/read-only) — codebase health (god files, churn, coupling), decision-debt (absorbed from gabe-debt, AP citations), and the ask-first skill-estate sweep (promote/archive by usage); LIVE production-push gate via /gabe-push Step 3.7 |
 | **gabe-help** | 1.2.1 | Context-aware guide + the P14 cross-project tool registry; Full Suite Catalog is GENERATED from skill frontmatter (scripts/gen-help-catalog.py, run by install.sh) |
 | **gabe-init** | 2.3.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
 | **gabe-lens** | 2.4.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
@@ -84,7 +84,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-next** | 2.4.1 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-cc-update) |
 | **gabe-plan** | 2.5.2 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
 | **gabe-pulse** | 1.0.0 | Read-only completeness sweep (satellite) — ten deterministic signals in four bands (EVIDENCE/LIFECYCLE/SHIP/AGING); `scripts/ledger-gap.sh` subtracts the LEDGER's Commits column from `git log` to surface work that escaped the record; defers routing to next.mjs, writes nothing, dispatches nothing |
-| **gabe-push** | 2.2.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env ship prints the /gabe-cc-update release pointer |
+| **gabe-push** | 2.3.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env/--epic pushes run the PRODUCTION GATES (Step 3.7: /gabe-health three-lens scan, findings presented, ONE proceed/hold ask); terminal-env ship prints the /gabe-cc-update release pointer |
 | **gabe-red** | 1.4.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips; scripts/prove-guard.py re-proves a guard can still FAIL (mutate → assert red → restore), feeding the center's named-vs-guarded distinction |
 | **gabe-review** | 1.8.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |

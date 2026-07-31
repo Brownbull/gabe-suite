@@ -269,8 +269,9 @@ restores the copy procedure (see the archive README).
 
 ### Step 2: Check hooks
 
-Check `~/.claude/settings.json` for these hooks — the six markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
+Check `~/.claude/settings.json` for these hooks — the seven markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
 - SessionStart hook (contains `KDBP Active`)
+- UserPromptSubmit hook (contains `DIRECTION GUARD` — the semantic steer rule, /gabe-assess auto-trigger)
 - SessionStart plan awareness (contains `ACTIVE PLAN` or `gabe-plan`)
 - PreToolUse checkpoint hook (contains `KDBP CHECKPOINT`)
 - PostToolUse structure warning (contains `STRUCTURE:` — new-file placement)

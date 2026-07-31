@@ -135,6 +135,28 @@ Runs every invocation. Detects branches on the remote that were not present when
    - If 0 and not a new local branch: "Nothing to push. All commits already on remote." — stop.
    - `push_source = origin/<promote_from>` skips this check (it's already on the remote by definition).
 
+### Step 3.7: Production gates (terminal env, or explicit epic)
+
+Ruled 2026-07-31 (operator: terminal-env + explicit override · ask-before-push).
+
+1. **Is this push GATED?**
+   - The target env is the TERMINAL env (no `promote_from` chain continues past it) **and** PUSH.md
+     declares more than one env → **gated**.
+   - The invocation says `--epic` (or the request says "push epic") → **gated**, any env, any project.
+   - PUSH.md declares a SINGLE env (no staging exists): automatic gating is OFF — print one line,
+     `ℹ ungated push — say 'push epic' (or --epic) to run the production gates`, and continue. The
+     line is informational, never a question.
+   - Staging / non-terminal envs → not gated; continue to Step 4 ("staging = keep moving").
+2. **Run the scan** (gated pushes only): dispatch `/gabe-health` — the full three-lens scan
+   (structural rot · decision-debt · estate sweep), read-only fork. The estate sweep's
+   promote/archive proposals ride along per its own ask-first contract.
+3. **Ask, never silently block or pass:** present the findings summary (counts per lens, the
+   CRITICAL/HIGH items verbatim), then ONE question — `[proceed]` push now / `[hold]` stop the push,
+   findings stand (route follow-ups: `/gabe-review deferred`, `/gabe-plan`). A held push exits
+   cleanly; nothing is auto-fixed.
+4. **Record:** carry `gates: <run: p/h counts | skipped(ungated) | held>` into Step 7's summary and
+   Step 8's ledger row tail.
+
 ### Step 4: Push
 
 1. Push logic depends on `push_source`:

@@ -158,5 +158,15 @@ DEBT="{'version':1,'status':'active','current_phase':'2','phases':[{'id':'1','ce
 nxout "$DEBT" | grep -q 'Commit→/gabe-commit' && ok || bad "next: debt banner must map every cell to its command (round-3 UX)"
 
 echo "=================================="
+
+# --- direction-guard: FIRE in KDBP projects, SILENT elsewhere (2026-07-31) ----
+DG="$REPO/scripts/hooks/kdbp/direction-guard.sh"
+out=$(CLAUDE_PROJECT_DIR="$T" bash "$DG")           # $T has .kdbp/ -> must FIRE
+case "$out" in *"DIRECTION GUARD"*) ok ;; *) bad "direction-guard: must FIRE when .kdbp exists" ;; esac
+NOK=$(mktemp -d)
+out=$(CLAUDE_PROJECT_DIR="$NOK" bash "$DG")         # no .kdbp -> must stay SILENT
+[ -z "$out" ] && ok || bad "direction-guard: must stay SILENT without .kdbp"
+rm -rf "$NOK"
+
 echo "hooks harness: $pass passed, $fail failed"
 [ "$fail" = 0 ]

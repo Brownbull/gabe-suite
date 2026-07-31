@@ -41,7 +41,7 @@ The six analyses: (1) God Files — touched in >25% of commits, (2) Churn Hotspo
 
 ## Estate-sweep lens (new, 2026-07-30 — ask-first, never auto)
 
-`/gabe-health estate` — the lazy-promotion rack model applied to the skill estate: (a) PROMOTE — did recent work produce a repeated behavior worth promoting to a skill? (b) ARCHIVE — is an installed skill long-unused (no invocations across a stated window) and a candidate for `skills/_archive/`? Both directions produce PROPOSALS presented to the human with the evidence (usage counts, window, inbound references); nothing is created or archived without an explicit yes. Ruled to run as a PRODUCTION-push gate alongside the other two lenses when the gabe-push rework lands.
+`/gabe-health estate` — the lazy-promotion rack model applied to the skill estate: (a) PROMOTE — did recent work produce a repeated behavior worth promoting to a skill? (b) ARCHIVE — is an installed skill long-unused (no invocations across a stated window) and a candidate for `skills/_archive/`? Both directions produce PROPOSALS presented to the human with the evidence (usage counts, window, inbound references); nothing is created or archived without an explicit yes. LIVE as the PRODUCTION-push gate since 2026-07-31: /gabe-push Step 3.7 dispatches the full three-lens scan on terminal-env and --epic pushes, presents findings, and asks proceed/hold.
 
 ## Procedure
 

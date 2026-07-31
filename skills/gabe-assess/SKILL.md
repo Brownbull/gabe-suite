@@ -3,7 +3,7 @@ name: gabe-assess
 description: "The direction guard — rapid impact assessment (blast radius, maturity-appropriate scope, prerequisites) before committing to an 'obvious' change, plus the boundary check absorbed from gabe-align (values + AP advisory at commit/PR boundaries)."
 when_to_use: "A new direction appears mid-development, the scope is being steered or expanded, 'this change feels obvious' — evaluate pros/cons and proceed-vs-backlog before code; also pre-flight before a risky or irreversible change. Cheaper than a full plan."
 metadata:
-  version: 1.2.0
+  version: 1.3.0
 ---
 
 # Gabe Assess — Change Impact Assessment Skill
@@ -20,9 +20,9 @@ Pause before an "obvious yes" and take a photograph of what a proposed change ac
 
 The values + AP advisory check that lived in gabe-align now runs here as part of the assessment when the change is risky, irreversible, or lands at a commit/PR boundary: check the proposal against the project's stated values and the Architecture Principles (`templates/architecture-principles.md`, AP1–AP13, advisory citations only — never gates). Deep spec preserved at `../_archive/gabe-align/references/`.
 
-## Direction guard (ruled rework, 2026-07-30 — not yet wired)
+## Direction guard (LIVE 2026-07-31 — semantic trigger)
 
-Operator ruling: this skill becomes the suite's DIRECTION GUARD — it should fire ITSELF when development steers a new direction, evaluating the steer (pros/cons, proceed-vs-backlog) instead of waiting to be called. The pain it answers: targets moved and scope expanded across sessions with no at-hand evaluation. Trigger points ruled: a direction steer detected mid-work · a very big change · after many commits/merges on main. The trigger mechanism (hook or register-comptroller escalation) is design work for the rework session — until it lands, invoke manually at those moments.
+This skill IS the suite's direction guard. The trigger is semantic and machine-wide: `scripts/hooks/kdbp/direction-guard.sh` (UserPromptSubmit, KDBP projects only) injects the steer rule into every prompt — a prompt that steers the work in a new direction (new target, scope expansion, tier jump) runs `/gabe-assess brief` BEFORE building and shows it: blast radius · tier fit · proceed-vs-backlog. Contained, tier-matched asks proceed without ceremony. Semantic-only by operator ruling (2026-07-31) — no commit counters, no diff thresholds; the pain this answers is targets moving across sessions with no at-hand evaluation.
 
 ## Usage / modes
 
