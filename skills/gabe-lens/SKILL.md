@@ -1,7 +1,7 @@
 ---
 name: gabe-lens
-description: Cognitive translation skill that transforms technical concepts into analogies, spatial maps, constraint boxes, and one-line handles — adapts to your cognitive suit.
-when_to_use: "Explain this concept my way, give me a handle / analogy / spatial map for X, annotate this file, calibrate my cognitive suit — cognitive translation of technical material."
+description: "Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, adapted to your cognitive suit."
+when_to_use: "Explain this concept my way, give me a handle / analogy / map for X, annotate this file, calibrate my suit."
 metadata:
   version: 2.4.0
 ---

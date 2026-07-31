@@ -1,7 +1,7 @@
 ---
 name: gabe-health
-description: "Codebase health analysis — god files, churn hotspots, coupling clusters, bug concentration, and scope creep vs plan. Run before epics, during retros, or when things feel fragile. Usage: /gabe-health [focus]"
-when_to_use: "How healthy is the codebase, are we accumulating mess — god files, churn hotspots, coupling clusters, bug concentration, scope creep vs plan; before epics, during retros, when things feel fragile."
+description: "Codebase health — god files, churn hotspots, coupling clusters, bug concentration, scope creep vs plan."
+when_to_use: "How healthy is the codebase, are we accumulating mess — before epics, during retros, when things feel fragile."
 context: fork
 agent: Explore
 metadata:

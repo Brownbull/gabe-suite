@@ -1,13 +1,15 @@
 ---
 name: gabe-init
-description: "Initialize a project with the KDBP stack — creates .kdbp/, installs hooks, configures by project type and maturity. Usage: /gabe-init [project-name]"
-when_to_use: "Set up KDBP in a project, initialize the Gabe stack, scaffold .kdbp/ — human-initiated only; never auto-invoke."
+description: "Project setup — creates .kdbp/, installs hooks, configures by project type and maturity."
+when_to_use: "Set up KDBP, initialize the Gabe stack — human-initiated only; never auto-invoke."
 disable-model-invocation: true
 metadata:
   version: 2.3.0
 ---
 
 # Gabe Init — KDBP project scaffolder
+
+**Usage:** `/gabe-init [project-name]`
 
 ## Gabe execution contract (E1–E7)
 

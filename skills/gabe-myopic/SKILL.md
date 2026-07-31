@@ -1,7 +1,7 @@
 ---
 name: gabe-myopic
-description: "Role-play a short-sighted user with a shallow planning horizon (1 / 1.5 / 2 steps — never 3+) and walk a flow step by step to flag foresight traps (consequences landing 2+ steps later), overwhelm points, recall demands, and no-undo dead-ends. The INVERSE of an expert panel: what would a beginner fail to see coming? Runs 3 horizons at once and reports each one's fatal step. Works on a described workflow, spec, UI code, screenshots, or a live app. Usage: /gabe-myopic [walk|trap|step|fix|horizon] [target]"
-when_to_use: "Review a UX flow / onboarding / checkout / wizard / form for whether normal people get confused, overwhelmed, or trapped; 'feels fine to us but users drop off'; sanity-check a spec before building; before shipping any multi-step flow."
+description: "Short-sighted-user walkthrough — role-plays shallow planning horizons (1/1.5/2 steps) to flag foresight traps, overwhelm, recall demands, and no-undo dead-ends; reports each horizon's fatal step."
+when_to_use: "Review a UX flow / onboarding / checkout / wizard for whether normal people get confused or trapped; sanity-check a spec before shipping any multi-step flow."
 context: fork
 metadata:
   version: 1.2.0

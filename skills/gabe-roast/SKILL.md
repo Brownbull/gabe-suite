@@ -1,7 +1,7 @@
 ---
 name: gabe-roast
-description: "Adversarial gap review from a required perspective. Usage: /gabe-roast [perspective] [target]. Classifies gaps by maturity (MVP/Enterprise/Scale) and importance (Critical/High/Medium/Low) with one-liners."
-when_to_use: "Roast this, find what's missing, adversarial gap review of a plan/spec/diff/implementation from a named perspective before shipping."
+description: "Adversarial gap review from a required perspective — gaps classified by maturity (MVP/Enterprise/Scale) and importance."
+when_to_use: "Roast this, find what's missing in a plan/spec/diff/implementation before shipping."
 context: fork
 agent: Explore
 metadata:

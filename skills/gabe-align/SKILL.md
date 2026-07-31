@@ -1,7 +1,7 @@
 ---
 name: gabe-align
-description: "Alignment guardian — manual pre-flight checks (shallow/standard/deep) plus automatic values + scenario checks at commit/PR boundaries. Usage: /gabe-align [mode] [target] or /gabe-align init [project]"
-when_to_use: "Are we still aligned, pre-flight check before a risky or irreversible change, values + AP advisory check at commit/PR boundaries — shallow for quick sanity, standard for phase boundaries, deep for direction changes."
+description: "Alignment guardian — values + AP advisory checks at commit/PR boundaries, shallow/standard/deep."
+when_to_use: "Are we still aligned; pre-flight before a risky or irreversible change — shallow for quick sanity, standard at phase boundaries, deep for direction changes."
 metadata:
   version: 1.1.1
 ---

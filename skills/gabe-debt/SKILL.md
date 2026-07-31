@@ -1,7 +1,7 @@
 ---
 name: gabe-debt
-description: "Architectural decision-debt scanner. Scans SCOPE + PLAN + code + commit history + retrospectives for decisions that were never made explicitly or that silently contradict each other — the kind that compound into complexity until the application breaks under its own weight. Usage: /gabe-debt [brief | dry-run | audit-rules | extract-rules | pattern=Pn | since=<ref> | strict | <file-or-folder>]. Outputs findings to four KDBP targets: .kdbp/DECISIONS.md, .kdbp/SCOPE.md §14, .kdbp/RULES.md, .kdbp/PENDING.md."
-when_to_use: "Scan for architecture decision-debt — decisions never made explicitly or silently contradicting each other across SCOPE/PLAN/code/history; when complexity feels unexplained, during retros, or before a big refactor."
+description: "Architecture decision-debt scanner — decisions never made explicitly or silently contradicting each other across SCOPE/PLAN/code/history; findings written to the four KDBP targets."
+when_to_use: "When complexity feels unexplained, during retros, or before a big refactor."
 context: fork
 agent: Explore
 metadata:

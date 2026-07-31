@@ -1,12 +1,14 @@
 ---
 name: gabe-handoff
-description: "Session handoff — emit a paste-able next-session prompt + sync durable KDBP state so a fresh session resumes with full fidelity. Run when context is heavy or when wrapping up. Usage: /gabe-handoff [--dry-run | --no-sync | <focus note>]"
-when_to_use: "Hand off, wrap up the session, prepare a resume/next-session prompt, context is heavy or running out — before ending or switching sessions on ongoing work."
+description: "Session handoff — paste-able next-session prompt + durable KDBP state sync so a fresh session resumes with full fidelity."
+when_to_use: "Hand off, wrap up, context heavy or running out — before ending or switching sessions on ongoing work."
 metadata:
   version: 2.1.0
 ---
 
 # Gabe Handoff — session handoff + resume prompt
+
+**Usage:** `/gabe-handoff [--dry-run | --no-sync | <focus note>]`
 
 ## Gabe execution contract (E1–E7)
 

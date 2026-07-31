@@ -103,36 +103,36 @@ The Gabe Suite — 30 skills (each skill IS its slash command).
 
 | Skill | Command | What it does |
 |------|---------|--------------|
-| gabe-adopt | /gabe-adopt init \| rank \| section <entity> \| status | Brownfield command-center adoption — archive existing docs (never delete), bootstrap the center shell from suite templates, machine-rank the critical entitie… |
-| gabe-align | /gabe-align [mode] [target] or /gabe-align init [project] | Alignment guardian — manual pre-flight checks (shallow/standard/deep) plus automatic values + scenario checks at commit/PR boundaries |
-| gabe-assess | /gabe-assess [change description or 'this'] | Rapid decision-context assessment for changes that feel obvious but carry hidden weight |
-| gabe-commit | /gabe-commit [commit message] \| /gabe-commit docs-audit | Commit quality gate — deterministic checks (incl. the >800-line size-budget check), interactive triage, defer/accept/fix per finding, evidence-triggered simp… |
-| gabe-debt | /gabe-debt [brief \| dry-run \| audit-rules \| extract-rules \| pattern=Pn \| since=<ref> \| strict \| <file-or-folder>]. Outputs findings to four KDBP targets: .kdbp/DECISIONS.md, .kdbp/SCOPE.md §14, .kdbp/RULES.md, .kdbp/PENDING.md | Architectural decision-debt scanner |
-| gabe-docs | /gabe-docs | Documentation standards for gabe-generated docs |
-| gabe-docsite | /gabe-docsite <what to document, or 'add the doc I wrote at docs/src/X.md'> | Publish documentation onto a self-contained, browsable HTML docs site — decide the right SECTION and disclosure level, wire it into the nav, and render it in… |
-| gabe-entity | /gabe-entity <slug> \| list \| <slug> --json | Entity-context reader — assembles ONE application entity's slice (code map + registry + bindings) into a context pack from the command center's committed dat… |
-| gabe-execute | /gabe-execute [task\|all\|<phase-number>] [--auto-commit] [--dry-run] | Execute the current phase of .kdbp/PLAN.md — implement tasks, checkpoint at commits, write Exec column state |
-| gabe-feature | /gabe-feature [<phase>\|--range A..B] \| status \| backfill \| curate <artifact-subdir> <shot-nums…> \| release [--since <row>] | Feature coverage for a project's Testing Command Center — translate shipped work into its entity's lens card, diagrams, and evidence narration over machine-d… |
-| gabe-handoff | /gabe-handoff [--dry-run \| --no-sync \| <focus note>] | Session handoff — emit a paste-able next-session prompt + sync durable KDBP state so a fresh session resumes with full fidelity |
-| gabe-health | /gabe-health [focus] | Codebase health analysis — god files, churn hotspots, coupling clusters, bug concentration, and scope creep vs plan |
-| gabe-help | /gabe-help | Context-aware guide for the Gabe Suite |
-| gabe-init | /gabe-init [project-name] | Initialize a project with the KDBP stack — creates .kdbp/, installs hooks, configures by project type and maturity |
-| gabe-lens | /gabe-lens | Cognitive translation skill that transforms technical concepts into analogies, spatial maps, constraint boxes, and one-line handles — adapts to your cognitiv… |
-| gabe-meme | /gabe-meme <subject or thread> [count] | Generate oblique memes as visual metaphors — the punchline lands in the reader's head, never on the image |
-| gabe-mockup | /gabe-mockup [goal\|react-story <screen-or-batch>\|design-ref\|refine <screen>] [--reconfigure] [--dry-run] [--platforms=web,mobile-web,native-mobile] [--themes=N] | UI/mockup work for React-first and legacy-HTML projects — runs the lift SOP (L0 resolve reference → L1 inventory components → L2 spike → L3 lift → L4 wire+ve… |
-| gabe-myopic | /gabe-myopic [walk\|trap\|step\|fix\|horizon] [target] | Role-play a short-sighted user with a shallow planning horizon (1 / 1.5 / 2 steps — never 3+) and walk a flow step by step to flag foresight traps (consequen… |
-| gabe-next | /gabe-next [--dry-run] | Zero-logic router — deterministic scripts/next.mjs over .kdbp/PLAN.json (prose PLAN.md fallback) dispatches to the next gabe command (review/commit/push/exec… |
-| gabe-plan | /gabe-plan [goal] [--full-catalog] [--html-artifact\|--no-html-artifact] | KDBP-aware planning with lifecycle management + tier decision per phase (MVP/enterprise/scale) and optional HTML review artifacts for complex decisions |
-| gabe-pulse | /gabe-pulse [brief \| --json \| --since <ref>] | Read-only completeness sweep — after a stretch of work, answers one question: given the current state, is anything important owed? Reads ten deterministic si… |
-| gabe-push | /gabe-push [env-name] [--reconfigure] | Push, create PR, watch CI, promote — env-aware shipping workflow reading .kdbp/PUSH.md (production, staging, custom envs) |
-| gabe-quip | /gabe-quip <rendered surface\|authored hero/label> [title\|hook\|aside\|pass] | Sharpen HUMAN-FACING HTML surfaces with sarcastic, insight-carrying wit — page/section titles, hero hooks, callout and label asides that surface the pain poi… |
-| gabe-red | /gabe-red [phase] | TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: inspect the test corpus, declare the cases that make the change necessary (R… |
-| gabe-review | /gabe-review [target] or /gabe-review deferred | Code review with risk pricing, confidence scoring, interactive triage, and deferred item tracking |
-| gabe-roast | /gabe-roast [perspective] [target]. Classifies gaps by maturity (MVP/Enterprise/Scale) and importance (Critical/High/Medium/Low) with one-liners | Adversarial gap review from a required perspective |
-| gabe-scope | /gabe-scope [--resume \| --start-over] | Backbone authoring command for the Gabe Suite |
-| gabe-scope-change | /gabe-scope-change [--force-addition \| --force-pivot] <description> | Scope evolution, one entry point |
-| gabe-scope-pivot | /gabe-scope-pivot | Scope pivot — direction change |
-| gabe-walk | /gabe-walk <feature\|procedure> [pass\|fail\|partial] | Human-eye verification of something built: BRIEF the walker first (why this walk · what changed · the flow itinerary · what pass means), then record the walk… |
+| gabe-adopt | /gabe-adopt | Brownfield command-center adoption — archive-never-delete init, machine-ranked entity shortlist, back-catalog ingested one section per run, each closed by an… |
+| gabe-align | /gabe-align | Alignment guardian — values + AP advisory checks at commit/PR boundaries, shallow/standard/deep |
+| gabe-assess | /gabe-assess | Rapid impact assessment — blast radius, maturity-appropriate scope, prerequisites — before committing to an 'obvious' change |
+| gabe-commit | /gabe-commit | Commit quality gate — deterministic checks incl. the 800-line size budget, interactive triage, evidence-triggered simplify pass; docs-audit mode for accumula… |
+| gabe-debt | /gabe-debt | Architecture decision-debt scanner — decisions never made explicitly or silently contradicting each other across SCOPE/PLAN/code/history; findings written to… |
+| gabe-docs | /gabe-docs | Documentation standards + Mermaid diagram library + the suite execution contract |
+| gabe-docsite | /gabe-docsite | Publish docs onto the generated HTML docs site — pick the section, wire the nav, render with working diagrams |
+| gabe-entity | /gabe-entity | Entity-context reader — assembles one entity's slice (code map + registry + bindings) into a context pack from the command center's committed data, without r… |
+| gabe-execute | /gabe-execute | Execute the current .kdbp/PLAN.md phase — tasks under the tier cap, checkpoint commits, escalation gate, Exec column state |
+| gabe-feature | /gabe-feature | Command-center feature coverage — translate shipped work into its entity's lens card, diagrams, and evidence narration; keep the center regenerating green |
+| gabe-handoff | /gabe-handoff | Session handoff — paste-able next-session prompt + durable KDBP state sync so a fresh session resumes with full fidelity |
+| gabe-health | /gabe-health | Codebase health — god files, churn hotspots, coupling clusters, bug concentration, scope creep vs plan |
+| gabe-help | /gabe-help | Context-aware guide — detects project state, shows what's configured, suggests the right workflow |
+| gabe-init | /gabe-init | Project setup — creates .kdbp/, installs hooks, configures by project type and maturity |
+| gabe-lens | /gabe-lens | Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, adapted to your cognitive suit |
+| gabe-meme | /gabe-meme | Oblique memes as visual metaphors — persona-matched template, text that lands by tangent, rendered via memegen.link and verified as PNG. Punch-up only |
+| gabe-mockup | /gabe-mockup | UI/mockup work over a per-project manifest — the lift SOP (L0 resolve → L1 inventory → L2 spike → L3 lift → L4 wire+verify), Storybook discipline, legacy-HTM… |
+| gabe-myopic | /gabe-myopic | Short-sighted-user walkthrough — role-plays shallow planning horizons (1/1.5/2 steps) to flag foresight traps, overwhelm, recall demands, and no-undo dead-en… |
+| gabe-next | /gabe-next | Zero-logic router — a deterministic script over PLAN state dispatches the next gabe command; no LLM decisions, no side effects |
+| gabe-plan | /gabe-plan | KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts |
+| gabe-pulse | /gabe-pulse | Read-only completeness sweep — ten deterministic signals (unregistered commits, uncommitted/unpushed work, router step, phase debt, stale stations, size budg… |
+| gabe-push | /gabe-push | Push, PR, CI watch, promotion — env-aware shipping via .kdbp/PUSH.md; detects remote drift, offers branch cleanup |
+| gabe-quip | /gabe-quip | Sarcastic, insight-carrying wit for human-facing HTML surfaces — titles, hooks, callouts that name the pain point |
+| gabe-red | /gabe-red | TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RE… |
+| gabe-review | /gabe-review | Code review — risk pricing, confidence scoring, interactive triage, deferred-item tracking, plan alignment, the cost of NOT fixing each finding |
+| gabe-roast | /gabe-roast | Adversarial gap review from a required perspective — gaps classified by maturity (MVP/Enterprise/Scale) and importance |
+| gabe-scope | /gabe-scope | Scope authoring for a NEW project — SCOPE.md (stable premise + §Phases arc), checkpoint-gated, every major step approved before the next |
+| gabe-scope-change | /gabe-scope-change | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline, pivots route to the safety-flagged /gabe-scope-pivot |
+| gabe-scope-pivot | /gabe-scope-pivot | Direction-change scope rewrite — archives SCOPE.md vN, re-derives v(N+1) from the new premise, records pivot rationale |
+| gabe-walk | /gabe-walk | Human-eye verification — BRIEF the walker (why · what changed · itinerary · verdict meanings), then record who·when·result·evidence to walks.jsonl |
 
 Archived (not installed; `skills/_archive/`): `gabe-arch`, `gabe-scope-addition`, `gabe-teach`.
 

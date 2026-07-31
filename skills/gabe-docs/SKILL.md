@@ -1,7 +1,7 @@
 ---
 name: gabe-docs
-description: "Documentation standards for gabe-generated docs. CommonMark compliance, Mermaid diagram selection, analogy-first openers, per-well diagram recommendations. Consulted by /gabe-init (doc stubs) and /gabe-commit (drift check)."
-when_to_use: "Background standards consulted by other gabe skills — doc structure standards, Mermaid diagram selection, and the suite execution contract (references/execution-contract.md). Not a user-facing command."
+description: "Documentation standards + Mermaid diagram library + the suite execution contract. Consulted by other gabe skills; not a user-facing command."
+when_to_use: "Background standards — doc structure, diagram selection, and the execution contract (references/execution-contract.md)."
 user-invocable: false
 metadata:
   version: 1.2.0

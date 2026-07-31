@@ -1,12 +1,14 @@
 ---
 name: gabe-walk
-description: "Human-eye verification of something built: BRIEF the walker first (why this walk · what changed · the flow itinerary · what pass means), then record the walk — four questions, one append to .kdbp/walks.jsonl (who · when · result · evidence · note). Records, never judges. Usage: /gabe-walk <feature|procedure> [pass|fail|partial]"
-when_to_use: "A human is about to walk (or just walked) a feature, a manual station, or an operational procedure (deploy/rollback/incident drill) — brief them on what to check, then put the result on the record: pass, fail, or partial. Also: a station is stale and needs a fresh walk."
+description: "Human-eye verification — BRIEF the walker (why · what changed · itinerary · verdict meanings), then record who·when·result·evidence to walks.jsonl. Records, never judges."
+when_to_use: "A human is about to walk (or just walked) a feature, manual station, or operational procedure; also a stale station needing a fresh walk."
 metadata:
   version: 1.1.0
 ---
 
 # Gabe Walk — the witness
+
+**Usage:** `/gabe-walk <feature|procedure> [pass|fail|partial]`
 
 ## Gabe execution contract (E1–E7)
 

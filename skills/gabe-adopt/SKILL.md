@@ -1,13 +1,15 @@
 ---
 name: gabe-adopt
-description: "Brownfield command-center adoption — archive existing docs (never delete), bootstrap the center shell from suite templates, machine-rank the critical entities, then ingest the back-catalog ONE section per run at human speed, each section checklist-gated and closed by operator approval recorded as a walk. New features keep flowing through /gabe-feature; the two tracks meet in the same center. Usage: /gabe-adopt init | rank | section <entity> | status"
-when_to_use: "An existing codebase needs a Testing Command Center — bootstrap it and ingest what already exists (features, tests, docs, proofs) section by section, in spare time, alongside normal feature development. Also: /gabe-feature stopped you with its bootstrap pointer. NOT for covering a freshly shipped phase (that is /gabe-feature) and NOT for publishing a doc page (that is /gabe-docsite)."
+description: "Brownfield command-center adoption — archive-never-delete init, machine-ranked entity shortlist, back-catalog ingested one section per run, each closed by an approval walk."
+when_to_use: "An existing codebase needs a Testing Command Center, or /gabe-feature stopped you with its bootstrap pointer. NOT for a freshly shipped phase (/gabe-feature) or doc pages (/gabe-docsite)."
 disable-model-invocation: true
 metadata:
   version: 1.2.4
 ---
 
 # Gabe Adopt — the back-catalog, at human speed
+
+**Usage:** `/gabe-adopt init | rank | section <entity> | status`
 
 ## Gabe execution contract (E1–E7)
 

@@ -1,7 +1,7 @@
 ---
 name: gabe-review
-description: "Code review with risk pricing, confidence scoring, interactive triage, and deferred item tracking. Also checks plan alignment (is this diff on-scope?), detects stale verified topics, and proposes DECISIONS.md entries for architectural changes. Surfaces the cost of NOT fixing each finding. Usage: /gabe-review [target] or /gabe-review deferred"
-when_to_use: "Review this diff/PR/phase/commit before merging — risk-priced findings with triage; also plan alignment ('is this on-scope?'), stale verified topics, deferred-item follow-up."
+description: "Code review — risk pricing, confidence scoring, interactive triage, deferred-item tracking, plan alignment, the cost of NOT fixing each finding."
+when_to_use: "Review this diff/PR/phase/commit before merging; also 'is this on-scope?', stale verified topics, deferred follow-up."
 metadata:
   version: 1.8.0
 ---

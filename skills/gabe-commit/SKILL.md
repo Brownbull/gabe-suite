@@ -1,12 +1,14 @@
 ---
 name: gabe-commit
-description: "Commit quality gate — deterministic checks (incl. the >800-line size-budget check), interactive triage, defer/accept/fix per finding, evidence-triggered simplify pass, and retroactive docs-audit mode for accumulated documentation drift. Usage: /gabe-commit [commit message] | /gabe-commit docs-audit"
-when_to_use: "Commit, save, checkpoint, ship this work, run the quality gate before committing — any request to record completed work in git in a KDBP project; also docs-audit for accumulated documentation drift."
+description: "Commit quality gate — deterministic checks incl. the 800-line size budget, interactive triage, evidence-triggered simplify pass; docs-audit mode for accumulated drift."
+when_to_use: "Commit, save, checkpoint, ship this work — any request to record completed work in git in a KDBP project."
 metadata:
   version: 2.4.0
 ---
 
 # Gabe Commit — commit quality gate
+
+**Usage:** `/gabe-commit [commit message] | /gabe-commit docs-audit`
 
 ## Gabe execution contract (E1–E7)
 

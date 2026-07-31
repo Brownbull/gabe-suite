@@ -1,7 +1,7 @@
 ---
 name: gabe-docsite
-description: "Publish documentation onto a self-contained, browsable HTML docs site — decide the right SECTION and disclosure level, wire it into the nav, and render it in the Cifra-styled shell with working diagrams. It PLACES and RENDERS; it does not fact-check the doc against the codebase (that is /gabe-docs, reviews, and the source-of-truth skills). Markdown is the source of truth; the HTML is generated. Usage: /gabe-docsite <what to document, or 'add the doc I wrote at docs/src/X.md'>"
-when_to_use: "Publish or update a page on the generated HTML docs site — place a doc in the right section, wire the nav, render with working diagrams. Markdown stays the source of truth."
+description: "Publish docs onto the generated HTML docs site — pick the section, wire the nav, render with working diagrams. Markdown stays the source of truth; it places and renders, never fact-checks."
+when_to_use: "Publish or update a page on the project's HTML docs site."
 metadata:
   version: 1.0.2
   status: suite skill (generic, project-agnostic)
@@ -9,6 +9,8 @@ metadata:
 ---
 
 # gabe-docsite — publish a doc into a browsable HTML site
+
+**Usage:** `/gabe-docsite <what to document, or 'add the doc I wrote at docs/src/X.md'>`
 
 ## Gabe execution contract (E1–E7)
 

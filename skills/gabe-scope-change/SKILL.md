@@ -1,12 +1,14 @@
 ---
 name: gabe-scope-change
-description: "Scope evolution, one entry point. Classifies the requested change (Opus, 9 pivot-trigger rules): a PIVOT routes to /gabe-scope-pivot; an ADDITION executes inline (new REQs/SCs/phases/refs/constraints, decimal phase IDs, coverage re-check). Override with --force-addition or --force-pivot. Usage: /gabe-scope-change [--force-addition | --force-pivot] <description>"
-when_to_use: "The scope needs to change — add, drop, or switch direction on an existing SCOPE.md. Classifies pivot vs addition; additions are handled here directly, pivots route to the safety-flagged /gabe-scope-pivot. Entry point for all scope evolution."
+description: "Scope evolution, one entry point — classifies pivot vs addition; additions execute inline, pivots route to the safety-flagged /gabe-scope-pivot."
+when_to_use: "The scope needs to change — add, drop, or switch direction on an existing SCOPE.md. Entry point for all scope evolution."
 metadata:
   version: 2.2.0
 ---
 
 # Gabe Scope Change — classify, then evolve
+
+**Usage:** `/gabe-scope-change [--force-addition | --force-pivot] <description>`
 
 ## Gabe execution contract (E1–E7)
 

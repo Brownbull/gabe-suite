@@ -1,12 +1,14 @@
 ---
 name: gabe-push
-description: "Push, create PR, watch CI, promote — env-aware shipping workflow reading .kdbp/PUSH.md (production, staging, custom envs). Detects remote branch drift, offers branch cleanup after success; first run interviews for envs. Usage: /gabe-push [env-name] [--reconfigure]"
-when_to_use: "Push, PR, deploy, promote, watch CI, ship to staging/production — any request to publish committed work or babysit a pipeline after committing."
+description: "Push, PR, CI watch, promotion — env-aware shipping via .kdbp/PUSH.md; detects remote drift, offers branch cleanup."
+when_to_use: "Push, deploy, promote, ship to staging/production, babysit a pipeline after committing."
 metadata:
   version: 2.2.0
 ---
 
 # Gabe Push — env-aware shipping workflow
+
+**Usage:** `/gabe-push [env-name] [--reconfigure]`
 
 ## Gabe execution contract (E1–E7)
 

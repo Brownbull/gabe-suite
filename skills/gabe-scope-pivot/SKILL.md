@@ -1,13 +1,15 @@
 ---
 name: gabe-scope-pivot
-description: "Scope pivot — direction change. Archives SCOPE.md v{N} (and any legacy ROADMAP.md, if present) to archive/, re-derives v{N+1} from the new premise, records pivot rationale in Change Log. Triggered by the 9 pivot rules. Usage (direct): /gabe-scope-pivot <description>"
-when_to_use: "Direction-changing scope rewrite (archive + re-derive SCOPE.md) — destructive; only via /gabe-scope-change routing or an explicit human request."
+description: "Direction-change scope rewrite — archives SCOPE.md vN, re-derives v(N+1) from the new premise, records pivot rationale."
+when_to_use: "Destructive — only via /gabe-scope-change routing or an explicit human request."
 disable-model-invocation: true
 metadata:
   version: 2.1.0
 ---
 
 # Gabe Scope Pivot — direction-change rewrite
+
+**Usage:** `/gabe-scope-pivot <description>`
 
 ## Gabe execution contract (E1–E7)
 

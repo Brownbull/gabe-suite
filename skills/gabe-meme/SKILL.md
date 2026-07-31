@@ -1,12 +1,14 @@
 ---
 name: gabe-meme
-description: "Generate oblique memes as visual metaphors — the punchline lands in the reader's head, never on the image. Picks a template whose PERSONA fits, writes text that goes by tangent (a mental step from what-it-says to what-it-means), renders via memegen.link (no auth), and verifies the rendered PNG before shipping. Punch-up only. Usage: /gabe-meme <subject or thread> [count]"
-when_to_use: "Make a meme (or a set) for a doc, post, thread, or presentation — oblique/satirical visual metaphors from a real subject, rendered to PNG. Not for emoji-composed images (that is not a meme); not for photorealistic art (use an image model)."
+description: "Oblique memes as visual metaphors — persona-matched template, text that lands by tangent, rendered via memegen.link and verified as PNG. Punch-up only."
+when_to_use: "Make a meme (or a set) for a doc, post, thread, or presentation. NOT emoji-composed images; NOT photorealistic art (use an image model)."
 metadata:
   version: 1.1.0
 ---
 
 # Gabe Meme — oblique memes as engagement metaphors
+
+**Usage:** `/gabe-meme <subject or thread> [count]`
 
 ## Gabe execution contract (E1–E7)
 

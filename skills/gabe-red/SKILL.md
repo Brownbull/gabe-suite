@@ -1,12 +1,14 @@
 ---
 name: gabe-red
-description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: inspect the test corpus, declare the cases that make the change necessary (REUSE an id vs mint a NEW one), write them against returning stubs, run them, and COMMIT the failure. Usage: /gabe-red [phase]"
-when_to_use: "The phase is planned and about to be executed — put the failing test cases in place first: declare case ids, prove RED by assertion, commit the red checkpoint. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
+description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
+when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
   version: 1.4.0
 ---
 
 # Gabe Red — the failing state, given an address
+
+**Usage:** `/gabe-red [phase]`
 
 ## Gabe execution contract (E1–E7)
 

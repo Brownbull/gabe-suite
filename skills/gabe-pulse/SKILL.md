@@ -1,7 +1,7 @@
 ---
 name: gabe-pulse
-description: "Read-only completeness sweep — after a stretch of work, answers one question: given the current state, is anything important owed? Reads ten deterministic signals (unregistered commits, uncommitted work, unpushed commits, the router's next step, prior-phase debt, Red/Center cells, PENDING escalations, never-walked stations, size budget), ranks them into bands and reports. Never writes, never dispatches, never judges code. Usage: /gabe-pulse [brief | --json | --since <ref>]"
-when_to_use: "After a long stretch of work, side work, or a scope that expanded on the fly — 'did everything that should have run actually run?', 'what am I missing?', 'is anything pending before I stop?'. A manual double-safeguard, not a lifecycle beat: it reports what is owed and points at the command that clears it."
+description: "Read-only completeness sweep — ten deterministic signals (unregistered commits, uncommitted/unpushed work, router step, phase debt, stale stations, size budget) ranked into bands. Never writes, never dispatches, never judges code."
+when_to_use: "After a long or sprawling stretch: did everything that should have run actually run, what am I missing, anything pending before I stop? Reports what is owed and the command that clears it."
 context: fork
 agent: Explore
 metadata:
@@ -9,6 +9,8 @@ metadata:
 ---
 
 # Gabe Pulse — is anything important owed?
+
+**Usage:** `/gabe-pulse [brief | --json | --since <ref>]`
 
 ## Gabe execution contract (E1–E7)
 

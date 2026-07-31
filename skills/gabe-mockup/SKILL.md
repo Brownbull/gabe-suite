@@ -1,7 +1,7 @@
 ---
 name: gabe-mockup
-description: "UI/mockup work for React-first and legacy-HTML projects — runs the lift SOP (L0 resolve reference → L1 inventory components → L2 spike → L3 lift → L4 wire+verify) over a per-project mockup manifest. Storybook discipline, design refs, refine loop for shipped screens, legacy HTML mockup-project recipes. Usage: /gabe-mockup [goal|react-story <screen-or-batch>|design-ref|refine <screen>] [--reconfigure] [--dry-run] [--platforms=web,mobile-web,native-mobile] [--themes=N]"
-when_to_use: "ANY spike / mockup / screen / UI-component / Storybook / design-ref request in a project with a mockup manifest — 'make a spike', 'build the X screen', 'port from design-lab', 'tweak this component' — not only explicit /gabe-mockup invocations. Never rebuild or recreate an existing component: resolve and reuse via the lift SOP."
+description: "UI/mockup work over a per-project manifest — the lift SOP (L0 resolve → L1 inventory → L2 spike → L3 lift → L4 wire+verify), Storybook discipline, legacy-HTML recipes."
+when_to_use: "ANY spike / mockup / screen / UI-component / Storybook / design-ref request in a project with a mockup manifest — not only explicit invocations. Never rebuild an existing component: resolve and reuse."
 paths:
   - "**/*.stories.tsx"
   - "**/design-system/**"
@@ -13,6 +13,8 @@ metadata:
 ---
 
 # Gabe Mockup — the lift SOP
+
+**Usage:** `/gabe-mockup [goal|react-story <screen-or-batch>|design-ref|refine <screen>] [--reconfigure] [--dry-run] [--platforms=web,mobile-web,native-mobile] [--themes=N]`
 
 ## Gabe execution contract (E1–E7)
 

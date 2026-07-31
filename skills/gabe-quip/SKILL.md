@@ -1,12 +1,14 @@
 ---
 name: gabe-quip
-description: "Sharpen HUMAN-FACING HTML surfaces with sarcastic, insight-carrying wit — page/section titles, hero hooks, callout and label asides that surface the pain point and name the obvious-but-unsaid, so a rendered page pulls the reader in. One lever in the engagement kit (diagrams · memes · progressive disclosure · labels · colors · styles). The joke carries the point never replaces it; punch-up; dosed. Proposes, never silently rewrites. Usage: /gabe-quip <rendered surface|authored hero/label> [title|hook|aside|pass]"
-when_to_use: "Make a human-facing RENDERED surface (command-center page, docsite, HTML report, mockup) or the content that feeds it more engaging — a witty title, hook, callout, or label that names a pain point. Sibling of /gabe-meme. NOT for markdown consumed by skills/agents (README, SKILL.md, workflow guides, .kdbp, config) — those stay straight and functional."
+description: "Sarcastic, insight-carrying wit for human-facing HTML surfaces — titles, hooks, callouts that name the pain point. The joke carries the point, never replaces it; punch-up, dosed; proposes, never silently rewrites."
+when_to_use: "Make a rendered surface (center page, docsite, HTML report, mockup) more engaging. NOT for markdown consumed by skills/agents — those stay straight."
 metadata:
   version: 1.1.0
 ---
 
 # Gabe Quip — sarcastic wit for the surfaces a human actually reads
+
+**Usage:** `/gabe-quip <rendered surface|authored hero/label> [title|hook|aside|pass]`
 
 ## Gabe execution contract (E1–E7)
 
