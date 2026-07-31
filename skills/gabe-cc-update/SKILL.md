@@ -1,14 +1,14 @@
 ---
-name: gabe-feature
+name: gabe-cc-update
 description: "Command-center feature coverage — translate shipped work into its entity's lens card, diagrams, and evidence narration; keep the center regenerating green."
-when_to_use: "Cover a shipped feature, center status, backfill entity-by-entity, curate proof after a green run — ONLY where docs/site/center/center.config.json exists; elsewhere STOP → /gabe-adopt."
+when_to_use: "Cover a shipped feature, center status, backfill entity-by-entity, curate proof after a green run — ONLY where docs/site/center/center.config.json exists; elsewhere STOP → /gabe-cc-init."
 metadata:
   version: 1.6.1
 ---
 
 # Gabe Feature — the command center's per-feature ritual
 
-**Usage:** `/gabe-feature [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…> | release [--since <row>]`
+**Usage:** `/gabe-cc-update [<phase>|--range A..B] | status | backfill | curate <artifact-subdir> <shot-nums…> | release [--since <row>]`
 
 ## Gabe execution contract (E1–E7)
 
@@ -22,11 +22,11 @@ The scripts do everything deterministic. The judgment that remains, and is ALL t
 
 ## Scope gate (run FIRST, every invocation)
 
-`docs/site/center/center.config.json` must exist in the project. If it does not: **STOP** — this project has no command center. Point the human at `/gabe-adopt` (brownfield center adoption — its `init` mode archives existing docs and bootstraps the center; `rank`/`section` ingest the back-catalog) and end.
+`docs/site/center/center.config.json` must exist in the project. If it does not: **STOP** — this project has no command center. Point the human at `/gabe-cc-init` (brownfield center adoption — its `init` mode archives existing docs and bootstraps the center; `rank`/`section` ingest the back-catalog) and end.
 
 ## Bindings (the project provides; verify before each mode)
 
-All machinery ships in the suite (`templates/center/` — generators, gate, helpers, harness) and reaches a project bootstrap-by-copy at `/gabe-adopt` init; the project's copies live under `scripts/`.
+All machinery ships in the suite (`templates/center/` — generators, gate, helpers, harness) and reaches a project bootstrap-by-copy at `/gabe-cc-init` init; the project's copies live under `scripts/`.
 
 | Binding | Path |
 |---|---|
@@ -36,34 +36,34 @@ All machinery ships in the suite (`templates/center/` — generators, gate, help
 | Backfill queue | `scripts/next_feature.py` |
 | Shell-JS harness | `scripts/verify_center_chrome.mjs <page.html…\|center-dir>` |
 | The one editorial overlay | `docs/site/center/center.config.json` (`paths` · `corpora` · `commands` · `entities.<slug>` blocks) |
-| Entity registry | `docs/site/center/adoption.json` (owned by `/gabe-adopt` — slugs, statuses, display names) |
+| Entity registry | `docs/site/center/adoption.json` (owned by `/gabe-cc-init` — slugs, statuses, display names) |
 | Cards | `docs/site/center/cards/<slug>.md` |
 
 Any binding in this table missing → E6 STOP, name it, done. Project-local extras (a scaffold script, extra reporters) are optional conveniences — never E6-mandatory. Format authority: the generators themselves (`scripts/_center_data.py` fails loud on card structure; `build_center_a3.py` aborts on an `entities` key adoption.json does not register) — `references/feature-spec.md` states intention and POINTS there; never duplicate the schema.
 
 ## Modes
 
-### `/gabe-feature <phase>` or `--range A..B` (default — cover one shipped feature)
+### `/gabe-cc-update <phase>` or `--range A..B` (default — cover one shipped feature)
 
-1. Name the entity(ies) the phase's work touched — slugs from `adoption.json` (an unknown slug aborts the build; a genuinely NEW entity is `/gabe-adopt` registry business, never a config edit). Display names come from the registry rows, colors from the generator maps — the config names nothing.
+1. Name the entity(ies) the phase's work touched — slugs from `adoption.json` (an unknown slug aborts the build; a genuinely NEW entity is `/gabe-cc-init` registry business, never a config edit). Display names come from the registry rows, colors from the generator maps — the config names nothing.
 2. Write or extend `entities.<slug>` in `center.config.json`: `test_rx` (required — claims the test files that VERIFY the entity, which may predate the phase; broad on purpose: an over-match shows as a visible row, an under-match silently hides coverage) and, once the section is adopted, `proofs[]` · `code{layer: [globs]}` · `models[]`. Draft patterns carry `TODO(verify-glob)`. Author or extend the card — the contract (required sections + EXACT headings, the FLOWS grammar, optional LENS/CODE/RISKS/ANGLES sections, diagram rules) lives ONCE in `references/feature-spec.md`: read it before writing; the gate flags deviations. Ground every line in commits/code you actually read.
 3. Regenerate (`refresh_center.sh regen`). Read the built feature page's **resolved match lists** — trim any over-claiming `test_rx`/glob, then delete the `TODO(verify-glob)` marker. Gate must be green (WARNs for THIS entity cleared).
 4. Evidence, when it exists or one run away: green e2e run → `curate` mode below. When it doesn't: the card's ANGLES intent plus the machine Action Ledger carry the absence honestly — never a fake proof.
 5. Present the built pages (feature + docs) to the human for THE review. On approval, stamp the card `# REVIEWED` (date + who) **and close the lifecycle loop (E5):** if the phase has a PLAN row whose Phases table carries a `Center` column, set that phase's `Center` cell to ✅ in `.kdbp/PLAN.md` **and** mirror `cells.center = "done"` into `.kdbp/PLAN.json` (same turn) — this is the cell `/gabe-next` reads to stop routing coverage. If the PLAN has no `Center` column, print one line: `ℹ PLAN has no Center column — run /gabe-plan update to adopt routed command-center coverage` and continue (never mutate the schema here; that is /gabe-plan's job). One feature per invocation; report what remains.
 
-### `/gabe-feature status`
+### `/gabe-cc-update status`
 
 Run `refresh_center.sh regen`; read the gate output verbatim. Report: dead links (should be none — they fail the build), adopted entities with no card yet, `TODO(verify-glob)` in the registry, `TODO(author)` sections, cards missing canonical DIAGRAM sections or a reviewed stamp, proof manifests missing narration (or carrying `TODO(narration)`), malformed FLOWS lines — each with its single next action. No judgment beyond ordering.
 
-### `/gabe-feature backfill`
+### `/gabe-cc-update backfill`
 
 Run `next_feature.py` — the queue reads committed center data only: fully-served PLAN phases whose `Center` cell is still open, then adopted entities with no card on disk. For the next queued item, ask the human for the TIER — **full** (evidence + narration; recent work) · **card-only** (registry block + card; history whose evidence nobody can rerun) · **skip** (record the disposition where the queue reads it: a parked/obsolete phase marks its PLAN `Center` cell ⏸/⚰️, a dropped entity carries the reason on its registry row — dropped work never gets a fake page, and never silence). Then run the default mode at that tier. One item per invocation.
 
-### `/gabe-feature release [--since <deployments-row>]`
+### `/gabe-cc-update release [--since <deployments-row>]`
 
 The stakeholder showcase — a MODE, not a lifecycle beat (it owns no time window, observes nothing perishable, gates nothing). Triggered by `/gabe-push`'s terminal-env pointer; renders `releases/<id>.html` from the phases whose `Center` cell went ✅ since the last terminal-env DEPLOYMENTS row. Contents + the video-slots-as-named-gaps rule: `references/feature-spec.md` §Release (binding).
 
-### `/gabe-feature curate <artifact-subdir> <shot-nums…>`
+### `/gabe-cc-update curate <artifact-subdir> <shot-nums…>`
 
 After a green e2e run: pick the shots that PROVE the claims (selection is the judgment — one leg per claim), run `curate_proof.py`, author the manifest's narration block (`story` · one sentence per leg — describes, never asserts) AND its classification (`role:` + `flows:` — feature-spec §Flow coverage), then register the set: append the artifact-subdir name to `entities.<slug>.proofs[]` in `center.config.json`. Regen. Video custody: recordings are machine-local, never committed; the pages say so.
 

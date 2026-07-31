@@ -48,7 +48,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 - Frontmatter: `description` + `when_to_use` (trigger sentence; combined ≤1,536 chars), plus flags where they apply — `context: fork` (satellite analyses), `agent: Explore` (read-only runs), `disable-model-invocation: true` (human-initiated only), `user-invocable: false` (background knowledge), `paths:` (auto-trigger globs).
 - The execution contract E1–E7 is stated ONCE in `skills/gabe-docs/references/execution-contract.md`; every SKILL.md carries a one-line pointer, never a pasted copy.
 - Provenance lives in git, not in runtime files — no migration notes, dates, or "moved from X" headers in skills (see the ledger rationale in the migration log).
-- Architecture Principles AP1–AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-align`, `/gabe-debt`, and `/gabe-review`.
+- Architecture Principles AP1–AP13 live in `templates/architecture-principles.md` and are advisory context for `/gabe-assess`, `/gabe-health debt`, and `/gabe-review`.
 - The Archetype Map (Prototyper/Builder/Sweeper/Grower/Maintainer) lives in `templates/archetype-map.md` — advisory context for `/gabe-roast` (canonical perspectives) and `/gabe-assess` (maturity posture-mix); a reading of the existing maturity axis, not a new level system.
 - Suite changes land in the REPO first; installs regenerate via `./install.sh`; `scripts/suite-doctor.sh` makes drift visible (incl. the suite invariants: hook harness green, version/count parity, portability lint, docsite staleness). Never patch `~/.claude` in place.
 - A deterministic script that will run against real project data ships only after a dry-run against a COPY of that data — record the run's numbers in the commit message (meta-review P1: template-derived fixtures validate the template, not reality).
@@ -60,46 +60,44 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 
 `.claude/output-styles/gabe.md` (movement register: action → consequence → next move; comptroller position-check on direction changes; DECISION blocks with mandatory defer-triggers; actors·elements·effects explanation format — naked chain, cast cards, risk dots) + `.claude/register-core.md` (4-rule payload re-injected by `.claude/settings.json` hooks on every prompt and after compaction). Canary battery: `tests/register/run.sh` — invariants pinned, mutation-proven. KILL/WIDEN conditions live in the style file's header; widen machine-wide only after it survives here. Full scope record: `docs/investigations/2026-07-30-gabe-suite-diet/`.
 
-## Capabilities (30 skills)
+## Capabilities (26 skills)
 
 | Skill | Version | Purpose |
 |---|---|---|
-| **gabe-adopt** | 1.2.4 | Brownfield command-center adoption — archive-never-delete init, machine-ranked shortlist, one section per run at human speed, walk-recorded approval; tracker lives outside PLAN.md (human-initiated only) |
-| **gabe-align** | 1.1.1 | Alignment guardian — shallow/standard/deep values and AP advisory checks |
-| **gabe-assess** | 1.1.1 | Rapid change impact assessment: blast radius, maturity scope, prerequisites |
+| **gabe-cc-init** | 1.2.4 | Brownfield command-center adoption — archive-never-delete init, machine-ranked shortlist, one section per run at human speed, walk-recorded approval; tracker lives outside PLAN.md (human-initiated only) |
+| **gabe-assess** | 1.2.0 | The direction guard — rapid impact assessment (blast radius, maturity scope, prerequisites) + the boundary check absorbed from gabe-align (values/AP advisory at commit/PR boundaries); ruled to auto-trigger on direction steers (rework pending) |
 | **gabe-commit** | 2.4.0 | Commit quality gate — deterministic checks incl. size-budget, triage, simplify tier, docs-audit; optional results_out digest, path or list (reports every tier, gates none) |
-| **gabe-debt** | 1.1.1 | Architecture decision-debt scanner with AP evidence citations (fork/read-only) |
 | **gabe-docs** | 1.2.0 | Documentation standards + diagrams library + the suite execution contract (background) |
 | **gabe-docsite** | 1.0.2 | Publish docs onto the generated HTML docs site |
-| **gabe-entity** | 1.0.1 | Entity-context reader — assembles one entity's slice (code map + registry + bindings) into a context pack from the center's committed data (archmap/adoption/config), joined on slug; a DATA lens not a per-entity skill (D7); brief or `--json`, plus `list` mode |
+| **gabe-cc-entity** | 1.0.1 | Entity-context reader — assembles one entity's slice (code map + registry + bindings) into a context pack from the center's committed data (archmap/adoption/config), joined on slug; a DATA lens not a per-entity skill (D7); brief or `--json`, plus `list` mode |
 | **gabe-execute** | 2.2.1 | Phase execution with tier cap, escalation gate, checkpoint commits; TASK CONTRACT carries the phase's `CASES:` (C-ids from /gabe-red) + case-scoped verify; narration legs authored hot |
-| **gabe-feature** | 1.6.1 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-adopt |
+| **gabe-cc-update** | 1.6.1 | Command-center feature coverage — card/diagrams/narration over machine facts; verdicts RENDERED from review triage (authored fallback); closes the PLAN `Center` cell on review; status, backfill, curate, release; bootstrap pointer → /gabe-cc-init |
 | **gabe-handoff** | 2.1.0 | Session handoff — paste-able resume prompt + KDBP state sync |
-| **gabe-health** | 1.1.1 | Codebase health — god files, churn hotspots, coupling (fork/read-only) |
+| **gabe-health** | 1.2.0 | The suite scanner, three lenses (fork/read-only) — codebase health (god files, churn, coupling), decision-debt (absorbed from gabe-debt, AP citations), and the ask-first skill-estate sweep (promote/archive by usage); ruled production-push gate |
 | **gabe-help** | 1.2.1 | Context-aware guide + the P14 cross-project tool registry; Full Suite Catalog is GENERATED from skill frontmatter (scripts/gen-help-catalog.py, run by install.sh) |
 | **gabe-init** | 2.3.0 | Project setup — `.kdbp/`, hooks, project type, maturity (human-initiated only) |
 | **gabe-lens** | 2.4.0 | Cognitive translation — analogies, maps, constraint boxes, handles |
-| **gabe-meme** | 1.1.0 | Oblique-meme generation — per-project tone setup + template-persona-matched visual metaphors via memegen.link; verified PNGs, punch-up (ported from chiless meme-hilo) |
+| **gabe-meme** | 1.2.0 | Oblique-meme generation — persona-matched visual metaphors via memegen.link, verified PNGs, punch-up; + surface-wit mode (absorbed gabe-quip): witty titles/hooks/callouts for rendered HTML surfaces, proposes never rewrites |
 | **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
 | **gabe-myopic** | 1.2.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork); findings labeled M[N], never C[N] |
-| **gabe-next** | 2.4.1 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-feature) |
+| **gabe-next** | 2.4.1 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-cc-update) |
 | **gabe-plan** | 2.5.2 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
 | **gabe-pulse** | 1.0.0 | Read-only completeness sweep (satellite) — ten deterministic signals in four bands (EVIDENCE/LIFECYCLE/SHIP/AGING); `scripts/ledger-gap.sh` subtracts the LEDGER's Commits column from `git log` to surface work that escaped the record; defers routing to next.mjs, writes nothing, dispatches nothing |
-| **gabe-push** | 2.2.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env ship prints the /gabe-feature release pointer |
-| **gabe-quip** | 1.1.0 | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts surfacing pain points; one engagement lever, proposes not rewrites, dosed (sibling of gabe-meme) |
+| **gabe-push** | 2.2.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env ship prints the /gabe-cc-update release pointer |
 | **gabe-red** | 1.4.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips; scripts/prove-guard.py re-proves a guard can still FAIL (mutate → assert red → restore), feeding the center's named-vs-guarded distinction |
 | **gabe-review** | 1.8.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.1 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |
 | **gabe-scope-change** | 2.2.0 | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline (absorbed gabe-scope-addition), pivots route to the safety-flagged gabe-scope-pivot |
 | **gabe-scope-pivot** | 2.1.0 | Direction-change scope rewrite (human/router-initiated only) |
-| **gabe-walk** | 1.1.0 | Human-eye verification — BRIEFS the walker first (why · what · flow itinerary · verdict meanings), then records who·when·result·evidence to walks.jsonl; records never judges; NEVER-walked renders red until walked |
 
 ## Archived skills
 
 Decommissioned-not-deleted skills live in `skills/_archive/` (outside the install/doctor glob) with a
 README covering why + how to reinstate; rulings in [docs/design/trim-ledger.md](docs/design/trim-ledger.md). Currently: **gabe-teach** + **gabe-arch** + **gabe-scope-addition** (archived 2026-07-15 —
-2,740 lines serving ~2 observed uses; trim-matrix audit). `~/.claude/gabe-arch/` user state is never
+2,740 lines serving ~2 observed uses; trim-matrix audit) + **gabe-walk** + **gabe-quip** + **gabe-align** +
+**gabe-debt** (archived 2026-07-30 — operator rulings on the skill-map artifact: walk lost its why;
+quip/align/debt absorbed into gabe-meme/gabe-assess/gabe-health). `~/.claude/gabe-arch/` user state is never
 touched by decommission.
 
 ## Workflow Docs

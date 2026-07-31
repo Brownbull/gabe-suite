@@ -34,7 +34,7 @@ Two inputs are required — target (file, folder, inline plan/concept, or "this 
 1. Treat any text after the invocation as `$ARGUMENTS` (perspective + target).
 2. Read `references/roast-spec.md` IN FULL before executing — the binding spec. If missing, E6 applies — STOP.
 3. Confirm both target and perspective are present; ask if either is missing.
-4. **Pre-roast gate:** run `/gabe-align shallow` on the target (skip if no `.kdbp/VALUES.md` or `~/.kdbp/VALUES.md` exists). PASS → proceed; CONCERN → warn and proceed; FAIL → warn and confirm before continuing.
+4. **Pre-roast gate:** run `/gabe-assess brief` on the target (skip if no `.kdbp/VALUES.md` or `~/.kdbp/VALUES.md` exists). PASS → proceed; CONCERN → warn and proceed; FAIL → warn and confirm before continuing.
 5. Read before attacking: list the folder tree, open every entry point + config, never cite a file not opened this session, print a read ledger (`Read: 14/38 files — skipped: ...`) directly under the perspective line.
 6. Stay fully in character for the perspective; classify each gap by maturity level and importance, filling every required per-gap field with cited evidence (or a recorded 0-hit search for absence claims).
 7. **Kill-gate (mandatory before printing):** re-verify every gap against its Evidence; a gap with an empty Evidence field is deleted, not demoted. Print `drafted N → killed X → reported Y` above the total line.

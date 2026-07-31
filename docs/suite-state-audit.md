@@ -52,8 +52,8 @@ reference mirror used by the wrapper skills.
 
 | Consumer | Current behavior |
 |----------|------------------|
-| `/gabe-align` | Standard and deep modes load AP1-AP13 as advisory checks. |
-| `/gabe-debt` | Findings may cite AP IDs when existing evidence touches a principle. |
+| `/gabe-assess` | Standard and deep modes load AP1-AP13 as advisory checks. |
+| `/gabe-health debt` | Findings may cite AP IDs when existing evidence touches a principle. |
 | `/gabe-review` | Review findings may cite AP IDs without changing severity. |
 
 The AP catalog is not a hard gate. Commands must not create findings from AP principles alone.
@@ -62,7 +62,7 @@ The AP catalog is not a hard gate. Commands must not create findings from AP pri
 
 ### Greenfield Split
 
-The underlying commands support a full new-project path, but the docs did not previously give one durable guide from idea to first execution phase. The missing guide needed to explain where AP checks, `/gabe-debt`, and React-first `/gabe-mockup design-ref` fit.
+The underlying commands support a full new-project path, but the docs did not previously give one durable guide from idea to first execution phase. The missing guide needed to explain where AP checks, `/gabe-health debt`, and React-first `/gabe-mockup design-ref` fit.
 
 ### Brownfield Split
 
@@ -82,7 +82,7 @@ The installer copied runtime specs and templates but not suite docs. That made i
 - Add a docs-first brownfield adoption guide.
 - Install the curated docs set into both local homes.
 - Add validation so docs inventory and install behavior are checked deterministically.
-- Do not add a new `/gabe-adopt` command in this batch. *(Superseded 2026-07-15: `/gabe-adopt` landed via verification-first ruling R7 — see `docs/design/verification-first/README.md` §5 addendum.)*
+- Do not add a new `/gabe-cc-init` command in this batch. *(Superseded 2026-07-15: `/gabe-cc-init` landed via verification-first ruling R7 — see `docs/design/verification-first/README.md` §5 addendum.)*
 
 ## Verification Targets
 

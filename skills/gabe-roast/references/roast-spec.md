@@ -213,7 +213,7 @@ TOTAL: [X] gaps — [Y] critical, [Z] high
 
 ### Before Roasting
 1. Confirm both inputs are present (target + perspective). If either is missing, ask.
-2. **Pre-roast gate:** Run `/gabe-align shallow` on the target (core values A1-A3 + project values). If all PASS: proceed. If CONCERN: print warning, proceed. If FAIL: print warning + "Foundational alignment issue. Consider `/gabe-align standard`. Proceed? [y/n]". Skip this gate if no `.kdbp/VALUES.md` or `~/.kdbp/VALUES.md` exists.
+2. **Pre-roast gate:** Run `/gabe-assess brief` on the target (core values A1-A3 + project values). If all PASS: proceed. If CONCERN: print warning, proceed. If FAIL: print warning + "Foundational alignment issue. Consider a full `/gabe-assess`. Proceed? [y/n]". Skip this gate if no `.kdbp/VALUES.md` or `~/.kdbp/VALUES.md` exists.
 3. Read before attacking — measurable, not vibes:
    (a) list the folder tree first; (b) open every entry point + config;
    (c) never cite or roast a file you did not open this session;

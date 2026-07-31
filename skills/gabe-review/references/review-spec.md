@@ -146,7 +146,7 @@ For each changed file, check these dimensions:
 
 **Tier drift detection:** When `.kdbp/PLAN.md` declares a phase Tier and the diff contains patterns above that tier, emit a `TIER_DRIFT` finding. See Step 4.75 Sub-check 5d for procedure and resolution options (downgrade vs amend-phase-tier).
 
-**Rule-violation escalation (via `/gabe-debt`):** If `.kdbp/RULES.md` exists (or `docs/rebuild/LESSONS.md` with R-rules is present), load the rule index before dimension scoring. For every finding, check if the affected file/line/pattern matches any rule's `Detection` signature. If yes, auto-elevate the finding's severity by one level (HIGH → CRITICAL, MEDIUM → HIGH) AND append a citation to the finding: `(violates R<n> from RULES.md — "<rule handle>")`. Load-bearing rules (tagged as such in the rule's `Status` field or explicit in source LESSONS) elevate straight to CRITICAL. Do not escalate if the user has already dismissed the match via `.kdbp/debt-ignore.md`.
+**Rule-violation escalation (via `/gabe-health debt`):** If `.kdbp/RULES.md` exists (or `docs/rebuild/LESSONS.md` with R-rules is present), load the rule index before dimension scoring. For every finding, check if the affected file/line/pattern matches any rule's `Detection` signature. If yes, auto-elevate the finding's severity by one level (HIGH → CRITICAL, MEDIUM → HIGH) AND append a citation to the finding: `(violates R<n> from RULES.md — "<rule handle>")`. Load-bearing rules (tagged as such in the rule's `Status` field or explicit in source LESSONS) elevate straight to CRITICAL. Do not escalate if the user has already dismissed the match via `.kdbp/debt-ignore.md`.
 
 **Architecture principle citations (advisory):** Load the AP catalog from the first available path: project-local `templates/architecture-principles.md`, `~/.claude/templates/gabe/architecture-principles.md`. For each review finding, attach AP IDs only when the finding's existing file/line/diff evidence directly touches a principle. AP citations explain the design force, but they do not create findings, change severity, or override the >80% confidence gate. Output format: `Architecture principles: AP8 explicit state, AP11 testability`.
 
@@ -215,7 +215,7 @@ standard Fix Cost × Defer Risk × Maturity Gate fields and rides the normal Ste
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;
   print `growth: showing 7 of N` when capped). The TRIAGE OUTCOME is authoritative — the center
   RENDERS the angle's verdict from it (fix → the case lands under a reserved id · defer → the
-  PENDING row the feature page cites · dismiss → SETTLED with the stated reason). `/gabe-feature`
+  PENDING row the feature page cites · dismiss → SETTLED with the stated reason). `/gabe-cc-update`
   never re-authors this judgment; its hand-authored verdict remains only the fallback for angles
   no review has priced.
 
@@ -1161,14 +1161,14 @@ Matches PLAN.md's pattern. No silent overwrites. No file locks.
 
 Written to `.kdbp/PENDING.md` (preferred), `.kdbp/deferred-cr.md`, or `.planning/deferred-cr.md` (first found, or create `.kdbp/PENDING.md`).
 
-File format (canonical 10-column schema — shared with gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-align's checkpoint handoff):
+File format (canonical 10-column schema — shared with gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-assess's checkpoint handoff (absorbed from gabe-align)):
 ```markdown
 | # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status |
 |---|------|--------|---------|------|-------|----------|--------|----------------|--------|
 | P26 | 2026-06-20 | gabe-review | Missing fail-open test | web/src/lib/rateLimiter.ts:88 | mvp | high | high | 1 | open |
 ```
 
-Writing rules: (1) ALWAYS match the existing file's header if it differs — never rewrite headers, never renumber rows; (2) all writers target `.kdbp/PENDING.md` first-found; `deferred-cr.md` / `.planning/deferred-cr.md` are legacy read-fallbacks only; (3) this schema is canonical for gabe-review, gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-align's checkpoint handoff — an edit here is an edit for all four. Map legacy columns when reading old rows: First Seen→Date, Review→Source, Defer Risk→drop into Finding text.
+Writing rules: (1) ALWAYS match the existing file's header if it differs — never rewrite headers, never renumber rows; (2) all writers target `.kdbp/PENDING.md` first-found; `deferred-cr.md` / `.planning/deferred-cr.md` are legacy read-fallbacks only; (3) this schema is canonical for gabe-review, gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-assess's checkpoint handoff (absorbed from gabe-align) — an edit here is an edit for all four. Map legacy columns when reading old rows: First Seen→Date, Review→Source, Defer Risk→drop into Finding text.
 
 **Persistence protocol:** Use the Edit tool to update individual rows. Read the file → find the row by `#` → update Status and Times Deferred → write back. If file doesn't exist, create it with the Write tool using the canonical header above.
 
@@ -1207,7 +1207,7 @@ When a finding is **dismissed** during triage:
 | Finding has CRITICAL severity | Fix immediately, no deferral allowed |
 | Finding has unclear blast radius | Run `/gabe-assess` on the finding before deciding |
 | Multiple findings in same area | Run `/gabe-roast [perspective]` on that area |
-| Alignment concern (wrong direction) | Run `/gabe-align shallow` to check values |
+| Alignment concern (wrong direction) | Run `/gabe-assess brief` to check values |
 | Deferred item reaches 3+ deferrals | BLOCK. Suggest `/gabe-roast qa` for test coverage roast |
 | KDBP checkpoint showed untested scenarios | Those scenarios become findings in gabe-review with severity HIGH |
 | Review confidence < 50 | Suggest fixing CRITICAL+HIGH before proceeding. Show projection table. |

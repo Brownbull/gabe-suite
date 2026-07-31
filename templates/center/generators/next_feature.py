@@ -6,11 +6,11 @@ features[] registry (retired: the center's pages are per adopted ENTITY, and
 build waves live in PLAN/LEDGER/git):
 
   1. PLAN phases fully served (exec/review/commit/push all done) whose Center
-     cell is still open — `/gabe-feature <phase>` covers them. A deferred (⏸)
+     cell is still open — `/gabe-cc-update <phase>` covers them. A deferred (⏸)
      or obsolete (⚰️) Center cell is its own recorded disposition: parked work
      stays visible with its state, never a fake page and never silence.
   2. Adopted entities (adoption.json, any non-pending status) with no card on
-     disk — `/gabe-adopt section` (back-catalog) or `/gabe-feature backfill`
+     disk — `/gabe-cc-init section` (back-catalog) or `/gabe-cc-update backfill`
      authors them.
 
 Denominator honesty: phases that predate the Center column are counted and
@@ -71,10 +71,10 @@ def main() -> int:
 
     if open_q:
         nxt = open_q[0]
-        print(f"\nnext (newest first): /gabe-feature {nxt['id']} — "
+        print(f"\nnext (newest first): /gabe-cc-update {nxt['id']} — "
               f"{(nxt.get('name') or '')[:70]}")
     elif cardless:
-        print(f"\nnext: /gabe-adopt section — start with "
+        print(f"\nnext: /gabe-cc-init section — start with "
               f"'{cardless[0]['entity']}'")
     else:
         print("\nqueue clear — every served phase is covered or parked, every "

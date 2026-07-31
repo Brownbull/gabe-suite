@@ -108,13 +108,13 @@ Gaps are numbered `W1..Wn`. Numbering stable across revisions — new gaps appen
 
 ---
 
-## W7 — `/gabe-align` cadence partial
+## W7 — `/gabe-assess` cadence partial
 
-**What's missing.** `/gabe-align` auto-runs at commit boundary (via hook) but nowhere else. Value drift between commits (during a long `/gabe-execute` session) is invisible.
+**What's missing.** `/gabe-assess` auto-runs at commit boundary (via hook) but nowhere else. Value drift between commits (during a long `/gabe-execute` session) is invisible.
 
 **Why it matters.** User codes against wrong values mid-session; `/gabe-review` catches late via value fence.
 
-**Current workaround.** Manual `/gabe-align shallow` before risky work.
+**Current workaround.** Manual `/gabe-assess brief` before risky work.
 
 ### Options
 
@@ -232,13 +232,13 @@ Gaps are numbered `W1..Wn`. Numbering stable across revisions — new gaps appen
 
 **Why it matters.** Brownfield work is where surprise is highest: existing architecture, undocumented decisions, partial tests, implicit state, and stale plans can all hide behind a clean working tree. A guide helps, but a command-backed adoption path would reduce missed steps and make the first KDBP baseline more repeatable.
 
-**Current workaround.** Follow [workflows/brownfield.md](workflows/brownfield.md): run read-only inventory first, use `/gabe-init update` when `.kdbp/` already exists, use cautious `/gabe-init` when it does not, then run `/gabe-health`, `/gabe-debt brief`, `/gabe-scope`, and `/gabe-plan check` as applicable.
+**Current workaround.** Follow [workflows/brownfield.md](workflows/brownfield.md): run read-only inventory first, use `/gabe-init update` when `.kdbp/` already exists, use cautious `/gabe-init` when it does not, then run `/gabe-health`, `/gabe-health debt`, `/gabe-scope`, and `/gabe-plan check` as applicable.
 
 ### Options
 
 | Option | Approach | Cost | Risk |
 |--------|----------|------|------|
-| **A** — New `/gabe-adopt` command | Guided brownfield flow: inventory, KDBP presence check, health/debt baseline, scope capture, plan retrofit prompt | medium | low if read-only by default |
+| **A** — New `/gabe-cc-init` command | Guided brownfield flow: inventory, KDBP presence check, health/debt baseline, scope capture, plan retrofit prompt | medium | low if read-only by default |
 | **B** — `/gabe-init --adopt` mode | Extend init with brownfield-specific prompts and baseline docs | medium | medium — init grows beyond setup |
 | **C** — Smarter `/gabe-help` detection | Detect brownfield signals and recommend the exact guide/order before any writes | low | low — advisory only |
 | **D** — Docs-only | Keep [workflows/brownfield.md](workflows/brownfield.md) as the adoption contract | zero | medium — easy to skip under pressure |

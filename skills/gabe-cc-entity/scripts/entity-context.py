@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gabe-entity — entity-context reader.
+"""gabe-cc-entity — entity-context reader.
 
 Assembles ONE application entity's slice into a context pack from the command
 center's committed data — WITHOUT re-reading the codebase:
@@ -27,7 +27,7 @@ CENTER_DEFAULT = "docs/site/center"
 
 def fail(msg, code=2):
     """Missing-anchor / not-found stop (E6). Writes to stderr, exits non-zero."""
-    sys.stderr.write("gabe-entity: STOP — %s\n" % msg)
+    sys.stderr.write("gabe-cc-entity: STOP — %s\n" % msg)
     sys.exit(code)
 
 
@@ -44,7 +44,7 @@ def locate_center(explicit):
         if (d / "center.config.json").is_file():
             return d
     fail("no command center found (looked for %s/center.config.json up from CWD).\n"
-         "This project has no built center — run /gabe-adopt first." % CENTER_DEFAULT)
+         "This project has no built center — run /gabe-cc-init first." % CENTER_DEFAULT)
 
 
 def load_json(path):
@@ -251,7 +251,7 @@ def render_list(archmap, adoption):
 
 
 def main():
-    ap = argparse.ArgumentParser(prog="gabe-entity", description="Entity-context reader.")
+    ap = argparse.ArgumentParser(prog="gabe-cc-entity", description="Entity-context reader.")
     ap.add_argument("slug", help="entity slug, or 'list' to enumerate registered entities")
     ap.add_argument("--center", help="center dir (default: %s found up from CWD)" % CENTER_DEFAULT)
     ap.add_argument("--json", action="store_true", help="emit the JSON pack instead of the brief")
@@ -264,7 +264,7 @@ def main():
 
     if archmap is None and adoption is None:
         fail("neither archmap.json nor adoption.json exists under %s.\n"
-             "Build the center first — /gabe-adopt or /gabe-feature." % center)
+             "Build the center first — /gabe-cc-init or /gabe-cc-update." % center)
 
     if args.slug == "list":
         print(render_list(archmap, adoption))

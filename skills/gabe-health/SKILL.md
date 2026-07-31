@@ -1,11 +1,11 @@
 ---
 name: gabe-health
-description: "Codebase health — god files, churn hotspots, coupling clusters, bug concentration, scope creep vs plan."
-when_to_use: "How healthy is the codebase, are we accumulating mess — before epics, during retros, when things feel fragile."
+description: "The suite scanner, three lenses — codebase health (god files, churn hotspots, coupling, bug concentration, scope creep), decision-debt (absorbed from gabe-debt: decisions never made explicitly or silently contradicting), and the skill-estate sweep (usage-based promote/archive proposals, always ask-first)."
+when_to_use: "How healthy is the codebase, are we accumulating mess, unexplained complexity, before a big refactor or epic, during retros — or at a production push, as its scan gate."
 context: fork
 agent: Explore
 metadata:
-  version: 1.1.1
+  version: 1.2.0
 ---
 
 # Gabe Health — Codebase Health Analysis
@@ -34,6 +34,14 @@ Surfaces structural fragility in a codebase before it becomes an incident — th
 Optional flags: `--days N` (lookback window, default 60 days), `--threshold N` (minimum commits to flag, default 5).
 
 The six analyses: (1) God Files — touched in >25% of commits, (2) Churn Hotspots — most lines modified, (3) Coupling Clusters — files that always change together (>60% co-change), (4) Bug-Fix Concentration — where `fix:`/`bug` commits cluster, (5) Scope Creep — planned vs actually-touched files, (6) Deferred Items & Maintenance Staleness — `.kdbp/PENDING.md` health plus `.kdbp/MAINTENANCE.md` if a legacy copy is present (retired from the default KDBP inventory in A2).
+
+## Decision-debt lens (absorbed from gabe-debt, 2026-07-30)
+
+`/gabe-health debt` — scan SCOPE + PLAN + code + commit history + retrospectives for decisions that were never made explicitly or that silently contradict each other, citing AP evidence (`templates/architecture-principles.md`). Same read-only discipline as the other lenses. In KDBP projects, findings target the four KDBP surfaces (DECISIONS.md, SCOPE.md §14, RULES.md, PENDING.md) — proposed, never auto-written from the fork. Deep spec preserved at `../_archive/gabe-debt/references/`.
+
+## Estate-sweep lens (new, 2026-07-30 — ask-first, never auto)
+
+`/gabe-health estate` — the lazy-promotion rack model applied to the skill estate: (a) PROMOTE — did recent work produce a repeated behavior worth promoting to a skill? (b) ARCHIVE — is an installed skill long-unused (no invocations across a stated window) and a candidate for `skills/_archive/`? Both directions produce PROPOSALS presented to the human with the evidence (usage counts, window, inbound references); nothing is created or archived without an explicit yes. Ruled to run as a PRODUCTION-push gate alongside the other two lenses when the gabe-push rework lands.
 
 ## Procedure
 

@@ -107,7 +107,7 @@ def run_checks() -> int:
 
     warns: list[str] = []
     # To-be-designed sweep (2026-07-23): pending type links are counted
-    # per page so /gabe-feature sees exactly where documentation debt
+    # per page so /gabe-cc-update sees exactly where documentation debt
     # sits — the sweep the operator asked to ride every regen.
     for name, html in pages.items():
         n_tbd = html.count('class="tag ic t-tbd"')

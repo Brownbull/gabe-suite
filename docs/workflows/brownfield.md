@@ -12,14 +12,14 @@ flowchart TD
     Inventory --> Init{"KDBP exists?"}
     Init -->|Yes| Update["/gabe-init update"]
     Init -->|No| Adopt["/gabe-init <name>"]
-    Update --> Baseline["/gabe-health + /gabe-debt brief"]
+    Update --> Baseline["/gabe-health + /gabe-health debt"]
     Adopt --> Baseline
     Baseline --> Scope["/gabe-scope or scope from existing docs"]
     Scope --> PlanCheck["/gabe-plan check when PLAN exists"]
     Scope --> Plan["/gabe-plan"]
 ```
 
-This guide covers KDBP adoption (init/scope/plan). For adopting the **Testing Command Center** into an existing codebase — archiving legacy docs, bootstrapping the center, and ingesting the back-catalog one approved section at a time — the dedicated command is `/gabe-adopt`.
+This guide covers KDBP adoption (init/scope/plan). For adopting the **Testing Command Center** into an existing codebase — archiving legacy docs, bootstrapping the center, and ingesting the back-catalog one approved section at a time — the dedicated command is `/gabe-cc-init`.
 
 ## Step 1 - Inventory Without Writing
 
@@ -52,7 +52,7 @@ Run:
 
 ```sh
 /gabe-health
-/gabe-debt brief
+/gabe-health debt
 ```
 
 Use the baseline to find:
@@ -115,12 +115,12 @@ Expected loop:
 Run `/gabe-review` tightly on changed areas and include untracked files that are clearly part of the same change set.
 
 **Understanding what already shipped:** if the project has no Testing Command Center yet,
-`/gabe-adopt` bootstraps one (archive-never-delete init, machine-ranked shortlist, one approved
-section per run). Once a center exists, `/gabe-feature backfill` is a first-class brownfield tool — it walks
+`/gabe-cc-init` bootstraps one (archive-never-delete init, machine-ranked shortlist, one approved
+section per run). Once a center exists, `/gabe-cc-update backfill` is a first-class brownfield tool — it walks
 served phases newest-first and turns each into an explainable page (card + diagrams +
 test angles + evidence), with honest tiers for history: `full` for recent work,
 `card-only` when evidence can't be re-run, `skip(reason)` for dropped work. New
-features then join the per-phase rhythm (`… /gabe-review → /gabe-feature <phase> →
+features then join the per-phase rhythm (`… /gabe-review → /gabe-cc-update <phase> →
 /gabe-commit …`) so the center never falls behind again.
 
 ## Brownfield AP Watchlist
@@ -140,7 +140,7 @@ features then join the per-phase rhythm (`… /gabe-review → /gabe-feature <ph
 Brownfield adoption is ready for normal phase execution when:
 
 - `.kdbp/` exists and important existing docs are reflected in scope or references.
-- current risk has been baselined with `/gabe-health` and `/gabe-debt brief`.
+- current risk has been baselined with `/gabe-health` and `/gabe-health debt`.
 - an active plan passes `/gabe-plan check`, or a new plan exists.
 - major implicit decisions are either recorded in `DECISIONS.md` or tracked in `PENDING.md`.
 - the first execution slice has a bounded blast radius and a clear test path.

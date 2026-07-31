@@ -69,10 +69,10 @@ All deterministic. No signal is inferred from prose or from a session transcript
 | P3 | Unpushed commits | `git log @{u}..HEAD` | `/gabe-push` |
 | P4 | Router's next step | `../gabe-next/scripts/next.mjs --json` | whatever it names |
 | P5 | Prior-phase debt | same, its prior-row sweep | the beat each row names |
-| P6 | Center coverage ⬜ | PLAN `Center` column | `/gabe-feature <phase>` |
+| P6 | Center coverage ⬜ | PLAN `Center` column | `/gabe-cc-update <phase>` |
 | P7 | Red debt ⬜ | PLAN `Red` column | `/gabe-red <phase>` |
 | P8 | PENDING escalations | `.kdbp/PENDING.md` | `/gabe-review deferred` |
-| P9 | Never-walked stations | `.kdbp/walks.jsonl` | `/gabe-walk` |
+| P9 | Never-walked stations | `.kdbp/walks.jsonl` | append walk record (walks.jsonl) |
 | P10 | Size-budget breaches | `../gabe-commit/scripts/size-budget.sh` | report-never-gate (R9) |
 
 **P4/P5 defer to `next.mjs` rather than re-deriving the routing decision.** Two readers of PLAN
@@ -111,7 +111,7 @@ EVIDENCE
   P2  30 uncommitted paths                                 → /gabe-commit
 LIFECYCLE
   P4  router says: /gabe-review (Phase 41 — Exec ✅, Review ⬜)
-  P6  3 phases shipped, not covered in the center          → /gabe-feature 38,39,41
+  P6  3 phases shipped, not covered in the center          → /gabe-cc-update 38,39,41
 SHIP
   P3  clean — nothing unpushed
 AGING

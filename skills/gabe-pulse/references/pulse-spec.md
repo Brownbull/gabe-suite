@@ -110,7 +110,7 @@ cells are outstanding. Clearing command: the beat each cell names.
 
 Phases whose `Center` cell is `⬜` **and** whose `Push` cell is `✅` — shipped but uncovered.
 Column absent → `unavailable — no Center column` (normal, not a defect). Clearing command:
-`/gabe-feature <phase>`.
+`/gabe-cc-update <phase>`.
 
 ### P7 · Red debt — LIFECYCLE
 
@@ -131,7 +131,7 @@ the total is context. Clearing command: `/gabe-review deferred`.
 
 Stations declared in the center config that have **zero** entries in `.kdbp/walks.jsonl`.
 Never-walked is the reportable state; a stale walk is not pulse's business (the center already
-renders staleness). Clearing command: `/gabe-walk <station>`.
+renders staleness). Clearing action: append a walk record to `.kdbp/walks.jsonl` (the `/gabe-walk` skill was archived 2026-07-30; the record format survives).
 
 ### P10 · Size-budget breaches — AGING
 
@@ -254,7 +254,7 @@ Checked against the adjacent specs at authoring time (CLAUDE.md's handshake-walk
 | `/gabe-health` | both survey the project | health = code condition (god files, churn, coupling); pulse = lifecycle completeness. No overlapping signal |
 | `/gabe-review` | both surface owed work | review prices and triages a diff; pulse counts and points. Pulse never opens a finding |
 | `/gabe-commit` | both read the LEDGER | commit **writes** rows; pulse only subtracts against them. Pulse writes nothing |
-| `/gabe-walk` | both read walks.jsonl | walk records; pulse counts never-walked. Pulse never appends |
+ | walks.jsonl records | both read walks.jsonl | walk records land by hand or via /gabe-cc-init approvals; pulse counts never-walked. Pulse never appends |
 | `stop-session-reminder` hook | both define "dirty" | identical rule — tracked modifications only, untracked-only does not fire |
 
 ## §7 What pulse must never become

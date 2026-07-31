@@ -61,7 +61,7 @@ CONTRACTS: list[tuple[str, str, str, str]] = [
      r"⤫\s*skipped\s*\([^)]*\)", "gabe-commit ≡ gabe-execute ≡ the E2 preamble"),
     ("pending-schema", "Canonical PENDING schema — the 10-column header row",
      r"\|\s*#\s*\|\s*Date\s*\|\s*Source\s*\|[^\n]*",
-     "gabe-review ≡ gabe-commit ≡ gabe-align ≡ gabe-push"),
+     "gabe-review ≡ gabe-commit ≡ gabe-assess ≡ gabe-push"),
     ("reuse-ledger", "REUSE LEDGER block",
      r"REUSE LEDGER[^\n|.]*", "gabe-execute ≡ gabe-mockup ≡ the E4 preamble"),
 ]

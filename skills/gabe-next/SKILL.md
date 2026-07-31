@@ -61,7 +61,7 @@ Store the resolved command as `EXEC_CMD` for Step 2 use. Review / Commit / Push 
 ### Step 1.7: Prior-row sweep (always print, never block)
 
 Scan Phases rows `1..N-1`. If any Red/Exec/Review/Commit/Push/Center cell ≠ ✅ (`Red` and `Center` count as debt only when their column is present), print before the routing decision:
-`⚠ INCOMPLETE PRIOR PHASES: [12: Review ⬜, Push ⬜ · 34: Center ⬜] — routing continues on Phase N; clear the debt with /gabe-red, /gabe-review, /gabe-push, or /gabe-feature on the listed phases.`
+`⚠ INCOMPLETE PRIOR PHASES: [12: Review ⬜, Push ⬜ · 34: Center ⬜] — routing continues on Phase N; clear the debt with /gabe-red, /gabe-review, /gabe-push, or /gabe-cc-update on the listed phases.`
 
 ### Step 2: Decide next action (zero LLM)
 
@@ -75,11 +75,11 @@ Apply this decision table, top-to-bottom. First match wins.
 | Target row's `Review` = ⬜ | `/gabe-review` | Code written and Exec gate complete; runtime-gated phases should only reach this after staging proof |
 | Target row's `Commit` = ⬜ | `/gabe-commit` | Reviewed, not committed |
 | Target row's `Push` = ⬜ | `/gabe-push` | Committed, not pushed |
-| Target row's `Center` = ⬜ (column present only) | `/gabe-feature <N>` | Shipped, not yet covered in the command center |
+| Target row's `Center` = ⬜ (column present only) | `/gabe-cc-update <N>` | Shipped, not yet covered in the command center |
 | All lifecycle cells = ✅ on target row AND more phases below | Advance `Current Phase` to `N+1`, re-run Step 2 | Phase done, move on |
 | All lifecycle cells = ✅ on target row AND no phases below | `/gabe-plan complete` | Plan complete — prompt archive |
 
-The lifecycle cells are `Exec · Review · Commit · Push`, plus `Red` **before Exec** when present (TDD-adopting projects — `/gabe-red` flips it ✅ when the red checkpoint/guard/skip record lands) and `Center` **after Push** when present (command-center projects — `/gabe-feature` flips it ✅ at the REVIEWED stamp, E5). A phase with neither column has the classic four-cell lifecycle, exactly as before.
+The lifecycle cells are `Exec · Review · Commit · Push`, plus `Red` **before Exec** when present (TDD-adopting projects — `/gabe-red` flips it ✅ when the red checkpoint/guard/skip record lands) and `Center` **after Push** when present (command-center projects — `/gabe-cc-update` flips it ✅ at the REVIEWED stamp, E5). A phase with neither column has the classic four-cell lifecycle, exactly as before.
 
 **Advance mechanics.** When advancing Current Phase, do NOT write any other file. Only rewrite the `## Current Phase` section to point to `N+1` and bump `Last Updated` in Context to today's date. Advancing past a non-✅ prior row is allowed but MUST re-print the Step 1.7 sweep warning — never advance silently over owed Review/Push work.
 
@@ -108,7 +108,7 @@ Three columns are optional; a missing one is treated as always-✅ and its routi
 
 - **`Exec` absent** (legacy plans pre-v2.9): decision table collapses to Review → Commit → Push → advance. Print `ℹ Legacy plan schema — Exec column missing. Add manually or recreate plan via /gabe-plan to adopt it.`
 - **`Red` absent** (any project that hasn't adopted the TDD beat): `/gabe-red` is never routed. No notice — absence is normal. Adopt via `/gabe-plan update` adding the `Red` column (⬜ per remaining phase).
-- **`Center` absent** (any project without a command center, the common case): the lifecycle is the classic four cells and `/gabe-feature` is never routed. No notice — absence is normal, not a defect. A command-center project adopts routed coverage by adding the `Center` column (`/gabe-plan update`, or by hand); until then the router simply never nags for coverage.
+- **`Center` absent** (any project without a command center, the common case): the lifecycle is the classic four cells and `/gabe-cc-update` is never routed. No notice — absence is normal, not a defect. A command-center project adopts routed coverage by adding the `Center` column (`/gabe-plan update`, or by hand); until then the router simply never nags for coverage.
 
 ### Step 5: Error surfaces
 
@@ -162,7 +162,7 @@ $ /gabe-next --dry-run     # command-center project: shipped phase not yet cover
 GABE NEXT (dry-run)
 PHASE: 35 — CE · Consent honesty
 STATE: Exec ✅ | Review ✅ | Commit ✅ | Push ✅ | Center ⬜
-NEXT:  /gabe-feature 35
+NEXT:  /gabe-cc-update 35
 REASON: Shipped, not yet covered in the command center
 ```
 

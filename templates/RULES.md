@@ -12,7 +12,7 @@ last_rule_event: <YYYY-MM-DD>
 
 **Meta-rule:** a rule without evidence is speculation. Every R-entry cites a commit, file, retro, or incident. If the citation becomes irrelevant (pattern retired, system reshaped), mark the rule `retired` with a date — don't carry dead dogma forward.
 
-**Maintained by:** `/gabe-debt` (see `skills/gabe-debt/SKILL.md`). `/gabe-debt extract-rules` mines retros + LESSONS files to propose new R-entries. `/gabe-review` consumes this file as a severity-escalation input (code that violates R-NN auto-escalates to CRITICAL with citation).
+**Maintained by:** `/gabe-health debt` (see `skills/gabe-health debt/SKILL.md`). `/gabe-health debt extract-rules` mines retros + LESSONS files to propose new R-entries. `/gabe-review` consumes this file as a severity-escalation input (code that violates R-NN auto-escalates to CRITICAL with citation).
 
 ---
 
@@ -26,7 +26,7 @@ last_rule_event: <YYYY-MM-DD>
 **Detection:** <how to check automatically — grep signature, lint rule, CI check, code-review perspective>
 **Applies to:** <phases (B0, I2, …) | REQs (REQ-01) | paths (src/features/scan/*)>
 **Status:** active
-**Sources:** <gabe-debt extract-rules YYYY-MM-DD | manual | LESSONS.md §N>
+**Sources:** <gabe-health debt extract-rules YYYY-MM-DD | manual | LESSONS.md §N>
 
 <!--
 Template for additional rules (copy-paste, increment ID):
@@ -45,7 +45,7 @@ Template for additional rules (copy-paste, increment ID):
 
 ## 2. Phase cross-reference {#phase-xref}
 
-<!-- Populated once rules accumulate. Built automatically by /gabe-debt audit-rules. -->
+<!-- Populated once rules accumulate. Built automatically by /gabe-health debt audit-rules. -->
 
 | Rule | Phases / REQs | Acceptance criterion the rule adds |
 |---|---|---|

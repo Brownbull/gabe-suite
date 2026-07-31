@@ -1,9 +1,9 @@
 ---
 name: gabe-assess
-description: "Rapid impact assessment — blast radius, maturity-appropriate scope, prerequisites — before committing to an 'obvious' change."
-when_to_use: "What's the blast radius of changing X, is this bigger than it looks, what must exist first — cheaper than a full plan."
+description: "The direction guard — rapid impact assessment (blast radius, maturity-appropriate scope, prerequisites) before committing to an 'obvious' change, plus the boundary check absorbed from gabe-align (values + AP advisory at commit/PR boundaries)."
+when_to_use: "A new direction appears mid-development, the scope is being steered or expanded, 'this change feels obvious' — evaluate pros/cons and proceed-vs-backlog before code; also pre-flight before a risky or irreversible change. Cheaper than a full plan."
 metadata:
-  version: 1.1.1
+  version: 1.2.0
 ---
 
 # Gabe Assess — Change Impact Assessment Skill
@@ -14,7 +14,15 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 ## What this does
 
-Pause before an "obvious yes" and take a photograph of what a proposed change actually means — blast radius, maturity-appropriate scope, prerequisites, and alternatives — before agreeing to it. This is NOT a code review (use gabe-roast) and NOT alignment checking (use gabe-align); it's the moment between "should we do X?" and "yes," the triage instinct that asks what you're actually signing up for. Use when about to reflexively say yes to a suggested fix, detour, or scope addition; skip for trivially-scoped changes (rename, typo) or when you've already assessed and are now implementing.
+Pause before an "obvious yes" and take a photograph of what a proposed change actually means — blast radius, maturity-appropriate scope, prerequisites, and alternatives — before agreeing to it. This is NOT a code review (use gabe-roast); it's the moment between "should we do X?" and "yes," the triage instinct that asks what you're actually signing up for. Use when about to reflexively say yes to a suggested fix, detour, or scope addition; skip for trivially-scoped changes (rename, typo) or when you've already assessed and are now implementing.
+
+## Boundary check (absorbed from gabe-align, 2026-07-30)
+
+The values + AP advisory check that lived in gabe-align now runs here as part of the assessment when the change is risky, irreversible, or lands at a commit/PR boundary: check the proposal against the project's stated values and the Architecture Principles (`templates/architecture-principles.md`, AP1–AP13, advisory citations only — never gates). Deep spec preserved at `../_archive/gabe-align/references/`.
+
+## Direction guard (ruled rework, 2026-07-30 — not yet wired)
+
+Operator ruling: this skill becomes the suite's DIRECTION GUARD — it should fire ITSELF when development steers a new direction, evaluating the steer (pros/cons, proceed-vs-backlog) instead of waiting to be called. The pain it answers: targets moved and scope expanded across sessions with no at-hand evaluation. Trigger points ruled: a direction steer detected mid-work · a very big change · after many commits/merges on main. The trigger mechanism (hook or register-comptroller escalation) is design work for the rework session — until it lands, invoke manually at those moments.
 
 ## Usage / modes
 

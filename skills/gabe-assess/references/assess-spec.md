@@ -72,7 +72,7 @@ Is this the right level of fix for where we are?
 
 The skill identifies which level the CURRENT project/situation is at, and flags when a proposed fix is over-engineered or under-engineered for that level.
 
-Current level := the `maturity:` frontmatter field of `.kdbp/BEHAVIOR.md` (same source /gabe-debt Step 0 uses). If the file/field is absent, print `maturity unknown — assuming MVP` in D2 output — never guess from vibes.
+Current level := the `maturity:` frontmatter field of `.kdbp/BEHAVIOR.md` (same source /gabe-health debt Step 0 uses). If the file/field is absent, print `maturity unknown — assuming MVP` in D2 output — never guess from vibes.
 
 **Posture mix (advisory).** Once the level is known, D2 may cite the archetype posture-mix for that maturity from `templates/archetype-map.md` (or `~/.claude/templates/gabe/archetype-map.md`) — e.g. at MVP lean Prototyper + Builder + Sweeper; at Scale, Sweeper + Grower + Maintainer with a Builder in reserve. This frames *what mode the fix should be made in*, not just its level, and can flag a change made in the wrong posture (Maintainer-grade hardening on a pre-PMF prototype). Advisory only — never a gate.
 
@@ -243,7 +243,7 @@ Handle: "[one-liner for the batch decision]"
 ## Integration with Other Skills
 
 - **After gabe-roast**: Roast finds gaps. Assessment triages which gaps to fix and how. Use `/gabe-assess` on each gap's suggested fix before implementing.
-- **Before gabe-align**: If the proposed change is large enough to question alignment, run `/gabe-align shallow` first, then `/gabe-assess` on the aligned approach.
+- **Boundary check (absorbed from gabe-align, 2026-07-30)**: when the change is risky, irreversible, or lands at a commit/PR boundary, include the values + AP advisory pass (SKILL.md §Boundary check; deep spec preserved at `../../_archive/gabe-align/references/`).
 - **With gabe-lens**: Assessment one-liners use Gabe Lens format. If the user needs to understand WHY a change has cross-cutting blast radius, use `/gabe-lens` on the underlying concept.
 
 ---

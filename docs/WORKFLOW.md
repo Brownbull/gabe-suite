@@ -25,11 +25,11 @@ For complex planning work, `/gabe-plan` can create a self-contained HTML review 
 
 | Mode | Use when | First command | Guide |
 |------|----------|---------------|-------|
-| Greenfield | You are starting from an idea or empty repo | `/gabe-align deep "<idea>"` | [workflows/greenfield.md](workflows/greenfield.md) |
+| Greenfield | You are starting from an idea or empty repo | `/gabe-assess "<idea>"` | [workflows/greenfield.md](workflows/greenfield.md) |
 | Brownfield | You are adopting an existing codebase | read-only inventory first | [workflows/brownfield.md](workflows/brownfield.md) |
 | Active KDBP | `.kdbp/PLAN.md` already exists | `/gabe-help`, then `/gabe-next` | this doc |
 
-Architecture Principles AP1-AP13 are advisory checks inside `/gabe-align`, `/gabe-debt`, and `/gabe-review`. They provide `CONCERN`/review/debt context; they do not block phase execution by themselves.
+Architecture Principles AP1-AP13 are advisory checks inside `/gabe-assess`, `/gabe-health debt`, and `/gabe-review`. They provide `CONCERN`/review/debt context; they do not block phase execution by themselves.
 
 ---
 
@@ -163,11 +163,11 @@ Direct entry points: `/gabe-scope-pivot` can be invoked directly when you alread
 | Command | Purpose |
 |---------|---------|
 | `/gabe-help` | context-aware "what should I do next?" — read-only scan |
-| `/gabe-align [depth]` | values check + checkpoint (shallow / standard / deep) |
+| `/gabe-assess [depth]` | values check + checkpoint (shallow / standard / deep) |
 | `/gabe-assess [change]` | blast radius + maturity scope + prerequisites for a proposed change |
 | `/gabe-roast [perspective] [target]` | adversarial gap review from a specific viewpoint |
 | `/gabe-health [focus]` | codebase structural health — god files, churn, coupling, bugs |
-| `/gabe-debt [brief\|dry-run\|target]` | architecture decision-debt scan with AP evidence citations |
+| `/gabe-health debt [brief\|dry-run\|target]` | architecture decision-debt scan with AP evidence citations |
 | `/gabe-mockup [mode]` | mockup, React Storybook, and design-reference workflows |
 | `/gabe-lens [concept]` | cognitive translation — analogies, constraint boxes, Gabe Blocks |
 
@@ -180,7 +180,7 @@ All project state lives under `.kdbp/` at the project root. Flat layout — no s
 | File | Purpose | Who writes | Shape |
 |------|---------|-----------|-------|
 | `BEHAVIOR.md` | project identity + maturity + stack + mockup manifest | `/gabe-init` | prose + frontmatter |
-| `VALUES.md` | project values (cross-stack: `~/.kdbp/VALUES.md`) | `/gabe-init`, `/gabe-align evolve` | prose |
+| `VALUES.md` | project values (cross-stack: `~/.kdbp/VALUES.md`) | `/gabe-init`, `/gabe-assess evolve` | prose |
 | `SCOPE.md` | REQs + reference frame + pillars + phase arc (`## Phases`) | `/gabe-scope` family | structured sections + frontmatter |
 | `scope-references.yaml` | reference frame refs | `/gabe-scope` family | YAML |
 | `PLAN.md` | **active plan** — Phases table + Phase Details | `/gabe-plan`, `/gabe-next`, `/gabe-execute`, `/gabe-review`, `/gabe-commit`, `/gabe-push` (column ticks) | markdown table + YAML per phase |
@@ -210,7 +210,7 @@ User-level (cross-project):
 1. **No raw commits.** All commits via `/gabe-commit`. Raw `git commit` bypasses CHECK 1–9 + deferred scan + doc drift + Notable Updates digest.
 2. **PLAN before code.** `/gabe-execute` reads `.kdbp/PLAN.md` state column before implementing. No implementation without a phase row.
 3. **STRUCTURE before placement.** New files must match a pattern in `.kdbp/STRUCTURE.md`. PostToolUse hook warns on drift; CHECK 9 escalates at commit.
-4. **VALUES override defaults.** Project `.kdbp/VALUES.md` + user `~/.kdbp/VALUES.md` outrank model priors. `/gabe-align` audits.
+4. **VALUES override defaults.** Project `.kdbp/VALUES.md` + user `~/.kdbp/VALUES.md` outrank model priors. `/gabe-assess` audits.
 5. **Verified KNOWLEDGE topics trump re-derivation, when present.** `.kdbp/KNOWLEDGE.md` is legacy-only — no live command creates one (the `gabe-teach` skill that owned this is archived, see `skills/_archive/`), but if a project still has one and it marks a topic `verified`, honor that explanation rather than re-deriving.
 6. **SCOPE.md writes only by the `/gabe-scope` family.** That includes its `## Phases` section. `/gabe-commit` warns on direct edits.
 7. **`/gabe-next` is read-only except for `## Current Phase` advancement.** No other state mutation. Zero LLM.
@@ -222,7 +222,7 @@ User-level (cross-project):
 ### Scenario 1 — greenfield project, first plan
 
 ```text
-user: /gabe-align deep "idea for the app"
+user: /gabe-assess "idea for the app"
   -> values, scenarios, and AP1-AP13 concerns surfaced before setup
 user: /gabe-init my-project
   -> .kdbp/ scaffolded, CLAUDE.md at root
@@ -248,7 +248,7 @@ user: /gabe-init existing-project
   -> starts a cautious KDBP baseline when no .kdbp/ exists
 user: /gabe-health
   -> maps structural hotspots before planning changes
-user: /gabe-debt brief
+user: /gabe-health debt
   -> records evidence-backed decision debt and AP concerns
 user: /gabe-plan check
   -> verifies active plan mappings when a plan already exists

@@ -8,7 +8,7 @@ Greenfield work starts with the highest uncertainty. The job is to reduce that u
 
 ```mermaid
 flowchart TD
-    Idea[Idea] --> Align["/gabe-align deep"]
+    Idea[Idea] --> Align["/gabe-assess"]
     Align --> Init["/gabe-init"]
     Init --> Scope["/gabe-scope"]
     Scope --> Assess["/gabe-assess"]
@@ -24,7 +24,7 @@ The diagram is intentionally serial. Gabe Suite is a one-active-plan workflow at
 Run:
 
 ```sh
-/gabe-align deep "<one paragraph app idea>"
+/gabe-assess "<one paragraph app idea>"
 ```
 
 Use this before scaffolding. Standard/deep alignment loads AP1-AP13, so the early check should look for:
@@ -78,10 +78,10 @@ Before `/gabe-plan`, run at least one pressure check:
 
 ```sh
 /gabe-assess "initial architecture and first build phase"
-/gabe-debt brief
+/gabe-health debt
 ```
 
-Use `/gabe-debt brief` after scope exists. It can surface missing decisions and cite AP principles when evidence supports the citation.
+Use `/gabe-health debt` after scope exists. It can surface missing decisions and cite AP principles when evidence supports the citation.
 
 ## Step 5 - Plan the First Build Slice
 
@@ -115,20 +115,20 @@ Run:
 - Commit pending: `/gabe-commit`
 - Push pending: `/gabe-push`
 
-**Projects with a Testing Command Center** (`docs/site/center/` — see `/gabe-feature`)
+**Projects with a Testing Command Center** (`docs/site/center/` — see `/gabe-cc-update`)
 add one step to the per-phase rhythm, between review and commit:
 
 ```
-/gabe-execute → /gabe-review → /gabe-feature <phase> → /gabe-commit → /gabe-push
+/gabe-execute → /gabe-review → /gabe-cc-update <phase> → /gabe-commit → /gabe-push
 ```
 
-That slot is where all of `/gabe-feature`'s inputs exist (shipped commits, review
+That slot is where all of `/gabe-cc-update`'s inputs exist (shipped commits, review
 verdict, test runs) and the commit then carries the regenerated center pages in the
 same checkpoint. `/gabe-next` stays cell-only (zero-logic); the feature step is part
 of the close-out ritual, not a PLAN cell — promoting it to a cell is D6/Wave-2.
 At PLAN time, the lightweight counterpart: note in the phase's `proof` which of the
 five angles (pytest · vitest · journey · deployed · motion) the phase commits to —
-`/gabe-feature` reads the promise back at close-out.
+`/gabe-cc-update` reads the promise back at close-out.
 
 For React-first UI projects, run:
 
@@ -144,7 +144,7 @@ A greenfield project is ready for first implementation when:
 
 - `.kdbp/BEHAVIOR.md`, `SCOPE.md`, `PLAN.md`, `PLAN.json`, and `DECISIONS.md` exist.
 - The first phase has a clear tier and testable acceptance signal.
-- AP concerns from `/gabe-align deep` are either resolved, recorded as decisions, or accepted as explicit tradeoffs.
+- AP concerns from `/gabe-assess` are either resolved, recorded as decisions, or accepted as explicit tradeoffs.
 - `/gabe-next` can identify the first phase and dispatch to the right execution command.
 
 ## Avoid

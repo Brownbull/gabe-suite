@@ -142,7 +142,7 @@ In 1–3 years: an ambient tool that watches what you're working on and surfaces
 - **pending** — not started
 - **in-progress** — at least one task checked off in per-phase PLAN.md
 - **blocked** — dependency or external blocker
-- **complete** — all Covers REQs satisfied; validated by `/gabe-align`
+- **complete** — all Covers REQs satisfied; validated by `/gabe-assess`
 - **deferred** — moved out of the current arc (retained for audit)
 
 #### ID conventions

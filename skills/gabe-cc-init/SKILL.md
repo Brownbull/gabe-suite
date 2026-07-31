@@ -1,7 +1,7 @@
 ---
-name: gabe-adopt
+name: gabe-cc-init
 description: "Brownfield command-center adoption — archive-never-delete init, machine-ranked entity shortlist, back-catalog ingested one section per run, each closed by an approval walk."
-when_to_use: "An existing codebase needs a Testing Command Center, or /gabe-feature stopped you with its bootstrap pointer. NOT for a freshly shipped phase (/gabe-feature) or doc pages (/gabe-docsite)."
+when_to_use: "An existing codebase needs a Testing Command Center, or /gabe-cc-update stopped you with its bootstrap pointer. NOT for a freshly shipped phase (/gabe-cc-update) or doc pages (/gabe-docsite)."
 disable-model-invocation: true
 metadata:
   version: 1.2.4
@@ -9,7 +9,7 @@ metadata:
 
 # Gabe Adopt — the back-catalog, at human speed
 
-**Usage:** `/gabe-adopt init | rank | section <entity> | status`
+**Usage:** `/gabe-cc-init init | rank | section <entity> | status`
 
 ## Gabe execution contract (E1–E7)
 
@@ -17,7 +17,7 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 ## The intention
 
-*A project that grew before the center existed has features, tests, and documentation nobody can see in one place. This skill adopts that back-catalog — but never by bulk import: legacy prose is raw material to re-verify, not truth to copy. It archives what exists (never deletes), bootstraps a clean-slate center, lets the machine rank what matters, and then ingests ONE section per run so the operator can check every diagram, doc, test angle, and proof at human speed before it counts. Meanwhile the main plan keeps shipping — new features enter the center through `/gabe-feature`, and the two tracks converge.*
+*A project that grew before the center existed has features, tests, and documentation nobody can see in one place. This skill adopts that back-catalog — but never by bulk import: legacy prose is raw material to re-verify, not truth to copy. It archives what exists (never deletes), bootstraps a clean-slate center, lets the machine rank what matters, and then ingests ONE section per run so the operator can check every diagram, doc, test angle, and proof at human speed before it counts. Meanwhile the main plan keeps shipping — new features enter the center through `/gabe-cc-update`, and the two tracks converge.*
 
 ## Modes
 
@@ -47,7 +47,7 @@ Per mode: `init` → archive manifest + bootstrapped paths + tracker location; `
 
 ## Non-goals
 
-- Does NOT cover freshly shipped phases (`/gabe-feature` owns the forward track and the PLAN `Center` cell).
+- Does NOT cover freshly shipped phases (`/gabe-cc-update` owns the forward track and the PLAN `Center` cell).
 - Does NOT place standalone doc pages (`/gabe-docsite`).
 - Does NOT delete anything, ever — archive is `git mv` plus an explanatory README.
 - Does NOT rank by opinion — every rank cites its machine signals; the operator overrides freely.

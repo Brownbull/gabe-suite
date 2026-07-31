@@ -1,4 +1,4 @@
-# Feature spec — the binding intentions behind /gabe-feature
+# Feature spec — the binding intentions behind /gabe-cc-update
 
 > The one deep home for the card contract. SKILL.md carries intention + flow
 > and points here; nothing below is restated there. Cards are PER ENTITY:
@@ -165,7 +165,7 @@ Authored by the session that creates the evidence, in the manifest's
 `narration` block: `story` (2–3 sentences, anyone) + `legs` (one plain
 sentence per leg — each leg is a claim, its shots are the proof). Describes,
 never asserts. Classification (`role:`/`flows:`) rides the same manifest —
-§Flow coverage above; `/gabe-feature curate` authors both and registers the
+§Flow coverage above; `/gabe-cc-update curate` authors both and registers the
 set in `entities.<slug>.proofs[]`. Video custody: recordings are
 machine-local and never committed; committed proof = the curated shots. The
 pages state both.
@@ -185,7 +185,7 @@ predate the Center column as out-of-generation — never silently absent.
 
 ## Bootstrap (a project without a center)
 
-Owned by `/gabe-adopt` (ruling R7 — its own skill, its own spec). The
+Owned by `/gabe-cc-init` (ruling R7 — its own skill, its own spec). The
 machinery is SUITE TEMPLATES: `templates/center/generators/` (builder + data
 and ingest layers + gate + refresh + `curate_proof.py` + `next_feature.py`),
 `templates/center/shell/` (the vendored A3-Tabbed skeletons) and
@@ -199,7 +199,7 @@ already exists.
 
 ## Release (the stakeholder showcase — a MODE, not a beat)
 
-`/gabe-feature release [--since <deployments-row>]` renders `releases/<id>.html` for
+`/gabe-cc-update release [--since <deployments-row>]` renders `releases/<id>.html` for
 stakeholders: the covered set = phases whose `Center` cell went ✅ since the last TERMINAL-env
 row in `.kdbp/DEPLOYMENTS.md` (the trigger is derived — `/gabe-push` detects the terminal-env
 ship and prints the pointer; staging ships fire nothing; projects without a center: silent skip).

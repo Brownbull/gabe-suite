@@ -514,7 +514,7 @@ Accounting is observable-only: after every LLM call, count it (`llm_calls += 1`)
 ## Integration with the suite
 
 - **`/gabe-plan <phase-id>`** is called AFTER `/gabe-scope` finalizes (Step 8 in next phase). Does not interact with in-progress scope sessions.
-- **`/gabe-align`, `/gabe-review`, `/gabe-commit`** read SCOPE.md — including its `## Phases` section — for drift detection. None write. `/gabe-commit` audit warns on direct edits (bypass of `-change`).
+- **`/gabe-assess`, `/gabe-review`, `/gabe-commit`** read SCOPE.md — including its `## Phases` section — for drift detection. None write. `/gabe-commit` audit warns on direct edits (bypass of `-change`).
 - **`/gabe-scope-change`** is the only write path post-finalize. Runs from any step — if invoked mid-session, tells user to finish or abort the in-progress session first.
 
 ---

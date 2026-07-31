@@ -1,10 +1,10 @@
 # Debt Pattern Catalog
 
-Data-driven catalog consumed by `/gabe-debt` (see `skills/gabe-debt/SKILL.md`). Each `P<n>-*.md` file is a self-contained pattern definition. Patterns are evidence-anchored to real failures in Gastify (`docs/rebuild/LESSONS.md` R1–R13) and BoletApp (`docs/sprint-artifacts/epic-14c-retro-2026-01-20.md`). Not generic invention.
+Data-driven catalog consumed by `/gabe-health debt` (see `skills/gabe-health debt/SKILL.md`). Each `P<n>-*.md` file is a self-contained pattern definition. Patterns are evidence-anchored to real failures in Gastify (`docs/rebuild/LESSONS.md` R1–R13) and BoletApp (`docs/sprint-artifacts/epic-14c-retro-2026-01-20.md`). Not generic invention.
 
 ## File format
 
-Every pattern file has the following sections. `gabe-debt` parses them deterministically — keep headings stable.
+Every pattern file has the following sections. `gabe-health` (debt lens) parses them deterministically — keep headings stable.
 
 ```markdown
 # P<n> — <pattern handle>

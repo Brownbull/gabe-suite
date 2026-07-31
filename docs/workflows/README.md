@@ -6,12 +6,12 @@
 
 | Situation | Use | First command |
 |-----------|-----|---------------|
-| New app from an idea | [Greenfield](greenfield.md) | `/gabe-align deep "<idea>"` |
+| New app from an idea | [Greenfield](greenfield.md) | `/gabe-assess "<idea>"` |
 | Existing codebase, no KDBP | [Brownfield](brownfield.md) | read-only inventory, then `/gabe-init <name>` |
 | Existing codebase with KDBP | [Brownfield](brownfield.md) | `/gabe-help`, then `/gabe-init update` if needed |
 | Existing active plan | [Core workflow](../WORKFLOW.md) | `/gabe-next` |
-| Shipped work needs explaining / testing invisible (center exists) | Testing Command Center (`/gabe-feature`) | `/gabe-feature status`, then `backfill` |
-| Existing codebase, no command center yet | Brownfield center adoption (`/gabe-adopt`) | `/gabe-adopt init`, then `rank`, then `section <entity>` |
+| Shipped work needs explaining / testing invisible (center exists) | Testing Command Center (`/gabe-cc-update`) | `/gabe-cc-update status`, then `backfill` |
+| Existing codebase, no command center yet | Brownfield center adoption (`/gabe-cc-init`) | `/gabe-cc-init init`, then `rank`, then `section <entity>` |
 
 ## Common Rule
 

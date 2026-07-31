@@ -26,18 +26,16 @@ Skills and hooks for understanding, reviewing, deciding, and shipping — with a
 | Skill | Command | What it does |
 |---|---|---|
 | **Gabe Lens** | `/gabe-lens` | Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles |
-| **Gabe Align** | `/gabe-align` | Values enforcement — pre-flight checks + auto-checkpoint at commit/PR |
 | **Gabe Review** | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items, tier drift |
 | **Gabe Roast** | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
 | **Gabe Myopic** | `/gabe-myopic` | Short-sighted-user walkthrough — simulates a shallow planning horizon (1/1.5/2 steps) to flag foresight traps, overwhelm, recall demands, no-undo dead-ends |
-| **Gabe Assess** | `/gabe-assess` | Change impact — blast radius, maturity scope, prerequisites, alternatives |
-| **Gabe Debt** | `/gabe-debt` | Architecture decision-debt scanner — missing decisions, rule violations, AP citations |
-| **Gabe Health** | `/gabe-health` | Codebase health — god files, churn hotspots, coupling, deferred items, maintenance |
+| **Gabe Assess** | `/gabe-assess` | The direction guard — change impact (blast radius, maturity scope, prerequisites) + values/AP boundary check |
+| **Gabe Health** | `/gabe-health` | The scanner, three lenses — codebase health · decision-debt (`debt`) · skill-estate sweep (`estate`, ask-first) |
 | **Gabe Help** | `/gabe-help` | Context-aware guide — scans environment, suggests the right tool |
 | **Gabe Mockup** | `/gabe-mockup` | UX/mockup execution — legacy HTML recipes plus React-first Storybook modes |
 | **Gabe Docs** | _(consulted)_ | Documentation house style — CommonMark, Mermaid library, per-well diagram recommendations (used by `/gabe-init`, `/gabe-commit`) |
 
-### Command Surface (30 skills)
+### Command Surface (26 skills)
 
 Every capability is one skill under `skills/<name>/` — the skill name gives the slash
 invocation (`skills/gabe-plan/` ⇒ `/gabe-plan`). Each SKILL.md is a lean core that loads
@@ -46,23 +44,20 @@ covers the full KDBP lifecycle from project init through ship:
 
 | Command | What it does |
 |---|---|
-| `/gabe-adopt` | Brownfield command-center adoption — archive existing docs (never delete), bootstrap the center, machine-rank the critical entities, ingest one section per run at human speed with checklist + walk-recorded approval |
-| `/gabe-align` | Alignment guardian — shallow, standard, and deep checks; standard/deep include AP1-AP13 advisory checks |
-| `/gabe-assess` | Change impact assessment — blast radius, maturity scope, prerequisites |
+| `/gabe-cc-init` | Brownfield command-center adoption — archive existing docs (never delete), bootstrap the center, machine-rank the critical entities, ingest one section per run at human speed with checklist + walk-recorded approval |
+| `/gabe-assess` | The direction guard — change impact assessment (blast radius, maturity scope, prerequisites) + the values/AP boundary check at commit/PR boundaries |
 | `/gabe-commit` | Commit quality gate — deterministic checks, interactive triage, defer/accept/fix |
-| `/gabe-debt` | Architecture decision-debt scanner — decisions, rules, open questions, AP citations |
 | `gabe-docs` *(background)* | Documentation standards + the suite execution contract — consulted by other skills, not invoked directly |
 | `/gabe-docsite` | Publish docs onto the generated HTML docs site — place, wire the nav, render with working diagrams |
-| `/gabe-entity` | Entity-context reader — assemble one entity's slice (code map + registry + bindings) into a context pack from the command center's data; brief or JSON |
+| `/gabe-cc-entity` | Entity-context reader — assemble one entity's slice (code map + registry + bindings) into a context pack from the command center's data; brief or JSON |
 | `/gabe-execute` | Phase execution — tier-cap task breakdown, mid-phase escalation gate |
-| `/gabe-feature` | Testing-command-center feature coverage — lens card + diagrams + evidence narration over machine facts; status/backfill/curate (projects with `docs/site/center/`) |
+| `/gabe-cc-update` | Testing-command-center feature coverage — lens card + diagrams + evidence narration over machine facts; status/backfill/curate (projects with `docs/site/center/`) |
 | `/gabe-handoff` | Session handoff — paste-able next-session resume prompt + evidence-gated KDBP state sync (PLAN/LEDGER/PENDING) into `.kdbp/HANDOFF.md` |
-| `/gabe-health` | Codebase structural health — god files, churn hotspots, coupling, bugs |
+| `/gabe-health` | The suite scanner — structural health (god files, churn, coupling, bugs) · `debt` decision-debt lens with AP citations · `estate` ask-first promote/archive sweep |
 | `/gabe-help` | Context-aware guide — scans environment and suggests the right workflow |
 | `/gabe-init` | Project setup — creates `.kdbp/`, installs hooks, selects project type + maturity |
 | `/gabe-lens` | Cognitive translation — analogies, constraint boxes, Gabe Blocks |
-| `/gabe-meme` | Oblique-meme generation — template-persona-matched visual metaphors rendered via memegen.link, verified PNGs, punch-up only |
-| `/gabe-quip` | Sarcastic wit for human-facing HTML surfaces — titles/hooks/callouts that surface the pain point; one engagement lever (with diagrams/memes/disclosure), proposes not rewrites, dosed |
+| `/gabe-meme` | Oblique-meme generation — persona-matched visual metaphors via memegen.link, verified PNGs, punch-up only; + surface-wit mode for rendered HTML surfaces (absorbed gabe-quip) |
 | `/gabe-mockup` | Mockup/UX workflow — legacy static mockups plus React-first Storybook and `design-ref` |
 | `/gabe-myopic` | Short-sighted-user walkthrough — panel of 3 planning horizons flags foresight traps, overwhelm, recall demands, no-undo dead-ends |
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
@@ -72,7 +67,6 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-red` | TDD's first half as a beat — declare the failing cases before code (C-ids born in test names), commit the red checkpoint; guards for refactors, enumerated skips |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |
 | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
-| `/gabe-walk` | Record a human walking the build — the witness: who·when·result·evidence to walks.jsonl; the manual angles' one input |
 | `/gabe-scope` | Authors SCOPE.md — stable premise plus the phase arc in its `## Phases` section — and `scope-references.yaml`. Multi-step, checkpoint-gated, Opus-heavy |
 | `/gabe-scope-change` | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline, pivots route to `-pivot` |
 | `/gabe-scope-pivot` | Scope pivot — direction change, archives v{N} and creates v{N+1} |
@@ -112,11 +106,11 @@ For complex plans, `/gabe-plan` may also create a self-contained HTML review art
 | I need to... | Use |
 |---|---|
 | Start a new project | `/gabe-init [name]` |
-| Start from a fresh idea | `/gabe-align deep "idea"` then `/gabe-init`, `/gabe-scope`, `/gabe-plan` |
+| Start from a fresh idea | `/gabe-assess "idea"` then `/gabe-init`, `/gabe-scope`, `/gabe-plan` |
 | Adopt an existing codebase | read [docs/workflows/brownfield.md](docs/workflows/brownfield.md), then use `/gabe-init` or `/gabe-init update` |
 | Scope a new project (SCOPE.md, incl. its `## Phases` section) | `/gabe-scope` |
 | Change project scope | `/gabe-scope-change "description of change"` |
-| Check values alignment | `/gabe-align [shallow/standard/deep]` |
+| Check values alignment (boundary check) | `/gabe-assess` |
 | Understand a concept | `/gabe-lens [concept]` |
 | Find gaps in a design | `/gabe-roast [perspective] [target]` |
 | Find where short-sighted users get lost or trapped | `/gabe-myopic [target]` |
@@ -126,7 +120,7 @@ For complex plans, `/gabe-plan` may also create a self-contained HTML review art
 | Execute mockup or React Storybook UI work | `/gabe-mockup` |
 | Advance automatically to next step | `/gabe-next` |
 | Review code | `/gabe-review` |
-| Scan architecture decision debt | `/gabe-debt [brief|dry-run]` |
+| Scan architecture decision debt | `/gabe-health debt [brief|dry-run]` |
 | Check codebase health | `/gabe-health` |
 | Commit with quality checks | `/gabe-commit [message]` |
 | Push, create PR, watch CI | `/gabe-push` |
@@ -172,7 +166,7 @@ This creates `.kdbp/`, installs hooks, and asks about project type and maturity.
 
 ## Gabe Lens (skill)
 
-> Everything from here through "Cognitive Suits" describes the `/gabe-lens` cognitive-translation skill — the single component that shares its name with the old suite. Other skills (`/gabe-review`, `/gabe-roast`, `/gabe-align`, etc.) are documented further below or in their respective SKILL.md files.
+> Everything from here through "Cognitive Suits" describes the `/gabe-lens` cognitive-translation skill — the single component that shares its name with the old suite. Other skills (`/gabe-review`, `/gabe-roast`, `/gabe-assess`, etc.) are documented further below or in their respective SKILL.md files.
 
 ### See it in action
 
@@ -495,7 +489,7 @@ One-line handles from both skills enhance compaction handoff notes by surviving 
 <details>
 <summary>How the Gabe Lens skill — and later the whole suite — was built from a cognitive self-observation experiment</summary>
 
-The suite started as a single skill called `gabe-lens`. That skill started as a personal experiment: **what happens when you use AI to reverse-engineer how your own brain learns?** Over time, workflow commands (`/gabe-init`, `/gabe-commit`, `/gabe-plan`, `/gabe-execute`, `/gabe-push`, `/gabe-teach`, `/gabe-scope`) and companion skills (`/gabe-roast`, `/gabe-align`, `/gabe-assess`, `/gabe-review`, `/gabe-health`, `/gabe-help`, plus the consulted-only `gabe-docs` and `gabe-arch`) accreted around it. The umbrella became the Gabe Suite. The origin skill kept its name.
+The suite started as a single skill called `gabe-lens`. That skill started as a personal experiment: **what happens when you use AI to reverse-engineer how your own brain learns?** Over time, workflow commands (`/gabe-init`, `/gabe-commit`, `/gabe-plan`, `/gabe-execute`, `/gabe-push`, `/gabe-teach`, `/gabe-scope`) and companion skills (`/gabe-roast`, `/gabe-assess`, `/gabe-assess`, `/gabe-review`, `/gabe-health`, `/gabe-help`, plus the consulted-only `gabe-docs` and `gabe-arch`) accreted around it. The umbrella became the Gabe Suite. The origin skill kept its name.
 
 I sat down with Claude and deliberately tried to learn a complex topic — attention mechanisms in neural networks. But the real goal wasn't understanding attention. It was watching *how my mind processed* the explanation, in real time, and having Claude observe and document the patterns.
 

@@ -989,7 +989,7 @@ for _d in pdirs:
         f'<a href="{_entity_href(o)}">'
         + entity_badge(o, LABELS.get(o, o), 13) + "</a>" for o in _owners)
     # WHAT the set shows — the manifest's own words (feature + story),
-    # written by /gabe-feature curate after the green run. A set with NO
+    # written by /gabe-cc-update curate after the green run. A set with NO
     # manifest predates the flow: it wears the LEGACY identifier, and the
     # closest thing it has to a story — its own numbered shot names — is
     # shown so the integration pass knows what it is looking at.
@@ -1077,7 +1077,7 @@ demo_shelf = (_shelf_bar + '<div id="shelf">' + table(
     # 2026-07-24: the description was cramped while fixed cells sprawled).
     widths=["44px", "1.1fr", "3.4fr", "58px", "100px", "1.5fr"],
     note=f"{len(pdirs)} proof set(s) under tests/web-e2e/proof/ — "
-         "screenshots a human CURATED after a green run (/gabe-feature "
+         "screenshots a human CURATED after a green run (/gabe-cc-update "
          "curate). A set is claimed by entities[].proofs in "
          "center.config.json and renders in full on its entity's Evidence "
          "tab; an unclaimed set is surface area for the next adoption.")
@@ -1106,7 +1106,7 @@ entity_grid = table(
       E(trunc(s["notes"].removeprefix("Treatment:").split(".")[0], 58))]
      for s in sorted(sections, key=lambda s: _by_rank.get(s["rank"], 3))],
     note="Source: docs/site/center/adoption.json — built one per run via "
-         "/gabe-adopt section <entity>, then walk-approved.")
+         "/gabe-cc-init section <entity>, then walk-approved.")
 
 # --------------------------------------------------------------------------- #
 # Hub lens tabs — the four-tab set re-lenses ONE subject (here: the project).
@@ -1365,7 +1365,7 @@ feature_docs = table(
     [[f"<b>{E(c.stem)}</b>", "—", str(len(c.read_text().splitlines()))] for c in _cards],
     num={2},
     note="Feature cards accumulate here as sections are adopted "
-         "(/gabe-adopt section <entity>)."
+         "(/gabe-cc-init section <entity>)."
 ) if _cards else gap("Feature docs", "docs/site/center/cards/*.md — 0 sections adopted")
 
 _decisions = len(re.findall(r"^\| *D\d+",
@@ -1447,7 +1447,7 @@ PER_FILE = {
         "{{ENTITIES_TITLE}}": "Entity index",
         "{{ENTITIES_LEDE}}": (f"The approved adoption baseline — {len(sections)} entities, "
                               f"{adopted} adopted. Each section is built one per run via "
-                              f"/gabe-adopt section, then walk-approved."),
+                              f"/gabe-cc-init section, then walk-approved."),
         "{{ENTITIES_KPIS}}": entities_kpis,
         "{{ENTITY_GRID}}": entity_grid,
     },
@@ -1761,7 +1761,7 @@ def render_testing() -> dict[str, str]:
                     "to <code>entities[].proofs</code> in "
                     "center.config.json — it then renders on that "
                     "entity's Evidence tab with its legs and galleries — "
-                    "and author its manifest.json (/gabe-feature curate "
+                    "and author its manifest.json (/gabe-cc-update curate "
                     "writes one on the next green run). A <b>likely</b> "
                     "badge is a name-pattern guess (the entity's test_rx "
                     "matched the folder name), never a claim. The entity "

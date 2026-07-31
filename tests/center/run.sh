@@ -1013,7 +1013,7 @@ grep -q 'names key(s) the card lacks: scam' "$T/gate.out" \
   && ok || bad "M30: gate must WARN on flows naming a card-unknown key"
 
 # --- walk subjects: bare slug AND adopt:<slug> both credit the entity ------
-# (the walk-briefing reshape: /gabe-walk transaction and /gabe-adopt's
+# (the walk-briefing reshape: record-walk: transaction and /gabe-cc-init's
 #  adopt:transaction are the same witness — an exact adopt:-only match left
 #  honest walks invisible on the very page they walked)
 WK="$T/walk"; mk_fixture "$WK"
@@ -1285,7 +1285,7 @@ g = [c for c in cards([prow(num="3", file="apps/api/pantry.py",
 assert g["state"] == "blocked" and g["ripe"] is False, g
 
 # ---- verify cards route to the RIGHT beat -------------------------------
-# 6/7 with only the walk owed -> /gabe-walk; 0/7 -> /gabe-adopt. Naming the
+# 6/7 with only the walk owed -> record-walk; 0/7 -> /gabe-cc-init. Naming the
 # wrong command sends the operator to a beat whose preconditions are not met.
 full = dict.fromkeys(("testing_inventory", "legacy_reverified", "card",
                       "diagrams", "proofs", "gate_green"), True)
@@ -1296,9 +1296,9 @@ secs = [{"entity": "recipe", "display_name": "Recipe",
          "status": "awaiting-approval",
          "checklist": dict.fromkeys(list(full) + ["walk_recorded"], False)}]
 by = {c["id"]: c for c in cards([], secs) if c["track"] == "verify"}
-assert by["verify:recipe"]["cmd"] == "/gabe-walk recipe", by["verify:recipe"]
+assert by["verify:recipe"]["cmd"] == "record walk: recipe → walks.jsonl", by["verify:recipe"]
 assert by["verify:recipe"]["ripe"] is True
-assert by["verify:pantry"]["cmd"] == "/gabe-adopt section pantry", by["verify:pantry"]
+assert by["verify:pantry"]["cmd"] == "/gabe-cc-init section pantry", by["verify:pantry"]
 assert by["verify:pantry"]["ripe"] is False
 # both are OWED TO YOU - nobody but the operator can clear either
 assert set(c["state"] for c in by.values()) == set(["owed_to_you"])

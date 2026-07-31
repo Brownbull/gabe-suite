@@ -1,4 +1,4 @@
-# Adopt spec — the binding contract behind /gabe-adopt
+# Adopt spec — the binding contract behind /gabe-cc-init
 
 > The one deep home for the adoption tracker, archive rules, the generator-promotion path,
 > ranking signals, the section checklist, and walk-recorded approval. SKILL.md carries intention
@@ -43,7 +43,7 @@ Small, append-only in spirit: rows change status, never vanish.
 ```
 
 - `status`: `pending | building | awaiting-approval | approved | covered-by-feature | dropped`.
-- `covered-by-feature`: the forward track (`/gabe-feature <phase>`) already built this entity's
+- `covered-by-feature`: the forward track (`/gabe-cc-update <phase>`) already built this entity's
   section — record the phase id in `notes`, reuse, never duplicate (E4).
 - `dropped` requires a reason in `notes`. Rows are never deleted.
 - The tracker NEVER lives in PLAN.md and `/gabe-next` never reads it — the main plan keeps
@@ -138,7 +138,7 @@ Small, append-only in spirit: rows change status, never vanish.
 
 **One entity per run — refuse batching** (`⛔ one section per run — human-speed review is the
 point`). Preconditions: shortlist approved — else exit
-`⛔ Shortlist not approved. Run /gabe-adopt rank and approve it before building a section.` —
+`⛔ Shortlist not approved. Run /gabe-cc-init rank and approve it before building a section.` —
 and the entity row exists and is `pending`/`building`.
 
 1. **Testing inventory** (machine): on entering the build, set the row's `status: "building"`
@@ -152,20 +152,20 @@ and the entity row exists and is `pending`/`building`.
    center; claims that no longer verify go to a `Not carried forward` list on the section page
    with one-line reasons. Bulk import is forbidden — a legacy page is testimony, not truth.
    Tick `legacy_reverified`.
-3. **Build:** feature card (entity primacy, gabe-feature's card contract where applicable),
+3. **Build:** feature card (entity primacy, gabe-cc-update's card contract where applicable),
    diagrams per `gabe-docs` standards (or the card states why fewer), testing page (angles +
    verdicts from machine facts), proofs — curate real shots/artifacts where they exist; absent
    proofs render as named gaps, never staged. Tick `card` / `diagrams` / `proofs`.
 4. **Regenerate + gate:** run the center refresh; the link/gate check must be green with this
    section contributing zero WARNs. Tick `gate_green`.
 5. **Checklist render + checkpoint:** BRIEF the operator before asking for a verdict —
-   per gabe-walk §Procedure step 2 (why this walk · the card's HANDLE/WHAT & WHY · the
+   per the walk-briefing convention (preserved from _archive/gabe-walk §Procedure step 2) (why this walk · the card's HANDLE/WHAT & WHY · the
    `# FLOWS` itinerary with each flow's proof state, unproven flows called out as "your
    eyes are the only verification" · what pass/partial/fail mean here). An approval
    request without its briefing is a mystery, and a mystery produces a rubber stamp,
    not a witness. Then show the checklist, the built page paths, the dropped-claims
    list. Operator verdict:
-   - **approve** → record via `/gabe-walk adopt:<entity> pass` (who·when·evidence = section
+   - **approve** → append the walk record to `.kdbp/walks.jsonl` — subject `adopt:<entity>`, result pass (who·when·evidence = section
      path); store the walk timestamp in `approved_walk`; status `approved`. Tick
      `walk_recorded`.
    - **changes** → status `awaiting-approval`, notes carry the asks; next run resumes here.
@@ -177,7 +177,7 @@ and the entity row exists and is `pending`/`building`.
 Read tracker + `walks.jsonl`; render the board: per-section status/checklist glyphs, approved
 n/of-shortlist convergence, stalest approved section (walk age), suggested next entity (highest
 rank still pending). **Reconciliation with the forward track:** a `pending`/`building` section
-whose entity already carries a `# REVIEWED`-stamped center card (built by `/gabe-feature`) is
+whose entity already carries a `# REVIEWED`-stamped center card (built by `/gabe-cc-update`) is
 listed with an offer to mark it `covered-by-feature` (phase id into `notes`) — reuse, never
 rebuild (E4). That offer is the ONLY write `status` may make, and only on explicit accept.
 
@@ -242,7 +242,7 @@ feature-spec (card contract). This section states what adoption must OBEY.
 
 ## Non-goals
 
-- No forward-track coverage (`/gabe-feature` owns shipped phases + the PLAN `Center` cell).
+- No forward-track coverage (`/gabe-cc-update` owns shipped phases + the PLAN `Center` cell).
 - No standalone doc placement (`/gabe-docsite`), no scope/plan edits, no deletion — ever.
 - No auto-approval: a section without its walk record is not approved, whatever the prose says.
 - No synthesized history: the section's changelog derives from git; adoption never backdates.

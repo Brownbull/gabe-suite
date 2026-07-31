@@ -9,7 +9,7 @@ One-command project setup. Wraps three operations into a single flow.
 
 ### Step 1: Create .kdbp/ directory
 
-Run the equivalent of `/gabe-align init [project-name]`:
+Create the baseline (absorbs the project-init behavior formerly invoked as `gabe-align init`):
 
 1. If `.kdbp/` already exists, show status and ask: "Reset, update, or skip init?"
    - **reset** — wipe `.kdbp/` and start fresh (destructive, loses LEDGER history and any active plan)
@@ -44,7 +44,7 @@ Run the equivalent of `/gabe-align init [project-name]`:
 ├── BEHAVIOR.md      # From answers above
 ├── VALUES.md        # Project values (empty template — user adds during first session)
 ├── DECISIONS.md     # Append-only architecture decision table
-├── RULES.md         # Scar-tissue constraints (R-rules) maintained by /gabe-debt
+├── RULES.md         # Scar-tissue constraints (R-rules) maintained by /gabe-health debt
 ├── PENDING.md       # Deferred items (empty)
 ├── LEDGER.md        # Thin session index (one row per checkpoint)
 ├── DOCS.md          # Doc drift mappings (from project type, used by CHECK 7)
@@ -114,7 +114,7 @@ created: [today's date]
 
 **DECISIONS.md** — use template from `~/.claude/templates/gabe/DECISIONS.md`
 
-**RULES.md** — use template from `~/.claude/templates/gabe/RULES.md`. Scaffolds empty with R-rule block template + phase cross-ref matrix. `/gabe-debt` populates it. `/gabe-review` reads it for severity escalation when a file/line violates an R-rule.
+**RULES.md** — use template from `~/.claude/templates/gabe/RULES.md`. Scaffolds empty with R-rule block template + phase cross-ref matrix. `/gabe-health debt` populates it. `/gabe-review` reads it for severity escalation when a file/line violates an R-rule.
 
 **PENDING.md** — start with:
 ```markdown

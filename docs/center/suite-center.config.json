@@ -1,5 +1,5 @@
 {
-  "_comment": "Bindings for the Gabe Suite's OWN command center. This is a FORK of the standard center (templates/center/, copied from HEAD ebfa82b) re-pointed at the suite itself. The suite is not an application: it has no endpoints, no models, no runtime, and per ruling R8 no .kdbp/. So the spine is the LIFECYCLE BEAT, not an application entity, and the lenses are the suite's own material: agents, formats, functions, data structures, hooks, testing, and the enforcement ledger. Nothing here is shared with templates/center/ \u2014 that template stays owned by /gabe-adopt and /gabe-feature for downstream projects.",
+  "_comment": "Bindings for the Gabe Suite's OWN command center. This is a FORK of the standard center (templates/center/, copied from HEAD ebfa82b) re-pointed at the suite itself. The suite is not an application: it has no endpoints, no models, no runtime, and per ruling R8 no .kdbp/. So the spine is the LIFECYCLE BEAT, not an application entity, and the lenses are the suite's own material: agents, formats, functions, data structures, hooks, testing, and the enforcement ledger. Nothing here is shared with templates/center/ — that template stays owned by /gabe-cc-init and /gabe-cc-update for downstream projects.",
   "project": {
     "name": "gabe-suite",
     "display_name": "Gabe Suite",
@@ -84,23 +84,14 @@
       ]
     },
     {
-      "slug": "walk",
-      "label": "Walk",
-      "kind": "beat",
-      "order": 8,
-      "skills": [
-        "gabe-walk"
-      ]
-    },
-    {
       "slug": "center",
       "label": "Center",
       "kind": "beat",
       "order": 9,
       "skills": [
-        "gabe-feature",
-        "gabe-adopt",
-        "gabe-entity"
+        "gabe-cc-update",
+        "gabe-cc-init",
+        "gabe-cc-entity"
       ]
     },
     {
@@ -112,12 +103,11 @@
         "gabe-roast",
         "gabe-myopic",
         "gabe-health",
-        "gabe-debt",
         "gabe-assess",
-        "gabe-align",
         "gabe-lens",
         "gabe-meme",
-        "gabe-quip", "gabe-pulse"]
+        "gabe-pulse"
+      ]
     },
     {
       "slug": "cross-cutting",
@@ -157,7 +147,7 @@
       "label": "Hardenable",
       "cls": "b-debt",
       "payable": true,
-      "blurb": "Could be checked mechanically and isn't. Payable debt \u2014 each one names the check that would close it."
+      "blurb": "Could be checked mechanically and isn't. Payable debt — each one names the check that would close it."
     },
     {
       "key": "PROMPT_ONLY",
@@ -171,10 +161,10 @@
       "label": "Broken claim",
       "cls": "b-broken",
       "payable": true,
-      "blurb": "The suite asserts enforcement that does not exist, or a mechanism that describes itself falsely. Highest urgency \u2014 these actively mislead."
+      "blurb": "The suite asserts enforcement that does not exist, or a mechanism that describes itself falsely. Highest urgency — these actively mislead."
     }
   ],
-  "_lenses_comment": "The estate. `group` is the nav grouping; `spike` records which cut a lens landed in. Only shipped lenses get a nav entry \u2014 an unshipped one is listed and visibly disabled rather than omitted (absent reads as 'does not exist') or 404ing (reads as broken).",
+  "_lenses_comment": "The estate. `group` is the nav grouping; `spike` records which cut a lens landed in. Only shipped lenses get a nav entry — an unshipped one is listed and visibly disabled rather than omitted (absent reads as 'does not exist') or 404ing (reads as broken).",
   "lenses": [
     {
       "slug": "board",
@@ -183,7 +173,7 @@
       "icon": "board",
       "spike": 1,
       "group": "Board",
-      "blurb": "Every open move the suite is carrying, projected from five committed sources \u2014 six framings, State is the landing one."
+      "blurb": "Every open move the suite is carrying, projected from five committed sources — six framings, State is the landing one."
     },
     {
       "slug": "enforcement",
@@ -209,7 +199,7 @@
       "label": "Testing",
       "icon": "check",
       "spike": 1,
-      "blurb": "The fixture batteries that give every other gate its teeth \u2014 and the gates that have no battery at all.",
+      "blurb": "The fixture batteries that give every other gate its teeth — and the gates that have no battery at all.",
       "group": "Enforcement"
     },
     {
@@ -227,7 +217,7 @@
       "label": "Format methods",
       "icon": "type",
       "spike": 1,
-      "blurb": "Literal output-string contracts \u2014 the byte-identical strings, E1-E7 output shapes, trailers and glyph sets \u2014 and where they have drifted.",
+      "blurb": "Literal output-string contracts — the byte-identical strings, E1-E7 output shapes, trailers and glyph sets — and where they have drifted.",
       "group": "Surfaces"
     },
     {
@@ -249,7 +239,7 @@
       "group": "Surfaces"
     }
   ],
-  "_provenance_comment": "Where the fork came from, so drift against the upstream template is answerable. The standard center template is NOT a dependency of this build \u2014 the shell is vendored under docs/center/shell/.",
+  "_provenance_comment": "Where the fork came from, so drift against the upstream template is answerable. The standard center template is NOT a dependency of this build — the shell is vendored under docs/center/shell/.",
   "provenance": {
     "forked_from": "templates/center",
     "forked_at_ref": "ebfa82b",

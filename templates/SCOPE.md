@@ -158,7 +158,7 @@ The phase arc derived from §12 Requirements. Unnumbered by design — it sits b
 - **pending** — not started
 - **in-progress** — at least one task checked off in per-phase PLAN.md
 - **blocked** — dependency or external blocker
-- **complete** — all Covers REQs satisfied; validated by `/gabe-align`
+- **complete** — all Covers REQs satisfied; validated by `/gabe-assess`
 - **deferred** — moved out of the current arc (retained for audit)
 
 #### ID conventions
@@ -182,7 +182,7 @@ Each phase below is deep-linkable via `{#phase-N}` anchor.
 
 **Exit criteria:**
 - REQ-01 acceptance signal satisfied
-- `/gabe-align` drift check passes
+- `/gabe-assess` drift check passes
 - `/gabe-review` has zero blocking items
 
 ---
@@ -257,7 +257,7 @@ Unresolved items from scoping. Items marked `[UNRESOLVED — brainstorm exit]` c
 
 ## 15. Change Log {#change-log}
 
-Append-only. Each entry: date, type (`init | addition | pivot | debt-scan`), summary, diff pointer (optional). Phase-arc changes (new/split/inserted phases from `/gabe-scope-change`'s Addition path, or a full re-derivation from `/gabe-scope-pivot`) log here too — there is no separate phase change log. `debt-scan` entries are written by `/gabe-debt` when it appends Open Questions to §14 and/or rules to `.kdbp/RULES.md`.
+Append-only. Each entry: date, type (`init | addition | pivot | debt-scan`), summary, diff pointer (optional). Phase-arc changes (new/split/inserted phases from `/gabe-scope-change`'s Addition path, or a full re-derivation from `/gabe-scope-pivot`) log here too — there is no separate phase change log. `debt-scan` entries are written by `/gabe-health debt` when it appends Open Questions to §14 and/or rules to `.kdbp/RULES.md`.
 
 | Date | Type | Summary |
 |---|---|---|

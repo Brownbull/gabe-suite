@@ -1,6 +1,6 @@
 #!/bin/bash
 # refresh_center.sh — ONE entry point for the command center's evidence inputs.
-# Bootstrap-by-copy per gabe-feature/references/feature-spec.md §Bootstrap.
+# Bootstrap-by-copy per gabe-cc-update/references/feature-spec.md §Bootstrap.
 #
 # The capture commands (junit / coverage / e2e) are DECLARED per project in
 # docs/site/center/center.config.json `commands` — one shell line per entry,

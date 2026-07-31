@@ -1,7 +1,7 @@
 ---
-name: gabe-entity
+name: gabe-cc-entity
 description: "Entity-context reader — assembles one entity's slice (code map + registry + bindings) into a context pack from the command center's committed data, without re-reading the codebase."
-when_to_use: "Everything about an entity: brief, context pack, what code/endpoints/models touch X, FK-related entities, coverage status. ONLY with a built command center; elsewhere STOP → /gabe-adopt."
+when_to_use: "Everything about an entity: brief, context pack, what code/endpoints/models touch X, FK-related entities, coverage status. ONLY with a built command center; elsewhere STOP → /gabe-cc-init."
 metadata:
   version: 1.0.1
 ---
@@ -16,11 +16,11 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 Assembles everything the suite already knows about one application **entity** — its code map, its adoption-registry row, and its config bindings — into a single **context pack** (a markdown brief, or JSON for an agent). It is a pure DATA reader: it indexes the command center's committed, read-once `archmap.json` and never re-analyzes the source (E4 reuse-first). The three sources join on the entity **slug**.
 
-This is the DATA answer to "a skill dedicated to Transactions": entities stay data (the D7 ruling — `adoption.json` is the registry, `center.config.json` holds bindings, `archmap.json` is the code map); this reader is a lens over that data, not a per-entity skill. It does not produce or refresh the center — to rebuild the underlying data, run `/gabe-adopt` or `/gabe-feature`.
+This is the DATA answer to "a skill dedicated to Transactions": entities stay data (the D7 ruling — `adoption.json` is the registry, `center.config.json` holds bindings, `archmap.json` is the code map); this reader is a lens over that data, not a per-entity skill. It does not produce or refresh the center — to rebuild the underlying data, run `/gabe-cc-init` or `/gabe-cc-update`.
 
 ## Usage / modes
 
-`/gabe-entity <slug> [--center DIR] [--json]` · `/gabe-entity list`
+`/gabe-cc-entity <slug> [--center DIR] [--json]` · `/gabe-cc-entity list`
 
 | Mode | Output |
 |------|--------|
@@ -32,7 +32,7 @@ This is the DATA answer to "a skill dedicated to Transactions": entities stay da
 
 1. Treat any text after the invocation as `$ARGUMENTS` — the entity slug, or the literal `list`.
 2. Read `references/entity-spec.md` before executing — the binding spec (data contract, join, pack schema, degradation rules). If missing, E6 applies — STOP.
-3. Locate the center: `docs/site/center/` found up from CWD, or `--center DIR`. If no `center.config.json` anchor exists, this project has no built center — **STOP and route to `/gabe-adopt`** (E6), never fabricate a pack.
+3. Locate the center: `docs/site/center/` found up from CWD, or `--center DIR`. If no `center.config.json` anchor exists, this project has no built center — **STOP and route to `/gabe-cc-init`** (E6), never fabricate a pack.
 4. Run `scripts/entity-context.py <slug> [--center DIR] [--json]` — the deterministic reader. Do NOT re-derive the slice by reading source; the reader indexes the committed `archmap.json`.
 5. Present the reader's output verbatim. If it STOPs (unknown slug, no center, no data), surface its message and available-entity list — do not invent a slice.
 6. Choose the mode by consumer: the **brief** for a human; **`--json`** when an agent or a downstream beat needs the pack as structured context.

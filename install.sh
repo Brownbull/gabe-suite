@@ -103,7 +103,7 @@ if [ -d "$SCRIPT_DIR/templates" ]; then
         run "mkdir -p ~/.claude/templates/gabe/$subname"
         run "cp -r \"$sub\"* ~/.claude/templates/gabe/$subname/ 2>/dev/null || true"
         # Local python runs leave __pycache__ beside the generators; stale
-        # bytecode must not ship (or count) — it would ride /gabe-adopt's
+        # bytecode must not ship (or count) — it would ride /gabe-cc-init's
         # promotion into user projects.
         run "find ~/.claude/templates/gabe/$subname -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true"
         SUB_COUNT=$(find "$sub" -type f ! -path '*__pycache__*' ! -name '*.pyc' 2>/dev/null | wc -l)

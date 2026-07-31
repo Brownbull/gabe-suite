@@ -10,6 +10,10 @@ not an archaeology dig.
 | `gabe-teach` (2.0.1) + `_templates/gabe-lens-learning.md` | 2026-07-15 | The 2,554-line reference corpus served ~2 observed real uses across both dogfood projects (trim-matrix audit). Capability parked, not judged worthless. |
 | `gabe-arch` (1.1.1) + `_templates/gabe-arch-{STATE,HISTORY}.md` | 2026-07-15 | Existed solely to feed `gabe-teach` — rides its fate. |
 | `gabe-scope-addition` (2.1.0) | 2026-07-15 | Absorbed into `/gabe-scope-change` Step 5 (the Addition path) — it was only ever reached through the router. `/gabe-scope-pivot` stays standalone for its `disable-model-invocation` safety flag. |
+| `gabe-walk` (1.1.0) | 2026-07-30 | Operator ruling (skill-map session): lost its why — 2 lifetime uses, walk stations unread. The walks.jsonl record format survives (pulse P9 and the center still read it; /gabe-cc-init appends approvals directly). |
+| `gabe-quip` (1.1.0) | 2026-07-30 | Absorbed into `/gabe-meme` as the surface-wit mode (ledger row 6) — same craft, one skill, the more representative name. |
+| `gabe-align` (1.1.1) | 2026-07-30 | Absorbed into `/gabe-assess` as the boundary check (ledger row 5 fired: slice 5 complete, still quiet). Assess is ruled to become the auto-triggering direction guard. |
+| `gabe-debt` (1.1.1) | 2026-07-30 | Absorbed into `/gabe-health` as the `debt` lens — 0 lifetime uses, same fork/read-only shape. Health also gains the ask-first `estate` sweep and is ruled a production-push gate. |
 
 ## Reinstate
 

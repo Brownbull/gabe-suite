@@ -15,7 +15,7 @@
 **Don't use when:**
 - Reviewing a specific diff (use /gabe-review)
 - Looking for bugs in code (use /gabe-roast qa)
-- Checking alignment with values (use /gabe-align shallow)
+- Checking alignment with values (use /gabe-assess brief)
 
 ---
 
@@ -220,7 +220,7 @@ When invoked with a focus (e.g., `/gabe-health coupling`), only that analysis ru
 | God file detected | `/gabe-roast architect [file]` — structural review to plan decomposition |
 | Coupling cluster | `/gabe-assess` — evaluate whether to decouple now or accept the coupling |
 | Bug-fix concentration | `/gabe-review` on that area — price the risk of current state |
-| Scope creep | `/gabe-align shallow` — values alignment check on unplanned work |
+| Scope creep | `/gabe-assess brief` — values alignment check on unplanned work |
 | High churn + hot file in next PR | `/gabe-review` will show 🔴 HOT churn flag — extra scrutiny on defer decisions |
 
 ---
@@ -242,7 +242,7 @@ This is NOT a per-commit tool. Run it periodically for strategic insight.
 ## What This Does NOT Do
 
 - Does NOT review code (use /gabe-review or /gabe-roast)
-- Does NOT check values alignment (use /gabe-align)
+- Does NOT check values alignment (use /gabe-assess)
 - Does NOT block commits or PRs (purely analytical)
 - Does NOT require `.kdbp/` to exist (works on any git repo)
 - Does NOT modify any files (read-only analysis)

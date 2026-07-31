@@ -98,7 +98,7 @@ Suggested next:
 1. **Read-only.** gabe-help never modifies files, creates directories, or writes output files. It only reads and recommends.
 2. **Fast.** The scan should take < 5 seconds. Don't read file contents unless needed (e.g., maturity from BEHAVIOR.md frontmatter, suit from profile).
 3. **No redundancy.** If the user just ran `/gabe-review`, don't suggest `/gabe-review` again. Check the conversation context.
-4. **Honest gaps.** If something isn't set up, say so directly. Don't hedge with "you might want to consider." Say: "Not initialized. For greenfield, run `/gabe-align deep` then `/gabe-init`; for brownfield, follow `docs/workflows/brownfield.md` first."
+4. **Honest gaps.** If something isn't set up, say so directly. Don't hedge with "you might want to consider." Say: "Not initialized. For greenfield, run `/gabe-assess` then `/gabe-init`; for brownfield, follow `docs/workflows/brownfield.md` first."
 5. **Max 5 suggestions.** More than 5 is noise. Pick the highest-value actions for the current state.
 6. **Show the full suite on request.** If the user asks "what tools are available?" or similar, render the full 22-command / 12-skill catalog table — verbatim in `references/help-spec.md` § "Full Suite Catalog (on request)".
 

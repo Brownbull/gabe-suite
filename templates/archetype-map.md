@@ -59,7 +59,7 @@ calls for.
 **Tolerates:** deleting work — including its own.
 **Refuses:** adding new surface when subtraction would do.
 **Dominant maturity:** MVP *and* Scale (matters early to stay lean, and late to stay fast).
-**Runs (beats):** `/gabe-commit` simplify-tier · `/gabe-health` · `/gabe-debt`.
+**Runs (beats):** `/gabe-commit` simplify-tier · `/gabe-health` · `/gabe-health debt`.
 **Roast lens (what a Sweeper attacks):** unnecessary surface, complexity, dead code paths,
   unshipped cruft, duplicated abstractions, slow hot paths.
 
@@ -70,7 +70,7 @@ calls for.
 **Tolerates:** churn and rework on something already shipped.
 **Refuses:** greenfield rewrites when iteration would learn faster.
 **Dominant maturity:** Enterprise (growing).
-**Runs (beats):** `/gabe-feature`/command center · `/gabe-scope-change`.
+**Runs (beats):** `/gabe-cc-update`/command center · `/gabe-scope-change`.
 **Roast lens (what a Grower attacks):** what blocks PMF iteration — outcomes that can't be
   measured, friction that makes change slow, features that ship but can't be learned from.
 
@@ -81,7 +81,7 @@ calls for.
 **Tolerates:** slow, deliberate change with a paper trail.
 **Refuses:** any regression to a working invariant.
 **Dominant maturity:** Scale (strong-PMF).
-**Runs (beats):** `/gabe-align` · `/gabe-commit` gates · `/gabe-push` CI + deploy-verify ·
+**Runs (beats):** `/gabe-assess` · `/gabe-commit` gates · `/gabe-push` CI + deploy-verify ·
   the "scale" tier.
 **Roast lens (what a Maintainer attacks):** what breaks at 10x — regressions, reliability
   gaps, security holes, missing rollback/monitoring, operability blind spots.

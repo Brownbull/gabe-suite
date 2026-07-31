@@ -3,7 +3,7 @@
 > This file is the binding spec; the SKILL.md core is a summary.
 > E1–E7: see `../../gabe-docs/references/execution-contract.md`.
 
-`/gabe-entity <slug>` assembles one application entity's slice into a **context pack**
+`/gabe-cc-entity <slug>` assembles one application entity's slice into a **context pack**
 from the command center's committed data. It is a deterministic reader
 (`scripts/entity-context.py`) — a pure consumer of the `archmap.json` contract, never a
 producer. This spec is the binding contract for what it reads and emits.
@@ -15,19 +15,19 @@ under D7**: entities are scoped via DATA, not code. `adoption.json` is THE entit
 `center.config.json` holds per-entity bindings; `archmap.json` is the read-once code map.
 This reader is a lens over that data. It adds no second entity mechanism, needs no
 project-local skill, and stays correct as the data evolves. To change what an entity *is*,
-edit the data (via `/gabe-adopt` / `/gabe-feature`), not this skill.
+edit the data (via `/gabe-cc-init` / `/gabe-cc-update`), not this skill.
 
 ## Inputs — the three sources, joined on the slug
 
 All three live under the center dir (default `docs/site/center/`, located up from CWD or via
 `--center`). `center.config.json` is the anchor: if it is absent the project has no built
-center → STOP → `/gabe-adopt` (E6).
+center → STOP → `/gabe-cc-init` (E6).
 
 | Source | Produced by | Contributes |
 |---|---|---|
 | `archmap.json` | `templates/center/generators/` (`collect_entity_map` + `build_center_a3`) | the code slice for `entities[slug]` |
-| `adoption.json` | `/gabe-adopt` | the registry row where `sections[].entity == slug` |
-| `center.config.json` | `/gabe-adopt` (filled per project) | bindings at `entities[slug]` (canonical shape only) |
+| `adoption.json` | `/gabe-cc-init` | the registry row where `sections[].entity == slug` |
+| `center.config.json` | `/gabe-cc-init` (filled per project) | bindings at `entities[slug]` (canonical shape only) |
 
 **Contract of `archmap.json`** (suite-owned since commit 991d8aa): top-level
 `{version, head, generated, entities}`; `entities` is a dict keyed by slug; each value is
@@ -87,8 +87,8 @@ grouped by layer), `## Relations` (related entities + unresolved tables), `## Bi
 | entity mapped but not in adoption | `registry: null`, brief prints "_not registered_" |
 | registered but `archmap.entities[slug]` is null/absent | `code: null`, brief prints "_not mapped_" |
 | legacy-shape or absent config | `bindings: null`, `config_canonical: false` |
-| no `center.config.json` | STOP → `/gabe-adopt` (E6) |
-| neither archmap nor adoption present | STOP → build the center (`/gabe-adopt` / `/gabe-feature`) |
+| no `center.config.json` | STOP → `/gabe-cc-init` (E6) |
+| neither archmap nor adoption present | STOP → build the center (`/gabe-cc-init` / `/gabe-cc-update`) |
 | unknown slug | STOP, print the registered-entity list (E7 report-where) |
 
 ## Handshake walk (adjacent beats)
@@ -97,7 +97,7 @@ grouped by layer), `## Relations` (related entities + unresolved tables), `## Bi
   entity-aware. First cut is standalone (a human or agent reads the brief / `--json`). The
   `--entity` beat-flag that would make execute/red/review entity-aware is a **deferred,
   coordinated** phase — it edits those specs and is out of scope here. No current seam breaks.
-- **Reads** exactly what `/gabe-adopt` and the promoted `templates/center/generators/` write.
+- **Reads** exactly what `/gabe-cc-init` and the promoted `templates/center/generators/` write.
   The reader depends on their output contract, not their internals; if the files are absent it
   STOPs toward the producer rather than guessing. It never writes center data (E5: it records
   nothing; it reads).
@@ -106,7 +106,7 @@ grouped by layer), `## Relations` (related entities + unresolved tables), `## Bi
 
 - In-repo smoke fixture: `tests/fixture-center/` — two linked entities (`widget` → `gadget`
   via FK). Exercises the join, FK relation resolution, `list`, `--json`, and the unknown-slug
-  STOP. Run: `python3 scripts/entity-context.py widget --center skills/gabe-entity/tests/fixture-center`.
+  STOP. Run: `python3 scripts/entity-context.py widget --center skills/gabe-cc-entity/tests/fixture-center`.
 - Reality check (per the suite rule — a data script ships only after a dry-run against a COPY
   of real data): validated against a copy of gastify's live center. `transaction` → 14
   endpoints, 5 models, 16 schemas, 37 files (10,658 lines); registry critical /

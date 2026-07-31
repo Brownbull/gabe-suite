@@ -81,7 +81,7 @@ for (let i = 0; i < idx; i++) {
   if (owed.length) debt.push(`${phases[i].id}: ${owed.join(", ")}`);
 }
 const warnings = debt.length
-  ? [`⚠ INCOMPLETE PRIOR PHASES: [${debt.join(" · ")}] — routing continues on Phase ${cur}; clear each cell on its phase: Red→/gabe-red · Exec→/gabe-execute · Review→/gabe-review · Commit→/gabe-commit · Push→/gabe-push · Center→/gabe-feature.`]
+  ? [`⚠ INCOMPLETE PRIOR PHASES: [${debt.join(" · ")}] — routing continues on Phase ${cur}; clear each cell on its phase: Red→/gabe-red · Exec→/gabe-execute · Review→/gabe-review · Commit→/gabe-commit · Push→/gabe-push · Center→/gabe-cc-update.`]
   : [];
 
 // Decision table (first match wins), walking forward from the current phase over
@@ -115,7 +115,7 @@ for (let i = idx; i < phases.length; i++) {
   else if (c.review === "todo") { next = "/gabe-review"; reason = "Code written and Exec gate complete"; }
   else if (c.commit === "todo") { next = "/gabe-commit"; reason = "Reviewed, not committed"; }
   else if (c.push === "todo") { next = "/gabe-push"; reason = "Committed, not pushed"; }
-  else if (c.center === "todo" || c.center === "in_progress") { next = `/gabe-feature ${ph.id}`; reason = "Shipped, not yet covered in the command center"; }
+  else if (c.center === "todo" || c.center === "in_progress") { next = `/gabe-cc-update ${ph.id}`; reason = "Shipped, not yet covered in the command center"; }
   else { advanceChain.push(String(ph.id)); continue; } // deferred/obsolete tail cells
   const state = lifecycle
     .map((k) => `${k[0].toUpperCase()}${k.slice(1)} ${GLYPH[c[k]] ?? "?"}`).join(" | ");

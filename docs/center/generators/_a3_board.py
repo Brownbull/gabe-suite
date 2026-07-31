@@ -329,8 +329,8 @@ def build_cards(*, plan, sections, archmap, adoption, labels, entity_href,
             # a 0/7 checklist does not need a walk, it needs adoption: naming
             # the wrong command sends the operator to a beat whose
             # preconditions are not met
-            cmd=(f"/gabe-walk {slug}" if only_walk
-                 else f"/gabe-adopt section {slug}"),
+            cmd=(f"record walk: {slug} → walks.jsonl" if only_walk
+                 else f"/gabe-cc-init section {slug}"),
             href=entity_href(slug), source="adoption.json §sections"))
 
     for w in D.load_walks():

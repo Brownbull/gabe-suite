@@ -1,9 +1,9 @@
 ---
 name: gabe-meme
-description: "Oblique memes as visual metaphors — persona-matched template, text that lands by tangent, rendered via memegen.link and verified as PNG. Punch-up only."
-when_to_use: "Make a meme (or a set) for a doc, post, thread, or presentation. NOT emoji-composed images; NOT photorealistic art (use an image model)."
+description: "Oblique memes as visual metaphors — persona-matched template, text that lands by tangent, rendered via memegen.link and verified as PNG. Punch-up only. Also carries the surface-wit mode: sarcastic, insight-carrying titles/hooks/callouts for rendered HTML surfaces — proposes, never rewrites."
+when_to_use: "Make a meme (or a set) for a doc, post, thread, or presentation; or sharpen a rendered HTML surface (center page, docsite, report, mockup) with a witty title/hook/callout. NOT emoji-composed images; NOT photorealistic art (use an image model); NOT for markdown consumed by skills/agents."
 metadata:
-  version: 1.1.0
+  version: 1.2.0
 ---
 
 # Gabe Meme — oblique memes as engagement metaphors
@@ -17,6 +17,10 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 ## The intention (why this skill exists)
 
 *A meme is an oblique derivative of a subject: the facts come from the real thing, but the meme NEVER states them directly. It works by tangent — it says something that sounds almost normal, and the reader connects it to what's actually going on. The punchline isn't in the meme; it's in the reader's head.* Ported from the Cifra·Chile `meme-hilo` pipeline — this is the transferable craft (the oblique method + the template engine), with the Chile-specific editorial/legal apparatus and its React `MemePanel`/`hilos` wiring left behind.
+
+## Surface-wit mode (absorbed from gabe-quip, 2026-07-30)
+
+When the target is a rendered HTML surface — a command-center page, docsite page, HTML report, or mockup — the deliverable is a TEXT proposal, not a PNG: a witty page/section title, hero hook, or callout/label aside that surfaces the pain point and names the obvious-but-unsaid. Same craft rules as memes: the joke CARRIES the point, never replaces it; punch-up only; dosed (one lever among diagrams · memes · disclosure · labels · colors · styles). PROPOSES, never silently rewrites — present options, the human applies. NOT for markdown consumed by skills/agents (README, SKILL.md, workflow guides, .kdbp, config) — those stay straight and functional. Deep spec preserved at `../_archive/gabe-quip/`.
 
 ## Setup gate (run FIRST, every invocation)
 
