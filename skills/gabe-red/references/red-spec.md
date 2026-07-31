@@ -88,6 +88,16 @@ carve-out at commit time and review's CASE DRIFT afterward).
 Refactor form: `- **Cases:** — · GUARD: C091, C147, C203 (behavior unchanged; must stay green)`
 with `RED: n/a (guard-only — no new claim)` in the report.
 
+Non-guard phases print the run-bearing form in the report — required, byte-identical shape:
+
+```
+RED: <n> failing (<runner cmd>, exit <code>)
+```
+
+Count and exit code are copied from THIS run's output (E2), never estimated — the line is the
+report's proof the red was executed rather than asserted (the proxy-evidence defect). It sits
+beside the `Cases:` line and shares its fate: a red claimed without it is record-less.
+
 Downstream readers: `/gabe-execute`'s TASK CONTRACT `CASES:` line (which ids each task advances;
 phase completion = every declared case green + every guard still green) · the center's testing
 pages (ever-red, verification changelog) · the enforcement hook (declared ids must grep ≥1 in the

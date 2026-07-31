@@ -142,7 +142,7 @@ For each changed file, check these dimensions:
 | **Performance** | N+1 queries, unbounded loops, missing indexes, memory leaks | MEDIUM |
 | **Style** | Naming, formatting, dead code, console.log in production | LOW |
 
-**Evidence contract:** every finding carries an `Evidence:` line quoting ≤2 exact code lines from the cited `file:line`. A finding may only cite a file/hunk opened via Read or the diff THIS session. Empty Evidence line → the finding is DELETED before output. Absence claims ("no test covers X", "nothing handles Y") require a search proof in the Evidence line: `grep -rn <pattern> <scope>` → 0 hits.
+**Evidence contract:** every finding carries an `Evidence:` line with ≤2 exact quoted code lines from the cited `file:line`. A finding may only cite a file/hunk opened via Read or the diff THIS session. Empty Evidence line → the finding is DELETED before output. Absence claims ("no test covers X", "nothing handles Y") require a search proof in the Evidence line: `grep -rn <pattern> <scope>` → 0 hits.
 
 **Tier drift detection:** When `.kdbp/PLAN.md` declares a phase Tier and the diff contains patterns above that tier, emit a `TIER_DRIFT` finding. See Step 4.75 Sub-check 5d for procedure and resolution options (downgrade vs amend-phase-tier).
 
@@ -245,7 +245,7 @@ Every finding gets these fields:
 | **Severity** | CRITICAL / HIGH / MEDIUM / LOW |
 | **Finding** | One-line description |
 | **File** | `file:line` |
-| **Evidence** | ≤2 exact quoted code lines from `file:line`, opened via Read or the diff this session; search proof (`grep -rn <pattern> <scope>` → 0 hits) for absence claims |
+| **Evidence** | ≤2 exact quoted code lines from the cited `file:line`, opened via Read or the diff this session; search proof (`grep -rn <pattern> <scope>` → 0 hits) for absence claims |
 | **Churn** | 🔴 HOT / ⚠️ WARM / ✅ STABLE (from Step 3.5) |
 | **Fix Cost** | T-shirt estimate: S (<30m), M (1-3h), L (3-8h), XL (>1d) |
 | **Defer Risk** | `[CONSEQUENCE] — P([probability]), Impact([severity])` |

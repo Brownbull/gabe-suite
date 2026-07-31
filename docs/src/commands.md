@@ -1,4 +1,4 @@
-The **core loop** — scope → plan → red → execute → review → commit → push — is the spine a project rides from first idea to shipped commit. `/gabe-red` puts the failing test cases on the record before code, and `/gabe-next` is a pure router that reads `.kdbp/PLAN.md` and tells you which beat to run next, so in practice you rarely choose manually. Around that spine sit the setup beat (`/gabe-init`, once per project), session continuity (`/gabe-handoff`), the human witness (`/gabe-walk`), and the command-center track (`/gabe-feature`). Every command runs under the same [E1–E7 execution contract](contract.html) — the gates below are each command's specific tightening of that shared floor.
+The **core loop** — scope → plan → red → execute → review → commit → push — is the spine a project rides from first idea to shipped commit. `/gabe-red` puts the failing test cases on the record before code, and `/gabe-next` is a pure router that reads `.kdbp/PLAN.md` and tells you which beat to run next, so in practice you rarely choose manually. Around that spine sit the setup beat (`/gabe-init`, once per project), session continuity (`/gabe-handoff`), the human walk record (`walks.jsonl` — its skill was archived 2026-07-30; the record format survives), and the command-center track (`/gabe-cc-update`). Every command runs under the same [E1–E7 execution contract](contract.html) — the gates below are each command's specific tightening of that shared floor.
 
 ## The lifecycle, beat by beat
 
@@ -13,9 +13,9 @@ This is the full cycle as it runs today. Each beat has a *software* job — buil
 | 5 | Review | `/gabe-review` | Price each finding: fix-cost × defer-risk × maturity gate | `PENDING.md` (the review-debt lane) + case subjects |
 | 6 | Commit | `/gabe-commit` | The chokepoint quality gate | The commit + a `LEDGER.md` row + a results digest |
 | 7 | Push | `/gabe-push` | Ship — PR, CI watch, deploy-verify, promote | `DEPLOYMENTS.md`; a terminal-env write is the release trigger |
-| 8 | **Walk** | `/gabe-walk` | Brief a *human*, then record their walk — the witness (never a mystery: why this walk, the flow itinerary, what pass means) | `walks.jsonl` → the center's manual angles + staleness |
-| 9 | Center | `/gabe-feature <phase>` | Translate a shipped feature into its card + test-strategy audit | A feature card + curated proof → the center's `✅` |
-| 10 | Release | `/gabe-feature release` | A stakeholder showcase — a *mode*, not a beat | Shots + diagrams per shipped version |
+| 8 | **Walk** | append to `walks.jsonl` | Brief a *human*, then record their walk — the witness (never a mystery: why this walk, the flow itinerary, what pass means). The `/gabe-walk` skill is archived (2026-07-30); approvals and walks append the record directly | `walks.jsonl` → the center's manual angles + staleness |
+| 9 | Center | `/gabe-cc-update <phase>` | Translate a shipped feature into its card + test-strategy audit | A feature card + curated proof → the center's `✅` |
+| 10 | Release | `/gabe-cc-update release` | A stakeholder showcase — a *mode*, not a beat | Shots + diagrams per shipped version |
 | 11 | Router | `/gabe-next` | Zero-logic dispatch over the `PLAN.md` status cells | Nothing of its own — it routes |
 | — | Advisors | align · assess · debt · health · myopic · roast | Quality judgment on demand, outside the beat loop | Findings → `PENDING` / `DECISIONS` / `RULES` |
 
@@ -37,7 +37,7 @@ Start with `/gabe-init`, then let `/gabe-next` drive the loop — it reads `.kdb
 | ✅ / — | ✅ | ✅ | ✅ | ✅ | advance to the next phase, or offer to close the plan |
 
 :::note Reading the cells
-`—` means the cell doesn't apply — a shipped row that predates the Red column, or a phase with no center coverage planned. The **Red** cell only seeds where execution is still to-do, so retrofitting it onto an existing plan never demands a retroactive fake red (decision [R1](decisions.html)). An optional **Center** cell, when a plan carries it, routes to `/gabe-feature` after push. Because the rule reads column state rather than session memory, an interrupted session is cheap to resume.
+`—` means the cell doesn't apply — a shipped row that predates the Red column, or a phase with no center coverage planned. The **Red** cell only seeds where execution is still to-do, so retrofitting it onto an existing plan never demands a retroactive fake red (decision [R1](decisions.html)). An optional **Center** cell, when a plan carries it, routes to `/gabe-cc-update` after push. Because the rule reads column state rather than session memory, an interrupted session is cheap to resume.
 :::
 
 ## The gate each beat enforces
@@ -62,7 +62,7 @@ These are not the only things each command does — each row is the specific mec
 | Command | Key gate it enforces |
 | --- | --- |
 | `/gabe-init` | ![gabe-init](assets/icons/cmd-init.png) Missing-anchor STOP for hook JSON — hook objects are read verbatim from `~/.claude/templates/gabe/hooks.json`; if that template is absent, init stops and reports rather than composing hook JSON from memory (the worst case being a hallucinated write to a project's `settings.json`). |
-| `/gabe-adopt` | Archive-never-delete — existing docs are archived, never overwritten, before the command center is bootstrapped; the shortlist is machine-ranked for operator approval, and each ingested section's sign-off is recorded as a walk. |
+| `/gabe-cc-init` | Archive-never-delete — existing docs are archived, never overwritten, before the command center is bootstrapped; the shortlist is machine-ranked for operator approval, and each ingested section's sign-off is recorded as a walk. |
 
 ### Session continuity — run when wrapping up
 

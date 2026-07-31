@@ -22,7 +22,7 @@ flowchart TD
   RV["/gabe-review<br>price the risk · triage"]
   CM["/gabe-commit<br>the quality gate"]
   PU["/gabe-push<br>CI + deploy-verify"]
-  WK["🚶 /gabe-walk<br>a human witnesses it"]
+  WK["🚶 walk record<br>a human witnesses it"]
   H["👤 Human<br>approves · picks tier · triages"]
 
   SC --> PL --> NX
@@ -42,7 +42,7 @@ flowchart TD
 
 Two kinds of work orbit the loop rather than living inside it:
 
-- **The witness — [`/gabe-walk`](commands.html).** Every automated signal in the loop is still produced by an agent. `/gabe-walk` records the one thing no machine can: a *human* actually used the feature, on a date, with a result. It records; it never judges. A station nobody has walked stays red until someone signs it.
+- **The witness — the walk record.** Every automated signal in the loop is still produced by an agent. A walk record (`walks.jsonl`; the `/gabe-walk` skill was archived 2026-07-30 — the record outlives it) captures the one thing no machine can: a *human* actually used the feature, on a date, with a result. It records; it never judges. A station nobody has walked stays red until someone signs it.
 - **The advisors — [analysis satellites](satellites.html).** `roast`, `myopic`, `health`, `debt`, `assess`, and `align` are adversarial tools you pull in on demand — before a risky change, during a retro, when something feels fragile. Nothing forces you to run them at a fixed step; they attack from an angle the loop doesn't naturally take and land their findings back where the loop will read them.
 
 ## The cadence rule: one phase per session

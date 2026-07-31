@@ -9,7 +9,7 @@ The [verification-first](verification-first.html) architecture didn't fall out o
 | **D3** | What media does a release page carry? | **Shots + diagrams in v1; video custody deferred** to the first real release. Video stays machine-local and is never committed — a named gap, not a faked one. |
 | **D4** | Does the suite need a `BEHAVIOR.md`? | **The template ships.** It's load-bearing three ways: the project's verify commands, its `critical_paths` hotfix arm, and its `results_out` digest target. Greenfield gets `results_out` on by default; brownfield opts in. |
 | **D5** | How do existing test corpora adopt [C-ids](c-id.html)? | **A mechanical backfill sweep**, one commit per repo, registered in `.git-blame-ignore-revs` — with **no fake reds.** A backfilled test gets an id, but its ever-red column stays honestly empty, because it was never actually seen to fail. |
-| **D6** | Which remaining test-first ideas are in? | **Ratified:** red-as-commit (the `RED:` trailer), case-drift checks live in *review* (judgment-shaped work in a judgment-shaped beat; commit keeps only deterministic greps), growth findings capped at 7, and `/gabe-feature` survives shrunk-in-place. |
+| **D6** | Which remaining test-first ideas are in? | **Ratified:** red-as-commit (the `RED:` trailer), case-drift checks live in *review* (judgment-shaped work in a judgment-shaped beat; commit keeps only deterministic greps), growth findings capped at 7, and `/gabe-cc-update` survives shrunk-in-place. |
 | **D7** | What does the harness enforce? | **Block lies, warn debts.** A hook blocks a ✅ whose proof doesn't exist on disk or git — at every tier. Everything else (thin coverage, un-walked stations, absent angles) is *warned*, never blocked. Enforcement then leaves the skill prose and lives in the hook, so the skills stay lean. |
 
 :::note D7 is the harness half of the fourth law
@@ -29,7 +29,7 @@ These are gaps left open **on purpose.** Naming them is the point — a silently
 A pre-rollout review produced a further set of rulings (R1–R7) before the design landed on real repos. Two shaped the product lastingly:
 
 - **R1 — red-column retrofits seed honestly.** Adding a Red column to an existing plan seeds "to-do" *only* where execution is still to-do; already-shipped rows render `—` and never demand a retroactive fake red.
-- **R7 — [`/gabe-adopt`](command-center.html) is its own skill** — brownfield command-center adoption: archive-never-delete init, a machine-ranked shortlist, one section per run at human speed, and approval recorded as a walk.
+- **R7 — [`/gabe-cc-init`](command-center.html) is its own skill** — brownfield command-center adoption: archive-never-delete init, a machine-ranked shortlist, one section per run at human speed, and approval recorded as a walk.
 
 The rest (R2–R6) were mechanical honesty fixes to the enforcement scripts — the kind of fixture-level tightening that keeps a checker able to both fire and stay silent.
 

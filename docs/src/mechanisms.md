@@ -46,7 +46,12 @@ Several mechanisms above are the *same* mechanism appearing in more than one ski
 | Skip code — `ℹ PLAN: <col> tick skipped (<enum>)` | gabe-plan ≡ gabe-commit ≡ gabe-execute |
 | Prior-phase warning — `⚠ INCOMPLETE PRIOR PHASES: [...]` | gabe-plan ≡ gabe-next |
 | 3-state glyphs — `✅ / ❌ / ⤫ skipped(<reason>)` | gabe-commit ≡ gabe-execute ≡ the E2 preamble |
-| Canonical PENDING schema | gabe-review ≡ gabe-commit ≡ gabe-align |
+| Canonical PENDING schema | gabe-review ≡ gabe-commit ≡ gabe-assess |
+| RED run line — `RED: <n> failing (<runner cmd>, exit <code>)` | gabe-red report (killer field, 2026-07-31; `RED: n/a (guard-only — no new claim)` is its sibling form) |
+| REUSE verdict line — `REUSE <path> \| EXTEND <path> \| NEW (searched <where> — none fit)` | gabe-execute TASK CONTRACT ≡ the E4 preamble (killer field) |
+| Finding Evidence — `≤2 exact quoted code lines from the cited file:line` | gabe-review finding contract, prose ≡ pricing table (killer field) |
+|  LEDGER commit-row tail — `findings [raw]→[survived] · deferred [n] · size-budget [ok/warn] · evidence [ok/warn/—] · docs-budget [ok/warn]` | gabe-commit (writes) → ledger-gap.sh (audits) (killer field) |
+| CI pass line — `CI: All checks passed.` | gabe-push verbatim-paste gate → Step 10 tick (killer field) |
 
 :::note Why this is a mechanism, not a coincidence
 A weak model is good at following an exact recipe and bad at reconstructing one from a vague memory of "we did something like this before." Byte-identical reuse turns a cross-file agreement into something a plain-text diff can verify — the same reason the [E1–E7 contract](contract.html) itself is pasted verbatim rather than paraphrased per file. When a mechanism below says its cost is "shared," this is the pattern it means: one canonical string, copied everywhere, ordering dependencies respected (the PENDING schema is defined before the commands that append to it).
@@ -79,7 +84,7 @@ Rules: (1) cite only files/hunks opened via Read or diff THIS session;
 (2) a finding with an empty Evidence line is DELETED before output.
 ```
 
-carried by: gabe-review, gabe-myopic, gabe-roast, gabe-assess, gabe-debt, gabe-health
+carried by: gabe-review, gabe-myopic, gabe-roast, gabe-assess, gabe-health (debt lens), gabe-health
 
 ### Executed-Evidence Gate
 
@@ -95,7 +100,7 @@ produced this run; if the command didn't run, print `<analysis> skipped` —
 never an estimate.
 ```
 
-carried by: gabe-commit, gabe-review, gabe-align, gabe-health, gabe-push, gabe-execute
+carried by: gabe-commit, gabe-review, gabe-assess, gabe-health, gabe-push, gabe-execute
 
 ### Absence-Claim Search Proof
 
@@ -110,7 +115,7 @@ an absence must paste the probing command's output before any phase builds
 on it.
 ```
 
-carried by: gabe-roast, gabe-myopic, gabe-review, gabe-plan, gabe-assess, gabe-debt
+carried by: gabe-roast, gabe-myopic, gabe-review, gabe-plan, gabe-assess, gabe-health (debt lens)
 
 ### Proof Validity Contract (identity · layer · entry · matrix)
 
@@ -159,7 +164,7 @@ Stamp: CONFIRMED | DOWNGRADED(<reason>) | KILLED(<K#>).
 Header MUST print: raw N → killed X → downgraded Y → survived Z.
 ```
 
-carried by: gabe-review, gabe-myopic, gabe-roast, gabe-debt, gabe-health
+carried by: gabe-review, gabe-myopic, gabe-roast, gabe-health (debt lens), gabe-health
 
 ### Falsifiable-Checker Rule (VERIFY table)
 
@@ -194,7 +199,7 @@ No vibes verdicts:
    uncertain, score the LOWER band, never up.
 ```
 
-carried by: gabe-align, gabe-review (confidence worksheet), gabe-health (threshold legend)
+carried by: gabe-assess, gabe-review (confidence worksheet), gabe-health (threshold legend)
 
 ## ![Reuse & anti-downgrade](assets/icons/fam-reuse.png) Family: Reuse & anti-downgrade
 
@@ -362,7 +367,7 @@ decimal IDs; (3) all writers target the SAME file (first-found rule, legacy
 name only as fallback).
 ```
 
-carried by: gabe-review, gabe-commit, gabe-push, gabe-align, gabe-plan (update scope-fence)
+carried by: gabe-review, gabe-commit, gabe-push, gabe-assess, gabe-plan (update scope-fence)
 
 ### Persistent Task Checklist
 
@@ -392,7 +397,7 @@ of absence additionally follow the absence-search rule (paste the probe
 output).
 ```
 
-carried by: gabe-plan, gabe-assess, gabe-debt, gabe-scope
+carried by: gabe-plan, gabe-assess, gabe-health (debt lens), gabe-scope
 
 ### Deferral Escalation Triggers
 
@@ -492,7 +497,7 @@ flowchart LR
 This is the corrective half of the **Executed-Evidence Gate** (see that section under [Family: Evidence](#family-evidence) above), applied to documentation rather than live runs: `gabe-health`'s worked examples had a literal `[compute co-change frequency]` placeholder sitting next to concrete example percentages, which reads as "this was measured" when it wasn't. The fix is the same rule as E2 applied to docs — a recipe in a skill file must be copy-pasteable and actually produce the shape of output it claims, or it's marked explicitly as illustrative, never left ambiguous.
 :::
 
-carried by: gabe-health, gabe-debt (pattern catalog worked examples)
+carried by: gabe-health, gabe-health (debt lens) (pattern catalog worked examples)
 
 ### Observable-Only Accounting
 
@@ -502,7 +507,7 @@ carried by: gabe-health, gabe-debt (pattern catalog worked examples)
 This is the accounting half of the **Adversarial Verify/Kill Pass** ("Header MUST print: raw N → killed X → downgraded Y → survived Z" — see that section under [Family: Verification](#family-verification) above) generalized to every other place the suite prints a count: the Deferred Scan's `N checked, M matched, K at ≥3` line, and the [Progressive Disclosure Budget](#the-mechanism-that-pays-for-all-the-others)'s line-count savings, which must be a real diff of before/after line counts, not a guessed round number.
 :::
 
-carried by: gabe-review, gabe-myopic, gabe-roast, gabe-debt, gabe-health
+carried by: gabe-review, gabe-myopic, gabe-roast, gabe-health (debt lens), gabe-health
 
 ### Missing-Anchor STOP
 
@@ -518,7 +523,7 @@ degraded partial mode is safe, name it explicitly (e.g. `running Step 1
 only — catalog missing`).
 ```
 
-carried by: all gabe-* wrappers, gabe-init, gabe-plan, gabe-debt, gabe-scope-change
+carried by: all gabe-* wrappers, gabe-init, gabe-plan, gabe-health (debt lens), gabe-scope-change
 
 ## The mechanism that pays for all the others
 

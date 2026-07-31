@@ -1,7 +1,7 @@
 """Format-method lens — the suite's literal output-string contracts, and where
 they have drifted.
 
-`docs/src/mechanisms.md` declares eight strings that must stay **byte-identical**
+`docs/src/mechanisms.md` declares the strings that must stay **byte-identical**
 across the skills that produce and consume them, and argues that byte-identity
 exists precisely so "a plain-text diff can verify" the agreement. No such diff
 ships. This module is that diff.
@@ -64,6 +64,22 @@ CONTRACTS: list[tuple[str, str, str, str]] = [
      "gabe-review ≡ gabe-commit ≡ gabe-assess ≡ gabe-push"),
     ("reuse-ledger", "REUSE LEDGER block",
      r"REUSE LEDGER[^\n|.]*", "gabe-execute ≡ gabe-mockup ≡ the E4 preamble"),
+    # Killer-report fields (2026-07-31): the five E-floor artifacts each spine gate's
+    # existing terminal report must carry — watched here so the demand cannot drift.
+    ("red-line", "RED run line — `RED: <n> failing (<runner cmd>, exit <code>)`",
+     r"RED:\s*(?:<n>|\d+)\s*failing[^\n|`]*", "gabe-red report (run-bearing form; `RED: n/a` is its guard-only sibling)"),
+    ("reuse-verdict", "REUSE verdict line — `REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)`",
+     r"REUSE\s*<path>\s*\|\s*EXTEND\s*<path>\s*\|\s*NEW\s*\(searched[^)]*\)",
+     "gabe-execute TASK CONTRACT ≡ the E4 preamble"),
+    ("evidence-line", "Finding Evidence — `≤2 exact quoted code lines from the cited file:line`",
+     r"≤2 exact quoted code lines from the cited\s*`?file:line`?",
+     "gabe-review finding contract (prose ≡ pricing table)"),
+    ("ledger-commit-row", "LEDGER commit-row tail — the full five-gate tail, `findings [raw]→[survived] · deferred [n] · …`",
+     r"findings\s*\[[^\]]*\]\s*→\s*\[[^\]]*\][^\n|]*docs-budget[^\n|]*",
+     "gabe-commit (writes) → ledger-gap.sh (audits)"),
+    ("ci-state", "CI pass line — `CI: All checks passed.`",
+     r"CI:\s*All checks passed\.?",
+     "gabe-push Step 6.5 (verbatim-paste gate) → Step 10 tick (`CI: ⏳ still running` is its enumerated sibling)"),
 ]
 
 # Placeholder conventions differ legitimately between a spec and an example, so

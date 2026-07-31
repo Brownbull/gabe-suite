@@ -15,9 +15,9 @@ Skim this table to find the tool that matches the risk you're worried about righ
 | `/gabe-myopic` | Steps in a flow that demand foresight a real, short-sighted user doesn't have | 3-horizon panel + step ledger + severity-ranked findings |
 | `/gabe-roast [perspective]` | Gaps a named adversarial perspective (architect, security, UX…) would catch | Gaps grouped by maturity (MVP/Enterprise/Scale) × importance, each with a one-liner |
 | `/gabe-health` | Structural fragility — god files, churn hotspots, coupling, bug concentration, scope creep | Six analyses with 🔴/⚠️/✅ severity bands and copy-pasted git-command numbers |
-| `/gabe-debt` | Architectural decisions that were never made explicitly, or that silently contradict each other | Findings triaged into DECISIONS.md ADRs, SCOPE.md open questions, RULES.md rules, or PENDING.md |
+| `/gabe-health debt` | Architectural decisions that were never made explicitly, or that silently contradict each other | Findings triaged into DECISIONS.md ADRs, SCOPE.md open questions, RULES.md rules, or PENDING.md |
 | `/gabe-assess` | Hidden weight behind an "obvious" change — blast radius, right-sized scope, prerequisites | Five-dimension assessment ending in a recommendation + one-liner |
-| `/gabe-align` | Drift from stated values (yours + the project's) and, at commit time, untested realistic scenarios | Per-value PASS/CONCERN/FAIL + a deterministic PROCEED verdict |
+| `/gabe-assess` | Drift from stated values (yours + the project's) and, at commit time, untested realistic scenarios | Per-value PASS/CONCERN/FAIL + a deterministic PROCEED verdict |
 
 ## The shared discipline: Evidence line + verify/kill pass
 
@@ -37,7 +37,7 @@ Without this discipline, a satellite could hand back a finding that sounded righ
 | K2 — Evidence | Does the cited source actually say what the finding claims it says? Re-open it and re-read. |
 | K3 — Guard | Does an existing safeguard (an undo, a warning, a "what NOT to flag" rule) already cover this, making the finding moot? |
 
-Each drafted finding is stamped `CONFIRMED`, `DOWNGRADED(<reason>)`, or `KILLED(K1|K2|K3)` — "plausible but unverified" counts as killed, not confirmed. The report header always prints the full funnel so nothing is hidden: `raw N → killed X → downgraded Y → survived Z`. This is the same discipline `/gabe-roast`'s kill-gate and `/gabe-debt`'s evidence floor apply in their own words — the mechanism generalizes across every satellite, not just `/gabe-myopic`.
+Each drafted finding is stamped `CONFIRMED`, `DOWNGRADED(<reason>)`, or `KILLED(K1|K2|K3)` — "plausible but unverified" counts as killed, not confirmed. The report header always prints the full funnel so nothing is hidden: `raw N → killed X → downgraded Y → survived Z`. This is the same discipline `/gabe-roast`'s kill-gate and `/gabe-health debt`'s evidence floor apply in their own words — the mechanism generalizes across every satellite, not just `/gabe-myopic`.
 
 ## What a "satellite" is, and why they're separate from the loop
 
@@ -136,9 +136,9 @@ Every number in the output is copy-pasted from a git command run in that same se
 Starting a new epic (know where the minefields are before walking in), during a retrospective ("why did this sprint feel fragile?" — now with data), after an incident (was this area inherently unstable, or a one-off?), or before a major refactor (which files need splitting first?). Not a per-commit tool — run it periodically for strategic insight, not on every diff.
 :::
 
-## `/gabe-debt` — decisions nobody actually made
+## `/gabe-health debt` — decisions nobody actually made
 
-Some of the worst bugs in a project's life didn't come from bad code — they came from a decision that was never made explicitly ("we'll figure out state ownership later") or one that quietly contradicts an earlier one (the scope doc says one thing, the plan's current phase assumes another, the code assumes a third). `/gabe-debt` scans for exactly that pattern using a catalog of evidence-anchored patterns distilled from real incidents, plus any project-local rules the team has already written down from its own retrospectives.
+Some of the worst bugs in a project's life didn't come from bad code — they came from a decision that was never made explicitly ("we'll figure out state ownership later") or one that quietly contradicts an earlier one (the scope doc says one thing, the plan's current phase assumes another, the code assumes a third). `/gabe-health debt` scans for exactly that pattern using a catalog of evidence-anchored patterns distilled from real incidents, plus any project-local rules the team has already written down from its own retrospectives.
 
 Every finding gets four scores — **severity** (tier-adjusted, elevated if it violates an existing rule), **confidence** (confident / uncertain-depends / weak-signal, based on how many independent sources agree), **blast radius** (how many phases, requirements, and files it touches), and a **status** (missing / implicit / contradictory / violating-existing-rule) — then gets triaged interactively into exactly one of four homes: a new architectural decision record, an open question for later, a codified rule, or a deferred item.
 
@@ -160,9 +160,9 @@ It closes on one recommendation and a memorable one-liner — never a gate, alwa
 You're about to say "yes" reflexively to a tangent that emerged mid-task, a fix outside your current scope, or an "obvious" unblock with unclear downstream consequences. Not for trivially scoped changes (a variable rename, a typo) — the pause only earns its keep when the weight is actually hidden.
 :::
 
-## `/gabe-align` — checking the work against what you said you'd hold to
+## `/gabe-assess` — checking the work against what you said you'd hold to
 
-Every other satellite attacks from outside the project's stated intentions. `/gabe-align` checks the work *against* them — the values you and the project already wrote down. It runs at two different moments: a manual pre-flight check (shallow, standard, or deep, depending on how much is riding on the decision) before you build something, and an automatic checkpoint that fires at every `git commit` or `gh pr create` without you asking for it.
+Every other satellite attacks from outside the project's stated intentions. `/gabe-assess` checks the work *against* them — the values you and the project already wrote down. It runs at two different moments: a manual pre-flight check (shallow, standard, or deep, depending on how much is riding on the decision) before you build something, and an automatic checkpoint that fires at every `git commit` or `gh pr create` without you asking for it.
 
 Values load from three stacking sources — universal structural guards built into the skill (A1-A7), your own cross-project values in `~/.kdbp/VALUES.md`, and this project's values in `.kdbp/VALUES.md` — and each gets an independent verdict: PASS, CONCERN, or FAIL, with any FAIL forcing a `DO NOT PROCEED` verdict and any CONCERN (with no FAIL) forcing `PROCEED WITH CONCERNS`. The automatic checkpoint adds a second layer standard/deep mode doesn't: for every changed source file, it names three realistic scenarios a real user would hit — including error states and empty data — and reports whether each one actually has a test. Untested scenarios a user proceeds past anyway get written straight into `PENDING.md` as deferred items, so the next `/gabe-review` finds them waiting.
 
@@ -181,8 +181,8 @@ A satellite that only prints a report and goes away would be a dead end. Every o
 | `/gabe-myopic` | Findings reported inline; severity + fix feed into the next `/gabe-plan` or a direct code fix |
 | `/gabe-roast` | Gaps reported inline; suggested next step is often `/gabe-assess` on each gap's fix before implementing |
 | `/gabe-health` | Reported inline; recommends `/gabe-roast architect` on god files, `/gabe-review` on fragile modules |
-| `/gabe-debt` | `.kdbp/DECISIONS.md`, `.kdbp/SCOPE.md` §14, `.kdbp/RULES.md`, or `.kdbp/PENDING.md` — user's choice per finding |
+| `/gabe-health debt` | `.kdbp/DECISIONS.md`, `.kdbp/SCOPE.md` §14, `.kdbp/RULES.md`, or `.kdbp/PENDING.md` — user's choice per finding |
 | `/gabe-assess` | Reported inline as a recommendation; the human decides and the loop proceeds accordingly |
-| `/gabe-align` | `.kdbp/LEDGER.md` (every checkpoint) + `.kdbp/PENDING.md` (untested scenarios the user proceeded past) |
+| `/gabe-assess` | `.kdbp/LEDGER.md` (every checkpoint) + `.kdbp/PENDING.md` (untested scenarios the user proceeded past) |
 
 That's the whole shape of "satellite": attack from an angle the loop doesn't naturally take, cite evidence for every claim, survive a verify/kill pass, and land the surviving findings somewhere the loop will read next time it comes around.

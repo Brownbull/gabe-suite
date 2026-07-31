@@ -50,7 +50,7 @@ Each phase moves through a row of status cells — **Red · Exec · Review · Co
 | `PLAN.md` | The active goal and a phase table (what's being built, and its Exec/Review/Commit/Push state per phase). | Every phase |
 | `PENDING.md` | Priced technical debt — one canonical row per deferred finding (source, file, scale tier, priority, times-deferred, status) so deferred work doesn't vanish into vague TODOs. | On each deferral or resolution |
 | `LEDGER.md` | Append-only session history — what shipped, what was reviewed, gate results, with proof (command output, file:line, artifact path) attached to every claim. | Every session, append-only |
-| `walks.jsonl` | A human's walk record — who · when · result · evidence, one line per walk; the one verification input with no machine source (see [`/gabe-walk`](commands.html)). | On each human walk, append-only |
+| `walks.jsonl` | A human's walk record — who · when · result · evidence, one line per walk; the one verification input with no machine source (the `/gabe-walk` skill is archived; records append directly). | On each human walk, append-only |
 
 ### ![Change-slowly](assets/icons/tier-slow.png) Change-slowly
 

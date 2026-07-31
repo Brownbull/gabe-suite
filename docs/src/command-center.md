@@ -98,7 +98,7 @@ Three honesty rules carry the lenses:
 
 - **Two bars, because one lies.** A class or function with zero endpoint touches can still be load-bearing service vocabulary — the violet internal bar is why only a *true* orphan (zero on both axes) reads as dead.
 - **References are directional and navigable.** Where a class meets a function, the link says `in`, `out`, or `in·out` (parameter vs return annotation); cross-entity references resolve to the owner's page wearing its **entity icon + name**, and a pending entity's references park at the entity index until its page exists.
-- **Undocumented app types surface as debt.** A CamelCase type that is app-internal *by import* but documented in no entity's map renders a dashed **`tbd`** pending link, and the crawl gate sweeps every page and warns with per-page counts — the exact work-list the next `/gabe-adopt` section retires.
+- **Undocumented app types surface as debt.** A CamelCase type that is app-internal *by import* but documented in no entity's map renders a dashed **`tbd`** pending link, and the crawl gate sweeps every page and warns with per-page counts — the exact work-list the next `/gabe-cc-init` section retires.
 
 :::note The same shape, more member kinds
 The lens dialect is deliberately member-kind-generic: functions and classes today, methods or endpoints-as-members tomorrow — each as its own scoped table, never mixed.
@@ -108,12 +108,12 @@ The lens dialect is deliberately member-kind-generic: functions and classes toda
 
 Two skills feed the center from opposite ends, and a third reads it:
 
-- **[`/gabe-feature`](commands.html)** is the forward track: each shipped feature is translated into its card, diagrams, and evidence narration over the machine facts, and the center regenerates green.
-- **`/gabe-adopt`** is the brownfield on-ramp for a project that already has code but no center. It **archives existing docs — never deletes them** — and bootstraps the center from suite templates, then machine-ranks a critical/high shortlist for the operator, and ingests **one entity per run at human speed**, with each approval recorded as a [walk](commands.html). The adoption tracker lives *outside* `PLAN.md`, so the main plan keeps shipping features through the normal loop while adoption proceeds on its own track — the two meet in the same center. (This is decision [R7](decisions.html).)
-- **`/gabe-entity`** is the reader: it assembles one entity's slice — its code map, registry, and bindings — into a context pack from the center's committed data, without re-reading the codebase.
+- **[`/gabe-cc-update`](commands.html)** is the forward track: each shipped feature is translated into its card, diagrams, and evidence narration over the machine facts, and the center regenerates green.
+- **`/gabe-cc-init`** is the brownfield on-ramp for a project that already has code but no center. It **archives existing docs — never deletes them** — and bootstraps the center from suite templates, then machine-ranks a critical/high shortlist for the operator, and ingests **one entity per run at human speed**, with each approval recorded as a [walk](commands.html). The adoption tracker lives *outside* `PLAN.md`, so the main plan keeps shipping features through the normal loop while adoption proceeds on its own track — the two meet in the same center. (This is decision [R7](decisions.html).)
+- **`/gabe-cc-entity`** is the reader: it assembles one entity's slice — its code map, registry, and bindings — into a context pack from the center's committed data, without re-reading the codebase.
 
 :::note Next
 - [The one picture & the four laws](verification-first.html) — the model this page is the flagship instance of.
 - [The C-id scheme](c-id.html) — the identity that makes the test matrix stitchable.
-- [Design decisions](decisions.html) — D2 (the walk witness feeding manual angles), D3 (release-page media), and R7 (`/gabe-adopt`).
+- [Design decisions](decisions.html) — D2 (the walk witness feeding manual angles), D3 (release-page media), and R7 (`/gabe-cc-init`).
 :::
