@@ -49,3 +49,18 @@ For long CI runs after push, a mechanical watch loop may babysit the pipeline in
 End with the `GABE PUSH COMPLETE` summary block (env, source, target, PR url or `—`, CI status) and a `Bookkeeping:` line reporting whether the bookkeeping commit happened. All state writes (PUSH.md, DEPLOYMENTS.md row, LEDGER.md entry, PLAN.md Push tick, PENDING.md/DECISIONS.md from the operational classifier) land in the same turn as the action they record (E5); a skipped Push tick prints the full decision record, never a silent skip. Safety-row prompts never silently default to proceed. The full output contract in the spec is binding.
 
 End every run with a single deterministic `NEXT: /gabe-next` line (phase advance / next phase), or `plan complete — /gabe-plan complete` on the last phase — the routing contract; no other suggestions.
+
+## Closing line — the angle nobody has taken
+
+After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
+
+```
+python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
+```
+
+It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
+satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
+the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
+suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
+them, and this line is the only thing that surfaces them during a normal beat. The signals, their
+sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.

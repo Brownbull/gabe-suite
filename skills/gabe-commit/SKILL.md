@@ -48,3 +48,18 @@ Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, sh
 Present findings grouped by severity with a clear per-finding action prompt (defer/accept/fix); never silently skip a check — a skipped check prints an enumerated reason, not silence. On commit, write the LEDGER.md thin-index row and any PLAN auto-tick (with its PLAN.json mirror) in the same turn (E5). Emit the visible `**Gabe-Lens brief**` (commit-shaped, output-only — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/docs, except when the commit-message generator already owns that body). Docs-audit mode is read-only for git and leaves any proposed file changes unstaged for the human to commit normally. The full output contract in the spec is binding.
 
 End every normal-flow run with a single deterministic `NEXT: /gabe-push` line — the routing contract; no other suggestions.
+
+## Closing line — the angle nobody has taken
+
+After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
+
+```
+python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
+```
+
+It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
+satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
+the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
+suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
+them, and this line is the only thing that surfaces them during a normal beat. The signals, their
+sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.

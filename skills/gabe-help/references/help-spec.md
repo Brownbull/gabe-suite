@@ -120,7 +120,7 @@ The Gabe Suite — 28 skills (each skill IS its slash command).
 | gabe-next | /gabe-next | Zero-logic router — a deterministic script over PLAN state dispatches the next gabe command; no LLM decisions, no side effects |
 | gabe-plan | /gabe-plan | KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts |
 | gabe-prism | /gabe-prism | Explanations rendered as a working system — the Gabe register's actors, chain, risks and blast radius drawn as a production floor where the payload moves, ma… |
-| gabe-pulse | /gabe-pulse | Read-only completeness sweep — ten deterministic signals (unregistered commits, uncommitted/unpushed work, router step, phase debt, stale stations, size budg… |
+| gabe-pulse | /gabe-pulse | Read-only completeness sweep — ten deterministic signals ranked into bands, plus the ANGLE family: which satellite would find something right now, surfaced a… |
 | gabe-push | /gabe-push | Push, PR, CI watch, promotion — env-aware shipping via .kdbp/PUSH.md; detects remote drift, offers branch cleanup |
 | gabe-red | /gabe-red | TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RE… |
 | gabe-review | /gabe-review | Code review — risk pricing, confidence scoring, interactive triage, deferred-item tracking, plan alignment, the cost of NOT fixing each finding |

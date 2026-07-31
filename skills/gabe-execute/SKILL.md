@@ -41,3 +41,18 @@ Executes phase tasks from `.kdbp/PLAN.md`. Complements `/gabe-plan` (write plan)
 Report per-task progress (files changed, verification result, commit hash) and end each phase with the Phases-table state line (`EXEC: … REVIEW: … COMMIT: … PUSH: …`) plus a `Next:` pointer (typically `/gabe-review` or `/gabe-next`). Emit the output-only `**Gabe-Lens block**` and `**Gabe-Lens brief — Platform progress**` — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/commits/docs unless another command already owns that write. All state writes (Exec ticks, DECISIONS.md escalations, PLAN.json proof mirrors, LEDGER.md thin-index rows) happen in the same turn as the action they record (E5); a skipped write prints an enumerated skip code, never silence. The full output contract in the spec is binding.
 
 End every completed-phase run with a single deterministic `NEXT: /gabe-review` line (checkpoint commits run inline via /gabe-commit) — the routing contract; no other suggestions.
+
+## Closing line — the angle nobody has taken
+
+After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
+
+```
+python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
+```
+
+It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
+satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
+the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
+suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
+them, and this line is the only thing that surfaces them during a normal beat. The signals, their
+sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.

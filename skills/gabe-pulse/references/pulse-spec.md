@@ -271,3 +271,73 @@ was retired in A2 KDBP-lite after it filled a real project's ledger with five ga
   earn a line.
 - Never converts an `undetermined` into a `clean`. That is the absence-of-evidence error, and
   §12 PROXY EVIDENCE names it as the suite's dominant recurring failure class.
+
+
+## §5 ANGLE signals — which satellite would find something
+
+Added 2026-07-31. The measured problem: **fifteen of the suite's twenty-eight skills have
+nothing that fires them**, and an operator working the router-dispatched spine never meets them.
+The rejected fix was a "consider /gabe-roast" line in each beat — a line that prints every run
+carries no information about THIS run, and the eye learns to skip the tail of a report.
+
+So a satellite earns its line only when repo state says it would find something. Computed by
+`scripts/angles.py`, which is deterministic, read-only, and reports an uncomputable signal as
+**unavailable with its reason** rather than staying quiet.
+
+### 5.1 The signals
+
+| id | Fires when | Surfaces | Source |
+|---|---|---|---|
+| S1 | ≥3 phases done and no commit since the plan started mentions a roast | `/gabe-roast` | PLAN.json + `git log` |
+| S2 | ≥25 commits since the last structural scan | `/gabe-health` | `git log` |
+| S3 | a reviewed phase declares `proof_type: journey\|visual` and carries no `proof` | `/gabe-myopic` | PLAN.json |
+| S4 | a doc page is older than the markdown it was rendered from | `/gabe-docsite` | `scripts/checkers/docsite-staleness.sh` |
+| S5 | **unavailable** — see 5.4 | `/gabe-scope-change` | — |
+| S6 | ≥3 changed files belong to one entity's code map | `/gabe-cc-entity <slug>` | center config + `git diff` |
+| S7 | the diff spans ≥2 layers across ≥3 files | `/gabe-prism` | center config + `git diff` |
+
+Thresholds are deliberately coarse. A threshold tuned to fire often is a threshold that will be
+ignored, and an ignored signal is worse than none because it also teaches the reader to skip the
+line beside it.
+
+### 5.2 The one-line mode — what the beats print
+
+Every spine beat (`plan · red · execute · review · commit · push`) ends by running
+`angles.py --one-line` and printing its output verbatim. It emits **at most one row**:
+
+```
+PULSE: 6 phases done, no adversarial pass on this plan → /gabe-roast "the docs merge"
+```
+
+and **nothing** when no trigger fires. There is deliberately no all-clear line: a beat that ends
+with a reassurance every run has re-invented the noise this replaces.
+
+### 5.3 Decay — how a true signal avoids becoming wallpaper
+
+Each offer is appended to `.kdbp/PULSE.jsonl` as `{ts, id, hash, text}`, where `hash` covers the
+signal id AND its evidence text. Offered **twice** on the same evidence without the condition
+clearing ⇒ suppressed until the evidence changes. Repos with no `.kdbp/` degrade to stateless
+mode: the signals still fire, decay simply does not apply, and that is stated rather than hidden.
+
+**Kill condition for this whole mechanism.** If the line is offered ten consecutive times and
+taken zero times — measurable directly from `PULSE.jsonl`, since a taken suggestion clears its
+own condition — it is noise, and it gets deleted rather than tuned. The same discipline the Gabe
+register holds over itself.
+
+### 5.4 S5 is unavailable, and says what would unlock it
+
+The intended trigger was *files changed outside every phase's declared scope*. `PLAN.json`
+carries `id / name / tier / complexity / types / cells / proof / cases` — and **no per-phase file
+or path declaration**. A proxy built on `types` would compare a category against a path and be
+wrong in both directions, so the signal reports unavailable and names what it needs: a `scope:`
+or `files:` field written into the phase record at plan time. Building the proxy would have been
+faster and would have produced a signal nobody could trust.
+
+### 5.5 Which satellites deliberately have NO trigger
+
+`/gabe-lens` · `/gabe-meme` · `/gabe-artifact` answer "help me think / help me see" — no repo
+state predicts them, and a guess would spend the reader's attention on nothing.
+`/gabe-help` addresses repo visitors, not the loop. `/gabe-scope` fires on new projects, which is
+not a state a beat can observe. `/gabe-next` is the thing you call. `/gabe-handoff` is already
+Stop-hooked. `/gabe-pulse` is this engine. **Wiring all fifteen would cheapen the six that mean
+something** — the roster stays honest by leaving these out loud.

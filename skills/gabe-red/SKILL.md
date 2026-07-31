@@ -55,3 +55,18 @@ Narrow `--run` to the single case where the runner allows: a suite-wide run make
 ## Output contract
 
 Per phase, on completion: a committed red checkpoint (`RED:` trailer) OR a guard-only record OR an enumerated skip code — never silence; the `Cases:` line in PLAN Phase Details naming every id; the `Red` cell ✅ in PLAN.md + PLAN.json; the failure output quoted verbatim in the report. This skill states no count or verdict beyond what the run printed (anti-curation).
+
+## Closing line — the angle nobody has taken
+
+After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
+
+```
+python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
+```
+
+It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
+satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
+the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
+suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
+them, and this line is the only thing that surfaces them during a normal beat. The signals, their
+sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.

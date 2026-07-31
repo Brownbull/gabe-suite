@@ -1,11 +1,11 @@
 ---
 name: gabe-pulse
-description: "Read-only completeness sweep — ten deterministic signals (unregistered commits, uncommitted/unpushed work, router step, phase debt, stale stations, size budget) ranked into bands. Never writes, never dispatches, never judges code."
+description: "Read-only completeness sweep — ten deterministic signals ranked into bands, plus the ANGLE family: which satellite would find something right now, surfaced as one line at the end of every spine beat so the manual-only skills stop depending on memory. Never writes, never dispatches, never judges code."
 when_to_use: "After a long or sprawling stretch: did everything that should have run actually run, what am I missing, anything pending before I stop? Reports what is owed and the command that clears it."
 context: fork
 agent: Explore
 metadata:
-  version: 1.0.0
+  version: 1.1.0
 ---
 
 # Gabe Pulse — is anything important owed?
@@ -121,3 +121,20 @@ signals: 8 ran · 2 unavailable (P9 no walks.jsonl · P10 no size-budget script 
 ```
 
 $ARGUMENTS
+
+## The ANGLE family (1.1.0)
+
+`scripts/angles.py` computes six live triggers — adversarial pass owed, structural scan overdue,
+journey proof missing, docs stale, entity context worth loading, an explanation worth drawing —
+and one that reports **unavailable** with what would unlock it. Spine beats print its
+`--one-line` output verbatim; it emits at most one row and nothing when nothing fires.
+
+```
+python3 skills/gabe-pulse/scripts/angles.py . --why      # every signal, including why one is quiet
+python3 skills/gabe-pulse/scripts/angles.py . --one-line # what a beat prints
+python3 skills/gabe-pulse/scripts/angles.py . --json     # machine output
+```
+
+Full contract in `references/pulse-spec.md` §5, including the decay rule and this mechanism's own
+kill condition. Battery: `tests/pulse-angles/run.sh` — 18 cases, every live signal proven to FIRE
+and stay SILENT, plus the cap, the silence, and the decay.

@@ -52,3 +52,18 @@ Verdict floors: BLOCK on any CRITICAL, 2+ escalated deferrals, VERY LOW coverage
 The full output contract in the spec is binding.
 
 End every run with a single deterministic `NEXT:` line per the PLAN row — `/gabe-commit` when Commit is ⬜, else `/gabe-push` — the routing contract; no other suggestions.
+
+## Closing line — the angle nobody has taken
+
+After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
+
+```
+python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
+```
+
+It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
+satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
+the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
+suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
+them, and this line is the only thing that surfaces them during a normal beat. The signals, their
+sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.
