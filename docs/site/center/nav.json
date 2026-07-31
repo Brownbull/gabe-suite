@@ -1,0 +1,173 @@
+{
+ "generator": "build_suite_center.py",
+ "head": "a943f9a",
+ "project": "Gabe Suite",
+ "groups": [
+  {
+   "label": "Now",
+   "cls": "g-now",
+   "items": [
+    {
+     "label": "Overview",
+     "href": "index.html",
+     "icon": "home"
+    }
+   ]
+  },
+  {
+   "label": "Board",
+   "cls": "g-board",
+   "items": [
+    {
+     "label": "Board",
+     "href": "board.html",
+     "icon": "board",
+     "count": 18
+    }
+   ]
+  },
+  {
+   "label": "Enforcement",
+   "cls": "g-code",
+   "items": [
+    {
+     "label": "Enforcement ledger",
+     "href": "enforcement.html",
+     "icon": "shield",
+     "count": 119
+    },
+    {
+     "label": "Hooks",
+     "href": "hooks.html",
+     "icon": "zap",
+     "count": 7
+    },
+    {
+     "label": "Testing",
+     "href": "testing.html",
+     "icon": "check",
+     "count": 16
+    }
+   ]
+  },
+  {
+   "label": "Surfaces",
+   "cls": "g-ent",
+   "items": [
+    {
+     "label": "Agents",
+     "href": "agents.html",
+     "icon": "users",
+     "count": 28
+    },
+    {
+     "label": "Format methods",
+     "href": "formats.html",
+     "icon": "type",
+     "count": 13
+    },
+    {
+     "label": "Functions",
+     "href": "functions.html",
+     "icon": "code",
+     "count": 427
+    },
+    {
+     "label": "Data structures",
+     "href": "structures.html",
+     "icon": "database",
+     "count": 19
+    }
+   ]
+  },
+  {
+   "label": "Docs",
+   "cls": "g-docs",
+   "items": [
+    {
+     "label": "Docs",
+     "href": "docs.html",
+     "icon": "book"
+    },
+    {
+     "label": "What KDBP is",
+     "href": "kdbp.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The development loop",
+     "href": "the-loop.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The E1\u2013E7 contract",
+     "href": "contract.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The skill map",
+     "href": "skill-map.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "Beats & commands",
+     "href": "commands.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "Analysis satellites",
+     "href": "satellites.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The one picture",
+     "href": "verification-first.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "/gabe-red",
+     "href": "gabe-red.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The C-id scheme",
+     "href": "c-id.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The command center",
+     "href": "command-center.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "The mechanism catalog",
+     "href": "mechanisms.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "Why weak models drift",
+     "href": "drift.html",
+     "icon": "filetext",
+     "sub": true
+    },
+    {
+     "label": "Design decisions",
+     "href": "decisions.html",
+     "icon": "filetext",
+     "sub": true
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,43 @@
+<!-- FIXTURE — the smallest floor that satisfies the gabe-prism contract:
+     three stages with distinct named payloads, a number and a state each, one
+     gate in its own register, one inspectable cell, every state legended.
+     The battery mutates THIS file to break each clause in turn. -->
+<title>prism fixture</title>
+<style>
+  :root { --ground:#f6f7f9; --card:#fff; --raised:#fbfcfd; --ink:#141a24; --ink-soft:#3d4756;
+          --muted:#7a8595; --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --radius:10px; }
+  body { background: var(--ground); color: var(--ink); font-family: ui-monospace, monospace; font-size: 15px; }
+  .artifact-page { max-width: 74rem; margin: 0 auto 0 32px; padding: 32px 24px; }
+  .floor { display: flex; gap: 10px; flex-wrap: wrap; align-items: flex-start; }
+  .node { text-align: left; font: inherit; background: var(--card); color: var(--ink);
+          border: 1px solid var(--rule); border-radius: var(--radius); padding: 10px 12px; cursor: pointer; }
+  .gate { background: var(--raised); border-style: dashed; cursor: default; }
+  .legend { color: var(--muted); font-size: 13px; margin-top: 14px; }
+  .detail { border-left: 4px solid var(--accent); padding: 10px 12px; margin-top: 14px; background: var(--card); }
+</style>
+
+<div class="artifact-page">
+  <div class="floor" data-prism>
+    <button class="node" data-node="source" data-in="authored prose" data-out="markdown with tokens"
+            data-num="13 files · 1,651 lines" data-state="running" data-detail="#d-source">
+      1 · source<br><small>docs/src/*.md</small>
+    </button>
+    <button class="node" data-node="converter" data-in="markdown with tokens" data-out="body html"
+            data-num="472 lines" data-state="running" data-detail="#d-conv">
+      2 · converter<br><small>_markdown.py</small>
+    </button>
+    <button class="node" data-node="extractor" data-in="body html" data-out="token records"
+            data-num="143 refs" data-state="ghost" data-detail="#d-ext">
+      3 · extractor<br><small>not written</small>
+    </button>
+    <span class="node gate" data-node="crawl gate" data-gate data-state="unpowered">
+      gate · check_suite_center.py
+    </span>
+  </div>
+
+  <p class="legend">running — built and proven · ghost — not built yet · unpowered — no fixture proves it can fail · broken — claims success it did not earn</p>
+
+  <div class="detail" id="d-source">source · docs/src/*.md — 13 authored markdown files, 1,651 lines, 11 mermaid diagrams.</div>
+  <div class="detail" id="d-conv">converter · _markdown.py — 472 lines, stays as-is through the merge.</div>
+  <div class="detail" id="d-ext">extractor — the one new generator the merge needs; scans rendered text for 8 token classes.</div>
+</div>

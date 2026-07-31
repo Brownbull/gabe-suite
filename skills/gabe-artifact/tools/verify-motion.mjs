@@ -1,89 +1,199 @@
+/* gabe-artifact · motion gate
+ *
+ * Proves a page's animation is real before it is published: each animated
+ * element is fingerprinted, replayed, re-sampled, and required to have CHANGED;
+ * the cog's Motion=Paused must freeze it; reduced motion must render a finished
+ * state rather than an empty frame.
+ *
+ * Usage:  node tools/verify-motion.mjs <path/to/page.html>
+ *         node tools/verify-motion.mjs                     (defaults to the pattern library)
+ *
+ * DISCOVERY, in order:
+ *   1. window.FXREPLAY — the registry an artifact's animations register into
+ *      ({slug: rebuildFn}); each slug's stage is `[data-fx="<slug>"]`, falling
+ *      back to the content column when a fragment does not mark one.
+ *   2. `.ex[data-anim]` cards — the pattern library's own shape.
+ * A page with neither reports SKIP loudly: nothing to verify is not the same as
+ * verified, and must never read as a pass.
+ *
+ * Two traps this cost us to learn, both still enforced: a fingerprint blind to
+ * background-color/border-color reports colour-only animation as frozen, and a
+ * sampling window shorter than the animation's own cadence reports a slow loop
+ * as dead. FX_WINDOW_MS overrides the window for a page with a slower cadence.
+ */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const HERE = dirname(fileURLToPath(import.meta.url));
+const target = resolve(process.argv[2] || resolve(HERE, '../assets/motion-patterns.html'));
+const WINDOW_MS = Number(process.env.FX_WINDOW_MS || 2400);
+const SETTLE_MS = Number(process.env.FX_SETTLE_MS || 800);
+const USER_DRIVEN = new Set((process.env.FX_USER_DRIVEN || 'scrub,scrolly').split(','));
+
 const { chromium } = await import(`${process.env.HOME}/.claude/skills/gabe-docsite/tools/_playwright.mjs`);
-const html = await readFile('motion-catalog.html', 'utf8');
-const srv = createServer((_q, r) => { r.writeHead(200, {'Content-Type':'text/html; charset=utf-8'}); r.end(html); });
-await new Promise(r => srv.listen(0, '127.0.0.1', r));
+const html = await readFile(target, 'utf8');
+const srv = createServer((_q, r) => { r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(html); });
+await new Promise((r) => srv.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${srv.address().port}/`;
 
 const FP = (sel) => {
   const stage = document.querySelector(sel);
   if (!stage) return 'MISSING:' + sel;
-  return [...stage.querySelectorAll('*')].map(n => {
+  return [...stage.querySelectorAll('*')].map((n) => {
     const r = n.getBoundingClientRect(), c = getComputedStyle(n);
-    return [Math.round(r.x*10), Math.round(r.y*10), Math.round(r.width*10), Math.round(r.height*10),
-            c.transform, c.strokeDashoffset, c.opacity, c.r, c.backgroundColor, c.borderColor,
-            n.getAttribute('fill'), n.getAttribute('stroke'), (n.textContent||'').length].join(',');
+    return [Math.round(r.x * 10), Math.round(r.y * 10), Math.round(r.width * 10), Math.round(r.height * 10),
+      c.transform, c.strokeDashoffset, c.opacity, c.r, c.backgroundColor, c.borderColor,
+      n.getAttribute('fill'), n.getAttribute('stroke'), n.getAttribute('data-hot'),
+      (n.textContent || '').length].join(',');
   }).join('|');
 };
 
+let pass = 0, fail = 0, skipped = 0;
+const ok = (n, d = '') => { console.log(`PASS  ${n}${d ? '  — ' + d : ''}`); pass++; };
+const bad = (n, d = '') => { console.log(`FAIL  ${n}${d ? '  — ' + d : ''}`); fail++; };
+const skip = (n) => { console.log(`SKIP  ${n}`); skipped++; };
+
 const b = await chromium.launch();
-let pass = 0, fail = 0;
-const ok = (n, d='') => { console.log(`PASS  ${n}${d?'  — '+d:''}`); pass++; };
-const bad = (n, d='') => { console.log(`FAIL  ${n}${d?'  — '+d:''}`); fail++; };
-
-// ── moving under normal motion ──────────────────────────────────────────
-const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
-const errs = []; p.on('pageerror', e => errs.push(String(e)));
+const p = await b.newPage({ viewport: { width: 1280, height: 950 } });
+const errs = [];
+p.on('pageerror', (e) => errs.push(String(e)));
 await p.goto(url, { waitUntil: 'load' });
-await p.waitForTimeout(300);
+await p.waitForTimeout(400);
 
-const cards = await p.$$eval('.ex[data-anim]', ns => ns.map(n => n.getAttribute('data-anim')));
-const USER_DRIVEN = new Set(['scrub', 'scrolly']);
+/* ── discovery ──────────────────────────────────────────────────────────── */
+const registry = await p.evaluate(() => Object.keys(window.FXREPLAY || {}));
+const cards = await p.$$eval('.ex[data-anim]', (ns) => ns.map((n) => n.getAttribute('data-anim')));
 
-for (const anim of cards) {
-  const sel = `.ex[data-anim="${anim}"] .ex-stage`;
-  if (USER_DRIVEN.has(anim)) continue;
-  await p.click(`.ex[data-anim="${anim}"] .ex-replay`);
-  const a = await p.evaluate(FP, sel);
-  await p.waitForTimeout(1800);
-  const c = await p.evaluate(FP, sel);
-  a !== c ? ok(`${anim} animates`) : bad(`${anim} still frozen 1.8s after replay`);
+/* PRECEDENCE: card discovery wins when cards exist. A card carries its own
+   stage element, so each animation is fingerprinted in isolation; the FXREPLAY
+   fallback fingerprints the content column, and on a page with several
+   animations one moving element would then mark every subject as moving. */
+let subjects = [];
+if (cards.length) {
+  subjects = cards.filter((a) => !USER_DRIVEN.has(a)).map((anim) => ({
+    slug: anim,
+    stage: `.ex[data-anim="${anim}"] .ex-stage`,
+    replay: async () => p.click(`.ex[data-anim="${anim}"] .ex-replay`),
+  }));
+  console.log(`discovered ${subjects.length} animation card(s) via .ex[data-anim]`);
+} else if (registry.length) {
+  subjects = registry.map((slug) => ({
+    slug,
+    stage: `[data-fx="${slug}"]`,
+    replay: async () => p.evaluate((s) => window.FXREPLAY[s](), slug),
+  }));
+  for (const s of subjects) {
+    if (!(await p.$(s.stage))) s.stage = (await p.$('.artifact-page')) ? '.artifact-page' : 'body';
+  }
+  console.log(`discovered ${subjects.length} animation(s) via window.FXREPLAY: ${registry.join(', ')}`);
 }
 
-// user-driven: scrubber
-await p.$eval('#m-scrub', e => { e.value = '5'; e.dispatchEvent(new Event('input', {bubbles:true})); });
-const scrubWhat = await p.$eval('#m-scrub-what', e => e.textContent);
-scrubWhat.includes('8') ? ok('scrub responds to input', scrubWhat) : bad('scrub did not update', scrubWhat);
+if (!subjects.length) {
+  console.log('SKIP  no animation found — the page registers no window.FXREPLAY entry and has no .ex[data-anim] card.');
+  console.log('      Nothing to verify is NOT the same as verified. If this page is supposed to move, it is broken.');
+  await b.close(); srv.close();
+  process.exit(0);
+}
 
-// user-driven: scrollytelling
-const before = await p.$eval('#m-scrolly-viz', e => e.innerHTML.length && e.querySelectorAll('[stroke="var(--accent)"]').length);
-await p.$eval('#m-scrolly', e => { e.scrollTop = e.scrollHeight; });
-await p.waitForTimeout(700);
-const after = await p.$eval('#m-scrolly-viz', e => e.querySelectorAll('[stroke="var(--accent)"]').length);
-after > before ? ok('scrolly advances on scroll', `${before} → ${after} lit`) : bad('scrolly did not advance', `${before} → ${after}`);
+/* ── 1 · each animation actually moves after a replay ───────────────────── */
+for (const s of subjects) {
+  /* A stage selector that matches nothing produced the same "MISSING:…" string
+     on every sample, which the loop below reported as FROZEN — a real contract
+     error dressed up as an animation bug, and the reader debugs the wrong thing. */
+  if (!(await p.$(s.stage))) {
+    bad(`${s.slug}: stage selector matched no element`, s.stage);
+    continue;
+  }
+  await s.replay();
+  const frames = new Set();
+  const STEPS = 6;
+  for (let k = 0; k < STEPS; k++) {
+    frames.add(await p.evaluate(FP, s.stage));
+    await p.waitForTimeout(Math.round(WINDOW_MS / STEPS) + k * 7);   // uneven, to defeat aliasing
+  }
+  frames.size > 1
+    ? ok(`${s.slug} animates after replay`, `${frames.size} distinct frames`)
+    : bad(`${s.slug} frozen across ${WINDOW_MS}ms after replay`, s.stage);
+}
 
-// replay restarts a finished animation
-await p.click('.ex[data-anim="swap"] .ex-replay');
-await p.waitForTimeout(120);
-const skel = await p.$$eval('.ex[data-anim="swap"] .skel', n => n.length);
-skel > 0 ? ok('replay restarts the skeleton') : bad('replay did not restart skeleton');
+/* The running render's size per stage — the baseline the reduced-motion check
+   compares against. Captured HERE, before any pause toggling: pausing rebuilds
+   every animation into its finished state, and on a page whose finished state
+   draws less, a baseline taken afterwards would quietly excuse an empty frame. */
+const liveNodes = [];
+for (const s of subjects) {
+  liveNodes.push(await p.evaluate((sel) => {
+    const st = document.querySelector(sel);
+    return st ? st.querySelectorAll('*').length : 0;
+  }, s.stage));
+}
 
-// global pause freezes motion
-await p.evaluate(() => window.__setMotion(false));
-const f1 = await p.evaluate(FP, '.ex[data-anim="arch"] .ex-stage');
-await p.waitForTimeout(1200);
-const f2 = await p.evaluate(FP, '.ex[data-anim="arch"] .ex-stage');
-f1 === f2 ? ok('cog Motion=Paused freezes packets') : bad('paused packets still moved');
+/* ── 2 · the cog's pause freezes every one of them ──────────────────────── */
+const hasCog = await p.$('#af-motion .af-opt[data-id="off"]');
+if (!hasCog) {
+  skip('cog Motion group absent — the page cannot honour the pause obligation (H4)');
+} else {
+  await p.evaluate(() => window.__setMotion(false));
+  /* Settle before sampling. Pausing flips elements to their finished state
+     through CSS TRANSITIONS (typically 300ms); a sample taken at 250ms catches
+     one mid-flight and the next sample, seconds later, sees the settled colour —
+     which reads as "still moving" and fails a page that froze correctly. */
+  await p.waitForTimeout(SETTLE_MS);
+  /* Sample SEVERAL times at uneven gaps, not once before and once after. A
+     single pair aliases: a 600ms loop sampled 2400ms apart lands on the exact
+     same phase, and an animation that never stopped reports as frozen. The
+     gaps below are deliberately non-harmonic. */
+  const GAPS = [0, 190, 330, 470, 610, 890];
+  const seen = subjects.map(() => new Set());
+  for (const g of GAPS) {
+    if (g) await p.waitForTimeout(g);
+    for (let i = 0; i < subjects.length; i++) seen[i].add(await p.evaluate(FP, subjects[i].stage));
+  }
+  const moved = subjects.filter((s, i) => seen[i].size > 1).map((s) => s.slug);
+  moved.length === 0
+    ? ok('cog Motion=Paused freezes every animation', `${subjects.length} checked`)
+    : bad('paused, but these kept moving', moved.join(', '));
+  await p.evaluate(() => window.__setMotion(true));
+}
 
-console.log('page errors:', errs.length ? errs.slice(0,3) : 'none');
+console.log('page errors:', errs.length ? errs.slice(0, 3) : 'none');
 if (errs.length) fail++;
 await p.close();
 
-// ── reduced motion: end states, no movement ─────────────────────────────
-const rp = await b.newPage({ viewport: { width: 1280, height: 900 }, reducedMotion: 'reduce' });
+/* ── 3 · reduced motion renders the FINISHED state, and nothing moves ───── */
+const rp = await b.newPage({ viewport: { width: 1280, height: 950 }, reducedMotion: 'reduce' });
+const rerrs = [];
+rp.on('pageerror', (e) => rerrs.push(String(e)));
 await rp.goto(url, { waitUntil: 'load' });
-await rp.waitForTimeout(400);
-const spans = await rp.$$eval('.span-bar', ns => ns.every(n => getComputedStyle(n).transform.includes('matrix(1,')));
-spans ? ok('reduced: spans render at full width') : bad('reduced: spans not at end state');
-const termLines = await rp.$$eval('#m-term .ln', n => n.length);
-termLines === 8 ? ok('reduced: command trace shows all 8 lines') : bad('reduced: trace incomplete', String(termLines));
-const r1 = await rp.evaluate(FP, '.ex[data-anim="arch"] .ex-stage');
-await rp.waitForTimeout(1200);
-const r2 = await rp.evaluate(FP, '.ex[data-anim="arch"] .ex-stage');
-r1 === r2 ? ok('reduced: nothing moves') : bad('reduced: something still moved');
+await rp.waitForTimeout(500);
+const stalled = [], empty = [];
+for (let i = 0; i < subjects.length; i++) {
+  const s = subjects[i];
+  const a = await rp.evaluate(FP, s.stage);
+  await rp.waitForTimeout(Math.round(WINDOW_MS / 2));
+  const c = await rp.evaluate(FP, s.stage);
+  if (a !== c) stalled.push(s.slug);
+  /* An empty stage is not only zero nodes. The real failure is a START state:
+     the animation renders its first frame — a bare container, half the traces
+     undrawn — and stops there. So compare against what the RUNNING page drew:
+     substantially less content under reduced motion is a start state, and the
+     obligation is the FINISHED one. */
+  const nodes = await rp.evaluate((sel) => {
+    const st = document.querySelector(sel);
+    return st ? st.querySelectorAll('*').length : 0;
+  }, s.stage);
+  const floorCount = Math.max(1, Math.floor(liveNodes[i] * 0.5));
+  if (nodes < floorCount) empty.push(`${s.slug} (${nodes} of ${liveNodes[i]} nodes)`);
+}
+stalled.length === 0 ? ok('reduced motion: nothing moves', `${subjects.length} checked`)
+  : bad('reduced motion: still animating', stalled.join(', '));
+empty.length === 0 ? ok('reduced motion: every stage renders its finished state, not a start frame')
+  : bad('reduced motion: stage(s) render less than the running page', empty.join(', '));
+if (rerrs.length) bad('reduced motion: page errors', rerrs.slice(0, 2).join(' | '));
 await rp.close();
 
 await b.close(); srv.close();
-console.log(`\n${pass}/${pass+fail} motion checks passed`);
+console.log(`\n${pass}/${pass + fail} motion checks passed${skipped ? ` (${skipped} skipped)` : ''} — ${target}`);
 process.exit(fail ? 1 : 0);

@@ -1,0 +1,99 @@
+<!-- FIXTURE — a minimal artifact page that honours H4 in full:
+     a JS-driven animation, registered for replay, frozen by the cog, finished
+     under reduced motion. The battery mutates THIS file to make each obligation
+     fail in turn, so every check in verify-motion.mjs is proven both ways. -->
+<title>motion fixture — gabe-artifact</title>
+<style>
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+  :root { --ground:#f6f7f9; --card:#fff; --raised:#fbfcfd; --ink:#141a24; --ink-soft:#3d4756;
+          --muted:#7a8595; --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5;
+          --accent-soft:#eef0fe; --radius:10px; }
+  body { background: var(--ground); color: var(--ink); font-family: var(--af-stack); font-size: var(--af-size); }
+  .artifact-page { max-width: 74rem; margin: 0 auto 0 clamp(16px, 4vw, 56px); padding: 32px 24px; }
+  .panel { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 15px; }
+  .cells { display: flex; gap: 8px; }
+  .cell {
+    flex: 1; padding: 10px; border: 1px solid var(--rule); border-radius: 8px;
+    background: var(--raised); color: var(--muted); font-size: 13px;
+    transition: border-color .3s ease, color .3s ease, background .3s ease;
+  }
+  .cell[data-hot="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
+  .af-chrome { position: fixed; top: 14px; right: 14px; }
+  .af-panel { display: none; }
+  .af-panel[data-open="true"] { display: block; }
+  :root[data-motion="off"] * { animation-play-state: paused !important; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="artifact-page">
+  <div class="panel" data-fx="probe">
+    <div class="cells" id="cells">
+      <div class="cell">markdown</div><div class="cell">body html</div>
+      <div class="cell">token</div><div class="cell">resolution</div>
+    </div>
+  </div>
+</div>
+
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel">cog</button>
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"></div>
+  </div>
+</div>
+
+<script>
+var MOTION = { on: true };
+(function () {
+  var root = document.documentElement, mhost = document.getElementById("af-motion");
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mhost.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === (on ? "on" : "off")));
+    });
+    if (window.__rebuildMotion) window.__rebuildMotion();
+  }
+  [["on", "Playing"], ["off", "Paused"]].forEach(function (m) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", m[0]); b.setAttribute("aria-checked", "false");
+    b.textContent = m[1];
+    b.addEventListener("click", function () { setMotion(m[0] === "on"); });
+    mhost.appendChild(b);
+  });
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setMotion = setMotion;
+})();
+</script>
+
+<script>
+(function () {
+  var cells = [].slice.call(document.querySelectorAll("#cells .cell"));
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var loop = null;
+  function build() {
+    if (loop) { clearInterval(loop); loop = null; }
+    cells.forEach(function (c) { c.setAttribute("data-hot", "false"); });
+    var on = (typeof MOTION === "undefined") || MOTION.on;
+    if (reduced || !on) { cells.forEach(function (c) { c.setAttribute("data-hot", "true"); }); return; }
+    var i = 0;
+    (function tick() {
+      cells.forEach(function (c, k) { c.setAttribute("data-hot", String(k <= i)); });
+      i = (i + 1) % cells.length;
+      if (i === 0) cells.forEach(function (c) { c.setAttribute("data-hot", "false"); });
+    })();
+    loop = setInterval(function () {
+      cells.forEach(function (c, k) { c.setAttribute("data-hot", String(k <= i)); });
+      i = (i + 1) % cells.length;
+      if (i === 0) cells.forEach(function (c) { c.setAttribute("data-hot", "false"); });
+    }, 600);
+  }
+  window.FXREPLAY = window.FXREPLAY || {};
+  window.FXREPLAY["probe"] = build;
+  window.__rebuildMotion = function () { Object.keys(window.FXREPLAY).forEach(function (k) { window.FXREPLAY[k](); }); };
+  build();
+})();
+</script>

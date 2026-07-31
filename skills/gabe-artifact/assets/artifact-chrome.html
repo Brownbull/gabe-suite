@@ -4,9 +4,13 @@
   Open this file in a browser to see the chrome working. To use it, copy the
   three marked blocks into a new artifact page:
 
-    BLOCK 1  <style> … </style>   → house tokens + left-anchored column + cog/panel CSS
-    BLOCK 2  markup               → the cog button + options panel (paste last in the body)
-    BLOCK 3  <script> … </script> → the font roster + panel behaviour
+    BLOCK 1  the style block   → tokens, 3 skins, section blocks, devices, cog CSS
+    BLOCK 2  the markup block  → the cog button + options panel (paste last in the body)
+    BLOCK 3  the script block  → font roster, skin roster, motion switch
+
+  Note for anything that extracts these blocks programmatically: this comment
+  deliberately spells the tags out in words. A literal <style>…</style> here is
+  the first thing a non-greedy regex finds, and the page it assembles has no CSS.
 
   Artifacts are published without <!doctype>/<html>/<head>/<body> — the host
   wraps the file. Keep <title> and drop this comment when you copy.
@@ -17,134 +21,330 @@
 
 <!-- ══ BLOCK 1 ══════════════════════════════════════════════════════════ -->
 <style>
-  /* ── font roster: the three families every artifact ships with ─────────
-     Values come from the founder's type-bench selections. The script keeps
-     these vars in sync; nothing else may hard-code a body font-family. */
+  /* ── font roster (H3) — the script keeps these in sync ─────────────── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+
+  /* ── title face (H3) — ONLY the section title pills pin a face: a modern
+        condensed grotesque, set in caps. DIN lineage, so it reads as console
+        lettering rather than book type, and it holds a long title in a pill
+        without wrapping. Locally resolvable in order — Bahnschrift ships with
+        Windows 10+, DIN Alternate with macOS — so nothing routes through a
+        blocked webfont. Every OTHER title on the page stays in the body face:
+        one distinctive treatment, or the distinction is worthless. */
   :root {
-    --af-stack: ui-monospace, monospace;
-    --af-size: 15px;
-    --af-track: -0.025em;
+    --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed",
+                "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
   }
 
-  /* ── house palette (violet-biased neutrals; swap the accent per subject) */
+  /* ── the legibility floor (H6) — the smallest text on a page is the text
+        most often unreadable. Secondary content sizes off THESE steps, never
+        below them: at the 15px base they compute to 13.8 / 12.8 / 12.3px.
+        They are calc() off the roster base, NOT bare `em`, because `em`
+        stacks: a .855em head inside a .92em table lands at 11.8px while both
+        authored values look safe. An absolute step cannot compound. */
   :root {
-    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
-    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
-    --rule: #ded8e5; --rule-soft: #ebe6ef;
-    --accent: #c42a64; --accent-soft: #fbe9f0;
-    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+    --fs-sm:  calc(var(--af-size) * 0.92);
+    --fs-xs:  calc(var(--af-size) * 0.855);
+    --fs-min: calc(var(--af-size) * 0.82);
+  }
+
+  /* ══ skins (H5) — chrome only: ground, ink, rules, accent, geometry.
+        Sources: Catalog = docs/site/center/assets/a3.css · Blueprint = skin F ·
+        Mission Console = skin B (output/mockups/center-skins.css). B and F are
+        spec'd light-only; their dark arms are derived so the viewer's theme
+        toggle still answers. Chart series and status colours are NEVER themed. */
+
+  /* ── Catalog · cool developer portal (default) ── */
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
   }
   @media (prefers-color-scheme: dark) {
-    :root {
-      --ground: #141118; --card: #1d1924; --raised: #241f2e;
-      --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
-      --rule: #322b3e; --rule-soft: #272130;
-      --accent: #f2679e; --accent-soft: #381c2a;
-      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40;
+      --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f;
+      --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
     }
   }
-  :root[data-theme="light"] {
-    --ground: #f4f2f5; --card: #ffffff; --raised: #faf8fb;
-    --ink: #191521; --ink-soft: #423a50; --muted: #6b6376;
-    --rule: #ded8e5; --rule-soft: #ebe6ef;
-    --accent: #c42a64; --accent-soft: #fbe9f0;
-    --shadow: 0 1px 2px rgba(25,21,33,.06), 0 8px 24px -16px rgba(25,21,33,.35);
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40;
+    --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f;
+    --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
   }
-  :root[data-theme="dark"] {
-    --ground: #141118; --card: #1d1924; --raised: #241f2e;
-    --ink: #ede9f2; --ink-soft: #cdc5d8; --muted: #9b93a8;
-    --rule: #322b3e; --rule-soft: #272130;
-    --accent: #f2679e; --accent-soft: #381c2a;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --strong:#101726;
   }
 
-  /* ── the page: content is anchored LEFT, never centred ──────────────── */
-  body {
-    background: var(--ground);
-    color: var(--ink);
-    font-family: var(--af-stack);
-    font-size: var(--af-size);
-    letter-spacing: var(--af-track);
-    line-height: 1.55;
-    text-align: left;
-    -webkit-font-smoothing: antialiased;
+  /* ── Blueprint · skin F, blue ink ── */
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8;
+    --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+    --radius:6px; --rail:5px; --shadow:none;
   }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138;
+      --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942;
+      --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138;
+    --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942;
+    --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe;
+    --strong:#16233b;
+  }
+
+  /* ── Mission Console · skin B, teal ops console ── */
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee;
+    --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+    --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+      --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39;
+      --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+    --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39;
+    --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4;
+    --strong:#1a2b36;
+  }
+
+  /* ══ section blocks — page furniture, deliberately OUTSIDE the series and
+        status palettes so a section header can never be mistaken for data. */
+  :root {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+      --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+      --sec9:#e3ab8f;
+      --sec-ink:#111722;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+    --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+    --sec9:#e3ab8f;
+    --sec-ink:#111722;
+  }
+  :root[data-theme="light"] {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+
+  /* ── chart series + status — never themed, validated (dataviz skill) ── */
+  :root {
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+  }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  /* ══ the page: content anchored LEFT, never centred (H1) ═══════════ */
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  /* ── scrollbars wear the skin ────────────────────────────────────────
+     A native scrollbar is the one piece of chrome the page does not own by
+     default, and it shows: a grey OS bar with stepper arrows sitting inside a
+     dark panel reads as a rendering fault, not as a control. Both engines are
+     addressed (Firefox takes the two `scrollbar-*` properties, WebKit/Blink the
+     pseudo-elements), the thumb is mixed from the skin's own accent so it moves
+     with the theme, and the stepper arrows are removed — a scroll bar is a
+     position indicator, not a set of buttons anyone clicks. */
+  :root {
+    --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule));
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--rule-soft);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb); border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
   .artifact-page {
     max-width: 74rem;
     margin: 0 auto 0 clamp(16px, 4vw, 56px);   /* left-anchored, never `margin: 0 auto` */
     padding: 32px 24px 48px;
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
+    display: flex; flex-direction: column; gap: 30px;
     text-align: left;
   }
-  /* keep the top of the column clear of the fixed cog */
-  .artifact-page > :first-child { padding-right: 56px; }
-
+  .artifact-page > :first-child { padding-right: 56px; }   /* clear of the fixed cog */
   :is(a, button, select, input, textarea, summary):focus-visible {
     outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
   }
+  p { margin: 0; }
 
-  /* ── the cog + options panel ────────────────────────────────────────── */
+  /* ══ the two devices (H5) — every skin, every section ══════════════ */
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  /* Title = normal-size text in a PILL that hugs it, led by an icon.
+     Prominence is the background and the icon, never the type: no uppercase,
+     no tracking, no size bump. The pill's padding stays tight — a wide slab
+     reads as a banner and competes with the content it introduces. */
+  .sec-head h2 {
+    margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground));
+    padding: 2px 11px 2px 9px; border-radius: 999px;
+    font-family: var(--af-title);
+    font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
+    line-height: 1.34;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  /* Every title carries an icon (H6). Lucide geometry, inlined — the CSP
+     blocks icon CDNs, and an icon font would fall back silently. */
+  .sec-head h2 svg {
+    width: 1.02em; height: 1.02em; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); }
+  .sec[data-sec="3"] { --sec: var(--sec3); } .sec[data-sec="4"] { --sec: var(--sec4); }
+  .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); }
+  .sec[data-sec="9"] { --sec: var(--sec9); }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--rule);
+    border-radius: var(--radius, 10px); padding: 15px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  /* :root prefix so the rail beats the `border:` shorthand above at equal
+     specificity — without it the rail silently renders at 1px. */
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+  /* ══ cog + options panel (H2 — the only floating affordance) ═══════ */
   .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
   .af-cog {
-    display: grid; place-items: center;
-    width: 38px; height: 38px;
+    display: grid; place-items: center; width: 38px; height: 38px;
     background: var(--card); color: var(--muted);
-    border: 1px solid var(--rule); border-radius: 10px;
-    box-shadow: var(--shadow); cursor: pointer;
-    transition: color .15s ease, border-color .15s ease, transform .25s ease;
+    border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease;
   }
   .af-cog:hover { color: var(--accent); border-color: var(--accent); }
   .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
   .af-cog svg { width: 18px; height: 18px; display: block; }
-
   .af-panel {
-    position: absolute; top: 46px; right: 0;
-    width: 258px;
+    position: absolute; top: 46px; right: 0; width: 262px;
     background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
     box-shadow: var(--shadow); padding: 14px;
-    display: none; flex-direction: column; gap: 12px;
+    display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto;
   }
   .af-panel[data-open="true"] { display: flex; }
-  .af-group { display: flex; flex-direction: column; gap: 8px; }
-  .af-legend {
-    font-family: ui-monospace, monospace;
-    font-size: 10px; letter-spacing: .12em; text-transform: uppercase;
-    color: var(--muted); margin: 0;
-  }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
   .af-opt {
     display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
-    width: 100%; text-align: left; cursor: pointer;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
     background: var(--raised); color: var(--ink);
-    border: 1px solid var(--rule); border-radius: 8px;
-    padding: 9px 11px;
+    border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px;
   }
   .af-opt:hover { border-color: var(--accent); }
   .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
-  .af-opt .af-name { font-size: 14px; line-height: 1.2; }     /* drawn in its own face */
-  .af-opt .af-spec {
-    font-family: ui-monospace, monospace;
-    font-size: 10px; color: var(--muted); letter-spacing: 0;
-    font-variant-numeric: tabular-nums; white-space: nowrap;
-  }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
-  .af-foot { font-family: ui-monospace, monospace; font-size: 10px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  /* motion primitives — global pause is wired to this attribute */
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
 
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 
 <div class="artifact-page">
   <header>
-    <p style="font-family: ui-monospace, monospace; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0;">gabe-artifact · chrome kit</p>
-    <h1 style="font-size: 2.1em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance;">The cog is the only floating thing on the page</h1>
-    <p style="color: var(--muted); max-width: 62ch; margin: 12px 0 0;">Everything else is anchored to the left edge of the column. Open the cog, switch the family, reload — the choice persists.</p>
+    <p style="font-size:var(--fs-min);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0">gabe-artifact · chrome kit</p>
+    <h1 style="font-size:2.1em;line-height:1.15;margin:8px 0 0;text-wrap:balance">The cog is the only floating thing</h1>
+    <p style="color:var(--muted);max-width:62ch;margin:12px 0 0">Content is anchored left. Each section title sits on its own contrasting block; each panel carries a left rail in the skin's accent. Switch skin or family in the cog — both persist.</p>
   </header>
 
-  <section style="display: flex; flex-direction: column; gap: 12px;">
-    <div style="background: var(--card); border: 1px solid var(--rule); border-radius: 10px; padding: 16px;">
-      <h2 style="font-size: 1.15em; margin: 0 0 8px;">Sample block</h2>
-      <p style="margin: 0; color: var(--ink-soft);">Ingrediente canónico · 12 recetas · ñÑ ¿0123? — the roster changes family, base size and tracking together, because that is how the settings were chosen.</p>
+  <!-- ICON SET (H6) — Lucide geometry, inlined. Paste the inner paths into
+       the title's <svg>; the CSS above sizes and strokes it. Any Lucide glyph
+       works — these are the ones a report reaches for first.
+         key-round   <circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>
+         route       <circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>
+         file-text   <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/>
+         panel-left  <rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/>
+         swap        <path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>
+         bar-chart   <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+         alert       <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/>
+         gavel       <path d="m14.5 12.5-8 8a2.1 2.1 0 1 1-3-3l8-8"/><path d="m16 16 6-6"/><path d="m8 8 6-6"/><path d="m9 7 8 8"/><path d="m21 11-8-8"/>
+         layers      <path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"/>
+         search      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/> -->
+  <section class="sec" data-sec="1">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></svg>First section</h2><span class="n">block 1</span></div>
+    <div class="cols">
+      <div class="panel">
+        <h3 style="margin:0;font-size:.92em">Panel with a rail</h3>
+        <p style="color:var(--ink-soft);font-size:.85em">The rail takes the skin's accent, so a page reads as one skin with many sections.</p>
+      </div>
+      <div class="panel">
+        <h3 style="margin:0;font-size:.92em">Second panel</h3>
+        <p style="color:var(--ink-soft);font-size:.85em">Ingrediente canónico · 12 recetas · ñÑ ¿0123?</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="2">
+    <div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="7.5" cy="15.5" r="5.5"></circle><path d="m21 2-9.6 9.6"></path><path d="m15.5 7.5 3 3L22 7l-3-3"></path></svg>Second section</h2><span class="n">block 2</span></div>
+    <div class="cols">
+      <div class="panel">
+        <h3 style="margin:0;font-size:.92em">A different block colour</h3>
+        <p style="color:var(--ink-soft);font-size:.85em">Eight tones are defined (<code>--sec1…--sec8</code>); set <code>data-sec</code> on each section.</p>
+      </div>
     </div>
   </section>
 </div>
@@ -159,105 +359,111 @@
   </button>
 
   <div class="af-panel" id="af-panel" data-open="false">
-    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts">
-      <p class="af-legend">Font family</p>
-    </div>
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <div class="af-divider"></div>
+    <!-- Drop this Motion group only if the page has no animation at all. -->
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
     <p class="af-foot" id="af-foot">—</p>
   </div>
 </div>
 
 <!-- ══ BLOCK 3 ══════════════════════════════════════════════════════════ -->
 <script>
+var MOTION = { on: true };   /* animations read this before scheduling work */
+
 (function () {
   "use strict";
 
-  /* The house roster. Add an entry here to add an option — nothing else changes. */
+  /* Add an entry to either roster to add an option — nothing else changes. */
   var FONTS = [
     { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
     { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
   ];
-  var DEFAULT_ID = "mono";
-  var STORE_KEY = "gabe:artifact:font";
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
 
   var root = document.documentElement;
-  var cog = document.getElementById("af-cog");
-  var panel = document.getElementById("af-panel");
-  var host = document.getElementById("af-fonts");
-  var foot = document.getElementById("af-foot");
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
 
-  function remembered() {
+  function read(key, list, dflt) {          /* sandboxed frames can throw on storage */
     try {
-      var id = window.localStorage.getItem(STORE_KEY);
-      return FONTS.some(function (f) { return f.id === id; }) ? id : DEFAULT_ID;
-    } catch (e) { return DEFAULT_ID; }   /* sandboxed frames can throw on storage */
+      var v = window.localStorage.getItem(key);
+      return list.some(function (x) { return x.id === v; }) ? v : dflt;
+    } catch (e) { return dflt; }
+  }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.textContent = item.label;
+    if (item.stack) n.style.fontFamily = item.stack;      /* preview its own face */
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { onPick(item.id); });
+    host.appendChild(b);
+  }
+  function mark(host, id) {
+    host.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id));
+    });
   }
 
-  function remember(id) {
-    try { window.localStorage.setItem(STORE_KEY, id); } catch (e) { /* no-op */ }
-  }
-
-  var current = remembered();
-
-  function apply(id) {
+  function applyFont(id) {
     var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
-    current = f.id;
     root.style.setProperty("--af-stack", f.stack);
     root.style.setProperty("--af-size", f.size + "px");
     root.style.setProperty("--af-track", f.track + "em");
-    remember(f.id);
-    var opts = host.querySelectorAll(".af-opt");
-    for (var i = 0; i < opts.length; i++) {
-      opts[i].setAttribute("aria-checked", String(opts[i].getAttribute("data-id") === f.id));
-    }
+    write(FKEY, f.id); mark(fhost, f.id);
     foot.textContent = f.size + "px · " + f.track + "em";
   }
-
-  FONTS.forEach(function (f) {
-    var b = document.createElement("button");
-    b.type = "button";
-    b.className = "af-opt";
-    b.setAttribute("role", "radio");
-    b.setAttribute("data-id", f.id);
-    b.setAttribute("aria-checked", "false");
-
-    var name = document.createElement("span");
-    name.className = "af-name";
-    name.style.fontFamily = f.stack;          /* each option previews its own face */
-    name.textContent = f.label;
-
-    var spec = document.createElement("span");
-    spec.className = "af-spec";
-    spec.textContent = f.size + " / " + f.track;
-
-    b.appendChild(name);
-    b.appendChild(spec);
-    b.addEventListener("click", function () { apply(f.id); });
-    host.appendChild(b);
-  });
-
-  function open(next) {
-    panel.setAttribute("data-open", String(next));
-    cog.setAttribute("aria-expanded", String(next));
+  function applySkin(id) {
+    root.setAttribute("data-skin", id);
+    write(SKEY, id); mark(shost, id);
+  }
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    /* Rebuild BEFORE pausing. A rebuild replaces the SVG, and a
+       pauseAnimations() called on the old element does nothing for the new
+       one — which is why four SMIL patterns kept running through "Paused"
+       even after the rebuild hook landed. Order: rebuild, then freeze. */
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mark(mhost, on ? "on" : "off");
   }
 
-  cog.addEventListener("click", function (e) {
-    e.stopPropagation();
-    open(panel.getAttribute("data-open") !== "true");
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
   });
 
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
   panel.addEventListener("click", function (e) { e.stopPropagation(); });
-
-  document.addEventListener("click", function () {
-    if (panel.getAttribute("data-open") === "true") open(false);
-  });
-
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") {
-      open(false);
-      cog.focus();
-    }
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
   });
 
-  apply(current);
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin;
+  window.__setMotion = setMotion;
 })();
 </script>

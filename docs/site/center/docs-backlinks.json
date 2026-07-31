@@ -1,0 +1,750 @@
+{
+ "generator": "build_docsite.py",
+ "targets": {
+  "skill:/gabe-push": [
+   {
+    "slug": "kdbp",
+    "title": "What KDBP is",
+    "href": "kdbp.html"
+   },
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "doc:the-loop": [
+   {
+    "slug": "kdbp",
+    "title": "What KDBP is",
+    "href": "kdbp.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   }
+  ],
+  "doc:commands": [
+   {
+    "slug": "kdbp",
+    "title": "What KDBP is",
+    "href": "kdbp.html"
+   },
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "contract",
+    "title": "The E1\u2013E7 execution contract",
+    "href": "contract.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "skill:/gabe-scope": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "skill:/gabe-plan": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   }
+  ],
+  "skill:/gabe-red": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   },
+   {
+    "slug": "c-id",
+    "title": "The C-id test-identity scheme",
+    "href": "c-id.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "skill:/gabe-execute": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   },
+   {
+    "slug": "mechanisms",
+    "title": "The mechanism catalog",
+    "href": "mechanisms.html"
+   }
+  ],
+  "skill:/gabe-review": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "mechanisms",
+    "title": "The mechanism catalog",
+    "href": "mechanisms.html"
+   }
+  ],
+  "skill:/gabe-commit": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   }
+  ],
+  "skill:/gabe-next": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "skill:/gabe-handoff": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "doc:kdbp": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "doc:contract": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "mechanisms",
+    "title": "The mechanism catalog",
+    "href": "mechanisms.html"
+   },
+   {
+    "slug": "drift",
+    "title": "Why weak models drift",
+    "href": "drift.html"
+   }
+  ],
+  "doc:satellites": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "c-id",
+    "title": "The C-id test-identity scheme",
+    "href": "c-id.html"
+   }
+  ],
+  "doc:gabe-red": [
+   {
+    "slug": "the-loop",
+    "title": "The development loop",
+    "href": "the-loop.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "c-id",
+    "title": "The C-id test-identity scheme",
+    "href": "c-id.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "skill:/gabe-docs": [
+   {
+    "slug": "contract",
+    "title": "The E1\u2013E7 execution contract",
+    "href": "contract.html"
+   },
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "doc:verification-first": [
+   {
+    "slug": "contract",
+    "title": "The E1\u2013E7 execution contract",
+    "href": "contract.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   },
+   {
+    "slug": "c-id",
+    "title": "The C-id test-identity scheme",
+    "href": "c-id.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "mechanisms",
+    "title": "The mechanism catalog",
+    "href": "mechanisms.html"
+   },
+   {
+    "slug": "drift",
+    "title": "Why weak models drift",
+    "href": "drift.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "doc:mechanisms": [
+   {
+    "slug": "contract",
+    "title": "The E1\u2013E7 execution contract",
+    "href": "contract.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "drift",
+    "title": "Why weak models drift",
+    "href": "drift.html"
+   }
+  ],
+  "doc:decisions": [
+   {
+    "slug": "contract",
+    "title": "The E1\u2013E7 execution contract",
+    "href": "contract.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   }
+  ],
+  "skill:/gabe-assess": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   }
+  ],
+  "skill:/gabe-cc-update": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "skill:/gabe-mockup": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-cc-init": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "skill:/gabe-init": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "skill:/gabe-scope-pivot": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-artifact": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-cc-entity": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   }
+  ],
+  "skill:/gabe-docsite": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-health": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   }
+  ],
+  "skill:/gabe-help": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   }
+  ],
+  "skill:/gabe-lens": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-meme": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-myopic": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   },
+   {
+    "slug": "c-id",
+    "title": "The C-id test-identity scheme",
+    "href": "c-id.html"
+   }
+  ],
+  "skill:/gabe-prism": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-pulse": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "skill:/gabe-roast": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   },
+   {
+    "slug": "satellites",
+    "title": "Analysis satellites",
+    "href": "satellites.html"
+   }
+  ],
+  "skill:/gabe-scope-change": [
+   {
+    "slug": "skill-map",
+    "title": "The skill map \u2014 and what fires each skill",
+    "href": "skill-map.html"
+   }
+  ],
+  "doc:c-id": [
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "gabe-red",
+    "title": "/gabe-red \u2014 the RED-commit beat",
+    "href": "gabe-red.html"
+   },
+   {
+    "slug": "command-center",
+    "title": "The Testing Command Center",
+    "href": "command-center.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "doc:command-center": [
+   {
+    "slug": "commands",
+    "title": "Lifecycle beats & command reference",
+    "href": "commands.html"
+   },
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "c-id",
+    "title": "The C-id test-identity scheme",
+    "href": "c-id.html"
+   },
+   {
+    "slug": "decisions",
+    "title": "Design decisions & standing red flags",
+    "href": "decisions.html"
+   }
+  ],
+  "doc:drift": [
+   {
+    "slug": "verification-first",
+    "title": "The one picture & the four laws",
+    "href": "verification-first.html"
+   },
+   {
+    "slug": "mechanisms",
+    "title": "The mechanism catalog",
+    "href": "mechanisms.html"
+   }
+  ]
+ }
+}

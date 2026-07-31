@@ -24,6 +24,7 @@ from __future__ import annotations
 
 import argparse
 import html
+import importlib.util
 import json
 import shutil
 import sys
@@ -63,6 +64,8 @@ IC = {
     "wrench":  '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>',
     "board": '<rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/>',
     "message": '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+    "book":     '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
+    "filetext": '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/>',
 }
 
 # Bucket -> (color, icon, urgency). Urgency drives the ledger's section order:
@@ -90,14 +93,93 @@ def _nav_svg(icon: str, size: int = 0) -> str:
             f"{IC[icon]}</svg>")
 
 
-def sidebar(cfg: dict, current: str, counts: dict) -> str:
-    """The suite center's own station set.
+def docs_sections(cfg: dict) -> list[dict]:
+    """The docsite's own SECTIONS, read from its config.
+
+    The seam that lets the markdown site and this center share one sidebar
+    without either one importing the other: the docsite config already declares
+    every page it publishes, so the nav is derived from it rather than
+    duplicated here. Absent config (a project with no docs site) yields an empty
+    list and the Docs group simply does not render — never a dead group.
+    """
+    rel = cfg.get("paths", {}).get("docsite_config")
+    if not rel:
+        return []
+    path = REPO_ROOT / rel
+    if not path.is_file():
+        return []
+    spec = importlib.util.spec_from_file_location("_docsite_cfg", path)
+    if spec is None or spec.loader is None:
+        return []
+    mod = importlib.util.module_from_spec(spec)
+    try:
+        spec.loader.exec_module(mod)
+    except Exception as exc:                      # noqa: BLE001 — a broken docs
+        print(f"  [nav] docsite config unreadable ({exc}) — Docs group omitted")
+        return []
+    out = []
+    for section in getattr(mod, "SECTIONS", []):
+        docs = []
+        for d in section.get("docs", []):
+            docs.append({"slug": d["slug"], "label": d.get("nav_label") or d["title"]})
+        if docs:
+            out.append({"key": section.get("key", ""), "label": section.get("label", ""),
+                        "docs": docs})
+    return out
+
+
+def nav_model(cfg: dict, counts: dict) -> list[dict]:
+    """The sidebar as DATA — groups of items, before any HTML exists.
+
+    Two builders render this same model (this one, and the docsite build via
+    nav.json), so it is built once and rendered twice rather than written twice
+    and drifting.
+    """
+    groups: list[dict] = [{
+        "label": "Now", "cls": "g-now",
+        "items": [{"label": "Overview", "href": "index.html", "icon": "home"}],
+    }]
+    nav_cls = {"Board": "g-board", "Enforcement": "g-code", "Surfaces": "g-ent"}
+    current_group = None
+    for lens in cfg["lenses"]:
+        if lens["spike"] != 1:
+            continue
+        g = lens.get("group", "Estate")
+        if g != current_group:
+            current_group = g
+            groups.append({"label": g, "cls": nav_cls.get(g, "g-code"), "items": []})
+        groups[-1]["items"].append({
+            "label": lens["label"], "href": lens["page"], "icon": lens["icon"],
+            "count": counts.get(lens["slug"]),
+        })
+
+    # The DOCS group — the markdown pages, rendered into this same shell.
+    sections = docs_sections(cfg)
+    if sections:
+        items = [{"label": "Docs", "href": "docs.html", "icon": "book"}]
+        for section in sections:
+            for d in section["docs"]:
+                items.append({"label": d["label"], "href": f"{d['slug']}.html",
+                              "icon": "filetext", "sub": True})
+        groups.append({"label": "Docs", "cls": "g-docs", "items": items})
+
+    later = [l for l in cfg["lenses"] if l["spike"] != 1]
+    if later:
+        groups.append({
+            "label": "Next cut", "cls": "g-ent",
+            "items": [{"label": l["label"], "icon": l["icon"], "href": None,
+                       "disabled": f"not built yet — spike {l['spike']}"} for l in later],
+        })
+    return groups
+
+
+def render_nav(cfg: dict, groups: list[dict], current: str, counts: dict) -> str:
+    """The one renderer for the nav model — used for the estate pages here and,
+    through nav.json, for the doc pages the docsite builder emits.
 
     The standard shell's sidebar is application-shaped (Entities · Docs · Code ·
     Testing · Ledger · Releases) and every one of those hrefs would be a dead
-    link here. Rather than leave broken nav, the whole <aside> is replaced: the
-    suite's stations are the estate lenses, and the beats are a FILTER on the
-    pages rather than a page each.
+    link here, so the whole <aside> is replaced rather than patched.
     """
     parts = [
         '<aside class="side">',
@@ -107,44 +189,38 @@ def sidebar(cfg: dict, current: str, counts: dict) -> str:
         f'    <span><b>{E(cfg["project"]["display_name"])}</b>'
         "<small>Gabe Center · suite</small></span>",
         "  </div>",
-        '  <div class="navlabel g-now">Now</div>',
-        f'  <a class="navitem{" on" if current == "index.html" else ""}" href="index.html">'
-        f"{_nav_svg('home')} Overview</a>",
     ]
-    nav_cls = {"Board": "g-board", "Enforcement": "g-code", "Surfaces": "g-ent"}
-    group = None
-    for lens in cfg["lenses"]:
-        if lens["spike"] != 1:
-            continue
-        g = lens.get("group", "Estate")
-        if g != group:
-            group = g
-            parts.append(f'  <div class="navlabel {nav_cls.get(g, "g-code")}">'
-                         f"{E(g)}</div>")
-        on = " on" if current == lens["page"] else ""
-        cnt = counts.get(lens["slug"])
-        badge = f' <span class="count">{cnt}</span>' if cnt is not None else ""
-        parts.append(
-            f'  <a class="navitem{on}" href="{lens["page"]}">'
-            f'{_nav_svg(lens["icon"])} {E(lens["label"])}{badge}</a>')
-
-    # Unshipped lenses are LISTED and visibly disabled. A lens that simply is
-    # not in the nav reads as "does not exist"; one that 404s reads as broken.
-    later = [l for l in cfg["lenses"] if l["spike"] != 1]
-    if later:
-        parts.append('  <div class="navlabel g-ent">Next cut</div>')
-        for lens in later:
+    for group in groups:
+        parts.append(f'  <div class="navlabel {group["cls"]}">{E(group["label"])}</div>')
+        for item in group["items"]:
+            # Unshipped lenses are LISTED and visibly disabled. A lens that is
+            # simply absent reads as "does not exist"; one that 404s reads as broken.
+            if item.get("disabled"):
+                parts.append(
+                    f'  <span class="navitem" style="opacity:.42;cursor:default" '
+                    f'title="{E(item["disabled"])}">'
+                    f'{_nav_svg(item["icon"])} {E(item["label"])} '
+                    f'<span class="count">—</span></span>')
+                continue
+            on = " on" if current == item["href"] else ""
+            sub = " navsubitem" if item.get("sub") else ""
+            cnt = item.get("count")
+            badge = f' <span class="count">{cnt}</span>' if cnt is not None else ""
+            size = 14 if item.get("sub") else 0
             parts.append(
-                f'  <span class="navitem" style="opacity:.42;cursor:default" '
-                f'title="not built yet — spike {lens["spike"]}">'
-                f'{_nav_svg(lens["icon"])} {E(lens["label"])} '
-                f'<span class="count">—</span></span>')
+                f'  <a class="navitem{sub}{on}" href="{item["href"]}">'
+                f'{_nav_svg(item["icon"], size)} {E(item["label"])}{badge}</a>')
 
     parts.append(
         f'  <div class="foot">built {E(counts.get("stamp", "?"))}<br>'
         f'HEAD {E(counts.get("head", "?"))} · {GENERATOR_NAME}</div>')
     parts.append("</aside>")
     return "\n".join(parts)
+
+
+def sidebar(cfg: dict, current: str, counts: dict) -> str:
+    """Back-compat entry point: model → render, in one call."""
+    return render_nav(cfg, nav_model(cfg, counts), current, counts)
 
 
 def page(cfg: dict, fname: str, title: str, lede: str, kpis: str, body: str,
@@ -161,7 +237,8 @@ def page(cfg: dict, fname: str, title: str, lede: str, kpis: str, body: str,
 
     start = skel.index("<aside class=\"side\">")
     end = skel.index("</aside>") + len("</aside>")
-    skel = skel[:start] + sidebar(cfg, fname, counts) + skel[end:]
+    groups = counts.get("_nav") or nav_model(cfg, counts)
+    skel = skel[:start] + render_nav(cfg, groups, fname, counts) + skel[end:]
 
     fills = {
         "{{LANG}}": cfg["project"]["lang"],
@@ -267,6 +344,62 @@ FILTER_SCRIPT = (
 
 def named_gap(what: str, source: str) -> str:
     return R.gap(what, source)
+
+
+def render_docs_station(cfg: dict, out: Path) -> tuple[str, str]:
+    """The Docs station: one row per published page, grouped by the docsite's own
+    tiers. Derived from the docsite config and the markdown on disk — a doc that
+    is declared but whose source is missing renders as a named gap, never a row
+    that pretends to exist."""
+    sections = docs_sections(cfg)
+    if not sections:
+        return "", named_gap("the docs station — no docsite config is wired",
+                             "paths.docsite_config in suite-center.config.json")
+
+    src_dir = REPO_ROOT / cfg["paths"].get("docsite_src", "docs/src")
+    total = sum(len(s["docs"]) for s in sections)
+    lines = 0
+    missing = 0
+    rows_by_section = []
+    for section in sections:
+        rows = []
+        for d in section["docs"]:
+            md = None
+            for cand in src_dir.glob("*.md"):
+                if cand.stem == d["slug"] or (d["slug"] == "index" and cand.stem == "hub"):
+                    md = cand
+                    break
+            if md is None:
+                missing += 1
+                rows.append([f'<b>{E(d["label"])}</b>',
+                             '<span class="tag s-bad">source missing</span>', "—", "—"])
+                continue
+            n = len(md.read_text(errors="replace").splitlines())
+            diagrams = md.read_text(errors="replace").count("```mermaid")
+            lines += n
+            rows.append([
+                f'<a href="{d["slug"]}.html"><b>{E(d["label"])}</b></a>',
+                f'<code>{E(md.name)}</code>',
+                R.lines_grade(n),
+                str(diagrams) if diagrams else '<span class="sub">—</span>',
+            ])
+        rows_by_section.append((section["label"], rows))
+
+    kpis = '<div class="kpis">' + "".join([
+        R.kpi("Pages", str(total), "rendered into this shell"),
+        R.kpi("Lines of markdown", f"{lines:,}", "the source of truth"),
+        R.kpi("Sections", str(len(sections)), "reading tiers"),
+        R.kpi("Missing sources", str(missing), "declared but absent",
+              alert=missing > 0),
+    ]) + "</div>"
+
+    body = []
+    for label, rows in rows_by_section:
+        body.append(R.sechead("Docs", label, "#8e4585", IC["book"],
+                              sub="Declared in docs/docsite.config.py; rendered from docs/src/.",
+                              sec_id=f"docs.{label.lower().replace(' ', '-')}"))
+        body.append(R.table(["Page", "Source", "Lines", "Diagrams"], rows, num={2, 3}))
+    return kpis, "\n".join(body)
 
 
 # ------------------------------------------------------------------ enforcement
@@ -762,6 +895,36 @@ def render_board(cfg: dict, cards: list[dict], labels: dict,
 # ------------------------------------------------------------------ agents
 
 
+def load_backlinks(out: Path) -> dict:
+    """docs-backlinks.json — the inbound half, written by the docsite build.
+
+    Read, never computed here: both directions come from ONE extraction pass so
+    they cannot disagree. Absent file (docs not built yet) ⇒ no backlinks, which
+    is honest on the first build of a fresh clone.
+    """
+    path = out / "docs-backlinks.json"
+    if not path.is_file():
+        return {}
+    try:
+        return json.loads(path.read_text(encoding="utf-8")).get("targets", {})
+    except json.JSONDecodeError:
+        return {}
+
+
+def backlink_line(backlinks: dict, cls: str, token: str) -> str:
+    """`Documented in: …` for one target, or nothing.
+
+    Nothing is the right output for an undocumented thing: an empty line reading
+    "Documented in: —" invites the reader to treat absence as a defect, when a
+    great deal of the estate has no reason to be written about.
+    """
+    docs = backlinks.get("%s:%s" % (cls, token)) or []
+    if not docs:
+        return ""
+    links = " · ".join('<a href="%s">%s</a>' % (d["href"], E(d["title"])) for d in docs)
+    return '<p class="docref">Documented in: %s</p>' % links
+
+
 def render_agents(cfg: dict, skills: list[dict], surf: dict) -> tuple[str, str]:
     forks, explore = surf["forks"], surf["explore"]
     human, bg, reg = surf["human_only"], surf["background"], surf["registry"]
@@ -805,7 +968,7 @@ def render_agents(cfg: dict, skills: list[dict], surf: dict) -> tuple[str, str]:
             " ".join(flags),
             inv,
             f'{s["dispatch_chars"]:,}',
-        ], _agent_detail(s), None))
+        ], _agent_detail(s, cfg.get("_backlinks")), None))
         group.append({"beat": s["beat"],
                       "ctx": "fork" if s["fork"] else "main",
                       "inv": ("human" if s["human_only"] else
@@ -840,7 +1003,7 @@ def render_agents(cfg: dict, skills: list[dict], surf: dict) -> tuple[str, str]:
     return kpis, "".join(body)
 
 
-def _agent_detail(s: dict) -> str:
+def _agent_detail(s: dict, backlinks: dict | None = None) -> str:
     facts = [
         ("Description", R.md(s["description"])),
         ("Trigger", R.md(s["when_to_use"])),
@@ -850,6 +1013,12 @@ def _agent_detail(s: dict) -> str:
         ("Ships code", f'{s["script_count"]} file(s)' if s["script_count"]
                        else "no — prose only"),
     ]
+    # The INBOUND edge: which written docs describe this skill. Derived from the
+    # docsite's extraction pass, never authored here — and stated as what it is,
+    # since a doc describing a skill is not evidence the skill works.
+    docref = backlink_line(backlinks or {}, "skill", "/" + s["name"])
+    if docref:
+        facts.append(("Written up in", docref))
     return ('<table class="tbl"><tbody>' + "".join(
         f'<tr><td style="width:150px;vertical-align:top"><b>{E(k)}</b></td>'
         f"<td>{v}</td></tr>" for k, v in facts) + "</tbody></table>")
@@ -1298,6 +1467,14 @@ def main() -> int:
         "board": sum(1 for c in cards if not c["done"]) or None,
     }
 
+    # ONE nav model for every page, and the same model handed to the docsite
+    # builder through nav.json — the seam that keeps two builders on one sidebar
+    # without either importing the other.
+    counts["_nav"] = nav_model(cfg, counts)
+    # The inbound edges the docsite extracted on its last run. First build of a
+    # fresh clone has none, and renders none.
+    cfg["_backlinks"] = load_backlinks(out)
+
     pages: dict[str, str] = {}
 
     board_fills = render_board(cfg, cards, card_labels, card_sources)
@@ -1363,8 +1540,24 @@ def main() -> int:
         "stands behind it.",
         k, b, counts)
 
+    # docs.html is NOT written here. Both builders once emitted it — this one a
+    # machine table, the docsite a rendered hub.md — and the second run silently
+    # overwrote the first. The page belongs to the builder that owns its sources,
+    # so the docsite renders it (prose + the same table, from its own config) and
+    # this build contributes only the nav entry.
+
     for name, html_text in pages.items():
         (out / name).write_text(html_text)
+
+    # The seam file. Written LAST so it describes the nav the pages actually
+    # wear, and read by build_docsite.py to render doc pages into this shell.
+    nav_path = out / "nav.json"
+    nav_path.write_text(json.dumps({
+        "generator": GENERATOR_NAME,
+        "head": counts.get("head", ""),
+        "project": cfg["project"]["display_name"],
+        "groups": counts["_nav"],
+    }, indent=1) + "\n", encoding="utf-8")
 
     assets_src = SHELL_SRC / "assets"
     assets_dst = out / "assets"

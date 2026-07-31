@@ -1,0 +1,1174 @@
+<title>Recipe tree — gabe-prism pattern</title>
+<style>
+  /* ── font roster (H3) — the script keeps these in sync ─────────────── */
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+
+  /* ── title face (H3) — ONLY the section title pills pin a face: a modern
+        condensed grotesque, set in caps. DIN lineage, so it reads as console
+        lettering rather than book type, and it holds a long title in a pill
+        without wrapping. Locally resolvable in order — Bahnschrift ships with
+        Windows 10+, DIN Alternate with macOS — so nothing routes through a
+        blocked webfont. Every OTHER title on the page stays in the body face:
+        one distinctive treatment, or the distinction is worthless. */
+  :root {
+    --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed",
+                "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  }
+
+  /* ── the legibility floor (H6) — the smallest text on a page is the text
+        most often unreadable. Secondary content sizes off THESE steps, never
+        below them: at the 15px base they compute to 13.8 / 12.8 / 12.3px.
+        They are calc() off the roster base, NOT bare `em`, because `em`
+        stacks: a .855em head inside a .92em table lands at 11.8px while both
+        authored values look safe. An absolute step cannot compound. */
+  :root {
+    --fs-sm:  calc(var(--af-size) * 0.92);
+    --fs-xs:  calc(var(--af-size) * 0.855);
+    --fs-min: calc(var(--af-size) * 0.82);
+  }
+
+  /* ══ skins (H5) — chrome only: ground, ink, rules, accent, geometry.
+        Sources: Catalog = docs/site/center/assets/a3.css · Blueprint = skin F ·
+        Mission Console = skin B (output/mockups/center-skins.css). B and F are
+        spec'd light-only; their dark arms are derived so the viewer's theme
+        toggle still answers. Chart series and status colours are NEVER themed. */
+
+  /* ── Catalog · cool developer portal (default) ── */
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40;
+      --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f;
+      --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40;
+    --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f;
+    --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --strong:#101726;
+  }
+
+  /* ── Blueprint · skin F, blue ink ── */
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8;
+    --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+    --radius:6px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138;
+      --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942;
+      --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138;
+    --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942;
+    --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe;
+    --strong:#16233b;
+  }
+
+  /* ── Mission Console · skin B, teal ops console ── */
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee;
+    --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+    --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+      --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39;
+      --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+    --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39;
+    --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4;
+    --strong:#1a2b36;
+  }
+
+  /* ══ section blocks — page furniture, deliberately OUTSIDE the series and
+        status palettes so a section header can never be mistaken for data. */
+  :root {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+      --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+      --sec9:#e3ab8f;
+      --sec-ink:#111722;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+    --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+    --sec9:#e3ab8f;
+    --sec-ink:#111722;
+  }
+  :root[data-theme="light"] {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+
+  /* ── chart series + status — never themed, validated (dataviz skill) ── */
+  :root {
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+  }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  /* ══ the page: content anchored LEFT, never centred (H1) ═══════════ */
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  /* ── scrollbars wear the skin ────────────────────────────────────────
+     A native scrollbar is the one piece of chrome the page does not own by
+     default, and it shows: a grey OS bar with stepper arrows sitting inside a
+     dark panel reads as a rendering fault, not as a control. Both engines are
+     addressed (Firefox takes the two `scrollbar-*` properties, WebKit/Blink the
+     pseudo-elements), the thumb is mixed from the skin's own accent so it moves
+     with the theme, and the stepper arrows are removed — a scroll bar is a
+     position indicator, not a set of buttons anyone clicks. */
+  :root {
+    --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule));
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--rule-soft);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb); border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  .artifact-page {
+    max-width: 74rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);   /* left-anchored, never `margin: 0 auto` */
+    padding: 32px 24px 48px;
+    display: flex; flex-direction: column; gap: 30px;
+    text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }   /* clear of the fixed cog */
+  :is(a, button, select, input, textarea, summary):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  p { margin: 0; }
+
+  /* ══ the two devices (H5) — every skin, every section ══════════════ */
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  /* Title = normal-size text in a PILL that hugs it, led by an icon.
+     Prominence is the background and the icon, never the type: no uppercase,
+     no tracking, no size bump. The pill's padding stays tight — a wide slab
+     reads as a banner and competes with the content it introduces. */
+  .sec-head h2 {
+    margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground));
+    padding: 2px 11px 2px 9px; border-radius: 999px;
+    font-family: var(--af-title);
+    font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
+    line-height: 1.34;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  /* Every title carries an icon (H6). Lucide geometry, inlined — the CSP
+     blocks icon CDNs, and an icon font would fall back silently. */
+  .sec-head h2 svg {
+    width: 1.02em; height: 1.02em; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); }
+  .sec[data-sec="3"] { --sec: var(--sec3); } .sec[data-sec="4"] { --sec: var(--sec4); }
+  .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); }
+  .sec[data-sec="9"] { --sec: var(--sec9); }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--rule);
+    border-radius: var(--radius, 10px); padding: 15px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  /* :root prefix so the rail beats the `border:` shorthand above at equal
+     specificity — without it the rail silently renders at 1px. */
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+  /* ══ cog + options panel (H2 — the only floating affordance) ═══════ */
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog {
+    display: grid; place-items: center; width: 38px; height: 38px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease;
+  }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel {
+    position: absolute; top: 46px; right: 0; width: 262px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px;
+    display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto;
+  }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    background: var(--raised); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px;
+  }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  /* motion primitives — global pause is wired to this attribute */
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<style>
+  .ex { display: flex; flex-direction: column; gap: 12px; }
+  .ex-head h3 { margin: 0; font-size: 1em; }
+  .ex-use { color: var(--muted); font-size: var(--fs-sm); margin: 4px 0 0; }
+  .ex-foot { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ex-btn {
+    font-family: inherit; font-size: var(--fs-min); cursor: pointer;
+    background: var(--raised); color: var(--ink-soft);
+    border: 1px solid var(--rule); border-radius: 7px; padding: 5px 12px;
+  }
+  .ex-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .ex-tag { color: var(--muted); font-size: var(--fs-min); }
+</style>
+<div class="artifact-page">
+<header>
+<p style="font-size:var(--fs-min);letter-spacing:.18em;text-transform:uppercase;color:var(--accent);margin:0">gabe-prism · pattern</p>
+<h1 style="font-size:1.7em;line-height:1.2;margin:8px 0 0">Recipe tree</h1>
+<p style="color:var(--ink-soft);max-width:70ch;margin:10px 0 0">Use when: dependency: what is missing before X can be produced. Rendered over the suite's own docs→center merge, every number measured at HEAD a943f9a.</p>
+</header>
+<section class="sec" data-sec="1"><div class="sec-head"><h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"></rect><path d="M9 3v18"></path></svg>Recipe tree</h2><span class="n">pattern</span></div>
+<div class="panel ex" data-anim="recipe-tree" data-fx="recipe-tree">
+<div class="ex-head"><p class="ex-use">Click any node to inspect it. Motion pauses from the cog.</p></div>
+<div class="ex-stage">
+<section class="fx-recipe">
+
+  <h3 class="rc-title">Tech-tree recipe cards</h3>
+  <p class="rc-sub">Every producer in the docs&#8594;center merge stated as a crafting recipe: the output it makes, the ingredient slots it needs, and the slot that is still empty.</p>
+
+  <p class="rc-lede">Where we are now: <b>13 markdown docs</b> build one site, <b>9 registry-driven pages</b> build another. The merge makes them one center. Click any card to craft it &mdash; the tree walks backwards, lights every recipe that chain needs, and runs the named payload through it.</p>
+
+  <div class="rc-bar">
+    <span class="rc-bar-lab">Craft</span>
+    <span class="rc-picks"></span>
+    <button class="rc-replay" type="button">&#8635; Replay</button>
+  </div>
+
+  <div class="rc-stats"></div>
+
+  <div class="rc-tree">
+    <div class="rc-canvas">
+      <div class="rc-heads"></div>
+      <div class="rc-field">
+        <svg class="rc-wires" aria-hidden="true" focusable="false"></svg>
+        <div class="rc-tiers"></div>
+        <span class="rc-pill" aria-hidden="true"></span>
+      </div>
+    </div>
+  </div>
+
+  <p class="rc-hop"><span class="rc-hop-n">&mdash;</span><span class="rc-hop-body">select a card to craft it</span></p>
+
+  <div class="rc-gates">
+    <p class="rc-lab">the gates standing over this chain</p>
+    <div class="rc-gate-list"></div>
+  </div>
+
+  <div class="rc-panel"></div>
+
+  <div class="rc-salvage">
+    <p class="rc-lab">scrapped for parts &mdash; 6,012 ln across 12 files enter the merge</p>
+    <ul class="rc-salv-list">
+      <li><b>mermaid.min.js</b> <span>3,587 ln</span> <em>stays as-is</em></li>
+      <li><b>_markdown.py</b> <span>472 ln</span> <em>stays as-is</em></li>
+      <li><b>site.css</b> <span>501 ln</span> <em>retires &#8594; ~150 ln ported into .docbody</em></li>
+      <li><b>build_docsite.py</b> <span>374 ln</span> <em>edited, keeps its job</em></li>
+      <li><b>_shell.py</b> <span>310 ln</span> <em>retires &#8594; ~120 ln adapter</em></li>
+      <li><b>icon_factory.py</b> <span>246 ln</span> <em data-bad="1">zero callers</em></li>
+      <li><b>docs/site/map.html</b> <span>34 KB</span> <em data-bad="1">orphan &mdash; in no config, regenerated by nothing</em></li>
+    </ul>
+  </div>
+
+</section>
+
+<style>
+  .fx-recipe { display: flex; flex-direction: column; gap: 13px; color: var(--ink); font-family: inherit; text-align: left; }
+  .fx-recipe *, .fx-recipe *::before, .fx-recipe *::after { box-sizing: border-box; }
+
+  .fx-recipe .rc-title { font-size: 17px; line-height: 1.3; font-weight: 600; margin: 0; letter-spacing: inherit; }
+  .fx-recipe .rc-sub { font-size: 13px; line-height: 1.5; color: var(--ink-soft); margin: -8px 0 0; max-width: 82ch; }
+  .fx-recipe .rc-lede { font-size: 13px; line-height: 1.55; color: var(--muted); margin: 0; max-width: 82ch; }
+  .fx-recipe .rc-lede b { color: var(--ink-soft); font-weight: 600; }
+  .fx-recipe .rc-lab { font-size: 12px; line-height: 1.4; letter-spacing: .11em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+
+  /* ── craft bar ─────────────────────────────────────────────── */
+  .fx-recipe .rc-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 7px;
+    padding: 8px 10px; background: var(--raised); border: 1px solid var(--rule); border-radius: var(--radius, 10px); }
+  .fx-recipe .rc-bar-lab { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+  .fx-recipe .rc-picks { display: contents; }
+  .fx-recipe .rc-pick, .fx-recipe .rc-replay {
+    font: inherit; font-size: 12px; line-height: 1.25; letter-spacing: inherit;
+    padding: 6px 11px; border-radius: 999px; border: 1px solid var(--rule);
+    background: var(--card); color: var(--ink-soft); cursor: pointer; white-space: nowrap; }
+  .fx-recipe .rc-pick:hover, .fx-recipe .rc-replay:hover { border-color: var(--accent); color: var(--accent); }
+  .fx-recipe .rc-pick[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .fx-recipe .rc-replay { margin-left: auto; color: var(--muted); }
+  .fx-recipe :is(button):focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* ── stat chips ────────────────────────────────────────────── */
+  .fx-recipe .rc-stats { display: flex; flex-wrap: wrap; gap: 6px; }
+  .fx-recipe .rc-chip { font-size: 12px; line-height: 1.4; padding: 4px 10px; border-radius: 999px;
+    border: 1px solid var(--rule-soft); background: var(--card); color: var(--muted); white-space: nowrap; }
+  .fx-recipe .rc-chip b { font-weight: 600; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .fx-recipe .rc-chip[data-lvl="serious"] { border-color: var(--serious); color: var(--serious); }
+  .fx-recipe .rc-chip[data-lvl="serious"] b { color: var(--serious); }
+  .fx-recipe .rc-chip[data-lvl="critical"] { border-color: var(--critical); color: var(--critical); }
+  .fx-recipe .rc-chip[data-lvl="critical"] b { color: var(--critical); }
+
+  /* ── the tree ──────────────────────────────────────────────── */
+  .fx-recipe .rc-tree { overflow-x: auto; overflow-y: hidden; background: var(--ground);
+    border: 1px solid var(--rule); border-radius: var(--radius, 10px); padding: 12px 12px 14px; }
+  .fx-recipe .rc-canvas { min-width: 1000px; }
+  .fx-recipe .rc-heads, .fx-recipe .rc-tiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0 26px; }
+  .fx-recipe .rc-heads { margin-bottom: 8px; }
+  .fx-recipe .rc-head { font-size: 12px; line-height: 1.4; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--muted); border-bottom: 1px solid var(--rule); padding-bottom: 5px; display: flex; gap: 6px; }
+  .fx-recipe .rc-head span { margin-left: auto; font-variant-numeric: tabular-nums; }
+  .fx-recipe .rc-field { position: relative; }
+  .fx-recipe .rc-tier { display: flex; flex-direction: column; justify-content: center; gap: 10px; }
+  .fx-recipe .rc-wires { position: absolute; left: 0; top: 0; overflow: visible; pointer-events: none; z-index: 1; }
+
+  .fx-recipe .rc-wire { fill: none; stroke: var(--rule-soft); stroke-width: 1.2; }
+  .fx-recipe .rc-wire[data-in="1"] { stroke: var(--rule); stroke-width: 1.5; }
+  .fx-recipe .rc-wire[data-starved="1"] { stroke-dasharray: 1.5 6; stroke-linecap: round; }
+  .fx-recipe .rc-wire[data-on="1"] { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 7 6; animation: rc-ants .95s linear infinite; }
+  .fx-recipe .rc-wire[data-on="1"][data-starved="1"] { stroke: var(--critical); stroke-width: 1.6; stroke-dasharray: 1.5 7; stroke-linecap: round; }
+  @keyframes rc-ants { to { stroke-dashoffset: -26; } }
+
+  /* ── a recipe card ─────────────────────────────────────────── */
+  .fx-recipe .rc-card { position: relative; z-index: 2; width: 100%; text-align: left; cursor: pointer;
+    font: inherit; letter-spacing: inherit; color: var(--ink);
+    display: flex; flex-direction: column; gap: 5px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius, 10px);
+    padding: 8px 9px 7px 11px; opacity: .5;
+    transition: opacity .3s ease, border-color .25s ease, box-shadow .25s ease; }
+  .fx-recipe .rc-card::before { content: ""; position: absolute; left: -1px; top: -1px; bottom: -1px; width: 3px;
+    background: var(--rule); border-radius: var(--radius, 10px) 0 0 var(--radius, 10px); }
+  .fx-recipe .rc-card[data-state="ready"]::before { background: var(--good); }
+  .fx-recipe .rc-card[data-state="partial"]::before { background: var(--warning); }
+  .fx-recipe .rc-card[data-state="new"]::before { background: var(--serious); }
+  .fx-recipe .rc-card[data-state="blocked"]::before { background: var(--critical); }
+  .fx-recipe .rc-card[data-in="1"] { opacity: .82; }
+  .fx-recipe .rc-card[data-lit="1"] { opacity: 1; border-color: var(--accent); background: var(--raised); box-shadow: inset 0 0 0 1px var(--accent); }
+  .fx-recipe .rc-card[data-sel="1"] { box-shadow: inset 0 0 0 1px var(--accent), 0 0 0 3px var(--accent-soft); }
+  .fx-recipe .rc-card:hover { border-color: var(--accent); }
+
+  .fx-recipe .rc-out { font-size: 13px; line-height: 1.32; font-weight: 600; color: var(--ink); }
+  .fx-recipe .rc-file { font-size: 12px; line-height: 1.35; color: var(--muted); overflow-wrap: anywhere; }
+  .fx-recipe .rc-meta { display: flex; flex-wrap: wrap; gap: 4px 8px; align-items: baseline; }
+  .fx-recipe .rc-cost { font-size: 12px; line-height: 1.35; color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .fx-recipe .rc-state { font-size: 12px; line-height: 1.35; letter-spacing: .06em; text-transform: uppercase; }
+  .fx-recipe [data-state="ready"] .rc-state { color: var(--good); }
+  .fx-recipe [data-state="partial"] .rc-state { color: var(--warning); }
+  .fx-recipe [data-state="new"] .rc-state { color: var(--serious); }
+  .fx-recipe [data-state="blocked"] .rc-state { color: var(--critical); }
+
+  .fx-recipe .rc-slots { display: flex; flex-direction: column; gap: 3px; border-top: 1px solid var(--rule-soft); padding-top: 5px; }
+  .fx-recipe .rc-needs-lab { font-size: 12px; line-height: 1.3; color: var(--muted); letter-spacing: .1em; text-transform: uppercase; }
+  .fx-recipe .rc-slot { display: flex; gap: 6px; align-items: baseline; font-size: 12px; line-height: 1.4; color: var(--ink-soft); }
+  .fx-recipe .rc-slot i { flex: 0 0 auto; width: 8px; height: 8px; border-radius: 2px; background: var(--good); transform: translateY(1px); }
+  .fx-recipe .rc-slot[data-ok="0"] { color: var(--critical); border: 1px dashed var(--critical); border-radius: 5px; padding: 2px 5px; margin: 1px 0; }
+  .fx-recipe .rc-slot[data-ok="0"] i { background: transparent; border: 1px dashed var(--critical); }
+  .fx-recipe .rc-slot em { font-style: normal; color: var(--muted); }
+  .fx-recipe .rc-slot[data-ok="0"] em { color: var(--critical); }
+
+  .fx-recipe .rc-yield { font-size: 12px; line-height: 1.4; color: var(--ink-soft); border-top: 1px solid var(--rule-soft); padding-top: 5px; }
+  .fx-recipe .rc-yield b { font-weight: 600; color: var(--ink); }
+
+  /* the enforcement layer: a dashed fence, never flow weight */
+  .fx-recipe .rc-fence { display: flex; flex-wrap: wrap; gap: 4px; border-top: 1px dashed var(--rule); padding-top: 5px; }
+  .fx-recipe .rc-gatechip { font-size: 12px; line-height: 1.2; padding: 1px 6px; border: 1px dashed var(--rule);
+    border-radius: 4px; color: var(--muted); background: transparent; }
+  .fx-recipe .rc-card[data-lit="1"] .rc-gatechip { border-color: var(--ink-soft); color: var(--ink-soft); }
+
+  /* ── the travelling payload ────────────────────────────────── */
+  .fx-recipe .rc-pill { position: absolute; left: 0; top: 0; z-index: 5; display: none; pointer-events: none;
+    font-size: 12px; line-height: 1.2; white-space: nowrap; padding: 5px 10px; border-radius: 999px;
+    background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); box-shadow: var(--shadow); }
+  .fx-recipe .rc-pill[data-on="1"] { display: inline-block; }
+  .fx-recipe .rc-pill[data-starved="1"] { background: var(--card); border-style: dashed; border-color: var(--critical); color: var(--critical); }
+
+  /* ── hop readout ───────────────────────────────────────────── */
+  .fx-recipe .rc-hop { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; margin: 0;
+    font-size: 13px; line-height: 1.5; color: var(--muted); min-height: 22px; }
+  .fx-recipe .rc-hop-n { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums;
+    border: 1px solid var(--rule); border-radius: 999px; padding: 2px 9px; white-space: nowrap; }
+  .fx-recipe .rc-hop-body b { color: var(--ink); font-weight: 600; }
+  .fx-recipe .rc-hop-p { display: inline-block; font-size: 12px; line-height: 1.3; padding: 2px 9px; border-radius: 999px;
+    background: var(--accent-soft); border: 1px solid var(--accent); color: var(--accent); }
+  .fx-recipe .rc-hop-p[data-starved="1"] { background: var(--card); border-style: dashed; border-color: var(--critical); color: var(--critical); }
+  .fx-recipe .rc-hop-bad { color: var(--critical); }
+
+  /* ── gate rail ─────────────────────────────────────────────── */
+  .fx-recipe .rc-gates { border: 1px dashed var(--rule); border-radius: var(--radius, 10px); padding: 10px 12px; background: var(--card); }
+  .fx-recipe .rc-gate-list { display: flex; flex-direction: column; gap: 6px; }
+  .fx-recipe .rc-gaterow { display: grid; grid-template-columns: minmax(150px, 1fr) minmax(88px, .6fr) minmax(160px, 1.5fr) minmax(160px, 1.5fr);
+    gap: 2px 12px; padding: 6px 0 6px 9px; border-left: 3px solid var(--rule-soft); opacity: .5; transition: opacity .3s ease; }
+  .fx-recipe .rc-gaterow[data-on="1"] { opacity: 1; border-left-color: var(--accent); }
+  .fx-recipe .rc-gname { font-size: 12px; line-height: 1.4; color: var(--ink); font-weight: 600; overflow-wrap: anywhere; }
+  .fx-recipe .rc-gwhen { font-size: 12px; line-height: 1.4; color: var(--muted); }
+  .fx-recipe .rc-gpass { font-size: 12px; line-height: 1.4; color: var(--ink-soft); }
+  .fx-recipe .rc-gfail { font-size: 12px; line-height: 1.4; color: var(--serious); }
+
+  /* ── inspect panel ─────────────────────────────────────────── */
+  .fx-recipe .rc-panel { background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius, 10px); padding: 12px 14px;
+    display: flex; flex-direction: column; gap: 10px; }
+  .fx-recipe .rc-phead { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: baseline; }
+  .fx-recipe .rc-pdot { width: 9px; height: 9px; border-radius: 3px; background: var(--rule); transform: translateY(1px); }
+  .fx-recipe .rc-phead[data-state="ready"] .rc-pdot { background: var(--good); }
+  .fx-recipe .rc-phead[data-state="partial"] .rc-pdot { background: var(--warning); }
+  .fx-recipe .rc-phead[data-state="new"] .rc-pdot { background: var(--serious); }
+  .fx-recipe .rc-phead[data-state="blocked"] .rc-pdot { background: var(--critical); }
+  .fx-recipe .rc-pname { font-size: 15px; line-height: 1.3; font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+  .fx-recipe .rc-pstat { font-size: 12px; line-height: 1.4; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .fx-recipe .rc-ptier { font-size: 12px; line-height: 1.4; letter-spacing: .1em; text-transform: uppercase; color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 999px; padding: 1px 8px; margin-left: auto; }
+  .fx-recipe .rc-pcols { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px 20px; }
+  .fx-recipe .rc-pcol p { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+  .fx-recipe .rc-pcol ul { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+  .fx-recipe .rc-pcol li { font-size: 13px; line-height: 1.45; color: var(--ink-soft); }
+  .fx-recipe .rc-pcol li[data-ok="0"] { color: var(--critical); }
+  .fx-recipe .rc-pcol li em { font-style: normal; color: var(--muted); }
+  .fx-recipe .rc-pcol li[data-ok="0"] em { color: var(--critical); }
+  .fx-recipe .rc-prisk { margin: 0; font-size: 13px; line-height: 1.5; padding: 8px 11px; border-radius: 8px;
+    border: 1px solid var(--rule); background: var(--raised); color: var(--ink-soft); }
+  .fx-recipe .rc-prisk b { font-weight: 600; letter-spacing: .06em; text-transform: uppercase; font-size: 12px; }
+  .fx-recipe .rc-prisk[data-lvl="warning"] { border-color: var(--warning); }
+  .fx-recipe .rc-prisk[data-lvl="warning"] b { color: var(--warning); }
+  .fx-recipe .rc-prisk[data-lvl="serious"] { border-color: var(--serious); }
+  .fx-recipe .rc-prisk[data-lvl="serious"] b { color: var(--serious); }
+  .fx-recipe .rc-prisk[data-lvl="critical"] { border-color: var(--critical); }
+  .fx-recipe .rc-prisk[data-lvl="critical"] b { color: var(--critical); }
+  .fx-recipe .rc-pblast { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+  .fx-recipe .rc-pblast b { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+  .fx-recipe .rc-notes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+  .fx-recipe .rc-notes li { font-size: 12px; line-height: 1.5; color: var(--muted); padding-left: 12px; position: relative; overflow-wrap: anywhere; }
+  .fx-recipe .rc-notes li::before { content: "\00B7"; position: absolute; left: 2px; color: var(--rule); }
+
+  /* ── salvage strip ─────────────────────────────────────────── */
+  .fx-recipe .rc-salvage { border-top: 1px solid var(--rule); padding-top: 10px; }
+  .fx-recipe .rc-salv-list { margin: 0; padding: 0; list-style: none; display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 3px 20px; }
+  .fx-recipe .rc-salv-list li { display: flex; flex-wrap: wrap; gap: 4px 8px; font-size: 12px; line-height: 1.5; align-items: baseline; }
+  .fx-recipe .rc-salv-list b { font-weight: 600; color: var(--ink); overflow-wrap: anywhere; }
+  .fx-recipe .rc-salv-list span { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .fx-recipe .rc-salv-list em { font-style: normal; color: var(--muted); }
+  .fx-recipe .rc-salv-list em[data-bad="1"] { color: var(--critical); }
+
+  @media (max-width: 760px) {
+    .fx-recipe .rc-gaterow { grid-template-columns: 1fr; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .fx-recipe .rc-wire, .fx-recipe .rc-card, .fx-recipe .rc-pill, .fx-recipe .rc-gaterow { animation: none !important; transition: none !important; }
+  }
+</style>
+
+<script>
+(function () {
+  "use strict";
+
+  var root = document.querySelector('.fx-recipe:not([data-built="1"])');
+  if (!root) { return; }
+  root.setAttribute("data-built", "1");
+
+  /* ── the recipe book — every number measured at HEAD a943f9a ─────────── */
+  var TIERS = ["sources", "convert", "generate", "assemble", "ship"];
+
+  var NODES = [
+    { id: "A", tier: 0, state: "ready", out: "authored markdown", file: "docs/src/*.md", cost: "13 files · 1,651 ln",
+      needs: [{ l: "authored prose", ok: 1 }],
+      yields: "13 md files · 143 token refs · 11 mermaid blocks",
+      hands: "_markdown.py",
+      notes: ["heaviest doc — commands.md · 14 skills · 9 paths · 96 ln",
+              "densest doc — mechanisms.md · 555 ln · 3 diagrams · 7 E-refs",
+              "token classes — 53 skills · 39 paths · 36 E1–E7 · 8 case ids · 7 .kdbp artifacts"],
+      risk: { lvl: "warning", t: "doctor left behind. The 13 staleness comparisons point at today's output paths; relocate the pages without moving the check and all 13 compare against files that no longer exist — CLEAN forever, a false green." },
+      blast: "13 pages relocated · 1 doctor check moved (+ its fixtures)" },
+
+    { id: "B", tier: 0, state: "partial", out: "a resolved target + anchor", file: "adoption · corpus · archmap · beats", cost: "4 registries",
+      needs: [{ l: "a token reference", ok: 1 }, { l: "entity card-alias", ok: 0, why: "not adopted" }],
+      yields: "targets like test-matrix.html#C1421",
+      hands: "both surfaces — doc page and ledger",
+      notes: ["C-ids live inside test names — the corpus IS the registry",
+              "adoption.json (entities) · test corpus (C-ids) · archmap.json (code) · beat roster (skills)",
+              "143 distinct token refs arrive from the 13 docs"],
+      risk: { lvl: "warning", t: "unresolved token. A doc cites card-alias before that entity is adopted: the chip renders dashed, with no href, and names the empty registry rather than pretending to resolve." },
+      blast: "0 lines — the registries are read, never written by the merge" },
+
+    { id: "C", tier: 0, state: "ready", out: "one page list per surface", file: "center.config · docsite.config", cost: "1 config extended",
+      needs: [{ l: "9 center lens names", ok: 1 }, { l: "13 docsite sections", ok: 1 }],
+      yields: "22 page declarations",
+      hands: "both builders",
+      notes: ["the docs section is the one new key",
+              "9 + 13 = 22 pages, colliding on exactly 1 filename: index.html"],
+      risk: { lvl: "warning", t: "1 filename collision. index.html exists on both sides — whichever config wins, one of the two index pages disappears without a word." },
+      blast: "1 config extended" },
+
+    { id: "S", tier: 0, state: "ready", out: "style rules", file: "a3.css + site.css", cost: "66 KB · 165 classes",
+      needs: [{ l: "a3.css", ok: 1, why: "0 prose selectors" }, { l: "site.css prose", ok: 1, why: "501 ln, retiring" }],
+      yields: "~150 lines worth porting into one prose layer",
+      hands: "the .docbody layer",
+      notes: ["a3.css carries 165 classes and 0 prose selectors — headings, lists and tables have no home yet",
+              "site.css retires whole; only its prose rules survive the move"],
+      risk: null,
+      blast: "~150 CSS lines ported · site.css (501 ln) deleted" },
+
+    { id: "D", tier: 1, state: "ready", out: "body HTML + link rewrites", file: "_markdown.py", cost: "472 ln · stays",
+      needs: [{ l: "markdown · 1,651 ln", ok: 1, from: "A" }],
+      yields: "13 body fragments, links already rewritten",
+      hands: "build_docsite.py and the token extractor",
+      notes: ["the one component the merge does not have to touch",
+              "11 mermaid blocks pass through here as fenced code"],
+      risk: null,
+      blast: "0 lines — untouched by the merge" },
+
+    { id: "G", tier: 1, state: "ready", out: "9 estate pages + nav.json", file: "build_suite_center.py", cost: "1,399 ln · edited",
+      needs: [{ l: "registries · 4", ok: 1, from: "B" }, { l: "center config", ok: 1, from: "C" }],
+      yields: "9 pages + 1 new seam file",
+      hands: "nav.json, then the output dir",
+      notes: ["21 modules · 13,330 ln sit behind this entry point",
+              "the new emit is nav.json — the seam both builders read"],
+      risk: { lvl: "serious", t: "stale battery anchor. suite-center's 36 asserts once fired on a mutation that was never applied — green while proving nothing. The battery now aborts instead of reporting." },
+      blast: "1 of the 4 generators edited · 2 batteries touched" },
+
+    { id: "E", tier: 2, state: "new", out: "8 classes of token reference", file: "token extractor (NEW)", cost: "1 new module · 143 refs to scan",
+      needs: [{ l: "rendered doc text", ok: 1, from: "D" }],
+      yields: "records like {class: case-id, value: C1421}",
+      hands: "the registries",
+      notes: ["8 classes over 143 refs — 53 skills · 39 paths · 36 E1–E7 · 8 case ids · 7 .kdbp artifacts",
+              "scans rendered text, not markdown source, so link rewrites already happened"],
+      risk: { lvl: "serious", t: "not written. With no extractor there is no token record, so nothing downstream resolves: the merged pages render beautifully and stop explaining anything." },
+      blast: "1 new module · feeds 2 surfaces per token" },
+
+    { id: "F", tier: 2, state: "ready", out: "one page per doc", file: "build_docsite.py", cost: "374 ln · edited",
+      needs: [{ l: "body HTML · 13", ok: 1, from: "D" }, { l: "docsite config", ok: 1, from: "C" }],
+      yields: "13 rendered pages",
+      hands: "the docpage shell",
+      notes: ["today it writes its own shell through _shell.py (310 ln) — that half retires into a ~120 ln adapter",
+              "diagram-compliance.mjs lands on its output: 11 mermaid blocks must be sized SVG"],
+      risk: null,
+      blast: "1 of the 4 generators edited · _shell.py retired" },
+
+    { id: "I", tier: 2, state: "new", out: "one rendered sidebar model", file: "nav.json (NEW seam)", cost: "1 seam file · both ingredients on the shelf",
+      needs: [{ l: "center lenses · 9", ok: 1, from: "G" }, { l: "docsite sections · 13", ok: 1, from: "C" }],
+      yields: "1 nav model, read by both builders",
+      hands: "the docpage shell",
+      notes: ["both ingredients are already on the shelf — the cheapest card on the board to craft, and 3 others wait on it",
+              "one model, two builders: the sidebar stops being written twice"],
+      risk: null,
+      blast: "1 new seam file · 2 builders read it" },
+
+    { id: "J", tier: 2, state: "new", out: "the one skin", file: ".docbody layer (NEW)", cost: "~150 ln ported",
+      needs: [{ l: "a3.css classes", ok: 1, from: "S" }, { l: "site.css prose rules", ok: 1, from: "S" }],
+      yields: "prose that lives inside the center chrome",
+      hands: "docs/site/center/",
+      notes: ["a3.css has 0 prose selectors today — every heading, list and table rule is new here",
+              "verify-artifact-chrome.mjs · 34 checks stands over this layer"],
+      risk: { lvl: "serious", t: "stacked em. A .855em heading inside a .92em table lands at 11.8px — under the floor, and that column silently stops being read. Port in px, not in multipliers." },
+      blast: "~150 CSS lines ported · 501 ln retired" },
+
+    { id: "H", tier: 3, state: "new", out: "a full center page", file: "center/shell/docpage.html", cost: "~60 ln",
+      needs: [{ l: "body HTML page", ok: 1, from: "F" }, { l: "nav model", ok: 0, from: "I", why: "nav.json not written" }],
+      yields: "13 doc pages wearing the center shell",
+      hands: "docs/site/center/",
+      notes: ["the smallest new file on the board and the one the product waits on",
+              "check_suite_center.py and diagram-compliance.mjs both land on its output"],
+      risk: { lvl: "serious", t: "not written, and starved: the nav slot stays empty until nav.json exists. Craft nav.json first — its own two ingredients are already filled." },
+      blast: "1 new shell skeleton · 13 pages relocated" },
+
+    { id: "K", tier: 3, state: "blocked", out: "outbound chip + inbound backlink", file: "resolution → 2 surfaces", cost: "2 surfaces per token",
+      needs: [{ l: "token record", ok: 0, from: "E", why: "extractor not written" }, { l: "registry hit", ok: 1, from: "B" }],
+      yields: "a chip on the doc page · a row on the case ledger",
+      hands: "docs/site/center/",
+      notes: ["worked trace — c-id.md says “every C-id, like C1421, lands on its ledger row”",
+              "→ the registry resolves it to test-matrix.html#C1421",
+              "→ two surfaces from one resolution: the chip outbound, and inbound “documented in: The C-id scheme”",
+              "this pair is what the merge actually buys"],
+      risk: { lvl: "critical", t: "blocked. The registry half works today; the token-record half does not exist. Every citation in all 13 docs stays plain text until the extractor ships." },
+      blast: "2 surfaces per resolved token · 143 refs waiting" },
+
+    { id: "L", tier: 4, state: "blocked", out: "the published center", file: "docs/site/center/", cost: "9 → 22 pages",
+      needs: [{ l: "13 doc pages", ok: 0, from: "H", why: "shell not written" }, { l: "9 estate pages", ok: 1, from: "G" },
+              { l: "the one skin", ok: 0, from: "J", why: ".docbody not written" }, { l: "resolved chips", ok: 0, from: "K", why: "extractor missing" }],
+      yields: "22 pages under one shell, one skin, one nav",
+      hands: "the gates, then 2 twin repos",
+      notes: ["9 center + 13 doc = 22 pages, colliding on exactly 1 filename: index.html",
+              "orphan — docs/site/map.html, 34 KB, in no config, regenerated by nothing",
+              "twin drift — gustify/gastify still name gabe-feature, gabe-adopt, gabe-entity, gabe-walk"],
+      risk: { lvl: "critical", t: "3 of 4 slots empty. And the two gates over this node are exactly the ones that can lie: an empty crawl (exit 2 now) and a doctor comparing against absent files." },
+      blast: "4 generators edited · 1 new shell · 1 new seam · ~150 CSS ln · 1 doctor check moved · 2 batteries · 1 config · 13 pages relocated · 1 orphan deleted · 2 twins after one clean regen here" }
+  ];
+
+  var EDGES = [
+    { from: "A", to: "D", p: "1,651 ln of markdown" },
+    { from: "D", to: "E", p: "rendered doc text" },
+    { from: "D", to: "F", p: "13 body HTML fragments" },
+    { from: "C", to: "F", p: "docsite config" },
+    { from: "B", to: "G", p: "registry rows" },
+    { from: "C", to: "G", p: "center config · +1 section" },
+    { from: "E", to: "K", p: "{case-id: C1421}" },
+    { from: "B", to: "K", p: "test-matrix.html#C1421" },
+    { from: "C", to: "I", p: "13 section names" },
+    { from: "G", to: "I", p: "9 lens names" },
+    { from: "F", to: "H", p: "13 rendered pages" },
+    { from: "I", to: "H", p: "the sidebar model" },
+    { from: "S", to: "J", p: "~150 ported lines" },
+    { from: "H", to: "L", p: "13 center doc pages" },
+    { from: "G", to: "L", p: "9 estate pages" },
+    { from: "J", to: "L", p: "the one skin" },
+    { from: "K", to: "L", p: "chip + backlink row" }
+  ];
+
+  var GATES = [
+    { chip: "links", name: "check_suite_center.py", when: "every regen",
+      pass: "every internal href, anchor and asset resolves",
+      fail: "exit 1 on a dead link · exit 2 on an empty crawl — a checker that looked at nothing must not report green",
+      covers: ["K", "H", "L"] },
+    { chip: "staleness", name: "suite-doctor.sh P3/P4", when: "every doctor run",
+      pass: "each docs/src/*.md is older than its generated page",
+      fail: "13 comparisons — move the outputs without the check and all 13 compare against absent files: CLEAN forever",
+      covers: ["A", "L"] },
+    { chip: "diagrams", name: "diagram-compliance.mjs", when: "after a docsite build",
+      pass: "every mermaid block is a rendered, sized <svg> over file://",
+      fail: "catches the “diagram renders as raw text” class — 11 blocks in scope",
+      covers: ["D", "F", "H"] },
+    { chip: "chrome", name: "verify-artifact-chrome.mjs", when: "before publishing",
+      pass: "34 checks on the rendered surface",
+      fail: "blocks the publish",
+      covers: ["J"] },
+    { chip: "batteries", name: "tests/*/run.sh", when: "doctor sweep",
+      pass: "hooks 49 · artifact-chrome 17 · suite-center 36",
+      fail: "a stale mutation anchor used to report green while proving nothing — now aborts",
+      covers: ["G", "L"] }
+  ];
+
+  var PICKS = [
+    { id: "L", l: "the merged center · 22 pages" },
+    { id: "H", l: "one doc page · 13" },
+    { id: "K", l: "a C1421 chip" },
+    { id: "I", l: "the sidebar model" }
+  ];
+
+  /* ── indexes ─────────────────────────────────────────────────────────── */
+  var BY = {}, OUT = {}, IN = {};
+  NODES.forEach(function (n) { BY[n.id] = n; OUT[n.id] = []; IN[n.id] = []; });
+  EDGES.forEach(function (e) {
+    e.key = e.from + ">" + e.to;
+    e.starved = BY[e.from].state === "new" || BY[e.from].state === "blocked";
+    OUT[e.from].push(e); IN[e.to].push(e);
+  });
+  var GATES_OF = {};
+  GATES.forEach(function (g) { g.covers.forEach(function (id) { (GATES_OF[id] = GATES_OF[id] || []).push(g); }); });
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  var STATE_LABEL = { ready: "ready", partial: "1 slot open", "new": "not written", blocked: "blocked" };
+
+  /* ── DOM refs ────────────────────────────────────────────────────────── */
+  var picksHost = root.querySelector(".rc-picks");
+  var statsHost = root.querySelector(".rc-stats");
+  var headsHost = root.querySelector(".rc-heads");
+  var tiersHost = root.querySelector(".rc-tiers");
+  var field = root.querySelector(".rc-field");
+  var svg = root.querySelector(".rc-wires");
+  var pill = root.querySelector(".rc-pill");
+  var hopN = root.querySelector(".rc-hop-n");
+  var hopBody = root.querySelector(".rc-hop-body");
+  var gateHost = root.querySelector(".rc-gate-list");
+  var panel = root.querySelector(".rc-panel");
+  var replayBtn = root.querySelector(".rc-replay");
+  var NS = "http://www.w3.org/2000/svg";
+
+  /* ── header stats, computed from the book so they cannot drift ───────── */
+  (function () {
+    var notWritten = NODES.filter(function (n) { return n.state === "new"; }).length;
+    var blocked = NODES.filter(function (n) { return n.state === "blocked"; }).length;
+    var broken = EDGES.filter(function (e) { return e.starved; }).length;
+    var chips = [
+      ["<b>" + NODES.length + "</b> recipe cards", ""],
+      ["<b>" + notWritten + "</b> not written", "serious"],
+      ["<b>" + blocked + "</b> blocked", "critical"],
+      ["<b>" + broken + "</b> supply lines broken", "critical"],
+      ["<b>143</b> token refs in 13 docs", ""],
+      ["<b>6,012</b> ln merged across 12 files", ""],
+      ["<b>9 → 22</b> pages out", ""]
+    ];
+    statsHost.innerHTML = chips.map(function (c) {
+      return '<span class="rc-chip"' + (c[1] ? ' data-lvl="' + c[1] + '"' : "") + ">" + c[0] + "</span>";
+    }).join("");
+  })();
+
+  /* ── quick picks ─────────────────────────────────────────────────────── */
+  PICKS.forEach(function (p) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "rc-pick"; b.setAttribute("data-target", p.id);
+    b.setAttribute("aria-pressed", "false"); b.textContent = p.l;
+    b.addEventListener("click", function () { select(p.id); });
+    picksHost.appendChild(b);
+  });
+
+  /* ── tier heads + cards ──────────────────────────────────────────────── */
+  var cardEl = {};
+  TIERS.forEach(function (name, t) {
+    var members = NODES.filter(function (n) { return n.tier === t; });
+    var h = document.createElement("p");
+    h.className = "rc-head";
+    h.innerHTML = esc(name) + "<span>" + members.length + "</span>";
+    headsHost.appendChild(h);
+
+    var col = document.createElement("div");
+    col.className = "rc-tier";
+    members.forEach(function (n) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "rc-card";
+      b.setAttribute("data-state", n.state);
+      b.setAttribute("data-in", "0"); b.setAttribute("data-lit", "0"); b.setAttribute("data-sel", "0");
+      b.setAttribute("aria-pressed", "false");
+      var gates = GATES_OF[n.id] || [];
+      b.innerHTML =
+        '<span class="rc-out">' + esc(n.out) + "</span>" +
+        '<span class="rc-file">' + esc(n.file) + "</span>" +
+        '<span class="rc-meta"><span class="rc-state">' + esc(STATE_LABEL[n.state]) + '</span><span class="rc-cost">' + esc(n.cost) + "</span></span>" +
+        '<span class="rc-slots"><span class="rc-needs-lab">needs</span>' +
+          n.needs.map(function (s) {
+            return '<span class="rc-slot" data-ok="' + (s.ok ? 1 : 0) + '"><i></i><span>' + esc(s.l) +
+              (s.why ? " <em>" + esc(s.ok ? s.why : "missing — " + s.why) + "</em>" : (s.ok ? "" : " <em>missing</em>")) +
+              "</span></span>";
+          }).join("") +
+        "</span>" +
+        '<span class="rc-yield">→ ' + esc(n.yields) + "</span>" +
+        (gates.length ? '<span class="rc-fence">' + gates.map(function (g) {
+            return '<span class="rc-gatechip">' + esc(g.chip) + "</span>"; }).join("") + "</span>" : "");
+      b.addEventListener("click", function () { select(n.id); });
+      col.appendChild(b);
+      cardEl[n.id] = b;
+    });
+    tiersHost.appendChild(col);
+  });
+
+  /* ── wires ───────────────────────────────────────────────────────────── */
+  var wireEl = {};
+  EDGES.forEach(function (e) {
+    var p = document.createElementNS(NS, "path");
+    p.setAttribute("class", "rc-wire");
+    p.setAttribute("data-in", "0"); p.setAttribute("data-on", "0");
+    p.setAttribute("data-starved", e.starved ? "1" : "0");
+    svg.appendChild(p);
+    wireEl[e.key] = p;
+  });
+
+  function r1(v) { return Math.round(v * 10) / 10; }
+  function anchor(e) {
+    var fr = field.getBoundingClientRect();
+    var s = cardEl[e.from].getBoundingClientRect(), t = cardEl[e.to].getBoundingClientRect();
+    var i = OUT[e.from].indexOf(e), j = IN[e.to].indexOf(e);
+    return {
+      x1: r1(s.right - fr.left), y1: r1(s.top - fr.top + s.height * ((i + 1) / (OUT[e.from].length + 1))),
+      x2: r1(t.left - fr.left), y2: r1(t.top - fr.top + t.height * ((j + 1) / (IN[e.to].length + 1)))
+    };
+  }
+  function drawWires() {
+    var fr = field.getBoundingClientRect();
+    var W = Math.round(fr.width), H = Math.round(fr.height);
+    if (!W || !H) { return; }
+    svg.setAttribute("viewBox", "0 0 " + W + " " + H);
+    svg.setAttribute("width", W); svg.setAttribute("height", H);
+    EDGES.forEach(function (e) {
+      var a = anchor(e), dx = Math.max(20, (a.x2 - a.x1) * 0.42);
+      wireEl[e.key].setAttribute("d", "M" + a.x1 + "," + a.y1 + " C" + (a.x1 + dx) + "," + a.y1 +
+        " " + (a.x2 - dx) + "," + a.y2 + " " + a.x2 + "," + a.y2);
+    });
+  }
+
+  /* ── chain walk: ask for a product, get everything it needs ──────────── */
+  function chainOf(id) {
+    var set = {}, stack = [id];
+    while (stack.length) {
+      var cur = stack.pop();
+      if (set[cur]) { continue; }
+      set[cur] = true;
+      IN[cur].forEach(function (e) { stack.push(e.from); });
+    }
+    return set;
+  }
+  function hopsFor(set, targetId) {
+    var steps = [];
+    for (var t = 0; t <= 4; t++) {
+      NODES.filter(function (n) { return n.tier === t && set[n.id]; }).forEach(function (n) {
+        var ins = IN[n.id].filter(function (e) { return set[e.from]; });
+        if (!ins.length) { steps.push({ type: "light", id: n.id }); return; }
+        ins.forEach(function (e, k) { steps.push({ type: "hop", e: e, light: k === ins.length - 1 ? n.id : null }); });
+      });
+    }
+    steps.targetId = targetId;
+    return steps;
+  }
+
+  /* ── panel + gate rail ───────────────────────────────────────────────── */
+  function renderPanel(id) {
+    var n = BY[id], gates = GATES_OF[id] || [];
+    panel.innerHTML =
+      '<div class="rc-phead" data-state="' + n.state + '"><span class="rc-pdot"></span>' +
+        '<span class="rc-pname">' + esc(n.file) + "</span>" +
+        '<span class="rc-pstat">' + esc(n.cost) + " · " + esc(STATE_LABEL[n.state]) + "</span>" +
+        '<span class="rc-ptier">' + esc(TIERS[n.tier]) + "</span></div>" +
+      '<div class="rc-pcols">' +
+        '<div class="rc-pcol"><p class="rc-lab">consumes</p><ul>' +
+          n.needs.map(function (s) {
+            return '<li data-ok="' + (s.ok ? 1 : 0) + '">' + esc(s.l) +
+              (s.from ? ' <em>← ' + esc(BY[s.from].file) + "</em>" : "") +
+              (s.why ? " <em>" + esc((s.ok ? "" : "missing — ") + s.why) + "</em>" : (s.ok ? "" : " <em>missing</em>")) +
+              "</li>";
+          }).join("") + "</ul></div>" +
+        '<div class="rc-pcol"><p class="rc-lab">produces</p><p>' + esc(n.out) + "</p><p>→ " + esc(n.yields) + "</p></div>" +
+        '<div class="rc-pcol"><p class="rc-lab">hands to</p><p>' + esc(n.hands) + "</p>" +
+          (gates.length ? '<p class="rc-lab" style="margin-top:8px">under gate</p><ul>' +
+            gates.map(function (g) { return "<li>" + esc(g.name) + " <em>" + esc(g.when) + "</em></li>"; }).join("") + "</ul>" : "") +
+        "</div>" +
+      "</div>" +
+      (n.risk ? '<p class="rc-prisk" data-lvl="' + n.risk.lvl + '"><b>risk here</b> — ' + esc(n.risk.t) + "</p>" : "") +
+      '<p class="rc-pblast"><b>a change here touches</b> ' + esc(n.blast) + "</p>" +
+      '<ul class="rc-notes">' + n.notes.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul>";
+  }
+  function renderGates(set) {
+    gateHost.innerHTML = GATES.map(function (g) {
+      var on = g.covers.some(function (id) { return set[id]; });
+      return '<div class="rc-gaterow" data-on="' + (on ? 1 : 0) + '">' +
+        '<span class="rc-gname">' + esc(g.name) + "</span>" +
+        '<span class="rc-gwhen">' + esc(g.when) + "</span>" +
+        '<span class="rc-gpass">passes when · ' + esc(g.pass) + "</span>" +
+        '<span class="rc-gfail">fails how · ' + esc(g.fail) + "</span></div>";
+    }).join("");
+  }
+
+  /* ── motion ──────────────────────────────────────────────────────────── */
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function motionOn() { return !(window.MOTION && window.MOTION.on === false); }
+  var timers = [], run = 0, current = "L", lastHop = null;
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+  function later(fn, ms) { var t = setTimeout(fn, ms); timers.push(t); return t; }
+
+  function placePill(x, y, animate) {
+    pill.style.transition = animate ? "transform .58s cubic-bezier(.4,.05,.25,1)" : "none";
+    pill.style.transform = "translate(calc(" + x + "px - 50%), calc(" + y + "px - 50%))";
+  }
+  function hopText(e, k, total, done) {
+    hopN.textContent = done ? "chain complete" : "hop " + (k + 1) + " / " + total;
+    var bad = e.starved
+      ? ' <span class="rc-hop-bad">· not yet — ' + esc(BY[e.from].file) + " is " +
+        (BY[e.from].state === "new" ? "not written" : "blocked") + "</span>"
+      : "";
+    hopBody.innerHTML = "<b>" + esc(BY[e.from].file) + "</b> → <b>" + esc(BY[e.to].file) +
+      '</b> · carries <span class="rc-hop-p" data-starved="' + (e.starved ? 1 : 0) + '">' + esc(e.p) + "</span>" + bad;
+  }
+
+  function applyChain(id) {
+    var set = chainOf(id);
+    NODES.forEach(function (n) {
+      var c = cardEl[n.id];
+      c.setAttribute("data-in", set[n.id] ? "1" : "0");
+      c.setAttribute("data-lit", "0");
+      c.setAttribute("data-sel", n.id === id ? "1" : "0");
+      c.setAttribute("aria-pressed", n.id === id ? "true" : "false");
+    });
+    EDGES.forEach(function (e) {
+      var w = wireEl[e.key];
+      w.setAttribute("data-in", set[e.from] && set[e.to] ? "1" : "0");
+      w.setAttribute("data-on", "0");
+    });
+    root.querySelectorAll(".rc-pick").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.getAttribute("data-target") === id ? "true" : "false");
+    });
+    return set;
+  }
+
+  function finish(steps) {
+    steps.forEach(function (s) {
+      if (s.type === "light") { cardEl[s.id].setAttribute("data-lit", "1"); return; }
+      wireEl[s.e.key].setAttribute("data-on", "1");
+      if (s.light) { cardEl[s.light].setAttribute("data-lit", "1"); }
+    });
+    var last = null, k = -1, hops = 0;
+    steps.forEach(function (s) { if (s.type === "hop") { hops++; last = s.e; k = hops - 1; } });
+    if (!last) { pill.setAttribute("data-on", "0"); hopN.textContent = "—"; hopBody.textContent = "a source recipe: nothing upstream of it"; return; }
+    lastHop = last;
+    /* the run is over: the payload docks in the readout so it stops covering the card it landed on */
+    pill.setAttribute("data-on", "0");
+    hopText(last, k, hops, true);
+  }
+
+  function runCraft(steps) {
+    var mine = ++run;
+    var hops = steps.filter(function (s) { return s.type === "hop"; }).length;
+    if (reduced || !motionOn()) { finish(steps); return; }
+    pill.setAttribute("data-on", "0");
+    hopN.textContent = hops ? "hop 0 / " + hops : "—";
+    hopBody.textContent = hops ? "assembling the line — one recipe at a time" : "a source recipe: nothing upstream of it";
+    var i = 0, k = 0;
+    (function step() {
+      if (mine !== run) { return; }
+      if (!motionOn()) { finish(steps); return; }
+      if (i >= steps.length) {
+        if (hops) { hopN.textContent = "chain complete"; }
+        pill.setAttribute("data-on", "0");
+        return;
+      }
+      var s = steps[i++];
+      if (s.type === "light") { cardEl[s.id].setAttribute("data-lit", "1"); later(step, 170); return; }
+      var e = s.e, a = anchor(e);
+      wireEl[e.key].setAttribute("data-on", "1");
+      pill.setAttribute("data-on", "1");
+      pill.setAttribute("data-starved", e.starved ? "1" : "0");
+      pill.textContent = e.p;
+      hopText(e, k++, hops, false);
+      placePill(a.x1, a.y1, false);
+      pill.getBoundingClientRect();
+      placePill(a.x2, a.y2, true);
+      lastHop = e;
+      later(function () {
+        if (mine !== run) { return; }
+        if (s.light) { cardEl[s.light].setAttribute("data-lit", "1"); }
+        step();
+      }, 640);
+    })();
+  }
+
+  function select(id) {
+    current = id;
+    clearTimers();
+    drawWires();
+    var set = applyChain(id);
+    renderPanel(id);
+    renderGates(set);
+    runCraft(hopsFor(set, id));
+  }
+
+  function build() { select(current); }
+
+  replayBtn.addEventListener("click", build);
+
+  /* keep the wires under the cards when the page reflows */
+  function reflow() {
+    drawWires();
+    if (lastHop) { var a = anchor(lastHop); placePill(a.x2, a.y2, false); }
+  }
+  if (window.ResizeObserver) { new ResizeObserver(reflow).observe(field); }
+  window.addEventListener("resize", reflow);
+
+  window.FXREPLAY = window.FXREPLAY || {};
+  window.FXREPLAY["recipe-tree"] = build;
+
+  requestAnimationFrame(function () { requestAnimationFrame(build); });
+})();
+</script>
+
+</div>
+<div class="ex-foot"><button class="ex-btn ex-replay" type="button">Replay</button><span class="ex-tag">gabe-prism · recipe-tree</span></div>
+</div></section>
+</div>
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <div class="af-divider"></div>
+    <!-- Drop this Motion group only if the page has no animation at all. -->
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+<script>
+var MOTION = { on: true };   /* animations read this before scheduling work */
+
+(function () {
+  "use strict";
+
+  /* Add an entry to either roster to add an option — nothing else changes. */
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
+
+  function read(key, list, dflt) {          /* sandboxed frames can throw on storage */
+    try {
+      var v = window.localStorage.getItem(key);
+      return list.some(function (x) { return x.id === v; }) ? v : dflt;
+    } catch (e) { return dflt; }
+  }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.textContent = item.label;
+    if (item.stack) n.style.fontFamily = item.stack;      /* preview its own face */
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { onPick(item.id); });
+    host.appendChild(b);
+  }
+  function mark(host, id) {
+    host.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id));
+    });
+  }
+
+  function applyFont(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    write(FKEY, f.id); mark(fhost, f.id);
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+  function applySkin(id) {
+    root.setAttribute("data-skin", id);
+    write(SKEY, id); mark(shost, id);
+  }
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    /* Rebuild BEFORE pausing. A rebuild replaces the SVG, and a
+       pauseAnimations() called on the old element does nothing for the new
+       one — which is why four SMIL patterns kept running through "Paused"
+       even after the rebuild hook landed. Order: rebuild, then freeze. */
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mark(mhost, on ? "on" : "off");
+  }
+
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin;
+  window.__setMotion = setMotion;
+})();
+</script>
+
+<script>
+(function () {
+  window.FXREPLAY = window.FXREPLAY || {};
+  document.querySelectorAll(".ex-replay").forEach(function (b) {
+    b.addEventListener("click", function () {
+      var k = b.closest(".ex").getAttribute("data-anim");
+      if (typeof window.FXREPLAY[k] === "function") window.FXREPLAY[k]();
+    });
+  });
+  window.__rebuildMotion = function () {
+    Object.keys(window.FXREPLAY).forEach(function (k) { try { window.FXREPLAY[k](); } catch (e) {} });
+  };
+})();
+</script>

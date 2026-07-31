@@ -173,22 +173,13 @@ PY
       "$REPO/docs/workflows" "$REPO/prompts" 2>/dev/null || true)
     [ -n "$hits" ] && report "invariant" "archived skill /$slug still presented as live in: $(echo "$hits" | tr '\n' ' ')"
   done
-  # P3/P4 — docsite: markdown source newer than its generated page means the
-  # site is stale. hub.md renders as the FRONT PAGE (docsite.config.py
-  # hub_intro_md → index.html) — the old name-based mapping compared it against
-  # a hub.html the builder never produces, so the front page could never fire
-  # (M13); and a src doc with NO generated page is a report, not a skip.
-  for src in "$REPO"/docs/src/*.md; do
-    [ -f "$src" ] || continue
-    base=$(basename "${src%.md}")
-    [ "$base" = "hub" ] && base="index"
-    page="$REPO/docs/site/$base.html"
-    if [ ! -f "$page" ]; then
-      report "invariant" "docsite: no generated page for docs/src/$(basename "$src") — rebuild (build_docsite.py)"
-    elif [ "$src" -nt "$page" ]; then
-      report "invariant" "docsite stale: docs/src/$(basename "$src") is newer than its generated page — rebuild (build_docsite.py)"
-    fi
-  done
+  # P3/P4 — docsite staleness. The check itself lives in its own script so it
+  # can be exercised by a battery against fixture repos: inline here it could
+  # only ever run against this repo, and a check that compares against files
+  # that no longer exist reports CLEAN forever. See tests/docsite-staleness/.
+  while IFS= read -r line; do
+    report "invariant" "$line"
+  done < <(bash "$REPO/scripts/checkers/docsite-staleness.sh" "$REPO" 2>/dev/null | grep '^docsite: ' | grep -v 'source(s) checked')
 }
 check_invariants
 

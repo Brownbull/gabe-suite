@@ -528,6 +528,11 @@ var MOTION = { on: true };
   function setMotion(on) {
     MOTION.on = on;
     root.setAttribute("data-motion", on ? "on" : "off");
+    /* Rebuild BEFORE pausing. A rebuild replaces the SVG, and a
+       pauseAnimations() called on the old element does nothing for the new
+       one — which is why four SMIL patterns kept running through "Paused"
+       even after the rebuild hook landed. Order: rebuild, then freeze. */
+    if (window.__rebuildMotion) window.__rebuildMotion();
     document.querySelectorAll("svg").forEach(function (s) {
       if (s.unpauseAnimations && s.pauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
     });
@@ -914,15 +919,19 @@ var MOTION = { on: true };
         var cb = cell.getBoundingClientRect(), sb = stage.getBoundingClientRect();
         var x = cb.left - sb.left + cb.width / 2, y = cb.top - sb.top + cb.height / 2;
         cur.style.transform = "translate(" + x + "px," + y + "px)";
-        later(function () {
+        function settle(pop) {
           cells.forEach(function (c) { c.setAttribute("data-hit", "false"); });
           cell.setAttribute("data-hit", "true");
           ring.style.left = (x - 4) + "px";
           ring.style.top = (y - 4) + "px";
           ring.style.animation = "none";
-          void ring.offsetWidth;
-          ring.style.animation = "clickpop .6s ease-out";
-        }, 700);
+          if (pop) { void ring.offsetWidth; ring.style.animation = "clickpop .6s ease-out"; }
+        }
+        /* Paused or reduced: land the click NOW. A trailing 700ms timer fires
+           after the pause and keeps mutating the page — motion the reader
+           asked to stop, and the one pattern the gate still caught. */
+        if (reduced || !MOTION.on) { settle(false); return; }
+        later(function () { settle(true); }, 700);
       }
       move(0);
       if (reduced || !MOTION.on) return;
@@ -1260,6 +1269,9 @@ var MOTION = { on: true };
     Object.keys(REPLAY).forEach(function (k) { REPLAY[k](); });
   });
   window.__replayAll = function () { Object.keys(REPLAY).forEach(function (k) { REPLAY[k](); }); };
+  /* the registry the motion gate discovers, and the hook the cog's pause calls */
+  window.FXREPLAY = REPLAY;
+  window.__rebuildMotion = window.__replayAll;
 
   /* ── copy names + keeps ── */
   (function () {

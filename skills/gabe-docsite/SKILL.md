@@ -1,9 +1,9 @@
 ---
 name: gabe-docsite
-description: "Publish docs onto the generated HTML docs site — pick the section, wire the nav, render with working diagrams. Markdown stays the source of truth; it places and renders, never fact-checks."
+description: "Publish docs onto the project's HTML site — pick the section, wire the nav, render with working diagrams. Renders INTO a command center's shell when one exists (one site, one skin, one sidebar) and extracts the references a page makes so both link directions are derived. Markdown stays the source of truth; it places and renders, never fact-checks."
 when_to_use: "Publish or update a page on the project's HTML docs site."
 metadata:
-  version: 1.0.2
+  version: 1.1.0
   status: suite skill (generic, project-agnostic)
   scope: any project with a docs/ site
 ---
@@ -20,12 +20,38 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 ## The site this skill operates
 
-A **self-contained, dependency-free static HTML docs site** under `docs/site/`, viewable over `file://`, styled with the warm **Cifra** palette. Every page wears identical chrome (sticky sidebar nav + top breadcrumb + masthead), **generated** from markdown — never hand-written.
+A **self-contained, dependency-free static HTML site**, viewable over `file://`, generated from markdown — never hand-written. It builds in one of two modes, and **the build states which one it took**.
 
-- **Source of truth** = markdown under `docs/src/*.md` + one **config** (`docs/docsite.config.py`) that declares the sections, the per-doc metadata, and the reading order.
-- **Generator** = `skills/gabe-docsite/generator/build_docsite.py --config docs/docsite.config.py` → emits `docs/site/*.html` + the hub `index.html` + `assets/`.
-- **Never hand-edit the generated HTML** — it is overwritten on every build.
-- **Diagrams** render via a **locally vendored classic `mermaid.min.js`** (not a CDN, not an ES-module), so they display over `file://` with no network and no build-time browser.
+### CENTER MODE (default where a command center exists)
+
+```
+build_docsite.py --config docs/docsite.config.py \
+                 --shell  docs/center/shell \
+                 --nav    docs/site/center/nav.json
+```
+
+Doc pages render **into the center's own shell** — same skin, same sidebar, same viewer settings — and emit **into the center's dir** as siblings of its estate pages. One site, one look. Two seam files carry it, and neither builder imports the other:
+
+| File | Written by | Read by | Carries |
+|---|---|---|---|
+| `nav.json` | the center build | this skill | the rendered sidebar model, so both builders wear one nav |
+| `docs-backlinks.json` | this skill | the center build | which docs cite which target, so the estate side never authors a link |
+
+The hub (`hub_intro_md`) becomes **`docs.html`, the Docs station** — `index.html` is the center's Overview and is the one filename the two page sets collide on. **Build order is a contract:** center → docs → center again → gates. The second center pass exists because the estate pages need the backlink index the docs produce, and the docs need the nav the center produces.
+
+### STANDALONE MODE (no center)
+
+Omit both flags and the site builds as before, under `docs/site/` with the Cifra shell (`_shell.py` + `site.css`). Kept deliberately: a project without a command center must still be able to publish docs. Center mode ships **neither** stylesheet — a second skin in the same `assets/` that nothing loads is exactly the drift the merge removed.
+
+- **Source of truth** = markdown under `docs/src/*.md` + `docs/docsite.config.py` (sections, per-doc metadata, reading order).
+- **Never hand-edit generated HTML** — it is overwritten on every build.
+- **Diagrams: two paths, and the gate names which one ran.** Pre-rendered to committed SVG when a working `_render_mermaid.mjs` is present — *probed once before use, because a renderer that is installed but broken is the runtime path with extra steps* — otherwise the vendored classic `mermaid.min.js`. A failed pre-render that degrades to source text **fails the build**.
+
+## References — both directions, one pass
+
+Every page's rendered text is scanned for four token classes, each resolved against a registry that already exists: **entity slug** (`adoption.json`), **case id** (the `test-matrix.html#C<n>` anchor contract), **skill/beat** (the skills on disk), **sibling doc** (this config). A class whose registry is absent is **not extracted** — that is different from extracted-and-unresolved, and rendering dashed chips for a registry this project does not have would teach the reader the page is broken.
+
+Outbound renders as a chip row on the doc page; inbound renders as `Written up in:` on the target's own surface. Both come from the same pass, so they cannot disagree, and deleting a doc removes its backlink on the next build.
 
 ## The four conventions (the heart of this skill)
 
@@ -74,8 +100,11 @@ Add a doc entry to the chosen section in `docs/docsite.config.py`: `slug`, `sour
 
 ### 4 · GENERATE + VERIFY (the gate)
 ```
+# where a center exists, the whole chain in one command:
+bash docs/center/generators/refresh_suite_center.sh regen
+# or standalone:
 python3 skills/gabe-docsite/generator/build_docsite.py --config docs/docsite.config.py
-node   skills/gabe-docsite/tools/diagram-compliance.mjs        # file:// diagram gate
+node   skills/gabe-docsite/tools/diagram-compliance.mjs docs/site   # file:// diagram gate
 ```
 - The build must complete with the new page in the Cifra shell, its nav entry under the right section, the breadcrumb resolving, and the hub card present.
 - **The compliance gate must pass (exit 0):** it loads every page over `file://` and asserts each diagram is a rendered, sized `<svg>` showing no raw mermaid source. This is the guard against the "diagram renders as raw text over `file://`" class of bug — a real regression the CDN/ES-module approach silently causes.
@@ -86,7 +115,7 @@ No-dependency markdown → HTML. Supported subset: ATX headings (`##` auto-numbe
 
 ## Guardrails
 - **Placement + rendering only.** Do NOT fact-check the doc against the code — accuracy/drift is owned elsewhere. Mention a glaring contradiction; do not fix it here.
-- **The Testing Command Center is not this site.** `docs/site/center/` is a specialized machine-truth build owned by `/gabe-cc-update` (forward track) and `/gabe-cc-init` (bootstrap + back-catalog) — never place or edit pages there.
+- **The center's ESTATE pages are not yours.** Doc pages now live in `docs/site/center/` beside them, but the estate pages themselves (entities, code, testing, ledger, releases) are machine-truth builds owned by `/gabe-cc-update` and `/gabe-cc-init` — never place or edit those.
 - **Markdown is the source of truth** under `docs/src/`. Never hand-edit generated `docs/site/*.html` (overwritten every build).
 - **Never recolor the Cifra palette** or hand-roll a page — reuse the shell.
 - **Diagrams: vendored classic mermaid only.** Never a CDN URL, never `type="module"` (breaks over `file://`).

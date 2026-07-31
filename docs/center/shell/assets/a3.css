@@ -988,3 +988,123 @@ details.legset .gal{margin:8px 0 4px}
    table; plain unguarded rides the existing gap chip and is reached by filter. */
 .tag.t-hot{background:var(--bad-soft);color:var(--bad)}
 .tag.t-unguarded{}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   .docbody — the PROSE layer (docsite merge, 2026-07-31)
+
+   Everything above this line styles machine facts: tables, chips, meters,
+   section banners. a3.css had literally ZERO rules for a paragraph, a heading
+   or a list, because until now nothing authored ever rendered inside the
+   center. The markdown pages changed that, and without this layer they render
+   as unstyled text on a themed page — the one thing a reader reads as broken.
+
+   Ported from the retiring Cifra stylesheet (site.css, 501 lines) and remapped
+   onto the center's own tokens, so light/dark, the viewer's font choice and the
+   density settings all reach prose for free. Scoped to .docbody: it can never
+   touch a generated table.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.docbody { color: var(--ink-2); font-size: .95rem; line-height: 1.65; max-width: 76ch; }
+.docbody > *:first-child { margin-top: 0; }
+
+.docbody h2 {
+  margin: 34px 0 12px; font-size: 1.22rem; font-weight: 700; letter-spacing: -.01em;
+  color: var(--ink); padding-bottom: 6px; border-bottom: 1px solid var(--line);
+  max-width: none;
+}
+.docbody h2 .num { font: var(--mono); font-size: .62em; color: var(--accent); margin-right: 9px; }
+.docbody h3 { margin: 26px 0 8px; font-size: 1.03rem; font-weight: 650; color: var(--ink); }
+.docbody h4 { margin: 20px 0 6px; font-size: .93rem; font-weight: 650; color: var(--ink); }
+.docbody p { margin: 0 0 13px; }
+.docbody a { color: var(--accent); text-decoration: none; border-bottom: 1px solid color-mix(in srgb, var(--accent) 35%, transparent); }
+.docbody a:hover { border-bottom-color: var(--accent); }
+.docbody strong, .docbody b { color: var(--ink); font-weight: 650; }
+.docbody em { font-style: italic; }
+.docbody ul, .docbody ol { margin: 0 0 14px 20px; padding: 0; }
+.docbody li { margin: 0 0 5px; }
+.docbody li > ul, .docbody li > ol { margin-top: 5px; }
+.docbody hr { border: 0; border-top: 1px solid var(--line); margin: 28px 0; }
+.docbody blockquote {
+  margin: 0 0 14px; padding: 10px 14px; border-left: 3px solid var(--accent);
+  background: var(--panel); color: var(--ink-2); border-radius: 0 6px 6px 0;
+}
+.docbody blockquote p:last-child { margin-bottom: 0; }
+.docbody code {
+  font: var(--mono); font-size: .87em; padding: 1px 5px; border-radius: 4px;
+  background: var(--panel); border: 1px solid var(--line-2); color: var(--ink);
+}
+.docbody pre {
+  margin: 0 0 15px; padding: 12px 14px; overflow-x: auto; border-radius: 8px;
+  background: var(--panel); border: 1px solid var(--line); line-height: 1.5;
+}
+.docbody pre code { background: none; border: 0; padding: 0; font-size: .85em; color: var(--ink-2); }
+
+/* Tables inside prose are AUTHORED, not generated — they take the center's
+   table look so a doc table and an estate table cannot be told apart, which is
+   the whole point of merging the two sites. */
+.docbody table { border-collapse: collapse; width: 100%; margin: 0 0 16px; font-size: .88em; }
+.docbody th {
+  text-align: left; font-size: .78em; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); font-weight: 600; padding: 8px 12px; border-bottom: 1px solid var(--line);
+}
+.docbody td { padding: 8px 12px; border-top: 1px solid var(--line-2); vertical-align: top; }
+.docbody tr:hover td { background: var(--panel); }
+
+.docbody .tasklist { list-style: none; margin-left: 2px; }
+.docbody .tasklist li { padding-left: 24px; position: relative; }
+.docbody .tasklist li::before { content: "☐"; position: absolute; left: 0; color: var(--muted); }
+.docbody .tasklist li.done::before { content: "☑"; color: var(--good); }
+
+/* The :::note callout directive the markdown converter emits. */
+.docbody .note {
+  margin: 0 0 15px; padding: 11px 14px; border-radius: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-left: 3px solid var(--accent);
+}
+.docbody .note .note-label {
+  display: block; font-size: .72em; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 4px;
+}
+.docbody .note p:last-child { margin-bottom: 0; }
+
+/* Diagrams: a pre-rendered SVG figure (build-time path) and the runtime
+   mermaid block get the SAME plate, so a reader cannot tell which path ran —
+   only the build log and the gate can, which is where that fact belongs. */
+.docbody .mermaid-fig, .docbody pre.mermaid {
+  margin: 0 0 16px; padding: 14px; border-radius: 8px; overflow-x: auto;
+  background: var(--panel); border: 1px solid var(--line); text-align: left;
+}
+.docbody .mermaid-fig svg, .docbody pre.mermaid svg { max-width: 100%; height: auto; }
+/* Dark theme gets an honest light plate under the diagram rather than an
+   inverted one — mermaid's own palette is authored for light grounds. */
+[data-theme="dark"] .docbody .mermaid-fig,
+[data-theme="dark"] .docbody pre.mermaid { background: #ece6d8; border-color: #d8d0bd; }
+.docbody pre.mermaid-fallback { border-color: var(--bad); }
+
+.docsource {
+  margin: 22px 0 0; font-size: .74rem; color: var(--muted); font: var(--mono);
+  padding-top: 10px; border-top: 1px dashed var(--line);
+}
+
+/* Reference chips — the OUTBOUND half of the docs↔estate graph. Derived on
+   every build from the page's own text; a reference that stops resolving stops
+   being rendered, so a chip is never a stale claim. */
+.refs { margin: 30px 0 0; padding-top: 16px; border-top: 1px solid var(--line); }
+.refs h2 { margin: 0 0 4px; font-size: .95rem; font-weight: 700; color: var(--ink); }
+.refs-note { margin: 0 0 10px; font-size: .74rem; color: var(--muted); max-width: 70ch; }
+.refchips { display: flex; flex-wrap: wrap; gap: 6px; }
+.refchip {
+  font: var(--mono); font-size: .74rem; text-decoration: none;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid var(--line); background: var(--panel); color: var(--ink-2);
+}
+.refchip:hover { border-color: var(--accent); color: var(--accent); }
+.refchip.r-entity { border-color: color-mix(in srgb, var(--accent) 45%, transparent); }
+.refchip.r-case   { border-color: color-mix(in srgb, var(--good) 45%, transparent); }
+.refchip.r-skill  { border-color: color-mix(in srgb, var(--warn, #d97a3d) 45%, transparent); }
+.refchip.r-doc    { border-style: dashed; }
+
+/* The INBOUND half, rendered on the estate side. Authored prose on a machine
+   page, and it says so — documentation is evidence that something is described,
+   never evidence that it works. */
+.docref { margin: 4px 0 0; font-size: .78rem; color: var(--muted); }
+.docref a { color: var(--accent); }
