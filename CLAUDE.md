@@ -31,6 +31,9 @@ gabe-suite/                   # current local folder: gabe_lens/ (rename deferre
   tests/hooks/run.sh          # hook/router fixture harness — run after ANY enforcement-layer edit
   assets/                     # Images for README
   docs/                       # User docs (start at docs/WORKFLOW.md)
+  docs/prisms/<slug>/         # AUTHORED prism pages (prism.json + body.html) —
+                              # content, not machinery; the machinery is the skill's.
+                              # docs/prisms/_fragments/*.html are the embeddables.
   README.md                   # Public-facing documentation
   CLAUDE.md                   # This file
   install.sh                  # Install suite to ~/.claude/
@@ -84,7 +87,7 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-next** | 2.4.1 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-cc-update) |
 | **gabe-plan** | 2.5.2 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
 | **gabe-pulse** | 1.1.0 | Read-only completeness sweep — ten deterministic signals in four bands, plus the **ANGLE family** (`scripts/angles.py`): six evidence-backed triggers naming which satellite would find something now, printed as ONE line at the end of every spine beat so the 15 manual-only skills stop depending on memory; decay record, stated kill condition, 18-case battery |
-| **gabe-prism** | 1.0.0 | Explanations rendered as a working system — the register's actors/chain/risks/blast-radius drawn as a production floor (payload moves, machines state their recipe, failures flag themselves, cells open to detail); five grammars chosen by material shape, an actor-table STOP condition, the four-state vocabulary (running·ghost·unpowered·broken), a 9-check contract gate + 10-case battery; wears gabe-artifact's chrome, never re-authors it |
+| **gabe-prism** | 1.1.0 | Explanations rendered as a working system — the register's actors/chain/risks/blast-radius drawn as a production floor; five grammars chosen by material shape, an actor-table STOP condition, the four-state vocabulary (running·ghost·unpowered·broken). **Two targets:** `disk` (default) renders into the command center — full-bleed canvas, prose still capped at 76ch, console vs article page kinds, ambient-loop+scrub or assemble-on-scroll motion, and `{{PRISM:<slug>}}` fragments embeddable in any doc page; `artifact` keeps the published-URL path. Gates: contract (8) + fit at 1440/1280/1024 (6-case battery) + gabe-artifact's motion gate |
 | **gabe-push** | 2.3.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env/--epic pushes run the PRODUCTION GATES (Step 3.7: /gabe-health three-lens scan, findings presented, ONE proceed/hold ask); terminal-env ship prints the /gabe-cc-update release pointer |
 | **gabe-red** | 1.4.0 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips; scripts/prove-guard.py re-proves a guard can still FAIL (mutate → assert red → restore), feeding the center's named-vs-guarded distinction |
 | **gabe-review** | 1.8.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |

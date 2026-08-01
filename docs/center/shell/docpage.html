@@ -4,9 +4,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{{DOC_TITLE}} · {{PROJECT_NAME}} Command Center</title>
 <link rel="stylesheet" href="assets/a3.css">
+<!-- The prism layer rides on every doc page, not only the ones that use it
+     today: a doc page can embed a prism fragment at any time, and a
+     component whose stylesheet arrives one build later renders as a pile of
+     unstyled divs. Both files are inert without a floor — the CSS is scoped to
+     .pf-*/.px-*, and prism-fx.js installs no controls when it finds none. -->
+<link rel="stylesheet" href="assets/prism.css">
 <script src="assets/slots.js" defer></script>
 <script src="assets/a3-settings.js" defer></script>
 <script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
 </head>
 <body>
 <!-- STATION: one authored DOC, rendered into the center's shell.

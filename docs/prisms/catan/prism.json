@@ -1,0 +1,13 @@
+{
+  "title": "Catan, read as a production floor",
+  "nav_label": "Catan",
+  "kicker": "non-software · belt-line",
+  "mode": "console",
+  "pattern": "belt-line",
+  "order": 10,
+  "kind": "generality test",
+  "card": "Dice to victory point in eight machines. The subject is a board game, so nothing here works because the material was already a pipeline in code.",
+  "lede": "Eight machines turn two dice into a victory point. Every number on this page is from the base-game rules for 3–4 players, and the four states land on four things a Catan player already recognises — including the one that reports success over work it did not do.",
+  "handle": "The robber is not a bad hex. The hex still rolls, the board still says it produced, and nothing arrives — which is the difference between <em>broken</em> and <em>not built</em>, and the whole reason two states are not enough.",
+  "source": "numbers from the Catan base-game rules (3–4 player set): 19 hexes, 18 number tokens, 95 resource cards, 25 development cards, 10 VP to win."
+}

@@ -15,7 +15,8 @@
     "schemas": "schemas",
     "templates": "templates",
     "docsite_src": "docs/src",
-    "docsite_config": "docs/docsite.config.py"
+    "docsite_config": "docs/docsite.config.py",
+    "prisms": "docs/prisms"
   },
   "_beats_comment": "The filter spine. Nine lifecycle beats + satellites, plus two non-beat homes (cross-cutting, suite-maintenance) so contracts like E1-E7 and the doctor's own invariants have an honest place to sit rather than being forced into a beat they do not belong to.",
   "beats": [

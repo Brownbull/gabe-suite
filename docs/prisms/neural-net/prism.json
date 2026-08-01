@@ -1,0 +1,13 @@
+{
+  "title": "A neural net, assembled one part at a time",
+  "nav_label": "Neural net",
+  "kicker": "article · assembly then console",
+  "mode": "article",
+  "pattern": "assembly-step",
+  "order": 20,
+  "kind": "two-driver test",
+  "card": "Scroll and the net builds itself, one machine per beat. At the end it runs — because 'what each part does' and 'how the weights move' are two different questions and want two different pages.",
+  "lede": "One concrete network: 784 inputs, one hidden layer of 128, ten outputs, 101,770 parameters. The article half answers what each moving part does. The console at the end answers the other question — how a correction at the output reaches a weight at the input.",
+  "handle": "A forward pass and a backward pass run over <em>the same machines in opposite directions</em>. That is the whole idea, and it is exactly what a static layer diagram cannot show — which is why this page ends on a console instead of a picture.",
+  "source": "arithmetic for a 784→128→10 MLP: 784×128 + 128 + 128×10 + 10 = 101,770 parameters. Every number on this page is that network's."
+}

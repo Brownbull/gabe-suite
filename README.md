@@ -64,7 +64,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
 | `/gabe-plan` | KDBP-aware planning + per-phase tier decision with optional HTML review artifact for complex decisions |
 | `/gabe-pulse` | Read-only completeness sweep — after a stretch of work, is anything important owed? Ten deterministic signals, four bands, every row naming the command that clears it. Writes nothing, dispatches nothing |
-| `/gabe-prism` | Explain a system as a working production floor — the payload moves and is named at every hop, machines carry their recipe and one measured number, failures separate into ghost/unpowered/broken, any cell opens to its detail; five patterns, chosen by the shape of the material |
+| `/gabe-prism` | Explain a system as a working production floor — the payload moves and is named at every hop, machines carry their recipe and one measured number, failures separate into ghost/unpowered/broken, any cell opens to its detail; five patterns, chosen by the shape of the material. Renders as a page in your command center (console or article), or as a published artifact |
 | `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
 | `/gabe-red` | TDD's first half as a beat — declare the failing cases before code (C-ids born in test names), commit the red checkpoint; guards for refactors, enumerated skips |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |

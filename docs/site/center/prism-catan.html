@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catan, read as a production floor · Gabe Suite Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+
+<aside class="side">
+    <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gabe Suite</b><small>Gabe Center · suite</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">18</span></a>
+  <div class="navlabel g-code">Enforcement</div>
+  <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
+  <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">18</span></a>
+  <div class="navlabel g-ent">Surfaces</div>
+  <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
+  <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">462</span></a>
+  <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
+  <a class="navitem navsubitem" href="kdbp.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> What KDBP is</a>
+  <a class="navitem navsubitem" href="the-loop.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The development loop</a>
+  <a class="navitem navsubitem" href="contract.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The E1–E7 contract</a>
+  <a class="navitem navsubitem" href="skill-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The skill map</a>
+  <a class="navitem navsubitem" href="commands.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Beats &amp; commands</a>
+  <a class="navitem navsubitem" href="satellites.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Analysis satellites</a>
+  <a class="navitem navsubitem" href="verification-first.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The one picture</a>
+  <a class="navitem navsubitem" href="gabe-red.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> /gabe-red</a>
+  <a class="navitem navsubitem" href="c-id.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The C-id scheme</a>
+  <a class="navitem navsubitem" href="command-center.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The command center</a>
+  <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
+  <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
+  <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem on" href="prism-catan.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Catan</a>
+  <a class="navitem navsubitem" href="prism-neural-net.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Hook chain</a>
+  <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> gastify scan→cooked</a>
+  <div class="foot">regen 2026-07-31 17:08<br>HEAD dd707b8 · build_suite_center.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Catan, read as a production floor</b></div>
+    <div class="spacer"></div>
+    <span class="chip warn">62 uncommitted</span>
+    <span class="stamp">regen · 2026-07-31 17:08</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">non-software · belt-line</div>
+    <h1>Catan, read as a production floor</h1>
+    <p class="prismlede">Eight machines turn two dice into a victory point. Every number on this page is from the base-game rules for 3–4 players, and the four states land on four things a Catan player already recognises — including the one that reports success over work it did not do.</p>
+    <p class="prismhandle">The robber is not a bad hex. The hex still rolls, the board still says it produced, and nothing arrives — which is the difference between <em>broken</em> and <em>not built</em>, and the whole reason two states are not enough.</p>
+  </div>
+
+  <div class="prismstage" data-prism-mode="console">
+    <div class="prismprose">
+  <p>Read the line left to right, then down one row and left to right again —
+  the break after machine&nbsp;4 is drawn, not implied. The chip riding each belt is the thing that
+  moved, named — and it is a <em>different</em> thing after every machine, which
+  is the test a concept map fails: an arrow labelled <em>produces</em> never says
+  what came out.</p>
+</div>
+
+<!-- FLOOR 1 — the main line. Eight machines, seven hops, one payload that
+     changes identity at every one of them. -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="catan-line" data-tick="1500" style="--pf-node-w:162px">
+  <div class="pf-belt pf-rows">
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="dice" data-in="two d6" data-out="a number 2–12"
+            data-num="36 outcomes · 7 is 6/36" data-state="running" data-detail="#d-dice">
+      <span class="pf-ix">1</span>
+      <span class="pf-name">dice</span>
+      <span class="pf-sub">start of turn</span>
+      <span class="pf-recipe"><i>in</i><span>two d6</span><i>out</i><span>a number 2–12</span></span>
+      <span class="pf-num">36 outcomes · 7 is 6/36</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a number 2–12"><div class="pf-rail"></div>
+      <div class="pf-chip">2–12</div><div class="pf-hoplab">a number</div></div>
+
+    <button class="pf-node" data-node="number tokens" data-in="a number 2–12" data-out="live hexes"
+            data-num="18 tokens on 19 hexes" data-state="running" data-detail="#d-tokens">
+      <span class="pf-ix">2</span>
+      <span class="pf-name">number tokens</span>
+      <span class="pf-sub">the board's index</span>
+      <span class="pf-recipe"><i>in</i><span>a number 2–12</span><i>out</i><span>live hexes</span></span>
+      <span class="pf-num">18 tokens on 19 hexes</span>
+    </button>
+
+    <div class="pf-hop" data-payload="live hexes"><div class="pf-rail"></div>
+      <div class="pf-chip">live hexes</div><div class="pf-hoplab">live hexes</div></div>
+
+    <button class="pf-node" data-node="hex" data-in="live hexes" data-out="resource cards"
+            data-num="5 types · 19 hexes" data-state="running" data-detail="#d-hex">
+      <span class="pf-ix">3</span>
+      <span class="pf-name">hex</span>
+      <span class="pf-sub">pays adjacent buildings</span>
+      <span class="pf-recipe"><i>in</i><span>live hexes</span><i>out</i><span>resource cards</span></span>
+      <span class="pf-num">settlement 1 card · city 2</span>
+      <span class="pf-alert">⚠ robber</span>
+    </button>
+
+    <div class="pf-hop" data-payload="resource cards"><div class="pf-rail"></div>
+      <div class="pf-chip">cards</div><div class="pf-hoplab">resource cards</div></div>
+
+    <button class="pf-node" data-node="hand" data-in="resource cards" data-out="a tradeable hand"
+            data-num="95 cards in the bank" data-state="running" data-detail="#d-hand">
+      <span class="pf-ix">4</span>
+      <span class="pf-name">hand</span>
+      <span class="pf-sub">what you hold</span>
+      <span class="pf-recipe"><i>in</i><span>resource cards</span><i>out</i><span>a tradeable hand</span></span>
+      <span class="pf-num">95 cards in the bank</span>
+      <span class="pf-alert">⚠ 7 = discard</span>
+    </button>
+
+    <div class="pf-hop pf-return" data-payload="a tradeable hand"><div class="pf-rail"></div>
+      <div class="pf-chip">hand</div><div class="pf-hoplab">hand ↓</div></div>
+   </div>
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="trade" data-in="a tradeable hand" data-out="the right cards"
+            data-num="4:1 bank · 3:1 · 2:1" data-state="running" data-detail="#d-trade">
+      <span class="pf-ix">5</span>
+      <span class="pf-name">trade</span>
+      <span class="pf-sub">bank · harbour · player</span>
+      <span class="pf-recipe"><i>in</i><span>a tradeable hand</span><i>out</i><span>the right cards</span></span>
+      <span class="pf-num">4:1 bank · 3:1 · 2:1</span>
+    </button>
+
+    <div class="pf-hop" data-payload="the right cards"><div class="pf-rail"></div>
+      <div class="pf-chip">right cards</div><div class="pf-hoplab">the right cards</div></div>
+
+    <button class="pf-node" data-node="build cost" data-in="the right cards" data-out="a paid cost"
+            data-num="road 2 · sett 4 · city 5" data-state="running" data-detail="#d-cost">
+      <span class="pf-ix">6</span>
+      <span class="pf-name">build cost</span>
+      <span class="pf-sub">the recipe card</span>
+      <span class="pf-recipe"><i>in</i><span>the right cards</span><i>out</i><span>a paid cost</span></span>
+      <span class="pf-num">road 2 · sett 4 · city 5 · dev 3</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a paid cost"><div class="pf-rail"></div>
+      <div class="pf-chip">paid</div><div class="pf-hoplab">a paid cost</div></div>
+
+    <button class="pf-node" data-node="building" data-in="a paid cost" data-out="a building"
+            data-num="5 setts · 4 cities · 15 roads" data-state="running" data-detail="#d-build">
+      <span class="pf-ix">7</span>
+      <span class="pf-name">building</span>
+      <span class="pf-sub">on the board, permanently</span>
+      <span class="pf-recipe"><i>in</i><span>a paid cost</span><i>out</i><span>a building</span></span>
+      <span class="pf-num">5 setts · 4 cities · 15 roads</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a building"><div class="pf-rail"></div>
+      <div class="pf-chip">building</div><div class="pf-hoplab">a building</div></div>
+
+    <button class="pf-node" data-node="tally" data-in="a building" data-out="victory points"
+            data-num="10 VP wins" data-state="running" data-detail="#d-tally">
+      <span class="pf-ix">8</span>
+      <span class="pf-name">tally</span>
+      <span class="pf-sub">the readout</span>
+      <span class="pf-recipe"><i>in</i><span>a building</span><i>out</i><span>victory points</span></span>
+      <span class="pf-num">10 VP wins</span>
+    </button>
+
+   </div>
+  </div>
+
+  <!-- The gate register. A gate is not a stage: nothing is handed to it and
+       nothing comes out of it — it decides whether the hop beside it happens. -->
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="the robber" data-gate data-state="broken"
+          title="Sits on one hex. That hex's number still comes up and pays nothing.">
+      robber · one hex pays nothing
+    </span>
+    <span class="pf-gate" data-node="the 7 discard" data-gate data-state="running"
+          title="Roll a 7 and every hand over 7 cards loses half, rounded down.">
+      7 rolled · hands &gt; 7 lose half
+    </span>
+    <span class="pf-gate" data-node="distance rule" data-gate data-state="running"
+          title="No settlement may be placed on an intersection adjacent to another settlement.">
+      distance rule · no adjacent settlements
+    </span>
+    <span class="pf-gate" data-node="stock limit" data-gate data-state="unpowered"
+          title="Nothing in the rules stops the bank running dry; play just stalls on that resource.">
+      bank stock · 19 cards per resource
+    </span>
+  </div>
+</div></div></div></div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — built, and something proves it pays</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — not built: no building touches it</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — built, but nothing makes it produce</span>
+  <span><i class="l-broken"></i> <b>broken</b> — the number comes up, the board says produced, nothing arrives</span>
+</div>
+
+<div class="prismprose" style="margin-top:30px">
+  <h2>The four states, on four hexes you have actually seen</h2>
+  <p>This is the part that does not survive a two-colour diagram. All four hexes
+  below are <em>not paying you</em>. Each one needs a different move, and a red
+  dot on all four would tell you to make the same move four times.</p>
+</div>
+
+<!-- FLOOR 2 — the same vocabulary, one row, four different next moves. -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="catan-states" data-tick="1200" data-scrub="off">
+  <div class="pf-belt wrapped" style="gap:12px">
+    <button class="pf-node" data-node="ore 9, two cities" data-in="a 9 rolled" data-out="4 ore cards"
+            data-num="2 cities adjacent" data-state="running" data-detail="#d-s-running">
+      <span class="pf-ix">running</span>
+      <span class="pf-name">ore · 9</span>
+      <span class="pf-recipe"><i>in</i><span>a 9 rolled</span><i>out</i><span>4 ore cards</span></span>
+      <span class="pf-num">2 cities adjacent · pays 4</span>
+    </button>
+
+    <button class="pf-node" data-node="wool 5, no building" data-in="a 5 rolled" data-out="nothing — you own no corner"
+            data-num="0 buildings adjacent" data-state="ghost" data-detail="#d-s-ghost">
+      <span class="pf-ix">ghost</span>
+      <span class="pf-name">wool · 5</span>
+      <span class="pf-recipe"><i>in</i><span>a 5 rolled</span><i>out</i><span>nothing — you own no corner</span></span>
+      <span class="pf-num">0 buildings adjacent</span>
+    </button>
+
+    <button class="pf-node" data-node="desert" data-in="any roll" data-out="no resource, ever"
+            data-num="1 of 19 hexes · 0 tokens" data-state="unpowered" data-detail="#d-s-unpowered">
+      <span class="pf-ix">unpowered</span>
+      <span class="pf-name">desert</span>
+      <span class="pf-recipe"><i>in</i><span>any roll</span><i>out</i><span>no resource, ever</span></span>
+      <span class="pf-num">1 of 19 hexes · 0 tokens</span>
+    </button>
+
+    <button class="pf-node" data-node="brick 6, robbed" data-in="a 6 rolled" data-out="0 cards — the robber holds it"
+            data-num="5/36 per turn, paying 0" data-state="broken" data-detail="#d-s-broken">
+      <span class="pf-ix">broken</span>
+      <span class="pf-name">brick · 6</span>
+      <span class="pf-recipe"><i>in</i><span>a 6 rolled</span><i>out</i><span>0 cards — the robber holds it</span></span>
+      <span class="pf-num">5/36 per turn, paying 0</span>
+      <span class="pf-alert">⚠ robbed</span>
+    </button>
+  </div>
+</div></div></div></div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-dice">
+    <h4>dice — 36 outcomes, and they are not flat</h4>
+    <p>Two d6 give 36 ordered outcomes. 7 occurs on 6 of them; 6 and 8 on 5 each;
+    2 and 12 on 1 each. That distribution is the whole reason a 6-hex corner is
+    worth fighting for and a 2-hex corner is a decoration.</p>
+    <dl><dt>consumes</dt><dd>two d6</dd>
+        <dt>produces</dt><dd>a number 2–12</dd>
+        <dt>fails by</dt><dd>rolling 7 — no hex pays, and the robber moves</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-tokens">
+    <h4>number tokens — the board's lookup table</h4>
+    <p>18 tokens sit on 19 hexes; the desert gets none. The token is what makes a
+    hex addressable: without it the hex exists on the board and is unreachable by
+    any roll, which is <em>unpowered</em>, not absent.</p>
+    <dl><dt>consumes</dt><dd>a number 2–12</dd>
+        <dt>produces</dt><dd>live hexes</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-hex">
+    <h4>hex — the only machine that creates material</h4>
+    <p>Everything downstream moves cards around. This is the one node that puts
+    new cards into the game, which is why the robber is placed here and not
+    anywhere else: block production and every later machine starves without any
+    of them reporting a fault.</p>
+    <dl><dt>consumes</dt><dd>live hexes</dd>
+        <dt>produces</dt><dd>resource cards — 1 per settlement, 2 per city</dd>
+        <dt>fails by</dt><dd>the robber: the roll matches and nothing is paid</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-hand">
+    <h4>hand — the buffer, and the one with a cap</h4>
+    <p>95 cards exist: 19 of each of the five resources. A hand is a buffer
+    between production and building, and it is the only buffer in the game that
+    is punished for being full — roll a 7 with more than 7 cards and half of them
+    go back, rounded down.</p>
+    <dl><dt>consumes</dt><dd>resource cards</dd>
+        <dt>produces</dt><dd>a tradeable hand</dd>
+        <dt>fails by</dt><dd>hoarding into a 7</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-trade">
+    <h4>trade — the ratio machine</h4>
+    <p>Three rates, and which one you get is a property of where you built, not
+    of what you hold: 4:1 with the bank always; 3:1 at a generic harbour; 2:1 at
+    the matching special harbour. 9 harbours exist — 4 generic and 5 special.</p>
+    <dl><dt>consumes</dt><dd>a tradeable hand</dd>
+        <dt>produces</dt><dd>the right cards</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-cost">
+    <h4>build cost — the recipe card, and the reason this is a tree</h4>
+    <p>Road: 1 brick + 1 lumber. Settlement: brick + lumber + wool + grain. City:
+    2 grain + 3 ore. Development card: ore + wool + grain. Read upward and the
+    line is a dependency tree — a city is unreachable without an ore hex,
+    whatever else you hold.</p>
+    <dl><dt>consumes</dt><dd>the right cards</dd>
+        <dt>produces</dt><dd>a paid cost</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-build">
+    <h4>building — the only irreversible machine</h4>
+    <p>5 settlements, 4 cities, 15 roads per player, and nothing is ever
+    un-built. Every other machine on this line is a flow; this one is state, and
+    it is why a bad opening placement is still costing you on turn 40.</p>
+    <dl><dt>consumes</dt><dd>a paid cost</dd>
+        <dt>produces</dt><dd>a building</dd>
+        <dt>gated by</dt><dd>the distance rule — no settlement adjacent to another</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-tally">
+    <h4>tally — the production readout</h4>
+    <p>Settlement 1, city 2, longest road 2, largest army 2, victory-point
+    development card 1. 10 wins. 25 development cards exist, of which 5 are
+    victory points — the only points on this board that arrive without a
+    building, and the reason a player with a small board can still be at 9.</p>
+    <dl><dt>consumes</dt><dd>a building</dd>
+        <dt>produces</dt><dd>victory points</dd></dl>
+  </div>
+
+  <div class="pf-detail" id="d-s-running">
+    <h4>running — and the proof is a card in your hand</h4>
+    <p>Two cities on a 9-ore hex pay 4 ore whenever a 9 comes up, which is 4/36
+    of rolls. <b>Next move:</b> nothing. This one works.</p>
+  </div>
+  <div class="pf-detail" id="d-s-ghost">
+    <h4>ghost — an honest absence, never a zero</h4>
+    <p>The 5-wool hex pays every time a 5 is rolled. It pays <em>someone else</em>,
+    because you own no corner on it. Reporting this as "0 wool income" hides the
+    reason. <b>Next move:</b> build there, or accept you are trading for wool all
+    game.</p>
+  </div>
+  <div class="pf-detail" id="d-s-unpowered">
+    <h4>unpowered — it exists, and nothing can make it produce</h4>
+    <p>The desert has no number token. A settlement on it is a real settlement,
+    worth its victory point, and it will never pay a card from that side. <b>Next
+    move:</b> stop waiting; the fix is elsewhere.</p>
+  </div>
+  <div class="pf-detail" id="d-s-broken">
+    <h4>broken — it reports success over work it did not do</h4>
+    <p>A 6-brick hex under the robber comes up on 5 of 36 rolls. The number is
+    called, the hex is named, everyone hears production happen, and no card
+    reaches you. A dashboard counting "rolls that matched my hexes" would show
+    this hex as your best asset. <b>Next move:</b> move the robber — a knight, or
+    your own next 7.</p>
+  </div>
+</div>
+
+<div class="prismprose" style="margin-top:34px">
+  <h2>What this page was actually testing</h2>
+  <p>Catan is not a pipeline in code and never was, which is the point: if the
+  grammar only worked on our own build chains, it would be a habit rather than a
+  skill. Eight machines, seven payload identities, four gates that decide rather
+  than transform, and four states that each name a different next move — none of
+  it needed the subject to be software.</p>
+  <p><strong>Where it strains:</strong> the trade machine is not really a stage —
+  it is a loop the player may run any number of times, and drawing it as one box
+  in a line understates it. A <code>belt-lanes</code> rendering would show it as a
+  lane that rejoins, at the cost of a busier page. That is a real limit of
+  <code>belt-line</code>, stated rather than hidden.</p>
+</div>
+
+  </div>
+
+  <p class="prismsource">source: docs/prisms/catan/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 2 floor(s). numbers from the Catan base-game rules (3–4 player set): 19 hexes, 18 number tokens, 95 resource cards, 25 development cards, 10 VP to win.</p>
+</main>
+
+</div>
+
+</body>
+</html>

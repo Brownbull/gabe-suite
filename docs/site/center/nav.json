@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "2f112a4",
+ "head": "dd707b8",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 19
+     "count": 18
     }
    ]
   },
@@ -46,7 +46,7 @@
      "label": "Testing",
      "href": "testing.html",
      "icon": "check",
-     "count": 17
+     "count": 18
     }
    ]
   },
@@ -70,7 +70,7 @@
      "label": "Functions",
      "href": "functions.html",
      "icon": "code",
-     "count": 446
+     "count": 462
     },
     {
      "label": "Data structures",
@@ -165,6 +165,41 @@
      "label": "Design decisions",
      "href": "decisions.html",
      "icon": "filetext",
+     "sub": true
+    }
+   ]
+  },
+  {
+   "label": "Explanations",
+   "cls": "g-ent",
+   "items": [
+    {
+     "label": "Explanations",
+     "href": "explanations.html",
+     "icon": "zap"
+    },
+    {
+     "label": "Catan",
+     "href": "prism-catan.html",
+     "icon": "book",
+     "sub": true
+    },
+    {
+     "label": "Neural net",
+     "href": "prism-neural-net.html",
+     "icon": "book",
+     "sub": true
+    },
+    {
+     "label": "Hook chain",
+     "href": "prism-hook-chain.html",
+     "icon": "book",
+     "sub": true
+    },
+    {
+     "label": "gastify scan\u2192cooked",
+     "href": "prism-gastify-scan-to-cooked.html",
+     "icon": "book",
      "sub": true
     }
    ]

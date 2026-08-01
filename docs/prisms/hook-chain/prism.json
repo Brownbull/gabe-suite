@@ -1,0 +1,13 @@
+{
+  "title": "The hook chain — how a rule reaches the model",
+  "nav_label": "Hook chain",
+  "kicker": "software-internal · belt-line",
+  "mode": "console",
+  "pattern": "belt-line",
+  "order": 30,
+  "kind": "hard-payload test",
+  "card": "Seven machines carrying an injected instruction. The payload is not an object — it is a sentence that becomes a behaviour, which is the case a box-and-arrow diagram cannot draw.",
+  "lede": "A keystroke becomes an event, a script, a string on stdout, a rule in the model's context, and — if the chain holds — a command that runs. Two of these machines cannot be proven to work, and this page says which two.",
+  "handle": "The direction guard is installed, correct, and <em>can never fire in this repository</em>: its first line is <code>[ -d .kdbp ] || exit 0</code>, and ruling R8 says this repo never carries <code>.kdbp/</code>. That is a ghost, not a failure — and no two-colour diagram has a way to say it.",
+  "source": "counts read from the repo at build time: 7 scripts in scripts/hooks/kdbp/, 2 hook events in .claude/settings.json, 14 lines in .claude/register-core.md, 28 skills, 119 classified rules in the enforcement ledger."
+}

@@ -1,0 +1,198 @@
+<div class="prismprose">
+  <p>The payload on this line is not a file or a record. It is an
+  <strong>instruction</strong> — text that starts as bytes on stdout and ends as
+  a behaviour, or does not. Watch where it stops being verifiable: the last three
+  machines carry the same sentence, and only the first of them can be tested.</p>
+</div>
+
+<div class="pf" data-prism data-fx="hook-line" data-tick="1500" style="--pf-node-w:168px">
+  <div class="pf-belt pf-rows">
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="the prompt" data-in="a typed message" data-out="a UserPromptSubmit event"
+            data-num="1 event per turn" data-state="running" data-detail="#d-h1">
+      <span class="pf-ix">1</span><span class="pf-name">the prompt</span>
+      <span class="pf-sub">operator presses enter</span>
+      <span class="pf-recipe"><i>in</i><span>a typed message</span><i>out</i><span>a UserPromptSubmit event</span></span>
+      <span class="pf-num">1 event per turn</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a UserPromptSubmit event"><div class="pf-rail"></div>
+      <div class="pf-chip">event</div><div class="pf-hoplab">an event</div></div>
+
+    <button class="pf-node" data-node="settings matcher" data-in="a UserPromptSubmit event" data-out="a shell command line"
+            data-num="2 events wired" data-state="running" data-detail="#d-h2">
+      <span class="pf-ix">2</span><span class="pf-name">settings.json</span>
+      <span class="pf-sub">the matcher table</span>
+      <span class="pf-recipe"><i>in</i><span>a UserPromptSubmit event</span><i>out</i><span>a shell command line</span></span>
+      <span class="pf-num">2 events wired · 5s timeout</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a shell command line"><div class="pf-rail"></div>
+      <div class="pf-chip">cmd</div><div class="pf-hoplab">a command</div></div>
+
+    <button class="pf-node" data-node="the hook script" data-in="a shell command line" data-out="stdout text + an exit code"
+            data-num="7 scripts · 16 lines" data-state="running" data-detail="#d-h3">
+      <span class="pf-ix">3</span><span class="pf-name">the hook script</span>
+      <span class="pf-sub">scripts/hooks/kdbp/</span>
+      <span class="pf-recipe"><i>in</i><span>a shell command line</span><i>out</i><span>stdout + exit code</span></span>
+      <span class="pf-num">7 scripts · guard is 16 lines</span>
+      <span class="pf-alert">⚠ ghost here</span>
+    </button>
+
+    <div class="pf-hop pf-return" data-payload="stdout text + an exit code"><div class="pf-rail"></div>
+      <div class="pf-chip">stdout</div><div class="pf-hoplab">stdout ↓</div></div>
+   </div>
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="the injector" data-in="stdout text + an exit code" data-out="a rule in the turn's context"
+            data-num="14 lines re-injected" data-state="running" data-detail="#d-h4">
+      <span class="pf-ix">4</span><span class="pf-name">the injector</span>
+      <span class="pf-sub">harness, before the turn</span>
+      <span class="pf-recipe"><i>in</i><span>stdout + exit code</span><i>out</i><span>a rule in context</span></span>
+      <span class="pf-num">14 lines, every prompt</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a rule in the turn's context"><div class="pf-rail"></div>
+      <div class="pf-chip">rule</div><div class="pf-hoplab">a rule</div></div>
+
+    <button class="pf-node" data-node="the model's turn" data-in="a rule in the turn's context" data-out="a named next move"
+            data-num="4 rules in the payload" data-state="unpowered" data-detail="#d-h5">
+      <span class="pf-ix">5</span><span class="pf-name">the model's turn</span>
+      <span class="pf-sub">reads it, or does not</span>
+      <span class="pf-recipe"><i>in</i><span>a rule in context</span><i>out</i><span>a named next move</span></span>
+      <span class="pf-num">4 rules · 0 fixtures</span>
+      <span class="pf-alert">⚠ unprovable</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a named next move"><div class="pf-rail"></div>
+      <div class="pf-chip">next move</div><div class="pf-hoplab">a next move</div></div>
+
+    <button class="pf-node" data-node="the skill" data-in="a named next move" data-out="a position check on disk"
+            data-num="28 skills addressable" data-state="running" data-detail="#d-h6">
+      <span class="pf-ix">6</span><span class="pf-name">the skill</span>
+      <span class="pf-sub">/gabe-assess brief</span>
+      <span class="pf-recipe"><i>in</i><span>a named next move</span><i>out</i><span>a position check on disk</span></span>
+      <span class="pf-num">28 skills addressable</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a position check on disk"><div class="pf-rail"></div>
+      <div class="pf-chip">check</div><div class="pf-hoplab">a check</div></div>
+
+    <button class="pf-node" data-node="the ledger row" data-in="a position check on disk" data-out="a classified enforcement claim"
+            data-num="119 rules classified" data-state="running" data-detail="#d-h7">
+      <span class="pf-ix">7</span><span class="pf-name">the ledger row</span>
+      <span class="pf-sub">enforcement.html</span>
+      <span class="pf-recipe"><i>in</i><span>a position check</span><i>out</i><span>a classified claim</span></span>
+      <span class="pf-num">119 rules classified</span>
+    </button>
+
+   </div>
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="kdbp guard" data-gate data-state="ghost"
+          title="direction-guard.sh line 9: [ -d &quot;$ROOT/.kdbp&quot; ] || exit 0. Ruling R8: this repo never carries .kdbp/.">
+      [ -d .kdbp ] || exit 0 · never true here
+    </span>
+    <span class="pf-gate" data-node="blocking exit" data-gate data-state="ghost"
+          title="A PreToolUse hook exiting 2 blocks the call. Neither wired event can block.">
+      exit 2 blocks the call · not wired
+    </span>
+    <span class="pf-gate" data-node="hook fixtures" data-gate data-state="running"
+          title="tests/hooks/run.sh proves each hook can both FIRE and stay silent.">
+      tests/hooks/run.sh · fires and stays silent
+    </span>
+    <span class="pf-gate" data-node="model compliance" data-gate data-state="unpowered"
+          title="No fixture can make the model fail to honour an injected rule, so none proves it honours one.">
+      model honours the rule · nothing can fail
+    </span>
+  </div>
+</div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — built, and a fixture proves it</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — present in code, unreachable in this repo</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — it happens, and nothing can prove it can fail</span>
+  <span><i class="l-broken"></i> <b>broken</b> — would claim enforcement it does not have (none here)</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-h1">
+    <h4>the prompt — the only machine a human operates</h4>
+    <p>Everything downstream is automatic. This is worth stating because the whole
+    chain's purpose is to add something the operator did not type, before the model
+    reads what they did type.</p>
+    <dl><dt>consumes</dt><dd>a typed message</dd><dt>produces</dt><dd>a UserPromptSubmit event</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-h2">
+    <h4>settings.json — a table, not a program</h4>
+    <p>Two events are wired in this repo: <code>UserPromptSubmit</code>, and
+    <code>SessionStart</code> with matcher <code>compact</code>. Both run the same
+    command — <code>cat .claude/register-core.md</code> — with a 5-second timeout.
+    The second exists because compaction drops the payload, and a rule that
+    survives everything except a context compaction is a rule that quietly stops
+    applying halfway through a long session.</p>
+    <dl><dt>consumes</dt><dd>a UserPromptSubmit event</dd>
+        <dt>produces</dt><dd>a shell command line</dd>
+        <dt>fails by</dt><dd>the 5s timeout — the turn proceeds with no rule and says nothing</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-h3">
+    <h4>the hook script — where the ghost is</h4>
+    <p>Seven scripts live in <code>scripts/hooks/kdbp/</code>.
+    <code>direction-guard.sh</code> is 16 lines, and its ninth is
+    <code>[ -d "$ROOT/.kdbp" ] || exit 0</code>. Ruling R8 says this repository
+    never carries <code>.kdbp/</code>, so in <em>this</em> repo the guard exits
+    silently on every prompt, forever. It is correct code that cannot run here.</p>
+    <dl><dt>consumes</dt><dd>a shell command line</dd>
+        <dt>produces</dt><dd>stdout text + an exit code</dd>
+        <dt>state</dt><dd>running for the register payload · ghost for the kdbp guards</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-h4">
+    <h4>the injector — the machine that changes the payload's nature</h4>
+    <p>Bytes on stdout go in; a rule inside the model's context comes out. This is
+    the identity change that makes the chain worth drawing: nothing downstream can
+    be inspected with a file read, because the payload is no longer on disk.</p>
+    <dl><dt>consumes</dt><dd>stdout text + an exit code</dd>
+        <dt>produces</dt><dd>a rule in the turn's context</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-h5">
+    <h4>the model's turn — unpowered, and honestly so</h4>
+    <p>The four rules arrive. Whether they change the answer cannot be tested by a
+    fixture, because no fixture can make a model deterministically fail to honour
+    an instruction. The suite's rule for this is explicit: a gate that cannot fail
+    is non-evidence. So this machine is amber, not green, and the enforcement
+    ledger classifies its rules as <em>prompt-only</em> rather than <em>enforced</em>.</p>
+    <dl><dt>consumes</dt><dd>a rule in the turn's context</dd>
+        <dt>produces</dt><dd>a named next move</dd>
+        <dt>why amber</dt><dd>0 fixtures can make it fail, so 0 prove it works</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-h6">
+    <h4>the skill — back to something you can read</h4>
+    <p>Once a skill is named, the payload is a file path again: 28 skills are
+    addressable, each one a directory with a SKILL.md the harness loads. The chain
+    becomes inspectable at exactly this point, which is why the ledger's evidence
+    starts here rather than one machine earlier.</p>
+    <dl><dt>consumes</dt><dd>a named next move</dd><dt>produces</dt><dd>a position check on disk</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-h7">
+    <h4>the ledger row — the claim, and its bucket</h4>
+    <p>119 rules are classified across four buckets: enforced, hardenable,
+    prompt-only, and falsely claimed. This line's own rules land in
+    <em>prompt-only</em>. A row that claimed <em>enforced</em> for machine 5 would
+    be the fourth state — <em>broken</em> — and the reason the ledger has a bucket
+    for it at all.</p>
+    <dl><dt>consumes</dt><dd>a position check on disk</dd><dt>produces</dt><dd>a classified enforcement claim</dd></dl>
+  </div>
+</div>
+
+<div class="prismprose" style="margin-top:34px">
+  <h2>The reason this subject was chosen</h2>
+  <p>An injected instruction is the hardest payload to draw: it has no size, no
+  file, and no place you can point at after machine 4. Drawn as a floor, the
+  awkwardness becomes the finding — the chain is fully provable for three
+  machines, unprovable for one, and dead in this repository at a gate that reads
+  <code>[ -d .kdbp ]</code>. A concept map of the same seven boxes would show
+  seven identical rectangles joined by seven identical arrows.</p>
+</div>

@@ -1,0 +1,96 @@
+<!--prism
+{ "title": "The ANGLE pipeline",
+  "note": "repo state → signal → one line → satellite · autoplays, own controls" }
+-->
+<!-- FRAGMENT — embeddable, and therefore deliberately small: four machines, one
+     row, no prose. It carries no nav entry (a fragment with one is a page) and
+     it autoplays with its own scrub bar, per the operator's ruling that a
+     component behaves the same standalone as embedded. -->
+<div class="pf" data-prism data-fx="angle" data-tick="1300" style="--pf-node-w:154px;--pf-hop-w:108px">
+  <div class="pf-belt">
+
+    <button class="pf-node" data-node="repo state" data-in="the working tree" data-out="7 probe results"
+            data-num="7 signals" data-state="running" data-detail="#d-a1">
+      <span class="pf-ix">1</span><span class="pf-name">repo state</span>
+      <span class="pf-recipe"><i>in</i><span>the working tree</span><i>out</i><span>7 probe results</span></span>
+      <span class="pf-num">7 signals · S1–S7</span>
+    </button>
+
+    <div class="pf-hop" data-payload="7 probe results"><div class="pf-rail"></div>
+      <div class="pf-chip">probes</div><div class="pf-hoplab">7 results</div></div>
+
+    <button class="pf-node" data-node="the signal" data-in="7 probe results" data-out="one evidence string"
+            data-num="1 fires, 6 stay quiet" data-state="running" data-detail="#d-a2">
+      <span class="pf-ix">2</span><span class="pf-name">the signal</span>
+      <span class="pf-recipe"><i>in</i><span>7 probe results</span><i>out</i><span>one evidence string</span></span>
+      <span class="pf-num">top 1 of 7 printed</span>
+    </button>
+
+    <div class="pf-hop" data-payload="one evidence string"><div class="pf-rail"></div>
+      <div class="pf-chip">evidence</div><div class="pf-hoplab">evidence</div></div>
+
+    <button class="pf-node" data-node="the ANGLE line" data-in="one evidence string" data-out="a named satellite + command"
+            data-num="1 line per beat" data-state="running" data-detail="#d-a3">
+      <span class="pf-ix">3</span><span class="pf-name">the ANGLE line</span>
+      <span class="pf-recipe"><i>in</i><span>one evidence string</span><i>out</i><span>a satellite + command</span></span>
+      <span class="pf-num">1 line per spine beat</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a named satellite + command"><div class="pf-rail"></div>
+      <div class="pf-chip">/gabe-…</div><div class="pf-hoplab">a command</div></div>
+
+    <button class="pf-node" data-node="the satellite" data-in="a named satellite + command" data-out="a finding, or nothing"
+            data-num="15 manual-only skills" data-state="unpowered" data-detail="#d-a4">
+      <span class="pf-ix">4</span><span class="pf-name">the satellite</span>
+      <span class="pf-recipe"><i>in</i><span>a satellite + command</span><i>out</i><span>a finding, or nothing</span></span>
+      <span class="pf-num">15 skills · run by hand</span>
+      <span class="pf-alert">⚠ operator-gated</span>
+    </button>
+
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="decay" data-gate data-state="running"
+          title="Offered twice on identical evidence and the signal is silenced — a true signal that becomes wallpaper stops being a signal.">
+      decay · silenced after 2 identical offers
+    </span>
+    <span class="pf-gate" data-node="decay record" data-gate data-state="ghost"
+          title="The decay record lives at .kdbp/PULSE.jsonl. This repo has no .kdbp/, so nothing is remembered between runs here.">
+      .kdbp/PULSE.jsonl · absent in this repo
+    </span>
+  </div>
+</div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — proven by the 18-case battery</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — code exists, no store to write to here</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — nothing makes the operator run it</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-a1">
+    <h4>repo state — seven probes, no judgement</h4>
+    <p>S1 adversarial · S2 structural · S3 journey proof · S4 published docs ·
+    S5 scope · S6 entity context · S7 explanation. Each is a deterministic read
+    of the tree; none of them decides anything.</p>
+  </div>
+  <div class="pf-detail" id="d-a2">
+    <h4>the signal — at most one is allowed to speak</h4>
+    <p>Every probe that fires carries its evidence. Only the top one is printed,
+    because a list of seven suggestions at the end of every beat is a list nobody
+    reads.</p>
+  </div>
+  <div class="pf-detail" id="d-a3">
+    <h4>the ANGLE line — one line, and it names the command</h4>
+    <p>The output is a single line naming which satellite would find something
+    right now and the exact command that runs it. Naming the command is the
+    point: a suggestion the reader has to translate is a suggestion they skip.</p>
+  </div>
+  <div class="pf-detail" id="d-a4">
+    <h4>the satellite — amber, because a human is the gate</h4>
+    <p>15 skills are manual-only. Nothing in this pipeline can run one; the line
+    can only make it visible. That is the honest ceiling of the design, and the
+    reason this machine is not green.</p>
+  </div>
+</div>

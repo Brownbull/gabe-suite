@@ -4,9 +4,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Analysis satellites · Gabe Suite Command Center</title>
 <link rel="stylesheet" href="assets/a3.css">
+<!-- The prism layer rides on every doc page, not only the ones that use it
+     today: a doc page can embed a prism fragment at any time, and a
+     component whose stylesheet arrives one build later renders as a pile of
+     unstyled divs. Both files are inert without a floor — the CSS is scoped to
+     .pf-*/.px-*, and prism-fx.js installs no controls when it finds none. -->
+<link rel="stylesheet" href="assets/prism.css">
 <script src="assets/slots.js" defer></script>
 <script src="assets/a3-settings.js" defer></script>
 <script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
 </head>
 <body>
 <!-- STATION: one authored DOC, rendered into the center's shell.
@@ -29,15 +36,15 @@
   <div class="navlabel g-now">Now</div>
   <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
   <div class="navlabel g-board">Board</div>
-  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">19</span></a>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">18</span></a>
   <div class="navlabel g-code">Enforcement</div>
   <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
   <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
-  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">17</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">18</span></a>
   <div class="navlabel g-ent">Surfaces</div>
   <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
   <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
-  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">446</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">462</span></a>
   <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
@@ -54,7 +61,13 @@
   <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
   <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
   <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
-  <div class="foot">regen 2026-07-31 17:04Z<br>HEAD 2f112a4 · build_suite_center.py</div>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem" href="prism-catan.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Catan</a>
+  <a class="navitem navsubitem" href="prism-neural-net.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Hook chain</a>
+  <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> gastify scan→cooked</a>
+  <div class="foot">regen 2026-07-31 18:20Z<br>HEAD dd707b8 · build_suite_center.py</div>
 </aside>
 
 <main class="main">
@@ -62,7 +75,7 @@
     <div class="crumb"><a href="index.html">Overview</a> › <a href="docs.html">Docs</a> › <b>Analysis satellites</b></div>
     <div class="spacer"></div>
     
-    <span class="stamp">regen · 2026-07-31 17:04Z</span>
+    <span class="stamp">regen · 2026-07-31 18:20Z</span>
   </div>
   <div class="subject">
     <div class="subjecthead">
@@ -145,7 +158,102 @@
 <p>Values load from three stacking sources — universal structural guards built into the skill (A1-A7), your own cross-project values in <code>~/.kdbp/VALUES.md</code>, and this project's values in <code class="kdbp-file kf-values">.kdbp/VALUES.md</code> — and each gets an independent verdict: PASS, CONCERN, or FAIL, with any FAIL forcing a <code>DO NOT PROCEED</code> verdict and any CONCERN (with no FAIL) forcing <code>PROCEED WITH CONCERNS</code>. The automatic checkpoint adds a second layer standard/deep mode doesn't: for every changed source file, it names three realistic scenarios a real user would hit — including error states and empty data — and reports whether each one actually has a test. Untested scenarios a user proceeds past anyway get written straight into <code class="kdbp-file kf-pending">PENDING.md</code> as deferred items, so the next <code>/gabe-review</code> finds them waiting.</p>
 <p><img class="doc-meme" src="assets/memes/align-drift.png" alt="Disaster Girl meme: "the values we wrote down" and "the PR that quietly ignores them.""></p>
 <div class="note"><span class="lbl">Use it when</span><p>Manually: before a new architecture or greenfield decision (deep mode), or as a quick sanity check before a roast or a non-trivial task (shallow/standard). Automatically: you don't invoke it at all — it fires on its own at every commit and PR, which is exactly the point. It's the one satellite in this list that isn't purely "on demand."</p></div>
-<h2 id="how-findings-get-back-into-the-loop"><span class="num">11</span>How findings get back into the loop</h2>
+<h2 id="what-reminds-you-to-run-one"><span class="num">11</span>What reminds you to run one</h2>
+<p>Every satellite on this page is manual — nothing fires them, which means they depend on you remembering they exist. The ANGLE family closes that gap: seven deterministic probes run at the end of every spine beat, and at most one prints a single line naming the satellite that would find something <em>right now</em> and the command that runs it.</p>
+<div class="pxfrag px-angle-pipeline" data-prism-fragment="angle-pipeline"><div class="pxhead"><span class="pxtitle">The ANGLE pipeline</span><span class="pxnote">repo state → signal → one line → satellite · autoplays, own controls</span></div><div class="pxbody"><!-- FRAGMENT — embeddable, and therefore deliberately small: four machines, one
+     row, no prose. It carries no nav entry (a fragment with one is a page) and
+     it autoplays with its own scrub bar, per the operator's ruling that a
+     component behaves the same standalone as embedded. -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="angle" data-tick="1300" style="--pf-node-w:154px;--pf-hop-w:108px">
+  <div class="pf-belt">
+
+    <button class="pf-node" data-node="repo state" data-in="the working tree" data-out="7 probe results"
+            data-num="7 signals" data-state="running" data-detail="#d-a1">
+      <span class="pf-ix">1</span><span class="pf-name">repo state</span>
+      <span class="pf-recipe"><i>in</i><span>the working tree</span><i>out</i><span>7 probe results</span></span>
+      <span class="pf-num">7 signals · S1–S7</span>
+    </button>
+
+    <div class="pf-hop" data-payload="7 probe results"><div class="pf-rail"></div>
+      <div class="pf-chip">probes</div><div class="pf-hoplab">7 results</div></div>
+
+    <button class="pf-node" data-node="the signal" data-in="7 probe results" data-out="one evidence string"
+            data-num="1 fires, 6 stay quiet" data-state="running" data-detail="#d-a2">
+      <span class="pf-ix">2</span><span class="pf-name">the signal</span>
+      <span class="pf-recipe"><i>in</i><span>7 probe results</span><i>out</i><span>one evidence string</span></span>
+      <span class="pf-num">top 1 of 7 printed</span>
+    </button>
+
+    <div class="pf-hop" data-payload="one evidence string"><div class="pf-rail"></div>
+      <div class="pf-chip">evidence</div><div class="pf-hoplab">evidence</div></div>
+
+    <button class="pf-node" data-node="the ANGLE line" data-in="one evidence string" data-out="a named satellite + command"
+            data-num="1 line per beat" data-state="running" data-detail="#d-a3">
+      <span class="pf-ix">3</span><span class="pf-name">the ANGLE line</span>
+      <span class="pf-recipe"><i>in</i><span>one evidence string</span><i>out</i><span>a satellite + command</span></span>
+      <span class="pf-num">1 line per spine beat</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a named satellite + command"><div class="pf-rail"></div>
+      <div class="pf-chip">/gabe-…</div><div class="pf-hoplab">a command</div></div>
+
+    <button class="pf-node" data-node="the satellite" data-in="a named satellite + command" data-out="a finding, or nothing"
+            data-num="15 manual-only skills" data-state="unpowered" data-detail="#d-a4">
+      <span class="pf-ix">4</span><span class="pf-name">the satellite</span>
+      <span class="pf-recipe"><i>in</i><span>a satellite + command</span><i>out</i><span>a finding, or nothing</span></span>
+      <span class="pf-num">15 skills · run by hand</span>
+      <span class="pf-alert">⚠ operator-gated</span>
+    </button>
+
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="decay" data-gate data-state="running"
+          title="Offered twice on identical evidence and the signal is silenced — a true signal that becomes wallpaper stops being a signal.">
+      decay · silenced after 2 identical offers
+    </span>
+    <span class="pf-gate" data-node="decay record" data-gate data-state="ghost"
+          title="The decay record lives at .kdbp/PULSE.jsonl. This repo has no .kdbp/, so nothing is remembered between runs here.">
+      .kdbp/PULSE.jsonl · absent in this repo
+    </span>
+  </div>
+</div></div></div></div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — proven by the 18-case battery</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — code exists, no store to write to here</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — nothing makes the operator run it</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-a1">
+    <h4>repo state — seven probes, no judgement</h4>
+    <p>S1 adversarial · S2 structural · S3 journey proof · S4 published docs ·
+    S5 scope · S6 entity context · S7 explanation. Each is a deterministic read
+    of the tree; none of them decides anything.</p>
+  </div>
+  <div class="pf-detail" id="d-a2">
+    <h4>the signal — at most one is allowed to speak</h4>
+    <p>Every probe that fires carries its evidence. Only the top one is printed,
+    because a list of seven suggestions at the end of every beat is a list nobody
+    reads.</p>
+  </div>
+  <div class="pf-detail" id="d-a3">
+    <h4>the ANGLE line — one line, and it names the command</h4>
+    <p>The output is a single line naming which satellite would find something
+    right now and the exact command that runs it. Naming the command is the
+    point: a suggestion the reader has to translate is a suggestion they skip.</p>
+  </div>
+  <div class="pf-detail" id="d-a4">
+    <h4>the satellite — amber, because a human is the gate</h4>
+    <p>15 skills are manual-only. Nothing in this pipeline can run one; the line
+    can only make it visible. That is the honest ceiling of the design, and the
+    reason this machine is not green.</p>
+  </div>
+</div></div></div>
+<p>The last machine is amber on purpose. This pipeline can make a satellite visible; it cannot run one, and pretending otherwise would be the fourth state.</p>
+<h2 id="how-findings-get-back-into-the-loop"><span class="num">12</span>How findings get back into the loop</h2>
 <p>A satellite that only prints a report and goes away would be a dead end. Every one of these six writes (or explicitly recommends writing) its findings into a file the core loop already reads on its next pass, so nothing discovered off-loop gets lost between sessions.</p>
 <div class="table-wrap"><table><thead><tr><th>Satellite</th><th>Where findings land</th></tr></thead><tbody><tr><td><code>/gabe-myopic</code></td><td>Findings reported inline; severity + fix feed into the next <code>/gabe-plan</code> or a direct code fix</td></tr><tr><td><code>/gabe-roast</code></td><td>Gaps reported inline; suggested next step is often <code>/gabe-assess</code> on each gap's fix before implementing</td></tr><tr><td><code>/gabe-health</code></td><td>Reported inline; recommends <code>/gabe-roast architect</code> on god files, <code>/gabe-review</code> on fragile modules</td></tr><tr><td><code>/gabe-health debt</code></td><td><code class="kdbp-file kf-decisions">.kdbp/DECISIONS.md</code>, <code class="kdbp-file kf-scope">.kdbp/SCOPE.md</code> §14, <code class="kdbp-file kf-rules">.kdbp/RULES.md</code>, or <code class="kdbp-file kf-pending">.kdbp/PENDING.md</code> — user's choice per finding</td></tr><tr><td><code>/gabe-assess</code></td><td>Reported inline as a recommendation; the human decides and the loop proceeds accordingly</td></tr><tr><td><code>/gabe-assess</code></td><td><code class="kdbp-file kf-ledger">.kdbp/LEDGER.md</code> (every checkpoint) + <code class="kdbp-file kf-pending">.kdbp/PENDING.md</code> (untested scenarios the user proceeded past)</td></tr></tbody></table></div>
 <p>That's the whole shape of "satellite": attack from an angle the loop doesn't naturally take, cite evidence for every claim, survive a verify/kill pass, and land the surviving findings somewhere the loop will read next time it comes around.</p><section class="refs"><h2>This page references</h2><p class="refs-note">Derived from the page's own text on every build — no link table is maintained, and a reference that stops resolving stops appearing.</p><div class="refchips"><a class="refchip r-skill" href="agents.html" title="skill: gabe-assess">/gabe-assess</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-commit">/gabe-commit</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-execute">/gabe-execute</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-health">/gabe-health</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-myopic">/gabe-myopic</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-plan">/gabe-plan</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-review">/gabe-review</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-roast">/gabe-roast</a><a class="refchip r-doc" href="commands.html" title="doc: Beats &amp; commands">commands</a><a class="refchip r-doc" href="contract.html" title="doc: The E1–E7 contract">contract</a><a class="refchip r-doc" href="mechanisms.html" title="doc: The mechanism catalog">mechanisms</a></div></section>

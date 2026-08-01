@@ -1108,3 +1108,14 @@ details.legset .gal{margin:8px 0 4px}
    never evidence that it works. */
 .docref { margin: 4px 0 0; font-size: .78rem; color: var(--muted); }
 .docref a { color: var(--accent); }
+
+/* ── doc-page images (docsite merge follow-up, found by check-prism-fit.mjs)
+   _markdown.py classifies every image as doc-meme / doc-fig / doc-icon, and the
+   standalone site.css styles all three. Center mode inherited the classes and
+   none of the rules, so a 1,017px meme rendered at full size and scrolled the
+   page body sideways at 1440 and below. Same intent as site.css, center vars. */
+.docbody img { max-width: 100%; height: auto; }
+.doc-meme { display: block; max-width: 380px; width: 100%; height: auto;
+  margin: 18px auto; border: 1px solid var(--line); border-radius: 10px; box-shadow: var(--shadow); }
+.doc-fig { display: block; max-width: 100%; width: 100%; height: auto; margin: 20px 0; }
+.doc-icon { max-width: 100%; height: auto; vertical-align: middle; }

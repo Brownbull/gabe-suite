@@ -1,16 +1,16 @@
 ---
 name: gabe-prism
-description: "Explanations rendered as a working system — the Gabe register's actors, chain, risks and blast radius drawn as a production floor where the payload moves, machines state their recipe, failures flag themselves and any cell opens to its detail. Five grammars, chosen by the shape of the material, not by taste."
+description: "Explanations rendered as a working system — the Gabe register's actors, chain, risks and blast radius drawn as a production floor where the payload moves, machines state their recipe, failures flag themselves and any cell opens to its detail. Five grammars chosen by the shape of the material; two targets — a command-center page (default) or a published Artifact."
 when_to_use: "Explaining something with three or more interlocking parts where a static diagram would hide the cargo — a pipeline, a build, an architecture, a migration, a lifecycle. Also when a reader says a concept map left them lost."
 metadata:
-  version: 1.0.0
+  version: 1.1.0
   status: suite skill (generic, project-agnostic)
   scope: any subject that can be decomposed into actors with named payloads
 ---
 
 # gabe-prism — one subject, split into the grammar that fits
 
-**Usage:** `/gabe-prism <what to explain>` · `/gabe-prism <subject> as <pattern>` · `/gabe-prism patterns`
+**Usage:** `/gabe-prism <what to explain>` · `/gabe-prism <subject> as <pattern>` · `/gabe-prism <subject> --target artifact` · `/gabe-prism patterns`
 
 ## Gabe execution contract (E1–E7)
 
@@ -18,9 +18,37 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 
 > **One line:** a concept map draws the connections and hides the cargo, so the reader stares at an arrow labelled *processes* with no way to ask what went in or which box jams. A production floor answers both by existing — the item is on the belt, it changes shape at each machine, and the starved machine turns colour before anyone reads a word.
 
+## P0 · Two targets — disk by default
+
+| `--target` | Chrome | Width | Delivery |
+|---|---|---|---|
+| **disk** (default) | the **command center's** shell — same sidebar, cog, skins | viewport minus the sidebar; **scaled, never reflowed** | `docs/site/center/prism-<slug>.html`, in git, in the nav, plus **fragments** embeddable in any doc page |
+| artifact | `gabe-artifact`'s house kit | `max-width: 74rem`, left-anchored | a published URL, for things that leave the repo |
+
+Two **page kinds** on the disk target, chosen by the question, not by taste:
+**console** answers *how does this move* (one screen, ambient loop + a scrub bar
+the reader can stop and step); **article** answers *what does each part do* (the
+floor assembles beat by beat as you scroll, and may end on a console cover of the
+thing it was building toward).
+
+Two width contracts that disagree on purpose: **the canvas takes the viewport,
+the prose still caps at 76ch** — freedom applies to the diagram, never to the
+sentence. Authored floor text is 13px and the minimum scale is 0.92, so the
+effective legibility floor is exactly 12px; below it the drawing's own box
+scrolls and the page body never does.
+
+**Binding spec: `references/disk-target.md`** — authoring layout, the motion
+drivers, the fragment seam, build order, and the gates. Read it before authoring
+a disk page; nothing on this page repeats it.
+
 ## What it borrows, what it owns
 
-**Borrowed from `gabe-artifact`** — all of the chrome: left anchor, one cog, the roster, three skins, iconed caps pills, the 12px floor, the motion pause contract, the 36-check render gate. A prism page IS an artifact and wears the house.
+**Borrowed from `gabe-artifact`** — the motion pause contract (`window.__setMotion`
++ the cog's `#af-motion` group) on BOTH targets, and on the artifact target the
+full house kit: left anchor, one cog, the roster, three skins, iconed caps pills,
+the 12px floor, the 36-check render gate. On the disk target the chrome belongs to
+the center instead; a prism page wearing artifact chrome inside a center would be
+the second-skin problem the docsite merge removed.
 
 **Borrowed from the Gabe register** — the material: actors, the chain, risks rendered at their position, cast cards, blast radius, decisions with breaks-if, defers with triggers. Nothing new is invented here, because the register already decomposes a system exactly the way a floor needs it:
 
@@ -87,15 +115,19 @@ Each ships as an openable page under `assets/patterns/` — **read one before au
 
 1. **Fill the actor table.** Cannot fill it ⇒ STOP and write prose (P1).
 2. **Choose** with P3 and say which pattern and why, in one line, before building.
-3. **Load `gabe-artifact`** and copy its three chrome blocks. The chrome is never re-authored here.
+3. **Pick the target and, on disk, the page kind** (P0) and say which and why in one line.
 4. **Lift the closest pattern** from `assets/patterns/` and re-point it at the real actor table. Numbers come from the table; a number not in the table does not appear on the page.
-5. **Run both gates** (E2):
+5. **Run the gates** (E2):
    ```
+   # disk target — the default
+   node tools/verify-prism.mjs                   <page.html>   # the contract below
+   node tools/check-prism-fit.mjs                <page.html>   # 1440/1280/1024
+   node ../gabe-artifact/tools/verify-motion.mjs <page.html>   # replay · pause · reduced
+
+   # artifact target — adds the house chrome gate, drops the fit gate
    node ../gabe-artifact/tools/verify-artifact-chrome.mjs <file>   # 36 checks
-   node ../gabe-artifact/tools/verify-motion.mjs        <file>     # replay · pause · reduced
-   node tools/verify-prism.mjs                          <file>     # the contract below
    ```
-6. **Publish and report** the URL *and* the absolute source path.
+6. **Report the absolute source path** — and, on the artifact target, the URL.
 
 ## P5 · What the verifier checks
 
@@ -108,6 +140,12 @@ Each ships as an openable page under `assets/patterns/` — **read one before au
 - **gates render in the gate register** — no element is both a stage and a gate
 - the **payload changes identity at least twice** across the chain, or nothing is being produced
 
+**A known hole, found by building rather than by reading the checker:** check 3
+verifies a number field is PRESENT, not that it holds a traceable number. A page
+whose every number is `⌀ not measured here` passes — correctly, since that is
+honest — and so would a page of invented figures. Closing it needs a resolvable
+`data-num-source`. Do not assume the gate defends provenance.
+
 Prose-only, and named as such: whether the actors are the *right* actors, and whether the analogy earns its cost. No script adjudicates that — a reviewer does.
 
 ## Anti-patterns
@@ -117,3 +155,6 @@ Prose-only, and named as such: whether the actors are the *right* actors, and wh
 - A number on the page that is not in the actor table.
 - Two states where four are needed — "not green" hides whether to build it, prove it, or stop trusting it.
 - Re-authoring chrome, palettes or motion primitives that `gabe-artifact` already ships.
+- A belt longer than ~5 machines left as one row: it clamps to the minimum scale at every desktop width and always scrolls. Break it into authored rows.
+- Prose taking the canvas's freedom — the sentence caps at 76ch even when the drawing does not.
+- Giving a fragment a nav entry. A fragment with one is a page, and should be one.

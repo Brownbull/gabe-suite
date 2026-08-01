@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><title>prism fit fixture</title>
+<!-- FIXTURE — hermetic on purpose. The real pages load assets/prism.css and
+     assets/prism-fx.js from the center; a battery that depended on those would
+     be testing the center's build, not the gate. Everything the gate measures is
+     inlined here: the stage, the 76ch prose cap, the fit box with an explicit
+     transform, and floor text at the 13px authored minimum.
+
+     The battery mutates THIS file to break each clause in turn, so every edit
+     below must stay anchorable — do not reflow it casually. -->
+<style>
+  :root { --bg:#f6f7f9; --surface:#fff; --panel:#fbfcfd; --line:#e7e9ee; --line-2:#eef0f4;
+          --ink:#141a24; --ink-2:#3d4756; --muted:#7a8595; --faint:#aab2be; --accent:#4f46e5; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--ink);
+         font: 15px/1.55 Menlo, Consolas, ui-monospace, monospace; }
+  .app { display:grid; grid-template-columns:248px 1fr; min-height:100vh; }
+  .side { background:#101726; }
+  .main { min-width:0; }
+  .prismhead { padding:24px 30px 4px; }
+  .prismhead p { max-width:76ch; }
+  .prismstage { padding:14px 30px 60px; min-width:0; }
+  .prismstage p, .prismstage li { max-width:76ch; }
+  .pfwrap { overflow-x:auto; overflow-y:hidden; }
+  .pfsize { position:relative; width:1104px; height:96px; }
+  .pffit { transform-origin:top left; transform:scale(0.92); }
+  .pf { display:inline-block; width:max-content; font-size:15px; }
+  .pf-belt { display:flex; align-items:stretch; }
+  .pf-node { position:relative; width:220px; flex:none; text-align:left; background:var(--surface);
+             border:1px solid var(--line); border-radius:10px; padding:9px 11px 8px;
+             display:flex; flex-direction:column; font:inherit; }
+  .pf-ix { font-size:13px; color:var(--faint); }
+  .pf-name { display:block; font-size:15px; font-weight:680; }
+  .pf-recipe { display:grid; grid-template-columns:27px 1fr; gap:1px 6px; font-size:13px; }
+  .pf-num { font-size:13px; color:var(--ink-2); }
+  .pf-hop { position:relative; width:124px; flex:none; align-self:center; height:40px; }
+  .pf-hoplab { position:absolute; left:0; right:0; top:23px; text-align:center; font-size:13px; color:var(--muted); }
+  .pf-legend { font-size:12px; color:var(--muted); margin-top:12px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side"></aside>
+  <main class="main">
+    <div class="prismhead"><h1>fit fixture</h1>
+      <p>A head paragraph, capped like every other sentence on a prism page.</p></div>
+    <div class="prismstage" data-prism-mode="console">
+      <p>Prose inside the canvas is still prose, so it caps at 76ch even though the canvas it sits in does not. This sentence is long enough that an uncapped rule would let it run the full width of a 1440px viewport, which is what the gate is looking for.</p>
+      <div class="pfwrap"><div class="pfsize"><div class="pffit">
+        <div class="pf" data-prism data-fx="fixture">
+          <div class="pf-belt">
+            <div class="pf-node" data-node="source" data-in="authored prose" data-out="markdown with tokens"
+                 data-num="13 files" data-state="running">
+              <span class="pf-ix">1</span><span class="pf-name">source</span>
+              <span class="pf-recipe"><i>in</i><span>authored prose</span><i>out</i><span>markdown</span></span>
+              <span class="pf-num">13 files</span>
+            </div>
+            <div class="pf-hop" data-payload="markdown"><div class="pf-hoplab">markdown</div></div>
+            <div class="pf-node" data-node="converter" data-in="markdown with tokens" data-out="body html"
+                 data-num="472 lines" data-state="running">
+              <span class="pf-ix">2</span><span class="pf-name">converter</span>
+              <span class="pf-recipe"><i>in</i><span>markdown</span><i>out</i><span>body html</span></span>
+              <span class="pf-num">472 lines</span>
+            </div>
+            <div class="pf-hop" data-payload="body html"><div class="pf-hoplab">body html</div></div>
+            <div class="pf-node" data-node="extractor" data-in="body html" data-out="token records"
+                 data-num="143 refs" data-state="ghost">
+              <span class="pf-ix">3</span><span class="pf-name">extractor</span>
+              <span class="pf-recipe"><i>in</i><span>body html</span><i>out</i><span>token records</span></span>
+              <span class="pf-num">143 refs</span>
+            </div>
+          </div>
+        </div>
+      </div></div></div>
+      <p class="pf-legend">running — built and proven · ghost — not built yet</p>
+    </div>
+  </main>
+</div>
+</body>
+</html>

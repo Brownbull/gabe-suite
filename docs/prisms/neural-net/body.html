@@ -1,0 +1,289 @@
+<div class="prismprose">
+  <p>Every layer diagram of a neural network shows boxes joined by arrows and
+  tells you nothing about what travels between them. Below, one machine is added
+  per beat as you scroll, and each one states what it eats and what it makes. The
+  net stays greyed until the beat that introduces it, so you are always looking
+  at the whole shape and never at a page that jumps.</p>
+</div>
+
+<div class="pf-assembly">
+  <div class="pf-sticky">
+    <!-- ONE floor, revealed beat by beat. data-assemble picks the assembly
+         driver: the scroll position is the scrubber, forwards and backwards. -->
+    <div class="pf" data-prism data-assemble data-fx="nn-net" style="--pf-node-w:166px">
+      <div class="pf-belt pf-rows">
+       <div class="pf-row">
+
+        <div class="pf-node" data-node="input vector" data-in="a 28×28 image" data-out="784 floats in [0,1]"
+             data-num="784 inputs" data-state="running">
+          <span class="pf-ix">1</span><span class="pf-name">input</span>
+          <span class="pf-sub">the image, flattened</span>
+          <span class="pf-recipe"><i>in</i><span>a 28×28 image</span><i>out</i><span>784 floats in [0,1]</span></span>
+          <span class="pf-num">784 inputs</span>
+        </div>
+
+        <div class="pf-hop" data-payload="784 floats"><div class="pf-rail"></div>
+          <div class="pf-chip">784 floats</div><div class="pf-hoplab">784 floats</div></div>
+
+        <div class="pf-node" data-node="W1" data-in="784 floats in [0,1]" data-out="128 weighted sums"
+             data-num="100,352 weights" data-state="running">
+          <span class="pf-ix">2</span><span class="pf-name">W1</span>
+          <span class="pf-sub">784 × 128 matrix</span>
+          <span class="pf-recipe"><i>in</i><span>784 floats in [0,1]</span><i>out</i><span>128 weighted sums</span></span>
+          <span class="pf-num">100,352 weights</span>
+        </div>
+
+        <div class="pf-hop" data-payload="128 weighted sums"><div class="pf-rail"></div>
+          <div class="pf-chip">128 sums</div><div class="pf-hoplab">128 sums</div></div>
+
+        <div class="pf-node" data-node="ReLU" data-in="128 weighted sums" data-out="128 activations, ≥ 0"
+             data-num="128 biases" data-state="running">
+          <span class="pf-ix">3</span><span class="pf-name">bias + ReLU</span>
+          <span class="pf-sub">the non-linearity</span>
+          <span class="pf-recipe"><i>in</i><span>128 weighted sums</span><i>out</i><span>128 activations, ≥ 0</span></span>
+          <span class="pf-num">128 biases</span>
+        </div>
+
+        <div class="pf-hop" data-payload="128 activations"><div class="pf-rail"></div>
+          <div class="pf-chip">128 acts</div><div class="pf-hoplab">128 acts</div></div>
+
+        <div class="pf-node" data-node="W2" data-in="128 activations, ≥ 0" data-out="10 logits"
+             data-num="1,280 weights" data-state="running">
+          <span class="pf-ix">4</span><span class="pf-name">W2</span>
+          <span class="pf-sub">128 × 10 matrix</span>
+          <span class="pf-recipe"><i>in</i><span>128 activations, ≥ 0</span><i>out</i><span>10 logits</span></span>
+          <span class="pf-num">1,280 weights</span>
+        </div>
+
+        <div class="pf-hop pf-return" data-payload="10 logits"><div class="pf-rail"></div>
+          <div class="pf-chip">10 logits</div><div class="pf-hoplab">logits ↓</div></div>
+       </div>
+       <div class="pf-row">
+
+        <div class="pf-node" data-node="softmax" data-in="10 logits" data-out="10 probabilities summing to 1"
+             data-num="10 classes" data-state="running">
+          <span class="pf-ix">5</span><span class="pf-name">softmax</span>
+          <span class="pf-sub">scores → a distribution</span>
+          <span class="pf-recipe"><i>in</i><span>10 logits</span><i>out</i><span>10 probabilities</span></span>
+          <span class="pf-num">10 classes · sums to 1</span>
+        </div>
+
+        <div class="pf-hop" data-payload="10 probabilities"><div class="pf-rail"></div>
+          <div class="pf-chip">10 probs</div><div class="pf-hoplab">10 probs</div></div>
+
+        <div class="pf-node" data-node="loss" data-in="10 probabilities summing to 1" data-out="one scalar loss"
+             data-num="1 number" data-state="running">
+          <span class="pf-ix">6</span><span class="pf-name">loss</span>
+          <span class="pf-sub">cross-entropy vs the label</span>
+          <span class="pf-recipe"><i>in</i><span>10 probabilities</span><i>out</i><span>one scalar loss</span></span>
+          <span class="pf-num">1 number · 101,770 blamed</span>
+        </div>
+
+        <div class="pf-hop" data-payload="one scalar loss"><div class="pf-rail"></div>
+          <div class="pf-chip">1 scalar</div><div class="pf-hoplab">one scalar loss</div></div>
+
+        <div class="pf-node" data-node="backprop" data-in="one scalar loss" data-out="101,770 gradients"
+             data-num="101,770 partials" data-state="running">
+          <span class="pf-ix">7</span><span class="pf-name">backprop</span>
+          <span class="pf-sub">the chain rule, backwards</span>
+          <span class="pf-recipe"><i>in</i><span>one scalar loss</span><i>out</i><span>101,770 gradients</span></span>
+          <span class="pf-num">101,770 partials</span>
+        </div>
+
+        <div class="pf-hop" data-payload="101,770 gradients"><div class="pf-rail"></div>
+          <div class="pf-chip">gradients</div><div class="pf-hoplab">101,770 grads</div></div>
+
+        <div class="pf-node" data-node="optimizer" data-in="101,770 gradients" data-out="updated weights"
+             data-num="lr 0.01 · 1 step" data-state="running">
+          <span class="pf-ix">8</span><span class="pf-name">optimizer</span>
+          <span class="pf-sub">SGD, one step</span>
+          <span class="pf-recipe"><i>in</i><span>101,770 gradients</span><i>out</i><span>updated weights</span></span>
+          <span class="pf-num">lr 0.01 · 1 step</span>
+        </div>
+
+       </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pf-beats">
+    <div class="pf-beat" data-reveal="1">
+      <h3><span class="pf-beatix">1</span> The input is not an image any more</h3>
+      <p>A 28×28 greyscale image is 784 numbers. Flattening throws away every fact
+      about which pixel was next to which — the network is not given the grid, and
+      it has to rediscover locality from the data or do without it. That single
+      decision is why a plain MLP is worse at images than a convolutional net, and
+      it is made here, at machine one, before any learning happens.</p>
+    </div>
+    <div class="pf-beat" data-reveal="2">
+      <h3><span class="pf-beatix">2</span> W1 is where almost the entire network lives</h3>
+      <p>784 inputs × 128 hidden units = <strong>100,352 weights</strong>, which is
+      98.6% of the 101,770 parameters in the whole model. Every intuition about
+      "the network learning" is mostly an intuition about this one matrix. Each
+      hidden unit holds 784 numbers — one opinion about every pixel — and the
+      weighted sum is that opinion applied.</p>
+    </div>
+    <div class="pf-beat" data-reveal="3">
+      <h3><span class="pf-beatix">3</span> ReLU is what stops it collapsing into one matrix</h3>
+      <p>Without a non-linearity, a stack of matrix multiplications is algebraically
+      identical to a single matrix — 101,770 parameters would buy exactly the
+      expressive power of 7,840. ReLU (<code>max(0, x)</code>) is the cheapest
+      function that breaks that equivalence: it costs one comparison per unit, adds
+      no parameters, and it is the reason depth buys anything at all.</p>
+    </div>
+    <div class="pf-beat" data-reveal="4">
+      <h3><span class="pf-beatix">4</span> W2 is small, and it is the part you can read</h3>
+      <p>128 × 10 = 1,280 weights, 1.3% of the model. Each of the ten output rows
+      is one class's answer to "which of the 128 features do I care about". This is
+      the layer people inspect when they want to know what a network learned,
+      precisely because it is small enough to look at.</p>
+    </div>
+    <div class="pf-beat" data-reveal="5">
+      <h3><span class="pf-beatix">5</span> Softmax turns scores into something you can bet on</h3>
+      <p>Ten logits are unbounded scores; ten probabilities sum to 1. The conversion
+      is not cosmetic — it is what makes the next machine's arithmetic mean
+      anything. A confidence of 0.98 and a logit of 4.1 carry the same ranking and
+      very different consequences when the loss is computed.</p>
+    </div>
+    <div class="pf-beat" data-reveal="6">
+      <h3><span class="pf-beatix">6</span> The loss is one number, and it indicts 101,770 of them</h3>
+      <p>Cross-entropy compares the ten probabilities against the one correct label
+      and produces a single scalar. This is the narrowest point on the whole line:
+      everything the network did collapses into one figure, and everything it does
+      next is derived from that figure. A pipeline with a one-number waist is
+      unusual, and it is worth seeing drawn.</p>
+    </div>
+    <div class="pf-beat" data-reveal="7">
+      <h3><span class="pf-beatix">7</span> Backprop expands one number back into 101,770</h3>
+      <p>The chain rule walks the same machines in reverse and asks each one: how
+      much did <em>you</em> contribute to that scalar? The answer is one partial
+      derivative per parameter — the payload goes from a single float to 101,770 of
+      them in one machine. That expansion, not the multiplication, is the thing
+      people find hard, and it is the reason this page ends on a console.</p>
+    </div>
+    <div class="pf-beat" data-reveal="8">
+      <h3><span class="pf-beatix">8</span> The optimizer is the only machine that writes</h3>
+      <p>Every machine before this one reads and produces. This one mutates: each
+      weight moves against its gradient by the learning rate, 0.01 here. Then the
+      whole line runs again with a slightly different W1 — which is why the last
+      hop on the console below points backwards.</p>
+    </div>
+  </div>
+</div>
+
+<!-- THE COVER — the same eight machines, now running. The article answered
+     "what does each part do"; this answers "how does a correction at the output
+     reach a weight at the input", which is a different question and needs
+     movement rather than text. -->
+<div class="pf-cover">
+  <h2>Now watch one training step go round</h2>
+  <p>Same eight machines, one loop. The chip is the payload: watch it stop being
+  an image, become a distribution, collapse to a single number, and come back out
+  as 101,770 corrections. The loop closes because machine 8 writes to machine 2.</p>
+
+  <div class="pf" data-prism data-fx="nn-loop" data-tick="1250" style="--pf-node-w:150px;--pf-hop-w:112px">
+    <div class="pf-belt pf-rows">
+     <div class="pf-row">
+      <div class="pf-node" data-node="input·loop" data-in="a 28×28 image" data-out="784 floats"
+           data-num="784" data-state="running">
+        <span class="pf-ix">1</span><span class="pf-name">input</span>
+        <span class="pf-recipe"><i>in</i><span>image</span><i>out</i><span>784 floats</span></span>
+        <span class="pf-num">784</span>
+      </div>
+      <div class="pf-hop" data-payload="784 floats"><div class="pf-rail"></div>
+        <div class="pf-chip">784</div><div class="pf-hoplab">784 floats</div></div>
+      <div class="pf-node" data-node="W1·loop" data-in="784 floats" data-out="128 sums"
+           data-num="100,352" data-state="running">
+        <span class="pf-ix">2</span><span class="pf-name">W1</span>
+        <span class="pf-recipe"><i>in</i><span>784 floats</span><i>out</i><span>128 sums</span></span>
+        <span class="pf-num">100,352 ✎</span>
+      </div>
+      <div class="pf-hop" data-payload="128 sums"><div class="pf-rail"></div>
+        <div class="pf-chip">128</div><div class="pf-hoplab">128 sums</div></div>
+      <div class="pf-node" data-node="ReLU·loop" data-in="128 sums" data-out="128 activations"
+           data-num="128" data-state="running">
+        <span class="pf-ix">3</span><span class="pf-name">ReLU</span>
+        <span class="pf-recipe"><i>in</i><span>128 sums</span><i>out</i><span>128 acts</span></span>
+        <span class="pf-num">128 biases</span>
+      </div>
+      <div class="pf-hop" data-payload="128 activations"><div class="pf-rail"></div>
+        <div class="pf-chip">acts</div><div class="pf-hoplab">128 acts</div></div>
+      <div class="pf-node" data-node="W2·loop" data-in="128 activations" data-out="10 logits"
+           data-num="1,280" data-state="running">
+        <span class="pf-ix">4</span><span class="pf-name">W2</span>
+        <span class="pf-recipe"><i>in</i><span>128 acts</span><i>out</i><span>10 logits</span></span>
+        <span class="pf-num">1,280 ✎</span>
+      </div>
+      <div class="pf-hop pf-return" data-payload="10 logits"><div class="pf-rail"></div>
+        <div class="pf-chip">10</div><div class="pf-hoplab">↓</div></div>
+     </div>
+     <div class="pf-row">
+      <div class="pf-node" data-node="softmax·loop" data-in="10 logits" data-out="10 probabilities"
+           data-num="10" data-state="running">
+        <span class="pf-ix">5</span><span class="pf-name">softmax</span>
+        <span class="pf-recipe"><i>in</i><span>10 logits</span><i>out</i><span>10 probs</span></span>
+        <span class="pf-num">sums to 1</span>
+      </div>
+      <div class="pf-hop" data-payload="10 probabilities"><div class="pf-rail"></div>
+        <div class="pf-chip">probs</div><div class="pf-hoplab">10 probs</div></div>
+      <div class="pf-node" data-node="loss·loop" data-in="10 probabilities" data-out="one scalar"
+           data-num="1" data-state="running">
+        <span class="pf-ix">6</span><span class="pf-name">loss</span>
+        <span class="pf-recipe"><i>in</i><span>10 probs</span><i>out</i><span>one scalar</span></span>
+        <span class="pf-num">1 number</span>
+      </div>
+      <div class="pf-hop" data-payload="one scalar loss"><div class="pf-rail"></div>
+        <div class="pf-chip">1</div><div class="pf-hoplab">one scalar</div></div>
+      <div class="pf-node" data-node="backprop·loop" data-in="one scalar" data-out="101,770 gradients"
+           data-num="101,770" data-state="running">
+        <span class="pf-ix">7</span><span class="pf-name">backprop</span>
+        <span class="pf-recipe"><i>in</i><span>one scalar</span><i>out</i><span>101,770 grads</span></span>
+        <span class="pf-num">101,770</span>
+      </div>
+      <div class="pf-hop" data-payload="101,770 gradients"><div class="pf-rail"></div>
+        <div class="pf-chip">grads</div><div class="pf-hoplab">101,770 grads</div></div>
+      <div class="pf-node" data-node="optimizer·loop" data-in="101,770 gradients" data-out="updated weights"
+           data-num="lr 0.01" data-state="running">
+        <span class="pf-ix">8</span><span class="pf-name">optimizer</span>
+        <span class="pf-recipe"><i>in</i><span>101,770 grads</span><i>out</i><span>new weights ↺ 2</span></span>
+        <span class="pf-num">lr 0.01</span>
+      </div>
+     </div>
+    </div>
+
+    <div class="pf-gates">
+      <span class="pf-gatelab">gates</span>
+      <span class="pf-gate" data-node="ReLU zero" data-gate data-state="running"
+            title="A unit whose sum is negative outputs 0, and its gradient is 0 too.">
+        ReLU ≤ 0 · gradient stops here
+      </span>
+      <span class="pf-gate" data-node="grad clip" data-gate data-state="ghost"
+            title="Not in this network. Named because its absence is a choice, not an oversight.">
+        gradient clipping · not in this net
+      </span>
+      <span class="pf-gate" data-node="held-out set" data-gate data-state="unpowered"
+            title="Training loss falls whether or not the network generalises. Nothing on this line can tell you which.">
+        held-out set · nothing here proves generalisation
+      </span>
+    </div>
+  </div>
+
+  <div class="pf-legend">
+    <span><i class="l-running"></i> <b>running</b> — in this network, and it moves numbers</span>
+    <span><i class="l-ghost"></i> <b>ghost</b> — not in this network: a named absence, not a zero</span>
+    <span><i class="l-unpowered"></i> <b>unpowered</b> — present, and nothing here proves it works</span>
+    <span><i class="l-broken"></i> <b>broken</b> — would report success it did not earn (none on this page)</span>
+  </div>
+
+  <div class="prismprose" style="margin-top:26px">
+    <p><strong>What the console shows that the article could not:</strong> the
+    payload's size does not travel with its importance. 784 floats in, 101,770
+    corrections out, and in between the entire network passes through a waist one
+    number wide. Read as a still diagram, machines 6 and 7 are two boxes the same
+    size as any other. Watched, they are obviously the strangest part of the line.</p>
+    <p><strong>Where this rendering strains:</strong> backprop is drawn as one
+    machine, and it is really the same four machines run in reverse. Drawing that
+    honestly needs <code>belt-lanes</code> with a return lane, at the cost of a
+    much busier console. Stated rather than hidden.</p>
+  </div>
+</div>

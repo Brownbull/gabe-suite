@@ -172,6 +172,19 @@ Values load from three stacking sources — universal structural guards built in
 Manually: before a new architecture or greenfield decision (deep mode), or as a quick sanity check before a roast or a non-trivial task (shallow/standard). Automatically: you don't invoke it at all — it fires on its own at every commit and PR, which is exactly the point. It's the one satellite in this list that isn't purely "on demand."
 :::
 
+## What reminds you to run one
+
+Every satellite on this page is manual — nothing fires them, which means they
+depend on you remembering they exist. The ANGLE family closes that gap: seven
+deterministic probes run at the end of every spine beat, and at most one prints a
+single line naming the satellite that would find something *right now* and the
+command that runs it.
+
+{{PRISM:angle-pipeline}}
+
+The last machine is amber on purpose. This pipeline can make a satellite visible;
+it cannot run one, and pretending otherwise would be the fourth state.
+
 ## How findings get back into the loop
 
 A satellite that only prints a report and goes away would be a dead end. Every one of these six writes (or explicitly recommends writing) its findings into a file the core loop already reads on its next pass, so nothing discovered off-loop gets lost between sessions.

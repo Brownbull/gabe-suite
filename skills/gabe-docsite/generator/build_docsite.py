@@ -245,6 +245,33 @@ def validate_config(config: dict[str, Any]) -> list[str]:
 # --------------------------------------------------------------------------- #
 
 
+_PRISM_TOKEN = re.compile(r"\{\{PRISM:([a-z0-9][a-z0-9-]*)\}\}")
+
+
+def load_prisms(path: Path | None) -> dict[str, str]:
+    """slug -> rendered fragment HTML, from build_prisms.py's manifest."""
+    if not path or not path.is_file():
+        return {}
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError:
+        return {}
+    return {s: f.get("html", "") for s, f in (data.get("fragments") or {}).items()}
+
+
+def expand_prisms(body_html: str, prisms: dict[str, str]) -> str:
+    """Replace {{PRISM:<slug>}} with its component; leave unknown slugs raw.
+
+    The unwrap step matters: markdown turns a token alone on its own line into
+    `<p>{{PRISM:<x>}}</p>`, and a <div> inside a <p> is closed by the parser
+    before it is opened, which detaches the component from its own scrub bar.
+    """
+    if not prisms:
+        return body_html
+    body_html = re.sub(r"<p>\s*(\{\{PRISM:[a-z0-9-]+\}\})\s*</p>", r"\1", body_html)
+    return _PRISM_TOKEN.sub(lambda m: prisms.get(m.group(1), m.group(0)), body_html)
+
+
 def build_link_map(config: dict[str, Any]) -> dict[Path, str]:
     """Absolute source-md path -> output slug, for every doc in every section."""
     src_dir: Path = config["_src_dir"]
@@ -335,6 +362,10 @@ def render_doc(
     config.setdefault("_refpages", []).append(
         (center_slug(doc["slug"]), doc["title"], refs))
     body_html += REF.chips_html(refs)
+    # Expanded AFTER extraction on purpose: a component's own links are its
+    # chrome, not this document's claims, and letting them into the reference
+    # graph would make the same fragment add edges to every page it appears on.
+    body_html = expand_prisms(body_html, config.get("_prisms", {}))
 
     skeleton = config.get("_skeleton")
     if skeleton:
@@ -582,6 +613,16 @@ def build(config: dict[str, Any]) -> int:
         out_dir.mkdir(parents=True, exist_ok=True)
     config["_stamp"] = _dt.datetime.now().strftime("%Y-%m-%d %H:%MZ")
 
+    # PRISM FRAGMENTS — the second seam file, read exactly like nav.json: one
+    # producer (build_prisms.py), one consumer (here), no import in either
+    # direction. Absent manifest leaves every {{PRISM:<slug>}} token unexpanded,
+    # which check_suite_center.py then fails on — a missing component stops the
+    # chain instead of shipping a page with a hole in it.
+    config["_prisms"] = load_prisms(config.get("_prisms_path"))
+    if config["_prisms"]:
+        print("prisms: %d embeddable fragment(s) available — %s"
+              % (len(config["_prisms"]), ", ".join(sorted(config["_prisms"]))))
+
     # REFERENCES — the registries this project actually has. Absent registry ⇒
     # that token class is not applicable here and is not extracted at all, which
     # is different from "extracted and unresolved".
@@ -686,6 +727,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--nav", type=Path, default=None,
         help="nav.json emitted by the center build — the sidebar model both builders share.")
+    parser.add_argument(
+        "--prisms", type=Path, default=None,
+        help="prism-fragments.json emitted by build_prisms.py — lets a doc page "
+             "embed a {{PRISM:<slug>}} component. Absent, tokens stay unexpanded.")
     args = parser.parse_args(argv)
 
     config_path = args.config.resolve()
@@ -696,6 +741,7 @@ def main(argv: list[str] | None = None) -> int:
     config = load_config(config_path)
     config["_shell_dir"] = args.shell.resolve() if args.shell else None
     config["_nav_path"] = args.nav.resolve() if args.nav else None
+    config["_prisms_path"] = args.prisms.resolve() if args.prisms else None
     return build(config)
 
 

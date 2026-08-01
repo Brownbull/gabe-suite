@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{PRISM_TITLE}} · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+<!-- STATION: one authored PRISM, rendered into the center's shell.
+     SOURCE: docs/prisms/<slug>/body.html + prism.json — authored HTML is the
+     source of truth (a floor is markup, not markdown); this page is generated
+     by skills/gabe-prism/generator/build_prisms.py and must never be hand-edited.
+
+     Two things make this station different from docpage.html, and only two:
+
+     1. THE CANVAS IS NOT CAPPED. The center caps .subject/.tabbody at
+        --content-max because those pages are reading columns. A floor is a
+        drawing: it gets the viewport minus the sidebar, and scales down rather
+        than reflowing. So the stage uses .prismstage, a class --content-max
+        does not touch.
+     2. THE PROSE STILL IS. Freedom applies to the diagram, never to the
+        sentence — .prismhead and every p/li inside the stage cap at 76ch,
+        which verify-prism.mjs measures rather than trusts.
+
+     MODE ({{PRISM_MODE}}) picks the motion driver, not the chrome:
+        console — one screen, ambient loop + scrub bar, the reader can stop it
+        article — assembles on scroll, each scene plays once, may end on a
+                  console cover for the thing the article was building toward -->
+<div class="app">
+
+<!-- ============ SIDEBAR — filled from nav.json, the model the center build
+     emits. Same seam the doc pages use; never authored here. -->
+<aside class="side">
+  {{SIDEBAR}}
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb">{{PRISM_CRUMB}}</div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+    <span class="stamp">regen · {{SYNC_AGE}}</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">{{PRISM_KICKER}}</div>
+    <h1>{{PRISM_TITLE}}</h1>
+    <p class="prismlede">{{PRISM_LEDE}}</p>
+    {{PRISM_HANDLE}}
+  </div>
+
+  <div class="prismstage" data-prism-mode="{{PRISM_MODE}}">
+    {{PRISM_BODY}}
+  </div>
+
+  <p class="prismsource">{{PRISM_SOURCE}}</p>
+</main>
+
+</div>
+{{PRISM_SCRIPTS}}
+</body>
+</html>

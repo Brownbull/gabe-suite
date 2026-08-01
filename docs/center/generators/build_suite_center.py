@@ -128,6 +128,40 @@ def docs_sections(cfg: dict) -> list[dict]:
     return out
 
 
+def prism_pages(cfg: dict) -> list[dict]:
+    """The authored prism pages, as nav items — title and order only.
+
+    Deliberately reads prism.json directly instead of importing build_prisms.py:
+    the nav needs four fields, and importing a whole builder to get them would
+    make this build fail whenever that one has a syntax error, on a page that
+    does not exist yet. FRAGMENTS ARE NOT SCANNED — a fragment with a nav item
+    is a page, and the absence of that code is the enforcement.
+    """
+    rel = cfg.get("paths", {}).get("prisms")
+    if not rel:
+        return []
+    root = REPO_ROOT / rel
+    if not root.is_dir():
+        return []
+    out = []
+    for d in sorted(root.iterdir()):
+        meta_path = d / "prism.json"
+        if not d.is_dir() or d.name.startswith("_") or not meta_path.is_file():
+            continue
+        if not (d / "body.html").is_file():
+            continue
+        try:
+            meta = json.loads(meta_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as exc:
+            print(f"  [nav] prism {d.name}: unreadable prism.json ({exc}) — omitted")
+            continue
+        out.append({"slug": d.name,
+                    "label": meta.get("nav_label") or meta.get("title", d.name),
+                    "order": meta.get("order", 999)})
+    out.sort(key=lambda p: (p["order"], p["slug"]))
+    return out
+
+
 def nav_model(cfg: dict, counts: dict) -> list[dict]:
     """The sidebar as DATA — groups of items, before any HTML exists.
 
@@ -162,6 +196,19 @@ def nav_model(cfg: dict, counts: dict) -> list[dict]:
                 items.append({"label": d["label"], "href": f"{d['slug']}.html",
                               "icon": "filetext", "sub": True})
         groups.append({"label": "Docs", "cls": "g-docs", "items": items})
+
+    # The EXPLANATIONS group — authored prism pages, rendered by build_prisms.py
+    # into this same shell. Scanned from disk rather than declared in config for
+    # the same reason the Docs group is derived from the docsite config: a nav
+    # list maintained by hand drifts from the pages that exist, and the drift is
+    # invisible until a link 404s.
+    prisms = prism_pages(cfg)
+    if prisms:
+        items = [{"label": "Explanations", "href": "explanations.html", "icon": "zap"}]
+        for p in prisms:
+            items.append({"label": p["label"], "href": f"prism-{p['slug']}.html",
+                          "icon": "book", "sub": True})
+        groups.append({"label": "Explanations", "cls": "g-ent", "items": items})
 
     later = [l for l in cfg["lenses"] if l["spike"] != 1]
     if later:

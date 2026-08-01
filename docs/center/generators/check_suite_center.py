@@ -161,6 +161,16 @@ def main(argv: list[str]) -> int:
             if tok in text:
                 dead.append(f"{name}: unfilled shell token {tok}")
 
+    # PRISM FRAGMENT TOKENS are a second family and needed their own sweep: they
+    # carry a slug and are lowercase, so the [A-Z_] pattern above never saw them
+    # and an unresolved {{PRISM:typo}} shipped silently inside a doc page.
+    # A page that MEANS to show the token writes its braces as entities, which is
+    # why this can be unconditional rather than "unless it looks like a code span".
+    for name, text in pages.items():
+        for tok in sorted(set(re.findall(r"\{\{PRISM:[a-z0-9-]+\}\}", text))):
+            dead.append(f"{name}: unresolved prism fragment {tok} "
+                        f"— no such slug in prism-fragments.json")
+
     print(f"  pages {len(pages)} · references checked {checked}")
     if dead:
         for d in dead:

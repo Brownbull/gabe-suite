@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A neural net, assembled one part at a time · Gabe Suite Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+
+<aside class="side">
+    <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gabe Suite</b><small>Gabe Center · suite</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">18</span></a>
+  <div class="navlabel g-code">Enforcement</div>
+  <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
+  <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">18</span></a>
+  <div class="navlabel g-ent">Surfaces</div>
+  <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
+  <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">462</span></a>
+  <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
+  <a class="navitem navsubitem" href="kdbp.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> What KDBP is</a>
+  <a class="navitem navsubitem" href="the-loop.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The development loop</a>
+  <a class="navitem navsubitem" href="contract.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The E1–E7 contract</a>
+  <a class="navitem navsubitem" href="skill-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The skill map</a>
+  <a class="navitem navsubitem" href="commands.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Beats &amp; commands</a>
+  <a class="navitem navsubitem" href="satellites.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Analysis satellites</a>
+  <a class="navitem navsubitem" href="verification-first.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The one picture</a>
+  <a class="navitem navsubitem" href="gabe-red.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> /gabe-red</a>
+  <a class="navitem navsubitem" href="c-id.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The C-id scheme</a>
+  <a class="navitem navsubitem" href="command-center.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The command center</a>
+  <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
+  <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
+  <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem" href="prism-catan.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Catan</a>
+  <a class="navitem navsubitem on" href="prism-neural-net.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Hook chain</a>
+  <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> gastify scan→cooked</a>
+  <div class="foot">regen 2026-07-31 17:08<br>HEAD dd707b8 · build_suite_center.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>A neural net, assembled one part at a time</b></div>
+    <div class="spacer"></div>
+    <span class="chip warn">62 uncommitted</span>
+    <span class="stamp">regen · 2026-07-31 17:08</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">article · assembly then console</div>
+    <h1>A neural net, assembled one part at a time</h1>
+    <p class="prismlede">One concrete network: 784 inputs, one hidden layer of 128, ten outputs, 101,770 parameters. The article half answers what each moving part does. The console at the end answers the other question — how a correction at the output reaches a weight at the input.</p>
+    <p class="prismhandle">A forward pass and a backward pass run over <em>the same machines in opposite directions</em>. That is the whole idea, and it is exactly what a static layer diagram cannot show — which is why this page ends on a console instead of a picture.</p>
+  </div>
+
+  <div class="prismstage" data-prism-mode="article">
+    <div class="prismprose">
+  <p>Every layer diagram of a neural network shows boxes joined by arrows and
+  tells you nothing about what travels between them. Below, one machine is added
+  per beat as you scroll, and each one states what it eats and what it makes. The
+  net stays greyed until the beat that introduces it, so you are always looking
+  at the whole shape and never at a page that jumps.</p>
+</div>
+
+<div class="pf-assembly">
+  <div class="pf-sticky">
+    <!-- ONE floor, revealed beat by beat. data-assemble picks the assembly
+         driver: the scroll position is the scrubber, forwards and backwards. -->
+    <div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-assemble data-fx="nn-net" style="--pf-node-w:166px">
+      <div class="pf-belt pf-rows">
+       <div class="pf-row">
+
+        <div class="pf-node" data-node="input vector" data-in="a 28×28 image" data-out="784 floats in [0,1]"
+             data-num="784 inputs" data-state="running">
+          <span class="pf-ix">1</span><span class="pf-name">input</span>
+          <span class="pf-sub">the image, flattened</span>
+          <span class="pf-recipe"><i>in</i><span>a 28×28 image</span><i>out</i><span>784 floats in [0,1]</span></span>
+          <span class="pf-num">784 inputs</span>
+        </div>
+
+        <div class="pf-hop" data-payload="784 floats"><div class="pf-rail"></div>
+          <div class="pf-chip">784 floats</div><div class="pf-hoplab">784 floats</div></div>
+
+        <div class="pf-node" data-node="W1" data-in="784 floats in [0,1]" data-out="128 weighted sums"
+             data-num="100,352 weights" data-state="running">
+          <span class="pf-ix">2</span><span class="pf-name">W1</span>
+          <span class="pf-sub">784 × 128 matrix</span>
+          <span class="pf-recipe"><i>in</i><span>784 floats in [0,1]</span><i>out</i><span>128 weighted sums</span></span>
+          <span class="pf-num">100,352 weights</span>
+        </div>
+
+        <div class="pf-hop" data-payload="128 weighted sums"><div class="pf-rail"></div>
+          <div class="pf-chip">128 sums</div><div class="pf-hoplab">128 sums</div></div>
+
+        <div class="pf-node" data-node="ReLU" data-in="128 weighted sums" data-out="128 activations, ≥ 0"
+             data-num="128 biases" data-state="running">
+          <span class="pf-ix">3</span><span class="pf-name">bias + ReLU</span>
+          <span class="pf-sub">the non-linearity</span>
+          <span class="pf-recipe"><i>in</i><span>128 weighted sums</span><i>out</i><span>128 activations, ≥ 0</span></span>
+          <span class="pf-num">128 biases</span>
+        </div>
+
+        <div class="pf-hop" data-payload="128 activations"><div class="pf-rail"></div>
+          <div class="pf-chip">128 acts</div><div class="pf-hoplab">128 acts</div></div>
+
+        <div class="pf-node" data-node="W2" data-in="128 activations, ≥ 0" data-out="10 logits"
+             data-num="1,280 weights" data-state="running">
+          <span class="pf-ix">4</span><span class="pf-name">W2</span>
+          <span class="pf-sub">128 × 10 matrix</span>
+          <span class="pf-recipe"><i>in</i><span>128 activations, ≥ 0</span><i>out</i><span>10 logits</span></span>
+          <span class="pf-num">1,280 weights</span>
+        </div>
+
+        <div class="pf-hop pf-return" data-payload="10 logits"><div class="pf-rail"></div>
+          <div class="pf-chip">10 logits</div><div class="pf-hoplab">logits ↓</div></div>
+       </div>
+       <div class="pf-row">
+
+        <div class="pf-node" data-node="softmax" data-in="10 logits" data-out="10 probabilities summing to 1"
+             data-num="10 classes" data-state="running">
+          <span class="pf-ix">5</span><span class="pf-name">softmax</span>
+          <span class="pf-sub">scores → a distribution</span>
+          <span class="pf-recipe"><i>in</i><span>10 logits</span><i>out</i><span>10 probabilities</span></span>
+          <span class="pf-num">10 classes · sums to 1</span>
+        </div>
+
+        <div class="pf-hop" data-payload="10 probabilities"><div class="pf-rail"></div>
+          <div class="pf-chip">10 probs</div><div class="pf-hoplab">10 probs</div></div>
+
+        <div class="pf-node" data-node="loss" data-in="10 probabilities summing to 1" data-out="one scalar loss"
+             data-num="1 number" data-state="running">
+          <span class="pf-ix">6</span><span class="pf-name">loss</span>
+          <span class="pf-sub">cross-entropy vs the label</span>
+          <span class="pf-recipe"><i>in</i><span>10 probabilities</span><i>out</i><span>one scalar loss</span></span>
+          <span class="pf-num">1 number · 101,770 blamed</span>
+        </div>
+
+        <div class="pf-hop" data-payload="one scalar loss"><div class="pf-rail"></div>
+          <div class="pf-chip">1 scalar</div><div class="pf-hoplab">one scalar loss</div></div>
+
+        <div class="pf-node" data-node="backprop" data-in="one scalar loss" data-out="101,770 gradients"
+             data-num="101,770 partials" data-state="running">
+          <span class="pf-ix">7</span><span class="pf-name">backprop</span>
+          <span class="pf-sub">the chain rule, backwards</span>
+          <span class="pf-recipe"><i>in</i><span>one scalar loss</span><i>out</i><span>101,770 gradients</span></span>
+          <span class="pf-num">101,770 partials</span>
+        </div>
+
+        <div class="pf-hop" data-payload="101,770 gradients"><div class="pf-rail"></div>
+          <div class="pf-chip">gradients</div><div class="pf-hoplab">101,770 grads</div></div>
+
+        <div class="pf-node" data-node="optimizer" data-in="101,770 gradients" data-out="updated weights"
+             data-num="lr 0.01 · 1 step" data-state="running">
+          <span class="pf-ix">8</span><span class="pf-name">optimizer</span>
+          <span class="pf-sub">SGD, one step</span>
+          <span class="pf-recipe"><i>in</i><span>101,770 gradients</span><i>out</i><span>updated weights</span></span>
+          <span class="pf-num">lr 0.01 · 1 step</span>
+        </div>
+
+       </div>
+      </div>
+    </div></div></div></div>
+  </div>
+
+  <div class="pf-beats">
+    <div class="pf-beat" data-reveal="1">
+      <h3><span class="pf-beatix">1</span> The input is not an image any more</h3>
+      <p>A 28×28 greyscale image is 784 numbers. Flattening throws away every fact
+      about which pixel was next to which — the network is not given the grid, and
+      it has to rediscover locality from the data or do without it. That single
+      decision is why a plain MLP is worse at images than a convolutional net, and
+      it is made here, at machine one, before any learning happens.</p>
+    </div>
+    <div class="pf-beat" data-reveal="2">
+      <h3><span class="pf-beatix">2</span> W1 is where almost the entire network lives</h3>
+      <p>784 inputs × 128 hidden units = <strong>100,352 weights</strong>, which is
+      98.6% of the 101,770 parameters in the whole model. Every intuition about
+      "the network learning" is mostly an intuition about this one matrix. Each
+      hidden unit holds 784 numbers — one opinion about every pixel — and the
+      weighted sum is that opinion applied.</p>
+    </div>
+    <div class="pf-beat" data-reveal="3">
+      <h3><span class="pf-beatix">3</span> ReLU is what stops it collapsing into one matrix</h3>
+      <p>Without a non-linearity, a stack of matrix multiplications is algebraically
+      identical to a single matrix — 101,770 parameters would buy exactly the
+      expressive power of 7,840. ReLU (<code>max(0, x)</code>) is the cheapest
+      function that breaks that equivalence: it costs one comparison per unit, adds
+      no parameters, and it is the reason depth buys anything at all.</p>
+    </div>
+    <div class="pf-beat" data-reveal="4">
+      <h3><span class="pf-beatix">4</span> W2 is small, and it is the part you can read</h3>
+      <p>128 × 10 = 1,280 weights, 1.3% of the model. Each of the ten output rows
+      is one class's answer to "which of the 128 features do I care about". This is
+      the layer people inspect when they want to know what a network learned,
+      precisely because it is small enough to look at.</p>
+    </div>
+    <div class="pf-beat" data-reveal="5">
+      <h3><span class="pf-beatix">5</span> Softmax turns scores into something you can bet on</h3>
+      <p>Ten logits are unbounded scores; ten probabilities sum to 1. The conversion
+      is not cosmetic — it is what makes the next machine's arithmetic mean
+      anything. A confidence of 0.98 and a logit of 4.1 carry the same ranking and
+      very different consequences when the loss is computed.</p>
+    </div>
+    <div class="pf-beat" data-reveal="6">
+      <h3><span class="pf-beatix">6</span> The loss is one number, and it indicts 101,770 of them</h3>
+      <p>Cross-entropy compares the ten probabilities against the one correct label
+      and produces a single scalar. This is the narrowest point on the whole line:
+      everything the network did collapses into one figure, and everything it does
+      next is derived from that figure. A pipeline with a one-number waist is
+      unusual, and it is worth seeing drawn.</p>
+    </div>
+    <div class="pf-beat" data-reveal="7">
+      <h3><span class="pf-beatix">7</span> Backprop expands one number back into 101,770</h3>
+      <p>The chain rule walks the same machines in reverse and asks each one: how
+      much did <em>you</em> contribute to that scalar? The answer is one partial
+      derivative per parameter — the payload goes from a single float to 101,770 of
+      them in one machine. That expansion, not the multiplication, is the thing
+      people find hard, and it is the reason this page ends on a console.</p>
+    </div>
+    <div class="pf-beat" data-reveal="8">
+      <h3><span class="pf-beatix">8</span> The optimizer is the only machine that writes</h3>
+      <p>Every machine before this one reads and produces. This one mutates: each
+      weight moves against its gradient by the learning rate, 0.01 here. Then the
+      whole line runs again with a slightly different W1 — which is why the last
+      hop on the console below points backwards.</p>
+    </div>
+  </div>
+</div>
+
+<!-- THE COVER — the same eight machines, now running. The article answered
+     "what does each part do"; this answers "how does a correction at the output
+     reach a weight at the input", which is a different question and needs
+     movement rather than text. -->
+<div class="pf-cover">
+  <h2>Now watch one training step go round</h2>
+  <p>Same eight machines, one loop. The chip is the payload: watch it stop being
+  an image, become a distribution, collapse to a single number, and come back out
+  as 101,770 corrections. The loop closes because machine 8 writes to machine 2.</p>
+
+  <div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="nn-loop" data-tick="1250" style="--pf-node-w:150px;--pf-hop-w:112px">
+    <div class="pf-belt pf-rows">
+     <div class="pf-row">
+      <div class="pf-node" data-node="input·loop" data-in="a 28×28 image" data-out="784 floats"
+           data-num="784" data-state="running">
+        <span class="pf-ix">1</span><span class="pf-name">input</span>
+        <span class="pf-recipe"><i>in</i><span>image</span><i>out</i><span>784 floats</span></span>
+        <span class="pf-num">784</span>
+      </div>
+      <div class="pf-hop" data-payload="784 floats"><div class="pf-rail"></div>
+        <div class="pf-chip">784</div><div class="pf-hoplab">784 floats</div></div>
+      <div class="pf-node" data-node="W1·loop" data-in="784 floats" data-out="128 sums"
+           data-num="100,352" data-state="running">
+        <span class="pf-ix">2</span><span class="pf-name">W1</span>
+        <span class="pf-recipe"><i>in</i><span>784 floats</span><i>out</i><span>128 sums</span></span>
+        <span class="pf-num">100,352 ✎</span>
+      </div>
+      <div class="pf-hop" data-payload="128 sums"><div class="pf-rail"></div>
+        <div class="pf-chip">128</div><div class="pf-hoplab">128 sums</div></div>
+      <div class="pf-node" data-node="ReLU·loop" data-in="128 sums" data-out="128 activations"
+           data-num="128" data-state="running">
+        <span class="pf-ix">3</span><span class="pf-name">ReLU</span>
+        <span class="pf-recipe"><i>in</i><span>128 sums</span><i>out</i><span>128 acts</span></span>
+        <span class="pf-num">128 biases</span>
+      </div>
+      <div class="pf-hop" data-payload="128 activations"><div class="pf-rail"></div>
+        <div class="pf-chip">acts</div><div class="pf-hoplab">128 acts</div></div>
+      <div class="pf-node" data-node="W2·loop" data-in="128 activations" data-out="10 logits"
+           data-num="1,280" data-state="running">
+        <span class="pf-ix">4</span><span class="pf-name">W2</span>
+        <span class="pf-recipe"><i>in</i><span>128 acts</span><i>out</i><span>10 logits</span></span>
+        <span class="pf-num">1,280 ✎</span>
+      </div>
+      <div class="pf-hop pf-return" data-payload="10 logits"><div class="pf-rail"></div>
+        <div class="pf-chip">10</div><div class="pf-hoplab">↓</div></div>
+     </div>
+     <div class="pf-row">
+      <div class="pf-node" data-node="softmax·loop" data-in="10 logits" data-out="10 probabilities"
+           data-num="10" data-state="running">
+        <span class="pf-ix">5</span><span class="pf-name">softmax</span>
+        <span class="pf-recipe"><i>in</i><span>10 logits</span><i>out</i><span>10 probs</span></span>
+        <span class="pf-num">sums to 1</span>
+      </div>
+      <div class="pf-hop" data-payload="10 probabilities"><div class="pf-rail"></div>
+        <div class="pf-chip">probs</div><div class="pf-hoplab">10 probs</div></div>
+      <div class="pf-node" data-node="loss·loop" data-in="10 probabilities" data-out="one scalar"
+           data-num="1" data-state="running">
+        <span class="pf-ix">6</span><span class="pf-name">loss</span>
+        <span class="pf-recipe"><i>in</i><span>10 probs</span><i>out</i><span>one scalar</span></span>
+        <span class="pf-num">1 number</span>
+      </div>
+      <div class="pf-hop" data-payload="one scalar loss"><div class="pf-rail"></div>
+        <div class="pf-chip">1</div><div class="pf-hoplab">one scalar</div></div>
+      <div class="pf-node" data-node="backprop·loop" data-in="one scalar" data-out="101,770 gradients"
+           data-num="101,770" data-state="running">
+        <span class="pf-ix">7</span><span class="pf-name">backprop</span>
+        <span class="pf-recipe"><i>in</i><span>one scalar</span><i>out</i><span>101,770 grads</span></span>
+        <span class="pf-num">101,770</span>
+      </div>
+      <div class="pf-hop" data-payload="101,770 gradients"><div class="pf-rail"></div>
+        <div class="pf-chip">grads</div><div class="pf-hoplab">101,770 grads</div></div>
+      <div class="pf-node" data-node="optimizer·loop" data-in="101,770 gradients" data-out="updated weights"
+           data-num="lr 0.01" data-state="running">
+        <span class="pf-ix">8</span><span class="pf-name">optimizer</span>
+        <span class="pf-recipe"><i>in</i><span>101,770 grads</span><i>out</i><span>new weights ↺ 2</span></span>
+        <span class="pf-num">lr 0.01</span>
+      </div>
+     </div>
+    </div>
+
+    <div class="pf-gates">
+      <span class="pf-gatelab">gates</span>
+      <span class="pf-gate" data-node="ReLU zero" data-gate data-state="running"
+            title="A unit whose sum is negative outputs 0, and its gradient is 0 too.">
+        ReLU ≤ 0 · gradient stops here
+      </span>
+      <span class="pf-gate" data-node="grad clip" data-gate data-state="ghost"
+            title="Not in this network. Named because its absence is a choice, not an oversight.">
+        gradient clipping · not in this net
+      </span>
+      <span class="pf-gate" data-node="held-out set" data-gate data-state="unpowered"
+            title="Training loss falls whether or not the network generalises. Nothing on this line can tell you which.">
+        held-out set · nothing here proves generalisation
+      </span>
+    </div>
+  </div></div></div></div>
+
+  <div class="pf-legend">
+    <span><i class="l-running"></i> <b>running</b> — in this network, and it moves numbers</span>
+    <span><i class="l-ghost"></i> <b>ghost</b> — not in this network: a named absence, not a zero</span>
+    <span><i class="l-unpowered"></i> <b>unpowered</b> — present, and nothing here proves it works</span>
+    <span><i class="l-broken"></i> <b>broken</b> — would report success it did not earn (none on this page)</span>
+  </div>
+
+  <div class="prismprose" style="margin-top:26px">
+    <p><strong>What the console shows that the article could not:</strong> the
+    payload's size does not travel with its importance. 784 floats in, 101,770
+    corrections out, and in between the entire network passes through a waist one
+    number wide. Read as a still diagram, machines 6 and 7 are two boxes the same
+    size as any other. Watched, they are obviously the strangest part of the line.</p>
+    <p><strong>Where this rendering strains:</strong> backprop is drawn as one
+    machine, and it is really the same four machines run in reverse. Drawing that
+    honestly needs <code>belt-lanes</code> with a return lane, at the cost of a
+    much busier console. Stated rather than hidden.</p>
+  </div>
+</div>
+
+  </div>
+
+  <p class="prismsource">source: docs/prisms/neural-net/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 2 floor(s). arithmetic for a 784→128→10 MLP: 784×128 + 128 + 128×10 + 10 = 101,770 parameters. Every number on this page is that network&#x27;s.</p>
+</main>
+
+</div>
+
+</body>
+</html>

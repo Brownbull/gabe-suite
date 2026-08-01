@@ -23,7 +23,7 @@
  */
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
-import { resolve, dirname } from 'node:path';
+import { resolve, dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -34,7 +34,24 @@ const USER_DRIVEN = new Set((process.env.FX_USER_DRIVEN || 'scrub,scrolly').spli
 
 const { chromium } = await import(`${process.env.HOME}/.claude/skills/gabe-docsite/tools/_playwright.mjs`);
 const html = await readFile(target, 'utf8');
-const srv = createServer((_q, r) => { r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(html); });
+/* `/` is always the page under test; any other path is served from the page's
+   own directory. An ARTIFACT is self-contained and never asks for a second
+   path, so this changes nothing for it — but a DISK page (gabe-prism's target)
+   loads assets/prism-fx.js, and the old one-file server answered that request
+   with the HTML itself. window.FXREPLAY then stayed empty and the gate reported
+   a loud SKIP over a page whose animations were fine: an unverified contract
+   dressed as an absent one. */
+const MIME = { '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json',
+               '.png': 'image/png', '.svg': 'image/svg+xml', '.woff2': 'font/woff2' };
+const srv = createServer(async (q, r) => {
+  const rel = decodeURIComponent((q.url || '/').split('?')[0]).replace(/^\/+/, '');
+  if (!rel) { r.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); r.end(html); return; }
+  try {
+    const buf = await readFile(join(dirname(target), rel));
+    r.writeHead(200, { 'Content-Type': MIME[rel.slice(rel.lastIndexOf('.'))] || 'application/octet-stream' });
+    r.end(buf);
+  } catch { r.writeHead(404); r.end('not found'); }
+});
 await new Promise((r) => srv.listen(0, '127.0.0.1', r));
 const url = `http://127.0.0.1:${srv.address().port}/`;
 

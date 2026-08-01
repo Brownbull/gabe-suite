@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>gastify: scan → cooked, with every number ghosted · Gabe Suite Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+
+<aside class="side">
+    <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gabe Suite</b><small>Gabe Center · suite</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">18</span></a>
+  <div class="navlabel g-code">Enforcement</div>
+  <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
+  <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">18</span></a>
+  <div class="navlabel g-ent">Surfaces</div>
+  <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
+  <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">462</span></a>
+  <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
+  <a class="navitem navsubitem" href="kdbp.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> What KDBP is</a>
+  <a class="navitem navsubitem" href="the-loop.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The development loop</a>
+  <a class="navitem navsubitem" href="contract.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The E1–E7 contract</a>
+  <a class="navitem navsubitem" href="skill-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The skill map</a>
+  <a class="navitem navsubitem" href="commands.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Beats &amp; commands</a>
+  <a class="navitem navsubitem" href="satellites.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Analysis satellites</a>
+  <a class="navitem navsubitem" href="verification-first.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The one picture</a>
+  <a class="navitem navsubitem" href="gabe-red.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> /gabe-red</a>
+  <a class="navitem navsubitem" href="c-id.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The C-id scheme</a>
+  <a class="navitem navsubitem" href="command-center.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The command center</a>
+  <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
+  <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
+  <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem" href="prism-catan.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Catan</a>
+  <a class="navitem navsubitem" href="prism-neural-net.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Hook chain</a>
+  <a class="navitem navsubitem on" href="prism-gastify-scan-to-cooked.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> gastify scan→cooked</a>
+  <div class="foot">regen 2026-07-31 17:08<br>HEAD dd707b8 · build_suite_center.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>gastify: scan → cooked, with every number ghosted</b></div>
+    <div class="spacer"></div>
+    <span class="chip warn">62 uncommitted</span>
+    <span class="stamp">regen · 2026-07-31 17:08</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">domain · belt-line · numbers absent</div>
+    <h1>gastify: scan → cooked, with every number ghosted</h1>
+    <p class="prismlede">Eight machines take a photographed receipt to a cooking event and back into a proficiency score. The shape is real. The numbers are not here — gastify lives in another repository — so every measured field renders as a named absence instead of a figure nobody could trace.</p>
+    <p class="prismhandle">A floor with no numbers cannot show a bottleneck, which is exactly what this page demonstrates: <em>every machine looks equally important</em>. That is the failure P1 predicts when the measured-number field is empty, shown rather than described.</p>
+  </div>
+
+  <div class="prismstage" data-prism-mode="console">
+    <div class="prismprose">
+  <p>This is the same grammar as the other pages with one field removed. Every
+  machine still names what it consumes and what it produces — that is structural,
+  and structure survives the trip between repositories. The measured number does
+  not, so it is drawn as <code>⌀</code> rather than guessed at.</p>
+  <p><strong>Read the floor and notice what you cannot do:</strong> you cannot say
+  which machine is the bottleneck, which one is worth optimising, or which one is
+  doing most of the work. Eight machines, all apparently equal. That is P1's claim
+  about the measured-number field, demonstrated instead of asserted.</p>
+</div>
+
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="gastify-line" data-tick="1500" style="--pf-node-w:164px">
+  <div class="pf-belt pf-rows">
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="receipt photo" data-in="a supermarket receipt" data-out="an image file"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g1">
+      <span class="pf-ix">1</span><span class="pf-name">receipt photo</span>
+      <span class="pf-sub">the operator's phone</span>
+      <span class="pf-recipe"><i>in</i><span>a supermarket receipt</span><i>out</i><span>an image file</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+    <div class="pf-hop" data-payload="an image file"><div class="pf-rail"></div>
+      <div class="pf-chip">image</div><div class="pf-hoplab">an image</div></div>
+
+    <button class="pf-node" data-node="scan" data-in="an image file" data-out="raw line items"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g2">
+      <span class="pf-ix">2</span><span class="pf-name">scan</span>
+      <span class="pf-sub">OCR + parse</span>
+      <span class="pf-recipe"><i>in</i><span>an image file</span><i>out</i><span>raw line items</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+    <div class="pf-hop" data-payload="raw line items"><div class="pf-rail"></div>
+      <div class="pf-chip">line items</div><div class="pf-hoplab">line items</div></div>
+
+    <button class="pf-node" data-node="draft" data-in="raw line items" data-out="a reviewable draft"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g3">
+      <span class="pf-ix">3</span><span class="pf-name">draft</span>
+      <span class="pf-sub">matched to known products</span>
+      <span class="pf-recipe"><i>in</i><span>raw line items</span><i>out</i><span>a reviewable draft</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a reviewable draft"><div class="pf-rail"></div>
+      <div class="pf-chip">draft</div><div class="pf-hoplab">a draft</div></div>
+
+    <button class="pf-node" data-node="transaction" data-in="a reviewable draft" data-out="a confirmed transaction"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g4">
+      <span class="pf-ix">4</span><span class="pf-name">transaction</span>
+      <span class="pf-sub">the human confirms</span>
+      <span class="pf-recipe"><i>in</i><span>a reviewable draft</span><i>out</i><span>a confirmed transaction</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+    <div class="pf-hop pf-return" data-payload="a confirmed transaction"><div class="pf-rail"></div>
+      <div class="pf-chip">txn</div><div class="pf-hoplab">txn ↓</div></div>
+   </div>
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="pantry stock" data-in="a confirmed transaction" data-out="on-hand quantities"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g5">
+      <span class="pf-ix">5</span><span class="pf-name">pantry stock</span>
+      <span class="pf-sub">the standing state</span>
+      <span class="pf-recipe"><i>in</i><span>a confirmed transaction</span><i>out</i><span>on-hand quantities</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+    <div class="pf-hop" data-payload="on-hand quantities"><div class="pf-rail"></div>
+      <div class="pf-chip">on hand</div><div class="pf-hoplab">on-hand</div></div>
+
+    <button class="pf-node" data-node="recipe match" data-in="on-hand quantities" data-out="cookable recipes"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g6">
+      <span class="pf-ix">6</span><span class="pf-name">recipe match</span>
+      <span class="pf-sub">stock ∩ requirements</span>
+      <span class="pf-recipe"><i>in</i><span>on-hand quantities</span><i>out</i><span>cookable recipes</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+      <span class="pf-alert">⚠ side input</span>
+    </button>
+
+    <div class="pf-hop" data-payload="cookable recipes"><div class="pf-rail"></div>
+      <div class="pf-chip">cookable</div><div class="pf-hoplab">cookable</div></div>
+
+    <button class="pf-node" data-node="cooking event" data-in="cookable recipes" data-out="consumed stock + a log entry"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g7">
+      <span class="pf-ix">7</span><span class="pf-name">cooking event</span>
+      <span class="pf-sub">someone actually cooks</span>
+      <span class="pf-recipe"><i>in</i><span>cookable recipes</span><i>out</i><span>consumed stock + a log</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+    <div class="pf-hop" data-payload="consumed stock + a log entry"><div class="pf-rail"></div>
+      <div class="pf-chip">log</div><div class="pf-hoplab">a log entry</div></div>
+
+    <button class="pf-node" data-node="proficiency" data-in="consumed stock + a log entry" data-out="a skill score ↺ 6"
+            data-num="⌀ not measured here" data-state="unpowered" data-detail="#d-g8">
+      <span class="pf-ix">8</span><span class="pf-name">proficiency</span>
+      <span class="pf-sub">feeds back into match</span>
+      <span class="pf-recipe"><i>in</i><span>consumed stock + a log</span><i>out</i><span>a skill score ↺ 6</span></span>
+      <span class="pf-num">⌀ unmeasured</span>
+    </button>
+
+   </div>
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="human confirm" data-gate data-state="unpowered"
+          title="A draft becomes a transaction only when a person accepts it. Not verifiable from this repo.">
+      human confirm · draft → transaction
+    </span>
+    <span class="pf-gate" data-node="bought-to-cookable notice" data-gate data-state="ghost"
+          title="Flow 3 (bought → cookable notification) is recorded as NOT BUILT — a named gap, not a zero.">
+      bought → cookable notification · NOT BUILT
+    </span>
+    <span class="pf-gate" data-node="stock floor" data-gate data-state="unpowered"
+          title="Nothing in this repository proves the stock can go negative or that anything stops it.">
+      stock ≥ 0 · nothing here proves it
+    </span>
+  </div>
+</div></div></div></div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — built and proven (nothing on this page qualifies from here)</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — not built: Flow 3 is a recorded, named gap</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — it exists in gastify; nothing in <em>this</em> repo proves it</span>
+  <span><i class="l-broken"></i> <b>broken</b> — would claim a number it cannot source (this page refuses to)</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-g1"><h4>receipt photo</h4>
+    <p>The only machine with a physical input. Everything after it is data about
+    an object that no longer matters.</p>
+    <dl><dt>consumes</dt><dd>a supermarket receipt</dd><dt>produces</dt><dd>an image file</dd>
+        <dt>number</dt><dd>⌀ — would be photos per week; not available here</dd></dl></div>
+  <div class="pf-detail" id="d-g2"><h4>scan</h4>
+    <p>The lossy machine. Its error rate is the single number that would most
+    change how the rest of the line is read, and it is exactly the number this
+    page cannot supply.</p>
+    <dl><dt>consumes</dt><dd>an image file</dd><dt>produces</dt><dd>raw line items</dd>
+        <dt>number</dt><dd>⌀ — would be items parsed / items present</dd></dl></div>
+  <div class="pf-detail" id="d-g3"><h4>draft</h4>
+    <p>Where a raw string becomes a known product, or fails to and waits for a
+    person.</p>
+    <dl><dt>consumes</dt><dd>raw line items</dd><dt>produces</dt><dd>a reviewable draft</dd>
+        <dt>number</dt><dd>⌀ — would be auto-matched / total</dd></dl></div>
+  <div class="pf-detail" id="d-g4"><h4>transaction</h4>
+    <p>The commit point. Before it, everything is provisional; after it, stock has
+    moved.</p>
+    <dl><dt>consumes</dt><dd>a reviewable draft</dd><dt>produces</dt><dd>a confirmed transaction</dd>
+        <dt>number</dt><dd>⌀ — would be drafts confirmed / drafts created</dd></dl></div>
+  <div class="pf-detail" id="d-g5"><h4>pantry stock</h4>
+    <p>The only standing state on the line. Every other machine is a flow; this one
+    persists, which is why an error upstream survives here rather than passing
+    through.</p>
+    <dl><dt>consumes</dt><dd>a confirmed transaction</dd><dt>produces</dt><dd>on-hand quantities</dd>
+        <dt>number</dt><dd>⌀ — would be distinct products held</dd></dl></div>
+  <div class="pf-detail" id="d-g6"><h4>recipe match — the side input</h4>
+    <p>This machine consumes two things: the pantry, and the recipe catalogue that
+    never came down this belt. A side input is the honest name for it, and drawing
+    it as a single inbound arrow would be the lie.</p>
+    <dl><dt>consumes</dt><dd>on-hand quantities + the recipe catalogue (side)</dd>
+        <dt>produces</dt><dd>cookable recipes</dd>
+        <dt>number</dt><dd>⌀ — would be recipes cookable / recipes known</dd></dl></div>
+  <div class="pf-detail" id="d-g7"><h4>cooking event</h4>
+    <p>The second human gate. Nothing automatic reaches machine 8 without someone
+    actually cooking.</p>
+    <dl><dt>consumes</dt><dd>cookable recipes</dd><dt>produces</dt><dd>consumed stock + a log entry</dd>
+        <dt>number</dt><dd>⌀ — would be cooked / suggested</dd></dl></div>
+  <div class="pf-detail" id="d-g8"><h4>proficiency — and the loop</h4>
+    <p>Its output returns to machine 6: what you have cooked changes what you are
+    offered. That feedback edge is why this is a line and not a funnel, and it is
+    the part a linear diagram of the same eight boxes silently drops.</p>
+    <dl><dt>consumes</dt><dd>consumed stock + a log entry</dd><dt>produces</dt><dd>a skill score, fed back to machine 6</dd>
+        <dt>number</dt><dd>⌀ — would be events per recipe</dd></dl></div>
+</div>
+
+<div class="prismprose" style="margin-top:34px">
+  <h2>What this page found out about the gate</h2>
+  <p><code>verify-prism.mjs</code> passes this page. Every stage carries a
+  <code>data-num</code>, so check 3 is satisfied — by the string
+  <code>⌀ not measured here</code>. <strong>The gate checks that a number field is
+  present, not that it holds a number</strong>, and a page could pass it with
+  invented figures just as easily as with honest absences.</p>
+  <p>That is a real limit, found by building the page rather than by reading the
+  checker. Closing it means either a provenance field per number, or a
+  <code>data-num-source</code> the gate can resolve — a decision for the skill,
+  not for this page. Recorded here so it is not rediscovered a third time.</p>
+</div>
+
+  </div>
+
+  <p class="prismsource">source: docs/prisms/gastify-scan-to-cooked/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 1 floor(s). STRUCTURE from the gastify domain; NUMBERS deliberately absent — this repository has no access to that project&#x27;s data, and the carry-forward rule is that a number on a prism page comes from the actor table or it does not appear.</p>
+</main>
+
+</div>
+
+</body>
+</html>
