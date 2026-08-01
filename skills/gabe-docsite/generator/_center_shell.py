@@ -40,6 +40,9 @@ _ICONS = {
     "type":     '<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>',
     "code":     '<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
     "database": '<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    "gauge": '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    "scrollcast": '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/>',
+    "component": '<path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/>',
 }
 
 
@@ -91,8 +94,9 @@ def render_sidebar(nav: dict[str, Any], current: str, project: str,
             cnt = item.get("count")
             badge = f' <span class="count">{cnt}</span>' if cnt is not None else ""
             size = 14 if item.get("sub") else 0
+            tip = f' title="{E(item["tip"])}"' if item.get("tip") else ""
             parts.append(
-                f'  <a class="navitem{sub}{on}" href="{item["href"]}">'
+                f'  <a class="navitem{sub}{on}" href="{item["href"]}"{tip}>'
                 f'{_icon(item.get("icon", ""), size)} {E(item["label"])}{badge}</a>')
     parts.append(f'  <div class="foot">regen {E(stamp)}<br>HEAD {E(head)} · {E(generator)}</div>')
     return "\n".join(parts)

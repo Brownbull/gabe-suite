@@ -1,13 +1,13 @@
 {
-  "title": "gastify: scan → cooked, with every number ghosted",
+  "title": "gastify: scan → cooked",
   "nav_label": "gastify scan→cooked",
-  "kicker": "domain · belt-line · numbers absent",
+  "kicker": "domain · belt-line · illustrative numbers",
   "mode": "console",
   "pattern": "belt-line",
   "order": 40,
-  "kind": "honesty test",
-  "card": "A real domain line with a side input and a feedback loop — and not one measured number, because that project's data is not in this repo. Every count is a ghost rather than a plausible invention.",
-  "lede": "Eight machines take a photographed receipt to a cooking event and back into a proficiency score. The shape is real. The numbers are not here — gastify lives in another repository — so every measured field renders as a named absence instead of a figure nobody could trace.",
-  "handle": "A floor with no numbers cannot show a bottleneck, which is exactly what this page demonstrates: <em>every machine looks equally important</em>. That is the failure P1 predicts when the measured-number field is empty, shown rather than described.",
-  "source": "STRUCTURE from the gastify domain; NUMBERS deliberately absent — this repository has no access to that project's data, and the carry-forward rule is that a number on a prism page comes from the actor table or it does not appear."
+  "kind": "domain example",
+  "card": "A real domain line with a side input and a feedback loop: a photographed receipt becomes pantry stock, cookable recipes, a cooking event, and a proficiency score that changes what gets offered next. Numbers are illustrative.",
+  "lede": "Eight machines take a photographed receipt to a cooking event and back into a proficiency score. The shape is gastify's; the numbers are invented for this example — the real page, with measured numbers, belongs in gastify's own command center once the suite propagates there.",
+  "handle": "Machine 6 is the reason this line is worth drawing: it consumes two things — the pantry that came down the belt, and a recipe catalogue that <em>never did</em>. A side input is the honest name for that, and machine 8 feeding back into machine 6 is why this is a loop, not a funnel. Both are exactly what a linear diagram of the same eight boxes silently drops.",
+  "source": "structure from the gastify domain; NUMBERS ARE ILLUSTRATIVE — invented for this example by operator ruling (2026-08-01), never measured. This page teaches the suite's grammar; it is not a status page for gastify and does not update when gastify changes."
 }

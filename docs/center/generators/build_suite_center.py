@@ -66,6 +66,9 @@ IC = {
     "message": '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
     "book":     '<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/>',
     "filetext": '<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/>',
+    "gauge": '<path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/>',
+    "scrollcast": '<path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/>',
+    "component": '<path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/>',
 }
 
 # Bucket -> (color, icon, urgency). Urgency drives the ledger's section order:
@@ -117,11 +120,18 @@ def docs_sections(cfg: dict) -> list[dict]:
     except Exception as exc:                      # noqa: BLE001 — a broken docs
         print(f"  [nav] docsite config unreadable ({exc}) — Docs group omitted")
         return []
+    # src_dir is declared relative to the CONFIG FILE (the docsite build
+    # resolves it the same way) — resolving from the repo root reads nothing
+    # and every embeds flag silently stays False.
+    src_dir = path.parent / getattr(mod, "SITE", {}).get("src_dir", "src")
     out = []
     for section in getattr(mod, "SECTIONS", []):
         docs = []
         for d in section.get("docs", []):
-            docs.append({"slug": d["slug"], "label": d.get("nav_label") or d["title"]})
+            src = src_dir / d.get("source_md", "")
+            embeds = src.is_file() and "{{PRISM:" in src.read_text(encoding="utf-8")
+            docs.append({"slug": d["slug"], "label": d.get("nav_label") or d["title"],
+                         "embeds": embeds})
         if docs:
             out.append({"key": section.get("key", ""), "label": section.get("label", ""),
                         "docs": docs})
@@ -155,9 +165,12 @@ def prism_pages(cfg: dict) -> list[dict]:
         except json.JSONDecodeError as exc:
             print(f"  [nav] prism {d.name}: unreadable prism.json ({exc}) — omitted")
             continue
+        body = (d / "body.html").read_text(encoding="utf-8")
         out.append({"slug": d.name,
                     "label": meta.get("nav_label") or meta.get("title", d.name),
-                    "order": meta.get("order", 999)})
+                    "order": meta.get("order", 999),
+                    "mode": meta.get("mode", "console"),
+                    "embeds": "{{PRISM:" in body})
     out.sort(key=lambda p: (p["order"], p["slug"]))
     return out
 
@@ -193,8 +206,12 @@ def nav_model(cfg: dict, counts: dict) -> list[dict]:
         items = [{"label": "Docs", "href": "docs.html", "icon": "book"}]
         for section in sections:
             for d in section["docs"]:
-                items.append({"label": d["label"], "href": f"{d['slug']}.html",
-                              "icon": "filetext", "sub": True})
+                icon = "component" if d.get("embeds") else "filetext"
+                item = {"label": d["label"], "href": f"{d['slug']}.html",
+                        "icon": icon, "sub": True}
+                if d.get("embeds"):
+                    item["tip"] = "embeds prism components"
+                items.append(item)
         groups.append({"label": "Docs", "cls": "g-docs", "items": items})
 
     # The EXPLANATIONS group — authored prism pages, rendered by build_prisms.py
@@ -204,10 +221,15 @@ def nav_model(cfg: dict, counts: dict) -> list[dict]:
     # invisible until a link 404s.
     prisms = prism_pages(cfg)
     if prisms:
+        mode_icon = {"console": "gauge", "article": "scrollcast"}
+        mode_tip = {"gauge": "console — one screen, ambient loop + scrub bar",
+                    "scrollcast": "article — assembles as you scroll",
+                    "component": "built from embedded components"}
         items = [{"label": "Explanations", "href": "explanations.html", "icon": "zap"}]
         for p in prisms:
+            icon = "component" if p.get("embeds") else mode_icon.get(p.get("mode"), "gauge")
             items.append({"label": p["label"], "href": f"prism-{p['slug']}.html",
-                          "icon": "book", "sub": True})
+                          "icon": icon, "sub": True, "tip": mode_tip[icon]})
         groups.append({"label": "Explanations", "cls": "g-ent", "items": items})
 
     later = [l for l in cfg["lenses"] if l["spike"] != 1]
@@ -254,8 +276,9 @@ def render_nav(cfg: dict, groups: list[dict], current: str, counts: dict) -> str
             cnt = item.get("count")
             badge = f' <span class="count">{cnt}</span>' if cnt is not None else ""
             size = 14 if item.get("sub") else 0
+            tip = f' title="{E(item["tip"])}"' if item.get("tip") else ""
             parts.append(
-                f'  <a class="navitem{sub}{on}" href="{item["href"]}">'
+                f'  <a class="navitem{sub}{on}" href="{item["href"]}"{tip}>'
                 f'{_nav_svg(item["icon"], size)} {E(item["label"])}{badge}</a>')
 
     parts.append(

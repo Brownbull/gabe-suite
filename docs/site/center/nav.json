@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "dd707b8",
+ "head": "424e4c5",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 18
+     "count": 19
     }
    ]
   },
@@ -122,8 +122,9 @@
     {
      "label": "Analysis satellites",
      "href": "satellites.html",
-     "icon": "filetext",
-     "sub": true
+     "icon": "component",
+     "sub": true,
+     "tip": "embeds prism components"
     },
     {
      "label": "The one picture",
@@ -181,26 +182,30 @@
     {
      "label": "Catan",
      "href": "prism-catan.html",
-     "icon": "book",
-     "sub": true
+     "icon": "gauge",
+     "sub": true,
+     "tip": "console \u2014 one screen, ambient loop + scrub bar"
     },
     {
      "label": "Neural net",
      "href": "prism-neural-net.html",
-     "icon": "book",
-     "sub": true
+     "icon": "scrollcast",
+     "sub": true,
+     "tip": "article \u2014 assembles as you scroll"
     },
     {
      "label": "Hook chain",
      "href": "prism-hook-chain.html",
-     "icon": "book",
-     "sub": true
+     "icon": "gauge",
+     "sub": true,
+     "tip": "console \u2014 one screen, ambient loop + scrub bar"
     },
     {
      "label": "gastify scan\u2192cooked",
      "href": "prism-gastify-scan-to-cooked.html",
-     "icon": "book",
-     "sub": true
+     "icon": "gauge",
+     "sub": true,
+     "tip": "console \u2014 one screen, ambient loop + scrub bar"
     }
    ]
   }
