@@ -23,7 +23,7 @@
   <div class="navlabel g-now">Now</div>
   <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
   <div class="navlabel g-board">Board</div>
-  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">19</span></a>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">20</span></a>
   <div class="navlabel g-code">Enforcement</div>
   <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
   <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
@@ -53,47 +53,57 @@
   <a class="navitem navsubitem" href="prism-catan.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Catan</a>
   <a class="navitem navsubitem" href="prism-neural-net.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> Neural net</a>
   <a class="navitem navsubitem" href="prism-hook-chain.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Hook chain</a>
-  <a class="navitem navsubitem on" href="prism-gastify-scan-to-cooked.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> gastify scan→cooked</a>
-  <div class="foot">regen 2026-08-01 19:32<br>HEAD 424e4c5 · build_suite_center.py</div>
+  <a class="navitem navsubitem on" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
+  <div class="foot">regen 2026-08-01 19:39<br>HEAD b483ac0 · build_suite_center.py</div>
 </aside>
 
 <main class="main">
   <div class="topbar">
     <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>gastify: scan → cooked</b></div>
     <div class="spacer"></div>
-    <span class="chip warn">20 uncommitted</span>
-    <span class="stamp">regen · 2026-08-01 19:32</span>
+    <span class="chip warn">21 uncommitted</span>
+    <span class="stamp">regen · 2026-08-01 19:39</span>
   </div>
 
   <div class="prismhead">
-    <div class="kicker">domain · belt-line · illustrative numbers</div>
+    <div class="kicker">domain · two components · illustrative numbers</div>
     <h1>gastify: scan → cooked</h1>
-    <p class="prismlede">Eight machines take a photographed receipt to a cooking event and back into a proficiency score. The shape is gastify's; the numbers are invented for this example — the real page, with measured numbers, belongs in gastify's own command center once the suite propagates there.</p>
-    <p class="prismhandle">Machine 6 is the reason this line is worth drawing: it consumes two things — the pantry that came down the belt, and a recipe catalogue that <em>never did</em>. A side input is the honest name for that, and machine 8 feeding back into machine 6 is why this is a loop, not a funnel. Both are exactly what a linear diagram of the same eight boxes silently drops.</p>
+    <p class="prismlede">Eight machines take a photographed receipt to a cooking event and back into a proficiency score — served here as two self-contained components any page in this center can embed with one token. The shape is gastify's; the numbers are invented for this example, and the measured page belongs in gastify's own command center once the suite propagates there.</p>
+    <p class="prismhandle">The seam between the two components is <em>one named payload</em> — the intake line ends on "a confirmed transaction" and the kitchen loop consumes exactly that. A component whose boundary is a named payload composes; one whose boundary is "and then the rest happens" does not.</p>
   </div>
 
   <div class="prismstage" data-prism-mode="console">
     <div class="prismprose">
-  <p>One week of a household running gastify, drawn as a line. Watch two things
-  no funnel diagram can show: machine&nbsp;6 eats a <strong>side input</strong>
-  (the recipe catalogue never rode this belt), and machine&nbsp;8 feeds back into
-  machine&nbsp;6 — what you have cooked changes what you are offered.</p>
+  <p>This page is <strong>assembled from two components</strong>, and that is its
+  second lesson. Each half of gastify's line below is a self-contained fragment —
+  its own floor, controls, gates, and inspectors — that any other page in this
+  center can embed with one token. When the suite propagates to gastify, its doc
+  pages can carry the intake story alone, or the kitchen loop alone, without
+  this page existing there at all.</p>
   <p><strong>The numbers are invented.</strong> They are shaped like a plausible
-  week so the line reads honestly — a bottleneck appears at the scan, a funnel
-  narrows at cooking — but nothing here was measured. The measured page belongs
-  in gastify's own command center, wired to its data, once the suite propagates
-  there. This one exists to teach the grammar.</p>
+  week so the line reads honestly — a bottleneck at the scan, a funnel at
+  cooking — but nothing was measured. The measured page belongs in gastify's own
+  command center, wired to its data. This one exists to teach the grammar.</p>
 </div>
 
-<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="gastify-line" data-tick="1500" style="--pf-node-w:164px">
-  <div class="pf-belt pf-rows">
-   <div class="pf-row">
+<div class="prismprose">
+  <h2>Component 1 · the intake line</h2>
+  <p>A receipt on paper becomes a confirmed transaction in four machines. Watch
+  the scan: it is the lossy one, and its three missed items are invisible to
+  everything downstream.</p>
+</div>
+
+<div class="pxfrag px-gastify-intake" data-prism-fragment="gastify-intake"><div class="pxhead"><span class="pxtitle">gastify · the intake line</span><span class="pxnote">receipt photo → scan → draft → transaction · numbers illustrative</span></div><div class="pxbody"><!-- FRAGMENT — the first half of gastify's scan→cooked line, self-contained so
+     any doc page (here, or in gastify's center after propagation) can embed the
+     intake story alone. Numbers are ILLUSTRATIVE by operator ruling 2026-08-01;
+     the note above says so wherever this component lands. -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="gastify-intake" data-tick="1400">
+  <div class="pf-belt">
 
     <button class="pf-node" data-node="receipt photo" data-in="a supermarket receipt" data-out="an image file"
-            data-num="4 photos this week" data-state="running" data-detail="#d-g1">
+            data-num="4 photos this week" data-state="running" data-detail="#d-gi1">
       <span class="pf-ix">1</span><span class="pf-name">receipt photo</span>
-      <span class="pf-sub">the operator's phone</span>
-      <span class="pf-recipe"><i>in</i><span>a supermarket receipt</span><i>out</i><span>an image file</span></span>
+      <span class="pf-recipe"><i>in</i><span>a receipt</span><i>out</i><span>an image file</span></span>
       <span class="pf-num">4 photos this week</span>
     </button>
 
@@ -101,84 +111,33 @@
       <div class="pf-chip">image</div><div class="pf-hoplab">an image</div></div>
 
     <button class="pf-node" data-node="scan" data-in="an image file" data-out="raw line items"
-            data-num="31 of 34 items parsed" data-state="running" data-detail="#d-g2">
+            data-num="31 of 34 items parsed" data-state="running" data-detail="#d-gi2">
       <span class="pf-ix">2</span><span class="pf-name">scan</span>
-      <span class="pf-sub">OCR + parse</span>
       <span class="pf-recipe"><i>in</i><span>an image file</span><i>out</i><span>raw line items</span></span>
-      <span class="pf-num">31 of 34 items parsed</span>
+      <span class="pf-num">31 of 34 parsed</span>
       <span class="pf-alert">⚠ lossy</span>
     </button>
 
     <div class="pf-hop" data-payload="raw line items"><div class="pf-rail"></div>
-      <div class="pf-chip">line items</div><div class="pf-hoplab">line items</div></div>
+      <div class="pf-chip">items</div><div class="pf-hoplab">line items</div></div>
 
     <button class="pf-node" data-node="draft" data-in="raw line items" data-out="a reviewable draft"
-            data-num="26 auto-matched · 5 to review" data-state="running" data-detail="#d-g3">
+            data-num="26 auto-matched · 5 to review" data-state="running" data-detail="#d-gi3">
       <span class="pf-ix">3</span><span class="pf-name">draft</span>
-      <span class="pf-sub">matched to known products</span>
       <span class="pf-recipe"><i>in</i><span>raw line items</span><i>out</i><span>a reviewable draft</span></span>
-      <span class="pf-num">26 auto-matched · 5 to review</span>
+      <span class="pf-num">26 matched · 5 to review</span>
     </button>
 
     <div class="pf-hop" data-payload="a reviewable draft"><div class="pf-rail"></div>
       <div class="pf-chip">draft</div><div class="pf-hoplab">a draft</div></div>
 
     <button class="pf-node" data-node="transaction" data-in="a reviewable draft" data-out="a confirmed transaction"
-            data-num="29 of 31 items confirmed" data-state="running" data-detail="#d-g4">
+            data-num="29 of 31 items confirmed" data-state="running" data-detail="#d-gi4">
       <span class="pf-ix">4</span><span class="pf-name">transaction</span>
-      <span class="pf-sub">the human confirms</span>
-      <span class="pf-recipe"><i>in</i><span>a reviewable draft</span><i>out</i><span>a confirmed transaction</span></span>
-      <span class="pf-num">29 of 31 items confirmed</span>
+      <span class="pf-recipe"><i>in</i><span>a draft</span><i>out</i><span>a confirmed transaction</span></span>
+      <span class="pf-num">29 of 31 confirmed</span>
     </button>
 
-    <div class="pf-hop pf-return" data-payload="a confirmed transaction"><div class="pf-rail"></div>
-      <div class="pf-chip">txn</div><div class="pf-hoplab">txn ↓</div></div>
-   </div>
-   <div class="pf-row">
-
-    <button class="pf-node" data-node="pantry stock" data-in="a confirmed transaction" data-out="on-hand quantities"
-            data-num="87 products on hand" data-state="running" data-detail="#d-g5">
-      <span class="pf-ix">5</span><span class="pf-name">pantry stock</span>
-      <span class="pf-sub">the standing state</span>
-      <span class="pf-recipe"><i>in</i><span>a confirmed transaction</span><i>out</i><span>on-hand quantities</span></span>
-      <span class="pf-num">87 products on hand</span>
-    </button>
-
-    <div class="pf-hop" data-payload="on-hand quantities"><div class="pf-rail"></div>
-      <div class="pf-chip">on hand</div><div class="pf-hoplab">on-hand</div></div>
-
-    <button class="pf-node" data-node="recipe match" data-in="on-hand quantities" data-out="cookable recipes"
-            data-num="12 cookable of 68 known" data-state="running" data-detail="#d-g6">
-      <span class="pf-ix">6</span><span class="pf-name">recipe match</span>
-      <span class="pf-sub">stock ∩ requirements</span>
-      <span class="pf-recipe"><i>in</i><span>on-hand quantities</span><i>out</i><span>cookable recipes</span></span>
-      <span class="pf-num">12 cookable of 68 known</span>
-      <span class="pf-alert">⚠ side input</span>
-    </button>
-
-    <div class="pf-hop" data-payload="cookable recipes"><div class="pf-rail"></div>
-      <div class="pf-chip">cookable</div><div class="pf-hoplab">cookable</div></div>
-
-    <button class="pf-node" data-node="cooking event" data-in="cookable recipes" data-out="consumed stock + a log entry"
-            data-num="5 cooked of 12 offered" data-state="running" data-detail="#d-g7">
-      <span class="pf-ix">7</span><span class="pf-name">cooking event</span>
-      <span class="pf-sub">someone actually cooks</span>
-      <span class="pf-recipe"><i>in</i><span>cookable recipes</span><i>out</i><span>consumed stock + a log</span></span>
-      <span class="pf-num">5 cooked of 12 offered</span>
-    </button>
-
-    <div class="pf-hop" data-payload="consumed stock + a log entry"><div class="pf-rail"></div>
-      <div class="pf-chip">log</div><div class="pf-hoplab">a log entry</div></div>
-
-    <button class="pf-node" data-node="proficiency" data-in="consumed stock + a log entry" data-out="a skill score ↺ 6"
-            data-num="41 events · 3 levels" data-state="running" data-detail="#d-g8">
-      <span class="pf-ix">8</span><span class="pf-name">proficiency</span>
-      <span class="pf-sub">feeds back into match</span>
-      <span class="pf-recipe"><i>in</i><span>consumed stock + a log</span><i>out</i><span>a skill score ↺ 6</span></span>
-      <span class="pf-num">41 events · 3 levels</span>
-    </button>
-
-   </div>
   </div>
 
   <div class="pf-gates">
@@ -187,6 +146,94 @@
           title="A draft becomes a transaction only when a person accepts it — nothing automatic crosses machine 4.">
       human confirm · draft → transaction
     </span>
+  </div>
+</div></div></div></div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — in the line, moving material (numbers illustrative)</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-gi1"><h4>receipt photo</h4>
+    <p>The only machine with a physical input. Everything after it is data about
+    an object that no longer matters.</p>
+    <dl><dt>consumes</dt><dd>a supermarket receipt</dd><dt>produces</dt><dd>an image file</dd></dl></div>
+  <div class="pf-detail" id="d-gi2"><h4>scan — the lossy machine</h4>
+    <p>31 of 34 items is a 91% rate, and the three lost items never reach the
+    pantry — stock drifts low and a cookable recipe reads as un-cookable. The
+    most valuable measurement on the whole line is this machine's error rate.</p>
+    <dl><dt>consumes</dt><dd>an image file</dd><dt>produces</dt><dd>raw line items</dd>
+        <dt>fails by</dt><dd>silent misses — nothing downstream knows an item was dropped</dd></dl></div>
+  <div class="pf-detail" id="d-gi3"><h4>draft</h4>
+    <p>Where a raw string becomes a known product, or waits for a person. 5 human
+    decisions per receipt is the line's per-week attention price.</p>
+    <dl><dt>consumes</dt><dd>raw line items</dd><dt>produces</dt><dd>a reviewable draft</dd></dl></div>
+  <div class="pf-detail" id="d-gi4"><h4>transaction — the commit point</h4>
+    <p>Before it, everything is provisional; after it, stock has moved. The two
+    rejected items are the human catching what the matcher got wrong.</p>
+    <dl><dt>consumes</dt><dd>a reviewable draft</dd><dt>produces</dt><dd>a confirmed transaction — the kitchen loop's input</dd></dl></div>
+</div></div></div>
+
+<div class="prismprose">
+  <h2>Component 2 · the kitchen loop</h2>
+  <p>The transaction the intake line just confirmed is exactly what the pantry
+  consumes — the seam between the two components is one named payload, which is
+  what makes them composable. This half holds the shapes the software examples
+  never exercise: a <strong>standing state</strong> (the pantry persists while
+  everything else flows), a <strong>side input</strong> (the recipe catalogue
+  never rode the belt), and a <strong>feedback edge</strong> (machine 8 writes
+  back to machine 6 — what you cook changes what you are offered).</p>
+</div>
+
+<div class="pxfrag px-gastify-kitchen" data-prism-fragment="gastify-kitchen"><div class="pxhead"><span class="pxtitle">gastify · the kitchen loop</span><span class="pxnote">pantry → recipe match → cooking → proficiency ↺ · numbers illustrative</span></div><div class="pxbody"><!-- FRAGMENT — the second half of gastify's line: the standing state, the side
+     input, the two human gates and the feedback edge. Self-contained for the
+     same reason as the intake fragment; the loop is the part worth reusing
+     wherever feedback needs explaining. Numbers ILLUSTRATIVE (ruling 2026-08-01). -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="gastify-kitchen" data-tick="1400">
+  <div class="pf-belt">
+
+    <button class="pf-node" data-node="pantry stock" data-in="a confirmed transaction" data-out="on-hand quantities"
+            data-num="87 products on hand" data-state="running" data-detail="#d-gk1">
+      <span class="pf-ix">5</span><span class="pf-name">pantry stock</span>
+      <span class="pf-recipe"><i>in</i><span>a confirmed transaction</span><i>out</i><span>on-hand quantities</span></span>
+      <span class="pf-num">87 products on hand</span>
+    </button>
+
+    <div class="pf-hop" data-payload="on-hand quantities"><div class="pf-rail"></div>
+      <div class="pf-chip">on hand</div><div class="pf-hoplab">on-hand</div></div>
+
+    <button class="pf-node" data-node="recipe match" data-in="on-hand quantities" data-out="cookable recipes"
+            data-num="12 cookable of 68 known" data-state="running" data-detail="#d-gk2">
+      <span class="pf-ix">6</span><span class="pf-name">recipe match</span>
+      <span class="pf-recipe"><i>in</i><span>on-hand quantities</span><i>out</i><span>cookable recipes</span></span>
+      <span class="pf-num">12 cookable of 68</span>
+      <span class="pf-alert">⚠ side input</span>
+    </button>
+
+    <div class="pf-hop" data-payload="cookable recipes"><div class="pf-rail"></div>
+      <div class="pf-chip">cookable</div><div class="pf-hoplab">cookable</div></div>
+
+    <button class="pf-node" data-node="cooking event" data-in="cookable recipes" data-out="consumed stock + a log entry"
+            data-num="5 cooked of 12 offered" data-state="running" data-detail="#d-gk3">
+      <span class="pf-ix">7</span><span class="pf-name">cooking event</span>
+      <span class="pf-recipe"><i>in</i><span>cookable recipes</span><i>out</i><span>stock used + a log</span></span>
+      <span class="pf-num">5 cooked of 12 offered</span>
+    </button>
+
+    <div class="pf-hop" data-payload="consumed stock + a log entry"><div class="pf-rail"></div>
+      <div class="pf-chip">log</div><div class="pf-hoplab">a log entry</div></div>
+
+    <button class="pf-node" data-node="proficiency" data-in="consumed stock + a log entry" data-out="a skill score ↺ 6"
+            data-num="41 events · 3 levels" data-state="running" data-detail="#d-gk4">
+      <span class="pf-ix">8</span><span class="pf-name">proficiency</span>
+      <span class="pf-recipe"><i>in</i><span>a log entry</span><i>out</i><span>a skill score ↺ 6</span></span>
+      <span class="pf-num">41 events · 3 levels</span>
+    </button>
+
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
     <span class="pf-gate" data-node="bought-to-cookable notice" data-gate data-state="ghost"
           title="Flow 3 (bought → cookable notification) is recorded as NOT BUILT — a named gap, not a zero.">
       bought → cookable notification · NOT BUILT
@@ -202,76 +249,56 @@
   <span><i class="l-running"></i> <b>running</b> — in the line, moving material (numbers illustrative)</span>
   <span><i class="l-ghost"></i> <b>ghost</b> — not built: Flow 3 is a recorded, named gap</span>
   <span><i class="l-unpowered"></i> <b>unpowered</b> — exists, and nothing proves it can fail</span>
-  <span><i class="l-broken"></i> <b>broken</b> — would report success it did not earn (none on this page)</span>
+  <span><i class="l-broken"></i> <b>broken</b> — would report success it did not earn (none here)</span>
 </div>
 
 <div class="pf-details">
-  <div class="pf-detail" id="d-g1"><h4>receipt photo</h4>
-    <p>The only machine with a physical input. Everything after it is data about
-    an object that no longer matters.</p>
-    <dl><dt>consumes</dt><dd>a supermarket receipt</dd><dt>produces</dt><dd>an image file</dd>
-        <dt>this week</dt><dd>4 photos (illustrative)</dd></dl></div>
-  <div class="pf-detail" id="d-g2"><h4>scan — the lossy machine</h4>
-    <p>31 of 34 items parsed is a 91% rate, and that one number colours the whole
-    line: the three lost items never reach the pantry, so stock drifts low and a
-    cookable recipe reads as un-cookable. The most valuable measurement on this
-    line is this machine's error rate — which is exactly why the real page, with
-    the real rate, belongs in gastify's center.</p>
-    <dl><dt>consumes</dt><dd>an image file</dd><dt>produces</dt><dd>raw line items</dd>
-        <dt>fails by</dt><dd>silent misses — nothing downstream knows an item was dropped</dd></dl></div>
-  <div class="pf-detail" id="d-g3"><h4>draft</h4>
-    <p>Where a raw string becomes a known product, or waits for a person. 26 of
-    31 auto-matched leaves 5 human decisions per receipt — the line's per-week
-    attention price.</p>
-    <dl><dt>consumes</dt><dd>raw line items</dd><dt>produces</dt><dd>a reviewable draft</dd></dl></div>
-  <div class="pf-detail" id="d-g4"><h4>transaction — the commit point</h4>
-    <p>Before it, everything is provisional; after it, stock has moved. The two
-    rejected items are the human catching what the matcher got wrong — the gate
-    beside the belt is this machine's contract.</p>
-    <dl><dt>consumes</dt><dd>a reviewable draft</dd><dt>produces</dt><dd>a confirmed transaction</dd></dl></div>
-  <div class="pf-detail" id="d-g5"><h4>pantry stock — the only standing state</h4>
+  <div class="pf-detail" id="d-gk1"><h4>pantry stock — the only standing state</h4>
     <p>Every other machine is a flow; this one persists. An error upstream does
-    not pass through it — it <em>accumulates</em> in it, which is why the scan's
-    misses matter more here than anywhere else.</p>
-    <dl><dt>consumes</dt><dd>a confirmed transaction</dd><dt>produces</dt><dd>on-hand quantities</dd></dl></div>
-  <div class="pf-detail" id="d-g6"><h4>recipe match — the side input</h4>
+    not pass through it — it <em>accumulates</em> in it, which is why the intake
+    scan's misses matter more here than anywhere else.</p>
+    <dl><dt>consumes</dt><dd>a confirmed transaction — the intake line's output</dd>
+        <dt>produces</dt><dd>on-hand quantities</dd></dl></div>
+  <div class="pf-detail" id="d-gk2"><h4>recipe match — the side input</h4>
     <p>This machine consumes two things: the pantry that came down the belt, and
     the 68-recipe catalogue that never did. Drawing that as one inbound arrow
-    would be the lie this page exists to avoid. 12 cookable of 68 known is the
-    household's real menu tonight.</p>
+    would be the lie this grammar exists to avoid. 12 cookable of 68 known is
+    the household's real menu tonight.</p>
     <dl><dt>consumes</dt><dd>on-hand quantities + the recipe catalogue (side)</dd>
         <dt>produces</dt><dd>cookable recipes</dd></dl></div>
-  <div class="pf-detail" id="d-g7"><h4>cooking event — the second human gate</h4>
+  <div class="pf-detail" id="d-gk3"><h4>cooking event — the second human gate</h4>
     <p>5 cooked of 12 offered: the line's narrowest voluntary funnel. Nothing
-    automatic reaches machine 8 — a person has to actually cook.</p>
+    automatic reaches proficiency — a person has to actually cook.</p>
     <dl><dt>consumes</dt><dd>cookable recipes</dd><dt>produces</dt><dd>consumed stock + a log entry</dd></dl></div>
-  <div class="pf-detail" id="d-g8"><h4>proficiency — and the loop</h4>
+  <div class="pf-detail" id="d-gk4"><h4>proficiency — and the loop</h4>
     <p>41 logged events across 3 skill levels, and the output returns to
     machine&nbsp;6: what you have cooked changes what you are offered. That
-    feedback edge is why this is a line and not a funnel, and it is the part a
-    linear diagram of the same eight boxes silently drops.</p>
+    feedback edge is why this is a loop and not a funnel — and the part a linear
+    diagram of the same boxes silently drops.</p>
     <dl><dt>consumes</dt><dd>consumed stock + a log entry</dd>
-        <dt>produces</dt><dd>a skill score, fed back to machine 6</dd></dl></div>
-</div>
+        <dt>produces</dt><dd>a skill score, fed back to recipe match</dd></dl></div>
+</div></div></div>
 
 <div class="prismprose" style="margin-top:34px">
   <h2>What this example is, and is not</h2>
-  <p>It <strong>is</strong> the suite's domain example: a belt with a side input,
-  a feedback loop, two human gates, and a named-gap ghost — shapes the software
-  examples do not exercise. It is <strong>not</strong> a status page for gastify:
-  every number is invented (operator ruling 2026-08-01), it does not update when
-  gastify changes, and when the suite propagates to gastify's own command center
-  the measured version gets built there, against real data, as its own page.</p>
+  <p>It <strong>is</strong> two things at once: the suite's domain example (a
+  belt with a side input, a feedback loop, two human gates, and a named-gap
+  ghost), and the demonstration of the <strong>component mode</strong> — an
+  explanation page composed from embeddable fragments rather than one authored
+  floor. It is <strong>not</strong> a status page for gastify: every number is
+  invented (operator ruling 2026-08-01), it does not update when gastify
+  changes, and the measured version gets built in gastify's own center at
+  propagation, as its own page.</p>
   <p>One consequence worth keeping in view: <code>verify-prism.mjs</code> passes
   these invented numbers exactly as it passed the ghosted ones — the gate checks
-  a number is <em>present</em>, not <em>traceable</em>. On this page the lede
-  and the source line carry the honesty instead. That division of labour is
-  recorded in the skill.</p>
+  a number is <em>present</em>, not <em>traceable</em>. The lede and the source
+  line carry the honesty instead. That division of labour is recorded in the
+  skill.</p>
 </div>
 
   </div>
 
-  <p class="prismsource">source: docs/prisms/gastify-scan-to-cooked/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 1 floor(s). structure from the gastify domain; NUMBERS ARE ILLUSTRATIVE — invented for this example by operator ruling (2026-08-01), never measured. This page teaches the suite&#x27;s grammar; it is not a status page for gastify and does not update when gastify changes.</p>
+  <p class="prismsource">source: docs/prisms/gastify-scan-to-cooked/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 0 floor(s). structure from the gastify domain; NUMBERS ARE ILLUSTRATIVE — invented for this example by operator ruling (2026-08-01), never measured. This page teaches the suite&#x27;s grammar; it is not a status page for gastify and does not update when gastify changes.</p>
 </main>
 
 </div>

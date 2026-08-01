@@ -1,0 +1,84 @@
+<!--prism
+{ "title": "gastify · the intake line",
+  "note": "receipt photo → scan → draft → transaction · numbers illustrative" }
+-->
+<!-- FRAGMENT — the first half of gastify's scan→cooked line, self-contained so
+     any doc page (here, or in gastify's center after propagation) can embed the
+     intake story alone. Numbers are ILLUSTRATIVE by operator ruling 2026-08-01;
+     the note above says so wherever this component lands. -->
+<div class="pf" data-prism data-fx="gastify-intake" data-tick="1400">
+  <div class="pf-belt">
+
+    <button class="pf-node" data-node="receipt photo" data-in="a supermarket receipt" data-out="an image file"
+            data-num="4 photos this week" data-state="running" data-detail="#d-gi1">
+      <span class="pf-ix">1</span><span class="pf-name">receipt photo</span>
+      <span class="pf-recipe"><i>in</i><span>a receipt</span><i>out</i><span>an image file</span></span>
+      <span class="pf-num">4 photos this week</span>
+    </button>
+
+    <div class="pf-hop" data-payload="an image file"><div class="pf-rail"></div>
+      <div class="pf-chip">image</div><div class="pf-hoplab">an image</div></div>
+
+    <button class="pf-node" data-node="scan" data-in="an image file" data-out="raw line items"
+            data-num="31 of 34 items parsed" data-state="running" data-detail="#d-gi2">
+      <span class="pf-ix">2</span><span class="pf-name">scan</span>
+      <span class="pf-recipe"><i>in</i><span>an image file</span><i>out</i><span>raw line items</span></span>
+      <span class="pf-num">31 of 34 parsed</span>
+      <span class="pf-alert">⚠ lossy</span>
+    </button>
+
+    <div class="pf-hop" data-payload="raw line items"><div class="pf-rail"></div>
+      <div class="pf-chip">items</div><div class="pf-hoplab">line items</div></div>
+
+    <button class="pf-node" data-node="draft" data-in="raw line items" data-out="a reviewable draft"
+            data-num="26 auto-matched · 5 to review" data-state="running" data-detail="#d-gi3">
+      <span class="pf-ix">3</span><span class="pf-name">draft</span>
+      <span class="pf-recipe"><i>in</i><span>raw line items</span><i>out</i><span>a reviewable draft</span></span>
+      <span class="pf-num">26 matched · 5 to review</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a reviewable draft"><div class="pf-rail"></div>
+      <div class="pf-chip">draft</div><div class="pf-hoplab">a draft</div></div>
+
+    <button class="pf-node" data-node="transaction" data-in="a reviewable draft" data-out="a confirmed transaction"
+            data-num="29 of 31 items confirmed" data-state="running" data-detail="#d-gi4">
+      <span class="pf-ix">4</span><span class="pf-name">transaction</span>
+      <span class="pf-recipe"><i>in</i><span>a draft</span><i>out</i><span>a confirmed transaction</span></span>
+      <span class="pf-num">29 of 31 confirmed</span>
+    </button>
+
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="human confirm" data-gate data-state="running"
+          title="A draft becomes a transaction only when a person accepts it — nothing automatic crosses machine 4.">
+      human confirm · draft → transaction
+    </span>
+  </div>
+</div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — in the line, moving material (numbers illustrative)</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-gi1"><h4>receipt photo</h4>
+    <p>The only machine with a physical input. Everything after it is data about
+    an object that no longer matters.</p>
+    <dl><dt>consumes</dt><dd>a supermarket receipt</dd><dt>produces</dt><dd>an image file</dd></dl></div>
+  <div class="pf-detail" id="d-gi2"><h4>scan — the lossy machine</h4>
+    <p>31 of 34 items is a 91% rate, and the three lost items never reach the
+    pantry — stock drifts low and a cookable recipe reads as un-cookable. The
+    most valuable measurement on the whole line is this machine's error rate.</p>
+    <dl><dt>consumes</dt><dd>an image file</dd><dt>produces</dt><dd>raw line items</dd>
+        <dt>fails by</dt><dd>silent misses — nothing downstream knows an item was dropped</dd></dl></div>
+  <div class="pf-detail" id="d-gi3"><h4>draft</h4>
+    <p>Where a raw string becomes a known product, or waits for a person. 5 human
+    decisions per receipt is the line's per-week attention price.</p>
+    <dl><dt>consumes</dt><dd>raw line items</dd><dt>produces</dt><dd>a reviewable draft</dd></dl></div>
+  <div class="pf-detail" id="d-gi4"><h4>transaction — the commit point</h4>
+    <p>Before it, everything is provisional; after it, stock has moved. The two
+    rejected items are the human catching what the matcher got wrong.</p>
+    <dl><dt>consumes</dt><dd>a reviewable draft</dd><dt>produces</dt><dd>a confirmed transaction — the kitchen loop's input</dd></dl></div>
+</div>

@@ -1,0 +1,97 @@
+<!--prism
+{ "title": "gastify · the kitchen loop",
+  "note": "pantry → recipe match → cooking → proficiency ↺ · numbers illustrative" }
+-->
+<!-- FRAGMENT — the second half of gastify's line: the standing state, the side
+     input, the two human gates and the feedback edge. Self-contained for the
+     same reason as the intake fragment; the loop is the part worth reusing
+     wherever feedback needs explaining. Numbers ILLUSTRATIVE (ruling 2026-08-01). -->
+<div class="pf" data-prism data-fx="gastify-kitchen" data-tick="1400">
+  <div class="pf-belt">
+
+    <button class="pf-node" data-node="pantry stock" data-in="a confirmed transaction" data-out="on-hand quantities"
+            data-num="87 products on hand" data-state="running" data-detail="#d-gk1">
+      <span class="pf-ix">5</span><span class="pf-name">pantry stock</span>
+      <span class="pf-recipe"><i>in</i><span>a confirmed transaction</span><i>out</i><span>on-hand quantities</span></span>
+      <span class="pf-num">87 products on hand</span>
+    </button>
+
+    <div class="pf-hop" data-payload="on-hand quantities"><div class="pf-rail"></div>
+      <div class="pf-chip">on hand</div><div class="pf-hoplab">on-hand</div></div>
+
+    <button class="pf-node" data-node="recipe match" data-in="on-hand quantities" data-out="cookable recipes"
+            data-num="12 cookable of 68 known" data-state="running" data-detail="#d-gk2">
+      <span class="pf-ix">6</span><span class="pf-name">recipe match</span>
+      <span class="pf-recipe"><i>in</i><span>on-hand quantities</span><i>out</i><span>cookable recipes</span></span>
+      <span class="pf-num">12 cookable of 68</span>
+      <span class="pf-alert">⚠ side input</span>
+    </button>
+
+    <div class="pf-hop" data-payload="cookable recipes"><div class="pf-rail"></div>
+      <div class="pf-chip">cookable</div><div class="pf-hoplab">cookable</div></div>
+
+    <button class="pf-node" data-node="cooking event" data-in="cookable recipes" data-out="consumed stock + a log entry"
+            data-num="5 cooked of 12 offered" data-state="running" data-detail="#d-gk3">
+      <span class="pf-ix">7</span><span class="pf-name">cooking event</span>
+      <span class="pf-recipe"><i>in</i><span>cookable recipes</span><i>out</i><span>stock used + a log</span></span>
+      <span class="pf-num">5 cooked of 12 offered</span>
+    </button>
+
+    <div class="pf-hop" data-payload="consumed stock + a log entry"><div class="pf-rail"></div>
+      <div class="pf-chip">log</div><div class="pf-hoplab">a log entry</div></div>
+
+    <button class="pf-node" data-node="proficiency" data-in="consumed stock + a log entry" data-out="a skill score ↺ 6"
+            data-num="41 events · 3 levels" data-state="running" data-detail="#d-gk4">
+      <span class="pf-ix">8</span><span class="pf-name">proficiency</span>
+      <span class="pf-recipe"><i>in</i><span>a log entry</span><i>out</i><span>a skill score ↺ 6</span></span>
+      <span class="pf-num">41 events · 3 levels</span>
+    </button>
+
+  </div>
+
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="bought-to-cookable notice" data-gate data-state="ghost"
+          title="Flow 3 (bought → cookable notification) is recorded as NOT BUILT — a named gap, not a zero.">
+      bought → cookable notification · NOT BUILT
+    </span>
+    <span class="pf-gate" data-node="stock floor" data-gate data-state="unpowered"
+          title="Stock should never go negative; no test proves anything stops it.">
+      stock ≥ 0 · nothing proves it
+    </span>
+  </div>
+</div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — in the line, moving material (numbers illustrative)</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — not built: Flow 3 is a recorded, named gap</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — exists, and nothing proves it can fail</span>
+  <span><i class="l-broken"></i> <b>broken</b> — would report success it did not earn (none here)</span>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-gk1"><h4>pantry stock — the only standing state</h4>
+    <p>Every other machine is a flow; this one persists. An error upstream does
+    not pass through it — it <em>accumulates</em> in it, which is why the intake
+    scan's misses matter more here than anywhere else.</p>
+    <dl><dt>consumes</dt><dd>a confirmed transaction — the intake line's output</dd>
+        <dt>produces</dt><dd>on-hand quantities</dd></dl></div>
+  <div class="pf-detail" id="d-gk2"><h4>recipe match — the side input</h4>
+    <p>This machine consumes two things: the pantry that came down the belt, and
+    the 68-recipe catalogue that never did. Drawing that as one inbound arrow
+    would be the lie this grammar exists to avoid. 12 cookable of 68 known is
+    the household's real menu tonight.</p>
+    <dl><dt>consumes</dt><dd>on-hand quantities + the recipe catalogue (side)</dd>
+        <dt>produces</dt><dd>cookable recipes</dd></dl></div>
+  <div class="pf-detail" id="d-gk3"><h4>cooking event — the second human gate</h4>
+    <p>5 cooked of 12 offered: the line's narrowest voluntary funnel. Nothing
+    automatic reaches proficiency — a person has to actually cook.</p>
+    <dl><dt>consumes</dt><dd>cookable recipes</dd><dt>produces</dt><dd>consumed stock + a log entry</dd></dl></div>
+  <div class="pf-detail" id="d-gk4"><h4>proficiency — and the loop</h4>
+    <p>41 logged events across 3 skill levels, and the output returns to
+    machine&nbsp;6: what you have cooked changes what you are offered. That
+    feedback edge is why this is a loop and not a funnel — and the part a linear
+    diagram of the same boxes silently drops.</p>
+    <dl><dt>consumes</dt><dd>consumed stock + a log entry</dd>
+        <dt>produces</dt><dd>a skill score, fed back to recipe match</dd></dl></div>
+</div>

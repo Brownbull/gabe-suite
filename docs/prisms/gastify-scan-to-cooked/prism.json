@@ -1,13 +1,13 @@
 {
   "title": "gastify: scan → cooked",
   "nav_label": "gastify scan→cooked",
-  "kicker": "domain · belt-line · illustrative numbers",
+  "kicker": "domain · two components · illustrative numbers",
   "mode": "console",
   "pattern": "belt-line",
   "order": 40,
-  "kind": "domain example",
-  "card": "A real domain line with a side input and a feedback loop: a photographed receipt becomes pantry stock, cookable recipes, a cooking event, and a proficiency score that changes what gets offered next. Numbers are illustrative.",
-  "lede": "Eight machines take a photographed receipt to a cooking event and back into a proficiency score. The shape is gastify's; the numbers are invented for this example — the real page, with measured numbers, belongs in gastify's own command center once the suite propagates there.",
-  "handle": "Machine 6 is the reason this line is worth drawing: it consumes two things — the pantry that came down the belt, and a recipe catalogue that <em>never did</em>. A side input is the honest name for that, and machine 8 feeding back into machine 6 is why this is a loop, not a funnel. Both are exactly what a linear diagram of the same eight boxes silently drops.",
+  "kind": "component demo",
+  "card": "gastify's line assembled from two reusable components — the intake line and the kitchen loop — each embeddable on its own in any doc page. The domain shapes (standing state, side input, feedback edge) live in the second. Numbers illustrative.",
+  "lede": "Eight machines take a photographed receipt to a cooking event and back into a proficiency score — served here as two self-contained components any page in this center can embed with one token. The shape is gastify's; the numbers are invented for this example, and the measured page belongs in gastify's own command center once the suite propagates there.",
+  "handle": "The seam between the two components is <em>one named payload</em> — the intake line ends on \"a confirmed transaction\" and the kitchen loop consumes exactly that. A component whose boundary is a named payload composes; one whose boundary is \"and then the rest happens\" does not.",
   "source": "structure from the gastify domain; NUMBERS ARE ILLUSTRATIVE — invented for this example by operator ruling (2026-08-01), never measured. This page teaches the suite's grammar; it is not a status page for gastify and does not update when gastify changes."
 }

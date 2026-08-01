@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "424e4c5",
+ "head": "b483ac0",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 19
+     "count": 20
     }
    ]
   },
@@ -203,9 +203,9 @@
     {
      "label": "gastify scan\u2192cooked",
      "href": "prism-gastify-scan-to-cooked.html",
-     "icon": "gauge",
+     "icon": "component",
      "sub": true,
-     "tip": "console \u2014 one screen, ambient loop + scrub bar"
+     "tip": "built from embedded components"
     }
    ]
   }

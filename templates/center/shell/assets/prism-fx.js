@@ -387,7 +387,13 @@
       [].slice.call(stage.querySelectorAll(".pf-assembly")).forEach(assemblyDriver);
       wireInspectors(stage);
     }
-    [].slice.call(document.querySelectorAll(".pxfrag")).forEach(wireInspectors);
+    /* Only fragments OUTSIDE the stage — the stage's own delegated listener
+       already covers everything inside it, and a second listener on the same
+       click toggles the panel open then shut in one press (net: dead click).
+       Found while converting gastify to a fragment-composed page. */
+    [].slice.call(document.querySelectorAll(".pxfrag"))
+      .filter(function (el) { return !el.closest(".prismstage"); })
+      .forEach(wireInspectors);
 
     fitAll();
     /* No floor on this page ⇒ no motion obligation ⇒ no control. A Motion knob

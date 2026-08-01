@@ -80,10 +80,12 @@ def load_pages(prisms_dir: Path) -> list[dict[str, Any]]:
         if mode not in MODES:
             print(f"  [prism] {d.name}: mode {mode!r} is not one of {MODES} — skipped")
             continue
+        body = body_path.read_text(encoding="utf-8")
         meta.update({
             "slug": d.name,
             "mode": mode,
-            "body": body_path.read_text(encoding="utf-8"),
+            "body": body,
+            "embeds": "{{PRISM:" in body,
             "src": f"docs/prisms/{d.name}/body.html",
         })
         pages.append(meta)
@@ -248,7 +250,11 @@ def render_index(skeleton: str, nav: dict, pages: list[dict], fragments: dict,
                  project: str, lang: str, stamp: str, pills: str) -> str:
     cards = []
     for p in pages:
-        tags = [p["mode"], p.get("pattern", ""), p.get("kind", "")]
+        # A fragment-composed page's defining fact is the composition, not the
+        # motion base its fragments happen to share — the chip says so, matching
+        # the component icon the nav already gives it.
+        shape = "components" if p.get("embeds") else p["mode"]
+        tags = [shape, p.get("pattern", ""), p.get("kind", "")]
         chips = "".join(f'<span class="pxtag">{E(t)}</span>' for t in tags if t)
         cards.append(
             f'<a class="pxcard" href="prism-{E(p["slug"])}.html">'
