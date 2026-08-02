@@ -364,3 +364,91 @@
   display: none;
 }
 .pfwrap.can-scroll + .pfhint, .pfhint.on { display: block; }
+
+/* ══ the dimension grammar — one container silhouette per KIND ═════════════ */
+/* Established on the Catan dissection (operator ruling, 2026-08-01): when
+   several kinds of thing share a page, the OUTER CONTAINER names the kind
+   before any label is read. The kit:
+     action / machine   .pf-node    sharp numbered card with a recipe face
+     gate / rule        .pf-gate    a flat tag in the gate register — never card weight
+     payload            .pf-chip    the small carrier riding a hop
+     seat / angle       .gv-seat    a capsule pill: a person, so soft and small
+     sphere             .gv-sphere  a wide soft-cornered region panel, round-badge head
+     body / part        .gv-body    a small square tile living inside a sphere
+     relationship       .gv-links   stroke-only SVG drawn BETWEEN containers, never a box
+   Colours stay skin vars — the silhouette is the identity, colour is secondary. */
+
+.gv { position: relative; display: flex; flex-direction: column; gap: 14px; margin: 16px 0 8px; }
+
+/* seats — capsules */
+.gv-seats { display: flex; flex-wrap: wrap; gap: 8px; position: relative; z-index: 2; }
+.gv-seat {
+  font: inherit; font-size: 13px; color: var(--ink-2); cursor: pointer;
+  display: inline-flex; align-items: center; gap: 7px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+  padding: 6px 13px;
+  transition: transform .22s ease, background .22s ease, color .22s ease,
+    border-color .22s ease;
+}
+.gv-seat .gvt { font-size: 12px; color: var(--muted); }
+.gv-seat:hover { border-color: var(--accent); }
+.gv-seat.is-active {
+  background: var(--accent); border-color: var(--accent); color: #fff;
+  transform: scale(1.05);
+}
+.gv-seat.is-active .gvt { color: rgba(255, 255, 255, .75); }
+
+/* spheres — region panels */
+.gv-spheres { display: flex; flex-wrap: wrap; gap: 12px; position: relative; z-index: 2; }
+.gv-sphere {
+  flex: 1 1 200px; min-width: 186px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 22px;
+  padding: 11px 13px 12px;
+}
+.gv-sphere .gvh { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); font-weight: 600; }
+.gv-sphere .gvh i {
+  width: 11px; height: 11px; border-radius: 50%; flex: none;
+  background: var(--accent-soft); border: 2px solid var(--accent);
+}
+.gv-sphere .gvh .gvn { margin-left: auto; font: var(--mono); font-size: 12px; color: var(--muted); font-weight: 400; }
+
+/* bodies — tiles */
+.gv-bodies { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.gv-body {
+  font-size: 12.5px; color: var(--ink-2);
+  background: var(--surface); border: 1px solid var(--line); border-radius: 6px;
+  padding: 3px 8px; display: inline-flex; align-items: baseline; gap: 6px;
+  transition: opacity .25s ease, transform .25s ease, border-color .25s ease,
+    background .25s ease;
+}
+.gv-body .k { font: var(--mono); font-size: 12px; color: var(--muted); }
+.gv-on .gv-body.is-dim { opacity: .34; }
+.gv-body.is-pulled {
+  border-color: var(--accent); background: var(--accent-soft); color: var(--ink);
+  transform: translateY(-2px);
+}
+.gv-body.is-pulled .k { color: var(--accent); }
+
+/* icons — a seat capsule and a sphere head each carry a small inline stroke
+   glyph (Lucide geometry, currentColor); the glyph seconds the silhouette,
+   never replaces it */
+.gvi {
+  width: 13px; height: 13px; flex: none; align-self: center;
+  fill: none; stroke: currentColor; stroke-width: 2;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+.gv-sphere .gvh .gvi { width: 14px; height: 14px; color: var(--accent); }
+
+/* the relationship layer — stroke over the containers, under the pointer */
+.gv-links { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: visible; }
+.gv-links path {
+  fill: none; stroke: var(--accent); stroke-width: 1.6;
+  stroke-dasharray: 7 5; opacity: .5;
+  animation: gv-flow 1.05s linear infinite;
+}
+@keyframes gv-flow { to { stroke-dashoffset: -12; } }
+[data-motion="off"] .gv-links path { animation-play-state: paused !important; }
+@media (prefers-reduced-motion: reduce) {
+  .gv-links path { animation: none; }
+  .gv-seat, .gv-body { transition: none; }
+}

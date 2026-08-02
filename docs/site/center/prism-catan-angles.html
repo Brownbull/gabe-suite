@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The dissection — how six seats came out of one box · Gabe Suite Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+
+<aside class="side">
+    <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gabe Suite</b><small>Gabe Center · suite</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">18</span></a>
+  <div class="navlabel g-code">Enforcement</div>
+  <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
+  <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">18</span></a>
+  <div class="navlabel g-ent">Surfaces</div>
+  <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
+  <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">462</span></a>
+  <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
+  <a class="navitem navsubitem" href="kdbp.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> What KDBP is</a>
+  <a class="navitem navsubitem" href="the-loop.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The development loop</a>
+  <a class="navitem navsubitem" href="contract.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The E1–E7 contract</a>
+  <a class="navitem navsubitem" href="skill-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The skill map</a>
+  <a class="navitem navsubitem" href="commands.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Beats &amp; commands</a>
+  <a class="navitem navsubitem" href="satellites.html" title="embeds prism components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> Analysis satellites</a>
+  <a class="navitem navsubitem" href="verification-first.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The one picture</a>
+  <a class="navitem navsubitem" href="gabe-red.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> /gabe-red</a>
+  <a class="navitem navsubitem" href="c-id.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The C-id scheme</a>
+  <a class="navitem navsubitem" href="command-center.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The command center</a>
+  <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
+  <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
+  <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem" href="prism-catan.html" title="index — a subject&#x27;s own landing page"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Catan</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-turn.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> The turn</a>
+  <a class="navitem navsubitem navsub2item on" href="prism-catan-angles.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> The dissection</a>
+  <a class="navitem navsubitem" href="prism-neural-net.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Hook chain</a>
+  <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
+  <div class="foot">regen 2026-08-01 20:10<br>HEAD 1c6aaac · build_suite_center.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>The dissection — how six seats came out of one box</b></div>
+    <div class="spacer"></div>
+    <span class="chip warn">53 uncommitted</span>
+    <span class="stamp">regen · 2026-08-01 20:10</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">console · the method</div>
+    <h1>The dissection — how six seats came out of one box</h1>
+    <p class="prismlede">Six machines turn one subject into a page queue: 24 named parts, five spheres, six seats, six gravity worlds. The beat prose lives behind the machines; the gravity map shows the pull itself — click a seat and its world lights. The seats live on the Catan index.</p>
+    <p class="prismhandle">Spheres belong to the subject, seats belong to the audience — mix them and you get a 'strategy sphere', which is the reader leaking into the subject.</p>
+  </div>
+
+  <div class="prismstage" data-prism-mode="console">
+    <div class="prismprose">
+  <p>Six machines turn one subject into a page queue — that line is the whole
+  method, and it runs below. Click any machine for why its step exists. The
+  seats it produced live on the <a href="prism-catan.html">Catan index</a>;
+  the gravity map further down shows the pull itself. Three container shapes
+  carry the page: <strong>sharp cards are actions</strong>, <strong>capsule
+  pills are seats</strong>, <strong>soft panels are spheres</strong> and the
+  tiles inside them are parts — the moving stroke between them is the pull.</p>
+</div>
+
+<!-- THE METHOD — one console line. The subject rides the belt and stops being
+     a subject: ledger, spheres, seated questions, gravity worlds, page queue.
+     The beat prose lives in the inspectors, not on the page surface. -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="catan-angles-method" data-tick="1500" style="--pf-node-w:170px">
+  <div class="pf-belt pf-rows">
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="subject intake" data-in="a subject, whole" data-out="named parts"
+         data-num="1 subject · 1 rulebook" data-state="running" data-detail="#m-intake">
+      <span class="pf-ix">1</span><span class="pf-name">subject intake</span>
+      <span class="pf-sub">open the box</span>
+      <span class="pf-recipe"><i>in</i><span>a subject, whole</span><i>out</i><span>named parts</span></span>
+      <span class="pf-num">1 subject · 1 rulebook</span>
+    </button>
+
+    <div class="pf-hop" data-payload="named parts"><div class="pf-rail"></div>
+      <div class="pf-chip">parts</div><div class="pf-hoplab">named parts</div></div>
+
+    <button class="pf-node" data-node="parts census" data-in="named parts" data-out="a counted ledger"
+         data-num="24 parts" data-state="running" data-detail="#m-census">
+      <span class="pf-ix">2</span><span class="pf-name">parts census</span>
+      <span class="pf-sub">angle-blind, on purpose</span>
+      <span class="pf-recipe"><i>in</i><span>named parts</span><i>out</i><span>a counted ledger</span></span>
+      <span class="pf-num">24 parts</span>
+    </button>
+
+    <div class="pf-hop" data-payload="a counted ledger"><div class="pf-rail"></div>
+      <div class="pf-chip">ledger</div><div class="pf-hoplab">a counted ledger</div></div>
+
+    <button class="pf-node" data-node="sphere scan" data-in="a counted ledger" data-out="five spheres"
+         data-num="5 spheres · 24 parts placed" data-state="running" data-detail="#m-spheres">
+      <span class="pf-ix">3</span><span class="pf-name">sphere scan</span>
+      <span class="pf-sub">the subject's own regions</span>
+      <span class="pf-recipe"><i>in</i><span>a counted ledger</span><i>out</i><span>five spheres</span></span>
+      <span class="pf-num">5 spheres · 24 parts placed</span>
+    </button>
+
+    <div class="pf-hop pf-return" data-payload="five spheres"><div class="pf-rail"></div>
+      <div class="pf-chip">spheres</div><div class="pf-hoplab">spheres ↓</div></div>
+   </div>
+   <div class="pf-row">
+
+    <button class="pf-node" data-node="angle roster" data-in="five spheres" data-out="six seated questions"
+         data-num="6 seats · 6 questions" data-state="running" data-detail="#m-roster">
+      <span class="pf-ix">4</span><span class="pf-name">angle roster</span>
+      <span class="pf-sub">people, not demographics</span>
+      <span class="pf-recipe"><i>in</i><span>five spheres</span><i>out</i><span>six seated questions</span></span>
+      <span class="pf-num">6 seats · 6 questions</span>
+    </button>
+
+    <div class="pf-hop" data-payload="six seated questions"><div class="pf-rail"></div>
+      <div class="pf-chip">seats</div><div class="pf-hoplab">seated questions</div></div>
+
+    <button class="pf-node" data-node="gravity assignment" data-in="six seated questions" data-out="six gravity worlds"
+         data-num="6 worlds · 5 bodies each" data-state="running" data-detail="#m-gravity">
+      <span class="pf-ix">5</span><span class="pf-name">gravity assignment</span>
+      <span class="pf-sub">mass, argued not measured</span>
+      <span class="pf-recipe"><i>in</i><span>six seated questions</span><i>out</i><span>six gravity worlds</span></span>
+      <span class="pf-num">6 worlds · 5 bodies each</span>
+    </button>
+
+    <div class="pf-hop" data-payload="six gravity worlds"><div class="pf-rail"></div>
+      <div class="pf-chip">worlds</div><div class="pf-hoplab">gravity worlds</div></div>
+
+    <button class="pf-node" data-node="page plan" data-in="six gravity worlds" data-out="a page queue"
+         data-num="6 wanted · 2 built" data-state="running" data-detail="#m-plan">
+      <span class="pf-ix">6</span><span class="pf-name">page plan</span>
+      <span class="pf-sub">the /gabe-imagine intake</span>
+      <span class="pf-recipe"><i>in</i><span>six gravity worlds</span><i>out</i><span>a page queue</span></span>
+      <span class="pf-num">6 wanted · 2 built</span>
+    </button>
+
+   </div>
+  </div>
+
+  <!-- The method's gates. A gate decides, it does not transform — and three of
+       these live only in prose, which the amber state says out loud. -->
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="in ≠ out" data-gate data-state="running"
+          title="verify-prism refuses any machine whose input and output share a name.">
+      in ≠ out · a machine that changes nothing is refused
+    </span>
+    <span class="pf-gate" data-node="the P1 STOP" data-gate data-state="unpowered"
+          title="Fewer than three distinct payloads is not a floor; it ships as prose. Enforced by the author — no checker can fire it.">
+      P1 STOP · under 3 distinct payloads it ships as prose
+    </span>
+    <span class="pf-gate" data-node="seat test" data-gate data-state="unpowered"
+          title="A seat names a person who could sit down tonight. 'Everyone' is not a seat. Lives in prose only.">
+      seat test · "everyone" is not a seat
+    </span>
+    <span class="pf-gate" data-node="mass tiebreak" data-gate data-state="unpowered"
+          title="If every seat ranks the same body first, you found the subject, not a gravity world. Lives in prose only.">
+      mass tiebreak · a body every seat ranks first is the subject
+    </span>
+  </div>
+</div></div></div></div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — ran on this page: its output is here to recount</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — not built, a named absence (none on this page)</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — a rule that lives in prose: nothing yet can make it fail</span>
+  <span><i class="l-broken"></i> <b>broken</b> — would report success it did not earn (none on this page)</span>
+</div>
+
+<div class="prismprose" style="margin-top:32px">
+  <h2>The gravity map — six seats pulling on 24 parts</h2>
+  <p>The map cycles one seat per beat; click a seat to hold it. Its world
+  lights and lifts, everything else dims, and the stroke is the pull. Watch
+  two structural facts surface without a paragraph: the same part is pulled by
+  up to <strong>3</strong> seats for different reasons (×N on the tile), and
+  <strong>8 of 24 parts sit in no seat's top five</strong> — the census kept
+  them anyway, because the census is angle-blind and the cut belongs to the
+  seats, not the counter.</p>
+</div>
+
+<div class="gv" data-gravity data-fx="catan-gravity" data-tick="1500">
+  <!-- Seats in READING ORDER — the journey is the taxonomy: play it, run it,
+       win it, adjudicate it, understand it, sell it. No second level layer. -->
+  <div class="gv-seats">
+    <button type="button" class="gv-seat" data-pull="recipes,resources,vpline,discard,distance"
+            title="what do I do on my turn?"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>the new player <span class="gvt">end user</span></button>
+    <button type="button" class="gv-seat" data-pull="stock,distance,discard,bank,talk"
+            title="how do I run tonight's table?"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>the table host <span class="gvt">admin</span></button>
+    <button type="button" class="gv-seat" data-pull="tokens,corners,harbours,robber,devdeck"
+            title="where is the edge?"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>the strategist <span class="gvt">power user</span></button>
+    <button type="button" class="gv-seat" data-pull="discard,robber,distance,devdeck,trade"
+            title="what exactly is permitted?"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>the rules lawyer <span class="gvt">compliance</span></button>
+    <button type="button" class="gv-seat" data-pull="robber,recipes,dice,trade,stock"
+            title="why does this hold together?"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="m12.99 6.74 1.93 3.44"/><path d="M19.136 12a10 10 0 0 1-14.271 0"/><path d="m21 21-2.16-3.84"/><path d="m3 21 8.02-14.26"/><circle cx="12" cy="5" r="2"/></svg>the designer <span class="gvt">architect</span></button>
+    <button type="button" class="gv-seat" data-pull="hexes,tokens,talk,recipes,vpline,harbours"
+            title="why does it still sell tables?"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>the publisher <span class="gvt">investor</span></button>
+  </div>
+
+  <div class="gv-spheres">
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1"/><circle cx="15.5" cy="8.5" r="1"/><circle cx="8.5" cy="15.5" r="1"/><circle cx="15.5" cy="15.5" r="1"/></svg>chance<span class="gvn">5 parts</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body" data-body="dice">two d6 <span class="k">36 rolls · ×1</span></span>
+        <span class="gv-body" data-body="tokens">number tokens <span class="k">18 · ×2</span></span>
+        <span class="gv-body" data-body="robber">the robber <span class="k">×3</span></span>
+        <span class="gv-body" data-body="devdeck">dev deck <span class="k">25 · ×2</span></span>
+        <span class="gv-body" data-body="seven">the 7 rule <span class="k">6/36 · ×0</span></span>
+      </div>
+    </div>
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l8.66 5v10L12 22l-8.66-5V7z"/></svg>geometry<span class="gvn">5 parts</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body" data-body="hexes">hexes <span class="k">19 · ×1</span></span>
+        <span class="gv-body" data-body="corners">intersections <span class="k">54 · ×1</span></span>
+        <span class="gv-body" data-body="paths">paths <span class="k">72 · ×0</span></span>
+        <span class="gv-body" data-body="harbours">harbours <span class="k">9 · ×2</span></span>
+        <span class="gv-body" data-body="distance">distance rule <span class="k">×3</span></span>
+      </div>
+    </div>
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="9" r="6"/><path d="M18.6 10.4A6 6 0 1 1 13.6 5.4"/></svg>economy<span class="gvn">5 parts</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body" data-body="resources">resource types <span class="k">5 · ×1</span></span>
+        <span class="gv-body" data-body="cards">resource cards <span class="k">95 · ×0</span></span>
+        <span class="gv-body" data-body="recipes">build recipes <span class="k">4 · ×3</span></span>
+        <span class="gv-body" data-body="ratios">trade ratios <span class="k">3 · ×0</span></span>
+        <span class="gv-body" data-body="bank">the bank <span class="k">×1</span></span>
+      </div>
+    </div>
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M14 9a2 2 0 0 1-2 2H6l-4 4V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2z"/><path d="M18 9h2a2 2 0 0 1 2 2v11l-4-4h-6a2 2 0 0 1-2-2v-1"/></svg>social<span class="gvn">4 parts</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body" data-body="trade">player trade <span class="k">×2</span></span>
+        <span class="gv-body" data-body="steal">the steal <span class="k">×0</span></span>
+        <span class="gv-body" data-body="discard">discard on 7 <span class="k">×3</span></span>
+        <span class="gv-body" data-body="talk">table talk <span class="k">×2</span></span>
+      </div>
+    </div>
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>progression<span class="gvn">5 parts</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body" data-body="stock">piece stock <span class="k">5·4·15 · ×2</span></span>
+        <span class="gv-body" data-body="road">longest road <span class="k">2 VP · ×0</span></span>
+        <span class="gv-body" data-body="army">largest army <span class="k">2 VP · ×0</span></span>
+        <span class="gv-body" data-body="vpcards">VP cards <span class="k">5 · ×0</span></span>
+        <span class="gv-body" data-body="vpline">the 10-VP line <span class="k">×2</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="prismprose" style="margin-top:30px">
+  <h2>Where this dissection strains</h2>
+  <p><strong>The census is judgment, not enumeration</strong> — the dev deck
+  sits in chance and its 5 VP cards again in progression; another dissector
+  merges them and counts 23. <strong>Mass has no unit</strong> — every rank is
+  argued, and an invented mass figure would pass today's present-not-traceable
+  gate, so the number is refused. <strong>The roster is capped by
+  usefulness</strong> — a seventh seat, the spectator, was cut because no page
+  would ever be built for it; the cut is named so it stays visible.</p>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="m-intake">
+    <h4>1 · subject intake — whole things take no questions</h4>
+    <p>The box is on the table: a board, cards, dice, wooden pieces, one
+    rulebook. Nothing can be explained yet because nothing is named —
+    <em>Catan</em> is one word, and one word cannot be asked anything. This
+    machine does nothing clever: it opens the box and starts naming. Beginning
+    anywhere else means inheriting someone else's names without noticing.</p>
+  </div>
+  <div class="pf-detail" id="m-census">
+    <h4>2 · parts census — angle-blind on purpose</h4>
+    <p>24 parts, counted before anyone knows who will ask. The order is the
+    point: name parts <em>for</em> a known audience and you silently cut
+    whatever that audience ignores — and every later seat inherits the cut. So
+    the census names anything <em>any</em> seat could care about; ranking and
+    cutting are machine 5's job. The proof it worked sits on the gravity map:
+    8 parts no seat pulls, kept anyway.</p>
+  </div>
+  <div class="pf-detail" id="m-spheres">
+    <h4>3 · sphere scan — the subject's own regions</h4>
+    <p>The 24 parts cluster into five regions where parts act together:
+    chance, geometry, economy, social, progression. No seat chose these — swap
+    the entire audience and the spheres stay put. That stability is the test
+    that you scanned the subject and not your reader: a "strategy sphere"
+    would have been the strategist leaking into the subject.</p>
+  </div>
+  <div class="pf-detail" id="m-roster">
+    <h4>4 · angle roster — a seat is a person and one question</h4>
+    <p>Six seats sit down, each carrying one question it would pay to have
+    answered. A seat is not a demographic; it is someone who could physically
+    sit down tonight — "everyone" is not a seat. Each Catan seat names the
+    seat it becomes on an application: end user, power user, admin,
+    compliance, architect, investor. That mapping is why a board game is the
+    rehearsal — same roster, different subject, tomorrow.</p>
+  </div>
+  <div class="pf-detail" id="m-gravity">
+    <h4>5 · gravity assignment — mass is how hard a question bends</h4>
+    <p>For each seat, all 24 parts pull and five make the world, ranked by
+    mass — argued, never numbered, because no unit measures mass and an
+    invented figure would pass today's gates. The proof the seats are real is
+    the mass test on the index: the robber read through six seats returns six
+    different readings — a rule, a weapon, a dispute, a procedure, a valve, a
+    story.</p>
+  </div>
+  <div class="pf-detail" id="m-plan">
+    <h4>6 · page plan — a queue names what is missing</h4>
+    <p>Each world names the page its question deserves: movement questions
+    want a console, parts questions want an article, procedures may refuse the
+    floor entirely. Six wanted, two built — <a href="prism-catan-turn.html">The
+    turn</a>, revealed to be the <em>new player's</em> page built before
+    anyone said whose it was, and this method record. The rest are named
+    absences in the <a href="prism-catan.html">index's queue</a>, never
+    zeros.</p>
+  </div>
+</div>
+
+  </div>
+
+  <p class="prismsource">source: docs/prisms/catan-angles/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 1 floor(s). game numbers from the Catan base-game rules (3–4 player set); census, seat and world counts are this page&#x27;s own dissection — recount them on this page.</p>
+</main>
+
+</div>
+
+</body>
+</html>

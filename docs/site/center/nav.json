@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "f0696c0",
+ "head": "1c6aaac",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 21
+     "count": 18
     }
    ]
   },
@@ -182,9 +182,25 @@
     {
      "label": "Catan",
      "href": "prism-catan.html",
+     "icon": "zap",
+     "sub": true,
+     "tip": "index \u2014 a subject's own landing page"
+    },
+    {
+     "label": "The turn",
+     "href": "prism-catan-turn.html",
      "icon": "gauge",
      "sub": true,
-     "tip": "console \u2014 one screen, ambient loop + scrub bar"
+     "tip": "console \u2014 one screen, ambient loop + scrub bar",
+     "sub2": true
+    },
+    {
+     "label": "The dissection",
+     "href": "prism-catan-angles.html",
+     "icon": "gauge",
+     "sub": true,
+     "tip": "console \u2014 one screen, ambient loop + scrub bar",
+     "sub2": true
     },
     {
      "label": "Neural net",

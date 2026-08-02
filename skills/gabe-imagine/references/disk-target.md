@@ -118,6 +118,33 @@ Per node: `data-node` `data-in` `data-out` `data-num` `data-state`, plus
 a state, and **never** `data-in`/`data-out` — a gate decides, it does not
 transform.
 
+## The dimension grammar — one container silhouette per kind
+
+Established on the Catan dissection (operator ruling, 2026-08-01): when several
+KINDS of thing share a page, the **outer container** names the kind before any
+label is read. Colour and motion are secondary; the silhouette is the identity.
+
+| Kind | Class | Silhouette |
+|---|---|---|
+| action / machine | `.pf-node` | sharp numbered card with a recipe face |
+| gate / rule | `.pf-gate` | flat tag in the gate register — never card weight |
+| payload | `.pf-chip` | the small carrier riding a hop |
+| seat / angle | `.gv-seat` | capsule pill — a person, so soft and small |
+| sphere | `.gv-sphere` | wide soft-cornered region panel, round-badge head |
+| body / part | `.gv-body` | small square tile living inside a sphere |
+| relationship | `.gv-links` | stroke-only SVG **between** containers, never a box |
+
+**The gravity map** is the relationship component:
+`<div class="gv" data-gravity data-fx="…" data-tick="…">` holding a `.gv-seats`
+rail of `.gv-seat[data-pull="id,id,…"]` capsules and `.gv-sphere` panels of
+`.gv-body[data-body="id"]` tiles. `prism-fx.js` cycles one seat per tick,
+lights the pulled tiles, dims the rest, and draws animated stroke curves from
+the seat to its bodies; clicking a seat stops the cycle on it. A `.gv` is NOT a
+floor — nothing transforms, so it carries no `data-prism` and the contract gate
+ignores it — but it MOVES, so it registers in `window.FXREPLAY`, obeys the cog
+pause, the spacebar and reduced motion (held state, no cycling), and is
+therefore reachable by `verify-motion.mjs` like any floor.
+
 ## Fragments — the embed seam
 
 `{{PRISM:<slug>}}` in any markdown doc page. `build_prisms.py` writes

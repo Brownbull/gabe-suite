@@ -284,6 +284,124 @@
     });
   }
 
+  /* ── the gravity driver — seats pull bodies: the relationship layer ────── */
+  /* A .gv is NOT a floor: nothing transforms, so it carries no data-prism and
+     the contract gate ignores it. It still MOVES, so it registers in floors and
+     FXREPLAY and answers the same pause, spacebar and reduced-motion contract —
+     a moving thing outside the pause contract would be the defect the cog
+     exists to prevent. */
+  function gravityDriver(el) {
+    var seats = [].slice.call(el.querySelectorAll(".gv-seat"));
+    if (!seats.length) return;
+    var chips = {};
+    [].slice.call(el.querySelectorAll(".gv-body[data-body]")).forEach(function (c) {
+      chips[c.getAttribute("data-body")] = c;
+    });
+    var svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+    svg.setAttribute("class", "gv-links");
+    svg.setAttribute("aria-hidden", "true");
+    el.appendChild(svg);
+
+    var g = {
+      el: el,
+      slug: el.getAttribute("data-fx") || "",
+      tick: parseInt(el.getAttribute("data-tick"), 10) || TICK,
+      step: 0, playing: false, timer: null, scale: 1
+    };
+
+    function pulls(seat) {
+      return (seat.getAttribute("data-pull") || "").split(",")
+        .map(function (s) { return s.trim(); }).filter(Boolean);
+    }
+
+    function draw(seat) {
+      while (svg.firstChild) svg.removeChild(svg.firstChild);
+      var host = el.getBoundingClientRect();
+      if (!host.width) return;
+      svg.setAttribute("viewBox", "0 0 " + host.width + " " + host.height);
+      var a = seat.getBoundingClientRect();
+      var x1 = a.left - host.left + a.width / 2;
+      var y1 = a.bottom - host.top;
+      pulls(seat).forEach(function (id) {
+        var c = chips[id];
+        if (!c) return;
+        var b = c.getBoundingClientRect();
+        var x2 = b.left - host.left + b.width / 2;
+        var y2 = b.top - host.top;
+        var bend = Math.max(30, (y2 - y1) * 0.55);
+        var p = document.createElementNS(svg.namespaceURI, "path");
+        p.setAttribute("d", "M" + x1 + "," + y1 +
+          " C" + x1 + "," + (y1 + bend) + " " + x2 + "," + (y2 - bend) +
+          " " + x2 + "," + y2);
+        svg.appendChild(p);
+      });
+    }
+
+    function paint() {
+      var seat = seats[g.step];
+      var on = {};
+      pulls(seat).forEach(function (id) { on[id] = true; });
+      seats.forEach(function (s, i) { s.classList.toggle("is-active", i === g.step); });
+      Object.keys(chips).forEach(function (id) {
+        chips[id].classList.toggle("is-pulled", !!on[id]);
+        chips[id].classList.toggle("is-dim", !on[id]);
+      });
+      el.classList.add("gv-on");
+      draw(seat);
+    }
+
+    function schedule() {
+      if (g.timer) { clearTimeout(g.timer); g.timer = null; }
+      if (!g.playing || reduced || !motionOn()) return;
+      g.timer = setTimeout(function () {
+        g.step = (g.step + 1) % seats.length;
+        paint();
+        schedule();
+      }, g.tick);
+    }
+
+    g.goto = function (k) {
+      g.step = ((k % seats.length) + seats.length) % seats.length;
+      paint();
+      schedule();
+    };
+    g.play = function () { g.playing = true; schedule(); };
+    g.pause = function () {
+      g.playing = false;
+      if (g.timer) { clearTimeout(g.timer); g.timer = null; }
+    };
+    g.replay = function () {
+      /* Under reduced motion a replay rewinds to a legible held state and
+         stops — the same obligation the console driver carries. */
+      g.step = 0;
+      paint();
+      if (reduced) { g.pause(); return; }
+      g.play();
+    };
+
+    el.addEventListener("click", function (e) {
+      var s = e.target.closest(".gv-seat");
+      if (!s) return;
+      /* Choosing a seat by hand means the reader took over: the cycle stops on
+         their seat instead of yanking it away one tick later. */
+      g.pause();
+      g.goto(seats.indexOf(s));
+    });
+
+    var rt;
+    window.addEventListener("resize", function () {
+      clearTimeout(rt);
+      rt = setTimeout(function () { draw(seats[g.step]); }, 140);
+    });
+
+    floors.push(g);
+    if (g.slug) window.FXREPLAY[g.slug] = g.replay;
+
+    paint();
+    if (reduced) { g.pause(); return; }
+    whenSeen(el, function () { g.play(); });
+  }
+
   /* ── the cog's Motion group — gabe-artifact's contract, verbatim ───────── */
   function setMotion(on) {
     document.documentElement.setAttribute("data-motion", on ? "on" : "off");
@@ -381,6 +499,8 @@
       }
       if (f.slug) window.FXREPLAY[f.slug] = f.replay;
     });
+
+    [].slice.call(document.querySelectorAll(".gv[data-gravity]")).forEach(gravityDriver);
 
     if (stage) {
       articleScenes(stage);

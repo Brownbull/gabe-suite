@@ -1,10 +1,11 @@
 {
   "title": "Catan, read as a production floor",
-  "nav_label": "Catan",
+  "nav_label": "The turn",
   "kicker": "non-software · belt-line",
   "mode": "console",
   "pattern": "belt-line",
-  "order": 10,
+  "order": 11,
+  "section": "catan",
   "kind": "generality test",
   "card": "Dice to victory point in eight machines. The subject is a board game, so nothing here works because the material was already a pipeline in code.",
   "lede": "Eight machines turn two dice into a victory point. Every number on this page is from the base-game rules for 3–4 players, and the four states land on four things a Catan player already recognises — including the one that reports success over work it did not do.",
