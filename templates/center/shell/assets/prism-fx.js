@@ -1,4 +1,4 @@
-/* gabe-prism · the disk target's motion runtime.
+/* gabe-imagine · the disk target's motion runtime.
  *
  * THREE DRIVERS, one file, because they share a clock, a pause and a registry —
  * splitting them would mean three copies of the pause obligation and only one of

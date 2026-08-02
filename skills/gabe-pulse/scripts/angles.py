@@ -237,7 +237,7 @@ def s7_prism(root: Path, plan: dict | None, cfg: dict | None):
         return None
     return (f"the diff spans {len(touched)} layers ({', '.join(sorted(touched)[:4])}) "
             f"across {len(changed)} files",
-            "/gabe-prism")
+            "/gabe-imagine")
 
 
 SIGNALS = [

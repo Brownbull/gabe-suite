@@ -19,7 +19,7 @@ Six ways, and a skill can be reached by more than one — `/gabe-commit` is both
 | ◎ **Path-triggered** | frontmatter `paths:` offers it when matching files are touched | 1 | `/gabe-mockup` |
 | ✋ **Human-only** | `disable-model-invocation` — a model may not start it | 3 | `/gabe-cc-init` `/gabe-init` `/gabe-scope-pivot` |
 | ▽ **Background** | `user-invocable: false` — loads with other skills, never called alone | 1 | `/gabe-docs` |
-| ☝ **Manual only** | nothing fires it; it runs when you ask, and not otherwise | **15** | `/gabe-artifact` `/gabe-cc-entity` `/gabe-docsite` `/gabe-handoff` `/gabe-health` `/gabe-help` `/gabe-lens` `/gabe-meme` `/gabe-myopic` `/gabe-next` `/gabe-prism` `/gabe-pulse` `/gabe-roast` `/gabe-scope` `/gabe-scope-change` |
+| ☝ **Manual only** | nothing fires it; it runs when you ask, and not otherwise | **15** | `/gabe-artifact` `/gabe-cc-entity` `/gabe-docsite` `/gabe-handoff` `/gabe-health` `/gabe-help` `/gabe-lens` `/gabe-meme` `/gabe-myopic` `/gabe-next` `/gabe-imagine` `/gabe-pulse` `/gabe-roast` `/gabe-scope` `/gabe-scope-change` |
 
 **Fifteen of twenty-eight have nothing pointing at them.** That is not a defect — a satellite that fired itself would be worse, and `/gabe-next` is manual by definition since it is the thing you call to be told what is next. But it does mean more than half the suite depends on the operator remembering it exists, which is exactly what the estate sweep in `/gabe-health` was built to surface.
 
@@ -47,7 +47,7 @@ Seven hooks ship; five name a skill. The router adds eight more beats, and `path
 - **Command center (2 + 1)** — `/gabe-cc-init` and `/gabe-cc-entity`; `/gabe-cc-update` is the third member but lives in the spine as a router beat.
 - **Documentation (2)** — `/gabe-docs` (background standards, the E1–E7 contract) and `/gabe-docsite`, which since the shell merge renders these very pages into the command center.
 - **Session ops (3)** — `/gabe-init`, `/gabe-help`, `/gabe-handoff`.
-- **Craft & communication (5)** — `/gabe-lens`, `/gabe-mockup`, `/gabe-meme`, `/gabe-artifact`, and `/gabe-prism`.
+- **Craft & communication (5)** — `/gabe-lens`, `/gabe-mockup`, `/gabe-meme`, `/gabe-artifact`, and `/gabe-imagine`.
 
 ## 4. Reading the machinery
 

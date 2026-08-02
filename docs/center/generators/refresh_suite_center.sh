@@ -37,11 +37,11 @@ prism_gates() {
   fi
   echo "== gate: prism contract (payloads · numbers · states · gates) =="
   for f in $pages; do
-    node "$REPO/skills/gabe-prism/tools/verify-prism.mjs" "$f" | tail -1
+    node "$REPO/skills/gabe-imagine/tools/verify-prism.mjs" "$f" | tail -1
   done
   echo "== gate: prism fit at 1440/1280/1024 =="
   # shellcheck disable=SC2086
-  node "$REPO/skills/gabe-prism/tools/check-prism-fit.mjs" $pages | tail -1
+  node "$REPO/skills/gabe-imagine/tools/check-prism-fit.mjs" $pages | tail -1
   echo "== gate: prism motion (replay · pause · reduced) =="
   for f in $pages; do
     node "$REPO/skills/gabe-artifact/tools/verify-motion.mjs" "$f" | tail -1
@@ -63,7 +63,7 @@ case "$MODE" in
     # which pass 1 above already wrote, and the Explanations group is scanned
     # from docs/prisms/ on disk — so pass 1's nav already carries it.
     echo "== build: the prisms, into the center's shell =="
-    python3 "$REPO/skills/gabe-prism/generator/build_prisms.py" \
+    python3 "$REPO/skills/gabe-imagine/generator/build_prisms.py" \
       --shell "$REPO/docs/center/shell" \
       --nav   "$REPO/docs/site/center/nav.json"
     echo "== build: the docs, into the center's shell =="

@@ -1,16 +1,21 @@
 ---
-name: gabe-prism
+name: gabe-imagine
 description: "Explanations rendered as a working system — the Gabe register's actors, chain, risks and blast radius drawn as a production floor where the payload moves, machines state their recipe, failures flag themselves and any cell opens to its detail. Five grammars chosen by the shape of the material; two targets — a command-center page (default) or a published Artifact."
 when_to_use: "Explaining something with three or more interlocking parts where a static diagram would hide the cargo — a pipeline, a build, an architecture, a migration, a lifecycle. Also when a reader says a concept map left them lost."
 metadata:
-  version: 1.1.0
+  version: 1.2.0
   status: suite skill (generic, project-agnostic)
   scope: any subject that can be decomposed into actors with named payloads
 ---
 
-# gabe-prism — one subject, split into the grammar that fits
+# gabe-imagine — one subject, split into the grammar that fits
 
-**Usage:** `/gabe-prism <what to explain>` · `/gabe-prism <subject> as <pattern>` · `/gabe-prism <subject> --target artifact` · `/gabe-prism patterns`
+> **Naming:** the SKILL is `gabe-imagine`; the artifact it renders is called a
+> **prism** — the format's noun, carried by `docs/prisms/`, `{{PRISM:<slug>}}`,
+> `prism-<slug>.html` and the gates. Same relation as `gabe-cc-update` rendering
+> lens cards or `gabe-red` minting C-ids: skill name ≠ artifact name.
+
+**Usage:** `/gabe-imagine <what to explain>` · `/gabe-imagine <subject> as <pattern>` · `/gabe-imagine <subject> --target artifact` · `/gabe-imagine patterns`
 
 ## Gabe execution contract (E1–E7)
 

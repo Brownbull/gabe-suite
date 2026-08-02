@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# gabe-prism contract battery — the executable contract of
-# skills/gabe-prism/tools/verify-prism.mjs.
+# gabe-imagine contract battery — the executable contract of
+# skills/gabe-imagine/tools/verify-prism.mjs.
 #
 # The skill's whole claim is that a floor says more than a concept map. Each
 # clause of that claim gets a fixture that FIRES and one that stays SILENT, so
@@ -9,7 +9,7 @@
 # Hermetic: temp copies only; the gate serves its own page on 127.0.0.1.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-GATE="$REPO/skills/gabe-prism/tools/verify-prism.mjs"
+GATE="$REPO/skills/gabe-imagine/tools/verify-prism.mjs"
 FIX="$REPO/tests/prism/fixtures/floor-ok.html"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

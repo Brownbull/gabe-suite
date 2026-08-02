@@ -1,4 +1,4 @@
-/* gabe-prism · the FIT gate — the price of giving up a fixed column.
+/* gabe-imagine · the FIT gate — the price of giving up a fixed column.
  *
  * A 74rem artifact could only spill in one direction. A full-bleed canvas can
  * spill four ways, and three of them look fine on the machine that authored it:

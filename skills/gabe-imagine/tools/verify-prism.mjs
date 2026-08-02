@@ -1,4 +1,4 @@
-/* gabe-prism · contract gate
+/* gabe-imagine · contract gate
  *
  * A factory view is only worth more than a concept map if its claims hold: the
  * payload is named at every hop, every node carries a number, failures are

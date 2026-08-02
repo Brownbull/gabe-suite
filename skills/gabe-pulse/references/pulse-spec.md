@@ -294,7 +294,7 @@ So a satellite earns its line only when repo state says it would find something.
 | S4 | a doc page is older than the markdown it was rendered from | `/gabe-docsite` | `scripts/checkers/docsite-staleness.sh` |
 | S5 | **unavailable** — see 5.4 | `/gabe-scope-change` | — |
 | S6 | ≥3 changed files belong to one entity's code map | `/gabe-cc-entity <slug>` | center config + `git diff` |
-| S7 | the diff spans ≥2 layers across ≥3 files | `/gabe-prism` | center config + `git diff` |
+| S7 | the diff spans ≥2 layers across ≥3 files | `/gabe-imagine` | center config + `git diff` |
 
 Thresholds are deliberately coarse. A threshold tuned to fire often is a threshold that will be
 ignored, and an ignored signal is worse than none because it also teaches the reader to skip the

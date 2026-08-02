@@ -112,6 +112,7 @@ The Gabe Suite — 28 skills (each skill IS its slash command).
 | gabe-handoff | /gabe-handoff | Session handoff — paste-able next-session prompt + durable KDBP state sync so a fresh session resumes with full fidelity |
 | gabe-health | /gabe-health | The suite scanner, three lenses — codebase health (god files, churn hotspots, coupling, bug concentration, scope creep), decision-debt (absorbed from gabe-de… |
 | gabe-help | /gabe-help | Context-aware guide — detects project state, shows what's configured, suggests the right workflow |
+| gabe-imagine | /gabe-imagine | Explanations rendered as a working system — the Gabe register's actors, chain, risks and blast radius drawn as a production floor where the payload moves, ma… |
 | gabe-init | /gabe-init | Project setup — creates .kdbp/, installs hooks, configures by project type and maturity |
 | gabe-lens | /gabe-lens | Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, adapted to your cognitive suit |
 | gabe-meme | /gabe-meme | Oblique memes as visual metaphors — persona-matched template, text that lands by tangent, rendered via memegen.link and verified as PNG. Punch-up only |
@@ -119,7 +120,6 @@ The Gabe Suite — 28 skills (each skill IS its slash command).
 | gabe-myopic | /gabe-myopic | Short-sighted-user walkthrough — role-plays shallow planning horizons (1/1.5/2 steps) to flag foresight traps, overwhelm, recall demands, and no-undo dead-en… |
 | gabe-next | /gabe-next | Zero-logic router — a deterministic script over PLAN state dispatches the next gabe command; no LLM decisions, no side effects |
 | gabe-plan | /gabe-plan | KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts |
-| gabe-prism | /gabe-prism | Explanations rendered as a working system — the Gabe register's actors, chain, risks and blast radius drawn as a production floor where the payload moves, ma… |
 | gabe-pulse | /gabe-pulse | Read-only completeness sweep — ten deterministic signals ranked into bands, plus the ANGLE family: which satellite would find something right now, surfaced a… |
 | gabe-push | /gabe-push | Push, PR, CI watch, promotion — env-aware shipping via .kdbp/PUSH.md; detects remote drift, offers branch cleanup |
 | gabe-red | /gabe-red | TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RE… |

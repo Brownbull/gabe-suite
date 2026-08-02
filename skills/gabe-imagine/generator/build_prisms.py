@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""gabe-prism · the DISK target builder — authored floors become center pages.
+"""gabe-imagine · the DISK target builder — authored floors become center pages.
 
 Why this is not part of build_docsite.py: that builder owns markdown→HTML, and a
 floor is not markdown. Trying to express a machine with a named payload, a state,

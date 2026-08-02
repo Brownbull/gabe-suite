@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "b483ac0",
+ "head": "f0696c0",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 20
+     "count": 21
     }
    ]
   },

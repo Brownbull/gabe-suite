@@ -36,7 +36,7 @@ const { chromium } = await import(`${process.env.HOME}/.claude/skills/gabe-docsi
 const html = await readFile(target, 'utf8');
 /* `/` is always the page under test; any other path is served from the page's
    own directory. An ARTIFACT is self-contained and never asks for a second
-   path, so this changes nothing for it — but a DISK page (gabe-prism's target)
+   path, so this changes nothing for it — but a DISK page (gabe-imagine's target)
    loads assets/prism-fx.js, and the old one-file server answered that request
    with the HTML itself. window.FXREPLAY then stayed empty and the gate reported
    a loud SKIP over a page whose animations were fine: an unverified contract

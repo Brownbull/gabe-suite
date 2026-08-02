@@ -1330,9 +1330,13 @@ assert B.board_html("state", mixed, labels).count('class="bcard"') == open_n
 
 # ---- KPI reconciliation: 0 is a real number, not "missing" --------------
 # `closed_days or 999` once made every same-day close count as ancient, so the
-# KPI contradicted the column beside it.
+# KPI contradicted the column beside it. The close date is TODAY, not a
+# literal: a hardcoded 2026-07-25 passed for exactly seven days and then
+# failed on 2026-08-01 — date-rot reporting a bug that did not exist.
+import datetime as _dt
+_today = _dt.date.today().isoformat()
 k = B.kpis([B._card(id="x", track="debt", title="t", detail="", state="done",
-                    done=True, created="2026-07-25", closed="2026-07-25",
+                    done=True, created=_today, closed=_today,
                     source="s")])
 assert "1 in the last 7" in k, k
 sys.exit(0)

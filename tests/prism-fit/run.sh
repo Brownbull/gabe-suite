@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# gabe-prism FIT battery — the executable contract of
-# skills/gabe-prism/tools/check-prism-fit.mjs.
+# gabe-imagine FIT battery — the executable contract of
+# skills/gabe-imagine/tools/check-prism-fit.mjs.
 #
 # The disk target's whole trade is that the canvas gives up its column. This
 # battery holds the four ways that trade goes wrong, each with a case that FIRES
@@ -16,7 +16,7 @@
 # Hermetic: temp copies only; the fixture inlines everything the gate measures.
 set -u
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
-GATE="$REPO/skills/gabe-prism/tools/check-prism-fit.mjs"
+GATE="$REPO/skills/gabe-imagine/tools/check-prism-fit.mjs"
 FIX="$REPO/tests/prism-fit/fixtures/fit-ok.html"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT

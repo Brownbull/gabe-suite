@@ -1,4 +1,4 @@
-/* gabe-prism · the DISK target's canvas layer.
+/* gabe-imagine · the DISK target's canvas layer.
  *
  * Scoped entirely to .prismhead / .prismstage / .pf-* / .pxfrag, so it can be
  * loaded on any center page without touching a single existing rule. The center
