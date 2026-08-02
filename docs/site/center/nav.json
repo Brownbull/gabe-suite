@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "1c6aaac",
+ "head": "b03aaa7",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 18
+     "count": 20
     }
    ]
   },
@@ -200,6 +200,14 @@
      "icon": "gauge",
      "sub": true,
      "tip": "console \u2014 one screen, ambient loop + scrub bar",
+     "sub2": true
+    },
+    {
+     "label": "The strategist",
+     "href": "prism-catan-strategist.html",
+     "icon": "scrollcast",
+     "sub": true,
+     "tip": "article \u2014 assembles as you scroll",
      "sub2": true
     },
     {

@@ -1,0 +1,14 @@
+{
+  "title": "The strategist — where the edge lives",
+  "nav_label": "The strategist",
+  "kicker": "seat page · power user",
+  "mode": "article",
+  "pattern": "belt-line",
+  "order": 13,
+  "section": "catan",
+  "kind": "seat page",
+  "card": "The first seat page: five edges priced in 36ths — pips, corners, harbours, the robber, the deck — closing on the opening algorithm as a console.",
+  "lede": "Five edges, every one a base-game number: the 2d6 triangle, the 14-pip corner, the 2:1 harbour, the robber's 5/36, and a deck that is 56% knights. The page closes on the opening algorithm — the three machines a strategist runs before placing a single road.",
+  "handle": "An edge is a number the table didn't compute — and Catan prints most of them on the tokens: five dots on the 6 and the 8. The strategist is the player who reads the board in 36ths.",
+  "source": "Catan base-game rules and their arithmetic (3–4 player set): 36 dice outcomes, 54 intersections, 9 harbours (4 generic 3:1 + 5 special 2:1), 25 development cards (14 knights · 5 VP · 2+2+2 utility)."
+}
