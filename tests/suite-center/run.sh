@@ -335,6 +335,46 @@ else
   bad "R8 — docs/site/center is not built; run refresh_suite_center.sh first"
 fi
 
+echo "== nav section nesting (R15) =="
+
+# R15 — a prism declaring `section: <slug>` nests one level deeper in BOTH
+# sidebar renderers (nav_model/render_nav here, _center_shell.render_sidebar
+# for the doc/prism pages), listed right after its parent. A child naming an
+# absent parent renders FLAT rather than vanishing — a typo costs an indent,
+# never a page.
+mkdir -p "$TMP/nest/alpha" "$TMP/nest/alpha-one" "$TMP/nest/beta-child" "$TMP/nest/gamma"
+for d in alpha alpha-one beta-child gamma; do echo "<div></div>" > "$TMP/nest/$d/body.html"; done
+printf '%s\n' '{"title":"Alpha","nav_label":"Alpha","mode":"index","order":1}' \
+  > "$TMP/nest/alpha/prism.json"
+printf '%s\n' '{"title":"Alpha one","nav_label":"Alpha one","mode":"console","order":2,"section":"alpha"}' \
+  > "$TMP/nest/alpha-one/prism.json"
+printf '%s\n' '{"title":"Beta child","nav_label":"Beta child","mode":"console","order":3,"section":"absent"}' \
+  > "$TMP/nest/beta-child/prism.json"
+printf '%s\n' '{"title":"Gamma","nav_label":"Gamma","mode":"article","order":4}' \
+  > "$TMP/nest/gamma/prism.json"
+got=$(cd "$GEN" && python3 - "$TMP/nest" <<'PY'
+import sys
+sys.path.insert(0, ".")
+sys.path.insert(0, "../../../skills/gabe-docsite/generator")
+import build_suite_center as B          # noqa: E402
+import _center_shell as CS              # noqa: E402
+cfg = {"project": {"display_name": "T"}, "lenses": [],
+       "paths": {"prisms": sys.argv[1]}}
+groups = B.nav_model(cfg, {})
+html = B.render_nav(cfg, groups, "x.html", {})
+seam = CS.render_sidebar({"groups": groups}, "x.html", "T", "", "", "g")
+checks = []
+for h in (html, seam):
+    checks.append('navsubitem navsub2item" href="prism-alpha-one.html"' in h)  # FIRE: nested
+    checks.append(h.index('href="prism-alpha.html"')
+                  < h.index('href="prism-alpha-one.html"'))                    # child follows parent
+    checks.append('navsub2item" href="prism-beta-child.html"' not in h)        # orphan stays flat
+    checks.append('href="prism-beta-child.html"' in h)                         # ...and stays listed
+print("ok" if all(checks) else "no")
+PY
+)
+check "R15 FIRE+SILENT: section nests after parent, orphan stays flat, both renderers agree" "$got" "ok"
+
 echo
 echo "suite-center battery: $pass passed, $fail failed"
 [ "$fail" -eq 0 ] || exit 1

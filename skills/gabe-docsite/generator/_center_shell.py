@@ -90,7 +90,8 @@ def render_sidebar(nav: dict[str, Any], current: str, project: str,
                     f'{E(item["label"])} <span class="count">—</span></span>')
                 continue
             on = " on" if item.get("href") == current else ""
-            sub = " navsubitem" if item.get("sub") else ""
+            sub = (" navsubitem navsub2item" if item.get("sub2")
+                   else " navsubitem" if item.get("sub") else "")
             cnt = item.get("count")
             badge = f' <span class="count">{cnt}</span>' if cnt is not None else ""
             size = 14 if item.get("sub") else 0

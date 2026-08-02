@@ -170,6 +170,7 @@ def prism_pages(cfg: dict) -> list[dict]:
                     "label": meta.get("nav_label") or meta.get("title", d.name),
                     "order": meta.get("order", 999),
                     "mode": meta.get("mode", "console"),
+                    "section": meta.get("section"),
                     "embeds": "{{PRISM:" in body})
     out.sort(key=lambda p: (p["order"], p["slug"]))
     return out
@@ -221,15 +222,38 @@ def nav_model(cfg: dict, counts: dict) -> list[dict]:
     # invisible until a link 404s.
     prisms = prism_pages(cfg)
     if prisms:
-        mode_icon = {"console": "gauge", "article": "scrollcast"}
+        mode_icon = {"console": "gauge", "article": "scrollcast", "index": "zap"}
         mode_tip = {"gauge": "console — one screen, ambient loop + scrub bar",
                     "scrollcast": "article — assembles as you scroll",
+                    "zap": "index — a subject's own landing page",
                     "component": "built from embedded components"}
         items = [{"label": "Explanations", "href": "explanations.html", "icon": "zap"}]
+        # A page declaring `section: <slug>` nests one level deeper, listed
+        # right after the page with that slug. A child whose parent is absent
+        # (or names itself) renders flat rather than vanishing — a typo must
+        # cost an indent, never a page.
+        slugs = {p["slug"] for p in prisms}
+        kids: dict[str, list[dict]] = {}
+        top: list[dict] = []
         for p in prisms:
+            sec = p.get("section")
+            if sec and sec != p["slug"] and sec in slugs:
+                kids.setdefault(sec, []).append(p)
+            else:
+                top.append(p)
+
+        def prism_item(p: dict, deep: bool) -> dict:
             icon = "component" if p.get("embeds") else mode_icon.get(p.get("mode"), "gauge")
-            items.append({"label": p["label"], "href": f"prism-{p['slug']}.html",
-                          "icon": icon, "sub": True, "tip": mode_tip[icon]})
+            item = {"label": p["label"], "href": f"prism-{p['slug']}.html",
+                    "icon": icon, "sub": True, "tip": mode_tip[icon]}
+            if deep:
+                item["sub2"] = True
+            return item
+
+        for p in top:
+            items.append(prism_item(p, deep=False))
+            for c in kids.get(p["slug"], []):
+                items.append(prism_item(c, deep=True))
         groups.append({"label": "Explanations", "cls": "g-ent", "items": items})
 
     later = [l for l in cfg["lenses"] if l["spike"] != 1]
@@ -272,7 +296,8 @@ def render_nav(cfg: dict, groups: list[dict], current: str, counts: dict) -> str
                     f'<span class="count">—</span></span>')
                 continue
             on = " on" if current == item["href"] else ""
-            sub = " navsubitem" if item.get("sub") else ""
+            sub = (" navsubitem navsub2item" if item.get("sub2")
+                   else " navsubitem" if item.get("sub") else "")
             cnt = item.get("count")
             badge = f' <span class="count">{cnt}</span>' if cnt is not None else ""
             size = 14 if item.get("sub") else 0
