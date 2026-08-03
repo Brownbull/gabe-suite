@@ -439,6 +439,16 @@
 }
 .gv-sphere .gvh .gvi { width: 14px; height: 14px; color: var(--accent); }
 
+/* under-labels — the translation layer IN PLACE (dissection map:
+   translation-elements). A formula or expression renders as .ul items in a
+   .ulrow: the symbol on top, its plain-words role directly beneath — the
+   reader never leaves the expression to learn what a term is. */
+.ulrow { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: flex-end; margin: 14px 0 8px; }
+.ul { display: inline-flex; flex-direction: column; align-items: center; gap: 4px; }
+.ul b { font-size: 19px; font-weight: 600; color: var(--ink); line-height: 1.15; }
+.ul b sup { font-size: 12px; }
+.ul i { font-style: normal; font: var(--mono); font-size: 12px; color: var(--muted); text-align: center; max-width: 16ch; }
+
 /* the relationship layer — stroke over the containers, under the pointer */
 .gv-links { position: absolute; inset: 0; z-index: 3; pointer-events: none; overflow: visible; }
 .gv-links path {

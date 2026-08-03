@@ -21,7 +21,7 @@
 | 1 | subject intake | a subject, whole | named parts | open the box; naming is the first act |
 | 2 | parts census | named parts | a counted ledger | **angle-blind on purpose** — count first, cut never; the cut belongs to the seats |
 | 3 | sphere scan | a counted ledger | spheres | cluster by where parts act together, not by who cares |
-| 4 | angle roster | spheres | seated questions | people, not demographics; each seat maps to an app archetype |
+| 4 | angle roster | spheres | seated questions | people, not demographics — a seat = person + question + refusal (seat-archetypes.md has the derivation recipes; the app archetype mapping is available, never mandatory) |
 | 5 | gravity assignment | seated questions | gravity worlds | ~5 bodies per seat, ranked; mass is argued, never numbered |
 | 6 | page plan | gravity worlds | a page queue | each world names the page kind its question deserves |
 
@@ -45,6 +45,46 @@
   honest states (built = running · mapped-not-built = ghost). Refusals are
   legitimate outputs — a checklist or a reference table is prose, and forcing
   it onto a belt is decoration.
+
+## The proposal checkpoint (I2 — nothing is built before it)
+
+After the dissection, STOP and ask — via AskUserQuestion, compactly:
+
+1. **The seats found** — one line each: who, their question.
+2. **Candidate representations**, ranked and priced: **CRITICAL** (the page
+   fails its seat without it) · **RECOMMENDED** (earns its space) ·
+   **NICE-TO-HAVE** (defer unless asked). Name the component kind for each
+   (simulator, ledger, map, console, tiles…) from the assets inventory.
+3. **The page index** — one page, or a section with a queue; which page
+   first; what stays ghost. Multi-session coverage is normal: the index
+   tracks built/ghost across sessions.
+
+State your defaults so the operator can approve in one word — but the
+operator cuts, promotes, and reorders; their word wins over the ranking.
+
+## Subject-shape census guide (I0 feeds this)
+
+- **concept/phenomenon** — parts are its quantities, rules, loops, actors
+  (inflation: money supply, the central bank, rates, prices, wages…).
+- **system/app** — entities, stores, surfaces, jobs; the center's committed
+  data (archmap/registry) is the census when one exists.
+- **use case** — the steps, the actors touched, the payloads exchanged, the
+  failure gates along the walk.
+- **code map** — functions/modules/endpoints and their call/data edges; the
+  census is measured (grep/registry), never recalled.
+
+## The queue's durable home (I3 writes it, I0 reads it)
+
+When a section is approved, I3 persists the dissection machine-readably at
+`docs/prisms/<index-slug>/dissection.json`: the seats (question, refusal,
+world), the cut seats, and the page queue (`pages: [{slug, seat, kind,
+state: built|ghost}]`). The index page's ghost cards are RENDERED views of
+this file, never a parallel copy. **Resume clause (E4):** I0 finds an
+existing estate or dissection.json for the subject ⇒ load it, report
+built/ghost, and jump to I2 with the delta — the dissection is not re-run
+unless the operator asks. **Nesting:** a use case under an already-dissected
+app inherits the app's census and joins its section as a page — never a new
+dissection.
 
 ## Standing rulings
 

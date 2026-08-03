@@ -3,6 +3,29 @@
 > Source: the DL derivations (Lucid + book1) and the graphics.h study cards
 > (book3). Load when WRITING a page's surface text, labels and numbers.
 
+## The surface budget (the digestibility bar, binding)
+
+Two operator verdicts define failure: "zero diagrams, zero visual
+representations … I have to read all the details to understand" and "still a
+word salad of an article, very difficult to follow." The checkable contract:
+
+- every section LEADS with a component; prose is captions beneath it;
+- **the budget counts FREE-STANDING prose blocks** (`.prismprose` and any
+  text standing between components): **≤150 words total, no block over 2
+  sentences** — count before presenting and report the count;
+- component-attached text (consequence lines, step sentences, under-labels,
+  cast entries, tile/node labels, legends, live readouts) is budgeted by its
+  OWN rule — one sentence per element, the templates below — and is exempt
+  from the 150;
+- **the tiebreak:** when mandated elements would overflow their component or
+  push prose past the budget, the overflow moves DOWN — into a detail level,
+  a hover, an inspector — never onto the surface. The levels device (see
+  interaction-hooks.md) is the overflow's home; the budget never yields;
+- captions are **register sentences** — and for this skill the register IS
+  this template, self-sufficient: *thing → action → consequence*, results
+  carrying *"if X then Y, so Z"*. (The full Gabe output style is
+  suite-internal context, not required reading.)
+
 ## Cast first
 
 The page opens with a glossary box declaring every symbol AND the real

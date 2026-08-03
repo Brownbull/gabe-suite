@@ -1,12 +1,10 @@
 # The dissection reference map — progressive disclosure index
 
-> **Status: STAGED, not yet bound.** Distilled from the operator's own corpora
-> — the Lucidchart estate (DL page, Linkchain) and four paper notebooks,
-> walked 2026-08-02; the narrative record lives in
-> `docs/design/catan-dissection-notes.md`. This map binds into SKILL.md at the
-> dissection-layer generalization; until then nothing here overrides
-> `../disk-target.md`, and a session that lands the generalization starts by
-> wiring these files into the P-numbered spine.
+> **Status: BOUND** — SKILL.md v1.3.0's flow (I0–I5) routes here per step;
+> these files are binding during execution. Distilled from the operator's own
+> corpora (the Lucidchart estate + four paper notebooks, walked 2026-08-02);
+> the narrative record lives in `docs/design/catan-dissection-notes.md`.
+> `../disk-target.md` stays the binding spec for the page grammar itself.
 
 Load by the moment, never all at once:
 
@@ -18,6 +16,7 @@ Load by the moment, never all at once:
 | writing the page surface | [translation-elements.md](translation-elements.md) | cast-first, under-labels, consequence lines, step templates |
 | drawing or choosing components | [visual-grammar.md](visual-grammar.md) | provenance color, ownership grouping, zones, cards, unlike-kinds rule |
 | deciding how a component responds | [interaction-hooks.md](interaction-hooks.md) | hook anchors, the three layouts, the glance→hover→click→selection ladder |
+| about to BUILD any visual component | [assets-inventory.md](assets-inventory.md) | built vs liftable vs new: shell components · the 31+20+5 copy-source libraries · page-local + the promotion rule |
 
 Two rules the whole map obeys:
 

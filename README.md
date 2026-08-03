@@ -56,7 +56,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-handoff` | Session handoff — paste-able next-session resume prompt + evidence-gated KDBP state sync (PLAN/LEDGER/PENDING) into `.kdbp/HANDOFF.md` |
 | `/gabe-health` | The suite scanner — structural health (god files, churn, coupling, bugs) · `debt` decision-debt lens with AP citations · `estate` ask-first promote/archive sweep |
 | `/gabe-help` | Context-aware guide — scans environment and suggests the right workflow |
-| `/gabe-imagine` | Explain a system as a working production floor — the payload moves and is named at every hop, machines carry their recipe and one measured number, failures separate into ghost/unpowered/broken, any cell opens to its detail; five patterns, chosen by the shape of the material. Renders as a page in your command center (console or article), or as a published artifact |
+| `/gabe-imagine` | Give it a context — a concept, an app, a use case, a phenomenon, a code map — and it dissects the material (seats, spheres, gravity worlds), proposes representations ranked critical/recommended/nice-to-have, asks, then builds command-center pages: component-led, register-voiced captions under a hard surface budget, assets lifted from the pattern libraries before anything is invented. Five floor grammars by material shape; console or article pages, or a published artifact |
 | `/gabe-init` | Project setup — creates `.kdbp/`, installs hooks, selects project type + maturity |
 | `/gabe-lens` | Cognitive translation — analogies, constraint boxes, Gabe Blocks |
 | `/gabe-meme` | Oblique-meme generation — persona-matched visual metaphors via memegen.link, verified PNGs, punch-up only; + surface-wit mode for rendered HTML surfaces (absorbed gabe-quip) |

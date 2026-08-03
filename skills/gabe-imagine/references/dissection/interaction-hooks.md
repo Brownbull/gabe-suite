@@ -41,11 +41,31 @@ of P1's rule that a cell which opens nothing must not be clickable.
 - Anything that moves on reaction still answers the cog pause, spacebar and
   reduced-motion — a reactive element outside the pause contract is a defect.
 
+## Detail levels — one visual, stepped depth (operator ruling, 2026-08-02)
+
+A visual opens at **level 0: the bare bones** — the well of that component,
+the fewest elements that still say the thing. A visible control (bar,
+buttons, a toggle) steps detail IN: each level ADDS elements, labels and
+numbers onto the SAME drawing, and the reader chooses their depth.
+
+- Levels are the static twin of an animation's steps — same decomposition,
+  reader-paced instead of time-paced. When a component also animates, its
+  levels and its animation beats must be the same cuts.
+- Keep the count small (2–4); a level adds, never rearranges — the drawing
+  must not jump under the reader.
+- The control shows the current level; the deepest level carries what the
+  old surface prose would have said. **The levels mechanism replaces
+  explanation text, it never adds to it** — this is the wording-reduction
+  device, not another widget.
+
 ## Existing instances (extend these, don't fork)
 
 - click→inspector: `pf-detail` panels (the open layer, shipped).
 - selection→cross-reaction: the gravity map (seats light their bodies — the
   relate layer, shipped).
 - hover: today only `title=` attributes — the weakest layer in the estate;
-  a real tooltip element is the first gap this file names.
+  a real tooltip element is the first gap this file names. **Standing ruling
+  until it is promoted to Tier 1: `title=` SATISFIES the hover layer, and
+  the page states the downgrade** (the say-so rule) — do not mint
+  incompatible one-off tooltips per page.
 - split view: not built — the second gap.

@@ -7,4 +7,6 @@ docs/investigations/**/raw/
 docs/investigations/**/site/
 docs/investigations/**/*.html
 docs/investigations/**/*.pdf
+docs/investigations/**/*.png
+docs/investigations/**/*.jpg
 .claude/settings.local.json

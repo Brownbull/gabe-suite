@@ -330,6 +330,170 @@ Recommendation if one must lead: start at 3 (git) — medium, self-receipting,
 and the operator can judge the glance-test instantly; then 7 as the hard
 proof.
 
+## Bench test №1 — compound interest: the fit-gap list (2026-08-02)
+
+Page: docs/prisms/compound-interest/ → prism-compound-interest.html
+(contract 8/8 · fit 15/15 · motion 4/4 · chain OK · doctor CLEAN).
+
+**FIT — patterns the shell carried without strain:**
+- The ordering law (well → worked decade → formula → levers → loop console)
+  fit article mode natively; no machinery needed, just discipline.
+- Cast-first glossary and the well composed from existing sphere panels.
+- Provenance color: plain tile = the seed's flat $50, accent tile = interest
+  on interest — the accent column growing down the ledger IS the concept.
+- Consequence lines rode the existing `.k` spans ("chasing daily over
+  monthly buys $1.65 a decade").
+- **Under-labels MINTED**: `.ulrow`/`.ul` in prism.css (mirrored), the
+  formula now reads with plain-word roles beneath each symbol — the map
+  predicted this gap and the test filled it.
+- The four states priced the honesty boundary: fees/tax = ghost (named
+  absences), withdrawal = unpowered (prose rule), machines = running because
+  every number is the page's own recountable arithmetic.
+- The return hop ("↺ 2", nn-loop precedent) carried the entire mechanism.
+
+**GAP — named on the record, not faked on the page:**
+1. **No hover layer** — ledger rows want hover = the exact arithmetic
+   (1,551.33 × 0.05 = 77.57); only `title=` exists. Interaction-hooks gap
+   #1, now confirmed by a real page.
+2. **No split view** — the three levers want visual-left / panel-right.
+   Gap #2 confirmed.
+3. **No curve component** — the hockey stick is TOLD in numbers, never
+   SHOWN; a real growth curve is the dataviz path, deliberately not taken
+   this round.
+4. **No well component** — the whole-picture section is a repurposed sphere
+   panel; a dedicated low-detail overview element (bigger type, fewer boxes)
+   would land the well better.
+5. **Ledger rows** are improvised `.gv-bodies` lines — they pass fit but
+   wrap unevenly when narrow; a proper ledger-row element is a candidate
+   mint for any enumeration-heavy page (D'Hondt would hit this hard).
+6. **Arithmetic is recountable but unchecked** — self-computed numbers
+   mitigate the data-num-source hole; nothing machine-verifies them. One
+   caught-by-hand error (year 16, not 15) proves both the risk and the
+   recount culture.
+
+**Round 2 (operator verdict on round 1: "zero diagrams, zero visual
+representations" — the sketch asked for a simulator):**
+- **The simulator SHIPPED** (page-local, inline in body.html): inputs
+  $/%​/months + saving↔loan toggle → month-resolution SVG curve (hover
+  crosshair + tooltip, click-pin — the sketch's "info click" dots) + the
+  paid/earned/remaining stacked bar on the right that REACTS to the hovered
+  month (the cross-reaction rule, working). Loan mode computes the real
+  payment (P·mr/(1−(1+mr)^−m)). Probed in headless: curve drawn, saving
+  $1,647.01/loop $647.01 (cross-checks the frequency ladder), loan
+  $10.61/mo · $272.79 interest.
+- **Ledger got inline bars** (amber = seed's pay · accent = earned-by-
+  interest, scale = year 10's $77.57) — the "Table with inline bars"
+  pattern lifted from gabe-artifact's static library at last.
+- **Loop console TRIMMED** — subs removed, recipes cut to 2–3 words, one
+  short number per machine.
+- **dataviz skill applied for real**: six-checks validator RAN — it killed
+  the neutral-gray series (chroma floor) and a too-light dark amber
+  (lightness band); shipped pair: accent + #b45309 light / #c98500 dark,
+  ALL PASS both modes. Mission skin's teal accent sits a hair under the
+  chroma floor as series-1 — accepted with secondary encoding (labels +
+  position + gaps), noted here.
+- **Asset lesson (operator's question "what assets do you have?"):**
+  gabe-artifact ships 31 static + 20 motion patterns (bar/line/area charts,
+  table-with-bars, stat tiles, timelines, tabs…) that disk pages had NEVER
+  used; gabe-imagine has 5 grammar patterns; the dataviz skill has the
+  method + validator. The sim + ledger bars are the first lifts. Candidate
+  mints for the shell (post-bench): the simulator frame (inputs+plot+
+  reactive bar) and the chart primitives — page-local for now, promotion
+  decision at land-it.
+
+## The one-shot goal (operator, 2026-08-02 — the skill's success criterion)
+
+The end state is a skill invoked as **"give it a context"** (a subject, e.g.
+compound interest) that generates the page IN ONE SHOT — no correction loop.
+Round 2's verdict stands: "still a word salad of an article, very difficult
+to follow." The honing continues THROUGH the test protocol, not through more
+in-session patching:
+
+**Test protocol:** the operator opens a FRESH session and runs a prepared
+prompt; the session builds the page cold from the staged map + inventory;
+the operator checks the result. Every failed run adds its verdict to this
+file and tightens the map — the map, not the page, is what accumulates.
+
+**The bar (verbatim verdicts a run must not reproduce):**
+- "zero diagrams, zero visual representations … I have to read all the
+  details to understand" (round 1)
+- "still a word salad of an article, very difficult to follow" (round 2)
+
+**Hard budget derived from the verdicts (checkable):** surface prose ≤150
+words total; no prose block over 2 sentences; every section leads with a
+visual component — prose is captions, never carrier. Depth lives in
+inspectors/hover/click, not on the surface.
+
+## The land-it, redirected — gabe-imagine v1.3.0 (operator, 2026-08-02)
+
+The one-shot prompt draft was rejected: "you are encoding too much
+information and context to give to the prompt itself." The constraints
+belong IN the skill; the prompt carries only a brief context. The skill must
+serve, equally: concepts (neural nets, compound interest), whole apps
+(gustify), single use cases (add a transaction, find a recipe), phenomena
+(inflation, money creation and its regulation — actors and social
+consequences), and code maps (function/workflow relationships). It may ASK
+(propose seats + representations ranked critical/recommended/nice-to-have),
+builds an index of pages, and covers big subjects across several sessions.
+
+Landed as v1.3.0 (map now BOUND):
+- SKILL.md: the flow **I0 intake → I1 dissect → I2 propose-&-ASK →
+  I3 index → I4 produce → I5 gate-&-STOP**, + the surface contract
+  (component-led sections · ≤150 surface words · register captions · assets
+  lifted before invented). 144 lines.
+- dissection-method.md: the I2 proposal checkpoint + the subject-shape
+  census guide (concept/app/use-case/code-map).
+- translation-elements.md: the surface budget with both verdicts quoted.
+- The operator floated a future name — "Gabe" — for the skill: rename
+  DEFERRED until the flow survives a one-shot (renames are full-sweep
+  expensive; trigger = operator repeats the ask after a passing run).
+- A separate context-producer skill (dissection as its own skill): DEFERRED;
+  trigger = a second skill needs the dissection layer.
+
+## The verify panel + v1.3.1 (2026-08-02, ultracode round)
+
+A 3-lens adversarial panel (generality · one-shot-ability · operator
+fidelity; full findings preserved at
+docs/design/2026-08-02-imagine-flow-panel.json) audited v1.3.0 and found the
+exact defect class the operator named: Catan/app residue promoted to
+universal law. Fixed as v1.3.1:
+- seats: general rule (person + question + refusal) + per-shape derivation
+  recipes; the six-seat table demoted to the app EXEMPLAR; mass test rebound
+  to the seated count; reading order generalized (distance from the doing);
+  caller-named audience ruling ("for a saver" seats that seat first).
+- ladder: maximal template — never skip a rung the subject HAS, declare the
+  missing ones; per-shape ladders; sibling enumeration scales (exhaustive
+  ≲10, else sample + count).
+- flow: I0 censuses the existing prism estate + resumes from
+  `dissection.json` (the queue's new durable home, written by I3); I2 marks
+  pages NEW/UPDATE/COVERED and slug overwrites need the operator's word; I5
+  defines the render probe + a reported pre-present checklist (word count ·
+  caption spot-check · ladder order).
+- budget: counting unit defined (free-standing prose only; component text
+  has per-element rules); the tiebreak: overflow moves DOWN into levels/
+  inspectors, the budget never yields.
+- disk-target: full prism.json schema (section/mode-index/order semantics),
+  the ONE build command named, portability rewritten honestly (downstream
+  centers not wired; owed at twin propagation), fragment header syntax.
+- hover ruling: `title=` satisfies the layer until a Tier-1 tooltip exists.
+- **Owed, explicitly:** mechanical budget/caption checks in verify-prism (+
+  battery) · a fixtured tools/probe-render.mjs · downstream prism wiring.
+
+## The two-session protocol + detail levels (operator, 2026-08-02)
+
+- **Detail levels ruling** (encoded in interaction-hooks.md): visuals open
+  at level 0 (bare bones) and a control (bar/buttons/toggle) steps detail IN
+  on the same drawing; levels = an animation's beats, reader-paced; the
+  levels mechanism REPLACES explanation text. The stepper is a named Tier-3
+  candidate.
+- **Protocol:** Session A (generator) runs ONLY the thin prompt, one shot.
+  Session B (corrections, inherits this session's context via handoff)
+  receives the operator's feedback on A's page, applies page corrections,
+  and generalizes every fix into the map/skill in the same pass.
+- **Round-2 compound-interest page REMOVED** after being committed (history
+  keeps the simulator; assets-inventory cites the sha) — the one-shot page
+  takes precedence.
+
 ## Open items
 
 - Generalize the dissection layer into `skills/gabe-imagine` (a pre-P1 step +

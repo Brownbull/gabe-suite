@@ -13,9 +13,9 @@
  *
  * Usage:  node tools/check-prism-fit.mjs <page.html> [more.html …]
  *
- * THE ARITHMETIC this gate holds to (prism.css states the same numbers):
- *   authored smallest text 15px × minimum scale 0.80 = 12px effective floor.
- * A page that needs to go below 0.80 must scroll its canvas instead, and this
+ * THE ARITHMETIC this gate holds to (prism.css/prism-fx.js state the same):
+ *   authored smallest text 13px × minimum scale 0.92 = 12px effective floor.
+ * A page that needs to go below 0.92 must scroll its canvas instead, and this
  * gate fails it if the page body scrolls rather than the box.
  */
 import { createServer } from 'node:http';

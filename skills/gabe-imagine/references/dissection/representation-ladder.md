@@ -10,23 +10,29 @@
 ## The ladder
 
 drawing / geometry → symbolic form → owner.field notation → table / ledger →
-code / runnable → the screen.
+code / runnable → the screen. **This is the MAXIMAL template** — the binding
+rules are:
 
-- **No rung skipped** — a reader lost at rung 4 climbs down one rung, not
-  back to zero.
-- **Every rung kept** — earlier rungs stay on the page (or one click deep);
-  the finished floor alone is the top rung with the ladder sawn off, which is
-  exactly what the operator called indigestible.
-- A page need not carry all rungs, but must know which rungs it shows and
-  which page (or inspector) holds the ones below.
+- never skip a rung the subject HAS — a reader lost at rung N climbs down
+  one rung, not back to zero, so earlier rungs stay on the page or one click
+  deep;
+- DECLARE the rungs the subject lacks (a use case has no symbolic form; a
+  phenomenon has no runnable) — a named missing rung is fine, a silently
+  sawn-off ladder is the "indigestible" verdict;
+- shape ladders: use case — storyboard → step table → screen; phenomenon —
+  zone scene → named quantities → ledger → simulator; code map — call
+  drawing → owner.field table → the code itself.
 
 ## The ordering law
 
-**One worked case fully expanded FIRST → exhaustive enumeration of the
-siblings → the generalization LAST.** (w1 end-to-end, then "…tweking
-w2/w3/b1…" for every parameter, then "Pattern from backpropagation".)
-The pattern is *extracted*, never asserted before its evidence; leading with
-the general machine row inverts the operator's absorption order.
+**One worked case fully expanded FIRST → the siblings → the generalization
+LAST.** The pattern is *extracted*, never asserted before its evidence;
+leading with the general machine row inverts the operator's absorption
+order. The middle clause scales: a SMALL family (≲10 siblings) is
+enumerated exhaustively (the "…tweking w2/w3/b1…" ledger); a large one is
+sampled — a few representative siblings drawn, the rest COUNTED with a
+pointer to where they live — because exhaustive enumeration of dozens
+collides with the surface budget.
 
 ## The numbered walk
 

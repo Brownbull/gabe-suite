@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "b03aaa7",
+ "head": "259efa7",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 20
+     "count": 23
     }
    ]
   },
@@ -230,6 +230,13 @@
      "icon": "component",
      "sub": true,
      "tip": "built from embedded components"
+    },
+    {
+     "label": "Compound interest",
+     "href": "prism-compound-interest.html",
+     "icon": "scrollcast",
+     "sub": true,
+     "tip": "article \u2014 assembles as you scroll"
     }
    ]
   }

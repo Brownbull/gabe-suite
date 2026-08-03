@@ -100,11 +100,31 @@ works, and every floor renders its **finished** state rather than a start frame.
 ## Authoring
 
 ```
-docs/prisms/<slug>/prism.json     title · nav_label · kicker · mode · pattern ·
-                                  order · lede · handle · card · source
-docs/prisms/<slug>/body.html      the authored floor(s) + prose
-docs/prisms/_fragments/<slug>.html  an embeddable component, optional JSON header
+docs/prisms/<slug>/prism.json       the page's metadata — full schema below
+docs/prisms/<slug>/body.html        the authored floor(s) + prose
+docs/prisms/_fragments/<slug>.html  an embeddable component; optional header:
+                                    <!--prism { "title": "…", "note": "…" } -->
+                                    (absent/malformed header ⇒ builder falls
+                                    back to the filename, never errors)
 ```
+
+**prism.json — the full schema** (required unless marked opt):
+
+| field | meaning |
+|---|---|
+| `title` | the page H1 |
+| `nav_label` | sidebar text |
+| `kicker` | the small line over the title (e.g. "seat page · end user") |
+| `mode` | `console` · `article` · `index` — index = a section's landing page, own nav glyph |
+| `pattern` (opt) | the grammar used (belt-line …); omit on index pages |
+| `order` | nav sort within Explanations — estate convention: 10s per subject (catan 10, its children 11–13), next subject 20, one-offs 50+; builder default 999 |
+| `section` (opt) | parent SLUG — nests this page under that page in the nav, listed right after it; absent/self/unknown parent renders flat, never hidden |
+| `kind` (opt) | free-text classification shown on the index card |
+| `card` · `lede` · `handle` · `source` | the index-card blurb · the opening paragraph · the hook line · the numbers' provenance line |
+
+**Slug collision rule:** `build_prisms.py` regenerates every `<slug>/` pair —
+writing into an existing slug REPLACES that page. Doing so requires the
+operator's explicit word at the I2 checkpoint; new work takes a new slug.
 
 The floor root is `<div class="pf" data-prism data-fx="…">`. **The builder wraps
 it** in `.pfwrap > .pfsize > .pffit` — never type those. Two elements rather than
@@ -164,17 +184,21 @@ graph would make one fragment add edges to every page it appears on.
 
 ## Build order
 
+**One command runs everything, builds and gates, in the suite repo:**
+
 ```
-build_suite_center.py          # emits nav.json
-build_prisms.py                # needs nav.json; emits pages + prism-fragments.json
-build_docsite.py               # needs BOTH seam files
-build_suite_center.py          # second pass, now with the docs' backlinks
-gates: links → diagrams → prism contract → fit → motion
+bash docs/center/generators/refresh_suite_center.sh regen
 ```
 
-Prisms run **before** the docs, not after as the original plan said: a doc page
-can embed a fragment, so the manifest has to exist before the docs render. The
-Explanations nav group is scanned from disk, so pass 1's nav already carries it.
+What it runs (know it, don't hand-run it unless iterating):
+`docs/center/generators/build_suite_center.py` (emits nav.json) →
+`skills/gabe-imagine/generator/build_prisms.py --shell docs/center/shell
+--nav docs/site/center/nav.json` (pages + prism-fragments.json) →
+`skills/gabe-docsite/generator/build_docsite.py` (needs both seam files) →
+center second pass → gates: links → diagrams → prism contract → fit →
+motion. Prisms run **before** the docs: a doc page can embed a fragment, so
+the manifest must exist first. Fast iteration loop: the first two builds +
+the three per-page gates only.
 
 ## Gates
 
@@ -196,9 +220,18 @@ slot — correctly, since that page is honest — but a page with invented figur
 would pass identically. Closing this needs a provenance field (`data-num-source`)
 the gate can resolve. Recorded so it is not rediscovered a third time.
 
-## Portability
+## Portability — the honest state
 
 `prismpage.html`, `prism.css` and `prism-fx.js` live in **both**
 `docs/center/shell/` (the suite's fork) and `templates/center/shell/` (what
-`/gabe-cc-init` gives a downstream project), byte-identical. `build_prisms.py`
-takes `--shell` and `--nav`, so it works against either.
+`/gabe-cc-init` gives a downstream project), byte-identical, and
+`build_prisms.py` takes `--shell`/`--nav` so it can render against either.
+**But the standard downstream center is NOT yet wired for prisms**:
+`build_center_a3.py` has no `prism_pages()` nav scan, `refresh_center.sh`
+has no prism leg, and `{{PRISM:}}` fragment expansion is suite-only. A
+downstream disk run today means: invoke
+`~/.claude/skills/gabe-imagine/generator/build_prisms.py` by hand against
+the project's shell + nav.json, accept NO nav entry and NO fragments, and
+SAY SO to the operator — or take `--target artifact`, stated, never as a
+silent downgrade (E3). Wiring the standard center is owed at twin
+propagation.

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Compound interest — the loop that pays itself · Gabe Suite Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+
+<aside class="side">
+    <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gabe Suite</b><small>Gabe Center · suite</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">23</span></a>
+  <div class="navlabel g-code">Enforcement</div>
+  <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
+  <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">7</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">18</span></a>
+  <div class="navlabel g-ent">Surfaces</div>
+  <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
+  <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">462</span></a>
+  <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
+  <a class="navitem navsubitem" href="kdbp.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> What KDBP is</a>
+  <a class="navitem navsubitem" href="the-loop.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The development loop</a>
+  <a class="navitem navsubitem" href="contract.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The E1–E7 contract</a>
+  <a class="navitem navsubitem" href="skill-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The skill map</a>
+  <a class="navitem navsubitem" href="commands.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Beats &amp; commands</a>
+  <a class="navitem navsubitem" href="satellites.html" title="embeds prism components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> Analysis satellites</a>
+  <a class="navitem navsubitem" href="verification-first.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The one picture</a>
+  <a class="navitem navsubitem" href="gabe-red.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> /gabe-red</a>
+  <a class="navitem navsubitem" href="c-id.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The C-id scheme</a>
+  <a class="navitem navsubitem" href="command-center.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The command center</a>
+  <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
+  <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
+  <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem" href="prism-catan.html" title="index — a subject&#x27;s own landing page"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Catan</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-turn.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> The turn</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-angles.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> The dissection</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-strategist.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> The strategist</a>
+  <a class="navitem navsubitem" href="prism-neural-net.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Hook chain</a>
+  <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
+  <a class="navitem navsubitem on" href="prism-compound-interest.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> Compound interest</a>
+  <div class="foot">regen 2026-08-02 18:53<br>HEAD 259efa7 · build_suite_center.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Compound interest — the loop that pays itself</b></div>
+    <div class="spacer"></div>
+    <span class="chip warn">44 uncommitted</span>
+    <span class="stamp">regen · 2026-08-02 18:53</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">seat page · end user · bench №1</div>
+    <h1>Compound interest — the loop that pays itself</h1>
+    <p class="prismlede">$1,000 at 5% for 10 years becomes $1,628.89 — $500.00 earned by the deposit, $128.89 earned by interest the interest already made. That second number is the whole idea. One worked decade first, every year on the page; the formula only after you have watched it happen.</p>
+    <p class="prismhandle">Simple interest pays your deposit. Compound interest also pays every payment it already made — the machine feeds its output back into its own input, and that return hop, not the rate, is what bends the line.</p>
+  </div>
+
+  <div class="prismstage" data-prism-mode="article">
+    <!-- Page-local kit for bench №1: the simulator + ledger bars. Skin-var
+     driven; series pair validated with the dataviz six-checks in both modes
+     (light: accent+#b45309 · dark: accent+#c98500, all PASS). Amber = your
+     own money; accent = money the loop made. -->
+<style>
+.ci { --ci-s2:#b45309; border:1px solid var(--line); border-radius:14px;
+  background:var(--panel); padding:14px 16px; margin:14px 0 6px; }
+:root[data-theme="dark"] .ci { --ci-s2:#c98500; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ci { --ci-s2:#c98500; } }
+.ci-controls { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; margin-bottom:12px; }
+.ci-f { display:flex; flex-direction:column; gap:3px; }
+.ci-f label { font:var(--mono); font-size:11px; color:var(--muted); }
+.ci-f input { width:104px; font:inherit; font-size:13px; color:var(--ink);
+  background:var(--surface); border:1px solid var(--line); border-radius:7px; padding:5px 8px; }
+.ci-mode { display:flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.ci-mode button { font:inherit; font-size:12.5px; padding:6px 13px; border:0;
+  background:var(--surface); color:var(--ink-2); cursor:pointer; }
+.ci-mode button.on { background:var(--accent); color:#fff; }
+.ci-stage { display:flex; flex-wrap:wrap; gap:16px; }
+.ci-plot { flex:2 1 320px; min-width:270px; position:relative; }
+.ci-plot svg { width:100%; height:auto; display:block; }
+.ci-tip { position:absolute; pointer-events:none; background:var(--surface);
+  border:1px solid var(--line); border-radius:7px; padding:4px 8px;
+  font:var(--mono); font-size:12px; color:var(--ink); white-space:nowrap;
+  transform:translate(-50%,-130%); display:none; }
+.ci-side { flex:0 0 170px; display:flex; flex-direction:column; gap:8px; }
+.ci-bar { display:flex; flex-direction:column-reverse; gap:2px; height:180px; width:44px; }
+.ci-seg { border-radius:4px; min-height:2px; }
+.ci-leg { display:flex; flex-direction:column; gap:4px; font-size:12.5px; color:var(--ink-2); }
+.ci-leg i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; }
+.ci-read { font-size:13px; color:var(--ink); border-top:1px solid var(--line); margin-top:12px; padding-top:9px; }
+.ci-read b { font-variant-numeric:tabular-nums; }
+.ci-lb { flex:1 1 130px; max-width:220px; display:flex; gap:2px; align-self:center; height:10px; }
+.ci-lb i, .ci-lb em { display:block; height:100%; border-radius:3px; }
+.ci-lb i { background:var(--ci-s2); }
+.ci-lb em { background:var(--accent); }
+.gv-sphere .ci-lbnote { font:var(--mono); font-size:12px; color:var(--muted); margin-top:8px; }
+@media (prefers-reduced-motion: reduce) { .ci * { transition:none !important; } }
+</style>
+
+<!-- The seat this page answers. -->
+<div class="gv" style="margin-bottom:2px">
+  <div class="gv-seats">
+    <span class="gv-seat is-active" style="cursor:default"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>the saver <span class="gvt">end user · "what does my money become, and which lever moves it?"</span></span>
+  </div>
+</div>
+
+<div class="prismprose">
+  <p>Your money sits in a loop: each month the bank pays a slice of whatever
+  the pot currently is, and the slice re-enters the pot. Set the loop's three
+  levers below and watch the curve bend — hover any month for its numbers,
+  click to hold it; the bar on the right splits where every peso came from.</p>
+</div>
+
+<!-- THE WELL, interactive — the operator's sketch: inputs · curve with
+     info-points · the paid/remaining bar on the right. -->
+<div class="ci" id="ci">
+  <div class="ci-controls">
+    <div class="ci-f"><label for="ci-p">principal $</label><input id="ci-p" type="number" min="1" step="100" value="1000"></div>
+    <div class="ci-f"><label for="ci-r">interest % / year</label><input id="ci-r" type="number" min="0" step="0.1" value="5"></div>
+    <div class="ci-f"><label for="ci-m">term · months</label><input id="ci-m" type="number" min="1" max="600" step="1" value="120"></div>
+    <div class="ci-mode" role="group" aria-label="Mode">
+      <button type="button" id="ci-sv" class="on">saving</button>
+      <button type="button" id="ci-ln">loan</button>
+    </div>
+  </div>
+  <div class="ci-stage">
+    <div class="ci-plot" id="ci-plot">
+      <svg viewBox="0 0 640 290" aria-label="Balance month by month">
+        <g id="ci-grid"></g>
+        <path id="ci-area" fill="var(--accent)" opacity="0.13" d=""></path>
+        <path id="ci-line" fill="none" stroke="var(--accent)" stroke-width="2" d=""></path>
+        <line id="ci-ref" stroke="var(--ci-s2)" stroke-width="1.5" stroke-dasharray="5 4" x1="0" y1="0" x2="0" y2="0"></line>
+        <g id="ci-dots"></g>
+        <line id="ci-x" stroke="var(--muted)" stroke-width="1" y1="14" y2="262" x1="-10" x2="-10" opacity="0"></line>
+      </svg>
+      <div class="ci-tip" id="ci-tip"></div>
+    </div>
+    <div class="ci-side">
+      <div class="ci-bar" id="ci-bar"></div>
+      <div class="ci-leg" id="ci-leg"></div>
+    </div>
+  </div>
+  <div class="ci-read" id="ci-read"></div>
+</div>
+
+<!-- CAST FIRST — the glossary card. -->
+<div class="gv">
+  <div class="gv-spheres">
+    <div class="gv-sphere" style="flex:2 1 340px">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>the cast<span class="gvn">5 symbols</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body">P · the seed <span class="k">$1,000 once</span></span>
+        <span class="gv-body">r · the rate <span class="k">5% a year</span></span>
+        <span class="gv-body">n · rounds per year <span class="k">1, then 12, then 365</span></span>
+        <span class="gv-body">t · the years <span class="k">10</span></span>
+        <span class="gv-body">A · what it becomes <span class="k">the number you care about</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THE WORKED CASE — annual ledger, now with the flow drawn per row:
+     amber = the seed's pay, accent = pay earned by earlier interest. -->
+<div class="prismprose" style="margin-top:26px">
+  <h2>One decade, watched year by year</h2>
+  <p>Same sentence every row, bigger numbers every year — and the bar draws
+  it: the amber part is the seed's flat $50.00, the accent part is money
+  earned by money you never deposited. Watch the accent grow.</p>
+</div>
+<div class="gv">
+  <div class="gv-spheres">
+    <div class="gv-sphere" style="flex:2 1 420px">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18"/><path d="m7 15 4-4 4 2 5-6"/></svg>the ledger · 5% on $1,000<span class="gvn">10 rounds</span></div>
+      <div class="gv-bodies"><span class="gv-body">y1 · 1,000.00 → 1,050.00</span><span class="gv-body">seed 50.00 · earned 0.00</span><span class="ci-lb"><i style="width:64.5%"></i></span></div>
+      <div class="gv-bodies"><span class="gv-body">y2 · 1,050.00 → 1,102.50</span><span class="gv-body is-pulled">seed 50.00 · earned 2.50</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:3.2%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y3 · 1,102.50 → 1,157.63</span><span class="gv-body is-pulled">seed 50.00 · earned 5.13</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:6.6%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y4 · 1,157.63 → 1,215.51</span><span class="gv-body is-pulled">seed 50.00 · earned 7.88</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:10.2%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y5 · 1,215.51 → 1,276.28</span><span class="gv-body is-pulled">seed 50.00 · earned 10.78</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:13.9%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y6 · 1,276.28 → 1,340.10</span><span class="gv-body is-pulled">seed 50.00 · earned 13.81</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:17.8%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y7 · 1,340.10 → 1,407.10</span><span class="gv-body is-pulled">seed 50.00 · earned 17.00</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:21.9%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y8 · 1,407.10 → 1,477.46</span><span class="gv-body is-pulled">seed 50.00 · earned 20.36</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:26.2%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y9 · 1,477.46 → 1,551.33</span><span class="gv-body is-pulled">seed 50.00 · earned 23.87</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:30.8%"></em></span></div>
+      <div class="gv-bodies"><span class="gv-body">y10 · 1,551.33 → 1,628.89</span><span class="gv-body is-pulled">seed 50.00 · earned 27.57</span><span class="ci-lb"><i style="width:64.5%"></i><em style="width:35.5%"></em></span></div>
+      <div class="ci-lbnote">bar scale: year 10's full pay, $77.57 · amber = the seed's pay · accent = pay earned by earlier interest</div>
+    </div>
+  </div>
+</div>
+<div class="prismprose">
+  <p><strong>The extraction:</strong> ten years paid <strong>+$628.89</strong>
+  = $500.00 (the seed's ten flat fifties) + <strong>$128.89 earned by
+  interest itself</strong> — a quarter of everything earned, from a machine
+  that started at zero. Rows show 2-decimal rounding; totals are computed
+  exact (one cent off the row-sum). At this rate the accent part out-earns
+  the amber part from year 16 on (50·(1.05<sup>15</sup>−1) = $53.95).</p>
+</div>
+
+<!-- THE GENERALIZATION — under-labels, only after the evidence. -->
+<div class="prismprose" style="margin-top:26px">
+  <h2>The formula, now that you have watched it</h2>
+</div>
+<div class="ulrow" style="margin-left:4px">
+  <span class="ul"><b>A</b><i>what it becomes</i></span>
+  <span class="ul"><b>=</b><i>&nbsp;</i></span>
+  <span class="ul"><b>P</b><i>the seed</i></span>
+  <span class="ul"><b>·</b><i>&nbsp;</i></span>
+  <span class="ul"><b>(1 + r/n)</b><i>one round's growth</i></span>
+  <span class="ul"><b><sup>n·t</sup></b><i>rounds that run</i></span>
+</div>
+<div class="prismprose">
+  <p>The years live in the exponent, so time multiplies while everything else
+  only scales — that asymmetry is priced below.</p>
+</div>
+
+<!-- THE LEVERS. -->
+<div class="prismprose" style="margin-top:26px">
+  <h2>The three levers, priced</h2>
+</div>
+<div class="gv">
+  <div class="gv-spheres">
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>time<span class="gvn">the strong lever</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body">doubling at 5% <span class="k">ln 2 / ln 1.05 = 14.21 y</span></span>
+        <span class="gv-body">the shortcut <span class="k">72 ÷ rate ≈ 14.4 y</span></span>
+        <span class="gv-body">at 10% <span class="k">7.27 y — rate halves the wait</span></span>
+        <span class="gv-body is-pulled">the duel <span class="k">$1,000 for 40 y = $7,040.00 beats $2,000 for 20 y = $5,306.60 — half the money, twice the time, wins by $1,733.40</span></span>
+      </div>
+    </div>
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="m3 17 6-6 4 4 8-8"/><path d="M17 7h4v4"/></svg>the rate<span class="gvn">the loud lever</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body">5% · 10 y <span class="k">$1,628.89</span></span>
+        <span class="gv-body">7% · 10 y <span class="k">$1,967.15</span></span>
+        <span class="gv-body is-pulled">2 points of rate <span class="k">+$338.26 a decade on $1,000 — every point compounds, which is why fees hurt twice</span></span>
+      </div>
+    </div>
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>rounds per year<span class="gvn">the flat lever</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body">yearly <span class="k">$1,628.89</span></span>
+        <span class="gv-body">monthly <span class="k">$1,647.01 · +$18.12</span></span>
+        <span class="gv-body">daily <span class="k">$1,648.66 · +$1.65</span></span>
+        <span class="gv-body">continuous <span class="k">$1,648.72 · +$0.06</span></span>
+        <span class="gv-body is-pulled">the flattening <span class="k">daily over monthly buys $1.65 a decade — read the APY, ignore the frequency ad</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- THE COVER — the loop, trimmed to glance-legibility. -->
+<div class="pf-cover">
+  <h2>The loop, running</h2>
+  <p>Three machines, one return hop — machine 3 feeds machine 2. Simple
+  interest is this same line with the return hop cut.</p>
+
+  <div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="compound-loop" data-tick="1500" style="--pf-node-w:170px">
+    <div class="pf-belt">
+
+      <button class="pf-node" data-node="the deposit" data-in="cash, once" data-out="a seeded pot"
+              data-num="$1,000" data-state="running" data-detail="#c-seed">
+        <span class="pf-ix">1</span><span class="pf-name">the deposit</span>
+        <span class="pf-recipe"><i>in</i><span>cash, once</span><i>out</i><span>a pot</span></span>
+        <span class="pf-num">$1,000</span>
+      </button>
+
+      <div class="pf-hop" data-payload="a seeded pot"><div class="pf-rail"></div>
+        <div class="pf-chip">the pot</div><div class="pf-hoplab">the pot</div></div>
+
+      <button class="pf-node" data-node="the rate slice" data-in="a seeded pot" data-out="this round's interest"
+              data-num="5% of NOW" data-state="running" data-detail="#c-slice">
+        <span class="pf-ix">2</span><span class="pf-name">the slice</span>
+        <span class="pf-recipe"><i>in</i><span>the pot</span><i>out</i><span>interest</span></span>
+        <span class="pf-num">5% of NOW</span>
+      </button>
+
+      <div class="pf-hop" data-payload="this round's interest"><div class="pf-rail"></div>
+        <div class="pf-chip">interest</div><div class="pf-hoplab">interest</div></div>
+
+      <button class="pf-node" data-node="the pot" data-in="this round's interest" data-out="a bigger pot ↺ 2"
+              data-num="$1,628.89 · 10 y" data-state="running" data-detail="#c-pot">
+        <span class="pf-ix">3</span><span class="pf-name">the pot</span>
+        <span class="pf-recipe"><i>in</i><span>interest</span><i>out</i><span>bigger pot ↺ 2</span></span>
+        <span class="pf-num">$1,628.89 · 10 y</span>
+      </button>
+
+    </div>
+
+    <div class="pf-gates">
+      <span class="pf-gatelab">gates</span>
+      <span class="pf-gate" data-node="withdrawal" data-gate data-state="unpowered"
+            title="Take money out and every later slice is cut from a smaller pot. Stated here; nothing on this page can fire it.">
+        withdrawal · shrinks every later slice
+      </span>
+      <span class="pf-gate" data-node="fees" data-gate data-state="ghost"
+            title="A fee is a negative rate compounding against you, by the same loop. Not modeled — a named absence.">
+        fees · the same loop, aimed at you — not modeled
+      </span>
+      <span class="pf-gate" data-node="tax" data-gate data-state="ghost"
+            title="Tax trims each slice before it re-enters the pot. Not modeled — a named absence.">
+        tax on gains · trims the slice — not modeled
+      </span>
+    </div>
+  </div></div></div></div>
+
+  <div class="pf-legend">
+    <span><i class="l-running"></i> <b>running</b> — its number is this page's own arithmetic, recount any row</span>
+    <span><i class="l-ghost"></i> <b>ghost</b> — real in the world, not modeled here: a named absence</span>
+    <span><i class="l-unpowered"></i> <b>unpowered</b> — a rule stated in prose: nothing here can fire it</span>
+    <span><i class="l-broken"></i> <b>broken</b> — would report gains it did not make (none on this page)</span>
+  </div>
+</div>
+
+<div class="prismprose" style="margin-top:28px">
+  <h2>What this page did not model</h2>
+  <p>Inflation runs the same loop against your money's meaning: 5% nominal
+  under 3% inflation is 1.05/1.03 − 1 = <strong>1.94% real</strong>. Fees
+  and tax are the other two counter-loops — on the gate register above,
+  named rather than dressed in invented numbers.</p>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="c-seed">
+    <h4>1 · the deposit — early beats big</h4>
+    <p>The seed works every round it exists, so WHEN it enters matters more
+    than how big it is: $1,000 for 40 years ($7,040.00) beats $2,000 for 20
+    years ($5,306.60) by $1,733.40 — half the money wins because it ran
+    twice the rounds, and the rounds live in the exponent.</p>
+  </div>
+  <div class="pf-detail" id="c-slice">
+    <h4>2 · the slice — cut from NOW, not from the start</h4>
+    <p>Simple interest cuts 5% of the original deposit forever: ten flat
+    fifties, $500.00, a straight line. This machine cuts 5% of whatever the
+    pot is now — $50.00 the first round, $77.57 the tenth. The difference
+    between those two sentences is the entire subject.</p>
+  </div>
+  <div class="pf-detail" id="c-pot">
+    <h4>3 · the pot — the only machine that remembers</h4>
+    <p>Deposits and slices are events; the pot is state, and it hands
+    machine 2 a bigger input every round. The frequency lever lives here:
+    more rounds re-feed the pot sooner, but the ladder flattens — monthly is
+    worth $18.12 a decade over yearly, daily $1.65 over monthly.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var el = { p: $("ci-p"), r: $("ci-r"), m: $("ci-m"), sv: $("ci-sv"), ln: $("ci-ln"),
+    grid: $("ci-grid"), area: $("ci-area"), line: $("ci-line"), ref: $("ci-ref"),
+    dots: $("ci-dots"), x: $("ci-x"), tip: $("ci-tip"), plot: $("ci-plot"),
+    bar: $("ci-bar"), leg: $("ci-leg"), read: $("ci-read") };
+  if (!el.p) return;
+  var NS = "http://www.w3.org/2000/svg";
+  var L = 46, R = 628, T = 16, B = 262;
+  var mode = "saving", pin = null, S = [];
+  var fmt = function (v) {
+    return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+
+  function inputs() {
+    var P = Math.max(1, parseFloat(el.p.value) || 1);
+    var r = Math.max(0, parseFloat(el.r.value) || 0);
+    var m = Math.min(600, Math.max(1, parseInt(el.m.value, 10) || 1));
+    return { P: P, r: r, m: m, mr: r / 1200 };
+  }
+
+  function compute() {
+    var c = inputs(); S = [];
+    var pay = 0;
+    if (mode === "loan") {
+      pay = c.mr > 0 ? c.P * c.mr / (1 - Math.pow(1 + c.mr, -c.m)) : c.P / c.m;
+    }
+    for (var k = 0; k <= c.m; k++) {
+      if (mode === "saving") {
+        var bal = c.P * Math.pow(1 + c.mr, k);
+        S.push({ k: k, v: bal, own: c.P, loop: bal - c.P });
+      } else {
+        var g = Math.pow(1 + c.mr, k);
+        var rem = c.mr > 0 ? c.P * g - pay * (g - 1) / c.mr : c.P - pay * k;
+        if (rem < 0) rem = 0;
+        var paid = pay * k, prin = c.P - rem;
+        S.push({ k: k, v: rem, own: prin, loop: Math.max(0, paid - prin), pay: pay });
+      }
+    }
+    return c;
+  }
+
+  function seg(color, h, dashed) {
+    var d = document.createElement("div");
+    d.className = "ci-seg";
+    d.style.height = h + "%";
+    if (dashed) { d.style.border = "1.5px dashed var(--line)"; d.style.background = "transparent"; }
+    else d.style.background = color;
+    return d;
+  }
+  function legRow(sw, dashed, label) {
+    var d = document.createElement("div");
+    var i = document.createElement("i");
+    if (dashed) { i.style.border = "1.5px dashed var(--line)"; }
+    else i.style.background = sw;
+    d.appendChild(i); d.appendChild(document.createTextNode(label));
+    return d;
+  }
+
+  function paintBar(pt, c) {
+    el.bar.textContent = ""; el.leg.textContent = "";
+    if (mode === "saving") {
+      var tot = pt.own + pt.loop || 1;
+      el.bar.appendChild(seg("var(--ci-s2)", pt.own / tot * 100));
+      el.bar.appendChild(seg("var(--accent)", pt.loop / tot * 100));
+      el.leg.appendChild(legRow("var(--ci-s2)", false, "deposited " + fmt(pt.own)));
+      el.leg.appendChild(legRow("var(--accent)", false, "earned " + fmt(pt.loop)));
+    } else {
+      var tot2 = pt.own + pt.loop + pt.v || 1;
+      el.bar.appendChild(seg("var(--ci-s2)", pt.own / tot2 * 100));
+      el.bar.appendChild(seg("var(--accent)", pt.loop / tot2 * 100));
+      el.bar.appendChild(seg("", pt.v / tot2 * 100, true));
+      el.leg.appendChild(legRow("var(--ci-s2)", false, "principal paid " + fmt(pt.own)));
+      el.leg.appendChild(legRow("var(--accent)", false, "interest paid " + fmt(pt.loop)));
+      el.leg.appendChild(legRow("", true, "remaining " + fmt(pt.v)));
+    }
+  }
+
+  function readout(pt, c) {
+    if (mode === "saving") {
+      el.read.innerHTML = "Month <b>" + pt.k + "</b>: pot <b>" + fmt(pt.v) +
+        "</b> — you deposited <b>" + fmt(pt.own) + "</b>; the loop added <b>" +
+        fmt(pt.loop) + "</b>.";
+    } else {
+      el.read.innerHTML = "Month <b>" + pt.k + "</b> of " + c.m + " at <b>" +
+        fmt(pt.pay) + "</b>/month: remaining <b>" + fmt(pt.v) +
+        "</b> — paid so far: <b>" + fmt(pt.own) + "</b> principal + <b>" +
+        fmt(pt.loop) + "</b> interest.";
+    }
+  }
+
+  function render() {
+    var c = compute();
+    var max = 0, i;
+    for (i = 0; i < S.length; i++) if (S[i].v > max) max = S[i].v;
+    if (mode === "loan") max = c.P;
+    max = max * 1.06 || 1;
+    var xs = function (k) { return L + (R - L) * (k / c.m); };
+    var ys = function (v) { return B - (B - T) * (v / max); };
+    var d = "", a = "";
+    for (i = 0; i < S.length; i++) {
+      d += (i ? "L" : "M") + xs(S[i].k).toFixed(1) + "," + ys(S[i].v).toFixed(1);
+    }
+    a = d + "L" + R + "," + B + "L" + L + "," + B + "Z";
+    el.line.setAttribute("d", d);
+    el.area.setAttribute("d", a);
+    el.grid.textContent = "";
+    for (i = 0; i <= 3; i++) {
+      var gv = max * i / 3, gy = ys(gv);
+      var ln = document.createElementNS(NS, "line");
+      ln.setAttribute("x1", L); ln.setAttribute("x2", R);
+      ln.setAttribute("y1", gy); ln.setAttribute("y2", gy);
+      ln.setAttribute("stroke", "var(--line)"); ln.setAttribute("opacity", "0.55");
+      el.grid.appendChild(ln);
+      var tx = document.createElementNS(NS, "text");
+      tx.setAttribute("x", L - 6); tx.setAttribute("y", gy + 4);
+      tx.setAttribute("text-anchor", "end");
+      tx.setAttribute("fill", "var(--muted)"); tx.setAttribute("font-size", "12");
+      tx.textContent = gv >= 1000 ? "$" + (gv / 1000).toFixed(1) + "k" : "$" + gv.toFixed(0);
+      el.grid.appendChild(tx);
+    }
+    if (mode === "saving") {
+      el.ref.setAttribute("x1", L); el.ref.setAttribute("x2", R);
+      el.ref.setAttribute("y1", ys(c.P)); el.ref.setAttribute("y2", ys(c.P));
+      el.ref.setAttribute("opacity", "1");
+    } else el.ref.setAttribute("opacity", "0");
+    el.dots.textContent = "";
+    for (i = 0; i < S.length; i++) {
+      if (S[i].k % 12 === 0 || S[i].k === c.m) {
+        var ci = document.createElementNS(NS, "circle");
+        ci.setAttribute("cx", xs(S[i].k)); ci.setAttribute("cy", ys(S[i].v));
+        ci.setAttribute("r", "4"); ci.setAttribute("fill", "var(--accent)");
+        el.dots.appendChild(ci);
+      }
+    }
+    var pt = S[pin !== null && pin <= c.m ? pin : c.m];
+    paintBar(pt, c); readout(pt, c);
+    el.x.setAttribute("opacity", "0"); el.tip.style.display = "none";
+    return { c: c, xs: xs, ys: ys };
+  }
+
+  var view = null;
+  function refresh() { pin = null; view = render(); }
+
+  function hover(ev) {
+    if (!view) return;
+    var box = el.plot.querySelector("svg").getBoundingClientRect();
+    var fx = (ev.clientX - box.left) / box.width * 640;
+    var k = Math.round((fx - L) / (R - L) * view.c.m);
+    if (k < 0) k = 0; if (k > view.c.m) k = view.c.m;
+    var pt = S[k];
+    var px = view.xs(k), py = view.ys(pt.v);
+    el.x.setAttribute("x1", px); el.x.setAttribute("x2", px);
+    el.x.setAttribute("opacity", "0.6");
+    el.tip.style.display = "block";
+    el.tip.style.left = (px / 640 * 100) + "%";
+    el.tip.style.top = (py / 290 * 100) + "%";
+    el.tip.textContent = "m" + pt.k + " · " + fmt(pt.v);
+    paintBar(pt, view.c); readout(pt, view.c);
+  }
+  function leave() {
+    if (!view) return;
+    if (pin === null) { var pt = S[view.c.m]; paintBar(pt, view.c); readout(pt, view.c); }
+    else { var pp = S[Math.min(pin, view.c.m)]; paintBar(pp, view.c); readout(pp, view.c); }
+    el.x.setAttribute("opacity", "0"); el.tip.style.display = "none";
+  }
+  function click(ev) {
+    if (!view) return;
+    var box = el.plot.querySelector("svg").getBoundingClientRect();
+    var fx = (ev.clientX - box.left) / box.width * 640;
+    var k = Math.round((fx - L) / (R - L) * view.c.m);
+    if (k < 0) k = 0; if (k > view.c.m) k = view.c.m;
+    pin = (pin === k) ? null : k;
+  }
+
+  el.p.addEventListener("input", refresh);
+  el.r.addEventListener("input", refresh);
+  el.m.addEventListener("input", refresh);
+  el.sv.addEventListener("click", function () {
+    mode = "saving"; el.sv.classList.add("on"); el.ln.classList.remove("on"); refresh();
+  });
+  el.ln.addEventListener("click", function () {
+    mode = "loan"; el.ln.classList.add("on"); el.sv.classList.remove("on"); refresh();
+  });
+  el.plot.addEventListener("mousemove", hover);
+  el.plot.addEventListener("mouseleave", leave);
+  el.plot.addEventListener("click", click);
+  refresh();
+})();
+</script>
+
+  </div>
+
+  <p class="prismsource">source: docs/prisms/compound-interest/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 1 floor(s). arithmetic on this page, recountable per row: 1000·1.05^t year by year; the frequency ladder 1000·(1+0.05/n)^(10n); doubling time ln 2 / ln 1.05 = 14.21 years; the duel 1000·1.05^40 vs 2000·1.05^20.</p>
+</main>
+
+</div>
+
+</body>
+</html>

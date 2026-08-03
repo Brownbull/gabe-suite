@@ -1,0 +1,315 @@
+{
+  "summary": "Adversarial 3-lens verify of the rebuilt gabe-imagine skill",
+  "agentCount": 3,
+  "logs": [],
+  "result": [
+    {
+      "lens": "generality",
+      "findings": [
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/seat-archetypes.md",
+          "severity": "blocker",
+          "problem": "The six-seat table is product/game residue promoted to THE universal roster. The header admits its scope: \"the Catan roster the operator ruled 'all six very good', built to rename onto any application\" — yet MAP.md routes EVERY subject shape (concept, phenomenon, use case, code map) here as binding. The question shapes and refusals are literally product-shaped: compliance = \"what exactly is permitted, per the text?\" (assumes a rulebook/spec exists), investor = \"why does this keep earning its place?\" with refusal \"depth that won't fit on the box\" — \"the box\" is Catan's game box, verbatim, sitting in a binding table.",
+          "why_it_breaks_one_shot": "Cold run on \"how countries create/regulate money (actors + social consequences)\": the natural seats are wage earner, saver, central banker, treasury, commercial bank — none derivable from this table. There is no \"text\" for the compliance seat, no product \"earning its place\" for the investor seat, no box. Cold run on \"add a new transaction in gustify\": a single use case has essentially one real seat; the roster proposes six. The I2 proposal the operator sees would be built from nonsense seats — exactly the failure the ASK checkpoint exists to prevent.",
+          "fix": "Demote the six-seat table to what it is: the WORKED EXEMPLAR for product/app-shaped subjects. State the general rule the exemplar instantiates (a seat = a person + a paid-for question + a refusal line), then give per-shape starter rosters or a derivation recipe: phenomenon → the actors who bear its consequences; use case → the doer, the person downstream, the person cleaning up failure; code map → maintainer, caller-author, reviewer. Rewrite the compliance/investor rows' questions in subject-neutral words (\"what does the binding source permit?\" only when a binding source exists; \"why does this persist / who pays for it?\")."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/seat-archetypes.md",
+          "severity": "major",
+          "problem": "Step 4 of \"Seating a new subject\" hard-binds the count: \"Run the mass test — one high-pull body through all six seats; six different readings or the roster isn't real.\" This contradicts step 5 in the same list (\"Cap by usefulness: name the seat you cut\") and dissection-method.md's own seat test (\"a seat names a person who could sit down tonight\"). If you legitimately cut seats you can never produce six readings, so the roster is declared \"not real\" by rule.",
+          "why_it_breaks_one_shot": "For \"look for a recipe in gustify\" or \"the hook router's callers\", three real seats exist at most. The rule forces either fabricating seats that fail the seat test (worked-example residue winning over the method's own gate) or failing the mass test on a correct roster. Either way the dissection self-contradicts on the first non-game subject.",
+          "fix": "Rebind the mass test to the seated roster, not to six: \"one high-pull body through every SEATED seat; as many distinct readings as seats, or the roster isn't real.\" Keep six as the ceiling of the archetype exemplar, not the required count."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/seat-archetypes.md",
+          "severity": "major",
+          "problem": "\"The reading order is the seat order: Play it → run it → win it → adjudicate it → understand it → sell it … The journey is the taxonomy — never staple a second initial/advanced layer on top.\" The verbs are a game/product adoption journey stated as THE binding ordering axis for all subjects.",
+          "why_it_breaks_one_shot": "Nobody plays, wins, or sells inflation; nobody \"wins\" a code map. For \"how countries create money\" the section index (I3's deliverable, central to operator issue 6) would be ordered by an adoption journey the subject does not have — the cold run either forces the mapping (nonsense index order) or invents its own ordering, violating the \"never staple another layer\" clause.",
+          "fix": "State the general law (order seats by increasing distance from the doing — from the person inside the moment to the person judging the whole) and mark \"play→run→win→adjudicate→understand→sell\" as the product-shaped instantiation. Give the phenomenon and code-map instantiations one line each."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/dissection-method.md",
+          "severity": "major",
+          "problem": "Machine 4's discipline column binds all subjects to app archetypes: \"angle roster … people, not demographics; each seat maps to an app archetype.\" The file's own census guide (I0) explicitly spans concept/phenomenon/use-case/code-map, but the roster machine that consumes that census forces every seat back through the app-archetype table.",
+          "why_it_breaks_one_shot": "Running the six machines on \"how inflation works\": machine 2's census correctly yields money supply, central bank, rates, prices, wages (the file's own example!) — then machine 4 demands each seat map to end-user/admin/power-user/compliance/architect/investor. The method's front half is generic and its back half re-imports the Catan frame, so the cold run's proposal quality collapses exactly at the seats step.",
+          "fix": "Change the discipline to \"people, not demographics; a seat = person + question + refusal (see seat-archetypes.md for the derivation recipe and the app-shaped exemplar)\" — the archetype mapping becomes available, not mandatory."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/representation-ladder.md",
+          "severity": "major",
+          "problem": "The ladder's rungs are math/code-notebook residue stated as the universal page structure: \"drawing / geometry → symbolic form → owner.field notation → table / ledger → code / runnable → the screen\", with the bolded rule \"No rung skipped\" and \"must know which rungs it shows and which page (or inspector) holds the ones below\" — presuming the lower rungs EXIST for every subject.",
+          "why_it_breaks_one_shot": "\"Add a new transaction in gustify\" has no symbolic form and no geometry rung; \"how countries regulate money\" has no code/runnable rung. Applying \"No rung skipped\" verbatim forces inventing a symbolic notation for a UI walkthrough or leaves the author unsure whether skipping is a defect — the third bullet's escape (\"need not carry all rungs\") directly contradicts the first bullet's bold rule, so a cold run cannot tell which is binding.",
+          "fix": "Resolve the contradiction explicitly: the ladder is the MAXIMAL template; the binding rules are (a) never skip a rung the subject HAS, (b) reader lost at rung N climbs to N−1, (c) declare which rungs the subject lacks. Add one-line ladders for the non-derivation shapes (use case: storyboard → step table → screen; phenomenon: geometry/zone scene → owner.field quantities → ledger → simulator)."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/representation-ladder.md",
+          "severity": "major",
+          "problem": "The ordering law carries backprop residue as universal law: \"One worked case fully expanded FIRST → exhaustive enumeration of the siblings → the generalization LAST. (w1 end-to-end, then '…tweking w2/w3/b1…' for every parameter…)\". \"Exhaustive enumeration of the siblings\" is right for a parameter family of six; it is not a law.",
+          "why_it_breaks_one_shot": "For a gustify code map, the \"siblings\" of one worked function are dozens of functions — exhaustive enumeration on the surface collides head-on with the ≤150-word budget the same skill binds. For \"how inflation works\", there is no sibling family at all, so the middle clause of the law is unexecutable. Cold run either bloats the page or silently drops a bolded law.",
+          "fix": "Keep worked-case-first and generalization-last as the law; downgrade the middle to \"then the siblings — exhaustively when the family is small and finite (parameters, moves), as a table or one representative per kind when it is large or open\"."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/representation-ladder.md",
+          "severity": "major",
+          "problem": "The one-page spec — the only bar I3's index page is judged against (\"A section index that is only a link list is under-built against this bar\") — is defined entirely in web-app terms: \"the estate tree + a routes/parts table + a 'you can:' capability list + the one-line main objective + wireframes of the surfaces. (YelpCamp on a single sheet.)\"",
+          "why_it_breaks_one_shot": "The index across sessions is operator issue 6's core deliverable. For the inflation section or a neural-network section, \"routes table\" and \"wireframes of the surfaces\" are nonsense; the cold run gets a bar it cannot apply, so the index degrades to exactly the link list the rule forbids — with no usable definition of better.",
+          "fix": "Restate the bar subject-neutrally: the whole estate in one glance — the part tree, a parts/relations table, a \"this system can:\" claim list, the one-line objective, and a preview tile per page (built/ghost state doing double duty as the coverage queue). Keep YelpCamp as the app-shaped example in parentheses."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/translation-elements.md",
+          "severity": "major",
+          "problem": "The ≤150-word surface budget (also in SKILL.md) is bound page-kind-blind, while the same file mandates surface elements that consume it: \"Under every result, one sentence\" (consequence line, explicitly \"beside\" the number, not in an inspector), the cast box \"declaring every symbol AND the real payloads\", and uniform step sentences. The budget was calibrated where it was mined — a one-screen console (compound interest).",
+          "why_it_breaks_one_shot": "A neural-network ARTICLE page (the disk-target spec's own \"canonical case\") carrying every kept rung, a worked case fully expanded, plus a consequence sentence under every result cannot stay under 150 words — ten results at ~15 words each is the whole budget before any caption exists. The cold run must either break the budget or break the consequence-line law; both are gated/binding, so one shot fails whichever way it goes.",
+          "fix": "Scope the budget per surface unit for article pages (e.g. ≤150 words per screen/beat, with the page total reported), or exempt the structured micro-patterns (under-labels, consequence lines attached to data-num) from the prose count and say so where the budget is stated — in both this file and SKILL.md, identically."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/MAP.md",
+          "severity": "minor",
+          "problem": "The router row fixes the seat count in its promise: \"choosing WHOSE question a page answers → seat-archetypes.md → the six-seat roster, the questions, the mass test\" — reinforcing six as the roster for every subject before the file is even opened.",
+          "why_it_breaks_one_shot": "Primes the cold run to fill six seats for a one-user gustify use case or a phenomenon, compounding the seat-archetypes defects even after those are fixed.",
+          "fix": "Reword to \"the seat recipe, the archetype exemplar, the mass test\" once seat-archetypes.md is generalized."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/translation-elements.md",
+          "severity": "minor",
+          "problem": "\"Cast first\" frames the opening box around symbols: \"a glossary box declaring every symbol AND the real payloads\" — and the uniform step sentence rule elevates notebook typography to a rule: captioned \"with the '…' continuation prefix\".",
+          "why_it_breaks_one_shot": "\"Add a transaction in gustify\" and \"how countries create money\" have actors and payloads but no symbols — a literal reading finds nothing to declare; the mandated \"…\" prefix is a private notebook habit that adds nothing on a web surface and reads as noise in register captions.",
+          "fix": "Reword cast-first as \"declaring every actor, symbol, and payload the page uses — whichever kinds the subject has\"; make the '…' prefix an example of the real rule (same template, values vary), not part of it."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/visual-grammar.md",
+          "severity": "minor",
+          "problem": "The zone storyboard — the natural grammar for \"how countries create money (actors + social consequences)\": zones as domains, icon actors, caption-bar arrows, gauges — exists only as mined prose here. It is absent from SKILL.md's P3 chooser (all five rows are belt/grid/tree production shapes) and ships in no pattern library, so the lift-before-create rule (operator issue 3) has nothing to lift for cyclic actor-flow subjects.",
+          "why_it_breaks_one_shot": "Cold run on money creation: the P3 chooser offers no row matching a circular multi-actor economy; the best-fitting grammar is described in this file but must be invented as Tier 3 from prose — re-creating exactly the on-the-fly asset invention the rebuild exists to stop, on one of the named future use cases.",
+          "fix": "Either add a chooser row in SKILL.md P3 (\"zone-flow — actors exchange in cycles across domains; consequences matter more than transformation\") backed by a sixth grammar pattern page under assets/patterns/, or explicitly bench it in assets-inventory.md's promotion candidates so the cold run knows it is sanctioned Tier 3 with this file as its spec."
+        }
+      ]
+    },
+    {
+      "lens": "one-shot",
+      "findings": [
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "blocker",
+          "problem": "No step in I0–I2 censuses the EXISTING prism estate (docs/prisms/*/prism.json) before dissecting/proposing. E4 'reuse first' is scoped to component assets (assets-inventory.md), not pages. A prism for this exact subject already exists: docs/prisms/compound-interest/ (kicker 'seat page · end user · bench №1' — the saver IS its seat), with its Tier-3 simulator recorded in assets-inventory.md.",
+          "why_it_breaks_one_shot": "The cold session for '/gabe-imagine compound interest, for a saver' would run the full dissection and propose building a page that is already built. Worst case it mints the obvious slug 'compound-interest' and writes docs/prisms/compound-interest/{prism.json,body.html}, silently overwriting the authored estate page (build_prisms.py globs every <slug>/prism.json pair with no collision guard). This is the page-level form of operator issue 3 (inventing what the library already holds) — the exact failure the rebuild must fix.",
+          "fix": "Add an estate-census step to I0/I1: read docs/prisms/*/prism.json (titles, kickers, sections) and the section indexes' queues before dissecting; at I2 the proposal must state per candidate page whether it is NEW, an UPDATE to an existing slug, or already covered (skip). Add a slug-collision rule: writing into an existing slug directory requires the operator's explicit word at I2."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/disk-target.md",
+          "severity": "blocker",
+          "problem": "The Authoring block documents prism.json as 'title · nav_label · kicker · mode · pattern · order · lede · handle · card · source' — but the shipped estate and builders use three more load-bearing fields it never mentions: `section: \"<parent-slug>\"` (nav nesting, consumed by build_suite_center.py line ~239), `mode: \"index\"` (legal in build_prisms.py MODES=('console','article','index') and rendered with its own nav icon), and `kind`. The spec's own 'two page kinds' table lists only console/article. Order-number semantics (catan=10, strategist=13, compound-interest=50, builder default 999) are stated nowhere. I3's binding reference (representation-ladder.md §one-page spec) covers what an index page should CONTAIN, not how one is authored.",
+          "why_it_breaks_one_shot": "Operator requirement 6 demands the skill propose a page index / section covering the subject across sessions. A cold session that gets a multi-page approval at I2 has no documented way to make a section: it cannot know `mode:\"index\"` exists, cannot nest seat pages under the index (`section:`), and must guess order numbers. The only sources are docs/prisms/catan* (content, never referenced by the skill) and generator source code — reverse-engineering, i.e. guessing.",
+          "fix": "Extend disk-target.md §Authoring to the full prism.json schema: every field with its meaning and an example, the three legal modes, the `section` nesting rule (child lists after its parent; absent/self parent renders flat), the order-number convention, and which fields are required vs optional. Point SKILL.md's I3 row at this section in addition to the one-page-spec content bar."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/disk-target.md",
+          "severity": "blocker",
+          "problem": "The build command is never named. §Build order lists five bare script names (build_suite_center.py, build_prisms.py, build_docsite.py, …) with no paths, no arguments, and no mention that one command runs the whole chain plus all gates: `bash docs/center/generators/refresh_suite_center.sh regen`. The scripts live in three different directories (docs/center/generators/, skills/gabe-imagine/generator/, skills/gabe-docsite/generator/). SKILL.md's P4 loop compounds this: step 4 'lift the pattern and re-point it' jumps straight to step 5 'run the gates <page.html>' — the loop never says WHERE to write the authored files nor that a build must run before docs/site/center/prism-<slug>.html exists for the gates to check.",
+          "why_it_breaks_one_shot": "After authoring body.html the cold session has no target for the gates until it reconstructs the build chain by grepping generator sources — a stall, and a guess-prone one (hand-running the chain risks missing the second build_suite_center.py pass or build_docsite.py's --prisms flag; the doc itself admits the originally-planned order was wrong). Nothing ships, or the gates run against a stale/absent page.",
+          "fix": "Name the one-command regen in both files: disk-target.md §Build order opens with `bash docs/center/generators/refresh_suite_center.sh regen` (suite repo) and states the per-script paths only as the explanation of what it runs; SKILL.md P4 gains an explicit step between 4 and 5: 'author docs/prisms/<slug>/{prism.json,body.html}, then run the regen script — it builds AND runs all three gates'."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/disk-target.md",
+          "severity": "major",
+          "problem": "§Portability claims build_prisms.py 'takes --shell and --nav, so it works against either' the suite fork or a downstream project's center. But the downstream center builder has zero prism wiring: build_center_a3.py and refresh_center.sh contain no mention of prisms, no prism_pages() nav scan, no build_prisms.py invocation, and no {{PRISM:}} fragment expansion — only the shell assets (prism.css/prism-fx.js) are mirrored into templates/center/shell/assets/.",
+          "why_it_breaks_one_shot": "Four of the operator's named future use cases live in gustify ('the gustify application', 'add a new transaction', 'look for a recipe') plus gastify code maps. A cold `--target disk` run in those repos follows this spec, authors docs/prisms/<slug>/, then discovers the center never picks it up: no nav entry, no page, no fragment seam. The skill does not serve those subjects equally, and the spec actively tells the session it would.",
+          "fix": "Either wire prism support into the standard center (prism_pages in build_center_a3.py + a prism leg in refresh_center.sh + mirror), or rewrite §Portability to state honestly what is and is not wired downstream and give the full manual downstream invocation (build_prisms.py --config/--shell/--nav/--out against the project's center) including its known gaps (nav entry, fragments)."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "major",
+          "problem": "I3 says the section index's built/ghost states 'track coverage across sessions', and dissection-method.md says 'the queue is the deliverable' — but the queue has no defined durable home or format. It exists only as authored HTML inside the index page's body.html. Nothing tells a RESUMING session where to read it, and I0's intake has no route for 'this subject already has an estate → load its index/queue instead of re-dissecting from zero'.",
+          "why_it_breaks_one_shot": "Operator requirement 6 is explicit multi-session coverage. Session 2 of '/gabe-imagine catan' (or of the compound-interest estate) re-enters at I0, re-classifies, re-dissects, and re-proposes — because the flow's only inputs are the brief context and the references. The dissection itself (seats, gravity worlds, the cut seat, queue states) is never persisted anywhere machine-readable; the next session either repeats the work or scrapes it out of rendered HTML — a guess either way.",
+          "fix": "Give the queue a contract: persist the dissection + queue per section (e.g. docs/prisms/<index-slug>/dissection.json — seats, worlds, pages wanted vs built with states), make I3 write it and I0 check for it ('estate exists → resume from its queue, skip to I2 with the delta'), and keep the index page's ghost cards RENDERED from it rather than parallel to it."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "major",
+          "problem": "I5 requires 'the P5 gates + a headless render probe for anything interactive', and P4 step 5 adds 'plus a headless probe that interactive components actually rendered' — but no tool, command, or acceptance criterion is named for this fourth check. The three named gates are the P5 gates; the probe is an unnamed extra.",
+          "why_it_breaks_one_shot": "Under E2 (RUN-BEFORE-✅) the session cannot tick the probe without running something, so it must either stall, improvise a one-off Playwright script (wasted, unfixtured work), or silently equate the probe with check-prism-fit's 'no page errors' leg — a silent downgrade E3 forbids. Three sessions will make three different choices.",
+          "fix": "Name it: either state that check-prism-fit.mjs's page-error + rendered-DOM checks ARE the render probe (and list what they assert), or ship a tools/probe-render.mjs with a usage line and fixtures, and reference it from both I5 and P4 step 5."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/tools/check-prism-fit.mjs",
+          "severity": "minor",
+          "problem": "The gate's header states 'authored smallest text 15px × minimum scale 0.80 = 12px effective floor' and claims 'prism.css states the same numbers'. It does not: prism.css, prism-fx.js (MIN_SCALE = 0.92), SKILL.md P0 and disk-target.md all state 13px × 0.92 = 12px.",
+          "why_it_breaks_one_shot": "A session self-checking its authored sizes against the gate it is about to run reads two contradictory floors from binding sources and cannot tell which the gate enforces — exactly a 'contract it cannot self-check'. It will burn a verification loop or author to the wrong arithmetic.",
+          "fix": "Correct the header comment to the 13px × 0.92 arithmetic (or, if 15/0.80 is the real enforcement, fix the spec + CSS + JS instead) so every statement of the floor agrees."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "minor",
+          "problem": "P4 step 5's gate commands (`node tools/verify-prism.mjs`, `node ../gabe-artifact/tools/verify-motion.mjs`) only resolve with CWD = skills/gabe-imagine/, which is never stated; agent shells reset CWD between calls, and from the repo root both paths fail.",
+          "why_it_breaks_one_shot": "First gate invocation errors with MODULE_NOT_FOUND; the session loses a loop rediscovering the paths (and the subagent-environment note in this repo explicitly says to use absolute paths).",
+          "fix": "Write the commands repo-root-relative (skills/gabe-imagine/tools/…, skills/gabe-artifact/tools/…) or simply point step 5 at refresh_suite_center.sh, which already runs all three legs with correct paths."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/disk-target.md",
+          "severity": "minor",
+          "problem": "§Fragments says a fragment carries an 'optional JSON header' but the format (`<!--prism { \"title\": …, \"note\": … } -->`, discovered only inside docs/prisms/_fragments/angle-pipeline.html) and its legal keys are documented nowhere.",
+          "why_it_breaks_one_shot": "A session whose I2 approval includes a fragment guesses the header syntax or omits it; a malformed header is silently ignored or breaks the manifest, and the session has no way to know which.",
+          "fix": "Add two lines to §Fragments: the exact comment-header syntax, the recognized keys (title, note, …), and what build_prisms.py does when the header is absent or malformed."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/dissection-method.md",
+          "severity": "minor",
+          "problem": "No machine in the method accepts a caller-named audience. The context here pre-names the seat ('for a saver'), but machines 4–5 always build the full six-seat roster from the spheres, and nothing says whether a named audience scopes the proposal or merely joins the roster.",
+          "why_it_breaks_one_shot": "The session must guess between two proposals: a six-seat estate for a one-seat ask (over-proposal, the 'too many pages' smell) or a single-seat shortcut that skips the roster and mass test the method calls mandatory. Different sessions will land differently on the same prompt.",
+          "fix": "Add a standing ruling: a caller-named audience is seated FIRST (mapped to its archetype); the roster and mass test still run, but the I2 defaults scope CRITICAL to the named seat and park the other seats as ghost queue entries."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "minor",
+          "problem": "The Usage line advertises `/gabe-imagine patterns` but no file defines what that invocation does (presumably: open/serve the five grammar pattern pages).",
+          "why_it_breaks_one_shot": "A cold session receiving that invocation has a named mode with no behavior spec and must invent one; on the main flow it is dead weight that reads like a missing reference.",
+          "fix": "Add one line defining the mode (e.g. 'patterns — list/open the five grammar pattern pages under assets/patterns/ for the operator to browse') or drop the token from Usage."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "minor",
+          "problem": "The surface contract requires captions 'per the Gabe register' with no pointer to the register's definition. The register lives in project-scoped files (.claude/output-styles/gabe.md + .claude/register-core.md, a suite-repo trial), while the skill declares itself 'generic, project-agnostic'.",
+          "why_it_breaks_one_shot": "In this repo the hooks inject the register so the cold run survives; in any downstream project (the gustify use cases) 'per the Gabe register' resolves to nothing beyond the inline 'thing → action → consequence' gloss, so caption compliance (operator issue 5) cannot be self-checked to the same bar everywhere.",
+          "fix": "Make the inline definition self-sufficient and binding (thing → action → consequence, plus the consequence-line 'if X then Y, so Z' from translation-elements.md) and cite the register file as optional richer context rather than the normative source."
+        }
+      ]
+    },
+    {
+      "lens": "fidelity",
+      "findings": [
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/translation-elements.md",
+          "severity": "blocker",
+          "problem": "The ≤150-word surface budget collides with the same file's mandatory elements, and the counting unit is undefined. The file simultaneously binds: consequence line (\"one sentence\") UNDER EVERY RESULT, a uniform step sentence per step, a cast-first glossary box, receipts beside every claim, bilingual glosses — while capping ALL surface prose at 150 words with no block over 2 sentences. On an article-kind page (the ladder's worked-case-fully-expanded-first ordering, e.g. 'how inflation works' or the NN backprop canonical case in disk-target.md), ~8 results × ~12-word consequence lines plus step sentences plus section captions exceeds 150 words before the well framing is written. And 'prose block' is never defined: do under-labels, .pf-beat captions, cast-box entries, and consequence lines drawn inside a component count? SKILL.md says 'prose is captions' — so on the strict reading they all count and the collision is certain; on the loose reading everything is relabeled a caption and the budget is toothless.",
+          "why_it_breaks_one_shot": "A cold run on any teaching subject from the operator's list (neural networks, inflation, money creation) must break one of two binding rules with no tiebreak text — either it busts the budget (reproducing issue 4, 'too many explanations') or it cuts the consequence lines and step sentences (reproducing issue 5, missing register voice, and the 'word salad' verdict the file itself quotes). Which one it sacrifices is arbitrary, so the outcome cannot meet the operator's bar either way.",
+          "fix": "Define the counting unit explicitly (e.g. budget counts free-standing prose blocks between components; caption-class text inside/under a component — consequence lines, step sentences, under-labels, cast box — is budgeted separately, e.g. ≤N words per component) and state the tiebreak: when the ladder's mandated elements exceed the budget, which rule yields and where the overflow goes (inspector layer vs a sibling page). One paragraph in translation-elements.md §surface budget resolves it."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/disk-target.md",
+          "severity": "blocker",
+          "problem": "The disk pipeline — the DEFAULT target — is specified only from the suite's seat. The binding §Build order names build_suite_center.py (twice) and build_docsite.py, which are suite-repo scripts; §Fragments binds {{PRISM:<slug>}} expansion to build_docsite.py and prism_pages() in build_suite_center.py; the 'Explanations nav group scanned from disk' is the suite center's. §Portability says only that the shell files exist in templates/center/shell/ and that build_prisms.py takes --shell/--nav — it never states where build_prisms.py runs from in a downstream project (it lives in the skill's generator/ dir), what replaces the suite builders in the build order, how the produced page enters a gustify/gastify center's nav, or whether fragments work there at all.",
+          "why_it_breaks_one_shot": "Three of the operator's eight named must-serve-equally cases are gustify-side ('the gustify application', 'add a new transaction', 'look for a recipe'). A cold run in gustify follows binding text whose build order names scripts that do not exist there and must improvise the pipeline — which IS issues 2 and 3 recurring (inventing on the fly what should live in the skill). Falling back silently to --target artifact would be an E3 silent downgrade.",
+          "fix": "Add a §Downstream build to disk-target.md: the invocation of the skill's own generator (path under ~/.claude/skills/gabe-imagine/generator/build_prisms.py with --shell templates-derived shell and --nav the center's nav.json), what the downstream equivalent of each suite step is, which steps (fragment expansion into docsite pages) are suite-only until ported, and the honest ruling for a center-less project (artifact target, stated to the operator, not silently)."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "major",
+          "problem": "Issue 6's second half — 'cover across several sessions' — is asserted but not routed. THE FLOW (I0–I5) has no resume branch: nothing tells a second session to look for an existing section index/queue for the subject and jump to I4, and nothing handles a nested subject (a use-case page like 'add a transaction' arriving after the 'gustify' app was already dissected — does it join the existing index and reuse the app census, or re-run I1?). dissection-method.md says 'multi-session coverage is normal: the index tracks built/ghost across sessions' and 'the queue is the deliverable' — a claim about the artifact, with no corresponding step in the flow that reads it back.",
+          "why_it_breaks_one_shot": "A cold session 2 ('/gabe-imagine gustify — next page') follows I0→I1 as written and re-dissects from scratch, or improvises a resume path — either way the queue the operator asked for does not actually govern coverage across sessions; the operator's list even implies nesting (app AND its use cases) which the flow cannot place.",
+          "fix": "Add a resume clause to I0 (E4-shaped): 'an existing index/queue for this subject ⇒ load it, report built/ghost, propose the next page — the dissection is not re-run unless the operator asks'; and one ruling in dissection-method.md for nested subjects: a use case under an already-dissected app inherits the app's census and joins its section index as a page, never a new dissection."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "major",
+          "problem": "The rules answering issues 1, 4 and 5 have no gate, while everything else on the surface does. verify-prism.mjs checks payloads, numbers, states, inspectors, gates — but not the 150-word budget, not the 2-sentence block cap, not the register-caption rule (state-only caption), not the ladder ordering (well first, worked case before generalization, no rung skipped). Grep confirms the verifier contains no word counting. The only check is translation-elements.md's 'count before presenting and report the count' — a self-report, for the budget alone; the structural rules in representation-ladder.md carry no pre-present check at all, and I5's report mentions only fit-gaps.",
+          "why_it_breaks_one_shot": "By the operator's own bar — a rule that cannot be checked before presenting is not a fix — issues 1, 4 and 5 are paper-fixed: the exact failure modes the rebuild exists to prevent (too much prose, non-register captions, structureless pages) are the only surface properties a cold run can violate and still pass every gate green, then present with confidence.",
+          "fix": "Two moves: (a) add mechanical checks to verify-prism.mjs — word count over surface prose nodes (excluding .pf-detail/inspector content once the counting unit is defined), sentence-per-block cap — since these ARE machine-countable; (b) make I5 emit a mandatory pre-present checklist line per page: word count · register-caption spot-check · ladder order (well→case→generalization) confirmed — so the semantic rules at least get a forced self-audit with a reported artifact, like the count rule already prescribes."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/assets-inventory.md",
+          "severity": "major",
+          "problem": "The 'created = recorded' duty (Tier 3: 'record it in dissection/assets-inventory.md') has no legal write location for downstream runs. In gustify, the skill is the installed copy under ~/.claude/skills/ — and the suite convention is never patch ~/.claude in place; the suite repo is not reachable from a gustify session. So for half the operator's use-case list, a cold run must either violate the suite's install discipline, silently skip the recording (E3), or record somewhere the next session will never look.",
+          "why_it_breaks_one_shot": "Issue 3's enforcement loop (lift before create, and creations feed the next lookup) breaks exactly where it matters most — cross-project reuse. A Tier-3 simulator built for a gustify prism is invisible to the next run, so the next run re-invents it: the operator's original complaint reproduced by the fix's own bookkeeping.",
+          "fix": "Add a downstream clause: in a non-suite project, Tier-3 creations are recorded in a project-local ledger (e.g. docs/prisms/_inventory.md or a section of the project's center config) that the Tier-3 lookup step also reads; promotion into Tier 1 remains a suite-repo act, flagged to the operator as owed."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/interaction-hooks.md",
+          "severity": "minor",
+          "problem": "The interaction ladder's hover layer is part of the binding full-bleed contract ('a tooltip with the next layer: role + the consequence line'), but the file itself admits no tooltip exists in any tier — 'today only title= attributes — the weakest layer in the estate; a real tooltip element is the first gap'. No ruling tells a cold run what to do: title= fallback, build the tooltip (Tier-3), or skip the layer.",
+          "why_it_breaks_one_shot": "Every full-bleed section forces either a Tier-3 creation (friction against lift-before-create, on every page, and different cold runs will mint incompatible tooltips) or an undeclared contract downgrade to title=.",
+          "fix": "One sentence ruling: until the tooltip is promoted to Tier 1, the hover layer is satisfied by title= (state the downgrade on the page per the mined say-so rule) — or promote the bench candidate now since the second page needing it has arguably arrived."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "minor",
+          "problem": "The I4 row compresses representation-ladder.md as 'ladder structure (well → worked case → generalization → detail)' — but that sequence is not the ladder. The file holds three distinct disciplines: the representation ladder (drawing → symbolic → owner.field → table → code → screen, with no-rung-skipped/every-rung-kept), the ordering law (worked case → sibling enumeration → generalization), and wells (overall picture first). The parenthetical merges them into a fourth sequence that appears nowhere in the reference.",
+          "why_it_breaks_one_shot": "The SKILL.md is the always-loaded text; a run that trusts the compression and skims the reference applies a wrong structure and skips the rung discipline that was built specifically against the 'indigestible' verdict.",
+          "fix": "Change the parenthetical to name the three disciplines rather than fake one sequence: 'ladder (rungs kept) + ordering law (worked case first) + well first'."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "minor",
+          "problem": "P4's gate commands ('node tools/verify-prism.mjs', 'node ../gabe-artifact/tools/verify-motion.mjs') assume cwd = the skill's root; nothing states this, and the page argument is a project-side path (docs/site/center/prism-<slug>.html), so the working directory is ambiguous — doubly so in a downstream project where the skill lives under ~/.claude.",
+          "why_it_breaks_one_shot": "A cold run in gustify resolves 'tools/' against the project cwd, the command fails, and the run either debugs paths mid-gate or skips a gate leg (E2/E3).",
+          "fix": "Write the commands with an explicit anchor: 'from the skill root (repo or ~/.claude/skills/gabe-imagine)' or use $SKILL_DIR-style absolute framing in the P4 block."
+        },
+        {
+          "file": "/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md",
+          "severity": "minor",
+          "problem": "Issue 5's fix leans on 'per the Gabe register', but the register is a project-scoped trial of THIS repo (.claude/output-styles/gabe.md) and is not carried by the installed skill; the only reachable definition is the inline 'thing → action → consequence' template plus the cut rule. That template is workable, but the phrase 'per the Gabe register' points at something a downstream or cold session cannot load.",
+          "why_it_breaks_one_shot": "A cold run outside this repo either treats the inline template as the whole register (fine but unverifiable against intent) or goes hunting for a register spec that isn't installed — mild E6 bait.",
+          "fix": "Make the inline template self-sufficient explicitly: 'the register, for this skill's purposes, IS this template: thing → action → consequence; the full output style is suite-internal' — one clause in the surface contract bullet."
+        }
+      ]
+    }
+  ],
+  "workflowProgress": [
+    {
+      "type": "workflow_phase",
+      "index": 1,
+      "title": "Verify"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 1,
+      "label": "lens:generality",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify",
+      "agentId": "a871852d7393fbbf2",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1785715045570,
+      "queuedAt": 1785715045542,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "LENS: GENERALITY. Read every file listed below IN FULL. The operator's six issues the rebuild must fix (verbatim intent):\n1. \"We don't have the structure / are not following any given structure\" (structure must exist, flexible per problem)\n2. Constraints were custom-per-case in the PROMPT instead of living in the skill\n3. \"We are inventing on the fly an asset. When we have a library of assets alre…",
+      "lastProgressAt": 1785715286857,
+      "tokens": 53299,
+      "toolCalls": 11,
+      "durationMs": 241285,
+      "resultPreview": "{\"findings\":[{\"file\":\"/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/seat-archetypes.md\",\"severity\":\"blocker\",\"problem\":\"The six-seat table is product/game residue promoted to THE universal roster. The header admits its scope: \\\"the Catan roster the operator ruled 'all six very good', built to rename onto any application\\\" — yet MAP.md routes EVERY subject shape (concept…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 2,
+      "label": "lens:one-shot",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify",
+      "agentId": "aa4adcb446ddf6fbd",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1785715045575,
+      "queuedAt": 1785715045542,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "LENS: ONE-SHOT-ABILITY. You are simulating a COLD session that receives only: \"/gabe-imagine compound interest, for a saver\". Its knowledge = the files below + the repo's CLAUDE.md. Walk the flow I0..I5 as that session would and find every point where it would stall, guess, or fail: missing mechanics (where do new pages go? how is a slug/section chosen? what nav/order fields exist? where is the bu…",
+      "lastProgressAt": 1785715421242,
+      "tokens": 82547,
+      "toolCalls": 25,
+      "durationMs": 375667,
+      "resultPreview": "{\"findings\":[{\"file\":\"/home/khujta/projects/gabe_lens/skills/gabe-imagine/SKILL.md\",\"severity\":\"blocker\",\"problem\":\"No step in I0–I2 censuses the EXISTING prism estate (docs/prisms/*/prism.json) before dissecting/proposing. E4 'reuse first' is scoped to component assets (assets-inventory.md), not pages. A prism for this exact subject already exists: docs/prisms/compound-interest/ (kicker 'seat pag…"
+    },
+    {
+      "type": "workflow_agent",
+      "index": 3,
+      "label": "lens:fidelity",
+      "phaseIndex": 1,
+      "phaseTitle": "Verify",
+      "agentId": "a1b3e67f5ead816a0",
+      "model": "claude-fable-5",
+      "state": "done",
+      "startedAt": 1785715045575,
+      "queuedAt": 1785715045543,
+      "attempt": 1,
+      "lastToolName": "StructuredOutput",
+      "promptPreview": "LENS: OPERATOR FIDELITY. Read every file below IN FULL, then audit: is each of the six issues STRUCTURALLY fixed in the binding text, or only paper-fixed (mentioned but not enforceable/checkable)? Also: does anything in the files contradict the six issues or the use-case breadth? Judge harshly — a rule that cannot be checked before presenting is not a fix. The operator's six issues the rebuild mus…",
+      "lastProgressAt": 1785715321664,
+      "tokens": 68238,
+      "toolCalls": 14,
+      "durationMs": 276089,
+      "resultPreview": "{\"findings\":[{\"file\":\"/home/khujta/projects/gabe_lens/skills/gabe-imagine/references/dissection/translation-elements.md\",\"severity\":\"blocker\",\"problem\":\"The ≤150-word surface budget collides with the same file's mandatory elements, and the counting unit is undefined. The file simultaneously binds: consequence line (\\\"one sentence\\\") UNDER EVERY RESULT, a uniform step sentence per step, a cast-firs…"
+    }
+  ],
+  "totalTokens": 204084,
+  "totalToolCalls": 50
+}
