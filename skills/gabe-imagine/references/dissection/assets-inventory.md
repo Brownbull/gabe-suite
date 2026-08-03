@@ -43,9 +43,10 @@ Inline `<style>/<script>` in a `docs/prisms/<slug>/body.html` is page-local
 by definition — real, gated, but NOT reusable until promoted to Tier 1.
 Current instances:
 
-- `compound-interest` — the loan/saving SIMULATOR (inputs → month-resolution
-  SVG curve with hover/click-pin + reactive stacked bar) and the ledger
-  inline bars (`.ci-*`).
+- the loan/saving SIMULATOR (inputs → month-resolution SVG curve with
+  hover/click-pin + reactive stacked bar) and the ledger inline bars
+  (`.ci-*`) — lift source: `git show 68836bb:docs/prisms/compound-interest/body.html`
+  (the bench №1 round-2 page, removed from the live estate; history keeps it).
 
 **Downstream clause:** in a non-suite project the installed skill is
 read-only (never patch `~/.claude` in place), so Tier-3 creations are
