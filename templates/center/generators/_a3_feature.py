@@ -1084,9 +1084,12 @@ def build_feature_pages(ctx) -> list[str]:
         _ledger_block += _action_block("other", "sec-ov-act-other",
                                        "top of the ledger", "sec-ov-actions")
         if ledger_closed:
+            # closed entries are HTML-safe at source: producers emit literals/counts,
+            # and the manual-walk entry carries a REAL <span title> (its note/who are
+            # E()-escaped where built) — re-escaping here renders the span as text.
             _ledger_block += ('<p class="sub">Closed this build — no row (only OPEN '
                               "moves surface): " + " · ".join(
-                                  f'<span class="tag s-ok">{E(c)}</span>'
+                                  f'<span class="tag s-ok">{c}</span>'
                                   for c in ledger_closed) + "</p>")
 
         # 2 · Feature card block (identity) -----------------------------------
