@@ -3,11 +3,11 @@
   "nav_label": "Compound interest",
   "kicker": "",
   "mode": "console",
-  "pattern": "belt-line",
+  "pattern": "loop-grid",
   "order": 50,
   "kind": "concept · the saver's seat",
-  "card": "The saver's console: four sliders price the levers, the chart marks the month the machine passes you, the floor beneath opens each machine's receipt — and four accounts each name a different next move.",
-  "lede": "$200 a month at 7% for 30 years becomes $243,994 — $72,000 deposited by you, $171,994 made by the machine; its column passes yours at month 217.",
+  "card": "The saver's console: five levers drive one model — the curve marks the month the machine passes you, five tiles price every lever, the floor opens each machine's receipt, and the erosion strip prices what the headline hides.",
+  "lede": "$200 a month at 7% for 30 years becomes $243,994 — $72,000 deposited by you, $171,994 made by the machine; its earnings pass yours at month 217.",
   "handle": "The gap between the dashed line and the curve is the machine's share — built by one hop: every payment re-enters the pot.",
-  "source": "arithmetic on this page, recountable: 360 rounds of pot += pot·0.07/12 + 200 → $243,994.20; levers re-run from the same recurrence (+$10,000 to start → +$81,165 = 10000·(1.0058333)^360 · +$100/mo → +$121,997 · +1 pt → +$54,078 · +10 y → +$139,809); crossover marked on the chart at month 217 ($43,446.71 earned vs $43,400 deposited); doubling ln 2 ÷ ln(1+r); erosion 1.07/1.03 − 1 = 3.88% real · 25% tax → 5.25% → $174,362."
+  "source": "arithmetic on this page, recountable: 360 rounds of pot += pot·i + 200 with i = (1+r/n)^(n/12)−1 (7%, monthly ⇒ 0.5833%) → $243,994.20; crossover m217 ($43,446.71 earned vs $43,400 deposited); payments $1.17 first · $1,413.89 last (cut on the m359 balance); levers from the same recurrence: +$10,000 start → +$81,165 (×8.1165) · +$100/mo → +$121,997 · +1 pt → +$54,078 · wait 10 y → −$139,809 · monthly→daily → +$954 (annual→monthly +$10,104); return hop cut ⇒ $147,390 — the missing $96,604 is interest earned by interest; erosion: 25% tax → 5.25% → $174,362, ÷1.03³⁰ = 2.43 → $71,835 (untaxed real $100,522; real rate 1.07/1.03−1 = 3.88%)."
 }

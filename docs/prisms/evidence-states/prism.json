@@ -1,0 +1,13 @@
+{
+  "title": "Transaction evidence — every state, its screenshot, its proof",
+  "nav_label": "evidence states",
+  "kicker": "representation lab · gastify transaction · real captures",
+  "mode": "console",
+  "pattern": "belt-lanes",
+  "order": 50,
+  "kind": "representation lab",
+  "card": "One entity's full state flow with its evidence estate overlaid — 16 states, 6 gates, 14 production captures, 3 named absences — drawn THREE ways (belt-lanes · hub-orbit · gate-first) so the operator picks the left side of the Evidence tab with a letter.",
+  "lede": "Every state a gastify transaction can reach, and what proves it: click any state in any of the three drawings and its production screenshot opens with the spec, code, models and cases behind it.",
+  "handle": "The diagram is the index; the screenshot is the evidence.",
+  "source": "proof manifests tx2b-journey · tx1-detail-reskin · txflows-journey; backend/app/api/transactions.py + models as read 2026-08-04; counts recountable from those files."
+}

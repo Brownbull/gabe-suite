@@ -46,6 +46,10 @@ Inline `<style>/<script>` in a `docs/prisms/<slug>/body.html` is page-local
 by definition — real, gated, but NOT reusable until promoted to Tier 1.
 Current instances:
 
+- the ORBIT RING layout (hub node + N ring nodes on a grid-areas ring, static
+  stroke-only spoke svg underlay) and the GATE-FIRST GROUPING panel (`.egroup`
+  — a `.pf-gate` heading over a wrap of compact pf-nodes + a one-line why) —
+  born in `docs/prisms/evidence-states/body.html` (the representation lab).
 - the loan/saving SIMULATOR (inputs → month-resolution SVG curve with
   hover/click-pin + reactive stacked bar) and the ledger inline bars
   (`.ci-*`) — lift source: `git show 68836bb:docs/prisms/compound-interest/body.html`

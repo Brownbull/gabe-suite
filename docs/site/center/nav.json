@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "6cb212e",
+ "head": "232cb99",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -70,7 +70,7 @@
      "label": "Functions",
      "href": "functions.html",
      "icon": "code",
-     "count": 471
+     "count": 473
     },
     {
      "label": "Data structures",
@@ -234,6 +234,13 @@
     {
      "label": "Compound interest",
      "href": "prism-compound-interest.html",
+     "icon": "gauge",
+     "sub": true,
+     "tip": "console \u2014 one screen, ambient loop + scrub bar"
+    },
+    {
+     "label": "evidence states",
+     "href": "prism-evidence-states.html",
      "icon": "gauge",
      "sub": true,
      "tip": "console \u2014 one screen, ambient loop + scrub bar"

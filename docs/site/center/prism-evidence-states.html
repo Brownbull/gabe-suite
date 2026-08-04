@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transaction evidence — every state, its screenshot, its proof · Gabe Suite Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<link rel="stylesheet" href="assets/prism.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/prism-fx.js" defer></script>
+</head>
+<body>
+
+<div class="app">
+
+
+<aside class="side">
+    <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>Gabe Suite</b><small>Gabe Center · suite</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board <span class="count">18</span></a>
+  <div class="navlabel g-code">Enforcement</div>
+  <a class="navitem" href="enforcement.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Enforcement ledger <span class="count">119</span></a>
+  <a class="navitem" href="hooks.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Hooks <span class="count">8</span></a>
+  <a class="navitem" href="testing.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Testing <span class="count">20</span></a>
+  <div class="navlabel g-ent">Surfaces</div>
+  <a class="navitem" href="agents.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg> Agents <span class="count">28</span></a>
+  <a class="navitem" href="formats.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg> Format methods <span class="count">13</span></a>
+  <a class="navitem" href="functions.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Functions <span class="count">473</span></a>
+  <a class="navitem" href="structures.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data structures <span class="count">19</span></a>
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Docs</a>
+  <a class="navitem navsubitem" href="kdbp.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> What KDBP is</a>
+  <a class="navitem navsubitem" href="the-loop.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The development loop</a>
+  <a class="navitem navsubitem" href="contract.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The E1–E7 contract</a>
+  <a class="navitem navsubitem" href="skill-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The skill map</a>
+  <a class="navitem navsubitem" href="commands.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Beats &amp; commands</a>
+  <a class="navitem navsubitem" href="satellites.html" title="embeds prism components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> Analysis satellites</a>
+  <a class="navitem navsubitem" href="verification-first.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The one picture</a>
+  <a class="navitem navsubitem" href="gabe-red.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> /gabe-red</a>
+  <a class="navitem navsubitem" href="c-id.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The C-id scheme</a>
+  <a class="navitem navsubitem" href="command-center.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The command center</a>
+  <a class="navitem navsubitem" href="mechanisms.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> The mechanism catalog</a>
+  <a class="navitem navsubitem" href="drift.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Why weak models drift</a>
+  <a class="navitem navsubitem" href="decisions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8"/><path d="M16 17H8"/></svg> Design decisions</a>
+  <div class="navlabel g-ent">Explanations</div>
+  <a class="navitem" href="explanations.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Explanations</a>
+  <a class="navitem navsubitem" href="prism-catan.html" title="index — a subject&#x27;s own landing page"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Catan</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-turn.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> The turn</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-angles.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> The dissection</a>
+  <a class="navitem navsubitem navsub2item" href="prism-catan-strategist.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> The strategist</a>
+  <a class="navitem navsubitem" href="prism-neural-net.html" title="article — assembles as you scroll"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 17V5a2 2 0 0 0-2-2H4"/><path d="M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4"/></svg> Neural net</a>
+  <a class="navitem navsubitem" href="prism-hook-chain.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Hook chain</a>
+  <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
+  <a class="navitem navsubitem" href="prism-compound-interest.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Compound interest</a>
+  <a class="navitem navsubitem on" href="prism-evidence-states.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> evidence states</a>
+  <div class="foot">regen 2026-08-04 16:05<br>HEAD 232cb99 · build_suite_center.py</div>
+</aside>
+
+<main class="main">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Transaction evidence — every state, its screenshot, its proof</b></div>
+    <div class="spacer"></div>
+    <span class="chip warn">42 uncommitted</span>
+    <span class="stamp">regen · 2026-08-04 16:05</span>
+  </div>
+
+  <div class="prismhead">
+    <div class="kicker">representation lab · gastify transaction · real captures</div>
+    <h1>Transaction evidence — every state, its screenshot, its proof</h1>
+    <p class="prismlede">Every state a gastify transaction can reach, and what proves it: click any state in any of the three drawings and its production screenshot opens with the spec, code, models and cases behind it.</p>
+    <p class="prismhandle"><span class="phlab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>the handle</span>The diagram is the index; the screenshot is the evidence.</p>
+  </div>
+
+  <div class="prismstage" data-prism-mode="console">
+    <style>
+  /* page-local layout only — node grammar, states, inspectors are shell-native */
+  .ev-shot{background:#0f1418;display:flex;justify-content:center;margin:0 0 10px}
+  .ev-shot img{max-height:340px;width:auto;max-width:100%;object-fit:contain}
+  .ev-shot+.ev-shot{margin-top:6px}
+  .ev-gap{background:repeating-linear-gradient(-45deg,transparent,transparent 10px,
+    rgba(155,44,44,.08) 10px,rgba(155,44,44,.08) 20px);border:1px dashed #9b2c2c;
+    border-radius:8px;padding:14px;text-align:center;font-size:.78rem;margin:0 0 10px}
+  /* b · hub-orbit — same nodes, ring placement; spokes are a static stroke-only svg */
+  .orbit{position:relative;display:grid;place-items:center;
+    grid-template-areas:". n ." "w hub e" ". s .";
+    grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto auto;
+    gap:26px 34px;padding:12px 0}
+  .orbit .o-hub{grid-area:hub}
+  .orbit .o-n{grid-area:n;display:flex;gap:18px}
+  .orbit .o-s{grid-area:s;display:flex;gap:18px}
+  .orbit .o-w{grid-area:w;display:flex;flex-direction:column;gap:14px;align-items:end}
+  .orbit .o-e{grid-area:e;display:flex;flex-direction:column;gap:14px;align-items:start}
+  .orbit .o-spokes{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+  /* c · gate-first — one bordered panel per guard */
+  .egroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+  .egroup{border:1px solid var(--line,#d8dee6);border-radius:12px;padding:12px 14px}
+  .egroup>.pf-gate{display:inline-block;margin-bottom:10px}
+  .egroup .eg-states{display:flex;flex-wrap:wrap;gap:10px}
+  .egroup .eg-why{font-size:13px;opacity:.75;margin:8px 0 0}
+</style>
+
+<div class="prismprose">
+  <p>One state model drives all three drawings — click any state anywhere and
+  its evidence opens below.</p>
+  <h2>a · belt-lanes — the lifecycle as a line</h2>
+  <p>The payload changes identity at every station; three rows, six gates
+  deciding beside the belt.</p>
+</div>
+
+<!-- FLOOR a — belt-lanes: 17 states, 3 authored rows, gates in the register -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="ev-belt" data-tick="1400" style="--pf-node-w:150px">
+  <div class="pf-belt pf-rows">
+   <div class="pf-row">
+    <button class="pf-node" data-node="scanning" data-in="a paper receipt" data-out="SSE frames"
+            data-num="3 country runs · 5/5 passed" data-state="running" data-detail="#d-scan">
+      <span class="pf-ix">1</span><span class="pf-name">scanning</span>
+      <span class="pf-sub">one capture surface (D111)</span>
+      <span class="pf-recipe"><i>in</i><span>a paper receipt</span><i>out</i><span>SSE frames</span></span>
+      <span class="pf-num">3 country runs · 5/5</span>
+    </button>
+    <div class="pf-hop" data-payload="SSE frames"><div class="pf-rail"></div>
+      <div class="pf-chip">frames</div><div class="pf-hoplab">SSE frames</div></div>
+    <button class="pf-node" data-node="degrade to manual" data-in="a failed scan" data-out="a manual form"
+            data-num="2 degrade legs shot" data-state="running" data-detail="#d-degrade">
+      <span class="pf-ix">2</span><span class="pf-name">degrade → manual</span>
+      <span class="pf-sub">the fallback IS the flow</span>
+      <span class="pf-recipe"><i>in</i><span>a failed scan</span><i>out</i><span>a manual form</span></span>
+      <span class="pf-num">2 degrade legs shot</span>
+    </button>
+    <div class="pf-hop" data-payload="a manual form"><div class="pf-rail"></div>
+      <div class="pf-chip">form</div><div class="pf-hoplab">a manual form</div></div>
+    <button class="pf-node" data-node="draft" data-in="frames or a form" data-out="an AI-filled draft"
+            data-num="TransactionDraft · 17 shots" data-state="running" data-detail="#d-draft">
+      <span class="pf-ix">3</span><span class="pf-name">draft</span>
+      <span class="pf-sub">review before anything persists</span>
+      <span class="pf-recipe"><i>in</i><span>frames or a form</span><i>out</i><span>an AI-filled draft</span></span>
+      <span class="pf-num">TransactionDraft · 17 shots</span>
+    </button>
+    <div class="pf-hop" data-payload="an AI-filled draft"><div class="pf-rail"></div>
+      <div class="pf-chip">draft</div><div class="pf-hoplab">a draft</div></div>
+    <button class="pf-node" data-node="draft resumed" data-in="a mid-review reload" data-out="the same draft, back"
+            data-num="persistence leg 04" data-state="running" data-detail="#d-resume">
+      <span class="pf-ix">4</span><span class="pf-name">draft resumed</span>
+      <span class="pf-sub">reload survives</span>
+      <span class="pf-recipe"><i>in</i><span>a mid-review reload</span><i>out</i><span>the same draft, back</span></span>
+      <span class="pf-num">persistence leg 04</span>
+    </button>
+    <div class="pf-hop pf-return" data-payload="a decision"><div class="pf-rail"></div>
+      <div class="pf-chip">keep?</div><div class="pf-hoplab">keep or discard ↓</div></div>
+   </div>
+   <div class="pf-row">
+    <button class="pf-node" data-node="discarded" data-in="Descartar" data-out="a real DELETE"
+            data-num="P119 edge · 0 captures" data-state="ghost" data-detail="#d-discard">
+      <span class="pf-ix">5</span><span class="pf-name">discarded</span>
+      <span class="pf-sub">the exit nobody photographs</span>
+      <span class="pf-recipe"><i>in</i><span>Descartar</span><i>out</i><span>a real DELETE</span></span>
+      <span class="pf-num">P119 edge · 0 captures</span>
+    </button>
+    <div class="pf-hop" data-payload="a confirmed draft"><div class="pf-rail"></div>
+      <div class="pf-chip">saved</div><div class="pf-hoplab">or: Guardar</div></div>
+    <button class="pf-node" data-node="saved" data-in="a confirmed draft" data-out="a Transaction row"
+            data-num="5 models touched" data-state="running" data-detail="#d-saved">
+      <span class="pf-ix">6</span><span class="pf-name">saved</span>
+      <span class="pf-sub">the steady state — detail</span>
+      <span class="pf-recipe"><i>in</i><span>a confirmed draft</span><i>out</i><span>a Transaction row</span></span>
+      <span class="pf-num">5 models touched</span>
+    </button>
+    <div class="pf-hop" data-payload="a Transaction row"><div class="pf-rail"></div>
+      <div class="pf-chip">row</div><div class="pf-hoplab">a row</div></div>
+    <button class="pf-node" data-node="edited" data-in="a field change" data-out="a PATCHed row"
+            data-num="api-asserted · 0 captures" data-state="unpowered" data-detail="#d-edit">
+      <span class="pf-ix">7</span><span class="pf-name">edited</span>
+      <span class="pf-sub">per-field PATCH</span>
+      <span class="pf-recipe"><i>in</i><span>a field change</span><i>out</i><span>a PATCHed row</span></span>
+      <span class="pf-num">api-asserted · 0 captures</span>
+    </button>
+    <div class="pf-hop" data-payload="a PATCHed row"><div class="pf-rail"></div>
+      <div class="pf-chip">row′</div><div class="pf-hoplab">still yours</div></div>
+    <button class="pf-node" data-node="item flagged" data-in="a long-press on an item" data-out="a TransactionItemFlag"
+            data-num="C1066 RLS-proven" data-state="running" data-detail="#d-flag">
+      <span class="pf-ix">8</span><span class="pf-name">item flagged</span>
+      <span class="pf-sub">your margin notes</span>
+      <span class="pf-recipe"><i>in</i><span>a long-press on an item</span><i>out</i><span>a TransactionItemFlag</span></span>
+      <span class="pf-num">C1066 RLS-proven</span>
+    </button>
+    <div class="pf-hop" data-payload="a shared row"><div class="pf-rail"></div>
+      <div class="pf-chip">copy</div><div class="pf-hoplab">a group copy</div></div>
+    <button class="pf-node" data-node="locked · shared" data-in="a group share" data-out="a locked row (D74)"
+            data-num="409 · share_count &gt; 0" data-state="running" data-detail="#d-lockshare">
+      <span class="pf-ix">9</span><span class="pf-name">locked · shared</span>
+      <span class="pf-sub">someone else can see it</span>
+      <span class="pf-recipe"><i>in</i><span>a group share</span><i>out</i><span>a locked row (D74)</span></span>
+      <span class="pf-num">409 · share_count &gt; 0</span>
+      <span class="pf-alert">⚠ edits refuse</span>
+    </button>
+    <div class="pf-hop pf-return" data-payload="a locked row"><div class="pf-rail"></div>
+      <div class="pf-chip">locked</div><div class="pf-hoplab">locks ↓</div></div>
+   </div>
+   <div class="pf-row">
+    <button class="pf-node" data-node="locked · matched" data-in="a statement match" data-out="a locked row (P117)"
+            data-num="_is_statement_matched" data-state="running" data-detail="#d-lockmatch">
+      <span class="pf-ix">10</span><span class="pf-name">locked · matched</span>
+      <span class="pf-sub">reconciled against a cartola</span>
+      <span class="pf-recipe"><i>in</i><span>a statement match</span><i>out</i><span>a locked row (P117)</span></span>
+      <span class="pf-num">_is_statement_matched</span>
+      <span class="pf-alert">⚠ edits refuse</span>
+    </button>
+    <div class="pf-hop" data-payload="a read-only detail"><div class="pf-rail"></div>
+      <div class="pf-chip">r/o</div><div class="pf-hoplab">the surface</div></div>
+    <button class="pf-node" data-node="locked surface" data-in="either lock" data-out="a read-only detail"
+            data-num="flags still write (leg 06)" data-state="running" data-detail="#d-locksurface">
+      <span class="pf-ix">11</span><span class="pf-name">locked surface</span>
+      <span class="pf-sub">read-only · flags exempt</span>
+      <span class="pf-recipe"><i>in</i><span>either lock</span><i>out</i><span>a read-only detail</span></span>
+      <span class="pf-num">flags still write (leg 06)</span>
+    </button>
+    <div class="pf-hop" data-payload="the last copy leaving"><div class="pf-rail"></div>
+      <div class="pf-chip">free</div><div class="pf-hoplab">unshare</div></div>
+    <button class="pf-node" data-node="unshared" data-in="the last group copy leaving" data-out="an unlocked row (P83)"
+            data-num="api-asserted · 0 captures" data-state="unpowered" data-detail="#d-unshare">
+      <span class="pf-ix">12</span><span class="pf-name">unshared</span>
+      <span class="pf-sub">locked while ANY copy survives</span>
+      <span class="pf-recipe"><i>in</i><span>the last group copy leaving</span><i>out</i><span>an unlocked row (P83)</span></span>
+      <span class="pf-num">api-asserted · 0 captures</span>
+    </button>
+    <div class="pf-hop" data-payload="the delete tap"><div class="pf-rail"></div>
+      <div class="pf-chip">tap</div><div class="pf-hoplab">delete</div></div>
+    <button class="pf-node" data-node="delete confirm" data-in="the delete tap" data-out="a confirm sheet"
+            data-num="C1067" data-state="running" data-detail="#d-delconfirm">
+      <span class="pf-ix">13</span><span class="pf-name">delete · confirm</span>
+      <span class="pf-sub">destructive, so it asks</span>
+      <span class="pf-recipe"><i>in</i><span>the delete tap</span><i>out</i><span>a confirm sheet</span></span>
+      <span class="pf-num">C1067</span>
+    </button>
+    <div class="pf-hop" data-payload="an absence"><div class="pf-rail"></div>
+      <div class="pf-chip">gone</div><div class="pf-hoplab">an absence</div></div>
+    <button class="pf-node" data-node="deleted" data-in="a confirmed delete" data-out="a row that is gone"
+            data-num="leg 08 · list shrinks" data-state="running" data-detail="#d-deleted">
+      <span class="pf-ix">14</span><span class="pf-name">deleted</span>
+      <span class="pf-sub">single or batch</span>
+      <span class="pf-recipe"><i>in</i><span>a confirmed delete</span><i>out</i><span>a row that is gone</span></span>
+      <span class="pf-num">leg 08 · list shrinks</span>
+    </button>
+   </div>
+   <div class="pf-row">
+    <button class="pf-node" data-node="batch deleted" data-in="N selected rows" data-out="a count, or a whole-batch refusal"
+            data-num="C1072 · C704 · 0 captures" data-state="unpowered" data-detail="#d-batch">
+      <span class="pf-ix">15</span><span class="pf-name">batch deleted</span>
+      <span class="pf-sub">all-or-nothing on locks</span>
+      <span class="pf-recipe"><i>in</i><span>N selected rows</span><i>out</i><span>a count, or a whole-batch refusal</span></span>
+      <span class="pf-num">C1072 · C704 · 0 captures</span>
+    </button>
+    <div class="pf-hop" data-payload="a delete past 90 days"><div class="pf-rail"></div>
+      <div class="pf-chip">90d+</div><div class="pf-hoplab">time passes</div></div>
+    <button class="pf-node" data-node="sealed" data-in="a delete past 90 days" data-out="a refusal — the period is settled"
+            data-num="0 tests · 0 captures" data-state="ghost" data-detail="#d-sealed">
+      <span class="pf-ix">16</span><span class="pf-name">sealed · 409</span>
+      <span class="pf-sub">UX-11 — time is the gate</span>
+      <span class="pf-recipe"><i>in</i><span>a delete past 90 days</span><i>out</i><span>a refusal — the period is settled</span></span>
+      <span class="pf-num">0 tests · 0 captures</span>
+      <span class="pf-alert">⚠ born-red candidate</span>
+    </button>
+    <div class="pf-hop" data-payload="a legal erasure request"><div class="pf-rail"></div>
+      <div class="pf-chip">DSR</div><div class="pf-hoplab">the legal door</div></div>
+    <button class="pf-node" data-node="DSR erasure" data-in="a legal erasure request" data-out="a bulk delete past every gate"
+            data-num="consent.py path · 0 captures" data-state="ghost" data-detail="#d-dsr">
+      <span class="pf-ix">17</span><span class="pf-name">DSR erasure</span>
+      <span class="pf-sub">bypasses the window, by right</span>
+      <span class="pf-recipe"><i>in</i><span>a legal erasure request</span><i>out</i><span>a bulk delete past every gate</span></span>
+      <span class="pf-num">consent.py path · 0 captures</span>
+    </button>
+   </div>
+  </div>
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="D74 share lock" data-gate data-state="running"
+          title="A shared row refuses per-field edits with an explicit 409 popup — never a silent partial.">D74 · shared rows refuse edits</span>
+    <span class="pf-gate" data-node="P117 statement lock" data-gate data-state="running"
+          title="A statement-matched row is sealed until the statement releases it.">P117 · matched rows are sealed</span>
+    <span class="pf-gate" data-node="UX-11 delete window" data-gate data-state="unpowered"
+          title="Deletes older than 90 days 409 — live in prod, and no test proves it fires.">UX-11 · 90-day window, untested</span>
+    <span class="pf-gate" data-node="confirm sheet" data-gate data-state="running"
+          title="Destructive paths ask first; the capture created its own victim.">confirm · destructive paths ask</span>
+    <span class="pf-gate" data-node="RLS scope" data-gate data-state="running"
+          title="Another scope's rows are invisible — batch deletes silently ignore them (C704).">RLS · other scopes invisible (C704)</span>
+    <span class="pf-gate" data-node="batch all-or-nothing" data-gate data-state="running"
+          title="One locked row in the selection refuses the WHOLE batch (D74 batch rule).">batch · one lock refuses all</span>
+  </div>
+</div></div></div></div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — captured AND asserted: a shot and a spec leg exist</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — asserted in api tests, never photographed (or live but untested)</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — no capture, no test — a named absence</span>
+</div>
+
+<div class="prismprose" style="margin-top:30px">
+  <h2>b · hub-orbit — saved is home</h2>
+  <p>Every episode leaves the detail and comes back to it; the orbit says so
+  before any label is read.</p>
+</div>
+
+<!-- FLOOR b — same nodes, ring placement; spokes are stroke-only, static -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="ev-orbit" data-scrub="off" style="--pf-node-w:140px">
+  <div class="orbit">
+    <svg class="o-spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+      <g stroke="var(--muted,#8a94a0)" stroke-width=".35" fill="none" opacity=".55">
+        <line x1="50" y1="50" x2="30" y2="10"/><line x1="50" y1="50" x2="70" y2="10"/>
+        <line x1="50" y1="50" x2="8"  y2="35"/><line x1="50" y1="50" x2="8"  y2="65"/>
+        <line x1="50" y1="50" x2="92" y2="35"/><line x1="50" y1="50" x2="92" y2="65"/>
+        <line x1="50" y1="50" x2="30" y2="90"/><line x1="50" y1="50" x2="70" y2="90"/>
+      </g>
+    </svg>
+    <div class="o-n">
+      <button class="pf-node" data-node="capture arc" data-in="a paper receipt" data-out="a Transaction row"
+              data-num="scan → draft → saved" data-state="running" data-detail="#d-scan">
+        <span class="pf-name">capture arc in</span>
+        <span class="pf-recipe"><i>in</i><span>a paper receipt</span><i>out</i><span>a Transaction row</span></span>
+        <span class="pf-num">scan → draft → saved</span>
+      </button>
+      <button class="pf-node" data-node="flag orbit" data-in="a long-press" data-out="a flag on the row"
+              data-num="survives every lock" data-state="running" data-detail="#d-flag">
+        <span class="pf-name">flag</span>
+        <span class="pf-recipe"><i>in</i><span>a long-press</span><i>out</i><span>a flag on the row</span></span>
+        <span class="pf-num">survives every lock</span>
+      </button>
+    </div>
+    <div class="o-w">
+      <button class="pf-node" data-node="edit orbit" data-in="a field change" data-out="a PATCHed row"
+              data-num="0 captures" data-state="unpowered" data-detail="#d-edit">
+        <span class="pf-name">edit</span>
+        <span class="pf-recipe"><i>in</i><span>a field change</span><i>out</i><span>a PATCHed row</span></span>
+        <span class="pf-num">0 captures</span>
+      </button>
+      <button class="pf-node" data-node="discard exit" data-in="Descartar" data-out="a real DELETE"
+              data-num="P119 · 0 captures" data-state="ghost" data-detail="#d-discard">
+        <span class="pf-name">discard</span>
+        <span class="pf-recipe"><i>in</i><span>Descartar</span><i>out</i><span>a real DELETE</span></span>
+        <span class="pf-num">P119 · 0 captures</span>
+      </button>
+    </div>
+    <button class="pf-node o-hub" data-node="saved hub" data-in="every episode" data-out="the steady state"
+            data-num="the detail — 5 models" data-state="running" data-detail="#d-saved">
+      <span class="pf-name">SAVED · detail</span>
+      <span class="pf-sub">home</span>
+      <span class="pf-recipe"><i>in</i><span>every episode</span><i>out</i><span>the steady state</span></span>
+      <span class="pf-num">the detail — 5 models</span>
+    </button>
+    <div class="o-e">
+      <button class="pf-node" data-node="share orbit" data-in="a group share" data-out="a locked row, until unshare"
+              data-num="D74 · P83" data-state="running" data-detail="#d-lockshare">
+        <span class="pf-name">share ⇄ unshare</span>
+        <span class="pf-recipe"><i>in</i><span>a group share</span><i>out</i><span>a locked row, until unshare</span></span>
+        <span class="pf-num">D74 · P83</span>
+      </button>
+      <button class="pf-node" data-node="match orbit" data-in="a statement match" data-out="a sealed row"
+              data-num="P117" data-state="running" data-detail="#d-lockmatch">
+        <span class="pf-name">statement match</span>
+        <span class="pf-recipe"><i>in</i><span>a statement match</span><i>out</i><span>a sealed row</span></span>
+        <span class="pf-num">P117</span>
+      </button>
+    </div>
+    <div class="o-s">
+      <button class="pf-node" data-node="delete exit" data-in="the delete tap" data-out="an absence"
+              data-num="confirm → gone" data-state="running" data-detail="#d-delconfirm">
+        <span class="pf-name">delete exit</span>
+        <span class="pf-recipe"><i>in</i><span>the delete tap</span><i>out</i><span>an absence</span></span>
+        <span class="pf-num">confirm → gone</span>
+      </button>
+      <button class="pf-node" data-node="seal by time" data-in="90 days passing" data-out="a refusal"
+              data-num="0 tests · 0 captures" data-state="ghost" data-detail="#d-sealed">
+        <span class="pf-name">sealed by time</span>
+        <span class="pf-recipe"><i>in</i><span>90 days passing</span><i>out</i><span>a refusal</span></span>
+        <span class="pf-num">0 tests · 0 captures</span>
+      </button>
+    </div>
+  </div>
+</div></div></div></div>
+
+<div class="prismprose" style="margin-top:30px">
+  <h2>c · gate-first — grouped by what stops you</h2>
+  <p>The ramifications view: each panel is a guard, holding the states it can
+  refuse.</p>
+</div>
+
+<!-- FLOOR c — gate-first grouping; same nodes, same inspectors -->
+<div class="pfwrap"><div class="pfsize"><div class="pffit"><div class="pf" data-prism data-fx="ev-gates" data-scrub="off" style="--pf-node-w:130px">
+  <div class="egroups">
+    <div class="egroup">
+      <span class="pf-gate" data-node="ungated capture" data-gate data-state="running">no gate · the capture lane</span>
+      <div class="eg-states">
+        <button class="pf-node" data-node="capture states" data-in="a paper receipt" data-out="a Transaction row"
+                data-num="9 capture shots" data-state="running" data-detail="#d-scan">
+          <span class="pf-name">scan→saved</span><span class="pf-num">9 capture shots</span>
+        </button>
+        <button class="pf-node" data-node="degrade fallback" data-in="a failed scan" data-out="a manual form"
+                data-num="2 shots" data-state="running" data-detail="#d-degrade">
+          <span class="pf-name">degrade→manual</span><span class="pf-num">2 shots</span>
+        </button>
+      </div>
+      <p class="eg-why">Nothing refuses you here — failure degrades, never blocks.</p>
+    </div>
+    <div class="egroup">
+      <span class="pf-gate" data-node="D74 group" data-gate data-state="running">D74 · the share lock</span>
+      <div class="eg-states">
+        <button class="pf-node" data-node="shared under D74" data-in="a group share" data-out="a locked row"
+                data-num="409 popup shot" data-state="running" data-detail="#d-lockshare">
+          <span class="pf-name">shared</span><span class="pf-num">409 popup shot</span>
+        </button>
+        <button class="pf-node" data-node="unshare under D74" data-in="the last copy leaving" data-out="an unlocked row"
+                data-num="P83 · api only" data-state="unpowered" data-detail="#d-unshare">
+          <span class="pf-name">unshared</span><span class="pf-num">P83 · api only</span>
+        </button>
+        <button class="pf-node" data-node="batch under D74" data-in="N rows, one locked" data-out="a whole-batch refusal"
+                data-num="C1072 · api only" data-state="unpowered" data-detail="#d-batch">
+          <span class="pf-name">batch 409</span><span class="pf-num">C1072 · api only</span>
+        </button>
+      </div>
+      <p class="eg-why">Shared numbers stay honest — one lock refuses the whole batch.</p>
+    </div>
+    <div class="egroup">
+      <span class="pf-gate" data-node="P117 group" data-gate data-state="running">P117 · the statement lock</span>
+      <div class="eg-states">
+        <button class="pf-node" data-node="matched under P117" data-in="a statement match" data-out="a sealed row"
+                data-num="409 popup shot" data-state="running" data-detail="#d-lockmatch">
+          <span class="pf-name">matched</span><span class="pf-num">409 popup shot</span>
+        </button>
+        <button class="pf-node" data-node="surface under locks" data-in="either lock" data-out="a read-only detail"
+                data-num="flags exempt" data-state="running" data-detail="#d-locksurface">
+          <span class="pf-name">read-only</span><span class="pf-num">flags exempt</span>
+        </button>
+      </div>
+      <p class="eg-why">Reconciled periods cannot shift under the user.</p>
+    </div>
+    <div class="egroup">
+      <span class="pf-gate" data-node="confirm group" data-gate data-state="running">confirm · destructive paths ask</span>
+      <div class="eg-states">
+        <button class="pf-node" data-node="confirm sheet state" data-in="the delete tap" data-out="a confirm sheet"
+                data-num="C1067 · shot" data-state="running" data-detail="#d-delconfirm">
+          <span class="pf-name">confirm</span><span class="pf-num">C1067 · shot</span>
+        </button>
+        <button class="pf-node" data-node="gone state" data-in="a confirmed delete" data-out="an absence"
+                data-num="leg 08 · shot" data-state="running" data-detail="#d-deleted">
+          <span class="pf-name">deleted</span><span class="pf-num">leg 08 · shot</span>
+        </button>
+        <button class="pf-node" data-node="discard under confirm" data-in="Descartar" data-out="a real DELETE"
+                data-num="P119 · 0 captures" data-state="ghost" data-detail="#d-discard">
+          <span class="pf-name">discarded</span><span class="pf-num">P119 · 0 captures</span>
+        </button>
+      </div>
+      <p class="eg-why">Both exits ask first; only one was ever photographed.</p>
+    </div>
+    <div class="egroup">
+      <span class="pf-gate" data-node="UX-11 group" data-gate data-state="unpowered">UX-11 · time seals the period</span>
+      <div class="eg-states">
+        <button class="pf-node" data-node="sealed under UX-11" data-in="a delete past 90 days" data-out="a refusal"
+                data-num="0 tests · 0 captures" data-state="ghost" data-detail="#d-sealed">
+          <span class="pf-name">sealed 409</span><span class="pf-num">0 tests · 0 captures</span>
+        </button>
+        <button class="pf-node" data-node="DSR past UX-11" data-in="a legal erasure request" data-out="a bulk delete past the gate"
+                data-num="consent.py · 0 captures" data-state="ghost" data-detail="#d-dsr">
+          <span class="pf-name">DSR bypass</span><span class="pf-num">consent.py · 0 captures</span>
+        </button>
+      </div>
+      <p class="eg-why">The gate that fires by itself as the calendar moves — and its only bypass is a legal right. Entirely unphotographed.</p>
+    </div>
+    <div class="egroup">
+      <span class="pf-gate" data-node="RLS group" data-gate data-state="running">RLS · other scopes invisible</span>
+      <div class="eg-states">
+        <button class="pf-node" data-node="edit under RLS" data-in="a field change" data-out="a PATCHed row"
+                data-num="404 cross-scope · C702" data-state="unpowered" data-detail="#d-edit">
+          <span class="pf-name">edited</span><span class="pf-num">404 cross-scope · C702</span>
+        </button>
+        <button class="pf-node" data-node="flag under RLS" data-in="a long-press" data-out="a flag"
+                data-num="C1066 · shots" data-state="running" data-detail="#d-flag">
+          <span class="pf-name">flagged</span><span class="pf-num">C1066 · shots</span>
+        </button>
+      </div>
+      <p class="eg-why">Every row above also sits behind this one — C704 proved a batch cannot reach a neighbour's rows.</p>
+    </div>
+  </div>
+</div></div></div></div>
+
+<div class="prismprose" style="margin-top:30px">
+  <p>Answer with a letter — the winner becomes the Evidence tab's left side;
+  the runners-up get stored.</p>
+</div>
+
+<!-- Shared inspectors — every representation's nodes open these -->
+<div class="pf-details">
+  <div class="pf-detail" id="d-scan">
+    <h4>scanning — the CL supermarket run, live on production</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/scan-02-slot-scanning.png" alt="scan slot mid-scan" loading="lazy"></div>
+    <p>The slot reads the receipt over SSE; three country runs (CL · US · FR)
+    walked this on production, 5/5 passed.</p>
+    <dl><dt>captured</dt><dd>2026-07-09 · recorded runs vs production (e5a5961)</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd>
+        <dt>code</dt><dd>web scan slot (SSE) · POST /api/v1/transactions</dd>
+        <dt>models</dt><dd>TransactionDraft</dd>
+        <dt>role</dt><dd>principal</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-degrade">
+    <h4>degrade → manual — the fallback is a first-class flow</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/degrade-01-slot-error.png" alt="scan slot error" loading="lazy"></div>
+    <div class="ev-shot"><img src="assets/evidence-states/degrade-02-manual-after-failure.png" alt="manual form after scan failure" loading="lazy"></div>
+    <p>A failed scan lands the user in the SAME surface as manual entry (D111)
+    — the degrade leg photographed both frames.</p>
+    <dl><dt>captured</dt><dd>2026-07-09 · degrade leg, 2 shots</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd>
+        <dt>role</dt><dd>principal (failure path)</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-draft">
+    <h4>draft — AI-populated, nothing persisted yet</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/scan-03-form-populated.png" alt="AI-populated draft form" loading="lazy"></div>
+    <p>Items, totals, merchant proposed for review; the row does not exist
+    until Guardar.</p>
+    <dl><dt>captured</dt><dd>2026-07-09 · vs production</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd>
+        <dt>models</dt><dd>TransactionDraft</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-resume">
+    <h4>draft resumed — reload survives</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/scan-04-reload-resumed.png" alt="draft resumed after reload" loading="lazy"></div>
+    <p>Mid-review reload brings the draft back — the persistence proof behind
+    TX2b's one-surface bet.</p>
+    <dl><dt>captured</dt><dd>2026-07-09 · persistence leg 04</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-discard">
+    <h4>discarded — a named absence</h4>
+    <div class="ev-gap"><b>⚠ no capture exists.</b> Descartar issues a REAL
+    DELETE (CA0 trust fix); the P119 delete-window edge was discovered on this
+    path — and no proof set ever photographed it.</div>
+    <dl><dt>code</dt><dd>DELETE /api/v1/transactions/{id} (from ScanResult)</dd>
+        <dt>cases</dt><dd>— none walk the discard UI —</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-saved">
+    <h4>saved — the steady state, on its detail</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/saved-detail-mobile.png" alt="transaction detail, mobile" loading="lazy"></div>
+    <p>The reference⟷live fidelity set's mobile detail — the surface every
+    episode returns to.</p>
+    <dl><dt>captured</dt><dd>2026-07-08/09 · fidelity set</dd>
+        <dt>spec</dt><dd>tests/web-e2e/tx1-detail-reskin.spec.ts</dd>
+        <dt>code</dt><dd>GET /api/v1/transactions/{id}</dd>
+        <dt>models</dt><dd>Transaction · TransactionItem · TransactionImage · TransactionItemFlag · TransactionDraft</dd>
+        <dt>role</dt><dd>reference</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-edit">
+    <h4>edited — asserted, never photographed</h4>
+    <div class="ev-gap"><b>unpowered.</b> Per-field PATCH is api-asserted
+    (including the 409 lock refusals and C702's cross-scope 404) — no visual
+    capture exists of the edit surface.</div>
+    <dl><dt>code</dt><dd>PATCH /api/v1/transactions/{id}</dd>
+        <dt>cases</dt><dd>update suite · C702</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-flag">
+    <h4>item flagged — margin notes that survive locks</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/01-flag-popup-mobile.png" alt="flag popup" loading="lazy"></div>
+    <div class="ev-shot"><img src="assets/evidence-states/02-flag-active-mobile.png" alt="flag active on item" loading="lazy"></div>
+    <p>Toggled live on production, then reverted — the seed ended unchanged.</p>
+    <dl><dt>captured</dt><dd>2026-07-22 · live capture (user B, es-CL, mobile-390)</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
+        <dt>models</dt><dd>TransactionItemFlag</dd>
+        <dt>cases</dt><dd>C1066 (RLS migration)</dd>
+        <dt>role</dt><dd>edge</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-lockshare">
+    <h4>locked · shared — the D74 popup, verbatim</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/03-lock-popup-shared-mobile.png" alt="share-lock 409 popup" loading="lazy"></div>
+    <p>An explicit refusal with lock-links — never a silent partial.</p>
+    <dl><dt>captured</dt><dd>2026-07-22 · live capture on production</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
+        <dt>code</dt><dd>PATCH → 409 (D74)</dd>
+        <dt>models</dt><dd>Transaction.is_shared / share_count</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-lockmatch">
+    <h4>locked · matched — the P117 popup</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/04-lock-popup-matched-mobile.png" alt="statement-match 409 popup" loading="lazy"></div>
+    <p>"Transacción conciliada" — the row is reconciled against a cartola and
+    refuses edits until released.</p>
+    <dl><dt>captured</dt><dd>2026-07-22 · live capture on production</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
+        <dt>code</dt><dd>PATCH → 409 (P117) · _is_statement_matched</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-locksurface">
+    <h4>locked surface — read-only, flags exempt</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/05-locked-detail-readonly-mobile.png" alt="locked detail read-only" loading="lazy"></div>
+    <div class="ev-shot"><img src="assets/evidence-states/06-flag-on-locked-mobile.png" alt="flag on locked row" loading="lazy"></div>
+    <p>Edit affordances gone; the flag still writes — the lock protects shared
+    numbers, not your own margin notes.</p>
+    <dl><dt>captured</dt><dd>2026-07-22 · legs 05 + 06</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-unshare">
+    <h4>unshared — the P83 unlock, api only</h4>
+    <div class="ev-gap"><b>unpowered.</b> The lock persists while ANY group
+    copy survives; the counter-to-zero unlock is proven in api tests and has
+    never been photographed.</div>
+    <dl><dt>cases</dt><dd>group-unshare suite (two-group persistence · re-lock)</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-delconfirm">
+    <h4>delete · confirm — it asks first</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/07-delete-confirm-mobile.png" alt="delete confirm sheet" loading="lazy"></div>
+    <p>The capture created its own victim, so the seed ended unchanged.</p>
+    <dl><dt>captured</dt><dd>2026-07-22 · live capture on production</dd>
+        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
+        <dt>code</dt><dd>DELETE /api/v1/transactions/{id} · delete_transaction</dd>
+        <dt>cases</dt><dd>C1067</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-deleted">
+    <h4>deleted — the list says so</h4>
+    <div class="ev-shot"><img src="assets/evidence-states/08-deleted-gone-mobile.png" alt="row gone after delete" loading="lazy"></div>
+    <p>The row is gone and the list shrank by one.</p>
+    <dl><dt>captured</dt><dd>2026-07-22 · leg 08</dd>
+        <dt>cases</dt><dd>C1067</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-batch">
+    <h4>batch deleted — all-or-nothing, api only</h4>
+    <div class="ev-gap"><b>unpowered.</b> Batch delete counts only your own
+    scope's rows (C704) and refuses the WHOLE batch when one row is locked —
+    asserted, never photographed.</div>
+    <dl><dt>code</dt><dd>POST /api/v1/transactions/batch-delete</dd>
+        <dt>cases</dt><dd>C1072 · C704</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-sealed">
+    <h4>sealed · 409 — the gate time fires</h4>
+    <div class="ev-gap"><b>⚠ ghost.</b> Deletes past
+    transaction_delete_window_days (90) refuse — settled periods' statistics
+    are sealed. NO test walks this path and NO capture exists; the fuse-fix
+    commit 126f36a6 names it a born-red /gabe-red candidate.</div>
+    <dl><dt>code</dt><dd>_assert_within_delete_window (UX-11)</dd>
+        <dt>cases</dt><dd>— none —</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-dsr">
+    <h4>DSR erasure — the legal door past every gate</h4>
+    <div class="ev-gap"><b>⚠ ghost.</b> The consent bulk path deletes past the
+    delete window BY DESIGN (a legal right, documented in the window's own
+    docstring) — entirely unphotographed, untested end-to-end.</div>
+    <dl><dt>code</dt><dd>consent.py bulk erasure path</dd>
+        <dt>cases</dt><dd>— none —</dd></dl>
+  </div>
+</div>
+
+  </div>
+
+  <p class="prismsource">source: docs/prisms/evidence-states/body.html — authored HTML is the source of truth; this page is generated by build_prisms.py and is never hand-edited. 3 floor(s). proof manifests tx2b-journey · tx1-detail-reskin · txflows-journey; backend/app/api/transactions.py + models as read 2026-08-04; counts recountable from those files.</p>
+</main>
+
+</div>
+
+</body>
+</html>
