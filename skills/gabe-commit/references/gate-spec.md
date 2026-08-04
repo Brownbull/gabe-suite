@@ -182,6 +182,12 @@ fails. Both hold → the failures are the checkpoint's evidence, not a `critical
 else blocks normally. Without this carve-out the gate would block the very commit `/gabe-red`
 exists to produce — or teach users `force-commit`, which is worse.
 
+Run check (a) deterministically, never by reading the output prose:
+`python3 ~/.claude/skills/gabe-red/scripts/case-thread.py --phase N --assert-red --run "<case-scoped cmd>"`
+— `RED-PROVEN` (exit 0) satisfies (a); `NOT-RED` (exit 2) is the block, with the broken-run
+reason printed (a passing set, or an import/collection error mislabeled as red). The script is
+the carve-out's parser; a gate run that skips it is asserting red instead of proving it.
+
 ### Step 4: Present results
 
 **Render these output shapes as plain markdown at runtime — do not wrap in a triple-backtick fence.** Markdown tables, status lines, and interactive prompts all render inline so the user can read severity columns and action tokens.

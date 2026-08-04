@@ -180,7 +180,7 @@ For each task T_i in order:
    CLASS: rebuild-to-reference | restyle | implement | stub | fix | wire
    REUSE: REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)
           Searched: <globs/greps/stories checked>
-   CASES: <C-ids this task turns green (red@<sha>)> · GUARD: <ids that must stay green> — from the phase's Cases: record, or "none declared (no /gabe-red record)"
+   CASES: <C-ids this task turns green (red@<sha>)> · GUARD: <ids that must stay green> — from the phase's Cases: record. No record? The line must say WHICH absence it is: "skip:<code> (recorded — legitimate non-TDD exit)" when the record carries an enumerated skip, or "RED OWED — /gabe-red never ran for this phase" when there is no record at all. A never-ran red may not dress as a skip.
    ```
    Rules: (a) if the intended CLASS is cheaper than the quoted text implies (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask — substitution requires an explicit user decision line; (b) if the task names a reference (mockup/story/spec/legacy screen), CLASS must be rebuild-to-reference and ACCEPTANCE must name the reference; (c) an empty Searched line invalidates the REUSE verdict — re-authoring a lookalike of an existing artifact is a DEFECT, not a style choice; (d) when the phase carries a `Cases:` record (written by /gabe-red — see that skill's `references/red-spec.md`), each task lists the ids it advances, and the phase may not finish until every declared case is green AND every guard is still green. Tests are not a task CLASS — they are the contract ON tasks.
 

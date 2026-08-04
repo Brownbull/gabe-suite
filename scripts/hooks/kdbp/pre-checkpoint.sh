@@ -34,6 +34,17 @@ print(bare)' 2>/dev/null || true)
   if [ -z "$cmd_bare" ]; then
     cmd_bare=$(printf '%s' "$input" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' | head -1 | sed 's/"command"[[:space:]]*:[[:space:]]*"//' | sed 's/"$//' || true)
   fi
+  # --- shell-side PLAN edit warn: plan-proof-guard watches Write/Edit tools only; a
+  #     sed/jq/python/redirect touching the PLAN mirrors slips past the lie-block unseen.
+  #     Warn-tier (a bypass ATTEMPT is a debt; the lie, if any, is caught on the next
+  #     tool-side PLAN write). Reads (cat/grep/jq without -i etc.) stay silent via the
+  #     mutation-verb requirement.
+  if [ -n "$cmd_bare" ] && printf '%s' "$cmd_bare" | grep -qE '\.kdbp/PLAN\.(json|md)' 2>/dev/null; then
+    if printf '%s' "$cmd_bare" | grep -qE '(sed[[:space:]]+-i|[[:space:]]-i[[:space:]].*\.kdbp/PLAN|jq .*>[[:space:]]*[^>]*\.kdbp/PLAN|>[[:space:]]*[^>]*\.kdbp/PLAN\.(json|md)|tee[[:space:]]+[^|]*\.kdbp/PLAN|python3?[[:space:]].*\.kdbp/PLAN)' 2>/dev/null; then
+      echo "[WARN] KDBP PLAN-EDIT: shell-side edit of .kdbp/PLAN.* — plan-proof-guard cannot see this write (it watches Write/Edit tools). Use the Edit/Write tool or a real parser via the skill steps; the honesty checks run there."
+    fi
+  fi
+
   if [ -n "$cmd_bare" ] && printf '%s' "$cmd_bare" | grep -qE '(^|&&[[:space:]]*|;[[:space:]]*)git commit' 2>/dev/null; then
       echo "[WARN] KDBP CHECKPOINT: Use /gabe-commit instead of raw git commit"
 

@@ -57,7 +57,9 @@ CAP="shots/{$(python3 -c "print(','.join(chr(97+i) for i in range(20)))")}/{$(py
 [ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'','proof':None}]")" = 2 ] && ok || bad "guard: Red done w/o cases must BLOCK"
 [ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'NEW C1 (red@$SHA)','proof':None}]")" = 0 ] && ok || bad "guard: Red done w/ reachable sha must pass"
 [ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'NEW C1 (red@deadbeef)','proof':None}]")" = 2 ] && ok || bad "guard: Red done w/ unreachable sha must BLOCK"
-[ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'NEW C1','proof':None}]")" = 0 ] && ok || bad "guard: cases record w/o sha passes (hook validates only cited shas)"
+[ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'NEW C1','proof':None}]")" = 2 ] && ok || bad "guard: NEW record w/o red@sha must BLOCK (rail R2 — record-shaped is not evidence-shaped)"
+[ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'— · GUARD: C091 (behavior unchanged)','proof':None}]")" = 0 ] && ok || bad "guard: guard-only record w/o sha must pass (refactor form needs no red commit)"
+[ "$(guard_on "[{'id':'r','cells':{'red':'done'},'cases':'skip:not-testable — config-only','proof':None}]")" = 0 ] && ok || bad "guard: skip:* record w/o sha must pass (enumerated exit)"
 
 # --- plan-proof-guard: scoping / robustness -------------------------------
 echo '{"tool_input":{"file_path":"/x/src/app.py"}}' | bash "$GUARD" >/dev/null 2>&1
@@ -93,6 +95,18 @@ echo "$out" | grep -q 'declared C999' && ok || bad "pre: declared id with 0 corp
 python3 -c "import json;json.dump({'version':1,'status':'active','current_phase':'1','phases':[{'id':'1','cells':{'exec':'done'},'cases':'NEW C147','proof':None}]},open('.kdbp/PLAN.json','w'))"
 out=$(printf '%s' '{"tool_input":{"command":"git commit -m x"}}' | bash "$PRE" 2>/dev/null)
 echo "$out" | grep -q 'declared C147' && bad "pre: id present in the corpus must NOT warn (M25)" || ok
+
+# --- pre-checkpoint: shell-side PLAN edit warn (rail R5) -------------------
+out=$(printf '%s' '{"tool_input":{"command":"sed -i s/todo/done/ .kdbp/PLAN.json"}}' | bash "$PRE" 2>/dev/null)
+echo "$out" | grep -q 'PLAN-EDIT' && ok || bad "pre: sed -i on PLAN.json must WARN (R5 — guard cannot see shell writes)"
+out=$(printf '%s' '{"tool_input":{"command":"python3 fix.py > .kdbp/PLAN.json"}}' | bash "$PRE" 2>/dev/null)
+echo "$out" | grep -q 'PLAN-EDIT' && ok || bad "pre: redirect into PLAN.json must WARN (R5)"
+out=$(printf '%s' '{"tool_input":{"command":"cat .kdbp/PLAN.json"}}' | bash "$PRE" 2>/dev/null)
+echo "$out" | grep -q 'PLAN-EDIT' && bad "pre: reading PLAN.json must stay SILENT (R5)" || ok
+out=$(printf '%s' '{"tool_input":{"command":"jq .phases .kdbp/PLAN.json"}}' | bash "$PRE" 2>/dev/null)
+echo "$out" | grep -q 'PLAN-EDIT' && bad "pre: jq read of PLAN.json must stay SILENT (R5)" || ok
+out=$(printf '%s' '{"tool_input":{"command":"sed -i s/a/b/ src/app.py"}}' | bash "$PRE" 2>/dev/null)
+echo "$out" | grep -q 'PLAN-EDIT' && bad "pre: sed on a non-PLAN file must stay SILENT (R5)" || ok
 
 # --- session + stop + structure hooks (M24 — 4 of 6 hooks had no cases) ----
 STOPH="$REPO/scripts/hooks/kdbp/stop-session-reminder.sh"

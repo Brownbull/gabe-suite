@@ -112,9 +112,14 @@ for ph in plan.get("phases", []) or []:
         if not cases:
             out.append(f"phase {pid}: Red ✅ but no `cases` record (PLAN.json phases[].cases — written by /gabe-red)")
         else:
-            for sha in re.findall(r"red@([0-9a-f]{7,40})", cases):
+            shas = re.findall(r"red@([0-9a-f]{7,40})", cases)
+            for sha in shas:
                 if not sha_reachable(sha):
                     out.append(f"phase {pid}: Red ✅ cites red@{sha} but that commit is unreachable")
+            # a record that DECLARES failing work (NEW/BUMP) but cites no red commit is
+            # record-shaped, not evidence-shaped — guard-only and skip:* records are exempt
+            if not shas and "skip:" not in cases and re.search(r"\b(NEW|BUMP)\b", cases):
+                out.append(f"phase {pid}: Red ✅ declares NEW/BUMP cases but cites no red@<sha> — a red claimed without its commit is record-less (run /gabe-red; the checkpoint commit carries the proof)")
     # --- review ✅ on a red-beat phase whose cases never went green ---
     if c.get("review") == "done":
         cases = (ph.get("cases") or "").strip()

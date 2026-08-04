@@ -100,8 +100,8 @@ beside the `Cases:` line and shares its fate: a red claimed without it is record
 
 Downstream readers: `/gabe-execute`'s TASK CONTRACT `CASES:` line (which ids each task advances;
 phase completion = every declared case green + every guard still green) · the center's testing
-pages (ever-red, verification changelog) · the enforcement hook (declared ids must grep ≥1 in the
-corpus).
+pages (ever-red, verification changelog) · the enforcement warn (`pre-checkpoint.sh`: declared
+ids must grep ≥1 in the corpus — warn-tier, never a block).
 
 ## The red→green thread (record states)
 
@@ -150,8 +150,9 @@ dir-scoped add); the sweep sha then goes into `.git-blame-ignore-revs` + `git co
 blame.ignoreRevsFile .git-blame-ignore-revs` in an immediately following chore commit — the sha
 cannot ride its own commit, and the file alone only helps GitHub's UI. **Never** rewrite a
 claim; **no fake reds** — backfilled cases carry ids but their ever-red stays empty until a
-genuine red is ever observed. New test files after the sweep: the commit-gate check requires an
-id at birth.
+genuine red is ever observed. New test files after the sweep: the commit-gate check WARNS on an
+id-less new test file (`pre-checkpoint.sh` — warn-tier by D1: a missing id is a debt, not a lie;
+the wording here once said "requires", which the hook never did).
 
 Sweep mechanics (rulings R2/R3, rehearsal-hardened): roots are EXPLICIT arguments, never
 inferred (legacy trees and generated artifact dirs must stay out); id detection/allocation uses
