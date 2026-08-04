@@ -38,6 +38,9 @@ from pathlib import Path
 # How much has to accumulate before a signal is worth a line. Deliberately
 # coarse: a threshold tuned to fire often is a threshold that will be ignored.
 THRESHOLDS = {
+    # S8 — owed captures worth interrupting for. Below this the census is
+    # merely young; above it, evidence debt is accumulating unattended.
+    "evidence_owed": 3,
     "phases_before_roast": 3,
     "commits_before_health": 25,
     "entity_files_touched": 3,
@@ -240,8 +243,44 @@ def s7_prism(root: Path, plan: dict | None, cfg: dict | None):
             "/gabe-imagine")
 
 
+def s8_evidence(root: Path, plan: dict | None, cfg: dict | None):
+    """Workflow-census capture debt — the standing reminder.
+
+    /gabe-review DETECTS drift on the diff that caused it; this angle exists for
+    what review can only DEFER: an owed capture needs a green e2e run plus
+    curation, so it survives the reviewing session and then needs something to
+    keep surfacing it. Reads the committed census only — no run, no parse."""
+    wf_dir = root / "docs" / "site" / "center" / "workflows"
+    if not wf_dir.is_dir():
+        return Unavailable("no workflow census yet — /gabe-cc-update authors it")
+    owed, drift, ents = 0, 0, 0
+    for f in sorted(wf_dir.glob("*.json")):
+        try:
+            census = json.loads(f.read_text())
+        except Exception:
+            continue
+        ents += 1
+        for st in (census.get("states") or {}).values():
+            if st.get("grp"):
+                continue
+            if not st.get("shot"):
+                owed += 1
+            cap = str(st.get("cap") or "")
+            if "owed" in cap:
+                drift += 1
+    if not ents:
+        return Unavailable("workflow census directory is empty")
+    if owed < THRESHOLDS["evidence_owed"]:
+        return None
+    named = f"{drift} named capture-owed" if drift else "none named"
+    return (f"{owed} workflow step(s) across {ents} entity census(es) have no "
+            f"capture ({named})",
+            "/gabe-cc-update curate")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
+    ("S8", "evidence debt", s8_evidence),
     ("S3", "journey proof", s3_myopic),
     ("S4", "published docs", s4_docsite),
     ("S6", "entity context", s6_entity),

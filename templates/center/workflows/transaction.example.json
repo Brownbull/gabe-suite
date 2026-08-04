@@ -1,0 +1,1969 @@
+{
+ "entity": "transaction",
+ "states": {
+  "home": {
+   "l": "home",
+   "st": "running",
+   "role": "supporting",
+   "shot": [
+    "assets/evidence-states/ca0-home-empty-cta.png"
+   ],
+   "uc": "The dashboard — empty state carries the scan CTA (CA0's scope-gated fix).",
+   "cap": "2026-07-11 · ca0 set",
+   "spec": "ca0 e2e (2/2 live)",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "plus": {
+   "l": "+ menu",
+   "st": "running",
+   "role": "supporting",
+   "shot": [
+    "assets/evidence-states/ca0-capture-menu.png"
+   ],
+   "uc": "“How do you want to record your expense?” — scan · batch · statement · manual.",
+   "cap": "2026-07-11 · ca0 set",
+   "spec": "ca0 e2e",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "form": {
+   "l": "form",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-manual-form-empty.png"
+   ],
+   "uc": "The single capture surface (D110/D111) — fresh here, or resumed from the one draft slot (ⓘ sheet explains the slot). Every ✎ satellite below edits THIS form.",
+   "cap": "2026-07-09/10 · tx2 set",
+   "spec": "routes/-transactions.new.test.tsx + tx2 journey",
+   "code": [
+    "routes/transactions.new.tsx"
+   ],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "txfields": {
+   "l": "tx fields ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "txf",
+   "st": "running",
+   "role": "section → workflow",
+   "uc": "Section — the transaction's own editable surfaces; seven derive from here (three captured, four owed).",
+   "cap": "aggregate of its children",
+   "spec": "TransactionCreate schema",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": [
+    "merchant",
+    "date",
+    "time",
+    "store_category",
+    "card_alias",
+    "recurrence…",
+    "country/city",
+    "total",
+    "currency",
+    "images[]"
+   ]
+  },
+  "itemfields": {
+   "l": "item fields ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "itemf",
+   "st": "running",
+   "role": "section → workflow",
+   "uc": "Section — the item rows; add → edit (qty · price · category), save ⇢ recomputes the total.",
+   "cap": "aggregate of its children",
+   "spec": "TransactionItemCreate schema",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": [
+    "items[]: name",
+    "qty",
+    "unit_price",
+    "total_price",
+    "item_category",
+    "subcategory"
+   ]
+  },
+  "autosave": {
+   "l": "autosave",
+   "st": "unpowered",
+   "role": "principal",
+   "uc": "The debounced whole-payload upsert running the whole time you edit — idempotent, and create flushes it before committing so no PUT races the commit.",
+   "cap": "capture owed (form-fields run)",
+   "spec": "useTransactionDraft (saveDraft)",
+   "code": [
+    "PUT /api/v1/transactions/draft → put_draft() (drafts.py:73)"
+   ],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "whole payload",
+     "saveDraft.mutateAsync() (debounced)",
+     "TransactionDraft.payload"
+    ]
+   ]
+  },
+  "landed": {
+   "l": "landed · home",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/ca0-home-empty-cta.png"
+   ],
+   "uc": "Create ends the entry flow on the DASHBOARD (Recent shows the new row) — it deliberately no longer pushes the detail, which read as an unexplained second screen.",
+   "cap": "2026-07-11 · ca0 set (the landing surface)",
+   "spec": "transactions.new.tsx:673 navigate({to:'/'})",
+   "code": [
+    "navigate({to:\"/\"})"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "backwf": {
+   "l": "⇱ back",
+   "grp": 1,
+   "lnk": 1,
+   "link": "__parent",
+   "st": "running",
+   "role": "link",
+   "uc": "Back to the workflow you came from.",
+   "cap": "—",
+   "spec": "—",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "backman": {
+   "l": "⇱ manual entry",
+   "grp": 1,
+   "lnk": 1,
+   "link": "manual",
+   "linkcur": "form",
+   "st": "running",
+   "role": "link",
+   "uc": "Back to the parent workflow.",
+   "cap": "—",
+   "spec": "—",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "totalink": {
+   "l": "total·CLP ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "txf",
+   "linkcur": "totalcur",
+   "st": "running",
+   "role": "link",
+   "uc": "The recompute lands on Total·CLP — it lives in the transaction-fields workflow.",
+   "cap": "—",
+   "spec": "—",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "resolve": {
+   "l": "resolve ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "resolvew",
+   "st": "running",
+   "role": "section → workflow",
+   "uc": "Section — the SHARED way out of the capture form: autosave · leave · discard · create. Manual and scan resolve identically because /scan is retired — it is the same form.",
+   "cap": "aggregate of its children",
+   "spec": "drafts.py (put · delete · commit)",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "merchdate": {
+   "l": "merch·date·time",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-form-filled.png"
+   ],
+   "uc": "The MerchantHeader inline fields — merchant name (charset-validated), date AND time; the filled capture shows the inline surface itself.",
+   "cap": "2026-07-09/10 · journey-filled",
+   "spec": "MerchantHeader + schema validators",
+   "code": [
+    "MerchantHeader.tsx"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "merchant",
+     "payloadFromForm() → create_transaction()",
+     "Transaction.merchant"
+    ],
+    [
+     "transaction_date",
+     "payloadFromForm() → create_transaction()",
+     "Transaction.transaction_date"
+    ],
+    [
+     "transaction_time",
+     "payloadFromForm() → create_transaction()",
+     "Transaction.transaction_time"
+    ]
+   ]
+  },
+  "storecat": {
+   "l": "store cat",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-category-picker.png"
+   ],
+   "uc": "CategoryPickerModal in STORE mode — this capture IS the store-category modal (“Categoría del comercio”), independent of the merchant name field.",
+   "cap": "2026-07-09/10 · live capture",
+   "spec": "tx2 set · useStoreCategories",
+   "code": [
+    "CategoryPickerModal.tsx"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "store_category_id",
+     "CategoryPickerModal(onPick) → create_transaction()",
+     "Transaction.store_category_id"
+    ],
+    [
+     "store_category_source=user",
+     "same",
+     "Transaction.store_category_source"
+    ]
+   ]
+  },
+  "payment": {
+   "l": "payment",
+   "st": "unpowered",
+   "role": "principal",
+   "uc": "PaymentPicker — card aliases incl. the provisioned Efectivo (D119); a fresh slot prefills the is_default alias. Modification capture OWED.",
+   "cap": "capture owed (form-fields run)",
+   "spec": "-transactions.new.test.tsx · useCardAliases",
+   "code": [
+    "PaymentPicker.tsx"
+   ],
+   "models": [
+    "CardAlias"
+   ],
+   "cids": [
+    "C70"
+   ],
+   "writes": [
+    [
+     "card_alias_id",
+     "PaymentPicker(onPick) → create_transaction()",
+     "Transaction.card_alias_id → CardAlias"
+    ]
+   ]
+  },
+  "cadence": {
+   "l": "cadence",
+   "st": "unpowered",
+   "role": "principal",
+   "uc": "The One-time chip — recurrence kind, interval, term N/M, label. Independent of the payment method. Modification capture OWED.",
+   "cap": "capture owed (form-fields run)",
+   "spec": "schema RecurrenceKind/Interval",
+   "code": [
+    "MerchantHeader.tsx"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "recurrence_kind",
+     "MerchantHeader cadence → create_transaction()",
+     "Transaction.recurrence_kind"
+    ],
+    [
+     "recurrence_interval",
+     "same",
+     "Transaction.recurrence_interval"
+    ],
+    [
+     "term_current / term_total",
+     "same",
+     "Transaction.term_*"
+    ],
+    [
+     "recurrence_label",
+     "same",
+     "Transaction.recurrence_label"
+    ]
+   ]
+  },
+  "location": {
+   "l": "location",
+   "st": "unpowered",
+   "role": "principal",
+   "uc": "LocationModal — purchase country + city (the SL track), reconciled against the settings default. sl-location e2e ran 12/12 live; no curated capture of the modal.",
+   "cap": "capture owed (form-fields run) · e2e-asserted 12/12",
+   "spec": "sl-location e2e",
+   "code": [
+    "LocationModal"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "country",
+     "LocationModal(onSet) → create_transaction()",
+     "Transaction.country"
+    ],
+    [
+     "city",
+     "same",
+     "Transaction.city"
+    ]
+   ]
+  },
+  "totalcur": {
+   "l": "total·CLP",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-form-filled.png"
+   ],
+   "uc": "TransactionTotal — the amount (≥0, minor units) and the 3-letter currency; recomputed when an item save lands (⇢).",
+   "cap": "2026-07-09/10 · journey-filled",
+   "spec": "TransactionTotal + schema",
+   "code": [
+    "TransactionTotal.tsx"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "total_minor",
+     "TransactionTotal → create_transaction()",
+     "Transaction.total_minor"
+    ],
+    [
+     "currency",
+     "same",
+     "Transaction.currency"
+    ]
+   ]
+  },
+  "attach": {
+   "l": "attach",
+   "st": "unpowered",
+   "role": "principal",
+   "uc": "Receipt images, up to 20 (the 0/20 counter) — persisted as TransactionImage rows on create. Modification capture OWED.",
+   "cap": "capture owed (form-fields run)",
+   "spec": "-transactions.new.test.tsx",
+   "code": [],
+   "models": [
+    "TransactionImage"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "image_urls[] (≤20)",
+     "attach → create_transaction()",
+     "TransactionImage rows"
+    ]
+   ]
+  },
+  "additem": {
+   "l": "add item",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-form-filled.png"
+   ],
+   "uc": "The items section — optional (“you can also save just the total”); rows group by item family.",
+   "cap": "2026-07-09/10 · journey-filled",
+   "spec": "ItemGroup/EditableItemRow",
+   "code": [
+    "EditableItemRow.tsx"
+   ],
+   "models": [
+    "TransactionItem"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "items[] (row added)",
+     "payloadFromForm() → create_transaction()",
+     "TransactionItem rows"
+    ]
+   ]
+  },
+  "itemedit": {
+   "l": "item edit",
+   "st": "unpowered",
+   "role": "principal",
+   "uc": "ItemEditModal — name, qty (WHOLE NUMBER in manual), unit price, total price; SAVE commits the row (⇢ recomputes Total·CLP), cancel discards it. Modification capture OWED.",
+   "cap": "capture owed (form-fields run)",
+   "spec": "-transactions.new.test.tsx + schema validators",
+   "code": [
+    "ItemEditModal"
+   ],
+   "models": [
+    "TransactionItem"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "name",
+     "ItemEditModal(onSave)",
+     "TransactionItem.name"
+    ],
+    [
+     "qty",
+     "ItemEditModal(onSave)",
+     "TransactionItem.qty"
+    ],
+    [
+     "unit_price_minor",
+     "ItemEditModal(onSave)",
+     "TransactionItem.unit_price_minor"
+    ],
+    [
+     "total_price_minor",
+     "ItemEditModal(onSave)",
+     "TransactionItem.total_price_minor"
+    ]
+   ]
+  },
+  "itemcat": {
+   "l": "item cat",
+   "st": "ghost",
+   "role": "named gap",
+   "uc": "CategoryPickerModal in ITEM mode — the pixel-icon list. NO curated capture exists of this mode; capture OWED.",
+   "cap": "capture owed (form-fields run)",
+   "spec": "useItemCategories · itemFamilies",
+   "code": [
+    "CategoryPickerModal.tsx"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "item_category_id",
+     "CategoryPickerModal(item mode)",
+     "TransactionItem.item_category_id"
+    ],
+    [
+     "subcategory",
+     "same",
+     "TransactionItem.subcategory"
+    ],
+    [
+     "category_source=user",
+     "same",
+     "TransactionItem.category_source"
+    ]
+   ]
+  },
+  "leaveguard": {
+   "l": "leave?",
+   "st": "unpowered",
+   "role": "edge",
+   "uc": "DF3 leave guard — a dirty form blocks back/nav/reload behind a ConfirmSheet; resumed-untouched exits deliberately do NOT cry data loss. e2e-asserted (3/3), no curated capture.",
+   "cap": "never (e2e-asserted)",
+   "spec": "df3-overlay-guards.spec.ts 3/3",
+   "code": [
+    "useBlocker (transactions.new.tsx:292)"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "cancel": {
+   "l": "discard",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/tx2-discard-confirm.png"
+   ],
+   "uc": "Discard asks first — then really deletes the draft (CA0 trust fix).",
+   "cap": "2026-07-09/10 · discard-confirm",
+   "spec": "tx2 set",
+   "code": [
+    "DELETE /api/v1/transactions/{id}"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "draft removal",
+     "discard → DELETE /transactions/{id}",
+     "TransactionDraft (deleted)"
+    ]
+   ]
+  },
+  "save": {
+   "l": "create",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-created-detail.png"
+   ],
+   "uc": "Create flushes the autosave (PUT) and then COMMITS the draft — two calls, ordered so no pending debounce can race the commit.",
+   "cap": "2026-07-09/10 · journey-created",
+   "spec": "tx2 journey spec · useCommitTransactionDraft",
+   "code": [
+    "POST /api/v1/transactions/draft/commit → commit_draft() (drafts.py:258)"
+   ],
+   "models": [
+    "Transaction",
+    "TransactionItem",
+    "TransactionImage"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "Transaction row",
+     "commit_draft() (drafts.py:258)",
+     "Transaction"
+    ],
+    [
+     "items[]",
+     "same",
+     "TransactionItem"
+    ],
+    [
+     "images[]",
+     "same",
+     "TransactionImage"
+    ]
+   ]
+  },
+  "imagesel": {
+   "l": "pick image",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/txd-image-selected.png"
+   ],
+   "uc": "Scan entry — the receipt photo chosen, ready to read.",
+   "cap": "2026-07-11 · txdirect set",
+   "spec": "txdirect e2e",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "scanning": {
+   "l": "scanning",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/scan-02-slot-scanning.png",
+    "assets/evidence-states/txd-scan-progress.png"
+   ],
+   "uc": "The slot reads the receipt over SSE — web slot + mobile progress, both photographed; three country runs 5/5.",
+   "cap": "2026-07-09/11 · tx2b + txdirect",
+   "spec": "_tx2b-live-capture.spec.ts",
+   "code": [
+    "web scan slot (SSE)"
+   ],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "degrade": {
+   "l": "degrade",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/degrade-01-slot-error.png",
+    "assets/evidence-states/degrade-02-manual-after-failure.png"
+   ],
+   "uc": "A failed scan lands in the SAME form as manual entry — photographed twice.",
+   "cap": "2026-07-09 · degrade leg",
+   "spec": "_tx2b-live-capture.spec.ts",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "draft": {
+   "l": "review",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/scan-03-form-populated.png"
+   ],
+   "uc": "AI-populated review — THE FORM again: every ✎ satellite of the manual workflow applies here; each correction overrides the AI's guess.",
+   "cap": "2026-07-09 · vs production",
+   "spec": "_tx2b-live-capture.spec.ts",
+   "code": [],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "draft payload fields",
+     "upsert_draft_from_scan() then form edits",
+     "TransactionDraft.payload"
+    ]
+   ]
+  },
+  "resumed": {
+   "l": "resume",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/scan-04-reload-resumed.png"
+   ],
+   "uc": "Reload mid-review; the draft comes back — the one-surface bet's persistence proof.",
+   "cap": "2026-07-09 · leg 04",
+   "spec": "_tx2b-live-capture.spec.ts",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "scandone": {
+   "l": "complete",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/txd-scan-complete.png",
+    "assets/evidence-states/txd-detail-from-scan.png"
+   ],
+   "uc": "“Guardar y ver” lands on the REAL created transaction (CA0 trust fix — no dead-end success card).",
+   "cap": "2026-07-11 · txdirect legs 03+04",
+   "spec": "txdirect e2e",
+   "code": [
+    "POST /api/v1/transactions"
+   ],
+   "models": [
+    "Transaction"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "Transaction row",
+     "persist_scan_result() (target=transaction)",
+     "Transaction"
+    ],
+    [
+     "items[]",
+     "same",
+     "TransactionItem"
+    ]
+   ]
+  },
+  "scanslot": {
+   "l": "scan slot ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "scanpipe",
+   "st": "running",
+   "role": "section → workflow",
+   "uc": "The upload slot on the SAME form (/scan is retired — D111 redirects it here with ?scan=true). Its 8-phase pipeline is its own workflow.",
+   "cap": "aggregate of its children",
+   "spec": "useScanToDraft.ts · deriveSlotState",
+   "code": [
+    "routes/transactions.new.tsx"
+   ],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "backscan": {
+   "l": "⇱ scan workflow",
+   "grp": 1,
+   "lnk": 1,
+   "link": "scan",
+   "linkcur": "form2",
+   "st": "running",
+   "role": "link",
+   "uc": "Back to the scan workflow.",
+   "cap": "—",
+   "spec": "—",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "form2": {
+   "l": "form",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/tx2-manual-form-empty.png"
+   ],
+   "uc": "The SAME capture surface as manual entry — scanning is a slot on it, not a separate screen (D111).",
+   "cap": "2026-07-09/10 · tx2 set",
+   "spec": "routes/-transactions.new.test.tsx",
+   "code": [
+    "routes/transactions.new.tsx"
+   ],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "pickimg": {
+   "l": "pick image",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/txd-image-selected.png"
+   ],
+   "uc": "The receipt photo chosen — the slot leaves idle.",
+   "cap": "2026-07-11 · txdirect set",
+   "spec": "txdirect e2e",
+   "code": [
+    "useScanUpload()"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "uploading": {
+   "l": "uploading",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/scan-02-slot-scanning.png",
+    "assets/evidence-states/txd-scan-progress.png"
+   ],
+   "uc": "POST /scans?target=draft — the phase chain runs uploading → submitted → processing → extracting → categorizing → verified.",
+   "cap": "2026-07-09/11 · tx2b + txdirect",
+   "spec": "_tx2b-live-capture.spec.ts",
+   "code": [
+    "submit_scan() (scans.py:57)",
+    "trigger_process_scan() (scans.py:168)"
+   ],
+   "models": [
+    "Scan"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "scan row",
+     "submit_scan()",
+     "Scan (draft_user_id set)"
+    ]
+   ]
+  },
+  "verified": {
+   "l": "verified",
+   "st": "unpowered",
+   "role": "edge",
+   "uc": "The extraction's own confidence stage before complete — surfaced as stageLabel/confidencePct; no capture isolates it.",
+   "cap": "capture owed (scan-phases run)",
+   "spec": "scanStore ScanPhase union",
+   "code": [
+    "deriveSlotState()"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "reseed": {
+   "l": "reseed form",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/scan-03-form-populated.png"
+   ],
+   "uc": "The terminal SSE event upserts a TransactionDraft and RESEEDS the form — every ✎ field of the manual workflow now edits the AI's guess.",
+   "cap": "2026-07-09 · vs production",
+   "spec": "_tx2b-live-capture.spec.ts",
+   "code": [
+    "upsert_draft_from_scan()",
+    "useScanToDraft(onFresh)"
+   ],
+   "models": [
+    "TransactionDraft"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "draft payload",
+     "upsert_draft_from_scan() (scan_to_draft.py:50)",
+     "TransactionDraft.payload"
+    ]
+   ]
+  },
+  "quota": {
+   "l": "quota out",
+   "st": "ghost",
+   "role": "named gap",
+   "uc": "quota_exhausted degrades the slot back to idle — the user continues by hand. No capture, no e2e leg.",
+   "cap": "never",
+   "spec": "— none —",
+   "code": [
+    "_quota_exhausted_detail() (scans.py:35)"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "mobiledirect": {
+   "l": "mobile direct",
+   "st": "running",
+   "role": "principal",
+   "shot": [
+    "assets/evidence-states/txd-scan-complete.png",
+    "assets/evidence-states/txd-detail-from-scan.png"
+   ],
+   "uc": "Mobile sends target=transaction — NO draft slot: the scan persists straight to a Transaction and lands on its detail.",
+   "cap": "2026-07-11 · txdirect legs 03+04",
+   "spec": "txdirect e2e",
+   "code": [
+    "submit_scan(target=transaction)",
+    "persist_scan_result()"
+   ],
+   "models": [
+    "Transaction"
+   ],
+   "cids": [],
+   "writes": [
+    [
+     "Transaction row",
+     "persist_scan_result()",
+     "Transaction"
+    ],
+    [
+     "items[]",
+     "same",
+     "TransactionItem"
+    ]
+   ]
+  },
+  "locks": {
+   "l": "locks ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "locksw",
+   "st": "running",
+   "role": "section → workflow",
+   "uc": "Section — the two lock kinds and the read-only surface they produce.",
+   "cap": "aggregate of its children",
+   "spec": "D74 · P117",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "exitw": {
+   "l": "exit ⧉",
+   "grp": 1,
+   "lnk": 1,
+   "link": "exitw2",
+   "st": "running",
+   "role": "section → workflow",
+   "uc": "Section — every way a row leaves: single, batch, sealed, DSR.",
+   "cap": "aggregate of its children",
+   "spec": "UX-11 · consent.py",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "backlife": {
+   "l": "⇱ lifecycle",
+   "grp": 1,
+   "lnk": 1,
+   "link": "lifecycle",
+   "linkcur": "saved",
+   "st": "running",
+   "role": "link",
+   "uc": "Back to the entity lifecycle.",
+   "cap": "—",
+   "spec": "—",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "saved": {
+   "l": "saved",
+   "st": "running",
+   "role": "reference",
+   "shot": [
+    "assets/evidence-states/saved-detail-mobile.png"
+   ],
+   "uc": "The steady state — the detail every episode returns to.",
+   "cap": "2026-07-08/09 · fidelity set",
+   "spec": "tx1-detail-reskin.spec.ts",
+   "code": [
+    "GET /api/v1/transactions/{id}"
+   ],
+   "models": [
+    "Transaction",
+    "TransactionItem",
+    "TransactionImage"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "edited": {
+   "l": "edit",
+   "st": "unpowered",
+   "role": "edge",
+   "uc": "Per-field PATCH — api-asserted incl. lock refusals and cross-scope 404; never photographed.",
+   "cap": "never (api only)",
+   "spec": "api update suite",
+   "code": [
+    "PATCH /api/v1/transactions/{id}"
+   ],
+   "models": [
+    "Transaction"
+   ],
+   "cids": [
+    "C702"
+   ],
+   "writes": [
+    [
+     "changed fields",
+     "update_transaction() (transactions.py:382)",
+     "Transaction"
+    ]
+   ]
+  },
+  "flagged": {
+   "l": "flag",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/01-flag-popup-mobile.png",
+    "assets/evidence-states/02-flag-active-mobile.png"
+   ],
+   "uc": "Per-item margin notes, live on production then reverted — flags survive every lock.",
+   "cap": "2026-07-22 · live",
+   "spec": "_txflows-live-capture.spec.ts",
+   "code": [],
+   "models": [
+    "TransactionItemFlag"
+   ],
+   "cids": [
+    "C1066"
+   ],
+   "writes": [
+    [
+     "is_flagged",
+     "update_transaction_item_flags() (transactions.py:573)",
+     "TransactionItemFlag"
+    ]
+   ]
+  },
+  "shared": {
+   "l": "shared",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/03-lock-popup-shared-mobile.png"
+   ],
+   "uc": "A shared row refuses edits with an explicit 409 popup — never a silent partial (D74).",
+   "cap": "2026-07-22 · live",
+   "spec": "_txflows-live-capture.spec.ts",
+   "code": [
+    "PATCH → 409 (D74)"
+   ],
+   "models": [
+    "Transaction.is_shared"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "matched": {
+   "l": "matched",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/04-lock-popup-matched-mobile.png"
+   ],
+   "uc": "“Transacción conciliada” — sealed until the statement releases it (P117).",
+   "cap": "2026-07-22 · live",
+   "spec": "_txflows-live-capture.spec.ts",
+   "code": [
+    "PATCH → 409 (P117)"
+   ],
+   "models": [
+    "Transaction"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "readonly": {
+   "l": "read-only",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/05-locked-detail-readonly-mobile.png",
+    "assets/evidence-states/06-flag-on-locked-mobile.png"
+   ],
+   "uc": "Edit affordances gone, flags still writable — the lock protects shared numbers, not your notes.",
+   "cap": "2026-07-22 · legs 05+06",
+   "spec": "_txflows-live-capture.spec.ts",
+   "code": [],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "unshared": {
+   "l": "unshare",
+   "st": "unpowered",
+   "role": "edge",
+   "uc": "Locked while ANY group copy survives; the P83 unlock is api-proven, never photographed.",
+   "cap": "never (api only)",
+   "spec": "group-unshare suite",
+   "code": [],
+   "models": [
+    "Transaction.share_count"
+   ],
+   "cids": [],
+   "writes": []
+  },
+  "confirm": {
+   "l": "confirm",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/07-delete-confirm-mobile.png"
+   ],
+   "uc": "Destructive paths ask first; the capture created its own victim.",
+   "cap": "2026-07-22 · live",
+   "spec": "_txflows-live-capture.spec.ts",
+   "code": [
+    "DELETE /api/v1/transactions/{id}"
+   ],
+   "models": [
+    "Transaction"
+   ],
+   "cids": [
+    "C1067"
+   ],
+   "writes": []
+  },
+  "deleted": {
+   "l": "deleted",
+   "st": "running",
+   "role": "edge",
+   "shot": [
+    "assets/evidence-states/08-deleted-gone-mobile.png"
+   ],
+   "uc": "The row is gone and the list shrank by one.",
+   "cap": "2026-07-22 · leg 08",
+   "spec": "_txflows-live-capture.spec.ts",
+   "code": [],
+   "models": [],
+   "cids": [
+    "C1067"
+   ],
+   "writes": [
+    [
+     "row removal",
+     "delete_transaction() (transactions.py:668)",
+     "Transaction (deleted)"
+    ]
+   ]
+  },
+  "batch": {
+   "l": "batch",
+   "st": "unpowered",
+   "role": "edge",
+   "uc": "Counts only your scope's rows and refuses the WHOLE batch on one lock — asserted, never photographed.",
+   "cap": "never (api only)",
+   "spec": "api batch suite",
+   "code": [
+    "POST …/batch-delete"
+   ],
+   "models": [
+    "Transaction"
+   ],
+   "cids": [
+    "C1072",
+    "C704"
+   ],
+   "writes": [
+    [
+     "rows removal",
+     "batch_delete_transactions() (transactions.py:800)",
+     "Transaction (deleted ×N)"
+    ]
+   ]
+  },
+  "sealed": {
+   "l": "409",
+   "st": "ghost",
+   "role": "named gap",
+   "uc": "Deletes past 90 days refuse — settled periods are sealed (UX-11). NO test, NO capture: the born-red candidate.",
+   "cap": "never",
+   "spec": "— none —",
+   "code": [
+    "_assert_within_delete_window"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": []
+  },
+  "dsr": {
+   "l": "DSR",
+   "st": "ghost",
+   "role": "named gap",
+   "uc": "The consent bulk path deletes past the window BY DESIGN — a legal right; unphotographed, untested end-to-end.",
+   "cap": "never",
+   "spec": "— none —",
+   "code": [
+    "consent.py bulk erasure"
+   ],
+   "models": [],
+   "cids": [],
+   "writes": [
+    [
+     "bulk rows removal",
+     "consent.py DSR erasure",
+     "Transaction (deleted, past every gate)"
+    ]
+   ]
+  }
+ },
+ "workflows": {
+  "manual": {
+   "label": "manual entry workflow",
+   "gates": [
+    [
+     "leave guard (DF3)",
+     "A dirty form blocks back/nav/reload behind a ConfirmSheet"
+    ],
+    [
+     "personal-only",
+     "The capture surface is scope-gated to the personal scope"
+    ],
+    [
+     "single draft slot",
+     "One in-flight draft per user (D110)"
+    ]
+   ],
+   "nodes": [
+    "home",
+    "plus",
+    "form",
+    "txfields",
+    "itemfields",
+    "resolve"
+   ],
+   "tree": [
+    [
+     "home",
+     210,
+     42
+    ],
+    [
+     "plus",
+     210,
+     104
+    ],
+    [
+     "form",
+     210,
+     166
+    ],
+    [
+     "txfields",
+     92,
+     250
+    ],
+    [
+     "itemfields",
+     212,
+     250
+    ],
+    [
+     "resolve",
+     332,
+     250
+    ]
+   ],
+   "edges": [
+    [
+     "home",
+     "plus"
+    ],
+    [
+     "plus",
+     "form"
+    ],
+    [
+     "form",
+     "txfields"
+    ],
+    [
+     "form",
+     "itemfields"
+    ],
+    [
+     "form",
+     "resolve"
+    ]
+   ],
+   "taps": [],
+   "bands": [],
+   "h": 290
+  },
+  "txf": {
+   "label": "transaction fields",
+   "sub": 1,
+   "gates": [
+    [
+     "name charset",
+     "Merchant name: letters, numbers, spaces, dots only"
+    ],
+    [
+     "amounts ≥ 0",
+     "total_minor validates non-negative"
+    ]
+   ],
+   "nodes": [
+    "merchdate",
+    "storecat",
+    "payment",
+    "cadence",
+    "location",
+    "attach",
+    "totalcur"
+   ],
+   "tree": [
+    [
+     "backman",
+     86,
+     38
+    ],
+    [
+     "merchdate",
+     128,
+     100,
+     "r"
+    ],
+    [
+     "storecat",
+     128,
+     148,
+     "r"
+    ],
+    [
+     "payment",
+     128,
+     196,
+     "r"
+    ],
+    [
+     "cadence",
+     128,
+     244,
+     "r"
+    ],
+    [
+     "location",
+     128,
+     292,
+     "r"
+    ],
+    [
+     "attach",
+     128,
+     340,
+     "r"
+    ],
+    [
+     "totalcur",
+     128,
+     388,
+     "r"
+    ]
+   ],
+   "edges": [],
+   "taps": [
+    [
+     86,
+     50,
+     "merchdate"
+    ],
+    [
+     86,
+     50,
+     "storecat"
+    ],
+    [
+     86,
+     50,
+     "payment"
+    ],
+    [
+     86,
+     50,
+     "cadence"
+    ],
+    [
+     86,
+     50,
+     "location"
+    ],
+    [
+     86,
+     50,
+     "attach"
+    ],
+    [
+     86,
+     50,
+     "totalcur"
+    ]
+   ],
+   "bands": [],
+   "h": 425
+  },
+  "itemf": {
+   "label": "item fields",
+   "sub": 1,
+   "gates": [
+    [
+     "whole-number qty",
+     "Manual entry rejects fractional quantities — the receipt tier allows them"
+    ],
+    [
+     "amounts ≥ 0",
+     "every price validates non-negative"
+    ]
+   ],
+   "nodes": [
+    "additem",
+    "itemedit",
+    "itemcat"
+   ],
+   "tree": [
+    [
+     "backman",
+     86,
+     38
+    ],
+    [
+     "additem",
+     128,
+     100,
+     "r"
+    ],
+    [
+     "itemedit",
+     146,
+     152,
+     "r"
+    ],
+    [
+     "itemcat",
+     164,
+     204,
+     "r"
+    ],
+    [
+     "totalink",
+     320,
+     152
+    ]
+   ],
+   "edges": [
+    [
+     "itemedit",
+     "totalink",
+     "fx"
+    ]
+   ],
+   "taps": [
+    [
+     86,
+     50,
+     "additem"
+    ],
+    [
+     128,
+     112,
+     "itemedit"
+    ],
+    [
+     146,
+     164,
+     "itemcat"
+    ]
+   ],
+   "bands": [],
+   "h": 245
+  },
+  "resolvew": {
+   "label": "resolve (shared)",
+   "sub": 1,
+   "gates": [
+    [
+     "flush before commit",
+     "create PUTs the pending payload, THEN commits — no racing debounce"
+    ],
+    [
+     "leave guard (DF3)",
+     "A dirty form blocks back/nav/reload; create and discard set skipLeaveGuard"
+    ],
+    [
+     "idempotent slot ops",
+     "PUT upsert and DELETE draft are both idempotent"
+    ]
+   ],
+   "nodes": [
+    "autosave",
+    "leaveguard",
+    "cancel",
+    "save",
+    "landed"
+   ],
+   "tree": [
+    [
+     "backwf",
+     80,
+     38
+    ],
+    [
+     "autosave",
+     132,
+     100,
+     "r"
+    ],
+    [
+     "leaveguard",
+     132,
+     160,
+     "r"
+    ],
+    [
+     "cancel",
+     132,
+     212,
+     "r"
+    ],
+    [
+     "save",
+     132,
+     264,
+     "r"
+    ],
+    [
+     "landed",
+     168,
+     316,
+     "r"
+    ]
+   ],
+   "edges": [],
+   "taps": [
+    [
+     80,
+     50,
+     "autosave"
+    ],
+    [
+     80,
+     50,
+     "leaveguard"
+    ],
+    [
+     80,
+     50,
+     "cancel"
+    ],
+    [
+     80,
+     50,
+     "save"
+    ],
+    [
+     132,
+     276,
+     "landed"
+    ]
+   ],
+   "bands": [
+    [
+     "CONTINUOUS",
+     86,
+     null
+    ],
+    [
+     "THE THREE WAYS OUT",
+     150,
+     130
+    ]
+   ],
+   "h": 350
+  },
+  "scan": {
+   "label": "scan workflow",
+   "gates": [
+    [
+     "/scan retired (D111)",
+     "The old route is a pure redirect into /transactions/new?scan=true"
+    ],
+    [
+     "single draft slot",
+     "One in-flight draft per user (D110)"
+    ],
+    [
+     "degrade, never block",
+     "Quota or failure returns the slot to idle — the form stays usable"
+    ]
+   ],
+   "nodes": [
+    "home",
+    "plus",
+    "form2",
+    "scanslot",
+    "txfields",
+    "itemfields",
+    "resolve",
+    "mobiledirect"
+   ],
+   "tree": [
+    [
+     "home",
+     210,
+     36
+    ],
+    [
+     "plus",
+     210,
+     92
+    ],
+    [
+     "form2",
+     210,
+     148
+    ],
+    [
+     "scanslot",
+     92,
+     232
+    ],
+    [
+     "txfields",
+     228,
+     232
+    ],
+    [
+     "itemfields",
+     228,
+     286
+    ],
+    [
+     "resolve",
+     350,
+     232
+    ],
+    [
+     "mobiledirect",
+     210,
+     368
+    ]
+   ],
+   "edges": [
+    [
+     "home",
+     "plus"
+    ],
+    [
+     "plus",
+     "form2"
+    ],
+    [
+     "form2",
+     "scanslot"
+    ],
+    [
+     "form2",
+     "txfields"
+    ],
+    [
+     "form2",
+     "resolve"
+    ],
+    [
+     "scanslot",
+     "itemfields",
+     "fx"
+    ]
+   ],
+   "taps": [
+    [
+     228,
+     244,
+     "itemfields"
+    ]
+   ],
+   "bands": [
+    [
+     "MOBILE — NO DRAFT SLOT (target=transaction)",
+     350,
+     330
+    ]
+   ],
+   "h": 410
+  },
+  "scanpipe": {
+   "label": "scan pipeline",
+   "sub": 1,
+   "gates": [
+    [
+     "SSE terminal event",
+     "Only the terminal event reseeds the form"
+    ],
+    [
+     "quota",
+     "quota_exhausted degrades to idle"
+    ]
+   ],
+   "nodes": [
+    "pickimg",
+    "uploading",
+    "verified",
+    "reseed",
+    "quota"
+   ],
+   "tree": [
+    [
+     "backscan",
+     92,
+     38
+    ],
+    [
+     "pickimg",
+     134,
+     100,
+     "r"
+    ],
+    [
+     "uploading",
+     152,
+     152,
+     "r"
+    ],
+    [
+     "verified",
+     170,
+     204,
+     "r"
+    ],
+    [
+     "reseed",
+     188,
+     256,
+     "r"
+    ],
+    [
+     "quota",
+     330,
+     152,
+     "r"
+    ]
+   ],
+   "edges": [
+    [
+     "uploading",
+     "quota"
+    ]
+   ],
+   "taps": [
+    [
+     92,
+     50,
+     "pickimg"
+    ],
+    [
+     134,
+     112,
+     "uploading"
+    ],
+    [
+     152,
+     164,
+     "verified"
+    ],
+    [
+     170,
+     216,
+     "reseed"
+    ]
+   ],
+   "bands": [],
+   "h": 300
+  },
+  "lifecycle": {
+   "label": "entity lifecycle",
+   "gates": [
+    [
+     "RLS",
+     "Other scopes' rows are invisible (C704)"
+    ],
+    [
+     "flags exempt",
+     "Flags stay writable on locked rows"
+    ]
+   ],
+   "nodes": [
+    "saved",
+    "edited",
+    "flagged",
+    "locks",
+    "exitw"
+   ],
+   "tree": [
+    [
+     "saved",
+     210,
+     44
+    ],
+    [
+     "edited",
+     110,
+     126,
+     "r"
+    ],
+    [
+     "flagged",
+     110,
+     178,
+     "r"
+    ],
+    [
+     "locks",
+     300,
+     126
+    ],
+    [
+     "exitw",
+     300,
+     190
+    ]
+   ],
+   "edges": [
+    [
+     "saved",
+     "locks"
+    ],
+    [
+     "saved",
+     "exitw"
+    ]
+   ],
+   "taps": [
+    [
+     210,
+     56,
+     "edited"
+    ],
+    [
+     210,
+     56,
+     "flagged"
+    ]
+   ],
+   "bands": [],
+   "h": 240
+  },
+  "locksw": {
+   "label": "locks",
+   "sub": 1,
+   "gates": [
+    [
+     "D74",
+     "Shared rows refuse edits — explicit 409"
+    ],
+    [
+     "P117",
+     "Statement-matched rows are sealed until released"
+    ]
+   ],
+   "nodes": [
+    "shared",
+    "unshared",
+    "matched",
+    "readonly"
+   ],
+   "tree": [
+    [
+     "backlife",
+     86,
+     38
+    ],
+    [
+     "shared",
+     134,
+     100,
+     "r"
+    ],
+    [
+     "unshared",
+     152,
+     152,
+     "r"
+    ],
+    [
+     "matched",
+     134,
+     214,
+     "r"
+    ],
+    [
+     "readonly",
+     300,
+     158,
+     "r"
+    ]
+   ],
+   "edges": [
+    [
+     "shared",
+     "readonly"
+    ],
+    [
+     "matched",
+     "readonly"
+    ]
+   ],
+   "taps": [
+    [
+     86,
+     50,
+     "shared"
+    ],
+    [
+     134,
+     112,
+     "unshared"
+    ],
+    [
+     86,
+     50,
+     "matched"
+    ]
+   ],
+   "bands": [],
+   "h": 250
+  },
+  "exitw2": {
+   "label": "exit paths",
+   "sub": 1,
+   "gates": [
+    [
+     "UX-11",
+     "Deletes past 90 days refuse — and no test proves it"
+    ],
+    [
+     "batch all-or-nothing",
+     "One locked row refuses the whole batch"
+    ]
+   ],
+   "nodes": [
+    "confirm",
+    "deleted",
+    "batch",
+    "sealed",
+    "dsr"
+   ],
+   "tree": [
+    [
+     "backlife",
+     86,
+     38
+    ],
+    [
+     "confirm",
+     134,
+     100,
+     "r"
+    ],
+    [
+     "deleted",
+     152,
+     152,
+     "r"
+    ],
+    [
+     "batch",
+     134,
+     214,
+     "r"
+    ],
+    [
+     "sealed",
+     134,
+     266,
+     "r"
+    ],
+    [
+     "dsr",
+     134,
+     318,
+     "r"
+    ]
+   ],
+   "edges": [],
+   "taps": [
+    [
+     86,
+     50,
+     "confirm"
+    ],
+    [
+     134,
+     112,
+     "deleted"
+    ],
+    [
+     86,
+     50,
+     "batch"
+    ],
+    [
+     86,
+     50,
+     "sealed"
+    ],
+    [
+     86,
+     50,
+     "dsr"
+    ]
+   ],
+   "bands": [],
+   "h": 350
+  }
+ },
+ "start": "manual"
+}

@@ -220,6 +220,21 @@ into a hook block, never into silence.
 - **CASE DRIFT** — a test edit that silently launders a claim (assertion weakened/removed while
   the id stays put). Judgment-shaped by design — this check lives HERE, deliberately not in a
   commit-gate grep (design record D6).
+- **WORKFLOW DRIFT** — the diff moved the product away from what the entity's WORKFLOW CENSUS
+  (`docs/site/center/workflows/<entity>.json`) says it is. Three machine-derived shapes, produced
+  by `scripts/check_workflow_drift.py <census> --archmap … --junit …` (report-never-gate, D1):
+  **census-lag** a writable field or surface this diff added that NO step covers · **claim-drift**
+  a step naming a C-id that no junit report ran, or a spec file no longer in the repo ·
+  **capture-debt** a step with no capture, or whose capture file left disk. Priced like any
+  finding; the triage outcome is authoritative. **Detection lives HERE because only review sees
+  the DIFF that caused the drift** — the session that added the field is the one that knows what
+  it is for; a week later nobody does. What review can only DEFER (an owed capture needs a green
+  e2e run plus curation) is carried afterwards by `/gabe-pulse`'s S8 evidence-debt angle, so a
+  deferred capture keeps surfacing instead of ageing out. Fix routes to `/gabe-cc-update`
+  (cover the step / re-point the spec) or `/gabe-red` (re-declare a case that stopped running);
+  `capture-debt` legitimately defers — the run has to happen first. Skip silently when the entity
+  has no census (nothing to drift from); NEVER report zero findings when a check could not run —
+  the checker prints `census-lag NOT RUN` with its reason instead.
 - **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
   triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;
