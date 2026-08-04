@@ -34,6 +34,8 @@
   .evnode.grp text{font:800 10px system-ui;letter-spacing:.05em}
   .evnode.grp.on rect{fill:var(--accent,#0d6e78);stroke:var(--accent,#0d6e78)}
   .evnode.grp.on text{fill:#fff}
+  .evnode.grp.lnk rect{stroke:var(--accent,#0d6e78);stroke-width:1.8}
+  .evnode.grp.lnk text{fill:var(--accent-ink,#0a565e)}
   .evmap .tap{stroke:var(--muted,#9aa5b1);stroke-width:1.1;fill:none}
   .evnode:hover circle{stroke-width:2.6}
   .evnode.on circle{fill:var(--accent,#0d6e78);stroke:var(--accent,#0d6e78)}
@@ -108,6 +110,8 @@
     <div class="evbar">
       <select id="evwf">
         <option value="manual">manual entry workflow</option>
+        <option value="txf">&nbsp;&nbsp;↳ transaction fields</option>
+        <option value="itemf">&nbsp;&nbsp;↳ item fields</option>
         <option value="scan">scan workflow</option>
         <option value="lifecycle">entity lifecycle</option>
       </select>
@@ -157,14 +161,19 @@ const S = {
   uc:"The single capture surface (D110/D111) — fresh here, or resumed from the one draft slot (ⓘ sheet explains the slot). Every ✎ satellite below edits THIS form.",
   cap:"2026-07-09/10 · tx2 set",spec:"routes/-transactions.new.test.tsx + tx2 journey",
   code:["routes/transactions.new.tsx"],models:["TransactionDraft"],cids:[],writes:[]},
- txfields:{l:"tx fields",grp:1,st:"running",role:"section",
+ txfields:{l:"tx fields ⧉",grp:1,lnk:1,link:"txf",st:"running",role:"section → workflow",
   uc:"Section — the transaction's own editable surfaces; seven derive from here (three captured, four owed).",
   cap:"aggregate of its children",spec:"TransactionCreate schema",code:[],models:[],cids:[],
   writes:["merchant","date","time","store_category","card_alias","recurrence…","country/city","total","currency","images[]"]},
- itemfields:{l:"item fields",grp:1,st:"running",role:"section",
+ itemfields:{l:"item fields ⧉",grp:1,lnk:1,link:"itemf",st:"running",role:"section → workflow",
   uc:"Section — the item rows; add → edit (qty · price · category), save ⇢ recomputes the total.",
   cap:"aggregate of its children",spec:"TransactionItemCreate schema",code:[],models:[],cids:[],
   writes:["items[]: name","qty","unit_price","total_price","item_category","subcategory"]},
+ backman:{l:"⇱ manual entry",grp:1,lnk:1,link:"manual",linkcur:"form",st:"running",role:"link",
+  uc:"Back to the parent workflow.",cap:"—",spec:"—",code:[],models:[],cids:[],writes:[]},
+ totalink:{l:"total·CLP ⧉",grp:1,lnk:1,link:"txf",linkcur:"totalcur",st:"running",role:"link",
+  uc:"The recompute lands on Total·CLP — it lives in the transaction-fields workflow.",
+  cap:"—",spec:"—",code:[],models:[],cids:[],writes:[]},
  resolve:{l:"resolve",grp:1,st:"running",role:"section",
   uc:"Section — the ways out of the form: leave (guarded), discard (real DELETE), create (the POST).",
   cap:"aggregate of its children",spec:"—",code:[],models:[],cids:[],writes:[]},
@@ -307,17 +316,23 @@ const S = {
 
 const WF = {
  manual:{
-  gates:[["whole-number qty","Manual entry rejects fractional quantities — the receipt tier allows them (schema validator, TX2b T4)"],
-         ["name charset","Merchant and item names: letters, numbers, spaces, dots only"],
-         ["leave guard (DF3)","A dirty form blocks back/nav/reload behind a ConfirmSheet"],
+  gates:[["leave guard (DF3)","A dirty form blocks back/nav/reload behind a ConfirmSheet"],
          ["personal-only","The capture surface is scope-gated to the personal scope"],
-         ["amounts ≥ 0","total_minor and every price validate non-negative"]],
-  pos:{home:[0,0],plus:[0,0],form:[0,0],txfields:[0,0],merchdate:[0,0],storecat:[0,0],
-       payment:[0,0],cadence:[0,0],location:[0,0],attach:[0,0],totalcur:[0,0],
-       itemfields:[0,0],additem:[0,0],itemedit:[0,0],itemcat:[0,0],
-       resolve:[0,0],leaveguard:[0,0],cancel:[0,0],save:[0,0],saved:[0,0]},
-  edges:[],
-  bands:[],h:650},
+         ["single draft slot","One in-flight draft per user (D110)"]],
+  pos:{home:[0,0],plus:[0,0],form:[0,0],txfields:[0,0],itemfields:[0,0],resolve:[0,0],
+       leaveguard:[0,0],cancel:[0,0],save:[0,0],saved:[0,0]},
+  edges:[],bands:[],h:470},
+ txf:{
+  gates:[["name charset","Merchant name: letters, numbers, spaces, dots only"],
+         ["amounts ≥ 0","total_minor validates non-negative"]],
+  pos:{backman:[0,0],merchdate:[0,0],storecat:[0,0],payment:[0,0],cadence:[0,0],
+       location:[0,0],attach:[0,0],totalcur:[0,0]},
+  edges:[],bands:[],h:430},
+ itemf:{
+  gates:[["whole-number qty","Manual entry rejects fractional quantities — the receipt tier allows them"],
+         ["amounts ≥ 0","every price validates non-negative"]],
+  pos:{backman:[0,0],additem:[0,0],itemedit:[0,0],itemcat:[0,0],totalink:[0,0]},
+  edges:[],bands:[],h:270},
  scan:{
   gates:[["degrade, never block","Scan failure lands in the manual form — no dead end"],
          ["single draft slot","One in-flight draft per user (D110); resume beats restart"]],
@@ -347,7 +362,7 @@ const DEFS='<defs><marker id="evarr" viewBox="0 0 8 8" refX="7" refY="4" markerW
 function node(id,x,y,cur,side){const s=S[id];
  const w=s.writes&&s.writes.length&&!s.grp?`<text class="wmark" x="${x+10}" y="${y-9}">✎</text>`:"";
  if(s.grp){const bw=s.l.length*6.6+18;
-  return `<g class="evnode grp${id===cur?" on":""}" data-state="${id}">`+
+  return `<g class="evnode grp${s.lnk?" lnk":""}${id===cur?" on":""}" data-state="${id}">`+
    `<rect x="${x-bw/2}" y="${y-12}" width="${bw}" height="24" rx="9"/>`+
    `<text x="${x}" y="${y+3.5}" text-anchor="middle">${s.l}</text></g>`;}
  const lab=side==="r"
@@ -365,39 +380,44 @@ function viewLanes(wf,cur){const W=WF[wf];
  W.edges.forEach(([a,b,k])=>s+=edge(a,b,W.pos,k));
  for(const id in W.pos)s+=node(id,...W.pos[id],cur);
  return s+"</svg>";}
-function viewTree(wf,cur){
- // manual only — bracket tree: trunk under each section pill, taps to children.
- const P={home:[200,30],plus:[200,82],form:[200,134],
-  txfields:[86,196],itemfields:[252,196],resolve:[200,560],
-  merchdate:[128,244],storecat:[128,290],payment:[128,336],cadence:[128,382],
-  location:[128,428],attach:[128,474],totalcur:[128,520],
-  additem:[296,244],itemedit:[314,296],itemcat:[332,348],
-  leaveguard:[86,612],cancel:[186,612],save:[286,612],saved:[324,662]};
- let g=`<svg viewBox="0 0 420 700">${DEFS}`;
+const tap=(x1,y1,x2,y2)=>`<path class="tap" d="M${x1},${y1} L${x1},${y2} L${x2-14},${y2}" marker-end="url(#evarr)"/>`;
+function viewTreeManual(cur){
+ const P={home:[210,36],plus:[210,92],form:[210,148],
+  txfields:[92,224],itemfields:[212,224],resolve:[332,224],
+  leaveguard:[300,290],cancel:[300,338],save:[300,386],saved:[338,436]};
+ let g=`<svg viewBox="0 0 420 470">${DEFS}`;
  g+=edge("home","plus",P);g+=edge("plus","form",P);
- g+=edge("form","txfields",P);g+=edge("form","itemfields",P);
- // form → resolve: routed around the right edge, no crossings
- g+=`<path class="edge" d="M214,140 C386,190 386,470 246,556"/>`;
- const tap=(x1,y1,x2,y2)=>`<path class="tap" d="M${x1},${y1} L${x1},${y2} L${x2-14},${y2}" marker-end="url(#evarr)"/>`;
- // tx trunk + taps
- for(const[i,id]of["merchdate","storecat","payment","cadence","location","attach","totalcur"].entries())
-  g+=tap(86,208,P[id][0],P[id][1]);
- // items: trunk to additem, itemedit; itemedit indents to itemcat
- g+=tap(252,208,P.additem[0],P.additem[1]);
+ g+=edge("form","txfields",P);g+=edge("form","itemfields",P);g+=edge("form","resolve",P);
+ g+=tap(332,236,P.leaveguard[0],P.leaveguard[1]);
+ g+=tap(332,236,P.cancel[0],P.cancel[1]);
+ g+=tap(332,236,P.save[0],P.save[1]);
+ g+=tap(P.save[0],P.save[1]+12,P.saved[0],P.saved[1]);
+ for(const id in P)g+=node(id,...P[id],cur,"b");
+ return g+"</svg>";}
+function viewTreeTxf(cur){
+ const P={backman:[86,38],merchdate:[128,100],storecat:[128,148],payment:[128,196],
+  cadence:[128,244],location:[128,292],attach:[128,340],totalcur:[128,388]};
+ let g=`<svg viewBox="0 0 420 425">${DEFS}`;
+ for(const id of["merchdate","storecat","payment","cadence","location","attach","totalcur"])
+  g+=tap(86,50,P[id][0],P[id][1]);
+ for(const id in P)g+=node(id,...P[id],cur,id==="backman"?"b":"r");
+ return g+"</svg>";}
+function viewTreeItemf(cur){
+ const P={backman:[86,38],additem:[128,100],itemedit:[146,152],itemcat:[164,204],
+  totalink:[320,152]};
+ let g=`<svg viewBox="0 0 420 245">${DEFS}`;
+ g+=tap(86,50,P.additem[0],P.additem[1]);
  g+=tap(P.additem[0],P.additem[1]+12,P.itemedit[0],P.itemedit[1]);
  g+=tap(P.itemedit[0],P.itemedit[1]+12,P.itemcat[0],P.itemcat[1]);
- // resolve taps
- for(const id of["leaveguard","cancel","save"])
-  g+=tap(200,572,P[id][0],P[id][1]);
- g+=tap(P.save[0],P.save[1]+12,P.saved[0],P.saved[1]);
- // the one data effect: item save ⇢ total
- g+=`<path class="edge fx" d="M326,308 C384,430 250,505 148,518"/>`;
+ g+=`<path class="edge fx" d="M${P.itemedit[0]+14},${P.itemedit[1]} L${P.totalink[0]-52},${P.totalink[1]}"/>`;
  for(const id in P)g+=node(id,...P[id],cur,
-  ["merchdate","storecat","payment","cadence","location","attach","totalcur","additem","itemedit","itemcat"].includes(id)?"r":"b");
+  ["additem","itemedit","itemcat"].includes(id)?"r":"b");
  return g+"</svg>";}
-function viewMap(wf,cur){return wf==="manual"?viewTree(wf,cur):viewLanes(wf,cur);}
+const TREES={manual:viewTreeManual,txf:viewTreeTxf,itemf:viewTreeItemf};
+function viewMap(wf,cur){return TREES[wf]?TREES[wf](cur):viewLanes(wf,cur);}
 const VIEWS={lanes:viewMap};
 
+const WFSTART={manual:"form",txf:"merchdate",itemf:"additem",scan:"imagesel",lifecycle:"saved"};
 let WFK="manual",VIEW="lanes",CUR="form";
 function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}
 function render(){
@@ -427,14 +447,18 @@ function render(){
 }
 document.addEventListener("click",e=>{
  const t=e.target.closest("[data-state]");
- if(t){CUR=t.dataset.state;render();return;}
+ if(t){const id=t.dataset.state,sd=S[id];
+  if(sd.lnk){WFK=sd.link;CUR=sd.linkcur||WFSTART[WFK];
+   document.getElementById("evwf").value=WFK;}
+  else CUR=id;
+  render();return;}
  const tab=e.target.closest(".evtab");
  if(tab){VIEW=tab.dataset.view;
   document.querySelectorAll(".evtab").forEach(b=>b.classList.toggle("on",b===tab));
   render();}
 });
 document.getElementById("evwf").addEventListener("change",e=>{
- WFK=e.target.value;CUR=Object.keys(WF[WFK].pos)[0];render();
+ WFK=e.target.value;CUR=WFSTART[WFK]||Object.keys(WF[WFK].pos)[0];render();
 });
 render();
 </script>
