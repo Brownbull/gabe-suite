@@ -36,6 +36,18 @@
   border-left: 3px solid var(--accent); background: var(--accent-soft);
   color: var(--ink); font-size: .92rem; border-radius: 0 8px 8px 0;
 }
+/* Every head element says WHAT it is: the handle box carries a labeled tag,
+   so a reader never has to deduce why a highlighted sentence sits there. */
+.prismhead .prismhandle .phlab {
+  display: inline-flex; align-items: center; gap: 5px; margin-right: 8px;
+  font: var(--mono); font-size: .64rem; text-transform: uppercase;
+  letter-spacing: .1em; font-weight: 700; color: var(--accent);
+  transform: translateY(-1px);
+}
+.prismhead .prismhandle .phlab svg {
+  width: 12px; height: 12px; stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+}
 
 /* ── stage: the canvas. NOT capped. ──────────────────────────────────────── */
 .prismstage { padding: 14px 30px 60px; min-width: 0; }
@@ -45,7 +57,41 @@
    is short by construction and is measured by its own component rules. */
 .prismstage p, .prismstage li, .prismstage blockquote { max-width: 76ch; }
 .prismprose { max-width: 76ch; margin: 0 0 22px; color: var(--ink-2); font-size: .95rem; line-height: 1.65; }
-.prismprose h2 { font-size: 1.12rem; font-weight: 680; color: var(--ink); margin: 30px 0 8px; letter-spacing: -.01em; }
+/* Section titles are PILLS — a distinct background and an icon, so the eye
+   finds section starts without reading, and the section rail can mirror them. */
+.prismprose h2 {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: var(--panel); border: 1px solid var(--line); border-radius: 9px;
+  padding: 6px 14px; font-size: 1.02rem; font-weight: 680; color: var(--ink);
+  margin: 30px 0 8px; letter-spacing: -.01em;
+}
+.prismprose h2 svg {
+  width: 15px; height: 15px; stroke: var(--accent); fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none;
+}
+.prismprose h2[id] { scroll-margin-top: 54px; }
+/* The section rail: h2 pills become a sticky in-page nav (built by
+   prism-fx.js when a stage carries 2+ of them). Shape borrowed from the
+   center's .subnav; top:0 because the prism topbar does not stick. */
+.prism-toc {
+  position: sticky; top: 0; z-index: 7; display: flex; gap: 4px;
+  flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none;
+  background: var(--bg); border-bottom: 1px solid var(--line);
+  padding: 7px 0; margin: 0 0 12px;
+  cursor: grab; user-select: none; touch-action: pan-y;
+}
+.prism-toc:active { cursor: grabbing; }
+.prism-toc a {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: .78rem; font-weight: 600; color: var(--muted);
+  text-decoration: none; padding: 4px 11px; border-radius: 7px; white-space: nowrap;
+}
+.prism-toc a:hover, .prism-toc a.on { background: var(--panel); color: var(--ink); }
+.prism-toc a svg {
+  width: 13px; height: 13px; stroke: currentColor; fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; flex: none;
+}
+.prism-toc a:hover svg, .prism-toc a.on svg { stroke: var(--accent); }
 .prismprose h3 { font-size: .99rem; font-weight: 650; color: var(--ink); margin: 22px 0 6px; }
 .prismprose strong { color: var(--ink); font-weight: 650; }
 .prismprose code { font: var(--mono); background: var(--panel); border: 1px solid var(--line); border-radius: 5px; padding: 1px 5px; }
@@ -111,6 +157,23 @@
 .pf-node .pf-sub { display: block; font: var(--mono); font-size: 13px; color: var(--muted); margin: -3px 0 6px; }
 .pf-recipe { display: grid; grid-template-columns: 27px 1fr; gap: 1px 6px; font-size: 13px; color: var(--ink-2); }
 .pf-recipe i { font-style: normal; color: var(--faint); font-family: var(--font-content); }
+/* ── enriched station cards — stored grammar from the floor-chooser round.
+   All OPTIONAL: an icon inside .pf-name, a station tint consumed from the
+   authored --tint, a share bar under the number. A plain card stays legal. */
+.pf-name svg {
+  width: 15px; height: 15px; stroke: var(--tint, var(--accent)); fill: none;
+  stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+  vertical-align: -2px; margin-right: 6px;
+}
+.pf-node.tinted { border-left: 4px solid var(--tint, var(--accent)); }
+.pf-share {
+  display: block; height: 5px; border-radius: 3px; background: var(--surface);
+  margin-top: 7px; overflow: hidden;
+}
+.pf-share i {
+  display: block; height: 100%; border-radius: 3px;
+  background: var(--tint, var(--accent));
+}
 .pf-num {
   display: inline-block; margin-top: 7px; font: var(--mono); font-size: 13px;
   background: var(--panel); border: 1px solid var(--line-2); border-radius: 20px; padding: 1px 8px; color: var(--ink-2);

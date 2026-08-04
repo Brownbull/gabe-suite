@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "68836bb",
+ "head": "6cb212e",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -22,7 +22,7 @@
      "label": "Board",
      "href": "board.html",
      "icon": "board",
-     "count": 24
+     "count": 18
     }
    ]
   },
@@ -40,13 +40,13 @@
      "label": "Hooks",
      "href": "hooks.html",
      "icon": "zap",
-     "count": 7
+     "count": 8
     },
     {
      "label": "Testing",
      "href": "testing.html",
      "icon": "check",
-     "count": 18
+     "count": 20
     }
    ]
   },
@@ -70,7 +70,7 @@
      "label": "Functions",
      "href": "functions.html",
      "icon": "code",
-     "count": 462
+     "count": 471
     },
     {
      "label": "Data structures",
@@ -230,6 +230,13 @@
      "icon": "component",
      "sub": true,
      "tip": "built from embedded components"
+    },
+    {
+     "label": "Compound interest",
+     "href": "prism-compound-interest.html",
+     "icon": "gauge",
+     "sub": true,
+     "tip": "console \u2014 one screen, ambient loop + scrub bar"
     }
    ]
   }

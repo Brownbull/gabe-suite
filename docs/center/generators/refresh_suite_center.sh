@@ -43,9 +43,21 @@ prism_gates() {
   # shellcheck disable=SC2086
   node "$REPO/skills/gabe-imagine/tools/check-prism-fit.mjs" $pages | tail -1
   echo "== gate: prism motion (replay · pause · reduced) =="
+  # FX_WINDOW_MS widened 2400→3600 on the flake's THIRD hit (the recorded
+  # trigger): under regen load the sampler sees too few frames inside the
+  # default window and reports a live animation as dead. Isolated re-runs
+  # passed 5/5 twice each time — the page was never the problem.
   for f in $pages; do
-    node "$REPO/skills/gabe-artifact/tools/verify-motion.mjs" "$f" | tail -1
+    FX_WINDOW_MS=3600 node "$REPO/skills/gabe-artifact/tools/verify-motion.mjs" "$f" | tail -1
   done
+  echo "== gate: prism render probe (authored script ran · hooks hold) =="
+  # One invocation, one browser, all pages: the probe proves each page's OWN
+  # script executed — errors, FXREPLAY registry, and the authored data-probe*
+  # hooks (non-empty roots, readout values, inputs react, hover reacts). An
+  # authored script with no hooks FAILS: that exact vacancy shipped the
+  # compound-interest one-shot with every static gate green.
+  # shellcheck disable=SC2086
+  node "$REPO/skills/gabe-imagine/tools/probe-render.mjs" $pages | tail -1
 }
 
 case "$MODE" in

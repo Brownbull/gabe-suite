@@ -1,0 +1,13 @@
+{
+  "title": "Compound interest — what your money becomes",
+  "nav_label": "Compound interest",
+  "kicker": "",
+  "mode": "console",
+  "pattern": "belt-line",
+  "order": 50,
+  "kind": "concept · the saver's seat",
+  "card": "The saver's console: four sliders price the levers, the chart marks the month the machine passes you, the floor beneath opens each machine's receipt — and four accounts each name a different next move.",
+  "lede": "$200 a month at 7% for 30 years becomes $243,994 — $72,000 deposited by you, $171,994 made by the machine; its column passes yours at month 217.",
+  "handle": "The gap between the dashed line and the curve is the machine's share — built by one hop: every payment re-enters the pot.",
+  "source": "arithmetic on this page, recountable: 360 rounds of pot += pot·0.07/12 + 200 → $243,994.20; levers re-run from the same recurrence (+$10,000 to start → +$81,165 = 10000·(1.0058333)^360 · +$100/mo → +$121,997 · +1 pt → +$54,078 · +10 y → +$139,809); crossover marked on the chart at month 217 ($43,446.71 earned vs $43,400 deposited); doubling ln 2 ÷ ln(1+r); erosion 1.07/1.03 − 1 = 3.88% real · 25% tax → 5.25% → $174,362."
+}

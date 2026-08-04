@@ -1,0 +1,1206 @@
+<!-- Page-local kit: the lever bank (sliders → stat tiles → chart, tile shape
+     lifted from gabe-artifact's static library) + the mechanism floor.
+     Series pair unchanged and already dataviz-validated in both modes
+     (light: accent+#b45309 · dark: accent+#c98500, all PASS).
+     Amber = money you deposited; accent = money the machine made. -->
+<style>
+.ci, .tm, .loopgrid { --ci-s2:#b45309; }
+:root[data-theme="dark"] :is(.ci, .tm, .loopgrid) { --ci-s2:#c98500; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :is(.ci, .tm, .loopgrid) { --ci-s2:#c98500; }
+}
+/* ── the 2×2 loop floor (chooser ruling: option A) — pf grammar intact,
+   layout authored: the return hop is GEOMETRY, drawn through the open
+   center, occluding nothing. Fixed 880px design; pffit scales it. ── */
+.pf-belt.loopgrid { display:grid; grid-template-columns:340px 340px;
+  grid-template-rows:190px 190px; gap:64px 200px; position:relative;
+  width:880px; }
+.loopgrid .pf-node { width:auto; }
+.loopgrid .t-amber { --tint:var(--ci-s2); }
+.loopgrid .t-acc { --tint:var(--accent); }
+.loopgrid .t-acc2 { --tint:color-mix(in srgb, var(--accent) 55%, var(--panel)); }
+.loopgrid svg.wires { position:absolute; inset:0; width:100%; height:100%;
+  pointer-events:none; }
+.wires path { fill:none; stroke:var(--line); stroke-width:2; }
+.wires path.ret { stroke:var(--accent); stroke-width:3.5; }
+.wires text { font:var(--mono); font-size:13px; fill:var(--muted); }
+.wires text.retl { fill:var(--accent); font-weight:700; }
+.loopgrid .pf-hop { position:absolute; width:110px; }
+.loopgrid .pf-hop .pf-rail { display:none; }
+.loopgrid .pf-hop .pf-hoplab { white-space:normal; overflow:visible; text-overflow:clip; }
+.loopgrid .hop-dep { left:385px; top:60px; }
+.loopgrid .hop-bal { left:660px; top:196px; }
+.loopgrid .hop-pay { left:385px; top:314px; }
+.loopgrid .hop-ret { left:378px; top:172px; }
+.ci { border:1px solid var(--line); border-radius:14px;
+  background:var(--panel); padding:14px 16px; margin:14px 0 6px; }
+/* The lever bank's own slider rows are HIDDEN, not removed: they stay the
+   master inputs every component listens to; the variable bar above is the
+   one visible control surface (operator: the two were redundant). */
+.ci-controls { display:none; }
+.ci-f { display:grid; grid-template-columns:150px 1fr 96px; gap:14px; align-items:center; }
+.ci-f label { font:var(--mono); font-size:11.5px; color:var(--muted); }
+.ci-f input[type="range"] { width:100%; margin:0; accent-color:var(--accent); }
+.ci-val { text-align:right; font-size:13px; color:var(--ink); font-variant-numeric:tabular-nums; }
+.ci-tiles { display:flex; flex-wrap:wrap; gap:12px; margin:14px 0 12px; }
+.ci-tile { flex:1 1 150px; background:var(--surface); border:1px solid var(--line);
+  border-radius:10px; padding:9px 14px 8px; }
+.ci-tile .v { font-size:21px; font-weight:600; color:var(--ink); font-variant-numeric:tabular-nums; }
+.ci-tile .k { font:var(--mono); font-size:11px; color:var(--muted); margin-top:2px; }
+.ci-tile.is-loop .v { color:var(--accent); }
+.ci-key { display:flex; gap:16px; font-size:12.5px; color:var(--ink-2); margin-bottom:4px; }
+.ci-key i { display:inline-block; width:14px; height:0; border-top:2px solid var(--ci-s2);
+  vertical-align:middle; margin-right:6px; }
+.ci-key i.dash { border-top-style:dashed; }
+.ci-key i.acc { border-top-color:var(--accent); border-top-style:solid; }
+.ci-note { font:var(--mono); font-size:11.5px; color:var(--muted); margin-top:8px; }
+.ci-plot { position:relative; }
+.ci-plot svg { width:100%; height:auto; display:block; }
+.ci-tip { position:absolute; pointer-events:none; background:var(--surface);
+  border:1px solid var(--line); border-radius:7px; padding:4px 8px;
+  font:var(--mono); font-size:12px; color:var(--ink); white-space:nowrap;
+  transform:translate(-50%,-130%); display:none; }
+.ci-read { font-size:13px; color:var(--ink); border-top:1px solid var(--line); margin-top:12px; padding-top:9px; }
+.ci-read b { font-variant-numeric:tabular-nums; }
+.ci-lev { font-size:13px; color:var(--ink-2); margin-top:6px; }
+.ci-lev b { color:var(--ink); font-variant-numeric:tabular-nums; }
+.ci-more { font:inherit; font-size:12.5px; margin-left:8px; padding:2px 10px; cursor:pointer;
+  color:var(--accent); background:var(--surface); border:1px solid var(--line); border-radius:999px; }
+.ci-more:hover { border-color:var(--accent); }
+/* The return hop is the subject (scan finding 1): give it the mass the
+   machine cards get for free — wider, bolder, a thicker rail. */
+.pf-hop.pf-return { width:130px; }
+.pf-hop.pf-return .pf-rail { height:3px; }
+.pf-hop.pf-return .pf-hoplab { color:var(--ink); font-weight:600;
+  white-space:normal; overflow:visible; text-overflow:clip; }
+/* The divergence chart (chooser ruling F1): four fates from the same first
+   dollar — the gaps ARE the argument. Curves wear the STATE colors; the
+   endpoint chips stay clickable so every account keeps its receipt. */
+.fx { border:1px solid var(--line); border-radius:14px; background:var(--panel);
+  padding:14px 16px; margin:14px 0 6px; }
+.fx svg { width:100%; height:auto; display:block; }
+.fx .grid line { stroke:var(--line); opacity:.55; }
+.fx text { font:var(--mono); font-size:13px; fill:var(--muted); }
+.fx-chips { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+.fx-chip { display:flex; flex-direction:column; gap:2px; flex:1 1 200px;
+  cursor:pointer; text-align:left; font:inherit; background:var(--surface);
+  border:1px solid var(--line); border-radius:9px; padding:7px 11px;
+  color:var(--ink-2); font-size:12.5px; }
+.fx-chip:hover { border-color:var(--accent); }
+.fx-chip.is-ghost { border-style:dashed; }
+.fx-chip b { color:var(--ink); font-variant-numeric:tabular-nums; }
+.fx-chip .sw { display:inline-block; width:14px; height:0; border-top:2.5px solid;
+  vertical-align:middle; margin-right:6px; }
+.fx-chip .mv { color:var(--ink); }
+.fx-chip .mv::before { content:"→ "; color:var(--accent); }
+
+/* The formula anatomy (chooser ruling R2, upgraded): the symbolic line and
+   its NUMERIC TWIN, joined by a month scrub — symbols become amounts. */
+.an { border:1px solid var(--line); border-radius:14px; background:var(--panel);
+  padding:16px; margin:14px 0 6px; }
+.an-eqrow { display:flex; align-items:flex-start; gap:4px; flex-wrap:wrap; }
+.an .bx { display:flex; flex-direction:column; align-items:center; gap:4px;
+  padding:5px 8px; border-radius:9px; cursor:pointer; border:1px solid transparent;
+  background:none; font:inherit; color:var(--ink); }
+.an .bx:hover, .an .bx.on { background:var(--surface); border-color:var(--accent); }
+.an .bx .s { font-family:"STIX Two Math","Cambria Math",Georgia,"Times New Roman",serif;
+  font-size:21px; white-space:nowrap; }
+.an .bx .s .mvar { font-style:italic; }
+.an .bx .s sup, .an .bx .s sub { font-size:13px; font-style:italic; }
+.an .bx .b { font:var(--mono); font-size:12.5px; color:var(--accent);
+  font-variant-numeric:tabular-nums; white-space:nowrap; }
+.an .op2 { font-family:"STIX Two Math",Georgia,serif; font-size:21px;
+  color:var(--ink-2); padding-top:5px; }
+.an-frac { display:inline-flex; flex-direction:column; align-items:center;
+  line-height:1.15; font-size:17px; }
+.an-frac .n { border-bottom:1.3px solid currentColor; padding:0 7px 1px; }
+.an-ctl { display:flex; align-items:center; gap:12px; margin-top:14px; flex-wrap:wrap; }
+.an-ctl .ms { display:flex; gap:5px; }
+.an-ctl .ms button { font:var(--mono); font-size:11.5px; padding:3px 9px; cursor:pointer;
+  color:var(--ink-2); background:var(--surface); border:1px solid var(--line); border-radius:999px; }
+.an-ctl .ms button:hover, .an-ctl .ms button.on { border-color:var(--accent); color:var(--ink); }
+.an-ctl input[type="range"] { flex:1; min-width:160px; margin:0; accent-color:var(--accent); }
+.an-side { border:1px solid var(--line); border-radius:10px; background:var(--surface);
+  padding:10px 14px; margin-top:12px; }
+.an-side b { font-size:13.5px; color:var(--ink); }
+.an-side .val { font:var(--mono); font-size:13px; color:var(--accent); margin-top:3px;
+  font-variant-numeric:tabular-nums; }
+.an-side p { margin:5px 0 0; font-size:13px; color:var(--muted); }
+.an-nav { display:flex; gap:8px; margin-top:9px; }
+.an-nav button { font:inherit; font-size:12.5px; padding:3px 12px; cursor:pointer;
+  color:var(--ink); background:var(--surface); border:1px solid var(--line); border-radius:7px; }
+.an-nav button:hover { border-color:var(--accent); }
+
+/* ── the variable bar — one model, surfaced everywhere. Sticks under the
+   section rail; each chip MORPHS into its own slider on hover/focus, and
+   only the hovered one. The lever bank stays the master; these mirror it. */
+.vbar { position:sticky; top:39px; z-index:6; display:flex; gap:8px;
+  align-items:stretch; background:var(--bg); border-bottom:1px solid var(--line);
+  padding:6px 0 7px; margin:10px 0 4px; }
+.vb2 { position:relative; flex:1 1 120px; max-width:220px; min-height:40px;
+  border:1px solid var(--line); border-radius:9px; background:var(--panel);
+  padding:5px 12px 4px; cursor:ew-resize; }
+.vb2 .lbl { display:block; font:var(--mono); font-size:10px; font-style:normal;
+  text-transform:uppercase; letter-spacing:.06em; color:var(--muted); }
+.vb2 > b { font-size:13.5px; color:var(--ink); font-variant-numeric:tabular-nums; }
+.vb2 .vslot { display:none; }
+.vb2:hover, .vb2:focus-within { border-color:var(--accent); }
+.vb2:hover .lbl, .vb2:hover > b,
+.vb2:focus-within .lbl, .vb2:focus-within > b { display:none; }
+.vb2:hover .vslot, .vb2:focus-within .vslot { display:flex; flex-direction:column;
+  align-items:center; gap:1px; }
+.vb2 .vslot label { font:var(--mono); font-size:10px; text-transform:uppercase;
+  letter-spacing:.06em; color:var(--accent); text-align:center; }
+.vb2 .vslot input[type="range"] { width:100%; margin:2px 0 0; accent-color:var(--accent); }
+/* ── the formula, mapped: an animated treemap of the closed form's parts ──
+   Two hue families = the page's provenance law (amber = you, accent = the
+   machine); parts of one family are SHADES via color-mix of the validated
+   pair — no new hues enter the page. */
+.tm { border:1px solid var(--line); border-radius:14px; background:var(--panel);
+  padding:14px 16px; margin:14px 0 6px; }
+.tm-math { font-family:"STIX Two Math","Cambria Math",Georgia,"Times New Roman",serif;
+  font-size:19px; color:var(--ink); display:flex; align-items:center; gap:9px;
+  flex-wrap:wrap; margin-bottom:10px; }
+.tm-math .mvar { font-style:italic; }
+.tm-math sup, .tm-math sub { font-size:12px; font-style:italic; }
+.mfrac { display:inline-flex; flex-direction:column; align-items:center;
+  vertical-align:middle; line-height:1.15; font-size:16px; }
+.mnum { border-bottom:1.3px solid currentColor; padding:0 7px 1px; }
+.mden { padding-top:1px; }
+.mop { color:var(--ink-2); }
+.mnote { font:var(--mono); font-size:11.5px; font-style:normal; color:var(--muted); margin-left:4px; }
+/* The canvas is STATIC: it represents the FINAL month's balance, and month k
+   draws at sqrt-scale from the bottom-left corner — area stays proportional
+   to money, so exponential growth reads as GROWTH, not as blocks eating
+   each other inside a fixed frame. */
+.tm-canvas { position:relative; height:260px; margin-top:6px; }
+.tm-scale { position:absolute; left:0; bottom:0; display:flex; gap:3px;
+  transition:width .18s linear, height .18s linear; }
+.tm-col { display:flex; flex-direction:column-reverse; gap:3px; min-width:0;
+  transition:flex-basis .18s linear; }
+.tm-b { border-radius:6px; min-height:0; overflow:hidden; position:relative;
+  transition:flex-basis .18s linear; }
+.tm-b i { display:flex; flex-direction:column; gap:3px; padding:6px 9px;
+  font-style:normal; }
+.tbh { display:flex; align-items:center; gap:5px; font-size:12px; white-space:nowrap; }
+.tbh svg { width:13px; height:13px; stroke:currentColor; fill:none;
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.tbr { display:flex; align-items:center; gap:7px; }
+.tba { font-size:13px; font-weight:600; font-variant-numeric:tabular-nums; white-space:nowrap; }
+/* The share ring: the circle's BORDER is the percentage — a 30% share draws
+   30% of the circumference bold, the rest stays a faint track. */
+.tbring { position:relative; width:26px; height:26px; flex:none; }
+.tbring svg { width:26px; height:26px; display:block; }
+.tbring circle { fill:none; stroke-width:2.6; }
+.tbring .trk { stroke:currentColor; opacity:.25; }
+.tbring .prg { stroke:currentColor; stroke-linecap:round;
+  transform:rotate(-90deg); transform-origin:center;
+  transition:stroke-dasharray .18s linear; }
+.tbp { position:absolute; inset:0; display:flex; align-items:center;
+  justify-content:center; font-size:8px; font-weight:700; font-style:normal; }
+.tm-b i { font-style:normal; font-size:12px; padding:5px 9px; white-space:nowrap;
+  display:block; font-variant-numeric:tabular-nums; }
+.b-p   { background:color-mix(in srgb, var(--ci-s2) 55%, var(--panel)); }
+.b-dep { background:var(--ci-s2); }
+.b-pg  { background:color-mix(in srgb, var(--accent) 40%, var(--panel)); }
+.b-sim { background:color-mix(in srgb, var(--accent) 68%, var(--panel)); }
+.b-sur { background:var(--accent); }
+.b-p i, .b-pg i { color:var(--ink); }
+.b-dep i, .b-sim i, .b-sur i { color:#fff; }
+.tm-empty { background:var(--surface); border:1px dashed var(--line); color:var(--muted);
+  font-size:12.5px; display:flex; align-items:center; justify-content:center;
+  border-radius:6px; position:absolute; left:0; bottom:0; width:180px; height:52px; }
+/* The stat strip: one iconed tile per part, separated, watchable month by
+   month — the numbers live ABOVE the map, not under the bar. */
+.tm-tiles { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:2px; }
+.tm-t { display:flex; flex-direction:column; gap:1px; flex:1 1 118px;
+  background:var(--surface); border:1px solid var(--line); border-radius:9px;
+  padding:7px 11px 6px; }
+.tm-t .tv { font-size:15.5px; font-weight:600; color:var(--ink);
+  font-variant-numeric:tabular-nums; white-space:nowrap; }
+.tm-t .tk { display:flex; align-items:center; gap:5px; font:var(--mono);
+  font-size:10.5px; color:var(--muted); white-space:nowrap; }
+.tm-t .tk svg { width:12px; height:12px; stroke:currentColor; fill:none;
+  stroke-width:2; stroke-linecap:round; stroke-linejoin:round; flex:none; }
+.tm-t .tk i { display:inline-block; width:8px; height:8px; border-radius:2px; flex:none; }
+.tm-t.is-sur .tv { color:var(--accent); }
+.tm-note { font:var(--mono); font-size:11.5px; color:var(--muted); margin-top:8px; }
+.tm-leg { display:flex; flex-wrap:wrap; gap:5px 14px; font-size:12.5px;
+  color:var(--ink-2); margin-top:9px; align-items:center; }
+.tm-leg i { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:5px; }
+.tm-leg .fam { font:var(--mono); font-size:10.5px; text-transform:uppercase;
+  letter-spacing:.4px; color:var(--muted); margin-right:-4px; }
+.tm-controls { display:flex; align-items:center; gap:12px; margin-top:11px; }
+.tm-play { width:36px; height:28px; border:1px solid var(--line); border-radius:7px;
+  background:var(--surface); color:var(--ink); cursor:pointer; font-size:12px; flex:none; }
+.tm-play:hover { border-color:var(--accent); }
+.tm-controls input[type="range"] { flex:1; margin:0; accent-color:var(--accent); }
+@media (prefers-reduced-motion: reduce) { .ci *, .tm * { transition:none !important; } }
+</style>
+
+<!-- The seat this page answers. -->
+<div class="gv" style="margin-bottom:2px">
+  <div class="gv-seats">
+    <span class="gv-seat is-active" style="cursor:default"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>the saver <span class="gvt">this page's seat · end user · "what does my money become, and which lever moves it?"</span></span>
+  </div>
+</div>
+
+<div class="prismprose" style="margin:8px 0 0">
+  <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6"/></svg>the lever bank</h2>
+</div>
+
+<!-- THE VARIABLE BAR — the page's one control surface, atop the first
+     diagram; sticks under the section rail on scroll. Hover/focus a chip
+     and it morphs into that one slider. The hidden .ci-controls inputs
+     below remain the masters it writes through to. -->
+<div class="vbar" id="vbar" data-probe-react>
+  <span class="vb2" tabindex="0"><i class="lbl">start</i><b id="vb-p" data-probe-out></b>
+    <span class="vslot"><label>starting amount $</label><input id="vs-p" type="range" min="0" max="50000" step="500" value="0" aria-label="starting amount"></span></span>
+  <span class="vb2" tabindex="0"><i class="lbl">deposit / mo</i><b id="vb-c" data-probe-out data-probe-expect="200"></b>
+    <span class="vslot"><label>added monthly $</label><input id="vs-c" type="range" min="0" max="2000" step="25" value="200" aria-label="added monthly"></span></span>
+  <span class="vb2" tabindex="0"><i class="lbl">rate / yr</i><b id="vb-r" data-probe-out></b>
+    <span class="vslot"><label>rate % / year</label><input id="vs-r" type="range" min="0" max="15" step="0.5" value="7" aria-label="rate per year"></span></span>
+  <span class="vb2" tabindex="0"><i class="lbl">years</i><b id="vb-y" data-probe-out></b>
+    <span class="vslot"><label>years</label><input id="vs-y" type="range" min="1" max="50" step="1" value="30" aria-label="years"></span></span>
+</div>
+<!-- THE LEVER BANK LEADS (finding 3: shape before arithmetic) — controls →
+     stat tiles → one full-width chart with the crossover marked on the curve
+     (finding 5). The formula's free variables ARE the lever census; the
+     frequency n is the declared fixed one (note below).
+     data-probe* hooks: tools/probe-render.mjs executes them headless. -->
+<div class="ci" id="ci" data-probe-react>
+  <div class="ci-controls">
+    <div class="ci-f"><label for="ci-p">starting amount $</label><input id="ci-p" type="range" min="0" max="50000" step="500" value="0"><span class="ci-val" id="ci-pv"></span></div>
+    <div class="ci-f"><label for="ci-c">added monthly $</label><input id="ci-c" type="range" min="0" max="2000" step="25" value="200"><span class="ci-val" id="ci-cv"></span></div>
+    <div class="ci-f"><label for="ci-r">rate % / year</label><input id="ci-r" type="range" min="0" max="15" step="0.5" value="7"><span class="ci-val" id="ci-rv"></span></div>
+    <div class="ci-f"><label for="ci-y">years</label><input id="ci-y" type="range" min="1" max="50" step="1" value="30"><span class="ci-val" id="ci-yv"></span></div>
+  </div>
+  <div class="ci-tiles">
+    <div class="ci-tile"><div class="v" id="ci-t-own" data-probe-out></div><div class="k">you put in</div></div>
+    <div class="ci-tile is-loop"><div class="v" id="ci-t-loop" data-probe-out data-probe-expect="171,994"></div><div class="k">the machine made</div></div>
+    <div class="ci-tile"><div class="v" id="ci-t-bal" data-probe-out data-probe-expect="243,994"></div><div class="k">the pot at the end</div></div>
+  </div>
+  <div class="ci-key">
+    <span><i class="acc"></i>the pot</span>
+    <span><i class="dash"></i>what you put in, flat</span>
+  </div>
+  <div class="ci-plot" id="ci-plot" data-probe-hover="#ci-tip">
+    <svg viewBox="0 0 640 290" aria-label="Balance month by month against a flat money-in line, crossover marked">
+      <g id="ci-grid"></g>
+      <path id="ci-area" fill="var(--accent)" opacity="0.13" d=""></path>
+      <path id="ci-line" data-probe fill="none" stroke="var(--accent)" stroke-width="2" d=""></path>
+      <line id="ci-ref" stroke="var(--ci-s2)" stroke-width="1.5" stroke-dasharray="5 4" x1="0" y1="0" x2="0" y2="0"></line>
+      <g id="ci-dots"></g>
+      <g id="ci-cross" data-probe></g>
+      <line id="ci-x" stroke="var(--muted)" stroke-width="1" y1="14" y2="262" x1="-10" x2="-10" opacity="0"></line>
+    </svg>
+    <div class="ci-tip" id="ci-tip"></div>
+  </div>
+  <div class="ci-read" id="ci-read" data-probe></div>
+  <div class="ci-lev" id="ci-lev" data-probe-out data-probe-expect="121,997"></div>
+  <div class="ci-note">compounded monthly, fixed — the frequency lever exists and is not on this page</div>
+</div>
+
+<!-- THE FORMULA, MAPPED — an animated treemap of the closed form's parts,
+     month by month. Follows the lever bank's settings (one model, two views);
+     its own controls are the month slider + play. The five parts recount the
+     page: at m360 simple = $75,390 and interest-on-interest = $96,604, the
+     same numbers the credit and engine inspectors state. -->
+<div class="prismprose" style="margin-top:26px">
+  <h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="8" height="10" rx="1"/><rect x="13" y="3" width="8" height="6" rx="1"/><rect x="13" y="11" width="8" height="10" rx="1"/><rect x="3" y="15" width="8" height="6" rx="1"/></svg>the money, mapped</h2>
+  <p>Every dollar, month by month, drawn to ONE scale — the full canvas is the
+  final balance, and each month grows from the corner toward it.</p>
+</div>
+<div class="tm" id="tm" data-fx="ci-map" data-probe-react>
+  <div class="tm-tiles">
+    <div class="tm-t"><div class="tv" id="tm-t-k" data-probe-out></div>
+      <div class="tk"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>month</div></div>
+    <div class="tm-t"><div class="tv" id="tm-t-p"></div>
+      <div class="tk"><i class="b-p"></i>the start</div></div>
+    <div class="tm-t"><div class="tv" id="tm-t-dep" data-probe-out></div>
+      <div class="tk"><i class="b-dep"></i>deposits</div></div>
+    <div class="tm-t"><div class="tv" id="tm-t-pg"></div>
+      <div class="tk"><i class="b-pg"></i>growth on the start</div></div>
+    <div class="tm-t"><div class="tv" id="tm-t-sim" data-probe-out></div>
+      <div class="tk"><i class="b-sim"></i>simple interest</div></div>
+    <div class="tm-t is-sur"><div class="tv" id="tm-t-sur" data-probe-out data-probe-expect="96,604"></div>
+      <div class="tk"><i class="b-sur"></i>interest on interest</div></div>
+    <div class="tm-t"><div class="tv" id="tm-t-tot" data-probe-out data-probe-expect="243,994"></div>
+      <div class="tk"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 17a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3.5L14 4h-4L7.5 7H4a2 2 0 0 0-2 2z"/><circle cx="12" cy="13" r="3"/></svg>the pot</div></div>
+  </div>
+  <div class="tm-canvas" id="tm-map" data-probe>
+    <div class="tm-scale" id="tm-scale"></div>
+  </div>
+  <div class="tm-leg">
+    <span class="fam">you</span>
+    <span><i class="b-p" style="display:inline-block"></i>the start</span>
+    <span><i class="b-dep" style="display:inline-block"></i>deposits</span>
+    <span class="fam">the machine</span>
+    <span><i class="b-pg" style="display:inline-block"></i>growth on the start</span>
+    <span><i class="b-sim" style="display:inline-block"></i>simple interest</span>
+    <span><i class="b-sur" style="display:inline-block"></i>interest on interest</span>
+  </div>
+  <div class="tm-controls">
+    <button class="tm-play" id="tm-play" type="button" aria-label="replay from month zero">▶</button>
+    <input id="tm-k" type="range" min="0" max="360" step="1" value="360" aria-label="month shown">
+    <span class="ci-val" id="tm-kv" style="text-align:right; min-width:90px"></span>
+  </div>
+  <div class="tm-note">amounts follow the lever bank above · area = money, at every month</div>
+</div>
+
+<!-- THE MECHANISM (finding 2's one explicit join): the floor that draws the
+     curve. Four machines, and the last hop returns — the return IS the subject. -->
+<div class="prismprose" style="margin-top:26px">
+  <h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>the machine behind the curve</h2>
+  <p>The curve above is this machine, running — click any machine for its
+  receipt.</p>
+</div>
+<div class="pf" data-prism data-fx="ci-line" data-tick="1500">
+  <div class="pf-belt loopgrid">
+    <svg class="wires" viewBox="0 0 880 444" aria-hidden="true">
+      <defs>
+        <marker id="ci-aw" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/>
+        </marker>
+        <marker id="ci-awr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.4" markerHeight="6.4" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/>
+        </marker>
+      </defs>
+      <path d="M340 95 H534" marker-end="url(#ci-aw)"/>
+      <path d="M710 190 V248" marker-end="url(#ci-aw)"/>
+      <path d="M540 349 H346" marker-end="url(#ci-aw)"/>
+      <path class="ret" d="M300 254 C 380 196, 500 240, 576 192" marker-end="url(#ci-awr)"/>
+    </svg>
+
+    <button class="pf-node tinted t-amber" style="grid-area:1/1" data-node="the paycheck" data-in="a month of your work" data-out="a $200 deposit"
+            data-num="$200 × 360 = $72,000" data-state="running" data-detail="#d-pay">
+      <span class="pf-ix">1</span>
+      <span class="pf-name"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>the paycheck</span>
+      <span class="pf-sub">the lever you hold</span>
+      <span class="pf-recipe"><i>in</i><span>a month of work</span><i>out</i><span>a $200 deposit</span></span>
+      <span class="pf-num">$200 × 360 = $72,000</span>
+      <span class="pf-share" title="your deposits are 29.5% of the final pot"><i style="width:29.5%"></i></span>
+    </button>
+
+    <div class="pf-hop hop-dep" data-payload="a $200 deposit"><div class="pf-rail"></div>
+      <div class="pf-chip">$200</div><div class="pf-hoplab">a deposit</div></div>
+
+    <button class="pf-node tinted t-acc" style="grid-area:1/2" data-node="the pot" data-in="deposits + returned payments" data-out="the balance, readable NOW"
+            data-num="y10 $34,617 → y30 $243,994" data-state="running" data-detail="#d-pot">
+      <span class="pf-ix">2</span>
+      <span class="pf-name"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M4 21V8l8-5 8 5v13"/><path d="M9 21v-6h6v6"/></svg>the pot</span>
+      <span class="pf-sub">the only machine that remembers</span>
+      <span class="pf-recipe"><i>in</i><span>deposits + returns</span><i>out</i><span>the balance NOW</span></span>
+      <span class="pf-num">y10 $34,617 → y30 $243,994</span>
+      <span class="pf-share" title="the pot holds 100% — every part ends here"><i style="width:100%"></i></span>
+    </button>
+
+    <div class="pf-hop hop-bal" data-payload="the balance, readable NOW"><div class="pf-rail"></div>
+      <div class="pf-chip">the pot</div><div class="pf-hoplab">the balance NOW</div></div>
+
+    <button class="pf-node tinted t-acc2" style="grid-area:2/2" data-node="the rate engine" data-in="the balance, readable NOW" data-out="an interest payment"
+            data-num="$1.17 first · $1,423.30 last" data-state="running" data-detail="#d-engine">
+      <span class="pf-ix">3</span>
+      <span class="pf-name"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M4.9 19.1 7 17M17 7l2.1-2.1"/></svg>the rate engine</span>
+      <span class="pf-sub">cuts from NOW, not from your deposits</span>
+      <span class="pf-recipe"><i>in</i><span>the balance NOW</span><i>out</i><span>an interest payment</span></span>
+      <span class="pf-num">$1.17 first · $1,423.30 last</span>
+      <span class="pf-alert">⚠ same 7%, ×1,217 the payment</span>
+    </button>
+
+    <div class="pf-hop hop-pay" data-payload="an interest payment"><div class="pf-rail"></div>
+      <div class="pf-chip">interest</div><div class="pf-hoplab">a payment</div></div>
+
+    <button class="pf-node tinted t-acc" style="grid-area:2/1" data-node="the credit" data-in="an interest payment" data-out="new principal ↺ 2"
+            data-num="$171,994 returned · 360 rounds" data-state="running" data-detail="#d-credit">
+      <span class="pf-ix">4</span>
+      <span class="pf-name"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>the credit</span>
+      <span class="pf-sub">the hop that IS compound interest</span>
+      <span class="pf-recipe"><i>in</i><span>a payment</span><i>out</i><span>new principal ↺ 2</span></span>
+      <span class="pf-num">$171,994 returned · 360 rounds</span>
+      <span class="pf-share" title="the machine returned 70.5% of the final pot"><i style="width:70.5%"></i></span>
+    </button>
+
+    <div class="pf-hop pf-return hop-ret" data-payload="new principal"><div class="pf-rail"></div>
+      <div class="pf-chip">new principal</div><div class="pf-hoplab">↺ back into the pot</div></div>
+
+  </div>
+
+  <!-- The gate register. A gate decides whether the loop keeps its shape;
+       nothing is handed to it and nothing comes out of it. -->
+  <div class="pf-gates">
+    <span class="pf-gatelab">gates</span>
+    <span class="pf-gate" data-node="withdrawal" data-gate data-state="unpowered"
+          title="Take money out mid-run and every later payment is cut from a smaller pot. Stated here; nothing on this page can fire it.">
+      withdrawal · shrinks every later payment
+    </span>
+    <span class="pf-gate" data-node="tax on interest" data-gate data-state="ghost"
+          title="In a taxed account 25% of each payment never returns. Not applied to this floor's numbers — priced in the accounts below.">
+      tax · 25% never returns — priced below
+    </span>
+    <span class="pf-gate" data-node="inflation" data-gate data-state="ghost"
+          title="Inflation reprices the finish line: $243,994 buys $100,522 of today's prices at 3%. Not applied here — priced in the accounts below.">
+      inflation · reprices the finish line
+    </span>
+  </div>
+</div>
+
+<div class="pf-legend">
+  <span><i class="l-running"></i> <b>running</b> — its number is this page's own arithmetic; recount any row</span>
+  <span><i class="l-ghost"></i> <b>ghost</b> — a real force not applied to this floor's numbers: named here, priced below</span>
+  <span><i class="l-unpowered"></i> <b>unpowered</b> — exists, and nothing on this page can fire it</span>
+</div>
+
+<!-- FOUR ACCOUNTS as state-badged scenario tiles (finding 7: not machine
+     cards) — each carries its number and its next move; click opens the receipt. -->
+<div class="prismprose" style="margin-top:28px">
+  <h2><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>four accounts, four next moves</h2>
+  <p>All four stand still on a screen — each needs a different move, which is
+  what one red dot cannot say.</p>
+</div>
+<div class="fx" id="fx" data-fx="ci-fates">
+  <svg id="fx-svg" viewBox="0 0 880 300" aria-label="four accounts from the same first dollar, one scale" data-probe></svg>
+  <div class="fx-chips">
+    <button class="fx-chip" data-detail="#d-s-run">
+      <span><span class="sw" style="border-color:var(--good)"></span>running · <b>this account</b></span>
+      <b id="fxc-inv" data-probe-expect="243,994"></b>
+      <span class="mv">nothing — leave it alone</span>
+    </button>
+    <button class="fx-chip is-ghost" data-detail="#d-s-ghost">
+      <span><span class="sw" style="border-color:var(--faint); border-top-style:dashed"></span>ghost · <b>the decade you wait</b></span>
+      <b id="fxc-wait"></b>
+      <span class="mv">start this month</span>
+    </button>
+    <button class="fx-chip" data-detail="#d-s-unpowered">
+      <span><span class="sw" style="border-color:var(--warn)"></span>unpowered · <b>the parked cash</b></span>
+      <b id="fxc-park"></b>
+      <span class="mv">move it where a rate exists</span>
+    </button>
+    <button class="fx-chip" data-detail="#d-s-broken">
+      <span><span class="sw" style="border-color:var(--bad); border-top-style:dashed"></span>broken · <b>the nominal readout, read real</b></span>
+      <b id="fxc-real"></b>
+      <span class="mv">read real, not nominal</span>
+    </button>
+  </div>
+</div>
+
+<!-- THE HEURISTIC — insight first (finding 8), the reference rows after. -->
+<div class="gv" style="margin-top:26px">
+  <div class="gv-spheres">
+    <div class="gv-sphere">
+      <div class="gvh"><svg class="gvi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>doubling time · the 72 shortcut<span class="gvn">72 ÷ rate</span></div>
+      <div class="gv-bodies">
+        <span class="gv-body is-pulled">at 7%, 30 years holds ~3 doublings <span class="k">the last decade alone pays $139,809 — more than the first two decades' $104,185 together</span></span>
+        <span class="gv-body">3% <span class="k">≈ 24.0 y · exact 23.4</span></span>
+        <span class="gv-body">5% <span class="k">≈ 14.4 y · exact 14.2</span></span>
+        <span class="gv-body">7% <span class="k">≈ 10.3 y · exact 10.2</span></span>
+        <span class="gv-body">10% <span class="k">≈ 7.2 y · exact 7.3</span></span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="prismprose" style="margin-top:26px">
+  <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 5H7l6 7-6 7h11"/></svg>the rule, after the evidence</h2>
+  <p>The rule that ran every number above — drag the month and watch the
+  symbols become amounts.</p>
+</div>
+<div class="an" id="an" data-probe-react>
+  <div class="an-eqrow" aria-label="the equation, every piece wearing its current value">
+    <button class="bx" type="button" data-t="0">
+      <span class="s"><span class="mvar">A</span><sub>k</sub></span>
+      <span class="b" id="an-A" data-probe-out data-probe-expect="243,994"></span>
+    </button>
+    <span class="op2">=</span>
+    <button class="bx" type="button" data-t="1">
+      <span class="s"><span class="mvar">P</span></span>
+      <span class="b" id="an-Pb">$0 · yours</span>
+    </button>
+    <button class="bx" type="button" data-t="2">
+      <span class="s">·(1+<span class="mvar">i</span>)<sup>k</sup></span>
+      <span class="b" id="an-G" data-probe-out></span>
+    </button>
+    <span class="op2">+</span>
+    <button class="bx" type="button" data-t="3">
+      <span class="s"><span class="mvar">c</span></span>
+      <span class="b" id="an-cb">$200 / mo</span>
+    </button>
+    <button class="bx" type="button" data-t="4">
+      <span class="s">·<span class="an-frac"><span class="n">(1+<span class="mvar">i</span>)<sup>k</sup> − 1</span><span><span class="mvar">i</span></span></span></span>
+      <span class="b" id="an-F" data-probe-out data-probe-expect="1,219.97"></span>
+    </button>
+  </div>
+  <div class="an-ctl">
+    <span class="ms" id="an-ms">
+      <button type="button" data-k="1">m1</button>
+      <button type="button" data-k="12">y1</button>
+      <button type="button" data-k="120">y10</button>
+      <button type="button" data-k="217">m217</button>
+      <button type="button" data-k="360" class="on">y30</button>
+    </span>
+    <input id="an-k" type="range" min="0" max="360" step="1" value="360" aria-label="month for the equation">
+    <span class="ci-val" id="an-kv" style="min-width:86px; text-align:right"></span>
+  </div>
+  <div class="an-side">
+    <b id="an-name"></b>
+    <div class="val" id="an-val"></div>
+    <p id="an-what"></p>
+    <div class="an-nav">
+      <button id="an-prev" type="button">◀ prev term</button>
+      <button id="an-next" type="button">next term ▶</button>
+    </div>
+  </div>
+</div>
+
+<div class="pf-details">
+  <div class="pf-detail" id="d-pay">
+    <h4>1 · the paycheck — the lever you actually hold each month</h4>
+    <p>Raise it $100 and the ending rises $121,997. Deposits and the starting
+    pot scale the curve; they never bend it. Bending is the credit's work.</p>
+    <dl><dt>consumes</dt><dd>a month of your work</dd>
+        <dt>produces</dt><dd>a $200 deposit</dd>
+        <dt>fails by</dt><dd>stopping — the belt starves, though the engine keeps paying on what's already in</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-pot">
+    <h4>2 · the pot — the only machine that remembers</h4>
+    <p>Deposits and payments are events; the pot is state, and it hands the
+    engine a bigger input every round: $34,617 at year 10, $104,185 at 20,
+    $243,994 at 30. The widening gap between decades is the memory working.</p>
+    <dl><dt>consumes</dt><dd>deposits + returned payments</dd>
+        <dt>produces</dt><dd>the balance, readable NOW</dd>
+        <dt>fails by</dt><dd>withdrawal — every later payment is cut from a smaller pot</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-engine">
+    <h4>3 · the rate engine — cuts from NOW, not from your deposits</h4>
+    <p>First payment $1.17; payment 360 is $1,423.30 — same 7%, ×1,217, because
+    the input grew. Pay interest on deposits only (simple interest) and 30
+    years ends at $147,390: the missing $96,604 is interest earned by
+    interest. One more point of rate is worth $54,078 — loud, but third of the
+    four levers.</p>
+    <dl><dt>consumes</dt><dd>the balance, readable NOW</dd>
+        <dt>produces</dt><dd>an interest payment · 7%/12 of the pot</dd></dl>
+  </div>
+  <div class="pf-detail" id="d-credit">
+    <h4>4 · the credit — the hop that IS compound interest</h4>
+    <p>Every payment re-enters as principal the engine will read next round.
+    Cut this hop and the same 30 years pays $75,390 instead of $171,994 —
+    simple interest is this exact floor with the return belt removed. The
+    $171,994 the machine made took this hop 360 times.</p>
+    <dl><dt>consumes</dt><dd>an interest payment</dd>
+        <dt>produces</dt><dd>new principal, back into the pot</dd>
+        <dt>gated by</dt><dd>tax — in a taxed account 25% of each payment never returns</dd></dl>
+  </div>
+
+  <div class="pf-detail" id="d-s-run">
+    <h4>running — and the proof is arithmetic you can redo</h4>
+    <p>360 rounds of pot += pot·0.07/12 + 200 lands on $243,994.20, no other
+    input. <b>Next move:</b> nothing. This one works — leave it alone; touching
+    it is the only way to break it.</p>
+  </div>
+  <div class="pf-detail" id="d-s-ghost">
+    <h4>ghost — an honest absence, never a zero</h4>
+    <p>Waiting ten years costs $139,809, and only $24,000 of that is deposits
+    you skipped — the other $115,809 is machine output that needed those years
+    to exist and now cannot. No later rate or raise rebuilds it: +1 point
+    recovers $54,078, less than half. <b>Next move:</b> start this month; time
+    is the one lever you cannot buy back.</p>
+  </div>
+  <div class="pf-detail" id="d-s-unpowered">
+    <h4>unpowered — it exists, and nothing turns it on</h4>
+    <p>The same $72,000, deposited into a 0% checking account, is still
+    $72,000 at year 30 — the machine is present and the engine never fires,
+    $0/month forever. Waiting fixes nothing here. <b>Next move:</b> move the
+    money to where a rate exists; the fix is a transfer, not patience.</p>
+  </div>
+  <div class="pf-detail" id="d-s-broken">
+    <h4>broken — reports success over work it did not do</h4>
+    <p>The screen says $243,994; at 3% inflation those dollars buy $100,522 of
+    today's prices — the readout claims wealth the machine did not create. In
+    a taxed account it overstates twice: 25% of every payment never returned,
+    so the true ending is $174,362. <b>Next move:</b> read real, not nominal —
+    and shelter the interest where the law allows.</p>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var el = { p: $("ci-p"), c: $("ci-c"), r: $("ci-r"), y: $("ci-y"),
+    pv: $("ci-pv"), cv: $("ci-cv"), rv: $("ci-rv"), yv: $("ci-yv"),
+    grid: $("ci-grid"), area: $("ci-area"), line: $("ci-line"), ref: $("ci-ref"),
+    dots: $("ci-dots"), cross: $("ci-cross"), x: $("ci-x"), tip: $("ci-tip"),
+    plot: $("ci-plot"),
+    tOwn: $("ci-t-own"), tLoop: $("ci-t-loop"), tBal: $("ci-t-bal"),
+    read: $("ci-read"), lev: $("ci-lev") };
+  if (!el.c) return;
+  var NS = "http://www.w3.org/2000/svg";
+  var L = 46, R = 628, T = 16, B = 262;
+  var pin = null, S = [];
+  var fmt = function (v) {
+    return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+
+  function inputs() {
+    var p = Math.max(0, parseFloat(el.p.value) || 0);
+    var c = Math.max(0, parseFloat(el.c.value) || 0);
+    var r = Math.max(0, parseFloat(el.r.value) || 0);
+    var y = Math.min(50, Math.max(1, parseInt(el.y.value, 10) || 1));
+    return { p: p, c: c, r: r, y: y, m: y * 12, mr: r / 1200 };
+  }
+
+  function annuity(c, mr, m) {
+    return mr > 0 ? c * (Math.pow(1 + mr, m) - 1) / mr : c * m;
+  }
+  function bal(p, c, mr, m) {
+    return p * Math.pow(1 + mr, m) + annuity(c, mr, m);
+  }
+
+  /* Value labels formatted, always — a slider that reads
+     7.000000000000001% has already lost the glance layer. */
+  function labels(c) {
+    el.pv.textContent = fmt(c.p);
+    el.cv.textContent = fmt(c.c);
+    el.rv.textContent = (c.r % 1 ? c.r.toFixed(1) : String(c.r)) + "%";
+    el.yv.textContent = c.y + " y";
+  }
+
+  function compute() {
+    var c = inputs(); S = [];
+    for (var k = 0; k <= c.m; k++) {
+      var v = bal(c.p, c.c, c.mr, k);
+      var own = c.p + c.c * k;
+      S.push({ k: k, v: v, own: own, loop: v - own });
+    }
+    return c;
+  }
+
+  function tiles(pt) {
+    el.tOwn.textContent = fmt(pt.own);
+    el.tLoop.textContent = fmt(pt.loop);
+    el.tBal.textContent = fmt(pt.v);
+  }
+
+  function readout(pt, m) {
+    el.read.innerHTML = pt.k === m
+      ? "Month <b>" + pt.k + "</b>, the end of the run — hover the curve to scrub any month, click to pin it."
+      : "Month <b>" + pt.k + "</b> of " + m + " — the tiles above are reading this month.";
+  }
+
+  function levers(c) {
+    var base = bal(c.p, c.c, c.mr, c.m);
+    var d0 = 10000 * Math.pow(1 + c.mr, c.m);
+    var d1 = bal(c.p, c.c + 100, c.mr, c.m) - base;
+    var d2 = bal(c.p, c.c, (c.r + 1) / 1200, c.m) - base;
+    var d3 = base - bal(c.p, c.c, c.mr, Math.max(0, c.m - 120));
+    el.lev.innerHTML = "From here, each lever, priced: +$10,000 to start → <b>+" + fmt(d0) +
+      "</b> · +$100/mo → <b>+" + fmt(d1) +
+      "</b> · +1 point → <b>+" + fmt(d2) + "</b> · wait 10 years → <b>−" + fmt(d3) + "</b>.";
+  }
+
+  function render() {
+    var c = compute();
+    var max = S[S.length - 1].v * 1.06 || 1;
+    var xs = function (k) { return L + (R - L) * (k / c.m); };
+    var ys = function (v) { return B - (B - T) * (v / max); };
+    var d = "", i;
+    for (i = 0; i < S.length; i++) {
+      d += (i ? "L" : "M") + xs(S[i].k).toFixed(1) + "," + ys(S[i].v).toFixed(1);
+    }
+    el.line.setAttribute("d", d);
+    el.area.setAttribute("d", d + "L" + R + "," + B + "L" + L + "," + B + "Z");
+    el.grid.textContent = "";
+    for (i = 0; i <= 3; i++) {
+      var gv = max * i / 3, gy = ys(gv);
+      var ln = document.createElementNS(NS, "line");
+      ln.setAttribute("x1", L); ln.setAttribute("x2", R);
+      ln.setAttribute("y1", gy); ln.setAttribute("y2", gy);
+      ln.setAttribute("stroke", "var(--line)"); ln.setAttribute("opacity", "0.55");
+      el.grid.appendChild(ln);
+      var tx = document.createElementNS(NS, "text");
+      tx.setAttribute("x", L - 6); tx.setAttribute("y", gy + 4);
+      tx.setAttribute("text-anchor", "end");
+      tx.setAttribute("fill", "var(--muted)"); tx.setAttribute("font-size", "12");
+      tx.textContent = gv >= 1000 ? "$" + (gv / 1000).toFixed(0) + "k" : "$" + gv.toFixed(0);
+      el.grid.appendChild(tx);
+    }
+    var yStep = c.y > 30 ? 10 : 5;
+    for (i = 0; i <= c.y; i += yStep) {
+      var xt = document.createElementNS(NS, "text");
+      xt.setAttribute("x", xs(i * 12)); xt.setAttribute("y", B + 16);
+      xt.setAttribute("text-anchor", "middle");
+      xt.setAttribute("fill", "var(--muted)"); xt.setAttribute("font-size", "11");
+      xt.textContent = i + (i ? "" : " y");
+      el.grid.appendChild(xt);
+    }
+    el.ref.setAttribute("x1", xs(0)); el.ref.setAttribute("y1", ys(S[0].own));
+    el.ref.setAttribute("x2", xs(c.m)); el.ref.setAttribute("y2", ys(S[c.m].own));
+    el.dots.textContent = "";
+    for (i = 0; i < S.length; i++) {
+      if (S[i].k % 60 === 0 && S[i].k > 0) {
+        var ci = document.createElementNS(NS, "circle");
+        ci.setAttribute("cx", xs(S[i].k)); ci.setAttribute("cy", ys(S[i].v));
+        ci.setAttribute("r", "4"); ci.setAttribute("fill", "var(--accent)");
+        el.dots.appendChild(ci);
+      }
+    }
+    /* The crossover, ON the curve (scan finding 5): first month the machine's
+       share beats yours. Hidden when the settings never cross. */
+    el.cross.textContent = "";
+    var cr = null;
+    for (i = 1; i < S.length; i++) {
+      if (S[i].own > 0 && S[i].loop > S[i].own) { cr = S[i]; break; }
+    }
+    if (cr) {
+      var cxp = xs(cr.k), cyp = ys(cr.v);
+      var ring = document.createElementNS(NS, "circle");
+      ring.setAttribute("cx", cxp); ring.setAttribute("cy", cyp);
+      ring.setAttribute("r", "6"); ring.setAttribute("fill", "none");
+      ring.setAttribute("stroke", "var(--ci-s2)"); ring.setAttribute("stroke-width", "2");
+      el.cross.appendChild(ring);
+      var lb = document.createElementNS(NS, "text");
+      var flip = cxp > 430;
+      lb.setAttribute("x", flip ? cxp - 12 : cxp + 12);
+      lb.setAttribute("y", cyp - 10);
+      lb.setAttribute("text-anchor", flip ? "end" : "start");
+      lb.setAttribute("fill", "var(--ink)"); lb.setAttribute("font-size", "12");
+      lb.textContent = "the machine passes you · m" + cr.k;
+      el.cross.appendChild(lb);
+    }
+    var pt = S[pin !== null && pin <= c.m ? pin : c.m];
+    labels(c); tiles(pt); readout(pt, c.m); levers(c);
+    el.x.setAttribute("opacity", "0"); el.tip.style.display = "none";
+    return { c: c, xs: xs, ys: ys };
+  }
+
+  var view = null;
+  function refresh() { pin = null; view = render(); }
+
+  function ptAt(ev) {
+    var box = el.plot.querySelector("svg").getBoundingClientRect();
+    var fx = (ev.clientX - box.left) / box.width * 640;
+    var k = Math.round((fx - L) / (R - L) * view.c.m);
+    if (k < 0) k = 0; if (k > view.c.m) k = view.c.m;
+    return k;
+  }
+  function hover(ev) {
+    if (!view) return;
+    var k = ptAt(ev), pt = S[k];
+    var px = view.xs(k), py = view.ys(pt.v);
+    el.x.setAttribute("x1", px); el.x.setAttribute("x2", px);
+    el.x.setAttribute("opacity", "0.6");
+    el.tip.style.display = "block";
+    el.tip.style.left = (px / 640 * 100) + "%";
+    el.tip.style.top = (py / 290 * 100) + "%";
+    el.tip.textContent = "m" + pt.k + " · " + fmt(pt.v);
+    tiles(pt); readout(pt, view.c.m);
+  }
+  function leave() {
+    if (!view) return;
+    var pt = S[pin === null ? view.c.m : Math.min(pin, view.c.m)];
+    tiles(pt); readout(pt, view.c.m);
+    el.x.setAttribute("opacity", "0"); el.tip.style.display = "none";
+  }
+  function click(ev) {
+    if (!view) return;
+    var k = ptAt(ev);
+    pin = (pin === k) ? null : k;
+  }
+
+  el.p.addEventListener("input", refresh);
+  el.c.addEventListener("input", refresh);
+  el.r.addEventListener("input", refresh);
+  el.y.addEventListener("input", refresh);
+  el.plot.addEventListener("mousemove", hover);
+  el.plot.addEventListener("mouseleave", leave);
+  el.plot.addEventListener("click", click);
+  refresh();
+})();
+
+/* ── the formula, mapped — treemap animator. One model, two views: amounts
+   come from the lever bank's sliders (defaults when absent); this component
+   owns only the month. Registers in FXREPLAY and obeys the cog's pause and
+   reduced motion like any floor. ─────────────────────────────────────────── */
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var map = $("tm-map"), scale = $("tm-scale"), kIn = $("tm-k"), kv = $("tm-kv"),
+      btn = $("tm-play");
+  var T = { k: $("tm-t-k"), p: $("tm-t-p"), dep: $("tm-t-dep"), pg: $("tm-t-pg"),
+            sim: $("tm-t-sim"), sur: $("tm-t-sur"), tot: $("tm-t-tot") };
+  if (!map) return;
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var motionOff = function () {
+    return document.documentElement.getAttribute("data-motion") === "off";
+  };
+  var fmt = function (v) {
+    return "$" + v.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+  };
+  var lever = function (id, dflt) {
+    var n = $(id);
+    return n ? (parseFloat(n.value) || 0) : dflt;
+  };
+  function cfg() {
+    var y = Math.max(1, Math.min(50, lever("ci-y", 30)));
+    return { p: lever("ci-p", 0), c: lever("ci-c", 200),
+             i: lever("ci-r", 7) / 1200, m: Math.round(y * 12) };
+  }
+  /* balance = P(1+i)^k + annuity, split five ways; simple interest on the
+     deposit stream is c·i·k(k−1)/2, so at m360 the parts land on the SAME
+     $75,390 / $96,604 the credit and engine inspectors already state. */
+  function parts(cf, k) {
+    var g = Math.pow(1 + cf.i, k);
+    var pg = cf.p * (g - 1);
+    var dep = cf.c * k;
+    var ann = cf.i > 0 ? cf.c * (g - 1) / cf.i : dep;
+    var sim = Math.min(cf.c * cf.i * k * (k - 1) / 2, Math.max(0, ann - dep));
+    var sur = Math.max(0, ann - dep - sim);
+    return { p: cf.p, pg: pg, dep: dep, sim: sim, sur: sur,
+             total: cf.p + pg + dep + sim + sur };
+  }
+
+  var colY = document.createElement("div"); colY.className = "tm-col";
+  var colM = document.createElement("div"); colM.className = "tm-col";
+  var empty = document.createElement("div"); empty.className = "tm-empty";
+  empty.textContent = "month 0 — nothing in the pot yet";
+  function block(cls) {
+    var b = document.createElement("div"); b.className = "tm-b " + cls;
+    var i = document.createElement("i"); b.appendChild(i);
+    return b;
+  }
+  /* column-reverse stacks: the start sits at the bottom-left ROOT, deposits
+     above it; the machine's parts climb the right column the same way. */
+  var ICONS = {
+    p: '<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>',
+    dep: '<circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18"/>',
+    pg: '<path d="M7 20h10"/><path d="M12 20v-9"/><path d="M12 11c0-3 2-5 5-5 0 3-2 5-5 5z"/><path d="M12 8C12 5 10 3 7 3c0 3 2 5 5 5z"/>',
+    sim: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+    sur: '<path d="m17 2 4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="m7 22-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/>'
+  };
+  var RING = 2 * Math.PI * 10;
+  function block(cls, key) {
+    var b = document.createElement("div"); b.className = "tm-b " + cls;
+    var i = document.createElement("i");
+    i.innerHTML =
+      '<span class="tbh"><svg viewBox="0 0 24 24" aria-hidden="true">' + ICONS[key] +
+      '</svg><span class="tbn"></span></span>' +
+      '<span class="tbr"><b class="tba"></b><span class="tbring">' +
+      '<svg viewBox="0 0 26 26" aria-hidden="true">' +
+      '<circle class="trk" cx="13" cy="13" r="10"/>' +
+      '<circle class="prg" cx="13" cy="13" r="10"/></svg><em class="tbp"></em></span></span>';
+    b.appendChild(i);
+    return { el: b, head: i.querySelector(".tbh"), name: i.querySelector(".tbn"),
+             row: i.querySelector(".tbr"), amt: i.querySelector(".tba"),
+             prg: i.querySelector(".prg"), pct: i.querySelector(".tbp") };
+  }
+  var B = { p: block("b-p", "p"), dep: block("b-dep", "dep"),
+            pg: block("b-pg", "pg"), sim: block("b-sim", "sim"), sur: block("b-sur", "sur") };
+  colY.appendChild(B.p.el); colY.appendChild(B.dep.el);
+  colM.appendChild(B.pg.el); colM.appendChild(B.sim.el); colM.appendChild(B.sur.el);
+  scale.appendChild(colY); scale.appendChild(colM); map.appendChild(empty);
+
+  var NAMES = { p: "the start", dep: "deposits", pg: "growth on the start",
+                sim: "simple interest", sur: "interest on interest" };
+  function setBlock(bo, key, v, colTotal, absW, s, share) {
+    bo.el.style.flexBasis = (colTotal > 0 ? v / colTotal * 100 : 0) + "%";
+    bo.el.style.display = v > 0 ? "" : "none";
+    var pr = Math.round(share * 100);
+    bo.el.title = NAMES[key] + " " + fmt(v) + " · " + pr + "% of the pot";
+    var absH = colTotal > 0 ? s * (v / colTotal) : 0;
+    var full = absW > 0.17 && absH > 0.15;
+    var headOnly = absW > 0.13 && absH > 0.07;
+    bo.head.style.display = (full || headOnly) ? "" : "none";
+    bo.row.style.display = full ? "" : "none";
+    bo.name.textContent = NAMES[key];
+    bo.amt.textContent = fmt(v);
+    bo.pct.textContent = pr + "%";
+    bo.prg.setAttribute("stroke-dasharray", (RING * share) + " " + RING);
+  }
+  var k = null, playing = false, timer = null;
+  function paint() {
+    var cf = cfg();
+    if (k === null || k > cf.m) k = cf.m;
+    kIn.max = cf.m; kIn.value = k;
+    var pt = parts(cf, k);
+    var end = parts(cf, cf.m).total;
+    var has = pt.total > 0 && end > 0;
+    empty.style.display = has ? "none" : "";
+    scale.style.display = has ? "" : "none";
+    if (has) {
+      /* area = money: the canvas IS the final month, so month k takes
+         sqrt(share) of each dimension and grows out of the corner. */
+      var s = Math.sqrt(pt.total / end);
+      scale.style.width = (s * 100) + "%";
+      scale.style.height = (s * 100) + "%";
+      var yv = pt.p + pt.dep, mv = pt.pg + pt.sim + pt.sur;
+      colY.style.flexBasis = (yv / pt.total * 100) + "%";
+      colM.style.flexBasis = (mv / pt.total * 100) + "%";
+      var wY = s * (yv / pt.total), wM = s * (mv / pt.total);
+      setBlock(B.p, "p", pt.p, yv, wY, s, pt.p / pt.total);
+      setBlock(B.dep, "dep", pt.dep, yv, wY, s, pt.dep / pt.total);
+      setBlock(B.pg, "pg", pt.pg, mv, wM, s, pt.pg / pt.total);
+      setBlock(B.sim, "sim", pt.sim, mv, wM, s, pt.sim / pt.total);
+      setBlock(B.sur, "sur", pt.sur, mv, wM, s, pt.sur / pt.total);
+    }
+    kv.textContent = "m" + k + " · y" + (k / 12).toFixed(1);
+    T.k.textContent = "m" + k;
+    T.p.textContent = fmt(pt.p);
+    T.dep.textContent = fmt(pt.dep);
+    T.pg.textContent = fmt(pt.pg);
+    T.sim.textContent = fmt(pt.sim);
+    T.sur.textContent = fmt(pt.sur);
+    T.tot.textContent = fmt(pt.total);
+  }
+  function paintBtn() { btn.textContent = playing ? "❚❚" : "▶"; }
+  function schedule() { clearTimeout(timer); timer = setTimeout(step, 60); }
+  function step() {
+    if (!playing) return;
+    if (reduced || motionOff()) { schedule(); return; }
+    var m = cfg().m;
+    k = Math.min(k + Math.max(1, Math.round(m / 200)), m);
+    paint();
+    if (k < m) schedule();
+    else { playing = false; paintBtn(); }
+  }
+  btn.addEventListener("click", function () {
+    if (playing) { playing = false; }
+    else { if (k >= cfg().m) k = 0; playing = true; schedule(); }
+    paintBtn();
+  });
+  kIn.addEventListener("input", function () {
+    playing = false; paintBtn();
+    k = parseInt(kIn.value, 10) || 0;
+    paint();
+  });
+  ["ci-p", "ci-c", "ci-r", "ci-y"].forEach(function (id) {
+    var n = $(id);
+    if (n) n.addEventListener("input", paint);
+  });
+  window.FXREPLAY = window.FXREPLAY || {};
+  window.FXREPLAY["ci-map"] = function () {
+    k = 0; playing = true; paintBtn(); paint(); schedule();
+  };
+  paint();   /* loads at the finished state — the reduced-motion law */
+})();
+
+/* ── the divergence chart (F1) — four fates from the same first dollar.
+   Loads FINISHED; FXREPLAY["ci-fates"] redraws 0→360 under the cog. ── */
+(function () {
+  "use strict";
+  var svg = document.getElementById("fx-svg");
+  if (!svg) return;
+  var NS = "http://www.w3.org/2000/svg";
+  var M = 360;
+  var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var motionOff = function () {
+    return document.documentElement.getAttribute("data-motion") === "off";
+  };
+  /* one model: the lever bank's sliders are the source of truth */
+  var lever = function (id, d) {
+    var n = document.getElementById(id);
+    return n ? (parseFloat(n.value) || 0) : d;
+  };
+  function cfg() { return { p: lever("ci-p", 0), c: lever("ci-c", 200), i: lever("ci-r", 7) / 1200 }; }
+  function bal(f, k) {
+    if (k <= 0) return 0;
+    var g = Math.pow(1 + f.i, k);
+    return f.p * g + (f.i > 0 ? f.c * (g - 1) / f.i : f.c * k);
+  }
+  function fates(k) {
+    var f = cfg();
+    return { inv: bal(f, k), wait: bal(f, k - 120), park: f.p + f.c * k,
+             real: bal(f, k) / Math.pow(1.03, k / 12) };
+  }
+  var fmt = function (v) {
+    return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  };
+  var L = 52, R = 868, T = 16, B = 262, max = 1;
+  var xs = function (k) { return L + (R - L) * k / M; };
+  var ys = function (v) { return B - (B - T) * v / max; };
+  var el = function (tag, attrs) {
+    var n = document.createElementNS(NS, tag);
+    for (var a in attrs) n.setAttribute(a, attrs[a]);
+    return n;
+  };
+  var S = [
+    { key: "inv", stroke: "var(--good)", dash: "", out: "fxc-inv" },
+    { key: "wait", stroke: "var(--faint)", dash: "7 6", out: "fxc-wait" },
+    { key: "park", stroke: "var(--warn)", dash: "", out: "fxc-park" },
+    { key: "real", stroke: "var(--bad)", dash: "3 4", out: "fxc-real" }
+  ];
+  var timer = null;
+  function drawTo(k) {
+    var e = fates(M);
+    S.forEach(function (s) {
+      var d = "";
+      for (var m2 = 0; m2 <= k; m2 += 4) {
+        d += (d ? "L" : "M") + xs(m2).toFixed(1) + "," + ys(fates(m2)[s.key]).toFixed(1);
+      }
+      s.path.setAttribute("d", d || "M0 0");
+      var v = fates(k)[s.key];
+      s.dot.setAttribute("cx", xs(k)); s.dot.setAttribute("cy", ys(v));
+      document.getElementById(s.out).textContent = fmt(v) +
+        (s.key === "wait" ? " — " + fmt(e.inv - e.wait) + " behind" : "");
+    });
+  }
+  /* rebuilt whenever the model changes: the scale itself depends on it */
+  function rebuild() {
+    clearInterval(timer);
+    max = Math.max(fates(M).inv, fates(M).park) * 1.05 || 1;
+    svg.innerHTML = "";
+    var grid = el("g", { class: "grid" });
+    svg.appendChild(grid);
+    [0, 0.5, 1].forEach(function (fr) {
+      var y = ys(max * fr);
+      grid.appendChild(el("line", { x1: L, x2: R, y1: y, y2: y }));
+      var t = el("text", { x: L - 6, y: y + 4, "text-anchor": "end" });
+      t.textContent = "$" + Math.round(max * fr / 1000) + "k";
+      svg.appendChild(t);
+    });
+    [0, 10, 20, 30].forEach(function (yr) {
+      var t = el("text", { x: xs(yr * 12), y: 286, "text-anchor": "middle" });
+      t.textContent = yr + (yr ? "" : " y");
+      svg.appendChild(t);
+    });
+    S.forEach(function (s) {
+      s.path = el("path", { fill: "none", stroke: s.stroke, "stroke-width": 2.6,
+        "stroke-dasharray": s.dash });
+      svg.appendChild(s.path);
+      s.dot = el("circle", { r: 4.5, fill: s.stroke });
+      svg.appendChild(s.dot);
+    });
+    drawTo(M);
+  }
+  ["ci-p", "ci-c", "ci-r"].forEach(function (id) {
+    var n = document.getElementById(id);
+    if (n) n.addEventListener("input", rebuild);
+  });
+  window.FXREPLAY = window.FXREPLAY || {};
+  window.FXREPLAY["ci-fates"] = function () {
+    clearInterval(timer);
+    if (reduced || motionOff()) { drawTo(M); return; }
+    var k = 0;
+    drawTo(0);
+    timer = setInterval(function () {
+      if (motionOff()) { clearInterval(timer); drawTo(M); return; }
+      k += 6;
+      drawTo(Math.min(k, M));
+      if (k >= M) clearInterval(timer);
+    }, 40);
+  };
+  rebuild();   /* finished state at load */
+})();
+
+/* ── the formula anatomy (R2, upgraded) — symbols and their numeric twin,
+   joined by the month scrub. Reader-paced; no ambient motion. ── */
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var kIn = $("an-k");
+  if (!kIn) return;
+  var M = 360;
+  var lever = function (id, d) {
+    var n = document.getElementById(id);
+    return n ? (parseFloat(n.value) || 0) : d;
+  };
+  function cfg() { return { p: lever("ci-p", 0), c: lever("ci-c", 200), i: lever("ci-r", 7) / 1200 }; }
+  function g(k) { return Math.pow(1 + cfg().i, k); }
+  function F(k) { var f = cfg(); return f.i > 0 ? (g(k) - 1) / f.i : k; }
+  function annu(k) { return cfg().c * F(k); }
+  function A(k) { return cfg().p * g(k) + annu(k); }
+  var fmt = function (v) {
+    return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 0 });
+  };
+  var fmt2 = function (v) {
+    return v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  var TERMS = [
+    { name: "Aₖ — the pot at month k",
+      val: function (k) { return fmt(A(k)) + " at m" + k; },
+      what: "Every component above lands on this number — recount any of them against it." },
+    { name: "P — the starting amount",
+      val: function (k) { var p = cfg().p; return p > 0 ? fmt(p) + ", grown by the factor beside it" : "$0 on this page — the lever bank's first slider wakes it"; },
+      what: "One lump at month zero. Whatever it is, the term beside it compounds it k times." },
+    { name: "(1+i)ᵏ — the growth factor",
+      val: function (k) { return "× " + fmt2(g(k)) + " after " + k + " months"; },
+      what: "One month's growth (1+i), applied k times. The exponent is the time lever — this factor is why starting early beats starting big." },
+    { name: "c — your monthly deposit",
+      val: function (k) { var c = cfg().c; return fmt(c) + " × " + k + " rounds = " + fmt(c * k) + " put in"; },
+      what: "Scales the curve; never bends it. Bending is the return hop's work." },
+    { name: "the machine's factor — each deposit compounded from ITS month",
+      val: function (k) { return fmt2(F(k)) + " × " + fmt(cfg().c) + " = " + fmt(annu(k)); },
+      what: "The return hop, k times, in one fraction (i = r/12). The month lives in the exponent while deposits and rate only scale — the worked case's lever table: +10 y $139,809 · +$100/mo $121,997 · +$10,000 start $81,165 · +1 pt $54,078." }
+  ];
+  var terms = [].slice.call(document.querySelectorAll("#an .bx"));
+  var ix = 4;
+  function paint() {
+    var k = parseInt(kIn.value, 10) || 0;
+    var f = cfg();
+    $("an-A").textContent = fmt(A(k));
+    $("an-Pb").textContent = fmt(f.p) + " · yours";
+    $("an-cb").textContent = fmt(f.c) + " / mo";
+    $("an-G").textContent = "× " + fmt2(g(k));
+    $("an-F").textContent = "× " + fmt2(F(k));
+    $("an-kv").textContent = "m" + k + " · y" + (k / 12).toFixed(1);
+    [].slice.call(document.querySelectorAll("#an-ms button")).forEach(function (b) {
+      b.classList.toggle("on", parseInt(b.getAttribute("data-k"), 10) === k);
+    });
+    $("an-name").textContent = TERMS[ix].name;
+    $("an-val").textContent = TERMS[ix].val(k);
+    $("an-what").textContent = TERMS[ix].what;
+    terms.forEach(function (t, j) { t.classList.toggle("on", j === ix); });
+  }
+  function show(n) { ix = (n + TERMS.length) % TERMS.length; paint(); }
+  terms.forEach(function (t, j) { t.addEventListener("click", function () { show(j); }); });
+  $("an-prev").addEventListener("click", function () { show(ix - 1); });
+  $("an-next").addEventListener("click", function () { show(ix + 1); });
+  $("an-ms").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (!b) return;
+    kIn.value = b.getAttribute("data-k");
+    paint();
+  });
+  kIn.addEventListener("input", paint);
+  ["ci-p", "ci-c", "ci-r"].forEach(function (id) {
+    var n = document.getElementById(id);
+    if (n) n.addEventListener("input", paint);
+  });
+  paint();
+})();
+
+/* ── the variable bar — mirrors the lever bank, two-way; the master stays
+   the lever bank, so every component's existing listener keeps working. ── */
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  if (!$("vbar")) return;
+  var PAIRS = [["p", "ci-p", "vs-p", "vb-p"], ["c", "ci-c", "vs-c", "vb-c"],
+               ["r", "ci-r", "vs-r", "vb-r"], ["y", "ci-y", "vs-y", "vb-y"]];
+  var fmt = function (v) { return "$" + v.toLocaleString("en-US", { maximumFractionDigits: 0 }); };
+  function chipText(key, v) {
+    if (key === "r") return (v % 1 ? v.toFixed(1) : String(v)) + "%";
+    if (key === "y") return v + " y";
+    return fmt(v);
+  }
+  function paintChips() {
+    PAIRS.forEach(function (p) {
+      var src = $(p[1]);
+      if (!src) return;
+      var v = parseFloat(src.value) || 0;
+      $(p[3]).textContent = chipText(p[0], v);
+      $(p[2]).value = src.value;
+    });
+  }
+  PAIRS.forEach(function (p) {
+    var master = $(p[1]), mirror = $(p[2]);
+    if (!master) return;
+    mirror.addEventListener("input", function () {
+      master.value = mirror.value;
+      master.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    master.addEventListener("input", paintChips);
+  });
+  paintChips();
+})();
+</script>

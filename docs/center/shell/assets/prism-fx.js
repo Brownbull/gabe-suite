@@ -284,6 +284,62 @@
     });
   }
 
+  /* ── the section rail — h2 pills become a sticky in-page nav ──────────── */
+  function buildToc(stage) {
+    var heads = [].slice.call(stage.querySelectorAll(".prismprose h2"));
+    if (heads.length < 2) return;
+    var bar = document.createElement("nav");
+    bar.className = "prism-toc";
+    bar.setAttribute("aria-label", "page sections");
+    var links = heads.map(function (h, i) {
+      if (!h.id) h.id = "psec-" + (i + 1);
+      var a = document.createElement("a");
+      a.href = "#" + h.id;
+      var ic = h.querySelector("svg");
+      if (ic) a.appendChild(ic.cloneNode(true));
+      a.appendChild(document.createTextNode(h.textContent.trim()));
+      bar.appendChild(a);
+      return a;
+    });
+    stage.insertBefore(bar, stage.firstChild);
+    /* Drag-to-scroll: a rail that overflows pans by grabbing anywhere on it —
+       including on a chip. A press that MOVES (>6px) is a pan and must not
+       navigate; a clean press is a click. Pointer events cover mouse + touch. */
+    var drag = { down: false, moved: false, x: 0, sl: 0 };
+    bar.addEventListener("pointerdown", function (e) {
+      drag.down = true; drag.moved = false; drag.x = e.clientX; drag.sl = bar.scrollLeft;
+    });
+    window.addEventListener("pointermove", function (e) {
+      if (!drag.down) return;
+      var dx = e.clientX - drag.x;
+      if (Math.abs(dx) > 6) drag.moved = true;
+      if (drag.moved) bar.scrollLeft = drag.sl - dx;
+    });
+    window.addEventListener("pointerup", function () { drag.down = false; });
+    window.addEventListener("pointercancel", function () { drag.down = false; });
+    bar.addEventListener("click", function (e) {
+      var a = e.target.closest("a");
+      if (!a) return;
+      e.preventDefault();
+      if (drag.moved) return;                       /* a pan, not a choice */
+      var t = document.getElementById(a.getAttribute("href").slice(1));
+      if (!t) return;
+      t.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "start" });
+      history.replaceState(null, "", a.getAttribute("href"));
+    });
+    if (!("IntersectionObserver" in window)) return;
+    /* The band sits high: a section is "current" while its title is in the
+       top third — matching where a reader looks after a jump. */
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (!en.isIntersecting) return;
+        var ix = heads.indexOf(en.target);
+        links.forEach(function (l, i) { l.classList.toggle("on", i === ix); });
+      });
+    }, { rootMargin: "-8% 0px -78% 0px", threshold: 0 });
+    heads.forEach(function (h) { io.observe(h); });
+  }
+
   /* ── the gravity driver — seats pull bodies: the relationship layer ────── */
   /* A .gv is NOT a floor: nothing transforms, so it carries no data-prism and
      the contract gate ignores it. It still MOVES, so it registers in floors and
@@ -506,6 +562,7 @@
       articleScenes(stage);
       [].slice.call(stage.querySelectorAll(".pf-assembly")).forEach(assemblyDriver);
       wireInspectors(stage);
+      buildToc(stage);
     }
     /* Only fragments OUTSIDE the stage — the stage's own delegated listener
        already covers everything inside it, and a second listener on the same

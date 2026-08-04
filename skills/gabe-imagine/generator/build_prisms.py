@@ -224,8 +224,16 @@ def render_page(skeleton: str, nav: dict, page: dict, project: str, lang: str,
                 stamp: str, pills: str, fragments: dict) -> str:
     body, floors = wrap_floors(page["body"], page["slug"])
     body = expand_tokens(body, fragments)
-    handle = (f'<p class="prismhandle">{page["handle"]}</p>'
+    handle = (f'<p class="prismhandle"><span class="phlab">'
+              f'<svg viewBox="0 0 24 24" aria-hidden="true">'
+              f'<path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>'
+              f'the handle</span>{page["handle"]}</p>'
               if page.get("handle") else "")
+    # An empty kicker renders NOTHING — a page whose body opens with a seat
+    # row carries its addressing there, and an empty .kicker div is one more
+    # unexplained format in an already-crowded head.
+    kicker = page.get("kicker", "")
+    kicker_html = f'<div class="kicker">{E(kicker)}</div>' if kicker else ""
     nav_html = CS.render_sidebar(
         nav, f"prism-{page['slug']}.html", project, stamp,
         nav.get("head", ""), nav.get("generator", GENERATOR_NAME))
@@ -239,7 +247,7 @@ def render_page(skeleton: str, nav: dict, page: dict, project: str, lang: str,
         skeleton,
         LANG=E(lang), PROJECT_NAME=E(project), SIDEBAR=nav_html,
         PRISM_CRUMB=crumb, STATUS_PILLS=pills, SYNC_AGE=E(stamp),
-        PRISM_TITLE=E(page["title"]), PRISM_KICKER=E(page.get("kicker", "")),
+        PRISM_TITLE=E(page["title"]), PRISM_KICKER=kicker_html,
         PRISM_LEDE=page.get("lede", ""), PRISM_HANDLE=handle,
         PRISM_MODE=E(page["mode"]), PRISM_BODY=body,
         PRISM_SOURCE=source, PRISM_SCRIPTS="",
