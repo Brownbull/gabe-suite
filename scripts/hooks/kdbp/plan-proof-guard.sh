@@ -95,6 +95,7 @@ except Exception:
     sys.exit(0)  # malformed mirror = not a lie; other tooling reports it
 out = []
 warns = []  # debts — printed with a WARN| prefix, split off in bash, never block
+legacy_review = []  # aggregated: one line per PLAN, not per phase (34-line firehose = warn-blindness)
 sha_cache = {}  # dedupe: verify each distinct sha once (a 5k-phase plan must not fork 5k gits)
 def sha_reachable(sha):
     if sha not in sha_cache:
@@ -134,7 +135,7 @@ for ph in plan.get("phases", []) or []:
                 if int(m.group(4)) < int(m.group(3)):
                     out.append(f"phase {pid}: Review ✅ with untriaged findings — findings:{m.group(3)} triaged:{m.group(4)} (every finding gets fix/defer/dismiss)")
         else:
-            warns.append(f"phase {pid}: Review ✅ without a review record (phases[].review — written by /gabe-review Step 6; legacy debt until adopted)")
+            legacy_review.append(pid)
     # --- review ✅ on a red-beat phase whose cases never went green ---
     if c.get("review") == "done":
         cases = (ph.get("cases") or "").strip()
@@ -161,6 +162,9 @@ for ph in plan.get("phases", []) or []:
                     path = re.sub(r"\s*\([^)]*\)\s*$", "", parts[-1]).strip()
                     if path and not evidence_exists(path):
                         out.append(f"phase {pid}: Exec ✅ but declared proof artifact missing on disk: {path}")
+if legacy_review:
+    shown = ", ".join(legacy_review[:6]) + (f" (+{len(legacy_review)-6} more)" if len(legacy_review) > 6 else "")
+    warns.append(f"{len(legacy_review)} phase(s) Review ✅ without a review record — legacy debt until /gabe-review 1.10.0 adoption (phases: {shown})")
 print("\n".join(["WARN|" + w for w in warns] + out))
 PY
 )

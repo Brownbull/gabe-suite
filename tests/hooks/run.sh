@@ -216,6 +216,12 @@ json.dump(plan,open('.kdbp/PLAN.json','w'))"
 wout=$(echo '{"tool_input":{"file_path":"/x/.kdbp/PLAN.json"}}' | bash "$GUARD" 2>/dev/null); wrc=$?
 [ "$wrc" = 0 ] && echo "$wout" | grep -q 'without a review record' && ok || bad "guard: Review done w/o record must WARN and exit 0 (legacy debt)"
 [ "$(guard_on "[{'id':'v','cells':{'review':'todo'},'review':'APPROVE@$SHA findings:1 triaged:1','cases':None,'proof':None}]")" = 0 ] && ok || bad "guard: review todo w/ record present must pass (no check)"
+python3 -c "
+import json
+plan={'version':1,'status':'active','current_phase':'1','phases':[{'id':str(i),'cells':{'review':'done'},'review':None,'cases':None,'proof':None} for i in range(1,9)]}
+json.dump(plan,open('.kdbp/PLAN.json','w'))"
+wout=$(echo '{"tool_input":{"file_path":"/x/.kdbp/PLAN.json"}}' | bash "$GUARD" 2>/dev/null)
+[ "$(echo "$wout" | grep -c 'without a review record')" = 1 ] && echo "$wout" | grep -q '8 phase(s)' && ok || bad "guard: 8 record-less phases must aggregate to ONE warn line (warn-blindness)"
 
 # --- red-entry-guard: WARN on source write while Red ⬜, SILENT otherwise ----
 REG="$REPO/scripts/hooks/kdbp/red-entry-guard.sh"
