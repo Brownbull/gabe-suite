@@ -1,6 +1,6 @@
 {
  "generator": "build_prisms.py",
- "head": "232cb99",
+ "head": "56b1e27",
  "fragments": {
   "angle-pipeline": {
    "title": "The ANGLE pipeline",

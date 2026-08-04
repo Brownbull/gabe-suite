@@ -1,0 +1,112 @@
+/* evidence-nav.css — the entity Evidence navigator (workflow map ⇄ evidence).
+   Shipped with the center shell; consumed by feature pages and prism pages
+   alike. Data contract: see evidence-nav.js. */
+  .evsplit{display:grid;grid-template-columns:minmax(330px,2fr) minmax(340px,3fr);
+    gap:18px;align-items:start;margin:6px 0 26px}
+  @media (max-width:960px){.evsplit{grid-template-columns:1fr}}
+  .evmap{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
+    border-radius:12px;padding:10px 12px 12px;position:sticky;top:12px}
+  .evbar{display:flex;gap:8px;margin:0 0 8px;align-items:center;flex-wrap:wrap}
+  .evbar select{font:inherit;font-size:12px;font-weight:700;padding:4px 9px;
+    border-radius:9px;border:1px solid var(--accent,#0d6e78);cursor:pointer;
+    background:var(--surface,#fff);color:var(--accent-ink,#0a565e)}
+  .evtab{font:inherit;font-size:11.5px;font-weight:700;padding:4px 10px;
+    border-radius:9px;border:1px solid var(--line,#d8dee6);cursor:pointer;
+    background:var(--surface,#fff);color:var(--muted,#5b6672)}
+  .evtab.on{background:var(--accent,#0d6e78);border-color:var(--accent,#0d6e78);
+    color:#fff}
+  .evmap svg{width:100%;height:auto;display:block}
+  .evmap .lanelab{font:700 10px system-ui;letter-spacing:.09em;
+    fill:var(--muted,#5b6672)}
+  .evmap .lanesep{stroke:var(--muted,#8a94a0);stroke-width:.8;
+    stroke-dasharray:3 5;opacity:.55}
+  .evmap .edge{stroke:var(--muted,#9aa5b1);stroke-width:1.1;fill:none;
+    marker-end:url(#evarr)}
+  .evmap .edge.fx{stroke:#6b46c1;stroke-dasharray:4 3;stroke-width:1.3}
+  .evnode{cursor:pointer}
+  .evnode .hit{fill:transparent}
+  .evnode circle{fill:var(--surface,#fff);stroke-width:1.7;transition:.14s}
+  .evnode.s-running circle{stroke:var(--accent,#0d6e78)}
+  .evnode.s-unpowered circle{stroke:#b7791f;fill:#fdf6ec}
+  .evnode.s-ghost circle{stroke:#9b2c2c;stroke-dasharray:3.5 2.5;fill:transparent}
+  .evnode text{font:600 12.5px system-ui;fill:var(--ink,#1c232b);pointer-events:none}
+  .evnode .wmark{font:800 11.5px system-ui;fill:#6b46c1}
+  .evnode.grp rect{fill:var(--bg,#f5f7fa);stroke:var(--muted,#8a94a0);
+    stroke-width:1.4;rx:9}
+  .evnode.grp text{font:800 12px system-ui;letter-spacing:.04em}
+  .evnode.grp.on rect{fill:var(--accent,#0d6e78);stroke:var(--accent,#0d6e78)}
+  .evnode.grp.on text{fill:#fff}
+  .evnode.grp.lnk rect{stroke:var(--accent,#0d6e78);stroke-width:1.8}
+  .evnode.grp.lnk text{fill:var(--accent-ink,#0a565e)}
+  .evmap .tap{stroke:var(--muted,#9aa5b1);stroke-width:1.1;fill:none}
+  .evnode:hover circle{stroke-width:2.6}
+  .evnode.on circle{fill:var(--accent,#0d6e78);stroke:var(--accent,#0d6e78)}
+  .evnode.on.s-ghost circle{fill:#9b2c2c;stroke:#9b2c2c}
+  .evnode.on.s-unpowered circle{fill:#b7791f;stroke:#b7791f}
+  .evnode.on text{font-weight:800}
+  .evleg{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:12px;
+    color:var(--muted,#5b6672);margin-top:8px}
+  .evleg i{display:inline-block;width:9px;height:9px;border-radius:50%;
+    border:1.7px solid;vertical-align:-1px;margin-right:4px}
+  .evleg .lr{border-color:var(--accent,#0d6e78)}
+  .evleg .lu{border-color:#b7791f;background:#fdf6ec}
+  .evleg .lg{border-color:#9b2c2c;border-style:dashed}
+  .evleg .lw{color:#6b46c1;font-weight:800;border:none;width:auto;height:auto}
+  .evgates{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .evgates b{font-size:10px;font-weight:800;letter-spacing:.08em;
+    color:var(--muted,#5b6672);text-transform:uppercase;margin-right:2px;
+    align-self:center}
+  .evgate{font-size:11.5px;font-weight:600;padding:1px 8px;border-radius:8px;
+    border:1px dashed var(--muted,#8a94a0);color:var(--muted,#5b6672);cursor:help}
+  /* right — evidence panel */
+  .evpanel{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
+    border-radius:12px;overflow:hidden}
+  .evpanel .shot{background:#0f1418;display:flex;justify-content:center;gap:8px}
+  .evpanel .shot img{max-height:380px;width:auto;max-width:49%;object-fit:contain}
+  .evpanel .shot img:only-child{max-width:100%}
+  .evpanel .shot .gap{display:flex;flex-direction:column;gap:6px;align-items:center;
+    justify-content:center;min-height:200px;font-size:12px;text-align:center;
+    padding:0 20px;color:var(--muted,#5b6672);
+    background:repeating-linear-gradient(-45deg,transparent,transparent 11px,
+    rgba(155,44,44,.07) 11px,rgba(155,44,44,.07) 22px)}
+  .evpanel .shot .gap b{color:#9b2c2c;font-size:13px}
+  .evpanel .meta{padding:12px 16px 6px}
+  .evpanel h3{margin:0;font-size:1rem}
+  .evpanel .uc{font-size:12.5px;margin:6px 0 10px;max-width:64ch;
+    color:var(--ink-2,#39424c)}
+  .evrow{display:flex;gap:8px;font-size:11.5px;margin:3px 0;align-items:baseline}
+  .evrow .k{flex:0 0 86px;font-size:9.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--muted,#5b6672)}
+  .evchip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;
+    border-radius:8px;border:1px solid var(--line,#d8dee6);margin:0 3px 3px 0;
+    font-family:ui-monospace,SFMono-Regular,monospace}
+  .evchip.code{border-color:var(--accent,#0d6e78);color:var(--accent-ink,#0a565e)}
+  .evchip.model{border-color:#b7791f;color:#8a5a12}
+  .evchip.cid{border-color:#6b46c1;color:#553c9a}
+  .evchip.write{border-color:#6b46c1;color:#553c9a;background:#f3effc}
+  .wmap{width:100%;border-collapse:collapse;margin:2px 0 4px;font-size:11px}
+  .wmap th{text-align:left;font-size:9px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--muted,#5b6672);padding:2px 6px 3px 0;
+    border-bottom:1px solid var(--line,#d8dee6)}
+  .wmap td{padding:3px 6px 3px 0;vertical-align:top;
+    border-bottom:1px solid var(--line,#eceef2)}
+  .wmap td.f{font-family:ui-monospace,SFMono-Regular,monospace;color:#553c9a;font-weight:600}
+  .wmap td.fn{font-family:ui-monospace,SFMono-Regular,monospace;
+    color:var(--accent-ink,#0a565e)}
+  .wmap td.md{font-family:ui-monospace,SFMono-Regular,monospace;color:#8a5a12}
+  .evpill{font-size:9.5px;font-weight:800;text-transform:uppercase;
+    letter-spacing:.07em;padding:2px 8px;border-radius:9px;vertical-align:2px}
+  .evpill.principal{background:#e2f2f3;color:#0a565e}
+  .evpill.reference{background:#eef1f5;color:#4a5560}
+  .evpill.supporting{background:#eef1f5;color:#4a5560}
+  .evpill.edge{background:#fdf1e2;color:#8a5a12}
+  .evpill.gap{background:#fbe9e9;color:#9b2c2c}
+  .evseq{display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+    padding:9px 16px 13px;border-top:1px solid var(--line,#d8dee6);
+    margin-top:10px;font-size:11px}
+  .evseq .k{font-size:9.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--muted,#5b6672);margin-right:3px}
+  .evstep{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;
+    border:1px solid var(--line,#d8dee6);cursor:pointer;background:var(--surface)}
+  .evstep.on{background:var(--accent,#0d6e78);color:#fff;
+    border-color:var(--accent,#0d6e78)}
