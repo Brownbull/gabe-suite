@@ -183,6 +183,65 @@
   .rbar { height: 14px; border-radius: 4px; background: var(--s1); transition: width .6s ease; }
   .rrow .v { color: var(--muted); text-align: right; font-variant-numeric: tabular-nums; }
 
+  /* divergence fates */
+  .df svg { width: 100%; height: auto; display: block; }
+  .df .grid line { stroke: var(--rule); opacity: .6; }
+  .df text { font-size: .62em; letter-spacing: 0; fill: var(--muted); }
+  .df-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+    font-size: .68em; letter-spacing: 0; }
+  .df-chips span { border: 1px solid var(--rule); border-radius: 7px; padding: 3px 8px; }
+  .df-chips i { display: inline-block; width: 12px; height: 0; border-top: 2px solid;
+    vertical-align: middle; margin-right: 5px; font-style: normal; }
+
+  /* decision fork */
+  .fk svg { width: 100%; height: auto; display: block; }
+  .fk path { fill: none; stroke-linecap: round; transition: opacity .4s; }
+  .fk text { font-size: .64em; letter-spacing: 0; fill: var(--ink); transition: opacity .4s; }
+  .fk .q { fill: var(--muted); }
+
+  /* loop grid floor */
+  .lf svg { width: 100%; height: auto; display: block; }
+  .lf .wire { fill: none; stroke: var(--rule); stroke-width: 2; transition: stroke .3s; }
+  .lf .wire.on { stroke: var(--s1); stroke-width: 2.6; }
+  .lf .wire.ret { stroke: var(--accent); opacity: .45; stroke-width: 3; }
+  .lf .wire.ret.on { opacity: 1; }
+
+  /* timeline conveyor */
+  .bc-station { height: 64px; border: 1px solid var(--rule); border-radius: 8px;
+    position: relative; overflow: hidden; margin-bottom: 10px; }
+  .bc-station .fill { position: absolute; left: 5px; right: 5px; bottom: 4px;
+    border-radius: 4px; background: var(--s1); opacity: .8; transition: height .12s linear; }
+  .bc-station .lvl { position: absolute; left: 0; right: 0; top: 6px; text-align: center;
+    font-size: .72em; letter-spacing: 0; font-variant-numeric: tabular-nums; }
+  .bc-track { position: relative; height: 26px; border-radius: 6px;
+    background: var(--raised); overflow: hidden; }
+  .bc-strip { position: absolute; top: 0; bottom: 0; display: flex;
+    transition: transform .1s linear; }
+  .bc-year { flex: none; width: 56px; box-sizing: border-box;
+    border-left: 2px solid var(--rule); padding: 4px 0 0 5px;
+    font-size: .62em; letter-spacing: 0; color: var(--muted); }
+  .bc-cursor { position: absolute; left: 90px; top: 0; bottom: 0;
+    border-left: 2px solid var(--accent); z-index: 1; }
+  .bc-cursor b { position: absolute; left: 4px; top: 3px; font-size: .62em;
+    letter-spacing: 0; color: var(--accent); background: var(--card);
+    padding: 1px 4px; border-radius: 4px; white-space: nowrap;
+    font-variant-numeric: tabular-nums; }
+
+  /* growing composition map */
+  .gm { position: relative; height: 190px; }
+  .gm-scale { position: absolute; left: 0; bottom: 0; display: flex; gap: 2px;
+    transition: width .3s linear, height .3s linear; }
+  .gm-col { display: flex; flex-direction: column-reverse; gap: 2px; min-width: 0;
+    transition: flex-basis .3s linear; }
+  .gm-b { border-radius: 5px; min-height: 0; overflow: hidden;
+    transition: flex-basis .3s linear; }
+  .gm-b i { display: block; font-style: normal; font-size: .68em; letter-spacing: 0;
+    padding: 3px 7px; white-space: nowrap; }
+  .gm .b-core { background: var(--s1); } .gm .b-core i { color: #fff; }
+  .gm .b-api { background: color-mix(in srgb, var(--s1) 50%, var(--card)); } .gm .b-api i { color: var(--ink); }
+  .gm .b-ui { background: var(--s2); } .gm .b-ui i { color: #fff; }
+  .gm .b-tests { background: color-mix(in srgb, var(--s2) 50%, var(--card)); } .gm .b-tests i { color: var(--ink); }
+
   /* state machine */
   .sm-label { font-size: .72em; color: var(--muted); margin-top: 6px; letter-spacing: 0; }
 
@@ -298,7 +357,7 @@
   </section>
 
   <section class="sec">
-    <div class="sec-head"><span class="dot"></span><h2>Architecture in motion</h2><span class="n">4</span></div>
+    <div class="sec-head"><span class="dot"></span><h2>Architecture in motion</h2><span class="n">5</span></div>
     <div class="grid">
 
       <article class="ex wide" data-name="Architecture map with live traffic" data-anim="arch">
@@ -317,6 +376,12 @@
         <div class="ex-head"><h3>Queue fill and drain</h3><p class="ex-use">Backlog as a living quantity — arriving faster than it leaves, then catching up.</p></div>
         <div class="ex-stage"><div class="queue" id="m-queue"></div><p class="sm-label" id="m-queue-lab">—</p></div>
         <div class="ex-foot"><span class="ex-tag">js</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Loop grid floor" data-anim="loopfloor">
+        <div class="ex-head"><h3>Loop grid floor</h3><p class="ex-use">Four actors on a 2×2 grid whose links carry DIRECTION — arrowheads on every wire, the return edge in accent — for any system whose defining move is output re-entering as input. The pulse walks the cycle.</p></div>
+        <div class="ex-stage"><div class="lf" id="m-loopfloor"></div><p class="sm-label" id="m-loopfloor-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">svg · directed loop</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
       </article>
 
       <article class="ex" data-name="Health pulse beacon" data-anim="pulse">
@@ -386,7 +451,7 @@
   </section>
 
   <section class="sec">
-    <div class="sec-head"><span class="dot"></span><h2>Data in motion</h2><span class="n">4</span></div>
+    <div class="sec-head"><span class="dot"></span><h2>Data in motion</h2><span class="n">8</span></div>
     <div class="grid">
 
       <article class="ex" data-name="Bar race" data-anim="race">
@@ -405,6 +470,30 @@
         <div class="ex-head"><h3>Chart morph</h3><p class="ex-use">The same values changing form — bars become dots and back — so the reader keeps hold of what they were looking at.</p></div>
         <div class="ex-stage"><div id="m-morph"></div></div>
         <div class="ex-foot"><span class="ex-tag">svg · transition</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Divergence fates" data-anim="fates">
+        <div class="ex-head"><h3>Divergence fates</h3><p class="ex-use">The same starting point under N policies, drawn on ONE scale — the gaps between the curves are the argument, and each endpoint carries its number and its next move. For any do-it / delay-it / skip-it comparison.</p></div>
+        <div class="ex-stage"><div class="df" id="m-fates"></div><div class="df-chips" id="m-fates-chips"></div></div>
+        <div class="ex-foot"><span class="ex-tag">svg · one scale</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Decision fork" data-anim="fork">
+        <div class="ex-head"><h3>Decision fork</h3><p class="ex-use">One trunk forking at each decision, revealed in stages; branch THICKNESS is the outcome's size. Not N strangers — one actor and the roads not taken. Built for many-branch subjects.</p></div>
+        <div class="ex-stage"><div class="fk" id="m-fork"></div><p class="sm-label" id="m-fork-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">svg · staged reveal</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Timeline conveyor" data-anim="beltclock">
+        <div class="ex-head"><h3>Timeline conveyor</h3><p class="ex-use">Ambient motion that answers WHEN: the belt is a ruled timeline sliding beneath a fixed NOW cursor while a station fills with time. Looping motion that carries no position in time is decoration, not information.</p></div>
+        <div class="ex-stage"><div id="m-beltclock"><div class="bc-station"><div class="lvl" id="m-bc-lvl">—</div><div class="fill" id="m-bc-fill" style="height:0%"></div></div><div class="bc-track"><div class="bc-strip" id="m-bc-strip"></div><div class="bc-cursor"><b id="m-bc-now">—</b></div></div></div><p class="sm-label" id="m-beltclock-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">js · time-anchored</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
+      </article>
+
+      <article class="ex" data-name="Growing composition map" data-anim="growmap">
+        <div class="ex-head"><h3>Growing composition map</h3><p class="ex-use">A whole that grows while its parts shift. The canvas IS the final frame; each step draws at √-scale from the corner, so growth reads as growth — never as parts eating parts. For anything cumulative-with-splits: code per entity, test estates, coverage, money.</p></div>
+        <div class="ex-stage"><div class="gm" id="m-growmap"></div><p class="sm-label" id="m-growmap-lab">—</p></div>
+        <div class="ex-foot"><span class="ex-tag">js · absolute scale</span><button class="ex-btn ex-replay" type="button">Replay</button><button class="ex-btn ex-copy" type="button">Copy name</button></div>
       </article>
 
       <article class="ex" data-name="Timeline scrubber" data-anim="scrub">
@@ -1252,6 +1341,259 @@ var MOTION = { on: true };
     }
     build();
     REPLAY["sm"] = build;
+  })();
+
+  /* ── divergence fates — the gaps between the curves ARE the argument ── */
+  (function () {
+    var host = document.getElementById("m-fates");
+    var chips = document.getElementById("m-fates-chips");
+    if (!host) return;
+    var loop;
+    var M = 120;
+    var POL = [
+      { name: "act now", color: "var(--s3)", fn: function (t) { return Math.pow(1.045, t) - 1; } },
+      { name: "act at t40", color: "var(--s1)", dash: "6 5", fn: function (t) { return t < 40 ? 0 : Math.pow(1.045, t - 40) - 1; } },
+      { name: "never automate", color: "var(--s2)", fn: function (t) { return t * 0.012; } }
+    ];
+    var L = 34, R = 310, T = 10, B = 128;
+    var MAX = POL[0].fn(M) * 1.06;
+    var xs = function (t) { return L + (R - L) * t / M; };
+    var ys = function (v) { return B - (B - T) * v / MAX; };
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = ""; chips.innerHTML = "";
+      var s = svg(320, 140);
+      [0, 0.5, 1].forEach(function (fr) {
+        s.appendChild(el("line", { x1: L, x2: R, y1: ys(MAX * fr), y2: ys(MAX * fr),
+          stroke: "var(--rule)", opacity: .6 }));
+      });
+      var rows = POL.map(function (p) {
+        p.path = el("path", { fill: "none", stroke: p.color, "stroke-width": 2.2,
+          "stroke-dasharray": p.dash || "" });
+        s.appendChild(p.path);
+        var c = document.createElement("span");
+        c.innerHTML = '<i style="border-color:' + p.color + '"></i>' + p.name + ' · <b></b>';
+        chips.appendChild(c);
+        p.chip = c.querySelector("b");
+        return p;
+      });
+      host.appendChild(s);
+      function draw(t) {
+        rows.forEach(function (p) {
+          var d = "";
+          for (var x = 0; x <= t; x += 2) {
+            d += (d ? "L" : "M") + xs(x).toFixed(1) + "," + ys(p.fn(x)).toFixed(1);
+          }
+          p.path.setAttribute("d", d || "M0 0");
+          p.chip.textContent = "×" + (1 + p.fn(t)).toFixed(1);
+        });
+      }
+      if (reduced || !MOTION.on) { draw(M); return; }
+      var t = 0;
+      draw(0);
+      loop = setInterval(function () {
+        t += 2;
+        draw(Math.min(t, M));
+        if (t >= M) clearInterval(loop);
+      }, 55);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["fates"] = build;
+  })();
+
+  /* ── decision fork — one trunk, the roads not taken ── */
+  (function () {
+    var host = document.getElementById("m-fork");
+    var lab = document.getElementById("m-fork-lab");
+    if (!host) return;
+    var loop;
+    var STAGES = [
+      { at: 0, lab: "one system, first decision" },
+      { at: 1, lab: "adopt CI, or stay manual?" },
+      { at: 2, lab: "with CI: add review, or ship raw?" },
+      { at: 3, lab: "branch thickness = defects caught per quarter" }
+    ];
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = "";
+      var s = svg(320, 150);
+      var parts = [
+        [el("path", { d: "M12 75 H92", stroke: "var(--ink-soft)", "stroke-width": 8, opacity: .8 })],
+        [el("path", { d: "M92 75 C 140 75, 150 42, 196 38", stroke: "var(--s3)", "stroke-width": 10 }),
+         el("path", { d: "M92 75 C 140 75, 150 112, 196 116", stroke: "var(--s2)", "stroke-width": 3, "stroke-dasharray": "6 5" }),
+         el("text", { x: 202, y: 121, class: "q" }, "manual · ×1")],
+        [el("path", { d: "M196 38 C 235 34, 245 20, 288 16", stroke: "var(--s3)", "stroke-width": 12 }),
+         el("path", { d: "M196 38 C 235 40, 245 62, 288 66", stroke: "var(--s4)", "stroke-width": 5 }),
+         el("text", { x: 240, y: 10 }, "CI + review · ×9"),
+         el("text", { x: 240, y: 84, class: "q" }, "CI raw · ×3")],
+        []
+      ];
+      parts.forEach(function (grp) {
+        grp.forEach(function (e2) { e2.setAttribute("opacity", 0); s.appendChild(e2); });
+      });
+      host.appendChild(s);
+      function show(stage) {
+        parts.forEach(function (grp, j) {
+          grp.forEach(function (e2) {
+            e2.setAttribute("opacity", stage >= j ? (e2.getAttribute("class") === "q" ? .8 : 1) : 0);
+          });
+        });
+        lab.textContent = STAGES[Math.min(stage, 3)].lab;
+      }
+      if (reduced || !MOTION.on) { show(3); return; }
+      var st = 0;
+      show(0);
+      loop = setInterval(function () { st = (st + 1) % 4; show(st); }, 1400);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["fork"] = build;
+  })();
+
+  /* ── loop grid floor — direction is part of the link's information ── */
+  (function () {
+    var host = document.getElementById("m-loopfloor");
+    var lab = document.getElementById("m-loopfloor-lab");
+    if (!host) return;
+    var loop;
+    var LINKS = [
+      { d: "M120 37 H192", name: "the spec moves plan → build" },
+      { d: "M255 59 V113", name: "the artifact moves build → measure" },
+      { d: "M200 143 H128", name: "the numbers move measure → learn" },
+      { d: "M65 121 V67", name: "lessons ↺ re-enter the plan", ret: true }
+    ];
+    var BOXES = [[10, 15, "plan"], [200, 15, "build"], [200, 121, "measure"], [10, 121, "learn"]];
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = "";
+      var s = svg(320, 180);
+      s.innerHTML =
+        '<defs><marker id="lf-a" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--muted)"/></marker>' +
+        '<marker id="lf-ar" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z" fill="var(--accent)"/></marker></defs>';
+      var paths = LINKS.map(function (l) {
+        var p = el("path", { d: l.d, class: "wire" + (l.ret ? " ret" : ""),
+          "marker-end": "url(#" + (l.ret ? "lf-ar" : "lf-a") + ")" });
+        s.appendChild(p);
+        return p;
+      });
+      BOXES.forEach(function (b) { box(s, b[0], b[1], 110, 44, b[2]); });
+      host.appendChild(s);
+      var i = 0;
+      function show(ix) {
+        paths.forEach(function (p, j) { p.classList.toggle("on", j === ix); });
+        lab.textContent = LINKS[ix].name;
+      }
+      if (reduced || !MOTION.on) { show(3); return; }
+      show(0);
+      loop = setInterval(function () { i = (i + 1) % 4; show(i); }, 950);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["loopfloor"] = build;
+  })();
+
+  /* ── timeline conveyor — ambient motion must say WHEN ── */
+  (function () {
+    var strip = document.getElementById("m-bc-strip");
+    var lab = document.getElementById("m-beltclock-lab");
+    if (!strip) return;
+    var fill = document.getElementById("m-bc-fill");
+    var lvl = document.getElementById("m-bc-lvl");
+    var now = document.getElementById("m-bc-now");
+    var loop;
+    var M = 96, CELL = 56;
+    (function () {
+      for (var y = 0; y < 8; y++) {
+        var c = document.createElement("div");
+        c.className = "bc-year";
+        c.textContent = "y" + (y + 1);
+        strip.appendChild(c);
+      }
+    })();
+    function frame(k) {
+      strip.style.transform = "translateX(" + (90 - k / 12 * CELL) + "px)";
+      fill.style.height = (k / M * 82) + "%";
+      lvl.textContent = Math.round(k / M * 100) + "% built";
+      now.textContent = "m" + k + " · y" + (k / 12).toFixed(1);
+      lab.textContent = "the belt position IS the date — freeze any frame and you still know when";
+    }
+    function build() {
+      if (loop) clearInterval(loop);
+      if (reduced || !MOTION.on) { frame(M); return; }
+      var k = 0;
+      frame(0);
+      loop = setInterval(function () {
+        k += 1;
+        frame(Math.min(k, M));
+        if (k >= M) clearInterval(loop);
+      }, 95);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["beltclock"] = build;
+  })();
+
+  /* ── growing composition map — absolute scale, mined on the
+        compound-interest prism: renormalizing each frame to 100% shows
+        shares eating shares and hides the growth itself. ── */
+  (function () {
+    var host = document.getElementById("m-growmap");
+    var lab = document.getElementById("m-growmap-lab");
+    if (!host) return;
+    var loop;
+    var END = 11;
+    function series(t) {
+      var ui = Math.pow(1.32, t);
+      return { core: 4 + 0.5 * t, api: 3 + 0.45 * t, ui: ui, tests: 0.6 * ui };
+    }
+    function total(v) { return v.core + v.api + v.ui + v.tests; }
+    var FINAL = total(series(END));
+    function build() {
+      if (loop) clearInterval(loop);
+      host.innerHTML = "";
+      var scale = document.createElement("div"); scale.className = "gm-scale";
+      var colA = document.createElement("div"); colA.className = "gm-col";
+      var colB = document.createElement("div"); colB.className = "gm-col";
+      var B = {};
+      [["core", "b-core", colA], ["api", "b-api", colA],
+       ["ui", "b-ui", colB], ["tests", "b-tests", colB]].forEach(function (d) {
+        var b = document.createElement("div"); b.className = "gm-b " + d[1];
+        b.appendChild(document.createElement("i"));
+        d[2].appendChild(b); B[d[0]] = b;
+      });
+      scale.appendChild(colA); scale.appendChild(colB); host.appendChild(scale);
+      function frame(t) {
+        var v = series(t), tot = total(v);
+        var s = Math.sqrt(tot / FINAL);
+        scale.style.width = s * 100 + "%"; scale.style.height = s * 100 + "%";
+        var a = v.core + v.api, g = v.ui + v.tests;
+        colA.style.flexBasis = a / tot * 100 + "%";
+        colB.style.flexBasis = g / tot * 100 + "%";
+        [["core", v.core, a], ["api", v.api, a],
+         ["ui", v.ui, g], ["tests", v.tests, g]].forEach(function (d) {
+          var b = B[d[0]];
+          b.style.flexBasis = d[1] / d[2] * 100 + "%";
+          var absW = s * (d[2] / tot), absH = s * (d[1] / d[2]);
+          b.firstChild.textContent = (absW > 0.2 && absH > 0.14)
+            ? d[0] + " " + d[1].toFixed(1) + "k" : "";
+          b.title = d[0] + " " + d[1].toFixed(1) + "k lines";
+        });
+        lab.textContent = "release " + (t + 1) + "/12 · " + tot.toFixed(1) +
+          "k lines · the canvas is release 12, every frame at true scale";
+      }
+      if (reduced || !MOTION.on) { frame(END); return; }
+      var t = 0;
+      frame(0);
+      loop = setInterval(function () {
+        t += 1;
+        frame(Math.min(t, END));
+        if (t >= END) clearInterval(loop);
+      }, 700);
+      timers.push(loop);
+    }
+    build();
+    REPLAY["growmap"] = build;
   })();
 
   /* ── replay wiring ── */

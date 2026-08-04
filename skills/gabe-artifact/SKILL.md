@@ -3,7 +3,7 @@ name: gabe-artifact
 description: "House chrome for published Artifacts — left-anchored content, a cog panel top-right, the fixed font roster, three suite skins, iconed section title pills set in a condensed grotesque, a 12px legibility floor, and motion-first visuals with a gated pause contract. Owns the build loop: design pass → kit → render gate → publish → report, plus two gated pattern libraries."
 when_to_use: "ANY request that ends in a published Artifact (report, dashboard, spec page, comparison, explorer) — not only explicit invocations. Also when an existing artifact is being updated or retrofitted with house chrome."
 metadata:
-  version: 1.3.0
+  version: 1.3.1
   status: suite skill (generic, project-agnostic)
   scope: any project that publishes Artifacts
 ---
@@ -98,7 +98,7 @@ Two built, gated and kept as assets — **read them before inventing a form.** B
 
 | Library | Holds | Use when |
 |---|---|---|
-| `assets/motion-patterns.html` | 20 moving elements — flow diagram, marching ants, command-trace replay, span waterfall, pipeline, architecture-with-traffic, event fan-out, queue, pulse, screen walkthrough, ghost cursor, funnel, scroll steps, bar race, chart entrance, chart morph, scrubber, skeleton, log ticker, state machine | **First stop.** Per H4. |
+| `assets/motion-patterns.html` | 25 moving elements — flow diagram, marching ants, command-trace replay, span waterfall, pipeline, architecture-with-traffic, loop grid floor (directed 2×2 cycle, arrowheaded wires, accent return), event fan-out, queue, pulse, screen walkthrough, ghost cursor, funnel, scroll steps, bar race, chart entrance, chart morph, divergence fates (N policies, one scale, gaps as argument), decision fork (staged trunk, branch thickness = outcome), timeline conveyor (the belt is a ruled timeline under a fixed NOW cursor), growing composition map (absolute scale — the canvas is the final frame), scrubber, skeleton, log ticker, state machine | **First stop.** Per H4. |
 | `assets/static-patterns.html` | 31 still elements — stat tiles, bar/line/area/histogram/scatter/radar/donut, sparkline, heat calendar, dumbbell, timeline, tree, matrix, stepper, Mermaid, tabs, accordion, chips, sortable table, callouts, empty state | The material genuinely doesn't move. |
 
 Charts in both follow the `dataviz` skill's validated palette — load that skill before writing chart code, and **run its validator**; never eyeball a palette.
