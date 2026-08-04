@@ -18,6 +18,7 @@ INVARIANTS=(
   "A defer without a trigger is forbidden"
   "Drop the register for"
   "Lists cap at 5"
+  "break the line when the point shifts"
   "NOT current on this stack"
   "Not expanded:"
   "No definitions mid-chain"
