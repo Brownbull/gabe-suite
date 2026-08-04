@@ -59,15 +59,15 @@
   <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
   <a class="navitem navsubitem" href="prism-compound-interest.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Compound interest</a>
   <a class="navitem navsubitem on" href="prism-evidence-states.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> evidence states</a>
-  <div class="foot">regen 2026-08-04 17:59<br>HEAD 232cb99 · build_suite_center.py</div>
+  <div class="foot">regen 2026-08-04 18:09<br>HEAD 232cb99 · build_suite_center.py</div>
 </aside>
 
 <main class="main">
   <div class="topbar">
     <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Transaction evidence — every state, its screenshot, its proof</b></div>
     <div class="spacer"></div>
-    <span class="chip warn">17 uncommitted</span>
-    <span class="stamp">regen · 2026-08-04 17:59</span>
+    <span class="chip warn">3 uncommitted</span>
+    <span class="stamp">regen · 2026-08-04 18:09</span>
   </div>
 
   <div class="prismhead">
@@ -101,6 +101,7 @@
     stroke-dasharray:3 5;opacity:.55}
   .evmap .edge{stroke:var(--muted,#9aa5b1);stroke-width:1.1;fill:none;
     marker-end:url(#evarr)}
+  .evmap .edge.fx{stroke:#6b46c1;stroke-dasharray:4 3;stroke-width:1.3}
   .evnode{cursor:pointer}
   .evnode circle{fill:var(--surface,#fff);stroke-width:1.7;transition:.14s}
   .evnode.s-running circle{stroke:var(--accent,#0d6e78)}
@@ -194,6 +195,7 @@
       <span><i class="lu"></i>unpowered — asserted, unphotographed</span>
       <span><i class="lg"></i>ghost — nothing</span>
       <span class="lw">✎ writes data</span>
+      <span style="color:#6b46c1">⇢ data effect (dashed)</span>
     </div>
   </div>
   <div class="evpanel" id="evpanel" data-probe>
@@ -230,51 +232,51 @@ const S = {
   uc:"The single capture surface (D110/D111) — fresh here, or resumed from the one draft slot (ⓘ sheet explains the slot). Every ✎ satellite below edits THIS form.",
   cap:"2026-07-09/10 · tx2 set",spec:"routes/-transactions.new.test.tsx + tx2 journey",
   code:["routes/transactions.new.tsx"],models:["TransactionDraft"],cids:[],writes:[]},
- merchdate:{l:"merchant·date",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
-  uc:"The MerchantHeader inline fields — merchant name (charset-validated), date, time.",
+ merchdate:{l:"merch·date·time",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
+  uc:"The MerchantHeader inline fields — merchant name (charset-validated), date AND time; the filled capture shows the inline surface itself.",
   cap:"2026-07-09/10 · journey-filled",spec:"MerchantHeader + schema validators",
   code:["MerchantHeader.tsx"],models:[],cids:[],
   writes:["merchant","transaction_date","transaction_time"]},
  storecat:{l:"store cat",st:"running",role:"principal",shot:[A+"tx2-category-picker.png"],
-  uc:"CategoryPickerModal in STORE mode — this capture IS the merchant variant; the item mode is below.",
+  uc:"CategoryPickerModal in STORE mode — this capture IS the store-category modal (“Categoría del comercio”), independent of the merchant name field.",
   cap:"2026-07-09/10 · live capture",spec:"tx2 set · useStoreCategories",
   code:["CategoryPickerModal.tsx"],models:[],cids:[],
   writes:["store_category_id","store_category_source=user"]},
  payment:{l:"payment",st:"unpowered",role:"principal",
-  uc:"PaymentPicker — card aliases incl. the provisioned Efectivo (D119); a fresh slot prefills the is_default alias. Unit-asserted, never photographed.",
-  cap:"never (unit only)",spec:"-transactions.new.test.tsx · useCardAliases",
+  uc:"PaymentPicker — card aliases incl. the provisioned Efectivo (D119); a fresh slot prefills the is_default alias. Modification capture OWED.",
+  cap:"capture owed (form-fields run)",spec:"-transactions.new.test.tsx · useCardAliases",
   code:["PaymentPicker.tsx"],models:["CardAlias"],cids:["C70"],
   writes:["card_alias_id"]},
- recurrence:{l:"cadence",st:"unpowered",role:"principal",
-  uc:"The One-time chip — recurrence kind, interval, term N/M, label (MerchantHeader row 2). Schema-validated; no capture of the picker itself.",
-  cap:"never (unit only)",spec:"schema RecurrenceKind/Interval",
+ cadence:{l:"cadence",st:"unpowered",role:"principal",
+  uc:"The One-time chip — recurrence kind, interval, term N/M, label. Independent of the payment method. Modification capture OWED.",
+  cap:"capture owed (form-fields run)",spec:"schema RecurrenceKind/Interval",
   code:["MerchantHeader.tsx"],models:[],cids:[],
   writes:["recurrence_kind","recurrence_interval","term_current/term_total","recurrence_label"]},
  location:{l:"location",st:"unpowered",role:"principal",
   uc:"LocationModal — purchase country + city (the SL track), reconciled against the settings default. sl-location e2e ran 12/12 live; no curated capture of the modal.",
-  cap:"never (e2e-asserted)",spec:"sl-location e2e 12/12",
+  cap:"capture owed (form-fields run) · e2e-asserted 12/12",spec:"sl-location e2e",
   code:["LocationModal"],models:[],cids:[],writes:["country","city"]},
  totalcur:{l:"total·CLP",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
-  uc:"TransactionTotal — the amount (≥0, minor units) and the 3-letter currency.",
+  uc:"TransactionTotal — the amount (≥0, minor units) and the 3-letter currency; recomputed when an item save lands (⇢).",
   cap:"2026-07-09/10 · journey-filled",spec:"TransactionTotal + schema",
   code:["TransactionTotal.tsx"],models:[],cids:[],
   writes:["total_minor","currency"]},
  attach:{l:"attach",st:"unpowered",role:"principal",
-  uc:"Receipt images, up to 20 (the 0/20 counter) — persisted as TransactionImage rows on create.",
-  cap:"never (unit only)",spec:"-transactions.new.test.tsx",
+  uc:"Receipt images, up to 20 (the 0/20 counter) — persisted as TransactionImage rows on create. Modification capture OWED.",
+  cap:"capture owed (form-fields run)",spec:"-transactions.new.test.tsx",
   code:[],models:["TransactionImage"],cids:[],writes:["image_urls[] (≤20)"]},
  additem:{l:"add item",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
   uc:"The items section — optional (“you can also save just the total”); rows group by item family.",
   cap:"2026-07-09/10 · journey-filled",spec:"ItemGroup/EditableItemRow",
   code:["EditableItemRow.tsx"],models:["TransactionItem"],cids:[],writes:["items[] (row added)"]},
  itemedit:{l:"item edit",st:"unpowered",role:"principal",
-  uc:"ItemEditModal — name (charset), qty (WHOLE NUMBER in manual — fractional only on the receipt tier), unit price, total price.",
-  cap:"never (unit only)",spec:"-transactions.new.test.tsx + schema validators",
+  uc:"ItemEditModal — name, qty (WHOLE NUMBER in manual), unit price, total price; SAVE commits the row (⇢ recomputes Total·CLP), cancel discards it. Modification capture OWED.",
+  cap:"capture owed (form-fields run)",spec:"-transactions.new.test.tsx + schema validators",
   code:["ItemEditModal"],models:["TransactionItem"],cids:[],
   writes:["item.name","item.qty","unit_price_minor","total_price_minor"]},
  itemcat:{l:"item cat",st:"ghost",role:"named gap",
-  uc:"CategoryPickerModal in ITEM mode — the pixel-icon list the operator photographed locally. NO curated capture exists of this mode.",
-  cap:"never",spec:"useItemCategories · itemFamilies",
+  uc:"CategoryPickerModal in ITEM mode — the pixel-icon list. NO curated capture exists of this mode; capture OWED.",
+  cap:"capture owed (form-fields run)",spec:"useItemCategories · itemFamilies",
   code:["CategoryPickerModal.tsx"],models:[],cids:[],
   writes:["item_category_id","subcategory","category_source=user"]},
  leaveguard:{l:"leave?",st:"unpowered",role:"edge",
@@ -375,16 +377,17 @@ const WF = {
          ["personal-only","The capture surface is scope-gated to the personal scope"],
          ["amounts ≥ 0","total_minor and every price validate non-negative"]],
   pos:{home:[200,38],plus:[200,96],form:[200,158],
-       merchdate:[56,232],payment:[152,232],location:[248,232],attach:[344,232],
-       storecat:[104,298],recurrence:[200,298],totalcur:[296,298],
-       additem:[76,382],itemedit:[186,382],itemcat:[296,382],
-       leaveguard:[56,462],cancel:[150,494],save:[254,462],saved:[348,494]},
+       merchdate:[52,238],storecat:[126,268],payment:[200,238],cadence:[274,268],location:[348,238],
+       attach:[126,330],totalcur:[274,330],
+       additem:[72,412],itemedit:[186,412],itemcat:[300,412],
+       leaveguard:[64,492],cancel:[152,524],save:[258,492],saved:[350,524]},
   edges:[["home","plus"],["plus","form"],
-         ["form","merchdate"],["form","payment"],["form","location"],["form","attach"],
-         ["merchdate","storecat"],["payment","recurrence"],["location","totalcur"],
+         ["form","merchdate"],["form","storecat"],["form","payment"],["form","cadence"],
+         ["form","location"],["form","attach"],["form","totalcur"],
          ["form","additem"],["additem","itemedit"],["itemedit","itemcat"],
-         ["form","leaveguard"],["leaveguard","cancel"],["form","save"],["save","saved"]],
-  bands:[["ENTRY",22,null],["TRANSACTION FIELDS ✎",214,196],["ITEMS ✎",356,340],["RESOLVE",444,428]],h:530},
+         ["itemedit","totalcur","fx"],
+         ["form","leaveguard"],["form","cancel"],["form","save"],["save","saved"]],
+  bands:[["ENTRY",22,null],["TRANSACTION FIELDS ✎",220,202],["ITEMS ✎  (item save ⇢ recomputes the total)",386,370],["RESOLVE",474,458]],h:560},
  scan:{
   gates:[["degrade, never block","Scan failure lands in the manual form — no dead end"],
          ["single draft slot","One in-flight draft per user (D110); resume beats restart"]],
@@ -416,14 +419,14 @@ function node(id,x,y,cur){const s=S[id];
  return `<g class="evnode s-${s.st}${id===cur?" on":""}" data-state="${id}">`+
   `<circle cx="${x}" cy="${y}" r="12"/>${w}`+
   `<text x="${x}" y="${y+24}" text-anchor="middle">${s.l}</text></g>`;}
-function edge(a,b,P){if(!P[a]||!P[b])return"";const[x1,y1]=P[a],[x2,y2]=P[b];
+function edge(a,b,P,kind){if(!P[a]||!P[b])return"";const[x1,y1]=P[a],[x2,y2]=P[b];
  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
- return `<path class="edge" d="M${x1+dx/L*14},${y1+dy/L*14} L${x2-dx/L*16},${y2-dy/L*16}"/>`;}
+ return `<path class="edge${kind==="fx"?" fx":""}" d="M${x1+dx/L*14},${y1+dy/L*14} L${x2-dx/L*16},${y2-dy/L*16}"/>`;}
 function viewLanes(wf,cur){const W=WF[wf];
  let s=`<svg viewBox="0 0 400 ${W.h}">${DEFS}`;
  W.bands.forEach(([t,y,sep])=>{if(sep)s+=`<line class="lanesep" x1="6" y1="${sep}" x2="394" y2="${sep}"/>`;
   s+=`<text class="lanelab" x="6" y="${y}">${t}</text>`;});
- W.edges.forEach(([a,b])=>s+=edge(a,b,W.pos));
+ W.edges.forEach(([a,b,k])=>s+=edge(a,b,W.pos,k));
  for(const id in W.pos)s+=node(id,...W.pos[id],cur);
  return s+"</svg>";}
 function viewOrbit(wf,cur){const ids=Object.keys(WF[wf].pos);
