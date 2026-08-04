@@ -1,0 +1,1361 @@
+<title>Gabe Suite — spine &amp; satellites explorer</title>
+
+<!-- ══ BLOCK 1 ══════════════════════════════════════════════════════════ -->
+<style>
+  :root { --af-stack: ui-monospace, monospace; --af-size: 15px; --af-track: -0.025em; }
+  :root {
+    --af-title: "Bahnschrift", "DIN Alternate", "Roboto Condensed",
+                "Arial Narrow", ui-sans-serif, system-ui, sans-serif;
+  }
+  :root {
+    --fs-sm:  calc(var(--af-size) * 0.92);
+    --fs-xs:  calc(var(--af-size) * 0.855);
+    --fs-min: calc(var(--af-size) * 0.82);
+  }
+
+  :root, :root[data-skin="catalog"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4;
+    --accent:#4f46e5; --accent-soft:#eef0fe; --strong:#101726;
+    --radius:10px; --rail:5px;
+    --shadow:0 1px 2px rgba(16,24,40,.05), 0 4px 14px rgba(16,24,40,.10);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root[data-skin="catalog"]:not([data-theme="light"]) {
+      --ground:#101726; --card:#1b2436; --raised:#212b40;
+      --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+      --rule:#2c3648; --rule-soft:#232d3f;
+      --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+    }
+  }
+  :root[data-theme="dark"], :root[data-skin="catalog"][data-theme="dark"] {
+    --ground:#101726; --card:#1b2436; --raised:#212b40;
+    --ink:#e7ebf3; --ink-soft:#c7cfdd; --muted:#79839a;
+    --rule:#2c3648; --rule-soft:#232d3f;
+    --accent:#8b83f5; --accent-soft:#23214a; --strong:#c7cfdd;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px -16px rgba(0,0,0,.9);
+  }
+  :root[data-skin="catalog"][data-theme="light"] {
+    --ground:#f6f7f9; --card:#ffffff; --raised:#fbfcfd;
+    --ink:#141a24; --ink-soft:#3d4756; --muted:#7a8595;
+    --rule:#e7e9ee; --rule-soft:#eef0f4; --accent:#4f46e5; --accent-soft:#eef0fe;
+    --strong:#101726;
+  }
+
+  :root[data-skin="blueprint"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8;
+    --accent:#1d4ed8; --accent-soft:#e4ecfe; --strong:#16233b;
+    --radius:6px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="blueprint"]:not([data-theme="light"]) {
+      --ground:#0b1220; --card:#101a2e; --raised:#142138;
+      --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+      --rule:#23375f; --rule-soft:#1a2942;
+      --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+    }
+  }
+  :root[data-skin="blueprint"][data-theme="dark"] {
+    --ground:#0b1220; --card:#101a2e; --raised:#142138;
+    --ink:#dce6fa; --ink-soft:#a8bce4; --muted:#7286b0;
+    --rule:#23375f; --rule-soft:#1a2942;
+    --accent:#6f9bff; --accent-soft:#16264a; --strong:#a8bce4; --shadow:none;
+  }
+  :root[data-skin="blueprint"][data-theme="light"] {
+    --ground:#f6f8fc; --card:#fdfeff; --raised:#f1f5fd;
+    --ink:#16233b; --ink-soft:#41547a; --muted:#8494b5;
+    --rule:#c3d0f0; --rule-soft:#dde5f8; --accent:#1d4ed8; --accent-soft:#e4ecfe;
+    --strong:#16233b;
+  }
+
+  :root[data-skin="mission"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee;
+    --accent:#0e7c8c; --accent-soft:#e0f1f4; --strong:#1a2b36;
+    --radius:4px; --rail:5px; --shadow:none;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root[data-skin="mission"]:not([data-theme="light"]) {
+      --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+      --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+      --rule:#27394a; --rule-soft:#1e2c39;
+      --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+    }
+  }
+  :root[data-skin="mission"][data-theme="dark"] {
+    --ground:#0e161c; --card:#16222b; --raised:#1b2934;
+    --ink:#e3edf3; --ink-soft:#b3c6d2; --muted:#7d92a0;
+    --rule:#27394a; --rule-soft:#1e2c39;
+    --accent:#2ba7bb; --accent-soft:#0f3038; --strong:#b3c6d2; --shadow:none;
+  }
+  :root[data-skin="mission"][data-theme="light"] {
+    --ground:#eef1f4; --card:#ffffff; --raised:#f6f8fa;
+    --ink:#1a2b36; --ink-soft:#4a6272; --muted:#7d92a0;
+    --rule:#c8d4dc; --rule-soft:#e2e9ee; --accent:#0e7c8c; --accent-soft:#e0f1f4;
+    --strong:#1a2b36;
+  }
+
+  :root {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+      --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+      --sec9:#e3ab8f;
+      --sec-ink:#111722;
+    }
+  }
+  :root[data-theme="dark"] {
+    --sec1:#9fb4d6; --sec2:#a3bfcd; --sec3:#8fc9c4; --sec4:#a8cfa6;
+    --sec5:#d8c48d; --sec6:#d9a3b0; --sec7:#bda8dd; --sec8:#a6b6d9;
+    --sec9:#e3ab8f;
+    --sec-ink:#111722;
+  }
+  :root[data-theme="light"] {
+    --sec1:#2b3a55; --sec2:#2f4858; --sec3:#1f5453; --sec4:#2e5339;
+    --sec5:#5a4a2b; --sec6:#5c3340; --sec7:#4a3560; --sec8:#33415c;
+    --sec9:#6b3f2e;
+    --sec-ink:#f7f8fa;
+  }
+
+  :root {
+    --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100;
+    --good:#0ca30c; --warning:#fab219; --serious:#ec835a; --critical:#d03b3b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+  }
+  :root[data-theme="dark"] { --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; }
+
+  body {
+    background: var(--ground); color: var(--ink);
+    font-family: var(--af-stack); font-size: var(--af-size); letter-spacing: var(--af-track);
+    line-height: 1.55; text-align: left; -webkit-font-smoothing: antialiased;
+  }
+  :root {
+    --sb-thumb: color-mix(in srgb, var(--accent) 42%, var(--rule));
+    scrollbar-width: thin;
+    scrollbar-color: var(--sb-thumb) var(--rule-soft);
+  }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--rule-soft); border-radius: 999px; }
+  ::-webkit-scrollbar-thumb {
+    background: var(--sb-thumb); border-radius: 999px;
+    border: 2px solid transparent; background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+  ::-webkit-scrollbar-button { display: none; width: 0; height: 0; }
+  ::-webkit-scrollbar-corner { background: transparent; }
+
+  .artifact-page {
+    max-width: 88rem;
+    margin: 0 auto 0 clamp(16px, 4vw, 56px);
+    padding: 32px 24px 48px;
+    display: flex; flex-direction: column; gap: 30px;
+    text-align: left;
+  }
+  .artifact-page > :first-child { padding-right: 56px; }
+  :is(a, button, select, input, textarea, summary):focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px;
+  }
+  p { margin: 0; }
+
+  .sec { display: flex; flex-direction: column; gap: 14px; }
+  .sec-head { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--rule); padding-bottom: 8px; }
+  .sec-head .n { margin-left: auto; font-size: var(--fs-min); color: var(--muted); letter-spacing: .08em; text-transform: uppercase; }
+  .sec-head h2 {
+    margin: 0; background: var(--sec, var(--strong)); color: var(--sec-ink, var(--ground));
+    padding: 2px 11px 2px 9px; border-radius: 999px;
+    font-family: var(--af-title);
+    font-size: 1em; font-weight: 600; letter-spacing: .045em; text-transform: uppercase;
+    line-height: 1.34;
+    display: inline-flex; align-items: center; gap: 7px;
+  }
+  .sec-head h2 svg {
+    width: 1.02em; height: 1.02em; flex: 0 0 auto;
+    fill: none; stroke: currentColor; stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+  }
+  .sec[data-sec="1"] { --sec: var(--sec1); } .sec[data-sec="2"] { --sec: var(--sec2); }
+  .sec[data-sec="3"] { --sec: var(--sec3); } .sec[data-sec="4"] { --sec: var(--sec4); }
+  .sec[data-sec="5"] { --sec: var(--sec5); } .sec[data-sec="6"] { --sec: var(--sec6); }
+  .sec[data-sec="7"] { --sec: var(--sec7); } .sec[data-sec="8"] { --sec: var(--sec8); }
+  .sec[data-sec="9"] { --sec: var(--sec9); }
+
+  .panel {
+    background: var(--card); border: 1px solid var(--rule);
+    border-radius: var(--radius, 10px); padding: 15px;
+    display: flex; flex-direction: column; gap: 12px;
+  }
+  :root .panel { border-left: var(--rail) solid var(--accent); }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; align-items: start; }
+
+  .af-chrome { position: fixed; top: 14px; right: 14px; z-index: 200; }
+  .af-cog {
+    display: grid; place-items: center; width: 38px; height: 38px;
+    background: var(--card); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 10px; box-shadow: var(--shadow);
+    cursor: pointer; transition: color .15s ease, border-color .15s ease, transform .25s ease;
+  }
+  .af-cog:hover { color: var(--accent); border-color: var(--accent); }
+  .af-cog[aria-expanded="true"] { color: var(--accent); border-color: var(--accent); transform: rotate(45deg); }
+  .af-cog svg { width: 18px; height: 18px; display: block; }
+  .af-panel {
+    position: absolute; top: 46px; right: 0; width: 262px;
+    background: var(--card); border: 1px solid var(--rule); border-radius: 12px;
+    box-shadow: var(--shadow); padding: 14px;
+    display: none; flex-direction: column; gap: 11px; max-height: 82vh; overflow-y: auto;
+  }
+  .af-panel[data-open="true"] { display: flex; }
+  .af-group { display: flex; flex-direction: column; gap: 7px; }
+  .af-legend { font-size: .72em; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin: 0; }
+  .af-opt {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 10px;
+    width: 100%; text-align: left; cursor: pointer; font-family: inherit;
+    background: var(--raised); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px; padding: 8px 11px;
+  }
+  .af-opt:hover { border-color: var(--accent); }
+  .af-opt[aria-checked="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .af-opt .af-name { font-size: 14px; line-height: 1.2; }
+  .af-opt .af-spec { font-size: 12px; color: var(--muted); letter-spacing: 0; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .af-opt[aria-checked="true"] .af-spec { color: var(--accent); }
+  .af-foot { font-size: 12px; color: var(--muted); margin: 0; letter-spacing: 0; }
+  .af-divider { height: 1px; background: var(--rule-soft); }
+
+  :root[data-motion="off"] *, :root[data-motion="off"] *::before { animation-play-state: paused !important; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<!-- ── page-specific styles ── -->
+<style>
+  h1 { font-size: 2.05em; line-height: 1.15; margin: 8px 0 0; text-wrap: balance; font-weight: 700; }
+  h3 { margin: 0; font-size: var(--fs-sm); font-weight: 600; }
+  .eyebrow { font-size: var(--fs-min); letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0; }
+  .sub { color: var(--muted); max-width: 68ch; margin: 12px 0 0; }
+  .dim { color: var(--muted); }
+  .small { font-size: var(--fs-sm); }
+  .tiny { font-size: var(--fs-xs); }
+
+  /* the one non-kit hue: the ⛓ injection violet, lifted from the Skill Map */
+  :root { --viol: #6E51A8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --viol: #B49BE0; } }
+  :root[data-theme="dark"] { --viol: #B49BE0; }
+  :root[data-theme="light"] { --viol: #6E51A8; }
+
+  .lbl { font-size: var(--fs-min); letter-spacing: .09em; text-transform: uppercase; color: var(--muted); }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 1px 9px; border-radius: 999px;
+    font-size: var(--fs-min); letter-spacing: .05em; text-transform: uppercase;
+    border: 1px solid transparent; white-space: nowrap;
+  }
+  .chip-ro   { color: var(--good); background: color-mix(in srgb, var(--good) 12%, var(--card)); border-color: color-mix(in srgb, var(--good) 40%, var(--rule)); }
+  .chip-warn { color: color-mix(in srgb, var(--warning) 70%, var(--ink)); background: color-mix(in srgb, var(--warning) 14%, var(--card)); border-color: color-mix(in srgb, var(--warning) 45%, var(--rule)); }
+  .chip-soft { color: var(--accent); background: var(--accent-soft); border-color: color-mix(in srgb, var(--accent) 40%, var(--rule)); }
+  .chip-mute { color: var(--muted); background: var(--raised); border-color: var(--rule); }
+  /* invocation chips — the Skill Map vocabulary */
+  .chip-inv { text-transform: none; letter-spacing: .02em; font-weight: 600; }
+  .i-hook   { color: var(--viol);   border-color: color-mix(in srgb, var(--viol) 55%, var(--rule)); background: color-mix(in srgb, var(--viol) 10%, var(--card)); }
+  .i-router { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 55%, var(--rule)); background: var(--accent-soft); }
+  .i-paths  { color: var(--s3);     border-color: color-mix(in srgb, var(--s3) 55%, var(--rule)); background: color-mix(in srgb, var(--s3) 10%, var(--card)); }
+  .i-human  { color: var(--ink);    border-color: color-mix(in srgb, var(--ink) 40%, var(--rule)); }
+  .i-bg     { color: var(--muted);  border-color: var(--rule); border-style: dashed; }
+  .i-manual { color: color-mix(in srgb, var(--warning) 72%, var(--ink)); border-color: color-mix(in srgb, var(--warning) 55%, var(--rule)); border-style: dashed; }
+
+  /* ══ the board — sketch density ══ */
+  .board { display: grid; grid-template-columns: minmax(230px, 4fr) minmax(250px, 4fr) minmax(360px, 9fr); gap: 16px; align-items: start; }
+  @media (max-width: 1100px) { .board { grid-template-columns: 1fr; } .detail-wrap { position: static !important; max-height: none !important; } }
+  .railcol { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  .railbox { display: flex; flex-direction: column; gap: 8px; }
+  .railbox .railhead { display: flex; align-items: baseline; gap: 8px; }
+  .railbox .railhead .lbl { color: var(--ink-soft); }
+
+  .node {
+    display: flex; flex-direction: column; gap: 0; width: 100%;
+    text-align: left; cursor: pointer; font-family: inherit; letter-spacing: var(--af-track);
+    background: var(--card); color: var(--ink);
+    border: 1px solid var(--rule); border-radius: 8px;
+    padding: 4px 10px; font-size: var(--fs-sm);
+  }
+  .node:hover { border-color: var(--accent); }
+  .node[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); box-shadow: inset 3px 0 0 var(--accent); }
+  .node .nrow { display: flex; align-items: baseline; gap: 7px; min-width: 0; }
+  .node .glyph { flex: 0 0 auto; width: 1.15em; color: var(--muted); font-size: var(--fs-min); }
+  .node[aria-pressed="true"] .glyph { color: var(--accent); }
+  .node .nname { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .node .nbadge { margin-left: auto; flex: 0 0 auto; font-size: var(--fs-min); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .node .angle-id { flex: 0 0 auto; color: var(--accent); font-weight: 700; font-size: var(--fs-min); }
+  .node.opt { border-style: dashed; margin-left: 16px; }
+  .node.router-node { border-left: 4px solid var(--accent); }
+  /* click-to-expand — the sketch's "if we click then show" */
+  .node .nx { display: none; }
+  .node[aria-pressed="true"] .nx {
+    display: flex; flex-direction: column; gap: 3px;
+    padding: 5px 0 3px 1.15em; border-top: 1px dashed color-mix(in srgb, var(--accent) 35%, var(--rule));
+    margin-top: 4px;
+  }
+  .nx .nhint { font-size: var(--fs-min); color: var(--ink-soft); line-height: 1.45; }
+  .nx .nmeta { display: flex; flex-wrap: wrap; gap: 4px 10px; font-size: var(--fs-min); color: var(--muted); }
+  .nx .nmeta b { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+  .nx .nmeta .has-inj { color: var(--viol); font-weight: 600; }
+
+  .conn { position: relative; height: 14px; margin-left: 22px; width: 2px; background: var(--rule); }
+  .conn .conn-dot {
+    position: absolute; left: -3px; top: 0; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    transform: translateY(8px); opacity: .85;
+    animation: connRun 1.6s linear var(--d, 0s) infinite;
+  }
+  @keyframes connRun {
+    0% { transform: translateY(-2px); opacity: 0; }
+    25% { opacity: .95; }
+    75% { opacity: .95; }
+    100% { transform: translateY(10px); opacity: 0; }
+  }
+  [data-settled="1"] .conn-dot { animation: none !important; }
+
+  .spine-tools { display: flex; align-items: center; gap: 10px; }
+  .replay-btn {
+    margin-left: auto; cursor: pointer; font-family: inherit;
+    background: var(--raised); color: var(--ink); border: 1px solid var(--rule);
+    border-radius: 8px; padding: 3px 10px; font-size: var(--fs-min);
+  }
+  .replay-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .other-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  @media (max-width: 1350px) { .other-grid { grid-template-columns: 1fr; } }
+
+  /* ══ detail panel ══ */
+  .detail-wrap { position: sticky; top: 14px; max-height: calc(100vh - 28px); overflow-y: auto; }
+  .detail { gap: 12px; }
+  .d-title { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .d-name { font-size: 1.25em; font-weight: 700; }
+  .d-grid { display: grid; grid-template-columns: 74px 1fr; gap: 6px 12px; }
+  .d-grid .lbl { padding-top: 2px; }
+  .d-grid .val { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .d-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 3px; }
+  .d-list li { font-size: var(--fs-xs); color: var(--ink-soft); display: flex; gap: 7px; align-items: baseline; }
+  .d-list li::before { content: "▸"; color: currentColor; opacity: .55; flex: 0 0 auto; font-size: var(--fs-min); }
+  .d-cost { display: flex; flex-wrap: wrap; gap: 8px; }
+  .d-cost .fact {
+    display: inline-flex; align-items: baseline; gap: 6px;
+    background: var(--raised); border: 1px solid var(--rule); border-radius: 8px;
+    padding: 3px 9px; font-size: var(--fs-xs);
+  }
+  .d-cost .fact b { font-variant-numeric: tabular-nums; }
+
+  /* machinery rows — ⚙ / ⛓ / ▤ / ✎, colored left rails like the Skill Map */
+  .mrow {
+    border-left: 3px solid var(--rule); background: var(--raised);
+    border-radius: 6px; padding: 7px 10px;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .mrow .mlbl { font-size: var(--fs-min); letter-spacing: .08em; text-transform: uppercase; font-weight: 700; color: var(--muted); }
+  .m-writes  { border-left-color: var(--s3); }   .m-writes .mlbl { color: var(--s3); }
+  .m-scripts { border-left-color: var(--s1); }   .m-scripts .mlbl { color: var(--s1); }
+  .m-inj     { border-left-color: var(--viol); } .m-inj .mlbl { color: var(--viol); }
+  .m-cons    { border-left-color: var(--rule); } .m-cons .mlbl { color: var(--muted); }
+  .m-none { border-left-style: dashed; border-left-color: color-mix(in srgb, var(--warning) 60%, var(--rule)); }
+  .m-none .mlbl { color: color-mix(in srgb, var(--warning) 72%, var(--ink)); }
+  .m-none .mtxt { font-size: var(--fs-xs); color: var(--muted); }
+  .m-inj .minj-txt { font-size: var(--fs-xs); color: var(--ink-soft); }
+
+  /* mini flow diagram */
+  .flow { display: flex; flex-direction: column; gap: 3px; }
+  .fbox {
+    border: 1px solid var(--rule); border-radius: 8px; background: var(--raised);
+    padding: 5px 10px; font-size: var(--fs-xs); color: var(--ink-soft);
+  }
+  .fbox.center { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); font-weight: 600; font-size: var(--fs-sm); }
+  .fbox .lbl { display: block; margin-bottom: 1px; }
+  .farrow { color: var(--accent); text-align: left; padding-left: 18px; line-height: 1; font-size: var(--fs-sm); }
+
+  /* ══ ledger ══ */
+  .bar-row { display: grid; grid-template-columns: minmax(220px, 2fr) 5fr; gap: 10px; align-items: center; }
+  @media (max-width: 760px) { .bar-row { grid-template-columns: 1fr; } }
+  .bar-label { font-size: var(--fs-sm); color: var(--ink-soft); }
+  .bar-label .tiny { display: block; color: var(--muted); }
+  .bar-track { display: flex; align-items: center; gap: 8px; }
+  .bar { height: 14px; border-radius: 4px; background: var(--accent); opacity: .85; min-width: 2px; }
+  .bar.generic { background: var(--warning); opacity: 1; }
+  .bar-val { font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  /* ══ hook stack ══ */
+  .hook-table-wrap { overflow-x: auto; }
+  table.hooks { width: 100%; border-collapse: collapse; }
+  .hooks th {
+    text-align: left; font-size: var(--fs-min); letter-spacing: .07em; text-transform: uppercase;
+    color: var(--muted); font-weight: 600; padding: 6px 12px 6px 0; border-bottom: 1px solid var(--rule);
+  }
+  .hooks td { padding: 7px 12px 7px 0; border-bottom: 1px solid var(--rule-soft); font-size: var(--fs-sm); vertical-align: top; color: var(--ink-soft); }
+  .hooks tr:last-child td { border-bottom: none; }
+  .hooks td code, .d-grid code, .d-list code, .fbox code, .minj-txt code { font-size: var(--fs-xs); background: var(--rule-soft); border-radius: 4px; padding: 0 4px; }
+  .ecc-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ecc-chip {
+    font-size: var(--fs-min); color: var(--muted);
+    border: 1px solid var(--rule); border-radius: 999px; padding: 1px 9px; background: var(--raised);
+  }
+
+  /* ══ visual position mini-map — WHERE without words ══ */
+  .pos { display: flex; flex-direction: column; gap: 5px; }
+  .pos-row { display: flex; align-items: center; gap: 5px; }
+  .pos-lbl { flex: 0 0 44px; font-size: var(--fs-min); letter-spacing: .07em; text-transform: uppercase; color: var(--muted); }
+  .pos-cell {
+    width: 16px; height: 16px; padding: 0; border-radius: 4px; cursor: pointer;
+    background: var(--raised); border: 1px solid var(--rule); position: relative;
+  }
+  .pos-row.sats .pos-cell { border-radius: 50%; }
+  .pos-cell:hover { border-color: var(--accent); }
+  .pos-cell.rt { transform: rotate(45deg); width: 13px; height: 13px; margin: 0 2px; }
+  .pos-cell.on { background: var(--accent); border-color: var(--accent); }
+  .pos-cell.on::after {
+    content: ""; position: absolute; inset: -4px; border-radius: inherit;
+    border: 2px solid var(--accent); opacity: 0;
+    animation: posPing 1.4s ease-out infinite;
+  }
+  @keyframes posPing { 0% { opacity: .8; transform: scale(.7); } 100% { opacity: 0; transform: scale(1.25); } }
+  [data-settled="1"] .pos-cell.on::after { animation: none !important; opacity: 0; }
+
+  /* ══ animated detail flow — the payload travels on every selection ══ */
+  .dflow { display: flex; flex-direction: column; gap: 0; }
+  .dseg { position: relative; height: 18px; margin-left: 22px; width: 2px; background: var(--rule); }
+  .dseg .dseg-dot {
+    position: absolute; left: -3px; top: 0; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--s2);
+    transform: translateY(12px); opacity: .9;
+    animation: dsegRun 1.3s linear var(--d, 0s) infinite;
+  }
+  @keyframes dsegRun {
+    0% { transform: translateY(-2px); opacity: 0; }
+    30% { opacity: 1; }
+    75% { opacity: 1; }
+    100% { transform: translateY(14px); opacity: 0; }
+  }
+  [data-settled="1"] .dseg-dot { animation: none !important; }
+
+  /* ══ cost meters — numbers as bars, not sentences ══ */
+  .meter { display: grid; grid-template-columns: 92px 1fr 58px; gap: 8px; align-items: center; }
+  .meter .lbl { letter-spacing: .05em; }
+  .meter-track { height: 10px; border-radius: 4px; background: var(--rule-soft); overflow: hidden; }
+  .meter-fill { height: 100%; border-radius: 4px; background: var(--accent); min-width: 2px; }
+  .meter-fill.refs { background: color-mix(in srgb, var(--accent) 45%, var(--rule)); }
+  .meter-val { font-size: var(--fs-xs); color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
+
+  /* ══ rail tabs — satellites / other share the column ══ */
+  .railtabs { display: flex; gap: 6px; }
+  .railtabs [role="tab"] {
+    flex: 1; text-align: center; cursor: pointer; font-family: inherit;
+    font-size: var(--fs-sm); padding: 5px 10px; border-radius: 8px;
+    background: var(--raised); color: var(--muted); border: 1px solid var(--rule);
+  }
+  .railtabs [role="tab"]:hover { border-color: var(--accent); }
+  .railtabs [role="tab"][aria-selected="true"] {
+    background: var(--accent-soft); color: var(--accent); border-color: var(--accent); font-weight: 600;
+  }
+
+  /* ══ the dependency diagram — inputs above, laterals beside, outputs below ══ */
+  .diag { display: flex; flex-direction: column; gap: 0; }
+  .diag-top, .diag-bot { display: grid; gap: 6px; grid-template-columns: 1fr; }
+  .diag-top.two, .diag-bot.two { grid-template-columns: 1fr 1fr; }
+  .diag-mid { display: flex; align-items: center; }
+  .diag-mid .fbox.center { flex: 1 1 auto; }
+  .fb-inj-box { flex: 0 1 42%; margin-left: 0; }
+  .fbox.fb-cons    { border-left: 3px solid var(--rule); }
+  .fbox.fb-scripts { border-left: 3px solid var(--s1); }
+  .fbox.fb-inj     { border-left: 3px solid var(--viol); }
+  .fbox.fb-writes  { border-left: 3px solid var(--s3); }
+  .fbox.fb-next    { border-left: 3px solid var(--accent); }
+  .hseg { position: relative; width: 26px; height: 2px; background: var(--rule); flex: 0 0 auto; }
+  .hseg .hseg-dot {
+    position: absolute; top: -3px; left: 0; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--viol);
+    transform: translateX(20px); opacity: .9;
+    animation: hsegRun 1.3s linear .3s infinite;
+  }
+  @keyframes hsegRun {
+    0% { transform: translateX(-2px); opacity: 0; }
+    30% { opacity: 1; }
+    75% { opacity: 1; }
+    100% { transform: translateX(20px); opacity: 0; }
+  }
+  [data-settled="1"] .hseg-dot { animation: none !important; }
+
+  /* ══ v3 node-graph diagram — a shape per item kind ══
+     ▢ command · ⎘ file (folded page) · ⌸ store (cylinder) ·
+     ‖ script (double bars) · ⧉ injection (tag). Each node owns its edge. */
+  .g-row { display: flex; justify-content: space-around; align-items: flex-start; gap: 8px; flex-wrap: wrap; }
+  .gnode { display: flex; flex-direction: column; align-items: center; min-width: 0; }
+  .gnode.below { flex-direction: column-reverse; }
+  .sh {
+    font-size: var(--fs-min); color: var(--ink-soft); background: var(--raised);
+    border: 1.5px solid var(--rule); padding: 4px 9px; max-width: 150px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-align: center;
+  }
+  .sh-cmd { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); border-radius: 4px; font-weight: 600; }
+  .sh-cmd.big { font-size: var(--fs-sm); padding: 6px 16px; }
+  .sh-file { border-color: var(--s3); border-radius: 0; clip-path: polygon(0 0, calc(100% - 11px) 0, 100% 11px, 100% 100%, 0 100%); padding-right: 13px; }
+  .sh-store { border-color: var(--s4); border-top: none; border-radius: 0 0 9px 9px / 0 0 7px 7px; position: relative; margin-top: 6px; }
+  .sh-store::before {
+    content: ""; position: absolute; left: -1.5px; right: -1.5px; top: -5px; height: 9px;
+    border: 1.5px solid var(--s4); border-radius: 50%; background: var(--raised);
+  }
+  .sh-script { border-color: var(--s1); border-inline: 4.5px double var(--s1); border-radius: 3px; }
+  .sh-inj { border-color: var(--viol); background: color-mix(in srgb, var(--viol) 10%, var(--card)); color: var(--viol); clip-path: polygon(11px 0, 100% 0, 100% 100%, 11px 100%, 0 50%); padding-left: 15px; }
+  .sh-agg { border-style: dashed; color: var(--muted); border-radius: 999px; }
+  .stub { position: relative; width: 2px; height: 13px; background: var(--rule); }
+  .stub .stub-dot {
+    position: absolute; left: -3px; top: 0; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--in-c, var(--accent));
+    transform: translateY(7px); opacity: .9;
+    animation: stubRun 1.2s linear var(--d, 0s) infinite;
+  }
+  @keyframes stubRun {
+    0% { transform: translateY(-3px); opacity: 0; }
+    30% { opacity: 1; }
+    75% { opacity: 1; }
+    100% { transform: translateY(9px); opacity: 0; }
+  }
+  [data-settled="1"] .stub-dot { animation: none !important; }
+  .grail { height: 2px; background: var(--rule); margin: 0 26px; }
+  .gc { display: flex; justify-content: center; }
+  .g-center { display: flex; align-items: center; justify-content: center; }
+  .g-legend { display: flex; flex-wrap: wrap; gap: 5px 12px; align-items: center; margin-top: 8px; }
+  .g-legend .lg { display: inline-flex; align-items: center; gap: 5px; font-size: var(--fs-min); color: var(--muted); }
+  .g-legend .sh { font-size: var(--fs-min); padding: 0 7px; max-width: none; }
+
+  /* ══ v5 — legend docks top-right of the detail head; diagram carries everything ══ */
+  .d-head { display: grid; grid-template-columns: 1fr auto; gap: 8px 16px; align-items: start; }
+  @media (max-width: 640px) { .d-head { grid-template-columns: 1fr; } }
+  .d-head-l { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .g-legend.v { flex-direction: column; align-items: flex-start; gap: 7px; margin-top: 2px; }
+  .g-row { row-gap: 14px; align-items: flex-end; }
+  .g-row.below-row { align-items: flex-start; }
+  .diag { overflow-x: auto; }
+
+  /* ══ v6 — two-column legend + node popover ══ */
+  .g-legend.v { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 12px; }
+  .g-legend.v .lg { white-space: nowrap; }
+  .diag { position: relative; }
+  .diag .sh { cursor: pointer; font-family: inherit; }
+  .diag .sh:hover { filter: brightness(1.12); }
+  .gpop {
+    position: absolute; z-index: 50; width: 240px;
+    background: var(--card); border: 1px solid var(--accent); border-radius: 8px;
+    box-shadow: var(--shadow); padding: 9px 11px;
+    display: flex; flex-direction: column; gap: 5px; text-align: left;
+  }
+  .gpop[hidden] { display: none; }
+  .gpop .gp-name { font-size: var(--fs-sm); font-weight: 700; word-break: break-word; }
+  .gpop .gp-role { font-size: var(--fs-min); color: var(--accent); letter-spacing: .03em; }
+  .gpop .gp-full { font-size: var(--fs-xs); color: var(--ink-soft); word-break: break-word; }
+  .gpop .gp-kind { align-self: flex-start; }
+
+  /* ══ v7 — element view takes the whole panel; popover retired ══ */
+  .el-close {
+    margin-left: auto; width: 26px; height: 26px; flex: 0 0 auto;
+    display: grid; place-items: center; cursor: pointer; font-family: inherit;
+    background: var(--raised); border: 1px solid var(--rule); border-radius: 6px;
+    color: var(--muted); font-size: var(--fs-sm); line-height: 1;
+  }
+  .el-close:hover { color: var(--accent); border-color: var(--accent); }
+  .el-role { font-size: var(--fs-sm); color: var(--accent); }
+  .el-full {
+    font-size: var(--fs-sm); color: var(--ink-soft); word-break: break-word;
+    background: var(--raised); border-left: 3px solid var(--rule); border-radius: 6px; padding: 8px 11px;
+  }
+  .el-refs { display: flex; flex-wrap: wrap; gap: 6px; }
+  .el-go {
+    cursor: pointer; font-family: inherit;
+    display: inline-flex; align-items: baseline; gap: 6px;
+    background: var(--raised); color: var(--ink); border: 1px solid var(--rule);
+    border-radius: 999px; padding: 2px 10px; font-size: var(--fs-xs);
+  }
+  .el-go:hover { border-color: var(--accent); color: var(--accent); }
+  .el-go .dir { font-size: var(--fs-min); color: var(--muted); }
+
+  /* ══ v8 — per-kind colored counters on every rail node ══ */
+  .kcs { display: inline-flex; gap: 6px; margin-left: auto; flex: 0 0 auto; }
+  .kc { font-size: var(--fs-min); color: var(--kc); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .kc.z { opacity: .38; }
+  .kcs.xl .kc { font-size: var(--fs-xs); }
+  .node .nbadge { margin-left: 8px; }
+
+  /* ══ v9 — machinery: hook guards + schema/contract shapes ══ */
+  .sh-hook {
+    border-color: var(--viol); border-style: dashed; border-radius: 6px;
+    color: var(--viol); background: color-mix(in srgb, var(--viol) 8%, var(--card));
+  }
+  .sh-contract {
+    border-color: var(--s3); border-radius: 2px;
+    background: repeating-linear-gradient(0deg,
+      var(--raised), var(--raised) 4px,
+      color-mix(in srgb, var(--s3) 14%, var(--raised)) 4px,
+      color-mix(in srgb, var(--s3) 14%, var(--raised)) 5px);
+  }
+  .hooks-col { display: flex; flex-direction: column; gap: 4px; flex: 0 1 38%; min-width: 0; align-items: stretch; }
+  .hooks-col .sh { max-width: none; }
+  .nmach { display: block; font-size: var(--fs-min); color: var(--mc, var(--muted)); line-height: 1.5; }
+  .nmach.dashed { color: var(--muted); border-left: 2px dashed color-mix(in srgb, var(--warning) 60%, var(--rule)); padding-left: 6px; }
+
+  /* ══ v10 — distinct machinery colors + dynamic-injection toggle ══ */
+  :root { --pink: #b83280; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --pink: #e07bc0; } }
+  :root[data-theme="dark"] { --pink: #e07bc0; }
+  :root[data-theme="light"] { --pink: #b83280; }
+  .sh-hook {
+    border-color: var(--s2); color: color-mix(in srgb, var(--s2) 80%, var(--ink));
+    background: color-mix(in srgb, var(--s2) 8%, var(--card));
+  }
+  .sh-contract {
+    border-color: var(--pink);
+    background: repeating-linear-gradient(0deg,
+      var(--raised), var(--raised) 4px,
+      color-mix(in srgb, var(--pink) 14%, var(--raised)) 4px,
+      color-mix(in srgb, var(--pink) 14%, var(--raised)) 5px);
+  }
+  .hseg .hseg-dot { background: var(--hd, var(--viol)); }
+  .ledger-toggle { max-width: 430px; }
+  .bar { transition: width .6s ease, background .3s ease; }
+  .bar-row.ondemand .bar { background: transparent; border: 1.5px dashed color-mix(in srgb, var(--warning) 70%, var(--rule)); }
+  .bar-row.ondemand .bar-label { opacity: .55; }
+
+</style>
+
+<div class="artifact-page">
+  <header>
+    <p class="eyebrow">gabe suite · command anatomy · 2026-08-03</p>
+    <h1>The spine, its satellites, and everything they inject</h1>
+    <p class="sub">Every command is a compact pill — click to expand it in place and the detail panel answers the sketch's questions: what it is, why it exists, when it runs, where it sits, what files it changes, which scripts it carries, and what context it injects. Below the board: the always-on layer every command pays before it starts, and the full hook stack. Data mined from the repo and adversarially verified (245 claims checked, 3 corrected).</p>
+  </header>
+
+  <section class="sec" data-sec="1">
+    <div class="sec-head">
+      <h2><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="3"></circle><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"></path><circle cx="18" cy="5" r="3"></circle></svg>The board</h2>
+      <span class="n">28 skills · click any node</span>
+    </div>
+    <div class="board">
+      <div class="railcol">
+        <div class="railbox">
+          <div class="railhead spine-tools">
+            <span class="lbl">Spine — the lifecycle</span>
+            <button class="replay-btn" id="spine-replay" type="button">↻ Replay flow</button>
+          </div>
+          <div id="spine-list" data-fx="spine-flow"></div>
+        </div>
+      </div>
+      <div class="railcol">
+        <div class="railbox">
+          <div class="railtabs" role="tablist" aria-label="Satellites or other">
+            <button type="button" id="tab-sats" role="tab" aria-selected="true">◉ Satellites · 8</button>
+            <button type="button" id="tab-other" role="tab" aria-selected="false">▢ Other · 10</button>
+          </div>
+          <div id="pane-sats" role="tabpanel">
+            <div id="sat-list" style="display:flex;flex-direction:column;gap:8px"></div>
+            <p class="tiny dim" id="angles-note" style="margin-top:8px"></p>
+          </div>
+          <div id="pane-other" role="tabpanel" hidden>
+            <div id="other-list"></div>
+          </div>
+        </div>
+      </div>
+      <div class="detail-wrap">
+        <div class="panel detail" id="detail"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="2">
+    <div class="sec-head">
+      <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"></path><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"></path></svg>The always-on layer</h2>
+      <span class="n">what every command pays</span>
+    </div>
+    <div class="panel">
+      <p class="small" style="color:var(--ink-soft)">Before ANY skill runs — before you even type — this context is already in the model's window. The amber slice is the generic-conventions layer flagged by move №2 of the paper contrast: the category the ablation study bounds at ≤10–15pp correctness effect, purchased in every session of every project.</p>
+      <div class="railtabs ledger-toggle" role="tablist" aria-label="Injection mode"><button type="button" id="lt-asis" role="tab" aria-selected="true">as-is · always-on</button><button type="button" id="lt-dyn" role="tab" aria-selected="false">if loaded dynamically</button></div>
+      <div id="ledger-session" style="display:flex;flex-direction:column;gap:8px"></div>
+      <div class="d-block">
+        <span class="lbl">re-injected on every prompt</span>
+        <div id="ledger-prompt" style="display:flex;flex-direction:column;gap:8px"></div>
+      </div>
+      <p class="tiny dim" id="ledger-total"></p>
+    </div>
+  </section>
+
+  <section class="sec" data-sec="3">
+    <div class="sec-head">
+      <h2><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3 4 7l4 4"></path><path d="M4 7h16"></path><path d="m16 21 4-4-4-4"></path><path d="M20 17H4"></path></svg>The hook stack</h2>
+      <span class="n">10 suite-owned · ECC unwired 2026-08-04</span>
+    </div>
+    <div class="cols">
+      <div class="panel">
+        <h3>Suite-owned — 8 kdbp machine hooks + 2 register project hooks</h3>
+        <div class="hook-table-wrap">
+          <table class="hooks" id="suite-hooks">
+            <thead><tr><th>Hook</th><th>Event</th><th>Does</th><th>Injects</th><th>Battery</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>ECC stack — UNWIRED 2026-08-04 (was 31 machine hook commands)</h3>
+        <p class="tiny dim">The everything-claude-code stack was never Gabe Suite machinery — it was a separate starter-kit install that stayed wired only because nothing removed it. All 31 hook groups were unwired from ~/.claude/settings.json on 2026-08-04 (backup: settings.json.bak-ecc-2026-08-04; scripts remain on disk — one cp reverses everything). Two visible losses to know about: session-start summary injection (the ECC:SUMMARY block) and Bash command audit/cost logging stopped with it.</p>
+        <div class="ecc-grid" id="ecc-hooks"></div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ══ BLOCK 2 ══════════════════════════════════════════════════════════ -->
+<div class="af-chrome">
+  <button class="af-cog" id="af-cog" type="button" aria-expanded="false" aria-controls="af-panel" aria-label="Display options">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <circle cx="12" cy="12" r="3.2"></circle>
+      <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+    </svg>
+  </button>
+
+  <div class="af-panel" id="af-panel" data-open="false">
+    <div class="af-group" role="radiogroup" aria-label="Font family" id="af-fonts"><p class="af-legend">Font family</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Theme" id="af-skins"><p class="af-legend">Theme</p></div>
+    <div class="af-divider"></div>
+    <div class="af-group" role="radiogroup" aria-label="Motion" id="af-motion"><p class="af-legend">Motion</p></div>
+    <p class="af-foot" id="af-foot">—</p>
+  </div>
+</div>
+
+<!-- ══ BLOCK 3 ══════════════════════════════════════════════════════════ -->
+<script>
+var MOTION = { on: true };   /* animations read this before scheduling work */
+
+(function () {
+  "use strict";
+
+  var FONTS = [
+    { id: "mono",  label: "Mono",     stack: 'ui-monospace, monospace', size: 15, track: -0.025 },
+    { id: "segoe", label: "Segoe UI", stack: '"Segoe UI", sans-serif',  size: 16, track: -0.015 }
+  ];
+  var SKINS = [
+    { id: "catalog",   label: "Catalog",         note: "center · indigo" },
+    { id: "blueprint", label: "Blueprint",       note: "skin F · blue" },
+    { id: "mission",   label: "Mission Console", note: "skin B · teal" }
+  ];
+  var FKEY = "gabe:artifact:font", SKEY = "gabe:artifact:skin";
+
+  var root = document.documentElement;
+  var cog = document.getElementById("af-cog"), panel = document.getElementById("af-panel");
+  var fhost = document.getElementById("af-fonts"), shost = document.getElementById("af-skins");
+  var mhost = document.getElementById("af-motion"), foot = document.getElementById("af-foot");
+
+  function read(key, list, dflt) {
+    try {
+      var v = window.localStorage.getItem(key);
+      return list.some(function (x) { return x.id === v; }) ? v : dflt;
+    } catch (e) { return dflt; }
+  }
+  function write(key, v) { try { window.localStorage.setItem(key, v); } catch (e) {} }
+
+  function opt(host, item, spec, onPick) {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "af-opt";
+    b.setAttribute("role", "radio"); b.setAttribute("data-id", item.id); b.setAttribute("aria-checked", "false");
+    var n = document.createElement("span");
+    n.className = "af-name"; n.textContent = item.label;
+    if (item.stack) n.style.fontFamily = item.stack;
+    var s = document.createElement("span");
+    s.className = "af-spec"; s.textContent = spec;
+    b.appendChild(n); b.appendChild(s);
+    b.addEventListener("click", function () { onPick(item.id); });
+    host.appendChild(b);
+  }
+  function mark(host, id) {
+    host.querySelectorAll(".af-opt").forEach(function (o) {
+      o.setAttribute("aria-checked", String(o.getAttribute("data-id") === id));
+    });
+  }
+
+  function applyFont(id) {
+    var f = FONTS.filter(function (x) { return x.id === id; })[0] || FONTS[0];
+    root.style.setProperty("--af-stack", f.stack);
+    root.style.setProperty("--af-size", f.size + "px");
+    root.style.setProperty("--af-track", f.track + "em");
+    write(FKEY, f.id); mark(fhost, f.id);
+    foot.textContent = f.size + "px · " + f.track + "em";
+  }
+  function applySkin(id) {
+    root.setAttribute("data-skin", id);
+    write(SKEY, id); mark(shost, id);
+  }
+  function setMotion(on) {
+    MOTION.on = on;
+    root.setAttribute("data-motion", on ? "on" : "off");
+    /* Rebuild BEFORE pausing — a pauseAnimations() aimed at a replaced
+       element does nothing for its replacement. Order: rebuild, then freeze. */
+    if (window.__rebuildMotion) window.__rebuildMotion();
+    document.querySelectorAll("svg").forEach(function (s) {
+      if (s.pauseAnimations && s.unpauseAnimations) { on ? s.unpauseAnimations() : s.pauseAnimations(); }
+    });
+    mark(mhost, on ? "on" : "off");
+  }
+
+  FONTS.forEach(function (f) { opt(fhost, f, f.size + " / " + f.track, applyFont); });
+  SKINS.forEach(function (s) { opt(shost, s, s.note, applySkin); });
+  [{ id: "on", label: "Playing" }, { id: "off", label: "Paused" }].forEach(function (m) {
+    opt(mhost, m, m.id === "on" ? "loops + replays" : "frozen", function (id) { setMotion(id === "on"); });
+  });
+
+  function open(next) { panel.setAttribute("data-open", String(next)); cog.setAttribute("aria-expanded", String(next)); }
+  cog.addEventListener("click", function (e) { e.stopPropagation(); open(panel.getAttribute("data-open") !== "true"); });
+  panel.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", function () { if (panel.getAttribute("data-open") === "true") open(false); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && panel.getAttribute("data-open") === "true") { open(false); cog.focus(); }
+  });
+
+  applyFont(read(FKEY, FONTS, "mono"));
+  applySkin(read(SKEY, SKINS, "catalog"));
+  setMotion(!window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+  window.__setSkin = applySkin;
+  window.__setMotion = setMotion;
+})();
+</script>
+
+<!-- ── the explorer: data + machinery + defs + rails + node-graph + element view ── -->
+<script>
+var DATA = {"skills":{"gabe-artifact":{"name":"gabe-artifact","version":"1.3.0","oneLine":"House chrome, build loop, and render gates for published Artifact pages.","cls":"other","flags":[],"whenToUse":"Any request that ends in a published Artifact, or updating/retrofitting an existing artifact with house chrome.","writes":["artifact HTML page in the session scratchpad (or a project file when asked)","published Artifact via the Artifact tool (same file path = same URL on redeploy)"],"consumes":["assets/artifact-chrome.html (tokens+CSS, cog markup, roster script)","assets/motion-patterns.html + assets/static-patterns.html (pattern libraries)","artifact-design and dataviz skills (loaded before markup/charts)","existing artifact file or URL when retrofitting"],"scripts":["tools/verify-artifact-chrome.mjs \u2014 36-check chrome render gate","tools/verify-motion.mjs \u2014 samples animations, proves movement"],"injects":"none","nextBeat":null,"why":"Every published page wears one learnable chrome, gate-verified rather than eyeballed.","coreLines":140,"refFiles":0,"refLines":0},"gabe-assess":{"name":"gabe-assess","version":"1.3.0","oneLine":"Rapid impact assessment before agreeing to a change; the suite's direction guard.","cls":"satellite","flags":[],"whenToUse":"A new direction mid-development, scope steering, 'this feels obvious' \u2014 or pre-flight before a risky or irreversible change.","writes":[],"consumes":["the proposed change description plus its context","files/configs the change touches (read before classifying blast radius)",".kdbp/STRUCTURE.md (D5 structural fit, when present)","templates/architecture-principles.md (AP1\u2013AP13, advisory)","templates/archetype-map.md (optional posture-mix citation)","references/assess-spec.md (binding spec)"],"scripts":[],"injects":"scripts/hooks/kdbp/direction-guard.sh (UserPromptSubmit, KDBP projects) injects the steer rule into every prompt \u2014 direction-changing prompts run /gabe-assess brief before building","nextBeat":null,"why":"Stops the reflexive yes \u2014 blast radius and tier fit seen before code.","coreLines":53,"refFiles":1,"refLines":286},"gabe-cc-entity":{"name":"gabe-cc-entity","version":"1.0.1","oneLine":"Assembles one entity's code map, registry row, and bindings into a context pack.","cls":"satellite","flags":[],"whenToUse":"Everything about an entity: brief, context pack, related code/endpoints/models, coverage status. Only with a built command center.","writes":[],"consumes":["docs/site/center/archmap.json (committed code map)","docs/site/center/adoption.json (entity registry)","docs/site/center/center.config.json (bindings; also the E6 anchor)","references/entity-spec.md (binding spec)"],"scripts":["scripts/entity-context.py \u2014 deterministic entity-slice reader"],"injects":"none","nextBeat":null,"why":"Entity answers come from committed center data, never re-reading the codebase.","coreLines":42,"refFiles":1,"refLines":115},"gabe-cc-init":{"name":"gabe-cc-init","version":"1.2.4","oneLine":"Adopts a brownfield back-catalog into a command center, one approved section per run.","cls":"other","flags":["disable-model-invocation"],"whenToUse":"An existing codebase needs a Testing Command Center, or /gabe-cc-update stopped you with its bootstrap pointer.","writes":["docs/_archive/<date>-pre-adoption/ (git mv archives plus explanatory README \u2014 never deletes)","docs/site/center/ shell bootstrapped by copy from suite templates/center/","docs/site/center/adoption.json (the adoption tracker + entity registry)","per-section center pages: card, diagrams, testing page, proofs",".kdbp/walks.jsonl (adopt:<entity> approval walk records)"],"consumes":["existing docs and any hand-built center (init inventory)","rank signals: SCOPE, PLAN incl. archives, routes/modules, test density, churn, walks.jsonl","legacy docs mined per section (carried forward only if re-verified)","references/adopt-spec.md (binding spec)"],"scripts":[],"injects":"none","nextBeat":"gabe-cc-update","why":"The back-catalog enters the center re-verified at human speed, never bulk-imported.","coreLines":55,"refFiles":1,"refLines":248},"gabe-cc-update":{"name":"gabe-cc-update","version":"1.6.1","oneLine":"Translates shipped work into entity cards, diagrams, and proof; keeps center green.","cls":"spine","flags":[],"whenToUse":"Cover a shipped feature, center status, backfill, curate proof \u2014 only where docs/site/center/center.config.json exists.","writes":["docs/site/center/center.config.json (entities.<slug> blocks: test_rx, proofs, code globs, models)","docs/site/center/cards/<slug>.md (authored card, # REVIEWED stamp)","regenerated center pages via scripts/refresh_center.sh",".kdbp/PLAN.md Center cell \u2705 + .kdbp/PLAN.json cells.center mirror","docs/site/center/releases/<id>.html (release mode)","proof manifests: narration + role/flows blocks (curate mode)"],"consumes":["docs/site/center/adoption.json (entity registry, owned by /gabe-cc-init)","machine facts: PLAN, junit, run-history, coverage, archmap, git","docs/site/center/center.config.json (scope-gate anchor)","references/feature-spec.md (binding card contract)"],"scripts":["scripts/build_center_a3.py (project binding) \u2014 center generator","scripts/refresh_center.sh (project binding) \u2014 regen chain driver","scripts/check_center_links.py (project binding) \u2014 link/registry gate","scripts/curate_proof.py (project binding) \u2014 proof-shot curation","scripts/next_feature.py (project binding) \u2014 backfill queue","scripts/verify_center_chrome.mjs (project binding) \u2014 shell-JS harness"],"injects":"none","nextBeat":null,"why":"Shipped work becomes explainable evidence; the center never asserts what machines didn't.","coreLines":72,"refFiles":1,"refLines":215},"gabe-commit":{"name":"gabe-commit","version":"2.4.1","oneLine":"Deterministic commit quality gate with interactive triage and ledger recording.","cls":"spine","flags":[],"whenToUse":"Commit, save, checkpoint, ship this work \u2014 any request to record completed work in git in a KDBP project.","writes":["git commit (generated message, model-routed)",".kdbp/LEDGER.md (thin-index row per commit)",".kdbp/PENDING.md (deferred findings, times-deferred bumps)",".kdbp/PLAN.md Commit auto-tick + .kdbp/PLAN.json mirror",".kdbp/archive/evidence-bypass.log (append on stale-evidence WARN)","docs edits + DOCS.md mapping fixes (docs-audit mode)"],"consumes":["staged git diff and git context",".kdbp/PLAN.md / PLAN.json (active phase, proof field)",".kdbp/PENDING.md, .kdbp/RULES.md (deferred items, split seams)","lint/types/tests/coverage command outputs (resolved, never guessed)","references/gate-spec.md + references/simplify-pass.md (binding specs)","RED: trailer carve-out \u2014 red checkpoints expected to fail their declared set (gate-spec L177) [prose]"],"scripts":["scripts/size-budget.sh \u2014 800-line size-budget WARN","scripts/evidence-freshness.sh \u2014 stale-proof WARN, bypass log","scripts/docs-budget.sh \u2014 new-md placement WARN"],"injects":"none","nextBeat":"gabe-push","why":"Nothing lands in git unchecked; every skipped check prints its reason.","coreLines":65,"refFiles":2,"refLines":819},"gabe-docs":{"name":"gabe-docs","version":"1.2.0","oneLine":"Background doc standards, Mermaid diagram library, and the suite execution contract.","cls":"background","flags":["user-invocable:false"],"whenToUse":"Background standards \u2014 doc structure, diagram selection, and the execution contract; consulted by other gabe skills.","writes":[],"consumes":["references/docs-spec.md (binding doc-standards spec)","diagrams-library.md (14 advanced Mermaid patterns)","docs being created/edited by consumer skills"],"scripts":[],"injects":"hosts references/execution-contract.md \u2014 the E1\u2013E7 payload every other gabe skill loads by pointer instead of pasting; also references/evidence-doctrine.md","nextBeat":null,"why":"One binding execution contract and doc standard, stated once, immune to copy drift.","coreLines":48,"refFiles":3,"refLines":535},"gabe-docsite":{"name":"gabe-docsite","version":"1.1.0","oneLine":"Publishes markdown docs onto the project's HTML site with wired nav and diagrams.","cls":"other","flags":[],"whenToUse":"Publish or update a page on the project's HTML docs site.","writes":["docs/docsite.config.py (append-only doc/section entries)","docs/src/<slug>.md (when authoring the source doc)","generated site HTML: docs/site/ (standalone) or docs/site/center/ siblings (center mode)","docs-backlinks.json (center-mode seam file the center build reads)","site assets copied from the skill on every build"],"consumes":["docs/src/*.md (markdown source of truth)","docs/docsite.config.py (sections, metadata, reading order)","docs/site/center/nav.json (center-mode seam, written by the center build)","reference registries: adoption.json, test-matrix C-id anchors, skills on disk, sibling-doc config"],"scripts":["generator/build_docsite.py \u2014 markdown-to-HTML site builder","tools/diagram-compliance.mjs \u2014 file:// diagram render gate","tools/_playwright.mjs \u2014 headless browser helper","tools/icon_factory.py \u2014 PixelLab batch icon generator"],"injects":"none","nextBeat":"gabe-commit","why":"Docs land in the right section, one skin, diagrams proven to render.","coreLines":125,"refFiles":0,"refLines":0},"gabe-execute":{"name":"gabe-execute","version":"2.3.1","oneLine":"Executes the current plan phase task by task with checkpoint commits.","cls":"spine","flags":[],"whenToUse":"Implement the phase, continue the plan, keep going, do task N.","writes":["source code files (the phase's tasks)",".kdbp/PLAN.md Exec cell ticks (\u2b1c\u2192\ud83d\udd04\u2192\u2705) and Tier cell on escalation",".kdbp/PLAN.json mirrors (ticks, proof)",".kdbp/DECISIONS.md (tier-escalation entry under the phase's D-entry)",".kdbp/LEDGER.md (EXEC thin-index rows)","checkpoint git commits \u2014 always via /gabe-commit inline, raw git prohibited"],"consumes":[".kdbp/PLAN.md Current Phase row + Phase Details YAML (tier, overrides, CASES)",".kdbp/BEHAVIOR.md (maturity, execute mode)",".kdbp/PENDING.md (open items on this phase's files)","references/execute-spec.md (binding spec)","Cases: record from /gabe-red \u2014 TASK CONTRACT CASES: line + case-scoped verify (execute-spec L174/L207); completion = declared cases green + guards green [prose]"],"scripts":[],"injects":"none","nextBeat":"gabe-review","why":"The plan gets built under its tier cap, with verified, resumable, checkpointed progress.","coreLines":58,"refFiles":1,"refLines":530},"gabe-handoff":{"name":"gabe-handoff","version":"2.1.0","oneLine":"Paste-able resume prompt plus durable KDBP state sync for session handoff","cls":"spine","flags":[],"whenToUse":"Hand off, wrap up, context heavy or running out \u2014 before ending or switching sessions on ongoing work.","writes":[".kdbp/HANDOFF.md (singleton, overwritten each run)",".kdbp/PLAN.md phase cells (mirrored into .kdbp/PLAN.json)",".kdbp/LEDGER.md (one appended row)",".kdbp/PENDING.md (rows for in-flight/deferred items)"],"consumes":["git branch/log/status/ahead-behind",".kdbp/PLAN.md current phase + Phases table",".kdbp/PENDING.md open items",".kdbp/LEDGER.md latest row",".kdbp/SCOPE.md \u00a7Phases","this session's landed work, decisions, in-flight items"],"scripts":[],"injects":"none","nextBeat":null,"why":"Zero-fidelity-loss resume \u2014 decisions, constraints, and the exact next move survive session death.","coreLines":38,"refFiles":1,"refLines":210},"gabe-health":{"name":"gabe-health","version":"1.2.0","oneLine":"Read-only scanner: codebase fragility, decision debt, and skill-estate sweep","cls":"satellite","flags":["context:fork","agent:Explore"],"whenToUse":"How healthy is the codebase, accumulating mess, before a big refactor/epic, during retros, or at a production push as its scan gate.","writes":[],"consumes":["git log/diff history (churn, coupling, fix-commit clusters)",".kdbp/PLAN.md or .planning plans (scope creep)",".kdbp/PENDING.md + legacy .kdbp/MAINTENANCE.md (deferred lens)","SCOPE/PLAN/DECISIONS + commit history (debt lens)","templates/architecture-principles.md (AP citations)","skill usage counts + inbound references (estate lens)"],"scripts":[],"injects":"none","nextBeat":null,"why":"Structural fragility surfaced before it becomes an incident; reports, never blocks.","coreLines":58,"refFiles":1,"refLines":248},"gabe-help":{"name":"gabe-help","version":"1.2.1","oneLine":"Scans project state and recommends the next Gabe commands","cls":"other","flags":[],"whenToUse":"What can the suite do, which gabe command fits, where do I start; check the tool registry before building anything new.","writes":[],"consumes":[".git/ presence + git status",".kdbp/ state (VALUES, BEHAVIOR maturity, LEDGER, deferred items)","~/.kdbp/VALUES.md","~/.claude/gabe-lens-profile.md",".planning/ (GSD phase state)","references/tool-registry.md (P14 cross-project registry)"],"scripts":[],"injects":"none","nextBeat":null,"why":"The user always knows the right next command from actual project state.","coreLines":113,"refFiles":2,"refLines":176},"gabe-imagine":{"name":"gabe-imagine","version":"1.3.2","oneLine":"Turns a brief context into interactive explanation pages (prisms) via dissect-propose-build","cls":"other","flags":[],"whenToUse":"Explaining anything with interlocking parts \u2014 concept, pipeline, app, use case, phenomenon, code map; also when a concept map left readers lost.","writes":["docs/prisms/<slug>/prism.json + body.html (authored source)","docs/prisms/<index-slug>/dissection.json (multi-page estate queue)","docs/site/center/prism-<slug>.html (built via refresh_suite_center.sh regen)","docs/prisms/_fragments/<slug>.html (embeddable fragments)","references/dissection/assets-inventory.md (records Tier-3 created assets)","published Artifact (--target artifact only)"],"consumes":["the one-line context brief","docs/prisms/*/prism.json + dissection.json (estate census at I0)","references/dissection/* (binding dissection method)","references/disk-target.md (binding disk spec)","assets/patterns/*.html (five grammar pattern pages)"],"scripts":["probe-render.mjs \u2014 headless proves authored script ran","verify-prism.mjs \u2014 prism contract gate","check-prism-fit.mjs \u2014 overflow and legibility gate","build_prisms.py \u2014 places authored floors as pages"],"injects":"none","nextBeat":null,"why":"Explanations that show the cargo moving, not concept maps that hide it.","coreLines":147,"refFiles":9,"refLines":807},"gabe-init":{"name":"gabe-init","version":"2.3.0","oneLine":"One-command KDBP project scaffolding: files, hooks, project-type configuration","cls":"spine","flags":["disable-model-invocation"],"whenToUse":"Set up KDBP, initialize the Gabe stack \u2014 human-initiated only; never auto-invoke.","writes":[".kdbp/ (BEHAVIOR, VALUES, DECISIONS, RULES, PENDING, LEDGER, DOCS, PLAN, STRUCTURE, archive/)","root CLAUDE.md",".gitignore (seeds .kdbp/reviews-archive/, idempotent)","~/.claude/settings.json (installs the 6 KDBP hooks verbatim)","project-type doc stubs (architecture.md, AGENTS_USE.md, SCALING.md, api.md, etc.)"],"consumes":["~/.claude/templates/gabe/ template files","~/.claude/templates/gabe/hooks.json (hook objects, read verbatim)","interview answers (name, domain, maturity, project type, stack)","existing .kdbp/ contents (update-mode diff)"],"scripts":[],"injects":"Installs the 6 KDBP hooks into ~/.claude/settings.json \u2014 incl. the UserPromptSubmit direction-guard (injects gabe-assess's steer rule), SessionStart kdbp-active/plan-awareness, PreToolUse plan-proof-guard, pre-checkpoint, and Stop reminders \u2014 which inject context on later prompts and sessions.","nextBeat":"gabe-plan","why":"A consistent, template-true KDBP scaffold; hooks never composed from memory.","coreLines":36,"refFiles":1,"refLines":367},"gabe-lens":{"name":"gabe-lens","version":"2.4.0","oneLine":"Explains concepts in the user's cognitive style: analogies, maps, handles","cls":"other","flags":[],"whenToUse":"Explain this concept my way, give me a handle / analogy / map for X, annotate this file, calibrate my suit.","writes":["~/.claude/gabe-lens-profile.md (calibrate mode only)","{name}-gabe-lens.md companion file (annotate mode only)"],"consumes":["~/.claude/gabe-lens-profile.md (suit selection)","SUITS.md (the four suit definitions)","references/lens-spec.md (binding block template)","the target concept, question, or file"],"scripts":[],"injects":"none","nextBeat":null,"why":"Complex concepts absorbed and retained in the user's actual thinking format.","coreLines":54,"refFiles":1,"refLines":473},"gabe-meme":{"name":"gabe-meme","version":"1.2.0","oneLine":"Oblique memes rendered via memegen.link, verified PNGs; plus surface-wit text proposals","cls":"other","flags":[],"whenToUse":"Make a meme (or set) for a doc, post, thread, presentation; or sharpen a rendered HTML surface with a witty title/hook/callout.","writes":["<output_dir>/meme.config.json (seeded on first use per project)","<output_dir>/*.png (rendered, Read-verified meme images)"],"consumes":["meme.config.json (tone, output_dir, real_subjects)","the subject file/thread (read in full)","references/meme-craft.md (template catalog, ethics tiers, URL encoding, writing prompt)"],"scripts":[],"injects":"none","nextBeat":null,"why":"Jokes that carry the point, punch up, and render verified \u2014 never shipped unseen.","coreLines":67,"refFiles":1,"refLines":197},"gabe-mockup":{"name":"gabe-mockup","version":"2.1.0","oneLine":"UI lift SOP over a mockup manifest: resolve, inventory, spike, lift, verify","cls":"other","flags":["paths:**/*.stories.tsx","paths:**/design-system/**","paths:**/spikes/**","paths:**/design-lab/**","paths:docs/mockups/**"],"whenToUse":"ANY spike/mockup/screen/UI-component/Storybook/design-ref request in a project with a mockup manifest; never rebuild an existing component.","writes":["spike stories under <spikes_root>","production screens/components in <app_root> or <storybook_root>","<screen_map> reference-doc updates after a lift",".kdbp/BEHAVIOR.md mockup: block (interview when absent)","mode bookkeeping: .kdbp/PLAN.md rows, LEDGER.md, INDEX.md, HANDOFF.json","screenshot/render-gate evidence under <proof_root>"],"consumes":[".kdbp/BEHAVIOR.md mockup: manifest (fallback .kdbp/MOCKUP.md)","<screen_map> canonical screen references","<design_ref> DESIGN.md design grammar","<reuse_roots> component inventory (E4 search)",".kdbp/PLAN.md (legacy M0\u2013M13 phase ladder)"],"scripts":["check-storybook-correspondence.mjs \u2014 story/source taxonomy correspondence check"],"injects":"none","nextBeat":null,"why":"Never rebuild an existing component \u2014 resolve, reuse, lift with verified render evidence.","coreLines":75,"refFiles":5,"refLines":808},"gabe-myopic":{"name":"gabe-myopic","version":"1.2.0","oneLine":"Role-plays short-sighted users to flag foresight traps in multi-step flows","cls":"satellite","flags":["context:fork"],"whenToUse":"Review a UX flow/onboarding/checkout/wizard for whether normal people get confused or trapped; sanity-check specs before shipping multi-step flows.","writes":[],"consumes":["the target: described workflow, spec/PRD, UI code/routes, screenshots, or live app","references/myopic-spec.md (8-question battery, panel mechanics, severity)","method.md / examples.md / reference.md (sibling files, on demand)"],"scripts":[],"injects":"none","nextBeat":null,"why":"Catches designs demanding foresight normal users don't have, before they ship.","coreLines":59,"refFiles":1,"refLines":195},"gabe-next":{"name":"gabe-next","version":"2.4.1","oneLine":"Deterministic router over PLAN state that dispatches the next lifecycle command","cls":"spine","flags":[],"whenToUse":"What's next, where were we, continue the lifecycle.","writes":[".kdbp/PLAN.md (## Current Phase advance + Last Updated only)",".kdbp/PLAN.json (current_phase/last_updated mirror)"],"consumes":[".kdbp/PLAN.json",".kdbp/PLAN.md"],"scripts":["next.mjs \u2014 deterministic routing decision from PLAN.json"],"injects":"none","nextBeat":null,"why":"One next step derived from state, never from memory or LLM judgment.","coreLines":178,"refFiles":0,"refLines":0},"gabe-plan":{"name":"gabe-plan","version":"2.5.3","oneLine":"Creates and manages .kdbp/PLAN.md with per-phase tier decisions","cls":"spine","flags":[],"whenToUse":"Plan, phases, tier decision, break down this goal \u2014 create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md.","writes":[".kdbp/PLAN.md",".kdbp/PLAN.json (machine mirror, same turn)",".kdbp/LEDGER.md (PLAN thin-index row)",".kdbp/DECISIONS.md (tier decision + overrides entry)","docs/gabe/plans/YYYY-MM-DD-<slug>/index.html (optional HTML review artifact)",".kdbp/archive/ (plan archive on complete/defer/cancel/replace)"],"consumes":[".kdbp/BEHAVIOR.md (maturity, domain, tech)","templates/gabe/tier-sections/* (trade-off matrix)",".kdbp/PLAN.md (existing active plan)"],"scripts":["regen-mirror.py \u2014 regenerate PLAN.json from PLAN.md"],"injects":"none","nextBeat":"gabe-execute","why":"Phased plans with explicit tier trade-offs, machine-mirrored for deterministic tooling.","coreLines":60,"refFiles":1,"refLines":851},"gabe-pulse":{"name":"gabe-pulse","version":"1.1.0","oneLine":"Read-only sweep of ten owed-work signals plus satellite-angle triggers","cls":"satellite","flags":["context:fork","agent:Explore"],"whenToUse":"After a long or sprawling stretch: did everything that should have run actually run; reports what is owed plus the clearing command.","writes":[],"consumes":["git state (status --porcelain, log @{u}..HEAD)",".kdbp/PLAN.md + PLAN.json (via gabe-next's next.mjs)",".kdbp/LEDGER.md (via ledger-gap.sh)",".kdbp/PENDING.md",".kdbp/walks.jsonl"],"scripts":["angles.py \u2014 six satellite-angle triggers, one line","ledger-gap.sh \u2014 detect commits missing LEDGER rows"],"injects":"its angles.py PULSE one-line, printed verbatim at the close of every spine beat","nextBeat":null,"why":"Owed work surfaces before it compounds; manual-only skills stop depending on memory.","coreLines":140,"refFiles":1,"refLines":343},"gabe-push":{"name":"gabe-push","version":"2.3.0","oneLine":"Env-aware push, PR, CI watch, and promotion with production gates","cls":"spine","flags":[],"whenToUse":"Push, deploy, promote, ship to staging/production, babysit a pipeline after committing.","writes":["git push to remote (+ PR create/update via gh)",".kdbp/PUSH.md (env config)",".kdbp/DEPLOYMENTS.md (row per run)",".kdbp/LEDGER.md (row)",".kdbp/PLAN.md Push tick + .kdbp/PLAN.json mirror",".kdbp/PENDING.md / .kdbp/DECISIONS.md (operational-decision classifier triage)","local bookkeeping git commit (Step 8.5, never git add -A)","remote branch deletion (opt-in cleanup after successful push)"],"consumes":[".kdbp/PUSH.md","git state + remote branches (drift detection)","gh CLI (auth, PR, CI status)",".kdbp/PLAN.md (final-env tick preconditions)"],"scripts":[],"injects":"none","nextBeat":"gabe-next","why":"Shipping with evidence \u2014 CI green, live smoke probe, safety prompts never default proceed.","coreLines":66,"refFiles":1,"refLines":581},"gabe-red":{"name":"gabe-red","version":"1.5.1","oneLine":"Declares case ids, writes failing tests, proves RED, commits the checkpoint","cls":"spine","flags":[],"whenToUse":"The phase is planned, about to execute; refactors declare GUARDs, genuinely un-testable phases self-skip with an enumerated code.","writes":["test files (failing cases with C-ids in test names + returning stubs)","red checkpoint git commit (via /gabe-commit, RED: trailer + Cases: line)",".kdbp/PLAN.md (Cases: record in Phase Details + Red cell \u2705)",".kdbp/PLAN.json (cells.red + cases mirror, same turn)",".kdbp/guard-proofs.jsonl (prove-guard verdicts, read by the center's guard lens)","PLAN.json phases[].cases record \u2014 guarded by plan-proof-guard: Red \u2705 blocked without it, red@sha must be git-reachable [deterministic]"],"consumes":[".kdbp/PLAN.md phase row (description, tier, proof_type)","existing test corpus (C-id grep, REUSE-first scan)"],"scripts":["prove-guard.py \u2014 mutate line, assert case fails","backfill-sweep.py \u2014 corpus sweep for un-minted cases","case-thread.py \u2014 red\u2192green thread: --assert-red at execute entry, --assert-green prints the green@sha stamp"],"injects":"none","nextBeat":"gabe-execute","why":"A test never observed red is not known to test anything.","coreLines":72,"refFiles":1,"refLines":151},"gabe-review":{"name":"gabe-review","version":"1.10.0","oneLine":"Reviews diffs with risk pricing, confidence score, and interactive triage","cls":"spine","flags":[],"whenToUse":"Review this diff/PR/phase/commit before merging; also 'is this on-scope?', stale verified topics, deferred follow-up.","writes":[".kdbp/REVIEW.md (live review doc, archived on completion)",".kdbp/PENDING.md (deferred items + classifier defers)",".kdbp/LEDGER.md (one row every run, any verdict)",".kdbp/PLAN.md Review tick + .kdbp/PLAN.json mirror (on pass, not MISALIGNED)",".kdbp/DECISIONS.md (accepted decision candidates, tier escalations)","source files (triage fix-now edits)","PLAN phases[].review record \u2014 <VERDICT>@<sha> findings:<n> triaged:<n> (guard blocks present-but-false, warns absent)"],"consumes":["git diff / KDBP-resolved phase scope",".kdbp/PLAN.md + .kdbp/PLAN.json (alignment, tier, proof)",".kdbp/LEDGER.md (scope + prior CONCERNs)",".kdbp/PENDING.md (deferred backlog)",".kdbp/BEHAVIOR.md (maturity)","case estate from /gabe-red \u2014 NEW CASE / CASE BUMP / CASE DRIFT subjects, reserved C[next] ids (review-spec L170-209) [prose]"],"scripts":[],"injects":"none","nextBeat":"gabe-commit","why":"Every finding priced \u2014 cost to fix now vs the bet of deferring.","coreLines":69,"refFiles":2,"refLines":1232},"gabe-roast":{"name":"gabe-roast","version":"1.1.0","oneLine":"Adversarial gap hunt from a named perspective, evidence-gated findings","cls":"satellite","flags":["context:fork","agent:Explore"],"whenToUse":"Roast this, find what's missing in a plan/spec/diff/implementation before shipping.","writes":[],"consumes":["target (file, folder, plan, architecture, or conversation)","templates/archetype-map.md (canonical archetype perspectives)",".kdbp/VALUES.md or ~/.kdbp/VALUES.md (pre-roast /gabe-assess gate)"],"scripts":[],"injects":"none","nextBeat":null,"why":"Gaps found before shipping, by an attacker whose job depends on it.","coreLines":45,"refFiles":1,"refLines":318},"gabe-scope":{"name":"gabe-scope","version":"2.1.1","oneLine":"Checkpoint-gated authoring of SCOPE.md premise plus phase arc for new projects","cls":"spine","flags":[],"whenToUse":"Scope a new project from an idea. For changing an existing scope use /gabe-scope-change.","writes":[".kdbp/SCOPE.md (premise + ## Phases arc, frozen once finalized)",".kdbp/scope-session.json (atomic per sub-step; tombstoned to .kdbp/archive/tombstones/ on finalize)",".kdbp/scope-references.yaml",".kdbp/research/ (agent outputs + SUMMARY.md; archived to .kdbp/research/archive/{timestamp}/)","KNOWLEDGE.md (Root artifacts pointer to SCOPE.md)"],"consumes":["user interview answers (Step 1 intake + checkpoints)","existing docs/rules (Step 0.5 Reference Frame scan)","~/.claude/prompts/gabe-scope/ prompt library"],"scripts":[],"injects":"none","nextBeat":"gabe-plan","why":"A stable premise every phase traces to, approved checkpoint by checkpoint.","coreLines":43,"refFiles":1,"refLines":526},"gabe-scope-change":{"name":"gabe-scope-change","version":"2.2.0","oneLine":"Classifies scope changes; executes additions inline, routes pivots out","cls":"other","flags":[],"whenToUse":"The scope needs to change \u2014 add, drop, or switch direction on an existing SCOPE.md. Entry point for all scope evolution.","writes":[".kdbp/CHANGES.jsonl (scope_change_classified + scope_addition events)",".kdbp/SCOPE.md (Addition path appends: REQ/SC/phase/non-goal/constraint + \u00a715 Change Log row)",".kdbp/scope-references.yaml (contextual/suggestive ref appends)"],"consumes":[".kdbp/SCOPE.md (incl. ## Phases)",".kdbp/scope-references.yaml","~/.claude/prompts/gabe-scope/scope-change-classifier.md (9 pivot triggers)"],"scripts":[],"injects":"none","nextBeat":"gabe-scope-pivot","why":"A pivot misfiled as an addition corrupts scope version history.","coreLines":119,"refFiles":0,"refLines":0},"gabe-scope-pivot":{"name":"gabe-scope-pivot","version":"2.1.0","oneLine":"Archives SCOPE vN, re-derives v(N+1) from the changed premise","cls":"other","flags":["disable-model-invocation"],"whenToUse":"Destructive \u2014 only via /gabe-scope-change routing or an explicit human request.","writes":[".kdbp/archive/vN/ (SCOPE.md, scope-references.yaml, legacy ROADMAP.md, research/)",".kdbp/SCOPE.md v{N+1} (scope_version bump, phases_version reset, pivot Change Log row)",".kdbp/scope-references.yaml (new version)",".kdbp/scope-session.json (fresh session; tombstoned on finalize)",".kdbp/CHANGES.jsonl (scope_pivot event)"],"consumes":[".kdbp/SCOPE.md vN + scope-references.yaml (prior state)","archived vN intake + research (seeded priors, optional reuse)","classifier rationale + trigger rule from /gabe-scope-change"],"scripts":[],"injects":"none","nextBeat":"gabe-plan","why":"Direction changes are typed-confirmed and archived \u2014 old scope never silently deleted.","coreLines":139,"refFiles":0,"refLines":0}},"rails":{"router":["gabe-next"],"spine":["gabe-scope","gabe-plan","gabe-red","gabe-execute","gabe-mockup","gabe-review","gabe-commit","gabe-push","gabe-cc-update"],"satellites":["gabe-assess","gabe-pulse","gabe-roast","gabe-health","gabe-myopic","gabe-cc-entity","gabe-docsite","gabe-imagine"],"other":["gabe-init","gabe-cc-init","gabe-scope-change","gabe-scope-pivot","gabe-handoff","gabe-help","gabe-lens","gabe-meme","gabe-artifact","gabe-docs"]},"spineMeta":{"gabe-scope":{"name":"gabe-scope","order":1,"beat":"Scope","optional":false,"gate":"approved SCOPE.md \u2014 stable premise + phase arc (precedes router)"},"gabe-plan":{"name":"gabe-plan","order":2,"beat":"Plan","optional":false,"gate":"active PLAN.md/json: phases, tier calls, declared proof types"},"gabe-red":{"name":"gabe-red","order":3,"beat":"Red (failing cases)","optional":true,"gate":"declared cases fail by assertion; red checkpoint committed (Red \u2705)"},"gabe-execute":{"name":"gabe-execute","order":4,"beat":"Execute","optional":false,"gate":"red set turned green under tier cap; Exec \u2705"},"gabe-mockup":{"name":"gabe-mockup","order":4,"beat":"Execute \u2014 mockup alt","optional":true,"gate":"mockup-tagged phase lifted per manifest; Exec \u2705"},"gabe-review":{"name":"gabe-review","order":5,"beat":"Review","optional":false,"gate":"findings priced and triaged; Review \u2705"},"gabe-commit":{"name":"gabe-commit","order":6,"beat":"Commit","optional":false,"gate":"deterministic gates pass, LEDGER row written; Commit \u2705"},"gabe-push":{"name":"gabe-push","order":7,"beat":"Push","optional":false,"gate":"pushed, CI green, deploy verified; Push \u2705"},"gabe-cc-update":{"name":"gabe-cc-update","order":8,"beat":"Center coverage","optional":true,"gate":"shipped phase covered; REVIEWED stamp flips Center \u2705"}},"satMeta":{"gabe-roast":{"name":"gabe-roast","trigger":"before shipping a plan/spec/design; ANGLE fires at 3+ done phases without an adversarial pass","angle":"S1 adversarial: \u22653 phases done and no roast/adversarial commit since plan start"},"gabe-health":{"name":"gabe-health","trigger":"before an epic/refactor, retros, production-push gate; ANGLE fires at 25+ commits since a scan","angle":"S2 structural: \u226525 commits since the last structural-scan commit"},"gabe-myopic":{"name":"gabe-myopic","trigger":"before shipping multi-step flows; ANGLE fires when reviewed journey/visual phases carry no proof","angle":"S3 journey proof: reviewed phase with proof_type journey/visual and no proof"},"gabe-docsite":{"name":"gabe-docsite","trigger":"when published doc pages fall behind their source markdown","angle":"S4 published docs: docsite-staleness checker finds pages older than their source markdown"},"gabe-cc-entity":{"name":"gabe-cc-entity","trigger":"when a diff concentrates in one entity \u2014 load its context pack","angle":"S6 entity context: \u22653 changed files belong to one entity's code map"},"gabe-imagine":{"name":"gabe-imagine","trigger":"when a change deserves a drawn explanation \u2014 diff spans multiple layers and files","angle":"S7 explanation: diff spans \u22652 layers across \u22653 changed files"},"gabe-assess":{"name":"gabe-assess","trigger":"a mid-task direction change or 'obvious' fix; direction-guard hook injects it on steer prompts","angle":""},"gabe-pulse":{"name":"gabe-pulse","trigger":"after a long or sprawling stretch, before stopping: is anything important owed anywhere?","angle":""}},"loopNote":"gabe-next reads PLAN cells via next.mjs: resume Exec \ud83d\udd04, else Red\u2192Exec\u2192Review\u2192Commit\u2192Push\u2192Center, first \u2b1c wins; missing Red/Center columns skip; prior-phase debt printed never blocking; advances over settled phases to /gabe-plan complete. Scope/plan precede routing.","anglesNote":"S5 \u00b7 scope drift \u2014 declared UNAVAILABLE by angles.py itself: PLAN.json has no per-phase scope/files field; a proxy would guess. Unlock: a scope: field written at plan time.","hooks":[{"name":"kdbp/pre-checkpoint.sh","event":"PreToolUse","matcher":"Bash","scope":"machine","family":"gabe-suite","does":"In KDBP repos, warns on raw git commit; checks C-id presence and corpus hits","injects":"'[WARN] KDBP CHECKPOINT: Use /gabe-commit' plus C-ID warn lines (stdout)","battery":"tests/hooks/run.sh \u2014 commit-warn FIRE/silent incl. quoting edge cases, C-id and declared-case warn FIRE/silent"},{"name":"kdbp/session-kdbp-active.sh","event":"SessionStart","matcher":"*","scope":"machine","family":"gabe-suite","does":"Announces KDBP project name/maturity/tech when .kdbp/BEHAVIOR.md exists","injects":"'[INFO] KDBP Active \u2014 <name> (<maturity>) [<tech>]' into session context","battery":"tests/hooks/run.sh \u2014 announces in fixture repo; fully silent in non-KDBP dir"},{"name":"kdbp/session-plan-awareness.sh","event":"SessionStart","matcher":"*","scope":"machine","family":"gabe-suite","does":"Summarizes current PLAN.json phase and cell trail at session start","injects":"'[INFO] ACTIVE PLAN: Phase N \u2014 <name> (exec/review/commit/push trail)' or none-line","battery":"tests/hooks/run.sh \u2014 active-phase FIRE, archived none-case, PLAN.md fallback, non-KDBP silent"},{"name":"kdbp/post-structure-warning.sh","event":"PostToolUse","matcher":"Write","scope":"machine","family":"gabe-suite","does":"On Write in KDBP repos, flags new files for STRUCTURE.md placement verification","injects":"'[INFO] STRUCTURE: new file <rel_path> \u2014 verify placement matches .kdbp/STRUCTURE.md' (stdout)","battery":"tests/hooks/run.sh \u2014 stray Write warns; .kdbp write and non-Write tool stay silent"},{"name":"kdbp/plan-proof-guard.sh","event":"PostToolUse","matcher":"Write|Edit|MultiEdit","scope":"machine","family":"gabe-suite","does":"BLOCKS lies on PLAN writes: Red \u2705 sans record/sha, Review \u2705 sans green@ or sans valid review record; WARNs debts","injects":"on violation only: stderr '\u26d4 PLAN-PROOF-GUARD blocked this PLAN write' + fix instructions, fed back to model","battery":"tests/hooks/run.sh \u2014 13 FIRE/pass cases: shorthand proofs pass, empty/missing/bare-glob evidence blocks, red-sha honesty, garbage-stdin silent"},{"name":"kdbp/stop-session-reminder.sh","event":"Stop","matcher":"*","scope":"machine","family":"gabe-suite","does":"Prints one /gabe-commit routing line when KDBP tree dirty, no session commit","injects":"'next: /gabe-commit (N tracked file(s) dirty, no commit this session)' \u2014 single deterministic line","battery":"tests/hooks/run.sh \u2014 dirty+old-HEAD FIRES; commit-in-transcript, clean tree, untracked-only all silent"},{"name":"kdbp/direction-guard.sh","event":"UserPromptSubmit","matcher":"*","scope":"machine","family":"gabe-suite","does":"Injects steer rule in KDBP projects only; silent here (repo carries no .kdbp)","injects":"'DIRECTION GUARD (kdbp): \u2026run /gabe-assess brief BEFORE building' steer rule into every prompt, KDBP projects only","battery":"tests/hooks/run.sh \u2014 FIRES with .kdbp present, stays silent without"},{"name":"register-core cat","event":"UserPromptSubmit","matcher":"*","scope":"project","family":"register","does":"cats .claude/register-core.md into every prompt \u2014 the 4-rule movement-register payload","injects":"GABE REGISTER 4 rules: movement chains, position-check on new directions, DECISION blocks, actor-chain explanation format","battery":"tests/register/run.sh \u2014 13 invariants pinned, canary FIRES on mutated copy, silent when intact, 14-line cost cap"},{"name":"register-core cat (compact)","event":"SessionStart","matcher":"compact","scope":"project","family":"register","does":"Re-injects register-core.md after compaction so the register survives summarization","injects":"same 4-rule GABE REGISTER payload, restored into post-compaction context","battery":"tests/register/run.sh \u2014 same invariant canary + settings-reference check"},{"name":"kdbp/red-entry-guard.sh","event":"PreToolUse","matcher":"Write|Edit|MultiEdit","scope":"machine","family":"gabe-suite","does":"WARNs on source writes while the phase Red cell is \u2b1c (D7 debt)","injects":"one [WARN] RED-ENTRY line on stdout when firing","battery":"tests/hooks/run.sh (8 red-entry cases)"}],"hookCounts":{"machine":8,"project":2,"suite":8,"register":2,"ecc":0},"ledger":{"session":[{"src":"~/.claude/rules/README.md + rules/common/ (9 files)","words":2467,"cat":"generic","note":"generic conventions \u2014 the paper-null category (move \u21162)"},{"src":"~/.claude/CLAUDE.md (global)","words":196,"cat":"operational","note":"no-/schedule rule"},{"src":"CLAUDE.md (this project)","words":2075,"cat":"operational","note":"suite structure, conventions, capability table"},{"src":"memory/MEMORY.md (auto-memory index)","words":790,"cat":"operational","note":"cross-session state"},{"src":".claude/output-styles/gabe.md (register)","words":821,"cat":"style","note":"the Gabe register, system prompt"}],"perPrompt":[{"src":".claude/register-core.md \u2014 UserPromptSubmit + post-compact hook","words":154,"note":"4-rule payload, EVERY prompt"},{"src":"kdbp/direction-guard.sh \u2014 UserPromptSubmit (machine-wide)","words":0,"note":"steer rule in KDBP projects; silent here (no .kdbp)"}]}};
+var MACHINERY = {"gabe-next":{"hooks":[],"contracts":[]},"gabe-plan":{"hooks":["plan-proof-guard.sh","session-plan-awareness.sh"],"contracts":["PLAN.md \u2194 PLAN.json mirror"]},"gabe-red":{"hooks":["plan-proof-guard.sh"],"contracts":["C-id identity scheme","red\u2192green thread (green@sha stamp)"]},"gabe-execute":{"hooks":["plan-proof-guard.sh","red-entry-guard.sh"],"contracts":["TASK CONTRACT with CASES"]},"gabe-review":{"hooks":[],"contracts":["review record (phases[].review)"]},"gabe-commit":{"hooks":["pre-checkpoint.sh"],"contracts":["LEDGER row discipline"]},"gabe-push":{"hooks":[],"contracts":["PUSH.md env contract"]},"gabe-cc-update":{"hooks":[],"contracts":["center.config.json gate"]},"gabe-scope":{"hooks":[],"contracts":["scope-session.schema.json","scope-references.schema.json"]},"gabe-scope-change":{"hooks":[],"contracts":["CHANGES.jsonl"]},"gabe-scope-pivot":{"hooks":[],"contracts":["CHANGES.jsonl","archive discipline"]},"gabe-assess":{"hooks":["direction-guard.sh"],"contracts":[]},"gabe-roast":{"hooks":[],"contracts":[]},"gabe-myopic":{"hooks":[],"contracts":[]},"gabe-pulse":{"hooks":[],"contracts":[]},"gabe-health":{"hooks":[],"contracts":[]},"gabe-cc-init":{"hooks":[],"contracts":["center.config.json gate","walks.jsonl"]},"gabe-cc-entity":{"hooks":[],"contracts":["center.config.json gate"]},"gabe-docs":{"hooks":[],"contracts":["E1\u2013E7 execution contract"]},"gabe-docsite":{"hooks":[],"contracts":[]},"gabe-init":{"hooks":["session-kdbp-active.sh","post-structure-warning.sh"],"contracts":[".kdbp/ structure"]},"gabe-help":{"hooks":[],"contracts":[]},"gabe-handoff":{"hooks":["stop-session-reminder.sh"],"contracts":[]},"gabe-lens":{"hooks":[],"contracts":["gabe-lens-profile.md"]},"gabe-mockup":{"hooks":[],"contracts":["mockup manifest"]},"gabe-meme":{"hooks":[],"contracts":["verified-PNG contract"]},"gabe-artifact":{"hooks":[],"contracts":["artifact chrome kit + pattern libraries"]},"gabe-imagine":{"hooks":[],"contracts":[]}};
+var MINFO = {"next.mjs":{"loc":"skills/gabe-next/scripts/","note":"the router itself","body":"Deterministic, zero-token routing decision over .kdbp/PLAN.json (prose PLAN.md fallback). READ-ONLY: prints the decision; any Current-Phase advance is written by the caller \u2014 PLAN.md and PLAN.json in the same turn."},"regen-mirror.py":{"loc":"skills/gabe-plan/scripts/","note":"rebuilds the machine mirror","body":"Regenerates .kdbp/PLAN.json from .kdbp/PLAN.md (plan-spec Step 4b), keeping the machine mirror in sync so the router and hooks read structured state instead of prose."},"plan-proof-guard.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 PostToolUse Write|Edit","note":"the one hook that BLOCKS","body":"D7 \u201cblock lies, warn debts\u201d: fires after any Write/Edit of .kdbp/PLAN.json or PLAN.md and validates the WHOLE plan state \u2014 a \u2705 cell whose evidence does not exist (a Red \u2705 without a reachable red@<sha> and non-empty cases) is BLOCKED at every tier. Debts are never its business. Live machine-wide."},"session-plan-awareness.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 SessionStart","note":"plan status banner","body":"Shows current plan status at session start from PLAN.json (fallback PLAN.md) \u2014 where the loop stands before any command runs."},"PLAN.md \u2194 PLAN.json mirror":{"loc":"\u200b.kdbp/","note":"one state, two readers","body":"Human plan and machine mirror hold the same state; regen-mirror.py rebuilds; writes land the same turn (E5)."},"prove-guard.py":{"loc":"skills/gabe-red/scripts/","note":"proves a guard can FAIL","body":"Proves a guard test can actually fail \u2014 by making it fail: mutate the target, assert the guard goes red, restore. Feeds the center's named-vs-guarded distinction. Known sharp edge (backlog): --run must be narrowed to ONE case, or an unrelated failure reads as proof."},"backfill-sweep.py":{"loc":"skills/gabe-red/scripts/","note":"retro C-id minting","body":"C-id backfill sweep (red-spec \u00a7Backfill, D5, rulings R2/R3): sweeps an existing test corpus and mints or attaches C-ids retroactively, so pre-suite tests join the registry."},"C-id identity scheme":{"loc":"gabe-red references/red-spec.md","note":"test-case identity","body":"Every declared case carries C[N] in the test name; the corpus IS the registry; ids REUSEd or minted NEW, never reissued. Named \u2260 guarded until prove-guard shows failure."},"TASK CONTRACT with CASES":{"loc":"gabe-execute spec","note":"red follows into execution","body":"Carries the phase's C-ids plus case-scoped verify \u2014 implementation is bound to the failing cases that justified it. Its REUSE verdict line is watched contract #10."},"size-budget.sh":{"loc":"skills/gabe-commit/scripts/","note":"the 800-line reporter","body":"Deterministic gabe-commit gate check: WARNs when a touched first-party file is, or newly crosses, >800 lines. Generated files excluded. Report-never-gate by ruling R9 \u2014 it states numbers, it never blocks."},"docs-budget.sh":{"loc":"skills/gabe-commit/scripts/","note":"documentation diet","body":"Deterministic WARN check (documentation diet 0.5b): markdown is the agent-facing record \u2014 few files, living, augmented in place \u2014 so a NEW .md file gets challenged rather than silently accumulated."},"evidence-freshness.sh":{"loc":"skills/gabe-commit/scripts/","note":"stale-proof detector","body":"Deterministic WARN-and-LOG check (Evidence Doctrine \u00a74, stage 1): when the current phase carries a non-null proof in PLAN.json, the newest proof artifact must be fresher than the code it claims to prove."},"pre-checkpoint.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 PreToolUse Bash","note":"commit-time WARNs","body":"Detects git commit in a Bash call: reminds /gabe-commit over raw git; D7 deterministic WARNS \u2014 never blocks \u2014 e.g. a STAGED NEW test file with no C[N] marker."},"LEDGER row discipline":{"loc":"\u200b.kdbp/LEDGER.md","note":"commits leave a row","body":"Every /gabe-commit writes its row (the full five-gate tail is watched contract #12 since c6191e9); ledger-gap.sh audits against it."},"PUSH.md env contract":{"loc":"\u200b.kdbp/","note":"where shipping is configured","body":"Env-aware shipping contract (production/staging/custom; first run interviews). The push rework lands its gates here \u2014 staging = keep moving, production/epic = health three-lens scan."},"center.config.json gate":{"loc":"docs/site/center/","note":"the center's presence test","body":"The command center's existence gate: gabe-cc-update and gabe-cc-entity STOP without it \u2192 /gabe-cc-init."},"validate.py":{"loc":"schemas/","note":"scope schema validator","body":"Validates a /gabe-scope session's state files against the two JSON Schemas (scope-session, scope-references). Battery: tests/scope-schema."},"scope-session.schema.json":{"loc":"schemas/","note":"pause/resume state shape","body":"JSON Schema \u201cScopeSession\u201d: in-flight /gabe-scope state, persisted across pause/resume. Machine-validated by validate.py."},"scope-references.schema.json":{"loc":"schemas/","note":"the reasoning frame","body":"JSON Schema \u201cScopeReferences\u201d: the Reference Frame declared at Step 0.5 \u2014 every reasoning call receives a framing block built from it."},"CHANGES.jsonl":{"loc":"\u200b.kdbp/","note":"scope audit log","body":"The scope family's audit log: tombstones + routing rows. Trim-ledger row 4 verified it live: kept, owned."},"archive discipline":{"loc":"skills/_archive/","note":"decommissioned, never deleted","body":"Skills exit via skills/_archive/ (outside the install glob, one git mv back); scope pivots archive SCOPE.md before re-deriving. Four exits landed in 5608b2a."},"direction-guard.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 UserPromptSubmit","note":"the steer rule, injected","body":"Fires ONLY when .kdbp/ exists: injects the direction-guard rule into every prompt \u2014 a prompt that steers the work (new target, scope expansion, tier jump) runs /gabe-assess brief BEFORE building; contained asks proceed without ceremony. Semantic-only by operator ruling; 7th marker in templates/hooks.json; battery-proven FIRE/SILENT (tests/hooks 49/49)."},"ledger-gap.sh":{"loc":"skills/gabe-pulse/scripts/","note":"finds escaped work","body":"Which commits landed WITHOUT a LEDGER row \u2014 subtracts the LEDGER's Commits column from git log, filtering bookkeeping-only commits. Blind to uncommitted work by design (backlog B7)."},"walks.jsonl":{"loc":"\u200b.kdbp/","note":"the human-verification record","body":"Append-only who\u00b7when\u00b7result\u00b7evidence\u00b7note; the center renders NEVER-walked red. The gabe-walk skill is ARCHIVED (5608b2a) \u2014 the record survives: /gabe-cc-init appends approvals directly, pulse P9 still counts."},"entity-context.py":{"loc":"skills/gabe-cc-entity/scripts/","note":"entity slice reader","body":"Assembles ONE entity's slice \u2014 code map, registry, bindings \u2014 by joining archmap.json + adoption.json + center.config.json on slug. Brief, --json, or list mode. Reads committed center data; never re-reads the codebase."},"E1\u2013E7 execution contract":{"loc":"gabe-docs/references/execution-contract.md","note":"the crucial-steps floors","body":"Seven floors every skill carries by pointer: evidence \u00b7 run-before-\u2705 \u00b7 no silent downgrade \u00b7 reuse first \u00b7 state sync \u00b7 missing anchor = STOP \u00b7 report where. Prose convention \u2014 its five costliest cells now have watched killer-report forms (c6191e9); the rest stays prose by the zero-overhead ruling."},"docsite build pipeline (9 scripts)":{"loc":"skills/gabe-docsite/","note":"a build system in a skill","body":"build_docsite.py + _markdown.py + _shell.py render markdown into the Cifra-styled HTML shell; diagram-compliance.mjs gates Mermaid; _playwright.mjs takes verification shots. Markdown stays the source of truth. This pipeline IS the 5,511-line surface; its future is the center integration."},"session-kdbp-active.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 SessionStart","note":"KDBP presence banner","body":"Shows KDBP status at session start when .kdbp/ exists \u2014 the session knows it is governed before the first prompt."},"post-structure-warning.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 PostToolUse Write","note":"structure drift WARN","body":"Warns when a new file lands outside the allowed patterns in .kdbp/STRUCTURE.md \u2014 drift surfaces at write time, never blocks."},".kdbp/ structure":{"loc":"\u200b.kdbp/STRUCTURE.md","note":"allowed shapes","body":"STRUCTURE.md declares allowed patterns; post-structure-warning.sh warns on writes outside them."},"gen-help-catalog.py":{"loc":"scripts/ (install-time)","note":"catalog generator","body":"Regenerates gabe-help's Full Suite Catalog from live skills/gabe-*/ frontmatter at every install \u2014 killed the hand-kept-catalog drift class (trim-ledger row 2)."},"stop-session-reminder.sh":{"loc":"scripts/hooks/kdbp/ \u00b7 Stop","note":"the exit nudge","body":"Fires ONLY when: KDBP project AND dirty tree AND no commit this session \u2014 then prints one deterministic next-step line."},"gabe-lens-profile.md":{"loc":"~/.claude/","note":"the cognitive suit","body":"The chosen cognitive suit for /gabe-lens; default (Spatial-Analogical) when absent."},"check-storybook-correspondence.mjs":{"loc":"skills/gabe-mockup/scripts/","note":"manifest \u2194 stories gate","body":"Verifies correspondence between the per-project mockup manifest and actual Storybook stories \u2014 which screens claim a story vs which stories exist."},"mockup manifest":{"loc":"per-project","note":"the screen inventory","body":"Per-project inventory the lift SOP resolves against \u2014 the structural backing for never-rebuild-existing."},"verified-PNG contract":{"loc":"gabe-meme spec","note":"render must round-trip","body":"A meme ships only after the memegen.link render round-trips to a real PNG."},"verify-artifact-chrome.mjs \u00b7 verify-motion.mjs":{"loc":"skills/gabe-artifact/tools/","note":"chrome render gates","body":"Playwright-driven verification of the artifact house chrome and motion patterns \u2014 the render gate in gabe-artifact's build loop. Battery: tests/artifact-chrome/."},"artifact chrome kit + pattern libraries":{"loc":"skills/gabe-artifact/assets/","note":"the house look, gated","body":"artifact-chrome.html + motion-patterns.html + static-patterns.html \u2014 the fixed chrome (left-anchored content, cog panel, font roster) and two gated pattern libraries every published Artifact draws from."}};
+
+(function () {
+  "use strict";
+  var sel = "gabe-next";
+  var tab = "sats";
+
+  /* invocation wiring — the Skill Map vocabulary (hook > router > paths > human > bg > manual) */
+  var REACHED = {
+    hook: ["gabe-assess", "gabe-commit", "gabe-plan", "gabe-red"],
+    router: ["gabe-next", "gabe-cc-update", "gabe-commit", "gabe-execute", "gabe-mockup", "gabe-plan", "gabe-push", "gabe-red", "gabe-review"],
+    paths: ["gabe-mockup"],
+    human: ["gabe-cc-init", "gabe-init", "gabe-scope-pivot"],
+    bg: ["gabe-docs"]
+  };
+  var INV = [
+    { k: "hook",   g: "⛓", label: "hook-fired",  cls: "i-hook" },
+    { k: "router", g: "⟳", label: "router",      cls: "i-router" },
+    { k: "paths",  g: "◎", label: "path-offered", cls: "i-paths" },
+    { k: "human",  g: "✋", label: "human-only",  cls: "i-human" },
+    { k: "bg",     g: "▽", label: "background",  cls: "i-bg" }
+  ];
+  var CORE_MAX = 178, REF_MAX = 1232;
+
+  var spineHost = document.getElementById("spine-list");
+  var satHost = document.getElementById("sat-list");
+  var otherHost = document.getElementById("other-list");
+  var detailHost = document.getElementById("detail");
+
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  }
+  function short(name) { return name.replace(/^gabe-/, ""); }
+  function on() { return !(window.MOTION && MOTION.on === false); }
+
+  function reachedOf(name) {
+    return INV.filter(function (i) { return REACHED[i.k].indexOf(name) >= 0; });
+  }
+  function glyphOf(name) {
+    var r = reachedOf(name);
+    return r.length ? r[0].g : "☝";
+  }
+
+  /* per-kind node census — counts exactly the nodes the diagram will draw:
+     ▢ commands (center + next) · ⌸ stores · ⛓ injects · ⎘ files · ‖ scripts */
+  function kindCounts(name) {
+    var s = DATA.skills[name];
+    var c = {
+      cmd: 1 + (s.nextBeat ? 1 : 0),
+      store: 0,
+      inj: (s.injects || "none").trim().toLowerCase() !== "none" ? 1 : 0,
+      file: 0,
+      script: (s.scripts || []).length
+    };
+    (s.consumes || []).concat(s.writes || []).forEach(function (x) {
+      if (kindOf(x) === "store") c.store++; else c.file++;
+    });
+    return c;
+  }
+  function countsHtml(name) {
+    var c = kindCounts(name);
+    function u(n, col, lbl) {
+      return '<span class="kc' + (n ? "" : " z") + '" style="--kc:' + col + '" title="' + n + " " + lbl + '">' + n + "</span>";
+    }
+    return '<span class="kcs">' +
+      u(c.cmd, "var(--accent)", "command(s)") +
+      u(c.store, "var(--s4)", "state/store(s)") +
+      u(c.inj, "var(--viol)", "injection(s)") +
+      u(c.file, "var(--s3)", "file(s)") +
+      u(c.script, "var(--s1)", "script(s)") +
+      "</span>";
+  }
+
+  /* drawer machinery — the Skill Map's missing axes: ⛓ hooks · ▤ schemas/contracts */
+  function machineryHtml(name) {
+    var m = MACHINERY[name] || {};
+    var parts = [];
+    if ((m.hooks || []).length) parts.push('<span class="nmach" style="--mc:var(--s2)">⛓ ' + esc(m.hooks.join(" · ")) + "</span>");
+    if ((m.contracts || []).length) parts.push('<span class="nmach" style="--mc:var(--pink)">▤ ' + esc(m.contracts.join(" · ")) + "</span>");
+    if (!parts.length && !(DATA.skills[name].scripts || []).length) parts.push('<span class="nmach dashed">no machinery — prose spec only</span>');
+    return parts.join("");
+  }
+
+  function nodeHtml(name, opts) {
+    var o = opts || {};
+    var cls = "node" + (o.opt ? " opt" : "") + (o.router ? " router-node" : "");
+    return '<button type="button" class="' + cls + '" data-skill="' + name + '" aria-pressed="' + String(name === sel) + '">' +
+      '<span class="nrow"><span class="glyph">' + glyphOf(name) + "</span>" +
+      '<span class="nname">/' + esc(short(name)) + "</span>" +
+      (o.angleId ? '<span class="angle-id">' + esc(o.angleId) + "</span>" : "") +
+      countsHtml(name) +
+      '<span class="nbadge">' + esc(o.badge || "") + "</span></span>" +
+      '<span class="nx">' + (o.hint ? '<span class="nhint">' + esc(o.hint) + "</span>" : "") + machineryHtml(name) + "</span>" +
+      "</button>";
+  }
+
+  /* build() restarts from zero AND reads MOTION.on — settled renders the
+     finished state (dots at rest, ping off), never a blank frame. */
+  function buildSpine() {
+    var html = nodeHtml("gabe-next", { router: true, badge: "router", hint: "zero-logic: reads PLAN state, dispatches the next beat" });
+    var i = 0;
+    DATA.rails.spine.forEach(function (name) {
+      var meta = DATA.spineMeta[name] || {};
+      html += '<div class="conn"><span class="conn-dot" style="--d:' + (i * 0.22) + 's"></span></div>';
+      html += nodeHtml(name, {
+        opt: !!meta.optional,
+        badge: String(meta.order != null ? meta.order : "·") + (meta.optional ? " · opt" : ""),
+        hint: meta.gate || ""
+      });
+      i++;
+    });
+    spineHost.innerHTML = html;
+    spineHost.setAttribute("data-settled", on() ? "0" : "1");
+    wire(spineHost);
+  }
+
+  function buildSats() {
+    var html = "";
+    DATA.rails.satellites.forEach(function (name) {
+      var meta = DATA.satMeta[name] || {};
+      var angleId = (meta.angle || "").match(/^S\d/) ? meta.angle.slice(0, 2) : "";
+      html += nodeHtml(name, { angleId: angleId, hint: meta.trigger || DATA.skills[name].whenToUse });
+    });
+    satHost.innerHTML = html;
+    document.getElementById("angles-note").textContent = DATA.anglesNote;
+    wire(satHost);
+  }
+
+  function buildOther() {
+    var html = "";
+    DATA.rails.other.forEach(function (name) {
+      var s = DATA.skills[name];
+      html += nodeHtml(name, { badge: "v" + (s.version || "?"), hint: s.oneLine });
+    });
+    otherHost.innerHTML = html;
+    otherHost.className = "other-grid";
+    wire(otherHost);
+  }
+
+  function setTab(which) {
+    tab = which;
+    document.getElementById("tab-sats").setAttribute("aria-selected", String(which === "sats"));
+    document.getElementById("tab-other").setAttribute("aria-selected", String(which === "other"));
+    document.getElementById("pane-sats").hidden = which !== "sats";
+    document.getElementById("pane-other").hidden = which !== "other";
+  }
+
+  function wire(host) {
+    host.querySelectorAll(".node,.pos-cell").forEach(function (n) {
+      n.addEventListener("click", function () { select(n.getAttribute("data-skill")); });
+    });
+  }
+
+  function railOf(name) {
+    if (DATA.rails.router.indexOf(name) >= 0) return "router";
+    if (DATA.rails.spine.indexOf(name) >= 0) return "spine";
+    if (DATA.rails.satellites.indexOf(name) >= 0) return "satellite";
+    return "other";
+  }
+
+  function posCell(name, extra) {
+    return '<button type="button" class="pos-cell ' + (extra || "") + (name === sel ? " on" : "") +
+      '" data-skill="' + name + '" title="/' + esc(short(name)) + '" aria-label="/' + esc(short(name)) + '"></button>';
+  }
+
+  function mlist(items, max) {
+    var arr = items || [];
+    var shown = max ? arr.slice(0, max) : arr;
+    var more = arr.length - shown.length;
+    var html = "<ul class='d-list'>";
+    shown.forEach(function (x) { html += "<li>" + esc(x) + "</li>"; });
+    if (more > 0) html += "<li>… " + more + " more</li>";
+    html += "</ul>";
+    return html;
+  }
+
+  function few(items, n, mapper) {
+    var arr = (items || []).map(mapper || function (x) { return x; });
+    var shown = arr.slice(0, n).map(esc).join(" · ");
+    return shown + (arr.length > n ? " · +" + (arr.length - n) : "");
+  }
+
+  /* the node-graph diagram — one SHAPE per item kind:
+     ▢ command · folded page = file · cylinder = state/store ·
+     double-barred box = script · pointed tag = injection.
+     Needs sit on TOP flowing down in; injection sits LATERAL;
+     outputs sit BELOW flowing down out; each node owns its edge. */
+  function kindOf(label) {
+    var l = label.toLowerCase();
+    if (/\.json|\.jsonl|\.ya?ml|ledger|pending|registry|archive|git |walks|memory|junit|run-history|coverage/.test(l)) return "store";
+    return "file";
+  }
+  function shapeNode(cls, label, full, stub, kind, band) {
+    var lbl = label.length > 21 ? label.slice(0, 21) + "…" : label;
+    return '<div class="gnode">' +
+      '<button type="button" class="sh ' + cls + '" title="' + esc(full || label) + '"' +
+      ' data-kind="' + (kind || "file") + '" data-band="' + (band || "need") + '" data-full="' + esc(full || label) + '">' +
+      esc(lbl) + "</button>" +
+      (stub ? '<span class="stub"><span class="stub-dot" style="--d:"></span></span>' : "") +
+      "</div>";
+  }
+  function tidy(label) {
+    return label.split(" (")[0].replace(/^the /, "").trim();
+  }
+  function diagram(s) {
+    var scripts = s.scripts || [];
+    var writes = s.writes || [];
+    var cons = s.consumes || [];
+    var inj = (s.injects || "none").trim();
+    var hasInj = inj.toLowerCase() !== "none";
+    var injShort = hasInj ? tidy(inj.split(/[—(]/)[0]) : "";
+    if (injShort.length > 30) injShort = injShort.slice(0, 30) + "…";
+
+    var d = 0;
+    function stubbed(shapeHtml, below) {
+      var style = '--d:' + (d * 0.18) + 's' + (below ? ';--in-c:var(--s3)' : '');
+      var withD = shapeHtml.replace('style="--d:"', 'style="' + style + '"');
+      d++;
+      return below ? withD.replace('class="gnode"', 'class="gnode below"') : withD;
+    }
+
+    /* TOP — needs: ALL consumes (file/store shapes) + ALL scripts (double-bar);
+       flex-wrap groups overflow into extra rows instead of truncating */
+    var topNodes = "";
+    cons.forEach(function (c) {
+      var k = kindOf(c);
+      topNodes += stubbed(shapeNode(k === "store" ? "sh-store" : "sh-file", tidy(c), c, "yes", k, "need"));
+    });
+    scripts.forEach(function (sc) {
+      topNodes += stubbed(shapeNode("sh-script", sc.split(" — ")[0], sc, "yes", "script", "need"));
+    });
+
+    /* CENTER — the command square, injection tag lateral */
+    var mHooks = (MACHINERY[sel] || {}).hooks || [];
+    var hooksCol = mHooks.length
+      ? '<div class="hooks-col">' + mHooks.map(function (h) {
+          return '<button type="button" class="sh sh-hook" data-kind="hook" data-band="lateral" data-full="' +
+            esc(h + " — shipped hook wired in settings; fires around this command") + '">⛓ ' + esc(h) + "</button>";
+        }).join("") + '</div><div class="hseg"><span class="hseg-dot" style="--hd:var(--s2)"></span></div>'
+      : "";
+    var center =
+      '<div class="g-center">' + hooksCol +
+      '<button type="button" class="sh sh-cmd big" data-kind="command" data-band="center" data-full="' + esc(s.oneLine) + '">/' + esc(short(sel)) + "</button>" +
+      (hasInj
+        ? '<div class="hseg"><span class="hseg-dot"></span></div>' +
+          '<button type="button" class="sh sh-inj" title="' + esc(inj) + '" data-kind="inject" data-band="lateral" data-full="' + esc(inj) + '">⛓ ' + esc(injShort) + "</button>"
+        : "") +
+      "</div>";
+
+    /* BOTTOM — outputs: ALL files/stores changed + the command triggered next */
+    var botNodes = "";
+    writes.forEach(function (w) {
+      var k = kindOf(w);
+      botNodes += stubbed(shapeNode(k === "store" ? "sh-store" : "sh-file", tidy(w), w, "yes", k, "out"), true);
+    });
+    if (!writes.length) botNodes += stubbed(shapeNode("sh-agg", "read-only", "this command changes nothing — analysis only", "yes", "file", "out"), true);
+    ((MACHINERY[sel] || {}).contracts || []).forEach(function (ct) {
+      botNodes += stubbed(shapeNode("sh-contract", "▤ " + ct, ct, "yes", "contract", "contract"), true);
+    });
+    if (s.nextBeat) botNodes += stubbed(shapeNode("sh-cmd", "/" + short(s.nextBeat), s.nextBeat, "yes", "command", "next"), true);
+
+    return '<div class="diag" id="dflow" data-fx="detail-flow">' +
+      '<div class="g-row">' + topNodes + "</div>" +
+      '<div class="grail"></div>' +
+      '<div class="gc"><span class="stub"><span class="stub-dot" style="--d:.1s"></span></span></div>' +
+      center +
+      '<div class="gc"><span class="stub"><span class="stub-dot" style="--d:.55s;--in-c:var(--s3)"></span></span></div>' +
+      '<div class="grail"></div>' +
+      '<div class="g-row below-row">' + botNodes + "</div>" +
+      "</div>";
+  }
+
+  /* element view — a clicked node takes over the whole detail panel; ✕ returns */
+  var elView = null;
+  var ROLE = {
+    "file|need": "input — read before the command acts",
+    "store|need": "input state — decisions derive from it",
+    "script|need": "input dependency — deterministic helper the command runs",
+    "inject|lateral": "lateral — context this command injects into the model",
+    "file|out": "output — written or updated by this command",
+    "store|out": "output state — durable record this command appends to",
+    "command|next": "downstream — the beat this command triggers next",
+    "command|center": "the command — every edge above feeds it, every edge below leaves it",
+    "hook|lateral": "guard — a shipped hook that fires around this command without being asked",
+    "contract|contract": "contract — the shape this command's outputs must satisfy"
+  };
+  var KINDLBL = { file: "⎘ file", store: "⌸ state/store", script: "‖ script", inject: "⛓ inject", command: "▢ command", hook: "⛓ hook (guard)", contract: "▤ schema/contract" };
+
+  function renderElement() {
+    var e = elView;
+    var refs = [];
+    if (e.kind === "file" || e.kind === "store" || e.kind === "script") {
+      var token = (e.full.split(" ")[0] || "").replace(/[,;:)]+$/, "").toLowerCase();
+      if (token.length >= 3) {
+        Object.keys(DATA.skills).forEach(function (n) {
+          var sk = DATA.skills[n];
+          var hit = function (x) { return x.toLowerCase().indexOf(token) >= 0; };
+          var i = (sk.consumes || []).some(hit);
+          var o = (sk.writes || []).some(hit) || (sk.scripts || []).some(hit);
+          if (i || o) refs.push({ n: n, d: i && o ? "in·out" : o ? "out" : "in" });
+        });
+      }
+    }
+    if (e.kind === "hook" || e.kind === "contract") {
+      var mkey = e.kind === "hook" ? "hooks" : "contracts";
+      var mname = e.name.replace(/^[⛓▤]\s*/, "");
+      Object.keys(MACHINERY).forEach(function (n) {
+        if ((MACHINERY[n][mkey] || []).some(function (x) { return x === mname; })) {
+          refs.push({ n: n, d: e.kind === "hook" ? "guards" : "governs" });
+        }
+      });
+    }
+    var cleanName = e.name.replace(/^[⛓▤]\s*/, "");
+    var minfo = (typeof MINFO !== "undefined" && MINFO[cleanName]) || null;
+    var html =
+      '<div class="d-title"><span class="d-name">' + esc(e.name) + "</span>" +
+      '<span class="chip chip-mute">' + (KINDLBL[e.kind] || e.kind) + "</span>" +
+      '<button type="button" class="el-close" id="el-close" aria-label="Close element view">✕</button></div>' +
+      '<p class="el-role">' + (ROLE[e.kind + "|" + e.band] || "") + " · in /" + esc(short(sel)) + "'s flow</p>" +
+      (minfo
+        ? '<div class="d-block" style="display:flex;flex-direction:column;gap:5px"><span class="lbl">what happens here</span>' +
+          (minfo.note ? '<p class="small" style="font-weight:700">' + esc(minfo.note) + "</p>" : "") +
+          (minfo.body ? '<p class="small" style="color:var(--ink-soft)">' + esc(minfo.body) + "</p>" : "") +
+          (minfo.loc ? '<p class="tiny dim">' + esc(minfo.loc) + "</p>" : "") + "</div>"
+        : "") +
+      (e.full && e.full !== e.name ? '<div class="el-full">' + esc(e.full) + "</div>" : "") +
+      (e.kind === "command" && e.band === "next"
+        ? '<div class="el-refs"><button type="button" class="el-go" data-skill="' + esc(e.name.replace(/^\//, "gabe-")) + '">open ' + esc(e.name) + ' →</button></div>'
+        : "") +
+      (refs.length
+        ? '<div class="d-block" style="display:flex;flex-direction:column;gap:7px"><span class="lbl">participates in ' + refs.length + " command" + (refs.length === 1 ? "" : "s") + '</span><div class="el-refs">' +
+          refs.map(function (r) {
+            return '<button type="button" class="el-go" data-skill="' + r.n + '">/' + esc(short(r.n)) + ' <span class="dir">' + r.d + "</span></button>";
+          }).join("") + "</div></div>"
+        : "");
+    detailHost.innerHTML = html;
+    detailHost.setAttribute("data-settled", "1");
+    var x = document.getElementById("el-close");
+    if (x) x.addEventListener("click", function () { elView = null; renderDetail(); });
+    detailHost.querySelectorAll(".el-go").forEach(function (b) {
+      b.addEventListener("click", function () { select(b.getAttribute("data-skill")); });
+    });
+  }
+
+  document.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t.closest && t.closest(".diag .sh")) {
+      var btn = t.closest(".sh");
+      elView = {
+        name: btn.textContent,
+        kind: btn.getAttribute("data-kind"),
+        band: btn.getAttribute("data-band"),
+        full: btn.getAttribute("data-full") || ""
+      };
+      renderDetail();
+    }
+  }, true);
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && elView) { elView = null; renderDetail(); }
+  });
+
+  function renderDetail() {
+    if (elView) { renderElement(); return; }
+    var s = DATA.skills[sel];
+    var sat = DATA.satMeta[sel] || {};
+    var inj = (s.injects || "none").trim();
+    var hasInj = inj.toLowerCase() !== "none";
+    var chips = reachedOf(sel).map(function (i) {
+      return '<span class="chip chip-inv ' + i.cls + '">' + i.g + " " + i.label + "</span>";
+    }).join("");
+    if (!chips) chips = '<span class="chip chip-inv i-manual">☝ manual only</span>';
+
+    var pos =
+      '<div class="pos">' +
+      '<div class="pos-row"><span class="pos-lbl">spine</span>' +
+      posCell("gabe-next", "rt") + DATA.rails.spine.map(function (n) { return posCell(n); }).join("") + "</div>" +
+      '<div class="pos-row sats"><span class="pos-lbl">sats</span>' +
+      DATA.rails.satellites.map(function (n) { return posCell(n); }).join("") + "</div>" +
+      '<div class="pos-row"><span class="pos-lbl">other</span>' +
+      DATA.rails.other.map(function (n) { return posCell(n); }).join("") + "</div></div>";
+
+    var whenTxt = railOf(sel) === "satellite" ? (sat.trigger || s.whenToUse) : s.whenToUse;
+    var whenPre = railOf(sel) === "satellite" && sat.angle && sat.angle.match(/^S\d/) ? sat.angle.slice(0, 2) + " · " : "";
+
+    var legend =
+      '<div class="g-legend v">' +
+      '<span class="lg"><span class="sh sh-cmd">▢</span>command</span>' +
+      '<span class="lg"><span class="sh sh-file">⎘</span>file</span>' +
+      '<span class="lg"><span class="sh sh-store">⌸</span>state/store</span>' +
+      '<span class="lg"><span class="sh sh-script">‖</span>script</span>' +
+      '<span class="lg"><span class="sh sh-inj">⛓</span>inject</span>' +
+      '<span class="lg"><span class="sh sh-hook">⛓</span>hook guard</span>' +
+      '<span class="lg"><span class="sh sh-contract">▤</span>contract</span>' +
+      "</div>";
+
+    var html =
+      '<div class="d-head"><div class="d-head-l">' +
+      '<div class="d-title"><span class="d-name">/' + esc(short(sel)) + '</span>' +
+      '<span class="chip chip-mute">v' + esc(s.version || "?") + "</span>" + chips + "</div>" +
+      pos +
+      "</div>" + legend + "</div>" +
+      '<p class="small" style="color:var(--ink-soft)">' + esc(s.oneLine) + "</p>" +
+      '<div class="d-grid">' +
+      '<span class="lbl">why</span><span class="val">' + esc(s.why || "—") + "</span>" +
+      '<span class="lbl">when</span><span class="val">' + esc(whenPre + whenTxt) + "</span>" +
+      "</div>" +
+      diagram(s) +
+      '<div class="d-block" style="display:flex;flex-direction:column;gap:6px">' +
+      '<div class="meter"><span class="lbl">core ln</span><span class="meter-track"><span class="meter-fill" style="width:' + Math.max(2, Math.round(s.coreLines / CORE_MAX * 100)) + '%"></span></span><span class="meter-val">' + s.coreLines + "</span></div>" +
+      '<div class="meter"><span class="lbl">refs ln</span><span class="meter-track"><span class="meter-fill refs" style="width:' + Math.max(2, Math.round(s.refLines / REF_MAX * 100)) + '%"></span></span><span class="meter-val">' + s.refLines + "</span></div>" +
+      '<div class="d-cost"><span class="fact">session base ≈ <b>8.4k</b> tok</span><span class="fact" style="color:var(--viol)">⛓ <b>154</b> w / prompt</span></div>' +
+      "</div>";
+
+    detailHost.innerHTML = html;
+    detailHost.setAttribute("data-settled", on() ? "0" : "1");
+    wire(detailHost);
+  }
+
+  function select(name) {
+    if (!name || !DATA.skills[name]) return;
+    sel = name;
+    elView = null;
+    var rail = railOf(sel);
+    if (rail === "satellite" && tab !== "sats") setTab("sats");
+    if (rail === "other" && tab !== "other") setTab("other");
+    [spineHost, satHost, otherHost].forEach(function (h) {
+      h.querySelectorAll(".node").forEach(function (n) {
+        n.setAttribute("aria-pressed", String(n.getAttribute("data-skill") === sel));
+      });
+    });
+    renderDetail();
+  }
+
+  function buildLedger() {
+    var max = 0;
+    DATA.ledger.session.forEach(function (r) { if (r.words > max) max = r.words; });
+    var host = document.getElementById("ledger-session");
+    var html = "";
+    DATA.ledger.session.forEach(function (r) {
+      var pct = Math.max(2, Math.round(r.words / max * 100));
+      html += '<div class="bar-row" data-cat="' + r.cat + '"><span class="bar-label">' + esc(r.src) +
+        '<span class="tiny">' + esc(r.note) + "</span></span>" +
+        '<span class="bar-track"><span class="bar' + (r.cat === "generic" ? " generic" : "") + '" data-pct="' + pct + '" style="width:' + pct + '%"></span>' +
+        '<span class="bar-val">' + r.words + " w" + (r.cat === "generic" ? " · paper-null" : "") + "</span></span></div>";
+    });
+    host.innerHTML = html;
+    var phost = document.getElementById("ledger-prompt");
+    var ph = "";
+    DATA.ledger.perPrompt.forEach(function (r) {
+      ph += '<div class="bar-row"><span class="bar-label">' + esc(r.src) +
+        '<span class="tiny">' + esc(r.note) + "</span></span>" +
+        '<span class="bar-track"><span class="bar" style="width:' + Math.max(2, Math.round(r.words / max * 100)) + '%"></span>' +
+        '<span class="bar-val">' + r.words + " w / prompt</span></span></div>";
+    });
+    phost.innerHTML = ph;
+    setLedgerMode("asis");
+  }
+
+  /* the dynamic-injection view — move №2 rendered live: flip the generic
+     always-on slice to on-demand and watch the session base drop */
+  function setLedgerMode(mode) {
+    var dyn = mode === "dyn";
+    var a = document.getElementById("lt-asis"), b = document.getElementById("lt-dyn");
+    if (a) a.setAttribute("aria-selected", String(!dyn));
+    if (b) b.setAttribute("aria-selected", String(dyn));
+    document.querySelectorAll('#ledger-session .bar-row[data-cat="generic"]').forEach(function (row) {
+      row.classList.toggle("ondemand", dyn);
+      var bar = row.querySelector(".bar");
+      var val = row.querySelector(".bar-val");
+      bar.style.width = dyn ? "4%" : bar.getAttribute("data-pct") + "%";
+      val.textContent = dyn ? "on-demand — loads only when a task needs it" : row.querySelector(".bar-label").textContent.indexOf("rules") >= 0 ? "2467 w · paper-null" : val.textContent;
+    });
+    var tot = 0, gen = 0;
+    DATA.ledger.session.forEach(function (r) { tot += r.words; if (r.cat === "generic") gen += r.words; });
+    var t = document.getElementById("ledger-total");
+    if (dyn) {
+      t.textContent = "Dynamic: the session base drops " + tot + " → " + (tot - gen) + " words (≈" +
+        (Math.round(tot * 1.33 / 100) / 10) + "k → ≈" + (Math.round((tot - gen) * 1.33 / 100) / 10) + "k tokens). " +
+        "The generic " + gen + " words become an on-demand reference — the paper's SELECTIVE arm: correctness effect bounded ≈0, " +
+        "and on-demand delivery was the study's only significant efficiency win. Mechanisms that already exist: skill references/ " +
+        "(E6 anchors), paths: triggers, and conditional hooks like direction-guard (injects only where .kdbp/ exists).";
+    } else {
+      t.textContent = "Session base: " + tot + " words ≈ " + (Math.round(tot * 1.33 / 100) / 10) + "k tokens (words × 1.33 estimate). " +
+        "The generic slice is " + gen + " words (~" + Math.round(gen * 1.33) + " tokens) in every session of every project — the audit target of move №2. " +
+        "Skill cores and references load only on invocation (per-skill meters in the detail panel).";
+    }
+  }
+
+  function buildHooks() {
+    var tbody = document.querySelector("#suite-hooks tbody");
+    var rows = "";
+    DATA.hooks.filter(function (h) { return h.family !== "ecc"; }).forEach(function (h) {
+      rows += "<tr><td><code>" + esc(h.name) + "</code></td><td>" + esc(h.event) + (h.matcher && h.matcher !== "*" ? " · " + esc(h.matcher) : "") + "</td>" +
+        "<td>" + esc(h.does) + "</td><td>" + esc(h.injects || "—") + "</td><td>" + esc(h.battery || "—") + "</td></tr>";
+    });
+    tbody.innerHTML = rows;
+    var ecc = document.getElementById("ecc-hooks");
+    var chips = "";
+    DATA.hooks.filter(function (h) { return h.family === "ecc"; }).forEach(function (h) {
+      chips += '<span class="ecc-chip">' + esc(h.event) + " · " + esc(h.name) + "</span>";
+    });
+    ecc.innerHTML = chips;
+  }
+
+  window.FXREPLAY = window.FXREPLAY || {};
+  window.FXREPLAY["spine-flow"] = buildSpine;
+  window.FXREPLAY["detail-flow"] = renderDetail;
+  window.__rebuildMotion = function () {
+    Object.keys(window.FXREPLAY).forEach(function (k) { window.FXREPLAY[k](); });
+  };
+  document.getElementById("spine-replay").addEventListener("click", function () { buildSpine(); renderDetail(); });
+  document.getElementById("tab-sats").addEventListener("click", function () { setTab("sats"); });
+  document.getElementById("tab-other").addEventListener("click", function () { setTab("other"); });
+  var ltA = document.getElementById("lt-asis"), ltB = document.getElementById("lt-dyn");
+  if (ltA) ltA.addEventListener("click", function () { setLedgerMode("asis"); });
+  if (ltB) ltB.addEventListener("click", function () { setLedgerMode("dyn"); });
+
+  buildSpine();
+  buildSats();
+  buildOther();
+  buildLedger();
+  buildHooks();
+  renderDetail();
+})();
+</script>
