@@ -59,15 +59,15 @@
   <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
   <a class="navitem navsubitem" href="prism-compound-interest.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Compound interest</a>
   <a class="navitem navsubitem on" href="prism-evidence-states.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> evidence states</a>
-  <div class="foot">regen 2026-08-04 17:39<br>HEAD 232cb99 · build_suite_center.py</div>
+  <div class="foot">regen 2026-08-04 17:47<br>HEAD 232cb99 · build_suite_center.py</div>
 </aside>
 
 <main class="main">
   <div class="topbar">
     <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Transaction evidence — every state, its screenshot, its proof</b></div>
     <div class="spacer"></div>
-    <span class="chip warn">4 uncommitted</span>
-    <span class="stamp">regen · 2026-08-04 17:39</span>
+    <span class="chip warn">20 uncommitted</span>
+    <span class="stamp">regen · 2026-08-04 17:47</span>
   </div>
 
   <div class="prismhead">
@@ -79,14 +79,16 @@
 
   <div class="prismstage" data-prism-mode="console">
     <style>
-  /* split view — diagram left, evidence right; the diagram stays SMALL:
-     little nodes, labels only, the flow readable at a glance (operator sketch). */
+  /* split view — diagram left (little nodes), evidence right (operator sketch). */
   .evsplit{display:grid;grid-template-columns:minmax(330px,2fr) minmax(340px,3fr);
     gap:18px;align-items:start;margin:6px 0 26px}
   @media (max-width:960px){.evsplit{grid-template-columns:1fr}}
   .evmap{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
     border-radius:12px;padding:10px 12px 12px;position:sticky;top:12px}
-  .evtabs{display:flex;gap:6px;margin:0 0 8px}
+  .evbar{display:flex;gap:8px;margin:0 0 8px;align-items:center;flex-wrap:wrap}
+  .evbar select{font:inherit;font-size:12px;font-weight:700;padding:4px 9px;
+    border-radius:9px;border:1px solid var(--accent,#0d6e78);cursor:pointer;
+    background:var(--surface,#fff);color:var(--accent-ink,#0a565e)}
   .evtab{font:inherit;font-size:11.5px;font-weight:700;padding:4px 10px;
     border-radius:9px;border:1px solid var(--line,#d8dee6);cursor:pointer;
     background:var(--surface,#fff);color:var(--muted,#5b6672)}
@@ -105,6 +107,7 @@
   .evnode.s-unpowered circle{stroke:#b7791f;fill:#fdf6ec}
   .evnode.s-ghost circle{stroke:#9b2c2c;stroke-dasharray:3.5 2.5;fill:transparent}
   .evnode text{font:600 10.5px system-ui;fill:var(--ink,#1c232b);pointer-events:none}
+  .evnode .wmark{font:800 10px system-ui;fill:#6b46c1}
   .evnode:hover circle{stroke-width:2.6}
   .evnode.on circle{fill:var(--accent,#0d6e78);stroke:var(--accent,#0d6e78)}
   .evnode.on.s-ghost circle{fill:#9b2c2c;stroke:#9b2c2c}
@@ -117,6 +120,7 @@
   .evleg .lr{border-color:var(--accent,#0d6e78)}
   .evleg .lu{border-color:#b7791f;background:#fdf6ec}
   .evleg .lg{border-color:#9b2c2c;border-style:dashed}
+  .evleg .lw{color:#6b46c1;font-weight:800;border:none;width:auto;height:auto}
   /* right — evidence panel */
   .evpanel{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
     border-radius:12px;overflow:hidden}
@@ -142,10 +146,12 @@
   .evchip.code{border-color:var(--accent,#0d6e78);color:var(--accent-ink,#0a565e)}
   .evchip.model{border-color:#b7791f;color:#8a5a12}
   .evchip.cid{border-color:#6b46c1;color:#553c9a}
+  .evchip.write{border-color:#6b46c1;color:#553c9a;background:#f3effc}
   .evpill{font-size:9.5px;font-weight:800;text-transform:uppercase;
     letter-spacing:.07em;padding:2px 8px;border-radius:9px;vertical-align:2px}
   .evpill.principal{background:#e2f2f3;color:#0a565e}
   .evpill.reference{background:#eef1f5;color:#4a5560}
+  .evpill.supporting{background:#eef1f5;color:#4a5560}
   .evpill.edge{background:#fdf1e2;color:#8a5a12}
   .evpill.gap{background:#fbe9e9;color:#9b2c2c}
   .evseq{display:flex;flex-wrap:wrap;gap:5px;align-items:center;
@@ -160,23 +166,27 @@
 </style>
 
 <div class="prismprose">
-  <p>Little nodes carry the flow; the evidence lives in the right column.
-  Click any state — the panel follows. Three groupings of the same 17 states;
-  pick by tab.</p>
+  <p>One workflow at a time, little nodes, the evidence in the right column.
+  ✎ marks the steps that WRITE data; colors say what proof exists.</p>
 </div>
 
 <div class="evsplit">
   <div class="evmap">
-    <div class="evtabs" id="evtabs">
+    <div class="evbar">
+      <select id="evwf">
+        <option value="manual">manual entry workflow</option>
+        <option value="scan">scan workflow</option>
+        <option value="lifecycle">entity lifecycle</option>
+      </select>
       <button class="evtab on" data-view="lanes">a · lanes</button>
       <button class="evtab" data-view="orbit">b · orbit</button>
-      <button class="evtab" data-view="gates">c · gates</button>
     </div>
     <div id="evdiag" data-probe></div>
     <div class="evleg">
       <span><i class="lr"></i>running — shot + assertion</span>
       <span><i class="lu"></i>unpowered — asserted, unphotographed</span>
       <span><i class="lg"></i>ghost — nothing</span>
+      <span class="lw">✎ writes data</span>
     </div>
   </div>
   <div class="evpanel" id="evpanel" data-probe>
@@ -192,156 +202,195 @@
 </div>
 
 <div class="prismprose">
-  <p>Answer with a letter — the winner becomes the Evidence tab's left side.</p>
+  <p>The workflow list is the entity's use-case census — scan and manual for
+  transaction; batch and statement belong to their own entities.</p>
 </div>
 
 <script>
-/* Evidence states — split view. 17 REAL states; every value manifest-sourced
-   (tx2b-journey · tx1-detail-reskin · txflows-journey · transactions.py). */
+/* Evidence states v3 — workflows as the grouping (operator graph, 2026-08-04).
+   Every shot is a committed proof-set capture; writes[] names what a step
+   mutates. Sources: tx2-newtransaction-reskin · ca0 · tx2b-journey ·
+   tx1-detail-reskin · txflows-journey manifests + transactions.py. */
 const A = "assets/evidence-states/";
 const S = {
- scanning:{l:"scan",lane:"capture",st:"running",role:"principal",
-  shot:[A+"scan-02-slot-scanning.png"],
-  uc:"Scan a paper receipt — one capture surface (D111); three country runs walked this on production, 5/5.",
-  cap:"2026-07-09 · recorded vs production (e5a5961)",
-  spec:"_tx2b-live-capture.spec.ts",code:["POST /api/v1/transactions","web scan slot (SSE)"],
-  models:["TransactionDraft"],cids:[]},
- degrade:{l:"degrade",lane:"capture",st:"running",role:"principal",
+ home:{l:"home",st:"running",role:"supporting",shot:[A+"ca0-home-empty-cta.png"],
+  uc:"The dashboard — empty state carries the scan CTA (CA0's scope-gated fix).",
+  cap:"2026-07-11 · ca0 set",spec:"ca0 e2e (2/2 live)",code:[],models:[],cids:[],writes:[]},
+ plus:{l:"+ menu",st:"running",role:"supporting",shot:[A+"ca0-capture-menu.png"],
+  uc:"“How do you want to record your expense?” — scan · batch · statement · manual.",
+  cap:"2026-07-11 · ca0 set",spec:"ca0 e2e",code:[],models:[],cids:[],writes:[]},
+ manual:{l:"manual",st:"running",role:"principal",shot:[A+"tx2-manual-form-empty.png"],
+  uc:"New transaction, by hand — the same single-draft surface scan lands in (D110/D111).",
+  cap:"2026-07-09/10 · tx2 set",spec:"tx2 journey spec",code:[],
+  models:["TransactionDraft"],cids:[],writes:[]},
+ txdata:{l:"tx data",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
+  uc:"Set the transaction's own fields — category, payment method, cadence, date, location, currency.",
+  cap:"2026-07-09/10 · journey-filled",spec:"tx2 journey spec",
+  code:["POST /api/v1/transactions"],models:["TransactionDraft"],cids:[],
+  writes:["draft: category","payment method","cadence","location"]},
+ items:{l:"items",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
+  uc:"Add the purchase's items — name, category, qty (same capture as the filled form).",
+  cap:"2026-07-09/10 · journey-filled",spec:"tx2 journey spec",code:[],
+  models:["TransactionItem"],cids:[],writes:["items[]: name","qty"]},
+ catpick:{l:"category",st:"running",role:"principal",shot:[A+"tx2-category-picker.png"],
+  uc:"The category picker — this capture is the MERCHANT variant; the item-category picker (pixel-icon list) has no curated shot yet.",
+  cap:"2026-07-09/10 · live capture",spec:"tx2 set",code:[],
+  models:["TransactionItem"],cids:[],writes:["item.category"]},
+ save:{l:"save",st:"running",role:"principal",shot:[A+"tx2-created-detail.png"],
+  uc:"Create persists the draft as a real row and lands on its detail.",
+  cap:"2026-07-09/10 · journey-created",spec:"tx2 journey spec",
+  code:["POST /api/v1/transactions"],models:["Transaction"],cids:[],
+  writes:["Transaction row (created)"]},
+ changetotal:{l:"total",st:"unpowered",role:"edge",
+  uc:"Adjusting the total after items — unit-asserted in the form model, no distinct capture of the act.",
+  cap:"never (unit only)",spec:"web vitest",code:[],models:[],cids:[],
+  writes:["transaction.total"]},
+ cancel:{l:"cancel",st:"running",role:"edge",shot:[A+"tx2-discard-confirm.png"],
+  uc:"Discard asks first — and then really deletes the draft (CA0 trust fix).",
+  cap:"2026-07-09/10 · discard-confirm",spec:"tx2 set",
+  code:["DELETE /api/v1/transactions/{id}"],models:[],cids:[],writes:["draft removal"]},
+ scanning:{l:"scan",st:"running",role:"principal",shot:[A+"scan-02-slot-scanning.png"],
+  uc:"The slot reads the receipt over SSE — three country runs, 5/5 on production.",
+  cap:"2026-07-09 · vs production (e5a5961)",spec:"_tx2b-live-capture.spec.ts",
+  code:["web scan slot (SSE)"],models:["TransactionDraft"],cids:[],writes:[]},
+ degrade:{l:"degrade",st:"running",role:"principal",
   shot:[A+"degrade-01-slot-error.png",A+"degrade-02-manual-after-failure.png"],
-  uc:"A failed scan lands in the SAME surface as manual entry — the fallback is a first-class flow, photographed twice.",
-  cap:"2026-07-09 · degrade leg",spec:"_tx2b-live-capture.spec.ts",code:[],models:["TransactionDraft"],cids:[]},
- draft:{l:"draft",lane:"capture",st:"running",role:"principal",
-  shot:[A+"scan-03-form-populated.png"],
-  uc:"AI-populated form awaiting review — nothing persists until Guardar.",
-  cap:"2026-07-09 · vs production",spec:"_tx2b-live-capture.spec.ts",code:[],models:["TransactionDraft"],cids:[]},
- resumed:{l:"resume",lane:"capture",st:"running",role:"principal",
-  shot:[A+"scan-04-reload-resumed.png"],
-  uc:"Reload mid-review and the draft comes back — the persistence proof behind the one-surface bet.",
-  cap:"2026-07-09 · leg 04",spec:"_tx2b-live-capture.spec.ts",code:[],models:["TransactionDraft"],cids:[]},
- discarded:{l:"discard",lane:"capture",st:"ghost",role:"named gap",
-  uc:"Descartar issues a REAL DELETE (CA0 trust fix) — the P119 delete-window edge was found here, and no proof set ever photographed it.",
-  cap:"never",spec:"— none —",code:["DELETE /api/v1/transactions/{id}"],models:[],cids:[]},
- saved:{l:"saved",lane:"living",st:"running",role:"reference",
-  shot:[A+"saved-detail-mobile.png"],
-  uc:"The steady state — the detail every episode returns to (reference⟷live fidelity set).",
+  uc:"A failed scan lands in the SAME surface as manual entry — photographed twice.",
+  cap:"2026-07-09 · degrade leg",spec:"_tx2b-live-capture.spec.ts",code:[],models:[],cids:[],writes:[]},
+ draft:{l:"draft",st:"running",role:"principal",shot:[A+"scan-03-form-populated.png"],
+  uc:"AI-populated form awaiting review — every correction here is a write over the AI's guess.",
+  cap:"2026-07-09 · vs production",spec:"_tx2b-live-capture.spec.ts",code:[],
+  models:["TransactionDraft"],cids:[],writes:["draft fields (AI overrides)"]},
+ resumed:{l:"resume",st:"running",role:"principal",shot:[A+"scan-04-reload-resumed.png"],
+  uc:"Reload mid-review; the draft comes back — the one-surface bet's persistence proof.",
+  cap:"2026-07-09 · leg 04",spec:"_tx2b-live-capture.spec.ts",code:[],models:[],cids:[],writes:[]},
+ saved:{l:"saved",st:"running",role:"reference",shot:[A+"saved-detail-mobile.png"],
+  uc:"The steady state — the detail every episode returns to.",
   cap:"2026-07-08/09 · fidelity set",spec:"tx1-detail-reskin.spec.ts",
   code:["GET /api/v1/transactions/{id}"],
-  models:["Transaction","TransactionItem","TransactionImage"],cids:[]},
- edited:{l:"edit",lane:"living",st:"unpowered",role:"edge",
-  uc:"Per-field PATCH is api-asserted — including lock refusals and the cross-scope 404 — but the edit surface was never photographed.",
+  models:["Transaction","TransactionItem","TransactionImage"],cids:[],writes:[]},
+ edited:{l:"edit",st:"unpowered",role:"edge",
+  uc:"Per-field PATCH — api-asserted incl. lock refusals and cross-scope 404; never photographed.",
   cap:"never (api only)",spec:"api update suite",code:["PATCH /api/v1/transactions/{id}"],
-  models:["Transaction"],cids:["C702"]},
- flagged:{l:"flag",lane:"living",st:"running",role:"edge",
+  models:["Transaction"],cids:["C702"],writes:["Transaction fields"]},
+ flagged:{l:"flag",st:"running",role:"edge",
   shot:[A+"01-flag-popup-mobile.png",A+"02-flag-active-mobile.png"],
-  uc:"Per-item margin notes, toggled live on production then reverted — flags survive every lock.",
-  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
-  code:["flag toggle popup"],models:["TransactionItemFlag"],cids:["C1066"]},
- shared:{l:"shared",lane:"locks",st:"running",role:"edge",
-  shot:[A+"03-lock-popup-shared-mobile.png"],
-  uc:"A shared row refuses edits with an explicit 409 popup and lock-links — never a silent partial (D74).",
-  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
-  code:["PATCH → 409 (D74)"],models:["Transaction.is_shared"],cids:[]},
- matched:{l:"matched",lane:"locks",st:"running",role:"edge",
-  shot:[A+"04-lock-popup-matched-mobile.png"],
-  uc:"“Transacción conciliada” — reconciled against a cartola, sealed until the statement releases it (P117).",
-  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
-  code:["PATCH → 409 (P117)","_is_statement_matched"],models:["Transaction"],cids:[]},
- readonly:{l:"read-only",lane:"locks",st:"running",role:"edge",
+  uc:"Per-item margin notes, live on production then reverted — flags survive every lock.",
+  cap:"2026-07-22 · live",spec:"_txflows-live-capture.spec.ts",code:[],
+  models:["TransactionItemFlag"],cids:["C1066"],writes:["TransactionItemFlag"]},
+ shared:{l:"shared",st:"running",role:"edge",shot:[A+"03-lock-popup-shared-mobile.png"],
+  uc:"A shared row refuses edits with an explicit 409 popup — never a silent partial (D74).",
+  cap:"2026-07-22 · live",spec:"_txflows-live-capture.spec.ts",
+  code:["PATCH → 409 (D74)"],models:["Transaction.is_shared"],cids:[],writes:[]},
+ matched:{l:"matched",st:"running",role:"edge",shot:[A+"04-lock-popup-matched-mobile.png"],
+  uc:"“Transacción conciliada” — sealed until the statement releases it (P117).",
+  cap:"2026-07-22 · live",spec:"_txflows-live-capture.spec.ts",
+  code:["PATCH → 409 (P117)"],models:["Transaction"],cids:[],writes:[]},
+ readonly:{l:"read-only",st:"running",role:"edge",
   shot:[A+"05-locked-detail-readonly-mobile.png",A+"06-flag-on-locked-mobile.png"],
-  uc:"What a lock feels like: edit affordances gone, flags still writable — the lock protects shared numbers, not your notes.",
-  cap:"2026-07-22 · legs 05+06",spec:"_txflows-live-capture.spec.ts",code:[],models:[],cids:[]},
- unshared:{l:"unshare",lane:"locks",st:"unpowered",role:"edge",
-  uc:"Locked while ANY group copy survives; the counter-to-zero unlock (P83) is api-proven and never photographed.",
-  cap:"never (api only)",spec:"group-unshare suite",code:[],models:["Transaction.share_count"],cids:[]},
- confirm:{l:"confirm",lane:"exit",st:"running",role:"edge",
-  shot:[A+"07-delete-confirm-mobile.png"],
-  uc:"Destructive paths ask first; the capture created its own victim so the seed ended unchanged.",
-  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
-  code:["DELETE /api/v1/transactions/{id}"],models:["Transaction"],cids:["C1067"]},
- deleted:{l:"deleted",lane:"exit",st:"running",role:"edge",
-  shot:[A+"08-deleted-gone-mobile.png"],
+  uc:"Edit affordances gone, flags still writable — the lock protects shared numbers, not your notes.",
+  cap:"2026-07-22 · legs 05+06",spec:"_txflows-live-capture.spec.ts",code:[],models:[],cids:[],writes:[]},
+ unshared:{l:"unshare",st:"unpowered",role:"edge",
+  uc:"Locked while ANY group copy survives; the P83 unlock is api-proven, never photographed.",
+  cap:"never (api only)",spec:"group-unshare suite",code:[],
+  models:["Transaction.share_count"],cids:[],writes:[]},
+ confirm:{l:"confirm",st:"running",role:"edge",shot:[A+"07-delete-confirm-mobile.png"],
+  uc:"Destructive paths ask first; the capture created its own victim.",
+  cap:"2026-07-22 · live",spec:"_txflows-live-capture.spec.ts",
+  code:["DELETE /api/v1/transactions/{id}"],models:["Transaction"],cids:["C1067"],writes:[]},
+ deleted:{l:"deleted",st:"running",role:"edge",shot:[A+"08-deleted-gone-mobile.png"],
   uc:"The row is gone and the list shrank by one.",
-  cap:"2026-07-22 · leg 08",spec:"_txflows-live-capture.spec.ts",code:[],models:[],cids:["C1067"]},
- batch:{l:"batch",lane:"exit",st:"unpowered",role:"edge",
-  uc:"Batch delete counts only your scope's rows and refuses the WHOLE batch when one row is locked — asserted, never photographed.",
+  cap:"2026-07-22 · leg 08",spec:"_txflows-live-capture.spec.ts",code:[],models:[],
+  cids:["C1067"],writes:["row removal"]},
+ batch:{l:"batch",st:"unpowered",role:"edge",
+  uc:"Counts only your scope's rows and refuses the WHOLE batch on one lock — asserted, never photographed.",
   cap:"never (api only)",spec:"api batch suite",code:["POST …/batch-delete"],
-  models:["Transaction"],cids:["C1072","C704"]},
- sealed:{l:"409",lane:"exit",st:"ghost",role:"named gap",
-  uc:"Deletes past 90 days refuse — settled periods are sealed (UX-11). NO test walks this and NO capture exists: the born-red candidate (126f36a6 names it).",
-  cap:"never",spec:"— none —",code:["_assert_within_delete_window"],models:[],cids:[]},
- dsr:{l:"DSR",lane:"exit",st:"ghost",role:"named gap",
-  uc:"The consent bulk path deletes past the window BY DESIGN — a legal right; entirely unphotographed and untested end-to-end.",
-  cap:"never",spec:"— none —",code:["consent.py bulk erasure"],models:[],cids:[]},
+  models:["Transaction"],cids:["C1072","C704"],writes:["rows removal (batch)"]},
+ sealed:{l:"409",st:"ghost",role:"named gap",
+  uc:"Deletes past 90 days refuse — settled periods are sealed (UX-11). NO test, NO capture: the born-red candidate.",
+  cap:"never",spec:"— none —",code:["_assert_within_delete_window"],models:[],cids:[],writes:[]},
+ dsr:{l:"DSR",st:"ghost",role:"named gap",
+  uc:"The consent bulk path deletes past the window BY DESIGN — a legal right; unphotographed, untested end-to-end.",
+  cap:"never",spec:"— none —",code:["consent.py bulk erasure"],models:[],cids:[],
+  writes:["bulk rows removal"]},
 };
-const EDGES = [["scanning","draft"],["scanning","degrade"],["degrade","draft"],
- ["draft","resumed"],["resumed","saved"],["draft","discarded"],
- ["saved","edited"],["saved","flagged"],["saved","shared"],["saved","matched"],
- ["shared","readonly"],["matched","readonly"],["shared","unshared"],
- ["saved","confirm"],["confirm","deleted"],["confirm","sealed"],["saved","dsr"],
- ["saved","batch"],["batch","deleted"]];
-const LANES = [["capture","CAPTURE"],["living","LIVING ROW"],["locks","LOCKS"],["exit","EXIT"]];
-const GATES = {D74:["shared","unshared","batch"],P117:["matched","readonly"],
- "UX-11":["sealed","dsr"],confirm:["confirm","deleted","discarded"],RLS:["edited","flagged"]};
+
+const WF = {
+ manual:{
+  pos:{home:[200,40],plus:[200,104],manual:[200,168],
+       txdata:[104,252],items:[288,252],catpick:[352,322],
+       save:[104,370],changetotal:[104,438],cancel:[250,370]},
+  edges:[["home","plus"],["plus","manual"],["manual","txdata"],["manual","items"],
+         ["items","catpick"],["items","save"],["items","cancel"],["txdata","save"],
+         ["save","changetotal"]],
+  bands:[["ENTRY",24,null],["THE FORM ✎",232,214],["RESOLVE",352,340]],h:470},
+ scan:{
+  pos:{home:[56,52],plus:[144,52],scanning:[232,52],degrade:[328,96],
+       draft:[232,150],resumed:[328,204],saved:[144,204]},
+  edges:[["home","plus"],["plus","scanning"],["scanning","degrade"],
+         ["scanning","draft"],["degrade","draft"],["draft","resumed"],
+         ["draft","saved"],["resumed","saved"]],
+  bands:[["SCAN → DRAFT → SAVED",26,null]],h:260},
+ lifecycle:{
+  pos:{saved:[200,54],edited:[80,120],flagged:[200,134],shared:[300,110],
+       matched:[356,178],readonly:[300,242],unshared:[204,220],
+       confirm:[64,318],batch:[140,352],deleted:[216,318],sealed:[292,352],dsr:[356,310]},
+  edges:[["saved","edited"],["saved","flagged"],["saved","shared"],["saved","matched"],
+         ["shared","readonly"],["matched","readonly"],["shared","unshared"],
+         ["saved","confirm"],["saved","batch"],["confirm","deleted"],["batch","deleted"],
+         ["confirm","sealed"],["saved","dsr"]],
+  bands:[["LIVING ROW",30,null],["LOCKS",100,86],["EXIT",296,280]],h:400},
+};
 
 const DEFS='<defs><marker id="evarr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0,0L8,4L0,8z" fill="#9aa5b1"/></marker></defs>';
 function node(id,x,y,cur){const s=S[id];
+ const w=s.writes&&s.writes.length?`<text class="wmark" x="${x+10}" y="${y-9}">✎</text>`:"";
  return `<g class="evnode s-${s.st}${id===cur?" on":""}" data-state="${id}">`+
-  `<circle cx="${x}" cy="${y}" r="12"/>`+
+  `<circle cx="${x}" cy="${y}" r="12"/>${w}`+
   `<text x="${x}" y="${y+24}" text-anchor="middle">${s.l}</text></g>`;}
 function edge(a,b,P){if(!P[a]||!P[b])return"";const[x1,y1]=P[a],[x2,y2]=P[b];
  const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
  return `<path class="edge" d="M${x1+dx/L*14},${y1+dy/L*14} L${x2-dx/L*16},${y2-dy/L*16}"/>`;}
-
-const POS_LANES={scanning:[52,52],degrade:[128,90],draft:[204,52],resumed:[280,52],
- discarded:[356,90],saved:[166,168],edited:[62,222],flagged:[166,238],
- shared:[268,222],matched:[356,238],readonly:[312,306],unshared:[218,306],
- confirm:[56,382],batch:[130,414],deleted:[204,382],sealed:[278,414],dsr:[352,382]};
-function viewLanes(cur){let s=`<svg viewBox="0 0 400 470">${DEFS}`;
- [["CAPTURE",22,null],["LIVING ROW",148,132],["LOCKS",286,268],["EXIT",362,346]]
-  .forEach(([t,y,sep])=>{if(sep)s+=`<line class="lanesep" x1="6" y1="${sep}" x2="394" y2="${sep}"/>`;
-   s+=`<text class="lanelab" x="6" y="${y}">${t}</text>`;});
- EDGES.forEach(([a,b])=>s+=edge(a,b,POS_LANES));
- for(const id in POS_LANES)s+=node(id,...POS_LANES[id],cur);
+function viewLanes(wf,cur){const W=WF[wf];
+ let s=`<svg viewBox="0 0 400 ${W.h}">${DEFS}`;
+ W.bands.forEach(([t,y,sep])=>{if(sep)s+=`<line class="lanesep" x1="6" y1="${sep}" x2="394" y2="${sep}"/>`;
+  s+=`<text class="lanelab" x="6" y="${y}">${t}</text>`;});
+ W.edges.forEach(([a,b])=>s+=edge(a,b,W.pos));
+ for(const id in W.pos)s+=node(id,...W.pos[id],cur);
  return s+"</svg>";}
-function viewOrbit(cur){const ring=["scanning","degrade","draft","resumed","discarded",
-  "edited","flagged","shared","matched","readonly","unshared","confirm","deleted","batch","sealed","dsr"];
- const cx=200,cy=205,R=150;let s=`<svg viewBox="0 0 400 420">${DEFS}`;
+function viewOrbit(wf,cur){const ids=Object.keys(WF[wf].pos);
+ const hub=wf==="lifecycle"?"saved":(wf==="scan"?"draft":"manual");
+ const ring=ids.filter(i=>i!==hub);
+ const cx=200,cy=200,R=142;let s=`<svg viewBox="0 0 400 410">${DEFS}`;
  ring.forEach((id,i)=>{const a=-Math.PI/2+i*2*Math.PI/ring.length;
   const x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
-  s+=`<line class="edge" x1="${cx+(x-cx)*.12+0}" y1="${cy+(y-cy)*.12}" x2="${x-(x-cx)*.13}" y2="${y-(y-cy)*.13}" marker-end="none" opacity=".45"/>`;
+  s+=`<line class="edge" x1="${cx+(x-cx)*.14}" y1="${cy+(y-cy)*.14}" x2="${x-(x-cx)*.15}" y2="${y-(y-cy)*.15}" opacity=".45"/>`;
   s+=node(id,x,y,cur);});
- s+=node("saved",cx,cy,cur);
+ s+=node(hub,cx,cy,cur);
  return s+"</svg>";}
-function viewGates(cur){let s=`<svg viewBox="0 0 400 430">${DEFS}`;let y=34;
- for(const[g,ids]of Object.entries(GATES)){
-  s+=`<text class="lanelab" x="8" y="${y-14}">${g}</text>`;
-  s+=`<line class="lanesep" x1="6" y1="${y+34}" x2="394" y2="${y+34}"/>`;
-  ids.forEach((id,i)=>s+=node(id,60+i*88,y,cur));y+=80;}
- s+=`<text class="lanelab" x="8" y="${y-14}">UNGATED</text>`;
- ["scanning","degrade","draft","resumed","saved"].forEach((id,i)=>s+=node(id,60+i*76,y,cur));
- return s+"</svg>";}
-const VIEWS={lanes:viewLanes,orbit:viewOrbit,gates:viewGates};
+const VIEWS={lanes:viewLanes,orbit:viewOrbit};
 
-let VIEW="lanes",CUR="saved";
+let WFK="manual",VIEW="lanes",CUR="manual";
 function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}
 function render(){
- document.getElementById("evdiag").innerHTML=VIEWS[VIEW](CUR);
+ document.getElementById("evdiag").innerHTML=VIEWS[VIEW](WFK,CUR);
  const s=S[CUR];
  document.getElementById("evshot").innerHTML=s.shot
   ?s.shot.map(p=>`<img src="${p}" alt="${s.l}" loading="lazy">`).join("")
   :`<div class="gap"><b>⚠ no capture exists</b><span>${s.uc}</span></div>`;
- document.getElementById("evtitle").textContent=s.l+" · "+s.lane;
+ document.getElementById("evtitle").textContent=s.l;
  const pill=document.getElementById("evrole");
  pill.textContent=s.role;pill.className="evpill "+(s.st==="ghost"?"gap":s.role.split(" ")[0]);
  document.getElementById("evuc").textContent=s.shot?s.uc:"";
  document.getElementById("evrows").innerHTML=
+  (s.writes.length?`<div class="evrow"><span class="k">✎ writes</span><span>${chips(s.writes,"write")}</span></div>`:"")+
   `<div class="evrow"><span class="k">captured</span><span>${s.cap}</span></div>`+
   `<div class="evrow"><span class="k">spec</span><span class="evchip">${s.spec}</span></div>`+
   (s.code.length?`<div class="evrow"><span class="k">code</span><span>${chips(s.code,"code")}</span></div>`:"")+
   (s.models.length?`<div class="evrow"><span class="k">models</span><span>${chips(s.models,"model")}</span></div>`:"")+
   (s.cids.length?`<div class="evrow"><span class="k">cases</span><span>${chips(s.cids,"cid")}</span></div>`:"");
- const seq=Object.keys(S).filter(id=>S[id].lane===s.lane);
- document.getElementById("evseq").innerHTML=`<span class="k">${s.lane} lane</span>`+
+ const seq=Object.keys(WF[WFK].pos);
+ document.getElementById("evseq").innerHTML=`<span class="k">${WFK}</span>`+
   seq.map(id=>`<button class="evstep${id===CUR?" on":""}" data-state="${id}">${S[id].l}</button>`).join(" ");
 }
 document.addEventListener("click",e=>{
@@ -351,6 +400,9 @@ document.addEventListener("click",e=>{
  if(tab){VIEW=tab.dataset.view;
   document.querySelectorAll(".evtab").forEach(b=>b.classList.toggle("on",b===tab));
   render();}
+});
+document.getElementById("evwf").addEventListener("change",e=>{
+ WFK=e.target.value;CUR=Object.keys(WF[WFK].pos)[0];render();
 });
 render();
 </script>
