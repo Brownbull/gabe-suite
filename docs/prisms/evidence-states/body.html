@@ -1,568 +1,276 @@
 <style>
-  /* page-local layout only — node grammar, states, inspectors are shell-native */
-  .ev-shot{background:#0f1418;display:flex;justify-content:center;margin:0 0 10px}
-  .ev-shot img{max-height:340px;width:auto;max-width:100%;object-fit:contain}
-  .ev-shot+.ev-shot{margin-top:6px}
-  .ev-gap{background:repeating-linear-gradient(-45deg,transparent,transparent 10px,
-    rgba(155,44,44,.08) 10px,rgba(155,44,44,.08) 20px);border:1px dashed #9b2c2c;
-    border-radius:8px;padding:14px;text-align:center;font-size:.78rem;margin:0 0 10px}
-  /* b · hub-orbit — same nodes, ring placement; spokes are a static stroke-only svg */
-  .orbit{position:relative;display:grid;place-items:center;
-    grid-template-areas:". n ." "w hub e" ". s .";
-    grid-template-columns:1fr auto 1fr;grid-template-rows:auto auto auto;
-    gap:26px 34px;padding:12px 0}
-  .orbit .o-hub{grid-area:hub}
-  .orbit .o-n{grid-area:n;display:flex;gap:18px}
-  .orbit .o-s{grid-area:s;display:flex;gap:18px}
-  .orbit .o-w{grid-area:w;display:flex;flex-direction:column;gap:14px;align-items:end}
-  .orbit .o-e{grid-area:e;display:flex;flex-direction:column;gap:14px;align-items:start}
-  .orbit .o-spokes{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
-  /* c · gate-first — one bordered panel per guard */
-  .egroups{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
-  .egroup{border:1px solid var(--line,#d8dee6);border-radius:12px;padding:12px 14px}
-  .egroup>.pf-gate{display:inline-block;margin-bottom:10px}
-  .egroup .eg-states{display:flex;flex-wrap:wrap;gap:10px}
-  .egroup .eg-why{font-size:13px;opacity:.75;margin:8px 0 0}
+  /* split view — diagram left, evidence right; the diagram stays SMALL:
+     little nodes, labels only, the flow readable at a glance (operator sketch). */
+  .evsplit{display:grid;grid-template-columns:minmax(330px,2fr) minmax(340px,3fr);
+    gap:18px;align-items:start;margin:6px 0 26px}
+  @media (max-width:960px){.evsplit{grid-template-columns:1fr}}
+  .evmap{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
+    border-radius:12px;padding:10px 12px 12px;position:sticky;top:12px}
+  .evtabs{display:flex;gap:6px;margin:0 0 8px}
+  .evtab{font:inherit;font-size:11.5px;font-weight:700;padding:4px 10px;
+    border-radius:9px;border:1px solid var(--line,#d8dee6);cursor:pointer;
+    background:var(--surface,#fff);color:var(--muted,#5b6672)}
+  .evtab.on{background:var(--accent,#0d6e78);border-color:var(--accent,#0d6e78);
+    color:#fff}
+  .evmap svg{width:100%;height:auto;display:block}
+  .evmap .lanelab{font:700 8.5px system-ui;letter-spacing:.09em;
+    fill:var(--muted,#5b6672)}
+  .evmap .lanesep{stroke:var(--muted,#8a94a0);stroke-width:.8;
+    stroke-dasharray:3 5;opacity:.55}
+  .evmap .edge{stroke:var(--muted,#9aa5b1);stroke-width:1.1;fill:none;
+    marker-end:url(#evarr)}
+  .evnode{cursor:pointer}
+  .evnode circle{fill:var(--surface,#fff);stroke-width:1.7;transition:.14s}
+  .evnode.s-running circle{stroke:var(--accent,#0d6e78)}
+  .evnode.s-unpowered circle{stroke:#b7791f;fill:#fdf6ec}
+  .evnode.s-ghost circle{stroke:#9b2c2c;stroke-dasharray:3.5 2.5;fill:transparent}
+  .evnode text{font:600 10.5px system-ui;fill:var(--ink,#1c232b);pointer-events:none}
+  .evnode:hover circle{stroke-width:2.6}
+  .evnode.on circle{fill:var(--accent,#0d6e78);stroke:var(--accent,#0d6e78)}
+  .evnode.on.s-ghost circle{fill:#9b2c2c;stroke:#9b2c2c}
+  .evnode.on.s-unpowered circle{fill:#b7791f;stroke:#b7791f}
+  .evnode.on text{font-weight:800}
+  .evleg{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:11px;
+    color:var(--muted,#5b6672);margin-top:8px}
+  .evleg i{display:inline-block;width:9px;height:9px;border-radius:50%;
+    border:1.7px solid;vertical-align:-1px;margin-right:4px}
+  .evleg .lr{border-color:var(--accent,#0d6e78)}
+  .evleg .lu{border-color:#b7791f;background:#fdf6ec}
+  .evleg .lg{border-color:#9b2c2c;border-style:dashed}
+  /* right — evidence panel */
+  .evpanel{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
+    border-radius:12px;overflow:hidden}
+  .evpanel .shot{background:#0f1418;display:flex;justify-content:center;gap:8px}
+  .evpanel .shot img{max-height:380px;width:auto;max-width:49%;object-fit:contain}
+  .evpanel .shot img:only-child{max-width:100%}
+  .evpanel .gap{display:flex;flex-direction:column;gap:6px;align-items:center;
+    justify-content:center;min-height:200px;font-size:12px;text-align:center;
+    padding:0 20px;color:var(--muted,#5b6672);
+    background:repeating-linear-gradient(-45deg,transparent,transparent 11px,
+    rgba(155,44,44,.07) 11px,rgba(155,44,44,.07) 22px)}
+  .evpanel .gap b{color:#9b2c2c;font-size:13px}
+  .evpanel .meta{padding:12px 16px 6px}
+  .evpanel h3{margin:0;font-size:1rem}
+  .evpanel .uc{font-size:12.5px;margin:6px 0 10px;max-width:64ch;
+    color:var(--ink-2,#39424c)}
+  .evrow{display:flex;gap:8px;font-size:11.5px;margin:3px 0;align-items:baseline}
+  .evrow .k{flex:0 0 86px;font-size:9.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--muted,#5b6672)}
+  .evchip{display:inline-block;font-size:10.5px;font-weight:600;padding:1px 7px;
+    border-radius:8px;border:1px solid var(--line,#d8dee6);margin:0 3px 3px 0;
+    font-family:ui-monospace,SFMono-Regular,monospace}
+  .evchip.code{border-color:var(--accent,#0d6e78);color:var(--accent-ink,#0a565e)}
+  .evchip.model{border-color:#b7791f;color:#8a5a12}
+  .evchip.cid{border-color:#6b46c1;color:#553c9a}
+  .evpill{font-size:9.5px;font-weight:800;text-transform:uppercase;
+    letter-spacing:.07em;padding:2px 8px;border-radius:9px;vertical-align:2px}
+  .evpill.principal{background:#e2f2f3;color:#0a565e}
+  .evpill.reference{background:#eef1f5;color:#4a5560}
+  .evpill.edge{background:#fdf1e2;color:#8a5a12}
+  .evpill.gap{background:#fbe9e9;color:#9b2c2c}
+  .evseq{display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+    padding:9px 16px 13px;border-top:1px solid var(--line,#d8dee6);
+    margin-top:10px;font-size:11px}
+  .evseq .k{font-size:9.5px;font-weight:700;text-transform:uppercase;
+    letter-spacing:.07em;color:var(--muted,#5b6672);margin-right:3px}
+  .evstep{font-size:11px;font-weight:600;padding:2px 8px;border-radius:8px;
+    border:1px solid var(--line,#d8dee6);cursor:pointer;background:var(--surface)}
+  .evstep.on{background:var(--accent,#0d6e78);color:#fff;
+    border-color:var(--accent,#0d6e78)}
 </style>
 
 <div class="prismprose">
-  <p>One state model drives all three drawings — click any state anywhere and
-  its evidence opens below.</p>
-  <h2>a · belt-lanes — the lifecycle as a line</h2>
-  <p>The payload changes identity at every station; three rows, six gates
-  deciding beside the belt.</p>
+  <p>Little nodes carry the flow; the evidence lives in the right column.
+  Click any state — the panel follows. Three groupings of the same 17 states;
+  pick by tab.</p>
 </div>
 
-<!-- FLOOR a — belt-lanes: 17 states, 3 authored rows, gates in the register -->
-<div class="pf" data-prism data-fx="ev-belt" data-tick="1400" style="--pf-node-w:150px">
-  <div class="pf-belt pf-rows">
-   <div class="pf-row">
-    <button class="pf-node" data-node="scanning" data-in="a paper receipt" data-out="SSE frames"
-            data-num="3 country runs · 5/5 passed" data-state="running" data-detail="#d-scan">
-      <span class="pf-ix">1</span><span class="pf-name">scanning</span>
-      <span class="pf-sub">one capture surface (D111)</span>
-      <span class="pf-recipe"><i>in</i><span>a paper receipt</span><i>out</i><span>SSE frames</span></span>
-      <span class="pf-num">3 country runs · 5/5</span>
-    </button>
-    <div class="pf-hop" data-payload="SSE frames"><div class="pf-rail"></div>
-      <div class="pf-chip">frames</div><div class="pf-hoplab">SSE frames</div></div>
-    <button class="pf-node" data-node="degrade to manual" data-in="a failed scan" data-out="a manual form"
-            data-num="2 degrade legs shot" data-state="running" data-detail="#d-degrade">
-      <span class="pf-ix">2</span><span class="pf-name">degrade → manual</span>
-      <span class="pf-sub">the fallback IS the flow</span>
-      <span class="pf-recipe"><i>in</i><span>a failed scan</span><i>out</i><span>a manual form</span></span>
-      <span class="pf-num">2 degrade legs shot</span>
-    </button>
-    <div class="pf-hop" data-payload="a manual form"><div class="pf-rail"></div>
-      <div class="pf-chip">form</div><div class="pf-hoplab">a manual form</div></div>
-    <button class="pf-node" data-node="draft" data-in="frames or a form" data-out="an AI-filled draft"
-            data-num="TransactionDraft · 17 shots" data-state="running" data-detail="#d-draft">
-      <span class="pf-ix">3</span><span class="pf-name">draft</span>
-      <span class="pf-sub">review before anything persists</span>
-      <span class="pf-recipe"><i>in</i><span>frames or a form</span><i>out</i><span>an AI-filled draft</span></span>
-      <span class="pf-num">TransactionDraft · 17 shots</span>
-    </button>
-    <div class="pf-hop" data-payload="an AI-filled draft"><div class="pf-rail"></div>
-      <div class="pf-chip">draft</div><div class="pf-hoplab">a draft</div></div>
-    <button class="pf-node" data-node="draft resumed" data-in="a mid-review reload" data-out="the same draft, back"
-            data-num="persistence leg 04" data-state="running" data-detail="#d-resume">
-      <span class="pf-ix">4</span><span class="pf-name">draft resumed</span>
-      <span class="pf-sub">reload survives</span>
-      <span class="pf-recipe"><i>in</i><span>a mid-review reload</span><i>out</i><span>the same draft, back</span></span>
-      <span class="pf-num">persistence leg 04</span>
-    </button>
-    <div class="pf-hop pf-return" data-payload="a decision"><div class="pf-rail"></div>
-      <div class="pf-chip">keep?</div><div class="pf-hoplab">keep or discard ↓</div></div>
-   </div>
-   <div class="pf-row">
-    <button class="pf-node" data-node="discarded" data-in="Descartar" data-out="a real DELETE"
-            data-num="P119 edge · 0 captures" data-state="ghost" data-detail="#d-discard">
-      <span class="pf-ix">5</span><span class="pf-name">discarded</span>
-      <span class="pf-sub">the exit nobody photographs</span>
-      <span class="pf-recipe"><i>in</i><span>Descartar</span><i>out</i><span>a real DELETE</span></span>
-      <span class="pf-num">P119 edge · 0 captures</span>
-    </button>
-    <div class="pf-hop" data-payload="a confirmed draft"><div class="pf-rail"></div>
-      <div class="pf-chip">saved</div><div class="pf-hoplab">or: Guardar</div></div>
-    <button class="pf-node" data-node="saved" data-in="a confirmed draft" data-out="a Transaction row"
-            data-num="5 models touched" data-state="running" data-detail="#d-saved">
-      <span class="pf-ix">6</span><span class="pf-name">saved</span>
-      <span class="pf-sub">the steady state — detail</span>
-      <span class="pf-recipe"><i>in</i><span>a confirmed draft</span><i>out</i><span>a Transaction row</span></span>
-      <span class="pf-num">5 models touched</span>
-    </button>
-    <div class="pf-hop" data-payload="a Transaction row"><div class="pf-rail"></div>
-      <div class="pf-chip">row</div><div class="pf-hoplab">a row</div></div>
-    <button class="pf-node" data-node="edited" data-in="a field change" data-out="a PATCHed row"
-            data-num="api-asserted · 0 captures" data-state="unpowered" data-detail="#d-edit">
-      <span class="pf-ix">7</span><span class="pf-name">edited</span>
-      <span class="pf-sub">per-field PATCH</span>
-      <span class="pf-recipe"><i>in</i><span>a field change</span><i>out</i><span>a PATCHed row</span></span>
-      <span class="pf-num">api-asserted · 0 captures</span>
-    </button>
-    <div class="pf-hop" data-payload="a PATCHed row"><div class="pf-rail"></div>
-      <div class="pf-chip">row′</div><div class="pf-hoplab">still yours</div></div>
-    <button class="pf-node" data-node="item flagged" data-in="a long-press on an item" data-out="a TransactionItemFlag"
-            data-num="C1066 RLS-proven" data-state="running" data-detail="#d-flag">
-      <span class="pf-ix">8</span><span class="pf-name">item flagged</span>
-      <span class="pf-sub">your margin notes</span>
-      <span class="pf-recipe"><i>in</i><span>a long-press on an item</span><i>out</i><span>a TransactionItemFlag</span></span>
-      <span class="pf-num">C1066 RLS-proven</span>
-    </button>
-    <div class="pf-hop" data-payload="a shared row"><div class="pf-rail"></div>
-      <div class="pf-chip">copy</div><div class="pf-hoplab">a group copy</div></div>
-    <button class="pf-node" data-node="locked · shared" data-in="a group share" data-out="a locked row (D74)"
-            data-num="409 · share_count &gt; 0" data-state="running" data-detail="#d-lockshare">
-      <span class="pf-ix">9</span><span class="pf-name">locked · shared</span>
-      <span class="pf-sub">someone else can see it</span>
-      <span class="pf-recipe"><i>in</i><span>a group share</span><i>out</i><span>a locked row (D74)</span></span>
-      <span class="pf-num">409 · share_count &gt; 0</span>
-      <span class="pf-alert">⚠ edits refuse</span>
-    </button>
-    <div class="pf-hop pf-return" data-payload="a locked row"><div class="pf-rail"></div>
-      <div class="pf-chip">locked</div><div class="pf-hoplab">locks ↓</div></div>
-   </div>
-   <div class="pf-row">
-    <button class="pf-node" data-node="locked · matched" data-in="a statement match" data-out="a locked row (P117)"
-            data-num="_is_statement_matched" data-state="running" data-detail="#d-lockmatch">
-      <span class="pf-ix">10</span><span class="pf-name">locked · matched</span>
-      <span class="pf-sub">reconciled against a cartola</span>
-      <span class="pf-recipe"><i>in</i><span>a statement match</span><i>out</i><span>a locked row (P117)</span></span>
-      <span class="pf-num">_is_statement_matched</span>
-      <span class="pf-alert">⚠ edits refuse</span>
-    </button>
-    <div class="pf-hop" data-payload="a read-only detail"><div class="pf-rail"></div>
-      <div class="pf-chip">r/o</div><div class="pf-hoplab">the surface</div></div>
-    <button class="pf-node" data-node="locked surface" data-in="either lock" data-out="a read-only detail"
-            data-num="flags still write (leg 06)" data-state="running" data-detail="#d-locksurface">
-      <span class="pf-ix">11</span><span class="pf-name">locked surface</span>
-      <span class="pf-sub">read-only · flags exempt</span>
-      <span class="pf-recipe"><i>in</i><span>either lock</span><i>out</i><span>a read-only detail</span></span>
-      <span class="pf-num">flags still write (leg 06)</span>
-    </button>
-    <div class="pf-hop" data-payload="the last copy leaving"><div class="pf-rail"></div>
-      <div class="pf-chip">free</div><div class="pf-hoplab">unshare</div></div>
-    <button class="pf-node" data-node="unshared" data-in="the last group copy leaving" data-out="an unlocked row (P83)"
-            data-num="api-asserted · 0 captures" data-state="unpowered" data-detail="#d-unshare">
-      <span class="pf-ix">12</span><span class="pf-name">unshared</span>
-      <span class="pf-sub">locked while ANY copy survives</span>
-      <span class="pf-recipe"><i>in</i><span>the last group copy leaving</span><i>out</i><span>an unlocked row (P83)</span></span>
-      <span class="pf-num">api-asserted · 0 captures</span>
-    </button>
-    <div class="pf-hop" data-payload="the delete tap"><div class="pf-rail"></div>
-      <div class="pf-chip">tap</div><div class="pf-hoplab">delete</div></div>
-    <button class="pf-node" data-node="delete confirm" data-in="the delete tap" data-out="a confirm sheet"
-            data-num="C1067" data-state="running" data-detail="#d-delconfirm">
-      <span class="pf-ix">13</span><span class="pf-name">delete · confirm</span>
-      <span class="pf-sub">destructive, so it asks</span>
-      <span class="pf-recipe"><i>in</i><span>the delete tap</span><i>out</i><span>a confirm sheet</span></span>
-      <span class="pf-num">C1067</span>
-    </button>
-    <div class="pf-hop" data-payload="an absence"><div class="pf-rail"></div>
-      <div class="pf-chip">gone</div><div class="pf-hoplab">an absence</div></div>
-    <button class="pf-node" data-node="deleted" data-in="a confirmed delete" data-out="a row that is gone"
-            data-num="leg 08 · list shrinks" data-state="running" data-detail="#d-deleted">
-      <span class="pf-ix">14</span><span class="pf-name">deleted</span>
-      <span class="pf-sub">single or batch</span>
-      <span class="pf-recipe"><i>in</i><span>a confirmed delete</span><i>out</i><span>a row that is gone</span></span>
-      <span class="pf-num">leg 08 · list shrinks</span>
-    </button>
-   </div>
-   <div class="pf-row">
-    <button class="pf-node" data-node="batch deleted" data-in="N selected rows" data-out="a count, or a whole-batch refusal"
-            data-num="C1072 · C704 · 0 captures" data-state="unpowered" data-detail="#d-batch">
-      <span class="pf-ix">15</span><span class="pf-name">batch deleted</span>
-      <span class="pf-sub">all-or-nothing on locks</span>
-      <span class="pf-recipe"><i>in</i><span>N selected rows</span><i>out</i><span>a count, or a whole-batch refusal</span></span>
-      <span class="pf-num">C1072 · C704 · 0 captures</span>
-    </button>
-    <div class="pf-hop" data-payload="a delete past 90 days"><div class="pf-rail"></div>
-      <div class="pf-chip">90d+</div><div class="pf-hoplab">time passes</div></div>
-    <button class="pf-node" data-node="sealed" data-in="a delete past 90 days" data-out="a refusal — the period is settled"
-            data-num="0 tests · 0 captures" data-state="ghost" data-detail="#d-sealed">
-      <span class="pf-ix">16</span><span class="pf-name">sealed · 409</span>
-      <span class="pf-sub">UX-11 — time is the gate</span>
-      <span class="pf-recipe"><i>in</i><span>a delete past 90 days</span><i>out</i><span>a refusal — the period is settled</span></span>
-      <span class="pf-num">0 tests · 0 captures</span>
-      <span class="pf-alert">⚠ born-red candidate</span>
-    </button>
-    <div class="pf-hop" data-payload="a legal erasure request"><div class="pf-rail"></div>
-      <div class="pf-chip">DSR</div><div class="pf-hoplab">the legal door</div></div>
-    <button class="pf-node" data-node="DSR erasure" data-in="a legal erasure request" data-out="a bulk delete past every gate"
-            data-num="consent.py path · 0 captures" data-state="ghost" data-detail="#d-dsr">
-      <span class="pf-ix">17</span><span class="pf-name">DSR erasure</span>
-      <span class="pf-sub">bypasses the window, by right</span>
-      <span class="pf-recipe"><i>in</i><span>a legal erasure request</span><i>out</i><span>a bulk delete past every gate</span></span>
-      <span class="pf-num">consent.py path · 0 captures</span>
-    </button>
-   </div>
+<div class="evsplit">
+  <div class="evmap">
+    <div class="evtabs" id="evtabs">
+      <button class="evtab on" data-view="lanes">a · lanes</button>
+      <button class="evtab" data-view="orbit">b · orbit</button>
+      <button class="evtab" data-view="gates">c · gates</button>
+    </div>
+    <div id="evdiag" data-probe></div>
+    <div class="evleg">
+      <span><i class="lr"></i>running — shot + assertion</span>
+      <span><i class="lu"></i>unpowered — asserted, unphotographed</span>
+      <span><i class="lg"></i>ghost — nothing</span>
+    </div>
   </div>
-  <div class="pf-gates">
-    <span class="pf-gatelab">gates</span>
-    <span class="pf-gate" data-node="D74 share lock" data-gate data-state="running"
-          title="A shared row refuses per-field edits with an explicit 409 popup — never a silent partial.">D74 · shared rows refuse edits</span>
-    <span class="pf-gate" data-node="P117 statement lock" data-gate data-state="running"
-          title="A statement-matched row is sealed until the statement releases it.">P117 · matched rows are sealed</span>
-    <span class="pf-gate" data-node="UX-11 delete window" data-gate data-state="unpowered"
-          title="Deletes older than 90 days 409 — live in prod, and no test proves it fires.">UX-11 · 90-day window, untested</span>
-    <span class="pf-gate" data-node="confirm sheet" data-gate data-state="running"
-          title="Destructive paths ask first; the capture created its own victim.">confirm · destructive paths ask</span>
-    <span class="pf-gate" data-node="RLS scope" data-gate data-state="running"
-          title="Another scope's rows are invisible — batch deletes silently ignore them (C704).">RLS · other scopes invisible (C704)</span>
-    <span class="pf-gate" data-node="batch all-or-nothing" data-gate data-state="running"
-          title="One locked row in the selection refuses the WHOLE batch (D74 batch rule).">batch · one lock refuses all</span>
+  <div class="evpanel" id="evpanel" data-probe>
+    <div class="shot" id="evshot"></div>
+    <div class="meta">
+      <h3><span id="evtitle" data-probe-expect="\S"></span>
+          <span class="evpill" id="evrole"></span></h3>
+      <p class="uc" id="evuc"></p>
+      <div id="evrows"></div>
+    </div>
+    <div class="evseq" id="evseq"></div>
   </div>
 </div>
 
-<div class="pf-legend">
-  <span><i class="l-running"></i> <b>running</b> — captured AND asserted: a shot and a spec leg exist</span>
-  <span><i class="l-unpowered"></i> <b>unpowered</b> — asserted in api tests, never photographed (or live but untested)</span>
-  <span><i class="l-ghost"></i> <b>ghost</b> — no capture, no test — a named absence</span>
+<div class="prismprose">
+  <p>Answer with a letter — the winner becomes the Evidence tab's left side.</p>
 </div>
 
-<div class="prismprose" style="margin-top:30px">
-  <h2>b · hub-orbit — saved is home</h2>
-  <p>Every episode leaves the detail and comes back to it; the orbit says so
-  before any label is read.</p>
-</div>
+<script>
+/* Evidence states — split view. 17 REAL states; every value manifest-sourced
+   (tx2b-journey · tx1-detail-reskin · txflows-journey · transactions.py). */
+const A = "assets/evidence-states/";
+const S = {
+ scanning:{l:"scan",lane:"capture",st:"running",role:"principal",
+  shot:[A+"scan-02-slot-scanning.png"],
+  uc:"Scan a paper receipt — one capture surface (D111); three country runs walked this on production, 5/5.",
+  cap:"2026-07-09 · recorded vs production (e5a5961)",
+  spec:"_tx2b-live-capture.spec.ts",code:["POST /api/v1/transactions","web scan slot (SSE)"],
+  models:["TransactionDraft"],cids:[]},
+ degrade:{l:"degrade",lane:"capture",st:"running",role:"principal",
+  shot:[A+"degrade-01-slot-error.png",A+"degrade-02-manual-after-failure.png"],
+  uc:"A failed scan lands in the SAME surface as manual entry — the fallback is a first-class flow, photographed twice.",
+  cap:"2026-07-09 · degrade leg",spec:"_tx2b-live-capture.spec.ts",code:[],models:["TransactionDraft"],cids:[]},
+ draft:{l:"draft",lane:"capture",st:"running",role:"principal",
+  shot:[A+"scan-03-form-populated.png"],
+  uc:"AI-populated form awaiting review — nothing persists until Guardar.",
+  cap:"2026-07-09 · vs production",spec:"_tx2b-live-capture.spec.ts",code:[],models:["TransactionDraft"],cids:[]},
+ resumed:{l:"resume",lane:"capture",st:"running",role:"principal",
+  shot:[A+"scan-04-reload-resumed.png"],
+  uc:"Reload mid-review and the draft comes back — the persistence proof behind the one-surface bet.",
+  cap:"2026-07-09 · leg 04",spec:"_tx2b-live-capture.spec.ts",code:[],models:["TransactionDraft"],cids:[]},
+ discarded:{l:"discard",lane:"capture",st:"ghost",role:"named gap",
+  uc:"Descartar issues a REAL DELETE (CA0 trust fix) — the P119 delete-window edge was found here, and no proof set ever photographed it.",
+  cap:"never",spec:"— none —",code:["DELETE /api/v1/transactions/{id}"],models:[],cids:[]},
+ saved:{l:"saved",lane:"living",st:"running",role:"reference",
+  shot:[A+"saved-detail-mobile.png"],
+  uc:"The steady state — the detail every episode returns to (reference⟷live fidelity set).",
+  cap:"2026-07-08/09 · fidelity set",spec:"tx1-detail-reskin.spec.ts",
+  code:["GET /api/v1/transactions/{id}"],
+  models:["Transaction","TransactionItem","TransactionImage"],cids:[]},
+ edited:{l:"edit",lane:"living",st:"unpowered",role:"edge",
+  uc:"Per-field PATCH is api-asserted — including lock refusals and the cross-scope 404 — but the edit surface was never photographed.",
+  cap:"never (api only)",spec:"api update suite",code:["PATCH /api/v1/transactions/{id}"],
+  models:["Transaction"],cids:["C702"]},
+ flagged:{l:"flag",lane:"living",st:"running",role:"edge",
+  shot:[A+"01-flag-popup-mobile.png",A+"02-flag-active-mobile.png"],
+  uc:"Per-item margin notes, toggled live on production then reverted — flags survive every lock.",
+  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
+  code:["flag toggle popup"],models:["TransactionItemFlag"],cids:["C1066"]},
+ shared:{l:"shared",lane:"locks",st:"running",role:"edge",
+  shot:[A+"03-lock-popup-shared-mobile.png"],
+  uc:"A shared row refuses edits with an explicit 409 popup and lock-links — never a silent partial (D74).",
+  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
+  code:["PATCH → 409 (D74)"],models:["Transaction.is_shared"],cids:[]},
+ matched:{l:"matched",lane:"locks",st:"running",role:"edge",
+  shot:[A+"04-lock-popup-matched-mobile.png"],
+  uc:"“Transacción conciliada” — reconciled against a cartola, sealed until the statement releases it (P117).",
+  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
+  code:["PATCH → 409 (P117)","_is_statement_matched"],models:["Transaction"],cids:[]},
+ readonly:{l:"read-only",lane:"locks",st:"running",role:"edge",
+  shot:[A+"05-locked-detail-readonly-mobile.png",A+"06-flag-on-locked-mobile.png"],
+  uc:"What a lock feels like: edit affordances gone, flags still writable — the lock protects shared numbers, not your notes.",
+  cap:"2026-07-22 · legs 05+06",spec:"_txflows-live-capture.spec.ts",code:[],models:[],cids:[]},
+ unshared:{l:"unshare",lane:"locks",st:"unpowered",role:"edge",
+  uc:"Locked while ANY group copy survives; the counter-to-zero unlock (P83) is api-proven and never photographed.",
+  cap:"never (api only)",spec:"group-unshare suite",code:[],models:["Transaction.share_count"],cids:[]},
+ confirm:{l:"confirm",lane:"exit",st:"running",role:"edge",
+  shot:[A+"07-delete-confirm-mobile.png"],
+  uc:"Destructive paths ask first; the capture created its own victim so the seed ended unchanged.",
+  cap:"2026-07-22 · live on production",spec:"_txflows-live-capture.spec.ts",
+  code:["DELETE /api/v1/transactions/{id}"],models:["Transaction"],cids:["C1067"]},
+ deleted:{l:"deleted",lane:"exit",st:"running",role:"edge",
+  shot:[A+"08-deleted-gone-mobile.png"],
+  uc:"The row is gone and the list shrank by one.",
+  cap:"2026-07-22 · leg 08",spec:"_txflows-live-capture.spec.ts",code:[],models:[],cids:["C1067"]},
+ batch:{l:"batch",lane:"exit",st:"unpowered",role:"edge",
+  uc:"Batch delete counts only your scope's rows and refuses the WHOLE batch when one row is locked — asserted, never photographed.",
+  cap:"never (api only)",spec:"api batch suite",code:["POST …/batch-delete"],
+  models:["Transaction"],cids:["C1072","C704"]},
+ sealed:{l:"409",lane:"exit",st:"ghost",role:"named gap",
+  uc:"Deletes past 90 days refuse — settled periods are sealed (UX-11). NO test walks this and NO capture exists: the born-red candidate (126f36a6 names it).",
+  cap:"never",spec:"— none —",code:["_assert_within_delete_window"],models:[],cids:[]},
+ dsr:{l:"DSR",lane:"exit",st:"ghost",role:"named gap",
+  uc:"The consent bulk path deletes past the window BY DESIGN — a legal right; entirely unphotographed and untested end-to-end.",
+  cap:"never",spec:"— none —",code:["consent.py bulk erasure"],models:[],cids:[]},
+};
+const EDGES = [["scanning","draft"],["scanning","degrade"],["degrade","draft"],
+ ["draft","resumed"],["resumed","saved"],["draft","discarded"],
+ ["saved","edited"],["saved","flagged"],["saved","shared"],["saved","matched"],
+ ["shared","readonly"],["matched","readonly"],["shared","unshared"],
+ ["saved","confirm"],["confirm","deleted"],["confirm","sealed"],["saved","dsr"],
+ ["saved","batch"],["batch","deleted"]];
+const LANES = [["capture","CAPTURE"],["living","LIVING ROW"],["locks","LOCKS"],["exit","EXIT"]];
+const GATES = {D74:["shared","unshared","batch"],P117:["matched","readonly"],
+ "UX-11":["sealed","dsr"],confirm:["confirm","deleted","discarded"],RLS:["edited","flagged"]};
 
-<!-- FLOOR b — same nodes, ring placement; spokes are stroke-only, static -->
-<div class="pf" data-prism data-fx="ev-orbit" data-scrub="off" style="--pf-node-w:140px">
-  <div class="orbit">
-    <svg class="o-spokes" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
-      <g stroke="var(--muted,#8a94a0)" stroke-width=".35" fill="none" opacity=".55">
-        <line x1="50" y1="50" x2="30" y2="10"/><line x1="50" y1="50" x2="70" y2="10"/>
-        <line x1="50" y1="50" x2="8"  y2="35"/><line x1="50" y1="50" x2="8"  y2="65"/>
-        <line x1="50" y1="50" x2="92" y2="35"/><line x1="50" y1="50" x2="92" y2="65"/>
-        <line x1="50" y1="50" x2="30" y2="90"/><line x1="50" y1="50" x2="70" y2="90"/>
-      </g>
-    </svg>
-    <div class="o-n">
-      <button class="pf-node" data-node="capture arc" data-in="a paper receipt" data-out="a Transaction row"
-              data-num="scan → draft → saved" data-state="running" data-detail="#d-scan">
-        <span class="pf-name">capture arc in</span>
-        <span class="pf-recipe"><i>in</i><span>a paper receipt</span><i>out</i><span>a Transaction row</span></span>
-        <span class="pf-num">scan → draft → saved</span>
-      </button>
-      <button class="pf-node" data-node="flag orbit" data-in="a long-press" data-out="a flag on the row"
-              data-num="survives every lock" data-state="running" data-detail="#d-flag">
-        <span class="pf-name">flag</span>
-        <span class="pf-recipe"><i>in</i><span>a long-press</span><i>out</i><span>a flag on the row</span></span>
-        <span class="pf-num">survives every lock</span>
-      </button>
-    </div>
-    <div class="o-w">
-      <button class="pf-node" data-node="edit orbit" data-in="a field change" data-out="a PATCHed row"
-              data-num="0 captures" data-state="unpowered" data-detail="#d-edit">
-        <span class="pf-name">edit</span>
-        <span class="pf-recipe"><i>in</i><span>a field change</span><i>out</i><span>a PATCHed row</span></span>
-        <span class="pf-num">0 captures</span>
-      </button>
-      <button class="pf-node" data-node="discard exit" data-in="Descartar" data-out="a real DELETE"
-              data-num="P119 · 0 captures" data-state="ghost" data-detail="#d-discard">
-        <span class="pf-name">discard</span>
-        <span class="pf-recipe"><i>in</i><span>Descartar</span><i>out</i><span>a real DELETE</span></span>
-        <span class="pf-num">P119 · 0 captures</span>
-      </button>
-    </div>
-    <button class="pf-node o-hub" data-node="saved hub" data-in="every episode" data-out="the steady state"
-            data-num="the detail — 5 models" data-state="running" data-detail="#d-saved">
-      <span class="pf-name">SAVED · detail</span>
-      <span class="pf-sub">home</span>
-      <span class="pf-recipe"><i>in</i><span>every episode</span><i>out</i><span>the steady state</span></span>
-      <span class="pf-num">the detail — 5 models</span>
-    </button>
-    <div class="o-e">
-      <button class="pf-node" data-node="share orbit" data-in="a group share" data-out="a locked row, until unshare"
-              data-num="D74 · P83" data-state="running" data-detail="#d-lockshare">
-        <span class="pf-name">share ⇄ unshare</span>
-        <span class="pf-recipe"><i>in</i><span>a group share</span><i>out</i><span>a locked row, until unshare</span></span>
-        <span class="pf-num">D74 · P83</span>
-      </button>
-      <button class="pf-node" data-node="match orbit" data-in="a statement match" data-out="a sealed row"
-              data-num="P117" data-state="running" data-detail="#d-lockmatch">
-        <span class="pf-name">statement match</span>
-        <span class="pf-recipe"><i>in</i><span>a statement match</span><i>out</i><span>a sealed row</span></span>
-        <span class="pf-num">P117</span>
-      </button>
-    </div>
-    <div class="o-s">
-      <button class="pf-node" data-node="delete exit" data-in="the delete tap" data-out="an absence"
-              data-num="confirm → gone" data-state="running" data-detail="#d-delconfirm">
-        <span class="pf-name">delete exit</span>
-        <span class="pf-recipe"><i>in</i><span>the delete tap</span><i>out</i><span>an absence</span></span>
-        <span class="pf-num">confirm → gone</span>
-      </button>
-      <button class="pf-node" data-node="seal by time" data-in="90 days passing" data-out="a refusal"
-              data-num="0 tests · 0 captures" data-state="ghost" data-detail="#d-sealed">
-        <span class="pf-name">sealed by time</span>
-        <span class="pf-recipe"><i>in</i><span>90 days passing</span><i>out</i><span>a refusal</span></span>
-        <span class="pf-num">0 tests · 0 captures</span>
-      </button>
-    </div>
-  </div>
-</div>
+const DEFS='<defs><marker id="evarr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="5.5" markerHeight="5.5" orient="auto"><path d="M0,0L8,4L0,8z" fill="#9aa5b1"/></marker></defs>';
+function node(id,x,y,cur){const s=S[id];
+ return `<g class="evnode s-${s.st}${id===cur?" on":""}" data-state="${id}">`+
+  `<circle cx="${x}" cy="${y}" r="12"/>`+
+  `<text x="${x}" y="${y+24}" text-anchor="middle">${s.l}</text></g>`;}
+function edge(a,b,P){if(!P[a]||!P[b])return"";const[x1,y1]=P[a],[x2,y2]=P[b];
+ const dx=x2-x1,dy=y2-y1,L=Math.hypot(dx,dy);
+ return `<path class="edge" d="M${x1+dx/L*14},${y1+dy/L*14} L${x2-dx/L*16},${y2-dy/L*16}"/>`;}
 
-<div class="prismprose" style="margin-top:30px">
-  <h2>c · gate-first — grouped by what stops you</h2>
-  <p>The ramifications view: each panel is a guard, holding the states it can
-  refuse.</p>
-</div>
+const POS_LANES={scanning:[52,52],degrade:[128,90],draft:[204,52],resumed:[280,52],
+ discarded:[356,90],saved:[166,168],edited:[62,222],flagged:[166,238],
+ shared:[268,222],matched:[356,238],readonly:[312,306],unshared:[218,306],
+ confirm:[56,382],batch:[130,414],deleted:[204,382],sealed:[278,414],dsr:[352,382]};
+function viewLanes(cur){let s=`<svg viewBox="0 0 400 470">${DEFS}`;
+ [["CAPTURE",22,null],["LIVING ROW",148,132],["LOCKS",286,268],["EXIT",362,346]]
+  .forEach(([t,y,sep])=>{if(sep)s+=`<line class="lanesep" x1="6" y1="${sep}" x2="394" y2="${sep}"/>`;
+   s+=`<text class="lanelab" x="6" y="${y}">${t}</text>`;});
+ EDGES.forEach(([a,b])=>s+=edge(a,b,POS_LANES));
+ for(const id in POS_LANES)s+=node(id,...POS_LANES[id],cur);
+ return s+"</svg>";}
+function viewOrbit(cur){const ring=["scanning","degrade","draft","resumed","discarded",
+  "edited","flagged","shared","matched","readonly","unshared","confirm","deleted","batch","sealed","dsr"];
+ const cx=200,cy=205,R=150;let s=`<svg viewBox="0 0 400 420">${DEFS}`;
+ ring.forEach((id,i)=>{const a=-Math.PI/2+i*2*Math.PI/ring.length;
+  const x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
+  s+=`<line class="edge" x1="${cx+(x-cx)*.12+0}" y1="${cy+(y-cy)*.12}" x2="${x-(x-cx)*.13}" y2="${y-(y-cy)*.13}" marker-end="none" opacity=".45"/>`;
+  s+=node(id,x,y,cur);});
+ s+=node("saved",cx,cy,cur);
+ return s+"</svg>";}
+function viewGates(cur){let s=`<svg viewBox="0 0 400 430">${DEFS}`;let y=34;
+ for(const[g,ids]of Object.entries(GATES)){
+  s+=`<text class="lanelab" x="8" y="${y-14}">${g}</text>`;
+  s+=`<line class="lanesep" x1="6" y1="${y+34}" x2="394" y2="${y+34}"/>`;
+  ids.forEach((id,i)=>s+=node(id,60+i*88,y,cur));y+=80;}
+ s+=`<text class="lanelab" x="8" y="${y-14}">UNGATED</text>`;
+ ["scanning","degrade","draft","resumed","saved"].forEach((id,i)=>s+=node(id,60+i*76,y,cur));
+ return s+"</svg>";}
+const VIEWS={lanes:viewLanes,orbit:viewOrbit,gates:viewGates};
 
-<!-- FLOOR c — gate-first grouping; same nodes, same inspectors -->
-<div class="pf" data-prism data-fx="ev-gates" data-scrub="off" style="--pf-node-w:130px">
-  <div class="egroups">
-    <div class="egroup">
-      <span class="pf-gate" data-node="ungated capture" data-gate data-state="running">no gate · the capture lane</span>
-      <div class="eg-states">
-        <button class="pf-node" data-node="capture states" data-in="a paper receipt" data-out="a Transaction row"
-                data-num="9 capture shots" data-state="running" data-detail="#d-scan">
-          <span class="pf-name">scan→saved</span><span class="pf-num">9 capture shots</span>
-        </button>
-        <button class="pf-node" data-node="degrade fallback" data-in="a failed scan" data-out="a manual form"
-                data-num="2 shots" data-state="running" data-detail="#d-degrade">
-          <span class="pf-name">degrade→manual</span><span class="pf-num">2 shots</span>
-        </button>
-      </div>
-      <p class="eg-why">Nothing refuses you here — failure degrades, never blocks.</p>
-    </div>
-    <div class="egroup">
-      <span class="pf-gate" data-node="D74 group" data-gate data-state="running">D74 · the share lock</span>
-      <div class="eg-states">
-        <button class="pf-node" data-node="shared under D74" data-in="a group share" data-out="a locked row"
-                data-num="409 popup shot" data-state="running" data-detail="#d-lockshare">
-          <span class="pf-name">shared</span><span class="pf-num">409 popup shot</span>
-        </button>
-        <button class="pf-node" data-node="unshare under D74" data-in="the last copy leaving" data-out="an unlocked row"
-                data-num="P83 · api only" data-state="unpowered" data-detail="#d-unshare">
-          <span class="pf-name">unshared</span><span class="pf-num">P83 · api only</span>
-        </button>
-        <button class="pf-node" data-node="batch under D74" data-in="N rows, one locked" data-out="a whole-batch refusal"
-                data-num="C1072 · api only" data-state="unpowered" data-detail="#d-batch">
-          <span class="pf-name">batch 409</span><span class="pf-num">C1072 · api only</span>
-        </button>
-      </div>
-      <p class="eg-why">Shared numbers stay honest — one lock refuses the whole batch.</p>
-    </div>
-    <div class="egroup">
-      <span class="pf-gate" data-node="P117 group" data-gate data-state="running">P117 · the statement lock</span>
-      <div class="eg-states">
-        <button class="pf-node" data-node="matched under P117" data-in="a statement match" data-out="a sealed row"
-                data-num="409 popup shot" data-state="running" data-detail="#d-lockmatch">
-          <span class="pf-name">matched</span><span class="pf-num">409 popup shot</span>
-        </button>
-        <button class="pf-node" data-node="surface under locks" data-in="either lock" data-out="a read-only detail"
-                data-num="flags exempt" data-state="running" data-detail="#d-locksurface">
-          <span class="pf-name">read-only</span><span class="pf-num">flags exempt</span>
-        </button>
-      </div>
-      <p class="eg-why">Reconciled periods cannot shift under the user.</p>
-    </div>
-    <div class="egroup">
-      <span class="pf-gate" data-node="confirm group" data-gate data-state="running">confirm · destructive paths ask</span>
-      <div class="eg-states">
-        <button class="pf-node" data-node="confirm sheet state" data-in="the delete tap" data-out="a confirm sheet"
-                data-num="C1067 · shot" data-state="running" data-detail="#d-delconfirm">
-          <span class="pf-name">confirm</span><span class="pf-num">C1067 · shot</span>
-        </button>
-        <button class="pf-node" data-node="gone state" data-in="a confirmed delete" data-out="an absence"
-                data-num="leg 08 · shot" data-state="running" data-detail="#d-deleted">
-          <span class="pf-name">deleted</span><span class="pf-num">leg 08 · shot</span>
-        </button>
-        <button class="pf-node" data-node="discard under confirm" data-in="Descartar" data-out="a real DELETE"
-                data-num="P119 · 0 captures" data-state="ghost" data-detail="#d-discard">
-          <span class="pf-name">discarded</span><span class="pf-num">P119 · 0 captures</span>
-        </button>
-      </div>
-      <p class="eg-why">Both exits ask first; only one was ever photographed.</p>
-    </div>
-    <div class="egroup">
-      <span class="pf-gate" data-node="UX-11 group" data-gate data-state="unpowered">UX-11 · time seals the period</span>
-      <div class="eg-states">
-        <button class="pf-node" data-node="sealed under UX-11" data-in="a delete past 90 days" data-out="a refusal"
-                data-num="0 tests · 0 captures" data-state="ghost" data-detail="#d-sealed">
-          <span class="pf-name">sealed 409</span><span class="pf-num">0 tests · 0 captures</span>
-        </button>
-        <button class="pf-node" data-node="DSR past UX-11" data-in="a legal erasure request" data-out="a bulk delete past the gate"
-                data-num="consent.py · 0 captures" data-state="ghost" data-detail="#d-dsr">
-          <span class="pf-name">DSR bypass</span><span class="pf-num">consent.py · 0 captures</span>
-        </button>
-      </div>
-      <p class="eg-why">The gate that fires by itself as the calendar moves — and its only bypass is a legal right. Entirely unphotographed.</p>
-    </div>
-    <div class="egroup">
-      <span class="pf-gate" data-node="RLS group" data-gate data-state="running">RLS · other scopes invisible</span>
-      <div class="eg-states">
-        <button class="pf-node" data-node="edit under RLS" data-in="a field change" data-out="a PATCHed row"
-                data-num="404 cross-scope · C702" data-state="unpowered" data-detail="#d-edit">
-          <span class="pf-name">edited</span><span class="pf-num">404 cross-scope · C702</span>
-        </button>
-        <button class="pf-node" data-node="flag under RLS" data-in="a long-press" data-out="a flag"
-                data-num="C1066 · shots" data-state="running" data-detail="#d-flag">
-          <span class="pf-name">flagged</span><span class="pf-num">C1066 · shots</span>
-        </button>
-      </div>
-      <p class="eg-why">Every row above also sits behind this one — C704 proved a batch cannot reach a neighbour's rows.</p>
-    </div>
-  </div>
-</div>
-
-<div class="prismprose" style="margin-top:30px">
-  <p>Answer with a letter — the winner becomes the Evidence tab's left side;
-  the runners-up get stored.</p>
-</div>
-
-<!-- Shared inspectors — every representation's nodes open these -->
-<div class="pf-details">
-  <div class="pf-detail" id="d-scan">
-    <h4>scanning — the CL supermarket run, live on production</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/scan-02-slot-scanning.png" alt="scan slot mid-scan" loading="lazy"></div>
-    <p>The slot reads the receipt over SSE; three country runs (CL · US · FR)
-    walked this on production, 5/5 passed.</p>
-    <dl><dt>captured</dt><dd>2026-07-09 · recorded runs vs production (e5a5961)</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd>
-        <dt>code</dt><dd>web scan slot (SSE) · POST /api/v1/transactions</dd>
-        <dt>models</dt><dd>TransactionDraft</dd>
-        <dt>role</dt><dd>principal</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-degrade">
-    <h4>degrade → manual — the fallback is a first-class flow</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/degrade-01-slot-error.png" alt="scan slot error" loading="lazy"></div>
-    <div class="ev-shot"><img src="assets/evidence-states/degrade-02-manual-after-failure.png" alt="manual form after scan failure" loading="lazy"></div>
-    <p>A failed scan lands the user in the SAME surface as manual entry (D111)
-    — the degrade leg photographed both frames.</p>
-    <dl><dt>captured</dt><dd>2026-07-09 · degrade leg, 2 shots</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd>
-        <dt>role</dt><dd>principal (failure path)</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-draft">
-    <h4>draft — AI-populated, nothing persisted yet</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/scan-03-form-populated.png" alt="AI-populated draft form" loading="lazy"></div>
-    <p>Items, totals, merchant proposed for review; the row does not exist
-    until Guardar.</p>
-    <dl><dt>captured</dt><dd>2026-07-09 · vs production</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd>
-        <dt>models</dt><dd>TransactionDraft</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-resume">
-    <h4>draft resumed — reload survives</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/scan-04-reload-resumed.png" alt="draft resumed after reload" loading="lazy"></div>
-    <p>Mid-review reload brings the draft back — the persistence proof behind
-    TX2b's one-surface bet.</p>
-    <dl><dt>captured</dt><dd>2026-07-09 · persistence leg 04</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_tx2b-live-capture.spec.ts</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-discard">
-    <h4>discarded — a named absence</h4>
-    <div class="ev-gap"><b>⚠ no capture exists.</b> Descartar issues a REAL
-    DELETE (CA0 trust fix); the P119 delete-window edge was discovered on this
-    path — and no proof set ever photographed it.</div>
-    <dl><dt>code</dt><dd>DELETE /api/v1/transactions/{id} (from ScanResult)</dd>
-        <dt>cases</dt><dd>— none walk the discard UI —</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-saved">
-    <h4>saved — the steady state, on its detail</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/saved-detail-mobile.png" alt="transaction detail, mobile" loading="lazy"></div>
-    <p>The reference⟷live fidelity set's mobile detail — the surface every
-    episode returns to.</p>
-    <dl><dt>captured</dt><dd>2026-07-08/09 · fidelity set</dd>
-        <dt>spec</dt><dd>tests/web-e2e/tx1-detail-reskin.spec.ts</dd>
-        <dt>code</dt><dd>GET /api/v1/transactions/{id}</dd>
-        <dt>models</dt><dd>Transaction · TransactionItem · TransactionImage · TransactionItemFlag · TransactionDraft</dd>
-        <dt>role</dt><dd>reference</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-edit">
-    <h4>edited — asserted, never photographed</h4>
-    <div class="ev-gap"><b>unpowered.</b> Per-field PATCH is api-asserted
-    (including the 409 lock refusals and C702's cross-scope 404) — no visual
-    capture exists of the edit surface.</div>
-    <dl><dt>code</dt><dd>PATCH /api/v1/transactions/{id}</dd>
-        <dt>cases</dt><dd>update suite · C702</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-flag">
-    <h4>item flagged — margin notes that survive locks</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/01-flag-popup-mobile.png" alt="flag popup" loading="lazy"></div>
-    <div class="ev-shot"><img src="assets/evidence-states/02-flag-active-mobile.png" alt="flag active on item" loading="lazy"></div>
-    <p>Toggled live on production, then reverted — the seed ended unchanged.</p>
-    <dl><dt>captured</dt><dd>2026-07-22 · live capture (user B, es-CL, mobile-390)</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
-        <dt>models</dt><dd>TransactionItemFlag</dd>
-        <dt>cases</dt><dd>C1066 (RLS migration)</dd>
-        <dt>role</dt><dd>edge</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-lockshare">
-    <h4>locked · shared — the D74 popup, verbatim</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/03-lock-popup-shared-mobile.png" alt="share-lock 409 popup" loading="lazy"></div>
-    <p>An explicit refusal with lock-links — never a silent partial.</p>
-    <dl><dt>captured</dt><dd>2026-07-22 · live capture on production</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
-        <dt>code</dt><dd>PATCH → 409 (D74)</dd>
-        <dt>models</dt><dd>Transaction.is_shared / share_count</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-lockmatch">
-    <h4>locked · matched — the P117 popup</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/04-lock-popup-matched-mobile.png" alt="statement-match 409 popup" loading="lazy"></div>
-    <p>"Transacción conciliada" — the row is reconciled against a cartola and
-    refuses edits until released.</p>
-    <dl><dt>captured</dt><dd>2026-07-22 · live capture on production</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
-        <dt>code</dt><dd>PATCH → 409 (P117) · _is_statement_matched</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-locksurface">
-    <h4>locked surface — read-only, flags exempt</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/05-locked-detail-readonly-mobile.png" alt="locked detail read-only" loading="lazy"></div>
-    <div class="ev-shot"><img src="assets/evidence-states/06-flag-on-locked-mobile.png" alt="flag on locked row" loading="lazy"></div>
-    <p>Edit affordances gone; the flag still writes — the lock protects shared
-    numbers, not your own margin notes.</p>
-    <dl><dt>captured</dt><dd>2026-07-22 · legs 05 + 06</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-unshare">
-    <h4>unshared — the P83 unlock, api only</h4>
-    <div class="ev-gap"><b>unpowered.</b> The lock persists while ANY group
-    copy survives; the counter-to-zero unlock is proven in api tests and has
-    never been photographed.</div>
-    <dl><dt>cases</dt><dd>group-unshare suite (two-group persistence · re-lock)</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-delconfirm">
-    <h4>delete · confirm — it asks first</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/07-delete-confirm-mobile.png" alt="delete confirm sheet" loading="lazy"></div>
-    <p>The capture created its own victim, so the seed ended unchanged.</p>
-    <dl><dt>captured</dt><dd>2026-07-22 · live capture on production</dd>
-        <dt>spec</dt><dd>tests/web-e2e/_txflows-live-capture.spec.ts</dd>
-        <dt>code</dt><dd>DELETE /api/v1/transactions/{id} · delete_transaction</dd>
-        <dt>cases</dt><dd>C1067</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-deleted">
-    <h4>deleted — the list says so</h4>
-    <div class="ev-shot"><img src="assets/evidence-states/08-deleted-gone-mobile.png" alt="row gone after delete" loading="lazy"></div>
-    <p>The row is gone and the list shrank by one.</p>
-    <dl><dt>captured</dt><dd>2026-07-22 · leg 08</dd>
-        <dt>cases</dt><dd>C1067</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-batch">
-    <h4>batch deleted — all-or-nothing, api only</h4>
-    <div class="ev-gap"><b>unpowered.</b> Batch delete counts only your own
-    scope's rows (C704) and refuses the WHOLE batch when one row is locked —
-    asserted, never photographed.</div>
-    <dl><dt>code</dt><dd>POST /api/v1/transactions/batch-delete</dd>
-        <dt>cases</dt><dd>C1072 · C704</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-sealed">
-    <h4>sealed · 409 — the gate time fires</h4>
-    <div class="ev-gap"><b>⚠ ghost.</b> Deletes past
-    transaction_delete_window_days (90) refuse — settled periods' statistics
-    are sealed. NO test walks this path and NO capture exists; the fuse-fix
-    commit 126f36a6 names it a born-red /gabe-red candidate.</div>
-    <dl><dt>code</dt><dd>_assert_within_delete_window (UX-11)</dd>
-        <dt>cases</dt><dd>— none —</dd></dl>
-  </div>
-  <div class="pf-detail" id="d-dsr">
-    <h4>DSR erasure — the legal door past every gate</h4>
-    <div class="ev-gap"><b>⚠ ghost.</b> The consent bulk path deletes past the
-    delete window BY DESIGN (a legal right, documented in the window's own
-    docstring) — entirely unphotographed, untested end-to-end.</div>
-    <dl><dt>code</dt><dd>consent.py bulk erasure path</dd>
-        <dt>cases</dt><dd>— none —</dd></dl>
-  </div>
-</div>
+let VIEW="lanes",CUR="saved";
+function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}
+function render(){
+ document.getElementById("evdiag").innerHTML=VIEWS[VIEW](CUR);
+ const s=S[CUR];
+ document.getElementById("evshot").innerHTML=s.shot
+  ?s.shot.map(p=>`<img src="${p}" alt="${s.l}" loading="lazy">`).join("")
+  :`<div class="gap"><b>⚠ no capture exists</b><span>${s.uc}</span></div>`;
+ document.getElementById("evtitle").textContent=s.l+" · "+s.lane;
+ const pill=document.getElementById("evrole");
+ pill.textContent=s.role;pill.className="evpill "+(s.st==="ghost"?"gap":s.role.split(" ")[0]);
+ document.getElementById("evuc").textContent=s.shot?s.uc:"";
+ document.getElementById("evrows").innerHTML=
+  `<div class="evrow"><span class="k">captured</span><span>${s.cap}</span></div>`+
+  `<div class="evrow"><span class="k">spec</span><span class="evchip">${s.spec}</span></div>`+
+  (s.code.length?`<div class="evrow"><span class="k">code</span><span>${chips(s.code,"code")}</span></div>`:"")+
+  (s.models.length?`<div class="evrow"><span class="k">models</span><span>${chips(s.models,"model")}</span></div>`:"")+
+  (s.cids.length?`<div class="evrow"><span class="k">cases</span><span>${chips(s.cids,"cid")}</span></div>`:"");
+ const seq=Object.keys(S).filter(id=>S[id].lane===s.lane);
+ document.getElementById("evseq").innerHTML=`<span class="k">${s.lane} lane</span>`+
+  seq.map(id=>`<button class="evstep${id===CUR?" on":""}" data-state="${id}">${S[id].l}</button>`).join(" ");
+}
+document.addEventListener("click",e=>{
+ const t=e.target.closest("[data-state]");
+ if(t){CUR=t.dataset.state;render();return;}
+ const tab=e.target.closest(".evtab");
+ if(tab){VIEW=tab.dataset.view;
+  document.querySelectorAll(".evtab").forEach(b=>b.classList.toggle("on",b===tab));
+  render();}
+});
+render();
+</script>
