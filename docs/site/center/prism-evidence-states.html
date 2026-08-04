@@ -59,21 +59,21 @@
   <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
   <a class="navitem navsubitem" href="prism-compound-interest.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Compound interest</a>
   <a class="navitem navsubitem on" href="prism-evidence-states.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> evidence states</a>
-  <div class="foot">regen 2026-08-04 18:27<br>HEAD 232cb99 · build_suite_center.py</div>
+  <div class="foot">regen 2026-08-04 18:36<br>HEAD 232cb99 · build_suite_center.py</div>
 </aside>
 
 <main class="main">
   <div class="topbar">
     <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Transaction evidence — every state, its screenshot, its proof</b></div>
     <div class="spacer"></div>
-    <span class="chip warn">13 uncommitted</span>
-    <span class="stamp">regen · 2026-08-04 18:27</span>
+    <span class="chip warn">14 uncommitted</span>
+    <span class="stamp">regen · 2026-08-04 18:36</span>
   </div>
 
   <div class="prismhead">
     <div class="kicker">representation lab · gastify transaction · real captures</div>
     <h1>Transaction evidence — every state, its screenshot, its proof</h1>
-    <p class="prismlede">Every state a gastify transaction can reach, and what proves it: click any state in any of the three drawings and its production screenshot opens with the spec, code, models and cases behind it.</p>
+    <p class="prismlede">Every step a gastify transaction workflow can reach, and what proves it: pick a workflow, click any node on the tree, and its production screenshot opens with the spec, code, models and cases behind it.</p>
     <p class="prismhandle"><span class="phlab"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>the handle</span>The diagram is the index; the screenshot is the evidence.</p>
   </div>
 
@@ -191,8 +191,7 @@
         <option value="scan">scan workflow</option>
         <option value="lifecycle">entity lifecycle</option>
       </select>
-      <button class="evtab on" data-view="lanes">a · map</button>
-      <button class="evtab" data-view="orbit">b · orbit</button>
+      <button class="evtab on" data-view="lanes">map</button>
     </div>
     <div id="evdiag" data-probe></div>
     <div class="evgates" id="evgates"></div>
@@ -446,25 +445,15 @@ function viewLanes(wf,cur){const W=WF[wf];
  W.edges.forEach(([a,b,k])=>s+=edge(a,b,W.pos,k));
  for(const id in W.pos)s+=node(id,...W.pos[id],cur);
  return s+"</svg>";}
-function viewOrbit(wf,cur){const ids=Object.keys(WF[wf].pos);
- const hub=wf==="lifecycle"?"saved":(wf==="scan"?"draft":"form");
- const ring=ids.filter(i=>i!==hub);
- const cx=200,cy=200,R=142;let s=`<svg viewBox="0 0 400 410">${DEFS}`;
- ring.forEach((id,i)=>{const a=-Math.PI/2+i*2*Math.PI/ring.length;
-  const x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
-  s+=`<line class="edge" x1="${cx+(x-cx)*.14}" y1="${cy+(y-cy)*.14}" x2="${x-(x-cx)*.15}" y2="${y-(y-cy)*.15}" opacity=".45"/>`;
-  s+=node(id,x,y,cur);});
- s+=node(hub,cx,cy,cur);
- return s+"</svg>";}
 function viewTree(wf,cur){
  // manual only — bracket tree: trunk under each section pill, taps to children.
  const P={home:[200,30],plus:[200,82],form:[200,134],
   txfields:[86,196],itemfields:[252,196],resolve:[200,560],
   merchdate:[128,244],storecat:[128,290],payment:[128,336],cadence:[128,382],
   location:[128,428],attach:[128,474],totalcur:[128,520],
-  additem:[300,244],itemedit:[300,296],itemcat:[314,348],
-  leaveguard:[86,612],cancel:[186,612],save:[286,612],saved:[356,612]};
- let g=`<svg viewBox="0 0 400 650">${DEFS}`;
+  additem:[296,244],itemedit:[314,296],itemcat:[332,348],
+  leaveguard:[86,612],cancel:[186,612],save:[286,612],saved:[324,662]};
+ let g=`<svg viewBox="0 0 420 700">${DEFS}`;
  g+=edge("home","plus",P);g+=edge("plus","form",P);
  g+=edge("form","txfields",P);g+=edge("form","itemfields",P);
  // form → resolve: routed around the right edge, no crossings
@@ -475,19 +464,19 @@ function viewTree(wf,cur){
   g+=tap(86,208,P[id][0],P[id][1]);
  // items: trunk to additem, itemedit; itemedit indents to itemcat
  g+=tap(252,208,P.additem[0],P.additem[1]);
- g+=tap(252,208,P.itemedit[0],P.itemedit[1]);
- g+=tap(300,308,P.itemcat[0],P.itemcat[1]);
+ g+=tap(P.additem[0],P.additem[1]+12,P.itemedit[0],P.itemedit[1]);
+ g+=tap(P.itemedit[0],P.itemedit[1]+12,P.itemcat[0],P.itemcat[1]);
  // resolve taps
  for(const id of["leaveguard","cancel","save"])
   g+=tap(200,572,P[id][0],P[id][1]);
- g+=edge("save","saved",P);
+ g+=tap(P.save[0],P.save[1]+12,P.saved[0],P.saved[1]);
  // the one data effect: item save ⇢ total
- g+=`<path class="edge fx" d="M312,290 C368,420 240,500 148,518"/>`;
+ g+=`<path class="edge fx" d="M326,308 C384,430 250,505 148,518"/>`;
  for(const id in P)g+=node(id,...P[id],cur,
   ["merchdate","storecat","payment","cadence","location","attach","totalcur","additem","itemedit","itemcat"].includes(id)?"r":"b");
  return g+"</svg>";}
 function viewMap(wf,cur){return wf==="manual"?viewTree(wf,cur):viewLanes(wf,cur);}
-const VIEWS={lanes:viewMap,orbit:viewOrbit};
+const VIEWS={lanes:viewMap};
 
 let WFK="manual",VIEW="lanes",CUR="form";
 function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}

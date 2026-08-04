@@ -3,11 +3,11 @@
   "nav_label": "evidence states",
   "kicker": "representation lab · gastify transaction · real captures",
   "mode": "console",
-  "pattern": "state-map · split view",
+  "pattern": "bracket tree · split view",
   "order": 50,
   "kind": "representation lab",
-  "card": "One entity's full state flow with its evidence estate overlaid — 17 states, small-node diagrams left, the selected state's production capture + provenance right — grouped three ways (lanes · orbit · gates) so the operator picks the Evidence tab's left side with a letter.",
-  "lede": "Every state a gastify transaction can reach, and what proves it: click any state in any of the three drawings and its production screenshot opens with the spec, code, models and cases behind it.",
+  "card": "One entity's evidence navigator — workflow dropdown, an indented bracket tree per workflow (sections derive their children; depth = dependency, siblings = parallel paths), the selected step's production capture + provenance right, ✎ write-marks and running/unpowered/ghost evidence states.",
+  "lede": "Every step a gastify transaction workflow can reach, and what proves it: pick a workflow, click any node on the tree, and its production screenshot opens with the spec, code, models and cases behind it.",
   "handle": "The diagram is the index; the screenshot is the evidence.",
   "source": "proof manifests tx2b-journey · tx1-detail-reskin · txflows-journey; backend/app/api/transactions.py + models as read 2026-08-04; counts recountable from those files."
 }

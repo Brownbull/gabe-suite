@@ -111,8 +111,7 @@
         <option value="scan">scan workflow</option>
         <option value="lifecycle">entity lifecycle</option>
       </select>
-      <button class="evtab on" data-view="lanes">a · map</button>
-      <button class="evtab" data-view="orbit">b · orbit</button>
+      <button class="evtab on" data-view="lanes">map</button>
     </div>
     <div id="evdiag" data-probe></div>
     <div class="evgates" id="evgates"></div>
@@ -366,25 +365,15 @@ function viewLanes(wf,cur){const W=WF[wf];
  W.edges.forEach(([a,b,k])=>s+=edge(a,b,W.pos,k));
  for(const id in W.pos)s+=node(id,...W.pos[id],cur);
  return s+"</svg>";}
-function viewOrbit(wf,cur){const ids=Object.keys(WF[wf].pos);
- const hub=wf==="lifecycle"?"saved":(wf==="scan"?"draft":"form");
- const ring=ids.filter(i=>i!==hub);
- const cx=200,cy=200,R=142;let s=`<svg viewBox="0 0 400 410">${DEFS}`;
- ring.forEach((id,i)=>{const a=-Math.PI/2+i*2*Math.PI/ring.length;
-  const x=cx+R*Math.cos(a),y=cy+R*Math.sin(a);
-  s+=`<line class="edge" x1="${cx+(x-cx)*.14}" y1="${cy+(y-cy)*.14}" x2="${x-(x-cx)*.15}" y2="${y-(y-cy)*.15}" opacity=".45"/>`;
-  s+=node(id,x,y,cur);});
- s+=node(hub,cx,cy,cur);
- return s+"</svg>";}
 function viewTree(wf,cur){
  // manual only — bracket tree: trunk under each section pill, taps to children.
  const P={home:[200,30],plus:[200,82],form:[200,134],
   txfields:[86,196],itemfields:[252,196],resolve:[200,560],
   merchdate:[128,244],storecat:[128,290],payment:[128,336],cadence:[128,382],
   location:[128,428],attach:[128,474],totalcur:[128,520],
-  additem:[300,244],itemedit:[300,296],itemcat:[314,348],
-  leaveguard:[86,612],cancel:[186,612],save:[286,612],saved:[356,612]};
- let g=`<svg viewBox="0 0 400 650">${DEFS}`;
+  additem:[296,244],itemedit:[314,296],itemcat:[332,348],
+  leaveguard:[86,612],cancel:[186,612],save:[286,612],saved:[324,662]};
+ let g=`<svg viewBox="0 0 420 700">${DEFS}`;
  g+=edge("home","plus",P);g+=edge("plus","form",P);
  g+=edge("form","txfields",P);g+=edge("form","itemfields",P);
  // form → resolve: routed around the right edge, no crossings
@@ -395,19 +384,19 @@ function viewTree(wf,cur){
   g+=tap(86,208,P[id][0],P[id][1]);
  // items: trunk to additem, itemedit; itemedit indents to itemcat
  g+=tap(252,208,P.additem[0],P.additem[1]);
- g+=tap(252,208,P.itemedit[0],P.itemedit[1]);
- g+=tap(300,308,P.itemcat[0],P.itemcat[1]);
+ g+=tap(P.additem[0],P.additem[1]+12,P.itemedit[0],P.itemedit[1]);
+ g+=tap(P.itemedit[0],P.itemedit[1]+12,P.itemcat[0],P.itemcat[1]);
  // resolve taps
  for(const id of["leaveguard","cancel","save"])
   g+=tap(200,572,P[id][0],P[id][1]);
- g+=edge("save","saved",P);
+ g+=tap(P.save[0],P.save[1]+12,P.saved[0],P.saved[1]);
  // the one data effect: item save ⇢ total
- g+=`<path class="edge fx" d="M312,290 C368,420 240,500 148,518"/>`;
+ g+=`<path class="edge fx" d="M326,308 C384,430 250,505 148,518"/>`;
  for(const id in P)g+=node(id,...P[id],cur,
   ["merchdate","storecat","payment","cadence","location","attach","totalcur","additem","itemedit","itemcat"].includes(id)?"r":"b");
  return g+"</svg>";}
 function viewMap(wf,cur){return wf==="manual"?viewTree(wf,cur):viewLanes(wf,cur);}
-const VIEWS={lanes:viewMap,orbit:viewOrbit};
+const VIEWS={lanes:viewMap};
 
 let WFK="manual",VIEW="lanes",CUR="form";
 function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}
