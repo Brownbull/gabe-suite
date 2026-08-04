@@ -996,6 +996,19 @@ Follow the shared procedure documented in `/gabe-plan` under "Shared: auto-tick 
 - On mismatch or legacy Status-column format: exit silently
 - On success, display: `✅ PLAN: Phase [N] review ticked` (one line at the end of output)
 
+**The review record (evidence the tick leaves — design ruling 2026-08-04, option B).** In the
+same turn as the tick, write the phase's review record into BOTH mirrors (E5):
+- PLAN.md Phase Details: `- **Review:** <VERDICT>@<short-sha> findings:<n> triaged:<n>`
+  (VERDICT = APPROVE | WARNING; sha = HEAD at review time; findings = total findings this run;
+  triaged = findings that received a triage outcome — fix/defer/dismiss)
+- PLAN.json `phases[id==N].review` = the same string (real parser, never sed; the mirror
+  regeneration parses the exact `- **Review:**` bullet — anywhere else is invisible to it).
+`plan-proof-guard` validates the record on every PLAN write: a Review ✅ whose record is
+malformed, cites an unreachable sha, or shows `triaged < findings` BLOCKS (an existing-but-false
+record is a lie); a Review ✅ with NO record WARNS (legacy debt — plans ticked before this
+record existed). The record is the tick's evidence; the findings themselves stay judgment (D6)
+and live in the archived REVIEW.md.
+
 If the pass condition is not met (BLOCK verdict or unresolved issues above gate), do NOT tick — but do not emit a warning either. The user knows they blocked.
 
 **LEDGER row — always append** (runs whether tick fires or skips; runs whether PLAN.md exists or not; SKIPPED on `discard`):

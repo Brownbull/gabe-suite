@@ -203,6 +203,20 @@ plan={'version':1,'status':'active','current_phase':'1','phases':[{'id':'d','cel
 json.dump(plan,open('.kdbp/PLAN.json','w'))" && cat; } | bash "$GUARD" 2>/dev/null)
 echo "$wout" | grep -q 'Exec ✅ while Red ⬜' && bad "guard: Exec done + Red done must NOT warn" || ok
 
+# --- plan-proof-guard: review record (option B — present-but-false blocks, absent warns) ---
+RV() { echo "{'id':'v','cells':{'review':'done'},'review':$1,'cases':None,'proof':None}"; }
+[ "$(guard_on "[$(RV "'APPROVE@$SHA findings:3 triaged:3'")]")" = 0 ] && ok || bad "guard: valid review record must pass"
+[ "$(guard_on "[$(RV "'looks fine to me'")]")" = 2 ] && ok || bad "guard: malformed review record must BLOCK"
+[ "$(guard_on "[$(RV "'APPROVE@deadbeef findings:0 triaged:0'")]")" = 2 ] && ok || bad "guard: unreachable review sha must BLOCK"
+[ "$(guard_on "[$(RV "'WARNING@$SHA findings:5 triaged:3'")]")" = 2 ] && ok || bad "guard: triaged < findings must BLOCK (untriaged findings)"
+python3 -c "
+import json
+plan={'version':1,'status':'active','current_phase':'1','phases':[{'id':'v','cells':{'review':'done'},'review':None,'cases':None,'proof':None}]}
+json.dump(plan,open('.kdbp/PLAN.json','w'))"
+wout=$(echo '{"tool_input":{"file_path":"/x/.kdbp/PLAN.json"}}' | bash "$GUARD" 2>/dev/null); wrc=$?
+[ "$wrc" = 0 ] && echo "$wout" | grep -q 'without a review record' && ok || bad "guard: Review done w/o record must WARN and exit 0 (legacy debt)"
+[ "$(guard_on "[{'id':'v','cells':{'review':'todo'},'review':'APPROVE@$SHA findings:1 triaged:1','cases':None,'proof':None}]")" = 0 ] && ok || bad "guard: review todo w/ record present must pass (no check)"
+
 # --- red-entry-guard: WARN on source write while Red ⬜, SILENT otherwise ----
 REG="$REPO/scripts/hooks/kdbp/red-entry-guard.sh"
 reg() { # $1 = phases py literal · $2 = file_path -> echoes hook stdout

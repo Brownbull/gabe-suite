@@ -120,6 +120,21 @@ for ph in plan.get("phases", []) or []:
             # record-shaped, not evidence-shaped — guard-only and skip:* records are exempt
             if not shas and "skip:" not in cases and re.search(r"\b(NEW|BUMP)\b", cases):
                 out.append(f"phase {pid}: Red ✅ declares NEW/BUMP cases but cites no red@<sha> — a red claimed without its commit is record-less (run /gabe-red; the checkpoint commit carries the proof)")
+    # --- review ✅ must leave its record (option B, ruling 2026-08-04) ---
+    # present-but-false blocks (lie); absent warns (legacy debt — plans ticked pre-record)
+    if c.get("review") == "done":
+        rv = (ph.get("review") or "").strip()
+        if rv:
+            m = re.match(r"^([A-Z]+)@([0-9a-f]{7,40})\s+findings:(\d+)\s+triaged:(\d+)$", rv)
+            if not m:
+                out.append(f"phase {pid}: Review ✅ but the review record is malformed: {rv!r} (want `<VERDICT>@<sha> findings:<n> triaged:<n>`)")
+            else:
+                if not sha_reachable(m.group(2)):
+                    out.append(f"phase {pid}: Review ✅ cites {m.group(1)}@{m.group(2)} but that commit is unreachable")
+                if int(m.group(4)) < int(m.group(3)):
+                    out.append(f"phase {pid}: Review ✅ with untriaged findings — findings:{m.group(3)} triaged:{m.group(4)} (every finding gets fix/defer/dismiss)")
+        else:
+            warns.append(f"phase {pid}: Review ✅ without a review record (phases[].review — written by /gabe-review Step 6; legacy debt until adopted)")
     # --- review ✅ on a red-beat phase whose cases never went green ---
     if c.get("review") == "done":
         cases = (ph.get("cases") or "").strip()

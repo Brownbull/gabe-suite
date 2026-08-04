@@ -127,12 +127,14 @@ for cells in rows:
     proof = detail(pid, "Proof")
     proof_type = detail_proof_type(pid)
     cases = detail(pid, "Cases")
-    for field, mdval in (("proof", proof), ("proof_type", proof_type), ("cases", cases)):
+    review = detail(pid, "Review")
+    for field, mdval in (("proof", proof), ("proof_type", proof_type), ("cases", cases), ("review", review)):
         if mdval is None and old_ph.get(field) is not None:
             notes.append(f"preserved phase {pid} {field} from old mirror (no .md source): {str(old_ph[field])[:60]!r}")
     proof = proof if proof is not None else old_ph.get("proof")
     proof_type = proof_type if proof_type is not None else old_ph.get("proof_type")
     cases = cases if cases is not None else old_ph.get("cases")
+    review = review if review is not None else old_ph.get("review")
     ph = {
         "id": pid,
         "name": cell("phase"),
@@ -144,6 +146,7 @@ for cells in rows:
         "proof": proof,
         "proof_type": proof_type,
         "cases": cases,
+        "review": review,
     }
     for cname in CELL_COLS:
         glyph = cell(cname)
