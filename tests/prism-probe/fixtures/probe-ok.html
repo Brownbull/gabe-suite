@@ -1,0 +1,62 @@
+<!doctype html>
+<!-- Compliant fixture for the render probe (tools/probe-render.mjs).
+     Hermetic: no shell assets — the inline script IS the authored layer under
+     test. Every declared hook has a working implementation; the battery's
+     mutations break them one at a time and the probe must FIRE on each. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>probe fixture</title>
+<style>
+  body { font: 14px sans-serif; margin: 24px; }
+  #tip { display: none; border: 1px solid #999; padding: 2px 6px; }
+</style>
+</head>
+<body>
+
+<div data-fx="fxa">the animated thing</div>
+
+<div id="root" data-probe></div>
+
+<div id="read" data-probe-expect="answer 42"></div>
+
+<div id="box" data-probe-react>
+  <input id="n" type="number" value="2">
+  <span id="out" data-probe-out></span>
+  <input id="m" type="range" min="0" max="1000" step="500" value="0">
+  <span id="out2" data-probe-out></span>
+</div>
+
+<div id="hov" data-probe-hover="#tip">hover me</div>
+<div id="tip"></div>
+
+<script>
+(function () {
+  "use strict";
+  window.FXREPLAY = { fxa: function () {} };
+  document.getElementById("root").appendChild(document.createElement("span"));
+  document.getElementById("read").textContent = "answer 42";
+  function calc() {
+    var n = parseFloat(document.getElementById("n").value) || 0;
+    document.getElementById("out").textContent = "product " + (n * 21);
+  }
+  document.getElementById("n").addEventListener("input", calc);
+  calc();
+  /* The second pair proves the refined contract: input #m moves ONLY #out2
+     (partial movement is legal), it is a range whose step would snap a raw
+     value write (stepUp-only perturbation), and #out2 is reachable by no
+     other input (the never-moved clause has a live target to lose). */
+  function calc2() {
+    var m = parseFloat(document.getElementById("m").value) || 0;
+    document.getElementById("out2").textContent = "shifted " + (m + 1);
+  }
+  document.getElementById("m").addEventListener("input", calc2);
+  calc2();
+  document.getElementById("hov").addEventListener("mouseenter", function () {
+    document.getElementById("tip").style.display = "block";
+    document.getElementById("tip").textContent = "peeked";
+  });
+})();
+</script>
+</body>
+</html>
