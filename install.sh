@@ -41,6 +41,10 @@ if [ -d "$SCRIPT_DIR/skills" ]; then
         GABE_SKILLS+=("$(basename "$skill_path")")
     done
 fi
+# Companion estate — NOT a suite capability (no gabe- prefix, outside the doctor's
+# parity globs): the operator's cross-project conventions, carried so a reinstall
+# on a fresh machine lands them (origin: move №2 diet, 2026-08-04).
+[ -d "$SCRIPT_DIR/skills/dev-conventions" ] && GABE_SKILLS+=("dev-conventions")
 
 if $UNINSTALL; then
     echo "=== Uninstall Gabe Suite ==="

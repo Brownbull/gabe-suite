@@ -86,11 +86,11 @@ There is no `commands/` directory: it was retired in the B2 skills-only migratio
 | **gabe-mockup** | 2.1.0 | The lift SOP (L0–L4) over a per-project mockup manifest; Storybook + legacy HTML modes |
 | **gabe-myopic** | 1.2.0 | Short-sighted-user walkthrough — foresight traps, overwhelm, recall, no-undo (fork); findings labeled M[N], never C[N] |
 | **gabe-next** | 2.4.1 | Zero-logic lifecycle router over PLAN.md state — optional `Red` (routes /gabe-red BEFORE Exec) → Exec→Review→Commit→Push + optional `Center` (routes /gabe-cc-update) |
-| **gabe-plan** | 2.5.2 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
+| **gabe-plan** | 2.5.3 | KDBP planning + per-phase tier decision (MVP/enterprise/scale); `proof_type` (test|visual|journey) declared at plan time; optional `Red`/`Center` columns (Red retrofits seed ⬜ only where Exec is ⬜) |
 | **gabe-pulse** | 1.1.0 | Read-only completeness sweep — ten deterministic signals in four bands, plus the **ANGLE family** (`scripts/angles.py`): six evidence-backed triggers naming which satellite would find something now, printed as ONE line at the end of every spine beat so the 15 manual-only skills stop depending on memory; decay record, stated kill condition, 18-case battery |
 | **gabe-push** | 2.3.0 | Push, PR, CI watch, promotion — env-aware shipping via `.kdbp/PUSH.md`; terminal-env/--epic pushes run the PRODUCTION GATES (Step 3.7: /gabe-health three-lens scan, findings presented, ONE proceed/hold ask); terminal-env ship prints the /gabe-cc-update release pointer |
 | **gabe-red** | 1.5.1 | TDD's first half as a beat — inspect the corpus, declare cases (C-ids in test names, corpus = registry), prove RED by assertion, commit the red checkpoint; GUARDs for refactors, enumerated skips; scripts/prove-guard.py re-proves a guard can still FAIL (mutate → assert red → restore), feeding the center's named-vs-guarded distinction; scripts/case-thread.py observes the red→green thread at both ends (execute entry assert-red, execute-finish/review assert-green + green@sha stamp; Review ✅ without the stamp BLOCKED by plan-proof-guard) |
-| **gabe-review** | 1.9.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
+| **gabe-review** | 1.10.0 | Code review — risk pricing, confidence scoring, plan alignment, triage; case-estate subjects (NEW CASE/BUMP/DRIFT, reserved C-ids) + absent-angle GROWTH triage (cap 7) on the same pricing |
 | **gabe-roast** | 1.1.0 | Adversarial gap review from a required perspective (fork/read-only) |
 | **gabe-scope** | 2.1.1 | Scope authoring — SCOPE.md (stable premise + §Phases arc) for a new project |
 | **gabe-scope-change** | 2.2.0 | Scope evolution, one entry point — classifies pivot vs addition; additions execute inline (absorbed gabe-scope-addition), pivots route to the safety-flagged gabe-scope-pivot |
@@ -104,6 +104,14 @@ README covering why + how to reinstate; rulings in [docs/design/trim-ledger.md](
 **gabe-debt** (archived 2026-07-30 — operator rulings on the skill-map artifact: walk lost its why;
 quip/align/debt absorbed into gabe-meme/gabe-assess/gabe-health). `~/.claude/gabe-arch/` user state is never
 touched by decommission.
+
+## Companion estate
+
+`skills/dev-conventions/` — the operator's cross-project conventions (NOT a suite capability: no
+`gabe-` prefix, no capability row, outside the doctor's parity globs). Carried in the repo so a
+reinstall on a fresh machine lands it; installed to `~/.claude/skills/dev-conventions/` by
+install.sh. Origin: the 2026-08-04 always-on diet (move №2) — content relocated from
+`~/.claude/rules/common/`, loaded on demand only.
 
 ## Workflow Docs
 
