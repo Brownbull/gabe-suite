@@ -1,0 +1,948 @@
+{
+ "links": [
+  {
+   "from": "gabe-plan (Red cell \u2b1c in PLAN.json)",
+   "to": "gabe-red",
+   "kind": "router-order",
+   "evidence": "else if (c.red === \"todo\" || c.red === \"in_progress\") { next = `/gabe-red ${ph.id}`; reason = \"Phase planned \u2014 failing cases first (TDD)\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 113)",
+   "strength": "deterministic",
+   "note": "next.mjs routes /gabe-red ahead of Exec; missing Red column = always-\u2705 degradation (line 98)."
+  },
+  {
+   "from": "gabe-red",
+   "to": "gabe-execute (ordering: red before first source edit)",
+   "kind": "router-order",
+   "evidence": "Runs after `/gabe-plan` (needs the phase row + its `proof_type`) and **before execute's first source Write** for the phase.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/SKILL.md (line 25)",
+   "strength": "prose",
+   "note": "The before-first-Write half is spec-only; only the /gabe-next path enforces order."
+  },
+  {
+   "from": "gabe-red (Cases: record)",
+   "to": "gabe-execute (TASK CONTRACT CASES: line)",
+   "kind": "data-contract",
+   "evidence": "Downstream readers: `/gabe-execute`'s TASK CONTRACT `CASES:` line (which ids each task advances; phase completion = every declared case green + every guard still green)",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/references/red-spec.md (lines 101-103)",
+   "strength": "prose",
+   "note": "Red names execute as a reader; no script maps ids to tasks."
+  },
+  {
+   "from": "gabe-execute (task contract field)",
+   "to": "gabe-red (consumes the phase's Cases: record)",
+   "kind": "data-contract",
+   "evidence": "CASES: <C-ids this task turns green (red@<sha>)> \u00b7 GUARD: <ids that must stay green> \u2014 from the phase's Cases: record, or \"none declared (no /gabe-red record)\"",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 174)",
+   "strength": "prose",
+   "note": "Execute's spec reciprocates the seam; rule (d) at line 176 blocks phase-finish until all cases green + guards green."
+  },
+  {
+   "from": "gabe-red (declared ids)",
+   "to": "gabe-execute (case-scoped verify run)",
+   "kind": "data-contract",
+   "evidence": "When the phase carries a `Cases:` record, the `tests:` line MUST be case-scoped (e.g. `pytest -k \"C147v2 or C148\"`) so the copied count speaks for the declared ids",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 207)",
+   "strength": "prose",
+   "note": "Verify output must speak for red's ids \u2014 declared-red now green, guards still green."
+  },
+  {
+   "from": "gabe-red (red checkpoint commit)",
+   "to": "gabe-commit (RED: trailer recognition)",
+   "kind": "commit-gate",
+   "evidence": "**The gate expects this commit to fail its tests.** `/gabe-commit` recognizes the `RED:` trailer (gate-spec Step 3, red-checkpoint carve-out)",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/references/red-spec.md (lines 55-56)",
+   "strength": "prose",
+   "note": "Red-side statement of the carve-out; also 'Never `force-commit` a red checkpoint'."
+  },
+  {
+   "from": "gabe-commit (CHECK 3 carve-out)",
+   "to": "gabe-red (declared-set assertion failures = evidence)",
+   "kind": "commit-gate",
+   "evidence": "When the commit message being gated carries a `RED:` trailer, CHECK 3's \"all pass\" rule inverts for exactly the declared set",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-commit/references/gate-spec.md (lines 177-178)",
+   "strength": "prose",
+   "note": "No script in gabe-commit/scripts implements the carve-out \u2014 LLM-followed spec only."
+  },
+  {
+   "from": "gabe-red (Red \u2705 tick + PLAN.json cases field)",
+   "to": "plan-proof-guard hook (D7 block)",
+   "kind": "hook-block",
+   "evidence": "out.append(f\"phase {pid}: Red \u2705 but no `cases` record (PLAN.json phases[].cases \u2014 written by /gabe-red)\")",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/plan-proof-guard.sh (line 106); wired via templates/hooks.json line 62",
+   "strength": "deterministic",
+   "note": "PostToolUse hook BLOCKS Red \u2705 without a cases record; red-spec line 67 states it."
+  },
+  {
+   "from": "gabe-red (red@<sha> citation in cases record)",
+   "to": "plan-proof-guard hook (sha reachability)",
+   "kind": "hook-block",
+   "evidence": "#   \u00b7 cells.red  == done \u2192 the phase's `cases` record must exist; a `red@<sha>` must be reachable",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/plan-proof-guard.sh (line 6; checks at 108-110)",
+   "strength": "deterministic",
+   "note": "Every cited red@sha must resolve in git; unreachable sha blocks the PLAN write."
+  },
+  {
+   "from": "gabe-red (declared C-ids in current phase's cases record)",
+   "to": "pre-checkpoint hook (corpus grep \u22651)",
+   "kind": "hook-block",
+   "evidence": "[WARN] C-ID: declared $cid (current phase Cases record) greps 0 hits in the corpus \u2014 write the test with $cid in its name, or fix the id in the Cases record",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/pre-checkpoint.sh (line 70); red-spec line 103 names it 'the enforcement hook'",
+   "strength": "deterministic",
+   "note": "Deterministic but WARN-only \u2014 it fires, never blocks."
+  },
+  {
+   "from": "gabe-red (id-at-birth rule for new test files)",
+   "to": "pre-checkpoint hook (new-file C-id check)",
+   "kind": "hook-block",
+   "evidence": "[WARN] C-ID: new test file $f carries no C[N] case id (gabe-red red-spec \u2014 ids are born in test names)",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/pre-checkpoint.sh (line 50); spec side red-spec lines 137-138",
+   "strength": "deterministic",
+   "note": "red-spec says the check 'requires an id at birth'; the hook only warns \u2014 severity drift."
+  },
+  {
+   "from": "gabe-red (verification of the failure, post-mint)",
+   "to": "gabe-review (CASE DRIFT subject)",
+   "kind": "prose-spec",
+   "evidence": "the hook never re-runs tests or verifies the failure itself (that is the gate's carve-out at commit time and review's CASE DRIFT afterward)",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/references/red-spec.md (lines 85-86)",
+   "strength": "prose",
+   "note": "Red explicitly delegates ongoing claim-integrity to review; review-spec Step 3.4 reciprocates (D6: deliberately not a gate grep)."
+  },
+  {
+   "from": "gabe-review (test-gap findings)",
+   "to": "gabe-red (reserved C-id allocation scheme)",
+   "kind": "data-contract",
+   "evidence": "RESERVED id \u2014 `NEW CASE C[next] \u2014 <behavior> \u2014 no case asserts this` (allocate per gabe-red `references/red-spec.md`: corpus `max(grep)+1`)",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (lines 170-171)",
+   "strength": "prose",
+   "note": "Review mints ids using red's allocation rule; NEW CASE / CASE BUMP subjects at lines 207-209."
+  },
+  {
+   "from": "gabe-red (skip:* codes in the phase record)",
+   "to": "gabe-review (skip-abuse finding)",
+   "kind": "prose-spec",
+   "evidence": "repeated `skip:*` on shippable phases is a review finding, not a silent norm.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/references/red-spec.md (lines 118-119)",
+   "strength": "prose",
+   "note": "No counter tracks skip repetition; review must notice."
+  },
+  {
+   "from": "gabe-red (prove-guard.py verdicts)",
+   "to": "command center guard lens (named vs guarded)",
+   "kind": "data-contract",
+   "evidence": "Verdicts append to `.kdbp/guard-proofs.jsonl`, which the command center's guard lens reads: an unproven case renders **`named`**, never `guarded`.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/SKILL.md (line 42)",
+   "strength": "deterministic",
+   "note": "Script writes jsonl; center generators read it (templates/center/generators/_center_data.py:501, _a3_guard.py)."
+  },
+  {
+   "from": "gabe-red (Cases: bullet placement in PLAN.md Phase Details)",
+   "to": "gabe-plan mirror regeneration + plan-proof-guard",
+   "kind": "data-contract",
+   "evidence": "that exact heading is what the PLAN.json mirror regeneration parses; a Cases line anywhere else is invisible to the mirror and the guard blocks the Red \u2705 as record-less.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-red/references/red-spec.md (lines 70-71)",
+   "strength": "deterministic",
+   "note": "regen-mirror.py parses the exact heading; misplaced record ends in a hook block."
+  },
+  {
+   "from": "gabe-plan (Red column retrofit seeding)",
+   "to": "gabe-red (which phases enter the beat's window)",
+   "kind": "prose-spec",
+   "evidence": "Seed it (\u2b1c) only when the project has adopted the red beat, and only on phases whose Exec is \u2b1c",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-plan/references/plan-spec.md (line 536; ruling R1 amended at line 741)",
+   "strength": "prose",
+   "note": "Prevents the router demanding a fake red on shipped/in-progress phases (D5)."
+  },
+  {
+   "from": "/gabe-next router",
+   "to": "/gabe-red before /gabe-execute",
+   "kind": "router-order",
+   "evidence": "else if (c.red === \"todo\" || c.red === \"in_progress\") { next = `/gabe-red ${ph.id}`; reason = \"Phase planned \u2014 failing cases first (TDD)\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 113)",
+   "strength": "deterministic",
+   "note": "Red todo/in_progress routes to /gabe-red before exec \u2014 but only when routing via /gabe-next"
+  },
+  {
+   "from": "/gabe-next router",
+   "to": "/gabe-execute (resume outranks red)",
+   "kind": "router-order",
+   "evidence": "// in_progress resumes (never retro-blocked); otherwise a pending red routes first.\n  if (c.exec === \"in_progress\") { next = execCmd(ph); reason = \"Phase exec in progress (resume)\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (lines 111-112)",
+   "strength": "deterministic",
+   "note": "An in-progress Exec is routed back to execute even with Red still pending"
+  },
+  {
+   "from": "/gabe-next router",
+   "to": "plans without a Red column",
+   "kind": "router-order",
+   "evidence": "// `red` (before Exec) and `center` (after Push) join the lifecycle only when the project\n  // defines them; absent \u2192 not this project's concern, never blocks settle/advance.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (lines 95-96)",
+   "strength": "deterministic",
+   "note": "Undefined Red cell means the router never routes red \u2014 opt-in only"
+  },
+  {
+   "from": "/gabe-next prior-row sweep",
+   "to": "prior phases' unfinished Red cells",
+   "kind": "router-order",
+   "evidence": "// Prior-row sweep (always print, never block). deferred/obsolete rows are settled, not debt.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 71)",
+   "strength": "deterministic",
+   "note": "Prior-phase Red debt prints a warning; routing continues regardless"
+  },
+  {
+   "from": "/gabe-execute Step 0 preconditions",
+   "to": ".kdbp/PLAN.md columns",
+   "kind": "prose-spec",
+   "evidence": "3. Phases table includes `Exec` column \u2192 else print legacy warning and exit (do not auto-migrate; recommend `/gabe-plan update` or manual edit).",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 39)",
+   "strength": "prose",
+   "note": "Preconditions check .kdbp, active plan, Exec column, project type \u2014 Red state is never read"
+  },
+  {
+   "from": "/gabe-red Cases: record",
+   "to": "/gabe-execute TASK CONTRACT CASES line",
+   "kind": "data-contract",
+   "evidence": "CASES: <C-ids this task turns green (red@<sha>)> \u00b7 GUARD: <ids that must stay green> \u2014 from the phase's Cases: record, or \"none declared (no /gabe-red record)\"",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 174)",
+   "strength": "prose",
+   "note": "Contract carries red's C-ids per task, with a built-in no-red fallback"
+  },
+  {
+   "from": "/gabe-execute TASK CONTRACT rule (d)",
+   "to": "phase finish condition",
+   "kind": "prose-spec",
+   "evidence": "each task lists the ids it advances, and the phase may not finish until every declared case is green AND every guard is still green.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 176)",
+   "strength": "prose",
+   "note": "Cases-green-before-finish stated in prose; no script re-checks it at Step 7"
+  },
+  {
+   "from": "/gabe-red Cases: record",
+   "to": "/gabe-execute T[i] VERIFY tests line",
+   "kind": "prose-spec",
+   "evidence": "When the phase carries a `Cases:` record, the `tests:` line MUST be case-scoped (e.g. `pytest -k \"C147v2 or C148\"`) so the copied count speaks for the declared ids \u2014 declared-red cases now green, guards still green.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 207)",
+   "strength": "prose",
+   "note": "Case-scoped verify at task end \u2014 instruction to the model, no validator"
+  },
+  {
+   "from": "plan-proof-guard PostToolUse hook",
+   "to": "Red \u2705 writes in PLAN mirrors",
+   "kind": "hook-block",
+   "evidence": "if not cases:\n            out.append(f\"phase {pid}: Red \u2705 but no `cases` record (PLAN.json phases[].cases \u2014 written by /gabe-red)\")",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/plan-proof-guard.sh (lines 105-106)",
+   "strength": "deterministic",
+   "note": "Blocks a lied Red \u2705 (no record / unreachable red@sha); does not require Red before Exec"
+  },
+  {
+   "from": "plan-proof-guard PostToolUse hook",
+   "to": "Exec \u2705 writes in PLAN mirrors",
+   "kind": "hook-block",
+   "evidence": "#   \u00b7 cells.red  == done \u2192 the phase's `cases` record must exist; a `red@<sha>` must be reachable\n#   \u00b7 cells.exec == done \u2192 every declared PROOF artifact path must exist on disk (proof:null passes)",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/plan-proof-guard.sh (lines 6-7)",
+   "strength": "deterministic",
+   "note": "Exec \u2705 gate checks PROOF artifacts on disk \u2014 never case greenness, never Red cell state"
+  },
+  {
+   "from": "/gabe-execute Step 4 structural backstop",
+   "to": "D7 plan-proof-guard hook",
+   "kind": "hook-block",
+   "evidence": "Exec `\u2705` with a declared PROOF artifact missing on disk, or Red `\u2705` without its `cases` record, is BLOCKED by the harness, not by this spec being remembered.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 197)",
+   "strength": "deterministic",
+   "note": "Spec cites the harness hook as the only non-prose backstop it relies on"
+  },
+  {
+   "from": "/gabe-execute Step 7 invariants",
+   "to": "phase-complete Exec \u2705 tick",
+   "kind": "commit-gate",
+   "evidence": "Then run `ls <each artifact path>` via Bash \u2014 a non-existent path means evidence is ABSENT: halt with the block message above.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (line 397)",
+   "strength": "prose",
+   "note": "Step 7's checked invariants are journey-proof + Commit column; no cases-green invariant exists"
+  },
+  {
+   "from": "gabe-review Step 3 branch-test gap (red-beat projects)",
+   "to": "gabe-red red-spec reserved-id allocation (NEW CASE C[next])",
+   "kind": "prose-spec",
+   "evidence": "Red-beat projects (PLAN phases carry `cases` records): emit the gap as a KNOWN subject with a\nRESERVED id \u2014 `NEW CASE C[next] \u2014 <behavior> \u2014 no case asserts this` (allocate per gabe-red",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L169)",
+   "strength": "prose",
+   "note": "Test gaps become KNOWN subjects under reserved ids via gabe-red's corpus max(grep)+1 recipe."
+  },
+  {
+   "from": "PLAN phase `cases` records (written by /gabe-red)",
+   "to": "gabe-review Step 3.4 case-estate activation",
+   "kind": "data-contract",
+   "evidence": "Active only when PLAN phases carry `cases` records or the project has a command center with\nabsent-angle verdicts.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L203)",
+   "strength": "prose",
+   "note": "Activation is a prose condition \u2014 no deterministic parse step forces reading the cases records."
+  },
+  {
+   "from": "diff that changes what an existing case claims",
+   "to": "CASE BUMP subject (version bump in test name)",
+   "kind": "prose-spec",
+   "evidence": "- **CASE BUMP C[n]\u2192v[k+1]** \u2014 the diff changes what an existing case CLAIMS. Fix = bump the\n  version in the test's name alongside the change (a re-run or mechanical edit never bumps).",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L208)",
+   "strength": "prose",
+   "note": "Review judges claim-change from the diff; no procedure enumerates existing case versions."
+  },
+  {
+   "from": "gabe-review Step 3.4 CASE DRIFT",
+   "to": "design record D6 (deliberately NOT a commit-gate grep)",
+   "kind": "prose-spec",
+   "evidence": "- **CASE DRIFT** \u2014 a test edit that silently launders a claim (assertion weakened/removed while\n  the id stays put). Judgment-shaped by design \u2014 this check lives HERE, deliberately not in a",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L210)",
+   "strength": "prose",
+   "note": "Laundered-claim detection is review-only LLM judgment; no deterministic backstop exists anywhere."
+  },
+  {
+   "from": "case-estate subjects (NEW CASE / BUMP / DRIFT / GROWTH)",
+   "to": "standard Step 4 pricing + Step 5 triage",
+   "kind": "prose-spec",
+   "evidence": "absent-angle verdicts. **Zero new pricing machinery** \u2014 every subject below is priced with the\nstandard Fix Cost \u00d7 Defer Risk \u00d7 Maturity Gate fields and rides the normal Step 5 triage.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L204)",
+   "strength": "prose",
+   "note": "Cases are TRIAGE SUBJECTS priced like any finding \u2014 nothing more; no execution, no re-run."
+  },
+  {
+   "from": "center absent-angle GROWTH opportunities",
+   "to": "review triage outcome (authoritative for center verdicts)",
+   "kind": "data-contract",
+   "evidence": "cost\" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;\n  print `growth: showing 7 of N` when capped). The TRIAGE OUTCOME is authoritative \u2014 the center",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L215)",
+   "strength": "prose",
+   "note": "cc-update RENDERS angle verdicts from triage outcomes; hand-authored verdict only fallback."
+  },
+  {
+   "from": "Step 3.4 finding deferred during triage",
+   "to": ".kdbp/PENDING.md row carrying the reserved C[n]",
+   "kind": "data-contract",
+   "evidence": "- Case-estate findings (Step 3.4) keep their reserved `C[n]` in the row \u2014 the id is the join the\n  center's testing pages and the pre-checkpoint hook read",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L1184)",
+   "strength": "prose",
+   "note": "This row is review's only case hand-off toward commit; the id is the downstream join key."
+  },
+  {
+   "from": "PLAN current-phase Cases record + staged test files",
+   "to": "pre-checkpoint.sh C-ID warns at git commit",
+   "kind": "hook-block",
+   "evidence": "#    \u00b7 a STAGED NEW test file with no C[N] id marker (see gabe-red references/red-spec.md)\n#    \u00b7 a declared case id (current phase's `cases` record) that greps 0 hits in the corpus",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/pre-checkpoint.sh (L5-6, warn at L70)",
+   "strength": "deterministic",
+   "note": "Commit-side, existence-only greps, WARN not block; pass/fail state never checked."
+  },
+  {
+   "from": "phase CASES red\u2192green verification",
+   "to": "gabe-execute case-scoped verify (NOT gabe-review)",
+   "kind": "prose-spec",
+   "evidence": "the `tests:` line MUST be case-scoped (e.g. `pytest -k \"C147v2 or C148\"`) so the copied count speaks for the declared ids \u2014 declared-red cases now green, guards still green.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-execute/references/execute-spec.md (~L207)",
+   "strength": "prose",
+   "note": "Green-proof lives in execute's narration; review-spec contains zero red\u2192green re-verification."
+  },
+  {
+   "from": "gabe-red RED: trailer checkpoint commit",
+   "to": "gabe-commit CHECK 3 inverted assertion gate",
+   "kind": "commit-gate",
+   "evidence": "declared set: verify (a) every C-id named in the trailer fails **by assertion** (an\nimport/collection error is NOT red \u2014 block as usual), and (b) no test OUTSIDE the declared set",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-commit/references/gate-spec.md (~L178)",
+   "strength": "prose",
+   "note": "Red-state verification is commit's carve-out, not review's; review is uninvolved in it."
+  },
+  {
+   "from": "review Test-coverage dimension",
+   "to": "diff-shaped branch analysis (not the C-id corpus)",
+   "kind": "prose-spec",
+   "evidence": "| **Test coverage** | New branches without corresponding test changes | HIGH |",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L138)",
+   "strength": "prose",
+   "note": "Coverage compares diff branches to test edits; never reconciles the declared id set."
+  },
+  {
+   "from": "review Final Verdict",
+   "to": "PLAN Review-column tick + LEDGER audit row",
+   "kind": "data-contract",
+   "evidence": "**Pass condition for Review column:**\n- Final Verdict is APPROVE or WARNING (not BLOCK)",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-review/references/review-spec.md (~L977; LEDGER row ~L1003)",
+   "strength": "prose",
+   "note": "Neither the tick condition nor the LEDGER row (raw\u2192survived\u00b7confidence\u00b7tick) carries any case state."
+  },
+  {
+   "from": "gabe-plan (Red cell \u2b1c/\ud83d\udd04)",
+   "to": "gabe-red (dispatched before any exec)",
+   "kind": "router-order",
+   "evidence": "else if (c.red === \"todo\" || c.red === \"in_progress\") { next = `/gabe-red ${ph.id}`; reason = \"Phase planned \u2014 failing cases first (TDD)\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 113)",
+   "strength": "deterministic",
+   "note": "Red \u2b1c/\ud83d\udd04 wins over Exec \u2b1c in the first-match decision table; fixture run.sh:148."
+  },
+  {
+   "from": "gabe-red (declared as machine predicate)",
+   "to": "gabe-execute ordering rationale",
+   "kind": "router-order",
+   "evidence": "// red-before-execute: the TDD ordering is a machine predicate, not a plea. An exec already\n  // in_progress resumes (never retro-blocked); otherwise a pending red routes first.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (lines 110-111)",
+   "strength": "deterministic",
+   "note": "The ordering claim is code comment + the line-113 predicate, not prose in a spec."
+  },
+  {
+   "from": "PLAN without a Red column (cell absent)",
+   "to": "gabe-execute directly (no red debt)",
+   "kind": "router-order",
+   "evidence": "if (c.red !== undefined) lifecycle.unshift(\"red\");",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 98)",
+   "strength": "deterministic",
+   "note": "Red is opt-in: undefined never matches todo; fixture run.sh:150 'omitted red key must settle'."
+  },
+  {
+   "from": "Exec \ud83d\udd04 (in progress)",
+   "to": "gabe-execute resume (red skipped)",
+   "kind": "router-order",
+   "evidence": "if (c.exec === \"in_progress\") { next = execCmd(ph); reason = \"Phase exec in progress (resume)\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 112)",
+   "strength": "deterministic",
+   "note": "In-progress exec resumes even with Red \u2b1c \u2014 never retro-blocked; fixture run.sh:152."
+  },
+  {
+   "from": "gabe-execute (Exec \u2705)",
+   "to": "gabe-review",
+   "kind": "router-order",
+   "evidence": "else if (c.review === \"todo\") { next = \"/gabe-review\"; reason = \"Code written and Exec gate complete\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (line 115)",
+   "strength": "deterministic",
+   "note": "Review only reachable after exec token leaves todo/in_progress; token order is the gate."
+  },
+  {
+   "from": "gabe-review (Review \u2705)",
+   "to": "gabe-commit \u2192 gabe-push",
+   "kind": "router-order",
+   "evidence": "else if (c.commit === \"todo\") { next = \"/gabe-commit\"; reason = \"Reviewed, not committed\"; }\n  else if (c.push === \"todo\") { next = \"/gabe-push\"; reason = \"Committed, not pushed\"; }",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (lines 116-117)",
+   "strength": "deterministic",
+   "note": "Commit and push each wait on the prior cell in the first-match table."
+  },
+  {
+   "from": "PLAN.json mirror (mistyped cell token)",
+   "to": "routing refusal (exit 2, prose fallback)",
+   "kind": "router-order",
+   "evidence": "// A mistyped cell token (\"Done\", \"complete\") is neither todo nor done \u2014 it would silently\n// route wrong (settle unfinished work, or skip the red/exec gate). Refuse the mirror instead.",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-next/scripts/next.mjs (lines 44-45)",
+   "strength": "deterministic",
+   "note": "Invalid tokens can't skip the red/exec gate; fixture run.sh:153 'invalid cell token must exit 2'."
+  },
+  {
+   "from": "gabe-red (cases record it writes)",
+   "to": "PLAN Red \u2705 cell (write blocked without it)",
+   "kind": "hook-block",
+   "evidence": "out.append(f\"phase {pid}: Red \u2705 but no `cases` record (PLAN.json phases[].cases \u2014 written by /gabe-red)\")",
+   "file": "/home/khujta/.claude/scripts/hooks/kdbp/plan-proof-guard.sh (line 106)",
+   "strength": "deterministic",
+   "note": "PostToolUse on PLAN writes; violation \u2192 exit 2, write blocked (D7 block-lies)."
+  },
+  {
+   "from": "gabe-red red checkpoint commit (red@<sha>)",
+   "to": "PLAN Red \u2705 cell (sha must be reachable)",
+   "kind": "hook-block",
+   "evidence": "out.append(f\"phase {pid}: Red \u2705 cites red@{sha} but that commit is unreachable\")",
+   "file": "/home/khujta/.claude/scripts/hooks/kdbp/plan-proof-guard.sh (line 110)",
+   "strength": "deterministic",
+   "note": "git cat-file -e sha^{commit} per cited sha; unreachable sha blocks the PLAN write."
+  },
+  {
+   "from": "gabe-execute (declared PROOF artifact)",
+   "to": "PLAN Exec \u2705 cell (artifact must exist on disk)",
+   "kind": "hook-block",
+   "evidence": "if path and not evidence_exists(path):\n                        out.append(f\"phase {pid}: Exec \u2705 but declared proof artifact missing on disk: {path}\")",
+   "file": "/home/khujta/.claude/scripts/hooks/kdbp/plan-proof-guard.sh (lines 120-121)",
+   "strength": "deterministic",
+   "note": "Only DECLARED proofs are checked \u2014 header: 'proof:null passes' (line 7)."
+  },
+  {
+   "from": "plan-proof-guard scope declaration",
+   "to": "red + exec cells ONLY (review/commit/push/center untouched)",
+   "kind": "data-contract",
+   "evidence": "#   \u00b7 cells.red  == done \u2192 the phase's `cases` record must exist; a `red@<sha>` must be reachable\n#   \u00b7 cells.exec == done \u2192 every declared PROOF artifact path must exist on disk (proof:null passes)",
+   "file": "/home/khujta/.claude/scripts/hooks/kdbp/plan-proof-guard.sh (lines 6-7)",
+   "strength": "deterministic",
+   "note": "The hook's whole check list \u2014 two cell kinds; everything else is out of its business."
+  },
+  {
+   "from": "gabe-red (RED: trailer in commit message)",
+   "to": "gabe-commit CHECK 3 inversion (red failures = evidence)",
+   "kind": "commit-gate",
+   "evidence": "message being gated carries a `RED:` trailer, CHECK 3's \"all pass\" rule inverts for exactly the\ndeclared set: verify (a) every C-id named in the trailer fails **by assertion** (an",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-commit/references/gate-spec.md (lines 177-183)",
+   "strength": "prose",
+   "note": "Spec-executed by the model \u2014 no script parses the RED: trailer or reruns the C-ids."
+  },
+  {
+   "from": "gabe-commit severity table (RED carve-out row)",
+   "to": "red checkpoint commit allowed through the tests gate",
+   "kind": "commit-gate",
+   "evidence": "| Test failures \u2014 RED checkpoint (see carve-out below) | Declared ids fail BY ASSERTION; everything else passes | expected evidence, not a failure |",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-commit/references/gate-spec.md (line 161)",
+   "strength": "prose",
+   "note": "Without it CHECK 3 (critical) would block the very commit /gabe-red must produce."
+  },
+  {
+   "from": "test failure (CHECK 3 critical)",
+   "to": "commit blocked unless force-commit justification",
+   "kind": "commit-gate",
+   "evidence": "**Blocked-commit rule:** `skip-to-pending` on a test failure records the item but the commit REMAINS BLOCKED unless the user types `force-commit: <one-line justification>`;",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-commit/references/gate-spec.md (line 267)",
+   "strength": "prose",
+   "note": "LLM-enforced; forced commits leave a `\u00b7 FORCED: <reason>` ledger trace, not a hard stop."
+  },
+  {
+   "from": "gabe-execute proof artifacts",
+   "to": "gabe-commit evidence-freshness warn",
+   "kind": "commit-gate",
+   "evidence": "`scripts/evidence-freshness.sh` (Evidence Doctrine \u00a74 \u2014 a proof-carrying phase must have proof_root artifacts at least as new as the staged source; WARNs append to `.kdbp/archive/evidence-bypass.log`)",
+   "file": "/home/khujta/projects/gabe_lens/skills/gabe-commit/references/gate-spec.md (line 42)",
+   "strength": "deterministic",
+   "note": "Script exists but 'each exit 2 = WARN finding, never a block' \u2014 report-never-gate."
+  },
+  {
+   "from": "raw `git commit` in Bash",
+   "to": "gabe-commit gate (nudge only)",
+   "kind": "hook-block",
+   "evidence": "echo \"[WARN] KDBP CHECKPOINT: Use /gabe-commit instead of raw git commit\"",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/pre-checkpoint.sh (line 38)",
+   "strength": "deterministic",
+   "note": "PreToolUse WARN, never blocks \u2014 header: 'debts warn; only plan-proof-guard blocks lies' (line 4)."
+  },
+  {
+   "from": "staged NEW test file",
+   "to": "gabe-red C-id scheme (ids born in test names)",
+   "kind": "hook-block",
+   "evidence": "echo \"[WARN] C-ID: new test file $f carries no C[N] case id (gabe-red red-spec \u2014 ids are born in test names)\"",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/pre-checkpoint.sh (line 50)",
+   "strength": "deterministic",
+   "note": "Warn-only; anchored ERE so SEC101/RFC1234 never satisfy the id check."
+  },
+  {
+   "from": "current phase's Cases record (declared C-ids)",
+   "to": "test corpus (git grep, .kdbp excluded)",
+   "kind": "hook-block",
+   "evidence": "echo \"[WARN] C-ID: declared $cid (current phase Cases record) greps 0 hits in the corpus \u2014 write the test with $cid in its name, or fix the id in the Cases record\"",
+   "file": "/home/khujta/projects/gabe_lens/scripts/hooks/kdbp/pre-checkpoint.sh (line 70)",
+   "strength": "deterministic",
+   "note": "Existence check only \u2014 grep for the id, not that the test runs or passes."
+  },
+  {
+   "from": "next.mjs red dispatch",
+   "to": "fixture battery (FIRE proven)",
+   "kind": "router-order",
+   "evidence": "nxout \"$BASE\" | grep -q '/gabe-red 1' && ok || bad \"next: red todo must route /gabe-red\"",
+   "file": "/home/khujta/projects/gabe_lens/tests/hooks/run.sh (line 148)",
+   "strength": "deterministic",
+   "note": "Plus run.sh:152 'in-progress exec must resume, never retro-red' and :150 'omitted red key must settle'."
+  },
+  {
+   "from": "plan-proof-guard Red honesty",
+   "to": "fixture battery (BLOCK proven)",
+   "kind": "hook-block",
+   "evidence": "[ \"$(guard_on \"[{'id':'r','cells':{'red':'done'},'cases':'','proof':None}]\")\" = 2 ] && ok || bad \"guard: Red done w/o cases must BLOCK\"",
+   "file": "/home/khujta/projects/gabe_lens/tests/hooks/run.sh (line 57)",
+   "strength": "deterministic",
+   "note": "Plus run.sh:59 'unreachable sha must BLOCK' and :58 reachable-sha pass case."
+  },
+  {
+   "from": "plan-proof-guard Exec proof honesty",
+   "to": "fixture battery (BLOCK proven)",
+   "kind": "hook-block",
+   "evidence": "[ \"$(guard_on \"[$(P p 'proof/empty/shot.png')]\")\" = 2 ] && ok || bad \"guard: empty evidence dir must BLOCK\"",
+   "file": "/home/khujta/projects/gabe_lens/tests/hooks/run.sh (line 47)",
+   "strength": "deterministic",
+   "note": "Plus run.sh:48 missing dir, :49 bare wildcard, :54 'null proof passes (guard validates only declared proofs)'."
+  },
+  {
+   "from": "pre-checkpoint declared-id warn",
+   "to": "fixture battery (WARN proven)",
+   "kind": "hook-block",
+   "evidence": "echo \"$out\" | grep -q 'declared C999' && ok || bad \"pre: declared id with 0 corpus hits must WARN (M25)\"",
+   "file": "/home/khujta/projects/gabe_lens/tests/hooks/run.sh (line 92)",
+   "strength": "deterministic",
+   "note": "Plus run.sh:95 silent case when id IS in corpus \u2014 FIRE and stay-silent both pinned."
+  }
+ ],
+ "gaps": [
+  {
+   "description": "Nothing blocks a direct /gabe-execute (or any source Write) while the phase's Red cell is \u2b1c \u2014 'before execute's first source Write' is enforced only when the operator happens to route through /gabe-next; no PreToolUse hook checks Red state on source edits.",
+   "consequence": "Source lands before failing cases exist; red degrades to retrofit theater and the never-observed-red defect returns."
+  },
+  {
+   "description": "plan-proof-guard verifies only record EXISTENCE and CITED-sha reachability \u2014 red-spec line 85 states plainly 'a record citing no sha passes'; a fabricated Cases: line with no red@sha ticks Red \u2705 unblocked.",
+   "consequence": "Record-shaped lies pass the D7 hook; only the prose gate and later review can distinguish them."
+  },
+  {
+   "description": "The red failure is never machine-re-verified after mint time: the tautology check is declared perishable, prove-guard.py re-runs are 'when the claim matters' with no trigger, cadence, or routing beat pointing at it.",
+   "consequence": "Void guards (twin-measured 1-in-6) render as protection until the day they miss a real regression."
+  },
+  {
+   "description": "Spec/hook severity drift: red-spec says the commit-gate 'requires an id at birth' for new test files and calls the corpus check 'the enforcement hook', but both pre-checkpoint.sh checks are [WARN]-only echoes that never block.",
+   "consequence": "Id-less test files and phantom declared C-ids commit cleanly despite the spec's 'requires' wording."
+  },
+  {
+   "description": "The RED: carve-out's hard logic \u2014 every declared id fails BY ASSERTION, nothing outside the set fails, import errors block \u2014 exists only as gate-spec prose; gabe-commit/scripts contains no script implementing the partition.",
+   "consequence": "A sloppy gate run can bless a NOT-RED (import/collection-error) checkpoint as evidence."
+  },
+  {
+   "description": "Execute's phase-completion condition ('every declared case green AND every guard still green') and the case-scoped tests: line are both prose rules; no script cross-checks the verify run's ids against the phase's cases record.",
+   "consequence": "Exec can tick \u2705 with a declared case never turned green if narration slips."
+  },
+  {
+   "description": "Squash-merge protection for the red commit is a printed warning only; unreachable shas are caught only for shas actually CITED, only on the next PLAN write \u2014 guard-only records cite none, and nothing detects a squash after the plan archives.",
+   "consequence": "Ever-red addresses silently go dark; 'has this case ever been observed failing' becomes unanswerable."
+  },
+  {
+   "description": "/gabe-execute itself has NO Red precondition: Step 0 validates .kdbp, active plan, Exec column, and project type, but never reads the Red column. Red-before-exec ordering lives solely in the /gabe-next router (next.mjs line 113), so a direct `/gabe-execute` invocation bypasses the only enforcement.",
+   "consequence": "Invoking /gabe-execute directly on a Red \u2b1c phase implements code test-last with zero warning."
+  },
+  {
+   "description": "The TASK CONTRACT fallback 'none declared (no /gabe-red record)' is self-certified: execute never distinguishes an enumerated skip code (skip:guard-only, skip:no-runtime-surface, skip:migration, skip:spike, skip:blocked-external \u2014 defined only in red-spec.md lines 111-116) from a red that simply never ran, and never surfaces or validates which skip applied.",
+   "consequence": "A never-ran red reads identically to a legitimate enumerated skip; the omission is invisible until review."
+  },
+  {
+   "description": "'Every declared case is green AND every guard is still green' before phase finish (execute-spec line 176) is prose-only. Step 7's deterministic invariants check journey-proof artifacts via `ls` and the Commit column, but nothing re-runs or re-checks the declared C-ids before Exec ticks \u2705, and the plan-proof-guard hook checks only proof-path existence and red@sha reachability.",
+   "consequence": "Exec can tick \u2705 with declared cases still red if the model forgets the prose rule."
+  },
+  {
+   "description": "The case-scoped `tests:` evidence line (execute-spec line 207) has no validator: nothing checks that the `-k` expression actually covers every declared C-id and guard from the Cases: record, only that some case-scoped command ran and its count was copied.",
+   "consequence": "A partial -k expression missing one declared id passes as full green."
+  },
+  {
+   "description": "The router's resume rule outranks red: `c.exec === \"in_progress\"` matches before the red check (next.mjs lines 112-113, 'never retro-blocked' by design). Once Exec is \ud83d\udd04 \u2014 including via a direct /gabe-execute start that skipped red \u2014 /gabe-next routes back to execute for that phase.",
+   "consequence": "One direct execute start permanently sidelines red from routing for that phase."
+  },
+  {
+   "description": "plan-proof-guard has no cross-cell ordering predicate: it blocks Red \u2705 without a cases record, but Red \u2b1c (or absent) combined with Exec \u2705 passes the hook clean \u2014 the hook enforces record honesty, not the red-before-exec sequence.",
+   "consequence": "A phase executed and completed with red never run passes every deterministic gate."
+  },
+  {
+   "description": "Red is opt-in at two layers with warn-only debt: projects without a Red column are never routed to red (next.mjs lines 95-96), and prior phases with Red \u2b1c only produce a printed warning while routing continues (lines 71, 83-84).",
+   "consequence": "Skipped red on earlier phases accrues as a scrollable warning, never a stop."
+  },
+  {
+   "description": "Review never verifies red\u2192green: no step runs, greps, or reads pass state for the phase's declared Cases ids \u2014 Step 3.4 only mints/bumps/drift-judges triage subjects; Coverage is diff-shaped and Runtime Evidence (Step 3.2) checks PLAN.json proof entries, not C-ids.",
+   "consequence": "A phase whose declared C-ids are still red or never ran can earn APPROVE and the Review tick."
+  },
+  {
+   "description": "No declared-vs-corpus reconciliation at review time: NEW CASE fires only from diff branch analysis; a /gabe-red id whose test was never written or was deleted is invisible to review \u2014 the only existence check is pre-checkpoint's commit-time grep, a WARN that gates nothing.",
+   "consequence": "A declared id with zero corpus hits passes review; only a dismissible commit warning remains downstream."
+  },
+  {
+   "description": "CASE DRIFT is judgment-only by design (D6) with no deterministic backstop in review or the hook \u2014 pre-checkpoint greps id tokens, never assertion strength.",
+   "consequence": "A weakened assertion under an unchanged id ships; the center keeps citing the case as guarding."
+  },
+  {
+   "description": "Step 3.4 activation lacks a deterministic detection step (contrast Step 0.3's zero-LLM PLAN parse): nothing in the procedure forces reading Phase Details cases records or the center's angle verdicts before scoring dimensions.",
+   "consequence": "On a red-beat project the entire case-estate layer can silently skip, producing a plain review."
+  },
+  {
+   "description": "Reserved C[next] allocation (corpus max(grep)+1) has no collision handling \u2014 unlike Sub-check 5b's documented D[N] race retry \u2014 and a reserved id is uncommitted until a triage fix/defer lands it.",
+   "consequence": "Concurrent review and red runs can mint duplicate C-ids, corrupting the center and hook joins."
+  },
+  {
+   "description": "GROWTH subjects beyond the cap of 7 per review are neither priced nor persisted by review; they exist only as the center's list.",
+   "consequence": "Low-ranked angles may stay on hand-authored fallback verdicts indefinitely, never entering triage."
+  },
+  {
+   "description": "Case outcomes leave no audit trace: the LEDGER row schema and the Review-tick pass condition carry no case fields (no green counts, no NEW CASE/BUMP/DRIFT tallies), and PENDING rows only capture deferrals.",
+   "consequence": "Nothing downstream can distinguish 'cases verified green' from 'cases never examined' for a ticked phase."
+  },
+  {
+   "description": "Review \u2705 has NO evidence check anywhere: plan-proof-guard validates only cells.red and cells.exec; no hook, script, or fixture verifies a review ran, findings were triaged, or cases pass before Review flips to done.",
+   "consequence": "A Review \u2705 can be flipped as a lie; the router then deterministically routes /gabe-commit on unreviewed code."
+  },
+  {
+   "description": "Exec \u2705 with `proof: null` passes plan-proof-guard (fixture run.sh:54 pins this). Nothing deterministic forces a proof to be DECLARED; gabe-plan's proof_type declaration and gabe-execute's proof-writing are prose, and evidence-freshness.sh only WARNs.",
+   "consequence": "A phase can close Exec \u2705 with zero evidence simply by never declaring a proof line."
+  },
+  {
+   "description": "The red@<sha> check verifies only that the commit EXISTS (git cat-file -e); it never inspects the commit for failing tests matching the declared C-ids, and a cases record citing no sha at all passes (fixture run.sh:60).",
+   "consequence": "Any reachable sha \u2014 even an unrelated commit \u2014 satisfies Red \u2705; assertion-red proof is prose in gabe-red's spec."
+  },
+  {
+   "description": "The red\u2192execute ordering binds only when work is dispatched through /gabe-next. next.mjs is READ-ONLY ('prints the decision'); no hook blocks invoking /gabe-execute directly or editing source files while Red is \u2b1c, and exec in_progress resumes without ever being retro-red-gated.",
+   "consequence": "TDD ordering is skippable by not asking the router; only the PLAN-cell lie is caught later."
+  },
+  {
+   "description": "The entire gabe-commit gate (CHECK 1\u20139, severity table, RED carve-out, force-commit ledger row) is prose executed by the model; the only deterministic guard on raw `git commit` is pre-checkpoint.sh, which by design 'never blocks \u2014 debts warn'.",
+   "consequence": "One raw git commit bypasses every commit check with only a [WARN] line as friction."
+  },
+  {
+   "description": "The RED-trailer carve-out has no script: no deterministic parser extracts the RED: trailer, reruns the declared C-ids, or distinguishes assertion-failure from import/collection error \u2014 the spec instructs the model to verify this.",
+   "consequence": "A fake red (collection error, or passing tests mislabeled) can be committed as a red checkpoint if the model mis-verifies."
+  },
+  {
+   "description": "plan-proof-guard is a PostToolUse hook on Write|Edit targeting *.kdbp/PLAN.json|PLAN.md paths; PLAN edits via Bash (sed/jq/python), git operations, or merges never trigger it, and a missing python3 makes it INERT with exit 0 (fail-open, line 28).",
+   "consequence": "The lie-block is bypassable via any shell-side PLAN edit; on a python3-less host it silently stops guarding."
+  },
+  {
+   "description": "No mechanism ever checks that declared cases PASS (green): pre-checkpoint greps only for the id's textual existence in the corpus; nothing runs the C-id tests before Exec \u2705, Review \u2705, or Push. gabe-execute's 'case-scoped verify' and gabe-push's production gates are prose.",
+   "consequence": "Green-at-completion is entirely on the model's discipline; a red-forever case can ride to production unnoticed by machinery."
+  }
+ ],
+ "check": {
+  "issues": [],
+  "okCount": 92
+ },
+ "audit": {
+  "rules": {
+   "files": [
+    {
+     "file": "/home/khujta/.claude/rules/common/coding-style.md",
+     "words": 223,
+     "operationalPct": 15,
+     "verdict": "trim-then-keep",
+     "rationale": "Numeric budgets (800/400 lines, <50-line fns, <4 nesting) echo the suite's real size-budget script; everything else is convention any model knows.",
+     "cutCandidates": [
+      "Immutability (CRITICAL) section incl. pseudocode block",
+      "Error Handling section (ALWAYS handle errors bullets)",
+      "Input Validation section (ALWAYS validate bullets)",
+      "Code Quality Checklist items that restate the numeric budgets or generic virtues (readable, well-named, proper error handling, no mutation)"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/code-review.md",
+     "words": 553,
+     "operationalPct": 10,
+     "verdict": "cut-candidate",
+     "rationale": "Largest file, near-pure convention; 80% coverage unenforced; agent table lists nonexistent go/rust reviewers; real review process lives in agent .md files and /gabe-review.",
+     "cutCandidates": [
+      "Purpose section",
+      "When to Review triggers list",
+      "Review Checklist (duplicates coding-style.md checklist)",
+      "Security Review Triggers list",
+      "Review Severity Levels table (CRITICAL/HIGH/MEDIUM/LOW)",
+      "Common Issues to Catch \u2014 Security (OWASP list), Code Quality (restates budgets), Performance (N+1/pagination/caching)",
+      "Review Workflow numbered steps",
+      "Approval Criteria",
+      "Integration with Other Rules link list",
+      "Agent Usage table rows for go-reviewer and rust-reviewer (agents do not exist)"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/agents.md",
+     "words": 243,
+     "operationalPct": 50,
+     "verdict": "trim-then-keep",
+     "rationale": "Roster table is genuinely machine-specific but stale: tdd-guide, doc-updater, rust-reviewer don't exist; database-, python-, typescript-reviewer exist unlisted. Fix roster, cut examples.",
+     "cutCandidates": [
+      "Parallel Task Execution GOOD/BAD markdown example block (keep the one-line rule)",
+      "Multi-Perspective Analysis role list (factual reviewer / senior engineer / etc.)",
+      "Stale roster rows: tdd-guide, doc-updater, rust-reviewer"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/security.md",
+     "words": 140,
+     "operationalPct": 10,
+     "verdict": "move-on-demand",
+     "rationale": "Generic OWASP-style checklist; only operational line is the security-reviewer agent pointer (agent exists). Load at commit/review time, not every prompt.",
+     "cutCandidates": [
+      "Mandatory Security Checks checklist (SQLi/XSS/CSRF/rate-limiting \u2014 standard model knowledge)",
+      "Secret Management bullets (never hardcode / use env vars)",
+      "Security Response Protocol steps 1,3,4,5 (keep only the security-reviewer agent pointer)"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/hooks.md",
+     "words": 105,
+     "operationalPct": 25,
+     "verdict": "trim-then-keep",
+     "rationale": "Keep two operational lines: never dangerously-skip-permissions, allowedTools lives in ~/.claude.json (verified present). Hook-type and TodoWrite prose restates harness built-ins.",
+     "cutCandidates": [
+      "Hook Types definitions (PreToolUse/PostToolUse/Stop \u2014 harness knowledge)",
+      "TodoWrite Best Practices section (duplicates harness system reminders)",
+      "'Todo list reveals' bullet list"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/git-workflow.md",
+     "words": 88,
+     "operationalPct": 40,
+     "verdict": "trim-then-keep",
+     "rationale": "Commit type/format preference is used every commit; attribution note is stale \u2014 no such key exists in ~/.claude/settings.json. PR steps are generic.",
+     "cutCandidates": [
+      "Pull Request Workflow steps 1-5 (analyze history, diff base...HEAD, -u flag \u2014 standard practice)",
+      "Attribution note (claims a settings.json key that is not present \u2014 verify or delete)"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/patterns.md",
+     "words": 145,
+     "operationalPct": 5,
+     "verdict": "cut-candidate",
+     "rationale": "Repository pattern and API response envelope are textbook knowledge; skeleton-project search is a preference with no commands, and development-workflow.md step 0 already covers it.",
+     "cutCandidates": [
+      "Repository Pattern section (findAll/findById/create/update/delete)",
+      "API Response Format envelope section",
+      "Skeleton Projects section (redundant with development-workflow.md Research & Reuse)"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/testing.md",
+     "words": 114,
+     "operationalPct": 5,
+     "verdict": "cut-candidate",
+     "rationale": "80% enforced by nothing on this machine; TDD RED/GREEN steps are generic; tdd-guide agent does not exist; operator's real testing beat is /gabe-red with C-ids.",
+     "cutCandidates": [
+      "Test-Driven Development RED/GREEN/IMPROVE steps",
+      "Test Types list (unit/integration/e2e)",
+      "Troubleshooting Test Failures steps",
+      "Agent Support \u2014 tdd-guide (agent file absent from ~/.claude/agents/)",
+      "80% coverage figure (unenforced; keep only if a gate ever cites it)"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/common/development-workflow.md",
+     "words": 315,
+     "operationalPct": 35,
+     "verdict": "trim-then-keep",
+     "rationale": "Step 0 research ordering names real tooling (gh CLI, Context7 MCP present; Exa MCP unverified) and changes process at implementation start. Steps 1-5 are generic pipeline.",
+     "cutCandidates": [
+      "Step 1 Plan First (planner agent + PRD/architecture/system_design doc list \u2014 conflicts with .kdbp flow in gabe projects)",
+      "Step 2 TDD Approach (references nonexistent tdd-guide; duplicates testing.md)",
+      "Step 3 Code Review (duplicates code-review.md)",
+      "Step 4 Commit & Push (duplicates git-workflow.md)",
+      "Step 5 Pre-Review Checks (duplicates code-review.md Pre-Review Requirements verbatim)"
+     ]
+    }
+   ]
+  },
+  "global": {
+   "files": [
+    {
+     "file": "/home/khujta/.claude/CLAUDE.md",
+     "words": 196,
+     "operationalPct": 65,
+     "verdict": "trim-then-keep",
+     "rationale": "One real user-specific rule (no proactive /schedule offers) worth ~50 words; the rest is why-padding, provenance, and header boilerplate.",
+     "cutCandidates": [
+      "Header blockquote ('Cross-project preferences... OVERRIDE default behavior')",
+      "'Why' paragraph (the rule already says never; motivation adds nothing operational)",
+      "'How to apply' bullet 2 ('If you are tempted to add one, the answer is no' \u2014 rhetorical restatement)",
+      "'Set: 2026-04-28 by user direction during gastify WDS Phase 0/1 session.' provenance line"
+     ]
+    },
+    {
+     "file": "/home/khujta/.claude/rules/README.md",
+     "words": 541,
+     "operationalPct": 10,
+     "verdict": "move-on-demand",
+     "rationale": "Install/maintenance doc re-injected every session; sessions never install rules. Only the one-sentence Rule Priority (specific-overrides-common) is session-relevant.",
+     "cutCandidates": [
+      "'## Installation' entire section \u2014 Option 1 install.sh commands and Option 2 manual cp commands plus the do-not-flatten warning (~150 words)",
+      "'## Structure' directory tree of rules/common + language dirs",
+      "'## Adding a New Language' 4-step how-to (~100 words)",
+      "'## Rules vs Skills' generic philosophy paragraph",
+      "'### Example' and '### Common rules with override notes' subsections under Rule Priority (keep only the one-line precedence statement)"
+     ]
+    }
+   ]
+  },
+  "project": {
+   "files": [
+    {
+     "file": "CLAUDE.md \u00a7 Preamble (title/repos/harness)",
+     "words": 94,
+     "operationalPct": 80,
+     "verdict": "keep-always-on",
+     "rationale": "Suite-vs-skill name disambiguation, legacy folder-name warning, and the Codex-dropped/installs-to-~/.claude ruling prevent recurring session mistakes.",
+     "cutCandidates": [
+      "Marketing clause 'that transform how you understand, review, decide, and ship'"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 Project Structure",
+     "words": 204,
+     "operationalPct": 80,
+     "verdict": "trim-then-keep",
+     "rationale": "Tree shape is derivable via ls; the value is annotation rules (\u2264200-line SKILL.md, run tests/hooks after enforcement edits, prisms=content-not-machinery) and the no-commands/ ruling.",
+     "cutCandidates": [
+      "Self-evident rows: assets/, README.md, CLAUDE.md ('This file'), install.sh",
+      "Second sentence of the commands/ paragraph ('Each skill IS its command...') \u2014 restatable in ~10 words"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 User Profile",
+     "words": 39,
+     "operationalPct": 70,
+     "verdict": "move-on-demand",
+     "rationale": "Scoped entirely to the gabe-lens skill; belongs in skills/gabe-lens/SKILL.md or its references, loaded only when that skill runs.",
+     "cutCandidates": [
+      "Entire section \u2014 relocate to gabe-lens skill docs; nothing here affects other sessions"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 Conventions",
+     "words": 365,
+     "operationalPct": 95,
+     "verdict": "keep-always-on",
+     "rationale": "Densest enforcement-bearing section: repo-first install flow, dry-run-on-COPY, FIRE-and-stay-silent fixtures, no-.kdbp ruling R8, size-budget R9 \u2014 all rules-of-this-machine with dated provenance.",
+     "cutCandidates": [
+      "Parenthetical meta-review citations (P1, P2/P4) could compress to bare rule + ruling id",
+      "AP1\u2013AP13 and Archetype Map bullets could shrink to path-only pointers (consumers listed in those files)"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 The Gabe Register (project-scoped trial)",
+     "words": 75,
+     "operationalPct": 90,
+     "verdict": "keep-always-on",
+     "rationale": "Live trial map: paths, canary battery, KILL/WIDEN location. Without it a session could break the trial machinery unknowingly. Short enough to carry.",
+     "cutCandidates": [
+      "The actors\u00b7elements\u00b7effects format enumeration duplicates the style file itself"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 Capabilities (28 skills)",
+     "words": 976,
+     "operationalPct": 85,
+     "verdict": "move-on-demand",
+     "rationale": "47% of the file, triple-redundant: frontmatter is source of truth, gen-help-catalog.py generates the catalog, and the session skill listing already injects every description.",
+     "cutCandidates": [
+      "All 28 Purpose cells \u2014 verbatim-adjacent to each skill's frontmatter description",
+      "Version column \u2014 derivable from frontmatter; only consumer is suite-doctor parity, which could check a generated file or README instead",
+      "Replace whole table with: count + pointer to gabe-help catalog / skills/*/SKILL.md (after re-pointing suite-doctor parity and 'Adding a New Skill' step 3)"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 Archived skills",
+     "words": 74,
+     "operationalPct": 75,
+     "verdict": "trim-then-keep",
+     "rationale": "The operational core is three rules: _archive/ location outside doctor glob, rulings in trim-ledger.md, never touch ~/.claude/gabe-arch. Per-skill history is ledger-derivable.",
+     "cutCandidates": [
+      "Per-skill archive dates, line counts (2,740), and absorption details \u2014 all recorded in docs/design/trim-ledger.md"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 Workflow Docs",
+     "words": 103,
+     "operationalPct": 85,
+     "verdict": "keep-always-on",
+     "rationale": "Pointers with read-before triggers (design record before restructuring, backlog before proposing work) are exactly what always-on context should be \u2014 cheap indirection, not content.",
+     "cutCandidates": [
+      "greenfield.md / brownfield.md one-liners (discoverable via workflows/README.md quick chooser)"
+     ]
+    },
+    {
+     "file": "CLAUDE.md \u00a7 Adding a New Skill",
+     "words": 145,
+     "operationalPct": 90,
+     "verdict": "move-on-demand",
+     "rationale": "A rarely-invoked procedure readable on demand \u2014 except step 2's handshake-walk rule, which applies to ANY seam-altering spec change and should migrate to Conventions first.",
+     "cutCandidates": [
+      "Steps 1, 3\u20135 \u2014 pure procedure, relocatable to a reference doc or the design record",
+      "NOT the handshake-walk clause: hoist its 'any spec change that alters a beat's inputs/outputs' generalization into \u00a7 Conventions before moving the section"
+     ]
+    }
+   ]
+  }
+ }
+}
