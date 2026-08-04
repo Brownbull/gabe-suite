@@ -100,8 +100,15 @@ def build_cases(repo: Path, inv_files: dict, corpora: list) -> list[dict]:
                 # gustify), and splitting there mangled the name, dropped the
                 # C-id, and left the case unminted with no ledger anchor.
                 # The junit FILE's suffix is the honest discriminator.
-                if ">" in name and not jf.endswith(".py"):
-                    group, _, name = (p.strip() for p in name.rpartition(">"))
+                # The separator is " > " WITH spaces — a bare ">" also matches
+                # a prose arrow ("same key -> same token"). And the split is
+                # at the FIRST one: C-ids ride case titles (never describes),
+                # so a title's own " > " ("last > first is up") must stay in
+                # the name half — last-split stranded the C-id in the group
+                # and rendered a minted case unminted.
+                if " > " in name and not jf.endswith(".py"):
+                    group, _, name = (p.strip()
+                                      for p in name.partition(" > "))
                 else:
                     tail = c.get("cls", "").rsplit(".", 1)[-1]
                     group = tail if tail[:1].isupper() else ""
@@ -599,7 +606,13 @@ def proof_verification(repo: Path, spec_val, corpora: list) -> dict | None:
         if not j:
             continue
         for jf, rec in j["files"].items():
+            # Suffix match runs BOTH ways: a pytest junit key is repo-deep
+            # while the manifest names the short path, but a playwright junit
+            # key is testDir-relative ("analytics-bars.spec.ts") while the
+            # manifest names the repo-relative path ("tests/web-e2e/…") —
+            # one-directional matching left every e2e proof set joinless.
             if not (jf == tok or jf.endswith("/" + tok)
+                    or tok.endswith("/" + jf)
                     or jf.startswith(tok + "/") or f"/{tok}/" in jf):
                 continue
             nfiles += 1
@@ -638,8 +651,12 @@ def proof_verification_html(repo: Path, spec_val, corpora: list) -> str:
     from urllib.parse import quote as _uq2
     _all = ("test-matrix.html?led-q=" + _uq2(pv["tok"], safe="")
             + "#sec-tests-cases")
-    pills = " ".join(f'<a class="cid" href="#C{x[1:]}">{E(x)}</a>'
-                     for x in pv["cids"][:12])
+    # Pills anchor the CANONICAL case ledger (test-matrix), not this page: a
+    # set's spec can carry cases the entity's own regex never claims, and a
+    # same-page #C anchor for those is a dead link the crawl gate catches.
+    pills = " ".join(
+        f'<a class="cid" href="test-matrix.html#C{x[1:]}">{E(x)}</a>'
+        for x in pv["cids"][:12])
     pills += (f' <a class="dlink" href="{_all}">all {pv["cases"]} in the '
               "case ledger →</a>")
     chips = "".join(_ep_chip(c, "lc-ep lc-via",

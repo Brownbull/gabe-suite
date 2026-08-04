@@ -38,6 +38,39 @@ from pathlib import Path
 import _center_data as D
 
 _CID_RX = re.compile(r"(?<![A-Za-z0-9])C([0-9]{1,5})(?![0-9])")
+
+
+def _test_home() -> str:
+    """The tree test-support files live in, DERIVED from config rather than
+    assumed: the results dir and the e2e spec glob both sit under it, so their
+    leading segment names it."""
+    paths = D.CFG.get("paths") or {}
+    for key in ("results", "e2e_spec_glob"):
+        seg = str(paths.get(key) or "").split("/", 1)[0]
+        if seg and "*" not in seg:
+            return seg
+    return ""
+
+
+_TEST_HOME = _test_home()
+
+
+def _is_test_support(path: str) -> bool:
+    """Whether a resolved import is TEST SUPPORT rather than app code.
+
+    `unmapped` carries one meaning — "a real APP file no entity's code map
+    registers YET, so adopting its entity lights this join". A conftest, a
+    fixture module or a spec helper can never be registered to an entity
+    because it is not app code, so counting it invents a debt nobody can ever
+    pay: the row would sit on the ledger forever, and the honest TBD total
+    would read high by however many test helpers the corpus imports.
+    Co-located unit tests (`web/src/**/x.test.ts`) are caught by the name rule,
+    so app directories keep reporting their real gaps."""
+    p = path.replace("\\", "/")
+    if _TEST_HOME and (p.startswith(f"{_TEST_HOME}/") or f"/{_TEST_HOME}/" in p):
+        return True
+    name = p.rsplit("/", 1)[-1]
+    return ".test." in name or ".spec." in name
 _VERBS = {"get", "post", "put", "patch", "delete"}
 _IMPORT_RX = re.compile(r"""(?:from|import)\s*\(?\s*['"]([^'"]+)['"]""")
 _IMPORT_CLAUSE_RX = re.compile(
@@ -299,6 +332,7 @@ def test_insight(repo: Path) -> dict:
                         if cand not in ex["reaches"]:
                             ex["reaches"].append(cand)
                     elif (repo / cand).is_file() \
+                            and not _is_test_support(cand) \
                             and cand not in ex["unmapped"]:
                         # A real repo module outside every entity's map —
                         # third-party imports never exist on this path.
@@ -373,8 +407,10 @@ def test_insight(repo: Path) -> dict:
                         if not fallback and (repo / cand).is_file():
                             fallback = cand
                     # Resolved on disk, registered nowhere: the actionable
-                    # gap — record it, return no mapped target.
-                    if fallback and fallback not in ex["unmapped"]:
+                    # gap — record it, return no mapped target. Test-support
+                    # files are not gaps (see _is_test_support).
+                    if fallback and not _is_test_support(fallback) \
+                            and fallback not in ex["unmapped"]:
                         ex["unmapped"].append(fallback)
                     return ""
 

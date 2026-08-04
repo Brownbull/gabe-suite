@@ -131,8 +131,11 @@ def case_rows(rec: dict, corpus: str, anchors: bool = False,
         if corpus == "api":
             tail = c.get("cls", "").rsplit(".", 1)[-1]
             group = tail if tail[:1].isupper() else ""
-        elif ">" in name:                       # vitest: "Describe > case name"
-            group, _, name = (p.strip() for p in name.rpartition(">"))
+        elif " > " in name:                     # vitest: "Describe > case name"
+            # " > " with spaces, split at the FIRST — a bare ">" also cuts at
+            # prose arrows, and C-ids ride case titles (never describes), so
+            # a title's own " > " must stay in the name half.
+            group, _, name = (p.strip() for p in name.partition(" > "))
         cid = _CID_RX.search(name)
         if cid and link_cids:
             cid_cell = (f'<a class="cid" href="{cid_base}#C{cid.group(1)}">'
@@ -478,15 +481,19 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
         else:
             closed.append(f'{kind} — {inv[key]["cases"]} green')
 
-    eff, hours, stage, _, _ = _GROWTH_PRICE["journey"]
-    _local = e2e.get("local_only_note", "web e2e is local-only")
-    if specs:
-        add("journey", f"{len(specs)} spec(s) walk this entity, no junit record "
-                       f"— {_local}",
-            "wire a junit capture for the journey run", eff, hours, stage)
-    else:
-        add("journey", "no browser spec walks this entity end to end",
-            "author the first end-to-end spec", eff, hours, stage)
+    # Standalone journey gap — only while NO corpus carries the journey kind;
+    # a wired e2e corpus reports through the corpus loop above instead, and
+    # this row would double-speak beside it.
+    if not any(c.get("kind") == "journey" for c in corpora):
+        eff, hours, stage, _, _ = _GROWTH_PRICE["journey"]
+        _local = e2e.get("local_only_note", "web e2e is local-only")
+        if specs:
+            add("journey", f"{len(specs)} spec(s) walk this entity, no junit "
+                           f"record — {_local}",
+                "wire a junit capture for the journey run", eff, hours, stage)
+        else:
+            add("journey", "no browser spec walks this entity end to end",
+                "author the first end-to-end spec", eff, hours, stage)
 
     eff, hours, stage, _, _ = _GROWTH_PRICE["coverage"]
     if e2e.get("coverage_sliced"):
@@ -894,9 +901,12 @@ def build_feature_pages(ctx) -> list[str]:
         _corpus_kpis = [
             kpi(f'{c["key"]} cases', str(inv[c["key"]]["cases"]),
                 f'{len(inv[c["key"]]["files"])} files') for c in ctx.corpora]
+        _journey_wired = any(c.get("kind") == "journey" for c in ctx.corpora)
         stats = '<div class="kpis">' + "".join([
             *_corpus_kpis,
-            kpi("e2e specs", str(len(specs)), "no junit capture", alert=True),
+            *([] if _journey_wired
+              else [kpi("e2e specs", str(len(specs)), "no junit capture",
+                        alert=True)]),
             kpi("priority", s["rank"], f'adoption: {s["status"]}'),
         ]) + "</div>"
 
@@ -1090,20 +1100,6 @@ def build_feature_pages(ctx) -> list[str]:
                  "from the codebase at build time.</div>")
         _card_block += lens_block(card)
         # ENTITIES is covered by the Code tab's data model — it does not repeat.
-        # REVIEWED is the card's own QUALIFICATION of its evidence — who
-        # looked, on what, and what they explicitly did NOT cover. It was
-        # parsed and then dropped, so a candid source could not reach the
-        # person reading the page: `grep -l REVIEWED docs/site/center/*.html`
-        # returned nothing while all seven cards carried the section
-        # (gustify #151). It renders ABOVE the fold, beside the verdict it
-        # qualifies — inside the collapsed "full card" it would qualify
-        # nothing anyone reads.
-        if card.get("REVIEWED"):
-            _card_block += (
-                '<div class="callout"><h3>Reviewed — what this evidence does '
-                'and does not cover</h3>'
-                + card_html(card.get("REVIEWED", []))
-                + "</div>")
         detail = "".join(
             f"<h3>{E(sec.title())}</h3>{card_html(card.get(sec, []))}"
             for sec in ("WHAT & WHY", "FOR WHOM", "FLOWS", "IS", "IS NOT")
@@ -1167,7 +1163,9 @@ def build_feature_pages(ctx) -> list[str]:
              str(inv[c["key"]]["cases"]), f'{len(inv[c["key"]]["files"])} file(s)',
              meter(inv[c["key"]]["cases"] - inv[c["key"]]["failed"], inv[c["key"]]["cases"]),
              kind_state(inv[c["key"]])] for c in ctx.corpora]
-        _kind_rows = _corpus_kind_rows + [
+        # The static journey row is the DEBT display — a wired e2e corpus
+        # reports through the corpus rows above with real counts.
+        _kind_rows = _corpus_kind_rows + ([] if _journey_wired else [
             [f'<span class="tag l-mobile">{kind_ic("journey")} journey</span>', f"{_e2e_runner} (e2e)",
              "—",
              f"{len(specs)} spec(s) on disk"
@@ -1175,7 +1173,7 @@ def build_feature_pages(ctx) -> list[str]:
                 f"out — they run the design lab, not the product</small>"
                 if ref_specs else ""),
              meter(0, 0),
-             f'<span class="tag s-gap">no junit capture ({_gap_tag})</span>'],
+             f'<span class="tag s-gap">no junit capture ({_gap_tag})</span>']]) + [
             [f'<span class="tag l-models">{kind_ic("coverage")} coverage</span>',
              f"pytest --cov (repo gate {_cov_gate})", "—", "not sliced per entity",
              meter(0, 0), '<span class="tag s-gap">named gap</span>'],

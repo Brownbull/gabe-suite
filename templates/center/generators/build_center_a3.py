@@ -640,9 +640,13 @@ _corpus_breakdown = " + ".join(
 # operator ruling 2026-07-23). Junit-backed kinds show counts + pass state,
 # the rest show their honest gap per entity (walks = manual).
 _kind_by_corpus = {c["key"]: c.get("kind", c["key"]) for c in CORPORA}
+# The static journey column is the DEBT display ("not wired") — it stands
+# only while no corpus carries the journey kind; a wired e2e corpus takes
+# the column over with real counts.
 _kind_cols = ([(k, _kind_by_corpus[k]) for k in corpora]
-              + [("", "journey"), ("", "coverage"), ("", "manual"),
-                 ("", "deployed")])
+              + [("", k2) for k2 in ("journey", "coverage", "manual",
+                                     "deployed")
+                 if k2 not in _kind_by_corpus.values()])
 _hdr = "".join(f'<th title="{E(kind)}">{kind_ic(kind, 14)}</th>'
                for _k, kind in _kind_cols)
 
@@ -798,7 +802,11 @@ for _c in CORPORA:
          f'{len(_j.get("files", {}))} file(s)',
          meter(_krec["cases"] - _krec["failed"], _krec["cases"]),
          kind_state(_krec)])
-_app_kind_rows += [
+# The static journey row is the DEBT display — it stands only while no
+# corpus carries the journey kind (a wired e2e corpus reports through the
+# loop above with real counts).
+_app_kind_rows += ([] if any(c.get("kind") == "journey" for c in CORPORA)
+                   else [
     [f'<span class="tag l-mobile">{kind_ic("journey")} journey</span>',
      f"{_e2e_runner} (e2e)", "—",
      f"{len(_app_specs)} spec(s) on disk"
@@ -806,7 +814,8 @@ _app_kind_rows += [
         f"— they run the design lab, not the product</small>"
         if _ref_specs else ""),
      meter(0, 0),
-     f'<span class="tag s-gap">no junit capture ({E(_e2e_gap_tag)})</span>'],
+     f'<span class="tag s-gap">no junit capture ({E(_e2e_gap_tag)})</span>']])
+_app_kind_rows += [
     [f'<span class="tag l-models">{kind_ic("coverage")} coverage</span>',
      "lines, from the wired reporter(s)", "—",
      (" · ".join(f"{v['percent']}% {k}" for k, v in _covd.items())
@@ -889,7 +898,7 @@ _bucket_rows = [
      f'{(junit_by.get(c["key"]) or {}).get("total", 0):,}',
      f'{_results_rel}/{c["key"]}-junit.xml',
      _corpus_what(c)] for c in CORPORA]
-if E2E:
+if E2E and not E2E.get("junit_wired"):
     _bucket_rows.append(
         ["<b>e2e</b>", E(E2E.get("runner", "playwright")), "—", "—",
          f'<span class="tag">not wired</span> {E(E2E.get("not_wired_note", ""))}',
@@ -1125,7 +1134,8 @@ tab_tests = (
               str(j["failed"]), str(j["skipped"]), E(D.rel_age(j.get("ranAt")))]
              for n, runner, j in _corpus_meta if j]
             + ([["<b>e2e</b>", E(E2E.get("runner", "playwright")), "—", "—", "—",
-                 "—", '<span class="tag">not wired</span>']] if E2E else []),
+                 "—", '<span class="tag">not wired</span>']]
+               if E2E and not E2E.get("junit_wired") else []),
             num={2, 3, 4, 5}))
 
 digests = []
