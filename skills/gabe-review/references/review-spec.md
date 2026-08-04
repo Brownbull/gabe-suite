@@ -204,6 +204,16 @@ Active only when PLAN phases carry `cases` records or the project has a command 
 absent-angle verdicts. **Zero new pricing machinery** — every subject below is priced with the
 standard Fix Cost × Defer Risk × Maturity Gate fields and rides the normal Step 5 triage.
 
+**Deterministic opener — the red→green check.** When the phase under review carries a
+red@-bearing `Cases:` record, run it before judging any subject:
+`python3 ~/.claude/skills/gabe-red/scripts/case-thread.py --phase N --assert-green --run "<case-scoped cmd>"`
+GREEN-PROVEN confirms the declared set turned green (the record should already carry execute's
+`green@<sha>` stamp — if it doesn't, the stamp is owed and this run's output is the evidence to
+demand it). NOT-GREEN is a **CRITICAL finding**: the phase's cases still fail after execution.
+The structural backstop is `plan-proof-guard` — a Review ✅ on a red@-bearing record with no
+reachable `green@<sha>` is BLOCKED at the PLAN write (D7), so this opener can be skipped only
+into a hook block, never into silence.
+
 - **NEW CASE C[next]** — Step 3's gap under a reserved id (above).
 - **CASE BUMP C[n]→v[k+1]** — the diff changes what an existing case CLAIMS. Fix = bump the
   version in the test's name alongside the change (a re-run or mechanical edit never bumps).

@@ -52,6 +52,19 @@
       ]
     }
   },
+  "RED-ENTRY-GUARD": {
+    "event": "PreToolUse",
+    "entry": {
+      "matcher": "Write|Edit|MultiEdit",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/red-entry-guard.sh\"",
+          "timeout": 5
+        }
+      ]
+    }
+  },
   "PLAN-PROOF-GUARD": {
     "event": "PostToolUse",
     "entry": {

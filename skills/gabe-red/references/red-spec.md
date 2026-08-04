@@ -103,6 +103,22 @@ phase completion = every declared case green + every guard still green) · the c
 pages (ever-red, verification changelog) · the enforcement hook (declared ids must grep ≥1 in the
 corpus).
 
+## The red→green thread (record states)
+
+The Cases record is a two-state thread, machine-observed at both ends: `red@<sha>` (this skill —
+failing proven by assertion) → `green@<sha>` (appended at the END of the record by
+`/gabe-execute` when its case-scoped verify passes; `scripts/case-thread.py --assert-green`
+prints the exact stamp line). Three rails watch the thread, split per D7:
+
+- `red-entry-guard` (PreToolUse) **WARNS** on source writes while the phase's Red cell is ⬜ and
+  no `skip:*` is recorded — sequencing debt, never a block.
+- `scripts/case-thread.py --assert-red --run "<case-scoped cmd>"` re-proves the declared set is
+  failing NOW at execute entry (a broken run — import/collection error — is NOT-RED, mirroring
+  the gate carve-out). Report-never-gate: it prints verdicts, writes nothing.
+- `plan-proof-guard` (PostToolUse) **BLOCKS** a Review ✅ whose red@-bearing record carries no
+  reachable `green@<sha>` — the review tick claims the cases pass; without the stamp that claim
+  is a lie.
+
 ## Skip codes (the honest non-TDD-able exits)
 
 A phase that cannot be test-first does NOT fake a red — it records one of (in the `Cases:` line

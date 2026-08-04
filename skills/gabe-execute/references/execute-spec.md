@@ -37,7 +37,16 @@ Parse `$ARGUMENTS`:
 1. `.kdbp/` exists → else print `⚠ No KDBP. Run /gabe-init first.` and exit.
 2. `.kdbp/PLAN.md` contains `<!-- status: active -->` → else print `ℹ No active plan. Run /gabe-plan [goal] first.` and exit.
 3. Phases table includes `Exec` column → else print legacy warning and exit (do not auto-migrate; recommend `/gabe-plan update` or manual edit).
-4. **Project type preflight.** Parse `<!-- project_type: ... -->` comment. Apply dispatch matrix:
+4. **Red-thread precondition (warn, never halt).** When the phases table carries a `Red` column
+   and the target phase's Red cell is `⬜`/`🔄` with no `skip:*` in its Cases record, print
+   `⚠ Red is ⬜ for phase N — failing cases first: /gabe-red N (or record an enumerated skip)`
+   and continue only on explicit user say-so ("proceed without red"). When a `Cases:` record
+   EXISTS, run the deterministic entry check before the first source Write:
+   `python3 ~/.claude/skills/gabe-red/scripts/case-thread.py --phase N --assert-red --run "<case-scoped cmd>"`
+   — NOT-RED (declared set already passing, or a broken run) means the red evidence is stale or
+   fake; stop and surface it. The `red-entry-guard` PreToolUse hook backs this rail
+   deterministically on every source write (D7: debts warn).
+5. **Project type preflight.** Parse `<!-- project_type: ... -->` comment. Apply dispatch matrix:
    - `code` or missing → proceed with Step 1.
    - `mockup` → print `⚠ Mockup plan active — use /gabe-mockup instead` and exit 0. Do not redirect silently; print full message so user understands why.
    - `hybrid` → parse target phase `types` list. If `types ⊆ mockup-tag-set` (`{design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`) → print `⚠ Hybrid plan — current phase is mockup-type. Use /gabe-mockup` and exit 0. Otherwise proceed with Step 1.
@@ -205,6 +214,13 @@ For each task T_i in order:
    journey: `<cmd>` → <artifact path>   (when required)
    ```
    Rules: a line may be printed only after its command ran; a missing tool prints `lint: none configured (BEHAVIOR.md)` — never omit the line; a skipped check renders `⤫ skipped(<reason>)`, never ✅; every number is copy-pasted from this run's output, never estimated. When the phase carries a `Cases:` record, the `tests:` line MUST be case-scoped (e.g. `pytest -k "C147v2 or C148"`) so the copied count speaks for the declared ids — declared-red cases now green, guards still green.
+
+   **Green stamp (red-thread close).** When the phase's final case-scoped verify passes, run
+   `python3 ~/.claude/skills/gabe-red/scripts/case-thread.py --phase N --assert-green --run "<same case-scoped cmd>"`
+   and append the printed `green@<sha>` stamp to the END of the phase's Cases record — PLAN.md
+   Phase Details bullet AND PLAN.json `phases[].cases`, same turn (E5, real parser, never sed).
+   The stamp is what lets Review ✅ pass `plan-proof-guard` later: a red@-bearing record with no
+   reachable green@ BLOCKS the review tick (D7 — that tick claims the cases pass).
 
 5. **Checkpoint (D2 decision):**
    - At every checkpoint, run `git diff --name-only` and compare against the phase Scope list. Any file outside Scope forces a classification NOW: structural → Step 6 halt menu; minor → record the deviation immediately, pre-filled with the file names, as a `deviation(minor): <path> — <1-line note>` line for the checkpoint commit body (Step 6). If no Scope list exists, print `Scope unfenced — deviation check skipped` so the omission is visible. Staging at Step 4.5 is an explicit path list — never `git add -A` when status shows out-of-scope files; print `excluded (other-track): <files>`.

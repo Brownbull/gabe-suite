@@ -4,7 +4,13 @@
 # at every tier. Debts (thin coverage, un-walked, absent angles) are NEVER this hook's business.
 # Checks (validates the WHOLE current PLAN.json state after the write — no diffing):
 #   · cells.red  == done → the phase's `cases` record must exist; a `red@<sha>` must be reachable
+#   · cells.review == done + a red@-bearing cases record → the record must carry a `green@<sha>`
+#     (stamped at execute finish when the case-scoped verify passed — case-thread.py prints it)
+#     and every cited green@<sha> must be reachable. Review ✅ claims the cases pass; a record
+#     that never left red is a LIE and blocks. Records with skip:* or no red@ are exempt.
 #   · cells.exec == done → every declared PROOF artifact path must exist on disk (proof:null passes)
+#   · WARN (stdout, never blocks): cells.exec == done while cells.red is todo/in_progress —
+#     red never ran for an executed phase. A debt, not a lie (D7).
 #     Real proof lines use shorthand (globs, {a,b}.png braces, 01..06 ranges — ruling R2): a token
 #     passes if the literal path exists, a brace-expanded glob matches, or its parent dir is
 #     non-empty. An empty/missing evidence dir still blocks — that is the lie being caught.
@@ -88,6 +94,7 @@ try:
 except Exception:
     sys.exit(0)  # malformed mirror = not a lie; other tooling reports it
 out = []
+warns = []  # debts — printed with a WARN| prefix, split off in bash, never block
 sha_cache = {}  # dedupe: verify each distinct sha once (a 5k-phase plan must not fork 5k gits)
 def sha_reachable(sha):
     if sha not in sha_cache:
@@ -108,6 +115,21 @@ for ph in plan.get("phases", []) or []:
             for sha in re.findall(r"red@([0-9a-f]{7,40})", cases):
                 if not sha_reachable(sha):
                     out.append(f"phase {pid}: Red ✅ cites red@{sha} but that commit is unreachable")
+    # --- review ✅ on a red-beat phase whose cases never went green ---
+    if c.get("review") == "done":
+        cases = (ph.get("cases") or "").strip()
+        if cases and "red@" in cases and "skip:" not in cases:
+            greens = re.findall(r"green@([0-9a-f]{7,40})", cases)
+            if not greens:
+                out.append(f"phase {pid}: Review ✅ but the Cases record never left red — no green@<sha> "
+                           "(execute stamps it when the case-scoped verify passes; case-thread.py --assert-green prints it)")
+            else:
+                for sha in greens:
+                    if not sha_reachable(sha):
+                        out.append(f"phase {pid}: Review ✅ cites green@{sha} but that commit is unreachable")
+    # --- exec ✅ while red still owed — a debt, warned on stdout, never blocked ---
+    if c.get("exec") == "done" and c.get("red") in ("todo", "in_progress"):
+        warns.append(f"phase {pid}: Exec ✅ while Red ⬜ — red never ran for this phase (debt; /gabe-red or an enumerated skip closes it)")
     # --- exec ✅ with a declared proof whose artifact is missing on disk ---
     if c.get("exec") == "done":
         proof = ph.get("proof")
@@ -119,9 +141,14 @@ for ph in plan.get("phases", []) or []:
                     path = re.sub(r"\s*\([^)]*\)\s*$", "", parts[-1]).strip()
                     if path and not evidence_exists(path):
                         out.append(f"phase {pid}: Exec ✅ but declared proof artifact missing on disk: {path}")
-print("\n".join(out))
+print("\n".join(["WARN|" + w for w in warns] + out))
 PY
 )
+
+# split debts (WARN|) from lies — debts surface on stdout and never block (D7)
+warn_lines=$(printf '%s\n' "${viol:-}" | grep '^WARN|' | sed 's/^WARN|/[WARN] plan-proof-guard: /' || true)
+viol=$(printf '%s\n' "${viol:-}" | grep -v '^WARN|' | grep -v '^$' || true)
+[ -n "$warn_lines" ] && echo "$warn_lines"
 
 if [ -n "${viol:-}" ]; then
   {

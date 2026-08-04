@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.4.0
+  version: 1.5.0
 ---
 
 # Gabe Red — the failing state, given an address
@@ -41,6 +41,7 @@ Runs after `/gabe-plan` (needs the phase row + its `proof_type`) and **before ex
 |---|---|
 | `scripts/prove-guard.py` | **Proves a guard can fail, by making it fail.** Mutates `<file>:<line>`, runs the case, asserts RED, and **always restores the file byte-for-byte** (verified, including on a crashing runner). `PROVEN` exit 0 · `VOID` exit 2 · `INCONCLUSIVE` exit 3 (already-red baseline · no syntax-safe mutation · dirty file). Only operator/literal swaps are applied — a mutation that broke the parse would fail the run for the wrong reason and be reported as proof. Verdicts append to `.kdbp/guard-proofs.jsonl`, which the command center's guard lens reads: an unproven case renders **`named`**, never `guarded`. |
 | `scripts/backfill-sweep.py` | Corpus sweep for un-minted cases. |
+| `scripts/case-thread.py` | **The red→green thread, observed at both ends.** `--assert-red` re-proves the declared set is failing NOW (execute entry; a broken run — import/collection error — is NOT-RED, never evidence). `--assert-green` proves it passes and prints the `green@<sha>` stamp execute appends to the Cases record (review's opener re-runs it; `plan-proof-guard` BLOCKS Review ✅ without a reachable stamp). `PROVEN` exit 0 · finding exit 2 · `INCONCLUSIVE` exit 3 (skip:* record, no ids). Report-never-gate: prints, writes nothing. |
 
 ```
 python3 ~/.claude/skills/gabe-red/scripts/prove-guard.py apps/api/wall.py:42 \

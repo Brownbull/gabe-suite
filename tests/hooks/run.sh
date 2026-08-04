@@ -168,5 +168,47 @@ out=$(CLAUDE_PROJECT_DIR="$NOK" bash "$DG")         # no .kdbp -> must stay SILE
 [ -z "$out" ] && ok || bad "direction-guard: must stay SILENT without .kdbp"
 rm -rf "$NOK"
 
+# --- plan-proof-guard: red→green thread (review honesty + exec/red debt) ----
+GREENSHA=$SHA
+[ "$(guard_on "[{'id':'g','cells':{'review':'done'},'cases':'NEW C1 (red@$SHA)','proof':None}]")" = 2 ] && ok || bad "guard: Review done w/ red@ but no green@ must BLOCK"
+[ "$(guard_on "[{'id':'g','cells':{'review':'done'},'cases':'NEW C1 (red@$SHA) · green@$GREENSHA','proof':None}]")" = 0 ] && ok || bad "guard: Review done w/ reachable green@ must pass"
+[ "$(guard_on "[{'id':'g','cells':{'review':'done'},'cases':'NEW C1 (red@$SHA) · green@deadbeef','proof':None}]")" = 2 ] && ok || bad "guard: Review done w/ unreachable green@ must BLOCK"
+[ "$(guard_on "[{'id':'g','cells':{'review':'done'},'cases':'skip:not-testable — config-only','proof':None}]")" = 0 ] && ok || bad "guard: Review done w/ skip:* record must pass (exempt)"
+[ "$(guard_on "[{'id':'g','cells':{'review':'done'},'cases':None,'proof':None}]")" = 0 ] && ok || bad "guard: Review done w/o cases record must pass (not a red-beat phase)"
+[ "$(guard_on "[{'id':'g','cells':{'review':'done'},'cases':'— · GUARD: C091 (behavior unchanged)','proof':None}]")" = 0 ] && ok || bad "guard: Review done on guard-only record (no red@) must pass"
+# exec ✅ while red ⬜ = debt: WARN on stdout, exit 0
+python3 -c "
+import json
+plan={'version':1,'status':'active','current_phase':'1','phases':[{'id':'d','cells':{'exec':'done','red':'todo'},'proof':None,'cases':None}]}
+json.dump(plan,open('.kdbp/PLAN.json','w'))"
+wout=$(echo '{"tool_input":{"file_path":"/x/.kdbp/PLAN.json"}}' | bash "$GUARD" 2>/dev/null); wrc=$?
+[ "$wrc" = 0 ] && echo "$wout" | grep -q 'Exec ✅ while Red ⬜' && ok || bad "guard: Exec done + Red todo must WARN on stdout and exit 0"
+wout=$(echo '{"tool_input":{"file_path":"/x/.kdbp/PLAN.json"}}' | { python3 -c "
+import json
+plan={'version':1,'status':'active','current_phase':'1','phases':[{'id':'d','cells':{'exec':'done','red':'done'},'proof':None,'cases':'NEW C1 (red@$SHA)'}]}
+json.dump(plan,open('.kdbp/PLAN.json','w'))" && cat; } | bash "$GUARD" 2>/dev/null)
+echo "$wout" | grep -q 'Exec ✅ while Red ⬜' && bad "guard: Exec done + Red done must NOT warn" || ok
+
+# --- red-entry-guard: WARN on source write while Red ⬜, SILENT otherwise ----
+REG="$REPO/scripts/hooks/kdbp/red-entry-guard.sh"
+reg() { # $1 = phases py literal · $2 = file_path -> echoes hook stdout
+  python3 -c "
+import json
+plan={'version':1,'status':'active','current_phase':'1','phases':$1}
+json.dump(plan,open('.kdbp/PLAN.json','w'))"
+  echo "{\"tool_input\":{\"file_path\":\"$2\"}}" | bash "$REG" 2>/dev/null
+}
+RTODO="[{'id':'1','cells':{'red':'todo','exec':'todo'},'cases':None}]"
+reg "$RTODO" "/x/src/app.py" | grep -q 'RED-ENTRY' && ok || bad "red-entry: source write w/ Red todo must WARN"
+reg "$RTODO" "/x/tests/test_app.py" | grep -q 'RED-ENTRY' && bad "red-entry: test file must stay SILENT (red workspace)" || ok
+reg "$RTODO" "/x/.kdbp/PLAN.md" | grep -q 'RED-ENTRY' && bad "red-entry: .kdbp write must stay SILENT" || ok
+reg "$RTODO" "/x/docs/notes.md" | grep -q 'RED-ENTRY' && bad "red-entry: docs/markdown must stay SILENT" || ok
+reg "[{'id':'1','cells':{'red':'done','exec':'todo'},'cases':'NEW C1'}]" "/x/src/app.py" | grep -q 'RED-ENTRY' && bad "red-entry: Red done must stay SILENT" || ok
+reg "[{'id':'1','cells':{'red':'todo','exec':'todo'},'cases':'skip:not-testable — config'}]" "/x/src/app.py" | grep -q 'RED-ENTRY' && bad "red-entry: enumerated skip must stay SILENT" || ok
+reg "[{'id':'1','cells':{'exec':'todo'},'cases':None}]" "/x/src/app.py" | grep -q 'RED-ENTRY' && bad "red-entry: absent Red column must stay SILENT" || ok
+NOK=$(mktemp -d); out=$(cd "$NOK" && echo '{"tool_input":{"file_path":"/x/src/app.py"}}' | bash "$REG" 2>/dev/null)
+[ -z "$out" ] && ok || bad "red-entry: no .kdbp must stay SILENT"
+rm -rf "$NOK"
+
 echo "hooks harness: $pass passed, $fail failed"
 [ "$fail" = 0 ]
