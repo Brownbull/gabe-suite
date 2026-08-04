@@ -301,9 +301,11 @@ def _verification_changelog() -> str:
         t = recs[-1].get("totals", {})
         rows.append([f"<b>{E(src)}</b>", str(t.get("passed", 0)),
                      str(t.get("failed", 0)), str(t.get("skipped", 0)),
-                     str(len(recs)), E(D.rel_age(recs[-1].get("ts")))])
+                     str(len(recs)), E((recs[-1].get("ts") or "")[:10] or "—"),
+                     E(D.rel_age(recs[-1].get("ts")))])
     return table(
-        ["Source", "Passed", "Failed", "Skipped", "Runs recorded", "Last change"],
+        ["Source", "Passed", "Failed", "Skipped", "Runs recorded", "Date",
+         "Last change"],
         rows, num={1, 2, 3, 4},
         note=f"{len(HISTORY)} line(s) in run-history.jsonl (committed, capped "
              f"{HISTORY_CAP}) — one per source per build whose totals moved. The "
