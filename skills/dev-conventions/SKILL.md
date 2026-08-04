@@ -8,12 +8,11 @@ metadata:
 
 # Dev Conventions — the shelved binder
 
-**Origin (2026-08-04, move №2 of the context-files investigation):** these files lived in
-`~/.claude/rules/common/` and were injected into every session of every project — ~2,467 words
-(~3.3k tokens) of always-on context, most of it generic convention the model already carries.
-The arXiv 2607.27250 ablation bounds the correctness effect of that category at ≈0; relocating
-it here converts the cost from *every session* to *only when a task opens a page*. Content is
-RELOCATED, not deleted — `mv` back to `~/.claude/rules/common/` reverses the move entirely.
+**Why this exists:** these files lived in `~/.claude/rules/common/` and rode every session of
+every project as always-on context (~2,467 words) — mostly generic convention the model already
+carries. Relocated here, they cost nothing until a task opens a page. Content is RELOCATED, not
+deleted — `mv` back to `~/.claude/rules/common/` reverses the move entirely. (Provenance and the
+evidence trail live in git and the paper-contrast investigation record.)
 
 ## When to open which page
 
