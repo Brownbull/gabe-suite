@@ -136,6 +136,31 @@ chrome proof was rebuilt as tests after the trial deleted it — do not regress 
 
 Evidence navigator: a node click swaps the right panel; a link pill jumps workflows and the picker follows; a shared sub-workflow's ⇱ back returns to whichever parent it was ENTERED from. A state with no capture renders the named-gap panel and never an image — the one property the battery mutation-proves by planting a fake shot.
 
+## Evidence navigator — the wiring contract (proven on the transaction exemplar)
+
+`example/feature-transaction.html` carries the navigator as the Evidence tab's
+FIRST section. Four things the exemplar settled, all of them cheap here and
+expensive in a twin:
+
+1. **`evidence-nav.js` must NOT be `defer`red.** It only defines a global, and
+   the generator's data block is an inline script that calls `mount()` during
+   parse — a deferred asset runs after parsing, so the first wiring attempt
+   mounted nothing. `defer` on this one file is a silent blank section.
+2. **The data is INLINED, never fetched.** Center pages are opened over
+   `file://` at least as often as over http, where `fetch()` is blocked. The
+   generator emits one `<script>` per entity holding `{states, workflows}` and
+   the mount call.
+3. **One subnav per pane.** The section contributes its LINK to the pane's
+   existing `.subnav`; it must not emit a second nav bar (the first cut did,
+   and the pane grew two).
+4. **Capture paths are center-relative** (`assets/evidence-states/…` from a
+   station page, `../assets/…` from `example/`). The generator owns the
+   rewrite from the project's proof root; a path that resolves in the prism
+   does not automatically resolve in a feature page.
+
+Section markup: `.subnav` link + `.sechead` (`--gc:#6b46c1`) with a `secinfo`
+legend naming the three proof states and ✎, then `<div id="ev-nav-root">`.
+
 ## Rules
 
 - The archived project's legacy shell/css is never a source of chrome.

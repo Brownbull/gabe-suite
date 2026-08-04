@@ -42,10 +42,9 @@ page built from scratch instead of its template is a defect (adopt-spec).
 | `tests.html` | Testing STATION — estate dashboard: cards (cases · files · claims · untested · corpora & gates) · kinds & coverage app-wide · entity × kind matrix; one `test-*` estate page per section (matrix=cases · files · claims · elements=untested · corpora=machinery) | 1 |
 | `board.html` | Board STATION — every open move as a card (tracks: verify · prove · build · debt · arc) re-columned six ways (state · track · entity · effort · age · done) + the clickable phase-sequence strip. Slots: `{{BOARD_KPIS}}` `{{PHASE_STRIP}}` `{{PHASE_JSON}}` `{{BOARD_MODES}}` `{{BOARD_FILTERS}}` `{{BOARD_BOARDS}}`. Rendered in a SECOND pass (after archmap) so cards are priced against this build, not the last one; behaviour in `assets/board.js` | 1 |
 | `entity-index.html` `docs.html` `ledger.html` `releases.html` | single-lens STATIONS | 1 |
-| `docpage.html` | **one authored DOC**, rendered into this shell by `build_docsite.py --shell --nav`. The only station whose body is PROSE rather than machine facts, which is why it carries the `.docbody` typography layer and no KPI row — there is nothing to count on a page whose claim is an argument. Slots: `{{DOC_TITLE}}` `{{DOC_KICKER}}` `{{DOC_LEDE}}` `{{DOC_BODY}}` `{{DOC_SOURCE}}` `{{DOC_SCRIPTS}}` `{{SIDEBAR}}` (filled from `nav.json`, never authored). Exemplar: `example/docpage-skill-map.html` | 1 |
 | `arch-code-map.html` (Tests column) | carries the GUARD chip per file — `guarded N/N` or `unguarded N/M`. reach and coverage say whether a file's code was RUN; the guard chip says whether any test NAMES what it declares, which is the question a refactor actually asks. Python rows are exact (ast defs → C-ids); ts/tsx rows are name-matched against the symbols web tests import, so they read as a floor and the tooltip says so | — |
 | *(spec'd, next loop)* `architecture.html` | app-wide Architecture STATION rendered from `archmap.json` | 1 |
-| `assets/a3.css` | the skin + identity layer + trial vocabulary (evolve via the loop, never per-project) — plus the `.docbody` PROSE layer added by the docsite merge: a3.css had zero rules for a paragraph, heading or list until authored pages started rendering here | — |
+| `assets/a3.css` | the skin + identity layer + trial vocabulary (evolve via the loop, never per-project) | — |
 | `assets/slots.js` | raw-skeleton affordance: unfilled `{{TOKEN}}`s render as labeled chips + a notice bar; inert on generated pages | — |
 | `assets/a3-settings.js` | viewer settings (cog in `.brand`): 10 content fonts, size S–XL, compact, rail, Light/Dark — localStorage | — |
 | `assets/a3-lightbox.js` | proof viewer + expander cascade; delegated on `a[data-lb]`, progressive (anchors resolve with JS off) | — |
@@ -136,6 +135,31 @@ itself stays script-free. **This layer ships only with its committed harness** (
 chrome proof was rebuilt as tests after the trial deleted it — do not regress this).
 
 Evidence navigator: a node click swaps the right panel; a link pill jumps workflows and the picker follows; a shared sub-workflow's ⇱ back returns to whichever parent it was ENTERED from. A state with no capture renders the named-gap panel and never an image — the one property the battery mutation-proves by planting a fake shot.
+
+## Evidence navigator — the wiring contract (proven on the transaction exemplar)
+
+`example/feature-transaction.html` carries the navigator as the Evidence tab's
+FIRST section. Four things the exemplar settled, all of them cheap here and
+expensive in a twin:
+
+1. **`evidence-nav.js` must NOT be `defer`red.** It only defines a global, and
+   the generator's data block is an inline script that calls `mount()` during
+   parse — a deferred asset runs after parsing, so the first wiring attempt
+   mounted nothing. `defer` on this one file is a silent blank section.
+2. **The data is INLINED, never fetched.** Center pages are opened over
+   `file://` at least as often as over http, where `fetch()` is blocked. The
+   generator emits one `<script>` per entity holding `{states, workflows}` and
+   the mount call.
+3. **One subnav per pane.** The section contributes its LINK to the pane's
+   existing `.subnav`; it must not emit a second nav bar (the first cut did,
+   and the pane grew two).
+4. **Capture paths are center-relative** (`assets/evidence-states/…` from a
+   station page, `../assets/…` from `example/`). The generator owns the
+   rewrite from the project's proof root; a path that resolves in the prism
+   does not automatically resolve in a feature page.
+
+Section markup: `.subnav` link + `.sechead` (`--gc:#6b46c1`) with a `secinfo`
+legend naming the three proof states and ✎, then `<div id="ev-nav-root">`.
 
 ## Rules
 
