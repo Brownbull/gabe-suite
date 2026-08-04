@@ -112,7 +112,7 @@ The Gabe Suite — 28 skills (each skill IS its slash command).
 | gabe-handoff | /gabe-handoff | Session handoff — paste-able next-session prompt + durable KDBP state sync so a fresh session resumes with full fidelity |
 | gabe-health | /gabe-health | The suite scanner, three lenses — codebase health (god files, churn hotspots, coupling, bug concentration, scope creep), decision-debt (absorbed from gabe-de… |
 | gabe-help | /gabe-help | Context-aware guide — detects project state, shows what's configured, suggests the right workflow |
-| gabe-imagine | /gabe-imagine | Explanations rendered as a working system — give it a brief context (a concept, an app, a use case, a phenomenon, a code map) and it dissects the material, p… |
+| gabe-imagine | /gabe-imagine | Understanding carried visually, not by prose — give it a brief context (a concept, an app, a use case, a phenomenon, a code map) and it dissects the material… |
 | gabe-init | /gabe-init | Project setup — creates .kdbp/, installs hooks, configures by project type and maturity |
 | gabe-lens | /gabe-lens | Cognitive translation — analogies, spatial maps, constraint boxes, one-line handles, adapted to your cognitive suit |
 | gabe-meme | /gabe-meme | Oblique memes as visual metaphors — persona-matched template, text that lands by tangent, rendered via memegen.link and verified as PNG. Punch-up only |

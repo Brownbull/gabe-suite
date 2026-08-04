@@ -58,6 +58,26 @@ numbers onto the SAME drawing, and the reader chooses their depth.
   explanation text, it never adds to it** — this is the wording-reduction
   device, not another widget.
 
+## Control choice — sliders for bounded levers
+
+A bounded numeric lever gets a SLIDER with its live value formatted beside
+it (a label reading `7.000000000000001%` has already lost the glance
+layer); a number input only for unbounded or precision entry. A time-like
+dimension (the month, the step) gets a scrub slider PLUS milestone chips
+for the story beats (m1 · y1 · y10 · the crossover · the end) — continuous
+for honesty, chips for narrative. Ruled on the lever bank + the anatomy.
+
+## The consolidated variable bar (one model, one control surface)
+
+When 2+ components share variables: ONE master control set (the first
+component's sliders may be it), and a sticky VARIABLE BAR that follows the
+scroll — value chips that MORPH into their own slider on hover/focus (only
+the touched one). Mirrors sync by writing the master input and dispatching
+`input`, so component listeners never re-wire. A component holding a
+private constant the model already owns is a defect. The floor may stay
+pinned to the worked case as the page's recountable anchor — SAY SO.
+Reference implementation: the compound-interest page.
+
 ## Existing instances (extend these, don't fork)
 
 - click→inspector: `pf-detail` panels (the open layer, shipped).
@@ -69,3 +89,5 @@ numbers onto the SAME drawing, and the reader chooses their depth.
   the page states the downgrade** (the say-so rule) — do not mint
   incompatible one-off tooltips per page.
 - split view: not built — the second gap.
+- hover-morph chips + one-model bar: the compound-interest variable bar.
+- reader-paced formula: the badged equation (translation-elements.md).

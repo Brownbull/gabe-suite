@@ -494,6 +494,395 @@ universal law. Fixed as v1.3.1:
   keeps the simulator; assets-inventory cites the sha) — the one-shot page
   takes precedence.
 
+## One-shot round 1 — the corrections session (2026-08-02)
+
+**Session A** ran the thin prompt cold and produced
+`docs/prisms/compound-interest/` (the saver's console: floor + simulator +
+ledger + four states + formula-last). **Operator verdict:** "seems like a
+playwright test is needed before declaring page ready, judge by yourself."
+
+**The judgment (Session B):** all three shipped gates were GREEN on a page
+whose runtime nobody had run — contract 8/8, fit 15/15, motion 5/5, and not
+one of them executes the page's own authored script. A hot inline probe then
+proved the simulator fine (15/15: curve drawn, $243,994 readout, inputs
+react, hover cross-reacts, inspectors open — the 2 first-pass fails were the
+probe's own viewport-coordinate bug, not the page). Visual pass clean. One
+REAL page defect surfaced by the checklist Session A never reported: surface
+prose = **212 words** when the builder-rendered lede + handle count, 123
+without — the counting unit had never ruled on page chrome, and that
+ambiguity is a word-salad leak.
+
+**Page fix (smallest change):** lede 45→27 · handle 44→17 · two prismprose
+blocks trimmed → **148/150 counted tokens**; meaning moved down, not lost —
+the floor and inspectors already carried it.
+
+**Generalization (the actual product):**
+- **`tools/probe-render.mjs` SHIPPED** (the I5 named gap closed): one
+  browser, all pages; always-on checks (zero page/console errors at load AND
+  after interaction · every `data-fx` slug in FXREPLAY) + author-declared
+  hooks — `data-probe` (renders non-empty) · `data-probe-expect` (readout
+  regex) · `data-probe-react`/`data-probe-out` (each input must move every
+  readout, then restore) · `data-probe-hover` (gesture changes its target).
+  **An authored script with no hooks FAILS** — Session A's gap verbatim,
+  now a firing clause. Generator chrome (`mermaid.initialize`) exempted.
+- **Battery:** `tests/prism-probe/` — 9 cases (8 FIRE mutations + the
+  chrome SILENT case), doctor-discovered.
+- **Wired:** `refresh_suite_center.sh` gained the probe leg (32 checks
+  across 9 floor pages, green); SKILL.md I5 rewritten to the shipped tool;
+  disk-target §Authoring got the hook table + §Gates row; the page declares
+  7 hooks.
+- **Counting-unit ruling** (translation-elements §surface budget): lede +
+  handle COUNT — the reader meets them before the first component; headings
+  and component-attached text stay exempt. SKILL bumped to **1.3.2**.
+
+**Pre-present checklist (reported, per I5):** surface count 148/150 ·
+captions spot-checked (consequence-carrying: "the machine passes you —
+m217", "same 7%, ×1,217 the payment") · ladder order confirmed (worked case
+→ floor → simulator → enumeration ledger → states → doubling → rule LAST).
+Full chain green: contract 8/8 · fit 135/135 · motion · probe 32/0 · doctor
+CLEAN. Still owed from the panel: mechanical budget/caption checks inside
+verify-prism, downstream prism wiring.
+
+## One-shot round 2 — the vanilla-Claude comparison (2026-08-02, operator)
+
+The operator asked desktop Claude (no skill) the same question and got a page
+whose GRAPHIC beat ours: full-width slider rows (value right-aligned) → a
+stat-tile row → one large chart, with a **starting amount** lever ours never
+had. Diagnosis (ruled): not over-tuned to compound interest and not a
+conscious cut — three mechanisms:
+1. **Census hole** — nothing enumerates a formula's FREE VARIABLES; P and n
+   fell out at bench round 2 and the lift rule carried the omission forward.
+2. **Lift preserved an improvisation** — the round-2 simulator frame (number
+   boxes + side bar) was lifted verbatim; no reference names a canonical
+   simulator layout, so the nearest local asset won.
+3. **No control-abstraction rule** — bounded numeric levers want sliders
+   with live formatted values (their "7.000000000000001%" is the
+   counter-case), number inputs only for unbounded/precision entry.
+
+**The corrections queue (SAVED — the working plan):**
+- STEP 1 (now): modify the page to the ruled layout — sliders (incl.
+  starting amount) → stat tiles (lifted shape from gabe-artifact's static
+  library) → full-width chart with year ticks; hover/pin, crossover,
+  provenance and probes kept; iterate with the operator to acceptance.
+- STEP 2: encode into the skill — (a) formula free-variable lever census:
+  every variable gets a control or a declared ghost; (b) the simulator
+  layout pattern (controls → tiles → chart) in the inventory + the lift
+  rider: a lifted asset's LAYOUT is re-judged against the library, not
+  inherited; (c) slider-vs-input rule + formatted value labels (battery
+  case for the float artifact). OPEN RULING (operator-only): chart-as-well
+  leading concept pages, floor demoted to the mechanism section.
+- STEP 3: re-run Session A's exact prompt cold ("/gabe-imagine compound
+  interest, for a saver") against the updated skill; the recreated page is
+  the test of the encodings.
+
+### The simplicity scan + the correction sweep (same session)
+
+Operator asked for a cold scan — "simplicity, abstractions visible right
+away" — then ruled: correct all findings, removal allowed, keep the sliders.
+Nine findings, all landed:
+1. **Loop quietest** → return hop got mass: wider hop, 3px rail, bold ink
+   label "↺ back into the pot" (wrap allowed; the shell ellipsizes hop
+   labels — page-local override), node 4 sub now says "the hop that IS
+   compound interest".
+2. **Three representations, word-only joins** → cast box CUT (recipe faces
+   already carry the payloads); one explicit join sentence: "The curve above
+   is this machine, running."
+3. **Shape after arithmetic** → the SIM LEADS the page; the floor demoted to
+   "The machine behind the curve". (The chart-as-well ruling, made by the
+   correction itself.)
+4. **Vocabulary strips between question and answer** → legend follows the
+   floor, drops `broken` (floor never uses it), gates shortened to fit
+   unclipped at 1440.
+5. **Crossover absent from the chart** → drawn on the curve: ring +
+   "the machine passes you · m217", recomputed live, hidden when settings
+   never cross; `data-probe` on the marker group.
+6. **Ledger duplicated the curve** → CUT entirely; its unique facts moved
+   (crossover → chart, shares → tiles at any hovered month).
+7. **State words in machine silhouettes** → floor 2 replaced by four
+   state-badged scenario TILES in a sphere (legend's own dot swatches
+   reused), each opening its old inspector.
+8. **Insight-last doubling** → pulled row moved first.
+9. **Six chrome strips** → cast gone, handle rewritten as a chart pointer
+   ("the gap … is the machine's share").
+Surface: **114/150** (was 148). Chain green after sweep: contract 8/8 ·
+fit 135/135 · motion 4/4 · probe 8/8 page / 32-0 site. STEP-2 encoding
+candidates the sweep adds: hop-label wrap-on-return default in the shell;
+"the ladder is also an ordering law INSIDE components" (insight-first);
+scenario-tile grammar for states-without-machines.
+
+### The head-grammar round (operator, same arc): "too many formats, no icons"
+
+Operator on the page head: too many unlabeled formats (kicker · title ·
+lede · handle box · seat pill), titles not distinct, no section navigation,
+icons only on the seat. **SHELL-level correction** (mirrored byte-identical
+to templates/center/shell/, doctor CLEAN):
+- **Labeled handle** — build_prisms.py wraps every handle in a `.phlab` tag
+  (bookmark icon + "THE HANDLE"): a reader never deduces what the box is.
+- **Kicker conditional** — empty kicker renders nothing; this page emptied
+  it (the seat row carries the addressing). Estate kickers unchanged.
+- **Section titles = iconed h2 pills** (`.prismprose h2`: panel background,
+  border, inline stroke icon) — the eye finds sections without reading.
+- **The section rail** — `prism-fx.js buildToc()`: 2+ h2 pills ⇒ a sticky
+  `.prism-toc` chip row at the stage top (icons cloned from pills,
+  scroll-spy `.on`, reduced-motion jumps, runtime-built so the static link
+  gate never sees dead anchors). Shape borrowed from the center's .subnav.
+- Page: four iconed sections (lever bank · machine · accounts · rule); seat
+  gvt now says "this page's seat · end user · …".
+Headless check: 4 chips, jump 0→1988px, spy highlights, rail sticks at 0,
+zero errors; probe 32/0, suite OK. Every prism page inherits pills + rail
++ labeled handle automatically at its next regen.
+
+### The treemap round (operator, 2026-08-04): rail drag + "the formula, mapped"
+
+Two asks, both landed:
+- **Rail drag-to-scroll (SHELL, mirrored):** the section rail pans by
+  grabbing anywhere on it — pointer events, 6px threshold; a press that
+  moves is a pan and never navigates, a clean press still jumps. Cursor
+  grab/grabbing, touch-action pan-y.
+- **NEW SECTION between the lever bank and the machine — "the formula,
+  mapped":** an animated 2-level treemap of the closed form's parts, month
+  by month. Columns = ownership (you · the machine), blocks = the five
+  parts: start P · deposits c·k | growth-on-start P((1+i)^k−1) · simple
+  interest c·i·k(k−1)/2 · interest-on-interest (the remainder). The split
+  RECOUNTS the page: at m360 simple = $75,390 and surplus = $96,604 — the
+  same numbers the credit/engine inspectors state. Formula typeset
+  LaTeX-look in pure CSS (serif math stack, italic vars, stacked fraction
+  bar — no external libs on center pages). Controls: month slider + play
+  (auto-advance ~200 steps); the treemap owns ONLY the month — amounts
+  follow the lever bank's sliders live (one model, two views; "maybe one
+  less selector" taken to its end). Registered as FXREPLAY["ci-map"],
+  obeys the cog (headless: advancing 48, frozen at 48 under
+  Motion=Paused, resumed 48→78) and reduced motion (loads finished).
+  Colors: shades of the two validated families via color-mix — no new
+  hues. Trap recorded: `--ci-s2` was scoped to `.ci`, so the treemap's
+  amber rendered TRANSPARENT until the var moved to `.ci, .tm` — a
+  page-local component reusing another component's var must widen the
+  var's scope, not assume it.
+Surface 131/150 · motion 5/5 (ci-map is a gated animation) · probe 32/0 ·
+doctor CLEAN. Rail now 5 chips.
+
+**Treemap correction round (operator, same day):** three rulings, landed:
+1. Formula OUT of the section (it never mapped to the diagram) → the
+   typeset math moved into the rule's closed-form inspector.
+2. The numbers moved ABOVE the map as an iconed stat strip — one tile per
+   part (month · start · deposits · growth-on-start · simple ·
+   interest-on-interest · the pot), color-dotted, watchable month by month.
+   probe-outs sit only on tiles that MOVE at P=0 (start/growth stay $0 —
+   an out no input moves fails the union clause, correctly).
+3. **The absolute-scale ruling (encode at STEP 2 — this is a general
+   animated-composition law):** a composition animated over time must NOT
+   renormalize each frame to 100% — that shows shares eating shares and
+   hides growth. The canvas is pinned to the FINAL frame's total; frame k
+   draws at sqrt(total_k/total_end) per dimension, anchored at the
+   bottom-left corner, so area stays money-true at every month and
+   exponential growth is VISIBLE as growth beside the linear deposits.
+   Columns stack column-reverse so the root parts sit at the anchor corner.
+Frames verified m60 (small corner cluster) · m217 (~60%, machine rivals
+deposits) · m360 (full canvas). Surface 140/150 · gates + probe green.
+
+**Pattern promotion (operator ruling):** the absolute-scale growing map is
+GENERAL ("growth over time of a whole divided into parts" — coverage,
+failure cases, code per entity) → promoted into gabe-artifact's motion
+library as **"Growing composition map"** (`data-anim="growmap"`, neutral
+code-per-entity demo on the s1/s2 series palette, follows the library's
+clearInterval/MOTION.on/reduced conventions). Library gate 22/22 · battery
+6/6 · counts 20→21 everywhere (CLAUDE.md, artifact SKILL 1.3.0→**1.3.1**,
+imagine SKILL, tool-registry, assets-inventory) · doctor CLEAN.
+
+**Machine-floor redesign (operator: "dense, plain, no icons/colors/
+dimension — show me options"):** four live options built as a chooser
+Artifact (one model, one clock, all four animated):
+A 2×2 loop grid (recommended) · B richer belt · C orbit console ·
+D production line. Published: claude.ai/code/artifact/ae2a22a7 (private).
+
+**The verdict + the landing:** operator chose **A** for the page; **B's
+card anatomy STORED as shell grammar** (prism.css optional additions:
+`.pf-name svg` icon slot · `.pf-node.tinted` consuming an authored
+`--tint` · `.pf-share` bar — a plain card stays legal; mirrored to
+templates); **D refined in the artifact** (kept as reference): the return
+pipe now flies in OPEN AIR above the stations — a pipe grazing a box reads
+as something half-hidden — and the engine got its own gauge fill (payment
+scales toward $1,423), because "it's scaled, not only the pot". Third D
+ruling (operator): a conveyor that rolls forever but says nothing about
+WHEN is decoration — **the belt became the timeline**: a year-ruled strip
+(y1…y30, month ticks) sliding beneath a fixed accent NOW cursor labeled
+"m·y", so the motion itself carries the time dimension. Encode at STEP 2:
+*looping/ambient motion must carry a legible position in time, or it is
+noise.*
+**Storage round (operator: "store these as reference diagrams — A, B, D"):**
+- **Loop grid floor** + **Timeline conveyor** joined the motion library
+  (21→**23**; neutral subjects — a plan→build→measure→learn cycle and a
+  build-progress belt; gate 24/24, battery 6/6, counts swept, doctor CLEAN).
+  B already stored as shell grammar. The SIXTH GRAMMAR (loop-grid as a full
+  `assets/patterns/` page + P3 row + "five grammars"→"six" sweep + minor
+  version) is DEFERRED to STEP 2 — that is where the version bump and
+  chooser-table change belong; trigger: STEP 2 execution.
+- **Directional links ruling (operator):** floor wires carry DIRECTION —
+  arrowheads on every link (muted head on flow wires, accent head on the
+  return), uni- or bidirectional but never bare. Landed on the page's A
+  floor + the chooser's A; encode into visual-grammar at STEP 2.
+- **Motion-gate flake, third hit** → the recorded trigger fired:
+  FX_WINDOW_MS widened to 3600 in refresh_suite_center.sh's motion leg
+  (isolated re-runs were 5/5 twice; regen load starves the sampler).
+**The page floor is now the 2×2 loop grid**: pf grammar fully intact
+(data-in/out/num/state/detail, hops in DOM order, scrub steps 4 payloads),
+layout authored page-locally — fixed 880px design grid (pffit scales it),
+SVG carries ONLY the four wire paths (labels live on the hops; svg text
+duplicating hop labels was the first build's bug), the return curve sweeps
+the open center bold-accent, cards carry icons + tints (amber you / accent
+machine) + share bars (29.5% · 100% · 70.5%). Chain green: contract 8/8 ·
+fit 135/135 · probe 32/0 · doctor CLEAN.
+
+**Block-label round (operator):** each treemap container now carries its
+concept ICON beside the name (flag · coins · sprout · percent · loop), and
+a second row with the amount + a SHARE RING — a 26px circle whose border
+arc IS the percentage of the pot (50% = half the circumference bold, rest
+a faint track; SVG dasharray over a 25%-opacity track, currentColor so it
+inherits the block's label color). Labels tier by absolute block size:
+full (head+row) → head-only → none; the title attr always carries all
+three facts. Bonus made visible: at m217 the deposits ring reads exactly
+50% — the crossover AS a gauge. Probe 32/0, suite OK.
+
+## The end-sections chooser (operator: same exercise, new vocabularies)
+
+Second chooser Artifact for the page's LAST TWO sections, six live options
+on the real numbers, one shared clock:
+claude.ai/code/artifact/b86e70e0 (private, favicon 🎯).
+- **§ four accounts** — F1 divergence chart (four fates from one first
+  dollar; the gaps are the argument; state-colored endpoint chips carry
+  number + next move) · F2 outcome race (bar race, time-anchored; the
+  parked bar stalls in plain sight) · F3 the forked account (ONE account
+  forking at three decisions; branch thickness = ending balance). CUT and
+  stated: an interactive "doors" treatment — least comparable, most cost.
+- **§ the rule** — R1 the recurrence RUNNING (odometer slots execute
+  pot + pot·r/12 + deposit = next pot, next pot slides back — the return
+  hop in arithmetic) · R2 term anatomy (reader-paced stepper; each term
+  lifts, names itself, shows its worked value) · R3 the 360-row collapse
+  (rows stream, accelerate, collapse into the closed form landing on the
+  same $243,994 — the formula as COMPRESSION, not decree).
+**Verdicts + landing:** **F1 CHOSEN** (accounts → the divergence chart on
+the page: state-colored curves — good/faint-dashed/warn/bad — endpoint
+chips clickable into the old d-s-* inspectors, loads finished,
+FXREPLAY["ci-fates"] replays the draw under the cog) · F2 refined in the
+artifact (gained the belt-as-timeline strip + NOW cursor — the
+time-position law applied) · F3 stored for MANY-BRANCH subjects · **R2
+CHOSEN + UPGRADED** (the rule → the formula anatomy: the symbolic line
+with a NUMERIC TWIN — $243,994 = $0 × 8.12 + $200 × 1,219.97 — joined by
+a month scrub + milestone chips m1/y1/y10/m217/y30; term stepper with
+live worked values; my call on steps: full 0–360 slider for continuity +
+five milestones for the story beats; the ulrow recurrence and the
+d-formula inspector RETIRED — the anatomy subsumes both, the lever
+asymmetry moved into the factor term's card). Library: **divergence
+fates** + **decision fork** cards added (neutral subjects: policy
+adoption · CI fork) → **25 motion**, gate 26/26, battery 6/6, counts
+swept, doctor CLEAN. Page: contract 8/8 · motion 6/6 (3 registered
+animations) · probe 32/0 · surface 128/150.
+
+## The equation lab (operator: "the values aren't well mapped — show the resolution")
+
+The anatomy's numeric twin SKIPPED the resolution — symbols jumped to the
+answer. Third chooser Artifact: claude.ai/code/artifact (equation-lab,
+🧮) — four ways to RESOLVE the equation, all fed by one variable bench
+(P/c/i/k cards, color-coded, ± steppers, click-to-flash; i shown rounded,
+math exact):
+- **E1 substitution cascade** — the operator's numbered list as lines:
+  substitute → parentheses → powers → subtraction → division (the
+  machine's factor) → multiplications → the pot; each line's freshly
+  resolved piece glows; stepper + show-all.
+- **E2 the morph** — same steps, ONE line simplifying in place (paper-
+  style, cheapest on space).
+- **E3 the evaluation ladder** — order of operations as a ladder,
+  variables enter at the bottom, every rung carries its live value.
+- **E4 the badged equation** — no steps; every sub-expression wears its
+  value as a badge and names itself on click.
+**Round 2 (operator: E1 + E3, add motion-library animation):** E1 gained
+the **command-trace replay** — lines stream in one per 800ms, the newest
+carries a blinking caret, the freshly resolved piece glows (reduced
+motion: all lines instantly) — plus the RIGHT-SIDE variable panel
+(P/c/i/k live, color-coded) and **the moment slider** (k, m12–m360,
+drag = all views re-derive; release = both animations replay). E3 gained
+**bottom-up evaluation** — rungs render dimmed, then light one per 520ms
+from i = r/12 up to the pot. Verified: streaming 3/8 mid-replay w/ caret,
+slider syncs bench + panel, ladder 2-lit/5-dim mid-eval, zero errors.
+**Verdict: E4 CHOSEN** ("just saw E4 — it is perfect") + the moment
+slider added to it in the lab. **Landed on the page:** the rule section's
+anatomy is now the BADGED EQUATION — five clickable units (Aₖ · P ·
+(1+i)ᵏ · c · the factor fraction), each wearing its live value as a badge
+($243,994 · $0·yours · ×8.12 · $200/mo · ×1,219.97 at y30), month slider
++ milestone chips kept, side card names the selected piece; probe outs on
+the three k-varying badges, expects 243,994 + 1,219.97. E1's trace-replay
+cascade and E3's bottom-up ladder stay STORED in the lab (animated).
+Probe 32/0 · suite OK.
+
+## The variable-bar round (operator: consolidate all variables, sticky + hover-morph)
+
+Every graphic owned private constants; ruled: ONE MODEL. Landed page-local:
+- **The lever bank stays the master** — its four sliders are the source of
+  truth; the FLOOR alone stays pinned to the worked case (the page's
+  recountable anchor, stated).
+- **The variable bar** — sticky under the section rail (top:39, z-6):
+  four chips (start · deposit/mo · rate/yr · years) showing live values;
+  **hovering (or keyboard-focusing) a chip morphs IT — and only it — into
+  its slider**, title centered above; mirrors are two-way synced by
+  setting the master input + dispatching `input`, so every component's
+  existing listener keeps working untouched.
+- **Fates chart + badged equation rewired off their private constants**
+  onto the model (fates rebuilds its own scale per change; the wait-chip's
+  "behind" gap now derives live; equation badges P/c live).
+- Probe: vbar is data-probe-react (each mirror moves its own chip; union
+  holds); headless proof: bar stuck at 39px · hover→slider yes · rate
+  7→10 propagated fates $243,994→$452,098 = sim tile = equation A —
+  CONSISTENT. Probe 32/0 · suite OK.
+**STEP-2 encoding candidate:** the consolidated-variable-bar pattern (one
+model · master controls · sticky mirror chips · hover-morph, master-
+dispatch sync so listeners never re-wire).
+
+**De-dup follow-up (operator: "redundancy — put the bar atop the first
+diagram"):** the lever bank's big slider rows HIDDEN (display:none — they
+stay the master inputs), the variable bar moved to the top of the first
+diagram as the page's ONE control surface. Re-proven after the move:
+hover-morph yes · rate 7→10 → fates = tile = equation $452,098 · probe
+32/0. The pattern's final form: chips-with-morph ARE the controls, the
+masters are invisible plumbing.
+
+## STEP 2 — the arc encoded (gabe-imagine → 1.4.0, 2026-08-04)
+
+Operator's north star, verbatim intent: *"Gabe Imagine should help us
+understand things visually instead of giving huge text to abstract from"*
+— the page ended up almost wordless, everything carried by instruments.
+Encoded:
+- **SKILL.md 1.4.0** — description + one-liner rewritten around the
+  instrument-not-article law; surface contract gains one-model/variable-bar
+  + badged-equation bullets; P3 gains **loop-grid** (sixth grammar; its
+  pattern page a NAMED GAP → read the loopfloor motion card + the
+  compound-interest floor); the representation-lab move linked; 161 lines.
+- **dissection-method.md** — formula free-variable lever census (I0 guide);
+  the representation-lab move at the I2 checkpoint (contested ⇒ lettered
+  live chooser artifact; runners-up STORED before the chooser retires).
+- **representation-ladder.md** — shape-leads/mechanism-follows (page scale)
+  + insight-first (component scale) corollaries of the ordering law.
+- **visual-grammar.md** — directed links · absolute scale · ambient-motion-
+  says-WHEN, each with its lift pointer.
+- **interaction-hooks.md** — slider-vs-input + scrub-with-milestones rule;
+  the consolidated variable bar recipe; instances updated.
+- **translation-elements.md** — the badged equation as THE formula device
+  (typeset math, badges, scrub, side card; cascade/ladder stored as the
+  teaching forms).
+- **disk-target.md §Authoring** — the one-model contract + simulator layout
+  + directed wires paragraph.
+- **assets-inventory.md** — the lift rider (layout re-judged, not
+  inherited).
+CLAUDE.md row rewritten; install 29/29 (operator's new dev-conventions
+skill rides alongside — untouched); doctor CLEAN.
+
+**STEP 3 (next, FRESH session):** park `docs/prisms/compound-interest/`
+(rename to `compound-interest-v1` or archive) so I0's census can't resume
+it, then run the EXACT prompt cold: `/gabe-imagine compound interest, for
+a saver`. Judge the cold page against v1: the census must surface P, the
+sim must lead, the floor must loop with directed wires, the formula must
+wear values, the surface must stay ≤150. The delta = what the skill still
+cannot do unaided.
+
 ## Open items
 
 - Generalize the dissection layer into `skills/gabe-imagine` (a pre-P1 step +

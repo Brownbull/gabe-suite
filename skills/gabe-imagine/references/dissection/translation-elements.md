@@ -11,8 +11,12 @@ word salad of an article, very difficult to follow." The checkable contract:
 
 - every section LEADS with a component; prose is captions beneath it;
 - **the budget counts FREE-STANDING prose blocks** (`.prismprose` and any
-  text standing between components): **≤150 words total, no block over 2
-  sentences** — count before presenting and report the count;
+  text standing between components) **AND the builder-rendered lede +
+  handle** — the reader meets them before the first component, and chrome
+  position does not exempt words (ruled on the compound-interest one-shot:
+  123 counted vs 212 read). Section headings and component-attached text
+  stay exempt. **≤150 words total, no block over 2 sentences** — count
+  before presenting and report the count;
 - component-attached text (consequence lines, step sentences, under-labels,
   cast entries, tile/node labels, legends, live readouts) is budgeted by its
   OWN rule — one sentence per element, the templates below — and is exempt
@@ -75,6 +79,21 @@ Evidence pasted beside the assertion: grapher screenshots with value tables
 integral, worked parameter values on every API card. This is the page-format
 half of the `data-num-source` provenance hole — the gate half stays open, the
 authoring half is this rule.
+
+## The badged equation (the formula device — chosen over three rivals)
+
+A formula never ships as a symbols-only wall. Its surface form: each
+sub-expression is a clickable unit wearing its CURRENT value as a badge
+directly beneath the symbol (Aₖ → $243,994 · (1+i)ᵏ → ×8.12 · the fraction
+→ ×1,219.97), a time/moment scrub + milestone chips re-deriving every badge
+together, and a side card that names the clicked piece, shows its worked
+arithmetic at that moment, and carries its consequence line. Math is
+TYPESET (serif math stack, italic vars, real fraction bars — CSS only, no
+libs). The under-label row (ulrow) remains the lighter form for a
+recurrence; the stored trace-replay cascade and evaluation ladder (the
+equation-lab artifact) are the step-by-step teaching forms for when a
+reader must watch the resolution happen. Ruled 2026-08-04 ("I need to
+replace the values one by one" → then "E4 is perfect").
 
 ## Bilingual glosses
 

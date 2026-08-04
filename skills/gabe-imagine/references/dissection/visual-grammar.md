@@ -65,6 +65,29 @@ before any label. Corollary: a new kind joining a page MINTS a new silhouette
 (extend the disk-target table); reusing an existing one silently merges two
 kinds and reintroduces the double-click.
 
+## Links carry direction — or they carry nothing
+
+Every wire between actors wears an ARROWHEAD (uni- or bidirectional, but
+never bare): the head is information about the link, not decoration. The
+defining edge of a loop (the return) draws in accent with more weight —
+the compound-interest floor whispered its own subject until the return hop
+got mass. Ruled on the loop-grid landing, 2026-08-04.
+
+## Absolute scale for animated composition
+
+A composition animated over time must NOT renormalize each frame to 100% —
+that shows shares eating shares and hides the growth itself. Pin the canvas
+to the FINAL frame's total; frame k draws at √(total_k/total_end) per
+dimension, anchored at one corner, so area stays value-true at every step.
+Lift: the "Growing composition map" motion card. Ruled on the money map.
+
+## Ambient motion says WHEN
+
+Looping/ambient motion carries a legible position in time — a ruled
+timeline sliding under a fixed NOW cursor, a ticking month label — or it is
+decoration ("there is nothing that tells us at which moment we are").
+Lift: the "Timeline conveyor" motion card. Ruled on the production line.
+
 ## Tool and API cards
 
 A library function is studied as a card: signature → worked parameter values

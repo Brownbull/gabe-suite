@@ -28,7 +28,14 @@ rules are:
 **One worked case fully expanded FIRST → the siblings → the generalization
 LAST.** The pattern is *extracted*, never asserted before its evidence;
 leading with the general machine row inverts the operator's absorption
-order. The middle clause scales: a SMALL family (≲10 siblings) is
+order. **Page-scale corollary (the simplicity-scan ruling): the SHAPE leads,
+the mechanism follows** — on a concept page the chart/simulator that answers
+the seat's question is the first component; the floor that explains HOW
+demotes to a "the machine behind it" section. Arithmetic in the glance
+position is the inversion that made screen one unreadable.
+**Component-scale corollary:** the law applies INSIDE a component too — a
+sphere/tile-set leads with its pulled insight row, reference rows after
+(the doubling sphere shipped insight-last and was ruled backwards). The middle clause scales: a SMALL family (≲10 siblings) is
 enumerated exhaustively (the "…tweking w2/w3/b1…" ledger); a large one is
 sampled — a few representative siblings drawn, the rest COUNTED with a
 pointer to where they live — because exhaustive enumeration of dozens

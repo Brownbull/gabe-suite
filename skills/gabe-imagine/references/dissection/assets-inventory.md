@@ -28,14 +28,17 @@ example with its own CSS/JS to copy:
 | Library | Path | Contents |
 |---|---|---|
 | static patterns (31) | `skills/gabe-artifact/assets/static-patterns.html` | bar/line/area charts, **table with inline bars**, stat tile row, donut gauge, histogram, dumbbell, sparkline, heat calendar, timeline, scatter, radar, tree, matrix, stepper, mermaid, tabs, accordion, filter chips, sortable table, callouts… |
-| motion patterns (20) | `skills/gabe-artifact/assets/motion-patterns.html` | animated flow, marching ants, trace replay, waterfall, pipeline, live-traffic map, event fan-out, **queue fill/drain**, health pulse, walkthrough, ghost cursor, funnel, scroll steps, bar race, chart entrance/morph, **timeline scrubber**, skeleton, log ticker, state machine |
+| motion patterns (25) | `skills/gabe-artifact/assets/motion-patterns.html` | animated flow, marching ants, trace replay, waterfall, pipeline, live-traffic map, **loop grid floor** (2×2 directed cycle — arrowheads on every wire, the return edge in accent; for any output-re-enters-as-input system), event fan-out, **queue fill/drain**, health pulse, walkthrough, ghost cursor, funnel, scroll steps, bar race, chart entrance/morph, **divergence fates** (same start, N policies, ONE scale — endpoint chips carry number + next move), **decision fork** (one trunk, staged forks, branch thickness = outcome; for many-branch subjects), **timeline conveyor** (ambient motion anchored to a ruled timeline + fixed NOW cursor — looping motion with no time position is decoration), **growing composition map** (a whole growing over time, split into parts — absolute scale: the canvas IS the final frame, each step at √-scale from the corner; promoted from the compound-interest prism, fits coverage/failure-cases/code-per-entity), **timeline scrubber**, skeleton, log ticker, state machine |
 | grammar patterns (5) | `skills/gabe-imagine/assets/patterns/*.html` | belt-line, belt-lanes, floor-grid, recipe-tree, assembly-step — same subject in all five |
 | house chrome | `skills/gabe-artifact/assets/artifact-chrome.html` | the artifact target's chrome reference (NOT for disk pages) |
 
 Lifting rules: re-point at real data (a number not in the actor table does
 not appear); swap hardcoded colors for skin vars; charts go through the
 dataviz skill's procedure (form → color → **run the validator** → marks →
-hover layer).
+hover layer). **The lift rider:** a lifted asset's LAYOUT is re-judged
+against the library's patterns, never inherited — the lift rule once
+carried a round-2 improvisation (number boxes + side bar) past a better
+canonical layout the library already named.
 
 ## Tier 3 — page-local (created on the fly, lives in that page's body.html)
 

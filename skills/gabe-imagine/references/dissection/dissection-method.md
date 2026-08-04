@@ -62,10 +62,24 @@ After the dissection, STOP and ask — via AskUserQuestion, compactly:
 State your defaults so the operator can approve in one word — but the
 operator cuts, promotes, and reorders; their word wins over the ranking.
 
+**The representation-lab move** (proven on the machine floor, the end
+sections, and the equation): when a representation stays CONTESTED after
+the ask — or the operator says "show me options" — build the candidates as
+LIVE lettered demos in one throwaway chooser Artifact (one shared model +
+clock, real numbers, a cost tag per option), and let the operator answer
+with a letter. Verdicts land on the page; the runners-up get STORED
+(library card or shell grammar) before the chooser retires — a rejected
+representation someone built is an asset, a rejected description is
+nothing.
+
 ## Subject-shape census guide (I0 feeds this)
 
 - **concept/phenomenon** — parts are its quantities, rules, loops, actors
   (inflation: money supply, the central bank, rates, prices, wages…).
+  **A subject that carries a formula/parameterized system: its FREE
+  VARIABLES ARE the lever census** — every variable gets a control or is
+  declared a fixed ghost with its price (the compound-interest one-shot
+  silently dropped P and n for two rounds; a vanilla answer had them).
 - **system/app** — entities, stores, surfaces, jobs; the center's committed
   data (archmap/registry) is the census when one exists.
 - **use case** — the steps, the actors touched, the payloads exchanged, the

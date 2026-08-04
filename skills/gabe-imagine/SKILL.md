@@ -1,9 +1,9 @@
 ---
 name: gabe-imagine
-description: "Explanations rendered as a working system — give it a brief context (a concept, an app, a use case, a phenomenon, a code map) and it dissects the material, proposes what to build, asks, then produces command-center pages where the payload moves, machines state their recipe, failures flag themselves and any cell opens to its detail. Five grammars chosen by the shape of the material; two targets — a command-center page (default) or a published Artifact."
+description: "Understanding carried visually, not by prose — give it a brief context (a concept, an app, a use case, a phenomenon, a code map) and it dissects the material, proposes what to build, asks, then produces command-center pages that are INSTRUMENTS: one variable model driving every component, payloads moving, machines stating their recipe, formulas wearing their live values, and barely any words on the surface. Six grammars chosen by the shape of the material; two targets — a command-center page (default) or a published Artifact."
 when_to_use: "Explaining anything with interlocking parts — a concept, a pipeline, an app, a single use case, a social/economic phenomenon, a map of functions or workflows. Give it a one-line context; it dissects, proposes representations, asks, then builds. Also when a reader says a concept map left them lost."
 metadata:
-  version: 1.3.1
+  version: 1.4.0
   status: suite skill (generic, project-agnostic)
   scope: any subject that can be decomposed into actors with named payloads
 ---
@@ -20,7 +20,7 @@ to a short paragraph: a concept ("compound interest, for a saver"), an app
 ("how countries create money"), a code relationship ("the hook router's
 callers"). The skill carries everything else; a caller never passes
 constraints, structure, or style — those live in this skill's references.
-Also: `/gabe-imagine patterns` — list and open the five grammar pattern pages
+Also: `/gabe-imagine patterns` — list and open the grammar pattern pages
 under `assets/patterns/` for browsing, nothing else · `--target artifact`.
 
 ## Gabe execution contract (E1–E7)
@@ -30,7 +30,9 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 > **One line:** a concept map draws the connections and hides the cargo. A
 > production floor answers by existing — the item is on the belt, it changes
 > shape at each machine, and the starved machine turns colour before anyone
-> reads a word.
+> reads a word. The finished page is an INSTRUMENT the reader plays, not an
+> article the reader abstracts from — when a page explains by paragraph, this
+> skill has failed (the compound-interest one-shot's verdicts, both rounds).
 
 ## THE FLOW — from a brief context to pages
 
@@ -45,23 +47,30 @@ steps themselves do not. The binding detail for each lives in
 | **I2 · propose & ASK** | present the dissection compactly, then the candidate representations ranked **CRITICAL / RECOMMENDED / NICE-TO-HAVE**, and the page index — each page marked **NEW / UPDATE / already COVERED**; writing into an existing slug requires the operator's explicit word here. Via AskUserQuestion, defaults stated; nothing is built before this checkpoint | `dissection/dissection-method.md` §proposal |
 | **I3 · index** | more than one page approved ⇒ a section index is the queue AND the dissection persists to `docs/prisms/<index-slug>/dissection.json` (seats · worlds · pages with built/ghost states) — the file I0 resumes from; one page ⇒ skip | `dissection/dissection-method.md` §queue · `disk-target.md` §Authoring |
 | **I4 · produce** | per approved page: the ladder (rungs the subject has, kept) + the ordering law (worked case first, generalization last) + well first; assets by lookup order (lift before create, created = recorded); the surface contract below | `dissection/representation-ladder.md` · `dissection/assets-inventory.md` · `dissection/translation-elements.md` · `dissection/visual-grammar.md` · `dissection/interaction-hooks.md` |
-| **I5 · gate & STOP** | the P5 gates; for interactive components, the render probe = a headless load asserting the component's roots rendered non-empty and its readouts hold sane values (a fixtured `tools/probe-render.mjs` is a NAMED GAP — until it ships, write the probe inline and show its output). Then the pre-present checklist, reported: surface word count · caption spot-check (register template) · ladder order confirmed. One shot per page; the operator judges | `disk-target.md` §gates |
+| **I5 · gate & STOP** | the P5 gates + the render probe: `tools/probe-render.mjs` loads the built page headless and proves the authored script RAN — zero errors, every `data-fx` in FXREPLAY, and the page's declared `data-probe*` hooks (non-empty roots · readout values · inputs move readouts · hover changes its target). An authored script with NO hooks fails the probe — declare them at I4 on everything the script renders. Then the pre-present checklist, reported: surface word count (lede + handle count toward the 150) · caption spot-check (register template) · ladder order confirmed. One shot per page; the operator judges | `disk-target.md` §gates |
 
 ## The surface contract (binding on every produced page)
 
 - **Every section leads with a component** — a floor, a map, a simulator, a
   ledger, tiles. Prose is captions beneath visuals, never the carrier.
-- **Surface budget: ≤150 words** across the page's prose blocks, no block
-  over 2 sentences. Depth lives one layer down — inspectors, hover, click.
+- **Surface budget: ≤150 words** across the page's prose blocks — the
+  builder-rendered lede and handle INCLUDED — no block over 2 sentences.
+  Depth lives one layer down — inspectors, hover, click.
 - **Captions are register sentences** — thing → action → consequence, per the
   Gabe register; a caption that only describes state gets its consequence
   attached or gets cut.
 - **Assets by lookup order** — Tier 1 shell grammar (free) → Tier 2 lift
-  (31 static + 20 motion + 5 grammar pattern libraries) → Tier 3 create,
+  (31 static + 25 motion + 5 grammar pattern libraries) → Tier 3 create,
   page-local, AND record it in `dissection/assets-inventory.md`. Inventing
   what the library holds is a defect (E4).
 - **Numbers are real and recountable**; new chart colors run the dataviz
   validator; unlike kinds never share a silhouette.
+- **One model, one control surface** — when 2+ components share variables,
+  a consolidated VARIABLE BAR drives them all (sticky mirror chips,
+  hover-morph sliders, master-dispatch sync — `disk-target.md` §Authoring);
+  a component with private constants that the model already owns is a defect.
+- **A formula is shown wearing its values** — the badged-equation device
+  (`dissection/translation-elements.md`), never a symbols-only wall.
 
 ## P0 · Two targets — disk by default
 
@@ -100,9 +109,15 @@ on that page, beside the thing it colours.
 | **floor-grid** | 8+ actors; adjacency and dead cells matter |
 | **recipe-tree** | the question is dependency — what is missing before X |
 | **assembly-step** | first-time teaching; slow reference view |
+| **loop-grid** | the chain CLOSES on itself — the return hop IS the subject; ≤5 actors on a 2×2, the return drawn as bold geometry through the open center |
 
 Each ships as an openable page under `assets/patterns/` — read one before
-authoring (E4). When two fit, offer both at I2; the operator's word wins.
+authoring (E4) — EXCEPT loop-grid, a NAMED GAP: until its page ships, read
+the "Loop grid floor" motion-library card + the compound-interest floor
+(`docs/prisms/compound-interest/body.html`, the reference implementation).
+When two fit, offer both at I2; the operator's word wins. A representation
+still contested after that ⇒ the representation-lab move
+(`dissection/dissection-method.md` §proposal).
 
 ## P4 · The build loop (inside I4)
 

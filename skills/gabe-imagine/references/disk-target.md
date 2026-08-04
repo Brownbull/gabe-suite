@@ -138,6 +138,39 @@ Per node: `data-node` `data-in` `data-out` `data-num` `data-state`, plus
 a state, and **never** `data-in`/`data-out` — a gate decides, it does not
 transform.
 
+**Probe hooks — authored WITH any page-local `<script>`.** Everything the
+script renders declares what the render probe must find:
+
+| hook | asserts |
+|---|---|
+| `data-probe` | the element renders NON-EMPTY after load (children, text, or an SVG `d`) |
+| `data-probe-expect="<regex>"` | the element's textContent matches at load |
+| `data-probe-react` (container) | EACH input/select inside moves ≥1 `data-probe-out`, EVERY `data-probe-out` moves under some input, then restores (perturbation is stepUp-based — range inputs snap raw value writes to their step) |
+| `data-probe-hover="<selector>"` | hovering the element's center changes the target (text or visibility) |
+
+`tools/probe-render.mjs` executes them headless; an authored script with **no**
+hooks fails the probe — an undeclared interactive page is how the
+compound-interest one-shot shipped a simulator no gate had ever run.
+
+**The one-model contract.** Components sharing variables read ONE master
+control set; a consolidated sticky variable bar (chips → hover-morph
+sliders, master-dispatch sync) is the visible surface — full recipe in
+`dissection/interaction-hooks.md` §variable bar. A simulator lays out
+**controls → stat tiles → one full-width chart** (the tile row precedes the
+plot — the static library's own rule); floor wires carry arrowheads, the
+return edge accent-weighted (`dissection/visual-grammar.md`).
+
+**Section titles + the section rail.** Every section title is an ICONED `h2`
+pill inside `.prismprose` — a small inline stroke svg, then a lowercase label;
+the pill background is what lets the eye find section starts without reading.
+Two or more h2 pills ⇒ `prism-fx.js` builds `.prism-toc`, a sticky in-page
+section rail at the stage top, automatically (icons cloned from the pills;
+scroll-spy highlight; reduced-motion jumps). The head stays four labeled
+elements — title · lede · the tagged handle box · the seat row — and the
+`kicker` is set to `""` when the body opens with a seat row: the seat carries
+the addressing, and one more unlabeled format is exactly what a crowded head
+does not need.
+
 ## The dimension grammar — one container silhouette per kind
 
 Established on the Catan dissection (operator ruling, 2026-08-01): when several
@@ -207,6 +240,7 @@ the three per-page gates only.
 | `tools/verify-prism.mjs` | payloads named and different · a number per stage · legal + legended states · gates are not stages · inspectors open something | `tests/prism/` |
 | `tools/check-prism-fit.mjs` | page body never scrolls sideways · 12px floor holds after scaling · overflowing floors can scroll their box · prose stays inside 76ch · no page errors — at 1440/1280/1024 | `tests/prism-fit/` |
 | `gabe-artifact/tools/verify-motion.mjs` | replay moves · cog pause freezes everything · reduced motion renders finished | `tests/artifact-motion/` |
+| `tools/probe-render.mjs` | the authored script RAN: zero page/console errors (load + after interaction) · every `data-fx` slug registered in FXREPLAY · the declared `data-probe*` hooks hold (§Authoring) · an authored script with no hooks fails | `tests/prism-probe/` |
 
 The motion gate takes ~20s per page, so the full chain runs over two minutes on a
 site with several floors. That is the cost of proving motion rather than
