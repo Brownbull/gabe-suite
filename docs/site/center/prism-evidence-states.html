@@ -59,15 +59,15 @@
   <a class="navitem navsubitem" href="prism-gastify-scan-to-cooked.html" title="built from embedded components"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5.5 8.5 9 12l-3.5 3.5L2 12l3.5-3.5Z"/><path d="m12 2 3.5 3.5L12 9 8.5 5.5 12 2Z"/><path d="M18.5 8.5 22 12l-3.5 3.5L15 12l3.5-3.5Z"/><path d="m12 15 3.5 3.5L12 22l-3.5-3.5L12 15Z"/></svg> gastify scan→cooked</a>
   <a class="navitem navsubitem" href="prism-compound-interest.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> Compound interest</a>
   <a class="navitem navsubitem on" href="prism-evidence-states.html" title="console — one screen, ambient loop + scrub bar"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg> evidence states</a>
-  <div class="foot">regen 2026-08-04 17:47<br>HEAD 232cb99 · build_suite_center.py</div>
+  <div class="foot">regen 2026-08-04 17:59<br>HEAD 232cb99 · build_suite_center.py</div>
 </aside>
 
 <main class="main">
   <div class="topbar">
     <div class="crumb"><a href="index.html">Overview</a> › <a href="explanations.html">Explanations</a> › <b>Transaction evidence — every state, its screenshot, its proof</b></div>
     <div class="spacer"></div>
-    <span class="chip warn">20 uncommitted</span>
-    <span class="stamp">regen · 2026-08-04 17:47</span>
+    <span class="chip warn">17 uncommitted</span>
+    <span class="stamp">regen · 2026-08-04 17:59</span>
   </div>
 
   <div class="prismhead">
@@ -121,18 +121,24 @@
   .evleg .lu{border-color:#b7791f;background:#fdf6ec}
   .evleg .lg{border-color:#9b2c2c;border-style:dashed}
   .evleg .lw{color:#6b46c1;font-weight:800;border:none;width:auto;height:auto}
+  .evgates{display:flex;flex-wrap:wrap;gap:4px;margin-top:7px}
+  .evgates b{font-size:9px;font-weight:800;letter-spacing:.08em;
+    color:var(--muted,#5b6672);text-transform:uppercase;margin-right:2px;
+    align-self:center}
+  .evgate{font-size:10.5px;font-weight:600;padding:1px 8px;border-radius:8px;
+    border:1px dashed var(--muted,#8a94a0);color:var(--muted,#5b6672);cursor:help}
   /* right — evidence panel */
   .evpanel{background:var(--surface,#fff);border:1px solid var(--line,#d8dee6);
     border-radius:12px;overflow:hidden}
   .evpanel .shot{background:#0f1418;display:flex;justify-content:center;gap:8px}
   .evpanel .shot img{max-height:380px;width:auto;max-width:49%;object-fit:contain}
   .evpanel .shot img:only-child{max-width:100%}
-  .evpanel .gap{display:flex;flex-direction:column;gap:6px;align-items:center;
+  .evpanel .shot .gap{display:flex;flex-direction:column;gap:6px;align-items:center;
     justify-content:center;min-height:200px;font-size:12px;text-align:center;
     padding:0 20px;color:var(--muted,#5b6672);
     background:repeating-linear-gradient(-45deg,transparent,transparent 11px,
     rgba(155,44,44,.07) 11px,rgba(155,44,44,.07) 22px)}
-  .evpanel .gap b{color:#9b2c2c;font-size:13px}
+  .evpanel .shot .gap b{color:#9b2c2c;font-size:13px}
   .evpanel .meta{padding:12px 16px 6px}
   .evpanel h3{margin:0;font-size:1rem}
   .evpanel .uc{font-size:12.5px;margin:6px 0 10px;max-width:64ch;
@@ -182,6 +188,7 @@
       <button class="evtab" data-view="orbit">b · orbit</button>
     </div>
     <div id="evdiag" data-probe></div>
+    <div class="evgates" id="evgates"></div>
     <div class="evleg">
       <span><i class="lr"></i>running — shot + assertion</span>
       <span><i class="lu"></i>unpowered — asserted, unphotographed</span>
@@ -219,51 +226,96 @@ const S = {
  plus:{l:"+ menu",st:"running",role:"supporting",shot:[A+"ca0-capture-menu.png"],
   uc:"“How do you want to record your expense?” — scan · batch · statement · manual.",
   cap:"2026-07-11 · ca0 set",spec:"ca0 e2e",code:[],models:[],cids:[],writes:[]},
- manual:{l:"manual",st:"running",role:"principal",shot:[A+"tx2-manual-form-empty.png"],
-  uc:"New transaction, by hand — the same single-draft surface scan lands in (D110/D111).",
-  cap:"2026-07-09/10 · tx2 set",spec:"tx2 journey spec",code:[],
-  models:["TransactionDraft"],cids:[],writes:[]},
- txdata:{l:"tx data",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
-  uc:"Set the transaction's own fields — category, payment method, cadence, date, location, currency.",
-  cap:"2026-07-09/10 · journey-filled",spec:"tx2 journey spec",
-  code:["POST /api/v1/transactions"],models:["TransactionDraft"],cids:[],
-  writes:["draft: category","payment method","cadence","location"]},
- items:{l:"items",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
-  uc:"Add the purchase's items — name, category, qty (same capture as the filled form).",
-  cap:"2026-07-09/10 · journey-filled",spec:"tx2 journey spec",code:[],
-  models:["TransactionItem"],cids:[],writes:["items[]: name","qty"]},
- catpick:{l:"category",st:"running",role:"principal",shot:[A+"tx2-category-picker.png"],
-  uc:"The category picker — this capture is the MERCHANT variant; the item-category picker (pixel-icon list) has no curated shot yet.",
-  cap:"2026-07-09/10 · live capture",spec:"tx2 set",code:[],
-  models:["TransactionItem"],cids:[],writes:["item.category"]},
- save:{l:"save",st:"running",role:"principal",shot:[A+"tx2-created-detail.png"],
-  uc:"Create persists the draft as a real row and lands on its detail.",
-  cap:"2026-07-09/10 · journey-created",spec:"tx2 journey spec",
-  code:["POST /api/v1/transactions"],models:["Transaction"],cids:[],
-  writes:["Transaction row (created)"]},
- changetotal:{l:"total",st:"unpowered",role:"edge",
-  uc:"Adjusting the total after items — unit-asserted in the form model, no distinct capture of the act.",
-  cap:"never (unit only)",spec:"web vitest",code:[],models:[],cids:[],
-  writes:["transaction.total"]},
- cancel:{l:"cancel",st:"running",role:"edge",shot:[A+"tx2-discard-confirm.png"],
-  uc:"Discard asks first — and then really deletes the draft (CA0 trust fix).",
+ form:{l:"form",st:"running",role:"principal",shot:[A+"tx2-manual-form-empty.png"],
+  uc:"The single capture surface (D110/D111) — fresh here, or resumed from the one draft slot (ⓘ sheet explains the slot). Every ✎ satellite below edits THIS form.",
+  cap:"2026-07-09/10 · tx2 set",spec:"routes/-transactions.new.test.tsx + tx2 journey",
+  code:["routes/transactions.new.tsx"],models:["TransactionDraft"],cids:[],writes:[]},
+ merchdate:{l:"merchant·date",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
+  uc:"The MerchantHeader inline fields — merchant name (charset-validated), date, time.",
+  cap:"2026-07-09/10 · journey-filled",spec:"MerchantHeader + schema validators",
+  code:["MerchantHeader.tsx"],models:[],cids:[],
+  writes:["merchant","transaction_date","transaction_time"]},
+ storecat:{l:"store cat",st:"running",role:"principal",shot:[A+"tx2-category-picker.png"],
+  uc:"CategoryPickerModal in STORE mode — this capture IS the merchant variant; the item mode is below.",
+  cap:"2026-07-09/10 · live capture",spec:"tx2 set · useStoreCategories",
+  code:["CategoryPickerModal.tsx"],models:[],cids:[],
+  writes:["store_category_id","store_category_source=user"]},
+ payment:{l:"payment",st:"unpowered",role:"principal",
+  uc:"PaymentPicker — card aliases incl. the provisioned Efectivo (D119); a fresh slot prefills the is_default alias. Unit-asserted, never photographed.",
+  cap:"never (unit only)",spec:"-transactions.new.test.tsx · useCardAliases",
+  code:["PaymentPicker.tsx"],models:["CardAlias"],cids:["C70"],
+  writes:["card_alias_id"]},
+ recurrence:{l:"cadence",st:"unpowered",role:"principal",
+  uc:"The One-time chip — recurrence kind, interval, term N/M, label (MerchantHeader row 2). Schema-validated; no capture of the picker itself.",
+  cap:"never (unit only)",spec:"schema RecurrenceKind/Interval",
+  code:["MerchantHeader.tsx"],models:[],cids:[],
+  writes:["recurrence_kind","recurrence_interval","term_current/term_total","recurrence_label"]},
+ location:{l:"location",st:"unpowered",role:"principal",
+  uc:"LocationModal — purchase country + city (the SL track), reconciled against the settings default. sl-location e2e ran 12/12 live; no curated capture of the modal.",
+  cap:"never (e2e-asserted)",spec:"sl-location e2e 12/12",
+  code:["LocationModal"],models:[],cids:[],writes:["country","city"]},
+ totalcur:{l:"total·CLP",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
+  uc:"TransactionTotal — the amount (≥0, minor units) and the 3-letter currency.",
+  cap:"2026-07-09/10 · journey-filled",spec:"TransactionTotal + schema",
+  code:["TransactionTotal.tsx"],models:[],cids:[],
+  writes:["total_minor","currency"]},
+ attach:{l:"attach",st:"unpowered",role:"principal",
+  uc:"Receipt images, up to 20 (the 0/20 counter) — persisted as TransactionImage rows on create.",
+  cap:"never (unit only)",spec:"-transactions.new.test.tsx",
+  code:[],models:["TransactionImage"],cids:[],writes:["image_urls[] (≤20)"]},
+ additem:{l:"add item",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
+  uc:"The items section — optional (“you can also save just the total”); rows group by item family.",
+  cap:"2026-07-09/10 · journey-filled",spec:"ItemGroup/EditableItemRow",
+  code:["EditableItemRow.tsx"],models:["TransactionItem"],cids:[],writes:["items[] (row added)"]},
+ itemedit:{l:"item edit",st:"unpowered",role:"principal",
+  uc:"ItemEditModal — name (charset), qty (WHOLE NUMBER in manual — fractional only on the receipt tier), unit price, total price.",
+  cap:"never (unit only)",spec:"-transactions.new.test.tsx + schema validators",
+  code:["ItemEditModal"],models:["TransactionItem"],cids:[],
+  writes:["item.name","item.qty","unit_price_minor","total_price_minor"]},
+ itemcat:{l:"item cat",st:"ghost",role:"named gap",
+  uc:"CategoryPickerModal in ITEM mode — the pixel-icon list the operator photographed locally. NO curated capture exists of this mode.",
+  cap:"never",spec:"useItemCategories · itemFamilies",
+  code:["CategoryPickerModal.tsx"],models:[],cids:[],
+  writes:["item_category_id","subcategory","category_source=user"]},
+ leaveguard:{l:"leave?",st:"unpowered",role:"edge",
+  uc:"DF3 leave guard — a dirty form blocks back/nav/reload behind a ConfirmSheet; resumed-untouched exits deliberately do NOT cry data loss. e2e-asserted (3/3), no curated capture.",
+  cap:"never (e2e-asserted)",spec:"df3-overlay-guards.spec.ts 3/3",
+  code:["useBlocker (transactions.new.tsx:292)"],models:[],cids:[],writes:[]},
+ cancel:{l:"discard",st:"running",role:"edge",shot:[A+"tx2-discard-confirm.png"],
+  uc:"Discard asks first — then really deletes the draft (CA0 trust fix).",
   cap:"2026-07-09/10 · discard-confirm",spec:"tx2 set",
   code:["DELETE /api/v1/transactions/{id}"],models:[],cids:[],writes:["draft removal"]},
- scanning:{l:"scan",st:"running",role:"principal",shot:[A+"scan-02-slot-scanning.png"],
-  uc:"The slot reads the receipt over SSE — three country runs, 5/5 on production.",
-  cap:"2026-07-09 · vs production (e5a5961)",spec:"_tx2b-live-capture.spec.ts",
+ save:{l:"create",st:"running",role:"principal",shot:[A+"tx2-created-detail.png"],
+  uc:"Create persists everything in one POST and lands on the detail.",
+  cap:"2026-07-09/10 · journey-created",spec:"tx2 journey spec",
+  code:["POST /api/v1/transactions"],
+  models:["Transaction","TransactionItem","TransactionImage"],cids:[],
+  writes:["Transaction row","items[]","images[]"]},
+ imagesel:{l:"pick image",st:"running",role:"principal",shot:[A+"txd-image-selected.png"],
+  uc:"Scan entry — the receipt photo chosen, ready to read.",
+  cap:"2026-07-11 · txdirect set",spec:"txdirect e2e",code:[],models:[],cids:[],writes:[]},
+ scanning:{l:"scanning",st:"running",role:"principal",
+  shot:[A+"scan-02-slot-scanning.png",A+"txd-scan-progress.png"],
+  uc:"The slot reads the receipt over SSE — web slot + mobile progress, both photographed; three country runs 5/5.",
+  cap:"2026-07-09/11 · tx2b + txdirect",spec:"_tx2b-live-capture.spec.ts",
   code:["web scan slot (SSE)"],models:["TransactionDraft"],cids:[],writes:[]},
  degrade:{l:"degrade",st:"running",role:"principal",
   shot:[A+"degrade-01-slot-error.png",A+"degrade-02-manual-after-failure.png"],
-  uc:"A failed scan lands in the SAME surface as manual entry — photographed twice.",
+  uc:"A failed scan lands in the SAME form as manual entry — photographed twice.",
   cap:"2026-07-09 · degrade leg",spec:"_tx2b-live-capture.spec.ts",code:[],models:[],cids:[],writes:[]},
- draft:{l:"draft",st:"running",role:"principal",shot:[A+"scan-03-form-populated.png"],
-  uc:"AI-populated form awaiting review — every correction here is a write over the AI's guess.",
-  cap:"2026-07-09 · vs production",spec:"_tx2b-live-capture.spec.ts",code:[],
-  models:["TransactionDraft"],cids:[],writes:["draft fields (AI overrides)"]},
+ draft:{l:"review",st:"running",role:"principal",shot:[A+"scan-03-form-populated.png"],
+  uc:"AI-populated review — THE FORM again: every ✎ satellite of the manual workflow applies here; each correction overrides the AI's guess.",
+  cap:"2026-07-09 · vs production",spec:"_tx2b-live-capture.spec.ts",
+  code:[],models:["TransactionDraft"],cids:[],writes:["draft fields (AI overrides)"]},
  resumed:{l:"resume",st:"running",role:"principal",shot:[A+"scan-04-reload-resumed.png"],
   uc:"Reload mid-review; the draft comes back — the one-surface bet's persistence proof.",
   cap:"2026-07-09 · leg 04",spec:"_tx2b-live-capture.spec.ts",code:[],models:[],cids:[],writes:[]},
+ scandone:{l:"complete",st:"running",role:"principal",
+  shot:[A+"txd-scan-complete.png",A+"txd-detail-from-scan.png"],
+  uc:"“Guardar y ver” lands on the REAL created transaction (CA0 trust fix — no dead-end success card).",
+  cap:"2026-07-11 · txdirect legs 03+04",spec:"txdirect e2e",
+  code:["POST /api/v1/transactions"],models:["Transaction"],cids:[],
+  writes:["Transaction row","items[] (from scan)"]},
  saved:{l:"saved",st:"running",role:"reference",shot:[A+"saved-detail-mobile.png"],
   uc:"The steady state — the detail every episode returns to.",
   cap:"2026-07-08/09 · fidelity set",spec:"tx1-detail-reskin.spec.ts",
@@ -317,21 +369,37 @@ const S = {
 
 const WF = {
  manual:{
-  pos:{home:[200,40],plus:[200,104],manual:[200,168],
-       txdata:[104,252],items:[288,252],catpick:[352,322],
-       save:[104,370],changetotal:[104,438],cancel:[250,370]},
-  edges:[["home","plus"],["plus","manual"],["manual","txdata"],["manual","items"],
-         ["items","catpick"],["items","save"],["items","cancel"],["txdata","save"],
-         ["save","changetotal"]],
-  bands:[["ENTRY",24,null],["THE FORM ✎",232,214],["RESOLVE",352,340]],h:470},
+  gates:[["whole-number qty","Manual entry rejects fractional quantities — the receipt tier allows them (schema validator, TX2b T4)"],
+         ["name charset","Merchant and item names: letters, numbers, spaces, dots only"],
+         ["leave guard (DF3)","A dirty form blocks back/nav/reload behind a ConfirmSheet"],
+         ["personal-only","The capture surface is scope-gated to the personal scope"],
+         ["amounts ≥ 0","total_minor and every price validate non-negative"]],
+  pos:{home:[200,38],plus:[200,96],form:[200,158],
+       merchdate:[56,232],payment:[152,232],location:[248,232],attach:[344,232],
+       storecat:[104,298],recurrence:[200,298],totalcur:[296,298],
+       additem:[76,382],itemedit:[186,382],itemcat:[296,382],
+       leaveguard:[56,462],cancel:[150,494],save:[254,462],saved:[348,494]},
+  edges:[["home","plus"],["plus","form"],
+         ["form","merchdate"],["form","payment"],["form","location"],["form","attach"],
+         ["merchdate","storecat"],["payment","recurrence"],["location","totalcur"],
+         ["form","additem"],["additem","itemedit"],["itemedit","itemcat"],
+         ["form","leaveguard"],["leaveguard","cancel"],["form","save"],["save","saved"]],
+  bands:[["ENTRY",22,null],["TRANSACTION FIELDS ✎",214,196],["ITEMS ✎",356,340],["RESOLVE",444,428]],h:530},
  scan:{
-  pos:{home:[56,52],plus:[144,52],scanning:[232,52],degrade:[328,96],
-       draft:[232,150],resumed:[328,204],saved:[144,204]},
-  edges:[["home","plus"],["plus","scanning"],["scanning","degrade"],
-         ["scanning","draft"],["degrade","draft"],["draft","resumed"],
-         ["draft","saved"],["resumed","saved"]],
-  bands:[["SCAN → DRAFT → SAVED",26,null]],h:260},
+  gates:[["degrade, never block","Scan failure lands in the manual form — no dead end"],
+         ["single draft slot","One in-flight draft per user (D110); resume beats restart"]],
+  pos:{home:[52,50],plus:[136,50],imagesel:[220,50],scanning:[304,50],degrade:[356,118],
+       draft:[220,150],resumed:[318,196],scandone:[136,196],saved:[52,246]},
+  edges:[["home","plus"],["plus","imagesel"],["imagesel","scanning"],
+         ["scanning","degrade"],["scanning","draft"],["degrade","draft"],
+         ["draft","resumed"],["draft","scandone"],["resumed","scandone"],
+         ["scandone","saved"]],
+  bands:[["SCAN → REVIEW → SAVED",26,null]],h:300},
  lifecycle:{
+  gates:[["D74","Shared rows refuse edits — explicit 409"],
+         ["P117","Statement-matched rows are sealed"],
+         ["UX-11","Deletes past 90 days refuse — and no test proves it"],
+         ["RLS","Other scopes' rows are invisible (C704)"]],
   pos:{saved:[200,54],edited:[80,120],flagged:[200,134],shared:[300,110],
        matched:[356,178],readonly:[300,242],unshared:[204,220],
        confirm:[64,318],batch:[140,352],deleted:[216,318],sealed:[292,352],dsr:[356,310]},
@@ -359,7 +427,7 @@ function viewLanes(wf,cur){const W=WF[wf];
  for(const id in W.pos)s+=node(id,...W.pos[id],cur);
  return s+"</svg>";}
 function viewOrbit(wf,cur){const ids=Object.keys(WF[wf].pos);
- const hub=wf==="lifecycle"?"saved":(wf==="scan"?"draft":"manual");
+ const hub=wf==="lifecycle"?"saved":(wf==="scan"?"draft":"form");
  const ring=ids.filter(i=>i!==hub);
  const cx=200,cy=200,R=142;let s=`<svg viewBox="0 0 400 410">${DEFS}`;
  ring.forEach((id,i)=>{const a=-Math.PI/2+i*2*Math.PI/ring.length;
@@ -370,10 +438,12 @@ function viewOrbit(wf,cur){const ids=Object.keys(WF[wf].pos);
  return s+"</svg>";}
 const VIEWS={lanes:viewLanes,orbit:viewOrbit};
 
-let WFK="manual",VIEW="lanes",CUR="manual";
+let WFK="manual",VIEW="lanes",CUR="form";
 function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}
 function render(){
  document.getElementById("evdiag").innerHTML=VIEWS[VIEW](WFK,CUR);
+ document.getElementById("evgates").innerHTML="<b>gates</b>"+
+  WF[WFK].gates.map(([g,t])=>`<span class="evgate" title="${t}">${g}</span>`).join("");
  const s=S[CUR];
  document.getElementById("evshot").innerHTML=s.shot
   ?s.shot.map(p=>`<img src="${p}" alt="${s.l}" loading="lazy">`).join("")
