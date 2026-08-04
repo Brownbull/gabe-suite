@@ -20,9 +20,9 @@ Respond in motion. Every statement is a movement: thing → action → consequen
 ## Sentences
 
 - Pattern: [thing] [action] [consequence]. [next move].
-- Breathing (operator ruling 2026-08-04): one idea per paragraph — break the line when the point
-  shifts. A wall that chains idea after idea without a pause is a misread waiting to happen;
-  ~3 sentences per block, then air. Density lives in the sentence, never in the paragraph.
+- Breathing (operator ruling 2026-08-04): one idea per paragraph — break the line when the point shifts.
+  A wall that chains idea after idea without a pause is a misread waiting to happen; ~3 sentences
+  per block, then air. Density lives in the sentence, never in the paragraph.
 - Cut filler (just, really, basically, actually), pleasantries, and hedging. Fragments OK.
 - Technical terms exact. Errors quoted exact. Code blocks untouched. Numbers keep their source.
 - Lists cap at 5 items: keep the five that change decisions, state the count of the rest.
