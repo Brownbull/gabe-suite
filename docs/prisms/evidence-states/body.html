@@ -123,6 +123,7 @@
         <option value="manual">manual entry workflow</option>
         <option value="txf">&nbsp;&nbsp;↳ transaction fields</option>
         <option value="itemf">&nbsp;&nbsp;↳ item fields</option>
+        <option value="resolvew">&nbsp;&nbsp;↳ resolve (shared)</option>
         <option value="scan">scan workflow</option>
         <option value="scanpipe">&nbsp;&nbsp;↳ scan pipeline</option>
         <option value="lifecycle">entity lifecycle</option>
@@ -183,14 +184,26 @@ const S = {
   uc:"Section — the item rows; add → edit (qty · price · category), save ⇢ recomputes the total.",
   cap:"aggregate of its children",spec:"TransactionItemCreate schema",code:[],models:[],cids:[],
   writes:["items[]: name","qty","unit_price","total_price","item_category","subcategory"]},
+ autosave:{l:"autosave",st:"unpowered",role:"principal",
+  uc:"The debounced whole-payload upsert running the whole time you edit — idempotent, and create flushes it before committing so no PUT races the commit.",
+  cap:"capture owed (form-fields run)",spec:"useTransactionDraft (saveDraft)",
+  code:["PUT /api/v1/transactions/draft → put_draft() (drafts.py:73)"],
+  models:["TransactionDraft"],cids:[],
+  writes:[["whole payload","saveDraft.mutateAsync() (debounced)","TransactionDraft.payload"]]},
+ landed:{l:"landed · home",st:"running",role:"principal",shot:[A+"ca0-home-empty-cta.png"],
+  uc:"Create ends the entry flow on the DASHBOARD (Recent shows the new row) — it deliberately no longer pushes the detail, which read as an unexplained second screen.",
+  cap:"2026-07-11 · ca0 set (the landing surface)",spec:"transactions.new.tsx:673 navigate({to:'/'})",
+  code:["navigate({to:\"/\"})"],models:[],cids:[],writes:[]},
+ backwf:{l:"⇱ back",grp:1,lnk:1,link:"__parent",st:"running",role:"link",
+  uc:"Back to the workflow you came from.",cap:"—",spec:"—",code:[],models:[],cids:[],writes:[]},
  backman:{l:"⇱ manual entry",grp:1,lnk:1,link:"manual",linkcur:"form",st:"running",role:"link",
   uc:"Back to the parent workflow.",cap:"—",spec:"—",code:[],models:[],cids:[],writes:[]},
  totalink:{l:"total·CLP ⧉",grp:1,lnk:1,link:"txf",linkcur:"totalcur",st:"running",role:"link",
   uc:"The recompute lands on Total·CLP — it lives in the transaction-fields workflow.",
   cap:"—",spec:"—",code:[],models:[],cids:[],writes:[]},
- resolve:{l:"resolve",grp:1,st:"running",role:"section",
-  uc:"Section — the ways out of the form: leave (guarded), discard (real DELETE), create (the POST).",
-  cap:"aggregate of its children",spec:"—",code:[],models:[],cids:[],writes:[]},
+ resolve:{l:"resolve ⧉",grp:1,lnk:1,link:"resolvew",st:"running",role:"section → workflow",
+  uc:"Section — the SHARED way out of the capture form: autosave · leave · discard · create. Manual and scan resolve identically because /scan is retired — it is the same form.",
+  cap:"aggregate of its children",spec:"drafts.py (put · delete · commit)",code:[],models:[],cids:[],writes:[]},
  merchdate:{l:"merch·date·time",st:"running",role:"principal",shot:[A+"tx2-form-filled.png"],
   uc:"The MerchantHeader inline fields — merchant name (charset-validated), date AND time; the filled capture shows the inline surface itself.",
   cap:"2026-07-09/10 · journey-filled",spec:"MerchantHeader + schema validators",
@@ -247,11 +260,11 @@ const S = {
   cap:"2026-07-09/10 · discard-confirm",spec:"tx2 set",
   code:["DELETE /api/v1/transactions/{id}"],models:[],cids:[],writes:[["draft removal","discard → DELETE /transactions/{id}","TransactionDraft (deleted)"]]},
  save:{l:"create",st:"running",role:"principal",shot:[A+"tx2-created-detail.png"],
-  uc:"Create persists everything in one POST and lands on the detail.",
-  cap:"2026-07-09/10 · journey-created",spec:"tx2 journey spec",
-  code:["POST /api/v1/transactions"],
+  uc:"Create flushes the autosave (PUT) and then COMMITS the draft — two calls, ordered so no pending debounce can race the commit.",
+  cap:"2026-07-09/10 · journey-created",spec:"tx2 journey spec · useCommitTransactionDraft",
+  code:["POST /api/v1/transactions/draft/commit → commit_draft() (drafts.py:258)"],
   models:["Transaction","TransactionItem","TransactionImage"],cids:[],
-  writes:[["Transaction row","create_transaction() (transactions.py:347)","Transaction"],["items[]","same","TransactionItem"],["images[]","same","TransactionImage"]]},
+  writes:[["Transaction row","commit_draft() (drafts.py:258)","Transaction"],["items[]","same","TransactionItem"],["images[]","same","TransactionImage"]]},
  imagesel:{l:"pick image",st:"running",role:"principal",shot:[A+"txd-image-selected.png"],
   uc:"Scan entry — the receipt photo chosen, ready to read.",
   cap:"2026-07-11 · txdirect set",spec:"txdirect e2e",code:[],models:[],cids:[],writes:[]},
@@ -390,6 +403,12 @@ const WF = {
          ["amounts ≥ 0","every price validates non-negative"]],
   pos:{backman:[0,0],additem:[0,0],itemedit:[0,0],itemcat:[0,0],totalink:[0,0]},
   edges:[],bands:[],h:270},
+ resolvew:{
+  gates:[["flush before commit","create PUTs the pending payload, THEN commits — no racing debounce"],
+         ["leave guard (DF3)","A dirty form blocks back/nav/reload; create and discard set skipLeaveGuard"],
+         ["idempotent slot ops","PUT upsert and DELETE draft are both idempotent"]],
+  pos:{backwf:[0,0],autosave:[0,0],leaveguard:[0,0],cancel:[0,0],save:[0,0],landed:[0,0]},
+  edges:[],bands:[],h:330},
  scan:{
   gates:[["/scan retired (D111)","The old route is a pure redirect into /transactions/new?scan=true"],
          ["single draft slot","One in-flight draft per user (D110)"],
@@ -535,14 +554,26 @@ function viewTreeExit(cur){
  g+=tap(86,50,P.dsr[0],P.dsr[1]);
  for(const id in P)g+=node(id,...P[id],cur,id==="backlife"?"b":"r");
  return g+"</svg>";}
-const TREES={manual:viewTreeManual,txf:viewTreeTxf,itemf:viewTreeItemf,
+function viewTreeResolve(cur){
+ const P={backwf:[80,38],autosave:[132,100],leaveguard:[132,160],cancel:[132,212],
+  save:[132,264],landed:[168,316]};
+ let g=`<svg viewBox="0 0 420 350">${DEFS}`;
+ g+=`<text class="lanelab" x="8" y="86">CONTINUOUS</text>`;
+ g+=`<line class="lanesep" x1="6" y1="130" x2="414" y2="130"/>`;
+ g+=`<text class="lanelab" x="8" y="150" style="paint-order:stroke" stroke="var(--surface,#fff)" stroke-width="3">THE THREE WAYS OUT</text>`;
+ g+=tap(80,50,P.autosave[0],P.autosave[1]);
+ for(const id of["leaveguard","cancel","save"])g+=tap(80,50,P[id][0],P[id][1]);
+ g+=tap(P.save[0],P.save[1]+12,P.landed[0],P.landed[1]);
+ for(const id in P)g+=node(id,...P[id],cur,id==="backwf"?"b":"r");
+ return g+"</svg>";}
+const TREES={resolvew:viewTreeResolve,manual:viewTreeManual,txf:viewTreeTxf,itemf:viewTreeItemf,
  scan:viewTreeScan,scanpipe:viewTreeScanPipe,lifecycle:viewTreeLife,
  locksw:viewTreeLocks,exitw2:viewTreeExit};
 function viewMap(wf,cur){return TREES[wf]?TREES[wf](cur):viewLanes(wf,cur);}
 const VIEWS={lanes:viewMap};
 
-const WFSTART={manual:"form",txf:"merchdate",itemf:"additem",scan:"form2",scanpipe:"pickimg",lifecycle:"saved",locksw:"shared",exitw2:"confirm"};
-let WFK="manual",VIEW="lanes",CUR="form";
+const WFSTART={manual:"form",txf:"merchdate",itemf:"additem",scan:"form2",scanpipe:"pickimg",resolvew:"autosave",lifecycle:"saved",locksw:"shared",exitw2:"confirm"};
+let WFK="manual",VIEW="lanes",CUR="form",PARENT="manual";
 function chips(list,cls){return list.map(c=>`<span class="evchip ${cls}">${c}</span>`).join("");}
 function render(){
  document.getElementById("evdiag").innerHTML=VIEWS[VIEW](WFK,CUR);
@@ -576,7 +607,9 @@ function render(){
 document.addEventListener("click",e=>{
  const t=e.target.closest("[data-state]");
  if(t){const id=t.dataset.state,sd=S[id];
-  if(sd.lnk){WFK=sd.link;CUR=sd.linkcur||WFSTART[WFK];
+  if(sd.lnk){const tgt=sd.link==="__parent"?PARENT:sd.link;
+   if(["manual","scan"].includes(WFK))PARENT=WFK;
+   WFK=tgt;CUR=sd.linkcur||WFSTART[WFK];
    document.getElementById("evwf").value=WFK;}
   else CUR=id;
   render();return;}
