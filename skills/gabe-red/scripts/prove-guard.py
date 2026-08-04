@@ -56,6 +56,14 @@ from pathlib import Path
 # to the FIRST match on the line. Comparison flips come first: they change
 # behaviour in the most direct way a guard should notice.
 MUTATIONS = [
+    # STRICT forms first (JS/TS). The loose patterns below deliberately exclude
+    # ===/!== — in `!==` the `!=` is followed by `=`, and in `===` the inner `==`
+    # is preceded by `=` — so without these two entries NO TypeScript guard is
+    # scriptable-provable and every TS codebase reads as `named`, never
+    # `guarded` (measured twice on gastify: both INCONCLUSIVE, both then proven
+    # by hand).
+    ("cmp ===>!==", r"===", "!=="),
+    ("cmp !==>===", r"!==", "==="),
     ("cmp ==>!=", r"(?<![=!<>])==(?!=)", "!="),
     ("cmp !=>==", r"!=(?!=)", "=="),
     ("cmp >=><", r">=", "<"),

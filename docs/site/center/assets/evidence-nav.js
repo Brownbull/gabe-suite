@@ -51,8 +51,7 @@
   var SHELL =
     '<div class="evsplit">' +
       '<div class="evmap">' +
-        '<div class="evbar"><select data-ev-wf></select>' +
-          '<button class="evtab on" type="button">map</button></div>' +
+        '<div class="evbar"><select data-ev-wf></select></div>' +
         '<div data-ev-diag data-probe></div>' +
         '<div class="evgates" data-ev-gates></div>' +
         '<div class="evleg">' +

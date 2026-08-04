@@ -49,6 +49,7 @@ page built from scratch instead of its template is a defect (adopt-spec).
 | `assets/slots.js` | raw-skeleton affordance: unfilled `{{TOKEN}}`s render as labeled chips + a notice bar; inert on generated pages | — |
 | `assets/a3-settings.js` | viewer settings (cog in `.brand`): 10 content fonts, size S–XL, compact, rail, Light/Dark — localStorage | — |
 | `assets/a3-lightbox.js` | proof viewer + expander cascade; delegated on `a[data-lb]`, progressive (anchors resolve with JS off) | — |
+| `assets/evidence-nav.js` + `.css` | the entity Evidence NAVIGATOR — one workflow at a time as a small-node bracket tree (left) ⇄ the selected step's production capture + provenance (right). Data-driven: `EvidenceNav.mount(root, {states, workflows, start})`; the contract and the LAYOUT LAW (siblings are parallel paths · a dependency sits one level below its parent · a complex section becomes its OWN linked workflow, never a denser subtree) are in the file's header. Battery: `tests/evidence-nav` | — |
 | `assets/board.js` | board station only: framing switch (remembered per browser), cross-framing dropdown filters, column folds, phase-detail panel. SHOWS and HIDES what the generator rendered — it never writes card state, because a card the viewer can move becomes a second source of truth | — |
 
 ## The ruled nav (landed map v3 — merged 2026-07-21)
@@ -133,6 +134,8 @@ line = leg + position, bottom = set. Expanders CASCADE to sub-sections — one t
 decision (`toggle` doesn't bubble: capture phase, and tests must wait a tick). Tab navigation
 itself stays script-free. **This layer ships only with its committed harness** (the 360-combo
 chrome proof was rebuilt as tests after the trial deleted it — do not regress this).
+
+Evidence navigator: a node click swaps the right panel; a link pill jumps workflows and the picker follows; a shared sub-workflow's ⇱ back returns to whichever parent it was ENTERED from. A state with no capture renders the named-gap panel and never an image — the one property the battery mutation-proves by planting a fake shot.
 
 ## Rules
 

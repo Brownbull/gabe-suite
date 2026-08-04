@@ -684,3 +684,125 @@ scattered gotchas to a named, first-class failure mode. `prove-guard` is the
 template for what the fix looks like in general: **do not ask whether the
 signal is present, perturb the thing and confirm the signal responds.** Every
 row of the registry above is that same move applied to a different proxy.
+
+## 2026-08-04 — EV1 · Evidence "State walk" explorer (design packet, gastify → suite)
+
+**Origin:** operator sketch (notebook): Evidence tab, two columns — LEFT the entity's states/use-case
+flow (clickable), RIGHT the screenshot + everything needed to understand that point in the workflow
+(role, captured-when, code touched, entities, models, functions, use-case narration). Ideal: ONE
+consolidated state diagram; fallback: a picker/dropdown over several. Operator moved the build
+SUITE-SIDE (this session's Phase 43 in gastify is PARKED, `MOVED SUITE-SIDE` annotation on the row;
+tier decision D125 mvp stands; pointer back at DF5). Lands in gastify via template propagation.
+
+**Assess (brief, run in gastify):** Blast local/center-lane · mvp match · Rec [C-staged] — progressive:
+chips + `:target` panes work JS-off, `evidence.js` adds SVG-node clicks. Handle: *"Diagrams exist,
+proofs exist — build the hallway between them."*
+
+**Recon facts (all verified in gastify @ 753192ac):**
+- Evidence tab is built by `scripts/_a3_evidence.py` (639 lines; `build_evidence_tab` :471) orchestrated
+  by `_a3_feature.py` (:1343-1362, slot `{{TAB_EVIDENCE}}` :1444). New section = one more
+  `sechead(sec_id=…)` inside the pane — no skeleton change needed for the SECTION (script tag IS a
+  skeleton change, see below).
+- The card already carries the LEFT side: `cards/transaction.md` `# DIAGRAM WORKFLOW` is a
+  `stateDiagram-v2` (Empty→Drafting→Committed→Editable→{Locked|Deleted|Sealed}) and
+  `# DIAGRAM USERFLOW` a flowchart; both render to INLINE SVG at build time via `_center_mermaid.py`
+  (Playwright + vendored mermaid.min.js, content-hash cache). NOTE: all three diagram SVGs share
+  `id="m0"` (duplicate-id bug worth fixing while in there).
+- Flow registry: card `# FLOWS` — `- <name> [★] → <step> → …` (8 flows, 4 golden ★) with inline
+  endpoint refs. Proof sets link back via manifest `flows:[]` (e.g. txflows-journey → flag/lock/delete).
+- RIGHT-panel joins (all existing): manifests (feature/spec/proof_form/role/legs/artifacts/narration
+  incl. per-leg text; NO captured_at field — capture time = `tests/web-e2e/artifacts/run-status.json`
+  `ranAt` keyed by spec-file-stem, fallback file mtime) · archmap.json `entities.<slug>` (endpoints
+  w/ file+fn+touches, models w/ cols, schemas, files triples) + `function_insight`/`model_insight`
+  (entity-stamped) + `test_insight` (by_endpoint/by_file/case_own) · A/B role: spec-side
+  `test.use({storageState: STATE.b})` / `signInAs(page,"b")` markers (manifest `role:` is the
+  principal/edge/reference vocabulary, NOT the user).
+- Interaction precedent: `board.js` `showPhase()` — data in `<script type="application/json">`,
+  delegated click, `.on` marking, Escape closes. Lightbox: delegated `a[data-lb]` (works inside any
+  `.xrow`). Projection-only contract: pre-render every per-flow panel hidden; JS only shows/hides.
+- Clickable SVG: NOTHING binds SVG nodes today (net-new). Plan: build-time post-process stamps
+  `data-flow`/`data-state` on the mermaid `<g>` nodes; `evidence.js` binds by delegation. The only
+  AUTHORED data needed anywhere: a small state→flow map (7 workflow states → 8 flows).
+- Harness contract: `verify_center_chrome.mjs` (STRUCTURAL + BEHAVIORAL node:vm modes) must gain
+  shape assertions for the new section; a new `evidence.js` needs a `<script src>` in
+  `templates/center/shell/feature.html` (builder byte-copies `shell/assets/*` → center assets);
+  generator unit cases go in `tests/center/test_center_render.py` (gastify runs it at 95P).
+- Skin: the `a3.css` block for the walk is suite-owned ("evolve via the loop, never per-project") —
+  author it HERE, twins receive it via propagation (the 2026-08-04 board-CSS incident — gastify got
+  board.html+board.js WITHOUT the css and the page rendered as 28k px of bare text — is the
+  cautionary tale: propagate the css WITH the station).
+
+**Gastify-side state for the return trip:** Phase 43 row exists (all cells ⬜, Red seeded), D125 tier
+decision logged, proof_type visual (Playwright capture → tests/web-e2e/proof/ev1-state-walk/).
+When the propagated feature lands + is covered, close the row via the normal beats there.
+
+## 2026-08-04 — two evidence-integrity findings from a gastify operator walk
+
+Both surfaced when the operator opened `feature-scan-receipt.html#tab-evidence` and said one proof set
+"seems like the screenshot comes from a legacy application". It did. Chasing why produced two
+suite-level defects.
+
+**1. The CAPTURED column measures the wrong thing — stale proof renders as fresh.**
+`_a3_evidence.py` derives a set's age from the newest media **mtime** (`_rel_days`), and the manifest
+schema has NO capture-date field (recon confirmed: dates live only as prose inside
+`proof_form`/`source_run`). So any checkout, rebase, copy or worktree op resets a proof's apparent age
+to zero. Measured on gastify at `07d24e59`:
+
+| set | page showed | actually captured |
+|---|---|---|
+| batch-scan | "10d ago" | 2026-06-03 — **62 days** |
+| sl-location | "10d ago" | 2026-07-11 — 24 days |
+| scan-live-journey | "9d ago" | 2026-07-09 — 26 days |
+
+Every one of those files carries mtime 2026-07-25 — one git operation flattened three different ages
+into one lie. The center's whole claim is "regenerate it and check"; an age that resets on checkout
+makes the freshest-looking evidence the least trustworthy. **Fix:** add `captured_at` to the manifest
+contract (ISO date, authored at capture time by `/gabe-execute`'s journey task, which is the session
+that knows), prefer it in `_a3_evidence.py`, keep mtime as the fallback, and render the fallback
+visibly as approximate ("≥Nd") so a missing field cannot masquerade as a measured date.
+
+**2. `prove-guard.py` cannot mutate JS/TS strict equality — the guard lens under-reports every
+TypeScript codebase.** Its mutation table is:
+
+```
+("cmp ==>!=", r"(?<![=!<>])==(?!=)", "!=")
+("cmp !=>==", r"!=(?!=)", "==")
+```
+
+Both patterns deliberately exclude `===`/`!==` (in `!==` the `!=` is followed by `=`; the `==` is
+preceded by `!`). Correct for Python, but it means NO TypeScript guard is scriptable-provable —
+verified twice on gastify (an `OVERLAY_ROUTES` array literal, and `phase !== "idle"`), both
+INCONCLUSIVE, both then proven by hand. Because `.kdbp/guard-proofs.jsonl` only records the script's
+verdicts, hand-proven cases render **`named`**, never `guarded` — so a twin can prove its guards
+properly and still show as unguarded. **Fix:** extend the table with the JS/TS strict forms
+(`===`→`!==`, `!==`→`===`) plus `&&`/`||`, and consider an operator-free fallback (swap a literal in
+the cited line) so array/config lines are mutable too. Until then, `INCONCLUSIVE` on a `.ts`/`.tsx`
+line means "the tool cannot", not "the guard is weak" — the guard lens should say which.
+
+**Side note for the release mode:** `/gabe-push`'s terminal-env pointer fires on EVERY production ship,
+but an ad-hoc fix by construction ticks no `Center` cell, so `release --since <row>` routes to an empty
+set. Two of two ships on 2026-08-04 did exactly this. A cheap precondition (fire only when ≥1 Center
+cell moved since the last terminal row) belongs in push Step 7.5, not in the release mode.
+
+### Lifecycle ordering note — Push before Center orphans commits every phase
+
+Surfaced by the operator on 2026-08-04: "shouldn't we push before moving into the next phase?"
+
+The cell order is `Red · Exec · Review · Commit · Push · Center`, so `/gabe-cc-update` necessarily
+writes its commits (regenerated pages, proof sets, card stamp, the Center tick itself) AFTER the
+phase's own `/gabe-push` has already run. Nothing in the phase lifecycle pushes them. On gastify
+Phase 16 that left 5 commits / 44 files local — including a proof re-capture that CORRECTED published
+evidence, so the stale version stayed the published one while the fixed version sat on a laptop.
+Default behaviour would have been for them to ride the NEXT phase's PR, mixing two phases' work into
+one deploy record.
+
+Not a bug in either command — an ordering consequence nobody owns. Options for the suite:
+(a) `/gabe-cc-update` ends with a `NEXT: /gabe-push` routing line when it wrote commits (cheapest,
+consistent with every other beat's routing contract); (b) `/gabe-next` routes back to `/gabe-push`
+when the current phase is fully ✅ but `origin/<branch>..HEAD` is non-empty, before advancing the
+pointer; (c) accept it and say so explicitly in the Center beat's output, so the operator is not the
+one who has to notice. (a) or (b) — the third only works if someone reads the line.
+
+Related: push Step 8.5 deliberately holds its bookkeeping commit local to ride the next real push.
+That is sound on its own, but it compounds this — the bookkeeping row for a ship can sit unpushed
+across an entire subsequent phase.
