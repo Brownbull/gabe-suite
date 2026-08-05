@@ -295,7 +295,7 @@ def test_insight(repo: Path) -> dict:
                   "fnv:" + hk, ref)
         toks = set(re.findall(r"[A-Za-z_]\w+", e.get("resp") or ""))
         toks.update(e.get("touches", []))
-        for tok in toks:
+        for tok in sorted(toks):
             if tok in mi:
                 _once(by_model.setdefault(tok, {}).setdefault(
                     "via_route", []), "mdv:" + tok, ref)
@@ -324,7 +324,7 @@ def test_insight(repo: Path) -> dict:
                 except (SyntaxError, UnicodeDecodeError):
                     continue
                 # T3 reach: imported modules -> mapped source files
-                for mod in pf.imports:
+                for mod in sorted(pf.imports):
                     cand = str(Path(root) / (mod.replace(".", "/") + ".py")) \
                         if root else mod.replace(".", "/") + ".py"
                     if cand in by_file:
@@ -360,7 +360,7 @@ def test_insight(repo: Path) -> dict:
                                 if chip not in own["endpoints"]:
                                     own["endpoints"].append(chip)
                     used = facts["calls"] | facts["names"]
-                    for nm in used & pf.imported_names:
+                    for nm in sorted(used & pf.imported_names):
                         for k2 in fn_by_name.get(nm, []):
                             _once(by_fn.setdefault(k2, {}).setdefault(
                                 "direct", []), "fnd:" + k2, ref)
@@ -440,7 +440,7 @@ def test_insight(repo: Path) -> dict:
                 fref = {"cid": "", "name": f"{len(rec['cases'])} case(s)",
                         "state": "file", "corpus": corpus, "tfile": tfile,
                         "n": len(rec["cases"])}
-                for lit in set(_ROUTE_RX.findall(src)):
+                for lit in sorted(set(_ROUTE_RX.findall(src))):
                     segs = ["*" if ("{" in s or "$" in s) else s
                             for s in _segs(lit)]
                     e = _ep_match("*", segs, eps, prefix_segs)

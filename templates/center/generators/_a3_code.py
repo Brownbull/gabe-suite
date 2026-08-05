@@ -1797,7 +1797,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                   f'<td>{int(s["j"] * 100)}% structural twin ({s["shared"]}/'
                   f'{s["of"]} fields) — justified echo, or duplication waiting '
                   f"to drift? Rule it.</td></tr>")
-    for cls in sorted(own, key=lambda k: -len(ins[k]["fields"]) if k in ins else 0):
+    for cls in sorted(own, key=lambda k: (-len(ins[k]["fields"])
+                                          if k in ins else 0, k)):
         c = ins.get(cls)
         if c and c["god"]:
             _ec = (f"<td>{_ent_cell(ins.get(cls, {}).get('entity', slug))}</td>"
