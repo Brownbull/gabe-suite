@@ -78,6 +78,9 @@ A checker that cannot fail (exit-0 no-op, 0 tests collected, continue-on-error) 
 **CHECK 6 — Deferred**
 - Read `.kdbp/PENDING.md` (fallback: `.kdbp/deferred-cr.md`)
 - Match: take each open row's File cell → strip backticks → split on `,` → glob each token against `git diff --staged --name-only`. Non-path prose cells match nothing.
+- Verified, two classes (form defined once at gabe-review § Deferred Item Persistence): `@<sha> <date>` is the ONLY re-derivable form — a machine can ask whether the cited file changed since that sha. Anything else renders the row unverified; `-` is the honest form of unverified, claiming nothing.
+- WARN on new prose-only rows: for each row ADDED to PENDING.md in the staged diff whose Verified cell carries prose (non-empty, not `-`, no `@<sha>` anchor), print `VERIFIED WARN: P[N] filed prose-only — "<cell>" cannot be re-derived; anchor as @<sha> <date> or leave -`. Warn-tier, NEVER a block — a missing anchor is a debt, not a lie; the warn makes it visible, nothing more. So `Verified: yes — I checked` on a new row always produces a WARN naming the row. The bare `<sha> <date>` form counts as anchored (it is re-derivable; gustify's 86 existing anchors all use it) — the warn fires only on cells with NO sha at all.
+- What the warn cannot catch: a WRONG citation filed fresh — right file opened, wrong line cited, sha current. No anchor or staleness check detects that; the gap is named at the canonical schema rather than oversold here.
 - ALWAYS print, even when empty: `DEFERRED SCAN: <N> open checked, <M> matched, <K> at Times Deferred ≥3` — an absent line means the check didn't run.
 
 **CHECK 7 — Doc Drift** (requires `.kdbp/` directory)
@@ -285,10 +288,10 @@ After all actions resolved:
 If the commit went through `force-commit: <reason>` (Blocked-commit rule above), append `· FORCED: [reason]` to this row's Gates column.
 
 4. If any items deferred, update `.kdbp/PENDING.md`:
-   - Add new row with date, source=`gabe-commit`, finding, file, scale (from BEHAVIOR.md maturity), priority, impact, times_deferred=1, status=open
+   - Add new row with date, source=`gabe-commit`, finding, file, scale (from BEHAVIOR.md maturity), priority, impact, times_deferred=1, status=open, verified=`@<sha> <date>` when the item was derived against a checked tree this session, else `-` (CHECK 6 warns on prose)
    - If item already exists in PENDING.md, increment `Times Deferred`
    - `Times Deferred` ≥ 3 → no further silent deferral: force a user decision `fix-now | accept-close (rationale recorded in the row) | drop`
-   - Each deferred row carries a short class tag as a prefix inside its Finding cell (e.g. `[reference-fidelity] …`, `[test-gap] …`, `[doc-drift] …`) — never a new column. When ≥2 OPEN rows share a class, print `⚠ repeated class <tag>: N items — possible systemic drift from intent; confirm direction before deferring again.`
+   - Each deferred row carries a short class tag as a prefix inside its Finding cell (e.g. `[reference-fidelity] …`, `[test-gap] …`, `[doc-drift] …`) — never a new column (that rule is about class tags; `Verified` is the schema's own 11th column, not a tag). When ≥2 OPEN rows share a class, print `⚠ repeated class <tag>: N items — possible systemic drift from intent; confirm direction before deferring again.`
 
 5. **Print the Gabe-Lens brief (output only).** Runs for every normal `/gabe-commit` after the commit and audit writes succeed; skipped for `docs-audit`.
    - Render as plain markdown:
@@ -526,7 +529,7 @@ Execute each user action in order:
 |---|---|---|---|
 | Doc target missing | `create` | Write new file with `# {filename-derived}` H1 + required `## {Section}` subheadings from all DOCS.md mappings pointing at this target + the standards marker `<!-- Standards: see ~/.claude/skills/gabe-docs/SKILL.md -->`. Leave section bodies as HTML-comment placeholders identical to `/gabe-init` doc stubs. | No |
 | | `skip` | One-time dismissal (session-scoped) | No |
-| | `defer` | Append row to PENDING.md: `{today} \| docs-audit \| Create {target} \| {target} \| large \| {priority} \| high \| 0 \| open` | No |
+| | `defer` | Append row to PENDING.md: `P[N] \| {today} \| docs-audit \| Create {target} \| {target} \| large \| {priority} \| high \| 0 \| open \| -` | No |
 | Doc section missing | `create-section` (new action) | Append `## {Section}\n\n<!-- TODO: populate from DOCS.md mapping {pattern} -->\n` to the target file | No |
 | | `skip` / `defer` | as above | No |
 | Doc section empty | `update-docs` | Invoke the existing per-diff `update-docs` triage action but scoped to (a) the specific section and (b) recent commits that touched source files mapped to this section. Seeds from `git log --oneline -10 -- {glob from mapping}` and the current file content of the section. LLM edits proposed, human confirms. | **Yes** |

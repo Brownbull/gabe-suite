@@ -1,7 +1,7 @@
 # Deferred Items
 
-| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status |
-|---|------|--------|---------|------|-------|----------|--------|----------------|--------|
+| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
+|---|------|--------|---------|------|-------|----------|--------|----------------|--------|----------|
 
 <!-- Sources: gabe-commit, gabe-review, checkpoint, gabe-health -->
 <!-- Scale: MVP, enterprise, scale (from BEHAVIOR.md maturity) -->

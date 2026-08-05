@@ -238,10 +238,10 @@ After displaying, append one thin-index row to `.kdbp/LEDGER.md` (per the house 
 
 ### Checkpoint ❌ → Deferred Item Handoff
 
-If the user proceeds with a commit despite ❌ untested scenarios, write those scenarios to `.kdbp/PENDING.md` when it exists, using the canonical 10-column schema (see gabe-review "Deferred Item Persistence"):
+If the user proceeds with a commit despite ❌ untested scenarios, write those scenarios to `.kdbp/PENDING.md` when it exists, using the canonical 11-column schema (see gabe-review "Deferred Item Persistence"):
 
 ```markdown
-| P4 | 2026-04-05 | checkpoint | Empty pantry scenario untested | suggestRecipes.ts | mvp | high | high | 1 | open |
+| P4 | 2026-04-05 | checkpoint | Empty pantry scenario untested | suggestRecipes.ts | mvp | high | high | 1 | open | - |
 ```
 
 `.kdbp/deferred-cr.md` is a legacy fallback only when PENDING.md is absent. Source is "checkpoint" (not a review name). This ensures that when `/gabe-review` runs next, it finds these items in the deferred backlog. If the same gap appears in the review's branch-test detection, `Times Deferred` increments to 2 → ⚠️ ESCALATED. This closes the loop between the automatic checkpoint and the manual review.
@@ -301,7 +301,7 @@ The automatic checkpoint at commit/PR only uses **Hot** tier values. Structural 
 ├── BEHAVIOR.md     # Project name, domain, maturity, active focus (~500 words)
 ├── VALUES.md       # Project-specific value handles (3-7 values)
 ├── LEDGER.md       # Checkpoint history (auto-appended, one line per checkpoint)
-├── PENDING.md      # Deferred items, canonical 10-column schema — shared with gabe-review (primary)
+├── PENDING.md      # Deferred items, canonical 11-column schema — shared with gabe-review (primary)
 └── deferred-cr.md  # Legacy fallback, only used when PENDING.md is absent
 ```
 

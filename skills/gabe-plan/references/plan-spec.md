@@ -587,9 +587,9 @@ When archiving a plan (from Step 1 or when completing later):
 
 Add a row to `.kdbp/PENDING.md`:
 
-| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status |
-|---|------|--------|---------|------|-------|----------|--------|----------------|--------|
-| P[N] | [date] | gabe-plan | Plan deferred: "[goal]" | .kdbp/archive/defer_PLAN_...md | [maturity] | [ask user: high/medium/low, default medium] | [ask user: high/moderate/low, default moderate] | 1 | open |
+| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
+|---|------|--------|---------|------|-------|----------|--------|----------------|--------|----------|
+| P[N] | [date] | gabe-plan | Plan deferred: "[goal]" | .kdbp/archive/defer_PLAN_...md | [maturity] | [ask user: high/medium/low, default medium] | [ask user: high/moderate/low, default moderate] | 1 | open | — |
 
 **6d. Log to LEDGER.md** — one thin-index row:
 

@@ -462,48 +462,48 @@ Consider `git reset` + split the commit, or update PLAN.md scope via /gabe-plan.
 
 Informational only — no auto-action. Does NOT write to PLAN.md.
 
-#### Sub-check 5c — Stale Verified Topic Detection
+#### Sub-check 5c — Stale Verified Anchor Detection
 
-(legacy — KNOWLEDGE.md is retired from the default KDBP inventory; this check no-ops when the file is absent)
+Purpose: "Are open PENDING rows now stale because the files they cite changed after their `Verified` anchor?"
 
-Purpose: "Are verified KNOWLEDGE.md topics now stale because the code they reference changed?"
+Skip silently if `.kdbp/PENDING.md` doesn't exist OR no open row carries a sha anchor in its `Verified` cell.
 
-Skip silently if `.kdbp/KNOWLEDGE.md` doesn't exist OR has no verified topics.
+Subject: open rows of `.kdbp/PENDING.md` whose `Verified` cell carries a sha anchor — the canonical written form is `@<sha> <date>` (defined once at § Deferred Item Persistence), and the bare `<sha> <date>` form is accepted on READ (gustify has filed 86 such cells since P1; a check that refuses the established convention is inert on the only project carrying the column) — AND whose `File` cell names at least one path. Prose-only and empty cells are out of scope here: they are unverified by definition, and gabe-commit CHECK 6 owns that warn.
 
 Procedure (deterministic, no LLM):
 
-1. Read `.kdbp/KNOWLEDGE.md`. Parse Gravity Wells table → `{well_id: paths_globs}`. Parse Topics table → collect rows with `Status: verified`.
-2. For each verified topic:
-   - Extract `Well` column → look up well's Paths globs.
-   - Extract `Source` column → if it contains a commit hash (7-40 hex chars), keep it; else skip.
-   - For each changed file in `git diff --name-only HEAD`:
-     - Does the file match any of the well's Paths globs? (fnmatch with `**` recursive support)
-     - If yes: run `git log --follow -1 --format=%H -- <file>` → get most recent commit on this file.
-     - If that commit is LATER than the topic's `Source` commit (via `git merge-base --is-ancestor topic_source file_latest`) → mark topic as **stale candidate**.
+1. Read `.kdbp/PENDING.md`. Collect rows with `Status: open`.
+2. For each open row:
+   - Extract the `Verified` cell → if it contains a commit hash (7-40 hex chars, `@`-prefixed or bare), keep the sha; else skip the row.
+   - Extract the `File` cell → strip backticks → split on `,` → keep path tokens, strip any `:line` suffix (same parse as gabe-commit CHECK 6; non-path prose matches nothing).
+   - For each cited file:
+     - Run `git log --follow -1 --format=%H -- <file>` → get most recent commit on this file.
+     - If that commit is LATER than the row's anchor (via `git merge-base --is-ancestor anchor_sha file_latest`, and the two differ) → mark the row as **stale candidate**.
+     - If `merge-base` exits 128, the anchor sha is unreachable from this history (a squashed branch, a rebase) → mark the row **anchor unresolvable** and list it in the same block with that label — an unresolvable anchor is itself a staleness signal, never a silent skip.
 3. If stale candidates found, render output block:
 
 ```
-### Stale Topic Candidates
+### Stale Anchor Candidates
 
-Topics whose verified material may no longer match the code:
+Open deferred rows whose cited files changed after their Verified anchor:
 
-  T1 — Why guardrails run before the LLM (well G1, verified 2026-04-15)
-       Changed since verification: app/agent/guardrails.py
-  T5 — Why 202 Accepted + BackgroundTask (well G3, verified 2026-04-10)
-       Changed since verification: app/api/main.py, app/api/tasks.py
+  P135 — storybook nav counter drifts on batch close (verified c89d4ee7 2026-07-21)
+         Changed since anchor: web/src/features/pantry/usePantryMutations.ts
+  P140 — locale bundle misses the batch strings (verified 04ee3120 2026-07-23)
+         Changed since anchor: web/src/locale/es.json
 
-  [mark-stale]  Flag these topics `stale` in KNOWLEDGE.md (legacy file; /gabe-teach is archived)
-  [skip]        Ignore this session
+(Real pattern: executed against gustify @ 81f02608, the relaxed-form algorithm
+flags five genuine candidates — #135 #136 #137 #140 #141. The brief's own
+exemplars #170/#150 are prose-only AND resolved, so no anchor check can flag
+them; anchored evidence prevents the NEXT #170, it cannot retroactively find
+the last one.)
+
+A stale candidate is not a verdict — the change may be unrelated. Re-derive the
+claim before acting on the row; acting on a summary alone is the failure mode
+this check exists to surface.
 ```
 
-On `mark-stale`:
-
-- Use Edit tool on `.kdbp/KNOWLEDGE.md` Topics table.
-- For each stale candidate row: find the row by `# T[N]` prefix, replace `verified` in the Status column with `stale`. Preserve all other columns (Tags, ArchConcepts, Last Touched, Verified Date, Score, Source) exactly.
-- Idempotent: re-running on already-`stale` rows is a no-op.
-- This is the ONE place review writes KNOWLEDGE.md. Surface narrow (status column only). No row creation, no deletion, no topic text change.
-
-On `skip`: no write. Stale candidates re-surface next `/gabe-review` until addressed.
+Report-never-gate: no write, no status flip, no verdict impact. Candidates re-surface every `/gabe-review` until the row is re-verified (fresh `@<sha> <date>` in `Verified`) or closed. What this check cannot catch: a WRONG citation filed fresh — current sha, wrong line — see the gap statement at § Deferred Item Persistence.
 
 #### Sub-check 5b — Architectural Decision Detection (Phase 3/6)
 
@@ -584,7 +584,7 @@ Precondition: trigger hit AND no row in `.kdbp/DOCS.md` references any file in t
 |--------|----------|
 | `accept` | Read DECISIONS.md → compute next `D[N]` (max existing + 1) → append row with today's date, title, rationale, alternatives joined by `<br>`, `active` status, review_trigger. Use Edit tool to append before the closing fence if DECISIONS uses a frontmatter fence, else append at EOF. Mark any open PENDING.md classifier row with matching title as `resolved` (today's date). |
 | `edit` | Show each field inline-editable (prompt per field, default = proposed value). On confirm, proceed to `accept`. |
-| `defer` | Append to PENDING.md: `\| P[N] \| today \| classifier \| [title] \| - \| small \| medium \| low \| 0 \| open \|`. Source column = `classifier`. Title stored verbatim in Finding for dedup on re-surface. If an open classifier row already exists with matching title (case-insensitive), increment `Times Deferred` on that row instead of creating a duplicate. |
+| `defer` | Append to PENDING.md: `\| P[N] \| today \| classifier \| [title] \| - \| small \| medium \| low \| 0 \| open \| - \|`. Source column = `classifier`. Title stored verbatim in Finding for dedup on re-surface. If an open classifier row already exists with matching title (case-insensitive), increment `Times Deferred` on that row instead of creating a duplicate. |
 | `drop` | No write. Session-scoped dedup set to this title (same title won't re-propose this run). Mark any open PENDING.md classifier row with matching title as `resolved` (today's date) to prevent re-surface loop. |
 
 **Default-on-drop-through:** If the command completes without the user picking an action (common in non-interactive flow — agent continues before user can choose), treat as `defer`. The unresolved candidate is persisted to PENDING.md so it re-surfaces instead of vanishing. Session-scoped dedup still applies per-title to prevent double-persist within a single run.
@@ -666,7 +666,7 @@ Resolution per finding:
 | `downgrade` | Informational. No auto-rip. User expected to remove code in follow-up commit. Finding stays open, re-surfaces next `/gabe-review` until code is gone. |
 | `amend-tier` | Prompt: "Why promote Phase N from [current] to [new]? (one sentence)". Update PLAN.md Tier cell, and mirror the same tier into `.kdbp/PLAN.json` `phases[id==N].tier` (per the `gabe-plan` auto-tick mirror step). Append `### Tier escalation` block to the phase's DECISIONS.md D-entry. Log one LEDGER row: `\| [YYYY-MM-DD] \| REVIEW \| tier escalation Phase [N] [old]→[new] \| — \| via review \|`. Finding resolved (removed from current run). |
 | `accept-drift` | Adds a `drift-accepted` note to the phase's DECISIONS.md D-entry with date + pattern. Finding resolved for this run. Re-surfaces next run if the pattern pops up elsewhere (prevents silent permanent drift). |
-| `defer` | Append to PENDING.md: `\| P[N] \| today \| gabe-review \| TIER_DRIFT: [section.dim] at [file] \| [file] \| [tier] \| medium \| moderate \| 0 \| open \|`. Source = `gabe-review`. |
+| `defer` | Append to PENDING.md: `\| P[N] \| today \| gabe-review \| TIER_DRIFT: [section.dim] at [file] \| [file] \| [tier] \| medium \| moderate \| 0 \| open \| - \|`. Source = `gabe-review`. |
 
 **Session-scoped dedup:** If same pattern + file fires in multiple consecutive reviews, apply escalation (2nd → tag `⚠ RECURRING`, 3rd → promote to BLOCK). Same escalation pattern as general deferred items.
 
@@ -1213,14 +1213,16 @@ Matches PLAN.md's pattern. No silent overwrites. No file locks.
 
 Written to `.kdbp/PENDING.md` (preferred), `.kdbp/deferred-cr.md`, or `.planning/deferred-cr.md` (first found, or create `.kdbp/PENDING.md`).
 
-File format (canonical 10-column schema — shared with gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-assess's checkpoint handoff (absorbed from gabe-align)):
+File format (canonical 11-column schema — shared with gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-assess's checkpoint handoff (absorbed from gabe-align)):
 ```markdown
-| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status |
-|---|------|--------|---------|------|-------|----------|--------|----------------|--------|
-| P26 | 2026-06-20 | gabe-review | Missing fail-open test | web/src/lib/rateLimiter.ts:88 | mvp | high | high | 1 | open |
+| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
+|---|------|--------|---------|------|-------|----------|--------|----------------|--------|----------|
+| P26 | 2026-06-20 | gabe-review | Missing fail-open test | web/src/lib/rateLimiter.ts:88 | mvp | high | high | 1 | open | @81f0260 2026-06-20 |
 ```
 
-Writing rules: (1) ALWAYS match the existing file's header if it differs — never rewrite headers, never renumber rows; (2) all writers target `.kdbp/PENDING.md` first-found; `deferred-cr.md` / `.planning/deferred-cr.md` are legacy read-fallbacks only; (3) this schema is canonical for gabe-review, gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-assess's checkpoint handoff (absorbed from gabe-align) — an edit here is an edit for all four. Map legacy columns when reading old rows: First Seen→Date, Review→Source, Defer Risk→drop into Finding text.
+**The `Verified` cell — two classes, defined here once.** `@<sha> <date>` is the ONLY re-derivable form: a machine can ask "has the cited file changed since that sha?" (Sub-check 5c asks exactly that). Anything else — prose ("yes — I checked"), a bare date — renders the row unverified; `-` is the honest form of unverified, claiming nothing. A missing anchor is a debt, not a lie: gabe-commit CHECK 6 warns on new prose-only rows and never blocks. Existing project files need no migration — extra columns already parse (rule 1), rows predating the column simply read as unverified, and new rows pick the convention up from CHECK 6's warn. What no staleness check catches: a WRONG citation filed fresh — right file opened, wrong line cited, sha current. The anchor proves the file hasn't moved, not that the author read it correctly; the only defence is re-deriving a row at the moment work is scoped from it, which is not built. The gap is named here so the anchor is not oversold.
+
+Writing rules: (1) ALWAYS match the existing file's header if it differs — never rewrite headers, never renumber rows; (2) all writers target `.kdbp/PENDING.md` first-found; `deferred-cr.md` / `.planning/deferred-cr.md` are legacy read-fallbacks only; (3) this schema is canonical for gabe-review, gabe-commit CHECK 6/Step 6.4, gabe-push 7.5b, and gabe-assess's checkpoint handoff (absorbed from gabe-align) — an edit here is an edit for all four, and two more sites restate the header verbatim and move with it: gabe-init's PENDING.md scaffold and gabe-plan step 6c. Map legacy columns when reading old rows: First Seen→Date, Review→Source, Defer Risk→drop into Finding text.
 
 **Persistence protocol:** Use the Edit tool to update individual rows. Read the file → find the row by `#` → update Status and Times Deferred → write back. If file doesn't exist, create it with the Write tool using the canonical header above.
 
@@ -1231,7 +1233,7 @@ When a finding is **fixed** during triage:
 - Log which review resolved it
 
 When a finding is **deferred** during triage:
-- If new: add row with `Times Deferred: 1`, `Status: Deferred`
+- If new: add row with `Times Deferred: 1`, `Status: Deferred`, and `Verified: @<HEAD sha> <today>` — the finding was just derived against this tree, so a review-filed row is born re-derivable
 - If recurring: increment `Times Deferred`, apply escalation rules (existing logic)
 - Case-estate findings (Step 3.4) keep their reserved `C[n]` in the row — the id is the join the
   center's testing pages and the pre-checkpoint hook read

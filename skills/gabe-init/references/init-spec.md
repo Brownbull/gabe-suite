@@ -120,8 +120,8 @@ created: [today's date]
 ```markdown
 # Deferred Items
 
-| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status |
-|---|------|--------|---------|------|-------|----------|--------|----------------|--------|
+| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
+|---|------|--------|---------|------|-------|----------|--------|----------------|--------|----------|
 ```
 
 **LEDGER.md** — create with the thin-index header:
