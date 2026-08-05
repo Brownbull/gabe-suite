@@ -405,12 +405,34 @@ _ARCH_PAGES = [
     ("arch-data-model.html", "Data model", "sec-code-model", "model",
      "every documented class, app-wide"),
     ("arch-dm-candidates.html", "Data-model candidates", "sec-code-model-cands",
-     "merge", "merge · deprecation · split, named by the machine"),
+     "merge", "merge · split, named by the machine"),
     ("arch-functions.html", "Functions", "sec-code-fns", "fn",
      "every mapped def, app-wide"),
     ("arch-fn-candidates.html", "Function candidates", "sec-code-fn-cands",
-     "split", "merge · deprecation · split, function-scoped"),
+     "split", "merge · split, function-scoped"),
 ]
+
+
+def _n_cands(recs: dict, floor: float, namer) -> int:
+    """The dashboard badge for a candidates page = EXACTLY the rows that page
+    renders: deduped MERGE pairs at or above the page's merge floor, plus one
+    SPLIT row per god record.
+
+    The `sim` field is recorded from the lower COMPUTE floor (_SIM_FLOOR /
+    _FN_SIM_FLOOR) so the detail tables can show a nearest neighbour that is
+    NOT a merge candidate; counting `c.get("sim")` therefore advertises a set
+    far wider than the table lists, and pairs get counted twice besides. A
+    badge the reader cannot reconcile with the page is the same failure R10
+    removed — a number stated with more confidence than its basis carries.
+    """
+    pairs, god = set(), 0
+    for key, c in recs.items():
+        if c.get("god"):
+            god += 1
+        s = c.get("sim")
+        if s and s.get("j", 0) >= floor:
+            pairs.add(tuple(sorted((namer(key, c), s["cls"]))))
+    return len(pairs) + god
 
 
 def estate_menu(items: list[tuple[str, str, str]], current: str) -> str:
@@ -1581,12 +1603,13 @@ def render_architecture(amap: dict) -> dict[str, str]:
     n_files = len(merged["files"])
     n_lines = sum(n for _l, _f, n in merged["files"])
     n_cls = len(merged["models"]) + len(merged["schemas"])
-    n_dmc = sum(1 for c in ins.values()
-                if c.get("orphan") or c.get("god")
-                or (c.get("sim") and c["sim"]["j"] >= 0.8))
-    n_fnc = sum(1 for c in fins.values()
-                if c.get("orphan") or c.get("god")
-                or (c.get("sim") and c["sim"]["j"] >= 0.85))
+    # Candidate counts = exactly what the candidate pages list: MERGE (a
+    # recorded nearest neighbour, i.e. similarity above the page's floor) plus
+    # SPLIT (god). Never "nothing references it": the map covers only the
+    # config-adopted files, so absence THERE is absence of evidence, not
+    # evidence of deadness (R10 — the center reports, it does not assert).
+    n_dmc = _n_cands(ins, _a3_code._MERGE_FLOOR, lambda k, c: k)
+    n_fnc = _n_cands(fins, _a3_code._FN_MERGE_FLOOR, lambda _k, c: c["fn"])
     kpis = '<div class="kpis">' + "".join([
         kpi("entities", str(len(ents)), "mapped"),
         kpi("endpoints", str(len(merged["endpoints"])), "HTTP surface"),

@@ -198,20 +198,19 @@ def guard_insight(*, function_insight: dict, by_function: dict,
         slot = classes.setdefault(f, {"path": f, "entity": v.get("entity", ""),
                                       "kind": "model", "lines": file_lines.get(f, 0),
                                       "declared": 0, "unguarded": 0,
-                                      "orphan_unguarded": 0, "names": [],
+                                      "names": [],
                                       "proven": proven_files.get(f, 0),
                                       "exact": True})
         slot["declared"] += 1
         if not by_model.get(cls):
-            # An ORPHAN is not a test candidate. Nothing uses it, so the move
-            # is to delete it, not to guard it — counted apart so the two never
-            # get added into one misleading number.
-            if v.get("orphan"):
-                slot["orphan_unguarded"] += 1
-            else:
-                slot["unguarded"] += 1
-                if len(slot["names"]) < 12:
-                    slot["names"].append(cls)
+            # Every unguarded declared class counts, full stop. This used to
+            # split off an "orphan" bucket — delete-it-don't-guard-it — on the
+            # strength of a flag that was ~94% false positive (a bare-name
+            # regex over the config-adopted files only). The split filed real
+            # guard debt under a verdict the map is not able to make.
+            slot["unguarded"] += 1
+            if len(slot["names"]) < 12:
+                slot["names"].append(cls)
     for f, slot in classes.items():
         slot["share"] = (round(slot["unguarded"] / slot["declared"], 3)
                          if slot["declared"] else 0.0)
@@ -223,7 +222,6 @@ def guard_insight(*, function_insight: dict, by_function: dict,
         "proofs_seen": len(proofs or []),
         "cls_files": len(classes),
         "cls_unguarded": sum(v["unguarded"] for v in classes.values()),
-        "cls_orphan": sum(v["orphan_unguarded"] for v in classes.values()),
         "fn_mapped": len(function_insight or {}),
         "fn_guarded": sum(1 for k in (function_insight or {}) if _guarded(k)),
         "fn_unguarded": len(functions),

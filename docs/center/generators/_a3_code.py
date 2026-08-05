@@ -395,11 +395,12 @@ def _collect_entity_map(slug: str, repo: Path) -> dict | None:
 # docs/investigations/2026-07-23-model-insight-spike/): every documented class
 # app-wide gets machine-derived signals — usage on TWO axes (api = endpoint
 # touches + FK in-degree · internal = mapped backend files referencing it),
-# a BASE flag (derives from nothing), a god-class flag, its closest structural
-# twin, and the orphan verdict (zero on BOTH usage axes). The same shape is
-# built to run over other member kinds later (functions · methods) — scoped
-# tables, never mixed. The generator NAMES candidates; verdicts stay with
-# judgment (review / a health pass), never authored here.
+# a BASE flag (derives from nothing), a god-class flag, and its closest
+# structural twin. The same shape is built to run over other member kinds later
+# (functions · methods) — scoped tables, never mixed. The generator NAMES
+# candidates; verdicts stay with judgment (review / a health pass), never
+# authored here. R10: usage is REPORTED, never turned into a deadness verdict —
+# absence of references in the mapped set is falsified by one unmapped file.
 # --------------------------------------------------------------------------- #
 
 _GOD_FIELDS = 15
@@ -412,7 +413,6 @@ _INS_ICONS = {
     "base": '<circle cx="12" cy="5" r="3"/><line x1="12" y1="22" x2="12" y2="8"/><path d="M5 12H2a10 10 0 0 0 20 0h-3"/>',
     "fields": '<rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/>',
     "sim": '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
-    "orphan": '<path d="m18.84 12.25 1.72-1.71a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="m5.17 11.75-1.71 1.71a5 5 0 0 0 7.07 7.07l1.71-1.71"/><line x1="8" y1="2" x2="8" y2="5"/><line x1="2" y1="8" x2="5" y2="8"/><line x1="16" y1="19" x2="16" y2="22"/><line x1="19" y1="16" x2="22" y2="16"/>',
     "merge": '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
     "split": '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
     "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
@@ -525,7 +525,6 @@ def model_insight(repo: Path) -> dict:
                     if rx.search("\n".join(lines[s - 1:e]))]
             c["internal_refs"].append(
                 {"file": f, "defs": list(dict.fromkeys(defs))[:6]})
-        c["orphan"] = c["usage"] == 0 and c["internal"] == 0
     for c in classes.values():
         mine = {n for n, *_ in c["fields"]}
         best, best_j, shared = "", 0.0, 0
@@ -554,10 +553,11 @@ def model_insight(repo: Path) -> dict:
 # dialect: icon tags · chips · two-bar usage · candidates), with the
 # function-shaped equivalents: kind = function | method | endpoint handler;
 # BASE = calls no other documented function; god = length ≥ _FN_GOD_LINES;
-# twin = body-identifier Jaccard; orphan = served by no endpoint and
-# referenced by no mapped code. Same-file references OUTSIDE the def's own
+# twin = body-identifier Jaccard. Same-file references OUTSIDE the def's own
 # span COUNT as internal usage — a helper called within its module is used
-# (a class merely living in its file is not).
+# (a class merely living in its file is not). Usage is EVIDENCE, never a
+# deadness verdict (R10): the refs scan sees only config-mapped Python, so
+# "no mapped caller" says as much about the config as about the code.
 # --------------------------------------------------------------------------- #
 
 _FN_GOD_LINES = 50
@@ -691,7 +691,6 @@ def function_insight(repo: Path) -> dict:
         c["base"] = not any(n != c["name"] and n in c["ids"]
                             for n in plain_names)
         c["god"] = c["lines"] >= _FN_GOD_LINES
-        c["orphan"] = not c["handler"] and not refs
         c["usage"] = c["api"]
     sizable = [c for c in fns.values() if len(c["ids"]) >= 8]
     for c in fns.values():
@@ -729,7 +728,7 @@ def insight_serial(repo: Path) -> dict:
 def _ins_tags(cls: str, ins: dict) -> str:
     """The icon chips for one class cell — dialect + colors per the ruling:
     kind (violet model / teal schema) · base green · fields-count red ·
-    twin+% amber · orphan slate."""
+    twin+% amber. No deadness chip — usage rides the two bars as evidence."""
     c = ins.get(cls)
     if not c:
         return ""
@@ -750,10 +749,6 @@ def _ins_tags(cls: str, ins: dict) -> str:
                           f"closest structural twin — {s['shared']}/{s['of']} "
                           f"fields shared",
                           f'{E(s["cls"])} {int(s["j"] * 100)}%')
-    if c["orphan"]:
-        out += " " + itag("t-orph", "orphan",
-                          "orphan — zero API usage AND zero internal "
-                          "references in the mapped backend files")
     return out
 
 
@@ -1704,13 +1699,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                f"union (Jaccard); a ≥{int(_MERGE_FLOOR * 100)}% pair becomes "
                f"a {itag('t-sim', 'merge', 'merge candidate')} merge candidate "
                "below.</li>"
-               f"<li>{itag('t-orph', 'orphan', 'orphan')} <b>orphan</b> — zero "
-               "API usage AND zero internal references; becomes a "
-               f"{itag('t-orph', 'archive', 'deprecation candidate')} "
-               "deprecation candidate below.</li>"
                "<li>Usage bars: teal = api (endpoint touches + FK in) · "
                "violet = internal (mapped backend files referencing the "
-               "class). Api-silent is not dead; only a true orphan is.</li>"
+               "class). Both bars are EVIDENCE, never a verdict: they count "
+               "references inside the config-mapped files only, so a zero "
+               "means <i>no indexed usage — go check</i>, never <i>dead</i>. "
+               "One unmapped file falsifies a zero; nothing falsifies a "
+               "count.</li>"
                "</ul></div>"
              + (f'<p class="sub"><b>About this section</b></p>{intro_html}'
                 if intro_html else ""))
@@ -1719,7 +1714,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
              + "".join(f'<button class="chip" data-f="{k}">{lbl}</button>'
                        for k, lbl in (("all", "All"), ("t-base", "base"),
                                       ("t-sim", "≈ similar"),
-                                      ("t-orph", "orphan"),
                                       ("t-god", "god"))) + "</div>")
     html += (f'<p class="sub"><span class="tag l-models">models</span> '
              f"{len(models)} DB entity class(es) — click a row to open its "
@@ -1785,16 +1779,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                   f'<td>{int(s["j"] * 100)}% structural twin ({s["shared"]}/'
                   f'{s["of"]} fields) — justified echo, or duplication waiting '
                   f"to drift? Rule it.</td></tr>")
-    for cls in sorted(own):
-        c = ins.get(cls)
-        if c and c["orphan"]:
-            _ec = (f"<td>{_ent_cell(ins.get(cls, {}).get('entity', slug))}</td>"
-                   if entity_col else "")
-            cands += (f'<tr>{_ec}<td>{itag("t-orph", "archive", "deprecation candidate")}'
-                      f'</td><td><code>{E(cls)}</code></td>'
-                      f"<td>zero API usage · zero internal references across "
-                      f"the mapped backend files — if nothing outside the map "
-                      f"uses it either, file for removal.</td></tr>")
     for cls in sorted(own, key=lambda k: -len(ins[k]["fields"]) if k in ins else 0):
         c = ins.get(cls)
         if c and c["god"]:
@@ -1808,8 +1792,9 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
     _n_cands = cands.count("<tr>")
     html += sechead(
         "Code", "Data-model candidates", "#7c3aed", _INS_ICONS["merge"],
-        sub="named by the machine, ruled by judgment — the verdict lands in "
-            "DECISIONS/PENDING via review or a health pass, never here",
+        sub="MERGE and SPLIT — named by the machine, ruled by judgment; the "
+            "verdict lands in DECISIONS/PENDING via review or a health pass, "
+            "never here",
         id_="sec-code-model-cands",
         note=f"{_n_cands} candidate(s) this build · each wears the color and "
              f"icon dialect of the flag that triggered it in the Data model "
@@ -1819,14 +1804,30 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
              f"<li>{itag('t-sim', 'merge', 'merge candidate')} <b>merge</b> — "
              f"structural twins ≥ {int(_MERGE_FLOOR * 100)}% (from the "
              f"{itag('t-sim', 'sim', 'similarity flag')} similarity flag).</li>"
-             f"<li>{itag('t-orph', 'archive', 'deprecation candidate')} "
-             "<b>deprecation</b> — a true orphan, zero on both usage axes "
-             f"(from the {itag('t-orph', 'orphan', 'orphan flag')} orphan "
-             "flag).</li>"
              f"<li>{itag('t-god', 'split', 'split candidate')} <b>split</b> — "
              f"a god class ≥ {_GOD_FIELDS} fields (from the "
              f"{itag('t-god', 'fields', 'fields flag', 'N')} fields flag)."
-             "</li></ul></div>")
+             "</li></ul></div>"
+             '<div class="leg"><b>Why these two, and not "nothing uses '
+             'this"</b> — similarity and size are CORPUS-COMPLETE signals: '
+             "two mapped classes sharing 87% of their field names is TRUE no "
+             "matter what lives outside the map, and a 22-field class is 22 "
+             "fields however little the config covers. Absence of references "
+             "is neither — a single file outside the entity config falsifies "
+             "it. This section names only what the instrument can actually "
+             "support; usage stays in the bars above as evidence to go check."
+             "</div>"
+             '<div class="leg"><b>The floor, stated honestly</b> — the '
+             "similarity flag records the TOP-1 nearest neighbour per class "
+             f"only, only above the {int(_SIM_FLOOR * 100)}% line, only "
+             "across the classes the entity config maps, and only field NAMES "
+             "(types and semantics are not compared). This page is a FLOOR, "
+             "not a census: it under-reports duplication and always will. "
+             "That direction is the safe one — under-reporting a positive "
+             "signal costs you a missed merge; under-reporting absence gets "
+             "live code deleted. Anything outside the config is invisible "
+             "here, and that gap measures the config's coverage, not the "
+             "codebase's cleanliness.</div>")
     if cands:
         html += (
             "<table class=\"tbl\"><thead><tr>"
@@ -1836,8 +1837,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             f"<tbody>{cands}</tbody></table>")
     else:
         html += ('<p class="sub">No data-model candidates this build — no '
-                 "twins past the merge line, no true orphans, no god "
-                 "classes.</p>")
+                 "twins past the merge line, no god classes.</p>")
     # ---- Functions — the FUNCTIONS lens (sibling of the data model) --------
     fins = function_insight(repo)
     page_py = {f for _layer, f, _n in files if f.endswith(".py")}
@@ -1877,14 +1877,13 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  f"(Jaccard); a ≥{int(_FN_MERGE_FLOOR * 100)}% pair becomes a "
                  f"{itag('t-sim', 'merge', 'merge candidate')} merge candidate "
                  "below.</li>"
-                 f"<li>{itag('t-orph', 'orphan', 'orphan')} <b>orphan</b> — "
-                 "served by no endpoint, referenced by no mapped code; becomes "
-                 f"a {itag('t-orph', 'archive', 'deprecation candidate')} "
-                 "deprecation candidate below.</li>"
                  "<li>Usage bars: teal = api (endpoints served + api-layer "
                  "files referencing) · violet = internal (mapped files "
                  "referencing — same-file calls outside the def count: a "
-                 "helper used within its module is used).</li></ul></div>")
+                 "helper used within its module is used). Both bars are "
+                 "EVIDENCE, never a verdict: the scan reads config-mapped "
+                 "Python only, so a zero reads <i>no indexed caller — go "
+                 "check</i>, never <i>dead</i>.</li></ul></div>")
         html += ('<div class="dmchips" id="fn-chips">'
                  + "".join(f'<button class="chip" data-f="{k}">{lbl}</button>'
                            # `unguarded` is a FILTER, not a per-row label: it
@@ -1896,7 +1895,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                           ("t-hot", "hot &amp; unguarded"),
                                           ("t-base", "base"),
                                           ("t-sim", "≈ similar"),
-                                          ("t-orph", "orphan"),
                                           ("t-god", "god"))) + "</div>")
 
         def _fn_tags(c: dict) -> str:
@@ -1930,10 +1928,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                                   f"closest structural twin — {s['shared']}/"
                                   f"{s['of']} shared identifiers",
                                   f'{E(s["cls"])} {int(s["j"] * 100)}%')
-            if c["orphan"]:
-                out += " " + itag("t-orph", "orphan",
-                                  "orphan — no endpoint serves it, no mapped "
-                                  "code references it")
             return out
 
         def _fn_usage_cell(c: dict) -> str:
@@ -2118,14 +2112,6 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                        f'<td>{int(s["j"] * 100)}% identifier twin '
                        f'({s["shared"]}/{s["of"]}) — same job twice, or a '
                        f"justified pattern? Rule it.</td></tr>")
-        for c in frows_src:
-            if c["orphan"]:
-                _ec = f"<td>{_ent_cell(c['entity'])}</td>" if entity_col else ""
-                fcands += (f'<tr>{_ec}<td>{itag("t-orph", "archive", "deprecation candidate")}'
-                           f'</td><td><code>{E(c["fn"])}</code></td>'
-                           f"<td>no endpoint serves it, no mapped code "
-                           f"references it — if nothing outside the map calls "
-                           f"it either, file for removal.</td></tr>")
         for c in sorted(frows_src, key=lambda x: -x["lines"]):
             if c["god"]:
                 _ec = f"<td>{_ent_cell(c['entity'])}</td>" if entity_col else ""
@@ -2137,8 +2123,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         _n_fcands = fcands.count("<tr>")
         html += sechead(
             "Code", "Function candidates", "#b45309", _INS_ICONS["merge"],
-            sub="named by the machine, ruled by judgment — same contract as "
-                "the data-model candidates, function-scoped",
+            sub="MERGE and SPLIT — named by the machine, ruled by judgment; "
+                "same contract as the data-model candidates, function-scoped",
             id_="sec-code-fn-cands",
             note=f"{_n_fcands} candidate(s) this build · each wears the color "
                  f"and icon dialect of the flag that triggered it in the "
@@ -2149,14 +2135,36 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  f" — identifier twins ≥ {int(_FN_MERGE_FLOOR * 100)}% (from "
                  f"the {itag('t-sim', 'sim', 'similarity flag')} similarity "
                  "flag).</li>"
-                 f"<li>{itag('t-orph', 'archive', 'deprecation candidate')} "
-                 "<b>deprecation</b> — served by no endpoint, referenced by "
-                 f"no mapped code (from the "
-                 f"{itag('t-orph', 'orphan', 'orphan flag')} orphan flag).</li>"
                  f"<li>{itag('t-god', 'split', 'split candidate')} <b>split</b>"
                  f" — a god function ≥ {_FN_GOD_LINES} lines (from the "
                  f"{itag('t-god', 'fields', 'length flag', 'N')} length flag)."
-                 "</li></ul></div>")
+                 "</li></ul></div>"
+                 '<div class="leg"><b>Why these two, and not "nothing calls '
+                 'this"</b> — similarity and length are CORPUS-COMPLETE '
+                 "signals: two mapped defs sharing 87% of their body "
+                 "identifiers is TRUE regardless of what lies outside the "
+                 "map, and a 120-line function is 120 lines however little "
+                 "the config covers. \"Nothing references this\" is falsified "
+                 "by one file outside the corpus — so this section names "
+                 "duplication and size, and never asserts deadness. The usage "
+                 "bars above report the evidence; the reader goes and "
+                 "checks.</div>"
+                 '<div class="leg"><b>The floor, stated honestly</b> — the '
+                 "similarity flag records the TOP-1 nearest neighbour per "
+                 "def, only among defs with ≥ 8 body identifiers, only above "
+                 f"the {int(_FN_SIM_FLOOR * 100)}% line, Python only, mapped "
+                 "files only. Every one of those is a way to MISS a pair, "
+                 "never a way to invent one. The page is a FLOOR, not a "
+                 "census — and that direction is the safe one: under-reporting "
+                 "a positive signal costs a missed merge, while under-reporting "
+                 "absence gets live code deleted.</div>"
+                 '<div class="leg"><b>Known blind spot</b> — files outside '
+                 "the entity config are invisible here, and the misses "
+                 "cluster there rather than in the maths: two modules can "
+                 "share dozens of byte-identical functions and drift apart "
+                 "for months without either appearing on this page, if one of "
+                 "them is not in the config. An empty candidates table means "
+                 "the mapped set is clean, not the repository.</div>")
         if fcands:
             html += (
                 "<table class=\"tbl\"><thead><tr>"
@@ -2166,8 +2174,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 f"</thead><tbody>{fcands}</tbody></table>")
         else:
             html += ('<p class="sub">No function candidates this build — no '
-                     "identifier twins past the merge line, no orphans, no "
-                     "god functions.</p>")
+                     "identifier twins past the merge line, no god functions "
+                     "in the mapped set.</p>")
     else:
         # The subnav always lists both sections — a pill pointing at a
         # missing anchor is a dead link the crawl gate rightly fails, so an

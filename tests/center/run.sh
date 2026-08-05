@@ -59,16 +59,37 @@ c = root / center_rel
 # An over-budget file so the Code area's action table has a structure row
 # (the folded-price shape needs rows to render).
 (root / "src" / "big.py").write_text("# filler\n" * 810)
-# Functions for the FUNCTIONS lens: a base helper used same-file, an orphan,
-# and a god-length def.
+# Functions for the FUNCTIONS lens: a base helper used same-file, a helper no
+# case names, a near-duplicate pair, and a god-length def.
+# The MERGE fixture (R10): two defs whose bodies share 16 of 17 identifiers
+# (89%, past _FN_MERGE_FLOOR = 0.85) and each carry ≥ 8 (the sizable floor).
+# Similarity is CORPUS-COMPLETE — two mapped defs being 89% alike stays true
+# whatever lives outside the map, which is why it replaced the orphan flag as
+# the candidate basis.
+_FN_TWIN = (
+    "def collate_gadget_{sfx}(records, lookup):\n"
+    "    totals = {{}}\n"
+    "    for entry in records:\n"
+    "        bucket = entry.kind_label\n"
+    "        weight = entry.amount_value\n"
+    "        totals[bucket] = totals.get(bucket, 0) + weight\n"
+    "    ranked = sorted(totals.items(), key=lambda pair: pair[1])\n"
+    "    average = float(sum(totals.values())) / float(len(ranked) or 1)\n"
+    "    report = {{'ranked': ranked, 'average': average, 'lookup': lookup}}\n"
+    "    return report\n\n\n")
 (root / "src" / "funcs.py").write_text(
     "from src.widgets import PendingThing\n\n\n"
     "def plan_widget(p: PendingThing) -> PendingThing:\n    return p\n\n\n"
     "def make_gid():\n    return 'g-1'\n\n\n"
     "def build_gadget(seed):\n    return make_gid() + seed\n\n\n"
+    # No case names it and no mapped file calls it. That is an UNTESTED-surface
+    # fixture and nothing more — after R10 the center may report the absence of
+    # indexed callers, never assert the def is dead.
     "def lonely_helper():\n    return 0\n\n\n"
     "def emit_gadget(d: GadgetDraft) -> GadgetDraft:\n    return d\n\n\n"
-    "def sprawler():\n" + "    x = 1\n" * 52 + "    return x\n")
+    + _FN_TWIN.format(sfx="alpha") + _FN_TWIN.format(sfx="beta")
+    # The SPLIT fixture: past _FN_GOD_LINES = 50.
+    + "def sprawler():\n" + "    x = 1\n" * 52 + "    return x\n")
 # A schema whose fields carry machine-readable descriptions (kwarg + trailing
 # comment) for the data-model Description column.
 (root / "src" / "schemas.py").write_text(
@@ -82,7 +103,14 @@ c = root / center_rel
     "    raw: bytes\n"
     "\n\nclass GadgetDraft:  # used by emit_gadget as param AND return -> in-out\n"
     "    gid: str\n"
-    "    note: str\n")
+    "    note: str\n"
+    # The model SPLIT fixture (R10): 16 fields, past _GOD_FIELDS = 15. Field
+    # names share nothing with the other three, so it perturbs no twin pair.
+    "\n\nclass GadgetBlob:  # 16 fields -> god class -> split candidate\n"
+    + "".join(f"    {_f}: str\n" for _f in
+              ("alpha", "bravo", "charlie", "delta", "echo", "foxtrot",
+               "golf", "hotel", "india", "juliet", "kilo", "lima",
+               "mike", "november", "oscar", "papa")))
 (root / "tests" / "results").mkdir(parents=True, exist_ok=True)
 (root / "tests" / "test_gadgets.py").write_text(
     "from src.schemas import GadgetOut\n"
@@ -328,11 +356,38 @@ html = (root / "docs/site/center/feature-gadget.html").read_text()
 assert 'id="dm-chips"' in html, "filter chips missing"
 assert html.count('class="tag ic') >= 6, "icon chips missing"
 assert 'title="base class' in html, "base tag missing (GadgetOut is base)"
-assert 'title="orphan' in html, "orphan tag missing"
+# R10 (2026-08-04): the center REPORTS evidence and never ASSERTS deadness.
+# The orphan chip was ~94% false positive on both twins because `refs` was a
+# bare-name regex over the config-adopted files only — it measured how little
+# the config maps, not how much code is dead. Chip and filter both gone.
+# MUTATION (two lines, because the flag has no compute site left to read):
+# restore `c["orphan"] = c["usage"] == 0 and c["internal"] == 0` at the tail
+# of model_insight()'s first loop, and `if c["orphan"]: out += itag("t-orph",
+# …)` in _ins_tags() — GadgetIn is zero on both axes, so it fires.
+assert 'title="orphan' not in html, "R10: the orphan chip must be GONE"
+# MUTATION: put ("t-orph", "orphan") back in the dm-chips tuple list.
+assert 'data-f="t-orph"' not in html, "R10: the orphan filter chip must be GONE"
 assert "u-int" in html and "ubar" in html, "two-bar usage missing"
 assert "Data-model candidates" in html, "candidates table missing"
-assert 'title="merge candidate"' in html, "twin pair must yield a merge candidate"
-assert 'title="deprecation candidate"' in html, "orphan must yield a deprecation candidate"
+# The repurposed basis (R10 part 2): field-name Jaccard and field count are
+# CORPUS-COMPLETE — GadgetOut ≈ GadgetIn at 100% and GadgetBlob at 16 fields
+# stay true whatever lives outside the map, which a single unmapped caller
+# would have falsified for "nothing references this". SCOPED to the section:
+# the functions half of the same page also ships merge and split rows, and an
+# unscoped `in html` would let sprawler vouch for GadgetBlob.
+_mc = html[html.find('id="sec-code-model-cands"'):html.find('id="sec-code-fns"')]
+assert _mc, "the dm candidates section must precede the functions section"
+# MUTATION: raise _MERGE_FLOOR above 1.0 — the 100% pair stops qualifying.
+assert 'title="merge candidate"' in _mc \
+    and "GadgetIn</code> ≈ <code>GadgetOut" in _mc, \
+    "the twin pair must be a MERGE candidate"
+# MUTATION: raise _GOD_FIELDS to 20 — GadgetBlob's 16 fields stop qualifying.
+assert 'title="split candidate"' in _mc and "past the 15-field" in _mc, \
+    "a 16-field class must yield a SPLIT candidate"
+# MUTATION: restore the `if c and c["orphan"]:` loop in the dm candidates
+# builder — GadgetIn and GadgetBlob both re-enter as deprecation rows.
+assert "deprecation candidate" not in _mc and "file for removal" not in _mc, \
+    "R10: no surface may nominate a class for deletion on absent references"
 assert "What the candidate icons mean" in html, "candidates icon dictionary missing"
 assert "Insight icons" in html, "section icon dictionary missing"
 assert '<ul class="iclist">' in html, "icon dictionary must render as a LIST"
@@ -362,16 +417,50 @@ assert 'id="sec-code-model-cands"' in html and 'id="sec-code-fn-cands"' in html,
 assert html.count("What the candidate icons mean") >= 2, \
     "both candidates sections need their icon dictionary in the section info"
 assert "Function candidates" in fns_html, "function candidates section missing"
-assert "lonely_helper" in fns_html.split("Function candidates")[1], \
-    "lonely_helper must be a deprecation candidate"
+# The repurposed FUNCTION candidates (R10 part 2): MERGE = body-identifier
+# Jaccard past _FN_MERGE_FLOOR, SPLIT = length past _FN_GOD_LINES. Both are
+# corpus-complete: the collate pair being 89% alike is a fact about the two
+# defs, not a claim about everything the map never read.
+_fc = fns_html[fns_html.find('id="sec-code-fn-cands"'):]
+# MUTATION: raise _FN_MERGE_FLOOR to 0.95 — the pair sits at 0.89 and the
+# merge row disappears from the table.
+assert "collate_gadget_alpha</code> ≈ <code>collate_gadget_beta" in _fc \
+    and "identifier twin" in _fc, \
+    "the 89% near-duplicate pair must be a MERGE candidate"
+# MUTATION: raise _FN_GOD_LINES to 60 — sprawler's 54 lines stop qualifying.
+assert "sprawler" in _fc and "past the 50-line" in _fc, \
+    "the 54-line def must be a SPLIT candidate"
+# MUTATION: restore the `if c["orphan"]:` loop in the fn candidates builder —
+# lonely_helper (and six others) re-enter as deprecation rows.
+assert "deprecation candidate" not in _fc and "file for removal" not in _fc, \
+    "R10: no surface may nominate a function for deletion on absent callers"
 assert "52" in fns_html or "53" in fns_html, "sprawler god-length must show"
 assert "Signature" in fns_html and "Calls" in fns_html, \
     "detail needs Calls + Signature titled blocks"
 fi = json.loads((root / "docs/site/center/archmap.json").read_text())["function_insight"]
 mg = fi["src/funcs.py::make_gid"]
-assert mg["base"] and mg["internal"] >= 1 and not mg["orphan"], mg
-assert fi["src/funcs.py::lonely_helper"]["orphan"]
+# The EVIDENCE survives the verdict's removal — usage/api/internal are facts
+# other surfaces read (the guard lens prices `hot` off usage), so they are
+# pinned here against a refactor that drops them alongside the flag.
+# MUTATION: add "usage" (or "api") to the excluded keys in fn_insight_serial()
+# — the pages still render and this KeyErrors, which is the whole point of
+# pinning the SERIALIZED record and not just the rendered surface.
+assert mg["base"] and mg["internal"] >= 1, mg
+assert (mg["usage"], mg["api"]) == (0, 0), mg
+lh = fi["src/funcs.py::lonely_helper"]
+# MUTATION: restore `c["orphan"] = not c["handler"] and not refs` at the tail
+# of function_insight() — lonely_helper is exactly the shape that set it True.
+assert "orphan" not in lh, f"R10: function_insight must carry no orphan verdict: {lh}"
+assert (lh["usage"], lh["api"], lh["internal"]) == (0, 0, 0), lh
+assert not any("orphan" in c for c in fi.values()), \
+    "R10: not one function record may carry the flag"
 assert fi["src/funcs.py::sprawler"]["god"]
+# The merge page's own input, pinned in the RECORD: a row can render from an
+# in-memory value the archmap never carries, and the census consumers read
+# the file. MUTATION: add "sim" to fn_insight_serial()'s excluded keys — the
+# candidates table still renders and this KeyErrors.
+_tw = fi["src/funcs.py::collate_gadget_alpha"]["sim"]
+assert _tw["cls"] == "collate_gadget_beta" and _tw["j"] >= 0.85, _tw
 # in/out dialect + linked references (entity-icons round)
 assert fi["src/funcs.py::emit_gadget"]["returns"] == "GadgetDraft"
 assert 'class="tag t-io"' in html, \
@@ -392,13 +481,95 @@ assert "<span>Defines</span>" not in html, \
 assert "BUDGET" in html, "code-map detail needs the budget row"
 a = json.loads((root / "docs/site/center/archmap.json").read_text())
 mi = a["model_insight"]
-assert mi["GadgetOut"]["base"] and not mi["GadgetOut"]["orphan"], mi["GadgetOut"]
+assert mi["GadgetOut"]["base"], mi["GadgetOut"]
 assert mi["GadgetOut"]["internal_refs"][0]["file"] == "src/api.py", \
     "endpoint handler must appear as a usage receipt"
-assert mi["GadgetIn"]["orphan"], mi["GadgetIn"]
+# MUTATION: restore `c["orphan"] = c["usage"] == 0 and c["internal"] == 0` at
+# the tail of the first model_insight() loop — GadgetIn sets it True.
+assert "orphan" not in mi["GadgetIn"], f"R10: no orphan verdict: {mi['GadgetIn']}"
+assert not any("orphan" in c for c in mi.values()), \
+    "R10: not one model record may carry the flag"
+# The evidence the verdict was built from SURVIVES it, unrenamed: usage is
+# still endpoint touches + FK in-degree, internal still counts referencing
+# mapped files. Pinned on both a used and an unused class — GadgetIn's (0, 0)
+# is exactly what used to read `orphan`, and it must now read as two numbers
+# and no verdict.
+# MUTATION: add "usage" (or "internal") to insight_serial()'s excluded keys.
+assert (mi["GadgetOut"]["usage"], mi["GadgetOut"]["internal"]) == (3, 1), \
+    mi["GadgetOut"]
+assert (mi["GadgetIn"]["usage"], mi["GadgetIn"]["internal"]) == (0, 0), \
+    mi["GadgetIn"]
 assert mi["GadgetOut"]["sim"]["cls"] == "GadgetIn" and mi["GadgetOut"]["sim"]["j"] == 1.0
 assert mi["GadgetIn"]["kind"] == "schema"
+# MUTATION: raise _GOD_FIELDS to 20 — the 16-field class stops being god.
+assert mi["GadgetBlob"]["god"] and not mi["GadgetOut"]["god"], mi["GadgetBlob"]
 PY
+
+# R10, estate-wide (design record §5, 2026-08-04): "the command center REPORTS
+# evidence and never ASSERTS deadness. A surface may say 'no indexed callers —
+# go check'; it may never say 'orphan'." The fixture is built to be the WORST
+# case for this: lonely_helper, GadgetIn, GadgetBlob and six other defs are all
+# zero on every reference axis, so every deleted render site has a live input.
+# Scoped to the pages + the archmap — a3.css may keep a dead .t-orph rule
+# (colors are shell vocabulary, not a claim), and that is not a verdict.
+python3 - "$FIX/docs/site/center" <<'PY' && ok || bad "R10: no page may assert deadness (see above)"
+import sys
+from pathlib import Path
+c = Path(sys.argv[1])
+pages = sorted(c.glob("*.html")) + [c / "archmap.json"]
+assert len(pages) > 12, f"only {len(pages)} surfaces swept — did the build run?"
+# MUTATION: restore EITHER `c["orphan"] = …` compute site on its own —
+# archmap.json is swept too, so the key alone trips this before any page does;
+# add a render site (_ins_tags · _fn_tags · either candidates loop) and a
+# rendered page carries the word as well.
+banned = ("orphan", "true orphan", "deprecation candidate", "t-orph",
+          "file for removal", "zero on both usage axes")
+for p in pages:
+    text = p.read_text()
+    for word in banned:
+        assert word not in text, f"{p.name} still says {word!r}"
+print(f"{len(pages)} surfaces swept clean")
+# The honesty the repurposed pages OWE their reader, on both of them. These
+# three sentences are the argument for the new basis; a page that keeps the
+# tables and drops them is back to asserting more than it knows.
+# MUTATION: delete the "The floor, stated honestly" paragraph from either
+# candidates sechead's info block in _a3_code.py.
+for _pg in ("arch-fn-candidates.html", "arch-dm-candidates.html"):
+    t = (c / _pg).read_text()
+    assert "CORPUS-COMPLETE" in t, f"{_pg}: the basis argument is missing"
+    assert "FLOOR, not a census" in t, f"{_pg}: the under-report must be owned"
+    assert "TOP-1" in t and "outside the entity config" in t, \
+        f"{_pg}: the floor's scope + its blind spot must be stated"
+print("both candidate pages state their floor")
+PY
+# The compute sites themselves, and every consumer that subscripts them. A
+# previous run of this migration deleted both `c["orphan"] = …` assignments
+# while three `if c["orphan"]:` reads stayed live: it parsed, and it would
+# have KeyError'd at build time. ast.parse cannot see that; this can.
+# MUTATION: re-add `c["orphan"] = not c["handler"] and not refs` to
+# _a3_code.py and the first grep fires.
+(cd "$GEN" && python3 - <<'PY'
+import re, sys
+from pathlib import Path
+gen = Path(".")
+hits = []
+for p in sorted(gen.glob("*.py")):
+    for n, line in enumerate(p.read_text().splitlines(), 1):
+        if re.search(r'\["orphan"\]|\.get\("orphan"\)|"orphan_unguarded"'
+                     r'|"cls_orphan"', line):
+            hits.append(f"{p.name}:{n}: {line.strip()}")
+assert not hits, "surviving orphan compute/read:\n" + "\n".join(hits)
+sys.path.insert(0, ".")
+import _a3_code as C
+# MUTATION: put the "orphan" key back in _INS_ICONS — the icon is the chip's
+# other half, and a live icon is how the chip comes back by accident.
+assert "orphan" not in C._INS_ICONS, "the orphan icon entry must be gone"
+# ... while the floors the repurposed pages now stand on are still named.
+assert C._FN_SIM_FLOOR == 0.6 and C._FN_GOD_LINES == 50, "fn floors moved"
+assert C._SIM_FLOOR == 0.5 and C._GOD_FIELDS == 15, "dm floors moved"
+print("generators clean · floors intact")
+PY
+) >"$T/r10.out" 2>&1 && ok || { bad "R10: no generator may compute or read the flag"; cat "$T/r10.out"; }
 
 # M04: the single-file set's href carries NO set-name segment.
 grep -q 'proof/solo.png"' "$FIX/docs/site/center/feature-gadget.html" \
@@ -594,6 +765,30 @@ for fname, anchor in pages.items():
     assert f'class="on" href="{fname}"' in h \
         and 'href="architecture.html"' in h, f"{fname}: estate menu missing"
     assert 'class="stickstack"' in h, f"{fname}: menu+bar must stack sticky"
+# R10 dry-run catch (gustify COPY, 2026-08-05): the dashboard badge must
+# count EXACTLY the rows its page renders. When the candidates pages were
+# repurposed off the orphan flag, the badge kept a looser selector
+# (`c.get("sim")`, i.e. the lower COMPUTE floor, pairs double-counted) and
+# advertised 88 candidates over a 30-row page — a number the reader cannot
+# reconcile, which is the same overclaim R10 removed.
+# MUTATION: in build_center_a3.py restore
+# `n_dmc = sum(1 for c in ins.values() if c.get("god") or c.get("sim"))`
+# — the fixture's GadgetIn/GadgetOut pair is recorded on both sides, so the
+# badge reads one higher than the table.
+for fname, anchor in (("arch-dm-candidates.html", "sec-code-model-cands"),
+                      ("arch-fn-candidates.html", "sec-code-fn-cands")):
+    h = (c / fname).read_text()
+    body = h[h.find(f'id="{anchor}"'):]
+    rows = body[body.find("<tbody>"):body.find("</tbody>")].count("<tr>")
+    assert rows > 0, f"{fname}: repurposed page renders NO rows"
+    import re as _re
+    badge = _re.search(rf'href="{fname}"[^>]*>.*?(\d+) candidate\(s\)',
+                       dash, _re.S)
+    assert badge, f"{fname}: dashboard badge missing"
+    assert int(badge.group(1)) == rows, \
+        f"{fname}: badge says {badge.group(1)}, page renders {rows}"
+    # ...and the subtitle may not advertise a row class the page cannot emit.
+    assert "deprecation" not in dash, "dashboard still advertises deprecation"
 h = (c / "arch-data-model.html").read_text()
 assert 'class="entb ent-gadget"' in h, "icon-only entity column missing"
 assert "dm-app-" in h, "app-scoped anchors missing"
@@ -1463,9 +1658,12 @@ ENTS = {"e1": {"files": [["models", "api/models.py", 120],
                "defines": {}}}
 FI = {"api/svc.py::doer": {"fn": "doer", "file": "api/svc.py", "entity": "e1",
                            "usage": 1, "lines": 5, "api": False}}
+# `Stale` carries the RETIRED flag in its input record on purpose: a twin
+# regenerating against an archmap written before R10 must not resurrect the
+# branch. The consumer reads evidence now, so the key is inert data.
 MI = {"Kept":   {"cls": "Kept", "file": "api/models.py", "entity": "e1"},
       "Naked":  {"cls": "Naked", "file": "api/models.py", "entity": "e1"},
-      "Dead":   {"cls": "Dead", "file": "api/models.py", "entity": "e1",
+      "Stale":  {"cls": "Stale", "file": "api/models.py", "entity": "e1",
                  "orphan": True},
       # this one lives in a file that ALREADY has a function chip
       "InSvc":  {"cls": "InSvc", "file": "api/svc.py", "entity": "e1"}}
@@ -1474,14 +1672,23 @@ gi = G.guard_insight(function_insight=FI, by_function={}, by_endpoint={},
                      by_model={"Kept": [{"cid": "C1"}]}, model_insight=MI)
 mf = gi["files"]["api/models.py"]
 assert mf["kind"] == "model" and mf["declared"] == 3, mf
-# Naked counts; Dead is an ORPHAN -> a delete candidate, never a test one
-assert mf["unguarded"] == 1 and mf["orphan_unguarded"] == 1, mf
-assert mf["names"] == ["Naked"], mf["names"]
+# R10: an unnamed class is UNGUARDED, full stop — the lens no longer forks a
+# class off as "delete it, don't guard it" on a verdict it cannot support.
+# MUTATION: restore `if v.get("orphan"): slot["orphan_unguarded"] += 1 else:`
+# around the counter in _a3_guard.guard_insight — Stale leaves the count and
+# both of the next two asserts fail.
+assert mf["unguarded"] == 2, mf
+assert "orphan_unguarded" not in mf, f"R10: the split slot must be gone: {mf}"
+assert mf["names"] == ["Naked", "Stale"], mf["names"]
 assert mf["lines"] == 120, "class-file lines come from the entity map"
 # the class in a file that already has a function chip is NOT re-counted
 assert gi["files"]["api/svc.py"]["kind"] == "api", gi["files"]["api/svc.py"]
 assert gi["files"]["api/svc.py"]["declared"] == 1, "no class/def double count"
-assert gi["totals"]["cls_files"] == 1 and gi["totals"]["cls_orphan"] == 1
+# MUTATION: re-add `"cls_orphan": sum(v["orphan_unguarded"] …)` to totals.
+assert gi["totals"]["cls_files"] == 1 and gi["totals"]["cls_unguarded"] == 2, \
+    gi["totals"]
+assert "cls_orphan" not in gi["totals"], \
+    f"R10: the orphan total must be gone: {gi['totals']}"
 
 # SILENT: with no model inputs at all the lens behaves exactly as before
 plain = G.guard_insight(function_insight=FI, by_function={}, by_endpoint={},

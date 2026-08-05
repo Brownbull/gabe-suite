@@ -761,7 +761,6 @@ details.legset .gal{margin:8px 0 4px}
 .t-base{background:color-mix(in srgb,#0a7d6b 16%,transparent);color:#0a7d6b}
 .t-god{background:color-mix(in srgb,#b3403a 14%,transparent);color:#b3403a}
 .t-sim{background:color-mix(in srgb,#b5771a 16%,transparent);color:#b5771a}
-.t-orph{background:color-mix(in srgb,#64748b 18%,transparent);color:#64748b}
 .ubar{display:inline-block;height:7px;border-radius:4px;background:var(--accent,#0d6e78);vertical-align:middle;margin-right:5px}
 .ubar.u-int{background:#7c3aed}
 .dmchips{margin:10px 0 4px}
