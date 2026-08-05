@@ -1103,6 +1103,20 @@ def build_feature_pages(ctx) -> list[str]:
                  "from the codebase at build time.</div>")
         _card_block += lens_block(card)
         # ENTITIES is covered by the Code tab's data model — it does not repeat.
+        # REVIEWED is the card's own QUALIFICATION of its evidence — who
+        # looked, on what, and what they explicitly did NOT cover. It was
+        # parsed and then dropped, so a candid source could not reach the
+        # person reading the page: `grep -l REVIEWED docs/site/center/*.html`
+        # returned nothing while all seven cards carried the section
+        # (gustify #151). It renders ABOVE the fold, beside the verdict it
+        # qualifies — inside the collapsed "full card" it would qualify
+        # nothing anyone reads.
+        if card.get("REVIEWED"):
+            _card_block += (
+                '<div class="callout"><h3>Reviewed — what this evidence does '
+                'and does not cover</h3>'
+                + card_html(card.get("REVIEWED", []))
+                + "</div>")
         detail = "".join(
             f"<h3>{E(sec.title())}</h3>{card_html(card.get(sec, []))}"
             for sec in ("WHAT & WHY", "FOR WHOM", "FLOWS", "IS", "IS NOT")

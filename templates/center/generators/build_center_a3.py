@@ -27,6 +27,7 @@ import json
 import os
 import re
 import subprocess
+import shutil
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -1873,8 +1874,15 @@ def main() -> int:
               f"NOT touched.")
     CENTER_OUT.mkdir(parents=True, exist_ok=True)
     (CENTER_OUT / "assets").mkdir(exist_ok=True)
+    # Assets may nest (e.g. assets/evidence-states/*.png — the navigator's
+    # captures). Copy files, RECURSE into directories: iterdir + read_bytes
+    # crashes the whole build on the first sub-directory it meets.
     for asset in (SHELL_SRC / "assets").iterdir():
-        (CENTER_OUT / "assets" / asset.name).write_bytes(asset.read_bytes())
+        dst = CENTER_OUT / "assets" / asset.name
+        if asset.is_dir():
+            shutil.copytree(asset, dst, dirs_exist_ok=True)
+        else:
+            dst.write_bytes(asset.read_bytes())
 
     wrote = []
     for src in sorted(SHELL_SRC.glob("*.html")):

@@ -1,6 +1,6 @@
 {
  "generator": "build_suite_center.py",
- "head": "d28fd09",
+ "head": "bab3aac",
  "project": "Gabe Suite",
  "groups": [
   {
@@ -46,7 +46,7 @@
      "label": "Testing",
      "href": "testing.html",
      "icon": "check",
-     "count": 21
+     "count": 22
     }
    ]
   },
@@ -70,7 +70,7 @@
      "label": "Functions",
      "href": "functions.html",
      "icon": "code",
-     "count": 473
+     "count": 480
     },
     {
      "label": "Data structures",
