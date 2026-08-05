@@ -10,3 +10,8 @@ docs/investigations/**/*.pdf
 docs/investigations/**/*.png
 docs/investigations/**/*.jpg
 .claude/settings.local.json
+
+# graft context graph — local cache, rebuilt in ~2s (`graft build`).
+# Its own `.ignore` re-admits it to ripgrep; delete that file after every build.
+graft/
+.ignore

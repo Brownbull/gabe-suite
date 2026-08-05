@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.5.1
+  version: 1.6.0
 ---
 
 # Gabe Red — the failing state, given an address
@@ -27,12 +27,12 @@ Runs after `/gabe-plan` (needs the phase row + its `proof_type`) and **before ex
 ## Procedure (deep spec: `references/red-spec.md` — binding)
 
 1. **Read the phase** — description, tier, `proof_type`. No test-shaped proof possible → the skip/guard decision (spec §Skip codes) — **never a fake red**.
-2. **Scan the corpus** (E4): grep existing C-ids + search tests related to the touched behavior. Print the `Searched:` line — an empty one invalidates the pass.
+2. **Scan the corpus** (E4): grep existing C-ids + search tests related to the touched behavior. Print the `Searched:` line — an empty one invalidates the pass. Where the project carries a graft index, run `graft build && rm -f .ignore` (unconditional; ~2 s warm — **the `rm` is mandatory**, the build re-admits graft's own cards to ripgrep and poisons every later grep) and take the cases' **reach** two-arm — `graft callers` + `graft grep`, never `ask`.
 3. **Decide per case:** REUSE an existing case (cite `C<N>`; bump to `v<K+1>` ONLY if the claim itself must change — a re-run never bumps) vs NEW (allocate `max(grep C-ids)+1`).
 4. **Write the cases** — id inside the test NAME (`test_..._C147v2` / `it('C147v2 · ...')`). Where the subject doesn't exist yet, add a **returning stub** (returns a wrong-but-typed value; NEVER raises — a raising stub blinds the tautology guard).
 5. **Run them.** Classify each case: **RED** (fails by assertion — evidence) · **NOT-RED** (import/collection error — non-evidence, fix before proceeding) · **TAUTOLOGY** (passes on unchanged code — halt; the case asserts nothing).
    *The tautology check is a MINT-TIME check, and its proof is perishable.* A case that was genuinely red here goes **VOID** later — a refactor severs the assertion, a missing cleanup leaves state that satisfies it, a config change excludes it from the run — and a void guard is indistinguishable from a real one until the day it fails to catch something (a twin measured its own void rate at **1 in 6** while trying not to write one). `scripts/prove-guard.py` is the standing form of this step: it mutates the line a case claims to protect and asserts the case goes red. Re-run it when the claim matters, not only when it is written.
-6. **Commit the red checkpoint** through `/gabe-commit` with the `RED:` trailer + `Cases:` line (formats in the spec). Write the phase's `Cases:` record into PLAN.md Phase Details, tick the `Red` cell ✅, mirror PLAN.json (E5).
+6. **Commit the red checkpoint** through `/gabe-commit` with the `RED:` trailer + `Cases:` line (formats in the spec). Write the phase's `Cases:` **and `Reach:`** records into PLAN.md Phase Details, tick the `Red` cell ✅, mirror PLAN.json (E5).
 7. **Report** (E7): ids declared (new/reused/bumped/guards), the red run's output line, the red commit sha.
 
 ## Scripts
@@ -55,7 +55,7 @@ Narrow `--run` to the single case where the runner allows: a suite-wide run make
 
 ## Output contract
 
-Per phase, on completion: a committed red checkpoint (`RED:` trailer) OR a guard-only record OR an enumerated skip code — never silence; the `Cases:` line in PLAN Phase Details naming every id; the `Red` cell ✅ in PLAN.md + PLAN.json; the failure output quoted verbatim in the report. This skill states no count or verdict beyond what the run printed (anti-curation).
+Per phase, on completion: a committed red checkpoint (`RED:` trailer) OR a guard-only record OR an enumerated skip code — never silence; the `Cases:` line in PLAN Phase Details naming every id, beside a `Reach:` line (or `no index`); the `Red` cell ✅ in PLAN.md + PLAN.json; the failure output quoted verbatim in the report. This skill states no count or verdict beyond what the run printed (anti-curation).
 
 ## Closing line — the angle nobody has taken
 

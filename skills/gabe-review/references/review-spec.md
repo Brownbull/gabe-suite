@@ -235,6 +235,20 @@ into a hook block, never into silence.
   `capture-debt` legitimately defers — the run has to happen first. Skip silently when the entity
   has no census (nothing to drift from); NEVER report zero findings when a check could not run —
   the checker prints `census-lag NOT RUN` with its reason instead.
+- **REACH DRIFT** — the diff and the phase's `Reach:` record (written by `/gabe-red`, cited by
+  `/gabe-execute`) disagree. Two shapes (report-never-gate, D1): **unreached** a file this diff
+  changed that no recorded reach named — either the graph missed an edge or the change grew past
+  its cases · **unused reach** a recorded place the diff never touched — the reach was over-broad,
+  or a case is owed there. Compare against the record's `graft@<sha>` stamp: a diff that moved
+  well past that sha explains drift by growth, not by a missing edge, and the finding says which.
+  Priced like any finding; the triage outcome is authoritative. **Detection lives HERE for the
+  same reason WORKFLOW DRIFT does** — only review sees the diff that caused it. Fix routes to
+  `/gabe-red` (a case is owed at an unreached place) or to nothing at all (the graph is
+  name-resolved and carries known collisions — one measured false edge linked a TypeScript
+  `initAnalytics` to a Python `register`). Skip silently when the phase has no `Reach:` record or
+  the project has no graft index; NEVER report zero findings when the check could not run — print
+  `REACH DRIFT NOT RUN` with the reason. **`unreached` is the running measurement** of whether the
+  graph's edges are complete, and it is the evidence the twin-propagation decision waits on.
 - **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
   triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;

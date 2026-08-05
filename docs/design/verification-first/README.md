@@ -222,6 +222,19 @@ commit series):
   over-budget generators (ruling-day numbers: `build_center_a3.py` 1,215 ·
   `_a3_feature.py` 1,343); revisit when a change wants a seam that the size
   actively obstructs, not before.
+- **R10 · The command center REPORTS evidence and never ASSERTS deadness.** A
+  surface may say *"no indexed callers — go check"*; it may never say *"orphan"*.
+  Measured on the twins: the archmap's `orphan` flag was **~94% false positive**
+  (126 of 134 flagged symbols provably referenced; 7–8 genuinely dead across
+  ~15,500 non-test callables) because `refs` was a bare-name regex over only the
+  files `center.config.json` adopts — 23.5% of gustify's Python, 0% of its
+  TypeScript. It measured how little the config maps, not how much code is dead.
+  **The number moved when you adopted files, not when you deleted code.** No
+  replacement instrument earns the assertion either: graft indexes 47% of
+  gustify's non-binary tracked files and 10% of this repo's, and reproducibly
+  returns a clean zero on a symbol with three live references. `grep -rn` is the
+  only admissible absence proof. Without this ruling written down, deleting the
+  flag reads as an oversight and gets rebuilt under a new name.
 
 ## 6 · The landing plan
 
