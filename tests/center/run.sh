@@ -1945,6 +1945,91 @@ grep 'evidence-nav.js' "$WFP" | grep -q 'defer' \
 grep -q 'evidence-nav.js' "$WFP" \
   && ok || bad "wf-nav include: the generated page must include evidence-nav.js"
 
+# --- census-gap action rows: a gap the navigator RENDERS is also PRICED -----
+# Every class the navigator shows lands as ONE aggregated row in the Evidence
+# action table (angle_rows, src "census"), fed by the SAME census_scan the
+# navigator mounts from — read once, probed once, per entity per build.
+
+# The scan is read ONCE: gadget-gid.png missing prints exactly one hold-out
+# note in the WFC build. MUTATION: drop the _CENSUS_MEMO lookup in census_scan
+# — angle_rows and workflow_nav_section each probe, the note prints twice.
+[ "$(grep -c 'capture missing on disk' "$T/build.out")" = 1 ] \
+  && ok || bad "census-rows: the census must be read+probed ONCE per entity (memo)"
+
+# WFC (fixture census: 1 ghost · 2 authored-unpowered · 1 demoted):
+# ghost class, one row naming the step. MUTATION: skip the st=="ghost" branch
+# in census_scan's classification.
+grep -q 'census step(s) named with no proof: resize' "$WFP" \
+  && ok || bad "census-rows: ghost steps must mint ONE aggregated evidence row"
+# unpowered class: BOTH steps on ONE row, census order. MUTATION: mint one row
+# per step (the row would name a single step, never 'save, size').
+grep -q 'census step(s) asserted but never photographed: save, size' "$WFP" \
+  && ok || bad "census-rows: authored-unpowered steps must aggregate onto ONE row"
+# demoted class (claimed running, shot missing on disk). MUTATION: drop
+# demoted.append in census_scan's running-with-no-capture branch.
+grep -q 'census capture(s) claimed but missing on disk: gid' "$WFP" \
+  && ok || bad "census-rows: a demoted capture claim must mint the drift-flavored row"
+# ... whose stake states the DISAGREEMENT, not the generic evidence stake.
+# MUTATION: drop the stake override on the demoted add() call.
+grep -q 'census claims more capture than the disk holds' "$WFP" \
+  && ok || bad "census-rows: the demoted row's stake must say census claims > disk holds"
+# src "census" renders its own provenance tag, never "judgment". MUTATION:
+# mint census rows with the default src, or map src "census" to the judgment tag.
+grep -q 'the disk probe this build">census<' "$WFP" \
+  && ok || bad "census-rows: census rows must wear the census provenance tag"
+
+# ABSENT census (the main fixture): the navigator's absence LINE (asserted
+# above) AND the priced action ROW both render — two halves of one honesty.
+# MUTATION: delete the status=="absent" branch in angle_rows' census block.
+grep -q 'workflow census not captured' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "census-rows absent: the priced action row must render beside the absence line"
+grep -q 'author the workflow census' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "census-rows absent: the row's move must name the owner command"
+
+# UNREADABLE census: line + row, both carrying the parse failure. MUTATION:
+# delete the status=="unreadable" branch in angle_rows' census block (row
+# grep) or return the mounted section on parse failure (line grep).
+WFU="$T/wfunread"; mk_fixture "$WFU"
+mkdir -p "$WFU/docs/site/center/workflows"
+printf '{ not json' > "$WFU/docs/site/center/workflows/gadget.json"
+[ "$(build "$WFU" "$SHELL_SRC")" = 0 ] && ok || { bad "census-rows unreadable: fixture must build"; cat "$T/build.out"; }
+WUP="$WFU/docs/site/center/feature-gadget.html"
+grep -q 'census unreadable' "$WUP" \
+  && ok || bad "census-rows unreadable: the navigator's named-gap line must render"
+grep -q 'workflow census present but unreadable' "$WUP" \
+  && ok || bad "census-rows unreadable: the priced action row must render beside the line"
+grep -q 'repair the census file' "$WUP" \
+  && ok || bad "census-rows unreadable: the row's move must name the owner command"
+
+# CLEAN census (every step running, every shot on disk): ZERO census rows —
+# the honest-clear case — while the navigator still mounts. MUTATION: mint any
+# census row unconditionally (e.g. drop the `if census.get(...)` guards).
+WFG="$T/wfgreen"; mk_fixture "$WFG"
+mkdir -p "$WFG/docs/site/center/workflows" \
+         "$WFG/docs/site/center/assets/evidence-states"
+python3 - "$WFG" "$REPO/tests/center/fixtures/workflow-census-gadget.json" <<'PY'
+import base64, json, sys
+from pathlib import Path
+root, src = Path(sys.argv[1]), Path(sys.argv[2])
+census = json.loads(src.read_text())
+png = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk"
+    "YPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+center = root / "docs/site/center"
+(center / "assets/evidence-states/gadget-green.png").write_bytes(png)
+for sid, st in census["states"].items():
+    if not st.get("grp"):
+        st["st"] = "running"
+        st["shot"] = ["assets/evidence-states/gadget-green.png"]
+(center / "workflows/gadget.json").write_text(json.dumps(census, indent=1))
+PY
+[ "$(build "$WFG" "$SHELL_SRC")" = 0 ] && ok || { bad "census-rows clean: fixture must build"; cat "$T/build.out"; }
+WGP="$WFG/docs/site/center/feature-gadget.html"
+grep -q 'EvidenceNav.mount' "$WGP" \
+  && ok || bad "census-rows clean: the navigator must still mount"
+grep -qE 'census step\(s\)|census capture\(s\)|workflow census not captured|workflow census present but unreadable' "$WGP" \
+  && bad "census-rows clean: an all-running census with shots on disk must mint ZERO census rows" || ok
+
 echo
 echo "center battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

@@ -22,6 +22,7 @@ import _center_mermaid as M
 from _a3_code import build_code_tab, collect_entity_map
 from _a3_evidence import (
     build_evidence_tab,
+    census_scan,
     collect_coverage,
     collect_set,
     is_reference,
@@ -438,7 +439,8 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
                over_files: list, maturity: str = "mvp",
                flow_gaps: list = (), unclear_sets: list = (),
                flows_malformed: list = (),
-               inferred_cover: list = ()) -> tuple[list[dict], list[str]]:
+               inferred_cover: list = (),
+               census: dict | None = None) -> tuple[list[dict], list[str]]:
     """Every OPEN move on the entity (one dict per row, both prices) plus the
     CLOSED-angle labels (a green / walked / proven angle emits no row). The
     single source the ledger, the Risk residual and the hub rollup read."""
@@ -449,14 +451,15 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
         return _GAP_STAKE.get(kind) or _STAKE_EXTRA.get(kind, "")
 
     def add(kind: str, now: str, move: str, eff: str, hours: str, stage: str,
-            src: str = "machine", now_html: str = "") -> None:
+            src: str = "machine", now_html: str = "", stake: str = "") -> None:
         price = _GROWTH_PRICE.get(kind)
         rows.append({
             "kind": kind, "now": now, "now_html": now_html, "move": move,
             "eff": eff, "hours": hours,
             "stage": stage, "ripe": _MATURITY_ORD[stage] <= _MATURITY_ORD[maturity],
             "buys": price[3] if price else _STRUCT_BUYS,
-            "stake": _stake(kind), "cost": price[4] if price else _STRUCT_COST,
+            "stake": stake or _stake(kind),
+            "cost": price[4] if price else _STRUCT_COST,
             "src": src, "domain": _ACTION_DOMAIN.get(kind, "other")})
 
     for c in corpora:
@@ -557,6 +560,52 @@ def angle_rows(slug: str, inv: dict, specs: list[str], walks: list[dict],
             "confirm with an explicit `flows:` in the covering manifest(s)",
             "XS", "~10 min", "mvp")
 
+    # Census gaps (census_scan — the same scan the workflow navigator renders
+    # from): a gap the navigator RENDERS is also PRICED here — rendering an
+    # absence and pricing it are two halves of one honesty. AGGREGATED PER
+    # CLASS: a 20-ghost census is ONE row naming its steps, never 20 rows.
+    # src "census" — derived from the committed census + this build's disk
+    # probe, not authored judgment.
+    if census is not None:
+        eff, hours, stage, _, _ = _GROWTH_PRICE["evidence"]
+
+        def _steps(ids: list) -> str:
+            return (", ".join(ids[:6])
+                    + (f" +{len(ids) - 6} more" if len(ids) > 6 else ""))
+
+        if census.get("status") == "absent":
+            add("evidence", "workflow census not captured",
+                "author the workflow census (/gabe-cc-update)",
+                eff, hours, stage, src="census")
+        elif census.get("status") == "unreadable":
+            add("evidence", "workflow census present but unreadable "
+                            f'({census.get("err", "parse error")})',
+                "repair the census file (/gabe-cc-update)",
+                eff, hours, stage, src="census")
+        else:
+            if census.get("ghost"):
+                _g = census["ghost"]
+                add("evidence", f"{len(_g)} census step(s) named with no "
+                                f"proof: {_steps(_g)}",
+                    "assert or capture the ghost steps (/gabe-cc-update)",
+                    eff, hours, stage, src="census")
+            if census.get("unpowered"):
+                _u = census["unpowered"]
+                add("evidence", f"{len(_u)} census step(s) asserted but never "
+                                f"photographed: {_steps(_u)}",
+                    "capture the owed shots (/gabe-cc-update)",
+                    eff, hours, stage, src="census")
+            if census.get("demoted"):
+                _d = census["demoted"]
+                add("evidence", f"{len(_d)} census capture(s) claimed but "
+                                f"missing on disk: {_steps(_d)}",
+                    "re-capture, or fix the census `shot` path "
+                    "(/gabe-cc-update)",
+                    eff, hours, stage, src="census",
+                    stake="the census claims more capture than the disk holds "
+                          "— the page demotes the claim this build, the file "
+                          "keeps it for the drift checker")
+
     for fpath, n in over_files:
         eff, hours = _struct_effort(n)
         pct = round(n * 100 / 800)
@@ -573,10 +622,15 @@ def _ledger_render(rows: list[dict]) -> list[list[str]]:
     """The ledger table body — one row per open move, both prices side by side."""
     out = []
     for r in rows:
-        src = ('<span class="tag s-ok" title="derived from a machine source '
-               'this build">machine</span>' if r["src"] == "machine" else
-               '<span class="tag e-m" title="card-authored judgment, '
-               're-verified at adoption">judgment</span>')
+        if r["src"] == "machine":
+            src = ('<span class="tag s-ok" title="derived from a machine '
+                   'source this build">machine</span>')
+        elif r["src"] == "census":
+            src = ('<span class="tag s-ok" title="derived from the committed '
+                   'workflow census + the disk probe this build">census</span>')
+        else:
+            src = ('<span class="tag e-m" title="card-authored judgment, '
+                   're-verified at adoption">judgment</span>')
         ripe = ('<span class="tag s-ok">ripe now</span>' if r["ripe"]
                 else '<span class="tag s-gap">later</span>')
         out.append([
@@ -939,12 +993,24 @@ def build_feature_pages(ctx) -> list[str]:
                 "malformed": len(_cov["malformed"]),
                 "unclassified": [n for n, _w in _cov["unclear"]],
             }
+        # The census is read ONCE per entity per build: census_scan memoizes
+        # on the census path, so the workflow navigator further down consumes
+        # THIS same scan without a second disk probe. A gap the navigator
+        # renders must also be flagged — the scan feeds angle_rows, which
+        # prices each gap class as an evidence action row.
+        try:
+            _census = census_scan(slug, ctx.center)
+        except Exception as _cs_err:                       # noqa: BLE001
+            print(f"    ⚠ feature-{slug}.html census scan skipped: "
+                  f"{type(_cs_err).__name__}: {_cs_err}")
+            _census = None
         ledger_rows, ledger_closed = angle_rows(
             slug, inv, specs, ctx.walks, s, proof_root, ctx.corpora, ctx.e2e,
             over_files, maturity,
             flow_gaps=_cov["unproven"], unclear_sets=_cov["unclear"],
             flows_malformed=_cov["malformed"],
-            inferred_cover=_cov["covered_inferred"])
+            inferred_cover=_cov["covered_inferred"],
+            census=_census)
         ledger_ripe = sum(1 for r in ledger_rows if r["ripe"])
         _lw = [w for w in ctx.walks if w.get("subject") in (slug, f"adopt:{slug}")]
 

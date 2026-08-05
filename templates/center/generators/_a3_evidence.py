@@ -490,6 +490,88 @@ def _census_gap(rel: str, title: str, detail: str) -> str:
             "Named gap, never a staged tree.</span></div></div>")
 
 
+_CENSUS_MEMO: dict[str, dict] = {}
+
+
+def census_scan(slug: str, center_dir: Path) -> dict:
+    """One entity's census, read and disk-probed ONCE per build — memoized on
+    the census path, because TWO surfaces consume the same facts: the
+    navigator (workflow_nav_section) RENDERS each gap in place, and the action
+    ledger (_a3_feature.angle_rows) PRICES it as a pending row. Rendering an
+    absence and pricing it are two halves of one honesty, and neither half may
+    re-probe the shots the other already probed.
+
+    Returns {"status": "absent" | "unreadable" | "ok", "rel": <center-relative
+    census path>}; when unreadable, plus "err" (the exception class name);
+    when ok, plus the raw "states" / "workflows" / "start", the "inlined"
+    states (the honesty pass applied: a shot missing under the center dir is
+    held out, a "running" step with no surviving capture demotes to
+    "unpowered" ON THE PAGE while the census file keeps its claim — the
+    accumulator law; check_workflow_drift.py prices the stale claim), and the
+    gap classes in census order: "ghost" (named, no proof), "unpowered"
+    (asserted, never photographed, as authored) and "demoted" (claimed
+    running, capture missing on disk at build)."""
+    census_path = center_dir / "workflows" / f"{slug}.json"
+    key = str(census_path)
+    hit = _CENSUS_MEMO.get(key)
+    if hit is not None:
+        return hit
+    out = _census_scan_once(slug, center_dir, census_path)
+    _CENSUS_MEMO[key] = out
+    return out
+
+
+def _census_scan_once(slug: str, center_dir: Path, census_path: Path) -> dict:
+    rel = f"workflows/{slug}.json"
+    if not census_path.exists():
+        return {"status": "absent", "rel": rel}
+    try:
+        census = json.loads(census_path.read_text())
+        states = census["states"]
+        workflows = census["workflows"]
+        if (not isinstance(states, dict) or not isinstance(workflows, dict)
+                or not workflows):
+            raise ValueError("states/workflows must be non-empty objects")
+        start = census.get("start") or next(iter(workflows))
+    except Exception as err:                       # noqa: BLE001
+        print(f"    ⚠ feature-{slug}.html workflow census unreadable — "
+              f"section degraded to a named gap: {type(err).__name__}: {err}")
+        return {"status": "unreadable", "rel": rel, "err": type(err).__name__}
+
+    inlined: dict = {}
+    ghost: list[str] = []
+    unpowered: list[str] = []
+    demoted: list[str] = []
+    for sid, raw in states.items():
+        s = dict(raw) if isinstance(raw, dict) else raw
+        if isinstance(s, dict) and not s.get("grp"):
+            shots = [u for u in (s.get("shot") or []) if isinstance(u, str)]
+            live = [u for u in shots if (center_dir / u).exists()]
+            for u in shots:
+                if u not in live:
+                    print(f"    ⚠ feature-{slug}.html workflow '{sid}': "
+                          f"capture missing on disk, held out of the page: {u}")
+            if live != shots:
+                if live:
+                    s["shot"] = live
+                else:
+                    s.pop("shot", None)
+            if s.get("st") == "running" and not live:
+                s["st"] = "unpowered"
+                demoted.append(sid)
+                print(f"    ⚠ feature-{slug}.html workflow '{sid}': demoted "
+                      f"running→unpowered on the page — no capture on disk; "
+                      f"the census keeps the claim for the drift checker")
+            elif s.get("st") == "unpowered":
+                unpowered.append(sid)
+            elif s.get("st") == "ghost":
+                ghost.append(sid)
+        inlined[sid] = s
+    return {"status": "ok", "rel": rel, "states": states,
+            "workflows": workflows, "start": start, "inlined": inlined,
+            "ghost": ghost, "unpowered": unpowered, "demoted": demoted}
+
+
 def workflow_nav_section(slug: str, center_dir: Path) -> tuple[str, bool]:
     """The Evidence tab's FIRST section — the evidence navigator (workflow
     bracket-tree map left, the selected step's capture + provenance right),
@@ -510,52 +592,24 @@ def workflow_nav_section(slug: str, center_dir: Path) -> tuple[str, bool]:
 
     No census → the one-line named absence (the debt + the command that clears
     it). A malformed census degrades to the same shape with its reason — one
-    entity's section, never a dead build. Returns (html, census_exists)."""
-    rel = f"workflows/{slug}.json"
-    census_path = center_dir / "workflows" / f"{slug}.json"
-    if not census_path.exists():
+    entity's section, never a dead build. Every fact here comes from
+    census_scan() — the ONE read + probe per entity per build; the action rows
+    that price these same gaps (_a3_feature.angle_rows) read the same scan.
+    Returns (html, census_exists)."""
+    scan = census_scan(slug, center_dir)
+    rel = scan["rel"]
+    if scan["status"] == "absent":
         return (_census_gap(
             rel, "census not captured",
             "absent. The workflow census is CAPTURE DEBT: author it with "
             "<code>/gabe-cc-update</code> (the <code>/gabe-pulse</code> S8 "
             "nag counts it)."), False)
-    try:
-        census = json.loads(census_path.read_text())
-        states = census["states"]
-        workflows = census["workflows"]
-        if (not isinstance(states, dict) or not isinstance(workflows, dict)
-                or not workflows):
-            raise ValueError("states/workflows must be non-empty objects")
-        start = census.get("start") or next(iter(workflows))
-    except Exception as err:                       # noqa: BLE001
-        print(f"    ⚠ feature-{slug}.html workflow census unreadable — "
-              f"section degraded to a named gap: {type(err).__name__}: {err}")
+    if scan["status"] == "unreadable":
         return (_census_gap(
             rel, "census unreadable",
-            f"present but unreadable ({E(type(err).__name__)}). Correct it "
+            f'present but unreadable ({E(scan["err"])}). Correct it '
             "with <code>/gabe-cc-update</code>."), False)
-
-    inlined: dict = {}
-    for sid, raw in states.items():
-        s = dict(raw) if isinstance(raw, dict) else raw
-        if isinstance(s, dict) and not s.get("grp"):
-            shots = [u for u in (s.get("shot") or []) if isinstance(u, str)]
-            live = [u for u in shots if (center_dir / u).exists()]
-            for u in shots:
-                if u not in live:
-                    print(f"    ⚠ feature-{slug}.html workflow '{sid}': "
-                          f"capture missing on disk, held out of the page: {u}")
-            if live != shots:
-                if live:
-                    s["shot"] = live
-                else:
-                    s.pop("shot", None)
-            if s.get("st") == "running" and not live:
-                s["st"] = "unpowered"
-                print(f"    ⚠ feature-{slug}.html workflow '{sid}': demoted "
-                      f"running→unpowered on the page — no capture on disk; "
-                      f"the census keeps the claim for the drift checker")
-        inlined[sid] = s
+    inlined, workflows, start = scan["inlined"], scan["workflows"], scan["start"]
 
     def _js(obj) -> str:
         # A literal </ inside a JSON string would close the inline script
