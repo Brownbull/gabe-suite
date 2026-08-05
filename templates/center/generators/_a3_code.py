@@ -415,8 +415,8 @@ _INS_ICONS = {
     "sim": '<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
     "merge": '<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
     "split": '<line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/>',
-    "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
     "doc": '<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',
+    "archive": '<rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><line x1="10" y1="12" x2="14" y2="12"/>',
     "zap": '<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
     "fn": '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
     "method": '<rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="2"/>',
@@ -1815,8 +1815,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             "never here",
         id_="sec-code-model-cands",
         note=f"{_n_cands} candidate(s) this build · each wears the color and "
-             f"icon dialect of the flag that triggered it in the Data model "
-             f"tables above.",
+             f"icon dialect of the flag that triggered it on the Data model "
+             f"page.",
         info='<div class="leg"><b>What the candidate icons mean</b>'
              '<ul class="iclist">'
              f"<li>{itag('t-sim', 'merge', 'merge candidate')} <b>merge</b> — "
@@ -1833,19 +1833,29 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
              "fields however little the config covers. Absence of references "
              "is neither — a single file outside the entity config falsifies "
              "it. This section names only what the instrument can actually "
-             "support; usage stays in the bars above as evidence to go check."
+             "support. The usage evidence lives on the Data model page — two "
+             "bars per class, api and internal — and a reader checks it there."
              "</div>"
              '<div class="leg"><b>The floor, stated honestly</b> — the '
              "similarity flag records the TOP-1 nearest neighbour per class "
-             f"only, only above the {int(_SIM_FLOOR * 100)}% line, only "
-             "across the classes the entity config maps, and only field NAMES "
-             "(types and semantics are not compared). This page is a FLOOR, "
-             "not a census: it under-reports duplication and always will. "
-             "That direction is the safe one — under-reporting a positive "
-             "signal costs you a missed merge; under-reporting absence gets "
-             "live code deleted. Anything outside the config is invisible "
-             "here, and that gap measures the config's coverage, not the "
-             "codebase's cleanliness.</div>")
+             f"only, only above the {int(_SIM_FLOOR * 100)}% line, Python "
+             "only, mapped files only, and only field NAMES (types and "
+             "semantics are not compared). Every one of those is a way to "
+             f"MISS a pair, never a way to invent one. This TABLE cuts higher "
+             f"still — it lists pairs at \u2265 {int(_MERGE_FLOOR * 100)}%, so "
+             f"the {int(_SIM_FLOOR * 100)}% recording floor is what the flag "
+             "sees, not what you are reading. This page is a FLOOR, not a "
+             "census: it under-reports duplication and always will. That "
+             "direction is the safe one — under-reporting a positive signal "
+             "costs you a missed merge; under-reporting absence gets live "
+             "code deleted.</div>"
+             '<div class="leg"><b>Known blind spot</b> \u2014 classes outside '
+             "the entity config are invisible here, and the misses cluster "
+             "there rather than in the maths: two modules can carry near-"
+             "identical schemas and drift apart for months without either "
+             "appearing on this page, if one of them is not in the config. "
+             "An empty candidates table means the mapped set is clean, not "
+             "the repository.</div>")
     if cands:
         html += (
             "<table class=\"tbl\"><thead><tr>"
@@ -1854,8 +1864,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             "<th>Why the machine flags it</th></tr></thead>"
             f"<tbody>{cands}</tbody></table>")
     else:
-        html += ('<p class="sub">No data-model candidates this build — no '
-                 "twins past the merge line, no god classes.</p>")
+        html += ('<p class="sub">No data-model candidates <b>in the mapped set</b> this build — no twins past the merge line, no god classes. Files outside the entity config were never examined.</p>')
     # ---- Functions — the FUNCTIONS lens (sibling of the data model) --------
     fins = function_insight(repo)
     page_py = {f for _layer, f, _n in files if f.endswith(".py")}
@@ -2145,8 +2154,8 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 "same contract as the data-model candidates, function-scoped",
             id_="sec-code-fn-cands",
             note=f"{_n_fcands} candidate(s) this build · each wears the color "
-                 f"and icon dialect of the flag that triggered it in the "
-                 f"Functions table above.",
+                 f"and icon dialect of the flag that triggered it on the "
+                 f"Functions page.",
             info='<div class="leg"><b>What the candidate icons mean</b>'
                  '<ul class="iclist">'
                  f"<li>{itag('t-sim', 'merge', 'merge candidate')} <b>merge</b>"
@@ -2165,13 +2174,15 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  "the config covers. \"Nothing references this\" is falsified "
                  "by one file outside the corpus — so this section names "
                  "duplication and size, and never asserts deadness. The usage "
-                 "bars above report the evidence; the reader goes and "
-                 "checks.</div>"
+                 "evidence lives on the Functions page — two bars per def, "
+                 "api and internal — and a reader checks it there.</div>"
                  '<div class="leg"><b>The floor, stated honestly</b> — the '
                  "similarity flag records the TOP-1 nearest neighbour per "
                  "def, only among defs with ≥ 8 body identifiers, only above "
                  f"the {int(_FN_SIM_FLOOR * 100)}% line, Python only, mapped "
-                 "files only. Every one of those is a way to MISS a pair, "
+                 f"files only \u2014 while this TABLE cuts higher still, listing "
+                 f"pairs at \u2265 {int(_FN_MERGE_FLOOR * 100)}%. Every one of "
+                 "those is a way to MISS a pair, "
                  "never a way to invent one. The page is a FLOOR, not a "
                  "census — and that direction is the safe one: under-reporting "
                  "a positive signal costs a missed merge, while under-reporting "

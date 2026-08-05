@@ -271,7 +271,7 @@ def guard_moves(gi: dict) -> list[dict]:
                 or (v["lines"] >= BIG_FILE and v["share"] >= UNGUARDED_SHARE)):
             continue
         what = ("handlers/defs" if v["kind"] == "api"
-                else "used classes" if v["kind"] == "model"
+                else "declared classes" if v["kind"] == "model"
                 else "exported symbols")
         moves.append({
             "id": f"guard:{path}", "kind": "file", "key": path,
