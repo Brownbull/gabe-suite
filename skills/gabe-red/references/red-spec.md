@@ -26,13 +26,30 @@
 - **Never:** a stored version registry (git already knows what changed) · a phase-scoped id
   (cases outlive phases; PLAN.json resets on archive) · retroactive id edits that alter a claim.
 
-## The red run — three outcomes, not two
+## The red run — four outcomes, not two
 
 | Outcome | Meaning | Action |
 |---|---|---|
-| **RED** — fails **by assertion** | real evidence: the case demands behavior that doesn't exist yet | proceed to the red commit |
+| **RED** — fails **by assertion**, and the assertion's failure is CAUSED by the absent behavior | real evidence: the case demands behavior that doesn't exist yet | proceed to the red commit |
 | **NOT-RED** — fails by import / collection / syntax | non-evidence: a broken test is not a failing test | fix the test/stub; re-run; never commit as red |
 | **TAUTOLOGY** — passes on unchanged code | the case asserts nothing about the change | HALT; rewrite the case (this is the guard `assert True` dies on) |
+| **RED-WRONG-REASON** — fails by assertion, but NOT because of the declared absence | the console cannot tell this from RED; a fixture gap, a wrong expected value, or a cancelled request all produce a genuine assertion failure that proves nothing | HALT; prove the cause with the FLIP test below, then rewrite or fix the fixture |
+
+**The FLIP test (what makes RED-WRONG-REASON detectable).** A case is only known to measure its
+claim when it changes state with the claim. Stub the subject so it satisfies **only** the declared
+claim: the case must go **GREEN**. Remove that stub: it must go **RED**. A case that does not FLIP
+has not been proven to measure anything — it is red for a reason nobody has identified.
+
+This is `scripts/prove-guard.py` run in reverse, and the asymmetry is the whole gap: prove-guard is
+required for GUARDS (mutate, assert red, restore) and not for NEW cases, on the reasoning that a new
+case is "already red". Already-red is exactly the state that hides this outcome. Measured on one
+twin phase: of eight assertion defects written by an author actively trying not to write one, one
+was RED-WRONG-REASON (a fixture with zero items, red for the fixture and not for the missing
+feature) and would have been committed as the red checkpoint.
+
+⚠ This does not catch an expected value copied from wrong prose — a case can be well-formed,
+bounded, synchronised, and assert the wrong number because the comment it was copied from was
+wrong. That is an unanchored-claim defect wearing a test's clothes, and no red-beat check reaches it.
 
 **The stub rule (what makes the tautology guard live):** when the subject under test does not
 exist yet, write a stub that **RETURNS a wrong-but-typed value — it never raises**. A raising stub
@@ -40,6 +57,27 @@ makes every case fail, so every case looks red and the guard is blind; a returni
 assertion execute against a real value, so an empty assertion gets caught. The stub is production
 code written at red — that is the priced tax, not an accident; "stub, not behavior" is a review
 subject (CASE DRIFT), not a gate check.
+
+### The async-boundary rules (runtime-evidence cases: journey / e2e)
+
+Three rules, each derived from a measured defect. A case violating one is red or green for reasons
+that have nothing to do with its claim, and the console reports it as ordinary evidence.
+
+1. **Every wait is bounded.** An unbounded wait on something that may legitimately never happen —
+   a PATCH that is a no-op, a response that never fires — does not fail the product; it hangs to the
+   test timeout and reports a HARNESS error (`"Target page, context or browser has been closed"`)
+   that names nothing. One such case failed a production e2e gate and cost a full trace to diagnose.
+2. **Every post-mutation assertion is preceded by an explicit synchronisation point** — await the
+   response, or poll the source of truth. **Never a sleep**: a sleep hides the race instead of
+   removing it. Two measured defects came from this — a click followed by a navigation that
+   cancelled the in-flight request (the API then read `null`, which looks *exactly* like the defect
+   under test), and an assertion after reload that read a persisted IndexedDB cache and accused the
+   very fix it existed to prove.
+3. **Assert against the source of truth, not a re-derived rendering of it.** If a UI value is
+   computed for display, asserting it proves the computation, not the state — such a case can fail
+   on a working build and pass on a broken one.
+
+A spec that clicks-then-navigates, or waits unbounded, is a review finding.
 
 ## The red checkpoint commit
 
