@@ -55,7 +55,7 @@ TRACKS = {
              "An open deferred finding, priced and dated."),
     "guard": ("Guard", "#c2461e",
               "Code that is used but that no test names — change it and "
-              "nothing goes red."),
+              "no NAMED case goes red."),
     "arc": ("Arc", "#5a53a8",
             "A scope phase not yet pulled into a plan — the long horizon."),
 }

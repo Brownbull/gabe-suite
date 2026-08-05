@@ -211,7 +211,7 @@ def guard_moves(gi: dict) -> list[dict]:
         moves.append({
             "id": f"guard:{key}", "kind": "function", "key": key,
             "title": f"{v['fn']}() is load-bearing and unguarded",
-            "detail": "Nothing fails if this breaks — " + ", ".join(why) + ".",
+            "detail": "No named case fails if this breaks — " + ", ".join(why) + ".",
             "entity": v["entity"], "file": v["file"], "usage": v["usage"],
             "lines": v["lines"], "unguarded": 1, "declared": 1, "exact": True,
             "effort": "S" if v["lines"] <= 60 else "M",

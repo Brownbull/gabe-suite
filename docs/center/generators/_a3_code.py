@@ -969,7 +969,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
             return _tgap("unguarded",
                          "no case or spec matches this route's path AND no "
                          "case names its handler — change the contract and "
-                         "nothing goes red")
+                         "no NAMED case goes red")
         if _has_journey and not any(
                 _ckind.get(c2) == "journey" for c2 in refs):
             chips.append(_tgap("journey —",
@@ -998,7 +998,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
         # is to let the reader filter TO them, not to label each one.
         return (f'<span class="tag tk t-tgap t-unguarded" title="no case '
                 f'reaches this {E(what)} by name or via a route — change it '
-                f'and nothing goes red">no case</span>')
+                f'and no NAMED case goes red">no case</span>')
 
     def _cm_tcell(f: str) -> str:
         rec = _ti["by_file"].get(f) or {}
@@ -1032,7 +1032,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                 bits.append(
                     f'<span class="tag tk {sev}" title="{n_un} of {n_all} '
                     f'declared defs are named by NO test — change them and '
-                    f'nothing goes red.{E(floor)}">unguarded '
+                    f'no NAMED case goes red.{E(floor)}">unguarded '
                     f'{n_un}/{n_all}</span>')
         return " ".join(bits)
     _rid_seen: set = set()
@@ -1197,7 +1197,7 @@ def build_code_tab(slug: str, repo: Path, intro_html: str,
                  + (f" \u00b7 showing {len(_gm_rows)}"
                     if len(_guard_moves) > len(_gm_rows) else "")
                  + ". A move is code that is USED and that no case NAMES \u2014 "
-                   "change it and nothing goes red. Files are one move each "
+                   "change it and no NAMED case goes red. Files are one move each "
                    "(writing guards is a file-sized sitting); a function is "
                    "named on its own only when it is load-bearing enough that "
                    "the guard is a single test.",

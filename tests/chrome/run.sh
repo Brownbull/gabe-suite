@@ -73,6 +73,44 @@ mkdir -p "$T/empty"
 [ "$(run_h "$T/empty")" = 2 ] \
   && ok || bad "vacuous: a dir with no qualifying pages must exit 2, not pass"
 
+# --- CHIP-CLASS COVERAGE ----------------------------------------------------
+# R10 retired the `orphan` verdict, its `.t-orph` CSS rule went with it, and 219
+# chips plus 8 filter buttons kept shipping in the gallery — rendering with bare
+# `.tag .ic` and teaching a vocabulary the generator can no longer emit. Nothing
+# here caught it: the harness checks markup contracts and asset presence, never
+# whether a `t-*` class the pages USE still has a rule that STYLES it. A gallery
+# is an exemplar; an exemplar demonstrating a dead class is drift with a
+# audience.
+# The predicate is STYLED-OR-EMITTED, not styled. A first cut asserting "every
+# t-* needs a CSS rule" fired on t-lg and t-uncl, which turned out to be live
+# semantic markers from build_center_a3.py whose visual weight comes from their
+# sibling s-med/s-gap classes. Those are correct markup, so the assertion was
+# wrong, not the gallery. Dead vocabulary is the class that is NEITHER styled
+# NOR emitted — precisely what t-orph became the moment R10 landed.
+chip_classes() {  # every t-* class the example pages actually use
+  grep -oh 'class="[^"]*\bt-[a-z0-9-]*' "$1"/*.html 2>/dev/null \
+    | grep -oh '\bt-[a-z0-9-]*' | sort -u
+}
+live_classes() {  # styled by the shell, OR emitted by a generator
+  { grep -oh '\.t-[a-z0-9-]*' "$1/assets/a3.css" 2>/dev/null | sed 's/^\.//'
+    grep -oh '\bt-[a-z0-9-]*' "$REPO"/templates/center/generators/*.py 2>/dev/null
+  } | sort -u
+}
+
+# SILENT: the shipped gallery uses no dead class
+mkshell
+dead=$(comm -23 <(chip_classes "$T/shell/example") <(live_classes "$T/shell") | tr '\n' ' ')
+[ -z "$(echo "$dead" | tr -d '[:space:]')" ] \
+  && ok || bad "silent: gallery uses t-* class(es) neither styled nor emitted: $dead"
+
+# FIRE: a class the shell no longer styles and no generator emits must be caught
+mkshell
+sed -i '0,/class="tag ic t-god"/s//class="tag ic t-retired"/' \
+  "$T/shell/example/arch-functions.html"
+dead=$(comm -23 <(chip_classes "$T/shell/example") <(live_classes "$T/shell") | tr '\n' ' ')
+[ -n "$(echo "$dead" | tr -d '[:space:]')" ] \
+  && ok || bad "fire: a t-* class neither styled nor emitted must be reported"
+
 echo "=================================="
 echo "chrome battery: $pass passed, $fail failed"
 [ "$fail" = 0 ]
