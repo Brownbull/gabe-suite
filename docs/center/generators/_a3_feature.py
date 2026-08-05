@@ -26,6 +26,7 @@ from _a3_evidence import (
     collect_set,
     is_reference,
     parse_flows,
+    workflow_nav_section,
 )
 from _a3_render import (kind_ic, kind_tag, 
     E,
@@ -1320,10 +1321,25 @@ def build_feature_pages(ctx) -> list[str]:
         # coercions in _a3_evidence handle the known bad shapes, and this backstop
         # catches any I did not enumerate — a malformed proof manifest degrades
         # ONE entity's Evidence tab to a named gap, never aborts the whole build.
+        # The workflow navigator FRONTS the tab when this entity's census
+        # exists (ctx.center/workflows/<slug>.json — an accumulator, authored
+        # by /gabe-cc-update); an absent census renders the NAMED absence line
+        # instead — never silence, never a fake empty tree (report-never-gate;
+        # /gabe-pulse S8 nags the debt). A census this build cannot read
+        # degrades ONE entity's section to a named gap, never aborts.
+        try:
+            _wf_html, _wf_has = workflow_nav_section(slug, ctx.center)
+        except Exception as _wf_err:                       # noqa: BLE001
+            print(f"    ⚠ feature-{slug}.html workflow section degraded to a "
+                  f"gap: {type(_wf_err).__name__}: {_wf_err}")
+            _wf_html, _wf_has = gap(
+                "Workflows",
+                f"workflows/{slug}.json ({type(_wf_err).__name__})"), False
         try:
             evidence = build_evidence_tab(
                 _cov, ctx.labels.get(slug, slug).lower(),
-                repo=ctx.repo_root, corpora=ctx.corpora)
+                repo=ctx.repo_root, corpora=ctx.corpora,
+                has_workflows=_wf_has)
         except Exception as _ev_err:                       # noqa: BLE001
             print(f"    ⚠ feature-{slug}.html Evidence tab degraded to a gap: "
                   f"{type(_ev_err).__name__}: {_ev_err}")
@@ -1332,7 +1348,8 @@ def build_feature_pages(ctx) -> list[str]:
         if not evidence:
             evidence = gap("Proof sets", f"_a3_feature.ENTITY_PROOFS['{slug}']")
         evidence = _action_block("evidence", "sec-ev-actions",
-                                 "all actions on Overview", "sec-ov-actions") + evidence
+                                 "all actions on Overview",
+                                 "sec-ov-actions") + _wf_html + evidence
         # Tests action table fronts the Tests tab (kinds/matrix are the record).
         tests_tab = _action_block("tests", "sec-tests-actions",
                                   "all actions on Overview", "sec-ov-actions") + tests_tab

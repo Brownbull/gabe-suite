@@ -29,6 +29,9 @@ _IC_CAM = ('<path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h
 _IC_INBOX = ('<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/>'
              '<path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 '
              '2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>')
+_IC_FLOWMAP = ('<circle cx="6" cy="6" r="3"/><circle cx="6" cy="18" r="3"/>'
+               '<path d="M6 9v6"/><circle cx="18" cy="12" r="3"/>'
+               '<path d="M9 6h6a3 3 0 0 1 3 3"/>')
 
 _SHOT_EXT = (".png", ".jpg", ".jpeg", ".webp")
 _VIDEO_EXT = (".webm", ".mp4", ".mov")
@@ -468,14 +471,144 @@ def _set_detail(s: dict, story: str = "") -> str:
     return out
 
 
+# --------------------------------------------------------------------------- #
+# The workflow navigator — census-driven. The census
+# (docs/site/center/workflows/<slug>.json) is an ACCUMULATOR (see
+# templates/center/workflows/README.md): steps change status but never vanish.
+# The page INLINES its data — center pages open over file://, where fetch() is
+# blocked (shell README, wiring trap 2) — and an absent census renders a NAMED
+# absence: never silence, never a fake empty tree (report-never-gate; the
+# /gabe-pulse S8 angle nags the debt).
+# --------------------------------------------------------------------------- #
+
+
+def _census_gap(rel: str, title: str, detail: str) -> str:
+    """The one-line honest absence state for the Evidence tab. `detail` is
+    trusted HTML (it carries the <code>command</code> that clears the debt)."""
+    return (f'<div class="callout"><h3>Workflows — {E(title)}</h3>'
+            f'<div class="items"><span>Source: <b>{E(rel)}</b> — {detail} '
+            "Named gap, never a staged tree.</span></div></div>")
+
+
+def workflow_nav_section(slug: str, center_dir: Path) -> tuple[str, bool]:
+    """The Evidence tab's FIRST section — the evidence navigator (workflow
+    bracket-tree map left, the selected step's capture + provenance right),
+    mounted from the entity's census at <center>/workflows/<slug>.json.
+
+    Census present → the exemplar's rendered shape exactly (see
+    shell/example/feature-transaction.html): the sechead legend naming the
+    three proof states + ✎, the `#ev-nav-root` div, then ONE inline <script>
+    holding the data and the `EvidenceNav.mount()` call — inlined, never
+    fetched, and parsing AFTER the root div. The census is inlined verbatim
+    minus one build-time honesty pass: a `shot` path that does not resolve
+    under the center dir is HELD OUT of the inlined copy (never a broken
+    <img> — evidence-nav.js renders any `shot` entry it is given), and a
+    "running" step left with no surviving capture demotes to "unpowered" on
+    the page — the assertion claim stands, the capture claim does not. The
+    census file keeps the stale claim ON PURPOSE (accumulator law), so
+    check_workflow_drift.py still prices it as capture-debt.
+
+    No census → the one-line named absence (the debt + the command that clears
+    it). A malformed census degrades to the same shape with its reason — one
+    entity's section, never a dead build. Returns (html, census_exists)."""
+    rel = f"workflows/{slug}.json"
+    census_path = center_dir / "workflows" / f"{slug}.json"
+    if not census_path.exists():
+        return (_census_gap(
+            rel, "census not captured",
+            "absent. The workflow census is CAPTURE DEBT: author it with "
+            "<code>/gabe-cc-update</code> (the <code>/gabe-pulse</code> S8 "
+            "nag counts it)."), False)
+    try:
+        census = json.loads(census_path.read_text())
+        states = census["states"]
+        workflows = census["workflows"]
+        if (not isinstance(states, dict) or not isinstance(workflows, dict)
+                or not workflows):
+            raise ValueError("states/workflows must be non-empty objects")
+        start = census.get("start") or next(iter(workflows))
+    except Exception as err:                       # noqa: BLE001
+        print(f"    ⚠ feature-{slug}.html workflow census unreadable — "
+              f"section degraded to a named gap: {type(err).__name__}: {err}")
+        return (_census_gap(
+            rel, "census unreadable",
+            f"present but unreadable ({E(type(err).__name__)}). Correct it "
+            "with <code>/gabe-cc-update</code>."), False)
+
+    inlined: dict = {}
+    for sid, raw in states.items():
+        s = dict(raw) if isinstance(raw, dict) else raw
+        if isinstance(s, dict) and not s.get("grp"):
+            shots = [u for u in (s.get("shot") or []) if isinstance(u, str)]
+            live = [u for u in shots if (center_dir / u).exists()]
+            for u in shots:
+                if u not in live:
+                    print(f"    ⚠ feature-{slug}.html workflow '{sid}': "
+                          f"capture missing on disk, held out of the page: {u}")
+            if live != shots:
+                if live:
+                    s["shot"] = live
+                else:
+                    s.pop("shot", None)
+            if s.get("st") == "running" and not live:
+                s["st"] = "unpowered"
+                print(f"    ⚠ feature-{slug}.html workflow '{sid}': demoted "
+                      f"running→unpowered on the page — no capture on disk; "
+                      f"the census keeps the claim for the drift checker")
+        inlined[sid] = s
+
+    def _js(obj) -> str:
+        # A literal </ inside a JSON string would close the inline script
+        # mid-data; <\/ is the same string to the JS parser.
+        return json.dumps(obj, ensure_ascii=False,
+                          separators=(",", ":")).replace("</", "<\\/")
+
+    head = sechead(
+        "Evidence", "Workflows", "#6b46c1", _IC_FLOWMAP,
+        sub="the steps this census has captured, and what proves each — pick a "
+            "workflow, click a node, read its capture",
+        id_="sec-ev-flows", open_=True,
+        info='<div class="leg">The map is the index; the screenshot is the '
+             'evidence. Node colour is the PROOF state: '
+             '<span class="tag s-ok">running</span> a capture and an assertion '
+             'both exist &middot; <span class="tag s-warn">unpowered</span> '
+             'asserted (api/unit/e2e) but never photographed &middot; '
+             '<span class="tag s-gap">ghost</span> neither — a named absence, '
+             'never a staged shot. <b>&#9998;</b> marks a step that WRITES '
+             'data; its panel maps every field to the function that writes it '
+             'and the model it lands in. Sections with real complexity are '
+             'their own linked workflows (&#10696;), and a shared one returns '
+             'to whichever parent you entered from.</div>')
+    # The mount script sits AFTER the root div (same fragment, source order),
+    # and evidence-nav.js is a NON-deferred head include in feature.html — the
+    # global exists when this parses (shell README, wiring trap 1). Do not add
+    # includes here and never add `defer` there.
+    mount = (
+        "<script>\n"
+        "/* Evidence navigator DATA — INLINED, never fetched: center pages\n"
+        "   open over file://, where fetch() is blocked (shell README). */\n"
+        'EvidenceNav.mount(document.getElementById("ev-nav-root"),\n'
+        f"  {{states: {_js(inlined)},\n"
+        f"   workflows: {_js(workflows)},\n"
+        f"   start: {_js(start)}}});\n"
+        "</script>")
+    return (head + '<div id="ev-nav-root"></div>' + mount, True)
+
+
 def build_evidence_tab(cov: dict, label: str = "this entity",
-                       repo=None, corpora: list | None = None) -> str:
+                       repo=None, corpora: list | None = None,
+                       has_workflows: bool = False) -> str:
     """The Evidence tab for one entity, rendered from collect_coverage(): a
     header table of its proof sets — each row carrying its ROLE (principal ·
     edge · reference · supporting, or unclassified) and opening onto its own
     galleries — followed by one PLACEHOLDER row per card flow no classified set
     covers. A declared set with nothing on disk keeps its row and reads as a
-    named gap; an uncovered flow reads as an unproven one."""
+    named gap; an uncovered flow reads as an unproven one.
+
+    `has_workflows` — the caller mounted the workflow navigator ahead of this
+    tab (workflow_nav_section, census present): the pane's ONE subnav gains
+    the Workflows link. The absence line gets no nav entry, and this section
+    never emits a second nav bar (shell README, wiring trap 3)."""
     sets = cov["sets"]
     if not sets and not cov["unproven"]:
         return ""
@@ -576,8 +709,10 @@ def build_evidence_tab(cov: dict, label: str = "this entity",
     specs = sorted({s["man"]["spec"] for s in sets
                     if isinstance(s["man"].get("spec"), str) and s["man"]["spec"]})
 
-    html = subnav([("sec-ev-sets", "Proof sets", _IC_CAM),
-                   ("sec-ev-gaps", "Not proven here", _IC_INBOX)])
+    html = subnav(([("sec-ev-flows", "Workflows", _IC_FLOWMAP)]
+                   if has_workflows else [])
+                  + [("sec-ev-sets", "Proof sets", _IC_CAM),
+                     ("sec-ev-gaps", "Not proven here", _IC_INBOX)])
     html += sechead(
         "Evidence", "Proof sets", "#0f766e", _IC_CAM,
         sub="what a person can look at and judge — captured by the e2e runs, "

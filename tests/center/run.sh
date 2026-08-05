@@ -1873,6 +1873,78 @@ printf '# scratch\n' >> "$PGR/src/wall.py"
 [ $? = 3 ] && ok || bad "prove-guard: a dirty file must be refused (the revert would not be exact)"
 (cd "$PGR" && git checkout -- src/wall.py)
 
+# --- evidence navigator: the census-driven mount (shell README wiring traps) --
+# The census (docs/site/center/workflows/<slug>.json) drives the Evidence tab's
+# Workflows section. Reference census: tests/center/fixtures/
+# workflow-census-gadget.json (2 workflows, 8 states, all three proof states).
+
+# Census ABSENT (the main fixture has none): the honest one-line absence must
+# render — the debt named, the clearing command stated — and no mount, no fake
+# tree, no subnav link. MUTATION that fires these: in workflow_nav_section,
+# return the mounted section (or "") when the census file is missing.
+grep -q 'census not captured' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "wf-census absent: the named absence line must render"
+grep -q 'gabe-cc-update' "$FIX/docs/site/center/feature-gadget.html" \
+  && ok || bad "wf-census absent: the absence line must carry the command that clears the debt"
+grep -q 'ev-nav-root' "$FIX/docs/site/center/feature-gadget.html" \
+  && bad "wf-census absent: no census must mean NO mount root — never a fake empty tree" || ok
+grep -q 'sec-ev-flows' "$FIX/docs/site/center/feature-gadget.html" \
+  && bad "wf-census absent: the pane subnav must NOT grow a Workflows link" || ok
+
+# Census PRESENT, with two captures on disk and one referenced file that is NOT
+# (gadget-gid.png is deliberately never written).
+WFC="$T/wfcensus"; mk_fixture "$WFC"
+mkdir -p "$WFC/docs/site/center/workflows" \
+         "$WFC/docs/site/center/assets/evidence-states"
+cp "$REPO/tests/center/fixtures/workflow-census-gadget.json" \
+   "$WFC/docs/site/center/workflows/gadget.json"
+python3 - "$WFC" <<'PY'
+import base64, sys
+from pathlib import Path
+png = base64.b64decode(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk"
+    "YPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==")
+d = Path(sys.argv[1]) / "docs/site/center/assets/evidence-states"
+(d / "gadget-home.png").write_bytes(png)
+(d / "gadget-plus.png").write_bytes(png)
+# gadget-gid.png stays missing on purpose: the demotion case below.
+PY
+[ "$(build "$WFC" "$SHELL_SRC")" = 0 ] && ok || { bad "wf-census: fixture must build"; cat "$T/build.out"; }
+WFP="$WFC/docs/site/center/feature-gadget.html"
+# The mounted shape: legend + root div + inline mount + the data INLINED.
+# MUTATION: drop any one emission (root div, mount call, legend, json.dumps of
+# states) from workflow_nav_section — its grep here goes red.
+grep -q 'id="ev-nav-root"' "$WFP" && ok || bad "wf-census: the mount root div must render"
+grep -q 'EvidenceNav.mount' "$WFP" && ok || bad "wf-census: the inline mount call must render"
+grep -q 'never a staged shot' "$WFP" && ok || bad "wf-census: the legend naming the three proof states must render"
+grep -q '"l":"resize"' "$WFP" && ok || bad "wf-census: the census states must be INLINED — file:// pages cannot fetch"
+grep -q 'gadget-home.png' "$WFP" && ok || bad "wf-census: a capture that IS on disk must survive into the page"
+grep -q 'href="#sec-ev-flows"' "$WFP" && ok || bad "wf-census: the pane's ONE subnav must gain the Workflows link"
+[ "$(grep -o '<nav class="subnav">' "$WFP" | wc -l)" -le 5 ] \
+  && ok || bad "wf-census: the section must join the pane's subnav, never add a second one"
+# Missing capture: held out of the inlined copy, step demoted, note printed —
+# never a broken <img>. MUTATION: inline census states unchecked (skip the
+# center-dir probe) in workflow_nav_section.
+grep -q 'gadget-gid.png' "$WFP" \
+  && bad "wf-census: a capture missing on disk must be HELD OUT of the page (broken img)" || ok
+grep -q '"l":"gid","st":"unpowered"' "$WFP" \
+  && ok || bad "wf-census: a running step with no surviving capture must render unpowered"
+grep -q 'capture missing on disk' "$T/build.out" \
+  && ok || bad "wf-census: holding a capture out must print a build note, never happen silently"
+# ... and the census FILE keeps the stale claim (accumulator law — the drift
+# checker prices it, the build must not "fix" it).
+grep -q 'gadget-gid.png' "$WFC/docs/site/center/workflows/gadget.json" \
+  && ok || bad "wf-census: the build must NEVER edit the census file (accumulator)"
+# Wiring trap 1, pinned: evidence-nav.js must NOT be deferred — a deferred
+# asset runs after the inline mount parses, a silent blank section. MUTATION:
+# add `defer` to the include in shell/feature.html.
+grep -q '<script src="assets/evidence-nav.js"></script>' "$SHELL_SRC/feature.html" \
+  && ok || bad "wf-nav include: shell feature.html must carry the plain include — no defer, no rename"
+grep 'evidence-nav.js' "$WFP" | grep -q 'defer' \
+  && bad "wf-nav include: the generated page carries a DEFERRED evidence-nav.js (silent blank section)" || ok
+grep -q 'evidence-nav.js' "$WFP" \
+  && ok || bad "wf-nav include: the generated page must include evidence-nav.js"
+
 echo
 echo "center battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

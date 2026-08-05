@@ -1,0 +1,114 @@
+{
+  "entity": "gadget",
+  "start": "manual",
+  "states": {
+    "home": {
+      "l": "home",
+      "st": "running",
+      "role": "principal",
+      "uc": "the gadget list — the workflow's entry point.",
+      "cap": "2026-07-11 · g1 set",
+      "spec": "tests/test_gadgets.py",
+      "shot": ["assets/evidence-states/gadget-home.png"],
+      "code": ["get_gadget() (src/api.py:6)"],
+      "models": ["GadgetOut.gid"],
+      "cids": ["C18"]
+    },
+    "plus": {
+      "l": "new gadget",
+      "st": "running",
+      "role": "principal",
+      "uc": "the create form opens with an empty draft.",
+      "cap": "2026-07-11 · g1 set",
+      "spec": "tests/test_gadgets.py",
+      "shot": ["assets/evidence-states/gadget-plus.png"],
+      "code": ["build_gadget() (src/funcs.py:9)"],
+      "cids": ["C18"]
+    },
+    "save": {
+      "l": "save",
+      "st": "unpowered",
+      "role": "principal",
+      "uc": "the gadget persists and gets its public id.",
+      "cap": "capture owed (create run)",
+      "spec": "tests/test_gadgets.py",
+      "code": ["make_gid() (src/funcs.py:6)"],
+      "cids": ["C18"],
+      "writes": [["gid", "make_gid()", "GadgetOut"]]
+    },
+    "resize": {
+      "l": "resize",
+      "st": "ghost",
+      "role": "edge",
+      "uc": "footprint edit after save — never captured, never asserted.",
+      "cap": "never",
+      "spec": "—"
+    },
+    "fields": {
+      "l": "gadget fields",
+      "grp": 1,
+      "lnk": 1,
+      "link": "gfields",
+      "linkcur": "gid",
+      "st": "running",
+      "role": "section",
+      "uc": "the field detail section — its own linked workflow.",
+      "cap": "—",
+      "spec": "—"
+    },
+    "gid": {
+      "l": "gid",
+      "st": "running",
+      "role": "supporting",
+      "uc": "the public identifier field renders read-only.",
+      "cap": "2026-07-11 · g1 set",
+      "spec": "tests/test_gadgets.py",
+      "shot": ["assets/evidence-states/gadget-gid.png"],
+      "models": ["GadgetOut.gid"],
+      "cids": ["C18"]
+    },
+    "size": {
+      "l": "size",
+      "st": "unpowered",
+      "role": "supporting",
+      "uc": "the footprint field validates a whole number of mm.",
+      "cap": "capture owed (fields run)",
+      "spec": "tests/test_gadgets.py",
+      "models": ["GadgetOut.size"]
+    },
+    "backman": {
+      "l": "⇱ manual",
+      "grp": 1,
+      "lnk": 1,
+      "link": "__parent",
+      "st": "running",
+      "role": "section",
+      "uc": "back to the parent workflow.",
+      "cap": "—",
+      "spec": "—"
+    }
+  },
+  "workflows": {
+    "manual": {
+      "label": "manual entry workflow",
+      "gates": [["whole-number size", "the footprint validates as an integer of mm"]],
+      "nodes": ["home", "plus", "save", "resize", "fields"],
+      "tree": [["home", 210, 42], ["plus", 210, 98], ["save", 210, 154], ["resize", 110, 224, "r"], ["fields", 300, 224]],
+      "edges": [["home", "plus"], ["plus", "save"], ["save", "fields", "fx"]],
+      "taps": [[210, 166, "resize"]],
+      "bands": [],
+      "h": 270
+    },
+    "gfields": {
+      "label": "gadget fields",
+      "sub": 1,
+      "gates": [],
+      "nodes": ["gid", "size"],
+      "tree": [["backman", 86, 38], ["gid", 128, 100, "r"], ["size", 146, 152, "r"]],
+      "edges": [],
+      "taps": [[86, 50, "gid"], [128, 112, "size"]],
+      "bands": [],
+      "h": 200
+    }
+  }
+}
