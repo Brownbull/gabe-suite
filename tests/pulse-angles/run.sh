@@ -54,12 +54,35 @@ run "$r" | grep -q "no adversarial pass" && ok "S1 fires: phases done, no roast"
 r=$(repo s1b); plan "$r" "$DONE4"; commits "$r" 2 "feat: work"; commits "$r" 1 "chore: roast findings triaged"
 run "$r" | grep -q "no adversarial pass" && bad "S1 fired despite a roast in history" || ok "S1 silent once a roast is on record"
 
+# a REVIEW commit mentioning "adversarial" is not a roast — it must NOT reset the
+# counter (measured false reset: "4-lens adversarial pass" silenced a whole cycle)
+r=$(repo s1c); plan "$r" "$DONE4"; commits "$r" 5 "review: 4-lens adversarial pass verified"
+run "$r" | grep -q "no adversarial pass" && ok "S1 not silenced by review prose saying 'adversarial'" || bad "S1 reset by a review commit — reviews are not roasts"
+
+# the emitted command is pasteable VERBATIM: perspective present, quote closed,
+# goal clipped at a word boundary (the 60-char mid-word clip once shipped
+# '/gabe-roast "…and the myopi' — pasted, it BLOCKED)
+LONGGOAL='{"goal":"Pay down the 3-month deferred-findings backlog and the myopic walkthrough debt","phases":[
+ {"id":"1","cells":{"exec":"done"}},{"id":"2","cells":{"exec":"done"}},
+ {"id":"3","cells":{"exec":"done"}},{"id":"4","cells":{"exec":"done"}}]}'
+r=$(repo s1d); plan "$r" "$LONGGOAL"; commits "$r" 5 "feat: work"
+line=$(run "$r" | grep "gabe-roast")
+if echo "$line" | grep -q '/gabe-roast Sweeper "' && echo "$line" | grep -q '"$' && ! echo "$line" | grep -q 'myopi'; then
+  ok "S1 command carries a perspective, closes its quote, clips at a word boundary"
+else bad "S1 command is not pasteable verbatim: $line"; fi
+
 # ── S2 · structural ────────────────────────────────────────────────────────
 r=$(repo s2a); commits "$r" 30 "feat: work"
 run "$r" | grep -q "since the last structural scan" && ok "S2 fires: 30 commits, no health scan" || bad "S2 did not fire"
 
 r=$(repo s2b); commits "$r" 30 "feat: work"; commits "$r" 1 "chore: gabe-health scan clean"
 run "$r" | grep -q "since the last structural scan" && bad "S2 fired right after a health scan" || ok "S2 silent right after a scan"
+
+# ordinary prose containing "churning" is not a scan record — it must NOT reset
+# (measured: "archmap.json stops churning on every regen" silenced S2 for a
+# 100+-commit cycle in which no scan had run)
+r=$(repo s2c); commits "$r" 30 "feat: work"; commits "$r" 1 "refactor: archmap stops churning on every regen"
+run "$r" | grep -q "since the last structural scan" && ok "S2 not silenced by prose saying 'churning'" || bad "S2 reset by incidental commit prose"
 
 # ── S3 · journey proof ─────────────────────────────────────────────────────
 r=$(repo s3a); plan "$r" '{"goal":"g","phases":[{"id":"7","proof_type":"journey","cells":{"exec":"done","review":"done"},"proof":null}]}'
@@ -91,6 +114,14 @@ run "$r" | grep -q "belong to the transaction code map" && ok "S6 fires: 3 files
 
 r=$(repo s6b); mkcenter "$r"; cd "$r"; echo x >> a.py; git add -A; cd - >/dev/null
 run "$r" | grep -q "belong to the transaction code map" && bad "S6 fired on a single file" || ok "S6 silent below the threshold"
+
+# clean tree + a .kdbp bookkeeping commit on top must not blind the signal — the
+# fallback walks back to the newest WORK commit (measured: 15 beat-end
+# invocations, 0 lines, every HEAD~1..HEAD diff was bookkeeping-only)
+r=$(repo s6c); mkcenter "$r"
+cd "$r" && for f in a.py b.py c.tsx; do echo x >> $f; done && git add -A && git commit -qm "feat: entity work" \
+  && mkdir -p .kdbp && echo tick > .kdbp/LEDGER.md && git add -A && git commit -qm "chore(kdbp): tick" && cd - >/dev/null
+run "$r" | grep -q "belong to the transaction code map" && ok "S6 sees past the .kdbp bookkeeping commit" || bad "S6 blinded by the bookkeeping-commit-last pattern"
 
 # ── S7 · explanation ───────────────────────────────────────────────────────
 r=$(repo s7a); mkcenter "$r"; cd "$r"; for f in a.py b.py c.tsx; do echo x >> $f; done; git add -A; cd - >/dev/null

@@ -18,7 +18,7 @@ from a clean one.
 
 `--one-line` prints AT MOST ONE row, formatted for a beat's terminal report:
 
-    PULSE: 6 phases done, no adversarial pass on this plan → /gabe-roast "<subject>"
+    PULSE: 6 phases done, no adversarial pass on this plan → /gabe-roast Sweeper "<subject>"
 
 and prints NOTHING when there is nothing. There is no "all clear" line: a beat
 that ends with a reassurance every run has re-invented the noise this avoids.
@@ -120,18 +120,34 @@ def s1_roast(root: Path, plan: dict | None, cfg: dict | None):
     done = done_phases(plan)
     if len(done) < THRESHOLDS["phases_before_roast"]:
         return None
-    since = commits_since_grep(root, r"roast|adversarial")
+    # Reset only on a roast RECORD, never on incidental prose: "adversarial" in
+    # the old pattern matched a review commit's "4-lens adversarial pass" line
+    # (measured on a copy of the real repo, 2026-08-07) and silenced the signal
+    # for a whole cycle. A review is not a roast.
+    since = commits_since_grep(root, r"gabe-roast|\broast(ed|s)?\b")
     if since is None:
         return Unavailable("no commit history to measure against")
     if since < len(done):
         return None
+    # The command must be pasteable VERBATIM: the old form clipped the goal
+    # mid-word inside the quotes AND omitted the perspective /gabe-roast
+    # requires — pasted as-is it BLOCKED (observed, 7-minute round trip).
+    # Sweeper is the archetype for accumulated-estate gaps — the perspective
+    # the operator picked unprompted for exactly this roast shape.
     goal = (plan.get("goal") or "this plan").strip()
+    if len(goal) > 60:
+        goal = (goal[:60].rsplit(" ", 1)[0] or goal[:60]) + "…"
     return (f"{len(done)} phases done, no adversarial pass on this plan",
-            f'/gabe-roast "{goal[:60]}"')
+            f'/gabe-roast Sweeper "{goal}"')
 
 
 def s2_health(root: Path, plan: dict | None, cfg: dict | None):
-    since = commits_since_grep(root, r"gabe-health|health scan|god file|churn")
+    # Reset only on a scan RECORD. The old pattern's loose words ("churn",
+    # "god file") collided with ordinary commit prose — measured on a copy of
+    # the real repo (2026-08-07): "archmap.json stops churning on every regen"
+    # re-zeroed the counter and kept S2 silent for an entire 100+-commit cycle
+    # while no scan had run.
+    since = commits_since_grep(root, r"gabe-health|structural scan|health scan")
     if since is None:
         return Unavailable("no commit history to measure against")
     if since < THRESHOLDS["commits_before_health"]:
@@ -182,10 +198,20 @@ def _entity_code_files(cfg: dict) -> dict[str, list[str]]:
 
 
 def _changed_files(root: Path) -> list[str]:
-    out = sh(["git", "diff", "--name-only", "HEAD"], root).splitlines()
-    if not out:
-        out = sh(["git", "diff", "--name-only", "HEAD~1", "HEAD"], root).splitlines()
-    return [f for f in out if f.strip()]
+    out = [f for f in sh(["git", "diff", "--name-only", "HEAD"], root).splitlines() if f.strip()]
+    if out:
+        return out
+    # Clean tree: at beat end the newest commit is almost always the .kdbp
+    # bookkeeping commit (cell tick, ledger row), and a HEAD~1..HEAD fallback
+    # sees only .kdbp files — measured on the real repo: 15 beat-end
+    # invocations, 0 lines, because every diff the fallback saw was
+    # bookkeeping. Walk back to the newest commit that touched actual work.
+    for sha in sh(["git", "log", "-10", "--format=%H"], root).split():
+        files = [f for f in sh(["git", "diff", "--name-only", f"{sha}~1", sha],
+                               root).splitlines() if f.strip()]
+        if files and not all(f.startswith(".kdbp/") for f in files):
+            return files
+    return []
 
 
 def s5_scope(root: Path, plan: dict | None, cfg: dict | None):

@@ -288,12 +288,12 @@ So a satellite earns its line only when repo state says it would find something.
 
 | id | Fires when | Surfaces | Source |
 |---|---|---|---|
-| S1 | ≥3 phases done and no commit since the plan started mentions a roast | `/gabe-roast` | PLAN.json + `git log` |
-| S2 | ≥25 commits since the last structural scan | `/gabe-health` | `git log` |
+| S1 | ≥3 phases done and no roast RECORD in recent commits (`gabe-roast`/"roast" — review prose saying "adversarial" is NOT a reset; measured false-silence 2026-08-07) | `/gabe-roast Sweeper "<goal>"` — pasteable verbatim: perspective included, goal clipped at a word boundary, quote closed | PLAN.json + `git log` |
+| S2 | ≥25 commits since the last scan RECORD (`gabe-health`/"structural scan"/"health scan" — loose words like "churn" collided with ordinary prose and silenced a full cycle; measured 2026-08-07) | `/gabe-health` | `git log` |
 | S3 | a reviewed phase declares `proof_type: journey\|visual` and carries no `proof` | `/gabe-myopic` | PLAN.json |
 | S4 | a doc page is older than the markdown it was rendered from | `/gabe-docsite` | `scripts/checkers/docsite-staleness.sh` |
 | S5 | **unavailable** — see 5.4 | `/gabe-scope-change` | — |
-| S6 | ≥3 changed files belong to one entity's code map | `/gabe-cc-entity <slug>` | center config + `git diff` |
+| S6 | ≥3 changed files belong to one entity's code map (clean tree ⇒ the diff source walks back past pure-`.kdbp` bookkeeping commits to the newest WORK commit — beat ends land right after the tick commit, which blinded the old `HEAD~1..HEAD` fallback; measured 15/15 silent, 2026-08-07) | `/gabe-cc-entity <slug>` | center config + `git diff` |
 | S7 | the diff spans ≥2 layers across ≥3 files | `/gabe-imagine` | center config + `git diff` |
 
 Thresholds are deliberately coarse. A threshold tuned to fire often is a threshold that will be
@@ -306,7 +306,7 @@ Every spine beat (`plan · red · execute · review · commit · push`) ends by 
 `angles.py --one-line` and printing its output verbatim. It emits **at most one row**:
 
 ```
-PULSE: 6 phases done, no adversarial pass on this plan → /gabe-roast "the docs merge"
+PULSE: 6 phases done, no adversarial pass on this plan → /gabe-roast Sweeper "the docs merge"
 ```
 
 and **nothing** when no trigger fires. There is deliberately no all-clear line: a beat that ends
