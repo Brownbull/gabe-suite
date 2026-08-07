@@ -266,6 +266,52 @@ JSON
 grep -q 'preserved phase 1 proof' "$T/out" \
   && ok || bad "bug2: the preservation must say so in a note"
 
+# --- declared Scope/Entities bullets → mirror lists (ruling 2026-08-07, ask A) ---
+DE="$T/declared"; mkdir -p "$DE/.kdbp"
+cat > "$DE/.kdbp/PLAN.md" <<'MD'
+## Phases
+
+| # | Phase | Exec |
+|---|-------|------|
+| 1 | A | ⬜ |
+| 2 | B | ⬜ |
+| 3 | C | ⬜ |
+
+## Phase Details
+
+### Phase 1 — A
+
+- **Scope:** web/src/routes/items.tsx, api/routers/items.py
+- **Entities:** `repertorio`, `pantry`
+
+### Phase 2 — B
+
+- **Entities:** none — cross-cutting infra, no registered entity applies
+
+### Phase 3 — C
+
+MD
+[ "$(run "$DE")" = 0 ] && ok || bad "declared: fixture runs"
+[ "$(J "$DE" "p['phases'][0]['scope']")" = "['web/src/routes/items.tsx', 'api/routers/items.py']" ] \
+  && ok || bad "declared: Scope bullet must mirror to a list"
+[ "$(J "$DE" "p['phases'][0]['entities']")" = "['repertorio', 'pantry']" ] \
+  && ok || bad "declared: Entities bullet must mirror to slugs (backticks stripped)"
+[ "$(J "$DE" "p['phases'][1]['entities']")" = "[]" ] \
+  && ok || bad "declared: 'none — <reason>' must mirror to [] (explicit honest blank)"
+[ "$(J "$DE" "'entities' in p['phases'][2]")" = "False" ] \
+  && ok || bad "declared: absent bullet must emit NO key (absent ≠ declared-none)"
+
+# preservation: mirror-recorded entities survive a regen whose .md lacks the bullet
+PE="$T/presental"; mkdir -p "$PE/.kdbp"
+sed -n '1,14p' "$DE/.kdbp/PLAN.md" | head -9 > "$PE/.kdbp/PLAN.md"
+printf '## Phase Details\n\n### Phase 1 — A\n\n' >> "$PE/.kdbp/PLAN.md"
+cat > "$PE/.kdbp/PLAN.json" <<'JSON'
+{"version": 1, "phases": [{"id": "1", "proof": null, "proof_type": null, "cases": null, "entities": ["repertorio"]}]}
+JSON
+[ "$(run "$PE")" = 0 ] && ok || bad "declared: preservation fixture runs"
+[ "$(J "$PE" "p['phases'][0]['entities']")" = "['repertorio']" ] \
+  && ok || bad "declared: recorded entities must survive a regen with no .md bullet"
+
 echo
 echo "plan-mirror battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

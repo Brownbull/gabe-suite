@@ -106,6 +106,18 @@ def detail_proof_type(pid):
     m = re.search(r"^proof_type:\s*(\S+)", blocks.get(pid, ""), re.M)
     return None if not m or m.group(1) in ("null", "~") else m.group(1)
 
+def detail_list(pid, label):
+    """Comma-separated bullet → list of trimmed items (backticks stripped).
+
+    `none — <reason>` mirrors to [] (an EXPLICIT honest blank — declared-none is
+    a different fact from never-declared, which stays None/absent)."""
+    bullet = detail(pid, label)
+    if bullet is None:
+        return None
+    if re.match(r"^none\b", bullet.strip(), re.I):
+        return []
+    return [t.strip(" `") for t in bullet.split(",") if t.strip(" `")]
+
 # --- old mirror (drift + preservation source) ---
 old_path = Path(".kdbp/PLAN.json")
 old_by_id = {}
@@ -128,13 +140,18 @@ for cells in rows:
     proof_type = detail_proof_type(pid)
     cases = detail(pid, "Cases")
     review = detail(pid, "Review")
-    for field, mdval in (("proof", proof), ("proof_type", proof_type), ("cases", cases), ("review", review)):
+    scope = detail_list(pid, "Scope")
+    entities = detail_list(pid, "Entities")
+    for field, mdval in (("proof", proof), ("proof_type", proof_type), ("cases", cases),
+                         ("review", review), ("scope", scope), ("entities", entities)):
         if mdval is None and old_ph.get(field) is not None:
             notes.append(f"preserved phase {pid} {field} from old mirror (no .md source): {str(old_ph[field])[:60]!r}")
     proof = proof if proof is not None else old_ph.get("proof")
     proof_type = proof_type if proof_type is not None else old_ph.get("proof_type")
     cases = cases if cases is not None else old_ph.get("cases")
     review = review if review is not None else old_ph.get("review")
+    scope = scope if scope is not None else old_ph.get("scope")
+    entities = entities if entities is not None else old_ph.get("entities")
     ph = {
         "id": pid,
         "name": cell("phase"),
@@ -148,6 +165,11 @@ for cells in rows:
         "cases": cases,
         "review": review,
     }
+    # optional declared fields — emitted only when they exist (absent ≠ declared-none)
+    if scope is not None:
+        ph["scope"] = scope
+    if entities is not None:
+        ph["entities"] = entities
     for cname in CELL_COLS:
         glyph = cell(cname)
         if glyph is None or glyph == "—":

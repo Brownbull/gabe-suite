@@ -249,6 +249,22 @@ into a hook block, never into silence.
   the project has no graft index; NEVER report zero findings when the check could not run — print
   `REACH DRIFT NOT RUN` with the reason. **`unreached` is the running measurement** of whether the
   graph's edges are complete, and it is the evidence the twin-propagation decision waits on.
+- **ENTITY DRIFT** — the phase's declared `entities` (PLAN.json, written at plan time from the
+  operator-confirmed Entities bullet — ruling 2026-08-07) and the entities the diff actually
+  touched disagree. Touched = changed files fnmatched against `center.config.json`
+  `entities{}.code` globs — the ledger's resolver, path-derived or absent, never keyword-guessed.
+  Two shapes (report-never-gate, D1): **undeclared-touched** the diff changed entity X's code but
+  the phase declared only Y — either the declaration was short or the work grew sideways ·
+  **declared-untouched** a declared entity's code never appeared in the diff — the declaration
+  was speculative, or its work is still owed. Priced like any finding; the triage outcome is
+  authoritative, and the fix is a one-line edit to the phase's Entities bullet + mirror (E5),
+  never a code change. Detection lives HERE for the same reason WORKFLOW/REACH DRIFT do — only
+  review sees the diff. Skip silently when the phase has no `entities` key (never declared) or
+  the project has no center config; a declared-`[]` phase (an explicit `none — <reason>`) IS
+  checked — touching entity code under a none-declaration is exactly the drift worth naming.
+  NEVER report zero findings when the check could not run — print `ENTITY DRIFT NOT RUN` with
+  the reason. The board's in-flight view renders declared-vs-touched live (inflight.json); this
+  subject is where the disagreement becomes a priced, triaged record.
 - **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
   triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;

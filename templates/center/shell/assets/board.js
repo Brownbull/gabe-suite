@@ -150,12 +150,39 @@
     (p.types || []).forEach(function (t) {
       tags.push('<span class="bc-area">' + esc(t) + '</span>');
     });
+    /* declared entities (plan-time, operator-confirmed — ruling 2026-08-07):
+       null/undefined = never declared → NOTHING renders (absence is absence);
+       [] = an explicit `none — <reason>` declaration → say so honestly. */
+    if (p.entities && p.entities.length) {
+      p.entities.forEach(function (s) {
+        tags.push('<span class="bc-ent" style="--ec:var(--accent)"><i></i>' + esc(s) + '</span>');
+      });
+    } else if (p.entities) {
+      tags.push('<span class="bc-area">entities: none declared</span>');
+    }
     tags.push('<span class="bc-' + (p.owes && p.owes.length ? 'gate' : 'ripe') + '">'
       + (p.owes && p.owes.length ? 'owes ' + p.owes.join(', ') : 'complete')
       + '</span>');
+    /* live overlay — window.GABE_INFLIGHT is the beat-tail projection
+       (inflight.js sibling; absent file = no overlay, static payload stands) */
+    var live = '';
+    var IF = window.GABE_INFLIGHT;
+    if (IF && IF.active && String(IF.current_phase) === String(p.id)) {
+      var bits = [];
+      if (IF.work_source === 'dirty') bits.push(IF.dirty_files + ' file(s) in flight');
+      else if (IF.work_source && IF.work_source !== 'none') bits.push('last work @ ' + IF.work_source);
+      (IF.touched || []).forEach(function (t) {
+        bits.push('touched ' + t.slug + ' ×' + t.files);
+      });
+      if (bits.length) {
+        live = '<p class="bsdlive"><b>live</b> · ' + esc(bits.join(' · '))
+          + (IF.head ? ' · head ' + esc(IF.head) : '') + '</p>';
+      }
+    }
     det.innerHTML = '<div class="bsdhead"><b>' + esc(p.id) + ' — ' + esc(p.name)
       + '</b><button class="bsdx" aria-label="close">×</button></div>'
       + '<div class="bsdtags">' + tags.join('') + '</div>'
+      + live
       + (p.desc ? '<p>' + esc(p.desc) + '</p>' : '')
       + '<div class="bc-rail">' + rail + '</div>';
     det.hidden = false;

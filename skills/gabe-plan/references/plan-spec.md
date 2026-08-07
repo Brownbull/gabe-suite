@@ -131,6 +131,7 @@ Execute the standard planning process:
    - Estimated complexity: low / medium / high
    - **Types** — phase type tags (drives Step 3.5 section assembly). Examples: `[ai-agent, integration]`, `[data-migration, multi-tenant]`, `[user-facing, client-state]`. Tags MUST come from the canonical closed list (mirrors `tier-section-index.md` so it survives a missing index): `{data-migration, persistence, multi-tenant, org-scoped, ai-agent, llm, user-facing, external-api, perf-sensitive, client-state, spa, pwa, auth, session, async-worker, queue, realtime, streaming, sse, migration, rollout, upload, storage, cdn, email, push, sms, design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`. Freeform tags (`frontend`, `ui-screens`) silently disable `/gabe-next` hybrid dispatch and `/gabe-execute` evidence classification — reject them and re-ask. See `~/.claude/templates/gabe/tier-sections/tier-section-index.md` for the full section mapping.
    - **Runtime journey evidence** — for phases tagged `{user-facing, native-mobile, mobile-web, web, upload, realtime, streaming, file-media, auth, session, notifications}`, include a concrete verification checkpoint that exercises the changed path on the target runtime and captures artifacts. Unit/static checks are not enough for these phase types.
+   - **Entities (command-center projects only, ruling 2026-08-07)** — PROPOSE the center entity slug(s) this phase's work touches by matching the phase's Scope files/globs against `docs/site/center/center.config.json` `entities{}.code` globs (and the archmap); present the proposal with the plan and let the operator confirm or correct it. A phase whose work maps to no registered entity declares `none — <reason>` — an honest blank, NEVER a guessed slug (the board's own attribution law: path-derived or absent). Declared entities are what the center's in-flight view can trust BEFORE any code exists; `/gabe-review` verifies declared-vs-touched drift after.
 3. **Identify dependencies** between phases.
 4. **Assess risks** — Flag anything that could block progress.
 5. **Present the plan** and WAIT for user confirmation.
@@ -449,6 +450,7 @@ Only after user confirms. Write with this structure:
 - **Tier:** [mvp | ent | scale]
 - **Prototype:** [yes | no]
 - **Scope:** <files/globs this phase may touch — e.g. web/src/routes/items.tsx, api/routers/items.py>
+- **Entities:** <command-center projects only — center entity slug(s) this phase touches, e.g. `repertorio`, `pantry`; or `none — <reason>`. Proposed by /gabe-plan from Scope × center.config code globs, operator-confirmed. Mirrored to PLAN.json `entities`; read by the board's in-flight view and verified by /gabe-review (declared-vs-touched). Omit the bullet entirely in projects without a center.>
 - **References:** <existing modules/patterns/docs to reuse — e.g. src/components/ListView, docs/api-conventions.md>
 - **Acceptance:** <observable signal — e.g. "GET /api/items renders seeded rows in the browser">
 - **Checkpoint:** <verification command(s) — e.g. npm run build && npx playwright test items>
@@ -519,6 +521,11 @@ Schema (v1):
       "proof": null,
       "proof_type": null,
       "cases": null
+      // "scope": ["<file-or-glob>", ...] — mirror of the Phase Details Scope: bullet (unlocks
+      //   the pulse S5 signal's named missing source); absent when the bullet is absent
+      // "entities": ["<center slug>", ...] — command-center projects only (ruling 2026-08-07);
+      //   [] mirrors an explicit `none — <reason>` declaration; absent = never declared.
+      //   Readers render absence honestly — an unmapped phase shows blank, never a guess
       // command-center projects only: cells also carries "center": "todo" (5th lifecycle cell)
       // TDD-adopting projects: cells also carries "red": "todo" (routed to /gabe-red BEFORE Exec)
       // and "cases" mirrors the Phase Details Cases: record (written by /gabe-red, E5) —

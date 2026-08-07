@@ -272,10 +272,23 @@ def load_plan() -> dict:
     jpath = KDBP / "PLAN.json"
     if jpath.exists():
         try:
-            raw = str(json.loads(jpath.read_text()).get("current_phase") or "").strip()
+            jdoc = json.loads(jpath.read_text())
+            raw = str(jdoc.get("current_phase") or "").strip()
             if raw:
                 match = next((p for p in phases if p["num"] == raw or p["id"] == raw), None)
                 authored = f'{raw} · {match["id"]}' if match else raw
+            # Declared entities/scope live ONLY in the mirror (Phase Details
+            # bullets, ruling 2026-08-07) — the table has no such column. Join
+            # by id; an absent key stays absent (honest blank, never a guess).
+            by_id = {str(jp.get("id")): jp for jp in jdoc.get("phases", []) or []
+                     if isinstance(jp, dict)}
+            for p in phases:
+                jp = by_id.get(p["id"]) or by_id.get(p["num"])
+                if jp:
+                    if "entities" in jp:
+                        p["entities"] = jp["entities"]
+                    if "scope" in jp:
+                        p["scope"] = jp["scope"]
         except (OSError, json.JSONDecodeError):
             authored = None
     return {"version": "PLAN.md", "status": "active", "goal": "", "maturity": "",

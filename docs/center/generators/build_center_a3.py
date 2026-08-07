@@ -1946,6 +1946,19 @@ def main() -> int:
     (CENTER_OUT / "board.html").write_text(_btext)
     wrote.append(("board.html", _btext.count("{{")))
 
+    # inflight.{json,js} are beat-tail artifacts (write-inflight.py, ruling
+    # 2026-08-07) — the board skeleton references inflight.js, so a center that
+    # has never seen a beat gets an HONEST inactive stub rather than a dead
+    # link. In THIS repo the stub is permanent truth: no .kdbp by ruling R8,
+    # so the tail's writer never fires here.
+    _ifj = CENTER_OUT / "inflight.json"
+    if not _ifj.is_file():
+        _stub = {"v": 1, "active": False, "reason": "no beat has written the projection yet",
+                 "head": None, "branch": None}
+        _ifj.write_text(json.dumps(_stub, indent=2, sort_keys=True) + "\n")
+        (CENTER_OUT / "inflight.js").write_text(
+            "window.GABE_INFLIGHT = " + json.dumps(_stub, sort_keys=True) + ";\n")
+
     # The app-wide Architecture station — a consumer of the read-once map, not a
     # second read of the code. Lights up {{SIDEBAR_CODE}} across the estate.
     if BUILD_ARCHITECTURE:

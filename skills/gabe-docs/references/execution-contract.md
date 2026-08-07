@@ -38,13 +38,17 @@ SILENCE — a missing source never prints filler.
    print `NEXT: blocked — <reason>` INSTEAD of the router's line; an honest override, never
    both lines.
 
-2. **`CENTER:` pointer — conditional, one line, never a gate.** Only when
-   `docs/site/center/center.config.json` exists:
+2. **`CENTER:` — refresh the in-flight projection, then point at it. Conditional, never a
+   gate.** Only when `docs/site/center/center.config.json` exists — first run
+   `python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-cc-update/scripts/write-inflight.py .`
+   (deterministic, zero LLM: projects PLAN.json + git into `docs/site/center/inflight.json`,
+   which the board and chrome pill read at view time; silent no-op when nothing changed —
+   battery at `tests/inflight/run.sh`), then print:
    ```
-   CENTER: docs/site/center/ — board + phase strip carry this beat's PLAN state on next regen
+   CENTER: docs/site/center/ — inflight.json carries this beat's state (phase · declared vs touched entities)
    ```
-   No center → print nothing. (Same conditional shape as push-spec's terminal-env release
-   pointer — silent when inapplicable.)
+   No center → run nothing, print nothing. (Same conditional shape as push-spec's terminal-env
+   release pointer — silent when inapplicable.)
 
 3. **The PULSE line — last.** Run
    `python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line`

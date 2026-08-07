@@ -912,6 +912,9 @@ details.legset .gal{margin:8px 0 4px}
 .bsdx:hover{color:var(--ink)}
 .bsdtags{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 0}
 .bseqdet p{margin:8px 0 0;font-size:.73rem;color:var(--muted);line-height:1.5}
+/* the live overlay (inflight.js, E8 beat tail) — fresher than the regen, and looks it */
+.bseqdet p.bsdlive{color:var(--accent);font-size:.72rem}
+.bseqdet p.bsdlive b{text-transform:uppercase;letter-spacing:.06em;font-size:.64rem}
 .bseqdet .bc-rail{margin-top:10px;gap:10px}
 .bseqdet .bc-rail span{min-width:44px;font-size:.62rem}
 

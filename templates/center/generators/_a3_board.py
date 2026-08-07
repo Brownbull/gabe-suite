@@ -388,7 +388,9 @@ def build_cards(*, plan, sections, archmap, adoption, labels, entity_href,
         area = ("web" if "user-facing" in types else
                 "api" if "persistence" in types else "process")
         common = dict(
-            id=f"build:{pid}", track="build", entities=[],
+            # declared at plan time, operator-confirmed (ruling 2026-08-07) —
+            # satisfies the attribution law: declared-or-absent, never guessed
+            id=f"build:{pid}", track="build", entities=p.get("entities") or [],
             title=f"{pid} — {p.get('name', '')}", detail=p.get("desc", ""),
             cells=cellmap, tier=p.get("tier", ""),
             complexity=p.get("complexity", ""), area=area,
@@ -739,6 +741,9 @@ def phase_strip(plan) -> tuple[str, str]:
                     "tier": p.get("tier", ""),
                     "complexity": p.get("complexity", ""),
                     "types": p.get("types") or [],
+                    # null = never declared · [] = declared none (honest blank)
+                    "entities": p.get("entities"),
+                    "scope": p.get("scope"),
                     "state": ("done" if not owed else "inflight"
                               if any(v == "done" for v in cells.values())
                               else "todo")})
