@@ -3,7 +3,7 @@ name: gabe-commit
 description: "Commit quality gate — deterministic checks incl. the 800-line size budget and the checkpoint task-record trailer (Cases/Class on any Task:-footered message), interactive triage, evidence-triggered simplify pass; docs-audit mode for accumulated drift."
 when_to_use: "Commit, save, checkpoint, ship this work — any request to record completed work in git in a KDBP project."
 metadata:
-  version: 2.6.0
+  version: 2.7.0
 ---
 
 # Gabe Commit — commit quality gate
@@ -47,19 +47,10 @@ Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, sh
 
 Present findings grouped by severity with a clear per-finding action prompt (defer/accept/fix); never silently skip a check — a skipped check prints an enumerated reason, not silence. On commit, write the LEDGER.md thin-index row and any PLAN auto-tick (with its PLAN.json mirror) in the same turn (E5). Emit the visible `**Gabe-Lens brief**` (commit-shaped, output-only — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/docs, except when the commit-message generator already owns that body). Docs-audit mode is read-only for git and leaves any proposed file changes unstaged for the human to commit normally. The full output contract in the spec is binding.
 
-End every normal-flow run with a single deterministic `NEXT: /gabe-push` line — the routing contract; no other suggestions.
+## Closing — the beat tail (E8)
 
-## Closing line — the angle nobody has taken
-
-After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
-
-```
-python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
-```
-
-It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
-satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
-the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
-suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
-them, and this line is the only thing that surfaces them during a normal beat. The signals, their
-sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.
+End every run with the three-part beat tail, specified ONCE in
+`../gabe-docs/references/execution-contract.md` §"The beat tail (E8)": `NOW:`/`NEXT:` rendered
+from `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (or the honest
+`NEXT: blocked — <reason>` override when this beat knows the router's answer is stale) · the
+conditional `CENTER:` pointer · the PULSE line last, verbatim, silent when silent.

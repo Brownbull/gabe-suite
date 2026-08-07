@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.7.1
+  version: 1.8.0
 ---
 
 # Gabe Red — the failing state, given an address
@@ -57,17 +57,10 @@ Narrow `--run` to the single case where the runner allows: a suite-wide run make
 
 Per phase, on completion: a committed red checkpoint (`RED:` trailer) OR a guard-only record OR an enumerated skip code — never silence; the `Cases:` line in PLAN Phase Details naming every id, beside a `Reach:` line (or `no index`); the `Red` cell ✅ in PLAN.md + PLAN.json; the failure output quoted verbatim in the report. This skill states no count or verdict beyond what the run printed (anti-curation).
 
-## Closing line — the angle nobody has taken
+## Closing — the beat tail (E8)
 
-After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
-
-```
-python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
-```
-
-It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
-satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
-the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
-suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
-them, and this line is the only thing that surfaces them during a normal beat. The signals, their
-sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.
+End every run with the three-part beat tail, specified ONCE in
+`../gabe-docs/references/execution-contract.md` §"The beat tail (E8)": `NOW:`/`NEXT:` rendered
+from `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (or the honest
+`NEXT: blocked — <reason>` override when this beat knows the router's answer is stale) · the
+conditional `CENTER:` pointer · the PULSE line last, verbatim, silent when silent.

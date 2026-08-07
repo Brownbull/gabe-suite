@@ -3,7 +3,7 @@ name: gabe-plan
 description: "KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts."
 when_to_use: "Plan, phases, tier decision, break down this goal — create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md."
 metadata:
-  version: 2.5.4
+  version: 2.6.0
 ---
 
 # Gabe Plan — KDBP-aware planner
@@ -42,19 +42,10 @@ KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.
 
 Write `.kdbp/PLAN.md` with the full section set (Goal/Context/Phases/Phase Details/Current Phase/Dependencies/Risks/Notes/Review Artifacts/Runtime Evidence Checkpoints), the `.kdbp/PLAN.json` machine mirror, and the corresponding LEDGER.md thin-index row in the same turn (E5). Tier decisions, per-dim overrides, and suppressed dimensions get a DECISIONS.md entry with a stated reason. Emit the output-only `**Gabe-Lens block**` — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/commits/docs unless another command already owns that write. When an HTML review artifact is created or refreshed, report its path. The full output contract in the spec is binding.
 
-End every run with a single deterministic `NEXT: /gabe-execute` line (the phase's Exec command) — the routing contract; no other suggestions.
+## Closing — the beat tail (E8)
 
-## Closing line — the angle nobody has taken
-
-After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
-
-```
-python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
-```
-
-It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
-satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
-the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
-suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
-them, and this line is the only thing that surfaces them during a normal beat. The signals, their
-sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.
+End every run with the three-part beat tail, specified ONCE in
+`../gabe-docs/references/execution-contract.md` §"The beat tail (E8)": `NOW:`/`NEXT:` rendered
+from `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (or the honest
+`NEXT: blocked — <reason>` override when this beat knows the router's answer is stale) · the
+conditional `CENTER:` pointer · the PULSE line last, verbatim, silent when silent.

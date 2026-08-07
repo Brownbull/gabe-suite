@@ -3,7 +3,7 @@ name: gabe-review
 description: "Code review — risk pricing, confidence scoring, interactive triage, deferred-item tracking, plan alignment, the cost of NOT fixing each finding."
 when_to_use: "Review this diff/PR/phase/commit before merging; also 'is this on-scope?', stale verified anchors, deferred follow-up."
 metadata:
-  version: 1.13.0
+  version: 1.14.0
 ---
 
 # Gabe Review — Code Review with Risk Pricing
@@ -51,19 +51,10 @@ Verdict floors: BLOCK on any CRITICAL, 2+ escalated deferrals, VERY LOW coverage
 
 The full output contract in the spec is binding.
 
-End every run with a single deterministic `NEXT:` line per the PLAN row — `/gabe-commit` when Commit is ⬜, else `/gabe-push` — the routing contract; no other suggestions.
+## Closing — the beat tail (E8)
 
-## Closing line — the angle nobody has taken
-
-After the report, run this and print its output **verbatim**, or print nothing when it prints nothing:
-
-```
-python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line
-```
-
-It emits **at most one line** (`PULSE: <evidence> → <command>`) and nothing at all when no
-satellite trigger fires — there is no all-clear line, because a reassurance printed every run is
-the noise this replaces. Do not add your own suggestions beside it, do not explain it, and do not
-suppress it because it looks unrelated: fifteen of the suite's skills have nothing that fires
-them, and this line is the only thing that surfaces them during a normal beat. The signals, their
-sources and the decay rule live in `../gabe-pulse/references/pulse-spec.md` §5.
+End every run with the three-part beat tail, specified ONCE in
+`../gabe-docs/references/execution-contract.md` §"The beat tail (E8)": `NOW:`/`NEXT:` rendered
+from `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (or the honest
+`NEXT: blocked — <reason>` override when this beat knows the router's answer is stale) · the
+conditional `CENTER:` pointer · the PULSE line last, verbatim, silent when silent.

@@ -16,6 +16,46 @@ These are floors, not ceilings — a skill's own gate may be stricter, never loo
 - **E6 MISSING ANCHOR = STOP** — referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.
 - **E7 REPORT WHERE** — end user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.
 
+## The beat tail (E8) — stated once, ruled 2026-08-07
+
+Every spine beat (`/gabe-plan` · `/gabe-red` · `/gabe-execute` · `/gabe-review` · `/gabe-commit` ·
+`/gabe-push`) ENDS with one three-part tail, in this order, after the skill's own report. It
+replaces every hand-written closing line — the audited cycles' hand-written tails were
+non-uniform (one beat had none) and the operator asked "how's it going / what's next" seven
+times across two repos while the router already knew the answer. Each part degrades to
+SILENCE — a missing source never prints filler.
+
+1. **`NOW:` / `NEXT:` — rendered from the router, never from memory.** Run
+   `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (read-only,
+   zero LLM, no state writes) and render its payload:
+   ```
+   NOW:  Phase <phase> — <name> · <state>
+   NEXT: <next> — <reason>
+   ```
+   The tail runs AFTER the beat's state writes (E5, same turn), so the router reads fresh
+   cells. No `.kdbp` plan, or router exit 2 → print neither line. When the beat KNOWS the
+   router's answer is stale (e.g. push blocked on an operator merge — the observed loop-spin),
+   print `NEXT: blocked — <reason>` INSTEAD of the router's line; an honest override, never
+   both lines.
+
+2. **`CENTER:` pointer — conditional, one line, never a gate.** Only when
+   `docs/site/center/center.config.json` exists:
+   ```
+   CENTER: docs/site/center/ — board + phase strip carry this beat's PLAN state on next regen
+   ```
+   No center → print nothing. (Same conditional shape as push-spec's terminal-env release
+   pointer — silent when inapplicable.)
+
+3. **The PULSE line — last.** Run
+   `python3 ${ECC_ROOT:-$HOME/.claude}/skills/gabe-pulse/scripts/angles.py . --one-line`
+   and print its output VERBATIM — at most one line, silence when no signal fires, never an
+   all-clear, no suggestions added beside it. The signals, sources, and decay rule live in
+   `../../gabe-pulse/references/pulse-spec.md` §5.
+
+Why parts 1–2 pass the no-unconditional-lines law: a beat just CHANGED cell state, so
+`NOW:`/`NEXT:` are state-carrying, not reassurance; the `CENTER:` pointer prints only where a
+center exists to point at. Part 3 keeps its own silence contract.
+
 ## Orchestration restraint (0.5c)
 
 Before any multi-agent design/mockup fan-out, run the premise past the human with ONE cheap
