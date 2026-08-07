@@ -468,6 +468,9 @@ When last task T_K commits successfully:
    ```
 7. **Print the Gabe-Lens platform-progress brief (output only).** Runs immediately after the normal phase-complete summary and before the full Gabe-Lens block.
    - Header line: `**Gabe-Lens brief — Platform progress**`
+   - Open with the shared three-line beat brief (ENTITY / FEATURE / DID — stated once in
+     `../../gabe-docs/references/execution-contract.md` §"The beat brief"), then the
+     platform-progress block below EXTENDS it.
    - Use active `gabe-lens` brief mode: concise constraint box plus one-line handle.
    - Format:
      ```

@@ -9,7 +9,7 @@ Deterministic commit quality gate. Runs checks, shows findings, lets you act on 
 
 ## Gabe-Lens Output Rule
 
-The normal commit flow prints `**Gabe-Lens brief**`, the commit-shaped member of the shared output-only Gabe-Lens explanation family. It is never written to `.kdbp/PLAN.md`, `.kdbp/REVIEW.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, or docs, and it is only included in a commit body when the commit-message generator already owns that body. This is a command-time understanding aid; the command-time briefs are the surviving explanation surface (`/gabe-teach` is archived).
+The normal commit flow prints `**Gabe-Lens brief**`, the commit-shaped member of the shared output-only Gabe-Lens explanation family — opening with the shared three-line beat brief (ENTITY / FEATURE / DID, stated once in `../../gabe-docs/references/execution-contract.md` §"The beat brief") that the commit-shaped body then extends. It is never written to `.kdbp/PLAN.md`, `.kdbp/REVIEW.md`, `.kdbp/LEDGER.md`, `.kdbp/PENDING.md`, or docs, and it is only included in a commit body when the commit-message generator already owns that body. This is a command-time understanding aid; the command-time briefs are the surviving explanation surface (`/gabe-teach` is archived).
 
 ## Procedure
 

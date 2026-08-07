@@ -3,7 +3,7 @@ name: gabe-push
 description: "Push, PR, CI watch, promotion — env-aware shipping via .kdbp/PUSH.md; detects remote drift, offers branch cleanup. Terminal-env and --epic pushes run the production gates: /gabe-health three-lens scan, findings presented, ONE blocking proceed/hold question that mints the gate marker the machine-wide push-gate-guard hook requires — a raw terminal push without it fails closed."
 when_to_use: "Push, deploy, promote, ship to staging/production, babysit a pipeline after committing."
 metadata:
-  version: 2.5.0
+  version: 2.6.0
 ---
 
 # Gabe Push — env-aware shipping workflow
@@ -47,6 +47,8 @@ For long CI runs after push, a mechanical watch loop may babysit the pipeline in
 ## Output contract (summary)
 
 End with the `GABE PUSH COMPLETE` summary block (env, source, target, PR url or `—`, CI status) and a `Bookkeeping:` line reporting whether the bookkeeping commit happened. All state writes (PUSH.md, DEPLOYMENTS.md row, LEDGER.md entry, PLAN.md Push tick, PENDING.md/DECISIONS.md from the operational classifier) land in the same turn as the action they record (E5); a skipped Push tick prints the full decision record, never a silent skip. Safety-row prompts never silently default to proceed. The full output contract in the spec is binding.
+
+Emit the shared beat brief (`**Gabe-Lens brief**` — ENTITY / FEATURE / DID, stated once in `../gabe-docs/references/execution-contract.md` §"The beat brief") just before the E8 tail; output-only, never persisted.
 
 ## Closing — the beat tail (E8)
 

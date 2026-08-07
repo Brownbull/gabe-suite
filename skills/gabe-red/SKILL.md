@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.8.0
+  version: 1.9.0
 ---
 
 # Gabe Red — the failing state, given an address
@@ -56,6 +56,8 @@ Narrow `--run` to the single case where the runner allows: a suite-wide run make
 ## Output contract
 
 Per phase, on completion: a committed red checkpoint (`RED:` trailer) OR a guard-only record OR an enumerated skip code — never silence; the `Cases:` line in PLAN Phase Details naming every id, beside a `Reach:` line (or `no index`); the `Red` cell ✅ in PLAN.md + PLAN.json; the failure output quoted verbatim in the report. This skill states no count or verdict beyond what the run printed (anti-curation).
+
+Emit the shared beat brief (`**Gabe-Lens brief**` — ENTITY / FEATURE / DID, stated once in `../gabe-docs/references/execution-contract.md` §"The beat brief") just before the E8 tail; output-only, never persisted.
 
 ## Closing — the beat tail (E8)
 

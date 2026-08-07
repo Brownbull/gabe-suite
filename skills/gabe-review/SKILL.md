@@ -3,7 +3,7 @@ name: gabe-review
 description: "Code review — risk pricing, confidence scoring, interactive triage, deferred-item tracking, plan alignment, the cost of NOT fixing each finding."
 when_to_use: "Review this diff/PR/phase/commit before merging; also 'is this on-scope?', stale verified anchors, deferred follow-up."
 metadata:
-  version: 1.15.0
+  version: 1.16.0
 ---
 
 # Gabe Review — Code Review with Risk Pricing
@@ -50,6 +50,8 @@ Full mode renders, in order: Findings table → Risk Dashboard → Coverage Conf
 Verdict floors: BLOCK on any CRITICAL, 2+ escalated deferrals, VERY LOW coverage, a maturity-gate overrun, or confidence < 50. WARNING on HIGH findings within tolerance, LOW coverage, or confidence 50-69. APPROVE requires zero CRITICAL, no above-gate escalated deferrals, coverage ≥ MEDIUM, and confidence ≥ 70.
 
 The full output contract in the spec is binding.
+
+Emit the shared beat brief (`**Gabe-Lens brief**` — ENTITY / FEATURE / DID, stated once in `../gabe-docs/references/execution-contract.md` §"The beat brief") just before the E8 tail; output-only, never persisted.
 
 ## Closing — the beat tail (E8)
 

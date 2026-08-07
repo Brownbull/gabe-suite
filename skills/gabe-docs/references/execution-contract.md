@@ -16,6 +16,30 @@ These are floors, not ceilings — a skill's own gate may be stricter, never loo
 - **E6 MISSING ANCHOR = STOP** — referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.
 - **E7 REPORT WHERE** — end user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.
 
+## The beat brief — stated once, ruled 2026-08-07 (ask C)
+
+Every spine beat's report carries ONE compact orientation block, printed just before the E8
+tail. It exists because the audited cycles' only orientation was hand-authored prose that
+evaporated with the context window (7 re-orientation asks). Output-only, like every
+Gabe-Lens surface — NEVER written to PLAN/REVIEW/LEDGER/PENDING/commits/docs; the machine
+half persists via `inflight.json`, the prose half is meant to evaporate.
+
+```
+**Gabe-Lens brief**
+ENTITY:  <the phase's declared entities, verbatim from the plan record; `none declared`
+          when the record has no entities key (honest blank, never a guess); append
+          `· touched: <slugs>` when the in-flight projection names entities the
+          declaration does not>
+FEATURE: <phase id — phase name, in the plan's own words>
+DID:     <this beat's outcome in one sentence — what moved, not what was attempted>
+```
+
+`NEXT` is deliberately absent — the E8 tail renders it from the router; the brief never
+duplicates it. Beat-specific richness EXTENDS this block where it already exists and stays
+where it lives: execute's `PLATFORM PROGRESS` (BUILT / NOW POSSIBLE / STILL NOT POSSIBLE /
+HANDLE — execute-spec) and commit's commit-shaped brief (gate-spec) print after these three
+lines, never instead of them.
+
 ## The beat tail (E8) — stated once, ruled 2026-08-07
 
 Every spine beat (`/gabe-plan` · `/gabe-red` · `/gabe-execute` · `/gabe-review` · `/gabe-commit` ·
