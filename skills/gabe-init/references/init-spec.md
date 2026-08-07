@@ -269,11 +269,13 @@ restores the copy procedure (see the archive README).
 
 ### Step 2: Check hooks
 
-Check `~/.claude/settings.json` for these hooks — the seven markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
+Check `~/.claude/settings.json` for these hooks — the nine markers defined in `~/.claude/templates/gabe/hooks.json` (the LEDGER.md per-tool-call writer and the KNOWLEDGE session-awareness hook are retired in A2 KDBP-lite; not checked, not wired):
 - SessionStart hook (contains `KDBP Active`)
 - UserPromptSubmit hook (contains `DIRECTION GUARD` — the semantic steer rule, /gabe-assess auto-trigger)
 - SessionStart plan awareness (contains `ACTIVE PLAN` or `gabe-plan`)
 - PreToolUse checkpoint hook (contains `KDBP CHECKPOINT`)
+- PreToolUse red-entry guard (contains `RED-ENTRY-GUARD` — warns on source writes while the phase's Red cell is still owed)
+- PreToolUse push-gate guard (contains `PUSH-GATE-GUARD` — fails a raw terminal-env `git push` closed unless /gabe-push minted a fresh `.kdbp/.push-gate-ok` after the ONE proceed/hold ask; ruling 2026-08-07)
 - PostToolUse structure warning (contains `STRUCTURE:` — new-file placement)
 - PostToolUse plan-proof guard (contains `PLAN-PROOF-GUARD` — D7: blocks a ✅ cell whose evidence doesn't exist; debts warn, lies block)
 - Stop session-end reminder (contains `SESSION-END REMINDER`)
@@ -285,7 +287,7 @@ For each missing hook:
 - If that file is missing or a key is absent: STOP hook installation and print `⛔ hook template missing at ~/.claude/templates/gabe/hooks.json — reinstall the suite. Not composing hook JSON from memory.` Continue init WITHOUT touching settings.json (degraded mode: report `Hooks installed: skipped (template missing)` in Step 4).
 - Otherwise show the exact JSON, ask `Install? [Y/n]`, and on yes append it to the appropriate array (never overwrite existing entries).
 
-If all hooks present: "All 6 KDBP hooks installed."
+If all hooks present: "All 9 KDBP hooks installed."
 
 ### Step 3: Project type
 

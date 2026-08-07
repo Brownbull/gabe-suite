@@ -252,6 +252,11 @@
     "slug": "satellites",
     "title": "Analysis satellites",
     "href": "satellites.html"
+   },
+   {
+    "slug": "mechanisms",
+    "title": "The mechanism catalog",
+    "href": "mechanisms.html"
    }
   ],
   "skill:/gabe-next": [

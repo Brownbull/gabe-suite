@@ -244,5 +244,89 @@ NOK=$(mktemp -d); out=$(cd "$NOK" && echo '{"tool_input":{"file_path":"/x/src/ap
 [ -z "$out" ] && ok || bad "red-entry: no .kdbp must stay SILENT"
 rm -rf "$NOK"
 
+# --- push-gate-guard: terminal-env promotion fails closed (ruling 2026-08-07) ---
+PGG="$REPO/scripts/hooks/kdbp/push-gate-guard.sh"
+pg() { printf '%s' "$1" | bash "$PGG" >/dev/null 2>&1; echo $?; }
+pgout() { printf '%s' "$1" | bash "$PGG" 2>/dev/null; }
+# multi-env PUSH.md: staging (source) + production (terminal, promote_from staging);
+# a commented-out decoy env proves comment-stripping (the template ships one).
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Environments
+
+### staging
+
+| Setting | Value |
+|---------|-------|
+| target_branch | staging |
+| promote_from | — |
+
+### production
+
+| Setting | Value |
+|---------|-------|
+| target_branch | main |
+| promote_from | staging |
+
+<!--
+### decoy-env
+
+| Setting | Value |
+|---------|-------|
+| target_branch | decoy |
+| promote_from | — |
+-->
+PUSHEOF
+rm -f .kdbp/.push-gate-ok
+PROMO='{"tool_input":{"command":"git push origin origin/staging:main"}}'
+[ "$(pg "$PROMO")" = 2 ] && ok || bad "push-gate: promotion push w/o marker must BLOCK (the observed bypass shape)"
+[ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 2 ] && ok || bad "push-gate: direct terminal push w/o marker must BLOCK"
+[ "$(pg '{"tool_input":{"command":"git push --force-with-lease origin HEAD:refs/heads/main"}}')" = 2 ] && ok || bad "push-gate: HEAD:refs/heads/main + force flag must BLOCK"
+[ "$(pg '{"tool_input":{"command":"git push origin feature-x"}}')" = 0 ] && ok || bad "push-gate: feature-branch push must stay SILENT"
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging"}}')" = 0 ] && ok || bad "push-gate: staging (non-terminal) push must stay SILENT"
+[ "$(pg '{"tool_input":{"command":"git log --grep \"git push origin main\""}}')" = 0 ] && ok || bad "push-gate: quoted decoy must stay SILENT"
+[ "$(pg '{"tool_input":{"command":"npm test"}}')" = 0 ] && ok || bad "push-gate: non-push command must stay SILENT"
+touch .kdbp/.push-gate-ok
+[ "$(pg "$PROMO")" = 0 ] && ok || bad "push-gate: fresh marker must authorize the promotion"
+touch -d '2 hours ago' .kdbp/.push-gate-ok
+[ "$(pg "$PROMO")" = 2 ] && ok || bad "push-gate: stale marker (2h old) must BLOCK"
+rm -f .kdbp/.push-gate-ok
+out=$(pgout '{"tool_input":{"command":"GABE_PUSH_EMERGENCY=1 git push origin origin/staging:main"}}'); rc=$?
+[ "$rc" = 0 ] && echo "$out" | grep -q 'GABE_PUSH_EMERGENCY' && ok || bad "push-gate: emergency escape must allow WITH a loud warning"
+[ "$(pg 'not json at all')" = 0 ] && ok || bad "push-gate: garbage stdin must fail OPEN (INERT warn)"
+CURB=$(git rev-parse --abbrev-ref HEAD)
+git checkout -qb main 2>/dev/null || git checkout -q main 2>/dev/null || true
+[ "$(pg '{"tool_input":{"command":"git push"}}')" = 2 ] && ok || bad "push-gate: bare push on checked-out terminal branch must BLOCK"
+git checkout -q "$CURB" 2>/dev/null || true
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+### production
+
+| Setting | Value |
+|---------|-------|
+| target_branch | main |
+| promote_from | — |
+PUSHEOF
+[ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 0 ] && ok || bad "push-gate: single-env project must stay SILENT (gating OFF, ruling 2026-07-31)"
+# plain key:value env format (the gustify shape — caught by the real-data dry-run,
+# where the table-only parse silently ALLOWED the promotion)
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Environments
+
+### staging
+
+target_branch: staging
+promote_from: null
+
+### production
+
+target_branch: main
+promote_from: staging
+PUSHEOF
+rm -f .kdbp/.push-gate-ok
+[ "$(pg "$PROMO")" = 2 ] && ok || bad "push-gate: key:value env format (gustify shape) must BLOCK the promotion"
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging"}}')" = 0 ] && ok || bad "push-gate: key:value format — staging push must stay SILENT"
+NOK=$(mktemp -d)
+[ "$( (cd "$NOK" && printf '%s' "$PROMO" | bash "$PGG" >/dev/null 2>&1; echo $?) )" = 0 ] && ok || bad "push-gate: no PUSH.md must stay SILENT"
+rm -rf "$NOK"
+
 echo "hooks harness: $pass passed, $fail failed"
 [ "$fail" = 0 ]

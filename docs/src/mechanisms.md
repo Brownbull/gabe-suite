@@ -48,7 +48,7 @@ Several mechanisms above are the *same* mechanism appearing in more than one ski
 | 3-state glyphs — `✅ / ❌ / ⤫ skipped(<reason>)` | gabe-commit ≡ gabe-execute ≡ the E2 preamble |
 | Canonical PENDING schema | gabe-review ≡ gabe-commit ≡ gabe-assess |
 | RED run line — `RED: <n> failing (<runner cmd>, exit <code>)` | gabe-red report (killer field, 2026-07-31; `RED: n/a (guard-only — no new claim)` is its sibling form) |
-| REUSE verdict line — `REUSE <path> \| EXTEND <path> \| NEW (searched <where> — none fit)` | gabe-execute TASK CONTRACT ≡ the E4 preamble (killer field) |
+| REUSE verdict line — `REUSE <path> \| EXTEND <path> \| NEW (searched <where> — none fit)` | gabe-execute E4 obligation (task-record era) ≡ the E4 preamble (killer field) |
 | Finding Evidence — `≤2 exact quoted code lines from the cited file:line` | gabe-review finding contract, prose ≡ pricing table (killer field) |
 |  LEDGER commit-row tail — `findings [raw]→[survived] · deferred [n] · size-budget [ok/warn] · evidence [ok/warn/—] · docs-budget [ok/warn]` | gabe-commit (writes) → ledger-gap.sh (audits) (killer field) |
 | CI pass line — `CI: All checks passed.` | gabe-push verbatim-paste gate → Step 10 tick (killer field) |
@@ -216,19 +216,20 @@ Every mechanism in this family targets the same underlying temptation: when a ta
 
 ### Task Contract Gate
 
-**Behavior:** before any code is written, the task is restated verbatim from the plan, its acceptance signals are named, and the deliverable is classed explicitly — rebuild, restyle, implement, stub, or fix. If the intended work is cheaper than the quoted text implies, that's a STOP, not a judgment call.
+**Behavior:** the per-task record lives in the checkpoint commit message, where a machine already looks — never in a printed ceremony. (The printed TASK CONTRACT block was retired 2026-08-07 after going 0-for-19 across two full twin cycles; its obligations — substitution stops, E4 reuse-first, cases bind completion — survive as prose rules in the execute spec.)
 
 ```
-## TASK CONTRACT (print before writing any code)
-1. QUOTE the task/phase Description VERBATIM from the plan file.
-2. ACCEPTANCE: restate 1–3 verifiable signals ("done when <observable check>").
-3. DELIVERABLE CLASS: name it — rebuild-to-reference | restyle | implement |
-   stub | fix. If intended work is a CHEAPER class than the quoted text
-   implies, STOP and ask; substitution requires an explicit user decision line.
-Implementation may not start until this block is printed.
+## TASK RECORD (trailer on every checkpoint commit)
+Phase: N — <phase name>
+Task:  T<i>/<K> — <task description>
+Cases: <C-ids advanced (red@<sha>) · Guard: <ids>> | none — <reason>
+       | skip:<code> … | RED OWED …
+Class: red | guard | wiring | growth
+Validated by /gabe-commit's checkpoint-trailer.sh — a Task:-footered
+message missing Cases:/Class: is a WARN finding (report, never gate).
 ```
 
-carried by: gabe-execute, gabe-mockup
+carried by: gabe-execute (writes) → gabe-commit (validates)
 
 ### Reference-Fidelity Acceptance
 

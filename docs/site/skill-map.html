@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Gabe suite — The skill map — and what fires each skill</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/site.css">
+</head>
+<body>
+
+<header class="topbar">
+  <button class="nav-toggle" id="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false">☰</button>
+  <a class="top-brand" href="index.html">🔧 GABE<span class="dot">.</span>docs <span class="sub">the KDBP development suite</span></a>
+  <nav class="crumbs" aria-label="Breadcrumb"><a href="index.html">Hub</a> <span class="crumb-sep">›</span> <span class="crumb-here">The skill map</span></nav>
+  <button class="adhd-toggle" id="adhd-toggle" type="button" aria-pressed="false" aria-label="Toggle bionic reading" title="Bionic reading"><span class="adhd-dot"></span></button>
+</header>
+<aside class="sidebar" id="sidebar">
+  <button class="side-collapse" id="side-collapse" type="button" aria-pressed="false" aria-label="Collapse navigation" title="Collapse navigation"><span class="side-collapse-glyph">«</span></button>
+  <nav class="sidenav">
+    <a class="side-link side-hub" href="index.html"><span class="sw" style="background:#6e6757"></span><span class="side-label">Hub</span></a>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 1 · Foundations <span class="chip basic">basic</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="kdbp.html" title="What KDBP is"><span class="sw" style="background:#3a6b3a"></span><span class="side-label">What KDBP is</span></a>
+        <a class="side-link" href="the-loop.html" title="The development loop"><span class="sw" style="background:#3a6b7a"></span><span class="side-label">The development loop</span></a>
+      </div>
+    </details>
+    <details class="side-group" open>
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
+        <a class="side-link active" href="skill-map.html" title="The skill map"><span class="sw" style="background:#7a5a2b"></span><span class="side-label">The skill map</span></a>
+        <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
+        <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 3 · Verification-first <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="verification-first.html" title="The one picture"><span class="sw" style="background:#1f7a5a"></span><span class="side-label">The one picture</span></a>
+        <a class="side-link" href="gabe-red.html" title="/gabe-red"><span class="sw" style="background:#b63a3a"></span><span class="side-label">/gabe-red</span></a>
+        <a class="side-link" href="c-id.html" title="The C-id scheme"><span class="sw" style="background:#7a6a2b"></span><span class="side-label">The C-id scheme</span></a>
+        <a class="side-link" href="command-center.html" title="The command center"><span class="sw" style="background:#2b5a8a"></span><span class="side-label">The command center</span></a>
+      </div>
+    </details>
+    <details class="side-group">
+      <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 4 · The mechanism corpus <span class="chip advanced">advanced</span></span></summary>
+      <div class="side-panel">
+        <a class="side-link" href="mechanisms.html" title="The mechanism catalog"><span class="sw" style="background:#a04030"></span><span class="side-label">The mechanism catalog</span></a>
+        <a class="side-link" href="drift.html" title="Why weak models drift"><span class="sw" style="background:#d97a3d"></span><span class="side-label">Why weak models drift</span></a>
+        <a class="side-link" href="decisions.html" title="Design decisions"><span class="sw" style="background:#6e6757"></span><span class="side-label">Design decisions</span></a>
+      </div>
+    </details>
+  </nav>
+</aside>
+<div class="nav-overlay" id="nav-overlay"></div>
+
+<div class="wrap"><main>
+  <header class="masthead">
+    <div class="kicker">Tier 2 · Reference</div>
+    <h1>The skill map — and what fires each skill</h1>
+    <p class="lede">All 28 skills by group, the machinery behind each, and the wiring question the roster cannot answer: which skills can start on their own, and which fifteen only run when you remember them.</p>
+  </header>
+<p>The suite is 28 skills. This page answers two questions the roster alone cannot: <strong>what each one is for</strong>, and <strong>how it is reached</strong> — because a skill nothing fires is only as available as your memory of it.</p>
+<p>Everything below is derived from the repo, not from recollection: hook scripts under <code>scripts/hooks/kdbp/</code>, the router's own dispatch table in <code>next.mjs</code>, and each skill's frontmatter flags. Measured 2026-07-31.</p>
+<div class="note"><span class="lbl">The interactive map</span><p>The rendered version of this page — cards per skill, machinery filters, the rulings strip, the E1–E7 matrix — lives as a published artifact: <strong><a href="https://claude.ai/code/artifact/4089cf6d-5639-448f-a5ff-e1969dd5a096">Gabe Suite — Skill Map</a></strong>. This page is its durable half; the artifact is the browsable one.</p></div>
+<h2 id="how-a-skill-gets-called"><span class="num">01</span>How a skill gets called</h2>
+<p>Six ways, and a skill can be reached by more than one — <code>/gabe-commit</code> is both hook-fired and router-dispatched.</p>
+<div class="table-wrap"><table><thead><tr><th>Reached by</th><th>What it means</th><th>Count</th><th>Skills</th></tr></thead><tbody><tr><td>⛓ <strong>Hook-fired</strong></td><td>a shipped hook injects it; it can start without anyone typing</td><td>4</td><td><code>/gabe-assess</code> <code>/gabe-commit</code> <code>/gabe-plan</code> <code>/gabe-red</code></td></tr><tr><td>⟳ <strong>Router-dispatched</strong></td><td><code>/gabe-next</code> reads PLAN state and names it as the next beat</td><td>8</td><td><code>/gabe-cc-update</code> <code>/gabe-commit</code> <code>/gabe-execute</code> <code>/gabe-mockup</code> <code>/gabe-plan</code> <code>/gabe-push</code> <code>/gabe-red</code> <code>/gabe-review</code></td></tr><tr><td>◎ <strong>Path-triggered</strong></td><td>frontmatter <code>paths:</code> offers it when matching files are touched</td><td>1</td><td><code>/gabe-mockup</code></td></tr><tr><td>✋ <strong>Human-only</strong></td><td><code>disable-model-invocation</code> — a model may not start it</td><td>3</td><td><code>/gabe-cc-init</code> <code>/gabe-init</code> <code>/gabe-scope-pivot</code></td></tr><tr><td>▽ <strong>Background</strong></td><td><code>user-invocable: false</code> — loads with other skills, never called alone</td><td>1</td><td><code>/gabe-docs</code></td></tr><tr><td>☝ <strong>Manual only</strong></td><td>nothing fires it; it runs when you ask, and not otherwise</td><td><strong>15</strong></td><td><code>/gabe-artifact</code> <code>/gabe-cc-entity</code> <code>/gabe-docsite</code> <code>/gabe-handoff</code> <code>/gabe-health</code> <code>/gabe-help</code> <code>/gabe-lens</code> <code>/gabe-meme</code> <code>/gabe-myopic</code> <code>/gabe-next</code> <code>/gabe-imagine</code> <code>/gabe-pulse</code> <code>/gabe-roast</code> <code>/gabe-scope</code> <code>/gabe-scope-change</code></td></tr></tbody></table></div>
+<p><strong>Fifteen of twenty-eight have nothing pointing at them.</strong> That is not a defect — a satellite that fired itself would be worse, and <code>/gabe-next</code> is manual by definition since it is the thing you call to be told what is next. But it does mean more than half the suite depends on the operator remembering it exists, which is exactly what the estate sweep in <code>/gabe-health</code> was built to surface.</p>
+<p>The extreme case is <code>/gabe-help</code>: nothing fires it <strong>and</strong> no other skill routes to it. Correct for a skill written for repo visitors rather than for the loop — and worth knowing before wondering why it never runs.</p>
+<h2 id="wired-and-what-wires-it"><span class="num">02</span>Wired, and what wires it</h2>
+<div class="table-wrap"><table><thead><tr><th>Hook</th><th>Event</th><th>Injects</th></tr></thead><tbody><tr><td><code>session-plan-awareness.sh</code></td><td>SessionStart</td><td>the plan's state, pointing at <code>/gabe-plan</code></td></tr><tr><td><code>pre-checkpoint.sh</code></td><td>PreToolUse</td><td>the commit gate, pointing at <code>/gabe-commit</code></td></tr><tr><td><code>plan-proof-guard.sh</code></td><td>PreToolUse</td><td>the proof rule, pointing at <code>/gabe-red</code></td></tr><tr><td><code>direction-guard.sh</code></td><td>UserPromptSubmit</td><td>the steer rule → <code>/gabe-assess brief</code> before building</td></tr><tr><td><code>stop-session-reminder.sh</code></td><td>Stop</td><td>uncommitted work, pointing at <code>/gabe-commit</code></td></tr><tr><td><code>session-kdbp-active.sh</code></td><td>SessionStart</td><td><code class="kdbp-file kf-dir">.kdbp/</code> state (no skill)</td></tr><tr><td><code>post-structure-warning.sh</code></td><td>PostToolUse</td><td>structure drift (no skill)</td></tr></tbody></table></div>
+<p>Seven hooks ship; five name a skill. The router adds eight more beats, and <code>paths:</code> adds one auto-offer. Everything else waits to be asked.</p>
+<h2 id="the-groups"><span class="num">03</span>The groups</h2>
+<ul><li><strong>The Spine (8)</strong> — the loop every phase rides: <code>plan → red → execute → review → commit → push → cc-update</code>, with <code>/gabe-next</code> as the wheel. Merging any beat means changing the router.</li><li><strong>Direction &amp; guard-rails (4)</strong> — <code>/gabe-scope</code>, <code>/gabe-scope-change</code>, <code>/gabe-scope-pivot</code>, and <code>/gabe-assess</code>, the direction guard that now fires itself.</li><li><strong>Verification satellites (4)</strong> — <code>/gabe-roast</code>, <code>/gabe-myopic</code>, <code>/gabe-pulse</code>, <code>/gabe-health</code>. All read-only, all forked, all manual.</li><li><strong>Command center (2 + 1)</strong> — <code>/gabe-cc-init</code> and <code>/gabe-cc-entity</code>; <code>/gabe-cc-update</code> is the third member but lives in the spine as a router beat.</li><li><strong>Documentation (2)</strong> — <code>/gabe-docs</code> (background standards, the E1–E7 contract) and <code>/gabe-docsite</code>, which since the shell merge renders these very pages into the command center.</li><li><strong>Session ops (3)</strong> — <code>/gabe-init</code>, <code>/gabe-help</code>, <code>/gabe-handoff</code>.</li><li><strong>Craft &amp; communication (5)</strong> — <code>/gabe-lens</code>, <code>/gabe-mockup</code>, <code>/gabe-meme</code>, <code>/gabe-artifact</code>, and <code>/gabe-imagine</code>.</li></ul>
+<h2 id="reading-the-machinery"><span class="num">04</span>Reading the machinery</h2>
+<p>Three kinds back the prose: <strong>⚙ scripts</strong> (deterministic checks a skill runs), <strong>⛓ hooks</strong> (the harness firing something), <strong>▤ schemas &amp; contracts</strong> (a shape or a byte-identical string something else validates). Four skills carry none of the three and are prose specs only — <code>/gabe-review</code>, <code>/gabe-roast</code>, <code>/gabe-myopic</code>, <code>/gabe-health</code>. That is a real property, not an oversight: their output is judgment, and no script adjudicates judgment.</p>
+<p>The corollary matters more than the count. <strong>A rule with no machinery behind it is a convention, and conventions drift.</strong> The enforcement ledger in the command center classifies all 119 of them on exactly that axis — enforced, hardenable, prompt-only, or falsely claimed — and the falsely-claimed bucket is the one that actively misleads.</p><section class="refs"><h2>This page references</h2><p class="refs-note">Derived from the page's own text on every build — no link table is maintained, and a reference that stops resolving stops appearing.</p><div class="refchips"><a class="refchip r-skill" href="agents.html" title="skill: gabe-artifact">/gabe-artifact</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-assess">/gabe-assess</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-cc-entity">/gabe-cc-entity</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-cc-init">/gabe-cc-init</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-cc-update">/gabe-cc-update</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-commit">/gabe-commit</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-docs">/gabe-docs</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-docsite">/gabe-docsite</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-execute">/gabe-execute</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-handoff">/gabe-handoff</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-health">/gabe-health</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-help">/gabe-help</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-imagine">/gabe-imagine</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-init">/gabe-init</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-lens">/gabe-lens</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-meme">/gabe-meme</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-mockup">/gabe-mockup</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-myopic">/gabe-myopic</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-next">/gabe-next</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-plan">/gabe-plan</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-pulse">/gabe-pulse</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-push">/gabe-push</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-red">/gabe-red</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-review">/gabe-review</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-roast">/gabe-roast</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-scope">/gabe-scope</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-scope-change">/gabe-scope-change</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-scope-pivot">/gabe-scope-pivot</a></div></section>
+</main></div>
+
+<footer class="stamp">
+  <b>GABE</b> · the KDBP development suite · documentation<br>
+  Source of truth: <b>docs/src/*.md</b> + <b>docs/docsite.config.py</b> · generated — do not edit the HTML by hand<br>
+  Visual system: Cifra · Chile editorial palette
+</footer>
+
+<script src="assets/site.js"></script>
+</body>
+</html>

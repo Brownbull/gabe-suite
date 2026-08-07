@@ -153,7 +153,19 @@ Ruled 2026-07-31 (operator: terminal-env + explicit override · ask-before-push)
 3. **Ask, never silently block or pass:** present the findings summary (counts per lens, the
    CRITICAL/HIGH items verbatim), then ONE question — `[proceed]` push now / `[hold]` stop the push,
    findings stand (route follow-ups: `/gabe-review deferred`, `/gabe-plan`). A held push exits
-   cleanly; nothing is auto-fixed.
+   cleanly; nothing is auto-fixed. **The ask is BLOCKING and in-session** (ruling 2026-08-07): it is
+   asked with the findings visible, via a real question — a blanket earlier agreement ("proceed with
+   the promotion") is NOT the answer, and fixes the scan surfaces are never self-applied and pushed
+   between scan and ask. The audited failure shape this closes: scan ran, findings never presented,
+   three gate fixes shipped sight-unseen, 49 commits promoted raw.
+3.5. **Write the gate marker (on `[proceed]` only):** `date > .kdbp/.push-gate-ok` — the machine
+   record that the gate ran and the operator answered. The `push-gate-guard` PreToolUse hook
+   (machine-wide, `scripts/hooks/kdbp/push-gate-guard.sh`, fixtures in `tests/hooks/`) BLOCKS any
+   `git push` whose destination is a terminal env's branch in a multi-env project unless this
+   marker exists and is younger than 30 minutes — the terminal push fails closed, spec prose no
+   longer carries it alone. Never write the marker on `[hold]`, and never write it outside this
+   step. Emergency escape (documented, loud): prefix the push with `GABE_PUSH_EMERGENCY=1` — the
+   hook allows it with a warning and the bypass stays visible to review.
 4. **Record:** carry `gates: <run: p/h counts | skipped(ungated) | held>` into Step 7's summary and
    Step 8's ledger row tail.
 
@@ -165,6 +177,8 @@ Ruled 2026-07-31 (operator: terminal-env + explicit override · ask-before-push)
    - `push_source = origin/<promote_from>` → promotion push: `git push [remote] origin/<promote_from>:<env.target_branch>` (fast-forward-only; remote-to-remote). If non-FF: stop with clear message and offer `[force-with-lease] [abort]`.
 2. If push fails (rejected, auth error, non-FF): show error and stop.
 3. Show: "Pushed <source_label> -> <env.target_branch> on [remote]."
+4. **Consume the gate marker:** `rm -f .kdbp/.push-gate-ok` after the push completes (success OR
+   failure) — the marker authorizes exactly one gated push attempt window, never a standing pass.
 
 ### Step 5: Create or update PR
 

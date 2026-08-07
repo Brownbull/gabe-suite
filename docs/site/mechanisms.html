@@ -32,6 +32,7 @@
       <summary><span class="side-chevron" aria-hidden="true"></span><span class="side-label">Tier 2 · The contract &amp; the beats <span class="chip core">core</span></span></summary>
       <div class="side-panel">
         <a class="side-link" href="contract.html" title="The E1–E7 contract"><span class="sw" style="background:#b65a2b"></span><span class="side-label">The E1–E7 contract</span></a>
+        <a class="side-link" href="skill-map.html" title="The skill map"><span class="sw" style="background:#7a5a2b"></span><span class="side-label">The skill map</span></a>
         <a class="side-link" href="commands.html" title="Beats &amp; commands"><span class="sw" style="background:#1f3a6b"></span><span class="side-label">Beats &amp; commands</span></a>
         <a class="side-link" href="satellites.html" title="Analysis satellites"><span class="sw" style="background:#7a5a8a"></span><span class="side-label">Analysis satellites</span></a>
       </div>
@@ -174,15 +175,16 @@ stub returns a sentinel, never the key as displayable text).</code></pre>
 <p><strong>In this family:</strong> the four mechanisms below, previewed here and detailed in their own subsections further down.</p>
 <ul><li><strong>Task Contract Gate</strong> — Restate the task and its deliverable class before writing code; a cheaper class requires an explicit user decision.</li><li><strong>Reference-Fidelity Acceptance</strong> — A named reference is resolved from a map file and rebuilt to a structural checklist, not eyeballed.</li><li><strong>Reuse Ledger</strong> — Search before creating anything; print the verdict — reuse, extend, or new — before writing new code.</li><li><strong>Task-contract quote-verbatim</strong> — The task/phase description is quoted verbatim, not paraphrased, so a paraphrase can't quietly soften it.</li></ul>
 <h3 id="task-contract-gate">Task Contract Gate</h3>
-<p><strong>Behavior:</strong> before any code is written, the task is restated verbatim from the plan, its acceptance signals are named, and the deliverable is classed explicitly — rebuild, restyle, implement, stub, or fix. If the intended work is cheaper than the quoted text implies, that's a STOP, not a judgment call.</p>
-<pre><code>## TASK CONTRACT (print before writing any code)
-1. QUOTE the task/phase Description VERBATIM from the plan file.
-2. ACCEPTANCE: restate 1–3 verifiable signals ("done when &lt;observable check&gt;").
-3. DELIVERABLE CLASS: name it — rebuild-to-reference | restyle | implement |
-   stub | fix. If intended work is a CHEAPER class than the quoted text
-   implies, STOP and ask; substitution requires an explicit user decision line.
-Implementation may not start until this block is printed.</code></pre>
-<p>carried by: gabe-execute, gabe-mockup</p>
+<p><strong>Behavior:</strong> the per-task record lives in the checkpoint commit message, where a machine already looks — never in a printed ceremony. (The printed TASK CONTRACT block was retired 2026-08-07 after going 0-for-19 across two full twin cycles; its obligations — substitution stops, E4 reuse-first, cases bind completion — survive as prose rules in the execute spec.)</p>
+<pre><code>## TASK RECORD (trailer on every checkpoint commit)
+Phase: N — &lt;phase name&gt;
+Task:  T&lt;i&gt;/&lt;K&gt; — &lt;task description&gt;
+Cases: &lt;C-ids advanced (red@&lt;sha&gt;) · Guard: &lt;ids&gt;&gt; | none — &lt;reason&gt;
+       | skip:&lt;code&gt; … | RED OWED …
+Class: red | guard | wiring | growth
+Validated by /gabe-commit's checkpoint-trailer.sh — a Task:-footered
+message missing Cases:/Class: is a WARN finding (report, never gate).</code></pre>
+<p>carried by: gabe-execute (writes) → gabe-commit (validates)</p>
 <h3 id="reference-fidelity-acceptance">Reference-Fidelity Acceptance</h3>
 <p><strong>Behavior:</strong> when a task names an external reference (a mockup, a story, a legacy screen), the reference is looked up from a canonical map — never guessed or reconstructed from memory — and "done" means a structural checklist ticked plus one same-viewport side-by-side, not a vibe match.</p>
 <pre><code>When a task names a reference (mockup/story/spec/legacy screen):
@@ -376,7 +378,7 @@ growing the file.</code></pre>
 <p>Applied to the suite's largest skills, this refactor has freed many hundreds of lines from a single skill file — far more context than all the other mechanisms in this catalog add back in, combined. That's the trade this catalog is built on: every gate above earns its keep because this mechanism clears room for it first.</p>
 <p>carried by: gabe-review, gabe-mockup, gabe-scope (structural refactor) — rule stated once in the suite authoring guide</p>
 <h2 id="where-this-connects"><span class="num">09</span>Where this connects</h2>
-<p>This catalog is the detail layer underneath the rest of the suite's rationale: <a href="contract.html">the E1–E7 contract</a> is the compressed, always-loaded summary that seven of these mechanisms distill down into; <a href="drift.html">why weak models drift</a> explains the underlying failure pattern that makes them necessary in the first place; and <a href="verification-first.html">the one picture &amp; the four laws</a> shows how the same discipline scales up from a single per-skill gate to the whole derived-view model.</p>
+<p>This catalog is the detail layer underneath the rest of the suite's rationale: <a href="contract.html">the E1–E7 contract</a> is the compressed, always-loaded summary that seven of these mechanisms distill down into; <a href="drift.html">why weak models drift</a> explains the underlying failure pattern that makes them necessary in the first place; and <a href="verification-first.html">the one picture &amp; the four laws</a> shows how the same discipline scales up from a single per-skill gate to the whole derived-view model.</p><section class="refs"><h2>This page references</h2><p class="refs-note">Derived from the page's own text on every build — no link table is maintained, and a reference that stops resolving stops appearing.</p><div class="refchips"><a class="refchip r-skill" href="agents.html" title="skill: gabe-commit">/gabe-commit</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-execute">/gabe-execute</a><a class="refchip r-skill" href="agents.html" title="skill: gabe-review">/gabe-review</a><a class="refchip r-doc" href="contract.html" title="doc: The E1–E7 contract">contract</a><a class="refchip r-doc" href="drift.html" title="doc: Why weak models drift">drift</a><a class="refchip r-doc" href="verification-first.html" title="doc: The one picture">verification-first</a></div></section>
 </main></div>
 
 <footer class="stamp">

@@ -163,6 +163,64 @@ rc=$(run_evid)
 [ "$rc" = 0 ] && grep -q "fresher than the staged changes" "$T/evid.out" \
   && ok || bad "evidence: proof mtime newer than staged src must stay SILENT (got $rc)"
 
+# =====================================================================
+# checkpoint-trailer.sh — <message-file|->; exit 0=clean/not-applicable,
+# 2=WARN finding, 1=usage (ruling 2026-08-07 — the TASK CONTRACT fold:
+# the printed block went 0-for-19; the record moved to the message).
+# =====================================================================
+TRAIL="$REPO/skills/gabe-commit/scripts/checkpoint-trailer.sh"
+tmsg() { printf '%s' "$1" > "$T/msg.txt"; bash "$TRAIL" "$T/msg.txt" >"$T/trail.out" 2>&1; echo $?; }
+
+[ "$(tmsg 'feat(x): ordinary commit with no footer')" = 0 ] && ok || bad "trailer: non-checkpoint message must stay SILENT"
+[ "$(tmsg 'feat(pantry): add slot counter
+
+Phase: 7 — F6 backend
+Task: T2/6 — derive counters
+Cases: C8134 (red@abc1234) · Guard: C8125
+Class: red')" = 0 ] && ok || bad "trailer: valid red checkpoint trailer must stay SILENT"
+[ "$(tmsg 'fix(x): y
+
+Task: T1/4 — wire the panel
+Cases: none — pure wiring, no red claim
+Class: wiring')" = 0 ] && ok || bad "trailer: wiring + honest none must stay SILENT"
+[ "$(tmsg 'chore: z
+
+Task: T3/4 — config move
+Cases: skip:not-testable — config-only
+Class: wiring')" = 0 ] && ok || bad "trailer: skip:<code> form must stay SILENT"
+[ "$(tmsg 'fix: w
+
+Task: T1/2 — hotfix
+Cases: RED OWED — /gabe-red never ran for this phase
+Class: growth')" = 0 ] && ok || bad "trailer: RED OWED honest-absence must stay SILENT"
+rc=$(tmsg 'feat: x
+
+Task: T2/6 — derive counters')
+[ "$rc" = 2 ] && grep -q 'no Cases: line' "$T/trail.out" && grep -q 'no Class: line' "$T/trail.out" \
+  && ok || bad "trailer: Task: without Cases:/Class: must FIRE naming both (got $rc)"
+rc=$(tmsg 'feat: x
+
+Task: T2/6 — d
+Cases: C8134
+Class: rebuild-to-reference')
+[ "$rc" = 2 ] && grep -q 'malformed Class' "$T/trail.out" && ok || bad "trailer: retired CLASS vocabulary must FIRE (got $rc)"
+rc=$(tmsg 'feat: x
+
+Task: T2/6 — d
+Cases: none — nothing declared
+Class: red')
+[ "$rc" = 2 ] && grep -q 'cites no C-id' "$T/trail.out" && ok || bad "trailer: Class red with no C-id must FIRE (got $rc)"
+rc=$(tmsg 'feat: x
+
+Task: T2/6 — d
+Cases: whatever prose
+Class: wiring')
+[ "$rc" = 2 ] && grep -q 'honest-absence' "$T/trail.out" && ok || bad "trailer: id-less prose Cases must FIRE (got $rc)"
+[ "$(bash "$TRAIL" >/dev/null 2>&1; echo $?)" = 1 ] && ok || bad "trailer: no args must exit 1 (usage)"
+[ "$(bash "$TRAIL" /nonexistent-msg-file >/dev/null 2>&1; echo $?)" = 1 ] && ok || bad "trailer: missing file must exit 1 (usage)"
+rc=$(printf 'Task: T1/1 — x\nCases: C5 (guarded)\nClass: guard\n' | bash "$TRAIL" - >/dev/null 2>&1; echo $?)
+[ "$rc" = 0 ] && ok || bad "trailer: stdin form with valid trailer must stay SILENT"
+
 echo "=================================="
 echo "commit-scripts battery: $pass passed, $fail failed"
 [ "$fail" = 0 ]

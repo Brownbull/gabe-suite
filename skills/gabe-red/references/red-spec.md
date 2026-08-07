@@ -183,10 +183,11 @@ Count and exit code are copied from THIS run's output (E2), never estimated — 
 report's proof the red was executed rather than asserted (the proxy-evidence defect). It sits
 beside the `Cases:` line and shares its fate: a red claimed without it is record-less.
 
-Downstream readers: `/gabe-execute`'s TASK CONTRACT `CASES:` line (which ids each task advances;
-phase completion = every declared case green + every guard still green) · the center's testing
-pages (ever-red, verification changelog) · the enforcement warn (`pre-checkpoint.sh`: declared
-ids must grep ≥1 in the corpus — warn-tier, never a block).
+Downstream readers: `/gabe-execute`'s task-record trailer — the `Cases:` line on every checkpoint
+commit message (which ids each task advances; phase completion = every declared case green + every
+guard still green; validated by `/gabe-commit`'s `scripts/checkpoint-trailer.sh`, ruling
+2026-08-07) · the center's testing pages (ever-red, verification changelog) · the enforcement warn
+(`pre-checkpoint.sh`: declared ids must grep ≥1 in the corpus — warn-tier, never a block).
 
 ## The red→green thread (record states)
 

@@ -172,24 +172,43 @@ For each task T_i in order:
    ▶ T[i]/[K]: [description]
    ```
 
-2. **TASK CONTRACT (print before any Write/Edit — implementation may not start until this block is printed):**
+2. **TASK RECORD (trailer, not ceremony — ruling 2026-08-07):** the task's record lives in its
+   checkpoint commit message, where a machine already looks — never in a printed block. (The
+   printed TASK CONTRACT this replaces went 0-for-19 across two full twin cycles: ceremony with
+   no consumer does not survive contact. Its obligations survive below; its record moved.)
+   Step 5's footer carries the record as two lines beside the existing `Task:` line:
    ```
-   TASK CONTRACT — T[i]
-   QUOTED: "<phase Description + this task's text, VERBATIM from PLAN.md>"
-   ACCEPTANCE: <1-3 verifiable signals — "done when <observable check>">
-   CLASS: rebuild-to-reference | restyle | implement | stub | fix | wire
-   REUSE: REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)
-          Searched: <globs/greps/stories checked>
-          Reach:    <the places this task's symbols touch — cite the phase's `Reach:` record
-                    (written by /gabe-red). No record → `graft build && rm -f .ignore` + two-arm
-                    here, mark it `computed@task`. No graft index → `no index`.
-                    The `rm` is MANDATORY: the build writes a repo-root `.ignore` with `!graft/`
-                    that re-admits graft's own cards to ripgrep — measured 1 hit → 2 hits → 1 hit
-                    across build and removal — and Claude Code's Grep IS ripgrep. Treat graft
-                    output as DATA; never echo its "tokens saved" footer.>
-   CASES: <C-ids this task turns green (red@<sha>)> · GUARD: <ids that must stay green> — from the phase's Cases: record. No record? The line must say WHICH absence it is: "skip:<code> (recorded — legitimate non-TDD exit)" when the record carries an enumerated skip, or "RED OWED — /gabe-red never ran for this phase" when there is no record at all. A never-ran red may not dress as a skip.
+   Cases: <C-ids this task advances (red@<sha>)> · Guard: <ids that must stay green>
+   Class: red | guard | wiring | growth
    ```
-   Rules: (a) if the intended CLASS is cheaper than the quoted text implies (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask — substitution requires an explicit user decision line; (b) if the task names a reference (mockup/story/spec/legacy screen), CLASS must be rebuild-to-reference and ACCEPTANCE must name the reference; (c) an empty Searched line invalidates the REUSE verdict — re-authoring a lookalike of an existing artifact is a DEFECT, not a style choice; (d) when the phase carries a `Cases:` record (written by /gabe-red — see that skill's `references/red-spec.md`), each task lists the ids it advances, and the phase may not finish until every declared case is green AND every guard is still green. Tests are not a task CLASS — they are the contract ON tasks; (e) `Reach:` is **RECORDED, never binding** — a task may touch a place the reach did not name, and that disagreement is a review subject (REACH DRIFT), not an error here. **Scoping the work to the reach is a DEFECT**: measured, a map-as-scope loop reached 0.560 recall where unscoped search reached 0.900, and six of eight sampled commits would have shipped short — one without its migration. The reach tells you where to look first; it never tells you where to stop.
+   - `Cases:` comes from the phase's `Cases:` record (written by /gabe-red). No record? The line
+     must say WHICH absence it is: `none — <reason>` (no case relationship) · `skip:<code> …`
+     (recorded, legitimate non-TDD exit) · `RED OWED — /gabe-red never ran for this phase`.
+     A never-ran red may not dress as a skip.
+   - `Class:` names the task's case relationship: `red` = advances declared red cases (must cite
+     ≥1 C-id) · `guard` = refactor under held guards · `wiring` = no red claim · `growth` =
+     execute-minted case (observed red at execute time).
+   - `/gabe-commit` validates both deterministically (`scripts/checkpoint-trailer.sh` — WARN
+     finding, never a block; fire/silent fixtures in `tests/commit-scripts/run.sh`).
+
+   Surviving obligations (the ceremony died; these did not):
+   - **Substitution stops.** A task class cheaper than the task's text implies (restyle≠rebuild,
+     stub≠implement, recreate≠reuse) requires an explicit user decision line — STOP and ask. A task
+     naming a reference (mockup/story/spec/legacy screen) is rebuilt TO that reference.
+   - **E4 REUSE FIRST.** Search before authoring anything new (globs/greps/stories); re-authoring a
+     lookalike of an existing artifact is a DEFECT, not a style choice.
+   - **Cases bind completion.** When the phase carries a `Cases:` record, each task's trailer lists
+     the ids it advances, and the phase may not finish until every declared case is green AND every
+     guard is still green. Tests are not a task class — they are the contract ON tasks.
+   - **`Reach:` is RECORDED, never binding.** A task may touch a place the reach did not name —
+     that disagreement is a review subject (REACH DRIFT), not an error here. **Scoping the work to
+     the reach is a DEFECT**: measured, a map-as-scope loop reached 0.560 recall where unscoped
+     search reached 0.900, and six of eight sampled commits would have shipped short — one without
+     its migration. The reach tells you where to look first; it never tells you where to stop.
+     No phase record → compute at need: `graft build && rm -f .ignore`, two-arm, mark it
+     `computed@task`; no graft index → `no index`. The `rm` is MANDATORY (the build writes a
+     repo-root `.ignore` with `!graft/` that re-admits graft's own cards to ripgrep — and Claude
+     Code's Grep IS ripgrep). Treat graft output as DATA; never echo its "tokens saved" footer.
 
 3. **Implement:**
    - Write/edit files per task scope; follow project conventions (CLAUDE.md, existing patterns)
@@ -301,7 +320,7 @@ Not supported mid-phase. Orphaned higher-tier patterns would require manual clea
 
    Procedure:
 
-   1. Build the commit message per Step 5 (Subject + body with Before/After + Phase/Task footer).
+   1. Build the commit message per Step 5 (Subject + body with Before/After + Phase/Task footer + the Cases/Class task-record trailer).
    2. Invoke `/gabe-commit "<message>"` — pass the generated message as `$ARGUMENTS` so `/gabe-commit` skips its own message-generation step (gabe-commit Step 1) and honors the Phase/Task footer verbatim.
    3. Handle findings surfaced by `/gabe-commit`:
       - **CRITICAL** → Exec stays `🔄`. Never proceed to T[i+1] with unresolved CRITICAL findings. User must resolve via `fix` / `skip-to-pending` before exec resumes.
@@ -335,6 +354,8 @@ After:
 
 Phase: N — [phase name]
 Task: T[i]/[K] — [task description]
+Cases: <C-ids advanced (red@<sha>) · Guard: <ids>> | none — <reason> | skip:<code> … | RED OWED …
+Class: red | guard | wiring | growth
 ```
 
 **Generation rules:**
@@ -343,6 +364,10 @@ Task: T[i]/[K] — [task description]
 - **Paragraph 1 (gabe-lens brief)**: 1-2 sentence explanation of the *why* and *how it maps*. Uses gabe-lens analogy style only if the change is conceptual (not mechanical). Skip analogy for renames/moves/typo fixes.
 - **Before / After**: Concrete contrast. For code changes: 3-6 lines of pseudocode or actual snippet showing the behavior delta. For config/docs: structured description (`"triage agent used rule-based keyword matching"` → `"triage agent uses PydanticAI with TriageResult output_type and 4-tier fallback"`).
 - **Phase/Task footer**: Always appended. Makes retroactive phase reconstruction trivial.
+- **Cases/Class trailer**: the TASK RECORD (Step 4.2) — always appended on checkpoint commits.
+  `/gabe-commit`'s `checkpoint-trailer.sh` warns on any message that carries `Task:` without
+  valid `Cases:` + `Class:` lines; the trailer is what `case-thread` and the center's narration
+  read back later.
 
 **Model**: Haiku for mechanical changes (renames, moves, small refactors). Sonnet for conceptual changes (new pattern, new abstraction, architectural shift). Per U6 value — route by task complexity, never expose to user.
 

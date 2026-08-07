@@ -3,7 +3,7 @@ name: gabe-execute
 description: "Execute the current .kdbp/PLAN.md phase — tasks under the tier cap, checkpoint commits, escalation gate, Exec column state."
 when_to_use: "Implement the phase, continue the plan, keep going, do task N."
 metadata:
-  version: 2.4.0
+  version: 2.5.0
 ---
 
 # Gabe Execute — phase implementation runner

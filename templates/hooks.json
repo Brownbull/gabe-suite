@@ -102,5 +102,18 @@
         }
       ]
     }
+  },
+  "PUSH-GATE-GUARD": {
+    "event": "PreToolUse",
+    "entry": {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "bash \"${ECC_ROOT:-$HOME/.claude}/scripts/hooks/kdbp/push-gate-guard.sh\"",
+          "timeout": 10
+        }
+      ]
+    }
   }
 }

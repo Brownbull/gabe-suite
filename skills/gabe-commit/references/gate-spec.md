@@ -39,7 +39,7 @@ If `.kdbp/PLAN.md` exists and contains `status: active`:
 
 Run these scripts. No LLM. No token cost. Target: 2-10 seconds total.
 
-Alongside CHECK 1-9, run the three skill-local scripts (each exit 2 = WARN finding, never a block): `scripts/size-budget.sh` (>800-line budget), `scripts/evidence-freshness.sh` (Evidence Doctrine §4 — a proof-carrying phase must have proof_root artifacts at least as new as the staged source; WARNs append to `.kdbp/archive/evidence-bypass.log`), and `scripts/docs-budget.sh` (documentation diet — new md outside allowed homes / dated-name md). Convention text: `../../gabe-docs/references/evidence-doctrine.md`.
+Alongside CHECK 1-9, run the four skill-local scripts (each exit 2 = WARN finding, never a block): `scripts/size-budget.sh` (>800-line budget), `scripts/evidence-freshness.sh` (Evidence Doctrine §4 — a proof-carrying phase must have proof_root artifacts at least as new as the staged source; WARNs append to `.kdbp/archive/evidence-bypass.log`), `scripts/docs-budget.sh` (documentation diet — new md outside allowed homes / dated-name md), and `scripts/checkpoint-trailer.sh <message-file|->` (the execute task record, ruling 2026-08-07 — a message carrying a `Task:` footer is a checkpoint commit and must carry valid `Cases:` + `Class:` lines; run it against the composed message BEFORE committing). Convention text: `../../gabe-docs/references/evidence-doctrine.md`.
 
 A check may be marked ✅ ONLY if its command executed via the Bash tool this session. Before the CHECKS summary line, print one evidence row per check:
 

@@ -65,7 +65,7 @@ covers the full KDBP lifecycle from project init through ship:
 | `/gabe-next` | Zero-logic router — reads PLAN.md and dispatches to the next gabe command |
 | `/gabe-plan` | KDBP-aware planning + per-phase tier decision with optional HTML review artifact for complex decisions |
 | `/gabe-pulse` | Read-only completeness sweep — after a stretch of work, is anything important owed? Ten deterministic signals, four bands, every row naming the command that clears it. Writes nothing, dispatches nothing |
-| `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping workflow |
+| `/gabe-push` | Push, create PR, watch CI, promote branches — post-commit shipping; terminal-env pushes are gated by a blocking proceed/hold ask backed by the fail-closed push-gate hook |
 | `/gabe-red` | TDD's first half as a beat — declare the failing cases before code (C-ids born in test names), commit the red checkpoint; guards for refactors, enumerated skips |
 | `/gabe-review` | Code review — risk pricing, confidence scoring, interactive triage, deferred items |
 | `/gabe-roast` | Adversarial gap review — stress-tests from a required perspective |
@@ -100,7 +100,11 @@ For complex plans, `/gabe-plan` may also create a self-contained HTML review art
 | KDBP Active | SessionStart | Loads project name, maturity, and stack from `.kdbp/BEHAVIOR.md` |
 | ACTIVE PLAN | SessionStart | Surfaces current phase + state cells — reads `.kdbp/PLAN.json` first, falls back to `PLAN.md` |
 | KDBP CHECKPOINT | PreToolUse (Bash) | Warns on raw `git commit`, points to `/gabe-commit` |
+| PUSH-GATE-GUARD | PreToolUse (Bash) | Fails a raw terminal-env `git push` closed in multi-env projects unless `/gabe-push` minted a fresh gate marker after the ONE proceed/hold ask |
+| RED-ENTRY-GUARD | PreToolUse (Write/Edit) | Warns on source writes while the current phase's Red cell is still owed |
 | STRUCTURE: warning | PostToolUse (Write) | Warns when a new file doesn't match a pattern in `.kdbp/STRUCTURE.md` |
+| PLAN-PROOF-GUARD | PostToolUse (Write/Edit) | D7 — blocks a PLAN ✅ cell whose cited evidence doesn't exist (debts warn, lies block) |
+| DIRECTION GUARD | UserPromptSubmit | Injects the steer rule in KDBP projects — direction changes route through `/gabe-assess brief` before building |
 | SESSION-END REMINDER | Stop | NEXT-pointer (0.3b): fires only when the tree is dirty AND no commit landed this session — prints `next: /gabe-commit` once |
 
 ### Workflows

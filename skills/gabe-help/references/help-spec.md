@@ -105,7 +105,7 @@ The Gabe Suite — 28 skills (each skill IS its slash command).
 | gabe-cc-entity | /gabe-cc-entity | Entity-context reader — assembles one entity's slice (code map + registry + bindings) into a context pack from the command center's committed data, without r… |
 | gabe-cc-init | /gabe-cc-init | Brownfield command-center adoption — archive-never-delete init, machine-ranked entity shortlist, back-catalog ingested one section per run, each closed by an… |
 | gabe-cc-update | /gabe-cc-update | Command-center feature coverage — translate shipped work into its entity's lens card, diagrams, and evidence narration; keep the center regenerating green |
-| gabe-commit | /gabe-commit | Commit quality gate — deterministic checks incl. the 800-line size budget, interactive triage, evidence-triggered simplify pass; docs-audit mode for accumula… |
+| gabe-commit | /gabe-commit | Commit quality gate — deterministic checks incl. the 800-line size budget and the checkpoint task-record trailer (Cases/Class on any Task:-footered message),… |
 | gabe-docs | /gabe-docs | Documentation standards + Mermaid diagram library + the suite execution contract |
 | gabe-docsite | /gabe-docsite | Publish docs onto the project's HTML site — pick the section, wire the nav, render with working diagrams |
 | gabe-execute | /gabe-execute | Execute the current .kdbp/PLAN.md phase — tasks under the tier cap, checkpoint commits, escalation gate, Exec column state |

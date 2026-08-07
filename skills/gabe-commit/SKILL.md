@@ -1,9 +1,9 @@
 ---
 name: gabe-commit
-description: "Commit quality gate — deterministic checks incl. the 800-line size budget, interactive triage, evidence-triggered simplify pass; docs-audit mode for accumulated drift."
+description: "Commit quality gate — deterministic checks incl. the 800-line size budget and the checkpoint task-record trailer (Cases/Class on any Task:-footered message), interactive triage, evidence-triggered simplify pass; docs-audit mode for accumulated drift."
 when_to_use: "Commit, save, checkpoint, ship this work — any request to record completed work in git in a KDBP project."
 metadata:
-  version: 2.5.0
+  version: 2.6.0
 ---
 
 # Gabe Commit — commit quality gate
