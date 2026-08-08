@@ -58,7 +58,7 @@ def _fallback(rec):
     m = re.search(r"skip:[a-z-]+", rec)
     if m:
         return [], [], m.group(0)
-    g = re.search(r"GUARD:?", rec, re.I)
+    g = re.search(r"\b(?:GUARD|Guard)\b:?", rec)   # the two real spellings only, never prose 'guard'
     dp, gp = (rec[:g.start()], rec[g.end():]) if g else (rec, "")
     dec = sorted(set(_CID.findall(dp)))
     gua = sorted(set(_CID.findall(gp)))

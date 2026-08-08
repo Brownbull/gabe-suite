@@ -20,7 +20,10 @@ import subprocess
 from pathlib import Path
 
 WALK = 10  # clean-tree walk-back window (the bound; the pulse decay record dampens repeats)
-_INFLIGHT = ("docs/site/center/inflight.json", "docs/site/center/inflight.js")
+# match the projection by BASENAME under any center dir — the suite layout writes it to
+# docs/center/, the app layout to docs/site/center/; a path-list check missed the former and
+# re-blinded S6/S7 there (review 2026-08-07).
+_INFLIGHT = ("inflight.json", "inflight.js")
 
 
 def _sh(args: list[str], root: Path) -> str:
@@ -34,7 +37,9 @@ def _sh(args: list[str], root: Path) -> str:
 def _is_bookkeeping(f: str) -> bool:
     # .kdbp state ticks and the beat-tail's own projection are not "work"; counting
     # them re-blinds the signal exactly as the pre-2026-08-07 HEAD~1..HEAD fallback did.
-    return f.startswith(".kdbp/") or f in _INFLIGHT
+    # Match inflight by basename so BOTH center layouts (docs/center/, docs/site/center/)
+    # are covered.
+    return f.startswith(".kdbp/") or f.rsplit("/", 1)[-1] in _INFLIGHT
 
 
 _CACHE: dict[str, tuple[list[str], str]] = {}
@@ -130,13 +135,18 @@ def touched_layers(cfg: dict, files: list[str]) -> list[str]:
     return sorted(l for l, pats in lg.items() if any(matches(f, p) for f in files for p in pats))
 
 
-def load_center_config(root: Path) -> dict | None:
+def load_center_config(root: Path):
+    """The ONE center-config probe, both layouts. Returns (cfg, center_dir):
+    cfg is None when no center exists AND when the config is malformed (a broken
+    config is not a usable center); center_dir is the config's directory so a
+    caller that also writes into the center (write-inflight) needs no second probe.
+    """
     for rel in ("docs/site/center/center.config.json",
                 "docs/center/suite-center.config.json"):
         p = root / rel
         if p.is_file():
             try:
-                return json.loads(p.read_text(encoding="utf-8"))
+                return json.loads(p.read_text(encoding="utf-8")), p.parent
             except json.JSONDecodeError:
-                return None
-    return None
+                return None, p.parent
+    return None, None

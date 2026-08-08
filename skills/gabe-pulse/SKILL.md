@@ -5,7 +5,7 @@ when_to_use: "After a long or sprawling stretch: did everything that should have
 context: fork
 agent: Explore
 metadata:
-  version: 1.4.0
+  version: 1.4.1
 ---
 
 # Gabe Pulse — is anything important owed?

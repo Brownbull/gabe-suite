@@ -319,6 +319,7 @@ git checkout -q "$CURB" 2>/dev/null || true
 [ "$(pg '{"tool_input":{"command":"git push origin main&&true"}}')" = 2 ] && ok || bad "push-gate: operator glued to the refspec → fail closed"
 [ "$(pg '{"tool_input":{"command":"git push origin main;echo done"}}')" = 2 ] && ok || bad "push-gate: semicolon glued to the refspec → fail closed"
 [ "$(pg '{"tool_input":{"command":"git --git-dir=/x/.git push origin main"}}')" = 2 ] && ok || bad "push-gate: repo-redirect flag → cannot prove repo → fail closed"
+[ "$(pg '{"tool_input":{"command":"git -C /other/repo push origin staging"}}')" = 2 ] && ok || bad "push-gate: -C redirect (validates the WRONG repo's PUSH.md) → fail closed"
 [ "$(pg '{"tool_input":{"command":"git push origin refs/heads/*:refs/heads/*"}}')" = 2 ] && ok || bad "push-gate: glob refspec → cannot prove it misses terminal → fail closed"
 # sha-bound marker: valid only while HEAD matches
 mkmarker
@@ -391,6 +392,31 @@ PUSHEOF
 rm -f .kdbp/.push-gate-ok
 [ "$(pg '{"tool_input":{"command":"git push origin staging"}}')" = 0 ] && ok || bad "push-gate: mis-wired multi-terminal topology must not block ordinary staging pushes"
 [ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 2 ] && ok || bad "push-gate: default env still gated in a mis-wired topology"
+# same mis-wired topology, but default_env is markdown-prettified — narrowing must still fire
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Defaults
+
+| **default_env** | production |
+
+## Environments
+
+### production
+
+| Setting | Value |
+|---------|-------|
+| target_branch | main |
+| promote_from | — |
+
+### staging
+
+| Setting | Value |
+|---------|-------|
+| target_branch | staging |
+| promote_from | — |
+PUSHEOF
+rm -f .kdbp/.push-gate-ok
+[ "$(pg '{"tool_input":{"command":"git push origin staging"}}')" = 0 ] && ok || bad "push-gate: bold **default_env** must still resolve → staging stays free (no silent production fallback)"
+[ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 2 ] && ok || bad "push-gate: bold **default_env** → default (main) still gated"
 # single-env project — gating OFF
 cat > .kdbp/PUSH.md <<'PUSHEOF'
 ### production

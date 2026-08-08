@@ -46,29 +46,16 @@ def sh(args: list[str], cwd: Path) -> str:
         return ""
 
 
-def load_center_config(root: Path):
-    """Probe BOTH center layouts — the app layout and the suite layout. The
-    single-path probe was a real bug: a suite-shaped center produced nothing while
-    the pulse line fired on the same registry."""
-    for rel in ("docs/site/center/center.config.json",
-                "docs/center/suite-center.config.json"):
-        p = root / rel
-        if p.is_file():
-            try:
-                return json.loads(p.read_text(encoding="utf-8")), p.parent
-            except Exception:  # noqa: BLE001
-                return {}, p.parent
-    return None, None
-
-
 def main() -> int:
     if work_scope is None:
         print("inflight: work_scope resolver not importable — skipped", file=sys.stderr)
         return 0  # a missing shared module is not a reason to brick a beat
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
-    cfg, out_dir = load_center_config(root)
+    # the SHARED both-layout probe (work_scope) — no second copy here, one parse-error
+    # semantics (malformed config → None → treated as no center, same as the pulse line)
+    cfg, out_dir = work_scope.load_center_config(root)
     if cfg is None:
-        return 0  # no center — not this project's surface; silence, not filler
+        return 0  # no center (or malformed config) — not this project's surface; silence
 
     head = sh(["git", "rev-parse", "--short", "HEAD"], root).strip() or None
     branch = sh(["git", "rev-parse", "--abbrev-ref", "HEAD"], root).strip() or None

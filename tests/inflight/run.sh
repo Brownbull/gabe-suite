@@ -148,5 +148,18 @@ python3 "$W" "$r" >/dev/null
 [ "$(J "$r" "p['touched'][0]['slug']")" = "pantry" ] && ok || bad "board resolver must match glob-declared entities (shared work_scope)"
 [ "$(J "$r" "p['touched'][0]['files']")" = "3" ] && ok || bad "board resolver must count 3 glob-matched files"
 
+# ── work_scope excludes the projection under BOTH center layouts (basename match) ──
+# (a path-list check only knew docs/site/center/; the suite layout writes to docs/center/,
+#  so its own inflight.js re-blinded pulse there — review 2026-08-07)
+r=$(mkrepo wsexcl); mkdir -p "$r/docs/site/center" "$r/docs/center" "$r/src"
+# a real dirty file keeps us on the dirty branch; the inflight files (both layouts) must be filtered out
+(cd "$r" && echo x > src/real.py && echo x > docs/site/center/inflight.js && echo x > docs/center/inflight.json && echo x > docs/center/inflight.js)
+got=$(cd "$r" && python3 -c "
+import sys; sys.path.insert(0,'$REPO/skills/gabe-pulse/scripts')
+import work_scope; from pathlib import Path
+files,src=work_scope.changed_files(Path('.'))
+print(sorted(files), src)")
+[ "$got" = "['src/real.py'] dirty" ] && ok || bad "work_scope must exclude inflight.* under both center layouts, keep real work (got: $got)"
+
 echo "inflight battery: $pass passed, $fail failed"
 [ "$fail" = 0 ]

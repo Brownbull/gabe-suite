@@ -73,16 +73,6 @@ def load_plan(root: Path) -> dict | None:
         return None
 
 
-def load_center_config(root: Path) -> dict | None:
-    for rel in ("docs/site/center/center.config.json",
-                "docs/center/suite-center.config.json"):
-        p = root / rel
-        if p.is_file():
-            try:
-                return json.loads(p.read_text(encoding="utf-8"))
-            except json.JSONDecodeError:
-                return None
-    return None
 
 
 def done_phases(plan: dict) -> list[dict]:
@@ -360,7 +350,7 @@ def main(argv: list[str] | None = None) -> int:
 
     root = Path(args.root).resolve()
     plan = load_plan(root)
-    cfg = load_center_config(root)
+    cfg, _cfgdir = work_scope.load_center_config(root)   # the shared, both-layout probe
     dpath = decay_path(root)
     offers = read_offers(dpath)
 

@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.9.1
+  version: 1.9.2
 ---
 
 # Gabe Red — the failing state, given an address

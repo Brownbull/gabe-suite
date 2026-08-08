@@ -57,10 +57,11 @@ def parse_cases(record: str):
         return [], [], skip.group(0)
     guard_part = ""
     declared_part = record
-    # case-insensitive: red-spec Cases records write `GUARD`, the execute checkpoint
-    # trailer writes `Guard:` — one grammar must parse both (ruling 2026-08-07), else a
-    # guard id in the trailer's tail counts as a declared red case
-    m = re.search(r"GUARD:?", record, re.I)
+    # Match the two REAL spellings only — red-spec's `GUARD`/`GUARD:` and the execute
+    # trailer's `Guard:` — both word-bounded, never a bare case-insensitive `guard`
+    # (that split records at prose like "guard-rail case C100" and misclassified the
+    # declared id as a guard — review regression 2026-08-07).
+    m = re.search(r"\b(?:GUARD|Guard)\b:?", record)
     if m:
         declared_part, guard_part = record[: m.start()], record[m.end():]
     declared = sorted(set(CID.findall(declared_part)))

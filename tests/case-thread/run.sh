@@ -65,5 +65,18 @@ OUT="2 passed" ; export OUT
 runner 0
 [ "$(ct --assert-green)" = 0 ] && ok || bad "guard-only record with passing run must be GREEN-PROVEN"
 
+# --- parse_cases grammar: the GUARD split must not fire on prose 'guard' ---
+# (a case-insensitive split misclassified declared C-ids as guards — review 2026-08-07)
+pc() { python3 -c "
+import importlib.util
+s=importlib.util.spec_from_file_location('ct','$CT'); m=importlib.util.module_from_spec(s); s.loader.exec_module(m)
+print(m.parse_cases($1))"; }
+[ "$(pc "'guard-rail case C100 · GUARD: C50'")" = "(['C100'], ['C50'], None)" ] \
+  && ok || bad "parse_cases: prose 'guard-rail' must NOT split — C100 stays declared, only GUARD: C50 is a guard"
+[ "$(pc "'NEW C147 · Guard: C091'")" = "(['C147'], ['C091'], None)" ] \
+  && ok || bad "parse_cases: the trailer's 'Guard:' spelling must still split"
+[ "$(pc "'BUMP C148 · GUARD C091'")" = "(['C148'], ['C091'], None)" ] \
+  && ok || bad "parse_cases: red-spec's uppercase GUARD (no colon) must still split"
+
 echo "case-thread battery: $pass passed, $fail failed"
 [ "$fail" = 0 ]

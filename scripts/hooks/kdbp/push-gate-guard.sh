@@ -86,10 +86,16 @@ def field(block, key):
     return None
 
 def default_env(text):
-    m = re.search(r"^\|\s*default_env\s*\|\s*([^|]+?)\s*\|", text, flags=re.M)
-    if not m:
-        m = re.search(r"^\s*default_env\s*:\s*(.+?)\s*$", text, flags=re.M)
-    return m.group(1).strip() if m else "production"
+    # de-decorate the key the same way field()/clean_key() do — a prettified
+    # `| **default_env** | staging |` row must not fall silently to "production"
+    for line in text.splitlines():
+        m = re.match(r"\|\s*([^|]+?)\s*\|\s*([^|]+?)\s*\|", line)
+        if m and clean_key(m.group(1)) == "default_env":
+            return m.group(2).strip()
+        m = re.match(r"\s*([^:|]+?)\s*:\s*(.+?)\s*$", line)
+        if m and clean_key(m.group(1)) == "default_env":
+            return m.group(2).strip()
+    return "production"
 
 heading_blocks = re.split(r"^###\s+", raw, flags=re.M)[1:]
 envs = []  # (name, target_branch, promote_from)
@@ -119,7 +125,7 @@ if len(terminal) > 1:
         terminal = {de_tb}
 
 # ── command → push destinations, fail-closed on anything unprovable ─────────────────────────
-REDIRECT = ("--git-dir", "--work-tree", "--namespace", "--exec-path", "--config-env")
+REDIRECT = ("-C", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--config-env")
 VALUE_FLAGS = {"-o", "--push-option", "--receive-pack", "--exec", "--repo", "-C", "-c",
                "--git-dir", "--work-tree", "--namespace", "--exec-path", "--config-env"}
 GLUE = ("&&", "||", ";", "|", "`", "$(", "\n")
