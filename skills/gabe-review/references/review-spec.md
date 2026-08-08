@@ -251,8 +251,11 @@ into a hook block, never into silence.
   graph's edges are complete, and it is the evidence the twin-propagation decision waits on.
 - **ENTITY DRIFT** — the phase's declared `entities` (PLAN.json, written at plan time from the
   operator-confirmed Entities bullet — ruling 2026-08-07) and the entities the diff actually
-  touched disagree. Touched = changed files fnmatched against `center.config.json`
-  `entities{}.code` globs — the ledger's resolver, path-derived or absent, never keyword-guessed.
+  touched disagree. Touched = changed files matched against `center.config.json` `entities{}.code`
+  globs by the SHARED resolver `skills/gabe-pulse/scripts/work_scope.py` (`touched_entities`) — the
+  SAME one the board's in-flight view and the pulse S6 signal call, so this finding can never
+  contradict what the board shows; path-derived or absent, never keyword-guessed, `*` does not
+  cross `/`.
   Two shapes (report-never-gate, D1): **undeclared-touched** the diff changed entity X's code but
   the phase declared only Y — either the declaration was short or the work grew sideways ·
   **declared-untouched** a declared entity's code never appeared in the diff — the declaration

@@ -57,7 +57,10 @@ def parse_cases(record: str):
         return [], [], skip.group(0)
     guard_part = ""
     declared_part = record
-    m = re.search(r"GUARD:?", record)
+    # case-insensitive: red-spec Cases records write `GUARD`, the execute checkpoint
+    # trailer writes `Guard:` — one grammar must parse both (ruling 2026-08-07), else a
+    # guard id in the trailer's tail counts as a declared red case
+    m = re.search(r"GUARD:?", record, re.I)
     if m:
         declared_part, guard_part = record[: m.start()], record[m.end():]
     declared = sorted(set(CID.findall(declared_part)))

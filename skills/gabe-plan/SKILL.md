@@ -3,7 +3,7 @@ name: gabe-plan
 description: "KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts."
 when_to_use: "Plan, phases, tier decision, break down this goal — create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md."
 metadata:
-  version: 2.7.0
+  version: 2.7.1
 ---
 
 # Gabe Plan — KDBP-aware planner
@@ -41,6 +41,8 @@ KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.
 ## Output contract (summary)
 
 Write `.kdbp/PLAN.md` with the full section set (Goal/Context/Phases/Phase Details/Current Phase/Dependencies/Risks/Notes/Review Artifacts/Runtime Evidence Checkpoints), the `.kdbp/PLAN.json` machine mirror, and the corresponding LEDGER.md thin-index row in the same turn (E5). Tier decisions, per-dim overrides, and suppressed dimensions get a DECISIONS.md entry with a stated reason. Emit the output-only `**Gabe-Lens block**` — never written to PLAN.md/REVIEW.md/LEDGER.md/PENDING.md/commits/docs unless another command already owns that write. When an HTML review artifact is created or refreshed, report its path. The full output contract in the spec is binding.
+
+Emit the shared beat brief (`**Gabe-Lens brief**` — ENTITY / FEATURE / DID, stated once in `../gabe-docs/references/execution-contract.md` §"The beat brief") just before the E8 tail; output-only, never persisted. Plan is the beat that DECLARES each phase's entities, so its ENTITY line (the just-declared slugs) carries the most of any beat's.
 
 ## Closing — the beat tail (E8)
 

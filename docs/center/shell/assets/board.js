@@ -164,13 +164,23 @@
       + (p.owes && p.owes.length ? 'owes ' + p.owes.join(', ') : 'complete')
       + '</span>');
     /* live overlay — window.GABE_INFLIGHT is the beat-tail projection
-       (inflight.js sibling; absent file = no overlay, static payload stands) */
+       (inflight.js sibling; absent file = no overlay, static payload stands).
+       Match on the generator's `current` stamp (num-or-id joined server-side),
+       NOT a string compare of IF.current_phase to p.id — those live in different
+       id spaces and never matched on a `<id> · <name>` layout. */
     var live = '';
     var IF = window.GABE_INFLIGHT;
-    if (IF && IF.active && String(IF.current_phase) === String(p.id)) {
+    var isCurrent = p.current
+      || (IF && (String(IF.current_phase) === String(p.id)
+                 || String(IF.current_phase) === String(p.num)));
+    if (IF && IF.active && isCurrent) {
       var bits = [];
       if (IF.work_source === 'dirty') bits.push(IF.dirty_files + ' file(s) in flight');
       else if (IF.work_source && IF.work_source !== 'none') bits.push('last work @ ' + IF.work_source);
+      /* declared-vs-touched — the comparison the ruling was built for. `declared`
+         null = never declared, [] = explicit none, else the operator's slugs. */
+      if (IF.declared && IF.declared.length) bits.push('declared ' + IF.declared.join(', '));
+      else if (IF.declared) bits.push('declared: none');
       (IF.touched || []).forEach(function (t) {
         bits.push('touched ' + t.slug + ' ×' + t.files);
       });

@@ -18,13 +18,19 @@ function out(obj, lines) {
   if (asJson) console.log(JSON.stringify(obj));
   else console.log(lines.join("\n"));
 }
+// A mirror-unusable exit still emits JSON under --json, so the E8 beat tail always parses one
+// shape; next:null tells the tail to print neither NOW nor NEXT (degrade rule).
+function fail2(msg) {
+  if (asJson) console.log(JSON.stringify({ next: null, reason: "mirror-unusable", detail: msg }));
+  else console.log(msg);
+  process.exit(2);
+}
 
 let plan;
 try {
   plan = JSON.parse(readFileSync(".kdbp/PLAN.json", "utf8"));
 } catch {
-  console.log("ℹ PLAN.json missing or invalid — fall back to prose PLAN.md routing (run /gabe-plan update to regenerate the mirror).");
-  process.exit(2);
+  fail2("ℹ PLAN.json missing or invalid — fall back to prose PLAN.md routing (run /gabe-plan update to regenerate the mirror).");
 }
 
 if (plan.status !== "active") {
@@ -33,29 +39,25 @@ if (plan.status !== "active") {
 }
 
 if (plan.phases != null && !Array.isArray(plan.phases)) {
-  console.log("ℹ PLAN.json `phases` is not an array — mirror damage. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.");
-  process.exit(2);
+  fail2("ℹ PLAN.json `phases` is not an array — mirror damage. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.");
 }
 const phases = plan.phases ?? [];
 if (phases.some((p) => p == null)) {
-  console.log("⚠ PLAN.json phases[] contains a null entry — mirror damage. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.");
-  process.exit(2);
+  fail2("⚠ PLAN.json phases[] contains a null entry — mirror damage. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.");
 }
 // A mistyped cell token ("Done", "complete") is neither todo nor done — it would silently
 // route wrong (settle unfinished work, or skip the red/exec gate). Refuse the mirror instead.
 for (const p of phases) {
   for (const [k, v] of Object.entries((p && p.cells) || {})) {
     if (!(v in GLYPH)) {
-      console.log(`⚠ PLAN.json phase ${p.id}: cell ${k}="${v}" is not a valid token (${Object.keys(GLYPH).join("/")}) — mirror drift. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.`);
-      process.exit(2);
+      fail2(`⚠ PLAN.json phase ${p.id}: cell ${k}="${v}" is not a valid token (${Object.keys(GLYPH).join("/")}) — mirror drift. Run /gabe-plan update to regenerate; falling back to prose PLAN.md routing.`);
     }
   }
 }
 const cur = String(plan.current_phase ?? "");
 const idx = phases.findIndex((p) => String(p.id) === cur);
 if (idx === -1) {
-  console.log(`⚠ Current Phase ${cur} has no matching entry in PLAN.json phases — mirror desync. Run /gabe-plan update to regenerate (or fix current_phase); falling back to prose PLAN.md routing.`);
-  process.exit(2);
+  fail2(`⚠ Current Phase ${cur} has no matching entry in PLAN.json phases — mirror desync. Run /gabe-plan update to regenerate (or fix current_phase); falling back to prose PLAN.md routing.`);
 }
 
 const projectType = plan.project_type ?? "code";
@@ -120,8 +122,12 @@ for (let i = idx; i < phases.length; i++) {
   const state = lifecycle
     .map((k) => `${k[0].toUpperCase()}${k.slice(1)} ${GLYPH[c[k]] ?? "?"}`).join(" | ");
   const advance = advanceChain.length && String(ph.id) !== cur ? String(ph.id) : null;
+  // Rendered lines the E8 beat tail prints VERBATIM — the tail must never format `state`
+  // (a cells OBJECT) itself, which rendered `· [object Object]` on every beat.
+  const nowLine = `Phase ${ph.id} — ${ph.name ?? "?"} · ${state}`;
+  const nextLine = `${next} — ${reason}`;
   out(
-    { next, reason, phase: String(ph.id), name: ph.name, state: c, advance_to: advance, warnings: debt, project_type: projectType },
+    { next, reason, phase: String(ph.id), name: ph.name, state: c, now_line: nowLine, next_line: nextLine, advance_to: advance, warnings: debt, project_type: projectType },
     [
       ...warnings,
       ...(advance ? [`ℹ PLAN: settled through ${advanceChain.join(", ")} — advance Current Phase to ${advance} (caller writes PLAN.md + PLAN.json).`] : []),
@@ -137,7 +143,10 @@ for (let i = idx; i < phases.length; i++) {
 }
 
 out(
-  { next: "/gabe-plan complete", reason: "all-phases-settled", warnings: debt },
+  // terminal payload carries no phase → now_line is null so the tail prints only NEXT.
+  { next: "/gabe-plan complete", reason: "all-phases-settled",
+    now_line: null, next_line: "/gabe-plan complete — every phase is settled (done/deferred/obsolete); archive the plan",
+    warnings: debt },
   [...warnings, "GABE NEXT (PLAN.json)", "NEXT:  /gabe-plan complete", "REASON: every phase is settled (done/deferred/obsolete) — archive the plan."]
 );
 process.exit(0);

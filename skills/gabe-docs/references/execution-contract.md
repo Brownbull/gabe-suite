@@ -49,18 +49,22 @@ non-uniform (one beat had none) and the operator asked "how's it going / what's 
 times across two repos while the router already knew the answer. Each part degrades to
 SILENCE — a missing source never prints filler.
 
-1. **`NOW:` / `NEXT:` — rendered from the router, never from memory.** Run
-   `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (read-only,
-   zero LLM, no state writes) and render its payload:
+1. **`NOW:` / `NEXT:` — printed from the router's own rendered strings, never formatted here.** Run
+   `node ${ECC_ROOT:-$HOME/.claude}/skills/gabe-next/scripts/next.mjs --json` (read-only, zero LLM,
+   no state writes) and print its `now_line` / `next_line` fields VERBATIM:
    ```
-   NOW:  Phase <phase> — <name> · <state>
-   NEXT: <next> — <reason>
+   NOW:  <now_line>
+   NEXT: <next_line>
    ```
-   The tail runs AFTER the beat's state writes (E5, same turn), so the router reads fresh
-   cells. No `.kdbp` plan, or router exit 2 → print neither line. When the beat KNOWS the
-   router's answer is stale (e.g. push blocked on an operator merge — the observed loop-spin),
-   print `NEXT: blocked — <reason>` INSTEAD of the router's line; an honest override, never
-   both lines.
+   The tail must NOT build these itself — the payload's `state` is a cells OBJECT, and formatting
+   it by hand rendered `· [object Object]` on every beat; the router owns the vocabulary and emits
+   the finished strings. The tail runs AFTER the beat's state writes (E5, same turn), so the router
+   reads fresh cells. Degrade rules: `now_line` is `null` on the plan-complete payload → print only
+   the NEXT line; `next` is `null` (exit 2 mirror-unusable, or the exit-1 no-active-plan payload) →
+   print NEITHER line; `node` not installed / the command errors → print NEITHER (never invent the
+   lines). When the beat KNOWS the router's answer is stale (e.g. push blocked on an operator
+   merge — the observed loop-spin), print `NEXT: blocked — <reason>` INSTEAD; an honest override,
+   never both.
 
 2. **`CENTER:` — refresh the in-flight projection, then point at it. Conditional, never a
    gate.** Only when `docs/site/center/center.config.json` exists — first run

@@ -1,35 +1,41 @@
 #!/usr/bin/env python3
 """write-inflight.py — the center's in-flight projection (ruling 2026-08-07, ask A).
 
-Derives docs/site/center/inflight.json from .kdbp/PLAN.json + git — a PROJECTION,
-never a database (the board's own law): a script writes it, nobody hand-edits it,
-and the board + chrome pill read it at view time the way the evidence navigator
-reads its committed census. Invoked by the E8 beat tail (execution-contract §"The
-beat tail") before the CENTER: pointer prints, so the file is exactly as fresh as
-the last beat.
+Derives docs/site/center/inflight.{json,js} from .kdbp/PLAN.json + git — a
+PROJECTION, never a database (the board's own law): a script writes it, nobody
+hand-edits it, and board.js reads it at view time. Invoked by the E8 beat tail
+before the CENTER: pointer prints, so the file is exactly as fresh as the last
+beat. The files are GITIGNORED (gabe-init seeds it): they carry `head`, which
+changes every commit, so tracking them would dirty the tree forever and re-blind
+the pulse signals; the board reads them locally and renders absence as absence.
 
-Determinism: NO wallclock — freshness is carried by `head` + the dirty-file count
-(the suite's byte-identical-builds law; a timestamp would make every run a diff).
-Same tree ⇒ same bytes: keys sorted on emit.
+"What changed" and "whose is it" come from the SHARED resolver
+(gabe-pulse/scripts/work_scope.py) — the same one the pulse S6/S7 signals use, so
+the board and the pulse line can never name different entities for one tree.
 
 Honest blanks: a phase with no `entities` key renders `declared: null` (never
 guessed); an explicit `none — <reason>` declaration arrives as `declared: []`.
-`touched` is path-derived only — dirty + last-work-commit files fnmatched against
-center.config `entities{}.code` globs (the ledger's resolver semantics; pure-.kdbp
-bookkeeping commits are skipped exactly like the pulse engine's walk-back).
 
 Usage: write-inflight.py [root]
-  silent exit 0 when the project has no center (docs/site/center/center.config.json)
-  writes + prints one line otherwise; exit 1 only on a write failure.
+  silent exit 0 when the project has no center; writes + prints one line otherwise;
+  exit 1 only on a write failure.
 Battery: tests/inflight/run.sh (FIRE and SILENT both proven).
 """
 from __future__ import annotations
 
-import fnmatch
 import json
 import subprocess
 import sys
 from pathlib import Path
+
+# The shared work-scope resolver lives in the pulse skill (pulse "owns the diff
+# source"). Under both the repo layout and the installed ~/.claude layout it sits
+# at ../../gabe-pulse/scripts relative to this file.
+sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "gabe-pulse" / "scripts"))
+try:
+    import work_scope
+except Exception:  # noqa: BLE001
+    work_scope = None
 
 
 def sh(args: list[str], cwd: Path) -> str:
@@ -40,56 +46,30 @@ def sh(args: list[str], cwd: Path) -> str:
         return ""
 
 
-def work_files(root: Path) -> tuple[list[str], str]:
-    """(files of the newest WORK state, its label) — dirty tree first, else the
-    newest commit whose files are not all under .kdbp/ (bookkeeping-blindness
-    rule, measured in the Wave-2 diagnosis)."""
-    # tracked changes AND untracked new files — a phase's first files are born
-    # untracked, and `git diff HEAD` alone would call that tree clean (the
-    # battery caught exactly this; B7's lesson: uncommitted work is the state
-    # most worth showing)
-    dirty = [f for f in sh(["git", "diff", "--name-only", "HEAD"], root).splitlines() if f.strip()]
-    dirty += [f for f in sh(["git", "ls-files", "--others", "--exclude-standard"],
-                            root).splitlines() if f.strip()]
-    # bookkeeping is not work (walk-back law), and the projection must never
-    # watch ITSELF — its own fresh file in the untracked set broke the
-    # unchanged-tree byte-identity until the battery caught it
-    dirty = [f for f in dirty
-             if not f.startswith(".kdbp/")
-             and not f.endswith(("center/inflight.json", "center/inflight.js"))]
-    if dirty:
-        return sorted(set(dirty)), "dirty"
-    for sha in sh(["git", "log", "-10", "--format=%H"], root).split():
-        files = [f for f in sh(["git", "diff", "--name-only", f"{sha}~1", sha], root).splitlines()
-                 if f.strip()]
-        if files and not all(f.startswith(".kdbp/") for f in files):
-            return files, sha[:8]
-    return [], "none"
-
-
-def touched_entities(cfg: dict, files: list[str]) -> list[dict]:
-    out = []
-    for slug, row in sorted((cfg.get("entities") or {}).items()):
-        globs: list[str] = []
-        for paths in (row.get("code") or {}).values():
-            globs += list(paths)
-        n = sum(1 for f in files if any(fnmatch.fnmatch(f, g) or f == g for g in globs))
-        if n:
-            out.append({"slug": slug, "files": n})
-    return out
+def load_center_config(root: Path):
+    """Probe BOTH center layouts — the app layout and the suite layout. The
+    single-path probe was a real bug: a suite-shaped center produced nothing while
+    the pulse line fired on the same registry."""
+    for rel in ("docs/site/center/center.config.json",
+                "docs/center/suite-center.config.json"):
+        p = root / rel
+        if p.is_file():
+            try:
+                return json.loads(p.read_text(encoding="utf-8")), p.parent
+            except Exception:  # noqa: BLE001
+                return {}, p.parent
+    return None, None
 
 
 def main() -> int:
+    if work_scope is None:
+        print("inflight: work_scope resolver not importable — skipped", file=sys.stderr)
+        return 0  # a missing shared module is not a reason to brick a beat
     root = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
-    cfg_path = root / "docs" / "site" / "center" / "center.config.json"
-    if not cfg_path.is_file():
+    cfg, out_dir = load_center_config(root)
+    if cfg is None:
         return 0  # no center — not this project's surface; silence, not filler
-    try:
-        cfg = json.loads(cfg_path.read_text(encoding="utf-8"))
-    except Exception:  # noqa: BLE001
-        cfg = {}
 
-    out_path = cfg_path.parent / "inflight.json"
     head = sh(["git", "rev-parse", "--short", "HEAD"], root).strip() or None
     branch = sh(["git", "rev-parse", "--abbrev-ref", "HEAD"], root).strip() or None
 
@@ -102,42 +82,50 @@ def main() -> int:
             plan = None
 
     doc: dict = {"v": 1, "head": head, "branch": branch}
-    if not plan or plan.get("status") != "active":
+    ph = None
+    if plan and plan.get("status") == "active":
+        cur = plan.get("current_phase")
+        # current_phase may be null (PLAN.md's Current Phase line didn't parse) —
+        # stringifying that to "None" and looking it up publishes a real phase as
+        # never-declared. Guard it: active but no resolvable phase is honest.
+        if cur not in (None, "", "null"):
+            ph = next((p for p in plan.get("phases", []) or []
+                       if str(p.get("id")) == str(cur)), None)
+
+    if ph is None:
         doc["active"] = False
-        doc["reason"] = ("no PLAN.json" if plan is None
-                        else f"plan status: {plan.get('status') or 'unknown'}")
+        if plan is None:
+            doc["reason"] = "no PLAN.json"
+        elif plan.get("status") != "active":
+            doc["reason"] = f"plan status: {plan.get('status') or 'unknown'}"
+        else:
+            doc["reason"] = "current phase not resolvable in PLAN.json"
     else:
-        cur = str(plan.get("current_phase", ""))
-        ph = next((p for p in plan.get("phases", []) or []
-                   if str(p.get("id")) == cur), None)
-        files, src = work_files(root)
+        files, src = work_scope.changed_files(root)
         doc["active"] = True
-        doc["current_phase"] = cur
-        doc["phase"] = ({
+        doc["current_phase"] = str(ph.get("id"))
+        doc["phase"] = {
             "id": str(ph.get("id")), "name": ph.get("name"),
             "tier": ph.get("tier"), "complexity": ph.get("complexity"),
             "types": ph.get("types") or [],
             "cells": ph.get("cells") or {},
             "cases": ph.get("cases"),
             "scope": ph.get("scope"),          # null = never declared
-        } if ph else None)
+        }
         # declared: null = never declared · [] = explicit `none — <reason>` (honest blank)
-        doc["declared"] = (ph.get("entities") if ph and "entities" in ph else None)
-        doc["touched"] = touched_entities(cfg, files)
+        doc["declared"] = ph.get("entities") if "entities" in ph else None
+        doc["touched"] = work_scope.touched_entities(cfg, files)
         doc["work_source"] = src               # "dirty" | <short sha> | "none"
-        doc["dirty_files"] = len([1 for _ in files]) if src == "dirty" else 0
+        doc["dirty_files"] = len(files) if src == "dirty" else 0
 
+    out_path = out_dir / "inflight.json"
+    js_path = out_dir / "inflight.js"
     body = json.dumps(doc, indent=2, sort_keys=True, ensure_ascii=False) + "\n"
-    # inflight.js is the SAME projection as a script sibling — the center's
-    # primary viewing mode is file://, where fetch() of a sibling JSON is dead;
-    # a <script src="inflight.js"> in the shell loads fine in both modes and a
-    # missing file degrades to a silent 404.
-    js_path = cfg_path.parent / "inflight.js"
     js_body = "window.GABE_INFLIGHT = " + json.dumps(doc, sort_keys=True, ensure_ascii=False) + ";\n"
     try:
         if (out_path.is_file() and out_path.read_text(encoding="utf-8") == body
                 and js_path.is_file() and js_path.read_text(encoding="utf-8") == js_body):
-            return 0  # unchanged — no write, no output (byte-identical law)
+            return 0  # unchanged — no write, no output
         out_path.write_text(body, encoding="utf-8")
         js_path.write_text(js_body, encoding="utf-8")
     except Exception as exc:  # noqa: BLE001

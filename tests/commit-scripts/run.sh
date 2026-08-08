@@ -209,13 +209,36 @@ rc=$(tmsg 'feat: x
 Task: T2/6 — d
 Cases: none — nothing declared
 Class: red')
-[ "$rc" = 2 ] && grep -q 'cites no C-id' "$T/trail.out" && ok || bad "trailer: Class red with no C-id must FIRE (got $rc)"
+[ "$rc" = 2 ] && grep -q 'declares no C-id' "$T/trail.out" && ok || bad "trailer: Class red with no C-id must FIRE (got $rc)"
 rc=$(tmsg 'feat: x
 
 Task: T2/6 — d
 Cases: whatever prose
 Class: wiring')
 [ "$rc" = 2 ] && grep -q 'honest-absence' "$T/trail.out" && ok || bad "trailer: id-less prose Cases must FIRE (got $rc)"
+# ASCII hyphen must be accepted, not just the em dash (real keyboards type '-')
+[ "$(tmsg 'fix: y
+
+Task: T1/4 — wire
+Cases: none - pure wiring, no red claim
+Class: wiring')" = 0 ] && ok || bad "trailer: honest-none with an ASCII hyphen must stay SILENT"
+# a Guard: tail id must NOT satisfy the red-claim (the reuse-parse_cases fix)
+rc=$(tmsg 'feat: x
+
+Task: T2/6 — refactor
+Cases: none — pure refactor · Guard: C8125
+Class: red')
+[ "$rc" = 2 ] && grep -q 'Guard: id does not count' "$T/trail.out" \
+  && ok || bad "trailer: Class red backed only by a Guard: id must FIRE (got $rc)"
+# a C-id on a wrapped continuation line must be seen, not missed
+[ "$(printf 'feat: x\n\nTask: T2/6 — d\nCases: advances\n       C8140 (red@a1b2c3d) · Guard: C1\nClass: red\n' > "$T/msg.txt"; bash "$TRAIL" "$T/msg.txt" >/dev/null 2>&1; echo $?)" = 0 ] \
+  && ok || bad "trailer: a C-id on a continuation line must count (no false red-claim WARN)"
+# Class value is case-insensitive
+[ "$(tmsg 'feat: x
+
+Task: T1/1 — d
+Cases: C8140 (red@a1b2c3d)
+Class: Red')" = 0 ] && ok || bad "trailer: capitalised Class value must be accepted, not called malformed"
 [ "$(bash "$TRAIL" >/dev/null 2>&1; echo $?)" = 1 ] && ok || bad "trailer: no args must exit 1 (usage)"
 [ "$(bash "$TRAIL" /nonexistent-msg-file >/dev/null 2>&1; echo $?)" = 1 ] && ok || bad "trailer: missing file must exit 1 (usage)"
 rc=$(printf 'Task: T1/1 — x\nCases: C5 (guarded)\nClass: guard\n' | bash "$TRAIL" - >/dev/null 2>&1; echo $?)

@@ -158,14 +158,19 @@ Ruled 2026-07-31 (operator: terminal-env + explicit override · ask-before-push)
    the promotion") is NOT the answer, and fixes the scan surfaces are never self-applied and pushed
    between scan and ask. The audited failure shape this closes: scan ran, findings never presented,
    three gate fixes shipped sight-unseen, 49 commits promoted raw.
-3.5. **Write the gate marker (on `[proceed]` only):** `date > .kdbp/.push-gate-ok` — the machine
-   record that the gate ran and the operator answered. The `push-gate-guard` PreToolUse hook
-   (machine-wide, `scripts/hooks/kdbp/push-gate-guard.sh`, fixtures in `tests/hooks/`) BLOCKS any
-   `git push` whose destination is a terminal env's branch in a multi-env project unless this
-   marker exists and is younger than 30 minutes — the terminal push fails closed, spec prose no
-   longer carries it alone. Never write the marker on `[hold]`, and never write it outside this
-   step. Emergency escape (documented, loud): prefix the push with `GABE_PUSH_EMERGENCY=1` — the
-   hook allows it with a warning and the bypass stays visible to review.
+3.5. **Write the gate marker (on `[proceed]` only):**
+   `printf '%s %s\n' "$(git rev-parse HEAD)" "<env.target_branch>" > .kdbp/.push-gate-ok` — the
+   machine record that the gate ran, bound to the exact tree it scanned. The `push-gate-guard`
+   PreToolUse hook (machine-wide, `scripts/hooks/kdbp/push-gate-guard.sh`, fixtures in
+   `tests/hooks/`) BLOCKS any `git push` it cannot prove targets only a non-terminal branch in a
+   multi-env project unless this marker's recorded HEAD sha equals the current HEAD — validated by
+   **content, never mtime** (portable across macOS/Linux; a committed or cloned marker cannot
+   authorize a foreign tree). **Any commit after the scan re-arms the gate** — the sha no longer
+   matches, so the "29 minutes of further commits promoted un-scanned" hole is closed by
+   construction. The marker is gitignored (gabe-init seeds `.gitignore`), so it never rides a
+   commit. Never write it on `[hold]`, never outside this step. Emergency escape (documented,
+   loud): prefix the push with `GABE_PUSH_EMERGENCY=1` — the hook allows it with a warning and the
+   bypass stays visible to review.
 4. **Record:** carry `gates: <run: p/h counts | skipped(ungated) | held>` into Step 7's summary and
    Step 8's ledger row tail.
 
@@ -175,10 +180,14 @@ Ruled 2026-07-31 (operator: terminal-env + explicit override · ask-before-push)
    - `push_source = HEAD` AND `current_branch = env.target_branch` → `git push -u [remote] <env.target_branch>`
    - `push_source = HEAD` AND `current_branch ≠ env.target_branch` → `git push -u [remote] <current_branch>:<env.target_branch>`
    - `push_source = origin/<promote_from>` → promotion push: `git push [remote] origin/<promote_from>:<env.target_branch>` (fast-forward-only; remote-to-remote). If non-FF: stop with clear message and offer `[force-with-lease] [abort]`.
-2. If push fails (rejected, auth error, non-FF): show error and stop.
+2. If push fails (rejected, auth error, non-FF): show error and stop — **leave the marker in place.**
+   A failed push did not change HEAD, so the marker is still valid for the retry the operator was
+   just offered (`[force-with-lease]`); consuming it here would block the suite's own offered
+   recovery and train `GABE_PUSH_EMERGENCY=1` as the habit.
 3. Show: "Pushed <source_label> -> <env.target_branch> on [remote]."
-4. **Consume the gate marker:** `rm -f .kdbp/.push-gate-ok` after the push completes (success OR
-   failure) — the marker authorizes exactly one gated push attempt window, never a standing pass.
+4. **Consume the gate marker on SUCCESS only:** `rm -f .kdbp/.push-gate-ok` after the push
+   succeeds — one authorized push per scan. (A lingering marker after an abandoned attempt is
+   harmless: it is gitignored, and the next commit's sha bump invalidates it anyway.)
 
 ### Step 5: Create or update PR
 

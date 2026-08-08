@@ -46,6 +46,7 @@ THRESHOLDS = {
     "entity_files_touched": 3,
     "prism_layers": 2,
     "prism_actors": 3,
+    "scope_outside": 1,
 }
 
 # Offered twice for the same evidence and not taken ⇒ silent until the evidence
@@ -186,85 +187,79 @@ def s4_docsite(root: Path, plan: dict | None, cfg: dict | None):
             "/gabe-docsite")
 
 
-def _entity_code_files(cfg: dict) -> dict[str, list[str]]:
-    out: dict[str, list[str]] = {}
-    for slug, row in (cfg.get("entities") or {}).items():
-        files = []
-        for _layer, paths in (row.get("code") or {}).items():
-            files += [p for p in paths if "*" not in p]
-        if files:
-            out[slug] = files
-    return out
+# The diff source and the entity resolver are SHARED with write-inflight.py so the
+# board and the pulse line can never name different entities for the same tree
+# (ruling 2026-08-07). work_scope.changed_files also excludes the beat tail's own
+# inflight.{json,js} — without that, part-2 of the tail rewrites them one line
+# before part-3 runs this file, and S6/S7 go permanently silent (the very bug the
+# walk-back was added to fix, reintroduced by the tail's own ordering).
+import os as _os  # noqa: E402
+import sys as _sys  # noqa: E402
+_sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))  # so `import work_scope` works even when angles.py is loaded via importlib (the batteries do this), not just run as a script
+import work_scope  # noqa: E402  (same dir; installed alongside under ~/.claude/skills/gabe-pulse/scripts)
 
 
-def _changed_files(root: Path) -> list[str]:
-    out = [f for f in sh(["git", "diff", "--name-only", "HEAD"], root).splitlines() if f.strip()]
-    if out:
-        return out
-    # Clean tree: at beat end the newest commit is almost always the .kdbp
-    # bookkeeping commit (cell tick, ledger row), and a HEAD~1..HEAD fallback
-    # sees only .kdbp files — measured on the real repo: 15 beat-end
-    # invocations, 0 lines, because every diff the fallback saw was
-    # bookkeeping. Walk back to the newest commit that touched actual work.
-    for sha in sh(["git", "log", "-10", "--format=%H"], root).split():
-        files = [f for f in sh(["git", "diff", "--name-only", f"{sha}~1", sha],
-                               root).splitlines() if f.strip()]
-        if files and not all(f.startswith(".kdbp/") for f in files):
-            return files
-    return []
+def _current_phase(plan: dict) -> dict | None:
+    cur = str(plan.get("current_phase", ""))
+    return next((p for p in plan.get("phases", []) or [] if str(p.get("id")) == cur), None)
 
 
 def s5_scope(root: Path, plan: dict | None, cfg: dict | None):
-    """Scope drift — NOT COMPUTABLE, and says so.
+    """Scope drift — files changed outside the current phase's declared scope.
 
-    The intent: files changed outside every phase's declared scope. PLAN.json
-    carries id/name/tier/complexity/types/cells/proof/cases — and no per-phase
-    file or path declaration. A proxy built on `types` would compare a category
-    against a path and be wrong in both directions, so this reports unavailable
-    rather than guessing. Unlocking it needs a `scope:` or `files:` field in the
-    phase record, written at plan time.
+    Computable since 2026-08-07: `/gabe-plan` mirrors the phase's Scope bullet to
+    PLAN.json `phases[].scope`. A phase with no scope key still reports unavailable
+    (honestly — nothing to drift from), never a `types` proxy guess.
     """
-    return Unavailable(
-        "PLAN.json has no per-phase scope/files field — a proxy on `types` would "
-        "compare a category against a path. Needs a `scope:` field written at plan time")
+    if plan is None:
+        return Unavailable("no .kdbp/PLAN.json — the phase record is the scope source")
+    ph = _current_phase(plan)
+    if ph is None:
+        return Unavailable("current phase not found in PLAN.json phases")
+    scope = ph.get("scope")
+    if not scope:
+        return Unavailable("current phase declares no `scope:` field — add one at plan time to unlock scope-drift")
+    changed, _src = work_scope.changed_files(root)
+    if not changed:
+        return None
+    outside = [f for f in changed if not any(work_scope.matches(f, p) for p in scope)]
+    if len(outside) < THRESHOLDS["scope_outside"]:
+        return None
+    return (f"{len(outside)} changed file(s) outside phase {ph.get('id')}'s declared scope",
+            "/gabe-scope-change")
 
 
 def s6_entity(root: Path, plan: dict | None, cfg: dict | None):
     if cfg is None:
         return Unavailable("no center config — entity code maps are the trigger's source")
-    maps = _entity_code_files(cfg)
-    if not maps:
+    globs = work_scope.entity_code_globs(cfg)
+    if not globs:
         return Unavailable("center config declares no entity code maps yet")
-    changed = set(_changed_files(root))
+    changed, _src = work_scope.changed_files(root)
     if not changed:
         return None
-    best, hits = None, 0
-    for slug, files in maps.items():
-        n = len(changed & set(files))
-        if n > hits:
-            best, hits = slug, n
-    if not best or hits < THRESHOLDS["entity_files_touched"]:
+    touched = work_scope.touched_entities(cfg, changed)
+    if not touched:
         return None
-    return (f"{hits} changed file(s) belong to the {best} code map",
-            f"/gabe-cc-entity {best}")
+    best = max(touched, key=lambda t: t["files"])
+    if best["files"] < THRESHOLDS["entity_files_touched"]:
+        return None
+    return (f"{best['files']} changed file(s) belong to the {best['slug']} code map",
+            f"/gabe-cc-entity {best['slug']}")
 
 
 def s7_prism(root: Path, plan: dict | None, cfg: dict | None):
     if cfg is None:
         return Unavailable("no center config — the layer map is the trigger's source")
-    layers: dict[str, set[str]] = {}
-    for _slug, row in (cfg.get("entities") or {}).items():
-        for layer, paths in (row.get("code") or {}).items():
-            layers.setdefault(layer, set()).update(p for p in paths if "*" not in p)
-    if not layers:
+    if not work_scope.layer_globs(cfg):
         return Unavailable("center config declares no layered code map yet")
-    changed = set(_changed_files(root))
+    changed, _src = work_scope.changed_files(root)
     if not changed:
         return None
-    touched = [l for l, files in layers.items() if changed & files]
+    touched = work_scope.touched_layers(cfg, changed)
     if len(touched) < THRESHOLDS["prism_layers"] or len(changed) < THRESHOLDS["prism_actors"]:
         return None
-    return (f"the diff spans {len(touched)} layers ({', '.join(sorted(touched)[:4])}) "
+    return (f"the diff spans {len(touched)} layers ({', '.join(touched[:4])}) "
             f"across {len(changed)} files",
             "/gabe-imagine")
 

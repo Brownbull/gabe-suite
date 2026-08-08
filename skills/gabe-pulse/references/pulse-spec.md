@@ -292,7 +292,7 @@ So a satellite earns its line only when repo state says it would find something.
 | S2 | ≥25 commits since the last scan RECORD (`gabe-health`/"structural scan"/"health scan" — loose words like "churn" collided with ordinary prose and silenced a full cycle; measured 2026-08-07) | `/gabe-health` | `git log` |
 | S3 | a reviewed phase declares `proof_type: journey\|visual` and carries no `proof` | `/gabe-myopic` | PLAN.json |
 | S4 | a doc page is older than the markdown it was rendered from | `/gabe-docsite` | `scripts/checkers/docsite-staleness.sh` |
-| S5 | **unavailable** — see 5.4 | `/gabe-scope-change` | — |
+| S5 | files changed outside the current phase's declared `scope` (see 5.4) — unavailable, honestly, when the phase declares no scope | `/gabe-scope-change` | PLAN.json `phases[].scope` + shared work-scope resolver |
 | S6 | ≥3 changed files belong to one entity's code map (clean tree ⇒ the diff source walks back past pure-`.kdbp` bookkeeping commits to the newest WORK commit — beat ends land right after the tick commit, which blinded the old `HEAD~1..HEAD` fallback; measured 15/15 silent, 2026-08-07) | `/gabe-cc-entity <slug>` | center config + `git diff` |
 | S7 | the diff spans ≥2 layers across ≥3 files | `/gabe-imagine` | center config + `git diff` |
 
@@ -324,14 +324,16 @@ taken zero times — measurable directly from `PULSE.jsonl`, since a taken sugge
 own condition — it is noise, and it gets deleted rather than tuned. The same discipline the Gabe
 register holds over itself.
 
-### 5.4 S5 is unavailable, and says what would unlock it
+### 5.4 S5 — scope drift, computable since the scope mirror (ruling 2026-08-07)
 
-The intended trigger was *files changed outside every phase's declared scope*. `PLAN.json`
-carries `id / name / tier / complexity / types / cells / proof / cases` — and **no per-phase file
-or path declaration**. A proxy built on `types` would compare a category against a path and be
-wrong in both directions, so the signal reports unavailable and names what it needs: a `scope:`
-or `files:` field written into the phase record at plan time. Building the proxy would have been
-faster and would have produced a signal nobody could trust.
+The trigger is *files changed outside the current phase's declared scope*. It was unavailable
+until `/gabe-plan` began mirroring the phase's Scope bullet to `PLAN.json` `phases[].scope`; S5
+now compares the changed files (from the shared work-scope resolver — the same diff source S6/S7
+use) against that phase's scope globs (`*` does not cross `/`) and fires on the ones outside it.
+A phase that declares **no** `scope:` field still reports unavailable — honestly, naming the
+missing field — rather than falling back to a `types` proxy that would compare a category against
+a path and be wrong in both directions. The rule held: no proxy nobody could trust; the signal
+waited for real data, then lit up when the data arrived.
 
 ### 5.5 Which satellites deliberately have NO trigger
 

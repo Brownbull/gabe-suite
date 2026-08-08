@@ -2,6 +2,7 @@
   "generated": "2026-07-26",
   "head": "58bcc28",
   "method": "Four parallel audits across the core-loop specs, shipped templates and doctrine, the enforcement machinery, and the satellite skills \u2014 each classification then attacked by an independent adversarial verifier. RECLASSIFY and REFUTED verdicts are applied here; a classification that did not survive attack was dropped.",
+  "superseded_note": "This is a dated snapshot at head 58bcc28 (2026-07-26), kept verbatim (provenance lives in git). Two entries about the PRINTED TASK CONTRACT block \u2014 'TASK CONTRACT must be printed before any Write/Edit' and 'REUSE vs EXTEND vs NEW verdict inside the TASK CONTRACT' \u2014 were RESOLVED on 2026-08-07: the printed block went 0-for-19 across two twin cycles and was retired. The task record moved to the checkpoint commit message (Cases:/Class: trailer), now validated by skills/gabe-commit/scripts/checkpoint-trailer.sh (fixtures in tests/commit-scripts/run.sh); the E4 REUSE obligation survives as prose in the execute spec. Read those two entries as history, not as current advice to build a printed-block hook.",
   "rules": [
     {
       "title": "Red \u2705 requires a non-empty `cases` record",

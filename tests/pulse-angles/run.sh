@@ -130,12 +130,33 @@ run "$r" | grep -q "the diff spans 2 layers" && ok "S7 fires: diff spans two lay
 r=$(repo s7b); mkcenter "$r"; cd "$r"; for f in a.py b.py; do echo x >> $f; done; git add -A; cd - >/dev/null
 run "$r" | grep -q "the diff spans" && bad "S7 fired within one layer" || ok "S7 silent within one layer"
 
-# ── S5 · scope — NOT COMPUTABLE, and must say so rather than guess ─────────
-r=$(repo s5); plan "$r" "$DONE4"
+# ── S5 · scope drift — computable since the scope mirror (ruling 2026-08-07) ──
+# no scope field on the current phase → honest unavailable, never a proxy guess
+r=$(repo s5a); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"}}]}'
 out=$(run "$r" --why)
-if echo "$out" | grep -q "S5  UNAVAILABLE" && echo "$out" | grep -q "no per-phase scope"; then
-  ok "S5 reports unavailable with what would unlock it"
-else bad "S5 must name its missing source, never fake a proxy"; fi
+if echo "$out" | grep -q "S5  UNAVAILABLE" && echo "$out" | grep -q "no .*scope.* field"; then
+  ok "S5 unavailable (honestly) when the current phase declares no scope"
+else bad "S5 must name its missing source when scope is absent"; fi
+# scope declared + a changed file outside it → fires
+r=$(repo s5b); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"},"scope":["api/*.py"]}]}'
+cd "$r"; mkdir -p api web; echo x > api/in.py; echo x > web/out.tsx; git add -A; cd - >/dev/null
+run "$r" | grep -q "outside phase 1's declared scope" && ok "S5 fires: a file changed outside declared scope" || bad "S5 did not fire on out-of-scope change"
+# scope declared + all changes inside it → silent
+r=$(repo s5c); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"},"scope":["api/*.py"]}]}'
+cd "$r"; mkdir -p api; echo x > api/one.py; echo x > api/two.py; git add -A; cd - >/dev/null
+run "$r" | grep -q "outside phase" && bad "S5 fired though every change is in scope" || ok "S5 silent when all changes are in scope"
+# glob semantics: api/*.py must NOT match a nested file (else 'in scope' silently over-claims)
+r=$(repo s5d); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"},"scope":["api/*.py"]}]}'
+cd "$r"; mkdir -p api/deep; echo x > api/deep/nested.py; git add -A; cd - >/dev/null
+run "$r" | grep -q "outside phase 1's declared scope" && ok "S5 counts a nested file as out-of-scope (glob * does not cross /)" || bad "S5 glob crossed a directory boundary"
+
+# ── S6 with a GLOB-declared entity (the literal-only resolver made these invisible) ──
+r=$(repo s6glob); mkdir -p "$r/docs/site/center"
+cat > "$r/docs/site/center/center.config.json" <<'JSON'
+{"entities":{"pantry":{"code":{"api":["api/*.py"]}}}}
+JSON
+cd "$r"; git add -A; git commit -qm cfg; mkdir -p api; for f in a b c; do echo x > api/$f.py; done; git add -A; cd - >/dev/null
+run "$r" | grep -q "belong to the pantry code map" && ok "S6 fires on a glob-declared entity" || bad "S6 blind to glob code maps (literal-only resolver bug)"
 
 # ── the three rules the mechanism lives or dies on ─────────────────────────
 r=$(repo cap); plan "$r" "$DONE4"; commits "$r" 30 "feat: work"; mkcenter "$r"

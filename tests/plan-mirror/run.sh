@@ -312,6 +312,59 @@ JSON
 [ "$(J "$PE" "p['phases'][0]['entities']")" = "['repertorio']" ] \
   && ok || bad "declared: recorded entities must survive a regen with no .md bullet"
 
+# --- detail_list must never fabricate slugs/scope (review 2026-08-07) ---
+HP="$T/hardparse"; mkdir -p "$HP/.kdbp"
+cat > "$HP/.kdbp/PLAN.md" <<'MD'
+## Phases
+
+| # | Phase | Exec |
+|---|-------|------|
+| 1 | Placeholder | ⬜ |
+| 2 | Braceglob | ⬜ |
+| 3 | Prose | ⬜ |
+| 4 | NoneOfThe | ⬜ |
+| 5 | Annotated | ⬜ |
+| 6 | ProseScope | ⬜ |
+
+## Phase Details
+
+### Phase 1 — Placeholder
+
+- **Entities:** <command-center projects only — center entity slug(s), e.g. `repertorio`, `pantry`; or `none — <reason>`>
+- **Scope:** <files/globs this phase may touch — e.g. web/src/routes/items.tsx>
+
+### Phase 2 — Braceglob
+
+- **Scope:** web/src/{a,b}.tsx, api/x.py
+
+### Phase 3 — Prose
+
+- **Entities:** the pantry and cooking entities (both)
+
+### Phase 4 — NoneOfThe
+
+- **Entities:** none of the registered entities apply here
+
+### Phase 5 — Annotated
+
+- **Scope:** `api/one.py` (new), `api/two.py` (new, evidence companion)
+
+### Phase 6 — ProseScope
+
+- **Scope:** `api/x.py`, determined by triage · **scope change 2026-08-01:** see the design doc
+MD
+[ "$(run "$HP")" = 0 ] && ok || bad "hardparse: fixture runs"
+[ "$(J "$HP" "'entities' in p['phases'][0]")" = "False" ] && ok || bad "hardparse: unfilled Entities placeholder must NOT mirror (never guess slugs)"
+[ "$(J "$HP" "'scope' in p['phases'][0]")" = "False" ] && ok || bad "hardparse: unfilled Scope placeholder must NOT mirror"
+[ "$(J "$HP" "p['phases'][1]['scope']")" = "['web/src/{a,b}.tsx', 'api/x.py']" ] && ok || bad "hardparse: brace glob must stay ONE token (depth-0 split)"
+# a path with a trailing (annotation) still mirrors (annotation cut, path kept)
+[ "$(J "$HP" "p['phases'][4]['scope']")" = "['api/one.py', 'api/two.py']" ] && ok || bad "hardparse: (annotation) tails must be cut, paths kept"
+# a PROSE scope bullet (any token not path-shaped) mirrors NOTHING — all-or-nothing, never junk
+[ "$(J "$HP" "'scope' in p['phases'][5]")" = "False" ] && ok || bad "hardparse: prose Scope bullet must NOT mirror junk globs (all-or-nothing, real-data lesson)"
+[ "$(J "$HP" "'entities' in p['phases'][2]")" = "False" ] && ok || bad "hardparse: prose Entities (spaces) must NOT mirror as junk slugs"
+grep -q 'phase 3 Entities bullet unparseable' "$T/out" && ok || bad "hardparse: an unparseable Entities bullet must be noted, not silently dropped"
+[ "$(J "$HP" "p['phases'][3].get('entities')")" = "['none of the registered entities apply here']" ] && bad "hardparse: 'none of the…' is prose, not honest-none []" || ok
+
 echo
 echo "plan-mirror battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

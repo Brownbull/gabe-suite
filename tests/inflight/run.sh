@@ -61,10 +61,9 @@ echo "$out" | grep -q "inflight: 7" && ok || bad "write must print its one line 
 [ "$(J "$r" "p['work_source']")" = "dirty" ] && ok || bad "work_source dirty"
 
 # ── determinism: second run on an unchanged tree writes nothing, bytes equal ─
-before=$(md5sum "$r/docs/site/center/inflight.json" | cut -d' ' -f1)
+cp "$r/docs/site/center/inflight.json" "$T/before.json"   # cmp, not md5sum (BSD ships no md5sum)
 out2=$(python3 "$W" "$r")
-after=$(md5sum "$r/docs/site/center/inflight.json" | cut -d' ' -f1)
-[ -z "$out2" ] && [ "$before" = "$after" ] \
+[ -z "$out2" ] && cmp -s "$T/before.json" "$r/docs/site/center/inflight.json" \
   && ok || bad "unchanged tree must be a silent no-op with identical bytes"
 grep -qE '"(generated|ts|time)' "$r/docs/site/center/inflight.json" \
   && bad "projection must carry NO wallclock field" || ok
@@ -107,6 +106,47 @@ printf '{"version":1,"status":"none","phases":[]}' > "$r/.kdbp/PLAN.json"
 python3 "$W" "$r" >/dev/null
 [ "$(J "$r" "p['active']")" = "False" ] && ok || bad "archived plan must render active:false"
 [ "$(J "$r" "p['reason']")" = "plan status: none" ] && ok || bad "inactive carries its reason"
+
+# ── null current_phase → active:false, NOT a declared phase mispublished ────
+# (regen-mirror writes current_phase:null when PLAN.md's Current Phase line
+# doesn't parse; str(None)=="None" would look up nothing and print declared:null
+# for a phase that DID declare entities)
+r=$(mkrepo nullphase); mkcenter "$r"; mkdir -p "$r/.kdbp"
+cat > "$r/.kdbp/PLAN.json" <<'JSON'
+{"version":1,"status":"active","current_phase":null,"phases":[{"id":"1","name":"A","cells":{"exec":"todo"},"entities":["pantry"]}]}
+JSON
+(cd "$r" && git add -A && git commit -qm wire)
+python3 "$W" "$r" >/dev/null
+[ "$(J "$r" "p['active']")" = "False" ] && ok || bad "null current_phase must render active:false, never publish a phase as never-declared"
+[ "$(J "$r" "'current_phase' not in p")" = "True" ] && ok || bad "null current_phase must be omitted, never the literal 'None'"
+
+# ── suite center layout (docs/center/suite-center.config.json) must be found ──
+# (the single-path probe produced nothing on a suite-shaped center while pulse fired)
+r=$(mkrepo suitelayout); mkdir -p "$r/docs/center" "$r/.kdbp" "$r/api"
+cat > "$r/docs/center/suite-center.config.json" <<'JSON'
+{"entities":{"pantry":{"code":{"api":["api/*.py"]}}}}
+JSON
+cat > "$r/.kdbp/PLAN.json" <<'JSON'
+{"version":1,"status":"active","current_phase":"1","phases":[{"id":"1","name":"A","cells":{"exec":"in_progress"},"entities":["pantry"]}]}
+JSON
+(cd "$r" && git add -A && git commit -qm wire && echo x > api/x.py)
+out=$(python3 "$W" "$r")
+[ -f "$r/docs/center/inflight.json" ] && ok || bad "suite-layout center must produce inflight.json (two-layout probe)"
+[ -n "$out" ] && ok || bad "suite-layout center must not fall to the silent no-center path"
+
+# ── shared resolver parity: board's touched agrees with the pulse S6 resolver ─
+# both must call work_scope; a glob-declared entity that S6 sees, the board sees too
+r=$(mkrepo parity); mkdir -p "$r/docs/site/center" "$r/.kdbp" "$r/api"
+cat > "$r/docs/site/center/center.config.json" <<'JSON'
+{"entities":{"pantry":{"code":{"api":["api/*.py"]}}}}
+JSON
+cat > "$r/.kdbp/PLAN.json" <<'JSON'
+{"version":1,"status":"active","current_phase":"1","phases":[{"id":"1","name":"A","cells":{"exec":"in_progress"}}]}
+JSON
+(cd "$r" && git add -A && git commit -qm wire && for f in a b c; do echo x > api/$f.py; done)
+python3 "$W" "$r" >/dev/null
+[ "$(J "$r" "p['touched'][0]['slug']")" = "pantry" ] && ok || bad "board resolver must match glob-declared entities (shared work_scope)"
+[ "$(J "$r" "p['touched'][0]['files']")" = "3" ] && ok || bad "board resolver must count 3 glob-matched files"
 
 echo "inflight battery: $pass passed, $fail failed"
 [ "$fail" = 0 ]

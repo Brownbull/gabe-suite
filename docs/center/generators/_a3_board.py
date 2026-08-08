@@ -387,10 +387,20 @@ def build_cards(*, plan, sections, archmap, adoption, labels, entity_href,
         types = ", ".join(p.get("types") or [])
         area = ("web" if "user-facing" in types else
                 "api" if "persistence" in types else "process")
+        # declared at plan time, operator-confirmed (ruling 2026-08-07) — a DIFFERENT
+        # provenance from the path-derived attribution the other tracks use, so it must
+        # NOT borrow the default "archmap path match" tooltip. Keep only registered
+        # slugs for column bucketing; an unregistered slug (typo, or not yet adopted)
+        # keeps the card (it lands in _cross) and is named honestly rather than vanishing.
+        declared = p.get("entities") or []
+        reg = [s for s in declared if s in labels]
+        unreg = [s for s in declared if s not in labels]
+        how = "declared at plan time (operator-confirmed)"
+        if unreg:
+            how += f" · unregistered: {', '.join(unreg)}"
         common = dict(
-            # declared at plan time, operator-confirmed (ruling 2026-08-07) —
-            # satisfies the attribution law: declared-or-absent, never guessed
-            id=f"build:{pid}", track="build", entities=p.get("entities") or [],
+            id=f"build:{pid}", track="build", entities=reg,
+            entity_how=(how if declared else None),
             title=f"{pid} — {p.get('name', '')}", detail=p.get("desc", ""),
             cells=cellmap, tier=p.get("tier", ""),
             complexity=p.get("complexity", ""), area=area,
@@ -727,6 +737,12 @@ def phase_strip(plan) -> tuple[str, str]:
     """The ONE thing the card board does not subsume: a card exists only while
     a phase still owes a cell, so finished phases leave no trace and the
     sequence disappears with them. Returns (html, payload-json)."""
+    # The current phase is stamped HERE via the num-or-id join (a phase has two
+    # identities — the `#` column `num` and the id inside the Phase cell). board.js
+    # must test this stamp, never string-compare inflight.current_phase to p.id: the
+    # two live in different id spaces and never match on a `<id> · <name>` layout,
+    # which left the whole live overlay silently dark (ruling 2026-08-07).
+    cur_ref = str(plan.get("current_phase") or "")
     seq = []
     for p in plan.get("phases", []):
         cells = {}
@@ -736,7 +752,9 @@ def phase_strip(plan) -> tuple[str, str]:
             if v is not None:
                 cells[k] = v
         owed = [k for k, v in cells.items() if v in ("todo", "in_progress")]
-        seq.append({"id": phase_id(p), "name": p.get("name", ""), "owes": owed,
+        is_current = cur_ref != "" and cur_ref in (str(p.get("id")), str(p.get("num")))
+        seq.append({"id": phase_id(p), "num": p.get("num"), "current": is_current,
+                    "name": p.get("name", ""), "owes": owed,
                     "cells": cells, "desc": p.get("desc", ""),
                     "tier": p.get("tier", ""),
                     "complexity": p.get("complexity", ""),

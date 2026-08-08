@@ -70,7 +70,7 @@ CONTRACTS: list[tuple[str, str, str, str]] = [
      r"RED:\s*(?:<n>|\d+)\s*failing[^\n|`]*", "gabe-red report (run-bearing form; `RED: n/a` is its guard-only sibling)"),
     ("reuse-verdict", "REUSE verdict line — `REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)`",
      r"REUSE\s*<path>\s*\|\s*EXTEND\s*<path>\s*\|\s*NEW\s*\(searched[^)]*\)",
-     "gabe-execute TASK CONTRACT ≡ the E4 preamble"),
+     "gabe-execute E4 obligation (task-record era) ≡ the E4 preamble · carriers: gabe-mockup L0, gabe-artifact, the E4 preamble"),
     ("evidence-line", "Finding Evidence — `≤2 exact quoted code lines from the cited file:line`",
      r"≤2 exact quoted code lines from the cited\s*`?file:line`?",
      "gabe-review finding contract (prose ≡ pricing table)"),

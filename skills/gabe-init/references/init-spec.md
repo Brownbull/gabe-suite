@@ -181,19 +181,25 @@ created: [today's date]
 
 **Preservation contract for `reset` on a marker-present file:** read the existing CLAUDE.md, find the line `<!-- Add project-specific instructions for Claude Code below. -->`. Everything after that line is user content — preserve it verbatim. Rewrite only the content above that line from the template + substitutions.
 
-### Step 1.8: Seed `.gitignore` entries (gabe-review archive)
+### Step 1.8: Seed `.gitignore` entries (local-only runtime artifacts)
 
-The project's `.gitignore` gets the line `.kdbp/reviews-archive/` appended so resolved gabe-review documents archive locally without bloating git history. (`.kdbp/archive/` — used by PLAN/SCOPE archives — stays tracked as before.)
+The project's `.gitignore` gets three entries appended so machine-written, tree-volatile files never ride a commit:
 
-**Idempotency:** grep-before-append. If `.gitignore` doesn't exist, create it with just that single line. If it exists and already contains the entry (exact-match line), do nothing. Otherwise, append with a leading newline if the file doesn't end in one.
+- `.kdbp/reviews-archive/` — resolved gabe-review documents archive locally without bloating history.
+- `.kdbp/.push-gate-ok` — the push-gate marker (ruling 2026-08-07). It is sha-bound and single-use; committing it would let a clone's checkout-fresh copy authorize a foreign tree, and its whole security value is that it is written by /gabe-push on THIS machine after the scan.
+- `docs/site/center/inflight.json` and `docs/site/center/inflight.js` — the in-flight projection the E8 beat tail rewrites every beat (its `head` field changes on every commit). Tracking them would re-dirty the tree forever and re-blind the pulse signals; the board reads them locally and renders absence as absence when they are gone (ruling 2026-08-07).
+
+(`.kdbp/archive/` — PLAN/SCOPE archives — stays tracked as before.)
+
+**Idempotency:** grep-before-append per entry. If `.gitignore` doesn't exist, create it with the entries. If an exact-match line is already present, skip it. Append with a leading newline if the file doesn't end in one.
 
 | Existing `.gitignore` state | Action |
 |---|---|
-| Missing | Create with `.kdbp/reviews-archive/` |
-| Present, entry missing | Append `.kdbp/reviews-archive/` |
-| Present, entry present | No-op |
+| Missing | Create with the three entries |
+| Present, entry missing | Append the missing entries |
+| Present, all present | No-op |
 
-Display a single line at the end: `✅ .gitignore: reviews-archive entry [added | already present]`. `reset` mode re-runs this check (idempotent). `update` mode includes it as part of the readiness scan.
+Display a single line at the end: `✅ .gitignore: local-artifact entries [added N | already present]`. `reset` mode re-runs this check (idempotent). `update` mode includes it as part of the readiness scan — an existing project that predates this ruling gets the two new entries topped up.
 
 ### Step 1.5: Update Mode (only when user picked `update`)
 
@@ -350,7 +356,7 @@ api/services/, api/observability/). Stages 1-5 are MVP; 6-9 are Enterprise.
 ```
 ✅ .kdbp/ initialized (9 files + archive/)
 ✅ CLAUDE.md: [created | merged | preserved | backed-up-and-replaced | ⚠ skipped]
-✅ Hooks installed (6/6)
+✅ Hooks installed (9/9)
 ✅ Project type: [type]
 ✅ Maturity: [mvp|enterprise|scale]
 ✅ DOCS.md: [N] mappings loaded for [project-type]

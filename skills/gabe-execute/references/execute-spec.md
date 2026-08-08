@@ -192,6 +192,12 @@ For each task T_i in order:
      finding, never a block; fire/silent fixtures in `tests/commit-scripts/run.sh`).
 
    Surviving obligations (the ceremony died; these did not):
+   - **Acceptance stays named.** Before writing a task's code, state its 1–3 verifiable done-when
+     signals ("done when <observable check>"); a task naming a reference (mockup/story/spec/legacy
+     screen) states the reference AS its acceptance. The retired printed block carried this as its
+     ACCEPTANCE field — it does not survive as a printed line, but the obligation does: Step 4.4's
+     lint/types/tests verification is not a substitute for knowing what "done" looks like against
+     the task's own intent (drift.md's ten-phase silent-downgrade incident is what its absence costs).
    - **Substitution stops.** A task class cheaper than the task's text implies (restyle≠rebuild,
      stub≠implement, recreate≠reuse) requires an explicit user decision line — STOP and ask. A task
      naming a reference (mockup/story/spec/legacy screen) is rebuilt TO that reference.
@@ -504,10 +510,11 @@ When last task T_K commits successfully:
    (retired output — no nudge is printed)
    ```
    This is a redundant safety net — per-commit `/gabe-commit` Step 6.5 already suggests teach, but scroll-loss in bulk commits can lose it.
-10. If scope arg was `all` → advance Current Phase to N+1 and re-enter Step 1. Else → print final route and exit:
-   ```
-   Next: /gabe-review (unreviewed code) or /gabe-next to route automatically.
-   ```
+10. If scope arg was `all` → advance Current Phase to N+1 and re-enter Step 1. Else → the route is
+   printed by the **E8 beat tail** (`NOW:`/`NEXT:` rendered from `next.mjs --json`, stated once in
+   `../../gabe-docs/references/execution-contract.md`), NOT a hardcoded line here — a second
+   literal route contradicts the router (e.g. a TDD project's next beat is `/gabe-red N+1`, not
+   `/gabe-review`). Do not print your own `Next:` line.
 
 ### Step 8: Interrupts + resume
 
@@ -575,7 +582,7 @@ Files changed:
 
 ✅ GABE EXECUTE — Phase 2 complete
 EXEC: ✅  REVIEW: ⬜  COMMIT: ✅  PUSH: ⬜
-Next: /gabe-review or /gabe-next
+[beat brief + E8 tail follow — NOW:/NEXT: rendered by the router, not a hardcoded line]
 ```
 
 $ARGUMENTS

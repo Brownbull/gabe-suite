@@ -257,6 +257,11 @@
     "slug": "mechanisms",
     "title": "The mechanism catalog",
     "href": "mechanisms.html"
+   },
+   {
+    "slug": "drift",
+    "title": "Why weak models drift",
+    "href": "drift.html"
    }
   ],
   "skill:/gabe-next": [

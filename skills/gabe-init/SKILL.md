@@ -4,7 +4,7 @@ description: "Project setup — creates .kdbp/, installs hooks, configures by pr
 when_to_use: "Set up KDBP, initialize the Gabe stack — human-initiated only; never auto-invoke."
 disable-model-invocation: true
 metadata:
-  version: 2.3.2
+  version: 2.3.3
 ---
 
 # Gabe Init — KDBP project scaffolder
@@ -26,11 +26,11 @@ One-command project setup wrapping three operations: (1) creates `.kdbp/` — BE
 3. If `.kdbp/` already exists, ask reset / update / skip and follow the mode routing table (each mode runs a fixed step sequence — reset: full create → CLAUDE.md → .gitignore seed → hooks → project type → readiness report; update: scan-missing → schema migration → hooks → condensed Update Report, skipping the full create/project-type steps).
 4. On create/reset: interview for project name, one-sentence domain, maturity, project type, tech stack; render `.kdbp/` files and root `CLAUDE.md` from the templates, substituting the interview answers; never overwrite existing user content.
 5. On update: diff the existing `.kdbp/` against the expected file/dir set, report present/missing/unrecognized, and on confirm create ONLY the missing items — never touch `BEHAVIOR.md`, `VALUES.md`, or any file with existing content. (The `~/.claude/gabe-arch/` lazy bootstrap is retired — gabe-arch is archived; existing user state is left untouched.)
-6. Seed `.gitignore` with `.kdbp/reviews-archive/` (idempotent, grep-before-append).
+6. Seed `.gitignore` with `.kdbp/reviews-archive/`, `.kdbp/.push-gate-ok`, and `docs/site/center/inflight.{json,js}` (idempotent, grep-before-append per entry) — local-only runtime artifacts that must never ride a commit.
 7. Check the 9 KDBP hooks in `~/.claude/settings.json`; install any missing ones from `~/.claude/templates/gabe/hooks.json` verbatim after a Y/n prompt — never compose hook JSON from memory.
 8. Create project-type-appropriate doc stubs (architecture.md, AGENTS_USE.md, SCALING.md, architecture-patterns.md, api.md, or README.md sections depending on agent-app / web-app / CLI / library), each carrying the `gabe-docs` standards-reference marker.
 9. Print the readiness report (reset/create) or Update Report (update mode).
 
 ## Output contract (summary)
 
-Reset/create ends with a readiness report: `.kdbp/` file count, CLAUDE.md status (created/merged/preserved/backed-up/skipped), hooks installed (N/6), project type, maturity, DOCS.md mapping count, doc stubs created, and a numbered next-steps list (add VALUES.md entries, run `/gabe-plan`, etc.). Update mode ends with a condensed report: files added, directories created, schema migrations applied, CLAUDE.md action, hooks installed count, preserved-file count. Every ✅ reflects a file/action actually created or verified this run (E2) — nothing is claimed done without evidence. The full output contract in the spec is binding.
+Reset/create ends with a readiness report: `.kdbp/` file count, CLAUDE.md status (created/merged/preserved/backed-up/skipped), hooks installed (N/9), project type, maturity, DOCS.md mapping count, doc stubs created, and a numbered next-steps list (add VALUES.md entries, run `/gabe-plan`, etc.). Update mode ends with a condensed report: files added, directories created, schema migrations applied, CLAUDE.md action, hooks installed count, preserved-file count. Every ✅ reflects a file/action actually created or verified this run (E2) — nothing is claimed done without evidence. The full output contract in the spec is binding.

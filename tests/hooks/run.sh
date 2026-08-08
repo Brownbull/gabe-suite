@@ -170,6 +170,21 @@ nxout "$RESUME" | grep -q 'resume' && ok || bad "next: in-progress exec must res
 [ "$(nx "{'version':1,'status':'active','current_phase':'9','phases':[{'id':'1','cells':{'exec':'todo'}}]}")" = 2 ] && ok || bad "next: current_phase desync must exit 2"
 DEBT="{'version':1,'status':'active','current_phase':'2','phases':[{'id':'1','cells':{'exec':'done','review':'done','commit':'todo','push':'done'}},{'id':'2','cells':{'exec':'todo','review':'todo','commit':'todo','push':'todo'}}]}"
 nxout "$DEBT" | grep -q 'Commit→/gabe-commit' && ok || bad "next: debt banner must map every cell to its command (round-3 UX)"
+# --json now_line/next_line: the E8 beat tail prints these VERBATIM (the [object Object] fix)
+njson() { python3 -c "import json;json.dump($1,open('.kdbp/PLAN.json','w'))"; node "$NEXT" --json 2>/dev/null; }
+nowline() { echo "$1" | python3 -c "import json,sys;print(json.load(sys.stdin).get('now_line'))"; }
+J1=$(njson "$BASE")
+echo "$J1" | python3 -c "import json,sys;json.load(sys.stdin)" 2>/dev/null && ok || bad "next --json: must emit valid JSON"
+[ "$(nowline "$J1")" != "None" ] && ! echo "$(nowline "$J1")" | grep -q 'object Object' \
+  && ok || bad "next --json: now_line must be a rendered string, never [object Object]"
+echo "$J1" | grep -q '"next_line"' && ok || bad "next --json: next_line must be present"
+# plan-complete payload → now_line null (tail prints only NEXT)
+ALLDONE="{'version':1,'status':'active','current_phase':'1','phases':[{'id':'1','cells':{'exec':'done','review':'done','commit':'done','push':'done'}}]}"
+[ "$(nowline "$(njson "$ALLDONE")")" = "None" ] && ok || bad "next --json: plan-complete payload must carry now_line null"
+# exit-2 mirror-unusable still emits JSON with next:null (tail parses one shape, prints neither)
+BADJ=$(njson "{'version':1,'status':'active','current_phase':'1','phases':[{'id':'1','cells':{'exec':'Done'}}]}")
+echo "$BADJ" | python3 -c "import json,sys;d=json.load(sys.stdin);assert d['next'] is None" 2>/dev/null \
+  && ok || bad "next --json: exit-2 must still emit JSON with next:null"
 
 echo "=================================="
 
@@ -248,9 +263,14 @@ rm -rf "$NOK"
 PGG="$REPO/scripts/hooks/kdbp/push-gate-guard.sh"
 pg() { printf '%s' "$1" | bash "$PGG" >/dev/null 2>&1; echo $?; }
 pgout() { printf '%s' "$1" | bash "$PGG" 2>/dev/null; }
+mkmarker() { printf '%s main\n' "$(git rev-parse HEAD)" > .kdbp/.push-gate-ok; }  # sha-bound, content not mtime
 # multi-env PUSH.md: staging (source) + production (terminal, promote_from staging);
 # a commented-out decoy env proves comment-stripping (the template ships one).
 cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Defaults
+
+| default_env | production |
+
 ## Environments
 
 ### staging
@@ -276,6 +296,8 @@ cat > .kdbp/PUSH.md <<'PUSHEOF'
 | promote_from | — |
 -->
 PUSHEOF
+git branch -f main HEAD 2>/dev/null; git branch -f feature-x HEAD 2>/dev/null
+CURB=$(git rev-parse --abbrev-ref HEAD)
 rm -f .kdbp/.push-gate-ok
 PROMO='{"tool_input":{"command":"git push origin origin/staging:main"}}'
 [ "$(pg "$PROMO")" = 2 ] && ok || bad "push-gate: promotion push w/o marker must BLOCK (the observed bypass shape)"
@@ -285,18 +307,91 @@ PROMO='{"tool_input":{"command":"git push origin origin/staging:main"}}'
 [ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging"}}')" = 0 ] && ok || bad "push-gate: staging (non-terminal) push must stay SILENT"
 [ "$(pg '{"tool_input":{"command":"git log --grep \"git push origin main\""}}')" = 0 ] && ok || bad "push-gate: quoted decoy must stay SILENT"
 [ "$(pg '{"tool_input":{"command":"npm test"}}')" = 0 ] && ok || bad "push-gate: non-push command must stay SILENT"
-touch .kdbp/.push-gate-ok
-[ "$(pg "$PROMO")" = 0 ] && ok || bad "push-gate: fresh marker must authorize the promotion"
-touch -d '2 hours ago' .kdbp/.push-gate-ok
-[ "$(pg "$PROMO")" = 2 ] && ok || bad "push-gate: stale marker (2h old) must BLOCK"
+# fail-closed on ambiguity (verified bypasses the old parser let through)
+git checkout -q feature-x 2>/dev/null || true
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD"}}')" = 0 ] && ok || bad "push-gate: HEAD refspec on a feature branch must resolve + stay SILENT"
+git checkout -q main 2>/dev/null || true
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD"}}')" = 2 ] && ok || bad "push-gate: HEAD refspec on the terminal branch must BLOCK (bare-HEAD bypass)"
+[ "$(pg '{"tool_input":{"command":"git push"}}')" = 2 ] && ok || bad "push-gate: bare push on checked-out terminal branch must BLOCK"
+git checkout -q "$CURB" 2>/dev/null || true
+[ "$(pg '{"tool_input":{"command":"git push --all origin"}}')" = 2 ] && ok || bad "push-gate: --all pushes every branch incl. terminal → must BLOCK"
+[ "$(pg '{"tool_input":{"command":"git push --mirror origin"}}')" = 2 ] && ok || bad "push-gate: --mirror → must BLOCK"
+[ "$(pg '{"tool_input":{"command":"git push origin main&&true"}}')" = 2 ] && ok || bad "push-gate: operator glued to the refspec → fail closed"
+[ "$(pg '{"tool_input":{"command":"git push origin main;echo done"}}')" = 2 ] && ok || bad "push-gate: semicolon glued to the refspec → fail closed"
+[ "$(pg '{"tool_input":{"command":"git --git-dir=/x/.git push origin main"}}')" = 2 ] && ok || bad "push-gate: repo-redirect flag → cannot prove repo → fail closed"
+[ "$(pg '{"tool_input":{"command":"git push origin refs/heads/*:refs/heads/*"}}')" = 2 ] && ok || bad "push-gate: glob refspec → cannot prove it misses terminal → fail closed"
+# sha-bound marker: valid only while HEAD matches
+mkmarker
+[ "$(pg "$PROMO")" = 0 ] && ok || bad "push-gate: marker whose sha == HEAD must authorize the promotion"
+printf 'deadbeefdeadbeefdeadbeefdeadbeefdeadbeef main\n' > .kdbp/.push-gate-ok
+[ "$(pg "$PROMO")" = 2 ] && ok || bad "push-gate: marker with a stale sha (a commit landed since) must BLOCK"
 rm -f .kdbp/.push-gate-ok
 out=$(pgout '{"tool_input":{"command":"GABE_PUSH_EMERGENCY=1 git push origin origin/staging:main"}}'); rc=$?
 [ "$rc" = 0 ] && echo "$out" | grep -q 'GABE_PUSH_EMERGENCY' && ok || bad "push-gate: emergency escape must allow WITH a loud warning"
-[ "$(pg 'not json at all')" = 0 ] && ok || bad "push-gate: garbage stdin must fail OPEN (INERT warn)"
-CURB=$(git rev-parse --abbrev-ref HEAD)
-git checkout -qb main 2>/dev/null || git checkout -q main 2>/dev/null || true
-[ "$(pg '{"tool_input":{"command":"git push"}}')" = 2 ] && ok || bad "push-gate: bare push on checked-out terminal branch must BLOCK"
-git checkout -q "$CURB" 2>/dev/null || true
+[ "$(pg 'not json at all')" = 0 ] && ok || bad "push-gate: non-push stdin must stay SILENT"
+# bold / backticked keys (the file is hand-editable; markdown tables get prettified)
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Defaults
+
+| default_env | production |
+
+## Environments
+
+### staging
+
+| Setting | Value |
+|---------|-------|
+| **target_branch** | staging |
+| **promote_from** | — |
+
+### production
+
+| Setting | Value |
+|---------|-------|
+| **target_branch** | main |
+| **promote_from** | staging |
+PUSHEOF
+rm -f .kdbp/.push-gate-ok
+[ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 2 ] && ok || bad "push-gate: bold-key env table must still parse + BLOCK (no fail-open on prettified markdown)"
+# INERT: env headings declared but none parse (never a silent ALLOW)
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Environments
+
+### production
+
+| Setting | Value |
+|---------|-------|
+| some-other-field | main |
+PUSHEOF
+out=$(pgout '{"tool_input":{"command":"git push origin main"}}'); rc=$?
+[ "$rc" = 0 ] && echo "$out" | grep -q 'INERT' && ok || bad "push-gate: declared env headings but none parsed must go INERT (loud), never silent ALLOW"
+# the template-trap: example env uncommented without wiring production.promote_from →
+# both read as terminal → ordinary staging push must NOT be blocked (gate the default env only)
+cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Defaults
+
+| default_env | production |
+
+## Environments
+
+### production
+
+| Setting | Value |
+|---------|-------|
+| target_branch | main |
+| promote_from | — |
+
+### staging
+
+| Setting | Value |
+|---------|-------|
+| target_branch | staging |
+| promote_from | — |
+PUSHEOF
+rm -f .kdbp/.push-gate-ok
+[ "$(pg '{"tool_input":{"command":"git push origin staging"}}')" = 0 ] && ok || bad "push-gate: mis-wired multi-terminal topology must not block ordinary staging pushes"
+[ "$(pg '{"tool_input":{"command":"git push origin main"}}')" = 2 ] && ok || bad "push-gate: default env still gated in a mis-wired topology"
+# single-env project — gating OFF
 cat > .kdbp/PUSH.md <<'PUSHEOF'
 ### production
 
@@ -309,6 +404,10 @@ PUSHEOF
 # plain key:value env format (the gustify shape — caught by the real-data dry-run,
 # where the table-only parse silently ALLOWED the promotion)
 cat > .kdbp/PUSH.md <<'PUSHEOF'
+## Defaults
+
+default_env: production
+
 ## Environments
 
 ### staging

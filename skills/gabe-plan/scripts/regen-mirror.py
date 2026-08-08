@@ -106,17 +106,70 @@ def detail_proof_type(pid):
     m = re.search(r"^proof_type:\s*(\S+)", blocks.get(pid, ""), re.M)
     return None if not m or m.group(1) in ("null", "~") else m.group(1)
 
-def detail_list(pid, label):
-    """Comma-separated bullet → list of trimmed items (backticks stripped).
+def _depth_split(s):
+    """Comma split that respects {} and () groups — a brace glob (`{a,b}.tsx`) or a
+    parenthetical (`x.md (new, evidence companion)`) is ONE token, not several."""
+    out, depth, cur = [], 0, ""
+    for ch in s:
+        if ch in "{(":
+            depth += 1; cur += ch
+        elif ch in "})":
+            depth = max(0, depth - 1); cur += ch
+        elif ch == "," and depth == 0:
+            out.append(cur); cur = ""
+        else:
+            cur += ch
+    out.append(cur)
+    return out
 
-    `none — <reason>` mirrors to [] (an EXPLICIT honest blank — declared-none is
-    a different fact from never-declared, which stays None/absent)."""
+
+_PATHY = re.compile(r"^[\w./*{}@,\[\]-]+$")   # a path/glob token: no spaces, no markdown
+
+def detail_list(pid, label, kind=None):
+    """A bullet → list, hardened against the ways a naive split fabricates data
+    (review 2026-08-07, proven on gustify's REAL prose-heavy Scope bullets):
+    · an UNFILLED template placeholder (`<files/globs …>`) is not a declaration → None;
+    · `none — <reason>` / `none` → [] (explicit honest blank); `none of the…` is prose;
+    · groups (`{a,b}`, `(new)`) never split; depth-0 commas only.
+    kind='path' (Scope): real bullets carry parentheticals, `→ new sibling modules`
+    prose, `· **scope change …:**` history, and backticks — EXTRACT only path-shaped
+    tokens and drop the prose, rather than mirror junk globs into S5 and the board.
+    kind='slug' (Entities): a slug is a bare identifier; any item with a space or
+    angle bracket means the bullet is prose that slipped the guard → None (never
+    guess a slug), caller notes it."""
     bullet = detail(pid, label)
     if bullet is None:
         return None
-    if re.match(r"^none\b", bullet.strip(), re.I):
-        return []
-    return [t.strip(" `") for t in bullet.split(",") if t.strip(" `")]
+    s = bullet.strip()
+    if s.startswith("<") or s.startswith("e.g.") or "projects only" in s:
+        return None                                   # unfilled template placeholder
+    if re.match(r"^none$", s, re.I) or re.match(r"^none\s*[—-]", s):
+        return []                                     # explicit honest-none, not "none of the…"
+
+    if kind == "path":
+        # ALL-OR-NOTHING (proven necessary on gustify's real 6-bullet plan, P1 dry-run
+        # 2026-08-07): a scan-for-path-runs picked up dates-with-slashes and `**bold`
+        # artifacts as junk globs. So each comma-token is cleaned of a trailing
+        # `(annotation)` / `→ prose` / `+ prose` tail and must then be path-shaped; if
+        # ANY token is still prose (a `·`/`**scope change:**` note, an "and"-joined
+        # clause), the whole bullet is human prose not a machine path list → return None
+        # and don't mirror. Clean paths or nothing — S5 and the board never see junk.
+        out = []
+        for raw in _depth_split(s):
+            t = re.split(r"\s+\(| → | \+ ", raw.strip().strip("`"))[0].strip().strip("`").strip()
+            if not t:
+                continue                              # a pure annotation like `(new)` — skip
+            if _PATHY.match(t) and ("/" in t or "*" in t or re.search(r"\.\w+$", t)):
+                out.append(t)
+            else:
+                return None                           # a prose token — the bullet is not machine-parseable
+        return out or None
+
+    items = [t.strip().strip("`").strip() for t in _depth_split(s)]
+    items = [t for t in items if t]
+    if kind == "slug" and any(re.search(r"[\s<>]", t) for t in items):
+        return None                                   # prose, not slugs — refuse to guess
+    return items
 
 # --- old mirror (drift + preservation source) ---
 old_path = Path(".kdbp/PLAN.json")
@@ -140,8 +193,10 @@ for cells in rows:
     proof_type = detail_proof_type(pid)
     cases = detail(pid, "Cases")
     review = detail(pid, "Review")
-    scope = detail_list(pid, "Scope")
-    entities = detail_list(pid, "Entities")
+    scope = detail_list(pid, "Scope", kind="path")
+    entities = detail_list(pid, "Entities", kind="slug")
+    if entities is None and detail(pid, "Entities") is not None:
+        notes.append(f"phase {pid} Entities bullet unparseable (placeholder or prose) — not mirrored, never guessed")
     for field, mdval in (("proof", proof), ("proof_type", proof_type), ("cases", cases),
                          ("review", review), ("scope", scope), ("entities", entities)):
         if mdval is None and old_ph.get(field) is not None:

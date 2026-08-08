@@ -1972,9 +1972,12 @@ def main() -> int:
     wrote.append(("board.html", _btext.count("{{")))
 
     # inflight.{json,js} are beat-tail artifacts (write-inflight.py, ruling
-    # 2026-08-07) — the board skeleton references inflight.js, so a center that
-    # has never seen a beat gets an HONEST inactive stub rather than a dead
-    # link. Never overwrite a real projection: the tail owns the live file.
+    # 2026-08-07) and are GITIGNORED (gabe-init seeds it). The builder writes an
+    # inactive stub at BUILD time so the board's <script src="inflight.js"> link
+    # resolves locally and the link gate passes — but because the files are
+    # gitignored, the stub is never committed, so there is no dirty-forever loop
+    # and pulse never sees them. In a project the beat tail overwrites the stub
+    # with live data locally; a deployed/published center simply has no overlay.
     _ifj = CENTER_OUT / "inflight.json"
     if not _ifj.is_file():
         _stub = {"v": 1, "active": False, "reason": "no beat has written the projection yet",

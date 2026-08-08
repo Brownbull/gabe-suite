@@ -15,3 +15,7 @@ docs/investigations/**/*.jpg
 # Its own `.ignore` re-admits it to ripgrep; delete that file after every build.
 graft/
 .ignore
+
+# in-flight projection — beat-tail artifact, rewritten every beat (ruling 2026-08-07)
+docs/site/center/inflight.json
+docs/site/center/inflight.js
