@@ -365,6 +365,41 @@ MD
 grep -q 'phase 3 Entities bullet unparseable' "$T/out" && ok || bad "hardparse: an unparseable Entities bullet must be noted, not silently dropped"
 [ "$(J "$HP" "p['phases'][3].get('entities')")" = "['none of the registered entities apply here']" ] && bad "hardparse: 'none of the…' is prose, not honest-none []" || ok
 
+# --- current_phase preservation: a narrative Current Phase section must not wipe the
+#     recorded current_phase (integration dry-run 2026-08-07 — gustify reads "P6 and P7
+#     both closed", which the `Phase <id>` regex cannot recover; the E8 tail degraded to
+#     no-NOW/NEXT on regen until this preservation landed) ---
+CP="$T/curphase"; mkdir -p "$CP/.kdbp"
+cat > "$CP/.kdbp/PLAN.md" <<'MD'
+<!-- status: active -->
+## Current Phase
+
+**THIS PLAN IS COMPLETE THROUGH PUSH. P6 and P7 both closed at the production promotion.**
+
+## Phases
+
+| # | Phase | Exec |
+|---|-------|------|
+| P7 | F6 | ✅ |
+
+## Phase Details
+
+### Phase P7 — F6
+
+MD
+cat > "$CP/.kdbp/PLAN.json" <<'JSON'
+{"version":1,"status":"active","current_phase":"P7","phases":[{"id":"P7","cells":{"exec":"done"},"proof":null,"cases":null}]}
+JSON
+[ "$(run "$CP")" = 0 ] && ok || bad "curphase: fixture runs"
+[ "$(J "$CP" "p['current_phase']")" = "P7" ] && ok || bad "curphase: narrative Current Phase must PRESERVE recorded current_phase, never wipe to None"
+grep -q 'preserved current_phase' "$T/out" && ok || bad "curphase: the preservation must say so in a note"
+# but a preserved id that no longer exists in the table must NOT be resurrected
+cat > "$CP/.kdbp/PLAN.json" <<'JSON'
+{"version":1,"status":"active","current_phase":"P99","phases":[{"id":"P7","cells":{"exec":"done"},"proof":null,"cases":null}]}
+JSON
+run "$CP" >/dev/null
+[ "$(J "$CP" "p['current_phase']")" = "None" ] && ok || bad "curphase: a stale current_phase absent from the table must NOT be preserved"
+
 echo
 echo "plan-mirror battery: $pass passed, $fail failed"
 [ "$fail" = 0 ] || exit 1

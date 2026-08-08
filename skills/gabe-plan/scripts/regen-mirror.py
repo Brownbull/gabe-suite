@@ -174,10 +174,12 @@ def detail_list(pid, label, kind=None):
 # --- old mirror (drift + preservation source) ---
 old_path = Path(".kdbp/PLAN.json")
 old_by_id = {}
+old_current = None
 if old_path.exists():
     try:
         old = json.loads(old_path.read_text())
         old_by_id = {str(p.get("id")): p for p in old.get("phases", []) if isinstance(p, dict)}
+        old_current = old.get("current_phase")
     except Exception as e:
         notes.append(f"old mirror unreadable ({e}) — regenerating fresh")
 
@@ -240,6 +242,17 @@ for cells in rows:
 
 cur_sec = section("Current Phase")
 cur = re.search(r"Phase\s+([A-Za-z0-9][\w.]*)", cur_sec)  # tolerates narrative like "(Phase 24), …"
+current_phase = cur.group(1).rstrip(".,)") if cur else None
+# PRESERVE current_phase (same doctrine as proof/cases: regeneration must never wipe recorded
+# state to null). The `## Current Phase` section is often free-form narrative — gustify's real
+# plan reads "P6 and P7 both closed", which the `Phase <id>` regex cannot recover — while the
+# skill's advance mechanics keep PLAN.json.current_phase correct. If the parse misses but the old
+# mirror named a phase that still exists, keep it, rather than degrade the whole E8 tail to
+# no-NOW/NEXT on the next regen (integration dry-run 2026-08-07).
+if current_phase is None and old_current is not None:
+    if str(old_current) in {str(p["id"]) for p in phases}:
+        current_phase = old_current
+        notes.append(f"preserved current_phase from old mirror (Current Phase section not parseable): {old_current!r}")
 goal = section("Goal").strip().split("\n\n")[0].replace("\n", " ")
 
 plan = {
@@ -250,7 +263,7 @@ plan = {
     "maturity": context_field("Maturity"),
     "created": context_field("Created"),
     "last_updated": (context_field("Last Updated") or "").split(" ")[0],
-    "current_phase": cur.group(1).rstrip(".,)") if cur else None,
+    "current_phase": current_phase,
     "phases": phases,
 }
 

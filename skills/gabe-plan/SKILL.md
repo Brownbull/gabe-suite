@@ -3,7 +3,7 @@ name: gabe-plan
 description: "KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts."
 when_to_use: "Plan, phases, tier decision, break down this goal — create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md."
 metadata:
-  version: 2.7.1
+  version: 2.7.2
 ---
 
 # Gabe Plan — KDBP-aware planner
