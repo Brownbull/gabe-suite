@@ -302,13 +302,15 @@ Every finding gets these fields:
 | **#** | Sequential number |
 | **Severity** | CRITICAL / HIGH / MEDIUM / LOW |
 | **Finding** | One-line description |
-| **File** | `file:line` |
+| **File** | a clickable workspace-relative link `[file:line](file#Lnn)` — findings contract, below |
 | **Evidence** | ≤2 exact quoted code lines from the cited `file:line`, opened via Read or the diff this session; search proof (`grep -rn <pattern> <scope>` → 0 hits) for absence claims |
 | **Churn** | 🔴 HOT / ⚠️ WARM / ✅ STABLE (from Step 3.5) |
 | **Fix Cost** | T-shirt estimate: S (<30m), M (1-3h), L (3-8h), XL (>1d) |
 | **Defer Risk** | `[CONSEQUENCE] — P([probability]), Impact([severity])` |
 | **Maturity Gate** | MVP / Enterprise / Scale — when this finding becomes relevant |
 | **Escalation** | Empty for new findings, `⚠️ RECURRING (Nth time)` for deferred items |
+
+This table obeys the **findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings contract"): the **File** cell — and every path named in Plan Alignment, STALE ANCHOR, WORKFLOW/REACH DRIFT, and PENDING/case subjects — renders as a clickable workspace-relative link; the Fix-Cost / Defer-Risk / Triage columns already force the remediation step.
 
 ### Defer Risk Scales
 

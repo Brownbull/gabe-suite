@@ -156,10 +156,12 @@ silently invent a flow.
 ### Evidence line (required per finding)
 | Input walked | Evidence format |
 |---|---|
-| UI code/routes | `path:line` — "quoted rendered string/snippet (≤2 lines)" |
+| UI code/routes | a clickable `[path:line](path#Lnn)` — "quoted rendered string/snippet (≤2 lines)" |
 | spec/PRD | §section — "quoted sentence" |
 | screenshots/mockup | screen id + quoted visible text |
 | described flow | the quoted step from the description |
+
+The UI-code Evidence cite renders as a clickable workspace-relative link (**findings contract**, `../../gabe-docs/references/execution-contract.md`); the per-finding **Fix** field already carries the horizon-collapsing step.
 
 Cite only sources opened THIS session. A finding whose Evidence line is empty or unquoted is
 DELETED before output — never shown, never merely downgraded.

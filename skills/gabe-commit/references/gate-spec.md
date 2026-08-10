@@ -242,6 +242,8 @@ Actions prompt (prose): `Actions? (e.g., "1:defer 2:keep 3:skip") or "all:commit
 
 `Fix critical findings before committing.`
 
+Every path a Finding names — `classify.py`, `README.md`, the failed test file, the god-file/structure match — renders as a clickable workspace-relative link (`[path](path)`, `[test file:line](file#Lnn)` for a test failure); the paths are already in hand from CHECK 1–8, so this costs nothing. The **Actions** column is the required remediation step. This is the **findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings contract").
+
 ### Step 5: Execute actions
 
 | Finding Type | Action | What Happens | LLM? | Cost |

@@ -16,6 +16,15 @@ These are floors, not ceilings — a skill's own gate may be stricter, never loo
 - **E6 MISSING ANCHOR = STOP** — referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.
 - **E7 REPORT WHERE** — end user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.
 
+## The findings contract — stated once, ruled 2026-08-10
+
+Any beat whose output ends in a **list of actionable findings** — things the operator must go fix, check, or act on — renders each finding as a **clickable local link plus a concrete remediation step**, so nothing has to be hunted for and no "next action" is a bare label:
+
+- **LINK** — every location a finding names (a `file:line`, a PENDING/registry row, an entity page, a god-file, a diff hunk) renders as a workspace-relative markdown link: `[file:line](path#Lnn)` when a line is known, `[label](path)` otherwise. A finding the operator cannot click is one they have to go find — never emit one. Local, workspace-relative links are fine (the IDE/terminal makes them clickable).
+- **STEP** — every finding ends in the exact next move: a command to run (`/gabe-… <args>`) or a precise edit ("add `# DIAGRAM WORKFLOW` to the card"). "report X" / "surface" / "flag" / "next action" without the concrete move is half a finding.
+
+Where a deterministic script already owns the findings AND their paths (a gate, a scanner, a committed census), the script emits the link + step itself and the skill relays it verbatim — never re-composing a link by hand (reference implementation: gabe-cc-update `status` → `center_status.py`). Where the findings are model-derived (a code review, a gap roast, a myopic trap), this contract is the mandate the skill's output section points at.
+
 ## The beat brief — stated once, ruled 2026-08-07 (ask C)
 
 Every spine beat's report carries ONE compact orientation block, printed just before the E8

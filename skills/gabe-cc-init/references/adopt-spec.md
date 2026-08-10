@@ -54,6 +54,9 @@ Small, append-only in spirit: rows change status, never vanish.
 1. **Inventory** — list what exists, with counts: `docs/**` trees (by subsystem), any
    `docs/site/center/` (hand-built), README-adjacent doc files, mockup/investigation dirs.
    Render as a table: path · files · looks-like (docs system / center / investigation / assets).
+   The **path** column renders as a clickable workspace-relative link — **findings contract**
+   (`../../gabe-docs/references/execution-contract.md`), which also governs the `rank` candidate
+   table's signal-evidence paths below.
 2. **Archive picker (checkpoint)** — the operator marks each inventory row KEEP or ARCHIVE.
    Machine sources are never offered for archive: tests, junit/results, `.kdbp/`, root README,
    source code. Default proposal: archive superseded human doc trees + any hand-built center;
@@ -125,7 +128,8 @@ Small, append-only in spirit: rows change status, never vanish.
 2. **Render the candidate table:** entity · proposed rank (critical/high/medium) · the signal
    evidence per column · what a section would contain (tests found y/n, legacy docs found y/n,
    proofs found y/n). No signal, no row — an entity the machine cannot see is proposed only by
-   the operator.
+   the operator. Every file/dir path in the signal-evidence columns renders as a clickable
+   workspace-relative link (findings contract).
 3. **Checkpoint:** the operator trims, re-ranks, adds, drops. On approval: write one
    `sections[]` row per shortlisted entity — `status: "pending"`, `rank`, `display_name` (one
    human-facing word, e.g. `"Transaction"` — D123: the registry's rendered name, never left to

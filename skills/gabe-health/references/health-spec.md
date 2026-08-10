@@ -207,6 +207,8 @@ Summary:
   Suggest: [one action — e.g., /gabe-roast architect functions/src/]
 ```
 
+This report obeys the **findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings contract"): every `<path>` and every `<fileA> ↔ <fileB>` pair in analyses 1–6 renders as a clickable workspace-relative link — the detection commands already surface the paths, so it costs nothing. And **each finding carries its own `→ next` step**, taken from the Integration table below (a god file → `/gabe-roast architect [file]` · a coupling pair → `/gabe-assess` · a churn hotspot → `/gabe-review [file]`) — not just the one global `Suggest:` line. Churn Hotspots and Coupling Clusters, which render no per-finding step today, must each name theirs per row.
+
 ### Single Analysis Mode
 
 When invoked with a focus (e.g., `/gabe-health coupling`), only that analysis runs.

@@ -92,8 +92,10 @@ Within the same maturity + importance bucket, order gaps by **impact** — the m
 | **One-liner** | Yes | A Gabe Lens handle — a memorable phrase (5-12 words) that captures the essence of THIS gap. Must survive fatigue and re-anchor the issue without re-reading the description. Concrete, not abstract. |
 | **Effort** | Yes | T-shirt size (S / M / L / XL) with confidence: `M (confident)` or `L (uncertain — depends on existing auth layer)`. Never false-precision story points without codebase knowledge. |
 | **What we lose** | Yes | The specific consequence of inaction. Not generic ("tech debt") — concrete ("first user with two accounts overwrites their own data"). |
-| **Evidence** | Yes | Proof the gap is real, from files opened this roast. Code: `path:line` + ≤2-line quote. ABSENCE claims ("no rate limiting", "nothing validates X"): the search executed + empty result (`grep -rn "rateLimit" src/ → 0 hits`). Docs: §section + quoted sentence. |
-| **Suggested fix** | Optional | A concrete recommendation. 1-3 sentences. Include file/component references when the target is code. Skip only when the fix is obvious from the gap description. |
+| **Evidence** | Yes | Proof the gap is real, from files opened this roast. Code: a clickable `[path:line](path#Lnn)` + ≤2-line quote. ABSENCE claims ("no rate limiting", "nothing validates X"): the search executed + empty result (`grep -rn "rateLimit" src/ → 0 hits`). Docs: §section + quoted sentence. |
+| **Suggested fix** | Yes | A concrete remediation step — the exact edit or command, not a direction. 1-3 sentences, with clickable file/component links when the target is code. A gap without its fix is half a finding. |
+
+This table obeys the **findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings contract"): the **Evidence** code cite renders as a clickable workspace-relative link, and **Suggested fix** is now required — every gap ends in its next move, never a bare label.
 
 ### One-Liner Rules
 
