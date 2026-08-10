@@ -36,7 +36,8 @@ shot demotion is the only divergence between the file and the page.)*
 | Moment | Beat | What happens |
 |---|---|---|
 | a feature ships | `/gabe-execute` → `/gabe-review` | review runs the drift checker over the DIFF and raises **WORKFLOW DRIFT** findings (review-spec §subjects). Detection lives there because only review sees the diff that caused it — the session that added a field is the one that knows what it is for. |
-| the phase's Center cell | `/gabe-cc-update <phase>` | the census is authored/extended: new steps, corrected specs, new links. This is the FIXER, never the detector — it only runs when the Center cell is open, and a drift in a phase with no center work must not be invisible. |
+| the phase's Center cell | `/gabe-cc-update <phase>` | the census is authored/extended: new steps, corrected specs, new links. This is the forward-track FIXER, never the detector — a drift in a phase with no center work must not be invisible. |
+| adopting a back-catalog entity | `/gabe-cc-init section` · `/gabe-cc-update backfill` | the **census ASK** (2026-08-10) — *author* (`scaffold_census.py` seeds a valid skeleton from the card's `# FLOWS`) · *extend* · *defer* · *decline*. **Decoupled from an open Center cell** so an entity with no phase still gets one: `/gabe-cc-init section` (step 3) writes it during adoption, `/gabe-cc-update backfill` writes it during re-coverage — both tick the `workflow_census` adoption key. This is why the FIXER row above is no longer the *only* authoring trigger. |
 | a green e2e run | `/gabe-cc-update curate` | owed captures get shot and curated; the step flips from ghost/unpowered to running. |
 | any spine beat, later | `/gabe-pulse` S8 | the standing reminder for what review could only DEFER: an owed capture needs a run plus curation, so it outlives the reviewing session. Fires at ≥3 owed steps. |
 

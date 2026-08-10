@@ -32,7 +32,8 @@ Small, append-only in spirit: rows change status, never vanish.
       "status": "pending",
       "checklist": {
         "testing_inventory": false, "legacy_reverified": false, "card": false,
-        "diagrams": false, "proofs": false, "gate_green": false, "walk_recorded": false
+        "diagrams": false, "proofs": false, "gate_green": false,
+        "workflow_census": false, "walk_recorded": false
       },
       "signals": "junit 34 hits · churn 12 commits/90d · SCOPE REQ-03",
       "approved_walk": null,
@@ -133,7 +134,7 @@ Small, append-only in spirit: rows change status, never vanish.
 3. **Checkpoint:** the operator trims, re-ranks, adds, drops. On approval: write one
    `sections[]` row per shortlisted entity — `status: "pending"`, `rank`, `display_name` (one
    human-facing word, e.g. `"Transaction"` — D123: the registry's rendered name, never left to
-   default to the raw slug), `signals` (the evidence string), `checklist` with ALL SEVEN keys
+   default to the raw slug), `signals` (the evidence string), `checklist` with ALL EIGHT keys
    `false`, `approved_walk: null`, `notes: ""` — and set `shortlist_approved` to today's ISO
    date (that date IS the truth test `section`/`status` check). Report. Re-running `rank`
    later APPENDS new candidates; approved rows are never re-ranked silently.
@@ -160,6 +161,12 @@ and the entity row exists and is `pending`/`building`.
    diagrams per `gabe-docs` standards (or the card states why fewer), testing page (angles +
    verdicts from machine facts), proofs — curate real shots/artifacts where they exist; absent
    proofs render as named gaps, never staged. Tick `card` / `diagrams` / `proofs`.
+   Then the **workflow census** — the card's `# FLOWS` now exist on disk, so run the census ASK
+   (`gabe-cc-update` feature-spec §The workflow census): `check_workflow_drift.py` the entity's
+   census, then *author* (`scaffold_census.py <root> <slug>` seeds a skeleton from the flows) /
+   *extend* / *defer* / *decline*. Tick `workflow_census` once authored or declined-with-reason.
+   This step is the WRITER for the 8th key: a back-catalog entity has no phase, so
+   `/gabe-cc-update`'s phase-driven census step never reaches it — the adoption ritual must.
 4. **Regenerate + gate:** run the center refresh; the link/gate check must be green with this
    section contributing zero WARNs. Tick `gate_green`.
 5. **Checklist render + checkpoint:** BRIEF the operator before asking for a verdict —

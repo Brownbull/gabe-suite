@@ -150,6 +150,36 @@ item ("the golden path has no proof" is a finding, not a blank); a set the
 build cannot classify is a clarification move ("add `role:`/`flows:` to its
 manifest"), never a silent guess.
 
+## The workflow census (the Evidence tab's spine)
+
+The census (`docs/site/center/workflows/<slug>.json`) is what the entity's Evidence
+tab renders; its schema and lifecycle live ONCE in `templates/center/workflows/README.md`
+(the `EvidenceNav.mount()` contract + the three drift checks). Where none exists the
+tab is a NAMED ABSENCE — honest, but the page cannot tell its own story. Authoring it
+was bound only to the forward-phase FIXER (an open Center cell), so back-catalog
+entities never got one. This closes that: **the census is a first-class step of
+`/gabe-cc-update`, decoupled from the Center cell.**
+
+- **Priority — P1, always high.** The census is structural completeness, not extra
+  work: without it the Evidence tab omits the entity's story. It ranks above code
+  hygiene and below only a live HIGH security flag (the sweep ladder, 2026-08-10).
+- **The step.** After regen, run `check_workflow_drift.py <census>`. If the census is
+  **absent or drifted**, ASK the operator — never author silently:
+  - *author now* — `scaffold_census.py <root> <slug>` seeds a VALID skeleton from the
+    card's `# FLOWS` (one state per flow, `start` = the golden ★ flow, every step
+    `ghost` / capture-owed). It invents no coverage; the operator reshapes the
+    flow-derived states into real UI states.
+  - *extend* — present + drifted: add the missing steps / correct the specs.
+  - *defer* — `/gabe-pulse` S8 nags at ≥3 owed; the tab shows the named absence.
+  - *decline* — record the reason; the named absence stands honestly.
+- **Then captures.** `curate` (below) flips ghost/unpowered steps to `running` after a
+  green e2e run — the census is authored first, captures fill in after.
+- **Registry.** Tick `workflow_census` in `adoption.json` once the census is authored
+  or explicitly declined-with-reason (the 8th adoption checklist key).
+
+The scaffold is a project-local convenience (E4, not E6-mandatory): absent, the census
+is hand-authored against the README schema, and the ASK still fires.
+
 ## The verification changelog (machine — run-history.jsonl)
 
 Run results are replaced on every refresh BY DESIGN; the center's durable
