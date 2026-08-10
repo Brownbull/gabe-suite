@@ -22,6 +22,16 @@
             "timeout": 5
           }
         ]
+      },
+      {
+        "matcher": "startup",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/scripts/suite-presence.py\" \"$CLAUDE_PROJECT_DIR\" --quiet 2>/dev/null || true",
+            "timeout": 10
+          }
+        ]
       }
     ]
   }

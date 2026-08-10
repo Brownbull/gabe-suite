@@ -1,0 +1,4 @@
+{
+  "adopts": ["register"],
+  "_note": "Project-local opt-in for Gabe Suite trials. A part listed here that is ABSENT reads as a GAP (not info) in scripts/suite-presence.py — so removing a declared part fires a warning instead of going silent. The register is a project-local trial (gabe_lens only until widened)."
+}
