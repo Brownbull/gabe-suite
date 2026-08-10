@@ -34,6 +34,7 @@ All machinery ships in the suite (`templates/center/` — generators, gate, help
 | Gate | `scripts/check_center_links.py` — chained by `refresh_center.sh` after EVERY mode; dead links / an empty crawl fail (exit 1), registry drift WARNs |
 | Proof curation | `scripts/curate_proof.py <artifact-subdir> <shot-nums…>` |
 | Backfill queue | `scripts/next_feature.py` |
+| Status actionables | `scripts/center_status.py` — the `status` mode's linked findings + `→ next` steps (reads registry/cards/config; prints, gates nothing) |
 | Shell-JS harness | `scripts/verify_center_chrome.mjs <page.html…\|center-dir>` |
 | The one editorial overlay | `docs/site/center/center.config.json` (`paths` · `corpora` · `commands` · `entities.<slug>` blocks) |
 | Entity registry | `docs/site/center/adoption.json` (owned by `/gabe-cc-init` — slugs, statuses, display names) |
@@ -53,7 +54,7 @@ Any binding in this table missing → E6 STOP, name it, done. Project-local extr
 
 ### `/gabe-cc-update status`
 
-Run `refresh_center.sh regen`; read the gate output verbatim. Report: dead links (should be none — they fail the build), adopted entities with no card yet, `TODO(verify-glob)` in the registry, `TODO(author)` sections, cards missing canonical DIAGRAM sections or a reviewed stamp, proof manifests missing narration (or carrying `TODO(narration)`), malformed FLOWS lines — each with its single next action. No judgment beyond ordering.
+Run `refresh_center.sh regen`, then `scripts/center_status.py` — it **owns the actionable list**: every finding is a workspace-relative markdown link (clickable in the IDE/terminal) plus a concrete `→ next` step, read from the same registry/cards/config the gate reads. **Relay its output verbatim** and add only ordering prose — never compose a link by hand. It covers the card + registry actionables: a card `# REVIEWED` not stamped (a card on disk is finalized regardless of registry status — a PENDING entity with a card is the live mid-ritual thread, surfaced not skipped), `TODO(author|verify-glob|narration)`, sub-canon diagrams (pre-review only), malformed FLOWS, proof sets missing narration, and cardless entities (adopted → backfill · pending → shortlisted). Then read the **gate's own** build + dead-link summary verbatim (dead links fail the build; the crawl is the gate's, not center_status's). No judgment beyond ordering.
 
 ### `/gabe-cc-update backfill`
 
