@@ -59,6 +59,10 @@ def main() -> int:
 
     head = sh(["git", "rev-parse", "--short", "HEAD"], root).strip() or None
     branch = sh(["git", "rev-parse", "--abbrev-ref", "HEAD"], root).strip() or None
+    # last_commit — the HEAD subject, a machine-derived proxy for the beat brief's
+    # DID line ("what we did"): the last landed work, never invented prose. Board
+    # renders it in the ▶ NOW banner; absent (no commits yet) = the line is omitted.
+    last_commit = sh(["git", "log", "-1", "--format=%s", "HEAD"], root).strip() or None
 
     plan = None
     plan_path = root / ".kdbp" / "PLAN.json"
@@ -68,7 +72,7 @@ def main() -> int:
         except Exception:  # noqa: BLE001
             plan = None
 
-    doc: dict = {"v": 1, "head": head, "branch": branch}
+    doc: dict = {"v": 1, "head": head, "branch": branch, "last_commit": last_commit}
     ph = None
     if plan and plan.get("status") == "active":
         cur = plan.get("current_phase")

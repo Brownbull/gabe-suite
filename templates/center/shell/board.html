@@ -4,14 +4,16 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Board · {{PROJECT_NAME}} Command Center</title>
 <link rel="stylesheet" href="assets/a3.css">
+<!-- the in-flight projection (write-inflight.py, E8 beat tail) — a script sibling
+     because file:// kills fetch(); missing file = silent 404. Loaded BEFORE board.js
+     so board.js's load-time current-beat banner (renderNow) sees window.GABE_INFLIGHT
+     (deferred scripts execute in document order). -->
+<script src="inflight.js" defer></script>
 <script src="assets/slots.js" defer></script>
 <script src="assets/a3-settings.js" defer></script>
 <script src="assets/a3-lightbox.js" defer></script>
 <script src="assets/rowclick.js" defer></script>
 <script src="assets/board.js" defer></script>
-<!-- the in-flight projection (write-inflight.py, E8 beat tail) — a script
-     sibling because file:// kills fetch(); missing file = silent 404 -->
-<script src="inflight.js" defer></script>
 </head>
 <body>
 <!-- STATION: Board — every OPEN move in the project as a card, re-columned six ways,

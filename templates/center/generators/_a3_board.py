@@ -616,6 +616,14 @@ def card_html(c: dict, labels: dict) -> str:
     nxt = (f'<div class="bc-next"><code>{E(c["cmd"])}</code></div>'
            if c.get("cmd") and not c["done"] else "")
 
+    # Two date facts the KPI tiles filter on, carried as attributes so a tile
+    # click can narrow to its OWN population (mode-switch alone shows the whole
+    # board). Definitions mirror kpis() EXACTLY — "closed 30d" = done and closed
+    # within 30 days; "over 3 months" = open and older than 90 days.
+    cd, ad = c.get("closed_days"), c.get("age_days")
+    closed30 = "1" if (c["done"] and cd is not None and cd <= 30) else "0"
+    aged = "1" if (not c["done"] and ad is not None and ad > 90) else "0"
+
     return (
         f'<article class="bcard" data-track="{E(c["track"])}" '
         f'data-state="{E(c["state"])}" '
@@ -623,6 +631,7 @@ def card_html(c: dict, labels: dict) -> str:
         f'data-area="{E(c.get("area") or "")}" '
         f'data-effort="{E(c.get("effort") or "")}" '
         f'data-ripe="{"1" if c["ripe"] else "0"}" '
+        f'data-closed30="{closed30}" data-aged="{aged}" '
         f'style="--tc:{tcol}">'
         f'<div class="bc-top">{"".join(chips)}{ripe}</div>'
         f'<h4>{E(c["title"])}</h4><p>{E(c["detail"])}</p>'
