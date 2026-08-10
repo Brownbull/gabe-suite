@@ -196,6 +196,15 @@ signals: N ran · M unavailable (<id> <reason> · <id> <reason>)
 Bands with no rows print `clean` on one line rather than being omitted — an omitted band is
 indistinguishable from a band that was never checked.
 
+**Findings contract** (`../../gabe-docs/references/execution-contract.md` §"The findings
+contract"): the `→ clearing command` is each row's STEP (already mandated). For the LINK half,
+a row that names a specific file or the artifact it read renders it as a clickable
+workspace-relative link — **P8** links `.kdbp/PENDING.md`, **P10** links each over-budget file
+(`size-budget.sh` prints them), **P1** links `.kdbp/LEDGER.md`, **P9** links `.kdbp/walks.jsonl`,
+and any signal naming a path links it. A bare count-plus-command row (P2 `N uncommitted paths`,
+P4/P6 phase ids) carries no link — a count has no single location and the command is the move.
+Pulse is deliberately command-first; linkify only where a real file is named, never a count.
+
 ### 4.2 Brief
 
 Headline plus the roster line. Nothing else.

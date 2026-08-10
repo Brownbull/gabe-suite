@@ -120,6 +120,15 @@ AGING
 signals: 8 ran · 2 unavailable (P9 no walks.jsonl · P10 no size-budget script on PATH)
 ```
 
+The fence shows the STRUCTURE. In the real response the rows that name a file are emitted as
+**markdown, not fenced**, so the paths click through (findings contract — a fenced link is inert):
+
+- **P1** 73 unregistered commits since `17a4056` → [.kdbp/LEDGER.md](.kdbp/LEDGER.md) · `/gabe-commit`
+- **P8** 2 PENDING rows at ≥3 deferrals → [.kdbp/PENDING.md](.kdbp/PENDING.md) · `/gabe-review deferred`
+- **P10** breaches → each over-budget file linked (from `size-budget.sh`) · advisory
+
+Count-only rows (P2 uncommitted, P4/P6 phase ids) stay plain — no single file to link.
+
 $ARGUMENTS
 
 ## The ANGLE family (1.1.0)
