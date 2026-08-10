@@ -15,6 +15,9 @@ ok()  { pass=$((pass+1)); }
 bad() { fail=$((fail+1)); echo "FAIL: $1"; }
 
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
+# hermetic HOME — the register can be installed machine-wide (~/.claude), and
+# suite-presence reads it; a clean temp HOME keeps the project-local fixtures pure.
+export HOME="$T/home"; mkdir -p "$HOME/.claude"
 
 reg_wired() {  # $1 = project dir — a fully wired register
   mkdir -p "$1/.claude/output-styles"
@@ -71,6 +74,17 @@ out=$(python3 "$SP" "$T/twin"); rc=$?
 { echo "$out" | grep -q "not adopted" && [ "$rc" = 0 ]; } \
   && ok || bad "no-false-fire: twin without register → info exit 0 (rc=$rc)"
 echo "$out" | grep -q "0 gap(s)" && ok || bad "no-false-fire: twin must report 0 gaps"
+
+# ---- MACHINE-WIDE: register installed in ~/.claude → wired, not "not adopted" ----
+mkdir -p "$HOME/.claude/output-styles"
+echo style > "$HOME/.claude/output-styles/gabe.md"
+printf '{"outputStyle":"Gabe","hooks":{"UserPromptSubmit":[{"hooks":[{"command":"cat $HOME/.claude/register-core.md"}]}]}}' \
+  > "$HOME/.claude/settings.json"
+kdbp_full "$T/mw"                 # a project with NO project-local register
+out=$(python3 "$SP" "$T/mw")
+echo "$out" | grep "Register" | grep -q "machine-wide" \
+  && ok || bad "machine-wide: a global register install reads 'wired (machine-wide)' on the Register line"
+rm -rf "$HOME/.claude/output-styles" "$HOME/.claude/settings.json"
 
 echo "=================================="
 echo "suite-presence battery: $pass passed, $fail failed"

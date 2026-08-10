@@ -95,10 +95,16 @@ def inventory(root: Path) -> tuple[list[tuple[str, str, str, str]], int]:
     reg_hook = ("register-core" in settings.read_text(encoding="utf-8")
                 if settings.exists() else False)
     declared = "register" in adopts
+    # machine-wide install (~/.claude) — active in EVERY project via a global hook,
+    # so "no project-local register" is NOT "not active" once the register is widened.
+    home = Path.home() / ".claude"
+    mw_settings = home / "settings.json"
+    mw_active = ((home / "output-styles" / "gabe.md").is_file() and mw_settings.is_file()
+                 and "register-core" in mw_settings.read_text(encoding="utf-8"))
     if reg_files and reg_hook:
         used += 1
         parts.append(("Register", "wired",
-                      ".claude/register-core.md + output-style + re-inject hook", ""))
+                      ".claude/register-core.md + output-style + re-inject hook (project-local)", ""))
     elif reg_files and not reg_hook:
         used += 1
         parts.append(("Register", "gap",
@@ -106,15 +112,20 @@ def inventory(root: Path) -> tuple[list[tuple[str, str, str, str]], int]:
                       "— the style is silently inactive",
                       "add the UserPromptSubmit + SessionStart hooks that cat "
                       ".claude/register-core.md"))
+    elif mw_active:
+        used += 1
+        parts.append(("Register", "wired",
+                      "active machine-wide (~/.claude/output-styles/gabe.md + global hook) "
+                      "— no project-local copy needed", ""))
     elif declared and not reg_files:
         used += 1
         parts.append(("Register", "gap",
                       "declared adopted (suite-adopts.json) but the files are absent",
                       "copy .claude/register-core.md + output-styles/gabe.md and wire the hook"))
     else:
-        # absent + undeclared → info, only meaningful if the project uses other parts
+        # absent everywhere + undeclared → info, only meaningful if the project uses other parts
         parts.append(("Register", "info",
-                      "not adopted — no .claude/register-core.md in this project", ""))
+                      "not adopted — no project-local or machine-wide register", ""))
 
     return parts, used
 
