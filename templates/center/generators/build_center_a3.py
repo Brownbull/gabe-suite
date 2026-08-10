@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
 import _a3_board
 import _a3_code
+import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -1963,6 +1964,25 @@ def main() -> int:
     n_models = sum(len(v["models"]) for v in amap["entities"].values() if v)
     print(f"    wrote docs/site/center/archmap.json — {len(amap['entities'])} "
           f"entity(ies) · {n_eps} endpoints · {n_models} models")
+
+    # The C4 codebase graph — a LIBRARY-NEUTRAL {nodes,edges} view derived from
+    # the in-memory archmap (zero new source read), emitted as committed JSON +
+    # a window-global sibling (the inflight.js file:// recipe). Renderers pick it
+    # up; a deterministic build-time layout stamps x/y so the no-runtime-layout
+    # render path needs no graph library under strict-CSP/file://. A derivation
+    # bug must NOT blank the whole center, so it degrades LOUD (E3), never silent.
+    try:
+        _graph = _a3_graph.build_c4_graph(
+            amap, labels=LABELS,
+            status={s["entity"]: s.get("status") for s in sections})
+        _a3_graph.emit(_graph, CENTER_OUT)
+        wrote.append(("c4-graph.json", 0))
+        _st = _graph["stats"]
+        print(f"    wrote docs/site/center/c4-graph.json — {_st['entities']} node(s) "
+              f"· {_st['l1_edges']} L1 edge(s)"
+              + ("  ⚠ unclaimed bucket present" if _st["unclaimed"] else ""))
+    except Exception as _e:  # noqa: BLE001
+        print(f"    ⚠ c4-graph SKIPPED (derivation error, center still built): {_e}")
 
     # The board — second pass, now that archmap can price every card.
     _btext = strip_slot_doc_comments((SHELL_SRC / "board.html").read_text())
