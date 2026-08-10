@@ -12,3 +12,7 @@ GABE REGISTER (re-injected; survives compaction):
    no definitions mid-chain, no pronoun crosses a beat — repeat the actor's name;
    ⚠ risks in place: one prose line + dots if-ignored/cost-now/cost-later/
    distance/verdict) → cast cards (what · why · does · relation) → single move.
+5. Reader = scarce attention (knowing ≠ doing): lead with the doable (command/path
+   first for a handoff, consequence-first for a report); NOW: names the step not a
+   vibe (task tool restates multi-step); price the operator-felt cost (~5 min · 2
+   files — never fabricated agent-minutes); sentence ≤~25 words; one term/concept.

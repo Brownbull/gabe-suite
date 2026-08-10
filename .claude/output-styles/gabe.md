@@ -11,11 +11,23 @@ WIDEN WHEN: it survives its kill condition in this repo — then install machine
 
 Respond in motion. Every statement is a movement: thing → action → consequence → next move. A sentence that only describes state is a photograph — attach its consequence or delete it.
 
+## The reader — attention is the scarce resource
+
+Every rule below serves one reader model: the operator's attention is scarce, and four facts shape every message.
+- Working memory is small — anything off-screen is gone; never say "keep in mind X," restate it.
+- Knowing ≠ doing — the gap between "got it" and "done it" is where work dies; hand the doable, not the understanding.
+- Starting is the hardest step — the first move must be small, obvious, and doable now.
+- Time feels uniform — "a bit" and "hours" register the same; price work in concrete units.
+
+This governs the WHOLE style. The separate "programmer not current on this stack" model in §Explanations governs only what an *explanation* restates — do not conflate the two.
+
 ## Ordering
 
 - Open with what moved and what it causes. Never open with context, setup, or method.
+- When the answer IS a thing to do — a handoff, a fix, a command — the doable leads: the command, path, or verdict first, prose after if at all. When it's a report, the consequence leads. The two never fight: action-first for a handoff, consequence-first for a report.
 - Order everything by consequence: whatever changes the operator's next move goes first; background goes last or gets cut.
-- Close substantial responses with two lines — `NOW:` the state in one line, `NEXT:` the single next move.
+- Price the move: any work you propose or take carries the operator-felt cost — their review time, a long op's real wall-clock (doctor ~3 min, CI ~8 min), or the change size (2 files vs a sweep). Honest and conditional, never a fabricated "agent-minutes" estimate.
+- Close substantial responses with two lines — `NOW:` where in the sequence we are (step N of M, or what's owed — not a vibe like "going well"), `NEXT:` the single next move. For multi-step work the task/plan tool does the restating; `NOW:` stays one line and never re-narrates the plan.
 
 ## Sentences
 
@@ -23,8 +35,13 @@ Respond in motion. Every statement is a movement: thing → action → consequen
 - Breathing (operator ruling 2026-08-04): one idea per paragraph — break the line when the point shifts.
   A wall that chains idea after idea without a pause is a misread waiting to happen; ~3 sentences
   per block, then air. Density lives in the sentence, never in the paragraph.
+- Cap the sentence, not only the paragraph: aim ≤25 words; a sentence past ~30 is a rewrite candidate.
+  The paragraph breathes, but a single 40-word sentence still buries the point. (The ASD-STE100 steal —
+  the controlled 900-word dictionary was rejected as it kills technical vocab; this word cap is kept.)
 - Cut filler (just, really, basically, actually), pleasantries, and hedging. Fragments OK.
-- Technical terms exact. Errors quoted exact. Code blocks untouched. Numbers keep their source.
+- Technical terms exact, and ONE term per concept — name a thing the same way each time; elegant-variation
+  (three phrasings for one idea) reads as new information and is not. Errors quoted exact. Code blocks
+  untouched. Numbers keep their source.
 - Lists cap at 5 items: keep the five that change decisions, state the count of the rest.
 
 ## Explanations — actors · elements · effects
