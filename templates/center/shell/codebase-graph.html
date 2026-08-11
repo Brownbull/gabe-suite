@@ -104,6 +104,9 @@
 .cbg-root .xpiece.again .ring{ stroke:var(--blast); stroke-width:2.4; }
 .cbg-root .xpiece .ring2{ fill:none; stroke:none; }
 .cbg-root .xpiece.selp .ring2{ stroke:var(--accent); stroke-width:2.6; }
+/* selection mark — an accent centre dot on the currently-opened piece */
+.cbg-root .xpiece .seldot{ opacity:0; pointer-events:none; transition:opacity .12s; }
+.cbg-root .xpiece.selp .seldot{ opacity:1; }
 .cbg-root .xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
 
 /* detail panel (persistent, right side) */
@@ -216,16 +219,19 @@
 .cbg-root #cbg-tip .meta{ color:var(--muted); font-size:11px; margin-top:3px; }
 
 /* ── legend (bottom bar) ── */
-.cbg-legend{ display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+/* bottom legend — command-center vocabulary: round entity dots (like the center's
+   .statuspill/.chip .dot), muted labels, a mono count. */
+.cbg-legend{ display:flex; align-items:center; gap:6px 18px; flex-wrap:wrap;
   padding:8px 20px; border-top:1px solid var(--line); background:var(--panel);
   font-size:11.5px; color:var(--muted); }
-.cbg-legend .grp{ display:flex; align-items:center; gap:14px; }
+.cbg-legend .grp{ display:flex; align-items:center; gap:6px 14px; flex-wrap:wrap; }
 .cbg-legend .item{ display:flex; align-items:center; gap:6px; }
-.cbg-legend .sw{ width:12px; height:12px; border-radius:4px; flex:none; }
+.cbg-legend .sw{ width:9px; height:9px; border-radius:50%; flex:none; }
 .cbg-legend .swr{ width:16px; height:0; border-top:2px solid var(--edge); position:relative; }
 .cbg-legend .swr::after{ content:""; position:absolute; right:-2px; top:-3px; border:3px solid transparent; border-left-color:var(--edge); }
 .cbg-legend .div{ width:1px; height:14px; background:var(--line); }
-.cbg-legend .count{ margin-left:auto; color:var(--ink); font-weight:600; }
+.cbg-legend .count{ margin-left:auto; color:var(--ink); font-weight:600;
+  font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; }
 
 /* ── Open/Close-all toggle — center-style pill (pressed = accent when expanded) ── */
 .cbg-root .cbg-toggle.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
@@ -248,6 +254,9 @@
   vertical-align:baseline; color:var(--accent); border-color:var(--accent); }
 .cbg-modal{ position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
   background:rgba(10,14,20,.36); }
+/* an author display:flex would defeat the [hidden] attribute (author beats the UA
+   [hidden]{display:none}) — so honor hidden explicitly, or the modal shows on load. */
+.cbg-modal[hidden]{ display:none; }
 .cbg-modal-card{ width:min(540px,92vw); max-height:80vh; overflow:auto; background:var(--panel);
   border:1px solid var(--line); border-radius:13px; box-shadow:0 20px 54px rgba(0,0,0,.34); padding:16px 18px; }
 .cbg-modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
@@ -850,6 +859,7 @@
         inner.appendChild(E("circle",{class:"ring2",r:e.r+7,cx:0,cy:0}));
         if(e.ring) inner.appendChild(E("circle",{r:e.r+4,cx:0,cy:0,fill:"none",stroke:e.color,"stroke-width":"2.4"}));
         inner.appendChild(E("circle",{r:e.r, fill:e.hollow?"var(--panel)":e.color, stroke:e.hollow?col:"var(--panel)","stroke-width":"2"}));
+        inner.appendChild(E("circle",{class:"seldot",r:3.2,cx:0,cy:0,fill:"var(--accent)",stroke:"var(--panel)","stroke-width":"1.4"}));
         if(e.badge){ var bw=9+String(e.badge).length*5.4, bx=e.r*0.64, by=-e.r*0.72;
           inner.appendChild(E("rect",{x:bx-bw/2,y:by-7,width:bw,height:14,rx:7,fill:e.color}));
           var bt=E("text",{class:"xbadge",x:bx,y:by+3}); bt.textContent=e.badge; inner.appendChild(bt); }
