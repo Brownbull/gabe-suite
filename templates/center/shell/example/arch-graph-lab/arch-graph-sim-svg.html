@@ -146,6 +146,16 @@ svg#graph{ display:block; width:100%; height:100%; }
    icon + name per kind (function · endpoint · model · schema · data type),
    soft-bg + colored-fg exactly like the center's .tag.ic; data-type tokens wear
    the center's ty-* type-family colors. */
+/* lifecycle timeline — one piece across all four stages (the differential) */
+.detail .lifecycle{ margin:11px 0 14px; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+.detail .lc-row{ display:flex; align-items:center; gap:8px; padding:6px 10px; cursor:pointer;
+  border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); line-height:1.3; }
+.detail .lc-row:first-child{ border-top:0; }
+.detail .lc-row:hover{ background:var(--line); }
+.detail .lc-row .lc-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+.detail .lc-row .lc-name{ font-weight:700; color:var(--ink); width:56px; flex:none; }
+.detail .lc-row.active .lc-sum{ color:var(--ink); font-weight:600; }
+.detail .lc-row .lc-sum{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .detail .idsec{ margin:12px 0 4px; }
 /* one column: the kind TITLE on its own row, its chips full-width beneath —
    so a chip never has to share the row with its label and can breathe. */
@@ -278,7 +288,7 @@ svg#graph{ display:block; width:100%; height:100%; }
     </defs>
     <g id="viewport"></g>
   </svg>
-  <div class="hint" id="hint">click an entity to open · click a piece for details · drag to move</div>
+  <div class="hint" id="hint">click an entity to open · double-click to collapse · click a piece for its lifecycle · drag to move</div>
   <div id="stagelegend"></div>
 </div>
 <aside class="side" id="side">
@@ -690,9 +700,14 @@ svg#graph{ display:block; width:100%; height:100%; }
     }
   }
   function onSingle(node){
-    // single-click SELECTS the entity (shows its summary) — never changes open/closed
-    if(view==="l1"){ if(INVOLVED[node.id]) openEntityDetail(node.slug); }
-    else { focusL2(node.id); }
+    // single-click OPENS + summarizes (M2) — expands a closed entity, never closes an
+    // open one (double-click collapses); then shows the entity summary.
+    if(view==="l1"){
+      if(INVOLVED[node.id]){
+        if(!expanded[node.slug]){ expanded[node.slug]=true; renderL1(); }
+        openEntityDetail(node.slug);
+      }
+    } else { focusL2(node.id); }
   }
   function onDouble(node){
     // double-click TOGGLES the entity open ↔ closed
@@ -960,7 +975,31 @@ svg#graph{ display:block; width:100%; height:100%; }
     return Object.keys(out).length?out:null;
   }
 
-  function openDetail(slug, p){        // a single PIECE, led by its stage headline
+  // ── the DIFFERENTIAL: one piece across ALL FOUR stages at once (M1+M5) ──
+  //  a click on a piece shows its whole red→execute→review→commit story; the
+  //  active stage expands below; the Review risk is ALWAYS on screen, one row
+  //  up, never a lens away. Clicking a row switches stage but keeps the piece.
+  function pieceStageLine(p, s){
+    var d=(((SIM.stages||{})[s]||{}).pieces||{})[p.id]||{};
+    if(s==="red")     return d.tested ? "red ✕ · "+(d.cases||[]).join(" ") : "no red test";
+    if(s==="execute") return d.changed ? "+"+(d.add||0)+" "+(d.what||"changed") : "not edited";
+    if(s==="review")  return d.touched_again ? "⚠ "+(d.risk||"")+" · "+trunc(d.why||"",42) : "clean";
+    if(s==="commit")  return p.role==="changed" ? "in commit ✓" : "not in commit";
+    return "";
+  }
+  function lifecycleStrip(p){
+    var order=["red","execute","review","commit"], nm={red:"Red",execute:"Execute",review:"Review",commit:"Commit"};
+    return "<div class='lifecycle'>" + order.map(function(s){
+      var c=STAGE_COLOR[s], on=(s===curStage);
+      return "<div class='lc-row"+(on?" active":"")+"' data-stage='"+s+"'"
+        +(on?" style='background:"+c+"14;border-left:3px solid "+c+"'":"")+">"
+        +"<span class='lc-dot' style='background:"+c+(on?"":";opacity:.4")+"'></span>"
+        +"<span class='lc-name'"+(on?" style='color:"+c+"'":"")+">"+nm[s]+"</span>"
+        +"<span class='lc-sum'>"+pieceStageLine(p,s)+"</span></div>";
+    }).join("") + "</div>";
+  }
+
+  function openDetail(slug, p){        // a single PIECE — its lifecycle timeline + the active stage
     var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
     var dp=document.getElementById("detail"), sc=STAGE_COLOR[curStage];
     var body="";
@@ -993,9 +1032,20 @@ svg#graph{ display:block; width:100%; height:100%; }
         + idSection(eids) + "<div class='idsec'>"+evidenceRow()+"</div>" + dblock("cases", (m.cases||[]).join(", ")||"—");
     }
     var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
-    dp.innerHTML = "<div class='phdr'>"+curStage+ex+"</div><h4>"+p.label+"</h4>"
-      + "<div class='kind'>in "+(nodeMeta[slug].node.label||slug)+"</div>"+body;
+    dp.innerHTML = "<div class='phdr'>"+curStage+ex+" · lifecycle</div><h4>"+p.label+"</h4>"
+      + "<div class='kind'>in "+(nodeMeta[slug].node.label||slug)+"</div>"
+      + lifecycleStrip(p) + body;
     selectPiece(slug+"|"+p.id);
+    // timeline rows switch the stage but keep THIS piece open (the differential nav)
+    dp.querySelectorAll(".lc-row").forEach(function(row){
+      row.addEventListener("click", function(){
+        var s=row.getAttribute("data-stage"); if(s===curStage) return;
+        curStage=s;
+        document.getElementById("stageSeg").querySelectorAll("button").forEach(function(b){
+          b.classList.toggle("on", b.getAttribute("data-stage")===s); });
+        renderL1(); openDetail(slug, p);
+      });
+    });
   }
 
   function openEntityDetail(slug){      // the WHOLE entity — its stage headline aggregates every highlighted piece
@@ -1237,7 +1287,7 @@ svg#graph{ display:block; width:100%; height:100%; }
       if(p) openDetail(slug, p);
     },
     detailOpen: function(){ return !document.querySelector("#detail .empty"); },
-    openAll:    function(){ toggleAllExpand(); },
+    openAll:    function(){ SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; }); renderL1(); },  // force-open (probes)
     insideNowSel: function(){ return insideLayout; },
     detailText: function(){ return document.getElementById("detail").textContent; },
     pieceRadius: function(pid){ var c=vp.querySelector('.xpiece[data-piece$="|'+pid+'"] .xpiece-in circle:last-of-type'); return c?+c.getAttribute("r"):0; },
@@ -1276,15 +1326,22 @@ svg#graph{ display:block; width:100%; height:100%; }
     hotColor:       function(){ var e=vp.querySelector("#expansion .xedge.hot"); return e?e.style.stroke:""; },
     // per-stage node-encoding legend (lower-left)
     stageLegend:    function(){ return document.getElementById("stagelegend").textContent; },
-    stageLegendRows:function(){ return document.querySelectorAll("#stagelegend .li").length; }
+    stageLegendRows:function(){ return document.querySelectorAll("#stagelegend .li").length; },
+    // per-piece lifecycle timeline (the differential)
+    lcRows:         function(){ return document.querySelectorAll("#detail .lc-row").length; },
+    lcActive:       function(){ var a=document.querySelector("#detail .lc-row.active"); return a?a.getAttribute("data-stage"):null; },
+    lcText:         function(s){ var r=document.querySelector("#detail .lc-row[data-stage='"+s+"']"); return r?r.textContent:""; },
+    lcClick:        function(s){ var r=document.querySelector("#detail .lc-row[data-stage='"+s+"']"); if(r) r.click(); }
   };
 
   // ── compact change note in the header + control wiring ──────────────
   if(SIM){
+    // M3: name the two sides ("changed" / "affected") instead of a bare arrow that
+    // reads as the same axis as the FK edge (which points the OTHER way).
     document.getElementById("hchange").innerHTML =
       "<b style='color:var(--ink)'>"+SIM.commit+"</b> "+trunc(SIM.subject,50)
-      + " · <span style='color:var(--touch)'>"+SIM.touched.join(",")+"</span> &rarr; "
-      + "<span style='color:var(--blast)'>"+SIM.blast.join(",")+"</span>";
+      + " · <span style='color:var(--touch)'>"+SIM.touched.join(",")+"</span> changed"
+      + " · <span style='color:var(--blast)'>"+SIM.blast.join(",")+"</span> affected";
   }
   document.getElementById("openAll").addEventListener("click", toggleAllExpand);
   document.getElementById("stageSeg").addEventListener("click", function(e){
@@ -1292,7 +1349,7 @@ svg#graph{ display:block; width:100%; height:100%; }
   });
   document.getElementById("layoutSel").addEventListener("change", function(){
     var v=this.value;
-    if(view==="l1"){ l1layout=v; expanded={}; renderL1(); }
+    if(view==="l1"){ l1layout=v; renderL1(); }   /* keep expansions across a layout change (M4) */
     else { l2layout=v; renderL2(drilledSlug); }
   });
   document.getElementById("insideSel").addEventListener("change", function(){
@@ -1300,7 +1357,11 @@ svg#graph{ display:block; width:100%; height:100%; }
   });
 
   // ── boot ────────────────────────────────────────────────────────────
+  // M6: open the involved entities on load — the blast story is the point of the
+  // page, so the FK "via" links should be legible without a first click.
+  if(SIM){ SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; }); }
   renderL1();
+  if(SIM && Object.keys(expanded).length){ document.getElementById("openAll").textContent="Close all"; }
   resetPanel();               // default panel = the stage-wide change summary
   window.__labready = true;
 })();
