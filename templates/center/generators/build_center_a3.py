@@ -1972,9 +1972,13 @@ def main() -> int:
     # render path needs no graph library under strict-CSP/file://. A derivation
     # bug must NOT blank the whole center, so it degrades LOUD (E3), never silent.
     try:
+        _gcolors = {s: R_MARKS.entity_color(s)
+                    for s, c in amap.get("entities", {}).items() if c}
+        _gcolors["__unclaimed__"] = "#8a8f98"   # the coverage-loss bucket, muted
         _graph = _a3_graph.build_c4_graph(
             amap, labels=LABELS,
-            status={s["entity"]: s.get("status") for s in sections})
+            status={s["entity"]: s.get("status") for s in sections},
+            colors=_gcolors)
         _a3_graph.emit(_graph, CENTER_OUT)
         wrote.append(("c4-graph.json", 0))
         _st = _graph["stats"]

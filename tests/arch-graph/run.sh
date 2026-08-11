@@ -155,6 +155,11 @@ cn = {n["id"]: n for n in cyc["l1"]["nodes"]}
 check(all(isinstance(cn[s]["fx"], (int, float)) for s in ("p", "q")),
       "flow is cycle-safe: a p↔q FK cycle yields finite fx (on-stack guard)")
 
+# ── COLORS: the per-entity palette rides WITH the graph (renderer parity) ────
+gc = G.build_c4_graph(FIX, labels=LABELS, status=STATUS, colors={"alpha": "#123456"})
+check(gc["colors"]["alpha"] == "#123456", "a passed palette rides in graph['colors']")
+check(g["colors"] == {}, "colors default to empty on an archmap-only build")
+
 # ── DETERMINISM: same inputs ⇒ byte-identical; keyed on head not wallclock ──
 g2 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
 check(json.dumps(g, sort_keys=True) == json.dumps(g2, sort_keys=True),
@@ -214,7 +219,7 @@ check(all(bg_l1n[f"ent{i}"]["fx"] > bg_l1n["ent0"]["fx"] for i in range(1, 6))
 d = pathlib.Path(tempfile.mkdtemp())
 uni = G.build_c4_graph({"head": "u", "entities": {
     "e": {"files": [], "models": [], "schemas": [], "endpoints": []}}},
-    labels={"e": "Café-Ñoño"}, status={})
+    labels={"e": "Café-Ñoño"}, status={}, colors={"e": "#abcdef"})
 G.emit(uni, d)
 check((d / "c4-graph.json").is_file() and (d / "c4-graph.js").is_file(),
       "emit writes c4-graph.json + c4-graph.js")
@@ -224,6 +229,8 @@ check("Café-Ñoño".encode("utf-8") in raw,
 js = (d / "c4-graph.js").read_text(encoding="utf-8")
 check(js.startswith("window.GABE_C4 = ") and js.rstrip().endswith(";"),
       "c4-graph.js assigns window.GABE_C4 (file:// no-fetch recipe)")
+check("window.GABE_C4_COLORS = " in js and "#abcdef" in js,
+      "c4-graph.js also assigns window.GABE_C4_COLORS (the palette sibling)")
 
 print(f"arch-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)

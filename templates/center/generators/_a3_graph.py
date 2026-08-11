@@ -343,12 +343,16 @@ def _stamp_l2(l2: dict[str, list[dict]]) -> None:
 
 
 def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
-                   status: dict[str, str] | None = None) -> dict[str, Any]:
+                   status: dict[str, str] | None = None,
+                   colors: dict[str, str] | None = None) -> dict[str, Any]:
     """The whole derivation: L1 entity graph + one L2 graph per entity, laid out.
 
-    Pure over ``amap["entities"]`` (+ labels/status), keyed on ``amap["head"]``.
-    ``labels``/``status`` default to empty — the graph still builds from archmap
-    alone, entities just render under their slug and without a registry status."""
+    Pure over ``amap["entities"]`` (+ labels/status/colors), keyed on ``amap["head"]``.
+    ``labels``/``status``/``colors`` default to empty — the graph still builds from
+    archmap alone, entities just render under their slug, without a registry status,
+    and (colors absent) a renderer falls back to a neutral fill. ``colors`` is the
+    center's per-entity palette (``_a3_render.entity_color``) carried WITH the graph
+    so any renderer paints entities the SAME hue the rest of the center uses."""
     labels = labels or {}
     entities = amap.get("entities") or {}
 
@@ -369,6 +373,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     return {
         "version": 1,
         "head": amap.get("head"),
+        "colors": dict(colors or {}),   # per-entity palette, carried with the graph
         "l1": {"nodes": l1_nodes, "edges": l1_edges},
         "l2": l2,
         "layout": {"l1": {"kind": "ring", "cx": 0.0, "cy": 0.0, "r": _L1_R,
@@ -397,6 +402,10 @@ def emit(graph: dict[str, Any], center_out: Path) -> None:
     (center_out / "c4-graph.json").write_text(
         json.dumps(graph, indent=1, ensure_ascii=False, sort_keys=True) + "\n",
         encoding="utf-8")
+    # window globals — the strict-CSP / file:// no-fetch recipe. Colors ride a
+    # sibling global so a renderer reads GABE_C4 (topology) + GABE_C4_COLORS (palette).
     (center_out / "c4-graph.js").write_text(
-        "window.GABE_C4 = " + json.dumps(graph, ensure_ascii=False, sort_keys=True)
-        + ";\n", encoding="utf-8")
+        "window.GABE_C4 = " + json.dumps(graph, ensure_ascii=False, sort_keys=True) + ";\n"
+        + "window.GABE_C4_COLORS = "
+        + json.dumps(graph.get("colors") or {}, ensure_ascii=False, sort_keys=True) + ";\n",
+        encoding="utf-8")
