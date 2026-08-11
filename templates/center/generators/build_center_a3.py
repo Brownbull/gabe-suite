@@ -1988,6 +1988,19 @@ def main() -> int:
     except Exception as _e:  # noqa: BLE001
         print(f"    ⚠ c4-graph SKIPPED (derivation error, center still built): {_e}")
 
+    # The change-simulation projection the codebase-graph station overlays on the
+    # graph. HONEST-EMPTY at rest: the station's <script src="./sim.data.js">
+    # must resolve (else the chrome gate's asset-resolves check fails) but a real
+    # twin center carries NO seeded change data — window.GABE_SIM=null makes the
+    # station degrade to the plain codebase map + a "no change in flight" note.
+    # Written only if absent, so a locally-derived projection is never clobbered
+    # (C2 will teach _a3_sim.py to derive it from live inflight + git). The
+    # committed example ships the seeded gustify fixture in its place.
+    _simf = CENTER_OUT / "sim.data.js"
+    if not _simf.is_file():
+        _simf.write_text("// no change in flight — honest-empty at rest "
+                         "(C2 derives the live projection)\nwindow.GABE_SIM = null;\n")
+
     # The board — second pass, now that archmap can price every card.
     _btext = strip_slot_doc_comments((SHELL_SRC / "board.html").read_text())
     for _tok, _val in {**SHARED, **render_board(amap)}.items():
