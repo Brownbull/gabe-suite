@@ -1995,6 +1995,17 @@ def main() -> int:
     (CENTER_OUT / "board.html").write_text(_btext)
     wrote.append(("board.html", _btext.count("{{")))
 
+    # The Codebase-graph station — a principal top-nav section (operator ruling
+    # 2026-08-11) rendering the C4 graph from the c4-graph.js emitted just above.
+    # Pure shared-token fill: the page's interactivity is static JS over the
+    # window globals, so it needs no page-specific data beyond SHARED chrome.
+    if (SHELL_SRC / "codebase-graph.html").exists():
+        _cbtext = strip_slot_doc_comments((SHELL_SRC / "codebase-graph.html").read_text())
+        for _tok, _val in SHARED.items():
+            _cbtext = _cbtext.replace(_tok, _val)
+        (CENTER_OUT / "codebase-graph.html").write_text(_cbtext)
+        wrote.append(("codebase-graph.html", _cbtext.count("{{")))
+
     # inflight.{json,js} are beat-tail artifacts (write-inflight.py, ruling
     # 2026-08-07) and are GITIGNORED (gabe-init seeds it). The builder writes an
     # inactive stub at BUILD time so the board's <script src="inflight.js"> link

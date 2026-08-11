@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codebase graph · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/rowclick.js" defer></script>
+<style>
+/* ── codebase-graph station — the winning zero-lib SVG renderer, scoped under
+   .cbg so it never collides with a3.css. Reads window.GABE_C4 (topology, baked
+   x/y ring + fx/fy deps-gradient) + window.GABE_C4_COLORS (the center palette)
+   from c4-graph.js. L1 entity graph · double-click drills to L2 pieces. ── */
+.cbg{ --edge:#9aa3ad; --gpanel:#fff; --gline:#e3e6ea; --gink:#1c2024; --gmuted:#6b7280; --gaccent:#0d6e78;
+  display:flex; flex-direction:column; flex:1; min-height:0; }
+[data-theme="dark"] .cbg, :root:not([data-theme="light"]) .cbg{ --edge:#4a525c; --gpanel:#171b21;
+  --gline:#262c34; --gink:#e6e9ee; --gmuted:#8a929c; }
+.cbg .cbg-toolbar{ display:flex; align-items:center; gap:10px; padding:9px 20px;
+  border-bottom:1px solid var(--gline); background:var(--gpanel); min-height:46px; }
+.cbg .cbg-crumb{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.cbg .cbg-crumb .dot{ width:9px; height:9px; border-radius:50%; background:var(--gmuted); flex:none; }
+.cbg .cbg-crumb .lvl{ color:var(--gmuted); font-weight:500; }
+.cbg button{ font:inherit; font-size:12.5px; color:var(--gink); background:var(--gpanel);
+  border:1px solid var(--gline); border-radius:7px; padding:5px 11px; cursor:pointer; }
+.cbg button:hover{ border-color:var(--edge); }
+.cbg button:disabled{ opacity:.4; cursor:default; }
+.cbg button.back{ font-weight:600; }
+.cbg .laywrap{ font-size:11px; color:var(--gmuted); display:flex; align-items:center; gap:6px; }
+.cbg .laywrap select{ font:inherit; font-size:12px; color:var(--gink); background:var(--gpanel);
+  border:1px solid var(--gline); border-radius:7px; padding:4px 7px; cursor:pointer; }
+.cbg .spacer{ flex:1; }
+.cbg .selinfo{ font-size:12px; color:var(--gmuted); }
+.cbg .selinfo b{ color:var(--gink); }
+.cbg .cbg-stage{ flex:1; min-height:0; overflow:auto; display:flex; align-items:center;
+  justify-content:center; padding:28px; position:relative; }
+.cbg .cbg-stage.l2view{ align-items:flex-start; justify-content:flex-start; }
+.cbg svg.graph{ display:block; }
+.cbg .edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .15s; }
+.cbg .arrowhead{ fill:var(--edge); }
+.cbg .node{ cursor:pointer; transition:opacity .15s; }
+.cbg .node .body{ transition:stroke .12s, stroke-width .12s; }
+.cbg .node text{ pointer-events:none; user-select:none; }
+.cbg .dim{ opacity:.13; }
+.cbg .node.sel .body{ stroke:var(--gaccent); stroke-width:3.5; }
+.cbg .colhdr{ fill:var(--gmuted); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.cbg .l1label{ font-size:13px; font-weight:650; text-anchor:middle; }
+.cbg .l1sub{ font-size:10.5px; text-anchor:middle; fill:var(--gmuted); }
+.cbg .chiplabel{ font-size:11px; font-weight:500; }
+.cbg .hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--gmuted);
+  background:var(--gpanel); border:1px solid var(--gline); border-radius:6px; padding:3px 8px; pointer-events:none; opacity:.9; }
+.cbg .cbg-tip{ position:fixed; z-index:50; pointer-events:none; max-width:260px; opacity:0;
+  transform:translateY(2px); transition:opacity .1s; background:var(--gpanel); border:1px solid var(--gline);
+  border-radius:9px; padding:9px 11px; box-shadow:0 8px 26px rgba(0,0,0,.16); font-size:12px; }
+.cbg .cbg-tip.on{ opacity:1; transform:none; }
+.cbg .cbg-tip .ttl{ font-weight:650; font-size:12.5px; margin-bottom:2px; display:flex; align-items:center; gap:7px; }
+.cbg .cbg-tip .ttl .sw{ width:10px; height:10px; border-radius:3px; flex:none; }
+.cbg .cbg-tip .kind{ font-size:10.5px; color:var(--gmuted); text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+.cbg .cbg-tip .grid{ display:grid; grid-template-columns:auto auto; gap:1px 14px; margin-top:4px; }
+.cbg .cbg-tip .grid .k{ color:var(--gmuted); }
+.cbg .cbg-tip .grid .v{ text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+.cbg .cbg-tip .meta{ color:var(--gmuted); font-size:11px; margin-top:3px; }
+.cbg .cbg-legend{ display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:8px 20px;
+  border-top:1px solid var(--gline); background:var(--gpanel); font-size:11.5px; color:var(--gmuted); }
+.cbg .cbg-legend .grp{ display:flex; align-items:center; gap:14px; }
+.cbg .cbg-legend .item{ display:flex; align-items:center; gap:6px; }
+.cbg .cbg-legend .sw{ width:12px; height:12px; border-radius:4px; flex:none; }
+.cbg .cbg-legend .swr{ width:16px; height:0; border-top:2px solid var(--edge); position:relative; }
+.cbg .cbg-legend .swr::after{ content:""; position:absolute; right:-2px; top:-3px; border:3px solid transparent; border-left-color:var(--edge); }
+.cbg .cbg-legend .div{ width:1px; height:14px; background:var(--gline); }
+.cbg .cbg-legend .count{ margin-left:auto; color:var(--gink); font-weight:600; }
+.cbg .demo{ font-size:11px; color:var(--gmuted); border:1px dashed var(--gline); border-radius:6px; padding:3px 9px; }
+.cbg .demo b{ color:var(--gink); }
+</style>
+</head>
+<body>
+<!-- STATION: Codebase graph — the C4 codebase graph (entities + FK edges), drawn
+     from c4-graph.json. A principal top-nav section (operator ruling 2026-08-11).
+     SOURCES: c4-graph.js (window.GABE_C4 + window.GABE_C4_COLORS), emitted by
+     _a3_graph.build_c4_graph/emit during the center build. -->
+<div class="app">
+
+<aside class="side">
+  <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>{{PROJECT_NAME}}</b><small>Gabe Center</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board</a>
+  <div class="navlabel g-code">Codebase graph</div>
+  <a class="navitem on" href="codebase-graph.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Codebase graph</a>
+  <div class="navlabel g-ent">Entities</div>
+  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">{{ENTITY_COUNT}}</span></a>
+  {{SIDEBAR_ENTITIES}}
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
+  <div class="navlabel g-code">Code</div>
+  {{SIDEBAR_CODE}}
+  <div class="navlabel g-test">Testing</div>
+  <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">{{TESTS_COUNT}}</span></a>
+  <a class="navitem navsubitem" href="test-matrix.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="12" y1="3" x2="12" y2="21"/></svg> Cases</a>
+  <a class="navitem navsubitem" href="test-files.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Files</a>
+  <a class="navitem navsubitem" href="test-claims.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Claims</a>
+  <a class="navitem navsubitem" href="test-elements.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Untested</a>
+  <a class="navitem navsubitem" href="test-corpora.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> Corpora &amp; gates</a>
+  <div class="navlabel g-ledger">Ledger</div>
+  <a class="navitem" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
+  <div class="navlabel g-rel">Releases</div>
+  <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
+  <div class="navlabel g-leaf">Leaf</div>
+  {{SIDEBAR_LEAF}}
+  <div class="foot">regen {{REGEN_STAMP}}<br>HEAD {{HEAD_SHA}} · {{GENERATOR_NAME}}</div>
+</aside>
+
+<main class="main" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Codebase graph</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+  </div>
+
+  <div class="cbg" id="cbg">
+    <div class="cbg-toolbar">
+      <button class="back" id="cbg-back" disabled>&larr; Back</button>
+      <div class="cbg-crumb"><span class="dot" id="cbg-crumbDot"></span><span id="cbg-crumbTxt">All entities</span>
+        <span class="lvl" id="cbg-crumbLvl">· L1 · fk graph</span></div>
+      <div class="spacer"></div>
+      <span class="demo" id="cbg-demo" hidden>example — no live graph, seeded fixture</span>
+      <label class="laywrap">layout
+        <select id="cbg-layout"><option value="ring">Ring</option><option value="flow">Flow · deps</option></select>
+      </label>
+      <div class="selinfo" id="cbg-selInfo"></div>
+      <button id="cbg-reset">Reset layout</button>
+    </div>
+    <div class="cbg-stage" id="cbg-stage">
+      <svg class="graph" id="cbg-graph" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <marker id="cbg-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path class="arrowhead" d="M0.5,0.5 L9.5,5 L0.5,9.5 z"></path>
+          </marker>
+        </defs>
+        <g id="cbg-viewport"></g>
+      </svg>
+      <div class="hint" id="cbg-hint">drag nodes · click to select · double-click to drill</div>
+    </div>
+    <div class="cbg-legend" id="cbg-legend"></div>
+  </div>
+  <div class="cbg-tip" id="cbg-tip"></div>
+</main>
+
+</div><!-- /.app -->
+
+<script src="./c4-graph.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = window.GABE_C4, COLORS = window.GABE_C4_COLORS || {};
+  if(!DATA){ document.getElementById("cbg-selInfo").textContent = "no c4-graph.js on this center yet"; return; }
+  var NS = "http://www.w3.org/2000/svg";
+  var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
+  var KIND_LABEL = { endpoint:"Endpoints", model:"Models", schema:"Schemas", external:"External" };
+
+  var view = "l1", drilledSlug = null, selected = null, l1layout = "ring";
+  var nodePos = {}, nodeMeta = {}, edgeRecs = [];
+  var CHIP_W = 214, CHIP_H = 38, MARGIN = 70;
+
+  var stage   = document.getElementById("cbg-stage");
+  var svg     = document.getElementById("cbg-graph");
+  var vp      = document.getElementById("cbg-viewport");
+  var tip     = document.getElementById("cbg-tip");
+  var backBtn = document.getElementById("cbg-back");
+  var resetBtn= document.getElementById("cbg-reset");
+  var legend  = document.getElementById("cbg-legend");
+  var laySel  = document.getElementById("cbg-layout");
+
+  function E(tag, attrs){ var e=document.createElementNS(NS, tag);
+    if(attrs) for(var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function trunc(s,n){ s=String(s); return s.length>n ? s.slice(0,n-1)+"…" : s; }
+
+  var L1 = DATA.l1.nodes, L1E = DATA.l1.edges;
+  var linesArr = L1.map(function(n){ return n.counts?n.counts.lines:0; });
+  var minSq = Math.sqrt(Math.min.apply(null, linesArr)), maxSq = Math.sqrt(Math.max.apply(null, linesArr));
+  function radius(n){ var t = maxSq>minSq ? (Math.sqrt(n.counts.lines)-minSq)/(maxSq-minSq) : .5; return 22 + t*38; }
+  function ewidth(w){ return 1.5 + (clamp(w,1,10)-1)/9*4.6; }
+  // Ring uses the baked x/y; Flow uses the baked fx/fy (the deps-gradient from _a3_graph).
+  function coord(n){ return (l1layout==="flow" && n.fx!=null) ? {x:n.fx,y:n.fy} : {x:n.x,y:n.y}; }
+
+  function frame(b){
+    var offX = MARGIN - b.minX, offY = MARGIN - b.minY;
+    svg.setAttribute("width",  Math.ceil((b.maxX-b.minX)+2*MARGIN));
+    svg.setAttribute("height", Math.ceil((b.maxY-b.minY)+2*MARGIN));
+    vp.setAttribute("transform", "translate("+offX+","+offY+")");
+  }
+
+  function renderL1(){
+    view = "l1"; drilledSlug = null;
+    vp.textContent = ""; nodePos = {}; nodeMeta = {}; edgeRecs = [];
+    var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    L1.forEach(function(n){
+      var r = radius(n), pad = r + 40, p = coord(n);
+      nodePos[n.id] = { x:p.x, y:p.y };
+      nodeMeta[n.id] = { kind:"entity", r:r, node:n };
+      minX=Math.min(minX,p.x-pad); maxX=Math.max(maxX,p.x+pad);
+      minY=Math.min(minY,p.y-r-6); maxY=Math.max(maxY,p.y+r+30);
+    });
+    frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
+    var eLayer = E("g"); vp.appendChild(eLayer);
+    L1E.forEach(function(ed){
+      var p = E("path", { class:"edge", "marker-end":"url(#cbg-arrow)" });
+      p.style.strokeWidth = ewidth(ed.weight); eLayer.appendChild(p);
+      var rec = { el:p, s:ed.source, t:ed.target, kind:"l1", weight:ed.weight, data:ed };
+      edgeRecs.push(rec); updateEdge(rec);
+    });
+    var nLayer = E("g"); vp.appendChild(nLayer);
+    L1.forEach(function(n){
+      var col = COLORS[n.slug] || (n.kind==="unclaimed" ? (COLORS.__unclaimed__||"#8a8f98") : "#888");
+      var g = E("g", { class:"node", "data-id":n.id });
+      var r = nodeMeta[n.id].r;
+      var c = E("circle", { class:"body", r:r, cx:0, cy:0, fill:col, stroke:"var(--gpanel)", "stroke-width":2 });
+      if(n.kind==="unclaimed"){ c.setAttribute("fill","var(--gpanel)");
+        c.setAttribute("stroke", COLORS.__unclaimed__||"#8a8f98"); c.setAttribute("stroke-dasharray","5 4"); }
+      var t1 = E("text", { class:"l1label", x:0, y:r+16 }); t1.textContent = n.label; t1.setAttribute("fill","var(--gink)");
+      var t2 = E("text", { class:"l1sub", x:0, y:r+30 });
+      t2.textContent = n.counts.endpoints+" ep · "+n.counts.lines.toLocaleString()+" ln";
+      g.appendChild(c); g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g);
+      nodeMeta[n.id].el = g; wire(g, n);
+    });
+    afterRender("All entities", DATA.stats.entities + " entities", "var(--gmuted)");
+    if(selected) applySelection();
+  }
+
+  function renderL2(slug){
+    view = "l2"; drilledSlug = slug; selected = null;
+    vp.textContent = ""; nodePos = {}; nodeMeta = {}; edgeRecs = [];
+    var g2 = DATA.l2[slug];
+    if(!g2){ afterRender(slug, "no L2 data", COLORS[slug]||"var(--gmuted)"); return; }
+    var order = (DATA.layout.l2 && DATA.layout.l2.order) || ["endpoint","model","schema","external"];
+    var present = {}, minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    g2.nodes.forEach(function(n){
+      nodePos[n.id] = { x:n.x, y:n.y }; nodeMeta[n.id] = { kind:n.kind, node:n };
+      present[n.kind] = (present[n.kind]||0) + 1;
+      minX=Math.min(minX,n.x); maxX=Math.max(maxX,n.x+CHIP_W); minY=Math.min(minY,n.y); maxY=Math.max(maxY,n.y+CHIP_H);
+    });
+    minY -= 34; frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
+    var hLayer = E("g");
+    order.forEach(function(kind, i){
+      if(!present[kind]) return;
+      var cx = i * ((DATA.layout.l2&&DATA.layout.l2.col_w) || 240);
+      var h = E("text", { class:"colhdr", x:cx+2, y:minY+18 }); h.textContent = KIND_LABEL[kind] + "  " + present[kind];
+      hLayer.appendChild(h);
+    });
+    vp.appendChild(hLayer);
+    var eLayer = E("g"); vp.appendChild(eLayer);
+    g2.edges.forEach(function(ed){
+      if(!nodePos[ed.source] || !nodePos[ed.target]) return;
+      var p = E("path", { class:"edge", "marker-end":"url(#cbg-arrow)" });
+      p.style.strokeWidth = ed.kind==="fk" ? 1.9 : 1.3;
+      if(ed.kind==="fk") p.style.strokeDasharray = "5 4"; eLayer.appendChild(p);
+      var rec = { el:p, s:ed.source, t:ed.target, kind:"l2", ekind:ed.kind, data:ed };
+      edgeRecs.push(rec); updateEdge(rec);
+    });
+    var nLayer = E("g"); vp.appendChild(nLayer);
+    g2.nodes.forEach(function(n){
+      var col = KIND_COLOR[n.kind] || "#888";
+      var g = E("g", { class:"node", "data-id":n.id, transform:"translate("+n.x+","+n.y+")" });
+      var rect = E("rect", { class:"body", x:0, y:0, width:CHIP_W, height:CHIP_H, rx:8, fill:"var(--gpanel)", stroke:col, "stroke-width":1.6 });
+      var bar  = E("rect", { x:0, y:0, width:5, height:CHIP_H, rx:2.5, fill:col });
+      if(n.kind==="external"){ rect.setAttribute("stroke-dasharray","5 4"); }
+      var label = n.label || String(n.id).replace(/^[^:]+:/,"");
+      var t = E("text", { class:"chiplabel", x:14, y:CHIP_H/2+4 }); t.setAttribute("fill","var(--gink)");
+      t.textContent = trunc(label, n.kind==="endpoint"?30:26);
+      g.appendChild(rect); g.appendChild(bar); g.appendChild(t); nLayer.appendChild(g);
+      nodeMeta[n.id].el = g; wire(g, n);
+    });
+    var ent = L1.filter(function(n){ return n.slug===slug; })[0];
+    afterRender((ent?ent.label:slug), g2.nodes.length + " nodes · " + g2.edges.length + " edges", COLORS[slug]||"var(--gmuted)");
+  }
+
+  function afterRender(title, sub, dotColor){
+    document.getElementById("cbg-crumbTxt").textContent = title;
+    document.getElementById("cbg-crumbLvl").textContent = view==="l1" ? "· L1 · fk graph" : "· L2 · touches + fk";
+    document.getElementById("cbg-crumbDot").style.background = dotColor;
+    document.getElementById("cbg-selInfo").innerHTML = sub ? "<span>"+sub+"</span>" : "";
+    backBtn.disabled = (view==="l1");
+    laySel.parentNode.style.display = (view==="l1") ? "" : "none";
+    stage.classList.toggle("l2view", view==="l2");
+    if(view==="l2") stage.scrollTop = 0, stage.scrollLeft = 0;
+    buildLegend();
+  }
+
+  function updateEdge(rec){
+    var s = nodePos[rec.s], t = nodePos[rec.t];
+    if(!s || !t){ rec.el.setAttribute("d",""); return; }
+    if(rec.kind==="l1"){
+      var r1 = nodeMeta[rec.s].r, r2 = nodeMeta[rec.t].r;
+      var dx=t.x-s.x, dy=t.y-s.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+      var sx=s.x+ux*r1, sy=s.y+uy*r1, ex=t.x-ux*(r2+3.5), ey=t.y-uy*(r2+3.5);
+      var mx=(sx+ex)/2, my=(sy+ey)/2, bow=Math.min(38, d*0.12);
+      rec.el.setAttribute("d","M"+sx+" "+sy+" Q "+(mx+(-uy)*bow)+" "+(my+(ux)*bow)+" "+ex+" "+ey);
+    } else {
+      var sc={ l:s.x, r:s.x+CHIP_W, cx:s.x+CHIP_W/2, cy:s.y+CHIP_H/2 };
+      var tc={ l:t.x, r:t.x+CHIP_W, cx:t.x+CHIP_W/2, cy:t.y+CHIP_H/2 };
+      var x1,x2,y1=sc.cy,y2=tc.cy, fwd = tc.cx>=sc.cx;
+      if(fwd){ x1=sc.r; x2=tc.l; } else { x1=sc.l; x2=tc.r; }
+      var h=Math.max(28, Math.abs(x2-x1)*0.5)*(fwd?1:-1);
+      rec.el.setAttribute("d","M"+x1+" "+y1+" C "+(x1+h)+" "+y1+" "+(x2-h)+" "+y2+" "+x2+" "+y2);
+    }
+  }
+  function refreshEdgesFor(id){ for(var i=0;i<edgeRecs.length;i++){ var r=edgeRecs[i]; if(r.s===id||r.t===id) updateEdge(r); } }
+
+  var pendingTap = null, dragging = null;
+  function wire(g, node){
+    g.addEventListener("pointerenter", function(){ if(!dragging) showTip(node); });
+    g.addEventListener("pointermove",  function(e){ if(!dragging) moveTip(e); });
+    g.addEventListener("pointerleave", function(){ hideTip(); });
+    g.addEventListener("pointerdown", function(e){
+      e.preventDefault();
+      var start = { x:e.clientX, y:e.clientY }, moved=false;
+      var origin = { x:nodePos[node.id].x, y:nodePos[node.id].y };
+      hideTip();
+      function onMove(ev){
+        var dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+        if(!moved && Math.abs(dx)+Math.abs(dy) < 4) return;
+        moved = true; dragging = node.id;
+        nodePos[node.id] = { x:origin.x+dx, y:origin.y+dy };
+        g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
+        refreshEdgesFor(node.id);
+      }
+      function onUp(){
+        window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp);
+        setTimeout(function(){ dragging=null; }, 0); if(!moved) tap(node);
+      }
+      window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
+    });
+    if(view==="l1") g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
+  }
+
+  function tap(node){
+    if(pendingTap && pendingTap.id===node.id){ clearTimeout(pendingTap.t); pendingTap=null; onDouble(node); }
+    else { if(pendingTap) clearTimeout(pendingTap.t);
+      var t=setTimeout(function(){ pendingTap=null; onSingle(node); }, 230); pendingTap = { id:node.id, t:t }; }
+  }
+  function onSingle(node){ selected = (selected===node.id) ? null : node.id; view==="l1"?applySelection():applyL2Highlight(); }
+  function onDouble(node){
+    if(view==="l1"){ drill(node.slug); }
+    else if(node.kind==="external"){ var s = node.label || String(node.id).replace(/^external:/,""); if(DATA.l2[s]) drill(s); }
+  }
+
+  function neighboursL1(id){ var keep={}; keep[id]=1;
+    L1E.forEach(function(e){ if(e.source===id) keep[e.target]=1; if(e.target===id) keep[e.source]=1; }); return keep; }
+  function applySelection(){
+    var nodes = vp.querySelectorAll(".node");
+    if(!selected){ nodes.forEach(function(n){ n.classList.remove("dim","sel"); });
+      edgeRecs.forEach(function(r){ r.el.classList.remove("dim"); });
+      afterRender("All entities", DATA.stats.entities+" entities", "var(--gmuted)"); return; }
+    var keep = neighboursL1(selected);
+    nodes.forEach(function(n){ var id=n.getAttribute("data-id"); n.classList.toggle("dim", !keep[id]); n.classList.toggle("sel", id===selected); });
+    edgeRecs.forEach(function(r){ r.el.classList.toggle("dim", !(r.s===selected || r.t===selected)); });
+    var m = nodeMeta[selected].node, deg=0;
+    L1E.forEach(function(e){ if(e.source===selected||e.target===selected) deg++; });
+    document.getElementById("cbg-selInfo").innerHTML = "selected <b>"+m.label+"</b> · "+deg+" fk link"+(deg===1?"":"s");
+  }
+  function applyL2Highlight(){
+    var nodes = vp.querySelectorAll(".node"), sel=document.getElementById("cbg-selInfo");
+    if(!selected){ nodes.forEach(function(n){ n.classList.remove("dim","sel"); });
+      edgeRecs.forEach(function(r){ r.el.classList.remove("dim"); });
+      sel.innerHTML = DATA.l2[drilledSlug].nodes.length+" nodes · "+DATA.l2[drilledSlug].edges.length+" edges"; return; }
+    var keep={}; keep[selected]=1;
+    edgeRecs.forEach(function(r){ if(r.s===selected) keep[r.t]=1; if(r.t===selected) keep[r.s]=1; });
+    nodes.forEach(function(n){ var id=n.getAttribute("data-id"); n.classList.toggle("dim", !keep[id]); n.classList.toggle("sel", id===selected); });
+    edgeRecs.forEach(function(r){ r.el.classList.toggle("dim", !(r.s===selected||r.t===selected)); });
+    var conn=0; edgeRecs.forEach(function(r){ if(r.s===selected||r.t===selected) conn++; });
+    var lbl = nodeMeta[selected].node.label || selected.replace(/^[^:]+:/,"");
+    sel.innerHTML = "selected <b>"+trunc(lbl,34)+"</b> · "+conn+" edge"+(conn===1?"":"s");
+  }
+
+  function drill(slug){ selected=null; renderL2(slug); }
+  function back(){ selected=null; renderL1(); }
+  backBtn.addEventListener("click", back);
+  resetBtn.addEventListener("click", function(){ selected=null; if(view==="l1") renderL1(); else renderL2(drilledSlug); });
+  laySel.addEventListener("change", function(){ l1layout=this.value; selected=null; renderL1(); });
+  stage.addEventListener("pointerdown", function(e){
+    if(e.target===stage || e.target===svg){ if(selected){ selected=null; view==="l1"?applySelection():applyL2Highlight(); } }
+  });
+
+  function showTip(node){
+    var html;
+    if(view==="l1"){
+      var c=node.counts, col=COLORS[node.slug]||"var(--gmuted)";
+      html = "<div class='ttl'><span class='sw' style='background:"+col+"'></span>"+node.label+"</div>"
+           + "<div class='kind'>entity · "+(node.status||"—")+"</div><div class='grid'>"
+           + row("endpoints",c.endpoints)+row("models",c.models)+row("schemas",c.schemas)
+           + row("files",c.files)+row("lines",c.lines.toLocaleString())+"</div>";
+    } else {
+      var col2=KIND_COLOR[node.kind]||"#888", lbl=node.label || String(node.id).replace(/^[^:]+:/,"");
+      html = "<div class='ttl'><span class='sw' style='background:"+col2+"'></span>"+lbl+"</div><div class='kind'>"+node.kind+"</div>";
+      if(node.table) html += "<div class='meta'>table · "+node.table+"</div>";
+      if(node.kind==="external") html += "<div class='meta'>&rarr; entity <b>"+lbl+"</b> · double-click to hop</div>";
+    }
+    tip.innerHTML = html; tip.classList.add("on");
+  }
+  function row(k,v){ return "<div class='k'>"+k+"</div><div class='v'>"+v+"</div>"; }
+  function moveTip(e){
+    var pad=14, w=tip.offsetWidth, h=tip.offsetHeight, x=e.clientX+pad, y=e.clientY+pad;
+    if(x+w>window.innerWidth-8)  x=e.clientX-w-pad;
+    if(y+h>window.innerHeight-8) y=e.clientY-h-pad;
+    tip.style.left=x+"px"; tip.style.top=y+"px";
+  }
+  function hideTip(){ tip.classList.remove("on"); }
+
+  function buildLegend(){
+    var html;
+    if(view==="l1"){
+      html = "<div class='grp'>";
+      L1.forEach(function(n){ html += "<span class='item'><span class='sw' style='background:"+(COLORS[n.slug]||"#888")+"'></span>"+n.label+"</span>"; });
+      html += "</div><div class='div'></div>"
+           + "<span class='item'><span class='swr'></span>fk (directed · width = weight)</span>"
+           + "<span class='count'>"+DATA.stats.entities+" entities · "+L1E.length+" edges · "
+           + (l1layout==="flow"?"deps gradient":"ring")+"</span>";
+    } else {
+      html = "<div class='grp'>";
+      ["endpoint","model","schema","external"].forEach(function(k){ html += "<span class='item'><span class='sw' style='background:"+KIND_COLOR[k]+"'></span>"+KIND_LABEL[k]+"</span>"; });
+      html += "</div><div class='div'></div>"
+           + "<span class='item'><span class='swr'></span>touches</span>"
+           + "<span class='item'><span class='swr' style='border-top-style:dashed'></span>fk</span>"
+           + "<span class='count'>double-click an external chip to hop</span>";
+    }
+    legend.innerHTML = html;
+  }
+
+  window.__cbgtest = {
+    view:    function(){ return view==="l1" ? "l1" : "l2:"+drilledSlug; },
+    l1nodes: function(){ return DATA.l1.nodes.length; },
+    l1edges: function(){ return DATA.l1.edges.length; },
+    entities:function(){ return DATA.l1.nodes.map(function(n){ return n.slug; }); },
+    layoutNow:function(){ return l1layout; },
+    setLayout:function(v){ l1layout=v; laySel.value=v; renderL1(); },
+    drill:   function(slug){ drill(slug); },
+    l2nodes: function(){ return (view==="l2" && DATA.l2[drilledSlug]) ? DATA.l2[drilledSlug].nodes.length : 0; },
+    back:    function(){ back(); }
+  };
+
+  renderL1();
+  window.__cbgready = true;
+})();
+</script>
+</body>
+</html>
