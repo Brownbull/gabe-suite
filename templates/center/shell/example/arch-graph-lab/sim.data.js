@@ -1,6 +1,6 @@
 window.GABE_SIM = {
  "commit": "fecb2ce3",
- "subject": "feat(repertorio): the mode row becomes the cupo \u2014 0063 migration + real service (C8134-C8136, C8138)",
+ "subject": "feat(repertorio): the mode row becomes the cupo — 0063 migration + real service (C8134-C8136, C8138)",
  "date": "2026-08-07",
  "touched": [
   "recipe"
@@ -97,21 +97,21 @@ window.GABE_SIM = {
     "label": "CookingSession",
     "kind": "model",
     "role": "link",
-    "via": "recipe_id \u2192 recipes.id"
+    "via": "recipe_id → recipes.id"
    },
    {
     "id": "model:CookingStepProgress",
     "label": "CookingStepProgress",
     "kind": "model",
     "role": "link",
-    "via": "recipe_step_id \u2192 recipe_steps.id"
+    "via": "recipe_step_id → recipe_steps.id"
    },
    {
     "id": "model:DishHistoryEvent",
     "label": "DishHistoryEvent",
     "kind": "model",
     "role": "link",
-    "via": "recipe_id \u2192 recipes.id"
+    "via": "recipe_id → recipes.id"
    }
   ]
  },
@@ -163,26 +163,26 @@ window.GABE_SIM = {
    "from": "model:CookingSession",
    "to_slug": "recipe",
    "to": "model:Recipe",
-   "via": "recipe_id \u2192 recipes.id"
+   "via": "recipe_id → recipes.id"
   },
   {
    "from_slug": "cooking",
    "from": "model:CookingStepProgress",
    "to_slug": "recipe",
    "to": "model:RecipeStep",
-   "via": "recipe_step_id \u2192 recipe_steps.id"
+   "via": "recipe_step_id → recipe_steps.id"
   },
   {
    "from_slug": "cooking",
    "from": "model:DishHistoryEvent",
    "to_slug": "recipe",
    "to": "model:Recipe",
-   "via": "recipe_id \u2192 recipes.id"
+   "via": "recipe_id → recipes.id"
   }
  ],
  "stages": {
   "red": {
-   "label": "Red \u00b7 real cases",
+   "label": "Red · real cases",
    "real": true,
    "pieces": {
     "model:RecipeFilterMode": {
@@ -190,10 +190,38 @@ window.GABE_SIM = {
      "cases": [
       "C8134"
      ],
-     "red": "cupo capacity is the members own pool \u2014 two members of ONE household \u2014 chef B fills 5 slots, free A holds 1, s",
+     "red": "cupo capacity is the members own pool — two members of ONE household — chef B fills 5 slots, free A holds 1, s",
      "covers": "cupo capacity / member pool (free-1 chef-5)",
      "guards": "a member's cupo cap is wrong",
-     "source": "tests/test_repertorio.py"
+     "source": "tests/test_repertorio.py",
+     "ids": {
+      "fn": [
+       "attach_cupo",
+       "release_cupo"
+      ],
+      "endpoint": [
+       {
+        "m": "PUT",
+        "p": "/recipe-filter-modes/{mode_id}/cupo",
+        "fn": "put_cupo"
+       },
+       {
+        "m": "DELETE",
+        "p": "/recipe-filter-modes/{mode_id}/cupo",
+        "fn": "delete_cupo"
+       }
+      ],
+      "model": [
+       "RecipeFilterMode"
+      ],
+      "datatype": [
+       {
+        "n": "cupo_dish_type",
+        "t": "str | None"
+       }
+      ]
+     },
+     "use_case": "A member's cupo capacity is their OWN pool (free 1 / chef 5), fail-closed"
     },
     "model:PlannedRecipe": {
      "tested": true,
@@ -202,19 +230,68 @@ window.GABE_SIM = {
       "C8136",
       "C8142"
      ],
-     "red": "cupo journey stamps and derived counters \u2014 planning stamps ``cupo_id`` + ``planned_by_user_id``; \u00b7 downgrade forces keep one and history survives \u00b7 plan with cupo stamps the link",
-     "covers": "the cook\u2192cupo path (plan stamps cupo_id) + downgrade",
+     "red": "cupo journey stamps and derived counters — planning stamps ``cupo_id`` + ``planned_by_user_id``; · downgrade forces keep one and history survives · plan with cupo stamps the link",
+     "covers": "the cook→cupo path (plan stamps cupo_id) + downgrade",
      "guards": "counters diverge / history lost on downgrade",
-     "source": "tests/test_repertorio.py + test_repertorio_api.py"
+     "source": "tests/test_repertorio.py + test_repertorio_api.py",
+     "ids": {
+      "fn": [
+       "plan_into_cupo",
+       "downgrade_to_free",
+       "planeadas_for_cupo",
+       "cocinadas_for_cupo"
+      ],
+      "endpoint": [
+       {
+        "m": "POST",
+        "p": "/recipes/{recipe_id}/plan",
+        "fn": "post_plan_recipe"
+       },
+       {
+        "m": "GET",
+        "p": "/repertorio/cupos",
+        "fn": "get_cupos"
+       }
+      ],
+      "model": [
+       "PlannedRecipe"
+      ],
+      "datatype": [
+       {
+        "n": "cupo_id",
+        "t": "uuid.UUID | None"
+       },
+       {
+        "n": "planned_by_user_id",
+        "t": "uuid.UUID"
+       },
+       {
+        "n": "status",
+        "t": "str"
+       }
+      ]
+     },
+     "use_case": "Cook→cupo journey: plan stamps the link · downgrade keeps one · log-derived history survives"
     },
     "model:CookingSession": {
      "tested": false,
-     "guards": "a recipe change could break an in-flight session"
+     "guards": "a recipe change could break an in-flight session",
+     "ids": {
+      "datatype": [
+       {
+        "n": "recipe_id",
+        "t": "uuid.UUID"
+       }
+      ],
+      "model": [
+       "CookingSession"
+      ]
+     }
     }
    }
   },
   "execute": {
-   "label": "Execute \u00b7 changes",
+   "label": "Execute · changes",
    "real": true,
    "pieces": {
     "model:PlannedRecipe": {
@@ -225,7 +302,25 @@ window.GABE_SIM = {
      "kind": "model",
      "action": "added",
      "what": "cupo_id",
-     "effect": "PlannedRecipe part of the cupo migration"
+     "effect": "PlannedRecipe part of the cupo migration",
+     "ids": {
+      "fn": [
+       "plan_into_cupo"
+      ],
+      "model": [
+       "PlannedRecipe"
+      ],
+      "datatype": [
+       {
+        "n": "cupo_id",
+        "t": "uuid.UUID | None"
+       }
+      ],
+      "structure": [
+       "Index ix_planned_recipes_cupo_id",
+       "FK → recipe_filter_modes.id (SET NULL)"
+      ]
+     }
     },
     "model:Recipe": {
      "changed": false,
@@ -259,7 +354,25 @@ window.GABE_SIM = {
      "kind": "model",
      "action": "added",
      "what": "cupo_dish_type",
-     "effect": "RecipeFilterMode the mode row becomes a cupo"
+     "effect": "RecipeFilterMode the mode row becomes a cupo",
+     "ids": {
+      "fn": [
+       "attach_cupo",
+       "release_cupo"
+      ],
+      "model": [
+       "RecipeFilterMode"
+      ],
+      "datatype": [
+       {
+        "n": "cupo_dish_type",
+        "t": "str | None"
+       }
+      ],
+      "structure": [
+       "String(60), nullable"
+      ]
+     }
     },
     "model:RecipeIngredient": {
      "changed": false,
@@ -300,7 +413,7 @@ window.GABE_SIM = {
    }
   },
   "review": {
-   "label": "Review \u00b7 real findings",
+   "label": "Review · real findings",
    "real": true,
    "pieces": {
     "model:PlannedRecipe": {
@@ -308,18 +421,60 @@ window.GABE_SIM = {
      "why": "Cross-type plan is unruled: POST /recipes/{id}/plan {cupo_id} accepts ANY recipe for ANY cupo dish type, so planeadas can carry plans whose ",
      "risk": "medium",
      "impact": "a soup cupo showing dessert planeadas reads as a broken counter to the user",
-     "source": "PENDING #209"
+     "source": "PENDING #209",
+     "ids": {
+      "fn": [
+       "plan_into_cupo"
+      ],
+      "endpoint": [
+       {
+        "m": "POST",
+        "p": "/recipes/{recipe_id}/plan",
+        "fn": "post_plan_recipe"
+       }
+      ],
+      "model": [
+       "PlannedRecipe"
+      ],
+      "datatype": [
+       {
+        "n": "cupo_id",
+        "t": "uuid.UUID | None"
+       }
+      ]
+     }
     },
     "model:RecipeFilterMode": {
      "touched_again": true,
-     "why": "attach_cupo silently overwrites (retype): a cupo's dish type can be swapped while old-type planeadas persist under the new label \u2014 nothing i",
+     "why": "attach_cupo silently overwrites (retype): a cupo's dish type can be swapped while old-type planeadas persist under the new label — nothing i",
      "risk": "low",
      "impact": "confusing counter provenance if a retype UI ever ships without a ruling",
-     "source": "PENDING #211"
+     "source": "PENDING #211",
+     "ids": {
+      "fn": [
+       "attach_cupo"
+      ],
+      "endpoint": [
+       {
+        "m": "PUT",
+        "p": "/recipe-filter-modes/{mode_id}/cupo",
+        "fn": "put_cupo"
+       }
+      ],
+      "model": [
+       "RecipeFilterMode"
+      ],
+      "datatype": [
+       {
+        "n": "cupo_dish_type",
+        "t": "str | None"
+       }
+      ]
+     }
     },
     "model:CookingSession": {
      "touched_again": false,
-     "why": "unchanged \u2014 verify the FK still resolves",
+     "why": "unchanged — verify the FK still resolves",
      "risk": "watch"
     }
    }
@@ -328,7 +483,7 @@ window.GABE_SIM = {
    "label": "Commit",
    "real": true,
    "meta": {
-    "subject": "feat(repertorio): the mode row becomes the cupo \u2014 0063 migration + real service (C8134-C8136, C8138)",
+    "subject": "feat(repertorio): the mode row becomes the cupo — 0063 migration + real service (C8134-C8136, C8138)",
     "date": "2026-08-07",
     "commit": "fecb2ce3",
     "files": 10,
@@ -342,5 +497,6 @@ window.GABE_SIM = {
     ]
    }
   }
- }
+ },
+ "ids_head": "430360b8"
 };

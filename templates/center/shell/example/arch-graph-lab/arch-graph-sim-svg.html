@@ -140,6 +140,37 @@ svg#graph{ display:block; width:100%; height:100%; }
 .detail .stageline{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
 .detail .dot{ display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
 .detail .dot i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+/* ── typed identifier chips — the command center's code-section visual language ──
+   icon + name per kind (function · endpoint · model · schema · data type),
+   soft-bg + colored-fg exactly like the center's .tag.ic; data-type tokens wear
+   the center's ty-* type-family colors. */
+.detail .idsec{ margin:12px 0 4px; }
+.detail .idrow{ display:flex; gap:10px; align-items:flex-start; padding:5px 0; border-top:1px solid var(--line); }
+.detail .idrow:first-child{ border-top:0; }
+.detail .idlbl{ flex:none; width:74px; font-size:10px; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted); padding-top:4px; }
+.detail .idchips{ display:flex; flex-wrap:wrap; gap:5px; flex:1; min-width:0; }
+.idchip{ display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:11px;
+  font-size:11.5px; line-height:1.55; max-width:100%; }
+.idchip svg{ flex:none; }
+.idchip b{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.idchip .mth{ font-weight:800; font-size:10px; letter-spacing:.03em; }
+.idchip.dt{ background:var(--line); color:var(--muted); }
+.idchip.dt b{ color:var(--ink); font-weight:600; }
+.idchip.dt .ty{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
+.idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace;
+  font-size:10.5px; padding:2px 8px; }
+/* type-family colors — byte-identical to the center's arch-data-model page */
+.ty-num1{color:#7089c4} .ty-num2{color:#1d4ed8}
+.ty-tim1{color:#c08a4a} .ty-tim2{color:#9a4b06}
+.ty-str1{color:#4f9a86} .ty-str2{color:#0b6a55}
+.ty-bool{color:#b83280} .ty-json{color:#7c6bb8} .ty-id{color:#78849a}
+@media (prefers-color-scheme:dark){
+  .ty-num1{color:#9db4ee} .ty-num2{color:#6c8cff}
+  .ty-tim1{color:#e3b579} .ty-tim2{color:#f0913c}
+  .ty-str1{color:#84c9b6} .ty-str2{color:#3fd6ac}
+  .ty-bool{color:#f472b6} .ty-json{color:#b4a8f0} .ty-id{color:#8391a5}
+}
 /* per-stage highlight colours on the stage buttons */
 #stageSeg button[data-stage="red"].on{ background:#e5484d; }
 #stageSeg button[data-stage="execute"].on{ background:#4c9aff; }
@@ -817,6 +848,59 @@ svg#graph{ display:block; width:100%; height:100%; }
     return "<div class='bar'><i style='width:"+g+"%;background:#2f9e63'></i><i style='width:"+(100-g)+"%;background:#e5484d'></i></div>"
       +"<div class='delta'>+"+(add||0)+" · −"+(del||0)+" lines</div>"; }
 
+  // ── typed identifier chips — EQUAL the command center's code-section language ──
+  //  glyphs lifted verbatim from _a3_code._INS_ICONS + _a3_render zap; kind
+  //  colours from KIND_COLOR; ty-* families mirror _a3_code._TYPE_CLS.
+  var KIND_ICON = {
+    fn:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+    endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+    datatype:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'
+  };
+  var KIND_CHIP = { fn:"#0f766e", endpoint:KIND_COLOR.endpoint, model:KIND_COLOR.model, schema:KIND_COLOR.schema };
+  var METHOD_COLOR = { GET:"#16794c", POST:"#4338ca", PUT:"#b45309", PATCH:"#b45309", DELETE:"#d1443c" };
+  var TYPE_CLS = { int:"num1",float:"num2",Decimal:"num2",Numeric:"num2",date:"tim1",time:"tim1",
+    datetime:"tim2",str:"str1",Text:"str2",bytes:"str2",bool:"bool",dict:"json",list:"json",
+    Any:"json",JSON:"json",Literal:"json",UUID:"id",uuid:"id" };
+  function icoSvg(path){ return '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" '
+    + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>'; }
+  function tyFamily(t){ var toks=String(t).split(/[^A-Za-z_]+/);
+    for(var i=0;i<toks.length;i++){ if(TYPE_CLS[toks[i]]) return TYPE_CLS[toks[i]]; } return null; }
+  function kindChip(kind,label){ var c=KIND_CHIP[kind]||"#868e96";
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f'>"+icoSvg(KIND_ICON[kind])
+      +"<b>"+trunc(label,30)+"</b></span>"; }
+  function epChip(ep){ var mc=METHOD_COLOR[ep.m]||"#868e96", c=KIND_CHIP.endpoint;
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+ep.m+" "+ep.p+" → "+ep.fn+"()'>"
+      +icoSvg(KIND_ICON.endpoint)+"<span class='mth' style='color:"+mc+"'>"+ep.m+"</span><b>"+ep.p+"</b></span>"; }
+  function dtChip(d){ var fam=tyFamily(d.t);
+    return "<span class='idchip dt'>"+icoSvg(KIND_ICON.datatype)+"<b>"+d.n+"</b>"
+      +"<span class='ty"+(fam?" ty-"+fam:"")+"'>"+d.t+"</span></span>"; }
+  function idrow(label,chips){ return chips ? "<div class='idrow'><div class='idlbl'>"+label
+    +"</div><div class='idchips'>"+chips+"</div></div>" : ""; }
+  function idSection(ids){
+    if(!ids) return "";
+    var h="";
+    if(ids.fn)        h+=idrow("Functions", ids.fn.map(function(f){ return kindChip("fn",f+"()"); }).join(""));
+    if(ids.endpoint)  h+=idrow("Endpoints", ids.endpoint.map(epChip).join(""));
+    if(ids.model)     h+=idrow("Models",    ids.model.map(function(m){ return kindChip("model",m); }).join(""));
+    if(ids.schema)    h+=idrow("Schemas",   ids.schema.map(function(s){ return kindChip("schema",s); }).join(""));
+    if(ids.datatype)  h+=idrow("Data types",ids.datatype.map(dtChip).join(""));
+    if(ids.structure) h+=idrow("Structures",ids.structure.map(function(s){ return "<span class='idchip st'>"+s+"</span>"; }).join(""));
+    return h ? "<div class='idsec'>"+h+"</div>" : "";
+  }
+  // union the current stage's identifiers across an entity's pieces (entity panel)
+  function aggregateIds(slug){
+    var sd=(SIM.stages&&SIM.stages[curStage])||{}, pieces=(SIM.pieces&&SIM.pieces[slug])||[];
+    var out={}, seen={fn:{},endpoint:{},model:{},schema:{},datatype:{},structure:{}};
+    pieces.forEach(function(p){ var ids=((sd.pieces&&sd.pieces[p.id])||{}).ids; if(!ids) return;
+      ["fn","endpoint","model","schema","datatype","structure"].forEach(function(k){
+        (ids[k]||[]).forEach(function(v){ var key=(k==="endpoint")?v.fn:(k==="datatype"?v.n:v);
+          if(seen[k][key]) return; seen[k][key]=1; (out[k]=out[k]||[]).push(v); }); });
+    });
+    return Object.keys(out).length?out:null;
+  }
+
   function openDetail(slug, p){        // a single PIECE, led by its stage headline
     var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
     var dp=document.getElementById("detail"), sc=STAGE_COLOR[curStage];
@@ -824,24 +908,30 @@ svg#graph{ display:block; width:100%; height:100%; }
     if(curStage==="execute"){
       body = d.changed
         ? "<div class='pillrow'>"+pill(d.action||"changed")+"<span class='file'>"+((d.file||"").split("/").pop())+"</span></div>"
-          + bar(d.add,d.del) + headline("what we changed", d.effect||d.what||"—", sc) + dblock("added", d.what||"internal edits")
+          + bar(d.add,d.del) + headline("what we changed", d.effect||d.what||"—", sc)
+          + idSection(d.ids) + (d.ids?"":dblock("added", d.what||"internal edits"))
         : "<div class='pillrow'>"+pill("not changed","var(--muted)")+"</div>"
           + dblock("relation","downstream via FK") + dblock("why it's here", d.summary||"referenced by the change");
     } else if(curStage==="red"){
       body = d.tested
         ? "<div class='pillrow'>"+pill("red proved","#e5484d")+(d.cases||[]).map(function(c){return "<span class='case'>"+c+"</span>";}).join("")+"</div>"
-          + headline("what we made fail", d.red||"—", "#e5484d") + dblock("covers", d.covers||"—") + dblock("guards against", d.guards||"—")
+          + headline("what we made fail", d.red||"—", "#e5484d")
+          + (d.use_case?dblock("use case", d.use_case):"") + idSection(d.ids)
+          + dblock("covers", d.covers||"—") + dblock("guards against", d.guards||"—")
           + (d.source?dblock("from", d.source):"")
-        : "<div class='pillrow'>"+pill("no test","var(--muted)")+"</div>" + dblock("risk if it breaks", d.guards||"no red declared for this piece");
+        : "<div class='pillrow'>"+pill("no test","var(--muted)")+"</div>"
+          + idSection(d.ids) + dblock("risk if it breaks", d.guards||"no red declared for this piece");
     } else if(curStage==="review"){
       var rc={low:"#2f9e63",medium:"#d9821f",high:"#e5484d",watch:"#4c9aff"}[d.risk]||sc;
       body = "<div class='pillrow'>"+pill(d.touched_again?"finding":"clean")+pill("risk "+(d.risk||"—"),rc)+"</div>"
-        + headline("what we found", d.why||"—", sc)
+        + headline("what we found", d.why||"—", sc) + idSection(d.ids)
         + (d.impact?dblock("impact", d.impact):"") + (d.source?dblock("from", d.source):"");
     } else if(curStage==="commit"){
       var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      var eids=(((SIM.stages.execute||{}).pieces||{})[p.id]||{}).ids;   // ship = what Execute changed
       body = "<div class='pillrow'>"+pill(p.role==="changed"?"in commit":"not in commit", p.role==="changed"?sc:"var(--muted)")+"<span class='file'>"+(m.commit||"")+"</span></div>"
-        + headline("what shipped", m.subject||"—", sc) + "<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>" + dblock("cases", (m.cases||[]).join(", ")||"—");
+        + headline("what shipped", m.subject||"—", sc) + "<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"
+        + idSection(eids) + dblock("cases", (m.cases||[]).join(", ")||"—");
     }
     var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
     dp.innerHTML = "<div class='phdr'>"+curStage+ex+"</div><h4>"+p.label+"</h4>"
@@ -873,6 +963,7 @@ svg#graph{ display:block; width:100%; height:100%; }
       + "<h4 style='color:"+roleCol+"'>"+(n.label||slug)+"</h4><div class='kind'>"+role+"</div>"
       + row("endpoints",c.endpoints||0)+row("models",c.models||0)+row("schemas",c.schemas||0)+row("files",c.files||0)+row("lines",(c.lines||0).toLocaleString())
       + headline(STAGE_HEAD[curStage], headText, sc)
+      + (function(){ var ag=aggregateIds(slug); return ag?idSection(ag):""; })()
       + "<div class='sum'>double-click to open its pieces</div>";
     selectPiece(null);
   }
@@ -1070,7 +1161,11 @@ svg#graph{ display:block; width:100%; height:100%; }
     intraEdges:     function(){ return vp.querySelectorAll("#expansion .xedge.intra").length; },
     crossEdges:     function(){ return vp.querySelectorAll("#expansion .xedge.cross").length; },
     focusNow:       function(){ return l2focus; },
-    hiEdges:        function(){ return vp.querySelectorAll(".edge.hi").length; }
+    hiEdges:        function(){ return vp.querySelectorAll(".edge.hi").length; },
+    // typed identifier chips in the detail panel (for the chip probe)
+    idChips:        function(){ return document.querySelectorAll("#detail .idchip").length; },
+    idRows:         function(){ return Array.prototype.map.call(document.querySelectorAll("#detail .idrow .idlbl"), function(l){ return l.textContent; }); },
+    tyChips:        function(){ return document.querySelectorAll("#detail .idchip.dt .ty[class*='ty-']").length; }
   };
 
   // ── compact change note in the header + control wiring ──────────────
