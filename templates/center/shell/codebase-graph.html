@@ -43,7 +43,7 @@
 .cbg-change .ln2 b{ color:var(--accent); font-weight:600; }
 
 /* ── toolbar ── */
-.cbg-toolbar{ display:flex; align-items:center; gap:10px; padding:9px 20px;
+.cbg-toolbar{ position:relative; display:flex; align-items:center; gap:10px; padding:9px 20px;
   border-bottom:1px solid var(--line); background:var(--panel); min-height:46px; flex-wrap:wrap; }
 .cbg-root .crumb{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
 .cbg-root .crumb .dot{ width:9px; height:9px; border-radius:50%; background:var(--muted); flex:none; }
@@ -226,6 +226,39 @@
 .cbg-legend .swr::after{ content:""; position:absolute; right:-2px; top:-3px; border:3px solid transparent; border-left-color:var(--edge); }
 .cbg-legend .div{ width:1px; height:14px; background:var(--line); }
 .cbg-legend .count{ margin-left:auto; color:var(--ink); font-weight:600; }
+
+/* ── Open/Close-all toggle — center-style pill (pressed = accent when expanded) ── */
+.cbg-root .cbg-toggle.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+/* ── gear popover holding the layout controls (Entities · Inside · Reset) ── */
+.cbg-root .cbg-gear{ display:inline-flex; align-items:center; justify-content:center; padding:6px 8px; }
+.cbg-root .cbg-gear svg{ display:block; }
+.cbg-gearpanel{ position:absolute; z-index:40; top:100%; right:16px; margin-top:6px; width:236px;
+  background:var(--panel); border:1px solid var(--line); border-radius:11px;
+  box-shadow:0 10px 30px rgba(0,0,0,.18); padding:13px; }
+.cbg-gearrow{ margin-bottom:13px; }
+.cbg-gearrow:last-child{ margin-bottom:0; }
+.cbg-gearlbl{ font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.cbg-optseg{ display:flex; gap:4px; }
+.cbg-root .cbg-optseg button{ flex:1; font-size:11.5px; font-weight:600; padding:5px 0; border-radius:7px;
+  border:1px solid var(--line); background:var(--panel); color:var(--muted); }
+.cbg-root .cbg-optseg button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.cbg-root #cbg-resetBtn{ width:100%; font-size:12px; font-weight:600; }
+/* ── commit "view" button + modal ── */
+.cbg-root .cbg-more{ font-size:10.5px; font-weight:600; padding:1px 7px; margin-left:7px; border-radius:6px;
+  vertical-align:baseline; color:var(--accent); border-color:var(--accent); }
+.cbg-modal{ position:fixed; inset:0; z-index:60; display:flex; align-items:center; justify-content:center;
+  background:rgba(10,14,20,.36); }
+.cbg-modal-card{ width:min(540px,92vw); max-height:80vh; overflow:auto; background:var(--panel);
+  border:1px solid var(--line); border-radius:13px; box-shadow:0 20px 54px rgba(0,0,0,.34); padding:16px 18px; }
+.cbg-modal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.cbg-modal-head b{ font-size:14px; }
+.cbg-root .cbg-x{ padding:2px 9px; font-size:13px; line-height:1; }
+.cbg-modal-body{ font-size:13px; color:var(--ink); line-height:1.55; }
+.cbg-modal-body .sha{ font-family:ui-monospace,Menlo,Consolas,monospace; color:var(--accent); font-weight:700; font-size:14px; }
+.cbg-modal-body .subj{ margin:9px 0; font-size:14px; font-weight:600; line-height:1.5; }
+.cbg-modal-body .meta{ color:var(--muted); font-size:12px; font-family:ui-monospace,Menlo,Consolas,monospace; margin-top:3px; }
+.cbg-modal-body .cases{ margin-top:11px; display:flex; flex-wrap:wrap; gap:5px; }
+.cbg-modal-body .cs{ font-size:11px; font-weight:700; color:#4c9aff; border:1px solid #4c9aff55; border-radius:5px; padding:1px 7px; }
 </style>
 </head>
 <body>
@@ -294,14 +327,23 @@
       </div>
       <div class="selinfo" id="cbg-selInfo"></div>
       <div class="spacer"></div>
-      <button id="cbg-openAll" hidden>Open all</button>
-      <label class="laywrap"><span id="cbg-layLbl">layout</span>
-        <select id="cbg-layoutSel"></select>
-      </label>
-      <label class="laywrap" id="cbg-insideWrap" hidden>inside
-        <select id="cbg-insideSel"></select>
-      </label>
-      <button id="cbg-resetBtn">Reset layout</button>
+      <button id="cbg-openAll" class="cbg-toggle" hidden>Open all</button>
+      <button class="cbg-gear" id="cbg-gear" title="Layout controls" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+      <div class="cbg-gearpanel" id="cbg-gearpanel" hidden>
+        <div class="cbg-gearrow" id="cbg-entitiesRow">
+          <div class="cbg-gearlbl" id="cbg-entitiesLbl">Entities layout</div>
+          <div class="cbg-optseg" id="cbg-entitiesSeg"></div>
+        </div>
+        <div class="cbg-gearrow" id="cbg-insideRow">
+          <div class="cbg-gearlbl">Inside entities</div>
+          <div class="cbg-optseg" id="cbg-insideSeg"></div>
+        </div>
+        <div class="cbg-gearrow">
+          <button id="cbg-resetBtn">Reset layout</button>
+        </div>
+      </div>
     </div>
 
     <div class="cbg-center">
@@ -328,6 +370,12 @@
 
     <div class="cbg-legend" id="cbg-legend"></div>
     <div id="cbg-tip"></div>
+    <div class="cbg-modal" id="cbg-commitModal" hidden>
+      <div class="cbg-modal-card">
+        <div class="cbg-modal-head"><b>Commit</b><button class="cbg-x" id="cbg-commitClose">&#10005;</button></div>
+        <div class="cbg-modal-body" id="cbg-commitBody"></div>
+      </div>
+    </div>
   </div>
 </main>
 
@@ -360,7 +408,7 @@
   var lastBounds = null;
   var l1layout = "ring", l2layout = "columns", insideLayout = "force";
   var STAGE_COLOR = { red:"#e5484d", execute:"#4c9aff", review:"#30a46c", commit:"#8e4ec6" };
-  var L1_LAYOUTS = { ring:"Ring", flow:"Flow (deps)", force:"Force" };
+  var L1_LAYOUTS = { ring:"Ring", flow:"Flow", force:"Force" };
   var L2_LAYOUTS = { columns:"Columns", force:"Force", radial:"Radial" };
   var INSIDE_LAYOUTS = { ring:"Ring", grid:"Grid", force:"Force" };
   var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
@@ -543,7 +591,8 @@
       var c = E("circle", { class:"body", r:r, cx:0, cy:0, fill:col, stroke:"var(--panel)", "stroke-width":2 });
       if(n.kind==="unclaimed"){ c.setAttribute("fill","var(--panel)");
         c.setAttribute("stroke", COLORS.__unclaimed__||"#8a8f98"); c.setAttribute("stroke-dasharray","5 4"); }
-      var t1 = E("text", { class:"l1label", x:0, y:r+16 }); t1.textContent = n.label; t1.setAttribute("fill","var(--ink)");
+      var pc = (SIM && SIM.pieces && SIM.pieces[n.slug]) ? SIM.pieces[n.slug].length : 0;
+      var t1 = E("text", { class:"l1label", x:0, y:r+16 }); t1.textContent = n.label + (pc ? " ("+pc+")" : ""); t1.setAttribute("fill","var(--ink)");
       var t2 = E("text", { class:"l1sub", x:0, y:r+30 });
       t2.textContent = n.counts.endpoints+" ep · "+n.counts.lines.toLocaleString()+" ln";
       g.appendChild(c); g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g);
@@ -628,19 +677,21 @@
     if(view==="l2") stage.scrollTop = 0, stage.scrollLeft = 0;
     syncLayoutSel(); buildLegend(); buildStageLegend();
   }
-  function fillSel(sel, opts, cur){
-    sel.innerHTML="";
+  // gear-panel segmented pills (center-style): one button per option, active = .on
+  function fillPills(seg, opts, cur, attr){
+    seg.innerHTML="";
     Object.keys(opts).forEach(function(k){
-      var o=document.createElement("option"); o.value=k; o.textContent=opts[k];
-      if(k===cur) o.selected=true; sel.appendChild(o);
+      var b=document.createElement("button"); b.textContent=opts[k]; b.setAttribute("data-"+attr,k);
+      if(k===cur) b.classList.add("on"); seg.appendChild(b);
     });
   }
   function syncLayoutSel(){
-    document.getElementById("cbg-layLbl").textContent = (view==="l1") ? "entities" : "layout";
-    fillSel(document.getElementById("cbg-layoutSel"), view==="l1"?L1_LAYOUTS:L2_LAYOUTS, view==="l1"?l1layout:l2layout);
-    var iw=document.getElementById("cbg-insideWrap");
-    if(view==="l1" && SIM){ iw.hidden=false; fillSel(document.getElementById("cbg-insideSel"), INSIDE_LAYOUTS, insideLayout); }
-    else iw.hidden=true;
+    // entities pills: L1 → Ring·Flow·Force · L2 → Columns·Force·Radial
+    document.getElementById("cbg-entitiesLbl").textContent = (view==="l1") ? "Entities layout" : "Layout";
+    fillPills(document.getElementById("cbg-entitiesSeg"), view==="l1"?L1_LAYOUTS:L2_LAYOUTS, view==="l1"?l1layout:l2layout, "lay");
+    var ir=document.getElementById("cbg-insideRow");
+    if(view==="l1" && SIM){ ir.hidden=false; fillPills(document.getElementById("cbg-insideSeg"), INSIDE_LAYOUTS, insideLayout, "in"); }
+    else ir.hidden=true;
   }
 
   function updateEdge(rec){
@@ -759,7 +810,9 @@
         });
       })(slug);
       layer.appendChild(cont);
-      var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col}); lb.textContent=nodeMeta[slug].node.label||slug;
+      var pcnt=((SIM.pieces&&SIM.pieces[slug])||[]).length;
+      var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col});
+      lb.textContent=(nodeMeta[slug].node.label||slug)+(pcnt?" ("+pcnt+")":"");
       layer.appendChild(lb);
       b.minX=Math.min(b.minX,pos.x-contR-24); b.maxX=Math.max(b.maxX,pos.x+contR+24);
       b.minY=Math.min(b.minY,pos.y-contR-24); b.maxY=Math.max(b.maxY,pos.y+contR+24);
@@ -823,10 +876,8 @@
           p.style.strokeDasharray=""; p.style.strokeDashoffset=""; p.style.transition=""; p.classList.add("flow"); }); }, flowAt);
       }); });
     }
-    document.getElementById("cbg-selInfo").innerHTML = slugs.map(function(s){
-      var role=((SIM.pieces[s]||[])[0]||{}).role, col=role==="changed"?"var(--touch)":"var(--blast)";
-      return "<span style='color:"+col+"'>"+(nodeMeta[s].node.label||s)+" ("+((SIM.pieces[s]||[]).length)+")</span>";
-    }).join(" &nbsp;·&nbsp; ") + " &nbsp; <span class='selinfo'>click a circle to collapse</span>";
+    // counts now ride the entity labels in the diagram; keep the bar clean
+    document.getElementById("cbg-selInfo").innerHTML = "";
   }
 
   function focusL2(id){
@@ -1009,7 +1060,9 @@
     l1edges:  function(){ return DATA.l1.edges.length; },
     entities: function(){ return DATA.l1.nodes.map(function(n){ return n.slug; }); },
     layoutNow:function(){ return l1layout; },
-    setLayout:function(v){ l1layout=v; document.getElementById("cbg-layoutSel").value=v; renderL1(); },
+    setLayout:function(v){ l1layout=v; renderL1(); },
+    gearOpen:function(){ return !document.getElementById("cbg-gearpanel").hidden; },
+    commitOpen:function(){ return !document.getElementById("cbg-commitModal").hidden; },
     drill:    function(slug){ drill(slug); },
     l2nodes:  function(){ return (view==="l2" && DATA.l2[drilledSlug]) ? DATA.l2[drilledSlug].nodes.length : 0; },
     back:     function(){ back(); },
@@ -1049,15 +1102,18 @@
       "<div class='ln1'><span class='dot'></span>"
       + "<span style='color:var(--touch)'>"+SIM.touched.join(", ")+"</span> changed"
       + " <span class='arr'>&rarr;</span> <span style='color:var(--blast)'>"+SIM.blast.join(", ")+"</span> affected</div>"
-      + "<div class='ln2'><b>"+SIM.commit+"</b> · "+trunc(SIM.subject,64)+"</div>";
+      + "<div class='ln2'><b>"+SIM.commit+"</b> · "+trunc(SIM.subject,64)
+      + " <button class='cbg-more' id='cbg-commitMore' title='Show the full commit'>view</button></div>";
+    document.getElementById("cbg-commitMore").addEventListener("click", showCommit);
     document.getElementById("cbg-openAll").hidden = false;
     document.getElementById("cbg-stageSeg").hidden = false;
     document.getElementById("cbg-hint").textContent =
-      "click an entity to open · double-click to collapse · click a piece for its lifecycle · drag to move";
+      "click an entity to open · double-click to collapse · click a piece for its lifecycle · drag to move · scroll to zoom";
     document.getElementById("cbg-openAll").addEventListener("click", function(){
       var inv=SIM.touched.concat(SIM.blast), allOpen=inv.length && inv.every(function(s){ return expanded[s]; });
       expanded={}; if(!allOpen) inv.forEach(function(s){ expanded[s]=true; });
-      document.getElementById("cbg-openAll").textContent = allOpen ? "Open all" : "Close all";
+      var btn=document.getElementById("cbg-openAll");
+      btn.textContent = allOpen ? "Open all" : "Close all"; btn.classList.toggle("on", !allOpen);
       renderL1();
     });
     document.getElementById("cbg-stageSeg").addEventListener("click", function(e){
@@ -1069,17 +1125,42 @@
       "<div class='ln1'><span class='dot idle'></span>No change in flight</div>"
       + "<div class='ln2'>showing the current codebase map</div>";
   }
-  document.getElementById("cbg-layoutSel").addEventListener("change", function(){
-    var v=this.value;
-    if(view==="l1"){ l1layout=v; renderL1(); }
-    else { l2layout=v; renderL2(drilledSlug); }
+  // gear-panel layout pills (Entities · Inside)
+  document.getElementById("cbg-entitiesSeg").addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-lay");
+    if(view==="l1"){ l1layout=v; renderL1(); } else { l2layout=v; renderL2(drilledSlug); }
   });
-  document.getElementById("cbg-insideSel").addEventListener("change", function(){
-    insideLayout=this.value; renderL1();
+  document.getElementById("cbg-insideSeg").addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return; insideLayout=b.getAttribute("data-in"); renderL1();
   });
+  // gear open/close (click outside dismisses)
+  (function(){
+    var gearBtn=document.getElementById("cbg-gear"), gearPanel=document.getElementById("cbg-gearpanel");
+    gearBtn.addEventListener("click", function(e){ e.stopPropagation();
+      var willOpen=gearPanel.hidden; gearPanel.hidden=!willOpen; gearBtn.setAttribute("aria-expanded", String(willOpen)); });
+    document.addEventListener("click", function(e){
+      if(!gearPanel.hidden && !gearPanel.contains(e.target) && !gearBtn.contains(e.target)){
+        gearPanel.hidden=true; gearBtn.setAttribute("aria-expanded","false"); }
+    });
+  })();
+  // commit modal — the actual commit (sha · full subject · files/lines · cases)
+  var cModal=document.getElementById("cbg-commitModal");
+  function showCommit(){
+    if(!SIM) return;
+    var m=(SIM.stages&&SIM.stages.commit&&SIM.stages.commit.meta)||{};
+    document.getElementById("cbg-commitBody").innerHTML =
+      "<div class='sha'>"+SIM.commit+"</div>"
+      + (SIM.date?"<div class='meta'>"+SIM.date+"</div>":"")
+      + "<div class='subj'>"+SIM.subject+"</div>"
+      + "<div class='meta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"
+      + ((m.cases&&m.cases.length)?"<div class='cases'>"+m.cases.map(function(c){ return "<span class='cs'>"+c+"</span>"; }).join("")+"</div>":"");
+    cModal.hidden=false;
+  }
+  document.getElementById("cbg-commitClose").addEventListener("click", function(){ cModal.hidden=true; });
+  cModal.addEventListener("click", function(e){ if(e.target===cModal) cModal.hidden=true; });
 
   renderL1();
-  if(SIM && Object.keys(expanded).length){ document.getElementById("cbg-openAll").textContent="Close all"; }
+  if(SIM && Object.keys(expanded).length){ var _oa=document.getElementById("cbg-openAll"); _oa.textContent="Close all"; _oa.classList.add("on"); }
   resetPanel();
   window.__cbgready = true;
 })();
