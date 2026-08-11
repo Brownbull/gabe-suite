@@ -831,11 +831,13 @@ svg#graph{ display:block; width:100%; height:100%; }
       body = d.tested
         ? "<div class='pillrow'>"+pill("red proved","#e5484d")+(d.cases||[]).map(function(c){return "<span class='case'>"+c+"</span>";}).join("")+"</div>"
           + headline("what we made fail", d.red||"—", "#e5484d") + dblock("covers", d.covers||"—") + dblock("guards against", d.guards||"—")
+          + (d.source?dblock("from", d.source):"")
         : "<div class='pillrow'>"+pill("no test","var(--muted)")+"</div>" + dblock("risk if it breaks", d.guards||"no red declared for this piece");
     } else if(curStage==="review"){
       var rc={low:"#2f9e63",medium:"#d9821f",high:"#e5484d",watch:"#4c9aff"}[d.risk]||sc;
-      body = "<div class='pillrow'>"+pill(d.touched_again?"re-touched":"unchanged")+pill("risk "+(d.risk||"—"),rc)+"</div>"
-        + headline("what we found", d.why||"—", sc) + dblock("test", (d.test||"—")+((d.cases&&d.cases.length)?" · "+d.cases.join(","):""));
+      body = "<div class='pillrow'>"+pill(d.touched_again?"finding":"clean")+pill("risk "+(d.risk||"—"),rc)+"</div>"
+        + headline("what we found", d.why||"—", sc)
+        + (d.impact?dblock("impact", d.impact):"") + (d.source?dblock("from", d.source):"");
     } else if(curStage==="commit"){
       var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
       body = "<div class='pillrow'>"+pill(p.role==="changed"?"in commit":"not in commit", p.role==="changed"?sc:"var(--muted)")+"<span class='file'>"+(m.commit||"")+"</span></div>"

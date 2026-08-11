@@ -182,35 +182,30 @@ window.GABE_SIM = {
  ],
  "stages": {
   "red": {
-   "label": "Red \u00b7 tests declared",
-   "real": false,
+   "label": "Red \u00b7 real cases",
+   "real": true,
    "pieces": {
-    "model:Recipe": {
-     "tested": true,
-     "cases": [
-      "C8135"
-     ],
-     "covers": "cupo attach + keep-set rules",
-     "red": "attaching a cupo must keep the set \u2192 RAISES CupoKeepSetError (guard not built)",
-     "guards": "a cupo attach silently drops the keep-set"
-    },
     "model:RecipeFilterMode": {
      "tested": true,
      "cases": [
       "C8134"
      ],
-     "covers": "mode-row \u2192 cupo migration (0063)",
-     "red": "the saved mode must survive the migrate \u2192 mode is NULL (0063 not applied)",
-     "guards": "a user loses their saved mode"
+     "red": "cupo capacity is the members own pool \u2014 two members of ONE household \u2014 chef B fills 5 slots, free A holds 1, s",
+     "covers": "cupo capacity / member pool (free-1 chef-5)",
+     "guards": "a member's cupo cap is wrong",
+     "source": "tests/test_repertorio.py"
     },
-    "model:RecipeDemand": {
+    "model:PlannedRecipe": {
      "tested": true,
      "cases": [
-      "C8136"
+      "C8135",
+      "C8136",
+      "C8142"
      ],
-     "covers": "downgrade past the free cap",
-     "red": "stock must hold at the cap \u2192 auto-downgrade fires (returns DowngradeResult)",
-     "guards": "stock is cut when it should hold"
+     "red": "cupo journey stamps and derived counters \u2014 planning stamps ``cupo_id`` + ``planned_by_user_id``; \u00b7 downgrade forces keep one and history survives \u00b7 plan with cupo stamps the link",
+     "covers": "the cook\u2192cupo path (plan stamps cupo_id) + downgrade",
+     "guards": "counters diverge / history lost on downgrade",
+     "source": "tests/test_repertorio.py + test_repertorio_api.py"
     },
     "model:CookingSession": {
      "tested": false,
@@ -305,31 +300,26 @@ window.GABE_SIM = {
    }
   },
   "review": {
-   "label": "Review \u00b7 notes",
-   "real": false,
+   "label": "Review \u00b7 real findings",
+   "real": true,
    "pieces": {
-    "model:Recipe": {
+    "model:PlannedRecipe": {
      "touched_again": true,
-     "why": "added the founder-gate guard (D187) on attach",
-     "test": "red\u2192green",
-     "cases": [
-      "C8135"
-     ],
-     "risk": "medium"
+     "why": "Cross-type plan is unruled: POST /recipes/{id}/plan {cupo_id} accepts ANY recipe for ANY cupo dish type, so planeadas can carry plans whose ",
+     "risk": "medium",
+     "impact": "a soup cupo showing dessert planeadas reads as a broken counter to the user",
+     "source": "PENDING #209"
     },
     "model:RecipeFilterMode": {
-     "touched_again": false,
-     "why": "migration only, no follow-up edit",
-     "test": "green",
-     "cases": [
-      "C8134"
-     ],
-     "risk": "low"
+     "touched_again": true,
+     "why": "attach_cupo silently overwrites (retype): a cupo's dish type can be swapped while old-type planeadas persist under the new label \u2014 nothing i",
+     "risk": "low",
+     "impact": "confusing counter provenance if a retype UI ever ships without a ruling",
+     "source": "PENDING #211"
     },
     "model:CookingSession": {
      "touched_again": false,
      "why": "unchanged \u2014 verify the FK still resolves",
-     "test": "\u2014",
      "risk": "watch"
     }
    }
