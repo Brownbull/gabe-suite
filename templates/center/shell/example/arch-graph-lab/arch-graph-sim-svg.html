@@ -94,6 +94,8 @@ svg#graph{ display:block; width:100%; height:100%; }
 .xedge{ fill:none; stroke-linecap:round; }
 .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.7; }   /* piece↔piece, same entity */
 .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.95; } /* piece→piece, across entities */
+/* a flow the CURRENT stage touched — painted the stage colour (stroke set inline) */
+.xedge.hot{ opacity:1; stroke-width:2.8; }
 /* expand animations */
 .xedge.flow{ stroke-dasharray:6 6; animation: xflow 1.1s linear infinite; }
 @keyframes xflow{ to{ stroke-dashoffset:-24; } }
@@ -145,11 +147,13 @@ svg#graph{ display:block; width:100%; height:100%; }
    soft-bg + colored-fg exactly like the center's .tag.ic; data-type tokens wear
    the center's ty-* type-family colors. */
 .detail .idsec{ margin:12px 0 4px; }
-.detail .idrow{ display:flex; gap:10px; align-items:flex-start; padding:5px 0; border-top:1px solid var(--line); }
+/* one column: the kind TITLE on its own row, its chips full-width beneath —
+   so a chip never has to share the row with its label and can breathe. */
+.detail .idrow{ display:block; padding:8px 0 6px; border-top:1px solid var(--line); }
 .detail .idrow:first-child{ border-top:0; }
-.detail .idlbl{ flex:none; width:74px; font-size:10px; font-weight:800; letter-spacing:.06em;
-  text-transform:uppercase; color:var(--muted); padding-top:4px; }
-.detail .idchips{ display:flex; flex-wrap:wrap; gap:5px; flex:1; min-width:0; }
+.detail .idlbl{ font-size:10px; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.detail .idchips{ display:flex; flex-wrap:wrap; gap:5px; }
 .idchip{ display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:11px;
   font-size:11.5px; line-height:1.55; max-width:100%; }
 .idchip svg{ flex:none; }
@@ -253,6 +257,10 @@ svg#graph{ display:block; width:100%; height:100%; }
               markerWidth="7" markerHeight="7" orient="auto-start-reverse">
         <path d="M0.5,0.5 L9.5,5 L0.5,9.5 z"></path>
       </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#e5484d"></path></marker>
+      <marker id="arrow-execute" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#4c9aff"></path></marker>
+      <marker id="arrow-review" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#30a46c"></path></marker>
+      <marker id="arrow-commit" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#8e4ec6"></path></marker>
     </defs>
     <g id="viewport"></g>
   </svg>
@@ -715,6 +723,15 @@ svg#graph{ display:block; width:100%; height:100%; }
     var b={minX:lastBounds.minX,minY:lastBounds.minY,maxX:lastBounds.maxX,maxY:lastBounds.maxY};
     var connector={};                              // endpoints of cross edges → pulse
     ((SIM.cross_edges)||[]).forEach(function(e){ connector[e.from_slug+"\t"+e.from]=1; connector[e.to_slug+"\t"+e.to]=1; });
+    // pieces the CURRENT stage highlights (tested/changed/found/in-commit) → any
+    // flow incident to one is a flow this stage touched, painted the stage colour.
+    var hot={};
+    SIM.touched.concat(SIM.blast).forEach(function(sl){
+      ((SIM.pieces&&SIM.pieces[sl])||[]).forEach(function(pc){
+        if(!stageEnc(sl,pc).hollow) hot[sl+"\t"+pc.id]=1;
+      });
+    });
+    var STG=STAGE_COLOR[curStage];
 
     // 1) containers + inner positions (per the "inside" layout, container auto-sized)
     slugs.forEach(function(slug){
@@ -743,23 +760,27 @@ svg#graph{ display:block; width:100%; height:100%; }
     frame(b);
 
     var animE=[], animP=[], crossPaths=[];
-    function line(a,c,cls,arrow){
-      var p=E("path",{class:cls, d:"M"+a.x+","+a.y+" L"+c.x+","+c.y});
-      if(arrow) p.setAttribute("marker-end","url(#arrow)");
+    function line(a,c,cls,arrow,hotColor){
+      var p=E("path",{class:cls+(hotColor?" hot":""), d:"M"+a.x+","+a.y+" L"+c.x+","+c.y});
+      if(hotColor) p.style.stroke=hotColor;                 // this flow was touched this stage
+      if(arrow) p.setAttribute("marker-end", hotColor?"url(#arrow-"+curStage+")":"url(#arrow)");
       layer.appendChild(p); if(!reduce) animE.push(p); return p;
     }
-    // 2) intra-entity edges (relationships among an entity's pieces)
+    // 2) intra-entity edges (relationships among an entity's pieces) — hot when
+    //    either endpoint is a piece this stage touched
     slugs.forEach(function(slug){
       ((SIM.intra_edges&&SIM.intra_edges[slug])||[]).forEach(function(e){
         var a=innerPos[slug+"\t"+e.source], c=innerPos[slug+"\t"+e.target];
-        if(a&&c) line(a,c,"xedge intra",false);
+        var hc=(hot[slug+"\t"+e.source]||hot[slug+"\t"+e.target])?STG:null;
+        if(a&&c) line(a,c,"xedge intra",false,hc);
       });
     });
-    // 3) cross-entity piece edges
+    // 3) cross-entity piece edges — hot when either endpoint piece was touched
     ((SIM.cross_edges)||[]).forEach(function(e){
       var a=innerPos[e.from_slug+"\t"+e.from] || nodePos[e.from_slug];
       var c=innerPos[e.to_slug+"\t"+e.to]   || nodePos[e.to_slug];
-      if(a&&c) crossPaths.push(line(a,c,"xedge cross",true));
+      var hc=(hot[e.from_slug+"\t"+e.from]||hot[e.to_slug+"\t"+e.to])?STG:null;
+      if(a&&c) crossPaths.push(line(a,c,"xedge cross",true,hc));
     });
     // 4) inner piece-circles — each flies out from its entity's centre
     slugs.forEach(function(slug){
@@ -1165,7 +1186,14 @@ svg#graph{ display:block; width:100%; height:100%; }
     // typed identifier chips in the detail panel (for the chip probe)
     idChips:        function(){ return document.querySelectorAll("#detail .idchip").length; },
     idRows:         function(){ return Array.prototype.map.call(document.querySelectorAll("#detail .idrow .idlbl"), function(l){ return l.textContent; }); },
-    tyChips:        function(){ return document.querySelectorAll("#detail .idchip.dt .ty[class*='ty-']").length; }
+    tyChips:        function(){ return document.querySelectorAll("#detail .idchip.dt .ty[class*='ty-']").length; },
+    // single-column check: is the label stacked ABOVE its chips (not beside)?
+    rowStacked:     function(){ var r=document.querySelector("#detail .idrow"); if(!r) return null;
+      var l=r.querySelector(".idlbl"), c=r.querySelector(".idchips"); if(!l||!c) return null;
+      return l.getBoundingClientRect().bottom <= c.getBoundingClientRect().top + 1; },
+    // stage-coloured touched flows in the diagram
+    hotEdges:       function(){ return vp.querySelectorAll("#expansion .xedge.hot").length; },
+    hotColor:       function(){ var e=vp.querySelector("#expansion .xedge.hot"); return e?e.style.stroke:""; }
   };
 
   // ── compact change note in the header + control wiring ──────────────
