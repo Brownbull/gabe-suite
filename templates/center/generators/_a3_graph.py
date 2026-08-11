@@ -11,9 +11,11 @@ Why library-neutral: the render step is a lab of alternatives (zero-lib SVG,
 force-directed, a vendored graph lib). The canonical form is therefore raw
 ``nodes`` + ``edges`` (``id`` / ``source`` / ``target`` / ``kind`` / ``weight``)
 that ANY renderer can adapt with a thin shim. A deterministic build-time layout
-pass ALSO stamps ``x``/``y`` (a ring for L1, columns-by-kind for L2) so the
-no-runtime-layout path needs no graph library under strict-CSP / file://;
-renderers that lay themselves out simply ignore the stamped coordinates.
+pass ALSO stamps ``x``/``y`` (a ring for L1, columns-by-kind for L2) AND ``fx``/``fy``
+(the Flare flow layout — a foundations-left→dependents-right dependency gradient over
+the FK DAG), so the no-runtime-layout path needs no graph library under strict-CSP /
+file:// and can offer 'Ring | Flow' by reading a field; renderers that lay themselves
+out simply ignore the stamped coordinates.
 
 What the edges MEAN (slice 1 — the archmap-only arm):
   * L1 CROSS-entity edges come from foreign keys: a model FK ``"table.col"`` →
@@ -58,6 +60,8 @@ _UNCLAIMED = "__unclaimed__"   # the coverage-loss bucket; namespaced vs real sl
 # --- layout constants (a deterministic build-time pass; renderers may ignore) ---
 _L1_R = 300.0        # ring radius for the entity ring
 _L1_UNCLAIMED = (0.0, 0.0)   # the unclaimed bucket sits at the ring's centre
+_L1_FLOW_COL_W = 210.0   # column stride for the flow (dependency-gradient) layout
+_L1_FLOW_ROW_H = 118.0   # row stride within a flow column
 _L2_COL_W = 240.0    # column stride for the columns-by-kind L2 layout
 _L2_ROW_H = 64.0     # row stride within a column
 _L2_KINDS = ("endpoint", "model", "schema", "external")  # column order, left→right
@@ -260,6 +264,72 @@ def _stamp_l1(nodes: list[dict]) -> None:
             node["x"], node["y"] = _L1_UNCLAIMED
 
 
+def _stamp_l1_flow(nodes: list[dict], edges: list[dict]) -> int:
+    """Flow (dependency-gradient) layout — the Flare ``flowLayout`` port.
+
+    Longest-path depth over the FK DAG puts FOUNDATIONS (depended-upon by many,
+    depending on nothing) at the LEFT and ENTRY POINTS (long dependency chains) at
+    the RIGHT. Our FK edges are already source→target = dependent→depended-upon, so
+    ``depth(u) = max over out-neighbours v of (1 + depth(v))`` needs NO inversion:
+    a sink (no outbound FK) is depth 0 (left), a model that FKs into two layers is
+    depth 2 (right). Cycle-safe via an on-stack guard (a back-edge contributes 0,
+    never recurses) — no Tarjan pass needed for the acyclic-in-practice FK graph.
+
+    ADDITIVE: bakes ``fx``/``fy`` on every entity node ALONGSIDE the ring ``x``/``y``
+    (never replaces them), so a renderer offers 'Ring | Flow' by reading a field, not
+    by recomputing under strict-CSP. Deterministic: columns sorted by (depth, id),
+    y centred per column, rounded to 2 dp. Returns the column count for stats.
+
+    The unclaimed bucket is excluded from the DAG (it has no outbound FK and is a
+    coverage artefact, not a domain layer) and pinned at the flow origin like the
+    ring centre — an FK INTO it is skipped, exactly as the ring ignores it."""
+    ents = [n for n in nodes if n["kind"] == "entity"]
+    ids = [n["id"] for n in ents]
+    has = set(ids)
+    out: dict[str, list[str]] = {i: [] for i in ids}
+    for e in edges:
+        s, t = e["source"], e["target"]
+        if s in has and t in has and s != t:
+            out[s].append(t)
+
+    depth: dict[str, int] = {}
+    onstack: set[str] = set()
+
+    def dep(u: str) -> int:
+        if u in depth:
+            return depth[u]
+        if u in onstack:               # back-edge: contributes 0, never recurses
+            return 0
+        onstack.add(u)
+        d = 0
+        for v in out[u]:
+            d = max(d, 1 + dep(v))
+        onstack.discard(u)
+        depth[u] = d
+        return d
+
+    for i in ids:
+        dep(i)
+
+    cols: dict[int, list[str]] = {}
+    for i in ids:
+        cols.setdefault(depth[i], []).append(i)
+    pos: dict[str, tuple[float, float]] = {}
+    for dk in sorted(cols):
+        col = sorted(cols[dk])
+        for j, nid in enumerate(col):
+            x = dk * _L1_FLOW_COL_W
+            y = (j - (len(col) - 1) / 2.0) * _L1_FLOW_ROW_H
+            pos[nid] = (round(x, 2), round(y, 2))
+
+    for n in ents:
+        n["fx"], n["fy"] = pos[n["id"]]
+    for n in nodes:
+        if n["kind"] == "unclaimed":
+            n["fx"], n["fy"] = _L1_UNCLAIMED
+    return (max(cols) + 1) if cols else 0
+
+
 def _stamp_l2(l2: dict[str, list[dict]]) -> None:
     """Columns-by-kind: endpoints | models | schemas | external, each column
     sorted, row y by index. Deterministic + rounded ⇒ stable."""
@@ -284,6 +354,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
 
     l1_nodes, l1_edges, unresolved = _l1(entities, labels, status)
     _stamp_l1(l1_nodes)
+    flow_cols = _stamp_l1_flow(l1_nodes, l1_edges)   # additive fx/fy (deps gradient)
 
     tbl2slug = _index_tables(entities)
     l2: dict[str, dict] = {}
@@ -300,12 +371,15 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         "head": amap.get("head"),
         "l1": {"nodes": l1_nodes, "edges": l1_edges},
         "l2": l2,
-        "layout": {"l1": {"kind": "ring", "cx": 0.0, "cy": 0.0, "r": _L1_R},
+        "layout": {"l1": {"kind": "ring", "cx": 0.0, "cy": 0.0, "r": _L1_R,
+                          "flow": {"col_w": _L1_FLOW_COL_W, "row_h": _L1_FLOW_ROW_H,
+                                   "cols": flow_cols}},
                    "l2": {"kind": "columns", "col_w": _L2_COL_W, "row_h": _L2_ROW_H,
                           "order": list(_L2_KINDS)}},
         "stats": {
             "entities": sum(1 for n in l1_nodes if n["kind"] == "entity"),
             "l1_edges": len(l1_edges),
+            "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
             "unresolved_tables": unresolved,
         },

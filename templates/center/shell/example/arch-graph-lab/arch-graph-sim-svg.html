@@ -418,7 +418,12 @@ svg#graph{ display:block; width:100%; height:100%; }
     return p2;
   }
   function computeL1Positions(){
-    if(l1layout==="flow")  return flowLayout(L1, L1E);
+    if(l1layout==="flow"){
+      // prefer the deps-gradient BAKED by _a3_graph.py (fx/fy); the JS flowLayout
+      // stays as a fallback for older data that predates the baked field.
+      if(L1.length && L1[0].fx!=null){ var pf={}; L1.forEach(function(n){ pf[n.id]={x:n.fx,y:n.fy}; }); return pf; }
+      return flowLayout(L1, L1E);
+    }
     if(l1layout==="force") return forceLayout(L1, L1E, {R:210, rest:170});
     var p={}; L1.forEach(function(n){ p[n.id]={x:n.x,y:n.y}; }); return p;   // ring (stamped)
   }

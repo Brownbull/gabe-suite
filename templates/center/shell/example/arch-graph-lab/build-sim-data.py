@@ -27,13 +27,22 @@ Run:  python3 build-sim-data.py         (rewrites ./sim.data.js in place)
 from __future__ import annotations
 
 import json
+import os
 import re
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 SIM_JS = HERE / "sim.data.js"
-GUSTIFY = Path("/home/khujta/projects/apps/gustify")
+# The twin checkout whose archmap + junit digests seed this example. Passed in —
+# NEVER hardcoded (portability invariant P6: no operator-machine path in a shipped
+# surface). Usage:  python3 build-sim-data.py <twin-repo>   or   GABE_TWIN_REPO=… …
+_TWIN = (sys.argv[1] if len(sys.argv) > 1 else os.environ.get("GABE_TWIN_REPO", "")).strip()
+if not _TWIN:
+    sys.exit("usage: build-sim-data.py <twin-repo-path>   (or set GABE_TWIN_REPO)\n"
+             "  a gustify checkout — its docs/site/center/archmap.json + tests/results/"
+             "*-junit.xml.digest.json seed the change-simulation example.")
+GUSTIFY = Path(_TWIN).expanduser()
 ARCHMAP = GUSTIFY / "docs/site/center/archmap.json"
 COMMIT = "fecb2ce3"
 

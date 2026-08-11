@@ -135,6 +135,26 @@ check(all("x" in n and "y" in n for n in g["l1"]["nodes"]),
       "L1 nodes carry stamped x/y")
 check(all("x" in n and "y" in n for n in a2["nodes"]), "L2 nodes carry stamped x/y")
 
+# ── FLOW LAYOUT: fx/fy stamped; the deps gradient (dependent RIGHT of its sink) ─
+check(all("fx" in n and "fy" in n for n in g["l1"]["nodes"]),
+      "L1 nodes carry flow fx/fy alongside ring x/y (additive)")
+check(l1n["alpha"]["fx"] > l1n["beta"]["fx"] and l1n["gamma"]["fx"] == l1n["beta"]["fx"],
+      "flow: a dependent (alpha→beta) sits RIGHT of its sink; sinks share a column")
+check(l1n[G._UNCLAIMED]["fx"] == 0.0 and l1n[G._UNCLAIMED]["fy"] == 0.0,
+      "flow: the unclaimed bucket pins at the origin (excluded from the DAG)")
+check(g["layout"]["l1"]["flow"]["col_w"] == 210.0 and g["stats"]["l1_flow_cols"] == 2,
+      "flow layout metadata + column count advertised (alpha depth 1 ⇒ 2 cols)")
+
+# ── FLOW CYCLE SAFETY: a FK cycle must not infinite-loop; both get finite fx ──
+cyc = G.build_c4_graph({"head": "cyc", "entities": {
+    "p": {"files": [], "models": [{"cls": "P", "table": "p", "fks": {"q": "q.id"}}],
+          "schemas": [], "endpoints": []},
+    "q": {"files": [], "models": [{"cls": "Q", "table": "q", "fks": {"p": "p.id"}}],
+          "schemas": [], "endpoints": []}}}, labels={}, status={})
+cn = {n["id"]: n for n in cyc["l1"]["nodes"]}
+check(all(isinstance(cn[s]["fx"], (int, float)) for s in ("p", "q")),
+      "flow is cycle-safe: a p↔q FK cycle yields finite fx (on-stack guard)")
+
 # ── DETERMINISM: same inputs ⇒ byte-identical; keyed on head not wallclock ──
 g2 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
 check(json.dumps(g, sort_keys=True) == json.dumps(g2, sort_keys=True),
@@ -185,6 +205,10 @@ check(bg["stats"]["entities"] == 6 and bg["stats"]["l1_edges"] == 5
       and all((f"ent{i}", "ent0") in {(e["source"], e["target"]) for e in bg["l1"]["edges"]}
               for i in range(1, 6)),
       "a realistic multi-entity archmap derives the expected star into ent0")
+bg_l1n = {n["id"]: n for n in bg["l1"]["nodes"]}
+check(all(bg_l1n[f"ent{i}"]["fx"] > bg_l1n["ent0"]["fx"] for i in range(1, 6))
+      and len({bg_l1n[f"ent{i}"]["fx"] for i in range(1, 6)}) == 1,
+      "flow: the star's dependents (ent1..5) share one column RIGHT of the ent0 sink")
 
 # ── emit writes both artifacts as utf-8 (non-ASCII label round-trips) ───────
 d = pathlib.Path(tempfile.mkdtemp())
