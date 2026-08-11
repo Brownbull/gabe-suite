@@ -1,484 +1,609 @@
-<title>Arch Graph Lab — Cytoscape.js</title>
+<title>Change Simulation — Cytoscape.js</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <style>
-  :root{ --bg:#f7f8fa; --panel:#ffffff; --ink:#1c2024; --muted:#6b7280;
-         --line:#e3e6ea; --edge:#9aa3ad; --accent:#0d6e78; }
-  @media (prefers-color-scheme:dark){ :root{ --bg:#0f1216; --panel:#171b21;
-         --ink:#e6e9ee; --muted:#8a929c; --line:#262c34; --edge:#4a525c; } }
-  *{ box-sizing:border-box; }
-  html,body{ height:100%; }
-  body{ background:var(--bg); color:var(--ink); margin:0;
-        font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
-        display:flex; flex-direction:column; overflow:hidden; }
+:root{ --bg:#f7f8fa; --panel:#ffffff; --ink:#1c2024; --muted:#6b7280;
+       --line:#e3e6ea; --edge:#9aa3ad; --accent:#0d6e78;
+       --touch:#1f8a53; --touch-bg:#e9f6ee; --blast:#d9821f; --blast-bg:#fbf1e0; }
+@media (prefers-color-scheme:dark){ :root{ --bg:#0f1216; --panel:#171b21;
+       --ink:#e6e9ee; --muted:#8a929c; --line:#262c34; --edge:#4a525c;
+       --touch:#4cbe83; --touch-bg:#12271c; --blast:#e0a24a; --blast-bg:#271f12; } }
+*{ box-sizing:border-box; }
+body{ background:var(--bg); color:var(--ink); margin:0;
+      font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+.center{ flex:1; min-height:0; display:flex; flex-direction:row; overflow:hidden; }
+.side{ width:25%; min-width:280px; max-width:440px; border-left:1px solid var(--line);
+       background:var(--panel); overflow:auto; flex:none; }
+.hchange{ font-weight:400; font-size:12px; color:var(--muted); margin-left:8px; }
+header{ padding:14px 20px 12px; border-bottom:1px solid var(--line); background:var(--panel); }
+header h1{ margin:0; font-size:16px; font-weight:650; letter-spacing:-.01em; }
+header h1 .tag{ font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.06em;
+  color:var(--accent); border:1px solid var(--accent); border-radius:4px; padding:1px 6px; margin-left:8px; vertical-align:2px; }
+.toolbar{ display:flex; align-items:center; gap:10px; padding:9px 20px;
+          border-bottom:1px solid var(--line); background:var(--panel); min-height:46px; }
+button{ font:inherit; font-size:12.5px; color:var(--ink); background:var(--panel);
+        border:1px solid var(--line); border-radius:7px; padding:5px 11px; cursor:pointer; }
+button:hover{ border-color:var(--edge); }
+.spacer{ flex:1; }
+.selinfo{ font-size:12px; color:var(--muted); }
+.selinfo b{ color:var(--ink); }
+.seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+.seg button{ border:0; border-radius:0; padding:5px 13px; font-weight:600; color:var(--muted); }
+.seg button + button{ border-left:1px solid var(--line); }
+#stageSeg button[data-stage="red"].on{ background:#e5484d; color:#fff; }
+#stageSeg button[data-stage="execute"].on{ background:#4c9aff; color:#fff; }
+#stageSeg button[data-stage="review"].on{ background:#30a46c; color:#fff; }
+#stageSeg button[data-stage="commit"].on{ background:#8e4ec6; color:#fff; }
+.stage{ flex:1; min-width:0; position:relative; overflow:hidden; }
+#cy{ position:absolute; inset:0; background:var(--panel); }
+.hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--muted);
+       background:var(--panel); border:1px solid var(--line); border-radius:6px;
+       padding:3px 8px; pointer-events:none; opacity:.9; z-index:4; }
 
-  header{ padding:12px 18px 10px; border-bottom:1px solid var(--line);
-          background:var(--panel); flex:0 0 auto; }
-  h1{ font-size:16px; margin:0 0 2px; letter-spacing:.2px; }
-  h1 .tag{ font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.8px;
-           color:var(--accent); border:1px solid var(--accent); border-radius:4px;
-           padding:1px 6px; margin-left:8px; vertical-align:2px; }
-  .sub{ font-size:12px; color:var(--muted); margin:0; }
-  .sub b{ color:var(--ink); font-weight:600; }
-
-  .toolbar{ display:flex; align-items:center; gap:14px; flex-wrap:wrap;
-            padding:8px 18px; border-bottom:1px solid var(--line);
-            background:var(--panel); flex:0 0 auto; }
-  .toolbar label{ font-size:12px; color:var(--muted); }
-  select, button{ font:inherit; font-size:12px; color:var(--ink);
-          background:var(--bg); border:1px solid var(--line); border-radius:6px;
-          padding:5px 9px; cursor:pointer; }
-  select:hover, button:hover{ border-color:var(--edge); }
-  button.primary{ background:var(--accent); color:#fff; border-color:var(--accent); }
-  button:disabled{ opacity:.4; cursor:default; }
-  .crumb{ font-size:12px; color:var(--muted); }
-  .crumb b{ color:var(--ink); }
-  .grow{ flex:1 1 auto; }
-  .count{ font-size:12px; color:var(--muted); }
-  .count b{ color:var(--ink); font-size:14px; }
-
-  .stage{ position:relative; flex:1 1 auto; min-height:0; }
-  #cy{ position:absolute; inset:0; background:var(--panel); }
-
-  .legend{ position:absolute; left:12px; bottom:12px; z-index:5;
-           background:var(--panel); border:1px solid var(--line); border-radius:8px;
-           padding:9px 11px; font-size:11px; box-shadow:0 2px 10px rgba(0,0,0,.08);
-           max-width:230px; }
-  .legend .lh{ font-size:10px; text-transform:uppercase; letter-spacing:.6px;
-               color:var(--muted); margin:0 0 5px; }
-  .legend .row{ display:flex; align-items:center; gap:7px; margin:3px 0; }
-  .sw{ width:13px; height:13px; border-radius:3px; flex:0 0 auto;
-       border:1px solid rgba(0,0,0,.15); }
-  .sw.dot{ border-radius:50%; }
-  .sw.dia{ border-radius:2px; transform:rotate(45deg) scale(.82); }
-  .sw.line{ height:0; border:0; border-top:3px solid var(--edge); width:16px; border-radius:0; }
-  .sw.line.fk{ border-top-color:#e06c4f; }
-  .sw.line.dash{ border-top-style:dashed; }
-  .legend .lbl{ color:var(--ink); }
-  .legend .hint{ color:var(--muted); margin-top:6px; font-size:10px;
-                 border-top:1px solid var(--line); padding-top:6px; }
-
-  #tip{ position:absolute; z-index:9; pointer-events:none; display:none;
-        background:var(--panel); border:1px solid var(--line); border-radius:8px;
-        padding:8px 10px; font-size:12px; box-shadow:0 4px 16px rgba(0,0,0,.16);
-        max-width:280px; }
-  #tip .tt{ font-weight:600; margin-bottom:3px; word-break:break-word; }
-  #tip .tk{ font-size:10px; text-transform:uppercase; letter-spacing:.5px; color:var(--muted); }
-  #tip .grid{ display:grid; grid-template-columns:auto auto; gap:1px 12px; margin-top:5px; }
-  #tip .grid span{ color:var(--muted); }
-  #tip .grid b{ color:var(--ink); text-align:right; }
+/* ── detail panel (identical language to the SVG sim + the command center) ── */
+.detail{ padding:16px 18px; font-size:13px; }
+.detail .empty{ color:var(--muted); font-size:12.5px; padding-top:6px; }
+.detail .phdr{ font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.detail h4{ margin:0 0 2px; font-size:16px; }
+.detail .kind{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:11px; }
+.detail .ex{ color:#b46a12; font-weight:700; text-transform:none; letter-spacing:0; }
+.detail .row{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-top:1px solid var(--line); }
+.detail .row .k{ color:var(--muted); } .detail .row .v{ font-weight:600; text-align:right; }
+.detail .sum{ margin-top:11px; color:var(--ink); opacity:.85; line-height:1.55; }
+.detail .pillrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 10px; }
+.detail .pill{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; padding:3px 9px; border-radius:999px; }
+.detail .file{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; color:var(--muted); }
+.detail .case{ font-size:11px; font-weight:700; color:#4c9aff; border:1px solid #4c9aff55; border-radius:5px; padding:1px 6px; }
+.detail .bar{ display:flex; height:7px; border-radius:4px; overflow:hidden; background:var(--line); margin:4px 0 3px; }
+.detail .bar i{ display:block; height:100%; }
+.detail .delta{ font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; margin-bottom:4px; }
+.detail .b{ margin:11px 0; }
+.detail .b .l{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.detail .b .t{ font-size:13.5px; color:var(--ink); margin-top:2px; line-height:1.4; }
+.detail .headline{ padding:8px 11px; border-radius:0 6px 6px 0; margin-top:3px; font-size:13px; color:var(--ink); line-height:1.5; }
+.detail .muted{ color:var(--muted); }
+.detail .headline .delta{ margin-top:5px; }
+/* lifecycle timeline */
+.detail .lifecycle{ margin:11px 0 14px; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
+.detail .lc-row{ display:flex; align-items:center; gap:8px; padding:6px 10px; cursor:pointer;
+  border-top:1px solid var(--line); font-size:11.5px; color:var(--muted); line-height:1.3; }
+.detail .lc-row:first-child{ border-top:0; }
+.detail .lc-row:hover{ background:var(--line); }
+.detail .lc-row .lc-dot{ width:9px; height:9px; border-radius:50%; flex:none; }
+.detail .lc-row .lc-name{ font-weight:700; color:var(--ink); width:56px; flex:none; }
+.detail .lc-row.active .lc-sum{ color:var(--ink); font-weight:600; }
+.detail .lc-row .lc-sum{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+/* typed identifier chips */
+.detail .idsec{ margin:12px 0 4px; }
+.detail .idrow{ display:block; padding:8px 0 6px; border-top:1px solid var(--line); }
+.detail .idrow:first-child{ border-top:0; }
+.detail .idlbl{ font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.detail .idchips{ display:flex; flex-wrap:wrap; gap:5px; }
+.idchip{ display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:11px; font-size:11.5px; line-height:1.55; max-width:100%; }
+.idchip svg{ flex:none; }
+.idchip b{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.idchip .mth{ font-weight:800; font-size:10px; letter-spacing:.03em; }
+.idchip.dt{ background:var(--line); color:var(--muted); }
+.idchip.dt b{ color:var(--ink); font-weight:600; }
+.idchip.dt .ty{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
+.idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; padding:2px 8px; }
+.ty-num1{color:#7089c4} .ty-num2{color:#1d4ed8}
+.ty-tim1{color:#c08a4a} .ty-tim2{color:#9a4b06}
+.ty-str1{color:#4f9a86} .ty-str2{color:#0b6a55}
+.ty-bool{color:#b83280} .ty-json{color:#7c6bb8} .ty-id{color:#78849a}
+@media (prefers-color-scheme:dark){
+  .ty-num1{color:#9db4ee} .ty-num2{color:#6c8cff}
+  .ty-tim1{color:#e3b579} .ty-tim2{color:#f0913c}
+  .ty-str1{color:#84c9b6} .ty-str2{color:#3fd6ac}
+  .ty-bool{color:#f472b6} .ty-json{color:#b4a8f0} .ty-id{color:#8391a5}
+}
+/* per-stage node-encoding legend (lower-left) */
+#stagelegend{ position:absolute; bottom:12px; left:14px; font-size:11px; color:var(--muted); z-index:4;
+  background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.10); max-width:250px; pointer-events:none; }
+#stagelegend .lh{ font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  margin-bottom:7px; display:flex; align-items:center; gap:6px; color:var(--ink); }
+#stagelegend .lh i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
+#stagelegend .li{ display:flex; align-items:center; gap:8px; padding:2px 0; line-height:1.32; }
+#stagelegend .li svg{ flex:none; }
+#stagelegend .li b{ color:var(--ink); font-weight:600; }
 </style>
 
 <header>
-  <h1>Codebase Architecture Graph <span class="tag">Cytoscape.js</span></h1>
-  <p class="sub"><b>EXAMPLE</b> — rendered over real gustify data, not live.
-     Approach: <b>Cytoscape.js (vendored)</b> · Integration cost:
-     <b>HIGH</b> — ~365&nbsp;KB <code>cytoscape.min.js</code> inlined as a sibling, plus a cy
-     stylesheet + event layer.</p>
+  <h1>Change Simulation <span class="tag">Cytoscape.js</span> <span class="hchange" id="hchange"></span></h1>
 </header>
 
 <div class="toolbar">
-  <label for="lay">Layout</label>
-  <select id="lay">
-    <option value="cose">cose (force)</option>
-    <option value="concentric">concentric (by degree)</option>
-    <option value="breadthfirst">breadthfirst</option>
-    <option value="grid">grid</option>
-    <option value="circle">circle</option>
-  </select>
-  <button id="back" disabled>&larr; Back to L1</button>
-  <button id="fit">Fit</button>
-  <span class="crumb" id="crumb">Level 1 · entity map</span>
-  <span class="grow"></span>
-  <span class="count" id="count"><b>7</b> entities</span>
+  <button id="openAll">Open all</button>
+  <div class="selinfo" id="selInfo"></div>
+  <div class="spacer"></div>
+  <div class="seg" id="stageSeg">
+    <button data-stage="red">Red</button>
+    <button data-stage="execute" class="on">Execute</button>
+    <button data-stage="review">Review</button>
+    <button data-stage="commit">Commit</button>
+  </div>
+  <button id="forceBtn">Force layout</button>
+  <button id="fitBtn">Fit</button>
 </div>
 
-<div class="stage">
-  <div id="cy"></div>
-  <div class="legend" id="legend"></div>
-  <div id="tip"></div>
+<div class="center">
+  <div class="stage" id="stage">
+    <div id="cy"></div>
+    <div id="stagelegend"></div>
+    <div class="hint" id="hint">click an entity to open · double-click to collapse · click a piece for its lifecycle · scroll = zoom · drag = pan</div>
+  </div>
+  <aside class="side" id="side">
+    <div id="detail" class="detail"><div class="empty">Click an entity or a piece for details.</div></div>
+  </aside>
 </div>
 
 <script src="./cytoscape.min.js"></script>
 <script src="./c4-graph.data.js"></script>
+<script src="./sim.data.js"></script>
 <script>
 (function(){
   "use strict";
-  var GC = window.GABE_C4;
-  var COL = window.GABE_C4_COLORS || {};
-  var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
+  var DATA = window.GABE_C4, COLORS = window.GABE_C4_COLORS || {}, SIM = window.GABE_SIM || null;
+  var L1 = DATA.l1.nodes, L1E = DATA.l1.edges;
+  var STAGE_COLOR = { red:"#e5484d", execute:"#4c9aff", review:"#30a46c", commit:"#8e4ec6" };
+  var KIND_COLOR  = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
+  var TOUCH_HEX = "#2ba55d", BLAST_HEX = "#dd9030";   // role outline (cytoscape needs hex, not var())
+  var curStage = "execute", selPiece = null, expanded = {};
+  var TOUCH = {}, BLAST = {}, INVOLVED = {}, byslug = {}, nodeMeta = {};
+  L1.forEach(function(n){ byslug[n.slug]=n; nodeMeta[n.slug]={ node:n }; });
+  if(SIM){ SIM.touched.forEach(function(s){ TOUCH[s]=1; INVOLVED[s]=1; });
+           SIM.blast.forEach(function(s){ BLAST[s]=1; INVOLVED[s]=1; }); }
 
-  // ---- state -------------------------------------------------------------
-  var cy = null;
-  var currentView = "l1";
-  var drilledSlug = null;
-  var currentLayout = "cose";
-  var savedL1Layout = "cose";
-  var ready = false;
+  function trunc(s,n){ s=String(s); return s.length>n ? s.slice(0,n-1)+"…" : s; }
+  function pieceObj(slug,pid){ return ((SIM.pieces&&SIM.pieces[slug])||[]).filter(function(x){ return x.id===pid; })[0]; }
 
-  var L1_SLUGS = GC.l1.nodes.filter(function(n){ return n.kind === "entity"; })
-                            .map(function(n){ return n.slug; });
-  var L1_NODE_COUNT = L1_SLUGS.length;
-  var L1_EDGE_COUNT = GC.l1.edges.length;
-
-  var container = document.getElementById("cy");
-  var tip = document.getElementById("tip");
-  var legendEl = document.getElementById("legend");
-  var crumbEl = document.getElementById("crumb");
-  var countEl = document.getElementById("count");
-  var backBtn = document.getElementById("back");
-  var laySel  = document.getElementById("lay");
-
-  // ---- theme -------------------------------------------------------------
-  var mq = window.matchMedia("(prefers-color-scheme: dark)");
-  function isDark(){
-    var t = document.documentElement.getAttribute("data-theme");
-    if (t === "dark") return true;
-    if (t === "light") return false;
-    return mq.matches;
+  // ══════════════════════════════════════════════════════════════════════
+  //  PANEL MACHINERY — copied from arch-graph-sim-svg.html (renderer-agnostic
+  //  HTML builders). DRY note: at slice-2-real, when the winning renderer is
+  //  picked, extract this into a shared sim-panel.js both pages load.
+  // ══════════════════════════════════════════════════════════════════════
+  function stageEnc(slug, p){
+    var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
+    var e={ r:11, hollow:true, ring:false, badge:"", color:STAGE_COLOR[curStage] };
+    if(curStage==="execute"){ if(d.changed){ e.hollow=false; e.r=11+Math.sqrt(d.add||0)*3.4; if(d.add) e.badge="+"+d.add; } }
+    else if(curStage==="red"){ if(d.tested){ e.hollow=false; e.ring=true; if(d.cases&&d.cases.length) e.badge=String(d.cases.length); } }
+    else if(curStage==="review"){ if(d.touched_again){ e.hollow=false; e.ring=true; } }
+    else if(curStage==="commit"){ if(p.role==="changed") e.hollow=false; }
+    return e;
   }
-
-  // ---- scaling -----------------------------------------------------------
-  var linesArr = GC.l1.nodes.map(function(n){ return (n.counts && n.counts.lines) || 0; });
-  var minLines = Math.min.apply(null, linesArr), maxLines = Math.max.apply(null, linesArr);
-  function entityDiam(v){
-    var a = Math.sqrt(Math.max(v,1)), lo = Math.sqrt(Math.max(minLines,1)), hi = Math.sqrt(Math.max(maxLines,1));
-    var t = hi > lo ? (a - lo) / (hi - lo) : 0.5;
-    return Math.round(36 + t * (94 - 36));
+  var STAGE_HEAD = { red:"what we made fail", execute:"what we changed", review:"what we found", commit:"what shipped" };
+  function pill(t,c){ return "<span class='pill' style='background:"+(c||STAGE_COLOR[curStage])+"'>"+t+"</span>"; }
+  function dblock(l,t){ return "<div class='b'><div class='l'>"+l+"</div><div class='t'>"+t+"</div></div>"; }
+  function headline(label,text,color){
+    return "<div class='b'><div class='l' style='color:"+color+"'>"+label+"</div>"
+      + "<div class='headline' style='background:"+color+"18;border-left:3px solid "+color+"'>"+text+"</div></div>";
   }
-  function edgeWpx(w){
-    var t = Math.min(Math.max((w - 1) / 9, 0), 1);
-    return +(1.5 + t * (7 - 1.5)).toFixed(2);
-  }
+  function bar(add,del){ var tot=(add||0)+(del||0)||1, g=Math.round(100*(add||0)/tot);
+    return "<div class='bar'><i style='width:"+g+"%;background:#2f9e63'></i><i style='width:"+(100-g)+"%;background:#e5484d'></i></div>"
+      +"<div class='delta'>+"+(add||0)+" · −"+(del||0)+" lines</div>"; }
 
-  // ---- element builders --------------------------------------------------
-  function buildL1(){
-    var els = [];
-    GC.l1.nodes.forEach(function(n){
-      els.push({ data:{
-        id:n.id, label:n.label, slug:n.slug, kind:n.kind || "entity",
-        status:n.status,
-        diam: entityDiam((n.counts && n.counts.lines) || 0),
-        endpoints:(n.counts||{}).endpoints, models:(n.counts||{}).models,
-        schemas:(n.counts||{}).schemas, files:(n.counts||{}).files,
-        lines:(n.counts||{}).lines
-      }, position:{ x:n.x, y:n.y } });
+  var KIND_ICON = {
+    fn:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+    endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+    schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+    datatype:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>'
+  };
+  var KIND_CHIP = { fn:"#0f766e", endpoint:KIND_COLOR.endpoint, model:KIND_COLOR.model, schema:KIND_COLOR.schema };
+  var METHOD_COLOR = { GET:"#16794c", POST:"#4338ca", PUT:"#b45309", PATCH:"#b45309", DELETE:"#d1443c" };
+  var TYPE_CLS = { int:"num1",float:"num2",Decimal:"num2",Numeric:"num2",date:"tim1",time:"tim1",
+    datetime:"tim2",str:"str1",Text:"str2",bytes:"str2",bool:"bool",dict:"json",list:"json",
+    Any:"json",JSON:"json",Literal:"json",UUID:"id",uuid:"id" };
+  function icoSvg(path){ return '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" '
+    + 'stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+path+'</svg>'; }
+  function tyFamily(t){ var toks=String(t).split(/[^A-Za-z_]+/);
+    for(var i=0;i<toks.length;i++){ if(TYPE_CLS[toks[i]]) return TYPE_CLS[toks[i]]; } return null; }
+  function kindChip(kind,label){ var c=KIND_CHIP[kind]||"#868e96";
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f'>"+icoSvg(KIND_ICON[kind])+"<b>"+trunc(label,30)+"</b></span>"; }
+  function epChip(ep){ var mc=METHOD_COLOR[ep.m]||"#868e96", c=KIND_CHIP.endpoint;
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+ep.m+" "+ep.p+" → "+ep.fn+"()'>"
+      +icoSvg(KIND_ICON.endpoint)+"<span class='mth' style='color:"+mc+"'>"+ep.m+"</span><b>"+ep.p+"</b></span>"; }
+  function dtChip(d){ var fam=tyFamily(d.t);
+    return "<span class='idchip dt'>"+icoSvg(KIND_ICON.datatype)+"<b>"+d.n+"</b><span class='ty"+(fam?" ty-"+fam:"")+"'>"+d.t+"</span></span>"; }
+  var TEST_ICON = {
+    unit:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+    integration:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    journey:'<circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/>',
+    web:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'
+  };
+  var VERIFIED_ICON = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+  var STATE_COLOR = { pass:"#16794c", red:"#e5484d", fail:"#e5484d", skip:"#b45309" };
+  function testChip(t){ var c=STATE_COLOR[t.state]||"#868e96", ic=TEST_ICON[t.kind]||TEST_ICON.unit;
+    var mk=t.state==="pass"?"✓":(t.state==="red"?"✕":"·"), lab=t.cid==="web"?"e2e":t.cid;
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+(t.name||t.tfile)+" · "+(t.tfile||"")+" · "+t.state+"'>"
+      +icoSvg(ic)+"<b>"+lab+"</b><span class='mth' style='color:"+c+"'>"+t.state+" "+mk+"</span></span>"; }
+  function evChip(label, ev){ if(!ev) return "";
+    var ok=(ev.exit===0 && !ev.failed), c=ok?"#16794c":"#e5484d";
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+label+"-junit @ "+(ev.head||"?")+"'>"
+      +icoSvg(VERIFIED_ICON)+"<b>"+label+"</b><span class='mth' style='color:"+c+"'>"+ev.passed+" ✓"
+      +(ev.failed?" · "+ev.failed+" ✕":"")+(ev.skipped?" · "+ev.skipped+" skip":"")+"</span></span>"; }
+  function evidenceRow(){ var ev=SIM.evidence; if(!ev) return "";
+    var chips=Object.keys(ev).map(function(k){ return evChip(k, ev[k]); }).join("");
+    return chips ? idrow("Evidence", chips) : ""; }
+  function idrow(label,chips){ return chips ? "<div class='idrow'><div class='idlbl'>"+label
+    +"</div><div class='idchips'>"+chips+"</div></div>" : ""; }
+  function idSection(ids){
+    if(!ids) return ""; var h="";
+    if(ids.fn)        h+=idrow("Functions", ids.fn.map(function(f){ return kindChip("fn",f+"()"); }).join(""));
+    if(ids.endpoint)  h+=idrow("Endpoints", ids.endpoint.map(epChip).join(""));
+    if(ids.model)     h+=idrow("Models",    ids.model.map(function(m){ return kindChip("model",m); }).join(""));
+    if(ids.schema)    h+=idrow("Schemas",   ids.schema.map(function(s){ return kindChip("schema",s); }).join(""));
+    if(ids.datatype)  h+=idrow("Data types",ids.datatype.map(dtChip).join(""));
+    if(ids.test)      h+=idrow("Tests",     ids.test.map(testChip).join(""));
+    if(ids.structure) h+=idrow("Structures",ids.structure.map(function(s){ return "<span class='idchip st'>"+s+"</span>"; }).join(""));
+    return h ? "<div class='idsec'>"+h+"</div>" : "";
+  }
+  function aggregateIds(slug){
+    var sd=(SIM.stages&&SIM.stages[curStage])||{}, pieces=(SIM.pieces&&SIM.pieces[slug])||[];
+    var out={}, seen={fn:{},endpoint:{},model:{},schema:{},datatype:{},test:{},structure:{}};
+    pieces.forEach(function(p){ var ids=((sd.pieces&&sd.pieces[p.id])||{}).ids; if(!ids) return;
+      ["fn","endpoint","model","schema","datatype","test","structure"].forEach(function(k){
+        (ids[k]||[]).forEach(function(v){ var key=(k==="endpoint")?v.fn:(k==="datatype"?v.n:(k==="test"?v.cid+v.tfile:v));
+          if(seen[k][key]) return; seen[k][key]=1; (out[k]=out[k]||[]).push(v); }); });
     });
-    GC.l1.edges.forEach(function(e, i){
-      els.push({ data:{
-        id:"l1e_"+i, source:e.source, target:e.target,
-        kind:e.kind || "fk", weight:e.weight || 1, wpx: edgeWpx(e.weight || 1)
-      }});
+    return Object.keys(out).length?out:null;
+  }
+
+  function pieceStageLine(p, s){
+    var d=(((SIM.stages||{})[s]||{}).pieces||{})[p.id]||{};
+    if(s==="red")     return d.tested ? "red ✕ · "+(d.cases||[]).join(" ") : "no red test";
+    if(s==="execute") return d.changed ? "+"+(d.add||0)+" "+(d.what||"changed") : "not edited";
+    if(s==="review")  return d.touched_again ? "⚠ "+(d.risk||"")+" · "+trunc(d.why||"",42) : "clean";
+    if(s==="commit")  return p.role==="changed" ? "in commit ✓" : "not in commit";
+    return "";
+  }
+  function lifecycleStrip(p){
+    var order=["red","execute","review","commit"], nm={red:"Red",execute:"Execute",review:"Review",commit:"Commit"};
+    return "<div class='lifecycle'>" + order.map(function(s){
+      var c=STAGE_COLOR[s], on=(s===curStage);
+      return "<div class='lc-row"+(on?" active":"")+"' data-stage='"+s+"'"
+        +(on?" style='background:"+c+"14;border-left:3px solid "+c+"'":"")+">"
+        +"<span class='lc-dot' style='background:"+c+(on?"":";opacity:.4")+"'></span>"
+        +"<span class='lc-name'"+(on?" style='color:"+c+"'":"")+">"+nm[s]+"</span>"
+        +"<span class='lc-sum'>"+pieceStageLine(p,s)+"</span></div>";
+    }).join("") + "</div>";
+  }
+
+  function openDetail(slug, p){
+    var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
+    var dp=document.getElementById("detail"), sc=STAGE_COLOR[curStage];
+    var body="";
+    if(curStage==="execute"){
+      body = d.changed
+        ? "<div class='pillrow'>"+pill(d.action||"changed")+"<span class='file'>"+((d.file||"").split("/").pop())+"</span></div>"
+          + bar(d.add,d.del) + headline("what we changed", d.effect||d.what||"—", sc)
+          + idSection(d.ids) + (d.ids?"":dblock("added", d.what||"internal edits"))
+        : "<div class='pillrow'>"+pill("not changed","var(--muted)")+"</div>"
+          + dblock("relation","downstream via FK") + dblock("why it's here", d.summary||"referenced by the change");
+    } else if(curStage==="red"){
+      body = d.tested
+        ? "<div class='pillrow'>"+pill("red proved","#e5484d")+(d.cases||[]).map(function(c){return "<span class='case'>"+c+"</span>";}).join("")+"</div>"
+          + headline("what we made fail", d.red||"—", "#e5484d")
+          + (d.use_case?dblock("use case", d.use_case):"") + idSection(d.ids)
+          + dblock("covers", d.covers||"—") + dblock("guards against", d.guards||"—")
+          + (d.source?dblock("from", d.source):"")
+        : "<div class='pillrow'>"+pill("no test","var(--muted)")+"</div>"
+          + idSection(d.ids) + dblock("risk if it breaks", d.guards||"no red declared for this piece");
+    } else if(curStage==="review"){
+      var rc={low:"#2f9e63",medium:"#d9821f",high:"#e5484d",watch:"#4c9aff"}[d.risk]||sc;
+      body = "<div class='pillrow'>"+pill(d.touched_again?"finding":"clean")+pill("risk "+(d.risk||"—"),rc)+"</div>"
+        + headline("what we found", d.why||"—", sc) + idSection(d.ids)
+        + (d.impact?dblock("impact", d.impact):"") + (d.source?dblock("from", d.source):"");
+    } else if(curStage==="commit"){
+      var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      var eids=(((SIM.stages.execute||{}).pieces||{})[p.id]||{}).ids;
+      body = "<div class='pillrow'>"+pill(p.role==="changed"?"in commit":"not in commit", p.role==="changed"?sc:"var(--muted)")+"<span class='file'>"+(m.commit||"")+"</span></div>"
+        + headline("what shipped", m.subject||"—", sc) + "<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"
+        + idSection(eids) + "<div class='idsec'>"+evidenceRow()+"</div>" + dblock("cases", (m.cases||[]).join(", ")||"—");
+    }
+    var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
+    dp.innerHTML = "<div class='phdr'>"+curStage+ex+" · lifecycle</div><h4>"+p.label+"</h4>"
+      + "<div class='kind'>in "+(nodeMeta[slug].node.label||slug)+"</div>"
+      + lifecycleStrip(p) + body;
+    selectPiece(slug+"|"+p.id);
+    dp.querySelectorAll(".lc-row").forEach(function(row){
+      row.addEventListener("click", function(){
+        var s=row.getAttribute("data-stage"); if(s===curStage) return;
+        curStage=s; setStageButtons(); render(); openDetail(slug, p);
+      });
+    });
+  }
+
+  function openEntityDetail(slug){
+    var dp=document.getElementById("detail");
+    var n=byslug[slug]||{}, c=n.counts||{};
+    var roleCol = TOUCH[slug]?"var(--touch)":(BLAST[slug]?"var(--blast)":"var(--muted)");
+    var role = TOUCH[slug]?"touched by this change":(BLAST[slug]?"downstream · blast radius":"not involved");
+    var pieces=(SIM.pieces&&SIM.pieces[slug])||[], sd=(SIM.stages&&SIM.stages[curStage])||{}, sc=STAGE_COLOR[curStage];
+    function rowk(k,v){ return "<div class='row'><span class='k'>"+k+"</span><span class='v'>"+v+"</span></div>"; }
+    var lines=[];
+    pieces.forEach(function(p){
+      var d=(sd.pieces&&sd.pieces[p.id])||{};
+      if(curStage==="red" && d.tested) lines.push("<b>"+p.label+"</b> — "+(d.red||d.covers||""));
+      else if(curStage==="execute" && d.changed) lines.push("<b>"+p.label+"</b> +"+d.add+" · "+(d.what||""));
+      else if(curStage==="review" && d.touched_again) lines.push("<b>"+p.label+"</b> — "+(d.why||"")+" ("+(d.risk||"")+")");
+      else if(curStage==="commit" && p.role==="changed") lines.push("<b>"+p.label+"</b>");
+    });
+    var headText;
+    if(curStage==="commit"){ var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      headText=(m.subject||"")+"<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"; }
+    else headText = lines.length ? lines.join("<br>") : "<span class='muted'>nothing in this entity for the "+curStage+" stage</span>";
+    var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
+    dp.innerHTML = "<div class='phdr'>entity · "+curStage+ex+"</div>"
+      + "<h4 style='color:"+roleCol+"'>"+(n.label||slug)+"</h4><div class='kind'>"+role+"</div>"
+      + rowk("endpoints",c.endpoints||0)+rowk("models",c.models||0)+rowk("schemas",c.schemas||0)+rowk("files",c.files||0)+rowk("lines",(c.lines||0).toLocaleString())
+      + headline(STAGE_HEAD[curStage], headText, sc)
+      + (function(){ var ag=aggregateIds(slug); return ag?idSection(ag):""; })()
+      + (curStage==="commit" ? "<div class='idsec'>"+evidenceRow()+"</div>" : "")
+      + "<div class='sum'>double-click to collapse · click a piece for its lifecycle</div>";
+    selectPiece(null);
+  }
+  function stageSummary(){
+    var dp=document.getElementById("detail"), sd=(SIM.stages&&SIM.stages[curStage])||{}, sc=STAGE_COLOR[curStage];
+    var lines=[], nn=0;
+    SIM.touched.concat(SIM.blast).forEach(function(slug){
+      var ent=(byslug[slug]||{}).label||slug;
+      ((SIM.pieces&&SIM.pieces[slug])||[]).forEach(function(p){
+        var d=(sd.pieces&&sd.pieces[p.id])||{};
+        if(curStage==="red" && d.tested){ nn++; lines.push("<b>"+p.label+"</b> — "+(d.red||d.covers||"")+" <span class='muted'>· "+ent+"</span>"); }
+        else if(curStage==="execute" && d.changed){ nn++; lines.push("<b>"+p.label+"</b> +"+d.add+" · "+(d.what||"")+" <span class='muted'>· "+ent+"</span>"); }
+        else if(curStage==="review" && d.touched_again){ nn++; lines.push("<b>"+p.label+"</b> — "+(d.why||"")+" ("+(d.risk||"")+") <span class='muted'>· "+ent+"</span>"); }
+        else if(curStage==="commit" && p.role==="changed"){ nn++; lines.push("<b>"+p.label+"</b> <span class='muted'>· "+ent+"</span>"); }
+      });
+    });
+    var noun={red:"red test",execute:"changed piece",review:"finding",commit:"piece in commit"}[curStage];
+    var head, sub=nn+" "+noun+(nn===1?"":"s");
+    if(curStage==="commit"){ var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      head="<b>"+(m.commit||"")+"</b> "+(m.subject||"")+"<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+" · "+(m.cases||[]).join(", ")+"</div>"; }
+    else head = lines.length ? lines.join("<br>") : "<span class='muted'>nothing flagged for the "+curStage+" stage</span>";
+    var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
+    dp.innerHTML = "<div class='phdr'>"+curStage+ex+" · all entities</div>"
+      + "<h4>Change summary</h4>"
+      + "<div class='kind'><span style='color:var(--touch)'>"+SIM.touched.join(", ")+"</span> &rarr; <span style='color:var(--blast)'>"+SIM.blast.join(", ")+"</span> · "+sub+"</div>"
+      + headline(STAGE_HEAD[curStage], head, sc)
+      + "<div class='sum'>click an entity or a piece for its detail</div>";
+    selectPiece(null);
+  }
+  function resetPanel(){ stageSummary(); }
+
+  function legendRow(inner, text){ return "<div class='li'><svg width='24' height='24' viewBox='0 0 24 24'>"+inner+"</svg><span>"+text+"</span></div>"; }
+  function buildStageLegend(){
+    var el=document.getElementById("stagelegend"); if(!el) return;
+    var sc=STAGE_COLOR[curStage];
+    var hollowG="<circle cx='12' cy='12' r='7' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>";
+    var rows="";
+    if(curStage==="red"){
+      rows += legendRow("<circle cx='12' cy='12' r='9.6' fill='none' stroke='#4c9aff' stroke-width='2'/><circle cx='12' cy='12' r='6' fill='#e5484d'/>", "<b>tested</b> · blue ring + badge = # cases");
+      rows += legendRow(hollowG, "<b>no red test</b> declared");
+    } else if(curStage==="execute"){
+      rows += legendRow("<circle cx='12' cy='12' r='9' fill='"+sc+"'/>", "<b>changed</b> · size ∝ lines, <b>+N</b> = added");
+      rows += legendRow("<circle cx='12' cy='12' r='6' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>", "in a changed file, <b>not edited</b>");
+    } else if(curStage==="review"){
+      rows += legendRow("<circle cx='12' cy='12' r='9.6' fill='none' stroke='var(--blast)' stroke-width='2'/><circle cx='12' cy='12' r='6' fill='"+sc+"'/>", "<b>finding</b> · re-touched in review");
+      rows += legendRow(hollowG, "<b>clean</b> / unchanged");
+    } else {
+      rows += legendRow("<circle cx='12' cy='12' r='7' fill='"+sc+"'/>", "<b>in this commit</b>");
+      rows += legendRow(hollowG, "<b>not</b> in the commit");
+    }
+    rows += legendRow(
+      "<circle cx='8' cy='12' r='5.6' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>"
+      +"<circle cx='17' cy='12' r='5.6' fill='var(--panel)' stroke='var(--blast)' stroke-width='2'/>",
+      "outline <b style='color:var(--touch)'>green</b> in the change · <b style='color:var(--blast)'>amber</b> downstream");
+    rows += legendRow(
+      "<line x1='2' y1='12' x2='18' y2='12' stroke='"+sc+"' stroke-width='2.8'/><path d='M17 8 L22 12 L17 16 Z' fill='"+sc+"'/>",
+      "<b>coloured flow</b> = a flow this stage touched");
+    el.innerHTML = "<div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"+rows;
+  }
+
+  // ══════════════════════════════════════════════════════════════════════
+  //  CYTOSCAPE GRAPH LAYER — L1 entities · explode into compound-node pieces ·
+  //  per-stage encoding · hot flows. Native pan / zoom / drag / fit.
+  // ══════════════════════════════════════════════════════════════════════
+  var SCALE = 2.5, cy = null;
+  var linesArr = L1.map(function(n){ return n.counts.lines; });
+  var minL = Math.min.apply(null, linesArr), maxL = Math.max.apply(null, linesArr);
+  function entityDiam(v){ var a=Math.sqrt(Math.max(v,1)), lo=Math.sqrt(minL), hi=Math.sqrt(maxL);
+    var t=hi>lo?(a-lo)/(hi-lo):0.5; return Math.round(48+t*66); }
+  function pieceRingPos(slug,i,cnt){
+    var n=byslug[slug], cx=n.x*SCALE, cy2=n.y*SCALE, rr=Math.max(80, cnt*15), a=-Math.PI/2+2*Math.PI*i/cnt;
+    return { x:cx+rr*Math.cos(a), y:cy2+rr*Math.sin(a) };
+  }
+  function computeHot(){ var h={}; SIM.touched.concat(SIM.blast).forEach(function(s){
+    ((SIM.pieces&&SIM.pieces[s])||[]).forEach(function(p){ if(!stageEnc(s,p).hollow) h[s+"|"+p.id]=1; }); }); return h; }
+
+  function buildElements(){
+    var els=[], hot=computeHot();
+    L1.forEach(function(n){
+      var ec=COLORS[n.slug]||"#888";
+      var e={ data:{ id:n.slug, kind:"entity", slug:n.slug, label:n.label, ecolor:ec,
+        diam:entityDiam(n.counts.lines), inv:INVOLVED[n.slug]?1:0 },
+        position:{ x:n.x*SCALE, y:n.y*SCALE } };
+      if(expanded[n.slug]) e.classes="expanded";
+      els.push(e);
+    });
+    L1E.forEach(function(ed,i){
+      els.push({ data:{ id:"fk_"+i, source:ed.source, target:ed.target, kind:"fk",
+        wpx:1.5+Math.min(Math.max((ed.weight-1)/9,0),1)*4.5,
+        inv:(INVOLVED[ed.source]&&INVOLVED[ed.target])?1:0,
+        hide:(expanded[ed.source]||expanded[ed.target])?1:0 } });
+    });
+    Object.keys(expanded).forEach(function(slug){
+      var pieces=(SIM.pieces&&SIM.pieces[slug])||[];
+      pieces.forEach(function(p,i){
+        var enc=stageEnc(slug,p), pos=pieceRingPos(slug,i,pieces.length);
+        var ring = (curStage==="red"&&!enc.hollow)?"#4c9aff":((curStage==="review"&&!enc.hollow)?BLAST_HEX:"");
+        els.push({ data:{ id:slug+"|"+p.id, parent:slug, kind:"piece", slug:slug, pieceId:p.id,
+          label:p.label+(enc.badge?"  "+enc.badge:""), role:p.role,
+          pdiam:Math.round(enc.r*2), hollow:enc.hollow?1:0, hot:enc.hollow?0:1,
+          sc:STAGE_COLOR[curStage], rc:(p.role==="changed"?TOUCH_HEX:BLAST_HEX), ring:ring },
+          position:{ x:pos.x, y:pos.y } });
+      });
+    });
+    Object.keys(expanded).forEach(function(slug){
+      ((SIM.intra_edges&&SIM.intra_edges[slug])||[]).forEach(function(e,i){
+        var hc=(hot[slug+"|"+e.source]||hot[slug+"|"+e.target])?STAGE_COLOR[curStage]:"";
+        els.push({ data:{ id:"in_"+slug+"_"+i, source:slug+"|"+e.source, target:slug+"|"+e.target,
+          kind:"intra", hot:hc?1:0, hc:hc } });
+      });
+    });
+    ((SIM.cross_edges)||[]).forEach(function(e,i){
+      var src=expanded[e.from_slug]?e.from_slug+"|"+e.from:e.from_slug;
+      var tgt=expanded[e.to_slug]?e.to_slug+"|"+e.to:e.to_slug;
+      var hc=((hot[e.from_slug+"|"+e.from])||(hot[e.to_slug+"|"+e.to]))?STAGE_COLOR[curStage]:"";
+      els.push({ data:{ id:"cr_"+i, source:src, target:tgt, kind:"cross", hot:hc?1:0, hc:hc, via:e.via||"" } });
     });
     return els;
   }
-  function buildL2(slug){
-    var g = GC.l2[slug]; if (!g) return [];
-    var els = [];
-    g.nodes.forEach(function(n){
-      els.push({ data:{
-        id:n.id, label:n.label, slug:n.slug, kind:n.kind,
-        table:n.table || null
-      }, position:{ x:n.x, y:n.y } });
-    });
-    g.edges.forEach(function(e, i){
-      els.push({ data:{
-        id:"l2e_"+i, source:e.source, target:e.target, kind:e.kind
-      }});
-    });
-    return els;
-  }
 
-  // ---- stylesheet --------------------------------------------------------
-  function buildStyle(dark){
-    var labelColor = dark ? "#e6e9ee" : "#1c2024";
-    var halo       = dark ? "#0f1216" : "#f7f8fa";
-    var edgeColor  = dark ? "#4a525c" : "#9aa3ad";
-    var nodeBorder = dark ? "#2a313a" : "#dfe3e8";
-    var fkColor    = "#e06c4f";
-
-    var style = [
-      { selector:"node", style:{
-          "label":"data(label)", "font-size":10, "font-weight":500,
-          "color":labelColor, "text-outline-width":2, "text-outline-color":halo,
-          "border-width":1, "border-color":nodeBorder,
-          "transition-property":"opacity", "transition-duration":"140ms"
-      }},
-      // ---- L1 entities ----
-      { selector:'node[kind="entity"]', style:{
-          "shape":"ellipse", "width":"data(diam)", "height":"data(diam)",
-          "font-size":12, "font-weight":700,
-          "text-valign":"center", "text-halign":"center",
-          "border-width":2, "border-color":"rgba(255,255,255,0.35)"
-      }},
-      { selector:'node[kind="unclaimed"]', style:{
-          "shape":"ellipse", "width":40, "height":40,
-          "background-color": COL["__unclaimed__"] || "#8a8f98",
-          "border-style":"dashed", "border-width":2, "border-color":edgeColor,
-          "font-size":11, "font-weight":600,
-          "text-valign":"center", "text-halign":"center"
-      }},
-      // ---- L2 kinds ----
-      { selector:'node[kind="endpoint"]', style:{
-          "shape":"round-rectangle", "background-color":KIND_COLOR.endpoint,
-          "width":26, "height":18, "text-valign":"bottom", "text-halign":"center",
-          "text-margin-y":3, "font-size":9, "text-wrap":"ellipsis", "text-max-width":"140px"
-      }},
-      { selector:'node[kind="model"]', style:{
-          "shape":"ellipse", "background-color":KIND_COLOR.model,
-          "width":30, "height":30, "text-valign":"bottom", "text-halign":"center",
-          "text-margin-y":3, "font-size":9, "text-wrap":"ellipsis", "text-max-width":"140px"
-      }},
-      { selector:'node[kind="schema"]', style:{
-          "shape":"diamond", "background-color":KIND_COLOR.schema,
-          "width":26, "height":26, "text-valign":"bottom", "text-halign":"center",
-          "text-margin-y":2, "font-size":9, "text-wrap":"ellipsis", "text-max-width":"140px"
-      }},
-      { selector:'node[kind="external"]', style:{
-          "shape":"hexagon", "background-color":KIND_COLOR.external,
-          "width":30, "height":26, "text-valign":"bottom", "text-halign":"center",
-          "text-margin-y":3, "font-size":9, "font-style":"italic",
-          "text-wrap":"ellipsis", "text-max-width":"140px"
-      }},
-      // ---- edges ----
-      { selector:"edge", style:{
-          "curve-style":"bezier", "line-color":edgeColor,
-          "target-arrow-color":edgeColor, "target-arrow-shape":"triangle",
-          "arrow-scale":1, "opacity":0.85,
-          "transition-property":"opacity", "transition-duration":"140ms"
-      }},
-      { selector:'edge[kind="fk"][weight]', style:{     // L1 fk (weighted)
-          "width":"data(wpx)", "line-color":fkColor,
-          "target-arrow-color":fkColor, "opacity":0.9
-      }},
-      { selector:'edge[kind="fk"]', style:{             // L2 fk
-          "line-color":fkColor, "target-arrow-color":fkColor, "width":1.8
-      }},
-      { selector:'edge[kind="touches"]', style:{        // L2 touches
-          "line-style":"dashed", "line-color":edgeColor,
-          "target-arrow-color":edgeColor, "width":1.4, "opacity":0.7
-      }},
-      // ---- interaction classes ----
-      { selector:".faded", style:{ "opacity":0.11, "text-opacity":0.11 } },
-      { selector:"node.sel", style:{
-          "border-width":4, "border-color":"#0d6e78", "opacity":1, "text-opacity":1 } },
-      { selector:"edge.hl", style:{ "opacity":1, "width":3, "line-color":"#0d6e78",
-          "target-arrow-color":"#0d6e78" } }
+  function buildStyle(){
+    return [
+      { selector:"node", style:{ "label":"data(label)", "font-size":10, "font-weight":500,
+        "color":"#6b7280", "text-outline-width":2, "text-outline-color":"#ffffff" } },
+      { selector:'node[kind="entity"]', style:{ "shape":"ellipse", "width":"data(diam)", "height":"data(diam)",
+        "background-color":"data(ecolor)", "font-size":12, "font-weight":700, "color":"#ffffff",
+        "text-valign":"center", "text-halign":"center", "text-outline-color":"data(ecolor)",
+        "border-width":2, "border-color":"rgba(255,255,255,0.4)" } },
+      { selector:'node[kind="entity"][inv=0]', style:{ "opacity":0.12 } },
+      { selector:'node.expanded', style:{ "shape":"round-rectangle", "background-opacity":0.06,
+        "background-color":"data(ecolor)", "border-style":"dashed", "border-width":2, "border-color":"data(ecolor)",
+        "text-valign":"top", "text-halign":"center", "color":"data(ecolor)", "text-outline-width":0,
+        "font-size":12, "font-weight":700, "padding":"16px" } },
+      { selector:'node[kind="piece"]', style:{ "shape":"ellipse", "width":"data(pdiam)", "height":"data(pdiam)",
+        "background-color":"data(sc)", "border-width":2, "border-color":"data(sc)",
+        "text-valign":"bottom", "text-halign":"center", "text-margin-y":3, "font-size":9.5, "color":"#1c2024",
+        "text-outline-color":"#ffffff", "text-wrap":"ellipsis", "text-max-width":"120px" } },
+      { selector:'node[kind="piece"][hollow=1]', style:{ "background-color":"#ffffff", "border-color":"data(rc)" } },
+      { selector:'node[kind="piece"][ring!=""]', style:{ "border-color":"data(ring)", "border-width":3.4 } },
+      { selector:'node.selp', style:{ "border-color":"#0d6e78", "border-width":4 } },
+      { selector:"edge", style:{ "curve-style":"bezier", "line-color":"#9aa3ad",
+        "target-arrow-color":"#9aa3ad", "target-arrow-shape":"triangle", "arrow-scale":0.9, "opacity":0.9 } },
+      { selector:'edge[kind="fk"]', style:{ "width":"data(wpx)", "line-color":"#dd9030",
+        "target-arrow-color":"#dd9030", "line-style":"dashed" } },
+      { selector:'edge[kind="fk"][inv=0]', style:{ "opacity":0.08 } },
+      { selector:'edge[kind="fk"][hide=1]', style:{ "opacity":0.08 } },
+      { selector:'edge[kind="intra"]', style:{ "line-color":"#9aa3ad", "width":1.6, "opacity":0.7, "target-arrow-shape":"none" } },
+      { selector:'edge[kind="cross"]', style:{ "line-color":"#dd9030", "line-style":"dashed", "width":2.2, "opacity":0.95 } },
+      { selector:'edge[hot=1]', style:{ "line-color":"data(hc)", "target-arrow-color":"data(hc)", "width":3, "opacity":1 } }
     ];
-
-    // per-slug entity colors — keyed on data.slug (scoped to entity kind so
-    // an L2 external node that carries a foreign slug is NOT recolored).
-    Object.keys(COL).forEach(function(slug){
-      if (slug === "__unclaimed__") return;
-      style.push({ selector:'node[kind="entity"][slug="'+slug+'"]',
-                   style:{ "background-color": COL[slug] } });
-    });
-    return style;
   }
 
-  // ---- layouts -----------------------------------------------------------
-  function layoutOpts(name){
-    var base = { name:name, animate:true, animationDuration:480, padding:44, fit:true };
-    if (name === "cose")
-      return Object.assign(base, { nodeRepulsion:9000, idealEdgeLength:130,
-             nodeOverlap:24, gravity:0.25, numIter:1000, randomize:false, componentSpacing:120 });
-    if (name === "concentric")
-      return Object.assign(base, { concentric:function(n){ return n.degree(); },
-             levelWidth:function(){ return 2; }, minNodeSpacing:44, equidistant:false });
-    if (name === "breadthfirst")
-      return Object.assign(base, { directed:true, spacingFactor:0.85, grid:false });
-    if (name === "grid")
-      return Object.assign(base, { avoidOverlap:true, condense:false });
-    if (name === "circle")
-      return Object.assign(base, { spacingFactor:1.15 });
-    return base;
-  }
-  function runLayout(name, onStop){
-    var l = cy.layout(layoutOpts(name));
-    if (onStop) l.one("layoutstop", onStop);
-    l.run();
-    return l;
-  }
-
-  // ---- selection / highlight --------------------------------------------
-  function clearSelection(){
-    if (!cy) return;
-    cy.elements().removeClass("faded sel hl");
-  }
-  function selectNode(node){
-    cy.elements().addClass("faded");
-    var hood = node.closedNeighborhood();
-    hood.removeClass("faded");
-    hood.edges().addClass("hl");
-    node.removeClass("faded").addClass("sel");
-  }
-
-  // ---- tooltip -----------------------------------------------------------
-  function showTip(node, rpos){
-    var d = node.data();
-    var html = "";
-    if (d.kind === "entity"){
-      html = '<div class="tt">'+esc(d.label)+'</div>'
-           + '<div class="grid">'
-           + '<span>endpoints</span><b>'+num(d.endpoints)+'</b>'
-           + '<span>models</span><b>'+num(d.models)+'</b>'
-           + '<span>schemas</span><b>'+num(d.schemas)+'</b>'
-           + '<span>files</span><b>'+num(d.files)+'</b>'
-           + '<span>lines</span><b>'+num(d.lines)+'</b>'
-           + '</div>'
-           + '<div class="tk" style="margin-top:6px">double-click to drill in</div>';
-    } else if (d.kind === "unclaimed"){
-      html = '<div class="tk">unclaimed</div><div class="tt">'+esc(d.label)+'</div>';
-    } else {
-      html = '<div class="tk">'+esc(d.kind)+'</div><div class="tt">'+esc(d.label)+'</div>'
-           + (d.table ? '<div class="tk">table: '+esc(d.table)+'</div>' : '');
-    }
-    tip.innerHTML = html;
-    tip.style.display = "block";
-    var w = tip.offsetWidth, h = tip.offsetHeight;
-    var st = container.getBoundingClientRect();
-    var x = rpos.x + 16, y = rpos.y + 16;
-    if (x + w > st.width)  x = rpos.x - w - 16;
-    if (y + h > st.height) y = rpos.y - h - 16;
-    tip.style.left = Math.max(4, x) + "px";
-    tip.style.top  = Math.max(4, y) + "px";
-  }
-  function hideTip(){ tip.style.display = "none"; }
-  function esc(s){ return String(s == null ? "" : s).replace(/[&<>"]/g, function(c){
-    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
-  function num(v){ return (v == null) ? "—" : Number(v).toLocaleString(); }
-
-  // ---- chrome (legend / crumb / count / back) ---------------------------
-  function updateChrome(){
-    backBtn.disabled = (currentView === "l1");
-    if (currentView === "l1"){
-      crumbEl.innerHTML = "Level 1 · entity map";
-      countEl.innerHTML = "<b>"+L1_NODE_COUNT+"</b> entities · <b>"+L1_EDGE_COUNT+"</b> fk edges";
-      renderLegendL1();
-    } else {
-      var g = GC.l2[drilledSlug];
-      var lbl = (GC.l1.nodes.find(function(n){ return n.slug === drilledSlug; }) || {}).label || drilledSlug;
-      crumbEl.innerHTML = 'Level 1 &rsaquo; <b>'+esc(lbl)+'</b> · internals';
-      countEl.innerHTML = "<b>"+g.nodes.length+"</b> nodes · <b>"+g.edges.length+"</b> edges";
-      renderLegendL2();
-    }
-  }
-  function renderLegendL1(){
-    var rows = L1_SLUGS.map(function(s){
-      var lbl = (GC.l1.nodes.find(function(n){ return n.slug === s; }) || {}).label || s;
-      return '<div class="row"><span class="sw dot" style="background:'+(COL[s]||"#888")+'"></span>'
-           + '<span class="lbl">'+esc(lbl)+'</span></div>';
-    }).join("");
-    legendEl.innerHTML = '<p class="lh">Entities · size ∝ lines</p>' + rows
-      + '<div class="row" style="margin-top:6px"><span class="sw line fk"></span>'
-      + '<span class="lbl">fk edge · width ∝ weight</span></div>'
-      + '<div class="hint">click = select · double-click = drill · scroll = zoom · drag = pan</div>';
-  }
-  function renderLegendL2(){
-    legendEl.innerHTML = '<p class="lh">Node kinds</p>'
-      + '<div class="row"><span class="sw" style="background:'+KIND_COLOR.endpoint+'"></span><span class="lbl">endpoint</span></div>'
-      + '<div class="row"><span class="sw dot" style="background:'+KIND_COLOR.model+'"></span><span class="lbl">model</span></div>'
-      + '<div class="row"><span class="sw dia" style="background:'+KIND_COLOR.schema+'"></span><span class="lbl">schema</span></div>'
-      + '<div class="row"><span class="sw" style="background:'+KIND_COLOR.external+'"></span><span class="lbl">external</span></div>'
-      + '<p class="lh" style="margin-top:8px">Edges</p>'
-      + '<div class="row"><span class="sw line fk"></span><span class="lbl">fk</span></div>'
-      + '<div class="row"><span class="sw line dash"></span><span class="lbl">touches</span></div>'
-      + '<div class="hint">click a node = highlight neighbours · Back returns to L1</div>';
-  }
-
-  // ---- drill / back ------------------------------------------------------
-  function drill(slug){
-    if (!GC.l2[slug]) return;
-    hideTip(); clearSelection();
-    if (currentView === "l1") savedL1Layout = currentLayout;
+  function render(){
+    var pan=cy?cy.pan():null, zoom=cy?cy.zoom():null;
     cy.elements().remove();
-    cy.add(buildL2(slug));
-    drilledSlug = slug; currentView = "l2";
-    currentLayout = "breadthfirst"; laySel.value = "breadthfirst";
-    runLayout("breadthfirst");
-    updateChrome();
+    cy.add(buildElements());
+    cy.style(buildStyle());
+    if(pan){ cy.pan(pan); cy.zoom(zoom); }        // keep the viewport across a re-render
+    if(selPiece){ var n=cy.getElementById(selPiece); if(n&&n.length) n.addClass("selp"); }
+    updateSelInfo();
   }
-  function showL1(){
-    hideTip(); clearSelection();
-    cy.elements().remove();
-    cy.add(buildL1());
-    drilledSlug = null; currentView = "l1";
-    currentLayout = savedL1Layout || "cose"; laySel.value = currentLayout;
-    runLayout(currentLayout);
-    updateChrome();
+  function selectPiece(key){ selPiece=key; if(!cy) return;
+    cy.nodes(".selp").removeClass("selp");
+    if(key){ var n=cy.getElementById(key); if(n&&n.length) n.addClass("selp"); } }
+
+  function onSingle(slug){                          // M2: single-click OPENS + summarizes (never closes)
+    if(!INVOLVED[slug]) return;
+    if(!expanded[slug]){ expanded[slug]=true; render(); }
+    openEntityDetail(slug);
+  }
+  function onDouble(slug){                          // double-click TOGGLES collapse
+    if(!INVOLVED[slug]) return;
+    if(expanded[slug]) delete expanded[slug]; else expanded[slug]=true;
+    render(); openEntityDetail(slug);
+  }
+  function toggleAllExpand(){
+    var inv=SIM.touched.concat(SIM.blast), allOpen=inv.length && inv.every(function(s){ return expanded[s]; });
+    expanded={}; if(!allOpen) inv.forEach(function(s){ expanded[s]=true; });
+    document.getElementById("openAll").textContent = allOpen ? "Open all" : "Close all";
+    render();
+  }
+  function setStageButtons(){
+    document.getElementById("stageSeg").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-stage")===curStage); });
+  }
+  function setStage(s){ curStage=s; setStageButtons(); render(); resetPanel(); buildStageLegend(); }
+  function updateSelInfo(){
+    var sd=(SIM.stages&&SIM.stages[curStage])||{};
+    document.getElementById("selInfo").innerHTML =
+      "<b>"+(sd.label||curStage)+"</b>"+(sd.real===false?" <span style='color:#b46a12'>· example</span>":"")
+      + " &nbsp; <span style='color:var(--touch)'>&#9679; "+SIM.touched.join(", ")+"</span>"
+      + (SIM.blast.length?" <span style='color:var(--blast)'>&#9679; "+SIM.blast.join(", ")+"</span>":"");
   }
 
-  // ---- events ------------------------------------------------------------
-  var lastId = null, lastT = 0, singleTimer = null;
+  // ── click discrimination (single vs double) ──
+  var lastId=null, lastT=0, st=null;
   function bindEvents(){
-    cy.on("tap", "node", function(evt){
-      var n = evt.target;
-      if (currentView === "l1" && n.data("kind") === "entity"){
-        var now = Date.now();
-        if (lastId === n.id() && (now - lastT) < 300){        // double-tap → drill
-          clearTimeout(singleTimer); singleTimer = null;
-          lastId = null; lastT = 0;
-          drill(n.data("slug"));
-        } else {                                              // first tap → wait
-          lastId = n.id(); lastT = now;
-          clearTimeout(singleTimer);
-          singleTimer = setTimeout(function(){
-            clearSelection(); selectNode(n); singleTimer = null;
-          }, 300);
-        }
-      } else {
-        clearSelection(); selectNode(n);
+    cy.on("tap","node", function(evt){
+      var n=evt.target, kind=n.data("kind");
+      if(kind==="piece"){ var p=pieceObj(n.data("slug"), n.data("pieceId")); if(p) openDetail(n.data("slug"), p); return; }
+      if(kind==="entity"){
+        var id=n.id(), now=Date.now();
+        if(lastId===id && now-lastT<300){ clearTimeout(st); st=null; lastId=null; lastT=0; onDouble(n.data("slug")); }
+        else { lastId=id; lastT=now; clearTimeout(st); st=setTimeout(function(){ st=null; onSingle(n.data("slug")); }, 300); }
       }
     });
-    cy.on("tap", function(evt){ if (evt.target === cy){ clearSelection(); } });
-
-    cy.on("mouseover", "node", function(evt){ showTip(evt.target, evt.renderedPosition); });
-    cy.on("mousemove", "node", function(evt){ showTip(evt.target, evt.renderedPosition); });
-    cy.on("mouseout", "node", hideTip);
-    cy.on("pan zoom drag", hideTip);
+    cy.on("tap", function(evt){ if(evt.target===cy) resetPanel(); });
   }
 
-  // ---- boot --------------------------------------------------------------
-  function markReady(){ if (!ready){ ready = true; window.__labready = true; } }
+  // ── boot ──
+  if(SIM){
+    document.getElementById("hchange").innerHTML =
+      "<b style='color:var(--ink)'>"+SIM.commit+"</b> "+trunc(SIM.subject,44)
+      + " · <span style='color:var(--touch)'>"+SIM.touched.join(",")+"</span> changed"
+      + " · <span style='color:var(--blast)'>"+SIM.blast.join(",")+"</span> affected";
+    SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; });   // M6: open on load
+  }
+  cy = cytoscape({ container:document.getElementById("cy"), elements:buildElements(),
+    style:buildStyle(), layout:{ name:"preset" }, wheelSensitivity:0.2, minZoom:0.15, maxZoom:3 });
+  bindEvents(); setStageButtons(); updateSelInfo();
+  if(Object.keys(expanded).length) document.getElementById("openAll").textContent="Close all";
+  resetPanel(); buildStageLegend();
+  cy.fit(null, 60);
+  window.cy = cy;
 
-  cy = cytoscape({
-    container: container,
-    elements: buildL1(),
-    style: buildStyle(isDark()),
-    layout: { name:"preset" },
-    wheelSensitivity: 0.22,
-    minZoom: 0.15, maxZoom: 3.5
-  });
-  bindEvents();
-  updateChrome();
-  runLayout("cose", markReady);
-  window.cy = cy;   // expose for headless UX probing (harmless in the example)
-  setTimeout(markReady, 1900);   // fallback if layoutstop never fires
+  document.getElementById("openAll").addEventListener("click", toggleAllExpand);
+  document.getElementById("stageSeg").addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(b) setStage(b.getAttribute("data-stage")); });
+  document.getElementById("fitBtn").addEventListener("click", function(){ cy.fit(null,60); });
+  document.getElementById("forceBtn").addEventListener("click", function(){
+    cy.layout({ name:"cose", animate:true, animationDuration:520, padding:60, nodeRepulsion:9000, idealEdgeLength:120, randomize:false }).run(); });
 
-  // theme reactivity
-  function restyle(){ if (cy) cy.style(buildStyle(isDark())); }
-  if (mq.addEventListener) mq.addEventListener("change", restyle);
-  else if (mq.addListener) mq.addListener(restyle);
-
-  // toolbar
-  laySel.addEventListener("change", function(){
-    currentLayout = laySel.value;
-    if (currentView === "l1") savedL1Layout = currentLayout;
-    hideTip(); runLayout(currentLayout);
-  });
-  backBtn.addEventListener("click", function(){ if (currentView !== "l1") showL1(); });
-  document.getElementById("fit").addEventListener("click", function(){ cy.fit(null, 44); });
-
-  // ---- MANDATORY TEST HOOK ----------------------------------------------
+  // ── MANDATORY TEST HOOK (mirrors the SVG sim surface) ──
   window.__labtest = {
-    approach: "Cytoscape.js (vendored)",
-    view:     function(){ return currentView === "l1" ? "l1" : "l2:" + drilledSlug; },
-    l1nodes:  function(){ return currentView === "l1" ? cy.nodes('[kind="entity"]').length : L1_NODE_COUNT; },
-    l1edges:  function(){ return currentView === "l1" ? cy.edges().length : L1_EDGE_COUNT; },
-    entities: function(){ return currentView === "l1"
-                            ? cy.nodes('[kind="entity"]').map(function(n){ return n.data("slug"); })
-                            : L1_SLUGS.slice(); },
-    drill:    function(slug){ drill(slug); },
-    l2nodes:  function(){ return currentView === "l2" ? cy.nodes().length : 0; },
-    back:     function(){ showL1(); }
+    approach:"Cytoscape.js · change simulation",
+    stageNow:function(){ return curStage; },
+    setStage:function(s){ setStage(s); },
+    openPiece:function(slug,pid){ var p=pieceObj(slug,pid); if(p) openDetail(slug,p); },
+    openEntity:function(slug){ openEntityDetail(slug); },
+    detailText:function(){ return document.getElementById("detail").textContent; },
+    detailOpen:function(){ return !document.querySelector("#detail .empty"); },
+    expandedNow:function(){ return Object.keys(expanded); },
+    singleClick:function(slug){ onSingle(slug); },
+    dblClick:function(slug){ onDouble(slug); },
+    openAll:function(){ SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; }); render(); },
+    touched:function(){ return SIM.touched.slice(); },
+    blast:function(){ return SIM.blast.slice(); },
+    pieceCircles:function(){ return cy.nodes('[kind="piece"]').length; },
+    containers:function(){ return cy.nodes(".expanded").length; },
+    hotEdges:function(){ return cy.edges("[hot=1]").length; },
+    hotColor:function(){ var e=cy.edges("[hot=1]"); return e.length?e[0].data("hc"):""; },
+    idChips:function(){ return document.querySelectorAll("#detail .idchip").length; },
+    idRows:function(){ return Array.prototype.map.call(document.querySelectorAll("#detail .idrow .idlbl"), function(l){ return l.textContent; }); },
+    tyChips:function(){ return document.querySelectorAll("#detail .idchip.dt .ty[class*='ty-']").length; },
+    lcRows:function(){ return document.querySelectorAll("#detail .lc-row").length; },
+    lcActive:function(){ var a=document.querySelector("#detail .lc-row.active"); return a?a.getAttribute("data-stage"):null; },
+    lcText:function(s){ var r=document.querySelector("#detail .lc-row[data-stage='"+s+"']"); return r?r.textContent:""; },
+    lcClick:function(s){ var r=document.querySelector("#detail .lc-row[data-stage='"+s+"']"); if(r) r.click(); },
+    stageLegend:function(){ return document.getElementById("stagelegend").textContent; },
+    stageLegendRows:function(){ return document.querySelectorAll("#stagelegend .li").length; }
   };
+  window.__labready = true;
 })();
 </script>
