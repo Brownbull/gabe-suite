@@ -913,6 +913,27 @@ svg#graph{ display:block; width:100%; height:100%; }
   function dtChip(d){ var fam=tyFamily(d.t);
     return "<span class='idchip dt'>"+icoSvg(KIND_ICON.datatype)+"<b>"+d.n+"</b>"
       +"<span class='ty"+(fam?" ty-"+fam:"")+"'>"+d.t+"</span></span>"; }
+  // TESTS + EVIDENCE — the center's test-kind glyphs, coloured by pass/red state.
+  var TEST_ICON = {
+    unit:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/>',
+    integration:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    journey:'<circle cx="6" cy="19" r="3"/><circle cx="18" cy="5" r="3"/><path d="M12 19h4.5a3.5 3.5 0 0 0 0-7h-8a3.5 3.5 0 0 1 0-7H12"/>',
+    web:'<circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>'
+  };
+  var VERIFIED_ICON = '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>';
+  var STATE_COLOR = { pass:"#16794c", red:"#e5484d", fail:"#e5484d", skip:"#b45309" };
+  function testChip(t){ var c=STATE_COLOR[t.state]||"#868e96", ic=TEST_ICON[t.kind]||TEST_ICON.unit;
+    var mk=t.state==="pass"?"✓":(t.state==="red"?"✕":"·"), lab=t.cid==="web"?"e2e":t.cid;
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+(t.name||t.tfile)+" · "+(t.tfile||"")+" · "+t.state+"'>"
+      +icoSvg(ic)+"<b>"+lab+"</b><span class='mth' style='color:"+c+"'>"+t.state+" "+mk+"</span></span>"; }
+  function evChip(label, ev){ if(!ev) return "";
+    var ok=(ev.exit===0 && !ev.failed), c=ok?"#16794c":"#e5484d";
+    return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+label+"-junit @ "+(ev.head||"?")+"'>"
+      +icoSvg(VERIFIED_ICON)+"<b>"+label+"</b><span class='mth' style='color:"+c+"'>"+ev.passed+" ✓"
+      +(ev.failed?" · "+ev.failed+" ✕":"")+(ev.skipped?" · "+ev.skipped+" skip":"")+"</span></span>"; }
+  function evidenceRow(){ var ev=SIM.evidence; if(!ev) return "";
+    var chips=Object.keys(ev).map(function(k){ return evChip(k, ev[k]); }).join("");
+    return chips ? idrow("Evidence", chips) : ""; }
   function idrow(label,chips){ return chips ? "<div class='idrow'><div class='idlbl'>"+label
     +"</div><div class='idchips'>"+chips+"</div></div>" : ""; }
   function idSection(ids){
@@ -923,16 +944,17 @@ svg#graph{ display:block; width:100%; height:100%; }
     if(ids.model)     h+=idrow("Models",    ids.model.map(function(m){ return kindChip("model",m); }).join(""));
     if(ids.schema)    h+=idrow("Schemas",   ids.schema.map(function(s){ return kindChip("schema",s); }).join(""));
     if(ids.datatype)  h+=idrow("Data types",ids.datatype.map(dtChip).join(""));
+    if(ids.test)      h+=idrow("Tests",     ids.test.map(testChip).join(""));
     if(ids.structure) h+=idrow("Structures",ids.structure.map(function(s){ return "<span class='idchip st'>"+s+"</span>"; }).join(""));
     return h ? "<div class='idsec'>"+h+"</div>" : "";
   }
   // union the current stage's identifiers across an entity's pieces (entity panel)
   function aggregateIds(slug){
     var sd=(SIM.stages&&SIM.stages[curStage])||{}, pieces=(SIM.pieces&&SIM.pieces[slug])||[];
-    var out={}, seen={fn:{},endpoint:{},model:{},schema:{},datatype:{},structure:{}};
+    var out={}, seen={fn:{},endpoint:{},model:{},schema:{},datatype:{},test:{},structure:{}};
     pieces.forEach(function(p){ var ids=((sd.pieces&&sd.pieces[p.id])||{}).ids; if(!ids) return;
-      ["fn","endpoint","model","schema","datatype","structure"].forEach(function(k){
-        (ids[k]||[]).forEach(function(v){ var key=(k==="endpoint")?v.fn:(k==="datatype"?v.n:v);
+      ["fn","endpoint","model","schema","datatype","test","structure"].forEach(function(k){
+        (ids[k]||[]).forEach(function(v){ var key=(k==="endpoint")?v.fn:(k==="datatype"?v.n:(k==="test"?v.cid+v.tfile:v));
           if(seen[k][key]) return; seen[k][key]=1; (out[k]=out[k]||[]).push(v); }); });
     });
     return Object.keys(out).length?out:null;
@@ -968,7 +990,7 @@ svg#graph{ display:block; width:100%; height:100%; }
       var eids=(((SIM.stages.execute||{}).pieces||{})[p.id]||{}).ids;   // ship = what Execute changed
       body = "<div class='pillrow'>"+pill(p.role==="changed"?"in commit":"not in commit", p.role==="changed"?sc:"var(--muted)")+"<span class='file'>"+(m.commit||"")+"</span></div>"
         + headline("what shipped", m.subject||"—", sc) + "<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"
-        + idSection(eids) + dblock("cases", (m.cases||[]).join(", ")||"—");
+        + idSection(eids) + "<div class='idsec'>"+evidenceRow()+"</div>" + dblock("cases", (m.cases||[]).join(", ")||"—");
     }
     var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
     dp.innerHTML = "<div class='phdr'>"+curStage+ex+"</div><h4>"+p.label+"</h4>"
@@ -1001,6 +1023,7 @@ svg#graph{ display:block; width:100%; height:100%; }
       + row("endpoints",c.endpoints||0)+row("models",c.models||0)+row("schemas",c.schemas||0)+row("files",c.files||0)+row("lines",(c.lines||0).toLocaleString())
       + headline(STAGE_HEAD[curStage], headText, sc)
       + (function(){ var ag=aggregateIds(slug); return ag?idSection(ag):""; })()
+      + (curStage==="commit" ? "<div class='idsec'>"+evidenceRow()+"</div>" : "")
       + "<div class='sum'>double-click to open its pieces</div>";
     selectPiece(null);
   }

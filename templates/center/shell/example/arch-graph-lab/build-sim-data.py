@@ -113,6 +113,26 @@ LINK_COLS = {
     "model:DishHistoryEvent": ("DishHistoryEvent", "recipe_id"),
 }
 
+# TESTS + EVIDENCE — which tests prove each changed piece. The C-cases are this
+# commit's own (fecb2ce3); `kind` is read from the file (…_api.py = integration,
+# a service test = unit, a .test.tsx = web/journey). Names come from case_own,
+# files from case_home, and pass-state from test_insight — all in the archmap.
+# The junit DIGESTS are the evidence the tests produce (passed/failed @ head).
+TEST_MAP = {
+    "model:PlannedRecipe": [
+        {"cid": "C8135", "kind": "unit"},
+        {"cid": "C8136", "kind": "unit"},
+        {"cid": "C8142", "kind": "integration"},
+    ],
+    "model:RecipeFilterMode": [
+        {"cid": "C8134", "kind": "unit"},
+        # the web-side rollback test that exercises recipe-filter-modes (corpus=web)
+        {"web": "apps/web/src/features/cooking/useRecipeFilterModes.rollback.test.tsx",
+         "kind": "web"},
+    ],
+}
+JUNIT_DIGESTS = {"api": "api-junit.xml.digest.json", "web": "web-junit.xml.digest.json"}
+
 
 def load_archmap() -> dict:
     if not ARCHMAP.exists():
@@ -169,10 +189,55 @@ def ids_from(spec: dict, coltypes, endpoints) -> dict:
     return out
 
 
+def load_evidence() -> dict:
+    """The junit digests — the evidence the tests produced (passed/failed @ head)."""
+    out = {}
+    res = GUSTIFY / "tests" / "results"
+    for label, fn in JUNIT_DIGESTS.items():
+        p = res / fn
+        if not p.exists():
+            print(f"    ⚠ junit digest missing: {p}")
+            continue
+        d = json.loads(p.read_text())
+        out[label] = {k: d.get(k) for k in
+                      ("passed", "failed", "skipped", "exit", "head", "duration_s")}
+    return out
+
+
+def build_case_index(amap: dict):
+    """cid -> {name, tfile}, from test_insight.case_home + case_own keys."""
+    ti = amap.get("test_insight", {}) or {}
+    home = ti.get("case_home", {}) or {}
+    own = ti.get("case_own", {}) or {}
+    names = {}
+    for key in own:                        # "<file>::<test_name_Cid>"
+        if "::" in key:
+            f, name = key.split("::", 1)
+            m = name.rsplit("_C", 1)
+            if len(m) == 2 and m[1].isdigit():
+                names["C" + m[1]] = name
+    return home, names
+
+
+def tests_for(pid: str, state: str, home, names) -> list:
+    entries = []
+    for t in TEST_MAP.get(pid, []):
+        if "web" in t:                      # a web/e2e test, no C-id
+            entries.append({"cid": "web", "kind": t["kind"], "state": state,
+                            "name": t["web"].split("/")[-1], "tfile": t["web"]})
+            continue
+        cid = t["cid"]
+        entries.append({"cid": cid, "kind": t["kind"], "state": state,
+                        "name": names.get(cid, ""), "tfile": home.get(cid, "")})
+    return entries
+
+
 def main() -> int:
     amap = load_archmap()
     coltypes, endpoints = build_indexes(amap)
     head = amap.get("head", "?")
+    home, case_names = build_case_index(amap)
+    evidence = load_evidence()
 
     raw = SIM_JS.read_text()
     m = re.search(r"window\.GABE_SIM\s*=\s*(\{.*\});\s*$", raw, re.S)
@@ -196,6 +261,20 @@ def main() -> int:
                 sd["use_case"] = spec["use_case"]
             counts[stage] += 1
             chip_total += sum(len(v) for v in ids.values())
+
+    # TESTS: born red in the Red beat, green in Execute (and thus Commit, which
+    # reads the Execute ids). The junit digests ride the top level as evidence.
+    test_chips = 0
+    for pid in TEST_MAP:
+        for stage, state in (("red", "red"), ("execute", "pass")):
+            sd = stages.get(stage, {}).get("pieces", {}).get(pid)
+            if sd is None:
+                continue
+            entries = tests_for(pid, state, home, case_names)
+            if entries:
+                sd.setdefault("ids", {})["test"] = entries
+                test_chips += len(entries)
+    sim["evidence"] = evidence
 
     # Link (blast) pieces — add the coupling datatype to the Red record.
     red_pieces = stages.get("red", {}).get("pieces", {})
@@ -222,6 +301,10 @@ def main() -> int:
     print(f"enriched     : red={counts['red']} execute={counts['execute']} "
           f"review={counts['review']} pieces")
     print(f"link pieces  : {len(LINK_COLS)} (datatype coupling)")
+    print(f"tests        : {test_chips} test chips (red born-red + execute green)")
+    print(f"evidence     : " + " · ".join(
+        f"{k} {v.get('passed')}✓/{v.get('failed')}✗ @{v.get('head')}"
+        for k, v in evidence.items()) or "none")
     print(f"typed chips  : {chip_total} total")
     print(f"wrote        : {SIM_JS}")
     return 0

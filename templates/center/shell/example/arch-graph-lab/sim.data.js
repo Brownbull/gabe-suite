@@ -219,6 +219,22 @@ window.GABE_SIM = {
         "n": "cupo_dish_type",
         "t": "str | None"
        }
+      ],
+      "test": [
+       {
+        "cid": "C8134",
+        "kind": "unit",
+        "state": "red",
+        "name": "test_cupo_capacity_is_the_members_own_pool_C8134",
+        "tfile": "apps/api/tests/test_repertorio.py"
+       },
+       {
+        "cid": "web",
+        "kind": "web",
+        "state": "red",
+        "name": "useRecipeFilterModes.rollback.test.tsx",
+        "tfile": "apps/web/src/features/cooking/useRecipeFilterModes.rollback.test.tsx"
+       }
       ]
      },
      "use_case": "A member's cupo capacity is their OWN pool (free 1 / chef 5), fail-closed"
@@ -268,6 +284,29 @@ window.GABE_SIM = {
        {
         "n": "status",
         "t": "str"
+       }
+      ],
+      "test": [
+       {
+        "cid": "C8135",
+        "kind": "unit",
+        "state": "red",
+        "name": "test_cupo_journey_stamps_and_derived_counters_C8135",
+        "tfile": "apps/api/tests/test_repertorio.py"
+       },
+       {
+        "cid": "C8136",
+        "kind": "unit",
+        "state": "red",
+        "name": "test_downgrade_forces_keep_one_and_history_survives_C8136",
+        "tfile": "apps/api/tests/test_repertorio.py"
+       },
+       {
+        "cid": "C8142",
+        "kind": "integration",
+        "state": "red",
+        "name": "test_plan_with_cupo_stamps_the_link_C8142",
+        "tfile": "apps/api/tests/test_repertorio_api.py"
        }
       ]
      },
@@ -319,6 +358,29 @@ window.GABE_SIM = {
       "structure": [
        "Index ix_planned_recipes_cupo_id",
        "FK → recipe_filter_modes.id (SET NULL)"
+      ],
+      "test": [
+       {
+        "cid": "C8135",
+        "kind": "unit",
+        "state": "pass",
+        "name": "test_cupo_journey_stamps_and_derived_counters_C8135",
+        "tfile": "apps/api/tests/test_repertorio.py"
+       },
+       {
+        "cid": "C8136",
+        "kind": "unit",
+        "state": "pass",
+        "name": "test_downgrade_forces_keep_one_and_history_survives_C8136",
+        "tfile": "apps/api/tests/test_repertorio.py"
+       },
+       {
+        "cid": "C8142",
+        "kind": "integration",
+        "state": "pass",
+        "name": "test_plan_with_cupo_stamps_the_link_C8142",
+        "tfile": "apps/api/tests/test_repertorio_api.py"
+       }
       ]
      }
     },
@@ -371,6 +433,22 @@ window.GABE_SIM = {
       ],
       "structure": [
        "String(60), nullable"
+      ],
+      "test": [
+       {
+        "cid": "C8134",
+        "kind": "unit",
+        "state": "pass",
+        "name": "test_cupo_capacity_is_the_members_own_pool_C8134",
+        "tfile": "apps/api/tests/test_repertorio.py"
+       },
+       {
+        "cid": "web",
+        "kind": "web",
+        "state": "pass",
+        "name": "useRecipeFilterModes.rollback.test.tsx",
+        "tfile": "apps/web/src/features/cooking/useRecipeFilterModes.rollback.test.tsx"
+       }
       ]
      }
     },
@@ -498,5 +576,23 @@ window.GABE_SIM = {
    }
   }
  },
- "ids_head": "430360b8"
+ "ids_head": "430360b8",
+ "evidence": {
+  "api": {
+   "passed": 1164,
+   "failed": 0,
+   "skipped": 0,
+   "exit": 0,
+   "head": "93b32077",
+   "duration_s": 128.38
+  },
+  "web": {
+   "passed": 856,
+   "failed": 0,
+   "skipped": 2,
+   "exit": 0,
+   "head": "fecb2ce3",
+   "duration_s": 10.97
+  }
+ }
 };
