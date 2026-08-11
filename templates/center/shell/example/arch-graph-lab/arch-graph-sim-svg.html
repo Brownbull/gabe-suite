@@ -193,6 +193,20 @@ svg#graph{ display:block; width:100%; height:100%; }
 .hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--muted);
        background:var(--panel); border:1px solid var(--line); border-radius:6px;
        padding:3px 8px; pointer-events:none; opacity:.9; }
+/* per-stage NODE-ENCODING key — what a filled/hollow/ringed/glowing circle means
+   for the CURRENT stage; rebuilt on every stage switch (buildStageLegend). */
+#stagelegend{ position:absolute; bottom:12px; left:14px; font-size:11px; color:var(--muted);
+  background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.10); max-width:250px; pointer-events:none; }
+#stagelegend .lh{ font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  margin-bottom:7px; display:flex; align-items:center; gap:6px; color:var(--ink); }
+#stagelegend .lh i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
+#stagelegend .li{ display:flex; align-items:center; gap:8px; padding:2px 0; line-height:1.32; }
+#stagelegend .li svg{ flex:none; }
+#stagelegend .li b{ color:var(--ink); font-weight:600; }
+@keyframes lgpulse{ 0%,100%{ opacity:.22; } 50%{ opacity:1; } }
+#stagelegend .lgpulse{ animation: lgpulse 1.6s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce){ #stagelegend .lgpulse{ animation:none; opacity:.7; } }
 
 /* ── tooltip ────────────────────────────────────────────────────────── */
 #tip{ position:fixed; z-index:50; pointer-events:none; max-width:260px; opacity:0;
@@ -265,6 +279,7 @@ svg#graph{ display:block; width:100%; height:100%; }
     <g id="viewport"></g>
   </svg>
   <div class="hint" id="hint">click an entity to open · click a piece for details · drag to move</div>
+  <div id="stagelegend"></div>
 </div>
 <aside class="side" id="side">
   <div id="detail" class="detail"><div class="empty">Click an entity or a piece for details.</div></div>
@@ -579,6 +594,7 @@ svg#graph{ display:block; width:100%; height:100%; }
     if(view==="l2") stage.scrollTop = 0, stage.scrollLeft = 0;
     syncLayoutSel();
     buildLegend();
+    buildStageLegend();
   }
   function fillSel(sel, opts, cur){
     sel.innerHTML="";
@@ -1053,6 +1069,47 @@ svg#graph{ display:block; width:100%; height:100%; }
       }
     }
   }
+  // per-stage NODE-ENCODING legend (lower-left) — what circle states mean HERE
+  function legendRow(inner, text){
+    return "<div class='li'><svg width='24' height='24' viewBox='0 0 24 24'>"+inner+"</svg><span>"+text+"</span></div>";
+  }
+  function buildStageLegend(){
+    var el=document.getElementById("stagelegend"); if(!el) return;
+    if(view==="l2"){ el.style.display="none"; return; } el.style.display="";
+    var sc=STAGE_COLOR[curStage];
+    var hollowG="<circle cx='12' cy='12' r='7' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>";
+    var rows="";
+    if(curStage==="red"){
+      rows += legendRow("<circle cx='12' cy='12' r='9.6' fill='none' stroke='#4c9aff' stroke-width='2'/><circle cx='12' cy='12' r='6' fill='#e5484d'/>",
+        "<b>tested</b> · blue ring + badge = # cases");
+      rows += legendRow(hollowG, "<b>no red test</b> declared");
+    } else if(curStage==="execute"){
+      rows += legendRow("<circle cx='12' cy='12' r='9' fill='"+sc+"'/>",
+        "<b>changed</b> · size ∝ lines, <b>+N</b> = added");
+      rows += legendRow("<circle cx='12' cy='12' r='6' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>",
+        "in a changed file, <b>not edited</b>");
+    } else if(curStage==="review"){
+      rows += legendRow("<circle cx='12' cy='12' r='9.6' fill='none' stroke='var(--blast)' stroke-width='2'/><circle cx='12' cy='12' r='6' fill='"+sc+"'/>",
+        "<b>finding</b> · re-touched in review");
+      rows += legendRow(hollowG, "<b>clean</b> / unchanged");
+    } else {
+      rows += legendRow("<circle cx='12' cy='12' r='7' fill='"+sc+"'/>", "<b>in this commit</b>");
+      rows += legendRow(hollowG, "<b>not</b> in the commit");
+    }
+    // common to every stage
+    rows += legendRow(
+      "<circle cx='8' cy='12' r='5.6' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>"
+      +"<circle cx='17' cy='12' r='5.6' fill='var(--panel)' stroke='var(--blast)' stroke-width='2'/>",
+      "outline <b style='color:var(--touch)'>green</b> in the change · <b style='color:var(--blast)'>amber</b> downstream");
+    rows += legendRow(
+      "<circle cx='12' cy='12' r='6.5' fill='var(--panel)' stroke='var(--blast)' stroke-width='2'/>"
+      +"<circle class='lgpulse' cx='12' cy='12' r='9.6' fill='none' stroke='"+sc+"' stroke-width='1.8'/>",
+      "<b>glow</b> = connector to another entity");
+    rows += legendRow(
+      "<line x1='2' y1='12' x2='18' y2='12' stroke='"+sc+"' stroke-width='2.8'/><path d='M17 8 L22 12 L17 16 Z' fill='"+sc+"'/>",
+      "<b>coloured flow</b> = a flow this stage touched");
+    el.innerHTML = "<div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"+rows;
+  }
   function setStage(s){
     curStage = s; resetPanel();
     document.getElementById("stageSeg").querySelectorAll("button").forEach(function(b){
@@ -1193,7 +1250,10 @@ svg#graph{ display:block; width:100%; height:100%; }
       return l.getBoundingClientRect().bottom <= c.getBoundingClientRect().top + 1; },
     // stage-coloured touched flows in the diagram
     hotEdges:       function(){ return vp.querySelectorAll("#expansion .xedge.hot").length; },
-    hotColor:       function(){ var e=vp.querySelector("#expansion .xedge.hot"); return e?e.style.stroke:""; }
+    hotColor:       function(){ var e=vp.querySelector("#expansion .xedge.hot"); return e?e.style.stroke:""; },
+    // per-stage node-encoding legend (lower-left)
+    stageLegend:    function(){ return document.getElementById("stagelegend").textContent; },
+    stageLegendRows:function(){ return document.querySelectorAll("#stagelegend .li").length; }
   };
 
   // ── compact change note in the header + control wiring ──────────────
