@@ -29,8 +29,12 @@
 /* top bar (header + toolbar) and bottom bar (legend) are full-width rows;
    the CENTRE row splits into the diagram + the 25% detail panel */
 .cbg-center{ flex:1; min-height:0; display:flex; flex-direction:row; overflow:hidden; }
-.cbg-side{ width:25%; min-width:280px; max-width:440px; border-left:1px solid var(--line);
+.cbg-side{ width:25%; min-width:280px; border-left:1px solid var(--line);
   background:var(--panel); overflow:auto; flex:none; }
+/* draggable divider — slide left to grow the panel (min = initial, max = 85%) */
+.cbg-resizer{ flex:none; width:8px; cursor:col-resize; position:relative; z-index:5; touch-action:none; }
+.cbg-resizer::before{ content:""; position:absolute; left:3px; top:0; bottom:0; width:2px; background:transparent; transition:background .12s; }
+.cbg-resizer:hover::before, .cbg-resizer.drag::before{ background:var(--accent); }
 
 /* ── header = the change strip (no redundant title; the breadcrumb names the page) ── */
 .cbg-header{ padding:9px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
@@ -93,9 +97,9 @@
 .cbg-root .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.7; }
 .cbg-root .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.95; }
 .cbg-root .xedge.hot{ opacity:1; stroke-width:2.8; }
-.cbg-root .xedge.flow{ stroke-dasharray:6 6; animation: cbg-xflow 1.1s linear infinite; }
+.cbg-root .xedge.flow{ stroke-dasharray:6 6; animation: cbg-xflow 1.5s linear infinite; }   /* slowed 1.1s → 1.5s */
 @keyframes cbg-xflow{ to{ stroke-dashoffset:-24; } }
-.cbg-root .xpiece.pulse circle{ animation: cbg-xpulse 1.7s ease-in-out infinite; }
+.cbg-root .xpiece.pulse circle{ animation: cbg-xpulse 2.4s ease-in-out infinite; }         /* glow slowed 1.7s → 2.4s */
 @keyframes cbg-xpulse{ 0%,100%{ stroke:var(--panel); stroke-width:2; } 50%{ stroke:var(--accent); stroke-width:3.6; } }
 @media (prefers-reduced-motion: reduce){ .cbg-root .xedge.flow{ animation:none; } .cbg-root .xpiece.pulse circle{ animation:none; } }
 .cbg-root .xpiece circle{ cursor:pointer; }
@@ -104,39 +108,43 @@
 .cbg-root .xpiece.again .ring{ stroke:var(--blast); stroke-width:2.4; }
 .cbg-root .xpiece .ring2{ fill:none; stroke:none; }
 .cbg-root .xpiece.selp .ring2{ stroke:var(--accent); stroke-width:2.6; }
-/* selection mark — an accent centre dot on the currently-opened piece */
-.cbg-root .xpiece .seldot{ opacity:0; pointer-events:none; transition:opacity .12s; }
-.cbg-root .xpiece.selp .seldot{ opacity:1; }
+/* selection mark — a black X spinning anti-clockwise in the opened piece's centre
+   (one consistent mark across every view). var(--ink) so it stays visible in dark. */
+.cbg-root .xpiece .selx{ opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center; }
+.cbg-root .xpiece .selx line{ stroke:var(--ink); stroke-width:1.9; stroke-linecap:round; }
+.cbg-root .xpiece.selp .selx{ opacity:1; animation: cbg-selspin 3s linear infinite; }
+@keyframes cbg-selspin{ from{ transform:rotate(0deg); } to{ transform:rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce){ .cbg-root .xpiece.selp .selx{ animation:none; } }
 .cbg-root .xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
 
 /* detail panel (persistent, right side) */
-.cbg-root .detail{ padding:16px 18px; font-size:13px; }
+.cbg-root .detail{ padding:16px 18px; font-family:var(--font-content); font-size:0.929rem; }
 .cbg-root .detail .close{ display:none; }
-.cbg-root .detail .empty{ color:var(--muted); font-size:12.5px; padding-top:6px; }
-.cbg-root .detail .phdr{ font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
-.cbg-root .detail h4{ margin:0 0 2px; font-size:16px; }
-.cbg-root .detail .kind{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:11px; }
+.cbg-root .detail .empty{ color:var(--muted); font-size:0.893rem; padding-top:6px; }
+.cbg-root .detail .phdr{ font-size:0.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.cbg-root .detail h4{ margin:0 0 2px; font-size:1.143rem; }
+.cbg-root .detail .kind{ font-size:0.786rem; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:11px; }
 .cbg-root .detail .ex{ color:#b46a12; font-weight:700; text-transform:none; letter-spacing:0; }
 .cbg-root .detail .row{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-top:1px solid var(--line); }
 .cbg-root .detail .row .k{ color:var(--muted); } .cbg-root .detail .row .v{ font-weight:600; text-align:right; }
 .cbg-root .detail .sum{ margin-top:11px; color:var(--ink); opacity:.85; line-height:1.55; }
 .cbg-root .detail .pillrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 10px; }
-.cbg-root .detail .pill{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.05em;
+.cbg-root .detail .pill{ display:inline-block; font-size:0.75rem; font-weight:800; letter-spacing:.05em;
   text-transform:uppercase; color:#fff; padding:3px 9px; border-radius:999px; }
-.cbg-root .detail .file{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; color:var(--muted); }
-.cbg-root .detail .case{ font-size:11px; font-weight:700; color:#4c9aff; border:1px solid #4c9aff55; border-radius:5px; padding:1px 6px; }
+.cbg-root .detail .file{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.821rem; color:var(--muted); }
+.cbg-root .detail .case{ font-size:0.786rem; font-weight:700; color:#4c9aff; border:1px solid #4c9aff55; border-radius:5px; padding:1px 6px; }
 .cbg-root .detail .bar{ display:flex; height:7px; border-radius:4px; overflow:hidden; background:var(--line); margin:4px 0 3px; }
 .cbg-root .detail .bar i{ display:block; height:100%; }
-.cbg-root .detail .delta{ font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; margin-bottom:4px; }
+.cbg-root .detail .delta{ font-size:0.821rem; color:var(--muted); font-variant-numeric:tabular-nums; margin-bottom:4px; }
 .cbg-root .detail .b{ margin:11px 0; }
-.cbg-root .detail .b .l{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
-.cbg-root .detail .b .t{ font-size:13.5px; color:var(--ink); margin-top:2px; line-height:1.4; }
+.cbg-root .detail .b .l{ font-size:0.714rem; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.cbg-root .detail .b .t{ font-size:0.964rem; color:var(--ink); margin-top:2px; line-height:1.4; }
 .cbg-root .detail .headline{ padding:8px 11px; border-radius:0 6px 6px 0; margin-top:3px;
   font-size:13px; color:var(--ink); line-height:1.5; }
 .cbg-root .detail .muted{ color:var(--muted); }
 .cbg-root .detail .headline .delta{ margin-top:5px; }
 .cbg-root .detail .stageline{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
-.cbg-root .detail .dot{ display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+.cbg-root .detail .dot{ display:inline-flex; align-items:center; gap:5px; font-size:0.786rem; color:var(--muted); }
 .cbg-root .detail .dot i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
 /* lifecycle timeline — one piece across all four stages (the differential) */
 .cbg-root .detail .lifecycle{ margin:11px 0 14px; border:1px solid var(--line); border-radius:9px; overflow:hidden; }
@@ -152,17 +160,17 @@
 /* one column: the kind TITLE on its own row, its chips full-width beneath */
 .cbg-root .detail .idrow{ display:block; padding:8px 0 6px; border-top:1px solid var(--line); }
 .cbg-root .detail .idrow:first-child{ border-top:0; }
-.cbg-root .detail .idlbl{ font-size:10px; font-weight:800; letter-spacing:.06em;
+.cbg-root .detail .idlbl{ font-size:0.714rem; font-weight:800; letter-spacing:.06em;
   text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 .cbg-root .detail .idchips{ display:flex; flex-wrap:wrap; gap:5px; }
 .cbg-root .idchip{ display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:11px;
   font-size:11.5px; line-height:1.55; max-width:100%; }
 .cbg-root .idchip svg{ flex:none; }
 .cbg-root .idchip b{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
-.cbg-root .idchip .mth{ font-weight:800; font-size:10px; letter-spacing:.03em; }
+.cbg-root .idchip .mth{ font-weight:800; font-size:0.714rem; letter-spacing:.03em; }
 .cbg-root .idchip.dt{ background:var(--line); color:var(--muted); }
 .cbg-root .idchip.dt b{ color:var(--ink); font-weight:600; }
-.cbg-root .idchip.dt .ty{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
+.cbg-root .idchip.dt .ty{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.75rem; }
 .cbg-root .idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace;
   font-size:10.5px; padding:2px 8px; }
 /* type-family colours (.ty-num1 … .ty-id) INHERIT from a3.css — theme-aware there. */
@@ -193,9 +201,19 @@
 /* per-stage NODE-ENCODING key (lower-left) — rebuilt on every stage switch */
 .cbg-root #cbg-stagelegend{ position:absolute; bottom:12px; left:14px; font-size:11px; color:var(--muted);
   background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px 8px;
-  box-shadow:0 6px 20px rgba(0,0,0,.10); max-width:250px; pointer-events:none; }
+  box-shadow:0 6px 20px rgba(0,0,0,.10); max-width:250px; pointer-events:auto; }
+.cbg-root #cbg-stagelegend.min{ padding:0; border:0; background:transparent; box-shadow:none; }
+.cbg-root #cbg-stagelegend .lghead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.cbg-root #cbg-stagelegend .lgbtn{ font:inherit; font-size:12px; line-height:1; color:var(--muted); background:var(--panel);
+  border:1px solid var(--line); border-radius:6px; padding:1px 6px; cursor:pointer; flex:none; }
+.cbg-root #cbg-stagelegend .lgbtn:hover{ border-color:var(--edge); color:var(--ink); }
+.cbg-root #cbg-stagelegend .lgpill{ font:inherit; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px; box-shadow:0 6px 20px rgba(0,0,0,.10); }
+.cbg-root #cbg-stagelegend .lgpill:hover{ border-color:var(--accent); }
+.cbg-root #cbg-stagelegend .lgpill i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
 .cbg-root #cbg-stagelegend .lh{ font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
-  margin-bottom:7px; display:flex; align-items:center; gap:6px; color:var(--ink); }
+  display:flex; align-items:center; gap:6px; color:var(--ink); }
 .cbg-root #cbg-stagelegend .lh i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
 .cbg-root #cbg-stagelegend .li{ display:flex; align-items:center; gap:8px; padding:2px 0; line-height:1.32; }
 .cbg-root #cbg-stagelegend .li svg{ flex:none; }
@@ -372,6 +390,7 @@
         <div class="hint" id="cbg-hint">drag to pan · double-click an entity to drill</div>
         <div id="cbg-stagelegend"></div>
       </div>
+      <div class="cbg-resizer" id="cbg-resizer" title="Drag to resize"></div>
       <aside class="cbg-side" id="cbg-side">
         <div id="cbg-detail" class="detail"><div class="empty">Loading the codebase graph…</div></div>
       </aside>
@@ -416,6 +435,7 @@
   var l2focus = null;
   var lastBounds = null;
   var l1layout = "ring", l2layout = "columns", insideLayout = "force";
+  var legendMin = false;   // lower-left stage legend collapsed to a pill?
   var STAGE_COLOR = { red:"#e5484d", execute:"#4c9aff", review:"#30a46c", commit:"#8e4ec6" };
   var L1_LAYOUTS = { ring:"Ring", flow:"Flow", force:"Force" };
   var L2_LAYOUTS = { columns:"Columns", force:"Force", radial:"Radial" };
@@ -859,7 +879,10 @@
         inner.appendChild(E("circle",{class:"ring2",r:e.r+7,cx:0,cy:0}));
         if(e.ring) inner.appendChild(E("circle",{r:e.r+4,cx:0,cy:0,fill:"none",stroke:e.color,"stroke-width":"2.4"}));
         inner.appendChild(E("circle",{r:e.r, fill:e.hollow?"var(--panel)":e.color, stroke:e.hollow?col:"var(--panel)","stroke-width":"2"}));
-        inner.appendChild(E("circle",{class:"seldot",r:3.2,cx:0,cy:0,fill:"var(--accent)",stroke:"var(--panel)","stroke-width":"1.4"}));
+        var selx=E("g",{class:"selx"}); var xa=Math.min(4.6, e.r*0.5);
+        selx.appendChild(E("line",{x1:-xa,y1:-xa,x2:xa,y2:xa}));
+        selx.appendChild(E("line",{x1:-xa,y1:xa,x2:xa,y2:-xa}));
+        inner.appendChild(selx);
         if(e.badge){ var bw=9+String(e.badge).length*5.4, bx=e.r*0.64, by=-e.r*0.72;
           inner.appendChild(E("rect",{x:bx-bw/2,y:by-7,width:bw,height:14,rx:7,fill:e.color}));
           var bt=E("text",{class:"xbadge",x:bx,y:by+3}); bt.textContent=e.badge; inner.appendChild(bt); }
@@ -952,6 +975,12 @@
     var el=document.getElementById("cbg-stagelegend"); if(!el) return;
     if(!SIM || view==="l2"){ el.style.display="none"; return; } el.style.display="";
     var sc=STAGE_COLOR[curStage];
+    el.classList.toggle("min", legendMin);
+    if(legendMin){   // collapsed → a little pill that maximizes on click
+      el.innerHTML = "<button class='lgpill' id='cbg-lgmax' title='Show the legend'><i style='background:"+sc+"'></i>Legend</button>";
+      document.getElementById("cbg-lgmax").onclick=function(){ legendMin=false; buildStageLegend(); };
+      return;
+    }
     var hollowG="<circle cx='12' cy='12' r='7' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>";
     var rows="";
     if(curStage==="red"){
@@ -980,7 +1009,9 @@
     rows += legendRow(
       "<line x1='2' y1='12' x2='18' y2='12' stroke='"+sc+"' stroke-width='2.8'/><path d='M17 8 L22 12 L17 16 Z' fill='"+sc+"'/>",
       "<b>coloured flow</b> = a flow this stage touched");
-    el.innerHTML = "<div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"+rows;
+    el.innerHTML = "<div class='lghead'><div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"
+      + "<button class='lgbtn' id='cbg-lgmin' title='Minimize'>&#8211;</button></div>"+rows;
+    document.getElementById("cbg-lgmin").onclick=function(){ legendMin=true; buildStageLegend(); };
   }
   function setStage(s){
     curStage = s; syncStageButtons(); renderL1(); reopenPanel();
@@ -1016,6 +1047,26 @@
     }, { passive:false });
   })();
   window.addEventListener("resize", function(){ if(lastBounds) frame(lastBounds); });
+
+  // ── drag the divider to resize the right panel (min = initial · max = 85%) ──
+  (function(){
+    var resizer=document.getElementById("cbg-resizer"), side=document.getElementById("cbg-side");
+    var center=side.parentNode, drag=null, minW=0;
+    resizer.addEventListener("pointerdown", function(e){
+      e.preventDefault();
+      if(!minW) minW=side.getBoundingClientRect().width;      // the initial size is the floor
+      drag={ cr:center.getBoundingClientRect() };
+      resizer.classList.add("drag");
+      if(resizer.setPointerCapture){ try{ resizer.setPointerCapture(e.pointerId); }catch(_){} }
+    });
+    window.addEventListener("pointermove", function(e){
+      if(!drag) return;
+      var maxW=drag.cr.width*0.85;                             // panel can take up to 85% of the row
+      var w=Math.max(minW, Math.min(maxW, drag.cr.right - e.clientX));
+      side.style.width=w+"px"; if(lastBounds) frame(lastBounds);
+    });
+    window.addEventListener("pointerup", function(){ if(drag){ drag=null; resizer.classList.remove("drag"); } });
+  })();
 
   function showTip(node){
     var html;
@@ -1103,7 +1154,14 @@
     },
     dblClick: function(key){
       var n = DATA.l1.nodes.filter(function(x){ return x.slug===key || x.id===key; })[0]; if(n) onDouble(n);
-    }
+    },
+    legendMinNow:   function(){ return legendMin; },
+    clickLegendMin: function(){ var b=document.getElementById("cbg-lgmin"); if(b) b.click(); },
+    clickLegendMax: function(){ var b=document.getElementById("cbg-lgmax"); if(b) b.click(); },
+    legendPillShown:function(){ return !!document.getElementById("cbg-lgmax"); },
+    sideWidth:      function(){ return Math.round(document.getElementById("cbg-side").getBoundingClientRect().width); },
+    selxSpins:      function(){ var x=document.querySelector("#cbg-expansion .xpiece.selp .selx");
+      return x ? getComputedStyle(x).animationName : ""; }
   };
 
   // ── boot ────────────────────────────────────────────────────────────────────
