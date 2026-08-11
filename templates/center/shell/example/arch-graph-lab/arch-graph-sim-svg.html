@@ -13,6 +13,12 @@
 body{ background:var(--bg); color:var(--ink); margin:0;
       font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
       height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+/* top bar (header + toolbar) and bottom bar (legend) are full-width body rows;
+   the CENTRE row splits into 75% diagram + 25% panel */
+.center{ flex:1; min-height:0; display:flex; flex-direction:row; overflow:hidden; }
+.side{ width:25%; min-width:280px; max-width:440px; border-left:1px solid var(--line);
+       background:var(--panel); overflow:auto; flex:none; }
+.hchange{ font-weight:400; font-size:12px; color:var(--muted); margin-left:8px; }
 
 /* ── header ─────────────────────────────────────────────────────────── */
 header{ padding:14px 20px 12px; border-bottom:1px solid var(--line); background:var(--panel); }
@@ -40,10 +46,10 @@ button.back{ font-weight:600; }
 .selinfo b{ color:var(--ink); }
 
 /* ── stage ──────────────────────────────────────────────────────────── */
-.stage{ flex:1; overflow:auto; display:flex; align-items:center; justify-content:center;
-        padding:28px; position:relative; }
-.stage.l2view{ align-items:flex-start; justify-content:flex-start; }
-svg#graph{ display:block; }
+/* the svg FILLS the stage; content is centred + panned by a viewport transform
+   (drag the background), so it never clips and pans whether it fits or overflows. */
+.stage{ flex:1; min-width:0; overflow:hidden; display:block; position:relative; }
+svg#graph{ display:block; width:100%; height:100%; }
 
 /* graph elements */
 .edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .15s; }
@@ -94,6 +100,51 @@ svg#graph{ display:block; }
 .xpiece.pulse circle{ animation: xpulse 1.7s ease-in-out infinite; }
 @keyframes xpulse{ 0%,100%{ stroke:var(--panel); stroke-width:2; } 50%{ stroke:var(--accent); stroke-width:3.6; } }
 @media (prefers-reduced-motion: reduce){ .xedge.flow{ animation:none; } .xpiece.pulse circle{ animation:none; } }
+/* per-stage node encoding rings + selection */
+.xpiece circle{ cursor:pointer; }
+.xpiece .ring{ fill:none; }
+.xpiece.tested .ring{ stroke:#4c9aff; stroke-width:2.4; }
+.xpiece.again  .ring{ stroke:var(--blast); stroke-width:2.4; }
+.xpiece .ring2{ fill:none; stroke:none; }
+.xpiece.selp .ring2{ stroke:var(--accent); stroke-width:2.6; }
+.xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
+/* detail panel (persistent, right side) */
+.detail{ padding:16px 18px; font-size:13px; }
+.detail .close{ display:none; }
+.detail .empty{ color:var(--muted); font-size:12.5px; padding-top:6px; }
+.detail .phdr{ font-size:10.5px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.detail h4{ margin:0 0 2px; font-size:16px; }
+.detail .kind{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; margin-bottom:11px; }
+.detail .ex{ color:#b46a12; font-weight:700; text-transform:none; letter-spacing:0; }
+.detail .row{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-top:1px solid var(--line); }
+.detail .row .k{ color:var(--muted); } .detail .row .v{ font-weight:600; text-align:right; }
+.detail .sum{ margin-top:11px; color:var(--ink); opacity:.85; line-height:1.55; }
+/* clear, low-word stage blocks */
+.detail .pillrow{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:2px 0 10px; }
+.detail .pill{ display:inline-block; font-size:10.5px; font-weight:800; letter-spacing:.05em;
+  text-transform:uppercase; color:#fff; padding:3px 9px; border-radius:999px; }
+.detail .file{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11.5px; color:var(--muted); }
+.detail .case{ font-size:11px; font-weight:700; color:#4c9aff; border:1px solid #4c9aff55; border-radius:5px; padding:1px 6px; }
+.detail .bar{ display:flex; height:7px; border-radius:4px; overflow:hidden; background:var(--line); margin:4px 0 3px; }
+.detail .bar i{ display:block; height:100%; }
+.detail .delta{ font-size:11.5px; color:var(--muted); font-variant-numeric:tabular-nums; margin-bottom:4px; }
+.detail .b{ margin:11px 0; }
+.detail .b .l{ font-size:10px; font-weight:800; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+.detail .b .t{ font-size:13.5px; color:var(--ink); margin-top:2px; line-height:1.4; }
+.detail .headline{ padding:8px 11px; border-radius:0 6px 6px 0; margin-top:3px;
+  font-size:13px; color:var(--ink); line-height:1.5; }
+.detail .muted{ color:var(--muted); }
+.detail .headline .delta{ margin-top:5px; }
+.stage{ cursor:grab; }
+.stage:active{ cursor:grabbing; }
+.detail .stageline{ display:flex; gap:6px; flex-wrap:wrap; margin-top:8px; }
+.detail .dot{ display:inline-flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); }
+.detail .dot i{ width:9px; height:9px; border-radius:50%; display:inline-block; }
+/* per-stage highlight colours on the stage buttons */
+#stageSeg button[data-stage="red"].on{ background:#e5484d; }
+#stageSeg button[data-stage="execute"].on{ background:#4c9aff; }
+#stageSeg button[data-stage="review"].on{ background:#30a46c; }
+#stageSeg button[data-stage="commit"].on{ background:#8e4ec6; }
 /* L2 connector focus — click a node to light exactly what it connects to */
 .stage.l2view .edge{ opacity:.42; }               /* calmer default, not spaghetti */
 .stage.l2view .edge.hi{ opacity:1; stroke:var(--accent); stroke-width:2.8; }
@@ -139,38 +190,31 @@ svg#graph{ display:block; }
 </style>
 
 <header>
-  <h1>Change Simulation <span style="color:var(--muted);font-weight:400">· blast radius · gustify</span></h1>
-  <div class="sub">
-    EXAMPLE — a real gustify change replayed on the graph
-    <span class="sep">·</span> <b>Before</b> shows what the change involves · <b>After</b> colours what it touched (green) and what's downstream (amber)
-  </div>
+  <h1>Change Simulation <span class="hchange" id="hchange"></span></h1>
 </header>
 
-<div class="change" id="changeBanner">
-  <span class="tag">SIMULATED CHANGE</span>
-  <b id="chSubj">—</b>
-  <span class="meta" id="chMeta"></span>
-</div>
-
 <div class="toolbar">
-  <button class="back" id="backBtn" disabled>&larr; Back</button>
-  <div class="crumb"><span class="dot" id="crumbDot"></span><span id="crumbTxt">All entities</span>
-    <span class="lvl" id="crumbLvl">· L1 · fk graph</span></div>
-  <div class="spacer"></div>
+  <button id="openAll">Open all</button>
+  <button class="back" id="backBtn" disabled hidden>&larr; Back</button>
+  <span class="dot" id="crumbDot" hidden></span><span id="crumbTxt" hidden></span><span id="crumbLvl" hidden></span>
   <div class="selinfo" id="selInfo"></div>
+  <div class="spacer"></div>
   <label class="laywrap"><span id="layLbl">layout</span>
     <select id="layoutSel"></select>
   </label>
   <label class="laywrap" id="insideWrap">inside
     <select id="insideSel"></select>
   </label>
-  <div class="seg" id="phaseSeg">
-    <button data-phase="before" class="on">Before</button>
-    <button data-phase="after">After</button>
+  <div class="seg" id="stageSeg">
+    <button data-stage="red">Red</button>
+    <button data-stage="execute" class="on">Execute</button>
+    <button data-stage="review">Review</button>
+    <button data-stage="commit">Commit</button>
   </div>
   <button id="resetBtn">Reset layout</button>
 </div>
 
+<div class="center">
 <div class="stage" id="stage">
   <svg id="graph" xmlns="http://www.w3.org/2000/svg">
     <defs>
@@ -181,8 +225,12 @@ svg#graph{ display:block; }
     </defs>
     <g id="viewport"></g>
   </svg>
-  <div class="hint" id="hint">drag nodes · click to select · double-click to drill</div>
+  <div class="hint" id="hint">click an entity to open · click a piece for details · drag to move</div>
 </div>
+<aside class="side" id="side">
+  <div id="detail" class="detail"><div class="empty">Click an entity or a piece for details.</div></div>
+</aside>
+</div><!-- /.center -->
 
 <div class="legend" id="legend"></div>
 
@@ -203,13 +251,16 @@ svg#graph{ display:block; }
     SIM.touched.forEach(function(s){ TOUCH[s]=1; INVOLVED[s]=1; });
     SIM.blast.forEach(function(s){ BLAST[s]=1; INVOLVED[s]=1; });
   }
-  var simPhase = "before";   // "before" | "after"
+  var curStage = "execute";  // lifecycle lens: red | execute | review | commit
+  var selPiece = null;       // "slug|pieceId" currently detailed
+  var PIECE_R = 11;          // base mini-circle radius (encodings scale from it)
   var expanded = {};         // L1: SET of entities currently exploded into their pieces
   var l2focus = null;        // L2: the node whose connectors are isolated
   var lastBounds = null;     // L1 frame bounds, so an expansion can grow the canvas
   var l1layout = "ring";       // entity arrangement: ring | flow | force
   var l2layout = "columns";    // L2 arrangement: columns | force | radial
-  var insideLayout = "ring";   // pieces INSIDE an expanded entity: ring | grid | force
+  var insideLayout = "force";  // pieces INSIDE an expanded entity: ring | grid | force
+  var STAGE_COLOR = { red:"#e5484d", execute:"#4c9aff", review:"#30a46c", commit:"#8e4ec6" };
   var L1_LAYOUTS = { ring:"Ring", flow:"Flow (deps)", force:"Force" };
   var L2_LAYOUTS = { columns:"Columns", force:"Force", radial:"Radial" };
   var INSIDE_LAYOUTS = { ring:"Ring", grid:"Grid", force:"Force" };
@@ -252,14 +303,15 @@ svg#graph{ display:block; }
   function ewidth(w){ return 1.5 + (clamp(w,1,10)-1)/9*4.6; }   // 1.5 .. 6.1
 
   // ── build viewport at natural pixel scale, offset so all coords ≥ margin
-  function frame(worldBounds){
-    var offX = MARGIN - worldBounds.minX, offY = MARGIN - worldBounds.minY;
-    var w = (worldBounds.maxX - worldBounds.minX) + 2*MARGIN;
-    var h = (worldBounds.maxY - worldBounds.minY) + 2*MARGIN;
-    svg.setAttribute("width",  Math.ceil(w));
-    svg.setAttribute("height", Math.ceil(h));
-    vp.setAttribute("transform", "translate("+offX+","+offY+")");
+  var panX=0, panY=0, fitTx=0, fitTy=0;
+  function frame(b){
+    var cw=stage.clientWidth||900, ch=stage.clientHeight||600;
+    svg.setAttribute("width", cw); svg.setAttribute("height", ch);
+    fitTx = Math.round((cw-(b.maxX-b.minX))/2 - b.minX);   // centre content in the viewport
+    fitTy = Math.round((ch-(b.maxY-b.minY))/2 - b.minY);
+    applyPan();
   }
+  function applyPan(){ vp.setAttribute("transform","translate("+(fitTx+panX)+","+(fitTy+panY)+")"); }
 
   // ══════════════════════════════════════════════════════════════════
   //  layout engines — Ring (stamped) · Flow (Flare dependency gradient) · Force
@@ -391,7 +443,7 @@ svg#graph{ display:block; }
 
     afterRender("All entities", DATA.stats.entities + " entities", "var(--muted)");
     applySim();
-    if(simPhase==="after" && Object.keys(expanded).length) drawExpansions();
+    if(Object.keys(expanded).length) drawExpansions();
   }
 
   // ══════════════════════════════════════════════════════════════════
@@ -583,18 +635,15 @@ svg#graph{ display:block; }
     }
   }
   function onSingle(node){
-    if(view==="l1"){
-      if(simPhase==="after") toggleExpand(node.slug);  // open entity → its changed pieces
-      // before phase: single-click shows nothing (we don't yet know internals)
-    } else {
-      focusL2(node.id);                                 // isolate this node's connectors
-    }
+    // single-click SELECTS the entity (shows its summary) — never changes open/closed
+    if(view==="l1"){ if(INVOLVED[node.id]) openEntityDetail(node.slug); }
+    else { focusL2(node.id); }
   }
   function onDouble(node){
-    if(view==="l1"){ drill(node.slug); }                // full L2 drill
-    else if(node.kind==="external"){                 // hop to the referenced entity
-      var s = node.label || String(node.id).replace(/^external:/,"");
-      if(DATA.l2[s]) drill(s);
+    // double-click TOGGLES the entity open ↔ closed
+    if(view==="l1" && INVOLVED[node.id]){
+      if(expanded[node.slug]) delete expanded[node.slug]; else expanded[node.slug]=true;
+      renderL1(); openEntityDetail(node.slug);
     }
   }
 
@@ -621,7 +670,7 @@ svg#graph{ display:block; }
   // (intra) and the piece→piece links to OTHER expanded entities (cross).
   function drawExpansions(){
     var slugs = Object.keys(expanded);
-    var PR = 11;                                  // piece-circle radius
+    var PR = PIECE_R;                             // piece-circle radius
     var innerPos = {};                            // "slug\tpieceId" -> {x,y}
     // hide the exploded entities' solid circles; fade the uninvolved
     vp.querySelectorAll(".node").forEach(function(n){
@@ -647,7 +696,13 @@ svg#graph{ display:block; }
       var contR=Math.max(56, extent+PR+18), col=COLORS[slug]||"#888";
       var cont=E("circle",{class:"xcontainer",cx:pos.x,cy:pos.y,r:contR,
         fill:col,"fill-opacity":"0.06",stroke:col,"stroke-opacity":"0.55","stroke-width":"1.6","stroke-dasharray":"4 4"});
-      cont.addEventListener("click", function(){ toggleExpand(slug); });   // click container to collapse
+      (function(sl){                                   // container: single = select · double = toggle
+        var en=L1.filter(function(x){ return x.slug===sl; })[0], ct=null;
+        cont.addEventListener("click", function(){
+          if(ct){ clearTimeout(ct); ct=null; onDouble(en); }
+          else { ct=setTimeout(function(){ ct=null; onSingle(en); }, 230); }
+        });
+      })(slug);
       layer.appendChild(cont);
       var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col}); lb.textContent=nodeMeta[slug].node.label||slug;
       layer.appendChild(lb);
@@ -681,12 +736,20 @@ svg#graph{ display:block; }
       ((SIM.pieces&&SIM.pieces[slug])||[]).forEach(function(p){
         var pp=innerPos[slug+"\t"+p.id]; if(!pp) return;
         var col=p.role==="changed"?"var(--touch)":"var(--blast)";
-        var g=E("g",{class:"xpiece"+(connector[slug+"\t"+p.id]?" pulse":""),transform:"translate("+pp.x+","+pp.y+")"});
+        var e=stageEnc(slug,p), key=slug+"|"+p.id;
+        var g=E("g",{class:"xpiece"+(connector[slug+"\t"+p.id]?" pulse":"")+(selPiece===key?" selp":""),
+                     "data-piece":key, transform:"translate("+pp.x+","+pp.y+")"});
         var inner=E("g",{class:"xpiece-in"});
-        inner.appendChild(E("circle",{r:PR,fill:col,stroke:"var(--panel)","stroke-width":"2"}));
-        var t=E("text",{class:"xplabel",x:0,y:PR+11}); t.textContent=trunc(p.label,16); inner.appendChild(t);
+        inner.appendChild(E("circle",{class:"ring2",r:e.r+7,cx:0,cy:0}));           // selection ring (styled only when .selp)
+        if(e.ring) inner.appendChild(E("circle",{r:e.r+4,cx:0,cy:0,fill:"none",stroke:e.color,"stroke-width":"2.4"}));
+        inner.appendChild(E("circle",{r:e.r, fill:e.hollow?"var(--panel)":e.color, stroke:e.hollow?col:"var(--panel)","stroke-width":"2"}));
+        if(e.badge){ var bw=9+String(e.badge).length*5.4, bx=e.r*0.64, by=-e.r*0.72;
+          inner.appendChild(E("rect",{x:bx-bw/2,y:by-7,width:bw,height:14,rx:7,fill:e.color}));
+          var bt=E("text",{class:"xbadge",x:bx,y:by+3}); bt.textContent=e.badge; inner.appendChild(bt); }
+        var t=E("text",{class:"xplabel",x:0,y:e.r+11}); t.textContent=trunc(p.label,16); inner.appendChild(t);
         var ti=E("title"); ti.textContent=(p.label)+(p.via?" — "+p.via:""); inner.appendChild(ti);
         g.appendChild(inner); layer.appendChild(g);
+        (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation(); openDetail(sl,pc); }); })(slug,p);
         if(!reduce) animP.push({el:inner, dx:pos.x-pp.x, dy:pos.y-pp.y});
       });
     });
@@ -733,6 +796,123 @@ svg#graph{ display:block; }
     document.getElementById("selInfo").innerHTML="<b>"+trunc(lbl,30)+"</b> · "+c+" connector"+(c===1?"":"s");
   }
 
+  // ── per-stage node encoding (magnitude/ring/badge) + the detail panel ─────
+  function stageEnc(slug, p){
+    var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
+    var e={ r:PIECE_R, hollow:true, ring:false, badge:"", color:STAGE_COLOR[curStage] };
+    if(curStage==="execute"){ if(d.changed){ e.hollow=false; e.r=PIECE_R+Math.sqrt(d.add||0)*3.4; if(d.add) e.badge="+"+d.add; } }
+    else if(curStage==="red"){ if(d.tested){ e.hollow=false; e.ring=true; if(d.cases&&d.cases.length) e.badge=String(d.cases.length); } }
+    else if(curStage==="review"){ if(d.touched_again){ e.hollow=false; e.ring=true; } }
+    else if(curStage==="commit"){ if(p.role==="changed") e.hollow=false; }
+    return e;   // highlighted pieces fill the STAGE colour; the rest stay hollow (role outline)
+  }
+  var STAGE_HEAD = { red:"what we made fail", execute:"what we changed", review:"what we found", commit:"what shipped" };
+  function pill(t,c){ return "<span class='pill' style='background:"+(c||STAGE_COLOR[curStage])+"'>"+t+"</span>"; }
+  function dblock(l,t){ return "<div class='b'><div class='l'>"+l+"</div><div class='t'>"+t+"</div></div>"; }
+  function headline(label,text,color){
+    return "<div class='b'><div class='l' style='color:"+color+"'>"+label+"</div>"
+      + "<div class='headline' style='background:"+color+"18;border-left:3px solid "+color+"'>"+text+"</div></div>";
+  }
+  function bar(add,del){ var tot=(add||0)+(del||0)||1, g=Math.round(100*(add||0)/tot);
+    return "<div class='bar'><i style='width:"+g+"%;background:#2f9e63'></i><i style='width:"+(100-g)+"%;background:#e5484d'></i></div>"
+      +"<div class='delta'>+"+(add||0)+" · −"+(del||0)+" lines</div>"; }
+
+  function openDetail(slug, p){        // a single PIECE, led by its stage headline
+    var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
+    var dp=document.getElementById("detail"), sc=STAGE_COLOR[curStage];
+    var body="";
+    if(curStage==="execute"){
+      body = d.changed
+        ? "<div class='pillrow'>"+pill(d.action||"changed")+"<span class='file'>"+((d.file||"").split("/").pop())+"</span></div>"
+          + bar(d.add,d.del) + headline("what we changed", d.effect||d.what||"—", sc) + dblock("added", d.what||"internal edits")
+        : "<div class='pillrow'>"+pill("not changed","var(--muted)")+"</div>"
+          + dblock("relation","downstream via FK") + dblock("why it's here", d.summary||"referenced by the change");
+    } else if(curStage==="red"){
+      body = d.tested
+        ? "<div class='pillrow'>"+pill("red proved","#e5484d")+(d.cases||[]).map(function(c){return "<span class='case'>"+c+"</span>";}).join("")+"</div>"
+          + headline("what we made fail", d.red||"—", "#e5484d") + dblock("covers", d.covers||"—") + dblock("guards against", d.guards||"—")
+        : "<div class='pillrow'>"+pill("no test","var(--muted)")+"</div>" + dblock("risk if it breaks", d.guards||"no red declared for this piece");
+    } else if(curStage==="review"){
+      var rc={low:"#2f9e63",medium:"#d9821f",high:"#e5484d",watch:"#4c9aff"}[d.risk]||sc;
+      body = "<div class='pillrow'>"+pill(d.touched_again?"re-touched":"unchanged")+pill("risk "+(d.risk||"—"),rc)+"</div>"
+        + headline("what we found", d.why||"—", sc) + dblock("test", (d.test||"—")+((d.cases&&d.cases.length)?" · "+d.cases.join(","):""));
+    } else if(curStage==="commit"){
+      var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      body = "<div class='pillrow'>"+pill(p.role==="changed"?"in commit":"not in commit", p.role==="changed"?sc:"var(--muted)")+"<span class='file'>"+(m.commit||"")+"</span></div>"
+        + headline("what shipped", m.subject||"—", sc) + "<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>" + dblock("cases", (m.cases||[]).join(", ")||"—");
+    }
+    var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
+    dp.innerHTML = "<div class='phdr'>"+curStage+ex+"</div><h4>"+p.label+"</h4>"
+      + "<div class='kind'>in "+(nodeMeta[slug].node.label||slug)+"</div>"+body;
+    selectPiece(slug+"|"+p.id);
+  }
+
+  function openEntityDetail(slug){      // the WHOLE entity — its stage headline aggregates every highlighted piece
+    var dp=document.getElementById("detail");
+    var n=(L1.filter(function(x){ return x.slug===slug; })[0])||{}, c=n.counts||{};
+    var roleCol = TOUCH[slug]?"var(--touch)":(BLAST[slug]?"var(--blast)":"var(--muted)");
+    var role = TOUCH[slug]?"touched by this change":(BLAST[slug]?"downstream · blast radius":"not involved");
+    var pieces=(SIM.pieces&&SIM.pieces[slug])||[], sd=(SIM.stages&&SIM.stages[curStage])||{}, sc=STAGE_COLOR[curStage];
+    function row(k,v){ return "<div class='row'><span class='k'>"+k+"</span><span class='v'>"+v+"</span></div>"; }
+    var lines=[];
+    pieces.forEach(function(p){
+      var d=(sd.pieces&&sd.pieces[p.id])||{};
+      if(curStage==="red" && d.tested) lines.push("<b>"+p.label+"</b> — "+(d.red||d.covers||""));
+      else if(curStage==="execute" && d.changed) lines.push("<b>"+p.label+"</b> +"+d.add+" · "+(d.what||""));
+      else if(curStage==="review" && d.touched_again) lines.push("<b>"+p.label+"</b> — "+(d.why||"")+" ("+(d.risk||"")+")");
+      else if(curStage==="commit" && p.role==="changed") lines.push("<b>"+p.label+"</b>");
+    });
+    var headText;
+    if(curStage==="commit"){ var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      headText=(m.subject||"")+"<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"; }
+    else headText = lines.length ? lines.join("<br>") : "<span class='muted'>nothing in this entity for the "+curStage+" stage</span>";
+    var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
+    dp.innerHTML = "<div class='phdr'>entity · "+curStage+ex+"</div>"
+      + "<h4 style='color:"+roleCol+"'>"+(n.label||slug)+"</h4><div class='kind'>"+role+"</div>"
+      + row("endpoints",c.endpoints||0)+row("models",c.models||0)+row("schemas",c.schemas||0)+row("files",c.files||0)+row("lines",(c.lines||0).toLocaleString())
+      + headline(STAGE_HEAD[curStage], headText, sc)
+      + "<div class='sum'>double-click to open its pieces</div>";
+    selectPiece(null);
+  }
+  function toggleAllExpand(){
+    var inv=SIM.touched.concat(SIM.blast), allOpen=inv.length && inv.every(function(s){ return expanded[s]; });
+    expanded={}; if(!allOpen) inv.forEach(function(s){ expanded[s]=true; });
+    document.getElementById("openAll").textContent = allOpen ? "Open all" : "Close all";
+    renderL1();
+  }
+  // default panel: a stage-wide summary of the crucial pieces across ALL entities
+  function stageSummary(){
+    var dp=document.getElementById("detail"), sd=(SIM.stages&&SIM.stages[curStage])||{}, sc=STAGE_COLOR[curStage];
+    var lines=[], n=0;
+    SIM.touched.concat(SIM.blast).forEach(function(slug){
+      var ent=(L1.filter(function(x){ return x.slug===slug; })[0]||{}).label||slug;
+      ((SIM.pieces&&SIM.pieces[slug])||[]).forEach(function(p){
+        var d=(sd.pieces&&sd.pieces[p.id])||{};
+        if(curStage==="red" && d.tested){ n++; lines.push("<b>"+p.label+"</b> — "+(d.red||d.covers||"")+" <span class='muted'>· "+ent+"</span>"); }
+        else if(curStage==="execute" && d.changed){ n++; lines.push("<b>"+p.label+"</b> +"+d.add+" · "+(d.what||"")+" <span class='muted'>· "+ent+"</span>"); }
+        else if(curStage==="review" && d.touched_again){ n++; lines.push("<b>"+p.label+"</b> — "+(d.why||"")+" ("+(d.risk||"")+") <span class='muted'>· "+ent+"</span>"); }
+        else if(curStage==="commit" && p.role==="changed"){ n++; lines.push("<b>"+p.label+"</b> <span class='muted'>· "+ent+"</span>"); }
+      });
+    });
+    var noun={red:"red test",execute:"changed piece",review:"finding",commit:"piece in commit"}[curStage];
+    var head, sub=n+" "+noun+(n===1?"":"s");
+    if(curStage==="commit"){ var m=(SIM.stages.commit&&SIM.stages.commit.meta)||{};
+      head="<b>"+(m.commit||"")+"</b> "+(m.subject||"")+"<div class='delta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+" · "+(m.cases||[]).join(", ")+"</div>"; }
+    else head = lines.length ? lines.join("<br>") : "<span class='muted'>nothing flagged for the "+curStage+" stage</span>";
+    var ex=(sd.real===false)?" <span class='ex'>· example</span>":"";
+    dp.innerHTML = "<div class='phdr'>"+curStage+ex+" · all entities</div>"
+      + "<h4>Change summary</h4>"
+      + "<div class='kind'><span style='color:var(--touch)'>"+SIM.touched.join(", ")+"</span> &rarr; <span style='color:var(--blast)'>"+SIM.blast.join(", ")+"</span> · "+sub+"</div>"
+      + headline(STAGE_HEAD[curStage], head, sc)
+      + "<div class='sum'>click an entity or a piece for its detail</div>";
+    selectPiece(null);
+  }
+  function resetPanel(){ stageSummary(); }
+  function selectPiece(key){
+    selPiece=key;
+    vp.querySelectorAll(".xpiece").forEach(function(g){ g.classList.toggle("selp", g.getAttribute("data-piece")===key); });
+  }
+
   // ── the change overlay: touched (green) · blast/downstream (amber) · faded ──
   function applySim(){
     if(!SIM) return;
@@ -742,48 +922,28 @@ svg#graph{ display:block; }
         var id=g.getAttribute("data-id");
         g.classList.remove("touched","blast","faded");
         if(!INVOLVED[id]){ g.classList.add("faded"); return; }   // uninvolved recede
-        if(simPhase==="after"){
-          if(TOUCH[id]) g.classList.add("touched");
-          else if(BLAST[id]) g.classList.add("blast");
-        }
+        if(TOUCH[id]) g.classList.add("touched"); else if(BLAST[id]) g.classList.add("blast");
       });
       edgeRecs.forEach(function(r){
         r.el.classList.remove("blastedge","faded");
         if(!(INVOLVED[r.s] && INVOLVED[r.t])){ r.el.classList.add("faded"); return; }
-        if(simPhase==="after" && BLAST[r.s] && TOUCH[r.t]) r.el.classList.add("blastedge");
+        if(BLAST[r.s] && TOUCH[r.t]) r.el.classList.add("blastedge");
       });
-      var story = simPhase==="before"
-        ? "involves <b>"+SIM.touched.join(", ")+"</b>"
-          + (SIM.blast.length ? " &amp; its dependents <b>"+SIM.blast.join(", ")+"</b>" : "")
-        : "<span style='color:var(--touch)'>&#9679; touched "+SIM.touched.join(", ")+"</span>"
-          + (SIM.blast.length ? " &nbsp;<span style='color:var(--blast)'>&#9679; downstream "+SIM.blast.join(", ")+"</span>" : "");
-      document.getElementById("selInfo").innerHTML = story;
-    } else {
-      var tl2 = (SIM.touched_l2 && SIM.touched_l2[drilledSlug]) || [];
-      var tset={}; tl2.forEach(function(x){ tset[x]=1; });
-      nodes.forEach(function(g){
-        var id=g.getAttribute("data-id");
-        g.classList.remove("touched","faded");
-        if(simPhase==="after" && tset[id]) g.classList.add("touched");
-      });
-      var sel=document.getElementById("selInfo");
-      if(TOUCH[drilledSlug] && tl2.length){
-        sel.innerHTML = simPhase==="after"
-          ? "<span style='color:var(--touch)'>&#9679; "+tl2.length+" model(s) in the changed files</span>"
-          : tl2.length+" model(s) live in the 3 changed files";
-      } else if(BLAST[drilledSlug]){
-        sel.innerHTML = "<span style='color:var(--blast)'>downstream of the change — verify</span>";
-      } else {
-        sel.innerHTML = DATA.l2[drilledSlug].nodes.length+" nodes · "+DATA.l2[drilledSlug].edges.length+" edges";
+      if(!Object.keys(expanded).length){
+        var sd=(SIM.stages&&SIM.stages[curStage])||{};
+        document.getElementById("selInfo").innerHTML =
+          "<b>"+(sd.label||curStage)+"</b>" + (sd.real===false?" <span style='color:#b46a12'>· example</span>":"")
+          + " &nbsp; <span style='color:var(--touch)'>&#9679; "+SIM.touched.join(", ")+"</span>"
+          + (SIM.blast.length?" <span style='color:var(--blast)'>&#9679; "+SIM.blast.join(", ")+"</span>":"")
+          + " &nbsp;<span class='selinfo'>click an entity to open it</span>";
       }
     }
   }
-  function setPhase(p){
-    simPhase = p;
-    if(p==="before") expanded = {};   // before = no expansion
-    var seg = document.getElementById("phaseSeg");
-    seg.querySelectorAll("button").forEach(function(b){ b.classList.toggle("on", b.getAttribute("data-phase")===p); });
-    if(view==="l1") renderL1(); else applySim();
+  function setStage(s){
+    curStage = s; resetPanel();
+    document.getElementById("stageSeg").querySelectorAll("button").forEach(function(b){
+      b.classList.toggle("on", b.getAttribute("data-stage")===s); });
+    renderL1();
   }
 
   // ── drill / back ────────────────────────────────────────────────────
@@ -792,12 +952,22 @@ svg#graph{ display:block; }
   backBtn.addEventListener("click", back);
   resetBtn.addEventListener("click", function(){ selected=null; if(view==="l1") renderL1(); else renderL2(drilledSlug); });
 
-  // click on empty stage clears selection
-  stage.addEventListener("pointerdown", function(e){
-    if(e.target===stage || e.target===svg){
-      if(selected){ selected=null; view==="l1"?applySelection():applyL2Highlight(); }
-    }
-  });
+  // drag the empty background to PAN the viewport; a click without drag clears the panel
+  (function(){
+    var pan=null;
+    stage.addEventListener("pointerdown", function(e){
+      if(e.target!==stage && e.target!==svg) return;         // nodes keep their own drag
+      pan={ x:e.clientX, y:e.clientY, px:panX, py:panY, moved:false };
+    });
+    window.addEventListener("pointermove", function(e){
+      if(!pan) return;
+      var dx=e.clientX-pan.x, dy=e.clientY-pan.y;
+      if(Math.abs(dx)+Math.abs(dy)>3) pan.moved=true;
+      panX=pan.px+dx; panY=pan.py+dy; applyPan();
+    });
+    window.addEventListener("pointerup", function(){ if(pan){ if(!pan.moved) resetPanel(); pan=null; } });
+  })();
+  window.addEventListener("resize", function(){ if(lastBounds) frame(lastBounds); });
 
   // ── tooltip ─────────────────────────────────────────────────────────
   function showTip(node){
@@ -866,8 +1036,17 @@ svg#graph{ display:block; }
     l2nodes:  function(){ return (view==="l2" && DATA.l2[drilledSlug]) ? DATA.l2[drilledSlug].nodes.length : 0; },
     back:     function(){ back(); },
     // simulation surface
-    phase:    function(){ return simPhase; },
-    setPhase: function(p){ setPhase(p); },
+    stageNow: function(){ return curStage; },
+    setStage: function(s){ setStage(s); },
+    openPiece: function(slug, pid){
+      var p=((SIM.pieces&&SIM.pieces[slug])||[]).filter(function(x){ return x.id===pid; })[0];
+      if(p) openDetail(slug, p);
+    },
+    detailOpen: function(){ return !document.querySelector("#detail .empty"); },
+    openAll:    function(){ toggleAllExpand(); },
+    insideNowSel: function(){ return insideLayout; },
+    detailText: function(){ return document.getElementById("detail").textContent; },
+    pieceRadius: function(pid){ var c=vp.querySelector('.xpiece[data-piece$="|'+pid+'"] .xpiece-in circle:last-of-type'); return c?+c.getAttribute("r"):0; },
     touched:  function(){ return SIM ? SIM.touched.slice() : []; },
     blast:    function(){ return SIM ? SIM.blast.slice() : []; },
     touchedNow:  function(){ return Array.prototype.map.call(vp.querySelectorAll(".node.touched"), function(g){ return g.getAttribute("data-id"); }); },
@@ -877,6 +1056,10 @@ svg#graph{ display:block; }
       var arr = view==="l1" ? DATA.l1.nodes : DATA.l2[drilledSlug].nodes;
       var n = arr.filter(function(x){ return x.slug===key || x.id===key; })[0];
       if(n) onSingle(n);
+    },
+    dblClick: function(key){
+      var n = DATA.l1.nodes.filter(function(x){ return x.slug===key || x.id===key; })[0];
+      if(n) onDouble(n);
     },
     expandedNow:    function(){ return Object.keys(expanded); },
     insideNow:      function(){ return insideLayout; },
@@ -888,19 +1071,16 @@ svg#graph{ display:block; }
     hiEdges:        function(){ return vp.querySelectorAll(".edge.hi").length; }
   };
 
-  // ── change banner + phase toggle wiring ─────────────────────────────
+  // ── compact change note in the header + control wiring ──────────────
   if(SIM){
-    document.getElementById("chSubj").textContent = SIM.subject;
-    document.getElementById("chMeta").innerHTML =
-      SIM.commit+" · "+SIM.date+" · "+SIM.files+" files &nbsp;|&nbsp; "
-      + "<span class='g'>touched "+SIM.touched.join(", ")+"</span>"
-      + (SIM.blast.length ? " <span class='arrow'>&rarr;</span> blast <b>"+SIM.blast.join(", ")+"</b>"
-                           + " ("+SIM.blast_edges.map(function(e){ return e.from+"&rarr;"+e.to; }).join(", ")+")" : "");
-  } else {
-    document.getElementById("changeBanner").style.display = "none";
+    document.getElementById("hchange").innerHTML =
+      "<b style='color:var(--ink)'>"+SIM.commit+"</b> "+trunc(SIM.subject,50)
+      + " · <span style='color:var(--touch)'>"+SIM.touched.join(",")+"</span> &rarr; "
+      + "<span style='color:var(--blast)'>"+SIM.blast.join(",")+"</span>";
   }
-  document.getElementById("phaseSeg").addEventListener("click", function(e){
-    var b = e.target.closest("button"); if(b) setPhase(b.getAttribute("data-phase"));
+  document.getElementById("openAll").addEventListener("click", toggleAllExpand);
+  document.getElementById("stageSeg").addEventListener("click", function(e){
+    var b = e.target.closest("button"); if(b) setStage(b.getAttribute("data-stage"));
   });
   document.getElementById("layoutSel").addEventListener("change", function(){
     var v=this.value;
@@ -913,6 +1093,7 @@ svg#graph{ display:block; }
 
   // ── boot ────────────────────────────────────────────────────────────
   renderL1();
+  resetPanel();               // default panel = the stage-wide change summary
   window.__labready = true;
 })();
 </script>
