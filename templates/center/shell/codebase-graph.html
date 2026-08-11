@@ -35,6 +35,15 @@
 .cbg-resizer{ flex:none; width:8px; cursor:col-resize; position:relative; z-index:5; touch-action:none; }
 .cbg-resizer::before{ content:""; position:absolute; left:3px; top:0; bottom:0; width:2px; background:transparent; transition:background .12s; }
 .cbg-resizer:hover::before, .cbg-resizer.drag::before{ background:var(--accent); }
+/* collapse toggle (top-right of the panel) → collapse to a thin bar / restore to default */
+.cbg-sidehdr{ position:sticky; top:0; z-index:3; display:flex; justify-content:flex-end; padding:7px 8px 0; background:var(--panel); }
+.cbg-root .cbg-sidetoggle{ padding:4px 7px; line-height:0; color:var(--muted); }
+.cbg-root .cbg-sidetoggle:hover{ color:var(--ink); border-color:var(--edge); }
+.cbg-root .cbg-sidetoggle svg{ display:block; }
+.cbg-side.collapsed{ width:42px !important; min-width:42px; overflow:hidden; }
+.cbg-side.collapsed .detail{ display:none; }
+.cbg-side.collapsed .cbg-sidehdr{ justify-content:center; padding:8px 0; }
+.cbg-center.sidecol .cbg-resizer{ display:none; }
 
 /* ── header = the change strip (no redundant title; the breadcrumb names the page) ── */
 .cbg-header{ padding:9px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
@@ -182,9 +191,20 @@
 .cbg-root #cbg-stageSeg button[data-stage="commit"].on{ background:#8e4ec6; }
 /* segmented before|after / stage toggle */
 .cbg-seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
-.cbg-seg button{ border:0; border-radius:0; padding:5px 13px; font-weight:600; color:var(--muted); }
+/* stage buttons mirror the right panel's lifecycle rows: a stage-colour dot on the
+   LEFT + the label, in the panel's content font. */
+.cbg-seg button{ display:inline-flex; align-items:center; gap:6px; font-family:var(--font-content);
+  border:0; border-radius:0; padding:5px 12px; font-weight:600; color:var(--muted); }
 .cbg-seg button + button{ border-left:1px solid var(--line); }
 .cbg-seg button.on{ background:var(--accent); color:#fff; }
+.cbg-seg button .sdot{ width:8px; height:8px; border-radius:50%; flex:none; }
+.cbg-root #cbg-stageSeg button[data-stage="red"] .sdot{ background:#e5484d; }
+.cbg-root #cbg-stageSeg button[data-stage="execute"] .sdot{ background:#4c9aff; }
+.cbg-root #cbg-stageSeg button[data-stage="review"] .sdot{ background:#30a46c; }
+.cbg-root #cbg-stageSeg button[data-stage="commit"] .sdot{ background:#8e4ec6; }
+.cbg-root #cbg-stageSeg button.on .sdot{ background:#fff; }
+/* the rest of the top controls share the panel font too */
+.cbg-root .cbg-toolbar button, .cbg-root .cbg-optseg button{ font-family:var(--font-content); }
 
 /* L2 connector focus — click a node to light exactly what it connects to */
 .cbg-stage.l2view .edge{ opacity:.42; }
@@ -347,10 +367,10 @@
       <button class="back" id="cbg-backBtn" disabled hidden>&larr; Back</button>
       <span class="dot" id="cbg-crumbDot" hidden></span><span id="cbg-crumbTxt" hidden></span><span id="cbg-crumbLvl" hidden></span>
       <div class="cbg-seg" id="cbg-stageSeg" hidden>
-        <button data-stage="red">Red</button>
-        <button data-stage="execute" class="on">Execute</button>
-        <button data-stage="review">Review</button>
-        <button data-stage="commit">Commit</button>
+        <button data-stage="red"><i class="sdot"></i>Red</button>
+        <button data-stage="execute" class="on"><i class="sdot"></i>Execute</button>
+        <button data-stage="review"><i class="sdot"></i>Review</button>
+        <button data-stage="commit"><i class="sdot"></i>Commit</button>
       </div>
       <div class="selinfo" id="cbg-selInfo"></div>
       <div class="spacer"></div>
@@ -392,6 +412,7 @@
       </div>
       <div class="cbg-resizer" id="cbg-resizer" title="Drag to resize"></div>
       <aside class="cbg-side" id="cbg-side">
+        <div class="cbg-sidehdr"><button class="cbg-sidetoggle" id="cbg-sideToggle" title="Collapse panel" aria-label="Collapse panel"></button></div>
         <div id="cbg-detail" class="detail"><div class="empty">Loading the codebase graph…</div></div>
       </aside>
     </div>
@@ -1068,6 +1089,23 @@
     window.addEventListener("pointerup", function(){ if(drag){ drag=null; resizer.classList.remove("drag"); } });
   })();
 
+  // ── collapse the panel to a thin bar / restore it to the default width ──
+  var sideCollapsed=false;
+  var CHEV_R='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>'; // » collapse
+  var CHEV_L='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>'; // « restore
+  function setSideCollapsed(v){
+    sideCollapsed=v;
+    var side=document.getElementById("cbg-side"), btn=document.getElementById("cbg-sideToggle");
+    side.classList.toggle("collapsed", v);
+    side.parentNode.classList.toggle("sidecol", v);
+    side.style.width="";                      // collapsed → CSS 42px · restored → CSS default 25%/280
+    btn.innerHTML = v ? CHEV_L : CHEV_R;       // symbol flips with state
+    btn.title = v ? "Restore panel" : "Collapse panel";
+    if(lastBounds) frame(lastBounds);          // the diagram takes the freed / returned space
+  }
+  document.getElementById("cbg-sideToggle").innerHTML = CHEV_R;
+  document.getElementById("cbg-sideToggle").addEventListener("click", function(){ setSideCollapsed(!sideCollapsed); });
+
   function showTip(node){
     var html;
     if(view==="l1"){
@@ -1161,7 +1199,11 @@
     legendPillShown:function(){ return !!document.getElementById("cbg-lgmax"); },
     sideWidth:      function(){ return Math.round(document.getElementById("cbg-side").getBoundingClientRect().width); },
     selxSpins:      function(){ var x=document.querySelector("#cbg-expansion .xpiece.selp .selx");
-      return x ? getComputedStyle(x).animationName : ""; }
+      return x ? getComputedStyle(x).animationName : ""; },
+    sideCollapsedNow: function(){ return sideCollapsed; },
+    clickSideToggle:  function(){ document.getElementById("cbg-sideToggle").click(); },
+    sideToggleIcon:   function(){ var h=document.getElementById("cbg-sideToggle").innerHTML;
+      return h.indexOf("13 17 18 12")>=0 ? "collapse" : (h.indexOf("11 17 6 12")>=0 ? "restore" : "?"); }
   };
 
   // ── boot ────────────────────────────────────────────────────────────────────
