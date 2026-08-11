@@ -32,11 +32,15 @@
 .cbg-side{ width:25%; min-width:280px; max-width:440px; border-left:1px solid var(--line);
   background:var(--panel); overflow:auto; flex:none; }
 
-/* ── header ── */
-.cbg-header{ padding:12px 20px 10px; border-bottom:1px solid var(--line); background:var(--panel); }
-.cbg-header h1{ margin:0; font-size:15px; font-weight:650; letter-spacing:-.01em; }
-.cbg-hchange{ font-weight:400; font-size:12px; color:var(--muted); margin-left:8px; }
-.cbg-hchange b{ color:var(--accent); font-weight:600; }
+/* ── header = the change strip (no redundant title; the breadcrumb names the page) ── */
+.cbg-header{ padding:9px 20px; border-bottom:1px solid var(--line); background:var(--panel); }
+.cbg-change{ display:flex; flex-direction:column; gap:1px; }
+.cbg-change .ln1{ font-size:13px; font-weight:600; color:var(--ink); display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+.cbg-change .ln1 .dot{ width:8px; height:8px; border-radius:50%; background:var(--touch); flex:none; }
+.cbg-change .ln1 .dot.idle{ background:var(--muted); }
+.cbg-change .ln1 .arr{ color:var(--blast); font-weight:700; }
+.cbg-change .ln2{ font-size:11.5px; color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace; }
+.cbg-change .ln2 b{ color:var(--accent); font-weight:600; }
 
 /* ── toolbar ── */
 .cbg-toolbar{ display:flex; align-items:center; gap:10px; padding:9px 20px;
@@ -276,7 +280,7 @@
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
   <span class="navsub" style="opacity:.5">none wired yet</span>
-  <div class="foot">regen 2026-08-11 21:53Z<br>HEAD 4c12a293 · build_center_a3.py</div>
+  <div class="foot">regen 2026-08-11 22:22Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
 <main class="main" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
@@ -288,27 +292,27 @@
 
   <div class="cbg-root" id="cbg-root">
     <div class="cbg-header">
-      <h1>Codebase graph <span class="cbg-hchange" id="cbg-hchange"></span></h1>
+      <div class="cbg-change" id="cbg-hchange"></div>
     </div>
 
     <div class="cbg-toolbar">
-      <button id="cbg-openAll" hidden>Open all</button>
       <button class="back" id="cbg-backBtn" disabled hidden>&larr; Back</button>
       <span class="dot" id="cbg-crumbDot" hidden></span><span id="cbg-crumbTxt" hidden></span><span id="cbg-crumbLvl" hidden></span>
-      <div class="selinfo" id="cbg-selInfo"></div>
-      <div class="spacer"></div>
-      <label class="laywrap"><span id="cbg-layLbl">layout</span>
-        <select id="cbg-layoutSel"></select>
-      </label>
-      <label class="laywrap" id="cbg-insideWrap" hidden>inside
-        <select id="cbg-insideSel"></select>
-      </label>
       <div class="cbg-seg" id="cbg-stageSeg" hidden>
         <button data-stage="red">Red</button>
         <button data-stage="execute" class="on">Execute</button>
         <button data-stage="review">Review</button>
         <button data-stage="commit">Commit</button>
       </div>
+      <div class="selinfo" id="cbg-selInfo"></div>
+      <div class="spacer"></div>
+      <button id="cbg-openAll" hidden>Open all</button>
+      <label class="laywrap"><span id="cbg-layLbl">layout</span>
+        <select id="cbg-layoutSel"></select>
+      </label>
+      <label class="laywrap" id="cbg-insideWrap" hidden>inside
+        <select id="cbg-insideSel"></select>
+      </label>
       <button id="cbg-resetBtn">Reset layout</button>
     </div>
 
@@ -361,6 +365,7 @@
   }
   var curStage = "execute";
   var selPiece = null;
+  var panelTarget = null;    // {piece:{slug,p}} | {entity:slug} | null — survives a stage switch
   var PIECE_R = 11;
   var expanded = {};
   var l2focus = null;
@@ -423,17 +428,26 @@
       + "For now: <b>double-click</b> an entity to drill into its pieces, drag the background to pan.</div>";
   }
   function resetPanel(){ if(PANEL) PANEL.resetPanel(); else degradePanel(); }
+  // re-render whatever the panel was showing (piece / entity / summary) for the
+  // CURRENT stage — so switching Red·Execute·Review·Commit keeps the selection.
+  function reopenPanel(){
+    if(!PANEL){ degradePanel(); return; }
+    if(panelTarget && panelTarget.piece) PANEL.openDetail(panelTarget.piece.slug, panelTarget.piece.p);
+    else if(panelTarget && panelTarget.entity) PANEL.openEntityDetail(panelTarget.entity);
+    else PANEL.resetPanel();
+  }
 
   // ── viewport at natural pixel scale; drag the background to pan ─────────────
-  var panX=0, panY=0, fitTx=0, fitTy=0;
+  var panX=0, panY=0, fitTx=0, fitTy=0, zoom=1;
   function frame(b){
     var cw=stage.clientWidth||900, ch=stage.clientHeight||600;
     svg.setAttribute("width", cw); svg.setAttribute("height", ch);
-    fitTx = Math.round((cw-(b.maxX-b.minX))/2 - b.minX);
-    fitTy = Math.round((ch-(b.maxY-b.minY))/2 - b.minY);
+    // centre the bounds at the CURRENT zoom (so a re-render keeps the zoom level)
+    fitTx = Math.round(cw/2 - zoom*(b.minX+b.maxX)/2);
+    fitTy = Math.round(ch/2 - zoom*(b.minY+b.maxY)/2);
     applyPan();
   }
-  function applyPan(){ vp.setAttribute("transform","translate("+(fitTx+panX)+","+(fitTy+panY)+")"); }
+  function applyPan(){ vp.setAttribute("transform","translate("+(fitTx+panX)+","+(fitTy+panY)+") scale("+zoom+")"); }
 
   // ── layout engines — Ring (stamped) · Flow (Flare gradient) · Force ────────
   function flowLayout(nodes, edges){
@@ -704,7 +718,7 @@
       if(!SIM){ return; }                                  // map mode: single-click is inert
       if(INVOLVED[node.id]){
         if(!expanded[node.slug]){ expanded[node.slug]=true; renderL1(); }
-        PANEL.openEntityDetail(node.slug);
+        panelTarget = { entity:node.slug }; PANEL.openEntityDetail(node.slug);
       }
     } else { focusL2(node.id); }
   }
@@ -713,7 +727,7 @@
     if(!SIM){ drill(node.slug); return; }                   // map mode: double-click drills to L2
     if(INVOLVED[node.id]){
       if(expanded[node.slug]) delete expanded[node.slug]; else expanded[node.slug]=true;
-      renderL1(); PANEL.openEntityDetail(node.slug);
+      renderL1(); panelTarget = { entity:node.slug }; PANEL.openEntityDetail(node.slug);
     }
   }
 
@@ -801,7 +815,7 @@
         var t=E("text",{class:"xplabel",x:0,y:e.r+11}); t.textContent=trunc(p.label,16); inner.appendChild(t);
         var ti=E("title"); ti.textContent=(p.label)+(p.via?" — "+p.via:""); inner.appendChild(ti);
         g.appendChild(inner); layer.appendChild(g);
-        (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation(); PANEL.openDetail(sl,pc); }); })(slug,p);
+        (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation(); panelTarget={piece:{slug:sl,p:pc}}; PANEL.openDetail(sl,pc); }); })(slug,p);
         if(!reduce) animP.push({el:inner, dx:pos.x-pp.x, dy:pos.y-pp.y});
       });
     });
@@ -920,15 +934,15 @@
     el.innerHTML = "<div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"+rows;
   }
   function setStage(s){
-    curStage = s; syncStageButtons(); renderL1(); resetPanel();
+    curStage = s; syncStageButtons(); renderL1(); reopenPanel();
   }
 
   function drill(slug){ selected=null; l2focus=null; expanded={}; renderL2(slug); }
   function back(){ selected=null; l2focus=null; expanded={}; renderL1(); }
   backBtn.addEventListener("click", back);
-  resetBtn.addEventListener("click", function(){ selected=null; if(view==="l1") renderL1(); else renderL2(drilledSlug); });
+  resetBtn.addEventListener("click", function(){ selected=null; zoom=1; panX=0; panY=0; if(view==="l1") renderL1(); else renderL2(drilledSlug); });
 
-  // drag empty background → PAN; a bare click clears the panel
+  // drag empty background → PAN; a bare click clears the panel; wheel → ZOOM at cursor
   (function(){
     var pan=null;
     stage.addEventListener("pointerdown", function(e){
@@ -941,7 +955,16 @@
       if(Math.abs(dx)+Math.abs(dy)>3) pan.moved=true;
       panX=pan.px+dx; panY=pan.py+dy; applyPan();
     });
-    window.addEventListener("pointerup", function(){ if(pan){ if(!pan.moved) resetPanel(); pan=null; } });
+    window.addEventListener("pointerup", function(){ if(pan){ if(!pan.moved){ panelTarget=null; resetPanel(); } pan=null; } });
+    // scroll up = zoom in, scroll down = zoom out; anchored so the point under the
+    // cursor stays put (translate absorbs the scale change, no re-frame needed).
+    stage.addEventListener("wheel", function(e){
+      e.preventDefault();
+      var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      var tx=fitTx+panX, ty=fitTy+panY, dx=(mx-tx)/zoom, dy=(my-ty)/zoom;
+      var z2=Math.max(0.35, Math.min(4, zoom*Math.exp(-e.deltaY*0.0015)));
+      panX = (mx - z2*dx) - fitTx; panY = (my - z2*dy) - fitTy; zoom = z2; applyPan();
+    }, { passive:false });
   })();
   window.addEventListener("resize", function(){ if(lastBounds) frame(lastBounds); });
 
@@ -1021,7 +1044,7 @@
     blast:    function(){ return SIM ? SIM.blast.slice() : []; },
     openPiece: function(slug, pid){
       var p=((SIM&&SIM.pieces&&SIM.pieces[slug])||[]).filter(function(x){ return x.id===pid; })[0];
-      if(p && PANEL) PANEL.openDetail(slug, p);
+      if(p && PANEL){ panelTarget={piece:{slug:slug,p:p}}; PANEL.openDetail(slug, p); }  // mirror a real piece click
     },
     singleClick: function(key){
       var arr = view==="l1" ? DATA.l1.nodes : (DATA.l2[drilledSlug]||{nodes:[]}).nodes;
@@ -1035,9 +1058,10 @@
   // ── boot ────────────────────────────────────────────────────────────────────
   if(SIM){
     document.getElementById("cbg-hchange").innerHTML =
-      "<b>"+SIM.commit+"</b> "+trunc(SIM.subject,50)
-      + " · <span style='color:var(--touch)'>"+SIM.touched.join(",")+"</span> changed"
-      + " · <span style='color:var(--blast)'>"+SIM.blast.join(",")+"</span> affected";
+      "<div class='ln1'><span class='dot'></span>"
+      + "<span style='color:var(--touch)'>"+SIM.touched.join(", ")+"</span> changed"
+      + " <span class='arr'>&rarr;</span> <span style='color:var(--blast)'>"+SIM.blast.join(", ")+"</span> affected</div>"
+      + "<div class='ln2'><b>"+SIM.commit+"</b> · "+trunc(SIM.subject,64)+"</div>";
     document.getElementById("cbg-openAll").hidden = false;
     document.getElementById("cbg-stageSeg").hidden = false;
     document.getElementById("cbg-hint").textContent =
@@ -1054,7 +1078,8 @@
     SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; });
   } else {
     document.getElementById("cbg-hchange").innerHTML =
-      "<span style='color:var(--muted)'>no change in flight — showing the current codebase map</span>";
+      "<div class='ln1'><span class='dot idle'></span>No change in flight</div>"
+      + "<div class='ln2'>showing the current codebase map</div>";
   }
   document.getElementById("cbg-layoutSel").addEventListener("change", function(){
     var v=this.value;
