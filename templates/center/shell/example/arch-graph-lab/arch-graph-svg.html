@@ -1,0 +1,535 @@
+<title>Arch Graph — Zero-Lib Inline SVG</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+:root{ --bg:#f7f8fa; --panel:#ffffff; --ink:#1c2024; --muted:#6b7280;
+       --line:#e3e6ea; --edge:#9aa3ad; --accent:#0d6e78; }
+@media (prefers-color-scheme:dark){ :root{ --bg:#0f1216; --panel:#171b21;
+       --ink:#e6e9ee; --muted:#8a929c; --line:#262c34; --edge:#4a525c; } }
+
+*{ box-sizing:border-box; }
+body{ background:var(--bg); color:var(--ink); margin:0;
+      font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+      height:100vh; display:flex; flex-direction:column; overflow:hidden; }
+
+/* ── header ─────────────────────────────────────────────────────────── */
+header{ padding:14px 20px 12px; border-bottom:1px solid var(--line); background:var(--panel); }
+header h1{ margin:0; font-size:16px; font-weight:650; letter-spacing:-.01em; }
+header .sub{ margin-top:3px; font-size:12px; color:var(--muted); }
+header .sub b{ color:var(--accent); font-weight:600; }
+header .sub .sep{ opacity:.45; padding:0 6px; }
+
+/* ── toolbar ────────────────────────────────────────────────────────── */
+.toolbar{ display:flex; align-items:center; gap:10px; padding:9px 20px;
+          border-bottom:1px solid var(--line); background:var(--panel); min-height:46px; }
+.crumb{ font-size:13px; font-weight:600; display:flex; align-items:center; gap:8px; }
+.crumb .dot{ width:9px; height:9px; border-radius:50%; background:var(--muted); flex:none; }
+.crumb .lvl{ color:var(--muted); font-weight:500; }
+button{ font:inherit; font-size:12.5px; color:var(--ink); background:var(--panel);
+        border:1px solid var(--line); border-radius:7px; padding:5px 11px; cursor:pointer; }
+button:hover{ border-color:var(--edge); }
+button:disabled{ opacity:.4; cursor:default; }
+button.back{ font-weight:600; }
+.spacer{ flex:1; }
+.selinfo{ font-size:12px; color:var(--muted); }
+.selinfo b{ color:var(--ink); }
+
+/* ── stage ──────────────────────────────────────────────────────────── */
+.stage{ flex:1; overflow:auto; display:flex; align-items:center; justify-content:center;
+        padding:28px; position:relative; }
+.stage.l2view{ align-items:flex-start; justify-content:flex-start; }
+svg#graph{ display:block; }
+
+/* graph elements */
+.edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .15s; }
+#arrow > path{ fill:var(--edge); }
+.node{ cursor:pointer; transition:opacity .15s; }
+.node .body{ transition:stroke .12s, stroke-width .12s; }
+.node text{ pointer-events:none; user-select:none; }
+.dim{ opacity:.13; }
+.node.sel .body{ stroke:var(--accent); stroke-width:3.5; }
+.colhdr{ fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em;
+         text-transform:uppercase; }
+.l1label{ font-size:13px; font-weight:650; text-anchor:middle; }
+.l1sub{ font-size:10.5px; text-anchor:middle; fill:var(--muted); }
+.chiplabel{ font-size:11px; font-weight:500; }
+.hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--muted);
+       background:var(--panel); border:1px solid var(--line); border-radius:6px;
+       padding:3px 8px; pointer-events:none; opacity:.9; }
+
+/* ── tooltip ────────────────────────────────────────────────────────── */
+#tip{ position:fixed; z-index:50; pointer-events:none; max-width:260px; opacity:0;
+      transform:translateY(2px); transition:opacity .1s; background:var(--panel);
+      border:1px solid var(--line); border-radius:9px; padding:9px 11px;
+      box-shadow:0 8px 26px rgba(0,0,0,.16); font-size:12px; }
+#tip.on{ opacity:1; transform:none; }
+#tip .ttl{ font-weight:650; font-size:12.5px; margin-bottom:2px; display:flex;
+           align-items:center; gap:7px; }
+#tip .ttl .sw{ width:10px; height:10px; border-radius:3px; flex:none; }
+#tip .kind{ font-size:10.5px; color:var(--muted); text-transform:uppercase;
+            letter-spacing:.05em; margin-bottom:5px; }
+#tip .grid{ display:grid; grid-template-columns:auto auto; gap:1px 14px; margin-top:4px; }
+#tip .grid .k{ color:var(--muted); }
+#tip .grid .v{ text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
+#tip .meta{ color:var(--muted); font-size:11px; margin-top:3px; }
+
+/* ── legend ─────────────────────────────────────────────────────────── */
+.legend{ display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+         padding:8px 20px; border-top:1px solid var(--line); background:var(--panel);
+         font-size:11.5px; color:var(--muted); }
+.legend .grp{ display:flex; align-items:center; gap:14px; }
+.legend .item{ display:flex; align-items:center; gap:6px; }
+.legend .sw{ width:12px; height:12px; border-radius:4px; flex:none; }
+.legend .swr{ width:16px; height:0; border-top:2px solid var(--edge); position:relative; }
+.legend .swr::after{ content:""; position:absolute; right:-2px; top:-3px; border:3px solid transparent;
+                     border-left-color:var(--edge); }
+.legend .div{ width:1px; height:14px; background:var(--line); }
+.legend .count{ margin-left:auto; color:var(--ink); font-weight:600; }
+</style>
+
+<header>
+  <h1>Architecture Graph <span style="color:var(--muted);font-weight:400">· gustify</span></h1>
+  <div class="sub">
+    EXAMPLE — rendered over real gustify data, not live
+    <span class="sep">·</span> approach <b>Zero-lib inline SVG</b>
+    <span class="sep">·</span> integration cost <b>NONE</b> (ships into the center directly, no vendoring)
+  </div>
+</header>
+
+<div class="toolbar">
+  <button class="back" id="backBtn" disabled>&larr; Back</button>
+  <div class="crumb"><span class="dot" id="crumbDot"></span><span id="crumbTxt">All entities</span>
+    <span class="lvl" id="crumbLvl">· L1 · fk graph</span></div>
+  <div class="spacer"></div>
+  <div class="selinfo" id="selInfo"></div>
+  <button id="resetBtn">Reset layout</button>
+</div>
+
+<div class="stage" id="stage">
+  <svg id="graph" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="arrow" viewBox="0 0 10 10" refX="8.5" refY="5"
+              markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+        <path d="M0.5,0.5 L9.5,5 L0.5,9.5 z"></path>
+      </marker>
+    </defs>
+    <g id="viewport"></g>
+  </svg>
+  <div class="hint" id="hint">drag nodes · click to select · double-click to drill</div>
+</div>
+
+<div class="legend" id="legend"></div>
+
+<div id="tip"></div>
+
+<script src="./c4-graph.data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = window.GABE_C4, COLORS = window.GABE_C4_COLORS || {};
+  var NS = "http://www.w3.org/2000/svg";
+  var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
+  var KIND_LABEL = { endpoint:"Endpoints", model:"Models", schema:"Schemas", external:"External" };
+
+  // ── state ───────────────────────────────────────────────────────────
+  var view = "l1", drilledSlug = null, selected = null;
+  var nodePos = {};        // id -> {x,y}   (L1: circle centre · L2: chip top-left)
+  var nodeMeta = {};       // id -> {kind, r?, el, node}
+  var edgeRecs = [];       // {el, s, t}
+  var CHIP_W = 214, CHIP_H = 38, MARGIN = 70;
+
+  var stage   = document.getElementById("stage");
+  var svg     = document.getElementById("graph");
+  var vp      = document.getElementById("viewport");
+  var tip     = document.getElementById("tip");
+  var backBtn = document.getElementById("backBtn");
+  var resetBtn= document.getElementById("resetBtn");
+  var legend  = document.getElementById("legend");
+
+  // ── tiny DOM helpers ────────────────────────────────────────────────
+  function E(tag, attrs){
+    var e = document.createElementNS(NS, tag);
+    if(attrs) for(var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function trunc(s,n){ s=String(s); return s.length>n ? s.slice(0,n-1)+"…" : s; }
+
+  // ── scales ──────────────────────────────────────────────────────────
+  var L1 = DATA.l1.nodes, L1E = DATA.l1.edges;
+  var linesArr = L1.map(function(n){ return n.counts?n.counts.lines:0; });
+  var minSq = Math.sqrt(Math.min.apply(null, linesArr)),
+      maxSq = Math.sqrt(Math.max.apply(null, linesArr));
+  function radius(n){
+    var t = maxSq>minSq ? (Math.sqrt(n.counts.lines)-minSq)/(maxSq-minSq) : .5;
+    return 22 + t*38;                      // 22 .. 60
+  }
+  function ewidth(w){ return 1.5 + (clamp(w,1,10)-1)/9*4.6; }   // 1.5 .. 6.1
+
+  // ── build viewport at natural pixel scale, offset so all coords ≥ margin
+  function frame(worldBounds){
+    var offX = MARGIN - worldBounds.minX, offY = MARGIN - worldBounds.minY;
+    var w = (worldBounds.maxX - worldBounds.minX) + 2*MARGIN;
+    var h = (worldBounds.maxY - worldBounds.minY) + 2*MARGIN;
+    svg.setAttribute("width",  Math.ceil(w));
+    svg.setAttribute("height", Math.ceil(h));
+    vp.setAttribute("transform", "translate("+offX+","+offY+")");
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  L1 render — ring of entities, curved directed fk edges
+  // ══════════════════════════════════════════════════════════════════
+  function renderL1(){
+    view = "l1"; drilledSlug = null;
+    vp.textContent = ""; nodePos = {}; nodeMeta = {}; edgeRecs = [];
+
+    var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    L1.forEach(function(n){
+      var r = radius(n), pad = r + 40;
+      nodePos[n.id] = { x:n.x, y:n.y };
+      nodeMeta[n.id] = { kind:"entity", r:r, node:n };
+      minX=Math.min(minX,n.x-pad); maxX=Math.max(maxX,n.x+pad);
+      minY=Math.min(minY,n.y-r-6); maxY=Math.max(maxY,n.y+r+30);
+    });
+    frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
+
+    // edges first (under nodes)
+    var eLayer = E("g"); vp.appendChild(eLayer);
+    L1E.forEach(function(ed){
+      var p = E("path", { class:"edge", "marker-end":"url(#arrow)" });
+      p.style.strokeWidth = ewidth(ed.weight);
+      eLayer.appendChild(p);
+      var rec = { el:p, s:ed.source, t:ed.target, kind:"l1", weight:ed.weight, data:ed };
+      edgeRecs.push(rec); updateEdge(rec);
+    });
+
+    // nodes
+    var nLayer = E("g"); vp.appendChild(nLayer);
+    L1.forEach(function(n){
+      var col = COLORS[n.slug] || (n.kind==="unclaimed" ? COLORS.__unclaimed__ : "#888");
+      var g = E("g", { class:"node", "data-id":n.id });
+      var r = nodeMeta[n.id].r;
+      var c = E("circle", { class:"body", r:r, cx:0, cy:0, fill:col,
+                            stroke:"var(--panel)", "stroke-width":2 });
+      if(n.kind==="unclaimed"){ c.setAttribute("fill","var(--panel)");
+        c.setAttribute("stroke", COLORS.__unclaimed__); c.setAttribute("stroke-dasharray","5 4"); }
+      var t1 = E("text", { class:"l1label", x:0, y:r+16 }); t1.textContent = n.label;
+      t1.setAttribute("fill","var(--ink)");
+      var t2 = E("text", { class:"l1sub", x:0, y:r+30 });
+      t2.textContent = n.counts.endpoints+" ep · "+n.counts.lines.toLocaleString()+" ln";
+      g.appendChild(c); g.appendChild(t1); g.appendChild(t2);
+      nLayer.appendChild(g);
+      nodeMeta[n.id].el = g;
+      wire(g, n);
+    });
+
+    afterRender("All entities", DATA.stats.entities + " entities", "var(--muted)");
+    if(selected) applySelection();   // (cleared on drill, so normally none)
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  L2 render — columns endpoint · model · schema · external
+  // ══════════════════════════════════════════════════════════════════
+  function renderL2(slug){
+    view = "l2"; drilledSlug = slug; selected = null;
+    vp.textContent = ""; nodePos = {}; nodeMeta = {}; edgeRecs = [];
+    var g2 = DATA.l2[slug];
+    if(!g2){ afterRender(slug, "no L2 data", COLORS[slug]||"var(--muted)"); return; }
+
+    var order = (DATA.layout.l2 && DATA.layout.l2.order) || ["endpoint","model","schema","external"];
+    var present = {};
+    var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    g2.nodes.forEach(function(n){
+      nodePos[n.id] = { x:n.x, y:n.y };            // chip top-left = stamped coord
+      nodeMeta[n.id] = { kind:n.kind, node:n };
+      present[n.kind] = (present[n.kind]||0) + 1;
+      minX=Math.min(minX,n.x); maxX=Math.max(maxX,n.x+CHIP_W);
+      minY=Math.min(minY,n.y); maxY=Math.max(maxY,n.y+CHIP_H);
+    });
+    minY -= 34;                                    // room for column headers
+    frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
+
+    // column headers
+    var hLayer = E("g");
+    order.forEach(function(kind, i){
+      if(!present[kind]) return;
+      var cx = i * (DATA.layout.l2.col_w || 240);
+      var h = E("text", { class:"colhdr", x:cx+2, y:minY+18 });
+      h.textContent = KIND_LABEL[kind] + "  " + present[kind];
+      hLayer.appendChild(h);
+    });
+    vp.appendChild(hLayer);
+
+    // edges
+    var eLayer = E("g"); vp.appendChild(eLayer);
+    g2.edges.forEach(function(ed){
+      if(!nodePos[ed.source] || !nodePos[ed.target]) return;
+      var p = E("path", { class:"edge", "marker-end":"url(#arrow)" });
+      p.style.strokeWidth = ed.kind==="fk" ? 1.9 : 1.3;
+      if(ed.kind==="fk") p.style.strokeDasharray = "5 4";
+      eLayer.appendChild(p);
+      var rec = { el:p, s:ed.source, t:ed.target, kind:"l2", ekind:ed.kind, data:ed };
+      edgeRecs.push(rec); updateEdge(rec);
+    });
+
+    // chips
+    var nLayer = E("g"); vp.appendChild(nLayer);
+    g2.nodes.forEach(function(n){
+      var col = KIND_COLOR[n.kind] || "#888";
+      var g = E("g", { class:"node", "data-id":n.id,
+                       transform:"translate("+n.x+","+n.y+")" });
+      var rect = E("rect", { class:"body", x:0, y:0, width:CHIP_W, height:CHIP_H,
+                             rx:8, fill:"var(--panel)", stroke:col, "stroke-width":1.6 });
+      var bar  = E("rect", { x:0, y:0, width:5, height:CHIP_H, rx:2.5, fill:col });
+      if(n.kind==="external"){ rect.setAttribute("stroke-dasharray","5 4"); }
+      var label = n.label || String(n.id).replace(/^[^:]+:/,"");
+      var t = E("text", { class:"chiplabel", x:14, y:CHIP_H/2+4 });
+      t.setAttribute("fill","var(--ink)");
+      t.textContent = trunc(label, n.kind==="endpoint"?30:26);
+      g.appendChild(rect); g.appendChild(bar); g.appendChild(t);
+      nLayer.appendChild(g);
+      nodeMeta[n.id].el = g;
+      wire(g, n);
+    });
+
+    var ent = L1.filter(function(n){ return n.slug===slug; })[0];
+    afterRender((ent?ent.label:slug), g2.nodes.length + " nodes · " + g2.edges.length + " edges",
+                COLORS[slug]||"var(--muted)");
+  }
+
+  // ── shared post-render bookkeeping ──────────────────────────────────
+  function afterRender(title, sub, dotColor){
+    document.getElementById("crumbTxt").textContent = title;
+    document.getElementById("crumbLvl").textContent =
+        view==="l1" ? "· L1 · fk graph" : "· L2 · touches + fk";
+    document.getElementById("crumbDot").style.background = dotColor;
+    document.getElementById("selInfo").innerHTML = sub ? "<span>"+sub+"</span>" : "";
+    backBtn.disabled = (view==="l1");
+    stage.classList.toggle("l2view", view==="l2");
+    if(view==="l2") stage.scrollTop = 0, stage.scrollLeft = 0;
+    buildLegend();
+  }
+
+  // ── geometry: (re)compute an edge path from live node positions ─────
+  function updateEdge(rec){
+    var s = nodePos[rec.s], t = nodePos[rec.t];
+    if(!s || !t){ rec.el.setAttribute("d",""); return; }
+    if(rec.kind==="l1"){
+      var r1 = nodeMeta[rec.s].r, r2 = nodeMeta[rec.t].r;
+      var dx=t.x-s.x, dy=t.y-s.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+      var sx=s.x+ux*r1, sy=s.y+uy*r1, ex=t.x-ux*(r2+3.5), ey=t.y-uy*(r2+3.5);
+      var mx=(sx+ex)/2, my=(sy+ey)/2, bow=Math.min(38, d*0.12);
+      var cx=mx + (-uy)*bow, cy=my + (ux)*bow;
+      rec.el.setAttribute("d","M"+sx+" "+sy+" Q "+cx+" "+cy+" "+ex+" "+ey);
+    } else {
+      var sc={ l:s.x, r:s.x+CHIP_W, cx:s.x+CHIP_W/2, cy:s.y+CHIP_H/2 };
+      var tc={ l:t.x, r:t.x+CHIP_W, cx:t.x+CHIP_W/2, cy:t.y+CHIP_H/2 };
+      var x1,x2,y1=sc.cy,y2=tc.cy, fwd = tc.cx>=sc.cx;
+      if(fwd){ x1=sc.r; x2=tc.l; } else { x1=sc.l; x2=tc.r; }
+      var h=Math.max(28, Math.abs(x2-x1)*0.5)*(fwd?1:-1);
+      rec.el.setAttribute("d","M"+x1+" "+y1+" C "+(x1+h)+" "+y1+" "+(x2-h)+" "+y2+" "+x2+" "+y2);
+    }
+  }
+  function refreshEdgesFor(id){
+    for(var i=0;i<edgeRecs.length;i++){
+      var r=edgeRecs[i]; if(r.s===id||r.t===id) updateEdge(r);
+    }
+  }
+
+  // ── interaction wiring on a node group ──────────────────────────────
+  var pendingTap = null, dragging = null;
+  function wire(g, node){
+    g.addEventListener("pointerenter", function(){ if(!dragging) showTip(node); });
+    g.addEventListener("pointermove",  function(e){ if(!dragging) moveTip(e); });
+    g.addEventListener("pointerleave", function(){ hideTip(); });
+
+    g.addEventListener("pointerdown", function(e){
+      e.preventDefault();
+      var start = { x:e.clientX, y:e.clientY }, moved=false;
+      var origin = { x:nodePos[node.id].x, y:nodePos[node.id].y };
+      hideTip();
+      function onMove(ev){
+        var dx=ev.clientX-start.x, dy=ev.clientY-start.y;
+        if(!moved && Math.abs(dx)+Math.abs(dy) < 4) return;
+        moved = true; dragging = node.id;
+        nodePos[node.id] = { x:origin.x+dx, y:origin.y+dy };
+        if(view==="l1") g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
+        else            g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
+        refreshEdgesFor(node.id);
+      }
+      function onUp(){
+        window.removeEventListener("pointermove", onMove);
+        window.removeEventListener("pointerup", onUp);
+        setTimeout(function(){ dragging=null; }, 0);
+        if(!moved) tap(node);
+      }
+      window.addEventListener("pointermove", onMove);
+      window.addEventListener("pointerup", onUp);
+    });
+
+    // position L1 group (L2 groups already carry their transform)
+    if(view==="l1") g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
+  }
+
+  // single-click vs double-click discrimination
+  function tap(node){
+    if(pendingTap && pendingTap.id===node.id){
+      clearTimeout(pendingTap.t); pendingTap=null; onDouble(node);
+    } else {
+      if(pendingTap) clearTimeout(pendingTap.t);
+      var t=setTimeout(function(){ pendingTap=null; onSingle(node); }, 230);
+      pendingTap = { id:node.id, t:t };
+    }
+  }
+  function onSingle(node){
+    if(view==="l1"){
+      selected = (selected===node.id) ? null : node.id;
+      applySelection();
+    } else {
+      selected = (selected===node.id) ? null : node.id;
+      applyL2Highlight();
+    }
+  }
+  function onDouble(node){
+    if(view==="l1"){ drill(node.slug); }
+    else if(node.kind==="external"){                 // hop to the referenced entity
+      var s = node.label || String(node.id).replace(/^external:/,"");
+      if(DATA.l2[s]) drill(s);
+    }
+  }
+
+  // ── selection / highlight ───────────────────────────────────────────
+  function neighboursL1(id){
+    var keep = {}; keep[id]=1;
+    L1E.forEach(function(e){ if(e.source===id) keep[e.target]=1; if(e.target===id) keep[e.source]=1; });
+    return keep;
+  }
+  function applySelection(){
+    document.getElementById("selInfo").innerHTML = "";
+    var nodes = vp.querySelectorAll(".node"), edges = vp.querySelectorAll(".edge");
+    if(!selected){
+      nodes.forEach(function(n){ n.classList.remove("dim","sel"); });
+      edges.forEach(function(e){ e.classList.remove("dim"); });
+      afterRender("All entities", DATA.stats.entities+" entities", "var(--muted)");
+      return;
+    }
+    var keep = neighboursL1(selected);
+    nodes.forEach(function(n){
+      var id=n.getAttribute("data-id");
+      n.classList.toggle("dim", !keep[id]);
+      n.classList.toggle("sel", id===selected);
+    });
+    edgeRecs.forEach(function(r){
+      r.el.classList.toggle("dim", !(r.s===selected || r.t===selected));
+    });
+    var m = nodeMeta[selected].node, deg=0;
+    L1E.forEach(function(e){ if(e.source===selected||e.target===selected) deg++; });
+    document.getElementById("selInfo").innerHTML =
+      "selected <b>"+m.label+"</b> · "+deg+" fk link"+(deg===1?"":"s");
+  }
+  function applyL2Highlight(){
+    var nodes = vp.querySelectorAll(".node"), sel=document.getElementById("selInfo");
+    if(!selected){
+      nodes.forEach(function(n){ n.classList.remove("dim","sel"); });
+      edgeRecs.forEach(function(r){ r.el.classList.remove("dim"); });
+      sel.innerHTML = DATA.l2[drilledSlug].nodes.length+" nodes · "+DATA.l2[drilledSlug].edges.length+" edges";
+      return;
+    }
+    var keep={}; keep[selected]=1;
+    edgeRecs.forEach(function(r){ if(r.s===selected) keep[r.t]=1; if(r.t===selected) keep[r.s]=1; });
+    nodes.forEach(function(n){
+      var id=n.getAttribute("data-id");
+      n.classList.toggle("dim", !keep[id]); n.classList.toggle("sel", id===selected);
+    });
+    edgeRecs.forEach(function(r){ r.el.classList.toggle("dim", !(r.s===selected||r.t===selected)); });
+    var conn=0; edgeRecs.forEach(function(r){ if(r.s===selected||r.t===selected) conn++; });
+    var lbl = nodeMeta[selected].node.label || selected.replace(/^[^:]+:/,"");
+    sel.innerHTML = "selected <b>"+trunc(lbl,34)+"</b> · "+conn+" edge"+(conn===1?"":"s");
+  }
+
+  // ── drill / back ────────────────────────────────────────────────────
+  function drill(slug){ selected=null; renderL2(slug); }
+  function back(){ selected=null; renderL1(); }
+  backBtn.addEventListener("click", back);
+  resetBtn.addEventListener("click", function(){ selected=null; if(view==="l1") renderL1(); else renderL2(drilledSlug); });
+
+  // click on empty stage clears selection
+  stage.addEventListener("pointerdown", function(e){
+    if(e.target===stage || e.target===svg){
+      if(selected){ selected=null; view==="l1"?applySelection():applyL2Highlight(); }
+    }
+  });
+
+  // ── tooltip ─────────────────────────────────────────────────────────
+  function showTip(node){
+    var html;
+    if(view==="l1"){
+      var c=node.counts, col=COLORS[node.slug]||"var(--muted)";
+      html = "<div class='ttl'><span class='sw' style='background:"+col+"'></span>"+node.label+"</div>"
+           + "<div class='kind'>entity · "+node.status+"</div>"
+           + "<div class='grid'>"
+           + row("endpoints",c.endpoints)+row("models",c.models)+row("schemas",c.schemas)
+           + row("files",c.files)+row("lines",c.lines.toLocaleString())+"</div>";
+    } else {
+      var col2=KIND_COLOR[node.kind]||"#888";
+      var lbl=node.label || String(node.id).replace(/^[^:]+:/,"");
+      html = "<div class='ttl'><span class='sw' style='background:"+col2+"'></span>"+lbl+"</div>"
+           + "<div class='kind'>"+node.kind+"</div>";
+      if(node.table) html += "<div class='meta'>table · "+node.table+"</div>";
+      if(node.kind==="external") html += "<div class='meta'>&rarr; entity <b>"+lbl+"</b> · double-click to hop</div>";
+    }
+    tip.innerHTML = html; tip.classList.add("on");
+  }
+  function row(k,v){ return "<div class='k'>"+k+"</div><div class='v'>"+v+"</div>"; }
+  function moveTip(e){
+    var pad=14, w=tip.offsetWidth, h=tip.offsetHeight;
+    var x=e.clientX+pad, y=e.clientY+pad;
+    if(x+w>window.innerWidth-8)  x=e.clientX-w-pad;
+    if(y+h>window.innerHeight-8) y=e.clientY-h-pad;
+    tip.style.left=x+"px"; tip.style.top=y+"px";
+  }
+  function hideTip(){ tip.classList.remove("on"); }
+
+  // ── legend ──────────────────────────────────────────────────────────
+  function buildLegend(){
+    var html;
+    if(view==="l1"){
+      html = "<div class='grp'>";
+      L1.forEach(function(n){
+        html += "<span class='item'><span class='sw' style='background:"+(COLORS[n.slug]||"#888")+"'></span>"+n.label+"</span>";
+      });
+      html += "</div><div class='div'></div>"
+           + "<span class='item'><span class='swr'></span>fk (directed · width = weight)</span>"
+           + "<span class='count'>"+DATA.stats.entities+" entities · "+L1E.length+" edges</span>";
+    } else {
+      html = "<div class='grp'>";
+      ["endpoint","model","schema","external"].forEach(function(k){
+        html += "<span class='item'><span class='sw' style='background:"+KIND_COLOR[k]+"'></span>"+KIND_LABEL[k]+"</span>";
+      });
+      html += "</div><div class='div'></div>"
+           + "<span class='item'><span class='swr'></span>touches</span>"
+           + "<span class='item'><span class='swr' style='border-top-style:dashed'></span>fk</span>"
+           + "<span class='count'>double-click an external chip to hop</span>";
+    }
+    legend.innerHTML = html;
+  }
+
+  // ══════════════════════════════════════════════════════════════════
+  //  MANDATORY TEST HOOK
+  // ══════════════════════════════════════════════════════════════════
+  window.__labtest = {
+    approach: "Zero-lib inline SVG",
+    view:     function(){ return view==="l1" ? "l1" : "l2:"+drilledSlug; },
+    l1nodes:  function(){ return DATA.l1.nodes.length; },
+    l1edges:  function(){ return DATA.l1.edges.length; },
+    entities: function(){ return DATA.l1.nodes.map(function(n){ return n.slug; }); },
+    drill:    function(slug){ drill(slug); },
+    l2nodes:  function(){ return (view==="l2" && DATA.l2[drilledSlug]) ? DATA.l2[drilledSlug].nodes.length : 0; },
+    back:     function(){ back(); }
+  };
+
+  // ── boot ────────────────────────────────────────────────────────────
+  renderL1();
+  window.__labready = true;
+})();
+</script>

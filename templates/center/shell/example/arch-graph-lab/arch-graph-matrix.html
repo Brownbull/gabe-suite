@@ -1,0 +1,569 @@
+<meta charset="utf-8">
+<title>Arch Graph — Adjacency Matrix</title>
+<style>
+  :root{ --bg:#f7f8fa; --panel:#ffffff; --ink:#1c2024; --muted:#6b7280;
+         --line:#e3e6ea; --edge:#9aa3ad; --accent:#0d6e78;
+         --shade:13,110,120; }
+  @media (prefers-color-scheme:dark){ :root{ --bg:#0f1216; --panel:#171b21;
+         --ink:#e6e9ee; --muted:#8a929c; --line:#262c34; --edge:#4a525c;
+         --accent:#3fb6c2; --shade:63,182,194; } }
+  *{ box-sizing:border-box; }
+  body{ background:var(--bg); color:var(--ink); margin:0;
+        font:14px/1.5 ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  a{ color:var(--accent); }
+
+  header{ padding:18px 22px 12px; border-bottom:1px solid var(--line); }
+  h1{ font-size:19px; margin:0 0 4px; letter-spacing:.2px; }
+  .note{ color:var(--muted); font-size:12.5px; margin:0; }
+  .note b{ color:var(--ink); font-weight:600; }
+  .meta{ margin-top:8px; display:flex; flex-wrap:wrap; gap:14px 22px; align-items:center; font-size:12.5px; }
+  .meta .cost{ color:var(--accent); font-weight:600; }
+
+  .wrap{ padding:16px 22px 40px; }
+
+  .toolbar{ display:flex; flex-wrap:wrap; gap:12px 20px; align-items:center;
+            margin-bottom:14px; font-size:12.5px; }
+  .toolbar label{ color:var(--muted); }
+  select{ font:inherit; font-size:12.5px; color:var(--ink); background:var(--panel);
+          border:1px solid var(--line); border-radius:7px; padding:5px 8px; }
+  .count-pill{ color:var(--muted); }
+  .count-pill b{ color:var(--ink); }
+
+  /* ---------- legend ---------- */
+  .legend{ display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center;
+           margin-left:auto; color:var(--muted); font-size:12px; }
+  .legend .grp{ display:flex; align-items:center; gap:6px; }
+  .swatch{ width:11px; height:11px; border-radius:3px; display:inline-block; }
+  .ramp{ width:64px; height:11px; border-radius:3px;
+         background:linear-gradient(90deg, rgba(var(--shade),.14), rgba(var(--shade),.85)); }
+
+  /* ---------- L1 matrix ---------- */
+  .matrix-scroll{ overflow-x:auto; border:1px solid var(--line); border-radius:12px;
+                  background:var(--panel); }
+  table.matrix{ border-collapse:separate; border-spacing:0; }
+  table.matrix th, table.matrix td{ padding:0; }
+
+  .corner{ position:sticky; left:0; z-index:3; background:var(--panel);
+           border-right:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .corner .cbox{ display:flex; flex-direction:column; justify-content:flex-end;
+                 height:100%; padding:8px 10px; min-width:170px; }
+  .corner .ax{ font-size:10.5px; color:var(--muted); letter-spacing:.3px; }
+  .corner .ax b{ color:var(--ink); }
+
+  th.colh{ vertical-align:bottom; border-bottom:1px solid var(--line);
+           background:var(--panel); }
+  th.colh .cbox{ display:flex; align-items:center; gap:6px; padding:8px 10px 9px;
+                 white-space:nowrap; cursor:default; min-width:96px; justify-content:center; }
+  th.rowh{ position:sticky; left:0; z-index:2; background:var(--panel);
+           border-right:1px solid var(--line); }
+  th.rowh .rbox{ display:flex; align-items:center; gap:7px; padding:0 12px;
+                 height:46px; white-space:nowrap; cursor:pointer; user-select:none; }
+  th.rowh .rbox:hover{ background:rgba(var(--shade),.06); }
+  th.rowh .drill-hint{ margin-left:auto; color:var(--muted); font-size:10px;
+                       opacity:0; transition:opacity .12s; }
+  th.rowh .rbox:hover .drill-hint{ opacity:1; }
+  .chip{ width:11px; height:11px; border-radius:3px; flex:0 0 auto;
+         box-shadow:0 0 0 1px rgba(0,0,0,.08) inset; }
+  .hlabel{ font-weight:600; font-size:12.5px; }
+
+  td.cell{ text-align:center; border-bottom:1px solid var(--line);
+           border-right:1px solid var(--line); height:46px; min-width:96px;
+           font-variant-numeric:tabular-nums; position:relative; cursor:default; }
+  td.cell .v{ font-weight:600; font-size:13px; }
+  td.cell.diag{ background:repeating-linear-gradient(45deg,
+                 transparent, transparent 5px, rgba(var(--edge-rgb,150,160,170),.10) 5px,
+                 rgba(150,160,170,.10) 10px); color:var(--muted); }
+  td.cell.diag .v{ font-weight:400; color:var(--muted); opacity:.55; }
+  td.cell.empty{ color:transparent; }
+  td.cell.has-edge{ cursor:pointer; }
+
+  /* selection + crosshair states */
+  .dim{ opacity:.24; transition:opacity .12s; }
+  th.sel .rbox, th.sel .cbox{ background:rgba(var(--shade),.14); }
+  th.sel .hlabel{ color:var(--accent); }
+  td.cell.hl{ outline:2px solid var(--accent); outline-offset:-2px; }
+  .xrow, .xcol{ background:rgba(var(--shade),.07) !important; }
+
+  /* ---------- L2 drill ---------- */
+  #l2view{ display:none; }
+  .l2head{ display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:14px; }
+  .back{ font:inherit; font-size:12.5px; color:var(--ink); background:var(--panel);
+         border:1px solid var(--line); border-radius:8px; padding:6px 12px;
+         cursor:pointer; }
+  .back:hover{ border-color:var(--accent); color:var(--accent); }
+  .l2title{ display:flex; align-items:center; gap:9px; font-size:16px; font-weight:600; }
+  .l2title .chip{ width:14px; height:14px; }
+  .l2counts{ color:var(--muted); font-size:12.5px; margin-left:auto; }
+  .l2counts span{ margin-left:12px; }
+  .l2counts b{ color:var(--ink); }
+
+  .cols{ display:grid; grid-template-columns:repeat(4, minmax(200px,1fr));
+         gap:14px; margin-bottom:18px; }
+  @media (max-width:900px){ .cols{ grid-template-columns:repeat(2,minmax(200px,1fr)); } }
+  .kcol{ background:var(--panel); border:1px solid var(--line); border-radius:11px;
+         overflow:hidden; display:flex; flex-direction:column; }
+  .kcol > h3{ margin:0; font-size:11px; letter-spacing:.6px; text-transform:uppercase;
+              padding:9px 12px; color:#fff; display:flex; justify-content:space-between; }
+  .kcol .body{ padding:8px; display:flex; flex-direction:column; gap:6px;
+               max-height:340px; overflow:auto; }
+  .kcol .empty-k{ color:var(--muted); font-size:12px; padding:8px 4px; font-style:italic; }
+  .nchip{ border:1px solid var(--line); border-left-width:3px; border-radius:7px;
+          padding:6px 8px; font-size:11.5px; cursor:pointer; word-break:break-word;
+          background:var(--bg); transition:background .1s,border-color .1s; }
+  .nchip:hover{ background:rgba(var(--shade),.07); }
+  .nchip.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .nchip.sel{ border-color:var(--accent); background:rgba(var(--shade),.12);
+              box-shadow:0 0 0 1px var(--accent) inset; }
+  .nchip.faded{ opacity:.3; }
+
+  .rel{ background:var(--panel); border:1px solid var(--line); border-radius:11px;
+        overflow:hidden; }
+  .rel > h3{ margin:0; font-size:11px; letter-spacing:.5px; text-transform:uppercase;
+             color:var(--muted); padding:10px 14px; border-bottom:1px solid var(--line); }
+  .rel .body{ max-height:300px; overflow:auto; }
+  .relrow{ display:flex; align-items:center; gap:8px; padding:7px 14px;
+           border-bottom:1px solid var(--line); font-size:12px; }
+  .relrow:last-child{ border-bottom:0; }
+  .relrow.faded{ opacity:.22; }
+  .relrow.sel{ background:rgba(var(--shade),.10); }
+  .relrow .src,.relrow .tgt{ font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+                             font-size:11px; }
+  .relrow .arrow{ color:var(--accent); font-weight:700; }
+  .relrow .kind{ margin-left:auto; font-size:10px; text-transform:uppercase;
+                 letter-spacing:.4px; color:var(--muted); border:1px solid var(--line);
+                 border-radius:20px; padding:1px 8px; }
+  .rel .empty-k{ color:var(--muted); font-style:italic; padding:12px 14px; font-size:12px; }
+
+  /* ---------- tooltip ---------- */
+  #tip{ position:fixed; z-index:50; pointer-events:none; display:none;
+        background:var(--panel); color:var(--ink); border:1px solid var(--line);
+        border-radius:9px; padding:8px 11px; font-size:12px; max-width:300px;
+        box-shadow:0 8px 26px rgba(0,0,0,.22); }
+  #tip .tt{ font-weight:600; margin-bottom:3px; word-break:break-word; }
+  #tip .tr{ color:var(--muted); display:flex; gap:12px; justify-content:space-between; }
+  #tip .tr b{ color:var(--ink); font-weight:600; }
+  #tip .tk{ color:var(--muted); }
+</style>
+
+<header>
+  <h1>Architecture Graph · Adjacency Matrix</h1>
+  <p class="note"><b>EXAMPLE</b> — rendered over real gustify data, not live.</p>
+  <div class="meta">
+    <span>Approach: <b>Adjacency Matrix (zero-lib)</b></span>
+    <span>Integration cost: <span class="cost">NONE</span> — plain HTML table, no graph library</span>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- ===================== L1 MATRIX ===================== -->
+  <section id="l1view">
+    <div class="toolbar">
+      <label for="sortsel">Sort rows &amp; columns:</label>
+      <select id="sortsel">
+        <option value="name">Name (A→Z)</option>
+        <option value="out">Out-weight (deps sent)</option>
+        <option value="in">In-weight (deps received)</option>
+        <option value="lines">Lines of code</option>
+        <option value="endpoints">Endpoints</option>
+      </select>
+      <span class="count-pill"><b id="entCount">0</b> entities · <b id="edgeCount">0</b> dependencies</span>
+      <div class="legend">
+        <span class="grp"><span class="ramp"></span> edge weight (FK count)</span>
+        <span class="grp"><span class="swatch" style="background:var(--accent)"></span> selected row/col</span>
+      </div>
+    </div>
+
+    <div class="matrix-scroll">
+      <table class="matrix" id="matrix"></table>
+    </div>
+    <p class="note" style="margin-top:10px">
+      Cell = directed dependency <b>row → column</b> (foreign-key references). Shade scales with weight.
+      Single-click a row header to <b>select</b> an entity; <b>double-click</b> it to drill into its endpoints, models, schemas &amp; external links.
+    </p>
+  </section>
+
+  <!-- ===================== L2 DRILL ===================== -->
+  <section id="l2view">
+    <div class="l2head">
+      <button class="back" id="backBtn">← Back to matrix</button>
+      <div class="l2title"><span class="chip" id="l2chip"></span><span id="l2name"></span></div>
+      <div class="l2counts" id="l2counts"></div>
+    </div>
+    <div class="legend" style="margin:0 0 14px">
+      <span class="grp"><span class="swatch" style="background:#4c6ef5"></span> endpoint</span>
+      <span class="grp"><span class="swatch" style="background:#12b886"></span> model</span>
+      <span class="grp"><span class="swatch" style="background:#f59f00"></span> schema</span>
+      <span class="grp"><span class="swatch" style="background:#868e96"></span> external</span>
+      <span class="grp" style="margin-left:14px">edges: <b style="color:var(--ink)">touches</b> · <b style="color:var(--ink)">fk</b></span>
+    </div>
+    <div class="cols" id="l2cols"></div>
+    <div class="rel">
+      <h3>Relations <span id="relCount" style="color:var(--muted)"></span></h3>
+      <div class="body" id="l2rel"></div>
+    </div>
+  </section>
+</div>
+
+<div id="tip"></div>
+
+<script src="./c4-graph.data.js"></script>
+<script>
+(function(){
+  "use strict";
+  var C4 = window.GABE_C4, COLORS = window.GABE_C4_COLORS;
+  var KPAL = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
+  var KORDER = (C4.layout && C4.layout.l2 && C4.layout.l2.order) || ["endpoint","model","schema","external"];
+
+  // ---- L1 data prep ----
+  var l1nodes = C4.l1.nodes.slice();                 // includes any unclaimed if present
+  var byslug = {}; l1nodes.forEach(function(n){ byslug[n.slug]=n; });
+  var l1edges = C4.l1.edges.slice();
+  var maxW = l1edges.reduce(function(m,e){ return Math.max(m, e.weight||0); }, 1);
+
+  // edge lookup + per-entity degree
+  var emap = {};   // emap[src][tgt] = edge
+  var outW = {}, inW = {};
+  l1nodes.forEach(function(n){ outW[n.slug]=0; inW[n.slug]=0; });
+  l1edges.forEach(function(e){
+    (emap[e.source] || (emap[e.source]={}))[e.target] = e;
+    outW[e.source] = (outW[e.source]||0) + (e.weight||0);
+    inW[e.target]  = (inW[e.target]||0)  + (e.weight||0);
+  });
+
+  var order = l1nodes.map(function(n){ return n.slug; });   // current row/col order
+  var selected = null;                                       // selected slug in L1
+  var view = "l1", drilledSlug = null;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var tip = $("tip");
+
+  // ---------- tooltip ----------
+  function showTip(html){ tip.innerHTML = html; tip.style.display = "block"; }
+  function hideTip(){ tip.style.display = "none"; }
+  function moveTip(ev){
+    var pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+    var x = ev.clientX + pad, y = ev.clientY + pad;
+    if (x + w > window.innerWidth  - 8) x = ev.clientX - w - pad;
+    if (y + h > window.innerHeight - 8) y = ev.clientY - h - pad;
+    tip.style.left = x + "px"; tip.style.top = y + "px";
+  }
+  document.addEventListener("mousemove", function(ev){
+    if (tip.style.display === "block") moveTip(ev);
+  });
+
+  function entTipHTML(slug){
+    var n = byslug[slug], c = n.counts || {};
+    var kindLbl = n.kind === "unclaimed" ? "unclaimed" : "entity";
+    return '<div class="tt">'+esc(n.label)+' <span class="tk">· '+kindLbl+'</span></div>'
+      + row("endpoints", c.endpoints) + row("models", c.models) + row("schemas", c.schemas)
+      + row("files", c.files) + row("lines", c.lines)
+      + '<div class="tr"><span>deps out / in</span><b>'+(outW[slug]||0)+' / '+(inW[slug]||0)+'</b></div>';
+  }
+  function row(k,v){ if(v==null) return ""; return '<div class="tr"><span>'+k+'</span><b>'+v+'</b></div>'; }
+  function esc(s){ return String(s).replace(/[&<>"]/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
+
+  // ---------- sorting ----------
+  function sortOrder(mode){
+    var arr = l1nodes.slice();
+    var key = {
+      name:      function(n){ return n.label.toLowerCase(); },
+      out:       function(n){ return -(outW[n.slug]||0); },
+      in:        function(n){ return -(inW[n.slug]||0); },
+      lines:     function(n){ return -((n.counts&&n.counts.lines)||0); },
+      endpoints: function(n){ return -((n.counts&&n.counts.endpoints)||0); }
+    }[mode] || function(n){ return n.label.toLowerCase(); };
+    arr.sort(function(a,b){
+      var ka=key(a), kb=key(b);
+      if (ka<kb) return -1; if (ka>kb) return 1;
+      return a.label.toLowerCase() < b.label.toLowerCase() ? -1 : 1;
+    });
+    order = arr.map(function(n){ return n.slug; });
+  }
+
+  // ---------- render L1 matrix ----------
+  function cellStyle(w){
+    // shade by weight; ink text stays legible over mid-tone teal in both themes
+    var f = w / maxW;                          // 0..1
+    var a = (0.14 + 0.66 * f).toFixed(3);
+    return "background:rgba(var(--shade),"+a+")";
+  }
+
+  function renderMatrix(){
+    var t = $("matrix");
+    t.innerHTML = "";
+    // header row
+    var thead = document.createElement("thead");
+    var htr = document.createElement("tr");
+    var corner = document.createElement("th");
+    corner.className = "corner";
+    corner.innerHTML = '<div class="cbox"><span class="ax">rows depend on columns</span>'
+      + '<span class="ax"><b>source ↓</b> &nbsp;/&nbsp; <b>target →</b></span></div>';
+    htr.appendChild(corner);
+    order.forEach(function(slug){
+      var n = byslug[slug];
+      var th = document.createElement("th");
+      th.className = "colh"; th.dataset.slug = slug; th.dataset.axis = "col";
+      th.innerHTML = '<div class="cbox"><span class="chip" style="background:'
+        + (COLORS[slug]||COLORS.__unclaimed__) + '"></span><span class="hlabel">'
+        + esc(n.label) + '</span></div>';
+      wireHeader(th, slug);
+      htr.appendChild(th);
+    });
+    thead.appendChild(htr); t.appendChild(thead);
+
+    // body rows
+    var tbody = document.createElement("tbody");
+    order.forEach(function(rslug){
+      var rn = byslug[rslug];
+      var tr = document.createElement("tr");
+      var rh = document.createElement("th");
+      rh.className = "rowh"; rh.dataset.slug = rslug; rh.dataset.axis = "row";
+      rh.innerHTML = '<div class="rbox"><span class="chip" style="background:'
+        + (COLORS[rslug]||COLORS.__unclaimed__) + '"></span><span class="hlabel">'
+        + esc(rn.label) + '</span><span class="drill-hint">dbl-click ⤢</span></div>';
+      wireHeader(rh, rslug);
+      tr.appendChild(rh);
+
+      order.forEach(function(cslug){
+        var td = document.createElement("td");
+        td.className = "cell";
+        td.dataset.src = rslug; td.dataset.tgt = cslug;
+        if (rslug === cslug){
+          td.className += " diag";
+          td.innerHTML = '<span class="v">·</span>';
+        } else {
+          var e = emap[rslug] && emap[rslug][cslug];
+          if (e){
+            td.className += " has-edge";
+            td.setAttribute("style", cellStyle(e.weight));
+            td.innerHTML = '<span class="v">'+e.weight+'</span>';
+            wireCell(td, e, rn, byslug[cslug]);
+          } else {
+            td.className += " empty";
+          }
+        }
+        // crosshair on any cell hover
+        td.addEventListener("mouseenter", function(){ crosshair(rslug, cslug, true); });
+        td.addEventListener("mouseleave", function(){ crosshair(rslug, cslug, false); });
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    t.appendChild(tbody);
+
+    $("entCount").textContent = l1nodes.length;
+    $("edgeCount").textContent = l1edges.length;
+    if (selected) applySelection(selected);
+  }
+
+  function crosshair(rslug, cslug, on){
+    var cls = on ? "add" : "remove";
+    document.querySelectorAll('.rowh[data-slug="'+rslug+'"] .rbox, .colh[data-slug="'+cslug+'"] .cbox')
+      .forEach(function(el){ el.parentElement.classList[cls]("xrow"); });
+  }
+
+  function wireCell(td, e, rn, cn){
+    td.addEventListener("mouseenter", function(){
+      var kinds = Object.keys(e.kinds||{}).map(function(k){ return e.kinds[k]+" "+k; }).join(", ");
+      showTip('<div class="tt">'+esc(rn.label)+' → '+esc(cn.label)+'</div>'
+        + '<div class="tr"><span>weight</span><b>'+e.weight+'</b></div>'
+        + '<div class="tr"><span>kinds</span><b>'+esc(kinds)+'</b></div>');
+    });
+    td.addEventListener("mouseleave", hideTip);
+    td.addEventListener("click", function(){ selectEntity(rn.slug); });
+  }
+
+  // ---------- header wiring: single-click select vs double-click drill ----------
+  function wireHeader(el, slug){
+    var timer = null;
+    el.addEventListener("mouseenter", function(){ showTip(entTipHTML(slug)); });
+    el.addEventListener("mouseleave", hideTip);
+    el.addEventListener("click", function(){
+      if (timer){ return; }
+      timer = setTimeout(function(){ timer = null; selectEntity(slug); }, 220);
+    });
+    el.addEventListener("dblclick", function(){
+      if (timer){ clearTimeout(timer); timer = null; }
+      hideTip(); openL2(slug);
+    });
+  }
+
+  // ---------- selection ----------
+  function selectEntity(slug){
+    selected = (selected === slug) ? null : slug;
+    applySelection(selected);
+  }
+  function clearStates(){
+    document.querySelectorAll("#matrix .sel").forEach(function(el){ el.classList.remove("sel"); });
+    document.querySelectorAll("#matrix .dim").forEach(function(el){ el.classList.remove("dim"); });
+    document.querySelectorAll("#matrix .hl").forEach(function(el){ el.classList.remove("hl"); });
+  }
+  function applySelection(slug){
+    clearStates();
+    if (!slug) return;
+    // neighbours: any entity connected by an edge (either direction)
+    var nb = {}; nb[slug] = true;
+    l1edges.forEach(function(e){
+      if (e.source === slug) nb[e.target] = true;
+      if (e.target === slug) nb[e.source] = true;
+    });
+    // headers
+    document.querySelectorAll(".rowh,.colh").forEach(function(h){
+      var s = h.dataset.slug;
+      if (s === slug) h.classList.add("sel");
+      else if (!nb[s]) h.classList.add("dim");
+    });
+    // cells: highlight edges touching slug, dim cells unrelated to slug
+    document.querySelectorAll("td.cell").forEach(function(td){
+      var src = td.dataset.src, tgt = td.dataset.tgt;
+      var touches = (src === slug || tgt === slug);
+      if (touches && td.classList.contains("has-edge")) td.classList.add("hl");
+      if (!touches) td.classList.add("dim");
+    });
+  }
+
+  // ---------- L2 drill ----------
+  function labelOf(g, id){
+    for (var i=0;i<g.nodes.length;i++) if (g.nodes[i].id === id) return g.nodes[i].label;
+    // fall back to stripping the "kind:" prefix
+    var ix = id.indexOf(":"); return ix>=0 ? id.slice(ix+1) : id;
+  }
+
+  function openL2(slug){
+    var g = C4.l2[slug]; if (!g) return;
+    drilledSlug = slug; view = "l2"; selected = null;
+    var n = byslug[slug];
+
+    $("l2chip").style.background = COLORS[slug] || COLORS.__unclaimed__;
+    $("l2name").textContent = n.label;
+    var c = n.counts || {};
+    $("l2counts").innerHTML =
+      '<span>endpoints <b>'+(c.endpoints||0)+'</b></span>'
+     +'<span>models <b>'+(c.models||0)+'</b></span>'
+     +'<span>schemas <b>'+(c.schemas||0)+'</b></span>'
+     +'<span>files <b>'+(c.files||0)+'</b></span>'
+     +'<span>lines <b>'+(c.lines||0)+'</b></span>';
+
+    // group nodes by kind
+    var groups = {}; KORDER.forEach(function(k){ groups[k]=[]; });
+    g.nodes.forEach(function(nd){ (groups[nd.kind] || (groups[nd.kind]=[])).push(nd); });
+
+    var colsEl = $("l2cols"); colsEl.innerHTML = "";
+    var allKinds = KORDER.slice();
+    Object.keys(groups).forEach(function(k){ if (allKinds.indexOf(k)<0) allKinds.push(k); });
+    allKinds.forEach(function(k){
+      var list = groups[k] || [];
+      var col = document.createElement("div");
+      col.className = "kcol";
+      var color = KPAL[k] || "#868e96";
+      col.innerHTML = '<h3 style="background:'+color+'"><span>'+k+'</span><span>'+list.length+'</span></h3>';
+      var body = document.createElement("div"); body.className = "body";
+      if (!list.length){
+        body.innerHTML = '<div class="empty-k">none</div>';
+      } else {
+        list.forEach(function(nd){
+          var chip = document.createElement("div");
+          chip.className = "nchip" + (k==="endpoint" ? " mono" : "");
+          chip.style.borderLeftColor = color;
+          chip.dataset.nodeid = nd.id;
+          chip.textContent = nd.label;
+          chip.addEventListener("mouseenter", function(){
+            showTip('<div class="tt">'+esc(nd.label)+'</div>'
+              + '<div class="tr"><span>kind</span><b>'+esc(nd.kind)+'</b></div>'
+              + (nd.table ? '<div class="tr"><span>table</span><b>'+esc(nd.table)+'</b></div>' : ''));
+          });
+          chip.addEventListener("mouseleave", hideTip);
+          chip.addEventListener("click", function(){ selectL2Node(nd.id); });
+          body.appendChild(chip);
+        });
+      }
+      col.appendChild(body);
+      colsEl.appendChild(col);
+    });
+
+    // relations
+    var relEl = $("l2rel"); relEl.innerHTML = "";
+    $("relCount").textContent = "(" + g.edges.length + ")";
+    if (!g.edges.length){
+      relEl.innerHTML = '<div class="empty-k">no internal relations recorded for this entity</div>';
+    } else {
+      g.edges.forEach(function(e){
+        var r = document.createElement("div");
+        r.className = "relrow";
+        r.dataset.src = e.source; r.dataset.tgt = e.target;
+        r.innerHTML = '<span class="src">'+esc(shorten(labelOf(g,e.source)))+'</span>'
+          + '<span class="arrow">→</span>'
+          + '<span class="tgt">'+esc(shorten(labelOf(g,e.target)))+'</span>'
+          + '<span class="kind">'+esc(e.kind)+'</span>';
+        relEl.appendChild(r);
+      });
+    }
+
+    $("l1view").style.display = "none";
+    $("l2view").style.display = "block";
+    window.scrollTo(0,0);
+  }
+  function shorten(s){ s=String(s); return s.length>46 ? s.slice(0,44)+"…" : s; }
+
+  var l2sel = null;
+  function selectL2Node(id){
+    l2sel = (l2sel === id) ? null : id;
+    var g = C4.l2[drilledSlug];
+    // connected node ids
+    var conn = {};
+    if (l2sel){
+      conn[l2sel] = true;
+      g.edges.forEach(function(e){
+        if (e.source === l2sel) conn[e.target] = true;
+        if (e.target === l2sel) conn[e.source] = true;
+      });
+    }
+    document.querySelectorAll(".nchip").forEach(function(ch){
+      ch.classList.remove("sel","faded");
+      if (!l2sel) return;
+      if (ch.dataset.nodeid === l2sel) ch.classList.add("sel");
+      else if (!conn[ch.dataset.nodeid]) ch.classList.add("faded");
+    });
+    document.querySelectorAll(".relrow").forEach(function(r){
+      r.classList.remove("sel","faded");
+      if (!l2sel) return;
+      if (r.dataset.src === l2sel || r.dataset.tgt === l2sel) r.classList.add("sel");
+      else r.classList.add("faded");
+    });
+  }
+
+  function backToL1(){
+    view = "l1"; drilledSlug = null; l2sel = null;
+    $("l2view").style.display = "none";
+    $("l1view").style.display = "block";
+    hideTip();
+    window.scrollTo(0,0);
+  }
+
+  // ---------- wire controls ----------
+  $("sortsel").addEventListener("change", function(){
+    selected = null;
+    sortOrder(this.value);
+    renderMatrix();
+  });
+  $("backBtn").addEventListener("click", backToL1);
+
+  // ---------- boot ----------
+  sortOrder("name");
+  renderMatrix();
+
+  // ---------- test hook ----------
+  window.__labtest = {
+    approach: "Adjacency Matrix (zero-lib)",
+    view:     function(){ return view === "l1" ? "l1" : "l2:" + drilledSlug; },
+    l1nodes:  function(){ return l1nodes.length; },
+    l1edges:  function(){ return l1edges.length; },   // = non-empty cells
+    entities: function(){ return order.slice(); },
+    drill:    function(slug){ openL2(slug); },
+    l2nodes:  function(){ return drilledSlug ? C4.l2[drilledSlug].nodes.length : 0; },
+    back:     function(){ backToL1(); }
+  };
+  window.__labready = true;
+})();
+</script>
