@@ -204,6 +204,36 @@ function ringPos(ids, R, cx, cy){ ids.forEach(function(id,i){
   pos[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); }
 
 var ENTS = D.entities.map(function(e){ return e.slug; });
+
+/* ── WHY-UNLINKED: derived from the DATA once, layout-independent, so the panel
+   can explain any element on any level. An endpoint is linked when it touches a
+   documented class or returns a schema documented somewhere; a class is linked
+   when anything references it (touch, intra FK, cross FK, or a response). ── */
+var LINKED = (function(){
+  var ep={}, cls={}, why={};
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{};
+    (pc.intra||[]).forEach(function(e){ cls[slug+"|"+e.s]=1; cls[slug+"|"+e.t]=1; });
+    (pc.endpoints||[]).forEach(function(e){
+      var k=slug+"|"+e.m+" "+e.p, linked=false, reasons=[];
+      if((e.touch||[]).length){ linked=true; e.touch.forEach(function(c){ cls[slug+"|"+c]=1; }); }
+      else reasons.push("its handler touches no documented class directly — the work happens one hop down, in the service layer (the function level's territory)");
+      if(e.resp && D.schema_owner[e.resp]){ linked=true;
+        cls[D.schema_owner[e.resp]+"|"+e.resp]=1; }
+      else if(e.resp) reasons.push("it returns <b>"+e.resp+"</b>, a type documented nowhere in the archmap (a plain dict or framework type)");
+      else reasons.push("it declares no response_model");
+      ep[k]=linked; if(!linked) why[k]=reasons;
+    }); });
+  (D.cross_edges||[]).forEach(function(e){ cls[e.fs+"|"+e.f]=1; cls[e.ts+"|"+e.t]=1; });
+  return {ep:ep, cls:cls, why:why};
+})();
+function unlinkedNote(kind, key, name){
+  if(kind==="ep"){ if(LINKED.ep[key]) return "";
+    return "<div class='k'>why is it unlinked?</div><div class='note'>"+(LINKED.why[key]||[]).join("; and ")
+      +". Raising this ceiling is the graft arm's function-level work, not a drawing gap.</div>"; }
+  if(LINKED.cls[key]) return "";
+  return "<div class='k'>why is it unlinked?</div><div class='note'>No documented foreign key, endpoint touch, or response references <b>"+name
+    +"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.</div>";
+}
 var entLayout = "ring", insideLayout = "tiers";   // Tiers default: models core · schemas outer ring
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
 /* curved wire: a quadratic bow perpendicular to the segment — crossings separate */
@@ -614,14 +644,17 @@ function drawLayers(){
 function meanAngle(angles){ if(!angles.length) return -Math.PI/2;
   var sx=0, sy=0; angles.forEach(function(a){ sx+=Math.cos(a); sy+=Math.sin(a); });
   return Math.atan2(sy, sx); }
-function spreadRing(items, angleOf){            // enforce a minimum angular gap on one ring
-  var arr=items.map(function(id){ return {id:id, a:angleOf(id)}; })
-    .sort(function(x,y){ return x.a-y.a; });
-  var minGap=Math.min(0.55, 2*Math.PI/Math.max(arr.length,1));
-  for(var pass=0; pass<3; pass++)
-    for(var i=1;i<arr.length;i++)
-      if(arr[i].a - arr[i-1].a < minGap) arr[i].a = arr[i-1].a + minGap;
-  var out={}; arr.forEach(function(x){ out[x.id]=x.a; }); return out; }
+function spreadRing(items, angleOf){
+  // EVEN spacing in mean-angle ORDER: items keep their locality (a fn stays near
+  // its endpoints' side of the circle) but spacing is uniform BY CONSTRUCTION —
+  // the previous gap-push spread had no wrap-around, so a crowded ring's tail
+  // landed on its head (measured 11px overlaps in 30+-piece cores), and items
+  // with NO reference angle all stacked on the default. Sort, then distribute.
+  var arr=items.map(function(id,i){ return {id:id, a:angleOf(id), i:i}; })
+    .sort(function(x,y){ return (x.a-y.a) || (x.i-y.i); });
+  var n=Math.max(arr.length,1), start=arr.length?arr[0].a:-Math.PI/2;
+  var out={}; arr.forEach(function(x,rank){ out[x.id]=start + 2*Math.PI*rank/n; });
+  return out; }
 function traceRadii(){ var radii={};
   ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
     var eps=pc.endpoints||[], traced=eps.filter(function(ep){ return (ep.touch||[]).length; });
@@ -775,15 +808,17 @@ function showEntity(en){ var pc=D.pieces[en.slug]||{};
    +"<div class='row'><span>lines</span><b>"+(en.counts.lines||0).toLocaleString()+"</b></div>"
    +"<div class='note'>Switch to <b>2 · Pieces</b> to open it — the endpoints move to the border.</div>"; }
 function showPiece(slug, it){
-  panel.innerHTML="<h3>"+esc(it.m.cls||"")+"</h3><div class='note'>"+(it.kind==="model"?"model (database cylinder)":"schema (S badge)")+" · in "+esc(slug)+"</div>"
+  panel.innerHTML="<h3>"+esc(it.m.cls||"")+"</h3><div class='note'>"+(it.kind==="model"?"model (database cylinder)":"schema (brace icon)")+" · in "+esc(slug)+"</div>"
    +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
-   +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":""); }
+   +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
+   +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
 function showEndpoint(slug, ep){
   panel.innerHTML="<h3 style='font-size:13px'>"+esc(ep.m+" "+ep.p)+"</h3>"
    +"<div class='note'>an ENTRY POINT on the border of "+esc(slug)+"</div>"
    +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
    +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
-   +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":""); }
+   +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
+   +unlinkedNote("ep", slug+"|"+ep.m+" "+ep.p, ep.p); }
 function showFn(f){
   panel.innerHTML="<h3>"+esc(f.name)+"()</h3>"
    +"<div class='row'><span>entity</span><b>"+esc(f.slug)+"</b></div>"
