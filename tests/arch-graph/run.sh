@@ -128,6 +128,92 @@ check(f"external:{G._UNCLAIMED}" in a2ids,
 check(not any(e["source"] == e["target"] for e in a2["edges"]),
       "no L2 self-loop from the planted self-FK")
 
+# ══ THE GRAFT-WIRING ARM (_a3_graft + build_c4_graph(graft=)) ══════════════
+_gspec = importlib.util.spec_from_file_location("_a3_graft", gen + "/_a3_graft.py")
+GG = importlib.util.module_from_spec(_gspec); _gspec.loader.exec_module(GG)
+import pathlib as _pl
+
+# a synthetic wiring index exercising every consume rule: cross-entity calls
+# (inferred), cross-entity imports (extracted), intra-entity call (dropped),
+# .js noise (dropped), raw-specifier import target (dropped), unmapped file
+# (dropped) — mirrors the REAL shapes sampled from gustify's index 2026-08-12.
+WIRING = {
+  "meta": {"version": 1, "nodeCount": 6, "edgeCount": 6, "languages": ["python"]},
+  "nodes": [
+    {"id": "apps/api/alpha.py", "kind": "file", "path": "apps/api/alpha.py"},
+    {"id": "apps/api/alpha.py#do_a", "kind": "function", "path": "apps/api/alpha.py"},
+    {"id": "apps/api/beta.py#do_b", "kind": "function", "path": "apps/api/beta.py"},
+    {"id": "apps/api/beta.py#do_b2", "kind": "function", "path": "apps/api/beta.py"},
+    {"id": "web/dist/bundle.js#x", "kind": "function", "path": "web/dist/bundle.js"},
+    {"id": "apps/api/stray.py#s", "kind": "function", "path": "apps/api/stray.py"},
+  ],
+  "edges": [
+    {"source": "apps/api/alpha.py#do_a", "target": "apps/api/beta.py#do_b",  "relation": "calls",   "confidence": "inferred"},
+    {"source": "apps/api/alpha.py",      "target": "apps/api/beta.py#do_b2", "relation": "imports", "confidence": "extracted"},
+    {"source": "apps/api/beta.py#do_b",  "target": "apps/api/beta.py#do_b2", "relation": "calls",   "confidence": "extracted"},
+    {"source": "apps/api/alpha.py#do_a", "target": "web/dist/bundle.js#x",   "relation": "calls",   "confidence": "inferred"},
+    {"source": "apps/api/alpha.py",      "target": "react",                  "relation": "imports", "confidence": "extracted"},
+    {"source": "apps/api/stray.py#s",    "target": "apps/api/beta.py#do_b",  "relation": "calls",   "confidence": "inferred"},
+  ],
+}
+_gx = GG.derive_cross(WIRING, FIX["entities"])
+check(_gx["pairs"] == {("alpha", "beta"): {"calls": 1, "imports": 1}},
+      "graft arm: exactly the cross-entity calls+imports pair survives")
+check(_gx["stats"]["dropped"] == {"noise": 1, "unresolved_target": 1,
+                                  "unmapped_file": 1, "intra_entity": 1},
+      "graft arm: every dropped edge is COUNTED by reason (no silent caps)")
+check(_gx["stats"]["confidence"]["calls"] == {"extracted": 0, "inferred": 1},
+      "graft arm: the trust split rides the stats (cross-file calls are a floor)")
+
+# folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
+_garm = {"present": True, "reason": "test", "index_hash": "abc123def456",
+         "pairs": _gx["pairs"], "stats": _gx["stats"]}
+gg = G.build_c4_graph(FIX, labels=LABELS, status=STATUS, graft=_garm)
+_ab = [e for e in gg["l1"]["edges"] if e["source"] == "alpha" and e["target"] == "beta"][0]
+check(_ab["kinds"] == {"calls": 1, "fk": 2, "imports": 1} and _ab["weight"] == 4,
+      "graft kinds fold into the reserved multi-kind edge dict; weight = sum")
+check(gg["stats"]["graft"]["present"] is True
+      and gg["stats"]["graft"]["index_hash"] == "abc123def456",
+      "stats.graft carries the index fingerprint when present")
+# a graft-only pair (no FK) creates a NEW edge rather than being dropped
+_g2 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+                       graft={"present": True, "reason": "t", "index_hash": "x",
+                              "pairs": {("gamma", "alpha"): {"calls": 3}},
+                              "stats": {"cross_calls": 3, "cross_imports": 0,
+                                        "confidence": {}, "dropped": {}}})
+_ga = [e for e in _g2["l1"]["edges"] if e["source"] == "gamma" and e["target"] == "alpha"]
+check(len(_ga) == 1 and _ga[0]["kinds"] == {"calls": 3},
+      "a graft-only entity pair becomes a NEW L1 edge (coupling FK cannot see)")
+
+# ── REGRESSION: graft absent → TOPOLOGY byte-identical to an FK-only build ──
+g_none = G.build_c4_graph(FIX, labels=LABELS, status=STATUS, graft=None)
+g_abs  = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+                          graft={"present": False, "reason": "no graft binary"})
+for part in ("l1", "l2", "cross_edges", "layout"):
+    check(json.dumps(g_none[part], sort_keys=True) == json.dumps(g[part], sort_keys=True)
+          and json.dumps(g_abs[part], sort_keys=True) == json.dumps(g[part], sort_keys=True),
+          f"graft absent: {part} is byte-identical to the pre-graft build")
+check(g_abs["stats"]["graft"] == {"present": False, "reason": "no graft binary"},
+      "graft absent: the absence is NAMED in stats, never silent")
+
+# ── ensure_index: no binary + no index → honest reason; never raises ──
+with tempfile.TemporaryDirectory() as _td:
+    _p, _r = GG.ensure_index(_pl.Path(_td), allow_build=False)
+    check(_p is None and "no index" in _r, "ensure_index: empty repo → None + reason")
+    _arm = GG.graft_arm(_pl.Path(_td), FIX["entities"], allow_build=False)
+    check(_arm["present"] is False and "no index" in _arm["reason"],
+          "graft_arm: absence degrades to present=False with the reason")
+    # a real index on disk, read as-found (build disabled = the dry-run path)
+    _gd = _pl.Path(_td) / "graft" / ".graph"; _gd.mkdir(parents=True)
+    (_gd / "wiring.json").write_text(json.dumps(WIRING), encoding="utf-8")
+    _arm2 = GG.graft_arm(_pl.Path(_td), FIX["entities"], allow_build=False)
+    check(_arm2["present"] is True and _arm2["pairs"] == {("alpha", "beta"): {"calls": 1, "imports": 1}}
+          and len(_arm2["index_hash"]) == 12,
+          "graft_arm: as-found index consumed + fingerprinted (dry-run path)")
+    # determinism: same index bytes → same hash + same pairs
+    _arm3 = GG.graft_arm(_pl.Path(_td), FIX["entities"], allow_build=False)
+    check(_arm2 == _arm3, "graft_arm: deterministic (same input → identical output)")
+
 # ── CROSS-ENTITY PIECE EDGES: model→model FKs that cross entities (piece res) ─
 # alpha.A has 4 FKs: self a.id (intra) · b.id + b.x (both → beta model:B) · legacy_x
 # (unclaimed). Only the two beta FKs are cross-entity piece edges; intra + unclaimed

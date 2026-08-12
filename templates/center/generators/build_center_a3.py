@@ -36,6 +36,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import _center_data as D  # noqa: E402
 import _a3_board
 import _a3_code
+import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
 import _a3_sim  # noqa: E402  (the live change-simulation projection — window.GABE_SIM)
 import _a3_guard
@@ -1976,15 +1977,26 @@ def main() -> int:
         _gcolors = {s: R_MARKS.entity_color(s)
                     for s, c in amap.get("entities", {}).items() if c}
         _gcolors["__unclaimed__"] = "#8a8f98"   # the coverage-loss bucket, muted
+        # the graft-wiring arm: self-provision (the red beat's recipe) + derive the
+        # cross-entity calls/imports slice. GABE_GRAFT_BUILD=0 reads as-found — a
+        # dry-run against a twin must never write its tree. The arm never raises;
+        # absence is a named stats entry, and the FK topology is unchanged.
+        _garm = _a3_graft.graft_arm(
+            REPO_ROOT, amap.get("entities") or {},
+            allow_build=os.environ.get("GABE_GRAFT_BUILD", "1") != "0")
         _graph = _a3_graph.build_c4_graph(
             amap, labels=LABELS,
             status={s["entity"]: s.get("status") for s in sections},
-            colors=_gcolors)
+            colors=_gcolors, graft=_garm)
         _a3_graph.emit(_graph, CENTER_OUT)
         wrote.append(("c4-graph.json", 0))
         _st = _graph["stats"]
+        _gst = _st.get("graft") or {}
         print(f"    wrote docs/site/center/c4-graph.json — {_st['entities']} node(s) "
               f"· {_st['l1_edges']} L1 edge(s)"
+              + (f" · graft {_gst.get('cross_calls', 0)} calls/"
+                 f"{_gst.get('cross_imports', 0)} imports ({_gst.get('reason')})"
+                 if _gst.get("present") else f" · graft absent ({_gst.get('reason')})")
               + ("  ⚠ unclaimed bucket present" if _st["unclaimed"] else ""))
     except Exception as _e:  # noqa: BLE001
         print(f"    ⚠ c4-graph SKIPPED (derivation error, center still built): {_e}")

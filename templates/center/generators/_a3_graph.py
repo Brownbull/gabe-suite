@@ -445,7 +445,8 @@ def _stamp_l2(l2: dict[str, list[dict]]) -> None:
 
 def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                    status: dict[str, str] | None = None,
-                   colors: dict[str, str] | None = None) -> dict[str, Any]:
+                   colors: dict[str, str] | None = None,
+                   graft: dict[str, Any] | None = None) -> dict[str, Any]:
     """The whole derivation: L1 entity graph + one L2 graph per entity, laid out.
 
     Pure over ``amap["entities"]`` (+ labels/status/colors), keyed on ``amap["head"]``.
@@ -458,6 +459,27 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     entities = amap.get("entities") or {}
 
     l1_nodes, l1_edges, unresolved = _l1(entities, labels, status)
+    # ── the graft-wiring arm (topology provider): cross-entity calls/imports the
+    #    FK derivation cannot see, folded into the multi-kind edge dict this schema
+    #    reserved for exactly this. graft absent → nodes/edges/layout byte-identical
+    #    to an FK-only build; only stats.graft names the absence (honesty law).
+    graft_present = bool(graft and graft.get("present"))
+    if graft_present:
+        by_pair = {(e["source"], e["target"]): e for e in l1_edges}
+        slugs = {n["slug"] for n in l1_nodes}
+        for (src, dst), kinds in (graft.get("pairs") or {}).items():
+            if src not in slugs or dst not in slugs:
+                continue                       # an entity the L1 set doesn't carry
+            e = by_pair.get((src, dst))
+            if e is None:
+                e = {"source": src, "target": dst, "weight": 0, "kinds": {}}
+                by_pair[(src, dst)] = e
+                l1_edges.append(e)
+            for rel, n in kinds.items():
+                e["kinds"][rel] = e["kinds"].get(rel, 0) + int(n)
+            e["kinds"] = {k: e["kinds"][k] for k in sorted(e["kinds"])}
+            e["weight"] = sum(e["kinds"].values())
+        l1_edges.sort(key=lambda e: (e["source"], e["target"]))
     _stamp_l1(l1_nodes)
     flow_cols = _stamp_l1_flow(l1_nodes, l1_edges)   # additive fx/fy (deps gradient)
 
@@ -491,6 +513,18 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
             "unresolved_tables": unresolved,
+            # the graft arm's honesty record: absent → named absent, never silent;
+            # present → the index fingerprint + the floor-not-census trust split.
+            "graft": ({"present": True,
+                       "reason": graft.get("reason"),
+                       "index_hash": graft.get("index_hash"),
+                       "cross_calls": (graft.get("stats") or {}).get("cross_calls", 0),
+                       "cross_imports": (graft.get("stats") or {}).get("cross_imports", 0),
+                       "confidence": (graft.get("stats") or {}).get("confidence"),
+                       "dropped": (graft.get("stats") or {}).get("dropped")}
+                      if graft_present else
+                      {"present": False,
+                       "reason": (graft or {}).get("reason", "not attempted")}),
         },
     }
 
