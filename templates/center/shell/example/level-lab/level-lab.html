@@ -81,6 +81,7 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
     <button data-lvl="layers">4 · Layers</button>
     <button data-lvl="trace">5 · Trace</button>
   </div>
+  <button id="testsbtn" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Tests</button>
   <button id="conns" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Connections</button>
   <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -236,6 +237,29 @@ function unlinkedNote(kind, key, name){
 }
 var entLayout = "ring", insideLayout = "tiers";   // Tiers default: models core · schemas outer ring
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
+var showTests = true;      // per-piece proof badges (count · corpus · state)
+/* PROOF BADGE: the piece's test estate at a glance — green = cases all pass,
+   red = a failing case exists, hollow grey = NO case names this piece (the
+   coverage signal). Count only, never test names; a small orange dot marks
+   web-corpus coverage on top of api. */
+function proofBadge(g, r, tests){
+  if(!showTests) return;
+  var bx=r*0.95+3, by=-r*0.95-3;
+  if(!tests){ var e=E("circle",{class:"tbadge none",cx:bx,cy:by,r:3.6,fill:"none",
+      stroke:"var(--muted)","stroke-width":"1.3","stroke-dasharray":"2 2"});
+    var ti=E("title"); ti.textContent="no cases name this piece — unproven at this altitude"; e.appendChild(ti);
+    g.appendChild(e); return; }
+  var col = tests.red>0 ? "var(--m-delete)" : "var(--c-model)";
+  var w = 9 + String(tests.n).length*4.6;
+  var bg=E("rect",{class:"tbadge has",x:bx-w/2,y:by-7,width:w,height:13,rx:6.5,fill:col});
+  var tx=E("text",{x:bx,y:by+3.2,"text-anchor":"middle",style:"font-size:8.6px;font-weight:800",fill:"#fff"});
+  tx.textContent=tests.n;
+  var ti2=E("title"); ti2.textContent=tests.n+" case(s) · api "+tests.api+" · web "+tests.web
+    +(tests.red?" · "+tests.red+" RED":" · all passing");
+  bg.appendChild(ti2);
+  g.appendChild(bg); g.appendChild(tx);
+  if(tests.web>0) g.appendChild(E("circle",{class:"tbadge web",cx:bx,cy:by+9.5,r:2.4,fill:"var(--c-fn-web)"}));
+}
 /* curved wire: a quadratic bow perpendicular to the segment — crossings separate */
 function curve(x1,y1,x2,y2,bow){ var dx=x2-x1, dy=y2-y1, d=Math.hypot(dx,dy)||1;
   var mx=(x1+x2)/2 - dy/d*bow, my=(y1+y2)/2 + dx/d*bow;
@@ -494,6 +518,7 @@ function drawPieces(){
       pieceAt[it.m.cls]=q; pieceAtGlobal[slug+"|"+it.m.cls]=q;
       var g=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+q.x+","+q.y+")"});
       if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
+      proofBadge(g, 9, it.m.tests||null);
       var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(it.m.cls||"",13); g.appendChild(t);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
@@ -523,6 +548,7 @@ function drawPieces(){
           _respCross.push({fs:slug, x:x, y:y, ts:D.schema_owner[ep.resp], cls:ep.resp, ep:ep}); }
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       epMark(g, 6.5, ep.m);
+      proofBadge(g, 7, ep.tests||null);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
@@ -583,6 +609,7 @@ function drawFunctions(){
     fns.forEach(function(f){ var q=pos["fn:"+f.id];
       var g=E("g",{class:"fnode","data-layer":f.layer, transform:"translate("+q.x+","+q.y+")"});
       fGlyph(g, 9, FNCOL[f.layer]||"var(--muted)", f.handler, f.god);
+      proofBadge(g, 10, f.tests||null);
       var t=E("text",{class:"plabel", y:19}); t.textContent=trunc(f.name,14); g.appendChild(t);
       var ti=E("title"); ti.textContent=f.name+" · "+f.layer+(f.handler?" · handler":"")+" · "+f.slug+(f.lang==="ts"?" · TS":""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f); });
@@ -736,6 +763,8 @@ function drawTrace(){
       var isModel=(pc.models||[]).some(function(m){ return m.cls===cls; });
       var g=E("g",{class:"piece","data-kind":isModel?"model":"schema", transform:"translate("+x+","+y+")"});
       if(isModel) cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
+      var _tm=(pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===cls; })[0];
+      proofBadge(g, 9, (_tm&&_tm.tests)||null);
       var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(cls,13); g.appendChild(t);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, {kind:isModel?"model":"schema", m:{cls:cls}}); });
       layer.appendChild(g); });
@@ -811,6 +840,8 @@ function showPiece(slug, it){
   panel.innerHTML="<h3>"+esc(it.m.cls||"")+"</h3><div class='note'>"+(it.kind==="model"?"model (database cylinder)":"schema (brace icon)")+" · in "+esc(slug)+"</div>"
    +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
    +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
+   +(it.m.tests?"<div class='row'><span>tests</span><b>"+it.m.tests.n+" case(s) · api "+it.m.tests.api+" · web "+it.m.tests.web+(it.m.tests.red?" · "+it.m.tests.red+" RED":"")+"</b></div>"
+     :"<div class='row'><span>tests</span><b>none — unproven</b></div>")
    +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
 function showEndpoint(slug, ep){
   panel.innerHTML="<h3 style='font-size:13px'>"+esc(ep.m+" "+ep.p)+"</h3>"
@@ -818,6 +849,8 @@ function showEndpoint(slug, ep){
    +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
    +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
    +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
+   +(ep.tests?"<div class='row'><span>tests</span><b>"+ep.tests.n+" case(s) · api "+ep.tests.api+" · web "+ep.tests.web+(ep.tests.red?" · "+ep.tests.red+" RED":"")+"</b></div>"
+     :"<div class='row'><span>tests</span><b>none — unproven</b></div>")
    +unlinkedNote("ep", slug+"|"+ep.m+" "+ep.p, ep.p); }
 function showFn(f){
   panel.innerHTML="<h3>"+esc(f.name)+"()</h3>"
@@ -840,6 +873,13 @@ document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
 window.addEventListener("resize", render);
 
+document.getElementById("testsbtn").addEventListener("click",function(){
+  showTests=!showTests;
+  this.classList.toggle("on",showTests);
+  this.style.background=showTests?"var(--accent)":"var(--panel)";
+  this.style.color=showTests?"#fff":"var(--ink)";
+  this.style.borderColor=showTests?"var(--accent)":"var(--line)";
+  renderKeepView(); });
 document.getElementById("conns").addEventListener("click",function(){
   showConns=!showConns;
   this.classList.toggle("on",showConns);
@@ -898,6 +938,9 @@ window.__lvltest = {
   setLayout:function(v){ entLayout=v; computeEntityPositions(); render(); },
   inside:function(){ return insideLayout; },
   conns:function(){ return showConns; },
+  tests:function(){ return showTests; },
+  toggleTests:function(){ document.getElementById("testsbtn").click(); },
+  tBadges:function(){ return {has:vp.querySelectorAll(".tbadge.has").length, none:vp.querySelectorAll(".tbadge.none").length, web:vp.querySelectorAll(".tbadge.web").length}; },
   toggleConns:function(){ document.getElementById("conns").click(); },
   xfkCount:function(){ return vp.querySelectorAll(".e-xfk").length; },
   curvedShare:function(){ var q=0,n=0; vp.querySelectorAll(".e-touch,.e-intra,.e-xfk").forEach(function(p){ n++; if((p.getAttribute("d")||"").indexOf("Q")>=0) q++; }); return {q:q,n:n}; },
