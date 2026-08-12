@@ -96,6 +96,7 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
       <button data-in="ring" class="on">Ring</button>
       <button data-in="grid">Grid</button>
       <button data-in="force">Force</button>
+      <button data-in="columns">Columns</button>
     </div>
   </div>
 </header>
@@ -204,18 +205,31 @@ var ENTS = D.entities.map(function(e){ return e.slug; });
 var entLayout = "ring", insideLayout = "ring";
 var expandedEps = {};        // slug → true when the entity's FULL endpoint list shows
 
-/* inner arrangement for a list of items around (cx,cy): Ring · Grid · Force */
-function insidePos(items, cx, cy){
-  var n=items.length||1, out={};
+/* inner arrangement for a list of items around (cx,cy): Ring · Grid · Force · Columns.
+   opts.edges = [[idA,idB],…] coupling pairs — FORCE ATTRACTS COUPLED ITEMS (without
+   edges, repulsion+centering just converges back to a ring — the archive station's
+   own measured lesson); opts.groups = id→group for the Columns arrangement. */
+function insidePos(items, cx, cy, opts){
+  opts=opts||{}; var n=items.length||1, out={};
   if(insideLayout==="grid"){ var cols=Math.ceil(Math.sqrt(n)), GX=52, GY=46, rows=Math.ceil(n/cols);
     items.forEach(function(id,i){ var r=Math.floor(i/cols), c=i%cols;
       out[id]={x:rnd(cx+(c-(cols-1)/2)*GX), y:rnd(cy+(r-(rows-1)/2)*GY)}; }); }
-  else if(insideLayout==="force"){ var P={},V={};
-    items.forEach(function(id,i){ var a=2*Math.PI*i/n, R0=Math.max(36,n*8);
+  else if(insideLayout==="columns"){
+    var groups={}, order=[];
+    items.forEach(function(id){ var g=(opts.groups||{})[id]||"other";
+      if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(id); });
+    order.forEach(function(g,ci){ var col=groups[g], x=cx+(ci-(order.length-1)/2)*110;
+      col.forEach(function(id,ri){ out[id]={x:rnd(x), y:rnd(cy+(ri-(col.length-1)/2)*44)}; }); }); }
+  else if(insideLayout==="force"){ var P={},V={},idx={};
+    items.forEach(function(id,i){ idx[id]=1; var a=2*Math.PI*i/n, R0=Math.max(36,n*8);
       P[id]={x:R0*Math.cos(a),y:R0*Math.sin(a)}; V[id]={x:0,y:0}; });
-    for(var it=0;it<130;it++){ for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){
+    var E2=(opts.edges||[]).filter(function(e){ return idx[e[0]]&&idx[e[1]]&&e[0]!==e[1]; });
+    for(var it=0;it<150;it++){ for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){
         var a=items[i],b=items[j],dx=P[a].x-P[b].x,dy=P[a].y-P[b].y,d2=dx*dx+dy*dy+40,d=Math.sqrt(d2),f=2200/d2;
         V[a].x+=dx/d*f;V[a].y+=dy/d*f;V[b].x-=dx/d*f;V[b].y-=dy/d*f; }
+      E2.forEach(function(e){ var a=e[0],b=e[1],dx=P[b].x-P[a].x,dy=P[b].y-P[a].y,
+        d=Math.hypot(dx,dy)||1,f=0.045*(d-52);
+        V[a].x+=dx/d*f;V[a].y+=dy/d*f;V[b].x-=dx/d*f;V[b].y-=dy/d*f; });
       items.forEach(function(id){ V[id].x=(V[id].x-P[id].x*0.02)*0.85; V[id].y=(V[id].y-P[id].y*0.02)*0.85;
         P[id].x+=V[id].x; P[id].y+=V[id].y; }); }
     items.forEach(function(id){ out[id]={x:rnd(cx+P[id].x), y:rnd(cy+P[id].y)}; }); }
@@ -371,13 +385,25 @@ function showEdge(ed){
    BORDER (click "+N more" to expand an entity's full surface); thin TOUCH wires
    from each endpoint to the pieces it reads/writes; containers DECLUTTERED and
    DRAGGABLE. ═══ */
+/* one entity's inner arrangement — items, ids, coupling edges (intra FKs) and kind
+   groups — computed ONE way so the radius estimate and the drawing always agree. */
+function innerArrangement(slug, cx, cy){
+  var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[],intra:[]};
+  var inner=pc.models.map(function(m){ return {kind:"model", m:m}; })
+    .concat(pc.schemas.slice(0,6).map(function(s){ return {kind:"schema", m:s}; }));
+  var ids=inner.map(function(it,i){ return slug+"|p"+i; });
+  var byCls={}, groups={};
+  inner.forEach(function(it,i){ if(it.m.cls) byCls[it.m.cls]=ids[i]; groups[ids[i]]=it.kind; });
+  var edges=(pc.intra||[]).map(function(e){ return [byCls[e.s], byCls[e.t]]; })
+    .filter(function(p){ return p[0]&&p[1]; });
+  var ipos=insidePos(ids, cx, cy, {edges:edges, groups:groups});
+  return {pc:pc, inner:inner, ids:ids, ipos:ipos, extent:innerExtent(ipos,cx,cy)};
+}
 function pieceRadii(){ var radii={};
-  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
-    var items=pc.models.length+Math.min(pc.schemas.length,6);
-    var ipos=insidePos(Array.apply(null,{length:items}).map(function(_,i){ return "probe"+i; }), 0, 0);
-    var eps=expandedEps[slug]?pc.endpoints.length:Math.min(pc.endpoints.length,16);
+  ENTS.forEach(function(slug){ var arr=innerArrangement(slug, 0, 0);
+    var eps=expandedEps[slug]?arr.pc.endpoints.length:Math.min(arr.pc.endpoints.length,16);
     var byEps=eps>0 ? (eps*15)/(2*Math.PI) : 0;             // circumference room for markers
-    radii[slug]=Math.max(innerExtent(ipos,0,0)+34, byEps, 62); });
+    radii[slug]=Math.max(arr.extent+34, byEps, 62); });
   return radii; }
 /* the L1 kinds edges (gradient amalgamation + direction bows) — shared by any
    level that shows whole entities, so INTER-entity coupling is never invisible. */
@@ -398,7 +424,9 @@ function drawPieces(){
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
   var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
   vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
-  drawInterEntityEdges(defs, interLayer, function(s){ return radii[s]; });
+  // L2 shows NO entity-to-entity lines — the coupling REMAPS to piece-to-piece
+  // cross edges (drawn after the loop, once every piece has its position).
+  var pieceAtGlobal={};                                    // slug|cls → position
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
     var contR=radii[slug];
@@ -407,14 +435,12 @@ function drawPieces(){
     wireEntityDrag(cont, slug);
     layer.appendChild(cont);
     var lb=E("text",{class:"lbl", x:p.x, y:p.y-contR-10}); lb.textContent=slug; lb.setAttribute("fill",col); layer.appendChild(lb);
-    // inner pieces: models = DB cylinders · schemas = curly-brace badges
-    var inner=pc.models.map(function(m){ return {kind:"model", m:m}; })
-      .concat(pc.schemas.slice(0,6).map(function(s){ return {kind:"schema", m:s}; }));
-    var ids=inner.map(function(it,i){ return slug+"|p"+i; });
-    var ipos=insidePos(ids, p.x, p.y);
+    // inner pieces: models = DB cylinders · schemas = curly-brace icons
+    var arr=innerArrangement(slug, p.x, p.y);
+    var pc2=arr.pc, inner=arr.inner, ids=arr.ids, ipos=arr.ipos;
     var pieceAt={};                                    // cls → drawn position (for touch wires)
     inner.forEach(function(it,i){ var q=ipos[ids[i]];
-      pieceAt[it.m.cls]=q;
+      pieceAt[it.m.cls]=q; pieceAtGlobal[slug+"|"+it.m.cls]=q;
       var g=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+q.x+","+q.y+")"});
       if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(it.m.cls||"",13); g.appendChild(t);
@@ -446,9 +472,27 @@ function drawPieces(){
       layer.appendChild(more); }
     b.minX=Math.min(b.minX,p.x-contR-30); b.maxX=Math.max(b.maxX,p.x+contR+30);
     b.minY=Math.min(b.minY,p.y-contR-30); b.maxY=Math.max(b.maxY,p.y+contR+34); });
+  // the REMAP: cross-entity coupling drawn between the ACTUAL PIECES (model→model
+  // FKs, the emitter's cross_edges) — amalgamation gradient from the source
+  // entity's colour to the target's; entity-to-entity lines do not exist here.
+  (D.cross_edges||[]).forEach(function(e){
+    var a=pieceAtGlobal[e.fs+"|"+e.f], c=pieceAtGlobal[e.ts+"|"+e.t]; if(!a||!c) return;
+    var grad=edgeGradient(defs, a, c, COLORS[e.fs]||"#888", COLORS[e.ts]||"#888");
+    var p=E("path",{class:"e-xfk", fill:"none", "stroke-width":"1.8",
+      "marker-end":"url(#arr)", d:"M"+a.x+" "+a.y+" L"+c.x+" "+c.y});
+    p.style.stroke="url(#"+grad+")"; p.style.opacity="0.8";
+    var hit=E("path",{d:p.getAttribute("d"), fill:"none", stroke:"transparent","stroke-width":"11", style:"cursor:pointer"});
+    (function(ed){ hit.addEventListener("click",function(ev){ ev.stopPropagation();
+      panel.innerHTML="<h3><span style='color:"+(COLORS[ed.fs]||"inherit")+"'>"+esc(ed.f)+"</span> → <span style='color:"+(COLORS[ed.ts]||"inherit")+"'>"+esc(ed.t)+"</span></h3>"
+        +"<div class='row'><span>kind</span><b>foreign key</b></div>"
+        +"<div class='row'><span>via column</span><b>"+esc(ed.via)+"</b></div>"
+        +"<div class='note'>A row in "+esc(ed.fs)+"'s "+esc(ed.f)+" points at a row in "+esc(ed.ts)+"'s "+esc(ed.t)+".</div>"; }); })(e);
+    var ti=E("title"); ti.textContent=e.fs+"."+e.f+" → "+e.ts+"."+e.t+" (via "+e.via+")"; hit.appendChild(ti);
+    interLayer.appendChild(p); interLayer.appendChild(hit); });
   frame(b);
   legend([glyphIt("model — table-backed", "cyl"), glyphIt("schema (brace icon)", "s"),
-          glyphIt("endpoint on the BORDER; colour = method · thin wire = what it touches", "ep")]);
+          glyphIt("endpoint on the BORDER; colour = method · thin wire = what it touches", "ep"),
+          "<span class='it'>cross-entity lines run PIECE to PIECE (model→model fk, gradient = the two entities)</span>"]);
 }
 
 /* ═══ LEVEL 3 · FUNCTIONS — F glyphs by layer; cross-entity calls dashed (trust) ═══ */
@@ -463,7 +507,11 @@ function drawFunctions(){
   Object.keys(bySlug).sort().forEach(function(slug){ var anchor=entAnchor(slug), col=COLORS[slug]||"#888";
     var fns=bySlug[slug];
     var ids=fns.map(function(f){ return "fn:"+f.id; });
-    var ipos=insidePos(ids, anchor.x, anchor.y);
+    var inCl={}; ids.forEach(function(id){ inCl[id]=1; });
+    var fedges=D.fn_edges.map(function(e){ return ["fn:"+e.s, "fn:"+e.t]; })
+      .filter(function(pr){ return inCl[pr[0]]&&inCl[pr[1]]; });
+    var fgroups={}; fns.forEach(function(f){ fgroups["fn:"+f.id]=f.layer; });
+    var ipos=insidePos(ids, anchor.x, anchor.y, {edges:fedges, groups:fgroups});
     ids.forEach(function(id){ if(!pos[id]) pos[id]=ipos[id]; });
     var R=innerExtent(ipos, anchor.x, anchor.y);
     nLayerCluster(nLayer, slug, anchor, col, Math.max(R+26, 56));
