@@ -102,8 +102,10 @@ Small, append-only in spirit: rows change status, never vanish.
      templates: `templates/center/shell/` (installed at `~/.claude/templates/gabe/center/shell/`)
      — `assets/` (a3.css incl. the IDENTITY LAYER: landed-map group colors, `.sechead` section
      banners, exclusive icons; plus slots.js, the raw-skeleton slot affordance — inert on
-     generated pages) + the FULL station set (`index`/`feature`/`tests`/`board`/
-     `entity-index`/`docs`/`ledger`/`releases`.html) with the placeholder contract + the
+     generated pages) + the FULL station set (`index`/`feature`/`tests`/`board`/`codebase-graph`/
+     `entity-index`/`docs`/`ledger`/`releases`.html — `codebase-graph` is the C4
+     codebase-graph / change-simulation station, auto-emitted with an honest-empty
+     `sim.data.js` + `c4-graph.js` alongside the archmap) with the placeholder contract + the
      station↔sources mapping table in that dir's README. The INVARIANT chrome ships in the
      skeletons (colored+iconed station sidebar per the RULED NAV — map v3, merged 2026-07-21 —, tab icons, `data-sec` section identity);
      generators fill only the project-specific slots the README lists. Every crucial section is

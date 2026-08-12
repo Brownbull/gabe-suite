@@ -191,6 +191,9 @@
 .cbg-root #cbg-stageSeg button[data-stage="commit"].on{ background:#8e4ec6; }
 /* segmented before|after / stage toggle */
 .cbg-seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+/* honor `hidden` — an author display:inline-flex beats the UA [hidden]{display:none},
+   so without this the stage control shows on the honest-empty (no-SIM) page. */
+.cbg-seg[hidden]{ display:none; }
 /* stage buttons mirror the right panel's lifecycle rows: a stage-colour dot on the
    LEFT + the label, in the panel's content font. */
 .cbg-seg button{ display:inline-flex; align-items:center; gap:6px; font-family:var(--font-content);
@@ -360,7 +363,7 @@
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
   <span class="navsub" style="opacity:.5">none wired yet</span>
-  <div class="foot">regen 2026-08-11 23:23Z<br>HEAD 4c12a293 · build_center_a3.py</div>
+  <div class="foot">regen 2026-08-12 00:27Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
 <main class="main" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">

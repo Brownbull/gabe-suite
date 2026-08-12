@@ -191,6 +191,9 @@
 .cbg-root #cbg-stageSeg button[data-stage="commit"].on{ background:#8e4ec6; }
 /* segmented before|after / stage toggle */
 .cbg-seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
+/* honor `hidden` — an author display:inline-flex beats the UA [hidden]{display:none},
+   so without this the stage control shows on the honest-empty (no-SIM) page. */
+.cbg-seg[hidden]{ display:none; }
 /* stage buttons mirror the right panel's lifecycle rows: a stage-colour dot on the
    LEFT + the label, in the panel's content font. */
 .cbg-seg button{ display:inline-flex; align-items:center; gap:6px; font-family:var(--font-content);
