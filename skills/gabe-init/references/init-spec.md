@@ -183,11 +183,12 @@ created: [today's date]
 
 ### Step 1.8: Seed `.gitignore` entries (local-only runtime artifacts)
 
-The project's `.gitignore` gets three entries appended so machine-written, tree-volatile files never ride a commit:
+The project's `.gitignore` gets these entries appended so machine-written, tree-volatile files never ride a commit:
 
 - `.kdbp/reviews-archive/` — resolved gabe-review documents archive locally without bloating history.
 - `.kdbp/.push-gate-ok` — the push-gate marker (ruling 2026-08-07). It is sha-bound and single-use; committing it would let a clone's checkout-fresh copy authorize a foreign tree, and its whole security value is that it is written by /gabe-push on THIS machine after the scan.
 - `docs/site/center/inflight.json` and `docs/site/center/inflight.js` — the in-flight projection the E8 beat tail rewrites every beat (its `head` field changes on every commit). Tracking them would re-dirty the tree forever and re-blind the pulse signals; the board reads them locally and renders absence as absence when they are gone (ruling 2026-08-07).
+- `docs/site/center/sim.data.js` — the change-simulation projection `_a3_sim.build_sim` derives from the live inflight + git each build (its `commit`/`head`/line counts churn every commit; `window.GABE_SIM = null` at rest). Same reasoning as inflight — a beat-tail artifact that would re-dirty the tree; the codebase-graph station reads it locally and degrades to the plain map when it is null/absent.
 
 (`.kdbp/archive/` — PLAN/SCOPE archives — stays tracked as before.)
 
@@ -195,7 +196,7 @@ The project's `.gitignore` gets three entries appended so machine-written, tree-
 
 | Existing `.gitignore` state | Action |
 |---|---|
-| Missing | Create with the three entries |
+| Missing | Create with the entries |
 | Present, entry missing | Append the missing entries |
 | Present, all present | No-op |
 

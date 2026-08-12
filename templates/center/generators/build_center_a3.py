@@ -37,6 +37,7 @@ import _center_data as D  # noqa: E402
 import _a3_board
 import _a3_code
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
+import _a3_sim  # noqa: E402  (the live change-simulation projection — window.GABE_SIM)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -1989,17 +1990,41 @@ def main() -> int:
         print(f"    ⚠ c4-graph SKIPPED (derivation error, center still built): {_e}")
 
     # The change-simulation projection the codebase-graph station overlays on the
-    # graph. HONEST-EMPTY at rest: the station's <script src="./sim.data.js">
-    # must resolve (else the chrome gate's asset-resolves check fails) but a real
-    # twin center carries NO seeded change data — window.GABE_SIM=null makes the
-    # station degrade to the plain codebase map + a "no change in flight" note.
-    # Written only if absent, so a locally-derived projection is never clobbered
-    # (C2 will teach _a3_sim.py to derive it from live inflight + git). The
-    # committed example ships the seeded gustify fixture in its place.
+    # graph — DERIVED LIVE (_a3_sim, C2): when a change is in flight (inflight.json
+    # active) it derives touched/blast/pieces/stages from inflight + archmap + git +
+    # junit + PENDING; otherwise window.GABE_SIM=null and the station degrades to the
+    # plain map. sim.data.js is a beat-tail artifact, gitignored like inflight.{json,js}
+    # (gabe-init seeds it), so the derivation from the churny tree never dirties a
+    # commit. A derivation error degrades to honest-empty, never blanks the center.
     _simf = CENTER_OUT / "sim.data.js"
-    if not _simf.is_file():
-        _simf.write_text("// no change in flight — honest-empty at rest "
-                         "(C2 derives the live projection)\nwindow.GABE_SIM = null;\n")
+    try:
+        _inflight = None
+        _ifsrc = CENTER / "inflight.json"          # write-inflight.py refreshes it at the beat tail
+        if _ifsrc.is_file():
+            _inflight = json.loads(_ifsrc.read_text())
+        _ev = {}
+        for _c in CORPORA:
+            _dp = REPO_ROOT / "tests" / "results" / f"{_c['key']}-junit.xml.digest.json"
+            if _dp.is_file():
+                try:
+                    _d = json.loads(_dp.read_text())
+                    _ev[_c["key"]] = {k: _d.get(k) for k in
+                                      ("passed", "failed", "skipped", "exit", "head", "duration_s")}
+                except Exception:  # noqa: BLE001
+                    pass
+        _pp = REPO_ROOT / ".kdbp" / "PENDING.md"
+        _pending = _pp.read_text(encoding="utf-8", errors="ignore") if _pp.is_file() else None
+        _sim = _a3_sim.build_sim(_inflight, amap, REPO_ROOT, evidence=_ev, pending=_pending)
+        _a3_sim.emit(_sim, CENTER_OUT)
+        if _sim is not None:
+            print(f"    wrote docs/site/center/sim.data.js — LIVE change in flight: "
+                  f"{','.join(_sim['touched'])} → {','.join(_sim['blast']) or '(no blast)'}")
+    except Exception as _e:  # noqa: BLE001
+        # honest-empty on any error — never leave a STALE live overlay (the file is
+        # gitignored/local, cheap to rewrite; a wrong "in flight" is worse than empty).
+        _simf.write_text("// no change in flight — honest-empty at rest (derivation error)\n"
+                         "window.GABE_SIM = null;\n")
+        print(f"    ⚠ sim.data.js honest-empty (derivation skipped): {_e}")
 
     # The board — second pass, now that archmap can price every card.
     _btext = strip_slot_doc_comments((SHELL_SRC / "board.html").read_text())
