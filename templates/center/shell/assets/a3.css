@@ -917,6 +917,10 @@ details.legset .gal{margin:8px 0 4px}
 .bnow-stage.done{color:var(--good);border-color:var(--good-soft);background:var(--good-soft)}
 .bnow-stage.now{color:#fff;background:var(--accent);border-color:var(--accent);font-weight:700}
 .bnow-stage.todo{color:var(--muted)}
+/* ▶ NOW → codebase-graph station (the live change overlay for this beat) */
+.bnow-graph{margin-left:auto;font-size:.62rem;font-weight:600;letter-spacing:.02em;text-decoration:none;
+  color:var(--accent-ink);background:var(--accent-soft);border:1px solid #d6d8fb;border-radius:20px;padding:1px 9px;white-space:nowrap}
+.bnow-graph:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
 .bnow-cmd{font:var(--mono);font-size:.64rem;color:var(--accent-ink);margin-left:2px}
 .bnow-ph{font-size:.86rem;color:var(--ink)}
 .bnow-ent{color:var(--muted)} .bnow-ent b{color:var(--ink);font-weight:600}

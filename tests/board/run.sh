@@ -48,6 +48,12 @@ grep -A1 '\.bnow-tag{' "$CSS" | grep -q 'color:#fff' \
 # the CSS must style what the banner emits: current-stage chip + label rows
 grep -q '\.bnow-stage\.now' "$CSS" && ok || bad "silent: CSS must style the lit spine stage (.bnow-stage.now)"
 grep -q '\.bnow-lab' "$CSS"        && ok || bad "silent: CSS must style the banner labels (.bnow-lab)"
+# the ▶ NOW banner links to the codebase-graph station — this beat's touched→blast IS
+# what the station overlays (C2 derives it live from the same inflight, so the target
+# is never honest-empty while the banner shows).
+grep -q 'href="codebase-graph.html"' "$JS" && grep -q 'bnow-graph' "$JS" \
+  && ok || bad "silent: the ▶ NOW banner must link to codebase-graph.html (.bnow-graph)"
+grep -q '\.bnow-graph' "$CSS" && ok || bad "silent: CSS must style the ▶ NOW→graph link (.bnow-graph)"
 
 # --- FIRE: drift on EITHER half is caught ----------------------------------
 T=$(mktemp -d); trap 'rm -rf "$T"' EXIT
