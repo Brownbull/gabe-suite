@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="{{LANG}}">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Codebase archive · {{PROJECT_NAME}} Command Center</title>
+<link rel="stylesheet" href="assets/a3.css">
+<script src="assets/slots.js" defer></script>
+<script src="assets/a3-settings.js" defer></script>
+<script src="assets/a3-lightbox.js" defer></script>
+<script src="assets/rowclick.js" defer></script>
+<style>
+/* ── Codebase-archive station — the ECOSYSTEM + the ARCHIVE of past changes. The
+   change-graph station (codebase-graph.html) is EPHEMERAL (the current change); this
+   one is DURABLE: it shows every entity with its pieces by default, and a right-panel
+   feature dropdown replays any PAST phase (from the committed sim-archive.json) by
+   lighting its touched→blast + pieces and dimming the rest. Everything scoped under
+   .eco-root + ids eco-*. Shared tokens inherit a3.css; only --edge/--touch/--blast
+   are local (theme-aware via [data-theme]). ── */
+.eco-root{ --edge:#9aa3ad; --touch:#1f8a53; --blast:#d9821f;
+  display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;
+  color:var(--ink); font:14px/1.5 var(--font-ui); }
+[data-theme="dark"] .eco-root{ --edge:#4a525c; --touch:#4cbe83; --blast:#e0a24a; }
+
+.eco-header{ padding:9px 20px; border-bottom:1px solid var(--line); background:var(--panel);
+  display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+.eco-header h1{ margin:0; font-size:15px; font-weight:650; letter-spacing:-.01em; }
+.eco-header .sub{ font-size:12px; color:var(--muted); }
+.eco-header .spacer{ flex:1; }
+.eco-root button{ font:inherit; font-size:12.5px; color:var(--ink); background:var(--panel);
+  border:1px solid var(--line); border-radius:7px; padding:5px 11px; cursor:pointer; }
+.eco-root button:hover{ border-color:var(--edge); }
+.eco-root button.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.eco-root .laywrap{ font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+.eco-root .laywrap select{ font:inherit; font-size:12px; color:var(--ink); background:var(--panel);
+  border:1px solid var(--line); border-radius:7px; padding:4px 7px; cursor:pointer; }
+
+.eco-center{ flex:1; min-height:0; display:flex; flex-direction:row; overflow:hidden; }
+.eco-stage{ flex:1; min-width:0; overflow:hidden; display:block; position:relative; cursor:grab; }
+.eco-stage:active{ cursor:grabbing; }
+.eco-root svg#eco-graph{ display:block; width:100%; height:100%; }
+.eco-side{ width:26%; min-width:290px; border-left:1px solid var(--line); background:var(--panel);
+  overflow:auto; flex:none; }
+
+.eco-root .edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .2s; }
+.eco-root #eco-arrow > path{ fill:var(--edge); }
+.eco-root .node{ cursor:pointer; transition:opacity .25s; }
+.eco-root .node .body{ transition:stroke .12s, stroke-width .12s, fill .25s; }
+.eco-root .node text{ pointer-events:none; user-select:none; }
+.eco-root .l1label{ font-size:13px; font-weight:650; text-anchor:middle; }
+.eco-root .l1sub{ font-size:10.5px; text-anchor:middle; fill:var(--muted); }
+/* filter states (a phase selected) */
+.eco-root .dim{ opacity:.1; }
+.eco-root .node.touched .body{ fill:var(--touch); stroke:var(--touch); stroke-width:2.5; }
+.eco-root .node.blast .body{ stroke:var(--blast); stroke-width:4; stroke-dasharray:7 4; }
+.eco-root .edge.lit{ stroke:var(--blast); opacity:1; }
+/* exploded pieces */
+.eco-root .xcontainer{ fill-opacity:.05; stroke-opacity:.5; stroke-width:1.4; stroke-dasharray:4 4; }
+.eco-root .xcontlabel{ font-size:12px; font-weight:650; text-anchor:middle; }
+.eco-root .xpiece circle{ cursor:pointer; transition:opacity .25s; }
+.eco-root .xplabel{ font-size:9px; text-anchor:middle; fill:var(--ink); }
+.eco-root .xedge{ fill:none; stroke-linecap:round; }
+.eco-root .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.9; }
+.eco-root .xedge.flow{ stroke-dasharray:6 6; animation: eco-flow 1.5s linear infinite; }
+@keyframes eco-flow{ to{ stroke-dashoffset:-24; } }
+@media (prefers-reduced-motion: reduce){ .eco-root .xedge.flow{ animation:none; } }
+/* selection X (same mark as the change graph) */
+.eco-root .xpiece .selx{ opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center; }
+.eco-root .xpiece .selx line{ stroke:var(--ink); stroke-width:1.9; stroke-linecap:round; }
+.eco-root .xpiece.selp .selx{ opacity:1; animation: eco-selspin 3s linear infinite; }
+@keyframes eco-selspin{ from{ transform:rotate(0deg); } to{ transform:rotate(-360deg); } }
+@media (prefers-reduced-motion: reduce){ .eco-root .xpiece.selp .selx{ animation:none; } }
+
+/* right panel — the feature dropdown + detail */
+.eco-panel{ padding:16px 18px; font-family:var(--font-content); font-size:0.93rem; }
+.eco-panel .phdr{ font-size:0.75rem; font-weight:700; letter-spacing:.1em; text-transform:uppercase; color:var(--muted); margin-bottom:10px; }
+.eco-panel h4{ margin:0 0 2px; font-size:1.14rem; }
+.eco-panel .kind{ font-size:0.79rem; color:var(--muted); margin-bottom:12px; }
+.eco-picker{ margin:0 0 16px; }
+.eco-picker label{ display:block; font-size:0.71rem; font-weight:800; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.eco-picker select{ width:100%; font:inherit; font-size:0.9rem; padding:8px 10px; border:1px solid var(--line);
+  border-radius:9px; background:var(--panel); color:var(--ink); }
+.eco-panel .row{ display:flex; justify-content:space-between; gap:12px; padding:5px 0; border-top:1px solid var(--line); }
+.eco-panel .row .k{ color:var(--muted); } .eco-panel .row .v{ font-weight:600; text-align:right; }
+.eco-panel .chips{ display:flex; flex-wrap:wrap; gap:5px; margin:8px 0 2px; }
+.eco-panel .chip{ display:inline-flex; align-items:center; gap:5px; font-size:0.79rem; font-weight:600;
+  padding:2px 9px; border-radius:11px; }
+.eco-panel .chip.t{ color:var(--touch); background:color-mix(in srgb,var(--touch) 16%,transparent); }
+.eco-panel .chip.b{ color:var(--blast); background:color-mix(in srgb,var(--blast) 16%,transparent); }
+.eco-panel .chip.m{ color:var(--ink-2); background:var(--line); }
+.eco-panel .sum{ margin-top:12px; color:var(--ink); opacity:.85; line-height:1.55; }
+.eco-panel .lab{ font-size:0.66rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 0 5px; }
+
+.eco-legend{ display:flex; align-items:center; gap:6px 18px; flex-wrap:wrap; padding:8px 20px;
+  border-top:1px solid var(--line); background:var(--panel); font-size:11.5px; color:var(--muted); }
+.eco-legend .item{ display:flex; align-items:center; gap:6px; }
+.eco-legend .sw{ width:9px; height:9px; border-radius:50%; flex:none; }
+.eco-legend .swr{ width:16px; height:0; border-top:2px solid var(--edge); }
+.eco-legend .count{ margin-left:auto; color:var(--ink); font-weight:600;
+  font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; }
+.eco-root .hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--muted);
+  background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:3px 8px; pointer-events:none; opacity:.9; }
+</style>
+</head>
+<body>
+<!-- STATION: Codebase archive — the whole-ecosystem map + the durable archive of past
+     phase changes. Reads c4-graph.js (window.GABE_C4) + sim-archive.js
+     (window.GABE_SIM_ARCHIVE, the committed per-phase accumulator). -->
+<div class="app">
+
+<aside class="side">
+  <div class="brand">
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>{{PROJECT_NAME}}</b><small>Gabe Center</small></span>
+  </div>
+  <div class="navlabel g-now">Now</div>
+  <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
+  <div class="navlabel g-board">Board</div>
+  <a class="navitem" href="board.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><rect x="7" y="7" width="3" height="9"/><rect x="14" y="7" width="3" height="5"/></svg> Board</a>
+  <div class="navlabel g-code">Codebase graph</div>
+  <a class="navitem" href="codebase-graph.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Change graph</a>
+  <a class="navitem on" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
+  <div class="navlabel g-ent">Entities</div>
+  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">{{ENTITY_COUNT}}</span></a>
+  {{SIDEBAR_ENTITIES}}
+  <div class="navlabel g-docs">Docs</div>
+  <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
+  <div class="navlabel g-code">Code</div>
+  {{SIDEBAR_CODE}}
+  <div class="navlabel g-test">Testing</div>
+  <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">{{TESTS_COUNT}}</span></a>
+  <div class="navlabel g-ledger">Ledger</div>
+  <a class="navitem" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
+  <div class="navlabel g-rel">Releases</div>
+  <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
+  <div class="navlabel g-leaf">Leaf</div>
+  {{SIDEBAR_LEAF}}
+  <div class="foot">regen {{REGEN_STAMP}}<br>HEAD {{HEAD_SHA}} · {{GENERATOR_NAME}}</div>
+</aside>
+
+<main class="main" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
+  <div class="topbar">
+    <div class="crumb"><a href="index.html">Overview</a> › <b>Codebase archive</b></div>
+    <div class="spacer"></div>
+    {{STATUS_PILLS}}
+  </div>
+
+  <div class="eco-root" id="eco-root">
+    <div class="eco-header">
+      <h1>Codebase archive</h1>
+      <span class="sub" id="eco-sub">the whole ecosystem · replay any past phase</span>
+      <div class="spacer"></div>
+      <button id="eco-expand" class="on">Explode all</button>
+      <label class="laywrap">layout
+        <select id="eco-layout"><option value="ring">Ring</option><option value="flow">Flow · deps</option></select>
+      </label>
+      <button id="eco-reset">Reset</button>
+    </div>
+
+    <div class="eco-center">
+      <div class="eco-stage" id="eco-stage">
+        <svg id="eco-graph" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <marker id="eco-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z"></path></marker>
+            <marker id="eco-arrow-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#d9821f"></path></marker>
+          </defs>
+          <g id="eco-viewport"></g>
+        </svg>
+        <div class="hint" id="eco-hint">drag to pan · scroll to zoom · pick a feature on the right</div>
+      </div>
+      <aside class="eco-side" id="eco-side">
+        <div class="eco-panel" id="eco-panel"></div>
+      </aside>
+    </div>
+
+    <div class="eco-legend" id="eco-legend"></div>
+  </div>
+</main>
+
+</div><!-- /.app -->
+
+<script src="./c4-graph.js"></script>
+<script src="./sim-archive.js"></script>
+<script>
+(function(){
+  "use strict";
+  var DATA = window.GABE_C4, COLORS = window.GABE_C4_COLORS || {};
+  if(!DATA){ document.getElementById("eco-panel").innerHTML = "<div class='kind'>no c4-graph.js on this center yet</div>"; return; }
+  var ARCHIVE = (window.GABE_SIM_ARCHIVE && window.GABE_SIM_ARCHIVE.phases) || [];
+  var NS = "http://www.w3.org/2000/svg";
+  var L1 = DATA.l1.nodes, L1E = DATA.l1.edges;
+
+  var selPhase = null;      // null = ecosystem (everything) · else the archive entry
+  var explodeAll = true;    // ecosystem: show every entity's pieces
+  var layout = "ring";
+  var selPiece = null;
+  var nodePos = {}, nodeMeta = {}, edgeRecs = [], lastBounds = null;
+  var PIECE_R = 10;
+
+  var stage = document.getElementById("eco-stage"), svg = document.getElementById("eco-graph"),
+      vp = document.getElementById("eco-viewport");
+
+  function E(t,a){ var e=document.createElementNS(NS,t); if(a) for(var k in a) e.setAttribute(k,a[k]); return e; }
+  function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
+  function trunc(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+"…":s; }
+  function ent(slug){ return L1.filter(function(n){ return n.slug===slug; })[0]; }
+  // an entity's model pieces (the ecosystem "everything inside")
+  function ecoPieces(slug){ var g=DATA.l2[slug]; if(!g) return [];
+    return g.nodes.filter(function(n){ return n.kind==="model"; })
+      .map(function(n){ return { id:n.id, label:n.label||n.id.replace(/^model:/,""), role:"eco" }; }); }
+  // the pieces to draw inside an entity for the CURRENT view
+  function piecesFor(slug){
+    if(selPhase){ return (selPhase.pieces && selPhase.pieces[slug]) || []; }
+    return explodeAll ? ecoPieces(slug) : [];
+  }
+  function involved(slug){ if(!selPhase) return true;
+    return selPhase.touched.indexOf(slug)>=0 || selPhase.blast.indexOf(slug)>=0; }
+
+  // ── scales / layout ──
+  var linesArr = L1.map(function(n){ return n.counts?n.counts.lines:0; });
+  var minSq=Math.sqrt(Math.min.apply(null,linesArr)), maxSq=Math.sqrt(Math.max.apply(null,linesArr));
+  function radius(n){ var t=maxSq>minSq?(Math.sqrt(n.counts.lines)-minSq)/(maxSq-minSq):.5; return 22+t*34; }
+  function ewidth(w){ return 1.5+(clamp(w,1,10)-1)/9*4.2; }
+  function coord(n){ return (layout==="flow" && n.fx!=null)?{x:n.fx,y:n.fy}:{x:n.x,y:n.y}; }
+
+  var panX=0, panY=0, fitTx=0, fitTy=0, zoom=1;
+  function frame(b){ var cw=stage.clientWidth||900, ch=stage.clientHeight||600;
+    svg.setAttribute("width",cw); svg.setAttribute("height",ch);
+    fitTx=Math.round(cw/2 - zoom*(b.minX+b.maxX)/2); fitTy=Math.round(ch/2 - zoom*(b.minY+b.maxY)/2); applyPan(); }
+  function applyPan(){ vp.setAttribute("transform","translate("+(fitTx+panX)+","+(fitTy+panY)+") scale("+zoom+")"); }
+
+  function insidePos(pieces, cx, cy){ var n=pieces.length||1, pos={}, R=Math.max(46,n*11);
+    pieces.forEach(function(p,i){ var a=-Math.PI/2+2*Math.PI*i/n; pos[p.id]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)}; }); return pos; }
+
+  function render(){
+    vp.textContent=""; nodePos={}; nodeMeta={}; edgeRecs=[];
+    var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+    L1.forEach(function(n){ var r=radius(n), p=coord(n), pad=r+46;
+      nodePos[n.id]={x:p.x,y:p.y}; nodeMeta[n.id]={r:r,node:n};
+      minX=Math.min(minX,p.x-pad); maxX=Math.max(maxX,p.x+pad); minY=Math.min(minY,p.y-r-6); maxY=Math.max(maxY,p.y+r+34); });
+    lastBounds={minX:minX,minY:minY,maxX:maxX,maxY:maxY};
+    frame(lastBounds);
+
+    var eLayer=E("g"); vp.appendChild(eLayer);
+    L1E.forEach(function(ed){ var p=E("path",{class:"edge","marker-end":"url(#eco-arrow)"});
+      p.style.strokeWidth=ewidth(ed.weight); eLayer.appendChild(p);
+      var rec={el:p,s:ed.source,t:ed.target,data:ed}; edgeRecs.push(rec); updateEdge(rec); });
+
+    var nLayer=E("g"); vp.appendChild(nLayer);
+    L1.forEach(function(n){
+      var col=COLORS[n.slug]||"#888";
+      var g=E("g",{class:"node entnode","data-id":n.id,transform:"translate("+nodePos[n.id].x+","+nodePos[n.id].y+")"});
+      var r=nodeMeta[n.id].r;
+      var c=E("circle",{class:"body",r:r,cx:0,cy:0,fill:col,stroke:"var(--panel)","stroke-width":2});
+      var cnt=(selPhase && selPhase.pieces && selPhase.pieces[n.slug]) ? selPhase.pieces[n.slug].length : 0;
+      var t1=E("text",{class:"l1label",x:0,y:r+16}); t1.setAttribute("fill","var(--ink)");
+      t1.textContent=n.label+(cnt?" ("+cnt+")":"");
+      var t2=E("text",{class:"l1sub",x:0,y:r+30}); t2.textContent=n.counts.endpoints+" ep · "+n.counts.models+" models";
+      g.appendChild(c); g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g);
+      nodeMeta[n.id].el=g; wire(g,n);
+    });
+
+    applyFilter();
+    drawExplosions();
+    buildLegend();
+  }
+
+  function updateEdge(rec){ var s=nodePos[rec.s], t=nodePos[rec.t]; if(!s||!t){ rec.el.setAttribute("d",""); return; }
+    var r1=nodeMeta[rec.s].r, r2=nodeMeta[rec.t].r, dx=t.x-s.x, dy=t.y-s.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+    var sx=s.x+ux*r1, sy=s.y+uy*r1, ex=t.x-ux*(r2+3.5), ey=t.y-uy*(r2+3.5), mx=(sx+ex)/2, my=(sy+ey)/2, bow=Math.min(38,d*0.12);
+    rec.el.setAttribute("d","M"+sx+" "+sy+" Q "+(mx-uy*bow)+" "+(my+ux*bow)+" "+ex+" "+ey); }
+  function refreshEdges(id){ edgeRecs.forEach(function(r){ if(r.s===id||r.t===id) updateEdge(r); }); }
+
+  // dim/light entities + edges for the current selection (a phase, or everything)
+  function applyFilter(){
+    vp.querySelectorAll(".node.entnode").forEach(function(g){ var id=g.getAttribute("data-id"), n=nodeMeta[id].node;
+      g.classList.remove("dim","touched","blast");
+      if(!selPhase) return;
+      if(!involved(id)){ g.classList.add("dim"); return; }
+      if(selPhase.touched.indexOf(id)>=0) g.classList.add("touched");
+      else if(selPhase.blast.indexOf(id)>=0) g.classList.add("blast");
+    });
+    edgeRecs.forEach(function(r){ r.el.classList.remove("dim","lit");
+      if(!selPhase) return;
+      var inc=involved(r.s)&&involved(r.t);
+      r.el.classList.toggle("dim",!inc);
+      if(inc && selPhase.blast.indexOf(r.s)>=0 && selPhase.touched.indexOf(r.t)>=0) r.el.classList.add("lit");
+    });
+  }
+
+  function drawExplosions(){
+    var old=vp.querySelector("#eco-expansion"); if(old) old.remove();
+    var showPieces = selPhase ? true : explodeAll;
+    if(!showPieces) return;
+    var reduce=!!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+    var layer=E("g",{id:"eco-expansion"}); vp.appendChild(layer);
+    var b={minX:lastBounds.minX,minY:lastBounds.minY,maxX:lastBounds.maxX,maxY:lastBounds.maxY};
+    var slugs=L1.map(function(n){ return n.slug; }).filter(function(s){ return involved(s) && piecesFor(s).length; });
+    var innerPos={};
+    slugs.forEach(function(slug){ var pos=nodePos[slug]; if(!pos) return;
+      var pieces=piecesFor(slug), ip=insidePos(pieces,pos.x,pos.y), extent=0;
+      pieces.forEach(function(p){ var pp=ip[p.id]; innerPos[slug+"\t"+p.id]=pp; extent=Math.max(extent,Math.hypot(pp.x-pos.x,pp.y-pos.y)); });
+      var contR=Math.max(52,extent+PIECE_R+16), col=COLORS[slug]||"#888";
+      var cont=E("circle",{class:"xcontainer",cx:pos.x,cy:pos.y,r:contR,fill:col,stroke:col});
+      layer.appendChild(cont);
+      var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col}); lb.textContent=(nodeMeta[slug].node.label||slug);
+      layer.appendChild(lb);
+      b.minX=Math.min(b.minX,pos.x-contR-20); b.maxX=Math.max(b.maxX,pos.x+contR+20);
+      b.minY=Math.min(b.minY,pos.y-contR-20); b.maxY=Math.max(b.maxY,pos.y+contR+20);
+    });
+    frame(b);
+    // cross-entity FK edges (only when a phase is selected)
+    if(selPhase){ (selPhase.cross_edges||[]).forEach(function(e){
+      var a=innerPos[e.from_slug+"\t"+e.from]||nodePos[e.from_slug], c=innerPos[e.to_slug+"\t"+e.to]||nodePos[e.to_slug];
+      if(a&&c){ var p=E("path",{class:"xedge cross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y}); layer.appendChild(p); }
+    }); }
+    // the piece mini-circles
+    slugs.forEach(function(slug){
+      var isT = selPhase && selPhase.touched.indexOf(slug)>=0, isB = selPhase && selPhase.blast.indexOf(slug)>=0;
+      piecesFor(slug).forEach(function(p){ var pp=innerPos[slug+"\t"+p.id]; if(!pp) return;
+        var fill = selPhase ? (isT?"var(--touch)":(isB?"var(--blast)":COLORS[slug])) : COLORS[slug];
+        var g=E("g",{class:"xpiece"+(selPiece===slug+"|"+p.id?" selp":""),"data-piece":slug+"|"+p.id,transform:"translate("+pp.x+","+pp.y+")"});
+        g.appendChild(E("circle",{r:PIECE_R,cx:0,cy:0,fill:fill,"fill-opacity":selPhase?"1":"0.85",stroke:"var(--panel)","stroke-width":"2"}));
+        var sx=E("g",{class:"selx"}); sx.appendChild(E("line",{x1:-4,y1:-4,x2:4,y2:4})); sx.appendChild(E("line",{x1:-4,y1:4,x2:4,y2:-4})); g.appendChild(sx);
+        var t=E("text",{class:"xplabel",x:0,y:PIECE_R+10}); t.textContent=trunc(p.label,15); g.appendChild(t);
+        var ti=E("title"); ti.textContent=p.label+(p.via?" — via "+p.via:""); g.appendChild(ti);
+        (function(sl,pc){ g.addEventListener("click",function(ev){ ev.stopPropagation(); openPiece(sl,pc); }); })(slug,p);
+        layer.appendChild(g);
+      });
+    });
+  }
+
+  // ── interaction: drag node · pan bg · zoom ──
+  var dragging=null;
+  function wire(g,node){
+    g.addEventListener("pointerdown",function(e){ e.preventDefault();
+      var start={x:e.clientX,y:e.clientY}, moved=false, origin={x:nodePos[node.id].x,y:nodePos[node.id].y};
+      function mv(ev){ var dx=ev.clientX-start.x, dy=ev.clientY-start.y; if(!moved && Math.abs(dx)+Math.abs(dy)<4) return;
+        moved=true; dragging=node.id; nodePos[node.id]={x:origin.x+dx,y:origin.y+dy};
+        g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")"); refreshEdges(node.id); }
+      function up(){ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+        setTimeout(function(){ dragging=null; },0); if(!moved) openEntity(node.slug); }
+      window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up);
+    });
+  }
+  (function(){ var pan=null;
+    stage.addEventListener("pointerdown",function(e){ if(e.target!==stage && e.target!==svg) return; pan={x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false}; });
+    window.addEventListener("pointermove",function(e){ if(!pan) return; var dx=e.clientX-pan.x,dy=e.clientY-pan.y; if(Math.abs(dx)+Math.abs(dy)>3)pan.moved=true; panX=pan.px+dx; panY=pan.py+dy; applyPan(); });
+    window.addEventListener("pointerup",function(){ if(pan){ if(!pan.moved){ selPiece=null; resetPanel(); vp.querySelectorAll(".xpiece.selp").forEach(function(x){x.classList.remove("selp");}); } pan=null; } });
+    stage.addEventListener("wheel",function(e){ e.preventDefault(); var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top,
+      tx=fitTx+panX, ty=fitTy+panY, dx=(mx-tx)/zoom, dy=(my-ty)/zoom, z2=Math.max(0.35,Math.min(4,zoom*Math.exp(-e.deltaY*0.0015)));
+      panX=(mx-z2*dx)-fitTx; panY=(my-z2*dy)-fitTy; zoom=z2; applyPan(); },{passive:false});
+  })();
+  window.addEventListener("resize",function(){ if(lastBounds) frame(lastBounds); });
+
+  // ── the right panel: feature picker + detail ──
+  function pickerHTML(){
+    var opts = "<option value=''>Everything · the whole ecosystem</option>"
+      + ARCHIVE.map(function(p,i){ return "<option value='"+i+"'>"+esc(p.phase)+(p.name?" · "+esc(p.name):"")+"</option>"; }).join("");
+    return "<div class='eco-picker'><label>Feature / phase</label><select id='eco-feature'>"+opts+"</select></div>";
+  }
+  function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+  function resetPanel(){
+    var p=document.getElementById("eco-panel");
+    if(!selPhase){
+      p.innerHTML = pickerHTML()
+        + "<div class='phdr'>ecosystem</div><h4>"+DATA.stats.entities+" entities</h4>"
+        + "<div class='kind'>every entity with its pieces — the whole application</div>"
+        + "<div class='row'><span class='k'>entities</span><span class='v'>"+DATA.stats.entities+"</span></div>"
+        + "<div class='row'><span class='k'>fk edges</span><span class='v'>"+L1E.length+"</span></div>"
+        + "<div class='row'><span class='k'>archived phases</span><span class='v'>"+ARCHIVE.length+"</span></div>"
+        + "<div class='sum'>Pick a feature above to replay a past phase's change — its touched → blast lights up and the rest fades. Drag to pan, scroll to zoom, click a piece for detail.</div>";
+    } else {
+      var s=selPhase;
+      p.innerHTML = pickerHTML()
+        + "<div class='phdr'>archived phase</div><h4>"+esc(s.phase)+(s.name?" · "+esc(s.name):"")+"</h4>"
+        + "<div class='kind'>"+(s.commit?esc(s.commit)+" · ":"")+esc(s.subject||"")+"</div>"
+        + "<div class='lab'>changed → affected</div>"
+        + "<div class='chips'>"+s.touched.map(function(t){ return "<span class='chip t'>"+esc(t)+"</span>"; }).join("")
+          + (s.blast.length?" <span style='color:var(--muted)'>→</span> ":"")
+          + s.blast.map(function(b){ return "<span class='chip b'>"+esc(b)+"</span>"; }).join("")+"</div>"
+        + "<div class='row'><span class='k'>changed pieces</span><span class='v'>"+countPieces(s)+"</span></div>"
+        + "<div class='row'><span class='k'>files</span><span class='v'>"+(s.files||0)+"</span></div>"
+        + "<div class='lab'>pieces</div><div class='chips'>"
+          + (s.touched.concat(s.blast).map(function(sl){ return ((s.pieces&&s.pieces[sl])||[]).map(function(pc){ return "<span class='chip m'>"+esc(pc.label)+"</span>"; }).join(""); }).join(""))
+        + "</div><div class='sum'>Click a piece in the diagram for its coupling. Choose <b>Everything</b> above to return to the full map.</div>";
+    }
+    document.getElementById("eco-feature").addEventListener("change", onPick);
+  }
+  function countPieces(s){ return (s.touched.concat(s.blast)).reduce(function(a,sl){ return a+(((s.pieces&&s.pieces[sl])||[]).length); },0); }
+  function openEntity(slug){ var n=ent(slug); if(!n) return; var c=n.counts;
+    document.getElementById("eco-panel").innerHTML = pickerHTML()
+      + "<div class='phdr'>entity"+(selPhase?" · "+esc(selPhase.phase):"")+"</div><h4 style='color:"+(COLORS[slug]||"var(--ink)")+"'>"+esc(n.label)+"</h4>"
+      + "<div class='kind'>"+esc(n.status||"")+"</div>"
+      + "<div class='row'><span class='k'>endpoints</span><span class='v'>"+c.endpoints+"</span></div>"
+      + "<div class='row'><span class='k'>models</span><span class='v'>"+c.models+"</span></div>"
+      + "<div class='row'><span class='k'>schemas</span><span class='v'>"+c.schemas+"</span></div>"
+      + "<div class='row'><span class='k'>lines</span><span class='v'>"+c.lines.toLocaleString()+"</span></div>";
+    document.getElementById("eco-feature").addEventListener("change", onPick);
+    document.getElementById("eco-feature").value = selPhase ? String(ARCHIVE.indexOf(selPhase)) : "";
+  }
+  function openPiece(slug,p){ selPiece=slug+"|"+p.id;
+    vp.querySelectorAll(".xpiece").forEach(function(g){ g.classList.toggle("selp",g.getAttribute("data-piece")===selPiece); });
+    var n=ent(slug);
+    document.getElementById("eco-panel").innerHTML = pickerHTML()
+      + "<div class='phdr'>piece"+(selPhase?" · "+esc(selPhase.phase):"")+"</div><h4>"+esc(p.label)+"</h4>"
+      + "<div class='kind'>in "+esc(n?n.label:slug)+(p.role==="link"?" · downstream link":(p.role==="changed"?" · changed":""))+"</div>"
+      + (p.via?"<div class='row'><span class='k'>couples via</span><span class='v'>"+esc(p.via)+"</span></div>":"")
+      + "<div class='sum'>"+(selPhase?"This piece is part of the "+esc(selPhase.phase)+" change.":"A model in the "+esc(n?n.label:slug)+" entity.")+"</div>";
+    document.getElementById("eco-feature").addEventListener("change", onPick);
+    document.getElementById("eco-feature").value = selPhase ? String(ARCHIVE.indexOf(selPhase)) : "";
+  }
+  function onPick(e){ var v=e.target.value; selPhase = v==="" ? null : ARCHIVE[+v]; selPiece=null;
+    document.getElementById("eco-sub").textContent = selPhase
+      ? ("replaying "+selPhase.phase+(selPhase.name?" · "+selPhase.name:"")) : "the whole ecosystem · replay any past phase";
+    document.getElementById("eco-expand").style.display = selPhase ? "none" : "";
+    render(); resetPanel();
+  }
+
+  function buildLegend(){
+    var el=document.getElementById("eco-legend"), html="";
+    if(selPhase){ html = "<span class='item'><span class='sw' style='background:var(--touch)'></span>changed</span>"
+      + "<span class='item'><span class='sw' style='background:var(--blast)'></span>affected (blast)</span>"
+      + "<span class='item'><span class='swr' style='border-top-color:var(--blast)'></span>fk coupling</span>"
+      + "<span class='count'>"+selPhase.phase+" · "+selPhase.touched.concat(selPhase.blast).length+" entities</span>"; }
+    else { html = L1.map(function(n){ return "<span class='item'><span class='sw' style='background:"+(COLORS[n.slug]||"#888")+"'></span>"+esc(n.label)+"</span>"; }).join("")
+      + "<span class='count'>"+DATA.stats.entities+" entities · "+ARCHIVE.length+" archived phase(s)</span>"; }
+    el.innerHTML=html;
+  }
+
+  document.getElementById("eco-expand").addEventListener("click",function(){ explodeAll=!explodeAll;
+    this.classList.toggle("on",explodeAll); this.textContent=explodeAll?"Explode all":"Collapse all"; render(); });
+  document.getElementById("eco-layout").addEventListener("change",function(){ layout=this.value; selPiece=null; render(); resetPanel(); });
+  document.getElementById("eco-reset").addEventListener("click",function(){ zoom=1; panX=0; panY=0; selPiece=null; render(); });
+
+  // ── test hook ──
+  window.__ecotest = {
+    entities:function(){ return L1.map(function(n){ return n.slug; }); },
+    archivePhases:function(){ return ARCHIVE.map(function(p){ return p.phase; }); },
+    selectedPhase:function(){ return selPhase?selPhase.phase:null; },
+    pick:function(phaseOrEmpty){ var i = phaseOrEmpty==="" ? "" : String(ARCHIVE.map(function(p){return p.phase;}).indexOf(phaseOrEmpty));
+      var sel=document.getElementById("eco-feature"); sel.value=i; onPick({target:sel}); },
+    containers:function(){ return vp.querySelectorAll("#eco-expansion .xcontainer").length; },
+    pieceCircles:function(){ return vp.querySelectorAll("#eco-expansion .xpiece").length; },
+    dimmed:function(){ return vp.querySelectorAll(".node.entnode.dim").length; },
+    touchedNow:function(){ return Array.prototype.map.call(vp.querySelectorAll(".node.touched"),function(g){ return g.getAttribute("data-id"); }); },
+    blastNow:function(){ return Array.prototype.map.call(vp.querySelectorAll(".node.blast"),function(g){ return g.getAttribute("data-id"); }); },
+    crossEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.cross").length; },
+    panelText:function(){ return document.getElementById("eco-panel").textContent; }
+  };
+
+  render(); resetPanel();
+  window.__ecoready = true;
+})();
+</script>
+</body>
+</html>

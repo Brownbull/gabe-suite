@@ -24,6 +24,7 @@ shell = pathlib.Path(sys.argv[1])
 station = (shell / "codebase-graph.html").read_text(encoding="utf-8")
 panel   = (shell / "assets" / "sim-panel.js").read_text(encoding="utf-8")
 lab     = (shell / "example" / "arch-graph-lab" / "arch-graph-sim-svg.html").read_text(encoding="utf-8")
+archive = (shell / "codebase-archive.html").read_text(encoding="utf-8")
 
 pass_ = 0; fail = 0
 def check(cond, msg):
@@ -114,6 +115,26 @@ for key in ["openDetail", "openEntityDetail", "resetPanel"]:
 check("degradePanel" in station, "station has a degrade path (no change in flight)")
 check(re.search(r'window\.GABE_SIM\s*\|\|\s*null', station) is not None,
       "station reads window.GABE_SIM defensively (|| null)")
+
+# ── F · the codebase-ARCHIVE station (ecosystem + past-phase replay) ──
+aCSS = re.sub(r'/\*.*?\*/', ' ', archive, flags=re.S)
+a_subs = hidden_subjects(archive)
+for s in sorted(x for x in a_subs if display_forced(aCSS, x)):
+    check(has_hidden_guard(aCSS, s), f"archive: hidden {s} is display-forced but has no {s}[hidden] guard")
+a_ids = set(re.findall(r'\bid=["\']([^"\']+)["\']', archive))
+a_mount = set(re.findall(r'getElementById\("([^"]+)"\)', archive))
+check(len(a_mount) > 6, "archive: found the mount ids")
+for mid in sorted(a_mount):
+    check(mid in a_ids, f'archive: getElementById("{mid}") has no matching id')
+a_srcs = re.findall(r'<script src="([^"]+)"', archive)
+for src in a_srcs:
+    if src.startswith("assets/"):
+        check((shell / src).is_file(), f'archive: <script src="{src}"> does not resolve')
+check("./c4-graph.js" in a_srcs, "archive loads the emitted ./c4-graph.js")
+check("./sim-archive.js" in a_srcs, "archive loads the committed ./sim-archive.js (window.GABE_SIM_ARCHIVE)")
+check("window.GABE_SIM_ARCHIVE" in archive, "archive reads window.GABE_SIM_ARCHIVE")
+check("window.__ecotest" in archive, "archive exposes the __ecotest probe hook")
+check("eco-feature" in archive, "archive builds the feature/phase dropdown (#eco-feature)")
 
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)

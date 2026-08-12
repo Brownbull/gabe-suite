@@ -330,6 +330,30 @@ def build_sim(inflight: dict | None, amap: dict, root: Path,
     }
 
 
+def archive_upsert(existing: dict | None, sim: dict | None, inflight: dict | None) -> dict:
+    """Accumulate the CURRENT phase's projection into the committed per-phase archive
+    (Graph 2 replays past changes). Keyed by phase id — completed phases stay FROZEN;
+    only the current phase's entry is (re)written, so a finished phase yields a clean,
+    byte-identical diff. A pure function of (existing, sim, inflight)."""
+    arch = existing if (isinstance(existing, dict) and existing.get("v")) else {"v": 1, "phases": []}
+    by_phase = {p.get("phase"): p for p in arch.get("phases", []) if isinstance(p, dict) and p.get("phase")}
+    ph = str((inflight or {}).get("current_phase") or "").strip()
+    if sim is not None and ph:
+        name = ((inflight or {}).get("phase") or {}).get("name") or ""
+        by_phase[ph] = {"phase": ph, "name": name, **sim}
+    return {"v": 1, "phases": [by_phase[k] for k in sorted(by_phase)]}
+
+
+def emit_archive(archive: dict, center_out: Path) -> None:
+    """Write the COMMITTED, diffable per-phase archive JSON + a window.GABE_SIM_ARCHIVE
+    sibling (the file:// recipe — a strict-CSP page reads a script global, never fetch)."""
+    (center_out / "sim-archive.json").write_text(
+        json.dumps(archive, sort_keys=True, ensure_ascii=False, indent=1) + "\n")
+    (center_out / "sim-archive.js").write_text(
+        "window.GABE_SIM_ARCHIVE = "
+        + json.dumps(archive, sort_keys=True, ensure_ascii=False) + ";\n")
+
+
 def emit(sim: dict | None, center_out: Path) -> None:
     """Write ``sim.data.js``. A live projection when a change is in flight, else the
     honest-empty stub (``window.GABE_SIM = null``). Sorted keys → byte-identical on an

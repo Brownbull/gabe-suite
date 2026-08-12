@@ -1997,8 +1997,9 @@ def main() -> int:
     # (gabe-init seeds it), so the derivation from the churny tree never dirties a
     # commit. A derivation error degrades to honest-empty, never blanks the center.
     _simf = CENTER_OUT / "sim.data.js"
+    _sim = None
+    _inflight = None
     try:
-        _inflight = None
         _ifsrc = CENTER / "inflight.json"          # write-inflight.py refreshes it at the beat tail
         if _ifsrc.is_file():
             _inflight = json.loads(_ifsrc.read_text())
@@ -2025,6 +2026,23 @@ def main() -> int:
         _simf.write_text("// no change in flight — honest-empty at rest (derivation error)\n"
                          "window.GABE_SIM = null;\n")
         print(f"    ⚠ sim.data.js honest-empty (derivation skipped): {_e}")
+
+    # The per-phase ARCHIVE (Graph 2 replays past changes) — accumulate the CURRENT
+    # phase's projection, keyed by phase id; completed phases stay frozen. COMMITTED +
+    # diffable (unlike the ephemeral sim.data.js), so the memory of past changes
+    # survives across sessions/clones (operator ruling 2026-08-12: committed accumulator,
+    # per completed phase). Reads the prior archive from the source center, upserts, writes.
+    try:
+        _archf = CENTER / "sim-archive.json"
+        _existing = json.loads(_archf.read_text()) if _archf.is_file() else None
+        _archive = _a3_sim.archive_upsert(_existing, _sim, _inflight)
+        _a3_sim.emit_archive(_archive, CENTER_OUT)
+        wrote.append(("sim-archive.json", 0))
+        if _sim is not None:
+            print(f"    wrote docs/site/center/sim-archive.json — {len(_archive['phases'])} "
+                  f"archived phase(s)")
+    except Exception as _e:  # noqa: BLE001
+        print(f"    ⚠ sim-archive skipped: {_e}")
 
     # The board — second pass, now that archmap can price every card.
     _btext = strip_slot_doc_comments((SHELL_SRC / "board.html").read_text())

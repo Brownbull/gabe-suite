@@ -162,6 +162,25 @@ _o1 = subprocess.run([sys.executable, "-c", _prog], env={**os.environ, "PYTHONHA
 check(_o0 == _o1 and _o0.strip().startswith("{"),
       "byte-identical across differing PYTHONHASHSEED (no set-order leak into output)")
 
+# ── G · per-phase archive accumulator (committed; Graph 2's memory of past changes) ──
+sA = {"touched": ["recipe"], "blast": ["cooking"], "pieces": {}, "stages": {}, "commit": "aaa"}
+sB = {"touched": ["board"], "blast": [], "pieces": {}, "stages": {}, "commit": "bbb"}
+g1 = _a3_sim.archive_upsert(None, sA, {"current_phase": "P7", "phase": {"name": "Cupo"}})
+check([p["phase"] for p in g1["phases"]] == ["P7"], "archive: first phase recorded")
+g2 = _a3_sim.archive_upsert(g1, sB, {"current_phase": "P8", "phase": {"name": "Deps"}})
+check([p["phase"] for p in g2["phases"]] == ["P7", "P8"], "archive: advancing accumulates (P7 + P8)")
+check(next(p for p in g2["phases"] if p["phase"] == "P7")["commit"] == "aaa",
+      "archive: a completed phase stays FROZEN when a later phase is current")
+g3 = _a3_sim.archive_upsert(g2, sB, {"current_phase": "P8", "phase": {"name": "Deps"}})
+check(json.dumps(g2, sort_keys=True) == json.dumps(g3, sort_keys=True),
+      "archive: re-upsert of the same phase is idempotent (clean diff)")
+g4 = _a3_sim.archive_upsert(g3, None, {"current_phase": "P9", "phase": {"name": "x"}})
+check([p["phase"] for p in g4["phases"]] == ["P7", "P8"],
+      "archive: an honest-empty beat (sim None) carries the archive, adds nothing")
+g5 = _a3_sim.archive_upsert(g2, {**sA, "commit": "ccc"}, {"current_phase": "P7", "phase": {"name": "Cupo v2"}})
+check(next(p for p in g5["phases"] if p["phase"] == "P7")["commit"] == "ccc",
+      "MUTATION: returning to a phase updates its (still-current, unfrozen) entry")
+
 print(f"sim battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
