@@ -25,7 +25,7 @@
 *{ box-sizing:border-box; margin:0; }
 body{ background:var(--bg); color:var(--ink); font:14px/1.5 ui-sans-serif,system-ui,sans-serif;
   height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-header{ display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+header{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; position:relative;
   padding:10px 18px; background:var(--panel); border-bottom:1px solid var(--line); }
 header h1{ font-size:15px; font-weight:650; }
 header .sub{ font-size:12px; color:var(--muted); }
@@ -78,6 +78,17 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
     <button data-lvl="pieces">2 · Pieces</button>
     <button data-lvl="functions">3 · Functions</button>
     <button data-lvl="layers">4 · Layers</button>
+  </div>
+  <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
+    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+  </button>
+  <div id="gearpanel" hidden style="position:absolute;z-index:40;top:52px;right:16px;width:230px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
+    <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
+    <div class="seg" id="laySeg" style="margin-left:0">
+      <button data-lay="ring" class="on">Ring</button>
+      <button data-lay="flow">Flow</button>
+      <button data-lay="force">Force</button>
+    </div>
   </div>
 </header>
 <div class="wrap">
@@ -165,7 +176,40 @@ function ringPos(ids, R, cx, cy){ ids.forEach(function(id,i){
   pos[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); }
 
 var ENTS = D.entities.map(function(e){ return e.slug; });
-ringPos(ENTS.map(function(s){ return "ent:"+s; }), 300, 0, 0);
+var entLayout = "ring";
+
+/* ── entity layouts: Ring · Flow (FK-DAG longest-path columns) · Force ── */
+function fkPairs(){ var out=[]; D.l1_edges.forEach(function(e){ if((e.kinds||{}).fk) out.push([e.s,e.t]); }); return out; }
+function computeEntityPositions(){
+  Object.keys(pos).forEach(function(k){                    // anchors move → clusters follow
+    if(k.indexOf("ent:")===0 || k.indexOf("fn:")===0) delete pos[k]; });
+  if(entLayout==="flow"){                                  // FK-only DAG, cycle-safe
+    var depth={}; ENTS.forEach(function(s){ depth[s]=0; });
+    var edges=fkPairs(), changed=true, guard=0;
+    while(changed && guard++<50){ changed=false;
+      edges.forEach(function(p){ if(depth[p[0]]<depth[p[1]]+1 && depth[p[0]]<ENTS.length){ depth[p[0]]=depth[p[1]]+1; changed=true; } }); }
+    var cols={}; ENTS.forEach(function(s){ (cols[depth[s]]=cols[depth[s]]||[]).push(s); });
+    Object.keys(cols).sort(function(a,b){return a-b;}).forEach(function(d){
+      cols[d].sort().forEach(function(s,i){ pos["ent:"+s]={x:rnd(d*260-260), y:rnd((i-(cols[d].length-1)/2)*170)}; }); });
+  } else if(entLayout==="force"){                          // angle-seeded, deterministic
+    var P={}, V={}, n=ENTS.length;
+    ENTS.forEach(function(s,i){ var a=2*Math.PI*i/n; P[s]={x:280*Math.cos(a),y:280*Math.sin(a)}; V[s]={x:0,y:0}; });
+    var E2=fkPairs();
+    for(var it=0; it<240; it++){
+      for(var i=0;i<n;i++) for(var j=i+1;j<n;j++){ var a=ENTS[i],b=ENTS[j],
+        dx=P[a].x-P[b].x, dy=P[a].y-P[b].y, d2=dx*dx+dy*dy+60, d=Math.sqrt(d2), f=13000/d2;
+        V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[b].x-=dx/d*f; V[b].y-=dy/d*f; }
+      E2.forEach(function(p){ var a=p[0],b=p[1], dx=P[b].x-P[a].x, dy=P[b].y-P[a].y,
+        d=Math.hypot(dx,dy)||1, f=0.02*(d-230);
+        V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[b].x-=dx/d*f; V[b].y-=dy/d*f; });
+      ENTS.forEach(function(s){ V[s].x=(V[s].x-P[s].x*0.003)*0.9; V[s].y=(V[s].y-P[s].y*0.003)*0.9;
+        P[s].x+=V[s].x; P[s].y+=V[s].y; }); }
+    ENTS.forEach(function(s){ pos["ent:"+s]={x:rnd(P[s].x), y:rnd(P[s].y)}; });
+  } else {
+    ringPos(ENTS.map(function(s){ return "ent:"+s; }), 300, 0, 0);
+  }
+}
+computeEntityPositions();
 
 function entAnchor(slug){ return pos["ent:"+slug]; }
 
@@ -178,14 +222,40 @@ function kindPath(layer, a, b, kind, off){
   layer.appendChild(p); return p;
 }
 
-/* ═══ LEVEL 1 · ENTITIES — kinds-aware edges (fk solid · calls dashed-moving · imports dotted) ═══ */
+/* ═══ LEVEL 1 · ENTITIES — edges wear an AMALGAMATION of the two entity colours
+   (a gradient source→target, so the blend also reads direction); kind lives in
+   the line STYLE (fk solid · calls dashed-moving · imports dotted); the two
+   DIRECTIONS of a pair bow to OPPOSITE sides so A→B never overlaps B→A; every
+   edge has a fat invisible hit-path — click it for the relationship detail. ═══ */
+var _gradN = 0;
+function edgeGradient(defs, a, c, sCol, tCol){
+  var id = "eg"+(++_gradN);
+  var g = E("linearGradient",{id:id, gradientUnits:"userSpaceOnUse",
+    x1:a.x, y1:a.y, x2:c.x, y2:c.y});
+  g.appendChild(E("stop",{offset:"0%", "stop-color":sCol}));
+  g.appendChild(E("stop",{offset:"100%", "stop-color":tCol}));
+  defs.appendChild(g); return id;
+}
 function drawEntities(){
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var eLayer=E("g"), nLayer=E("g"); vp.appendChild(eLayer); vp.appendChild(nLayer);
+  var defs=E("defs"), eLayer=E("g"), nLayer=E("g");
+  vp.appendChild(defs); vp.appendChild(eLayer); vp.appendChild(nLayer);
+  // pair-direction bookkeeping: the lexicographically FIRST direction bows +, the
+  // reverse bows −, and each kind steps further out on its own side.
   D.l1_edges.forEach(function(ed){ var a=entAnchor(ed.s), c=entAnchor(ed.t); if(!a||!c) return;
-    var kinds=Object.keys(ed.kinds).sort(), off=-8*(kinds.length-1)/2;
-    kinds.forEach(function(k,i){ var p=kindPath(eLayer, a, c, k, off+i*16);
-      var ti=E("title"); ti.textContent=ed.s+" → "+ed.t+" · "+k+" ×"+ed.kinds[k]+(k==="calls"?" (inferred — a floor)":""); p.appendChild(ti); }); });
+    var fwd = ed.s < ed.t, side = fwd ? 1 : -1;
+    var kinds=Object.keys(ed.kinds).sort();
+    var grad = edgeGradient(defs, a, c, COLORS[ed.s]||"#888", COLORS[ed.t]||"#888");
+    kinds.forEach(function(k,i){
+      var off = side * (14 + i*18);                       // directions on opposite sides
+      var p=kindPath(eLayer, a, c, k, off);
+      p.style.stroke = "url(#"+grad+")";
+      // a fat transparent twin makes the thin line clickable
+      var hit=E("path",{d:p.getAttribute("d"), fill:"none", stroke:"transparent",
+        "stroke-width":"13", style:"cursor:pointer"});
+      (function(edge){ hit.addEventListener("click",function(ev){ ev.stopPropagation(); showEdge(edge); }); })(ed);
+      var ti=E("title"); ti.textContent=ed.s+" → "+ed.t+" · "+k+" ×"+ed.kinds[k]+(k==="calls"?" (inferred — a floor)":""); hit.appendChild(ti);
+      eLayer.appendChild(hit); }); });
   D.entities.forEach(function(en){ var p=entAnchor(en.slug), col=COLORS[en.slug]||"#888";
     var r=24+Math.sqrt(en.counts.lines||1)/14;
     var g=E("g",{class:"entnode","data-id":"ent:"+en.slug, transform:"translate("+p.x+","+p.y+")"});
@@ -197,8 +267,18 @@ function drawEntities(){
     b.minX=Math.min(b.minX,p.x-90); b.maxX=Math.max(b.maxX,p.x+90);
     b.minY=Math.min(b.minY,p.y-70); b.maxY=Math.max(b.maxY,p.y+80); });
   frame(b);
-  legend([sw("fk — foreign key","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
-          sw("imports","dot","var(--muted)")]);
+  legend([sw("fk — solid","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
+          sw("imports — dotted","dot","var(--muted)"),
+          "<span class='it'>line colour = the two entities it joins (source → target blend) · click any line</span>"]);
+}
+function showEdge(ed){
+  var rows=Object.keys(ed.kinds).sort().map(function(k){
+    return "<div class='row'><span>"+esc(k)+"</span><b>×"+ed.kinds[k]+"</b></div>"; }).join("");
+  panel.innerHTML="<h3><span style='color:"+(COLORS[ed.s]||"inherit")+"'>"+esc(ed.s)+"</span> → <span style='color:"+(COLORS[ed.t]||"inherit")+"'>"+esc(ed.t)+"</span></h3>"
+   +"<div class='k'>relationship kinds</div>"+rows
+   +"<div class='note'>"+(ed.kinds.fk?"<b>fk</b> = schema dependency (foreign keys). ":"")
+   +(ed.kinds.calls?"<b>calls</b> = function calls crossing the boundary — every cross-file call is graft-inferred, so this count is a floor. ":"")
+   +(ed.kinds.imports?"<b>imports</b> = module imports.":"")+"</div>";
 }
 
 /* ═══ LEVEL 2 · PIECES — cylinders + S badges inside; ENDPOINTS ON THE BORDER ═══ */
@@ -358,6 +438,17 @@ document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
 window.addEventListener("resize", render);
 
+/* ── the gear: entity layout Ring · Flow · Force (the command center's options) ── */
+(function(){ var gb=document.getElementById("gear"), gp=document.getElementById("gearpanel");
+  gb.addEventListener("click",function(e){ e.stopPropagation(); var open=gp.hidden; gp.hidden=!open; gb.setAttribute("aria-expanded",String(open)); });
+  document.addEventListener("click",function(e){ if(!gp.hidden && !gp.contains(e.target) && !gb.contains(e.target)) gp.hidden=true; });
+  document.getElementById("laySeg").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    entLayout=b.getAttribute("data-lay");
+    document.querySelectorAll("#laySeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    computeEntityPositions(); render(); });
+})();
+
 /* ── test hook ── */
 window.__lvltest = {
   level:function(){ return level; },
@@ -386,7 +477,19 @@ window.__lvltest = {
     return {ok:ok, bad:bad};
   },
   entPos:function(){ var o={}; ENTS.forEach(function(s){ o[s]=[pos["ent:"+s].x, pos["ent:"+s].y]; }); return o; },
-  panelText:function(){ return panel.textContent; }
+  panelText:function(){ return panel.textContent; },
+  layout:function(){ return entLayout; },
+  setLayout:function(v){ entLayout=v; computeEntityPositions(); render(); },
+  gradients:function(){ return vp.querySelectorAll("defs linearGradient").length; },
+  hitPaths:function(){ return vp.querySelectorAll("path[stroke='transparent']").length; },
+  clickFirstEdge:function(){ var h=vp.querySelector("path[stroke='transparent']"); if(h) h.dispatchEvent(new MouseEvent("click",{bubbles:true})); },
+  bowSides:function(){ // A→B and B→A between the same pair must bow to OPPOSITE sides
+    var seen={}, both=0, opposite=0;
+    D.l1_edges.forEach(function(ed){ var key=[ed.s,ed.t].sort().join("|");
+      if(seen[key] && seen[key]!==(ed.s<ed.t)){ both++; opposite++; } // one fwd + one rev exists
+      seen[key]=(ed.s<ed.t); });
+    return {pairsBothDirs:both, opposite:opposite};
+  }
 };
 render();
 window.__lvlready = true;
