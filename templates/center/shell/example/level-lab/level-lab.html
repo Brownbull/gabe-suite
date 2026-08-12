@@ -81,6 +81,7 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
     <button data-lvl="layers">4 · Layers</button>
     <button data-lvl="trace">5 · Trace</button>
   </div>
+  <button id="conns" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Connections</button>
   <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
     <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
   </button>
@@ -93,7 +94,8 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
     </div>
     <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout</div>
     <div class="seg" id="inSeg" style="margin-left:0">
-      <button data-in="ring" class="on">Ring</button>
+      <button data-in="tiers" class="on">Tiers</button>
+      <button data-in="ring">Ring</button>
       <button data-in="grid">Grid</button>
       <button data-in="force">Force</button>
       <button data-in="columns">Columns</button>
@@ -202,7 +204,12 @@ function ringPos(ids, R, cx, cy){ ids.forEach(function(id,i){
   pos[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); }
 
 var ENTS = D.entities.map(function(e){ return e.slug; });
-var entLayout = "ring", insideLayout = "ring";
+var entLayout = "ring", insideLayout = "tiers";   // Tiers default: models core · schemas outer ring
+var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
+/* curved wire: a quadratic bow perpendicular to the segment — crossings separate */
+function curve(x1,y1,x2,y2,bow){ var dx=x2-x1, dy=y2-y1, d=Math.hypot(dx,dy)||1;
+  var mx=(x1+x2)/2 - dy/d*bow, my=(y1+y2)/2 + dx/d*bow;
+  return "M"+x1+" "+y1+" Q "+rnd(mx)+" "+rnd(my)+" "+x2+" "+y2; }
 var expandedEps = {};        // slug → true when the entity's FULL endpoint list shows
 
 /* inner arrangement for a list of items around (cx,cy): Ring · Grid · Force · Columns.
@@ -211,6 +218,19 @@ var expandedEps = {};        // slug → true when the entity's FULL endpoint li
    own measured lesson); opts.groups = id→group for the Columns arrangement. */
 function insidePos(items, cx, cy, opts){
   opts=opts||{}; var n=items.length||1, out={};
+  if(insideLayout==="tiers"){                     // concentric rings per GROUP (models core, schemas outer)
+    var tg={}, torder=[];
+    items.forEach(function(id){ var g=(opts.groups||{})[id]||"other";
+      if(!tg[g]){ tg[g]=[]; torder.push(g); } tg[g].push(id); });
+    torder.sort();
+    var r0=0;
+    torder.forEach(function(g,ti){ var ring=tg[g];
+      var need=Math.max(30, ring.length*8.2);
+      var R=(torder.length===1)?need:(r0=r0+(ti===0?need:Math.max(44, need-r0+30)));
+      if(torder.length>1 && ti===0) r0=need;
+      ring.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/ring.length + (ti%2)*0.35;
+        out[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); });
+    return out; }
   if(insideLayout==="grid"){ var cols=Math.ceil(Math.sqrt(n)), GX=52, GY=46, rows=Math.ceil(n/cols);
     items.forEach(function(id,i){ var r=Math.floor(i/cols), c=i%cols;
       out[id]={x:rnd(cx+(c-(cols-1)/2)*GX), y:rnd(cy+(r-(rows-1)/2)*GY)}; }); }
@@ -401,7 +421,7 @@ function innerArrangement(slug, cx, cy){
 }
 function pieceRadii(){ var radii={};
   ENTS.forEach(function(slug){ var arr=innerArrangement(slug, 0, 0);
-    var eps=expandedEps[slug]?arr.pc.endpoints.length:Math.min(arr.pc.endpoints.length,16);
+    var eps=arr.pc.endpoints.length;                       // ALWAYS the full surface
     var byEps=eps>0 ? (eps*15)/(2*Math.PI) : 0;             // circumference room for markers
     radii[slug]=Math.max(arr.extent+34, byEps, 62); });
   return radii; }
@@ -448,38 +468,35 @@ function drawPieces(){
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
       layer.appendChild(g); });
     // INTRA model→model FK edges — they wear the ENTITY'S colour
-    (pc.intra||[]).forEach(function(e){ var a=pieceAt[e.s], c=pieceAt[e.t]; if(!a||!c) return;
+    (pc.intra||[]).forEach(function(e,ei){ var a=pieceAt[e.s], c=pieceAt[e.t]; if(!a||!c) return;
       var p=E("path",{class:"e-intra", fill:"none", "stroke-width":"1.6",
-        d:"M"+a.x+" "+a.y+" L"+c.x+" "+c.y}); p.style.stroke=col; p.style.opacity="0.75";
+        d:curve(a.x,a.y,c.x,c.y,(ei%2?16:-16))}); p.style.stroke=col; p.style.opacity="0.75";
       var ti=E("title"); ti.textContent=e.s+" → "+e.t+" (fk via "+e.via+")"; p.appendChild(ti);
       wireLayer.appendChild(p); });
     // ENDPOINTS on the border — capped at 16, "+N more" EXPANDS to the full surface
-    var all=pc.endpoints, shown=expandedEps[slug]?all:all.slice(0,16);
+    var all=pc.endpoints, shown=all;                    // ALWAYS show every endpoint
     shown.forEach(function(ep,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(shown.length,1);
       var x=rnd(p.x+contR*Math.cos(a)), y=rnd(p.y+contR*Math.sin(a));
       // TOUCH WIRES: endpoint → the drawn pieces its handler reads/writes — entity colour
-      (ep.touch||[]).forEach(function(cls){ var q=pieceAt[cls]; if(!q) return;
-        var tw=E("path",{class:"e-touch", d:"M"+x+" "+y+" L"+q.x+" "+q.y});
+      (ep.touch||[]).forEach(function(cls,ci){ var q=pieceAt[cls]; if(!q) return;
+        var tw=E("path",{class:"e-touch", d:curve(x,y,q.x,q.y,(ci%2?14:-14))});
         tw.style.stroke=col; wireLayer.appendChild(tw); });
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       epMark(g, 6.5, ep.m);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
-    if(all.length>16){ var more=E("text",{class:"sub2 epmore", x:p.x, y:p.y+contR+16, style:"cursor:pointer;text-decoration:underline"});
-      more.textContent=expandedEps[slug]?"show fewer endpoints":"+"+(all.length-16)+" more endpoints — click to show all";
-      more.addEventListener("click",function(ev){ ev.stopPropagation(); expandedEps[slug]=!expandedEps[slug]; renderKeepView(); });
-      layer.appendChild(more); }
+    /* expander removed — the full API surface always shows (operator ruling) */
     b.minX=Math.min(b.minX,p.x-contR-30); b.maxX=Math.max(b.maxX,p.x+contR+30);
     b.minY=Math.min(b.minY,p.y-contR-30); b.maxY=Math.max(b.maxY,p.y+contR+34); });
   // the REMAP: cross-entity coupling drawn between the ACTUAL PIECES (model→model
   // FKs, the emitter's cross_edges) — amalgamation gradient from the source
   // entity's colour to the target's; entity-to-entity lines do not exist here.
-  (D.cross_edges||[]).forEach(function(e){
+  if(showConns) (D.cross_edges||[]).forEach(function(e,xi){
     var a=pieceAtGlobal[e.fs+"|"+e.f], c=pieceAtGlobal[e.ts+"|"+e.t]; if(!a||!c) return;
     var grad=edgeGradient(defs, a, c, COLORS[e.fs]||"#888", COLORS[e.ts]||"#888");
-    var p=E("path",{class:"e-xfk", fill:"none", "stroke-width":"1.8",
-      "marker-end":"url(#arr)", d:"M"+a.x+" "+a.y+" L"+c.x+" "+c.y});
+    var p=E("path",{class:"e-xfk", fill:"none", "stroke-width":"1.8","stroke-dasharray":"2 5",
+      "marker-end":"url(#arr)", d:curve(a.x,a.y,c.x,c.y,(xi%2?26:-26))});
     p.style.stroke="url(#"+grad+")"; p.style.opacity="0.8";
     var hit=E("path",{d:p.getAttribute("d"), fill:"none", stroke:"transparent","stroke-width":"11", style:"cursor:pointer"});
     (function(ed){ hit.addEventListener("click",function(ev){ ev.stopPropagation();
@@ -592,26 +609,33 @@ function traceRadii(){ var radii={};
     var eps=pc.endpoints||[], traced=eps.filter(function(ep){ return (ep.touch||[]).length; });
     var fns={}, cls={};
     traced.forEach(function(ep){ if(ep.fn) fns[ep.fn]=1; (ep.touch||[]).forEach(function(c){ cls[c]=1; }); });
+    (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
     var nCls=Object.keys(cls).length, nFn=Object.keys(fns).length;
     var core=Math.max(26, nCls*8), ring2=core+(nFn?48:18);
-    var shown=expandedEps[slug]?eps.length:Math.min(eps.length,16);
+    var shown=eps.length;                                // full surface, always
     var byEps=shown>0?(shown*15)/(2*Math.PI):0;
     radii[slug]=Math.max(ring2+46, byEps, 66); });
   return radii; }
 function drawTrace(){
   var radii=traceRadii(); declutterAnchors(radii);
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var wireLayer=E("g"), layer=E("g"); vp.appendChild(wireLayer); vp.appendChild(layer);
+  var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
+  vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
+  var clsAtGlobal={};
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
     var R=radii[slug];
     // traced surface first: endpoints WITH touch data lead the border ordering
     var eps=(pc.endpoints||[]).slice().sort(function(a,b){
       return ((b.touch||[]).length?1:0)-((a.touch||[]).length?1:0); });
-    var shown=expandedEps[slug]?eps:eps.slice(0,16);
+    var shown=eps;                                        // full surface, always
     var fns={}, clsSet={};
     shown.forEach(function(ep){ if((ep.touch||[]).length && ep.fn){ fns[ep.fn]=fns[ep.fn]||[];
       (ep.touch||[]).forEach(function(c){ clsSet[c]=1; }); } });
+    // the core ALSO holds this entity's cross-FK participant models, so the
+    // inter-entity connections have real pieces to land on (auth gets its
+    // User/Household core instead of an empty circle).
+    (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) clsSet[e.f]=1; if(e.ts===slug) clsSet[e.t]=1; });
     var clsL=Object.keys(clsSet).sort();
     var core=Math.max(26, clsL.length*8), ring2=core+(Object.keys(fns).length?48:18);
     // the container + the two inner GUIDE rings — the onion made visible
@@ -656,7 +680,7 @@ function drawTrace(){
     clsL.forEach(function(cls){ var a=clsAngle[cls],
         r=clsL.length>1?core:0,
         x=rnd(p.x+r*Math.cos(a)), y=rnd(p.y+r*Math.sin(a));
-      clsAt[cls]={x:x,y:y};
+      clsAt[cls]={x:x,y:y}; clsAtGlobal[slug+"|"+cls]={x:x,y:y};
       var isModel=(pc.models||[]).some(function(m){ return m.cls===cls; });
       var g=E("g",{class:"piece","data-kind":isModel?"model":"schema", transform:"translate("+x+","+y+")"});
       if(isModel) cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
@@ -669,17 +693,24 @@ function drawTrace(){
     shown.forEach(function(ep){ if(!(ep.touch||[]).length || !ep.fn) return;
       var a=epAngle[ep.m+" "+ep.p], f=fnAt[ep.fn]; if(a===undefined||!f) return;
       var ex=rnd(p.x+R*Math.cos(a)), ey=rnd(p.y+R*Math.sin(a));
-      var w1=E("path",{class:"e-touch", d:"M"+ex+" "+ey+" L"+f.x+" "+f.y});
+      var w1=E("path",{class:"e-touch", d:curve(ex,ey,f.x,f.y,10)});
       w1.style.stroke=col; w1.style.opacity="0.8"; wireLayer.appendChild(w1);
-      (ep.touch||[]).forEach(function(c){ var q=clsAt[c]; if(!q) return;
-        var w2=E("path",{class:"e-touch", d:"M"+f.x+" "+f.y+" L"+q.x+" "+q.y});
+      (ep.touch||[]).forEach(function(c,ci){ var q=clsAt[c]; if(!q) return;
+        var w2=E("path",{class:"e-touch", d:curve(f.x,f.y,q.x,q.y,(ci%2?12:-12))});
         w2.style.stroke=col; w2.style.opacity="0.8"; wireLayer.appendChild(w2); }); });
-    if(eps.length>16){ var more=E("text",{class:"sub2 epmore", x:p.x, y:p.y+R+18, style:"cursor:pointer;text-decoration:underline"});
-      more.textContent=expandedEps[slug]?"show fewer endpoints":"+"+(eps.length-16)+" more endpoints — click to show all";
-      more.addEventListener("click",function(ev){ ev.stopPropagation(); expandedEps[slug]=!expandedEps[slug]; renderKeepView(); });
-      layer.appendChild(more); }
+    /* expander removed — the full surface always shows */
     b.minX=Math.min(b.minX,p.x-R-30); b.maxX=Math.max(b.maxX,p.x+R+30);
     b.minY=Math.min(b.minY,p.y-R-30); b.maxY=Math.max(b.maxY,p.y+R+36); });
+  // INTER-ENTITY connections (the toggle): cross-entity model→model FKs between
+  // the cores — DOTTED, wearing the same gradient amalgamation as D1/D2.
+  if(showConns) (D.cross_edges||[]).forEach(function(e,xi){
+    var a=clsAtGlobal[e.fs+"|"+e.f], c=clsAtGlobal[e.ts+"|"+e.t]; if(!a||!c) return;
+    var grad=edgeGradient(defs, a, c, COLORS[e.fs]||"#888", COLORS[e.ts]||"#888");
+    var pth=E("path",{class:"e-xfk", fill:"none", "stroke-width":"1.8","stroke-dasharray":"2 5",
+      "marker-end":"url(#arr)", d:curve(a.x,a.y,c.x,c.y,(xi%2?30:-30))});
+    pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.8";
+    var ti=E("title"); ti.textContent=e.fs+"."+e.f+" → "+e.ts+"."+e.t+" (via "+e.via+")";
+    pth.appendChild(ti); interLayer.appendChild(pth); });
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("middle ring = handler ƒ","f-api"),
@@ -747,6 +778,14 @@ document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
 window.addEventListener("resize", render);
 
+document.getElementById("conns").addEventListener("click",function(){
+  showConns=!showConns;
+  this.classList.toggle("on",showConns);
+  this.style.background=showConns?"var(--accent)":"var(--panel)";
+  this.style.color=showConns?"#fff":"var(--ink)";
+  this.style.borderColor=showConns?"var(--accent)":"var(--line)";
+  renderKeepView(); });
+
 /* ── the gear: entity layout Ring · Flow · Force (the command center's options) ── */
 (function(){ var gb=document.getElementById("gear"), gp=document.getElementById("gearpanel");
   gb.addEventListener("click",function(e){ e.stopPropagation(); var open=gp.hidden; gp.hidden=!open; gb.setAttribute("aria-expanded",String(open)); });
@@ -796,6 +835,10 @@ window.__lvltest = {
   layout:function(){ return entLayout; },
   setLayout:function(v){ entLayout=v; computeEntityPositions(); render(); },
   inside:function(){ return insideLayout; },
+  conns:function(){ return showConns; },
+  toggleConns:function(){ document.getElementById("conns").click(); },
+  xfkCount:function(){ return vp.querySelectorAll(".e-xfk").length; },
+  curvedShare:function(){ var q=0,n=0; vp.querySelectorAll(".e-touch,.e-intra,.e-xfk").forEach(function(p){ n++; if((p.getAttribute("d")||"").indexOf("Q")>=0) q++; }); return {q:q,n:n}; },
   setInside:function(v){ insideLayout=v; Object.keys(pos).forEach(function(k){ if(k.indexOf("fn:")===0) delete pos[k]; }); render(); },
   expandEps:function(slug){ expandedEps[slug]=!expandedEps[slug]; renderKeepView(); },
   touchWires:function(){ return vp.querySelectorAll(".e-touch").length; },
