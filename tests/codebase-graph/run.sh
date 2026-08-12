@@ -140,8 +140,32 @@ check('id="eco-openAll"' in archive, "archive has the Close/Open-all toggle")
 check('id="eco-conns"' in archive, "archive has the Connections toggle")
 check(".xedge.intra" in aCSS, "archive styles the intra (piece↔piece) edge class")
 check("intraEdgesFor" in archive, "archive derives intra edges (phase intra_edges | C4 L2 fk)")
-check("if(!explodeAll) return;" in archive,
+# an exploded entity's big body vanishes; the container + pieces replace it (change-graph parity)
+check(".node.exploded" in aCSS and "opacity:0" in aCSS.split(".node.exploded",1)[1][:40],
+      "archive: an exploded entity's body is hidden (.node.exploded opacity:0)")
+check('classList.toggle("exploded"' in archive, "archive: the exploded class is toggled per entity at draw")
+# cross-entity PIECE coupling in the ecosystem view (the emitter's cross_edges)
+check(".xedge.xcross" in aCSS, "archive styles the ecosystem cross-entity piece edge (.xedge.xcross)")
+check("DATA.cross_edges" in archive, "archive reads the emitter's piece-level cross_edges")
+check("declutter" in archive, "archive declutters entity spacing so exploded containers do not overlap")
+# defaults MIRROR the change graph (entities ring · inside force)
+check('insideLayout = "force"' in archive, "archive default inside layout = force (change-graph parity)")
+check("if(!slugs.length) return;" in archive,
       "archive: the Close/Open-all toggle governs pieces in BOTH ecosystem + phase modes")
+# FIRE: if the exploded-hide rule were dropped, the body would overlap the pieces again
+_amut = re.sub(r'\.node\.exploded\s*\{[^}]*\}', '', aCSS, count=1)
+check(".node.exploded" not in _amut, "MUTATION: a removed exploded-hide rule is detectable")
+# an `unclaimed` L1 bucket (counts:null, no l2) must be excluded — else radius()/labels
+# deref null and the map crashes on load (adversarial-verify HIGH). Filter at ingest.
+check('filter(function(n){ return n.kind==="entity"; })' in archive,
+      "archive filters L1 to entity nodes (unclaimed bucket excluded — crash guard)")
+# centre-edge suppression must consult showConns, not explodeAll alone, or turning
+# Connections off in an exploded ecosystem yields an EDGELESS graph (verify MEDIUM).
+check("explodeAll && showConns && hasXcross && bothExp" in archive,
+      "archive suppresses a centre edge ONLY when a piece-level replacement is drawn (never edgeless)")
+# the Connections toggle governs phase cross edges too (uniform contract, verify NIT)
+check("if(selPhase && showConns){ (selPhase.cross_edges" in archive,
+      "archive: the Connections toggle gates phase cross edges as well as intra")
 # FIRE: if the openAll toggle were hidden in phase mode again, the old assignment returns
 check("style.display = selPhase" not in archive,
       "archive: the Close/Open-all toggle is NOT hidden in phase mode (regression guard)")

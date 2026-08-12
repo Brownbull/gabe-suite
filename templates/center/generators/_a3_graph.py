@@ -162,6 +162,64 @@ def _l1(entities: dict[str, Any], labels: dict[str, str],
     return nodes, edges, sorted(unresolved)
 
 
+def _index_tbl_models(entities: dict[str, Any]) -> dict[str, str]:
+    """{table_name: model node id ('model:<cls>')} — GLOBAL, for resolving a
+    cross-entity FK target ``table.col`` to the specific model PIECE it references.
+
+    Deterministic first-writer over ``sorted(entities)`` then declared model order,
+    mirroring ``_index_tables`` — a table declared by two entities resolves to the
+    same (alphabetically-first slug's) model both indexes agree on."""
+    idx: dict[str, str] = {}
+    for slug in sorted(entities):
+        code = entities[slug]
+        if not code:
+            continue
+        for model in code.get("models") or []:
+            tbl, cls = model.get("table"), model.get("cls")
+            if tbl and cls:
+                idx.setdefault(tbl, f"model:{cls}")
+    return idx
+
+
+def _cross_edges(entities: dict[str, Any],
+                 tbl2slug: dict[str, str]) -> list[dict]:
+    """Piece-level CROSS-entity FK edges: ``model:<cls>`` --via ``col``--> ``model:<cls>``
+    where the two models live in DIFFERENT entities.
+
+    The L1 edges aggregate these per entity-pair and DROP which model/column carried
+    the FK; this keeps the piece resolution so a renderer (the codebase-archive
+    ecosystem view) can draw connections between the COMPONENTS of different entities,
+    not just between entity centres. Intra-entity FKs are L2 detail; a FK to an
+    unclaimed/library table (no owning entity) has no target piece and is excluded.
+    Deterministic: sorted iteration + a sorted, de-duped return."""
+    tbl2model = _index_tbl_models(entities)
+    seen: set[tuple] = set()
+    out: list[dict] = []
+    for slug in sorted(entities):
+        code = entities[slug]
+        if not code:
+            continue
+        for model in code.get("models") or []:
+            src = f"model:{model.get('cls')}"
+            for col, ref in (model.get("fks") or {}).items():
+                target_table = ref.split(".", 1)[0]
+                target_slug = tbl2slug.get(target_table)
+                if target_slug is None or target_slug == slug:
+                    continue                       # unclaimed or intra-entity
+                dst = tbl2model.get(target_table)
+                if not dst:
+                    continue
+                key = (slug, src, target_slug, dst, col)
+                if key in seen:
+                    continue
+                seen.add(key)
+                out.append({"from_slug": slug, "from": src,
+                            "to_slug": target_slug, "to": dst, "via": col})
+    out.sort(key=lambda e: (e["from_slug"], e["from"],
+                            e["to_slug"], e["to"], e["via"]))
+    return out
+
+
 def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         labels: dict[str, str]) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
@@ -361,6 +419,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     flow_cols = _stamp_l1_flow(l1_nodes, l1_edges)   # additive fx/fy (deps gradient)
 
     tbl2slug = _index_tables(entities)
+    cross_edges = _cross_edges(entities, tbl2slug)   # piece-level cross-entity FKs
     l2: dict[str, dict] = {}
     for slug in sorted(entities):
         code = entities[slug]
@@ -375,6 +434,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         "head": amap.get("head"),
         "colors": dict(colors or {}),   # per-entity palette, carried with the graph
         "l1": {"nodes": l1_nodes, "edges": l1_edges},
+        "cross_edges": cross_edges,     # model→model FK edges that cross entities
         "l2": l2,
         "layout": {"l1": {"kind": "ring", "cx": 0.0, "cy": 0.0, "r": _L1_R,
                           "flow": {"col_w": _L1_FLOW_COL_W, "row_h": _L1_FLOW_ROW_H,
@@ -384,6 +444,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         "stats": {
             "entities": sum(1 for n in l1_nodes if n["kind"] == "entity"),
             "l1_edges": len(l1_edges),
+            "cross_edges": len(cross_edges),
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
             "unresolved_tables": unresolved,

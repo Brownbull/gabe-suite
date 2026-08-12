@@ -9,9 +9,13 @@ over **real gustify data**, so they are viewable without running a twin build:
   ecosystem by default, with a right-panel dropdown that replays any PAST phase from
   the committed archive (`sim-archive.js`), lighting its touched → blast + pieces and
   fading the rest. Shares the change graph's controls — the **Close/Open-all** toggle
-  and **⚙ layout** gear stay live in both modes, a **Connections** toggle shows the
-  piece↔piece FK coupling inside every entity (ecosystem AND a replayed phase), and a
-  selected phase gets the four **Red·Execute·Review·Commit** stage lenses.
+  and **⚙ layout** gear stay live in both modes (defaults mirror the change graph:
+  entities **ring** · inside **force**), a **Connections** toggle shows the piece↔piece
+  FK coupling both INSIDE each entity and ACROSS entities (the emitter's new
+  `cross_edges`), an exploded entity's big circle gives way to its container + pieces
+  (auto-spaced so they never overlap), and a selected phase opens every involved entity
+  to its FULL model set with the four **Red·Execute·Review·Commit** stage lenses
+  highlighting what the commit touched.
 
 Open either directly (`file://`).
 

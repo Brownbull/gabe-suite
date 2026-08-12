@@ -126,6 +126,31 @@ check(f"external:{G._UNCLAIMED}" in a2ids,
 check(not any(e["source"] == e["target"] for e in a2["edges"]),
       "no L2 self-loop from the planted self-FK")
 
+# ── CROSS-ENTITY PIECE EDGES: model→model FKs that cross entities (piece res) ─
+# alpha.A has 4 FKs: self a.id (intra) · b.id + b.x (both → beta model:B) · legacy_x
+# (unclaimed). Only the two beta FKs are cross-entity piece edges; intra + unclaimed
+# are excluded. Both target table b → model:B (the deduped owner). via keeps the col.
+xe = g["cross_edges"]
+check(g["stats"]["cross_edges"] == len(xe) == 2,
+      "cross_edges has exactly the 2 cross-entity FKs (intra + unclaimed excluded)")
+check(all(e["from_slug"] == "alpha" and e["from"] == "model:A"
+          and e["to_slug"] == "beta" and e["to"] == "model:B" for e in xe),
+      "each cross edge resolves BOTH ends to the specific model piece")
+check(sorted(e["via"] for e in xe) == ["b_col", "b_col2"],
+      "cross edges keep the FK column (via) the L1 aggregate drops")
+check(not any(e["via"] == "self_col" for e in xe),
+      "the intra-entity self-FK is NOT a cross edge")
+check(not any(e["to_slug"] == G._UNCLAIMED or "legacy" in e.get("via", "") for e in xe),
+      "a FK to an unmodelled table has no target piece → excluded from cross_edges")
+check(xe == sorted(xe, key=lambda e: (e["from_slug"], e["from"], e["to_slug"], e["to"], e["via"])),
+      "cross_edges is deterministically sorted")
+# FIRE: a fixture with NO cross-entity FK yields an empty list (the check can fail)
+_nox = G.build_c4_graph({"head": "nox", "entities": {
+    "solo": {"files": [], "models": [{"cls": "S", "table": "s", "fks": {"self": "s.id"}}],
+             "schemas": [], "endpoints": []}}})
+check(_nox["cross_edges"] == [] and _nox["stats"]["cross_edges"] == 0,
+      "MUTATION: an intra-only graph has zero cross_edges (guard is falsifiable)")
+
 # ── NODE-ID UNIQUENESS: beta's duplicate model B yields ONE node ────────────
 b2ids = [n["id"] for n in g["l2"]["beta"]["nodes"]]
 check(b2ids.count("model:B") == 1, "a duplicate model class yields a single L2 node id")
