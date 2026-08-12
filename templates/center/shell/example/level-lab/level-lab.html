@@ -81,6 +81,9 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
     <button data-lvl="layers">4 · Layers</button>
     <button data-lvl="trace">5 · Trace</button>
   </div>
+  <button id="guardsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Guards</button>
+  <button id="hubsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Hubs</button>
+  <button id="pressbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Pressure</button>
   <button id="testsbtn" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Tests</button>
   <button id="conns" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Connections</button>
   <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
@@ -238,6 +241,29 @@ function unlinkedNote(kind, key, name){
 var entLayout = "ring", insideLayout = "tiers";   // Tiers default: models core · schemas outer ring
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
 var showTests = true;      // per-piece proof badges (count · corpus · state)
+var showGuards = false;    // validator shields (guard_insight) — lens, off by default
+var showHubs = false;      // fan-in rings + god halos (model/function_insight)
+var showPress = false;     // change-pressure heat (the phase archive)
+function guardMark(g, r, n){ if(!showGuards || !n) return;
+  var m=E("path",{class:"gmark", d:"M0 -5 L4.2 -3 L4.2 1.2 Q4.2 4.6 0 6 Q-4.2 4.6 -4.2 1.2 L-4.2 -3 Z",
+    fill:"var(--c-fn-services)", stroke:"var(--panel)", "stroke-width":"1",
+    transform:"translate("+(-r-4)+","+(r+4)+")"});
+  var ti=E("title"); ti.textContent=n+" declared validator(s) guard this piece"; m.appendChild(ti);
+  g.appendChild(m); }
+function hubMark(g, r, hub){ if(!showHubs || !hub) return;
+  if((hub.usage||0)>=5){ var ring=E("circle",{class:"hmark hub", r:r+5.5, fill:"none",
+      stroke:"var(--accent)", "stroke-width": Math.min(3.4, 1.2+hub.usage/5)});
+    var ti=E("title"); ti.textContent="hub — fan-in usage "+hub.usage+" (fk_in + touches)"; ring.appendChild(ti);
+    g.appendChild(ring); }
+  if(hub.god){ var gd=E("circle",{class:"hmark god", r:r+9, fill:"none",
+      stroke:"var(--m-delete)", "stroke-width":"1.4", "stroke-dasharray":"4 3"});
+    var ti2=E("title"); ti2.textContent="god piece — oversized, many responsibilities"; gd.appendChild(ti2);
+    g.appendChild(gd); } }
+function pressMark(g, r, slug, cls){ if(!showPress) return;
+  var n=(D.pressure||{})[slug+"|"+cls]; if(!n) return;
+  var halo=E("circle",{class:"pmark", r:r+8, fill:"var(--m-put)", "fill-opacity":Math.min(0.42, 0.16*n), stroke:"none"});
+  var ti=E("title"); ti.textContent="touched in "+n+" archived phase(s) — change pressure"; halo.appendChild(ti);
+  g.insertBefore(halo, g.firstChild); }
 /* PROOF BADGE: the piece's test estate at a glance — green = cases all pass,
    red = a failing case exists, hollow grey = NO case names this piece (the
    coverage signal). Count only, never test names; a small orange dot marks
@@ -519,6 +545,7 @@ function drawPieces(){
       var g=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+q.x+","+q.y+")"});
       if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       proofBadge(g, 9, it.m.tests||null);
+      guardMark(g, 9, it.m.guards||0); hubMark(g, 9, it.m.hub||null); pressMark(g, 9, slug, it.m.cls);
       var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(it.m.cls||"",13); g.appendChild(t);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
@@ -549,6 +576,7 @@ function drawPieces(){
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null);
+      guardMark(g, 7, ep.guards||0);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
@@ -610,6 +638,7 @@ function drawFunctions(){
       var g=E("g",{class:"fnode","data-layer":f.layer, transform:"translate("+q.x+","+q.y+")"});
       fGlyph(g, 9, FNCOL[f.layer]||"var(--muted)", f.handler, f.god);
       proofBadge(g, 10, f.tests||null);
+      hubMark(g, 10, f.hub||null);
       var t=E("text",{class:"plabel", y:19}); t.textContent=trunc(f.name,14); g.appendChild(t);
       var ti=E("title"); ti.textContent=f.name+" · "+f.layer+(f.handler?" · handler":"")+" · "+f.slug+(f.lang==="ts"?" · TS":""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f); });
@@ -765,6 +794,7 @@ function drawTrace(){
       if(isModel) cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       var _tm=(pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===cls; })[0];
       proofBadge(g, 9, (_tm&&_tm.tests)||null);
+      guardMark(g, 9, (_tm&&_tm.guards)||0); hubMark(g, 9, (_tm&&_tm.hub)||null); pressMark(g, 9, slug, cls);
       var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(cls,13); g.appendChild(t);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, {kind:isModel?"model":"schema", m:{cls:cls}}); });
       layer.appendChild(g); });
@@ -842,6 +872,9 @@ function showPiece(slug, it){
    +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
    +(it.m.tests?"<div class='row'><span>tests</span><b>"+it.m.tests.n+" case(s) · api "+it.m.tests.api+" · web "+it.m.tests.web+(it.m.tests.red?" · "+it.m.tests.red+" RED":"")+"</b></div>"
      :"<div class='row'><span>tests</span><b>none — unproven</b></div>")
+   +(it.m.guards?"<div class='row'><span>guards</span><b>"+it.m.guards+" validator(s)</b></div>":"<div class='row'><span>guards</span><b>none declared</b></div>")
+   +(it.m.hub?"<div class='row'><span>fan-in</span><b>usage "+(it.m.hub.usage||0)+(it.m.hub.god?" · GOD piece":"")+"</b></div>":"")
+   +((D.pressure||{})[slug+"|"+it.m.cls]?"<div class='row'><span>pressure</span><b>touched in "+D.pressure[slug+"|"+it.m.cls]+" archived phase(s)</b></div>":"")
    +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
 function showEndpoint(slug, ep){
   panel.innerHTML="<h3 style='font-size:13px'>"+esc(ep.m+" "+ep.p)+"</h3>"
@@ -873,6 +906,16 @@ document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
 window.addEventListener("resize", render);
 
+function lensBtn(id, get, set){ document.getElementById(id).addEventListener("click",function(){
+  var v=!get(); set(v);
+  this.classList.toggle("on",v);
+  this.style.background=v?"var(--accent)":"var(--panel)";
+  this.style.color=v?"#fff":"var(--ink)";
+  this.style.borderColor=v?"var(--accent)":"var(--line)";
+  renderKeepView(); }); }
+lensBtn("guardsbtn", function(){return showGuards;}, function(v){showGuards=v;});
+lensBtn("hubsbtn",   function(){return showHubs;},   function(v){showHubs=v;});
+lensBtn("pressbtn",  function(){return showPress;},  function(v){showPress=v;});
 document.getElementById("testsbtn").addEventListener("click",function(){
   showTests=!showTests;
   this.classList.toggle("on",showTests);
@@ -939,6 +982,9 @@ window.__lvltest = {
   inside:function(){ return insideLayout; },
   conns:function(){ return showConns; },
   tests:function(){ return showTests; },
+  lenses:function(){ return {guards:showGuards, hubs:showHubs, press:showPress}; },
+  toggleLens:function(w){ document.getElementById(w+"btn").click(); },
+  marks:function(){ return {shields:vp.querySelectorAll(".gmark").length, hubs:vp.querySelectorAll(".hmark.hub").length, gods:vp.querySelectorAll(".hmark.god").length, heat:vp.querySelectorAll(".pmark").length}; },
   toggleTests:function(){ document.getElementById("testsbtn").click(); },
   tBadges:function(){ return {has:vp.querySelectorAll(".tbadge.has").length, none:vp.querySelectorAll(".tbadge.none").length, web:vp.querySelectorAll(".tbadge.web").length}; },
   toggleConns:function(){ document.getElementById("conns").click(); },
