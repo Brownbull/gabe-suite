@@ -136,6 +136,22 @@
 .eco-panel .headline{ padding:8px 11px; border-radius:0 6px 6px 0; margin:6px 0 4px; font-size:0.9rem; line-height:1.5; }
 .eco-panel .sum{ margin-top:12px; color:var(--ink); opacity:.85; line-height:1.55; }
 .eco-panel .lab{ font-size:0.66rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 0 5px; }
+/* structural id-card (Tier 1): principal fn lead + typed chips — the change graph's
+   visual language; .ty-* type-family colours INHERIT from a3.css (theme-aware). */
+.eco-panel .principal{ display:flex; align-items:center; gap:7px; padding:7px 10px; margin:8px 0 2px; border-radius:8px;
+  background:color-mix(in srgb,var(--accent) 13%,transparent); color:var(--ink); font-size:0.87rem; }
+.eco-panel .principal svg{ flex:none; color:var(--accent); }
+.eco-panel .idrow{ display:block; padding:8px 0 6px; border-top:1px solid var(--line); }
+.eco-panel .idlbl{ font-size:0.71rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+.eco-panel .idchips{ display:flex; flex-wrap:wrap; gap:5px; }
+.eco-root .idchip{ display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border-radius:11px; font-size:11.5px; line-height:1.55; max-width:100%; }
+.eco-root .idchip svg{ flex:none; }
+.eco-root .idchip b{ font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; }
+.eco-root .idchip .mth{ font-weight:800; font-size:0.71rem; letter-spacing:.03em; }
+.eco-root .idchip.dt{ background:var(--line); color:var(--muted); }
+.eco-root .idchip.dt b{ color:var(--ink); font-weight:600; }
+.eco-root .idchip.dt .ty{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.75rem; }
+.eco-root .idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
 
 .eco-legend{ display:flex; align-items:center; gap:6px 18px; flex-wrap:wrap; padding:8px 20px; border-top:1px solid var(--line); background:var(--panel); font-size:11.5px; color:var(--muted); }
 .eco-legend .item{ display:flex; align-items:center; gap:6px; }
@@ -165,7 +181,7 @@
   <a class="navitem on" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-              <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+                    <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -175,7 +191,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-              <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+                    <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -189,7 +205,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-              <span class="navsub" style="opacity:.5">none wired yet</span>
+                    <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:23Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -276,7 +292,7 @@
   function E(t,a){ var e=document.createElementNS(NS,t); if(a) for(var k in a) e.setAttribute(k,a[k]); return e; }
   function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
   function trunc(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+"…":s; }
-  function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;"}[c]; }); }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function ent(slug){ return L1.filter(function(n){ return n.slug===slug; })[0]; }
   function ecoPieces(slug){ var g=DATA.l2[slug]; if(!g) return [];
     return g.nodes.filter(function(n){ return n.kind==="model"; })
@@ -504,6 +520,44 @@
   })();
   window.addEventListener("resize",function(){ if(lastBounds) frame(lastBounds); });
 
+  // ── structural id-card (Tier 1): principal-fn lead + typed chips, from the model's
+  //    c4-graph L2 `ids` block. Same visual language as the change graph's panel;
+  //    honest-empty (a section only renders when its data exists), lists capped. ──
+  var KIND_ICON={
+    fn:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+    endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+    datatype:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>' };
+  var KIND_CHIP={ fn:"#0f766e", endpoint:"#4c6ef5" };
+  var METHOD_COLOR={ GET:"#16794c", POST:"#4338ca", PUT:"#b45309", PATCH:"#b45309", DELETE:"#d1443c" };
+  var TYPE_CLS={ int:"num1", float:"num2", Decimal:"num2", Numeric:"num2", date:"tim1", time:"tim1",
+    datetime:"tim2", str:"str1", Text:"str2", bytes:"str2", bool:"bool", dict:"json", list:"json",
+    Any:"json", JSON:"json", Literal:"json", UUID:"id", uuid:"id" };
+  function icoSvg(p){ return '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; }
+  function tyFamily(t){ var toks=String(t).split(/[^A-Za-z_]+/); for(var i=0;i<toks.length;i++){ if(TYPE_CLS[toks[i]]) return TYPE_CLS[toks[i]]; } return null; }
+  function kindChip(kind,label){ var c=KIND_CHIP[kind]||"#868e96"; return "<span class='idchip' style='color:"+c+";background:"+c+"1f'>"+icoSvg(KIND_ICON[kind])+"<b>"+esc(trunc(label,30))+"</b></span>"; }
+  function epChip(ep){ var mc=METHOD_COLOR[ep.m]||"#868e96", c=KIND_CHIP.endpoint; return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+esc(ep.m+" "+ep.p+" → "+ep.fn+"()")+"'>"+icoSvg(KIND_ICON.endpoint)+"<span class='mth' style='color:"+mc+"'>"+esc(ep.m)+"</span><b>"+esc(ep.p)+"</b></span>"; }
+  function dtChip(d){ var fam=tyFamily(d.t); return "<span class='idchip dt'>"+icoSvg(KIND_ICON.datatype)+"<b>"+esc(d.n)+"</b><span class='ty"+(fam?" ty-"+fam:"")+"'>"+esc(d.t)+"</span></span>"; }
+  function idrow(label,chips){ return chips?"<div class='idrow'><div class='idlbl'>"+label+"</div><div class='idchips'>"+chips+"</div></div>":""; }
+  function moreChip(arr,n){ return arr.length>n?"<span class='idchip st'>+"+(arr.length-n)+" more</span>":""; }
+  function modelNode(slug,id){ var gg=DATA.l2[slug]; if(!gg) return ""; for(var i=0;i<gg.nodes.length;i++){ if(gg.nodes[i].id===id) return gg.nodes[i]; } return ""; }
+  function idCardHTML(ids){ if(!ids) return ""; var h="";
+    if(ids.principal) h+="<div class='principal'>"+icoSvg(KIND_ICON.fn)+"<span>principal fn · <b>"+esc(ids.principal)+"()</b></span></div>";
+    if(ids.datatype) h+=idrow("Data types", ids.datatype.slice(0,8).map(dtChip).join("")+moreChip(ids.datatype,8));
+    if(ids.endpoint) h+=idrow("API", ids.endpoint.slice(0,6).map(epChip).join("")+moreChip(ids.endpoint,6));
+    if(ids.fn) h+=idrow("Functions", ids.fn.slice(0,6).map(function(f){ return kindChip("fn",f+"()"); }).join("")+moreChip(ids.fn,6));
+    return h; }
+  // an ENTITY-level aggregate: unique endpoints + fns across its model pieces
+  function entityIdCard(slug){ var g=DATA.l2[slug]; if(!g) return "";
+    var eps={}, fns={}, dt=0;
+    g.nodes.forEach(function(n){ if(n.kind==="model" && n.ids){
+      (n.ids.endpoint||[]).forEach(function(e){ eps[e.m+" "+e.p]=e; });
+      (n.ids.fn||[]).forEach(function(f){ fns[f]=1; }); dt+=(n.ids.datatype||[]).length; } });
+    var epl=Object.keys(eps).sort().map(function(k){ return eps[k]; }), fnl=Object.keys(fns).sort();
+    var h="";
+    if(epl.length) h+=idrow("API", epl.slice(0,6).map(epChip).join("")+moreChip(epl,6));
+    if(fnl.length) h+=idrow("Functions", fnl.slice(0,6).map(function(f){ return kindChip("fn",f+"()"); }).join("")+moreChip(fnl,6));
+    return h; }
+
   // ── the right panel: dropdown (persistent value) + stage lens + detail ──
   function pickerHTML(){ return "<div class='eco-picker'><label>Feature / phase</label><select id='eco-feature'>"
       + "<option value=''>Everything · the whole ecosystem</option>"
@@ -554,20 +608,23 @@
       + "<div class='row'><span class='k'>endpoints</span><span class='v'>"+c.endpoints+"</span></div>"
       + "<div class='row'><span class='k'>models</span><span class='v'>"+c.models+"</span></div>"
       + "<div class='row'><span class='k'>schemas</span><span class='v'>"+c.schemas+"</span></div>"
-      + "<div class='row'><span class='k'>lines</span><span class='v'>"+c.lines.toLocaleString()+"</span></div>";
+      + "<div class='row'><span class='k'>lines</span><span class='v'>"+c.lines.toLocaleString()+"</span></div>"
+      + entityIdCard(slug);
     afterPanel();
   }
   function openPiece(slug,p){ selPiece=slug+"|"+p.id;
     vp.querySelectorAll(".xpiece").forEach(function(g){ g.classList.toggle("selp",g.getAttribute("data-piece")===selPiece); });
     var n=ent(slug), pfor=phasePiece(slug,p.id), d=selPhase?(((selPhase.stages&&selPhase.stages[curStage])||{}).pieces||{})[p.id]||{}:{};
     var role=pfor?pfor.role:null, via=pfor?pfor.via:null;
+    var mn=modelNode(slug,p.id), sids=mn?mn.ids:null;   // the structural id-card
     document.getElementById("eco-panel").innerHTML = pickerHTML() + stageSegHTML()
       + "<div class='phdr'>piece"+(selPhase?" · "+curStage:"")+"</div><h4>"+esc(p.label)+"</h4>"
       + "<div class='kind'>in "+esc(n?n.label:slug)+(role==="link"?" · downstream link":(role==="changed"?" · changed":""))+"</div>"
       + (via?"<div class='row'><span class='k'>couples via</span><span class='v'>"+esc(via)+"</span></div>":"")
       + (selPhase&&d.add?"<div class='row'><span class='k'>+ lines</span><span class='v'>"+d.add+"</span></div>":"")
       + (selPhase&&d.cases&&d.cases.length?"<div class='row'><span class='k'>cases</span><span class='v'>"+esc(d.cases.join(", "))+"</span></div>":"")
-      + "<div class='sum'>"+(selPhase?(role?"Part of the "+esc(selPhase.phase)+" change.":"A model in "+esc(n?n.label:slug)+" — untouched by this phase."):"A model in the "+esc(n?n.label:slug)+" entity.")+"</div>";
+      + idCardHTML(sids)
+      + (sids?"":"<div class='sum'>"+(selPhase?(role?"Part of the "+esc(selPhase.phase)+" change.":"A model in "+esc(n?n.label:slug)+" — untouched by this phase."):"A model in the "+esc(n?n.label:slug)+" entity.")+"</div>");
     afterPanel();
   }
   function onPick(e){ var v=e.target.value; selPhase = v==="" ? null : ARCHIVE[+v]; selPiece=null; curStage="execute";
@@ -657,6 +714,12 @@
     toggleSide:function(){ document.getElementById("eco-sideToggle").click(); },
     sideWidth:function(){ return document.getElementById("eco-side").getBoundingClientRect().width; },
     hasResizer:function(){ return !!document.getElementById("eco-resizer"); },
+    openPieceFor:function(slug,id){ var mn=modelNode(slug,id); openPiece(slug,{id:id,label:(mn&&mn.label)||id.replace(/^model:/,"")}); },
+    openEntityFor:function(slug){ openEntity(slug); },
+    panelDatatypes:function(){ return document.querySelectorAll("#eco-panel .idchip.dt").length; },
+    panelEndpoints:function(){ return document.querySelectorAll("#eco-panel .idrow .idchip .mth").length; },
+    panelPrincipal:function(){ var e=document.querySelector("#eco-panel .principal b"); return e?e.textContent:null; },
+    panelFunctions:function(){ return document.querySelectorAll("#eco-panel .idrow").length; },
     containers:function(){ return vp.querySelectorAll("#eco-expansion .xcontainer").length; },
     pieceCircles:function(){ return vp.querySelectorAll("#eco-expansion .xpiece").length; },
     dimmed:function(){ return vp.querySelectorAll(".node.entnode.dim").length; },

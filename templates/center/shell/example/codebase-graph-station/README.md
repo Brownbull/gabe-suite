@@ -15,7 +15,10 @@ over **real gustify data**, so they are viewable without running a twin build:
   `cross_edges`), an exploded entity's big circle gives way to its container + pieces
   (auto-spaced so they never overlap), and a selected phase opens every involved entity
   to its FULL model set with the four **Red·Execute·Review·Commit** stage lenses
-  highlighting what the commit touched. The visual grammar matches the change graph:
+  highlighting what the commit touched. Clicking a piece opens its structural
+  **id-card** — the principal function, its data types, and the API endpoints that
+  touch it (from the emitter's per-model `ids` block), honest-empty and capped. The
+  visual grammar matches the change graph:
   **force** actually reshapes (coupled pieces attract), intra edges wear their
   **entity's colour** (stage colour when they touch a changed piece), cross-entity
   edges are the amber **moving-dash** flow, and the right panel **collapses to a bar /

@@ -46,7 +46,9 @@ FIX = {"head": "cafef00d", "generated": "2026-01-01 00:00Z", "entities": {
   "alpha": {
     "files": [["api", "apps/api/alpha.py", 100]],
     "models": [
-      {"cls": "A", "table": "a", "fks": {"self_col": "a.id",     # intra → no L1 edge
+      {"cls": "A", "table": "a",
+       "cols": [["id", "uuid.UUID", ""], ["name", "str", ""]],     # → model_ids datatype
+       "fks": {"self_col": "a.id",     # intra → no L1 edge
                                           "b_col":  "b.id",       # cross → alpha→beta
                                           "b_col2": "b.x",        # cross → weight 2
                                           "x_col":  "legacy_x.id"}},  # unmodelled → unclaimed
@@ -150,6 +152,30 @@ _nox = G.build_c4_graph({"head": "nox", "entities": {
              "schemas": [], "endpoints": []}}})
 check(_nox["cross_edges"] == [] and _nox["stats"]["cross_edges"] == 0,
       "MUTATION: an intra-only graph has zero cross_edges (guard is falsifiable)")
+
+# ── MODEL IDS: the structural id-card (Tier 1 panel data) on L2 model nodes ──
+# model A has cols → datatype. The GET /alpha endpoint touches model Dup → Dup gets
+# endpoint + principal fn. A model touched by nothing with no cols → NO ids (honest).
+a2n = {n["id"]: n for n in a2["nodes"]}
+aids = a2n["model:A"].get("ids", {})
+check([d["n"] for d in aids.get("datatype", [])] == ["id", "name"]
+      and aids["datatype"][0]["t"] == "uuid.UUID",
+      "model_ids: a model's cols become datatype [{n,t}] in source order")
+dupids = a2n["model:Dup"].get("ids", {})
+check(any(e["fn"] == "get_alpha" and e["m"] == "GET" for e in dupids.get("endpoint", [])),
+      "model_ids: an endpoint that touches the model appears in ids.endpoint")
+check(dupids.get("principal") == "get_alpha" and dupids.get("fn") == ["get_alpha"],
+      "model_ids: the principal fn is the endpoint's fn (surfaced for the panel)")
+check("endpoint" not in aids and "principal" not in aids,
+      "model_ids: model A (no endpoint touches it) has no API/principal — honest-empty")
+# a pure sink model with neither cols nor a touching endpoint carries NO ids at all
+gmn = {n["id"]: n for n in g["l2"]["gamma"]["nodes"]}
+check("ids" not in gmn["model:Gm"], "model_ids: a bare model gets no ids card (honest-empty)")
+# reuse-shape: model_ids is a pure function callable directly
+_mi = G.model_ids({"cls": "Z", "cols": [["x", "int", ""]]},
+                  [{"method": "POST", "path": "/z", "fn": "mk_z", "touches": ["Z"]}])
+check(_mi["principal"] == "mk_z" and _mi["datatype"] == [{"n": "x", "t": "int"}],
+      "model_ids is a reusable pure helper (datatype + principal)")
 
 # ── NODE-ID UNIQUENESS: beta's duplicate model B yields ONE node ────────────
 b2ids = [n["id"] for n in g["l2"]["beta"]["nodes"]]

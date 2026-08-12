@@ -220,6 +220,45 @@ def _cross_edges(entities: dict[str, Any],
     return out
 
 
+def model_ids(model: dict[str, Any],
+              endpoints: list[dict] | None) -> dict[str, Any]:
+    """The STRUCTURAL id-card for a model piece — what a detail panel shows about it,
+    independent of any change:
+
+    * ``datatype`` — the model's columns ``[{n, t}]`` (name + declared type).
+    * ``endpoint`` — the API endpoints that TOUCH this model ``[{m, p, fn}]`` (an
+      endpoint touches the model when the model's ``cls`` is in its ``touches``).
+    * ``fn``       — the distinct functions behind those endpoints, PRINCIPAL FIRST
+      (the fn wired to the most touching endpoints; ties broken by name).
+    * ``principal``— that lead function, surfaced so a panel can headline "the one
+      to keep tabs on".
+
+    Pure over one model dict + the entity's endpoints. Deterministic: cols keep source
+    order, endpoints iterate in source order, fns sort by (-hits, name). Reused by the
+    L2 emit AND (later) the change derivation, so one rule feeds every panel."""
+    cls = model.get("cls")
+    dts = [{"n": c[0], "t": c[1]} for c in (model.get("cols") or [])
+           if c and len(c) >= 2 and c[0]]
+    eps: list[dict] = []
+    fn_hits: dict[str, int] = {}
+    for ep in (endpoints or []):
+        if cls and cls in (ep.get("touches") or []):
+            eps.append({"m": ep.get("method"), "p": ep.get("path"), "fn": ep.get("fn")})
+            fn = ep.get("fn")
+            if fn:
+                fn_hits[fn] = fn_hits.get(fn, 0) + 1
+    fns = sorted(fn_hits, key=lambda f: (-fn_hits[f], f))
+    ids: dict[str, Any] = {}
+    if dts:
+        ids["datatype"] = dts
+    if eps:
+        ids["endpoint"] = eps
+    if fns:
+        ids["fn"] = fns
+        ids["principal"] = fns[0]
+    return ids
+
+
 def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         labels: dict[str, str]) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
@@ -253,8 +292,12 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
 
     for model in code.get("models") or []:
         nid = f"model:{model.get('cls')}"
-        add_node({"id": nid, "kind": "model", "slug": slug,
-                  "label": model.get("cls"), "table": model.get("table")})
+        node = {"id": nid, "kind": "model", "slug": slug,
+                "label": model.get("cls"), "table": model.get("table")}
+        ids = model_ids(model, code.get("endpoints"))
+        if ids:                                   # honest-empty: no card if nothing to show
+            node["ids"] = ids
+        add_node(node)
         if model.get("cls"):
             own_classes.setdefault(model["cls"], nid)   # a model wins a name tie
     for schema in code.get("schemas") or []:

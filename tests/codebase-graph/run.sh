@@ -181,6 +181,18 @@ check('id="eco-resizer"' in archive and 'id="eco-sideToggle"' in archive,
       "archive has the resize divider + collapse toggle (change-graph panel parity)")
 check(".eco-side.collapsed" in aCSS and "setSideCollapsed" in archive,
       "archive wires the collapse-to-a-bar panel")
+# Tier 1: the structural id-card (data structures · API · principal fn) from the
+# model's c4-graph L2 `ids` block, rendered honest-empty with the change-graph chips.
+check("idCardHTML" in archive and "function modelNode(" in archive,
+      "archive renders the model's structural id-card from its L2 ids block")
+check("ids.principal" in archive and "'principal'" in archive,
+      "archive surfaces the principal function as the panel lead")
+check("function dtChip(" in archive and "function epChip(" in archive and ".idchip" in aCSS,
+      "archive carries the typed chip renderers (data types + API) + their styles")
+check('idCardHTML(sids)' in archive, "archive's piece panel injects the id-card")
+# FIRE: idCardHTML must be honest-empty (no card when the model carries no ids)
+check("function idCardHTML(ids){ if(!ids) return" in archive,
+      "archive id-card is honest-empty (no ids → nothing rendered) — regression guard")
 # FIRE: if the openAll toggle were hidden in phase mode again, the old assignment returns
 check("style.display = selPhase" not in archive,
       "archive: the Close/Open-all toggle is NOT hidden in phase mode (regression guard)")
