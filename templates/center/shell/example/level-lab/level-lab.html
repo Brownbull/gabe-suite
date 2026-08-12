@@ -244,6 +244,17 @@ var showTests = true;      // per-piece proof badges (count · corpus · state)
 var showGuards = false;    // validator shields (guard_insight) — lens, off by default
 var showHubs = false;      // fan-in rings + god halos (model/function_insight)
 var showPress = false;     // change-pressure heat (the phase archive)
+/* RADIAL LABEL: on a ring, a fixed below-the-icon label runs into the ring
+   neighbour (measured: 3-5 text collisions + 4 label-over-icon hits). Fanning
+   each label outward from the container centre puts it in free space; the
+   anchor flips by side so text always grows AWAY from the crowd. */
+function radialLabel(g, q, centre, txt, off){
+  var dx=q.x-centre.x, dy=q.y-centre.y, d=Math.hypot(dx,dy);
+  var ux=d>1?dx/d:0, uy=d>1?dy/d:1;
+  var lx=rnd(ux*(off||18)), ly=rnd(uy*(off||18)+3);
+  var anchor = ux>0.35 ? "start" : (ux<-0.35 ? "end" : "middle");
+  var e=E("text",{class:"plabel", x:lx, y:ly, style:"text-anchor:"+anchor});
+  e.textContent=txt; g.appendChild(e); return e; }
 function guardMark(g, r, n){ if(!showGuards || !n) return;
   var m=E("path",{class:"gmark", d:"M0 -5 L4.2 -3 L4.2 1.2 Q4.2 4.6 0 6 Q-4.2 4.6 -4.2 1.2 L-4.2 -3 Z",
     fill:"var(--c-fn-services)", stroke:"var(--panel)", "stroke-width":"1",
@@ -306,7 +317,7 @@ function insidePos(items, cx, cy, opts){
     var r0=0;
     torder.forEach(function(g,ti){ var ring=tg[g];
       var need=Math.max(30, ring.length*8.2);
-      var R=(torder.length===1)?need:(r0=r0+(ti===0?need:Math.max(44, need-r0+30)));
+      var R=(torder.length===1)?need:(r0=r0+(ti===0?need:Math.max(88, need-r0+30)));
       if(torder.length>1 && ti===0) r0=need;
       ring.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/ring.length + (ti%2)*0.35;
         out[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); });
@@ -503,7 +514,7 @@ function pieceRadii(){ var radii={};
   ENTS.forEach(function(slug){ var arr=innerArrangement(slug, 0, 0);
     var eps=arr.pc.endpoints.length;                       // ALWAYS the full surface
     var byEps=eps>0 ? (eps*15)/(2*Math.PI) : 0;             // circumference room for markers
-    radii[slug]=Math.max(arr.extent+34, byEps, 62); });
+    radii[slug]=Math.max(arr.extent+88, byEps, 62); });   // band > max label reach (19 offset + ~62px text)
   return radii; }
 /* the L1 kinds edges (gradient amalgamation + direction bows) — shared by any
    level that shows whole entities, so INTER-entity coupling is never invisible. */
@@ -546,7 +557,7 @@ function drawPieces(){
       if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       proofBadge(g, 9, it.m.tests||null);
       guardMark(g, 9, it.m.guards||0); hubMark(g, 9, it.m.hub||null); pressMark(g, 9, slug, it.m.cls);
-      var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(it.m.cls||"",13); g.appendChild(t);
+      radialLabel(g, q, p, trunc(it.m.cls||"",13), 17);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
       layer.appendChild(g); });
@@ -639,7 +650,7 @@ function drawFunctions(){
       fGlyph(g, 9, FNCOL[f.layer]||"var(--muted)", f.handler, f.god);
       proofBadge(g, 10, f.tests||null);
       hubMark(g, 10, f.hub||null);
-      var t=E("text",{class:"plabel", y:19}); t.textContent=trunc(f.name,14); g.appendChild(t);
+      radialLabel(g, q, anchor, trunc(f.name,14), 19);
       var ti=E("title"); ti.textContent=f.name+" · "+f.layer+(f.handler?" · handler":"")+" · "+f.slug+(f.lang==="ts"?" · TS":""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f); });
       nLayer.appendChild(g);
@@ -718,10 +729,10 @@ function traceRadii(){ var radii={};
     traced.forEach(function(ep){ if(ep.fn) fns[ep.fn]=1; (ep.touch||[]).forEach(function(c){ cls[c]=1; }); });
     (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
     var nCls=Object.keys(cls).length, nFn=Object.keys(fns).length;
-    var core=Math.max(26, nCls*8), ring2=core+(nFn?48:18);
+    var core=Math.max(26, nCls*8), ring2=core+(nFn?88:18);   // label band after the core
     var shown=eps.length;                                // full surface, always
     var byEps=shown>0?(shown*15)/(2*Math.PI):0;
-    radii[slug]=Math.max(ring2+46, byEps, 66); });
+    radii[slug]=Math.max(ring2+88, byEps, 66); });          // label band after the fn ring
   return radii; }
 function drawTrace(){
   var radii=traceRadii(); declutterAnchors(radii);
@@ -745,7 +756,7 @@ function drawTrace(){
     (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) clsSet[e.f]=1; if(e.ts===slug) clsSet[e.t]=1; });
     shown.forEach(function(ep){ if(ep.resp && D.schema_owner[ep.resp]===slug) clsSet[ep.resp]=1; });
     var clsL=Object.keys(clsSet).sort();
-    var core=Math.max(26, clsL.length*8), ring2=core+(Object.keys(fns).length?48:18);
+    var core=Math.max(26, clsL.length*8), ring2=core+(Object.keys(fns).length?88:18);
     // the container + the two inner GUIDE rings — the onion made visible
     var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:R, fill:col, stroke:col, style:"cursor:grab"});
     cont.__click=function(){ var en=D.entities.filter(function(e){return e.slug===slug;})[0]; if(en) showEntity(en); };
@@ -774,7 +785,7 @@ function drawTrace(){
       fnAt[fn]={x:x,y:y};
       var g=E("g",{class:"fnode","data-layer":"api", transform:"translate("+x+","+y+")"});
       fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
-      var t=E("text",{class:"plabel", y:18}); t.textContent=trunc(fn,14); g.appendChild(t);
+      radialLabel(g, {x:x,y:y}, p, trunc(fn,14), 18);
       g.addEventListener("click",function(ev){ ev.stopPropagation();
         showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false}); });
       layer.appendChild(g); });
@@ -795,7 +806,7 @@ function drawTrace(){
       var _tm=(pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===cls; })[0];
       proofBadge(g, 9, (_tm&&_tm.tests)||null);
       guardMark(g, 9, (_tm&&_tm.guards)||0); hubMark(g, 9, (_tm&&_tm.hub)||null); pressMark(g, 9, slug, cls);
-      var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(cls,13); g.appendChild(t);
+      radialLabel(g, {x:x,y:y}, p, trunc(cls,13), 17);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, {kind:isModel?"model":"schema", m:{cls:cls}}); });
       layer.appendChild(g); });
     if(!clsL.length){ var note=E("text",{class:"sub2", x:p.x, y:p.y+3});
