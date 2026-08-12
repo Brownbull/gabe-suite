@@ -49,6 +49,18 @@
 .eco-root svg#eco-graph{ display:block; width:100%; height:100%; }
 .eco-side{ width:26%; min-width:290px; border-left:1px solid var(--line); background:var(--panel);
   overflow:auto; flex:none; }
+/* collapse-to-a-bar + drag-to-resize — the SAME affordance the change graph carries */
+.eco-resizer{ flex:none; width:8px; cursor:col-resize; position:relative; z-index:5; touch-action:none; }
+.eco-resizer::before{ content:""; position:absolute; left:3px; top:0; bottom:0; width:2px; background:transparent; transition:background .12s; }
+.eco-resizer:hover::before, .eco-resizer.drag::before{ background:var(--accent); }
+.eco-sidehdr{ position:sticky; top:0; z-index:3; display:flex; justify-content:flex-end; padding:7px 8px 0; background:var(--panel); }
+.eco-root .eco-sidetoggle{ padding:4px 7px; line-height:0; color:var(--muted); }
+.eco-root .eco-sidetoggle:hover{ color:var(--ink); border-color:var(--edge); }
+.eco-root .eco-sidetoggle svg{ display:block; }
+.eco-side.collapsed{ width:42px !important; min-width:42px; overflow:hidden; }
+.eco-side.collapsed .eco-panel{ display:none; }
+.eco-side.collapsed .eco-sidehdr{ justify-content:center; padding:8px 0; }
+.eco-center.sidecol .eco-resizer{ display:none; }
 
 .eco-root .edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .2s; }
 .eco-root #eco-arrow > path{ fill:var(--edge); }
@@ -74,8 +86,12 @@
 .eco-root .xplabel{ font-size:9px; text-anchor:middle; fill:var(--ink); }
 .eco-root .xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
 .eco-root .xedge{ fill:none; stroke-linecap:round; }
-.eco-root .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.6; }
-.eco-root .xedge.xcross{ stroke:var(--edge); stroke-width:1.8; opacity:.72; }   /* ecosystem cross-entity piece coupling */
+/* intra = coupling INSIDE one entity: inherits the ENTITY colour (inline stroke);
+   when it touches a CHANGED piece it flips to the stage colour (.hot). */
+.eco-root .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.75; }
+.eco-root .xedge.intra.hot{ opacity:1; stroke-width:2.4; }
+/* cross = coupling ACROSS entities: always the amber flow highlight, both modes. */
+.eco-root .xedge.xcross{ stroke:var(--blast); stroke-width:2; opacity:.9; }
 .eco-root .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.9; }
 .eco-root .xedge.flow{ stroke-dasharray:6 6; animation: eco-flow 1.5s linear infinite; }
 @keyframes eco-flow{ to{ stroke-dashoffset:-24; } }
@@ -149,7 +165,7 @@
   <a class="navitem on" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-          <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+              <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -159,7 +175,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-          <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+              <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -173,7 +189,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-          <span class="navsub" style="opacity:.5">none wired yet</span>
+              <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:23Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -212,7 +228,9 @@
         </svg>
         <div class="hint" id="eco-hint">drag to pan · scroll to zoom · pick a feature on the right</div>
       </div>
+      <div class="eco-resizer" id="eco-resizer" title="Drag to resize"></div>
       <aside class="eco-side" id="eco-side">
+        <div class="eco-sidehdr"><button class="eco-sidetoggle" id="eco-sideToggle" title="Collapse panel" aria-label="Collapse panel"></button></div>
         <div class="eco-panel" id="eco-panel"></div>
       </aside>
     </div>
@@ -319,6 +337,7 @@
   // MEMOISED per render (_contR, cleared in render()) — declutter's pair loop would
   // otherwise recompute each slug's force layout O(involved) times.
   var _contR={};
+  var _drawnPairs={};   // "A\tB" for every entity pair whose piece-level coupling was drawn this render
   function estContR(slug){ if(_contR[slug]!=null) return _contR[slug];
     var pieces=piecesFor(slug), v;
     if(!pieces.length){ var e=ent(slug); v=e?radius(e)+20:36; }
@@ -346,7 +365,9 @@
     return explodeAll ? declutter(p) : p; }
   function insidePos(slug,pieces,cx,cy){ var n=pieces.length||1,pos={};
     if(insideLayout==="grid"){ var cols=Math.ceil(Math.sqrt(n)),GX=54,GY=50; pieces.forEach(function(p,i){ var r=Math.floor(i/cols),c=i%cols,rows=Math.ceil(n/cols); pos[p.id]={x:cx+(c-(cols-1)/2)*GX,y:cy+(r-(rows-1)/2)*GY}; }); }
-    else if(insideLayout==="force"){ var nds=pieces.map(function(p){ return {id:p.id}; }); var fp=forceLayout(nds,[],{R:Math.max(40,n*9),iter:150,k:2400,rest:52}); pieces.forEach(function(p){ pos[p.id]={x:cx+fp[p.id].x,y:cy+fp[p.id].y}; }); }
+    else if(insideLayout==="force"){ var nds=pieces.map(function(p){ return {id:p.id}; });
+      var ied=intraEdgesFor(slug);   // pass the coupling so force ACTUALLY reshapes (coupled pieces attract) — was []=pure repulsion≈ring
+      var fp=forceLayout(nds,ied,{R:Math.max(42,n*9),iter:170,k:2600,rest:58}); pieces.forEach(function(p){ pos[p.id]={x:cx+fp[p.id].x,y:cy+fp[p.id].y}; }); }
     else { var R=Math.max(46,n*11); pieces.forEach(function(p,i){ var a=-Math.PI/2+2*Math.PI*i/n; pos[p.id]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)}; }); }
     return pos; }
 
@@ -374,7 +395,7 @@
       var t1=E("text",{class:"l1label",x:0,y:r+16}); t1.setAttribute("fill","var(--ink)"); t1.textContent=n.label+(cnt?" ("+cnt+")":"");
       var t2=E("text",{class:"l1sub",x:0,y:r+30}); t2.textContent=n.counts.endpoints+" ep · "+n.counts.models+" models";
       g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g); nodeMeta[n.id].el=g; wire(g,n); });
-    applyFilter(); drawExplosions(); buildLegend();
+    applyFilter(); drawExplosions(); suppressReplacedEdges(); buildLegend();
   }
 
   function updateEdge(rec){ var s=nodePos[rec.s],t=nodePos[rec.t]; if(!s||!t){ rec.el.setAttribute("d",""); return; }
@@ -388,23 +409,24 @@
       g.classList.remove("dim","touched","blast"); if(!selPhase) return;
       if(!involved(id)){ g.classList.add("dim"); return; }
       if(selPhase.touched.indexOf(id)>=0) g.classList.add("touched"); else if(selPhase.blast.indexOf(id)>=0) g.classList.add("blast"); });
-    var exp={}; explodedSlugs().forEach(function(s){ exp[s]=1; });
-    var hasXcross=(DATA.cross_edges||[]).length>0;
     edgeRecs.forEach(function(r){ r.el.classList.remove("dim","lit","xhide");
-      var bothExp=exp[r.s]&&exp[r.t];
-      // an entity-centre line is suppressed ONLY when a piece-level replacement is
-      // actually being drawn for that pair — i.e. both ends exploded AND connections
-      // shown. Otherwise (connections off, stale/empty cross_edges, collapsed) it
-      // stays as the fallback coupling, so the graph is never edgeless.
-      if(!selPhase){ if(explodeAll && showConns && hasXcross && bothExp) r.el.classList.add("xhide"); return; }
-      var inc=involved(r.s)&&involved(r.t);
-      if(inc && showConns && bothExp){ r.el.classList.add("xhide"); return; }   // phase piece cross_edges carry it
-      r.el.classList.toggle("dim",!inc);
+      // ecosystem edges stay visible by default; a centre line is suppressed ONLY if a
+      // piece-level replacement was actually DRAWN for that pair — decided post-draw in
+      // suppressReplacedEdges(), never on a blanket both-exploded gate (which hid the
+      // blast coupling when a phase's cross_edges was empty/stale, leaving it edgeless).
+      if(!selPhase) return;
+      var inc=involved(r.s)&&involved(r.t); r.el.classList.toggle("dim",!inc);
       if(inc && selPhase.blast.indexOf(r.s)>=0 && selPhase.touched.indexOf(r.t)>=0) r.el.classList.add("lit"); });
   }
+  // suppress an entity-centre FK line ONLY for the exact pairs whose piece-level
+  // coupling drawExplosions actually drew (_drawnPairs) — so an unreplaced pair keeps
+  // its lit/plain centre line rather than vanishing. Runs AFTER drawExplosions.
+  function suppressReplacedEdges(){ edgeRecs.forEach(function(r){
+    if(_drawnPairs[r.s+"\t"+r.t]) r.el.classList.add("xhide"); }); }
 
   function drawExplosions(){
     var old=vp.querySelector("#eco-expansion"); if(old) old.remove();
+    _drawnPairs={};
     var slugs=explodedSlugs();
     // an exploded entity's big circle vanishes; the container + pieces replace it.
     L1.forEach(function(n){ var el=nodeMeta[n.slug]&&nodeMeta[n.slug].el; if(el) el.classList.toggle("exploded", slugs.indexOf(n.slug)>=0); });
@@ -425,22 +447,29 @@
       var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col}); lb.textContent=(nodeMeta[slug].node.label||slug)+(cnt?" ("+cnt+")":""); layer.appendChild(lb);
       b.minX=Math.min(b.minX,pos.x-contR-20); b.maxX=Math.max(b.maxX,pos.x+contR+20); b.minY=Math.min(b.minY,pos.y-contR-20); b.maxY=Math.max(b.maxY,pos.y+contR+20); });
     frame(b);
-    // piece↔piece coupling INSIDE each entity — the SAME thing the change graph shows.
-    if(showConns){ slugs.forEach(function(slug){ intraEdgesFor(slug).forEach(function(e){
+    // the CHANGED pieces of the current stage — an intra edge touching one goes "hot".
+    var hot={};
+    if(selPhase){ slugs.forEach(function(slug){ piecesFor(slug).forEach(function(p){ if(!stageEnc(slug,p).hollow) hot[slug+"\t"+p.id]=1; }); }); }
+    // piece↔piece coupling INSIDE each entity — inherits the ENTITY colour (recipe =
+    // its dark green), flipping to the stage colour when it touches a changed piece.
+    if(showConns){ slugs.forEach(function(slug){ var col=COLORS[slug]||"var(--edge)"; intraEdgesFor(slug).forEach(function(e){
       var a=innerPos[slug+"\t"+e.source], c=innerPos[slug+"\t"+e.target];
-      if(a&&c){ layer.appendChild(E("path",{class:"xedge intra",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y})); } }); }); }
-    // piece↔piece coupling ACROSS entities. Ecosystem: every FK crossing an entity
-    // boundary (the emitter's piece-level cross_edges), neutral+directed. Phase: only
-    // the change's cross edges, amber + flowing.
+      if(a&&c){ var isHot=hot[slug+"\t"+e.source]||hot[slug+"\t"+e.target];
+        var pth=E("path",{class:"xedge intra"+(isHot?" hot":""),d:"M"+a.x+","+a.y+" L"+c.x+","+c.y});
+        pth.style.stroke = isHot ? STAGE_COLOR[curStage] : col; layer.appendChild(pth); } }); }); }
+    // piece↔piece coupling ACROSS entities — always the amber flow highlight (the change
+    // graph's cross style: dashed, moving). Ecosystem: every FK crossing a boundary.
     if(showConns && !selPhase){ (DATA.cross_edges||[]).forEach(function(e){
       var a=innerPos[e.from_slug+"\t"+e.from], c=innerPos[e.to_slug+"\t"+e.to];
-      if(a&&c){ var pth=E("path",{class:"xedge xcross","marker-end":"url(#eco-arrow)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y}); var ti=E("title"); ti.textContent=e.from.replace(/^model:/,"")+" → "+e.to.replace(/^model:/,"")+(e.via?" (via "+e.via+")":""); pth.appendChild(ti); layer.appendChild(pth); } }); }
+      if(a&&c){ var pth=E("path",{class:"xedge xcross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y}); var ti=E("title"); ti.textContent=e.from.replace(/^model:/,"")+" → "+e.to.replace(/^model:/,"")+(e.via?" (via "+e.via+")":""); pth.appendChild(ti); layer.appendChild(pth);
+        _drawnPairs[e.from_slug+"\t"+e.to_slug]=1; _drawnPairs[e.to_slug+"\t"+e.from_slug]=1; } }); }
     // phase cross-entity piece coupling — amber + flowing. Gated by showConns (the
     // Connections toggle governs ALL piece edges, both modes). Anchored to the actual
     // PIECES: a phase piece since renamed/deleted from the current l2 has no innerPos,
     // so its edge is skipped — never anchored to an invisible entity centre.
     if(selPhase && showConns){ (selPhase.cross_edges||[]).forEach(function(e){ var a=innerPos[e.from_slug+"\t"+e.from], c=innerPos[e.to_slug+"\t"+e.to];
-      if(a&&c){ layer.appendChild(E("path",{class:"xedge cross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y})); } }); }
+      if(a&&c){ layer.appendChild(E("path",{class:"xedge cross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y}));
+        _drawnPairs[e.from_slug+"\t"+e.to_slug]=1; _drawnPairs[e.to_slug+"\t"+e.from_slug]=1; } }); }
     slugs.forEach(function(slug){
       piecesFor(slug).forEach(function(p){ var pp=innerPos[slug+"\t"+p.id]; if(!pp) return;
         var pfor=phasePiece(slug,p.id);
@@ -572,6 +601,28 @@
   })();
   document.getElementById("eco-reset").addEventListener("click",function(){ zoom=1; panX=0; panY=0; selPiece=null; render(); });
 
+  // ── drag the divider to resize · collapse to a bar / restore (SAME as the change graph) ──
+  (function(){ var resizer=document.getElementById("eco-resizer"), side=document.getElementById("eco-side"),
+      center=side.parentNode, drag=null, minW=0;
+    resizer.addEventListener("pointerdown",function(e){ e.preventDefault();
+      if(!minW) minW=side.getBoundingClientRect().width; drag={cr:center.getBoundingClientRect()};
+      resizer.classList.add("drag"); if(resizer.setPointerCapture){ try{ resizer.setPointerCapture(e.pointerId); }catch(_){} } });
+    window.addEventListener("pointermove",function(e){ if(!drag) return; var maxW=drag.cr.width*0.85;
+      var w=Math.max(minW,Math.min(maxW,drag.cr.right-e.clientX)); side.style.width=w+"px"; if(lastBounds) frame(lastBounds); });
+    window.addEventListener("pointerup",function(){ if(drag){ drag=null; resizer.classList.remove("drag"); } });
+  })();
+  var sideCollapsed=false;
+  var CHEV_R='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>';
+  var CHEV_L='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>';
+  function setSideCollapsed(v){ sideCollapsed=v;
+    var side=document.getElementById("eco-side"), btn=document.getElementById("eco-sideToggle");
+    side.classList.toggle("collapsed",v); side.parentNode.classList.toggle("sidecol",v);
+    side.style.width="";                       // collapsed → CSS 42px · restored → CSS default 26%/290
+    btn.innerHTML = v?CHEV_L:CHEV_R; btn.title = v?"Restore panel":"Collapse panel";
+    if(lastBounds) frame(lastBounds); }
+  document.getElementById("eco-sideToggle").innerHTML = CHEV_R;
+  document.getElementById("eco-sideToggle").addEventListener("click",function(){ setSideCollapsed(!sideCollapsed); });
+
   // ── test hook ──
   window.__ecotest = {
     entities:function(){ return L1.map(function(n){ return n.slug; }); },
@@ -593,9 +644,19 @@
     connsOn:function(){ return document.getElementById("eco-conns").classList.contains("on"); },
     intraEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.intra").length; },
     xcrossEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.xcross").length; },
+    flowEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.flow").length; },
+    hotIntraEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.intra.hot").length; },
+    intraStroke:function(){ var e=vp.querySelector("#eco-expansion .xedge.intra:not(.hot)"); return e?e.style.stroke:null; },
     explodedNodes:function(){ return vp.querySelectorAll(".node.entnode.exploded").length; },
     hiddenCenterEdges:function(){ return vp.querySelectorAll(".edge.xhide").length; },
     insideLayoutNow:function(){ return insideLayout; },
+    setInside:function(v){ insideLayout=v; render(); },
+    piecePositions:function(){ var o={}; vp.querySelectorAll("#eco-expansion .xpiece").forEach(function(g){
+      var m=/translate\(([-0-9.]+),([-0-9.]+)\)/.exec(g.getAttribute("transform")||""); if(m) o[g.getAttribute("data-piece")]=[+m[1],+m[2]]; }); return o; },
+    sideCollapsed:function(){ return document.getElementById("eco-side").classList.contains("collapsed"); },
+    toggleSide:function(){ document.getElementById("eco-sideToggle").click(); },
+    sideWidth:function(){ return document.getElementById("eco-side").getBoundingClientRect().width; },
+    hasResizer:function(){ return !!document.getElementById("eco-resizer"); },
     containers:function(){ return vp.querySelectorAll("#eco-expansion .xcontainer").length; },
     pieceCircles:function(){ return vp.querySelectorAll("#eco-expansion .xpiece").length; },
     dimmed:function(){ return vp.querySelectorAll(".node.entnode.dim").length; },

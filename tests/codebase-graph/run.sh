@@ -159,13 +159,28 @@ check(".node.exploded" not in _amut, "MUTATION: a removed exploded-hide rule is 
 # deref null and the map crashes on load (adversarial-verify HIGH). Filter at ingest.
 check('filter(function(n){ return n.kind==="entity"; })' in archive,
       "archive filters L1 to entity nodes (unclaimed bucket excluded — crash guard)")
-# centre-edge suppression must consult showConns, not explodeAll alone, or turning
-# Connections off in an exploded ecosystem yields an EDGELESS graph (verify MEDIUM).
-check("explodeAll && showConns && hasXcross && bothExp" in archive,
-      "archive suppresses a centre edge ONLY when a piece-level replacement is drawn (never edgeless)")
+# centre-edge suppression must be PER-PAIR (only pairs whose piece-level coupling was
+# actually drawn), not a blanket both-exploded gate — else an unreplaced pair (empty/
+# stale cross_edges, cls-less model) hides the blast coupling with nothing in its place.
+check("_drawnPairs[r.s" in archive and "suppressReplacedEdges" in archive,
+      "archive suppresses a centre edge ONLY for pairs whose piece-level replacement was drawn")
+check("explodeAll && showConns && hasXcross && bothExp" not in archive,
+      "archive no longer uses the blanket both-exploded xhide gate (edgeless-blast regression guard)")
 # the Connections toggle governs phase cross edges too (uniform contract, verify NIT)
 check("if(selPhase && showConns){ (selPhase.cross_edges" in archive,
       "archive: the Connections toggle gates phase cross edges as well as intra")
+# change-graph parity (r3-followup): force feeds on the intra edges (else force≈ring);
+# intra edges inherit the entity colour; cross edges flow; collapse/resize panel present.
+check("forceLayout(nds,ied," in archive,
+      "archive: inside-force layout is fed the intra edges (reshapes; was []=repulsion≈ring)")
+check("pth.style.stroke = isHot ? STAGE_COLOR[curStage] : col" in archive,
+      "archive: intra edges inherit the entity colour, stage colour when hot")
+check('class:"xedge xcross"+(reduce?"":" flow")' in archive,
+      "archive: ecosystem cross edges use the amber flow (moving dash) like the change graph")
+check('id="eco-resizer"' in archive and 'id="eco-sideToggle"' in archive,
+      "archive has the resize divider + collapse toggle (change-graph panel parity)")
+check(".eco-side.collapsed" in aCSS and "setSideCollapsed" in archive,
+      "archive wires the collapse-to-a-bar panel")
 # FIRE: if the openAll toggle were hidden in phase mode again, the old assignment returns
 check("style.display = selPhase" not in archive,
       "archive: the Close/Open-all toggle is NOT hidden in phase mode (regression guard)")
