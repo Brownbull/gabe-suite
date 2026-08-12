@@ -410,7 +410,7 @@ function showEdge(ed){
 function innerArrangement(slug, cx, cy){
   var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[],intra:[]};
   var inner=pc.models.map(function(m){ return {kind:"model", m:m}; })
-    .concat(pc.schemas.slice(0,6).map(function(s){ return {kind:"schema", m:s}; }));
+    .concat(pc.schemas.map(function(s){ return {kind:"schema", m:s}; }));   // the USED schemas — every drawn piece participates
   var ids=inner.map(function(it,i){ return slug+"|p"+i; });
   var byCls={}, groups={};
   inner.forEach(function(it,i){ if(it.m.cls) byCls[it.m.cls]=ids[i]; groups[ids[i]]=it.kind; });
@@ -447,6 +447,7 @@ function drawPieces(){
   // L2 shows NO entity-to-entity lines — the coupling REMAPS to piece-to-piece
   // cross edges (drawn after the loop, once every piece has its position).
   var pieceAtGlobal={};                                    // slug|cls → position
+  var _respCross=[];                                       // endpoint → a schema OWNED elsewhere
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
     var contR=radii[slug];
@@ -481,6 +482,15 @@ function drawPieces(){
       (ep.touch||[]).forEach(function(cls,ci){ var q=pieceAt[cls]; if(!q) return;
         var tw=E("path",{class:"e-touch", d:curve(x,y,q.x,q.y,(ci%2?14:-14))});
         tw.style.stroke=col; wireLayer.appendChild(tw); });
+      // the RESPONSE wire — what this endpoint RETURNS (every endpoint has one)
+      if(ep.resp){ var rq=pieceAt[ep.resp];
+        if(rq){ var rw=E("path",{class:"e-resp", fill:"none","stroke-width":"1.2","stroke-dasharray":"4 3",
+            d:curve(x,y,rq.x,rq.y,(i%2?18:-18))});
+          rw.style.stroke=col; rw.style.opacity="0.6";
+          var rti=E("title"); rti.textContent=ep.m+" "+ep.p+" returns "+ep.resp; rw.appendChild(rti);
+          wireLayer.appendChild(rw); }
+        else if(D.schema_owner[ep.resp] && D.schema_owner[ep.resp]!==slug)
+          _respCross.push({fs:slug, x:x, y:y, ts:D.schema_owner[ep.resp], cls:ep.resp, ep:ep}); }
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       epMark(g, 6.5, ep.m);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
@@ -492,6 +502,14 @@ function drawPieces(){
   // the REMAP: cross-entity coupling drawn between the ACTUAL PIECES (model→model
   // FKs, the emitter's cross_edges) — amalgamation gradient from the source
   // entity's colour to the target's; entity-to-entity lines do not exist here.
+  if(showConns) _respCross.forEach(function(rc,ri){
+    var q=pieceAtGlobal[rc.ts+"|"+rc.cls]; if(!q) return;
+    var grad=edgeGradient(defs, {x:rc.x,y:rc.y}, q, COLORS[rc.fs]||"#888", COLORS[rc.ts]||"#888");
+    var pth=E("path",{class:"e-xfk", fill:"none","stroke-width":"1.3","stroke-dasharray":"4 3",
+      "marker-end":"url(#arr)", d:curve(rc.x,rc.y,q.x,q.y,(ri%2?34:-34))});
+    pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.65";
+    var ti=E("title"); ti.textContent=rc.ep.m+" "+rc.ep.p+" ("+rc.fs+") returns "+rc.cls+" — owned by "+rc.ts;
+    pth.appendChild(ti); interLayer.appendChild(pth); });
   if(showConns) (D.cross_edges||[]).forEach(function(e,xi){
     var a=pieceAtGlobal[e.fs+"|"+e.f], c=pieceAtGlobal[e.ts+"|"+e.t]; if(!a||!c) return;
     var grad=edgeGradient(defs, a, c, COLORS[e.fs]||"#888", COLORS[e.ts]||"#888");
@@ -636,6 +654,7 @@ function drawTrace(){
     // inter-entity connections have real pieces to land on (auth gets its
     // User/Household core instead of an empty circle).
     (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) clsSet[e.f]=1; if(e.ts===slug) clsSet[e.t]=1; });
+    shown.forEach(function(ep){ if(ep.resp && D.schema_owner[ep.resp]===slug) clsSet[ep.resp]=1; });
     var clsL=Object.keys(clsSet).sort();
     var core=Math.max(26, clsL.length*8), ring2=core+(Object.keys(fns).length?48:18);
     // the container + the two inner GUIDE rings — the onion made visible
@@ -697,7 +716,13 @@ function drawTrace(){
       w1.style.stroke=col; w1.style.opacity="0.8"; wireLayer.appendChild(w1);
       (ep.touch||[]).forEach(function(c,ci){ var q=clsAt[c]; if(!q) return;
         var w2=E("path",{class:"e-touch", d:curve(f.x,f.y,q.x,q.y,(ci%2?12:-12))});
-        w2.style.stroke=col; w2.style.opacity="0.8"; wireLayer.appendChild(w2); }); });
+        w2.style.stroke=col; w2.style.opacity="0.8"; wireLayer.appendChild(w2); });
+      if(ep.resp){ var rq=clsAt[ep.resp];
+        if(rq){ var w3=E("path",{class:"e-resp", fill:"none","stroke-width":"1.2","stroke-dasharray":"4 3",
+            d:curve(f.x,f.y,rq.x,rq.y,8)});
+          w3.style.stroke=col; w3.style.opacity="0.6";
+          var ti3=E("title"); ti3.textContent=(ep.fn||ep.p)+" returns "+ep.resp; w3.appendChild(ti3);
+          wireLayer.appendChild(w3); } } });
     /* expander removed — the full surface always shows */
     b.minX=Math.min(b.minX,p.x-R-30); b.maxX=Math.max(b.maxX,p.x+R+30);
     b.minY=Math.min(b.minY,p.y-R-30); b.maxY=Math.max(b.maxY,p.y+R+36); });
@@ -756,7 +781,9 @@ function showPiece(slug, it){
 function showEndpoint(slug, ep){
   panel.innerHTML="<h3 style='font-size:13px'>"+esc(ep.m+" "+ep.p)+"</h3>"
    +"<div class='note'>an ENTRY POINT on the border of "+esc(slug)+"</div>"
-   +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"; }
+   +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
+   +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
+   +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":""); }
 function showFn(f){
   panel.innerHTML="<h3>"+esc(f.name)+"()</h3>"
    +"<div class='row'><span>entity</span><b>"+esc(f.slug)+"</b></div>"
