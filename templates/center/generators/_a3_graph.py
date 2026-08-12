@@ -38,10 +38,13 @@ Honesty laws (the map must not lie):
   * Intra-entity edges (a FK inside one entity) are L2 detail; L1 carries only
     CROSS-entity edges.
 
-Determinism: the output is a pure function of (amap.entities, labels, status) with
-every list sorted and every coordinate rounded, keyed on ``amap.head`` (the git
+Determinism: the output is a pure function of (amap.entities, labels, status, and —
+when the graft arm passes one — the graft INDEX, a machine-local gitignored cache)
+with every list sorted and every coordinate rounded, keyed on ``amap.head`` (the git
 sha, stable on an unchanged tree) — NOT ``amap.generated`` (a wallclock that would
-churn the committed file every build). Same inputs ⇒ byte-identical output. (The
+churn the committed file every build). Same inputs ⇒ byte-identical output; but note
+the graft input makes the committed file MACHINE-SHAPED: a regen on a host without
+the binary/index strips the calls/imports kinds (the build prints the flip loudly). (The
 ring coordinates round math.cos/sin to 2 dp; that rounding absorbs any libm
 last-bit variance, but strict cross-platform byte-identity is a property of the
 build host's float repr, not a guarantee this module can make alone.)
@@ -481,7 +484,11 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             e["weight"] = sum(e["kinds"].values())
         l1_edges.sort(key=lambda e: (e["source"], e["target"]))
     _stamp_l1(l1_nodes)
-    flow_cols = _stamp_l1_flow(l1_nodes, l1_edges)   # additive fx/fy (deps gradient)
+    # the FLOW layout stays FK-ONLY deliberately: the deps gradient reads schema
+    # dependency, call graphs can be cyclic, and the baked fx/fy must not churn
+    # with every call-count change — so graft edges never reach the DAG.
+    _fk_edges = [e for e in l1_edges if (e.get("kinds") or {}).get("fk")]
+    flow_cols = _stamp_l1_flow(l1_nodes, _fk_edges)   # additive fx/fy (deps gradient)
 
     tbl2slug = _index_tables(entities)
     cross_edges = _cross_edges(entities, tbl2slug)   # piece-level cross-entity FKs

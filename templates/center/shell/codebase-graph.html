@@ -489,7 +489,7 @@
   var linesArr = L1.map(function(n){ return n.counts?n.counts.lines:0; });
   var minSq = Math.sqrt(Math.min.apply(null, linesArr)), maxSq = Math.sqrt(Math.max.apply(null, linesArr));
   function radius(n){ var t = maxSq>minSq ? (Math.sqrt(n.counts.lines)-minSq)/(maxSq-minSq) : .5; return 22 + t*38; }
-  function ewidth(w){ return 1.5 + (clamp(w,1,10)-1)/9*4.6; }
+  function ewidth(w){ return 1.5 + Math.min(4.6, Math.log(1+Math.max(0,w))*1.4); }   // log-scale: call-heavy edges no longer all pin at max
 
   // ── the shared detail panel (assets/sim-panel.js), parameterized on this
   //    renderer's two touchpoints: applyStage (re-render) + selectPiece. ──────

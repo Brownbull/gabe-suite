@@ -15,8 +15,9 @@ INPUTS (all committed/derived center data or plain git — no project hardcoding
   PENDING  : .kdbp/PENDING.md — review findings on the changed files (optional)
 
 HONEST PROVENANCE — DERIVED vs left EMPTY (the station degrades per-field):
-  DERIVED : touched · blast · blast_edges (FK reverse, the SAME edges the station
-            draws) · pieces (a touched entity's CHANGED models, by file · a blast
+  DERIVED : touched · blast · blast_edges (FK reverse — FK-ONLY BY DESIGN: this
+            module builds its graph with graft=None; call-aware blast is a
+            deliberate future decision, graft phase 2) · pieces (a touched entity's CHANGED models, by file · a blast
             entity's models whose FK points into the change) · Execute {changed,add,
             del} (git numstat, FILE-level attribution — stated) · Commit meta (git
             totals + head/subject) · Red {tested,cases} (the phase's declared cases)
@@ -41,7 +42,7 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
-import _a3_graph  # sibling — reuse the FK graph so blast reads the station's own edges
+import _a3_graph  # sibling — built here with graft=None: blast stays FK-only by design
 
 
 def _sh(args: list[str], cwd: Path) -> str:
@@ -196,8 +197,8 @@ def build_sim(inflight: dict | None, amap: dict, root: Path,
     tset = set(touched)
     ents = _entities(amap)
 
-    # ── blast radius: entities whose FK points INTO a touched entity, from the SAME
-    #    L1 edges the station draws (source=dependent → target=depended) ──
+    # ── blast radius: entities whose FK points INTO a touched entity (source=
+    #    dependent → target=depended). graft=None on purpose: FK-only blast. ──
     edges = _a3_graph.build_c4_graph(amap)["l1"]["edges"]
     blast, blast_edges = set(), []
     for e in edges:

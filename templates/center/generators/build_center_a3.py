@@ -1984,6 +1984,17 @@ def main() -> int:
         _garm = _a3_graft.graft_arm(
             REPO_ROOT, amap.get("entities") or {},
             allow_build=os.environ.get("GABE_GRAFT_BUILD", "1") != "0")
+        # TRIPWIRE: c4-graph.json is machine-shaped by the (gitignored) graft index —
+        # if this regen flips graft presence vs the committed file, say so LOUDLY, or
+        # a graft-less host silently strips every calls/imports edge from the map.
+        with contextlib.suppress(Exception):
+            _prev = json.loads((CENTER_OUT / "c4-graph.json").read_text(encoding="utf-8"))
+            _was = bool((_prev.get("stats", {}).get("graft") or {}).get("present"))
+            if _was != bool(_garm.get("present")):
+                print(f"    ⚠ GRAFT PRESENCE FLIP: committed c4-graph has graft "
+                      f"present={_was}, this regen derives present={bool(_garm.get('present'))} "
+                      f"({_garm.get('reason')}) — the calls/imports kinds will "
+                      f"{'appear' if _garm.get('present') else 'DISAPPEAR'} in the diff")
         _graph = _a3_graph.build_c4_graph(
             amap, labels=LABELS,
             status={s["entity"]: s.get("status") for s in sections},

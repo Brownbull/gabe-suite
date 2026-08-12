@@ -73,15 +73,47 @@ def ensure_index(root: Path, allow_build: bool = True,
         ok = proc.returncode == 0
     except (subprocess.TimeoutExpired, OSError):
         ok = False
-    ignore = root / ".ignore"
-    try:  # the .ignore hazard — remove only when graft wrote it
-        if ignore.exists() and "graft" in ignore.read_text(encoding="utf-8", errors="replace"):
-            ignore.unlink()
-    except OSError:
-        pass
+    _defuse_ignore(root)
     if not idx.exists():
         return None, "build ran but no index" if ok else "build failed, no index"
     return idx, "rebuilt" if ok else "as-found (build failed, stale)"
+
+
+# The exact entries graft's ensureSearchable APPENDS to a repo-root .ignore —
+# the `!graft/` re-admit is the ripgrep hazard. Only THESE lines (plus graft's
+# own comment lines) are ever removed; user-authored lines always survive.
+_GRAFT_IGNORE_LINES = {"!graft/", "graft/.cache/", "graft/.graph/"}
+
+
+def _defuse_ignore(root: Path) -> None:
+    """Surgically strip graft's appended block from the repo-root ``.ignore``.
+
+    The first cut of this function unlinked any ``.ignore`` whose text mentioned
+    graft — which would have deleted a USER'S file (e.g. one hiding the 21MB
+    ``graft/`` cache from ripgrep, plus their other lines) on every regen. Now:
+    drop only graft's own entries and graft-mentioning comment lines, keep every
+    other line byte-for-byte, and unlink only when nothing non-blank remains.
+    Runs after every build attempt (a failed build may still have written the
+    block); never raises."""
+    ignore = root / ".ignore"
+    try:
+        if not ignore.exists():
+            return
+        kept, dropped = [], 0
+        for line in ignore.read_text(encoding="utf-8", errors="replace").splitlines():
+            s = line.strip()
+            if s in _GRAFT_IGNORE_LINES or (s.startswith("#") and "graft" in s.lower()):
+                dropped += 1
+                continue
+            kept.append(line)
+        if not dropped:
+            return                                  # nothing of graft's here
+        if any(l.strip() for l in kept):
+            ignore.write_text("\n".join(kept) + "\n", encoding="utf-8")
+        else:
+            ignore.unlink()
+    except OSError:
+        pass
 
 
 def load_wiring(idx: Path) -> tuple[dict[str, Any], str]:
@@ -111,6 +143,7 @@ def derive_cross(wiring: dict[str, Any],
     the extracted/inferred trust split, and what was dropped as noise/unresolved
     — a silent cap reads as coverage, so nothing is dropped silently)."""
     file2slug: dict[str, str] = {}
+    collisions = 0
     for slug in sorted(entities):
         code = entities[slug]
         if not code:
@@ -118,12 +151,24 @@ def derive_cross(wiring: dict[str, Any],
         for row in code.get("files") or []:
             # archmap file rows are [layer, repo-relative-path, lines]
             if len(row) >= 2 and isinstance(row[1], str):
+                if row[1] in file2slug and file2slug[row[1]] != slug:
+                    collisions += 1              # a file two entities claim — visible, not silent
                 file2slug.setdefault(row[1], slug)
 
     node_ids = {n["id"] for n in wiring.get("nodes") or []}
     pairs: dict[tuple[str, str], dict[str, int]] = {}
     conf = {r: {"extracted": 0, "inferred": 0} for r in _RELATIONS}
     dropped = {"noise": 0, "unresolved_target": 0, "unmapped_file": 0, "intra_entity": 0}
+    # EVIDENCE for the drop counters: top dropped path prefixes per reason — a bare
+    # integer cannot distinguish "storybook output correctly excluded" from "my whole
+    # backend was classified as noise"; three prefixes can.
+    _prefix_hits: dict[str, dict[str, int]] = {"noise": {}, "unmapped_file": {}}
+
+    def _hit(reason: str, path: str) -> None:
+        d = _prefix_hits.get(reason)
+        if d is not None:
+            pre = "/".join(path.split("/")[:2]) or path
+            d[pre] = d.get(pre, 0) + 1
 
     for e in wiring.get("edges") or []:
         rel = e.get("relation")
@@ -136,10 +181,12 @@ def derive_cross(wiring: dict[str, Any],
         src_f, dst_f = _file_of(src_id), _file_of(dst_id)
         if _is_noise(src_f) or _is_noise(dst_f):
             dropped["noise"] += 1
+            _hit("noise", dst_f if _is_noise(dst_f) else src_f)
             continue
         src_slug, dst_slug = file2slug.get(src_f), file2slug.get(dst_f)
         if src_slug is None or dst_slug is None:
             dropped["unmapped_file"] += 1       # outside the entity-mapped corpus
+            _hit("unmapped_file", src_f if src_slug is None else dst_f)
             continue
         if src_slug == dst_slug:
             dropped["intra_entity"] += 1        # L2 detail, not an L1 edge
@@ -150,6 +197,8 @@ def derive_cross(wiring: dict[str, Any],
         if c in ("extracted", "inferred"):
             conf[rel][c] += 1
 
+    top_prefixes = {r: dict(sorted(h.items(), key=lambda kv: (-kv[1], kv[0]))[:3])
+                    for r, h in _prefix_hits.items() if h}
     return {
         "pairs": {k: dict(sorted(v.items())) for k, v in sorted(pairs.items())},
         "stats": {
@@ -157,6 +206,8 @@ def derive_cross(wiring: dict[str, Any],
             "cross_imports": sum(v.get("imports", 0) for v in pairs.values()),
             "confidence": conf,     # every cross-FILE call is inferred by design → a floor
             "dropped": dropped,
+            "dropped_top_prefixes": top_prefixes,
+            "file_entity_collisions": collisions,
         },
     }
 
@@ -172,7 +223,13 @@ def graft_arm(root: Path, entities: dict[str, Any],
         idx, reason = ensure_index(Path(root), allow_build=allow_build)
         if idx is None:
             return {"present": False, "reason": reason}
-        wiring, fp = load_wiring(idx)
+        try:
+            wiring, fp = load_wiring(idx)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            # a truncated/corrupt index (graft writes non-atomically; a timeout can
+            # kill it mid-write) — name the STATE, never leak a parser traceback
+            # into the committed stats. The next successful build self-heals it.
+            return {"present": False, "reason": "index unreadable (corrupt or truncated)"}
         meta = wiring.get("meta") or {}
         out = derive_cross(wiring, entities)
         return {

@@ -196,6 +196,68 @@ for part in ("l1", "l2", "cross_edges", "layout"):
 check(g_abs["stats"]["graft"] == {"present": False, "reason": "no graft binary"},
       "graft absent: the absence is NAMED in stats, never silent")
 
+# ── the .ignore defuse: SURGICAL — graft's block dies, user lines survive ──
+with tempfile.TemporaryDirectory() as _td:
+    _r = _pl.Path(_td)
+    # FIRE: a pure graft-written .ignore (its comment + its entries) is removed whole
+    (_r / ".ignore").write_text("# graft: keep the cards out of ripgrep\n!graft/\ngraft/.cache/\ngraft/.graph/\n")
+    GG._defuse_ignore(_r)
+    check(not (_r / ".ignore").exists(), ".ignore defuse FIRES: a pure graft block is removed")
+    # SILENT half: a USER .ignore with graft's block APPENDED keeps every user line
+    (_r / ".ignore").write_text("coverage/\ngraft/\n# mine, mentions nothing\n!graft/\ngraft/.graph/\n")
+    GG._defuse_ignore(_r)
+    _left = (_r / ".ignore").read_text()
+    check(_left == "coverage/\ngraft/\n# mine, mentions nothing\n",
+          ".ignore defuse is SURGICAL: user lines (incl. their own graft/ hide-rule) survive")
+    # SILENT: an .ignore with NOTHING of graft's is untouched byte-for-byte
+    (_r / ".ignore").write_text("dist/\n*.log\n")
+    GG._defuse_ignore(_r)
+    check((_r / ".ignore").read_text() == "dist/\n*.log\n",
+          ".ignore defuse stays SILENT on a file with no graft content")
+
+# ── ensure_index BUILD path: a fake `graft` binary on PATH (hermetic) ──
+import os as _os
+with tempfile.TemporaryDirectory() as _td:
+    _r = _pl.Path(_td); _bin = _r / "bin"; _bin.mkdir()
+    _gdir = _r / "repo" / "graft" / ".graph"; _gdir.mkdir(parents=True)
+    # the fake binary writes the hazardous .ignore + a wiring index, like the real one
+    (_bin / "graft").write_text("#!/bin/sh\nprintf '!graft/\\n' > .ignore\n"
+                                "exit 0\n")
+    (_bin / "graft").chmod(0o755)
+    (_gdir / "wiring.json").write_text(json.dumps(WIRING), encoding="utf-8")
+    _old = _os.environ.get("PATH", "")
+    _os.environ["PATH"] = str(_bin) + _os.pathsep + _old
+    try:
+        _p2, _r2 = GG.ensure_index(_r / "repo", allow_build=True)
+        check(_p2 is not None and _r2 == "rebuilt", "ensure_index build path: fake binary runs → 'rebuilt'")
+        check(not (_r / "repo" / ".ignore").exists(),
+              "ensure_index build path: the hazardous .ignore the build wrote is defused")
+    finally:
+        _os.environ["PATH"] = _old
+
+# ── a corrupt/truncated index → a NAMED state, never a parser traceback ──
+with tempfile.TemporaryDirectory() as _td:
+    _gd = _pl.Path(_td) / "graft" / ".graph"; _gd.mkdir(parents=True)
+    (_gd / "wiring.json").write_text('{"meta": {"version": 1}, "nodes": [{"id"')  # truncated
+    _armc = GG.graft_arm(_pl.Path(_td), FIX["entities"], allow_build=False)
+    check(_armc["present"] is False and _armc["reason"] == "index unreadable (corrupt or truncated)",
+          "graft_arm: a truncated index yields the clean named reason, no parser leak")
+
+# ── FLOW STABILITY: the deps gradient is FK-only — graft must not move fx/fy ──
+_gflow = G.build_c4_graph(FIX, labels=LABELS, status=STATUS, graft=_garm)
+_nof   = G.build_c4_graph(FIX, labels=LABELS, status=STATUS, graft=None)
+check(all(a["fx"] == b["fx"] and a["fy"] == b["fy"]
+          for a, b in zip(sorted(_gflow["l1"]["nodes"], key=lambda n: n["id"]),
+                          sorted(_nof["l1"]["nodes"], key=lambda n: n["id"]))),
+      "flow layout is FK-only: graft call edges never move the baked fx/fy")
+
+# ── drop evidence: the counters carry top path prefixes + the collision count ──
+check("dropped_top_prefixes" in _gx["stats"] and
+      _gx["stats"]["dropped_top_prefixes"].get("noise", {}).get("web/dist") == 1,
+      "derive_cross records WHICH prefixes were dropped, not just how many")
+check(_gx["stats"]["file_entity_collisions"] == 0,
+      "derive_cross counts file→entity claim collisions (0 in the fixture)")
+
 # ── ensure_index: no binary + no index → honest reason; never raises ──
 with tempfile.TemporaryDirectory() as _td:
     _p, _r = GG.ensure_index(_pl.Path(_td), allow_build=False)
