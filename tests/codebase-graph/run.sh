@@ -135,6 +135,16 @@ check("./sim-archive.js" in a_srcs, "archive loads the committed ./sim-archive.j
 check("window.GABE_SIM_ARCHIVE" in archive, "archive reads window.GABE_SIM_ARCHIVE")
 check("window.__ecotest" in archive, "archive exposes the __ecotest probe hook")
 check("eco-feature" in archive, "archive builds the feature/phase dropdown (#eco-feature)")
+# the Close/Open-all + Connections controls (change-graph parity) and the intra-edge machinery
+check('id="eco-openAll"' in archive, "archive has the Close/Open-all toggle")
+check('id="eco-conns"' in archive, "archive has the Connections toggle")
+check(".xedge.intra" in aCSS, "archive styles the intra (piece↔piece) edge class")
+check("intraEdgesFor" in archive, "archive derives intra edges (phase intra_edges | C4 L2 fk)")
+check("if(!explodeAll) return;" in archive,
+      "archive: the Close/Open-all toggle governs pieces in BOTH ecosystem + phase modes")
+# FIRE: if the openAll toggle were hidden in phase mode again, the old assignment returns
+check("style.display = selPhase" not in archive,
+      "archive: the Close/Open-all toggle is NOT hidden in phase mode (regression guard)")
 
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)

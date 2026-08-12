@@ -68,6 +68,7 @@
 .eco-root .xplabel{ font-size:9px; text-anchor:middle; fill:var(--ink); }
 .eco-root .xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
 .eco-root .xedge{ fill:none; stroke-linecap:round; }
+.eco-root .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.6; }
 .eco-root .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.9; }
 .eco-root .xedge.flow{ stroke-dasharray:6 6; animation: eco-flow 1.5s linear infinite; }
 @keyframes eco-flow{ to{ stroke-dashoffset:-24; } }
@@ -86,10 +87,11 @@
 .eco-picker{ margin:0 0 14px; }
 .eco-picker label{ display:block; font-size:0.71rem; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
 .eco-picker select{ width:100%; font:inherit; font-size:0.9rem; padding:8px 10px; border:1px solid var(--line); border-radius:9px; background:var(--panel); color:var(--ink); }
-/* the stage lens selector (same vocabulary as the change graph) */
-.eco-seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; margin:0 0 14px; }
-.eco-root .eco-seg button{ display:inline-flex; align-items:center; gap:6px; border:0; border-radius:0; padding:5px 11px; font-weight:600; color:var(--muted); font-family:var(--font-content); }
-.eco-root .eco-seg button + button{ border-left:1px solid var(--line); }
+/* the stage lens selector (same vocabulary as the change graph) — WRAPS to 2 rows
+   so all four fit the narrow panel without clipping "Commit". */
+.eco-seg{ display:flex; flex-wrap:wrap; gap:5px; margin:0 0 14px; }
+.eco-root .eco-seg button{ display:inline-flex; align-items:center; gap:5px; border:1px solid var(--line);
+  border-radius:8px; padding:4px 10px; font-size:11.5px; font-weight:600; color:var(--muted); font-family:var(--font-content); }
 .eco-seg button .sdot{ width:8px; height:8px; border-radius:50%; flex:none; }
 .eco-root #eco-stageSeg button[data-stage="red"] .sdot{ background:#e5484d; }
 .eco-root #eco-stageSeg button[data-stage="execute"] .sdot{ background:#4c9aff; }
@@ -140,7 +142,7 @@
   <a class="navitem on" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-  <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+    <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -150,7 +152,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-  <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+    <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -164,7 +166,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-  <span class="navsub" style="opacity:.5">none wired yet</span>
+    <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:23Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -181,6 +183,7 @@
       <span class="sub" id="eco-sub">the whole ecosystem · replay any past phase</span>
       <div class="spacer"></div>
       <button id="eco-openAll" class="cbg-toggle on">Close all</button>
+      <button id="eco-conns" class="cbg-toggle on" title="Show/hide piece↔piece coupling inside entities">Connections</button>
       <button class="cbg-gear" id="eco-gear" title="Layout controls" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       </button>
@@ -228,7 +231,8 @@
 
   var selPhase = null;      // null = ecosystem · else the archive entry
   var curStage = "execute"; // the lens for the selected phase
-  var explodeAll = true;    // ecosystem: show every entity's pieces
+  var explodeAll = true;    // show every entity's pieces (BOTH ecosystem + phase)
+  var showConns = true;     // draw piece↔piece FK coupling inside entities
   var layout = "ring", insideLayout = "ring";
   var selPiece = null;
   var nodePos = {}, nodeMeta = {}, edgeRecs = [], lastBounds = null;
@@ -248,7 +252,14 @@
     return g.nodes.filter(function(n){ return n.kind==="model"; })
       .map(function(n){ return { id:n.id, label:n.label||n.id.replace(/^model:/,""), role:"eco" }; }); }
   function piecesFor(slug){ if(selPhase){ return (selPhase.pieces && selPhase.pieces[slug]) || []; }
-    return explodeAll ? ecoPieces(slug) : []; }
+    return ecoPieces(slug); }
+  // piece↔piece coupling within one entity: the phase's own intra_edges when replaying,
+  // else the entity's FK edges between its models straight from the C4 L2 graph.
+  function intraEdgesFor(slug){ if(selPhase){ return (selPhase.intra_edges && selPhase.intra_edges[slug]) || []; }
+    var g=DATA.l2[slug]; if(!g) return []; var models={};
+    g.nodes.forEach(function(n){ if(n.kind==="model") models[n.id]=1; });
+    return (g.edges||[]).filter(function(e){ return e.kind==="fk" && models[e.source] && models[e.target]; })
+      .map(function(e){ return {source:e.source, target:e.target}; }); }
   function involved(slug){ if(!selPhase) return true;
     return selPhase.touched.indexOf(slug)>=0 || selPhase.blast.indexOf(slug)>=0; }
 
@@ -330,7 +341,7 @@
 
   function drawExplosions(){
     var old=vp.querySelector("#eco-expansion"); if(old) old.remove();
-    if(!(selPhase || explodeAll)) return;
+    if(!explodeAll) return;   // the Close/Open-all toggle governs pieces in BOTH modes
     var reduce=!!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     var layer=E("g",{id:"eco-expansion"}); vp.appendChild(layer);
     var b={minX:lastBounds.minX,minY:lastBounds.minY,maxX:lastBounds.maxX,maxY:lastBounds.maxY};
@@ -344,6 +355,11 @@
       var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col}); lb.textContent=(nodeMeta[slug].node.label||slug); layer.appendChild(lb);
       b.minX=Math.min(b.minX,pos.x-contR-20); b.maxX=Math.max(b.maxX,pos.x+contR+20); b.minY=Math.min(b.minY,pos.y-contR-20); b.maxY=Math.max(b.maxY,pos.y+contR+20); });
     frame(b);
+    // piece↔piece coupling inside each entity — the SAME thing the change graph shows.
+    // Drawn in BOTH the ecosystem and a replayed phase; the Connections toggle hides it.
+    if(showConns){ slugs.forEach(function(slug){ intraEdgesFor(slug).forEach(function(e){
+      var a=innerPos[slug+"\t"+e.source], c=innerPos[slug+"\t"+e.target];
+      if(a&&c){ layer.appendChild(E("path",{class:"xedge intra",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y})); } }); }); }
     if(selPhase){ (selPhase.cross_edges||[]).forEach(function(e){ var a=innerPos[e.from_slug+"\t"+e.from]||nodePos[e.from_slug], c=innerPos[e.to_slug+"\t"+e.to]||nodePos[e.to_slug];
       if(a&&c){ layer.appendChild(E("path",{class:"xedge cross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y})); } }); }
     slugs.forEach(function(slug){ var isT=selPhase&&selPhase.touched.indexOf(slug)>=0, isB=selPhase&&selPhase.blast.indexOf(slug)>=0;
@@ -446,8 +462,7 @@
   }
   function onPick(e){ var v=e.target.value; selPhase = v==="" ? null : ARCHIVE[+v]; selPiece=null; curStage="execute";
     document.getElementById("eco-sub").textContent = selPhase ? ("replaying "+selPhase.phase+(selPhase.name?" · "+selPhase.name:"")) : "the whole ecosystem · replay any past phase";
-    document.getElementById("eco-openAll").style.display = selPhase ? "none" : "";
-    render(); resetPanel();
+    render(); resetPanel();  // Close/Open-all + Connections stay live in BOTH modes
   }
 
   function buildLegend(){ var el=document.getElementById("eco-legend"), html="";
@@ -466,6 +481,8 @@
     fillPills(document.getElementById("eco-insideSeg"),INSIDE_LAYOUTS,insideLayout,"in"); }
   document.getElementById("eco-openAll").addEventListener("click",function(){ explodeAll=!explodeAll;
     this.classList.toggle("on",explodeAll); this.textContent=explodeAll?"Close all":"Open all"; render(); });
+  document.getElementById("eco-conns").addEventListener("click",function(){ showConns=!showConns;
+    this.classList.toggle("on",showConns); render(); });
   document.getElementById("eco-entitiesSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; layout=b.getAttribute("data-lay"); syncPills(); render(); });
   document.getElementById("eco-insideSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; insideLayout=b.getAttribute("data-in"); syncPills(); render(); });
   (function(){ var gb=document.getElementById("eco-gear"), gp=document.getElementById("eco-gearpanel");
@@ -490,6 +507,10 @@
     layoutNow:function(){ return layout; },
     toggleAll:function(){ document.getElementById("eco-openAll").click(); },
     explodeAllOn:function(){ return document.getElementById("eco-openAll").classList.contains("on"); },
+    openAllShown:function(){ return document.getElementById("eco-openAll").style.display !== "none"; },
+    toggleConns:function(){ document.getElementById("eco-conns").click(); },
+    connsOn:function(){ return document.getElementById("eco-conns").classList.contains("on"); },
+    intraEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.intra").length; },
     containers:function(){ return vp.querySelectorAll("#eco-expansion .xcontainer").length; },
     pieceCircles:function(){ return vp.querySelectorAll("#eco-expansion .xpiece").length; },
     dimmed:function(){ return vp.querySelectorAll(".node.entnode.dim").length; },
