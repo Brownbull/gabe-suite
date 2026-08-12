@@ -89,6 +89,12 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
       <button data-lay="flow">Flow</button>
       <button data-lay="force">Force</button>
     </div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout</div>
+    <div class="seg" id="inSeg" style="margin-left:0">
+      <button data-in="ring" class="on">Ring</button>
+      <button data-in="grid">Grid</button>
+      <button data-in="force">Force</button>
+    </div>
   </div>
 </header>
 <div class="wrap">
@@ -133,14 +139,24 @@ function cylinder(g, r, col){            // MODEL = database cylinder
     fill:col, "fill-opacity":"0.9", stroke:"var(--panel)","stroke-width":"1.4"}));
   g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col, stroke:"var(--panel)","stroke-width":"1.4"}));
 }
-function sBadge(g, r, col){              // SCHEMA = rounded-square S badge
-  g.appendChild(E("rect",{x:-r, y:-r, width:2*r, height:2*r, rx:4, fill:col, "fill-opacity":"0.16", stroke:col,"stroke-width":"1.5"}));
-  var t=E("text",{class:"plabel", y:3.5, style:"font-size:"+(r*1.1)+"px;font-weight:800", fill:col}); t.textContent="S"; g.appendChild(t);
+// the command center's OWN icon geometry (sim-panel KIND_ICON) — the lab speaks
+// the suite's icon language: schema = curly braces, function = the ƒ-curve.
+var ICO_SCHEMA='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1';
+var ICO_FN='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6';
+function icoPath(g, d, col, scale){
+  var p=E("path",{d:d, fill:"none", stroke:col, "stroke-width":"2",
+    "stroke-linecap":"round","stroke-linejoin":"round",
+    transform:"translate("+(-12*scale)+","+(-12*scale)+") scale("+scale+")"});
+  g.appendChild(p);
 }
-function fGlyph(g, r, col, handler, god){ // FUNCTION = F glyph, ring = handler, warn = god
+function sBadge(g, r, col){              // SCHEMA = the center's curly-brace icon
+  g.appendChild(E("rect",{x:-r, y:-r, width:2*r, height:2*r, rx:4, fill:col, "fill-opacity":"0.16", stroke:col,"stroke-width":"1.5"}));
+  icoPath(g, ICO_SCHEMA, col, (r*1.5)/24);
+}
+function fGlyph(g, r, col, handler, god){ // FUNCTION = the center's ƒ-curve icon; ring = handler, warn = god
   g.appendChild(E("circle",{r:r, fill:col, "fill-opacity":"0.14", stroke:col, "stroke-width": handler?"2.6":"1.5"}));
   if(god) g.appendChild(E("circle",{r:r+3.5, fill:"none", stroke:"var(--m-delete)","stroke-width":"1.4","stroke-dasharray":"3 3"}));
-  var t=E("text",{class:"plabel", y:3.5, style:"font-size:"+(r*1.15)+"px;font-weight:800", fill:col}); t.textContent="F"; g.appendChild(t);
+  icoPath(g, ICO_FN, col, (r*1.7)/24);
 }
 function epMark(g, r, method){           // ENDPOINT = method-coloured border marker
   var col = METHOD[method]||"var(--muted)";
@@ -176,7 +192,67 @@ function ringPos(ids, R, cx, cy){ ids.forEach(function(id,i){
   pos[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); }
 
 var ENTS = D.entities.map(function(e){ return e.slug; });
-var entLayout = "ring";
+var entLayout = "ring", insideLayout = "ring";
+var expandedEps = {};        // slug → true when the entity's FULL endpoint list shows
+
+/* inner arrangement for a list of items around (cx,cy): Ring · Grid · Force */
+function insidePos(items, cx, cy){
+  var n=items.length||1, out={};
+  if(insideLayout==="grid"){ var cols=Math.ceil(Math.sqrt(n)), GX=52, GY=46, rows=Math.ceil(n/cols);
+    items.forEach(function(id,i){ var r=Math.floor(i/cols), c=i%cols;
+      out[id]={x:rnd(cx+(c-(cols-1)/2)*GX), y:rnd(cy+(r-(rows-1)/2)*GY)}; }); }
+  else if(insideLayout==="force"){ var P={},V={};
+    items.forEach(function(id,i){ var a=2*Math.PI*i/n, R0=Math.max(36,n*8);
+      P[id]={x:R0*Math.cos(a),y:R0*Math.sin(a)}; V[id]={x:0,y:0}; });
+    for(var it=0;it<130;it++){ for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){
+        var a=items[i],b=items[j],dx=P[a].x-P[b].x,dy=P[a].y-P[b].y,d2=dx*dx+dy*dy+40,d=Math.sqrt(d2),f=2200/d2;
+        V[a].x+=dx/d*f;V[a].y+=dy/d*f;V[b].x-=dx/d*f;V[b].y-=dy/d*f; }
+      items.forEach(function(id){ V[id].x=(V[id].x-P[id].x*0.02)*0.85; V[id].y=(V[id].y-P[id].y*0.02)*0.85;
+        P[id].x+=V[id].x; P[id].y+=V[id].y; }); }
+    items.forEach(function(id){ out[id]={x:rnd(cx+P[id].x), y:rnd(cy+P[id].y)}; }); }
+  else { var R=Math.max(42,n*7.8);
+    items.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/n;
+      out[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); }
+  return out;
+}
+function innerExtent(ipos, cx, cy){ var m=0;
+  Object.keys(ipos).forEach(function(k){ m=Math.max(m, Math.hypot(ipos[k].x-cx, ipos[k].y-cy)); }); return m; }
+
+/* DECLUTTER: scale entity anchors out from their centroid until no two container
+   circles overlap (radii passed per slug). Scale-up only — never shrinks.
+   SUPPRESSED during a drag: the user's placement wins over the no-overlap rule
+   (they can always drop things apart themselves). */
+var suppressDeclutter=false;
+function declutterAnchors(radii){
+  if(suppressDeclutter) return;
+  var cx=0, cy=0; ENTS.forEach(function(s){ cx+=pos["ent:"+s].x; cy+=pos["ent:"+s].y; });
+  cx/=ENTS.length; cy/=ENTS.length;
+  var scale=1;
+  for(var i=0;i<ENTS.length;i++) for(var j=i+1;j<ENTS.length;j++){
+    var a=ENTS[i], b=ENTS[j],
+        d=Math.hypot(pos["ent:"+a].x-pos["ent:"+b].x, pos["ent:"+a].y-pos["ent:"+b].y)||1,
+        need=(radii[a]||60)+(radii[b]||60)+34;
+    if(d*scale<need) scale=need/d; }
+  if(scale<=1.001) return;
+  ENTS.forEach(function(s){ var p=pos["ent:"+s];
+    pos["ent:"+s]={x:rnd(cx+(p.x-cx)*scale), y:rnd(cy+(p.y-cy)*scale)}; });
+}
+
+/* DRAG an entity anchor (any level that renders per-entity groups) */
+function wireEntityDrag(el, slug){
+  el.addEventListener("pointerdown", function(e){
+    e.preventDefault(); e.stopPropagation();
+    var start={x:e.clientX, y:e.clientY}, o=pos["ent:"+slug], origin={x:o.x, y:o.y}, moved=false;
+    function mv(ev){ var s=baseScale*zoom,
+        dx=(ev.clientX-start.x)/s, dy=(ev.clientY-start.y)/s;
+      if(!moved && Math.abs(dx)+Math.abs(dy)<3) return; moved=true;
+      pos["ent:"+slug]={x:rnd(origin.x+dx), y:rnd(origin.y+dy)};
+      Object.keys(pos).forEach(function(k){ if(k.indexOf("fn:")===0) delete pos[k]; });
+      suppressDeclutter=true; try{ renderKeepView(); } finally{ suppressDeclutter=false; } }
+    function up(){ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+      if(!moved && el.__click) el.__click(); }
+    window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up); });
+}
 
 /* ── entity layouts: Ring · Flow (FK-DAG longest-path columns) · Force ── */
 function fkPairs(){ var out=[]; D.l1_edges.forEach(function(e){ if((e.kinds||{}).fk) out.push([e.s,e.t]); }); return out; }
@@ -262,7 +338,8 @@ function drawEntities(){
     g.appendChild(E("circle",{class:"body", r:r, fill:col, stroke:"var(--panel)","stroke-width":"2"}));
     var t=E("text",{class:"lbl", y:r+15}); t.textContent=en.label; g.appendChild(t);
     var s=E("text",{class:"sub2", y:r+28}); s.textContent=en.counts.endpoints+" ep · "+en.counts.models+" models"; g.appendChild(s);
-    g.addEventListener("click",function(ev){ ev.stopPropagation(); showEntity(en); });
+    g.__click=function(){ showEntity(en); };
+    wireEntityDrag(g, en.slug);                     // drag to move; a still click selects
     nLayer.appendChild(g);
     b.minX=Math.min(b.minX,p.x-90); b.maxX=Math.max(b.maxX,p.x+90);
     b.minY=Math.min(b.minY,p.y-70); b.maxY=Math.max(b.maxY,p.y+80); });
@@ -281,43 +358,65 @@ function showEdge(ed){
    +(ed.kinds.imports?"<b>imports</b> = module imports.":"")+"</div>";
 }
 
-/* ═══ LEVEL 2 · PIECES — cylinders + S badges inside; ENDPOINTS ON THE BORDER ═══ */
+/* ═══ LEVEL 2 · PIECES — cylinders + brace-icon schemas inside; ENDPOINTS ON THE
+   BORDER (click "+N more" to expand an entity's full surface); thin TOUCH wires
+   from each endpoint to the pieces it reads/writes; containers DECLUTTERED and
+   DRAGGABLE. ═══ */
+function pieceRadii(){ var radii={};
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
+    var items=pc.models.length+Math.min(pc.schemas.length,6);
+    var ipos=insidePos(Array.apply(null,{length:items}).map(function(_,i){ return "probe"+i; }), 0, 0);
+    var eps=expandedEps[slug]?pc.endpoints.length:Math.min(pc.endpoints.length,16);
+    var byEps=eps>0 ? (eps*15)/(2*Math.PI) : 0;             // circumference room for markers
+    radii[slug]=Math.max(innerExtent(ipos,0,0)+34, byEps, 62); });
+  return radii; }
 function drawPieces(){
+  var radii=pieceRadii(); declutterAnchors(radii);
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var layer=E("g"); vp.appendChild(layer);
+  var wireLayer=E("g"), layer=E("g"); vp.appendChild(wireLayer); vp.appendChild(layer);
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
-    var n=pc.models.length + Math.min(pc.schemas.length,6);
-    var innerR=Math.max(40, n*7.5), contR=innerR+30;
-    layer.appendChild(E("circle",{class:"container", cx:p.x, cy:p.y, r:contR, fill:col, stroke:col}));
+    var contR=radii[slug];
+    var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:contR, fill:col, stroke:col, style:"cursor:grab"});
+    cont.__click=function(){ showEntity(D.entities.filter(function(e){return e.slug===slug;})[0]); };
+    wireEntityDrag(cont, slug);
+    layer.appendChild(cont);
     var lb=E("text",{class:"lbl", x:p.x, y:p.y-contR-10}); lb.textContent=slug; lb.setAttribute("fill",col); layer.appendChild(lb);
-    // models = DB cylinders on an inner ring
+    // inner pieces: models = DB cylinders · schemas = curly-brace badges
     var inner=pc.models.map(function(m){ return {kind:"model", m:m}; })
       .concat(pc.schemas.slice(0,6).map(function(s){ return {kind:"schema", m:s}; }));
-    inner.forEach(function(it,i){ var a=-Math.PI/2+2*Math.PI*i/inner.length;
-      var x=rnd(p.x+innerR*Math.cos(a)), y=rnd(p.y+innerR*Math.sin(a));
-      var g=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+x+","+y+")"});
+    var ids=inner.map(function(it,i){ return slug+"|p"+i; });
+    var ipos=insidePos(ids, p.x, p.y);
+    var pieceAt={};                                    // cls → drawn position (for touch wires)
+    inner.forEach(function(it,i){ var q=ipos[ids[i]];
+      pieceAt[it.m.cls]=q;
+      var g=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+q.x+","+q.y+")"});
       if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       var t=E("text",{class:"plabel", y:16}); t.textContent=trunc(it.m.cls||"",13); g.appendChild(t);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
       layer.appendChild(g); });
-    // ENDPOINTS = method-coloured markers ON THE CONTAINER BORDER (the entity's surface)
-    var eps=pc.endpoints.slice(0,16);
-    eps.forEach(function(ep,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(eps.length,1);
+    // ENDPOINTS on the border — capped at 16, "+N more" EXPANDS to the full surface
+    var all=pc.endpoints, shown=expandedEps[slug]?all:all.slice(0,16);
+    shown.forEach(function(ep,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(shown.length,1);
       var x=rnd(p.x+contR*Math.cos(a)), y=rnd(p.y+contR*Math.sin(a));
+      // TOUCH WIRES: endpoint → the drawn pieces its handler reads/writes
+      (ep.touch||[]).forEach(function(cls){ var q=pieceAt[cls]; if(!q) return;
+        wireLayer.appendChild(E("path",{class:"e-touch", d:"M"+x+" "+y+" L"+q.x+" "+q.y})); });
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       epMark(g, 6.5, ep.m);
-      var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"; g.appendChild(ti);
+      var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
-    if(pc.endpoints.length>16){ var more=E("text",{class:"sub2", x:p.x, y:p.y+contR+16});
-      more.textContent="+"+(pc.endpoints.length-16)+" more endpoints"; layer.appendChild(more); }
+    if(all.length>16){ var more=E("text",{class:"sub2 epmore", x:p.x, y:p.y+contR+16, style:"cursor:pointer;text-decoration:underline"});
+      more.textContent=expandedEps[slug]?"show fewer endpoints":"+"+(all.length-16)+" more endpoints — click to show all";
+      more.addEventListener("click",function(ev){ ev.stopPropagation(); expandedEps[slug]=!expandedEps[slug]; renderKeepView(); });
+      layer.appendChild(more); }
     b.minX=Math.min(b.minX,p.x-contR-30); b.maxX=Math.max(b.maxX,p.x+contR+30);
     b.minY=Math.min(b.minY,p.y-contR-30); b.maxY=Math.max(b.maxY,p.y+contR+34); });
   frame(b);
-  legend([glyphIt("model — table-backed", "cyl"), glyphIt("schema", "s"),
-          glyphIt("endpoint on the BORDER = the entity's surface; colour = method", "ep")]);
+  legend([glyphIt("model — table-backed", "cyl"), glyphIt("schema (brace icon)", "s"),
+          glyphIt("endpoint on the BORDER; colour = method · thin wire = what it touches", "ep")]);
 }
 
 /* ═══ LEVEL 3 · FUNCTIONS — F glyphs by layer; cross-entity calls dashed (trust) ═══ */
@@ -325,10 +424,17 @@ function drawFunctions(){
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
   var eLayer=E("g"), nLayer=E("g"); vp.appendChild(eLayer); vp.appendChild(nLayer);
   var bySlug={}; D.fn_nodes.forEach(function(f){ (bySlug[f.slug]=bySlug[f.slug]||[]).push(f); });
+  // declutter the involved anchors for the cluster radii
+  var _r={}; Object.keys(bySlug).forEach(function(s){ _r[s]=Math.max(56, bySlug[s].length*10+26); });
+  ENTS.forEach(function(s){ if(!_r[s]) _r[s]=40; });
+  declutterAnchors(_r);
   Object.keys(bySlug).sort().forEach(function(slug){ var anchor=entAnchor(slug), col=COLORS[slug]||"#888";
-    var fns=bySlug[slug], R=Math.max(30, fns.length*9);
-    layerRing(fns.map(function(f){ return "fn:"+f.id; }), R, anchor.x, anchor.y);
-    nLayerCluster(nLayer, slug, anchor, col, R+26);
+    var fns=bySlug[slug];
+    var ids=fns.map(function(f){ return "fn:"+f.id; });
+    var ipos=insidePos(ids, anchor.x, anchor.y);
+    ids.forEach(function(id){ if(!pos[id]) pos[id]=ipos[id]; });
+    var R=innerExtent(ipos, anchor.x, anchor.y);
+    nLayerCluster(nLayer, slug, anchor, col, Math.max(R+26, 56));
     fns.forEach(function(f){ var q=pos["fn:"+f.id];
       var g=E("g",{class:"fnode","data-layer":f.layer, transform:"translate("+q.x+","+q.y+")"});
       fGlyph(g, 9, FNCOL[f.layer]||"var(--muted)", f.handler, f.god);
@@ -346,10 +452,13 @@ function drawFunctions(){
           sw("thick ring = endpoint handler","line","var(--c-fn-api)"),
           sw("dashed = confidence:inferred (every cross-file call — a floor)","dash","var(--accent)")]);
 }
-function layerRing(ids,R,cx,cy){ ringPos(ids,R,cx,cy); }
 function nLayerCluster(layer, slug, p, col, r){
-  layer.appendChild(E("circle",{class:"container", cx:p.x, cy:p.y, r:r, fill:col, stroke:col}));
+  var c=E("circle",{class:"container", cx:p.x, cy:p.y, r:r, fill:col, stroke:col, style:"cursor:grab"});
+  c.__click=function(){ var en=D.entities.filter(function(e){return e.slug===slug;})[0]; if(en) showEntity(en); };
+  wireEntityDrag(c, slug);
+  layer.appendChild(c);
   var lb=E("text",{class:"lbl", x:p.x, y:p.y-r-8}); lb.textContent=slug; lb.setAttribute("fill",col); layer.appendChild(lb); }
+function renderKeepView(){ var px=panX, py=panY, z=zoom; render(); panX=px; panY=py; zoom=z; apply(); }
 
 /* ═══ LEVEL 4 · LAYERS — lanes api / services / web; lane-crossing calls visible ═══ */
 function drawLayers(){
@@ -447,6 +556,12 @@ window.addEventListener("resize", render);
     entLayout=b.getAttribute("data-lay");
     document.querySelectorAll("#laySeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     computeEntityPositions(); render(); });
+  document.getElementById("inSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    insideLayout=b.getAttribute("data-in");
+    document.querySelectorAll("#inSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    Object.keys(pos).forEach(function(k){ if(k.indexOf("fn:")===0) delete pos[k]; });
+    render(); });
 })();
 
 /* ── test hook ── */
@@ -480,6 +595,20 @@ window.__lvltest = {
   panelText:function(){ return panel.textContent; },
   layout:function(){ return entLayout; },
   setLayout:function(v){ entLayout=v; computeEntityPositions(); render(); },
+  inside:function(){ return insideLayout; },
+  setInside:function(v){ insideLayout=v; Object.keys(pos).forEach(function(k){ if(k.indexOf("fn:")===0) delete pos[k]; }); render(); },
+  expandEps:function(slug){ expandedEps[slug]=!expandedEps[slug]; renderKeepView(); },
+  touchWires:function(){ return vp.querySelectorAll(".e-touch").length; },
+  schemaIcons:function(){ return vp.querySelectorAll(".piece[data-kind='schema'] path").length; },
+  fnIcons:function(){ return vp.querySelectorAll(".fnode path").length; },
+  containerOverlap:function(){ var cs=[]; vp.querySelectorAll("circle.container").forEach(function(c){
+      cs.push({x:+c.getAttribute("cx"), y:+c.getAttribute("cy"), r:+c.getAttribute("r")}); });
+    var bad=0; for(var i=0;i<cs.length;i++)for(var j=i+1;j<cs.length;j++){
+      if(Math.hypot(cs[i].x-cs[j].x, cs[i].y-cs[j].y) < cs[i].r+cs[j].r) bad++; } return bad; },
+  dragEntity:function(slug,dx,dy){ var o=pos["ent:"+slug];
+    pos["ent:"+slug]={x:o.x+dx, y:o.y+dy};
+    Object.keys(pos).forEach(function(k){ if(k.indexOf("fn:")===0) delete pos[k]; });
+    suppressDeclutter=true; try{ renderKeepView(); } finally{ suppressDeclutter=false; } },
   gradients:function(){ return vp.querySelectorAll("defs linearGradient").length; },
   hitPaths:function(){ return vp.querySelectorAll("path[stroke='transparent']").length; },
   clickFirstEdge:function(){ var h=vp.querySelector("path[stroke='transparent']"); if(h) h.dispatchEvent(new MouseEvent("click",{bubbles:true})); },
