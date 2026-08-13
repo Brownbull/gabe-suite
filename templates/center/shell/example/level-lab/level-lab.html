@@ -45,6 +45,8 @@ aside .k{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-s
   display:flex; align-items:center; gap:6px; }
 aside .k svg{ flex:0 0 auto; }
 aside .note.nt{ margin-top:0; }
+aside .cgo{ cursor:pointer; } aside .cgo:hover{ text-decoration:underline; }
+aside .jgo:hover b{ text-decoration:underline; }
 .flowdot{ pointer-events:none; }
 aside .row{ display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-top:1px solid var(--line); }
 aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10px; }
@@ -608,9 +610,17 @@ function showEdge(ed){
     return "<div class='row'><span>"+esc(k)+"</span><b>×"+ed.kinds[k]+"</b></div>"; }).join("");
   panel.innerHTML="<h3><span style='color:"+(COLORS[ed.s]||"inherit")+"'>"+esc(ed.s)+"</span> → <span style='color:"+(COLORS[ed.t]||"inherit")+"'>"+esc(ed.t)+"</span></h3>"
    +_sect(_psvg("<path d='M3 6h18' stroke='var(--muted)' stroke-width='1.8'/><path d='M3 12h18' stroke='var(--muted)' stroke-width='1.8' stroke-dasharray='4 3'/><path d='M3 18h18' stroke='var(--muted)' stroke-width='1.8' stroke-dasharray='1.5 3'/>"),"relationship kinds")+rows
+   +"<div class='row jgo' data-slug='"+esc(ed.s)+"' style='cursor:pointer'><span>from</span><b>→ "+esc(ed.s)+"</b></div>"
+   +"<div class='row jgo' data-slug='"+esc(ed.t)+"' style='cursor:pointer'><span>to</span><b>→ "+esc(ed.t)+"</b></div>"
    +"<div class='note'>"+(ed.kinds.fk?"<b>fk</b> = schema dependency (foreign keys). ":"")
    +(ed.kinds.calls?"<b>calls</b> = function calls crossing the boundary — every cross-file call is graft-inferred, so this count is a floor. ":"")
-   +(ed.kinds.imports?"<b>imports</b> = module imports.":"")+"</div>";
+   +(ed.kinds.imports?"<b>imports</b> = module imports.":"")
+   +" Click a → row to travel to that entity.</div>";
+  panel.querySelectorAll(".jgo").forEach(function(row){
+    row.addEventListener("click",function(){ var slug=row.getAttribute("data-slug");
+      var w=entAnchor(slug); if(!w) return; centerCamera(w);
+      var en=D.entities.filter(function(x){ return x.slug===slug; })[0];
+      if(en) showEntity(en); }); });
 }
 
 /* ═══ LEVEL 2 · PIECES — cylinders + brace-icon schemas inside; ENDPOINTS ON THE
@@ -1139,9 +1149,7 @@ function drawTrace(){
     var ti=E("title"); ti.textContent=e.fs+"."+e.f+" → "+e.ts+"."+e.t+" (via "+e.via+")";
     pth.appendChild(ti); interLayer.appendChild(pth);
     flowDots(interLayer, pth, "url(#"+grad+")");
-    var xi2=regEdge(pth, "xfk", "cls:"+e.fs+"|"+e.f, "cls:"+e.ts+"|"+e.t, "via "+e.via);
-    pth.style.pointerEvents="stroke"; pth.style.cursor="pointer";
-    pth.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(xi2); }); });
+    regEdge(pth, "xfk", "cls:"+e.fs+"|"+e.f, "cls:"+e.ts+"|"+e.t, "via "+e.via); });
   // USE edges — a function references a model/schema (archmap internal_refs).
   // Rides the existing node when the fn is drawn (handler ƒ or border endpoint);
   // cross-entity wires are Connections-gated like the FKs, own-entity stay subtle.
@@ -1159,9 +1167,7 @@ function drawTrace(){
     var tiu=E("title"); tiu.textContent=e.fn+"() uses "+e.ts+"."+e.cls; pu.appendChild(tiu);
     (cross?interLayer:wireLayer).appendChild(pu);
     flowDots(cross?interLayer:wireLayer, pu, dotFill);
-    var ui2=regEdge(pu, "use", from.key||("fn:"+e.fs+"|"+e.fn), "cls:"+e.ts+"|"+e.cls, "references the class (archmap)");
-    pu.style.pointerEvents="stroke"; pu.style.cursor="pointer";
-    pu.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(ui2); }); });
+    regEdge(pu, "use", from.key||("fn:"+e.fs+"|"+e.fn), "cls:"+e.ts+"|"+e.cls, "references the class (archmap)"); });
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("bubble = a cluster ("+(traceCluster==="kind"?"functions · models · schemas":traceCluster)+")","f-api"),
@@ -1390,8 +1396,20 @@ function regNode(g, key, label, type){ g.setAttribute("data-key", key);
 function regEdge(el, kind, fromKey, toKey, how){
   var idx=SELREG.edges.length;
   SELREG.edges.push({el:el, kind:kind, from:fromKey, to:toKey, how:how||""});
+  // EVERY registered connector is interactive — click selects, dbl-click hops
+  // (round 31 gap: route/touch/resp wires were registered but had no listener)
+  el.style.pointerEvents="stroke"; el.style.cursor="pointer";
+  el.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(idx); });
   el.addEventListener("dblclick",function(ev){ ev.stopPropagation(); ev.preventDefault(); edgeHop(idx); });
   return idx; }
+/* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
+   click handler runs, so the panel becomes that element's card */
+function jumpToNode(key){
+  var w=nodeWorldXY(key); if(!w) return;
+  centerCamera(w);
+  var n=SELREG.nodes[key];
+  if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
+}
 /* ── EDGE HOP (operator round 31): dbl-click a connector → the camera JUMPS to
    one of its endpoint nodes — the FAR one first (that's the end you can't see);
    dbl-click again → the other end. Pan only; the zoom level never moves. ── */
@@ -1460,12 +1478,16 @@ function connectionsHTML(key, mine){
   mine.forEach(function(i){ var e=SELREG.edges[i];
     var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
     var dir=e.from===key?"→":"←";
-    h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span><b>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
+    h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span>"
+      +"<b class='cgo' data-k='"+esc(nk)+"' title='travel to it'>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
   return h; }
 function wireConnRows(){
   panel.querySelectorAll(".conrow").forEach(function(row){
     row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
-    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); }); }); }
+    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); }); });
+  // the OTHER element's name is the transporter — click it to land on that element
+  panel.querySelectorAll(".cgo").forEach(function(b){
+    b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
 function selectEdge(i){
   var e=SELREG.edges[i]; if(!e) return;
   clearSelection();
@@ -1474,15 +1496,19 @@ function selectEdge(i){
   [f,to].forEach(function(n){ if(n) n.el.appendChild(E("circle",{class:"nbrring", r:14})); });
   panel.innerHTML="<h3>connector</h3>"
    +"<div class='row'><span>kind</span><b>"+esc(edgeWord(e.kind))+"</b></div>"
-   +"<div class='row'><span>from</span><b>"+esc(f?f.label:e.from)+"</b></div>"
-   +"<div class='row'><span>to</span><b>"+esc(to?to.label:e.to)+"</b></div>"
+   +"<div class='row jgo' data-k='"+esc(e.from)+"' style='cursor:pointer'><span>from</span><b>→ "+esc(f?f.label:e.from)+"</b></div>"
+   +"<div class='row jgo' data-k='"+esc(e.to)+"' style='cursor:pointer'><span>to</span><b>→ "+esc(to?to.label:e.to)+"</b></div>"
    +(e.how?"<div class='row'><span>how</span><b>"+esc(e.how)+"</b></div>":"")
-   +"<div class='note'>"+{route:"the endpoint dispatches to its handler function",
+   +"<div class='note'>"+({route:"the endpoint dispatches to its handler function",
       touch:"the endpoint's handler reads or writes this piece",
       resp:"the handler returns this schema to the caller",
       fk:"a foreign-key column points at the other table",
       xfk:"a foreign key crossing the entity boundary",
-      call:"a function call (graft; cross-file calls are inferred — a floor)"}[e.kind]+"</div>";
+      use:"the function references this model/schema in its body (archmap)",
+      call:"a function call (graft; cross-file calls are inferred — a floor)"}[e.kind]||"")
+   +" Click a → row to travel to that component.</div>";
+  panel.querySelectorAll(".jgo").forEach(function(row){
+    row.addEventListener("click",function(){ jumpToNode(row.getAttribute("data-k")); }); });
 }
 /* the panel add-on used by every node click */
 function attachSelection(key){
