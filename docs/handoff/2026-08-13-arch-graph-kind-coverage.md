@@ -1,84 +1,88 @@
-# Handoff — arch-graph arc: kind coverage + toolbar redesign
+# Handoff — arch-graph arc: kind coverage LANDED · production slice next
 
-> Generated 2026-08-13 · branch `main` · HEAD `bf0fa1d` (pushed origin + korigin, tree clean)
+> Generated 2026-08-13 · branch `main` · HEAD `ff0a3cf` (pushed origin + korigin, tree clean)
 > The suite repo carries no `.kdbp/` (ruling R8) — durable state lives in the session
 > memory (`arch-graph-arc.md`) and this file. Overwrite/append on the next handoff.
 
 ## Resume prompt
 
 Continue the ARCH-GRAPH ARC in /home/khujta/projects/gabe_lens on branch `main`
-(HEAD `bf0fa1d` — the ARCHIVE port + shared grammar; 0 ahead, pushed to origin AND korigin).
+(HEAD `ff0a3cf` — KIND COVERAGE + the toolbar redesign; 0 ahead, pushed origin AND korigin).
 
 READ FIRST:
 - ~/.claude/projects/-home-khujta-projects-gabe-lens/memory/arch-graph-arc.md (the full arc record)
-- templates/center/shell/example/level-lab/level-lab.html (the ITERATED reference — endpoints ON the border, schemas as brace icons, handler ƒ glyphs, use-fns)
-- templates/center/shell/codebase-graph.html + codebase-archive.html (the two ported stations)
-- templates/center/shell/assets/graph-grammar.js (the shared grammar both stations consume)
+- templates/center/generators/_a3_graph.py (the emitter — parse_endpoints, model_ids, _cross_edges)
+- templates/center/shell/example/level-lab/level-lab.html (the iterated reference — round 27 diagnosis of the 4 recipe-filter-mode endpoints names the 3 production items)
+- templates/center/shell/codebase-graph.html + codebase-archive.html (the two stations, now full-surface)
 
-STATE
-- Landed this session (all pushed both remotes, suite-doctor CLEAN): `8c78420` port slice 1 (lab renderer) · `c16ef60` doctor lint scope · `68ee10d` slice-1 review fixes (15 confirmed) · `c8c1758` slice 2 (det dossiers, emitter `element_detail`) · `2fb7d7a` slice-2 review fixes (18 confirmed: uqs normalize, file-row split) · `2f3950e` slice 3 (journeys · ← trail · corner boxes) · `bf0fa1d` archive port + `assets/graph-grammar.js` extraction + the line ruling (change graph = DIRECT default · archive = BOWED, both pinned).
-- Verified: tests/codebase-graph 198/0 · tests/arch-graph 101/0 · tests/sim 31/0 · probes port1–6 = 336/336 (real browser). Artifacts current: change graph `88252c8f` (🗺️) · archive `55f39ce9` (🗄️).
-- In-flight: nothing uncommitted.
+## What just landed (`ff0a3cf`)
 
-TASK (do this next) — operator's words, verbatim:
-1. "running a Playwright test comparing the diagrams that we created against the ones
-   that we iterated on. Compare them, because right now in the diagrams I only see
-   models. There are no functions, no API endpoints, no nothing else, only models,
-   not schemas, so we are missing a lot. This is in both the change graph and the
-   codebase archive."
-   KNOWN ROOT CAUSES (verified this session): the archive's `ecoPieces()` filters
-   `n.kind==="model"` (codebase-archive.html:414) — endpoints/schemas exist in
-   DATA.l2 but are never drawn; the change graph's explode draws `SIM.pieces`,
-   which `_a3_sim.py` emits as MODEL pieces only (recorded MVP thinness) — only
-   its no-SIM L2 drill shows all kinds. The LAB grammar (the iterated reference)
-   puts the entity's FULL surface in view: endpoints as method-coloured markers
-   ON the container border, schemas as brace icons in the core, handler ƒ +
-   use-fns (level-lab drawPieces/drawTrace). APPROACH: write the comparison
-   probe FIRST (a port7-probe that loads the lab + both stations and counts
-   drawn kinds per entity — it must be RED against today's stations), then close
-   the gap render-side (the data is already in DATA.l2 — endpoints/schemas/
-   touches edges; `_a3_sim` changes only if the change graph needs endpoint/
-   schema pieces IN the sim, otherwise draw the full surface from L2 and overlay
-   the sim's model pieces on it, the lab's own pattern). Keep every existing
-   battery-pinned seam; probes port1–6 must stay green.
-2. "check the navigation bars. They are getting too crowded and are unbrowsable,
-   so I want you to come up with a better way to represent the navigation bar"
-   — the CHANGE GRAPH TOOLBAR (see the operator's screenshot: stage seg +
-   journeys select + step bar + depth slider wrapping into a second row with
-   Close-all + gear). Candidates from the lab's own rulings (round 36): icon-only
-   toggles with tooltips, gear far-right, a deliberate two-row header (levels/
-   lenses split) instead of accidental flex-wrap, journeys behind a compact
-   icon+popover. PROPOSE 2–3 options to the operator before rebuilding — this is
-   a design call, not a mechanical port.
+Both stations draw the **full L2 surface** (API endpoints on the container BORDER,
+schemas + models in the CORE — not models-only), matching the level-lab reference,
+from data already in `DATA.l2` (zero emitter change). Plus the change-graph toolbar
+redesign (Option B): journeys fold behind a ▷ popover + count badge, Open-all is
+icon-only, the two popovers are mutually exclusive, the toolbar no longer wraps.
 
-RUNBOOK
-- Probes: bash templates/center/shell/example/codebase-graph-station/probes/run.sh [portN]
-  (engine: createRequire('/home/khujta/.npm/_npx/9833c18b2d85bc59/node_modules/') +
-  executablePath /home/khujta/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell)
-- Lab probes: bash templates/center/shell/example/level-lab/probes/run.sh (~8 min, 30 batteries)
-- Batteries: bash tests/codebase-graph/run.sh · tests/arch-graph/run.sh · tests/sim/run.sh
-- Example regen after ANY shell edit: fill tokens from the OLD example copy + rehome
-  assets/ → ../../assets/ (the python pattern used across this arc — see the regen
-  snippets in this session's commits; also README "Regenerate" section for the full
-  build_center_a3 dry-run path). Regen BOTH pages when the shared asset changes.
-- Gotchas: probe REAL mouse clicks where z-order matters; every re-render replays the
-  0.9s fly-in — settle ~1.2s before real-mouse clicks; a "background" click must use
-  the STAGE rect (viewport coords can hit the nav sidebar and navigate away); a
-  selection-probe pick must sit on a DRAWN wire; synthetic hooks must mirror the WHOLE
-  real handler; `assert old in t` before every python .replace; commit direct to main,
-  push BOTH remotes; suite-doctor only via run_in_background.
+- CHANGE GRAPH: sim BEAT pieces stay `.xpiece` (port1's count pin holds); the surface
+  draws as a separate `.xsurf[data-kind]` layer the sim overlays. `surfaceLayout()` +
+  `declutterExpanded()` new; surface pieces selectable via the `reopenPanel` `surf` arm.
+- ARCHIVE: `ecoPieces` widened to model|schema|endpoint; `insidePos` splits border/core;
+  kind glyph dispatch + `data-kind`; touch wires (Connections-gated); beat model-only.
+- Comparison probe **port7** (RED→GREEN, counts DERIVED from `GABE_C4.l2`, per-entity
+  exact + aggregate floor + behavioral touch-wire/endpoint-click).
+- Verified: port1-7 = 54/21/16/30/38/41/21 · batteries 219/101/31 · doctor CLEAN.
+- 10-agent adversarial review: drawExpansions rewrite CLEAN; 5 confirmed findings
+  fixed (popover mutual-exclusion + 4 probe/battery quality); 1 refuted.
+- Artifacts refreshed (same URLs): 🗺️ `88252c8f` (change graph) · 🗄️ `55f39ce9` (archive).
 
-AFTER THAT
-1. Artifact refresh (both 🗺️ 88252c8f + 🗄️ 55f39ce9) once kinds render.
-2. The parked production slice: endpoints dedup (c)+(b) URL-home · use-cases
-   derivation · derive_communities · path-constant fix.
-3. Twin propagation — OPERATOR-GATED (twins' vendored shells lack both stations +
-   graph-grammar.js; resolve_shell presence-drift note stands).
+## TASK (do this next) — the parked PRODUCTION slice (operator-sequenced)
+
+All four are GENERATOR-side (twin-neutral, ride every cc-update regen), from the
+round-27 / round-41 diagnosis (see arch-graph-arc.md):
+
+1. **Endpoints dedup + URL-home in `parse_endpoints`** (operator ruling 2026-08-13,
+   options (c)+(b)): a canonical `(method,path)` key with claim-merge (touch-union) +
+   URL-namespace override on multi-claimed files. Prevents the allergen double-claim
+   (99→67 unique endpoints in the lab fixture; allergen honestly 0 endpoints = an
+   ASPECT). (a) twin-config curation stays optional per-twin.
+2. **Use-cases derivation into the archmap build** (~½ day, zero new scan): URL first
+   non-param segment(s) → 1–10 use-cases/entity. Rides every regen.
+3. **`_a3_graft.derive_communities`** (~1 day incl. determinism battery): label
+   propagation over graft intra-entity calls+touches+FK+resp, ≤14/entity.
+4. **Path-constant resolution**: `_BASE`-style variable route paths collapse to "/"
+   in `parse_endpoints` (the 4 recipe-filter-mode endpoints). Literal-only today.
+
+Cascade note: any endpoint change re-homes every entity's endpoint set at next regen —
+re-pin the lab/station probes' derived counts.
+
+THEN: **twin propagation — OPERATOR-GATED** (gustify/gastify vendored shells lack BOTH
+stations + `graph-grammar.js`; `resolve_shell` only byte-diffs files in both shells,
+so a twin missing the station regens silently — greenlight required).
+
+Deferred / noted: standalone FN nodes (the operator's "no functions") = the graft L3
+arm; the lab's L2 shows no fn glyphs either (endpoints already name their handler fn
+in the dossier). docs/src/command-center.md station count (browser-gated docsite rebuild).
+
+## Runbook
+
+- Probes: `bash templates/center/shell/example/codebase-graph-station/probes/run.sh [portN]`
+  (engine: `createRequire('/home/khujta/.npm/_npx/9833c18b2d85bc59/node_modules/')` +
+  executablePath `/home/khujta/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell`)
+- Batteries: `bash tests/{codebase-graph,arch-graph,sim}/run.sh`
+- Example regen after a SHELL edit (no browser build): node-regex swap the shell's
+  `<style>` + inline `<script>` into the example clone; for MARKUP changes ALSO swap
+  the `<div class="cbg-root">…</main>` block (tokens/assets live outside all three →
+  `leaked tokens: 0`). Self-contained artifact inliner: `/tmp/…/scratchpad/inline-artifact.mjs`.
+- Gotchas: settle ~1.3s after re-renders (fly-in) before real-mouse clicks; a
+  background click uses the STAGE rect (viewport coords hit the nav → navigate away);
+  a selection pick must sit on a DRAWN wire; `node --check` the extracted inline script
+  before probing (a load-time SyntaxError just times out the probe); commit direct to
+  main, push BOTH remotes; suite-doctor via `run_in_background` (foreground SIGTERM
+  kills a backgrounded doctor); doctor short-circuits on install DRIFT → `./install.sh`
+  before a clean doctor run.
 
 ## State snapshot
 
-- Landed: 7 commits `8c78420`..`bf0fa1d` (see STATE above), all pushed both remotes.
-- In-flight: none (tree clean, 0 ahead).
-- Verified: batteries 198/0 · 101/0 · 31/0; probes 336/336; doctor CLEAN.
-- KDBP sync this run: none — no `.kdbp/` in this repo (ruling R8); memory
-  `arch-graph-arc.md` updated instead.
+- Landed this session: `ff0a3cf` (kind coverage + toolbar), pushed both remotes.
+- In-flight: none (tree clean, 0 ahead) after the docs(handoff) commit.
+- Verified: probes 218 asserts · batteries 219/101/31 · doctor CLEAN.
