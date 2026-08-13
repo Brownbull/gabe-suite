@@ -54,6 +54,11 @@ aside .irow .im{ color:var(--muted); }
 .selring{ fill:none; stroke:var(--accent); stroke-width:2.4; stroke-dasharray:6 5; animation:dashmove 2.2s linear infinite; }
 .nbrring{ fill:none; stroke:var(--accent); stroke-width:1.3; opacity:.7; }
 .e-hl{ opacity:1 !important; stroke-width:3 !important; }
+.e-hop1{ opacity:1 !important;   stroke-width:3 !important; }
+.e-hop2{ opacity:.85 !important; stroke-width:2.3 !important; }
+.e-hop3{ opacity:.7 !important;  stroke-width:1.8 !important; }
+.e-hop4{ opacity:.55 !important; stroke-width:1.4 !important; }
+.e-hop5{ opacity:.42 !important; stroke-width:1.1 !important; }
 .e-faded{ opacity:.07 !important; }
 aside .conrow{ display:flex; align-items:center; gap:7px; padding:5px 0; border-top:1px solid var(--line);
   font-size:12.5px; cursor:pointer; }
@@ -119,21 +124,29 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       <div id="clRow">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Cluster core by <span style="opacity:.6">(5·Trace)</span></div>
       <div class="seg" id="clSeg" style="margin-left:0;flex-wrap:wrap">
-        <button data-cl="kind" class="on">Kind</button>
+        <button data-cl="kind">Kind</button>
         <button data-cl="tests">Tests</button>
         <button data-cl="guards">Guards</button>
-        <button data-cl="usecase">Use case</button>
+        <button data-cl="usecase" class="on">Use case</button>
         <button data-cl="community">Community</button>
       </div>
       </div>
       <div id="inRow">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(2 · 3 · 5-bubbles)</span></div>
       <div class="seg" id="inSeg" style="margin-left:0;flex-wrap:wrap">
-        <button data-in="tiers" class="on">Tiers</button>
+        <button data-in="tiers">Tiers</button>
         <button data-in="ring">Ring</button>
-        <button data-in="force">Force</button>
+        <button data-in="force" class="on">Force</button>
         <button data-in="columns">Columns</button>
       </div>
+      </div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Highlight depth (selection)</div>
+      <div class="seg" id="depthSeg" style="margin-left:0">
+        <button data-d="1" class="on">1</button>
+        <button data-d="2">2</button>
+        <button data-d="3">3</button>
+        <button data-d="4">4</button>
+        <button data-d="5">5</button>
       </div>
     </div>
   </div>
@@ -291,13 +304,13 @@ function unlinkedNote(kind, key, name){
   return "<div class='k'>why is it unlinked?</div><div class='note'>No documented foreign key, endpoint touch, or response references <b>"+name
     +"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.</div>";
 }
-var entLayout = "ring", insideLayout = "tiers";   // Tiers default: models core · schemas outer ring
+var entLayout = "ring", insideLayout = "force";   // defaults per operator screenshot: Ring · Force
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
 var showTests = true;      // per-piece proof badges (count · corpus · state)
 var showGuards = false;    // validator shields (guard_insight) — lens, off by default
 var showHubs = false;      // fan-in rings + god halos (model/function_insight)
 var showPress = false;     // change-pressure heat (the phase archive)
-var traceCluster = "kind"; // trace core clustering: kind | tests | guards | flow
+var traceCluster = "usecase"; // default per operator screenshot (kind/tests/guards/usecase/community)
 /* RADIAL LABEL: on a ring, a fixed below-the-icon label runs into the ring
    neighbour (measured: 3-5 text collisions + 4 label-over-icon hits). Fanning
    each label outward from the container centre puts it in free space; the
@@ -1258,6 +1271,7 @@ document.getElementById("conns").addEventListener("click",function(){
    as clickable rows in the panel, and lets a connector itself be inspected. ── */
 var SELREG = { nodes:{}, edges:[] };
 var selKey = null;
+var selDepth = 1;   // hop depth of the selection highlight (1–5, gear-tuned)
 function regNode(g, key, label, type){ g.setAttribute("data-key", key);
   SELREG.nodes[key]={el:g, label:label, type:type}; }
 function regEdge(el, kind, fromKey, toKey, how){
@@ -1266,19 +1280,31 @@ function regEdge(el, kind, fromKey, toKey, how){
   return idx; }
 function clearSelection(){ selKey=null;
   vp.querySelectorAll(".selring,.nbrring").forEach(function(x){ x.remove(); });
-  vp.querySelectorAll(".e-hl").forEach(function(x){ x.classList.remove("e-hl"); });
-  vp.querySelectorAll(".e-faded").forEach(function(x){ x.classList.remove("e-faded"); }); }
+  vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
+    x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
 function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", route:"routes"}[kind]||kind; }
 function selectNode(key){
   clearSelection(); selKey=key;
   var n=SELREG.nodes[key]; if(!n) return [];
   n.el.appendChild(E("circle",{class:"selring", r:16}));
-  var mine=[], other=[];
-  SELREG.edges.forEach(function(e,i){ (e.from===key||e.to===key)?mine.push(i):other.push(i); });
-  other.forEach(function(i){ SELREG.edges[i].el.classList.add("e-faded"); });
-  mine.forEach(function(i){ var e=SELREG.edges[i]; e.el.classList.add("e-hl");
-    var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
-    if(nb && !nb.el.querySelector(".nbrring")) nb.el.appendChild(E("circle",{class:"nbrring", r:14})); });
+  // BFS to selDepth: hop 1 boldest, each further hop thinner (e-hop1..e-hop5)
+  var seenN={}, seenE={}, frontier=[key], mine=[];
+  seenN[key]=true;
+  for(var d=1; d<=selDepth && frontier.length; d++){
+    var next=[];
+    SELREG.edges.forEach(function(e,i){ if(seenE[i]) return;
+      var hitFrom=frontier.indexOf(e.from)>=0, hitTo=frontier.indexOf(e.to)>=0;
+      if(!hitFrom && !hitTo) return;
+      seenE[i]=true; e.el.classList.add("e-hop"+d);
+      if(d===1) mine.push(i);
+      var nk=hitFrom?e.to:e.from;
+      if(!seenN[nk]){ seenN[nk]=true; next.push(nk);
+        var nb=SELREG.nodes[nk];
+        if(nb && !nb.el.querySelector(".nbrring")){
+          var ring=E("circle",{class:"nbrring", r:14}); ring.style.opacity=String(Math.max(0.25, 0.8-0.14*(d-1)));
+          nb.el.appendChild(ring); } } });
+    frontier=next; }
+  SELREG.edges.forEach(function(e,i){ if(!seenE[i]) e.el.classList.add("e-faded"); });
   return mine; }
 function connectionsHTML(key, mine){
   if(!mine.length) return "<div class='k'>connections</div><div class='note'>no drawn connector touches it on this level</div>";
@@ -1374,6 +1400,13 @@ function indicatorHTML(o){
     traceCluster=b.getAttribute("data-cl");
     document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });   // a cluster change reshapes the INSIDE — the camera stays put
+  document.getElementById("depthSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    selDepth=+b.getAttribute("data-d");
+    document.querySelectorAll("#depthSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    if(selKey){ var k=selKey, mine=selectNode(k);   // re-run the highlight at the new depth
+      var rows=panel.querySelector(".conrow"); }
+  });
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     insideLayout=b.getAttribute("data-in");
@@ -1418,6 +1451,9 @@ window.__lvltest = {
   tests:function(){ return showTests; },
   cluster:function(){ return traceCluster; },
   setCluster:function(v){ traceCluster=v; renderKeepView(); },
+  depth:function(){ return selDepth; },
+  setDepth:function(v){ selDepth=v; if(selKey) selectNode(selKey); },
+  hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll('.e-hop'+d).length; return o; },
   coreGroups:function(){ var o={}; vp.querySelectorAll('.piece[data-grp]').forEach(function(g){ var k=g.getAttribute('data-grp'); if(k) o[k]=(o[k]||0)+1; }); return o; },
   lenses:function(){ return {guards:showGuards, hubs:showHubs, press:showPress}; },
   toggleLens:function(w){ document.getElementById(w+"btn").click(); },
