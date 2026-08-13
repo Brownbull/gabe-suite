@@ -116,7 +116,7 @@ aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10p
       <g id="vp"></g>
     </svg>
     <div class="fixture">EXAMPLE FIXTURE · gustify (read-only) · fn call edges dashed = graft confidence:inferred (a floor)</div>
-    <div class="hint">drag to pan · scroll to zoom · click anything</div>
+    <div class="hint">scroll = pan · shift = sideways · ctrl / pinch = zoom · drag · click anything</div>
   </div>
   <aside id="panel"></aside>
 </div>
@@ -196,8 +196,22 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
     pan={x:e.clientX,y:e.clientY,px:panX,py:panY}; });
   window.addEventListener("pointermove",function(e){ if(!pan) return; panX=pan.px+(e.clientX-pan.x); panY=pan.py+(e.clientY-pan.y); apply(); });
   window.addEventListener("pointerup",function(){ pan=null; });
+  // WHEEL GRAMMAR (operator 2026-08-12): plain scroll PANS vertically ·
+  // Shift PANS sideways · Ctrl/Cmd ZOOMS at the cursor (a trackpad pinch
+  // arrives as ctrl+wheel natively, so pinch-to-zoom just works).
   stage.addEventListener("wheel",function(e){ e.preventDefault();
-    zoom=Math.max(0.3,Math.min(4, zoom*Math.exp(-e.deltaY*0.0014))); apply(); },{passive:false});
+    if(e.ctrlKey || e.metaKey){
+      var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      var s1=baseScale*zoom, wx=(mx-(fitT[0]+panX))/s1, wy=(my-(fitT[1]+panY))/s1;
+      zoom=Math.max(0.3,Math.min(4, zoom*Math.exp(-e.deltaY*0.0022)));
+      var s2=baseScale*zoom;
+      panX=mx-fitT[0]-wx*s2; panY=my-fitT[1]-wy*s2;      // the point under the cursor stays put
+    } else if(e.shiftKey){
+      panX-=(e.deltaY+e.deltaX);
+    } else {
+      panX-=e.deltaX; panY-=e.deltaY;
+    }
+    apply(); },{passive:false});
 })();
 
 /* ── layouts (deterministic; positions persist per id across levels) ── */
@@ -995,6 +1009,7 @@ window.__lvltest = {
   tests:function(){ return showTests; },
   lenses:function(){ return {guards:showGuards, hubs:showHubs, press:showPress}; },
   toggleLens:function(w){ document.getElementById(w+"btn").click(); },
+  view:function(){ return {panX:panX, panY:panY, zoom:zoom}; },
   marks:function(){ return {shields:vp.querySelectorAll(".gmark").length, hubs:vp.querySelectorAll(".hmark.hub").length, gods:vp.querySelectorAll(".hmark.god").length, heat:vp.querySelectorAll(".pmark").length}; },
   toggleTests:function(){ document.getElementById("testsbtn").click(); },
   tBadges:function(){ return {has:vp.querySelectorAll(".tbadge.has").length, none:vp.querySelectorAll(".tbadge.none").length, web:vp.querySelectorAll(".tbadge.web").length}; },
