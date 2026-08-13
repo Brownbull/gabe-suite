@@ -86,9 +86,11 @@ aside .conrow{ display:flex; align-items:center; gap:7px; padding:5px 0; border-
 aside .conrow:hover{ color:var(--accent); }
 aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
   color:var(--muted); flex:none; min-width:52px; }   /* .sub2 kills pointer-events — the expander must stay clickable */
-.legend{ display:flex; gap:6px 14px; flex-wrap:wrap; align-items:center;
-  font-size:11px; color:var(--muted); }
-.legend .it{ display:inline-flex; align-items:center; gap:6px; }
+.legend{ display:block; font-size:11px; color:var(--muted);
+  max-height:44vh; overflow-y:auto; }
+.legend .lg-h{ font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--muted); opacity:.75; margin:6px 0 2px; }
+.legend .it{ display:flex; align-items:center; gap:6px; }
 .legend svg{ width:16px; height:14px; }
 /* node vocab */
 .entnode circle.body{ transition:opacity .25s; }
@@ -1543,11 +1545,20 @@ function glyphIt(label, kind){
          "f-web":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-web)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-web)'>F</text>"}[kind];
   return "<span class='it'><svg viewBox='0 0 16 15'>"+g+"</svg>"+esc(label)+"</span>"; }
 var LEGEND_TAIL=[
-  "<span class='it'>moving dot = the DIRECTION of a wire (constant speed; a bidirectional pair rides two lanes)</span>",
-  "<span class='it'>count pill = test cases (green pass · red fail) · hollow dashed circle = unproven</span>",
-  "<span class='it'>shield = validator guard · thick ring = fan-in hub · red dashed halo = god piece · orange heat = change pressure (toggles)</span>",
-  "<span class='it'>spinning ring = selected · connector boldness decays per hop (depth slider)</span>"];
-function legend(items){ document.getElementById("legend").innerHTML=items.concat(LEGEND_TAIL).join(""); }
+  "<div class='lg-h'>everywhere</div>",
+  "<span class='it'>moving dot = the direction of a wire (constant speed)</span>",
+  "<span class='it'>two parallel wires = a bidirectional pair (one lane each way)</span>",
+  "<span class='it'>count pill = test cases (green pass · red fail)</span>",
+  "<span class='it'>hollow dashed circle = unproven (no test names it)</span>",
+  "<span class='it'>shield = validator guard (toggle)</span>",
+  "<span class='it'>thick ring = fan-in hub · red dashed halo = god piece (toggle)</span>",
+  "<span class='it'>orange heat = change pressure from the archive (toggle)</span>",
+  "<span class='it'>spinning ring = the selected element</span>",
+  "<span class='it'>wire boldness decays per hop (the depth slider)</span>",
+  "<span class='it'>glowing links + dashed rings = the active journey</span>"];
+function legend(items){
+  document.getElementById("legend").innerHTML=
+    ["<div class='lg-h'>this level</div>"].concat(items).concat(LEGEND_TAIL).join(""); }
 
 function showDefault(){
   panel.innerHTML="<h3>"+esc({entities:"Entities",pieces:"Pieces",functions:"Functions",layers:"Layers",trace:"Trace"}[level])+"</h3>"
@@ -1566,11 +1577,16 @@ function showEntity(en){ var pc=D.pieces[en.slug]||{};
    +"<div class='row'><span>schemas</span><b>"+en.counts.schemas+"</b></div>"
    +"<div class='row'><span>lines</span><b>"+(en.counts.lines||0).toLocaleString()+"</b></div>"
    +"<div class='note'>Switch to <b>2 · Pieces</b> to open it — the endpoints move to the border.</div>"; }
+function entityRow(slug){
+  return "<div class='row'><span>entity</span><b style='display:flex;align-items:center;gap:6px'>"
+    +"<span class='entdot' style='width:9px;height:9px;border-radius:50%;display:inline-block;background:"+(COLORS[slug]||"#888")+"'></span>"
+    +esc(slug)+"</b></div>"; }
 function showPiece(slug, it){
   var _o={kind:it.kind, table:it.m.table, tests:it.m.tests||null, guards:it.m.guards||0,
       hub:it.m.hub||null, press:(D.pressure||{})[slug+"|"+it.m.cls]||0};
   panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(it.m.cls||"")+"</h3>"
-   +"<div class='note'>"+(it.kind==="model"?"model":"schema")+" · in "+esc(slug)+"</div>"
+   +"<div class='note'>"+(it.kind==="model"?"model":"schema")+"</div>"
+   +entityRow(slug)
    +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
    +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
    +(insideLayout==="tiers"?"<div class='row'><span>tier</span><b>"+(it.kind==="model"?"models — inner ring":"schemas — outer ring")+"</b></div>":"")
@@ -1579,7 +1595,8 @@ function showPiece(slug, it){
 function showEndpoint(slug, ep){
   var _o={kind:"ep", method:ep.m, mcol:METHOD[ep.m]||"var(--muted)", tests:ep.tests||null, guards:ep.guards||0};
   panel.innerHTML="<h3 style='font-size:13px;display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(ep.m+" "+ep.p)+"</h3>"
-   +"<div class='note'>an entry point on the border of "+esc(slug)+"</div>"
+   +"<div class='note'>an entry point on the entity's border</div>"
+   +entityRow(slug)
    +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
    +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
    +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
@@ -1589,7 +1606,7 @@ function showFn(f){
   var _o={kind:"fn", layer:f.layer, fncol:FNCOL[f.layer]||"var(--muted)",
       tests:f.tests||null, hub:f.hub||null, god:f.god, handler:f.handler, uses:f.uses||0};
   panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(f.name)+"()</h3>"
-   +"<div class='row'><span>entity</span><b>"+esc(f.slug)+"</b></div>"
+   +entityRow(f.slug)
    +"<div class='row'><span>layer</span><b>"+esc(f.layer)+"</b></div>"
    +"<div class='row'><span>language</span><b>"+(f.lang==="ts"?"TypeScript":"Python")+"</b></div>"
    +indicatorHTML(_o)
@@ -1730,7 +1747,7 @@ var JRN={list:[], cur:null, i:0};
 function jrnResolved(){ return JRN.cur ? JRN.cur.steps.filter(function(k){ return !!SELREG.nodes[k]; }) : []; }
 function jrnGo(di){
   if(!JRN.cur) return;
-  if(level!=="trace"){ level="trace"; render(); }   // journeys live on the trace
+  if(level!=="trace" && level!=="layers"){ level="trace"; render(); }   // journeys walk the trace OR the layers
   var steps=jrnResolved(); if(!steps.length) return;
   JRN.i=Math.max(0, Math.min(steps.length-1, JRN.i+di));
   var key=steps[JRN.i];

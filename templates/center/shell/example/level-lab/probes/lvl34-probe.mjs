@@ -66,11 +66,11 @@ await pg.evaluate(() => {
     .dispatchEvent(new MouseEvent('click',{bubbles:true})); });
 const card = await pg.evaluate(() => document.querySelector('#panel').textContent);
 ok(/UserDietaryProfile/.test(card) && /connections \(/.test(card), 'L4 node click opens the card with connections');
-// a journey still auto-switches to trace
+// round 40: a journey picked ON layers STAYS on layers (entities → trace, lvl35)
 await pg.evaluate(() => { const sel=document.getElementById('jrnSel');
   sel.value='0'; sel.dispatchEvent(new Event('change',{bubbles:true})); });
-ok(await pg.evaluate(() => document.querySelector('#levels button.on').getAttribute('data-lvl'))==='trace',
-  'journeys still walk on the trace');
+ok(await pg.evaluate(() => document.querySelector('#levels button.on').getAttribute('data-lvl'))==='layers',
+  'a journey picked on layers walks the layers');
 await pg.click('#jrnX');
 
 ok(errs.length===0, 'no console errors: '+errs.slice(0,3).join(' | '));
