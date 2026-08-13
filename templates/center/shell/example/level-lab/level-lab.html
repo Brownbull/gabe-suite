@@ -48,7 +48,18 @@ aside .irow{ display:flex; align-items:center; gap:9px; padding:5px 0; border-to
 aside .irow svg{ flex:none; }
 aside .irow b{ flex:none; }
 aside .irow .im{ color:var(--muted); }
-.epmore{ pointer-events:auto !important; }   /* .sub2 kills pointer-events — the expander must stay clickable */
+.epmore{ pointer-events:auto !important; }
+/* selection: the picked node wears a spinning accent ring; its 1-hop connectors
+   light up; everything else fades until the background is clicked. */
+.selring{ fill:none; stroke:var(--accent); stroke-width:2.4; stroke-dasharray:6 5; animation:dashmove 2.2s linear infinite; }
+.nbrring{ fill:none; stroke:var(--accent); stroke-width:1.3; opacity:.7; }
+.e-hl{ opacity:1 !important; stroke-width:3 !important; }
+.e-faded{ opacity:.07 !important; }
+aside .conrow{ display:flex; align-items:center; gap:7px; padding:5px 0; border-top:1px solid var(--line);
+  font-size:12.5px; cursor:pointer; }
+aside .conrow:hover{ color:var(--accent); }
+aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted); flex:none; min-width:52px; }   /* .sub2 kills pointer-events — the expander must stay clickable */
 .legend{ display:flex; gap:8px 18px; flex-wrap:wrap; align-items:center;
   padding:7px 18px; border-top:1px solid var(--line); background:var(--panel);
   font-size:11.5px; color:var(--muted); }
@@ -120,7 +131,6 @@ aside .irow .im{ color:var(--muted); }
       <div class="seg" id="inSeg" style="margin-left:0;flex-wrap:wrap">
         <button data-in="tiers" class="on">Tiers</button>
         <button data-in="ring">Ring</button>
-        <button data-in="grid">Grid</button>
         <button data-in="force">Force</button>
         <button data-in="columns">Columns</button>
       </div>
@@ -217,7 +227,10 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
   stage.addEventListener("pointerdown",function(e){ if(e.target.closest(".piece,.epmark,.fnode,.entnode")) return;
     pan={x:e.clientX,y:e.clientY,px:panX,py:panY}; });
   window.addEventListener("pointermove",function(e){ if(!pan) return; panX=pan.px+(e.clientX-pan.x); panY=pan.py+(e.clientY-pan.y); apply(); });
-  window.addEventListener("pointerup",function(){ pan=null; });
+  window.addEventListener("pointerup",function(e2){
+    if(pan && !pan.movedFar && Math.abs(e2.clientX-pan.x)+Math.abs(e2.clientY-pan.y)<4){
+      clearSelection(); showDefault(); }                       // a still background click deselects
+    pan=null; });
   // WHEEL GRAMMAR (operator 2026-08-12): plain scroll PANS vertically ·
   // Shift PANS sideways · Ctrl/Cmd ZOOMS at the cursor (a trackpad pinch
   // arrives as ctrl+wheel natively, so pinch-to-zoom just works).
@@ -941,7 +954,9 @@ function drawTrace(){
       epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
-      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
+      regNode(g, "ep:"+slug+"|"+ep.m+" "+ep.p, ep.m+" "+ep.p, "ep");
+      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
+        attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
       layer.appendChild(g); });
     // 3 · CLUSTER BUBBLES — dashed sub-containers; in the multi-membership modes
     //     (use case · community · census) bubbles ENCLOSE their members and may
@@ -955,8 +970,10 @@ function drawTrace(){
         proofBadge(g, 9, f2.tests||null);
         var t2=E("text",{class:"plabel", y:17}); t2.textContent=trunc(it.name,11); g.appendChild(t2);
         var ti2=E("title"); ti2.textContent=it.name+"() · handler"; g.appendChild(ti2);
+        regNode(g, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
         g.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null}); });
+          showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null});
+          attachSelection("fn:"+slug+"|"+it.name); });
         layer.appendChild(g);
       } else { var cls=it.name;
         clsAt[cls]={x:x,y:y}; clsAtGlobal[slug+"|"+cls]={x:x,y:y};
@@ -966,8 +983,10 @@ function drawTrace(){
         guardMark(g3, 9, (it.m&&it.m.guards)||0); hubMark(g3, 9, (it.m&&it.m.hub)||null); pressMark(g3, 9, slug, cls);
         var t3=E("text",{class:"plabel", y:17}); t3.textContent=trunc(cls,11); g3.appendChild(t3);
         var ti3=E("title"); ti3.textContent=(it.kind==="model"?"model ":"schema ")+cls+(it.m&&it.m.table?" · table "+it.m.table:""); g3.appendChild(ti3);
+        regNode(g3, "cls:"+slug+"|"+cls, cls, it.kind);
         g3.addEventListener("click",function(ev){ ev.stopPropagation();
-          showPiece(slug, {kind:it.kind, m:it.m||{cls:cls}}); });
+          showPiece(slug, {kind:it.kind, m:it.m||{cls:cls}});
+          attachSelection("cls:"+slug+"|"+cls); });
         layer.appendChild(g3); } }
     if(isMulti){
       L.bubbles.forEach(function(bu){ var cx=p.x+bu.cx, cy=p.y+bu.cy;
@@ -997,15 +1016,18 @@ function drawTrace(){
       var ex=rnd(p.x+R*Math.cos(a)), ey=rnd(p.y+R*Math.sin(a));
       var w1=E("path",{class:"e-touch", d:curve(ex,ey,f.x,f.y,10)});
       w1.style.stroke=col; w1.style.opacity="0.8"; wireLayer.appendChild(w1);
+      regEdge(w1, "route", "ep:"+slug+"|"+ep.m+" "+ep.p, "fn:"+slug+"|"+ep.fn, "the route invokes "+ep.fn+"()");
       (ep.touch||[]).forEach(function(c,ci){ var q=clsAt[c]; if(!q) return;
         var w2=E("path",{class:"e-touch", d:curve(f.x,f.y,q.x,q.y,(ci%2?12:-12))});
-        w2.style.stroke=col; w2.style.opacity="0.8"; wireLayer.appendChild(w2); });
+        w2.style.stroke=col; w2.style.opacity="0.8"; wireLayer.appendChild(w2);
+        regEdge(w2, "touch", "fn:"+slug+"|"+ep.fn, "cls:"+slug+"|"+c, "read/written by the handler body"); });
       if(ep.resp){ var rq=clsAt[ep.resp];
         if(rq){ var w3=E("path",{class:"e-resp", fill:"none","stroke-width":"1.2","stroke-dasharray":"4 3",
             d:curve(f.x,f.y,rq.x,rq.y,8)});
           w3.style.stroke=col; w3.style.opacity="0.6";
           var ti4=E("title"); ti4.textContent=(ep.fn||ep.p)+" returns "+ep.resp; w3.appendChild(ti4);
-          wireLayer.appendChild(w3); } } });
+          wireLayer.appendChild(w3);
+          regEdge(w3, "resp", "fn:"+slug+"|"+ep.fn, "cls:"+slug+"|"+ep.resp, "response_model"); } } });
     b.minX=Math.min(b.minX,p.x-R-30); b.maxX=Math.max(b.maxX,p.x+R+30);
     b.minY=Math.min(b.minY,p.y-R-30); b.maxY=Math.max(b.maxY,p.y+R+36); });
   // INTER-ENTITY connections (the toggle) — dotted gradient, core to core
@@ -1016,7 +1038,10 @@ function drawTrace(){
       "marker-end":"url(#arr)", d:curve(a.x,a.y,c.x,c.y,(xi%2?30:-30))});
     pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.8";
     var ti=E("title"); ti.textContent=e.fs+"."+e.f+" → "+e.ts+"."+e.t+" (via "+e.via+")";
-    pth.appendChild(ti); interLayer.appendChild(pth); });
+    pth.appendChild(ti); interLayer.appendChild(pth);
+    var xi2=regEdge(pth, "xfk", "cls:"+e.fs+"|"+e.f, "cls:"+e.ts+"|"+e.t, "via "+e.via);
+    pth.style.pointerEvents="stroke"; pth.style.cursor="pointer";
+    pth.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(xi2); }); });
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("bubble = a cluster ("+(traceCluster==="kind"?"functions · models · schemas":traceCluster)+")","f-api"),
@@ -1161,6 +1186,7 @@ function showPiece(slug, it){
    +"<div class='note'>"+(it.kind==="model"?"model":"schema")+" · in "+esc(slug)+"</div>"
    +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
    +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
+   +(insideLayout==="tiers"?"<div class='row'><span>tier</span><b>"+(it.kind==="model"?"models — inner ring":"schemas — outer ring")+"</b></div>":"")
    +indicatorHTML(_o)
    +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
 function showEndpoint(slug, ep){
@@ -1191,7 +1217,7 @@ function syncGearApplicability(){
   if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
 }
 function render(){
-  vp.textContent=""; panX=0; panY=0; zoom=1;
+  vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null;
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
   document.querySelectorAll("#levels button").forEach(function(btn){
@@ -1226,6 +1252,68 @@ document.getElementById("conns").addEventListener("click",function(){
   this.style.color=showConns?"#fff":"var(--ink)";
   this.style.borderColor=showConns?"var(--accent)":"var(--line)";
   renderKeepView(); });
+
+/* ── SELECTION ENGINE: every node and wire registers itself at draw time; a click
+   highlights the node + its 1-hop connectors, fades the rest, lists the connectors
+   as clickable rows in the panel, and lets a connector itself be inspected. ── */
+var SELREG = { nodes:{}, edges:[] };
+var selKey = null;
+function regNode(g, key, label, type){ g.setAttribute("data-key", key);
+  SELREG.nodes[key]={el:g, label:label, type:type}; }
+function regEdge(el, kind, fromKey, toKey, how){
+  var idx=SELREG.edges.length;
+  SELREG.edges.push({el:el, kind:kind, from:fromKey, to:toKey, how:how||""});
+  return idx; }
+function clearSelection(){ selKey=null;
+  vp.querySelectorAll(".selring,.nbrring").forEach(function(x){ x.remove(); });
+  vp.querySelectorAll(".e-hl").forEach(function(x){ x.classList.remove("e-hl"); });
+  vp.querySelectorAll(".e-faded").forEach(function(x){ x.classList.remove("e-faded"); }); }
+function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", route:"routes"}[kind]||kind; }
+function selectNode(key){
+  clearSelection(); selKey=key;
+  var n=SELREG.nodes[key]; if(!n) return [];
+  n.el.appendChild(E("circle",{class:"selring", r:16}));
+  var mine=[], other=[];
+  SELREG.edges.forEach(function(e,i){ (e.from===key||e.to===key)?mine.push(i):other.push(i); });
+  other.forEach(function(i){ SELREG.edges[i].el.classList.add("e-faded"); });
+  mine.forEach(function(i){ var e=SELREG.edges[i]; e.el.classList.add("e-hl");
+    var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
+    if(nb && !nb.el.querySelector(".nbrring")) nb.el.appendChild(E("circle",{class:"nbrring", r:14})); });
+  return mine; }
+function connectionsHTML(key, mine){
+  if(!mine.length) return "<div class='k'>connections</div><div class='note'>no drawn connector touches it on this level</div>";
+  var h="<div class='k'>connections ("+mine.length+")</div>";
+  mine.forEach(function(i){ var e=SELREG.edges[i];
+    var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
+    var dir=e.from===key?"→":"←";
+    h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span><b>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
+  return h; }
+function wireConnRows(){
+  panel.querySelectorAll(".conrow").forEach(function(row){
+    row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); }); }); }
+function selectEdge(i){
+  var e=SELREG.edges[i]; if(!e) return;
+  clearSelection();
+  SELREG.edges.forEach(function(x,j){ x.el.classList.add(j===i?"e-hl":"e-faded"); });
+  var f=SELREG.nodes[e.from], to=SELREG.nodes[e.to];
+  [f,to].forEach(function(n){ if(n) n.el.appendChild(E("circle",{class:"nbrring", r:14})); });
+  panel.innerHTML="<h3>connector</h3>"
+   +"<div class='row'><span>kind</span><b>"+esc(edgeWord(e.kind))+"</b></div>"
+   +"<div class='row'><span>from</span><b>"+esc(f?f.label:e.from)+"</b></div>"
+   +"<div class='row'><span>to</span><b>"+esc(to?to.label:e.to)+"</b></div>"
+   +(e.how?"<div class='row'><span>how</span><b>"+esc(e.how)+"</b></div>":"")
+   +"<div class='note'>"+{route:"the endpoint dispatches to its handler function",
+      touch:"the endpoint's handler reads or writes this piece",
+      resp:"the handler returns this schema to the caller",
+      fk:"a foreign-key column points at the other table",
+      xfk:"a foreign key crossing the entity boundary",
+      call:"a function call (graft; cross-file calls are inferred — a floor)"}[e.kind]+"</div>";
+}
+/* the panel add-on used by every node click */
+function attachSelection(key){
+  var mine=selectNode(key);
+  panel.insertAdjacentHTML("beforeend", connectionsHTML(key, mine));
+  wireConnRows(); }
 
 /* ── THE INDICATOR CARD: every mark an element wears in the diagram, repeated in
    the panel AS THE SAME ICON, with a label and what it means (operator: numbers
