@@ -81,6 +81,11 @@ aside .chip{ display:inline-block; font-size:10.5px; font-weight:700; border-rad
       <button data-st="review">3 · Review</button>
       <button data-st="commit">4 · Commit</button>
     </div>
+    <div class="seg" id="icoSeg" style="margin-left:8px" title="try an icon set — Classic is the level-lab's exact geometry">
+      <button data-ico="classic" class="on">Classic</button>
+      <button data-ico="lucide">Lucide</button>
+      <button data-ico="solid">Solid</button>
+    </div>
     <button id="themebtn" class="tgl" title="Theme — light / dark"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
   </div>
 </header>
@@ -126,17 +131,76 @@ function flowDots(host, pathEl, fill){
   else { var am=E("animateMotion",{dur:dur.toFixed(2)+"s", repeatCount:"indefinite", rotate:"none"});
     var mp=E("mpath"); mp.setAttribute("href","#"+pathEl.id); am.appendChild(mp); dot.appendChild(am); }
   host.appendChild(dot); }
-function cylinder(g,r,col){ g.appendChild(E("ellipse",{cx:0,cy:-r*0.62,rx:r,ry:r*0.38,fill:col}));
-  var b=E("path",{d:"M"+(-r)+" "+(-r*0.62)+" v"+(r*1.24)+" a"+r+" "+(r*0.38)+" 0 0 0 "+(2*r)+" 0 v-"+(r*1.24), fill:col});
-  g.appendChild(b); }
-function sBadge(g,r,col){ g.appendChild(E("path",{d:"M"+(-r*0.5)+" "+(-r)+" h-1 a2 2 0 0 0 -2 2 v"+(r*0.6)+" a2 2 0 0 1 -2 2 a2 2 0 0 1 2 2 v"+(r*0.6)+" a2 2 0 0 0 2 2 h1 M"+(r*0.5)+" "+(-r)+" h1 a2 2 0 0 1 2 2 v"+(r*0.6)+" a2 2 0 0 0 2 2 a2 2 0 0 0 -2 2 v"+(r*0.6)+" a2 2 0 0 1 -2 2 h-1",
-  fill:"none", stroke:col, "stroke-width":"1.8"})); }
-function fGlyph(g,r,col,handler){ if(handler) g.appendChild(E("circle",{r:r+2.5, fill:"none", stroke:col, "stroke-width":"2"}));
-  g.appendChild(E("path",{d:"M-2 "+(r*0.8)+" c2 0 3 -1 3 -3 v-"+(r*0.8)+" c0 -2 1 -3 3 -3 M-3 0 h6",
-    fill:"none", stroke:col, "stroke-width":"2"})); }
+/* ICON SETS (operator round 46): "classic" = the level-lab's EXACT geometry —
+   byte-identical path strings, one icon language across both pages. "lucide" and
+   "solid" are try-on sets; add a set = add four draw fns to ICONSETS. */
 var METHOD={GET:"var(--m-get)", POST:"var(--m-post)", PATCH:"var(--m-put)", PUT:"var(--m-put)", DELETE:"var(--m-delete)"};
-function epMark(g,r,m){ g.appendChild(E("circle",{r:r+2, fill:METHOD[m]||"var(--muted)"}));
-  g.appendChild(E("path",{d:"M1 "+(-r+1)+" L-2.6 1 h2 L-1 "+(r-1)+" L2.6 -1 h-2 Z", fill:"#fff"})); }
+var ICO_SCHEMA='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1';
+var ICO_FN='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6';
+var ICONSETS={
+  classic:{
+    model:function(g,r,col){ var h=r*1.5, w=r*1.7;
+      g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6),
+        fill:col, "fill-opacity":"0.9", stroke:"var(--panel)","stroke-width":"1.4"}));
+      g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col, stroke:"var(--panel)","stroke-width":"1.4"})); },
+    schema:function(g,r,col){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2.4",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"})); },
+    fn:function(g,r,col,handler){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:col,
+        "stroke-width": handler?"3.1":"2.2",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r*1.2)+","+(-r*1.2)+") scale("+(2.4*r/24)+")"})); },
+    ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+      g.appendChild(E("circle",{r:r, fill:col, stroke:"var(--panel)","stroke-width":"1.6"}));
+      g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
+        fill:"#fff", transform:"scale("+(r/6)+")"})); }
+  },
+  lucide:{
+    model:function(g,r,col){ var k=2.2*r/24, tf="translate("+(-r*1.1)+","+(-r*1.1)+") scale("+k+")";
+      g.appendChild(E("ellipse",{cx:12, cy:5, rx:9, ry:3, fill:"none", stroke:col, "stroke-width":"2", transform:tf}));
+      g.appendChild(E("path",{d:"M3 5v14a9 3 0 0 0 18 0V5 M3 12a9 3 0 0 0 18 0",
+        fill:"none", stroke:col, "stroke-width":"2","stroke-linecap":"round", transform:tf})); },
+    schema:function(g,r,col){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"})); },
+    fn:function(g,r,col,handler){ var k=2.4*r/24, tf="translate("+(-r*1.2)+","+(-r*1.2)+") scale("+k+")";
+      g.appendChild(E("rect",{x:3, y:3, width:18, height:18, rx:4, fill:"none", stroke:col,
+        "stroke-width": handler?"2.6":"1.8", transform:tf}));
+      g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:col, "stroke-width":"2",
+        "stroke-linecap":"round","stroke-linejoin":"round", transform:tf})); },
+    ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+      g.appendChild(E("circle",{r:r+1, fill:"none", stroke:col, "stroke-width":"2"}));
+      g.appendChild(E("path",{d:"M13 2 3 14h9l-1 8 10-12h-9l1-8z", fill:col,
+        transform:"translate("+(-r*0.75)+","+(-r*0.75)+") scale("+(1.5*r/24)+")"})); }
+  },
+  solid:{
+    model:function(g,r,col){ var h=r*1.5, w=r*1.7;
+      g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6), fill:col}));
+      g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col}));
+      g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/3.2, ry:2.2, fill:"var(--panel)", "fill-opacity":"0.5"})); },
+    schema:function(g,r,col){ g.appendChild(E("rect",{x:-r, y:-r, width:2*r, height:2*r, rx:5, fill:col}));
+      g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:"#fff", "stroke-width":"2.2",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r*0.75)+","+(-r*0.75)+") scale("+(1.5*r/24)+")"})); },
+    fn:function(g,r,col,handler){ g.appendChild(E("circle",{r:r+1.5, fill:col}));
+      if(handler) g.appendChild(E("circle",{r:r+3.5, fill:"none", stroke:col, "stroke-width":"1.6"}));
+      g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:"#fff", "stroke-width":"2.4",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r*0.85)+","+(-r*0.85)+") scale("+(1.7*r/24)+")"})); },
+    ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+      g.appendChild(E("rect",{x:-r-1, y:-r-1, width:2*r+2, height:2*r+2, rx:6, fill:col}));
+      g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
+        fill:"#fff", transform:"scale("+(r/6)+")"})); }
+  }
+};
+var ICONSET="classic";
+function cylinder(g,r,col){ ICONSETS[ICONSET].model(g,r,col); }
+function sBadge(g,r,col){ ICONSETS[ICONSET].schema(g,r,col); }
+function fGlyph(g,r,col,handler){ ICONSETS[ICONSET].fn(g,r,col,handler); }
+function epMark(g,r,m){ ICONSETS[ICONSET].ep(g,r,m); }
 function pill(g,y,n,red){ var w=n>9?15:11;
   g.appendChild(E("rect",{class:"tpill", x:y-2, y:-y-8, width:w, height:10, rx:5,
     fill:red?"var(--red)":"var(--ok)"}));
@@ -313,6 +377,11 @@ window.addEventListener("resize",fit);
 
 document.getElementById("stages").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; applyStage(b.getAttribute("data-st")); });
+document.getElementById("icoSeg").addEventListener("click",function(e){
+  var b=e.target.closest("button"); if(!b) return;
+  ICONSET=b.getAttribute("data-ico");
+  document.querySelectorAll("#icoSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+  build(); applyStage(curStage); });
 document.getElementById("themebtn").addEventListener("click",function(){
   var r=document.documentElement, cur=r.getAttribute("data-theme");
   var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -321,6 +390,8 @@ document.getElementById("themebtn").addEventListener("click",function(){
 build(); fit(); applyStage("red");
 window.__cgtest={
   stage:function(){ return curStage; },
+  iconset:function(){ return ICONSET; },
+  setIcons:function(s){ ICONSET=s; build(); applyStage(curStage); },
   set:function(s){ applyStage(s); },
   counts:function(){ return {
     rings: vp.querySelectorAll(".red-ring,.heat-ring,.ok-ring,.drift-ring,.blast-ring").length,
