@@ -814,9 +814,13 @@ function traceInner(slug){
     (ep.touch||[]).forEach(function(c){ cls[c]=1; }); }
     if(ep.resp && D.schema_owner[ep.resp]===slug) cls[ep.resp]=1; });
   (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
+  // classes USED from elsewhere are revealed too — an edge needs its target drawn
+  (D.use_edges||[]).forEach(function(e){ if(e.ts===slug) cls[e.cls]=1; });
   var pieceOf=function(c){ return (pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===c; })[0]; };
   var isModel=function(c){ return (pc.models||[]).some(function(m){ return m.cls===c; }); };
   var items=Object.keys(fns).sort().map(function(fn){ return {id:"fn:"+fn, kind:"fn", name:fn}; })
+    .concat((pc.usefns||[]).filter(function(u){ return !fns[u.fn]; })
+      .map(function(u){ return {id:"fn:"+u.fn, kind:"usefn", name:u.fn, uses:u.uses}; }))
     .concat(Object.keys(cls).sort().map(function(c){ return {id:"cls:"+c, kind:isModel(c)?"model":"schema", name:c, m:pieceOf(c)}; }));
   return {pc:pc, eps:eps, items:items};
 }
@@ -837,7 +841,7 @@ function traceMembership(slug, items){
   } else {
     Object.keys(src).sort().forEach(function(g){ var v=src[g]||{};
       items.forEach(function(it){
-        if(it.kind==="fn" ? (v.fns||[]).indexOf(it.name)>=0 : (v.cls||[]).indexOf(it.name)>=0)
+        if((it.kind==="fn"||it.kind==="usefn") ? (v.fns||[]).indexOf(it.name)>=0 : (v.cls||[]).indexOf(it.name)>=0)
           memb[it.id].push(g); }); });
   }
   var fallback = traceCluster==="census" ? "uncensused" : "other";
@@ -848,20 +852,20 @@ function traceMembershipAny(slug, items){
   if(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census")
     return traceMembership(slug, items);
   var of = traceCluster==="tests"
-    ? function(it){ var d=it.kind==="fn" ? (D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{}).tests : (it.m&&it.m.tests); return d?"proven":"unproven"; }
+    ? function(it){ var d=(it.kind==="fn"||it.kind==="usefn") ? (D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{}).tests : (it.m&&it.m.tests); return d?"proven":"unproven"; }
     : traceCluster==="guards"
-    ? function(it){ if(it.kind==="fn") return "functions"; return (it.m&&it.m.guards)?"guarded":"unguarded"; }
-    : function(it){ return it.kind==="fn"?"functions":(it.kind==="model"?"models":"schemas"); };
+    ? function(it){ if(it.kind==="fn"||it.kind==="usefn") return "functions"; return (it.m&&it.m.guards)?"guarded":"unguarded"; }
+    : function(it){ return (it.kind==="fn"||it.kind==="usefn")?"functions":(it.kind==="model"?"models":"schemas"); };
   var memb={}; items.forEach(function(it){ memb[it.id]=[of(it)]; }); return memb;
 }
 function traceGroups(items){
   var of;
-  if(traceCluster==="tests") of=function(it){ var d=it.kind==="fn"
+  if(traceCluster==="tests") of=function(it){ var d=(it.kind==="fn"||it.kind==="usefn")
       ? (D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{}).tests
       : (it.m&&it.m.tests); return d?"proven":"unproven"; };
-  else if(traceCluster==="guards") of=function(it){ if(it.kind==="fn") return "functions";
+  else if(traceCluster==="guards") of=function(it){ if(it.kind==="fn"||it.kind==="usefn") return "functions";
       return (it.m&&it.m.guards)?"guarded":"unguarded"; };
-  else of=function(it){ return it.kind==="fn"?"functions":(it.kind==="model"?"models":"schemas"); };
+  else of=function(it){ return (it.kind==="fn"||it.kind==="usefn")?"functions":(it.kind==="model"?"models":"schemas"); };
   var groups={}, order=[];
   items.forEach(function(it){ var g=of(it); if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(it); });
   order.sort();
@@ -882,6 +886,7 @@ function traceLayoutMulti(slug){
     (ep.touch||[]).forEach(function(c){ couple.push(["fn:"+ep.fn, "cls:"+c]); });
     if(ep.resp) couple.push(["fn:"+ep.fn, "cls:"+ep.resp]); } });
   (pc.intra||[]).forEach(function(e){ couple.push(["cls:"+e.s, "cls:"+e.t]); });
+  (D.use_edges||[]).forEach(function(e){ if(e.fs===slug && e.ts===slug) couple.push(["fn:"+e.fn, "cls:"+e.cls]); });
   // group anchors on a ring; per-group arrangement via the INSIDE layout
   var only={}, shared=[];
   inner.items.forEach(function(it){ var gs=memb[it.id];
@@ -958,7 +963,7 @@ function drawTrace(){
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
   var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
   vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
-  var clsAtGlobal={};
+  var clsAtGlobal={}, fnAtGlobal={}, epByFnGlobal={};
   var isMulti=true;   // ONE layout path: disjoint modes are single-membership multi
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var L=isMulti?traceLayoutMulti(slug):traceLayout(slug), pc=L.inner.pc, R=radii[slug];
@@ -976,6 +981,7 @@ function drawTrace(){
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
       twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);   // BELOW the icon, like every piece
+      if(ep.fn) epByFnGlobal[slug+"|"+ep.fn]={x:x, y:y, key:"ep:"+slug+"|"+ep.m+" "+ep.p};
       regNode(g, "ep:"+slug+"|"+ep.m+" "+ep.p, ep.m+" "+ep.p, "ep");
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
         attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
@@ -985,7 +991,7 @@ function drawTrace(){
     //     OVERLAP — a shared piece is drawn once, never duplicated (operator ruling).
     var fnAt={}, clsAt={};
     function drawInnerItem(it, x, y, grpLabel){
-      if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y};
+      if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
         var g=E("g",{class:"fnode","data-layer":"api","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
         fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
         var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
@@ -997,6 +1003,20 @@ function drawTrace(){
           showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null});
           attachSelection("fn:"+slug+"|"+it.name); });
         layer.appendChild(g);
+      } else if(it.kind==="usefn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
+        // a USING function — drawn because it references models/schemas (archmap
+        // internal_refs), incl. across entities; service-teal, no handler ring
+        var gu=E("g",{class:"fnode usefn","data-layer":"services","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
+        fGlyph(gu, 8.5, "var(--c-fn-services)", false, false);
+        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
+        proofBadge(gu, 9, fu.tests||null);
+        twoRowLabel(gu, it.name, 0, 17);
+        var tiu=E("title"); tiu.textContent=it.name+"() · uses "+(it.uses||0)+" class"+((it.uses||0)===1?"":"es"); gu.appendChild(tiu);
+        regNode(gu, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
+        gu.addEventListener("click",function(ev){ ev.stopPropagation();
+          showFn({name:it.name, slug:slug, layer:"services", lang:"py", handler:false, god:false, tests:fu.tests||null, hub:fu.hub||null});
+          attachSelection("fn:"+slug+"|"+it.name); });
+        layer.appendChild(gu);
       } else { var cls=it.name;
         clsAt[cls]={x:x,y:y}; clsAtGlobal[slug+"|"+cls]={x:x,y:y};
         var g3=E("g",{class:"piece","data-kind":it.kind,"data-grp":grpLabel, transform:"translate("+x+","+y+")"});
@@ -1064,11 +1084,29 @@ function drawTrace(){
     var xi2=regEdge(pth, "xfk", "cls:"+e.fs+"|"+e.f, "cls:"+e.ts+"|"+e.t, "via "+e.via);
     pth.style.pointerEvents="stroke"; pth.style.cursor="pointer";
     pth.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(xi2); }); });
+  // USE edges — a function references a model/schema (archmap internal_refs).
+  // Rides the existing node when the fn is drawn (handler ƒ or border endpoint);
+  // cross-entity wires are Connections-gated like the FKs, own-entity stay subtle.
+  (D.use_edges||[]).forEach(function(e,ui){
+    var from=fnAtGlobal[e.fs+"|"+e.fn]||epByFnGlobal[e.fs+"|"+e.fn];
+    var to=clsAtGlobal[e.ts+"|"+e.cls]; if(!from||!to) return;
+    var cross=e.fs!==e.ts; if(cross && !showConns) return;
+    var pu=E("path",{class:"e-use", fill:"none",
+      "stroke-width":cross?"1.4":"1.1","stroke-dasharray":"1.5 3.5",
+      "marker-end":"url(#arr)", d:curve(from.x,from.y,to.x,to.y,(ui%2?22:-22))});
+    if(cross){ var gr2=edgeGradient(defs, from, to, COLORS[e.fs]||"#888", COLORS[e.ts]||"#888");
+      pu.style.stroke="url(#"+gr2+")"; pu.style.opacity="0.75"; }
+    else { pu.style.stroke=COLORS[e.fs]||"#888"; pu.style.opacity="0.45"; }
+    var tiu=E("title"); tiu.textContent=e.fn+"() uses "+e.ts+"."+e.cls; pu.appendChild(tiu);
+    (cross?interLayer:wireLayer).appendChild(pu);
+    var ui2=regEdge(pu, "use", from.key||("fn:"+e.fs+"|"+e.fn), "cls:"+e.ts+"|"+e.cls, "references the class (archmap)");
+    pu.style.pointerEvents="stroke"; pu.style.cursor="pointer";
+    pu.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(ui2); }); });
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("bubble = a cluster ("+(traceCluster==="kind"?"functions · models · schemas":traceCluster)+")","f-api"),
-          glyphIt("model","cyl"), glyphIt("schema","s"),
-          "<span class='it'>wires: endpoint → ƒ → the data it touches · dashed = returns · switch the cluster in ⚙</span>"]);
+          glyphIt("model","cyl"), glyphIt("schema","s"), glyphIt("using fn (references data)","f-serv"),
+          "<span class='it'>wires: endpoint → ƒ → the data it touches · dashed = returns · fine-dotted = uses · switch the cluster in ⚙</span>"]);
 }
 // the FLOW option: the original concentric onion (mean-angle placement)
 function drawTraceFlow(){
@@ -1291,7 +1329,7 @@ function clearSelection(){ selKey=null;
   vp.querySelectorAll(".selring,.nbrring").forEach(function(x){ x.remove(); });
   vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
     x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
-function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", route:"routes"}[kind]||kind; }
+function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", route:"routes", use:"uses"}[kind]||kind; }
 function selectNode(key){
   clearSelection(); selKey=key;
   var n=SELREG.nodes[key]; if(!n) return [];
