@@ -51,6 +51,7 @@
 .cbg-side.collapsed{ width:42px !important; min-width:42px; overflow:hidden; }
 .cbg-side.collapsed .detail{ display:none; }
 .cbg-side.collapsed .cbg-sidehdr{ justify-content:center; padding:8px 0; }
+.cbg-side.collapsed .cbg-navback{ display:none; }
 .cbg-center.sidecol .cbg-resizer{ display:none; }
 
 /* ── header = the change strip (no redundant title; the breadcrumb names the page) ── */
@@ -238,6 +239,41 @@
 .cbg-root .detail .jgo{ cursor:pointer; } .cbg-root .detail .jgo:hover b{ text-decoration:underline; }
 .cbg-root .detail .note{ font-size:0.857rem; color:var(--muted); line-height:1.5; margin-top:10px; }
 
+/* ── JOURNEYS (slice 3, lab round 37): the picker + step bar in the toolbar;
+   participants wear dashed rings, member links glow accent ── */
+.cbg-root .cbg-jrn{ display:inline-flex; align-items:center; gap:6px; }
+.cbg-root .cbg-jrn select{ font:inherit; font-family:var(--font-content); font-size:12px; max-width:210px;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:7px; padding:4px 6px; cursor:pointer; }
+#cbg-jrnBar{ display:inline-flex; align-items:center; gap:5px; }
+#cbg-jrnBar[hidden]{ display:none; }   /* honor hidden — author display beats the UA rule */
+.cbg-root #cbg-jrnPos{ font-size:12px; min-width:34px; text-align:center; }
+.cbg-root #cbg-jrnStep{ font-size:12px; color:var(--muted); max-width:180px; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; }
+.cbg-root .e-jrn{ stroke:var(--accent) !important; stroke-width:2.6 !important; opacity:1 !important; }
+.cbg-root .jrn-ring{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:4 3; opacity:.9; pointer-events:none; }
+/* ── NAV HISTORY (lab round 35): ← pops the 6-deep travel trail ── */
+.cbg-root .cbg-navback{ font-weight:700; color:#fff; background:var(--accent); border-color:var(--accent); padding:4px 10px; }
+.cbg-root .cbg-navback:hover{ border-color:var(--accent); opacity:.9; }
+/* ── CORNER BOXES (lab round 36): Legend bottom-left · Controls bottom-right ── */
+.cbg-root .cbg-keys{ position:absolute; bottom:12px; right:16px; z-index:25; max-width:300px; font-size:11px;
+  color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.10); }
+.cbg-root .cbg-keys .kbhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.cbg-root .cbg-keys .kbtgl{ font:inherit; font-size:12px; line-height:1; color:var(--muted); background:none;
+  border:none; padding:0 2px; cursor:pointer; }
+.cbg-root .cbg-keys.min .kbbody{ display:none; }
+.cbg-root .cbg-keys .kbbody{ margin-top:5px; }
+.cbg-root .cbg-keys .kbbody div{ padding:1.5px 0; color:var(--ink); }
+.cbg-root .cbg-keys .kbbody span{ color:var(--muted); }
+/* the legend TAIL lives inside the Legend corner box now (the full-width bottom
+   bar died — lab round 36 corner-box ruling) */
+.cbg-root #cbg-stagelegend .cbg-legend{ display:flex; flex-direction:column; align-items:stretch; gap:2px;
+  padding:0; border:0; background:none; font-size:11px; margin-top:7px; }
+.cbg-root #cbg-stagelegend .cbg-legend .grp{ display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap; }
+.cbg-root #cbg-stagelegend .cbg-legend .div{ width:auto; height:1px; background:var(--line); margin:4px 0; }
+.cbg-root #cbg-stagelegend .cbg-legend .count{ margin-left:0; margin-top:3px; }
+
 /* per-stage highlight colours on the stage buttons */
 .cbg-root #cbg-stageSeg button[data-stage="red"].on{ background:#e5484d; }
 .cbg-root #cbg-stageSeg button[data-stage="execute"].on{ background:#4c9aff; }
@@ -304,18 +340,12 @@
 .cbg-root #cbg-tip .grid .v{ text-align:right; font-variant-numeric:tabular-nums; font-weight:600; }
 .cbg-root #cbg-tip .meta{ color:var(--muted); font-size:11px; margin-top:3px; }
 
-/* ── legend (bottom bar) ── */
-/* bottom legend — command-center vocabulary: round entity dots (like the center's
-   .statuspill/.chip .dot), muted labels, a mono count. */
-.cbg-legend{ display:flex; align-items:center; gap:6px 18px; flex-wrap:wrap;
-  padding:8px 20px; border-top:1px solid var(--line); background:var(--panel);
-  font-size:11.5px; color:var(--muted); }
-.cbg-legend .grp{ display:flex; align-items:center; gap:6px 14px; flex-wrap:wrap; }
+/* ── legend item vocabulary (rendered inside the Legend corner box) ── */
+.cbg-legend{ color:var(--muted); }
 .cbg-legend .item{ display:flex; align-items:center; gap:6px; }
 .cbg-legend .item svg{ flex:none; }
 .cbg-legend .sw{ width:9px; height:9px; border-radius:50%; flex:none; }
-.cbg-legend .div{ width:1px; height:14px; background:var(--line); }
-.cbg-legend .count{ margin-left:auto; color:var(--ink); font-weight:600;
+.cbg-legend .count{ color:var(--ink); font-weight:600;
   font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; }
 
 /* ── Open/Close-all + Connections toggles — center-style pills (pressed = accent) ── */
@@ -378,7 +408,7 @@
   <a class="navitem" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-              <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+                  <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -388,7 +418,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-              <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+                  <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -407,7 +437,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-              <span class="navsub" style="opacity:.5">none wired yet</span>
+                  <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:05Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -431,6 +461,16 @@
         <button data-stage="execute" class="on"><i class="sdot"></i>Execute</button>
         <button data-stage="review"><i class="sdot"></i>Review</button>
         <button data-stage="commit"><i class="sdot"></i>Commit</button>
+      </div>
+      <div class="cbg-jrn">
+        <select id="cbg-jrnSel" title="walk a derived request path — or the change itself — step by step"></select>
+        <span id="cbg-jrnBar" hidden>
+          <button id="cbg-jrnPrev" title="previous step">&#9664;</button>
+          <b id="cbg-jrnPos">1/1</b>
+          <button id="cbg-jrnNext" title="next step">&#9654;</button>
+          <span id="cbg-jrnStep"></span>
+          <button id="cbg-jrnX" title="leave the journey">&#10005;</button>
+        </span>
       </div>
       <div class="selinfo" id="cbg-selInfo"></div>
       <div class="spacer"></div>
@@ -473,17 +513,23 @@
         <svg id="cbg-graph" xmlns="http://www.w3.org/2000/svg">
           <g id="cbg-viewport"></g>
         </svg>
-        <div class="hint" id="cbg-hint">drag to pan · double-click an entity to drill</div>
         <div id="cbg-stagelegend"></div>
+        <div class="cbg-keys min" id="cbg-keys">
+          <div class="kbhead"><span>Controls</span><button class="kbtgl" id="cbg-keysMin" title="minimize / restore">+</button></div>
+          <div class="kbbody" id="cbg-keysBody"></div>
+        </div>
       </div>
       <div class="cbg-resizer" id="cbg-resizer" title="Drag to resize"></div>
       <aside class="cbg-side" id="cbg-side">
-        <div class="cbg-sidehdr"><button class="cbg-sidetoggle" id="cbg-sideToggle" title="Collapse panel" aria-label="Collapse panel"></button></div>
+        <div class="cbg-sidehdr">
+        <button class="cbg-navback" id="cbg-navback" hidden title="back through the travel trail (up to 6 stops)">&larr;</button>
+        <span class="spacer"></span>
+        <button class="cbg-sidetoggle" id="cbg-sideToggle" title="Collapse panel" aria-label="Collapse panel"></button>
+      </div>
         <div id="cbg-detail" class="detail"><div class="empty">Loading the codebase graph…</div></div>
       </aside>
     </div>
 
-    <div class="cbg-legend" id="cbg-legend"></div>
     <div id="cbg-tip"></div>
     <div class="cbg-modal" id="cbg-commitModal" hidden>
       <div class="cbg-modal-card">
@@ -545,7 +591,6 @@
   var tip     = document.getElementById("cbg-tip");
   var backBtn = document.getElementById("cbg-backBtn");
   var resetBtn= document.getElementById("cbg-resetBtn");
-  var legend  = document.getElementById("cbg-legend");
   var detail  = document.getElementById("cbg-detail");
 
   function E(tag, attrs){ var e=document.createElementNS(NS, tag);
@@ -919,9 +964,9 @@
     _peeks.push(function(){ r.remove(); });
   }
   function clearSelection(){ selKey=null; peekClear();
-    vp.querySelectorAll(".selring,.nbrring,.peek-ring").forEach(function(x){ x.remove(); });
-    vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
-      x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
+    vp.querySelectorAll(".selring,.nbrring,.peek-ring,.jrn-ring").forEach(function(x){ x.remove(); });
+    vp.querySelectorAll(".e-hl,.e-faded,.e-jrn,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
+      x.classList.remove("e-hl","e-faded","e-jrn","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
   function edgeWord(kind){ return {touch:"touches", fk:"fk", xfk:"cross-fk", calls:"calls", imports:"imports"}[kind]||kind; }
   function selectNode(key){
     clearSelection(); selKey=key;
@@ -1015,14 +1060,14 @@
     var w = go==="from"?a:b;
     if(!w){ go = go==="from"?"to":"from"; w = go==="from"?a:b; }
     _edgeHop={i:i, at:go};
+    navVisit(go==="from"?e.from:e.to);
     centerCamera(w);
   }
-  /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
-     click path runs, so the panel becomes that element's card. Only pc: pieces
-     carry a real click listener; entities and L2 nodes tap via wire()'s
-     POINTERDOWN timer, where a synthetic click is inert — land them
-     programmatically through onSingle. */
-  function jumpToNode(key){
+  /* land: centre the camera on a node (zoom kept) AND run its click path, so the
+     panel becomes that element's card. Only pc: pieces carry a real click
+     listener; entities and L2 nodes tap via wire()'s POINTERDOWN timer, where a
+     synthetic click is inert — land them programmatically through onSingle. */
+  function landOn(key){
     var w=nodeWorldXY(key); if(!w) return;
     centerCamera(w);
     if(key.indexOf("ent:")===0){
@@ -1038,6 +1083,29 @@
     }
     var meta=nodeMeta[key];
     if(meta && meta.node) onSingle(meta.node);
+  }
+  function jumpToNode(key){ if(!nodeWorldXY(key)) return; navVisit(key); landOn(key); }
+  /* ── NAV HISTORY (lab round 35): link travel is a CHAIN — every jump/hop pushes
+     the node it left, 6 deep; ← pops back. A plain click on an in-chain element
+     changes nothing; an out-of-chain click starts a fresh chain. The trail
+     SURVIVES re-renders (keys, not elements); a view change clears it. ── */
+  var navStack=[], navCur=null;
+  function navUI(){ var b=document.getElementById("cbg-navback");
+    b.hidden = navStack.length===0;
+    b.innerHTML = "&larr; "+navStack.length; }
+  function navVisit(key){
+    if(navCur && navCur!==key){ navStack.push(navCur); while(navStack.length>6) navStack.shift(); }
+    navCur=key; navUI(); }
+  function navTouch(key){
+    if(key===navCur || navStack.indexOf(key)>=0) return;
+    navStack=[]; navCur=key; navUI(); }
+  function navClear(){ navStack=[]; navCur=null; navUI(); }
+  function goBack(){
+    while(navStack.length){
+      var k=navStack.pop();
+      if(SELREG.nodes[k]){ navCur=k; navUI(); landOn(k); return; }   // skip keys the view lost
+    }
+    navCur=null; navUI();
   }
 
   // ── L1 render — entities + kind edges (gradient · lanes · flow dots) ────────
@@ -1192,7 +1260,7 @@
     if(!SIM || view==="l2") document.getElementById("cbg-selInfo").innerHTML = sub ? "<span>"+sub+"</span>" : "";
     backBtn.disabled = (view==="l1");
     backBtn.hidden = (view==="l1");
-    syncLayoutSel(); buildLegend(); buildStageLegend();
+    syncLayoutSel(); buildStageLegend(); buildLegend();
   }
   // gear-panel segmented pills (center-style): one button per option, active = .on
   function fillPills(seg, opts, cur, attr){
@@ -1256,15 +1324,18 @@
   function onSingle(node){
     if(view==="l1"){
       if(SIM && PANEL){
+        navTouch("ent:"+node.slug);
         panelTarget = { entity:node.slug };
         PANEL.openEntityDetail(node.slug);
         attachEntitySelection(node.slug);
       } else {
+        navTouch("ent:"+node.slug);
         panelTarget = { entity:node.slug };
         entityCard(node);
         if(SELREG.nodes["ent:"+node.slug]) appendConn("ent:"+node.slug, selectNode("ent:"+node.slug));
       }
     } else {
+      navTouch(node.id);
       panelTarget = { l2:node.id };
       l2NodeCard(node);
       if(SELREG.nodes[node.id]) appendConn(node.id, selectNode(node.id));
@@ -1586,6 +1657,7 @@
         regNode(g, "pc:"+slug+"|"+p.id, p.label, p.kind||"model", 16);
         (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation();
           cancelContTap();                     // a piece click is never a container single-click
+          navTouch("pc:"+sl+"|"+pc.id);
           panelTarget={piece:{slug:sl,p:pc}}; if(PANEL) PANEL.openDetail(sl,pc); }); })(slug,p);
         if(!reduce) animP.push({el:inner, dx:pos.x-pp.x, dy:pos.y-pp.y});
       });
@@ -1631,15 +1703,17 @@
   }
   function buildStageLegend(){
     var el=document.getElementById("cbg-stagelegend"); if(!el) return;
-    if(!SIM || view==="l2"){ el.style.display="none"; return; } el.style.display="";
-    var sc=STAGE_COLOR[curStage];
+    var stageRows = !!SIM && view==="l1";   // the beat key only where beats render
+    var sc = stageRows ? STAGE_COLOR[curStage] : "var(--muted)";
+    el.style.display="";
     el.classList.toggle("min", legendMin);
     if(legendMin){   // collapsed → a little pill that maximizes on click
       el.innerHTML = "<button class='lgpill' id='cbg-lgmax' title='Show the legend'><i style='background:"+sc+"'></i>Legend</button>";
-      document.getElementById("cbg-lgmax").onclick=function(){ legendMin=false; buildStageLegend(); };
+      document.getElementById("cbg-lgmax").onclick=function(){ legendMin=false; buildStageLegend(); buildLegend(); };
       return;
     }
     var rows="";
+    if(stageRows){
     if(curStage==="red"){
       rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='#e5484d' stroke-width='2' stroke-dasharray='5 3'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
         "<b>red ring</b> · declared case proved RED, pill = # cases");
@@ -1667,26 +1741,111 @@
     rows += legendRow(
       "<circle cx='12' cy='12' r='9.5' fill='none' stroke='var(--accent)' stroke-width='2' stroke-dasharray='5 4'/>",
       "<b>spinning ring</b> = the selected element (depth slider = reach)");
-    el.innerHTML = "<div class='lghead'><div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"
-      + "<button class='lgbtn' id='cbg-lgmin' title='Minimize'>&#8211;</button></div>"+rows;
+    }
+    // ONE box (lab round 36): the variable beat key + the level's static tail —
+    // buildLegend fills #cbg-legend right after this shell renders
+    el.innerHTML = "<div class='lghead'><div class='lh'><i style='background:"+sc+"'></i>Legend"
+      + (stageRows ? " · "+curStage : "")+"</div>"
+      + "<button class='lgbtn' id='cbg-lgmin' title='Minimize'>&#8211;</button></div>"+rows
+      + "<div class='cbg-legend' id='cbg-legend'></div>";
     document.getElementById("cbg-lgmin").onclick=function(){ legendMin=true; buildStageLegend(); };
   }
   function setStage(s){
     curStage = s; syncStageButtons(); renderKeepView(); reopenPanel();
   }
 
+  /* ── JOURNEYS (lab round 37): a journey is an ordered list of node keys.
+     REQUEST journeys are DERIVED from the L2 wires — endpoint → the pieces its
+     handler touches → their FK targets. The CHANGE walk (SIM only) is the blast
+     radius as ordered steps — changed pieces → the cross-boundary coupling →
+     the downstream pieces. Steps resolve against SELREG at PLAY time, so layout
+     and stage switches never break a walk — unresolvable steps skip honestly. ── */
+  function buildJourneys(){
+    var out=[];
+    if(SIM){
+      var seen={}, steps=[];
+      var add=function(k){ if(!seen[k]){ seen[k]=1; steps.push(k); } };
+      var xst=(SIM.stages&&SIM.stages.execute&&SIM.stages.execute.pieces)||{};
+      (SIM.touched||[]).forEach(function(sl){ ((SIM.pieces||{})[sl]||[]).forEach(function(p){
+        if((xst[p.id]||{}).changed) add("pc:"+sl+"|"+p.id); }); });
+      (SIM.cross_edges||[]).forEach(function(e){ add("pc:"+e.from_slug+"|"+e.from); add("pc:"+e.to_slug+"|"+e.to); });
+      (SIM.blast||[]).forEach(function(sl){ ((SIM.pieces||{})[sl]||[]).forEach(function(p){ add("pc:"+sl+"|"+p.id); }); });
+      if(steps.length>=2) out.push({ kind:"change", ent:(SIM.touched||[]).join("+"),
+        name:"the change — touched → blast", steps:steps.slice(0,20) });
+    }
+    Object.keys(DATA.l2||{}).sort().forEach(function(slug){
+      var g2=DATA.l2[slug]; if(!g2) return;
+      var touch={}, fk={};
+      (g2.edges||[]).forEach(function(e){
+        if(e.kind==="touches") (touch[e.source]=touch[e.source]||[]).push(e.target);
+        else if(e.kind==="fk") (fk[e.source]=fk[e.source]||[]).push(e.target);
+      });
+      (g2.nodes||[]).forEach(function(n){
+        if(n.kind!=="endpoint" || !touch[n.id]) return;
+        var seen2={}, st=[];
+        var add2=function(k){ if(!seen2[k]){ seen2[k]=1; st.push(k); } };
+        add2(n.id);
+        touch[n.id].forEach(function(c){ add2(c); (fk[c]||[]).forEach(add2); });
+        if(st.length<2) return;
+        out.push({ kind:"request", ent:slug,
+          name:String(n.label||n.id).replace(/^endpoint:/,""), steps:st.slice(0,20) });
+      });
+    });
+    return out;
+  }
+  var JRN={ list:[], cur:null, i:0 };
+  function jrnResolved(){ return JRN.cur ? JRN.cur.steps.filter(function(k){ return !!SELREG.nodes[k]; }) : []; }
+  function jrnEnsureView(){
+    var j=JRN.cur;
+    if(j.kind==="request"){ if(view!=="l2" || drilledSlug!==j.ent) drill(j.ent); return; }
+    if(view!=="l1") back();
+    var inv=SIM.touched.concat(SIM.blast), need=false;
+    inv.forEach(function(s){ if(!expanded[s]) need=true; });
+    if(need){ inv.forEach(function(s){ expanded[s]=true; }); renderKeepView(); }
+  }
+  function jrnGo(di){
+    if(!JRN.cur) return;
+    jrnEnsureView();
+    var steps=jrnResolved(); if(!steps.length) return;
+    JRN.i=Math.max(0, Math.min(steps.length-1, JRN.i+di));
+    var key=steps[JRN.i];
+    jumpToNode(key);
+    // the OVERLAY: the whole walk reads as one lit path — participant links glow,
+    // the selection fade is stripped (a walk is not a per-step neighbourhood)
+    var inJ={}; steps.forEach(function(k){ inJ[k]=1; });
+    vp.querySelectorAll(".nbrring").forEach(function(x){ x.remove(); });
+    SELREG.edges.forEach(function(e){
+      e.el.classList.remove("e-faded","e-hl","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5");
+      if(inJ[e.from] && inJ[e.to]) e.el.classList.add("e-jrn"); });
+    steps.forEach(function(k){ var n2=SELREG.nodes[k];
+      if(n2 && !n2.el.querySelector(".jrn-ring"))
+        n2.el.appendChild(E("circle",{class:"jrn-ring", r:n2.ringR})); });
+    document.getElementById("cbg-jrnPos").textContent=(JRN.i+1)+"/"+steps.length;
+    var n=SELREG.nodes[key];
+    document.getElementById("cbg-jrnStep").textContent = n ? n.label : key;
+  }
+  function jrnStart(idx){
+    JRN.cur=JRN.list[idx]||null; JRN.i=0;
+    document.getElementById("cbg-jrnBar").hidden=!JRN.cur;
+    if(JRN.cur) jrnGo(0);
+  }
+  function jrnExit(){ JRN.cur=null; JRN.i=0;
+    document.getElementById("cbg-jrnBar").hidden=true;
+    document.getElementById("cbg-jrnSel").value="";
+    clearSelection(); }
+
   var skipAnimOnce = false;
   function renderKeepView(){ if(view==="l1") renderL1(); else renderL2(drilledSlug); skipAnimOnce=false; }
   // every render resets SELREG — re-rendering controls must restore the panel's
   // selection the way setStage does, or the open card silently loses its ring
   function rerenderKeepPanel(){ renderKeepView(); reopenPanel(); }
-  function drill(slug){ userPos={}; expanded={}; panX=0; panY=0; zoom=1; renderL2(slug); }
-  function back(){ userPos={}; expanded={}; panX=0; panY=0; zoom=1;
+  function drill(slug){ userPos={}; expanded={}; panX=0; panY=0; zoom=1; navClear(); renderL2(slug); }
+  function back(){ userPos={}; expanded={}; panX=0; panY=0; zoom=1; navClear();
     if(SIM) SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; });
     renderL1(); resetPanel(); }
   backBtn.addEventListener("click", back);
   resetBtn.addEventListener("click", function(){ userPos={}; zoom=1; panX=0; panY=0;
-    panelTarget=null; clearSelection(); renderKeepView(); resetPanel(); });
+    panelTarget=null; navClear(); clearSelection(); renderKeepView(); resetPanel(); });
 
   /* ── the wheel grammar (lab round 12): plain scroll PANS vertically · Shift PANS
      sideways · Ctrl/Cmd (or pinch) ZOOMS at the cursor, clamped by the EFFECTIVE
@@ -1825,7 +1984,8 @@
            + lsw("fk","dash","var(--edge)")
            + "<span class='count'>double-click an external piece to hop</span>";
     }
-    legend.innerHTML = html;
+    var el=document.getElementById("cbg-legend");
+    if(el) el.innerHTML = html;
   }
 
   // ── test hook (namespaced) ──────────────────────────────────────────────────
@@ -1861,7 +2021,7 @@
     blast:    function(){ return SIM ? SIM.blast.slice() : []; },
     openPiece: function(slug, pid){
       var p=((SIM&&SIM.pieces&&SIM.pieces[slug])||[]).filter(function(x){ return x.id===pid; })[0];
-      if(p && PANEL){ cancelContTap();          // mirror a REAL piece click (incl. its canceller)
+      if(p && PANEL){ cancelContTap(); navTouch("pc:"+slug+"|"+p.id);   // mirror a REAL piece click
         panelTarget={piece:{slug:slug,p:p}}; PANEL.openDetail(slug, p); }
     },
     singleClick: function(key){
@@ -1916,6 +2076,22 @@
     contTapPending: function(){ return !!pendingCont; },
     openAllFace: function(){ var b=document.getElementById("cbg-openAll");
       return { text:b.textContent, on:b.classList.contains("on") }; },
+    journeys: function(){ return JRN.list.map(function(j){ return { kind:j.kind, ent:j.ent, name:j.name, n:j.steps.length }; }); },
+    jrnState: function(){ return { cur:JRN.cur?JRN.cur.name:null, i:JRN.i, resolved:jrnResolved().length }; },
+    jrnPick:  function(i){ var s=document.getElementById("cbg-jrnSel"); s.value=String(i);
+      s.dispatchEvent(new Event("change",{bubbles:false})); },
+    jrnNext:  function(){ document.getElementById("cbg-jrnNext").click(); },
+    jrnPrev:  function(){ document.getElementById("cbg-jrnPrev").click(); },
+    jrnExit:  function(){ document.getElementById("cbg-jrnX").click(); },
+    jrnRings: function(){ return vp.querySelectorAll(".jrn-ring").length; },
+    jrnEdges: function(){ return vp.querySelectorAll(".e-jrn").length; },
+    navDepth: function(){ return navStack.length; },
+    navBack:  function(){ goBack(); },
+    navShown: function(){ return !document.getElementById("cbg-navback").hidden; },
+    keysMinNow: function(){ return document.getElementById("cbg-keys").classList.contains("min"); },
+    clickKeysMin: function(){ document.getElementById("cbg-keysMin").click(); },
+    legendTail: function(){ var t=document.querySelector("#cbg-stagelegend #cbg-legend");
+      return t ? t.querySelectorAll(".item").length : -1; },
     dossier:  function(){ return {
       ptabs: document.querySelectorAll("#cbg-detail table.ptab").length,
       uq:    document.querySelectorAll("#cbg-detail .uqchip").length,
@@ -1936,8 +2112,6 @@
     document.getElementById("cbg-openAll").hidden = false;
     document.getElementById("cbg-conns").hidden = false;
     document.getElementById("cbg-stageSeg").hidden = false;
-    document.getElementById("cbg-hint").textContent =
-      "click = inspect · double-click an entity opens / closes it · scroll = pan · ctrl+scroll = zoom · alt+scroll = depth";
     document.getElementById("cbg-openAll").addEventListener("click", function(){
       var inv=SIM.touched.concat(SIM.blast), allOpen=inv.length && inv.every(function(s){ return expanded[s]; });
       expanded={}; if(!allOpen) inv.forEach(function(s){ expanded[s]=true; });
@@ -1954,8 +2128,6 @@
     document.getElementById("cbg-hchange").innerHTML =
       "<div class='ln1'><span class='dot idle'></span>No change in flight</div>"
       + "<div class='ln2'>showing the current codebase map</div>";
-    document.getElementById("cbg-hint").textContent =
-      "click = inspect · double-click an entity to drill · scroll = pan · ctrl+scroll = zoom · alt+scroll = depth";
   }
   // gear-panel layout pills (Entities · Inside · Lines · Icons)
   document.getElementById("cbg-entitiesSeg").addEventListener("click", function(e){
@@ -1999,6 +2171,38 @@
   document.getElementById("cbg-commitClose").addEventListener("click", function(){ cModal.hidden=true; });
   cModal.addEventListener("click", function(e){ if(e.target===cModal) cModal.hidden=true; });
 
+  // ── the Controls corner box (lab round 36): the gesture grammar, starts min ──
+  document.getElementById("cbg-keysBody").innerHTML =
+    "<div>click <span>· inspect (card + connections)</span></div>"
+    + (SIM ? "<div>double-click an entity <span>· open / close its pieces</span></div>"
+           : "<div>double-click an entity <span>· drill into its pieces</span></div>")
+    + "<div>drag a node <span>· move it · drag the background · pan</span></div>"
+    + "<div>scroll <span>· pan vertically · shift &#43; scroll · sideways</span></div>"
+    + "<div>ctrl / pinch <span>· zoom at the cursor</span></div>"
+    + "<div>alt &#43; scroll <span>· highlight depth (the slider follows)</span></div>"
+    + "<div>dbl-click a wire <span>· hop between its ends</span></div>"
+    + "<div>&larr; (panel top) <span>· back through the travel trail (6 stops)</span></div>";
+  document.getElementById("cbg-keysMin").addEventListener("click", function(){
+    var box=document.getElementById("cbg-keys"), min=box.classList.toggle("min");
+    this.textContent = min ? "+" : "\u2212";
+  });
+  document.getElementById("cbg-navback").addEventListener("click", goBack);
+  // ── journeys picker: the change walk (SIM) + the derived request walks ──
+  (function(){
+    var sel=document.getElementById("cbg-jrnSel");
+    JRN.list=buildJourneys();
+    var h="<option value=''>&#8212; journeys &#8212;</option>", chg=[], req=[];
+    JRN.list.forEach(function(j,i){
+      (j.kind==="change"?chg:req).push(
+        "<option value='"+i+"'>"+esc(j.name)+" · "+esc(j.ent)+" ("+j.steps.length+")</option>"); });
+    if(chg.length) h+="<optgroup label='The change in flight'>"+chg.join("")+"</optgroup>";
+    h+="<optgroup label='Request — derived from the wires ("+req.length+")'>"+req.join("")+"</optgroup>";
+    sel.innerHTML=h;
+    sel.addEventListener("change", function(){ if(this.value==="") jrnExit(); else jrnStart(+this.value); });
+    document.getElementById("cbg-jrnPrev").addEventListener("click", function(){ jrnGo(-1); });
+    document.getElementById("cbg-jrnNext").addEventListener("click", function(){ jrnGo(1); });
+    document.getElementById("cbg-jrnX").addEventListener("click", jrnExit);
+  })();
   renderL1();
   resetPanel();
   window.__cbgready = true;

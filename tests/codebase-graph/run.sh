@@ -161,6 +161,25 @@ check("route-file coverage" in station,
 check("table-layout:fixed" in CSS and "overflow-wrap:anywhere" in CSS,
       "ptab tables cannot overflow the panel (fixed layout + wrap)")
 
+# ── E4 · slice 3: journeys · nav history · corner boxes ──
+check("function buildJourneys" in station, "journeys derive from the L2 wires (+ the SIM change walk)")
+check(".slice(0,20)" in station and station.count(".slice(0,20)") >= 2,
+      "journey steps are capped at 20 (both walk kinds)")
+check("jrnResolved" in station and "SELREG.nodes[k]" in station,
+      "journey steps resolve against SELREG at PLAY time (layout switches never break a walk)")
+check("function navVisit" in station and "function navTouch" in station and "function goBack" in station,
+      "the nav trail: link travel pushes, plain clicks touch, ← pops")
+check("navStack.length>6) navStack.shift()" in station, "the trail is 6-deep")
+check("navVisit(key); landOn(key);" in station,
+      "jumpToNode = navVisit + landOn (travel always records the chain)")
+check('id="cbg-keys"' in station and 'class="cbg-keys min"' in station,
+      "the Controls corner box exists and STARTS minimized")
+check("'<div class=\'cbg-legend\' id=\'cbg-legend\'>'" in station.replace('"', "'") or
+      '"<div class=\'cbg-legend\' id=\'cbg-legend\'></div>"' in station,
+      "the legend TAIL is created INSIDE the Legend corner box")
+check('<div class="cbg-legend" id="cbg-legend"></div>' not in station,
+      "the full-width bottom legend bar is gone (corner-box ruling, lab round 36)")
+
 # ── E · honest-empty contract: the station degrades when GABE_SIM is null
 check("degradePanel" in station, "station has a degrade path (no change in flight)")
 check(re.search(r'window\.GABE_SIM\s*\|\|\s*null', station) is not None,

@@ -38,7 +38,11 @@ four stage lenses wearing the **beat overlays** (red rings+pills → heat+blast 
 green flips + amber drift ring → commit purple), a per-stage lower-left encoding
 legend, and a persistent right panel with the per-piece **lifecycle timeline**,
 typed identifier chips (fn · endpoint · model · schema · data type), and tests +
-evidence, plus the selection's clickable **connections** rows.
+evidence, plus the selection's clickable **connections** rows. Since slice 3 the
+toolbar carries a **journeys** picker (the change walk + request walks derived
+from the wires, stepped ◀ ▶ with a glowing overlay), the panel header a **←
+travel trail** (6 stops), and the stage's corners the **Legend** box (beat key +
+level tail) and the **Controls** box (the gesture grammar).
 
 ## Files
 
@@ -76,8 +80,10 @@ selection engine over the fixture (counts derived from `GABE_SIM`, never hardcod
 `port2` builds a temp `GABE_SIM=null` twin and pins the honest-empty degrade + the
 L2 drill; `port3` pins the review's failure modes (unclaimed-bucket boot, hop by
 slug, travel); `port4` pins the slice-2 DOSSIER (enriched cards + the sim-piece
-panel join, every count derived from the committed det). Not doctor-wired
-(browser-bound); run when iterating on the station.
+panel join, every count derived from the committed det); `port5` pins slice 3
+(journeys derived from the wires + the change walk, the ← nav trail, the two
+corner boxes). Not doctor-wired (browser-bound); run when iterating on the
+station.
 ⚠ every re-render replays the 0.9s piece fly-in — probes must settle (~1.2s) before
 real-mouse clicks, or they hit the container where the pieces still are.
 
