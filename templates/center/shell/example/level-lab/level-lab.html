@@ -130,8 +130,6 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
     <span class="sub" id="sub">the level-navigation model + symbol grammar, on real gustify data</span>
     <div class="seg" id="levels">
       <button data-lvl="entities" class="on">1 · Entities</button>
-      <button data-lvl="pieces">2 · Pieces</button>
-      <button data-lvl="functions">3 · Functions</button>
       <button data-lvl="layers">4 · Layers</button>
       <button data-lvl="trace">5 · Trace</button>
     </div>
@@ -180,7 +178,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       </div>
       </div>
       <div id="inRow">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(2 · 3 · 5-bubbles)</span></div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(5 · trace bubbles)</span></div>
       <div class="seg" id="inSeg" style="margin-left:0;flex-wrap:wrap">
         <button data-in="tiers">Tiers</button>
         <button data-in="force" class="on">Force</button>
@@ -721,12 +719,18 @@ function drawEntities(){
       var ti=E("title"); ti.textContent=ed.s+" → "+ed.t+" · "+k+" ×"+ed.kinds[k]+(k==="calls"?" (inferred — a floor)":""); hit.appendChild(ti);
       eLayer.appendChild(hit); }); });
   D.entities.forEach(function(en){ var p=entAnchor(en.slug), col=COLORS[en.slug]||"#888";
-    var r=24+Math.sqrt(en.counts.lines||1)/14;
+    var pc0=D.pieces[en.slug]||{models:[],schemas:[],endpoints:[]};
+    var nPieces=(pc0.models||[]).length+(pc0.schemas||[]).length+(pc0.endpoints||[]).length+((pc0.usefns||[]).length);
+    var r=rnd(18+4.6*Math.sqrt(nPieces));    // the circle carries its diagram-5 weight
     var g=E("g",{class:"entnode","data-id":"ent:"+en.slug, transform:"translate("+p.x+","+p.y+")"});
     g.appendChild(E("circle",{class:"body", r:r, fill:col, stroke:"var(--panel)","stroke-width":"2"}));
     var t=E("text",{class:"lbl", y:r+15}); t.textContent=en.label; g.appendChild(t);
     var s=E("text",{class:"sub2", y:r+28}); s.textContent=en.counts.endpoints+" ep · "+en.counts.models+" models"; g.appendChild(s);
     g.__click=function(){ showEntity(en); };
+    // dbl-click = OPEN (the center station's drill): jump into the trace, centred here
+    g.addEventListener("dblclick",function(ev){ ev.stopPropagation(); ev.preventDefault();
+      level="trace"; render();
+      var w=entAnchor(en.slug); if(w) centerCamera(w); });
     wireEntityDrag(g, en.slug);                     // drag to move; a still click selects
     nLayer.appendChild(g);
     b.minX=Math.min(b.minX,p.x-90); b.maxX=Math.max(b.maxX,p.x+90);
@@ -957,35 +961,140 @@ function renderKeepView(){ var px=panX, py=panY, z=zoom; render(); panX=px; panY
 
 /* ═══ LEVEL 4 · LAYERS — lanes api / services / web; lane-crossing calls visible ═══ */
 function drawLayers(){
-  var LANES=["api","services","web"], LANEX={api:-380, services:0, web:380};
-  var b={minX:-560,minY:-320,maxX:560,maxY:340};
+  /* Diagram 4 REBUILT (operator round 39): keep the LANE structure, carry the
+     FULL diagram-5 inventory — every endpoint, function, model and schema —
+     with the settled grammar (bare icons, badges, canonical keys, wires). */
+  var LANES=["endpoints","api","services","web","data"];
+  var LANECOL={endpoints:"var(--m-get)", api:"var(--c-fn-api)", services:"var(--c-fn-services)",
+               web:"var(--c-fn-web)", data:"var(--c-model)"};
   var bgLayer=E("g"), eLayer=E("g"), nLayer=E("g");
-  vp.appendChild(bgLayer); vp.appendChild(eLayer); vp.appendChild(nLayer);
-  LANES.forEach(function(ln){ var x=LANEX[ln];
-    bgLayer.appendChild(E("rect",{x:x-150, y:-300, width:300, height:620, rx:12,
-      fill:FNCOL[ln], "fill-opacity":"0.05", stroke:FNCOL[ln], "stroke-opacity":"0.4","stroke-dasharray":"5 5"}));
-    var t=E("text",{class:"lbl", x:x, y:-278}); t.textContent=ln.toUpperCase(); t.setAttribute("fill",FNCOL[ln]); nLayer.appendChild(t); });
-  var byLane={api:[],services:[],web:[]};
-  D.fn_nodes.forEach(function(f){ if(byLane[f.layer]) byLane[f.layer].push(f); });
-  LANES.forEach(function(ln){ byLane[ln].forEach(function(f,i){
-    var id="lane:"+f.id;
-    if(!pos[id]) pos[id]={x:LANEX[ln]+((i%2)?58:-58), y:-240+i*(520/Math.max(byLane[ln].length,1))+18};
-    var q=pos[id];
-    var g=E("g",{class:"fnode","data-layer":f.layer, transform:"translate("+q.x+","+q.y+")"});
-    fGlyph(g, 8.5, FNCOL[f.layer], f.handler, f.god);
-    var t=E("text",{class:"plabel", y:18}); t.textContent=trunc(f.name,15); g.appendChild(t);
-    var ti=E("title"); ti.textContent=f.name+" · "+f.slug; g.appendChild(ti);
-    regNode(g, "lane:"+f.id, f.name+"()", "fn");
-    g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f);
-      attachSelection("lane:"+f.id); });
-    nLayer.appendChild(g); }); });
-  D.fn_edges.forEach(function(ed){ var a=pos["lane:"+ed.s], c=pos["lane:"+ed.t]; if(!a||!c) return;
-    var p4=kindPath(eLayer, a, c, ed.rel==="imports"?"imports":"calls", 10);
-    flowDots(eLayer, p4, "#9aa3ad");
-    regEdge(p4, ed.rel==="imports"?"import":"call", "lane:"+ed.s, "lane:"+ed.t, "confidence: "+ed.conf); });
+  var defs=E("defs");
+  vp.appendChild(defs); vp.appendChild(bgLayer); vp.appendChild(eLayer); vp.appendChild(nLayer);
+  var lanes={endpoints:[], api:[], services:[], web:[], data:[]};
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
+    (pc.endpoints||[]).forEach(function(ep){ lanes.endpoints.push({kind:"ep", slug:slug, ep:ep}); });
+    (pc.models||[]).forEach(function(m){ lanes.data.push({kind:"model", slug:slug, m:m}); });
+    (pc.schemas||[]).forEach(function(s){ lanes.data.push({kind:"schema", slug:slug, m:s}); });
+    var seen={};
+    (pc.endpoints||[]).forEach(function(ep){ if(ep.fn && (ep.touch||[]).length && !seen[ep.fn]){
+      seen[ep.fn]=1; lanes.api.push({kind:"fn", slug:slug, name:ep.fn, handler:true}); } });
+    (pc.usefns||[]).forEach(function(u){ if(!seen[u.fn]){ seen[u.fn]=1;
+      lanes.services.push({kind:"usefn", slug:slug, name:u.fn, uses:u.uses}); } });
+  });
+  D.fn_nodes.forEach(function(f){ if(f.layer==="web")
+    lanes.web.push({kind:"fn", slug:f.slug, name:f.name, handler:f.handler, f:f}); });
+  var GX=118, GY=46, WRAP=24, laneX={}, x0=0;
+  var epAtG={}, fnAtG={}, clsAtG={}, epByFnG={};
+  LANES.forEach(function(ln){ var items=lanes[ln]; if(!items.length){ laneX[ln]=null; return; }
+    items.sort(function(a,b){ var ka=a.slug+"|"+(a.name||(a.ep?a.ep.m+a.ep.p:"")||(a.m?a.m.cls:""));
+      var kb=b.slug+"|"+(b.name||(b.ep?b.ep.m+b.ep.p:"")||(b.m?b.m.cls:""));
+      return ka<kb?-1:1; });
+    var cols=Math.ceil(items.length/WRAP), w=cols*GX;
+    laneX[ln]={x:x0+w/2, cols:cols, w:w}; x0+=w+70; });
+  var totalW=x0-70;
+  LANES.forEach(function(ln){ if(laneX[ln]) laneX[ln].x-=totalW/2; });
+  var maxRows=0;
+  LANES.forEach(function(ln){ if(laneX[ln]) maxRows=Math.max(maxRows, Math.min(WRAP, lanes[ln].length)); });
+  var H=maxRows*GY+70, top=-H/2;
+  var b={minX:-totalW/2-60, minY:top-60, maxX:totalW/2+60, maxY:top+H+40};
+  LANES.forEach(function(ln){ var L=laneX[ln]; if(!L) return;
+    bgLayer.appendChild(E("rect",{x:L.x-L.w/2-14, y:top-34, width:L.w+28, height:H+10, rx:12,
+      fill:LANECOL[ln], "fill-opacity":"0.04", stroke:LANECOL[ln], "stroke-opacity":"0.4","stroke-dasharray":"5 5"}));
+    var t=E("text",{class:"lbl", x:L.x, y:top-14}); t.textContent=ln.toUpperCase();
+    t.setAttribute("fill",LANECOL[ln]); nLayer.appendChild(t); });
+  LANES.forEach(function(ln){ var L=laneX[ln]; if(!L) return;
+    lanes[ln].forEach(function(it,i){
+      var col=Math.floor(i/WRAP), row=i%WRAP;
+      var x=rnd(L.x-L.w/2+GX/2+col*GX), y=rnd(top+row*GY+14);
+      var colr=COLORS[it.slug]||"#888";
+      if(it.kind==="ep"){ var ep=it.ep;
+        var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
+        epMark(g, 6.5, ep.m); proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
+        g.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:colr}));
+        twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);
+        var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" · "+it.slug+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
+        if(ep.fn) epByFnG[it.slug+"|"+ep.fn]={x:x, y:y, key:"ep:"+it.slug+"|"+ep.m+" "+ep.p};
+        epAtG[it.slug+"|"+ep.m+" "+ep.p]={x:x,y:y};
+        regNode(g, "ep:"+it.slug+"|"+ep.m+" "+ep.p, ep.m+" "+ep.p, "ep");
+        (function(slug2,ep2){ g.addEventListener("click",function(ev){ ev.stopPropagation();
+          showEndpoint(slug2, ep2); attachSelection("ep:"+slug2+"|"+ep2.m+" "+ep2.p); }); })(it.slug, ep);
+        nLayer.appendChild(g);
+      } else if(it.kind==="model"||it.kind==="schema"){ var cls=it.m.cls;
+        var g2=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+x+","+y+")"});
+        if(it.kind==="model") cylinder(g2, 8, "var(--c-model)"); else sBadge(g2, 7, "var(--c-schema)");
+        proofBadge(g2, 9, it.m.tests||null); guardMark(g2, 9, it.m.guards||0);
+        hubMark(g2, 9, it.m.hub||null); pressMark(g2, 9, it.slug, cls);
+        g2.appendChild(E("circle",{cx:-11, cy:-9, r:2.6, fill:colr}));
+        twoRowLabel(g2, cls, 0, 17);
+        var ti2=E("title"); ti2.textContent=(it.kind==="model"?"model ":"schema ")+cls+" · "+it.slug; g2.appendChild(ti2);
+        clsAtG[it.slug+"|"+cls]={x:x,y:y};
+        regNode(g2, "cls:"+it.slug+"|"+cls, cls, it.kind);
+        (function(slug2,it2){ g2.addEventListener("click",function(ev){ ev.stopPropagation();
+          showPiece(slug2, {kind:it2.kind, m:it2.m}); attachSelection("cls:"+slug2+"|"+it2.m.cls); }); })(it.slug, it);
+        nLayer.appendChild(g2);
+      } else { var nm=it.name;
+        var lay=ln==="web"?"web":(it.kind==="usefn"?"services":"api");
+        var g3=E("g",{class:"fnode"+(it.kind==="usefn"?" usefn":""),"data-layer":lay, transform:"translate("+x+","+y+")"});
+        fGlyph(g3, 8.5, FNCOL[lay]||"var(--muted)", !!it.handler, false);
+        var fD=D.fn_nodes.filter(function(f){ return f.name===nm && f.slug===it.slug; })[0]||{};
+        proofBadge(g3, 9, fD.tests||null);
+        g3.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:colr}));
+        twoRowLabel(g3, nm, 0, 17);
+        var ti3=E("title"); ti3.textContent=nm+"() · "+lay+" · "+it.slug; g3.appendChild(ti3);
+        fnAtG[it.slug+"|"+nm]={x:x,y:y};
+        regNode(g3, "fn:"+it.slug+"|"+nm, nm+"()", "fn");
+        (function(slug2,nm2,lay2,h2,u2,fD2){ g3.addEventListener("click",function(ev){ ev.stopPropagation();
+          showFn({name:nm2, slug:slug2, layer:lay2, lang:lay2==="web"?"ts":"py", handler:!!h2, god:false, uses:u2||0, tests:fD2.tests||null, hub:fD2.hub||null});
+          attachSelection("fn:"+slug2+"|"+nm2); }); })(it.slug, nm, lay, it.handler, it.uses, fD);
+        nLayer.appendChild(g3);
+      } }); });
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{}; var col=COLORS[slug]||"#888";
+    (pc.endpoints||[]).forEach(function(ep){
+      var e0=epAtG[slug+"|"+ep.m+" "+ep.p]; if(!e0) return;
+      var f0=ep.fn && fnAtG[slug+"|"+ep.fn];
+      if(f0){ var w1=E("path",{class:"e-touch", d:curve(e0.x,e0.y,f0.x,f0.y,10)});
+        w1.style.stroke=col; w1.style.opacity="0.7"; eLayer.appendChild(w1);
+        regEdge(w1, "route", "ep:"+slug+"|"+ep.m+" "+ep.p, "fn:"+slug+"|"+ep.fn, "the route invokes "+ep.fn+"()");
+        flowDots(eLayer, w1, col); }
+      var src=f0||e0, srcKey=f0?("fn:"+slug+"|"+ep.fn):("ep:"+slug+"|"+ep.m+" "+ep.p);
+      (ep.touch||[]).forEach(function(c,ci){ var q=clsAtG[slug+"|"+c]; if(!q) return;
+        var w2=E("path",{class:"e-touch", d:curve(src.x,src.y,q.x,q.y,(ci%2?14:-14))});
+        w2.style.stroke=col; w2.style.opacity="0.7"; eLayer.appendChild(w2);
+        regEdge(w2, "touch", srcKey, "cls:"+slug+"|"+c, "read/written by the handler body"); });
+      if(ep.resp){ var own=D.schema_owner[ep.resp], rq=own&&clsAtG[own+"|"+ep.resp];
+        if(rq){ var w3=E("path",{class:"e-resp", fill:"none","stroke-width":"1.2","stroke-dasharray":"4 3",
+            d:curve(src.x,src.y,rq.x,rq.y,8)});
+          w3.style.stroke=col; w3.style.opacity="0.55"; eLayer.appendChild(w3);
+          regEdge(w3, "resp", srcKey, "cls:"+own+"|"+ep.resp, "response_model"); } } });
+    (pc.intra||[]).forEach(function(e2,ei){ var a=clsAtG[slug+"|"+e2.s], c2=clsAtG[slug+"|"+e2.t]; if(!a||!c2) return;
+      var pI=E("path",{class:"e-intra", fill:"none","stroke-width":"1.4", d:curve(a.x,a.y,c2.x,c2.y,(ei%2?16:-16))});
+      pI.style.stroke=col; pI.style.opacity="0.6"; eLayer.appendChild(pI);
+      regEdge(pI, "fk", "cls:"+slug+"|"+e2.s, "cls:"+slug+"|"+e2.t, "via "+e2.via); }); });
+  if(showConns) (D.cross_edges||[]).forEach(function(e2,xi){
+    var a=clsAtG[e2.fs+"|"+e2.f], c2=clsAtG[e2.ts+"|"+e2.t]; if(!a||!c2) return;
+    var grad=edgeGradient(defs, a, c2, COLORS[e2.fs]||"#888", COLORS[e2.ts]||"#888");
+    var pX=E("path",{class:"e-xfk", fill:"none","stroke-width":"1.8","stroke-dasharray":"2 5",
+      d:curve(a.x,a.y,c2.x,c2.y,laneBow("cls:"+e2.fs+"|"+e2.f, "cls:"+e2.ts+"|"+e2.t, (xi%2?24:-24)))});
+    pX.style.stroke="url(#"+grad+")"; pX.style.opacity="0.8"; eLayer.appendChild(pX);
+    flowDots(eLayer, pX, "url(#"+grad+")");
+    regEdge(pX, "xfk", "cls:"+e2.fs+"|"+e2.f, "cls:"+e2.ts+"|"+e2.t, "via "+e2.via); });
+  (D.use_edges||[]).forEach(function(e2,ui){
+    var from=fnAtG[e2.fs+"|"+e2.fn]||epByFnG[e2.fs+"|"+e2.fn];
+    var to=clsAtG[e2.ts+"|"+e2.cls]; if(!from||!to) return;
+    var cross=e2.fs!==e2.ts; if(cross && !showConns) return;
+    var pU=E("path",{class:"e-use", fill:"none","stroke-width":cross?"1.4":"1.1","stroke-dasharray":"1.5 3.5",
+      d:curve(from.x,from.y,to.x,to.y,laneBow((from.key||("fn:"+e2.fs+"|"+e2.fn)), "cls:"+e2.ts+"|"+e2.cls, (ui%2?18:-18)))});
+    var dotFill;
+    if(cross){ var g4=edgeGradient(defs, from, to, COLORS[e2.fs]||"#888", COLORS[e2.ts]||"#888");
+      pU.style.stroke="url(#"+g4+")"; pU.style.opacity="0.75"; dotFill="url(#"+g4+")"; }
+    else { pU.style.stroke=COLORS[e2.fs]||"#888"; pU.style.opacity="0.45"; dotFill=COLORS[e2.fs]||"#888"; }
+    eLayer.appendChild(pU);
+    flowDots(eLayer, pU, dotFill);
+    regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
   frame(b);
-  legend([sw("lane = function_insight.layer (api · services · web)","line","var(--muted)"),
-          sw("a dashed line CROSSING lanes = cross-layer coupling","dash","var(--accent)")]);
+  legend([glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
+          glyphIt("model","cyl"), glyphIt("schema","s"),
+          "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"]);
 }
 
 /* ═══ LEVEL 5 · TRACE — the ONION: diagram 2's container layout with a layered,
@@ -1488,7 +1597,7 @@ function showFn(f){
 
 /* ── level switching (position persistence keeps shared anchors) ── */
 function syncGearApplicability(){
-  var inOk = (level==="pieces"||level==="functions"||(level==="trace"&&traceCluster!=="flow"));
+  var inOk = (level==="trace"&&traceCluster!=="flow");   // Inside shapes the trace bubbles (2/3 left the UI; 4 is a fixed grid)
   var clOk = (level==="trace");
   var inRow=document.getElementById("inRow"), clRow=document.getElementById("clRow");
   if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }

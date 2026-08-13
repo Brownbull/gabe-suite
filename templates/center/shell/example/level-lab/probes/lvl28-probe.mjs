@@ -98,10 +98,12 @@ matrix.push('functions/calls: '+await pressKind('functions','calls','#canvas .e-
 const nImp3 = await pg.evaluate(()=>document.querySelectorAll('#canvas .e-imports').length);
 if(nImp3) matrix.push('functions/imports: '+await pressKind('functions','imports','#canvas .e-imports', nImp3));
 else console.log('  functions/imports: none drawn (fixture)');
-// ── L4 · layers: call / import across lanes
+// ── L4 · layers (round 39: the full-inventory lanes — route/touch/use wires)
 await T("window.__lvltest.set('layers')");
-matrix.push('layers/calls: '+await pressKind('layers','calls','#canvas .e-calls',
-  await pg.evaluate(()=>document.querySelectorAll('#canvas .e-calls').length)));
+matrix.push('layers/touch: '+await pressKind('layers','touch','#canvas .e-touch',
+  await pg.evaluate(()=>document.querySelectorAll('#canvas .e-touch').length)));
+matrix.push('layers/use: '+await pressKind('layers','use','#canvas .e-use',
+  await pg.evaluate(()=>document.querySelectorAll('#canvas .e-use').length)));
 // ── L5 · trace: route+touch / resp / xfk / use
 await T("window.__lvltest.set('trace')");
 matrix.push('trace/route+touch: '+await pressKind('trace','route+touch','#canvas .e-touch',
