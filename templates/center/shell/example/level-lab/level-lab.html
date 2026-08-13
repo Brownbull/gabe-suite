@@ -48,6 +48,7 @@ aside .note.nt{ margin-top:0; }
 aside .cgo{ cursor:pointer; } aside .cgo:hover{ text-decoration:underline; }
 aside .jgo:hover b{ text-decoration:underline; }
 .flowdot{ pointer-events:none; }
+.bubble{ pointer-events:none; }
 aside .row{ display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-top:1px solid var(--line); }
 aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10px; }
 aside .irow{ display:flex; align-items:center; gap:9px; padding:5px 0; border-top:1px solid var(--line); font-size:12.5px; }
@@ -671,8 +672,8 @@ function drawInterEntityEdges(defs, eLayer, radiusOf){
 function drawPieces(){
   var radii=pieceRadii(); declutterAnchors(radii);
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
-  vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
+  var defs=E("defs"), contLayer=E("g"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
+  vp.appendChild(defs); vp.appendChild(contLayer); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
   // L2 shows NO entity-to-entity lines — the coupling REMAPS to piece-to-piece
   // cross edges (drawn after the loop, once every piece has its position).
   var pieceAtGlobal={};                                    // slug|cls → position
@@ -683,7 +684,7 @@ function drawPieces(){
     var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:contR, fill:col, stroke:col, style:"cursor:grab"});
     cont.__click=function(){ showEntity(D.entities.filter(function(e){return e.slug===slug;})[0]); };
     wireEntityDrag(cont, slug);
-    layer.appendChild(cont);
+    contLayer.appendChild(cont);
     var lb=E("text",{class:"lbl", x:p.x, y:p.y-contR-10}); lb.textContent=slug; lb.setAttribute("fill",col); layer.appendChild(lb);
     // inner pieces: models = DB cylinders · schemas = curly-brace icons
     var arr=innerArrangement(slug, p.x, p.y);
@@ -697,14 +698,17 @@ function drawPieces(){
       guardMark(g, 9, it.m.guards||0); hubMark(g, 9, it.m.hub||null); pressMark(g, 9, slug, it.m.cls);
       radialLabel(g, q, p, it.m.cls||"", 17);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
-      g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
+      regNode(g, "cls:"+slug+"|"+it.m.cls, it.m.cls, it.kind);
+      g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it);
+        attachSelection("cls:"+slug+"|"+it.m.cls); });
       layer.appendChild(g); });
     // INTRA model→model FK edges — they wear the ENTITY'S colour
     (pc.intra||[]).forEach(function(e,ei){ var a=pieceAt[e.s], c=pieceAt[e.t]; if(!a||!c) return;
       var p=E("path",{class:"e-intra", fill:"none", "stroke-width":"1.6",
         d:curve(a.x,a.y,c.x,c.y,(ei%2?16:-16))}); p.style.stroke=col; p.style.opacity="0.75";
       var ti=E("title"); ti.textContent=e.s+" → "+e.t+" (fk via "+e.via+")"; p.appendChild(ti);
-      wireLayer.appendChild(p); });
+      wireLayer.appendChild(p);
+      regEdge(p, "fk", "cls:"+slug+"|"+e.s, "cls:"+slug+"|"+e.t, "via "+e.via); });
     // ENDPOINTS on the border — capped at 16, "+N more" EXPANDS to the full surface
     var all=pc.endpoints, shown=all;                    // ALWAYS show every endpoint
     shown.forEach(function(ep,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(shown.length,1);
@@ -712,14 +716,16 @@ function drawPieces(){
       // TOUCH WIRES: endpoint → the drawn pieces its handler reads/writes — entity colour
       (ep.touch||[]).forEach(function(cls,ci){ var q=pieceAt[cls]; if(!q) return;
         var tw=E("path",{class:"e-touch", d:curve(x,y,q.x,q.y,(ci%2?14:-14))});
-        tw.style.stroke=col; wireLayer.appendChild(tw); });
+        tw.style.stroke=col; wireLayer.appendChild(tw);
+        regEdge(tw, "touch", "ep:"+slug+"|"+ep.m+" "+ep.p, "cls:"+slug+"|"+cls, "read/written by the handler body"); });
       // the RESPONSE wire — what this endpoint RETURNS (every endpoint has one)
       if(ep.resp){ var rq=pieceAt[ep.resp];
         if(rq){ var rw=E("path",{class:"e-resp", fill:"none","stroke-width":"1.2","stroke-dasharray":"4 3",
             d:curve(x,y,rq.x,rq.y,(i%2?18:-18))});
           rw.style.stroke=col; rw.style.opacity="0.6";
           var rti=E("title"); rti.textContent=ep.m+" "+ep.p+" returns "+ep.resp; rw.appendChild(rti);
-          wireLayer.appendChild(rw); }
+          wireLayer.appendChild(rw);
+          regEdge(rw, "resp", "ep:"+slug+"|"+ep.m+" "+ep.p, "cls:"+slug+"|"+ep.resp, "response_model"); }
         else if(D.schema_owner[ep.resp] && D.schema_owner[ep.resp]!==slug)
           _respCross.push({fs:slug, x:x, y:y, ts:D.schema_owner[ep.resp], cls:ep.resp, ep:ep}); }
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
@@ -728,7 +734,9 @@ function drawPieces(){
       guardMark(g, 7, ep.guards||0);
       twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);   // BELOW the icon, like every piece
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
-      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
+      regNode(g, "ep:"+slug+"|"+ep.m+" "+ep.p, ep.m+" "+ep.p, "ep");
+      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
+        attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
       layer.appendChild(g); });
     /* expander removed — the full API surface always shows (operator ruling) */
     b.minX=Math.min(b.minX,p.x-contR-30); b.maxX=Math.max(b.maxX,p.x+contR+30);
@@ -744,7 +752,8 @@ function drawPieces(){
     pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.65";
     var ti=E("title"); ti.textContent=rc.ep.m+" "+rc.ep.p+" ("+rc.fs+") returns "+rc.cls+" — owned by "+rc.ts;
     pth.appendChild(ti); interLayer.appendChild(pth);
-    flowDots(interLayer, pth, "url(#"+grad+")"); });
+    flowDots(interLayer, pth, "url(#"+grad+")");
+    regEdge(pth, "resp", "ep:"+rc.fs+"|"+rc.ep.m+" "+rc.ep.p, "cls:"+rc.ts+"|"+rc.cls, "returned across the entity boundary"); });
   if(showConns) (D.cross_edges||[]).forEach(function(e,xi){
     var a=pieceAtGlobal[e.fs+"|"+e.f], c=pieceAtGlobal[e.ts+"|"+e.t]; if(!a||!c) return;
     var grad=edgeGradient(defs, a, c, COLORS[e.fs]||"#888", COLORS[e.ts]||"#888");
@@ -753,11 +762,7 @@ function drawPieces(){
     p.style.stroke="url(#"+grad+")"; p.style.opacity="0.8";
     flowDots(interLayer, p, "url(#"+grad+")");
     var hit=E("path",{d:p.getAttribute("d"), fill:"none", stroke:"transparent","stroke-width":"11", style:"cursor:pointer"});
-    (function(ed){ hit.addEventListener("click",function(ev){ ev.stopPropagation();
-      panel.innerHTML="<h3><span style='color:"+(COLORS[ed.fs]||"inherit")+"'>"+esc(ed.f)+"</span> → <span style='color:"+(COLORS[ed.ts]||"inherit")+"'>"+esc(ed.t)+"</span></h3>"
-        +"<div class='row'><span>kind</span><b>foreign key</b></div>"
-        +"<div class='row'><span>via column</span><b>"+esc(ed.via)+"</b></div>"
-        +"<div class='note'>A row in "+esc(ed.fs)+"'s "+esc(ed.f)+" points at a row in "+esc(ed.ts)+"'s "+esc(ed.t)+".</div>"; }); })(e);
+    regEdge(hit, "xfk", "cls:"+e.fs+"|"+e.f, "cls:"+e.ts+"|"+e.t, "via "+e.via);
     var ti=E("title"); ti.textContent=e.fs+"."+e.f+" → "+e.ts+"."+e.t+" (via "+e.via+")"; hit.appendChild(ti);
     interLayer.appendChild(p); interLayer.appendChild(hit); });
   frame(b);
@@ -769,7 +774,8 @@ function drawPieces(){
 /* ═══ LEVEL 3 · FUNCTIONS — F glyphs by layer; cross-entity calls dashed (trust) ═══ */
 function drawFunctions(){
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var eLayer=E("g"), nLayer=E("g"); vp.appendChild(eLayer); vp.appendChild(nLayer);
+  var cLayer=E("g"), eLayer=E("g"), nLayer=E("g");
+  vp.appendChild(cLayer); vp.appendChild(eLayer); vp.appendChild(nLayer);
   var bySlug={}; D.fn_nodes.forEach(function(f){ (bySlug[f.slug]=bySlug[f.slug]||[]).push(f); });
   // declutter the involved anchors for the cluster radii
   var _r={}; Object.keys(bySlug).forEach(function(s){ _r[s]=Math.max(56, bySlug[s].length*10+26); });
@@ -785,7 +791,7 @@ function drawFunctions(){
     var ipos=insidePos(ids, anchor.x, anchor.y, {edges:fedges, groups:fgroups});
     ids.forEach(function(id){ if(!pos[id]) pos[id]=ipos[id]; });
     var R=innerExtent(ipos, anchor.x, anchor.y);
-    nLayerCluster(nLayer, slug, anchor, col, Math.max(R+26, 56));
+    nLayerCluster(cLayer, slug, anchor, col, Math.max(R+26, 56));
     fns.forEach(function(f){ var q=pos["fn:"+f.id];
       var g=E("g",{class:"fnode","data-layer":f.layer, transform:"translate("+q.x+","+q.y+")"});
       fGlyph(g, 9, FNCOL[f.layer]||"var(--muted)", f.handler, f.god);
@@ -793,14 +799,17 @@ function drawFunctions(){
       hubMark(g, 10, f.hub||null);
       radialLabel(g, q, anchor, trunc(f.name,14), 19);
       var ti=E("title"); ti.textContent=f.name+" · "+f.layer+(f.handler?" · handler":"")+" · "+f.slug+(f.lang==="ts"?" · TS":""); g.appendChild(ti);
-      g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f); });
+      regNode(g, "fn:"+f.id, f.name+"()", "fn");
+      g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f);
+        attachSelection("fn:"+f.id); });
       nLayer.appendChild(g);
       b.minX=Math.min(b.minX,q.x-60); b.maxX=Math.max(b.maxX,q.x+60);
       b.minY=Math.min(b.minY,q.y-40); b.maxY=Math.max(b.maxY,q.y+40); }); });
   D.fn_edges.forEach(function(ed){ var a=pos["fn:"+ed.s], c=pos["fn:"+ed.t]; if(!a||!c) return;
     var p=kindPath(eLayer, a, c, ed.rel==="imports"?"imports":"calls", 0);
     flowDots(eLayer, p, "#9aa3ad");
-    var ti=E("title"); ti.textContent=ed.s.split("#").pop()+" → "+ed.t.split("#").pop()+" · "+ed.rel+" · "+ed.conf; p.appendChild(ti); });
+    var ti=E("title"); ti.textContent=ed.s.split("#").pop()+" → "+ed.t.split("#").pop()+" · "+ed.rel+" · "+ed.conf; p.appendChild(ti);
+    regEdge(p, ed.rel==="imports"?"import":"call", "fn:"+ed.s, "fn:"+ed.t, "confidence: "+ed.conf); });
   frame(b);
   legend([glyphIt("F api","f-api"), glyphIt("F services","f-serv"), glyphIt("F web (TS)","f-web"),
           sw("thick ring = endpoint handler","line","var(--c-fn-api)"),
@@ -818,9 +827,10 @@ function renderKeepView(){ var px=panX, py=panY, z=zoom; render(); panX=px; panY
 function drawLayers(){
   var LANES=["api","services","web"], LANEX={api:-380, services:0, web:380};
   var b={minX:-560,minY:-320,maxX:560,maxY:340};
-  var eLayer=E("g"), nLayer=E("g"); vp.appendChild(eLayer); vp.appendChild(nLayer);
+  var bgLayer=E("g"), eLayer=E("g"), nLayer=E("g");
+  vp.appendChild(bgLayer); vp.appendChild(eLayer); vp.appendChild(nLayer);
   LANES.forEach(function(ln){ var x=LANEX[ln];
-    nLayer.appendChild(E("rect",{x:x-150, y:-300, width:300, height:620, rx:12,
+    bgLayer.appendChild(E("rect",{x:x-150, y:-300, width:300, height:620, rx:12,
       fill:FNCOL[ln], "fill-opacity":"0.05", stroke:FNCOL[ln], "stroke-opacity":"0.4","stroke-dasharray":"5 5"}));
     var t=E("text",{class:"lbl", x:x, y:-278}); t.textContent=ln.toUpperCase(); t.setAttribute("fill",FNCOL[ln]); nLayer.appendChild(t); });
   var byLane={api:[],services:[],web:[]};
@@ -833,10 +843,14 @@ function drawLayers(){
     fGlyph(g, 8.5, FNCOL[f.layer], f.handler, f.god);
     var t=E("text",{class:"plabel", y:18}); t.textContent=trunc(f.name,15); g.appendChild(t);
     var ti=E("title"); ti.textContent=f.name+" · "+f.slug; g.appendChild(ti);
-    g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f); });
+    regNode(g, "lane:"+f.id, f.name+"()", "fn");
+    g.addEventListener("click",function(ev){ ev.stopPropagation(); showFn(f);
+      attachSelection("lane:"+f.id); });
     nLayer.appendChild(g); }); });
   D.fn_edges.forEach(function(ed){ var a=pos["lane:"+ed.s], c=pos["lane:"+ed.t]; if(!a||!c) return;
-    flowDots(eLayer, kindPath(eLayer, a, c, ed.rel==="imports"?"imports":"calls", 10), "#9aa3ad"); });
+    var p4=kindPath(eLayer, a, c, ed.rel==="imports"?"imports":"calls", 10);
+    flowDots(eLayer, p4, "#9aa3ad");
+    regEdge(p4, ed.rel==="imports"?"import":"call", "lane:"+ed.s, "lane:"+ed.t, "confidence: "+ed.conf); });
   frame(b);
   legend([sw("lane = function_insight.layer (api · services · web)","line","var(--muted)"),
           sw("a dashed line CROSSING lanes = cross-layer coupling","dash","var(--accent)")]);
@@ -1028,15 +1042,15 @@ function drawTrace(){
   if(traceCluster==="flow") return drawTraceFlow();
   var radii=traceRadii(); declutterAnchors(radii);
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
-  vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
+  var defs=E("defs"), contLayer=E("g"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
+  vp.appendChild(defs); vp.appendChild(contLayer); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
   var clsAtGlobal={}, fnAtGlobal={}, epByFnGlobal={};
   var isMulti=true;   // ONE layout path: disjoint modes are single-membership multi
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var L=isMulti?traceLayoutMulti(slug):traceLayout(slug), pc=L.inner.pc, R=radii[slug];
     var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:R, fill:col, stroke:col, style:"cursor:grab"});
     cont.__click=function(){ var en=D.entities.filter(function(e){return e.slug===slug;})[0]; if(en) showEntity(en); };
-    wireEntityDrag(cont, slug); layer.appendChild(cont);
+    wireEntityDrag(cont, slug); contLayer.appendChild(cont);
     var lb=E("text",{class:"lbl", x:p.x, y:p.y-R-10}); lb.textContent=slug; lb.setAttribute("fill",col); layer.appendChild(lb);
     // 2 · ENDPOINTS on the border (unchanged — the exposed surface)
     var shown=L.inner.eps, epAngle={};
@@ -1178,8 +1192,8 @@ function drawTrace(){
 function drawTraceFlow(){
   var radii=traceRadii(); declutterAnchors(radii);
   var b={minX:1e9,minY:1e9,maxX:-1e9,maxY:-1e9};
-  var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
-  vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
+  var defs=E("defs"), contLayer=E("g"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
+  vp.appendChild(defs); vp.appendChild(contLayer); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
   var clsAtGlobal={};
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var pc=D.pieces[slug]||{models:[],schemas:[],endpoints:[]};
@@ -1196,7 +1210,7 @@ function drawTraceFlow(){
     var core=Math.max(26, clsL.length*8), ring2=core+(Object.keys(fns).length?88:18);
     var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:R, fill:col, stroke:col, style:"cursor:grab"});
     cont.__click=function(){ var en=D.entities.filter(function(e){return e.slug===slug;})[0]; if(en) showEntity(en); };
-    wireEntityDrag(cont, slug); layer.appendChild(cont);
+    wireEntityDrag(cont, slug); contLayer.appendChild(cont);
     [ring2, core].forEach(function(r){ if(r<R) layer.appendChild(E("circle",{cx:p.x, cy:p.y, r:r,
       fill:"none", stroke:col, "stroke-opacity":"0.25","stroke-width":"1","stroke-dasharray":"2 5"})); });
     var lb=E("text",{class:"lbl", x:p.x, y:p.y-R-10}); lb.textContent=slug; lb.setAttribute("fill",col); layer.appendChild(lb);
@@ -1399,8 +1413,20 @@ function regEdge(el, kind, fromKey, toKey, how){
   // EVERY registered connector is interactive — click selects, dbl-click hops
   // (round 31 gap: route/touch/resp wires were registered but had no listener)
   el.style.pointerEvents="stroke"; el.style.cursor="pointer";
-  el.addEventListener("click",function(ev){ ev.stopPropagation(); selectEdge(idx); });
-  el.addEventListener("dblclick",function(ev){ ev.stopPropagation(); ev.preventDefault(); edgeHop(idx); });
+  var onClick=function(ev){ ev.stopPropagation(); selectEdge(idx); };
+  var onDbl=function(ev){ ev.stopPropagation(); ev.preventDefault(); edgeHop(idx); };
+  el.addEventListener("click",onClick);
+  el.addEventListener("dblclick",onDbl);
+  // a thin wire renders SUB-PIXEL at fit zoom — a real mouse can't land on it.
+  // Give it an invisible 9px hit twin carrying the same listeners.
+  var d=el.getAttribute && el.getAttribute("d");
+  var sw=parseFloat(el.getAttribute("stroke-width")||"1");
+  if(d && sw<9 && el.parentNode){
+    var tw=E("path",{d:d, fill:"none", stroke:"transparent","stroke-width":"9"});
+    tw.style.pointerEvents="stroke"; tw.style.cursor="pointer";
+    tw.addEventListener("click",onClick); tw.addEventListener("dblclick",onDbl);
+    el.parentNode.insertBefore(tw, el.nextSibling);
+  }
   return idx; }
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
@@ -1447,7 +1473,7 @@ function clearSelection(){ selKey=null;
   vp.querySelectorAll(".selring,.nbrring").forEach(function(x){ x.remove(); });
   vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
     x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
-function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", route:"routes", use:"uses"}[kind]||kind; }
+function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses"}[kind]||kind; }
 function selectNode(key){
   clearSelection(); selKey=key;
   var n=SELREG.nodes[key]; if(!n) return [];
@@ -1505,7 +1531,8 @@ function selectEdge(i){
       fk:"a foreign-key column points at the other table",
       xfk:"a foreign key crossing the entity boundary",
       use:"the function references this model/schema in its body (archmap)",
-      call:"a function call (graft; cross-file calls are inferred — a floor)"}[e.kind]||"")
+      call:"a function call (graft; cross-file calls are inferred — a floor)",
+      "import":"a module import (graft)"}[e.kind]||"")
    +" Click a → row to travel to that component.</div>";
   panel.querySelectorAll(".jgo").forEach(function(row){
     row.addEventListener("click",function(){ jumpToNode(row.getAttribute("data-k")); }); });
