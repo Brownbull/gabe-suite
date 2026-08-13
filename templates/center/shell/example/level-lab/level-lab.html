@@ -125,8 +125,10 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
       <div class="seg" id="laySeg" style="margin-left:0;flex-wrap:wrap">
         <button data-lay="ring">Ring</button>
+        <button data-lay="chain">Chain</button>
         <button data-lay="flow">Flow</button>
         <button data-lay="force" class="on">Force</button>
+        <button data-lay="spread">Spread</button>
       </div>
       <div id="clRow">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Cluster core by <span style="opacity:.6">(5·Trace)</span></div>
@@ -145,7 +147,15 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
         <button data-in="ring">Ring</button>
         <button data-in="force" class="on">Force</button>
         <button data-in="columns">Columns</button>
+        <button data-in="rows">Rows</button>
+        <button data-in="spiral">Spiral</button>
       </div>
+      </div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Lines</div>
+      <div class="seg" id="lineSeg" style="margin-left:0;flex-wrap:wrap">
+        <button data-line="direct">Direct</button>
+        <button data-line="curved" class="on">Curved</button>
+        <button data-line="bowed">Bowed</button>
       </div>
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Highlight depth (selection)</div>
       <div class="seg" id="depthSeg" style="margin-left:0">
@@ -386,7 +396,11 @@ function proofBadge(g, r, tests){
   if(tests.web>0) g.appendChild(E("circle",{class:"tbadge web",cx:bx,cy:by+9.5,r:2.4,fill:"var(--c-fn-web)"}));
 }
 /* curved wire: a quadratic bow perpendicular to the segment — crossings separate */
+/* LINES (operator round 34): one knob bends every connector — Direct keeps a
+   whisper of bow so lane pairs stay separable; Bowed doubles the curvature. */
+var lineStyle="curved", LINE_MULT={direct:0.25, curved:1, bowed:2};
 function curve(x1,y1,x2,y2,bow){ var dx=x2-x1, dy=y2-y1, d=Math.hypot(dx,dy)||1;
+  bow=bow*(LINE_MULT[lineStyle]||1);
   var mx=(x1+x2)/2 - dy/d*bow, my=(y1+y2)/2 + dx/d*bow;
   return "M"+x1+" "+y1+" Q "+rnd(mx)+" "+rnd(my)+" "+x2+" "+y2; }
 var expandedEps = {};        // slug → true when the entity's FULL endpoint list shows
@@ -432,6 +446,39 @@ function insidePos(items, cx, cy, opts){
       items.forEach(function(id){ V[id].x=(V[id].x-P[id].x*0.02)*0.85; V[id].y=(V[id].y-P[id].y*0.02)*0.85;
         P[id].x+=V[id].x; P[id].y+=V[id].y; }); }
     items.forEach(function(id){ out[id]={x:rnd(cx+P[id].x), y:rnd(cy+P[id].y)}; }); }
+  else if(insideLayout==="rows"){
+    // one ROW per group, ordered by BARYCENTER of coupled neighbours in the other
+    // rows (Sugiyama-lite) — fn→class wires drop straight down instead of crossing
+    var rg={}, rorder=[];
+    items.forEach(function(id){ var g=(opts.groups||{})[id]||"other";
+      if(!rg[g]){ rg[g]=[]; rorder.push(g); } rg[g].push(id); });
+    rorder.sort();
+    var xIdx={};
+    rorder.forEach(function(g){ rg[g].sort().forEach(function(id,i){ xIdx[id]=i; }); });
+    var nbr={}; (opts.edges||[]).forEach(function(e){
+      (nbr[e[0]]=nbr[e[0]]||[]).push(e[1]); (nbr[e[1]]=nbr[e[1]]||[]).push(e[0]); });
+    for(var sweep=0; sweep<4; sweep++)
+      rorder.forEach(function(g){
+        rg[g].sort(function(a,b){
+          var ba=(nbr[a]||[]).reduce(function(s,o){ return s+(xIdx[o]||0); },0)/Math.max((nbr[a]||[]).length,1);
+          var bb=(nbr[b]||[]).reduce(function(s,o){ return s+(xIdx[o]||0); },0)/Math.max((nbr[b]||[]).length,1);
+          return ba-bb || (a<b?-1:1); });
+        rg[g].forEach(function(id,i){ xIdx[id]=i; }); });
+    var WRAP=12;
+    var rowYs=[], y0=0;
+    rorder.forEach(function(g){ rowYs.push({g:g, subs:Math.ceil(rg[g].length/WRAP)}); });
+    var totalSubs=rowYs.reduce(function(s,r){ return s+r.subs; },0), yCur=-(totalSubs-1)/2*64;
+    rorder.forEach(function(g){ var arr2=rg[g], subs=Math.ceil(arr2.length/WRAP);
+      for(var si=0; si<subs; si++){
+        var seg=arr2.slice(si*WRAP,(si+1)*WRAP);
+        seg.forEach(function(id,i){ out[id]={x:rnd(cx+(i-(seg.length-1)/2)*56), y:rnd(cy+yCur)}; });
+        yCur+=64; } });
+    return out; }
+  else if(insideLayout==="spiral"){
+    // phyllotaxis: golden-angle spiral — densest even packing, labels never stack
+    items.forEach(function(id,i){ var r=15.5*Math.sqrt(i+0.6), a=i*2.399963;
+      out[id]={x:rnd(cx+r*Math.cos(a)), y:rnd(cy+r*Math.sin(a))}; });
+    return out; }
   else { var R=Math.max(42,n*7.8);
     items.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/n;
       out[id]={x:rnd(cx+R*Math.cos(a)), y:rnd(cy+R*Math.sin(a))}; }); }
@@ -503,6 +550,39 @@ function computeEntityPositions(){
       ENTS.forEach(function(s){ V[s].x=(V[s].x-P[s].x*0.003)*0.9; V[s].y=(V[s].y-P[s].y*0.003)*0.9;
         P[s].x+=V[s].x; P[s].y+=V[s].y; }); }
     ENTS.forEach(function(s){ pos["ent:"+s]={x:rnd(P[s].x), y:rnd(P[s].y)}; });
+  } else if(entLayout==="chain"){                          // ring, but ORDERED by coupling:
+    // greedy nearest-neighbour chain over L1 edge weight — connected entities sit
+    // adjacent on the circle, so their edges hug the rim instead of crossing it
+    var W={}; D.l1_edges.forEach(function(e){ var w=0, ks=e.kinds||{};
+      Object.keys(ks).forEach(function(k){ w+=ks[k]; });
+      var key=e.s<e.t?e.s+"|"+e.t:e.t+"|"+e.s; W[key]=(W[key]||0)+w; });
+    var wOf=function(a,b){ return W[a<b?a+"|"+b:b+"|"+a]||0; };
+    var deg={}; ENTS.forEach(function(s){ deg[s]=0; });
+    Object.keys(W).forEach(function(k){ var p=k.split("|"); deg[p[0]]+=W[k]; deg[p[1]]+=W[k]; });
+    var left=ENTS.slice().sort(function(a,b){ return deg[b]-deg[a] || (a<b?-1:1); });
+    var order=[left.shift()];
+    while(left.length){ var last=order[order.length-1], best=0, bi=0;
+      left.forEach(function(s,i){ var w=wOf(last,s); if(w>best){ best=w; bi=i; } });
+      order.push(left.splice(bi,1)[0]); }
+    ringPos(order.map(function(s){ return "ent:"+s; }), 300, 0, 0);
+  } else if(entLayout==="spread"){                         // stress layout: screen distance
+    // tracks graph distance (BFS hops over ALL L1 kinds) — deterministic, ring-seeded
+    var adj={}; ENTS.forEach(function(s){ adj[s]=[]; });
+    D.l1_edges.forEach(function(e){ if(adj[e.s]&&adj[e.t]){ adj[e.s].push(e.t); adj[e.t].push(e.s); } });
+    var HOP={}; ENTS.forEach(function(s){ var d={}, q=[s]; d[s]=0;
+      while(q.length){ var u=q.shift(); adj[u].forEach(function(v){ if(d[v]===undefined){ d[v]=d[u]+1; q.push(v); } }); }
+      HOP[s]=d; });
+    var far=1; ENTS.forEach(function(a){ ENTS.forEach(function(b){ if((HOP[a][b]||0)>far) far=HOP[a][b]; }); });
+    var SP={}; ENTS.forEach(function(s,i){ var a=2*Math.PI*i/ENTS.length;
+      SP[s]={x:300*Math.cos(a), y:300*Math.sin(a)}; });
+    for(var st=0; st<220; st++){
+      ENTS.forEach(function(a){ var mx2=0, my2=0, wsum=0;
+        ENTS.forEach(function(b){ if(a===b) return;
+          var hop=HOP[a][b]!==undefined?HOP[a][b]:far+1, target=hop*215;
+          var dx=SP[a].x-SP[b].x, dy=SP[a].y-SP[b].y, d=Math.hypot(dx,dy)||1, w=1/(hop*hop);
+          mx2+=w*(SP[b].x+dx/d*target); my2+=w*(SP[b].y+dy/d*target); wsum+=w; });
+        SP[a]={x:mx2/wsum, y:my2/wsum}; }); }
+    ENTS.forEach(function(s){ pos["ent:"+s]={x:rnd(SP[s].x), y:rnd(SP[s].y)}; });
   } else {
     ringPos(ENTS.map(function(s){ return "ent:"+s; }), 300, 0, 0);
   }
@@ -513,6 +593,7 @@ function entAnchor(slug){ return pos["ent:"+slug]; }
 
 /* ── edge draw helper: one path per KIND between two points, arrowed ── */
 function kindPath(layer, a, b, kind, off){
+  off=off*(LINE_MULT[lineStyle]||1);
   var dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
   var mx=(a.x+b.x)/2 - uy*off, my=(a.y+b.y)/2 + ux*off;
   var p=E("path",{class:"e-"+kind, d:"M"+a.x+" "+a.y+" Q "+mx+" "+my+" "+b.x+" "+b.y});
@@ -1612,6 +1693,11 @@ function indicatorHTML(o){
     var b=e.target.closest("button"); if(!b) return;
     applyDepth(+b.getAttribute("data-d"));
   });
+  document.getElementById("lineSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    lineStyle=b.getAttribute("data-line");
+    document.querySelectorAll("#lineSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    renderKeepView(); });
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     insideLayout=b.getAttribute("data-in");
@@ -1660,6 +1746,8 @@ window.__lvltest = {
   setDepth:function(v){ applyDepth(v); },
   hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll('.e-hop'+d).length; return o; },
   laneBowProbe:function(a,b,w){ return laneBow(a,b,w); },
+  line:function(){ return lineStyle; },
+  setLine:function(v){ lineStyle=v; renderKeepView(); },
   cam:function(){ return {panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice()}; },
   hopState:function(){ return {i:_edgeHop.i, at:_edgeHop.at}; },
   nodeXY:function(k){ return nodeWorldXY(k); },
