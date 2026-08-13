@@ -578,7 +578,13 @@ function drawEntities(){
       // a fat transparent twin makes the thin line clickable
       var hit=E("path",{d:p.getAttribute("d"), fill:"none", stroke:"transparent",
         "stroke-width":"13", style:"cursor:pointer"});
-      (function(edge){ hit.addEventListener("click",function(ev){ ev.stopPropagation(); showEdge(edge); }); })(ed);
+      (function(edge){ hit.addEventListener("click",function(ev){ ev.stopPropagation(); showEdge(edge); });
+        hit.addEventListener("dblclick",function(ev){ ev.stopPropagation(); ev.preventDefault();
+          var key="l1:"+edge.s+"›"+edge.t, wa=entAnchor(edge.s), wb=entAnchor(edge.t);
+          var go = _edgeHop.i===key ? (_edgeHop.at==="from"?"to":"from")
+                 : (screenDistToCentre(wa)>=screenDistToCentre(wb)?"from":"to");
+          _edgeHop={i:key, at:go};
+          centerCamera(go==="from"?wa:wb); }); })(ed);
       var ti=E("title"); ti.textContent=ed.s+" → "+ed.t+" · "+k+" ×"+ed.kinds[k]+(k==="calls"?" (inferred — a floor)":""); hit.appendChild(ti);
       eLayer.appendChild(hit); }); });
   D.entities.forEach(function(en){ var p=entAnchor(en.slug), col=COLORS[en.slug]||"#888";
@@ -642,7 +648,13 @@ function drawInterEntityEdges(defs, eLayer, radiusOf){
       var p=kindPath(eLayer, a, c, k, off); p.style.stroke="url(#"+grad+")"; p.style.opacity="0.65";
       flowDots(eLayer, p, "url(#"+grad+")");
       var hit=E("path",{d:p.getAttribute("d"), fill:"none", stroke:"transparent","stroke-width":"13", style:"cursor:pointer"});
-      (function(edge){ hit.addEventListener("click",function(ev){ ev.stopPropagation(); showEdge(edge); }); })(ed);
+      (function(edge){ hit.addEventListener("click",function(ev){ ev.stopPropagation(); showEdge(edge); });
+        hit.addEventListener("dblclick",function(ev){ ev.stopPropagation(); ev.preventDefault();
+          var key="l1:"+edge.s+"›"+edge.t, wa=entAnchor(edge.s), wb=entAnchor(edge.t);
+          var go = _edgeHop.i===key ? (_edgeHop.at==="from"?"to":"from")
+                 : (screenDistToCentre(wa)>=screenDistToCentre(wb)?"from":"to");
+          _edgeHop={i:key, at:go};
+          centerCamera(go==="from"?wa:wb); }); })(ed);
       var ti=E("title"); ti.textContent=ed.s+" → "+ed.t+" · "+k+" ×"+ed.kinds[k]; hit.appendChild(ti);
       eLayer.appendChild(hit); }); });
 }
@@ -1326,7 +1338,7 @@ function syncGearApplicability(){
   if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
 }
 function render(){
-  vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={};
+  vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
   document.querySelectorAll("#levels button").forEach(function(btn){
@@ -1378,7 +1390,41 @@ function regNode(g, key, label, type){ g.setAttribute("data-key", key);
 function regEdge(el, kind, fromKey, toKey, how){
   var idx=SELREG.edges.length;
   SELREG.edges.push({el:el, kind:kind, from:fromKey, to:toKey, how:how||""});
+  el.addEventListener("dblclick",function(ev){ ev.stopPropagation(); ev.preventDefault(); edgeHop(idx); });
   return idx; }
+/* ── EDGE HOP (operator round 31): dbl-click a connector → the camera JUMPS to
+   one of its endpoint nodes — the FAR one first (that's the end you can't see);
+   dbl-click again → the other end. Pan only; the zoom level never moves. ── */
+var _edgeHop={i:-1, at:null};
+function nodeWorldXY(key){
+  var n=SELREG.nodes[key]; if(!n) return null;
+  var m=/translate\(([-0-9.]+)[ ,]+([-0-9.]+)\)/.exec(n.el.getAttribute("transform")||"");
+  if(m) return {x:+m[1], y:+m[2]};
+  var cx=n.el.getAttribute("cx"), cy=n.el.getAttribute("cy");
+  if(cx!==null && cy!==null) return {x:+cx, y:+cy};
+  try{ var bb=n.el.getBBox(); return {x:bb.x+bb.width/2, y:bb.y+bb.height/2}; }catch(_){ return null; }
+}
+function screenDistToCentre(w){
+  var r=stage.getBoundingClientRect(), s=baseScale*zoom;
+  return Math.hypot(fitT[0]+panX+w.x*s - r.width/2, fitT[1]+panY+w.y*s - r.height/2);
+}
+function centerCamera(w){                       // zoom untouched — only pan moves
+  var r=stage.getBoundingClientRect(), s=baseScale*zoom;
+  panX=r.width/2 - fitT[0] - w.x*s;
+  panY=r.height/2 - fitT[1] - w.y*s;
+  apply();
+}
+function edgeHop(i){
+  var e=SELREG.edges[i]; if(!e) return;
+  var a=nodeWorldXY(e.from), b=nodeWorldXY(e.to); if(!a && !b) return;
+  var go;
+  if(_edgeHop.i===i) go = _edgeHop.at==="from" ? "to" : "from";
+  else go = (a&&b) ? (screenDistToCentre(a)>=screenDistToCentre(b)?"from":"to") : (a?"from":"to");
+  var w = go==="from"?a:b;
+  if(!w){ go = go==="from"?"to":"from"; w = go==="from"?a:b; }
+  _edgeHop={i:i, at:go};
+  centerCamera(w);
+}
 function clearSelection(){ selKey=null;
   vp.querySelectorAll(".selring,.nbrring").forEach(function(x){ x.remove(); });
   vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
@@ -1418,7 +1464,8 @@ function connectionsHTML(key, mine){
   return h; }
 function wireConnRows(){
   panel.querySelectorAll(".conrow").forEach(function(row){
-    row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); }); }); }
+    row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
+    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); }); }); }
 function selectEdge(i){
   var e=SELREG.edges[i]; if(!e) return;
   clearSelection();
@@ -1560,6 +1607,9 @@ window.__lvltest = {
   setDepth:function(v){ applyDepth(v); },
   hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll('.e-hop'+d).length; return o; },
   laneBowProbe:function(a,b,w){ return laneBow(a,b,w); },
+  cam:function(){ return {panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice()}; },
+  hopState:function(){ return {i:_edgeHop.i, at:_edgeHop.at}; },
+  nodeXY:function(k){ return nodeWorldXY(k); },
   connAudit:function(){ var deg={}; Object.keys(SELREG.nodes).forEach(function(k){ deg[k]=0; });
     SELREG.edges.forEach(function(e){ if(deg[e.from]!==undefined) deg[e.from]++; if(deg[e.to]!==undefined) deg[e.to]++; });
     var out=[]; Object.keys(deg).forEach(function(k){ if(deg[k]===0){ var n=SELREG.nodes[k]; out.push({key:k, label:n.label, type:n.type}); } });
