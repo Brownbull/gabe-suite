@@ -74,6 +74,11 @@ aside .cgo{ cursor:pointer; } aside .cgo:hover{ text-decoration:underline; }
 aside .jgo:hover b{ text-decoration:underline; }
 .flowdot{ pointer-events:none; }
 .e-jrn{ stroke:var(--accent) !important; stroke-width:2.6 !important; opacity:1 !important; }
+.e-peek{ stroke:var(--accent) !important; stroke-width:3.4 !important; opacity:1 !important; stroke-dasharray:none !important; }
+.peek-ring{ fill:none; stroke:var(--accent); stroke-width:2.4; opacity:.95; pointer-events:none;
+  animation:peekpulse 1s ease-in-out infinite; }
+@keyframes peekpulse{ 0%,100%{ stroke-opacity:.95; } 50%{ stroke-opacity:.45; } }
+@media (prefers-reduced-motion: reduce){ .peek-ring{ animation:none; } }
 .jrn-ring{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:4 3; opacity:.9; pointer-events:none; }
 .bubble{ pointer-events:none; }
 aside .row{ display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-top:1px solid var(--line); }
@@ -1911,8 +1916,8 @@ function edgeHop(i){
   navVisit(go==="from"?e.from:e.to);
   centerCamera(w);
 }
-function clearSelection(){ selKey=null;
-  vp.querySelectorAll(".selring,.nbrring,.jrn-ring").forEach(function(x){ x.remove(); });
+function clearSelection(){ selKey=null; peekClear();
+  vp.querySelectorAll(".selring,.nbrring,.jrn-ring,.peek-ring").forEach(function(x){ x.remove(); });
   vp.querySelectorAll(".e-hl,.e-faded,.e-jrn,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
     x.classList.remove("e-hl","e-faded","e-jrn","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
 function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses"}[kind]||kind; }
@@ -1949,10 +1954,32 @@ function connectionsHTML(key, mine){
     h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span>"
       +"<b class='cgo' data-k='"+esc(nk)+"' title='travel to it'>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
   return h; }
+var _peeks=[];
+function peekClear(){ _peeks.forEach(function(f){ f(); }); _peeks=[]; }
+function peekEdge(i){
+  peekClear();
+  var e=SELREG.edges[i]; if(!e) return;
+  e.el.classList.add("e-peek");
+  _peeks.push(function(){ e.el.classList.remove("e-peek"); });
+  var far = (selKey && e.from===selKey) ? [e.to] : (selKey && e.to===selKey) ? [e.from] : [e.from, e.to];
+  far.forEach(function(k){ var n=SELREG.nodes[k]; if(!n) return;
+    var r=E("circle",{class:"peek-ring", r:18});
+    n.el.appendChild(r);
+    _peeks.push(function(){ r.remove(); }); });
+}
+function peekNode(k){
+  peekClear();
+  var n=SELREG.nodes[k]; if(!n) return;
+  var r=E("circle",{class:"peek-ring", r:18});
+  n.el.appendChild(r);
+  _peeks.push(function(){ r.remove(); });
+}
 function wireConnRows(){
   panel.querySelectorAll(".conrow").forEach(function(row){
     row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
-    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); }); });
+    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); });
+    row.addEventListener("mouseenter",function(){ peekEdge(+row.getAttribute("data-conn")); });
+    row.addEventListener("mouseleave",peekClear); });
   // the OTHER element's name is the transporter — click it to land on that element
   panel.querySelectorAll(".cgo").forEach(function(b){
     b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
@@ -1977,7 +2004,9 @@ function selectEdge(i){
       "import":"a module import (graft)"}[e.kind]||"")
    +" Click a → row to travel to that component.</div>";
   panel.querySelectorAll(".jgo").forEach(function(row){
-    row.addEventListener("click",function(){ jumpToNode(row.getAttribute("data-k")); }); });
+    row.addEventListener("click",function(){ jumpToNode(row.getAttribute("data-k")); });
+    row.addEventListener("mouseenter",function(){ peekNode(row.getAttribute("data-k")); });
+    row.addEventListener("mouseleave",peekClear); });
 }
 /* the panel add-on used by every node click */
 function attachSelection(key){
