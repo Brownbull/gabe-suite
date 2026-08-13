@@ -118,7 +118,7 @@ aside .irow .im{ color:var(--muted); }
       </div>
       </div>
       <div id="inRow">
-      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(2·Pieces · 3·Functions)</span></div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(2 · 3 · 5-bubbles)</span></div>
       <div class="seg" id="inSeg" style="margin-left:0;flex-wrap:wrap">
         <button data-in="tiers" class="on">Tiers</button>
         <button data-in="ring">Ring</button>
@@ -808,6 +808,16 @@ function traceMembership(slug, items){
   items.forEach(function(it){ if(!memb[it.id].length) memb[it.id]=[fallback]; });
   return memb;
 }
+function traceMembershipAny(slug, items){
+  if(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census")
+    return traceMembership(slug, items);
+  var of = traceCluster==="tests"
+    ? function(it){ var d=it.kind==="fn" ? (D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{}).tests : (it.m&&it.m.tests); return d?"proven":"unproven"; }
+    : traceCluster==="guards"
+    ? function(it){ if(it.kind==="fn") return "functions"; return (it.m&&it.m.guards)?"guarded":"unguarded"; }
+    : function(it){ return it.kind==="fn"?"functions":(it.kind==="model"?"models":"schemas"); };
+  var memb={}; items.forEach(function(it){ memb[it.id]=[of(it)]; }); return memb;
+}
 function traceGroups(items){
   var of;
   if(traceCluster==="tests") of=function(it){ var d=it.kind==="fn"
@@ -827,30 +837,44 @@ function bubbleGeom(n){ var cols=Math.ceil(Math.sqrt(n)), rows=Math.ceil(n/cols)
   var w=(cols-1)*54, h=(rows-1)*46;
   return {cols:cols, rows:rows, w:w, h:h, r:Math.max(34, Math.hypot(w, h+18)/2 + 30)}; }
 function traceLayoutMulti(slug){
-  var inner=traceInner(slug), memb=traceMembership(slug, inner.items);
+  var inner=traceInner(slug), memb=traceMembershipAny(slug, inner.items);
   var gnames=[]; inner.items.forEach(function(it){ memb[it.id].forEach(function(g){ if(gnames.indexOf(g)<0) gnames.push(g); }); });
   gnames.sort();
-  // group anchors on a ring, radius from a disjoint-size estimate
-  var est={}; gnames.forEach(function(g){ est[g]=0; });
-  inner.items.forEach(function(it){ memb[it.id].forEach(function(g){ est[g]++; }); });
+  // the entity's coupling among inner items — feeds the per-bubble Force layout
+  var pc=inner.pc, couple=[];
+  (pc.endpoints||[]).forEach(function(ep){ if(ep.fn){
+    (ep.touch||[]).forEach(function(c){ couple.push(["fn:"+ep.fn, "cls:"+c]); });
+    if(ep.resp) couple.push(["fn:"+ep.fn, "cls:"+ep.resp]); } });
+  (pc.intra||[]).forEach(function(e){ couple.push(["cls:"+e.s, "cls:"+e.t]); });
+  // group anchors on a ring; per-group arrangement via the INSIDE layout
+  var only={}, shared=[];
+  inner.items.forEach(function(it){ var gs=memb[it.id];
+    if(gs.length===1) (only[gs[0]]=only[gs[0]]||[]).push(it); else shared.push(it); });
+  var arr={}, radius={};
+  gnames.forEach(function(g){ var its=only[g]||[];
+    var ids=its.map(function(it){ return it.id; });
+    var kinds={}; its.forEach(function(it){ kinds[it.id]=it.kind; });
+    var edges=couple.filter(function(pr){ return ids.indexOf(pr[0])>=0 && ids.indexOf(pr[1])>=0; });
+    var ip=insidePos(ids, 0, 0, {edges:edges, groups:kinds});
+    arr[g]=ip; radius[g]=Math.max(34, innerExtent(ip,0,0)+44); });
   var N=gnames.length, anchors={};
   if(N===1) anchors[gnames[0]]={x:0,y:0};
-  else { var maxr=0; gnames.forEach(function(g){ maxr=Math.max(maxr, bubbleGeom(est[g]).r); });
-    var D0=Math.max(90, (2*maxr+30)/(2*Math.sin(Math.PI/N)));
-    gnames.forEach(function(g,i){ var a=-Math.PI/2+2*Math.PI*i/N;
+  else { var D0=0;
+    for(var i=0;i<N;i++) for(var j=i+1;j<N;j++){
+      var need=radius[gnames[i]]+radius[gnames[j]]+18, ang=2*Math.PI*Math.abs(i-j)/N;
+      D0=Math.max(D0, need/(2*Math.sin(Math.min(ang, 2*Math.PI-ang)/2))); }
+    gnames.forEach(function(g,k){ var a=-Math.PI/2+2*Math.PI*k/N;
       anchors[g]={x:rnd(D0*Math.cos(a)), y:rnd(D0*Math.sin(a))}; }); }
-  // placement: single-group → grid slot at its anchor · multi → centroid (+ stack offset)
-  var pos={}, gridIdx={}, comboIdx={};
-  inner.items.forEach(function(it){ var gs=memb[it.id];
-    if(gs.length===1){ var g=gs[0], i=(gridIdx[g]=gridIdx[g]||{n:0}).n++;
-      var geo=bubbleGeom(est[g]);
-      var row=Math.floor(i/geo.cols), coln=i%geo.cols;
-      pos[it.id]={x:rnd(anchors[g].x+(coln-(geo.cols-1)/2)*54), y:rnd(anchors[g].y+(row-(geo.rows-1)/2)*46-8)}; }
-    else { var cx=0, cy=0; gs.forEach(function(g){ cx+=anchors[g].x; cy+=anchors[g].y; });
-      cx/=gs.length; cy/=gs.length;
-      var key=gs.join("|"), k=(comboIdx[key]=comboIdx[key]||{n:0}).n++;
-      pos[it.id]={x:rnd(cx+(k%2?1:-1)*Math.ceil(k/2)*56), y:rnd(cy+((k%3)-1)*30)}; } });
-  // bubbles = enclosing circles of member positions (overlap EXPECTED for shared pieces)
+  var pos={};
+  gnames.forEach(function(g){ (only[g]||[]).forEach(function(it){
+    var q=arr[g][it.id]; pos[it.id]={x:rnd(anchors[g].x+q.x), y:rnd(anchors[g].y+q.y)}; }); });
+  var comboIdx={};
+  shared.forEach(function(it){ var gs=memb[it.id];
+    var cx=0, cy=0; gs.forEach(function(g){ cx+=anchors[g].x; cy+=anchors[g].y; });
+    cx/=gs.length; cy/=gs.length;
+    var key=gs.join("|"), k=(comboIdx[key]=comboIdx[key]||{n:0}).n++;
+    pos[it.id]={x:rnd(cx+(k%2?1:-1)*Math.ceil(k/2)*56), y:rnd(cy+((k%3)-1)*30)}; });
+  // bubbles = enclosing circles of member positions (overlap where pieces are shared)
   var bubbles=gnames.map(function(g){
     var mem=inner.items.filter(function(it){ return memb[it.id].indexOf(g)>=0; });
     var cx=0, cy=0; mem.forEach(function(it){ cx+=pos[it.id].x; cy+=pos[it.id].y; });
@@ -890,9 +914,7 @@ function traceRadii(){ var radii={};
       (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
       var core=Math.max(26, Object.keys(cls).length*8), ring2=core+(Object.keys(fns).length?88:18);
       radii[slug]=Math.max(ring2+88, (eps.length*15)/(2*Math.PI), 66);
-    } else if(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census")
-      radii[slug]=traceLayoutMulti(slug).R;
-    else radii[slug]=traceLayout(slug).R; });
+    } else radii[slug]=traceLayoutMulti(slug).R; });
   return radii; }
 function drawTrace(){
   if(traceCluster==="flow") return drawTraceFlow();
@@ -901,7 +923,7 @@ function drawTrace(){
   var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
   vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
   var clsAtGlobal={};
-  var isMulti=(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census");
+  var isMulti=true;   // ONE layout path: disjoint modes are single-membership multi
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
     var L=isMulti?traceLayoutMulti(slug):traceLayout(slug), pc=L.inner.pc, R=radii[slug];
     var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:R, fill:col, stroke:col, style:"cursor:grab"});
@@ -1160,7 +1182,7 @@ function showFn(f){
 
 /* ── level switching (position persistence keeps shared anchors) ── */
 function syncGearApplicability(){
-  var inOk = (level==="pieces"||level==="functions");
+  var inOk = (level==="pieces"||level==="functions"||(level==="trace"&&traceCluster!=="flow"));
   var clOk = (level==="trace");
   var inRow=document.getElementById("inRow"), clRow=document.getElementById("clRow");
   if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }
@@ -1261,13 +1283,13 @@ function indicatorHTML(o){
     var b=e.target.closest("button"); if(!b) return;
     traceCluster=b.getAttribute("data-cl");
     document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
-    render(); });
+    renderKeepView(); });   // a cluster change reshapes the INSIDE — the camera stays put
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     insideLayout=b.getAttribute("data-in");
     document.querySelectorAll("#inSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     Object.keys(pos).forEach(function(k){ if(k.indexOf("fn:")===0) delete pos[k]; });
-    render(); });
+    renderKeepView(); });
 })();
 
 /* ── test hook ── */
@@ -1305,7 +1327,7 @@ window.__lvltest = {
   conns:function(){ return showConns; },
   tests:function(){ return showTests; },
   cluster:function(){ return traceCluster; },
-  setCluster:function(v){ traceCluster=v; render(); },
+  setCluster:function(v){ traceCluster=v; renderKeepView(); },
   coreGroups:function(){ var o={}; vp.querySelectorAll('.piece[data-grp]').forEach(function(g){ var k=g.getAttribute('data-grp'); if(k) o[k]=(o[k]||0)+1; }); return o; },
   lenses:function(){ return {guards:showGuards, hubs:showHubs, press:showPress}; },
   toggleLens:function(w){ document.getElementById(w+"btn").click(); },
