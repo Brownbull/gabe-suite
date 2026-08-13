@@ -26,13 +26,19 @@ over **real gustify data**, so they are viewable without running a twin build:
 
 Open either directly (`file://`).
 
-The station is the **change-simulation lifecycle instrument** (the final agreed
-layout): the C4 entity graph with the change in flight overlaid — touched entities
-(green) and their FK blast radius (amber) — explodable into typed mini-circle
-pieces, four stage lenses (**Red · Execute · Review · Commit**), stage-coloured hot
-flows, a per-stage lower-left encoding legend, and a persistent right panel with the
-per-piece **lifecycle timeline**, typed identifier chips (fn · endpoint · model ·
-schema · data type), and tests + evidence.
+The station is the **change-simulation lifecycle instrument**, rendered since the
+station port (slice 1) in the **level-lab grammar**: the C4 entity graph with the
+change in flight overlaid — touched entities (green) and their FK blast radius
+(amber) — explodable into pieces drawn with the suite's **Lucide icons** (Classic /
+Solid reachable from the ⚙ gear), halo-trimmed **bowed wires** with entity-gradient
+strokes and travelling **flow dots** (direction is motion, no arrowheads), the
+**selection engine** (click anything → spinning ring + hop-decayed connectors,
+depth slider 1–5, alt+scroll steps it, hover a connection row to **peek**), and the
+four stage lenses wearing the **beat overlays** (red rings+pills → heat+blast →
+green flips + amber drift ring → commit purple), a per-stage lower-left encoding
+legend, and a persistent right panel with the per-piece **lifecycle timeline**,
+typed identifier chips (fn · endpoint · model · schema · data type), and tests +
+evidence, plus the selection's clickable **connections** rows.
 
 ## Files
 
@@ -51,12 +57,23 @@ schema · data type), and tests + evidence.
   twin this is the **committed** per-phase accumulator `_a3_sim.archive_upsert` grows
   at each build (durable, unlike the gitignored `sim.data.js`).
 
-**Honest-empty by design.** A real twin center ships **no** seeded change —
-`build_center_a3` writes `sim.data.js` as `window.GABE_SIM = null`, and the station
+**Honest-empty by design.** A real twin center ships **no** seeded change — at rest
+`build_center_a3` writes `sim.data.js` as `window.GABE_SIM = null` and the station
 degrades to the plain codebase **map** (the L1 graph + a "no change in flight" note;
-double-click an entity to drill its L2 pieces). C2 will teach `_a3_sim.py` to derive
-a live projection from inflight + git. This example seeds the fixture only so the
-full instrument is demonstrable offline.
+double-click an entity to drill its L2 pieces, lab icons + selection engine intact).
+When a change IS in flight, `_a3_sim.py` derives the live projection from inflight +
+archmap + git + junit + PENDING. This example seeds the rich curated fixture only so
+the full instrument is demonstrable offline — do NOT regen it from a build.
+
+## Probes
+
+`probes/run.sh` — the station's author-time playwright battery (real browser, REAL
+mouse where z-order matters): `port1` pins the lab grammar + beat overlays +
+selection engine over the fixture (counts derived from `GABE_SIM`, never hardcoded);
+`port2` builds a temp `GABE_SIM=null` twin and pins the honest-empty degrade + the
+L2 drill. Not doctor-wired (browser-bound); run when iterating on the station.
+⚠ every re-render replays the 0.9s piece fly-in — probes must settle (~1.2s) before
+real-mouse clicks, or they hit the container where the pieces still are.
 
 Note: only the station page ships here — the sidebar's links to sibling center pages
 (board, entities, …) are illustrative chrome, not live in this isolated snapshot.

@@ -9,19 +9,27 @@
 <script src="../../assets/a3-lightbox.js" defer></script>
 <script src="../../assets/rowclick.js" defer></script>
 <style>
-/* ── Codebase-graph station — the change-simulation lifecycle instrument
-   (the FINAL agreed layout: lifecycle timeline · typed chips · tests+evidence ·
-   4 stage lenses · explode/compound · hot flows · lower-left legend · single-
-   column panel). EVERYTHING is scoped under .cbg-root and every id is namespaced
-   cbg-* so the instrument never collides with a3.css (which owns .side/.center/
-   body/header/button/.seg/.bar and the shell chrome). Custom props: the shared
-   ones (--bg/--panel/--ink/--muted/--line/--accent + the .ty-* families) INHERIT
-   from a3.css so the instrument is theme-correct for free; only the sim-specific
-   --edge/--touch/--blast are defined here (a3.css lacks them), light + [data-theme].
-   Reads window.GABE_C4 + GABE_C4_COLORS (topology + palette) and window.GABE_SIM
-   (the change in flight). No GABE_SIM → the instrument degrades to the plain
-   codebase MAP + a "no change in flight" note (honest-empty until C2). ── */
+/* ── Codebase-graph station — the change-simulation lifecycle instrument,
+   POST-MERGE: it renders with the LEVEL-LAB GRAMMAR (operator rounds 1–48) —
+   Lucide icons by default (Classic/Solid reachable from the gear), halo-trimmed
+   bowed wires, entity-GRADIENT strokes with travelling FLOW DOTS (direction is
+   motion, not arrowheads), lane bows for bidirectional pairs, the regNode/regEdge
+   SELECTION ENGINE (hop-depth slider + hover peek), and the layering law
+   backgrounds → wires → nodes. The four stage lenses wear the change-graph-lab
+   BEAT overlays: red rings+pills → heat+blast → green flips+drift ring →
+   commit purple; drift stays amber (a finding-state, not a beat).
+   EVERYTHING is scoped under .cbg-root and every id is namespaced cbg-* so the
+   instrument never collides with a3.css (which owns .side/.center/body/header/
+   button/.seg/.bar and the shell chrome). Shared custom props (--bg/--panel/
+   --ink/--muted/--line/--accent + the .ty-* families) INHERIT from a3.css so
+   the instrument is theme-correct for free; the sim/lab-specific tokens are
+   defined here. Reads window.GABE_C4 + GABE_C4_COLORS (topology + palette) and
+   window.GABE_SIM (the change in flight). No GABE_SIM → the instrument degrades
+   to the plain codebase MAP + a "no change in flight" note (honest-empty). ── */
 .cbg-root{ --edge:#9aa3ad; --touch:#1f8a53; --touch-bg:#e9f6ee; --blast:#d9821f; --blast-bg:#fbf1e0;
+  --drift:#e8590c;
+  --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
+  --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
   display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;
   color:var(--ink); font:14px/1.5 var(--font-ui); }
 [data-theme="dark"] .cbg-root{ --edge:#4a525c; --touch:#4cbe83; --touch-bg:#12271c; --blast:#e0a24a; --blast-bg:#271f12; }
@@ -66,12 +74,14 @@
 .cbg-root button:hover{ border-color:var(--edge); }
 .cbg-root button:disabled{ opacity:.4; cursor:default; }
 .cbg-root button.back{ font-weight:600; }
-.cbg-root .laywrap{ font-size:11px; color:var(--muted); display:flex; align-items:center; gap:6px; }
-.cbg-root .laywrap select{ font:inherit; font-size:12px; color:var(--ink); background:var(--panel);
-  border:1px solid var(--line); border-radius:7px; padding:4px 7px; cursor:pointer; }
 .cbg-root .spacer{ flex:1; }
 .cbg-root .selinfo{ font-size:12px; color:var(--muted); }
 .cbg-root .selinfo b{ color:var(--ink); }
+/* the depth control — the selection engine's hop reach (Alt+scroll steps it) */
+.cbg-root .cbg-depth{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700;
+  color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.cbg-root .cbg-depth input{ width:84px; accent-color:var(--accent); }
+.cbg-root .cbg-depth b{ color:var(--ink); width:10px; text-align:center; }
 
 /* ── stage ── */
 .cbg-stage{ flex:1; min-width:0; overflow:hidden; display:block; position:relative; cursor:grab; }
@@ -79,52 +89,69 @@
 .cbg-root svg#cbg-graph{ display:block; width:100%; height:100%; }
 
 /* graph elements */
-.cbg-root .edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .15s; }
-.cbg-root #cbg-arrow > path{ fill:var(--edge); }
 .cbg-root .node{ cursor:pointer; transition:opacity .15s; }
 .cbg-root .node .body{ transition:stroke .12s, stroke-width .12s; }
 .cbg-root .node text{ pointer-events:none; user-select:none; }
-.cbg-root .dim{ opacity:.13; }
-.cbg-root .node.sel .body{ stroke:var(--accent); stroke-width:3.5; }
-
-/* ── change-simulation overlay ── */
 .cbg-root .node.faded{ opacity:.12; }
-.cbg-root .edge.faded{ opacity:.07; }
 .cbg-root .node.touched .body{ fill:var(--touch); stroke:var(--touch); stroke-width:2.5; }
-.cbg-root .node.touched .chiplabel{ fill:#fff; }
 .cbg-root .node.blast .body{ stroke:var(--blast); stroke-width:4.5; stroke-dasharray:7 4; }
-.cbg-root .edge.blastedge{ stroke:var(--blast); }
-.cbg-root .node .badge{ font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
-
-/* single-click: the entity EXPANDS into a container of mini-circle pieces */
 .cbg-root .node.exploded{ opacity:0; pointer-events:none; }
-.cbg-root .xcontainer{ cursor:pointer; }
-.cbg-root .xcontlabel{ font-size:12.5px; font-weight:650; text-anchor:middle; }
+.cbg-root .l1label{ font-size:13px; font-weight:650; text-anchor:middle; }
+.cbg-root .l1sub{ font-size:10.5px; text-anchor:middle; fill:var(--muted); }
+.cbg-root .plabel{ font-size:8.5px; text-anchor:middle; fill:var(--ink); pointer-events:none; }
+.cbg-root .colhdr{ fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
+.cbg-root .halo{ fill:transparent; stroke:var(--line); stroke-width:1; opacity:.55; pointer-events:none; }
+.cbg-root .flowdot{ pointer-events:none; }
+.cbg-root .xpiece{ cursor:pointer; }
 .cbg-root .xpiece text{ pointer-events:none; }
-.cbg-root .xplabel{ font-size:9.5px; text-anchor:middle; fill:var(--ink); }
-.cbg-root .xedge{ fill:none; stroke-linecap:round; }
-.cbg-root .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.7; }
-.cbg-root .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.95; }
-.cbg-root .xedge.hot{ opacity:1; stroke-width:2.8; }
-.cbg-root .xedge.flow{ stroke-dasharray:6 6; animation: cbg-xflow 1.5s linear infinite; }   /* slowed 1.1s → 1.5s */
-@keyframes cbg-xflow{ to{ stroke-dashoffset:-24; } }
-.cbg-root .xpiece.pulse circle{ animation: cbg-xpulse 2.4s ease-in-out infinite; }         /* glow slowed 1.7s → 2.4s */
-@keyframes cbg-xpulse{ 0%,100%{ stroke:var(--panel); stroke-width:2; } 50%{ stroke:var(--accent); stroke-width:3.6; } }
-@media (prefers-reduced-motion: reduce){ .cbg-root .xedge.flow{ animation:none; } .cbg-root .xpiece.pulse circle{ animation:none; } }
-.cbg-root .xpiece circle{ cursor:pointer; }
-.cbg-root .xpiece .ring{ fill:none; }
-.cbg-root .xpiece.tested .ring{ stroke:#4c9aff; stroke-width:2.4; }
-.cbg-root .xpiece.again .ring{ stroke:var(--blast); stroke-width:2.4; }
-.cbg-root .xpiece .ring2{ fill:none; stroke:none; }
-.cbg-root .xpiece.selp .ring2{ stroke:var(--accent); stroke-width:2.6; }
-/* selection mark — a black X spinning anti-clockwise in the opened piece's centre
-   (one consistent mark across every view). var(--ink) so it stays visible in dark. */
-.cbg-root .xpiece .selx{ opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center; }
-.cbg-root .xpiece .selx line{ stroke:var(--ink); stroke-width:1.9; stroke-linecap:round; }
-.cbg-root .xpiece.selp .selx{ opacity:1; animation: cbg-selspin 3s linear infinite; }
-@keyframes cbg-selspin{ from{ transform:rotate(0deg); } to{ transform:rotate(-360deg); } }
-@media (prefers-reduced-motion: reduce){ .cbg-root .xpiece.selp .selx{ animation:none; } }
-.cbg-root .xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
+.cbg-root .xcontainer{ cursor:pointer; }
+.cbg-root .xcontlabel{ font-size:12.5px; font-weight:650; text-anchor:middle; pointer-events:none; user-select:none; }
+
+/* wire kinds — the lab grammar: fk solid · calls dashed-MOVING · imports dotted;
+   touch/intra wear the owning entity's colour, cross = gradient dotted */
+.cbg-root .e-fk{ fill:none; stroke:var(--edge); stroke-width:1.8; }
+.cbg-root .e-calls{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:6 5;
+  animation:cbg-dashmove 1.6s linear infinite; }
+.cbg-root .e-imports{ fill:none; stroke:var(--muted); stroke-width:1.4; stroke-dasharray:2 4; }
+.cbg-root .e-touch{ fill:none; stroke:var(--edge); stroke-width:1; opacity:.55; }
+.cbg-root .e-intra{ fill:none; stroke:var(--edge); stroke-width:1.6; opacity:.75; }
+.cbg-root .e-xfk{ fill:none; stroke:var(--edge); stroke-width:1.8; stroke-dasharray:2 5; opacity:.85; }
+.cbg-root .e-intra.hot, .cbg-root .e-xfk.hot{ opacity:1; stroke-width:2.6; }
+@keyframes cbg-dashmove{ to{ stroke-dashoffset:-22; } }
+@media (prefers-reduced-motion: reduce){ .cbg-root .e-calls{ animation:none; } }
+/* base L1 edges step back while entities are exploded (piece wires carry the story) */
+.cbg-root .basefade{ opacity:.08 !important; }
+
+/* ── SELECTION ENGINE (lab rounds 23–24): spinning ring on the picked node,
+   1-hop connectors boldest, decaying boldness per hop, the rest faded ── */
+.cbg-root .selring{ fill:none; stroke:var(--accent); stroke-width:2.4; stroke-dasharray:6 5;
+  animation:cbg-dashmove 2.2s linear infinite; }
+.cbg-root .nbrring{ fill:none; stroke:var(--accent); stroke-width:1.3; opacity:.7; }
+.cbg-root .e-hl{ opacity:1 !important; stroke-width:3 !important; }
+.cbg-root .e-hop1{ opacity:1 !important;   stroke-width:3 !important; }
+.cbg-root .e-hop2{ opacity:.85 !important; stroke-width:2.3 !important; }
+.cbg-root .e-hop3{ opacity:.7 !important;  stroke-width:1.8 !important; }
+.cbg-root .e-hop4{ opacity:.55 !important; stroke-width:1.4 !important; }
+.cbg-root .e-hop5{ opacity:.42 !important; stroke-width:1.1 !important; }
+.cbg-root .e-faded{ opacity:.07 !important; }
+/* hover PEEK (lab round 43): the wire glows, the far element wears a pulsing ring */
+.cbg-root .e-peek{ stroke:var(--accent) !important; stroke-width:3.4 !important; opacity:1 !important; stroke-dasharray:none !important; }
+.cbg-root .peek-ring{ fill:none; stroke:var(--accent); stroke-width:2.4; opacity:.95; pointer-events:none;
+  animation:cbg-peekpulse 1s ease-in-out infinite; }
+@keyframes cbg-peekpulse{ 0%,100%{ stroke-opacity:.95; } 50%{ stroke-opacity:.45; } }
+@media (prefers-reduced-motion: reduce){ .cbg-root .peek-ring{ animation:none; } .cbg-root .selring{ animation:none; } }
+
+/* ── BEAT OVERLAYS — the change-graph-lab render contract (round 48, blessed):
+   red rings+pills → heat+blast → green flips + amber drift → commit purple ── */
+.cbg-root .red-ring{ fill:none; stroke:#e5484d; stroke-width:2; stroke-dasharray:5 3; }
+.cbg-root .heat-ring{ fill:none; stroke:#4c9aff; stroke-width:2.4; opacity:.9; }
+.cbg-root .blast-ring{ fill:none; stroke:#4c9aff; stroke-width:1.3; stroke-dasharray:3 3; opacity:.7; }
+.cbg-root .ok-ring{ fill:none; stroke:#30a46c; stroke-width:2; }
+.cbg-root .commit-ring{ fill:none; stroke:#8e4ec6; stroke-width:2.2; }
+.cbg-root .drift-ring{ fill:none; stroke:var(--drift); stroke-width:2; stroke-dasharray:2 3; }
+@keyframes cbg-pulse{ 0%,100%{ stroke-opacity:.95; } 50%{ stroke-opacity:.4; } }
+.cbg-root .red-ring, .cbg-root .heat-ring, .cbg-root .drift-ring{ animation:cbg-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce){ .cbg-root .red-ring, .cbg-root .heat-ring, .cbg-root .drift-ring{ animation:none; } }
 
 /* detail panel (persistent, right side) */
 .cbg-root .detail{ padding:16px 18px; font-family:var(--font-content); font-size:0.929rem; }
@@ -183,13 +210,25 @@
 .cbg-root .idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace;
   font-size:10.5px; padding:2px 8px; }
 /* type-family colours (.ty-num1 … .ty-id) INHERIT from a3.css — theme-aware there. */
+/* CONNECTIONS rows (the selection engine's panel tail) + travel/peek rows */
+.cbg-root .detail .k2{ font-size:0.714rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em;
+  font-weight:800; margin:12px 0 4px; display:flex; align-items:center; gap:6px; }
+.cbg-root .detail .k2 svg{ flex:0 0 auto; }
+.cbg-root .detail .conrow{ display:flex; align-items:center; gap:7px; padding:5px 0; border-top:1px solid var(--line);
+  font-size:0.857rem; cursor:pointer; }
+.cbg-root .detail .conrow:hover{ color:var(--accent); }
+.cbg-root .detail .conrow .ck{ font-size:0.714rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted); flex:none; min-width:52px; }
+.cbg-root .detail .cgo{ cursor:pointer; } .cbg-root .detail .cgo:hover{ text-decoration:underline; }
+.cbg-root .detail .jgo{ cursor:pointer; } .cbg-root .detail .jgo:hover b{ text-decoration:underline; }
+.cbg-root .detail .note{ font-size:0.857rem; color:var(--muted); line-height:1.5; margin-top:10px; }
 
 /* per-stage highlight colours on the stage buttons */
 .cbg-root #cbg-stageSeg button[data-stage="red"].on{ background:#e5484d; }
 .cbg-root #cbg-stageSeg button[data-stage="execute"].on{ background:#4c9aff; }
 .cbg-root #cbg-stageSeg button[data-stage="review"].on{ background:#30a46c; }
 .cbg-root #cbg-stageSeg button[data-stage="commit"].on{ background:#8e4ec6; }
-/* segmented before|after / stage toggle */
+/* segmented stage toggle */
 .cbg-seg{ display:inline-flex; border:1px solid var(--line); border-radius:8px; overflow:hidden; }
 /* honor `hidden` — an author display:inline-flex beats the UA [hidden]{display:none},
    so without this the stage control shows on the honest-empty (no-SIM) page. */
@@ -209,15 +248,6 @@
 /* the rest of the top controls share the panel font too */
 .cbg-root .cbg-toolbar button, .cbg-root .cbg-optseg button{ font-family:var(--font-content); }
 
-/* L2 connector focus — click a node to light exactly what it connects to */
-.cbg-stage.l2view .edge{ opacity:.42; }
-.cbg-stage.l2view .edge.hi{ opacity:1; stroke:var(--accent); stroke-width:2.8; }
-.cbg-stage.l2view .edge.faded{ opacity:.05; }
-.cbg-stage.l2view .node.faded{ opacity:.14; }
-.cbg-root .colhdr{ fill:var(--muted); font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; }
-.cbg-root .l1label{ font-size:13px; font-weight:650; text-anchor:middle; }
-.cbg-root .l1sub{ font-size:10.5px; text-anchor:middle; fill:var(--muted); }
-.cbg-root .chiplabel{ font-size:11px; font-weight:500; }
 .cbg-root .hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--muted);
   background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:3px 8px; pointer-events:none; opacity:.9; }
 
@@ -267,16 +297,15 @@
   font-size:11.5px; color:var(--muted); }
 .cbg-legend .grp{ display:flex; align-items:center; gap:6px 14px; flex-wrap:wrap; }
 .cbg-legend .item{ display:flex; align-items:center; gap:6px; }
+.cbg-legend .item svg{ flex:none; }
 .cbg-legend .sw{ width:9px; height:9px; border-radius:50%; flex:none; }
-.cbg-legend .swr{ width:16px; height:0; border-top:2px solid var(--edge); position:relative; }
-.cbg-legend .swr::after{ content:""; position:absolute; right:-2px; top:-3px; border:3px solid transparent; border-left-color:var(--edge); }
 .cbg-legend .div{ width:1px; height:14px; background:var(--line); }
 .cbg-legend .count{ margin-left:auto; color:var(--ink); font-weight:600;
   font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; }
 
-/* ── Open/Close-all toggle — center-style pill (pressed = accent when expanded) ── */
+/* ── Open/Close-all + Connections toggles — center-style pills (pressed = accent) ── */
 .cbg-root .cbg-toggle.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
-/* ── gear popover holding the layout controls (Entities · Inside · Reset) ── */
+/* ── gear popover holding the layout controls (Entities · Inside · Lines · Icons · Reset) ── */
 .cbg-root .cbg-gear{ display:inline-flex; align-items:center; justify-content:center; padding:6px 8px; }
 .cbg-root .cbg-gear svg{ display:block; }
 .cbg-gearpanel{ position:absolute; z-index:40; top:100%; right:16px; margin-top:6px; width:236px;
@@ -334,7 +363,7 @@
   <a class="navitem" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-  <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+      <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -344,7 +373,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-  <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+      <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -363,7 +392,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-  <span class="navsub" style="opacity:.5">none wired yet</span>
+      <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:05Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -390,6 +419,13 @@
       </div>
       <div class="selinfo" id="cbg-selInfo"></div>
       <div class="spacer"></div>
+      <label class="cbg-depth" id="cbg-depthCtl" title="Highlight depth — press Alt and scroll to change it">depth
+        <input type="range" id="cbg-depthSlider" min="1" max="5" step="1" value="5">
+        <b id="cbg-depthVal">5</b>
+      </label>
+      <button id="cbg-conns" class="cbg-toggle on" hidden title="Connections — cross-entity piece wires (FK coupling)">
+        <svg viewBox="0 0 24 24" width="15" height="15"><path d="M3 17 Q12 3 21 12" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="13.5" cy="8.6" r="2.4" fill="currentColor"/></svg>
+      </button>
       <button id="cbg-openAll" class="cbg-toggle" hidden>Open all</button>
       <button class="cbg-gear" id="cbg-gear" title="Layout controls" aria-expanded="false">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -403,6 +439,14 @@
           <div class="cbg-gearlbl">Inside entities</div>
           <div class="cbg-optseg" id="cbg-insideSeg"></div>
         </div>
+        <div class="cbg-gearrow" id="cbg-linesRow">
+          <div class="cbg-gearlbl">Lines</div>
+          <div class="cbg-optseg" id="cbg-linesSeg"></div>
+        </div>
+        <div class="cbg-gearrow" id="cbg-iconsRow">
+          <div class="cbg-gearlbl">Icons</div>
+          <div class="cbg-optseg" id="cbg-iconsSeg"></div>
+        </div>
         <div class="cbg-gearrow">
           <button id="cbg-resetBtn">Reset layout</button>
         </div>
@@ -412,15 +456,6 @@
     <div class="cbg-center">
       <div class="cbg-stage" id="cbg-stage">
         <svg id="cbg-graph" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <marker id="cbg-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
-              <path d="M0.5,0.5 L9.5,5 L0.5,9.5 z"></path>
-            </marker>
-            <marker id="cbg-arrow-red" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#e5484d"></path></marker>
-            <marker id="cbg-arrow-execute" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#4c9aff"></path></marker>
-            <marker id="cbg-arrow-review" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#30a46c"></path></marker>
-            <marker id="cbg-arrow-commit" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#8e4ec6"></path></marker>
-          </defs>
           <g id="cbg-viewport"></g>
         </svg>
         <div class="hint" id="cbg-hint">drag to pan · double-click an entity to drill</div>
@@ -465,24 +500,29 @@
     (SIM.blast||[]).forEach(function(s){ BLAST[s]=1; INVOLVED[s]=1; });
   }
   var curStage = "execute";
-  var selPiece = null;
   var panelTarget = null;    // {piece:{slug,p}} | {entity:slug} | null — survives a stage switch
-  var PIECE_R = 11;
   var expanded = {};
-  var l2focus = null;
-  var lastBounds = null;
+  var view = "l1", drilledSlug = null;
   var l1layout = "ring", l2layout = "columns", insideLayout = "force";
-  var legendMin = false;   // lower-left stage legend collapsed to a pill?
+  var lineStyle = "bowed";   // merge-contract default (operator round 45)
+  var ICONSET = "lucide";    // operator round 48: Lucide everywhere
+  var showConns = true;      // cross-entity piece wires — default ON
+  var selDepth = 5;          // hop-depth default (merge contract)
+  var legendMin = false;
+  var userPos = {};          // node-drag overrides, id → {x,y}
+  var nodePos = {}, nodeMeta = {};
+  var baseEdges = [];        // L1 base edges (+ their flow dots) for the exploded fade
+  var lastBounds = null;
+
   var STAGE_COLOR = { red:"#e5484d", execute:"#4c9aff", review:"#30a46c", commit:"#8e4ec6" };
   var L1_LAYOUTS = { ring:"Ring", flow:"Flow", force:"Force" };
   var L2_LAYOUTS = { columns:"Columns", force:"Force", radial:"Radial" };
   var INSIDE_LAYOUTS = { ring:"Ring", grid:"Grid", force:"Force" };
+  var LINE_OPTS = { direct:"Direct", bowed:"Bowed" };
+  var ICON_OPTS = { classic:"Classic", lucide:"Lucide", solid:"Solid" };
   var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
   var KIND_LABEL = { endpoint:"Endpoints", model:"Models", schema:"Schemas", external:"External" };
-
-  var view = "l1", drilledSlug = null, selected = null;
-  var nodePos = {}, nodeMeta = {}, edgeRecs = [];
-  var CHIP_W = 214, CHIP_H = 38;
+  var METHOD = { GET:"var(--m-get)", POST:"var(--m-post)", PUT:"var(--m-put)", PATCH:"var(--m-put)", DELETE:"var(--m-delete)" };
 
   var stage   = document.getElementById("cbg-stage");
   var svg     = document.getElementById("cbg-graph");
@@ -491,17 +531,157 @@
   var backBtn = document.getElementById("cbg-backBtn");
   var resetBtn= document.getElementById("cbg-resetBtn");
   var legend  = document.getElementById("cbg-legend");
+  var detail  = document.getElementById("cbg-detail");
 
   function E(tag, attrs){ var e=document.createElementNS(NS, tag);
     if(attrs) for(var k in attrs) e.setAttribute(k, attrs[k]); return e; }
+  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
   function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
   function trunc(s,n){ s=String(s); return s.length>n ? s.slice(0,n-1)+"…" : s; }
+  function rnd(v){ return Math.round(v*100)/100; }         // kill 1e-14 float dust in transforms
 
   var L1 = DATA.l1.nodes, L1E = DATA.l1.edges;
+  // the emitter's __unclaimed__ bucket carries counts:null — every counts read
+  // below must survive it (it once killed the whole station at boot)
   var linesArr = L1.map(function(n){ return n.counts?n.counts.lines:0; });
   var minSq = Math.sqrt(Math.min.apply(null, linesArr)), maxSq = Math.sqrt(Math.max.apply(null, linesArr));
-  function radius(n){ var t = maxSq>minSq ? (Math.sqrt(n.counts.lines)-minSq)/(maxSq-minSq) : .5; return 22 + t*38; }
-  function ewidth(w){ return 1.5 + (clamp(w,1,10)-1)/9*4.6; }
+  function radius(n){ var ln = n.counts?n.counts.lines:0;
+    var t = maxSq>minSq ? (Math.sqrt(ln)-minSq)/(maxSq-minSq) : .5; return 22 + Math.max(0,t)*38; }
+
+  /* ── THE LAB GRAMMAR — icons · halo-trimmed bowed wires · gradients · flow dots ──
+     Ported from the level lab (rounds 1–48). Lucide is the default set; Classic
+     (the lab's settled geometry) and Solid stay reachable from the gear. */
+  var ICO_SCHEMA='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1';
+  var ICO_FN='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6';
+  var ICONSETS={
+    classic:{
+      model:function(g,r,col){ var h=r*1.5, w=r*1.7;
+        g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6),
+          fill:col, "fill-opacity":"0.9", stroke:"var(--panel)","stroke-width":"1.4"}));
+        g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col, stroke:"var(--panel)","stroke-width":"1.4"})); },
+      schema:function(g,r,col){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+        g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2.4",
+          "stroke-linecap":"round","stroke-linejoin":"round",
+          transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"})); },
+      fn:function(g,r,col,handler){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+        g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:col,
+          "stroke-width": handler?"3.1":"2.2",
+          "stroke-linecap":"round","stroke-linejoin":"round",
+          transform:"translate("+(-r*1.2)+","+(-r*1.2)+") scale("+(2.4*r/24)+")"})); },
+      ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+        g.appendChild(E("circle",{r:r, fill:col, stroke:"var(--panel)","stroke-width":"1.6"}));
+        g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
+          fill:"#fff", transform:"scale("+(r/6)+")"})); }
+    },
+    lucide:{
+      model:function(g,r,col){ var k=2.2*r/24, tf="translate("+(-r*1.1)+","+(-r*1.1)+") scale("+k+")";
+        g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+        g.appendChild(E("ellipse",{cx:12, cy:5, rx:9, ry:3, fill:"none", stroke:col, "stroke-width":"2", transform:tf}));
+        g.appendChild(E("path",{d:"M3 5v14a9 3 0 0 0 18 0V5 M3 12a9 3 0 0 0 18 0",
+          fill:"none", stroke:col, "stroke-width":"2","stroke-linecap":"round", transform:tf})); },
+      schema:function(g,r,col){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+        g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2",
+          "stroke-linecap":"round","stroke-linejoin":"round",
+          transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"})); },
+      fn:function(g,r,col,handler){ var k=2.4*r/24, tf="translate("+(-r*1.2)+","+(-r*1.2)+") scale("+k+")";
+        g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+        g.appendChild(E("rect",{x:3, y:3, width:18, height:18, rx:4, fill:"none", stroke:col,
+          "stroke-width": handler?"2.6":"1.8", transform:tf}));
+        g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:col, "stroke-width":"2",
+          "stroke-linecap":"round","stroke-linejoin":"round", transform:tf})); },
+      ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+        g.appendChild(E("circle",{r:r+1, fill:"none", stroke:col, "stroke-width":"2"}));
+        g.appendChild(E("path",{d:"M13 2 3 14h9l-1 8 10-12h-9l1-8z", fill:col,
+          transform:"translate("+(-r*0.75)+","+(-r*0.75)+") scale("+(1.5*r/24)+")"})); }
+    },
+    solid:{
+      model:function(g,r,col){ var h=r*1.5, w=r*1.7;
+        g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6), fill:col}));
+        g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col}));
+        g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/3.2, ry:2.2, fill:"var(--panel)", "fill-opacity":"0.5"})); },
+      schema:function(g,r,col){ g.appendChild(E("rect",{x:-r, y:-r, width:2*r, height:2*r, rx:5, fill:col}));
+        g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:"#fff", "stroke-width":"2.2",
+          "stroke-linecap":"round","stroke-linejoin":"round",
+          transform:"translate("+(-r*0.75)+","+(-r*0.75)+") scale("+(1.5*r/24)+")"})); },
+      fn:function(g,r,col,handler){ g.appendChild(E("circle",{r:r+1.5, fill:col}));
+        if(handler) g.appendChild(E("circle",{r:r+3.5, fill:"none", stroke:col, "stroke-width":"1.6"}));
+        g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:"#fff", "stroke-width":"2.4",
+          "stroke-linecap":"round","stroke-linejoin":"round",
+          transform:"translate("+(-r*0.85)+","+(-r*0.85)+") scale("+(1.7*r/24)+")"})); },
+      ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+        g.appendChild(E("rect",{x:-r-1, y:-r-1, width:2*r+2, height:2*r+2, rx:6, fill:col}));
+        g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
+          fill:"#fff", transform:"scale("+(r/6)+")"})); }
+    }
+  };
+  function cylinder(g,r,col){ ICONSETS[ICONSET].model(g,r,col); }
+  function sBadge(g,r,col){ ICONSETS[ICONSET].schema(g,r,col); }
+  function fGlyph(g,r,col,handler){ ICONSETS[ICONSET].fn(g,r,col,handler); }
+  function epMark(g,r,m){ ICONSETS[ICONSET].ep(g,r,m); }
+
+  var LINE_MULT = { direct:0.25, bowed:2 };
+  var HALO_R = 14;   // the element circle: wires START at its edge, never at the icon
+  function curve(x1,y1,x2,y2,bow){ var dx=x2-x1, dy=y2-y1, d=Math.hypot(dx,dy)||1;
+    bow=bow*(LINE_MULT[lineStyle]||1);
+    if(d>3*HALO_R){ var ux=dx/d, uy=dy/d;
+      x1=x1+ux*HALO_R; y1=y1+uy*HALO_R; x2=x2-ux*HALO_R; y2=y2-uy*HALO_R;
+      dx=x2-x1; dy=y2-y1; d=Math.hypot(dx,dy)||1; }
+    var mx=(x1+x2)/2 - dy/d*bow, my=(y1+y2)/2 + dx/d*bow;
+    return "M"+rnd(x1)+" "+rnd(y1)+" Q "+rnd(mx)+" "+rnd(my)+" "+rnd(x2)+" "+rnd(y2); }
+  function halo(g){ g.insertBefore(E("circle",{class:"halo", r:HALO_R}), g.firstChild); }
+  function kindPath(layer, a, b, kind, off){
+    off=off*(LINE_MULT[lineStyle]||1);
+    var dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+    var mx=(a.x+b.x)/2 - uy*off, my=(a.y+b.y)/2 + ux*off;
+    var p=E("path",{class:"e-"+kind, d:"M"+rnd(a.x)+" "+rnd(a.y)+" Q "+rnd(mx)+" "+rnd(my)+" "+rnd(b.x)+" "+rnd(b.y)});
+    layer.appendChild(p); return p;
+  }
+  var _uid = 0;
+  function edgeGradient(defs, a, c, sCol, tCol){
+    var id = "cbgeg"+(++_uid);
+    var g = E("linearGradient",{id:id, gradientUnits:"userSpaceOnUse",
+      x1:rnd(a.x), y1:rnd(a.y), x2:rnd(c.x), y2:rnd(c.y)});
+    g.appendChild(E("stop",{offset:"0%", "stop-color":sCol}));
+    g.appendChild(E("stop",{offset:"100%", "stop-color":tCol}));
+    defs.appendChild(g); return id;
+  }
+  /* FLOW DOTS (lab round 30): direction reads as MOTION, not arrowheads — dots
+     travel source → target at constant SPEED (dur ∝ length); a bidirectional pair
+     rides two LANES (laneBow bows the reverse path to the opposite side). Reduced
+     motion: a static dot at 62% of the path still names the direction. */
+  var REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var _lanes = {};
+  function laneBow(kFrom, kTo, bow){
+    var k = kFrom<kTo ? kFrom+"›"+kTo : kTo+"›"+kFrom, rec=_lanes[k];
+    if(rec===undefined){ _lanes[k]={dir:kFrom, sign:bow<0?-1:1}; return bow; }
+    return (rec.dir===kFrom?rec.sign:-rec.sign)*Math.abs(bow);
+  }
+  function flowDots(host, pathEl, fill){
+    var out=[], len=0; try{ len=pathEl.getTotalLength(); }catch(_){ return out; }
+    if(!len) return out;
+    if(!pathEl.id) pathEl.id="cbgf"+(++_uid);
+    var dur=Math.max(1.6, len/55), n=len>260?2:1;
+    for(var i=0;i<n;i++){
+      var dot=E("circle",{class:"flowdot", r:"2.1", fill:fill});
+      if(REDUCED || dragging){ var q=pathEl.getPointAtLength(len*0.62);   // drags re-render per move — no SMIL restart churn
+        dot.setAttribute("cx",rnd(q.x)); dot.setAttribute("cy",rnd(q.y));
+      } else {
+        var am=E("animateMotion",{dur:dur.toFixed(2)+"s", repeatCount:"indefinite",
+          begin:(-dur*i/n).toFixed(2)+"s", rotate:"none"});
+        var mp=E("mpath"); mp.setAttribute("href","#"+pathEl.id);
+        am.appendChild(mp); dot.appendChild(am);
+      }
+      host.appendChild(dot); out.push(dot);
+    }
+    return out;
+  }
+  function rows2(s, max){ s=String(s); if(s.length<=max) return [s];
+    var r1=s.slice(0,max), rest=s.slice(max);
+    return [r1, rest.length<=max?rest:rest.slice(0,max-1)+"…"]; }
+  function twoRowLabel(g, txt, x, y){
+    rows2(txt,10).forEach(function(r,i){
+      var e=E("text",{class:"plabel", x:x, y:y+i*10});
+      e.textContent=r; g.appendChild(e); }); }
 
   // ── the shared detail panel (assets/sim-panel.js), parameterized on this
   //    renderer's two touchpoints: applyStage (re-render) + selectPiece. ──────
@@ -509,25 +689,26 @@
     document.getElementById("cbg-stageSeg").querySelectorAll("button").forEach(function(b){
       b.classList.toggle("on", b.getAttribute("data-stage")===curStage); });
   }
-  function selectPiece(key){
-    selPiece=key;
-    vp.querySelectorAll(".xpiece").forEach(function(g){ g.classList.toggle("selp", g.getAttribute("data-piece")===key); });
-  }
   var PANEL = (SIM && window.GABE_SIM_PANEL) ? window.GABE_SIM_PANEL({
     SIM:SIM, entities:L1, STAGE_COLOR:STAGE_COLOR, KIND_COLOR:KIND_COLOR,
     detailId:"cbg-detail", stageSegId:"cbg-stageSeg",
     getStage:function(){ return curStage; },
-    applyStage:function(s){ curStage=s; syncStageButtons(); renderL1(); },
-    selectPiece:selectPiece
+    applyStage:function(s){ curStage=s; syncStageButtons(); renderKeepView(); },
+    selectPiece:function(key){
+      if(!key){ clearSelection(); return; }
+      var k="pc:"+key; if(!SELREG.nodes[k]){ clearSelection(); return; }
+      appendConn(k, selectNode(k));     // the sim card + the connections tail
+    }
   }) : null;
-  // no change in flight → the honest-empty map note (C2 wires a live projection)
+  // no change in flight → the honest-empty map note
   function degradePanel(){
-    document.getElementById("cbg-detail").innerHTML =
+    detail.innerHTML =
       "<div class='phdr'>codebase map</div><h4>No change in flight</h4>"
       + "<div class='kind'>showing the current codebase</div>"
       + "<div class='sum'>When a change is in progress the lifecycle instrument lights up here — "
       + "the touched entities, their blast radius, and the Red · Execute · Review · Commit stages. "
-      + "For now: <b>double-click</b> an entity to drill into its pieces, drag the background to pan.</div>";
+      + "For now: <b>click</b> anything to inspect it, <b>double-click</b> an entity to drill into "
+      + "its pieces, scroll to pan, ctrl+scroll to zoom.</div>";
   }
   function resetPanel(){ if(PANEL) PANEL.resetPanel(); else degradePanel(); }
   // re-render whatever the panel was showing (piece / entity / summary) for the
@@ -535,21 +716,30 @@
   function reopenPanel(){
     if(!PANEL){ degradePanel(); return; }
     if(panelTarget && panelTarget.piece) PANEL.openDetail(panelTarget.piece.slug, panelTarget.piece.p);
-    else if(panelTarget && panelTarget.entity) PANEL.openEntityDetail(panelTarget.entity);
+    else if(panelTarget && panelTarget.entity){ PANEL.openEntityDetail(panelTarget.entity); attachEntitySelection(panelTarget.entity); }
     else PANEL.resetPanel();
   }
+  function attachEntitySelection(slug){
+    if(!SELREG.nodes["ent:"+slug]) return;
+    appendConn("ent:"+slug, selectNode("ent:"+slug));
+  }
+  function appendConn(key, mine){
+    detail.insertAdjacentHTML("beforeend", connectionsHTML(key, mine));
+    wireConnRows();
+  }
 
-  // ── viewport at natural pixel scale; drag the background to pan ─────────────
-  var panX=0, panY=0, fitTx=0, fitTy=0, zoom=1;
+  // ── camera: fit-to-bounds base scale · pan · zoom (the lab's wheel grammar) ──
+  var panX=0, panY=0, zoom=1, fitT=[0,0], baseScale=1;
   function frame(b){
+    lastBounds=b;
     var cw=stage.clientWidth||900, ch=stage.clientHeight||600;
     svg.setAttribute("width", cw); svg.setAttribute("height", ch);
-    // centre the bounds at the CURRENT zoom (so a re-render keeps the zoom level)
-    fitTx = Math.round(cw/2 - zoom*(b.minX+b.maxX)/2);
-    fitTy = Math.round(ch/2 - zoom*(b.minY+b.maxY)/2);
-    applyPan();
+    var sx=(cw-40)/Math.max(1,b.maxX-b.minX), sy=(ch-40)/Math.max(1,b.maxY-b.minY);
+    baseScale=Math.min(1, sx, sy);
+    fitT=[Math.round(cw/2 - baseScale*(b.minX+b.maxX)/2), Math.round(ch/2 - baseScale*(b.minY+b.maxY)/2)];
+    apply();
   }
-  function applyPan(){ vp.setAttribute("transform","translate("+(fitTx+panX)+","+(fitTy+panY)+") scale("+zoom+")"); }
+  function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(fitT[1]+panY)+") scale("+(baseScale*zoom)+")"); }
 
   // ── layout engines — Ring (stamped) · Flow (Flare gradient) · Force ────────
   function flowLayout(nodes, edges){
@@ -584,16 +774,19 @@
       nodes.forEach(function(nd){ var id=nd.id; vel[id].x=(vel[id].x - pos[id].x*0.003)*0.9; vel[id].y=(vel[id].y - pos[id].y*0.003)*0.9;
         pos[id].x+=vel[id].x; pos[id].y+=vel[id].y; });
     }
-    var p2={}; Object.keys(pos).forEach(function(k){ p2[k]={x:Math.round(pos[k].x*100)/100,y:Math.round(pos[k].y*100)/100}; });
+    var p2={}; Object.keys(pos).forEach(function(k){ p2[k]={x:rnd(pos[k].x),y:rnd(pos[k].y)}; });
     return p2;
   }
   function computeL1Positions(){
+    var p;
     if(l1layout==="flow"){
-      if(L1.length && L1[0].fx!=null){ var pf={}; L1.forEach(function(n){ pf[n.id]={x:n.fx,y:n.fy}; }); return pf; }
-      return flowLayout(L1, L1E);
+      if(L1.length && L1[0].fx!=null){ p={}; L1.forEach(function(n){ p[n.id]={x:n.fx,y:n.fy}; }); }
+      else p=flowLayout(L1, L1E);
     }
-    if(l1layout==="force") return forceLayout(L1, L1E, {R:210, rest:170});
-    var p={}; L1.forEach(function(n){ p[n.id]={x:n.x,y:n.y}; }); return p;
+    else if(l1layout==="force") p=forceLayout(L1, L1E, {R:210, rest:170});
+    else { p={}; L1.forEach(function(n){ p[n.id]={x:n.x,y:n.y}; }); }
+    L1.forEach(function(n){ if(userPos[n.id]) p[n.id]=userPos[n.id]; });   // drags win
+    return p;
   }
   function computeInsidePositions(slug, pieces, cx, cy){
     var n=pieces.length||1, pos={};
@@ -614,23 +807,202 @@
     return pos;
   }
   function computeL2Positions(g2){
-    if(l2layout==="force") return forceLayout(g2.nodes, g2.edges, {R:270, iter:260, k:5200, rest:118});
-    if(l2layout==="radial"){
+    var p;
+    if(l2layout==="force") p=forceLayout(g2.nodes, g2.edges, {R:270, iter:260, k:5200, rest:118});
+    else if(l2layout==="radial"){
       var ord=["endpoint","schema","model","external"];
       var sorted=g2.nodes.slice().sort(function(a,b){ return (ord.indexOf(a.kind)-ord.indexOf(b.kind)) || (a.id<b.id?-1:1); });
-      var R=Math.max(220, sorted.length*13), pos={};
-      sorted.forEach(function(n,i){ var a=-Math.PI/2+2*Math.PI*i/sorted.length; pos[n.id]={x:R*Math.cos(a),y:R*Math.sin(a)}; });
-      return pos;
+      var R=Math.max(220, sorted.length*13); p={};
+      sorted.forEach(function(n,i){ var a=-Math.PI/2+2*Math.PI*i/sorted.length; p[n.id]={x:rnd(R*Math.cos(a)),y:rnd(R*Math.sin(a))}; });
+    } else {
+      var ord2=["endpoint","schema","model","external"], COLW=(DATA.layout.l2&&DATA.layout.l2.col_w)||240, kc={};
+      ord2.forEach(function(k,i){ kc[k]=i; });
+      p={}; g2.nodes.forEach(function(n){ p[n.id]={x:kc[n.kind]*COLW, y:n.y}; });
     }
-    var ord2=["endpoint","schema","model","external"], COLW=(DATA.layout.l2&&DATA.layout.l2.col_w)||240, kc={};
-    ord2.forEach(function(k,i){ kc[k]=i; });
-    var p={}; g2.nodes.forEach(function(n){ p[n.id]={x:kc[n.kind]*COLW, y:n.y}; }); return p;
+    g2.nodes.forEach(function(n){ if(userPos[n.id]) p[n.id]=userPos[n.id]; });
+    return p;
   }
 
-  // ── L1 render ──────────────────────────────────────────────────────────────
+  /* ── SELECTION ENGINE (lab rounds 23–33): every node and wire registers itself
+     at draw time; a click highlights the node + its connectors to selDepth hops
+     with decaying boldness, fades the rest, and appends the connections as
+     clickable rows (hover = PEEK) under whatever card the panel is showing. ── */
+  var SELREG = { nodes:{}, edges:[] };
+  var selKey = null;
+  var _edgeHop = { i:-1, at:null };
+  function regNode(g, key, label, type, ringR){ g.setAttribute("data-key", key);
+    SELREG.nodes[key]={el:g, label:label, type:type, ringR:ringR||16}; }
+  function regEdge(el, kind, fromKey, toKey, how){
+    var idx=SELREG.edges.length;
+    SELREG.edges.push({el:el, kind:kind, from:fromKey, to:toKey, how:how||""});
+    el.style.pointerEvents="stroke"; el.style.cursor="pointer";
+    var onClick=function(ev){ ev.stopPropagation(); selectEdge(idx); };
+    var onDbl=function(ev){ ev.stopPropagation(); ev.preventDefault(); edgeHop(idx); };
+    el.addEventListener("click",onClick);
+    el.addEventListener("dblclick",onDbl);
+    // a thin wire renders SUB-PIXEL at fit zoom — a real mouse can't land on it.
+    // Give it an invisible 9px hit twin carrying the same listeners (round 33).
+    var d=el.getAttribute && el.getAttribute("d");
+    if(d && el.parentNode){
+      var tw=E("path",{d:d, fill:"none", stroke:"transparent","stroke-width":"9"});
+      tw.style.pointerEvents="stroke"; tw.style.cursor="pointer";
+      tw.addEventListener("click",onClick); tw.addEventListener("dblclick",onDbl);
+      el.parentNode.insertBefore(tw, el.nextSibling);
+    }
+    return idx; }
+  function applyDepth(d){ d=Math.max(1, Math.min(5, d)); if(d===selDepth) return;
+    selDepth=d;
+    document.getElementById("cbg-depthSlider").value=String(d);
+    document.getElementById("cbg-depthVal").textContent=String(d);
+    if(selKey) selectNode(selKey); }
+  var _peeks=[];
+  function peekClear(){ _peeks.forEach(function(f){ f(); }); _peeks=[]; }
+  function peekEdge(i){
+    peekClear();
+    var e=SELREG.edges[i]; if(!e) return;
+    e.el.classList.add("e-peek");
+    _peeks.push(function(){ e.el.classList.remove("e-peek"); });
+    var far = (selKey && e.from===selKey) ? [e.to] : (selKey && e.to===selKey) ? [e.from] : [e.from, e.to];
+    far.forEach(function(k){ var n=SELREG.nodes[k]; if(!n) return;
+      var r=E("circle",{class:"peek-ring", r:n.ringR+2});
+      n.el.appendChild(r);
+      _peeks.push(function(){ r.remove(); }); });
+  }
+  function peekNode(k){
+    peekClear();
+    var n=SELREG.nodes[k]; if(!n) return;
+    var r=E("circle",{class:"peek-ring", r:n.ringR+2});
+    n.el.appendChild(r);
+    _peeks.push(function(){ r.remove(); });
+  }
+  function clearSelection(){ selKey=null; peekClear();
+    vp.querySelectorAll(".selring,.nbrring,.peek-ring").forEach(function(x){ x.remove(); });
+    vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
+      x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
+  function edgeWord(kind){ return {touch:"touches", fk:"fk", xfk:"cross-fk", calls:"calls", imports:"imports"}[kind]||kind; }
+  function selectNode(key){
+    clearSelection(); selKey=key;
+    var n=SELREG.nodes[key]; if(!n) return [];
+    n.el.appendChild(E("circle",{class:"selring", r:n.ringR}));
+    // BFS to selDepth: hop 1 boldest, each further hop thinner (e-hop1..e-hop5)
+    var seenN={}, seenE={}, frontier=[key], mine=[];
+    seenN[key]=true;
+    for(var d=1; d<=selDepth && frontier.length; d++){
+      var next=[];
+      SELREG.edges.forEach(function(e,i){ if(seenE[i]) return;
+        var hitFrom=frontier.indexOf(e.from)>=0, hitTo=frontier.indexOf(e.to)>=0;
+        if(!hitFrom && !hitTo) return;
+        seenE[i]=true; e.el.classList.add("e-hop"+d);
+        if(d===1) mine.push(i);
+        var nk=hitFrom?e.to:e.from;
+        if(!seenN[nk]){ seenN[nk]=true; next.push(nk);
+          var nb=SELREG.nodes[nk];
+          if(nb && !nb.el.querySelector(".nbrring")){
+            var ring=E("circle",{class:"nbrring", r:nb.ringR-2}); ring.style.opacity=String(Math.max(0.25, 0.8-0.14*(d-1)));
+            nb.el.appendChild(ring); } } });
+      frontier=next; }
+    SELREG.edges.forEach(function(e,i){ if(!seenE[i]) e.el.classList.add("e-faded"); });
+    return mine; }
+  function _psvg(inner, w){ return "<svg viewBox='0 0 24 24' width='"+(w||15)+"' height='"+(w||15)+"'>"+inner+"</svg>"; }
+  function _sect(icon, label){ return "<div class='k2'>"+icon+"<span>"+label+"</span></div>"; }
+  function connectionsHTML(key, mine){
+    var wireIc=_psvg("<path d='M3 17 Q12 3 21 12' fill='none' stroke='var(--accent)' stroke-width='2'/><circle cx='13.5' cy='8.6' r='2.2' fill='var(--accent)'/>");
+    if(!mine.length) return _sect(wireIc,"connections")+"<div class='note'>no drawn connector touches it on this view</div>";
+    var h=_sect(wireIc,"connections ("+mine.length+")");
+    mine.forEach(function(i){ var e=SELREG.edges[i];
+      var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
+      var dir=e.from===key?"→":"←";
+      h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span>"
+        +"<b class='cgo' data-k='"+esc(nk)+"' title='travel to it'>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
+    return h; }
+  function wireConnRows(){
+    detail.querySelectorAll(".conrow").forEach(function(row){
+      row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
+      row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); });
+      row.addEventListener("mouseenter",function(){ peekEdge(+row.getAttribute("data-conn")); });
+      row.addEventListener("mouseleave",peekClear); });
+    // the OTHER element's name is the transporter — click it to land on that element
+    detail.querySelectorAll(".cgo").forEach(function(b){
+      b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
+  function selectEdge(i){
+    var e=SELREG.edges[i]; if(!e) return;
+    clearSelection();
+    SELREG.edges.forEach(function(x,j){ x.el.classList.add(j===i?"e-hl":"e-faded"); });
+    var f=SELREG.nodes[e.from], to=SELREG.nodes[e.to];
+    [f,to].forEach(function(n){ if(n) n.el.appendChild(E("circle",{class:"selring", r:n.ringR-1})); });
+    detail.innerHTML="<div class='phdr'>connector</div><h4>"+esc(edgeWord(e.kind))+"</h4>"
+     +"<div class='row jgo' data-k='"+esc(e.from)+"'><span class='k'>from</span><b class='v'>→ "+esc(f?f.label:e.from)+"</b></div>"
+     +"<div class='row jgo' data-k='"+esc(e.to)+"'><span class='k'>to</span><b class='v'>→ "+esc(to?to.label:e.to)+"</b></div>"
+     +(e.how?"<div class='row'><span class='k'>how</span><span class='v'>"+esc(e.how)+"</span></div>":"")
+     +"<div class='note'>"+({touch:"the endpoint's handler reads or writes this piece",
+        fk:"a foreign-key column points at the other table",
+        xfk:"a foreign key crossing the entity boundary",
+        calls:"function calls crossing the boundary — every cross-file call is graft-inferred, a floor",
+        imports:"module imports crossing the boundary"}[e.kind]||"")
+     +" Click a → row to travel to that component; double-click the wire to hop between its ends.</div>";
+    detail.querySelectorAll(".jgo").forEach(function(row){
+      row.addEventListener("click",function(){ jumpToNode(row.getAttribute("data-k")); });
+      row.addEventListener("mouseenter",function(){ peekNode(row.getAttribute("data-k")); });
+      row.addEventListener("mouseleave",peekClear); });
+  }
+  function nodeWorldXY(key){
+    var n=SELREG.nodes[key]; if(!n) return null;
+    var m=/translate\(([-0-9.]+)[ ,]+([-0-9.]+)\)/.exec(n.el.getAttribute("transform")||"");
+    if(m) return {x:+m[1], y:+m[2]};
+    try{ var bb=n.el.getBBox(); return {x:bb.x+bb.width/2, y:bb.y+bb.height/2}; }catch(_){ return null; }
+  }
+  function screenDistToCentre(w){
+    var r=stage.getBoundingClientRect(), s=baseScale*zoom;
+    return Math.hypot(fitT[0]+panX+w.x*s - r.width/2, fitT[1]+panY+w.y*s - r.height/2);
+  }
+  function centerCamera(w){                       // zoom untouched — only pan moves
+    var r=stage.getBoundingClientRect(), s=baseScale*zoom;
+    panX=r.width/2 - fitT[0] - w.x*s;
+    panY=r.height/2 - fitT[1] - w.y*s;
+    apply();
+  }
+  function edgeHop(i){
+    var e=SELREG.edges[i]; if(!e) return;
+    var a=nodeWorldXY(e.from), b=nodeWorldXY(e.to); if(!a && !b) return;
+    var go;
+    if(_edgeHop.i===i) go = _edgeHop.at==="from" ? "to" : "from";
+    else go = (a&&b) ? (screenDistToCentre(a)>=screenDistToCentre(b)?"from":"to") : (a?"from":"to");
+    var w = go==="from"?a:b;
+    if(!w){ go = go==="from"?"to":"from"; w = go==="from"?a:b; }
+    _edgeHop={i:i, at:go};
+    centerCamera(w);
+  }
+  /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
+     click path runs, so the panel becomes that element's card. Only pc: pieces
+     carry a real click listener; entities and L2 nodes tap via wire()'s
+     POINTERDOWN timer, where a synthetic click is inert — land them
+     programmatically through onSingle. */
+  function jumpToNode(key){
+    var w=nodeWorldXY(key); if(!w) return;
+    centerCamera(w);
+    if(key.indexOf("ent:")===0){
+      var slug=key.slice(4);
+      var en=L1.filter(function(x){ return x.slug===slug; })[0];
+      if(en) onSingle(en);
+      return;
+    }
+    if(key.indexOf("pc:")===0){
+      var n=SELREG.nodes[key];
+      if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
+      return;
+    }
+    var meta=nodeMeta[key];
+    if(meta && meta.node) onSingle(meta.node);
+  }
+
+  // ── L1 render — entities + kind edges (gradient · lanes · flow dots) ────────
+  function resetRegistry(){
+    SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1,at:null}; peekClear();
+  }
   function renderL1(){
     view = "l1"; drilledSlug = null;
-    vp.textContent = ""; nodePos = {}; nodeMeta = {}; edgeRecs = [];
+    vp.textContent = ""; nodePos = {}; nodeMeta = {}; baseEdges = [];
+    resetRegistry();
     var POS = computeL1Positions();
     var minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
     L1.forEach(function(n){
@@ -640,16 +1012,30 @@
       minX=Math.min(minX,p.x-pad); maxX=Math.max(maxX,p.x+pad);
       minY=Math.min(minY,p.y-r-6); maxY=Math.max(maxY,p.y+r+30);
     });
-    lastBounds = {minX:minX,minY:minY,maxX:maxX,maxY:maxY};
-    frame(lastBounds);
-    var eLayer = E("g"); vp.appendChild(eLayer);
+    frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
+    var defs = E("defs"), eLayer = E("g"), nLayer = E("g");
+    vp.appendChild(defs); vp.appendChild(eLayer); vp.appendChild(nLayer);
+    // edges: one path per KIND (fk solid · calls dashed-moving · imports dotted),
+    // gradient = the two entities' colours (source → target, the amalgamation),
+    // opposite-side bows for the two directions of a pair, flow dots for direction.
     L1E.forEach(function(ed){
-      var p = E("path", { class:"edge", "marker-end":"url(#cbg-arrow)" });
-      p.style.strokeWidth = ewidth(ed.weight); eLayer.appendChild(p);
-      var rec = { el:p, s:ed.source, t:ed.target, kind:"l1", weight:ed.weight, data:ed };
-      edgeRecs.push(rec); updateEdge(rec);
+      var a=nodePos[ed.source], c=nodePos[ed.target]; if(!a||!c) return;
+      var kinds=Object.keys(ed.kinds||{}).sort(); if(!kinds.length) kinds=["fk"];
+      var side = ed.source < ed.target ? 1 : -1;
+      var grad = edgeGradient(defs, a, c, COLORS[ed.source]||"#888", COLORS[ed.target]||"#888");
+      kinds.forEach(function(k,i){
+        var off = side * (14 + i*18);
+        var p = kindPath(eLayer, a, c, k, off);
+        p.style.stroke = "url(#"+grad+")";
+        var cnt = (ed.kinds&&ed.kinds[k])!=null ? ed.kinds[k] : ed.weight;
+        var ti=E("title"); ti.textContent=ed.source+" → "+ed.target+" · "+k+" ×"+cnt
+          +(k==="calls"?" (inferred — a floor)":""); p.appendChild(ti);
+        regEdge(p, k, "ent:"+ed.source, "ent:"+ed.target,
+          "×"+cnt+(k==="calls"?" — cross-file calls are graft-inferred (a floor)":""));
+        var dots = flowDots(eLayer, p, "url(#"+grad+")");
+        baseEdges.push({el:p, dots:dots, s:ed.source, t:ed.target});
+      });
     });
-    var nLayer = E("g"); vp.appendChild(nLayer);
     L1.forEach(function(n){
       var col = COLORS[n.slug] || (n.kind==="unclaimed" ? (COLORS.__unclaimed__||"#8a8f98") : "#888");
       var g = E("g", { class:"node entnode", "data-id":n.id });
@@ -660,87 +1046,94 @@
       var pc = (SIM && SIM.pieces && SIM.pieces[n.slug]) ? SIM.pieces[n.slug].length : 0;
       var t1 = E("text", { class:"l1label", x:0, y:r+16 }); t1.textContent = n.label + (pc ? " ("+pc+")" : ""); t1.setAttribute("fill","var(--ink)");
       var t2 = E("text", { class:"l1sub", x:0, y:r+30 });
-      t2.textContent = n.counts.endpoints+" ep · "+n.counts.lines.toLocaleString()+" ln";
+      t2.textContent = n.counts ? (n.counts.endpoints+" ep · "+n.counts.lines.toLocaleString()+" ln")
+                                : "unresolved fk targets";
       g.appendChild(c); g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g);
-      nodeMeta[n.id].el = g; wire(g, n);
+      nodeMeta[n.id].el = g;
+      regNode(g, "ent:"+n.slug, n.label, "entity", r+6);
+      wire(g, n);
     });
-    afterRender("All entities", DATA.stats.entities + " entities", "var(--muted)");
+    afterRender("All entities", DATA.stats.entities + " entities · " + L1E.length + " links", "var(--muted)");
     applySim();
-    if(Object.keys(expanded).length) drawExpansions();
+    if(SIM && Object.keys(expanded).length) drawExpansions();
   }
 
-  // ── L2 render — columns endpoint · model · schema · external ────────────────
+  // ── L2 render — the drilled entity's pieces in the lab grammar ──────────────
+  function methodOf(label){ var m=String(label).split(" ")[0]; return METHOD[m]?m:null; }
   function renderL2(slug){
-    view = "l2"; drilledSlug = slug; selected = null; l2focus = null;
-    vp.textContent = ""; nodePos = {}; nodeMeta = {}; edgeRecs = [];
+    view = "l2"; drilledSlug = slug;
+    vp.textContent = ""; nodePos = {}; nodeMeta = {}; baseEdges = [];
+    resetRegistry();
     var g2 = DATA.l2[slug];
     if(!g2){ afterRender(slug, "no L2 data", COLORS[slug]||"var(--muted)"); return; }
+    var col = COLORS[slug] || "#888";
     var POS = computeL2Positions(g2);
-    var asChips = (l2layout==="columns"), PR2 = 12;
     var present = {}, minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
     g2.nodes.forEach(function(n){
       var p=POS[n.id];
       nodePos[n.id] = { x:p.x, y:p.y };
-      nodeMeta[n.id] = { kind:n.kind, node:n, shape: asChips?"chip":"circle", r:PR2 };
+      nodeMeta[n.id] = { kind:n.kind, node:n, r:12 };
       present[n.kind] = (present[n.kind]||0) + 1;
-      if(asChips){ minX=Math.min(minX,p.x); maxX=Math.max(maxX,p.x+CHIP_W); minY=Math.min(minY,p.y); maxY=Math.max(maxY,p.y+CHIP_H); }
-      else { minX=Math.min(minX,p.x-PR2-46); maxX=Math.max(maxX,p.x+PR2+46); minY=Math.min(minY,p.y-PR2-6); maxY=Math.max(maxY,p.y+PR2+18); }
+      minX=Math.min(minX,p.x-64); maxX=Math.max(maxX,p.x+64);
+      minY=Math.min(minY,p.y-20); maxY=Math.max(maxY,p.y+34);
     });
-    if(asChips) minY -= 34;
+    if(l2layout==="columns") minY -= 40;
     frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
-    if(asChips){
+    var defs = E("defs"), hLayer = E("g"), eLayer = E("g"), nLayer = E("g");
+    vp.appendChild(defs); vp.appendChild(hLayer); vp.appendChild(eLayer); vp.appendChild(nLayer);
+    if(l2layout==="columns"){
       var ord3=["endpoint","schema","model","external"], COLW3=(DATA.layout.l2&&DATA.layout.l2.col_w)||240;
-      var hLayer = E("g");
       ord3.forEach(function(kind, i){
         if(!present[kind]) return;
-        var h = E("text", { class:"colhdr", x:i*COLW3+2, y:minY+18 });
+        var h = E("text", { class:"colhdr", x:i*COLW3, y:minY+18, "text-anchor":"middle" });
         h.textContent = KIND_LABEL[kind] + "  " + present[kind]; hLayer.appendChild(h);
       });
-      vp.appendChild(hLayer);
     }
-    var eLayer = E("g"); vp.appendChild(eLayer);
-    g2.edges.forEach(function(ed){
-      if(!nodePos[ed.source] || !nodePos[ed.target]) return;
-      var p = E("path", { class:"edge", "marker-end":"url(#cbg-arrow)" });
-      p.style.strokeWidth = ed.kind==="fk" ? 1.9 : 1.3;
-      if(ed.kind==="fk") p.style.strokeDasharray = "5 4"; eLayer.appendChild(p);
-      var rec = { el:p, s:ed.source, t:ed.target, kind:"l2", ekind:ed.kind, data:ed };
-      edgeRecs.push(rec); updateEdge(rec);
+    g2.edges.forEach(function(ed, i){
+      var a=nodePos[ed.source], c=nodePos[ed.target];
+      if(!a || !c) return;
+      var isFk = ed.kind==="fk";
+      var p = E("path",{ class: isFk?"e-intra":"e-touch",
+        d: curve(a.x,a.y,c.x,c.y,(i%2?14:-14)) });
+      if(isFk) p.style.strokeDasharray="4 3";
+      p.style.stroke = col;
+      eLayer.appendChild(p);
+      var ti=E("title"); ti.textContent=String(ed.source).replace(/^[^:]+:/,"")+" → "
+        +String(ed.target).replace(/^[^:]+:/,"")+" · "+(ed.kind||"touch"); p.appendChild(ti);
+      regEdge(p, isFk?"fk":"touch", ed.source, ed.target, isFk?"foreign key":"read/written by the handler");
+      flowDots(eLayer, p, col);
     });
-    var nLayer = E("g"); vp.appendChild(nLayer);
     g2.nodes.forEach(function(n){
-      var col = KIND_COLOR[n.kind] || "#888";
       var label = n.label || String(n.id).replace(/^[^:]+:/,"");
       var g = E("g", { class:"node", "data-id":n.id, transform:"translate("+nodePos[n.id].x+","+nodePos[n.id].y+")" });
-      if(asChips){
-        var rect = E("rect", { class:"body", x:0, y:0, width:CHIP_W, height:CHIP_H, rx:8, fill:"var(--panel)", stroke:col, "stroke-width":1.6 });
-        var bar  = E("rect", { x:0, y:0, width:5, height:CHIP_H, rx:2.5, fill:col });
-        if(n.kind==="external"){ rect.setAttribute("stroke-dasharray","5 4"); }
-        var t = E("text", { class:"chiplabel", x:14, y:CHIP_H/2+4 }); t.setAttribute("fill","var(--ink)");
-        t.textContent = trunc(label, n.kind==="endpoint"?30:26);
-        g.appendChild(rect); g.appendChild(bar); g.appendChild(t);
-      } else {
-        var c2 = E("circle", { class:"body", r:PR2, cx:0, cy:0, fill:"var(--panel)", stroke:col, "stroke-width":2.6 });
-        if(n.kind==="external"){ c2.setAttribute("stroke-dasharray","4 3"); }
-        var t2 = E("text", { class:"xplabel", x:0, y:PR2+11 }); t2.setAttribute("fill","var(--ink)");
-        t2.textContent = trunc(label, 16);
-        g.appendChild(c2); g.appendChild(t2);
-      }
-      nLayer.appendChild(g); nodeMeta[n.id].el = g; wire(g, n);
+      halo(g);
+      if(n.kind==="endpoint"){ var m=methodOf(label)||"GET"; epMark(g, 6.5, m);
+        twoRowLabel(g, label.replace(/^[A-Z]+ /,"").replace(/^\//,"")||m, 0, 17); }
+      else if(n.kind==="model"){ cylinder(g, 8, "var(--c-model)"); twoRowLabel(g, label, 0, 17); }
+      else if(n.kind==="schema"){ sBadge(g, 7, "var(--c-schema)"); twoRowLabel(g, label, 0, 17); }
+      else { var xc=COLORS[n.slug]||"#868e96";   // COLORS is keyed by SLUG, never the display label
+        g.appendChild(E("circle",{r:9, fill:"var(--panel)", stroke:xc, "stroke-width":"2","stroke-dasharray":"4 3"}));
+        twoRowLabel(g, label, 0, 20); }
+      var ti=E("title"); ti.textContent=label+" · "+n.kind
+        +(n.table?" · table "+n.table:"")
+        +(n.kind==="external"?" — double-click to hop":""); g.appendChild(ti);
+      nLayer.appendChild(g); nodeMeta[n.id].el = g;
+      regNode(g, n.id, trunc(label,30), n.kind, 16);
+      wire(g, n);
     });
     var ent = L1.filter(function(n){ return n.slug===slug; })[0];
-    afterRender((ent?ent.label:slug), g2.nodes.length + " nodes · " + g2.edges.length + " edges", COLORS[slug]||"var(--muted)");
-    applySim();
+    afterRender((ent?ent.label:slug), g2.nodes.length + " pieces · " + g2.edges.length + " wires", COLORS[slug]||"var(--muted)");
   }
 
   function afterRender(title, sub, dotColor){
     document.getElementById("cbg-crumbTxt").textContent = title;
-    document.getElementById("cbg-crumbLvl").textContent = view==="l1" ? "· L1 · fk graph" : "· L2 · touches + fk";
+    document.getElementById("cbg-crumbLvl").textContent = view==="l1" ? "· L1" : "· L2 · touches + fk";
     document.getElementById("cbg-crumbDot").style.background = dotColor;
+    ["cbg-crumbDot","cbg-crumbTxt","cbg-crumbLvl"].forEach(function(id){
+      document.getElementById(id).hidden = (view==="l1"); });
     if(!SIM || view==="l2") document.getElementById("cbg-selInfo").innerHTML = sub ? "<span>"+sub+"</span>" : "";
     backBtn.disabled = (view==="l1");
-    stage.classList.toggle("l2view", view==="l2");
-    if(view==="l2") stage.scrollTop = 0, stage.scrollLeft = 0;
+    backBtn.hidden = (view==="l1");
     syncLayoutSel(); buildLegend(); buildStageLegend();
   }
   // gear-panel segmented pills (center-style): one button per option, active = .on
@@ -752,57 +1145,33 @@
     });
   }
   function syncLayoutSel(){
-    // entities pills: L1 → Ring·Flow·Force · L2 → Columns·Force·Radial
     document.getElementById("cbg-entitiesLbl").textContent = (view==="l1") ? "Entities layout" : "Layout";
     fillPills(document.getElementById("cbg-entitiesSeg"), view==="l1"?L1_LAYOUTS:L2_LAYOUTS, view==="l1"?l1layout:l2layout, "lay");
     var ir=document.getElementById("cbg-insideRow");
     if(view==="l1" && SIM){ ir.hidden=false; fillPills(document.getElementById("cbg-insideSeg"), INSIDE_LAYOUTS, insideLayout, "in"); }
     else ir.hidden=true;
+    fillPills(document.getElementById("cbg-linesSeg"), LINE_OPTS, lineStyle, "line");
+    fillPills(document.getElementById("cbg-iconsSeg"), ICON_OPTS, ICONSET, "ico");
   }
 
-  function updateEdge(rec){
-    var s = nodePos[rec.s], t = nodePos[rec.t];
-    if(!s || !t){ rec.el.setAttribute("d",""); return; }
-    if(rec.kind==="l1"){
-      var r1 = nodeMeta[rec.s].r, r2 = nodeMeta[rec.t].r;
-      var dx=t.x-s.x, dy=t.y-s.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
-      var sx=s.x+ux*r1, sy=s.y+uy*r1, ex=t.x-ux*(r2+3.5), ey=t.y-uy*(r2+3.5);
-      var mx=(sx+ex)/2, my=(sy+ey)/2, bow=Math.min(38, d*0.12);
-      rec.el.setAttribute("d","M"+sx+" "+sy+" Q "+(mx+(-uy)*bow)+" "+(my+(ux)*bow)+" "+ex+" "+ey);
-    } else if(nodeMeta[rec.s].shape==="circle" || nodeMeta[rec.t].shape==="circle"){
-      var r1c=nodeMeta[rec.s].r||12, r2c=nodeMeta[rec.t].r||12;
-      var dxc=t.x-s.x, dyc=t.y-s.y, dc=Math.hypot(dxc,dyc)||1, uxc=dxc/dc, uyc=dyc/dc;
-      var sxc=s.x+uxc*r1c, syc=s.y+uyc*r1c, exc=t.x-uxc*(r2c+3), eyc=t.y-uyc*(r2c+3);
-      var mxc=(sxc+exc)/2, myc=(syc+eyc)/2, bowc=Math.min(26,dc*0.09);
-      rec.el.setAttribute("d","M"+sxc+" "+syc+" Q "+(mxc-uyc*bowc)+" "+(myc+uxc*bowc)+" "+exc+" "+eyc);
-    } else {
-      var sc={ l:s.x, r:s.x+CHIP_W, cx:s.x+CHIP_W/2, cy:s.y+CHIP_H/2 };
-      var tc={ l:t.x, r:t.x+CHIP_W, cx:t.x+CHIP_W/2, cy:t.y+CHIP_H/2 };
-      var x1,x2,y1=sc.cy,y2=tc.cy, fwd = tc.cx>=sc.cx;
-      if(fwd){ x1=sc.r; x2=tc.l; } else { x1=sc.l; x2=tc.r; }
-      var h=Math.max(28, Math.abs(x2-x1)*0.5)*(fwd?1:-1);
-      rec.el.setAttribute("d","M"+x1+" "+y1+" C "+(x1+h)+" "+y1+" "+(x2-h)+" "+y2+" "+x2+" "+y2);
-    }
-  }
-  function refreshEdgesFor(id){ for(var i=0;i<edgeRecs.length;i++){ var r=edgeRecs[i]; if(r.s===id||r.t===id) updateEdge(r); } }
-
+  // ── node interaction: drag to move (re-render keeps the view) · tap to inspect ──
   var pendingTap = null, dragging = null;
   function wire(g, node){
     g.addEventListener("pointerenter", function(){ if(!dragging) showTip(node); });
     g.addEventListener("pointermove",  function(e){ if(!dragging) moveTip(e); });
     g.addEventListener("pointerleave", function(){ hideTip(); });
     g.addEventListener("pointerdown", function(e){
-      e.preventDefault();
+      e.preventDefault(); e.stopPropagation();
       var start = { x:e.clientX, y:e.clientY }, moved=false;
       var origin = { x:nodePos[node.id].x, y:nodePos[node.id].y };
       hideTip();
       function onMove(ev){
-        var dx=ev.clientX-start.x, dy=ev.clientY-start.y;
-        if(!moved && Math.abs(dx)+Math.abs(dy) < 4) return;
+        var s = baseScale*zoom || 1;
+        var dx=(ev.clientX-start.x)/s, dy=(ev.clientY-start.y)/s;
+        if(!moved && Math.abs(dx)+Math.abs(dy) < 3) return;
         moved = true; dragging = node.id;
-        nodePos[node.id] = { x:origin.x+dx, y:origin.y+dy };
-        g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
-        refreshEdgesFor(node.id);
+        userPos[node.id] = { x:rnd(origin.x+dx), y:rnd(origin.y+dy) };
+        renderKeepView();
       }
       function onUp(){
         window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp);
@@ -810,7 +1179,7 @@
       }
       window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
     });
-    if(view==="l1") g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
+    g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")");
   }
 
   function tap(node){
@@ -818,46 +1187,109 @@
     else { if(pendingTap) clearTimeout(pendingTap.t);
       var t=setTimeout(function(){ pendingTap=null; onSingle(node); }, 230); pendingTap = { id:node.id, t:t }; }
   }
+  // click model (operator-corrected): single-click SELECTS (card + highlight, never
+  // mutates expanded); double-click OPENS/CLOSES an involved entity (SIM) or drills (map)
   function onSingle(node){
     if(view==="l1"){
-      if(!SIM){ return; }                                  // map mode: single-click is inert
-      if(INVOLVED[node.id]){
-        if(!expanded[node.slug]){ expanded[node.slug]=true; renderL1(); }
-        panelTarget = { entity:node.slug }; PANEL.openEntityDetail(node.slug);
+      if(SIM && PANEL){
+        panelTarget = { entity:node.slug };
+        PANEL.openEntityDetail(node.slug);
+        attachEntitySelection(node.slug);
+      } else {
+        entityCard(node);
+        if(SELREG.nodes["ent:"+node.slug]) appendConn("ent:"+node.slug, selectNode("ent:"+node.slug));
       }
-    } else { focusL2(node.id); }
+    } else {
+      l2NodeCard(node);
+      if(SELREG.nodes[node.id]) appendConn(node.id, selectNode(node.id));
+    }
   }
   function onDouble(node){
-    if(view!=="l1") return;
+    // external pieces carry the target SLUG (label is the display name — 'Auth'
+    // vs the l2 key 'auth'); an unclaimed stub has no l2, so the hop stays inert
+    if(view==="l2"){ if(node.kind==="external" && node.slug && DATA.l2[node.slug]) drill(node.slug); return; }
     if(!SIM){ drill(node.slug); return; }                   // map mode: double-click drills to L2
     if(INVOLVED[node.id]){
       if(expanded[node.slug]) delete expanded[node.slug]; else expanded[node.slug]=true;
-      renderL1(); panelTarget = { entity:node.slug }; PANEL.openEntityDetail(node.slug);
+      renderKeepView(); panelTarget = { entity:node.slug };
+      PANEL.openEntityDetail(node.slug); attachEntitySelection(node.slug);
     }
   }
 
-  // ── single-click expansion (SIM only): explode an entity into its pieces ────
+  // map-mode / L2 cards (the sim panel owns these when a change is in flight)
+  function rowKV(k,v){ return "<div class='row'><span class='k'>"+k+"</span><span class='v'>"+v+"</span></div>"; }
+  function entityCard(n){
+    var c=n.counts||{};
+    detail.innerHTML = "<div class='phdr'>codebase map</div>"
+      + "<h4 style='color:"+(COLORS[n.slug]||"inherit")+"'>"+esc(n.label)+"</h4>"
+      + "<div class='kind'>entity"+(n.status?" · "+esc(String(n.status)):"")+"</div>"
+      + rowKV("endpoints", c.endpoints||0) + rowKV("models", c.models||0)
+      + rowKV("schemas", c.schemas||0) + rowKV("files", c.files||0)
+      + rowKV("lines", (c.lines||0).toLocaleString())
+      + "<div class='sum'>double-click to drill into its pieces.</div>";
+  }
+  function l2NodeCard(n){
+    var label = n.label || String(n.id).replace(/^[^:]+:/,"");
+    var h = "<div class='phdr'>"+esc(drilledSlug||"")+" · piece</div>"
+      + "<h4>"+esc(trunc(label,40))+"</h4><div class='kind'>"+esc(n.kind)+"</div>";
+    if(n.kind==="endpoint"){ var m=methodOf(label); if(m) h+=rowKV("method", m); }
+    if(n.table) h+=rowKV("table", esc(n.table));
+    if(n.kind==="external") h+="<div class='sum'>lives in another entity — <b>double-click</b> it on the canvas to hop there.</div>";
+    detail.innerHTML = h;
+  }
+
+  /* ── the SIM explode: an involved entity opens into its pieces — lab icons,
+     entity-colour intra wires, gradient cross wires, BEAT overlays per stage.
+     Layering law (round 33): containers → wires → pieces. ── */
+  function beatEnc(slug, p){
+    var st=(SIM.stages||{});
+    var d=((st[curStage]||{}).pieces||{})[p.id]||{};
+    var red=((st.red||{}).pieces||{})[p.id]||{};
+    var out={ rings:[], pill:null, hot:false };
+    if(curStage==="red"){
+      if(d.tested){ out.rings.push(["red-ring",19]); out.pill={ t:String((d.cases||[]).length||1), col:STAGE_COLOR.red }; out.hot=true; }
+    } else if(curStage==="execute"){
+      if(d.changed){ out.rings.push(["heat-ring",19]); if(d.add) out.pill={ t:"+"+d.add, col:STAGE_COLOR.execute }; out.hot=true; }
+      else if(p.role==="link"){ out.rings.push(["blast-ring",23]); }
+    } else if(curStage==="review"){
+      if(red.tested){ out.rings.push(["ok-ring",19]); out.pill={ t:String((red.cases||[]).length||1), col:STAGE_COLOR.review }; out.hot=true; }
+      if(d.touched_again){ out.rings.push(["drift-ring",22]); out.hot=true; }
+    } else if(curStage==="commit"){
+      if(p.role==="changed"){ out.rings.push(["commit-ring",19]); out.hot=true; }
+    }
+    return out;
+  }
+  // ADAPTED from the preview pill: variable width so "+N" fits (geometry moved
+  // with it — deliberate, the only beat-overlay deviation from change-graph-lab)
+  function pillOn(g, txt, col){
+    var s=String(txt), w=9+s.length*5.4, bx=13, by=-14;
+    g.appendChild(E("rect",{class:"bpill", x:bx-w/2, y:by-6, width:w, height:12, rx:6, fill:col}));
+    var t=E("text",{class:"bpill", x:bx, y:by+3.2, "text-anchor":"middle",
+      style:"font-size:8.6px;font-weight:800", fill:"#fff"}); t.textContent=s; g.appendChild(t);
+  }
+  function drawPieceIcon(g, p){
+    if(p.kind==="schema") sBadge(g, 7, "var(--c-schema)");
+    else if(p.kind==="endpoint"){ var m=methodOf(p.label)||"GET"; epMark(g, 6.5, m); }
+    else if(p.kind==="fn") fGlyph(g, 8.5, "var(--c-fn-api)", true);
+    else cylinder(g, 8, "var(--c-model)");
+  }
   function drawExpansions(){
-    var slugs = Object.keys(expanded);
-    var PR = PIECE_R, innerPos = {};
+    var slugs = Object.keys(expanded); if(!slugs.length) return;
     vp.querySelectorAll(".node").forEach(function(n){
       var id=n.getAttribute("data-id");
       if(expanded[id]) n.classList.add("exploded");
       else if(!INVOLVED[id]) n.classList.add("faded");
     });
-    edgeRecs.forEach(function(r){ r.el.classList.add("faded"); });
-    var reduce = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
-    var layer=E("g",{id:"cbg-expansion"}); vp.appendChild(layer);
+    baseEdges.forEach(function(be){ be.el.classList.add("basefade");
+      be.dots.forEach(function(d){ d.classList.add("basefade"); }); });
+    // a drag re-renders on every pointermove — replaying the fly-in would keep
+    // the pieces stuck at opacity 0 near the entity centre for the whole drag
+    var reduce = REDUCED || !!dragging;
+    var expL=E("g",{id:"cbg-expansion"}), defs=E("defs"), bgL=E("g"), wireL=E("g"), nodeL=E("g");
+    expL.appendChild(defs); expL.appendChild(bgL); expL.appendChild(wireL); expL.appendChild(nodeL);
+    vp.appendChild(expL);
     var b={minX:lastBounds.minX,minY:lastBounds.minY,maxX:lastBounds.maxX,maxY:lastBounds.maxY};
-    var connector={};
-    ((SIM.cross_edges)||[]).forEach(function(e){ connector[e.from_slug+"\t"+e.from]=1; connector[e.to_slug+"\t"+e.to]=1; });
-    var hot={};
-    SIM.touched.concat(SIM.blast).forEach(function(sl){
-      ((SIM.pieces&&SIM.pieces[sl])||[]).forEach(function(pc){
-        if(!stageEnc(sl,pc).hollow) hot[sl+"\t"+pc.id]=1;
-      });
-    });
-    var STG=STAGE_COLOR[curStage];
+    var innerPos={};
     slugs.forEach(function(slug){
       var pos=nodePos[slug]; if(!pos) return;
       var pieces=(SIM.pieces&&SIM.pieces[slug])||[];
@@ -865,7 +1297,7 @@
       var extent=0;
       pieces.forEach(function(p){ var pp=ip[p.id]; innerPos[slug+"\t"+p.id]=pp;
         extent=Math.max(extent, Math.hypot(pp.x-pos.x, pp.y-pos.y)); });
-      var contR=Math.max(56, extent+PR+18), col=COLORS[slug]||"#888";
+      var contR=Math.max(56, extent+HALO_R+22), col=COLORS[slug]||"#888";
       var cont=E("circle",{class:"xcontainer",cx:pos.x,cy:pos.y,r:contR,
         fill:col,"fill-opacity":"0.06",stroke:col,"stroke-opacity":"0.55","stroke-width":"1.6","stroke-dasharray":"4 4"});
       (function(sl){
@@ -875,133 +1307,130 @@
           else { ct=setTimeout(function(){ ct=null; onSingle(en); }, 230); }
         });
       })(slug);
-      layer.appendChild(cont);
-      var pcnt=((SIM.pieces&&SIM.pieces[slug])||[]).length;
+      bgL.appendChild(cont);
+      var pcnt=pieces.length;
       var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col});
       lb.textContent=(nodeMeta[slug].node.label||slug)+(pcnt?" ("+pcnt+")":"");
-      layer.appendChild(lb);
+      bgL.appendChild(lb);
       b.minX=Math.min(b.minX,pos.x-contR-24); b.maxX=Math.max(b.maxX,pos.x+contR+24);
       b.minY=Math.min(b.minY,pos.y-contR-24); b.maxY=Math.max(b.maxY,pos.y+contR+24);
     });
     frame(b);
-    var animE=[], animP=[], crossPaths=[];
-    function line(a,c,cls,arrow,hotColor){
-      var p=E("path",{class:cls+(hotColor?" hot":""), d:"M"+a.x+","+a.y+" L"+c.x+","+c.y});
-      if(hotColor) p.style.stroke=hotColor;
-      if(arrow) p.setAttribute("marker-end", hotColor?"url(#cbg-arrow-"+curStage+")":"url(#cbg-arrow)");
-      layer.appendChild(p); if(!reduce) animE.push(p); return p;
-    }
+    // the beat's HOT set — pieces this stage highlights; wires incident to them
+    // wear the stage colour (the "coloured flow = touched" law)
+    var hot={};
     slugs.forEach(function(slug){
-      ((SIM.intra_edges&&SIM.intra_edges[slug])||[]).forEach(function(e){
-        var a=innerPos[slug+"\t"+e.source], c=innerPos[slug+"\t"+e.target];
-        var hc=(hot[slug+"\t"+e.source]||hot[slug+"\t"+e.target])?STG:null;
-        if(a&&c) line(a,c,"xedge intra",false,hc);
+      ((SIM.pieces&&SIM.pieces[slug])||[]).forEach(function(p){
+        if(beatEnc(slug,p).hot) hot[slug+"\t"+p.id]=1;
       });
     });
-    ((SIM.cross_edges)||[]).forEach(function(e){
-      var a=innerPos[e.from_slug+"\t"+e.from] || nodePos[e.from_slug];
-      var c=innerPos[e.to_slug+"\t"+e.to]   || nodePos[e.to_slug];
-      var hc=(hot[e.from_slug+"\t"+e.from]||hot[e.to_slug+"\t"+e.to])?STG:null;
-      if(a&&c) crossPaths.push(line(a,c,"xedge cross",true,hc));
+    var STG=STAGE_COLOR[curStage];
+    // wires: intra (entity colour, stage colour when hot) then cross (gradient)
+    slugs.forEach(function(slug){
+      var col=COLORS[slug]||"#888";
+      ((SIM.intra_edges&&SIM.intra_edges[slug])||[]).forEach(function(e,ei){
+        var a=innerPos[slug+"\t"+e.source], c=innerPos[slug+"\t"+e.target];
+        if(!a||!c) return;
+        var isHot=hot[slug+"\t"+e.source]||hot[slug+"\t"+e.target];
+        var p=E("path",{class:"e-intra"+(isHot?" hot":""), d:curve(a.x,a.y,c.x,c.y,(ei%2?16:-16))});
+        p.style.stroke=isHot?STG:col;
+        wireL.appendChild(p);
+        var ti=E("title"); ti.textContent=String(e.source).replace(/^[^:]+:/,"")+" → "
+          +String(e.target).replace(/^[^:]+:/,"")+" · fk"; p.appendChild(ti);
+        regEdge(p, "fk", "pc:"+slug+"|"+e.source, "pc:"+slug+"|"+e.target, "model foreign key");
+        flowDots(wireL, p, isHot?STG:col);
+      });
     });
+    // an endpoint falls back to the ENTITY when its piece isn't drawn — either
+    // the entity is collapsed, or a live sim's cross_edge targets an unchanged
+    // model that never became a piece. The KEY must agree with the GEOMETRY
+    // (innerPos decides both), and an entity-anchored end is pulled in to the
+    // entity's rim (curve()'s 14px halo trim is sized for pieces, not a 22-60px
+    // entity circle — the wires-at-the-element's-edge law).
+    function rimPull(pt, toward, slug){
+      var r=(nodeMeta[slug]&&nodeMeta[slug].r?nodeMeta[slug].r:22)+6-HALO_R;
+      var dx=toward.x-pt.x, dy=toward.y-pt.y, d=Math.hypot(dx,dy)||1;
+      return { x:pt.x+dx/d*r, y:pt.y+dy/d*r };
+    }
+    if(showConns) ((SIM.cross_edges)||[]).forEach(function(e,xi){
+      var aIn=innerPos[e.from_slug+"\t"+e.from], cIn=innerPos[e.to_slug+"\t"+e.to];
+      var a=aIn || nodePos[e.from_slug], c=cIn || nodePos[e.to_slug];
+      if(!a||!c) return;
+      var fromKey = aIn ? "pc:"+e.from_slug+"|"+e.from : "ent:"+e.from_slug;
+      var toKey   = cIn ? "pc:"+e.to_slug+"|"+e.to     : "ent:"+e.to_slug;
+      if(!aIn) a=rimPull(a, c, e.from_slug);
+      if(!cIn) c=rimPull(c, a, e.to_slug);
+      var isHot=hot[e.from_slug+"\t"+e.from]||hot[e.to_slug+"\t"+e.to];
+      var p=E("path",{class:"e-xfk"+(isHot?" hot":""),
+        d:curve(a.x,a.y,c.x,c.y, laneBow("x:"+e.from_slug+"|"+e.from, "x:"+e.to_slug+"|"+e.to, (xi%2?26:-26)))});
+      var fill;
+      if(isHot){ p.style.stroke=STG; fill=STG; }
+      else { var gr=edgeGradient(defs, a, c, COLORS[e.from_slug]||"#888", COLORS[e.to_slug]||"#888");
+        p.style.stroke="url(#"+gr+")"; fill="url(#"+gr+")"; }
+      wireL.appendChild(p);
+      var ti=E("title"); ti.textContent=e.from_slug+"."+String(e.from).replace(/^[^:]+:/,"")
+        +" → "+e.to_slug+"."+String(e.to).replace(/^[^:]+:/,"")+(e.via?" (via "+e.via+")":""); p.appendChild(ti);
+      regEdge(p, "xfk", fromKey, toKey, e.via?("via "+e.via):"fk across the boundary");
+      flowDots(wireL, p, fill);
+    });
+    // pieces — lab icons + role dot + the current beat's rings/pills
+    var animP=[];
     slugs.forEach(function(slug){
       var pos=nodePos[slug];
       ((SIM.pieces&&SIM.pieces[slug])||[]).forEach(function(p){
         var pp=innerPos[slug+"\t"+p.id]; if(!pp) return;
-        var col=p.role==="changed"?"var(--touch)":"var(--blast)";
-        var e=stageEnc(slug,p), key=slug+"|"+p.id;
-        var g=E("g",{class:"xpiece"+(connector[slug+"\t"+p.id]?" pulse":"")+(selPiece===key?" selp":""),
-                     "data-piece":key, transform:"translate("+pp.x+","+pp.y+")"});
+        var enc=beatEnc(slug,p), key=slug+"|"+p.id;
+        var g=E("g",{class:"xpiece", "data-piece":key, transform:"translate("+pp.x+","+pp.y+")"});
         var inner=E("g",{class:"xpiece-in"});
-        inner.appendChild(E("circle",{class:"ring2",r:e.r+7,cx:0,cy:0}));
-        if(e.ring) inner.appendChild(E("circle",{r:e.r+4,cx:0,cy:0,fill:"none",stroke:e.color,"stroke-width":"2.4"}));
-        inner.appendChild(E("circle",{r:e.r, fill:e.hollow?"var(--panel)":e.color, stroke:e.hollow?col:"var(--panel)","stroke-width":"2"}));
-        var selx=E("g",{class:"selx"}); var xa=Math.min(4.6, e.r*0.5);
-        selx.appendChild(E("line",{x1:-xa,y1:-xa,x2:xa,y2:xa}));
-        selx.appendChild(E("line",{x1:-xa,y1:xa,x2:xa,y2:-xa}));
-        inner.appendChild(selx);
-        if(e.badge){ var bw=9+String(e.badge).length*5.4, bx=e.r*0.64, by=-e.r*0.72;
-          inner.appendChild(E("rect",{x:bx-bw/2,y:by-7,width:bw,height:14,rx:7,fill:e.color}));
-          var bt=E("text",{class:"xbadge",x:bx,y:by+3}); bt.textContent=e.badge; inner.appendChild(bt); }
-        var t=E("text",{class:"xplabel",x:0,y:e.r+11}); t.textContent=trunc(p.label,16); inner.appendChild(t);
+        halo(inner);
+        drawPieceIcon(inner, p);
+        // role dot: green = changed by this phase · amber = downstream link
+        inner.appendChild(E("circle",{cx:-10, cy:-9, r:2.6,
+          fill: p.role==="changed" ? "var(--touch)" : "var(--blast)"}));
+        enc.rings.forEach(function(rg){ inner.appendChild(E("circle",{class:rg[0], r:rg[1], cx:0, cy:0})); });
+        if(enc.pill) pillOn(inner, enc.pill.t, enc.pill.col);
+        twoRowLabel(inner, p.label, 0, 24);
         var ti=E("title"); ti.textContent=(p.label)+(p.via?" — "+p.via:""); inner.appendChild(ti);
-        g.appendChild(inner); layer.appendChild(g);
-        (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation(); panelTarget={piece:{slug:sl,p:pc}}; PANEL.openDetail(sl,pc); }); })(slug,p);
+        g.appendChild(inner); nodeL.appendChild(g);
+        regNode(g, "pc:"+slug+"|"+p.id, p.label, p.kind||"model", 16);
+        (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation();
+          panelTarget={piece:{slug:sl,p:pc}}; if(PANEL) PANEL.openDetail(sl,pc); }); })(slug,p);
         if(!reduce) animP.push({el:inner, dx:pos.x-pp.x, dy:pos.y-pp.y});
       });
     });
     if(!reduce){
       animP.forEach(function(a){ a.el.style.opacity="0"; a.el.style.transform="translate("+a.dx+"px,"+a.dy+"px)"; });
-      animE.forEach(function(p){ var len=0; try{ len=p.getTotalLength(); }catch(e){} if(len){ p.style.strokeDasharray=len; p.style.strokeDashoffset=len; p.__len=len; } });
       requestAnimationFrame(function(){ requestAnimationFrame(function(){
         animP.forEach(function(a,i){
           a.el.style.transition="transform .5s cubic-bezier(.2,.85,.25,1) "+(i*40)+"ms, opacity .4s ease "+(i*40)+"ms";
           a.el.style.transform="translate(0px,0px)"; a.el.style.opacity="1";
         });
-        var edgeStart=animP.length*40+140;
-        animE.forEach(function(p,i){ if(!p.__len) return;
-          p.style.transition="stroke-dashoffset .5s ease "+(edgeStart+i*55)+"ms"; p.style.strokeDashoffset="0"; });
-        var flowAt=edgeStart+animE.length*55+520;
-        setTimeout(function(){ crossPaths.forEach(function(p){
-          p.style.strokeDasharray=""; p.style.strokeDashoffset=""; p.style.transition=""; p.classList.add("flow"); }); }, flowAt);
       }); });
     }
-    // counts now ride the entity labels in the diagram; keep the bar clean
+    // counts ride the entity labels in the diagram; keep the bar clean
     document.getElementById("cbg-selInfo").innerHTML = "";
   }
 
-  function focusL2(id){
-    l2focus = (l2focus===id) ? null : id;
-    var nodes=vp.querySelectorAll(".node");
-    if(!l2focus){
-      nodes.forEach(function(n){ n.classList.remove("faded"); });
-      edgeRecs.forEach(function(r){ r.el.classList.remove("faded","hi"); });
-      applySim(); return;
-    }
-    var keep={}; keep[l2focus]=1;
-    edgeRecs.forEach(function(r){ if(r.s===l2focus)keep[r.t]=1; if(r.t===l2focus)keep[r.s]=1; });
-    nodes.forEach(function(n){ n.classList.toggle("faded", !keep[n.getAttribute("data-id")]); });
-    var c=0;
-    edgeRecs.forEach(function(r){ var inc=(r.s===l2focus||r.t===l2focus); if(inc)c++;
-      r.el.classList.toggle("hi",inc); r.el.classList.toggle("faded",!inc); });
-    var lbl=nodeMeta[l2focus].node.label||l2focus.replace(/^[^:]+:/,"");
-    document.getElementById("cbg-selInfo").innerHTML="<b>"+trunc(lbl,30)+"</b> · "+c+" connector"+(c===1?"":"s");
-  }
-
-  // ── per-stage node encoding (renderer-side; the panel reads SIM directly) ───
-  function stageEnc(slug, p){
-    var sd=(SIM.stages&&SIM.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
-    var e={ r:PIECE_R, hollow:true, ring:false, badge:"", color:STAGE_COLOR[curStage] };
-    if(curStage==="execute"){ if(d.changed){ e.hollow=false; e.r=PIECE_R+Math.sqrt(d.add||0)*3.4; if(d.add) e.badge="+"+d.add; } }
-    else if(curStage==="red"){ if(d.tested){ e.hollow=false; e.ring=true; if(d.cases&&d.cases.length) e.badge=String(d.cases.length); } }
-    else if(curStage==="review"){ if(d.touched_again){ e.hollow=false; e.ring=true; } }
-    else if(curStage==="commit"){ if(p.role==="changed") e.hollow=false; }
-    return e;
-  }
-
   function applySim(){
-    if(!SIM) return;
-    var nodes = vp.querySelectorAll(".node");
-    if(view==="l1"){
-      nodes.forEach(function(g){
-        var id=g.getAttribute("data-id");
-        g.classList.remove("touched","blast","faded");
-        if(!INVOLVED[id]){ g.classList.add("faded"); return; }
-        if(TOUCH[id]) g.classList.add("touched"); else if(BLAST[id]) g.classList.add("blast");
-      });
-      edgeRecs.forEach(function(r){
-        r.el.classList.remove("blastedge","faded");
-        if(!(INVOLVED[r.s] && INVOLVED[r.t])){ r.el.classList.add("faded"); return; }
-        if(BLAST[r.s] && TOUCH[r.t]) r.el.classList.add("blastedge");
-      });
-      if(!Object.keys(expanded).length){
-        var sd=(SIM.stages&&SIM.stages[curStage])||{};
-        document.getElementById("cbg-selInfo").innerHTML =
-          "<b>"+(sd.label||curStage)+"</b>" + (sd.real===false?" <span style='color:#b46a12'>· example</span>":"")
-          + " &nbsp; <span style='color:var(--touch)'>&#9679; "+SIM.touched.join(", ")+"</span>"
-          + (SIM.blast.length?" <span style='color:var(--blast)'>&#9679; "+SIM.blast.join(", ")+"</span>":"")
-          + " &nbsp;<span class='selinfo'>click an entity to open it</span>";
-      }
+    if(!SIM || view!=="l1") return;
+    vp.querySelectorAll(".node").forEach(function(g){
+      var id=g.getAttribute("data-id");
+      g.classList.remove("touched","blast","faded");
+      if(!INVOLVED[id]){ g.classList.add("faded"); return; }
+      if(TOUCH[id]) g.classList.add("touched"); else if(BLAST[id]) g.classList.add("blast");
+    });
+    baseEdges.forEach(function(be){
+      var off = !(INVOLVED[be.s] && INVOLVED[be.t]);
+      be.el.classList.toggle("basefade", off);
+      be.dots.forEach(function(d){ d.classList.toggle("basefade", off); });
+    });
+    if(!Object.keys(expanded).length){
+      var sd=(SIM.stages&&SIM.stages[curStage])||{};
+      document.getElementById("cbg-selInfo").innerHTML =
+        "<b>"+(sd.label||curStage)+"</b>" + (sd.real===false?" <span style='color:#b46a12'>· example</span>":"")
+        + " &nbsp; <span style='color:var(--touch)'>&#9679; "+SIM.touched.join(", ")+"</span>"
+        + (SIM.blast.length?" <span style='color:var(--blast)'>&#9679; "+SIM.blast.join(", ")+"</span>":"")
+        + " &nbsp;<span class='selinfo'>click an entity to open it</span>";
     }
   }
 
@@ -1018,50 +1447,60 @@
       document.getElementById("cbg-lgmax").onclick=function(){ legendMin=false; buildStageLegend(); };
       return;
     }
-    var hollowG="<circle cx='12' cy='12' r='7' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>";
     var rows="";
     if(curStage==="red"){
-      rows += legendRow("<circle cx='12' cy='12' r='9.6' fill='none' stroke='#4c9aff' stroke-width='2'/><circle cx='12' cy='12' r='6' fill='#e5484d'/>",
-        "<b>tested</b> · blue ring + badge = # cases");
-      rows += legendRow(hollowG, "<b>no red test</b> declared");
+      rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='#e5484d' stroke-width='2' stroke-dasharray='5 3'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
+        "<b>red ring</b> · declared case proved RED, pill = # cases");
+      rows += legendRow("<circle cx='12' cy='12' r='4' fill='var(--muted)'/>", "no ring = <b>no red test</b> declared");
     } else if(curStage==="execute"){
-      rows += legendRow("<circle cx='12' cy='12' r='9' fill='"+sc+"'/>", "<b>changed</b> · size ∝ lines, <b>+N</b> = added");
-      rows += legendRow("<circle cx='12' cy='12' r='6' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>", "in a changed file, <b>not edited</b>");
+      rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='#4c9aff' stroke-width='2.4'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
+        "<b>heat ring</b> · edited, pill <b>+N</b> = lines added");
+      rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='#4c9aff' stroke-width='1.3' stroke-dasharray='3 3'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
+        "dashed = <b>downstream</b> (blast radius)");
     } else if(curStage==="review"){
-      rows += legendRow("<circle cx='12' cy='12' r='9.6' fill='none' stroke='var(--blast)' stroke-width='2'/><circle cx='12' cy='12' r='6' fill='"+sc+"'/>",
-        "<b>finding</b> · re-touched in review");
-      rows += legendRow(hollowG, "<b>clean</b> / unchanged");
+      rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='#30a46c' stroke-width='2'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
+        "<b>green ring</b> · the red cases now PASS");
+      rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='var(--drift)' stroke-width='2' stroke-dasharray='2 3'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
+        "<b>amber dashed</b> · drift / finding — priced by the review");
     } else {
-      rows += legendRow("<circle cx='12' cy='12' r='7' fill='"+sc+"'/>", "<b>in this commit</b>");
-      rows += legendRow(hollowG, "<b>not</b> in the commit");
+      rows += legendRow("<circle cx='12' cy='12' r='9.5' fill='none' stroke='#8e4ec6' stroke-width='2.2'/><circle cx='12' cy='12' r='4' fill='var(--muted)'/>",
+        "<b>purple ring</b> · in the checkpoint commit");
     }
     rows += legendRow(
-      "<circle cx='8' cy='12' r='5.6' fill='var(--panel)' stroke='var(--touch)' stroke-width='2'/>"
-      +"<circle cx='17' cy='12' r='5.6' fill='var(--panel)' stroke='var(--blast)' stroke-width='2'/>",
-      "outline <b style='color:var(--touch)'>green</b> in the change · <b style='color:var(--blast)'>amber</b> downstream");
+      "<circle cx='8' cy='12' r='3' fill='var(--touch)'/><circle cx='17' cy='12' r='3' fill='var(--blast)'/>",
+      "dot <b style='color:var(--touch)'>green</b> changed · <b style='color:var(--blast)'>amber</b> downstream");
     rows += legendRow(
-      "<circle cx='12' cy='12' r='6.5' fill='var(--panel)' stroke='var(--blast)' stroke-width='2'/>"
-      +"<circle class='lgpulse' cx='12' cy='12' r='9.6' fill='none' stroke='"+sc+"' stroke-width='1.8'/>",
-      "<b>glow</b> = connector to another entity");
+      "<path d='M2 12 Q12 6 22 12' fill='none' stroke='"+sc+"' stroke-width='2.4'/><circle cx='12' cy='9' r='2.2' fill='"+sc+"'/>",
+      "<b>coloured wire</b> = a flow this beat touched · moving dot = direction");
     rows += legendRow(
-      "<line x1='2' y1='12' x2='18' y2='12' stroke='"+sc+"' stroke-width='2.8'/><path d='M17 8 L22 12 L17 16 Z' fill='"+sc+"'/>",
-      "<b>coloured flow</b> = a flow this stage touched");
+      "<circle cx='12' cy='12' r='9.5' fill='none' stroke='var(--accent)' stroke-width='2' stroke-dasharray='5 4'/>",
+      "<b>spinning ring</b> = the selected element (depth slider = reach)");
     el.innerHTML = "<div class='lghead'><div class='lh'><i style='background:"+sc+"'></i>"+curStage+" — what a circle means</div>"
       + "<button class='lgbtn' id='cbg-lgmin' title='Minimize'>&#8211;</button></div>"+rows;
     document.getElementById("cbg-lgmin").onclick=function(){ legendMin=true; buildStageLegend(); };
   }
   function setStage(s){
-    curStage = s; syncStageButtons(); renderL1(); reopenPanel();
+    curStage = s; syncStageButtons(); renderKeepView(); reopenPanel();
   }
 
-  function drill(slug){ selected=null; l2focus=null; expanded={}; renderL2(slug); }
-  function back(){ selected=null; l2focus=null; expanded={}; renderL1(); }
+  function renderKeepView(){ if(view==="l1") renderL1(); else renderL2(drilledSlug); }
+  // every render resets SELREG — re-rendering controls must restore the panel's
+  // selection the way setStage does, or the open card silently loses its ring
+  function rerenderKeepPanel(){ renderKeepView(); if(PANEL) reopenPanel(); }
+  function drill(slug){ userPos={}; expanded={}; panX=0; panY=0; zoom=1; renderL2(slug); }
+  function back(){ userPos={}; expanded={}; panX=0; panY=0; zoom=1;
+    if(SIM) SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; });
+    renderL1(); resetPanel(); }
   backBtn.addEventListener("click", back);
-  resetBtn.addEventListener("click", function(){ selected=null; zoom=1; panX=0; panY=0; if(view==="l1") renderL1(); else renderL2(drilledSlug); });
+  resetBtn.addEventListener("click", function(){ userPos={}; zoom=1; panX=0; panY=0;
+    panelTarget=null; clearSelection(); renderKeepView(); resetPanel(); });
 
-  // drag empty background → PAN; a bare click clears the panel; wheel → ZOOM at cursor
+  /* ── the wheel grammar (lab round 12): plain scroll PANS vertically · Shift PANS
+     sideways · Ctrl/Cmd (or pinch) ZOOMS at the cursor, clamped by the EFFECTIVE
+     scale · Alt STEPS the highlight depth (the slider follows). Background drag
+     pans; a still background click clears the selection + panel. ── */
   (function(){
-    var pan=null;
+    var pan=null, altAcc=0;
     stage.addEventListener("pointerdown", function(e){
       if(e.target!==stage && e.target!==svg) return;
       pan={ x:e.clientX, y:e.clientY, px:panX, py:panY, moved:false };
@@ -1070,20 +1509,36 @@
       if(!pan) return;
       var dx=e.clientX-pan.x, dy=e.clientY-pan.y;
       if(Math.abs(dx)+Math.abs(dy)>3) pan.moved=true;
-      panX=pan.px+dx; panY=pan.py+dy; applyPan();
+      panX=pan.px+dx; panY=pan.py+dy; apply();
     });
-    window.addEventListener("pointerup", function(){ if(pan){ if(!pan.moved){ panelTarget=null; resetPanel(); } pan=null; } });
-    // scroll up = zoom in, scroll down = zoom out; anchored so the point under the
-    // cursor stays put (translate absorbs the scale change, no re-frame needed).
+    window.addEventListener("pointerup", function(){ if(pan){ if(!pan.moved){ panelTarget=null; clearSelection(); resetPanel(); } pan=null; } });
     stage.addEventListener("wheel", function(e){
       e.preventDefault();
-      var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
-      var tx=fitTx+panX, ty=fitTy+panY, dx=(mx-tx)/zoom, dy=(my-ty)/zoom;
-      var z2=Math.max(0.35, Math.min(4, zoom*Math.exp(-e.deltaY*0.0015)));
-      panX = (mx - z2*dx) - fitTx; panY = (my - z2*dy) - fitTy; zoom = z2; applyPan();
+      if(e.altKey){
+        altAcc+=e.deltaY;                                    // trackpads drip small deltas — step per notch
+        if(Math.abs(altAcc)>=40){ applyDepth(selDepth+(altAcc<0?1:-1)); altAcc=0; }
+        return;
+      }
+      if(e.ctrlKey || e.metaKey){
+        var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+        var s1=baseScale*zoom, wx=(mx-(fitT[0]+panX))/s1, wy=(my-(fitT[1]+panY))/s1;
+        var zn=zoom*Math.exp(-e.deltaY*0.0022);
+        var eff=baseScale*zn;                                // what a pixel actually renders at
+        if(eff>3.5) zn=3.5/baseScale;                        // deep enough to READ labels
+        if(eff<0.05) zn=0.05/baseScale;
+        zoom=zn;
+        var s2=baseScale*zoom;
+        panX=mx-fitT[0]-wx*s2; panY=my-fitT[1]-wy*s2;        // the point under the cursor stays put
+      } else if(e.shiftKey){
+        panX-=(e.deltaY+e.deltaX);
+      } else {
+        panX-=e.deltaX; panY-=e.deltaY;
+      }
+      apply();
     }, { passive:false });
   })();
   window.addEventListener("resize", function(){ if(lastBounds) frame(lastBounds); });
+  document.getElementById("cbg-depthSlider").addEventListener("input", function(){ applyDepth(+this.value); });
 
   // ── drag the divider to resize the right panel (min = initial · max = 85%) ──
   (function(){
@@ -1126,15 +1581,16 @@
     var html;
     if(view==="l1"){
       var c=node.counts, col=COLORS[node.slug]||"var(--muted)";
-      html = "<div class='ttl'><span class='sw' style='background:"+col+"'></span>"+node.label+"</div>"
-           + "<div class='kind'>entity · "+(node.status||"—")+"</div><div class='grid'>"
-           + trow("endpoints",c.endpoints)+trow("models",c.models)+trow("schemas",c.schemas)
-           + trow("files",c.files)+trow("lines",c.lines.toLocaleString())+"</div>";
+      html = "<div class='ttl'><span class='sw' style='background:"+col+"'></span>"+esc(node.label)+"</div>"
+           + "<div class='kind'>"+(node.kind==="unclaimed"?"unclaimed fk targets":"entity · "+esc(String(node.status||"—")))+"</div>"
+           + (c ? "<div class='grid'>"
+             + trow("endpoints",c.endpoints)+trow("models",c.models)+trow("schemas",c.schemas)
+             + trow("files",c.files)+trow("lines",c.lines.toLocaleString())+"</div>" : "");
     } else {
       var col2=KIND_COLOR[node.kind]||"#888", lbl=node.label || String(node.id).replace(/^[^:]+:/,"");
-      html = "<div class='ttl'><span class='sw' style='background:"+col2+"'></span>"+lbl+"</div><div class='kind'>"+node.kind+"</div>";
-      if(node.table) html += "<div class='meta'>table · "+node.table+"</div>";
-      if(node.kind==="external") html += "<div class='meta'>&rarr; entity <b>"+lbl+"</b> · double-click to hop</div>";
+      html = "<div class='ttl'><span class='sw' style='background:"+col2+"'></span>"+esc(trunc(lbl,34))+"</div><div class='kind'>"+esc(node.kind)+"</div>";
+      if(node.table) html += "<div class='meta'>table · "+esc(node.table)+"</div>";
+      if(node.kind==="external") html += "<div class='meta'>&rarr; entity <b>"+esc(lbl)+"</b> · double-click to hop</div>";
     }
     tip.innerHTML = html; tip.classList.add("on");
   }
@@ -1147,22 +1603,32 @@
   }
   function hideTip(){ tip.classList.remove("on"); }
 
+  function lsw(label, kind, col){
+    return "<span class='item'><svg viewBox='0 0 22 14' width='22' height='14'><path d='M2 7 L20 7' fill='none' stroke='"+col+"' stroke-width='2' "
+      + (kind==="dash"?"stroke-dasharray='5 4'":kind==="dot"?"stroke-dasharray='2 3'":kind==="fine"?"stroke-dasharray='2 5'":"")
+      + "/></svg>"+label+"</span>";
+  }
   function buildLegend(){
     var html;
     if(view==="l1"){
+      var kindsPresent={};
+      L1E.forEach(function(e){ Object.keys(e.kinds||{fk:1}).forEach(function(k){ kindsPresent[k]=1; }); });
       html = "<div class='grp'>";
       L1.forEach(function(n){ html += "<span class='item'><span class='sw' style='background:"+(COLORS[n.slug]||"#888")+"'></span>"+n.label+"</span>"; });
-      html += "</div><div class='div'></div>"
-           + "<span class='item'><span class='swr'></span>fk (directed · width = weight)</span>"
+      html += "</div><div class='div'></div>";
+      if(kindsPresent.fk)      html += lsw("fk — solid","line","var(--edge)");
+      if(kindsPresent.calls)   html += lsw("calls — dashed, moving (a floor)","dash","var(--accent)");
+      if(kindsPresent.imports) html += lsw("imports — dotted","dot","var(--muted)");
+      html += "<span class='item'>wire colour = the two entities it joins · moving dot = direction · click any wire</span>"
            + "<span class='count'>"+DATA.stats.entities+" entities · "+L1E.length+" edges · "
            + (l1layout==="flow"?"deps gradient":l1layout)+"</span>";
     } else {
       html = "<div class='grp'>";
       ["endpoint","model","schema","external"].forEach(function(k){ html += "<span class='item'><span class='sw' style='background:"+KIND_COLOR[k]+"'></span>"+KIND_LABEL[k]+"</span>"; });
       html += "</div><div class='div'></div>"
-           + "<span class='item'><span class='swr'></span>touches</span>"
-           + "<span class='item'><span class='swr' style='border-top-style:dashed'></span>fk</span>"
-           + "<span class='count'>double-click an external chip to hop</span>";
+           + lsw("touches","line","var(--edge)")
+           + lsw("fk","dash","var(--edge)")
+           + "<span class='count'>double-click an external piece to hop</span>";
     }
     legend.innerHTML = html;
   }
@@ -1175,7 +1641,7 @@
     l1edges:  function(){ return DATA.l1.edges.length; },
     entities: function(){ return DATA.l1.nodes.map(function(n){ return n.slug; }); },
     layoutNow:function(){ return l1layout; },
-    setLayout:function(v){ l1layout=v; renderL1(); },
+    setLayout:function(v){ l1layout=v; renderKeepView(); },
     gearOpen:function(){ return !document.getElementById("cbg-gearpanel").hidden; },
     commitOpen:function(){ return !document.getElementById("cbg-commitModal").hidden; },
     drill:    function(slug){ drill(slug); },
@@ -1183,7 +1649,7 @@
     back:     function(){ back(); },
     stageNow: function(){ return curStage; },
     setStage: function(s){ setStage(s); },
-    detailText: function(){ return document.getElementById("cbg-detail").textContent; },
+    detailText: function(){ return detail.textContent; },
     detailOpen: function(){ return !document.querySelector("#cbg-detail .empty"); },
     idChips:  function(){ return document.querySelectorAll("#cbg-detail .idchip").length; },
     idRows:   function(){ return Array.prototype.map.call(document.querySelectorAll("#cbg-detail .idrow .idlbl"), function(l){ return l.textContent; }); },
@@ -1193,8 +1659,8 @@
     expandedNow: function(){ return Object.keys(expanded); },
     pieceCircles:function(){ return vp.querySelectorAll("#cbg-expansion .xpiece").length; },
     containers:  function(){ return vp.querySelectorAll("#cbg-expansion .xcontainer").length; },
-    crossEdges:  function(){ return vp.querySelectorAll("#cbg-expansion .xedge.cross").length; },
-    hotEdges:    function(){ return vp.querySelectorAll("#cbg-expansion .xedge.hot").length; },
+    crossEdges:  function(){ return vp.querySelectorAll(".e-xfk").length; },
+    hotEdges:    function(){ return vp.querySelectorAll("#cbg-expansion .hot").length; },
     stageLegendRows: function(){ return document.querySelectorAll("#cbg-stagelegend .li").length; },
     touched:  function(){ return SIM ? SIM.touched.slice() : []; },
     blast:    function(){ return SIM ? SIM.blast.slice() : []; },
@@ -1207,19 +1673,46 @@
       var n = arr.filter(function(x){ return x.slug===key || x.id===key; })[0]; if(n) onSingle(n);
     },
     dblClick: function(key){
-      var n = DATA.l1.nodes.filter(function(x){ return x.slug===key || x.id===key; })[0]; if(n) onDouble(n);
+      var arr = view==="l1" ? DATA.l1.nodes : (DATA.l2[drilledSlug]||{nodes:[]}).nodes;
+      var n = arr.filter(function(x){ return x.slug===key || x.id===key; })[0]; if(n) onDouble(n);
     },
     legendMinNow:   function(){ return legendMin; },
     clickLegendMin: function(){ var b=document.getElementById("cbg-lgmin"); if(b) b.click(); },
     clickLegendMax: function(){ var b=document.getElementById("cbg-lgmax"); if(b) b.click(); },
     legendPillShown:function(){ return !!document.getElementById("cbg-lgmax"); },
     sideWidth:      function(){ return Math.round(document.getElementById("cbg-side").getBoundingClientRect().width); },
-    selxSpins:      function(){ var x=document.querySelector("#cbg-expansion .xpiece.selp .selx");
-      return x ? getComputedStyle(x).animationName : ""; },
     sideCollapsedNow: function(){ return sideCollapsed; },
     clickSideToggle:  function(){ document.getElementById("cbg-sideToggle").click(); },
     sideToggleIcon:   function(){ var h=document.getElementById("cbg-sideToggle").innerHTML;
-      return h.indexOf("13 17 18 12")>=0 ? "collapse" : (h.indexOf("11 17 6 12")>=0 ? "restore" : "?"); }
+      return h.indexOf("13 17 18 12")>=0 ? "collapse" : (h.indexOf("11 17 6 12")>=0 ? "restore" : "?"); },
+    // ── the lab-grammar surfaces (the port's own instruments) ──
+    icons:    function(){ return ICONSET; },
+    setIcons: function(v){ ICONSET=v; renderKeepView(); },
+    line:     function(){ return lineStyle; },
+    setLine:  function(v){ lineStyle=v; renderKeepView(); },
+    conns:    function(){ return showConns; },
+    toggleConns: function(){ document.getElementById("cbg-conns").click(); },
+    depth:    function(){ return selDepth; },
+    setDepth: function(v){ applyDepth(v); },
+    selKeyNow:function(){ return selKey; },
+    reg:      function(){ return { nodes:Object.keys(SELREG.nodes).length, edges:SELREG.edges.length }; },
+    hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll(".e-hop"+d).length; return o; },
+    halos:    function(){ return vp.querySelectorAll(".halo").length; },
+    flowdots: function(){ return vp.querySelectorAll(".flowdot").length; },
+    gradients:function(){ return vp.querySelectorAll("defs linearGradient").length; },
+    rings:    function(){ var q=function(s){ return vp.querySelectorAll(s).length; };
+      return { red:q(".red-ring"), heat:q(".heat-ring"), blast:q(".blast-ring"),
+               ok:q(".ok-ring"), commit:q(".commit-ring"), drift:q(".drift-ring") }; },
+    pills:    function(){ return vp.querySelectorAll("rect.bpill").length; },
+    selrings: function(){ return vp.querySelectorAll(".selring").length; },
+    faded:    function(){ return vp.querySelectorAll(".e-faded").length; },
+    peeked:   function(){ return vp.querySelectorAll(".peek-ring").length; },
+    conRows:  function(){ return document.querySelectorAll("#cbg-detail .conrow").length; },
+    hoverConn:function(i){ var r=document.querySelectorAll("#cbg-detail .conrow")[i||0];
+      if(r) r.dispatchEvent(new MouseEvent("mouseenter",{bubbles:false})); },
+    clickConn:function(i){ var r=document.querySelectorAll("#cbg-detail .conrow")[i||0]; if(r) r.click(); },
+    cam:      function(){ return { panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice() }; },
+    nodeXY:   nodeWorldXY
   };
 
   // ── boot ────────────────────────────────────────────────────────────────────
@@ -1228,19 +1721,23 @@
       "<div class='ln1'><span class='dot'></span>"
       + "<span style='color:var(--touch)'>"+SIM.touched.join(", ")+"</span> changed"
       + " <span class='arr'>&rarr;</span> <span style='color:var(--blast)'>"+SIM.blast.join(", ")+"</span> affected</div>"
-      + "<div class='ln2'><b>"+SIM.commit+"</b> · "+trunc(SIM.subject,64)
+      + "<div class='ln2'><b>"+SIM.commit+"</b> · "+esc(trunc(SIM.subject,64))
       + " <button class='cbg-more' id='cbg-commitMore' title='Show the full commit'>view</button></div>";
     document.getElementById("cbg-commitMore").addEventListener("click", showCommit);
     document.getElementById("cbg-openAll").hidden = false;
+    document.getElementById("cbg-conns").hidden = false;
     document.getElementById("cbg-stageSeg").hidden = false;
     document.getElementById("cbg-hint").textContent =
-      "click an entity to open · double-click to collapse · click a piece for its lifecycle · drag to move · scroll to zoom";
+      "click = inspect · double-click an entity opens / closes it · scroll = pan · ctrl+scroll = zoom · alt+scroll = depth";
     document.getElementById("cbg-openAll").addEventListener("click", function(){
       var inv=SIM.touched.concat(SIM.blast), allOpen=inv.length && inv.every(function(s){ return expanded[s]; });
       expanded={}; if(!allOpen) inv.forEach(function(s){ expanded[s]=true; });
       var btn=document.getElementById("cbg-openAll");
       btn.textContent = allOpen ? "Open all" : "Close all"; btn.classList.toggle("on", !allOpen);
-      renderL1();
+      rerenderKeepPanel();
+    });
+    document.getElementById("cbg-conns").addEventListener("click", function(){
+      showConns=!showConns; this.classList.toggle("on", showConns); rerenderKeepPanel();
     });
     document.getElementById("cbg-stageSeg").addEventListener("click", function(e){
       var b = e.target.closest("button"); if(b) setStage(b.getAttribute("data-stage"));
@@ -1250,14 +1747,24 @@
     document.getElementById("cbg-hchange").innerHTML =
       "<div class='ln1'><span class='dot idle'></span>No change in flight</div>"
       + "<div class='ln2'>showing the current codebase map</div>";
+    document.getElementById("cbg-hint").textContent =
+      "click = inspect · double-click an entity to drill · scroll = pan · ctrl+scroll = zoom · alt+scroll = depth";
   }
-  // gear-panel layout pills (Entities · Inside)
+  // gear-panel layout pills (Entities · Inside · Lines · Icons)
   document.getElementById("cbg-entitiesSeg").addEventListener("click", function(e){
     var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-lay");
-    if(view==="l1"){ l1layout=v; renderL1(); } else { l2layout=v; renderL2(drilledSlug); }
+    userPos={};
+    if(view==="l1"){ l1layout=v; } else { l2layout=v; }
+    rerenderKeepPanel();
   });
   document.getElementById("cbg-insideSeg").addEventListener("click", function(e){
-    var b=e.target.closest("button"); if(!b) return; insideLayout=b.getAttribute("data-in"); renderL1();
+    var b=e.target.closest("button"); if(!b) return; insideLayout=b.getAttribute("data-in"); rerenderKeepPanel();
+  });
+  document.getElementById("cbg-linesSeg").addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return; lineStyle=b.getAttribute("data-line"); rerenderKeepPanel();
+  });
+  document.getElementById("cbg-iconsSeg").addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return; ICONSET=b.getAttribute("data-ico"); rerenderKeepPanel();
   });
   // gear open/close (click outside dismisses)
   (function(){
@@ -1277,7 +1784,7 @@
     document.getElementById("cbg-commitBody").innerHTML =
       "<div class='sha'>"+SIM.commit+"</div>"
       + (SIM.date?"<div class='meta'>"+SIM.date+"</div>":"")
-      + "<div class='subj'>"+SIM.subject+"</div>"
+      + "<div class='subj'>"+esc(SIM.subject)+"</div>"
       + "<div class='meta'>"+(m.files||0)+" files · +"+(m.add||0)+" · −"+(m.del||0)+"</div>"
       + ((m.cases&&m.cases.length)?"<div class='cases'>"+m.cases.map(function(c){ return "<span class='cs'>"+c+"</span>"; }).join("")+"</div>":"");
     cModal.hidden=false;
