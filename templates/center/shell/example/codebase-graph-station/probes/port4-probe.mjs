@@ -32,9 +32,13 @@ ok(cov.det>0 && cov.det/cov.all>0.8, `the example carries det (${cov.det}/${cov.
 await t('drill("recipe")'); await pg.waitForTimeout(200);
 const epx = await pg.evaluate(()=>{
   const n=window.GABE_C4.l2.recipe.nodes.find(x=>x.id==='endpoint:GET /recipes');
-  return { id:n.id, doc:n.det.doc, fn:n.fn, ret:n.det.sig&&n.det.sig.returns,
-           cases:(n.det.cases||[]).length, more:n.det.cases_more||0, cid:n.det.cases[0].cid };
+  if(!n || !n.det || !n.det.doc || !n.det.sig || !(n.det.cases||[]).length) return null;
+  return { id:n.id, doc:n.det.doc, fn:n.fn, ret:n.det.sig.returns,
+           cases:n.det.cases.length, more:n.det.cases_more||0, cid:n.det.cases[0].cid,
+           nfail:n.det.cases.filter(c=>c.state!=='pass'&&c.state!=='skip').length };
 });
+ok(!!epx, 'fixture shape: GET /recipes carries doc+sig+cases (regen guard)');
+if(!epx){ await b.close(); console.log(`port4: ${P}/${P+F} pass`); process.exit(1); }
 await t(`singleClick(${JSON.stringify(epx.id)})`); await pg.waitForTimeout(200);
 let txt = await t('detailText()');
 ok(txt.indexOf(epx.doc.slice(0,30))>=0, 'endpoint card carries its PURPOSE (live doc)');
@@ -46,14 +50,19 @@ ok(txt.indexOf(epx.cid)>=0, 'case rows carry their C-ids');
 ok(txt.indexOf('entity')>=0 && txt.indexOf('layer')>=0, 'entity + layer rows present');
 let d1 = await t('dossier()');
 ok(d1.ptabs>=2 && d1.cids>0, 'dossier tables rendered (signature + tested-by)');
+const nFail = await pg.evaluate(()=>document.querySelectorAll('#cbg-detail td.st-fail').length);
+ok(nFail===epx.nfail, `only REAL failures wear st-fail (${epx.nfail} expected — file/skip rows never do)`);
+ok(txt.indexOf("'")===-1 || txt.indexOf('UniqueConstraint')<0, 'no raw constraint exprs leak into the card');
 
 // 2 · L2 model card: STRUCTURE capped + unique chips + STORED-AS + usage + file
 const mox = await pg.evaluate(()=>{
   const n=window.GABE_C4.l2.recipe.nodes.find(x=>x.id==='model:Recipe');
+  if(!n || !n.det || !(n.det.cols||[]).length) return null;
   return { cols:n.det.cols.length, more:n.det.cols_more||0, uq:(n.det.uqs||[])
            .filter(u=>n.det.cols.some(c=>c[0]===u)).length,
            fks:(n.det.fks||[]).length, file:n.det.file };
 });
+ok(!!mox, 'fixture shape: model:Recipe carries cols (regen guard)');
 await t('singleClick("model:Recipe")'); await pg.waitForTimeout(200);
 txt = await t('detailText()');
 ok(txt.indexOf('structure ('+(mox.cols+mox.more)+' columns)')>=0,
@@ -65,22 +74,37 @@ ok(mox.fks===0 || txt.indexOf('stored as')>=0, 'STORED-AS renders when the model
 ok(txt.indexOf(mox.file)>=0, 'the file row names the source file');
 ok(txt.indexOf('usage')>=0, 'the usage row renders (fan-in bars)');
 
-// 3 · honest-empty: a det-less node renders its bare card without a crash
-const bare = await pg.evaluate(()=>{
+// 2b · the unique chip actually FIRES somewhere real (normalized uqs ∩ shown cols)
+const uqNode = await pg.evaluate(()=>{
   for(const [slug,g] of Object.entries(window.GABE_C4.l2)){
-    const n=g.nodes.find(x=>!x.det && x.kind!=='external');
-    if(n) return {slug, id:n.id};
+    for(const n of g.nodes){
+      if(!n.det || !(n.det.uqs||[]).length) continue;
+      const hits=(n.det.uqs||[]).filter(u=>(n.det.cols||[]).some(c=>c[0]===u)).length;
+      if(hits>0) return { slug, id:n.id, hits };
+    }
   }
   return null;
 });
-if(bare){
+ok(!!uqNode, 'the fixture carries a model whose unique columns are visible');
+if(uqNode){
   await t('back()'); await pg.waitForTimeout(100);
-  await t(`drill(${JSON.stringify(bare.slug)})`); await pg.waitForTimeout(200);
-  await t(`singleClick(${JSON.stringify(bare.id)})`); await pg.waitForTimeout(200);
-  const d2 = await t('dossier()');
-  ok(d2.ptabs===0, 'a det-less piece renders NO dossier tables (honest-empty)');
-  ok((await t('detailText()')).length>0, 'the bare card still renders');
-} else { ok(true, 'no det-less non-external node in the fixture (skip)'); }
+  await t(`drill(${JSON.stringify(uqNode.slug)})`); await pg.waitForTimeout(200);
+  await t(`singleClick(${JSON.stringify(uqNode.id)})`); await pg.waitForTimeout(200);
+  const dq = await t('dossier()');
+  ok(dq.uq===uqNode.hits && dq.uq>0,
+     `unique chips FIRE on real data (${uqNode.hits} on ${uqNode.id}) — the dead-join regression guard`);
+}
+
+// 3 · honest-empty: DELETE a node's det in-page — the bare card must not crash
+// (the fixture has no det-less non-external node, so the old hunt self-skipped)
+await t('back()'); await pg.waitForTimeout(100);
+await pg.evaluate(()=>{ const n=window.GABE_C4.l2.recipe.nodes.find(x=>x.id==='model:Recipe');
+  delete n.det; });
+await t('drill("recipe")'); await pg.waitForTimeout(200);
+await t('singleClick("model:Recipe")'); await pg.waitForTimeout(200);
+const d2 = await t('dossier()');
+ok(d2.ptabs===0, 'a det-less piece renders NO dossier tables (honest-empty, forced)');
+ok((await t('detailText()')).length>0, 'the bare card still renders');
 
 // 4 · the SIM PANEL JOIN: lifecycle card → layer row + dossier → connections
 await t('back()'); await pg.waitForTimeout(300);

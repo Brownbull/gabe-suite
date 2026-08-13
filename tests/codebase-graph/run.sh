@@ -19,7 +19,7 @@ REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 SHELL_SRC="$REPO/templates/center/shell"
 
 python3 - "$SHELL_SRC" <<'PY'
-import sys, re, pathlib
+import sys, re, json, pathlib
 shell = pathlib.Path(sys.argv[1])
 station = (shell / "codebase-graph.html").read_text(encoding="utf-8")
 panel   = (shell / "assets" / "sim-panel.js").read_text(encoding="utf-8")
@@ -152,8 +152,14 @@ check('"structure ("+(det.cols.length+(det.cols_more||0))' in station,
       "STRUCTURE headlines the FULL column count (shown + capped)")
 check('"tested by ("+n+")"' in station and "cases_more" in station,
       "TESTED-BY headlines the full ledger count, cap named")
-_m4 = station.replace("if(!det) return \"\";", "")
-check("if(!det) return \"\";" not in _m4, "MUTATION: a stripped honest-empty guard is detectable")
+# (an earlier `X not in s.replace(X,'')` mutation line was tautological — always
+# true whether or not X existed; for substring pins the presence check IS the gate)
+check("function stateCls" in station and "st-skip" in station,
+      "case states are three-valued (skip is never styled as a failure)")
+check("route-file coverage" in station,
+      "route-literal FILE credits render as a neutral fact, not a case row")
+check("table-layout:fixed" in CSS and "overflow-wrap:anywhere" in CSS,
+      "ptab tables cannot overflow the panel (fixed layout + wrap)")
 
 # ── E · honest-empty contract: the station degrades when GABE_SIM is null
 check("degradePanel" in station, "station has a degrade path (no change in flight)")
@@ -240,6 +246,26 @@ check("function idCardHTML(ids){ if(!ids) return" in archive,
 # FIRE: if the openAll toggle were hidden in phase mode again, the old assignment returns
 check("style.display = selPhase" not in archive,
       "archive: the Close/Open-all toggle is NOT hidden in phase mode (regression guard)")
+
+# ── G · the committed example's det obeys the emitter contract (drift guard) ──
+_exjs = (shell / "example" / "codebase-graph-station" / "c4-graph.js").read_text(encoding="utf-8")
+_body = _exjs.split("window.GABE_C4 = ", 1)[1].split(";\nwindow.GABE_C4_COLORS", 1)[0]
+_ex = json.loads(_body)
+_dets = [n["det"] for g2 in _ex["l2"].values() for n in g2["nodes"] if "det" in n]
+check(len(_dets) > 100, "example: det present at scale")
+check(all(c.get("state") != "file" for d in _dets for c in d.get("cases", [])),
+      "example: no file-aggregate pseudo-row impersonates a case")
+check(all(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", u) for d in _dets for u in d.get("uqs", [])),
+      "example: uqs are bare column names (normalized, never constraint exprs)")
+check(all(len(d.get("cols", [])) <= 10 and len(d.get("cases", [])) <= 6 for d in _dets),
+      "example: the emitter caps hold in the committed payload")
+check(not any(n.get("resp") == "—" for g2 in _ex["l2"].values() for n in g2["nodes"]),
+      "example: the em-dash resp default never ships")
+_seen_cases = [ (c.get("corpus"), c.get("cid"), c.get("name"))
+                for d in _dets for c in d.get("cases", []) ]
+check(all(len({k for k in ((c.get("corpus"), c.get("cid"), c.get("name")) for c in d.get("cases", []))})
+          == len(d.get("cases", [])) for d in _dets),
+      "example: no duplicated case rows inside one dossier")
 
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)

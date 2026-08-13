@@ -341,7 +341,8 @@ FIX_DET = {"head": "de7a11", "entities": {
     "models": [{"cls": "A", "table": "a", "doc": "The A record.",
                 "file": "apps/api/alpha.py",
                 "cols": [[f"c{i}", "int", ""] for i in range(12)],   # 12 → 10 + 2 more
-                "uqs": ["c2", "c1"],
+                "uqs": ["UniqueConstraint('c2', 'c1', name='uq_a_c2_c1')",
+                         "UniqueConstraint('nope', name='uq_gone')"],   # the PARSER shape (ast.unparse)
                 "fks": {"b_col": "b.id", "a_col": "a.id"}},
                {"cls": "Bare", "table": "bare", "doc": "—", "fks": {}}],   # em-dash doc skipped
     "schemas": [{"cls": "AOut", "doc": "Out shape.", "file": "apps/api/alpha.py",
@@ -356,9 +357,15 @@ FIX_DET = {"head": "de7a11", "entities": {
   "test_insight": {
     "by_endpoint": {"apps/api/alpha.py::get_a":
         {"api": [{"cid": f"C{i}", "name": f"t{i}_C{i}", "state": "pass", "corpus": "api",
-                  "tfile": "tests/t.py"} for i in range(8)]}},   # 8 → 6 + 2 more
+                  "tfile": "tests/t.py"} for i in range(8)]
+              + [{"cid": "", "name": "3 case(s)", "state": "file", "corpus": "web",
+                  "tfile": "tests/w.spec.ts"}]}},   # 8 → 6 + 2 more; the file row splits out
     "by_model": {"A": {"direct": [{"cid": "C9", "name": "t9_C9", "state": "fail",
-                                   "corpus": "api", "tfile": "tests/t.py"}]}},
+                                   "corpus": "api", "tfile": "tests/t.py"}],
+                       "via_route": [{"cid": "C9", "name": "t9_C9", "state": "fail",
+                                      "corpus": "api", "tfile": "tests/t.py"}]},   # same case, twice-credited
+                 "AOut": {"direct": [{"cid": "C77", "name": "t77_C77", "state": "pass",
+                                      "corpus": "api", "tfile": "tests/t.py"}]}},
   }}
 gd = G.build_c4_graph(FIX_DET)
 dn = {n["id"]: n for n in gd["l2"]["alpha"]["nodes"]}
@@ -368,14 +375,16 @@ check(adet["doc"] == "The A record." and adet["file"] == "apps/api/alpha.py"
       "det: model doc + file + flines (joined from the entity's files)")
 check(len(adet["cols"]) == 10 and adet["cols_more"] == 2,
       "det: STRUCTURE capped at 10 cols with cols_more (12-col model)")
-check(adet["uqs"] == ["c1", "c2"], "det: unique columns sorted")
+check(adet["uqs"] == ["c1", "c2"],
+      "det: uqs NORMALIZED — quoted names extracted from the constraint EXPRESSION "
+      "strings and intersected with the columns ('nope' dropped)")
 check(adet["fks"] == [["a_col", "a.id"], ["b_col", "b.id"]],
       "det: STORED-AS fks sorted by column")
 check(adet["usage"] == {"fk_in": 5, "internal": 2},
       "det: model usage from model_insight")
 check(adet["cases"] == [{"cid": "C9", "name": "t9_C9", "state": "fail", "corpus": "api"}]
       and "cases_more" not in adet,
-      "det: TESTED-BY from by_model, tfile dropped, no cap residue under the cap")
+      "det: TESTED-BY deduped across direct/via_route (one row, not two), tfile dropped")
 edet = dn["endpoint:GET /a"]["det"]
 check(edet["doc"] == "Reads A." and edet["status"] == "200",
       "det: endpoint PURPOSE + status (stringified)")
@@ -383,14 +392,40 @@ check(edet["sig"] == {"returns": "AOut", "async": True, "lines": 42},
       "det: SIGNATURE from function_insight (returns/async/lines)")
 check(edet["usage"] == {"api": 3, "internal": 1}, "det: endpoint usage from function_insight")
 check(len(edet["cases"]) == 6 and edet["cases_more"] == 2,
-      "det: TESTED-BY capped at 6 with cases_more (8 cases)")
+      "det: TESTED-BY capped at 6 with cases_more (8 REAL cases; the file row never counts)")
+check(all(c["state"] != "file" for c in edet["cases"]),
+      "det: route-literal FILE credits never impersonate cases")
+check(edet["case_files"] == [{"corpus": "web", "name": "3 case(s)"}],
+      "det: the file credit survives as case_files (a coverage-by-file fact)")
 check(edet["cases"] == sorted(edet["cases"], key=lambda r: (r["corpus"], r["cid"], r["name"])),
       "det: cases deterministically sorted")
 check(dn["endpoint:GET /a"].get("fn") == "get_a" and dn["endpoint:GET /a"].get("resp") == "AOut",
       "det: endpoint node carries fn + resp for the card's route rows")
+_gdash = G.build_c4_graph({"head": "d1", "entities": {"e": {"files": [], "models": [], "schemas": [],
+    "endpoints": [{"method": "GET", "path": "/x", "fn": "g", "resp": "—", "touches": []}]}}})
+check("resp" not in {n["id"]: n for n in _gdash["l2"]["e"]["nodes"]}["endpoint:GET /x"],
+      "det: the parser's em-dash resp default never ships as a returns row")
 sdet = dn["schema:AOut"]["det"]
 check(sdet["cols"] == [["x", "str", ""]] and sdet["doc"] == "Out shape.",
       "det: schema fields become cols; schema doc carried")
+check(sdet.get("cases") == [{"cid": "C77", "name": "t77_C77", "state": "pass", "corpus": "api"}],
+      "det: a schema's own by_model cases carry (no mi record → the floor keeps them)")
+# the kind/file-blind join: a schema named like a MODEL in another file must NOT
+# inherit that model's fan-in or cases
+_gcol = G.build_c4_graph({"head": "col1", "entities": {
+    "a": {"files": [], "models": [{"cls": "X", "table": "x", "file": "fa.py", "fks": {},
+                                    "cols": [["id", "int", ""]]}], "schemas": [], "endpoints": []},
+    "b": {"files": [], "models": [], "schemas": [{"cls": "X", "file": "fb.py",
+                                                   "fields": [["y", "str", ""]]}], "endpoints": []}},
+    "model_insight": {"X": {"file": "fa.py", "fk_in": 5, "internal": 2}},
+    "test_insight": {"by_model": {"X": {"direct": [{"cid": "C1", "name": "t_C1",
+                                                     "state": "pass", "corpus": "api"}]}}}})
+_bx = {n["id"]: n for n in _gcol["l2"]["b"]["nodes"]}["schema:X"]
+check("usage" not in _bx.get("det", {}) and "cases" not in _bx.get("det", {}),
+      "det: a schema sharing a MODEL's class name inherits neither its fan-in nor its cases")
+_ax = {n["id"]: n for n in _gcol["l2"]["a"]["nodes"]}["model:X"]
+check(_ax["det"]["usage"] == {"fk_in": 5, "internal": 2},
+      "det: the true owner (file-matched) keeps its usage")
 check("doc" not in dn["model:Bare"].get("det", {}),
       "det: an em-dash doc is skipped (honest-empty PURPOSE)")
 check(json.dumps(gd, sort_keys=True) == json.dumps(G.build_c4_graph(FIX_DET), sort_keys=True),

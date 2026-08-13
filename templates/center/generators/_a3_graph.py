@@ -55,6 +55,7 @@ from __future__ import annotations
 
 import json
 import math
+import re
 from pathlib import Path
 from typing import Any
 
@@ -278,7 +279,10 @@ def element_detail(kind: str, obj: dict[str, Any],
     * ``file``/``flines`` — where it lives + the file's line count (the 800
       budget is a render-time judgment, the emitter only carries the number).
     * ``cols``   — model columns / schema fields ``[[name, type, default]]``,
-      capped at ``_DET_COLS_CAP`` with ``cols_more``; ``uqs`` = unique columns.
+      capped at ``_DET_COLS_CAP`` with ``cols_more``; ``uqs`` = unique COLUMN
+      NAMES, extracted from the parser's ``UniqueConstraint(...)`` expression
+      strings (quoted identifiers ∩ this element's columns — the raw repr can
+      never match a column, and its 90-char cut truncates mid-expression).
     * ``fks``    — ``[[column, table.col]]`` sorted (models only, STORED-AS).
     * ``sig``    — endpoint handler signature from function_insight
       (``returns`` · ``async`` · ``lines``).
@@ -286,7 +290,11 @@ def element_detail(kind: str, obj: dict[str, Any],
       call counts), models/schemas from model_insight (fk_in/internal refs).
     * ``cases``  — the test ledger rows ``{cid, name, state, corpus}`` capped at
       ``_DET_CASES_CAP`` with ``cases_more`` (by_endpoint keyed ``file::fn``,
-      by_model keyed on the class name).
+      by_model keyed on the class name), DEDUPED across groups (direct +
+      via_route credit the same case) and with the route-literal FILE aggregates
+      (``state:'file'`` pseudo-rows) split out into ``case_files`` — they are
+      coverage-by-file facts, not cases, and painting them as cases both
+      inflated the count and rendered as failures.
 
     Pure + deterministic (source order for cols, explicit sorts for fks/cases);
     HONEST-EMPTY — an element with nothing to show returns {} and gets NO det
@@ -327,21 +335,37 @@ def element_detail(kind: str, obj: dict[str, Any],
             det["cols"] = [list(c[:3]) for c in cols[:_DET_COLS_CAP]]
             if len(cols) > _DET_COLS_CAP:
                 det["cols_more"] = len(cols) - _DET_COLS_CAP
-        uqs = obj.get("uqs") or []
-        if uqs:
-            det["uqs"] = sorted(uqs)
+        uq_names: set[str] = set()
+        col_names = {c[0] for c in cols}
+        for expr in obj.get("uqs") or []:
+            uq_names.update(n for n in re.findall(r"'([A-Za-z_][A-Za-z0-9_]*)'", str(expr))
+                            if n in col_names)
+        if uq_names:
+            det["uqs"] = sorted(uq_names)
         if kind == "model" and obj.get("fks"):
             det["fks"] = sorted([[c, ref] for c, ref in obj["fks"].items()])
         rec = mi.get(obj.get("cls") or "")
+        if rec and rec.get("file") and file and rec["file"] != file:
+            rec = None                      # a same-named class in ANOTHER file — not this element
         if rec:
             usage = {"fk_in": rec.get("fk_in", 0), "internal": rec.get("internal", 0)}
             if any(usage.values()):
                 det["usage"] = usage
-        groups = ti_model.get(obj.get("cls") or "")
+        groups = ti_model.get(obj.get("cls") or "") if rec is not None or not mi.get(obj.get("cls") or "") else None
 
-    rows = []
+    rows, files, seen = [], [], set()
     for grp in (groups or {}).values():
         for c in grp or []:
+            if c.get("state") == "file":     # a route-literal FILE credit, not a case
+                key = (c.get("corpus"), c.get("name"))
+                if key not in seen:
+                    seen.add(key)
+                    files.append({"corpus": c.get("corpus"), "name": c.get("name")})
+                continue
+            key = (c.get("corpus"), c.get("cid"), c.get("name"))
+            if key in seen:
+                continue                     # direct + via_route credit the same case once
+            seen.add(key)
             rows.append({"cid": c.get("cid"), "name": c.get("name"),
                          "state": c.get("state"), "corpus": c.get("corpus")})
     if rows:
@@ -349,6 +373,9 @@ def element_detail(kind: str, obj: dict[str, Any],
         det["cases"] = rows[:_DET_CASES_CAP]
         if len(rows) > _DET_CASES_CAP:
             det["cases_more"] = len(rows) - _DET_CASES_CAP
+    if files:
+        files.sort(key=lambda f: (str(f["corpus"]), str(f["name"])))
+        det["case_files"] = files
     return det
 
 
@@ -421,7 +448,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
                  "label": f"{ep.get('method')} {ep.get('path')}"}
         if ep.get("fn"):
             enode["fn"] = ep["fn"]                # the handler, for the card's route row
-        if ep.get("resp"):
+        if ep.get("resp") and ep["resp"] != "—":   # the parser's em-dash default is "none declared"
             enode["resp"] = ep["resp"]
         edet = det_of("endpoint", ep)
         if edet:
