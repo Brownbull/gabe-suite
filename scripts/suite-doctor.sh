@@ -154,9 +154,12 @@ PY
     done < <(grep -oE '\([0-9]+ skills\)' "$REPO/$f" | grep -oE '[0-9]+')
   done
   # P6 — portability: shipped surfaces must not couple to one machine
-  # (pattern split so this script never matches itself; bytecode caches excluded)
+  # (pattern split so this script never matches itself; bytecode caches excluded;
+  # example probes/ excluded — AUTHOR-TIME playwright instruments, machine-bound
+  # BY DESIGN with the fresh-machine recipe in their run.sh headers; they never
+  # execute on a twin machine, so the operator path is not a portability leak)
   op_path="/home/""khujta"
-  hits=$(grep -rl "$op_path" "$REPO"/skills "$REPO"/templates "$REPO"/scripts "$REPO"/prompts "$REPO"/schemas "$REPO/install.sh" 2>/dev/null | grep -vE '_archive|__pycache__|\.pyc$' || true)
+  hits=$(grep -rl "$op_path" "$REPO"/skills "$REPO"/templates "$REPO"/scripts "$REPO"/prompts "$REPO"/schemas "$REPO/install.sh" 2>/dev/null | grep -vE '_archive|__pycache__|\.pyc$|/example/[^/]+/probes/' || true)
   [ -n "$hits" ] && report "invariant" "operator-machine path in shipped surface(s): $(echo "$hits" | tr '\n' ' ')"
   bare=$(grep -rn '\$ECC_ROOT' "$REPO"/templates "$REPO"/skills 2>/dev/null | grep -v 'ECC_ROOT:-' || true)
   [ -n "$bare" ] && report "invariant" "bare \$ECC_ROOT (no :-\$HOME/.claude fallback): $(echo "$bare" | cut -d: -f1-2 | tr '\n' ' ')"
