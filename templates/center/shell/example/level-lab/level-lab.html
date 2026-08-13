@@ -78,44 +78,52 @@ aside .irow .im{ color:var(--muted); }
 </head>
 <body>
 <header>
-  <h1>Level lab</h1>
-  <span class="sub" id="sub">the level-navigation model + symbol grammar, on real gustify data</span>
-  <div class="seg" id="levels">
-    <button data-lvl="entities" class="on">1 · Entities</button>
-    <button data-lvl="pieces">2 · Pieces</button>
-    <button data-lvl="functions">3 · Functions</button>
-    <button data-lvl="layers">4 · Layers</button>
-    <button data-lvl="trace">5 · Trace</button>
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%">
+    <h1>Level lab</h1>
+    <span class="sub" id="sub">the level-navigation model + symbol grammar, on real gustify data</span>
+    <div class="seg" id="levels">
+      <button data-lvl="entities" class="on">1 · Entities</button>
+      <button data-lvl="pieces">2 · Pieces</button>
+      <button data-lvl="functions">3 · Functions</button>
+      <button data-lvl="layers">4 · Layers</button>
+      <button data-lvl="trace">5 · Trace</button>
+    </div>
   </div>
-  <button id="guardsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Guards</button>
-  <button id="hubsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Hubs</button>
-  <button id="pressbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Pressure</button>
-  <button id="testsbtn" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Tests</button>
-  <button id="conns" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Connections</button>
-  <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
-    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-  </button>
-  <div id="gearpanel" hidden style="position:absolute;z-index:40;top:52px;right:16px;width:230px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
-    <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
-    <div class="seg" id="laySeg" style="margin-left:0">
-      <button data-lay="ring" class="on">Ring</button>
-      <button data-lay="flow">Flow</button>
-      <button data-lay="force">Force</button>
-    </div>
-    <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Cluster core by (trace)</div>
-    <div class="seg" id="clSeg" style="margin-left:0">
-      <button data-cl="kind" class="on">Kind</button>
-      <button data-cl="tests">Tests</button>
-      <button data-cl="guards">Guards</button>
-      <button data-cl="flow">Flow</button>
-    </div>
-    <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout</div>
-    <div class="seg" id="inSeg" style="margin-left:0">
-      <button data-in="tiers" class="on">Tiers</button>
-      <button data-in="ring">Ring</button>
-      <button data-in="grid">Grid</button>
-      <button data-in="force">Force</button>
-      <button data-in="columns">Columns</button>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:7px">
+    <button id="guardsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Guards</button>
+    <button id="hubsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Hubs</button>
+    <button id="pressbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Pressure</button>
+    <button id="testsbtn" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Tests</button>
+    <button id="conns" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Connections</button>
+    <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
+      <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+    <div id="gearpanel" hidden style="position:absolute;z-index:40;top:100%;left:0;margin-top:4px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
+      <div class="seg" id="laySeg" style="margin-left:0;flex-wrap:wrap">
+        <button data-lay="ring" class="on">Ring</button>
+        <button data-lay="flow">Flow</button>
+        <button data-lay="force">Force</button>
+      </div>
+      <div id="clRow">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Cluster core by <span style="opacity:.6">(5·Trace)</span></div>
+      <div class="seg" id="clSeg" style="margin-left:0;flex-wrap:wrap">
+        <button data-cl="kind" class="on">Kind</button>
+        <button data-cl="tests">Tests</button>
+        <button data-cl="guards">Guards</button>
+        <button data-cl="flow">Flow</button>
+      </div>
+      </div>
+      <div id="inRow">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(2·Pieces · 3·Functions)</span></div>
+      <div class="seg" id="inSeg" style="margin-left:0;flex-wrap:wrap">
+        <button data-in="tiers" class="on">Tiers</button>
+        <button data-in="ring">Ring</button>
+        <button data-in="grid">Grid</button>
+        <button data-in="force">Force</button>
+        <button data-in="columns">Columns</button>
+      </div>
+      </div>
     </div>
   </div>
 </header>
@@ -1070,12 +1078,20 @@ function showFn(f){
    +"<div class='note'>Edges into/out of this ƒ are graft call edges — dashed = inferred (floor).</div>"; }
 
 /* ── level switching (position persistence keeps shared anchors) ── */
+function syncGearApplicability(){
+  var inOk = (level==="pieces"||level==="functions");
+  var clOk = (level==="trace");
+  var inRow=document.getElementById("inRow"), clRow=document.getElementById("clRow");
+  if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }
+  if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
+}
 function render(){
   vp.textContent=""; panX=0; panY=0; zoom=1;
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
   document.querySelectorAll("#levels button").forEach(function(btn){
     btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); });
+  syncGearApplicability();
 }
 document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
