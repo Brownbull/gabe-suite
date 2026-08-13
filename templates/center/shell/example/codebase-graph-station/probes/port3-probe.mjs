@@ -49,6 +49,17 @@ try {
   await t('singleClick("__unclaimed__")');
   await pg.waitForTimeout(150);
   ok((await t('detailText()')).toLowerCase().indexOf('unclaimed')>=0, 'clicking the bucket opens a card, no throw');
+  // the tooltip guard (showTip on counts:null — reverted green before this pin)
+  await pg.evaluate(()=>{
+    const g=[...document.querySelectorAll('#cbg-viewport .node')].find(n=>n.getAttribute('data-id')==='__unclaimed__');
+    g.dispatchEvent(new PointerEvent('pointerenter',{bubbles:false}));
+    g.dispatchEvent(new PointerEvent('pointermove',{bubbles:false,clientX:400,clientY:300}));
+  });
+  await pg.waitForTimeout(150);
+  ok(await pg.evaluate(()=>{
+      const tip=document.getElementById('cbg-tip');
+      return tip.classList.contains('on') && tip.textContent.indexOf('unclaimed fk targets')>=0;
+    }), 'hovering the bucket shows the honest tooltip, never a crash');
 
   // 2 · external hop: drill an entity, double-click its external piece → target L2
   await t('drill("recipe")');
@@ -90,6 +101,28 @@ try {
   }
 
   ok(errs.length===0, 'zero console errors: '+errs.slice(0,3).join(' | '));
+
+  // 4 · the bucket on the MAP page (SIM null + unclaimed): card + inert drill
+  const tmp2 = path.join(here, '..', '.tmp-unclaimed-map.html');
+  fs.writeFileSync(tmp2, src.replace('<script src="./sim.data.js"></script>',
+    '<script>window.GABE_SIM = null;</script>'));
+  try {
+    const p2 = await b.newPage({ viewport:{ width:1440, height:900 } });
+    const errs2=[];
+    p2.on('console',m=>{ if(m.type()==='error') errs2.push(m.text()); });
+    p2.on('pageerror',e=>errs2.push(String(e)));
+    await p2.goto('file://' + tmp2);
+    await p2.waitForFunction('window.__cbgready===true',{timeout:8000});
+    const t2 = expr => p2.evaluate(`window.__cbgtest.${expr}`);
+    await t2('singleClick("__unclaimed__")'); await p2.waitForTimeout(150);
+    const txt = await t2('detailText()');
+    ok(txt.indexOf('unclaimed fk targets')>=0 && txt.indexOf('coverage debt')>=0,
+       'map mode: the bucket card is honest (no counts, no drill hint)');
+    await t2('dblClick("__unclaimed__")'); await p2.waitForTimeout(150);
+    ok((await t2('view()'))==='l1', 'map mode: double-clicking the bucket never dead-ends in L2');
+    ok(errs2.length===0, 'map+bucket page: zero console errors');
+  } finally { fs.unlinkSync(tmp2); }
+
   console.log(`port3: ${P}/${P+F} pass`);
 } finally {
   await b.close();

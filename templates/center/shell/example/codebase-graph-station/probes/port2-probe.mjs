@@ -45,6 +45,16 @@ try {
   ok(await t('selrings()')===1, 'entity selection ring');
   ok(await t('conRows()')>0, 'entity connections listed');
 
+  // map-mode restore (fresh-review): a gear pill re-render keeps card + ring
+  await pg.evaluate(()=>{ document.getElementById('cbg-gear').click();
+    document.querySelector('#cbg-linesSeg [data-line="direct"]').click(); });
+  await pg.waitForTimeout(200);
+  ok(await t('selrings()')===1 && (await t('detailText()')).indexOf('codebase map')>=0,
+     'map mode: a Lines pill re-render keeps the entity card + its ring');
+  await pg.evaluate(()=>{ document.querySelector('#cbg-linesSeg [data-line="bowed"]').click();
+    document.getElementById('cbg-gear').click(); });
+  await pg.waitForTimeout(150);
+
   // L2 drill: lab icons, halos, registered pieces, selection
   await t('dblClick("recipe")');
   await pg.waitForTimeout(200);

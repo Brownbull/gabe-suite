@@ -111,6 +111,33 @@ for key in ["openDetail", "openEntityDetail", "resetPanel"]:
     check(("PANEL." + key) in station, f"station calls PANEL.{key}")
     check(("PANEL." + key) in lab, f"lab calls PANEL.{key}")
 
+# ── E2 · revert-green fixes pinned (slice-1 fresh review): esc() on the subject,
+# the drag gate, and the contract constants all reverted green before these.
+check("esc(trunc(SIM.subject" in station, "the change strip escapes SIM.subject (XSS pin)")
+check("esc(SIM.subject)" in station, "the commit modal escapes SIM.subject (XSS pin)")
+_m3 = station.replace("esc(trunc(SIM.subject,64))", "trunc(SIM.subject,64)")
+check("esc(trunc(SIM.subject" not in _m3, "MUTATION: a stripped strip-esc is detectable")
+check("REDUCED || !!dragging || skipAnimOnce" in station,
+      "drawExpansions gates the fly-in on drag + the release render")
+check("REDUCED || dragging" in station, "flowDots renders static dots while dragging")
+check("skipAnimOnce=true; rerenderKeepPanel()" in station,
+      "drag release re-renders (dots re-animate, selection restored)")
+check("pointer-events:none" in re.search(r'\.cbg-root \.xcontlabel\{[^}]*\}', CSS).group(0),
+      "the container label is pointer-transparent (dead-zone pin)")
+check('["drift-ring",22]' in station, "drift ring keeps the contract radius 22 (≠ ok-ring 19)")
+_et = re.search(r'\.cbg-root \.e-touch\{[^}]*\}', CSS).group(0)
+check("stroke-width:1;" in _et and "opacity:.55" in _et,
+      "e-touch keeps the lab constants 1/.55")
+check("r=Math.min(r, d*0.5)" in station, "rimPull is clamped (never past the far anchor)")
+check("panelTarget = { edge:" in station, "selectEdge records its panel target")
+check("panelTarget = { l2:" in station, "map-mode L2 cards record their panel target")
+check("function syncOpenAll" in station and station.count("syncOpenAll()") >= 2,
+      "the Open/Close-all face derives from `expanded` in the render path")
+check("cancelContTap()" in station and "pendingCont" in station,
+      "piece/wire clicks cancel a pending container single-click")
+check('regNode(contWrap, "ent:"+slug' in station,
+      "an exploded entity re-registers on its container (visible selection ring)")
+
 # ── E · honest-empty contract: the station degrades when GABE_SIM is null
 check("degradePanel" in station, "station has a degrade path (no change in flight)")
 check(re.search(r'window\.GABE_SIM\s*\|\|\s*null', station) is not None,

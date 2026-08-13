@@ -699,13 +699,35 @@
       + "its pieces, scroll to pan, ctrl+scroll to zoom.</div>";
   }
   function resetPanel(){ if(PANEL) PANEL.resetPanel(); else degradePanel(); }
-  // re-render whatever the panel was showing (piece / entity / summary) for the
-  // CURRENT stage — so switching Red·Execute·Review·Commit keeps the selection.
+  // re-render whatever the panel was showing (piece / entity / L2 node / connector
+  // / summary) — every re-rendering control funnels here, SIM mode AND map mode,
+  // so a lens flip never strips the selection while the card stays up.
   function reopenPanel(){
-    if(!PANEL){ degradePanel(); return; }
-    if(panelTarget && panelTarget.piece) PANEL.openDetail(panelTarget.piece.slug, panelTarget.piece.p);
-    else if(panelTarget && panelTarget.entity){ PANEL.openEntityDetail(panelTarget.entity); attachEntitySelection(panelTarget.entity); }
-    else PANEL.resetPanel();
+    var t = panelTarget;
+    if(t && t.piece && !SELREG.nodes["pc:"+t.piece.slug+"|"+t.piece.p.id]){
+      // the piece's entity collapsed (Close-all / double-click) — demote to it
+      panelTarget = { entity:t.piece.slug }; t = panelTarget;
+    }
+    if(t && t.piece && PANEL){ PANEL.openDetail(t.piece.slug, t.piece.p); return; }
+    if(t && t.entity){
+      if(PANEL){ PANEL.openEntityDetail(t.entity); attachEntitySelection(t.entity); return; }
+      var en = L1.filter(function(x){ return x.slug===t.entity; })[0];
+      if(en){ entityCard(en);
+        if(SELREG.nodes["ent:"+t.entity]) appendConn("ent:"+t.entity, selectNode("ent:"+t.entity));
+        return; }
+    }
+    if(t && t.l2){
+      var meta = nodeMeta[t.l2];
+      if(meta && meta.node){ l2NodeCard(meta.node);
+        if(SELREG.nodes[t.l2]) appendConn(t.l2, selectNode(t.l2));
+        return; }
+    }
+    if(t && t.edge){
+      // edge INDICES die with every SELREG rebuild — re-find by (from, to, kind)
+      for(var i=0;i<SELREG.edges.length;i++){ var e=SELREG.edges[i];
+        if(e.from===t.edge.from && e.to===t.edge.to && e.kind===t.edge.kind){ selectEdge(i); return; } }
+    }
+    resetPanel();
   }
   function attachEntitySelection(slug){
     if(!SELREG.nodes["ent:"+slug]) return;
@@ -914,6 +936,8 @@
       b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
   function selectEdge(i){
     var e=SELREG.edges[i]; if(!e) return;
+    cancelContTap();
+    panelTarget = { edge:{ from:e.from, to:e.to, kind:e.kind } };
     clearSelection();
     SELREG.edges.forEach(function(x,j){ x.el.classList.add(j===i?"e-hl":"e-faded"); });
     var f=SELREG.nodes[e.from], to=SELREG.nodes[e.to];
@@ -1044,6 +1068,17 @@
     afterRender("All entities", DATA.stats.entities + " entities · " + L1E.length + " links", "var(--muted)");
     applySim();
     if(SIM && Object.keys(expanded).length) drawExpansions();
+    syncOpenAll();
+  }
+  // the toggle's face derives from `expanded` — back(), double-click toggles and
+  // Open/Close-all itself all funnel through a render, so it can never desync
+  function syncOpenAll(){
+    if(!SIM) return;
+    var inv=SIM.touched.concat(SIM.blast);
+    var allOpen=inv.length>0 && inv.every(function(s){ return expanded[s]; });
+    var btn=document.getElementById("cbg-openAll");
+    btn.textContent = allOpen ? "Close all" : "Open all";
+    btn.classList.toggle("on", allOpen);
   }
 
   // ── L2 render — the drilled entity's pieces in the lab grammar ──────────────
@@ -1102,9 +1137,11 @@
       else { var xc=COLORS[n.slug]||"#868e96";   // COLORS is keyed by SLUG, never the display label
         g.appendChild(E("circle",{r:9, fill:"var(--panel)", stroke:xc, "stroke-width":"2","stroke-dasharray":"4 3"}));
         twoRowLabel(g, label, 0, 20); }
+      var hopOk = n.kind==="external" && n.slug && DATA.l2[n.slug];
       var ti=E("title"); ti.textContent=label+" · "+n.kind
         +(n.table?" · table "+n.table:"")
-        +(n.kind==="external"?" — double-click to hop":""); g.appendChild(ti);
+        +(n.kind==="external"?(hopOk?" — double-click to hop":" — fk target outside every claimed entity"):"");
+      g.appendChild(ti);
       nLayer.appendChild(g); nodeMeta[n.id].el = g;
       regNode(g, n.id, trunc(label,30), n.kind, 16);
       wire(g, n);
@@ -1143,7 +1180,8 @@
   }
 
   // ── node interaction: drag to move (re-render keeps the view) · tap to inspect ──
-  var pendingTap = null, dragging = null;
+  var pendingTap = null, dragging = null, pendingCont = null;
+  function cancelContTap(){ if(pendingCont){ clearTimeout(pendingCont.t); pendingCont=null; } }
   function wire(g, node){
     g.addEventListener("pointerenter", function(){ if(!dragging) showTip(node); });
     g.addEventListener("pointermove",  function(e){ if(!dragging) moveTip(e); });
@@ -1163,7 +1201,12 @@
       }
       function onUp(){
         window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp);
-        setTimeout(function(){ dragging=null; }, 0); if(!moved) tap(node);
+        // the last drag frame rendered with `dragging` set (static dots, no fly-in);
+        // one release render restores SMIL motion + the selection — skipAnimOnce
+        // keeps the fly-in from replaying on that render.
+        setTimeout(function(){ dragging=null;
+          if(moved){ skipAnimOnce=true; rerenderKeepPanel(); } }, 0);
+        if(!moved) tap(node);
       }
       window.addEventListener("pointermove", onMove); window.addEventListener("pointerup", onUp);
     });
@@ -1184,10 +1227,12 @@
         PANEL.openEntityDetail(node.slug);
         attachEntitySelection(node.slug);
       } else {
+        panelTarget = { entity:node.slug };
         entityCard(node);
         if(SELREG.nodes["ent:"+node.slug]) appendConn("ent:"+node.slug, selectNode("ent:"+node.slug));
       }
     } else {
+      panelTarget = { l2:node.id };
       l2NodeCard(node);
       if(SELREG.nodes[node.id]) appendConn(node.id, selectNode(node.id));
     }
@@ -1196,7 +1241,7 @@
     // external pieces carry the target SLUG (label is the display name — 'Auth'
     // vs the l2 key 'auth'); an unclaimed stub has no l2, so the hop stays inert
     if(view==="l2"){ if(node.kind==="external" && node.slug && DATA.l2[node.slug]) drill(node.slug); return; }
-    if(!SIM){ drill(node.slug); return; }                   // map mode: double-click drills to L2
+    if(!SIM){ if(node.kind!=="unclaimed" && DATA.l2[node.slug]) drill(node.slug); return; }   // map mode drill (the unclaimed bucket has no L2)
     if(INVOLVED[node.id]){
       if(expanded[node.slug]) delete expanded[node.slug]; else expanded[node.slug]=true;
       renderKeepView(); panelTarget = { entity:node.slug };
@@ -1207,14 +1252,15 @@
   // map-mode / L2 cards (the sim panel owns these when a change is in flight)
   function rowKV(k,v){ return "<div class='row'><span class='k'>"+k+"</span><span class='v'>"+v+"</span></div>"; }
   function entityCard(n){
-    var c=n.counts||{};
+    var c=n.counts||{}, bucket = n.kind==="unclaimed";
     detail.innerHTML = "<div class='phdr'>codebase map</div>"
       + "<h4 style='color:"+(COLORS[n.slug]||"inherit")+"'>"+esc(n.label)+"</h4>"
-      + "<div class='kind'>entity"+(n.status?" · "+esc(String(n.status)):"")+"</div>"
-      + rowKV("endpoints", c.endpoints||0) + rowKV("models", c.models||0)
-      + rowKV("schemas", c.schemas||0) + rowKV("files", c.files||0)
-      + rowKV("lines", (c.lines||0).toLocaleString())
-      + "<div class='sum'>double-click to drill into its pieces.</div>";
+      + "<div class='kind'>"+(bucket?"unclaimed fk targets":"entity"+(n.status?" · "+esc(String(n.status)):""))+"</div>"
+      + (n.counts ? rowKV("endpoints", c.endpoints||0) + rowKV("models", c.models||0)
+          + rowKV("schemas", c.schemas||0) + rowKV("files", c.files||0)
+          + rowKV("lines", (c.lines||0).toLocaleString()) : "")
+      + (bucket ? "<div class='sum'>foreign keys point at tables no entity claims — coverage debt, not a place.</div>"
+                : "<div class='sum'>double-click to drill into its pieces.</div>");
   }
   function l2NodeCard(n){
     var label = n.label || String(n.id).replace(/^[^:]+:/,"");
@@ -1222,7 +1268,9 @@
       + "<h4>"+esc(trunc(label,40))+"</h4><div class='kind'>"+esc(n.kind)+"</div>";
     if(n.kind==="endpoint"){ var m=methodOf(label); if(m) h+=rowKV("method", m); }
     if(n.table) h+=rowKV("table", esc(n.table));
-    if(n.kind==="external") h+="<div class='sum'>lives in another entity — <b>double-click</b> it on the canvas to hop there.</div>";
+    if(n.kind==="external") h += (n.slug && DATA.l2[n.slug])
+      ? "<div class='sum'>lives in another entity — <b>double-click</b> it on the canvas to hop there.</div>"
+      : "<div class='sum'>an fk target outside every claimed entity — nothing to hop to.</div>";
     detail.innerHTML = h;
   }
 
@@ -1271,8 +1319,9 @@
     baseEdges.forEach(function(be){ be.el.classList.add("basefade");
       be.dots.forEach(function(d){ d.classList.add("basefade"); }); });
     // a drag re-renders on every pointermove — replaying the fly-in would keep
-    // the pieces stuck at opacity 0 near the entity centre for the whole drag
-    var reduce = REDUCED || !!dragging;
+    // the pieces stuck at opacity 0 near the entity centre for the whole drag;
+    // skipAnimOnce = the drag-release render (motion returns, no fly-in replay)
+    var reduce = REDUCED || !!dragging || skipAnimOnce;
     var expL=E("g",{id:"cbg-expansion"}), defs=E("defs"), bgL=E("g"), wireL=E("g"), nodeL=E("g");
     expL.appendChild(defs); expL.appendChild(bgL); expL.appendChild(wireL); expL.appendChild(nodeL);
     vp.appendChild(expL);
@@ -1286,20 +1335,26 @@
       pieces.forEach(function(p){ var pp=ip[p.id]; innerPos[slug+"\t"+p.id]=pp;
         extent=Math.max(extent, Math.hypot(pp.x-pos.x, pp.y-pos.y)); });
       var contR=Math.max(56, extent+HALO_R+22), col=COLORS[slug]||"#888";
-      var cont=E("circle",{class:"xcontainer",cx:pos.x,cy:pos.y,r:contR,
+      var contWrap=E("g",{transform:"translate("+pos.x+","+pos.y+")"});
+      var cont=E("circle",{class:"xcontainer",cx:0,cy:0,r:contR,
         fill:col,"fill-opacity":"0.06",stroke:col,"stroke-opacity":"0.55","stroke-width":"1.6","stroke-dasharray":"4 4"});
       (function(sl){
-        var en=L1.filter(function(x){ return x.slug===sl; })[0], ct=null;
+        var en=L1.filter(function(x){ return x.slug===sl; })[0];
         cont.addEventListener("click", function(){
-          if(ct){ clearTimeout(ct); ct=null; onDouble(en); }
-          else { ct=setTimeout(function(){ ct=null; onSingle(en); }, 230); }
+          if(pendingCont && pendingCont.slug===sl){ clearTimeout(pendingCont.t); pendingCont=null; onDouble(en); }
+          else { cancelContTap();
+            pendingCont={ slug:sl, t:setTimeout(function(){ pendingCont=null; onSingle(en); }, 230) }; }
         });
       })(slug);
-      bgL.appendChild(cont);
+      contWrap.appendChild(cont);
       var pcnt=pieces.length;
-      var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col});
+      var lb=E("text",{class:"xcontlabel",x:0,y:-contR-8,fill:col});
       lb.textContent=(nodeMeta[slug].node.label||slug)+(pcnt?" ("+pcnt+")":"");
-      bgL.appendChild(lb);
+      contWrap.appendChild(lb);
+      bgL.appendChild(contWrap);
+      // the exploded L1 node is opacity:0 — selection/peek rings would vanish with
+      // it; the entity key re-registers on the container wrapper (visible rim ring)
+      regNode(contWrap, "ent:"+slug, nodeMeta[slug].node.label||slug, "entity", contR+4);
       b.minX=Math.min(b.minX,pos.x-contR-24); b.maxX=Math.max(b.maxX,pos.x+contR+24);
       b.minY=Math.min(b.minY,pos.y-contR-24); b.maxY=Math.max(b.maxY,pos.y+contR+24);
     });
@@ -1338,6 +1393,7 @@
     function rimPull(pt, toward, slug){
       var r=(nodeMeta[slug]&&nodeMeta[slug].r?nodeMeta[slug].r:22)+6-HALO_R;
       var dx=toward.x-pt.x, dy=toward.y-pt.y, d=Math.hypot(dx,dy)||1;
+      r=Math.min(r, d*0.5);           // clamped: never past the far anchor
       return { x:pt.x+dx/d*r, y:pt.y+dy/d*r };
     }
     if(showConns) ((SIM.cross_edges)||[]).forEach(function(e,xi){
@@ -1382,6 +1438,7 @@
         g.appendChild(inner); nodeL.appendChild(g);
         regNode(g, "pc:"+slug+"|"+p.id, p.label, p.kind||"model", 16);
         (function(sl,pc){ g.addEventListener("click", function(ev){ ev.stopPropagation();
+          cancelContTap();                     // a piece click is never a container single-click
           panelTarget={piece:{slug:sl,p:pc}}; if(PANEL) PANEL.openDetail(sl,pc); }); })(slug,p);
         if(!reduce) animP.push({el:inner, dx:pos.x-pp.x, dy:pos.y-pp.y});
       });
@@ -1471,10 +1528,11 @@
     curStage = s; syncStageButtons(); renderKeepView(); reopenPanel();
   }
 
-  function renderKeepView(){ if(view==="l1") renderL1(); else renderL2(drilledSlug); }
+  var skipAnimOnce = false;
+  function renderKeepView(){ if(view==="l1") renderL1(); else renderL2(drilledSlug); skipAnimOnce=false; }
   // every render resets SELREG — re-rendering controls must restore the panel's
   // selection the way setStage does, or the open card silently loses its ring
-  function rerenderKeepPanel(){ renderKeepView(); if(PANEL) reopenPanel(); }
+  function rerenderKeepPanel(){ renderKeepView(); reopenPanel(); }
   function drill(slug){ userPos={}; expanded={}; panX=0; panY=0; zoom=1; renderL2(slug); }
   function back(){ userPos={}; expanded={}; panX=0; panY=0; zoom=1;
     if(SIM) SIM.touched.concat(SIM.blast).forEach(function(s){ expanded[s]=true; });
@@ -1578,7 +1636,9 @@
       var col2=KIND_COLOR[node.kind]||"#888", lbl=node.label || String(node.id).replace(/^[^:]+:/,"");
       html = "<div class='ttl'><span class='sw' style='background:"+col2+"'></span>"+esc(trunc(lbl,34))+"</div><div class='kind'>"+esc(node.kind)+"</div>";
       if(node.table) html += "<div class='meta'>table · "+esc(node.table)+"</div>";
-      if(node.kind==="external") html += "<div class='meta'>&rarr; entity <b>"+esc(lbl)+"</b> · double-click to hop</div>";
+      if(node.kind==="external") html += (node.slug && DATA.l2[node.slug])
+        ? "<div class='meta'>&rarr; entity <b>"+esc(lbl)+"</b> · double-click to hop</div>"
+        : "<div class='meta'>fk target outside every claimed entity</div>";
     }
     tip.innerHTML = html; tip.classList.add("on");
   }
@@ -1654,7 +1714,8 @@
     blast:    function(){ return SIM ? SIM.blast.slice() : []; },
     openPiece: function(slug, pid){
       var p=((SIM&&SIM.pieces&&SIM.pieces[slug])||[]).filter(function(x){ return x.id===pid; })[0];
-      if(p && PANEL){ panelTarget={piece:{slug:slug,p:p}}; PANEL.openDetail(slug, p); }  // mirror a real piece click
+      if(p && PANEL){ cancelContTap();          // mirror a REAL piece click (incl. its canceller)
+        panelTarget={piece:{slug:slug,p:p}}; PANEL.openDetail(slug, p); }
     },
     singleClick: function(key){
       var arr = view==="l1" ? DATA.l1.nodes : (DATA.l2[drilledSlug]||{nodes:[]}).nodes;
@@ -1700,7 +1761,14 @@
       if(r) r.dispatchEvent(new MouseEvent("mouseenter",{bubbles:false})); },
     clickConn:function(i){ var r=document.querySelectorAll("#cbg-detail .conrow")[i||0]; if(r) r.click(); },
     cam:      function(){ return { panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice() }; },
-    nodeXY:   nodeWorldXY
+    nodeXY:   nodeWorldXY,
+    entR:     function(slug){ return nodeMeta[slug] ? nodeMeta[slug].r : null; },
+    dotsAnimated: function(){ return vp.querySelectorAll(".flowdot animateMotion").length; },
+    selringHost:  function(){ var r=vp.querySelector(".selring"); if(!r) return null;
+      var n=r.closest(".node"); return n ? (n.classList.contains("exploded")?"exploded-node":"node") : "other"; },
+    contTapPending: function(){ return !!pendingCont; },
+    openAllFace: function(){ var b=document.getElementById("cbg-openAll");
+      return { text:b.textContent, on:b.classList.contains("on") }; }
   };
 
   // ── boot ────────────────────────────────────────────────────────────────────
@@ -1720,9 +1788,7 @@
     document.getElementById("cbg-openAll").addEventListener("click", function(){
       var inv=SIM.touched.concat(SIM.blast), allOpen=inv.length && inv.every(function(s){ return expanded[s]; });
       expanded={}; if(!allOpen) inv.forEach(function(s){ expanded[s]=true; });
-      var btn=document.getElementById("cbg-openAll");
-      btn.textContent = allOpen ? "Open all" : "Close all"; btn.classList.toggle("on", !allOpen);
-      rerenderKeepPanel();
+      rerenderKeepPanel();                       // syncOpenAll runs in the render
     });
     document.getElementById("cbg-conns").addEventListener("click", function(){
       showConns=!showConns; this.classList.toggle("on", showConns); rerenderKeepPanel();
@@ -1781,7 +1847,6 @@
   cModal.addEventListener("click", function(e){ if(e.target===cModal) cModal.hidden=true; });
 
   renderL1();
-  if(SIM && Object.keys(expanded).length){ var _oa=document.getElementById("cbg-openAll"); _oa.textContent="Close all"; _oa.classList.add("on"); }
   resetPanel();
   window.__cbgready = true;
 })();

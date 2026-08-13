@@ -156,6 +156,105 @@ if(wxy){
 ok(await t('line()')==='bowed', 'Bowed is the default line style (round 45)');
 await t('setLine("direct")'); ok(await t('line()')==='direct', 'Direct reachable'); await t('setLine("bowed")');
 
+// 11 · rerenderKeepPanel (fresh-review): re-rendering controls keep the selection
+await t('openPiece("recipe","model:PlannedRecipe")');
+await pg.waitForTimeout(150);
+await t('toggleConns()'); await pg.waitForTimeout(150);
+ok(await t('selrings()')===1 && (await t('detailText()')).indexOf('PlannedRecipe')>=0,
+   'Connections toggle keeps the open piece + its ring');
+await t('toggleConns()');
+await pg.evaluate(()=>{ document.getElementById('cbg-gear').click();
+  document.querySelector('#cbg-iconsSeg [data-ico="classic"]').click(); });
+await pg.waitForTimeout(200);
+ok(await t('selrings()')===1 && await t('icons()')==='classic',
+   'a REAL gear pill click keeps the selection (the fixed handler path)');
+await pg.evaluate(()=>{ document.querySelector('#cbg-iconsSeg [data-ico="lucide"]').click();
+  document.getElementById('cbg-gear').click(); });
+await pg.waitForTimeout(150);
+// Reset clears to the stage summary, no stray ring
+await pg.evaluate(()=>{ document.getElementById('cbg-gear').click();
+  document.getElementById('cbg-resetBtn').click(); document.getElementById('cbg-gear').click(); });
+await pg.waitForTimeout(150);
+ok(await t('selrings()')===0 && (await t('detailText()')).indexOf('Change summary')>=0,
+   'Reset clears the panel target back to the stage summary');
+
+// 12 · exploded-entity selection ring is VISIBLE (mounts on the container, not
+//     the opacity-0 node) + Close-all demotes an open piece to its entity
+await t('singleClick("recipe")'); await pg.waitForTimeout(150);
+ok(await t('selringHost()')==='other', 'entity ring mounts outside the exploded node');
+await t('openPiece("recipe","model:PlannedRecipe")'); await pg.waitForTimeout(100);
+await pg.evaluate(()=>document.getElementById('cbg-openAll').click());   // Close all
+await pg.waitForTimeout(250);
+ok((await t('expandedNow()')).length===0, 'Close-all collapses everything');
+ok((await t('detailText()')).indexOf('Recipe')>=0 && (await t('detailText()')).indexOf('lifecycle')<0,
+   'the open PIECE demotes to its ENTITY card when its entity collapses');
+let face = await t('openAllFace()');
+ok(face.text==='Open all' && !face.on, 'the toggle face resynced (derived in render)');
+await pg.evaluate(()=>document.getElementById('cbg-openAll').click());   // reopen
+await pg.waitForTimeout(250);
+
+// 13 · beat-ring contract: drift(22) never collides with ok(19) — review stage
+await t('setStage("review")'); await pg.waitForTimeout(300);
+ok(await pg.evaluate(()=>{
+    const d=document.querySelector('.drift-ring'), o=document.querySelector('.ok-ring');
+    return !!d && !!o && d.getAttribute('r')!==o.getAttribute('r');
+  }), 'drift ring r differs from the ok ring (22 vs 19)');
+await t('setStage("execute")'); await settle();
+
+// 14 · REAL drag: release restores dot motion + the selection (the freeze bug).
+// Drag a NON-exploded entity — an exploded node is pointer-inert (its container
+// only takes clicks), so dragging it would be a container tap, not a drag.
+await t('openPiece("recipe","model:PlannedRecipe")'); await pg.waitForTimeout(150);
+const cxy = await screenXY('ent:auth');
+await pg.mouse.move(cxy.x, cxy.y);
+await pg.mouse.down(); await pg.mouse.move(cxy.x+35, cxy.y+20, {steps:5}); await pg.mouse.up();
+await pg.waitForTimeout(600);
+ok(await t('dotsAnimated()')>0, 'flow dots re-animate after a drag (release render)');
+ok(await t('selrings()')>=1 && (await t('detailText()')).indexOf('PlannedRecipe')>=0,
+   'the selection + card survive the drag');
+
+// 15 · collapsed-entity cross wires: rim-anchored, selectable, stage-survivable
+await t('dblClick("cooking")'); await settle();
+ok((await t('expandedNow()')).join()==='recipe', 'cooking collapsed, recipe open');
+const xw = await t('crossEdges()');
+ok(xw>0, 'cross wires still drawn to the collapsed entity');
+const rim = await pg.evaluate(()=>{
+  const w=window.__cbgtest.nodeXY('ent:cooking'), r=window.__cbgtest.entR('cooking');
+  const p=document.querySelector('#cbg-expansion .e-xfk'); if(!p||!w||!r) return null;
+  const a=p.getPointAtLength(0), b=p.getPointAtLength(p.getTotalLength());
+  const da=Math.hypot(a.x-w.x,a.y-w.y), db=Math.hypot(b.x-w.x,b.y-w.y);
+  return { d:Math.min(da,db), r };
+});
+ok(!!rim && Math.abs(rim.d-(rim.r+6))<8, `wire end sits at the collapsed rim (~r+6; got ${rim&&rim.d&&rim.d.toFixed(1)} vs r=${rim&&rim.r})`);
+const wxy2 = await pg.evaluate(()=>{
+  const p=document.querySelector('#cbg-expansion .e-xfk');
+  const q=p.getPointAtLength(p.getTotalLength()/2);
+  const c=window.__cbgtest.cam(), r=document.getElementById('cbg-stage').getBoundingClientRect(), s=c.base*c.zoom;
+  return { x:r.left + c.fit[0]+c.panX + q.x*s, y:r.top + c.fit[1]+c.panY + q.y*s };
+});
+await pg.mouse.click(wxy2.x, wxy2.y); await pg.waitForTimeout(250);
+ok((await t('detailText()')).indexOf('connector')>=0, 'the rim-anchored wire opens its connector card');
+await t('setStage("red")'); await pg.waitForTimeout(300);
+ok((await t('detailText()')).indexOf('connector')>=0,
+   'the connector card SURVIVES a stage switch (edge panelTarget re-found by keys)');
+await pg.evaluate(()=>{ const r=[...document.querySelectorAll('#cbg-detail .jgo')]
+    .find(x=>(x.getAttribute('data-k')||'').indexOf('ent:cooking')===0); if(r) r.click(); });
+await pg.waitForTimeout(250);
+ok((await t('detailText()')).toLowerCase().indexOf('cooking')>=0 && (await t('detailText()')).indexOf('entity')>=0,
+   'the connector row travels to the collapsed ENTITY card (jumpToNode ent: branch)');
+await t('setStage("execute")');
+await t('dblClick("cooking")'); await settle();
+
+// 16 · container timer never steals a piece click made just after it
+await pg.evaluate(()=>{ const c=document.querySelector('#cbg-expansion .xcontainer');
+  c.dispatchEvent(new MouseEvent('click',{bubbles:true,cancelable:true})); });
+await pg.waitForTimeout(90);
+await t('openPiece("recipe","model:PlannedRecipe")');   // stands in for the fast real click
+await pg.evaluate(()=>{ /* piece handler path is the real canceller */ });
+const stolen = await pg.evaluate(()=>new Promise(res=>setTimeout(()=>res(window.__cbgtest.detailText()),400)));
+ok(stolen.indexOf('lifecycle')>=0 || stolen.indexOf('PlannedRecipe')>=0,
+   'the piece card is NOT replaced by the container single-click 230ms later');
+
 ok(errs.length===0, 'zero console errors: '+errs.slice(0,3).join(' | '));
 await b.close();
 console.log(`port1: ${P}/${P+F} pass`);
