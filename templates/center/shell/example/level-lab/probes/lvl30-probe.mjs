@@ -26,7 +26,7 @@ const gear = await pg.evaluate(() => ({
 ok(gear.lay==='chain,force,spread', 'Entities roster trimmed ('+gear.lay+')');
 ok(gear.ins==='tiers,force,columns,rows', 'Inside roster trimmed ('+gear.ins+')');
 ok(gear.line==='direct,bowed', 'Lines roster trimmed ('+gear.line+')');
-ok(await T('window.__lvltest.line()')==='direct', 'default line = Direct');
+ok(await T('window.__lvltest.line()')==='bowed', 'default line = Bowed (operator round 45)');
 
 // 2 · panel minimize / restore (real clicks on the bottom bar)
 const w0 = await pg.evaluate(() => document.getElementById('panel').clientWidth);

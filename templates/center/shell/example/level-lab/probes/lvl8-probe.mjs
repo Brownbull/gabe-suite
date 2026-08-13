@@ -14,12 +14,13 @@ const link = await pg.evaluate(() => {
   const vp = document.getElementById('vp');
   const xy = g => { const m=/translate\(([-0-9.]+),([-0-9.]+)\)/.exec(g.getAttribute('transform')||''); return m?[+m[1],+m[2]]:null; };
   const eps = [...vp.querySelectorAll('.epmark')].map(xy).filter(Boolean);
-  const starts = new Set();
+  const starts = [];
   vp.querySelectorAll('.e-touch,.e-resp,.e-xfk').forEach(p=>{
-    const m=/^M([-0-9.]+) ([-0-9.]+)/.exec(p.getAttribute('d')||''); if(m) starts.add(m[1]+','+m[2]);
+    const m=/^M([-0-9.]+) ([-0-9.]+)/.exec(p.getAttribute('d')||''); if(m) starts.push([+m[1],+m[2]]);
   });
+  // round 45: wires depart at the 14px halo edge — match by distance, not identity
   let linked=0;
-  eps.forEach(p=>{ if(starts.has(p[0]+','+p[1])) linked++; });
+  eps.forEach(p=>{ if(starts.some(s=>Math.hypot(s[0]-p[0], s[1]-p[1])<=15.5)) linked++; });
   return {eps:eps.length, linked,
           resp: vp.querySelectorAll('.e-resp').length,
           touch: vp.querySelectorAll('.e-touch').length,

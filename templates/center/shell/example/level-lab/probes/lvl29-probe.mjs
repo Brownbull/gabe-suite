@@ -91,7 +91,7 @@ const gear = await pg.evaluate(() => ({
 ok(gear.lay==='chain,force,spread', 'Entities roster (trimmed round 35) ('+gear.lay+')');
 ok(gear.ins==='tiers,force,columns,rows', 'Inside roster (trimmed round 35) ('+gear.ins+')');
 ok(gear.line==='direct,bowed', 'Lines roster (trimmed round 35) ('+gear.line+')');
-await T("window.__lvltest.setLine('direct')");
+await T("window.__lvltest.setLine('bowed')");
 
 ok(errs.length===0, 'no console errors: '+errs.slice(0,3).join(' | '));
 console.log(`lvl29 (layout exploration): ${P} pass, ${F} fail`);
