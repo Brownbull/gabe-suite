@@ -219,6 +219,12 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
         <button data-line="direct">Direct</button>
         <button data-line="bowed" class="on">Bowed</button>
       </div>
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Icons</div>
+      <div class="seg" id="icoSeg" style="margin-left:0;flex-wrap:wrap">
+        <button data-ico="classic" class="on">Classic</button>
+        <button data-ico="lucide">Lucide</button>
+        <button data-ico="solid">Solid</button>
+      </div>
     </div>
     </div>
   </div>
@@ -278,12 +284,11 @@ function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {"&":"&
 function trunc(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+"…":s; }
 
 /* ── the symbol grammar (one function per glyph, reused across levels) ── */
-function cylinder(g, r, col){            // MODEL = database cylinder
-  var h=r*1.5, w=r*1.7;
-  g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6),
-    fill:col, "fill-opacity":"0.9", stroke:"var(--panel)","stroke-width":"1.4"}));
-  g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col, stroke:"var(--panel)","stroke-width":"1.4"}));
-}
+/* ICON SETS (operator round 46/47): Classic = the settled lab geometry;
+   Lucide + Solid are try-on sets, switched from the gear — same roster as the
+   change-graph preview so a choice made in either page reads in both. */
+var ICONSET="classic";
+function cylinder(g, r, col){ ICONSETS[ICONSET].model(g, r, col); }
 // the command center's OWN icon geometry (sim-panel KIND_ICON) — the lab speaks
 // the suite's icon language: schema = curly braces, function = the ƒ-curve.
 var ICO_SCHEMA='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1';
@@ -294,28 +299,73 @@ function icoPath(g, d, col, scale){
     transform:"translate("+(-12*scale)+","+(-12*scale)+") scale("+scale+")"});
   g.appendChild(p);
 }
-function sBadge(g, r, col){              // SCHEMA = the bare curly-brace icon (no box)
-  g.appendChild(E("circle",{r:r+4, fill:"transparent"}));           // invisible hit target
-  var p=E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2.4",
-    "stroke-linecap":"round","stroke-linejoin":"round",
-    transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"});
-  g.appendChild(p);
-}
-function fGlyph(g, r, col, handler, god){ // FUNCTION = the bare ƒ-curve icon (no circle);
-  g.appendChild(E("circle",{r:r+4, fill:"transparent"}));           // invisible hit target
-  var p=E("path",{d:ICO_FN, fill:"none", stroke:col,
-    "stroke-width": handler?"3.1":"2.2",                            // thicker stroke = handler
-    "stroke-linecap":"round","stroke-linejoin":"round",
-    transform:"translate("+(-r*1.2)+","+(-r*1.2)+") scale("+(2.4*r/24)+")"});
-  g.appendChild(p);
-  if(god) g.appendChild(E("circle",{cx:r*0.9, cy:-r*0.9, r:3, fill:"var(--m-delete)"}));  // red dot = god fn
-}
-function epMark(g, r, method){           // ENDPOINT = method-coloured border marker
-  var col = METHOD[method]||"var(--muted)";
-  g.appendChild(E("circle",{r:r, fill:col, stroke:"var(--panel)","stroke-width":"1.6"}));
-  g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
-    fill:"#fff", transform:"scale("+(r/6)+")"}));
-}
+function sBadge(g, r, col){ ICONSETS[ICONSET].schema(g, r, col); }
+function fGlyph(g, r, col, handler, god){ ICONSETS[ICONSET].fn(g, r, col, handler, god); }
+function epMark(g, r, method){ ICONSETS[ICONSET].ep(g, r, method); }
+var ICONSETS={
+  classic:{
+    model:function(g,r,col){ var h=r*1.5, w=r*1.7;
+      g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6),
+        fill:col, "fill-opacity":"0.9", stroke:"var(--panel)","stroke-width":"1.4"}));
+      g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col, stroke:"var(--panel)","stroke-width":"1.4"})); },
+    schema:function(g,r,col){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2.4",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"})); },
+    fn:function(g,r,col,handler,god){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:col,
+        "stroke-width": handler?"3.1":"2.2",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r*1.2)+","+(-r*1.2)+") scale("+(2.4*r/24)+")"}));
+      if(god) g.appendChild(E("circle",{cx:r*0.9, cy:-r*0.9, r:3, fill:"var(--m-delete)"})); },
+    ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+      g.appendChild(E("circle",{r:r, fill:col, stroke:"var(--panel)","stroke-width":"1.6"}));
+      g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
+        fill:"#fff", transform:"scale("+(r/6)+")"})); }
+  },
+  lucide:{
+    model:function(g,r,col){ var k=2.2*r/24, tf="translate("+(-r*1.1)+","+(-r*1.1)+") scale("+k+")";
+      g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("ellipse",{cx:12, cy:5, rx:9, ry:3, fill:"none", stroke:col, "stroke-width":"2", transform:tf}));
+      g.appendChild(E("path",{d:"M3 5v14a9 3 0 0 0 18 0V5 M3 12a9 3 0 0 0 18 0",
+        fill:"none", stroke:col, "stroke-width":"2","stroke-linecap":"round", transform:tf})); },
+    schema:function(g,r,col){ g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:col, "stroke-width":"2",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r)+","+(-r)+") scale("+(2*r/24)+")"})); },
+    fn:function(g,r,col,handler,god){ var k=2.4*r/24, tf="translate("+(-r*1.2)+","+(-r*1.2)+") scale("+k+")";
+      g.appendChild(E("circle",{r:r+4, fill:"transparent"}));
+      g.appendChild(E("rect",{x:3, y:3, width:18, height:18, rx:4, fill:"none", stroke:col,
+        "stroke-width": handler?"2.6":"1.8", transform:tf}));
+      g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:col, "stroke-width":"2",
+        "stroke-linecap":"round","stroke-linejoin":"round", transform:tf}));
+      if(god) g.appendChild(E("circle",{cx:r*0.9, cy:-r*0.9, r:3, fill:"var(--m-delete)"})); },
+    ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+      g.appendChild(E("circle",{r:r+1, fill:"none", stroke:col, "stroke-width":"2"}));
+      g.appendChild(E("path",{d:"M13 2 3 14h9l-1 8 10-12h-9l1-8z", fill:col,
+        transform:"translate("+(-r*0.75)+","+(-r*0.75)+") scale("+(1.5*r/24)+")"})); }
+  },
+  solid:{
+    model:function(g,r,col){ var h=r*1.5, w=r*1.7;
+      g.appendChild(E("path",{d:"M"+(-w/2)+" "+(-h/2+3)+" v"+(h-6)+" a"+(w/2)+" 4 0 0 0 "+w+" 0 v-"+(h-6), fill:col}));
+      g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/2, ry:4, fill:col}));
+      g.appendChild(E("ellipse",{cx:0, cy:-h/2+3, rx:w/3.2, ry:2.2, fill:"var(--panel)", "fill-opacity":"0.5"})); },
+    schema:function(g,r,col){ g.appendChild(E("rect",{x:-r, y:-r, width:2*r, height:2*r, rx:5, fill:col}));
+      g.appendChild(E("path",{d:ICO_SCHEMA, fill:"none", stroke:"#fff", "stroke-width":"2.2",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r*0.75)+","+(-r*0.75)+") scale("+(1.5*r/24)+")"})); },
+    fn:function(g,r,col,handler,god){ g.appendChild(E("circle",{r:r+1.5, fill:col}));
+      if(handler) g.appendChild(E("circle",{r:r+3.5, fill:"none", stroke:col, "stroke-width":"1.6"}));
+      g.appendChild(E("path",{d:ICO_FN, fill:"none", stroke:"#fff", "stroke-width":"2.4",
+        "stroke-linecap":"round","stroke-linejoin":"round",
+        transform:"translate("+(-r*0.85)+","+(-r*0.85)+") scale("+(1.7*r/24)+")"}));
+      if(god) g.appendChild(E("circle",{cx:r*0.9, cy:-r*0.9, r:3, fill:"var(--m-delete)"})); },
+    ep:function(g,r,method){ var col=METHOD[method]||"var(--muted)";
+      g.appendChild(E("rect",{x:-r-1, y:-r-1, width:2*r+2, height:2*r+2, rx:6, fill:col}));
+      g.appendChild(E("path",{d:"M1.4 "+(-r*0.62)+" L"+(-r*0.5)+" 0.6 L0.2 0.6 L-1 "+(r*0.66)+" L"+(r*0.56)+" -0.4 L0 -0.4 Z",
+        fill:"#fff", transform:"scale("+(r/6)+")"})); }
+  }
+};
 
 /* ── pan/zoom (shared) ── */
 function frame(b){ var cw=stage.clientWidth||900, ch=stage.clientHeight||600;
@@ -2100,6 +2150,11 @@ function indicatorHTML(o){
     lineStyle=b.getAttribute("data-line");
     document.querySelectorAll("#lineSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
+  document.getElementById("icoSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    ICONSET=b.getAttribute("data-ico");
+    document.querySelectorAll("#icoSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    renderKeepView(); });
   document.getElementById("themebtn").addEventListener("click",function(){
     var r=document.documentElement, cur=r.getAttribute("data-theme");
     var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -2193,6 +2248,8 @@ window.__lvltest = {
   jrnState:function(){ return {cur:JRN.cur?JRN.cur.name:null, i:JRN.i, resolved:jrnResolved().length}; },
   line:function(){ return lineStyle; },
   setLine:function(v){ lineStyle=v; renderKeepView(); },
+  icons:function(){ return ICONSET; },
+  setIcons:function(v){ ICONSET=v; renderKeepView(); },
   cam:function(){ return {panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice()}; },
   theme:function(){ return document.documentElement.getAttribute("data-theme")||""; },
   hopState:function(){ return {i:_edgeHop.i, at:_edgeHop.at}; },
