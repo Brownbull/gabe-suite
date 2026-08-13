@@ -24,13 +24,19 @@ const t = expr => pg.evaluate(`window.__ecotest.${expr}`);
 // 1 · boot: the ecosystem in the lab grammar — icons, halos, dots, gradients
 ok(await t('line()')==='bowed', 'BOWED is the archive default (operator 2026-08-13)');
 ok(await t('icons()')==='lucide', 'Lucide is the default set');
-const nPieces = await pg.evaluate(()=>Object.values(window.GABE_C4.l2)
-  .reduce((s,g)=>s+g.nodes.filter(n=>n.kind==='model').length,0));
-ok(await t('pieceCircles()')===nPieces, `every model piece drawn (${nPieces})`);
+// the FULL SURFACE (kind coverage 2026-08-13): models + schemas in the core, API
+// endpoints on the border — counts DERIVED from GABE_C4.l2, never hardcoded.
+const kc = await pg.evaluate(()=>{ const o={model:0,schema:0,endpoint:0};
+  Object.values(window.GABE_C4.l2).forEach(g=>g.nodes.forEach(n=>{ if(o[n.kind]!=null) o[n.kind]++; })); return o; });
+const nPieces = kc.model + kc.schema + kc.endpoint;
+ok(await t('pieceKind("model")')===kc.model, `every model drawn in the core (${kc.model})`);
+ok(await t('pieceKind("schema")')===kc.schema, `every schema drawn in the core (${kc.schema})`);
+ok(await t('pieceKind("endpoint")')===kc.endpoint, `every API endpoint on the border (${kc.endpoint})`);
+ok(await t('touchEdges()')>0, 'touch wires link endpoints to the pieces they read/write');
 ok(await pg.evaluate(()=>[...document.querySelectorAll('#eco-viewport path')]
     .some(p=>(p.getAttribute('d')||'').startsWith('M3 5v14a9 3 0 0 0 18 0V5'))),
    'pieces draw the lucide db cylinder');
-ok(await t('halos()')>=nPieces, 'every piece wears the 14px halo');
+ok(await t('halos()')>=nPieces, 'every surface piece wears the 14px halo');
 ok(await t('flowdots()')>0 && await t('gradients()')>0,
    'gradient wires + flow dots (the amber marching dash died)');
 ok(await pg.evaluate(()=>document.querySelectorAll('#eco-viewport marker').length)===0,

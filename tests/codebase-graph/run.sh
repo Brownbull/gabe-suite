@@ -190,6 +190,18 @@ check("'<div class=\'cbg-legend\' id=\'cbg-legend\'>'" in station.replace('"', "
       "the legend TAIL is created INSIDE the Legend corner box")
 check('<div class="cbg-legend" id="cbg-legend"></div>' not in station,
       "the full-width bottom legend bar is gone (corner-box ruling, lab round 36)")
+# ── E4b · TOOLBAR REDESIGN (operator 2026-08-13, Option B): one dense row — the
+# journeys select folds behind a ▷ popover with a count badge; Open-all is icon-only.
+check('id="cbg-jrnBtn"' in station and 'id="cbg-jrnCount"' in station,
+      "the journeys picker is a ▷ button + count badge (the ~210px select left the toolbar)")
+check('id="cbg-jrnPop"' in station and 'id="cbg-jrnSel"' in station.split("cbg-jrnPop",1)[1][:220],
+      "the journeys select lives inside the #cbg-jrnPop popover")
+check(".cbg-jrnbtn[hidden]" in CSS,
+      "the icon journeys button honors [hidden] (author display beats the UA rule — the stepper replaces it in a walk)")
+check('btn.setAttribute("data-face"' in station and "b.getAttribute(\"data-face\")" in station,
+      "Open-all is icon-only; its semantic face survives on data-face (panel logic + probe)")
+check("_CLOSE_ICON" in station and "_OPEN_ICON" in station,
+      "syncOpenAll swaps an expand/collapse ICON (round-36 grammar), not text")
 
 # ── E · honest-empty contract: the station degrades when GABE_SIM is null
 check("degradePanel" in station, "station has a degrade path (no change in flight)")
@@ -302,6 +314,42 @@ _seen_cases = [ (c.get("corpus"), c.get("cid"), c.get("name"))
 check(all(len({k for k in ((c.get("corpus"), c.get("cid"), c.get("name")) for c in d.get("cases", []))})
           == len(d.get("cases", [])) for d in _dets),
       "example: no duplicated case rows inside one dossier")
+
+# ── H · KIND COVERAGE (operator 2026-08-13): both stations draw the FULL L2 surface
+#        — models + schemas in the core, API endpoints on the border — not models only.
+# change graph: the sim BEAT pieces stay .xpiece (port1's count pin); the full surface
+# draws as a SEPARATE .xsurf[data-kind] layer the sim overlays (beat stays model-only).
+check("function surfaceLayout(" in station,
+      "change graph derives the full L2 surface (surfaceLayout: models+schemas core, endpoints border)")
+check('class:"xsurf","data-kind":kind' in station,
+      "change graph draws surface pieces as .xsurf[data-kind] (kept off the .xpiece beat count)")
+check(".cbg-root .xsurf{" in CSS, "change graph styles the surface piece class")
+check("pos[ep.id]={ x:cx+contR*Math.cos" in station,
+      "change graph places endpoints on the container BORDER (radius = contR)")
+check('class:"e-touch"' in station and 'regEdge(p, "touch"' in station,
+      "change graph wires endpoints to the pieces they touch (border → core)")
+check("function declutterExpanded(" in station,
+      "change graph declutters exploded entities so the bigger containers never overlap")
+# archive: the full surface as .xpiece[data-kind]; endpoints ride the border via insidePos.
+check('n.kind==="model"||n.kind==="schema"||n.kind==="endpoint"' in archive,
+      "archive ecoPieces admits models + schemas + endpoints (was model-only)")
+check('class:"xpiece","data-kind":kind' in archive,
+      "archive tags every piece with its data-kind (probe/selection discriminator)")
+check('p.kind!=="endpoint"' in archive,
+      "archive insidePos partitions the core (models+schemas) from the border (endpoints)")
+check("ICONSETS[ICONSET].ep(g, 6.5," in archive and "ICONSETS[ICONSET].schema(g, 7," in archive,
+      "archive dispatches the endpoint + schema glyphs by kind (was hard-coded model)")
+check('if(selPhase && kind==="model")' in archive,
+      "archive keeps the phase BEAT encoding model-only (endpoints/schemas render inert)")
+check('class:"xedge touch"' in archive and ".xedge.touch" in aCSS,
+      "archive draws the border → core touch wires")
+check("pieceKind:function(k)" in archive, "archive exposes the per-kind probe counter")
+# reverting ecoPieces to model-only is caught by the widened-filter presence check
+# ABOVE — for a substring pin the presence check IS the mutation gate (the lesson this
+# file records at the tautological-`X not in s.replace(X,'')` note; a fake .replace()
+# mutation here would be theatre, always-true whenever the string exists). The behavioral
+# proof that the widened filter actually RENDERS the kinds lives in port6/port7 (real
+# browser: pieceKind("endpoint"/"schema")===fixture, touchEdges()>0).
 
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)

@@ -101,6 +101,50 @@ ok(await t('navDepth()')===0 && await t('navShown()')===false, 'the trail is spe
 await t('openPiece("cooking","model:CookingSession")'); await pg.waitForTimeout(200);
 ok(await t('navDepth()')===0, 'a plain click starts a fresh chain, never a push');
 
+// 6 · TOOLBAR REDESIGN (operator 2026-08-13, Option B): one dense row — the
+// journeys picker folds behind a ▷ popover with a count badge; Open-all is
+// icon-only; the ~210px select no longer rides the toolbar.
+ok((await t('jrnCount()'))===String(jl.length), 'the ▷ journeys button carries the derived count');
+await t('clickJrnBtn()'); await pg.waitForTimeout(90);
+ok(await t('jrnPopOpen()')===true, 'the ▷ button opens the journeys popover');
+ok(await pg.evaluate(()=>document.getElementById('cbg-jrnPop').contains(document.getElementById('cbg-jrnSel'))),
+   'the journeys select lives inside the popover (off the toolbar row)');
+await t('clickJrnBtn()'); await pg.waitForTimeout(90);
+ok(await t('jrnPopOpen()')===false, 'the button toggles the popover shut');
+// the two popovers are MUTUALLY EXCLUSIVE (review 2026-08-13): opening one closes
+// the other (the stopPropagation-blocks-the-other-dismiss bug is fixed).
+await pg.evaluate(()=>document.getElementById('cbg-gear').click()); await pg.waitForTimeout(80);
+ok(await t('gearOpen()')===true, 'the gear popover opens');
+await t('clickJrnBtn()'); await pg.waitForTimeout(80);
+ok(await t('jrnPopOpen()')===true && await t('gearOpen()')===false,
+   'opening journeys closes the gear (popovers are mutually exclusive)');
+await pg.evaluate(()=>document.getElementById('cbg-gear').click()); await pg.waitForTimeout(80);
+ok(await t('gearOpen()')===true && await t('jrnPopOpen()')===false,
+   'opening the gear closes journeys (the reverse holds too)');
+await pg.evaluate(()=>document.getElementById('cbg-gear').click()); await pg.waitForTimeout(60);
+ok(await pg.evaluate(()=>{ const b2=document.getElementById('cbg-openAll');
+    return b2.textContent.trim()==='' && !!b2.querySelector('svg'); }),
+   'Open-all is icon-only (round-36 grammar)');
+// data-face must TRACK the real expand/collapse state (not a constant literal) — the
+// openAllFace() hook + panel logic read it. Toggle Open-all and require both faces are
+// reachable + distinct (a constant would fail this; the old face-text assert could not).
+const df1 = await pg.evaluate(()=>document.getElementById('cbg-openAll').getAttribute('data-face'));
+await pg.evaluate(()=>document.getElementById('cbg-openAll').click()); await pg.waitForTimeout(280);
+const df2 = await pg.evaluate(()=>document.getElementById('cbg-openAll').getAttribute('data-face'));
+ok((df1==='open'||df1==='close') && (df2==='open'||df2==='close') && df1!==df2,
+   `Open-all data-face flips with the real expand/collapse state (${df1} → ${df2})`);
+await pg.evaluate(()=>document.getElementById('cbg-openAll').click()); await pg.waitForTimeout(280);   // restore
+// the crowding fix: at a realistic laptop width, with the change walk ACTIVE (the
+// worst case — the step bar is up too), the toolbar no longer wraps to a second row
+// (the old ~210px journeys select + text Open-all would have wrapped here).
+await pg.setViewportSize({ width:1200, height:900 }); await pg.waitForTimeout(150);
+const chgIdx = jl.findIndex(j=>j.kind==='change');
+if(chgIdx>=0){ await t(`jrnPick(${chgIdx})`); await pg.waitForTimeout(400); }
+const tbH = await pg.evaluate(()=>document.querySelector('.cbg-toolbar').offsetHeight);
+ok(tbH < 66, `the toolbar stays ONE row at 1200px with a journey running (height ${tbH}px, wrap would ~double it)`);
+await t('jrnExit()'); await pg.waitForTimeout(120);
+await pg.setViewportSize({ width:1440, height:900 }); await pg.waitForTimeout(120);
+
 ok(errs.length===0, 'zero console errors: '+errs.slice(0,3).join(' | '));
 await b.close();
 console.log(`port5: ${P}/${P+F} pass`);
