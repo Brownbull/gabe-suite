@@ -19,9 +19,15 @@
   --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
   --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
 }
-@media (prefers-color-scheme: dark){ :root{
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#101726; --panel:#1b2436; --ink:#e7ebf3; --muted:#79839a; --line:#2c3648;
   --accent:#8b83f5; --edge:#4a525c; } }
+:root[data-theme="dark"]{
+  --bg:#101726; --panel:#1b2436; --ink:#e7ebf3; --muted:#79839a; --line:#2c3648;
+  --accent:#8b83f5; --edge:#4a525c; }
+:root[data-theme="light"]{
+  --bg:#f6f7f9; --panel:#ffffff; --ink:#141a24; --muted:#7a8595; --line:#e7e9ee;
+  --accent:#4f46e5; --edge:#9aa3ad; }
 *{ box-sizing:border-box; margin:0; }
 body{ background:var(--bg); color:var(--ink); font:14px/1.5 ui-sans-serif,system-ui,sans-serif;
   height:100vh; display:flex; flex-direction:column; overflow:hidden; }
@@ -172,6 +178,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       depth <input type="range" id="depthSlider" min="1" max="5" step="1" value="5" style="width:88px;accent-color:var(--accent)">
       <b id="depthVal" style="color:var(--ink);width:10px;text-align:center">5</b>
     </label>
+    <button id="themebtn" class="tgl" title="Theme — light / dark (follows the OS until toggled; the command center's stamp will drive this once embedded)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
     <button id="guardsbtn" class="tgl" title="Guards — teal shields mark pieces/endpoints with declared validators"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
     <button id="hubsbtn" class="tgl" title="Hubs — fan-in rings (width = usage) and red dashed god halos"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='6' fill='none' stroke='currentColor' stroke-width='2.6'/><circle cx='12' cy='12' r='10' fill='none' stroke='currentColor' stroke-width='1.2' stroke-dasharray='4 3'/></svg></button>
     <button id="pressbtn" class="tgl" title="Pressure — orange heat where the archive shows change concentration"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='8.5' fill='currentColor' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='currentColor'/></svg></button>
@@ -2087,6 +2094,10 @@ function indicatorHTML(o){
     lineStyle=b.getAttribute("data-line");
     document.querySelectorAll("#lineSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
+  document.getElementById("themebtn").addEventListener("click",function(){
+    var r=document.documentElement, cur=r.getAttribute("data-theme");
+    var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+    r.setAttribute("data-theme", dark ? "light" : "dark"); });
   document.getElementById("navback").addEventListener("click",function(){ goBack(); });
   JRN.list=buildJourneys();
   (function(){ var sel=document.getElementById("jrnSel");
@@ -2177,6 +2188,7 @@ window.__lvltest = {
   line:function(){ return lineStyle; },
   setLine:function(v){ lineStyle=v; renderKeepView(); },
   cam:function(){ return {panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice()}; },
+  theme:function(){ return document.documentElement.getAttribute("data-theme")||""; },
   hopState:function(){ return {i:_edgeHop.i, at:_edgeHop.at}; },
   nodeXY:function(k){ return nodeWorldXY(k); },
   connAudit:function(){ var deg={}; Object.keys(SELREG.nodes).forEach(function(k){ deg[k]=0; });
