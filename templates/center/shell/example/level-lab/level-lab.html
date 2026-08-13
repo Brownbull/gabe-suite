@@ -268,6 +268,14 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
 
 /* ── layouts (deterministic; positions persist per id across levels) ── */
 function rnd(v){ return Math.round(v*100)/100; }         // kill 1e-14 float dust in transforms
+function rows2(s, max){ s=String(s); if(s.length<=max) return [s];
+  var r1=s.slice(0,max), rest=s.slice(max);
+  return [r1, rest.length<=max?rest:rest.slice(0,max-1)+"…"]; }   // 2 rows of ~10, dots when longer
+function twoRowLabel(g, txt, x, y, anchor){
+  rows2(txt,10).forEach(function(r,i){
+    var e=E("text",{class:"plabel", x:x, y:y+i*10});
+    if(anchor) e.setAttribute("style","text-anchor:"+anchor);
+    e.textContent=r; g.appendChild(e); }); }
 function ringPos(ids, R, cx, cy){ ids.forEach(function(id,i){
   if(pos[id]) return;                                    // persistence: never re-scatter
   var a=-Math.PI/2 + 2*Math.PI*i/ids.length;
@@ -320,8 +328,7 @@ function radialLabel(g, q, centre, txt, off){
   var ux=d>1?dx/d:0, uy=d>1?dy/d:1;
   var lx=rnd(ux*(off||18)), ly=rnd(uy*(off||18)+3);
   var anchor = ux>0.35 ? "start" : (ux<-0.35 ? "end" : "middle");
-  var e=E("text",{class:"plabel", x:lx, y:ly, style:"text-anchor:"+anchor});
-  e.textContent=txt; g.appendChild(e); return e; }
+  twoRowLabel(g, txt, lx, ly, anchor); }
 function guardMark(g, r, n){ if(!showGuards || !n) return;
   var m=E("path",{class:"gmark", d:"M0 -5 L4.2 -3 L4.2 1.2 Q4.2 4.6 0 6 Q-4.2 4.6 -4.2 1.2 L-4.2 -3 Z",
     fill:"var(--c-fn-services)", stroke:"var(--panel)", "stroke-width":"1",
@@ -432,7 +439,7 @@ function declutterAnchors(radii){
   for(var i=0;i<ENTS.length;i++) for(var j=i+1;j<ENTS.length;j++){
     var a=ENTS[i], b=ENTS[j],
         d=Math.hypot(pos["ent:"+a].x-pos["ent:"+b].x, pos["ent:"+a].y-pos["ent:"+b].y)||1,
-        need=(radii[a]||60)+(radii[b]||60)+34;
+        need=(radii[a]||60)+(radii[b]||60)+110;   // room for the outward endpoint labels
     if(d*scale<need) scale=need/d; }
   if(scale<=1.001) return;
   ENTS.forEach(function(s){ var p=pos["ent:"+s];
@@ -580,7 +587,7 @@ function innerArrangement(slug, cx, cy){
 function pieceRadii(){ var radii={};
   ENTS.forEach(function(slug){ var arr=innerArrangement(slug, 0, 0);
     var eps=arr.pc.endpoints.length;                       // ALWAYS the full surface
-    var byEps=eps>0 ? (eps*15)/(2*Math.PI) : 0;             // circumference room for markers
+    var byEps=eps>0 ? (eps*27)/(2*Math.PI) : 0;             // room for markers + their labels
     radii[slug]=Math.max(arr.extent+88, byEps, 62); });   // band > max label reach (19 offset + ~62px text)
   return radii; }
 /* the L1 kinds edges (gradient amalgamation + direction bows) — shared by any
@@ -624,7 +631,7 @@ function drawPieces(){
       if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       proofBadge(g, 9, it.m.tests||null);
       guardMark(g, 9, it.m.guards||0); hubMark(g, 9, it.m.hub||null); pressMark(g, 9, slug, it.m.cls);
-      radialLabel(g, q, p, trunc(it.m.cls||"",13), 17);
+      radialLabel(g, q, p, it.m.cls||"", 17);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showPiece(slug, it); });
       layer.appendChild(g); });
@@ -655,6 +662,11 @@ function drawPieces(){
       epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null);
       guardMark(g, 7, ep.guards||0);
+      (function(){ var dx=x-p.x, dy=y-p.y, dd=Math.hypot(dx,dy)||1, ux=dx/dd, uy=dy/dd;
+        var band=(i%2? 13 : 33);
+        var lx=rnd(ux*band), ly=rnd(uy*band+3);
+        var anc = ux>0.35?"start":(ux<-0.35?"end":"middle");
+        twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, lx, ly, anc); })();
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
@@ -911,7 +923,7 @@ function traceLayoutMulti(slug){
     return {g:g, cx:rnd(cx), cy:rnd(cy), r:rnd(r), n:mem.length}; });
   var maxR=0; bubbles.forEach(function(b){ maxR=Math.max(maxR, Math.hypot(b.cx,b.cy)+b.r); });
   inner.items.forEach(function(it){ maxR=Math.max(maxR, Math.hypot(pos[it.id].x,pos[it.id].y)+40); });
-  var R=Math.max(maxR+42, (inner.eps.length*15)/(2*Math.PI), 66);
+  var R=Math.max(maxR+42, (inner.eps.length*27)/(2*Math.PI), 66);
   return {inner:inner, memb:memb, pos:pos, bubbles:bubbles, R:R};
 }
 function traceLayout(slug){
@@ -941,7 +953,7 @@ function traceRadii(){ var radii={};
       traced.forEach(function(ep){ if(ep.fn) fns[ep.fn]=1; (ep.touch||[]).forEach(function(c){ cls[c]=1; }); });
       (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
       var core=Math.max(26, Object.keys(cls).length*8), ring2=core+(Object.keys(fns).length?88:18);
-      radii[slug]=Math.max(ring2+88, (eps.length*15)/(2*Math.PI), 66);
+      radii[slug]=Math.max(ring2+88, (eps.length*27)/(2*Math.PI), 66);
     } else radii[slug]=traceLayoutMulti(slug).R; });
   return radii; }
 function drawTrace(){
@@ -967,6 +979,11 @@ function drawTrace(){
       epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
+      (function(){ var dx=x-p.x, dy=y-p.y, dd=Math.hypot(dx,dy)||1, ux=dx/dd, uy=dy/dd;
+        var band=(i%2? 13 : 33);                             // alternate bands so dense borders read
+        var lx=rnd(ux*band), ly=rnd(uy*band+3);
+        var anc = ux>0.35?"start":(ux<-0.35?"end":"middle");
+        twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, lx, ly, anc); })();
       regNode(g, "ep:"+slug+"|"+ep.m+" "+ep.p, ep.m+" "+ep.p, "ep");
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
         attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
@@ -981,7 +998,7 @@ function drawTrace(){
         fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
         var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
         proofBadge(g, 9, f2.tests||null);
-        var t2=E("text",{class:"plabel", y:17}); t2.textContent=trunc(it.name,11); g.appendChild(t2);
+        twoRowLabel(g, it.name, 0, 17);
         var ti2=E("title"); ti2.textContent=it.name+"() · handler"; g.appendChild(ti2);
         regNode(g, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
         g.addEventListener("click",function(ev){ ev.stopPropagation();
@@ -994,7 +1011,7 @@ function drawTrace(){
         if(it.kind==="model") cylinder(g3, 8, "var(--c-model)"); else sBadge(g3, 7, "var(--c-schema)");
         proofBadge(g3, 9, (it.m&&it.m.tests)||null);
         guardMark(g3, 9, (it.m&&it.m.guards)||0); hubMark(g3, 9, (it.m&&it.m.hub)||null); pressMark(g3, 9, slug, cls);
-        var t3=E("text",{class:"plabel", y:17}); t3.textContent=trunc(cls,11); g3.appendChild(t3);
+        twoRowLabel(g3, cls, 0, 17);
         var ti3=E("title"); ti3.textContent=(it.kind==="model"?"model ":"schema ")+cls+(it.m&&it.m.table?" · table "+it.m.table:""); g3.appendChild(ti3);
         regNode(g3, "cls:"+slug+"|"+cls, cls, it.kind);
         g3.addEventListener("click",function(ev){ ev.stopPropagation();
