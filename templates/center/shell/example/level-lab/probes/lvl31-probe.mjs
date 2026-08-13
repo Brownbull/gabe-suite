@@ -65,11 +65,11 @@ const w0 = await pg.evaluate(() => document.getElementById('panel').clientWidth)
 await pg.click('#panelchev');
 const collapsed = await pg.evaluate(() => ({
   aside:!!document.querySelector('#sidewrap.min'),
-  chev:document.getElementById('panelchev').textContent }));
+  chev:document.querySelector('#panelchev polyline') ? 'svg' : '' }));
 await pg.click('#panelchev');
 const w2 = await pg.evaluate(() => document.getElementById('panel').clientWidth);
 ok(w0>=270 && collapsed.aside && w2>=270, `chevron collapses and restores the panel (${w0}→min→${w2})`);
-ok(collapsed.chev==='«', 'chevron flips direction when collapsed');
+ok(collapsed.chev==='svg', 'chevron renders the double-chevron svg');
 
 // 5 · legend corner box: bottom-LEFT, collapsible, carries the full symbol tail
 const leg = await pg.evaluate(() => {

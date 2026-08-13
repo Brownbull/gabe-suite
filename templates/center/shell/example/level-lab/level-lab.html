@@ -40,16 +40,18 @@ svg#canvas{ display:block; width:100%; height:100%; }
 aside .irow svg{ width:17px; height:17px; }
 .legend svg{ width:16px; height:14px; }
 #sidewrap{ position:relative; flex:none; display:flex; }
-aside{ width:300px; border-left:1px solid var(--line); background:var(--panel); overflow:auto; padding:14px 16px 16px 30px; }
+aside{ width:300px; border-left:1px solid var(--line); background:var(--panel); overflow:auto; padding:14px 16px 48px; }
 #navback{ position:absolute; top:8px; right:10px; z-index:6; font:inherit; font-size:12px; font-weight:700;
   background:var(--accent); color:#fff; border:1px solid var(--accent); border-radius:8px; padding:3px 10px; cursor:pointer; }
-#panelchev{ position:absolute; top:8px; left:6px; z-index:6; font:inherit; font-size:13px; font-weight:700;
-  width:22px; height:22px; line-height:1; background:var(--panel); color:var(--muted);
-  border:1px solid var(--line); border-radius:6px; cursor:pointer; padding:0; }
-#sidewrap.min{ width:26px; }
+#panelchev{ position:absolute; bottom:10px; right:10px; z-index:6; width:32px; height:32px;
+  display:flex; align-items:center; justify-content:center; line-height:0;
+  background:var(--panel); color:var(--muted); border:1px solid var(--line);
+  border-radius:8px; cursor:pointer; padding:0; }
+#panelchev:hover{ color:var(--ink); border-color:var(--edge); }
+#sidewrap.min{ width:42px; }
 #sidewrap.min aside{ display:none; }
 #sidewrap.min #navback{ display:none; }
-#sidewrap.min #panelchev{ left:2px; }
+#sidewrap.min #panelchev{ right:5px; }
 aside h3{ font-size:14px; margin-bottom:2px; }
 aside .k{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin:12px 0 4px;
   display:flex; align-items:center; gap:6px; }
@@ -58,6 +60,8 @@ aside .note.nt{ margin-top:0; }
 aside .cgo{ cursor:pointer; } aside .cgo:hover{ text-decoration:underline; }
 aside .jgo:hover b{ text-decoration:underline; }
 .flowdot{ pointer-events:none; }
+.e-jrn{ stroke:var(--accent) !important; stroke-width:2.6 !important; opacity:1 !important; }
+.jrn-ring{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:4 3; opacity:.9; pointer-events:none; }
 .bubble{ pointer-events:none; }
 aside .row{ display:flex; justify-content:space-between; font-size:12.5px; padding:3px 0; border-top:1px solid var(--line); }
 aside .note{ font-size:12px; color:var(--muted); line-height:1.5; margin-top:10px; }
@@ -477,14 +481,16 @@ function insidePos(items, cx, cy, opts){
     order.forEach(function(g,ci){ var col=groups[g], x=cx+(ci-(order.length-1)/2)*110;
       col.forEach(function(id,ri){ out[id]={x:rnd(x), y:rnd(cy+(ri-(col.length-1)/2)*44)}; }); }); }
   else if(insideLayout==="force"){ var P={},V={},idx={};
-    items.forEach(function(id,i){ idx[id]=1; var a=2*Math.PI*i/n, R0=Math.max(36,n*8);
+    // operator round 38: same force pattern, MORE breathing room — stronger
+    // repulsion, longer rest length, wider seed ring
+    items.forEach(function(id,i){ idx[id]=1; var a=2*Math.PI*i/n, R0=Math.max(50,n*10);
       P[id]={x:R0*Math.cos(a),y:R0*Math.sin(a)}; V[id]={x:0,y:0}; });
     var E2=(opts.edges||[]).filter(function(e){ return idx[e[0]]&&idx[e[1]]&&e[0]!==e[1]; });
     for(var it=0;it<150;it++){ for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){
-        var a=items[i],b=items[j],dx=P[a].x-P[b].x,dy=P[a].y-P[b].y,d2=dx*dx+dy*dy+40,d=Math.sqrt(d2),f=2200/d2;
+        var a=items[i],b=items[j],dx=P[a].x-P[b].x,dy=P[a].y-P[b].y,d2=dx*dx+dy*dy+40,d=Math.sqrt(d2),f=5200/d2;
         V[a].x+=dx/d*f;V[a].y+=dy/d*f;V[b].x-=dx/d*f;V[b].y-=dy/d*f; }
       E2.forEach(function(e){ var a=e[0],b=e[1],dx=P[b].x-P[a].x,dy=P[b].y-P[a].y,
-        d=Math.hypot(dx,dy)||1,f=0.045*(d-52);
+        d=Math.hypot(dx,dy)||1,f=0.05*(d-88);
         V[a].x+=dx/d*f;V[a].y+=dy/d*f;V[b].x-=dx/d*f;V[b].y-=dy/d*f; });
       items.forEach(function(id){ V[id].x=(V[id].x-P[id].x*0.02)*0.85; V[id].y=(V[id].y-P[id].y*0.02)*0.85;
         P[id].x+=V[id].x; P[id].y+=V[id].y; }); }
@@ -1121,7 +1127,7 @@ function traceLayoutMulti(slug){
     var cx=0, cy=0; gs.forEach(function(g){ cx+=anchors[g].x; cy+=anchors[g].y; });
     cx/=gs.length; cy/=gs.length;
     var key=gs.join("|"), k=(comboIdx[key]=comboIdx[key]||{n:0}).n++;
-    pos[it.id]={x:rnd(cx+(k%2?1:-1)*Math.ceil(k/2)*56), y:rnd(cy+((k%3)-1)*30)}; });
+    pos[it.id]={x:rnd(cx+(k%2?1:-1)*Math.ceil(k/2)*68), y:rnd(cy+((k%3)-1)*44)}; });
   // bubbles = enclosing circles of member positions (overlap where pieces are shared)
   var bubbles=gnames.map(function(g){
     var mem=inner.items.filter(function(it){ return memb[it.id].indexOf(g)>=0; });
@@ -1620,6 +1626,16 @@ function jrnGo(di){
   JRN.i=Math.max(0, Math.min(steps.length-1, JRN.i+di));
   var key=steps[JRN.i];
   jumpToNode(key);
+  // the journey OVERLAY: participant links glow, the rest return to normal —
+  // the walk reads as one lit path, not a per-step neighbourhood
+  var inJ={}; steps.forEach(function(k){ inJ[k]=1; });
+  vp.querySelectorAll(".nbrring").forEach(function(x){ x.remove(); });
+  SELREG.edges.forEach(function(e){
+    e.el.classList.remove("e-faded","e-hl","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5");
+    if(inJ[e.from] && inJ[e.to]) e.el.classList.add("e-jrn"); });
+  steps.forEach(function(k){ var n2=SELREG.nodes[k];
+    if(n2 && !n2.el.querySelector(".jrn-ring"))
+      n2.el.appendChild(E("circle",{class:"jrn-ring", r:13})); });
   document.getElementById("jrnPos").textContent=(JRN.i+1)+"/"+steps.length;
   var n=SELREG.nodes[key];
   document.getElementById("jrnStep").textContent=n?n.label:key;
@@ -1631,7 +1647,8 @@ function jrnStart(idx){
 }
 function jrnExit(){ JRN.cur=null; JRN.i=0;
   document.getElementById("jrnBar").hidden=true;
-  document.getElementById("jrnSel").value=""; }
+  document.getElementById("jrnSel").value="";
+  clearSelection(); }
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
 function jumpToNode(key){
@@ -1676,9 +1693,9 @@ function edgeHop(i){
   centerCamera(w);
 }
 function clearSelection(){ selKey=null;
-  vp.querySelectorAll(".selring,.nbrring").forEach(function(x){ x.remove(); });
-  vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
-    x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
+  vp.querySelectorAll(".selring,.nbrring,.jrn-ring").forEach(function(x){ x.remove(); });
+  vp.querySelectorAll(".e-hl,.e-faded,.e-jrn,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
+    x.classList.remove("e-hl","e-faded","e-jrn","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
 function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses"}[kind]||kind; }
 function selectNode(key){
   clearSelection(); selKey=key;
@@ -1837,9 +1854,13 @@ function indicatorHTML(o){
     document.getElementById("jrnNext").addEventListener("click",function(){ jrnGo(1); });
     document.getElementById("jrnX").addEventListener("click",function(){ jrnExit(); });
   })();
-  document.getElementById("panelchev").addEventListener("click",function(){
+  var CHEV_R='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>';
+  var CHEV_L='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="11 17 6 12 11 7"/><polyline points="18 17 13 12 18 7"/></svg>';
+  var _chev=document.getElementById("panelchev"); _chev.innerHTML=CHEV_R;
+  _chev.addEventListener("click",function(){
     var sw=document.getElementById("sidewrap"), min=sw.classList.toggle("min");
-    document.getElementById("panelchev").innerHTML = min ? "&#171;" : "&#187;"; });
+    _chev.innerHTML = min ? CHEV_L : CHEV_R;
+    _chev.title = min ? "restore the panel" : "minimize the panel"; });
   [["legendBox","legendMin"],["keysBox","keysMin"]].forEach(function(pr){
     document.getElementById(pr[1]).addEventListener("click",function(){
       var box=document.getElementById(pr[0]), min=box.classList.toggle("min");
