@@ -23,6 +23,7 @@ import sys, re, json, pathlib
 shell = pathlib.Path(sys.argv[1])
 station = (shell / "codebase-graph.html").read_text(encoding="utf-8")
 panel   = (shell / "assets" / "sim-panel.js").read_text(encoding="utf-8")
+grammar = (shell / "assets" / "graph-grammar.js").read_text(encoding="utf-8")
 lab     = (shell / "example" / "arch-graph-lab" / "arch-graph-sim-svg.html").read_text(encoding="utf-8")
 archive = (shell / "codebase-archive.html").read_text(encoding="utf-8")
 
@@ -119,7 +120,8 @@ _m3 = station.replace("esc(trunc(SIM.subject,64))", "trunc(SIM.subject,64)")
 check("esc(trunc(SIM.subject" not in _m3, "MUTATION: a stripped strip-esc is detectable")
 check("REDUCED || !!dragging || skipAnimOnce" in station,
       "drawExpansions gates the fly-in on drag + the release render")
-check("REDUCED || dragging" in station, "flowDots renders static dots while dragging")
+check("GG.flowDots(host,pathEl,fill,!!dragging)" in station,
+      "flowDots renders static dots while dragging (via the shared asset)")
 check("skipAnimOnce=true; rerenderKeepPanel()" in station,
       "drag release re-renders (dots re-animate, selection restored)")
 check("pointer-events:none" in re.search(r'\.cbg-root \.xcontlabel\{[^}]*\}', CSS).group(0),
@@ -140,26 +142,35 @@ check('regNode(contWrap, "ent:"+slug' in station,
 
 # ── E3 · the DOSSIER (port slice 2): PURPOSE/STRUCTURE/SIGNATURE/TESTED-BY over
 # the emitter's per-node det block — honest-empty at every level.
-check("function dossierHTML(det" in station, "station defines the dossier renderer")
-check("if(!det) return \"\";" in station, "dossier is honest-empty (no det → no dossier)")
+# the dossier + icon grammar now lives in assets/graph-grammar.js (shared by BOTH
+# stations — extracted at the recorded trigger when the archive adopted the grammar)
+check("window.GABE_GRAPH_GRAMMAR" in grammar, "graph-grammar.js defines the shared factory")
+check('src="assets/graph-grammar.js"' in station, "the change graph loads the shared grammar")
+check("window.GABE_GRAPH_GRAMMAR" in station, "the change graph consumes the factory (guarded)")
+check("function dossierHTML(det" in grammar, "the shared asset defines the dossier renderer")
+check("if (!det) return \"\";" in grammar, "dossier is honest-empty (no det → no dossier)")
 for fn in ["docSect", "structSect", "sigSect", "casesSect", "fkSect"]:
-    check(("function " + fn + "(") in station, f"dossier section {fn} present")
+    check(("function " + fn + "(") in grammar, f"dossier section {fn} in the shared asset")
 check("dossierHTML(n.det" in station, "the L2 card renders the dossier")
 check("dossierHTML(l2n.det" in station, "the sim piece card JOINS the dossier (slice 2)")
 check("table.ptab" in CSS and ".uqchip" in CSS and ".cid" in CSS,
       "the dossier table vocabulary is styled")
-check('"structure ("+(det.cols.length+(det.cols_more||0))' in station,
+check('"structure (" + (det.cols.length + (det.cols_more || 0))' in grammar,
       "STRUCTURE headlines the FULL column count (shown + capped)")
-check('"tested by ("+n+")"' in station and "cases_more" in station,
+check('"tested by (" + n + ")"' in grammar and "cases_more" in grammar,
       "TESTED-BY headlines the full ledger count, cap named")
 # (an earlier `X not in s.replace(X,'')` mutation line was tautological — always
 # true whether or not X existed; for substring pins the presence check IS the gate)
-check("function stateCls" in station and "st-skip" in station,
+check("function stateCls" in grammar and "st-skip" in grammar,
       "case states are three-valued (skip is never styled as a failure)")
-check("route-file coverage" in station,
+check("route-file coverage" in grammar,
       "route-literal FILE credits render as a neutral fact, not a case row")
+check("ICONSETS" in grammar and "lucide" in grammar and "classic" in grammar and "solid" in grammar,
+      "the three icon sets live once, in the shared asset")
 check("table-layout:fixed" in CSS and "overflow-wrap:anywhere" in CSS,
       "ptab tables cannot overflow the panel (fixed layout + wrap)")
+check('var lineStyle = "direct"' in station,
+      "the change graph defaults to DIRECT lines (Bowed is the archive's — operator 2026-08-13)")
 
 # ── E4 · slice 3: journeys · nav history · corner boxes ──
 check("function buildJourneys" in station, "journeys derive from the L2 wires (+ the SIM change walk)")
@@ -244,8 +255,14 @@ check("forceLayout(nds,ied," in archive,
       "archive: inside-force layout is fed the intra edges (reshapes; was []=repulsion≈ring)")
 check("pth.style.stroke = isHot ? STAGE_COLOR[curStage] : col" in archive,
       "archive: intra edges inherit the entity colour, stage colour when hot")
-check('class:"xedge xcross"+(reduce?"":" flow")' in archive,
-      "archive: ecosystem cross edges use the amber flow (moving dash) like the change graph")
+check('class:"xedge xcross"' in archive and "flowDots(wireL, pth" in archive,
+      "archive: ecosystem cross edges wear entity GRADIENTS + flow dots (the shared grammar — the amber marching dash died with the port)")
+check('src="assets/graph-grammar.js"' in archive and "window.GABE_GRAPH_GRAMMAR" in archive,
+      "archive consumes the shared graph-grammar.js (guarded)")
+check('var lineStyle = "bowed"' in archive,
+      "the archive defaults to BOWED lines (its signature — the change graph reads direct)")
+check("dossierHTML(mn?mn.det:null" in archive.replace(" ",""),
+      "the archive piece card joins the det dossier")
 check('id="eco-resizer"' in archive and 'id="eco-sideToggle"' in archive,
       "archive has the resize divider + collapse toggle (change-graph panel parity)")
 check(".eco-side.collapsed" in aCSS and "setSideCollapsed" in archive,
@@ -256,8 +273,8 @@ check("idCardHTML" in archive and "function modelNode(" in archive,
       "archive renders the model's structural id-card from its L2 ids block")
 check("ids.principal" in archive and "'principal'" in archive,
       "archive surfaces the principal function as the panel lead")
-check("function dtChip(" in archive and "function epChip(" in archive and ".idchip" in aCSS,
-      "archive carries the typed chip renderers (data types + API) + their styles")
+check("GG.chips.dtChip" in archive and "GG.chips.epChip" in archive and ".idchip" in aCSS,
+      "archive consumes the typed chip renderers from the shared grammar (+ its styles)")
 check('idCardHTML(sids)' in archive, "archive's piece panel injects the id-card")
 # FIRE: idCardHTML must be honest-empty (no card when the model carries no ids)
 check("function idCardHTML(ids){ if(!ids) return" in archive,

@@ -153,8 +153,8 @@ if(wxy){
 }
 
 // 10 · lines default Bowed; Direct reachable
-ok(await t('line()')==='bowed', 'Bowed is the default line style (round 45)');
-await t('setLine("direct")'); ok(await t('line()')==='direct', 'Direct reachable'); await t('setLine("bowed")');
+ok(await t('line()')==='direct', 'Direct is the default line style (operator 2026-08-13; Bowed = the archive)');
+await t('setLine("bowed")'); ok(await t('line()')==='bowed', 'Bowed reachable'); await t('setLine("direct")');
 
 // 11 · rerenderKeepPanel (fresh-review): re-rendering controls keep the selection
 await t('openPiece("recipe","model:PlannedRecipe")');

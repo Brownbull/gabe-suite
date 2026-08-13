@@ -8,7 +8,11 @@ over **real gustify data**, so they are viewable without running a twin build:
 - **`codebase-archive.html`** — the **Codebase archive** (durable): the whole
   ecosystem by default, with a right-panel dropdown that replays any PAST phase from
   the committed archive (`sim-archive.js`), lighting its touched → blast + pieces and
-  fading the rest. Shares the change graph's controls — the **Close/Open-all** toggle
+  fading the rest. Since the archive port it renders in the **level-lab grammar**
+  (shared `graph-grammar.js`): Lucide icons, **Bowed**-default halo wires (its
+  signature — the change graph reads direct), gradient cross wires + flow dots,
+  the selection engine (depth · peek · travel · ← trail), BEAT rings on a replayed
+  phase, corner boxes, and the det dossier on piece cards. Shares the change graph's controls — the **Close/Open-all** toggle
   and **⚙ layout** gear stay live in both modes (defaults mirror the change graph:
   entities **ring** · inside **force**), a **Connections** toggle shows the piece↔piece
   FK coupling both INSIDE each entity and ACROSS entities (the emitter's new
@@ -82,7 +86,9 @@ L2 drill; `port3` pins the review's failure modes (unclaimed-bucket boot, hop by
 slug, travel); `port4` pins the slice-2 DOSSIER (enriched cards + the sim-piece
 panel join, every count derived from the committed det); `port5` pins slice 3
 (journeys derived from the wires + the change walk, the ← nav trail, the two
-corner boxes). Not doctor-wired (browser-bound); run when iterating on the
+corner boxes); `port6` pins the ARCHIVE port (lab grammar over the ecosystem,
+beat rings on a replayed phase with counts derived from `sim-archive.js`,
+selection/travel/trail, corner boxes, Bowed default). Not doctor-wired (browser-bound); run when iterating on the
 station.
 ⚠ every re-render replays the 0.9s piece fly-in — probes must settle (~1.2s) before
 real-mouse clicks, or they hit the container where the pieces still are.

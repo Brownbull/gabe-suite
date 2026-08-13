@@ -9,14 +9,20 @@
 <script src="../../assets/a3-lightbox.js" defer></script>
 <script src="../../assets/rowclick.js" defer></script>
 <style>
-/* ── Codebase-archive station — the ECOSYSTEM + the ARCHIVE of past changes. The
-   change graph (codebase-graph.html) is EPHEMERAL (the current change); this one is
-   DURABLE: every entity with its pieces by default, and a right-panel feature dropdown
-   replays any PAST phase (from committed sim-archive.json) — its touched → blast +
-   pieces light up, the rest fades, and the four stage lenses (Red·Execute·Review·
-   Commit) re-encode the pieces just like the change graph. Everything scoped under
+/* ── Codebase-archive station — the ECOSYSTEM + the ARCHIVE of past changes,
+   rendered in the LEVEL-LAB GRAMMAR shared with the change graph
+   (assets/graph-grammar.js): Lucide icons (Classic/Solid in the gear),
+   halo-trimmed BOWED wires (Bowed is THIS station's signature — the change
+   graph reads direct), entity-gradient cross wires with flow dots, the
+   regNode/regEdge selection engine (depth slider · peek · travel · ← trail),
+   the corner boxes, and the beat-ring overlays on a replayed phase.
+   The change graph is EPHEMERAL (the current change); this one is DURABLE:
+   every entity with its pieces by default, and the feature dropdown replays
+   any PAST phase from the committed sim-archive.json. Everything scoped under
    .eco-root + ids eco-*; shared tokens inherit a3.css. ── */
-.eco-root{ --edge:#9aa3ad; --touch:#1f8a53; --blast:#d9821f;
+.eco-root{ --edge:#9aa3ad; --touch:#1f8a53; --blast:#d9821f; --drift:#e8590c;
+  --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
+  --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
   display:flex; flex-direction:column; flex:1; min-height:0; overflow:hidden;
   color:var(--ink); font:14px/1.5 var(--font-ui); }
 [data-theme="dark"] .eco-root{ --edge:#4a525c; --touch:#4cbe83; --blast:#e0a24a; }
@@ -30,7 +36,12 @@
   border:1px solid var(--line); border-radius:7px; padding:5px 11px; cursor:pointer; }
 .eco-root button:hover{ border-color:var(--edge); }
 .eco-root .cbg-toggle.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
-/* gear popover — the SAME layout controls as the change graph */
+/* the depth control — the selection engine's hop reach (Alt+scroll steps it) */
+.eco-root .eco-depth{ display:flex; align-items:center; gap:6px; font-size:11px; font-weight:700;
+  color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+.eco-root .eco-depth input{ width:84px; accent-color:var(--accent); }
+.eco-root .eco-depth b{ color:var(--ink); width:10px; text-align:center; }
+/* gear popover — the SAME layout controls as the change graph (+ Lines · Icons) */
 .eco-root .cbg-gear{ display:inline-flex; align-items:center; justify-content:center; padding:6px 8px; }
 .eco-root .cbg-gear svg{ display:block; }
 .eco-gearpanel{ position:absolute; z-index:40; top:100%; right:16px; margin-top:6px; width:236px;
@@ -54,53 +65,87 @@
 .eco-resizer::before{ content:""; position:absolute; left:3px; top:0; bottom:0; width:2px; background:transparent; transition:background .12s; }
 .eco-resizer:hover::before, .eco-resizer.drag::before{ background:var(--accent); }
 .eco-sidehdr{ position:sticky; top:0; z-index:3; display:flex; justify-content:flex-end; padding:7px 8px 0; background:var(--panel); }
+.eco-root .eco-navback{ font-weight:700; color:#fff; background:var(--accent); border-color:var(--accent); padding:4px 10px; }
+.eco-root .eco-navback:hover{ border-color:var(--accent); opacity:.9; }
+.eco-root .eco-sidehdr .spacer{ flex:1; }
 .eco-root .eco-sidetoggle{ padding:4px 7px; line-height:0; color:var(--muted); }
 .eco-root .eco-sidetoggle:hover{ color:var(--ink); border-color:var(--edge); }
 .eco-root .eco-sidetoggle svg{ display:block; }
 .eco-side.collapsed{ width:42px !important; min-width:42px; overflow:hidden; }
 .eco-side.collapsed .eco-panel{ display:none; }
 .eco-side.collapsed .eco-sidehdr{ justify-content:center; padding:8px 0; }
+.eco-side.collapsed .eco-navback{ display:none; }
 .eco-center.sidecol .eco-resizer{ display:none; }
 
-.eco-root .edge{ fill:none; stroke:var(--edge); stroke-linecap:round; transition:opacity .2s; }
-.eco-root #eco-arrow > path{ fill:var(--edge); }
+/* graph vocabulary — the shared grammar's classes, eco-scoped */
 .eco-root .node{ cursor:pointer; transition:opacity .25s; }
 .eco-root .node .body{ transition:stroke .12s, stroke-width .12s, fill .25s; }
 .eco-root .node text{ pointer-events:none; user-select:none; }
 .eco-root .l1label{ font-size:13px; font-weight:650; text-anchor:middle; }
 .eco-root .l1sub{ font-size:10.5px; text-anchor:middle; fill:var(--muted); }
+.eco-root .plabel{ font-size:8.5px; text-anchor:middle; fill:var(--ink); pointer-events:none; }
+.eco-root .halo{ fill:transparent; stroke:var(--line); stroke-width:1; opacity:.55; pointer-events:none; }
+.eco-root .flowdot{ pointer-events:none; }
 .eco-root .dim{ opacity:.1; }
 .eco-root .node.touched .body{ fill:var(--touch); stroke:var(--touch); stroke-width:2.5; }
 .eco-root .node.blast .body{ stroke:var(--blast); stroke-width:4; stroke-dasharray:7 4; }
 /* an EXPLODED entity's big circle vanishes — its container + pieces take its place
    (same rule as the change graph); the container carries the touched/blast tint. */
 .eco-root .node.exploded{ opacity:0; pointer-events:none; }
-.eco-root .edge.lit{ stroke:var(--blast); opacity:1; }
-.eco-root .edge.xhide{ opacity:0; pointer-events:none; }   /* ecosystem: piece cross-edges replace the entity-centre lines */
-.eco-root .xcontainer{ fill-opacity:.05; stroke-opacity:.5; stroke-width:1.4; stroke-dasharray:4 4; }
+.eco-root .edge{ fill:none; stroke-linecap:round; transition:opacity .2s; }
+.eco-root .e-fk{ fill:none; stroke:var(--edge); stroke-width:1.8; }
+.eco-root .e-calls{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:6 5;
+  animation:eco-dashmove 1.6s linear infinite; }
+.eco-root .e-imports{ fill:none; stroke:var(--muted); stroke-width:1.4; stroke-dasharray:2 4; }
+@keyframes eco-dashmove{ to{ stroke-dashoffset:-22; } }
+@media (prefers-reduced-motion: reduce){ .eco-root .e-calls{ animation:none; } }
+.eco-root .edge.lit{ opacity:1; }
+.eco-root .edge.xhide{ opacity:0 !important; pointer-events:none; }   /* piece cross-edges replace the entity-centre lines */
+.eco-root .basefade{ opacity:.08 !important; }
+.eco-root .xcontainer{ fill-opacity:.05; stroke-opacity:.5; stroke-width:1.4; stroke-dasharray:4 4; cursor:pointer; }
 .eco-root .xcontainer.ct{ stroke:var(--touch); stroke-opacity:.85; stroke-width:2.2; }
 .eco-root .xcontainer.cb{ stroke:var(--blast); stroke-opacity:.85; stroke-width:2.2; }
-.eco-root .xcontlabel{ font-size:12px; font-weight:650; text-anchor:middle; }
-.eco-root .xpiece circle{ cursor:pointer; transition:opacity .25s; }
-.eco-root .xpiece .ring{ fill:none; }
-.eco-root .xplabel{ font-size:9px; text-anchor:middle; fill:var(--ink); }
+.eco-root .xcontlabel{ font-size:12px; font-weight:650; text-anchor:middle; pointer-events:none; user-select:none; }
+.eco-root .xpiece{ cursor:pointer; }
+.eco-root .xpiece text{ pointer-events:none; }
 .eco-root .xbadge{ font-size:9px; font-weight:800; fill:#fff; text-anchor:middle; }
 .eco-root .xedge{ fill:none; stroke-linecap:round; }
 /* intra = coupling INSIDE one entity: inherits the ENTITY colour (inline stroke);
    when it touches a CHANGED piece it flips to the stage colour (.hot). */
 .eco-root .xedge.intra{ stroke:var(--edge); stroke-width:1.5; opacity:.75; }
 .eco-root .xedge.intra.hot{ opacity:1; stroke-width:2.4; }
-/* cross = coupling ACROSS entities: always the amber flow highlight, both modes. */
-.eco-root .xedge.xcross{ stroke:var(--blast); stroke-width:2; opacity:.9; }
-.eco-root .xedge.cross{ stroke:var(--blast); stroke-width:2.2; opacity:.9; }
-.eco-root .xedge.flow{ stroke-dasharray:6 6; animation: eco-flow 1.5s linear infinite; }
-@keyframes eco-flow{ to{ stroke-dashoffset:-24; } }
-@media (prefers-reduced-motion: reduce){ .eco-root .xedge.flow{ animation:none; } }
-.eco-root .xpiece .selx{ opacity:0; pointer-events:none; transform-box:fill-box; transform-origin:center; }
-.eco-root .xpiece .selx line{ stroke:var(--ink); stroke-width:1.9; stroke-linecap:round; }
-.eco-root .xpiece.selp .selx{ opacity:1; animation: eco-selspin 3s linear infinite; }
-@keyframes eco-selspin{ from{ transform:rotate(0deg); } to{ transform:rotate(-360deg); } }
-@media (prefers-reduced-motion: reduce){ .eco-root .xpiece.selp .selx{ animation:none; } }
+/* cross = coupling ACROSS entities: entity-GRADIENT strokes, direction = flow dots */
+.eco-root .xedge.xcross{ stroke:var(--blast); stroke-width:1.8; stroke-dasharray:2 5; opacity:.85; }
+.eco-root .xedge.cross{ stroke:var(--blast); stroke-width:1.8; stroke-dasharray:2 5; opacity:.9; }
+.eco-root .xedge.hot{ opacity:1; stroke-width:2.6; }
+
+/* selection engine (lab rounds 23–43) — same classes as the change graph */
+.eco-root .selring{ fill:none; stroke:var(--accent); stroke-width:2.4; stroke-dasharray:6 5;
+  animation:eco-dashmove 2.2s linear infinite; }
+.eco-root .nbrring{ fill:none; stroke:var(--accent); stroke-width:1.3; opacity:.7; }
+.eco-root .e-hl{ opacity:1 !important; stroke-width:3 !important; }
+.eco-root .e-hop1{ opacity:1 !important;   stroke-width:3 !important; }
+.eco-root .e-hop2{ opacity:.85 !important; stroke-width:2.3 !important; }
+.eco-root .e-hop3{ opacity:.7 !important;  stroke-width:1.8 !important; }
+.eco-root .e-hop4{ opacity:.55 !important; stroke-width:1.4 !important; }
+.eco-root .e-hop5{ opacity:.42 !important; stroke-width:1.1 !important; }
+.eco-root .e-faded{ opacity:.07 !important; }
+.eco-root .e-peek{ stroke:var(--accent) !important; stroke-width:3.4 !important; opacity:1 !important; stroke-dasharray:none !important; }
+.eco-root .peek-ring{ fill:none; stroke:var(--accent); stroke-width:2.4; opacity:.95; pointer-events:none;
+  animation:eco-peekpulse 1s ease-in-out infinite; }
+@keyframes eco-peekpulse{ 0%,100%{ stroke-opacity:.95; } 50%{ stroke-opacity:.45; } }
+@media (prefers-reduced-motion: reduce){ .eco-root .peek-ring{ animation:none; } .eco-root .selring{ animation:none; } }
+
+/* BEAT overlays for a replayed phase — the change-graph-lab contract */
+.eco-root .red-ring{ fill:none; stroke:#e5484d; stroke-width:2; stroke-dasharray:5 3; }
+.eco-root .heat-ring{ fill:none; stroke:#4c9aff; stroke-width:2.4; opacity:.9; }
+.eco-root .blast-ring{ fill:none; stroke:#4c9aff; stroke-width:1.3; stroke-dasharray:3 3; opacity:.7; }
+.eco-root .ok-ring{ fill:none; stroke:#30a46c; stroke-width:2; }
+.eco-root .commit-ring{ fill:none; stroke:#8e4ec6; stroke-width:2.2; }
+.eco-root .drift-ring{ fill:none; stroke:var(--drift); stroke-width:2; stroke-dasharray:2 3; }
+@keyframes eco-pulse{ 0%,100%{ stroke-opacity:.95; } 50%{ stroke-opacity:.4; } }
+.eco-root .red-ring, .eco-root .heat-ring, .eco-root .drift-ring{ animation:eco-pulse 1.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce){ .eco-root .red-ring, .eco-root .heat-ring, .eco-root .drift-ring{ animation:none; } }
 
 /* right panel */
 .eco-panel{ padding:16px 18px; font-family:var(--font-content); font-size:0.93rem; }
@@ -136,8 +181,8 @@
 .eco-panel .headline{ padding:8px 11px; border-radius:0 6px 6px 0; margin:6px 0 4px; font-size:0.9rem; line-height:1.5; }
 .eco-panel .sum{ margin-top:12px; color:var(--ink); opacity:.85; line-height:1.55; }
 .eco-panel .lab{ font-size:0.66rem; font-weight:800; letter-spacing:.07em; text-transform:uppercase; color:var(--muted); margin:14px 0 5px; }
-/* structural id-card (Tier 1): principal fn lead + typed chips — the change graph's
-   visual language; .ty-* type-family colours INHERIT from a3.css (theme-aware). */
+/* structural id-card (Tier 1): principal fn lead + typed chips — chips come from
+   the shared graph-grammar.js; .ty-* type-family colours INHERIT from a3.css. */
 .eco-panel .principal{ display:flex; align-items:center; gap:7px; padding:7px 10px; margin:8px 0 2px; border-radius:8px;
   background:color-mix(in srgb,var(--accent) 13%,transparent); color:var(--ink); font-size:0.87rem; }
 .eco-panel .principal svg{ flex:none; color:var(--accent); }
@@ -152,19 +197,70 @@
 .eco-root .idchip.dt b{ color:var(--ink); font-weight:600; }
 .eco-root .idchip.dt .ty{ font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.75rem; }
 .eco-root .idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:10.5px; }
+/* the DOSSIER vocabulary (shared with the change graph, eco-scoped) */
+.eco-panel table.ptab{ border-collapse:collapse; width:100%; font-size:0.821rem; margin-top:2px; table-layout:fixed; }
+.eco-panel table.ptab th{ text-align:left; font-size:0.714rem; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--muted); font-weight:700; padding:2px 8px 2px 0; border-bottom:1px solid var(--line); }
+.eco-panel table.ptab th.nw{ width:22%; }
+.eco-panel table.ptab td{ padding:2.5px 8px 2.5px 0; border-bottom:1px solid var(--line); vertical-align:top;
+  overflow-wrap:anywhere; }
+.eco-panel table.ptab td.ty{ color:var(--c-schema); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.786rem; }
+.eco-panel .pbar{ display:inline-block; height:7px; border-radius:4px; background:var(--accent); vertical-align:middle; margin-right:5px; }
+.eco-panel .pmore{ font-size:0.75rem; color:var(--muted); padding:2px 0; }
+.eco-panel .uqchip{ font-size:0.643rem; font-weight:800; letter-spacing:.04em; color:var(--c-schema);
+  border:1px solid var(--c-schema); border-radius:5px; padding:0 4px; margin-left:4px; }
+.eco-panel .st-pass{ color:#16794c; font-weight:700; } .eco-panel .st-fail{ color:#e5484d; font-weight:700; }
+.eco-panel .st-skip{ color:var(--muted); font-weight:600; }
+.eco-panel .cid{ font-size:0.714rem; font-weight:800; color:var(--accent); }
+.eco-panel .note{ font-size:0.857rem; color:var(--muted); line-height:1.5; margin-top:10px; }
+.eco-panel .k2{ font-size:0.714rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em;
+  font-weight:800; margin:12px 0 4px; display:flex; align-items:center; gap:6px; }
+.eco-panel .k2 svg{ flex:0 0 auto; }
+.eco-panel .conrow{ display:flex; align-items:center; gap:7px; padding:5px 0; border-top:1px solid var(--line);
+  font-size:0.857rem; cursor:pointer; }
+.eco-panel .conrow:hover{ color:var(--accent); }
+.eco-panel .conrow .ck{ font-size:0.714rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--muted); flex:none; min-width:52px; }
+.eco-panel .cgo{ cursor:pointer; } .eco-panel .cgo:hover{ text-decoration:underline; }
+.eco-panel .jgo{ cursor:pointer; } .eco-panel .jgo:hover b{ text-decoration:underline; }
 
-.eco-legend{ display:flex; align-items:center; gap:6px 18px; flex-wrap:wrap; padding:8px 20px; border-top:1px solid var(--line); background:var(--panel); font-size:11.5px; color:var(--muted); }
+/* CORNER BOXES (lab round 36): Legend bottom-left · Controls bottom-right */
+.eco-root #eco-legendbox{ position:absolute; bottom:12px; left:14px; z-index:25; font-size:11px; color:var(--muted);
+  background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.10); max-width:250px; pointer-events:auto; }
+.eco-root #eco-legendbox.min{ padding:0; border:0; background:transparent; box-shadow:none; }
+.eco-root #eco-legendbox .lghead{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:7px; }
+.eco-root #eco-legendbox .lh{ font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  display:flex; align-items:center; gap:6px; color:var(--ink); }
+.eco-root #eco-legendbox .lh i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
+.eco-root #eco-legendbox .lgbtn{ font:inherit; font-size:12px; line-height:1; color:var(--muted); background:var(--panel);
+  border:1px solid var(--line); border-radius:6px; padding:1px 6px; cursor:pointer; flex:none; }
+.eco-root #eco-legendbox .lgpill{ font:inherit; font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:999px; padding:6px 12px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:7px; box-shadow:0 6px 20px rgba(0,0,0,.10); }
+.eco-root #eco-legendbox .lgpill i{ width:9px; height:9px; border-radius:50%; display:inline-block; flex:none; }
+.eco-legend{ color:var(--muted); display:flex; flex-direction:column; align-items:stretch; gap:2px; font-size:11px; }
 .eco-legend .item{ display:flex; align-items:center; gap:6px; }
+.eco-legend .grp{ display:flex; align-items:center; gap:4px 10px; flex-wrap:wrap; }
 .eco-legend .sw{ width:9px; height:9px; border-radius:50%; flex:none; }
-.eco-legend .swr{ width:16px; height:0; border-top:2px solid var(--edge); }
-.eco-legend .count{ margin-left:auto; color:var(--ink); font-weight:600; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; }
-.eco-root .hint{ position:absolute; bottom:10px; right:16px; font-size:11px; color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:3px 8px; pointer-events:none; opacity:.9; }
+.eco-legend .count{ color:var(--ink); font-weight:600; font-family:ui-monospace,Menlo,Consolas,monospace; font-size:11px; margin-top:3px; }
+.eco-root .eco-keys{ position:absolute; bottom:12px; right:16px; z-index:25; max-width:300px; font-size:11px;
+  color:var(--muted); background:var(--panel); border:1px solid var(--line); border-radius:9px; padding:9px 11px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.10); }
+.eco-root .eco-keys .kbhead{ display:flex; align-items:center; justify-content:space-between; gap:10px;
+  font-size:10px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); }
+.eco-root .eco-keys .kbtgl{ font:inherit; font-size:12px; line-height:1; color:var(--muted); background:none;
+  border:none; padding:0 2px; cursor:pointer; }
+.eco-root .eco-keys.min .kbbody{ display:none; }
+.eco-root .eco-keys .kbbody{ margin-top:5px; }
+.eco-root .eco-keys .kbbody div{ padding:1.5px 0; color:var(--ink); }
+.eco-root .eco-keys .kbbody span{ color:var(--muted); }
 </style>
 </head>
 <body>
 <!-- STATION: Codebase archive — the whole-ecosystem map + the durable archive of past
      phase changes. Reads c4-graph.js (window.GABE_C4) + sim-archive.js
-     (window.GABE_SIM_ARCHIVE, the committed per-phase accumulator). -->
+     (window.GABE_SIM_ARCHIVE) + assets/graph-grammar.js (the shared lab grammar). -->
 <div class="app">
 
 <aside class="side">
@@ -181,7 +277,7 @@
   <a class="navitem on" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-                      <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+  <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -191,7 +287,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-                      <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+  <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -205,7 +301,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-                      <span class="navsub" style="opacity:.5">none wired yet</span>
+  <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:23Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -221,6 +317,10 @@
       <h1>Codebase archive</h1>
       <span class="sub" id="eco-sub">the whole ecosystem · replay any past phase</span>
       <div class="spacer"></div>
+      <label class="eco-depth" id="eco-depthCtl" title="Highlight depth — press Alt and scroll to change it">depth
+        <input type="range" id="eco-depthSlider" min="1" max="5" step="1" value="5">
+        <b id="eco-depthVal">5</b>
+      </label>
       <button id="eco-openAll" class="cbg-toggle on">Close all</button>
       <button id="eco-conns" class="cbg-toggle on" title="Show/hide piece↔piece FK coupling — inside AND across entities">Connections</button>
       <button class="cbg-gear" id="eco-gear" title="Layout controls" aria-expanded="false">
@@ -229,6 +329,8 @@
       <div class="eco-gearpanel" id="eco-gearpanel" hidden>
         <div class="eco-gearrow"><div class="eco-gearlbl">Entities layout</div><div class="eco-optseg" id="eco-entitiesSeg"></div></div>
         <div class="eco-gearrow"><div class="eco-gearlbl">Inside entities</div><div class="eco-optseg" id="eco-insideSeg"></div></div>
+        <div class="eco-gearrow"><div class="eco-gearlbl">Lines</div><div class="eco-optseg" id="eco-linesSeg"></div></div>
+        <div class="eco-gearrow"><div class="eco-gearlbl">Icons</div><div class="eco-optseg" id="eco-iconsSeg"></div></div>
         <div class="eco-gearrow"><button id="eco-reset">Reset layout</button></div>
       </div>
     </div>
@@ -236,22 +338,24 @@
     <div class="eco-center">
       <div class="eco-stage" id="eco-stage">
         <svg id="eco-graph" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <marker id="eco-arrow" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z"></path></marker>
-            <marker id="eco-arrow-b" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0.5,0.5 L9.5,5 L0.5,9.5 z" fill="#d9821f"></path></marker>
-          </defs>
           <g id="eco-viewport"></g>
         </svg>
-        <div class="hint" id="eco-hint">drag to pan · scroll to zoom · pick a feature on the right</div>
+        <div id="eco-legendbox"></div>
+        <div class="eco-keys min" id="eco-keys">
+          <div class="kbhead"><span>Controls</span><button class="kbtgl" id="eco-keysMin" title="minimize / restore">+</button></div>
+          <div class="kbbody" id="eco-keysBody"></div>
+        </div>
       </div>
       <div class="eco-resizer" id="eco-resizer" title="Drag to resize"></div>
       <aside class="eco-side" id="eco-side">
-        <div class="eco-sidehdr"><button class="eco-sidetoggle" id="eco-sideToggle" title="Collapse panel" aria-label="Collapse panel"></button></div>
+        <div class="eco-sidehdr">
+          <button class="eco-navback" id="eco-navback" hidden title="back through the travel trail (up to 6 stops)">&larr;</button>
+          <span class="spacer"></span>
+          <button class="eco-sidetoggle" id="eco-sideToggle" title="Collapse panel" aria-label="Collapse panel"></button>
+        </div>
         <div class="eco-panel" id="eco-panel"></div>
       </aside>
     </div>
-
-    <div class="eco-legend" id="eco-legend"></div>
   </div>
 </main>
 
@@ -259,11 +363,15 @@
 
 <script src="./c4-graph.js"></script>
 <script src="./sim-archive.js"></script>
+<script src="../../assets/graph-grammar.js"></script>
 <script>
 (function(){
   "use strict";
   var DATA = window.GABE_C4, COLORS = window.GABE_C4_COLORS || {};
   if(!DATA){ document.getElementById("eco-panel").innerHTML = "<div class='kind'>no c4-graph.js on this center yet</div>"; return; }
+  if(!window.GABE_GRAPH_GRAMMAR){ document.getElementById("eco-panel").innerHTML =
+    "<div class='kind'>assets/graph-grammar.js missing on this center</div>"; return; }
+  var GG = window.GABE_GRAPH_GRAMMAR();   // the shared level-lab grammar (both stations)
   var ARCHIVE = (window.GABE_SIM_ARCHIVE && window.GABE_SIM_ARCHIVE.phases) || [];
   var NS = "http://www.w3.org/2000/svg";
   // ENTITIES only — an `unclaimed` bucket node (any FK to a library/legacy table)
@@ -280,19 +388,39 @@
   var explodeAll = true;    // show every entity's pieces (BOTH ecosystem + phase)
   var showConns = true;     // draw piece↔piece FK coupling inside entities
   var layout = "ring", insideLayout = "force";   // defaults MIRROR the change graph
-  var selPiece = null;
+  var lineStyle = "bowed";  // operator ruling 2026-08-13: BOWED is the ARCHIVE's
+                            // signature (the change graph reads direct)
+  var ICONSET = "lucide";   // operator round 48: Lucide everywhere
+  var selDepth = 5;
+  var legendMin = false;
   var nodePos = {}, nodeMeta = {}, edgeRecs = [], lastBounds = null;
   var PIECE_R = 10;
 
   var stage = document.getElementById("eco-stage"), svg = document.getElementById("eco-graph"),
-      vp = document.getElementById("eco-viewport");
+      vp = document.getElementById("eco-viewport"), panel = document.getElementById("eco-panel");
   var L1_LAYOUTS = { ring:"Ring", flow:"Flow", force:"Force" };
   var INSIDE_LAYOUTS = { ring:"Ring", grid:"Grid", force:"Force" };
+  var LINE_OPTS = { direct:"Direct", bowed:"Bowed" };
+  var ICON_OPTS = { classic:"Classic", lucide:"Lucide", solid:"Solid" };
+  var LINE_MULT = { direct:0.25, bowed:2 };
 
   function E(t,a){ var e=document.createElementNS(NS,t); if(a) for(var k in a) e.setAttribute(k,a[k]); return e; }
   function clamp(v,a,b){ return v<a?a:(v>b?b:v); }
-  function trunc(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+"…":s; }
-  function esc(s){ return String(s).replace(/[&<>"']/g,function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  var esc = GG.esc, trunc = GG.trunc, rnd = GG.rnd;
+  var ICONSETS = GG.ICONSETS, HALO_R = GG.HALO_R;
+  function halo(g){ GG.halo(g); }
+  function curve(x1,y1,x2,y2,bow){ return GG.curve(x1,y1,x2,y2,bow*(LINE_MULT[lineStyle]||1)); }
+  function kindPath(layer,a,b,kind,off){ return GG.kindPath(layer,a,b,kind,off*(LINE_MULT[lineStyle]||1)); }
+  function edgeGradient(defs,a,c,sCol,tCol){ return GG.edgeGradient(defs,a,c,sCol,tCol); }
+  var _lanes = GG.lanes();
+  function laneBow(kFrom,kTo,bow){ return _lanes.bow(kFrom,kTo,bow); }
+  function flowDots(host,pathEl,fill){ return GG.flowDots(host,pathEl,fill,!!dragging); }
+  function twoRowLabel(g,txt,x,y){ GG.twoRowLabel(g,txt,x,y); }
+  var _psvg = GG._psvg, _sect = GG._sect, dossierHTML = GG.dossierHTML;
+  var kindChip = GG.chips.kindChip, epChip = GG.chips.epChip, dtChip = GG.chips.dtChip,
+      idrow = GG.chips.idrow, moreChip = GG.chips.moreChip, icoSvg = GG.chips.icoSvg,
+      KIND_ICON = GG.chips.KIND_ICON;
+
   function ent(slug){ return L1.filter(function(n){ return n.slug===slug; })[0]; }
   function ecoPieces(slug){ var g=DATA.l2[slug]; if(!g) return [];
     return g.nodes.filter(function(n){ return n.kind==="model"; })
@@ -316,17 +444,26 @@
   function involved(slug){ if(!selPhase) return true;
     return selPhase.touched.indexOf(slug)>=0 || selPhase.blast.indexOf(slug)>=0; }
 
-  // per-stage encoding for a phase piece (same rules as the change graph). Pieces
-  // NOT in the phase's changed/link set stay hollow-neutral — you see them, they
-  // just carry no change signal for this lens.
+  // per-stage encoding for a phase piece — the change-graph-lab BEAT contract:
+  // red rings+pills → heat+blast → green flips + amber drift → commit purple.
+  // `hollow` survives as the HOT predicate the intra-edge colour flip reads.
   function stageEnc(slug,p){
-    var sd=(selPhase.stages&&selPhase.stages[curStage])||{}, d=(sd.pieces&&sd.pieces[p.id])||{};
+    var st=selPhase.stages||{};
+    var d=((st[curStage]||{}).pieces||{})[p.id]||{};
+    var red=((st.red||{}).pieces||{})[p.id]||{};
     var pp=phasePiece(slug,p.id), role=pp?pp.role:null;
-    var e={ r:PIECE_R, hollow:true, ring:false, badge:"", color:STAGE_COLOR[curStage] };
-    if(curStage==="execute"){ if(d.changed){ e.hollow=false; e.r=PIECE_R+Math.sqrt(d.add||0)*3; if(d.add) e.badge="+"+d.add; } }
-    else if(curStage==="red"){ if(d.tested){ e.hollow=false; e.ring=true; if(d.cases&&d.cases.length) e.badge=String(d.cases.length); } }
-    else if(curStage==="review"){ if(d.touched_again){ e.hollow=false; e.ring=true; } }
-    else if(curStage==="commit"){ if(role==="changed") e.hollow=false; }
+    var e={ hollow:true, rings:[], pill:null };
+    if(curStage==="red"){
+      if(d.tested){ e.hollow=false; e.rings.push(["red-ring",17]); e.pill={ t:String((d.cases||[]).length||1), col:STAGE_COLOR.red }; }
+    } else if(curStage==="execute"){
+      if(d.changed){ e.hollow=false; e.rings.push(["heat-ring",17]); if(d.add) e.pill={ t:"+"+d.add, col:STAGE_COLOR.execute }; }
+      else if(role==="link"){ e.rings.push(["blast-ring",20]); }
+    } else if(curStage==="review"){
+      if(red.tested){ e.hollow=false; e.rings.push(["ok-ring",17]); e.pill={ t:String((red.cases||[]).length||1), col:STAGE_COLOR.review }; }
+      if(d.touched_again){ e.hollow=false; e.rings.push(["drift-ring",20]); }
+    } else if(curStage==="commit"){
+      if(role==="changed"){ e.hollow=false; e.rings.push(["commit-ring",17]); }
+    }
     return e;
   }
 
@@ -334,7 +471,6 @@
   var linesArr = L1.map(function(n){ return n.counts?n.counts.lines:0; });
   var minSq=Math.sqrt(Math.min.apply(null,linesArr)), maxSq=Math.sqrt(Math.max.apply(null,linesArr));
   function radius(n){ var t=maxSq>minSq?(Math.sqrt(n.counts.lines)-minSq)/(maxSq-minSq):.5; return 22+t*34; }
-  function ewidth(w){ return 1.5+Math.min(4.2, Math.log(1+Math.max(0,w))*1.35); }   // log-scale: call-heavy edges no longer all pin at max
   function forceLayout(nodes,edges,opt){ opt=opt||{}; var R=opt.R||200,ITER=opt.iter||240,K=opt.k||9000,REST=opt.rest||150,pos={},vel={},n=nodes.length,has={};
     nodes.forEach(function(nd,i){ var a=2*Math.PI*i/n; pos[nd.id]={x:R*Math.cos(a),y:R*Math.sin(a)}; vel[nd.id]={x:0,y:0}; has[nd.id]=1; });
     var E2=edges.filter(function(e){ return has[e.source]&&has[e.target]&&e.source!==e.target; });
@@ -374,11 +510,14 @@
       if(d*scale<need) scale=need/d; }
     if(scale<=1.001) return p;
     var q={}; Object.keys(p).forEach(function(id){ q[id]={x:cx+(p[id].x-cx)*scale,y:cy+(p[id].y-cy)*scale}; }); return q; }
+  var userPos = {};   // node-drag overrides, id → {x,y}
   function computeL1Positions(){ var p;
     if(layout==="flow" && L1.length && L1[0].fx!=null){ p={}; L1.forEach(function(n){ p[n.id]={x:n.fx,y:n.fy}; }); }
     else if(layout==="force") p=forceLayout(L1,L1E,{R:230,rest:190});
     else { p={}; L1.forEach(function(n){ p[n.id]={x:n.x,y:n.y}; }); }
-    return explodeAll ? declutter(p) : p; }
+    p = explodeAll ? declutter(p) : p;
+    L1.forEach(function(n){ if(userPos[n.id]) p[n.id]=userPos[n.id]; });   // drags win
+    return p; }
   function insidePos(slug,pieces,cx,cy){ var n=pieces.length||1,pos={};
     if(insideLayout==="grid"){ var cols=Math.ceil(Math.sqrt(n)),GX=54,GY=50; pieces.forEach(function(p,i){ var r=Math.floor(i/cols),c=i%cols,rows=Math.ceil(n/cols); pos[p.id]={x:cx+(c-(cols-1)/2)*GX,y:cy+(r-(rows-1)/2)*GY}; }); }
     else if(insideLayout==="force"){ var nds=pieces.map(function(p){ return {id:p.id}; });
@@ -387,22 +526,239 @@
     else { var R=Math.max(46,n*11); pieces.forEach(function(p,i){ var a=-Math.PI/2+2*Math.PI*i/n; pos[p.id]={x:cx+R*Math.cos(a),y:cy+R*Math.sin(a)}; }); }
     return pos; }
 
-  var panX=0,panY=0,fitTx=0,fitTy=0,zoom=1;
-  function frame(b){ var cw=stage.clientWidth||900,ch=stage.clientHeight||600; svg.setAttribute("width",cw); svg.setAttribute("height",ch);
-    fitTx=Math.round(cw/2 - zoom*(b.minX+b.maxX)/2); fitTy=Math.round(ch/2 - zoom*(b.minY+b.maxY)/2); applyPan(); }
-  function applyPan(){ vp.setAttribute("transform","translate("+(fitTx+panX)+","+(fitTy+panY)+") scale("+zoom+")"); }
+  // ── camera: fit-to-bounds base scale · pan · zoom (the lab's wheel grammar) ──
+  var panX=0, panY=0, zoom=1, fitT=[0,0], baseScale=1;
+  function frame(b){
+    lastBounds=b;
+    var cw=stage.clientWidth||900, ch=stage.clientHeight||600;
+    svg.setAttribute("width", cw); svg.setAttribute("height", ch);
+    var sx=(cw-40)/Math.max(1,b.maxX-b.minX), sy=(ch-40)/Math.max(1,b.maxY-b.minY);
+    baseScale=Math.min(1, sx, sy);
+    fitT=[Math.round(cw/2 - baseScale*(b.minX+b.maxX)/2), Math.round(ch/2 - baseScale*(b.minY+b.maxY)/2)];
+    applyPan();
+  }
+  function applyPan(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(fitT[1]+panY)+") scale("+(baseScale*zoom)+")"); }
+
+  /* ── SELECTION ENGINE (shared grammar, per-host state): registry · BFS to
+     selDepth · peek · connector cards · travel · the ← trail. Same block as the
+     change graph — the remaining DRY debt, recorded in graph-grammar.js. ── */
+  var SELREG = { nodes:{}, edges:[] };
+  var selKey = null;
+  var _edgeHop = { i:-1, at:null };
+  function regNode(g, key, label, type, ringR){ g.setAttribute("data-key", key);
+    SELREG.nodes[key]={el:g, label:label, type:type, ringR:ringR||16}; }
+  function regEdge(el, kind, fromKey, toKey, how){
+    var idx=SELREG.edges.length;
+    SELREG.edges.push({el:el, kind:kind, from:fromKey, to:toKey, how:how||""});
+    el.style.pointerEvents="stroke"; el.style.cursor="pointer";
+    var onClick=function(ev){ ev.stopPropagation(); selectEdge(idx); };
+    var onDbl=function(ev){ ev.stopPropagation(); ev.preventDefault(); edgeHop(idx); };
+    el.addEventListener("click",onClick);
+    el.addEventListener("dblclick",onDbl);
+    var d=el.getAttribute && el.getAttribute("d");
+    if(d && el.parentNode){
+      var tw=E("path",{d:d, fill:"none", stroke:"transparent","stroke-width":"9"});
+      tw.style.pointerEvents="stroke"; tw.style.cursor="pointer";
+      tw.addEventListener("click",onClick); tw.addEventListener("dblclick",onDbl);
+      el.parentNode.insertBefore(tw, el.nextSibling);
+    }
+    return idx; }
+  function applyDepth(d){ d=Math.max(1, Math.min(5, d)); if(d===selDepth) return;
+    selDepth=d;
+    document.getElementById("eco-depthSlider").value=String(d);
+    document.getElementById("eco-depthVal").textContent=String(d);
+    if(selKey) selectNode(selKey); }
+  var _peeks=[];
+  function peekClear(){ _peeks.forEach(function(f){ f(); }); _peeks=[]; }
+  function peekEdge(i){
+    peekClear();
+    var e=SELREG.edges[i]; if(!e) return;
+    e.el.classList.add("e-peek");
+    _peeks.push(function(){ e.el.classList.remove("e-peek"); });
+    var far = (selKey && e.from===selKey) ? [e.to] : (selKey && e.to===selKey) ? [e.from] : [e.from, e.to];
+    far.forEach(function(k){ var n=SELREG.nodes[k]; if(!n) return;
+      var r=E("circle",{class:"peek-ring", r:n.ringR+2});
+      n.el.appendChild(r);
+      _peeks.push(function(){ r.remove(); }); });
+  }
+  function peekNode(k){
+    peekClear();
+    var n=SELREG.nodes[k]; if(!n) return;
+    var r=E("circle",{class:"peek-ring", r:n.ringR+2});
+    n.el.appendChild(r);
+    _peeks.push(function(){ r.remove(); });
+  }
+  function clearSelection(){ selKey=null; peekClear();
+    vp.querySelectorAll(".selring,.nbrring,.peek-ring").forEach(function(x){ x.remove(); });
+    vp.querySelectorAll(".e-hl,.e-faded,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
+      x.classList.remove("e-hl","e-faded","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
+  function edgeWord(kind){ return {fk:"fk", xfk:"cross-fk", calls:"calls", imports:"imports"}[kind]||kind; }
+  function selectNode(key){
+    clearSelection(); selKey=key;
+    var n=SELREG.nodes[key]; if(!n) return [];
+    n.el.appendChild(E("circle",{class:"selring", r:n.ringR}));
+    var seenN={}, seenE={}, frontier=[key], mine=[];
+    seenN[key]=true;
+    for(var d=1; d<=selDepth && frontier.length; d++){
+      var next=[];
+      SELREG.edges.forEach(function(e,i){ if(seenE[i]) return;
+        var hitFrom=frontier.indexOf(e.from)>=0, hitTo=frontier.indexOf(e.to)>=0;
+        if(!hitFrom && !hitTo) return;
+        seenE[i]=true; e.el.classList.add("e-hop"+d);
+        if(d===1) mine.push(i);
+        var nk=hitFrom?e.to:e.from;
+        if(!seenN[nk]){ seenN[nk]=true; next.push(nk);
+          var nb=SELREG.nodes[nk];
+          if(nb && !nb.el.querySelector(".nbrring")){
+            var ring=E("circle",{class:"nbrring", r:nb.ringR-2}); ring.style.opacity=String(Math.max(0.25, 0.8-0.14*(d-1)));
+            nb.el.appendChild(ring); } } });
+      frontier=next; }
+    SELREG.edges.forEach(function(e,i){ if(!seenE[i]) e.el.classList.add("e-faded"); });
+    return mine; }
+  function connectionsHTML(key, mine){
+    var wireIc=_psvg("<path d='M3 17 Q12 3 21 12' fill='none' stroke='var(--accent)' stroke-width='2'/><circle cx='13.5' cy='8.6' r='2.2' fill='var(--accent)'/>");
+    if(!mine.length) return _sect(wireIc,"connections")+"<div class='note'>no drawn connector touches it on this view</div>";
+    var h=_sect(wireIc,"connections ("+mine.length+")");
+    mine.forEach(function(i){ var e=SELREG.edges[i];
+      var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
+      var dir=e.from===key?"→":"←";
+      h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span>"
+        +"<b class='cgo' data-k='"+esc(nk)+"' title='travel to it'>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
+    return h; }
+  function wireConnRows(){
+    panel.querySelectorAll(".conrow").forEach(function(row){
+      row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
+      row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); });
+      row.addEventListener("mouseenter",function(){ peekEdge(+row.getAttribute("data-conn")); });
+      row.addEventListener("mouseleave",peekClear); });
+    panel.querySelectorAll(".cgo").forEach(function(b){
+      b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
+  function appendConn(key, mine){
+    panel.insertAdjacentHTML("beforeend", connectionsHTML(key, mine));
+    wireConnRows();
+  }
+  function selectEdge(i){
+    var e=SELREG.edges[i]; if(!e) return;
+    ecoTarget = { edge:{ from:e.from, to:e.to, kind:e.kind } };
+    clearSelection();
+    SELREG.edges.forEach(function(x,j){ x.el.classList.add(j===i?"e-hl":"e-faded"); });
+    var f=SELREG.nodes[e.from], to=SELREG.nodes[e.to];
+    [f,to].forEach(function(n){ if(n) n.el.appendChild(E("circle",{class:"selring", r:n.ringR-1})); });
+    panel.innerHTML=pickerHTML()+stageSegHTML()
+     +"<div class='phdr'>connector</div><h4>"+esc(edgeWord(e.kind))+"</h4>"
+     +"<div class='row jgo' data-k='"+esc(e.from)+"'><span class='k'>from</span><b class='v'>→ "+esc(f?f.label:e.from)+"</b></div>"
+     +"<div class='row jgo' data-k='"+esc(e.to)+"'><span class='k'>to</span><b class='v'>→ "+esc(to?to.label:e.to)+"</b></div>"
+     +(e.how?"<div class='row'><span class='k'>how</span><span class='v'>"+esc(e.how)+"</span></div>":"")
+     +"<div class='note'>"+({fk:"a foreign-key column points at the other table",
+        xfk:"a foreign key crossing the entity boundary",
+        calls:"function calls crossing the boundary — every cross-file call is graft-inferred, a floor",
+        imports:"module imports crossing the boundary"}[e.kind]||"")
+     +" Click a → row to travel; double-click the wire to hop between its ends.</div>";
+    afterPanel();
+    panel.querySelectorAll(".jgo").forEach(function(row){
+      row.addEventListener("click",function(){ jumpToNode(row.getAttribute("data-k")); });
+      row.addEventListener("mouseenter",function(){ peekNode(row.getAttribute("data-k")); });
+      row.addEventListener("mouseleave",peekClear); });
+  }
+  function nodeWorldXY(key){
+    var n=SELREG.nodes[key]; if(!n) return null;
+    var m=/translate\(([-0-9.]+)[ ,]+([-0-9.]+)\)/.exec(n.el.getAttribute("transform")||"");
+    if(m) return {x:+m[1], y:+m[2]};
+    try{ var bb=n.el.getBBox(); return {x:bb.x+bb.width/2, y:bb.y+bb.height/2}; }catch(_){ return null; }
+  }
+  function screenDistToCentre(w){
+    var r=stage.getBoundingClientRect(), s=baseScale*zoom;
+    return Math.hypot(fitT[0]+panX+w.x*s - r.width/2, fitT[1]+panY+w.y*s - r.height/2);
+  }
+  function centerCamera(w){
+    var r=stage.getBoundingClientRect(), s=baseScale*zoom;
+    panX=r.width/2 - fitT[0] - w.x*s;
+    panY=r.height/2 - fitT[1] - w.y*s;
+    applyPan();
+  }
+  function edgeHop(i){
+    var e=SELREG.edges[i]; if(!e) return;
+    var a=nodeWorldXY(e.from), b=nodeWorldXY(e.to); if(!a && !b) return;
+    var go;
+    if(_edgeHop.i===i) go = _edgeHop.at==="from" ? "to" : "from";
+    else go = (a&&b) ? (screenDistToCentre(a)>=screenDistToCentre(b)?"from":"to") : (a?"from":"to");
+    var w = go==="from"?a:b;
+    if(!w){ go = go==="from"?"to":"from"; w = go==="from"?a:b; }
+    _edgeHop={i:i, at:go};
+    navVisit(go==="from"?e.from:e.to);
+    centerCamera(w);
+  }
+  function landOn(key){
+    var w=nodeWorldXY(key); if(!w) return;
+    centerCamera(w);
+    if(key.indexOf("ent:")===0){ openEntity(key.slice(4)); return; }
+    var n=SELREG.nodes[key];
+    if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
+  }
+  function jumpToNode(key){ if(!nodeWorldXY(key)) return; navVisit(key); landOn(key); }
+  var navStack=[], navCur=null;
+  function navUI(){ var b=document.getElementById("eco-navback");
+    b.hidden = navStack.length===0;
+    b.innerHTML = "&larr; "+navStack.length; }
+  function navVisit(key){
+    if(navCur && navCur!==key){ navStack.push(navCur); while(navStack.length>6) navStack.shift(); }
+    navCur=key; navUI(); }
+  function navTouch(key){
+    if(key===navCur || navStack.indexOf(key)>=0) return;
+    navStack=[]; navCur=key; navUI(); }
+  function navClear(){ navStack=[]; navCur=null; navUI(); }
+  function goBack(){
+    while(navStack.length){
+      var k=navStack.pop();
+      if(SELREG.nodes[k]){ navCur=k; navUI(); landOn(k); return; }
+    }
+    navCur=null; navUI();
+  }
+
+  // ── the panel target — whatever card is open, replayed after every re-render ──
+  var ecoTarget = null;   // {piece:{slug,p}} | {entity:slug} | {edge:{from,to,kind}} | null
+  function reopenPanel(){
+    var t=ecoTarget;
+    if(t && t.piece){ openPiece(t.piece.slug, t.piece.p); return; }
+    if(t && t.entity){ openEntity(t.entity); return; }
+    if(t && t.edge){
+      for(var i=0;i<SELREG.edges.length;i++){ var e=SELREG.edges[i];
+        if(e.from===t.edge.from && e.to===t.edge.to && e.kind===t.edge.kind){ selectEdge(i); return; } }
+    }
+    resetPanel();
+  }
 
   function render(){
     vp.textContent=""; nodePos={}; nodeMeta={}; edgeRecs=[]; _contR={};
+    SELREG={nodes:{},edges:[]}; selKey=null; _lanes=GG.lanes(); _edgeHop={i:-1,at:null}; peekClear();
     var POS=computeL1Positions(), minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
     L1.forEach(function(n){ var r=radius(n), p=POS[n.id]||{x:n.x,y:n.y}, pad=r+46;
       nodePos[n.id]={x:p.x,y:p.y}; nodeMeta[n.id]={r:r,node:n};
       minX=Math.min(minX,p.x-pad); maxX=Math.max(maxX,p.x+pad); minY=Math.min(minY,p.y-r-6); maxY=Math.max(maxY,p.y+r+34); });
     lastBounds={minX:minX,minY:minY,maxX:maxX,maxY:maxY}; frame(lastBounds);
-    var eLayer=E("g"); vp.appendChild(eLayer);
-    L1E.forEach(function(ed){ var p=E("path",{class:"edge","marker-end":"url(#eco-arrow)"}); p.style.strokeWidth=ewidth(ed.weight); var kt=E("title"); kt.textContent=ed.source+" → "+ed.target+" · "+Object.keys(ed.kinds||{}).sort().map(function(k){return k+"×"+ed.kinds[k];}).join(" · "); p.appendChild(kt); eLayer.appendChild(p);
-      var rec={el:p,s:ed.source,t:ed.target,data:ed}; edgeRecs.push(rec); updateEdge(rec); });
-    var nLayer=E("g"); vp.appendChild(nLayer);
+    var defs=E("defs"), eLayer=E("g"), nLayer=E("g");
+    vp.appendChild(defs); vp.appendChild(eLayer); vp.appendChild(nLayer);
+    // base entity coupling — one path per KIND, entity-gradient stroke, flow dots
+    L1E.forEach(function(ed){
+      var a=nodePos[ed.source], c=nodePos[ed.target]; if(!a||!c) return;
+      var kinds=Object.keys(ed.kinds||{}).sort(); if(!kinds.length) kinds=["fk"];
+      var side = ed.source < ed.target ? 1 : -1;
+      var grad = edgeGradient(defs, a, c, COLORS[ed.source]||"#888", COLORS[ed.target]||"#888");
+      kinds.forEach(function(k,i){
+        var off = side * (14 + i*18);
+        var p = kindPath(eLayer, a, c, k, off);
+        p.classList.add("edge");
+        p.style.stroke = "url(#"+grad+")";
+        var cnt = (ed.kinds&&ed.kinds[k])!=null ? ed.kinds[k] : ed.weight;
+        var ti=E("title"); ti.textContent=ed.source+" → "+ed.target+" · "+k+" ×"+cnt
+          +(k==="calls"?" (inferred — a floor)":""); p.appendChild(ti);
+        regEdge(p, k, "ent:"+ed.source, "ent:"+ed.target,
+          "×"+cnt+(k==="calls"?" — cross-file calls are graft-inferred (a floor)":""));
+        var dots = flowDots(eLayer, p, "url(#"+grad+")");
+        var rec={el:p, dots:dots, grad:"url(#"+grad+")", s:ed.source, t:ed.target, kind:k, data:ed};
+        edgeRecs.push(rec);
+      });
+    });
     L1.forEach(function(n){ var col=COLORS[n.slug]||"#888";
       var g=E("g",{class:"node entnode","data-id":n.id,transform:"translate("+nodePos[n.id].x+","+nodePos[n.id].y+")"});
       var r=nodeMeta[n.id].r;
@@ -410,15 +766,13 @@
       var cnt=(selPhase && selPhase.pieces && selPhase.pieces[n.slug]) ? selPhase.pieces[n.slug].length : 0;
       var t1=E("text",{class:"l1label",x:0,y:r+16}); t1.setAttribute("fill","var(--ink)"); t1.textContent=n.label+(cnt?" ("+cnt+")":"");
       var t2=E("text",{class:"l1sub",x:0,y:r+30}); t2.textContent=n.counts.endpoints+" ep · "+n.counts.models+" models";
-      g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g); nodeMeta[n.id].el=g; wire(g,n); });
+      g.appendChild(t1); g.appendChild(t2); nLayer.appendChild(g); nodeMeta[n.id].el=g;
+      regNode(g, "ent:"+n.slug, n.label, "entity", r+6);
+      wire(g,n); });
     applyFilter(); drawExplosions(); suppressReplacedEdges(); buildLegend();
   }
-
-  function updateEdge(rec){ var s=nodePos[rec.s],t=nodePos[rec.t]; if(!s||!t){ rec.el.setAttribute("d",""); return; }
-    var r1=nodeMeta[rec.s].r,r2=nodeMeta[rec.t].r,dx=t.x-s.x,dy=t.y-s.y,d=Math.hypot(dx,dy)||1,ux=dx/d,uy=dy/d;
-    var sx=s.x+ux*r1,sy=s.y+uy*r1,ex=t.x-ux*(r2+3.5),ey=t.y-uy*(r2+3.5),mx=(sx+ex)/2,my=(sy+ey)/2,bow=Math.min(38,d*0.12);
-    rec.el.setAttribute("d","M"+sx+" "+sy+" Q "+(mx-uy*bow)+" "+(my+ux*bow)+" "+ex+" "+ey); }
-  function refreshEdges(id){ edgeRecs.forEach(function(r){ if(r.s===id||r.t===id) updateEdge(r); }); }
+  function renderKeepView(){ render(); }
+  function rerenderKeepPanel(){ render(); reopenPanel(); }
 
   function applyFilter(){
     vp.querySelectorAll(".node.entnode").forEach(function(g){ var id=g.getAttribute("data-id");
@@ -430,16 +784,25 @@
       // piece-level replacement was actually DRAWN for that pair — decided post-draw in
       // suppressReplacedEdges(), never on a blanket both-exploded gate (which hid the
       // blast coupling when a phase's cross_edges was empty/stale, leaving it edgeless).
-      if(!selPhase) return;
+      if(!selPhase){ r.el.style.stroke=r.grad; return; }
       var inc=involved(r.s)&&involved(r.t); r.el.classList.toggle("dim",!inc);
-      if(inc && (r.data.kinds||{}).fk && selPhase.blast.indexOf(r.s)>=0 && selPhase.touched.indexOf(r.t)>=0) r.el.classList.add("lit"); });   // lit = FK coupling only: blast is FK-derived, a call-only edge must not impersonate it
+      var lit = inc && (r.data.kinds||{}).fk && selPhase.blast.indexOf(r.s)>=0 && selPhase.touched.indexOf(r.t)>=0;
+      r.el.classList.toggle("lit", lit);   // lit = FK coupling only: blast is FK-derived, a call-only edge must not impersonate it
+      r.el.style.stroke = lit ? "var(--blast)" : r.grad;   // the gradient yields to the blast highlight
+    });
   }
   // suppress an entity-centre FK line ONLY for the exact pairs whose piece-level
   // coupling drawExplosions actually drew (_drawnPairs) — so an unreplaced pair keeps
   // its lit/plain centre line rather than vanishing. Runs AFTER drawExplosions.
   function suppressReplacedEdges(){ edgeRecs.forEach(function(r){
-    if(_drawnPairs[r.s+"\t"+r.t]) r.el.classList.add("xhide"); }); }
+    if(_drawnPairs[r.s+"\t"+r.t]){ r.el.classList.add("xhide");
+      r.dots.forEach(function(d){ d.classList.add("basefade"); }); } }); }
 
+  function pillOn(g, txt, col){
+    var s=String(txt), w=9+s.length*5.4, bx=12, by=-13;
+    g.appendChild(E("rect",{class:"bpill", x:bx-w/2, y:by-6, width:w, height:12, rx:6, fill:col}));
+    var t=E("text",{class:"xbadge", x:bx, y:by+3.2}); t.textContent=s; g.appendChild(t);
+  }
   function drawExplosions(){
     var old=vp.querySelector("#eco-expansion"); if(old) old.remove();
     _drawnPairs={};
@@ -449,6 +812,9 @@
     if(!slugs.length) return;   // the Close/Open-all toggle governs pieces in BOTH modes
     var reduce=!!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
     var layer=E("g",{id:"eco-expansion"}); vp.appendChild(layer);
+    // LAYERING LAW (lab round 33): backgrounds → wires → nodes
+    var defs=E("defs"), bgL=E("g"), wireL=E("g"), nodeL=E("g");
+    layer.appendChild(defs); layer.appendChild(bgL); layer.appendChild(wireL); layer.appendChild(nodeL);
     var b={minX:lastBounds.minX,minY:lastBounds.minY,maxX:lastBounds.maxX,maxY:lastBounds.maxY};
     var innerPos={};
     slugs.forEach(function(slug){ var pos=nodePos[slug]; if(!pos) return;
@@ -456,11 +822,17 @@
       pieces.forEach(function(p){ var pp=ip[p.id]; innerPos[slug+"\t"+p.id]=pp; extent=Math.max(extent,Math.hypot(pp.x-pos.x,pp.y-pos.y)); });
       var contR=Math.max(52,extent+PIECE_R+16), col=COLORS[slug]||"#888";
       var isT=selPhase&&selPhase.touched.indexOf(slug)>=0, isB=selPhase&&selPhase.blast.indexOf(slug)>=0;
-      var cont=E("circle",{class:"xcontainer"+(isT?" ct":isB?" cb":""),cx:pos.x,cy:pos.y,r:contR,fill:col,stroke:col});
+      var contWrap=E("g",{transform:"translate("+pos.x+","+pos.y+")"});
+      var cont=E("circle",{class:"xcontainer"+(isT?" ct":isB?" cb":""),cx:0,cy:0,r:contR,fill:col,stroke:col});
       (function(sl){ cont.addEventListener("click",function(ev){ ev.stopPropagation(); openEntity(sl); }); })(slug);
-      layer.appendChild(cont);
+      contWrap.appendChild(cont);
       var cnt=(selPhase&&selPhase.pieces&&selPhase.pieces[slug])?selPhase.pieces[slug].length:0;
-      var lb=E("text",{class:"xcontlabel",x:pos.x,y:pos.y-contR-8,fill:col}); lb.textContent=(nodeMeta[slug].node.label||slug)+(cnt?" ("+cnt+")":""); layer.appendChild(lb);
+      var lb=E("text",{class:"xcontlabel",x:0,y:-contR-8,fill:col}); lb.textContent=(nodeMeta[slug].node.label||slug)+(cnt?" ("+cnt+")":"");
+      contWrap.appendChild(lb);
+      bgL.appendChild(contWrap);
+      // the exploded L1 node is opacity:0 — the entity key re-registers on the
+      // container wrapper so selection/peek rings stay visible
+      regNode(contWrap, "ent:"+slug, nodeMeta[slug].node.label||slug, "entity", contR+4);
       b.minX=Math.min(b.minX,pos.x-contR-20); b.maxX=Math.max(b.maxX,pos.x+contR+20); b.minY=Math.min(b.minY,pos.y-contR-20); b.maxY=Math.max(b.maxY,pos.y+contR+20); });
     frame(b);
     // the CHANGED pieces of the current stage — an intra edge touching one goes "hot".
@@ -468,77 +840,105 @@
     if(selPhase){ slugs.forEach(function(slug){ piecesFor(slug).forEach(function(p){ if(!stageEnc(slug,p).hollow) hot[slug+"\t"+p.id]=1; }); }); }
     // piece↔piece coupling INSIDE each entity — inherits the ENTITY colour (recipe =
     // its dark green), flipping to the stage colour when it touches a changed piece.
-    if(showConns){ slugs.forEach(function(slug){ var col=COLORS[slug]||"var(--edge)"; intraEdgesFor(slug).forEach(function(e){
+    if(showConns){ slugs.forEach(function(slug){ var col=COLORS[slug]||"var(--edge)"; intraEdgesFor(slug).forEach(function(e,ei){
       var a=innerPos[slug+"\t"+e.source], c=innerPos[slug+"\t"+e.target];
       if(a&&c){ var isHot=hot[slug+"\t"+e.source]||hot[slug+"\t"+e.target];
-        var pth=E("path",{class:"xedge intra"+(isHot?" hot":""),d:"M"+a.x+","+a.y+" L"+c.x+","+c.y});
-        pth.style.stroke = isHot ? STAGE_COLOR[curStage] : col; layer.appendChild(pth); } }); }); }
-    // piece↔piece coupling ACROSS entities — always the amber flow highlight (the change
-    // graph's cross style: dashed, moving). Ecosystem: every FK crossing a boundary.
-    if(showConns && !selPhase){ (DATA.cross_edges||[]).forEach(function(e){
+        var pth=E("path",{class:"xedge intra"+(isHot?" hot":""),d:curve(a.x,a.y,c.x,c.y,(ei%2?14:-14))});
+        pth.style.stroke = isHot ? STAGE_COLOR[curStage] : col; wireL.appendChild(pth);
+        var ti=E("title"); ti.textContent=String(e.source).replace(/^[^:]+:/,"")+" → "+String(e.target).replace(/^[^:]+:/,"")+" · fk"; pth.appendChild(ti);
+        regEdge(pth, "fk", "pc:"+slug+"|"+e.source, "pc:"+slug+"|"+e.target, "model foreign key");
+        flowDots(wireL, pth, isHot ? STAGE_COLOR[curStage] : col); } }); }); }
+    // piece↔piece coupling ACROSS entities — entity-GRADIENT strokes + flow dots
+    // (the shared grammar; direction is motion, never arrowheads). Ecosystem: every
+    // FK crossing a boundary.
+    if(showConns && !selPhase){ (DATA.cross_edges||[]).forEach(function(e,xi){
       var a=innerPos[e.from_slug+"\t"+e.from], c=innerPos[e.to_slug+"\t"+e.to];
-      if(a&&c){ var pth=E("path",{class:"xedge xcross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y}); var ti=E("title"); ti.textContent=e.from.replace(/^model:/,"")+" → "+e.to.replace(/^model:/,"")+(e.via?" (via "+e.via+")":""); pth.appendChild(ti); layer.appendChild(pth);
+      if(a&&c){ var grad=edgeGradient(defs,a,c,COLORS[e.from_slug]||"#888",COLORS[e.to_slug]||"#888");
+        var pth=E("path",{class:"xedge xcross",d:curve(a.x,a.y,c.x,c.y,laneBow("x:"+e.from_slug+"|"+e.from,"x:"+e.to_slug+"|"+e.to,(xi%2?26:-26)))});
+        pth.style.stroke="url(#"+grad+")";
+        var ti=E("title"); ti.textContent=e.from.replace(/^model:/,"")+" → "+e.to.replace(/^model:/,"")+(e.via?" (via "+e.via+")":""); pth.appendChild(ti);
+        wireL.appendChild(pth);
+        regEdge(pth, "xfk", "pc:"+e.from_slug+"|"+e.from, "pc:"+e.to_slug+"|"+e.to, e.via?("via "+e.via):"fk across the boundary");
+        flowDots(wireL, pth, "url(#"+grad+")");
         _drawnPairs[e.from_slug+"\t"+e.to_slug]=1; _drawnPairs[e.to_slug+"\t"+e.from_slug]=1; } }); }
-    // phase cross-entity piece coupling — amber + flowing. Gated by showConns (the
-    // Connections toggle governs ALL piece edges, both modes). Anchored to the actual
-    // PIECES: a phase piece since renamed/deleted from the current l2 has no innerPos,
-    // so its edge is skipped — never anchored to an invisible entity centre.
-    if(selPhase && showConns){ (selPhase.cross_edges||[]).forEach(function(e){ var a=innerPos[e.from_slug+"\t"+e.from], c=innerPos[e.to_slug+"\t"+e.to];
-      if(a&&c){ layer.appendChild(E("path",{class:"xedge cross"+(reduce?"":" flow"),"marker-end":"url(#eco-arrow-b)",d:"M"+a.x+","+a.y+" L"+c.x+","+c.y}));
+    // phase cross-entity piece coupling — stage-hot or gradient. Gated by showConns
+    // (the Connections toggle governs ALL piece edges, both modes). Anchored to the
+    // actual PIECES: a phase piece since renamed/deleted from the current l2 has no
+    // innerPos, so its edge is skipped — never anchored to an invisible entity centre.
+    if(selPhase && showConns){ (selPhase.cross_edges||[]).forEach(function(e,xi){ var a=innerPos[e.from_slug+"\t"+e.from], c=innerPos[e.to_slug+"\t"+e.to];
+      if(a&&c){ var isHot=hot[e.from_slug+"\t"+e.from]||hot[e.to_slug+"\t"+e.to];
+        var pth=E("path",{class:"xedge cross"+(isHot?" hot":""),d:curve(a.x,a.y,c.x,c.y,laneBow("x:"+e.from_slug+"|"+e.from,"x:"+e.to_slug+"|"+e.to,(xi%2?26:-26)))});
+        var fill;
+        if(isHot){ pth.style.stroke=STAGE_COLOR[curStage]; fill=STAGE_COLOR[curStage]; }
+        else { var gr=edgeGradient(defs,a,c,COLORS[e.from_slug]||"#888",COLORS[e.to_slug]||"#888");
+          pth.style.stroke="url(#"+gr+")"; fill="url(#"+gr+")"; }
+        wireL.appendChild(pth);
+        regEdge(pth, "xfk", "pc:"+e.from_slug+"|"+e.from, "pc:"+e.to_slug+"|"+e.to, e.via?("via "+e.via):"fk across the boundary");
+        flowDots(wireL, pth, fill);
         _drawnPairs[e.from_slug+"\t"+e.to_slug]=1; _drawnPairs[e.to_slug+"\t"+e.from_slug]=1; } }); }
+    // pieces — Lucide model cylinders (the shared icon grammar) + role dot + the
+    // replayed phase's BEAT rings/pills
     slugs.forEach(function(slug){
       piecesFor(slug).forEach(function(p){ var pp=innerPos[slug+"\t"+p.id]; if(!pp) return;
         var pfor=phasePiece(slug,p.id);
-        var role = pfor&&pfor.role==="changed" ? "var(--touch)" : pfor&&pfor.role==="link" ? "var(--blast)" : COLORS[slug];
-        var g=E("g",{class:"xpiece"+(selPiece===slug+"|"+p.id?" selp":""),"data-piece":slug+"|"+p.id,transform:"translate("+pp.x+","+pp.y+")"});
-        if(selPhase){ var e=stageEnc(slug,p);
-          if(e.ring) g.appendChild(E("circle",{class:"ring",r:e.r+4,cx:0,cy:0,stroke:e.color,"stroke-width":"2.3"}));
-          g.appendChild(E("circle",{r:e.r,cx:0,cy:0,fill:e.hollow?"var(--panel)":e.color,stroke:e.hollow?role:"var(--panel)","stroke-width":"2"}));
-          if(e.badge){ var bw=9+String(e.badge).length*5.4,bx=e.r*0.64,by=-e.r*0.72; g.appendChild(E("rect",{x:bx-bw/2,y:by-7,width:bw,height:14,rx:7,fill:e.color})); var bt=E("text",{class:"xbadge",x:bx,y:by+3}); bt.textContent=e.badge; g.appendChild(bt); }
-        } else { g.appendChild(E("circle",{r:PIECE_R,cx:0,cy:0,fill:role,"fill-opacity":"0.85",stroke:"var(--panel)","stroke-width":"2"})); }
-        var sx=E("g",{class:"selx"}); sx.appendChild(E("line",{x1:-4,y1:-4,x2:4,y2:4})); sx.appendChild(E("line",{x1:-4,y1:4,x2:4,y2:-4})); g.appendChild(sx);
-        var t=E("text",{class:"xplabel",x:0,y:(selPhase?stageEnc(slug,p).r:PIECE_R)+10}); t.textContent=trunc(p.label,15); g.appendChild(t);
+        var roleCol = pfor&&pfor.role==="changed" ? "var(--touch)" : pfor&&pfor.role==="link" ? "var(--blast)" : COLORS[slug];
+        var g=E("g",{class:"xpiece","data-piece":slug+"|"+p.id,transform:"translate("+pp.x+","+pp.y+")"});
+        halo(g);
+        ICONSETS[ICONSET].model(g, 8, "var(--c-model)");
+        g.appendChild(E("circle",{cx:-10, cy:-9, r:2.6, fill:roleCol}));   // role dot
+        if(selPhase){ var enc=stageEnc(slug,p);
+          enc.rings.forEach(function(rg){ g.appendChild(E("circle",{class:rg[0], r:rg[1], cx:0, cy:0})); });
+          if(enc.pill) pillOn(g, enc.pill.t, enc.pill.col); }
+        twoRowLabel(g, p.label, 0, 22);
         var ti=E("title"); ti.textContent=p.label+(pfor&&pfor.via?" — via "+pfor.via:""); g.appendChild(ti);
-        (function(sl,pc){ g.addEventListener("click",function(ev){ ev.stopPropagation(); openPiece(sl,pc); }); })(slug,p);
-        layer.appendChild(g); }); });
+        nodeL.appendChild(g);
+        regNode(g, "pc:"+slug+"|"+p.id, p.label, "model", 16);
+        (function(sl,pc){ g.addEventListener("click",function(ev){ ev.stopPropagation();
+          navTouch("pc:"+sl+"|"+pc.id); openPiece(sl,pc); }); })(slug,p);
+      }); });
   }
 
-  // ── interaction ──
+  // ── interaction: drag re-renders (userPos), tap opens; the lab wheel grammar ──
   var dragging=null;
-  function wire(g,node){ g.addEventListener("pointerdown",function(e){ e.preventDefault();
+  function wire(g,node){ g.addEventListener("pointerdown",function(e){ e.preventDefault(); e.stopPropagation();
     var start={x:e.clientX,y:e.clientY},moved=false,origin={x:nodePos[node.id].x,y:nodePos[node.id].y};
-    function mv(ev){ var dx=ev.clientX-start.x,dy=ev.clientY-start.y; if(!moved&&Math.abs(dx)+Math.abs(dy)<4) return; moved=true; dragging=node.id;
-      nodePos[node.id]={x:origin.x+dx,y:origin.y+dy}; g.setAttribute("transform","translate("+nodePos[node.id].x+","+nodePos[node.id].y+")"); refreshEdges(node.id); }
-    function up(){ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up); setTimeout(function(){ dragging=null; },0); if(!moved) openEntity(node.slug); }
+    function mv(ev){ var s=baseScale*zoom||1;
+      var dx=(ev.clientX-start.x)/s,dy=(ev.clientY-start.y)/s;
+      if(!moved&&Math.abs(dx)+Math.abs(dy)<3) return; moved=true; dragging=node.id;
+      userPos[node.id]={x:rnd(origin.x+dx),y:rnd(origin.y+dy)};
+      renderKeepView(); }
+    function up(){ window.removeEventListener("pointermove",mv); window.removeEventListener("pointerup",up);
+      setTimeout(function(){ dragging=null; if(moved) rerenderKeepPanel(); },0);
+      if(!moved){ navTouch("ent:"+node.slug); openEntity(node.slug);
+        if(SELREG.nodes["ent:"+node.slug]) appendConn("ent:"+node.slug, selectNode("ent:"+node.slug)); } }
     window.addEventListener("pointermove",mv); window.addEventListener("pointerup",up); }); }
-  (function(){ var pan=null;
+  (function(){ var pan=null, altAcc=0;
     stage.addEventListener("pointerdown",function(e){ if(e.target!==stage && e.target!==svg) return; pan={x:e.clientX,y:e.clientY,px:panX,py:panY,moved:false}; });
     window.addEventListener("pointermove",function(e){ if(!pan) return; var dx=e.clientX-pan.x,dy=e.clientY-pan.y; if(Math.abs(dx)+Math.abs(dy)>3)pan.moved=true; panX=pan.px+dx; panY=pan.py+dy; applyPan(); });
-    window.addEventListener("pointerup",function(){ if(pan){ if(!pan.moved){ selPiece=null; resetPanel(); vp.querySelectorAll(".xpiece.selp").forEach(function(x){x.classList.remove("selp");}); } pan=null; } });
-    stage.addEventListener("wheel",function(e){ e.preventDefault(); var rect=stage.getBoundingClientRect(),mx=e.clientX-rect.left,my=e.clientY-rect.top,tx=fitTx+panX,ty=fitTy+panY,dx=(mx-tx)/zoom,dy=(my-ty)/zoom,z2=Math.max(0.35,Math.min(4,zoom*Math.exp(-e.deltaY*0.0015)));
-      panX=(mx-z2*dx)-fitTx; panY=(my-z2*dy)-fitTy; zoom=z2; applyPan(); },{passive:false});
+    window.addEventListener("pointerup",function(){ if(pan){ if(!pan.moved){ ecoTarget=null; clearSelection(); resetPanel(); } pan=null; } });
+    stage.addEventListener("wheel",function(e){ e.preventDefault();
+      if(e.altKey){ altAcc+=e.deltaY;
+        if(Math.abs(altAcc)>=40){ applyDepth(selDepth+(altAcc<0?1:-1)); altAcc=0; } return; }
+      if(e.ctrlKey || e.metaKey){
+        var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+        var s1=baseScale*zoom, wx=(mx-(fitT[0]+panX))/s1, wy=(my-(fitT[1]+panY))/s1;
+        var zn=zoom*Math.exp(-e.deltaY*0.0022);
+        var eff=baseScale*zn;
+        if(eff>3.5) zn=3.5/baseScale;
+        if(eff<0.05) zn=0.05/baseScale;
+        zoom=zn;
+        var s2=baseScale*zoom;
+        panX=mx-fitT[0]-wx*s2; panY=my-fitT[1]-wy*s2;
+      } else if(e.shiftKey){ panX-=(e.deltaY+e.deltaX); }
+      else { panX-=e.deltaX; panY-=e.deltaY; }
+      applyPan(); },{passive:false});
   })();
   window.addEventListener("resize",function(){ if(lastBounds) frame(lastBounds); });
+  document.getElementById("eco-depthSlider").addEventListener("input", function(){ applyDepth(+this.value); });
+  document.getElementById("eco-navback").addEventListener("click", goBack);
 
-  // ── structural id-card (Tier 1): principal-fn lead + typed chips, from the model's
-  //    c4-graph L2 `ids` block. Same visual language as the change graph's panel;
-  //    honest-empty (a section only renders when its data exists), lists capped. ──
-  var KIND_ICON={
-    fn:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
-    endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
-    datatype:'<polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/>' };
-  var KIND_CHIP={ fn:"#0f766e", endpoint:"#4c6ef5" };
-  var METHOD_COLOR={ GET:"#16794c", POST:"#4338ca", PUT:"#b45309", PATCH:"#b45309", DELETE:"#d1443c" };
-  var TYPE_CLS={ int:"num1", float:"num2", Decimal:"num2", Numeric:"num2", date:"tim1", time:"tim1",
-    datetime:"tim2", str:"str1", Text:"str2", bytes:"str2", bool:"bool", dict:"json", list:"json",
-    Any:"json", JSON:"json", Literal:"json", UUID:"id", uuid:"id" };
-  function icoSvg(p){ return '<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+p+'</svg>'; }
-  function tyFamily(t){ var toks=String(t).split(/[^A-Za-z_]+/); for(var i=0;i<toks.length;i++){ if(TYPE_CLS[toks[i]]) return TYPE_CLS[toks[i]]; } return null; }
-  function kindChip(kind,label){ var c=KIND_CHIP[kind]||"#868e96"; return "<span class='idchip' style='color:"+c+";background:"+c+"1f'>"+icoSvg(KIND_ICON[kind])+"<b>"+esc(trunc(label,30))+"</b></span>"; }
-  function epChip(ep){ var mc=METHOD_COLOR[ep.m]||"#868e96", c=KIND_CHIP.endpoint; return "<span class='idchip' style='color:"+c+";background:"+c+"1f' title='"+esc(ep.m+" "+ep.p+" → "+ep.fn+"()")+"'>"+icoSvg(KIND_ICON.endpoint)+"<span class='mth' style='color:"+mc+"'>"+esc(ep.m)+"</span><b>"+esc(ep.p)+"</b></span>"; }
-  function dtChip(d){ var fam=tyFamily(d.t); return "<span class='idchip dt'>"+icoSvg(KIND_ICON.datatype)+"<b>"+esc(d.n)+"</b><span class='ty"+(fam?" ty-"+fam:"")+"'>"+esc(d.t)+"</span></span>"; }
-  function idrow(label,chips){ return chips?"<div class='idrow'><div class='idlbl'>"+label+"</div><div class='idchips'>"+chips+"</div></div>":""; }
-  function moreChip(arr,n){ return arr.length>n?"<span class='idchip st'>+"+(arr.length-n)+" more</span>":""; }
+  // ── structural id-card (Tier 1): principal-fn lead + typed chips — the chip
+  //    renderers come from the shared graph-grammar.js; honest-empty, capped. ──
   function modelNode(slug,id){ var gg=DATA.l2[slug]; if(!gg) return ""; for(var i=0;i<gg.nodes.length;i++){ if(gg.nodes[i].id===id) return gg.nodes[i]; } return ""; }
   function idCardHTML(ids){ if(!ids) return ""; var h="";
     if(ids.principal) h+="<div class='principal'>"+icoSvg(KIND_ICON.fn)+"<span>principal fn · <b>"+esc(ids.principal)+"()</b></span></div>";
@@ -570,9 +970,9 @@
     var sel=document.getElementById("eco-feature");
     if(sel){ sel.value = selPhase ? String(ARCHIVE.indexOf(selPhase)) : ""; sel.addEventListener("change", onPick); }
     var seg=document.getElementById("eco-stageSeg");
-    if(seg) seg.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; curStage=b.getAttribute("data-stage"); render(); resetPanel(); });
+    if(seg) seg.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; curStage=b.getAttribute("data-stage"); rerenderKeepPanel(); });
   }
-  function resetPanel(){ var p=document.getElementById("eco-panel");
+  function resetPanel(){ var p=panel;
     if(!selPhase){
       p.innerHTML = pickerHTML()
         + "<div class='phdr'>ecosystem</div><h4>"+DATA.stats.entities+" entities</h4>"
@@ -580,7 +980,7 @@
         + "<div class='row'><span class='k'>entities</span><span class='v'>"+DATA.stats.entities+"</span></div>"
         + "<div class='row'><span class='k'>coupling edges</span><span class='v'>"+L1E.length+"</span></div>"
         + "<div class='row'><span class='k'>archived phases</span><span class='v'>"+ARCHIVE.length+"</span></div>"
-        + "<div class='sum'>Pick a feature above to replay a past phase — its touched → blast lights up, the rest fades, and the stage lenses re-encode the pieces. Drag to pan, scroll to zoom.</div>";
+        + "<div class='sum'>Pick a feature above to replay a past phase — its touched → blast lights up, the rest fades, and the stage lenses paint the beat rings. Click anything to inspect it; scroll pans, ctrl+scroll zooms.</div>";
     } else { var s=selPhase, sc=STAGE_COLOR[curStage];
       p.innerHTML = pickerHTML() + stageSegHTML()
         + "<div class='phdr'>"+esc(s.phase)+" · "+curStage+"</div><h4>"+esc(s.name||s.phase)+"</h4>"
@@ -602,7 +1002,8 @@
     return n+" "+(curStage==="commit"?"piece(s) "+noun:"piece(s) "+noun); }
   function countPieces(s){ return (s.touched.concat(s.blast)).reduce(function(a,sl){ return a+(((s.pieces&&s.pieces[sl])||[]).length); },0); }
   function openEntity(slug){ var n=ent(slug); if(!n) return; var c=n.counts;
-    document.getElementById("eco-panel").innerHTML = pickerHTML() + stageSegHTML()
+    ecoTarget = { entity:slug };
+    panel.innerHTML = pickerHTML() + stageSegHTML()
       + "<div class='phdr'>entity"+(selPhase?" · "+esc(selPhase.phase):"")+"</div><h4 style='color:"+(COLORS[slug]||"var(--ink)")+"'>"+esc(n.label)+"</h4>"
       + "<div class='kind'>"+esc(n.status||"")+"</div>"
       + "<div class='row'><span class='k'>endpoints</span><span class='v'>"+c.endpoints+"</span></div>"
@@ -611,52 +1012,93 @@
       + "<div class='row'><span class='k'>lines</span><span class='v'>"+c.lines.toLocaleString()+"</span></div>"
       + entityIdCard(slug);
     afterPanel();
+    if(SELREG.nodes["ent:"+slug]) appendConn("ent:"+slug, selectNode("ent:"+slug));
   }
-  function openPiece(slug,p){ selPiece=slug+"|"+p.id;
-    vp.querySelectorAll(".xpiece").forEach(function(g){ g.classList.toggle("selp",g.getAttribute("data-piece")===selPiece); });
+  function openPiece(slug,p){
+    ecoTarget = { piece:{slug:slug, p:p} };
     var n=ent(slug), pfor=phasePiece(slug,p.id), d=selPhase?(((selPhase.stages&&selPhase.stages[curStage])||{}).pieces||{})[p.id]||{}:{};
     var role=pfor?pfor.role:null, via=pfor?pfor.via:null;
     var mn=modelNode(slug,p.id), sids=mn?mn.ids:null;   // the structural id-card
-    document.getElementById("eco-panel").innerHTML = pickerHTML() + stageSegHTML()
+    panel.innerHTML = pickerHTML() + stageSegHTML()
       + "<div class='phdr'>piece"+(selPhase?" · "+curStage:"")+"</div><h4>"+esc(p.label)+"</h4>"
       + "<div class='kind'>in "+esc(n?n.label:slug)+(role==="link"?" · downstream link":(role==="changed"?" · changed":""))+"</div>"
       + (via?"<div class='row'><span class='k'>couples via</span><span class='v'>"+esc(via)+"</span></div>":"")
       + (selPhase&&d.add?"<div class='row'><span class='k'>+ lines</span><span class='v'>"+d.add+"</span></div>":"")
       + (selPhase&&d.cases&&d.cases.length?"<div class='row'><span class='k'>cases</span><span class='v'>"+esc(d.cases.join(", "))+"</span></div>":"")
       + idCardHTML(sids)
-      + (sids?"":"<div class='sum'>"+(selPhase?(role?"Part of the "+esc(selPhase.phase)+" change.":"A model in "+esc(n?n.label:slug)+" — untouched by this phase."):"A model in the "+esc(n?n.label:slug)+" entity.")+"</div>");
+      + dossierHTML(mn?mn.det:null, "docstring")
+      + (sids||mn&&mn.det?"":"<div class='sum'>"+(selPhase?(role?"Part of the "+esc(selPhase.phase)+" change.":"A model in "+esc(n?n.label:slug)+" — untouched by this phase."):"A model in the "+esc(n?n.label:slug)+" entity.")+"</div>");
     afterPanel();
+    if(SELREG.nodes["pc:"+slug+"|"+p.id]) appendConn("pc:"+slug+"|"+p.id, selectNode("pc:"+slug+"|"+p.id));
   }
-  function onPick(e){ var v=e.target.value; selPhase = v==="" ? null : ARCHIVE[+v]; selPiece=null; curStage="execute";
+  function onPick(e){ var v=e.target.value; selPhase = v==="" ? null : ARCHIVE[+v]; ecoTarget=null; curStage="execute";
     document.getElementById("eco-sub").textContent = selPhase ? ("replaying "+selPhase.phase+(selPhase.name?" · "+selPhase.name:"")) : "the whole ecosystem · replay any past phase";
     render(); resetPanel();  // Close/Open-all + Connections stay live in BOTH modes
   }
 
-  function buildLegend(){ var el=document.getElementById("eco-legend"), html="";
-    if(selPhase){ html = "<span class='item'><span class='sw' style='background:var(--touch)'></span>changed</span>"
-      + "<span class='item'><span class='sw' style='background:var(--blast)'></span>affected (blast)</span>"
-      + "<span class='item'><span class='swr' style='border-top-color:var(--blast)'></span>coupling (fk · calls)</span>"
-      + "<span class='count'>"+esc(selPhase.phase)+" · "+curStage+" lens</span>"; }
-    else { html = L1.map(function(n){ return "<span class='item'><span class='sw' style='background:"+(COLORS[n.slug]||"#888")+"'></span>"+esc(n.label)+"</span>"; }).join("")
-      + "<span class='count'>"+DATA.stats.entities+" entities · "+ARCHIVE.length+" archived phase(s)</span>"; }
-    el.innerHTML=html;
+  // ── the Legend corner box: phase key + the level tail, one collapsible box ──
+  function legendRow(inner, text){
+    return "<div class='item'><svg width='22' height='16' viewBox='0 0 24 24'>"+inner+"</svg><span>"+text+"</span></div>"; }
+  function buildLegend(){ var el=document.getElementById("eco-legendbox"), sc=selPhase?STAGE_COLOR[curStage]:"var(--muted)";
+    el.classList.toggle("min", legendMin);
+    if(legendMin){
+      el.innerHTML = "<button class='lgpill' id='eco-lgmax' title='Show the legend'><i style='background:"+sc+"'></i>Legend</button>";
+      document.getElementById("eco-lgmax").onclick=function(){ legendMin=false; buildLegend(); };
+      return;
+    }
+    var rows="";
+    if(selPhase){
+      if(curStage==="red") rows+=legendRow("<circle cx='12' cy='12' r='9' fill='none' stroke='#e5484d' stroke-width='2' stroke-dasharray='5 3'/>","<b>red ring</b> · case proved RED, pill = # cases");
+      else if(curStage==="execute"){ rows+=legendRow("<circle cx='12' cy='12' r='9' fill='none' stroke='#4c9aff' stroke-width='2.4'/>","<b>heat ring</b> · edited, pill +N = lines");
+        rows+=legendRow("<circle cx='12' cy='12' r='9' fill='none' stroke='#4c9aff' stroke-width='1.3' stroke-dasharray='3 3'/>","dashed = <b>downstream</b> (blast)"); }
+      else if(curStage==="review"){ rows+=legendRow("<circle cx='12' cy='12' r='9' fill='none' stroke='#30a46c' stroke-width='2'/>","<b>green ring</b> · the red cases now PASS");
+        rows+=legendRow("<circle cx='12' cy='12' r='9' fill='none' stroke='var(--drift)' stroke-width='2' stroke-dasharray='2 3'/>","<b>amber dashed</b> · drift / finding"); }
+      else rows+=legendRow("<circle cx='12' cy='12' r='9' fill='none' stroke='#8e4ec6' stroke-width='2.2'/>","<b>purple ring</b> · in the checkpoint");
+      rows+=legendRow("<circle cx='8' cy='12' r='3' fill='var(--touch)'/><circle cx='17' cy='12' r='3' fill='var(--blast)'/>","dot <b>green</b> changed · <b>amber</b> downstream");
+    }
+    rows+=legendRow("<path d='M2 12 Q12 6 22 12' fill='none' stroke='var(--edge)' stroke-width='2'/><circle cx='12' cy='9' r='2.2' fill='var(--edge)'/>","moving dot = a wire's direction");
+    var tail;
+    if(selPhase) tail="<div class='eco-legend' id='eco-legend'><div class='count'>"+esc(selPhase.phase)+" · "+curStage+" lens</div></div>";
+    else tail="<div class='eco-legend' id='eco-legend'><div class='grp'>"
+      + L1.map(function(n){ return "<span class='item'><span class='sw' style='background:"+(COLORS[n.slug]||"#888")+"'></span>"+esc(n.label)+"</span>"; }).join("")
+      + "</div><div class='count'>"+DATA.stats.entities+" entities · "+ARCHIVE.length+" archived phase(s)</div></div>";
+    el.innerHTML = "<div class='lghead'><div class='lh'><i style='background:"+sc+"'></i>Legend"+(selPhase?" · "+curStage:"")+"</div>"
+      + "<button class='lgbtn' id='eco-lgmin' title='Minimize'>&#8211;</button></div>"+rows+tail;
+    document.getElementById("eco-lgmin").onclick=function(){ legendMin=true; buildLegend(); };
   }
 
   // ── layout controls (same as the change graph): Open/Close-all toggle + gear ──
   function fillPills(seg,opts,cur,attr){ seg.innerHTML=""; Object.keys(opts).forEach(function(k){ var b=document.createElement("button"); b.textContent=opts[k]; b.setAttribute("data-"+attr,k); if(k===cur)b.classList.add("on"); seg.appendChild(b); }); }
   function syncPills(){ fillPills(document.getElementById("eco-entitiesSeg"),L1_LAYOUTS,layout,"lay");
-    fillPills(document.getElementById("eco-insideSeg"),INSIDE_LAYOUTS,insideLayout,"in"); }
+    fillPills(document.getElementById("eco-insideSeg"),INSIDE_LAYOUTS,insideLayout,"in");
+    fillPills(document.getElementById("eco-linesSeg"),LINE_OPTS,lineStyle,"line");
+    fillPills(document.getElementById("eco-iconsSeg"),ICON_OPTS,ICONSET,"ico"); }
   document.getElementById("eco-openAll").addEventListener("click",function(){ explodeAll=!explodeAll;
-    this.classList.toggle("on",explodeAll); this.textContent=explodeAll?"Close all":"Open all"; render(); });
+    this.classList.toggle("on",explodeAll); this.textContent=explodeAll?"Close all":"Open all"; rerenderKeepPanel(); });
   document.getElementById("eco-conns").addEventListener("click",function(){ showConns=!showConns;
-    this.classList.toggle("on",showConns); render(); });
-  document.getElementById("eco-entitiesSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; layout=b.getAttribute("data-lay"); syncPills(); render(); });
-  document.getElementById("eco-insideSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; insideLayout=b.getAttribute("data-in"); syncPills(); render(); });
+    this.classList.toggle("on",showConns); rerenderKeepPanel(); });
+  document.getElementById("eco-entitiesSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; layout=b.getAttribute("data-lay"); userPos={}; syncPills(); rerenderKeepPanel(); });
+  document.getElementById("eco-insideSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; insideLayout=b.getAttribute("data-in"); syncPills(); rerenderKeepPanel(); });
+  document.getElementById("eco-linesSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; lineStyle=b.getAttribute("data-line"); syncPills(); rerenderKeepPanel(); });
+  document.getElementById("eco-iconsSeg").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; ICONSET=b.getAttribute("data-ico"); syncPills(); rerenderKeepPanel(); });
   (function(){ var gb=document.getElementById("eco-gear"), gp=document.getElementById("eco-gearpanel");
     gb.addEventListener("click",function(e){ e.stopPropagation(); var open=gp.hidden; gp.hidden=!open; gb.setAttribute("aria-expanded",String(open)); });
     document.addEventListener("click",function(e){ if(!gp.hidden && !gp.contains(e.target) && !gb.contains(e.target)){ gp.hidden=true; gb.setAttribute("aria-expanded","false"); } });
   })();
-  document.getElementById("eco-reset").addEventListener("click",function(){ zoom=1; panX=0; panY=0; selPiece=null; render(); });
+  document.getElementById("eco-reset").addEventListener("click",function(){ zoom=1; panX=0; panY=0; userPos={}; ecoTarget=null; navClear(); clearSelection(); render(); resetPanel(); });
+
+  // ── the Controls corner box: the gesture grammar, starts min ──
+  document.getElementById("eco-keysBody").innerHTML =
+    "<div>click <span>· inspect (card + connections)</span></div>"
+    + "<div>drag a node <span>· move it · drag the background · pan</span></div>"
+    + "<div>scroll <span>· pan vertically · shift &#43; scroll · sideways</span></div>"
+    + "<div>ctrl / pinch <span>· zoom at the cursor</span></div>"
+    + "<div>alt &#43; scroll <span>· highlight depth (the slider follows)</span></div>"
+    + "<div>dbl-click a wire <span>· hop between its ends</span></div>"
+    + "<div>&larr; (panel top) <span>· back through the travel trail (6 stops)</span></div>";
+  document.getElementById("eco-keysMin").addEventListener("click",function(){
+    var box=document.getElementById("eco-keys"), min=box.classList.toggle("min");
+    this.textContent = min ? "+" : "−"; });
 
   // ── drag the divider to resize · collapse to a bar / restore (SAME as the change graph) ──
   (function(){ var resizer=document.getElementById("eco-resizer"), side=document.getElementById("eco-side"),
@@ -701,7 +1143,6 @@
     connsOn:function(){ return document.getElementById("eco-conns").classList.contains("on"); },
     intraEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.intra").length; },
     xcrossEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.xcross").length; },
-    flowEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.flow").length; },
     hotIntraEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.intra.hot").length; },
     intraStroke:function(){ var e=vp.querySelector("#eco-expansion .xedge.intra:not(.hot)"); return e?e.style.stroke:null; },
     explodedNodes:function(){ return vp.querySelectorAll(".node.entnode.exploded").length; },
@@ -727,7 +1168,43 @@
     blastNow:function(){ return Array.prototype.map.call(vp.querySelectorAll(".node.blast"),function(g){ return g.getAttribute("data-id"); }); },
     crossEdges:function(){ return vp.querySelectorAll("#eco-expansion .xedge.cross").length; },
     badges:function(){ return vp.querySelectorAll("#eco-expansion .xbadge").length; },
-    panelText:function(){ return document.getElementById("eco-panel").textContent; }
+    panelText:function(){ return document.getElementById("eco-panel").textContent; },
+    // ── the lab-grammar surfaces (the archive port's own instruments) ──
+    icons:function(){ return ICONSET; },
+    setIcons:function(v){ ICONSET=v; rerenderKeepPanel(); },
+    line:function(){ return lineStyle; },
+    setLine:function(v){ lineStyle=v; rerenderKeepPanel(); },
+    depth:function(){ return selDepth; },
+    setDepth:function(v){ applyDepth(v); },
+    selKeyNow:function(){ return selKey; },
+    selrings:function(){ return vp.querySelectorAll(".selring").length; },
+    reg:function(){ return { nodes:Object.keys(SELREG.nodes).length, edges:SELREG.edges.length }; },
+    hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll(".e-hop"+d).length; return o; },
+    halos:function(){ return vp.querySelectorAll(".halo").length; },
+    flowdots:function(){ return vp.querySelectorAll(".flowdot").length; },
+    dotsAnimated:function(){ return vp.querySelectorAll(".flowdot animateMotion").length; },
+    gradients:function(){ return vp.querySelectorAll("defs linearGradient").length; },
+    rings:function(){ var q=function(s){ return vp.querySelectorAll(s).length; };
+      return { red:q(".red-ring"), heat:q(".heat-ring"), blast:q(".blast-ring"),
+               ok:q(".ok-ring"), commit:q(".commit-ring"), drift:q(".drift-ring") }; },
+    pills:function(){ return vp.querySelectorAll("rect.bpill").length; },
+    conRows:function(){ return document.querySelectorAll("#eco-panel .conrow").length; },
+    hoverConn:function(i){ var r=document.querySelectorAll("#eco-panel .conrow")[i||0];
+      if(r) r.dispatchEvent(new MouseEvent("mouseenter",{bubbles:false})); },
+    peeked:function(){ return vp.querySelectorAll(".peek-ring").length; },
+    navDepth:function(){ return navStack.length; },
+    navBack:function(){ goBack(); },
+    navShown:function(){ return !document.getElementById("eco-navback").hidden; },
+    keysMinNow:function(){ return document.getElementById("eco-keys").classList.contains("min"); },
+    clickKeysMin:function(){ document.getElementById("eco-keysMin").click(); },
+    legendMinNow:function(){ return legendMin; },
+    dossier:function(){ return {
+      ptabs: document.querySelectorAll("#eco-panel table.ptab").length,
+      uq:    document.querySelectorAll("#eco-panel .uqchip").length,
+      cids:  document.querySelectorAll("#eco-panel .cid").length }; },
+    cam:function(){ return { panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice() }; },
+    nodeXY:nodeWorldXY,
+    entR:function(slug){ return nodeMeta[slug] ? nodeMeta[slug].r : null; }
   };
 
   syncPills(); render(); resetPanel();
