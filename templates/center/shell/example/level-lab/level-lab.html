@@ -40,14 +40,16 @@ svg#canvas{ display:block; width:100%; height:100%; }
 aside .irow svg{ width:17px; height:17px; }
 .legend svg{ width:16px; height:14px; }
 #sidewrap{ position:relative; flex:none; display:flex; }
-aside{ width:300px; border-left:1px solid var(--line); background:var(--panel); overflow:auto; padding:14px 16px 40px; }
+aside{ width:300px; border-left:1px solid var(--line); background:var(--panel); overflow:auto; padding:14px 16px 16px 30px; }
 #navback{ position:absolute; top:8px; right:10px; z-index:6; font:inherit; font-size:12px; font-weight:700;
   background:var(--accent); color:#fff; border:1px solid var(--accent); border-radius:8px; padding:3px 10px; cursor:pointer; }
-#panelmin{ position:absolute; bottom:0; left:0; right:0; height:26px; z-index:6; font:inherit; font-size:12px;
-  background:var(--panel); color:var(--muted); border:none; border-top:1px solid var(--line); cursor:pointer; }
-#sidewrap.min aside{ width:34px; padding:0; }
-#sidewrap.min aside > *{ display:none; }
+#panelchev{ position:absolute; top:8px; left:6px; z-index:6; font:inherit; font-size:13px; font-weight:700;
+  width:22px; height:22px; line-height:1; background:var(--panel); color:var(--muted);
+  border:1px solid var(--line); border-radius:6px; cursor:pointer; padding:0; }
+#sidewrap.min{ width:26px; }
+#sidewrap.min aside{ display:none; }
 #sidewrap.min #navback{ display:none; }
+#sidewrap.min #panelchev{ left:2px; }
 aside h3{ font-size:14px; margin-bottom:2px; }
 aside .k{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin:12px 0 4px;
   display:flex; align-items:center; gap:6px; }
@@ -80,9 +82,8 @@ aside .conrow{ display:flex; align-items:center; gap:7px; padding:5px 0; border-
 aside .conrow:hover{ color:var(--accent); }
 aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
   color:var(--muted); flex:none; min-width:52px; }   /* .sub2 kills pointer-events — the expander must stay clickable */
-.legend{ display:flex; gap:8px 18px; flex-wrap:wrap; align-items:center;
-  padding:7px 18px; border-top:1px solid var(--line); background:var(--panel);
-  font-size:11.5px; color:var(--muted); }
+.legend{ display:flex; gap:6px 14px; flex-wrap:wrap; align-items:center;
+  font-size:11px; color:var(--muted); }
 .legend .it{ display:inline-flex; align-items:center; gap:6px; }
 .legend svg{ width:16px; height:14px; }
 /* node vocab */
@@ -101,8 +102,19 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 @keyframes dashmove{ to{ stroke-dashoffset:-22; } }
 @media (prefers-reduced-motion: reduce){ .e-calls{ animation:none; } }
 .dim{ opacity:.12; }
-.hint{ position:absolute; bottom:10px; right:14px; font-size:11px; color:var(--muted);
-  background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:3px 9px; pointer-events:none; }
+.tgl{ font:inherit; background:var(--panel); color:var(--ink); border:1px solid var(--line);
+  border-radius:8px; padding:5px 8px; cursor:pointer; display:inline-flex; align-items:center; }
+.tgl.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.cornerbox{ position:absolute; bottom:10px; z-index:25; max-width:360px; font-size:11px;
+  background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 10px; }
+.cornerbox .cbhead{ display:flex; align-items:center; gap:10px; font-size:11px; font-weight:800;
+  letter-spacing:.05em; text-transform:uppercase; color:var(--muted); }
+.cornerbox .cbtgl{ margin-left:auto; font:inherit; font-size:12px; background:none; border:none;
+  color:var(--muted); cursor:pointer; padding:0 2px; }
+.cornerbox.min .cbbody{ display:none; }
+.cornerbox .cbbody{ margin-top:5px; }
+#keysBox .cbbody div{ padding:1.5px 0; color:var(--ink); }
+#keysBox .cbbody span{ color:var(--muted); }
 .fixture{ position:absolute; top:10px; left:14px; font-size:10.5px; color:var(--muted);
   background:var(--panel); border:1px dashed var(--line); border-radius:6px; padding:2px 9px; pointer-events:none; }
 </style>
@@ -120,16 +132,24 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       <button data-lvl="trace">5 · Trace</button>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:7px">
-    <button id="guardsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Guards</button>
-    <button id="hubsbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Hubs</button>
-    <button id="pressbtn" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:5px 13px;cursor:pointer">Pressure</button>
-    <button id="testsbtn" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Tests</button>
-    <button id="conns" class="on" style="font:inherit;font-size:12.5px;font-weight:600;background:var(--accent);color:#fff;border:1px solid var(--accent);border-radius:8px;padding:5px 13px;cursor:pointer">Connections</button>
+  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:7px;position:relative">
+    <div id="journeys" style="display:flex;align-items:center;gap:6px;min-height:28px">
+      <!-- JOURNEYS live here (design settled round 36; feature owed) -->
+    </div>
+    <div id="ctrl2" style="display:flex;align-items:center;gap:8px;margin-left:auto;position:relative">
+    <label id="depthCtl" title="Press Alt and scroll to modify it" style="display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted)">
+      depth <input type="range" id="depthSlider" min="1" max="5" step="1" value="5" style="width:88px;accent-color:var(--accent)">
+      <b id="depthVal" style="color:var(--ink);width:10px;text-align:center">5</b>
+    </label>
+    <button id="guardsbtn" class="tgl" title="Guards — teal shields mark pieces/endpoints with declared validators"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
+    <button id="hubsbtn" class="tgl" title="Hubs — fan-in rings (width = usage) and red dashed god halos"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='6' fill='none' stroke='currentColor' stroke-width='2.6'/><circle cx='12' cy='12' r='10' fill='none' stroke='currentColor' stroke-width='1.2' stroke-dasharray='4 3'/></svg></button>
+    <button id="pressbtn" class="tgl" title="Pressure — orange heat where the archive shows change concentration"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='8.5' fill='currentColor' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='currentColor'/></svg></button>
+    <button id="testsbtn" class="tgl on" title="Tests — proof badges: count pill (green pass / red fail), hollow dashed = unproven"><svg viewBox='0 0 24 24' width='16' height='16'><rect x='3' y='7' width='18' height='11' rx='5.5' fill='none' stroke='currentColor' stroke-width='2'/><path d='M8.5 12.5 l2.4 2.4 L15.5 10' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
+    <button id="conns" class="tgl on" title="Connections — cross-entity wires (FKs, returned schemas, uses)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M3 17 Q12 3 21 12' fill='none' stroke='currentColor' stroke-width='2'/><circle cx='13.5' cy='8.6' r='2.4' fill='currentColor'/></svg></button>
     <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
     </button>
-    <div id="gearpanel" hidden style="position:absolute;z-index:40;top:100%;left:0;margin-top:4px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
+    <div id="gearpanel" hidden style="position:absolute;z-index:40;top:100%;right:0;margin-top:4px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
       <div class="seg" id="laySeg" style="margin-left:0;flex-wrap:wrap">
         <button data-lay="chain">Chain</button>
@@ -160,14 +180,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
         <button data-line="direct" class="on">Direct</button>
         <button data-line="bowed">Bowed</button>
       </div>
-      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Highlight depth (selection)</div>
-      <div class="seg" id="depthSeg" style="margin-left:0">
-        <button data-d="1">1</button>
-        <button data-d="2">2</button>
-        <button data-d="3">3</button>
-        <button data-d="4">4</button>
-        <button data-d="5" class="on">5</button>
-      </div>
+    </div>
     </div>
   </div>
 </header>
@@ -181,15 +194,29 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       <g id="vp"></g>
     </svg>
     <div class="fixture">EXAMPLE FIXTURE · gustify (read-only) · fn call edges dashed = graft confidence:inferred (a floor)</div>
-    <div class="hint">scroll = pan · shift = sideways · ctrl / pinch = zoom · drag · click anything</div>
+    <div id="legendBox" class="cornerbox" style="left:14px">
+      <div class="cbhead"><span>Legend</span><button class="cbtgl" id="legendMin" title="minimize / restore">−</button></div>
+      <div class="cbbody legend" id="legend"></div>
+    </div>
+    <div id="keysBox" class="cornerbox min" style="right:14px">
+      <div class="cbhead"><span>Controls</span><button class="cbtgl" id="keysMin" title="minimize / restore">+</button></div>
+      <div class="cbbody">
+        <div>scroll <span>· pan vertically</span></div>
+        <div>shift + scroll <span>· pan sideways</span></div>
+        <div>ctrl / pinch <span>· zoom at the cursor</span></div>
+        <div>alt + scroll <span>· highlight depth (the slider follows)</span></div>
+        <div>drag an entity <span>· move it (declutter pauses)</span></div>
+        <div>click <span>· inspect · </span>dbl-click a wire <span>· hop between its ends</span></div>
+        <div>&#8592; <span>· back through the trail (up to 6 stops)</span></div>
+      </div>
+    </div>
   </div>
   <div id="sidewrap">
     <aside id="panel"></aside>
     <button id="navback" hidden title="back to the previous element">←</button>
-    <button id="panelmin" title="minimize / restore the panel">⌄</button>
+    <button id="panelchev" title="minimize / restore the panel">&#187;</button>
   </div>
 </div>
-<div class="legend" id="legend"></div>
 
 <script src="./level-lab.data.js"></script>
 <script>
@@ -1391,7 +1418,12 @@ function glyphIt(label, kind){
          "f-serv":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-services)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-services)'>F</text>",
          "f-web":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-web)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-web)'>F</text>"}[kind];
   return "<span class='it'><svg viewBox='0 0 16 15'>"+g+"</svg>"+esc(label)+"</span>"; }
-function legend(items){ document.getElementById("legend").innerHTML=items.join(""); }
+var LEGEND_TAIL=[
+  "<span class='it'>moving dot = the DIRECTION of a wire (constant speed; a bidirectional pair rides two lanes)</span>",
+  "<span class='it'>count pill = test cases (green pass · red fail) · hollow dashed circle = unproven</span>",
+  "<span class='it'>shield = validator guard · thick ring = fan-in hub · red dashed halo = god piece · orange heat = change pressure (toggles)</span>",
+  "<span class='it'>spinning ring = selected · connector boldness decays per hop (depth slider)</span>"];
+function legend(items){ document.getElementById("legend").innerHTML=items.concat(LEGEND_TAIL).join(""); }
 
 function showDefault(){
   panel.innerHTML="<h3>"+esc({entities:"Entities",pieces:"Pieces",functions:"Functions",layers:"Layers",trace:"Trace"}[level])+"</h3>"
@@ -1463,9 +1495,6 @@ window.addEventListener("resize", render);
 function lensBtn(id, get, set){ document.getElementById(id).addEventListener("click",function(){
   var v=!get(); set(v);
   this.classList.toggle("on",v);
-  this.style.background=v?"var(--accent)":"var(--panel)";
-  this.style.color=v?"#fff":"var(--ink)";
-  this.style.borderColor=v?"var(--accent)":"var(--line)";
   renderKeepView(); }); }
 lensBtn("guardsbtn", function(){return showGuards;}, function(v){showGuards=v;});
 lensBtn("hubsbtn",   function(){return showHubs;},   function(v){showHubs=v;});
@@ -1480,9 +1509,6 @@ document.getElementById("testsbtn").addEventListener("click",function(){
 document.getElementById("conns").addEventListener("click",function(){
   showConns=!showConns;
   this.classList.toggle("on",showConns);
-  this.style.background=showConns?"var(--accent)":"var(--panel)";
-  this.style.color=showConns?"#fff":"var(--ink)";
-  this.style.borderColor=showConns?"var(--accent)":"var(--line)";
   renderKeepView(); });
 
 /* ── SELECTION ENGINE: every node and wire registers itself at draw time; a click
@@ -1493,8 +1519,8 @@ var selKey = null;
 var selDepth = 5;   // default 5 per operator
 function applyDepth(d){ d=Math.max(1, Math.min(5, d)); if(d===selDepth) return;
   selDepth=d;
-  document.querySelectorAll("#depthSeg button").forEach(function(x){
-    x.classList.toggle("on", +x.getAttribute("data-d")===d); });
+  document.getElementById("depthSlider").value=String(d);   // the slider follows, live
+  document.getElementById("depthVal").textContent=String(d);
   if(selKey) selectNode(selKey); }   // re-run the highlight at the new depth
 function regNode(g, key, label, type){ g.setAttribute("data-key", key);
   SELREG.nodes[key]={el:g, label:label, type:type}; }
@@ -1726,19 +1752,21 @@ function indicatorHTML(o){
     traceCluster=b.getAttribute("data-cl");
     document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });   // a cluster change reshapes the INSIDE — the camera stays put
-  document.getElementById("depthSeg").addEventListener("click",function(e){
-    var b=e.target.closest("button"); if(!b) return;
-    applyDepth(+b.getAttribute("data-d"));
-  });
+  document.getElementById("depthSlider").addEventListener("input",function(){
+    applyDepth(+this.value); });
   document.getElementById("lineSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     lineStyle=b.getAttribute("data-line");
     document.querySelectorAll("#lineSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
   document.getElementById("navback").addEventListener("click",function(){ goBack(); });
-  document.getElementById("panelmin").addEventListener("click",function(){
+  document.getElementById("panelchev").addEventListener("click",function(){
     var sw=document.getElementById("sidewrap"), min=sw.classList.toggle("min");
-    document.getElementById("panelmin").textContent = min ? "⌃" : "⌄"; });
+    document.getElementById("panelchev").innerHTML = min ? "&#171;" : "&#187;"; });
+  [["legendBox","legendMin"],["keysBox","keysMin"]].forEach(function(pr){
+    document.getElementById(pr[1]).addEventListener("click",function(){
+      var box=document.getElementById(pr[0]), min=box.classList.toggle("min");
+      this.textContent = min ? "+" : "−"; }); });
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     insideLayout=b.getAttribute("data-in");

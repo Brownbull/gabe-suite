@@ -30,9 +30,9 @@ ok(await T('window.__lvltest.line()')==='direct', 'default line = Direct');
 
 // 2 · panel minimize / restore (real clicks on the bottom bar)
 const w0 = await pg.evaluate(() => document.getElementById('panel').clientWidth);
-await pg.click('#panelmin');
+await pg.click('#panelchev');
 const w1 = await pg.evaluate(() => document.getElementById('panel').clientWidth);
-await pg.click('#panelmin');
+await pg.click('#panelchev');
 const w2 = await pg.evaluate(() => document.getElementById('panel').clientWidth);
 ok(w0>=280 && w1<60 && w2>=280, `panel minimizes and restores (${w0}→${w1}→${w2})`);
 

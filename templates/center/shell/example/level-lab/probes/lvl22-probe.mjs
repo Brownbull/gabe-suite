@@ -25,7 +25,8 @@ console.log('  depth1 hops:', JSON.stringify(h));
 ok(h[1]>0 && h[2]===0, 'depth 1: only hop-1 edges highlighted ('+h[1]+')');
 
 // crank to 3 via the GEAR — deeper hops light with decaying boldness
-await pg.click('#gear'); await pg.click('#depthSeg button[data-d="3"]');
+await pg.evaluate(() => { const s=document.getElementById('depthSlider');
+  s.value='3'; s.dispatchEvent(new Event('input',{bubbles:true})); });
 h = await T('window.__lvltest.hopCounts()');
 console.log('  depth3 hops:', JSON.stringify(h));
 ok(h[1]>0 && h[2]>0, 'depth 3: hop-2 edges light up ('+h[2]+')');
@@ -37,12 +38,14 @@ console.log('  widths:', widths.join(' > '));
 ok(widths.length>=2 && widths.every((w,i)=>i===0||w<widths[i-1]), 'boldness DECAYS per hop ('+widths.join(' > ')+')');
 
 // depth 5 reaches further or saturates without error
-await pg.click('#depthSeg button[data-d="5"]');
+await pg.evaluate(() => { const s=document.getElementById('depthSlider');
+  s.value='5'; s.dispatchEvent(new Event('input',{bubbles:true})); });
 h = await T('window.__lvltest.hopCounts()');
 const total5 = Object.values(h).reduce((a,b)=>a+b,0);
 ok(total5>0, 'depth 5 highlights the reachable web ('+JSON.stringify(h)+')');
 // back to 1 → thin again
-await pg.click('#depthSeg button[data-d="1"]');
+await pg.evaluate(() => { const s=document.getElementById('depthSlider');
+  s.value='1'; s.dispatchEvent(new Event('input',{bubbles:true})); });
 h = await T('window.__lvltest.hopCounts()');
 ok(h[2]===0 && h[1]>0, 'back to depth 1: deeper hops cleared');
 

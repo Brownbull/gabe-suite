@@ -16,7 +16,7 @@ const wheel = (dy, mods) => pg.evaluate(([dy, mods]) => {
 }, [dy, mods]);
 const depth = () => T('window.__lvltest.depth()');
 const gearOn = () => pg.evaluate(() => {
-  const on=document.querySelector('#depthSeg button.on'); return on?+on.getAttribute('data-d'):0; });
+  return +document.getElementById('depthSlider').value; });
 
 await T("window.__lvltest.set('trace')");
 ok(await depth()===5, 'starts at default depth 5');
@@ -28,7 +28,7 @@ for(const want of [4,3,2,1]){
 }
 await wheel(100, {altKey:true}); await wheel(100, {altKey:true});
 ok(await depth()===1, 'clamps at 1 (extra down-notches ignored)');
-ok(await gearOn()===1, 'gear segment mirrors depth 1, got '+await gearOn());
+ok(await gearOn()===1, 'depth slider mirrors depth 1, got '+await gearOn());
 
 // scroll UP with Alt → deeper, clamps at 5
 for(const want of [2,3,4,5]){
@@ -37,7 +37,7 @@ for(const want of [2,3,4,5]){
 }
 await wheel(-100, {altKey:true});
 ok(await depth()===5, 'clamps at 5 (extra up-notches ignored)');
-ok(await gearOn()===5, 'gear segment mirrors depth 5');
+ok(await gearOn()===5, 'depth slider mirrors depth 5');
 
 // trackpad drip: small deltas accumulate to ONE step per ~40px, not one per event
 await pg.evaluate(() => { for(let i=0;i<4;i++)
