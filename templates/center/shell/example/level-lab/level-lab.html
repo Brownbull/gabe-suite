@@ -1463,6 +1463,10 @@ window.__lvltest = {
   depth:function(){ return selDepth; },
   setDepth:function(v){ selDepth=v; if(selKey) selectNode(selKey); },
   hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll('.e-hop'+d).length; return o; },
+  connAudit:function(){ var deg={}; Object.keys(SELREG.nodes).forEach(function(k){ deg[k]=0; });
+    SELREG.edges.forEach(function(e){ if(deg[e.from]!==undefined) deg[e.from]++; if(deg[e.to]!==undefined) deg[e.to]++; });
+    var out=[]; Object.keys(deg).forEach(function(k){ if(deg[k]===0){ var n=SELREG.nodes[k]; out.push({key:k, label:n.label, type:n.type}); } });
+    return {total:Object.keys(deg).length, zero:out}; },
   coreGroups:function(){ var o={}; vp.querySelectorAll('.piece[data-grp]').forEach(function(g){ var k=g.getAttribute('data-grp'); if(k) o[k]=(o[k]||0)+1; }); return o; },
   lenses:function(){ return {guards:showGuards, hubs:showHubs, press:showPress}; },
   toggleLens:function(w){ document.getElementById(w+"btn").click(); },
