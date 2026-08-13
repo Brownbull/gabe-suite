@@ -900,38 +900,32 @@ function showEntity(en){ var pc=D.pieces[en.slug]||{};
    +"<div class='row'><span>lines</span><b>"+(en.counts.lines||0).toLocaleString()+"</b></div>"
    +"<div class='note'>Switch to <b>2 · Pieces</b> to open it — the endpoints move to the border.</div>"; }
 function showPiece(slug, it){
-  panel.innerHTML="<h3>"+esc(it.m.cls||"")+"</h3><div class='note'>"+(it.kind==="model"?"model (database cylinder)":"schema (brace icon)")+" · in "+esc(slug)+"</div>"
+  var _o={kind:it.kind, table:it.m.table, tests:it.m.tests||null, guards:it.m.guards||0,
+      hub:it.m.hub||null, press:(D.pressure||{})[slug+"|"+it.m.cls]||0};
+  panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(it.m.cls||"")+"</h3>"
+   +"<div class='note'>"+(it.kind==="model"?"model":"schema")+" · in "+esc(slug)+"</div>"
    +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
    +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
-   +(it.m.tests?"<div class='row'><span>tests</span><b>"+it.m.tests.n+" case(s) · api "+it.m.tests.api+" · web "+it.m.tests.web+(it.m.tests.red?" · "+it.m.tests.red+" RED":"")+"</b></div>"
-     :"<div class='row'><span>tests</span><b>none — unproven</b></div>")
-   +(it.m.guards?"<div class='row'><span>guards</span><b>"+it.m.guards+" validator(s)</b></div>":"<div class='row'><span>guards</span><b>none declared</b></div>")
-   +(it.m.hub?"<div class='row'><span>fan-in</span><b>usage "+(it.m.hub.usage||0)+(it.m.hub.god?" · GOD piece":"")+"</b></div>":"")
-   +((D.pressure||{})[slug+"|"+it.m.cls]?"<div class='row'><span>pressure</span><b>touched in "+D.pressure[slug+"|"+it.m.cls]+" archived phase(s)</b></div>":"")
-   +indicatorHTML({kind:it.kind, table:it.m.table, tests:it.m.tests||null, guards:it.m.guards||0,
-      hub:it.m.hub||null, press:(D.pressure||{})[slug+"|"+it.m.cls]||0})
+   +indicatorHTML(_o)
    +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
 function showEndpoint(slug, ep){
-  panel.innerHTML="<h3 style='font-size:13px'>"+esc(ep.m+" "+ep.p)+"</h3>"
-   +"<div class='note'>an ENTRY POINT on the border of "+esc(slug)+"</div>"
+  var _o={kind:"ep", method:ep.m, mcol:METHOD[ep.m]||"var(--muted)", tests:ep.tests||null, guards:ep.guards||0};
+  panel.innerHTML="<h3 style='font-size:13px;display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(ep.m+" "+ep.p)+"</h3>"
+   +"<div class='note'>an entry point on the border of "+esc(slug)+"</div>"
    +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
    +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
    +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
-   +(ep.tests?"<div class='row'><span>tests</span><b>"+ep.tests.n+" case(s) · api "+ep.tests.api+" · web "+ep.tests.web+(ep.tests.red?" · "+ep.tests.red+" RED":"")+"</b></div>"
-     :"<div class='row'><span>tests</span><b>none — unproven</b></div>")
-   +indicatorHTML({kind:"ep", method:ep.m, mcol:METHOD[ep.m]||"var(--muted)",
-      tests:ep.tests||null, guards:ep.guards||0})
+   +indicatorHTML(_o)
    +unlinkedNote("ep", slug+"|"+ep.m+" "+ep.p, ep.p); }
 function showFn(f){
-  panel.innerHTML="<h3>"+esc(f.name)+"()</h3>"
+  var _o={kind:"fn", layer:f.layer, fncol:FNCOL[f.layer]||"var(--muted)",
+      tests:f.tests||null, hub:f.hub||null, god:f.god, handler:f.handler};
+  panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(f.name)+"()</h3>"
    +"<div class='row'><span>entity</span><b>"+esc(f.slug)+"</b></div>"
    +"<div class='row'><span>layer</span><b>"+esc(f.layer)+"</b></div>"
    +"<div class='row'><span>language</span><b>"+(f.lang==="ts"?"TypeScript":"Python")+"</b></div>"
-   +(f.handler?"<div class='row'><span>role</span><b>endpoint handler</b></div>":"")
-   +(f.god?"<div class='row'><span>⚠</span><b>god function</b></div>":"")
-   +indicatorHTML({kind:"fn", layer:f.layer, fncol:FNCOL[f.layer]||"var(--muted)",
-      tests:f.tests||null, hub:f.hub||null, god:f.god, handler:f.handler})
-   +"<div class='note'>Edges into/out of this F are graft call edges — dashed = inferred (floor).</div>"; }
+   +indicatorHTML(_o)
+   +"<div class='note'>Edges into/out of this ƒ are graft call edges — dashed = inferred (floor).</div>"; }
 
 /* ── level switching (position persistence keeps shared anchors) ── */
 function render(){
@@ -975,41 +969,43 @@ document.getElementById("conns").addEventListener("click",function(){
    and symbols must decode themselves on click). ── */
 function _psvg(inner, w){ return "<svg viewBox='0 0 24 24' width='"+(w||17)+"' height='"+(w||17)+"'>"+inner+"</svg>"; }
 function _irow(icon, label, meaning){ return "<div class='irow'>"+icon+"<b>"+label+"</b><span class='im'>"+meaning+"</span></div>"; }
+function kindIcon(o){    // the element's own glyph, inline beside its name
+  if(o.kind==="model") return _psvg("<ellipse cx='12' cy='6' rx='8' ry='3' fill='var(--c-model)'/><path d='M4 6 v10 a8 3 0 0 0 16 0 v-10' fill='var(--c-model)'/>");
+  if(o.kind==="schema") return _psvg("<path d='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1' fill='none' stroke='var(--c-schema)' stroke-width='2'/>");
+  if(o.kind==="fn") return _psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='"+(o.fncol||"var(--c-fn-api)")+"' stroke-width='2.2'/>");
+  if(o.kind==="ep") return _psvg("<circle cx='12' cy='12' r='9' fill='"+(o.mcol||"var(--m-get)")+"'/><path d='M13.5 6 L9 13 h2.6 L10.5 18 L15 11 h-2.6 Z' fill='#fff'/>");
+  return ""; }
 function indicatorHTML(o){
-  var h="<div class='k'>what the symbols on this element mean</div>";
-  // the KIND icon first — what the shape itself is
-  if(o.kind==="model") h+=_irow(_psvg("<ellipse cx='12' cy='6' rx='8' ry='3' fill='var(--c-model)'/><path d='M4 6 v10 a8 3 0 0 0 16 0 v-10' fill='var(--c-model)'/>"),
-    "database cylinder","a model — a table-backed class"+(o.table?" (table "+esc(o.table)+")":""));
-  if(o.kind==="schema") h+=_irow(_psvg("<path d='"+"M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"+"' fill='none' stroke='var(--c-schema)' stroke-width='2'/>"),
-    "curly braces","a schema — an API data shape (request/response)");
-  if(o.kind==="fn") h+=_irow(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='"+(o.fncol||"var(--c-fn-api)")+"' stroke-width='2.2'/>"),
-    "ƒ curve","a function — colour = its layer ("+esc(o.layer||"api")+")");
-  if(o.kind==="ep") h+=_irow(_psvg("<circle cx='12' cy='12' r='9' fill='"+(o.mcol||"var(--m-get)")+"'/><path d='M13.5 6 L9 13 h2.6 L10.5 18 L15 11 h-2.6 Z' fill='#fff'/>"),
-    esc(o.method||"")+" bolt","an API endpoint on the entity border — colour = HTTP method");
-  // TESTS — exactly the badge drawn on the node
+  var h="";
+  // TESTS — the badge beside its facts, nothing "defined"
+  h+="<div class='k'>tests</div>";
   if(o.tests){ var tc=o.tests.red>0?"var(--m-delete)":"var(--c-model)";
     h+=_irow(_psvg("<rect x='3' y='7' width='18' height='11' rx='5.5' fill='"+tc+"'/><text x='12' y='15.5' text-anchor='middle' font-size='8.5' font-weight='800' fill='#fff'>"+o.tests.n+"</text>"),
-      o.tests.n+" test case(s)","the count pill: "+(o.tests.red>0?o.tests.red+" FAILING (red)":"all passing (green)")+" · api "+o.tests.api+" · web "+o.tests.web);
+      o.tests.n+" case(s)", (o.tests.red>0?o.tests.red+" failing":"all passing")+" · api "+o.tests.api+" · web "+o.tests.web);
     if(o.tests.web>0) h+=_irow(_psvg("<circle cx='12' cy='12' r='5' fill='var(--c-fn-web)'/>"),
-      "orange dot","web-corpus coverage on top of api"); }
+      "web coverage","on top of the api corpus"); }
   else h+=_irow(_psvg("<circle cx='12' cy='12' r='6.5' fill='none' stroke='var(--muted)' stroke-width='1.6' stroke-dasharray='3 3'/>"),
-    "hollow dashed circle","UNPROVEN — no test case names this element");
+    "unproven","no test case names this element");
   // GUARDS
-  if(o.guards) h+=_irow(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='var(--c-fn-services)'/>"),
-    o.guards+" validator(s)","the teal shield: declared guards check this element's data");
-  else if(o.kind==="model"||o.kind==="schema"||o.kind==="ep") h+=_irow(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='var(--muted)' stroke-width='1.4' stroke-dasharray='3 3'/>"),
-    "no shield","no declared validator guards it");
-  // HUB / GOD
-  if(o.hub && (o.hub.usage||0)>=5) h+=_irow(_psvg("<circle cx='12' cy='12' r='6' fill='none' stroke='var(--accent)' stroke-width='2.6'/>"),
-    "fan-in ring","a HUB — usage "+o.hub.usage+" (foreign keys in + endpoint touches): many pieces depend on it");
-  if((o.hub&&o.hub.god)||o.god) h+=_irow(_psvg("<circle cx='12' cy='12' r='8' fill='none' stroke='var(--m-delete)' stroke-width='1.6' stroke-dasharray='4 3'/>"),
-    "red dashed halo","a GOD piece — oversized, holds many responsibilities; change with care");
-  // HANDLER (fns)
-  if(o.handler) h+=_irow(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--c-fn-api)' stroke-width='3.4'/>"),
-    "thick ƒ stroke","an ENDPOINT HANDLER — the function a route calls first");
-  // PRESSURE
-  if(o.press) h+=_irow(_psvg("<circle cx='12' cy='12' r='8.5' fill='var(--m-put)' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='var(--m-put)'/>"),
-    "orange heat halo","change pressure — touched in "+o.press+" archived phase(s)");
+  if(o.kind!=="fn"){ h+="<div class='k'>guards</div>";
+    if(o.guards) h+=_irow(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='var(--c-fn-services)'/>"),
+      o.guards+" validator(s)","declared checks on this element's data");
+    else h+=_irow(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='var(--muted)' stroke-width='1.4' stroke-dasharray='3 3'/>"),
+      "none declared","no validator guards it"); }
+  // FAN-IN (only when the data exists)
+  if(o.hub || o.god){ h+="<div class='k'>fan-in</div>";
+    if(o.hub && (o.hub.usage||0)>0) h+=_irow(_psvg("<circle cx='12' cy='12' r='6' fill='none' stroke='var(--accent)' stroke-width='2.6'/>"),
+      "usage "+o.hub.usage, (o.hub.usage>=5?"a hub — many pieces depend on it":"foreign keys in + endpoint touches"));
+    if((o.hub&&o.hub.god)||o.god) h+=_irow(_psvg("<circle cx='12' cy='12' r='8' fill='none' stroke='var(--m-delete)' stroke-width='1.6' stroke-dasharray='4 3'/>"),
+      "god piece","oversized — holds many responsibilities"); }
+  // ROLE (fns)
+  if(o.handler) { h+="<div class='k'>role</div>";
+    h+=_irow(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--c-fn-api)' stroke-width='3.4'/>"),
+      "endpoint handler","the function a route calls first"); }
+  // PRESSURE (only when touched)
+  if(o.press){ h+="<div class='k'>pressure</div>";
+    h+=_irow(_psvg("<circle cx='12' cy='12' r='8.5' fill='var(--m-put)' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='var(--m-put)'/>"),
+      "touched in "+o.press+" phase(s)","change concentration from the archive"); }
   return h;
 }
 
