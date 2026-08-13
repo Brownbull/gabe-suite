@@ -810,11 +810,32 @@ function drawTrace(){
         showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false}); });
       layer.appendChild(g); });
     // 4 · the CORE: schemas / models the functions touch, at the mean angle of their fns
-    var clsFnAngles={};
-    shown.forEach(function(ep){ (ep.touch||[]).forEach(function(c){
-      if(ep.fn && fnAt[ep.fn]!==undefined && fnAngle[ep.fn]!==undefined)
-        (clsFnAngles[c]=clsFnAngles[c]||[]).push(fnAngle[ep.fn]); }); });
-    var clsAngle=spreadRing(clsL, function(c){ return meanAngle(clsFnAngles[c]||[]); });
+    // KIND SECTORS (operator round 16): the core splits into a MODELS arc and a
+    // SCHEMAS arc — contiguous clusters instead of interleaved mean-angle scatter.
+    // Within a sector, names sort alphabetically (deterministic); sector width is
+    // proportional to its count with a small divider gap between arcs.
+    var modelsL=clsL.filter(function(c){ return (pc.models||[]).some(function(m){ return m.cls===c; }); });
+    var schemasL=clsL.filter(function(c){ return modelsL.indexOf(c)<0; });
+    var clsAngle={}, GAP=0.22, start=-Math.PI/2;
+    (function(){ var nM=modelsL.length, nS=schemasL.length, tot=nM+nS;
+      if(!tot) return;
+      var spanM = nM ? (2*Math.PI-2*GAP) * (nS? nM/tot : 1) : 0;
+      var spanS = nS ? (2*Math.PI-2*GAP) - (nS&&nM? spanM : (nM?spanM:0)) : 0;
+      if(!nM) spanS = 2*Math.PI-2*GAP;
+      modelsL.forEach(function(c,i){ clsAngle[c] = start + GAP/2 + (nM>1 ? spanM*i/(nM-1) : spanM/2); });
+      var s2 = start + GAP + spanM + GAP/2;
+      schemasL.forEach(function(c,i){ clsAngle[c] = s2 + (nS>1 ? spanS*i/(nS-1) : spanS/2); });
+      // sector furniture: divider ticks + arc labels, faint, entity-coloured
+      if(nM && nS){ [start, start+GAP/2+spanM+GAP/4].forEach(function(a){
+          layer.appendChild(E("line",{x1:rnd(p.x+(core-16)*Math.cos(a)), y1:rnd(p.y+(core-16)*Math.sin(a)),
+            x2:rnd(p.x+(core+16)*Math.cos(a)), y2:rnd(p.y+(core+16)*Math.sin(a)),
+            stroke:col, "stroke-opacity":"0.35", "stroke-width":"1"})); });
+        var aM = start + GAP/2 + spanM/2, aS = s2 + spanS/2;
+        [[aM,"models"],[aS,"schemas"]].forEach(function(za){
+          var zl=E("text",{class:"sub2", x:rnd(p.x+(core+26)*Math.cos(za[0])),
+            y:rnd(p.y+(core+26)*Math.sin(za[0])+3), "fill-opacity":"0.75"});
+          zl.textContent=za[1]; zl.setAttribute("fill",col); layer.appendChild(zl); }); }
+    })();
     var clsAt={};
     clsL.forEach(function(cls){ var a=clsAngle[cls],
         r=clsL.length>1?core:0,
