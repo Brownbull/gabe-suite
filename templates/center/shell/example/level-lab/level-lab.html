@@ -133,8 +133,17 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:7px;position:relative">
-    <div id="journeys" style="display:flex;align-items:center;gap:6px;min-height:28px">
-      <!-- JOURNEYS live here (design settled round 36; feature owed) -->
+    <div id="journeys" style="display:flex;align-items:center;gap:6px;min-height:28px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)">journeys</span>
+      <select id="jrnSel" title="walk a derived request path or a census use-case, step by step"
+        style="font:inherit;font-size:12px;max-width:230px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:4px 6px"></select>
+      <span id="jrnBar" hidden style="display:inline-flex;align-items:center;gap:5px">
+        <button id="jrnPrev" class="tgl" title="previous step">&#9664;</button>
+        <b id="jrnPos" style="font-size:12px;min-width:34px;text-align:center">1/1</b>
+        <button id="jrnNext" class="tgl" title="next step">&#9654;</button>
+        <span id="jrnStep" style="font-size:12px;color:var(--muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button id="jrnX" class="tgl" title="leave the journey">&#10005;</button>
+      </span>
     </div>
     <div id="ctrl2" style="display:flex;align-items:center;gap:8px;margin-left:auto;position:relative">
     <label id="depthCtl" title="Press Alt and scroll to modify it" style="display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--muted)">
@@ -1569,6 +1578,60 @@ function goBack(){
   var n=SELREG.nodes[k];
   if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
 }
+/* ── JOURNEYS (operator round 37): a journey is an ordered list of node keys.
+   REQUEST journeys are DERIVED — endpoint → handler ƒ → touched models →
+   returned schema → its cross-entity users (use edges). USE-CASE journeys come
+   from the census (EXAMPLE workflows until a twin curates its own). Steps
+   resolve against SELREG at play time, so cluster/layout changes never break a
+   walk — unresolvable steps are skipped honestly. ── */
+function buildJourneys(){
+  var out=[];
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{endpoints:[]};
+    (pc.endpoints||[]).forEach(function(ep){
+      var seen={}, steps=[];
+      var add=function(k){ if(!seen[k]){ seen[k]=1; steps.push(k); } };
+      add("ep:"+slug+"|"+ep.m+" "+ep.p);
+      if(ep.fn) add("fn:"+slug+"|"+ep.fn);
+      var classes=[];
+      (ep.touch||[]).forEach(function(c){ add("cls:"+slug+"|"+c); classes.push(c); });
+      if(ep.resp){ var own=D.schema_owner[ep.resp];
+        if(own){ add("cls:"+own+"|"+ep.resp); classes.push(ep.resp); } }
+      (D.use_edges||[]).forEach(function(e){
+        if(e.fs!==slug && classes.indexOf(e.cls)>=0) add("fn:"+e.fs+"|"+e.fn); });
+      if(steps.length<2) return;                 // a bare unlinked endpoint is no journey
+      out.push({kind:"request", ent:slug, name:ep.m+" "+ep.p, steps:steps.slice(0,20)});
+    }); });
+  Object.keys(D.census||{}).sort().forEach(function(slug){
+    Object.keys(D.census[slug]).sort().forEach(function(wf){
+      var v=D.census[slug][wf]||{}, seen={}, steps=[];
+      var add=function(k){ if(!seen[k]){ seen[k]=1; steps.push(k); } };
+      (v.fns||[]).forEach(function(f){ add("fn:"+slug+"|"+f); });
+      (v.cls||[]).forEach(function(c){ add("cls:"+slug+"|"+c); });
+      if(steps.length>=2) out.push({kind:"usecase", ent:slug, name:wf, steps:steps.slice(0,20)});
+    }); });
+  return out;
+}
+var JRN={list:[], cur:null, i:0};
+function jrnResolved(){ return JRN.cur ? JRN.cur.steps.filter(function(k){ return !!SELREG.nodes[k]; }) : []; }
+function jrnGo(di){
+  if(!JRN.cur) return;
+  if(level!=="trace"){ level="trace"; render(); }   // journeys live on the trace
+  var steps=jrnResolved(); if(!steps.length) return;
+  JRN.i=Math.max(0, Math.min(steps.length-1, JRN.i+di));
+  var key=steps[JRN.i];
+  jumpToNode(key);
+  document.getElementById("jrnPos").textContent=(JRN.i+1)+"/"+steps.length;
+  var n=SELREG.nodes[key];
+  document.getElementById("jrnStep").textContent=n?n.label:key;
+}
+function jrnStart(idx){
+  JRN.cur=JRN.list[idx]||null; JRN.i=0;
+  document.getElementById("jrnBar").hidden=!JRN.cur;
+  if(JRN.cur) jrnGo(0);
+}
+function jrnExit(){ JRN.cur=null; JRN.i=0;
+  document.getElementById("jrnBar").hidden=true;
+  document.getElementById("jrnSel").value=""; }
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
 function jumpToNode(key){
@@ -1760,6 +1823,20 @@ function indicatorHTML(o){
     document.querySelectorAll("#lineSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
   document.getElementById("navback").addEventListener("click",function(){ goBack(); });
+  JRN.list=buildJourneys();
+  (function(){ var sel=document.getElementById("jrnSel");
+    var h="<option value=''>— pick a journey —</option>";
+    var req=[], uc=[];
+    JRN.list.forEach(function(j,i){
+      (j.kind==="request"?req:uc).push("<option value='"+i+"'>"+esc(j.name)+" · "+esc(j.ent)+" ("+j.steps.length+")</option>"); });
+    h+="<optgroup label='Request — derived from the wires ("+req.length+")'>"+req.join("")+"</optgroup>";
+    h+="<optgroup label='Use case — census example ("+uc.length+")'>"+uc.join("")+"</optgroup>";
+    sel.innerHTML=h;
+    sel.addEventListener("change",function(){ if(this.value==="") jrnExit(); else jrnStart(+this.value); });
+    document.getElementById("jrnPrev").addEventListener("click",function(){ jrnGo(-1); });
+    document.getElementById("jrnNext").addEventListener("click",function(){ jrnGo(1); });
+    document.getElementById("jrnX").addEventListener("click",function(){ jrnExit(); });
+  })();
   document.getElementById("panelchev").addEventListener("click",function(){
     var sw=document.getElementById("sidewrap"), min=sw.classList.toggle("min");
     document.getElementById("panelchev").innerHTML = min ? "&#171;" : "&#187;"; });
@@ -1815,6 +1892,8 @@ window.__lvltest = {
   setDepth:function(v){ applyDepth(v); },
   hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll('.e-hop'+d).length; return o; },
   laneBowProbe:function(a,b,w){ return laneBow(a,b,w); },
+  journeys:function(){ return JRN.list.map(function(j){ return {kind:j.kind, ent:j.ent, name:j.name, n:j.steps.length}; }); },
+  jrnState:function(){ return {cur:JRN.cur?JRN.cur.name:null, i:JRN.i, resolved:jrnResolved().length}; },
   line:function(){ return lineStyle; },
   setLine:function(v){ lineStyle=v; renderKeepView(); },
   cam:function(){ return {panX:panX, panY:panY, zoom:zoom, base:baseScale, fit:fitT.slice()}; },
