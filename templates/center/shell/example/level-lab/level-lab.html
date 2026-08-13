@@ -1577,6 +1577,8 @@ function showEntity(en){ var pc=D.pieces[en.slug]||{};
    +"<div class='row'><span>schemas</span><b>"+en.counts.schemas+"</b></div>"
    +"<div class='row'><span>lines</span><b>"+(en.counts.lines||0).toLocaleString()+"</b></div>"
    +"<div class='note'>Switch to <b>2 · Pieces</b> to open it — the endpoints move to the border.</div>"; }
+function layerRow(lay){
+  return "<div class='row'><span>layer</span><b style='color:"+(FNCOL[lay]||"var(--c-model)")+"'>"+esc(lay)+"</b></div>"; }
 function entityRow(slug){
   return "<div class='row'><span>entity</span><b style='display:flex;align-items:center;gap:6px'>"
     +"<span class='entdot' style='width:9px;height:9px;border-radius:50%;display:inline-block;background:"+(COLORS[slug]||"#888")+"'></span>"
@@ -1587,6 +1589,7 @@ function showPiece(slug, it){
   panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(it.m.cls||"")+"</h3>"
    +"<div class='note'>"+(it.kind==="model"?"model":"schema")+"</div>"
    +entityRow(slug)
+   +layerRow("data")
    +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
    +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
    +(insideLayout==="tiers"?"<div class='row'><span>tier</span><b>"+(it.kind==="model"?"models — inner ring":"schemas — outer ring")+"</b></div>":"")
@@ -1597,6 +1600,7 @@ function showEndpoint(slug, ep){
   panel.innerHTML="<h3 style='font-size:13px;display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(ep.m+" "+ep.p)+"</h3>"
    +"<div class='note'>an entry point on the entity's border</div>"
    +entityRow(slug)
+   +layerRow("api")
    +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
    +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
    +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
@@ -1607,7 +1611,7 @@ function showFn(f){
       tests:f.tests||null, hub:f.hub||null, god:f.god, handler:f.handler, uses:f.uses||0};
   panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(f.name)+"()</h3>"
    +entityRow(f.slug)
-   +"<div class='row'><span>layer</span><b>"+esc(f.layer)+"</b></div>"
+   +layerRow(f.layer)
    +"<div class='row'><span>language</span><b>"+(f.lang==="ts"?"TypeScript":"Python")+"</b></div>"
    +indicatorHTML(_o)
    +"<div class='note'>Edges into/out of this ƒ are graft call edges — dashed = inferred (floor).</div>"; }

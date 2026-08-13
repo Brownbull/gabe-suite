@@ -41,6 +41,18 @@ const match = await pg.evaluate(() => {
     .map(c=>({f:c.getAttribute('fill'), s:getComputedStyle(c).fill}));
   return { dot, any: cont.some(c=>c.s===dot) }; });
 ok(match.any, 'the dot matches a canvas entity colour ('+match.dot+')');
+// round 41: every card carries a LAYER row (piece=data · endpoint=api · fn=its layer)
+const layerOf = () => pg.evaluate(() => {
+  const rows=[...document.querySelectorAll('#panel .row')];
+  const r=rows.find(x=>x.querySelector('span')?.textContent==='layer');
+  return r ? r.querySelector('b').textContent.trim() : null; });
+ok(await layerOf()==='data', 'piece card: layer row = data');
+await pg.evaluate(() => [...document.querySelectorAll('#canvas .epmark')][0]
+  .dispatchEvent(new MouseEvent('click',{bubbles:true})));
+ok(await layerOf()==='api', 'endpoint card: layer row = api');
+await pg.evaluate(() => [...document.querySelectorAll('#canvas .fnode')][0]
+  .dispatchEvent(new MouseEvent('click',{bubbles:true})));
+ok(['api','services','web'].includes(await layerOf()), 'fn card: layer row = its layer');
 
 // 2 · journeys play ON LAYERS when picked there
 await T("window.__lvltest.set('layers')");
