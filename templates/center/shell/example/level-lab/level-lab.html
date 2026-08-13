@@ -113,8 +113,6 @@ aside .irow .im{ color:var(--muted); }
         <button data-cl="guards">Guards</button>
         <button data-cl="usecase">Use case</button>
         <button data-cl="community">Community</button>
-        <button data-cl="census">Census</button>
-        <button data-cl="flow">Flow</button>
       </div>
       </div>
       <div id="inRow">
@@ -227,7 +225,11 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
     if(e.ctrlKey || e.metaKey){
       var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
       var s1=baseScale*zoom, wx=(mx-(fitT[0]+panX))/s1, wy=(my-(fitT[1]+panY))/s1;
-      zoom=Math.max(0.3,Math.min(4, zoom*Math.exp(-e.deltaY*0.0022)));
+      var _zn=zoom*Math.exp(-e.deltaY*0.0022);
+      var _eff=baseScale*_zn;                              // what a pixel actually renders at
+      if(_eff>3.5) _zn=3.5/baseScale;                      // deep enough to READ labels
+      if(_eff<0.05) _zn=0.05/baseScale;
+      zoom=_zn;
       var s2=baseScale*zoom;
       panX=mx-fitT[0]-wx*s2; panY=my-fitT[1]-wy*s2;      // the point under the cursor stays put
     } else if(e.shiftKey){
