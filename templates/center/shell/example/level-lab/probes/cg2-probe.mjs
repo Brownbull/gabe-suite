@@ -10,12 +10,9 @@ await lab.goto('file:///home/khujta/projects/gabe_lens/templates/center/shell/ex
 await lab.waitForFunction('window.__lvlready===true',{timeout:8000});
 await lab.evaluate("window.__lvltest.set('trace')");
 const sig = (page) => page.evaluate(() => {
-  const first = sel => document.querySelector(sel);
   const d = el => el ? (el.getAttribute('d')||el.tagName) : null;
-  const model = first('#canvas .piece[data-kind="model"] path, #canvas g path[fill-opacity="0.9"]');
-  const schemaP = [...document.querySelectorAll('#canvas path')].find(p=>(p.getAttribute('d')||'').startsWith('M8 3H7'));
-  const fnP = [...document.querySelectorAll('#canvas path')].find(p=>(p.getAttribute('d')||'').startsWith('M9 17c2'));
-  return { model:d(model), schema:d(schemaP), fn:d(fnP) }; });
+  const find = pre => [...document.querySelectorAll('#canvas path')].find(p=>(p.getAttribute('d')||'').startsWith(pre));
+  return { model:d(find('M3 5v14')), schema:d(find('M8 3H7')), fn:d(find('M9 17c2')) }; });
 const labSig = await sig(lab);
 
 const pg = await b.newPage(); const errs=[];
@@ -27,29 +24,29 @@ console.log('  lab model d:', (labSig.model||'').slice(0,40));
 console.log('  cg  model d:', (cgSig.model||'').slice(0,40));
 
 // 1 · Classic = the lab's exact geometry
-ok(!!labSig.model && labSig.model===cgSig.model, 'MODEL geometry byte-identical to the lab');
+ok(!!labSig.model && labSig.model===cgSig.model, 'MODEL (lucide db) byte-identical to the lab');
 ok(!!labSig.schema && labSig.schema===cgSig.schema, 'SCHEMA braces byte-identical to the lab');
 ok(!!labSig.fn && labSig.fn===cgSig.fn, 'ƒ-curve byte-identical to the lab');
-ok(await pg.evaluate(() => window.__cgtest.iconset())==='classic', 'Classic is the default set');
+ok(await pg.evaluate(() => window.__cgtest.iconset())==='lucide', 'Lucide is the default set (both pages)');
 
 // 2 · the switcher: Lucide changes geometry, stage survives
 await pg.click('#stages button[data-st="review"]');
-await pg.click('#icoSeg button[data-ico="lucide"]');
-const luc = await pg.evaluate(() => ({
+await pg.click('#icoSeg button[data-ico="classic"]');
+const cla = await pg.evaluate(() => ({
   set: window.__cgtest.iconset(),
   stage: window.__cgtest.stage(),
-  zap: [...document.querySelectorAll('#canvas path')].some(p=>(p.getAttribute('d')||'').startsWith('M13 2 3 14')),
+  cyl: [...document.querySelectorAll('#canvas path')].some(p=>(p.getAttribute('d')||'').startsWith('M-6.8 -3 v6')),
   drift: document.querySelectorAll('#canvas .drift-ring').length }));
-ok(luc.set==='lucide' && luc.zap, 'Lucide set draws its own geometry (zap endpoints)');
-ok(luc.stage==='review' && luc.drift===1, 'the stage + overlays survive the icon switch');
+ok(cla.set==='classic' && cla.cyl, 'Classic set still reachable (settled cylinder)');
+ok(cla.stage==='review' && cla.drift===1, 'the stage + overlays survive the icon switch');
 
 // 3 · Solid set distinct; Classic returns to parity
 await pg.click('#icoSeg button[data-ico="solid"]');
 const solid = await pg.evaluate(() => [...document.querySelectorAll('#canvas rect')].filter(r=>+r.getAttribute('rx')>=5).length);
 ok(solid>0, 'Solid set draws filled shapes ('+solid+')');
-await pg.click('#icoSeg button[data-ico="classic"]');
+await pg.click('#icoSeg button[data-ico="lucide"]');
 const back = await sig(pg);
-ok(back.model===labSig.model && back.fn===labSig.fn, 'Classic restores exact lab parity');
+ok(back.model===labSig.model && back.fn===labSig.fn, 'Lucide restores exact lab parity');
 
 ok(errs.length===0, 'no console errors: '+errs.slice(0,3).join(' | '));
 console.log(`cg2 (icon parity + sets): ${P} pass, ${F} fail`);

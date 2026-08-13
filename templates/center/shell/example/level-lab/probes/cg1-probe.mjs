@@ -41,7 +41,19 @@ ok((await pg.evaluate(() => document.querySelectorAll('#panel .st-pass').length)
 // 4 · COMMIT: all green, trailer named
 await pg.click('#stages button[data-st="commit"]');
 c = await C();
-ok(c.okr===5 && c.drift===0 && c.pills===0, 'commit: the touched set green, overlays cleared');
+ok(c.cring===5 && c.okr===0 && c.drift===0 && c.pills===0, 'commit: the touched set wears the COMMIT ring, overlays cleared');
+// the center's canonical beat palette (codebase-graph.html STAGE_COLOR)
+const beatCols = await pg.evaluate(() => {
+  const cs = sel => { const el=document.querySelector(sel); return el?getComputedStyle(el).stroke:null; };
+  window.__cgtest.set('red');   const r=cs('#canvas .red-ring');
+  window.__cgtest.set('execute'); const e=cs('#canvas .heat-ring');
+  window.__cgtest.set('review');  const v=cs('#canvas .ok-ring');
+  window.__cgtest.set('commit');  const c2=cs('#canvas .commit-ring');
+  return {r,e,v,c2}; });
+ok(beatCols.r==='rgb(229, 72, 77)', 'red beat wears the center red #e5484d ('+beatCols.r+')');
+ok(beatCols.e==='rgb(76, 154, 255)', 'execute wears the center blue #4c9aff');
+ok(beatCols.v==='rgb(48, 164, 108)', 'review wears the center green #30a46c');
+ok(beatCols.c2==='rgb(142, 78, 198)', 'commit wears the center purple #8e4ec6');
 ok(/Cases: C901/.test(await panelTxt()), 'panel carries the checkpoint trailer');
 
 // theme: stamp wins here too

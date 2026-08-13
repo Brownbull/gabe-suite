@@ -11,7 +11,8 @@
   --accent:#4f46e5; --edge:#9aa3ad;
   --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e;
   --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
-  --red:#d1443c; --heat:#b45309; --ok:#12b886; --drift:#e8590c;
+  --st-red:#e5484d; --st-exec:#4c9aff; --st-review:#30a46c; --st-commit:#8e4ec6;
+  --red:#e5484d; --ok:#30a46c; --drift:#e8590c;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
   --bg:#101726; --panel:#1b2436; --ink:#e7ebf3; --muted:#79839a; --line:#2c3648;
@@ -60,14 +61,20 @@ aside .chip{ display:inline-block; font-size:10.5px; font-weight:700; border-rad
 .halo{ fill:transparent; stroke:var(--line); stroke-width:1; opacity:.55; pointer-events:none; }
 .flowdot{ pointer-events:none; }
 .e-w{ fill:none; }
-.red-ring{ fill:none; stroke:var(--red); stroke-width:2; stroke-dasharray:5 3; }
-.heat-ring{ fill:none; stroke:var(--heat); stroke-width:2.4; opacity:.85; }
-.blast-ring{ fill:none; stroke:var(--heat); stroke-width:1.3; stroke-dasharray:3 3; opacity:.7; }
-.ok-ring{ fill:none; stroke:var(--ok); stroke-width:2; }
+.red-ring{ fill:none; stroke:var(--st-red); stroke-width:2; stroke-dasharray:5 3; }
+.heat-ring{ fill:none; stroke:var(--st-exec); stroke-width:2.4; opacity:.9; }
+.blast-ring{ fill:none; stroke:var(--st-exec); stroke-width:1.3; stroke-dasharray:3 3; opacity:.7; }
+.ok-ring{ fill:none; stroke:var(--st-review); stroke-width:2; }
+.commit-ring{ fill:none; stroke:var(--st-commit); stroke-width:2.2; }
 .drift-ring{ fill:none; stroke:var(--drift); stroke-width:2; stroke-dasharray:2 3; }
+#stages button.on[data-st="red"]{ background:var(--st-red); border-color:var(--st-red); }
+#stages button.on[data-st="execute"]{ background:var(--st-exec); border-color:var(--st-exec); }
+#stages button.on[data-st="review"]{ background:var(--st-review); border-color:var(--st-review); }
+#stages button.on[data-st="commit"]{ background:var(--st-commit); border-color:var(--st-commit); }
 @keyframes pulse{ 0%,100%{ stroke-opacity:.95; } 50%{ stroke-opacity:.4; } }
 .red-ring,.heat-ring,.drift-ring{ animation:pulse 1.4s ease-in-out infinite; }
 @media (prefers-reduced-motion: reduce){ .red-ring,.heat-ring,.drift-ring{ animation:none; } }
+aside .st-pass{ color:var(--st-review); } aside .st-red{ color:var(--st-red); }
 </style>
 </head>
 <body>
@@ -82,8 +89,8 @@ aside .chip{ display:inline-block; font-size:10.5px; font-weight:700; border-rad
       <button data-st="commit">4 · Commit</button>
     </div>
     <div class="seg" id="icoSeg" style="margin-left:8px" title="try an icon set — Classic is the level-lab's exact geometry">
-      <button data-ico="classic" class="on">Classic</button>
-      <button data-ico="lucide">Lucide</button>
+      <button data-ico="classic">Classic</button>
+      <button data-ico="lucide" class="on">Lucide</button>
       <button data-ico="solid">Solid</button>
     </div>
     <button id="themebtn" class="tgl" title="Theme — light / dark"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
@@ -196,7 +203,7 @@ var ICONSETS={
         fill:"#fff", transform:"scale("+(r/6)+")"})); }
   }
 };
-var ICONSET="classic";
+var ICONSET="lucide";   // operator round 48: Lucide everywhere
 function cylinder(g,r,col){ ICONSETS[ICONSET].model(g,r,col); }
 function sBadge(g,r,col){ ICONSETS[ICONSET].schema(g,r,col); }
 function fGlyph(g,r,col,handler){ ICONSETS[ICONSET].fn(g,r,col,handler); }
@@ -336,7 +343,7 @@ function applyStage(st){
     Object.keys(per2).forEach(function(k){ ring(k, "ok-ring"); pillOn(k, per2[k], false); });
     CHANGE.drift.forEach(function(d){ ring(d.key, "drift-ring", 22); });
   } else if(st==="commit"){
-    CHANGE.touched.forEach(function(k){ ring(k, "ok-ring"); });
+    CHANGE.touched.forEach(function(k){ ring(k, "commit-ring"); });
   }
   var S=STAGE_TEXT[st];
   var h="<h3>"+esc(CHANGE.name)+"</h3>"
@@ -394,11 +401,12 @@ window.__cgtest={
   setIcons:function(s){ ICONSET=s; build(); applyStage(curStage); },
   set:function(s){ applyStage(s); },
   counts:function(){ return {
-    rings: vp.querySelectorAll(".red-ring,.heat-ring,.ok-ring,.drift-ring,.blast-ring").length,
+    rings: vp.querySelectorAll(".red-ring,.heat-ring,.ok-ring,.commit-ring,.drift-ring,.blast-ring").length,
     red: vp.querySelectorAll(".red-ring").length,
     heat: vp.querySelectorAll(".heat-ring").length,
     blast: vp.querySelectorAll(".blast-ring").length,
     okr: vp.querySelectorAll(".ok-ring").length,
+    cring: vp.querySelectorAll(".commit-ring").length,
     drift: vp.querySelectorAll(".drift-ring").length,
     pills: vp.querySelectorAll(".tpill").length,
     halos: vp.querySelectorAll(".halo").length,

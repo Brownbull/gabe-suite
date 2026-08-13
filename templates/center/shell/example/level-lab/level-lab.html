@@ -221,8 +221,8 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       </div>
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Icons</div>
       <div class="seg" id="icoSeg" style="margin-left:0;flex-wrap:wrap">
-        <button data-ico="classic" class="on">Classic</button>
-        <button data-ico="lucide">Lucide</button>
+        <button data-ico="classic">Classic</button>
+        <button data-ico="lucide" class="on">Lucide</button>
         <button data-ico="solid">Solid</button>
       </div>
     </div>
@@ -287,7 +287,7 @@ function trunc(s,n){ s=String(s); return s.length>n?s.slice(0,n-1)+"…":s; }
 /* ICON SETS (operator round 46/47): Classic = the settled lab geometry;
    Lucide + Solid are try-on sets, switched from the gear — same roster as the
    change-graph preview so a choice made in either page reads in both. */
-var ICONSET="classic";
+var ICONSET="lucide";   // operator round 48: Lucide everywhere
 function cylinder(g, r, col){ ICONSETS[ICONSET].model(g, r, col); }
 // the command center's OWN icon geometry (sim-panel KIND_ICON) — the lab speaks
 // the suite's icon language: schema = curly braces, function = the ƒ-curve.
