@@ -39,7 +39,15 @@ header .sub{ font-size:12px; color:var(--muted); }
 svg#canvas{ display:block; width:100%; height:100%; }
 aside .irow svg{ width:17px; height:17px; }
 .legend svg{ width:16px; height:14px; }
-aside{ width:300px; flex:none; border-left:1px solid var(--line); background:var(--panel); overflow:auto; padding:14px 16px; }
+#sidewrap{ position:relative; flex:none; display:flex; }
+aside{ width:300px; border-left:1px solid var(--line); background:var(--panel); overflow:auto; padding:14px 16px 40px; }
+#navback{ position:absolute; top:8px; right:10px; z-index:6; font:inherit; font-size:12px; font-weight:700;
+  background:var(--accent); color:#fff; border:1px solid var(--accent); border-radius:8px; padding:3px 10px; cursor:pointer; }
+#panelmin{ position:absolute; bottom:0; left:0; right:0; height:26px; z-index:6; font:inherit; font-size:12px;
+  background:var(--panel); color:var(--muted); border:none; border-top:1px solid var(--line); cursor:pointer; }
+#sidewrap.min aside{ width:34px; padding:0; }
+#sidewrap.min aside > *{ display:none; }
+#sidewrap.min #navback{ display:none; }
 aside h3{ font-size:14px; margin-bottom:2px; }
 aside .k{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin:12px 0 4px;
   display:flex; align-items:center; gap:6px; }
@@ -124,9 +132,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
     <div id="gearpanel" hidden style="position:absolute;z-index:40;top:100%;left:0;margin-top:4px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
       <div class="seg" id="laySeg" style="margin-left:0;flex-wrap:wrap">
-        <button data-lay="ring">Ring</button>
         <button data-lay="chain">Chain</button>
-        <button data-lay="flow">Flow</button>
         <button data-lay="force" class="on">Force</button>
         <button data-lay="spread">Spread</button>
       </div>
@@ -144,17 +150,14 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout <span style="opacity:.6">(2 · 3 · 5-bubbles)</span></div>
       <div class="seg" id="inSeg" style="margin-left:0;flex-wrap:wrap">
         <button data-in="tiers">Tiers</button>
-        <button data-in="ring">Ring</button>
         <button data-in="force" class="on">Force</button>
         <button data-in="columns">Columns</button>
         <button data-in="rows">Rows</button>
-        <button data-in="spiral">Spiral</button>
       </div>
       </div>
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Lines</div>
       <div class="seg" id="lineSeg" style="margin-left:0;flex-wrap:wrap">
-        <button data-line="direct">Direct</button>
-        <button data-line="curved" class="on">Curved</button>
+        <button data-line="direct" class="on">Direct</button>
         <button data-line="bowed">Bowed</button>
       </div>
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Highlight depth (selection)</div>
@@ -180,7 +183,11 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
     <div class="fixture">EXAMPLE FIXTURE · gustify (read-only) · fn call edges dashed = graft confidence:inferred (a floor)</div>
     <div class="hint">scroll = pan · shift = sideways · ctrl / pinch = zoom · drag · click anything</div>
   </div>
-  <aside id="panel"></aside>
+  <div id="sidewrap">
+    <aside id="panel"></aside>
+    <button id="navback" hidden title="back to the previous element">←</button>
+    <button id="panelmin" title="minimize / restore the panel">⌄</button>
+  </div>
 </div>
 <div class="legend" id="legend"></div>
 
@@ -398,7 +405,7 @@ function proofBadge(g, r, tests){
 /* curved wire: a quadratic bow perpendicular to the segment — crossings separate */
 /* LINES (operator round 34): one knob bends every connector — Direct keeps a
    whisper of bow so lane pairs stay separable; Bowed doubles the curvature. */
-var lineStyle="curved", LINE_MULT={direct:0.25, curved:1, bowed:2};
+var lineStyle="direct", LINE_MULT={direct:0.25, curved:1, bowed:2};
 function curve(x1,y1,x2,y2,bow){ var dx=x2-x1, dy=y2-y1, d=Math.hypot(dx,dy)||1;
   bow=bow*(LINE_MULT[lineStyle]||1);
   var mx=(x1+x2)/2 - dy/d*bow, my=(y1+y2)/2 + dx/d*bow;
@@ -700,7 +707,9 @@ function showEdge(ed){
    +" Click a → row to travel to that entity.</div>";
   panel.querySelectorAll(".jgo").forEach(function(row){
     row.addEventListener("click",function(){ var slug=row.getAttribute("data-slug");
-      var w=entAnchor(slug); if(!w) return; centerCamera(w);
+      var w=entAnchor(slug); if(!w) return;
+      navVisit("ent:"+slug);
+      centerCamera(w);
       var en=D.entities.filter(function(x){ return x.slug===slug; })[0];
       if(en) showEntity(en); }); });
 }
@@ -1440,6 +1449,7 @@ function syncGearApplicability(){
 }
 function render(){
   vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
+  navStack=[]; navCur=null; navUI();
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
   document.querySelectorAll("#levels button").forEach(function(btn){
@@ -1509,10 +1519,35 @@ function regEdge(el, kind, fromKey, toKey, how){
     el.parentNode.insertBefore(tw, el.nextSibling);
   }
   return idx; }
+/* ── NAV HISTORY (operator round 35): link navigation is a CHAIN — every hop or
+   panel travel pushes the node it left, up to 6 deep; ← pops back. A plain click
+   on an in-chain element changes nothing; a click on an out-of-chain element
+   starts a fresh chain (history overridden). ── */
+var navStack=[], navCur=null;
+function navUI(){ var b=document.getElementById("navback");
+  b.hidden = navStack.length===0;
+  b.textContent = "← "+navStack.length; }
+function navVisit(key){                          // a LINK navigation lands on key
+  if(navCur && navCur!==key){ navStack.push(navCur); while(navStack.length>6) navStack.shift(); }
+  navCur=key; navUI(); }
+function navTouch(key){                          // a plain selection
+  if(key===navCur || navStack.indexOf(key)>=0) return;   // in-chain: nothing happens
+  navStack=[]; navCur=key; navUI(); }                    // alien: the chain is overridden
+function goBack(){
+  if(!navStack.length) return;
+  var k=navStack.pop(); navCur=k; navUI();
+  if(k.indexOf("ent:")===0){ var w0=pos[k]; if(w0) centerCamera(w0);
+    var en=D.entities.filter(function(x){ return "ent:"+x.slug===k; })[0];
+    if(en) showEntity(en); return; }
+  var w=nodeWorldXY(k); if(w) centerCamera(w);
+  var n=SELREG.nodes[k];
+  if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
+}
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
 function jumpToNode(key){
   var w=nodeWorldXY(key); if(!w) return;
+  navVisit(key);
   centerCamera(w);
   var n=SELREG.nodes[key];
   if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
@@ -1548,6 +1583,7 @@ function edgeHop(i){
   var w = go==="from"?a:b;
   if(!w){ go = go==="from"?"to":"from"; w = go==="from"?a:b; }
   _edgeHop={i:i, at:go};
+  navVisit(go==="from"?e.from:e.to);
   centerCamera(w);
 }
 function clearSelection(){ selKey=null;
@@ -1600,7 +1636,7 @@ function selectEdge(i){
   clearSelection();
   SELREG.edges.forEach(function(x,j){ x.el.classList.add(j===i?"e-hl":"e-faded"); });
   var f=SELREG.nodes[e.from], to=SELREG.nodes[e.to];
-  [f,to].forEach(function(n){ if(n) n.el.appendChild(E("circle",{class:"nbrring", r:14})); });
+  [f,to].forEach(function(n){ if(n) n.el.appendChild(E("circle",{class:"selring", r:15})); });
   panel.innerHTML="<h3>connector</h3>"
    +"<div class='row'><span>kind</span><b>"+esc(edgeWord(e.kind))+"</b></div>"
    +"<div class='row jgo' data-k='"+esc(e.from)+"' style='cursor:pointer'><span>from</span><b>→ "+esc(f?f.label:e.from)+"</b></div>"
@@ -1620,6 +1656,7 @@ function selectEdge(i){
 }
 /* the panel add-on used by every node click */
 function attachSelection(key){
+  navTouch(key);
   var mine=selectNode(key);
   panel.insertAdjacentHTML("beforeend", connectionsHTML(key, mine));
   wireConnRows(); }
@@ -1698,6 +1735,10 @@ function indicatorHTML(o){
     lineStyle=b.getAttribute("data-line");
     document.querySelectorAll("#lineSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
+  document.getElementById("navback").addEventListener("click",function(){ goBack(); });
+  document.getElementById("panelmin").addEventListener("click",function(){
+    var sw=document.getElementById("sidewrap"), min=sw.classList.toggle("min");
+    document.getElementById("panelmin").textContent = min ? "⌃" : "⌄"; });
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     insideLayout=b.getAttribute("data-in");
