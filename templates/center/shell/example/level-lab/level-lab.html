@@ -246,8 +246,15 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
     pan=null; });
   // WHEEL GRAMMAR (operator 2026-08-12): plain scroll PANS vertically ·
   // Shift PANS sideways · Ctrl/Cmd ZOOMS at the cursor (a trackpad pinch
-  // arrives as ctrl+wheel natively, so pinch-to-zoom just works).
+  // arrives as ctrl+wheel natively, so pinch-to-zoom just works) ·
+  // Alt STEPS the highlight depth (up = deeper to 5, down = shallower to 1).
+  var altAcc=0;
   stage.addEventListener("wheel",function(e){ e.preventDefault();
+    if(e.altKey){
+      altAcc+=e.deltaY;                                    // trackpads drip small deltas — step per notch
+      if(Math.abs(altAcc)>=40){ applyDepth(selDepth+(altAcc<0?1:-1)); altAcc=0; }
+      return;
+    }
     if(e.ctrlKey || e.metaKey){
       var rect=stage.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
       var s1=baseScale*zoom, wx=(mx-(fitT[0]+panX))/s1, wy=(my-(fitT[1]+panY))/s1;
@@ -1319,6 +1326,11 @@ document.getElementById("conns").addEventListener("click",function(){
 var SELREG = { nodes:{}, edges:[] };
 var selKey = null;
 var selDepth = 5;   // default 5 per operator
+function applyDepth(d){ d=Math.max(1, Math.min(5, d)); if(d===selDepth) return;
+  selDepth=d;
+  document.querySelectorAll("#depthSeg button").forEach(function(x){
+    x.classList.toggle("on", +x.getAttribute("data-d")===d); });
+  if(selKey) selectNode(selKey); }   // re-run the highlight at the new depth
 function regNode(g, key, label, type){ g.setAttribute("data-key", key);
   SELREG.nodes[key]={el:g, label:label, type:type}; }
 function regEdge(el, kind, fromKey, toKey, how){
@@ -1449,10 +1461,7 @@ function indicatorHTML(o){
     renderKeepView(); });   // a cluster change reshapes the INSIDE — the camera stays put
   document.getElementById("depthSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
-    selDepth=+b.getAttribute("data-d");
-    document.querySelectorAll("#depthSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
-    if(selKey){ var k=selKey, mine=selectNode(k);   // re-run the highlight at the new depth
-      var rows=panel.querySelector(".conrow"); }
+    applyDepth(+b.getAttribute("data-d"));
   });
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
@@ -1499,7 +1508,7 @@ window.__lvltest = {
   cluster:function(){ return traceCluster; },
   setCluster:function(v){ traceCluster=v; renderKeepView(); },
   depth:function(){ return selDepth; },
-  setDepth:function(v){ selDepth=v; if(selKey) selectNode(selKey); },
+  setDepth:function(v){ applyDepth(v); },
   hopCounts:function(){ var o={}; for(var d=1; d<=5; d++) o[d]=vp.querySelectorAll('.e-hop'+d).length; return o; },
   connAudit:function(){ var deg={}; Object.keys(SELREG.nodes).forEach(function(k){ deg[k]=0; });
     SELREG.edges.forEach(function(e){ if(deg[e.from]!==undefined) deg[e.from]++; if(deg[e.to]!==undefined) deg[e.to]++; });
