@@ -20,8 +20,8 @@
 set -u
 DIR="$(cd "$(dirname "$0")" && pwd)"
 pass=0; fail=0
-for f in "$DIR"/${1:-lvl}*-probe.mjs; do
-  [ -e "$f" ] || { echo "no probes match: ${1:-lvl}"; exit 2; }
+for f in "$DIR"/${1:-}*-probe.mjs; do
+  [ -e "$f" ] || { echo "no probes match: ${1:-all}"; exit 2; }
   out=$(node "$f" 2>&1); rc=$?
   tail1=$(echo "$out" | tail -1)
   if [ $rc -eq 0 ]; then pass=$((pass+1)); echo "PASS  $(basename "$f")  · $tail1"
