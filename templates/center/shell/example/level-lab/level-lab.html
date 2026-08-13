@@ -111,6 +111,9 @@ aside .irow .im{ color:var(--muted); }
         <button data-cl="kind" class="on">Kind</button>
         <button data-cl="tests">Tests</button>
         <button data-cl="guards">Guards</button>
+        <button data-cl="usecase">Use case</button>
+        <button data-cl="community">Community</button>
+        <button data-cl="census">Census</button>
         <button data-cl="flow">Flow</button>
       </div>
       </div>
@@ -781,6 +784,30 @@ function traceInner(slug){
     .concat(Object.keys(cls).sort().map(function(c){ return {id:"cls:"+c, kind:isModel(c)?"model":"schema", name:c, m:pieceOf(c)}; }));
   return {pc:pc, eps:eps, items:items};
 }
+/* MULTI-MEMBERSHIP modes (use case · community · census): an item may belong to
+   SEVERAL groups — it is placed ONCE (at the centroid of its groups' anchors) and
+   every bubble that owns it ENCLOSES it, so bubbles overlap instead of duplicating
+   pieces (operator ruling). Disjoint modes stay single-membership. */
+function traceMembership(slug, items){
+  var pcU=(D.pieces[slug]||{}).usecases||{}, pcC=(D.pieces[slug]||{}).communities||{};
+  var src = traceCluster==="usecase" ? pcU
+          : traceCluster==="community" ? null
+          : (D.census||{})[slug] || {};
+  var memb={};
+  items.forEach(function(it){ memb[it.id]=[]; });
+  if(traceCluster==="community"){
+    Object.keys(pcC).sort().forEach(function(g){ (pcC[g]||[]).forEach(function(n){
+      items.forEach(function(it){ if(it.name===n) memb[it.id].push(g); }); }); });
+  } else {
+    Object.keys(src).sort().forEach(function(g){ var v=src[g]||{};
+      items.forEach(function(it){
+        if(it.kind==="fn" ? (v.fns||[]).indexOf(it.name)>=0 : (v.cls||[]).indexOf(it.name)>=0)
+          memb[it.id].push(g); }); });
+  }
+  var fallback = traceCluster==="census" ? "uncensused" : "other";
+  items.forEach(function(it){ if(!memb[it.id].length) memb[it.id]=[fallback]; });
+  return memb;
+}
 function traceGroups(items){
   var of;
   if(traceCluster==="tests") of=function(it){ var d=it.kind==="fn"
@@ -799,6 +826,42 @@ function traceGroups(items){
 function bubbleGeom(n){ var cols=Math.ceil(Math.sqrt(n)), rows=Math.ceil(n/cols);
   var w=(cols-1)*54, h=(rows-1)*46;
   return {cols:cols, rows:rows, w:w, h:h, r:Math.max(34, Math.hypot(w, h+18)/2 + 30)}; }
+function traceLayoutMulti(slug){
+  var inner=traceInner(slug), memb=traceMembership(slug, inner.items);
+  var gnames=[]; inner.items.forEach(function(it){ memb[it.id].forEach(function(g){ if(gnames.indexOf(g)<0) gnames.push(g); }); });
+  gnames.sort();
+  // group anchors on a ring, radius from a disjoint-size estimate
+  var est={}; gnames.forEach(function(g){ est[g]=0; });
+  inner.items.forEach(function(it){ memb[it.id].forEach(function(g){ est[g]++; }); });
+  var N=gnames.length, anchors={};
+  if(N===1) anchors[gnames[0]]={x:0,y:0};
+  else { var maxr=0; gnames.forEach(function(g){ maxr=Math.max(maxr, bubbleGeom(est[g]).r); });
+    var D0=Math.max(90, (2*maxr+30)/(2*Math.sin(Math.PI/N)));
+    gnames.forEach(function(g,i){ var a=-Math.PI/2+2*Math.PI*i/N;
+      anchors[g]={x:rnd(D0*Math.cos(a)), y:rnd(D0*Math.sin(a))}; }); }
+  // placement: single-group → grid slot at its anchor · multi → centroid (+ stack offset)
+  var pos={}, gridIdx={}, comboIdx={};
+  inner.items.forEach(function(it){ var gs=memb[it.id];
+    if(gs.length===1){ var g=gs[0], i=(gridIdx[g]=gridIdx[g]||{n:0}).n++;
+      var geo=bubbleGeom(est[g]);
+      var row=Math.floor(i/geo.cols), coln=i%geo.cols;
+      pos[it.id]={x:rnd(anchors[g].x+(coln-(geo.cols-1)/2)*54), y:rnd(anchors[g].y+(row-(geo.rows-1)/2)*46-8)}; }
+    else { var cx=0, cy=0; gs.forEach(function(g){ cx+=anchors[g].x; cy+=anchors[g].y; });
+      cx/=gs.length; cy/=gs.length;
+      var key=gs.join("|"), k=(comboIdx[key]=comboIdx[key]||{n:0}).n++;
+      pos[it.id]={x:rnd(cx+(k%2?1:-1)*Math.ceil(k/2)*56), y:rnd(cy+((k%3)-1)*30)}; } });
+  // bubbles = enclosing circles of member positions (overlap EXPECTED for shared pieces)
+  var bubbles=gnames.map(function(g){
+    var mem=inner.items.filter(function(it){ return memb[it.id].indexOf(g)>=0; });
+    var cx=0, cy=0; mem.forEach(function(it){ cx+=pos[it.id].x; cy+=pos[it.id].y; });
+    cx/=Math.max(mem.length,1); cy/=Math.max(mem.length,1);
+    var r=34; mem.forEach(function(it){ r=Math.max(r, Math.hypot(pos[it.id].x-cx, pos[it.id].y-cy)+34); });
+    return {g:g, cx:rnd(cx), cy:rnd(cy), r:rnd(r), n:mem.length}; });
+  var maxR=0; bubbles.forEach(function(b){ maxR=Math.max(maxR, Math.hypot(b.cx,b.cy)+b.r); });
+  inner.items.forEach(function(it){ maxR=Math.max(maxR, Math.hypot(pos[it.id].x,pos[it.id].y)+40); });
+  var R=Math.max(maxR+42, (inner.eps.length*15)/(2*Math.PI), 66);
+  return {inner:inner, memb:memb, pos:pos, bubbles:bubbles, R:R};
+}
 function traceLayout(slug){
   // bubble centres + entity radius, computed ONE way for radii + drawing
   var inner=traceInner(slug), gr=traceGroups(inner.items);
@@ -827,7 +890,9 @@ function traceRadii(){ var radii={};
       (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
       var core=Math.max(26, Object.keys(cls).length*8), ring2=core+(Object.keys(fns).length?88:18);
       radii[slug]=Math.max(ring2+88, (eps.length*15)/(2*Math.PI), 66);
-    } else radii[slug]=traceLayout(slug).R; });
+    } else if(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census")
+      radii[slug]=traceLayoutMulti(slug).R;
+    else radii[slug]=traceLayout(slug).R; });
   return radii; }
 function drawTrace(){
   if(traceCluster==="flow") return drawTraceFlow();
@@ -836,8 +901,9 @@ function drawTrace(){
   var defs=E("defs"), interLayer=E("g"), wireLayer=E("g"), layer=E("g");
   vp.appendChild(defs); vp.appendChild(interLayer); vp.appendChild(wireLayer); vp.appendChild(layer);
   var clsAtGlobal={};
+  var isMulti=(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census");
   ENTS.forEach(function(slug){ var p=entAnchor(slug), col=COLORS[slug]||"#888";
-    var L=traceLayout(slug), pc=L.inner.pc, R=radii[slug];
+    var L=isMulti?traceLayoutMulti(slug):traceLayout(slug), pc=L.inner.pc, R=radii[slug];
     var cont=E("circle",{class:"container", cx:p.x, cy:p.y, r:R, fill:col, stroke:col, style:"cursor:grab"});
     cont.__click=function(){ var en=D.entities.filter(function(e){return e.slug===slug;})[0]; if(en) showEntity(en); };
     wireEntityDrag(cont, slug); layer.appendChild(cont);
@@ -853,37 +919,52 @@ function drawTrace(){
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
-    // 3 · CLUSTER BUBBLES — the sketch's dashed sub-containers, one per group
+    // 3 · CLUSTER BUBBLES — dashed sub-containers; in the multi-membership modes
+    //     (use case · community · census) bubbles ENCLOSE their members and may
+    //     OVERLAP — a shared piece is drawn once, never duplicated (operator ruling).
     var fnAt={}, clsAt={};
-    L.bubbles.forEach(function(bu,bi){ var c={x:p.x+L.centres[bi].x, y:p.y+L.centres[bi].y};
-      layer.appendChild(E("circle",{class:"bubble", cx:c.x, cy:c.y, r:bu.geo.r,
-        fill:col, "fill-opacity":"0.06", stroke:col, "stroke-opacity":"0.55",
-        "stroke-width":"1.2","stroke-dasharray":"3 4"}));
-      var bl=E("text",{class:"sub2","data-sector":bu.g, x:c.x, y:c.y-bu.geo.r-6,
-        style:"font-weight:700"}); bl.textContent=bu.g; bl.setAttribute("fill",col); layer.appendChild(bl);
-      bu.items.forEach(function(it,i){ var row=Math.floor(i/bu.geo.cols), coln=i%bu.geo.cols;
-        var x=rnd(c.x+(coln-(bu.geo.cols-1)/2)*54), y=rnd(c.y+(row-(bu.geo.rows-1)/2)*46-8);
-        if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y};
-          var g=E("g",{class:"fnode","data-layer":"api","data-grp":bu.g, transform:"translate("+x+","+y+")"});
-          fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
-          var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
-          proofBadge(g, 9, f2.tests||null);
-          var t2=E("text",{class:"plabel", y:17}); t2.textContent=trunc(it.name,11); g.appendChild(t2);
-          var ti2=E("title"); ti2.textContent=it.name+"() · handler"; g.appendChild(ti2);
-          g.addEventListener("click",function(ev){ ev.stopPropagation();
-            showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null}); });
-          layer.appendChild(g);
-        } else { var cls=it.name;
-          clsAt[cls]={x:x,y:y}; clsAtGlobal[slug+"|"+cls]={x:x,y:y};
-          var g3=E("g",{class:"piece","data-kind":it.kind,"data-grp":bu.g, transform:"translate("+x+","+y+")"});
-          if(it.kind==="model") cylinder(g3, 8, "var(--c-model)"); else sBadge(g3, 7, "var(--c-schema)");
-          proofBadge(g3, 9, (it.m&&it.m.tests)||null);
-          guardMark(g3, 9, (it.m&&it.m.guards)||0); hubMark(g3, 9, (it.m&&it.m.hub)||null); pressMark(g3, 9, slug, cls);
-          var t3=E("text",{class:"plabel", y:17}); t3.textContent=trunc(cls,11); g3.appendChild(t3);
-          var ti3=E("title"); ti3.textContent=(it.kind==="model"?"model ":"schema ")+cls+(it.m&&it.m.table?" · table "+it.m.table:""); g3.appendChild(ti3);
-          g3.addEventListener("click",function(ev){ ev.stopPropagation();
-            showPiece(slug, {kind:it.kind, m:it.m||{cls:cls}}); });
-          layer.appendChild(g3); } }); });
+    function drawInnerItem(it, x, y, grpLabel){
+      if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y};
+        var g=E("g",{class:"fnode","data-layer":"api","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
+        fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
+        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
+        proofBadge(g, 9, f2.tests||null);
+        var t2=E("text",{class:"plabel", y:17}); t2.textContent=trunc(it.name,11); g.appendChild(t2);
+        var ti2=E("title"); ti2.textContent=it.name+"() · handler"; g.appendChild(ti2);
+        g.addEventListener("click",function(ev){ ev.stopPropagation();
+          showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null}); });
+        layer.appendChild(g);
+      } else { var cls=it.name;
+        clsAt[cls]={x:x,y:y}; clsAtGlobal[slug+"|"+cls]={x:x,y:y};
+        var g3=E("g",{class:"piece","data-kind":it.kind,"data-grp":grpLabel, transform:"translate("+x+","+y+")"});
+        if(it.kind==="model") cylinder(g3, 8, "var(--c-model)"); else sBadge(g3, 7, "var(--c-schema)");
+        proofBadge(g3, 9, (it.m&&it.m.tests)||null);
+        guardMark(g3, 9, (it.m&&it.m.guards)||0); hubMark(g3, 9, (it.m&&it.m.hub)||null); pressMark(g3, 9, slug, cls);
+        var t3=E("text",{class:"plabel", y:17}); t3.textContent=trunc(cls,11); g3.appendChild(t3);
+        var ti3=E("title"); ti3.textContent=(it.kind==="model"?"model ":"schema ")+cls+(it.m&&it.m.table?" · table "+it.m.table:""); g3.appendChild(ti3);
+        g3.addEventListener("click",function(ev){ ev.stopPropagation();
+          showPiece(slug, {kind:it.kind, m:it.m||{cls:cls}}); });
+        layer.appendChild(g3); } }
+    if(isMulti){
+      L.bubbles.forEach(function(bu){ var cx=p.x+bu.cx, cy=p.y+bu.cy;
+        layer.appendChild(E("circle",{class:"bubble", cx:cx, cy:cy, r:bu.r,
+          fill:col, "fill-opacity":"0.05", stroke:col, "stroke-opacity":"0.5",
+          "stroke-width":"1.2","stroke-dasharray":"3 4"}));
+        var bl=E("text",{class:"sub2","data-sector":bu.g, x:cx, y:cy-bu.r-6,
+          style:"font-weight:700"}); bl.textContent=bu.g+" ("+bu.n+")"; bl.setAttribute("fill",col); layer.appendChild(bl); });
+      L.inner.items.forEach(function(it){ var q=L.pos[it.id];
+        drawInnerItem(it, p.x+q.x, p.y+q.y, L.memb[it.id].join("+")); });
+    } else {
+      L.bubbles.forEach(function(bu,bi){ var c={x:p.x+L.centres[bi].x, y:p.y+L.centres[bi].y};
+        layer.appendChild(E("circle",{class:"bubble", cx:c.x, cy:c.y, r:bu.geo.r,
+          fill:col, "fill-opacity":"0.06", stroke:col, "stroke-opacity":"0.55",
+          "stroke-width":"1.2","stroke-dasharray":"3 4"}));
+        var bl=E("text",{class:"sub2","data-sector":bu.g, x:c.x, y:c.y-bu.geo.r-6,
+          style:"font-weight:700"}); bl.textContent=bu.g; bl.setAttribute("fill",col); layer.appendChild(bl);
+        bu.items.forEach(function(it,i){ var row=Math.floor(i/bu.geo.cols), coln=i%bu.geo.cols;
+          var x=rnd(c.x+(coln-(bu.geo.cols-1)/2)*54), y=rnd(c.y+(row-(bu.geo.rows-1)/2)*46-8);
+          drawInnerItem(it, x, y, bu.g); }); });
+    }
     if(!L.inner.items.length){ var note=E("text",{class:"sub2", x:p.x, y:p.y+3});
       note.textContent="no traced flows"; layer.appendChild(note); }
     // the WIRES: endpoint → its ƒ → each class it touches → what it returns
