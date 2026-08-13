@@ -117,9 +117,9 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
     <div id="gearpanel" hidden style="position:absolute;z-index:40;top:100%;left:0;margin-top:4px;width:280px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:12px">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:6px">Entities layout</div>
       <div class="seg" id="laySeg" style="margin-left:0;flex-wrap:wrap">
-        <button data-lay="ring" class="on">Ring</button>
+        <button data-lay="ring">Ring</button>
         <button data-lay="flow">Flow</button>
-        <button data-lay="force">Force</button>
+        <button data-lay="force" class="on">Force</button>
       </div>
       <div id="clRow">
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Cluster core by <span style="opacity:.6">(5·Trace)</span></div>
@@ -142,11 +142,11 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
       </div>
       <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Highlight depth (selection)</div>
       <div class="seg" id="depthSeg" style="margin-left:0">
-        <button data-d="1" class="on">1</button>
+        <button data-d="1">1</button>
         <button data-d="2">2</button>
         <button data-d="3">3</button>
         <button data-d="4">4</button>
-        <button data-d="5">5</button>
+        <button data-d="5" class="on">5</button>
       </div>
     </div>
   </div>
@@ -312,7 +312,7 @@ function unlinkedNote(kind, key, name){
   return "<div class='k'>why is it unlinked?</div><div class='note'>No documented foreign key, endpoint touch, or response references <b>"+name
     +"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.</div>";
 }
-var entLayout = "ring", insideLayout = "force";   // defaults per operator screenshot: Ring · Force
+var entLayout = "force", insideLayout = "force";   // defaults per operator screenshot: Force · Force
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
 var showTests = true;      // per-piece proof badges (count · corpus · state)
 var showGuards = false;    // validator shields (guard_insight) — lens, off by default
@@ -587,7 +587,7 @@ function innerArrangement(slug, cx, cy){
 function pieceRadii(){ var radii={};
   ENTS.forEach(function(slug){ var arr=innerArrangement(slug, 0, 0);
     var eps=arr.pc.endpoints.length;                       // ALWAYS the full surface
-    var byEps=eps>0 ? (eps*27)/(2*Math.PI) : 0;             // room for markers + their labels
+    var byEps=eps>0 ? (eps*50)/(2*Math.PI) : 0;             // below-labels need ~50px of arc each
     radii[slug]=Math.max(arr.extent+88, byEps, 62); });   // band > max label reach (19 offset + ~62px text)
   return radii; }
 /* the L1 kinds edges (gradient amalgamation + direction bows) — shared by any
@@ -662,11 +662,7 @@ function drawPieces(){
       epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null);
       guardMark(g, 7, ep.guards||0);
-      (function(){ var dx=x-p.x, dy=y-p.y, dd=Math.hypot(dx,dy)||1, ux=dx/dd, uy=dy/dd;
-        var band=(i%2? 13 : 33);
-        var lx=rnd(ux*band), ly=rnd(uy*band+3);
-        var anc = ux>0.35?"start":(ux<-0.35?"end":"middle");
-        twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, lx, ly, anc); })();
+      twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);   // BELOW the icon, like every piece
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
       layer.appendChild(g); });
@@ -923,7 +919,7 @@ function traceLayoutMulti(slug){
     return {g:g, cx:rnd(cx), cy:rnd(cy), r:rnd(r), n:mem.length}; });
   var maxR=0; bubbles.forEach(function(b){ maxR=Math.max(maxR, Math.hypot(b.cx,b.cy)+b.r); });
   inner.items.forEach(function(it){ maxR=Math.max(maxR, Math.hypot(pos[it.id].x,pos[it.id].y)+40); });
-  var R=Math.max(maxR+42, (inner.eps.length*27)/(2*Math.PI), 66);
+  var R=Math.max(maxR+42, (inner.eps.length*50)/(2*Math.PI), 66);
   return {inner:inner, memb:memb, pos:pos, bubbles:bubbles, R:R};
 }
 function traceLayout(slug){
@@ -940,7 +936,7 @@ function traceLayout(slug){
     for(var k=0;k<N;k++){ var a=-Math.PI/2+2*Math.PI*k/N;
       centres.push({x:rnd(D0*Math.cos(a)), y:rnd(D0*Math.sin(a))}); } }
   var maxR=0; bs.forEach(function(b,i){ maxR=Math.max(maxR, Math.hypot(centres[i].x,centres[i].y)+b.geo.r); });
-  var shown=inner.eps.length, byEps=shown>0?(shown*15)/(2*Math.PI):0;
+  var shown=inner.eps.length, byEps=shown>0?(shown*50)/(2*Math.PI):0;
   var R=Math.max(maxR+42, byEps, 66);
   return {inner:inner, bubbles:bs, centres:centres, R:R};
 }
@@ -953,7 +949,7 @@ function traceRadii(){ var radii={};
       traced.forEach(function(ep){ if(ep.fn) fns[ep.fn]=1; (ep.touch||[]).forEach(function(c){ cls[c]=1; }); });
       (D.cross_edges||[]).forEach(function(e){ if(e.fs===slug) cls[e.f]=1; if(e.ts===slug) cls[e.t]=1; });
       var core=Math.max(26, Object.keys(cls).length*8), ring2=core+(Object.keys(fns).length?88:18);
-      radii[slug]=Math.max(ring2+88, (eps.length*27)/(2*Math.PI), 66);
+      radii[slug]=Math.max(ring2+88, (eps.length*50)/(2*Math.PI), 66);
     } else radii[slug]=traceLayoutMulti(slug).R; });
   return radii; }
 function drawTrace(){
@@ -979,11 +975,7 @@ function drawTrace(){
       epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
-      (function(){ var dx=x-p.x, dy=y-p.y, dd=Math.hypot(dx,dy)||1, ux=dx/dd, uy=dy/dd;
-        var band=(i%2? 13 : 33);                             // alternate bands so dense borders read
-        var lx=rnd(ux*band), ly=rnd(uy*band+3);
-        var anc = ux>0.35?"start":(ux<-0.35?"end":"middle");
-        twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, lx, ly, anc); })();
+      twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);   // BELOW the icon, like every piece
       regNode(g, "ep:"+slug+"|"+ep.m+" "+ep.p, ep.m+" "+ep.p, "ep");
       g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
         attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
@@ -1288,7 +1280,7 @@ document.getElementById("conns").addEventListener("click",function(){
    as clickable rows in the panel, and lets a connector itself be inspected. ── */
 var SELREG = { nodes:{}, edges:[] };
 var selKey = null;
-var selDepth = 1;   // hop depth of the selection highlight (1–5, gear-tuned)
+var selDepth = 5;   // default 5 per operator
 function regNode(g, key, label, type){ g.setAttribute("data-key", key);
   SELREG.nodes[key]={el:g, label:label, type:type}; }
 function regEdge(el, kind, fromKey, toKey, how){
