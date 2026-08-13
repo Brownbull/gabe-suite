@@ -138,6 +138,23 @@ check("cancelContTap()" in station and "pendingCont" in station,
 check('regNode(contWrap, "ent:"+slug' in station,
       "an exploded entity re-registers on its container (visible selection ring)")
 
+# ── E3 · the DOSSIER (port slice 2): PURPOSE/STRUCTURE/SIGNATURE/TESTED-BY over
+# the emitter's per-node det block — honest-empty at every level.
+check("function dossierHTML(det" in station, "station defines the dossier renderer")
+check("if(!det) return \"\";" in station, "dossier is honest-empty (no det → no dossier)")
+for fn in ["docSect", "structSect", "sigSect", "casesSect", "fkSect"]:
+    check(("function " + fn + "(") in station, f"dossier section {fn} present")
+check("dossierHTML(n.det" in station, "the L2 card renders the dossier")
+check("dossierHTML(l2n.det" in station, "the sim piece card JOINS the dossier (slice 2)")
+check("table.ptab" in CSS and ".uqchip" in CSS and ".cid" in CSS,
+      "the dossier table vocabulary is styled")
+check('"structure ("+(det.cols.length+(det.cols_more||0))' in station,
+      "STRUCTURE headlines the FULL column count (shown + capped)")
+check('"tested by ("+n+")"' in station and "cases_more" in station,
+      "TESTED-BY headlines the full ledger count, cap named")
+_m4 = station.replace("if(!det) return \"\";", "")
+check("if(!det) return \"\";" not in _m4, "MUTATION: a stripped honest-empty guard is detectable")
+
 # ── E · honest-empty contract: the station degrades when GABE_SIM is null
 check("degradePanel" in station, "station has a degrade path (no change in flight)")
 check(re.search(r'window\.GABE_SIM\s*\|\|\s*null', station) is not None,

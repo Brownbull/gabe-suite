@@ -262,8 +262,99 @@ def model_ids(model: dict[str, Any],
     return ids
 
 
+_DET_COLS_CAP = 10    # STRUCTURE rows shown; the rest becomes "+N more"
+_DET_CASES_CAP = 6    # TESTED-BY rows shown; the matrix carries the full ledger
+
+
+def element_detail(kind: str, obj: dict[str, Any],
+                   file_lines: dict[str, int],
+                   fi: dict[str, Any], ti_ep: dict[str, Any],
+                   ti_model: dict[str, Any], mi: dict[str, Any]) -> dict[str, Any]:
+    """The panel DOSSIER for one L2 piece — the center's per-element fields
+    (PURPOSE · STRUCTURE · SIGNATURE · TESTED-BY) derived at build time so the
+    station's detail panel reads LIVE archmap data, never a lab fixture:
+
+    * ``doc``    — the element's docstring/purpose (skipped when absent/"—").
+    * ``file``/``flines`` — where it lives + the file's line count (the 800
+      budget is a render-time judgment, the emitter only carries the number).
+    * ``cols``   — model columns / schema fields ``[[name, type, default]]``,
+      capped at ``_DET_COLS_CAP`` with ``cols_more``; ``uqs`` = unique columns.
+    * ``fks``    — ``[[column, table.col]]`` sorted (models only, STORED-AS).
+    * ``sig``    — endpoint handler signature from function_insight
+      (``returns`` · ``async`` · ``lines``).
+    * ``usage``  — fan-in numbers: endpoints from function_insight (api/internal
+      call counts), models/schemas from model_insight (fk_in/internal refs).
+    * ``cases``  — the test ledger rows ``{cid, name, state, corpus}`` capped at
+      ``_DET_CASES_CAP`` with ``cases_more`` (by_endpoint keyed ``file::fn``,
+      by_model keyed on the class name).
+
+    Pure + deterministic (source order for cols, explicit sorts for fks/cases);
+    HONEST-EMPTY — an element with nothing to show returns {} and gets NO det
+    key, so a twin without the insight blocks degrades to the bare card."""
+    det: dict[str, Any] = {}
+    doc = obj.get("doc")
+    if doc and doc != "—":
+        det["doc"] = doc
+    file = obj.get("file")
+    if file:
+        det["file"] = file
+        if file in file_lines:
+            det["flines"] = file_lines[file]
+
+    if kind == "endpoint":
+        if obj.get("status"):
+            det["status"] = str(obj["status"])
+        fn = obj.get("fn")
+        rec = fi.get(f"{file}::{fn}") if (file and fn) else None
+        if rec:
+            sig = {}
+            if rec.get("returns"):
+                sig["returns"] = rec["returns"]
+            if rec.get("async"):
+                sig["async"] = True
+            if rec.get("lines"):
+                sig["lines"] = rec["lines"]
+            if sig:
+                det["sig"] = sig
+            usage = {"api": rec.get("api", 0), "internal": rec.get("internal", 0)}
+            if any(usage.values()):
+                det["usage"] = usage
+        groups = ti_ep.get(f"{file}::{fn}") if (file and fn) else None
+    else:
+        cols = obj.get("cols") if kind == "model" else obj.get("fields")
+        cols = [c for c in (cols or []) if c and len(c) >= 2 and c[0]]
+        if cols:
+            det["cols"] = [list(c[:3]) for c in cols[:_DET_COLS_CAP]]
+            if len(cols) > _DET_COLS_CAP:
+                det["cols_more"] = len(cols) - _DET_COLS_CAP
+        uqs = obj.get("uqs") or []
+        if uqs:
+            det["uqs"] = sorted(uqs)
+        if kind == "model" and obj.get("fks"):
+            det["fks"] = sorted([[c, ref] for c, ref in obj["fks"].items()])
+        rec = mi.get(obj.get("cls") or "")
+        if rec:
+            usage = {"fk_in": rec.get("fk_in", 0), "internal": rec.get("internal", 0)}
+            if any(usage.values()):
+                det["usage"] = usage
+        groups = ti_model.get(obj.get("cls") or "")
+
+    rows = []
+    for grp in (groups or {}).values():
+        for c in grp or []:
+            rows.append({"cid": c.get("cid"), "name": c.get("name"),
+                         "state": c.get("state"), "corpus": c.get("corpus")})
+    if rows:
+        rows.sort(key=lambda r: (str(r["corpus"]), str(r["cid"]), str(r["name"])))
+        det["cases"] = rows[:_DET_CASES_CAP]
+        if len(rows) > _DET_CASES_CAP:
+            det["cases_more"] = len(rows) - _DET_CASES_CAP
+    return det
+
+
 def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
-        labels: dict[str, str]) -> dict[str, list[dict]]:
+        labels: dict[str, str],
+        insight: dict[str, Any] | None = None) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
     wiring, plus honest ``external`` stub nodes for outbound FKs into other
     entities / unclaimed tables — so a drill never hides where the entity reaches.
@@ -277,11 +368,19 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
     edges: list[dict] = []
     own_classes: dict[str, str] = {}   # cls -> node id (this entity only)
     externals: dict[str, dict] = {}    # ext node id -> node
+    ins = insight or {}
+    file_lines = {f[1]: f[2] for f in (code.get("files") or [])
+                  if isinstance(f, (list, tuple)) and len(f) >= 3}
 
     def add_node(node: dict) -> None:
         if node["id"] not in node_ids:   # deterministic first-writer dedup
             node_ids.add(node["id"])
             nodes.append(node)
+
+    def det_of(kind: str, obj: dict) -> dict:
+        return element_detail(kind, obj, file_lines,
+                              ins.get("fi") or {}, ins.get("ti_ep") or {},
+                              ins.get("ti_model") or {}, ins.get("mi") or {})
 
     def ext(owner: str) -> str:
         nid = f"external:{owner}"
@@ -300,19 +399,34 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         ids = model_ids(model, code.get("endpoints"))
         if ids:                                   # honest-empty: no card if nothing to show
             node["ids"] = ids
+        det = det_of("model", model)
+        if det:                                   # honest-empty: no dossier, no key
+            node["det"] = det
         add_node(node)
         if model.get("cls"):
             own_classes.setdefault(model["cls"], nid)   # a model wins a name tie
     for schema in code.get("schemas") or []:
         nid = f"schema:{schema.get('cls')}"
-        add_node({"id": nid, "kind": "schema", "slug": slug,
-                  "label": schema.get("cls")})
+        snode = {"id": nid, "kind": "schema", "slug": slug,
+                 "label": schema.get("cls")}
+        sdet = det_of("schema", schema)
+        if sdet:
+            snode["det"] = sdet
+        add_node(snode)
         if schema.get("cls"):
             own_classes.setdefault(schema["cls"], nid)
     for ep in code.get("endpoints") or []:
         nid = f"endpoint:{ep.get('method')} {ep.get('path')}"
-        add_node({"id": nid, "kind": "endpoint", "slug": slug,
-                  "label": f"{ep.get('method')} {ep.get('path')}"})
+        enode = {"id": nid, "kind": "endpoint", "slug": slug,
+                 "label": f"{ep.get('method')} {ep.get('path')}"}
+        if ep.get("fn"):
+            enode["fn"] = ep["fn"]                # the handler, for the card's route row
+        if ep.get("resp"):
+            enode["resp"] = ep["resp"]
+        edet = det_of("endpoint", ep)
+        if edet:
+            enode["det"] = edet
+        add_node(enode)
         for cls in ep.get("touches") or []:
             tgt = own_classes.get(cls)
             if tgt and tgt != nid:
@@ -492,12 +606,19 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
 
     tbl2slug = _index_tables(entities)
     cross_edges = _cross_edges(entities, tbl2slug)   # piece-level cross-entity FKs
+    # the per-element dossier's insight bundle — every block optional (a twin
+    # without an insight section still builds; its cards go honest-empty)
+    ti = amap.get("test_insight") or {}
+    insight = {"fi": amap.get("function_insight") or {},
+               "ti_ep": ti.get("by_endpoint") or {},
+               "ti_model": ti.get("by_model") or {},
+               "mi": amap.get("model_insight") or {}}
     l2: dict[str, dict] = {}
     for slug in sorted(entities):
         code = entities[slug]
         if not code:
             continue
-        graph = _l2(slug, code, tbl2slug, labels)
+        graph = _l2(slug, code, tbl2slug, labels, insight)
         _stamp_l2(graph)
         l2[slug] = graph
 

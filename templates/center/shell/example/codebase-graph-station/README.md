@@ -46,7 +46,10 @@ evidence, plus the selection's clickable **connections** rows.
   under `.cbg-root`). Shell assets are rehomed to the suite's real `../../assets/`
   (incl. `sim-panel.js`, the shared detail panel).
 - `c4-graph.js` — gustify's emitted C4 graph (`window.GABE_C4` topology with baked
-  ring **x/y** + deps-gradient **fx/fy**, plus `window.GABE_C4_COLORS`, the palette).
+  ring **x/y** + deps-gradient **fx/fy**, plus `window.GABE_C4_COLORS`, the palette;
+  since port slice 2 every L2 node also carries its **`det` dossier** — PURPOSE ·
+  STRUCTURE (capped 10 cols) · SIGNATURE · TESTED-BY (capped 6 cases) — derived
+  read-only from the twin archmap and merged onto the frozen snapshot's nodes).
 - `sim.data.js` — the **seeded example change** `window.GABE_SIM` (gustify commit
   `fecb2ce3`, "the mode row becomes the cupo"): `recipe` changed → `cooking`
   downstream. This is an **example fixture**, not live data.
@@ -71,7 +74,10 @@ the full instrument is demonstrable offline — do NOT regen it from a build.
 mouse where z-order matters): `port1` pins the lab grammar + beat overlays +
 selection engine over the fixture (counts derived from `GABE_SIM`, never hardcoded);
 `port2` builds a temp `GABE_SIM=null` twin and pins the honest-empty degrade + the
-L2 drill. Not doctor-wired (browser-bound); run when iterating on the station.
+L2 drill; `port3` pins the review's failure modes (unclaimed-bucket boot, hop by
+slug, travel); `port4` pins the slice-2 DOSSIER (enriched cards + the sim-piece
+panel join, every count derived from the committed det). Not doctor-wired
+(browser-bound); run when iterating on the station.
 ⚠ every re-render replays the 0.9s piece fly-in — probes must settle (~1.2s) before
 real-mouse clicks, or they hit the container where the pieces still are.
 

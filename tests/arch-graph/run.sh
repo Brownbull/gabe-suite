@@ -325,6 +325,77 @@ _mi = G.model_ids({"cls": "Z", "cols": [["x", "int", ""]]},
 check(_mi["principal"] == "mk_z" and _mi["datatype"] == [{"n": "x", "t": "int"}],
       "model_ids is a reusable pure helper (datatype + principal)")
 
+# ── ELEMENT DETAIL: the panel dossier (PURPOSE·STRUCTURE·SIGNATURE·TESTED-BY)
+# on L2 nodes — derived from the insight blocks, capped, honest-empty.
+# FIX has NO insight blocks: det still fires from archmap alone (cols), and an
+# endpoint with nothing to show carries NO det key at all.
+check(a2n["model:A"].get("det", {}).get("cols") == [["id", "uuid.UUID", ""], ["name", "str", ""]],
+      "det: model cols ride the dossier even without insight blocks")
+check("det" not in a2n["endpoint:GET /alpha"],
+      "det: an endpoint with no doc/file/insight carries NO det key (honest-empty)")
+check("det" not in gmn["model:Gm"] or gmn["model:Gm"]["det"],
+      "det: never an empty dict on a node")
+FIX_DET = {"head": "de7a11", "entities": {
+  "alpha": {
+    "files": [["api", "apps/api/alpha.py", 900]],   # over the 800 budget → flines carries it
+    "models": [{"cls": "A", "table": "a", "doc": "The A record.",
+                "file": "apps/api/alpha.py",
+                "cols": [[f"c{i}", "int", ""] for i in range(12)],   # 12 → 10 + 2 more
+                "uqs": ["c2", "c1"],
+                "fks": {"b_col": "b.id", "a_col": "a.id"}},
+               {"cls": "Bare", "table": "bare", "doc": "—", "fks": {}}],   # em-dash doc skipped
+    "schemas": [{"cls": "AOut", "doc": "Out shape.", "file": "apps/api/alpha.py",
+                 "fields": [["x", "str", ""]]}],
+    "endpoints": [{"method": "GET", "path": "/a", "fn": "get_a", "doc": "Reads A.",
+                   "file": "apps/api/alpha.py", "status": 200, "resp": "AOut",
+                   "touches": ["AOut"]}],
+  }},
+  "function_insight": {"apps/api/alpha.py::get_a":
+      {"returns": "AOut", "async": True, "lines": 42, "api": 3, "internal": 1}},
+  "model_insight": {"A": {"fk_in": 5, "internal": 2}},
+  "test_insight": {
+    "by_endpoint": {"apps/api/alpha.py::get_a":
+        {"api": [{"cid": f"C{i}", "name": f"t{i}_C{i}", "state": "pass", "corpus": "api",
+                  "tfile": "tests/t.py"} for i in range(8)]}},   # 8 → 6 + 2 more
+    "by_model": {"A": {"direct": [{"cid": "C9", "name": "t9_C9", "state": "fail",
+                                   "corpus": "api", "tfile": "tests/t.py"}]}},
+  }}
+gd = G.build_c4_graph(FIX_DET)
+dn = {n["id"]: n for n in gd["l2"]["alpha"]["nodes"]}
+adet = dn["model:A"]["det"]
+check(adet["doc"] == "The A record." and adet["file"] == "apps/api/alpha.py"
+      and adet["flines"] == 900,
+      "det: model doc + file + flines (joined from the entity's files)")
+check(len(adet["cols"]) == 10 and adet["cols_more"] == 2,
+      "det: STRUCTURE capped at 10 cols with cols_more (12-col model)")
+check(adet["uqs"] == ["c1", "c2"], "det: unique columns sorted")
+check(adet["fks"] == [["a_col", "a.id"], ["b_col", "b.id"]],
+      "det: STORED-AS fks sorted by column")
+check(adet["usage"] == {"fk_in": 5, "internal": 2},
+      "det: model usage from model_insight")
+check(adet["cases"] == [{"cid": "C9", "name": "t9_C9", "state": "fail", "corpus": "api"}]
+      and "cases_more" not in adet,
+      "det: TESTED-BY from by_model, tfile dropped, no cap residue under the cap")
+edet = dn["endpoint:GET /a"]["det"]
+check(edet["doc"] == "Reads A." and edet["status"] == "200",
+      "det: endpoint PURPOSE + status (stringified)")
+check(edet["sig"] == {"returns": "AOut", "async": True, "lines": 42},
+      "det: SIGNATURE from function_insight (returns/async/lines)")
+check(edet["usage"] == {"api": 3, "internal": 1}, "det: endpoint usage from function_insight")
+check(len(edet["cases"]) == 6 and edet["cases_more"] == 2,
+      "det: TESTED-BY capped at 6 with cases_more (8 cases)")
+check(edet["cases"] == sorted(edet["cases"], key=lambda r: (r["corpus"], r["cid"], r["name"])),
+      "det: cases deterministically sorted")
+check(dn["endpoint:GET /a"].get("fn") == "get_a" and dn["endpoint:GET /a"].get("resp") == "AOut",
+      "det: endpoint node carries fn + resp for the card's route rows")
+sdet = dn["schema:AOut"]["det"]
+check(sdet["cols"] == [["x", "str", ""]] and sdet["doc"] == "Out shape.",
+      "det: schema fields become cols; schema doc carried")
+check("doc" not in dn["model:Bare"].get("det", {}),
+      "det: an em-dash doc is skipped (honest-empty PURPOSE)")
+check(json.dumps(gd, sort_keys=True) == json.dumps(G.build_c4_graph(FIX_DET), sort_keys=True),
+      "det: byte-deterministic across rebuilds")
+
 # ── NODE-ID UNIQUENESS: beta's duplicate model B yields ONE node ────────────
 b2ids = [n["id"] for n in g["l2"]["beta"]["nodes"]]
 check(b2ids.count("model:B") == 1, "a duplicate model class yields a single L2 node id")

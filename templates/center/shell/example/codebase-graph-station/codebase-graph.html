@@ -210,6 +210,18 @@
 .cbg-root .idchip.st{ background:var(--line); color:var(--muted); font-family:ui-monospace,Menlo,Consolas,monospace;
   font-size:10.5px; padding:2px 8px; }
 /* type-family colours (.ty-num1 … .ty-id) INHERIT from a3.css — theme-aware there. */
+/* the DOSSIER sections (slice 2): PURPOSE · STRUCTURE · SIGNATURE · TESTED-BY */
+.cbg-root .detail table.ptab{ border-collapse:collapse; width:100%; font-size:0.821rem; margin-top:2px; }
+.cbg-root .detail table.ptab th{ text-align:left; font-size:0.714rem; letter-spacing:.05em; text-transform:uppercase;
+  color:var(--muted); font-weight:700; padding:2px 8px 2px 0; border-bottom:1px solid var(--line); white-space:nowrap; }
+.cbg-root .detail table.ptab td{ padding:2.5px 8px 2.5px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+.cbg-root .detail table.ptab td.ty{ color:var(--c-schema); font-family:ui-monospace,Menlo,Consolas,monospace; font-size:0.786rem; }
+.cbg-root .detail .pbar{ display:inline-block; height:7px; border-radius:4px; background:var(--accent); vertical-align:middle; margin-right:5px; }
+.cbg-root .detail .pmore{ font-size:0.75rem; color:var(--muted); padding:2px 0; }
+.cbg-root .detail .uqchip{ font-size:0.643rem; font-weight:800; letter-spacing:.04em; color:var(--c-schema);
+  border:1px solid var(--c-schema); border-radius:5px; padding:0 4px; margin-left:4px; }
+.cbg-root .detail .st-pass{ color:#16794c; font-weight:700; } .cbg-root .detail .st-fail{ color:#e5484d; font-weight:700; }
+.cbg-root .detail .cid{ font-size:0.714rem; font-weight:800; color:var(--accent); }
 /* CONNECTIONS rows (the selection engine's panel tail) + travel/peek rows */
 .cbg-root .detail .k2{ font-size:0.714rem; color:var(--muted); text-transform:uppercase; letter-spacing:.07em;
   font-weight:800; margin:12px 0 4px; display:flex; align-items:center; gap:6px; }
@@ -363,7 +375,7 @@
   <a class="navitem" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
   <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
-          <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
+            <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
   <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
@@ -373,7 +385,7 @@
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-          <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
+            <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
   <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
   <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
   <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
@@ -392,7 +404,7 @@
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-          <span class="navsub" style="opacity:.5">none wired yet</span>
+            <span class="navsub" style="opacity:.5">none wired yet</span>
   <div class="foot">regen 2026-08-12 15:05Z<br>HEAD 4c12a293 · build_center_a3.py</div>
 </aside>
 
@@ -697,7 +709,13 @@
     selectPiece:function(key){
       if(!key){ clearSelection(); return; }
       var k="pc:"+key; if(!SELREG.nodes[k]){ clearSelection(); return; }
-      appendConn(k, selectNode(k));     // the sim card + the connections tail
+      // the PANEL JOIN (slice 2): under the lifecycle card, the piece's live
+      // structural dossier (its L2 twin's det), then the connections tail
+      var sp=key.split("|");
+      var l2n=(L2X[sp[0]]||{})[sp[1]];
+      if(l2n && l2n.det) detail.insertAdjacentHTML("beforeend",
+        layerRowHTML("data") + dossierHTML(l2n.det, "docstring"));
+      appendConn(k, selectNode(k));
     }
   }) : null;
   // no change in flight → the honest-empty map note
@@ -1263,6 +1281,93 @@
 
   // map-mode / L2 cards (the sim panel owns these when a change is in flight)
   function rowKV(k,v){ return "<div class='row'><span class='k'>"+k+"</span><span class='v'>"+v+"</span></div>"; }
+  /* ── THE DOSSIER (slice 2): PURPOSE · STRUCTURE · SIGNATURE · TESTED-BY over
+     the emitter's per-node `det` block — LIVE archmap data, never a lab fixture.
+     Every section honest-empty: no field, no section; no det, no dossier. ── */
+  var L2X = {};   // slug → (node.id → node): the piece-card join
+  Object.keys(DATA.l2||{}).forEach(function(s){ var m={};
+    (DATA.l2[s].nodes||[]).forEach(function(n){ m[n.id]=n; }); L2X[s]=m; });
+  var FNCOL = { api:"var(--c-fn-api)", services:"var(--c-fn-services)", web:"var(--c-fn-web)", data:"var(--c-model)" };
+  function entityRowHTML(slug){
+    return "<div class='row'><span class='k'>entity</span><span class='v' style='display:inline-flex;align-items:center;gap:6px'>"
+      + "<span style='width:9px;height:9px;border-radius:50%;display:inline-block;background:"+(COLORS[slug]||"#888")+"'></span>"
+      + esc(slug)+"</span></div>";
+  }
+  function layerRowHTML(lay){
+    return rowKV("layer", "<b style='color:"+(FNCOL[lay]||"var(--muted)")+"'>"+esc(lay)+"</b>");
+  }
+  function docSect(det, label){
+    if(!det || !det.doc) return "";
+    return _sect(_psvg("<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M14 2v5h5 M16 13H8 M16 17H8' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"), label)
+      + "<div class='note'>"+esc(det.doc)+"</div>";
+  }
+  function fileRowHTML(det){
+    if(!det || !det.file) return "";
+    var over = det.flines && det.flines > 800;   // the 800 CODE budget, report-never-gate
+    return "<div class='row'><span class='k'>file</span><span class='v' style='font-weight:500'>"
+      + "<code style='font-family:ui-monospace,Menlo,Consolas,monospace;font-size:0.786rem'>"+esc(det.file)+"</code>"
+      + (det.flines ? " <span style='color:"+(over?"#e5484d":"var(--muted)")+"'>"+det.flines+" ln"+(over?" · over the 800 budget":"")+"</span>" : "")
+      + "</span></div>";
+  }
+  function usageRowHTML(det){
+    var u=det && det.usage; if(!u) return "";
+    var bar=function(n,col){ return "<span class='pbar' style='width:"+Math.min(6*(n||0),84)+"px;background:"+col+"'></span>"+(n||0); };
+    var parts=[];
+    if(u.api!=null)      parts.push(bar(u.api,"var(--c-fn-services)")+" api");
+    if(u.fk_in!=null)    parts.push(bar(u.fk_in,"var(--c-fn-services)")+" fk-in");
+    if(u.internal!=null) parts.push(bar(u.internal,"var(--accent)")+" internal");
+    return parts.length ? "<div class='row'><span class='k'>usage</span><span class='v'>"+parts.join(" &nbsp; ")+"</span></div>" : "";
+  }
+  function structSect(det){
+    if(!det || !det.cols || !det.cols.length) return "";
+    var uq={}; (det.uqs||[]).forEach(function(u){ uq[u]=1; });
+    var h=_sect(_psvg("<path d='M3 5h18v14H3z M3 10h18 M9 5v14' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),
+      "structure ("+(det.cols.length+(det.cols_more||0))+" columns)");
+    h+="<table class='ptab'><tr><th>column</th><th>type</th><th>default</th></tr>";
+    det.cols.forEach(function(c){
+      h+="<tr><td>"+esc(c[0])+(uq[c[0]]?"<span class='uqchip'>unique</span>":"")+"</td>"
+        +"<td class='ty'>"+esc(c[1]||"")+"</td><td style='color:var(--muted)'>"+esc(c[2]||"")+"</td></tr>"; });
+    h+="</table>";
+    if(det.cols_more) h+="<div class='pmore'>+"+det.cols_more+" more column(s)</div>";
+    return h;
+  }
+  function fkSect(det){
+    if(!det || !det.fks || !det.fks.length) return "";
+    var h=_sect(_psvg("<path d='M9 12h6 M5 12a4 4 0 0 1 4-4h1 M19 12a4 4 0 0 1-4 4h-1' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),
+      "stored as (foreign keys)");
+    h+="<table class='ptab'><tr><th>fk column</th><th>points at</th></tr>";
+    det.fks.forEach(function(f){ h+="<tr><td>"+esc(f[0])+"</td><td class='ty'>"+esc(f[1])+"</td></tr>"; });
+    return h+"</table>";
+  }
+  function sigSect(det){
+    var s=det && det.sig; if(!s) return "";
+    var h=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--muted)' stroke-width='2'/>"),
+      "signature");
+    h+="<table class='ptab'><tr><th>part</th><th>type</th><th>role</th></tr>";
+    if(s.returns) h+="<tr><td>return</td><td class='ty'>"+esc(s.returns)+"</td><td>out</td></tr>";
+    h+="</table><div class='pmore'>"+(s.async?"async · ":"")+(s.lines?s.lines+" lines · ":"")
+      +"params live in the center's render pass</div>";
+    return h;
+  }
+  function casesSect(det){
+    if(!det || !det.cases || !det.cases.length) return "";
+    var n=det.cases.length+(det.cases_more||0);
+    var h=_sect(_psvg("<rect x='3' y='7' width='18' height='11' rx='5.5' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M8.5 12.5 l2.4 2.4 L15.5 10' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),
+      "tested by ("+n+")");
+    h+="<table class='ptab'><tr><th>kind</th><th>case</th><th>state</th></tr>";
+    det.cases.forEach(function(c){
+      h+="<tr><td>"+esc(c.corpus||"")+"</td>"
+        +"<td>"+(c.cid?"<span class='cid'>"+esc(c.cid)+"</span> ":"")+esc(c.name||"")+"</td>"
+        +"<td class='"+(c.state==="pass"?"st-pass":"st-fail")+"'>"+esc(c.state||"")+"</td></tr>"; });
+    h+="</table>";
+    if(det.cases_more) h+="<div class='pmore'>+"+det.cases_more+" more case(s) — the matrix carries the full ledger</div>";
+    return h;
+  }
+  function dossierHTML(det, docLabel){
+    if(!det) return "";
+    return docSect(det, docLabel) + sigSect(det) + structSect(det) + fkSect(det)
+      + usageRowHTML(det) + fileRowHTML(det) + casesSect(det);
+  }
   function entityCard(n){
     var c=n.counts||{}, bucket = n.kind==="unclaimed";
     detail.innerHTML = "<div class='phdr'>codebase map</div>"
@@ -1277,12 +1382,20 @@
   function l2NodeCard(n){
     var label = n.label || String(n.id).replace(/^[^:]+:/,"");
     var h = "<div class='phdr'>"+esc(drilledSlug||"")+" · piece</div>"
-      + "<h4>"+esc(trunc(label,40))+"</h4><div class='kind'>"+esc(n.kind)+"</div>";
-    if(n.kind==="endpoint"){ var m=methodOf(label); if(m) h+=rowKV("method", m); }
+      + "<h4>"+esc(trunc(label,40))+"</h4><div class='kind'>"+esc(n.kind)+"</div>"
+      + entityRowHTML(n.kind==="external" ? (n.slug||"") : (drilledSlug||""))
+      + (n.kind!=="external" ? layerRowHTML(n.kind==="endpoint" ? "api" : "data") : "");
+    if(n.kind==="endpoint"){
+      var m=methodOf(label); if(m) h+=rowKV("method", m);
+      if(n.fn)   h+=rowKV("handler", esc(n.fn)+"()");
+      if(n.resp) h+=rowKV("returns", esc(n.resp));
+      if(n.det && n.det.status) h+=rowKV("status", esc(n.det.status));
+    }
     if(n.table) h+=rowKV("table", esc(n.table));
     if(n.kind==="external") h += (n.slug && DATA.l2[n.slug])
       ? "<div class='sum'>lives in another entity — <b>double-click</b> it on the canvas to hop there.</div>"
       : "<div class='sum'>an fk target outside every claimed entity — nothing to hop to.</div>";
+    h += dossierHTML(n.det, n.kind==="endpoint" ? "purpose" : "docstring");
     detail.innerHTML = h;
   }
 
@@ -1780,7 +1893,13 @@
       var n=r.closest(".node"); return n ? (n.classList.contains("exploded")?"exploded-node":"node") : "other"; },
     contTapPending: function(){ return !!pendingCont; },
     openAllFace: function(){ var b=document.getElementById("cbg-openAll");
-      return { text:b.textContent, on:b.classList.contains("on") }; }
+      return { text:b.textContent, on:b.classList.contains("on") }; },
+    dossier:  function(){ return {
+      ptabs: document.querySelectorAll("#cbg-detail table.ptab").length,
+      uq:    document.querySelectorAll("#cbg-detail .uqchip").length,
+      cids:  document.querySelectorAll("#cbg-detail .cid").length,
+      sects: Array.prototype.map.call(document.querySelectorAll("#cbg-detail .k2 span"), function(s){ return s.textContent; }) }; },
+    hasDet:   function(slug,id){ return !!((L2X[slug]||{})[id] && L2X[slug][id].det); }
   };
 
   // ── boot ────────────────────────────────────────────────────────────────────
