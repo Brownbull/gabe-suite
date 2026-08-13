@@ -102,6 +102,13 @@ aside .irow .im{ color:var(--muted); }
       <button data-lay="flow">Flow</button>
       <button data-lay="force">Force</button>
     </div>
+    <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Cluster core by (trace)</div>
+    <div class="seg" id="clSeg" style="margin-left:0">
+      <button data-cl="kind" class="on">Kind</button>
+      <button data-cl="tests">Tests</button>
+      <button data-cl="guards">Guards</button>
+      <button data-cl="flow">Flow</button>
+    </div>
     <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:11px 0 6px">Inside layout</div>
     <div class="seg" id="inSeg" style="margin-left:0">
       <button data-in="tiers" class="on">Tiers</button>
@@ -264,6 +271,7 @@ var showTests = true;      // per-piece proof badges (count · corpus · state)
 var showGuards = false;    // validator shields (guard_insight) — lens, off by default
 var showHubs = false;      // fan-in rings + god halos (model/function_insight)
 var showPress = false;     // change-pressure heat (the phase archive)
+var traceCluster = "kind"; // trace core clustering: kind | tests | guards | flow
 /* RADIAL LABEL: on a ring, a fixed below-the-icon label runs into the ring
    neighbour (measured: 3-5 text collisions + 4 label-over-icon hits). Fanning
    each label outward from the container centre puts it in free space; the
@@ -810,39 +818,53 @@ function drawTrace(){
         showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false}); });
       layer.appendChild(g); });
     // 4 · the CORE: schemas / models the functions touch, at the mean angle of their fns
-    // KIND SECTORS (operator round 16): the core splits into a MODELS arc and a
-    // SCHEMAS arc — contiguous clusters instead of interleaved mean-angle scatter.
-    // Within a sector, names sort alphabetically (deterministic); sector width is
-    // proportional to its count with a small divider gap between arcs.
-    var modelsL=clsL.filter(function(c){ return (pc.models||[]).some(function(m){ return m.cls===c; }); });
-    var schemasL=clsL.filter(function(c){ return modelsL.indexOf(c)<0; });
-    var clsAngle={}, GAP=0.22, start=-Math.PI/2;
-    (function(){ var nM=modelsL.length, nS=schemasL.length, tot=nM+nS;
-      if(!tot) return;
-      var spanM = nM ? (2*Math.PI-2*GAP) * (nS? nM/tot : 1) : 0;
-      var spanS = nS ? (2*Math.PI-2*GAP) - (nS&&nM? spanM : (nM?spanM:0)) : 0;
-      if(!nM) spanS = 2*Math.PI-2*GAP;
-      modelsL.forEach(function(c,i){ clsAngle[c] = start + GAP/2 + (nM>1 ? spanM*i/(nM-1) : spanM/2); });
-      var s2 = start + GAP + spanM + GAP/2;
-      schemasL.forEach(function(c,i){ clsAngle[c] = s2 + (nS>1 ? spanS*i/(nS-1) : spanS/2); });
-      // sector furniture: divider ticks + arc labels, faint, entity-coloured
-      if(nM && nS){ [start, start+GAP/2+spanM+GAP/4].forEach(function(a){
-          layer.appendChild(E("line",{x1:rnd(p.x+(core-16)*Math.cos(a)), y1:rnd(p.y+(core-16)*Math.sin(a)),
-            x2:rnd(p.x+(core+16)*Math.cos(a)), y2:rnd(p.y+(core+16)*Math.sin(a)),
-            stroke:col, "stroke-opacity":"0.35", "stroke-width":"1"})); });
-        var aM = start + GAP/2 + spanM/2, aS = s2 + spanS/2;
-        [[aM,"models"],[aS,"schemas"]].forEach(function(za){
-          var zl=E("text",{class:"sub2", x:rnd(p.x+(core+26)*Math.cos(za[0])),
-            y:rnd(p.y+(core+26)*Math.sin(za[0])+3), "fill-opacity":"0.75"});
-          zl.textContent=za[1]; zl.setAttribute("fill",col); layer.appendChild(zl); }); }
-    })();
+    // CLUSTERED CORE (operator rounds 16-17): the core groups into labeled
+    // contiguous arcs by a CHOSEN PROPERTY — Kind (models|schemas), Tests
+    // (proven|unproven), Guards (guarded|unguarded) — or Flow (each piece at the
+    // mean angle of its functions, the wire-shortest placement, no grouping).
+    var clsAngle={}, clsGroup={};
+    var _pieceOf=function(c){ return (pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===c; })[0]; };
+    if(traceCluster==="flow"){
+      var clsFnAngles={};
+      shown.forEach(function(ep){ (ep.touch||[]).forEach(function(c){
+        if(ep.fn && fnAngle[ep.fn]!==undefined)
+          (clsFnAngles[c]=clsFnAngles[c]||[]).push(fnAngle[ep.fn]); }); });
+      clsAngle=spreadRing(clsL, function(c){ return meanAngle(clsFnAngles[c]||[]); });
+      clsL.forEach(function(c){ clsGroup[c]="flow"; });
+    } else {
+      var groupOf = traceCluster==="kind"
+        ? function(c){ return (pc.models||[]).some(function(m){ return m.cls===c; }) ? "models" : "schemas"; }
+        : traceCluster==="tests"
+        ? function(c){ var z=_pieceOf(c); return (z&&z.tests)?"proven":"unproven"; }
+        : function(c){ var z=_pieceOf(c); return (z&&z.guards)?"guarded":"unguarded"; };
+      var groups={}, order=[];
+      clsL.forEach(function(c){ var g=groupOf(c); clsGroup[c]=g;
+        if(!groups[g]){ groups[g]=[]; order.push(g); } groups[g].push(c); });
+      order.sort();
+      var GAP=0.22, start=-Math.PI/2, tot=clsL.length, cursor=start;
+      order.forEach(function(gname,gi){ var arr=groups[gname];
+        var span=(2*Math.PI - order.length*GAP) * arr.length/tot;
+        arr.forEach(function(c,i){ clsAngle[c] = cursor + GAP/2 + (arr.length>1 ? span*i/(arr.length-1) : span/2); });
+        // sector furniture: divider tick at the arc start + the GROUP label mid-arc
+        if(order.length>1){
+          var ax=cursor; layer.appendChild(E("line",{
+            x1:rnd(p.x+(core-16)*Math.cos(ax)), y1:rnd(p.y+(core-16)*Math.sin(ax)),
+            x2:rnd(p.x+(core+16)*Math.cos(ax)), y2:rnd(p.y+(core+16)*Math.sin(ax)),
+            stroke:col, "stroke-opacity":"0.4", "stroke-width":"1.2"}));
+          var mid=cursor + GAP/2 + span/2;
+          var zl=E("text",{class:"sub2", "data-sector":gname,
+            x:rnd(p.x+(core+26)*Math.cos(mid)), y:rnd(p.y+(core+26)*Math.sin(mid)+3),
+            style:"font-weight:700"});
+          zl.textContent=gname; zl.setAttribute("fill",col); layer.appendChild(zl); }
+        cursor += GAP + span; });
+    }
     var clsAt={};
     clsL.forEach(function(cls){ var a=clsAngle[cls],
         r=clsL.length>1?core:0,
         x=rnd(p.x+r*Math.cos(a)), y=rnd(p.y+r*Math.sin(a));
       clsAt[cls]={x:x,y:y}; clsAtGlobal[slug+"|"+cls]={x:x,y:y};
       var isModel=(pc.models||[]).some(function(m){ return m.cls===cls; });
-      var g=E("g",{class:"piece","data-kind":isModel?"model":"schema", transform:"translate("+x+","+y+")"});
+      var g=E("g",{class:"piece","data-kind":isModel?"model":"schema","data-grp":clsGroup[cls]||"", transform:"translate("+x+","+y+")"});
       if(isModel) cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       var _tm=(pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===cls; })[0];
       proofBadge(g, 9, (_tm&&_tm.tests)||null);
@@ -1039,6 +1061,11 @@ function indicatorHTML(o){
     entLayout=b.getAttribute("data-lay");
     document.querySelectorAll("#laySeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     computeEntityPositions(); render(); });
+  document.getElementById("clSeg").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    traceCluster=b.getAttribute("data-cl");
+    document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    render(); });
   document.getElementById("inSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
     insideLayout=b.getAttribute("data-in");
@@ -1081,6 +1108,9 @@ window.__lvltest = {
   inside:function(){ return insideLayout; },
   conns:function(){ return showConns; },
   tests:function(){ return showTests; },
+  cluster:function(){ return traceCluster; },
+  setCluster:function(v){ traceCluster=v; render(); },
+  coreGroups:function(){ var o={}; vp.querySelectorAll('.piece[data-grp]').forEach(function(g){ var k=g.getAttribute('data-grp'); if(k) o[k]=(o[k]||0)+1; }); return o; },
   lenses:function(){ return {guards:showGuards, hubs:showHubs, press:showPress}; },
   toggleLens:function(w){ document.getElementById(w+"btn").click(); },
   view:function(){ return {panX:panX, panY:panY, zoom:zoom}; },
