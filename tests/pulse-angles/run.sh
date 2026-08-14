@@ -145,6 +145,28 @@ run "$r" | grep -q "entity-shape drift" && bad "S9 fired on a clean entity model
 r=$(repo s9c); commits "$r" 1 "feat: work"
 run "$r" | grep -q "entity-shape drift" && bad "S9 fired without a center" || ok "S9 silent with no center config"
 
+# ── S10 · web→API bridge drift — reads the committed c4-graph.json stats.web ──
+mkc4() { mkdir -p "$1/docs/site/center"
+  printf '%s' "$2" > "$1/docs/site/center/c4-graph.json"
+  printf '{}' > "$1/docs/site/center/center.config.json"
+  cd "$1" && git add -A && git commit -qm "center+c4" && cd - >/dev/null; }
+
+# FIRES: >=2 unmatched fetches named in stats.web.unmatched
+r=$(repo s10a); mkc4 "$r" '{"stats":{"web":{"present":true,"unmatched":[{"m":"GET","p":"/api/v1/equipment","from":"web:useEquip"},{"m":"GET","p":"/api/v1/notifications","from":"web:useNotifs"}]}}}'
+run "$r" | grep -q "web-bridge drift" && ok "S10 fires: >=2 fetches hit no declared endpoint" || bad "S10 did not fire on unmatched fetches"
+
+# SILENT below threshold (1 < 2) — the mutation of the fire case: one stray is not a pattern
+r=$(repo s10b); mkc4 "$r" '{"stats":{"web":{"present":true,"unmatched":[{"m":"GET","p":"/api/v1/equipment","from":"web:useEquip"}]}}}'
+run "$r" | grep -q "web-bridge drift" && bad "S10 fired on a single stray fetch (below threshold)" || ok "S10 silent below the >=2 threshold"
+
+# SILENT when the web arm is absent (backend-only / no REST idiom → present:false)
+r=$(repo s10c); mkc4 "$r" '{"stats":{"web":{"present":false,"reason":"no web source"}}}'
+run "$r" | grep -q "web-bridge drift" && bad "S10 fired when the web arm is absent" || ok "S10 silent when web arm absent"
+
+# SILENT with no center at all
+r=$(repo s10d); commits "$r" 1 "feat: work"
+run "$r" | grep -q "web-bridge drift" && bad "S10 fired without a center" || ok "S10 silent with no center config"
+
 # ── S5 · scope drift — computable since the scope mirror (ruling 2026-08-07) ──
 # no scope field on the current phase → honest unavailable, never a proxy guess
 r=$(repo s5a); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"}}]}'

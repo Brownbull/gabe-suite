@@ -537,6 +537,121 @@ check(js.startswith("window.GABE_C4 = ") and js.rstrip().endswith(";"),
 check("window.GABE_C4_COLORS = " in js and "#abcdef" in js,
       "c4-graph.js also assigns window.GABE_C4_COLORS (the palette sibling)")
 
+# ══ THE WEB→API BRIDGE ARM (_a3_web + build_c4_graph(web=)) ═════════════════
+# The frontend arm: a fetching FILE becomes a web PIECE, its apiFetch(method,path)
+# becomes a BRIDGE cross-edge to the endpoint it names, an unmatched fetch is NAMED.
+sys.path.insert(0, gen)                     # so _a3_web can `from _a3_graft import`
+import _a3_web as W
+
+# ── web_arm extraction self-test: real source, a temp web tree (hermetic) ──
+with tempfile.TemporaryDirectory() as _td:
+    _wr = pathlib.Path(_td) / "apps" / "web" / "src" / "features"
+    _wr.mkdir(parents=True)
+    (_wr / "OrderList.tsx").write_text(
+        'import { apiFetch } from "@lib/api/client";\n'
+        'export function useOrders(){ return apiFetch<T>("/api/v1/orders", { signal }); }\n'
+        'export function addLine(id){ return apiFetch<T>(`/api/v1/orders/${id}/lines`,'
+        ' { method: "POST", body: { qty: 1 } }); }\n', encoding="utf-8")
+    (_wr / "client.ts").write_text(               # the DEFINITION file → excluded
+        'export async function apiFetch<T>(path, opts){ return fetch(path); }\n', encoding="utf-8")
+    _ent = {"orders": {"files": [["web", "apps/web/src/features/OrderList.tsx", 3]]}}
+    _wa = W.web_arm(pathlib.Path(_td), _ent)
+    check(_wa["present"] is True and _wa["extractor"] == "apiFetch",
+          "web_arm detects the apiFetch idiom over the tree")
+    _ol = [s for s in _wa["screens"] if s["file"].endswith("OrderList.tsx")]
+    check(len(_ol) == 1, "web_arm collapses a fetching file to ONE screen node")
+    _calls = {(c["method"], c["path"]) for c in _ol[0]["calls"]} if _ol else set()
+    check(("GET", "/api/v1/orders") in _calls, "web_arm extracts a literal apiFetch path")
+    check(("POST", "/api/v1/orders/${id}/lines") in _calls,
+          "web_arm reads method from the options object (a nested body:{…} survived)")
+    check(_ol[0]["slug"] == "orders" if _ol else False,
+          "web_arm homes a screen by its archmap file row")
+    check(not any("client" in s["file"] for s in _wa["screens"]),
+          "web_arm SKIPS the apiFetch definition file (its param calls are not sites)")
+    _wempty = W.web_arm(pathlib.Path(_td) / "nowhere", _ent)
+    check(_wempty["present"] is False and "no web source" in _wempty["reason"],
+          "web_arm honest-empty (present=False + reason) when there is no web source")
+    _wdet = W.web_arm(pathlib.Path(_td), _ent)
+    check(json.dumps(_wa, sort_keys=True) == json.dumps(_wdet, sort_keys=True),
+          "web_arm deterministic: same tree → identical output")
+
+# ── build_c4_graph(web=): a param endpoint proving the snake↔camel + prefix norm ─
+FIX_WEB = {"head": "web1", "entities": {
+  "orders": {"files": [["api", "apps/api/orders.py", 50]],
+             "models": [{"cls": "Order", "table": "orders", "fks": {}}], "schemas": [],
+             "endpoints": [
+                 {"method": "GET", "path": "/orders", "fn": "list_orders", "touches": []},
+                 {"method": "POST", "path": "/orders/{order_id}/lines",   # snake param
+                  "fn": "add_line", "touches": []}]},
+}}
+WARM = {"present": True, "reason": "apiFetch · 3 files",
+        "stats": {"extractor": "apiFetch", "fetch_sites": 3, "dynamic": 1},
+        "screens": [
+            {"id": "web:OrderList", "file": "apps/web/OrderList.tsx", "slug": "orders",
+             "label": "OrderList", "sites": 1,
+             "calls": [{"method": "GET", "path": "/api/v1/orders"}]},          # prefix strip
+            {"id": "web:AddLine", "file": "apps/web/AddLine.tsx", "slug": None,  # endpoint-homed
+             "label": "AddLine", "sites": 1,
+             "calls": [{"method": "POST", "path": "/api/v1/orders/${orderId}/lines"}]},  # camel param
+            {"id": "web:Ghost", "file": "apps/web/Ghost.tsx", "slug": "orders",
+             "label": "Ghost", "sites": 1,
+             "calls": [{"method": "DELETE", "path": "/api/v1/nope"}]}]}          # no endpoint
+gw = G.build_c4_graph(FIX_WEB, web=WARM)
+gw_o = {n["id"]: n for n in gw["l2"]["orders"]["nodes"]}
+gw_br = [e for e in gw["cross_edges"] if e.get("kind") == "bridge"]
+check(gw_o.get("web:OrderList", {}).get("kind") == "web",
+      "a fetching file becomes a web PIECE in its entity's L2")
+check(any(e["from"] == "web:OrderList" and e["to"] == "endpoint:GET /orders" for e in gw_br),
+      "bridge: /api/v1/orders → endpoint GET /orders (the /api/vN prefix is stripped)")
+check(any(e["from"] == "web:AddLine" and e["to"] == "endpoint:POST /orders/{order_id}/lines"
+          for e in gw_br),
+      "bridge: camel ${orderId} matches snake {order_id} (param normalized to a placeholder)")
+check("web:AddLine" in gw_o,
+      "an unhomed screen (slug=None) homes to the entity of the endpoint it fetched")
+_wst = gw["stats"]["web"]
+check(_wst["present"] is True and _wst["matched"] == 2,
+      "stats.web.matched counts the bridged fetches")
+check(any(u["m"] == "DELETE" and u["p"] == "/api/v1/nope" for u in _wst["unmatched"]),
+      "an unmatched fetch is NAMED in stats.web.unmatched, never dropped")
+check(not any(e["to"] == "endpoint:DELETE /nope" or "/nope" in e["to"] for e in gw_br),
+      "an unmatched fetch produces NO bridge edge")
+check(gw["cross_edges"] == sorted(gw["cross_edges"],
+      key=lambda e: (e["from_slug"], e["from"], e["to_slug"], e["to"], e.get("via", ""))),
+      "cross_edges (FK + bridge) stays deterministically sorted")
+
+# ── MUTATION: remove the POST endpoint → AddLine's fetch flips matched→unmatched ─
+FIX_NOEP = json.loads(json.dumps(FIX_WEB))
+FIX_NOEP["entities"]["orders"]["endpoints"] = [
+    e for e in FIX_NOEP["entities"]["orders"]["endpoints"] if e["method"] != "POST"]
+gwm = G.build_c4_graph(FIX_NOEP, web=WARM)
+gwm_br = [e for e in gwm["cross_edges"] if e.get("kind") == "bridge"]
+check(not any(e["from"] == "web:AddLine" for e in gwm_br)
+      and any(u["p"] == "/api/v1/orders/${orderId}/lines" for u in gwm["stats"]["web"]["unmatched"])
+      and _wst["matched"] == 2,
+      "MUTATION: dropping the endpoint flips its bridge to unmatched (baseline still matched)")
+
+# ── HONEST-EMPTY: web absent → l1/l2/cross_edges/layout byte-identical ──────
+gw_base = G.build_c4_graph(FIX_WEB)                       # no web kwarg
+gw_none = G.build_c4_graph(FIX_WEB, web=None)
+gw_abs  = G.build_c4_graph(FIX_WEB, web={"present": False, "reason": "no web source"})
+for part in ("l1", "l2", "cross_edges", "layout"):
+    check(json.dumps(gw_none[part], sort_keys=True) == json.dumps(gw_base[part], sort_keys=True)
+          and json.dumps(gw_abs[part], sort_keys=True) == json.dumps(gw_base[part], sort_keys=True),
+          f"web absent: {part} is byte-identical to the web-less build")
+check(gw_abs["stats"]["web"] == {"present": False, "reason": "no web source"},
+      "web absent: the absence is NAMED in stats.web, never silent")
+check("web" not in {n["kind"] for n in gw_none["l2"]["orders"]["nodes"]},
+      "web absent: no web piece is drawn")
+
+# ── DETERMINISM: two web builds are byte-identical ─────────────────────────
+check(json.dumps(gw, sort_keys=True) == json.dumps(G.build_c4_graph(FIX_WEB, web=WARM), sort_keys=True),
+      "web build is byte-deterministic across rebuilds")
+
+# ── NORMALIZATION unit: the join key collapses prefix + params on both sides ─
+check(G._norm_path("/api/v1/orders/${orderId}/lines") == "/orders/{}/lines"
+      and G._norm_path("/orders/{order_id}/lines") == "/orders/{}/lines",
+      "_norm_path: /api/vN stripped and {x}/${x} collapsed → the two sides meet")
+
 print(f"arch-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY

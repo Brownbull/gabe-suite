@@ -68,7 +68,9 @@ _L1_FLOW_COL_W = 210.0   # column stride for the flow (dependency-gradient) layo
 _L1_FLOW_ROW_H = 118.0   # row stride within a flow column
 _L2_COL_W = 240.0    # column stride for the columns-by-kind L2 layout
 _L2_ROW_H = 64.0     # row stride within a column
-_L2_KINDS = ("endpoint", "model", "schema", "external")  # column order, left→right
+_L2_KINDS = ("endpoint", "model", "schema", "external", "web")  # column order, left→right
+#            web is APPENDED (not prepended) so adding the frontend arm leaves every
+#            existing piece's stamped x/y byte-identical — only web nodes get a new column.
 
 
 def _index_tables(entities: dict[str, Any]) -> dict[str, str]:
@@ -182,6 +184,45 @@ def _index_tbl_models(entities: dict[str, Any]) -> dict[str, str]:
             tbl, cls = model.get("table"), model.get("cls")
             if tbl and cls:
                 idx.setdefault(tbl, f"model:{cls}")
+    return idx
+
+
+# ── the web→API bridge join (Path A frontend arm) ───────────────────────────
+_API_PREFIX_RE = re.compile(r"^/api/v\d+")
+_PATH_PARAM_RE = re.compile(r"\$?\{[^}]*\}")
+
+
+def _norm_path(path: str) -> str:
+    """Normalize a URL path to the bridge match key. Two mismatches must collapse
+    or the join hits ~0%: web literals carry the ``/api/vN`` mount prefix the
+    archmap endpoints do NOT, and web params are camel ``${itemId}`` while archmap
+    params are snake ``{item_id}``. So drop the version prefix, collapse every
+    ``{x}``/``${x}`` to one placeholder (match STRUCTURE, not the param name), and
+    strip a trailing slash. Applied to BOTH sides — never mutates a stored id."""
+    p = (path or "").strip()
+    p = _API_PREFIX_RE.sub("", p)
+    p = _PATH_PARAM_RE.sub("{}", p)
+    p = p.rstrip("/")
+    if not p.startswith("/"):
+        p = "/" + p
+    return p
+
+
+def _index_endpoints(entities: dict[str, Any]) -> dict[tuple[str, str], tuple[str, str]]:
+    """``{(METHOD, norm_path): (slug, 'endpoint:<method> <rawpath>')}`` — GLOBAL, so
+    a web fetch resolves to the endpoint PIECE it names. Endpoint node ids are
+    per-L2 (minted in ``_l2``) with no global address, so the bridge targets the
+    (to_slug, to=node-id) pair exactly as ``_cross_edges`` does for models.
+    First-writer over ``sorted(entities)`` — a stable, order-independent tie-break."""
+    idx: dict[tuple[str, str], tuple[str, str]] = {}
+    for slug in sorted(entities):
+        code = entities[slug]
+        if not code:
+            continue
+        for ep in code.get("endpoints") or []:
+            key = (str(ep.get("method", "")).upper(), _norm_path(str(ep.get("path", ""))))
+            nid = f"endpoint:{ep.get('method')} {ep.get('path')}"
+            idx.setdefault(key, (slug, nid))
     return idx
 
 
@@ -381,7 +422,8 @@ def element_detail(kind: str, obj: dict[str, Any],
 
 def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         labels: dict[str, str],
-        insight: dict[str, Any] | None = None) -> dict[str, list[dict]]:
+        insight: dict[str, Any] | None = None,
+        web_pieces: list[dict] | None = None) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
     wiring, plus honest ``external`` stub nodes for outbound FKs into other
     entities / unclaimed tables — so a drill never hides where the entity reaches.
@@ -460,6 +502,15 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
                 edges.append({"source": nid, "target": tgt, "kind": "touches"})
             # a touch to no own class: not another entity's (upstream own-filter),
             # an external/library schema with no node → nothing to point at, drop.
+
+    # web pieces (Path A frontend arm): one node per fetching FILE, homed to this
+    # entity by the web arm (by file, or by the endpoint its fetch matched). The
+    # bridge EDGE (web→endpoint) lives at the top level (cross_edges) so it can
+    # cross entities; here we only add the node. web absent → nothing added.
+    for wp in (web_pieces or []):
+        add_node({"id": wp["id"], "kind": "web", "slug": slug,
+                  "label": wp.get("label", wp["id"]),
+                  "sites": int(wp.get("sites", 0))})
 
     # model → model FK edges: intra-entity → the target model node; cross-entity
     # or unclaimed → the owner's external stub.
@@ -590,7 +641,8 @@ def _stamp_l2(l2: dict[str, list[dict]]) -> None:
 def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                    status: dict[str, str] | None = None,
                    colors: dict[str, str] | None = None,
-                   graft: dict[str, Any] | None = None) -> dict[str, Any]:
+                   graft: dict[str, Any] | None = None,
+                   web: dict[str, Any] | None = None) -> dict[str, Any]:
     """The whole derivation: L1 entity graph + one L2 graph per entity, laid out.
 
     Pure over ``amap["entities"]`` (+ labels/status/colors), keyed on ``amap["head"]``.
@@ -633,6 +685,63 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
 
     tbl2slug = _index_tables(entities)
     cross_edges = _cross_edges(entities, tbl2slug)   # piece-level cross-entity FKs
+
+    # ── the web→API bridge (Path A frontend arm): match each fetching file's
+    #    (method, path) calls to the endpoint PIECE they name, emit a web piece +
+    #    a bridge cross-edge, and NAME every unmatched fetch (never drop it). web
+    #    absent → every field empty and l1/l2/cross_edges/layout byte-identical to
+    #    the FK+graft build; only stats.web names the absence (honesty law).
+    web_present = bool(web and web.get("present"))
+    web_by_slug: dict[str, list[dict]] = {}
+    _bridges: list[dict] = []
+    _unmatched: list[dict] = []
+    _web_screens = _web_unhomed = 0
+    if web_present:
+        ep_index = _index_endpoints(entities)
+        _slugs = set(entities)
+        for screen in web.get("screens") or []:
+            _hits: list[tuple[str, str]] = []
+            for call in screen.get("calls") or []:
+                key = (str(call.get("method", "")).upper(),
+                       _norm_path(str(call.get("path", ""))))
+                hit = ep_index.get(key)
+                if hit:
+                    _hits.append(hit)                       # (ep_slug, ep_id)
+                else:
+                    _unmatched.append({"from": screen["id"], "m": key[0],
+                                       "p": call.get("path")})
+            # home the screen: its file-home if the archmap carries the file, else
+            # the (sorted-first) matched endpoint's entity — the bridge fallback.
+            home = screen.get("slug")
+            if home not in _slugs:
+                home = sorted({s for s, _ in _hits})[0] if _hits else None
+            if home is None:
+                _web_unhomed += 1                           # unhomed + unmatched → not drawn
+                continue
+            web_by_slug.setdefault(home, []).append(
+                {"id": screen["id"], "label": screen.get("label"),
+                 "sites": len(screen.get("calls") or [])})
+            _web_screens += 1
+            for ep_slug, ep_id in _hits:
+                _bridges.append({"from_slug": home, "from": screen["id"],
+                                 "to_slug": ep_slug, "to": ep_id,
+                                 "via": "fetch", "kind": "bridge"})
+        # dedup a screen's repeat calls to one endpoint; sort both lists
+        _seen: set[tuple[str, str]] = set()
+        _bd: list[dict] = []
+        for e in sorted(_bridges, key=lambda e: (e["from_slug"], e["from"],
+                                                 e["to_slug"], e["to"])):
+            k = (e["from"], e["to"])
+            if k not in _seen:
+                _seen.add(k)
+                _bd.append(e)
+        _bridges = _bd
+        _unmatched.sort(key=lambda u: (u["m"], str(u["p"]), u["from"]))
+        if _bridges:   # keep FK-only cross_edges byte-identical when no bridge exists
+            cross_edges = sorted(cross_edges + _bridges,
+                                 key=lambda e: (e["from_slug"], e["from"],
+                                                e["to_slug"], e["to"], e.get("via", "")))
+
     # the per-element dossier's insight bundle — every block optional (a twin
     # without an insight section still builds; its cards go honest-empty)
     ti = amap.get("test_insight") or {}
@@ -645,7 +754,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         code = entities[slug]
         if not code:
             continue
-        graph = _l2(slug, code, tbl2slug, labels, insight)
+        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug))
         _stamp_l2(graph)
         l2[slug] = graph
 
@@ -680,6 +789,21 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                       if graft_present else
                       {"present": False,
                        "reason": (graft or {}).get("reason", "not attempted")}),
+            # the web arm's honesty record: the bridge is a HEURISTIC (graft traces
+            # zero ts→py), so unmatched fetches are NAMED here, never dropped — a
+            # coverage-gap finding, not a silent zero. Absent → named absent.
+            "web": ({"present": True,
+                     "reason": web.get("reason"),
+                     "extractor": (web.get("stats") or {}).get("extractor"),
+                     "screens": _web_screens,
+                     "unhomed": _web_unhomed,
+                     "fetch_sites": (web.get("stats") or {}).get("fetch_sites", 0),
+                     "matched": len(_bridges),
+                     "unmatched": _unmatched,
+                     "dynamic": (web.get("stats") or {}).get("dynamic", 0)}
+                    if web_present else
+                    {"present": False,
+                     "reason": (web or {}).get("reason", "not attempted")}),
         },
     }
 

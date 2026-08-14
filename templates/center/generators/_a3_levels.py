@@ -151,9 +151,13 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                      for e in graph.get("l1", {}).get("edges", [])
                      if e.get("source") and e.get("target")
                      and e["source"] != "__unclaimed__" and e["target"] != "__unclaimed__"],
+        # FK cross-edges only — the C4 graph now also carries web→endpoint BRIDGE
+        # edges (kind:'bridge', a station concept); they are NOT a LEVELS fact, so
+        # the rich feed stays FK-only and byte-identical to the pre-bridge build.
         "cross_edges": [{"fs": e["from_slug"], "f": _strip(e["from"]),
                          "ts": e["to_slug"], "t": _strip(e["to"]), "via": e.get("via", "")}
-                        for e in graph.get("cross_edges", [])],
+                        for e in graph.get("cross_edges", [])
+                        if e.get("kind") != "bridge"],
         "schema_owner": {},
         "detail": {},
         "fn_nodes": [],

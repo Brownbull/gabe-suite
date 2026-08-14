@@ -188,6 +188,7 @@ import sys as _sys  # noqa: E402
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))  # so `import work_scope` works even when angles.py is loaded via importlib (the batteries do this), not just run as a script
 import work_scope  # noqa: E402  (same dir; installed alongside under ~/.claude/skills/gabe-pulse/scripts)
 import entity_shape  # noqa: E402  (same dir; the URL-domain ↔ entity-model cross-tab, computed fresh)
+import fetch_bridge  # noqa: E402  (same dir; the web→API bridge drift, read from the committed c4-graph)
 
 
 def _current_phase(plan: dict) -> dict | None:
@@ -319,6 +320,32 @@ def s9_entity_shape(root: Path, plan: dict | None, cfg: dict | None):
     return (f"entity-shape drift — {' · '.join(parts)}", "/gabe-cc-init")
 
 
+def s10_web_bridge(root: Path, plan: dict | None, cfg: dict | None):
+    """Web→API bridge drift — a frontend apiFetch that resolves to NO declared
+    endpoint (the model doesn't cover an API surface the web actually calls).
+
+    The STANDING reminder: /gabe-review catches a NEW unmatched fetch on the diff;
+    this angle keeps a persisted gap visible every beat. READS the committed
+    c4-graph.json's stats.web.unmatched — the bridge extractor already NAMED every
+    unresolved fetch at emit time. Nothing is recomputed (graft cannot recover a
+    fetch's path and a pulse angle must not glob source), so it reads the persisted
+    bridge — the same freshness contract as S9 reading the archmap."""
+    if cfg is None:
+        return Unavailable("no center config — the bridge lives in c4-graph.json")
+    try:
+        present, unmatched, _reason = fetch_bridge.load_unmatched(root)
+    except FileNotFoundError:
+        return Unavailable("no c4-graph.json yet — the center regen builds the bridge")
+    if not present:
+        return Unavailable("web arm absent (no web source / no REST idiom)")
+    if len(unmatched) < fetch_bridge.WEB_UNMATCHED_MIN:
+        return None
+    names = ", ".join(f"{u.get('m')} {u.get('p')}" for u in unmatched[:2])
+    more = f" +{len(unmatched) - 2}" if len(unmatched) > 2 else ""
+    return (f"web-bridge drift — {len(unmatched)} fetch(es) hit no declared endpoint "
+            f"({names}{more})", "/gabe-cc-init")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -329,6 +356,7 @@ SIGNALS = [
     ("S2", "structural", s2_health),
     ("S5", "scope", s5_scope),
     ("S9", "entity shape", s9_entity_shape),
+    ("S10", "web bridge", s10_web_bridge),
 ]
 
 

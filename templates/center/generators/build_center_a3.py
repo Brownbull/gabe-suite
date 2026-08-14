@@ -40,6 +40,7 @@ import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
 import _a3_levels  # noqa: E402  (the rich LEVELS graph — the lab-native station feed)
 import _a3_sim  # noqa: E402  (the live change-simulation projection — window.GABE_SIM)
+import _a3_web  # noqa: E402  (the web→API bridge extractor — the frontend arm)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -1985,6 +1986,14 @@ def main() -> int:
         _garm = _a3_graft.graft_arm(
             REPO_ROOT, amap.get("entities") or {},
             allow_build=os.environ.get("GABE_GRAFT_BUILD", "1") != "0")
+        # the web→API bridge arm (Path A frontend): a SEPARATE module with its own
+        # try/except so a fetch-parser bug degrades the bridge to honest-empty and
+        # NEVER masquerades as graft absence (two arms, two presence flags). Read-only
+        # source glob → no allow_build gate; honest-empty on a backend-only twin.
+        try:
+            _warm = _a3_web.web_arm(REPO_ROOT, amap.get("entities") or {})
+        except Exception as _we:  # noqa: BLE001
+            _warm = {"present": False, "reason": f"web arm error: {_we}"}
         # TRIPWIRE: c4-graph.json is machine-shaped by the (gitignored) graft index —
         # if this regen flips graft presence vs the committed file, say so LOUDLY, or
         # a graft-less host silently strips every calls/imports edge from the map.
@@ -1996,10 +2005,18 @@ def main() -> int:
                       f"present={_was}, this regen derives present={bool(_garm.get('present'))} "
                       f"({_garm.get('reason')}) — the calls/imports kinds will "
                       f"{'appear' if _garm.get('present') else 'DISAPPEAR'} in the diff")
+            # the web arm's OWN presence flip — reuse the already-loaded _prev; a
+            # web-less host silently strips every web piece + bridge edge otherwise.
+            _wwas = bool((_prev.get("stats", {}).get("web") or {}).get("present"))
+            if _wwas != bool(_warm.get("present")):
+                print(f"    ⚠ WEB PRESENCE FLIP: committed c4-graph has web "
+                      f"present={_wwas}, this regen derives present={bool(_warm.get('present'))} "
+                      f"({_warm.get('reason')}) — the web pieces + bridge edges will "
+                      f"{'appear' if _warm.get('present') else 'DISAPPEAR'} in the diff")
         _graph = _a3_graph.build_c4_graph(
             amap, labels=LABELS,
             status={s["entity"]: s.get("status") for s in sections},
-            colors=_gcolors, graft=_garm)
+            colors=_gcolors, graft=_garm, web=_warm)
         _a3_graph.emit(_graph, CENTER_OUT)
         wrote.append(("c4-graph.json", 0))
         # the LEVELS graph (window.GABE_LEVELS) — the lab-native station's rich feed:
@@ -2023,6 +2040,13 @@ def main() -> int:
                  f"{_gst.get('cross_imports', 0)} imports ({_gst.get('reason')})"
                  if _gst.get("present") else f" · graft absent ({_gst.get('reason')})")
               + ("  ⚠ unclaimed bucket present" if _st["unclaimed"] else ""))
+        _wst = _st.get("web") or {}
+        if _wst.get("present"):
+            print(f"    web bridge — {_wst.get('extractor')} · {_wst.get('screens', 0)} screen(s) "
+                  f"· {_wst.get('matched', 0)} bridged / {len(_wst.get('unmatched') or [])} unmatched "
+                  f"· {_wst.get('dynamic', 0)} dynamic")
+        else:
+            print(f"    web bridge absent ({_wst.get('reason')})")
     except Exception as _e:  # noqa: BLE001
         print(f"    ⚠ c4-graph SKIPPED (derivation error, center still built): {_e}")
 

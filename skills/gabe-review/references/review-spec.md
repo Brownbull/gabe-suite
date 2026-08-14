@@ -288,6 +288,25 @@ into a hook block, never into silence.
   drift). Skip silently when the project has no center config or the diff adds no routes; NEVER
   report zero when the check could not run — the script prints nothing only when it genuinely ran
   clean.
+- **WEB-BRIDGE DRIFT** — the diff ADDS a frontend `apiFetch(path, {method})` whose `(method, path)`
+  resolves to NO declared endpoint, so the web calls an API surface no entity owns (a missing/
+  undeclared endpoint, a typo'd path, or model drift). The frontend twin of ENTITY-SHAPE DRIFT:
+  that one is a new *route* landing in an unowned URL domain; THIS is a new *fetch* hitting no
+  endpoint at all. Machine-derived (report-never-gate, D1) by
+  `python3 ~/.claude/skills/gabe-pulse/scripts/fetch_bridge.py . --diff <base>` where `<base>` is the
+  review's RESOLVED target from Step 0.3 (`git add -N` a brand-new web file first so its `+` lines
+  enter the diff). It reads the committed `archmap.json` for the endpoint key-space (normalized: the
+  `/api/vN` prefix stripped, `{x}`/`${x}` params collapsed — the bridge's own match contract) and
+  greps the diff's ADDED `apiFetch` calls; a new fetch that matches no endpoint is named. Prints
+  `WEB-BRIDGE DRIFT NOT RUN` with a reason when there is no archmap to check against — never a false
+  clean. **Detection lives HERE, on the diff, because the fetch is NEW — the center has not
+  regenerated the bridge to include it yet, so only review sees it fresh**; the STANDING unmatched
+  fetch it may create is carried afterwards by `/gabe-pulse`'s S10 web-bridge angle (which reads the
+  committed `c4-graph.json` `stats.web.unmatched`, the same review-detects / pulse-nags split S9 uses).
+  Priced like any finding; the fix routes to `/gabe-cc-init` (adopt/declare the endpoint's entity — a
+  model decision) or to nothing (a genuinely dynamic path the bridge cannot resolve — then it is a
+  named limitation, not drift). Skip silently when the project has no center config; NEVER report zero
+  when the check could not run.
 - **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
   triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;
