@@ -7,9 +7,9 @@ const pg = await b.newPage({ viewport:{ width:1280, height:800 } }); const errs=
 pg.on('console',m=>{ if(m.type()==='error') errs.push(m.text()); }); pg.on('pageerror',e=>errs.push(String(e)));
 await pg.goto('file:///home/khujta/projects/gabe_lens/templates/center/shell/example/level-lab/level-lab.html'); await pg.waitForFunction('window.__lvlready===true',{timeout:8000});
 const T = async fn => pg.evaluate(fn);
-// roster: exactly the five
+// roster: exactly the six (FK join added 2026-08-13 — the operator's union-find filter)
 const roster = await T("[...document.querySelectorAll('#clSeg button')].map(b=>b.getAttribute('data-cl')).join(',')");
-ok(roster==='kind,tests,guards,usecase,community', 'cluster roster = kind·tests·guards·usecase·community ('+roster+')');
+ok(roster==='kind,tests,guards,usecase,community,fk', 'cluster roster = kind·tests·guards·usecase·community·fk ('+roster+')');
 // zoom depth: on the big trace, ctrl-zoom until labels are readable — effective scale ≥3
 await T("window.__lvltest.set('trace')");
 for(let i=0;i<40;i++) await pg.evaluate(() => { const st=document.getElementById('stage'); const r=st.getBoundingClientRect();

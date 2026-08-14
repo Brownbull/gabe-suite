@@ -157,6 +157,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
     <span class="sub" id="sub">the level-navigation model + symbol grammar, on real gustify data</span>
     <div class="seg" id="levels">
       <button data-lvl="entities" class="on">1 · Entities</button>
+      <button data-lvl="functions">3 · Functions</button>
       <button data-lvl="layers">4 · Layers</button>
       <button data-lvl="trace">5 · Trace</button>
     </div>
@@ -203,6 +204,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
         <button data-cl="guards">Guards</button>
         <button data-cl="usecase" class="on">Use case</button>
         <button data-cl="community">Community</button>
+        <button data-cl="fk" title="FK join — models linked by an intra-entity foreign key (union-find components)">FK join</button>
       </div>
       </div>
       <div id="inRow">
@@ -1235,14 +1237,17 @@ function traceInner(slug){
    every bubble that owns it ENCLOSES it, so bubbles overlap instead of duplicating
    pieces (operator ruling). Disjoint modes stay single-membership. */
 function traceMembership(slug, items){
-  var pcU=(D.pieces[slug]||{}).usecases||{}, pcC=(D.pieces[slug]||{}).communities||{};
+  var pcU=(D.pieces[slug]||{}).usecases||{}, pcC=(D.pieces[slug]||{}).communities||{},
+      pcF=(D.pieces[slug]||{}).fk_communities||{};
+  // flat {group:[names]} modes — community + FK-join share one shape/branch
+  var flat = traceCluster==="community" ? pcC : traceCluster==="fk" ? pcF : null;
   var src = traceCluster==="usecase" ? pcU
-          : traceCluster==="community" ? null
+          : flat ? null
           : (D.census||{})[slug] || {};
   var memb={};
   items.forEach(function(it){ memb[it.id]=[]; });
-  if(traceCluster==="community"){
-    Object.keys(pcC).sort().forEach(function(g){ (pcC[g]||[]).forEach(function(n){
+  if(flat){
+    Object.keys(flat).sort().forEach(function(g){ (flat[g]||[]).forEach(function(n){
       items.forEach(function(it){ if(it.name===n) memb[it.id].push(g); }); }); });
   } else {
     Object.keys(src).sort().forEach(function(g){ var v=src[g]||{};
@@ -1255,7 +1260,7 @@ function traceMembership(slug, items){
   return memb;
 }
 function traceMembershipAny(slug, items){
-  if(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census")
+  if(traceCluster==="usecase"||traceCluster==="community"||traceCluster==="census"||traceCluster==="fk")
     return traceMembership(slug, items);
   var of = traceCluster==="tests"
     ? function(it){ var d=(it.kind==="fn"||it.kind==="usefn") ? (D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{}).tests : (it.m&&it.m.tests); return d?"proven":"unproven"; }

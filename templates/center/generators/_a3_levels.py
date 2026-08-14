@@ -81,12 +81,22 @@ def _tests_of(det: dict | None) -> dict[str, int]:
     return out
 
 
-def _use_case_seg(path: str) -> str:
-    """the first non-parameter URL segment — the use-case key (root when none)."""
-    for seg in str(path).split("/"):
-        if seg and seg[0] not in ("{", ":"):
-            return seg
-    return "root"
+def _use_case_key(path: str, depth: int) -> str:
+    """the leading non-parameter URL segments (up to ``depth``), joined by '/'
+    — the use-case key (``root`` when the path has none)."""
+    segs = [s for s in str(path).split("/") if s and s[0] not in ("{", ":")]
+    return "/".join(segs[:depth]) if segs else "root"
+
+
+def _use_case_depth(paths: list[str]) -> int:
+    """adaptive grouping depth for one entity's routes. An entity whose endpoints
+    spread across only ONE or TWO distinct first segments groups one level DEEPER
+    — otherwise that first segment is a single coarse blob (``/cooking/*`` →
+    ``cooking`` swallows the whole entity). Entities that already spread across ≥3
+    first segments stay at depth 1. Fits the hand-derived fixture 65/67 (operator
+    ruling 2026-08-13); the 2 residual are genuine curation, not a rule."""
+    firsts = {_use_case_key(p, 1) for p in paths}
+    return 2 if len(firsts) <= 2 else 1
 
 
 def build_levels(amap: dict[str, Any], graph: dict[str, Any],
@@ -100,6 +110,23 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
     l1_nodes = [n for n in graph.get("l1", {}).get("nodes", []) if n.get("kind") == "entity"]
     l2 = graph.get("l2", {}) or {}
     colors = graph.get("colors", {}) or {}
+
+    # ── endpoint dedup + URL-home (round 27 decision — one endpoint, one entity) ──
+    # An aspect entity whose center.config claims another entity's ROUTE files (e.g.
+    # allergen ⊃ pantry/cooking/recipe routes) would re-draw 32 duplicate endpoints.
+    # Home each (method, path) by its HANDLER's entity — function_insight already
+    # resolved which entity the handler file belongs to — so the real owner keeps it
+    # and the aspect becomes endpoint-less (allergen → an aspect, present via its
+    # models/schemas + cross edges, not phantom route copies). Reproduces the fixture.
+    ep_home: dict[str, str] = {}
+    for _slug, _code in ents.items():
+        for _ep in _code.get("endpoints", []) or []:
+            _key = (str(_ep.get("method", "")) + " " + str(_ep.get("path", ""))).strip()
+            _home = (FI.get((_ep.get("file", "") or "") + "::" + (_ep.get("fn", "") or ""), {}) or {}).get("entity")
+            if _home:
+                ep_home[_key] = _home
+            else:
+                ep_home.setdefault(_key, _slug)
 
     # class → owning entity (models + schemas), and file → entity (for fn homing)
     cls_ent: dict[str, str] = {}
@@ -137,36 +164,71 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         "pieces": {},
     }
 
-    # ── fn_nodes — every function, from function_insight ──────────────────────
-    for fid in sorted(FI):
-        f = FI[fid]
-        slug = f.get("entity")
-        if not slug:
-            continue
-        lv["fn_nodes"].append({
-            "id": fid.replace("::", "#"), "name": f.get("fn", ""), "slug": slug,
-            "kind": "function", "lang": "py" if str(f.get("file", "")).endswith(".py") else "ts",
-            "layer": f.get("layer", "services"), "handler": bool(f.get("handler")),
-            "god": bool(f.get("god")),
-            "hub": {"god": bool(f.get("god")), "usage": f.get("internal", 0)},
-            "tests": {"api": f.get("api", 0), "web": f.get("web", 0),
-                      "n": (f.get("api", 0) + f.get("web", 0)), "red": 0},
-        })
-
-    # ── use_edges + usefns — a fn references a model owned elsewhere ───────────
+    # ── the DRAWN function set — the on-path fns the fixture draws, not all 461, so
+    #    the trace stays legible and the communities cluster on FLOW. Three sources,
+    #    homed first-wins (function_insight is authoritative over graft's file→entity):
+    #      1. HANDLERS          — the API entry points, the trace roots
+    #      2. cross-entity MODEL USERS — a fn reads/writes a model another entity owns
+    #      3. graft handler-CALL TARGETS — the fns a handler invokes (so the call
+    #         wires have both endpoints drawn; the lab drops an edge to an undrawn fn)
+    drawn_fn: dict[str, str] = {}       # graft-style id (file#fn) → owning entity
+    _handlers: set[str] = set()         # the handler ids — the ONLY roots of fn_edges
+    # 1 · handlers (function_insight key is file::fn; the drawn id is graft's file#fn)
+    for _k, _f in FI.items():
+        if _f.get("handler") and _f.get("file") and _f.get("entity"):
+            _hid = _f["file"] + "#" + _f["fn"]
+            drawn_fn.setdefault(_hid, _f["entity"])
+            _handlers.add(_hid)
+    # 2 · use_edges + usefns — a fn references a model owned elsewhere
     usefns_by: dict[str, dict[str, int]] = {}
     for cls in sorted(MI):
         owner = cls_ent.get(cls)
         if not owner:
             continue
         for ref in MI[cls].get("internal_refs", []) or []:
-            using = file_ent.get(ref.get("file", "")) or owner
+            rfile = ref.get("file", "")
+            using = file_ent.get(rfile) or owner
             for fn in ref.get("defs", []) or []:
                 usefns_by.setdefault(using, {})
                 usefns_by[using][fn] = usefns_by[using].get(fn, 0) + 1
                 if using != owner:
                     lv["use_edges"].append({"fs": using, "cls": cls, "ts": owner, "fn": fn})
+                    if rfile:
+                        drawn_fn.setdefault(rfile + "#" + fn, using)  # a CROSS-entity model-user is drawn
     lv["use_edges"].sort(key=lambda e: (e["fs"], e["ts"], e["cls"], e["fn"]))
+    # 3 · graft handler-rooted calls → fn_edges + their endpoints join the drawn set.
+    #     Only calls WHOSE SOURCE IS A HANDLER are drawn (the fixture's edge rule); the
+    #     cross-file call is graft-inferred, so this edge set is a FLOOR, never a census.
+    _gf = (graft or {}).get("functions") or {}
+    _fedges: list[dict[str, Any]] = []
+    for c in _gf.get("calls") or []:
+        if c["s"] not in _handlers:
+            continue
+        drawn_fn.setdefault(c["s"], c["ss"])
+        drawn_fn.setdefault(c["t"], c["ts"])
+        _fedges.append({"s": c["s"], "ss": c["ss"], "t": c["t"], "ds": c["ts"],
+                        "rel": "calls", "conf": c.get("conf", "inferred")})
+    # both endpoints are now in drawn_fn by construction; keep the edge only if so
+    _fedges = [e for e in _fedges if e["s"] in drawn_fn and e["t"] in drawn_fn]
+    _fedges.sort(key=lambda e: (e["ss"], e["ds"], e["s"], e["t"]))
+    lv["fn_edges"] = _fedges
+
+    # ── fn_nodes — the DRAWN functions only, enriched from function_insight where
+    #    present; graft/TS fns (no function_insight) default their layer by file ext.
+    for fid in sorted(drawn_fn):
+        slug = drawn_fn[fid]
+        rfile, _, name = fid.partition("#")
+        f = FI.get(rfile + "::" + name, {})
+        is_py = rfile.endswith(".py")
+        lv["fn_nodes"].append({
+            "id": fid, "name": name, "slug": slug, "kind": "function",
+            "lang": "py" if is_py else "ts",
+            "layer": f.get("layer") or ("services" if is_py else "web"),
+            "handler": bool(f.get("handler")), "god": bool(f.get("god")),
+            "hub": {"god": bool(f.get("god")), "usage": f.get("internal", 0)},
+            "tests": {"api": f.get("api", 0), "web": f.get("web", 0),
+                      "n": (f.get("api", 0) + f.get("web", 0)), "red": 0},
+        })
 
     # ── per-entity pieces (from the C4 L2) + the rich lenses ──────────────────
     for slug in sorted(l2):
@@ -194,6 +256,8 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                 if det:
                     lv["detail"]["cls:" + slug + "|" + nd["label"]] = {"cases": det.get("cases", []), "det": det}
             elif k == "endpoint":
+                if ep_home.get(nd["label"], slug) != slug:
+                    continue    # deduped — this route is drawn by its handler's entity
                 touch = sorted({_strip(e["target"]) for e in edges
                                 if e.get("kind") == "touches" and e.get("source") == nd["id"]})
                 efile = (det or {}).get("file", "")
@@ -201,15 +265,26 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                 endpoints.append({"m": _method_of(nd["label"]), "p": _path_of(nd["label"]),
                                   "fn": nd.get("fn", ""), "resp": (nd.get("resp") or "") if nd.get("resp") != "—" else "",
                                   "guards": guards, "touch": touch})
+        # schemas are PRUNED to the endpoint-facing set — a schema is kept only if an
+        # endpoint of THIS entity touches it (request body) or returns it (resp). The
+        # nested component schemas (a *Block/*Summary that appears only INSIDE a response's
+        # fields, never at an endpoint boundary) drop off, matching the fixture exactly.
+        _touched = set()
+        for _ep in endpoints:
+            _touched.update(_ep.get("touch", []))
+            if _ep.get("resp"):
+                _touched.add(_ep["resp"])
+        schemas = [s for s in schemas if s["cls"] in _touched]
         # intra: model→model FK inside the entity (via unknown at L2 → "")
         intra = sorted(({"s": model_id[e["source"]], "t": model_id[e["target"]], "via": ""}
                         for e in edges if e.get("kind") == "fk"
                         and e.get("source") in model_id and e.get("target") in model_id),
                        key=lambda x: (x["s"], x["t"]))
-        # usecases: endpoints grouped by first non-param URL segment
+        # usecases: endpoints grouped by leading URL segments, at an entity-adaptive depth
         usecases: dict[str, dict[str, list]] = {}
+        _uc_depth = _use_case_depth([ep["p"] for ep in endpoints])
         for ep in endpoints:
-            seg = _use_case_seg(ep["p"])
+            seg = _use_case_key(ep["p"], _uc_depth)
             uc = usecases.setdefault(seg, {"cls": [], "eps": [], "fns": []})
             uc["eps"].append(ep["m"] + " " + ep["p"])
             if ep["fn"]:
@@ -217,7 +292,66 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             for c in ep["touch"]:
                 if c not in uc["cls"]:
                     uc["cls"].append(c)
-        # communities: components over intra-FK ∪ shared-endpoint-touch, hub-named
+        # ── communities: the fixture algorithm — deterministic label-propagation over
+        #    a graph of HANDLER functions + models + schemas, joined by touches + resp
+        #    + intra-FK. Each cluster is a handler and the pieces it reads/returns, so
+        #    the groups are function-named — the flow view. (Endpoints are the DEDUPED
+        #    set, so an aspect entity's phantom routes never pollute the clustering.)
+        adj: dict[str, set] = {}
+        nodeset = {m["cls"] for m in models} | {s["cls"] for s in schemas}
+
+        def _link(a: str, b: str) -> None:
+            if a and b and a != b:
+                nodeset.add(a); nodeset.add(b)
+                adj.setdefault(a, set()).add(b)
+                adj.setdefault(b, set()).add(a)
+
+        for e in intra:
+            _link(e["s"], e["t"])
+        for ep in endpoints:
+            h = ep["fn"]
+            if not h:
+                continue
+            for c in ep["touch"]:
+                _link(h, c)
+            if ep["resp"]:
+                _link(h, ep["resp"])
+        label = {n: n for n in sorted(nodeset)}
+        for _ in range(20):
+            changed = False
+            for n in sorted(nodeset):
+                nb = adj.get(n)
+                if not nb:
+                    continue
+                cnt: dict[str, int] = {}
+                for m in nb:
+                    cnt[label[m]] = cnt.get(label[m], 0) + 1
+                best = min(sorted(cnt), key=lambda x: (-cnt[x], x))
+                if best != label[n]:
+                    label[n] = best; changed = True
+            if not changed:
+                break
+        groups: dict[str, list[str]] = {}
+        for n in nodeset:
+            groups.setdefault(label[n], []).append(n)
+        # the fixture keeps groups of >=3 and folds the rest into "misc"; hub = max degree
+        communities: dict[str, list[str]] = {}
+        misc: list[str] = []
+        ci = 0
+        for root in sorted(groups, key=lambda r: (-len(groups[r]), r)):
+            mem = sorted(groups[root])
+            if len(mem) < 3:
+                misc.extend(mem)
+                continue
+            ci += 1
+            hub = max(mem, key=lambda c: (len(adj.get(c, ())), c))
+            communities["c%d·%s" % (ci, hub[:12])] = mem
+        if misc:
+            communities["misc"] = sorted(misc)
+
+        # ── fk_communities: the operator's NEW "Cluster by FK" filter — models joined
+        #    by foreign key only (union-find over intra FK). A data-shape view, distinct
+        #    from the function-flow communities above; drawn when the FK cluster is picked.
         parent = {m["cls"]: m["cls"] for m in models}
 
         def find(x: str) -> str:
@@ -226,31 +360,25 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                 x = parent[x]
             return x
 
-        def union(a: str, b: str) -> None:
-            if a in parent and b in parent:
-                parent[find(a)] = find(b)
-
         for e in intra:
-            union(e["s"], e["t"])
-        for ep in endpoints:                       # models co-touched by one endpoint group together
-            ms = [c for c in ep["touch"] if c in parent]
-            for c in ms[1:]:
-                union(ms[0], c)
-        comp: dict[str, list[str]] = {}
+            if e["s"] in parent and e["t"] in parent:
+                parent[find(e["s"])] = find(e["t"])
+        fkcomp: dict[str, list[str]] = {}
         for m in models:
-            comp.setdefault(find(m["cls"]), []).append(m["cls"])
-        communities: dict[str, list[str]] = {}
-        ci = 0
-        for root in sorted(comp, key=lambda r: (-len(comp[r]), r)):
-            ci += 1
-            members = sorted(comp[root])
-            hub = max(members, key=lambda c: (MI.get(c, {}).get("usage", 0), c))
-            communities["c%d·%s" % (ci, hub)] = members
+            fkcomp.setdefault(find(m["cls"]), []).append(m["cls"])
+        fk_communities: dict[str, list[str]] = {}
+        fi = 0
+        for root in sorted(fkcomp, key=lambda r: (-len(fkcomp[r]), r)):
+            fi += 1
+            mem = sorted(fkcomp[root])
+            hub = max(mem, key=lambda c: (MI.get(c, {}).get("usage", 0), c))
+            fk_communities["f%d·%s" % (fi, hub)] = mem
+
         usefns = sorted(({"fn": fn, "uses": n} for fn, n in (usefns_by.get(slug, {})).items()),
                         key=lambda x: (-x["uses"], x["fn"]))[:40]
         lv["pieces"][slug] = {"models": models, "schemas": schemas, "endpoints": endpoints,
                               "intra": intra, "usecases": usecases, "communities": communities,
-                              "usefns": usefns}
+                              "fk_communities": fk_communities, "usefns": usefns}
 
     # ── fn_edges — cross-file function CALLS (graft only; honest-empty else) ───
     if graft and graft.get("present") and graft.get("fn_edges"):

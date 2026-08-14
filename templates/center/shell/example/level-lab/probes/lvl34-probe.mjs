@@ -14,7 +14,7 @@ const T = async fn => pg.evaluate(fn);
 
 // 1 · roster: exactly 1 · 4 · 5 (machinery for 2/3 stays hook-reachable)
 const roster = await pg.evaluate(() => [...document.querySelectorAll('#levels button')].map(x=>x.getAttribute('data-lvl')).join(','));
-ok(roster==='entities,layers,trace', 'level roster = Entities · Layers · Trace ('+roster+')');
+ok(roster==='entities,functions,layers,trace', 'level roster = Entities · Functions · Layers · Trace ('+roster+')');
 await T("window.__lvltest.set('pieces')");
 ok(await T("document.querySelectorAll('#canvas .piece').length")>100, 'pieces machinery still hook-reachable (gates)');
 

@@ -134,6 +134,49 @@ def _file_of(node_id: str) -> str:
     return node_id.split("#", 1)[0]
 
 
+def _file2slug(entities: dict[str, Any]) -> dict[str, str]:
+    """Map every archmap-listed file to its owning entity (first claim wins)."""
+    f2s: dict[str, str] = {}
+    for slug in sorted(entities):
+        code = entities[slug]
+        if not code:
+            continue
+        for row in code.get("files") or []:
+            if len(row) >= 2 and isinstance(row[1], str):
+                f2s.setdefault(row[1], slug)
+    return f2s
+
+
+def derive_functions(wiring: dict[str, Any],
+                     entities: dict[str, Any]) -> dict[str, Any]:
+    """The function-level slice the LEVELS graph draws: every graft FUNCTION node homed
+    to its entity (``id`` = ``path#symbol``, homed by file → entity) + the ``calls``
+    edges between two homed functions. ``_a3_levels`` selects the trace-relevant subset
+    (cross-entity callers/callees + model users) and clusters on it. Honest: a call whose
+    endpoints don't both map to entities is dropped (counted), never guessed."""
+    f2s = _file2slug(entities)
+    fn_slug: dict[str, str] = {}
+    for n in wiring.get("nodes") or []:
+        if n.get("kind") != "function":
+            continue
+        f = _file_of(n["id"])
+        if _is_noise(f):
+            continue
+        slug = f2s.get(f)
+        if slug:
+            fn_slug[n["id"]] = slug
+    calls: list[dict[str, Any]] = []
+    for e in wiring.get("edges") or []:
+        if e.get("relation") != "calls":
+            continue
+        s, t = e.get("source"), e.get("target")
+        if s in fn_slug and t in fn_slug and s != t:
+            calls.append({"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
+                          "conf": e.get("confidence", "inferred")})
+    calls.sort(key=lambda c: (c["ss"], c["ts"], c["s"], c["t"]))
+    return {"fn_slug": fn_slug, "calls": calls}
+
+
 def derive_cross(wiring: dict[str, Any],
                  entities: dict[str, Any]) -> dict[str, Any]:
     """The cross-entity coupling slice: {(src_slug, dst_slug): {relation: count}}.
@@ -232,10 +275,12 @@ def graft_arm(root: Path, entities: dict[str, Any],
             return {"present": False, "reason": "index unreadable (corrupt or truncated)"}
         meta = wiring.get("meta") or {}
         out = derive_cross(wiring, entities)
+        fout = derive_functions(wiring, entities)
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
             "pairs": out["pairs"], "stats": out["stats"],
+            "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws
         }
     except Exception as exc:  # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"graft arm error: {exc}"}
