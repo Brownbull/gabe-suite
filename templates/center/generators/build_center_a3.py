@@ -38,6 +38,7 @@ import _a3_board
 import _a3_code
 import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
+import _a3_levels  # noqa: E402  (the rich LEVELS graph — the lab-native station feed)
 import _a3_sim  # noqa: E402  (the live change-simulation projection — window.GABE_SIM)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
@@ -2001,6 +2002,19 @@ def main() -> int:
             colors=_gcolors, graft=_garm)
         _a3_graph.emit(_graph, CENTER_OUT)
         wrote.append(("c4-graph.json", 0))
+        # the LEVELS graph (window.GABE_LEVELS) — the lab-native station's rich feed:
+        # functions · use-cases · communities · use-edges, ALL from the archmap insight
+        # blocks (_a3_code already writes them) + the C4 topology; only cross-file call
+        # edges need graft, honest-empty otherwise. A derivation error degrades the
+        # station to topology-only (window.GABE_LEVELS absent), never blanks the center.
+        try:
+            _levels = _a3_levels.build_levels(amap, _graph, graft=_garm)
+            _a3_levels.emit(_levels, CENTER_OUT)
+            wrote.append(("levels.json", 0))
+            print(f"    wrote docs/site/center/levels.json — {len(_levels['fn_nodes'])} fn(s) "
+                  f"· {len(_levels['use_edges'])} use-edge(s)")
+        except Exception as _le:  # noqa: BLE001
+            print(f"    ⚠ levels SKIPPED (derivation error, station degrades to topology): {_le}")
         _st = _graph["stats"]
         _gst = _st.get("graft") or {}
         print(f"    wrote docs/site/center/c4-graph.json — {_st['entities']} node(s) "

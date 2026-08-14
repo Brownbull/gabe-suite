@@ -43,6 +43,7 @@ tool exists to kill, applied to its own config.
 | `_a3_code.py` | the Code tab — endpoints / models / schemas parsed from source with `ast` |
 | `_a3_evidence.py` | the Evidence tab — proof sets walked off disk, narrated from each `manifest.json` |
 | `_a3_graph.py` | the C4 codebase graph — a LIBRARY-NEUTRAL `{nodes,edges}` view derived from the in-memory archmap (zero new source read; FK-only L1 edges, honesty laws), emitted as committed `c4-graph.json` + the `window.GABE_C4`/`GABE_C4_COLORS` sibling `c4-graph.js` with a baked ring x/y + deps-gradient fx/fy layout. Feeds the `codebase-graph.html` station. Battery: `tests/arch-graph` (emitter) + `tests/codebase-graph` (station) |
+| `_a3_levels.py` | the rich LEVELS graph — `window.GABE_LEVELS` for the lab-native station: functions · use-cases · communities · use-edges · per-piece hub/god/tests/guards, ALL derived from the archmap insight blocks (`function_insight` · `model_insight.internal_refs` · `guard_insight` · `test_insight`) + the C4 topology (cross-file call edges ride graft, honest-empty otherwise). Emitted as `levels.json` + the `window.GABE_LEVELS` sibling `levels.js`. Feeds `codebase-archive-lab.html` (the lab renderer wrapped in the shell chrome). Battery: `tests/levels` |
 | `_center_mermaid.py` | build-time mermaid pre-render, cached by content hash |
 | `check_center_links.py` | the crawl gate — every internal href resolves, or the build fails |
 | `refresh_center.sh` | ONE entry point — `regen` (default, cheap) or a capture mode from `commands` |
