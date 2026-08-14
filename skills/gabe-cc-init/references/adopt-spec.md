@@ -133,6 +133,16 @@ Small, append-only in spirit: rows change status, never vanish.
    proofs found y/n). No signal, no row — an entity the machine cannot see is proposed only by
    the operator. Every file/dir path in the signal-evidence columns renders as a clickable
    workspace-relative link (findings contract).
+2b. **The URL-domain SECOND LENS (advisory, alongside — never replaces the ranking).** When
+   `docs/site/center/archmap.json` exists (a re-rank, or after the first bootstrap pass), also run
+   `python3 ~/.claude/skills/gabe-pulse/scripts/entity_shape.py .` and present its output beside
+   the candidate table: **orphan domains** (a URL surface no proposed entity owns — a candidate
+   entity the churn/test ranking may have missed, named via the optional `url_domain_map`) and
+   **aspect entities** (a candidate that co-claims many URL domains and solely-owns almost none —
+   likely a cross-cutting concern, not a peer domain; flag it so the operator rules it in
+   knowingly, not by accident). This lens ADVISES; the operator still rules the shortlist
+   (2026-07-21 baseline). Honest-skip with one line — `URL-domain lens: no archmap yet, re-run
+   after the first section adoption` — when the archmap is absent (initial greenfield rank).
 3. **Checkpoint:** the operator trims, re-ranks, adds, drops. On approval: write one
    `sections[]` row per shortlisted entity — `status: "pending"`, `rank`, `display_name` (one
    human-facing word, e.g. `"Transaction"` — D123: the registry's rendered name, never left to

@@ -130,6 +130,21 @@ run "$r" | grep -q "the diff spans 2 layers" && ok "S7 fires: diff spans two lay
 r=$(repo s7b); mkcenter "$r"; cd "$r"; for f in a.py b.py; do echo x >> $f; done; git add -A; cd - >/dev/null
 run "$r" | grep -q "the diff spans" && bad "S7 fired within one layer" || ok "S7 silent within one layer"
 
+# ── S9 · entity-shape drift — orphan domain + aspect entity (reads the archmap) ──
+mkarchmap() { mkdir -p "$1/docs/site/center"
+  printf '%s' '{"entities":{"cooking":{"code":{"api":["a.py"]}}}}' > "$1/docs/site/center/center.config.json"
+  printf '%s' "$2" > "$1/docs/site/center/archmap.json"
+  cd "$1" && git add -A && git commit -qm "center+archmap" && cd - >/dev/null; }
+# 'shared' co-claims 3 domains + solely owns /admin (orphan); cooking/pantry/recipe own their own
+r=$(repo s9a); mkarchmap "$r" '{"entities":{"cooking":{"endpoints":[{"path":"/cooking","method":"GET"}]},"pantry":{"endpoints":[{"path":"/pantry","method":"GET"}]},"recipe":{"endpoints":[{"path":"/recipes","method":"GET"}]},"shared":{"endpoints":[{"path":"/cooking","method":"GET"},{"path":"/pantry","method":"GET"},{"path":"/recipes","method":"GET"},{"path":"/admin","method":"GET"}]}}}'
+run "$r" | grep -q "entity-shape drift" && ok "S9 fires: an orphan domain + an aspect entity" || bad "S9 did not fire on a drifted model"
+# clean model — every domain owned by a distinct entity, no aspect → silent
+r=$(repo s9b); mkarchmap "$r" '{"entities":{"cooking":{"endpoints":[{"path":"/cooking","method":"GET"}]},"pantry":{"endpoints":[{"path":"/pantry","method":"GET"}]},"recipe":{"endpoints":[{"path":"/recipes","method":"GET"}]}}}'
+run "$r" | grep -q "entity-shape drift" && bad "S9 fired on a clean entity model" || ok "S9 silent on a clean model"
+# no center config → honest unavailable, never a guess
+r=$(repo s9c); commits "$r" 1 "feat: work"
+run "$r" | grep -q "entity-shape drift" && bad "S9 fired without a center" || ok "S9 silent with no center config"
+
 # ── S5 · scope drift — computable since the scope mirror (ruling 2026-08-07) ──
 # no scope field on the current phase → honest unavailable, never a proxy guess
 r=$(repo s5a); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"}}]}'

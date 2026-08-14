@@ -304,6 +304,7 @@ So a satellite earns its line only when repo state says it would find something.
 | S5 | files changed outside the current phase's declared `scope` (see 5.4) — unavailable, honestly, when the phase declares no scope | `/gabe-scope-change` | PLAN.json `phases[].scope` + shared work-scope resolver |
 | S6 | ≥3 changed files belong to one entity's code map (clean tree ⇒ the diff source walks back past pure-`.kdbp` bookkeeping commits to the newest WORK commit — beat ends land right after the tick commit, which blinded the old `HEAD~1..HEAD` fallback; measured 15/15 silent, 2026-08-07) | `/gabe-cc-entity <slug>` | center config + `git diff` |
 | S7 | the diff spans ≥2 layers across ≥3 files | `/gabe-imagine` | center config + `git diff` |
+| S9 | the entity model diverges from the URL structure — a domain no *domain* entity owns (orphan), or a cross-cutting concern modeled as a peer domain (aspect: co-claims ≥3 domains, solely-owns ≤1). The STANDING reminder; `/gabe-review` catches the NEW route on the diff. See 5.6 | `/gabe-cc-init` | committed `archmap.json`, recomputed fresh (nothing stored — `entity_shape.py`) |
 
 Thresholds are deliberately coarse. A threshold tuned to fire often is a threshold that will be
 ignored, and an ignored signal is worse than none because it also teaches the reader to skip the
@@ -352,3 +353,27 @@ state predicts them, and a guess would spend the reader's attention on nothing.
 not a state a beat can observe. `/gabe-next` is the thing you call. `/gabe-handoff` is already
 Stop-hooked. `/gabe-pulse` is this engine. **Wiring all fifteen would cheapen the six that mean
 something** — the roster stays honest by leaving these out loud.
+
+### 5.6 S9 — entity-shape drift (the standing model reminder)
+
+The entity model is a set of DOMAIN aggregates (recipe · cooking · …). Two ways it drifts from
+the app's real URL structure, both of which misdirect a workflow trace:
+
+- **Orphan domain** — a URL surface (`/settings`) that no domain entity owns; it falls to a
+  cross-cutting aspect, so tracing "the settings workflow" lands in the wrong entity.
+- **Aspect entity** — a cross-cutting concern (`allergen`) modeled as a peer domain: it
+  co-claims ≥3 URL domains yet solely-owns ≤1 (`ASPECT_COCLAIM_MIN` / `ASPECT_SOLE_MAX` in
+  `entity_shape.py`, operator-ruled 2026-08-14).
+
+**Division of labour with `/gabe-review`.** Review DETECTS a new route in an orphan domain on the
+diff that introduced it (fresh, real-time — the Step 3.4 subject ENTITY-SHAPE DRIFT). S9 is the STANDING
+reminder for a drift that already exists and survives the reviewing session — the same
+review-detects / pulse-nags split S8 uses for census capture debt.
+
+**No stored artifact.** S9 recomputes the URL↔entity cross-tab from the committed `archmap.json`
+on every beat via `entity_shape.entity_shape()`. There is deliberately no `entity-drift.json` to
+write at regen and read stale here — the freshness of the signal is the freshness of the archmap,
+and nothing must be remembered-to-refresh (operability ruling 2026-08-14). Unavailable, honestly,
+when there is no center config or no archmap yet. Candidate names for an orphan come from an
+optional `url_domain_map` in `center.config.json` (`{segment: name}`, e.g. `settings → account`);
+absent an entry, the candidate is the verbatim segment.

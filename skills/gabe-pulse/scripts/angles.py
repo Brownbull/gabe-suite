@@ -187,6 +187,7 @@ import os as _os  # noqa: E402
 import sys as _sys  # noqa: E402
 _sys.path.insert(0, _os.path.dirname(_os.path.abspath(__file__)))  # so `import work_scope` works even when angles.py is loaded via importlib (the batteries do this), not just run as a script
 import work_scope  # noqa: E402  (same dir; installed alongside under ~/.claude/skills/gabe-pulse/scripts)
+import entity_shape  # noqa: E402  (same dir; the URL-domain ↔ entity-model cross-tab, computed fresh)
 
 
 def _current_phase(plan: dict) -> dict | None:
@@ -289,6 +290,35 @@ def s8_evidence(root: Path, plan: dict | None, cfg: dict | None):
             "/gabe-cc-update curate")
 
 
+def s9_entity_shape(root: Path, plan: dict | None, cfg: dict | None):
+    """Entity-shape drift — a URL surface no DOMAIN entity owns (orphan), or a
+    cross-cutting concern modeled as a peer domain (aspect).
+
+    The STANDING reminder: /gabe-review catches a NEW route on the diff that
+    caused the drift; this angle keeps an already-standing orphan/aspect visible
+    every beat. Recomputed fresh from the committed archmap here — NOTHING is
+    stored, so nothing goes stale and nothing needs remembering."""
+    if cfg is None:
+        return Unavailable("no center config — the entity model is the trigger's source")
+    try:
+        endpoints, umap = entity_shape.load_project(root)
+    except FileNotFoundError:
+        return Unavailable("no archmap yet — the center regen builds it")
+    shape = entity_shape.entity_shape(endpoints, umap)
+    orphans, aspects = shape["orphans"], shape["aspects"]
+    if not orphans and not aspects:
+        return None
+    parts = []
+    if orphans:
+        names = ", ".join("/" + o["domain"] for o in orphans[:3])
+        more = f" +{len(orphans) - 3}" if len(orphans) > 3 else ""
+        parts.append(f"{len(orphans)} orphan domain(s) ({names}{more})")
+    if aspects:
+        names = ", ".join(a["entity"] for a in aspects[:3])
+        parts.append(f"{len(aspects)} aspect entity(ies) ({names})")
+    return (f"entity-shape drift — {' · '.join(parts)}", "/gabe-cc-init")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -298,6 +328,7 @@ SIGNALS = [
     ("S7", "explanation", s7_prism),
     ("S2", "structural", s2_health),
     ("S5", "scope", s5_scope),
+    ("S9", "entity shape", s9_entity_shape),
 ]
 
 

@@ -268,6 +268,26 @@ into a hook block, never into silence.
   NEVER report zero findings when the check could not run — print `ENTITY DRIFT NOT RUN` with
   the reason. The board's in-flight view renders declared-vs-touched live (inflight.json); this
   subject is where the disagreement becomes a priced, triaged record.
+- **ENTITY-SHAPE DRIFT** — the diff ADDS a route whose URL domain no *domain* entity owns, so a
+  future trace of that workflow lands nowhere (or inside a cross-cutting aspect). Distinct from
+  ENTITY DRIFT above: that one is plan-declared-vs-touched entities; THIS is the route's URL
+  surface vs the entity MODEL. Machine-derived (report-never-gate, D1) by
+  `python3 ~/.claude/skills/gabe-pulse/scripts/entity_shape.py . --diff <base>` where `<base>` is
+  the review's RESOLVED target from Step 0.3 (a committed range like the LEDGER sha's parent, or
+  `HEAD` for an uncommitted tree — `git add -N` a brand-new route file first so its `+` lines enter
+  the diff). It reads the committed `archmap.json` for the current model (which domains a domain
+  entity owns, which entities are cross-cutting aspects) and greps the diff's ADDED route
+  decorators; a new route in an unowned domain is named with its candidate entity (from the
+  optional `url_domain_map`, verbatim fallback). Prints `ENTITY-SHAPE DRIFT NOT RUN` with a reason
+  when there is no archmap to check against — never a false clean. **Detection lives HERE, on the diff, because the route is NEW — the archmap has not
+  regenerated to include it yet, so only review sees it fresh**; the STANDING orphan/aspect it may
+  create is carried afterwards by `/gabe-pulse`'s S9 entity-shape angle (the same review-detects /
+  pulse-nags split S8/WORKFLOW DRIFT use). Priced like any finding; the fix routes to
+  `/gabe-cc-init` (add or reclassify an entity — a config decision, never a code change) or to
+  nothing (the surface genuinely belongs to an existing aspect — then the aspect is truth, not
+  drift). Skip silently when the project has no center config or the diff adds no routes; NEVER
+  report zero when the check could not run — the script prints nothing only when it genuinely ran
+  clean.
 - **GROWTH: <feature>/<angle>** — an absent-angle GROWTH OPPORTUNITY from the center enters
   triage priced like any finding: its "what adding tests would buy" IS Defer Risk; its "at what
   cost" IS Fix Cost. **Cap: at most 7 GROWTH findings per review** (highest Defer Risk first;
