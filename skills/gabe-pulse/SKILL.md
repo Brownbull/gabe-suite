@@ -5,7 +5,7 @@ when_to_use: "After a long or sprawling stretch: did everything that should have
 context: fork
 agent: Explore
 metadata:
-  version: 1.5.0
+  version: 1.6.0
 ---
 
 # Gabe Pulse — is anything important owed?
@@ -133,10 +133,13 @@ $ARGUMENTS
 
 ## The ANGLE family (1.1.0)
 
-`scripts/angles.py` computes six live triggers — adversarial pass owed, structural scan overdue,
-journey proof missing, docs stale, entity context worth loading, an explanation worth drawing —
-and one that reports **unavailable** with what would unlock it. Spine beats print its
-`--one-line` output verbatim; it emits at most one row and nothing when nothing fires.
+`scripts/angles.py` computes ten evidence-backed triggers — adversarial pass owed (S1),
+structural scan overdue (S2), journey proof missing (S3), published docs stale (S4), scope drift
+(S5), entity context worth loading (S6), an explanation worth drawing (S7), workflow-census
+capture debt (S8), entity-shape drift (S9), and a diff-added fetch that named no declared endpoint
+(S10) — each naming the satellite that would find it now, or reporting **unavailable** with what
+would unlock it. Spine beats print its `--one-line` output verbatim; it emits at most one row and
+nothing when nothing fires.
 
 ```
 python3 skills/gabe-pulse/scripts/angles.py . --why      # every signal, including why one is quiet
@@ -145,5 +148,5 @@ python3 skills/gabe-pulse/scripts/angles.py . --json     # machine output
 ```
 
 Full contract in `references/pulse-spec.md` §5, including the decay rule and this mechanism's own
-kill condition. Battery: `tests/pulse-angles/run.sh` — 18 cases, every live signal proven to FIRE
+kill condition. Battery: `tests/pulse-angles/run.sh` — 33 cases, every live signal proven to FIRE
 and stay SILENT, plus the cap, the silence, and the decay.

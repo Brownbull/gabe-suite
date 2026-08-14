@@ -119,7 +119,8 @@
 .cbg-root .e-touch{ fill:none; stroke:var(--edge); stroke-width:1; opacity:.55; }
 .cbg-root .e-intra{ fill:none; stroke:var(--edge); stroke-width:1.6; opacity:.75; }
 .cbg-root .e-xfk{ fill:none; stroke:var(--edge); stroke-width:1.8; stroke-dasharray:2 5; opacity:.85; }
-.cbg-root .e-intra.hot, .cbg-root .e-xfk.hot{ opacity:1; stroke-width:2.6; }
+.cbg-root .e-bridge{ fill:none; stroke:var(--c-fn-web); stroke-width:1.6; stroke-dasharray:6 4; opacity:.9; }
+.cbg-root .e-intra.hot, .cbg-root .e-xfk.hot, .cbg-root .e-bridge.hot{ opacity:1; stroke-width:2.6; }
 @keyframes cbg-dashmove{ to{ stroke-dashoffset:-22; } }
 @media (prefers-reduced-motion: reduce){ .cbg-root .e-calls{ animation:none; } }
 /* base L1 edges step back while entities are exploded (piece wires carry the story) */
@@ -419,7 +420,7 @@
   <a class="navitem on" href="codebase-graph.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg> Change graph</a>
   <a class="navitem" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <div class="navlabel g-ent">Entities</div>
-  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">7</span></a>
+  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">8</span></a>
   <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
   <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
   <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
@@ -427,6 +428,7 @@
   <a class="navitem" href="feature-auth.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Auth</a>
   <a class="navitem" href="feature-progression.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Progression</a>
   <a class="navitem" href="feature-legal-consent.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Legal/Consent</a>
+  <a class="navitem" style="opacity:.55" href="entity-index.html" title="medium · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Settings <span class="count">pending</span></a>
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
@@ -450,7 +452,7 @@
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
   <span class="navsub" style="opacity:.5">none wired yet</span>
-  <div class="foot">regen 2026-08-12 15:05Z<br>HEAD 4c12a293 · build_center_a3.py</div>
+  <div class="foot">regen 2026-08-14 19:59Z<br>HEAD fcc3bb73 · build_center_a3.py</div>
 </aside>
 
 <main class="main" style="display:flex;flex-direction:column;height:100vh;overflow:hidden">
@@ -572,6 +574,12 @@
   var DATA = window.GABE_C4, COLORS = window.GABE_C4_COLORS || {};
   if(!DATA){ document.getElementById("cbg-detail").innerHTML =
     "<div class='empty'>no c4-graph.js on this center yet</div>"; return; }
+  // a fetching screen whose (method, path) matched no endpoint PIECE: an
+  // archmap-coverage gap the S10 nag surfaces. Keyed by web-node id → the raw
+  // "METHOD /path" list, so the L2 drill can mark the screen hollow-dashed.
+  var WEB_UNMATCHED = {};
+  (function(){ var u=(DATA.stats&&DATA.stats.web&&DATA.stats.web.unmatched)||[];
+    u.forEach(function(x){ WEB_UNMATCHED[x.from]=(WEB_UNMATCHED[x.from]||[]).concat(x.m+" "+x.p); }); })();
   if(!window.GABE_GRAPH_GRAMMAR){ document.getElementById("cbg-detail").innerHTML =
     "<div class='empty'>assets/graph-grammar.js missing on this center</div>"; return; }
   var GG = window.GABE_GRAPH_GRAMMAR();   // the shared level-lab grammar (both stations)
@@ -606,8 +614,8 @@
   var INSIDE_LAYOUTS = { ring:"Ring", grid:"Grid", force:"Force" };
   var LINE_OPTS = { direct:"Direct", bowed:"Bowed" };
   var ICON_OPTS = { classic:"Classic", lucide:"Lucide", solid:"Solid" };
-  var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96" };
-  var KIND_LABEL = { endpoint:"Endpoints", model:"Models", schema:"Schemas", external:"External" };
+  var KIND_COLOR = { endpoint:"#4c6ef5", model:"#12b886", schema:"#f59f00", external:"#868e96", web:"#e8590c" };
+  var KIND_LABEL = { endpoint:"Endpoints", model:"Models", schema:"Schemas", external:"External", web:"Screens" };
   var METHOD = { GET:"var(--m-get)", POST:"var(--m-post)", PUT:"var(--m-put)", PATCH:"var(--m-put)", DELETE:"var(--m-delete)" };
 
   var stage   = document.getElementById("cbg-stage");
@@ -849,11 +857,12 @@
      so its beat + wires survive. */
   function surfaceLayout(slug, cx, cy){
     var l2=(DATA.l2[slug]&&DATA.l2[slug].nodes)||[];
-    var models=[], schemas=[], endpoints=[], seen={};
+    var models=[], schemas=[], endpoints=[], web=[], seen={};
     l2.forEach(function(n){
       if(n.kind==="model"){ models.push(n); seen[n.id]=1; }
       else if(n.kind==="schema"){ schemas.push(n); }
       else if(n.kind==="endpoint"){ endpoints.push(n); }
+      else if(n.kind==="web"){ web.push(n); }
     });
     ((SIM.pieces&&SIM.pieces[slug])||[]).forEach(function(p){
       if(!seen[p.id]){ models.push({id:p.id, label:p.label, kind:"model", slug:slug}); seen[p.id]=1; }
@@ -870,18 +879,23 @@
     var contR=Math.max(extent+42, byEps, 56);
     endpoints.forEach(function(ep,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(endpoints.length,1);
       pos[ep.id]={ x:cx+contR*Math.cos(a), y:cy+contR*Math.sin(a) }; });
-    return { pos:pos, models:models, schemas:schemas, endpoints:endpoints, contR:contR };
+    // fetching screens sit on an OUTER ring (the frontend arm reaches IN to the
+    // endpoints) so a bridge wire reads screen → endpoint → core, outside in.
+    var webR=web.length ? contR+38 : contR;   // web-less entity → radius unchanged (byte-identical)
+    web.forEach(function(w,i){ var a=-Math.PI/2+2*Math.PI*(i+0.5)/Math.max(web.length,1);
+      pos[w.id]={ x:cx+webR*Math.cos(a), y:cy+webR*Math.sin(a) }; });
+    return { pos:pos, models:models, schemas:schemas, endpoints:endpoints, web:web, contR:webR };
   }
   function computeL2Positions(g2){
     var p;
     if(l2layout==="force") p=forceLayout(g2.nodes, g2.edges, {R:270, iter:260, k:5200, rest:118});
     else if(l2layout==="radial"){
-      var ord=["endpoint","schema","model","external"];
+      var ord=["endpoint","schema","model","external","web"];
       var sorted=g2.nodes.slice().sort(function(a,b){ return (ord.indexOf(a.kind)-ord.indexOf(b.kind)) || (a.id<b.id?-1:1); });
       var R=Math.max(220, sorted.length*13); p={};
       sorted.forEach(function(n,i){ var a=-Math.PI/2+2*Math.PI*i/sorted.length; p[n.id]={x:rnd(R*Math.cos(a)),y:rnd(R*Math.sin(a))}; });
     } else {
-      var ord2=["endpoint","schema","model","external"], COLW=(DATA.layout.l2&&DATA.layout.l2.col_w)||240, kc={};
+      var ord2=["endpoint","schema","model","external","web"], COLW=(DATA.layout.l2&&DATA.layout.l2.col_w)||240, kc={};
       ord2.forEach(function(k,i){ kc[k]=i; });
       p={}; g2.nodes.forEach(function(n){ p[n.id]={x:kc[n.kind]*COLW, y:n.y}; });
     }
@@ -945,7 +959,7 @@
     vp.querySelectorAll(".selring,.nbrring,.peek-ring,.jrn-ring").forEach(function(x){ x.remove(); });
     vp.querySelectorAll(".e-hl,.e-faded,.e-jrn,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
       x.classList.remove("e-hl","e-faded","e-jrn","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
-  function edgeWord(kind){ return {touch:"touches", fk:"fk", xfk:"cross-fk", calls:"calls", imports:"imports"}[kind]||kind; }
+  function edgeWord(kind){ return {touch:"touches", fk:"fk", xfk:"cross-fk", calls:"calls", imports:"imports", bridge:"bridge"}[kind]||kind; }
   function selectNode(key){
     clearSelection(); selKey=key;
     var n=SELREG.nodes[key]; if(!n) return [];
@@ -1184,11 +1198,27 @@
       minY=Math.min(minY,p.y-20); maxY=Math.max(maxY,p.y+34);
     });
     if(l2layout==="columns") minY -= 40;
+    // ── the web→API bridges landing in THIS drill: each fetching screen's
+    //    inferred (method,path) → the endpoint PIECE it names. A same-entity
+    //    endpoint already has a node; a cross-entity one gets a synthetic stub
+    //    (mirror the external target) stacked to the right so the wire lands. The
+    //    stub bounds are folded in BEFORE frame() so they sit inside the viewBox.
+    var bridges = (DATA.cross_edges||[]).filter(function(e){
+      return e.kind==="bridge" && e.from_slug===slug && nodePos[e.from]; });
+    var bridgeStub = {}, _stubX = maxX + 92, _stubY = minY + 44;
+    bridges.forEach(function(e){
+      if(nodePos[e.to] || bridgeStub[e.to]) return;   // real node, or already stubbed
+      bridgeStub[e.to] = { x:_stubX, y:_stubY,
+        label:String(e.to).replace(/^[^:]+:/,""), to_slug:e.to_slug };
+      _stubY += 54;
+    });
+    Object.keys(bridgeStub).forEach(function(id){ var s=bridgeStub[id];
+      maxX=Math.max(maxX,s.x+70); minY=Math.min(minY,s.y-22); maxY=Math.max(maxY,s.y+26); });
     frame({minX:minX,minY:minY,maxX:maxX,maxY:maxY});
     var defs = E("defs"), hLayer = E("g"), eLayer = E("g"), nLayer = E("g");
     vp.appendChild(defs); vp.appendChild(hLayer); vp.appendChild(eLayer); vp.appendChild(nLayer);
     if(l2layout==="columns"){
-      var ord3=["endpoint","schema","model","external"], COLW3=(DATA.layout.l2&&DATA.layout.l2.col_w)||240;
+      var ord3=["endpoint","schema","model","external","web"], COLW3=(DATA.layout.l2&&DATA.layout.l2.col_w)||240;
       ord3.forEach(function(kind, i){
         if(!present[kind]) return;
         var h = E("text", { class:"colhdr", x:i*COLW3, y:minY+18, "text-anchor":"middle" });
@@ -1217,17 +1247,59 @@
         twoRowLabel(g, label.replace(/^[A-Z]+ /,"").replace(/^\//,"")||m, 0, 17); }
       else if(n.kind==="model"){ cylinder(g, 8, "var(--c-model)"); twoRowLabel(g, label, 0, 17); }
       else if(n.kind==="schema"){ sBadge(g, 7, "var(--c-schema)"); twoRowLabel(g, label, 0, 17); }
+      else if(n.kind==="web"){   // a fetching screen — the frontend arm's piece (a 'screen' glyph)
+        var unm = WEB_UNMATCHED[n.id];   // a screen whose fetch named no endpoint → hollow-dashed
+        var rectAttr={x:-10,y:-8,width:20,height:16,rx:3,fill:"var(--panel)",
+          stroke:"var(--c-fn-web)","stroke-width":"2"};
+        if(unm){ rectAttr.fill="none"; rectAttr["stroke-dasharray"]="3 3"; rectAttr["stroke-opacity"]="0.7"; }
+        g.appendChild(E("rect",rectAttr));
+        g.appendChild(E("line",{x1:-10,y1:-3,x2:10,y2:-3,stroke:"var(--c-fn-web)","stroke-width":"1.1",
+          "stroke-opacity":unm?"0.7":"1"}));
+        twoRowLabel(g, label, 0, 20); }
       else { var xc=COLORS[n.slug]||"#868e96";   // COLORS is keyed by SLUG, never the display label
         g.appendChild(E("circle",{r:9, fill:"var(--panel)", stroke:xc, "stroke-width":"2","stroke-dasharray":"4 3"}));
         twoRowLabel(g, label, 0, 20); }
       var hopOk = n.kind==="external" && n.slug && DATA.l2[n.slug];
       var ti=E("title"); ti.textContent=label+" · "+n.kind
         +(n.table?" · table "+n.table:"")
-        +(n.kind==="external"?(hopOk?" — double-click to hop":" — fk target outside every claimed entity"):"");
+        +(n.kind==="external"?(hopOk?" — double-click to hop":" — fk target outside every claimed entity"):"")
+        +(n.kind==="web"&&WEB_UNMATCHED[n.id]?" — fetch unmatched (no endpoint named): "+WEB_UNMATCHED[n.id].join(", "):"");
       g.appendChild(ti);
       nLayer.appendChild(g); nodeMeta[n.id].el = g;
       regNode(g, n.id, trunc(label,30), n.kind, 16);
       wire(g, n);
+    });
+    // synthetic stubs for cross-entity bridge endpoints (dashed --c-fn-web ring,
+    // the "endpoint reached by a fetch, living in another entity" vocabulary). kind
+    // is 'external' so it inherits the existing owner-badge + double-click-to-hop +
+    // "lives in another entity" card the FK-mirror external nodes already carry; and
+    // wire() makes it clickable like every other node (regNode alone is inert).
+    Object.keys(bridgeStub).forEach(function(id){ var s=bridgeStub[id];
+      nodePos[id]={x:s.x,y:s.y};
+      var node={id:id,kind:"external",label:s.label,slug:s.to_slug};
+      var g=E("g",{class:"node","data-id":id,transform:"translate("+s.x+","+s.y+")"});
+      halo(g);
+      g.appendChild(E("circle",{r:9,fill:"var(--panel)",stroke:"var(--c-fn-web)","stroke-width":"2","stroke-dasharray":"3 3"}));
+      twoRowLabel(g, s.label, 0, 20);
+      var toEnt=L1.filter(function(n){ return n.slug===s.to_slug; })[0];
+      var hopOk=s.to_slug && DATA.l2[s.to_slug];
+      var ti=E("title"); ti.textContent=s.label+" · endpoint in "+(toEnt?toEnt.label:s.to_slug)
+        +" — reached by a fetch bridge"+(hopOk?" · double-click to hop":""); g.appendChild(ti);
+      nLayer.appendChild(g);
+      nodeMeta[id]={kind:"external",node:node,r:13,el:g};
+      regNode(g, id, trunc(s.label,30), "endpoint", 15);
+      wire(g, node);
+    });
+    // the bridge wires themselves: screen → endpoint, dashed --c-fn-web, a FLOOR
+    bridges.forEach(function(e,i){
+      var a=nodePos[e.from], c=nodePos[e.to];
+      if(!a||!c) return;
+      var p=E("path",{class:"e-bridge", d:curve(a.x,a.y,c.x,c.y,(i%2?12:-12))});
+      eLayer.appendChild(p);
+      var ti=E("title"); ti.textContent=String(e.from).replace(/^[^:]+:/,"")+" → "
+        +String(e.to).replace(/^[^:]+:/,"")+" · inferred fetch (a floor)"; p.appendChild(ti);
+      regEdge(p, "bridge", e.from, e.to, "inferred fetch → endpoint (a floor)");
+      flowDots(eLayer, p, "var(--c-fn-web)");
     });
     var ent = L1.filter(function(n){ return n.slug===slug; })[0];
     afterRender((ent?ent.label:slug), g2.nodes.length + " pieces · " + g2.edges.length + " wires", COLORS[slug]||"var(--muted)");
@@ -1554,6 +1626,29 @@
       regEdge(p, "xfk", fromKey, toKey, e.via?("via "+e.via):"fk across the boundary");
       flowDots(wireL, p, fill);
     });
+    // the web→API bridges over the exploded surface: screen (outer ring) → the
+    // endpoint it fetches. Scoped to INVOLVED (touched+blast) like the SIM.cross_edges
+    // pass above — a DATA-wide sweep would flood the canvas with wires between faded,
+    // unexploded entities. One end involved is enough (an exploded screen reaching an
+    // endpoint that lives elsewhere is signal). An involved end outside the exploded
+    // surface falls back to its entity rim (rimPull).
+    if(showConns) (DATA.cross_edges||[]).forEach(function(e,bi){
+      if(e.kind!=="bridge") return;
+      if(!INVOLVED[e.from_slug] && !INVOLVED[e.to_slug]) return;
+      var aIn=innerPos[e.from_slug+"\t"+e.from], cIn=innerPos[e.to_slug+"\t"+e.to];
+      var a=aIn || nodePos[e.from_slug], c=cIn || nodePos[e.to_slug];
+      if(!a||!c) return;
+      var fromKey = aIn ? "pc:"+e.from_slug+"|"+e.from : "ent:"+e.from_slug;
+      var toKey   = cIn ? "pc:"+e.to_slug+"|"+e.to     : "ent:"+e.to_slug;
+      if(!aIn) a=rimPull(a, c, e.from_slug);
+      if(!cIn) c=rimPull(c, a, e.to_slug);
+      var p=E("path",{class:"e-bridge", d:curve(a.x,a.y,c.x,c.y, laneBow("b:"+e.from_slug+"|"+e.from, "b:"+e.to_slug+"|"+e.to, (bi%2?18:-18)))});
+      wireL.appendChild(p);
+      var ti=E("title"); ti.textContent=String(e.from).replace(/^[^:]+:/,"")+" → "
+        +String(e.to).replace(/^[^:]+:/,"")+" · inferred fetch (a floor)"; p.appendChild(ti);
+      regEdge(p, "bridge", fromKey, toKey, "inferred fetch → endpoint (a floor)");
+      flowDots(wireL, p, "var(--c-fn-web)");
+    });
     // the FULL SURFACE — non-sim models + schemas in the core, API endpoints on the
     // border (the lab grammar). Stage-invariant: NO beat rings, NO fly-in; the sim's
     // changed/blast pieces overlay them (drawn next, in nodeL, above surfL).
@@ -1569,6 +1664,12 @@
         if(kind==="endpoint"){ var m=methodOf(label)||"GET"; epMark(g, 6.5, m);
           twoRowLabel(g, label.replace(/^[A-Z]+ /,"").replace(/^\//,"")||m, 0, 20); }
         else if(kind==="schema"){ sBadge(g, 7, "var(--c-schema)"); twoRowLabel(g, label, 0, 22); }
+        else if(kind==="web"){ var unm=WEB_UNMATCHED[node.id];   // a fetching screen on the outer ring
+          var ra={x:-9,y:-7,width:18,height:14,rx:3,fill:"var(--panel)",stroke:"var(--c-fn-web)","stroke-width":"2"};
+          if(unm){ ra.fill="none"; ra["stroke-dasharray"]="3 3"; ra["stroke-opacity"]="0.7"; }
+          g.appendChild(E("rect",ra));
+          g.appendChild(E("line",{x1:-9,y1:-2.5,x2:9,y2:-2.5,stroke:"var(--c-fn-web)","stroke-width":"1"}));
+          twoRowLabel(g, label, 0, 22); }
         else { cylinder(g, 8, "var(--c-model)"); twoRowLabel(g, label, 0, 22); }
         var ti=E("title"); ti.textContent=label+" · "+kind; g.appendChild(ti);
         surfL.appendChild(g);
@@ -1583,6 +1684,7 @@
       srf.models.forEach(function(m){ if(!simSet[m.id]) drawSurf(m, "model"); });
       srf.schemas.forEach(function(s){ drawSurf(s, "schema"); });
       srf.endpoints.forEach(function(e){ drawSurf(e, "endpoint"); });
+      (srf.web||[]).forEach(function(w){ drawSurf(w, "web"); });
     });
     // pieces — lab icons + role dot + the current beat's rings/pills
     var animP=[];
@@ -1929,7 +2031,7 @@
            + (l1layout==="flow"?"deps gradient":l1layout)+"</span>";
     } else {
       html = "<div class='grp'>";
-      ["endpoint","model","schema","external"].forEach(function(k){ html += "<span class='item'><span class='sw' style='background:"+KIND_COLOR[k]+"'></span>"+KIND_LABEL[k]+"</span>"; });
+      ["endpoint","model","schema","external","web"].forEach(function(k){ html += "<span class='item'><span class='sw' style='background:"+KIND_COLOR[k]+"'></span>"+KIND_LABEL[k]+"</span>"; });
       html += "</div><div class='div'></div>"
            + lsw("touches","line","var(--edge)")
            + lsw("fk","dash","var(--edge)")
@@ -1968,6 +2070,7 @@
     touchEdges:  function(){ return vp.querySelectorAll("#cbg-expansion .e-touch").length; },
     containers:  function(){ return vp.querySelectorAll("#cbg-expansion .xcontainer").length; },
     crossEdges:  function(){ return vp.querySelectorAll(".e-xfk").length; },
+    bridgeEdges: function(){ return vp.querySelectorAll(".e-bridge").length; },
     hotEdges:    function(){ return vp.querySelectorAll("#cbg-expansion .hot").length; },
     stageLegendRows: function(){ return document.querySelectorAll("#cbg-stagelegend .li").length; },
     touched:  function(){ return SIM ? SIM.touched.slice() : []; },

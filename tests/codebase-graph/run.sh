@@ -351,6 +351,47 @@ check("pieceKind:function(k)" in archive, "archive exposes the per-kind probe co
 # proof that the widened filter actually RENDERS the kinds lives in port6/port7 (real
 # browser: pieceKind("endpoint"/"schema")===fixture, touchEdges()>0).
 
+# ── I · WEB→API BRIDGE (Path A frontend arm): the station draws the web pieces
+#        (Screens) + the inferred fetch→endpoint bridge edges. STATIC presence pins
+#        (each IS its own mutation gate — a fake .replace() would be theatre); the
+#        REAL render proof is a headless-chrome check against the P3-regen example
+#        (drill recipe → 7 bridges/8 screens · allergen → 1 bridge/1 cross-entity
+#        stub · explode → 11 web surface + 48 bridges), run when the render changes.
+check(".cbg-root .e-bridge{" in CSS,
+      "bridge edges carry a .e-bridge class (dashed --c-fn-web wire)")
+check('web:"#e8590c"' in station and 'web:"Screens"' in station,
+      "the web piece kind is registered (KIND_COLOR/KIND_LABEL Screens)")
+check('else if(n.kind==="web"){' in station,
+      "the L2 drill draws a web 'screen' glyph")
+check('e.kind==="bridge" && e.from_slug===slug' in station,
+      "the L2 drill draws a bridge pass over DATA.cross_edges (from_slug === drill)")
+check('bridgeStub[e.to]' in station and 'reached by a fetch bridge' in station,
+      "a cross-entity bridge endpoint gets a synthetic stub (mirror the external target)")
+check('regEdge(p, "bridge"' in station and 'bridge:"bridge"' in station,
+      "bridge edges register with the 'bridge' kind + edgeWord")
+check("var WEB_UNMATCHED" in station and "fetch unmatched (no endpoint named)" in station,
+      "an unmatched fetch marks its screen hollow-dashed with the raw method+path")
+# the SIM-gated explode: web bucket + web surface glyph + a DATA-bridge pass
+check('else if(n.kind==="web"){ web.push(n)' in station and "web:web, contR:webR" in station,
+      "surfaceLayout collects web pieces on an outer ring (web-less → radius unchanged)")
+check('else if(kind==="web"){ var unm=WEB_UNMATCHED' in station,
+      "the explode drawSurf draws a web 'screen' glyph")
+check('if(e.kind!=="bridge") return;' in station,
+      "the explode draws a DATA-bridge pass (screen → endpoint over the surface)")
+check("bridgeEdges: function()" in station,
+      "the __cbgtest probe exposes the bridge-edge count")
+# the committed EXAMPLE payload actually carries web data (a web-stripping regen fails here)
+_wst = _ex.get("stats", {}).get("web") or {}
+check(_wst.get("present") is True and _wst.get("matched", 0) > 0,
+      "example c4-graph.js carries a present web arm with matched bridges")
+_brk = [e for e in _ex.get("cross_edges", []) if e.get("kind") == "bridge"]
+check(len(_brk) == _wst.get("matched"),
+      "example: bridge cross_edges count == stats.web.matched (every match is a wire)")
+check(any(n.get("kind") == "web" for g2 in _ex["l2"].values() for n in g2["nodes"]),
+      "example: web pieces present as L2 nodes (the Screens the drill draws)")
+check(all("m" in u and "p" in u and "from" in u for u in _wst.get("unmatched", [])),
+      "example: every unmatched fetch names its method + path + source screen")
+
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
