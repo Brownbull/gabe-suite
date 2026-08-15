@@ -13,13 +13,11 @@
     --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --mono:ui-monospace,Menlo,Consolas,monospace;
   }
-  :root[data-theme="dark"]{
-    --bg:#0f1114; --panel:#171a1f; --ink:#e6e8eb; --muted:#8a919b; --line:#262a30; --edge:#4a525c; --ok:#4cbe83; --c-model:#2fd0a0;
-  }
+  :root[data-theme="dark"]{ --bg:#0f1114; --panel:#171a1f; --ink:#e6e8eb; --muted:#8a919b; --line:#262a30; --edge:#4a525c; --ok:#4cbe83; --c-model:#2fd0a0; }
   *{ box-sizing:border-box; } body{ margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 var(--font-ui); }
   svg.ico{ width:14px; height:14px; flex:none; stroke-width:2; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; }
   header{ padding:18px 24px 6px; display:flex; align-items:flex-start; gap:16px; }
-  .htext{ flex:1; } h1{ font-size:18px; margin:0 0 4px; } .sub{ color:var(--muted); font-size:13px; max-width:820px; }
+  .htext{ flex:1; } h1{ font-size:18px; margin:0 0 4px; } .sub{ color:var(--muted); font-size:13px; max-width:840px; }
   .tbtn{ display:inline-flex; align-items:center; gap:6px; border:1px solid var(--line); background:var(--panel); color:var(--muted); border-radius:8px; padding:6px 10px; cursor:pointer; font:600 12px/1 var(--font-ui); }
   .tbtn:hover{ color:var(--ink); border-color:var(--edge); }
   .legend{ display:flex; gap:16px; align-items:center; padding:8px 24px 0; font-size:12px; color:var(--muted); flex-wrap:wrap; }
@@ -27,56 +25,48 @@
   .lane{ display:flex; gap:18px; align-items:flex-start; padding:14px 24px 44px; overflow-x:auto; }
   .col{ flex:none; } .coltitle{ font-size:11.5px; font-weight:800; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin:0 0 8px 2px; }
 
-  .panel{ position:relative; width:328px; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.05); overflow:hidden; }
+  .panel{ position:relative; width:330px; background:var(--panel); border:1px solid var(--line); border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.05); overflow:hidden; }
   .grip{ position:absolute; left:0; top:0; bottom:0; width:6px; cursor:ew-resize; z-index:2; }
   .grip::before{ content:""; position:absolute; left:2px; top:50%; transform:translateY(-50%); width:2px; height:34px; border-radius:2px; background:var(--line); }
   .grip:hover::before{ background:var(--accent); }
-  /* header: row1 = name, row2 = [icon] type · sub */
   .phead{ display:flex; align-items:flex-start; gap:8px; padding:12px 10px 11px 16px; border-bottom:1px solid var(--line); }
-  .ptitle{ flex:1; min-width:0; }
-  .pname{ font:600 14px/1.3 var(--mono); word-break:break-all; }
+  .ptitle{ flex:1; min-width:0; } .pname{ font:600 14px/1.3 var(--mono); word-break:break-all; }
   .ptype{ display:flex; align-items:center; gap:5px; font-size:11.5px; color:var(--muted); margin-top:3px; }
-  .ptype .kglyph{ width:15px; height:15px; }
-  .ptype b{ text-transform:uppercase; letter-spacing:.04em; font-size:10.5px; }
-  .winbtns{ display:flex; gap:2px; flex:none; }
-  .winbtn{ border:1px solid transparent; background:none; color:var(--muted); border-radius:6px; width:24px; height:24px; cursor:pointer; font-size:13px; line-height:1; padding:0; }
-  .winbtn:hover{ border-color:var(--edge); color:var(--ink); }
+  .ptype .kglyph{ width:15px; height:15px; } .ptype b{ text-transform:uppercase; letter-spacing:.04em; font-size:10.5px; }
+  .winbtns{ display:flex; gap:2px; flex:none; } .winbtn{ border:1px solid transparent; background:none; color:var(--muted); border-radius:6px; width:24px; height:24px; cursor:pointer; font-size:13px; line-height:1; padding:0; } .winbtn:hover{ border-color:var(--edge); color:var(--ink); }
   .pbody{ padding:11px 16px 15px; } .panel.min .pbody{ display:none; }
 
   .sec{ margin:0 0 13px; } .sec:last-child{ margin-bottom:0; }
   .sechd{ display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 7px; }
-  .sechd .prov{ width:6px; height:6px; border-radius:50%; margin-left:2px; }
-  .sechd .cnt{ margin-left:auto; font:700 10px/1 var(--font-ui); color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:2px 7px; }
-  .sublbl{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); margin:5px 0 4px; }
+  .sechd .cnt{ margin-left:auto; font:700 10px/1 var(--font-ui); color:#fff; background:var(--accent); border-radius:10px; padding:2px 7px; }
+  .sechd .cnt.ok{ background:var(--ok); }
+  .sublbl{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); margin:4px 0 5px; }
   .kv{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:1.5px 0; }
   .kv .kico{ color:var(--muted); } .kv .k{ color:var(--muted); flex:none; width:70px; } .kv .v{ color:var(--ink); min-width:0; }
   .chip{ display:inline-flex; align-items:center; gap:4px; font:600 11px/1.5 var(--mono); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 7px; margin:0 4px 4px 0; }
   .chip svg{ width:11px; height:11px; }
-  .chip.model{ color:var(--c-model); } .chip.schema{ color:var(--c-schema); } .chip.web{ color:var(--c-web); } .chip.route{ color:var(--c-endpoint); } .chip.fn{ color:var(--c-fn); }
-  .chip.ok{ color:var(--ok); } .chip.redc{ color:var(--red); }
+  .chip.model{ color:var(--c-model); } .chip.schema{ color:var(--c-schema); } .chip.web{ color:var(--c-web); } .chip.route{ color:var(--c-endpoint); } .chip.fn{ color:var(--c-fn); } .chip.ok{ color:var(--ok); }
   .doc{ font-size:12.5px; color:var(--ink); background:var(--bg); border-left:2px solid var(--edge); padding:7px 10px; border-radius:0 6px 6px 0; }
-  .more{ font:600 11px/1 var(--font-ui); color:var(--accent); background:none; border:1px dashed var(--edge); border-radius:6px; padding:4px 8px; cursor:pointer; }
-  .more:hover{ border-color:var(--accent); }
+  .more{ font:600 11px/1 var(--font-ui); color:var(--accent); background:none; border:1px dashed var(--edge); border-radius:6px; padding:4px 8px; cursor:pointer; } .more:hover{ border-color:var(--accent); }
   .flag{ display:inline-flex; align-items:center; gap:4px; font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; color:var(--god); border:1px solid var(--god); }
-  .idtag{ font-size:11px; color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 7px; }
+  /* the tab bar (multi-category sections) */
+  .tabbar{ display:flex; gap:3px; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .tab{ display:inline-flex; align-items:center; gap:4px; font:600 11px/1 var(--font-ui); color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 7px; border-bottom:2px solid transparent; }
+  .tab svg{ width:12px; height:12px; } .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+  .tab .tabn{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:0 5px; font-size:10px; font-weight:700; }
+  .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
   table.cols{ width:100%; border-collapse:collapse; font-size:12px; } table.cols td{ padding:2px 4px; border-bottom:1px solid var(--line); }
   table.cols td.ty{ color:var(--c-schema); font-family:var(--mono); font-size:11px; text-align:right; }
   .keycol{ display:inline-flex; align-items:center; gap:4px; }
-  .count{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:2.5px 0; border-bottom:1px dotted var(--line); }
-  .count .lbl{ flex:1; } .count .n{ font-weight:700; font-variant-numeric:tabular-nums; }
-  /* the test / behind toggle badge */
-  .badge{ display:inline-flex; align-items:center; gap:5px; font:700 11px/1 var(--font-ui); color:var(--ink);
-    background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:4px 9px; cursor:pointer; }
-  .badge:hover{ border-color:var(--edge); } .badge .n{ background:var(--accent); color:#fff; border-radius:8px; padding:1px 6px; font-size:10px; }
-  .badge.ok .n{ background:var(--ok); } .badge .chev{ transition:transform .15s; } .badge.open .chev{ transform:rotate(90deg); }
-  .drawer{ margin-top:7px; } .todo{ font-size:11px; color:var(--god); margin-top:5px; }
+  .count{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:2.5px 0; border-bottom:1px dotted var(--line); } .count .lbl{ flex:1; } .count .n{ font-weight:700; font-variant-numeric:tabular-nums; }
+  .todo{ font-size:11px; color:var(--god); margin-top:6px; }
 </style>
 </head>
 <body>
 <header>
   <div class="htext">
     <h1>Element components — the right-panel card per element kind</h1>
-    <div class="sub">Real gustify data, the center's own kind-glyphs on the header + a Lucide icon on every section (nothing bare). Shared chrome (name → type row · min/max · left-edge resize · connections-on-top +N more past 5 · <b>a test count-badge you toggle open</b> · <b>a code-behind drawer</b>), sections adapt to the kind. See every kind, then we lock the layout.</div>
+    <div class="sub">Real gustify data. The rule you set: a section with <b>more than one category → tabs</b> (click a kind, see what's inside); a section with <b>one category → shown directly, ungated</b>. So <b>Tests</b> tabs by api/web (see <b>Entity · Allergen</b>: api 41 / web 3), <b>Connections</b> tabs by routes/touches/returns/screens, and <b>Code behind</b> (functions only) shows straight through.</div>
   </div>
   <button class="tbtn" id="theme"></button>
 </header>
@@ -87,7 +77,6 @@
 <div class="lane" id="lane"></div>
 
 <script>
-// ── Lucide-ish icon paths (24x24) — section + field + kind glyphs ──
 const P={
   link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
   test:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
@@ -98,11 +87,9 @@ const P={
   layers:'<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
   down:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
   merge:'<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
-  box:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
-  route:'<path d="M9 6l6 6-6 6"/>', tag:'<path d="M12 2H2v10l9.29 9.29a1 1 0 0 0 1.41 0l7.29-7.29a1 1 0 0 0 0-1.41Z"/><path d="M7 7h.01"/>',
-  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
   role:'<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
-  // KIND glyphs (match the graph nodes)
+  globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
   endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
   model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
   schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
@@ -110,11 +97,12 @@ const P={
   web:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
   entity:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
   external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>',
+  alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
 };
-const ico=(n,cls,col)=>{const s=`<svg class="ico ${cls||''}" viewBox="0 0 24 24" ${col?`style="color:${col}"`:''}>${P[n]}</svg>`;const d=document.createElement('div');d.innerHTML=s;return d.firstChild;};
+const ico=(n,cls,col)=>{const s=`<svg class="ico ${cls||''}" viewBox="0 0 24 24" ${col?`style="color:${col}"`:''}>${P[n]||""}</svg>`;const d=document.createElement('div');d.innerHTML=s;return d.firstChild;};
 const E=(t,a,...k)=>{const e=document.createElement(t);for(const p in(a||{})){if(p==="class")e.className=a[p];else if(p==="html")e.innerHTML=a[p];else e.setAttribute(p,a[p]);}k.flat().forEach(c=>c!=null&&e.append(c));return e;};
 
-function chips(items, cls, glyph, cap=5){
+function chipList(items, cls, glyph, cap=5){
   const wrap=E("span"); const head=items.slice(0,cap), tail=items.slice(cap);
   const mk=x=>E("span",{class:"chip "+cls}, glyph?ico(glyph):null, x);
   head.forEach(x=>wrap.append(mk(x)));
@@ -122,130 +110,124 @@ function chips(items, cls, glyph, cap=5){
     const b=E("button",{class:"more"},`+${tail.length} more`); b.onclick=()=>{hid.style.display="inline";b.remove();}; wrap.append(hid,b); }
   return wrap;
 }
-function sechd(icoName, label, count){ return E("div",{class:"sechd"}, ico(icoName), label, count!=null?E("span",{class:"cnt"},count):null); }
-function sec(icoName, label, count, ...body){ return E("div",{class:"sec"}, sechd(icoName,label,count), ...body); }
-function sublbl(icoName, t){ return E("div",{class:"sublbl"}, ico(icoName), t); }
+function sechd(icoName, label, count, ok){ return E("div",{class:"sechd"}, ico(icoName), label, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},count):null); }
 function kv(icoName,k,v){ return E("div",{class:"kv"}, icoName?ico(icoName,"kico"):E("span",{style:"width:14px"}), E("span",{class:"k"},k), E("span",{class:"v",html:v})); }
 
-// tests: a count-badge (matches the diagram's test pill) that TOGGLES the case list open
-function testsBadge(t){
-  if(!t || !(t.cases&&t.cases.length)) return E("div",{class:"sec"}, sechd("test","Tests"), E("div",{style:"font-size:12px;color:var(--muted)"},"— no cases claimed yet"));
-  const total=t.cases.length;
-  const badge=E("button",{class:"badge ok"}, ico("test"), "tests", E("span",{class:"n"},total),
-    E("span",{style:"color:var(--muted);font-weight:600"},`api ${t.api||0} · web ${t.web||0}${t.red?" · red "+t.red:""}`),
-    ico("route","chev"));
-  const drawer=E("div",{class:"drawer",style:"display:none"});
-  t.cases.forEach(c=>drawer.append(E("span",{class:"chip ok"}, ico("test"), c)));
-  badge.onclick=()=>{ const open=drawer.style.display!=="none"; drawer.style.display=open?"none":"block"; badge.classList.toggle("open",!open); };
-  return E("div",{class:"sec"}, sechd("test","Tests"), badge, drawer);
+// THE RULE: groups>1 → tabs; groups==1 → direct; groups==0 → empty note.
+function tabbed(secIcon, title, groups, opt){
+  opt=opt||{}; const live=groups.filter(g=>g.count>0);
+  const total=live.reduce((s,g)=>s+g.count,0);
+  const hd=sechd(secIcon, title, opt.showCount?total:null, opt.ok);
+  if(!live.length) return E("div",{class:"sec"}, hd, E("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+  if(live.length===1){ const g=live[0];
+    return E("div",{class:"sec"}, hd, E("div",{class:"sublbl"}, ico(g.icon), `${g.label} ${g.count}`), g.node()); }
+  const bar=E("div",{class:"tabbar"}), body=E("div");
+  const show=i=>{ body.innerHTML=""; body.append(live[i].node()); [...bar.children].forEach((c,j)=>c.classList.toggle("on",j===i)); };
+  live.forEach((g,i)=>{ const t=E("button",{class:"tab"}, ico(g.icon), g.label, E("span",{class:"tabn"},g.count)); t.onclick=()=>show(i); bar.append(t); });
+  const wrap=E("div",{class:"sec"}, hd, bar, body); show(0); return wrap;
 }
-// code-behind: the graft floor (count is REAL) + a toggle drawer for the fn list (pending derive_behind extension)
-function behindSec(b, mockFns){
-  if(!b) return null;
-  const badge=E("button",{class:"badge"}, ico("layers"), `↓ ${b.fns} fns behind`, E("span",{style:"color:var(--muted);font-weight:600"},`depth ${b.depth}`), ico("route","chev"));
-  const drawer=E("div",{class:"drawer",style:"display:none"});
-  (mockFns||[]).forEach(f=>drawer.append(E("span",{class:"chip fn"}, ico("function"), f)));
-  drawer.append(E("div",{class:"todo"},"⚑ the NAMED list needs a small derive_behind extension (the BFS already visits them — collect the ids). Count is live today."));
-  badge.onclick=()=>{ const open=drawer.style.display!=="none"; drawer.style.display=open?"none":"block"; badge.classList.toggle("open",!open); };
-  return E("div",{class:"sec"}, sechd("layers","Code behind"), badge, drawer);
-}
+const G=(label,icon,count,nodeFn)=>({label,icon,count,node:nodeFn});
+
 function colsTable(cols, fks){
   const fkset=new Set((fks||[]).map(f=>f[0])); const t=E("table",{class:"cols"});
-  cols.forEach(c=>t.append(E("tr",null,
-    E("td",null, fkset.has(c[0])?E("span",{class:"keycol"},ico("key"),c[0]):c[0]), E("td",{class:"ty"},c[1]))));
+  cols.forEach(c=>t.append(E("tr",null, E("td",null, fkset.has(c[0])?E("span",{class:"keycol"},ico("key"),c[0]):c[0]), E("td",{class:"ty"},c[1]))));
   return t;
+}
+// code behind — ONE category (functions) → shown directly, never gated
+function behindDirect(b, fns){
+  if(!b) return null;
+  const body=E("div",null, E("div",{class:"sublbl"}, ico("function"), `${b.fns} functions · depth ${b.depth}`));
+  const list=E("div"); (fns||[]).forEach(f=>list.append(E("span",{class:"chip fn"}, ico("function"), f))); body.append(list);
+  body.append(E("div",{class:"todo"}, ico("alert"), " named list pending a small derive_behind extension — count + depth are live today."));
+  return E("div",{class:"sec"}, sechd("layers","Code behind"), body);
 }
 function panel(kind, kglyph, kcolor, name, typeSub, bodyNodes){
   const p=E("div",{class:"panel"});
   p.append(E("div",{class:"grip",title:"drag to resize"}));
-  const min=E("button",{class:"winbtn",title:"minimise"},"▁"), max=E("button",{class:"winbtn",title:"restore"},"▢");
+  const min=E("button",{class:"winbtn"},"▁"), max=E("button",{class:"winbtn"},"▢");
   min.onclick=()=>p.classList.add("min"); max.onclick=()=>p.classList.toggle("min");
   p.append(E("div",{class:"phead"},
-    E("div",{class:"ptitle"},
-      E("div",{class:"pname"},name),
-      E("div",{class:"ptype",style:`color:${kcolor}`}, ico(kglyph,"kglyph"), E("b",null,kind),
-        typeSub?E("span",{style:"color:var(--muted)"},"· "+typeSub):null)),
+    E("div",{class:"ptitle"}, E("div",{class:"pname"},name),
+      E("div",{class:"ptype",style:`color:${kcolor}`}, ico(kglyph,"kglyph"), E("b",null,kind), typeSub?E("span",{style:"color:var(--muted)"},"· "+typeSub):null)),
     E("div",{class:"winbtns"}, min, max)));
   p.append(E("div",{class:"pbody"}, ...bodyNodes));
   return p;
 }
+const cids=arr=>()=>{const w=E("div");arr.forEach(c=>w.append(E("span",{class:"chip ok"},ico("test"),c)));return w;};
 
 const CARDS=[
 ["API endpoint", ()=>panel("endpoint","endpoint","var(--c-endpoint)","POST /pantry/items/batch","create_pantry_items_batch()",[
-  sec("link","Connections",
-    null,
-    sublbl("endpoint","routes"), chips(["POST /pantry/items/batch"],"route","endpoint"),
-    sublbl("model","touches"), chips(["Location","BatchItemResult","CreateBatchRequest","CreateBatchResponse","PantryItemCreate","PantryItemResponse"],"model","model"),
-    sublbl("schema","returns"), chips(["CreateBatchResponse"],"schema","schema"),
-    sublbl("web","screens"), chips(["useBatchAdd"],"web","web")),
-  testsBadge({cases:["C137","C143","C144"],api:3,web:0,red:0}),
-  behindSec({fns:1,depth:1},["_validate_location_per_row"]),
-  sec("info","Identity", null,
-    kv("box","entity","pantry"), kv("layers","layer","api"), kv("file","language","Python"),
-    kv("role","role","endpoint handler"), kv("merge","fan-in","0 callers")),
-  sec("doc","Docstring", null, E("div",{class:"doc"},"Create many confirmed pantry items in ONE transaction (Phase 58, D101)."),
-    kv("route","signature","async · 75 lines · → <code>CreateBatchResponse</code>"),
-    kv("info","status","HTTP_201_CREATED"), kv("file","file","apps/api/api/pantry.py:562")),
+  tabbed("link","Connections",[
+    G("routes","endpoint",1,()=>chipList(["POST /pantry/items/batch"],"route","endpoint")),
+    G("touches","model",6,()=>chipList(["Location","BatchItemResult","CreateBatchRequest","CreateBatchResponse","PantryItemCreate","PantryItemResponse"],"model","model")),
+    G("returns","schema",1,()=>chipList(["CreateBatchResponse"],"schema","schema")),
+    G("screens","web",1,()=>chipList(["useBatchAdd"],"web","web"))]),
+  tabbed("test","Tests",[ G("api","test",3,cids(["C137","C143","C144"])), G("web","web",0,()=>E("div")) ],{showCount:true,ok:true}),
+  behindDirect({fns:1,depth:1},["_validate_location_per_row"]),
+  E("div",{class:"sec"}, sechd("info","Identity"),
+    kv("entity","entity","pantry"), kv("layers","layer","api"), kv("globe","language","Python"), kv("role","role","endpoint handler"), kv("merge","fan-in","0 callers")),
+  E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"Create many confirmed pantry items in ONE transaction (Phase 58, D101)."),
+    kv("endpoint","signature","async · 75 lines · → <code>CreateBatchResponse</code>"), kv("info","status","HTTP_201_CREATED"), kv("file","file","apps/api/api/pantry.py:562")),
 ])],
 ["Model", ()=>panel("model","model","var(--c-model)","UserDietaryProfile","table user_dietary_profile",[
-  sec("link","Connections", null,
-    sublbl("endpoint","touched by endpoints"), chips(["GET /diet/profile","PUT /diet/profile","GET /recipes"],"route","endpoint"),
-    sublbl("function","referenced by functions"), chips(["apply_allergen_filter","score_preferences"],"fn","function")),
-  sec("table","Structure",6, colsTable([["id","uuid.UUID"],["user_id","uuid.UUID"],["allergens","list[str]"],["preferences","list[str]"],["created_at","datetime"],["updated_at","datetime"]],[["user_id","users.id"]])),
-  sec("key","Keys", null, kv("key","foreign","user_id → <code>users.id</code>"), kv("key","unique","user_id")),
-  testsBadge({cases:["C1038","C1039"],api:2,web:0,red:0}),
-  sec("doc","Docstring", null, E("div",{class:"doc"},"Two-section dietary profile (D108): allergens[] (hard SQL filter) + preferences[] (soft)."), kv("file","file","apps/api/models/allergen.py")),
+  tabbed("link","Connections",[
+    G("touched by","endpoint",3,()=>chipList(["GET /diet/profile","PUT /diet/profile","GET /recipes"],"route","endpoint")),
+    G("used by fns","function",2,()=>chipList(["apply_allergen_filter","score_preferences"],"fn","function"))]),
+  E("div",{class:"sec"}, sechd("table","Structure",6), colsTable([["id","uuid.UUID"],["user_id","uuid.UUID"],["allergens","list[str]"],["preferences","list[str]"],["created_at","datetime"],["updated_at","datetime"]],[["user_id","users.id"]])),
+  E("div",{class:"sec"}, sechd("key","Keys"), kv("key","foreign","user_id → <code>users.id</code>"), kv("key","unique","user_id")),
+  tabbed("test","Tests",[ G("api","test",2,cids(["C1038","C1039"])), G("web","web",0,()=>E("div")) ],{showCount:true,ok:true}),
+  E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"Two-section dietary profile (D108): allergens[] (hard SQL filter) + preferences[] (soft)."), kv("file","file","apps/api/models/allergen.py")),
 ])],
 ["Schema", ()=>panel("schema","schema","var(--c-schema)","DietaryProfileInput","request body",[
-  sec("table","Fields",3, colsTable([["allergens","list[str]"],["preferences","list[str]"],["diet","str | None"]],[])),
-  sec("link","Connections", null, sublbl("endpoint","used by endpoints"), chips(["PUT /diet/profile"],"route","endpoint")),
-  testsBadge({cases:["C1102"],api:1,web:0,red:0}),
-  sec("doc","Docstring", null, E("div",{class:"doc"},"Request body for updating a user's dietary profile."), kv("file","file","apps/api/schemas/allergen.py")),
+  E("div",{class:"sec"}, sechd("table","Fields",3), colsTable([["allergens","list[str]"],["preferences","list[str]"],["diet","str | None"]],[])),
+  tabbed("link","Connections",[ G("used by","endpoint",1,()=>chipList(["PUT /diet/profile"],"route","endpoint")) ]),
+  tabbed("test","Tests",[ G("api","test",1,cids(["C1102"])) ],{showCount:true,ok:true}),
+  E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"Request body for updating a user's dietary profile."), kv("file","file","apps/api/schemas/allergen.py")),
 ])],
 ["Function", ()=>panel("function","function","var(--c-fn)","_query_domain()","internal helper",[
-  sec("link","Connections", null,
-    sublbl("merge","called by (fan-in 1)"), chips(["get_catalog"],"fn","function"),
-    sublbl("route","calls out"), chips(["_normalize","_resolve_taxonomy"],"fn","function")),
-  behindSec({fns:2,depth:2},["_normalize","_resolve_taxonomy"]),
-  sec("info","Identity", null,
-    kv("box","entity","recipe"), kv("layers","layer","api"), kv("file","language","Python"), kv("role","role","internal helper"),
+  tabbed("link","Connections",[
+    G("called by","merge",1,()=>chipList(["get_catalog"],"fn","function")),
+    G("calls out","endpoint",2,()=>chipList(["_normalize","_resolve_taxonomy"],"fn","function"))]),
+  behindDirect({fns:2,depth:2},["_normalize","_resolve_taxonomy"]),
+  E("div",{class:"sec"}, sechd("info","Identity"),
+    kv("entity","entity","recipe"), kv("layers","layer","api"), kv("globe","language","Python"), kv("role","role","internal helper"),
     E("div",{style:"margin-top:6px"}, E("span",{class:"flag"}, ico("info"),"god fn · usage 1"))),
-  testsBadge({cases:[],api:0,web:0,red:0}),
-  sec("doc","Docstring", null, E("div",{class:"doc"},"Query one taxonomy domain (internal — no route calls it directly)."), kv("file","file","apps/api/api/catalog.py")),
+  tabbed("test","Tests",[],{showCount:true,empty:"— no cases claimed yet"}),
+  E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"Query one taxonomy domain (internal — no route calls it directly)."), kv("file","file","apps/api/api/catalog.py")),
 ])],
 ["Frontend screen", ()=>panel("frontend","web","var(--c-web)","useBatchAdd","apps/web/src/features/pantry",[
-  sec("down","Fetches",2,
-    sublbl("endpoint","bridged → endpoint"), chips(["POST /pantry/items/batch"],"route","endpoint"),
-    E("div",{class:"sublbl",style:"color:var(--c-web)"}, ico("web"),"unmatched (no endpoint declared)"), chips(["GET /api/v1/equipment"],"web","web")),
-  sec("link","Connections", null, sublbl("box","reaches entity"), chips(["pantry"],"model","box")),
-  testsBadge({cases:["C2044"],api:0,web:1,red:0}),
-  sec("doc","Docstring", null, E("div",{class:"doc"},"React hook: batch-add confirmed pantry items from the add screen."), kv("file","file","useBatchAdd.ts")),
+  tabbed("down","Fetches",[
+    G("bridged","endpoint",1,()=>chipList(["POST /pantry/items/batch"],"route","endpoint")),
+    G("unmatched","web",1,()=>chipList(["GET /api/v1/equipment"],"web","web"))],{showCount:true}),
+  tabbed("link","Connections",[ G("reaches","entity",1,()=>chipList(["pantry"],"model","entity")) ]),
+  tabbed("test","Tests",[ G("web","web",1,cids(["C2044"])) ],{showCount:true,ok:true}),
+  E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"React hook: batch-add confirmed pantry items from the add screen."), kv("file","file","useBatchAdd.ts")),
 ])],
 ["Entity (container)", ()=>panel("entity","entity","var(--c-entity)","Allergen","approved · principal UserDietaryProfile",[
-  sec("box","Composition", null,
+  E("div",{class:"sec"}, sechd("entity","Composition"),
     E("div",{class:"count"}, ico("endpoint","kico"), E("span",{class:"lbl"},"API endpoints"), E("span",{class:"n"},"32")),
     E("div",{class:"count"}, ico("model","kico"), E("span",{class:"lbl"},"Models"), E("span",{class:"n"},"6")),
     E("div",{class:"count"}, ico("schema","kico"), E("span",{class:"lbl"},"Schemas"), E("span",{class:"n"},"7")),
     E("div",{class:"count"}, ico("file","kico"), E("span",{class:"lbl"},"Files"), E("span",{class:"n"},"22")),
     E("div",{class:"count",style:"border:none"}, ico("layers","kico"), E("span",{class:"lbl"},"Lines"), E("span",{class:"n"},"5,741"))),
-  testsBadge({cases:["C1038","C1039","C1102"],api:41,web:3,red:0}),
+  tabbed("test","Tests",[
+    G("api","test",41,cids(["C1038","C1039","C1101","C1102","C1140","C1141"])),
+    G("web","web",3,cids(["C2044","C2045","C2046"]))],{showCount:true,ok:true}),
 ])],
 ["External (fk target)", ()=>panel("external","external","var(--c-external)","users.id","lives in another entity",[
-  sec("link","Reach", null,
-    sublbl("box","target entity"), chips(["auth"],"model","box"),
-    sublbl("key","referenced by"), chips(["UserDietaryProfile.user_id","PantryItem.owner_id"],"fn","key")),
-  sec("doc","Note", null, E("div",{class:"doc"},"An fk target outside this entity — double-click on the canvas to hop to Auth.")),
+  tabbed("link","Reach",[
+    G("target","entity",1,()=>chipList(["auth"],"model","entity")),
+    G("referenced by","key",2,()=>chipList(["UserDietaryProfile.user_id","PantryItem.owner_id"],"fn","key"))]),
+  E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"An fk target outside this entity — double-click on the canvas to hop to Auth.")),
 ])],
 ];
 
 const lane=document.getElementById("lane");
 CARDS.forEach(([title,fn])=>{ lane.append(E("div",{class:"col"}, E("div",{class:"coltitle"},title), fn())); });
 const tb=document.getElementById("theme");
-function setThemeLabel(){ const dark=document.documentElement.getAttribute("data-theme")==="dark";
-  tb.innerHTML=""; tb.append(ico(dark?"info":"layers"), dark?"light":"dark"); }
-tb.onclick=()=>{ const dark=document.documentElement.getAttribute("data-theme")==="dark";
-  document.documentElement.setAttribute("data-theme", dark?"light":"dark"); setThemeLabel(); };
-setThemeLabel();
+function lbl(){ const dark=document.documentElement.getAttribute("data-theme")==="dark"; tb.innerHTML=""; tb.append(ico(dark?"globe":"layers"), dark?"light":"dark"); }
+tb.onclick=()=>{ const dark=document.documentElement.getAttribute("data-theme")==="dark"; document.documentElement.setAttribute("data-theme", dark?"light":"dark"); lbl(); };
+lbl();
 </script>
 </body>
 </html>

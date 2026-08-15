@@ -57,6 +57,31 @@ directory, so this is additive, not a rewrite.
 
 ---
 
+## Locked design decisions (operator, 2026-08-15)
+
+Elicited via the spikes in this directory (`panel-spike.html`, `element-components.html`,
+`frontend-placement.html`).
+
+- **Frontend placement = a dedicated `Frontend` entity** (`frontend-placement.html` option 2):
+  screens live inside their own entity circle; bridges cross to the backend endpoints they call.
+  Rejected: concentric ring (harder to read), satellites (crowds busy entities). **Layer-lanes is
+  DEFERRED** — it becomes a separate future "codebase archive in **layers**" view, not this graph.
+- **Canonical graph layout** = endpoints on the entity-circle **edge** (entry points), models/schemas
+  inside; the levels-lab cluster grammar + all its layout-options carry over unchanged.
+- **Journeys** step through the **Red · Execute · Review · Commit** stage faces per event, in the panel.
+- **The right panel** — one per-kind card, shared chrome:
+  - header **restacked**: NAME on row 1, then `[kind-glyph] TYPE · sub` on row 2 (no left badge);
+  - the center's **kind-glyphs** on the header + chips, a **Lucide icon on every section and field**
+    (nothing bare — matches the rest of the command center);
+  - min/max top-right · left-edge drag-resize (as today);
+  - **THE TAB RULE:** a section with **>1 category → tabs** (click a kind, see inside); a section with
+    **1 category → shown directly, ungated**. Applies to Tests (api/web/red), Connections
+    (routes/touches/returns/screens), Fetches (bridged/unmatched), etc.
+  - **Tests**: a count badge by the title + tabs per kind (Allergen: `api 41` / `web 3`).
+  - **Code behind**: one category (functions) → shown directly, never gated. The `{fns, depth}` COUNT
+    is live (the shipped `behind` metric); the **named function list** needs a small `derive_behind`
+    extension (the BFS already visits them — collect the ids). ⏳ Phase-2 first task, ~10 lines + re-regen + a battery case.
+
 ## The plan — phased, no big-bang
 
 ### Phase 0 · DECIDE — DONE (this doc)
