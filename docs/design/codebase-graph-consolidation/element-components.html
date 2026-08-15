@@ -52,11 +52,19 @@
   .tracebtn{ border:1px solid transparent; background:none; color:var(--muted); border-radius:6px; width:22px; height:22px; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center; }
   .tracebtn:hover:not(:disabled){ border-color:var(--edge); color:var(--ink); } .tracebtn:disabled{ opacity:.35; cursor:default; }
   .tracepos{ font:600 10px/1 var(--font-ui); color:var(--muted); min-width:22px; text-align:center; }
-  .pbody{ padding:11px 16px 15px; } .panel.min .pbody{ display:none; }
+  .pbody{ padding:11px 16px 15px; }
   .pfoot{ display:flex; align-items:center; justify-content:flex-end; gap:8px; padding:6px 10px; border-top:1px solid var(--line); }
   .pfoot .fnote{ margin-right:auto; font:500 10px/1 var(--font-ui); color:var(--muted); font-style:italic; }
   .chev-collapse{ border:1px solid var(--line); background:var(--panel); color:var(--muted); border-radius:6px; width:28px; height:22px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; padding:0; }
-  .chev-collapse:hover{ border-color:var(--edge); color:var(--ink); } .chev-collapse svg{ transition:transform .15s; } .panel.min .chev-collapse svg{ transform:rotate(180deg); }
+  .chev-collapse:hover{ border-color:var(--edge); color:var(--ink); }
+  /* MINIMIZE = collapse to a thin vertical BAR on the right (x-axis) — not hide the rows.
+     The panel always lives on the right, so it shrinks to a single-column rail. */
+  .minbar{ display:none; }
+  .panel.min{ width:40px; }
+  .panel.min .grip, .panel.min .phead, .panel.min .pbody, .panel.min .pfoot{ display:none; }
+  .panel.min .minbar{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:9px 0 12px; }
+  .panel.min .minbar .chev-collapse svg{ transform:rotate(180deg); }   /* » becomes « to reopen */
+  .minname{ writing-mode:vertical-rl; transform:rotate(180deg); font:600 1.08em/1 var(--font-mono); color:var(--muted); white-space:nowrap; letter-spacing:.02em; }
 
   .sec{ margin:0 0 13px; } .sec:last-child{ margin-bottom:0; }
   .sechd{ display:flex; align-items:center; gap:6px; font-size:.81em; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 7px; }
@@ -140,6 +148,7 @@ const P={
   external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>',
   alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
   arrowL:'<polyline points="15 18 9 12 15 6"/>', arrowR:'<polyline points="9 18 15 12 9 6"/>', chevD:'<polyline points="6 9 12 15 18 9"/>',
+  chevRR:'<path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>',
 };
 const ico=(n,cls,col)=>{const s=`<svg class="ico ${cls||''}" viewBox="0 0 24 24" ${col?`style="color:${col}"`:''}>${P[n]||""}</svg>`;const d=document.createElement('div');d.innerHTML=s;return d.firstChild;};
 const E=(t,a,...k)=>{const e=document.createElement(t);for(const p in(a||{})){if(p==="class")e.className=a[p];else if(p==="html")e.innerHTML=a[p];else e.setAttribute(p,a[p]);}k.flat().forEach(c=>c!=null&&e.append(c));return e;};
@@ -214,10 +223,14 @@ function panel(kind, kglyph, kcolor, name, typeSub, bodyNodes){
       E("div",{class:"ptype",style:`color:${kcolor}`}, ico(kglyph,"kglyph"), E("b",null,kind), typeSub?E("span",{style:"color:var(--muted)"},typeSub):null)),
     E("div",{class:"tracenav",title:"your node trace — back / forward (a temporary journey)"}, back, E("span",{class:"tracepos"},"2/3"), fwd)));
   p.append(E("div",{class:"pbody"}, ...bodyNodes));
-  // bottom-right: the collapse chevron (like the center's panels)
-  const chev=E("button",{class:"chev-collapse",title:"collapse / expand"}, ico("chevD"));
+  // bottom-right: » collapses the panel to a thin rail on the right (like the center's panels)
+  const chev=E("button",{class:"chev-collapse",title:"collapse to a rail →"}, ico("chevRR"));
   chev.onclick=()=>p.classList.toggle("min");
   p.append(E("div",{class:"pfoot"}, E("span",{class:"fnote"},"drag left edge to resize"), chev));
+  // the collapsed rail (shown only when .min): « to reopen + the name, vertical
+  const reopen=E("button",{class:"chev-collapse",title:"reopen ←"}, ico("chevRR"));
+  reopen.onclick=()=>p.classList.remove("min");
+  p.append(E("div",{class:"minbar"}, reopen, E("div",{class:"minname"},name)));
   return p;
 }
 const cids=arr=>()=>{const w=E("div");arr.forEach(c=>w.append(E("span",{class:"chip ok"},ico("test"),c)));return w;};

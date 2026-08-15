@@ -76,8 +76,10 @@ Elicited via the spikes in this directory (`panel-spike.html`, `element-componen
     click through (not in a defined journey): select a node → another → another, and back/forward
     walk that trace. The journey STEP control (for a defined journey) lives in the **top nav**, not
     here; this corner is back/forward only.
-  - **the collapse control is a chevron in the BOTTOM-RIGHT** (matching the center's panels), not a
-    min/max in the top-right. Left-edge drag still resizes.
+  - **the collapse control is a `»` chevron in the BOTTOM-RIGHT** (matching the center's panels).
+    Minimize = **collapse to a thin vertical RAIL on the right (x-axis)** — the panel always lives
+    on the right, so it shrinks to a single column showing the name vertically + a `«` to reopen.
+    It is NOT a vertical row-collapse. Left-edge drag still resizes.
   - the center's **kind-glyphs** on the header + chips, a **Lucide icon on every section and field**
     (nothing bare — matches the rest of the command center);
   - min/max top-right · left-edge drag-resize (as today);
