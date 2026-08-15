@@ -80,8 +80,16 @@ Elicited via the spikes in this directory (`panel-spike.html`, `element-componen
   - **Connections are NEVER tabbed** — every group (routes/touches/returns/screens · bridged/unmatched)
     is **always fully visible**, and hovering a connection chip **highlights its node in the graph**
     (the diagram's existing peek/selection behavior). Long groups keep a `+N more`.
-  - **A section-level warning is an ICON by the title** (not a text block) — hover/click reveals why.
-    Code-behind carries one until the fn-list lands.
+  - **Section-level notes are ICONS by the title** (not text blocks) — hover/click reveals the text.
+    Two variants: a **warning** (amber, e.g. code-behind's pending fn-list) and an **info** (accent,
+    e.g. the connections "hover → highlights the graph node" explanation). Same generic tip-icon.
+  - **TWO weight measures, each a badged number:**
+    - **Usage** = **in-degree** (how many elements depend on this — screens fetching an endpoint ·
+      endpoints+functions referencing a model · callers of a function via the levels feed's
+      `hub.usage`). A badge + a relative bar at the top of the card — the "how load-bearing" read.
+      Derivable from the connection data already computed; a dedicated `usage` field is a small emit.
+    - **Code behind** = **out-degree** (the call-tree `{fns, depth}` behind it) — a number badge on
+      the title. The "how heavy to change" read. High usage + high behind = a hotspot.
   - **Code behind**: one category (functions) → shown directly, never gated. The `{fns, depth}` COUNT
     is live (the shipped `behind` metric); the **named function list** needs a small `derive_behind`
     extension (the BFS already visits them — collect the ids). ⏳ Phase-2 first task, ~10 lines + re-regen + a battery case.
