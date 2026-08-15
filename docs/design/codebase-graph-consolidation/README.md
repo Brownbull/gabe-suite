@@ -127,7 +127,18 @@ styles + behaviour; any "clean re-implementation from scratch" is the mistake, n
 ### Phase 0 · DECIDE — DONE (this doc)
 Levels lab canonical; column station demoted. No code.
 
-### Phase 1 · WIRE the levels lab into the center
+### Phase 1 · WIRE the levels lab into the center  — ✅ SLICE 1 DONE
+Executed as option B: `codebase-archive-lab.html` promoted to a shell-root page (reverse-tokenized
+from the built lab — port, not rebuild), nav label **"Levels"** added across 11 shell-root pages.
+Ships + all tokens fill + renders 104 nodes / 4 level tabs (headless-verified); doctor CLEAN.
+⏳ **Deferred to Phase 2 (shell-asset integration):** the promoted page is self-contained (its own
+`<style>`) and does NOT yet load the shared shell stack (`a3.css` + `a3-settings.js`/`slots.js`/
+`a3-lightbox.js`/`rowclick.js`). Consequence: it lacks the center's settings panel (font/size/theme)
+and the `slots.js` unfilled-token safety net. Fold it into the shared stack when porting the panel,
+verifying the lab's own styles don't collide with `a3.css` (needs a real visual pass, not just a
+node-count check).
+
+#### (original plan)
 Promote `codebase-archive-lab.html`/`level-lab.html` from `example/` to `shell/` root (as the
 `{{TOKEN}}`-slotted shell page), add the "Change graph"/"Codebase archive" nav link, let
 `build_center_a3`'s glob copy it. Result: the beautiful diagram becomes the real, shipped page.

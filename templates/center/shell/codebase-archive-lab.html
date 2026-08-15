@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{LANG}}">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Levels graph · Gustify Command Center</title>
+<title>Levels graph · {{PROJECT_NAME}} Command Center</title>
 <style>
 /* ── LEVEL LAB — a display DESIGN lab, not a station: the level-navigation model
    (Entities → Pieces → Functions → Layers) with the symbol grammar the operator
@@ -194,8 +194,8 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
 <body>
 <nav class="side">
   <div class="brand">
-    <span class="logo"><img src="../../assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
-    <span><b>Gustify</b><small>Gabe Center</small></span>
+    <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
+    <span><b>{{PROJECT_NAME}}</b><small>Gabe Center</small></span>
   </div>
   <div class="navlabel g-now">Now</div>
   <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
@@ -206,40 +206,27 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   <a class="navitem" href="codebase-archive.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8v13H3V8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Codebase archive</a>
   <a class="navitem on" href="codebase-archive-lab.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/></svg> Levels</a>
   <div class="navlabel g-ent">Entities</div>
-  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">8</span></a>
-  <a class="navitem" href="feature-recipe.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> Recipe</a>
-  <a class="navitem" href="feature-allergen.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Allergen</a>
-  <a class="navitem" href="feature-pantry.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg> Pantry</a>
-  <a class="navitem" href="feature-cooking.html" title="critical · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Cooking</a>
-  <a class="navitem" href="feature-auth.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Auth</a>
-  <a class="navitem" href="feature-progression.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg> Progression</a>
-  <a class="navitem" href="feature-legal-consent.html" title="high · approved"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg> Legal/Consent</a>
-  <a class="navitem" style="opacity:.55" href="entity-index.html" title="medium · pending"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg> Settings <span class="count">pending</span></a>
+  <a class="navitem" href="entity-index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg> Entity index <span class="count">{{ENTITY_COUNT}}</span></a>
+  {{SIDEBAR_ENTITIES}}
   <div class="navlabel g-docs">Docs</div>
   <a class="navitem" href="docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg> Docs</a>
   <div class="navlabel g-code">Code</div>
-  <a class="navitem" href="architecture.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg> Architecture</a>
-  <a class="navitem navsubitem" href="arch-endpoints.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Endpoints</a>
-  <a class="navitem navsubitem" href="arch-code-map.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Code map</a>
-  <a class="navitem navsubitem" href="arch-data-model.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/></svg> Data model</a>
-  <a class="navitem navsubitem" href="arch-dm-candidates.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/></svg> Data-model candidates</a>
-  <a class="navitem navsubitem" href="arch-functions.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/></svg> Functions</a>
-  <a class="navitem navsubitem" href="arch-fn-candidates.html"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="6" y1="3" x2="6" y2="15"/><circle cx="18" cy="6" r="3"/><circle cx="6" cy="18" r="3"/><path d="M18 9a9 9 0 0 1-9 9"/></svg> Function candidates</a>
+  {{SIDEBAR_CODE}}
   <div class="navlabel g-test">Testing</div>
-  <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">2,031</span></a>
+  <a class="navitem" href="tests.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> Tests <span class="count">{{TESTS_COUNT}}</span></a>
   <div class="navlabel g-ledger">Ledger</div>
   <a class="navitem" href="ledger.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="21 8 21 21 3 21 3 8"/><rect x="1" y="3" width="22" height="5"/><line x1="10" y1="12" x2="14" y2="12"/></svg> Latest change</a>
   <div class="navlabel g-rel">Releases</div>
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
-  <span class="navsub" style="opacity:.5">none wired yet</span>
-  <div class="foot">regen 2026-08-15 23:33Z<br>HEAD fcc3bb73 · build_center_a3.py</div>
+  {{SIDEBAR_LEAF}}
+  <div class="foot">regen {{REGEN_STAMP}}<br>HEAD {{HEAD_SHA}} · {{GENERATOR_NAME}}</div>
 </nav>
 <div class="labcol">
   <div class="topbar">
     <div class="crumb"><a href="index.html">Overview</a> › <b>Levels graph</b></div>
     <div class="spacer"></div>
-    <span class="statuspill ok">repo · 2,031 tests · 0 failed</span> <span class="statuspill warn">phase P8 · Dependency-vuln paydown</span>
+    {{STATUS_PILLS}}
   </div>
 <header>
   <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;width:100%">
