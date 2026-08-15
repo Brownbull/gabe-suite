@@ -196,6 +196,43 @@ for part in ("l1", "l2", "cross_edges", "layout"):
 check(g_abs["stats"]["graft"] == {"present": False, "reason": "no graft binary"},
       "graft absent: the absence is NAMED in stats, never silent")
 
+# ══ THE ENDPOINT `behind` FLOOR (derive_behind + build_c4_graph attach) ══════
+# do_a → do_b → do_b2 (real source): 2 transitive callees, BFS depth 2. The
+# do_a → web/dist/bundle.js#x call is DROPPED (build-output noise, like derive_functions).
+_beh = GG.derive_behind(WIRING, {"e": {"endpoints": [
+    {"file": "apps/api/alpha.py", "fn": "do_a", "method": "GET", "path": "/a"}]}})
+check(_beh == {"apps/api/alpha.py#do_a": {"fns": 2, "depth": 2}},
+      "derive_behind: transitive callees (fns) + BFS depth, build-output noise EXCLUDED")
+_beh2 = GG.derive_behind(WIRING, {"e": {"endpoints": [
+    {"file": "apps/api/ghost.py", "fn": "nope", "method": "GET", "path": "/z"}]}})
+check(_beh2 == {}, "derive_behind: an unresolvable handler gets NO entry (honest, never a zero)")
+# the depth cap sets truncated:True (no silent cap) — exercised with a shrunk cap + a chain
+_saved_cap = GG._BEHIND_DEPTH_CAP; GG._BEHIND_DEPTH_CAP = 2
+_wt = {"nodes": [{"id": f"a{i}.py#f", "kind": "function", "path": f"a{i}.py"} for i in range(5)],
+       "edges": [{"source": f"a{i}.py#f", "target": f"a{i+1}.py#f", "relation": "calls"} for i in range(4)]}
+_bt = GG.derive_behind(_wt, {"e": {"endpoints": [{"file": "a0.py", "fn": "f", "method": "G", "path": "/x"}]}})
+GG._BEHIND_DEPTH_CAP = _saved_cap
+check(_bt["a0.py#f"].get("truncated") is True and _bt["a0.py#f"]["depth"] == 2,
+      "derive_behind: the depth cap sets truncated:True (no silent cap)")
+# the floor attaches to the endpoint node by <file>#<fn>; a mini-archmap with a filed endpoint
+_bam = {"head": "b", "entities": {"e": {
+    "files": [["api", "apps/api/alpha.py", 10]], "models": [], "schemas": [],
+    "endpoints": [{"method": "GET", "path": "/a", "fn": "do_a",
+                   "file": "apps/api/alpha.py", "touches": []}]}}}
+_bgraft = {"present": True, "reason": "t", "index_hash": "x", "pairs": {}, "stats": {},
+           "behind": {"apps/api/alpha.py#do_a": {"fns": 2, "depth": 2}}}
+_bg = G.build_c4_graph(_bam, graft=_bgraft)
+_enode = [n for n in _bg["l2"]["e"]["nodes"] if n["kind"] == "endpoint"][0]
+check(_enode.get("behind") == {"fns": 2, "depth": 2},
+      "build_c4_graph: the behind floor attaches to the endpoint node by <file>#<fn>")
+check(_bg["stats"]["behind"] == {"present": True, "scored": 1, "max_fns": 2},
+      "stats.behind records the scored-handler count + max mass when graft present")
+# honest-empty: graft absent → no endpoint carries behind, stats.behind names the absence
+_bg0 = G.build_c4_graph(_bam, graft=None)
+_e0 = [n for n in _bg0["l2"]["e"]["nodes"] if n["kind"] == "endpoint"][0]
+check("behind" not in _e0 and _bg0["stats"]["behind"] == {"present": False},
+      "behind honest-empty: graft absent → no endpoint badge + stats.behind present:False")
+
 # ── the .ignore defuse: SURGICAL — graft's block dies, user lines survive ──
 with tempfile.TemporaryDirectory() as _td:
     _r = _pl.Path(_td)

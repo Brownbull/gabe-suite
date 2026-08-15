@@ -423,7 +423,8 @@ def element_detail(kind: str, obj: dict[str, Any],
 def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         labels: dict[str, str],
         insight: dict[str, Any] | None = None,
-        web_pieces: list[dict] | None = None) -> dict[str, list[dict]]:
+        web_pieces: list[dict] | None = None,
+        behind: dict[str, dict] | None = None) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
     wiring, plus honest ``external`` stub nodes for outbound FKs into other
     entities / unclaimed tables — so a drill never hides where the entity reaches.
@@ -495,6 +496,9 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         edet = det_of("endpoint", ep)
         if edet:
             enode["det"] = edet
+        bkey = f"{ep.get('file')}#{ep.get('fn')}"   # the graft call-tree floor behind this handler
+        if behind and bkey in behind:               # honest-empty: no key → no badge, never a guess
+            enode["behind"] = behind[bkey]
         add_node(enode)
         for cls in ep.get("touches") or []:
             tgt = own_classes.get(cls)
@@ -749,12 +753,15 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                "ti_ep": ti.get("by_endpoint") or {},
                "ti_model": ti.get("by_model") or {},
                "mi": amap.get("model_insight") or {}}
+    # the endpoint call-tree floor (graft): {<file>#<fn> → {fns, depth}} per handler.
+    # graft absent → {} → no endpoint carries a behind field → byte-identical build.
+    behind = (graft or {}).get("behind") or {}
     l2: dict[str, dict] = {}
     for slug in sorted(entities):
         code = entities[slug]
         if not code:
             continue
-        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug))
+        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug), behind)
         _stamp_l2(graph)
         l2[slug] = graph
 
@@ -804,6 +811,11 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                     if web_present else
                     {"present": False,
                      "reason": (web or {}).get("reason", "not attempted")}),
+            # the endpoint call-tree floor: a view-only complexity signal, honest by
+            # construction (a handler graft cannot resolve gets no entry, not a zero).
+            "behind": ({"present": True, "scored": len(behind),
+                        "max_fns": max((b["fns"] for b in behind.values()), default=0)}
+                       if graft_present else {"present": False}),
         },
     }
 

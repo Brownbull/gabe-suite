@@ -177,6 +177,69 @@ def derive_functions(wiring: dict[str, Any],
     return {"fn_slug": fn_slug, "calls": calls}
 
 
+_BEHIND_DEPTH_CAP = 40   # observed max call-tree depth ~19 on gustify; guards a pathological graph
+
+
+def derive_behind(wiring: dict[str, Any],
+                  entities: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Per API endpoint, the graft call-tree FLOOR behind its handler: ``{fns, depth}``.
+
+    A view-only complexity signal — NOT a rail. ``fns`` = distinct transitive callees
+    (excl. self) reachable over ``calls`` edges; ``depth`` = BFS layers = the shortest-path
+    eccentricity of the reachable set (a cheap honest depth, not the NP-hard longest path);
+    ``truncated: True`` rides ONLY when the depth cap clipped the walk (no silent caps —
+    the same honesty law derive_cross applies to dropped edges). Keyed by the handler's
+    wiring id ``<file>#<fn>`` so ``_a3_graph`` attaches it to the endpoint node by the same
+    key. NOISE-FILTERED like ``derive_functions``: build-output nodes (``.js``/``dist``/… —
+    over half of a measured index) never count toward the floor. Honest by construction: an
+    endpoint whose handler is not an indexed source function gets NO entry (never a guess).
+    Cheap — one BFS per endpoint over the ``calls`` adjacency. Deterministic: the result
+    depends only on reachability, never on edge order; keys sorted."""
+    # source function nodes only — noise (build output) is dropped, mirroring
+    # derive_functions, so a call INTO bundle.js never inflates the floor.
+    fn_ids = {n["id"] for n in (wiring.get("nodes") or [])
+              if n.get("kind") == "function" and not _is_noise(_file_of(n["id"]))}
+    adj: dict[str, list[str]] = {}
+    for e in wiring.get("edges") or []:
+        if e.get("relation") == "calls":
+            s, t = e.get("source"), e.get("target")
+            if s in fn_ids and t in fn_ids:   # both ends real source functions
+                adj.setdefault(s, []).append(t)
+
+    def behind(start: str) -> dict[str, Any]:
+        seen = {start}
+        frontier = [start]
+        depth = 0
+        while frontier and depth < _BEHIND_DEPTH_CAP:
+            nxt: list[str] = []
+            for u in frontier:
+                for v in adj.get(u) or ():
+                    if v not in seen:
+                        seen.add(v)
+                        nxt.append(v)
+            if not nxt:
+                break
+            frontier = nxt
+            depth += 1
+        res: dict[str, Any] = {"fns": len(seen) - 1, "depth": depth}
+        if frontier and depth >= _BEHIND_DEPTH_CAP:   # the cap clipped a deeper walk
+            res["truncated"] = True
+        return res
+
+    out: dict[str, dict[str, Any]] = {}
+    for ent in entities.values():
+        if not ent:                       # a slug with no code map (dict|None) — the sibling guard
+            continue
+        for ep in ent.get("endpoints") or []:
+            f, fn = ep.get("file"), ep.get("fn")
+            if not f or not fn:
+                continue
+            key = f"{f}#{fn}"
+            if key in fn_ids and key not in out:
+                out[key] = behind(key)
+    return {k: out[k] for k in sorted(out)}
+
+
 def derive_cross(wiring: dict[str, Any],
                  entities: dict[str, Any]) -> dict[str, Any]:
     """The cross-entity coupling slice: {(src_slug, dst_slug): {relation: count}}.
@@ -276,11 +339,13 @@ def graft_arm(root: Path, entities: dict[str, Any],
         meta = wiring.get("meta") or {}
         out = derive_cross(wiring, entities)
         fout = derive_functions(wiring, entities)
+        behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
             "pairs": out["pairs"], "stats": out["stats"],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws
+            "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
         }
     except Exception as exc:  # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"graft arm error: {exc}"}

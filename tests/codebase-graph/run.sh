@@ -392,6 +392,22 @@ check(any(n.get("kind") == "web" for g2 in _ex["l2"].values() for n in g2["nodes
 check(all("m" in u and "p" in u and "from" in u for u in _wst.get("unmatched", [])),
       "example: every unmatched fetch names its method + path + source screen")
 
+# ── J · ENDPOINT `behind` FLOOR (graft call-tree mass, a view-only complexity badge)
+check("function behindBadge(" in station and ".cbg-root .behind-badge rect{" in CSS,
+      "the behind badge has a draw helper + its muted pill style")
+check(station.count("behindBadge(g, n.behind)") >= 1 and "behindBadge(g, node.behind)" in station,
+      "both endpoint render paths (drill + explode) draw the behind badge")
+check('h+=rowKV("behind"' in station and "behindBadges:function()" in station,
+      "the detail card shows a behind row + the __cbgtest probe counts the badges")
+_bst = _ex.get("stats", {}).get("behind") or {}
+check(_bst.get("present") is True and _bst.get("scored", 0) > 0,
+      "example c4-graph.js carries a present behind arm with scored handlers")
+_beps = [n for g2 in _ex["l2"].values() for n in g2["nodes"]
+         if n.get("kind") == "endpoint" and "behind" in n]
+check(_beps and all(isinstance(n["behind"].get("fns"), int)
+                    and isinstance(n["behind"].get("depth"), int) for n in _beps),
+      "example: endpoints carry a {fns, depth} behind floor (ints, no guessed shape)")
+
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
