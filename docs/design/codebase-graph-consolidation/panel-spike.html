@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Right-panel layout spike — codebase-graph consolidation</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --panel:#ffffff; --ink:#1c2024; --muted:#6b7280; --line:#e6e8eb;
+    --edge:#9aa3ad; --accent:#4c6ef5; --c-model:#12b886; --c-schema:#f59f00;
+    --c-fn-api:#4c6ef5; --c-fn-web:#e8590c; --ok:#1f8a53; --ok-bg:#e9f6ee;
+    --lv:#e8590c; --c4:#4c6ef5;   /* provenance: LEVELS vs C4 */
+    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --mono:ui-monospace,Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+    --bg:#0f1114; --panel:#171a1f; --ink:#e6e8eb; --muted:#8a919b; --line:#262a30;
+    --edge:#4a525c; --ok:#4cbe83; --ok-bg:#12271c; --c-model:#2fd0a0;
+  }}
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--bg); color:var(--ink); font:14px/1.5 var(--font-ui); }
+  header{ padding:20px 24px 8px; }
+  h1{ font-size:18px; margin:0 0 4px; }
+  .sub{ color:var(--muted); font-size:13px; max-width:900px; }
+  .legend{ display:flex; gap:16px; align-items:center; margin:12px 0 0; font-size:12px; color:var(--muted); flex-wrap:wrap; }
+  .dot{ width:9px; height:9px; border-radius:50%; display:inline-block; margin-right:5px; vertical-align:-1px; }
+  .lane{ display:flex; gap:20px; align-items:flex-start; padding:16px 24px 40px; overflow-x:auto; }
+  .col{ flex:none; }
+  .coltitle{ font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 8px 2px; }
+  .colnote{ font-size:11.5px; color:var(--muted); margin:0 0 10px 2px; max-width:340px; min-height:32px; }
+
+  /* ── the panel shell (shared): resize gripper + min/max ── */
+  .panel{ position:relative; width:340px; background:var(--panel); border:1px solid var(--line);
+    border-radius:12px; box-shadow:0 1px 3px rgba(0,0,0,.05); overflow:hidden; }
+  .grip{ position:absolute; left:0; top:0; bottom:0; width:6px; cursor:ew-resize; }
+  .grip::before{ content:""; position:absolute; left:2px; top:50%; transform:translateY(-50%);
+    width:2px; height:34px; border-radius:2px; background:var(--line); }
+  .grip:hover::before{ background:var(--accent); }
+  .phead{ display:flex; align-items:flex-start; gap:8px; padding:12px 12px 10px 16px; border-bottom:1px solid var(--line); }
+  .phead .method{ font:700 10px/1.4 var(--mono); letter-spacing:.04em; color:#fff; background:var(--c-fn-api);
+    padding:2px 6px; border-radius:5px; flex:none; margin-top:1px; }
+  .ptitle{ flex:1; min-width:0; }
+  .ptitle .path{ font:600 13px/1.35 var(--mono); word-break:break-all; }
+  .ptitle .fn{ font-size:11.5px; color:var(--muted); }
+  .winbtns{ display:flex; gap:2px; flex:none; }
+  .winbtn{ border:1px solid transparent; background:none; color:var(--muted); border-radius:6px;
+    width:24px; height:24px; cursor:pointer; font-size:13px; line-height:1; padding:0; }
+  .winbtn:hover{ border-color:var(--edge); color:var(--ink); }
+  .pbody{ padding:12px 16px 16px; }
+  .panel.min .pbody{ display:none; }
+  .panel.min{ width:340px; }
+
+  /* ── section primitives ── */
+  .sec{ margin:0 0 14px; }
+  .sec:last-child{ margin-bottom:0; }
+  .sechd{ display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:800; letter-spacing:.07em;
+    text-transform:uppercase; color:var(--muted); margin:0 0 7px; }
+  .prov{ width:7px; height:7px; border-radius:50%; flex:none; }
+  .kv{ display:flex; gap:8px; font-size:12.5px; padding:1px 0; }
+  .kv .k{ color:var(--muted); flex:none; width:74px; }
+  .kv .v{ color:var(--ink); }
+  .chip{ display:inline-flex; align-items:center; gap:4px; font:600 11px/1.5 var(--mono);
+    background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 7px; margin:0 4px 4px 0; }
+  .chip.model{ color:var(--c-model); } .chip.schema{ color:var(--c-schema); }
+  .chip.screen{ color:var(--c-fn-web); } .chip.route{ color:var(--c-fn-api); }
+  .chip.ok::before{ content:"✓"; color:var(--ok); font-weight:800; }
+  .doc{ font-size:12.5px; color:var(--ink); background:var(--bg); border-left:2px solid var(--edge);
+    padding:7px 10px; border-radius:0 6px 6px 0; }
+  .more{ display:inline-block; font:600 11px/1 var(--font-ui); color:var(--accent); background:none;
+    border:1px dashed var(--edge); border-radius:6px; padding:4px 8px; cursor:pointer; margin-top:2px; }
+  .more:hover{ border-color:var(--accent); }
+  .grid2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .tabbar{ display:flex; gap:4px; margin-bottom:8px; border-bottom:1px solid var(--line); }
+  .tab{ font:600 11px/1 var(--font-ui); color:var(--muted); background:none; border:none; cursor:pointer;
+    padding:6px 8px; border-bottom:2px solid transparent; }
+  .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+  .behind{ display:inline-flex; align-items:center; gap:5px; font:700 11px/1 var(--font-ui);
+    color:var(--muted); background:var(--bg); border:1px solid var(--line); border-radius:12px; padding:3px 9px; }
+  .idrow{ display:flex; flex-wrap:wrap; gap:5px; }
+  .idtag{ font-size:11px; color:var(--muted); background:var(--bg); border:1px solid var(--line);
+    border-radius:6px; padding:2px 7px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Right-panel layout spike — three arrangements, one real record</h1>
+  <div class="sub">Same data (<code>POST /pantry/items/batch</code> from gustify), three panel layouts. Every panel shares the contract you named: <b>min / max</b> top-right, a <b>drag gripper</b> on the left edge (resizes today), <b>connections up top</b> with a <b>+N more</b> when a group runs past 5, plus <b>tests · title · docstring</b>. The point of the spike: pick the <b>order + grouping</b> you want, and I compose the winner. This is the "match between the two models" — every field is tagged by its source feed.</div>
+  <div class="legend">
+    <span><span class="dot" style="background:var(--c4)"></span>from <b>GABE_C4</b> (piece det · behind · cases · signature · bridge)</span>
+    <span><span class="dot" style="background:var(--lv)"></span>from <b>GABE_LEVELS</b> (entity · layer · role · fan-in · connections)</span>
+    <span style="margin-left:auto">click <b>▢</b> to min/max · drag the left edge · click <b>+N more</b></span>
+  </div>
+</header>
+
+<div class="lane" id="lane"></div>
+
+<script>
+const D = {
+  method:"POST", path:"/pantry/items/batch", fn:"create_pantry_items_batch",
+  entity:"pantry", layer:"api", lang:"Python",
+  role:"endpoint handler — the fn a route calls first",
+  doc:"Create many confirmed pantry items in ONE transaction (Phase 58, D101).",
+  sig:{async:true, lines:75, returns:"CreateBatchResponse", status:"HTTP_201_CREATED"},
+  file:"apps/api/api/pantry.py", flines:562,
+  behind:{fns:1, depth:1}, fanIn:0,
+  tests:{cases:["C137","C143","C144"], api:3, web:0, red:0, allPass:true},
+  conn:{
+    routes:["POST /pantry/items/batch"],
+    touches:["Location","BatchItemResult","CreateBatchRequest","CreateBatchResponse","PantryItemCreate","PantryItemResponse"],
+    returns:["CreateBatchResponse"],
+    screens:["useBatchAdd"]
+  }
+};
+const E=(t,a,...k)=>{const e=document.createElement(t);for(const p in(a||{})){if(p==="class")e.className=a[p];else if(p==="html")e.innerHTML=a[p];else e.setAttribute(p,a[p]);}k.flat().forEach(c=>e.append(c));return e;};
+const prov=c=>E("span",{class:"prov",style:`background:var(--${c})`});
+
+// a collapsible chip list: shows first `cap`, a +N more expands the rest
+function chips(items, cls, cap){
+  const wrap=E("div"); const head=items.slice(0,cap), tail=items.slice(cap);
+  head.forEach(x=>wrap.append(E("span",{class:"chip "+cls},x)));
+  if(tail.length){
+    const hidden=E("span",{style:"display:none"});
+    tail.forEach(x=>hidden.append(E("span",{class:"chip "+cls},x)));
+    const btn=E("button",{class:"more"},`+${tail.length} more`);
+    btn.onclick=()=>{hidden.style.display="inline"; btn.remove();};
+    wrap.append(hidden,btn);
+  }
+  return wrap;
+}
+function sec(label, provColor, ...body){
+  return E("div",{class:"sec"}, E("div",{class:"sechd"}, provColor?prov(provColor):"", label), ...body);
+}
+function kv(k,v){ return E("div",{class:"kv"}, E("span",{class:"k"},k), E("span",{class:"v"},v)); }
+function testChips(){ return D.tests.cases.map(c=>E("span",{class:"chip ok"},c)); }
+
+// the shared panel shell — head (title + min/max) + a body the variant fills
+function panel(bodyNodes){
+  const p=E("div",{class:"panel"});
+  p.append(E("div",{class:"grip",title:"drag to resize (today's behaviour)"}));
+  const min=E("button",{class:"winbtn",title:"minimise"},"▁");
+  const max=E("button",{class:"winbtn",title:"maximise / restore"},"▢");
+  min.onclick=()=>p.classList.add("min"); max.onclick=()=>p.classList.toggle("min");
+  p.append(E("div",{class:"phead"},
+    E("span",{class:"method"},D.method),
+    E("div",{class:"ptitle"}, E("div",{class:"path"},D.path), E("div",{class:"fn"},D.fn+"()")),
+    E("div",{class:"winbtns"}, min, max)));
+  p.append(E("div",{class:"pbody"}, ...bodyNodes));
+  return p;
+}
+
+// ── Variant A · connections-led stack ───────────────────────────────
+function variantA(){
+  return panel([
+    sec("Connections", "lv",
+      E("div",{style:"font-size:11px;color:var(--muted);margin:-2px 0 5px"},"routes"), chips(D.conn.routes,"route",5),
+      E("div",{style:"font-size:11px;color:var(--muted);margin:4px 0 5px"},"touches"), chips(D.conn.touches,"model",5),
+      E("div",{style:"font-size:11px;color:var(--muted);margin:4px 0 5px"},"returns"), chips(D.conn.returns,"schema",5),
+      E("div",{style:"font-size:11px;color:var(--muted);margin:4px 0 5px"},"screens"), chips(D.conn.screens,"screen",5)),
+    sec("Tests", "c4", E("div",{class:"idrow"}, ...testChips(),
+        E("span",{class:"idtag"},`api ${D.tests.api} · web ${D.tests.web} · ${D.tests.allPass?"all pass":"failing"}`))),
+    sec("Identity", "lv",
+      kv("entity", D.entity), kv("layer", D.layer), kv("language", D.lang),
+      kv("role", D.role), kv("fan-in", D.fanIn+" callers"),
+      E("div",{style:"margin-top:6px"}, E("span",{class:"behind"},`↓ ${D.behind.fns} fns behind · depth ${D.behind.depth}`))),
+    sec("Docstring", "c4", E("div",{class:"doc"}, D.doc),
+      E("div",{class:"kv",style:"margin-top:7px"}, E("span",{class:"k"},"signature"),
+        E("span",{class:"v",html:`async · ${D.sig.lines} lines · → <code>${D.sig.returns}</code> · ${D.sig.status}`})),
+      kv("file", `${D.file} (${D.flines} lines)`))
+  ]);
+}
+
+// ── Variant B · identity-led, tabbed connections ────────────────────
+function variantB(){
+  const groups={routes:["route",D.conn.routes], touches:["model",D.conn.touches], returns:["schema",D.conn.returns], screens:["screen",D.conn.screens]};
+  const body=E("div"); const tabbar=E("div",{class:"tabbar"});
+  let cur="touches";
+  const render=()=>{ body.innerHTML=""; const [cls,items]=groups[cur]; body.append(chips(items,cls,5)); };
+  Object.keys(groups).forEach(k=>{ const t=E("button",{class:"tab"+(k===cur?" on":"")},`${k} ${groups[k][1].length}`);
+    t.onclick=()=>{cur=k; [...tabbar.children].forEach(c=>c.classList.remove("on")); t.classList.add("on"); render();}; tabbar.append(t); });
+  render();
+  return panel([
+    sec("", "lv", E("div",{class:"idrow"},
+      E("span",{class:"idtag"},"● "+D.entity), E("span",{class:"idtag"},D.layer), E("span",{class:"idtag"},D.lang),
+      E("span",{class:"idtag"},"handler"), E("span",{class:"idtag"},"fan-in "+D.fanIn))),
+    sec("Docstring", "c4", E("div",{class:"doc"}, D.doc)),
+    sec("Connections", "lv", tabbar, body),
+    sec("Tests", "c4", E("div",{class:"idrow"}, ...testChips(),
+        E("span",{class:"idtag"},`${D.tests.api} api · all pass`))),
+    E("div",{class:"kv",style:"border-top:1px solid var(--line);padding-top:9px"},
+      E("span",{class:"k"},"depth"), E("span",{class:"v",html:`<span class="behind">↓ ${D.behind.fns} fns · d${D.behind.depth}</span> &nbsp; ${D.file.split("/").pop()}`}))
+  ]);
+}
+
+// ── Variant C · two-column dense ────────────────────────────────────
+function variantC(){
+  return panel([
+    E("div",{class:"doc",style:"margin-bottom:12px"}, D.doc),
+    E("div",{class:"grid2"},
+      E("div",null,
+        sec("Connections", "lv",
+          E("div",{style:"font-size:11px;color:var(--muted);margin:-2px 0 4px"},`touches ${D.conn.touches.length}`),
+          chips(D.conn.touches,"model",5),
+          E("div",{style:"font-size:11px;color:var(--muted);margin:5px 0 4px"},"returns · screens"),
+          chips([...D.conn.returns.map(x=>x),...D.conn.screens],"schema",5))),
+      E("div",null,
+        sec("Tests", "c4", E("div",null, ...testChips())),
+        sec("Depth", "c4", E("span",{class:"behind"},`↓ ${D.behind.fns} · d${D.behind.depth}`)),
+        sec("Identity", "lv",
+          E("div",{class:"idrow"}, E("span",{class:"idtag"},D.entity), E("span",{class:"idtag"},D.layer),
+            E("span",{class:"idtag"},D.lang), E("span",{class:"idtag"},"fan-in "+D.fanIn))))),
+    E("div",{class:"kv",style:"border-top:1px solid var(--line);padding-top:9px;margin-top:4px"},
+      E("span",{class:"k"},"route"), E("span",{class:"v",html:`<code>${D.method} ${D.path}</code>`})),
+    kv("signature", `async · ${D.sig.lines} lines · → ${D.sig.returns}`),
+    kv("file", `${D.file}`)
+  ]);
+}
+
+const VARIANTS=[
+  ["A · connections-led stack","Everything stacked in reading order, connections first. Simplest to scan; tallest panel.", variantA],
+  ["B · identity strip + tabbed connections","A compact identity strip on top, connections as tabs (routes/touches/returns/screens) so long groups never dominate. Most compact.", variantB],
+  ["C · two-column dense","A docstring header, then a 2-col split — connections left, tests+depth+identity right. Best for a WIDE panel.", variantC],
+];
+const lane=document.getElementById("lane");
+VARIANTS.forEach(([title,note,fn])=>{
+  lane.append(E("div",{class:"col"}, E("div",{class:"coltitle"},title), E("div",{class:"colnote"},note), fn()));
+});
+</script>
+</body>
+</html>
