@@ -94,6 +94,25 @@ Elicited via the spikes in this directory (`panel-spike.html`, `element-componen
     is live (the shipped `behind` metric); the **named function list** needs a small `derive_behind`
     extension (the BFS already visits them — collect the ids). ⏳ Phase-2 first task, ~10 lines + re-regen + a battery case.
 
+  - **FONT follows the center settings.** The panel uses `--font-content` + `--root-size`
+    (a3-settings.js writes them on `:root`), so changing the content font/size in the center
+    restyles the panel too. Only **code stays fixed** in `--font-mono` (the endpoint path in the
+    title, column type annotations, inline `<code>`). The spike carries a font-roster + size +
+    theme control mirroring `a3-settings.js` so it previews faithfully.
+
+## ⚠ REUSE, DO NOT REBUILD (operator directive, 2026-08-15)
+
+The spikes in this directory are the **SOURCE to PORT**, not a throwaway mockup:
+- **`element-components.html`** = the per-kind right-panel (chrome · tab rule · connections ·
+  usage/behind measures · icons · tip-icons · font-settings). Phase 2 **lifts this HTML/CSS/JS**
+  into the levels-lab panel — it is NOT re-authored from a blank file.
+- **`frontend-placement.html`** (option 2, dedicated frontend entity) = the chosen graph layout.
+
+This is the SAME failure mode that created the two parallel graph tracks: something got iterated
+to a good state, then **rebuilt from scratch** elsewhere, and the good version was abandoned.
+**Do not repeat it.** When Phase 2 builds the real panel/layout, it PORTS these files' markup +
+styles + behaviour; any "clean re-implementation from scratch" is the mistake, not the fix.
+
 ## The plan — phased, no big-bang
 
 ### Phase 0 · DECIDE — DONE (this doc)
