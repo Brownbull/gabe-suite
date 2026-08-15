@@ -74,10 +74,14 @@ Elicited via the spikes in this directory (`panel-spike.html`, `element-componen
   - the center's **kind-glyphs** on the header + chips, a **Lucide icon on every section and field**
     (nothing bare — matches the rest of the command center);
   - min/max top-right · left-edge drag-resize (as today);
-  - **THE TAB RULE:** a section with **>1 category → tabs** (click a kind, see inside); a section with
-    **1 category → shown directly, ungated**. Applies to Tests (api/web/red), Connections
-    (routes/touches/returns/screens), Fetches (bridged/unmatched), etc.
-  - **Tests**: a count badge by the title + tabs per kind (Allergen: `api 41` / `web 3`).
+  - **TABS are for Tests + Code-behind ONLY.** Tests tab per kind when it has >1 (Allergen:
+    `api 41` / `web 3`), with a count badge by the title; a single-kind Tests shows directly.
+    Code-behind has one category (functions) → shows straight through.
+  - **Connections are NEVER tabbed** — every group (routes/touches/returns/screens · bridged/unmatched)
+    is **always fully visible**, and hovering a connection chip **highlights its node in the graph**
+    (the diagram's existing peek/selection behavior). Long groups keep a `+N more`.
+  - **A section-level warning is an ICON by the title** (not a text block) — hover/click reveals why.
+    Code-behind carries one until the fn-list lands.
   - **Code behind**: one category (functions) → shown directly, never gated. The `{fns, depth}` COUNT
     is live (the shipped `behind` metric); the **named function list** needs a small `derive_behind`
     extension (the BFS already visits them — collect the ids). ⏳ Phase-2 first task, ~10 lines + re-regen + a battery case.

@@ -60,13 +60,24 @@
   .keycol{ display:inline-flex; align-items:center; gap:4px; }
   .count{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:2.5px 0; border-bottom:1px dotted var(--line); } .count .lbl{ flex:1; } .count .n{ font-weight:700; font-variant-numeric:tabular-nums; }
   .todo{ font-size:11px; color:var(--god); margin-top:6px; }
+  /* connections: always visible, hover a chip → highlights it (peeks the graph node) */
+  .connbox .chip{ cursor:pointer; transition:border-color .1s, box-shadow .1s; }
+  .connbox .chip:hover{ border-color:var(--accent); box-shadow:0 0 0 2px rgba(76,110,245,.22); }
+  .hint{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); margin-top:7px; font-style:italic; }
+  .hint svg{ width:12px; height:12px; }
+  /* a section-level warning: just an icon by the title; hover/click reveals why */
+  .warnico{ color:var(--god); cursor:help; position:relative; display:inline-flex; margin-left:2px; }
+  .warnico svg{ width:13px; height:13px; }
+  .warnico .tip{ display:none; position:absolute; top:19px; left:-4px; z-index:6; width:214px; text-transform:none; letter-spacing:0;
+    background:var(--ink); color:var(--panel); font:500 11px/1.45 var(--font-ui); padding:7px 9px; border-radius:7px; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+  .warnico:hover .tip, .warnico.on .tip{ display:block; }
 </style>
 </head>
 <body>
 <header>
   <div class="htext">
     <h1>Element components — the right-panel card per element kind</h1>
-    <div class="sub">Real gustify data. The rule you set: a section with <b>more than one category → tabs</b> (click a kind, see what's inside); a section with <b>one category → shown directly, ungated</b>. So <b>Tests</b> tabs by api/web (see <b>Entity · Allergen</b>: api 41 / web 3), <b>Connections</b> tabs by routes/touches/returns/screens, and <b>Code behind</b> (functions only) shows straight through.</div>
+    <div class="sub">Real gustify data. The rule you set: <b>Tests</b> tabs by kind (see <b>Entity · Allergen</b>: api 41 / web 3); <b>Connections are ALWAYS fully visible</b> (never tabbed) and each chip <b>hover-highlights its node in the graph</b>; <b>Code behind</b> (functions only) shows straight through. A section-level warning is just an <b>icon by the title</b> — hover/click it to see why (Code behind carries one until the derive_behind list lands).</div>
   </div>
   <button class="tbtn" id="theme"></button>
 </header>
@@ -110,7 +121,8 @@ function chipList(items, cls, glyph, cap=5){
     const b=E("button",{class:"more"},`+${tail.length} more`); b.onclick=()=>{hid.style.display="inline";b.remove();}; wrap.append(hid,b); }
   return wrap;
 }
-function sechd(icoName, label, count, ok){ return E("div",{class:"sechd"}, ico(icoName), label, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},count):null); }
+function warnIcon(text){ const w=E("span",{class:"warnico",title:text}, ico("alert"), E("span",{class:"tip"},text)); w.onclick=e=>{ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
+function sechd(icoName, label, count, ok, warn){ return E("div",{class:"sechd"}, ico(icoName), label, warn?warnIcon(warn):null, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},count):null); }
 function kv(icoName,k,v){ return E("div",{class:"kv"}, icoName?ico(icoName,"kico"):E("span",{style:"width:14px"}), E("span",{class:"k"},k), E("span",{class:"v",html:v})); }
 
 // THE RULE: groups>1 → tabs; groups==1 → direct; groups==0 → empty note.
@@ -128,6 +140,17 @@ function tabbed(secIcon, title, groups, opt){
 }
 const G=(label,icon,count,nodeFn)=>({label,icon,count,node:nodeFn});
 
+// CONNECTIONS: never tabbed — every group shown at once, chips hover-highlight the graph node.
+function conns(secIcon, title, groups, opt){
+  opt=opt||{}; const live=groups.filter(g=>g.count>0);
+  const total=live.reduce((s,g)=>s+g.count,0);
+  const box=E("div",{class:"connbox"});
+  if(!live.length) box.append(E("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+  live.forEach(g=>{ box.append(E("div",{class:"sublbl"}, ico(g.icon), `${g.label} ${g.count}`), g.node()); });
+  const hint=live.length?E("div",{class:"hint"}, ico("info"), "hover a connection → highlights it in the graph"):null;
+  return E("div",{class:"sec"}, sechd(secIcon,title, opt.showCount?total:null), box, hint);
+}
+
 function colsTable(cols, fks){
   const fkset=new Set((fks||[]).map(f=>f[0])); const t=E("table",{class:"cols"});
   cols.forEach(c=>t.append(E("tr",null, E("td",null, fkset.has(c[0])?E("span",{class:"keycol"},ico("key"),c[0]):c[0]), E("td",{class:"ty"},c[1]))));
@@ -138,8 +161,8 @@ function behindDirect(b, fns){
   if(!b) return null;
   const body=E("div",null, E("div",{class:"sublbl"}, ico("function"), `${b.fns} functions · depth ${b.depth}`));
   const list=E("div"); (fns||[]).forEach(f=>list.append(E("span",{class:"chip fn"}, ico("function"), f))); body.append(list);
-  body.append(E("div",{class:"todo"}, ico("alert"), " named list pending a small derive_behind extension — count + depth are live today."));
-  return E("div",{class:"sec"}, sechd("layers","Code behind"), body);
+  const warn="Named list pending a small derive_behind extension — the BFS already visits these functions, it just needs to collect the ids. The count + depth are live today.";
+  return E("div",{class:"sec"}, sechd("layers","Code behind", null, false, warn), body);
 }
 function panel(kind, kglyph, kcolor, name, typeSub, bodyNodes){
   const p=E("div",{class:"panel"});
@@ -157,7 +180,7 @@ const cids=arr=>()=>{const w=E("div");arr.forEach(c=>w.append(E("span",{class:"c
 
 const CARDS=[
 ["API endpoint", ()=>panel("endpoint","endpoint","var(--c-endpoint)","POST /pantry/items/batch","create_pantry_items_batch()",[
-  tabbed("link","Connections",[
+  conns("link","Connections",[
     G("routes","endpoint",1,()=>chipList(["POST /pantry/items/batch"],"route","endpoint")),
     G("touches","model",6,()=>chipList(["Location","BatchItemResult","CreateBatchRequest","CreateBatchResponse","PantryItemCreate","PantryItemResponse"],"model","model")),
     G("returns","schema",1,()=>chipList(["CreateBatchResponse"],"schema","schema")),
@@ -170,7 +193,7 @@ const CARDS=[
     kv("endpoint","signature","async · 75 lines · → <code>CreateBatchResponse</code>"), kv("info","status","HTTP_201_CREATED"), kv("file","file","apps/api/api/pantry.py:562")),
 ])],
 ["Model", ()=>panel("model","model","var(--c-model)","UserDietaryProfile","table user_dietary_profile",[
-  tabbed("link","Connections",[
+  conns("link","Connections",[
     G("touched by","endpoint",3,()=>chipList(["GET /diet/profile","PUT /diet/profile","GET /recipes"],"route","endpoint")),
     G("used by fns","function",2,()=>chipList(["apply_allergen_filter","score_preferences"],"fn","function"))]),
   E("div",{class:"sec"}, sechd("table","Structure",6), colsTable([["id","uuid.UUID"],["user_id","uuid.UUID"],["allergens","list[str]"],["preferences","list[str]"],["created_at","datetime"],["updated_at","datetime"]],[["user_id","users.id"]])),
@@ -180,12 +203,12 @@ const CARDS=[
 ])],
 ["Schema", ()=>panel("schema","schema","var(--c-schema)","DietaryProfileInput","request body",[
   E("div",{class:"sec"}, sechd("table","Fields",3), colsTable([["allergens","list[str]"],["preferences","list[str]"],["diet","str | None"]],[])),
-  tabbed("link","Connections",[ G("used by","endpoint",1,()=>chipList(["PUT /diet/profile"],"route","endpoint")) ]),
+  conns("link","Connections",[ G("used by","endpoint",1,()=>chipList(["PUT /diet/profile"],"route","endpoint")) ]),
   tabbed("test","Tests",[ G("api","test",1,cids(["C1102"])) ],{showCount:true,ok:true}),
   E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"Request body for updating a user's dietary profile."), kv("file","file","apps/api/schemas/allergen.py")),
 ])],
 ["Function", ()=>panel("function","function","var(--c-fn)","_query_domain()","internal helper",[
-  tabbed("link","Connections",[
+  conns("link","Connections",[
     G("called by","merge",1,()=>chipList(["get_catalog"],"fn","function")),
     G("calls out","endpoint",2,()=>chipList(["_normalize","_resolve_taxonomy"],"fn","function"))]),
   behindDirect({fns:2,depth:2},["_normalize","_resolve_taxonomy"]),
@@ -196,10 +219,10 @@ const CARDS=[
   E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"Query one taxonomy domain (internal — no route calls it directly)."), kv("file","file","apps/api/api/catalog.py")),
 ])],
 ["Frontend screen", ()=>panel("frontend","web","var(--c-web)","useBatchAdd","apps/web/src/features/pantry",[
-  tabbed("down","Fetches",[
+  conns("down","Fetches",[
     G("bridged","endpoint",1,()=>chipList(["POST /pantry/items/batch"],"route","endpoint")),
     G("unmatched","web",1,()=>chipList(["GET /api/v1/equipment"],"web","web"))],{showCount:true}),
-  tabbed("link","Connections",[ G("reaches","entity",1,()=>chipList(["pantry"],"model","entity")) ]),
+  conns("link","Connections",[ G("reaches","entity",1,()=>chipList(["pantry"],"model","entity")) ]),
   tabbed("test","Tests",[ G("web","web",1,cids(["C2044"])) ],{showCount:true,ok:true}),
   E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"React hook: batch-add confirmed pantry items from the add screen."), kv("file","file","useBatchAdd.ts")),
 ])],
@@ -215,7 +238,7 @@ const CARDS=[
     G("web","web",3,cids(["C2044","C2045","C2046"]))],{showCount:true,ok:true}),
 ])],
 ["External (fk target)", ()=>panel("external","external","var(--c-external)","users.id","lives in another entity",[
-  tabbed("link","Reach",[
+  conns("link","Reach",[
     G("target","entity",1,()=>chipList(["auth"],"model","entity")),
     G("referenced by","key",2,()=>chipList(["UserDietaryProfile.user_id","PantryItem.owner_id"],"fn","key"))]),
   E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"An fk target outside this entity — double-click on the canvas to hop to Auth.")),
