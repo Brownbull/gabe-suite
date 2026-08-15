@@ -178,6 +178,7 @@ def derive_functions(wiring: dict[str, Any],
 
 
 _BEHIND_DEPTH_CAP = 40   # observed max call-tree depth ~19 on gustify; guards a pathological graph
+_BEHIND_NAMES_CAP = 12   # the panel shows up to this many fn names behind a handler, then "+N"
 
 
 def derive_behind(wiring: dict[str, Any],
@@ -222,6 +223,13 @@ def derive_behind(wiring: dict[str, Any],
             frontier = nxt
             depth += 1
         res: dict[str, Any] = {"fns": len(seen) - 1, "depth": depth}
+        # the NAMED functions behind the handler (short symbol, sorted, capped) — the BFS
+        # already visited them, so this is free; the panel renders them instead of a count alone.
+        names = sorted({s.split("#", 1)[1] for s in seen if s != start and "#" in s})
+        if names:
+            res["names"] = names[:_BEHIND_NAMES_CAP]
+            if len(names) > _BEHIND_NAMES_CAP:
+                res["names_more"] = len(names) - _BEHIND_NAMES_CAP
         if frontier and depth >= _BEHIND_DEPTH_CAP:   # the cap clipped a deeper walk
             res["truncated"] = True
         return res

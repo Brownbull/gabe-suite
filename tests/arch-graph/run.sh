@@ -201,8 +201,8 @@ check(g_abs["stats"]["graft"] == {"present": False, "reason": "no graft binary"}
 # do_a → web/dist/bundle.js#x call is DROPPED (build-output noise, like derive_functions).
 _beh = GG.derive_behind(WIRING, {"e": {"endpoints": [
     {"file": "apps/api/alpha.py", "fn": "do_a", "method": "GET", "path": "/a"}]}})
-check(_beh == {"apps/api/alpha.py#do_a": {"fns": 2, "depth": 2}},
-      "derive_behind: transitive callees (fns) + BFS depth, build-output noise EXCLUDED")
+check(_beh == {"apps/api/alpha.py#do_a": {"fns": 2, "depth": 2, "names": ["do_b", "do_b2"]}},
+      "derive_behind: transitive callees (fns) + BFS depth + NAMED fns, build-output noise EXCLUDED")
 _beh2 = GG.derive_behind(WIRING, {"e": {"endpoints": [
     {"file": "apps/api/ghost.py", "fn": "nope", "method": "GET", "path": "/z"}]}})
 check(_beh2 == {}, "derive_behind: an unresolvable handler gets NO entry (honest, never a zero)")
@@ -214,6 +214,13 @@ _bt = GG.derive_behind(_wt, {"e": {"endpoints": [{"file": "a0.py", "fn": "f", "m
 GG._BEHIND_DEPTH_CAP = _saved_cap
 check(_bt["a0.py#f"].get("truncated") is True and _bt["a0.py#f"]["depth"] == 2,
       "derive_behind: the depth cap sets truncated:True (no silent cap)")
+# the named-fn list caps at _BEHIND_NAMES_CAP (12) with a +N remainder
+_wc = {"nodes": [{"id": f"c/{i}.py#f{i}", "kind": "function", "path": f"c/{i}.py"} for i in range(15)]
+                + [{"id": "c/h.py#h", "kind": "function", "path": "c/h.py"}],
+       "edges": [{"source": "c/h.py#h", "target": f"c/{i}.py#f{i}", "relation": "calls"} for i in range(15)]}
+_bc = GG.derive_behind(_wc, {"e": {"endpoints": [{"file": "c/h.py", "fn": "h", "method": "G", "path": "/x"}]}})["c/h.py#h"]
+check(_bc["fns"] == 15 and len(_bc["names"]) == 12 and _bc.get("names_more") == 3,
+      "derive_behind: the named-fn list caps at 12 with a +N remainder")
 # the floor attaches to the endpoint node by <file>#<fn>; a mini-archmap with a filed endpoint
 _bam = {"head": "b", "entities": {"e": {
     "files": [["api", "apps/api/alpha.py", 10]], "models": [], "schemas": [],
