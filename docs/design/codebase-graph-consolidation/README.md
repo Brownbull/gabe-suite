@@ -70,7 +70,14 @@ Elicited via the spikes in this directory (`panel-spike.html`, `element-componen
   inside; the levels-lab cluster grammar + all its layout-options carry over unchanged.
 - **Journeys** step through the **Red · Execute · Review · Commit** stage faces per event, in the panel.
 - **The right panel** — one per-kind card, shared chrome:
-  - header **restacked**: NAME on row 1, then `[kind-glyph] TYPE · sub` on row 2 (no left badge);
+  - header **restacked**: NAME on row 1, then `[kind-glyph] TYPE sub` on row 2 (no left badge, and
+    **no middle dot** between the kind and the sub — just the glyph, the kind, then the sub);
+  - **top-right is RESERVED for the trace back/forward** — a temporary journey of the nodes you
+    click through (not in a defined journey): select a node → another → another, and back/forward
+    walk that trace. The journey STEP control (for a defined journey) lives in the **top nav**, not
+    here; this corner is back/forward only.
+  - **the collapse control is a chevron in the BOTTOM-RIGHT** (matching the center's panels), not a
+    min/max in the top-right. Left-edge drag still resizes.
   - the center's **kind-glyphs** on the header + chips, a **Lucide icon on every section and field**
     (nothing bare — matches the rest of the command center);
   - min/max top-right · left-edge drag-resize (as today);
