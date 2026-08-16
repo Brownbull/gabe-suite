@@ -37,6 +37,28 @@ entity/maturity vocabulary. Dead/avoid: CodeSee (shut 2024), Sourcetrail (archiv
   explore code at every level, tests, evidence, the board (project status), ledger, releases.
 - **graft = the codebase map.** We hand mapping to graft and base the Center on it.
 
+## GAP FINDING (2026-08-16, from graft's real output) — graft is GENERIC; framework+process stay
+
+Read gustify's `wiring.json`: a route handler is a plain `function` node (`async def _recipe_titles(...)`)
+with NO `GET /recipes`; a model is `class AdminReviewQueue(Base)` with NO `__tablename__`/Column/ForeignKey.
+graft's AST is framework-BLIND. Node kinds: file 1063 · function 5790 · class 363 · method 211 · interface
+98 · type 916. Edges: calls 7643 · contains 7378 · imports 5429 · extends 289 · references 222 · implements 1.
+
+So adoption **thins** the generators, it does not delete them. Per the 13-need gap matrix (see the
+`Graft Adoption Plan` artifact): graft fills ~4 needs outright (functions/code-map/architecture-topology/
+frontend-topology) + enriches 3 (layer/domain/fetch overlays) + the `--deep` prose; the SUITE keeps 6
+framework/process needs — **route decorators · ORM table/FK/columns · Pydantic fields · fetch paths ·
+test results (junit) · board/ledger/evidence/sim**. No gap is unfillable; the "gaps" are the framework/
+process parses we already do. Retires: signature re-parse · generic call graph · node inventory · the
+`_a3_web` regex topology (→ graft TS reader).
+
+**Deep layer** = graft's three stateless `ChatModel.create` calls (summarize/crux/synthesize). Run them
+on the CLAUDE SUBSCRIPTION (Path A: execute the prompts our side, write graft's `body_hash` cache — in-bounds,
+no proxy, no fork). PROBE FIRST: does the injection hook consume deep prose or only the structural card? If
+structural-only, `--deep` is optional for the pilot. Tie the run to `/gabe-commit` (only the diff's files,
+cached) so the map gains deep info as work finishes; review/cc-entity READ it. Regen cost: structural build
+~ms (hook every beat); deep incremental (changed files only → hook on commit).
+
 ## The layering — who owns what
 
 The Center's sections split cleanly into **codebase facts** (→ graft) and **process/domain**
