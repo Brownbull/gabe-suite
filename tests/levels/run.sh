@@ -33,7 +33,7 @@ AMAP = {
               "schemas": [], "endpoints": [{"method": "GET", "path": "/users", "fn": "list_users", "file": "api/users.py", "touches": ["User"], "resp": ""}],
               "files": [["api", "api/users.py", 50]], "defines": {}}},
   "function_insight": {
-    "api/orders.py::list_orders": {"fn": "list_orders", "entity": "orders", "file": "api/orders.py", "layer": "api", "handler": True, "god": False, "internal": 2, "api": 3, "web": 0},
+    "api/orders.py::list_orders": {"fn": "list_orders", "entity": "orders", "file": "api/orders.py", "layer": "api", "handler": True, "god": False, "internal": 2, "api": 3, "web": 0, "doc": "List all orders for the user.", "lines": 12, "returns": "OrderResponse", "async": True},
     "api/orders.py::add_line": {"fn": "add_line", "entity": "orders", "file": "api/orders.py", "layer": "api", "handler": True, "god": False, "internal": 0, "api": 1, "web": 0},
     "api/users.py::list_users": {"fn": "list_users", "entity": "users", "file": "api/users.py", "layer": "api", "handler": True, "god": False, "internal": 0, "api": 1, "web": 0}},
   "model_insight": {
@@ -139,6 +139,30 @@ _lv5 = _a3_levels.build_levels(_m5, _a3_graph.build_c4_graph(_m5))
 ck(not any(set(v) >= {"Order", "OrderLine"} for v in _lv5["pieces"]["orders"]["fk_communities"].values())
    and any(set(v) >= {"Order", "OrderLine"} for v in lv["pieces"]["orders"]["fk_communities"].values()),
    "MUTATION: removing the intra FK splits the fk_community")
+
+# ── fn DETAIL projection (the panel's Function card feed): doc · file · signature
+#    from function_insight, keyed "fn:"+slug+"|"+name like the cls: rows, honest-empty
+#    per field. list_orders' FI carries a docstring + returns + async + line count.
+_fd = lv["detail"].get("fn:orders|list_orders")
+ck(bool(_fd) and _fd.get("doc") == "List all orders for the user." and _fd.get("file") == "api/orders.py"
+   and _fd.get("flines") == 12 and _fd.get("sig", {}).get("returns") == "OrderResponse"
+   and _fd.get("sig", {}).get("async") is True,
+   "fn detail projects doc + file + flines + signature from function_insight")
+# add_line's FI has file/entity but NO doc/lines/returns ⇒ file only, nothing fabricated
+_fda = lv["detail"].get("fn:orders|add_line")
+ck(bool(_fda) and _fda.get("file") == "api/orders.py" and "doc" not in _fda
+   and "flines" not in _fda and "sig" not in _fda,
+   "fn detail honest-empty: no docstring/signature insight ⇒ file only, no fabricated fields")
+# MUTATION 6 — strip list_orders' doc + returns + async ⇒ its fn detail loses doc + sig,
+#   keeping file (which comes from the drawn id, not the insight) — detectable
+_m6 = copy.deepcopy(AMAP)
+for _f in ("doc", "returns", "async", "lines"):
+    _m6["function_insight"]["api/orders.py::list_orders"].pop(_f, None)
+_lv6 = _a3_levels.build_levels(_m6, _a3_graph.build_c4_graph(_m6))
+_fd6 = _lv6["detail"].get("fn:orders|list_orders")
+ck(bool(_fd6) and "doc" not in _fd6 and "sig" not in _fd6 and "flines" not in _fd6
+   and _fd6.get("file") == "api/orders.py" and bool(_fd) and _fd.get("doc"),
+   "MUTATION: stripping the docstring/signature insight drops the fn detail doc + sig, keeps file")
 
 print(f"levels battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)

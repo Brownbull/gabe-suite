@@ -149,6 +149,67 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .fixture{ position:absolute; top:10px; left:14px; font-size:10.5px; color:var(--muted);
   background:var(--panel); border:1px dashed var(--line); border-radius:6px; padding:2px 9px; pointer-events:none; }
 
+/* ── ECP panel kit — PORTED from docs/design/codebase-graph-consolidation/
+   element-components.html (operator-locked 2026-08-15), scoped under #panel so it
+   never collides with the lab's own aside styles. The card FOLLOWS the center's
+   content font/size (--font-content / --root-size, written by a3-settings.js once
+   the shell stack loads — Phase-2 task 4); code (paths, types) stays --font-mono.
+   The *-x fallbacks keep it styled before that stack is present. ── */
+#panel .ecp{ --c-endpoint:#4c6ef5; --c-fn:#7048e8; --c-god:#d9821f;
+  --font-content-x:var(--font-content, ui-sans-serif,system-ui,sans-serif);
+  --font-mono-x:var(--font-mono, Menlo,Consolas,ui-monospace,monospace);
+  --root-size-x:var(--root-size, 13px);
+  font-family:var(--font-content-x); font-size:var(--root-size-x); }
+#panel .ecp code{ font-family:var(--font-mono-x); }
+#panel svg.ico{ width:14px; height:14px; flex:none; stroke-width:2; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; }
+#panel .phead{ display:flex; align-items:flex-start; gap:8px; padding:2px 0 11px; border-bottom:1px solid var(--line); margin-bottom:11px; }
+#panel .ptitle{ flex:1; min-width:0; }
+#panel .pname{ font:600 1.08em/1.3 var(--font-mono-x); word-break:break-all; color:var(--ink); }
+#panel .ptype{ display:flex; align-items:center; gap:5px; font-size:.88em; color:var(--muted); margin-top:3px; }
+#panel .ptype .kglyph{ width:15px; height:15px; }
+#panel .ptype b{ text-transform:uppercase; letter-spacing:.04em; font-size:.81em; }
+#panel .tracenav{ display:flex; align-items:center; gap:1px; flex:none; }
+#panel .tracebtn{ border:1px solid transparent; background:none; color:var(--muted); border-radius:6px; width:22px; height:22px; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+#panel .tracebtn:hover:not(:disabled){ border-color:var(--edge); color:var(--ink); }
+#panel .tracebtn:disabled{ opacity:.35; cursor:default; }
+#panel .tracepos{ font:600 10px/1 var(--font-ui); color:var(--muted); min-width:22px; text-align:center; }
+#panel .ecp .sec{ margin:0 0 13px; } #panel .ecp .sec:last-child{ margin-bottom:0; }
+#panel .sechd{ display:flex; align-items:center; gap:6px; font-size:.81em; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 7px; }
+#panel .sechd .cnt{ margin-left:auto; font-family:var(--font-ui); font-weight:700; font-size:.77em; color:#fff; background:var(--accent); border-radius:10px; padding:2px 7px; }
+#panel .sechd .cnt.ok{ background:var(--c-model); }
+#panel .sublbl{ display:flex; align-items:center; gap:5px; font-size:.85em; color:var(--muted); margin:4px 0 5px; }
+#panel .ecp .kv{ display:flex; align-items:center; gap:7px; font-size:.96em; padding:1.5px 0; border-top:none; }
+#panel .kv .kico{ color:var(--muted); }
+#panel .kv .k{ color:var(--muted); flex:none; width:70px; text-transform:none; letter-spacing:0; font-weight:400; font-size:1em; margin:0; display:inline; }
+#panel .kv .v{ color:var(--ink); min-width:0; }
+#panel .chip{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:.85em; line-height:1.5; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 7px; margin:0 4px 4px 0; }
+#panel .chip svg{ width:11px; height:11px; }
+#panel .chip.model{ color:var(--c-model); } #panel .chip.schema{ color:var(--c-schema); } #panel .chip.web{ color:var(--c-fn-web); } #panel .chip.route{ color:var(--c-endpoint); } #panel .chip.fn{ color:var(--c-fn); } #panel .chip.ok{ color:var(--c-model); }
+#panel .chip.hot{ cursor:pointer; transition:border-color .1s, box-shadow .1s; }
+#panel .chip.hot:hover{ border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
+#panel .ecp .doc{ font-size:.96em; color:var(--ink); background:var(--bg); border-left:2px solid var(--edge); padding:7px 10px; border-radius:0 6px 6px 0; margin:0; }
+#panel .more{ font-weight:600; font-size:.85em; line-height:1; color:var(--accent); background:none; border:1px dashed var(--edge); border-radius:6px; padding:4px 8px; cursor:pointer; } #panel .more:hover{ border-color:var(--accent); }
+#panel .flag{ display:inline-flex; align-items:center; gap:4px; font-family:var(--font-ui); font-weight:700; font-size:.77em; text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; color:var(--c-god); border:1px solid var(--c-god); }
+#panel .tabbar{ display:flex; gap:3px; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+#panel .tab{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:.85em; line-height:1; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 7px; border-bottom:2px solid transparent; }
+#panel .tab svg{ width:12px; height:12px; } #panel .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+#panel .tab .tabn{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:0 5px; font-size:.77em; font-weight:700; }
+#panel .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+#panel table.cols{ width:100%; border-collapse:collapse; font-size:.92em; margin-top:2px; } #panel table.cols td{ padding:2px 4px; border-bottom:1px solid var(--line); }
+#panel table.cols td.ty{ color:var(--c-schema); font-family:var(--font-mono-x); font-size:.85em; text-align:right; }
+#panel .keycol{ display:inline-flex; align-items:center; gap:4px; }
+#panel .ecp .count{ display:flex; align-items:center; gap:7px; font-size:.96em; padding:2.5px 0; border-bottom:1px dotted var(--line); } #panel .count .lbl{ flex:1; } #panel .count .n{ font-weight:700; font-variant-numeric:tabular-nums; }
+#panel .hint{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); margin-top:7px; font-style:italic; }
+#panel .hint svg{ width:12px; height:12px; }
+#panel .tipico{ cursor:help; position:relative; display:inline-flex; margin-left:2px; }
+#panel .tipico.info{ color:var(--accent); } #panel .tipico.warn{ color:var(--c-god); }
+#panel .tipico svg{ width:13px; height:13px; }
+#panel .tipico .tip{ display:none; position:absolute; top:19px; left:-4px; z-index:6; width:214px; text-transform:none; letter-spacing:0;
+  background:var(--ink); color:var(--panel); font:500 11px/1.45 var(--font-ui); padding:7px 9px; border-radius:7px; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+#panel .tipico:hover .tip, #panel .tipico.on .tip{ display:block; }
+#panel .ubar{ height:6px; background:var(--bg); border:1px solid var(--line); border-radius:4px; overflow:hidden; margin:1px 0 6px; }
+#panel .ufill{ height:100%; background:var(--accent); }
+
 /* ── center chrome (nav sidebar + topbar) grafted around the lab renderer ── */
 :root{ --sidebar:#101726; --sidebar-2:#1b2436; --sidebar-ink:#c7cfdd; --sidebar-muted:#79839a;
   --side-w:248px; --font-ui:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
@@ -344,11 +405,16 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
 </div>
 
 </div><!-- /labcol -->
+<script src="./c4-graph.js"></script>
 <script src="./levels.js"></script>
 <script>
 (function(){
 "use strict";
 var D = window.GABE_LEVELS; if(!D) return;
+// GABE_C4 is the SECOND feed the panel reads (Phase-2 consolidation): the endpoint
+// `behind` floor + the web→API bridges live here, never in GABE_LEVELS (which stays
+// FK-only + byte-identical). Absent → every C4-sourced card row goes honest-empty.
+var C4 = window.GABE_C4 || null;
 var NS = "http://www.w3.org/2000/svg";
 var COLORS = D.colors || {};
 var METHOD = { GET:"var(--m-get)", POST:"var(--m-post)", PUT:"var(--m-put)", PATCH:"var(--m-put)", DELETE:"var(--m-delete)" };
@@ -532,13 +598,17 @@ var LINKED = (function(){
   (D.cross_edges||[]).forEach(function(e){ cls[e.fs+"|"+e.f]=1; cls[e.ts+"|"+e.t]=1; });
   return {ep:ep, cls:cls, why:why};
 })();
-function unlinkedNote(kind, key, name){
-  if(kind==="ep"){ if(LINKED.ep[key]) return "";
-    return _sect(_psvg("<path d='M3 12h5 M16 12h5' fill='none' stroke='var(--muted)' stroke-width='2.2' stroke-dasharray='2.5 2.5'/>"),"why is it unlinked?")+"<div class='note'>"+(LINKED.why[key]||[]).join("; and ")
-      +". Raising this ceiling is the graft arm's function-level work, not a drawing gap.</div>"; }
-  if(LINKED.cls[key]) return "";
-  return _sect(_psvg("<path d='M3 12h5 M16 12h5' fill='none' stroke='var(--muted)' stroke-width='2.2' stroke-dasharray='2.5 2.5'/>"),"why is it unlinked?")+"<div class='note'>No documented foreign key, endpoint touch, or response references <b>"+name
-    +"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.</div>";
+// WHY-UNLINKED as an ECP section — the honest-empty explainer that survives the port:
+// when a piece/endpoint draws NO connector, say WHY (from the layout-independent LINKED
+// table) instead of leaving the reader guessing. Returns null (skipped) when it IS linked.
+// The endpoint reasons carry intentional <b> markup, so the note is set as html.
+function ecpUnlinked(kind, key, name){
+  var linked = (kind==="ep") ? LINKED.ep[key] : LINKED.cls[key];
+  if(linked) return null;
+  var reason = (kind==="ep")
+    ? ((LINKED.why[key]||[]).join("; and ")+". Raising this ceiling is the graft arm's function-level work, not a drawing gap.")
+    : ("No documented foreign key, endpoint touch, or response references <b>"+esc(name)+"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.");
+  return H("div",{class:"sec"}, ecpSechd("info","Why unlinked"), H("div",{class:"doc",html:reason}));
 }
 var entLayout = "force", insideLayout = "force";   // defaults per operator screenshot: Force · Force
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
@@ -1725,6 +1795,171 @@ function legend(items){
   document.getElementById("legend").innerHTML=
     ["<div class='lg-h'>this level</div>"].concat(items).concat(LEGEND_TAIL).join(""); }
 
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ECP — the element-components panel kit, PORTED from
+   docs/design/codebase-graph-consolidation/element-components.html (operator-locked
+   2026-08-15). Per-kind right-panel cards with shared chrome: a restacked header
+   (NAME row1, [glyph TYPE sub] row2, no dot) with the trace back/forward top-right ·
+   a Usage IN-DEGREE bar · always-visible SEMANTIC connection chips (hover → peeks the
+   graph node, click → travels to it) · Tests + Code-behind the ONLY tabbed sections ·
+   a Lucide icon on every section + field · info/warn tip-icons · follows the center's
+   --font-content / --root-size. Reused VERBATIM (renamed the DOM builder E→H to avoid
+   the lab's SVG E, chips wired into the lab's peek/nav), NOT rebuilt — a from-scratch
+   rebuild elsewhere is exactly what forked the two codebase-graph tracks. ═════════ */
+var ECP_P = {
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  test:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  table:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M12 3v18"/>',
+  key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  doc:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8M16 17H8M10 9H8"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  layers:'<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+  merge:'<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+  role:'<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+  function:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+  web:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+  entity:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>',
+  alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+  arrowL:'<polyline points="15 18 9 12 15 6"/>', arrowR:'<polyline points="9 18 15 12 9 6"/>'
+};
+function H(t,a){ var e=document.createElement(t), i, args=arguments;
+  for(var p in (a||{})){ if(p==="class") e.className=a[p]; else if(p==="html") e.innerHTML=a[p]; else e.setAttribute(p,a[p]); }
+  for(i=2;i<args.length;i++) ecpAppend(e,args[i]);
+  return e; }
+function ecpAppend(e,c){ if(c==null) return; if(Array.isArray(c)){ c.forEach(function(x){ ecpAppend(e,x); }); return; }
+  if(typeof c==="object") e.appendChild(c); else e.appendChild(document.createTextNode(String(c))); }
+function ecpIco(n, cls, col){ var s="<svg class='ico "+(cls||"")+"' viewBox='0 0 24 24' "+(col?"style='color:"+col+"'":"")+">"+(ECP_P[n]||"")+"</svg>";
+  var d=document.createElement("div"); d.innerHTML=s; return d.firstChild; }
+// the lab-wiring hooks (set once, below): a chip's hover peeks its graph node, a click
+// travels to it — the diagram's existing peek/select behaviour, reused not reinvented.
+var ECP={ onPeek:null, onPeekClear:null, onJump:null };
+function ecpChip(item, cls, glyph){
+  var label=(item&&typeof item==="object")?item.label:item;
+  var key=(item&&typeof item==="object")?item.key:null;
+  var c=H("span",{class:"chip "+(cls||"")}, glyph?ecpIco(glyph):null, label);
+  if(key){ c.classList.add("hot");
+    c.addEventListener("mouseenter",function(){ if(ECP.onPeek) ECP.onPeek(key); });
+    c.addEventListener("mouseleave",function(){ if(ECP.onPeekClear) ECP.onPeekClear(); });
+    c.addEventListener("click",function(ev){ ev.stopPropagation(); if(ECP.onJump) ECP.onJump(key); }); }
+  return c; }
+function ecpChipList(items, cls, glyph, cap){ cap=cap||5;
+  var wrap=H("span"), head=items.slice(0,cap), tail=items.slice(cap);
+  head.forEach(function(x){ wrap.append(ecpChip(x,cls,glyph)); });
+  if(tail.length){ var hid=H("span",{style:"display:none"}); tail.forEach(function(x){ hid.append(ecpChip(x,cls,glyph)); });
+    var b=H("button",{class:"more"},"+"+tail.length+" more"); b.onclick=function(){ hid.style.display="inline"; b.remove(); }; wrap.append(hid,b); }
+  return wrap; }
+function ecpTip(tip){ var w=H("span",{class:"tipico "+(tip.cls||"info"),title:tip.text}, ecpIco(tip.icon), H("span",{class:"tip"},tip.text));
+  w.onclick=function(ev){ ev.stopPropagation(); w.classList.toggle("on"); }; return w; }
+function ecpSechd(icoName, label, count, ok, tip){ return H("div",{class:"sechd"}, ecpIco(icoName), label,
+  tip?ecpTip(tip):null, (count!=null)?H("span",{class:"cnt"+(ok?" ok":"")}, String(count)):null); }
+var ECP_CONN_TIP={icon:"info",text:"hover a connection → highlights that node in the graph (the diagram's peek/select behaviour).",cls:"info"};
+function ecpUsage(n, breakdown){ n=n||0;
+  return H("div",{class:"sec"},
+    ecpSechd("merge","Usage", n, false, {icon:"info",text:"IN-DEGREE — how many elements depend on this one. Break it and this many are affected (a load-bearing measure).",cls:"info"}),
+    H("div",{class:"ubar"}, H("div",{class:"ufill",style:"width:"+Math.min(100,n*9)+"%"})),
+    breakdown?H("div",{class:"sublbl"}, ecpIco("link"), breakdown):null); }
+function ecpKv(icoName,k,v){ return H("div",{class:"kv"}, icoName?ecpIco(icoName,"kico"):H("span",{style:"width:14px"}),
+  H("span",{class:"k"},k), H("span",{class:"v",html:v})); }
+function ecpG(label,icon,count,nodeFn){ return {label:label,icon:icon,count:count,node:nodeFn}; }
+// THE TAB RULE (operator ruling): tabs are for Tests + Code-behind ONLY. groups>1 → tabs;
+// groups==1 → direct; groups==0 → empty note. Connections use ecpConns and are NEVER tabbed.
+function ecpTabbed(secIcon, title, groups, opt){
+  opt=opt||{}; var live=groups.filter(function(g){ return g.count>0; });
+  var total=live.reduce(function(s,g){ return s+g.count; },0);
+  var hd=ecpSechd(secIcon, title, opt.showCount?total:null, opt.ok);
+  if(!live.length) return H("div",{class:"sec"}, hd, H("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+  if(live.length===1){ var g=live[0];
+    return H("div",{class:"sec"}, hd, H("div",{class:"sublbl"}, ecpIco(g.icon), g.label+" "+g.count), g.node()); }
+  var bar=H("div",{class:"tabbar"}), body=H("div");
+  var show=function(i){ body.innerHTML=""; body.append(live[i].node());
+    Array.prototype.forEach.call(bar.children,function(c,j){ c.classList.toggle("on",j===i); }); };
+  live.forEach(function(g,i){ var t=H("button",{class:"tab"}, ecpIco(g.icon), g.label, H("span",{class:"tabn"}, String(g.count))); t.onclick=function(){ show(i); }; bar.append(t); });
+  var wrap=H("div",{class:"sec"}, hd, bar, body); show(0); return wrap; }
+// CONNECTIONS — never tabbed: every group shown at once; chips hover-highlight the node.
+function ecpConns(secIcon, title, groups, opt){
+  opt=opt||{}; var live=groups.filter(function(g){ return g.count>0; });
+  var total=live.reduce(function(s,g){ return s+g.count; },0);
+  var box=H("div",{class:"connbox"});
+  if(!live.length) box.append(H("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+  live.forEach(function(g){ box.append(H("div",{class:"sublbl"}, ecpIco(g.icon), g.label+" "+g.count), g.node()); });
+  return H("div",{class:"sec"}, ecpSechd(secIcon,title, opt.showCount?total:null, false, live.length?ECP_CONN_TIP:null), box); }
+function ecpColsTable(cols, fks){
+  var fkset={}; (fks||[]).forEach(function(f){ fkset[f[0]]=1; });
+  var t=H("table",{class:"cols"});
+  cols.forEach(function(c){ t.append(H("tr",null, H("td",null, fkset[c[0]]?H("span",{class:"keycol"},ecpIco("key"),c[0]):c[0]), H("td",{class:"ty"}, c[1]||""))); });
+  return t; }
+// Code behind — ONE category (functions) → shown directly, never gated. The named list
+// rides the C4 behind floor (derive_behind.names, live); an unresolved handler keeps a warn.
+function ecpBehind(b){
+  if(!b) return null;
+  var body=H("div",null, H("div",{class:"sublbl"}, ecpIco("function"), "depth "+(b.depth||0)+" · the call tree behind this"+(b.truncated?" (depth-capped)":"")));
+  var list=H("div"); (b.names||[]).forEach(function(f){ list.append(H("span",{class:"chip fn"}, ecpIco("function"), f)); });
+  if(b.names_more) list.append(H("span",{class:"more"}, "+"+b.names_more+" more"));
+  body.append(list);
+  var warn=(b.names&&b.names.length)?null:{icon:"alert",cls:"warn",text:"The count + depth are live; graft resolved no named callees for this handler (a cross-file inference gap, not a zero)."};
+  return H("div",{class:"sec"}, ecpSechd("layers","Code behind", b.fns||0, false, warn), body); }
+// tests → cid chips (rows carry {cid,name} from the C4 det; a bare string also renders)
+function ecpCids(arr){ return function(){ var w=H("div"); (arr||[]).forEach(function(c){
+  w.append(H("span",{class:"chip ok"}, ecpIco("test"), (c&&typeof c==="object")?(c.cid||c.name||"case"):c)); }); return w; }; }
+
+/* ── the restacked header + the TRACE back/forward (top-right). The trace is a
+   temporary journey of the nodes you click through — it rides the lab's nav history
+   (navStack) extended with a forward stack. A defined journey's STEP control lives in
+   the top nav (jrnBar); this corner is back/forward only. ── */
+var navFwd=[], ecpCurHead=null, _ecpFwding=false;
+function ecpHeader(kind, kglyph, kcolor, name, typeSub){
+  var back=H("button",{class:"tracebtn",title:"back — previous node in your trace"}, ecpIco("arrowL"));
+  var fwd=H("button",{class:"tracebtn",title:"forward — next node in your trace"}, ecpIco("arrowR"));
+  var posEl=H("span",{class:"tracepos"},"");
+  back.addEventListener("click",function(){ ecpTraceGo(-1); });
+  fwd.addEventListener("click",function(){ ecpTraceGo(1); });
+  var head=H("div",{class:"phead"},
+    H("div",{class:"ptitle"}, H("div",{class:"pname"}, name),
+      H("div",{class:"ptype",style:"color:"+kcolor}, ecpIco(kglyph,"kglyph"), H("b",null,kind), typeSub?H("span",{style:"color:var(--muted)"}, typeSub):null)),
+    H("div",{class:"tracenav",title:"your node trace — back / forward"}, back, posEl, fwd));
+  head._back=back; head._fwd=fwd; head._pos=posEl; return head; }
+function ecpTraceSync(){ if(!ecpCurHead) return;
+  ecpCurHead._back.disabled = navStack.length===0;
+  ecpCurHead._fwd.disabled = navFwd.length===0;
+  var total=navStack.length+navFwd.length+1, cur=navStack.length+1;
+  ecpCurHead._pos.textContent = total>1 ? (cur+"/"+total) : ""; }
+function ecpTraceGo(dir){
+  if(dir<0){ if(!navStack.length) return; if(navCur) navFwd.push(navCur); goBack(); }
+  else { if(!navFwd.length) return; var k=navFwd.pop(); _ecpFwding=true; jumpToNode(k); _ecpFwding=false; }
+  ecpTraceSync(); }
+
+/* ── C4 lookups — the endpoint `behind` floor + the web→API bridges the panel reads
+   from GABE_C4 (never GABE_LEVELS). Honest-empty: C4 absent ⇒ null / []. ── */
+function c4Endpoint(slug, m, p){ if(!C4 || !C4.l2 || !C4.l2[slug]) return null;
+  var lbl=m+" "+p, ns=C4.l2[slug].nodes||[];
+  for(var i=0;i<ns.length;i++){ if(ns[i].kind==="endpoint" && ns[i].label===lbl) return ns[i]; }
+  return null; }
+function c4BridgesTo(endpointNodeId){ if(!C4 || !C4.cross_edges) return [];
+  return C4.cross_edges.filter(function(e){ return e.kind==="bridge" && e.to===endpointNodeId; }); }
+function c4ScreenLabel(id, slug){ if(!C4 || !C4.l2 || !C4.l2[slug]) return id; var ns=C4.l2[slug].nodes||[];
+  for(var i=0;i<ns.length;i++){ if(ns[i].id===id) return ns[i].label||id; } return id; }
+
+/* ── the ECP card mount: clears the aside, builds the .ecp card (header + body), and
+   leaves an #ecp-conns slot the selection engine fills with the 1-hop connectors. The
+   aside's own #panelgrip (drag) + #panelchev (collapse-to-rail) provide the outer chrome. ── */
+var _ecpExtraConns=null;   // extra connection groups a card contributes from C4 (endpoint screens)
+function ecpConnSlot(){ return H("div",{id:"ecp-conns"}); }
+function mountCard(kind, kglyph, kcolor, name, sub, bodyNodes){
+  panel.innerHTML="";
+  var root=H("div",{class:"ecp"});
+  var head=ecpHeader(kind, kglyph, kcolor, name, sub); ecpCurHead=head;
+  root.append(head);
+  var pbody=H("div",{class:"pbody"});
+  bodyNodes.forEach(function(n){ ecpAppend(pbody,n); });
+  root.append(pbody); panel.append(root);
+  ecpTraceSync(); }
+
 function showDefault(){
   panel.innerHTML="<h3>"+esc({entities:"Entities",pieces:"Pieces",functions:"Functions",layers:"Layers",trace:"Trace"}[level])+"</h3>"
    +"<div class='note'>"+{
@@ -1735,126 +1970,118 @@ function showDefault(){
      trace:"The merge of Pieces + Functions: each endpoint wired to the handler function it calls, wired to the models/schemas that handler reads or writes — the request's path through the code, end to end. Wires wear the entity's colour."
    }[level]+"</div>"+_sect(_psvg("<ellipse cx='12' cy='6' rx='8' ry='3' fill='none' stroke='var(--muted)' stroke-width='1.5'/><path d='M4 6 v10 a8 3 0 0 0 16 0 v-10' fill='none' stroke='var(--muted)' stroke-width='1.5'/>"),"fixture")+"<div class='note'>"+esc(D.note)+"</div>";
 }
-function showEntity(en){ var pc=D.pieces[en.slug]||{};
-  panel.innerHTML="<h3 style='color:"+(COLORS[en.slug]||"inherit")+"'>"+esc(en.label)+"</h3>"
-   +"<div class='row'><span>endpoints</span><b>"+en.counts.endpoints+"</b></div>"
-   +"<div class='row'><span>models</span><b>"+en.counts.models+"</b></div>"
-   +"<div class='row'><span>schemas</span><b>"+en.counts.schemas+"</b></div>"
-   +"<div class='row'><span>lines</span><b>"+(en.counts.lines||0).toLocaleString()+"</b></div>"
-   +"<div class='note'>Switch to <b>2 · Pieces</b> to open it — the endpoints move to the border.</div>"; }
-var _icoDoc="<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M14 2v5h5 M16 13H8 M16 17H8' fill='none' stroke='var(--muted)' stroke-width='1.7'/>";
-var _icoTbl="<path d='M3 5h18v14H3z M3 10h18 M9 5v14' fill='none' stroke='var(--muted)' stroke-width='1.7'/>";
-function detailOf(key){ return (D.detail||{})[key]; }
-function docSect(doc, label){
-  if(!doc || doc==="\u2014") return "";
-  return _sect(_psvg(_icoDoc), label)+_snote(esc(doc)); }
-function fileRow(file, lines){
-  if(!file) return "";
-  var over=lines && lines>800;
-  return "<div class='row'><span>file</span><b style='font-weight:500'><code style='font-size:10.5px'>"+esc(file)+"</code>"
-    +(lines?" <span style='color:"+(over?"var(--m-delete)":"var(--muted)")+"'>"+lines+" ln"+(over?" · over the 800 budget":"")+"</span>":"")+"</b></div>"; }
-function usageRows(api, internal){
-  if(api==null && internal==null) return "";
-  var bar=function(n,col){ return "<span class='pbar' style='width:"+Math.min(6*(n||0),84)+"px;background:"+col+"'></span>"+(n||0); };
-  return "<div class='row'><span>usage</span><b>"+bar(api,"var(--c-fn-services)")+" api &nbsp; "+bar(internal,"var(--accent)")+" internal</b></div>"; }
-function twinRow(det){
-  var bits=[];
-  if(det.base) bits.push("base — derives from nothing");
-  if(det.sim) bits.push("twin: "+esc(det.sim)+(det.simj?" ("+Math.round(det.simj*100)+"%)":""));
-  return bits.length ? "<div class='row'><span>shape</span><b>"+bits.join(" · ")+"</b></div>" : ""; }
-function casesSect(det){
-  if(!det || !det.cases || !det.cases.length) return "";
-  var n=det.cases.length+(det.cases_more||0);
-  var h=_sect(_psvg("<rect x='3' y='7' width='18' height='11' rx='5.5' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M8.5 12.5 l2.4 2.4 L15.5 10' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),"tested by ("+n+")");
-  h+="<table class='ptab'><tr><th>kind</th><th>tier</th><th>case</th><th>state</th></tr>";
-  det.cases.forEach(function(c){
-    h+="<tr><td>"+esc(c.corpus)+"</td><td>"+esc(c.tier)+"</td>"
-      +"<td>"+(c.cid?"<span class='cid'>"+esc(c.cid)+"</span> ":"")+esc(c.name)+"</td>"
-      +"<td class='"+(c.state==="pass"?"st-pass":"st-fail")+"'>"+esc(c.state)+"</td></tr>"; });
-  h+="</table>";
-  if(det.cases_more) h+="<div class='pmore'>+"+det.cases_more+" more case(s) — the command center's matrix carries the full ledger</div>";
-  return h; }
-function structSect(det){
-  if(!det || !det.cols || !det.cols.length) return "";
-  var h=_sect(_psvg(_icoTbl),"structure ("+(det.cols.length+(det.cols_more||0))+" columns)");
-  h+="<table class='ptab'><tr><th>column</th><th>type</th><th>description</th></tr>";
-  det.cols.forEach(function(c){
-    h+="<tr><td>"+esc(c[0])+(c[3]?"<span class='uqchip'>unique</span>":"")+"</td>"
-      +"<td style='color:var(--c-schema)'>"+esc(c[1])+"</td><td style='color:var(--muted)'>"+esc(c[2]||"")+"</td></tr>"; });
-  h+="</table>";
-  if(det.cols_more) h+="<div class='pmore'>+"+det.cols_more+" more column(s)</div>";
-  return h; }
-function fkSect(det){
-  if(!det || !det.fks || !det.fks.length) return "";
-  var h=_sect(_psvg("<path d='M9 12h6 M5 12a4 4 0 0 1 4-4h1 M19 12a4 4 0 0 1-4 4h-1' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),"stored as (foreign keys)");
-  h+="<table class='ptab'><tr><th>fk column</th><th>points at</th></tr>";
-  det.fks.forEach(function(f){ h+="<tr><td>"+esc(f[0])+"</td><td style='color:var(--c-schema)'>"+esc(f[1])+"</td></tr>"; });
-  return h+"</table>"; }
-function sigSect(det){
-  if(!det || (!det.returns && det.async==null)) return "";
-  var h=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--muted)' stroke-width='2'/>"),"signature");
-  h+="<table class='ptab'><tr><th>part</th><th>type</th><th>role</th></tr>";
-  if(det.returns) h+="<tr><td>return</td><td style='color:var(--c-schema)'>"+esc(det.returns)+"</td><td>out</td></tr>";
-  h+="</table>";
-  h+="<div class='pmore'>"+(det.async?"async · ":"")+(det.lines?det.lines+" lines · ":"")
-    +"params live in the center's render pass — they join at the merge</div>";
-  return h; }
-function layerRow(lay){
-  return "<div class='row'><span>layer</span><b style='color:"+(FNCOL[lay]||"var(--c-model)")+"'>"+esc(lay)+"</b></div>"; }
-function entityRow(slug){
-  return "<div class='row'><span>entity</span><b style='display:flex;align-items:center;gap:6px'>"
-    +"<span class='entdot' style='width:9px;height:9px;border-radius:50%;display:inline-block;background:"+(COLORS[slug]||"#888")+"'></span>"
-    +esc(slug)+"</b></div>"; }
+function showEntity(en){
+  _ecpExtraConns=null;
+  var pc=D.pieces[en.slug]||{}, c=en.counts||{};
+  // usage IN-DEGREE = inbound cross-entity references (levels cross_edges landing here)
+  var inbound=(D.cross_edges||[]).filter(function(e){ return e.ts===en.slug; }).length;
+  var body=[];
+  body.push(ecpUsage(inbound, inbound?(inbound+" inbound cross-entity reference"+(inbound>1?"s":"")):"no other entity references it"));
+  body.push(H("div",{class:"sec"}, ecpSechd("entity","Composition"),
+    H("div",{class:"count"}, ecpIco("endpoint","kico"), H("span",{class:"lbl"},"API endpoints"), H("span",{class:"n"}, String(c.endpoints||0))),
+    H("div",{class:"count"}, ecpIco("model","kico"), H("span",{class:"lbl"},"Models"), H("span",{class:"n"}, String(c.models||0))),
+    H("div",{class:"count"}, ecpIco("schema","kico"), H("span",{class:"lbl"},"Schemas"), H("span",{class:"n"}, String(c.schemas||0))),
+    H("div",{class:"count",style:"border:none"}, ecpIco("layers","kico"), H("span",{class:"lbl"},"Lines"), H("span",{class:"n"}, (c.lines||0).toLocaleString()))));
+  var api=0, web=0;
+  (pc.models||[]).concat(pc.schemas||[]).forEach(function(m){ if(m.tests){ api+=m.tests.api||0; web+=m.tests.web||0; } });
+  if(api||web) body.push(H("div",{class:"sec"}, ecpSechd("test","Tests", api+web, true),
+    H("div",{class:"sublbl"}, ecpIco("test"), "api "+api+" · web "+web+" — the matrix carries the full ledger")));
+  var principal=(pc.models&&pc.models[0])?pc.models[0].cls:null;
+  mountCard("entity","entity", COLORS[en.slug]||"var(--c-entity)", en.label, principal?("principal "+principal):"", body);
+}
+/* the pre-port panel string-builders (detailOf · docSect · fileRow · usageRows ·
+   twinRow · casesSect · structSect · fkSect · sigSect · layerRow · entityRow +
+   the _ico* glyphs) were retired with the show* rewrite — the ECP kit renders
+   these as DOM cards now. Removed (git carries the history). */
 function showPiece(slug, it){
-  var _o={kind:it.kind, table:it.m.table, tests:it.m.tests||null, guards:it.m.guards||0,
-      hub:it.m.hub||null, press:(D.pressure||{})[slug+"|"+it.m.cls]||0};
-  panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(it.m.cls||"")+"</h3>"
-   +"<div class='note'>"+(it.kind==="model"?"model":"schema")+"</div>"
-   +entityRow(slug)
-   +layerRow("data")
-   +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
-   +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
-   +(insideLayout==="tiers"?"<div class='row'><span>tier</span><b>"+(it.kind==="model"?"models — inner ring":"schemas — outer ring")+"</b></div>":"")
-   +(function(){ var det=detailOf("cls:"+slug+"|"+(it.m.cls||""))||{};
-      return fileRow(det.file, det.lines)
-        + usageRows(det.usage, det.internal)
-        + twinRow(det)
-        + docSect(det.doc, "docstring")
-        + structSect(det)
-        + (it.kind==="model" ? fkSect(det) : "")
-        + casesSect(det); })()
-   +indicatorHTML(_o)
-   +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
+  _ecpExtraConns=null;
+  var cls=it.m.cls||"", m=it.m;
+  // model/schema DETAIL rides GABE_LEVELS.detail["cls:…"].det (the C4 element_detail
+  // dossier the levels feed homes here): cols · fks · uqs · doc · file · cases.
+  var d=D.detail["cls:"+slug+"|"+cls]||{}, det=d.det||{};
+  var usageN=(m.hub&&m.hub.usage)||0;
+  var body=[];
+  body.push(ecpUsage(usageN, usageN?("fan-in "+usageN+" — endpoints + functions referencing it"):"nothing references it yet"));
+  body.push(ecpConnSlot());
+  body.push(ecpUnlinked("cls", slug+"|"+cls, cls));
+  if(det.cols && det.cols.length){
+    var tblTitle=(it.kind==="model")?"Structure":"Fields";
+    body.push(H("div",{class:"sec"}, ecpSechd("table",tblTitle, det.cols.length+(det.cols_more||0)),
+      ecpColsTable(det.cols, (it.kind==="model")?det.fks:null),
+      det.cols_more?H("div",{class:"sublbl"}, "+"+det.cols_more+" more column(s)"):null));
+  }
+  if(it.kind==="model" && ((det.fks&&det.fks.length) || (det.uqs&&det.uqs.length))){
+    var keyRows=[];
+    (det.fks||[]).forEach(function(f){ keyRows.push(ecpKv("key","foreign", esc(f[0])+" → <code>"+esc(f[1])+"</code>")); });
+    if(det.uqs&&det.uqs.length) keyRows.push(ecpKv("key","unique", esc(det.uqs.join(", "))));
+    body.push(H("div",{class:"sec"}, ecpSechd("key","Keys"), keyRows));
+  }
+  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; });
+  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length,ecpCids(apiC)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
+  if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(det.doc)), det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
+  else if(det.file) body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(det.file)+"</code>")));
+  if(m.hub&&m.hub.god) body.push(H("div",{class:"sec"}, H("span",{class:"flag"}, ecpIco("info"), "god "+it.kind+" · usage "+usageN)));
+  var kcol=(it.kind==="model")?"var(--c-model)":"var(--c-schema)";
+  var sub=(it.kind==="model")?("table "+(m.table||"—")):"schema";
+  mountCard(it.kind, it.kind, kcol, cls, sub, body);
+}
 function showEndpoint(slug, ep){
-  var _o={kind:"ep", method:ep.m, mcol:METHOD[ep.m]||"var(--muted)", tests:ep.tests||null, guards:ep.guards||0};
-  panel.innerHTML="<h3 style='font-size:13px;display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(ep.m+" "+ep.p)+"</h3>"
-   +"<div class='note'>an entry point on the entity's border</div>"
-   +entityRow(slug)
-   +layerRow("api")
-   +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
-   +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
-   +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
-   +(function(){ var det=detailOf("ep:"+slug+"|"+ep.m+" "+ep.p)||{};
-      return (det.status?"<div class='row'><span>status</span><b>"+esc(String(det.status))+"</b></div>":"")
-        + fileRow(det.file, det.lines)
-        + docSect(det.doc, "purpose")
-        + casesSect(det); })()
-   +indicatorHTML(_o)
-   +unlinkedNote("ep", slug+"|"+ep.m+" "+ep.p, ep.p); }
+  var epId="endpoint:"+ep.m+" "+ep.p;
+  // endpoint DETAIL + the `behind` floor ride GABE_C4 (never GABE_LEVELS): the l2 node's
+  // element_detail dossier (doc · status · sig · file · cases) + node.behind {fns,depth,names}.
+  var c4n=c4Endpoint(slug, ep.m, ep.p), det=(c4n&&c4n.det)||{}, behind=(c4n&&c4n.behind)||null;
+  var bridges=c4BridgesTo(epId);
+  var usageN=bridges.length;   // usage IN-DEGREE = screens fetching this endpoint (C4 bridges)
+  // the screens group rides the Connections section as a C4 EXTRA (screens aren't drawn on
+  // the levels grammar yet → the chips carry no node key, so they are shown, not hot).
+  _ecpExtraConns = bridges.length ? [ ecpG("screens","web",bridges.length, (function(bs){ return function(){
+      return ecpChipList(bs.map(function(b){ return {label:c4ScreenLabel(b.from,b.from_slug)}; }),"web","web"); }; })(bridges)) ] : null;
+  var body=[];
+  body.push(ecpUsage(usageN, usageN?(usageN+" screen"+(usageN>1?"s":"")+" fetch this endpoint"):"no screen fetch bridged (entry point)"));
+  body.push(ecpConnSlot());
+  body.push(ecpUnlinked("ep", slug+"|"+ep.m+" "+ep.p, ep.p));
+  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; });
+  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length,ecpCids(apiC)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
+  if(behind) body.push(ecpBehind(behind));
+  var idRows=[ ecpKv("entity","entity", esc(slug)), ecpKv("layers","layer","api"),
+     ecpKv("role","role","endpoint handler"), (ep.guards?ecpKv("info","guards", ep.guards+" validator(s)"):null) ];
+  body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
+  if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Purpose"), H("div",{class:"doc"}, esc(det.doc)),
+     det.sig?ecpKv("endpoint","signature",(det.sig.async?"async · ":"")+(det.sig.lines?det.sig.lines+" lines · ":"")+"→ <code>"+esc(det.sig.returns||ep.resp||"—")+"</code>"):null,
+     det.status?ecpKv("info","status", esc(String(det.status))):null,
+     det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
+  else {
+    var pr=[];
+    if(ep.resp) pr.push(ecpKv("schema","returns", "<code>"+esc(ep.resp)+"</code>"));
+    if(det.status) pr.push(ecpKv("info","status", esc(String(det.status))));
+    if(det.file) pr.push(ecpKv("file","file","<code>"+esc(det.file)+"</code>"));
+    if(pr.length) body.push(H("div",{class:"sec"}, ecpSechd("endpoint","Handler"), pr));
+  }
+  mountCard("endpoint","endpoint","var(--c-endpoint)", ep.m+" "+ep.p, ep.fn?ep.fn+"()":"", body);
+}
 function showFn(f){
-  var _o={kind:"fn", layer:f.layer, fncol:FNCOL[f.layer]||"var(--muted)",
-      tests:f.tests||null, hub:f.hub||null, god:f.god, handler:f.handler, uses:f.uses||0};
-  panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(f.name)+"()</h3>"
-   +entityRow(f.slug)
-   +layerRow(f.layer)
-   +"<div class='row'><span>language</span><b>"+(f.lang==="ts"?"TypeScript":"Python")+"</b></div>"
-   +(function(){ var det=detailOf("fn:"+f.slug+"|"+f.name)||{};
-      return fileRow(det.file, det.flines)
-        + usageRows(det.api, det.internal)
-        + docSect(det.doc, "docstring")
-        + sigSect(det)
-        + casesSect(det); })()
-   +indicatorHTML(_o); }
+  _ecpExtraConns=null;
+  // fn DETAIL rides GABE_LEVELS.detail["fn:…"] (the wider function_insight projection):
+  // doc · file · signature. Fan-in usage is the fn_node's hub.usage (already live).
+  var fd=D.detail["fn:"+f.slug+"|"+f.name]||{};
+  var usageN=(f.hub&&f.hub.usage)||0;
+  var body=[];
+  body.push(ecpUsage(usageN, usageN?(usageN+" caller"+(usageN>1?"s":"")+" (fan-in)"):(f.handler?"endpoint handler — entered by a route, not called internally":"no internal caller recorded")));
+  body.push(ecpConnSlot());
+  var idRows=[ ecpKv("entity","entity", esc(f.slug)), ecpKv("layers","layer", esc(f.layer||"")),
+     ecpKv("globe","language", f.lang==="ts"?"TypeScript":"Python"),
+     ecpKv("role","role", f.handler?"endpoint handler":(f.god?"god function":"internal helper")) ];
+  body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
+  if(f.god) body.push(H("div",{class:"sec"}, H("span",{class:"flag"}, ecpIco("info"), "god fn · usage "+usageN)));
+  var tn=(f.tests&&f.tests.n)||0;
+  body.push(ecpTabbed("test","Tests",[], {showCount:true, empty: tn?(tn+" case(s) cover this function's file"):"— no cases claimed yet"}));
+  var sig=fd.sig||{};
+  if(sig.returns||sig.async) body.push(H("div",{class:"sec"}, ecpSechd("function","Signature"),
+     ecpKv("function","returns",(sig.async?"async · ":"")+(fd.flines?fd.flines+" lines · ":"")+"→ <code>"+esc(sig.returns||"—")+"</code>")));
+  if(fd.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(fd.doc)), fd.file?ecpKv("file","file","<code>"+esc(fd.file)+"</code>"):null));
+  else if(fd.file) body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(fd.file)+"</code>")));
+  mountCard("function","function", FNCOL[f.layer]||"var(--c-fn)", f.name+"()", f.handler?"endpoint handler":(f.god?"god function":"internal helper"), body);
+}
 
 /* ── level switching (position persistence keeps shared anchors) ── */
 function syncGearApplicability(){
@@ -1866,7 +2093,7 @@ function syncGearApplicability(){
 }
 function render(){
   vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
-  navStack=[]; navCur=null; navUI();
+  navStack=[]; navFwd=[]; navCur=null; ecpCurHead=null; navUI();
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
   document.querySelectorAll("#levels button").forEach(function(btn){
@@ -1936,14 +2163,14 @@ function regEdge(el, kind, fromKey, toKey, how){
    starts a fresh chain (history overridden). ── */
 var navStack=[], navCur=null;
 function navUI(){ var b=document.getElementById("navback");
-  b.hidden = navStack.length===0;
-  b.textContent = "← "+navStack.length; }
+  if(b) b.hidden=true;               // the trace back/forward now lives in the card header
+  ecpTraceSync(); }
 function navVisit(key){                          // a LINK navigation lands on key
   if(navCur && navCur!==key){ navStack.push(navCur); while(navStack.length>6) navStack.shift(); }
-  navCur=key; navUI(); }
+  navCur=key; if(!_ecpFwding) navFwd=[]; navUI(); }      // a fresh branch drops the forward trace
 function navTouch(key){                          // a plain selection
   if(key===navCur || navStack.indexOf(key)>=0) return;   // in-chain: nothing happens
-  navStack=[]; navCur=key; navUI(); }                    // alien: the chain is overridden
+  navStack=[]; navFwd=[]; navCur=key; navUI(); }         // alien: the chain is overridden
 function goBack(){
   if(!navStack.length) return;
   var k=navStack.pop(); navCur=k; navUI();
@@ -2022,7 +2249,13 @@ function jrnExit(){ JRN.cur=null; JRN.i=0;
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
 function jumpToNode(key){
-  var w=nodeWorldXY(key); if(!w) return;
+  // entity keys are NOT in SELREG (nodeWorldXY can't resolve them) — land on them the
+  // same way goBack does, so a FORWARD-trace hop onto an entity works instead of silently
+  // dropping the trace (it did before this branch: nodeWorldXY→null returned early).
+  if(key.indexOf("ent:")===0){ navVisit(key); var w0=pos[key]; if(w0) centerCamera(w0);
+    var en=D.entities.filter(function(x){ return "ent:"+x.slug===key; })[0];
+    if(en) showEntity(en); return; }
+  var w=nodeWorldXY(key); if(!w) return;   // node not drawn on this level — leave nav untouched
   navVisit(key);
   centerCamera(w);
   var n=SELREG.nodes[key];
@@ -2090,16 +2323,24 @@ function selectNode(key){
     frontier=next; }
   SELREG.edges.forEach(function(e,i){ if(!seenE[i]) e.el.classList.add("e-faded"); });
   return mine; }
-function connectionsHTML(key, mine){
-  var wireIc=_psvg("<path d='M3 17 Q12 3 21 12' fill='none' stroke='var(--accent)' stroke-width='2'/><circle cx='13.5' cy='8.6' r='2.2' fill='var(--accent)'/>");
-  if(!mine.length) return _sect(wireIc,"connections")+"<div class='note nt'>no drawn connector touches it on this level</div>";
-  var h=_sect(wireIc,"connections ("+mine.length+")");
+/* the SELECTED node's 1-hop connectors, grouped by edge kind into the semantic groups
+   the ECP card shows (routes / touches / returns / uses / calls / fk …) — graph-truthful
+   (from SELREG), rendered as element-components chips each carrying its neighbour's node
+   key so a hover PEEKS that node and a click TRAVELS to it. Returns an array of ecpG. */
+function ecpGraphConns(key, mine){
+  var groups={};
   mine.forEach(function(i){ var e=SELREG.edges[i];
-    var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
-    var dir=e.from===key?"→":"←";
-    h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span>"
-      +"<b class='cgo' data-k='"+esc(nk)+"' title='travel to it'>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
-  return h; }
+    var nk=(e.from===key)?e.to:e.from, nb=SELREG.nodes[nk];
+    var w=edgeWord(e.kind);
+    (groups[w]=groups[w]||[]).push({label:nb?nb.label:nk, key:nk}); });
+  var CLS={touches:"model", returns:"schema", routes:"fn", uses:"model", calls:"fn", imports:"web", fk:"model", "cross-fk":"model"};
+  var GLY={touches:"model", returns:"schema", routes:"function", uses:"model", calls:"function", imports:"file", fk:"key", "cross-fk":"key"};
+  var ORDER=["routes","touches","returns","uses","calls","imports","fk","cross-fk"];
+  var words=ORDER.filter(function(w){ return groups[w]; });
+  Object.keys(groups).forEach(function(w){ if(ORDER.indexOf(w)<0) words.push(w); });
+  return words.map(function(w){
+    return ecpG(w, GLY[w]||"link", groups[w].length, (function(items,cls,gl){
+      return function(){ return ecpChipList(items, cls, gl); }; })(groups[w], CLS[w]||"route", GLY[w]||"function")); }); }
 var _peeks=[];
 function peekClear(){ _peeks.forEach(function(f){ f(); }); _peeks=[]; }
 function peekEdge(i){
@@ -2120,15 +2361,8 @@ function peekNode(k){
   n.el.appendChild(r);
   _peeks.push(function(){ r.remove(); });
 }
-function wireConnRows(){
-  panel.querySelectorAll(".conrow").forEach(function(row){
-    row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
-    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); });
-    row.addEventListener("mouseenter",function(){ peekEdge(+row.getAttribute("data-conn")); });
-    row.addEventListener("mouseleave",peekClear); });
-  // the OTHER element's name is the transporter — click it to land on that element
-  panel.querySelectorAll(".cgo").forEach(function(b){
-    b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
+// wire the ECP chips into the diagram: a chip hover peeks its graph node, a click travels.
+ECP.onPeek=peekNode; ECP.onPeekClear=peekClear; ECP.onJump=jumpToNode;
 function selectEdge(i){
   var e=SELREG.edges[i]; if(!e) return;
   clearSelection();
@@ -2154,63 +2388,33 @@ function selectEdge(i){
     row.addEventListener("mouseenter",function(){ peekNode(row.getAttribute("data-k")); });
     row.addEventListener("mouseleave",peekClear); });
 }
-/* the panel add-on used by every node click */
+/* the panel add-on every node click runs AFTER its show* built the ECP card: it
+   highlights the node + its 1-hop neighbourhood, then fills the card's #ecp-conns slot
+   with the semantic connection groups (graph 1-hop + any C4 extras the card contributed,
+   e.g. an endpoint's bridged screens). Chips self-wire their peek/travel via ECP hooks. */
 function attachSelection(key){
   navTouch(key);
   var mine=selectNode(key);
-  panel.insertAdjacentHTML("beforeend", connectionsHTML(key, mine));
-  wireConnRows(); }
+  var slot=document.getElementById("ecp-conns");
+  if(slot){
+    var groups=ecpGraphConns(key, mine).concat(_ecpExtraConns||[]);
+    slot.innerHTML="";
+    slot.appendChild(ecpConns("link","Connections", groups, {showCount:true, empty:"no drawn connector touches it on this level"}));
+  }
+  ecpTraceSync(); }
 
 /* ── THE INDICATOR CARD: every mark an element wears in the diagram, repeated in
    the panel AS THE SAME ICON, with a label and what it means (operator: numbers
    and symbols must decode themselves on click). ── */
 function _psvg(inner, w){ return "<svg viewBox='0 0 24 24' width='"+(w||17)+"' height='"+(w||17)+"'>"+inner+"</svg>"; }
-function _irow(icon, label, meaning){ return "<div class='irow'>"+icon+"<b>"+label+"</b><span class='im'>"+meaning+"</span></div>"; }
-function kindIcon(o){    // the element's own glyph, inline beside its name
-  if(o.kind==="model") return _psvg("<ellipse cx='12' cy='6' rx='8' ry='3' fill='var(--c-model)'/><path d='M4 6 v10 a8 3 0 0 0 16 0 v-10' fill='var(--c-model)'/>");
-  if(o.kind==="schema") return _psvg("<path d='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1' fill='none' stroke='var(--c-schema)' stroke-width='2'/>");
-  if(o.kind==="fn") return _psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='"+(o.fncol||"var(--c-fn-api)")+"' stroke-width='2.2'/>");
-  if(o.kind==="ep") return _psvg("<circle cx='12' cy='12' r='9' fill='"+(o.mcol||"var(--m-get)")+"'/><path d='M13.5 6 L9 13 h2.6 L10.5 18 L15 11 h-2.6 Z' fill='#fff'/>");
-  return ""; }
 /* Section headers CARRY the canvas glyph (operator round 30): the icon an element
    wears in the diagram leads its section title — the pill leads "tests", the shield
    leads "guards" — same geometry, state-aware. Facts sit below as plain lines;
    later the tests section lists the actual cases, linked into the command center. */
 function _sect(icon, label){ return "<div class='k'>"+icon+"<span>"+label+"</span></div>"; }
-function _snote(txt){ return "<div class='note nt'>"+txt+"</div>"; }
-function indicatorHTML(o){
-  var h="";
-  // TESTS — the count pill IS the section icon (hollow dashed when unproven)
-  if(o.tests){ var tc=o.tests.red>0?"var(--m-delete)":"var(--c-model)";
-    h+=_sect(_psvg("<rect x='3' y='7' width='18' height='11' rx='5.5' fill='"+tc+"'/><text x='12' y='15.5' text-anchor='middle' font-size='8.5' font-weight='800' fill='#fff'>"+o.tests.n+"</text>"),"tests");
-    h+=_snote(o.tests.n+" case(s) — "+(o.tests.red>0?o.tests.red+" failing":"all passing")+" · api "+o.tests.api+" · web "+o.tests.web);
-    if(o.tests.web>0) h+=_irow(_psvg("<circle cx='12' cy='12' r='5' fill='var(--c-fn-web)'/>"),
-      "web coverage","on top of the api corpus"); }
-  else { h+=_sect(_psvg("<circle cx='12' cy='12' r='6.5' fill='none' stroke='var(--muted)' stroke-width='1.6' stroke-dasharray='3 3'/>"),"tests");
-    h+=_snote("unproven — no test case names this element"); }
-  // GUARDS — the shield leads (dashed hollow when none)
-  if(o.kind!=="fn"){
-    if(o.guards){ h+=_sect(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='var(--c-fn-services)'/>"),"guards");
-      h+=_snote(o.guards+" validator(s) — declared checks on this element's data"); }
-    else { h+=_sect(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='var(--muted)' stroke-width='1.4' stroke-dasharray='3 3'/>"),"guards");
-      h+=_snote("none declared — no validator guards it"); } }
-  // FAN-IN — the usage ring leads; the god halo keeps its own row
-  if(o.hub || o.god){
-    h+=_sect(_psvg("<circle cx='12' cy='12' r='6' fill='none' stroke='var(--accent)' stroke-width='2.6'/>"),"fan-in");
-    if(o.hub && (o.hub.usage||0)>0)
-      h+=_snote("usage "+o.hub.usage+" — "+(o.hub.usage>=5?"a hub, many pieces depend on it":"foreign keys in + endpoint touches"));
-    if((o.hub&&o.hub.god)||o.god) h+=_irow(_psvg("<circle cx='12' cy='12' r='8' fill='none' stroke='var(--m-delete)' stroke-width='1.6' stroke-dasharray='4 3'/>"),
-      "god piece","oversized — holds many responsibilities"); }
-  // ROLE — the ƒ curve leads, coloured by the function's layer
-  if(o.handler){ h+=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--c-fn-api)' stroke-width='3.4'/>"),"role");
-    h+=_snote("endpoint handler — the function a route calls first"); }
-  else if(o.uses){ h+=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--c-fn-services)' stroke-width='3.4'/>"),"role");
-    h+=_snote("using function — references "+o.uses+" model/schema class(es)"); }
-  // PRESSURE — the heat dot leads
-  if(o.press){ h+=_sect(_psvg("<circle cx='12' cy='12' r='8.5' fill='var(--m-put)' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='var(--m-put)'/>"),"pressure");
-    h+=_snote("touched in "+o.press+" phase(s) — change concentration from the archive"); }
-  return h;
-}
+/* kindIcon · _irow · indicatorHTML (the pre-port glyph + indicator-decoder
+   builders) were retired with the show* rewrite — the ECP header glyphs +
+   Usage/Tests/Identity/Code-behind sections replace them. */
 
 /* ── the gear: entity layout Ring · Flow · Force (the command center's options) ── */
 (function(){ var gb=document.getElementById("gear"), gp=document.getElementById("gearpanel");

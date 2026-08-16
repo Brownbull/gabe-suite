@@ -233,6 +233,28 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             "tests": {"api": f.get("api", 0), "web": f.get("web", 0),
                       "n": (f.get("api", 0) + f.get("web", 0)), "red": 0},
         })
+        # fn DETAIL — the wider projection of function_insight the panel's Function
+        # card reads (detailOf("fn:"+slug+"|"+name)), keyed exactly like the cls: rows.
+        # Pure archmap, honest-empty PER FIELD: no docstring insight ⇒ no doc, a TS fn
+        # with no function_insight ⇒ file only. Keeps the fn card off a blank without
+        # a new source read; C4's element_detail dossier covers endpoints/models/schemas,
+        # functions are the LEVELS feed's own territory so their detail is homed here.
+        fdet: dict[str, Any] = {}
+        if rfile:
+            fdet["file"] = rfile
+        if f.get("doc") and f["doc"] != "—":
+            fdet["doc"] = f["doc"]
+        if f.get("lines"):
+            fdet["flines"] = f["lines"]
+        _sig: dict[str, Any] = {}
+        if f.get("returns"):
+            _sig["returns"] = f["returns"]
+        if f.get("async"):
+            _sig["async"] = True
+        if _sig:
+            fdet["sig"] = _sig
+        if fdet:
+            lv["detail"]["fn:" + slug + "|" + name] = fdet
 
     # ── per-entity pieces (from the C4 L2) + the rich lenses ──────────────────
     for slug in sorted(l2):
