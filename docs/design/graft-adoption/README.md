@@ -49,6 +49,28 @@ ONE thing we skip is the **`--deep` flag**: we do NOT run graft's LLM prose pass
   fields·guards`). No graft LLM pass, no graft API key. In the lineage, `doc` moves from "graft --deep"
   to **"suite · deep"**. Everything else graft init/build provides — enforcement + structural facts — is used.
 
+## P0 INVENTORY (2026-08-16, read-only, both twins) — every "after" cell CONFIRMED
+
+Verified graft's populated output against the consumption ledger (twin trees untouched):
+
+| claim | gustify | gastify |
+|---|---|---|
+| nodes · edges | 8,441 · 20,962 | 14,424 · 38,200 |
+| **node kinds** (all 6) | file 1063 · function 5790 · class 363 · method 211 · interface 98 · type 916 | file 1368 · function 10226 · class 391 · method 1568 · type 425 · interface 446 |
+| **signature** filled | 7,378 (87%) | 13,056 (90%) |
+| **exported=True** | 5,804 | 5,275 |
+| **TS/tsx nodes** (frontend) | 4,444 | 3,620 |
+| **edge relations** | calls · contains · imports · extends · references · implements | calls · contains · imports · extends · implements (no `references`) |
+| **summary** (--deep) | 0 (expected — no --deep) | 0 |
+| **framework facts** (method/path/table/cols/fks) on a node | **absent** | **absent** |
+
+Confirms: signature/exported/all-6-kinds/all-edge-relations/TS-nodes are REALLY there → the "after"
+consumption is grounded, not aspirational. graft carries **no** docstring field either (node keys:
+id·name·kind·path·span·signature·exported·origin·body_hash·chars·summary·crux·summary_state·owner) —
+so `doc` (the docstring) stays a suite AST parse (deterministic, free); suite-deep ADDS summary/crux on
+top. `references` is gustify-only → consume honest-empty when a twin lacks a relation. Twin note: the
+gustify graft was rebuilt on the pilot (18,494→8,441 nodes — tighter scope).
+
 ## GAP FINDING (2026-08-16, from graft's real output) — graft is GENERIC; framework+process stay
 
 Read gustify's `wiring.json`: a route handler is a plain `function` node (`async def _recipe_titles(...)`)
