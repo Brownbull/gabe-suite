@@ -210,6 +210,24 @@ _ga = [e for e in _g2["l1"]["edges"] if e["source"] == "gamma" and e["target"] =
 check(len(_ga) == 1 and _ga[0]["kinds"] == {"calls": 3},
       "a graft-only entity pair becomes a NEW L1 edge (coupling FK cannot see)")
 
+# ── P1a review D1/D2: STAT-ONLY relations never fold into the RENDERED L1 edge ──
+# references co-emits a `calls` for the SAME node-pair (100% overlap on gustify) → folding it
+# double-counts the weight; and references/contains/extends/implements have no edge CSS/legend.
+# They stay honest in stats.cross_by_relation, but are never a drawn L1 kind. Whitelist=calls,imports.
+_gwl = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+                        graft={"present": True, "reason": "t", "index_hash": "x",
+                               "pairs": {("alpha", "beta"): {"calls": 2, "references": 2, "extends": 1}},
+                               "stats": {}})
+_abw = [e for e in _gwl["l1"]["edges"] if e["source"] == "alpha" and e["target"] == "beta"][0]
+check("references" not in _abw["kinds"] and "extends" not in _abw["kinds"]
+      and _abw["kinds"].get("calls") == 2,
+      "P1a-fix D1: references/extends do NOT fold into the rendered L1 edge kinds (whitelist)")
+_gonly = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+                          graft={"present": True, "reason": "t", "index_hash": "x",
+                                 "pairs": {("gamma", "alpha"): {"references": 5}}, "stats": {}})
+check(not any("references" in e.get("kinds", {}) for e in _gonly["l1"]["edges"]),
+      "P1a-fix D2: a references-ONLY graft pair injects no references kind / no unstyled phantom wire")
+
 # ── REGRESSION: graft absent → TOPOLOGY byte-identical to an FK-only build ──
 g_none = G.build_c4_graph(FIX, labels=LABELS, status=STATUS, graft=None)
 g_abs  = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,

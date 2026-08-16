@@ -647,6 +647,13 @@ def _stamp_l2(l2: dict[str, list[dict]]) -> None:
         cols[kind] += 1
 
 
+# graft relations that fold into the RENDERED L1 edge kinds. The FULL 6-relation coupling is
+# consumed in stats.cross_by_relation; only these two are drawn (styled + legended + non-
+# redundant). `references` overlaps `calls`, and `contains`/`extends`/`implements` have no edge
+# CSS yet — kept stat-only until they earn a rendered kind (P1a review D1/D2).
+_L1_RENDER_RELATIONS = ("calls", "imports")
+
+
 def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                    status: dict[str, str] | None = None,
                    colors: dict[str, str] | None = None,
@@ -675,13 +682,23 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         for (src, dst), kinds in (graft.get("pairs") or {}).items():
             if src not in slugs or dst not in slugs:
                 continue                       # an entity the L1 set doesn't carry
+            # P1a review (D1/D2): only calls/imports fold into the RENDERED L1 weight. graft
+            # co-emits a `references` edge for the same node-pair as its `calls` edge (100%
+            # overlap on gustify's one references pair) → folding it double-counts; and the
+            # renderer/legend only know calls/imports/fk (an `e-references` path draws as an
+            # unstyled black blob). The full 6-relation coupling stays honest in
+            # stats.cross_by_relation — it is CONSUMED, just not (yet) a drawn L1 kind.
+            render_kinds = {rel: int(n) for rel, n in kinds.items()
+                            if rel in _L1_RENDER_RELATIONS}
+            if not render_kinds:
+                continue                       # coupled only by stat-only relations → no L1 edge
             e = by_pair.get((src, dst))
             if e is None:
                 e = {"source": src, "target": dst, "weight": 0, "kinds": {}}
                 by_pair[(src, dst)] = e
                 l1_edges.append(e)
-            for rel, n in kinds.items():
-                e["kinds"][rel] = e["kinds"].get(rel, 0) + int(n)
+            for rel, n in render_kinds.items():
+                e["kinds"][rel] = e["kinds"].get(rel, 0) + n
             e["kinds"] = {k: e["kinds"][k] for k in sorted(e["kinds"])}
             e["weight"] = sum(e["kinds"].values())
         l1_edges.sort(key=lambda e: (e["source"], e["target"]))

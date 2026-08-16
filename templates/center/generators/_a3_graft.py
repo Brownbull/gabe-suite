@@ -185,9 +185,11 @@ _BEHIND_DEPTH_CAP = 40   # observed max call-tree depth ~19 on gustify; guards a
 _BEHIND_NAMES_CAP = 12   # the panel shows up to this many fn names behind a handler, then "+N"
 
 
-# the graft node kinds that carry a call-tree (callable code). P1: METHODS were dropped
-# from the hidden-mass metric — a class method calls things too, so excluding 2,006 of them
-# (gustify) undercounted the mass. Include them; classes/types/interfaces are not callable.
+# the graft node kinds that carry a call-tree (callable code). P1: METHODS were dropped from
+# the hidden-mass metric — a class method calls things too, so include them. Correct-by-design;
+# the measured impact is INDEX-DEPENDENT and can be small (gustify carries 211 method nodes, 194
+# in-set → max endpoint behind unchanged, per-endpoint deltas <=2). classes/types/interfaces
+# are not callable, so they never enter the call-tree set.
 _CALLABLE_KINDS = ("function", "method")
 
 
