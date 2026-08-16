@@ -49,11 +49,13 @@ ONE thing we skip is the **`--deep` flag**: we do NOT run graft's LLM prose pass
   fields·guards`). No graft LLM pass, no graft API key. In the lineage, `doc` moves from "graft --deep"
   to **"suite · deep"**. Everything else graft init/build provides — enforcement + structural facts — is used.
 
-## P0 INVENTORY (2026-08-16, read-only, both twins) — every "after" cell CONFIRMED
+## P0 INVENTORY (2026-08-16, read-only) — every "after" cell CONFIRMED on the gustify pilot
 
-Verified graft's populated output against the consumption ledger (twin trees untouched):
+**graft is installed ONLY on gustify (the pilot branch).** gastify's `graft/` is a STALE prior build
+(borrowed-piece run ~Aug 5, no current install) — shown below as an indicative second data point, NOT an
+authoritative install. Verified graft's populated output against the consumption ledger (trees untouched):
 
-| claim | gustify | gastify |
+| claim | gustify (LIVE pilot) | gastify (stale ref) |
 |---|---|---|
 | nodes · edges | 8,441 · 20,962 | 14,424 · 38,200 |
 | **node kinds** (all 6) | file 1063 · function 5790 · class 363 · method 211 · interface 98 · type 916 | file 1368 · function 10226 · class 391 · method 1568 · type 425 · interface 446 |
