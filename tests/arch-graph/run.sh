@@ -165,6 +165,31 @@ check(_gx["stats"]["dropped"] == {"noise": 1, "unresolved_target": 1,
 check(_gx["stats"]["confidence"]["calls"] == {"extracted": 0, "inferred": 1},
       "graft arm: the trust split rides the stats (cross-file calls are a floor)")
 
+# ── P1 (graft adoption): ALL 6 relations · node_facts · methods in the hidden mass ──
+_W2 = {"meta": {"version": 1}, "nodes": [
+    {"id": "apps/api/alpha.py#Cls", "kind": "class", "path": "apps/api/alpha.py", "signature": "class Cls(Base)", "exported": "True"},
+    {"id": "apps/api/beta.py#Base", "kind": "class", "path": "apps/api/beta.py"},
+    {"id": "apps/api/alpha.py#Cls.meth", "kind": "method", "path": "apps/api/alpha.py", "signature": "def meth(self) -> int"},
+    {"id": "apps/api/beta.py#leaf", "kind": "function", "path": "apps/api/beta.py"},
+    {"id": "web/dist/bundle.js#z", "kind": "function", "path": "web/dist/bundle.js"},
+  ], "edges": [
+    {"source": "apps/api/alpha.py#Cls", "target": "apps/api/beta.py#Base", "relation": "extends", "confidence": "extracted"},
+    {"source": "apps/api/alpha.py#Cls", "target": "apps/api/beta.py#leaf", "relation": "references", "confidence": "inferred"},
+    {"source": "apps/api/alpha.py#Cls.meth", "target": "apps/api/beta.py#leaf", "relation": "calls", "confidence": "inferred"},
+  ]}
+_gx2 = GG.derive_cross(_W2, FIX["entities"])
+check(_gx2["stats"]["cross_by_relation"].get("extends") == 1
+      and _gx2["stats"]["cross_by_relation"].get("references") == 1,
+      "P1: derive_cross consumes ALL 6 relations (extends + references cross-entity counted)")
+_nf = GG.derive_node_facts(_W2)
+check(_nf.get("apps/api/alpha.py#Cls", {}).get("signature") == "class Cls(Base)"
+      and _nf["apps/api/alpha.py#Cls"].get("exported") is True
+      and "web/dist/bundle.js#z" not in _nf,
+      "P1: derive_node_facts carries signature + exported per node, noise excluded")
+_fnb2 = GG.derive_fn_behind(_W2)
+check("apps/api/alpha.py#Cls.meth" in _fnb2 and _fnb2["apps/api/alpha.py#Cls.meth"]["fns"] == 1,
+      "P1: a METHOD's call-tree counts in the hidden mass (methods were dropped before P1)")
+
 # folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
 _garm = {"present": True, "reason": "test", "index_hash": "abc123def456",
          "pairs": _gx["pairs"], "stats": _gx["stats"]}

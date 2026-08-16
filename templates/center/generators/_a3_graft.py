@@ -47,7 +47,11 @@ from typing import Any
 _INDEX_REL = Path("graft") / ".graph" / "wiring.json"
 _NOISE_SUFFIXES = (".js", ".mjs", ".jsx")
 _NOISE_PARTS = ("node_modules", "dist", "build", "storybook-static", "__pycache__")
-_RELATIONS = ("calls", "imports")   # the cross-entity coupling kinds we consume
+# P1 (graft adoption): consume ALL of graft's edge relations, not just calls/imports.
+# contains = file→symbol (a file's API); extends/implements = the type hierarchy;
+# references = a cross-file symbol use. contains is intra-file → intra-entity (drops out
+# of the L1 cross set); the rest surface real cross-entity coupling the FK view can't see.
+_RELATIONS = ("calls", "imports", "contains", "extends", "implements", "references")
 
 
 def ensure_index(root: Path, allow_build: bool = True,
@@ -181,13 +185,19 @@ _BEHIND_DEPTH_CAP = 40   # observed max call-tree depth ~19 on gustify; guards a
 _BEHIND_NAMES_CAP = 12   # the panel shows up to this many fn names behind a handler, then "+N"
 
 
+# the graft node kinds that carry a call-tree (callable code). P1: METHODS were dropped
+# from the hidden-mass metric — a class method calls things too, so excluding 2,006 of them
+# (gustify) undercounted the mass. Include them; classes/types/interfaces are not callable.
+_CALLABLE_KINDS = ("function", "method")
+
+
 def _behind_context(wiring: dict[str, Any]) -> tuple[set[str], dict[str, list[str]]]:
-    """The shared substrate for the call-tree floor: (source-function id set, ``calls``
+    """The shared substrate for the call-tree floor: (callable-node id set, ``calls``
     adjacency between them). NOISE-FILTERED like ``derive_functions`` — build-output nodes
     (``.js``/``dist``/… — over half a measured index) never count, so a call INTO bundle.js
-    never inflates the floor."""
+    never inflates the floor. Callable = function OR method (P1 correctness fix)."""
     fn_ids = {n["id"] for n in (wiring.get("nodes") or [])
-              if n.get("kind") == "function" and not _is_noise(_file_of(n["id"]))}
+              if n.get("kind") in _CALLABLE_KINDS and not _is_noise(_file_of(n["id"]))}
     adj: dict[str, list[str]] = {}
     for e in wiring.get("edges") or []:
         if e.get("relation") == "calls":
@@ -335,12 +345,37 @@ def derive_cross(wiring: dict[str, Any],
         "stats": {
             "cross_calls": sum(v.get("calls", 0) for v in pairs.values()),
             "cross_imports": sum(v.get("imports", 0) for v in pairs.values()),
+            # P1: the full cross-entity total per relation (all 6 now consumed), so the honesty
+            # numbers show extends/implements/references coupling, not just calls/imports.
+            "cross_by_relation": {r: sum(v.get(r, 0) for v in pairs.values()) for r in _RELATIONS},
             "confidence": conf,     # every cross-FILE call is inferred by design → a floor
             "dropped": dropped,
             "dropped_top_prefixes": top_prefixes,
             "file_entity_collisions": collisions,
         },
     }
+
+
+def derive_node_facts(wiring: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Per non-noise node, the RAW graft facts the center can consume instead of re-deriving
+    from source: ``kind`` · ``signature`` (the def/class line, populated on 87-90% of nodes) ·
+    ``exported``. Keyed by the wiring id (``path#symbol`` or a bare file path). P1 (graft
+    adoption): this is what lets a downstream generator DROP its function_insight signature
+    re-parse — the string graft already stores is right here. In-process data (not emitted raw
+    to the committed graph — it would bloat it); the consumer reads it during the build."""
+    out: dict[str, dict[str, Any]] = {}
+    for n in wiring.get("nodes") or []:
+        nid = n.get("id")
+        if not nid or _is_noise(_file_of(nid)):
+            continue
+        fact: dict[str, Any] = {"kind": n.get("kind")}
+        sig = n.get("signature")
+        if sig and sig != "None":
+            fact["signature"] = sig
+        if str(n.get("exported")) == "True":
+            fact["exported"] = True
+        out[nid] = fact
+    return {k: out[k] for k in sorted(out)}
 
 
 def graft_arm(root: Path, entities: dict[str, Any],
@@ -366,6 +401,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         fout = derive_functions(wiring, entities)
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
+        node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
@@ -373,6 +409,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws
             "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
             "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
+            "node_facts": node_facts,  # P1: raw graft facts (kind/signature/exported) — in-process, not emitted raw
         }
     except Exception as exc:  # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"graft arm error: {exc}"}
