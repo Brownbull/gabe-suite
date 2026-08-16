@@ -116,12 +116,16 @@ ck("return false" in js and "if(ok!==false) navFwd.pop()" in js,
 # ── FRONTEND MAPPING (frontend-placement option 2: a dedicated Frontend entity) ──
 ck("function drawFrontend(" in js and "function showWeb(" in js and "function c4Screens(" in js,
    "the frontend overlay is present: drawFrontend (entity + bridges) + showWeb (screen card)")
-ck(js.count("drawFrontend(defs, contLayer, interLayer, layer, b)") >= 2,
-   "drawFrontend is hooked into BOTH trace variants (drawTrace + drawTraceFlow)")
+ck(js.count("drawFrontend(defs, contLayer, interLayer, layer, b, radii)") >= 2,
+   "drawFrontend is hooked into BOTH trace variants (drawTrace + drawTraceFlow), per-entity radii-placed")
 ck('kind==="web"' in js and 'e.kind==="bridge"' in js,
    "screens read from GABE_C4 web nodes; bridge wires from cross_edges kind:'bridge'")
 ck("function epKeyOf(" in js,
    "bridges resolve the endpoint by its M-path label (aspect dedup: C4 home ≠ drawn home)")
+# per-entity DISTRIBUTION: screens group beside their backend entity (homed by where their
+# endpoints DRAW, not the C4 file-home) — the operator's "closer" ruling, short bridges
+ck("var byEnt={}" in js and "tally[s]=(tally[s]||0)+1" in js,
+   "drawFrontend homes each screen to its primary DRAWN-endpoint entity (per-entity clusters)")
 # the screen card wires the bridged fetches as hot chips (hover peeks the endpoint node)
 _sw = re.search(r"function showWeb\(.*?\n(.*?)\n(?=function |/\* )", js, re.S)
 ck(_sw is not None and "epKeyOf(x.to, x.to_slug)" in _sw.group(1) and 'ecpConns("link","Reaches"' in _sw.group(1),

@@ -1663,7 +1663,7 @@ function drawTrace(){
     (cross?interLayer:wireLayer).appendChild(pu);
     flowDots(cross?interLayer:wireLayer, pu, dotFill);
     regEdge(pu, "use", from.key||("fn:"+e.fs+"|"+e.fn), "cls:"+e.ts+"|"+e.cls, "references the class (archmap)"); });
-  drawFrontend(defs, contLayer, interLayer, layer, b);   // the dedicated Frontend entity + bridges
+  drawFrontend(defs, contLayer, interLayer, layer, b, radii);   // per-entity frontend clusters + bridges
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("bubble = a cluster ("+(traceCluster==="kind"?"functions · models · schemas":traceCluster)+")","f-api"),
@@ -1768,7 +1768,7 @@ function drawTraceFlow(){
     pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.8";
     pth.appendChild(E("title")); interLayer.appendChild(pth);
     flowDots(interLayer, pth, "url(#"+grad+")"); });
-  drawFrontend(defs, contLayer, interLayer, layer, b);   // the dedicated Frontend entity + bridges
+  drawFrontend(defs, contLayer, interLayer, layer, b, radii);   // per-entity frontend clusters + bridges
   frame(b);
   legend([glyphIt("border = API endpoints","ep"), glyphIt("middle ring = handler ƒ","f-api"),
           glyphIt("core = models","cyl"), glyphIt("+ schemas","s"),
@@ -2139,37 +2139,57 @@ function c4Screens(){
     if(n.kind==="web" && !out[n.id]){ out[n.id]={id:n.id, slug:n.slug, label:n.label||n.id, sites:n.sites||0}; order.push(n.id); } }); });
   return { map:out, order:order.sort() };
 }
-function drawFrontend(defs, contLayer, interLayer, layer, b){
-  var S=c4Screens(); if(!S.order.length) return;      // backend-only project → no Frontend entity
+function drawFrontend(defs, contLayer, interLayer, layer, b, radii){
+  var S=c4Screens(); if(!S.order.length) return;      // backend-only project → no frontend clusters
   var col="var(--c-fn-web)";
-  var cx=b.maxX + Math.max(170, 40*Math.sqrt(S.order.length)), cy=(b.minY+b.maxY)/2;
-  var R=Math.max(72, 20+Math.ceil(Math.sqrt(S.order.length))*24);
-  var cont=E("circle",{class:"container frontcont", cx:cx, cy:cy, r:R, fill:col, stroke:col, "stroke-dasharray":"5 4"});
-  cont.__click=function(){ };                          // a container click just deselects (no entity card)
-  contLayer.appendChild(cont);
-  var lb=E("text",{class:"lbl", x:cx, y:cy-R-10}); lb.textContent="Frontend"; lb.setAttribute("fill",col); layer.appendChild(lb);
+  // PER-ENTITY distribution (operator ruling 2026-08-15): a screen sits in a small frontend
+  // bubble JUST OUTSIDE its backend entity (grouped by the C4 web-node slug), pushed radially
+  // away from the graph centre — so bridges stay SHORT and the frontend hugs its backend,
+  // instead of one far-right Frontend blob with long criss-crossing wires (option-2's con).
+  var cxs=0, cys=0, nE=0; ENTS.forEach(function(s){ var p=entAnchor(s); if(p){ cxs+=p.x; cys+=p.y; nE++; } });
+  var GC={x:nE?cxs/nE:0, y:nE?cys/nE:0};
+  // HOME each screen to the entity where its bridged endpoints actually DRAW (not the C4
+  // file-home) — this is what keeps bridges SHORT under aspect dedup: a route C4-files under
+  // allergen but the trace draws it under auth, so the screen must sit by auth, not allergen.
+  var byEnt={};
+  S.order.forEach(function(id){
+    var tally={};
+    (C4 && C4.cross_edges || []).forEach(function(e){ if(e.kind==="bridge" && e.from===id){
+      var k=epKeyOf(e.to, e.to_slug); if(SELREG.nodes[k]) { var s=k.slice(3, k.indexOf("|")); tally[s]=(tally[s]||0)+1; } } });
+    var best=S.map[id].slug, bn=0; Object.keys(tally).forEach(function(s){ if(tally[s]>bn){ bn=tally[s]; best=s; } });
+    (byEnt[best]=byEnt[best]||[]).push(id);
+  });
   var scAt={};
-  S.order.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(S.order.length,1);
-    var rr=S.order.length>1?R*0.62:0, x=rnd(cx+rr*Math.cos(a)), y=rnd(cy+rr*Math.sin(a));
-    scAt[id]={x:x,y:y};
-    var g=E("g",{class:"screen", transform:"translate("+x+","+y+")"});
-    halo(g);
-    g.appendChild(E("rect",{x:-6.5,y:-5,width:13,height:9.5,rx:2, fill:"var(--panel)", stroke:col, "stroke-width":"1.7"}));
-    g.appendChild(E("line",{x1:-2.5,y1:6.5,x2:2.5,y2:6.5, stroke:col, "stroke-width":"1.5"}));
-    twoRowLabel(g, trunc(S.map[id].label,14), 0, 15);
-    var ti=E("title"); ti.textContent="screen "+S.map[id].label; g.appendChild(ti);
-    regNode(g, id, S.map[id].label, "web");   // the C4 web id already carries the "web:" prefix
-    (function(sc){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showWeb(sc); attachSelection(sc.id); }); })(S.map[id]);
-    layer.appendChild(g);
-    b.minX=Math.min(b.minX,x-34); b.maxX=Math.max(b.maxX,x+34); b.minY=Math.min(b.minY,y-22); b.maxY=Math.max(b.maxY,y+22); });
-  b.minX=Math.min(b.minX,cx-R); b.maxX=Math.max(b.maxX,cx+R); b.minY=Math.min(b.minY,cy-R-16); b.maxY=Math.max(b.maxY,cy+R);
-  // bridge wires: screen → the backend endpoint it fetches (drawn only if that endpoint is on-level)
+  Object.keys(byEnt).sort().forEach(function(slug){
+    var ids=byEnt[slug], anchor=entAnchor(slug)||GC, R=(radii&&radii[slug])||70;
+    var dx=anchor.x-GC.x, dy=anchor.y-GC.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+    var fr=Math.max(30, 14+Math.ceil(Math.sqrt(ids.length))*20);
+    var fc={x:rnd(anchor.x+ux*(R+fr+34)), y:rnd(anchor.y+uy*(R+fr+34))};
+    var sub=E("circle",{class:"frontcont", cx:fc.x, cy:fc.y, r:fr, fill:col, stroke:col});
+    contLayer.appendChild(sub);
+    var flb=E("text",{class:"sub2", x:fc.x, y:fc.y-fr-4}); flb.setAttribute("fill",col); flb.textContent="⧉ "+slug+" · web"; layer.appendChild(flb);
+    ids.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(ids.length,1);
+      var rr=ids.length>1?fr*0.6:0, x=rnd(fc.x+rr*Math.cos(a)), y=rnd(fc.y+rr*Math.sin(a));
+      scAt[id]={x:x,y:y};
+      var g=E("g",{class:"screen", transform:"translate("+x+","+y+")"});
+      halo(g);
+      g.appendChild(E("rect",{x:-6.5,y:-5,width:13,height:9.5,rx:2, fill:"var(--panel)", stroke:col, "stroke-width":"1.7"}));
+      g.appendChild(E("line",{x1:-2.5,y1:6.5,x2:2.5,y2:6.5, stroke:col, "stroke-width":"1.5"}));
+      twoRowLabel(g, trunc(S.map[id].label,14), 0, 15);
+      var ti=E("title"); ti.textContent="screen "+S.map[id].label+" → "+slug; g.appendChild(ti);
+      regNode(g, id, S.map[id].label, "web");   // the C4 web id already carries the "web:" prefix
+      (function(sc){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showWeb(sc); attachSelection(sc.id); }); })(S.map[id]);
+      layer.appendChild(g);
+      b.minX=Math.min(b.minX,x-34); b.maxX=Math.max(b.maxX,x+34); b.minY=Math.min(b.minY,y-22); b.maxY=Math.max(b.maxY,y+22); });
+    b.minX=Math.min(b.minX,fc.x-fr); b.maxX=Math.max(b.maxX,fc.x+fr); b.minY=Math.min(b.minY,fc.y-fr-16); b.maxY=Math.max(b.maxY,fc.y+fr);
+  });
+  // bridge wires: screen → the backend endpoint it fetches (short now — screen sits by its entity)
   (C4 && C4.cross_edges || []).forEach(function(e){
     if(e.kind!=="bridge") return;
     var from=scAt[e.from]; if(!from) return;
     var epkey=epKeyOf(e.to, e.to_slug), w=nodeWorldXY(epkey); if(!w) return;
     var pth=E("path",{class:"e-bridge", fill:"none", stroke:col, "stroke-width":"1.5","stroke-dasharray":"5 3",
-      d:curve(from.x,from.y,w.x,w.y, -34)}); pth.style.opacity="0.85";
+      d:curve(from.x,from.y,w.x,w.y, -22)}); pth.style.opacity="0.85";
     var ti=E("title"); ti.textContent=(S.map[e.from]||{}).label+" fetches "+_stripEp(e.to); pth.appendChild(ti);
     interLayer.appendChild(pth); flowDots(interLayer, pth, col);
     regEdge(pth, "bridge", e.from, epkey, "fetch"); });
