@@ -243,6 +243,29 @@ ck("function edgeWordIn(" in js
    and re.search(r"out\s*\?\s*edgeWord\(e\.kind\)\s*:\s*edgeWordIn\(e\.kind\)", js) is not None,
    "SWEEP-D: ecpGraphConns inverts the verb for a target node (edgeWordIn on e.to===key)")
 
+# ── POLISH LOCKS: frontend color/force + element finder + visual legend (2026-08-16) ──
+# Frontend takes its backend entity's hue, a shade darker (was one hardcoded web-orange).
+ck("function darken(" in js and re.search(r"darken\(COLORS\[slug\]", js) is not None,
+   "POLISH: frontend bubble colour = darken(entity colour), not a fixed web-orange")
+# Screens FORCE-spread (readable), not a tight ring.
+ck("function forceScreens(" in js and "var pos=forceScreens(ids)" in js,
+   "POLISH: frontend screens are force-distributed (forceScreens), not a fixed ring")
+# The backend↔frontend bridge is fine-DOTTED + wears the entity hue.
+ck(re.search(r'"stroke-dasharray":"1 4"', js) is not None and "var bc=scCol[e.from]" in js,
+   "POLISH: bridge wire is fine-dotted (1 4) in the screen's entity colour")
+# The top-right element FINDER: input + travels to matches (jumpToNode) + Enter/▲▼ nav.
+ck('id="findinput"' in page and "function forceScreens(" in js,
+   "POLISH: the element finder input is present")
+ck(re.search(r"function recompute\(\)", js) is not None
+   and re.search(r"if\(!jumpToNode\(k\)\)\s*peekNode\(k\)", js) is not None,
+   "POLISH: the finder matches SELREG.nodes + travels to each match (jumpToNode/peekNode)")
+# The legend SHOWS the real glyph/wire, never a word-description of it (operator ruling).
+ck("function _lgS(" in js and "class='lgico'" in js and js.count("_lgS(") >= 8,
+   "POLISH: legend rows render the real glyph/wire swatch (_lgS · svg.lgico), not words")
+# the retired word-descriptions are GONE from the legend tail (shield/thick ring/red halo).
+ck("<b>shield</b> = validator guard" not in js and "<b>red halo</b> = god piece" not in js,
+   "POLISH: the word-description legend rows (shield=/red halo=) are removed")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
