@@ -240,6 +240,20 @@ _e0 = [n for n in _bg0["l2"]["e"]["nodes"] if n["kind"] == "endpoint"][0]
 check("behind" not in _e0 and _bg0["stats"]["behind"] == {"present": False},
       "behind honest-empty: graft absent → no endpoint badge + stats.behind present:False")
 
+# ══ THE PER-FUNCTION `behind` FLOOR (derive_fn_behind — every call-source fn) ══
+# the operator's "every drawn node carries its hidden mass": what a FUNCTION pulls in
+# transitively (put under the rug), same BFS/noise-filter/caps as the endpoint floor.
+# adj = do_a→do_b→do_b2 ; stray.s→do_b ; do_a→bundle.js DROPPED (build-output noise).
+_fnb = GG.derive_fn_behind(WIRING)
+check(_fnb.get("apps/api/alpha.py#do_a") == {"fns": 2, "depth": 2, "names": ["do_b", "do_b2"]},
+      "derive_fn_behind: a caller's transitive callee mass (noise excluded), same shape as an endpoint's")
+check(_fnb.get("apps/api/beta.py#do_b") == {"fns": 1, "depth": 1, "names": ["do_b2"]},
+      "derive_fn_behind: an intermediate fn carries only what IT pulls in (do_b → do_b2)")
+check("apps/api/beta.py#do_b2" not in _fnb,
+      "derive_fn_behind: a LEAF fn (no outgoing calls) gets NO entry (honest-empty, panel omits the section)")
+check("web/dist/bundle.js#x" not in _fnb,
+      "derive_fn_behind: build-output noise is never a call-source (mirrors derive_behind)")
+
 # ── the .ignore defuse: SURGICAL — graft's block dies, user lines survive ──
 with tempfile.TemporaryDirectory() as _td:
     _r = _pl.Path(_td)

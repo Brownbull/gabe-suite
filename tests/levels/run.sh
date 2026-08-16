@@ -88,7 +88,9 @@ GRAFT = {"present": True, "functions": {
                "ss": "orders", "ts": "users", "conf": "extracted"},
               # a NON-handler-rooted call must be ignored (helper is not a handler)
               {"s": "api/users.py#helper", "t": "api/orders.py#list_orders",
-               "ss": "users", "ts": "orders", "conf": "inferred"}]}}
+               "ss": "users", "ts": "orders", "conf": "inferred"}]},
+    # the per-function CODE-BEHIND floor (hidden mass) — attaches to the drawn fn_node
+    "fn_behind": {"api/orders.py#list_orders": {"fns": 1, "depth": 1, "names": ["helper"]}}}
 _lvg = _a3_levels.build_levels(AMAP, graph, graft=GRAFT)
 ck(len(_lvg["fn_edges"]) == 1, "fn_edges = handler-ROOTED graft calls only (non-handler source ignored)")
 _fe = _lvg["fn_edges"][0]
@@ -96,6 +98,12 @@ ck(_fe["ss"] == "orders" and _fe["ds"] == "users" and _fe["rel"] == "calls" and 
    "fn_edge reshaped {s·ss·t·ds·rel·conf} with the graft confidence carried")
 ck(any(n["id"] == "api/users.py#helper" for n in _lvg["fn_nodes"]),
    "the call TARGET joins the drawn set (else the lab drops the edge to an undrawn node)")
+# fn CODE-BEHIND: graft.fn_behind attaches to the matching drawn fn_node; a fn with no
+# fn_behind entry (a leaf) carries no `behind` — honest-empty, the panel omits the section.
+_lo = [n for n in _lvg["fn_nodes"] if n["id"] == "api/orders.py#list_orders"][0]
+_hp = [n for n in _lvg["fn_nodes"] if n["id"] == "api/users.py#helper"][0]
+ck(_lo.get("behind") == {"fns": 1, "depth": 1, "names": ["helper"]} and "behind" not in _hp,
+   "fn_behind attaches the hidden-mass floor to its fn_node; a leaf fn stays behind-less")
 ck(len(lv["entities"]) == 2 and len(lv["l1_edges"]) >= 1, "entities + L1 edges carried from the C4 topology")
 # determinism — byte-identical across two independent builds
 ck(json.dumps(lv, sort_keys=True) == json.dumps(_a3_levels.build_levels(AMAP, _a3_graph.build_c4_graph(AMAP)), sort_keys=True),

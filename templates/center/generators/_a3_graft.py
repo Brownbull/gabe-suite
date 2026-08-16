@@ -181,23 +181,11 @@ _BEHIND_DEPTH_CAP = 40   # observed max call-tree depth ~19 on gustify; guards a
 _BEHIND_NAMES_CAP = 12   # the panel shows up to this many fn names behind a handler, then "+N"
 
 
-def derive_behind(wiring: dict[str, Any],
-                  entities: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """Per API endpoint, the graft call-tree FLOOR behind its handler: ``{fns, depth}``.
-
-    A view-only complexity signal — NOT a rail. ``fns`` = distinct transitive callees
-    (excl. self) reachable over ``calls`` edges; ``depth`` = BFS layers = the shortest-path
-    eccentricity of the reachable set (a cheap honest depth, not the NP-hard longest path);
-    ``truncated: True`` rides ONLY when the depth cap clipped the walk (no silent caps —
-    the same honesty law derive_cross applies to dropped edges). Keyed by the handler's
-    wiring id ``<file>#<fn>`` so ``_a3_graph`` attaches it to the endpoint node by the same
-    key. NOISE-FILTERED like ``derive_functions``: build-output nodes (``.js``/``dist``/… —
-    over half of a measured index) never count toward the floor. Honest by construction: an
-    endpoint whose handler is not an indexed source function gets NO entry (never a guess).
-    Cheap — one BFS per endpoint over the ``calls`` adjacency. Deterministic: the result
-    depends only on reachability, never on edge order; keys sorted."""
-    # source function nodes only — noise (build output) is dropped, mirroring
-    # derive_functions, so a call INTO bundle.js never inflates the floor.
+def _behind_context(wiring: dict[str, Any]) -> tuple[set[str], dict[str, list[str]]]:
+    """The shared substrate for the call-tree floor: (source-function id set, ``calls``
+    adjacency between them). NOISE-FILTERED like ``derive_functions`` — build-output nodes
+    (``.js``/``dist``/… — over half a measured index) never count, so a call INTO bundle.js
+    never inflates the floor."""
     fn_ids = {n["id"] for n in (wiring.get("nodes") or [])
               if n.get("kind") == "function" and not _is_noise(_file_of(n["id"]))}
     adj: dict[str, list[str]] = {}
@@ -206,34 +194,51 @@ def derive_behind(wiring: dict[str, Any],
             s, t = e.get("source"), e.get("target")
             if s in fn_ids and t in fn_ids:   # both ends real source functions
                 adj.setdefault(s, []).append(t)
+    return fn_ids, adj
 
-    def behind(start: str) -> dict[str, Any]:
-        seen = {start}
-        frontier = [start]
-        depth = 0
-        while frontier and depth < _BEHIND_DEPTH_CAP:
-            nxt: list[str] = []
-            for u in frontier:
-                for v in adj.get(u) or ():
-                    if v not in seen:
-                        seen.add(v)
-                        nxt.append(v)
-            if not nxt:
-                break
-            frontier = nxt
-            depth += 1
-        res: dict[str, Any] = {"fns": len(seen) - 1, "depth": depth}
-        # the NAMED functions behind the handler (short symbol, sorted, capped) — the BFS
-        # already visited them, so this is free; the panel renders them instead of a count alone.
-        names = sorted({s.split("#", 1)[1] for s in seen if s != start and "#" in s})
-        if names:
-            res["names"] = names[:_BEHIND_NAMES_CAP]
-            if len(names) > _BEHIND_NAMES_CAP:
-                res["names_more"] = len(names) - _BEHIND_NAMES_CAP
-        if frontier and depth >= _BEHIND_DEPTH_CAP:   # the cap clipped a deeper walk
-            res["truncated"] = True
-        return res
 
+def _behind_of(start: str, adj: dict[str, list[str]]) -> dict[str, Any]:
+    """BFS the call-tree behind ``start`` → ``{fns, depth, names?, names_more?, truncated?}``.
+
+    ``fns`` = distinct transitive callees (excl. self); ``depth`` = BFS layers = the
+    shortest-path eccentricity of the reachable set (a cheap honest depth, not the NP-hard
+    longest path); ``truncated: True`` rides ONLY when the depth cap clipped the walk (no
+    silent caps). ``names`` = the NAMED callees (short symbol, sorted, capped) — free, the
+    BFS already visited them. Deterministic: depends only on reachability, never edge order."""
+    seen = {start}
+    frontier = [start]
+    depth = 0
+    while frontier and depth < _BEHIND_DEPTH_CAP:
+        nxt: list[str] = []
+        for u in frontier:
+            for v in adj.get(u) or ():
+                if v not in seen:
+                    seen.add(v)
+                    nxt.append(v)
+        if not nxt:
+            break
+        frontier = nxt
+        depth += 1
+    res: dict[str, Any] = {"fns": len(seen) - 1, "depth": depth}
+    names = sorted({s.split("#", 1)[1] for s in seen if s != start and "#" in s})
+    if names:
+        res["names"] = names[:_BEHIND_NAMES_CAP]
+        if len(names) > _BEHIND_NAMES_CAP:
+            res["names_more"] = len(names) - _BEHIND_NAMES_CAP
+    if frontier and depth >= _BEHIND_DEPTH_CAP:   # the cap clipped a deeper walk
+        res["truncated"] = True
+    return res
+
+
+def derive_behind(wiring: dict[str, Any],
+                  entities: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """Per API endpoint, the graft call-tree FLOOR behind its handler: ``{fns, depth, names}``.
+
+    A view-only complexity signal — NOT a rail. Keyed by the handler's wiring id
+    ``<file>#<fn>`` so ``_a3_graph`` attaches it to the endpoint node by the same key. Honest
+    by construction: an endpoint whose handler is not an indexed source function gets NO entry
+    (never a guess). Cheap — one BFS per endpoint over the ``calls`` adjacency; keys sorted."""
+    fn_ids, adj = _behind_context(wiring)
     out: dict[str, dict[str, Any]] = {}
     for ent in entities.values():
         if not ent:                       # a slug with no code map (dict|None) — the sibling guard
@@ -244,7 +249,19 @@ def derive_behind(wiring: dict[str, Any],
                 continue
             key = f"{f}#{fn}"
             if key in fn_ids and key not in out:
-                out[key] = behind(key)
+                out[key] = _behind_of(key, adj)
+    return {k: out[k] for k in sorted(out)}
+
+
+def derive_fn_behind(wiring: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    """The call-tree floor behind EVERY call-source FUNCTION (not just endpoint handlers) —
+    the operator's "every drawn node carries its hidden mass" intent (2026-08-14): what
+    functions THIS function pulls in transitively, the ones put "under the rug" by it. Keyed
+    by the function's wiring id ``<file>#<fn>``; computed only for functions that call
+    something (a leaf fn has fns:0 and gets NO entry — honest, the panel omits the section).
+    Same BFS / noise-filter / caps as ``derive_behind``. Deterministic: keys sorted."""
+    _fn_ids, adj = _behind_context(wiring)
+    out = {s: _behind_of(s, adj) for s in adj if adj.get(s)}
     return {k: out[k] for k in sorted(out)}
 
 
@@ -348,12 +365,14 @@ def graft_arm(root: Path, entities: dict[str, Any],
         out = derive_cross(wiring, entities)
         fout = derive_functions(wiring, entities)
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
+        fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
             "pairs": out["pairs"], "stats": out["stats"],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws
             "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
+            "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
         }
     except Exception as exc:  # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"graft arm error: {exc}"}

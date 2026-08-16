@@ -66,6 +66,10 @@ ck('ecpTabbed("test","Tests"' in js, "Tests are built with ecpTabbed (tab-when->
 ck('ecpConns("link","Connections"' in js, "Connections use ecpConns (NEVER tabbed)")
 ck("b.names" in js and 'ecpSechd("layers","Code behind"' in js,
    "ecpBehind renders the NAMED callees (derive_behind.names) under a Code-behind section")
+# the FUNCTION card also shows Code-behind (the hidden mass a fn pulls in — per-fn floor)
+_sf = re.search(r"function showFn\(.*?\n(.*?)\n(?=function |/\* )", js, re.S)
+ck(_sf is not None and re.search(r"if\(f\.behind\)\s*body\.push\(ecpBehind\(f\.behind\)\)", _sf.group(1)) is not None,
+   "showFn renders Code behind (ecpBehind) when the fn carries a behind floor")
 ck("function c4Endpoint(" in js and "function c4BridgesTo(" in js,
    "the endpoint card reads C4: c4Endpoint (behind/det) + c4BridgesTo (screens)")
 

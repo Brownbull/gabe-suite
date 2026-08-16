@@ -219,12 +219,13 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
 
     # ── fn_nodes — the DRAWN functions only, enriched from function_insight where
     #    present; graft/TS fns (no function_insight) default their layer by file ext.
+    _fn_behind = (graft or {}).get("fn_behind") or {}   # per-fn call-tree floor (hidden mass)
     for fid in sorted(drawn_fn):
         slug = drawn_fn[fid]
         rfile, _, name = fid.partition("#")
         f = FI.get(rfile + "::" + name, {})
         is_py = rfile.endswith(".py")
-        lv["fn_nodes"].append({
+        _node = {
             "id": fid, "name": name, "slug": slug, "kind": "function",
             "lang": "py" if is_py else "ts",
             "layer": f.get("layer") or ("services" if is_py else "web"),
@@ -232,7 +233,14 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             "hub": {"god": bool(f.get("god")), "usage": f.get("internal", 0)},
             "tests": {"api": f.get("api", 0), "web": f.get("web", 0),
                       "n": (f.get("api", 0) + f.get("web", 0)), "red": 0},
-        })
+        }
+        # the CODE-BEHIND floor (out-degree): what functions this function pulls in
+        # transitively — the hidden mass "under the rug". Honest-empty: a leaf fn (no
+        # outgoing calls) has no fn_behind entry → the panel omits the Code-behind section.
+        _bh = _fn_behind.get(fid)
+        if _bh:
+            _node["behind"] = _bh
+        lv["fn_nodes"].append(_node)
         # fn DETAIL — the wider projection of function_insight the panel's Function
         # card reads (detailOf("fn:"+slug+"|"+name)), keyed exactly like the cls: rows.
         # Pure archmap, honest-empty PER FIELD: no docstring insight ⇒ no doc, a TS fn

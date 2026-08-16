@@ -415,6 +415,11 @@ var NS = "http://www.w3.org/2000/svg";
 var COLORS = D.colors || {};
 var METHOD = { GET:"var(--m-get)", POST:"var(--m-post)", PUT:"var(--m-put)", PATCH:"var(--m-put)", DELETE:"var(--m-delete)" };
 var FNCOL = { api:"var(--c-fn-api)", services:"var(--c-fn-services)", web:"var(--c-fn-web)" };
+// fn CODE-BEHIND lookup (slug|name → {fns,depth,names}). fn_nodes carry it, but the
+// trace/layers click handlers build MINIMAL f objects, so showFn resolves behind here
+// for every entry path (the Functions level already passes the full node).
+var FN_BEHIND = {};
+(D.fn_nodes||[]).forEach(function(n){ if(n.behind) FN_BEHIND[n.slug+"|"+n.name]=n.behind; });
 var level = "entities";
 var pos = {};                 // POSITION PERSISTENCE: id → {x,y}, survives level switches
 var panX=0, panY=0, zoom=1, fitT=[0,0];
@@ -2078,6 +2083,7 @@ function showEndpoint(slug, ep){
 }
 function showFn(f){
   _ecpExtraConns=null;
+  if(!f.behind) f.behind = FN_BEHIND[f.slug+"|"+f.name];   // resolve for minimal-f entry paths
   // fn DETAIL rides GABE_LEVELS.detail["fn:…"] (the wider function_insight projection):
   // doc · file · signature. Fan-in usage is the fn_node's hub.usage (already live).
   var fd=D.detail["fn:"+f.slug+"|"+f.name]||{};
@@ -2085,6 +2091,9 @@ function showFn(f){
   var body=[];
   body.push(ecpUsage(usageN, usageN?(usageN+" caller"+(usageN>1?"s":"")+" (fan-in)"):(f.handler?"endpoint handler — entered by a route, not called internally":"no internal caller recorded")));
   body.push(ecpConnSlot());
+  // CODE BEHIND (out-degree) — the functions this function pulls in transitively, the
+  // hidden mass "under the rug". Same graft floor as an endpoint's, per drawn function.
+  if(f.behind) body.push(ecpBehind(f.behind));
   var idRows=[ ecpKv("entity","entity", esc(f.slug)), ecpKv("layers","layer", esc(f.layer||"")),
      ecpKv("globe","language", f.lang==="ts"?"TypeScript":"Python"),
      ecpKv("role","role", f.handler?"endpoint handler":(f.god?"god function":"internal helper")) ];
