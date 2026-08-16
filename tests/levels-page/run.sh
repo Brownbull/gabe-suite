@@ -86,6 +86,29 @@ ck("function ecpUnlinked(" in js and "var LINKED" in js,
 ck(js.count('ecpUnlinked("cls"') >= 1 and js.count('ecpUnlinked("ep"') >= 1,
    "showPiece + showEndpoint wire the why-unlinked section (honest-empty on no connectors)")
 
+# ── second-review fixes (all in NEW code paths) ─────────────────────────────
+# F2: BOTH trace variants pair show* with attachSelection (drawTrace AND drawTraceFlow),
+#     else the flow variant leaves #ecp-conns empty + drops an endpoint's bridged screens.
+_flow = re.search(r"function drawTraceFlow\(.*?\n(.*?)\nfunction ", js, re.S)
+_flowbody = _flow.group(1) if _flow else ""
+ck(_flowbody.count("attachSelection(") >= 3,
+   "drawTraceFlow pairs every element show* with attachSelection (fills #ecp-conns + screens)")
+# F1: a direct entity click enters the trace (navTouch) so the header back/forward is its own
+ck(re.search(r'function showEntity\(.*?navTouch\("ent:"\+en\.slug\)', js, re.S) is not None,
+   "showEntity enters the node trace (navTouch) — the header trace reflects the entity, not a stale node")
+# F3: schema usage is a real in-degree (endpoints referencing it), not a false 0 from a missing hub
+ck("reference this body/response" in js,
+   "schema Usage derives a real in-degree (endpoints touching/returning it), not hub-0")
+# F4: the fn Tests section no longer shows a contradictory 0 pill / false 'N cases cover' note
+ck("no cases claimed for a function" in js and "case(s) cover this function" not in js,
+   "the function Tests section is honest-empty (no self-contradictory count pill)")
+# F6: the dead #navback control is gone (the ECP header owns the trace now)
+ck('id="navback"' not in page and 'getElementById("navback")' not in js,
+   "the retired #navback control is removed (no dead hidden button + handler)")
+# F5: jumpToNode reports whether it landed; the forward-trace pops navFwd only on success
+ck("return false" in js and "if(ok!==false) navFwd.pop()" in js,
+   "the forward-trace peeks then pops navFwd only on a successful land (no lost key / desync)")
+
 # ── the ECP panel CSS is SCOPED under #panel (no global leak) ─────────────────
 # Every ECP panel rule must be prefixed with #panel. A BARE global rule (a line that
 # starts one of these class selectors with no #panel ancestor) would leak the card

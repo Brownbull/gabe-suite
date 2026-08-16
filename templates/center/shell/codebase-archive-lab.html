@@ -60,8 +60,6 @@ aside .uqchip{ font-size:9px; font-weight:800; letter-spacing:.04em; color:var(-
   border:1px solid var(--c-schema); border-radius:5px; padding:0 4px; margin-left:4px; }
 aside .st-pass{ color:var(--c-model); font-weight:700; } aside .st-fail{ color:var(--m-delete); font-weight:700; }
 aside .cid{ font-size:10px; font-weight:800; color:var(--accent); }
-#navback{ position:absolute; top:8px; right:10px; z-index:6; font:inherit; font-size:12px; font-weight:700;
-  background:var(--accent); color:#fff; border:1px solid var(--accent); border-radius:8px; padding:3px 10px; cursor:pointer; }
 #panelchev{ position:absolute; bottom:10px; right:10px; z-index:6; width:32px; height:32px;
   display:flex; align-items:center; justify-content:center; line-height:0;
   background:var(--panel); color:var(--muted); border:1px solid var(--line);
@@ -69,7 +67,6 @@ aside .cid{ font-size:10px; font-weight:800; color:var(--accent); }
 #panelchev:hover{ color:var(--ink); border-color:var(--edge); }
 #sidewrap.min{ width:42px; }
 #sidewrap.min aside{ display:none; }
-#sidewrap.min #navback{ display:none; }
 #sidewrap.min #panelchev{ right:5px; }
 aside h3{ font-size:14px; margin-bottom:2px; }
 aside .k{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin:12px 0 4px;
@@ -399,7 +396,6 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   <div id="sidewrap">
     <div id="panelgrip" title="drag to resize the panel"></div>
     <aside id="panel"></aside>
-    <button id="navback" hidden title="back to the previous element">←</button>
     <button id="panelchev" title="minimize / restore the panel">&#187;</button>
   </div>
 </div>
@@ -1700,7 +1696,8 @@ function drawTraceFlow(){
       halo(g); epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
-      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
+      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
+        attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
       layer.appendChild(g); });
     var fnIds=Object.keys(fns).sort();
     shown.forEach(function(ep){ if((ep.touch||[]).length && ep.fn && fns[ep.fn])
@@ -1714,7 +1711,8 @@ function drawTraceFlow(){
       halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
       radialLabel(g, {x:x,y:y}, p, trunc(fn,14), 18);
       g.addEventListener("click",function(ev){ ev.stopPropagation();
-        showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false}); });
+        showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false});
+        attachSelection("fn:"+slug+"|"+fn); });
       layer.appendChild(g); });
     var clsFnAngles={};
     shown.forEach(function(ep){ (ep.touch||[]).forEach(function(c){
@@ -1735,7 +1733,8 @@ function drawTraceFlow(){
       radialLabel(g, {x:x,y:y}, p, trunc(cls,13), 17);
       var tti=E("title"); tti.textContent=(isModel?"model ":"schema ")+cls+(_tm&&_tm.table?" · table "+_tm.table:""); g.appendChild(tti);
       g.addEventListener("click",function(ev){ ev.stopPropagation();
-        showPiece(slug, {kind:isModel?"model":"schema", m:_tm||{cls:cls}}); });
+        showPiece(slug, {kind:isModel?"model":"schema", m:_tm||{cls:cls}});
+        attachSelection("cls:"+slug+"|"+cls); });
       layer.appendChild(g); });
     if(!clsL.length){ var note=E("text",{class:"sub2", x:p.x, y:p.y+3});
       note.textContent="no traced flows"; layer.appendChild(note); }
@@ -1931,7 +1930,10 @@ function ecpTraceSync(){ if(!ecpCurHead) return;
   ecpCurHead._pos.textContent = total>1 ? (cur+"/"+total) : ""; }
 function ecpTraceGo(dir){
   if(dir<0){ if(!navStack.length) return; if(navCur) navFwd.push(navCur); goBack(); }
-  else { if(!navFwd.length) return; var k=navFwd.pop(); _ecpFwding=true; jumpToNode(k); _ecpFwding=false; }
+  // PEEK then pop only on a successful land — a forward target not drawn on the current
+  // level (jumpToNode → false) must stay in navFwd, not vanish + desync the counter.
+  else { if(!navFwd.length) return; var k=navFwd[navFwd.length-1]; _ecpFwding=true;
+    var ok=jumpToNode(k); _ecpFwding=false; if(ok!==false) navFwd.pop(); }
   ecpTraceSync(); }
 
 /* ── C4 lookups — the endpoint `behind` floor + the web→API bridges the panel reads
@@ -1972,6 +1974,11 @@ function showDefault(){
 }
 function showEntity(en){
   _ecpExtraConns=null;
+  // the entity enters the node trace like every other card, so the header back/forward
+  // reflects IT (idempotent: goBack/jumpToNode pre-set navCur, so navTouch early-returns
+  // there; a DIRECT entity click starts a fresh chain). Without this the entity card
+  // showed a trace position + back button pointing at an unrelated node.
+  navTouch("ent:"+en.slug);
   var pc=D.pieces[en.slug]||{}, c=en.counts||{};
   // usage IN-DEGREE = inbound cross-entity references (levels cross_edges landing here)
   var inbound=(D.cross_edges||[]).filter(function(e){ return e.ts===en.slug; }).length;
@@ -1999,9 +2006,19 @@ function showPiece(slug, it){
   // model/schema DETAIL rides GABE_LEVELS.detail["cls:…"].det (the C4 element_detail
   // dossier the levels feed homes here): cols · fks · uqs · doc · file · cases.
   var d=D.detail["cls:"+slug+"|"+cls]||{}, det=d.det||{};
-  var usageN=(m.hub&&m.hub.usage)||0;
+  // usage IN-DEGREE. A model carries model_insight fan-in on hub.usage; a SCHEMA has no
+  // hub (the levels feed builds schemas as {cls,tests}), so derive its in-degree from the
+  // endpoints that reference it as a body (touch) or response (resp) — else the bar always
+  // read 0 with a false "nothing references it yet" for a heavily-used response schema.
+  var usageN, usageNote;
+  if(it.kind==="model"){ usageN=(m.hub&&m.hub.usage)||0;
+    usageNote = usageN?("fan-in "+usageN+" — endpoints + functions referencing it"):"nothing references it yet"; }
+  else { usageN=0;
+    Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].endpoints||[]).forEach(function(e){
+      if((e.touch||[]).indexOf(cls)>=0 || e.resp===cls) usageN++; }); });
+    usageNote = usageN?(usageN+" endpoint"+(usageN>1?"s":"")+" reference this body/response"):"no endpoint references it directly"; }
   var body=[];
-  body.push(ecpUsage(usageN, usageN?("fan-in "+usageN+" — endpoints + functions referencing it"):"nothing references it yet"));
+  body.push(ecpUsage(usageN, usageNote));
   body.push(ecpConnSlot());
   body.push(ecpUnlinked("cls", slug+"|"+cls, cls));
   if(det.cols && det.cols.length){
@@ -2073,8 +2090,11 @@ function showFn(f){
      ecpKv("role","role", f.handler?"endpoint handler":(f.god?"god function":"internal helper")) ];
   body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
   if(f.god) body.push(H("div",{class:"sec"}, H("span",{class:"flag"}, ecpIco("info"), "god fn · usage "+usageN)));
-  var tn=(f.tests&&f.tests.n)||0;
-  body.push(ecpTabbed("test","Tests",[], {showCount:true, empty: tn?(tn+" case(s) cover this function's file"):"— no cases claimed yet"}));
+  // functions carry no cid-level cases in this feed (fn_nodes.tests is a reference COUNT,
+  // not a test ledger), so — like the element-components fn card — Tests is honest-empty.
+  // No count pill: a "0" pill beside a "N cases cover this" note was self-contradictory.
+  body.push(H("div",{class:"sec"}, ecpSechd("test","Tests"),
+     H("div",{style:"font-size:12px;color:var(--muted)"}, "— no cases claimed for a function (coverage is tracked per endpoint/model)")));
   var sig=fd.sig||{};
   if(sig.returns||sig.async) body.push(H("div",{class:"sec"}, ecpSechd("function","Signature"),
      ecpKv("function","returns",(sig.async?"async · ":"")+(fd.flines?fd.flines+" lines · ":"")+"→ <code>"+esc(sig.returns||"—")+"</code>")));
@@ -2162,9 +2182,7 @@ function regEdge(el, kind, fromKey, toKey, how){
    on an in-chain element changes nothing; a click on an out-of-chain element
    starts a fresh chain (history overridden). ── */
 var navStack=[], navCur=null;
-function navUI(){ var b=document.getElementById("navback");
-  if(b) b.hidden=true;               // the trace back/forward now lives in the card header
-  ecpTraceSync(); }
+function navUI(){ ecpTraceSync(); }   // the trace back/forward lives in the card header now
 function navVisit(key){                          // a LINK navigation lands on key
   if(navCur && navCur!==key){ navStack.push(navCur); while(navStack.length>6) navStack.shift(); }
   navCur=key; if(!_ecpFwding) navFwd=[]; navUI(); }      // a fresh branch drops the forward trace
@@ -2254,12 +2272,13 @@ function jumpToNode(key){
   // dropping the trace (it did before this branch: nodeWorldXY→null returned early).
   if(key.indexOf("ent:")===0){ navVisit(key); var w0=pos[key]; if(w0) centerCamera(w0);
     var en=D.entities.filter(function(x){ return "ent:"+x.slug===key; })[0];
-    if(en) showEntity(en); return; }
-  var w=nodeWorldXY(key); if(!w) return;   // node not drawn on this level — leave nav untouched
+    if(en) showEntity(en); return true; }
+  var w=nodeWorldXY(key); if(!w) return false;   // node not drawn on this level — leave nav untouched
   navVisit(key);
   centerCamera(w);
   var n=SELREG.nodes[key];
   if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
+  return true;
 }
 /* ── EDGE HOP (operator round 31): dbl-click a connector → the camera JUMPS to
    one of its endpoint nodes — the FAR one first (that's the end you can't see);
@@ -2446,7 +2465,6 @@ function _sect(icon, label){ return "<div class='k'>"+icon+"<span>"+label+"</spa
     var r=document.documentElement, cur=r.getAttribute("data-theme");
     var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
     r.setAttribute("data-theme", dark ? "light" : "dark"); });
-  document.getElementById("navback").addEventListener("click",function(){ goBack(); });
   JRN.list=buildJourneys();
   (function(){ var sel=document.getElementById("jrnSel");
     var h="<option value=''>— pick a journey —</option>";
