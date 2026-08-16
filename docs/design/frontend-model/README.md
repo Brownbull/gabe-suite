@@ -29,9 +29,13 @@ invisible. The asymmetry is real —
 
 Model the frontend the way the backend is modeled: typed NODES + resolved EDGES, honest-empty.
 
-**Nodes** (proposed kinds): `component` · `hook` (useX) · `store` (Zustand/Redux/Context/Jotai)
-· `route` (page/route→component) · `fe-type` (the frontend's own TS interfaces — a
-schema-equivalent) · keep `screen` as a role/flag on whichever file fetches.
+**Nodes** — DECIDED 2026-08-16: the **FULL** taxonomy, 7 kinds:
+`component` · `hook` (useX) · `store` (Zustand/Redux/Context/Jotai) · `route`
+(page/route→component) · `fe-type` (the frontend's own TS interfaces — a schema-equivalent)
+· `endpoint` (backend, the bridge target) · `screen` = a role/flag on whichever file fetches.
+Glyphs LOCKED to the operator-approved set from the `Frontend Graph Tiers` artifact:
+component = browser-window · hook = fn-braces rect · store = box/package · route = signpost
+· fe-type = schema-braces · endpoint = bolt (all Lucide, matching the levels-graph kit).
 
 **Edges**: `imports` (file→file) · `renders` (component→component via JSX) · `uses-hook`
 (component→hook) · `uses-store` (consumer→store) · `fetches` (the existing bridge, screen→
@@ -98,6 +102,49 @@ wants `node_modules` present and a protobuf-decode step.
   ring" to a small multi-glyph cluster (component/hook/store glyphs) — the force layout + per-entity
   bubble we just shipped already accommodate this (that is WHY we kept the bubble over concentric).
 
+## 5b. Verification & completeness — the ORACLE strategy (operator's core concern)
+
+The backend earned trust because Python's AST is authoritative + graft's graph was
+cross-checked by the badge-vs-panel audit (24 defects found). The frontend needs the same
+rigor, and the same shape: an authoritative ORACLE + a layered check that names every gap
+instead of skipping it silently.
+
+**The oracle = the TypeScript COMPILER.** It resolves every import, symbol, and reference —
+it is the engine behind VS Code's "Find All References," so it knows the truth about what
+connects to what. Reach it via **ts-morph** (in-process TS Compiler API, emits JSON we
+control, degrades gracefully without `node_modules`) — or **scip-typescript** for a portable
+committed index. This is the frontend's Python-AST-equivalent, and it is an EXISTING tool
+(the operator's "prefer a tool over building from scratch" — the oracle is not hand-rolled).
+
+The extraction and the oracle are DIFFERENT tools on purpose, so they can disagree:
+- ast-grep + dependency-cruiser do the cheap, fast extraction (node classification + import edges).
+- the compiler (ts-morph/scip) is the authoritative denominator we check that extraction against.
+
+**Three verification layers (mirroring the backend):**
+
+1. **Hermetic BATTERY** (`tests/frontend/`) — a tiny known React app with EVERY node + edge
+   hand-enumerated; the extractor must find exactly that set (prove it can FIRE and stay
+   silent, mutation-checked). Deterministic, like the synthetic archmaps in `tests/levels`.
+
+2. **Real DRY-RUN + coverage numbers** against gustify's `apps/web` READ-ONLY:
+   - **Node coverage** — the compiler enumerates ALL `.ts/.tsx` files (the denominator). Every
+     file is either classified (component/hook/store/route/type) or bucketed `unclassified: N`.
+     A skipped file is a NAMED number, never a silent drop → "not skipping nodes" is provable.
+   - **Edge coverage** — `captured / compiler-resolved` for imports + references. A reference the
+     compiler resolves that our graph misses is a listed gap, with the file+symbol.
+   - Numbers go in the commit message (the suite's dry-run-on-a-COPY rule).
+   - **Hand-verified sample flow** — the recipe-browse flow already enumerated by hand (7 nodes,
+     6 edges: route→container→{view,store,hook}, hook→endpoint, type→hook) is a golden assertion.
+
+3. **Adversarial AUDIT** — once it renders, the SAME badge-vs-panel + structural-sweep discipline
+   that caught the 24 backend defects: agents diff the drawn frontend graph against the source +
+   the oracle, hunting misclassification and missing edges the coverage % can't see.
+
+The completeness guarantee is layer 2's node/edge coverage: the compiler is the total, our
+extraction is the numerator, and the difference is always a named list — honest-empty applied
+to completeness. **`ast-grep`/`dependency-cruiser` shift from "the extractor" to "the FAST extractor
+verified against the compiler oracle"; scip/ts-morph rise from Tier-2 to the verification backbone.**
+
 ## 6. Constraints (non-negotiable, from the suite's design record)
 
 Deterministic (sorted globs, no wallclock) · honest-empty (missing tool/root ⇒ empty field,
@@ -108,9 +155,12 @@ dry-run on a COPY with the numbers in the commit message.
 
 ## 7. Phased build plan
 
-- **P0 — spike (1 slice):** run `ast-grep` + `dependency-cruiser` against gustify's `apps/web`
-  READ-ONLY; hand-count what nodes/edges they yield vs the actual source. Record numbers. Decide
-  the node-kind taxonomy from real data (not a template).
+- **P0 — spike + oracle baseline (1 slice):** against gustify's `apps/web` READ-ONLY, run BOTH
+  the fast extractor (`ast-grep` + `dependency-cruiser`) AND the compiler oracle (`ts-morph`
+  `getSourceFiles`/`findReferences`, or `scip-typescript`). Report the **coverage numbers**: total
+  files (oracle denominator) · classified-by-kind histogram · `unclassified: N` · edges captured /
+  compiler-resolved. This IS the verification harness proving nothing is silently skipped — built
+  first, before any render. Taxonomy already DECIDED (Full, 7 kinds); P0 validates it against real data.
 - **P1 — topology arm:** dependency-cruiser import edges into `_a3_web` (self-provisioned, honest-empty,
   own try/except) → `imports` edges in `GABE_C4`. Battery + twin dry-run numbers.
 - **P2 — domain arm:** ast-grep classification (component/hook/store) + render/uses edges. New L2
