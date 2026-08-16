@@ -8,6 +8,27 @@
 > Status: PLAN (draft for operator review). Depends on the "is there an off-the-shelf center"
 > quick check (running) — if that finds nothing adopt-able, this plan stands as-is.
 
+## Off-the-shelf check (2026-08-16) — no center to adopt; the split is validated
+
+Scanned portals (Backstage/Port/Cortex), viz/health (CodeCharta/Structurizr/CodeScene/Sourcegraph/
+CodeSee/Sourcetrail), and static-HTML generators (rendergit/repo-visualizer). **Verdict: no adopt-able
+command center.** It is bespoke BY NATURE — the board (plan→execute→review→commit) and ledger/evidence
+pillars are welded to the KDBP lifecycle; no product couples a derived code graph to a workflow board +
+a provenance ledger in a local static artifact. Where products are strong (the graph, health) they are
+hosted services or single-pillar.
+
+Crucially, this VALIDATES "keep the renderer, feed it graft": it is the SAME architecture CodeCharta
+ships in production (adapters → one `cc.json` → local visualizer, nothing uploaded) and Structurizr
+exposes (workspace JSON → `export static` HTML). The feed→renderer split is a proven pattern, not a compromise.
+
+Mine the IDEA, not the product: (1) **CodeCharta `cc.json`** — the strongest mirror of our graft→center
+feed discipline; study its canonical-JSON interchange. (2) **Structurizr** — "one model, many views" +
+static-HTML C4 export + a workspace JSON schema; the Center's graph could emit a Structurizr-compatible
+workspace to get its viewers for free. (3) **CodeScene** signal catalog (churn×complexity hotspots,
+change-coupling) to sharpen gabe-health. (4) **Backstage** catalog entity schema + Scorecards for the
+entity/maturity vocabulary. Dead/avoid: CodeSee (shut 2024), Sourcetrail (archived 2021), Sourcegraph
+(enterprise-only mid-2025), Code Climate Velocity (→ Qlty).
+
 ## The mental model (operator's words, affirmed)
 
 - **Gabe Suite = the process spine.** read → execute → review → commit → push. A mix of borrowed
