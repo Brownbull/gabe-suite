@@ -109,11 +109,17 @@ aside .conrow:hover{ color:var(--accent); }
 aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
   color:var(--muted); flex:none; min-width:52px; }   /* .sub2 kills pointer-events — the expander must stay clickable */
 .legend{ display:block; font-size:11px; color:var(--muted);
-  max-height:44vh; overflow-y:auto; }
-.legend .lg-h{ font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--muted); opacity:.75; margin:6px 0 2px; }
-.legend .it{ display:flex; align-items:center; gap:6px; }
-.legend svg{ width:16px; height:14px; }
+  max-height:46vh; overflow-y:auto; padding-right:2px; }
+.legend .lg-h{ font-size:9.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--accent); opacity:.9; margin:0 0 3px; padding:8px 0 0; border-top:1px solid var(--line);
+  display:flex; align-items:center; gap:5px; }
+.legend .lg-h:first-child{ border-top:none; padding-top:0; }
+.legend .lg-h svg{ width:12px; height:12px; opacity:.85; }
+.legend .it{ display:flex; align-items:baseline; gap:7px; padding:2px 0; line-height:1.4; }
+.legend .it > svg{ width:18px; height:15px; flex:none; align-self:center; }
+.legend .it b{ color:var(--ink); font-weight:650; }
+.legend .cmap{ margin:4px auto 7px; display:block; width:204px !important; height:102px !important; }
+.legend .cmap text{ font-weight:700; }
 /* node vocab */
 .entnode circle.body{ transition:opacity .25s; }
 .lbl{ font-size:12px; font-weight:650; text-anchor:middle; fill:var(--ink); pointer-events:none; }
@@ -1850,21 +1856,39 @@ function glyphIt(label, kind){
          "f-serv":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-services)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-services)'>F</text>",
          "f-web":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-web)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-web)'>F</text>"}[kind];
   return "<span class='it'><svg viewBox='0 0 16 15'>"+g+"</svg>"+esc(label)+"</span>"; }
+// the CORNER MAP — a single node showing which badge sits in which corner (the three
+// toggles read at once): code-behind top-left · tests top-right · used-by bottom-right.
+var LEGEND_CMAP=
+  "<svg class='cmap' viewBox='0 0 208 104' width='204' height='102'>"
+  +"<circle cx='104' cy='52' r='22' fill='none' stroke='var(--edge)' stroke-width='1.8'/>"
+  +"<circle cx='104' cy='52' r='7' fill='var(--muted)' opacity='.3'/>"
+  +"<text x='104' y='55' text-anchor='middle' fill='var(--muted)' style='font-size:7px'>node</text>"
+  // top-left: code-behind (purple)
+  +"<rect x='66' y='22' width='20' height='13' rx='6.5' fill='var(--c-fn)'/><text x='76' y='31.5' text-anchor='middle' fill='#fff' style='font-size:9px'>4</text>"
+  +"<text x='62' y='18' text-anchor='end' fill='var(--c-fn)' style='font-size:8.5px'>code&#8209;behind</text>"
+  // top-right: tests (green)
+  +"<rect x='122' y='22' width='20' height='13' rx='6.5' fill='var(--c-model)'/><text x='132' y='31.5' text-anchor='middle' fill='#fff' style='font-size:9px'>6</text>"
+  +"<text x='146' y='18' text-anchor='start' fill='var(--c-model)' style='font-size:8.5px'>tests</text>"
+  // bottom-right: used-by (accent)
+  +"<rect x='122' y='69' width='20' height='13' rx='6.5' fill='var(--accent)'/><text x='132' y='78.5' text-anchor='middle' fill='#fff' style='font-size:9px'>3</text>"
+  +"<text x='146' y='86' text-anchor='start' fill='var(--accent)' style='font-size:8.5px'>used&#8209;by</text>"
+  +"</svg>";
+var _lgTag="<svg viewBox='0 0 24 24'><path d='M4 5h16M4 12h16M4 19h10' fill='none' stroke='currentColor' stroke-width='2.4'/></svg>";
 var LEGEND_TAIL=[
-  "<div class='lg-h'>everywhere</div>",
-  "<span class='it'>moving dot = the direction of a wire (constant speed)</span>",
-  "<span class='it'>two parallel wires = a bidirectional pair (one lane each way)</span>",
-  "<span class='it'>count pill = test cases (green pass · red fail)</span>",
-  "<span class='it'>hollow dashed circle = unproven (no test names it)</span>",
-  "<span class='it'>shield = validator guard (toggle)</span>",
-  "<span class='it'>thick ring = fan-in hub · red dashed halo = god piece (toggle)</span>",
-  "<span class='it'>orange heat = change pressure from the archive (toggle)</span>",
-  "<span class='it'>spinning ring = the selected element</span>",
-  "<span class='it'>wire boldness decays per hop (the depth slider)</span>",
-  "<span class='it'>glowing links + dashed rings = the active journey</span>"];
+  "<div class='lg-h'>"+_lgTag+"node badges (toggle)</div>",
+  LEGEND_CMAP,
+  "<span class='it'><b>count pill</b> — a live number; <b>hollow dashed</b> = none at this altitude</span>",
+  "<span class='it'><b>shield</b> = validator guard · <b>thick ring</b> = fan-in hub · <b>red halo</b> = god piece</span>",
+  "<span class='it'><b>orange heat</b> = change pressure from the archive</span>",
+  "<div class='lg-h'>"+_lgTag+"wires</div>",
+  "<span class='it'><b>moving dot</b> = wire direction · <b>two lanes</b> = a bidirectional pair</span>",
+  "<span class='it'><b>dashed</b> = returns · <b>fine&#8209;dotted</b> = uses · boldness decays per hop (depth)</span>",
+  "<div class='lg-h'>"+_lgTag+"interaction</div>",
+  "<span class='it'><b>spinning ring</b> = the selected element</span>",
+  "<span class='it'><b>glowing links + dashed rings</b> = the active journey</span>"];
 function legend(items){
   document.getElementById("legend").innerHTML=
-    ["<div class='lg-h'>this level</div>"].concat(items).concat(LEGEND_TAIL).join(""); }
+    ["<div class='lg-h'>"+_lgTag+"this level</div>"].concat(items).concat(LEGEND_TAIL).join(""); }
 
 /* ═══════════════════════════════════════════════════════════════════════════════
    ECP — the element-components panel kit, PORTED from

@@ -145,6 +145,11 @@ ck('var showBehind' in js and 'var showUsage' in js
 # the badges sit at DIFFERENT corners than Tests (top-right): behind top-left, usage bottom-right
 ck("var bx=-(r*0.95+3), by=-r*0.95-3;" in js and "var bx=r*0.95+3, by=r*0.95+3;" in js,
    "behind badge is TOP-LEFT, usage badge is BOTTOM-RIGHT (Tests stays top-right)")
+# the LEGEND is structured into sections + carries the corner-map explaining the 3 badge slots
+ck("LEGEND_CMAP" in js and "code&#8209;behind" in js and 'class=\'cmap\'' in js,
+   "the legend has a corner-map diagram (code-behind top-left · tests top-right · used-by bottom-right)")
+ck(js.count('"<div class=\'lg-h\'>"+_lgTag+') >= 3,
+   "the legend is grouped into labeled sections (this level · node badges · wires · interaction)")
 # nodeMarks is called at the node draw sites (endpoints/models/functions), not just defined
 ck(js.count("nodeMarks(") >= 12, "nodeMarks is wired at every node draw site (>=12 calls)")
 
