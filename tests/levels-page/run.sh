@@ -134,6 +134,20 @@ ck(_sw is not None and "epKeyOf(x.to, x.to_slug)" in _sw.group(1) and 'ecpConns(
 ck('if(e.kind==="bridge") return;' in js,
    "ecpGraphConns skips bridge edges (fetches come from the complete C4 set, not the drawn subset)")
 
+# ── NODE BADGES: toggle buttons for CODE-BEHIND (top-left) + USED-BY (bottom-right) ──
+ck('id="behindbtn"' in page and 'id="usagebtn"' in page,
+   "the behind + used-by toggle buttons exist in the toolbar (siblings of the Tests toggle)")
+ck("function behindBadge(" in js and "function usageBadge(" in js and "function nodeMarks(" in js,
+   "the badge renderers exist: behindBadge (top-left) + usageBadge (bottom-right) + nodeMarks dispatcher")
+ck('var showBehind' in js and 'var showUsage' in js
+   and 'lensBtn("behindbtn"' in js and 'lensBtn("usagebtn"' in js,
+   "the toggles are wired (showBehind/showUsage flags via lensBtn, off by default)")
+# the badges sit at DIFFERENT corners than Tests (top-right): behind top-left, usage bottom-right
+ck("var bx=-(r*0.95+3), by=-r*0.95-3;" in js and "var bx=r*0.95+3, by=r*0.95+3;" in js,
+   "behind badge is TOP-LEFT, usage badge is BOTTOM-RIGHT (Tests stays top-right)")
+# nodeMarks is called at the node draw sites (endpoints/models/functions), not just defined
+ck(js.count("nodeMarks(") >= 12, "nodeMarks is wired at every node draw site (>=12 calls)")
+
 # ── the ECP panel CSS is SCOPED under #panel (no global leak) ─────────────────
 # Every ECP panel rule must be prefixed with #panel. A BARE global rule (a line that
 # starts one of these class selectors with no #panel ancestor) would leak the card
