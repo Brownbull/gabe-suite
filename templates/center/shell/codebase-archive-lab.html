@@ -669,7 +669,10 @@ function pressMark(g, r, slug, cls){ if(!showPress) return;
 function proofBadge(g, r, tests){
   if(!showTests) return;
   var bx=r*0.95+3, by=-r*0.95-3;
-  if(!tests){ var e=E("circle",{class:"tbadge none",cx:bx,cy:by,r:3.6,fill:"none",
+  // SWEEP-D: a tests OBJECT with n<=0 is still truthy — the old `if(!tests)` let a
+  // 0-case element render a solid green "0 · all passing" badge (gastify's schema
+  // StatementLine node). Zero cases is UNPROVEN, not passing → the hollow glyph.
+  if(!tests || !(tests.n>0)){ var e=E("circle",{class:"tbadge none",cx:bx,cy:by,r:3.6,fill:"none",
       stroke:"var(--muted)","stroke-width":"1.3","stroke-dasharray":"2 2"});
     var ti=E("title"); ti.textContent="no cases name this piece — unproven at this altitude"; e.appendChild(ti);
     g.appendChild(e); return; }
@@ -1356,17 +1359,21 @@ function drawLayers(){
       } else { var nm=it.name;
         var lay=ln==="web"?"web":(it.kind==="usefn"?"services":"api");
         var g3=E("g",{class:"fnode"+(it.kind==="usefn"?" usefn":""),"data-layer":lay, transform:"translate("+x+","+y+")"});
-        halo(g3); fGlyph(g3, 8.5, FNCOL[lay]||"var(--muted)", !!it.handler, false);
-        var fD=D.fn_nodes.filter(function(f){ return f.name===nm && f.slug===it.slug; })[0]||{};
+        // SWEEP-B: resolve the home fn_node with a NAME-ONLY fallback — a cross-home draw
+        // (fn homed to A, drawn under borrowing entity it.slug) misses the name+slug filter,
+        // leaving badges hollow + the panel usage 0. god + overlay key follow the home node.
+        var fD=D.fn_nodes.filter(function(f){ return f.name===nm && f.slug===it.slug; })[0]
+               || D.fn_nodes.filter(function(f){ return f.name===nm; })[0] || {};
+        halo(g3); fGlyph(g3, 8.5, FNCOL[lay]||"var(--muted)", !!it.handler, !!fD.god);
         proofBadge(g3, 9, fD.tests||null);
-        nodeMarks(g3, 9, "fn:"+it.slug+"|"+nm);
+        nodeMarks(g3, 9, "fn:"+(fD.slug||it.slug)+"|"+nm);
         g3.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:colr}));
         twoRowLabel(g3, nm, 0, 17);
         var ti3=E("title"); ti3.textContent=nm+"() · "+lay+" · "+it.slug; g3.appendChild(ti3);
         fnAtG[it.slug+"|"+nm]={x:x,y:y};
         regNode(g3, "fn:"+it.slug+"|"+nm, nm+"()", "fn");
         (function(slug2,nm2,lay2,h2,u2,fD2){ g3.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:nm2, slug:slug2, layer:lay2, lang:lay2==="web"?"ts":"py", handler:!!h2, god:false, uses:u2||0, tests:fD2.tests||null, hub:fD2.hub||null});
+          showFn({name:nm2, slug:slug2, id:fD2.id, layer:lay2, lang:lay2==="web"?"ts":"py", handler:!!h2, god:!!fD2.god, uses:u2||0, tests:fD2.tests||null, hub:fD2.hub||null});
           attachSelection("fn:"+slug2+"|"+nm2); }); })(it.slug, nm, lay, it.handler, it.uses, fD);
         nLayer.appendChild(g3);
       } }); });
@@ -1641,30 +1648,30 @@ function drawTrace(){
     function drawInnerItem(it, x, y, grpLabel){
       if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
         var g=E("g",{class:"fnode","data-layer":"api","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
-        halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
-        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
+        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node (name-resolved)
+        halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, !!f2.god);   // SWEEP-B: real god, not hardcoded false
         proofBadge(g, 9, f2.tests||null);
-        nodeMarks(g, 9, "fn:"+slug+"|"+it.name);
+        nodeMarks(g, 9, "fn:"+(f2.slug||slug)+"|"+it.name);   // overlay keyed by HOME slug
         twoRowLabel(g, it.name, 0, 17);
         var ti2=E("title"); ti2.textContent=it.name+"() · handler"; g.appendChild(ti2);
         regNode(g, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
         g.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null});
+          showFn({name:it.name, slug:slug, id:f2.id, layer:"api", lang:"py", handler:true, god:!!f2.god, tests:f2.tests||null, hub:f2.hub||null});
           attachSelection("fn:"+slug+"|"+it.name); });
         layer.appendChild(g);
       } else if(it.kind==="usefn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
         // a USING function — drawn because it references models/schemas (archmap
         // internal_refs), incl. across entities; service-teal, no handler ring
         var gu=E("g",{class:"fnode usefn","data-layer":"services","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
-        halo(gu); fGlyph(gu, 8.5, "var(--c-fn-services)", false, false);
-        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
+        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node (name-resolved)
+        halo(gu); fGlyph(gu, 8.5, "var(--c-fn-services)", false, !!fu.god);   // SWEEP-B: real god
         proofBadge(gu, 9, fu.tests||null);
-        nodeMarks(gu, 9, "fn:"+slug+"|"+it.name);
+        nodeMarks(gu, 9, "fn:"+(fu.slug||slug)+"|"+it.name);   // overlay keyed by HOME slug (cross-home usefn)
         twoRowLabel(gu, it.name, 0, 17);
         var tiu=E("title"); tiu.textContent=it.name+"() · uses "+(it.uses||0)+" class"+((it.uses||0)===1?"":"es"); gu.appendChild(tiu);
         regNode(gu, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
         gu.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:it.name, slug:slug, layer:"services", lang:"py", handler:false, god:false, uses:it.uses, tests:fu.tests||null, hub:fu.hub||null});
+          showFn({name:it.name, slug:slug, id:fu.id, layer:"services", lang:"py", handler:false, god:!!fu.god, uses:it.uses, tests:fu.tests||null, hub:fu.hub||null});
           attachSelection("fn:"+slug+"|"+it.name); });
         layer.appendChild(gu);
       } else { var cls=it.name;
@@ -1806,11 +1813,12 @@ function drawTraceFlow(){
         x=rnd(p.x+ring2*Math.cos(a)), y=rnd(p.y+ring2*Math.sin(a));
       fnAt[fn]={x:x,y:y};
       var g=E("g",{class:"fnode","data-layer":"api", transform:"translate("+x+","+y+")"});
-      halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
+      var f3=D.fn_nodes.filter(function(ff){ return ff.name===fn; })[0]||{};   // SWEEP-B: home node
+      halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, !!f3.god);
       radialLabel(g, {x:x,y:y}, p, trunc(fn,14), 18);
-      g.addEventListener("click",function(ev){ ev.stopPropagation();
-        showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false});
-        attachSelection("fn:"+slug+"|"+fn); });
+      (function(f3){ g.addEventListener("click",function(ev){ ev.stopPropagation();
+        showFn({name:fn, slug:slug, id:f3.id, layer:"api", lang:"py", handler:true, god:!!f3.god, hub:f3.hub||null});
+        attachSelection("fn:"+slug+"|"+fn); }); })(f3);
       layer.appendChild(g); });
     var clsFnAngles={};
     shown.forEach(function(ep){ (ep.touch||[]).forEach(function(c){
@@ -2130,7 +2138,10 @@ function showPiece(slug, it){
   var cls=it.m.cls||"", m=it.m;
   // model/schema DETAIL rides GABE_LEVELS.detail["cls:…"].det (the C4 element_detail
   // dossier the levels feed homes here): cols · fks · uqs · doc · file · cases.
-  var d=D.detail["cls:"+slug+"|"+cls]||{}, det=d.det||{};
+  // SWEEP-A: read the KIND-aware detail key — a model and a same-named schema keep
+  // separate det records (cls: vs sch:), so the schema panel shows the SCHEMA's own
+  // columns/file, not the model's (gastify StatementLine: 20 fields not the model's 23).
+  var d=D.detail[(it.kind==="model"?"cls:":"sch:")+slug+"|"+cls]||{}, det=d.det||{};
   // usage IN-DEGREE. A model carries model_insight fan-in on hub.usage; a SCHEMA has no
   // hub (the levels feed builds schemas as {cls,tests}), so derive its in-degree from the
   // endpoints that reference it as a body (touch) or response (resp) — else the bar always
@@ -2203,6 +2214,15 @@ function showEndpoint(slug, ep){
 }
 function showFn(f){
   _ecpExtraConns=null;
+  // SWEEP-B: re-resolve the CANONICAL fn_node. A cross-home draw (a usefn drawn under a
+  // borrowing entity) passes the DRAWN slug + a hardcoded god:false, so a fn that is god
+  // with fan-in 3 at home read as usage 0 / "internal helper" on Trace & Layers. Normalize
+  // god/hub/behind/home-slug from the fn_node itself so the panel is level-independent.
+  var _FN=D.fn_nodes||[], _fn0=null;
+  if(f.id) _fn0=_FN.filter(function(n){return n.id===f.id;})[0];
+  if(!_fn0 && f.slug) _fn0=_FN.filter(function(n){return n.name===f.name && n.slug===f.slug;})[0];
+  if(!_fn0) _fn0=_FN.filter(function(n){return n.name===f.name;})[0];
+  if(_fn0){ f.slug=_fn0.slug; f.god=!!_fn0.god; if(_fn0.hub) f.hub=_fn0.hub; if(_fn0.behind) f.behind=_fn0.behind; }
   if(!f.behind) f.behind = FN_BEHIND[f.slug+"|"+f.name];   // resolve for minimal-f entry paths
   // fn DETAIL rides GABE_LEVELS.detail["fn:…"] (the wider function_insight projection):
   // doc · file · signature. Fan-in usage is the fn_node's hub.usage (already live).
@@ -2583,21 +2603,32 @@ function selectNode(key){
    the ECP card shows (routes / touches / returns / uses / calls / fk …) — graph-truthful
    (from SELREG), rendered as element-components chips each carrying its neighbour's node
    key so a hover PEEKS that node and a click TRAVELS to it. Returns an array of ecpG. */
+// SWEEP-D: the verb must follow edge DIRECTION. The old code labeled every 1-hop edge
+// with edgeWord(kind) whether the selected node was the SOURCE or the TARGET, so a
+// target node read its verbs backwards — schema MeResponse showed "returns · GET /me"
+// (the endpoints return IT) and model Recipe showed "uses · fn()" (the fns use IT). Pick
+// the active verb when e.from===key, the passive form when e.to===key.
+function edgeWordIn(kind){ return {touch:"touched by", resp:"returned by", fk:"fk from",
+  xfk:"cross-fk from", call:"called by", "import":"imported by", route:"routed by",
+  use:"used by", bridge:"fetched by"}[kind]||("← "+kind); }
+// glyph/chip class keyed by KIND (direction-agnostic) so both verb forms share styling.
+var EDGE_CLS={touch:"model", resp:"schema", route:"fn", use:"model", call:"fn", "import":"web", fk:"model", xfk:"model", bridge:"route"};
+var EDGE_GLY={touch:"model", resp:"schema", route:"function", use:"model", call:"function", "import":"file", fk:"key", xfk:"key", bridge:"endpoint"};
 function ecpGraphConns(key, mine){
-  var groups={};
+  var groups={};   // display word → {cls, gly, items}
   mine.forEach(function(i){ var e=SELREG.edges[i];
     if(e.kind==="bridge") return;   // web→API bridges are shown from C4 (complete) as a card EXTRA, not the drawn subset
-    var nk=(e.from===key)?e.to:e.from, nb=SELREG.nodes[nk];
-    var w=edgeWord(e.kind);
-    (groups[w]=groups[w]||[]).push({label:nb?nb.label:nk, key:nk}); });
-  var CLS={touches:"model", returns:"schema", routes:"fn", uses:"model", calls:"fn", imports:"web", fk:"model", "cross-fk":"model", fetches:"route"};
-  var GLY={touches:"model", returns:"schema", routes:"function", uses:"model", calls:"function", imports:"file", fk:"key", "cross-fk":"key", fetches:"endpoint"};
-  var ORDER=["routes","fetches","touches","returns","uses","calls","imports","fk","cross-fk"];
+    var out=(e.from===key), nk=out?e.to:e.from, nb=SELREG.nodes[nk];
+    var w=out?edgeWord(e.kind):edgeWordIn(e.kind);
+    var grp=groups[w]||(groups[w]={cls:EDGE_CLS[e.kind]||"route", gly:EDGE_GLY[e.kind]||"function", items:[]});
+    grp.items.push({label:nb?nb.label:nk, key:nk}); });
+  var ORDER=["routes","routed by","fetches","fetched by","touches","touched by","returns","returned by",
+             "uses","used by","calls","called by","imports","imported by","fk","fk from","cross-fk","cross-fk from"];
   var words=ORDER.filter(function(w){ return groups[w]; });
   Object.keys(groups).forEach(function(w){ if(ORDER.indexOf(w)<0) words.push(w); });
-  return words.map(function(w){
-    return ecpG(w, GLY[w]||"link", groups[w].length, (function(items,cls,gl){
-      return function(){ return ecpChipList(items, cls, gl); }; })(groups[w], CLS[w]||"route", GLY[w]||"function")); }); }
+  return words.map(function(w){ var grp=groups[w];
+    return ecpG(w, grp.gly, grp.items.length, (function(items,cls,gl){
+      return function(){ return ecpChipList(items, cls, gl); }; })(grp.items, grp.cls, grp.gly)); }); }
 var _peeks=[];
 function peekClear(){ _peeks.forEach(function(f){ f(); }); _peeks=[]; }
 function peekEdge(i){

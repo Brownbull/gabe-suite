@@ -225,6 +225,37 @@ _du2 = _lvu2["detail"]["cls:x|Dup"]["det"]
 ck(len(_du2.get("cases", [])) == 1 and _du2.get("cases_more") == 3 and bool(_du2.get("cols")),
    "AUDIT #16: _store_det merge is order-independent (schema-first == model-first)")
 
+# ── SWEEP LOCKS: the structural-audit fixes (model/schema identity + cross-entity prune) ──
+# SWEEP-A: a model and a SAME-NAMED schema in one entity keep DISTINCT detail records —
+#   model under cls:, schema under sch: — so the schema panel shows its OWN columns, not
+#   the model's (gastify StatementLine: schema 20 fields/source_order vs model 23/id).
+# SWEEP-C: a schema OWNED by entity A but returned only by entity B's endpoint survives the
+#   per-entity prune (was dropped → drawn nowhere, gustify MeResponse/SettingsResponse).
+_msw = copy.deepcopy(AMAP)
+_msw["entities"]["orders"]["models"].append(
+    {"cls": "Dup", "table": "dups", "cols": [["mid", "uuid", ""]], "fks": {}})
+_msw["entities"]["orders"]["schemas"].append(
+    {"cls": "Dup", "fields": [["sfield", "str", ""]]})
+_msw["entities"]["orders"]["endpoints"].append(
+    {"method": "GET", "path": "/dup", "fn": "get_dup", "file": "api/orders.py", "touches": [], "resp": "Dup"})
+# UserExport is a users-owned schema returned by an ORDERS endpoint (cross-entity)
+_msw["entities"]["users"]["schemas"].append({"cls": "UserExport", "fields": [["x", "str", ""]]})
+_msw["entities"]["orders"]["endpoints"].append(
+    {"method": "GET", "path": "/export", "fn": "export", "file": "api/orders.py", "touches": [], "resp": "UserExport"})
+_lsw = _a3_levels.build_levels(_msw, _a3_graph.build_c4_graph(_msw))
+_dm = (_lsw["detail"].get("cls:orders|Dup") or {}).get("det", {})
+_ds = (_lsw["detail"].get("sch:orders|Dup") or {}).get("det", {})
+ck((_dm.get("cols") or [[None]])[0][0] == "mid" and (_ds.get("cols") or [[None]])[0][0] == "sfield",
+   "SWEEP-A: model (cls:) + same-named schema (sch:) keep DISTINCT detail — own columns each")
+ck("UserExport" in {s["cls"] for s in _lsw["pieces"]["users"]["schemas"]},
+   "SWEEP-C: a schema returned by ANOTHER entity's endpoint survives the prune (drawn, not dropped)")
+# MUTATION — a schema NO endpoint anywhere touches/returns is still pruned (guard can fire)
+_msw2 = copy.deepcopy(_msw)
+_msw2["entities"]["users"]["schemas"].append({"cls": "NeverUsed", "fields": [["y", "str", ""]]})
+_lsw2 = _a3_levels.build_levels(_msw2, _a3_graph.build_c4_graph(_msw2))
+ck("NeverUsed" not in {s["cls"] for s in _lsw2["pieces"]["users"]["schemas"]},
+   "SWEEP-C MUTATION: a schema referenced by NO endpoint (any entity) is still pruned")
+
 print(f"levels battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

@@ -214,6 +214,31 @@ ck(re.search(r"key:\s*b\.from\b", js) is not None
    and '"web:"+b.from' not in js and "'web:'+b.from" not in js,
    "AUDIT #13: screen chip uses b.from verbatim (no double web: prefix)")
 
+# ── SWEEP LOCKS: the structural-audit page fixes (verified 66/66·54/54 held after) ──────
+# SWEEP-A: showPiece reads the KIND-aware detail key (model cls:, schema sch:) so a schema
+#   panel shows its own columns, not a same-named model's.
+ck(re.search(r'it\.kind===["\']model["\']\s*\?\s*["\']cls:["\']\s*:\s*["\']sch:["\']', js) is not None,
+   "SWEEP-A: showPiece reads the kind-aware detail key (cls: model / sch: schema)")
+# SWEEP-B: showFn RE-RESOLVES the canonical fn_node so a cross-home draw shows real home
+#   god/usage/behind (was god:false + drawn-slug → usage 0 on Trace/Layers).
+ck(re.search(r"_fn0\s*=\s*_FN\.filter", js) is not None and "f.god=!!_fn0.god" in js,
+   "SWEEP-B: showFn re-resolves the fn_node (god/hub/behind from the home node)")
+# SWEEP-B: the cross-home draw sites pass the HOME slug to nodeMarks + real god to fGlyph
+#   (a name-only fallback resolves a usefn drawn under a borrowing entity).
+ck(js.count('nodeMarks(g, 9, "fn:"+(f2.slug||slug)') >= 1
+   and 'nodeMarks(gu, 9, "fn:"+(fu.slug||slug)' in js,
+   "SWEEP-B: fn draw sites key nodeMarks by the HOME slug (f2.slug/fu.slug fallback)")
+ck('"var(--c-fn-services)", false, !!fu.god' in js and js.count("!!f2.god") >= 1,
+   "SWEEP-B: fGlyph gets the real god flag (not hardcoded false) at the fn draw sites")
+# SWEEP-D: a 0-case tests OBJECT renders HOLLOW (unproven), not a green "0 · all passing".
+ck(re.search(r"if\(!tests\s*\|\|\s*!\(tests\.n>0\)\)", js) is not None,
+   "SWEEP-D: proofBadge renders hollow when tests.n<=0 (no green '0 · all passing')")
+# SWEEP-D: Connections verb follows edge DIRECTION — active when the node is the source,
+#   passive (…-by) when it is the target (was always active → target nodes read backwards).
+ck("function edgeWordIn(" in js
+   and re.search(r"out\s*\?\s*edgeWord\(e\.kind\)\s*:\s*edgeWordIn\(e\.kind\)", js) is not None,
+   "SWEEP-D: ecpGraphConns inverts the verb for a target node (edgeWordIn on e.to===key)")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

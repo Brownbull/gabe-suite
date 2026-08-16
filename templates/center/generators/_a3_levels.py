@@ -305,6 +305,25 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         if fdet:
             lv["detail"]["fn:" + slug + "|" + name] = fdet
 
+    # SWEEP-C: the GLOBAL endpoint-facing schema set — every class any entity's endpoint
+    # touches (request body) or returns (bare resp), across ALL entities. The per-entity
+    # prune below keeps a schema only if a LOCAL endpoint references it, which dropped a
+    # schema OWNED by entity A but returned only by entity B's endpoints (gustify
+    # MeResponse/SettingsResponse/AccountExportResponse → drawn nowhere, 7 return-wires
+    # dangling). Prune against this union so a cross-entity-referenced schema survives.
+    _global_touched: set = set()
+    for _slug in l2:
+        _g = l2[_slug]
+        for _nd in _g.get("nodes", []):
+            if _nd.get("kind") != "endpoint":
+                continue
+            for _e in _g.get("edges", []):
+                if _e.get("kind") == "touches" and _e.get("source") == _nd["id"]:
+                    _global_touched.add(_strip(_e["target"]))
+            _r = _nd.get("resp")
+            if _r and _r != "—":
+                _global_touched.add(_bare_cls(_r))
+
     # ── per-entity pieces (from the C4 L2) + the rich lenses ──────────────────
     for slug in sorted(l2):
         g = l2[slug]
@@ -329,7 +348,11 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                 lv["schema_owner"][nd["label"]] = slug
                 schemas.append({"cls": nd["label"], "tests": _tests_of(det)})
                 if det:
-                    _store_det(lv, "cls:" + slug + "|" + nd["label"], det)
+                    # SWEEP-A: schemas key detail under `sch:` (models keep `cls:`). A model and
+                    # a same-named schema in one entity (gastify StatementLine) shared the cls:
+                    # key, so the merge showed the MODEL's cols/file/count on the SCHEMA panel.
+                    # Distinct keys give each its own det; the showPiece read is kind-aware.
+                    _store_det(lv, "sch:" + slug + "|" + nd["label"], det)
             elif k == "endpoint":
                 if ep_home.get(nd["label"], slug) != slug:
                     continue    # deduped — this route is drawn by its handler's entity
@@ -359,8 +382,12 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         # ALL its schemas (allergen's 7 request bodies), contradicting the design's own intent
         # that the aspect stays "present via its models/schemas". Only prune when the entity
         # actually owns endpoints; an endpoint-less entity keeps its (elsewhere-referenced) schemas.
+        # AUDIT #11: only prune when THIS entity owns endpoints (an endpoint-less aspect keeps
+        # its elsewhere-referenced schemas). SWEEP-C: prune against the GLOBAL touched set, so a
+        # schema returned by ANOTHER entity's endpoint is kept + drawn (not dropped for having no
+        # LOCAL endpoint reference). The local set is folded in for parity/robustness.
         if endpoints:
-            _touched = set()
+            _touched = set(_global_touched)
             for _ep in endpoints:
                 _touched.update(_ep.get("touch", []))
                 if _ep.get("resp"):     # resp is now the BARE class (AUDIT #6) → a container-returned schema survives the prune
