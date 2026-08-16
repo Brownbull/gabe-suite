@@ -223,6 +223,10 @@ ck(re.search(r'it\.kind===["\']model["\']\s*\?\s*["\']cls:["\']\s*:\s*["\']sch:[
 #   god/usage/behind (was god:false + drawn-slug → usage 0 on Trace/Layers).
 ck(re.search(r"_fn0\s*=\s*_FN\.filter", js) is not None and "f.god=!!_fn0.god" in js,
    "SWEEP-B: showFn re-resolves the fn_node (god/hub/behind from the home node)")
+# SWEEP-B guard: the NAME-ONLY fallback fires only when UNAMBIGUOUS — two entities may
+# define a fn of the same name; picking the first would show a homonym's god/usage.
+ck(re.search(r"_byName\.length===1", js) is not None,
+   "SWEEP-B: showFn name-only fallback is unambiguous-only (homonym guard)")
 # SWEEP-B: the cross-home draw sites pass the HOME slug to nodeMarks + real god to fGlyph
 #   (a name-only fallback resolves a usefn drawn under a borrowing entity).
 ck(js.count('nodeMarks(g, 9, "fn:"+(f2.slug||slug)') >= 1

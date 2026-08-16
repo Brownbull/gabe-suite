@@ -1648,7 +1648,8 @@ function drawTrace(){
     function drawInnerItem(it, x, y, grpLabel){
       if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
         var g=E("g",{class:"fnode","data-layer":"api","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
-        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node (name-resolved)
+        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name && f.slug===slug; })[0]
+               || D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node: slug-match first, then name
         halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, !!f2.god);   // SWEEP-B: real god, not hardcoded false
         proofBadge(g, 9, f2.tests||null);
         nodeMarks(g, 9, "fn:"+(f2.slug||slug)+"|"+it.name);   // overlay keyed by HOME slug
@@ -1663,7 +1664,8 @@ function drawTrace(){
         // a USING function — drawn because it references models/schemas (archmap
         // internal_refs), incl. across entities; service-teal, no handler ring
         var gu=E("g",{class:"fnode usefn","data-layer":"services","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
-        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node (name-resolved)
+        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name && f.slug===slug; })[0]
+               || D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node: slug-match first, then name
         halo(gu); fGlyph(gu, 8.5, "var(--c-fn-services)", false, !!fu.god);   // SWEEP-B: real god
         proofBadge(gu, 9, fu.tests||null);
         nodeMarks(gu, 9, "fn:"+(fu.slug||slug)+"|"+it.name);   // overlay keyed by HOME slug (cross-home usefn)
@@ -2221,7 +2223,10 @@ function showFn(f){
   var _FN=D.fn_nodes||[], _fn0=null;
   if(f.id) _fn0=_FN.filter(function(n){return n.id===f.id;})[0];
   if(!_fn0 && f.slug) _fn0=_FN.filter(function(n){return n.name===f.name && n.slug===f.slug;})[0];
-  if(!_fn0) _fn0=_FN.filter(function(n){return n.name===f.name;})[0];
+  // name-only fallback ONLY when UNAMBIGUOUS — two entities can define a fn of the same
+  // name; picking the first would show a homonym's god/usage. Draw-site clicks pass f.id
+  // (exact), so this rung fires only for id-less entry paths (breadcrumbs/deep links).
+  if(!_fn0){ var _byName=_FN.filter(function(n){return n.name===f.name;}); if(_byName.length===1) _fn0=_byName[0]; }
   if(_fn0){ f.slug=_fn0.slug; f.god=!!_fn0.god; if(_fn0.hub) f.hub=_fn0.hub; if(_fn0.behind) f.behind=_fn0.behind; }
   if(!f.behind) f.behind = FN_BEHIND[f.slug+"|"+f.name];   // resolve for minimal-f entry paths
   // fn DETAIL rides GABE_LEVELS.detail["fn:…"] (the wider function_insight projection):
