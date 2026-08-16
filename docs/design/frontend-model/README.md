@@ -42,6 +42,49 @@ component = browser-window · hook = fn-braces rect · store = box/package · ro
 endpoint). This mirrors graft's "one graph, two providers": TOPOLOGY (imports/refs) + DOMAIN
 (the node classification).
 
+## 2b. CORRECTION — graft ALREADY indexes the frontend (the gap is ours, not graft's)
+
+Measured 2026-08-16: gustify's `graft/.graph/wiring.json` = **18,494 nodes** (files + symbols,
+each with `kind·path·span·signature·exported·summary·crux`) + **47,139 edges**
+(`source·target·relation·confidence`), and **28,211 `.ts` refs** sit alongside 25,218 `.py`
+(gastify: 22,106 `.ts`). TS files (`App.tsx`, …) are indexed with `origin:ast`.
+
+So **graft has NO frontend gap** — it maps TS topology (imports/calls, cross-file) today, the
+same as Python. The gap is entirely in the SUITE's CONSUMPTION: `_a3_web.py` regex-extracts only
+fetch-sites and ignores graft's rich TS node/edge data. We have been leaving the frontend
+topology on the table.
+
+**This reshapes the plan — REUSE-FIRST:**
+- **Topology (edges)** — come from graft's EXISTING TS wiring, not a new tool. `dependency-cruiser`
+  is demoted to an optional import-only fallback (graft already covers imports + calls).
+- **Domain (node kinds)** — the real new work: classify each graft TS file/symbol into
+  component/hook/store/route/fe-type (convention + `ast-grep`, or `ts-morph`).
+- **Oracle (verification)** — the compiler still matters: graft's cross-file TS calls are inferred,
+  a FLOOR (per the suite's own graft trust-split), so `ts-morph`/`scip` is the authoritative
+  denominator that tells us what graft's floor missed.
+
+Net: the frontend arm is mostly a CONSUMER of graft's TS index + a domain classifier + a compiler
+oracle — far less new tooling than §3/§4 first assumed.
+
+## 2c. The DUAL PURPOSE — the map as pre-computed context (token-saving), not just a picture
+
+The operator's framing: a codebase map exists so the suite's spine reads pre-computed context
+instead of rescanning the codebase every task (graft/graphify's token-saving premise). Honest
+current state:
+- The ASSET exists and is rich — graft's `wiring.json` carries per-node `summary`/`crux` fields
+  built for exactly this, over the WHOLE codebase (backend + frontend).
+- The suite surfaces a SLICE into `archmap.json` (backend-leaning) + reads it in TARGETED ways:
+  `gabe-cc-entity` assembles an entity context-pack "from the committed `archmap.json`, never
+  re-reading the source"; `gabe-execute` uses graft for reach/reuse; `gabe-review` reads `archmap`
+  for drift checks. But there is NO universal "inject the precomputed map as context on every task."
+- So the double purpose is REAL but under-exploited: the index is a whole-codebase map; the wiring
+  to save tokens broadly across the spine is partial.
+
+**Adding the frontend map (this project) makes `archmap` whole-codebase** → `gabe-cc-entity` and any
+map-reader then serve FRONTEND context too, same as backend. **Wiring the map as universal spine
+pre-context is a SEPARATE, larger arc** (its own design record) — worthwhile, but not folded into
+the frontend build; flagged here so it is not lost.
+
 ## 3. Research — the tool landscape (2026-08-16)
 
 **There is no single "graft for the frontend."** graft's power is a queryable cross-file
