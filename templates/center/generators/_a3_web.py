@@ -35,12 +35,29 @@ from typing import Any
 
 from _a3_graft import _file2slug   # reuse the archmap file→entity homing table
 
-# the conventional web source root (relative to the repo). Absent → honest-empty.
-_WEB_ROOT = ("apps", "web", "src")
+# the conventional web source roots (relative to the repo), tried IN ORDER — the first
+# that exists AND holds ts/tsx sources wins. Covers apps/web/src (monorepo), web/src,
+# frontend/src, and a bare src/, so the frontend arm is not gustify-layout-specific.
+# Absent everywhere → honest-empty.
+_WEB_ROOTS = (("apps", "web", "src"), ("web", "src"), ("frontend", "src"),
+              ("apps", "frontend", "src"), ("client", "src"), ("src",))
 _SKIP_SUFFIXES = (".test.ts", ".test.tsx", ".spec.ts", ".spec.tsx",
                   ".stories.tsx", ".stories.ts", ".d.ts")
 _NOISE_PARTS = frozenset({"node_modules", "dist", "build", "storybook-static",
                           "__mocks__", "__tests__"})
+
+
+def _detect_web_root(root: Path):
+    """The first candidate web root that exists AND holds ≥1 non-noise .ts/.tsx — the
+    web layer's location is project-specific, so we detect it rather than assume one."""
+    for parts in _WEB_ROOTS:
+        cand = root.joinpath(*parts)
+        if not cand.is_dir():
+            continue
+        for f in cand.rglob("*.ts*"):
+            if f.suffix in (".ts", ".tsx") and not any(p in _NOISE_PARTS for p in f.parts):
+                return cand
+    return None
 
 # ── the pluggable call-site matchers; group 'path' = the first-arg literal ────
 # apiFetch / axios / fetch. axios also captures the method in group 'm'.
@@ -155,10 +172,10 @@ def web_arm(root: Path, entities: dict[str, Any]) -> dict[str, Any]:
     """
     try:
         root = Path(root)
-        web_root = root.joinpath(*_WEB_ROOT)
-        if not web_root.is_dir():
+        web_root = _detect_web_root(root)
+        if web_root is None:
             return {"present": False,
-                    "reason": f"no web source at {'/'.join(_WEB_ROOT)}"}
+                    "reason": "no web source (tried " + ", ".join("/".join(p) for p in _WEB_ROOTS) + ")"}
         files = _iter_sources(web_root)
         # read every candidate once; drop the wrapper's own definition file
         texts: list[tuple[Path, str]] = []

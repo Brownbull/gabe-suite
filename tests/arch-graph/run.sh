@@ -633,6 +633,26 @@ with tempfile.TemporaryDirectory() as _td:
     check(json.dumps(_wa, sort_keys=True) == json.dumps(_wdet, sort_keys=True),
           "web_arm deterministic: same tree → identical output")
 
+# ── multi-layout web-root detection: web/src (not apps/web/src) is found ──────
+# gastify's frontend lives at web/src, not gustify's apps/web/src — the arm detects
+# the root across common layouts instead of assuming one (else frontend = false-empty).
+with tempfile.TemporaryDirectory() as _td2:
+    _wr2 = pathlib.Path(_td2) / "web" / "src" / "features"
+    _wr2.mkdir(parents=True)
+    (_wr2 / "Cards.tsx").write_text(
+        'import { apiFetch } from "@lib/api/client";\n'
+        'export function useCards(){ return apiFetch<T>("/api/v1/cards", { signal }); }\n', encoding="utf-8")
+    _wm = W.web_arm(pathlib.Path(_td2), {"cards": {"files": [["web", "web/src/features/Cards.tsx", 2]]}})
+    check(_wm["present"] is True and bool(_wm["screens"]),
+          "web_arm detects a NON-apps web root (web/src) — not gustify-layout-specific")
+    check(any(c["path"] == "/api/v1/cards" for s in _wm["screens"] for c in s["calls"]),
+          "web_arm extracts fetches from the detected web/src root")
+    # apps/web/src still WINS the order when both exist (monorepo precedence)
+    (pathlib.Path(_td2) / "apps" / "web" / "src" / "features").mkdir(parents=True)
+    (pathlib.Path(_td2) / "apps" / "web" / "src" / "features" / "A.tsx").write_text("export const x=1;\n", encoding="utf-8")
+    check(str(W._detect_web_root(pathlib.Path(_td2))).replace("\\", "/").endswith("apps/web/src"),
+          "web-root order: apps/web/src wins when both apps/web/src and web/src exist")
+
 # ── build_c4_graph(web=): a param endpoint proving the snake↔camel + prefix norm ─
 FIX_WEB = {"head": "web1", "entities": {
   "orders": {"files": [["api", "apps/api/orders.py", 50]],
