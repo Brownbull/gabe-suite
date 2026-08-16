@@ -120,7 +120,9 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .sub2{ font-size:10px; text-anchor:middle; fill:var(--muted); pointer-events:none; }
 .plabel{ font-size:8.5px; text-anchor:middle; fill:var(--ink); pointer-events:none; }
 .container{ fill-opacity:.05; stroke-opacity:.5; stroke-width:1.4; stroke-dasharray:4 4; }
-.piece, .epmark, .fnode{ cursor:pointer; }
+.piece, .epmark, .fnode, .screen{ cursor:pointer; }
+.frontcont{ fill-opacity:.05; stroke-opacity:.6; stroke-width:1.4; stroke-dasharray:5 4; }
+.e-bridge{ fill:none; stroke:var(--c-fn-web); stroke-width:1.5; stroke-dasharray:5 3; opacity:.85; }
 /* edges */
 .e-fk{ fill:none; stroke:var(--edge); stroke-width:1.8; }
 .e-calls{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:6 5;
@@ -525,7 +527,7 @@ var baseScale=1;
 function zoomless(v){ return v; }
 function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(fitT[1]+panY)+") scale("+(baseScale*zoom)+")"); }
 (function(){ var pan=null;
-  stage.addEventListener("pointerdown",function(e){ if(e.target.closest(".piece,.epmark,.fnode,.entnode")) return;
+  stage.addEventListener("pointerdown",function(e){ if(e.target.closest(".piece,.epmark,.fnode,.entnode,.screen")) return;
     pan={x:e.clientX,y:e.clientY,px:panX,py:panY}; });
   window.addEventListener("pointermove",function(e){ if(!pan) return; panX=pan.px+(e.clientX-pan.x); panY=pan.py+(e.clientY-pan.y); apply(); });
   window.addEventListener("pointerup",function(e2){
@@ -1661,6 +1663,7 @@ function drawTrace(){
     (cross?interLayer:wireLayer).appendChild(pu);
     flowDots(cross?interLayer:wireLayer, pu, dotFill);
     regEdge(pu, "use", from.key||("fn:"+e.fs+"|"+e.fn), "cls:"+e.ts+"|"+e.cls, "references the class (archmap)"); });
+  drawFrontend(defs, contLayer, interLayer, layer, b);   // the dedicated Frontend entity + bridges
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("bubble = a cluster ("+(traceCluster==="kind"?"functions · models · schemas":traceCluster)+")","f-api"),
@@ -1765,6 +1768,7 @@ function drawTraceFlow(){
     pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.8";
     pth.appendChild(E("title")); interLayer.appendChild(pth);
     flowDots(interLayer, pth, "url(#"+grad+")"); });
+  drawFrontend(defs, contLayer, interLayer, layer, b);   // the dedicated Frontend entity + bridges
   frame(b);
   legend([glyphIt("border = API endpoints","ep"), glyphIt("middle ring = handler ƒ","f-api"),
           glyphIt("core = models","cyl"), glyphIt("+ schemas","s"),
@@ -2057,7 +2061,7 @@ function showEndpoint(slug, ep){
   // the screens group rides the Connections section as a C4 EXTRA (screens aren't drawn on
   // the levels grammar yet → the chips carry no node key, so they are shown, not hot).
   _ecpExtraConns = bridges.length ? [ ecpG("screens","web",bridges.length, (function(bs){ return function(){
-      return ecpChipList(bs.map(function(b){ return {label:c4ScreenLabel(b.from,b.from_slug)}; }),"web","web"); }; })(bridges)) ] : null;
+      return ecpChipList(bs.map(function(b){ return {label:c4ScreenLabel(b.from,b.from_slug), key:"web:"+b.from}; }),"web","web"); }; })(bridges)) ] : null;
   var body=[];
   body.push(ecpUsage(usageN, usageN?(usageN+" screen"+(usageN>1?"s":"")+" fetch this endpoint"):"no screen fetch bridged (entry point)"));
   body.push(ecpConnSlot());
@@ -2110,6 +2114,88 @@ function showFn(f){
   if(fd.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(fd.doc)), fd.file?ecpKv("file","file","<code>"+esc(fd.file)+"</code>"):null));
   else if(fd.file) body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(fd.file)+"</code>")));
   mountCard("function","function", FNCOL[f.layer]||"var(--c-fn)", f.name+"()", f.handler?"endpoint handler":(f.god?"god function":"internal helper"), body);
+}
+
+/* ── FRONTEND MAPPING (frontend-placement.html option 2 — a dedicated Frontend entity):
+   the web layer is its OWN entity circle drawn beside the backend cluster; screens (the
+   fetching files, from GABE_C4 web nodes) live inside it; dashed bridge wires cross to the
+   backend endpoints they call (GABE_C4 cross_edges kind:'bridge'). Additive OVERLAY — it
+   never enters ENTS/layouts; honest-empty when a project has no frontend (backend-only). ── */
+function _stripEp(id){ return String(id).replace(/^endpoint:/, ""); }
+// resolve a C4 endpoint (node id "endpoint:M p" + its C4 home slug) to the endpoint's
+// SELREG key AS DRAWN on this level. The C4 home can differ from the drawn home (aspect
+// dedup: a route C4 files under allergen but the trace draws under the handler's entity),
+// so fall back to matching the "M p" label against any drawn endpoint.
+function epKeyOf(c4to, to_slug){
+  var mp=_stripEp(c4to), k="ep:"+to_slug+"|"+mp;
+  if(SELREG.nodes[k]) return k;
+  var found=k; Object.keys(SELREG.nodes).some(function(x){
+    if(x.indexOf("ep:")===0 && x.slice(x.indexOf("|")+1)===mp){ found=x; return true; } });
+  return found;
+}
+function c4Screens(){
+  var out={}, order=[];
+  if(C4 && C4.l2) Object.keys(C4.l2).forEach(function(slug){ (C4.l2[slug].nodes||[]).forEach(function(n){
+    if(n.kind==="web" && !out[n.id]){ out[n.id]={id:n.id, slug:n.slug, label:n.label||n.id, sites:n.sites||0}; order.push(n.id); } }); });
+  return { map:out, order:order.sort() };
+}
+function drawFrontend(defs, contLayer, interLayer, layer, b){
+  var S=c4Screens(); if(!S.order.length) return;      // backend-only project → no Frontend entity
+  var col="var(--c-fn-web)";
+  var cx=b.maxX + Math.max(170, 40*Math.sqrt(S.order.length)), cy=(b.minY+b.maxY)/2;
+  var R=Math.max(72, 20+Math.ceil(Math.sqrt(S.order.length))*24);
+  var cont=E("circle",{class:"container frontcont", cx:cx, cy:cy, r:R, fill:col, stroke:col, "stroke-dasharray":"5 4"});
+  cont.__click=function(){ };                          // a container click just deselects (no entity card)
+  contLayer.appendChild(cont);
+  var lb=E("text",{class:"lbl", x:cx, y:cy-R-10}); lb.textContent="Frontend"; lb.setAttribute("fill",col); layer.appendChild(lb);
+  var scAt={};
+  S.order.forEach(function(id,i){ var a=-Math.PI/2+2*Math.PI*i/Math.max(S.order.length,1);
+    var rr=S.order.length>1?R*0.62:0, x=rnd(cx+rr*Math.cos(a)), y=rnd(cy+rr*Math.sin(a));
+    scAt[id]={x:x,y:y};
+    var g=E("g",{class:"screen", transform:"translate("+x+","+y+")"});
+    halo(g);
+    g.appendChild(E("rect",{x:-6.5,y:-5,width:13,height:9.5,rx:2, fill:"var(--panel)", stroke:col, "stroke-width":"1.7"}));
+    g.appendChild(E("line",{x1:-2.5,y1:6.5,x2:2.5,y2:6.5, stroke:col, "stroke-width":"1.5"}));
+    twoRowLabel(g, trunc(S.map[id].label,14), 0, 15);
+    var ti=E("title"); ti.textContent="screen "+S.map[id].label; g.appendChild(ti);
+    regNode(g, id, S.map[id].label, "web");   // the C4 web id already carries the "web:" prefix
+    (function(sc){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showWeb(sc); attachSelection(sc.id); }); })(S.map[id]);
+    layer.appendChild(g);
+    b.minX=Math.min(b.minX,x-34); b.maxX=Math.max(b.maxX,x+34); b.minY=Math.min(b.minY,y-22); b.maxY=Math.max(b.maxY,y+22); });
+  b.minX=Math.min(b.minX,cx-R); b.maxX=Math.max(b.maxX,cx+R); b.minY=Math.min(b.minY,cy-R-16); b.maxY=Math.max(b.maxY,cy+R);
+  // bridge wires: screen → the backend endpoint it fetches (drawn only if that endpoint is on-level)
+  (C4 && C4.cross_edges || []).forEach(function(e){
+    if(e.kind!=="bridge") return;
+    var from=scAt[e.from]; if(!from) return;
+    var epkey=epKeyOf(e.to, e.to_slug), w=nodeWorldXY(epkey); if(!w) return;
+    var pth=E("path",{class:"e-bridge", fill:"none", stroke:col, "stroke-width":"1.5","stroke-dasharray":"5 3",
+      d:curve(from.x,from.y,w.x,w.y, -34)}); pth.style.opacity="0.85";
+    var ti=E("title"); ti.textContent=(S.map[e.from]||{}).label+" fetches "+_stripEp(e.to); pth.appendChild(ti);
+    interLayer.appendChild(pth); flowDots(interLayer, pth, col);
+    regEdge(pth, "bridge", e.from, epkey, "fetch"); });
+}
+function showWeb(sc){
+  _ecpExtraConns=null;
+  var bridged=((C4&&C4.cross_edges)||[]).filter(function(e){ return e.kind==="bridge" && e.from===sc.id; });
+  var unmatched=(((C4&&C4.stats&&C4.stats.web)||{}).unmatched||[]).filter(function(u){ return u.from===sc.id; });
+  // FETCHES ride the Connections slot as C4 EXTRAS (complete, not the drawn subset): the
+  // bridged endpoints (hot — hover peeks / click travels to the endpoint if on-level) + the
+  // unmatched fetches (no endpoint node → shown, not hot).
+  var extra=[];
+  if(bridged.length) extra.push(ecpG("bridged","endpoint",bridged.length, (function(bs){ return function(){
+      return ecpChipList(bs.map(function(x){ return {label:_stripEp(x.to), key:epKeyOf(x.to, x.to_slug)}; }),"route","endpoint"); }; })(bridged)));
+  if(unmatched.length) extra.push(ecpG("unmatched","web",unmatched.length, (function(us){ return function(){
+      return ecpChipList(us.map(function(u){ return u.m+" "+u.p; }),"web","web"); }; })(unmatched)));
+  _ecpExtraConns = extra.length ? extra : null;
+  var reaches={}; bridged.forEach(function(x){ reaches[x.to_slug]=1; }); var rk=Object.keys(reaches).sort();
+  var body=[];
+  body.push(ecpUsage(0,"entry point — no code depends on a screen"));
+  body.push(ecpConnSlot());
+  if(rk.length) body.push(ecpConns("link","Reaches",[ ecpG("entities","entity",rk.length, (function(ks){ return function(){
+      return ecpChipList(ks.map(function(s){ return {label:s}; }),"model","entity"); }; })(rk)) ],{showCount:true}));
+  body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(sc.id)+"</code>"),
+     sc.sites?ecpKv("web","fetch sites", sc.sites+" call site"+(sc.sites>1?"s":"")):null));
+  mountCard("frontend","web","var(--c-fn-web)", sc.label, sc.id, body);
 }
 
 /* ── level switching (position persistence keeps shared anchors) ── */
@@ -2327,7 +2413,7 @@ function clearSelection(){ selKey=null; peekClear();
   vp.querySelectorAll(".selring,.nbrring,.jrn-ring,.peek-ring").forEach(function(x){ x.remove(); });
   vp.querySelectorAll(".e-hl,.e-faded,.e-jrn,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
     x.classList.remove("e-hl","e-faded","e-jrn","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
-function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses"}[kind]||kind; }
+function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses", bridge:"fetches"}[kind]||kind; }
 function selectNode(key){
   clearSelection(); selKey=key;
   var n=SELREG.nodes[key]; if(!n) return [];
@@ -2358,12 +2444,13 @@ function selectNode(key){
 function ecpGraphConns(key, mine){
   var groups={};
   mine.forEach(function(i){ var e=SELREG.edges[i];
+    if(e.kind==="bridge") return;   // web→API bridges are shown from C4 (complete) as a card EXTRA, not the drawn subset
     var nk=(e.from===key)?e.to:e.from, nb=SELREG.nodes[nk];
     var w=edgeWord(e.kind);
     (groups[w]=groups[w]||[]).push({label:nb?nb.label:nk, key:nk}); });
-  var CLS={touches:"model", returns:"schema", routes:"fn", uses:"model", calls:"fn", imports:"web", fk:"model", "cross-fk":"model"};
-  var GLY={touches:"model", returns:"schema", routes:"function", uses:"model", calls:"function", imports:"file", fk:"key", "cross-fk":"key"};
-  var ORDER=["routes","touches","returns","uses","calls","imports","fk","cross-fk"];
+  var CLS={touches:"model", returns:"schema", routes:"fn", uses:"model", calls:"fn", imports:"web", fk:"model", "cross-fk":"model", fetches:"route"};
+  var GLY={touches:"model", returns:"schema", routes:"function", uses:"model", calls:"function", imports:"file", fk:"key", "cross-fk":"key", fetches:"endpoint"};
+  var ORDER=["routes","fetches","touches","returns","uses","calls","imports","fk","cross-fk"];
   var words=ORDER.filter(function(w){ return groups[w]; });
   Object.keys(groups).forEach(function(w){ if(ORDER.indexOf(w)<0) words.push(w); });
   return words.map(function(w){

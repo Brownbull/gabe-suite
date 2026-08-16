@@ -113,6 +113,23 @@ ck('id="navback"' not in page and 'getElementById("navback")' not in js,
 ck("return false" in js and "if(ok!==false) navFwd.pop()" in js,
    "the forward-trace peeks then pops navFwd only on a successful land (no lost key / desync)")
 
+# ── FRONTEND MAPPING (frontend-placement option 2: a dedicated Frontend entity) ──
+ck("function drawFrontend(" in js and "function showWeb(" in js and "function c4Screens(" in js,
+   "the frontend overlay is present: drawFrontend (entity + bridges) + showWeb (screen card)")
+ck(js.count("drawFrontend(defs, contLayer, interLayer, layer, b)") >= 2,
+   "drawFrontend is hooked into BOTH trace variants (drawTrace + drawTraceFlow)")
+ck('kind==="web"' in js and 'e.kind==="bridge"' in js,
+   "screens read from GABE_C4 web nodes; bridge wires from cross_edges kind:'bridge'")
+ck("function epKeyOf(" in js,
+   "bridges resolve the endpoint by its M-path label (aspect dedup: C4 home ≠ drawn home)")
+# the screen card wires the bridged fetches as hot chips (hover peeks the endpoint node)
+_sw = re.search(r"function showWeb\(.*?\n(.*?)\n(?=function |/\* )", js, re.S)
+ck(_sw is not None and "epKeyOf(x.to, x.to_slug)" in _sw.group(1) and 'ecpConns("link","Reaches"' in _sw.group(1),
+   "showWeb: bridged fetch chips carry the endpoint key (peek/travel) + a Reaches-entities section")
+# bridges are shown from C4 as a card EXTRA, never double-counted from the drawn 1-hop
+ck('if(e.kind==="bridge") return;' in js,
+   "ecpGraphConns skips bridge edges (fetches come from the complete C4 set, not the drawn subset)")
+
 # ── the ECP panel CSS is SCOPED under #panel (no global leak) ─────────────────
 # Every ECP panel rule must be prefixed with #panel. A BARE global rule (a line that
 # starts one of these class selectors with no #panel ancestor) would leak the card
