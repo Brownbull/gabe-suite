@@ -69,12 +69,18 @@ _CALL_RES: dict[str, re.Pattern] = {
         re.I),
     "fetch": re.compile(
         r"""(?<![\w.])fetch\s*\(\s*[`'"](?P<path>[^`'"]+)[`'"]"""),
+    # AUDIT #5: openapi-fetch — `apiClient.GET("/path")` / `client.POST(...)`. The method is
+    # the (UPPERCASE, case-sensitive → distinctive, won't catch Map.get()) property; the path
+    # is the first-arg literal. gastify's dominant idiom (70 sites) that the roster missed.
+    "openapiFetch": re.compile(
+        r"""(?<![\w.])[A-Za-z_$][\w$]*\s*\.\s*(?P<m>GET|POST|PUT|PATCH|DELETE)\s*\(\s*[`'"](?P<path>[^`'"]+)[`'"]"""),
 }
 # a bare-identifier first arg (apiFetch(path, …)) — a dynamic call site, NAMED not matched.
 _CALL_DYN: dict[str, re.Pattern] = {
     "apiFetch": re.compile(r"""apiFetch\w*\s*(?:<[^>]*>)?\s*\(\s*[A-Za-z_$][\w$]*\s*[,)]"""),
     "axios": re.compile(r"""axios\s*\.\s*(?:get|post|put|patch|delete)\s*\(\s*[A-Za-z_$][\w$]*\s*[,)]""", re.I),
     "fetch": re.compile(r"""(?<![\w.])fetch\s*\(\s*[A-Za-z_$][\w$]*\s*[,)]"""),
+    "openapiFetch": re.compile(r"""(?<![\w.])[A-Za-z_$][\w$]*\s*\.\s*(?:GET|POST|PUT|PATCH|DELETE)\s*\(\s*[A-Za-z_$][\w$]*\s*[,)]"""),
 }
 # the wrapper's OWN definition file (apiFetch is defined here, not called) — its
 # internal `path` param calls are not real call sites; skip the file entirely.
@@ -135,7 +141,7 @@ def _extract_file(text: str, idiom: str) -> tuple[list[dict[str, str]], int]:
     rx = _CALL_RES[idiom]
     for m in rx.finditer(text):
         path = m.group("path")
-        if idiom == "axios":
+        if idiom in ("axios", "openapiFetch"):   # method rides the call itself (group m)
             method = m.group("m").upper()
         else:
             method = _method_after(text, m.start())

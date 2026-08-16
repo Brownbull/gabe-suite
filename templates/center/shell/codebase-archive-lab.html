@@ -429,7 +429,9 @@ var FNCOL = { api:"var(--c-fn-api)", services:"var(--c-fn-services)", web:"var(-
 // trace/layers click handlers build MINIMAL f objects, so showFn resolves behind here
 // for every entry path (the Functions level already passes the full node).
 var FN_BEHIND = {};
-(D.fn_nodes||[]).forEach(function(n){ if(n.behind) FN_BEHIND[n.slug+"|"+n.name]=n.behind; });
+// AUDIT #3: dual-key by slug|name (Trace/Layers key) AND the fn id file#name (the
+// Functions level's regNode key is "fn:"+f.id) so nodeMarks resolves on EVERY level.
+(D.fn_nodes||[]).forEach(function(n){ if(n.behind){ FN_BEHIND[n.slug+"|"+n.name]=n.behind; FN_BEHIND[n.id]=n.behind; } });
 var level = "entities";
 var pos = {};                 // POSITION PERSISTENCE: id → {x,y}, survives level switches
 var panX=0, panY=0, zoom=1, fitT=[0,0];
@@ -644,12 +646,12 @@ function guardMark(g, r, n){ if(!showGuards || !n) return;
   var m=E("path",{class:"gmark", d:"M0 -5 L4.2 -3 L4.2 1.2 Q4.2 4.6 0 6 Q-4.2 4.6 -4.2 1.2 L-4.2 -3 Z",
     fill:"var(--c-fn-services)", stroke:"var(--panel)", "stroke-width":"1",
     transform:"translate("+(-r-4)+","+(r+4)+")"});
-  var ti=E("title"); ti.textContent=n+" declared validator(s) guard this piece"; m.appendChild(ti);
+  var ti=E("title"); ti.textContent=n+" validator(s) declared in this route FILE (file-scoped, not per-endpoint)"; m.appendChild(ti);   // AUDIT #10
   g.appendChild(m); }
 function hubMark(g, r, hub){ if(!showHubs || !hub) return;
   if((hub.usage||0)>=5){ var ring=E("circle",{class:"hmark hub", r:r+5.5, fill:"none",
       stroke:"var(--accent)", "stroke-width": Math.min(3.4, 1.2+hub.usage/5)});
-    var ti=E("title"); ti.textContent="hub — fan-in usage "+hub.usage+" (fk_in + touches)"; ring.appendChild(ti);
+    var ti=E("title"); ti.textContent="hub — fan-in usage "+hub.usage+" (callers / referencing elements)"; ring.appendChild(ti);
     g.appendChild(ring); }
   if(hub.god){ var gd=E("circle",{class:"hmark god", r:r+9, fill:"none",
       stroke:"var(--m-delete)", "stroke-width":"1.4", "stroke-dasharray":"4 3"});
@@ -718,9 +720,29 @@ var _BEHIND_MP={}, _USAGE_MP={}, USAGE_BY_KEY={};
 if(C4){ (C4.l2?Object.keys(C4.l2):[]).forEach(function(s){ (C4.l2[s].nodes||[]).forEach(function(n){
     if(n.kind==="endpoint" && n.behind) _BEHIND_MP[n.label]=n.behind.fns; }); });
   (C4.cross_edges||[]).forEach(function(e){ if(e.kind==="bridge"){ var mp=_stripEp(e.to); _USAGE_MP[mp]=(_USAGE_MP[mp]||0)+1; } }); }
-(D.fn_nodes||[]).forEach(function(n){ if(n.hub) USAGE_BY_KEY["fn:"+n.slug+"|"+n.name]=n.hub.usage; });
+// functions — dual-keyed (slug|name AND the fn id) like FN_BEHIND, so the Functions level resolves (AUDIT #3)
+(D.fn_nodes||[]).forEach(function(n){ if(n.hub){ USAGE_BY_KEY["fn:"+n.slug+"|"+n.name]=n.hub.usage; USAGE_BY_KEY["fn:"+n.id]=n.hub.usage; } });
+// models — fan-in hub (matches showPiece's model usage)
 Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].models||[]).forEach(function(m){
   if(m.hub) USAGE_BY_KEY["cls:"+s+"|"+m.cls]=m.hub.usage; }); });
+// AUDIT #4: SCHEMAS have no hub — their in-degree is the count of endpoints (ANY entity)
+// that touch/return them, EXACTLY as showPiece computes it. Without this the Used-by badge
+// on every schema rendered hollow while the schema's own panel showed a non-zero count.
+// AUDIT #15: count DISTINCT endpoints per schema (touch OR resp), NOT touch+resp
+// separately — a handler that both takes a body of type X and RETURNS X was scored
+// twice by the badge while showPiece's `||` scan scored it once (badge 11 vs panel 6
+// on CookingSessionResponse). Dedup per endpoint so the badge == the panel in-degree.
+var _schemaIn={};
+Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].endpoints||[]).forEach(function(e){
+  var refd={};
+  (e.touch||[]).forEach(function(c){ refd[c]=1; });
+  if(e.resp) refd[e.resp]=1;
+  Object.keys(refd).forEach(function(c){ _schemaIn[c]=(_schemaIn[c]||0)+1; }); }); });
+Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].schemas||[]).forEach(function(sc){
+  // AUDIT #16: a MODEL of the same name+entity already set this key to its fan-in
+  // (line above). Don't clobber it with the schema in-degree — the drawn piece is the
+  // model, whose panel reads m.hub.usage; overwriting made badge(1) ≠ panel(2).
+  var _k="cls:"+s+"|"+sc.cls; if(USAGE_BY_KEY[_k]==null) USAGE_BY_KEY[_k]=_schemaIn[sc.cls]||0; }); });
 function nodeMarks(g, r, key){
   if((!showBehind && !showUsage) || !key) return;
   var behindN, usageN;
@@ -2002,6 +2024,13 @@ function ecpBehind(b){
 // tests → cid chips (rows carry {cid,name} from the C4 det; a bare string also renders)
 function ecpCids(arr){ return function(){ var w=H("div"); (arr||[]).forEach(function(c){
   w.append(H("span",{class:"chip ok"}, ecpIco("test"), (c&&typeof c==="object")?(c.cid||c.name||"case"):c)); }); return w; }; }
+// AUDIT #14: det.cases is DISPLAY-CAPPED with the overflow in det.cases_more. The proof
+// BADGE counts the true total (cids + cases_more); the panel listed only the enumerable
+// cids → badge said 26, panel said 6 for the SAME node. Fold cases_more into the group
+// count (so the section total == the badge) + a note explaining the un-listed remainder.
+function ecpCidsMore(arr,more){ return function(){ var w=ecpCids(arr)();
+  if(more>0) w.append(H("div",{class:"sublbl",style:"color:var(--muted);margin-top:4px"},
+    "+"+more+" more attributed (counted in total; no cid on file)")); return w; }; }
 
 /* ── the restacked header + the TRACE back/forward (top-right). The trace is a
    temporary journey of the nodes you click through — it rides the lab's nav history
@@ -2129,8 +2158,8 @@ function showPiece(slug, it){
     if(det.uqs&&det.uqs.length) keyRows.push(ecpKv("key","unique", esc(det.uqs.join(", "))));
     body.push(H("div",{class:"sec"}, ecpSechd("key","Keys"), keyRows));
   }
-  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; });
-  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length,ecpCids(apiC)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
+  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; }), casesMore=det.cases_more||0;
+  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length+casesMore,ecpCidsMore(apiC,casesMore)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
   if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(det.doc)), det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
   else if(det.file) body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(det.file)+"</code>")));
   if(m.hub&&m.hub.god) body.push(H("div",{class:"sec"}, H("span",{class:"flag"}, ecpIco("info"), "god "+it.kind+" · usage "+usageN)));
@@ -2148,16 +2177,16 @@ function showEndpoint(slug, ep){
   // the screens group rides the Connections section as a C4 EXTRA (screens aren't drawn on
   // the levels grammar yet → the chips carry no node key, so they are shown, not hot).
   _ecpExtraConns = bridges.length ? [ ecpG("screens","web",bridges.length, (function(bs){ return function(){
-      return ecpChipList(bs.map(function(b){ return {label:c4ScreenLabel(b.from,b.from_slug), key:"web:"+b.from}; }),"web","web"); }; })(bridges)) ] : null;
+      return ecpChipList(bs.map(function(b){ return {label:c4ScreenLabel(b.from,b.from_slug), key:b.from}; }),"web","web"); }; })(bridges)) ] : null;   // AUDIT #13: b.from already carries the "web:" prefix — no double-prefix
   var body=[];
   body.push(ecpUsage(usageN, usageN?(usageN+" screen"+(usageN>1?"s":"")+" fetch this endpoint"):"no screen fetch bridged (entry point)"));
   body.push(ecpConnSlot());
   body.push(ecpUnlinked("ep", slug+"|"+ep.m+" "+ep.p, ep.p));
-  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; });
-  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length,ecpCids(apiC)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
+  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; }), casesMore=det.cases_more||0;
+  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length+casesMore,ecpCidsMore(apiC,casesMore)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
   if(behind) body.push(ecpBehind(behind));
   var idRows=[ ecpKv("entity","entity", esc(slug)), ecpKv("layers","layer","api"),
-     ecpKv("role","role","endpoint handler"), (ep.guards?ecpKv("info","guards", ep.guards+" validator(s)"):null) ];
+     ecpKv("role","role","endpoint handler"), (ep.guards?ecpKv("info","guards", ep.guards+" validator(s) in the route file"):null) ];   // AUDIT #10: file-scoped
   body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
   if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Purpose"), H("div",{class:"doc"}, esc(det.doc)),
      det.sig?ecpKv("endpoint","signature",(det.sig.async?"async · ":"")+(det.sig.lines?det.sig.lines+" lines · ":"")+"→ <code>"+esc(det.sig.returns||ep.resp||"—")+"</code>"):null,
@@ -2294,7 +2323,11 @@ function showWeb(sc){
   if(unmatched.length) extra.push(ecpG("unmatched","web",unmatched.length, (function(us){ return function(){
       return ecpChipList(us.map(function(u){ return u.m+" "+u.p; }),"web","web"); }; })(unmatched)));
   _ecpExtraConns = extra.length ? extra : null;
-  var reaches={}; bridged.forEach(function(x){ reaches[x.to_slug]=1; }); var rk=Object.keys(reaches).sort();
+  // AUDIT #9: the bridge's raw to_slug is the C4 LISTING entity (aspect dedup: allergen wins
+  // the alpha-first tie-break), not where the endpoint DRAWS. Resolve the drawn owner via
+  // epKeyOf so Reaches names the real backend entity (auth), matching the drawn wire.
+  var reaches={}; bridged.forEach(function(x){ var k=epKeyOf(x.to, x.to_slug), bar=k.indexOf("|");
+    reaches[bar>3?k.slice(3,bar):x.to_slug]=1; }); var rk=Object.keys(reaches).sort();
   var body=[];
   body.push(ecpUsage(0,"entry point — no code depends on a screen"));
   body.push(ecpConnSlot());

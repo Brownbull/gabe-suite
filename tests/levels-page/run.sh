@@ -185,6 +185,35 @@ ck(bool(bare_m), "MUTATION: a bare unscoped .chip{…} rule IS detected by the s
 ck("--font-content" in style and "--root-size" in style,
    "the card follows the center content font/size (--font-content / --root-size, with fallbacks)")
 
+# ── AUDIT LOCKS: the badge-vs-panel consistency fixes (the graph badge must AGREE with
+#    the node's own panel — verified 66/66 gustify · 54/54 gastify via playwright) ─────
+# #3: FN_BEHIND is DUAL-KEYED (slug|name AND the fn id) so the Functions level (id-keyed)
+#     and the Trace level (slug|name-keyed) both resolve the behind floor.
+ck(re.search(r"FN_BEHIND\[n\.slug\s*\+\s*[\"']\|[\"']\s*\+\s*n\.name\]", js) is not None
+   and re.search(r"FN_BEHIND\[n\.id\]", js) is not None,
+   "AUDIT #3: FN_BEHIND dual-keyed (slug|name AND fn id)")
+# #4/#15: schema in-degree counts DISTINCT endpoints (touch OR resp), deduped per
+#     endpoint — NOT touch and resp separately (that double-counted a handler that both
+#     takes and returns X → badge 11 vs panel 6).
+ck("var _schemaIn" in js and re.search(r"var\s+refd\s*=\s*\{\}", js) is not None
+   and re.search(r"Object\.keys\(refd\)\.forEach", js) is not None,
+   "AUDIT #15: _schemaIn dedups per endpoint (touch OR resp counted once)")
+# #16: a MODEL already set USAGE_BY_KEY to its fan-in; the schema loop must NOT clobber it.
+ck(re.search(r"if\(USAGE_BY_KEY\[_k\]\s*==\s*null\)\s*USAGE_BY_KEY\[_k\]\s*=\s*_schemaIn", js) is not None,
+   "AUDIT #16: schema usage does not overwrite a same-named model's fan-in (== null guard)")
+# #14: the panel Tests count folds cases_more (the >cap overflow) so the section total ==
+#     the proof badge (was badge 26 vs panel 6). ecpCidsMore renders the '+N more' note.
+ck("function ecpCidsMore(" in js
+   and re.search(r"ecpG\(\"api\",\"test\",\s*apiC\.length\s*\+\s*casesMore", js) is not None,
+   "AUDIT #14: panel Tests api-group count = apiC.length + casesMore (matches the badge)")
+ck(js.count("casesMore=det.cases_more||0") >= 2,
+   "AUDIT #14: BOTH cards (showPiece + showEndpoint) read cases_more for the Tests total")
+# #13: the endpoint's screen chip keys on the C4 web id VERBATIM (b.from already carries
+#     the 'web:' prefix — a "web:"+b.from would double-prefix and break peek/jump).
+ck(re.search(r"key:\s*b\.from\b", js) is not None
+   and '"web:"+b.from' not in js and "'web:'+b.from" not in js,
+   "AUDIT #13: screen chip uses b.from verbatim (no double web: prefix)")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

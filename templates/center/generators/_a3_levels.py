@@ -34,6 +34,7 @@ Battery: tests/levels/run.sh (derive + honest-empty + determinism, mutation-prov
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -41,6 +42,16 @@ from typing import Any
 def _strip(nid: str) -> str:
     """model:Recipe → Recipe (drop the kind prefix a C4 node id carries)."""
     return nid.split(":", 1)[1] if ":" in nid else nid
+
+
+def _bare_cls(resp: str) -> str:
+    """AUDIT #6: the bare schema class inside a container return type — list[X] · Optional[X]
+    · Sequence[X] · list[X] | None → X — so schema_owner (keyed by bare class name) resolves
+    it. Returns resp unchanged when there is no wrapper. Grabs the LAST CamelCase identifier
+    (the payload type), which handles nested/optional/union wrappers without a real parser."""
+    s = str(resp or "")
+    ids = re.findall(r"[A-Z][A-Za-z0-9_]+", s)
+    return ids[-1] if ids else s
 
 
 def _method_of(label: str) -> str:
@@ -54,7 +65,13 @@ def _path_of(label: str) -> str:
 
 
 def _tests_of(det: dict | None) -> dict[str, int]:
-    """{api, web, n, red} from a C4 node's det.cases (+ route-file coverage rows)."""
+    """{api, web, n, red} — the real CASE count from a C4 node's det.cases (+ the capped
+    remainder). AUDIT #7: det.cases is DISPLAY-CAPPED (element_detail caps at
+    _DET_CASES_CAP), with the overflow count in det.cases_more; the old code missed it
+    (undercounting >cap models like OwnershipScope 27→6) AND digit-parsed det.case_files
+    (route-literal FILE coverage, NOT cases — a stray filename digit could inflate n). Now:
+    count real cases + cases_more (attributed to api, the dominant corpus — cases_more
+    carries no split), and IGNORE case_files (coverage-by-file is not a case count)."""
     out = {"api": 0, "web": 0, "n": 0, "red": 0}
     if not det:
         return out
@@ -67,18 +84,37 @@ def _tests_of(det: dict | None) -> dict[str, int]:
         st = c.get("state")
         if st and st not in ("pass", "skip"):
             out["red"] += 1
-    for f in det.get("case_files", []) or []:
-        n = 0
-        for tok in str(f.get("name", "")).split():
-            if tok.isdigit():
-                n = int(tok)
-                break
-        out["n"] += n
-        if f.get("corpus") == "web":
-            out["web"] += n
-        else:
-            out["api"] += n
+    cm = int(det.get("cases_more", 0) or 0)
+    if cm:
+        out["n"] += cm
+        out["api"] += cm
     return out
+
+
+def _merge_det(old: dict, new: dict) -> dict:
+    """Model + schema of the SAME name+entity share the ``cls:slug|label`` detail key
+    (an ORM model and its same-named response schema). AUDIT #16: the second write
+    clobbered the first — a schema det (cols, no cases) wiped a model det (29 cases)
+    so the proof BADGE read the model's tests (29) while the PANEL read the schema's
+    det (0). Merge instead: fill empty slots + keep the richer case set/overflow, so
+    the panel shows the UNION (model cases + schema cols) and badge == panel."""
+    out = dict(old)
+    for key, val in new.items():
+        if not out.get(key) and val:
+            out[key] = val
+    if len(new.get("cases", []) or []) > len(out.get("cases", []) or []):
+        out["cases"] = new["cases"]
+    if int(new.get("cases_more", 0) or 0) > int(out.get("cases_more", 0) or 0):
+        out["cases_more"] = new["cases_more"]
+    return out
+
+
+def _store_det(lv: dict, key: str, det: dict) -> None:
+    """Write a piece's element_detail under ``key``, MERGING with any prior entry
+    (model/schema name collision) rather than overwriting — see ``_merge_det``."""
+    prev = lv["detail"].get(key)
+    d = _merge_det(prev["det"], det) if prev else det
+    lv["detail"][key] = {"cases": d.get("cases", []), "det": d}
 
 
 def _use_case_key(path: str, depth: int) -> str:
@@ -230,9 +266,14 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             "lang": "py" if is_py else "ts",
             "layer": f.get("layer") or ("services" if is_py else "web"),
             "handler": bool(f.get("handler")), "god": bool(f.get("god")),
-            "hub": {"god": bool(f.get("god")), "usage": f.get("internal", 0)},
-            "tests": {"api": f.get("api", 0), "web": f.get("web", 0),
-                      "n": (f.get("api", 0) + f.get("web", 0)), "red": 0},
+            # AUDIT #8: fan-in = ALL callers. function_insight.internal EXCLUDES api-layer
+            # callers, so a service fn called only from handlers read 0 — inverting the
+            # load-bearing signal. Total in-degree = internal + api.
+            "hub": {"god": bool(f.get("god")), "usage": f.get("internal", 0) + f.get("api", 0)},
+            # AUDIT #1: NO fabricated `tests`. The old field was function_insight reference
+            # counts (api = code coupling, web = a key FI never writes → always 0), rendered
+            # as green "all passing" pills on untested fns. Coverage is tracked per
+            # endpoint/model, not per function (the panel already says so) → honest-empty.
         }
         # the CODE-BEHIND floor (out-degree): what functions this function pulls in
         # transitively — the hidden mass "under the rug". Honest-empty: a leaf fn (no
@@ -283,12 +324,12 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                                "hub": {"god": bool(mi.get("god")), "usage": mi.get("usage", 0)},
                                "tests": _tests_of(det)})
                 if det:
-                    lv["detail"]["cls:" + slug + "|" + nd["label"]] = {"cases": det.get("cases", []), "det": det}
+                    _store_det(lv, "cls:" + slug + "|" + nd["label"], det)
             elif k == "schema":
                 lv["schema_owner"][nd["label"]] = slug
                 schemas.append({"cls": nd["label"], "tests": _tests_of(det)})
                 if det:
-                    lv["detail"]["cls:" + slug + "|" + nd["label"]] = {"cases": det.get("cases", []), "det": det}
+                    _store_det(lv, "cls:" + slug + "|" + nd["label"], det)
             elif k == "endpoint":
                 if ep_home.get(nd["label"], slug) != slug:
                     continue    # deduped — this route is drawn by its handler's entity
@@ -296,19 +337,35 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                                 if e.get("kind") == "touches" and e.get("source") == nd["id"]})
                 efile = (det or {}).get("file", "")
                 guards = int((GI.get(efile, {}) or {}).get("declared", 0)) if efile else 0
+                _resp_full = (nd.get("resp") or "") if nd.get("resp") != "—" else ""
                 endpoints.append({"m": _method_of(nd["label"]), "p": _path_of(nd["label"]),
-                                  "fn": nd.get("fn", ""), "resp": (nd.get("resp") or "") if nd.get("resp") != "—" else "",
-                                  "guards": guards, "touch": touch})
+                                  "fn": nd.get("fn", ""),
+                                  # AUDIT #6: `resp` is the BARE payload class (list[X]/Optional[X] → X)
+                                  # so EVERY schema_owner/pieceAt join on the page resolves it — a
+                                  # container return used to bind to nothing (returns-wire dead, false
+                                  # "documented nowhere"). The full type still shows in the panel via
+                                  # det.sig.returns; resp_full carries it for any consumer that wants it.
+                                  "resp": _bare_cls(_resp_full), "resp_full": _resp_full,
+                                  "guards": guards, "touch": touch,
+                                  # AUDIT #2: without this the graph proofBadge always drew the hollow
+                                  # 'unproven' glyph even though the endpoint's real cases sit in det.cases.
+                                  "tests": _tests_of(det)})
         # schemas are PRUNED to the endpoint-facing set — a schema is kept only if an
         # endpoint of THIS entity touches it (request body) or returns it (resp). The
         # nested component schemas (a *Block/*Summary that appears only INSIDE a response's
         # fields, never at an endpoint boundary) drop off, matching the fixture exactly.
-        _touched = set()
-        for _ep in endpoints:
-            _touched.update(_ep.get("touch", []))
-            if _ep.get("resp"):
-                _touched.add(_ep["resp"])
-        schemas = [s for s in schemas if s["cls"] in _touched]
+        # AUDIT #11: an endpoint-LESS aspect entity (all its routes deduped to their handler
+        # entity) has an empty `endpoints` list → an empty _touched → the prune would delete
+        # ALL its schemas (allergen's 7 request bodies), contradicting the design's own intent
+        # that the aspect stays "present via its models/schemas". Only prune when the entity
+        # actually owns endpoints; an endpoint-less entity keeps its (elsewhere-referenced) schemas.
+        if endpoints:
+            _touched = set()
+            for _ep in endpoints:
+                _touched.update(_ep.get("touch", []))
+                if _ep.get("resp"):     # resp is now the BARE class (AUDIT #6) → a container-returned schema survives the prune
+                    _touched.add(_ep["resp"])
+            schemas = [s for s in schemas if s["cls"] in _touched]
         # intra: model→model FK inside the entity (via unknown at L2 → "")
         intra = sorted(({"s": model_id[e["source"]], "t": model_id[e["target"]], "via": ""}
                         for e in edges if e.get("kind") == "fk"

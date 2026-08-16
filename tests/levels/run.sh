@@ -172,6 +172,59 @@ ck(bool(_fd6) and "doc" not in _fd6 and "sig" not in _fd6 and "flines" not in _f
    and _fd6.get("file") == "api/orders.py" and bool(_fd) and _fd.get("doc"),
    "MUTATION: stripping the docstring/signature insight drops the fn detail doc + sig, keeps file")
 
+# ── AUDIT LOCKS: the proof/detail invariants the badge-vs-panel audit exposed ────────
+# (the pre-audit battery passed while all 16 defects existed — these pin the fixes)
+# #1: fn_nodes NEVER carry a `tests` field — a function is not a test target; the badge
+#     fabricated proof for functions. The feed must not emit one.
+ck(all("tests" not in n for n in lv["fn_nodes"]),
+   "AUDIT #1: fn_nodes carry NO tests field (no fabricated function proof)")
+# #8: a fn_node's fan-in usage = internal + api callers (function_insight.internal EXCLUDES
+#     the api layer; counting internal alone read a false 0 for a handler no internal fn calls).
+_lo0 = [n for n in lv["fn_nodes"] if n["name"] == "list_orders"][0]
+ck(_lo0["hub"]["usage"] == 5, "AUDIT #8: fn hub.usage = internal + api (2 + 3 = 5)")
+_m8 = copy.deepcopy(AMAP); _m8["function_insight"]["api/orders.py::list_orders"]["api"] = 0
+_lv8 = _a3_levels.build_levels(_m8, _a3_graph.build_c4_graph(_m8))
+_lo8 = [n for n in _lv8["fn_nodes"] if n["name"] == "list_orders"][0]
+ck(_lo8["hub"]["usage"] == 2 and _lo0["hub"]["usage"] == 5,
+   "AUDIT #8 MUTATION: dropping api callers drops fan-in (5 → 2) — api IS counted")
+# #2: every endpoint carries a tests{n,api,web,red} dict — missing → the page drew every
+#     endpoint as the hollow 'unproven' glyph even when det.cases existed.
+ck(all(isinstance(e.get("tests"), dict) and "n" in e["tests"]
+       for s in lv["pieces"].values() for e in s["endpoints"]),
+   "AUDIT #2: every endpoint carries a tests{n,...} dict (proof badge can render)")
+# #6: a container return (list[X]/Optional[X]) is BARE in `resp` (so schema_owner joins)
+#     with the full form kept in resp_full.
+_mr = copy.deepcopy(AMAP)
+_mr["entities"]["orders"]["endpoints"].append(
+    {"method": "GET", "path": "/orders/recent", "fn": "recent", "file": "api/orders.py",
+     "touches": [], "resp": "list[OrderResponse]"})
+_lvr = _a3_levels.build_levels(_mr, _a3_graph.build_c4_graph(_mr))
+_er = [e for e in _lvr["pieces"]["orders"]["endpoints"] if e["p"] == "/orders/recent"][0]
+ck(_er["resp"] == "OrderResponse" and _er["resp_full"] == "list[OrderResponse]",
+   "AUDIT #6: a container resp (list[X]) is BARE in resp, full in resp_full")
+# #7/#14 (unit): _tests_of counts cases_more (the >cap overflow) in n — a >cap model
+#     reported n=6 not the true count, so badge(29) ≠ panel — and IGNORES case_files
+#     (coverage-by-file, not cases — a stray filename digit used to inflate n).
+ck(_a3_levels._tests_of({"cases": [{"corpus": "api", "cid": "C1", "state": "pass"}], "cases_more": 5})["n"] == 6,
+   "AUDIT #14: _tests_of.n includes cases_more (6 = 1 shown + 5 overflow)")
+ck(_a3_levels._tests_of({"cases": [], "case_files": [{"corpus": "api", "name": "x"}]})["n"] == 0,
+   "AUDIT #7: _tests_of ignores case_files (coverage-by-file, not a case count)")
+# #16 (unit): _store_det MERGES a same-key write (model det then schema det, either order)
+#     instead of clobbering — a schema (cols, no cases) wiped a model (29 cases) so the
+#     badge read the model's tests while the panel read the schema's 0-case det.
+_lvu = {"detail": {}}
+_a3_levels._store_det(_lvu, "cls:x|Dup", {"cases": [{"cid": "C1"}], "cases_more": 3, "file": "m.py"})
+_a3_levels._store_det(_lvu, "cls:x|Dup", {"cols": [["a", "int", ""]], "file": "s.py"})
+_du = _lvu["detail"]["cls:x|Dup"]["det"]
+ck(len(_du.get("cases", [])) == 1 and _du.get("cases_more") == 3 and bool(_du.get("cols")),
+   "AUDIT #16: _store_det MERGES model cases + schema cols on a shared key (no clobber)")
+_lvu2 = {"detail": {}}
+_a3_levels._store_det(_lvu2, "cls:x|Dup", {"cols": [["a", "int", ""]], "file": "s.py"})
+_a3_levels._store_det(_lvu2, "cls:x|Dup", {"cases": [{"cid": "C1"}], "cases_more": 3, "file": "m.py"})
+_du2 = _lvu2["detail"]["cls:x|Dup"]["det"]
+ck(len(_du2.get("cases", [])) == 1 and _du2.get("cases_more") == 3 and bool(_du2.get("cols")),
+   "AUDIT #16: _store_det merge is order-independent (schema-first == model-first)")
+
 print(f"levels battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

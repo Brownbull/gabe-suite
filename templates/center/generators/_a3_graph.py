@@ -199,9 +199,14 @@ def _norm_path(path: str) -> str:
     params are snake ``{item_id}``. So drop the version prefix, collapse every
     ``{x}``/``${x}`` to one placeholder (match STRUCTURE, not the param name), and
     strip a trailing slash. Applied to BOTH sides — never mutates a stored id."""
+    # AUDIT #12/#19: collapse params FIRST so a leading base-URL var (${API_BASE}) becomes
+    # a placeholder, then drop that placeholder, then strip the /api/vN mount now that it
+    # leads. Old order stripped ^/api/vN before the base was collapsed, so
+    # ${API_BASE}/api/v1/statements kept its /api/v1 and never matched POST /statements.
     p = (path or "").strip()
-    p = _API_PREFIX_RE.sub("", p)
     p = _PATH_PARAM_RE.sub("{}", p)
+    p = re.sub(r"^\{\}(?=/)", "", p)     # ${base}/… → /…  (a fully-dynamic {}{} stays unmatched — honest)
+    p = _API_PREFIX_RE.sub("", p)        # /api/vN now leads → strip the mount
     p = p.rstrip("/")
     if not p.startswith("/"):
         p = "/" + p
