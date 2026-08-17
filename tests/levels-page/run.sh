@@ -273,6 +273,11 @@ ck(js.count("det.gsig") >= 3 and re.search(r"det\.gsig\?", js) is not None,
 ck('ecpSechd("function","Definition")' in js and "exported · public API" in js,
    "P1b: showPiece shows a Definition row (graft class signature) + the exported/public-API flag")
 
+# operator ruling 2026-08-16: a LONG/complex kv value stacks — label+icon on top as a title,
+# value full-width below (uses the whole panel column); short values stay inline side-by-side.
+ck(".kv.stack{" in style and re.search(r'"kv"\s*\+\s*\(stack\?" stack"', js) is not None,
+   "kv: a long value stacks (label on top, value full-width) — short values stay inline")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
