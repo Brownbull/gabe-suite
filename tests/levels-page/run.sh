@@ -290,10 +290,10 @@ ck("D.fe_buckets" in js and "candidate" in js,
 ck("function feKindSummary(" in js and "function showFrontend(" in js,
    "P2b: the frontend panel helpers are defined")
 # P2b — the LAYERS FRONTEND LANES (navigable dots per kind) + the motion toggle
-ck('class:"felane"' in js and "data-fp-k" in js,
-   "P2b-lanes: the Layers view draws navigable frontend lanes (a dot per piece)")
-ck("function showFePiece(" in js,
-   "P2b-lanes: a frontend dot opens its piece panel (showFePiece)")
+ck('class:"felane"' in js and '"e-fecall"' in js and "drawnByKind" in js,
+   "P2b-lanes: the Layers view draws frontend piece MARKERS wired by their calls (not a dot field)")
+ck("function showFePiece(" in js and "feHidden" in js,
+   "P2b-lanes: a piece opens its panel; the isolated mass is hidden as a behind count")
 ck('"FRONTEND"' in js and '"BACKEND"' in js,
    "P2b-lanes: the BACKEND / FRONTEND group labels split the diagram")
 ck('id="motionbtn"' in page and "svg.pauseAnimations()" in js and "[data-motion=" in style,

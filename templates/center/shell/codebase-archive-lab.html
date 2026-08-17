@@ -17,6 +17,8 @@
   --bg:#f6f7f9; --panel:#ffffff; --ink:#141a24; --muted:#7a8595; --line:#e7e9ee;
   --accent:#4f46e5; --edge:#9aa3ad;
   --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
+  /* frontend-kind glyph colours (Layers frontend lanes) — glyph = kind, dot = entity */
+  --fk-comp:#e8590c; --fk-hook:#0ca678; --fk-store:#e64980; --fk-route:#339af0;
   --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
@@ -140,6 +142,7 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .piece, .epmark, .fnode, .screen{ cursor:pointer; }
 .frontcont{ fill-opacity:.05; stroke-opacity:.6; stroke-width:1.4; stroke-dasharray:5 4; }
 .e-bridge{ fill:none; stroke:var(--c-fn-web); stroke-width:1.5; stroke-dasharray:5 3; opacity:.85; }
+.e-fecall{ fill:none; stroke:var(--fk-hook); stroke-width:1.2; opacity:.42; }
 /* edges */
 .e-fk{ fill:none; stroke:var(--edge); stroke-width:1.8; }
 .e-calls{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:6 5;
@@ -1573,50 +1576,74 @@ function drawLayers(){
     eLayer.appendChild(pU);
     flowDots(eLayer, pU, dotFill);
     regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
-  // ── P2b: FRONTEND LANES (operator: navigable columns, NOT a stats band). To the LEFT
-  //    of the backend lanes, one lane per KIND (component · fe-type · hook · store · route);
-  //    each piece is a DOT coloured by its entity (bucket pieces = orange). Click a dot for
-  //    the piece. A BACKEND / FRONTEND group label says which half is which. Honest-empty:
-  //    no arm ⇒ the block is skipped, the backend layout is byte-unchanged.
+  // ── P2b: FRONTEND LANES — the same grammar as the backend lanes, not a stats field.
+  //    Left of the backend block, one column per KIND in request-flow order (route →
+  //    component → hook → store). Each drawn piece is a MARKER (kind-coloured glyph +
+  //    entity dot + label), CONNECTED by its call wires (component → hook is the bulk).
+  //    Curation mirrors the backend: draw the pieces that PARTICIPATE (have a call edge)
+  //    plus routes + stores (entry points / state); the isolated mass — every fe-type
+  //    and every uncalled component — is HIDDEN and named as a behind count, exactly
+  //    like the backend's Code-behind. Honest-empty: no arm ⇒ block skipped, backend byte-same.
   if(D.frontend && D.frontend.present){
-    var FKINDS=["component","fe-type","hook","store","route"];
-    var byKind={}; FKINDS.forEach(function(k){ byKind[k]=[]; });
-    function feAdd(list, col, home){ (list||[]).forEach(function(pp){
-      if(byKind[pp.k]) byKind[pp.k].push({n:pp.n, k:pp.k, col:col, home:home}); }); }
+    var FEKCOL={route:"var(--fk-route)", component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)"};
+    var FECOLS=["route","component","hook","store"];
+    var feAll={};
+    function feGather(list, ecol, home){ (list||[]).forEach(function(pp){
+      feAll[pp.id]={id:pp.id, n:pp.n||"", k:pp.k, home:home, ecol:ecol}; }); }
     D.entities.forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
-      if(fe) feAdd(fe.pieces, COLORS[en.slug]||"var(--c-fn-web)", en.label); });
-    (D.fe_buckets||[]).forEach(function(bk){ feAdd(bk.pieces, "var(--c-fn-web)", bk.name); });
-    var PIT=7, DOT=2.6, GAP=26, feg=E("g",{class:"felane"}); nLayer.appendChild(feg);
-    var flanes=FKINDS.map(function(k){ var n=byKind[k].length;
-      var cols=Math.max(1,Math.min(38,Math.ceil(Math.sqrt(n*1.7))));
-      return {k:k, n:n, cols:cols, w:cols*PIT, rows:Math.ceil(n/Math.max(1,cols))}; }).filter(function(l){ return l.n; });
-    var feW=flanes.reduce(function(s,l){ return s+l.w+GAP; },0)-GAP;
-    var feX0=rnd(-totalW/2-70-feW), feY0=top+6, cxp=feX0;
-    flanes.forEach(function(l){
-      var hd=E("text",{x:rnd(cxp), y:top-14, style:"text-anchor:start;font-size:10.5px;fill:var(--c-fn-web);font-weight:700"});
-      hd.textContent=l.k+" "+l.n; feg.appendChild(hd);
-      byKind[l.k].forEach(function(d,i){ var rr=Math.floor(i/l.cols), cc=i%l.cols;
-        var dot=E("circle",{r:DOT, cx:rnd(cxp+cc*PIT+DOT), cy:rnd(feY0+rr*PIT+DOT), fill:d.col,
-          "data-fp-n":d.n||"", "data-fp-k":d.k, "data-fp-h":d.home, style:"cursor:pointer"});
-        feg.appendChild(dot); });
-      cxp+=l.w+GAP; });
-    feg.addEventListener("click",function(ev){ var t=ev.target;
-      if(t.getAttribute && t.getAttribute("data-fp-k")){ ev.stopPropagation();
-        showFePiece(t.getAttribute("data-fp-n"), t.getAttribute("data-fp-k"), t.getAttribute("data-fp-h")); } });
-    var feH=flanes.reduce(function(m,l){ return Math.max(m, l.rows*PIT); },0);
-    var flab=E("text",{x:rnd(feX0), y:top-34, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
+      if(fe) feGather(fe.pieces, COLORS[en.slug]||"var(--c-fn-web)", en.label); });
+    (D.fe_buckets||[]).forEach(function(bk){ feGather(bk.pieces, "var(--c-fn-web)", bk.name); });
+    var feEdges=D.fe_edges||[], fedeg={};
+    feEdges.forEach(function(e){ fedeg[e.s]=(fedeg[e.s]||0)+1; fedeg[e.t]=(fedeg[e.t]||0)+1; });
+    var drawnByKind={route:[], component:[], hook:[], store:[]}, feHidden={};
+    Object.keys(feAll).forEach(function(id){ var p=feAll[id];
+      if((fedeg[id] || p.k==="route" || p.k==="store") && drawnByKind[p.k]) drawnByKind[p.k].push(p);
+      else feHidden[p.k]=(feHidden[p.k]||0)+1; });
+    FECOLS.forEach(function(k){ drawnByKind[k].sort(function(a,c){ return a.home<c.home?-1:a.home>c.home?1:(a.n<c.n?-1:1); }); });
+    var FEGX=80, FEGY=36, FEWRAP=24, few=E("g"), feg=E("g",{class:"felane"});
+    nLayer.appendChild(few); nLayer.appendChild(feg);           // wires under, markers over
+    var laneMeta=FECOLS.map(function(k){ var it=drawnByKind[k];
+      return {k:k, items:it, subcols:Math.max(1,Math.ceil(it.length/FEWRAP)), w:Math.max(1,Math.ceil(it.length/FEWRAP))*FEGX}; })
+      .filter(function(l){ return l.items.length; });
+    var feTotW=laneMeta.reduce(function(s,l){ return s+l.w+40; },0)-40;
+    var feX0=rnd(-totalW/2-90-feTotW), feTop=top+10, cx=feX0, fepos={};
+    laneMeta.forEach(function(l){
+      var hd=E("text",{x:rnd(cx), y:top-14, style:"text-anchor:start;font-size:10.5px;font-weight:800;fill:"+FEKCOL[l.k]});
+      hd.textContent=l.k.toUpperCase()+" "+l.items.length; feg.appendChild(hd);
+      l.items.forEach(function(p,i){ var scq=Math.floor(i/FEWRAP), rwq=i%FEWRAP;
+        var x=rnd(cx+scq*FEGX+FEGX/2), y=rnd(feTop+rwq*FEGY+8); fepos[p.id]={x:x,y:y};
+        var g=E("g",{class:"fnode", transform:"translate("+x+","+y+")"});
+        halo(g); fGlyph(g, 8, FEKCOL[l.k], p.k==="route", false);
+        g.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:p.ecol}));
+        twoRowLabel(g, p.n||("("+p.k+")"), 0, 17);
+        var ti=E("title"); ti.textContent=p.n+" · "+p.k+" · "+p.home; g.appendChild(ti);
+        (function(pp){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showFePiece(pp.n, pp.k, pp.home); }); })(p);
+        regNode(g, "fe:"+p.id, p.n||p.k, p.k); feg.appendChild(g); });
+      cx+=l.w+40; });
+    feEdges.forEach(function(e){ var a=fepos[e.s], c=fepos[e.t]; if(!a||!c) return;
+      var pth=E("path",{class:"e-fecall", d:curve(a.x,a.y,c.x,c.y,12)});
+      few.appendChild(pth); flowDots(few, pth, "var(--fk-hook)");
+      regEdge(pth, "fe", "fe:"+e.s, "fe:"+e.t, e.rel+" (frontend call)"); });
+    var flab=E("text",{x:rnd(feX0), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
     flab.textContent="FRONTEND"; feg.appendChild(flab);
-    var blab=E("text",{x:rnd(-totalW/2), y:top-34, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
+    var blab=E("text",{x:rnd(-totalW/2), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
     blab.textContent="BACKEND"; nLayer.appendChild(blab);
-    b.minX=Math.min(b.minX,feX0-30); b.minY=Math.min(b.minY,top-46); b.maxY=Math.max(b.maxY,feY0+feH+20);
+    var feHidTot=Object.keys(feHidden).reduce(function(s,k){ return s+feHidden[k]; },0);
+    if(feHidTot){ var hn=E("text",{x:rnd(feX0), y:top-21, style:"text-anchor:start;font-size:10px;fill:var(--muted)"});
+      hn.textContent="+ "+feHidTot+" behind (unconnected · fe-types): "+["component","hook","route","store","fe-type"]
+        .filter(function(k){ return feHidden[k]; }).map(function(k){ return feHidden[k]+" "+k; }).join(" · ");
+      feg.appendChild(hn); }
+    var feHrows=laneMeta.reduce(function(m,l){ return Math.max(m, Math.min(FEWRAP,l.items.length)*FEGY); },0);
+    b.minX=Math.min(b.minX,feX0-40); b.minY=Math.min(b.minY,top-46); b.maxY=Math.max(b.maxY,feTop+feHrows+30);
   }
   frame(b);
   var _lleg=[glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
           glyphIt("model","cyl"), glyphIt("schema","s"),
           "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"];
-  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 34 14'>"
-    +"<circle cx='7' cy='7' r='3.4' fill='var(--accent)'/><circle cx='20' cy='7' r='3.4' fill='var(--c-fn-web)'/></svg>"
-    +"<span class='lglbl'>frontend: a dot = one piece · colour = its entity (orange = no backend) · lane = its kind</span></span>");
+  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 56 14'>"
+    +"<circle cx='7' cy='7' r='4' fill='none' stroke='var(--fk-route)' stroke-width='2'/><circle cx='20' cy='7' r='4' fill='none' stroke='var(--fk-comp)' stroke-width='2'/>"
+    +"<circle cx='33' cy='7' r='4' fill='none' stroke='var(--fk-hook)' stroke-width='2'/><circle cx='46' cy='7' r='4' fill='none' stroke='var(--fk-store)' stroke-width='2'/></svg>"
+    +"<span class='lglbl'>frontend piece — glyph colour = kind (route · component · hook · store) · dot = entity · wire = calls · unconnected hidden behind</span></span>");
   legend(_lleg);
 }
 
