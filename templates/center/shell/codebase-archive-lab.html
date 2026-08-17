@@ -358,6 +358,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
     <span class="sub" id="sub">the whole ecosystem, live from the archmap</span>
     <div class="seg" id="levels">
       <button data-lvl="entities" class="on">1 · Entities</button>
+      <button data-lvl="frontend">2 · Frontend</button>
       <button data-lvl="functions">3 · Functions</button>
       <button data-lvl="layers">4 · Layers</button>
       <button data-lvl="trace">5 · Trace</button>
@@ -441,6 +442,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   </div>
 </header>
 <div class="wrap">
+  <div id="fgstage" style="display:none;flex:1;min-width:0;position:relative;overflow:hidden"></div>
   <div id="stage">
     <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -483,6 +485,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
 
 </div><!-- /labcol -->
 <script src="./assets/a3-settings.js" defer></script>
+<script src="./assets/force-graph.min.js"></script>
 <script src="./c4-graph.js"></script>
 <script src="./levels.js"></script>
 <script>
@@ -1083,6 +1086,7 @@ var motionOn = !REDUCED;
   window.setMotion=function(on){ motionOn=on;
     document.documentElement.setAttribute("data-motion", on?"on":"off");
     try{ on ? svg.unpauseAnimations() : svg.pauseAnimations(); }catch(_){}
+    try{ if(_FG){ on ? _FG.resumeAnimation() : _FG.pauseAnimation(); } }catch(_){}   // force-graph particles
     if(mb){ mb.classList.toggle("on", on); mb.innerHTML = on?ICON_PAUSE:ICON_PLAY;
       mb.title = on ? "Motion — pause the moving dots" : "Motion — resume the moving dots"; } };
   if(mb) mb.addEventListener("click", function(){ window.setMotion(!motionOn); });
@@ -1586,72 +1590,12 @@ function drawLayers(){
     eLayer.appendChild(pU);
     flowDots(eLayer, pU, dotFill);
     regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
-  // ── P2b: FRONTEND LANES — the backend lane grammar for the frontend. Left of the
-  //    backend block, one CONTAINER per KIND (fe-type · route · component · hook · store),
-  //    fe-type first. Each piece is a MARKER: a kind-SHAPED icon (feGlyph) STROKED in its
-  //    ENTITY colour (colour = grouping, not layer), CONNECTED by call wires coloured by the
-  //    source→target ENTITY blend. Every piece is drawn — the unconnected ones (all
-  //    fe-types, uncalled components) sit in their column, just unwired. Honest-empty: no
-  //    arm ⇒ block skipped, backend layout byte-same.
-  if(D.frontend && D.frontend.present){
-    var FEKCOL={"fe-type":"var(--fk-type)", route:"var(--fk-route)", component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)"};
-    var FECOLS=["fe-type","route","component","hook","store"];
-    var feAll={};
-    function feGather(list, ecol, home){ (list||[]).forEach(function(pp){
-      feAll[pp.id]={id:pp.id, n:pp.n||"", k:pp.k, home:home, ecol:ecol}; }); }
-    D.entities.forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
-      if(fe) feGather(fe.pieces, COLORS[en.slug]||"#e8590c", en.label); });        // hex so gradients resolve
-    (D.fe_buckets||[]).forEach(function(bk){ feGather(bk.pieces, "#e8590c", bk.name); });
-    var feEdges=D.fe_edges||[], drawnByKind={};
-    FECOLS.forEach(function(k){ drawnByKind[k]=[]; });
-    Object.keys(feAll).forEach(function(id){ var p=feAll[id]; if(drawnByKind[p.k]) drawnByKind[p.k].push(p); });
-    FECOLS.forEach(function(k){ drawnByKind[k].sort(function(a,c){ return a.home<c.home?-1:a.home>c.home?1:(a.n<c.n?-1:1); }); });
-    var FEGX=74, FEGY=34, FEWRAP=38;
-    var febg=E("g"), few=E("g"), feg=E("g",{class:"felane"});
-    nLayer.appendChild(febg); nLayer.appendChild(few); nLayer.appendChild(feg);   // container · wires · markers
-    var laneMeta=FECOLS.map(function(k){ var it=drawnByKind[k]; var subcols=Math.max(1,Math.ceil(it.length/FEWRAP));
-      return {k:k, items:it, subcols:subcols, w:subcols*FEGX}; }).filter(function(l){ return l.items.length; });
-    var feTotW=laneMeta.reduce(function(s,l){ return s+l.w+34; },0)-34;
-    var feX0=rnd(-totalW/2-100-feTotW), feTop=top+12, cx=feX0, fepos={};
-    laneMeta.forEach(function(l){
-      var colH=Math.min(FEWRAP, l.items.length)*FEGY;
-      febg.appendChild(E("rect",{x:rnd(cx-12), y:top-8, width:rnd(l.w+6), height:rnd(colH+24), rx:12,
-        fill:FEKCOL[l.k], "fill-opacity":"0.045", stroke:FEKCOL[l.k], "stroke-opacity":"0.42", "stroke-dasharray":"5 5"}));
-      var hd=E("text",{x:rnd(cx-6), y:top-14, style:"text-anchor:start;font-size:10.5px;font-weight:800;fill:"+FEKCOL[l.k]});
-      hd.textContent=l.k.toUpperCase()+" "+l.items.length; feg.appendChild(hd);
-      l.items.forEach(function(p,i){ var scq=Math.floor(i/FEWRAP), rwq=i%FEWRAP;
-        var x=rnd(cx+scq*FEGX+FEGX/2), y=rnd(feTop+rwq*FEGY+8); fepos[p.id]={x:x,y:y};
-        var g=E("g",{class:"fnode", transform:"translate("+x+","+y+")"});
-        halo(g); feGlyph(g, 8, p.k, p.ecol);
-        twoRowLabel(g, p.n||("("+p.k+")"), 0, 16);
-        var ti=E("title"); ti.textContent=p.n+" · "+p.k+" · "+p.home; g.appendChild(ti);
-        (function(pp){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showFePiece(pp.n, pp.k, pp.home); }); })(p);
-        regNode(g, "fe:"+p.id, p.n||p.k, p.k); feg.appendChild(g); });
-      cx+=l.w+34; });
-    feEdges.forEach(function(e){ var a=fepos[e.s], c=fepos[e.t]; if(!a||!c) return;
-      var sc=(feAll[e.s]||{}).ecol||"#888", tc=(feAll[e.t]||{}).ecol||"#888";
-      var pth=E("path",{class:"e-fecall", d:curve(a.x,a.y,c.x,c.y,12)});
-      if(sc===tc){ pth.style.stroke=sc; } else { pth.style.stroke="url(#"+edgeGradient(defs,a,c,sc,tc)+")"; }
-      few.appendChild(pth); flowDots(few, pth, sc);
-      regEdge(pth, "fe", "fe:"+e.s, "fe:"+e.t, e.rel+" (frontend call)"); });
-    var flab=E("text",{x:rnd(feX0-6), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
-    flab.textContent="FRONTEND"; feg.appendChild(flab);
-    var blab=E("text",{x:rnd(-totalW/2), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
-    blab.textContent="BACKEND"; nLayer.appendChild(blab);
-    var feHrows=laneMeta.reduce(function(m,l){ return Math.max(m, Math.min(FEWRAP,l.items.length)*FEGY); },0);
-    b.minX=Math.min(b.minX,feX0-40); b.minY=Math.min(b.minY,top-46); b.maxY=Math.max(b.maxY,feTop+feHrows+30);
-  }
+  // frontend moved to the '2 · Frontend' force-graph level (library render) — the
+  // Layers view is backend-only again; the SVG frontend lanes were retired 2026-08-17.
   frame(b);
   var _lleg=[glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
           glyphIt("model","cyl"), glyphIt("schema","s"),
           "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"];
-  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 92 14' fill='none' stroke='currentColor' stroke-width='1.6'>"
-    +"<rect x='2' y='3.5' width='9' height='9' rx='2'/>"                                                     // component
-    +"<path d='M25 3 V8 a3 3 0 1 1 -3 0'/>"                                                                  // hook
-    +"<ellipse cx='40' cy='5' rx='4' ry='1.5'/><path d='M36 5 V10 a4 1.5 0 0 0 8 0 V5'/>"                     // store
-    +"<path d='M58 2 L63 7 L58 12 L53 7 Z'/>"                                                                // route
-    +"<text x='71' y='11.5' stroke='none' fill='currentColor' style='font-size:11px;font-weight:800;font-family:ui-monospace,monospace'>{}</text>"  // fe-type
-    +"</svg><span class='lglbl'>frontend kinds: component · hook · store · route · type — icon = kind · colour = entity · wire = entity blend · unwired = no calls</span></span>");
   legend(_lleg);
 }
 
@@ -2654,15 +2598,63 @@ function syncGearApplicability(){
   if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }
   if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
 }
+function markLevelButtons(){ document.querySelectorAll("#levels button").forEach(function(btn){
+  btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); }); }
 function render(){
+  // FRONTEND level = a force-graph on its own canvas (WebGL/canvas library), NOT the SVG
+  // stage. Swap the two hosts; the SVG levels are untouched.
+  var isFG = (level==="frontend");
+  document.getElementById("stage").style.display = isFG ? "none" : "";
+  document.getElementById("fgstage").style.display = isFG ? "" : "none";
+  if(isFG){ drawFrontendGraph(); showFrontendDefault(); markLevelButtons(); syncGearApplicability(); return; }
   vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
   navStack=[]; navFwd=[]; navCur=null; ecpCurHead=null; navUI();
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
-  document.querySelectorAll("#levels button").forEach(function(btn){
-    btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); });
+  markLevelButtons();
   syncGearApplicability();
   if(!motionOn){ try{ svg.pauseAnimations(); }catch(_){} }   // keep paused across a re-draw
+}
+/* ── the FRONTEND force-graph (library render, operator-committed 2026-08-17). Nodes =
+   graft's classified TS pieces (colour = ENTITY, size = KIND weight), links = the call
+   edges (animated particles = the movement). Built once, then updated on re-entry. ── */
+var _FG=null;
+function drawFrontendGraph(){
+  if(typeof ForceGraph==="undefined" || !D.frontend || !D.frontend.present) return;
+  var SZ={ "fe-type":2, route:6, component:3, hook:7, store:9 };
+  var nodes=[], seen={};
+  function add(list, ecol, home){ (list||[]).forEach(function(p){ if(p.id && !seen[p.id]){ seen[p.id]=1;
+    nodes.push({id:p.id, label:p.n||p.k, kind:p.k, home:home, color:ecol, val:SZ[p.k]||2}); } }); }
+  (D.entities||[]).forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
+    if(fe) add(fe.pieces, (D.colors||{})[en.slug]||"#e8590c", en.label); });
+  (D.fe_buckets||[]).forEach(function(bk){ add(bk.pieces, "#e8590c", bk.name); });
+  var ids={}; nodes.forEach(function(n){ ids[n.id]=1; });
+  var links=(D.fe_edges||[]).filter(function(e){ return ids[e.s] && ids[e.t]; })
+    .map(function(e){ return {source:e.s, target:e.t}; });
+  if(_FG){ _FG.graphData({nodes:nodes, links:links}); if(!motionOn) _FG.pauseAnimation(); return; }
+  var bg=(getComputedStyle(document.body).getPropertyValue("--bg")||"#101726").trim();
+  _FG=ForceGraph()(document.getElementById("fgstage"))
+    .backgroundColor(bg)
+    .graphData({nodes:nodes, links:links})
+    .nodeRelSize(2).nodeVal(function(n){return n.val;}).nodeColor(function(n){return n.color;})
+    .nodeLabel(function(n){return n.label+" · "+n.kind+" · "+n.home;})
+    .linkColor(function(){return "rgba(232,89,12,0.28)";}).linkWidth(0.5)
+    .linkDirectionalParticles(2).linkDirectionalParticleSpeed(0.006)
+    .linkDirectionalParticleWidth(1.5).linkDirectionalParticleColor(function(){return "#ffa94d";})
+    .onNodeClick(function(n){ showFePiece(n.label, n.kind, n.home); })
+    .onEngineStop(function(){ try{ _FG.zoomToFit(500, 60); }catch(_){} })   // centre + fit when settled
+    .cooldownTicks(140);
+  try{ _FG.d3Force("charge").strength(-18); }catch(_){}
+  if(!motionOn) _FG.pauseAnimation();
+}
+function showFrontendDefault(){
+  var s=(D.frontend&&D.frontend.total)||0;
+  panel.innerHTML="<h3 style='color:var(--c-fn-web)'>Frontend graph</h3>"
+   +"<div class='row'><span>pieces</span><b>"+s+"</b></div>"
+   +"<div class='note'>graft's classified TS — component · hook · store · route · type. Node colour = its "
+   +"entity, size = kind; a wire = a call (particles = the flow). Drag to pan, scroll to zoom, click a node "
+   +"for its details. The scattered nodes are unwired in graft's call graph (types + JSX are a known blind "
+   +"spot — the linking arm is next).</div>";
 }
 document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });

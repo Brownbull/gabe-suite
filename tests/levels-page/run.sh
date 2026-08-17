@@ -289,17 +289,17 @@ ck("D.fe_buckets" in js and "candidate" in js,
    "P2b: FE-native buckets draw as their own circles, candidate entities flagged")
 ck("function feKindSummary(" in js and "function showFrontend(" in js,
    "P2b: the frontend panel helpers are defined")
-# P2b — the LAYERS FRONTEND LANES (navigable dots per kind) + the motion toggle
-ck('class:"felane"' in js and '"e-fecall"' in js and "drawnByKind" in js,
-   "P2b-lanes: the Layers view draws frontend piece MARKERS wired by their calls (not a dot field)")
-ck("function feGlyph(" in js and "function showFePiece(" in js,
-   "P2b-lanes: per-KIND icons (feGlyph) + a piece opens its panel")
-ck("edgeGradient(defs,a,c,sc,tc)" in js and "p.ecol" in js,
-   "P2b-lanes: markers coloured by ENTITY; wires by the source→target entity blend (not all green)")
-ck("febg.appendChild" in js and "fe-type" in js,
-   "P2b-lanes: a CONTAINER box per kind-column; fe-types shown in their column (not hidden)")
-ck('"FRONTEND"' in js and '"BACKEND"' in js,
-   "P2b-lanes: the BACKEND / FRONTEND group labels split the diagram")
+# P2b — the FRONTEND FORCE-GRAPH level (vendored library render) + the motion toggle
+ck('src="./assets/force-graph.min.js"' in page,
+   "P2b-fg: the force-graph library is vendored + loaded")
+ck('data-lvl="frontend"' in page and "function drawFrontendGraph(" in js,
+   "P2b-fg: a '2 · Frontend' level renders the frontend force-graph")
+ck("ForceGraph()" in js and "linkDirectionalParticles" in js,
+   "P2b-fg: nodes/links from GABE_LEVELS, animated link particles (the movement)")
+ck("function showFePiece(" in js and ".onNodeClick(" in js,
+   "P2b-fg: a node click opens its piece panel")
+ck("_FG.pauseAnimation()" in js and 'level==="frontend"' in js,
+   "P2b-fg: the pause button freezes the force-graph; the SVG stage swaps for the canvas host")
 ck('id="motionbtn"' in page and "svg.pauseAnimations()" in js and "[data-motion=" in style,
    "motion toggle: the pause button freezes both SMIL (pauseAnimations) and CSS (data-motion)")
 ck('id="overlaysbtn"' in page and "themebtn" not in page,
