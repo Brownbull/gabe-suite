@@ -350,3 +350,26 @@ a unified wrap … like a liquid, basically around what is inside."
 - OPEN: metaball at REAL scale (dozens of nodes, long links) may need res/every tuning for perf; the
   `WRAPCFG` URL knobs exist for that. Sub-blob vs entity-blob separation currently rides opacity +
   hue-nudge — revisit if they read as one at real density.
+
+### 9h · wrap-shows-nothing BUG + control narrowing (operator, 2026-08-17)
+
+- **BUG (operator: "select Wrap, I don't see anything … titles pile in the middle, everything
+  intertwined").** Root cause: the metaball rebuild was gated `if(!force && _wtick%every!==0) return;`
+  — a `return` **inside** the `CLUSTERS.forEach`. Switching to wrap AFTER the sim cooled meant the one
+  `updateClusters()` call hit the gate, `return`ed, and (a) never added balls → empty invisible
+  surface, (b) skipped the label-positioning code that follows the shape branches → both entity labels
+  fell back to origin (0,0,0) and stacked at screen centre. Screenshots missed it because a URL preset
+  builds wrap DURING the tick loop (gate passes), never post-settle.
+- **FIX:** gate only the REBUILD, never the label — `else if(shape==="wrap" && (force||_wtick%every===0))`
+  so a non-rebuild tick falls through to the label code. And `onCluster` now calls `updateClusters(true)`
+  (force) so flipping to wrap when the sim is already stopped builds the blob immediately. Regression
+  hook `?drive=wrap` flips the selectors AFTER `onEngineStop` to exercise exactly this path.
+- **Controls narrowed** (operator): shapes are **polygon · wrap** only now — aura removed from both
+  levels, sphere removed from entity. Transparency is **faint · ghost · film** only (subtle/medium/strong
+  dropped from the UI; OPMAP keys kept but unexposed), and the three transparency selectors (bubble ·
+  sub · entity) moved to a **top-right panel** — the keepers that carry into the final diagram (a nav
+  bar later). Wrap's film/ghost/faint values bumped (0.06/0.11/0.17) so a metaball still reads at the
+  three light levels.
+- OPEN: the force layout is non-deterministic between runs — one settle spread the entities wide,
+  another overlapped them. If overlap reads as "intertwined" at real scale, seed the layout or widen
+  the entity-separation force (`EX`).
