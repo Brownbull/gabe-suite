@@ -126,11 +126,13 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .legend .lglbl{ color:var(--muted); }
 /* node vocab */
 .entnode circle.body{ transition:opacity .25s; }
-/* P2b — the FRONTEND companion circle (folded-in pieces) + FE-native bucket circles */
+/* P2b — the FRONTEND companion HEXAGON (folded-in pieces, in the ENTITY's colour) +
+   FE-native bucket hexagons (orange, no entity). Hexagon = frontend; colour = which entity. */
 .fenode{ cursor:pointer; }
-.fenode circle.febody{ transition:opacity .2s; }
-.fenode text.felbl{ font-size:10px; text-anchor:middle; fill:var(--c-fn-web); font-weight:700; pointer-events:none; }
-.fenode text.felbl.sub{ font-size:8.5px; fill:var(--muted); font-weight:600; }
+.fenode polygon.febody{ transition:opacity .2s; }
+.fenode text.felbl{ font-size:10px; text-anchor:middle; fill:var(--ink); font-weight:650; pointer-events:none; }
+.fenode text.fecount{ font-size:11px; text-anchor:middle; font-weight:800; pointer-events:none; }
+.feband{ font-size:12px; fill:var(--ink); font-weight:600; letter-spacing:.03em; pointer-events:none; }
 .lbl{ font-size:12px; font-weight:650; text-anchor:middle; fill:var(--ink); pointer-events:none; }
 .sub2{ font-size:10px; text-anchor:middle; fill:var(--muted); pointer-events:none; }
 .plabel{ font-size:8.5px; text-anchor:middle; fill:var(--ink); pointer-events:none; }
@@ -611,6 +613,8 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
 
 /* ── layouts (deterministic; positions persist per id across levels) ── */
 function rnd(v){ return Math.round(v*100)/100; }         // kill 1e-14 float dust in transforms
+function hexPts(r){ var p=[]; for(var i=0;i<6;i++){ var a=Math.PI/180*(60*i);   // flat-top hexagon
+  p.push(rnd(r*Math.cos(a))+","+rnd(r*Math.sin(a))); } return p.join(" "); }
 function rows2(s, max){ s=String(s); if(s.length<=max) return [s];
   var r1=s.slice(0,max), rest=s.slice(max);
   return [r1, rest.length<=max?rest:rest.slice(0,max-1)+"…"]; }   // 2 rows of ~10, dots when longer
@@ -1100,13 +1104,14 @@ function drawEntities(){
       if(!fe || !fe.count) return;
       var p=entAnchor(en.slug); if(!p) return; _feAny=true;
       var ePieces=(pc.models||[]).length+(pc.schemas||[]).length+(pc.endpoints||[]).length+((pc.usefns||[]).length);
-      var er=rnd(18+4.6*Math.sqrt(ePieces)), fr=rnd(Math.min(32, 13+2.0*Math.sqrt(fe.count)));
-      var fx=rnd(p.x+er+fr+14), fy=rnd(p.y-er-fr+2);
-      nLayer.appendChild(E("line",{x1:p.x, y1:p.y, x2:fx, y2:fy, stroke:"var(--c-fn-web)","stroke-width":"1.4","stroke-dasharray":"4 3","stroke-opacity":"0.7"}));
+      var er=rnd(18+4.6*Math.sqrt(ePieces)), fr=rnd(Math.min(30, 14+1.9*Math.sqrt(fe.count)));
+      var fx=rnd(p.x+er+fr+16), fy=rnd(p.y-er-fr);
+      var ecol=COLORS[en.slug]||"var(--c-fn-web)";                 // the FE hexagon wears its entity's hue
+      nLayer.appendChild(E("line",{x1:p.x, y1:p.y, x2:fx, y2:fy, stroke:ecol,"stroke-width":"1.5","stroke-dasharray":"4 3","stroke-opacity":"0.7"}));
       var fg=E("g",{class:"fenode","data-id":"fe:"+en.slug, transform:"translate("+fx+","+fy+")"});
-      fg.appendChild(E("circle",{class:"febody", r:fr, fill:"var(--c-fn-web)","fill-opacity":"0.16", stroke:"var(--c-fn-web)","stroke-width":"2"}));
-      var ft=E("text",{class:"felbl", y:3}); ft.textContent=fe.count; fg.appendChild(ft);
-      var fl=E("text",{class:"felbl sub", y:fr+11}); fl.textContent="frontend"; fg.appendChild(fl);
+      fg.appendChild(E("polygon",{class:"febody", points:hexPts(fr), fill:ecol,"fill-opacity":"0.22", stroke:ecol,"stroke-width":"2"}));
+      var ft=E("text",{class:"fecount", y:4, fill:ecol}); ft.textContent=fe.count; fg.appendChild(ft);
+      var fl=E("text",{class:"felbl", y:fr+13}); fl.textContent=en.label; fg.appendChild(fl);
       var ti=E("title"); ti.textContent=en.label+" frontend — "+feKindSummary(fe.by_kind); fg.appendChild(ti);
       (function(en2,fe2){ fg.addEventListener("click",function(ev){ ev.stopPropagation(); showFrontend(en2.label, fe2, false); }); })(en, fe);
       nLayer.appendChild(fg);
@@ -1116,14 +1121,14 @@ function drawEntities(){
     if(buckets.length){
       _feAny=true;
       var by=b.maxY+112, bx0=-70, GAPB=162;
-      var bl=E("text",{class:"felbl", x:rnd(bx0-18), y:rnd(by-58), style:"text-anchor:start;font-size:11px"});
-      bl.textContent="frontend · no backend entity"; nLayer.appendChild(bl);
-      buckets.forEach(function(bk,i){ var fr=rnd(Math.min(32, 13+2.0*Math.sqrt(bk.count))), bx=rnd(bx0+i*GAPB), byy=rnd(by), cand=!!bk.candidate;
+      var bl0=E("text",{class:"feband", x:rnd(bx0-18), y:rnd(by-58), style:"text-anchor:start"});
+      bl0.textContent="frontend · no backend entity"; nLayer.appendChild(bl0);
+      buckets.forEach(function(bk,i){ var fr=rnd(Math.min(30, 14+1.9*Math.sqrt(bk.count))), bx=rnd(bx0+i*GAPB), byy=rnd(by), cand=!!bk.candidate;
         var bg=E("g",{class:"fenode"+(cand?" cand":""),"data-id":"feb:"+bk.name, transform:"translate("+bx+","+byy+")"});
-        bg.appendChild(E("circle",{class:"febody", r:fr, fill:"var(--c-fn-web)","fill-opacity":cand?"0.09":"0.16",
+        bg.appendChild(E("polygon",{class:"febody", points:hexPts(fr), fill:"var(--c-fn-web)","fill-opacity":cand?"0.12":"0.22",
           stroke:"var(--c-fn-web)","stroke-width":"2","stroke-dasharray":cand?"5 4":"0"}));
-        var bt=E("text",{class:"felbl", y:3}); bt.textContent=bk.count; bg.appendChild(bt);
-        var bl=E("text",{class:"felbl sub", y:fr+11}); bl.textContent=bk.name+(cand?" ◆":""); bg.appendChild(bl);
+        var bt=E("text",{class:"fecount", y:4, fill:"var(--c-fn-web)"}); bt.textContent=bk.count; bg.appendChild(bt);
+        var bl=E("text",{class:"felbl", y:fr+13}); bl.textContent=bk.name+(cand?" ◆":""); bg.appendChild(bl);
         var ti=E("title"); ti.textContent=(cand?"candidate entity (UI-only, no backend) — ":"frontend bucket — ")+bk.name+" · "+feKindSummary(bk.by_kind); bg.appendChild(ti);
         (function(bk2){ bg.addEventListener("click",function(ev){ ev.stopPropagation(); showFrontend(bk2.name, bk2, bk2.candidate); }); })(bk);
         nLayer.appendChild(bg);
@@ -1134,7 +1139,11 @@ function drawEntities(){
   var _leg=[sw("fk — solid","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
           sw("imports — dotted","dot","var(--muted)"),
           "<span class='it'>line colour = the two entities it joins (source → target blend) · click any line</span>"];
-  if(_feAny) _leg.push("<span class='it'><svg class='lgico' viewBox='0 0 40 18'><circle cx='9' cy='9' r='6' fill='var(--c-fn-web)' fill-opacity='0.16' stroke='var(--c-fn-web)' stroke-width='2'/><circle cx='30' cy='9' r='6' fill='var(--c-fn-web)' fill-opacity='0.09' stroke='var(--c-fn-web)' stroke-width='2' stroke-dasharray='4 3'/></svg><span class='lglbl'>frontend · dashed = candidate entity</span></span>");
+  if(_feAny) _leg.push("<span class='it'><svg class='lgico' viewBox='0 0 66 18'>"
+    +"<polygon points='15.5,9 12.25,14.63 5.75,14.63 2.5,9 5.75,3.37 12.25,3.37' fill='var(--accent)' fill-opacity='0.22' stroke='var(--accent)' stroke-width='2'/>"
+    +"<polygon points='37.5,9 34.25,14.63 27.75,14.63 24.5,9 27.75,3.37 34.25,3.37' fill='var(--c-fn-web)' fill-opacity='0.22' stroke='var(--c-fn-web)' stroke-width='2'/>"
+    +"<polygon points='59.5,9 56.25,14.63 49.75,14.63 46.5,9 49.75,3.37 56.25,3.37' fill='var(--c-fn-web)' fill-opacity='0.12' stroke='var(--c-fn-web)' stroke-width='2' stroke-dasharray='4 3'/></svg>"
+    +"<span class='lglbl'>frontend — entity hue folds in · orange = no backend · dashed = candidate</span></span>");
   legend(_leg);
 }
 function feKindSummary(bk){ if(!bk) return "—";

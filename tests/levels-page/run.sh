@@ -279,7 +279,8 @@ ck(".kv.stack{" in style and re.search(r'"kv"\s*\+\s*\(stack\?" stack"', js) is 
    "kv: a long value stacks (label on top, value full-width) — short values stay inline")
 
 # P2b — the FRONTEND render (companion circle per entity + FE-native bucket circles)
-ck(".fenode circle.febody{" in style, "P2b: the frontend companion/bucket circle is styled (.fenode .febody)")
+ck(".fenode polygon.febody{" in style, "P2b: the frontend companion/bucket HEXAGON is styled (.fenode .febody)")
+ck("function hexPts(" in js, "P2b: the hexagon-points helper is defined")
 ck("D.frontend && D.frontend.present" in js,
    "P2b: the FE render is HONEST-EMPTY guarded — skipped when the graft arm is absent")
 ck('"fe:"+en.slug' in js and "showFrontend(" in js,
