@@ -2654,6 +2654,31 @@ function _rc(v){ if(!v) return "#8a8f98"; if(v.charAt(0)==="#") return v;   // r
   return v; }
 function _fgReChrome(){ _EMU.panel=_rc("var(--panel)"); _EMU.ink=_rc("var(--muted)"); _EMU.accent=_rc("var(--accent)");   // canvas chrome (panel/label/ring) resolved to hex; re-run on theme change + every entry
   if(_FG) try{ _FG.backgroundColor(_rc("var(--bg)")); }catch(_){} }
+/* size the canvas to its CONTAINER — force-graph otherwise defaults to the WINDOW size,
+   so the canvas overflowed #fgstage (clipped under the sidebar) AND its internal centre
+   (window/2) drifted zoom-at-cursor to the right. Explicit width/height fixes both. */
+function _fgSize(host){ if(!_FG||!host) return;
+  try{ _FG.width(host.clientWidth||892).height(host.clientHeight||716); }catch(_){} }
+/* the ENTITY CONTAINER CIRCLES — the SVG's beautiful translucent onions, emulated: a
+   filled + dashed circle behind each cluster (centroid + node reach), drawn UNDER the
+   nodes (onRenderFramePre, graph-space ctx). Cluster mode only; 4B lanes get none. */
+function _fgContainers(ctx, gs){ var sp=_EMU.spec;
+  if(!sp || sp.arrange==="lanes") return;
+  var groups={}; (sp.nodes||[]).forEach(function(n){ if(n.x==null) return; (groups[n.cl]=groups[n.cl]||[]).push(n); });
+  Object.keys(groups).forEach(function(cl){ var ns=groups[cl];
+    var cx=0, cy=0; ns.forEach(function(n){ cx+=n.x; cy+=n.y; }); cx/=ns.length; cy/=ns.length;
+    // ROBUST radius: the 88th-percentile node distance (not the max — one stray node
+    // otherwise inflates the onion into its neighbours). A few outliers ride the border.
+    var ds=ns.map(function(n){ return Math.hypot(n.x-cx, n.y-cy); }).sort(function(a,b){ return a-b; });
+    var r=(ds[Math.floor(ds.length*0.88)]||ds[ds.length-1]||30)+RG+14;
+    var col=ns[0].entCol||"#8a8f98", fade=_EMU.hl?0.4:1;
+    ctx.save();
+    ctx.globalAlpha=0.055*fade; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fill();
+    ctx.globalAlpha=0.45*fade; ctx.lineWidth=1.4/gs; ctx.setLineDash([5/gs,4/gs]); ctx.strokeStyle=col;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    if(gs>0.28){ ctx.globalAlpha=0.92*fade; ctx.fillStyle=col; ctx.textAlign="center"; ctx.textBaseline="bottom";
+      ctx.font="700 "+(11)+"px ui-sans-serif,system-ui,sans-serif"; ctx.fillText(cl, cx, cy-r-5); }
+    ctx.restore(); }); }
 /* canvas glyphs — the SVG icon vocabulary drawn on ctx. ICO_FN/ICO_SCHEMA (24-viewBox
    path strings) ride straight onto the canvas via Path2D; the rest are primitives. */
 var _P_FN=new Path2D(ICO_FN), _P_SCH=new Path2D(ICO_SCHEMA),
@@ -2743,7 +2768,7 @@ function emuFG(spec){
   fgLayout(spec);                                       // per-node target (_tx,_ty) + seed, per spec.arrange + laySeg
   fgBuildAdj(spec);                                     // adjacency for depth/journey highlight
   var data={nodes:spec.nodes, links:spec.links};
-  if(_FG){ _EMU.hl=null; _FG.linkCurvature(_EMU.curv).graphData(data);
+  if(_FG){ _EMU.hl=null; _fgSize(host); _FG.linkCurvature(_EMU.curv).graphData(data);
     _FG.resumeAnimation();                              // RUN until the new layout settles + fits ONCE, THEN onEngineStop re-pauses (paused-state fix: graphData alone never restarts the loop)
     (spec.def||function(){})(); return; }
   _EMU.repaint=function(){ if(!_FG||motionOn) return;   // motion ON = the rAF loop already paints every frame; paused = nudge two frames
@@ -2765,6 +2790,7 @@ function emuFG(spec){
         ctx.beginPath(); ctx.arc(n.x, n.y, RG+3.5, 0, 2*Math.PI); ctx.stroke(); ctx.restore(); } })
     .nodePointerAreaPaint(function(n, color, ctx){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(n.x,n.y,RG*1.5,0,2*Math.PI); ctx.fill(); })
     .nodeLabel(function(n){ return esc(n.label)+" · "+n.kind+(n.home?" · "+esc(n.home):(n.slug?" · "+esc(n.slug):"")); })
+    .onRenderFramePre(function(ctx, gs){ _fgContainers(ctx, gs); })   // the translucent entity onions, under the nodes
     .linkCurvature(_EMU.curv)
     .linkCanvasObjectMode(function(){return "replace";})
     .linkCanvasObject(fgLink)
@@ -2776,14 +2802,18 @@ function emuFG(spec){
     .onEngineStop(function(){                             // FIT ONCE, then re-pause if Motion is off (the layout still settled + fitted while paused)
       if(!_EMU.fitted){ _EMU.fitted=true; try{ _FG.zoomToFit(motionOn?400:1, 40); }catch(_){} }   // instant fit when paused (a 400ms tween would stall with the loop about to stop)
       if(!motionOn) requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(!motionOn) _FG.pauseAnimation(); }); }); })
-    .cooldownTicks(160);
-  try{ _FG.d3Force("charge").strength(-20); }catch(_){}
-  try{ _FG.d3Force("link").distance(20); }catch(_){}
-  var CF=function(alpha){ var ns=CF.__n||[], s=_EMU.clStrength||0.09; ns.forEach(function(n){
+    .cooldownTicks(200);
+  try{ _FG.d3Force("charge").strength(-26); }catch(_){}   // enough repulsion to breathe, not so much the onion bloats
+  // CROSS-entity wires are DRAWN but exert ~no layout pull — otherwise they drag nodes
+  // between clusters and bloat the onions (the SVG places nodes deterministically, so its
+  // wires never pull). Intra-entity links keep their cluster cohesive.
+  try{ _FG.d3Force("link").distance(function(l){ return l.cross?90:22; }).strength(function(l){ return l.cross?0.02:0.5; }); }catch(_){}
+  var CF=function(alpha){ var ns=CF.__n||[], s=_EMU.clStrength||0.05; ns.forEach(function(n){
     if(n._tx==null) return; n.vx+=(n._tx-n.x)*s*alpha; n.vy+=(n._ty-n.y)*s*alpha; }); };   // pull each node to its target (reads _tx/_ty live)
   CF.initialize=function(ns){ CF.__n=ns; };
   try{ _FG.d3Force("cluster", CF); }catch(_){}
   fgControls(host);
+  _fgSize(host);   // size the canvas to #fgstage (force-graph defaults to the window → overflow + zoom drift)
   // NB: do NOT pause here even when Motion is off — let the sim tick to onEngineStop so the
   // layout settles + fits ONCE; onEngineStop then re-pauses. (Fixes the never-fit-when-paused +
   // reduced-motion cases the pre-emptive pause caused.)
@@ -2808,13 +2838,13 @@ function fgLayout(spec){
       if(n.x==null){ n.x=n._tx+((i%7)-3)*10; n.y=n._ty+(((i*3)%9)-4)*10; } });
     return;
   }
-  var spread=(mode==="spread"?1.55:1), R=Math.max(240, keys.length*58)*spread, anch={};
-  if(mode==="chain"){ var step=Math.max(230, R*2/Math.max(1,keys.length));
+  var spread=(mode==="spread"?1.4:1), R=Math.max(440, keys.length*120)*spread, anch={};   // wide ring → the onions SEPARATE instead of overlapping in the centre
+  if(mode==="chain"){ var step=Math.max(340, R*2/Math.max(1,keys.length));
     keys.forEach(function(k,i){ anch[k]={x:(i-(keys.length-1)/2)*step, y:0}; }); }
   else keys.forEach(function(k,i){ var a=-Math.PI/2+2*Math.PI*i/keys.length; anch[k]={x:Math.cos(a)*R, y:Math.sin(a)*R}; });
-  _EMU.anch=anch; _EMU.clStrength=(mode==="spread"?0.05:0.09);
+  _EMU.anch=anch; _EMU.clStrength=(mode==="spread"?0.09:0.14);   // firm pull → compact, non-overlapping onions (the SVG look); charge still lets nodes breathe
   spec.nodes.forEach(function(n,i){ var a=anch[n.cl]||{x:0,y:0}; n._tx=a.x; n._ty=a.y;
-    if(n.x==null){ n.x=a.x+((i%9)-4)*7; n.y=a.y+(((i*5)%9)-4)*7; } });
+    if(n.x==null){ n.x=a.x+((i%11)-5)*14; n.y=a.y+(((i*5)%11)-5)*14; } });
 }
 /* adjacency for depth/journey highlight — from the SPEC links (string endpoints here;
    force-graph mutates source/target to node objects after graphData, hence the ||). */
@@ -3495,6 +3525,11 @@ window.__lvltest = {
     return {mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}; },
   fgArrange:function(){ return entLayout||"force"; },
   fgClearHL:function(){ fgClearHL(); },
+  fgCanvasFits:function(){ var h=document.getElementById("fgstage"), cv=document.querySelector("#fgstage canvas");
+    return cv ? {ok:(cv.width===h.clientWidth && cv.height===h.clientHeight), cw:cv.width, hw:h.clientWidth} : null; },
+  fgS2G:function(x,y){ return _FG?_FG.screen2GraphCoords(x,y):null; },
+  fgG2S:function(gx,gy){ return _FG?_FG.graph2ScreenCoords(gx,gy):null; },
+  fgContainers:function(){ var sp=_EMU.spec||{nodes:[]}, o={}; sp.nodes.forEach(function(n){ if(n.cl) o[n.cl]=1; }); return Object.keys(o).length; },
   fgCross:function(){ var t=0,x=0; (_EMU.spec?_EMU.spec.links:[]).forEach(function(l){ t++; if(l.cross) x++; }); return {total:t, cross:x}; },
   fgParticleOff:function(){ return (_EMU.spec?_EMU.spec.links:[]).filter(function(l){ return _fgParticleCount(l)===0; }).length; },
   jrnPick:function(i){ jrnStart(i); var h=_EMU.hl; return h?{mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}:null; }

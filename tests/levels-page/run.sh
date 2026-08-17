@@ -378,6 +378,14 @@ ck('function _fgReChrome(' in js and '_fgReChrome();' in js,
 ck('else if(JRN.cur && (level==="tracefg"||level==="layersfg")) jrnGo(0)' in js,
    "HARDEN2: the Connections toggle RECOMPUTES a live highlight/journey (its BFS now depends on showConns)")
 
+# operator visual pass (2026-08-17): canvas-sizing (clip+zoom-drift) + the entity onion circles
+ck('function _fgSize(' in js and '_FG.width(host.clientWidth' in js and '_fgSize(host)' in js,
+   "VISUAL: the FG canvas is sized to #fgstage (force-graph defaults to the window → clip under sidebar + zoom drift)")
+ck('function _fgContainers(' in js and '.onRenderFramePre(' in js and 'ds[Math.floor(ds.length*0.88)]' in js,
+   "VISUAL: translucent ENTITY ONION circles behind each cluster (robust 88th-pct radius, under the nodes)")
+ck('return l.cross?0.02:0.5' in js and 'l.cross?90:22' in js,
+   "VISUAL: cross-entity wires exert ~no layout pull (drawn, not dragging) so the onions stay compact + separated")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
