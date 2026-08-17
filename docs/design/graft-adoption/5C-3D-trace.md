@@ -296,3 +296,29 @@ Tunable: aura opacity/size, sub-cluster key (layer vs kind vs the 2D grouping), 
   the operator described. SPHERE and AURA remain as alternative shapes per level.
 - Channels still separate: icon = kind · bubble = neutral · cluster colour = entity (sub =
   hue-nudge). Bundle now also exposes `ConvexGeometry`.
+
+### 9f · curved + roomy polygons · the WRAP shape · lighter opacity (operator, 2026-08-17)
+
+Operator ruling (drawing: entities connected, an outer shell around entities + their links = a
+cluster; clusters nest inside entities; two containment levels — inner = the cluster around
+elements+connectors, outer = a polygon holding "the same + more" = the entity).
+
+- **Polygon now ENCLOSES each node, and rounds.** Old hull anchored to node *centres* (icons
+  poked the boundary). New `hull(ms,pad)` seeds a sphere of 12 icosahedron points (radius
+  `NR+pad`) around every member, then convex-hulls the cloud → the boundary clears every icon
+  (room to spare) and the corners read rounded, not faceted. Entity pad 26 vs sub 10.
+- **WRAP = a new shape: a sphere at each node + a cylinder along each connector** — the
+  "spheres and cylinders that surround the connectors" from the drawing, a *secondary polygon*
+  built from solids. It reads as an organic, fully-curved blob (the closest match to the
+  hand-drawn shells). Available at both levels; cylinders oriented per tick
+  (`quaternion.setFromUnitVectors(UP, dir)`).
+- **Shape sets now:** sub = aura · polygon · **wrap** · off; entity = aura · sphere · polygon ·
+  **wrap** · off. A polygon-outer + wrap-inner mix reproduces the two-level sketch.
+- **Opacity retuned LIGHT, five steps.** medium/strong were too strong; added **ghost** + **faint**
+  below subtle. `OPMAP` per surface (bubble/aura/sphere/polygon/wrap). Defaults: bubble=subtle,
+  sub=aura/faint, entity=polygon/ghost.
+- Spike gained a URL preset (`?entShape=…&entOp=…`) + a `window.onerror` red banner — for scripted
+  comparison shots (`google-chrome --headless --use-angle=swiftshader`, no puppeteer on this box).
+- OPEN: the polygon's long spans between distant nodes stay flat (convex-hull limit). Fully-curved
+  *polygon* (metaball/marching-cubes) is a heavier lift — **defer until** the operator picks polygon
+  over wrap AND the flat spans read wrong at real scale; wrap already covers the curved case.
