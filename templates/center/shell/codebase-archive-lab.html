@@ -361,6 +361,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       <button data-lvl="frontend">2 · Frontend</button>
       <button data-lvl="functions">3 · Functions</button>
       <button data-lvl="layers">4 · Layers</button>
+      <button data-lvl="layersfg">4B · Layers ᶠ</button>
       <button data-lvl="trace">5 · Trace</button>
       <button data-lvl="tracefg">5B · Trace ᶠ</button>
     </div>
@@ -443,6 +444,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   </div>
 </header>
 <div class="wrap">
+  <div id="graphhost" style="flex:1;min-width:0;position:relative;display:flex">
   <div id="fgstage" style="display:none;flex:1;min-width:0;position:relative;overflow:hidden"></div>
   <div id="stage">
     <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
@@ -453,13 +455,6 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       <g id="vp"></g>
     </svg>
     <div class="fixture">EXAMPLE FIXTURE · gustify (read-only) · fn call edges dashed = graft confidence:inferred (a floor)</div>
-    <div id="findbar" class="findbar" title="find an element by name — Enter / ▼ next, Shift+Enter / ▲ previous">
-      <svg viewBox="0 0 24 24" width="13" height="13" class="fico"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.3" y1="16.3" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-      <input id="findinput" type="text" placeholder="find element…" autocomplete="off" spellcheck="false">
-      <span id="findcount" class="findcount"></span>
-      <button id="findprev" class="findnav" title="previous match (Shift+Enter)">▲</button>
-      <button id="findnext" class="findnav" title="next match (Enter)">▼</button>
-    </div>
     <div id="legendBox" class="cornerbox" style="left:14px">
       <div class="cbhead"><span>Legend</span><button class="cbtgl" id="legendMin" title="minimize / restore">−</button></div>
       <div class="cbbody legend" id="legend"></div>
@@ -477,6 +472,14 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       </div>
     </div>
   </div>
+  <div id="findbar" class="findbar" title="find an element by name — Enter / ▼ next, Shift+Enter / ▲ previous">
+    <svg viewBox="0 0 24 24" width="13" height="13" class="fico"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.3" y1="16.3" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="findinput" type="text" placeholder="find element…" autocomplete="off" spellcheck="false">
+    <span id="findcount" class="findcount"></span>
+    <button id="findprev" class="findnav" title="previous match (Shift+Enter)">▲</button>
+    <button id="findnext" class="findnav" title="next match (Enter)">▼</button>
+  </div>
+  </div><!-- /graphhost -->
   <div id="sidewrap">
     <div id="panelgrip" title="drag to resize the panel"></div>
     <aside id="panel"></aside>
@@ -2593,21 +2596,37 @@ function showWeb(sc){
 
 /* ── level switching (position persistence keeps shared anchors) ── */
 function syncGearApplicability(){
+  var fg=fgIsLevel();
   var inOk = (level==="trace"&&traceCluster!=="flow");   // Inside shapes the trace bubbles (2/3 left the UI; 4 is a fixed grid)
   var clOk = (level==="trace");
   var inRow=document.getElementById("inRow"), clRow=document.getElementById("clRow");
   if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }
   if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
+  // FG levels carry NO SVG badge overlays — honestly disable those toggles so none reads
+  // active-but-dead (the divergence). Connections · depth · journeys · motion · the
+  // Entities-layout gear stay live (they DO drive the canvas).
+  ["guardsbtn","hubsbtn","pressbtn","behindbtn","usagebtn","testsbtn","overlaysbtn"].forEach(function(id){
+    var b=document.getElementById(id); if(!b) return;
+    b.style.opacity=fg?"0.3":""; b.style.pointerEvents=fg?"none":""; });
+  // the Lines + Icons gear rows also don't apply on FG (fgLink uses _EMU.curv, fgGlyph is
+  // hardcoded) — dim them so no gear control reads active-but-dead.
+  ["lineSeg","icoSeg"].forEach(function(id){ var s=document.getElementById(id); if(!s) return;
+    s.style.opacity=fg?"0.35":""; s.style.pointerEvents=fg?"none":""; });
+  // journeys are a backend concept — off on the FRONTEND FG level (its ids match no journey)
+  var jr=document.getElementById("journeys");
+  if(jr){ var joff=(level==="frontend"); jr.style.opacity=joff?"0.35":""; jr.style.pointerEvents=joff?"none":""; }
 }
 function markLevelButtons(){ document.querySelectorAll("#levels button").forEach(function(btn){
   btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); }); }
 function render(){
   // The FORCE-GRAPH levels ("2 · Frontend" + "5B · Trace") render on their own canvas
   // (the library, not the SVG stage). Swap the two hosts; the SVG levels are untouched.
-  var isFG = (level==="frontend" || level==="tracefg");
+  var isFG = (level==="frontend" || level==="tracefg" || level==="layersfg");
   document.getElementById("stage").style.display = isFG ? "none" : "";
   document.getElementById("fgstage").style.display = isFG ? "" : "none";
-  if(isFG){ (level==="tracefg"?drawTraceFG:drawFrontendGraph)(); markLevelButtons(); syncGearApplicability(); return; }
+  // the element FINDER overlays whichever host is live — it sits in a shared wrapper (#graphhost)
+  // OUTSIDE #fgstage, so force-graph clearing its own container never destroys it.
+  if(isFG){ ({tracefg:drawTraceFG, layersfg:drawLayersFG, frontend:drawFrontendGraph})[level](); markLevelButtons(); syncGearApplicability(); return; }
   vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
   navStack=[]; navFwd=[]; navCur=null; ecpCurHead=null; navUI();
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
@@ -2633,6 +2652,8 @@ function _rc(v){ if(!v) return "#8a8f98"; if(v.charAt(0)==="#") return v;   // r
   var m=/var\((--[a-z0-9-]+)\)/i.exec(v);
   if(m){ var r=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); return r||"#8a8f98"; }
   return v; }
+function _fgReChrome(){ _EMU.panel=_rc("var(--panel)"); _EMU.ink=_rc("var(--muted)"); _EMU.accent=_rc("var(--accent)");   // canvas chrome (panel/label/ring) resolved to hex; re-run on theme change + every entry
+  if(_FG) try{ _FG.backgroundColor(_rc("var(--bg)")); }catch(_){} }
 /* canvas glyphs — the SVG icon vocabulary drawn on ctx. ICO_FN/ICO_SCHEMA (24-viewBox
    path strings) ride straight onto the canvas via Path2D; the rest are primitives. */
 var _P_FN=new Path2D(ICO_FN), _P_SCH=new Path2D(ICO_SCHEMA),
@@ -2676,12 +2697,15 @@ function fgLabel(ctx, txt, x, y, col){ var rows=rows2(txt,12);
    so the drawn curve and the particle flow coincide; entity-blend gradient + per-kind dash. */
 function fgLink(link, ctx){ var e=link.source, t=link.target;
   if(!e||!t||e.x==null||t.x==null) return;
+  if(!showConns && link.cross) return;                   // Connections toggle hides cross-entity wires
+  var hl=_EMU.hl, on = hl ? hl.links[link._i] : null;    // highlight: lit vs dimmed
   var dx=t.x-e.x, dy=t.y-e.y, d=Math.hypot(dx,dy)||1, u=d*_EMU.curv;
   var cx=(e.x+t.x)/2 + u*dy/d, cy=(e.y+t.y)/2 - u*dx/d;
   var stroke;
   if(link.scol===link.tcol){ stroke=link.scol; }
   else { stroke=ctx.createLinearGradient(e.x,e.y,t.x,t.y); stroke.addColorStop(0,link.scol); stroke.addColorStop(1,link.tcol); }
-  ctx.save(); ctx.globalAlpha=0.55; ctx.strokeStyle=stroke; ctx.lineWidth=link.w||0.9;
+  ctx.save(); ctx.globalAlpha = hl ? (on?0.95:0.05) : 0.55;
+  ctx.strokeStyle=stroke; ctx.lineWidth=(link.w||0.9)*(on?1.8:1);
   ctx.setLineDash(link.dash||[]);
   ctx.beginPath(); ctx.moveTo(e.x,e.y); ctx.quadraticCurveTo(cx,cy,t.x,t.y); ctx.stroke();
   ctx.restore(); }
@@ -2702,8 +2726,8 @@ function fgControls(host){
       _FG.centerAt(gp.x-(mx-w/2)/k2, gp.y-(my-h/2)/k2);   // the point under the cursor stays put
     } else if(e.shiftKey){                                // horizontal pan
       var c=_FG.centerAt(); _FG.centerAt(c.x+(e.deltaY+e.deltaX)/k, c.y);
-    } else if(e.altKey){                                  // depth: reserved (no selection engine on the FG levels yet)
-      altAcc+=e.deltaY; if(Math.abs(altAcc)>=40) altAcc=0;
+    } else if(e.altKey){                                  // STEP the highlight depth (like the SVG stage)
+      altAcc+=e.deltaY; if(Math.abs(altAcc)>=40){ applyDepth(selDepth+(altAcc<0?1:-1)); altAcc=0; }
     } else {                                              // vertical pan (plain scroll)
       var c2=_FG.centerAt(); _FG.centerAt(c2.x+e.deltaX/k, c2.y+e.deltaY/k);
     }
@@ -2715,50 +2739,116 @@ function emuFG(spec){
   if(!spec || typeof ForceGraph==="undefined") return;
   _EMU.spec=spec; _EMU.curv=spec.curv||0.14; _EMU.fitted=false;
   var host=document.getElementById("fgstage");
-  // CLUSTER BY ENTITY — the SVG Trace packs each entity into an onion; a plain force
-  // layout strings the nodes out. A per-cluster centroid force (cl = slug|home) pulls
-  // each entity's pieces into a blob, so 5B reads as the same diagram with movement.
-  var seen={}, keys=[]; spec.nodes.forEach(function(n){ n.cl=n.slug||n.home||"·"; if(!seen[n.cl]){ seen[n.cl]=1; keys.push(n.cl); } });
-  keys.sort(); var R=Math.max(240, keys.length*58), anch={};
-  keys.forEach(function(k,i){ var a=-Math.PI/2+2*Math.PI*i/keys.length; anch[k]={x:Math.cos(a)*R, y:Math.sin(a)*R}; });
-  _EMU.anch=anch;
-  spec.nodes.forEach(function(n,i){ if(n.x==null){ var a=anch[n.cl]||{x:0,y:0};   // seed near the cluster → converges tight, fits stable
-    n.x=a.x+((i%9)-4)*7; n.y=a.y+(((i*5)%9)-4)*7; } });
+  _fgReChrome();                                        // re-resolve the theme chrome on EVERY entry (a theme toggled on an SVG level is picked up on return)
+  fgLayout(spec);                                       // per-node target (_tx,_ty) + seed, per spec.arrange + laySeg
+  fgBuildAdj(spec);                                     // adjacency for depth/journey highlight
   var data={nodes:spec.nodes, links:spec.links};
-  if(_FG){ _FG.linkCurvature(_EMU.curv).graphData(data); if(!motionOn) _FG.pauseAnimation(); (spec.def||function(){})(); return; }
-  _EMU.panel=_rc("var(--panel)"); _EMU.ink=_rc("var(--muted)");
+  if(_FG){ _EMU.hl=null; _FG.linkCurvature(_EMU.curv).graphData(data);
+    _FG.resumeAnimation();                              // RUN until the new layout settles + fits ONCE, THEN onEngineStop re-pauses (paused-state fix: graphData alone never restarts the loop)
+    (spec.def||function(){})(); return; }
+  _EMU.repaint=function(){ if(!_FG||motionOn) return;   // motion ON = the rAF loop already paints every frame; paused = nudge two frames
+    _FG.resumeAnimation(); requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(!motionOn) _FG.pauseAnimation(); }); }); };
   _FG=ForceGraph()(host)
     .backgroundColor(_rc("var(--bg)"))
     .graphData(data)
     .nodeRelSize(1).nodeVal(1)
     .nodeCanvasObjectMode(function(){return "replace";})
     .nodeCanvasObject(function(n, ctx, gs){
+      var hl=_EMU.hl, hop = hl ? hl.nodes[n.id] : undefined, dim = hl && hop===undefined;
+      ctx.save(); if(dim) ctx.globalAlpha=0.12;
       fgGlyph(ctx, n.kind, n.x, n.y, RG, n.glyphCol, n.entCol, {handler:n.handler, god:n.god, panel:_EMU.panel});
-      if(gs>0.7 && n.label) fgLabel(ctx, n.label, n.x, n.y+RG+3.5, _EMU.ink); })
+      if(!dim && gs>0.7 && n.label) fgLabel(ctx, n.label, n.x, n.y+RG+3.5, _EMU.ink);
+      ctx.restore();
+      if(hl && hop!==undefined){ ctx.save();             // selection / journey ring on the lit set
+        ctx.globalAlpha=(hl.center===n.id)?1:Math.max(0.32, 1-hop*0.16);
+        ctx.lineWidth=(hl.center===n.id)?2.6:1.5; ctx.strokeStyle=_EMU.accent;
+        ctx.beginPath(); ctx.arc(n.x, n.y, RG+3.5, 0, 2*Math.PI); ctx.stroke(); ctx.restore(); } })
     .nodePointerAreaPaint(function(n, color, ctx){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(n.x,n.y,RG*1.5,0,2*Math.PI); ctx.fill(); })
     .nodeLabel(function(n){ return esc(n.label)+" · "+n.kind+(n.home?" · "+esc(n.home):(n.slug?" · "+esc(n.slug):"")); })
     .linkCurvature(_EMU.curv)
     .linkCanvasObjectMode(function(){return "replace";})
     .linkCanvasObject(fgLink)
-    .linkDirectionalParticles(2).linkDirectionalParticleSpeed(0.006)
-    .linkDirectionalParticleWidth(1.5).linkDirectionalParticleColor(function(l){return l.pcol||l.scol;})
-    .onNodeClick(function(n){ (_EMU.spec.onClick||function(){})(n); })
-    .onEngineStop(function(){ if(!_EMU.fitted){ _EMU.fitted=true; try{ _FG.zoomToFit(400, 40); }catch(_){} } })  // FIT ONCE — a node-drag re-heat never re-zooms out
+    .linkDirectionalParticles(function(l){ return _fgParticleCount(l); })   // Connections toggle hides cross-wire particles
+    .linkDirectionalParticleSpeed(0.006)
+    .linkDirectionalParticleWidth(1.6).linkDirectionalParticleColor(function(l){return l.pcol||l.scol;})
+    .onNodeClick(function(n){ (_EMU.spec.onClick||function(){})(n); fgHighlight(n.id, selDepth); })
+    .onBackgroundClick(function(){ fgClearHL(); (_EMU.spec.def||function(){})(); })
+    .onEngineStop(function(){                             // FIT ONCE, then re-pause if Motion is off (the layout still settled + fitted while paused)
+      if(!_EMU.fitted){ _EMU.fitted=true; try{ _FG.zoomToFit(motionOn?400:1, 40); }catch(_){} }   // instant fit when paused (a 400ms tween would stall with the loop about to stop)
+      if(!motionOn) requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(!motionOn) _FG.pauseAnimation(); }); }); })
     .cooldownTicks(160);
   try{ _FG.d3Force("charge").strength(-20); }catch(_){}
   try{ _FG.d3Force("link").distance(20); }catch(_){}
-  var CF=function(alpha){ var ns=CF.__n||[]; ns.forEach(function(n){ var a=_EMU.anch[n.cl]; if(!a) return;
-    n.vx+=(a.x-n.x)*0.09*alpha; n.vy+=(a.y-n.y)*0.09*alpha; }); };   // entity-centroid pull (reads _EMU.anch live)
+  var CF=function(alpha){ var ns=CF.__n||[], s=_EMU.clStrength||0.09; ns.forEach(function(n){
+    if(n._tx==null) return; n.vx+=(n._tx-n.x)*s*alpha; n.vy+=(n._ty-n.y)*s*alpha; }); };   // pull each node to its target (reads _tx/_ty live)
   CF.initialize=function(ns){ CF.__n=ns; };
   try{ _FG.d3Force("cluster", CF); }catch(_){}
   fgControls(host);
-  if(!motionOn) _FG.pauseAnimation();
+  // NB: do NOT pause here even when Motion is off — let the sim tick to onEngineStop so the
+  // layout settles + fits ONCE; onEngineStop then re-pauses. (Fixes the never-fit-when-paused +
+  // reduced-motion cases the pre-emptive pause caused.)
   (spec.def||function(){})();
 }
+/* fgLayout — assign each node a target (_tx,_ty) the cluster force pulls toward, plus a
+   seed position. spec.arrange: "cluster" (Trace/Frontend — entity onion-blobs on a ring)
+   or "lanes" (4B Layers — LAYER on X columns, ENTITY on Y rows: a grouping axis the flat
+   SVG never had). entLayout (the ONE shared layout pref — laySeg chain/force/spread, also
+   driving the SVG entity levels) tunes the spread + strength; no separate FG state to desync. */
+function fgLayout(spec){
+  var arrange=spec.arrange||"cluster", mode=entLayout||"force";
+  var seen={}, keys=[]; spec.nodes.forEach(function(n){ n.cl=n.slug||n.home||"·"; if(!seen[n.cl]){ seen[n.cl]=1; keys.push(n.cl); } });
+  keys.sort(); _EMU.anchKeys=keys;
+  if(arrange==="lanes"){
+    var LANES=["endpoints","api","services","web","data"];
+    var present=LANES.filter(function(L){ return spec.nodes.some(function(n){ return n.lane===L; }); });
+    var gapX=(mode==="spread"?300:220), lx={}; present.forEach(function(L,i){ lx[L]=(i-(present.length-1)/2)*gapX; });
+    var gapY=(mode==="spread"?122:92), ky={}; keys.forEach(function(k,i){ ky[k]=(i-(keys.length-1)/2)*gapY; });
+    _EMU.laneX=lx; _EMU.clStrength=0.16;
+    spec.nodes.forEach(function(n,i){ n._tx=(lx[n.lane]!=null?lx[n.lane]:0); n._ty=(ky[n.cl]!=null?ky[n.cl]:0);
+      if(n.x==null){ n.x=n._tx+((i%7)-3)*10; n.y=n._ty+(((i*3)%9)-4)*10; } });
+    return;
+  }
+  var spread=(mode==="spread"?1.55:1), R=Math.max(240, keys.length*58)*spread, anch={};
+  if(mode==="chain"){ var step=Math.max(230, R*2/Math.max(1,keys.length));
+    keys.forEach(function(k,i){ anch[k]={x:(i-(keys.length-1)/2)*step, y:0}; }); }
+  else keys.forEach(function(k,i){ var a=-Math.PI/2+2*Math.PI*i/keys.length; anch[k]={x:Math.cos(a)*R, y:Math.sin(a)*R}; });
+  _EMU.anch=anch; _EMU.clStrength=(mode==="spread"?0.05:0.09);
+  spec.nodes.forEach(function(n,i){ var a=anch[n.cl]||{x:0,y:0}; n._tx=a.x; n._ty=a.y;
+    if(n.x==null){ n.x=a.x+((i%9)-4)*7; n.y=a.y+(((i*5)%9)-4)*7; } });
+}
+/* adjacency for depth/journey highlight — from the SPEC links (string endpoints here;
+   force-graph mutates source/target to node objects after graphData, hence the ||). */
+function fgBuildAdj(spec){ var adj={}; spec.nodes.forEach(function(n){ adj[n.id]=[]; });
+  spec.links.forEach(function(l,i){ l._i=i; var s=(l.source&&l.source.id)||l.source, t=(l.target&&l.target.id)||l.target;
+    if(adj[s]&&adj[t]){ adj[s].push({id:t,li:i,cross:l.cross}); adj[t].push({id:s,li:i,cross:l.cross}); } });   // carry cross so the BFS can honour the Connections toggle
+  _EMU.adj=adj; }
+/* depth highlight — BFS from a clicked node to `depth` hops; lights the neighbourhood,
+   dims the rest, flows particles only on lit wires (alt+scroll changes the depth). With
+   Connections OFF a hidden cross-entity wire is NOT traversed (its node stays dark). */
+function fgHighlight(centerId, depth){ var adj=_EMU.adj||{}; if(adj[centerId]===undefined) return;
+  var nodes={}, links={}, front=[centerId]; nodes[centerId]=0;
+  for(var h=0; h<Math.max(1,depth); h++){ var next=[];
+    front.forEach(function(id){ (adj[id]||[]).forEach(function(e){ if(!showConns && e.cross) return;   // hidden wire → not a highlight path
+      links[e.li]=1; if(nodes[e.id]===undefined){ nodes[e.id]=h+1; next.push(e.id); } }); });
+    front=next; if(!front.length) break; }
+  _EMU.hl={center:centerId, nodes:nodes, links:links, mode:"sel"}; _fgSyncParticles(); _EMU.repaint(); }
+/* journey highlight — light the ordered path (every resolvable step + the wires among them). */
+function fgJourneyLight(stepIds){ var set={}, present={};
+  stepIds.forEach(function(id){ if(_EMU.adj && _EMU.adj[id]!==undefined){ set[id]=0; present[id]=1; } });
+  var links={}; (_EMU.spec.links||[]).forEach(function(l,i){ var s=(l.source&&l.source.id)||l.source, t=(l.target&&l.target.id)||l.target;
+    if(present[s]&&present[t] && (showConns || !l.cross)) links[i]=1; });
+  _EMU.hl={center:null, nodes:set, links:links, mode:"jrn"}; _fgSyncParticles(); _EMU.repaint(); }
+function fgClearHL(){ _EMU.hl=null; _fgSyncParticles(); if(_EMU.repaint) _EMU.repaint(); }
+function _fgParticleCount(l){ if(!showConns && l.cross) return 0;   // Connections toggle hides cross-wire particles
+  if(_EMU.hl) return _EMU.hl.links[l._i]?3:0; return 2; }           // during a highlight, particles flow ONLY on the lit path
+function _fgSyncParticles(){ if(_FG) _FG.linkDirectionalParticles(function(l){ return _fgParticleCount(l); }); }   // fresh closure → force-graph rebuilds photons
+function fgCenterOn(id){ var n=(_EMU.spec.nodes||[]).filter(function(x){ return x.id===id; })[0];
+  if(n && n.x!=null) _FG.centerAt(n.x, n.y, motionOn?400:0); }   // instant when paused (a tween can't advance with the loop stopped)
+function fgIsLevel(){ return level==="tracefg"||level==="frontend"||level==="layersfg"; }
 var _LK_W={route:1.1, touch:0.9, resp:0.8, xfk:1.0, use:0.9, calls:0.9},
     _LK_D={resp:[3,3], use:[1.5,3], xfk:[1.5,4]};
-function _lk(s,t,sc,tc,kind){ return {source:s, target:t, scol:_rc(sc), tcol:_rc(tc), pcol:_rc(sc),
-  w:_LK_W[kind]||0.9, dash:_LK_D[kind]||null, kind:kind}; }
+function _lk(s,t,sc,tc,kind,fe,te){ return {source:s, target:t, scol:_rc(sc), tcol:_rc(tc), pcol:_rc(sc),
+  w:_LK_W[kind]||0.9, dash:_LK_D[kind]||null, kind:kind, cross:(fe!=null&&te!=null&&fe!==te)}; }
 /* 5B · TRACE spec — the same data drawTrace wires: endpoints → handler ƒ → the models/
    schemas it touches → the response, plus cross-entity FKs and use edges. Glyph = kind,
    dot = entity. This is the richest diagram, so it proves the emulation. */
@@ -2779,23 +2869,23 @@ function buildTraceSpec(){
       if(!ep.fn) return;
       var fnId="fn:"+slug+"|"+ep.fn;
       nd(fnId,"fn",C_API,col, ep.fn, {handler:true, slug:slug, fnname:ep.fn});
-      links.push(_lk(epId, fnId, col, col, "route"));
+      links.push(_lk(epId, fnId, col, col, "route", slug, slug));
       (ep.touch||[]).forEach(function(c){ var k=clsKind[slug+"|"+c]||"model", cid="cls:"+slug+"|"+c;
         nd(cid, k, k==="model"?C_MOD:C_SCH, col, c, {slug:slug, cls:c});
-        links.push(_lk(fnId, cid, col, col, "touch")); });
+        links.push(_lk(fnId, cid, col, col, "touch", slug, slug)); });
       if(ep.resp){ var own=D.schema_owner[ep.resp];
         if(own){ var rid="cls:"+own+"|"+ep.resp;
           nd(rid, "schema", C_SCH, COLORS[own]||col, ep.resp, {slug:own, cls:ep.resp});
-          links.push(_lk(fnId, rid, col, COLORS[own]||col, "resp")); } }
+          links.push(_lk(fnId, rid, col, COLORS[own]||col, "resp", slug, own)); } }
     }); });
   (D.cross_edges||[]).forEach(function(e){ var a="cls:"+e.fs+"|"+e.f, c="cls:"+e.ts+"|"+e.t;
     nd(a, clsKind[e.fs+"|"+e.f]||"model", C_MOD, COLORS[e.fs]||"#8a8f98", e.f, {slug:e.fs, cls:e.f});
     nd(c, clsKind[e.ts+"|"+e.t]||"model", C_MOD, COLORS[e.ts]||"#8a8f98", e.t, {slug:e.ts, cls:e.t});
-    links.push(_lk(a, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "xfk")); });
+    links.push(_lk(a, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "xfk", e.fs, e.ts)); });
   (D.use_edges||[]).forEach(function(e){ var f="fn:"+e.fs+"|"+e.fn, c="cls:"+e.ts+"|"+e.cls;
     nd(f, "usefn", C_SRV, COLORS[e.fs]||"#8a8f98", e.fn, {slug:e.fs, fnname:e.fn});
     nd(c, clsKind[e.ts+"|"+e.cls]||"model", C_MOD, COLORS[e.ts]||"#8a8f98", e.cls, {slug:e.ts, cls:e.cls});
-    links.push(_lk(f, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "use")); });
+    links.push(_lk(f, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "use", e.fs, e.ts)); });
   var arr=Object.keys(nodes).map(function(k){return nodes[k];}), ids={}; arr.forEach(function(n){ ids[n.id]=1; });
   links=links.filter(function(l){ return ids[l.source] && ids[l.target]; });
   return {nodes:arr, links:links, onClick:showTraceFGNode, def:showTraceFGDefault, curv:0.14}; }
@@ -2811,16 +2901,40 @@ function showTraceFGDefault(){ var s=_EMU.spec||{nodes:[],links:[]};
    +"<b>Ctrl/⌘+scroll</b> zooms at the cursor · <b>drag</b> a node or the canvas. Compare with 5·Trace.</div>"; }
 function showTraceFGNode(n){
   if(n.kind==="ep" && n.ep){ showEndpoint(n.slug, n.ep); return; }
-  if((n.kind==="fn"||n.kind==="usefn")){
-    showFn({name:n.fnname, slug:n.slug, layer:n.kind==="fn"?"api":"services", lang:"py", handler:!!n.handler, god:!!n.god}); return; }
+  if((n.kind==="fn"||n.kind==="usefn")){ var lay=n.layerWeb?"web":(n.kind==="fn"?"api":"services");
+    showFn({name:n.fnname, slug:n.slug, layer:lay, lang:lay==="web"?"ts":"py", handler:!!n.handler, god:!!n.god}); return; }
   if(n.kind==="model"||n.kind==="schema"){ showPiece(n.slug, {kind:n.kind, m:{cls:n.cls}}); return; }
   panel.innerHTML="<h3>"+esc(n.label)+"</h3><div class='row'><span>kind</span><b>"+esc(n.kind)+"</b></div>"; }
+/* 4B · LAYERS spec — the same inventory as 5B, arranged in force LANES: endpoints · api ·
+   services · web · data become X COLUMNS and entities become Y ROWS — a grouping axis the
+   flat SVG Layers never had. Reuses the trace nodes/wires (same keys) + adds the web-fn lane. */
+function buildLayersSpec(){
+  var s=buildTraceSpec();
+  var LANE={ep:"endpoints", fn:"api", usefn:"services", model:"data", schema:"data"};
+  s.nodes.forEach(function(n){ n.lane=n.layerWeb?"web":(LANE[n.kind]||"data"); n.x=null; n.y=null; });
+  var byId={}; s.nodes.forEach(function(n){ byId[n.id]=1; });
+  (D.fn_nodes||[]).forEach(function(f){ if(f.layer!=="web") return;      // graft's web-lane fns (not in the backend trace set)
+    var id="fn:"+f.slug+"|"+f.name; if(byId[id]) return; byId[id]=1;
+    s.nodes.push({id:id, kind:"fn", glyphCol:_rc("var(--c-fn-web)"), entCol:COLORS[f.slug]||_rc("var(--c-fn-web)"),
+      label:f.name, lane:"web", slug:f.slug, fnname:f.name, handler:!!f.handler, god:!!f.god, layerWeb:true, x:null, y:null}); });
+  s.arrange="lanes"; s.onClick=showTraceFGNode; s.def=showLayersFGDefault; s.curv=0.10;
+  return s;
+}
+function drawLayersFG(){ emuFG(buildLayersSpec()); }
+function showLayersFGDefault(){ var s=_EMU.spec||{nodes:[],links:[]};
+  panel.innerHTML="<h3 style='color:var(--c-fn-api)'>Layers ᶠ — force-graph</h3>"
+   +"<div class='row'><span>nodes</span><b>"+s.nodes.length+"</b></div>"
+   +"<div class='row'><span>wires</span><b>"+s.links.length+"</b></div>"
+   +"<div class='note'>Diagram 4 with force-graph: the LAYER is the <b>X axis</b> (endpoints → api → "
+   +"services → web → data), the <b>entity is the Y axis</b> — a grouping the flat SVG never had. Same "
+   +"glyphs + wires as 5B. <b>Click</b> a node to light its neighbourhood · <b>Alt+scroll</b> changes the "
+   +"depth · pick a <b>journey</b> to walk the path · <b>Ctrl/⌘+scroll</b> zooms · <b>drag</b> to move.</div>"; }
 /* 2 · FRONTEND spec — graft's classified TS pieces, same emulated grammar. */
 function buildFrontendSpec(){
   if(!D.frontend || !D.frontend.present) return null;
   var KC={ component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)", route:"var(--fk-route)", "fe-type":"var(--muted)" };
-  var nodes=[], seen={}, ent={};
-  function add(list, entCol, home){ (list||[]).forEach(function(p){ if(p.id && !seen[p.id]){ seen[p.id]=1; ent[p.id]=entCol;
+  var nodes=[], seen={}, ent={}, homeOf={};
+  function add(list, entCol, home){ (list||[]).forEach(function(p){ if(p.id && !seen[p.id]){ seen[p.id]=1; ent[p.id]=entCol; homeOf[p.id]=home;
     nodes.push({id:p.id, kind:p.k, glyphCol:_rc(KC[p.k]||"var(--muted)"), entCol:entCol, label:p.n||p.k, home:home}); } }); }
   (D.entities||[]).forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
     if(fe) add(fe.pieces, COLORS[en.slug]||_rc("var(--c-fn-web)"), en.label); });
@@ -2829,8 +2943,9 @@ function buildFrontendSpec(){
   var web=_rc("var(--c-fn-web)");
   var links=(D.fe_edges||[]).filter(function(e){ return ids[e.s] && ids[e.t]; })
     .map(function(e){ var sc=ent[e.s]||web, tc=ent[e.t]||sc;
-      return {source:e.s, target:e.t, scol:sc, tcol:tc, pcol:sc, w:0.9, dash:null, kind:e.rel||"calls"}; });
-  return {nodes:nodes, links:links, onClick:function(n){ showFePiece(n.label, n.kind, n.home); }, def:showFrontendDefault, curv:0.12}; }
+      return {source:e.s, target:e.t, scol:sc, tcol:tc, pcol:sc, w:0.9, dash:null, kind:e.rel||"calls",
+        cross:(homeOf[e.s]!==homeOf[e.t])}; });
+  return {nodes:nodes, links:links, arrange:"cluster", onClick:function(n){ showFePiece(n.label, n.kind, n.home); }, def:showFrontendDefault, curv:0.12}; }
 function drawFrontendGraph(){ emuFG(buildFrontendSpec()); }
 function showFrontendDefault(){
   var s=(D.frontend&&D.frontend.total)||0, hid=(D.frontend&&D.frontend.scaffold_total)||0;
@@ -2844,7 +2959,17 @@ function showFrontendDefault(){
 }
 document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
-window.addEventListener("resize", render);
+window.addEventListener("resize", function(){
+  if(fgIsLevel()){ if(_FG){ var h=document.getElementById("fgstage");   // resize the CANVAS only — no rebuild, no highlight/journey clear
+    try{ _FG.width(h.clientWidth).height(h.clientHeight); }catch(_){} if(_EMU.repaint) _EMU.repaint(); } return; }
+  render(); });
+// THEME → the FG bakes colours to hex at build (canvas can't read CSS vars); on a theme
+// switch re-resolve the chrome + rebuild so glyph/wire/ring colours follow the new theme.
+(function(){ var mo=new MutationObserver(function(){
+    if(!fgIsLevel() || !_FG) return;
+    render(); });   // re-entry runs _fgReChrome() + rebuilds the spec → glyph/wire/ring/bg all follow the new theme (a theme change on an SVG level is picked up on the next FG entry)
+  mo.observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+})();
 
 function lensBtn(id, get, set){ document.getElementById(id).addEventListener("click",function(){
   var v=!get(); set(v);
@@ -2865,6 +2990,11 @@ document.getElementById("testsbtn").addEventListener("click",function(){
 document.getElementById("conns").addEventListener("click",function(){
   showConns=!showConns;
   this.classList.toggle("on",showConns);
+  if(fgIsLevel()){   // FG: hide cross-wires + their particles, no re-layout — but the highlight BFS now depends on showConns, so RECOMPUTE an active highlight/journey
+    if(_EMU.hl && _EMU.hl.mode==="sel" && _EMU.hl.center) fgHighlight(_EMU.hl.center, selDepth);   // fgHighlight re-syncs particles + repaints
+    else if(JRN.cur && (level==="tracefg"||level==="layersfg")) jrnGo(0);                          // re-light the current journey step under the new showConns
+    else { _fgSyncParticles(); if(_EMU.repaint) _EMU.repaint(); }
+    return; }
   renderKeepView(); });
 
 /* ── SELECTION ENGINE: every node and wire registers itself at draw time; a click
@@ -2877,6 +3007,7 @@ function applyDepth(d){ d=Math.max(1, Math.min(5, d)); if(d===selDepth) return;
   selDepth=d;
   document.getElementById("depthSlider").value=String(d);   // the slider follows, live
   document.getElementById("depthVal").textContent=String(d);
+  if(fgIsLevel()){ if(_EMU.hl && _EMU.hl.mode==="sel" && _EMU.hl.center) fgHighlight(_EMU.hl.center, selDepth); return; }
   if(selKey) selectNode(selKey); }   // re-run the highlight at the new depth
 function regNode(g, key, label, type){ g.setAttribute("data-key", key);
   SELREG.nodes[key]={el:g, label:label, type:type}; }
@@ -2960,6 +3091,16 @@ var JRN={list:[], cur:null, i:0};
 function jrnResolved(){ return JRN.cur ? JRN.cur.steps.filter(function(k){ return !!SELREG.nodes[k]; }) : []; }
 function jrnGo(di){
   if(!JRN.cur) return;
+  if(level==="frontend") return;                                        // journeys are a BACKEND concept — the FE piece ids share no key with them; do NOT force-switch to trace
+  if(level==="tracefg" || level==="layersfg"){                          // journeys light the FG path (same key scheme)
+    var stepsF=(JRN.cur.steps||[]).filter(function(k){ return _EMU.adj && _EMU.adj[k]!==undefined; });
+    if(!stepsF.length) return;
+    JRN.i=Math.max(0, Math.min(stepsF.length-1, JRN.i+di));
+    var keyF=stepsF[JRN.i]; fgJourneyLight(stepsF); fgCenterOn(keyF);
+    var nF=(_EMU.spec.nodes||[]).filter(function(x){ return x.id===keyF; })[0];
+    document.getElementById("jrnPos").textContent=(JRN.i+1)+"/"+stepsF.length;
+    document.getElementById("jrnStep").textContent=nF?nF.label:keyF; return;
+  }
   if(level!=="trace" && level!=="layers"){ level="trace"; render(); }   // journeys walk the trace OR the layers
   var steps=jrnResolved(); if(!steps.length) return;
   JRN.i=Math.max(0, Math.min(steps.length-1, JRN.i+di));
@@ -2987,6 +3128,7 @@ function jrnStart(idx){
 function jrnExit(){ JRN.cur=null; JRN.i=0;
   document.getElementById("jrnBar").hidden=true;
   document.getElementById("jrnSel").value="";
+  if(fgIsLevel()) fgClearHL();
   clearSelection(); }
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
@@ -3177,8 +3319,9 @@ function _sect(icon, label){ return "<div class='k'>"+icon+"<span>"+label+"</spa
   document.addEventListener("click",function(e){ if(!gp.hidden && !gp.contains(e.target) && !gb.contains(e.target)) gp.hidden=true; });
   document.getElementById("laySeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
-    entLayout=b.getAttribute("data-lay");
+    entLayout=b.getAttribute("data-lay");   // ONE shared layout pref (SVG entity levels + FG clustering)
     document.querySelectorAll("#laySeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    if(fgIsLevel()){ render(); return; }    // FG: force=ring blobs · spread=looser · chain=line of clusters
     computeEntityPositions(); render(); });
   document.getElementById("clSeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
@@ -3339,11 +3482,22 @@ window.__lvltest = {
   fg:function(){ if(!_FG) return null;
     var sp=_EMU.spec||{nodes:[],links:[]};
     return {fitted:_EMU.fitted, zoom:_FG.zoom(), center:_FG.centerAt(),
-      nodes:sp.nodes.length, links:sp.links.length,
+      nodes:sp.nodes.length, links:sp.links.length, accent:_EMU.accent,
       canvas: !!document.querySelector("#fgstage canvas"),
       kinds:(function(){ var o={}; sp.nodes.forEach(function(n){ o[n.kind]=(o[n.kind]||0)+1; }); return o; })() }; },
   fgSetZoom:function(k){ if(_FG) _FG.zoom(k); },
-  fgReheat:function(){ try{ _FG.d3ReheatSimulation(); }catch(_){} }
+  fgReheat:function(){ try{ _FG.d3ReheatSimulation(); }catch(_){} },
+  fgNodeIds:function(kind){ return (_EMU.spec?_EMU.spec.nodes:[]).filter(function(n){ return !kind||n.kind===kind; }).map(function(n){ return n.id; }); },
+  fgLanes:function(){ var o={}; (_EMU.spec?_EMU.spec.nodes:[]).forEach(function(n){ if(n.lane) o[n.lane]=(o[n.lane]||0)+1; }); return o; },
+  fgClick:function(id){ var n=(_EMU.spec?_EMU.spec.nodes:[]).filter(function(x){ return x.id===id; })[0]; if(!n) return false;
+    (_EMU.spec.onClick||function(){})(n); fgHighlight(n.id, selDepth); return true; },
+  fgHL:function(){ var h=_EMU.hl; if(!h) return null;
+    return {mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}; },
+  fgArrange:function(){ return entLayout||"force"; },
+  fgClearHL:function(){ fgClearHL(); },
+  fgCross:function(){ var t=0,x=0; (_EMU.spec?_EMU.spec.links:[]).forEach(function(l){ t++; if(l.cross) x++; }); return {total:t, cross:x}; },
+  fgParticleOff:function(){ return (_EMU.spec?_EMU.spec.links:[]).filter(function(l){ return _fgParticleCount(l)===0; }).length; },
+  jrnPick:function(i){ jrnStart(i); var h=_EMU.hl; return h?{mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}:null; }
 };
 render();
 
@@ -3357,14 +3511,21 @@ render();
   if(!input) return;
   var matches=[], mi=-1;
   function recompute(){ var q=(input.value||"").trim().toLowerCase(); matches=[];
-    if(q){ Object.keys(SELREG.nodes).forEach(function(k){ var n=SELREG.nodes[k];
-        if((n.label||"").toLowerCase().indexOf(q)>=0 || k.toLowerCase().indexOf(q)>=0) matches.push(k); });
-      matches.sort(function(a,b){ var la=(SELREG.nodes[a].label||""), lb=(SELREG.nodes[b].label||"");
-        return la.length-lb.length || (la<lb?-1:1); }); }
+    if(q){ if(fgIsLevel()){                              // FG levels search the spec nodes (SELREG is SVG-only)
+        (_EMU.spec?_EMU.spec.nodes:[]).forEach(function(n){
+          if((n.label||"").toLowerCase().indexOf(q)>=0 || (n.id||"").toLowerCase().indexOf(q)>=0) matches.push(n.id); });
+        matches.sort(function(a,b){ return a.length-b.length || (a<b?-1:1); });
+      } else { Object.keys(SELREG.nodes).forEach(function(k){ var n=SELREG.nodes[k];
+          if((n.label||"").toLowerCase().indexOf(q)>=0 || k.toLowerCase().indexOf(q)>=0) matches.push(k); });
+        matches.sort(function(a,b){ var la=(SELREG.nodes[a].label||""), lb=(SELREG.nodes[b].label||"");
+          return la.length-lb.length || (la<lb?-1:1); }); } }
     mi=-1; render(); }
   function go(step){ if(!matches.length){ render(); return; }
     mi = (mi<0) ? (step>0?0:matches.length-1) : ((mi+step)+matches.length)%matches.length;
-    var k=matches[mi]; if(!jumpToNode(k)) peekNode(k); render(); }
+    var k=matches[mi];
+    if(fgIsLevel()){ fgCenterOn(k); fgHighlight(k, selDepth); }   // travel + light the match on the canvas
+    else { if(!jumpToNode(k)) peekNode(k); }
+    render(); }
   function render(){ countEl.textContent = matches.length
       ? ((mi>=0?(mi+1)+" / ":"")+matches.length+(mi>=0?"":" found"))
       : (input.value.trim()?"none":""); }

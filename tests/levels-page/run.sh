@@ -328,6 +328,56 @@ ck("function fgControls(" in js and "enableZoomInteraction(false)" in js
 ck('d3Force("cluster"' in js and "_EMU.anch" in js,
    "5B: an entity-centroid force clusters each entity's pieces (emulates the SVG onion)")
 
+# 4B + FG feature parity — the force-graph levels get the SVG diagrams' INTERACTIONS too:
+#   click→depth highlight (alt+scroll), journeys light the path, Connections hides cross
+#   wires, a clustering-layout control, and 4B (Layers on the library). Divergence fixed:
+#   the SVG-only lens toggles are honestly disabled on the FG levels.
+ck('data-lvl="layersfg"' in page and "function drawLayersFG(" in js and "function buildLayersSpec(" in js,
+   "4B: a '4B · Layers ᶠ' level renders Layers on the force-graph")
+ck('arrange="lanes"' in js and 'n.lane=' in js and 'n.layerWeb?"web"' in js,
+   "4B: LANES arrange — layer on the X axis, entity on the Y (a new grouping axis)")
+ck("function fgHighlight(" in js and "function fgJourneyLight(" in js and "function fgClearHL(" in js,
+   "FG: a selection/highlight engine — click-select, journey path, clear")
+ck("fgHighlight(n.id, selDepth)" in js and ".onNodeClick(" in js and ".onBackgroundClick(" in js,
+   "FG: a node click lights its depth-N neighbourhood; a background click clears it")
+ck("applyDepth(selDepth+(altAcc<0?1:-1))" in js and "if(fgIsLevel())" in js and "fgHighlight(_EMU.hl.center, selDepth)" in js,
+   "FG: Alt+scroll steps the highlight depth (like the SVG stage) and re-lights")
+ck('level==="tracefg" || level==="layersfg"' in js and "fgJourneyLight(stepsF)" in js,
+   "FG: journeys light the ordered path on the force-graph (shared key scheme)")
+ck("function _fgParticleCount(" in js and "!showConns && l.cross" in js and "function _fgSyncParticles(" in js,
+   "FG: the Connections toggle hides cross-entity wires AND their particles")
+ck('mode=entLayout' in js and 'mode==="spread"' in js and 'mode==="chain"' in js,
+   "FG: the SHARED Entities-layout pref (force/spread/chain) tunes the FG clustering (one state, no desync)")
+ck('"guardsbtn","hubsbtn","pressbtn","behindbtn","usagebtn","testsbtn"' in js
+   and 'b.style.pointerEvents=fg?"none":""' in js and '["lineSeg","icoSeg"]' in js,
+   "FG: SVG-only lens toggles + the Lines/Icons gear rows are DISABLED on the FG levels (the divergence fix)")
+
+# adversarial-verify HARDENING (2026-08-17, 20 findings) — the paused-motion state class the
+# motion-ON probe masked, + highlight/particle/connection coherence.
+ck('_FG.resumeAnimation()' in js and 'zoomToFit(motionOn?400:1' in js
+   and 'if(!motionOn) requestAnimationFrame' in js,
+   "HARDEN: a paused FG level still ticks to settle + fit ONCE, then re-pauses (no stale/never-fit canvas)")
+ck('_EMU.hl.links[l._i]?3:0' in js and '_fgSyncParticles()' in js,
+   "HARDEN: during a highlight, particles flow ONLY on the lit path (contract honoured, photons re-synced)")
+ck('if(!showConns && e.cross) return' in js,
+   "HARDEN: the depth/journey BFS does NOT traverse a hidden cross-entity wire when Connections is off")
+ck('centerAt(n.x, n.y, motionOn?400:0)' in js,
+   "HARDEN: a journey/finder camera move is INSTANT when paused (a tween can't advance with the loop stopped)")
+ck('if(level==="frontend") return;' in js,
+   "HARDEN: a journey on the FRONTEND FG level is a no-op — it never force-switches to the SVG trace")
+ck('if(fgIsLevel()){' in js and 'fgCenterOn(k); fgHighlight(k, selDepth)' in js,
+   "HARDEN: the element finder works on the FG levels (searches spec nodes → travel + highlight)")
+ck('_FG.width(h.clientWidth).height(h.clientHeight)' in js,
+   "HARDEN: a window resize resizes the FG CANVAS only — no rebuild, no highlight/journey wipe")
+ck('MutationObserver' in js and 'attributeFilter:["data-theme"]' in js,
+   "HARDEN: a theme switch re-resolves the FG chrome + rebuilds so glyph/wire/ring colours follow")
+
+# re-verify wave 2 (3 fix-induced regressions) — theme picked up on RETURN + conns recompute
+ck('function _fgReChrome(' in js and '_fgReChrome();' in js,
+   "HARDEN2: the FG chrome re-resolves on EVERY entry (a theme toggled on an SVG level is picked up on return)")
+ck('else if(JRN.cur && (level==="tracefg"||level==="layersfg")) jrnGo(0)' in js,
+   "HARDEN2: the Connections toggle RECOMPUTES a live highlight/journey (its BFS now depends on showConns)")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
