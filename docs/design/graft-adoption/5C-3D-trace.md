@@ -373,3 +373,26 @@ a unified wrap … like a liquid, basically around what is inside."
 - OPEN: the force layout is non-deterministic between runs — one settle spread the entities wide,
   another overlapped them. If overlap reads as "intertwined" at real scale, seed the layout or widen
   the entity-separation force (`EX`).
+
+### 9i · config panel (draggable · icons + pills) · shared shape · radius (operator, 2026-08-17)
+
+The transparency strip becomes a real **config panel** — the control surface that carries into the
+final diagram (a nav bar, later).
+
+- **Panel:** draggable (grab the header) · minimizable (`–`/`+`) · starts top-right · legend font (the
+  body sans, not the OS select font) · every group led by a lucide icon. Node-detail panel moved to the
+  left column so it no longer collides.
+- **Pills, not dropdowns** (operator rule: ≤3 options → a pill toggle, >3 → a dropdown; everything here
+  is ≤3): CONTAINER `shape` = `polygon | wrap` (icons); SHOW = `sub` / `entity` on-off toggles (deselect
+  = that level hidden); TRANSPARENCY = three 3-way pills (`bubble` / `sub` / `entity` × faint·ghost·film).
+- **Shape is SHARED** (operator "one or the other for both"): one `polygon | wrap` choice drives BOTH
+  levels. `CFG.subShape`/`entShape` collapsed into `CFG.shape` + `CFG.subOn`/`entOn`.
+- **Radius** — a bounded slider (0.6×–1.6×, `RADMIN/RADMAX`) fits both containers tighter or looser.
+  Applied LIVE in `updateClusters` (polygon `pad·radius`, wrap `nodeR/tubeR·radius`) so dragging never
+  forces a metaball rebuild — the slider's `input` just re-runs `updateClusters(true)`.
+- Model: `CFG={shape,subOn,entOn,radius,bubble,subOp,entOp}`. Panel built in JS (`buildCfg`) from the
+  `GLYPH`/`ICO` sets; `applyCfg` routes bubble→node-rebuild, everything else→cluster-rebuild. URL presets
+  + `?drive` updated to the new keys; `dragCfg` binds window listeners once (no leak across rebuilds).
+- Verified headless: default/​wrap/​tight/​loose + post-settle `?drive=wrap`, no clip, 0 JS errors.
+- NOT covered (spike-only, deferred to the real build): pill/panel styling will be re-skinned to the
+  command-center shell when this ports; the nav-bar home is later.
