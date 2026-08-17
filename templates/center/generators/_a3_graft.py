@@ -382,11 +382,40 @@ def derive_node_facts(wiring: dict[str, Any]) -> dict[str, dict[str, Any]]:
 
 _FE_TYPE_KINDS = ("interface", "type")
 
+# the TS→TS relations the frontend topology DRAWS (composition): a piece imports / calls / references
+# another. graft also emits `contains` (file→symbol nesting) + `extends`/`implements` (type hierarchy);
+# those are structure, not composition, so they stay OUT of the edge set derive_frontend promises. NOT
+# the P1a render whitelist (that dropped `references` as a calls-duplicate at the L1 aggregate) — at
+# piece level `references` IS the component-uses-component edge, kept lossless for P2b to dedup at render.
+_FE_EDGE_RELATIONS = ("imports", "calls", "references")
+
+
+def _is_scaffold(path: str) -> bool:
+    """Dev-time TS that is NOT shipped app structure: Storybook stories, /spikes/ prototypes, and
+    test/mock/fixture files. graft indexes the SOURCE (so it escapes _is_noise, which drops only
+    build output like .js/dist/storybook-static), but a frontend STRUCTURE map that counted it would
+    misreport the app — P2a review measured 486/2040 (23.8%) of gustify's classified pieces as
+    scaffold. Frontend-LOCAL by design: _is_noise is shared by the whole graft arm; this is not."""
+    stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
+    return (
+        "/spikes/" in path or stem.endswith("Spike")
+        or ".stories." in path or ".test." in path or ".spec." in path
+        or "__tests__/" in path or "__mocks__/" in path
+        or "/fixtures/" in path or "/e2e/" in path or ".e2e." in path
+    )
+
 
 def _fe_classify(node: dict[str, Any]) -> str | None:
     """The frontend KIND of a graft TS node — convention-based (P2a). None = not a frontend piece.
     Precedence: fe-type → hook → store → route → component. graft's generic AST can't see JSX or a
-    Zustand `create()`, so the classification is by NAME/PATH convention (honest, refinable later)."""
+    call-initialized const, so the classification is by NAME/PATH convention (honest, refinable later).
+
+    Two deliberate asymmetries (P2a review): (1) component/hook/route/fe-type gate on symbol KIND so a
+    graft `file` container never double-counts the symbol it holds — 7 route FILE nodes were doubling
+    their route functions. (2) `store` does NOT gate on kind: graft emits no symbol for a `create()`/
+    `createContext()` const, so the *file* it lives in (named *Store/*Context) is the only signal there
+    is. That makes store a FLOOR, not a census — a Zustand `useUiStore` in `store/ui.ts` (a file NOT
+    named *Store) is invisible until a suite framework parse adds it."""
     kind = node.get("kind")
     name = node.get("name") or ""
     path = node.get("path") or ""
@@ -396,28 +425,35 @@ def _fe_classify(node: dict[str, Any]) -> str | None:
     if kind == "function" and len(name) > 3 and name.startswith("use") and name[3:4].isupper():
         return "hook"
     # store: a name ENDING in Store/Context (not a substring — `restoreNormalMode`/`updateStoredPortions`
-    # are not stores), a *store.ts file, or a createContext(). base strips a trailing .ts/.tsx.
+    # are not stores), a *store.ts file, or a createContext(). base strips a trailing .ts/.tsx. NO kind
+    # guard — a store/context const has no graft symbol, so its FILE node is the piece (the floor above).
     base = name.rsplit(".", 1)[0] if name.endswith((".ts", ".tsx")) else name
     if base.endswith(("Store", "store", "Context")) or "createcontext" in low:
         return "store"
-    # route: a Cap-named .tsx UNDER routes/, or a *Route/*Router symbol (not every helper in routes/)
-    if name.endswith(("Route", "Router")) or ("/routes/" in path and path.endswith(".tsx") and name[:1].isupper()):
-        return "route"
-    if kind in ("function", "class") and path.endswith(".tsx") and name[:1].isupper():
-        return "component"
+    # route + component: SYMBOL-level only (kind function/class) — a graft `file` node is a container,
+    # not a piece, and would double-count the symbol it holds. route: a *Route/*Router symbol, or a
+    # Cap-named .tsx UNDER routes/ (not every helper in routes/).
+    if kind in ("function", "class"):
+        if name.endswith(("Route", "Router")) or ("/routes/" in path and path.endswith(".tsx") and name[:1].isupper()):
+            return "route"
+        if path.endswith(".tsx") and name[:1].isupper():
+            return "component"
     return None
 
 
 def derive_frontend(wiring: dict[str, Any]) -> dict[str, Any]:
     """P2a (graft adoption): classify graft's TS/tsx nodes into frontend KINDS (hook · component ·
-    store · route · fe-type) + carry the TS→TS topology edges (imports/calls/references between two
-    classified pieces). Convention-based, NOISE-filtered, honest-empty when a repo has no TS. DATA
-    only — the render (P2b) draws it; a backend-only project yields {nodes:[], edges:[], stats:{...}}."""
+    store · route · fe-type) + carry the TS→TS composition edges (imports/calls/references between two
+    classified pieces). Convention-based, NOISE-filtered, SCAFFOLD-filtered (stories/spikes/tests are
+    dev-time, not app structure — see _is_scaffold), honest-empty when a repo has no TS. `store` is a
+    name-convention FLOOR (call-initialized create()/createContext() consts are invisible to graft —
+    see _fe_classify). DATA only — the render (P2b) draws it; a backend-only project yields
+    {nodes:[], edges:[], stats:{...}}."""
     nodes: dict[str, dict[str, Any]] = {}
     for n in wiring.get("nodes") or []:
         p = n.get("path") or ""
         nid = n.get("id")
-        if not nid or not p.endswith((".ts", ".tsx")) or _is_noise(_file_of(nid)):
+        if not nid or not p.endswith((".ts", ".tsx")) or _is_noise(_file_of(nid)) or _is_scaffold(p):
             continue
         k = _fe_classify(n)
         if not k:
@@ -427,7 +463,8 @@ def derive_frontend(wiring: dict[str, Any]) -> dict[str, Any]:
     edges = sorted(
         ({"s": e["source"], "t": e["target"], "rel": e.get("relation")}
          for e in (wiring.get("edges") or [])
-         if e.get("source") in ids and e.get("target") in ids and e["source"] != e["target"]),
+         if e.get("source") in ids and e.get("target") in ids and e["source"] != e["target"]
+         and e.get("relation") in _FE_EDGE_RELATIONS),
         key=lambda x: (x["s"], x["t"], str(x["rel"])))
     by_kind: dict[str, int] = {}
     for v in nodes.values():

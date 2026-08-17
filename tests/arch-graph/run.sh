@@ -227,6 +227,45 @@ check(len(_fe["edges"]) == 1 and _fe["edges"][0]["rel"] == "calls",
 check(GG.derive_frontend({"nodes": [{"id": "a.py#f", "kind": "function", "path": "a.py", "name": "f"}], "edges": []})["stats"]["total"] == 0,
       "P2a: a backend-only repo (no TS) → frontend honest-empty")
 
+# P2a review fix 1 — SCAFFOLD (stories/spikes/tests) is dev-time, not app structure → excluded.
+# MUTATION-PROVEN: drop `_is_scaffold` from the node filter and this fails (all 4 classify).
+_W_scaf = {"nodes": [
+    {"id": "apps/web/src/Real.tsx#Real", "kind": "function", "path": "apps/web/src/Real.tsx", "name": "Real"},
+    {"id": "apps/web/src/Story.stories.tsx#Demo", "kind": "function", "path": "apps/web/src/Story.stories.tsx", "name": "Demo"},
+    {"id": "apps/web/src/spikes/S.tsx#Probe", "kind": "function", "path": "apps/web/src/spikes/S.tsx", "name": "Probe"},
+    {"id": "apps/web/src/X.test.tsx#Case", "kind": "function", "path": "apps/web/src/X.test.tsx", "name": "Case"},
+  ], "edges": []}
+_scaf = GG.derive_frontend(_W_scaf)
+check(_scaf["stats"]["total"] == 1 and _scaf["nodes"][0]["name"] == "Real",
+      "P2a-fix: scaffold (.stories/spikes/.test) dropped; only the shipped piece survives")
+
+# P2a review fix 2 — the file/symbol ASYMMETRY: a route FILE node double-counts its route symbol
+# (killed — route gates on kind), but a *Context/*Store FILE node is a store's ONLY signal (kept).
+# MUTATION-PROVEN: un-guard the route branch → route==2; blanket-skip file nodes → store==0.
+_W_file = {"nodes": [
+    {"id": "apps/web/src/routes/Login.tsx", "kind": "file", "path": "apps/web/src/routes/Login.tsx", "name": "Login.tsx"},
+    {"id": "apps/web/src/routes/Login.tsx#Login", "kind": "function", "path": "apps/web/src/routes/Login.tsx", "name": "Login"},
+    {"id": "apps/web/src/authContext.ts", "kind": "file", "path": "apps/web/src/authContext.ts", "name": "authContext.ts"},
+  ], "edges": []}
+_ffe = GG.derive_frontend(_W_file)
+check(_ffe["stats"]["by_kind"].get("route") == 1 and _ffe["stats"]["by_kind"].get("store") == 1
+      and _ffe["stats"]["total"] == 2,
+      "P2a-fix: route FILE node dropped (no symbol double-count), but a context FILE node kept as store")
+
+# P2a review fix 3 — edges are COMPOSITION only (imports/calls/references); `contains` (file→symbol
+# nesting) + extends/implements (type hierarchy) stay OUT. MUTATION-PROVEN: drop the _FE_EDGE_RELATIONS
+# guard and `contains` survives.
+_W_edge = {"nodes": [
+    {"id": "apps/web/src/A.tsx#A", "kind": "function", "path": "apps/web/src/A.tsx", "name": "A"},
+    {"id": "apps/web/src/B.tsx#B", "kind": "function", "path": "apps/web/src/B.tsx", "name": "B"},
+  ], "edges": [
+    {"source": "apps/web/src/A.tsx#A", "target": "apps/web/src/B.tsx#B", "relation": "references"},
+    {"source": "apps/web/src/A.tsx#A", "target": "apps/web/src/B.tsx#B", "relation": "contains"},
+  ]}
+_ee = GG.derive_frontend(_W_edge)
+check([e["rel"] for e in _ee["edges"]] == ["references"],
+      "P2a-fix: edge set restricted to documented composition relations — `contains` dropped")
+
 # folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
 _garm = {"present": True, "reason": "test", "index_hash": "abc123def456",
          "pairs": _gx["pairs"], "stats": _gx["stats"]}
