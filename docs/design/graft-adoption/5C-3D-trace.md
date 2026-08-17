@@ -142,3 +142,37 @@ Each spike is a headless-verified render + a screenshot for sign-off, same disci
 
 Costs: vendoring `3d-force-graph` adds three.js (~single ~1MB min.js, one-time). Spike 1 is
 ~half a day; the full 5C with all channels is a multi-spike arc.
+
+---
+
+## 8 · SPIKE 1 — BUILT (2026-08-17)
+
+A live, self-contained 3D spike is at **`/home/khujta/gabe-graph-review/spike-3d/index.html`**
+(open in a browser). It renders **recipe + auth** (77 nodes) in `3d-force-graph` and puts
+**every channel above on a live toggle** so we can compare them:
+
+- **Z axis** toggle: Layer altitude · Call depth · Free 3D. (Layer altitude reads best — the
+  request falls top→down: endpoint rings up top, handler cubes mid, schema octahedrons +
+  model cylinders at the bottom.)
+- **Node size:** Code-behind · Used-by · Uniform.
+- **Extra channels** (checkboxes): glow = tested · halo ring = used-by · red satellite = god.
+- **Links:** colour by kind / by entity · particles = flow · curve cross-entity wires.
+- Kind = shape: endpoint = portal **ring** · handler = **cube** · service = **sphere** ·
+  model = **cylinder** · schema = **octahedron**. Hue-ring at the base = entity.
+- Orbit controls (drag=rotate · right-drag=pan · scroll=zoom).
+
+**Rebuild the bundle** (self-contained, THREE + ForceGraph3D one instance — a separately
+loaded three.js conflicts with the bundled one):
+```
+npm i 3d-force-graph three
+echo "import * as THREE from 'three'; import ForceGraph3D from '3d-force-graph';\
+ window.THREE=THREE; window.ForceGraph3D=ForceGraph3D;" > entry.js
+npx esbuild entry.js --bundle --minify --format=iife --outfile=3d-bundle.js
+```
+Data slice (`spike-3d-data.js`) is extracted from a built `levels.json` (recipe+auth
+endpoints→handler→touched→resp + cross_edges + use_edges, each node carrying
+behind.fns / behind.depth / hub.usage / tests / god).
+
+**NEXT after operator review of the spike:** lock the channel choices → assemble 5C as a
+`data-lvl="trace3d"` level, reusing 5B's highlight/journey/finder logic + the shared spec
+builder, swapping only draw (three.js meshes) + controls (orbit) + the Y-altitude layout.
