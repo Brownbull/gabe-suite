@@ -105,6 +105,32 @@ _hp = [n for n in _lvg["fn_nodes"] if n["id"] == "api/users.py#helper"][0]
 ck(_lo.get("behind") == {"fns": 1, "depth": 1, "names": ["helper"]} and "behind" not in _hp,
    "fn_behind attaches the hidden-mass floor to its fn_node; a leaf fn stays behind-less")
 ck(len(lv["entities"]) == 2 and len(lv["l1_edges"]) >= 1, "entities + L1 edges carried from the C4 topology")
+
+# P2b — the FRONTEND arm wires into GABE_LEVELS: pieces fold into their entity, the rest
+# become FE-native buckets (candidates flagged), scaffold + edges ride for the render.
+_GFE = {"present": True, "frontend": {
+    "nodes": [
+        {"id": "web/src/features/orders/Cart.tsx#Cart", "name": "Cart", "kind": "component", "path": "web/src/features/orders/Cart.tsx", "home": "orders"},
+        {"id": "web/src/features/shopping/Bag.tsx#Bag", "name": "Bag", "kind": "component", "path": "web/src/features/shopping/Bag.tsx", "home": "shopping"}],
+    "edges": [{"s": "web/src/features/orders/Cart.tsx#Cart", "t": "web/src/features/shopping/Bag.tsx#Bag", "rel": "calls"}],
+    "scaffold": [{"id": "web/src/features/orders/Cart.stories.tsx#Demo", "name": "Demo", "kind": "component", "path": "web/src/features/orders/Cart.stories.tsx", "home": "orders"}],
+    "stats": {"total": 2, "by_kind": {"component": 2}, "by_home": {"orders": 1, "shopping": 1},
+              "edges": 1, "by_relation": {"calls": 1}, "scaffold_total": 1, "scaffold_by_kind": {"component": 1},
+              "candidate_entities": [{"name": "shopping", "pieces": 1}]}}}
+_lvfe = _a3_levels.build_levels(AMAP, graph, graft=_GFE)
+ck(_lvfe["frontend"]["present"] and _lvfe["frontend"]["total"] == 2,
+   "P2b: the frontend arm wires into GABE_LEVELS (present + total)")
+ck(_lvfe["pieces"]["orders"].get("frontend", {}).get("count") == 1
+   and _lvfe["pieces"]["orders"]["frontend"]["by_kind"] == {"component": 1},
+   "P2b: a piece homed to an entity FOLDS IN — pieces[slug].frontend (the band + entity circle)")
+_fb = {b["name"]: b for b in _lvfe["fe_buckets"]}
+ck(_fb.get("shopping", {}).get("candidate") is True and _fb["shopping"]["count"] == 1,
+   "P2b: a piece with no backend entity becomes an FE-native bucket, flagged candidate")
+ck(len(_lvfe["fe_edges"]) == 1 and len(_lvfe["fe_scaffold"]) == 1,
+   "P2b: FE composition edges + the scaffold toggle layer are carried for the render")
+ck(_lvg["frontend"] == {"present": False} and _lvg["fe_buckets"] == [] and lv["frontend"] == {"present": False},
+   "P2b: frontend honest-empty when the graft arm has no frontend block (or no arm at all)")
+
 # determinism — byte-identical across two independent builds
 ck(json.dumps(lv, sort_keys=True) == json.dumps(_a3_levels.build_levels(AMAP, _a3_graph.build_c4_graph(AMAP)), sort_keys=True),
    "deterministic (byte-identical output)")

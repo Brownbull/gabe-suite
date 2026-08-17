@@ -135,6 +135,18 @@ def _use_case_depth(paths: list[str]) -> int:
     return 2 if len(firsts) <= 2 else 1
 
 
+def _fe_slim(nodes: list[dict[str, Any]]) -> dict[str, Any]:
+    """Compact a homed frontend-piece list into the LEVELS feed shape: a per-kind
+    count (the stacked BAND reads this) + the pieces themselves (the cluster CIRCLE
+    draws these). Sorted → deterministic."""
+    by_kind: dict[str, int] = {}
+    pieces = []
+    for n in sorted(nodes, key=lambda x: x["id"]):
+        by_kind[n["kind"]] = by_kind.get(n["kind"], 0) + 1
+        pieces.append({"id": n["id"], "n": n.get("name"), "k": n["kind"]})
+    return {"count": len(nodes), "by_kind": dict(sorted(by_kind.items())), "pieces": pieces}
+
+
 def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                  graft: dict[str, Any] | None = None) -> dict[str, Any]:
     """Pure derivation of the LEVELS graph from the archmap + the C4 graph."""
@@ -502,6 +514,39 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
     if graft and graft.get("present") and graft.get("fn_edges"):
         lv["fn_edges"] = sorted(graft["fn_edges"],
                                 key=lambda e: (e.get("ss", ""), e.get("ds", ""), e.get("s", ""), e.get("t", "")))
+
+    # ── P2b: the FRONTEND arm — graft's classified TS pieces homed to entities +
+    #    FE-native buckets (design-system · app-shell · UI-only-domain candidates).
+    #    Two render forms read this: a stacked BAND in the Layers level (pieces[slug].
+    #    frontend.by_kind) and a companion frontend CIRCLE per entity in the cluster
+    #    graph (pieces[slug].frontend.pieces + the buckets). Scaffold rides SEPARATELY
+    #    for a toggle. Honest-empty when the graft arm is absent or the repo has no TS.
+    fe = (graft or {}).get("frontend") or {}
+    fe_stats = fe.get("stats") or {}
+    if fe_stats.get("total"):
+        ent_slugs = {n["slug"] for n in l1_nodes}
+        cand = {c["name"] for c in fe_stats.get("candidate_entities", [])}
+        homed: dict[str, list[dict[str, Any]]] = {}
+        for n in fe.get("nodes", []):
+            homed.setdefault(n.get("home"), []).append(n)
+        for slug, fnodes in homed.items():                      # fold FE into each entity
+            if slug in ent_slugs:
+                lv["pieces"].setdefault(slug, {})["frontend"] = _fe_slim(fnodes)
+        lv["fe_buckets"] = [                                    # pieces belonging to no entity
+            {"name": home, "candidate": home in cand, **_fe_slim(fnodes)}
+            for home, fnodes in sorted(homed.items()) if home not in ent_slugs]
+        lv["fe_edges"] = fe.get("edges", [])                   # FE composition wires (cluster render)
+        lv["fe_scaffold"] = [{"id": n["id"], "n": n.get("name"), "k": n["kind"], "home": n.get("home")}
+                             for n in sorted(fe.get("scaffold", []), key=lambda x: x["id"])]
+        lv["frontend"] = {"present": True, "total": fe_stats["total"],
+                          "by_home": fe_stats.get("by_home", {}),
+                          "candidate_entities": fe_stats.get("candidate_entities", []),
+                          "scaffold_total": fe_stats.get("scaffold_total", 0)}
+    else:
+        lv["frontend"] = {"present": False}
+        lv["fe_buckets"] = []
+        lv["fe_edges"] = []
+        lv["fe_scaffold"] = []
 
     return lv
 
