@@ -266,6 +266,26 @@ _ee = GG.derive_frontend(_W_edge)
 check([e["rel"] for e in _ee["edges"]] == ["references"],
       "P2a-fix: edge set restricted to documented composition relations — `contains` dropped")
 
+# P2b — HOME each piece to an entity or an FE-native bucket + carry scaffold for a toggle.
+_W_home = {"nodes": [
+    {"id": "apps/web/src/features/cooking/Pot.tsx#Pot", "kind": "function", "path": "apps/web/src/features/cooking/Pot.tsx", "name": "Pot"},
+    {"id": "apps/web/src/features/profile/Bio.tsx#Bio", "kind": "function", "path": "apps/web/src/features/profile/Bio.tsx", "name": "Bio"},
+    {"id": "apps/web/src/design-system/Btn.tsx#Btn", "kind": "function", "path": "apps/web/src/design-system/Btn.tsx", "name": "Btn"},
+    {"id": "apps/web/src/routes/Home.tsx#Home", "kind": "function", "path": "apps/web/src/routes/Home.tsx", "name": "Home"},
+    {"id": "apps/web/src/features/cooking/Pot.stories.tsx#Demo", "kind": "function", "path": "apps/web/src/features/cooking/Pot.stories.tsx", "name": "Demo"},
+  ], "edges": []}
+_h = GG.derive_frontend(_W_home, frozenset({"cooking"}))
+_bh = _h["stats"]["by_home"]
+check(_bh.get("cooking") == 1 and _bh.get("design-system") == 1 and _bh.get("app-shell") == 1,
+      "P2b: pieces home to their entity (cooking), design-system, and the app-shell bucket")
+check(_bh.get("profile") == 1 and [c["name"] for c in _h["stats"]["candidate_entities"]] == ["profile"],
+      "P2b: a feature with no backend entity homes to itself AND flags as a candidate entity")
+check(_h["stats"]["total"] == 4 and _h["stats"]["scaffold_total"] == 1
+      and len(_h["scaffold"]) == 1 and _h["scaffold"][0]["home"] == "cooking",
+      "P2b: scaffold is carried SEPARATELY (out of total, kept for the toggle, still homed)")
+check(all("home" in n for n in _h["nodes"]),
+      "P2b: every shipped piece carries its home")
+
 # folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
 _garm = {"present": True, "reason": "test", "index_hash": "abc123def456",
          "pairs": _gx["pairs"], "stats": _gx["stats"]}

@@ -441,25 +441,62 @@ def _fe_classify(node: dict[str, Any]) -> str | None:
     return None
 
 
-def derive_frontend(wiring: dict[str, Any]) -> dict[str, Any]:
-    """P2a (graft adoption): classify graft's TS/tsx nodes into frontend KINDS (hook · component ·
-    store · route · fe-type) + carry the TS→TS composition edges (imports/calls/references between two
-    classified pieces). Convention-based, NOISE-filtered, SCAFFOLD-filtered (stories/spikes/tests are
-    dev-time, not app structure — see _is_scaffold), honest-empty when a repo has no TS. `store` is a
-    name-convention FLOOR (call-initialized create()/createContext() consts are invisible to graft —
-    see _fe_classify). DATA only — the render (P2b) draws it; a backend-only project yields
-    {nodes:[], edges:[], stats:{...}}."""
-    nodes: dict[str, dict[str, Any]] = {}
+# feature-dir → entity slug where the folder name differs from the slug. Everything
+# else is identity (features/cooking → cooking) or resolves to a bucket below.
+_FEAT2ENT = {"legal": "legal-consent", "recipes": "recipe"}
+
+
+def _fe_home(path: str, entity_slugs: frozenset[str]) -> tuple[str, bool]:
+    """Where a frontend piece belongs in the graph (P2b): an ENTITY slug when its
+    feature folds into one graft's domain model already draws, else an FE-native
+    BUCKET name. Returns (home, is_candidate) — is_candidate flags a feature
+    namespace with NO backend entity (a UI-only domain the model never named, worth
+    considering as a new entity — the frontend twin of entity-shape drift)."""
+    parts = path.split("/")
+    rest = parts[parts.index("src") + 1:] if "src" in parts else []
+    head = rest[0] if rest else ""
+    if head == "features" and len(rest) > 1:
+        feat = rest[1]
+        ent = _FEAT2ENT.get(feat, feat)
+        if ent in entity_slugs:
+            return (ent, False)          # folds into the backend entity of the same name
+        return (feat, True)              # a feature the backend never modeled → candidate entity
+    if head in entity_slugs:
+        return (head, False)             # a top-level dir that IS an entity (e.g. auth/)
+    if head == "design-system":
+        return ("design-system", False)  # the shared component kit — its own bucket
+    return ("app-shell", False)          # routes · lib · i18n · layout · loose types — structural
+
+
+def derive_frontend(wiring: dict[str, Any],
+                    entity_slugs: frozenset[str] = frozenset()) -> dict[str, Any]:
+    """P2a: classify graft's TS/tsx nodes into frontend KINDS (hook · component · store · route ·
+    fe-type) + carry the TS→TS composition edges (imports/calls/references between two classified
+    pieces). P2b: HOME each piece to a backend entity or an FE-native bucket (see _fe_home), and carry
+    the SCAFFOLD set SEPARATELY so a render toggle can re-admit it. Convention-based, NOISE-filtered,
+    honest-empty when a repo has no TS. `store` is a name-convention FLOOR (call-initialized create()/
+    createContext() consts are invisible to graft — see _fe_classify). DATA only — the render draws it;
+    ``nodes``/``stats.total`` are the SHIPPED app (scaffold excluded); ``scaffold`` is the dimmable layer."""
+    shipped: dict[str, dict[str, Any]] = {}
+    scaffold: dict[str, dict[str, Any]] = {}
+    candidates: dict[str, int] = {}      # feature namespaces with no backend entity → piece count
     for n in wiring.get("nodes") or []:
         p = n.get("path") or ""
         nid = n.get("id")
-        if not nid or not p.endswith((".ts", ".tsx")) or _is_noise(_file_of(nid)) or _is_scaffold(p):
+        if not nid or not p.endswith((".ts", ".tsx")) or _is_noise(_file_of(nid)):
             continue
         k = _fe_classify(n)
         if not k:
             continue
-        nodes[nid] = {"id": nid, "name": n.get("name"), "kind": k, "path": p}
-    ids = set(nodes)
+        home, cand = _fe_home(p, entity_slugs)
+        rec = {"id": nid, "name": n.get("name"), "kind": k, "path": p, "home": home}
+        if _is_scaffold(p):
+            scaffold[nid] = rec
+        else:
+            shipped[nid] = rec
+            if cand:
+                candidates[home] = candidates.get(home, 0) + 1
+    ids = set(shipped)
     edges = sorted(
         ({"s": e["source"], "t": e["target"], "rel": e.get("relation")}
          for e in (wiring.get("edges") or [])
@@ -467,16 +504,25 @@ def derive_frontend(wiring: dict[str, Any]) -> dict[str, Any]:
          and e.get("relation") in _FE_EDGE_RELATIONS),
         key=lambda x: (x["s"], x["t"], str(x["rel"])))
     by_kind: dict[str, int] = {}
-    for v in nodes.values():
+    by_home: dict[str, int] = {}
+    for v in shipped.values():
         by_kind[v["kind"]] = by_kind.get(v["kind"], 0) + 1
+        by_home[v["home"]] = by_home.get(v["home"], 0) + 1
     by_rel: dict[str, int] = {}
     for x in edges:
         by_rel[x["rel"]] = by_rel.get(x["rel"], 0) + 1
+    sc_by_kind: dict[str, int] = {}
+    for v in scaffold.values():
+        sc_by_kind[v["kind"]] = sc_by_kind.get(v["kind"], 0) + 1
     return {
-        "nodes": [nodes[k] for k in sorted(nodes)],
+        "nodes": [shipped[k] for k in sorted(shipped)],
         "edges": edges,
-        "stats": {"total": len(nodes), "by_kind": dict(sorted(by_kind.items())),
-                  "edges": len(edges), "by_relation": dict(sorted(by_rel.items()))},
+        "scaffold": [scaffold[k] for k in sorted(scaffold)],
+        "stats": {"total": len(shipped), "by_kind": dict(sorted(by_kind.items())),
+                  "by_home": dict(sorted(by_home.items())),
+                  "edges": len(edges), "by_relation": dict(sorted(by_rel.items())),
+                  "scaffold_total": len(scaffold), "scaffold_by_kind": dict(sorted(sc_by_kind.items())),
+                  "candidate_entities": [{"name": k, "pieces": candidates[k]} for k in sorted(candidates)]},
     }
 
 
@@ -504,7 +550,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
-        frontend = derive_frontend(wiring)         # P2a: classified TS frontend structure (nodes+edges), data-only
+        frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
