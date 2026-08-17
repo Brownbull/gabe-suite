@@ -190,6 +190,14 @@ _fnb2 = GG.derive_fn_behind(_W2)
 check("apps/api/alpha.py#Cls.meth" in _fnb2 and _fnb2["apps/api/alpha.py#Cls.meth"]["fns"] == 1,
       "P1: a METHOD's call-tree counts in the hidden mass (methods were dropped before P1)")
 
+# P1b: element_detail folds graft's node_facts (signature + exported) into the dossier by file#symbol
+_nf_fix = {"apps/api/beta.py#leaf": {"kind": "function", "signature": "def leaf() -> int", "exported": True}}
+_det_ep = G.element_detail("endpoint", {"file": "apps/api/beta.py", "fn": "leaf"}, {}, {}, {}, {}, {}, node_facts=_nf_fix)
+check(_det_ep.get("gsig") == "def leaf() -> int" and _det_ep.get("exported") is True,
+      "P1b: element_detail carries graft's signature + exported (by file#fn) into the dossier")
+check("gsig" not in G.element_detail("endpoint", {"file": "apps/api/beta.py", "fn": "leaf"}, {}, {}, {}, {}, {}),
+      "P1b: no node_facts → no gsig (honest-empty; graft-absent build unchanged)")
+
 # folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
 _garm = {"present": True, "reason": "test", "index_hash": "abc123def456",
          "pairs": _gx["pairs"], "stats": _gx["stats"]}

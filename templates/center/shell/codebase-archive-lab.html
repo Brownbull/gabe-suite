@@ -2211,6 +2211,10 @@ function showPiece(slug, it){
     if(det.uqs&&det.uqs.length) keyRows.push(ecpKv("key","unique", esc(det.uqs.join(", "))));
     body.push(H("div",{class:"sec"}, ecpSechd("key","Keys"), keyRows));
   }
+  // P1b: graft's class definition (signature) + exported flag — from node_facts, not re-parsed
+  if(det.gsig) body.push(H("div",{class:"sec"}, ecpSechd("function","Definition"),
+    ecpKv("function","signature","<code>"+esc(det.gsig)+"</code>"),
+    det.exported?ecpKv("globe","visibility","exported · public API"):null));
   var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; }), casesMore=det.cases_more||0;
   body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length+casesMore,ecpCidsMore(apiC,casesMore)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
   if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(det.doc)), det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
@@ -2242,11 +2246,12 @@ function showEndpoint(slug, ep){
      ecpKv("role","role","endpoint handler"), (ep.guards?ecpKv("info","guards", ep.guards+" validator(s) in the route file"):null) ];   // AUDIT #10: file-scoped
   body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
   if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Purpose"), H("div",{class:"doc"}, esc(det.doc)),
-     det.sig?ecpKv("endpoint","signature",(det.sig.async?"async · ":"")+(det.sig.lines?det.sig.lines+" lines · ":"")+"→ <code>"+esc(det.sig.returns||ep.resp||"—")+"</code>"):null,
+     (det.gsig||det.sig)?ecpKv("endpoint","signature",(det.gsig?"<code>"+esc(det.gsig)+"</code>":((det.sig.async?"async · ":"")+"→ <code>"+esc(det.sig.returns||ep.resp||"—")+"</code>"))+((det.sig&&det.sig.lines)?" · "+det.sig.lines+" lines":"")):null,   // P1b: graft's full signature preferred over the re-derived return type
      det.status?ecpKv("info","status", esc(String(det.status))):null,
      det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
   else {
     var pr=[];
+    if(det.gsig) pr.push(ecpKv("endpoint","signature","<code>"+esc(det.gsig)+"</code>"));   // P1b: graft's signature even without a docstring
     if(ep.resp) pr.push(ecpKv("schema","returns", "<code>"+esc(ep.resp)+"</code>"));
     if(det.status) pr.push(ecpKv("info","status", esc(String(det.status))));
     if(det.file) pr.push(ecpKv("file","file","<code>"+esc(det.file)+"</code>"));

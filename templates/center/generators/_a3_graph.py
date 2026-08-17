@@ -316,7 +316,8 @@ _DET_CASES_CAP = 6    # TESTED-BY rows shown; the matrix carries the full ledger
 def element_detail(kind: str, obj: dict[str, Any],
                    file_lines: dict[str, int],
                    fi: dict[str, Any], ti_ep: dict[str, Any],
-                   ti_model: dict[str, Any], mi: dict[str, Any]) -> dict[str, Any]:
+                   ti_model: dict[str, Any], mi: dict[str, Any],
+                   node_facts: dict[str, Any] | None = None) -> dict[str, Any]:
     """The panel DOSSIER for one L2 piece — the center's per-element fields
     (PURPOSE · STRUCTURE · SIGNATURE · TESTED-BY) derived at build time so the
     station's detail panel reads LIVE archmap data, never a lab fixture:
@@ -354,6 +355,17 @@ def element_detail(kind: str, obj: dict[str, Any],
         det["file"] = file
         if file in file_lines:
             det["flines"] = file_lines[file]
+
+    # P1b (graft adoption): graft's RAW signature + exported flag, keyed by file#symbol (the
+    # endpoint handler fn, or the model/schema class). Displayed instead of re-deriving the def
+    # line from source — the string graft already stores. node_facts = _a3_graft.derive_node_facts.
+    _sym = obj.get("fn") or obj.get("cls")
+    _nf = (node_facts or {}).get(f"{file}#{_sym}") if (file and _sym) else None
+    if _nf:
+        if _nf.get("signature"):
+            det["gsig"] = _nf["signature"]
+        if _nf.get("exported"):
+            det["exported"] = True
 
     if kind == "endpoint":
         if obj.get("status"):
@@ -455,7 +467,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
     def det_of(kind: str, obj: dict) -> dict:
         return element_detail(kind, obj, file_lines,
                               ins.get("fi") or {}, ins.get("ti_ep") or {},
-                              ins.get("ti_model") or {}, ins.get("mi") or {})
+                              ins.get("ti_model") or {}, ins.get("mi") or {},
+                              node_facts=ins.get("node_facts") or {})
 
     def ext(owner: str) -> str:
         nid = f"external:{owner}"
@@ -774,7 +787,9 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     insight = {"fi": amap.get("function_insight") or {},
                "ti_ep": ti.get("by_endpoint") or {},
                "ti_model": ti.get("by_model") or {},
-               "mi": amap.get("model_insight") or {}}
+               "mi": amap.get("model_insight") or {},
+               # P1b: graft's raw node facts (signature/exported), honest-empty when graft absent
+               "node_facts": (graft.get("node_facts") or {}) if (graft and graft.get("present")) else {}}
     # the endpoint call-tree floor (graft): {<file>#<fn> → {fns, depth}} per handler.
     # graft absent → {} → no endpoint carries a behind field → byte-identical build.
     behind = (graft or {}).get("behind") or {}

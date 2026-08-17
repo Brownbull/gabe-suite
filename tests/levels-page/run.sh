@@ -266,6 +266,13 @@ ck("function _lgS(" in js and "class='lgico'" in js and js.count("_lgS(") >= 8,
 ck("<b>shield</b> = validator guard" not in js and "<b>red halo</b> = god piece" not in js,
    "POLISH: the word-description legend rows (shield=/red halo=) are removed")
 
+# P1b (graft adoption): the panels render graft's raw signature (det.gsig from node_facts) —
+# the endpoint Handler/Purpose signature row + the model/schema Definition row prefer it.
+ck(js.count("det.gsig") >= 3 and re.search(r"det\.gsig\?", js) is not None,
+   "P1b: showEndpoint + showPiece render graft's signature (det.gsig)")
+ck('ecpSechd("function","Definition")' in js and "exported · public API" in js,
+   "P1b: showPiece shows a Definition row (graft class signature) + the exported/public-API flag")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
