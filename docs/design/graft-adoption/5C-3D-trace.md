@@ -244,3 +244,21 @@ return to the group spike (recipe+auth) → then replicate the grammar into 5C +
 
 **Open for the operator:** the default icon mode (Billboard-in-bubble vs Solid-in-bubble),
 and which bubble effects to add (fresnel rim · pulse on select · colour = a metric).
+
+### 9c · all 12 kinds · slim bubbles · first CLUSTERING pass (operator, 2026-08-17)
+
+- **Default LOCKED: Billboard 2D + bubble on** (operator's pick).
+- **12 kinds** — added the two missing from element-components: **Frontend screen** (monitor)
+  + **External (fk target)** (external-link). Entity stays the container/boundary, not an
+  icon-node.
+- **Bubbles slimmed** — smaller (r 7.8, was 11), tighter to the icon, more transparent, and
+  **NEUTRAL grey** (no longer the kind colour): the colour channel is now free for clustering.
+- **CLUSTERING — first pass:** the graph is now **two entities** (recipe · auth). Each node
+  carries `kind` (→ icon/panel) + `ent` (→ cluster). Layout: layer on Y, **entity on X** (the
+  clusters pull apart). A **big translucent sphere per entity** (colour = ENTITY, updated each
+  `onEngineTick` to enclose its cluster, labelled) is the "one big entity around the icons".
+  Icon colour = kind · bubble = neutral · **big sphere = entity** — three separate channels.
+  A cross-entity FK wire runs recipe.Recipe → auth.users.id.
+
+**NEXT:** tune the cluster boundary (sphere vs hull; the layer-spread makes recipe's sphere
+tall) + the clustering encoding → then scale to recipe+auth real data → then 5C + the suite.
