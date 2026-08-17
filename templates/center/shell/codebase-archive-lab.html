@@ -444,7 +444,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   </div>
 </header>
 <div class="wrap">
-  <div id="graphhost" style="flex:1;min-width:0;position:relative;display:flex">
+  <div id="graphhost" style="flex:1;min-width:0;position:relative;display:flex;border-right:1px solid var(--line)">
   <div id="fgstage" style="display:none;flex:1;min-width:0;position:relative;overflow:hidden"></div>
   <div id="stage">
     <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
@@ -2598,10 +2598,15 @@ function showWeb(sc){
 function syncGearApplicability(){
   var fg=fgIsLevel();
   var inOk = (level==="trace"&&traceCluster!=="flow");   // Inside shapes the trace bubbles (2/3 left the UI; 4 is a fixed grid)
-  var clOk = (level==="trace");
+  var clOk = (level==="trace" || (fg && level!=="frontend"));   // Cluster-core now sub-groups the FG entities too (5B/4B)
   var inRow=document.getElementById("inRow"), clRow=document.getElementById("clRow");
   if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }
   if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
+  // sync the clSeg active button to the CURRENT level's grouping; drop Guards on FG (operator ruling)
+  var curG = (fg && level!=="frontend") ? (_EMU.fgGroup||"kind") : traceCluster;
+  document.querySelectorAll("#clSeg button").forEach(function(x){ var v=x.getAttribute("data-cl");
+    x.classList.toggle("on", v===curG);
+    if(v==="guards"){ x.style.opacity=fg?"0.3":""; x.style.pointerEvents=fg?"none":""; } });
   // FG levels carry NO SVG badge overlays — honestly disable those toggles so none reads
   // active-but-dead (the divergence). Connections · depth · journeys · motion · the
   // Entities-layout gear stay live (they DO drive the canvas).
@@ -2647,7 +2652,7 @@ function render(){
    (alt=depth · ctrl/⌘=zoom-at-cursor · shift=h-pan · scroll=v-pan · drag-pan). Colours
    are RESOLVED to hex at build time (canvas can't read CSS vars); the SVG levels are
    untouched — this owns only the #fgstage canvas. ── */
-var _FG=null, _EMU={spec:null, curv:0.14, fitted:false}, RG=8;   // RG = glyph radius (graph units), uniform (kind=shape, not size → no "is it 3D?")
+var _FG=null, _EMU={spec:null, curv:0.14, fitted:false, fgGroup:"kind"}, RG=8;   // RG = glyph radius (graph units); fgGroup = clSeg sub-grouping (kind default)
 function _rc(v){ if(!v) return "#8a8f98"; if(v.charAt(0)==="#") return v;   // resolve "var(--x)"/hex → hex
   var m=/var\((--[a-z0-9-]+)\)/i.exec(v);
   if(m){ var r=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); return r||"#8a8f98"; }
@@ -2659,25 +2664,69 @@ function _fgReChrome(){ _EMU.panel=_rc("var(--panel)"); _EMU.ink=_rc("var(--mute
    (window/2) drifted zoom-at-cursor to the right. Explicit width/height fixes both. */
 function _fgSize(host){ if(!_FG||!host) return;
   try{ _FG.width(host.clientWidth||892).height(host.clientHeight||716); }catch(_){} }
-/* the ENTITY CONTAINER CIRCLES — the SVG's beautiful translucent onions, emulated: a
-   filled + dashed circle behind each cluster (centroid + node reach), drawn UNDER the
-   nodes (onRenderFramePre, graph-space ctx). Cluster mode only; 4B lanes get none. */
-function _fgContainers(ctx, gs){ var sp=_EMU.spec;
-  if(!sp || sp.arrange==="lanes") return;
-  var groups={}; (sp.nodes||[]).forEach(function(n){ if(n.x==null) return; (groups[n.cl]=groups[n.cl]||[]).push(n); });
-  Object.keys(groups).forEach(function(cl){ var ns=groups[cl];
-    var cx=0, cy=0; ns.forEach(function(n){ cx+=n.x; cy+=n.y; }); cx/=ns.length; cy/=ns.length;
-    // ROBUST radius: the 88th-percentile node distance (not the max — one stray node
-    // otherwise inflates the onion into its neighbours). A few outliers ride the border.
-    var ds=ns.map(function(n){ return Math.hypot(n.x-cx, n.y-cy); }).sort(function(a,b){ return a-b; });
-    var r=(ds[Math.floor(ds.length*0.88)]||ds[ds.length-1]||30)+RG+14;
-    var col=ns[0].entCol||"#8a8f98", fade=_EMU.hl?0.4:1;
-    ctx.save();
-    ctx.globalAlpha=0.055*fade; ctx.fillStyle=col; ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.fill();
-    ctx.globalAlpha=0.45*fade; ctx.lineWidth=1.4/gs; ctx.setLineDash([5/gs,4/gs]); ctx.strokeStyle=col;
-    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
-    if(gs>0.28){ ctx.globalAlpha=0.92*fade; ctx.fillStyle=col; ctx.textAlign="center"; ctx.textBaseline="bottom";
-      ctx.font="700 "+(11)+"px ui-sans-serif,system-ui,sans-serif"; ctx.fillText(cl, cx, cy-r-5); }
+/* convex hull (Andrew monotone chain) — the boundary hugging a set of points. */
+function _hull(pts){ if(pts.length<3) return pts.slice();
+  var p=pts.map(function(q){ return {x:q.x, y:q.y}; }).sort(function(a,b){ return a.x-b.x || a.y-b.y; });
+  function cr(o,a,b){ return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x); }
+  var lo=[]; for(var i=0;i<p.length;i++){ while(lo.length>=2 && cr(lo[lo.length-2],lo[lo.length-1],p[i])<=0) lo.pop(); lo.push(p[i]); }
+  var up=[]; for(var j=p.length-1;j>=0;j--){ while(up.length>=2 && cr(up[up.length-2],up[up.length-1],p[j])<=0) up.pop(); up.push(p[j]); }
+  lo.pop(); up.pop(); return lo.concat(up); }
+/* draw a padded, rounded hull (a blob hugging the nodes) — the outer OUTLINE per the
+   operator ruling: not a big circle, a boundary around the actual elements. */
+function _drawHull(ctx, pts, cx, cy, pad, col, fillA, strokeA, dash, gs){
+  var h=_hull(pts);
+  if(h.length<3){ var r=(h.length?Math.max.apply(null,h.map(function(p){return Math.hypot(p.x-cx,p.y-cy);})):16)+pad;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); }
+  else { var ex=h.map(function(p){ var dx=p.x-cx, dy=p.y-cy, d=Math.hypot(dx,dy)||1; return {x:p.x+dx/d*pad, y:p.y+dy/d*pad}; });
+    ctx.beginPath();
+    for(var i=0;i<ex.length;i++){ var b=ex[i], nb=ex[(i+1)%ex.length];
+      if(i===0){ var pb=ex[ex.length-1]; ctx.moveTo((pb.x+b.x)/2,(pb.y+b.y)/2); }
+      ctx.quadraticCurveTo(b.x, b.y, (b.x+nb.x)/2, (b.y+nb.y)/2); }
+    ctx.closePath(); }
+  if(fillA){ ctx.globalAlpha=fillA; ctx.fillStyle=col; ctx.fill(); }
+  ctx.globalAlpha=strokeA; ctx.lineWidth=1.4/gs; ctx.strokeStyle=col;
+  if(dash) ctx.setLineDash(dash.map(function(v){ return v/gs; })); ctx.stroke(); ctx.setLineDash([]); }
+/* the sub-group key for a node — the clSeg grouping ported to the FG (guards dropped). */
+function _fgGroupKey(n){ var m=_EMU.fgGroup||"kind";
+  if(m==="tests")     return n.tests?"tested":"untested";
+  if(m==="community") return (_EMU.comm&&_EMU.comm[n.id])||"c0";
+  if(m==="usecase")   return (_EMU.uc&&_EMU.uc[n.id])||"—";
+  if(m==="fk")        return (_EMU.fk&&_EMU.fk[n.id])||n.kind;
+  return n.kind==="usefn"?"fn":n.kind; }   // kind (default): fn · model · schema
+/* precompute community (connected components over INTRA links) + usecase (census) + fk. */
+function _fgComputeGroups(spec){
+  var parent={}; spec.nodes.forEach(function(n){ parent[n.id]=n.id; });
+  function find(x){ while(parent[x]!==x){ parent[x]=parent[parent[x]]; x=parent[x]; } return x; }
+  (spec.links||[]).forEach(function(l){ if(l.cross) return; var s=(l.source&&l.source.id)||l.source, t=(l.target&&l.target.id)||l.target;
+    if(parent[s]!==undefined && parent[t]!==undefined) parent[find(s)]=find(t); });
+  var roots={}, ci=0, comm={}; spec.nodes.forEach(function(n){ var r=find(n.id);
+    if(roots[r]===undefined) roots[r]=ci++; comm[n.id]=n.cl+"·c"+roots[r]; });
+  _EMU.comm=comm; _EMU.fk=comm;
+  var uc={}; if(typeof D!=="undefined" && D.census) Object.keys(D.census).forEach(function(slug){ Object.keys(D.census[slug]||{}).forEach(function(wf){
+    var v=D.census[slug][wf]||{}; (v.fns||[]).forEach(function(f){ var id="fn:"+slug+"|"+f; if(!uc[id]) uc[id]=slug+"·"+wf; });
+    (v.cls||[]).forEach(function(c){ var id="cls:"+slug+"|"+c; if(!uc[id]) uc[id]=slug+"·"+wf; }); }); });
+  _EMU.uc=uc;
+  // TESTS flag (for the tests grouping) — a node is "tested" if its fn/model/schema carries proof
+  var tset={}; if(typeof D!=="undefined"){ (D.fn_nodes||[]).forEach(function(f){ if(f.tests) tset["fn:"+f.slug+"|"+f.name]=1; });
+    Object.keys(D.pieces||{}).forEach(function(slug){ var pc=D.pieces[slug]||{};
+      (pc.models||[]).concat(pc.schemas||[]).forEach(function(m){ if(m && m.cls && m.tests) tset["cls:"+slug+"|"+m.cls]=1; }); }); }
+  spec.nodes.forEach(function(n){ n.tests=!!tset[n.id]; }); }
+/* the ENTITY + SUB-GROUP hulls — the SVG's onions, emulated as boundaries hugging the
+   nodes: a light hull per sub-group (kind/tests/…), a dashed hull per entity enclosing
+   ALL its nodes (so nothing floats outside its entity). Cluster mode only. */
+function _fgHulls(ctx, gs){ var sp=_EMU.spec; if(!sp || sp.arrange==="lanes") return;
+  var ent={}, sub={};
+  sp.nodes.forEach(function(n){ if(n.x==null) return; (ent[n.cl]=ent[n.cl]||[]).push(n); if(n._sub){ (sub[n._sub]=sub[n._sub]||[]).push(n); } });
+  var fade=_EMU.hl?0.4:1;
+  Object.keys(sub).forEach(function(sk){ var ns=sub[sk]; if(ns.length<2) return;   // sub-group blobs (under)
+    var cx=0,cy=0; ns.forEach(function(n){ cx+=n.x; cy+=n.y; }); cx/=ns.length; cy/=ns.length;
+    ctx.save(); _drawHull(ctx, ns, cx, cy, RG+7, ns[0].glyphCol||"#8a8f98", 0.05*fade, 0.32*fade, null, gs); ctx.restore(); });
+  Object.keys(ent).forEach(function(cl){ var ns=ent[cl];                            // entity outer hull (over the sub-blobs)
+    var cx=0,cy=0, top=1e9; ns.forEach(function(n){ cx+=n.x; cy+=n.y; if(n.y<top) top=n.y; }); cx/=ns.length; cy/=ns.length;
+    var col=ns[0].entCol||"#8a8f98";
+    ctx.save(); _drawHull(ctx, ns, cx, cy, RG+16, col, 0.05*fade, 0.5*fade, [6,4], gs);
+    if(gs>0.22){ ctx.globalAlpha=0.95*fade; ctx.fillStyle=col; ctx.textAlign="center"; ctx.textBaseline="bottom";
+      ctx.font="700 13px ui-sans-serif,system-ui,sans-serif"; ctx.fillText(cl, cx, top-RG-14); }
     ctx.restore(); }); }
 /* canvas glyphs — the SVG icon vocabulary drawn on ctx. ICO_FN/ICO_SCHEMA (24-viewBox
    path strings) ride straight onto the canvas via Path2D; the rest are primitives. */
@@ -2790,7 +2839,7 @@ function emuFG(spec){
         ctx.beginPath(); ctx.arc(n.x, n.y, RG+3.5, 0, 2*Math.PI); ctx.stroke(); ctx.restore(); } })
     .nodePointerAreaPaint(function(n, color, ctx){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(n.x,n.y,RG*1.5,0,2*Math.PI); ctx.fill(); })
     .nodeLabel(function(n){ return esc(n.label)+" · "+n.kind+(n.home?" · "+esc(n.home):(n.slug?" · "+esc(n.slug):"")); })
-    .onRenderFramePre(function(ctx, gs){ _fgContainers(ctx, gs); })   // the translucent entity onions, under the nodes
+    .onRenderFramePre(function(ctx, gs){ _fgHulls(ctx, gs); })   // entity + sub-group hull outlines, under the nodes
     .linkCurvature(_EMU.curv)
     .linkCanvasObjectMode(function(){return "replace";})
     .linkCanvasObject(fgLink)
@@ -2803,13 +2852,18 @@ function emuFG(spec){
       if(!_EMU.fitted){ _EMU.fitted=true; try{ _FG.zoomToFit(motionOn?400:1, 40); }catch(_){} }   // instant fit when paused (a 400ms tween would stall with the loop about to stop)
       if(!motionOn) requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(!motionOn) _FG.pauseAnimation(); }); }); })
     .cooldownTicks(200);
-  try{ _FG.d3Force("charge").strength(-26); }catch(_){}   // enough repulsion to breathe, not so much the onion bloats
-  // CROSS-entity wires are DRAWN but exert ~no layout pull — otherwise they drag nodes
-  // between clusters and bloat the onions (the SVG places nodes deterministically, so its
-  // wires never pull). Intra-entity links keep their cluster cohesive.
-  try{ _FG.d3Force("link").distance(function(l){ return l.cross?90:22; }).strength(function(l){ return l.cross?0.02:0.5; }); }catch(_){}
-  var CF=function(alpha){ var ns=CF.__n||[], s=_EMU.clStrength||0.05; ns.forEach(function(n){
-    if(n._tx==null) return; n.vx+=(n._tx-n.x)*s*alpha; n.vy+=(n._ty-n.y)*s*alpha; }); };   // pull each node to its target (reads _tx/_ty live)
+  try{ _FG.d3Force("charge").strength(-14); }catch(_){}   // gentle — the COLLISION force below does the readable spacing
+  // CROSS-entity wires are DRAWN but exert ZERO layout pull — otherwise they drag nodes
+  // between clusters (the SVG places nodes deterministically, so its wires never pull).
+  try{ _FG.d3Force("link").distance(function(l){ return l.cross?140:24; }).strength(function(l){ return l.cross?0:0.1; }); }catch(_){}
+  var MIND=RG*2+22;                                       // min centre-to-centre so glyphs + labels never overlap (readability)
+  var CF=function(alpha){ var ns=CF.__n||[], s=_EMU.clStrength||0.16;
+    ns.forEach(function(n){ if(n._tx==null) return; n.vx+=(n._tx-n.x)*s*alpha; n.vy+=(n._ty-n.y)*s*alpha; });   // pull each node to its (endpoint-border / sub-group) target
+    var byCl={}; ns.forEach(function(n){ (byCl[n.cl]=byCl[n.cl]||[]).push(n); });          // COLLISION within an entity → readable separation
+    Object.keys(byCl).forEach(function(cl){ var g=byCl[cl];
+      for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++){ var a=g[i], b=g[j];
+        var dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||0.01;
+        if(d<MIND){ var p=(MIND-d)/d*0.5; a.vx-=dx*p; a.vy-=dy*p; b.vx+=dx*p; b.vy+=dy*p; } } }); };
   CF.initialize=function(ns){ CF.__n=ns; };
   try{ _FG.d3Force("cluster", CF); }catch(_){}
   fgControls(host);
@@ -2838,13 +2892,31 @@ function fgLayout(spec){
       if(n.x==null){ n.x=n._tx+((i%7)-3)*10; n.y=n._ty+(((i*3)%9)-4)*10; } });
     return;
   }
-  var spread=(mode==="spread"?1.4:1), R=Math.max(440, keys.length*120)*spread, anch={};   // wide ring → the onions SEPARATE instead of overlapping in the centre
-  if(mode==="chain"){ var step=Math.max(340, R*2/Math.max(1,keys.length));
+  // ── cluster arrange (Trace / Frontend): entities on a ring; INSIDE each entity the
+  //    ENDPOINTS ride the border + the rest sub-group by the clSeg grouping, each sub-group
+  //    its own region. Collision (in the cluster force) does the readable spacing. ──
+  _fgComputeGroups(spec);                                        // _EMU.comm / uc / fk for the grouping modes
+  var byCl={}; spec.nodes.forEach(function(n){ (byCl[n.cl]=byCl[n.cl]||[]).push(n); });
+  var big=0; keys.forEach(function(k){ big=Math.max(big,(byCl[k]||[]).length); });
+  var spread=(mode==="spread"?1.35:1);
+  var R=Math.max(560, keys.length*95 + Math.sqrt(big)*80)*spread, anch={};   // ring wide enough that entity regions don't collide
+  if(mode==="chain"){ var step=Math.max(420, R*2/Math.max(1,keys.length));
     keys.forEach(function(k,i){ anch[k]={x:(i-(keys.length-1)/2)*step, y:0}; }); }
   else keys.forEach(function(k,i){ var a=-Math.PI/2+2*Math.PI*i/keys.length; anch[k]={x:Math.cos(a)*R, y:Math.sin(a)*R}; });
-  _EMU.anch=anch; _EMU.clStrength=(mode==="spread"?0.09:0.14);   // firm pull → compact, non-overlapping onions (the SVG look); charge still lets nodes breathe
-  spec.nodes.forEach(function(n,i){ var a=anch[n.cl]||{x:0,y:0}; n._tx=a.x; n._ty=a.y;
-    if(n.x==null){ n.x=a.x+((i%11)-5)*14; n.y=a.y+(((i*5)%11)-5)*14; } });
+  _EMU.anch=anch; _EMU.clStrength=(mode==="spread"?0.12:0.17);
+  var entR={};
+  keys.forEach(function(cl){ var ns=byCl[cl]||[], a=anch[cl]||{x:0,y:0};
+    var er=Math.max(110, Math.sqrt(ns.length)*30); entR[cl]=er;                 // entity region radius (endpoints ride this)
+    var eps=ns.filter(function(n){ return n.kind==="ep"; }), rest=ns.filter(function(n){ return n.kind!=="ep"; });
+    eps.forEach(function(n,i){ var ea=-Math.PI/2+2*Math.PI*i/Math.max(1,eps.length);   // endpoints ON the border ring
+      n._tx=a.x+er*Math.cos(ea); n._ty=a.y+er*Math.sin(ea); n._sub=cl+"¦endpoints"; });
+    var subs={}, sord=[]; rest.forEach(function(n){ var g=_fgGroupKey(n); if(!subs[g]){ subs[g]=[]; sord.push(g); } subs[g].push(n); n._sub=cl+"¦"+g; });
+    sord.sort();
+    sord.forEach(function(g,si){ var sa=-Math.PI/2+2*Math.PI*si/Math.max(1,sord.length);
+      var sr=(sord.length>1?er*0.46:0), scx=a.x+sr*Math.cos(sa), scy=a.y+sr*Math.sin(sa);
+      subs[g].forEach(function(n,i2){ n._tx=scx+((i2%7)-3)*20; n._ty=scy+(((i2*3)%7)-3)*20; }); }); });
+  _EMU.entR=entR;
+  spec.nodes.forEach(function(n){ if(n.x==null){ n.x=(n._tx||0)+((n.id.length%9)-4)*3; n.y=(n._ty||0)+((n.id.length%7)-3)*3; } });
 }
 /* adjacency for depth/journey highlight — from the SPEC links (string endpoints here;
    force-graph mutates source/target to node objects after graphData, hence the ||). */
@@ -3354,8 +3426,10 @@ function _sect(icon, label){ return "<div class='k'>"+icon+"<span>"+label+"</spa
     if(fgIsLevel()){ render(); return; }    // FG: force=ring blobs · spread=looser · chain=line of clusters
     computeEntityPositions(); render(); });
   document.getElementById("clSeg").addEventListener("click",function(e){
-    var b=e.target.closest("button"); if(!b) return;
-    traceCluster=b.getAttribute("data-cl");
+    var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-cl");
+    if(fgIsLevel()){ if(v==="guards") return;   // FG: the clSeg SUB-GROUPS each entity (kind/tests/usecase/community/fk; guards dropped)
+      _EMU.fgGroup=v; document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); }); render(); return; }
+    traceCluster=v;
     document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });   // a cluster change reshapes the INSIDE — the camera stays put
   document.getElementById("depthSlider").addEventListener("input",function(){
@@ -3530,6 +3604,20 @@ window.__lvltest = {
   fgS2G:function(x,y){ return _FG?_FG.screen2GraphCoords(x,y):null; },
   fgG2S:function(gx,gy){ return _FG?_FG.graph2ScreenCoords(gx,gy):null; },
   fgContainers:function(){ var sp=_EMU.spec||{nodes:[]}, o={}; sp.nodes.forEach(function(n){ if(n.cl) o[n.cl]=1; }); return Object.keys(o).length; },
+  fgGroup:function(){ return _EMU.fgGroup||"kind"; },
+  fgSetGroup:function(v){ _EMU.fgGroup=v; render(); },
+  fgSubgroups:function(){ var sp=_EMU.spec||{nodes:[]}, o={}; sp.nodes.forEach(function(n){ if(n._sub) o[n._sub]=1; }); return Object.keys(o).length; },
+  fgMinGap:function(){ var sp=_EMU.spec||{nodes:[]}, byCl={}, min=1e9;   // tightest same-entity node spacing (readability)
+    sp.nodes.forEach(function(n){ if(n.x!=null)(byCl[n.cl]=byCl[n.cl]||[]).push(n); });
+    Object.keys(byCl).forEach(function(cl){ var g=byCl[cl];
+      for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++){ var d=Math.hypot(g[i].x-g[j].x, g[i].y-g[j].y); if(d<min) min=d; } });
+    return min===1e9?null:min; },
+  fgEpOnBorder:function(){ var sp=_EMU.spec||{nodes:[]}, byCl={}, res={ok:0,bad:0};   // endpoints should sit near their entity's outer radius
+    sp.nodes.forEach(function(n){ if(n.x!=null)(byCl[n.cl]=byCl[n.cl]||[]).push(n); });
+    Object.keys(byCl).forEach(function(cl){ var g=byCl[cl], cx=0,cy=0; g.forEach(function(n){cx+=n.x;cy+=n.y;}); cx/=g.length; cy/=g.length;
+      var mx=0; g.forEach(function(n){ var d=Math.hypot(n.x-cx,n.y-cy); if(d>mx)mx=d; });
+      g.forEach(function(n){ if(n.kind!=="ep")return; var d=Math.hypot(n.x-cx,n.y-cy); (d>mx*0.6?res.ok++:res.bad++); }); });
+    return res; },
   fgCross:function(){ var t=0,x=0; (_EMU.spec?_EMU.spec.links:[]).forEach(function(l){ t++; if(l.cross) x++; }); return {total:t, cross:x}; },
   fgParticleOff:function(){ return (_EMU.spec?_EMU.spec.links:[]).filter(function(l){ return _fgParticleCount(l)===0; }).length; },
   jrnPick:function(i){ jrnStart(i); var h=_EMU.hl; return h?{mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}:null; }

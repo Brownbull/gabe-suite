@@ -381,10 +381,23 @@ ck('else if(JRN.cur && (level==="tracefg"||level==="layersfg")) jrnGo(0)' in js,
 # operator visual pass (2026-08-17): canvas-sizing (clip+zoom-drift) + the entity onion circles
 ck('function _fgSize(' in js and '_FG.width(host.clientWidth' in js and '_fgSize(host)' in js,
    "VISUAL: the FG canvas is sized to #fgstage (force-graph defaults to the window → clip under sidebar + zoom drift)")
-ck('function _fgContainers(' in js and '.onRenderFramePre(' in js and 'ds[Math.floor(ds.length*0.88)]' in js,
-   "VISUAL: translucent ENTITY ONION circles behind each cluster (robust 88th-pct radius, under the nodes)")
-ck('return l.cross?0.02:0.5' in js and 'l.cross?90:22' in js,
-   "VISUAL: cross-entity wires exert ~no layout pull (drawn, not dragging) so the onions stay compact + separated")
+ck('function _fgHulls(' in js and 'function _hull(' in js and '.onRenderFramePre(' in js,
+   "VISUAL: entity + sub-group HULL outlines (convex hull hugging the nodes), drawn under the nodes")
+ck('return l.cross?0:0.1' in js and 'l.cross?140:24' in js,
+   "VISUAL: cross-entity wires exert ZERO layout pull (drawn, not dragging) so the entities stay separated")
+# operator visual pass #2 (2026-08-17): the SVG's inside-the-entity structure, ported
+ck('n._sub=cl+"¦endpoints"' in js and 'er*Math.cos(ea)' in js,
+   "LAYOUT: ENDPOINTS ride the entity BORDER ring (the exposed surface, like the SVG)")
+ck('function _fgGroupKey(' in js and '_EMU.fgGroup' in js and 'n.kind==="usefn"?"fn":n.kind' in js,
+   "LAYOUT: per-entity SUB-GROUPS by the clSeg grouping (kind default; fn/model/schema/…)")
+ck('function _fgComputeGroups(' in js and '_EMU.comm' in js and '_EMU.uc' in js,
+   "LAYOUT: community (connected-components) + usecase (census) + tests grouping data precomputed")
+ck('var MIND=RG*2+22' in js and 'a.vx-=dx*p; a.vy-=dy*p; b.vx+=dx*p; b.vy+=dy*p' in js,
+   "LAYOUT: a COLLISION force spaces same-entity nodes ≥ MIND apart (readability)")
+ck('if(v==="guards") return;' in js and '_EMU.fgGroup=v;' in js,
+   "LAYOUT: clSeg drives the FG sub-grouping (Guards dropped, per the operator)")
+ck('border-right:1px solid var(--line)' in page and 'id="graphhost"' in page,
+   "LAYOUT: the graph area has a right-edge border (panel-divider affordance)")
 
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
