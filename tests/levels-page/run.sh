@@ -278,6 +278,17 @@ ck('ecpSechd("function","Definition")' in js and "exported · public API" in js,
 ck(".kv.stack{" in style and re.search(r'"kv"\s*\+\s*\(stack\?" stack"', js) is not None,
    "kv: a long value stacks (label on top, value full-width) — short values stay inline")
 
+# P2b — the FRONTEND render (companion circle per entity + FE-native bucket circles)
+ck(".fenode circle.febody{" in style, "P2b: the frontend companion/bucket circle is styled (.fenode .febody)")
+ck("D.frontend && D.frontend.present" in js,
+   "P2b: the FE render is HONEST-EMPTY guarded — skipped when the graft arm is absent")
+ck('"fe:"+en.slug' in js and "showFrontend(" in js,
+   "P2b: each entity draws a clickable frontend companion → showFrontend()")
+ck("D.fe_buckets" in js and "candidate" in js,
+   "P2b: FE-native buckets draw as their own circles, candidate entities flagged")
+ck("function feKindSummary(" in js and "function showFrontend(" in js,
+   "P2b: the frontend panel helpers are defined")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

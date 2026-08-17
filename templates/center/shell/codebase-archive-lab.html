@@ -126,6 +126,11 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .legend .lglbl{ color:var(--muted); }
 /* node vocab */
 .entnode circle.body{ transition:opacity .25s; }
+/* P2b — the FRONTEND companion circle (folded-in pieces) + FE-native bucket circles */
+.fenode{ cursor:pointer; }
+.fenode circle.febody{ transition:opacity .2s; }
+.fenode text.felbl{ font-size:10px; text-anchor:middle; fill:var(--c-fn-web); font-weight:700; pointer-events:none; }
+.fenode text.felbl.sub{ font-size:8.5px; fill:var(--muted); font-weight:600; }
 .lbl{ font-size:12px; font-weight:650; text-anchor:middle; fill:var(--ink); pointer-events:none; }
 .sub2{ font-size:10px; text-anchor:middle; fill:var(--muted); pointer-events:none; }
 .plabel{ font-size:8.5px; text-anchor:middle; fill:var(--ink); pointer-events:none; }
@@ -1085,10 +1090,64 @@ function drawEntities(){
     nLayer.appendChild(g);
     b.minX=Math.min(b.minX,p.x-90); b.maxX=Math.max(b.maxX,p.x+90);
     b.minY=Math.min(b.minY,p.y-70); b.maxY=Math.max(b.maxY,p.y+80); });
+  // ── P2b: the FRONTEND companion — a second circle per entity for its folded-in
+  //    frontend pieces (operator's "second circle dedicated for the frontend"), and
+  //    FE-native bucket circles for the pieces no backend entity owns. Honest-empty:
+  //    absent frontend arm ⇒ D.frontend.present false ⇒ this whole block is skipped.
+  var _feAny=false;
+  if(D.frontend && D.frontend.present){
+    D.entities.forEach(function(en){ var pc=D.pieces[en.slug]||{}, fe=pc.frontend;
+      if(!fe || !fe.count) return;
+      var p=entAnchor(en.slug); if(!p) return; _feAny=true;
+      var ePieces=(pc.models||[]).length+(pc.schemas||[]).length+(pc.endpoints||[]).length+((pc.usefns||[]).length);
+      var er=rnd(18+4.6*Math.sqrt(ePieces)), fr=rnd(Math.min(32, 13+2.0*Math.sqrt(fe.count)));
+      var fx=rnd(p.x+er+fr+14), fy=rnd(p.y-er-fr+2);
+      nLayer.appendChild(E("line",{x1:p.x, y1:p.y, x2:fx, y2:fy, stroke:"var(--c-fn-web)","stroke-width":"1.4","stroke-dasharray":"4 3","stroke-opacity":"0.7"}));
+      var fg=E("g",{class:"fenode","data-id":"fe:"+en.slug, transform:"translate("+fx+","+fy+")"});
+      fg.appendChild(E("circle",{class:"febody", r:fr, fill:"var(--c-fn-web)","fill-opacity":"0.16", stroke:"var(--c-fn-web)","stroke-width":"2"}));
+      var ft=E("text",{class:"felbl", y:3}); ft.textContent=fe.count; fg.appendChild(ft);
+      var fl=E("text",{class:"felbl sub", y:fr+11}); fl.textContent="frontend"; fg.appendChild(fl);
+      var ti=E("title"); ti.textContent=en.label+" frontend — "+feKindSummary(fe.by_kind); fg.appendChild(ti);
+      (function(en2,fe2){ fg.addEventListener("click",function(ev){ ev.stopPropagation(); showFrontend(en2.label, fe2, false); }); })(en, fe);
+      nLayer.appendChild(fg);
+      b.minX=Math.min(b.minX,fx-fr-24); b.maxX=Math.max(b.maxX,fx+fr+24);
+      b.minY=Math.min(b.minY,fy-fr-24); b.maxY=Math.max(b.maxY,fy+fr+30); });
+    var buckets=D.fe_buckets||[];
+    if(buckets.length){
+      _feAny=true;
+      var by=b.maxY+112, bx0=-70, GAPB=162;
+      var bl=E("text",{class:"felbl", x:rnd(bx0-18), y:rnd(by-58), style:"text-anchor:start;font-size:11px"});
+      bl.textContent="frontend · no backend entity"; nLayer.appendChild(bl);
+      buckets.forEach(function(bk,i){ var fr=rnd(Math.min(32, 13+2.0*Math.sqrt(bk.count))), bx=rnd(bx0+i*GAPB), byy=rnd(by), cand=!!bk.candidate;
+        var bg=E("g",{class:"fenode"+(cand?" cand":""),"data-id":"feb:"+bk.name, transform:"translate("+bx+","+byy+")"});
+        bg.appendChild(E("circle",{class:"febody", r:fr, fill:"var(--c-fn-web)","fill-opacity":cand?"0.09":"0.16",
+          stroke:"var(--c-fn-web)","stroke-width":"2","stroke-dasharray":cand?"5 4":"0"}));
+        var bt=E("text",{class:"felbl", y:3}); bt.textContent=bk.count; bg.appendChild(bt);
+        var bl=E("text",{class:"felbl sub", y:fr+11}); bl.textContent=bk.name+(cand?" ◆":""); bg.appendChild(bl);
+        var ti=E("title"); ti.textContent=(cand?"candidate entity (UI-only, no backend) — ":"frontend bucket — ")+bk.name+" · "+feKindSummary(bk.by_kind); bg.appendChild(ti);
+        (function(bk2){ bg.addEventListener("click",function(ev){ ev.stopPropagation(); showFrontend(bk2.name, bk2, bk2.candidate); }); })(bk);
+        nLayer.appendChild(bg);
+        b.minX=Math.min(b.minX,bx-fr-40); b.maxX=Math.max(b.maxX,bx+fr+40); b.maxY=Math.max(b.maxY,byy+fr+40); });
+    }
+  }
   frame(b);
-  legend([sw("fk — solid","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
+  var _leg=[sw("fk — solid","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
           sw("imports — dotted","dot","var(--muted)"),
-          "<span class='it'>line colour = the two entities it joins (source → target blend) · click any line</span>"]);
+          "<span class='it'>line colour = the two entities it joins (source → target blend) · click any line</span>"];
+  if(_feAny) _leg.push("<span class='it'><svg class='lgico' viewBox='0 0 40 18'><circle cx='9' cy='9' r='6' fill='var(--c-fn-web)' fill-opacity='0.16' stroke='var(--c-fn-web)' stroke-width='2'/><circle cx='30' cy='9' r='6' fill='var(--c-fn-web)' fill-opacity='0.09' stroke='var(--c-fn-web)' stroke-width='2' stroke-dasharray='4 3'/></svg><span class='lglbl'>frontend · dashed = candidate entity</span></span>");
+  legend(_leg);
+}
+function feKindSummary(bk){ if(!bk) return "—";
+  return Object.keys(bk).sort().map(function(k){ return bk[k]+" "+k; }).join(" · "); }
+function showFrontend(label, fe, candidate){
+  var by=fe.by_kind||{};
+  var rows=Object.keys(by).sort().map(function(k){
+    return "<div class='row'><span>"+esc(k)+"</span><b>"+by[k]+"</b></div>"; }).join("");
+  panel.innerHTML="<h3 style='color:var(--c-fn-web)'>"+esc(label)+" · frontend</h3>"
+   +(candidate?"<div class='note' style='border-left:3px solid var(--c-fn-web);padding-left:8px'><b>Candidate entity.</b> A UI-only domain graft found in the frontend with NO backend entity of the same name — worth considering as a new entity.</div>":"")
+   +_sect(_psvg("<circle cx='12' cy='12' r='7' fill='none' stroke='var(--c-fn-web)' stroke-width='2'/>"),"pieces by kind")+rows
+   +"<div class='row'><span>total</span><b>"+(fe.count||0)+"</b></div>"
+   +"<div class='note'>Frontend structure from graft's TS index — components · hooks · stores · types. Composition wires between pieces render in the graph.</div>";
 }
 function showEdge(ed){
   var rows=Object.keys(ed.kinds).sort().map(function(k){
