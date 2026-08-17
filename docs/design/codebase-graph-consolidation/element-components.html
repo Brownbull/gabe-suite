@@ -10,6 +10,8 @@
     --accent:#4c6ef5; --c-endpoint:#4c6ef5; --c-model:#12b886; --c-schema:#f59f00; --c-fn:#7048e8;
     --c-web:#e8590c; --c-entity:#0d6e78; --c-external:#868e96; --ok:#1f8a53; --red:#e03131; --god:#d9821f;
     --lv:#e8590c; --c4:#4c6ef5;
+    /* frontend kind colours (match the center's Layers/force-graph palette) */
+    --fk-comp:#e8590c; --fk-hook:#0ca678; --fk-store:#e64980; --fk-route:#339af0; --fk-type:#868e96;
     /* the center's font settings: --font-content is the CONTENT font (settings-driven,
        default Menlo) that the panel FOLLOWS; --font-mono is fixed for code (paths, types)
        that stay monospace whatever the content font; --root-size scales the panel. */
@@ -76,6 +78,7 @@
   .chip{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:.85em; line-height:1.5; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 7px; margin:0 4px 4px 0; }
   .chip svg{ width:11px; height:11px; }
   .chip.model{ color:var(--c-model); } .chip.schema{ color:var(--c-schema); } .chip.web{ color:var(--c-web); } .chip.route{ color:var(--c-endpoint); } .chip.fn{ color:var(--c-fn); } .chip.ok{ color:var(--ok); }
+  .chip.component{ color:var(--fk-comp); } .chip.hook{ color:var(--fk-hook); } .chip.store{ color:var(--fk-store); } .chip.froute{ color:var(--fk-route); } .chip.type{ color:var(--fk-type); }
   .doc{ font-size:.96em; color:var(--ink); background:var(--bg); border-left:2px solid var(--edge); padding:7px 10px; border-radius:0 6px 6px 0; }
   .more{ font-weight:600; font-size:.85em; line-height:1; color:var(--accent); background:none; border:1px dashed var(--edge); border-radius:6px; padding:4px 8px; cursor:pointer; } .more:hover{ border-color:var(--accent); }
   .flag{ display:inline-flex; align-items:center; gap:4px; font-family:var(--font-ui); font-weight:700; font-size:.77em; text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; color:var(--god); border:1px solid var(--god); }
@@ -149,6 +152,12 @@ const P={
   alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
   arrowL:'<polyline points="15 18 9 12 15 6"/>', arrowR:'<polyline points="9 18 15 12 9 6"/>', chevD:'<polyline points="6 9 12 15 18 9"/>',
   chevRR:'<path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>',
+  // frontend kind glyphs
+  component:'<rect x="3" y="3" width="18" height="18" rx="3"/><rect x="6" y="6" width="12" height="4" rx="1"/>',
+  hook:'<path d="M15 5v8a5 5 0 0 1-10 0"/><circle cx="15" cy="4" r="1.6"/>',
+  store:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14a8 3 0 0 0 16 0V5"/>',
+  route:'<path d="M12 2 22 12 12 22 2 12z"/>',
+  braces:'<path d="M7 4a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/>',
 };
 const ico=(n,cls,col)=>{const s=`<svg class="ico ${cls||''}" viewBox="0 0 24 24" ${col?`style="color:${col}"`:''}>${P[n]||""}</svg>`;const d=document.createElement('div');d.innerHTML=s;return d.firstChild;};
 const E=(t,a,...k)=>{const e=document.createElement(t);for(const p in(a||{})){if(p==="class")e.className=a[p];else if(p==="html")e.innerHTML=a[p];else e.setAttribute(p,a[p]);}k.flat().forEach(c=>c!=null&&e.append(c));return e;};
@@ -287,6 +296,47 @@ const CARDS=[
   conns("link","Connections",[ G("reaches","entity",1,()=>chipList(["pantry"],"model","entity")) ]),
   tabbed("test","Tests",[ G("web","web",1,cids(["C2044"])) ],{showCount:true,ok:true}),
   E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"},"React hook: batch-add confirmed pantry items from the add screen."), kv("file","file","useBatchAdd.ts")),
+])],
+["Component", ()=>panel("component","component","var(--fk-comp)","RecipeCard","apps/web/src/features/recipe",[
+  usage(4,"4 components render this one"),
+  conns("link","Renders / uses",[
+    G("hooks","hook",2,()=>chipList(["useRecipe","useT"],"hook","hook")),
+    G("reads store","store",1,()=>chipList(["recipeStore"],"store","store")),
+    G("child components","component",3,()=>chipList(["IngredientRow","StepList","AllergenBadge"],"component","component"))]),
+  tabbed("test","Tests",[ G("web","web",2,cids(["C2101","C2102"])) ],{showCount:true,ok:true}),
+  E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home","recipe"), kv("role","kind","UI component"), kv("globe","language","TypeScript/TSX")),
+  E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"A React component — graft captures its call edges (component→hook) but barely JSX child renders (a known blind spot; the Tier-1 link arm fills this)."), kv("file","file","RecipeCard.tsx")),
+])],
+["Hook", ()=>panel("hook","hook","var(--fk-hook)","useRecipeFilters","apps/web/src/features/recipe",[
+  usage(6,"6 components call this hook"),
+  conns("down","Fetches",[ G("bridged","endpoint",1,()=>chipList(["GET /recipes"],"route","endpoint")) ],{showCount:true}),
+  conns("link","Uses",[
+    G("called by","component",6,()=>chipList(["RecipeList","SearchBar","FilterPanel"],"component","component")),
+    G("calls hooks","hook",1,()=>chipList(["useDebounce"],"hook","hook"))]),
+  tabbed("test","Tests",[ G("web","web",1,cids(["C2140"])) ],{showCount:true,ok:true}),
+  E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home","recipe"), kv("role","kind","React hook"), kv("layers","reaches","recipe (via GET /recipes)")),
+  E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"A hook is the bridge to the API — its fetch is matched to the endpoint by method+path (the web→API bridge)."), kv("file","file","useRecipeFilters.ts")),
+])],
+["Store", ()=>panel("store","store","var(--fk-store)","recipeStore","apps/web/src/features/recipe",[
+  usage(9,"9 components / hooks read this store"),
+  conns("link","Read by",[
+    G("components","component",7,()=>chipList(["RecipeCard","RecipeList","EditRecipe"],"component","component")),
+    G("hooks","hook",2,()=>chipList(["useRecipe","useRecipeFilters"],"hook","hook"))]),
+  E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home","recipe"), kv("role","kind","state store / context")),
+  E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"A store (Zustand/createContext) is the FE data cylinder — a createContext const has no graft symbol, so the *Store file is its only signal (a documented FLOOR)."), kv("file","file","recipeStore.ts")),
+])],
+["Route (screen)", ()=>panel("route","route","var(--fk-route)","/recipes/:id","apps/web/src/routes",[
+  usage(0,"entry point — a URL, nothing depends on it"),
+  conns("link","Renders",[ G("component","component",1,()=>chipList(["RecipeDetail"],"component","component")) ]),
+  conns("down","Reaches",[ G("entity","entity",1,()=>chipList(["recipe"],"model","entity")) ],{showCount:true}),
+  E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home","recipe"), kv("role","kind","route / URL"), kv("globe","path","/recipes/:id")),
+  E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"A route maps a URL to the component tree it mounts — the entry the user actually lands on. Orphan URL-domains here feed entity-shape thinking (a candidate entity)."), kv("file","file","recipe.routes.ts")),
+])],
+["Type", ()=>panel("type","braces","var(--fk-type)","RecipeResponse","TS type / interface",[
+  usage(0,"— unlinked (graft emits 0 type-usage edges)"),
+  E("div",{class:"sec"}, sechd("table","Shape",4), colsTable([["id","string"],["title","string"],["ingredients","Ingredient[]"],["steps","Step[]"]],[])),
+  conns("link","Used by",[ G("annotations","component",0,()=>E("div")) ],{empty:"— none captured (a graft blind spot: types are erased, their usage emits no edge)"}),
+  E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"A TS type/interface — erased at runtime, so graft sees it declared but not USED. The scattered {} nodes in 2·Frontend are these (the Tier-1 ast-grep arm would link them)."), kv("file","file","recipe.types.ts")),
 ])],
 ["Entity (container)", ()=>panel("entity","entity","var(--c-entity)","Allergen","approved · principal UserDietaryProfile",[
   usage(12,"12 inbound cross-entity references"),

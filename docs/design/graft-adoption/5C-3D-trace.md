@@ -176,3 +176,37 @@ behind.fns / behind.depth / hub.usage / tests / god).
 **NEXT after operator review of the spike:** lock the channel choices → assemble 5C as a
 `data-lvl="trace3d"` level, reusing 5B's highlight/journey/finder logic + the shared spec
 builder, swapping only draw (three.js meshes) + controls (orbit) + the Y-altitude layout.
+
+---
+
+## 9 · SPIKE 2 — "one of each kind" (atomic 3D vocabulary, 2026-08-17)
+
+Operator backtracked: settle the **atomic** representation (each kind's 3D form + its
+right-panel + its links) before the composite graph. Two deliverables:
+
+- **`docs/design/codebase-graph-consolidation/element-components.html` UPDATED** — the
+  per-kind right-panel reference now includes the **frontend kinds** (Component · Hook ·
+  Store · Route · Type), each with its own panel (Connections · Identity · Note), beside
+  the backend kinds. 12 panels.
+- **`/home/khujta/gabe-graph-review/spike-kinds/index.html`** — a minimal 3D graph, **one
+  node per kind**, wired FE→API→data through every kind, each kind a **distinct 3D form**:
+
+  | kind | 3D form | | kind | 3D form |
+  |---|---|---|---|---|
+  | endpoint | torus **ring** (method-hue) | | component | flat **panel** |
+  | function | **cube** | | hook | torus-**knot** |
+  | model | **cylinder** | | store | **cylinder** (FE-hue) |
+  | schema | **octahedron** | | route | **cone** |
+  | entity | wireframe **icosahedron** (container) | | type | wireframe **box** (erased) |
+
+  Links carry a **relation label** + colour + particles (renders/uses/reads/typed/fetches/
+  handler/touch/resp/in). **Click a node → its element-components panel.** Y = layer
+  altitude (FE up top, data low). Legend = the vocabulary.
+
+**ORBIT FIX (operator: rotation felt spinny):** `controlType` is a *construction* option in
+3d-force-graph — the spike now builds with **`{controlType:'orbit'}`** (up-vector stays
+fixed, no roll) with a **Trackball** toggle + a **Reset view** button. (A full nav-cube
+gizmo is a later nicety.)
+
+**NEXT:** settle each kind's form + link encoding + the clustering encoding here → then
+return to the group spike (recipe+auth) → then replicate the grammar into 5C + the suite.
