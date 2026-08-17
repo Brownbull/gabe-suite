@@ -197,6 +197,13 @@ check(_det_ep.get("gsig") == "def leaf() -> int" and _det_ep.get("exported") is 
       "P1b: element_detail carries graft's signature + exported (by file#fn) into the dossier")
 check("gsig" not in G.element_detail("endpoint", {"file": "apps/api/beta.py", "fn": "leaf"}, {}, {}, {}, {}, {}),
       "P1b: no node_facts → no gsig (honest-empty; graft-absent build unchanged)")
+# P1b review fix: _normalize_sig strips param DEFAULT bodies (FastAPI Query/Depends prose that
+# blew a handler signature to 11.8k chars) + caps length — the useful name·params·return survives.
+_rawsig = "async def h( q: str = Query(None, description=(" + "'x'*99 " * 40 + ")), n: int = 5 ) -> Resp"
+_norm = G._normalize_sig(_rawsig)
+check("Query(" not in _norm and "= 5" not in _norm and "q: str" in _norm and "n: int" in _norm
+      and "-> Resp" in _norm and len(_norm) <= 220,
+      "P1b-fix: _normalize_sig drops param defaults + caps length (no multi-KB signature)")
 
 # folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
 _garm = {"present": True, "reason": "test", "index_hash": "abc123def456",

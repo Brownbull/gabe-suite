@@ -313,6 +313,61 @@ _DET_COLS_CAP = 10    # STRUCTURE rows shown; the rest becomes "+N more"
 _DET_CASES_CAP = 6    # TESTED-BY rows shown; the matrix carries the full ledger
 
 
+def _normalize_sig(sig: str, cap: int = 220) -> str:
+    """Collapse graft's RAW signature to a readable line: whitespace squeezed, each param's
+    DEFAULT value dropped (`x: T = Query(None, description=("…"))` → `x: T`), then capped. graft
+    inlines FastAPI Query/Depends/Field bodies + description prose, blowing a handler signature to
+    KBs (gustify GET /recipes = 11,844 chars) — the useful part is name · params · return.
+    Balanced-bracket aware (a comma/`=` inside [] or () is not a separator)."""
+    s = " ".join(str(sig).split())
+    o = s.find("(")
+    if o < 0:
+        return s if len(s) <= cap else s[:cap - 1] + "…"
+    depth = 0
+    close = -1
+    for i in range(o, len(s)):
+        c = s[i]
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+            if depth == 0:
+                close = i
+                break
+    if close < 0:
+        return s if len(s) <= cap else s[:cap - 1] + "…"
+    head, body, tail = s[:o + 1], s[o + 1:close], s[close:]
+    params, depth, cur = [], 0, ""
+    for c in body:
+        if c in "([{":
+            depth += 1
+        elif c in ")]}":
+            depth -= 1
+        if c == "," and depth == 0:
+            params.append(cur)
+            cur = ""
+        else:
+            cur += c
+    if cur.strip():
+        params.append(cur)
+    cleaned = []
+    for p in params:
+        p = p.strip()
+        d = eq = 0
+        eq = -1
+        for i, c in enumerate(p):
+            if c in "([{":
+                d += 1
+            elif c in ")]}":
+                d -= 1
+            elif c == "=" and d == 0 and p[i - 1:i] not in ("=", "!", "<", ">") and p[i + 1:i + 2] != "=":
+                eq = i
+                break
+        cleaned.append((p[:eq] if eq >= 0 else p).strip())
+    out = " ".join((head + ", ".join(c for c in cleaned if c) + tail).split())
+    return out if len(out) <= cap else out[:cap - 1] + "…"
+
+
 def element_detail(kind: str, obj: dict[str, Any],
                    file_lines: dict[str, int],
                    fi: dict[str, Any], ti_ep: dict[str, Any],
@@ -363,7 +418,7 @@ def element_detail(kind: str, obj: dict[str, Any],
     _nf = (node_facts or {}).get(f"{file}#{_sym}") if (file and _sym) else None
     if _nf:
         if _nf.get("signature"):
-            det["gsig"] = _nf["signature"]
+            det["gsig"] = _normalize_sig(_nf["signature"])   # P1b review: strip default bodies + cap
         if _nf.get("exported"):
             det["exported"] = True
 

@@ -182,6 +182,9 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
   --root-size-x:var(--root-size, 13px);
   font-family:var(--font-content-x); font-size:var(--root-size-x); }
 #panel .ecp code{ font-family:var(--font-mono-x); }
+/* P1b review: a signature code value wraps unbroken tokens (generics/Annotated[...]) so a
+   long-but-capped gsig never overflows the 300px panel horizontally. The emitter caps length. */
+#panel .kv .v, #panel .kv .v code{ overflow-wrap:anywhere; word-break:break-word; min-width:0; }
 #panel svg.ico{ width:14px; height:14px; flex:none; stroke-width:2; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; }
 #panel .phead{ display:flex; align-items:flex-start; gap:8px; padding:2px 0 11px; border-bottom:1px solid var(--line); margin-bottom:11px; }
 #panel .ptitle{ flex:1; min-width:0; }
