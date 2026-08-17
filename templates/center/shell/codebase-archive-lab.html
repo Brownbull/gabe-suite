@@ -362,6 +362,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       <button data-lvl="functions">3 · Functions</button>
       <button data-lvl="layers">4 · Layers</button>
       <button data-lvl="trace">5 · Trace</button>
+      <button data-lvl="tracefg">5B · Trace ᶠ</button>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:7px;position:relative">
@@ -2601,12 +2602,12 @@ function syncGearApplicability(){
 function markLevelButtons(){ document.querySelectorAll("#levels button").forEach(function(btn){
   btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); }); }
 function render(){
-  // FRONTEND level = a force-graph on its own canvas (WebGL/canvas library), NOT the SVG
-  // stage. Swap the two hosts; the SVG levels are untouched.
-  var isFG = (level==="frontend");
+  // The FORCE-GRAPH levels ("2 · Frontend" + "5B · Trace") render on their own canvas
+  // (the library, not the SVG stage). Swap the two hosts; the SVG levels are untouched.
+  var isFG = (level==="frontend" || level==="tracefg");
   document.getElementById("stage").style.display = isFG ? "none" : "";
   document.getElementById("fgstage").style.display = isFG ? "" : "none";
-  if(isFG){ drawFrontendGraph(); showFrontendDefault(); markLevelButtons(); syncGearApplicability(); return; }
+  if(isFG){ (level==="tracefg"?drawTraceFG:drawFrontendGraph)(); markLevelButtons(); syncGearApplicability(); return; }
   vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
   navStack=[]; navFwd=[]; navCur=null; ecpCurHead=null; navUI();
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
@@ -2615,46 +2616,231 @@ function render(){
   syncGearApplicability();
   if(!motionOn){ try{ svg.pauseAnimations(); }catch(_){} }   // keep paused across a re-draw
 }
-/* ── the FRONTEND force-graph (library render, operator-committed 2026-08-17). Nodes =
-   graft's classified TS pieces (colour = ENTITY, size = KIND weight), links = the call
-   edges (animated particles = the movement). Built once, then updated on re-entry. ── */
-var _FG=null;
-function drawFrontendGraph(){
-  if(typeof ForceGraph==="undefined" || !D.frontend || !D.frontend.present) return;
-  var SZ={ "fe-type":2, route:6, component:3, hook:7, store:9 };
-  var nodes=[], seen={};
-  function add(list, ecol, home){ (list||[]).forEach(function(p){ if(p.id && !seen[p.id]){ seen[p.id]=1;
-    nodes.push({id:p.id, label:p.n||p.k, kind:p.k, home:home, color:ecol, val:SZ[p.k]||2}); } }); }
-  (D.entities||[]).forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
-    if(fe) add(fe.pieces, (D.colors||{})[en.slug]||"#e8590c", en.label); });
-  (D.fe_buckets||[]).forEach(function(bk){ add(bk.pieces, "#e8590c", bk.name); });
-  var ids={}; nodes.forEach(function(n){ ids[n.id]=1; });
-  var links=(D.fe_edges||[]).filter(function(e){ return ids[e.s] && ids[e.t]; })
-    .map(function(e){ return {source:e.s, target:e.t}; });
-  if(_FG){ _FG.graphData({nodes:nodes, links:links}); if(!motionOn) _FG.pauseAnimation(); return; }
-  var bg=(getComputedStyle(document.body).getPropertyValue("--bg")||"#101726").trim();
-  _FG=ForceGraph()(document.getElementById("fgstage"))
-    .backgroundColor(bg)
-    .graphData({nodes:nodes, links:links})
-    .nodeRelSize(2).nodeVal(function(n){return n.val;}).nodeColor(function(n){return n.color;})
-    .nodeLabel(function(n){return n.label+" · "+n.kind+" · "+n.home;})
-    .linkColor(function(){return "rgba(232,89,12,0.28)";}).linkWidth(0.5)
-    .linkDirectionalParticles(2).linkDirectionalParticleSpeed(0.006)
-    .linkDirectionalParticleWidth(1.5).linkDirectionalParticleColor(function(){return "#ffa94d";})
-    .onNodeClick(function(n){ showFePiece(n.label, n.kind, n.home); })
-    .onEngineStop(function(){ try{ _FG.zoomToFit(500, 60); }catch(_){} })   // centre + fit when settled
-    .cooldownTicks(140);
-  try{ _FG.d3Force("charge").strength(-18); }catch(_){}
-  if(!motionOn) _FG.pauseAnimation();
+/* ══ 5B · EMULATED FORCE-GRAPH (operator ruling 2026-08-17) ══════════════════════════
+   The force-graph library gives us MOVEMENT (particle flow, glow, node-drag) at 60fps;
+   this renderer gives it the SVG diagrams' LOOK & CONTROLS so it stops being "super
+   different". ONE renderer, TWO callers: "5B · Trace" (the richest diagram, the
+   emulation proof) and "2 · Frontend" (graft's TS pieces). It draws the SVG grammar on
+   the canvas — per-KIND icon glyphs (kind = shape + glyph-colour; entity = a small dot,
+   the suite's Layers grammar), curved entity-blend wires whose bow MATCHES force-graph's
+   own particle curve (control = midpoint offset perpendicular by curvature·dist, the
+   library's formula) so the flow rides the drawn wire, and the SVG control scheme
+   (alt=depth · ctrl/⌘=zoom-at-cursor · shift=h-pan · scroll=v-pan · drag-pan). Colours
+   are RESOLVED to hex at build time (canvas can't read CSS vars); the SVG levels are
+   untouched — this owns only the #fgstage canvas. ── */
+var _FG=null, _EMU={spec:null, curv:0.14, fitted:false}, RG=8;   // RG = glyph radius (graph units), uniform (kind=shape, not size → no "is it 3D?")
+function _rc(v){ if(!v) return "#8a8f98"; if(v.charAt(0)==="#") return v;   // resolve "var(--x)"/hex → hex
+  var m=/var\((--[a-z0-9-]+)\)/i.exec(v);
+  if(m){ var r=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); return r||"#8a8f98"; }
+  return v; }
+/* canvas glyphs — the SVG icon vocabulary drawn on ctx. ICO_FN/ICO_SCHEMA (24-viewBox
+   path strings) ride straight onto the canvas via Path2D; the rest are primitives. */
+var _P_FN=new Path2D(ICO_FN), _P_SCH=new Path2D(ICO_SCHEMA),
+    _P_BOLT=new Path2D("M13 2 3 14h9l-1 8 10-12h-9l1-8z"), _GODC="#d1443c";
+function _rrect(ctx,x,y,w,h,rr){ ctx.beginPath();
+  ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); }
+function _pathIco(ctx,p,x,y,r,col,tr,sw){ ctx.save(); ctx.translate(x-r*tr,y-r*tr); var s=sw*r/24; ctx.scale(s,s);
+  ctx.lineWidth=1.9/s; ctx.strokeStyle=col; ctx.lineJoin="round"; ctx.lineCap="round"; ctx.stroke(p); ctx.restore(); }
+function _cyl(ctx,x,y,r,col,fill){ var rx=r*0.82, ry=r*0.32, hy=r*0.6;
+  ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.8; ctx.lineJoin="round";
+  ctx.beginPath(); ctx.moveTo(x-rx,y-hy); ctx.lineTo(x-rx,y+hy);
+  ctx.ellipse(x,y+hy,rx,ry,0,Math.PI,0,true); ctx.lineTo(x+rx,y-hy);
+  if(fill){ ctx.globalAlpha=0.9; ctx.fill(); ctx.globalAlpha=1; } else ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(x,y-hy,rx,ry,0,0,2*Math.PI);
+  if(fill){ ctx.fillStyle=col; ctx.fill(); } else ctx.stroke(); }
+function fgGlyph(ctx, kind, x, y, r, gcol, ent, o){ o=o||{};
+  ctx.save(); ctx.lineJoin="round"; ctx.lineCap="round"; ctx.strokeStyle=gcol; ctx.fillStyle=gcol; ctx.lineWidth=1.8;
+  if(kind==="ep"){ ctx.beginPath(); ctx.arc(x,y,r*0.92,0,2*Math.PI); ctx.stroke();
+    ctx.save(); var bs=(1.35*r)/22; ctx.translate(x-13*bs, y-12*bs); ctx.scale(bs,bs); ctx.fillStyle=gcol; ctx.fill(_P_BOLT); ctx.restore(); }
+  else if(kind==="fn"||kind==="usefn"){ _rrect(ctx,x-r,y-r,2*r,2*r,r*0.34); ctx.lineWidth=o.handler?2.6:1.8; ctx.stroke();
+    _pathIco(ctx,_P_FN,x,y,r,gcol,1.2,2.4);
+    if(o.god){ ctx.beginPath(); ctx.arc(x+r*0.9,y-r*0.9,r*0.3,0,2*Math.PI); ctx.fillStyle=_GODC; ctx.fill(); } }
+  else if(kind==="model"){ _cyl(ctx,x,y,r,gcol,true); }
+  else if(kind==="store"){ _cyl(ctx,x,y,r,gcol,false); }
+  else if(kind==="schema"){ _rrect(ctx,x-r*0.95,y-r*0.95,r*1.9,r*1.9,r*0.28); ctx.stroke();
+    _pathIco(ctx,_P_SCH,x,y,r*0.86,gcol,1,2); }
+  else if(kind==="component"){ _rrect(ctx,x-r*0.9,y-r*0.9,r*1.8,r*1.8,r*0.34); ctx.stroke(); }
+  else if(kind==="hook"){ ctx.beginPath(); ctx.moveTo(x+r*0.5,y-r*0.9); ctx.lineTo(x+r*0.5,y+r*0.15);
+    ctx.arc(x-r*0.18,y+r*0.15,r*0.68,0,Math.PI*0.92,false); ctx.stroke(); }
+  else if(kind==="route"){ ctx.beginPath(); ctx.moveTo(x,y-r); ctx.lineTo(x+r,y); ctx.lineTo(x,y+r); ctx.lineTo(x-r,y); ctx.closePath(); ctx.stroke(); }
+  else { ctx.font="800 "+(r*1.7).toFixed(1)+"px ui-monospace,monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle=gcol; ctx.fillText("{}", x, y+r*0.06); }
+  if(ent && o.entDot!==false){ ctx.beginPath(); ctx.arc(x+r*0.82,y+r*0.82,r*0.44,0,2*Math.PI);
+    ctx.fillStyle=ent; ctx.fill(); ctx.lineWidth=Math.max(0.5,r*0.11); ctx.strokeStyle=o.panel||"#fff"; ctx.stroke(); }
+  ctx.restore(); }
+function fgLabel(ctx, txt, x, y, col){ var rows=rows2(txt,12);
+  ctx.font="4.6px ui-sans-serif,system-ui,sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillStyle=col;
+  rows.forEach(function(r,i){ ctx.fillText(r, x, y+i*5.2); }); }
+/* the wire: a quadratic whose control point IS force-graph's (midpoint ⊥ curvature·dist)
+   so the drawn curve and the particle flow coincide; entity-blend gradient + per-kind dash. */
+function fgLink(link, ctx){ var e=link.source, t=link.target;
+  if(!e||!t||e.x==null||t.x==null) return;
+  var dx=t.x-e.x, dy=t.y-e.y, d=Math.hypot(dx,dy)||1, u=d*_EMU.curv;
+  var cx=(e.x+t.x)/2 + u*dy/d, cy=(e.y+t.y)/2 - u*dx/d;
+  var stroke;
+  if(link.scol===link.tcol){ stroke=link.scol; }
+  else { stroke=ctx.createLinearGradient(e.x,e.y,t.x,t.y); stroke.addColorStop(0,link.scol); stroke.addColorStop(1,link.tcol); }
+  ctx.save(); ctx.globalAlpha=0.55; ctx.strokeStyle=stroke; ctx.lineWidth=link.w||0.9;
+  ctx.setLineDash(link.dash||[]);
+  ctx.beginPath(); ctx.moveTo(e.x,e.y); ctx.quadraticCurveTo(cx,cy,t.x,t.y); ctx.stroke();
+  ctx.restore(); }
+/* SVG control scheme over the canvas — disable force-graph's wheel-zoom, keep its
+   drag-pan + node-drag, and re-wire alt/ctrl/shift/scroll exactly like the SVG stage
+   (lines 625–653). Wired ONCE; reads _FG live. */
+function fgControls(host){
+  try{ _FG.enableZoomInteraction(false); }catch(_){}   // our wheel scheme owns the wheel; drag-pan + node-drag stay
+  var altAcc=0;
+  host.addEventListener("wheel", function(e){ e.preventDefault();
+    var k=_FG.zoom()||1;
+    if(e.ctrlKey || e.metaKey){                          // ZOOM at the cursor (trackpad pinch arrives as ctrl+wheel)
+      var rect=host.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      var gp=_FG.screen2GraphCoords(mx,my);
+      var k2=k*Math.exp(-e.deltaY*0.0022); k2=Math.max(0.05, Math.min(8, k2));
+      _FG.zoom(k2);
+      var w=host.clientWidth, h=host.clientHeight;
+      _FG.centerAt(gp.x-(mx-w/2)/k2, gp.y-(my-h/2)/k2);   // the point under the cursor stays put
+    } else if(e.shiftKey){                                // horizontal pan
+      var c=_FG.centerAt(); _FG.centerAt(c.x+(e.deltaY+e.deltaX)/k, c.y);
+    } else if(e.altKey){                                  // depth: reserved (no selection engine on the FG levels yet)
+      altAcc+=e.deltaY; if(Math.abs(altAcc)>=40) altAcc=0;
+    } else {                                              // vertical pan (plain scroll)
+      var c2=_FG.centerAt(); _FG.centerAt(c2.x+e.deltaX/k, c2.y+e.deltaY/k);
+    }
+  }, {passive:false});
 }
+/* the ONE force-graph instance on #fgstage, (re)driven by a spec. Built once; a level
+   switch swaps graphData + spec (the closures read _EMU.spec live) and re-fits ONCE. */
+function emuFG(spec){
+  if(!spec || typeof ForceGraph==="undefined") return;
+  _EMU.spec=spec; _EMU.curv=spec.curv||0.14; _EMU.fitted=false;
+  var host=document.getElementById("fgstage");
+  // CLUSTER BY ENTITY — the SVG Trace packs each entity into an onion; a plain force
+  // layout strings the nodes out. A per-cluster centroid force (cl = slug|home) pulls
+  // each entity's pieces into a blob, so 5B reads as the same diagram with movement.
+  var seen={}, keys=[]; spec.nodes.forEach(function(n){ n.cl=n.slug||n.home||"·"; if(!seen[n.cl]){ seen[n.cl]=1; keys.push(n.cl); } });
+  keys.sort(); var R=Math.max(240, keys.length*58), anch={};
+  keys.forEach(function(k,i){ var a=-Math.PI/2+2*Math.PI*i/keys.length; anch[k]={x:Math.cos(a)*R, y:Math.sin(a)*R}; });
+  _EMU.anch=anch;
+  spec.nodes.forEach(function(n,i){ if(n.x==null){ var a=anch[n.cl]||{x:0,y:0};   // seed near the cluster → converges tight, fits stable
+    n.x=a.x+((i%9)-4)*7; n.y=a.y+(((i*5)%9)-4)*7; } });
+  var data={nodes:spec.nodes, links:spec.links};
+  if(_FG){ _FG.linkCurvature(_EMU.curv).graphData(data); if(!motionOn) _FG.pauseAnimation(); (spec.def||function(){})(); return; }
+  _EMU.panel=_rc("var(--panel)"); _EMU.ink=_rc("var(--muted)");
+  _FG=ForceGraph()(host)
+    .backgroundColor(_rc("var(--bg)"))
+    .graphData(data)
+    .nodeRelSize(1).nodeVal(1)
+    .nodeCanvasObjectMode(function(){return "replace";})
+    .nodeCanvasObject(function(n, ctx, gs){
+      fgGlyph(ctx, n.kind, n.x, n.y, RG, n.glyphCol, n.entCol, {handler:n.handler, god:n.god, panel:_EMU.panel});
+      if(gs>0.7 && n.label) fgLabel(ctx, n.label, n.x, n.y+RG+3.5, _EMU.ink); })
+    .nodePointerAreaPaint(function(n, color, ctx){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(n.x,n.y,RG*1.5,0,2*Math.PI); ctx.fill(); })
+    .nodeLabel(function(n){ return esc(n.label)+" · "+n.kind+(n.home?" · "+esc(n.home):(n.slug?" · "+esc(n.slug):"")); })
+    .linkCurvature(_EMU.curv)
+    .linkCanvasObjectMode(function(){return "replace";})
+    .linkCanvasObject(fgLink)
+    .linkDirectionalParticles(2).linkDirectionalParticleSpeed(0.006)
+    .linkDirectionalParticleWidth(1.5).linkDirectionalParticleColor(function(l){return l.pcol||l.scol;})
+    .onNodeClick(function(n){ (_EMU.spec.onClick||function(){})(n); })
+    .onEngineStop(function(){ if(!_EMU.fitted){ _EMU.fitted=true; try{ _FG.zoomToFit(400, 40); }catch(_){} } })  // FIT ONCE — a node-drag re-heat never re-zooms out
+    .cooldownTicks(160);
+  try{ _FG.d3Force("charge").strength(-20); }catch(_){}
+  try{ _FG.d3Force("link").distance(20); }catch(_){}
+  var CF=function(alpha){ var ns=CF.__n||[]; ns.forEach(function(n){ var a=_EMU.anch[n.cl]; if(!a) return;
+    n.vx+=(a.x-n.x)*0.09*alpha; n.vy+=(a.y-n.y)*0.09*alpha; }); };   // entity-centroid pull (reads _EMU.anch live)
+  CF.initialize=function(ns){ CF.__n=ns; };
+  try{ _FG.d3Force("cluster", CF); }catch(_){}
+  fgControls(host);
+  if(!motionOn) _FG.pauseAnimation();
+  (spec.def||function(){})();
+}
+var _LK_W={route:1.1, touch:0.9, resp:0.8, xfk:1.0, use:0.9, calls:0.9},
+    _LK_D={resp:[3,3], use:[1.5,3], xfk:[1.5,4]};
+function _lk(s,t,sc,tc,kind){ return {source:s, target:t, scol:_rc(sc), tcol:_rc(tc), pcol:_rc(sc),
+  w:_LK_W[kind]||0.9, dash:_LK_D[kind]||null, kind:kind}; }
+/* 5B · TRACE spec — the same data drawTrace wires: endpoints → handler ƒ → the models/
+   schemas it touches → the response, plus cross-entity FKs and use edges. Glyph = kind,
+   dot = entity. This is the richest diagram, so it proves the emulation. */
+function buildTraceSpec(){
+  var nodes={}; var links=[];
+  function nd(id, kind, gc, ent, label, extra){ if(!nodes[id]){
+    nodes[id]={id:id, kind:kind, glyphCol:_rc(gc), entCol:ent, label:label};
+    if(extra) for(var kk in extra) nodes[id][kk]=extra[kk]; } return nodes[id]; }
+  var clsKind={};
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{};
+    (pc.models||[]).forEach(function(m){ if(m.cls) clsKind[slug+"|"+m.cls]="model"; });
+    (pc.schemas||[]).forEach(function(sc){ if(sc.cls) clsKind[slug+"|"+sc.cls]="schema"; }); });
+  var C_API="var(--c-fn-api)", C_SRV="var(--c-fn-services)", C_MOD="var(--c-model)", C_SCH="var(--c-schema)";
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{endpoints:[]}, col=COLORS[slug]||"#8a8f98";
+    (pc.endpoints||[]).forEach(function(ep){
+      var epId="ep:"+slug+"|"+ep.m+" "+ep.p;
+      nd(epId,"ep",METHOD[ep.m]||"var(--muted)",col, ep.p.replace(/^\//,"")||ep.m, {method:ep.m, slug:slug, ep:ep});
+      if(!ep.fn) return;
+      var fnId="fn:"+slug+"|"+ep.fn;
+      nd(fnId,"fn",C_API,col, ep.fn, {handler:true, slug:slug, fnname:ep.fn});
+      links.push(_lk(epId, fnId, col, col, "route"));
+      (ep.touch||[]).forEach(function(c){ var k=clsKind[slug+"|"+c]||"model", cid="cls:"+slug+"|"+c;
+        nd(cid, k, k==="model"?C_MOD:C_SCH, col, c, {slug:slug, cls:c});
+        links.push(_lk(fnId, cid, col, col, "touch")); });
+      if(ep.resp){ var own=D.schema_owner[ep.resp];
+        if(own){ var rid="cls:"+own+"|"+ep.resp;
+          nd(rid, "schema", C_SCH, COLORS[own]||col, ep.resp, {slug:own, cls:ep.resp});
+          links.push(_lk(fnId, rid, col, COLORS[own]||col, "resp")); } }
+    }); });
+  (D.cross_edges||[]).forEach(function(e){ var a="cls:"+e.fs+"|"+e.f, c="cls:"+e.ts+"|"+e.t;
+    nd(a, clsKind[e.fs+"|"+e.f]||"model", C_MOD, COLORS[e.fs]||"#8a8f98", e.f, {slug:e.fs, cls:e.f});
+    nd(c, clsKind[e.ts+"|"+e.t]||"model", C_MOD, COLORS[e.ts]||"#8a8f98", e.t, {slug:e.ts, cls:e.t});
+    links.push(_lk(a, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "xfk")); });
+  (D.use_edges||[]).forEach(function(e){ var f="fn:"+e.fs+"|"+e.fn, c="cls:"+e.ts+"|"+e.cls;
+    nd(f, "usefn", C_SRV, COLORS[e.fs]||"#8a8f98", e.fn, {slug:e.fs, fnname:e.fn});
+    nd(c, clsKind[e.ts+"|"+e.cls]||"model", C_MOD, COLORS[e.ts]||"#8a8f98", e.cls, {slug:e.ts, cls:e.cls});
+    links.push(_lk(f, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "use")); });
+  var arr=Object.keys(nodes).map(function(k){return nodes[k];}), ids={}; arr.forEach(function(n){ ids[n.id]=1; });
+  links=links.filter(function(l){ return ids[l.source] && ids[l.target]; });
+  return {nodes:arr, links:links, onClick:showTraceFGNode, def:showTraceFGDefault, curv:0.14}; }
+function drawTraceFG(){ emuFG(buildTraceSpec()); }
+function showTraceFGDefault(){ var s=_EMU.spec||{nodes:[],links:[]};
+  panel.innerHTML="<h3 style='color:var(--c-fn-api)'>Trace ᶠ — force-graph</h3>"
+   +"<div class='row'><span>nodes</span><b>"+s.nodes.length+"</b></div>"
+   +"<div class='row'><span>wires</span><b>"+s.links.length+"</b></div>"
+   +"<div class='note'>The 5·Trace flow rendered with force-graph: endpoint → handler ƒ → the "
+   +"data it touches → its response, plus cross-entity FKs + use edges. <b>Glyph = kind</b> "
+   +"(◇ endpoint · ƒ handler · cylinder model · {} schema), the small <b>dot = its entity</b>; a "
+   +"wire = a relation (particles = the flow). <b>Scroll</b> pans · <b>Shift+scroll</b> sideways · "
+   +"<b>Ctrl/⌘+scroll</b> zooms at the cursor · <b>drag</b> a node or the canvas. Compare with 5·Trace.</div>"; }
+function showTraceFGNode(n){
+  if(n.kind==="ep" && n.ep){ showEndpoint(n.slug, n.ep); return; }
+  if((n.kind==="fn"||n.kind==="usefn")){
+    showFn({name:n.fnname, slug:n.slug, layer:n.kind==="fn"?"api":"services", lang:"py", handler:!!n.handler, god:!!n.god}); return; }
+  if(n.kind==="model"||n.kind==="schema"){ showPiece(n.slug, {kind:n.kind, m:{cls:n.cls}}); return; }
+  panel.innerHTML="<h3>"+esc(n.label)+"</h3><div class='row'><span>kind</span><b>"+esc(n.kind)+"</b></div>"; }
+/* 2 · FRONTEND spec — graft's classified TS pieces, same emulated grammar. */
+function buildFrontendSpec(){
+  if(!D.frontend || !D.frontend.present) return null;
+  var KC={ component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)", route:"var(--fk-route)", "fe-type":"var(--muted)" };
+  var nodes=[], seen={}, ent={};
+  function add(list, entCol, home){ (list||[]).forEach(function(p){ if(p.id && !seen[p.id]){ seen[p.id]=1; ent[p.id]=entCol;
+    nodes.push({id:p.id, kind:p.k, glyphCol:_rc(KC[p.k]||"var(--muted)"), entCol:entCol, label:p.n||p.k, home:home}); } }); }
+  (D.entities||[]).forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
+    if(fe) add(fe.pieces, COLORS[en.slug]||_rc("var(--c-fn-web)"), en.label); });
+  (D.fe_buckets||[]).forEach(function(bk){ add(bk.pieces, _rc("var(--c-fn-web)"), bk.name); });
+  var ids={}; nodes.forEach(function(n){ ids[n.id]=1; });
+  var web=_rc("var(--c-fn-web)");
+  var links=(D.fe_edges||[]).filter(function(e){ return ids[e.s] && ids[e.t]; })
+    .map(function(e){ var sc=ent[e.s]||web, tc=ent[e.t]||sc;
+      return {source:e.s, target:e.t, scol:sc, tcol:tc, pcol:sc, w:0.9, dash:null, kind:e.rel||"calls"}; });
+  return {nodes:nodes, links:links, onClick:function(n){ showFePiece(n.label, n.kind, n.home); }, def:showFrontendDefault, curv:0.12}; }
+function drawFrontendGraph(){ emuFG(buildFrontendSpec()); }
 function showFrontendDefault(){
-  var s=(D.frontend&&D.frontend.total)||0;
+  var s=(D.frontend&&D.frontend.total)||0, hid=(D.frontend&&D.frontend.scaffold_total)||0;
   panel.innerHTML="<h3 style='color:var(--c-fn-web)'>Frontend graph</h3>"
    +"<div class='row'><span>pieces</span><b>"+s+"</b></div>"
-   +"<div class='note'>graft's classified TS — component · hook · store · route · type. Node colour = its "
-   +"entity, size = kind; a wire = a call (particles = the flow). Drag to pan, scroll to zoom, click a node "
-   +"for its details. The scattered nodes are unwired in graft's call graph (types + JSX are a known blind "
-   +"spot — the linking arm is next).</div>";
+   +"<div class='note'>graft's classified TS — same grammar as 5B: <b>glyph = kind</b> (▢ component · "
+   +"hook · ⛁ store · ◇ route · {} type), the small <b>dot = its entity</b>; a wire = a call (particles = "
+   +"the flow). <b>Scroll</b> pans · <b>Ctrl/⌘+scroll</b> zooms at the cursor · <b>drag</b> to move. The "
+   +"scattered {} nodes are unwired in graft's call graph (types + JSX are a known blind spot — the "
+   +"linking arm is next).</div>";
 }
 document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
@@ -3149,7 +3335,15 @@ window.__lvltest = {
       if(seen[key] && seen[key]!==(ed.s<ed.t)){ both++; opposite++; } // one fwd + one rev exists
       seen[key]=(ed.s<ed.t); });
     return {pairsBothDirs:both, opposite:opposite};
-  }
+  },
+  fg:function(){ if(!_FG) return null;
+    var sp=_EMU.spec||{nodes:[],links:[]};
+    return {fitted:_EMU.fitted, zoom:_FG.zoom(), center:_FG.centerAt(),
+      nodes:sp.nodes.length, links:sp.links.length,
+      canvas: !!document.querySelector("#fgstage canvas"),
+      kinds:(function(){ var o={}; sp.nodes.forEach(function(n){ o[n.kind]=(o[n.kind]||0)+1; }); return o; })() }; },
+  fgSetZoom:function(k){ if(_FG) _FG.zoom(k); },
+  fgReheat:function(){ try{ _FG.d3ReheatSimulation(); }catch(_){} }
 };
 render();
 

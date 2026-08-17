@@ -305,6 +305,29 @@ ck('id="motionbtn"' in page and "svg.pauseAnimations()" in js and "[data-motion=
 ck('id="overlaysbtn"' in page and "themebtn" not in page,
    "toolbar: guards/hubs/pressure in an overlays dropdown; theme moved to the global cog")
 
+# 5B — the EMULATED force-graph (Trace ᶠ + Frontend share ONE renderer that draws the
+#      SVG grammar on the canvas: per-kind icon glyphs, curved entity-blend wires that
+#      ride the particle curve, the SVG control scheme, and a FIT-ONCE guard).
+ck('data-lvl="tracefg"' in page and "function drawTraceFG(" in js,
+   "5B: a '5B · Trace ᶠ' level is added, rendered on the force-graph canvas")
+ck("function emuFG(" in js and "buildTraceSpec()" in js and "buildFrontendSpec()" in js,
+   "5B: ONE renderer (emuFG) drives BOTH the trace spec and the frontend spec")
+ck('level==="tracefg"' in js and 'level==="frontend" || level==="tracefg"' in js,
+   "5B: render() routes both force-graph levels to the #fgstage canvas")
+ck("function fgGlyph(" in js and "new Path2D(ICO_FN)" in js and "new Path2D(ICO_SCHEMA)" in js,
+   "5B: per-KIND canvas glyphs — the SVG ƒ/braces icons ride onto the canvas via Path2D")
+ck(".nodeCanvasObjectMode(function(){return \"replace\";})" in js and "n.entCol" in js,
+   "5B: nodes draw the glyph themselves (replace mode); kind = shape, entity = the dot")
+ck("function fgLink(" in js and "quadraticCurveTo(cx,cy" in js and "createLinearGradient" in js,
+   "5B: wires are curved entity-blend gradients whose control point = force-graph's own")
+ck("if(!_EMU.fitted)" in js and "_EMU.fitted=true" in js,
+   "5B: FIT-ONCE — zoomToFit fires once, never re-zooming out on a node-drag re-heat")
+ck("function fgControls(" in js and "enableZoomInteraction(false)" in js
+   and "e.ctrlKey || e.metaKey" in js and "e.shiftKey" in js and "e.altKey" in js,
+   "5B: the SVG control scheme (ctrl=zoom · shift=h-pan · alt=depth · scroll=v-pan) over the canvas")
+ck('d3Force("cluster"' in js and "_EMU.anch" in js,
+   "5B: an entity-centroid force clusters each entity's pieces (emulates the SVG onion)")
+
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
