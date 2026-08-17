@@ -289,6 +289,13 @@ ck("D.fe_buckets" in js and "candidate" in js,
    "P2b: FE-native buckets draw as their own circles, candidate entities flagged")
 ck("function feKindSummary(" in js and "function showFrontend(" in js,
    "P2b: the frontend panel helpers are defined")
+# P2b — the LAYERS BAND (stacked bar per entity/bucket, by kind) + the motion toggle
+ck("--fk-comp:" in style and "--fk-store:" in style,
+   "P2b-band: the frontend-kind categorical palette is defined (never themed)")
+ck("FRONTEND — pieces by kind" in js,
+   "P2b-band: the Layers view draws the stacked frontend band")
+ck('id="motionbtn"' in page and "svg.pauseAnimations()" in js and "[data-motion=" in style,
+   "motion toggle: the pause button freezes both SMIL (pauseAnimations) and CSS (data-motion)")
 
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)

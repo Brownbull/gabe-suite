@@ -17,6 +17,8 @@
   --bg:#f6f7f9; --panel:#ffffff; --ink:#141a24; --muted:#7a8595; --line:#e7e9ee;
   --accent:#4f46e5; --edge:#9aa3ad;
   --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
+  /* frontend-kind categorical palette (the Layers band segments) — never themed */
+  --fk-comp:#e8590c; --fk-type:#7048e8; --fk-hook:#0ca678; --fk-store:#e64980; --fk-route:#339af0;
   --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
@@ -1540,10 +1542,45 @@ function drawLayers(){
     eLayer.appendChild(pU);
     flowDots(eLayer, pU, dotFill);
     regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
+  // ── P2b: the FRONTEND BAND — a stacked bar per entity/bucket, segmented by kind
+  //    (the "stack band" form for the Layers view). Bars scale to the largest count;
+  //    a folded entity wears its own name, a bucket its bucket name (◆ = candidate).
+  //    Honest-empty: no frontend arm ⇒ the block is skipped, layout unchanged.
+  if(D.frontend && D.frontend.present){
+    var FK=[["component","--fk-comp"],["fe-type","--fk-type"],["hook","--fk-hook"],["store","--fk-store"],["route","--fk-route"]];
+    var frows=[];
+    D.entities.forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
+      if(fe&&fe.count) frows.push({name:en.label, by:fe.by_kind, n:fe.count, cand:false}); });
+    (D.fe_buckets||[]).forEach(function(bk){ frows.push({name:bk.name, by:bk.by_kind, n:bk.count, cand:!!bk.candidate}); });
+    frows.sort(function(a,c){ return c.n-a.n || (a.name<c.name?-1:1); });
+    var maxN=frows.reduce(function(m,r){ return Math.max(m,r.n); },1);
+    var BW=300, RH=26, LBLW=120, fx0=rnd(-(LBLW+BW+50)/2), fy0=top+H+62;
+    var fb=E("g"); nLayer.appendChild(fb);
+    var ftitle=E("text",{x:fx0, y:fy0-26, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:700;letter-spacing:.03em"});
+    ftitle.textContent="FRONTEND — pieces by kind"; fb.appendChild(ftitle);
+    frows.forEach(function(r,i){ var ry=fy0+i*RH;
+      var nm=E("text",{class:"felbl", x:fx0+LBLW-10, y:ry+13, style:"text-anchor:end"}); nm.textContent=r.name+(r.cand?" ◆":""); fb.appendChild(nm);
+      var cursor=0;
+      FK.forEach(function(k){ var c=r.by[k[0]]||0; if(!c) return; var w=rnd(c/maxN*BW);
+        var seg=E("rect",{x:rnd(fx0+LBLW+cursor), y:ry+2, width:Math.max(w,1.5), height:RH-8, rx:2,
+          fill:"var("+k[1]+")","fill-opacity":r.cand?"0.55":"0.9"});
+        var sti=E("title"); sti.textContent=r.name+" · "+c+" "+k[0]; seg.appendChild(sti); fb.appendChild(seg);
+        cursor+=w; });
+      var tot=E("text",{class:"felbl", x:rnd(fx0+LBLW+cursor+8), y:ry+13, style:"text-anchor:start;font-weight:800"});
+      tot.textContent=r.n; fb.appendChild(tot); });
+    b.minX=Math.min(b.minX,fx0-20); b.maxX=Math.max(b.maxX,fx0+LBLW+BW+70);
+    b.maxY=Math.max(b.maxY,fy0+frows.length*RH+20);
+  }
   frame(b);
-  legend([glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
+  var _lleg=[glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
           glyphIt("model","cyl"), glyphIt("schema","s"),
-          "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"]);
+          "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"];
+  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 64 14'>"
+    +"<rect x='1' y='3' width='9' height='8' rx='1.5' fill='var(--fk-comp)'/><rect x='13' y='3' width='9' height='8' rx='1.5' fill='var(--fk-type)'/>"
+    +"<rect x='25' y='3' width='9' height='8' rx='1.5' fill='var(--fk-hook)'/><rect x='37' y='3' width='9' height='8' rx='1.5' fill='var(--fk-store)'/>"
+    +"<rect x='49' y='3' width='9' height='8' rx='1.5' fill='var(--fk-route)'/></svg>"
+    +"<span class='lglbl'>frontend kinds: component · fe-type · hook · store · route</span></span>");
+  legend(_lleg);
 }
 
 /* ═══ LEVEL 5 · TRACE — the ONION: diagram 2's container layout with a layered,
