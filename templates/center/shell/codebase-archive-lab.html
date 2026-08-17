@@ -2964,7 +2964,11 @@ function fgHighlight(centerId, depth){ var adj=_EMU.adj||{}; if(adj[centerId]===
   var nodes={}, links={}, front=[centerId]; nodes[centerId]=0;
   for(var h=0; h<Math.max(1,depth); h++){ var next=[];
     front.forEach(function(id){ (adj[id]||[]).forEach(function(e){ if(!showConns && e.cross) return;   // hidden wire → not a highlight path
-      links[e.li]=1; if(nodes[e.id]===undefined){ nodes[e.id]=h+1; next.push(e.id); } }); });
+      links[e.li]=1;
+      // a CROSS-entity edge LIGHTS its neighbour (you see the connection) but is NOT expanded
+      // through — else a click follows the FK chain (Location→Household→User→…) across every
+      // entity and lights the whole model universe. The highlight stays THIS entity's flow.
+      if(nodes[e.id]===undefined){ nodes[e.id]=h+1; if(!e.cross) next.push(e.id); } }); });
     front=next; if(!front.length) break; }
   _EMU.hl={center:centerId, nodes:nodes, links:links, mode:"sel"}; _fgSyncParticles(); _EMU.repaint(); }
 /* journey highlight — light the ordered path (every resolvable step + the wires among them). */
@@ -3631,6 +3635,9 @@ window.__lvltest = {
     (_EMU.spec.onClick||function(){})(n); fgHighlight(n.id, selDepth); return true; },
   fgHL:function(){ var h=_EMU.hl; if(!h) return null;
     return {mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}; },
+  fgHLEntities:function(){ var h=_EMU.hl; if(!h) return 0; var byId={}, ents={};
+    (_EMU.spec?_EMU.spec.nodes:[]).forEach(function(n){ byId[n.id]=n.cl; });
+    Object.keys(h.nodes).forEach(function(id){ if(byId[id]) ents[byId[id]]=1; }); return Object.keys(ents).length; },
   fgArrange:function(){ return entLayout||"force"; },
   fgClearHL:function(){ fgClearHL(); },
   fgCanvasFits:function(){ var h=document.getElementById("fgstage"), cv=document.querySelector("#fgstage canvas");

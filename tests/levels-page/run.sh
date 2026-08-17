@@ -417,6 +417,8 @@ ck('if(level==="frontend") return n.kind==="usefn"?"fn":n.kind;' in js,
    "FIX: the Frontend level forces KIND grouping (its ids match no backend usecase/tests map)")
 ck('_EMU.keepCam=' in js and 'if(_EMU.keepCam){' in js,
    "FIX: a grouping change PRESERVES the camera (no re-fit), like the SVG clSeg")
+ck('if(!e.cross) next.push(e.id)' in js,
+   "FIX: a click's highlight BFS lights cross-entity neighbours but does NOT expand through them (no whole-model-universe select)")
 
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
