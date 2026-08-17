@@ -228,5 +228,19 @@ return to the group spike (recipe+auth) → then replicate the grammar into 5C +
   (with the kind glyphs) · Tests · Identity · Note, plus a **minimize-to-rail** button.
 - Bundle now also exposes `SVGLoader` (esbuild, one three instance).
 
-**Open question for the operator:** which icon mode is 5C's default — Billboard (crisp,
-flat, always legible) or Tube 3D (volumetric, "more 3D")? Primitives stays as a fallback.
+### 9b · volume + bubbles + font (operator pass, 2026-08-17)
+
+- **BUBBLE (the sphere container, default ON, toggle)** — every node is a translucent
+  glowing sphere (kind hue · wireframe rim · a bright core) with the icon INSIDE. It does
+  three jobs at once: gives the flat 2D icon **volume**; is the **boundary the links reach**
+  (no more line stabbing the icon centre — the operator's confusion); and is the canvas for
+  **effects** (glow/rim now; fresnel/pulse later).
+- **SOLID 3D icon mode** — the icon's filled silhouette **extruded with a bevel** (createShapes
+  closes the stroke path → a fill → ExtrudeGeometry): the 2D icon with real depth (a solid
+  lightning bolt, diamond, `{ }`, `< >`, hook). The volumetric look, still reading as the icon.
+  Four modes now: **Billboard 2D · Solid 3D · Tube 3D · Primitives** (Billboard is the default).
+- **FONT** — the link + node labels now use the **Gabe-center content font (Menlo, mono)** with
+  a selector (Menlo · Cascadia · Segoe · Helvetica). (Was a generic sans.)
+
+**Open for the operator:** the default icon mode (Billboard-in-bubble vs Solid-in-bubble),
+and which bubble effects to add (fresnel rim · pulse on select · colour = a metric).
