@@ -289,13 +289,17 @@ ck("D.fe_buckets" in js and "candidate" in js,
    "P2b: FE-native buckets draw as their own circles, candidate entities flagged")
 ck("function feKindSummary(" in js and "function showFrontend(" in js,
    "P2b: the frontend panel helpers are defined")
-# P2b — the LAYERS BAND (stacked bar per entity/bucket, by kind) + the motion toggle
-ck("--fk-comp:" in style and "--fk-store:" in style,
-   "P2b-band: the frontend-kind categorical palette is defined (never themed)")
-ck("FRONTEND — pieces by kind" in js,
-   "P2b-band: the Layers view draws the stacked frontend band")
+# P2b — the LAYERS FRONTEND LANES (navigable dots per kind) + the motion toggle
+ck('class:"felane"' in js and "data-fp-k" in js,
+   "P2b-lanes: the Layers view draws navigable frontend lanes (a dot per piece)")
+ck("function showFePiece(" in js,
+   "P2b-lanes: a frontend dot opens its piece panel (showFePiece)")
+ck('"FRONTEND"' in js and '"BACKEND"' in js,
+   "P2b-lanes: the BACKEND / FRONTEND group labels split the diagram")
 ck('id="motionbtn"' in page and "svg.pauseAnimations()" in js and "[data-motion=" in style,
    "motion toggle: the pause button freezes both SMIL (pauseAnimations) and CSS (data-motion)")
+ck('id="overlaysbtn"' in page and "themebtn" not in page,
+   "toolbar: guards/hubs/pressure in an overlays dropdown; theme moved to the global cog")
 
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)

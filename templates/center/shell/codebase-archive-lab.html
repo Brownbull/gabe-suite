@@ -17,8 +17,6 @@
   --bg:#f6f7f9; --panel:#ffffff; --ink:#141a24; --muted:#7a8595; --line:#e7e9ee;
   --accent:#4f46e5; --edge:#9aa3ad;
   --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
-  /* frontend-kind categorical palette (the Layers band segments) — never themed */
-  --fk-comp:#e8590c; --fk-type:#7048e8; --fk-hook:#0ca678; --fk-store:#e64980; --fk-route:#339af0;
   --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
@@ -164,6 +162,20 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .ovrow:last-child{ margin-bottom:0; }
 .ovrow.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
 .ovrow svg{ width:15px; height:15px; flex:none; }
+/* global settings cog panel (assets/a3-settings.js) — a3.css is not loaded on this lab
+   page, so the ~10 panel rules are inlined here (--surface → --panel). Hidden until the
+   sidebar cog toggles .on. */
+.a3gear{ display:inline-flex; align-items:center; gap:6px; margin-left:8px; background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:3px 7px; font-size:.72rem; font-weight:600; color:var(--muted); cursor:pointer; }
+.a3gear:hover{ color:var(--accent); border-color:var(--accent); }
+.a3panel{ position:fixed; right:20px; top:56px; z-index:60; width:262px; background:var(--panel); border:1px solid var(--line); border-radius:11px; box-shadow:0 12px 34px rgba(0,0,0,.30); padding:14px; display:none; }
+.a3panel.on{ display:block; }
+.a3panel h4{ margin:0 0 10px; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.a3panel label.row{ display:block; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:12px 0 5px; }
+.a3panel select{ width:100%; font-size:.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:inherit; }
+.a3seg{ display:flex; gap:4px; }
+.a3seg button{ flex:1; font-size:.76rem; font-weight:600; padding:6px 0; border-radius:7px; border:1px solid var(--line); background:var(--panel); color:var(--muted); cursor:pointer; font-family:inherit; }
+.a3seg button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.a3toggle{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.72rem; color:var(--muted); margin-top:10px; }
 .cornerbox{ position:absolute; bottom:10px; z-index:25; max-width:360px; font-size:11px;
   background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 10px; }
 .cornerbox .cbhead{ display:flex; align-items:center; gap:10px; font-size:11px; font-weight:800;
@@ -1194,6 +1206,12 @@ function showFrontend(label, fe, candidate){
    +"<div class='row'><span>total</span><b>"+(fe.count||0)+"</b></div>"
    +"<div class='note'>Frontend structure from graft's TS index — components · hooks · stores · types. Composition wires between pieces render in the graph.</div>";
 }
+function showFePiece(name, kind, home){
+  panel.innerHTML="<h3 style='color:var(--c-fn-web)'>"+esc(name||"(anonymous)")+"</h3>"
+   +"<div class='row'><span>kind</span><b>"+esc(kind)+"</b></div>"
+   +"<div class='row'><span>frontend of</span><b>"+esc(home)+"</b></div>"
+   +"<div class='note'>A frontend "+esc(kind)+" from graft's TS index. Click its entity's octagon in 1·Entities for the full frontend slice.</div>";
+}
 function showEdge(ed){
   var rows=Object.keys(ed.kinds).sort().map(function(k){
     return "<div class='row'><span>"+esc(k)+"</span><b>×"+ed.kinds[k]+"</b></div>"; }).join("");
@@ -1555,44 +1573,50 @@ function drawLayers(){
     eLayer.appendChild(pU);
     flowDots(eLayer, pU, dotFill);
     regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
-  // ── P2b: the FRONTEND BAND — a stacked bar per entity/bucket, segmented by kind
-  //    (the "stack band" form for the Layers view). Bars scale to the largest count;
-  //    a folded entity wears its own name, a bucket its bucket name (◆ = candidate).
-  //    Honest-empty: no frontend arm ⇒ the block is skipped, layout unchanged.
+  // ── P2b: FRONTEND LANES (operator: navigable columns, NOT a stats band). To the LEFT
+  //    of the backend lanes, one lane per KIND (component · fe-type · hook · store · route);
+  //    each piece is a DOT coloured by its entity (bucket pieces = orange). Click a dot for
+  //    the piece. A BACKEND / FRONTEND group label says which half is which. Honest-empty:
+  //    no arm ⇒ the block is skipped, the backend layout is byte-unchanged.
   if(D.frontend && D.frontend.present){
-    var FK=[["component","--fk-comp"],["fe-type","--fk-type"],["hook","--fk-hook"],["store","--fk-store"],["route","--fk-route"]];
-    var frows=[];
+    var FKINDS=["component","fe-type","hook","store","route"];
+    var byKind={}; FKINDS.forEach(function(k){ byKind[k]=[]; });
+    function feAdd(list, col, home){ (list||[]).forEach(function(pp){
+      if(byKind[pp.k]) byKind[pp.k].push({n:pp.n, k:pp.k, col:col, home:home}); }); }
     D.entities.forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
-      if(fe&&fe.count) frows.push({name:en.label, by:fe.by_kind, n:fe.count, cand:false}); });
-    (D.fe_buckets||[]).forEach(function(bk){ frows.push({name:bk.name, by:bk.by_kind, n:bk.count, cand:!!bk.candidate}); });
-    frows.sort(function(a,c){ return c.n-a.n || (a.name<c.name?-1:1); });
-    var maxN=frows.reduce(function(m,r){ return Math.max(m,r.n); },1);
-    var BW=300, RH=26, LBLW=120, fx0=rnd(-(LBLW+BW+50)/2), fy0=top+H+62;
-    var fb=E("g"); nLayer.appendChild(fb);
-    var ftitle=E("text",{x:fx0, y:fy0-26, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:700;letter-spacing:.03em"});
-    ftitle.textContent="FRONTEND — pieces by kind"; fb.appendChild(ftitle);
-    frows.forEach(function(r,i){ var ry=fy0+i*RH;
-      var nm=E("text",{class:"felbl", x:fx0+LBLW-10, y:ry+13, style:"text-anchor:end"}); nm.textContent=r.name+(r.cand?" ◆":""); fb.appendChild(nm);
-      var cursor=0;
-      FK.forEach(function(k){ var c=r.by[k[0]]||0; if(!c) return; var w=rnd(c/maxN*BW);
-        var seg=E("rect",{x:rnd(fx0+LBLW+cursor), y:ry+2, width:Math.max(w,1.5), height:RH-8, rx:2,
-          fill:"var("+k[1]+")","fill-opacity":r.cand?"0.55":"0.9"});
-        var sti=E("title"); sti.textContent=r.name+" · "+c+" "+k[0]; seg.appendChild(sti); fb.appendChild(seg);
-        cursor+=w; });
-      var tot=E("text",{class:"felbl", x:rnd(fx0+LBLW+cursor+8), y:ry+13, style:"text-anchor:start;font-weight:800"});
-      tot.textContent=r.n; fb.appendChild(tot); });
-    b.minX=Math.min(b.minX,fx0-20); b.maxX=Math.max(b.maxX,fx0+LBLW+BW+70);
-    b.maxY=Math.max(b.maxY,fy0+frows.length*RH+20);
+      if(fe) feAdd(fe.pieces, COLORS[en.slug]||"var(--c-fn-web)", en.label); });
+    (D.fe_buckets||[]).forEach(function(bk){ feAdd(bk.pieces, "var(--c-fn-web)", bk.name); });
+    var PIT=7, DOT=2.6, GAP=26, feg=E("g",{class:"felane"}); nLayer.appendChild(feg);
+    var flanes=FKINDS.map(function(k){ var n=byKind[k].length;
+      var cols=Math.max(1,Math.min(38,Math.ceil(Math.sqrt(n*1.7))));
+      return {k:k, n:n, cols:cols, w:cols*PIT, rows:Math.ceil(n/Math.max(1,cols))}; }).filter(function(l){ return l.n; });
+    var feW=flanes.reduce(function(s,l){ return s+l.w+GAP; },0)-GAP;
+    var feX0=rnd(-totalW/2-70-feW), feY0=top+6, cxp=feX0;
+    flanes.forEach(function(l){
+      var hd=E("text",{x:rnd(cxp), y:top-14, style:"text-anchor:start;font-size:10.5px;fill:var(--c-fn-web);font-weight:700"});
+      hd.textContent=l.k+" "+l.n; feg.appendChild(hd);
+      byKind[l.k].forEach(function(d,i){ var rr=Math.floor(i/l.cols), cc=i%l.cols;
+        var dot=E("circle",{r:DOT, cx:rnd(cxp+cc*PIT+DOT), cy:rnd(feY0+rr*PIT+DOT), fill:d.col,
+          "data-fp-n":d.n||"", "data-fp-k":d.k, "data-fp-h":d.home, style:"cursor:pointer"});
+        feg.appendChild(dot); });
+      cxp+=l.w+GAP; });
+    feg.addEventListener("click",function(ev){ var t=ev.target;
+      if(t.getAttribute && t.getAttribute("data-fp-k")){ ev.stopPropagation();
+        showFePiece(t.getAttribute("data-fp-n"), t.getAttribute("data-fp-k"), t.getAttribute("data-fp-h")); } });
+    var feH=flanes.reduce(function(m,l){ return Math.max(m, l.rows*PIT); },0);
+    var flab=E("text",{x:rnd(feX0), y:top-34, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
+    flab.textContent="FRONTEND"; feg.appendChild(flab);
+    var blab=E("text",{x:rnd(-totalW/2), y:top-34, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
+    blab.textContent="BACKEND"; nLayer.appendChild(blab);
+    b.minX=Math.min(b.minX,feX0-30); b.minY=Math.min(b.minY,top-46); b.maxY=Math.max(b.maxY,feY0+feH+20);
   }
   frame(b);
   var _lleg=[glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
           glyphIt("model","cyl"), glyphIt("schema","s"),
           "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"];
-  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 64 14'>"
-    +"<rect x='1' y='3' width='9' height='8' rx='1.5' fill='var(--fk-comp)'/><rect x='13' y='3' width='9' height='8' rx='1.5' fill='var(--fk-type)'/>"
-    +"<rect x='25' y='3' width='9' height='8' rx='1.5' fill='var(--fk-hook)'/><rect x='37' y='3' width='9' height='8' rx='1.5' fill='var(--fk-store)'/>"
-    +"<rect x='49' y='3' width='9' height='8' rx='1.5' fill='var(--fk-route)'/></svg>"
-    +"<span class='lglbl'>frontend kinds: component · fe-type · hook · store · route</span></span>");
+  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 34 14'>"
+    +"<circle cx='7' cy='7' r='3.4' fill='var(--accent)'/><circle cx='20' cy='7' r='3.4' fill='var(--c-fn-web)'/></svg>"
+    +"<span class='lglbl'>frontend: a dot = one piece · colour = its entity (orange = no backend) · lane = its kind</span></span>");
   legend(_lleg);
 }
 
