@@ -205,6 +205,28 @@ check("Query(" not in _norm and "= 5" not in _norm and "q: str" in _norm and "n:
       and "-> Resp" in _norm and len(_norm) <= 220,
       "P1b-fix: _normalize_sig drops param defaults + caps length (no multi-KB signature)")
 
+# P2a: derive_frontend classifies graft's TS nodes into frontend kinds + carries the TS topology
+_W_fe = {"nodes": [
+    {"id": "apps/web/src/useAuth.ts#useAuth", "kind": "function", "path": "apps/web/src/useAuth.ts", "name": "useAuth"},
+    {"id": "apps/web/src/App.tsx#App", "kind": "function", "path": "apps/web/src/App.tsx", "name": "App"},
+    {"id": "apps/web/src/cartStore.ts#cartStore", "kind": "function", "path": "apps/web/src/cartStore.ts", "name": "cartStore"},
+    {"id": "apps/web/src/routes/Login.tsx#Login", "kind": "function", "path": "apps/web/src/routes/Login.tsx", "name": "Login"},
+    {"id": "apps/web/src/types.ts#Props", "kind": "interface", "path": "apps/web/src/types.ts", "name": "Props"},
+    {"id": "apps/web/dist/bundle.js#z", "kind": "function", "path": "apps/web/dist/bundle.js", "name": "z"},
+    {"id": "apps/api/x.py#restoreNormalMode", "kind": "function", "path": "apps/api/x.py", "name": "restoreNormalMode"},
+  ], "edges": [
+    {"source": "apps/web/src/App.tsx#App", "target": "apps/web/src/useAuth.ts#useAuth", "relation": "calls"},
+  ]}
+_fe = GG.derive_frontend(_W_fe)
+_byk = _fe["stats"]["by_kind"]
+check(_byk.get("hook") == 1 and _byk.get("component") == 1 and _byk.get("store") == 1
+      and _byk.get("route") == 1 and _byk.get("fe-type") == 1 and _fe["stats"]["total"] == 5,
+      "P2a: derive_frontend classifies hook/component/store/route/fe-type; .js noise + backend .py excluded")
+check(len(_fe["edges"]) == 1 and _fe["edges"][0]["rel"] == "calls",
+      "P2a: derive_frontend carries TS→TS topology edges (App calls useAuth)")
+check(GG.derive_frontend({"nodes": [{"id": "a.py#f", "kind": "function", "path": "a.py", "name": "f"}], "edges": []})["stats"]["total"] == 0,
+      "P2a: a backend-only repo (no TS) → frontend honest-empty")
+
 # folded into the graph: the (alpha,beta) FK edge gains the new kinds; weight = sum
 _garm = {"present": True, "reason": "test", "index_hash": "abc123def456",
          "pairs": _gx["pairs"], "stats": _gx["stats"]}

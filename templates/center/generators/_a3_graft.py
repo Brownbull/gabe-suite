@@ -380,6 +380,69 @@ def derive_node_facts(wiring: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {k: out[k] for k in sorted(out)}
 
 
+_FE_TYPE_KINDS = ("interface", "type")
+
+
+def _fe_classify(node: dict[str, Any]) -> str | None:
+    """The frontend KIND of a graft TS node — convention-based (P2a). None = not a frontend piece.
+    Precedence: fe-type → hook → store → route → component. graft's generic AST can't see JSX or a
+    Zustand `create()`, so the classification is by NAME/PATH convention (honest, refinable later)."""
+    kind = node.get("kind")
+    name = node.get("name") or ""
+    path = node.get("path") or ""
+    low = name.lower()
+    if kind in _FE_TYPE_KINDS:
+        return "fe-type"
+    if kind == "function" and len(name) > 3 and name.startswith("use") and name[3:4].isupper():
+        return "hook"
+    # store: a name ENDING in Store/Context (not a substring — `restoreNormalMode`/`updateStoredPortions`
+    # are not stores), a *store.ts file, or a createContext(). base strips a trailing .ts/.tsx.
+    base = name.rsplit(".", 1)[0] if name.endswith((".ts", ".tsx")) else name
+    if base.endswith(("Store", "store", "Context")) or "createcontext" in low:
+        return "store"
+    # route: a Cap-named .tsx UNDER routes/, or a *Route/*Router symbol (not every helper in routes/)
+    if name.endswith(("Route", "Router")) or ("/routes/" in path and path.endswith(".tsx") and name[:1].isupper()):
+        return "route"
+    if kind in ("function", "class") and path.endswith(".tsx") and name[:1].isupper():
+        return "component"
+    return None
+
+
+def derive_frontend(wiring: dict[str, Any]) -> dict[str, Any]:
+    """P2a (graft adoption): classify graft's TS/tsx nodes into frontend KINDS (hook · component ·
+    store · route · fe-type) + carry the TS→TS topology edges (imports/calls/references between two
+    classified pieces). Convention-based, NOISE-filtered, honest-empty when a repo has no TS. DATA
+    only — the render (P2b) draws it; a backend-only project yields {nodes:[], edges:[], stats:{...}}."""
+    nodes: dict[str, dict[str, Any]] = {}
+    for n in wiring.get("nodes") or []:
+        p = n.get("path") or ""
+        nid = n.get("id")
+        if not nid or not p.endswith((".ts", ".tsx")) or _is_noise(_file_of(nid)):
+            continue
+        k = _fe_classify(n)
+        if not k:
+            continue
+        nodes[nid] = {"id": nid, "name": n.get("name"), "kind": k, "path": p}
+    ids = set(nodes)
+    edges = sorted(
+        ({"s": e["source"], "t": e["target"], "rel": e.get("relation")}
+         for e in (wiring.get("edges") or [])
+         if e.get("source") in ids and e.get("target") in ids and e["source"] != e["target"]),
+        key=lambda x: (x["s"], x["t"], str(x["rel"])))
+    by_kind: dict[str, int] = {}
+    for v in nodes.values():
+        by_kind[v["kind"]] = by_kind.get(v["kind"], 0) + 1
+    by_rel: dict[str, int] = {}
+    for x in edges:
+        by_rel[x["rel"]] = by_rel.get(x["rel"], 0) + 1
+    return {
+        "nodes": [nodes[k] for k in sorted(nodes)],
+        "edges": edges,
+        "stats": {"total": len(nodes), "by_kind": dict(sorted(by_kind.items())),
+                  "edges": len(edges), "by_relation": dict(sorted(by_rel.items()))},
+    }
+
+
 def graft_arm(root: Path, entities: dict[str, Any],
               allow_build: bool = True) -> dict[str, Any]:
     """The whole arm, one call: ensure → load → derive. NEVER raises.
@@ -404,6 +467,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
+        frontend = derive_frontend(wiring)         # P2a: classified TS frontend structure (nodes+edges), data-only
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
@@ -412,6 +476,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
             "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
             "node_facts": node_facts,  # P1: raw graft facts (kind/signature/exported) — in-process, not emitted raw
+            "frontend": frontend,      # P2a: classified TS frontend structure {nodes,edges,stats} — data-only
         }
     except Exception as exc:  # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"graft arm error: {exc}"}
