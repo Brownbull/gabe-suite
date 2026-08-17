@@ -322,3 +322,31 @@ elements+connectors, outer = a polygon holding "the same + more" = the entity).
 - OPEN: the polygon's long spans between distant nodes stay flat (convex-hull limit). Fully-curved
   *polygon* (metaball/marching-cubes) is a heavier lift — **defer until** the operator picks polygon
   over wrap AND the flat spans read wrong at real scale; wrap already covers the curved case.
+
+### 9g · WRAP = a fused liquid (metaball) · faint polygon · film opacity (operator, 2026-08-17)
+
+Operator ruling (two drawings: image-1 = the current discrete users.id/User wrap; the sheet = an
+arrow to the DESIRED single sticky glob). "Cannot distinguish one [sphere/cylinder] from the other …
+a unified wrap … like a liquid, basically around what is inside."
+
+- **WRAP is now ONE metaball iso-surface**, not discrete spheres + cylinders. `MarchingCubes`
+  (`three/examples/jsm/objects/MarchingCubes.js`, added to the esbuild bundle → `window.MarchingCubes`)
+  builds a single fused surface per cluster: a ball at each node (`nodeR`) + balls sampled along each
+  connector (`tubeR`) melt into one sticky liquid; the connector becomes a neck, no part is separable.
+  Coordinate map: geometry spans local [-1,1], balls in [0,1]; `strength = (iso+subtract)·(r/2S)²`,
+  `S` = uniform half-extent of the member bbox + nodeR. Applies at **both** levels (sub + entity).
+- **Cost control:** the metaball is expensive (O(res³) per rebuild), so it rebuilds every `every`
+  ticks during cool-down + a **forced final on `onEngineStop`** (crisp settled blob). res 96 entity /
+  64 sub. `WRAPCFG` is URL-overridable (`?wEntRes=…&wIso=…`) for tuning. Only built when WRAP is
+  selected — a plain load (polygon default) pays nothing.
+- **POLYGON lost its wireframe.** The vertex lines competed with the element links and would only
+  multiply as entities grow. Now a **Lambert-shaded translucent fill** (with `computeVertexNormals`)
+  carries the form; no lines. Directly answers "make the lines between vertices less prominent."
+- **Opacity gained `film`** — below ghost, the barest whisper (bubble default now `film`). Six steps:
+  film · ghost · faint · subtle · medium · strong. WRAP has its own heavier ramp (a metaball at 0.01
+  is invisible; its faint = 0.08).
+- Verified headless (google-chrome swiftshader): liquid single-blob, two-level nested blobs, faint
+  polygon, 0 JS errors. The metaball reproduces the sheet's peanut/neck shape a convex hull cannot.
+- OPEN: metaball at REAL scale (dozens of nodes, long links) may need res/every tuning for perf; the
+  `WRAPCFG` URL knobs exist for that. Sub-blob vs entity-blob separation currently rides opacity +
+  hue-nudge — revisit if they read as one at real density.
