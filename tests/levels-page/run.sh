@@ -292,8 +292,12 @@ ck("function feKindSummary(" in js and "function showFrontend(" in js,
 # P2b — the LAYERS FRONTEND LANES (navigable dots per kind) + the motion toggle
 ck('class:"felane"' in js and '"e-fecall"' in js and "drawnByKind" in js,
    "P2b-lanes: the Layers view draws frontend piece MARKERS wired by their calls (not a dot field)")
-ck("function showFePiece(" in js and "feHidden" in js,
-   "P2b-lanes: a piece opens its panel; the isolated mass is hidden as a behind count")
+ck("function feGlyph(" in js and "function showFePiece(" in js,
+   "P2b-lanes: per-KIND icons (feGlyph) + a piece opens its panel")
+ck("edgeGradient(defs,a,c,sc,tc)" in js and "p.ecol" in js,
+   "P2b-lanes: markers coloured by ENTITY; wires by the source→target entity blend (not all green)")
+ck("febg.appendChild" in js and "fe-type" in js,
+   "P2b-lanes: a CONTAINER box per kind-column; fe-types shown in their column (not hidden)")
 ck('"FRONTEND"' in js and '"BACKEND"' in js,
    "P2b-lanes: the BACKEND / FRONTEND group labels split the diagram")
 ck('id="motionbtn"' in page and "svg.pauseAnimations()" in js and "[data-motion=" in style,

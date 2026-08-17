@@ -532,6 +532,16 @@ function icoPath(g, d, col, scale){
 }
 function sBadge(g, r, col){ ICONSETS[ICONSET].schema(g, r, col); }
 function fGlyph(g, r, col, handler, god){ ICONSETS[ICONSET].fn(g, r, col, handler, god); }
+/* frontend KIND icons — a distinct shape per kind (component · hook · store · route ·
+   fe-type), STROKED in the piece's ENTITY colour (colour = grouping, not kind — the kind
+   is the shape). Used by the Layers frontend lanes. */
+function feGlyph(g, r, kind, col){ var sw=1.9;
+  if(kind==="component"){ g.appendChild(E("rect",{x:rnd(-r*0.85), y:rnd(-r*0.85), width:rnd(r*1.7), height:rnd(r*1.7), rx:rnd(r*0.34), fill:"none", stroke:col, "stroke-width":sw})); }
+  else if(kind==="hook"){ g.appendChild(E("path",{d:"M "+rnd(r*0.5)+" "+rnd(-r*0.9)+" V "+rnd(r*0.1)+" A "+rnd(r*0.68)+" "+rnd(r*0.68)+" 0 1 1 "+rnd(-r*0.68)+" 0", fill:"none", stroke:col, "stroke-width":sw, "stroke-linecap":"round"})); }
+  else if(kind==="store"){ g.appendChild(E("ellipse",{cx:0, cy:rnd(-r*0.55), rx:rnd(r*0.82), ry:rnd(r*0.32), fill:"none", stroke:col, "stroke-width":sw}));
+    g.appendChild(E("path",{d:"M "+rnd(-r*0.82)+" "+rnd(-r*0.55)+" V "+rnd(r*0.55)+" A "+rnd(r*0.82)+" "+rnd(r*0.32)+" 0 0 0 "+rnd(r*0.82)+" "+rnd(r*0.55)+" V "+rnd(-r*0.55), fill:"none", stroke:col, "stroke-width":sw})); }
+  else if(kind==="route"){ g.appendChild(E("path",{d:"M 0 "+rnd(-r)+" L "+rnd(r)+" 0 L 0 "+rnd(r)+" L "+rnd(-r)+" 0 Z", fill:"none", stroke:col, "stroke-width":sw, "stroke-linejoin":"round"})); }
+  else { var t=E("text",{x:0, y:rnd(r*0.68), style:"text-anchor:middle;font-weight:800;font-family:ui-monospace,monospace;font-size:"+rnd(r*1.9)+"px;fill:"+col}); t.textContent="{}"; g.appendChild(t); } }
 function epMark(g, r, method){ ICONSETS[ICONSET].ep(g, r, method); }
 var ICONSETS={
   classic:{
@@ -1576,63 +1586,58 @@ function drawLayers(){
     eLayer.appendChild(pU);
     flowDots(eLayer, pU, dotFill);
     regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
-  // ── P2b: FRONTEND LANES — the same grammar as the backend lanes, not a stats field.
-  //    Left of the backend block, one column per KIND in request-flow order (route →
-  //    component → hook → store). Each drawn piece is a MARKER (kind-coloured glyph +
-  //    entity dot + label), CONNECTED by its call wires (component → hook is the bulk).
-  //    Curation mirrors the backend: draw the pieces that PARTICIPATE (have a call edge)
-  //    plus routes + stores (entry points / state); the isolated mass — every fe-type
-  //    and every uncalled component — is HIDDEN and named as a behind count, exactly
-  //    like the backend's Code-behind. Honest-empty: no arm ⇒ block skipped, backend byte-same.
+  // ── P2b: FRONTEND LANES — the backend lane grammar for the frontend. Left of the
+  //    backend block, one CONTAINER per KIND (fe-type · route · component · hook · store),
+  //    fe-type first. Each piece is a MARKER: a kind-SHAPED icon (feGlyph) STROKED in its
+  //    ENTITY colour (colour = grouping, not layer), CONNECTED by call wires coloured by the
+  //    source→target ENTITY blend. Every piece is drawn — the unconnected ones (all
+  //    fe-types, uncalled components) sit in their column, just unwired. Honest-empty: no
+  //    arm ⇒ block skipped, backend layout byte-same.
   if(D.frontend && D.frontend.present){
-    var FEKCOL={route:"var(--fk-route)", component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)"};
-    var FECOLS=["route","component","hook","store"];
+    var FEKCOL={"fe-type":"var(--fk-type)", route:"var(--fk-route)", component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)"};
+    var FECOLS=["fe-type","route","component","hook","store"];
     var feAll={};
     function feGather(list, ecol, home){ (list||[]).forEach(function(pp){
       feAll[pp.id]={id:pp.id, n:pp.n||"", k:pp.k, home:home, ecol:ecol}; }); }
     D.entities.forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
-      if(fe) feGather(fe.pieces, COLORS[en.slug]||"var(--c-fn-web)", en.label); });
-    (D.fe_buckets||[]).forEach(function(bk){ feGather(bk.pieces, "var(--c-fn-web)", bk.name); });
-    var feEdges=D.fe_edges||[], fedeg={};
-    feEdges.forEach(function(e){ fedeg[e.s]=(fedeg[e.s]||0)+1; fedeg[e.t]=(fedeg[e.t]||0)+1; });
-    var drawnByKind={route:[], component:[], hook:[], store:[]}, feHidden={};
-    Object.keys(feAll).forEach(function(id){ var p=feAll[id];
-      if((fedeg[id] || p.k==="route" || p.k==="store") && drawnByKind[p.k]) drawnByKind[p.k].push(p);
-      else feHidden[p.k]=(feHidden[p.k]||0)+1; });
+      if(fe) feGather(fe.pieces, COLORS[en.slug]||"#e8590c", en.label); });        // hex so gradients resolve
+    (D.fe_buckets||[]).forEach(function(bk){ feGather(bk.pieces, "#e8590c", bk.name); });
+    var feEdges=D.fe_edges||[], drawnByKind={};
+    FECOLS.forEach(function(k){ drawnByKind[k]=[]; });
+    Object.keys(feAll).forEach(function(id){ var p=feAll[id]; if(drawnByKind[p.k]) drawnByKind[p.k].push(p); });
     FECOLS.forEach(function(k){ drawnByKind[k].sort(function(a,c){ return a.home<c.home?-1:a.home>c.home?1:(a.n<c.n?-1:1); }); });
-    var FEGX=80, FEGY=36, FEWRAP=24, few=E("g"), feg=E("g",{class:"felane"});
-    nLayer.appendChild(few); nLayer.appendChild(feg);           // wires under, markers over
-    var laneMeta=FECOLS.map(function(k){ var it=drawnByKind[k];
-      return {k:k, items:it, subcols:Math.max(1,Math.ceil(it.length/FEWRAP)), w:Math.max(1,Math.ceil(it.length/FEWRAP))*FEGX}; })
-      .filter(function(l){ return l.items.length; });
-    var feTotW=laneMeta.reduce(function(s,l){ return s+l.w+40; },0)-40;
-    var feX0=rnd(-totalW/2-90-feTotW), feTop=top+10, cx=feX0, fepos={};
+    var FEGX=74, FEGY=34, FEWRAP=38;
+    var febg=E("g"), few=E("g"), feg=E("g",{class:"felane"});
+    nLayer.appendChild(febg); nLayer.appendChild(few); nLayer.appendChild(feg);   // container · wires · markers
+    var laneMeta=FECOLS.map(function(k){ var it=drawnByKind[k]; var subcols=Math.max(1,Math.ceil(it.length/FEWRAP));
+      return {k:k, items:it, subcols:subcols, w:subcols*FEGX}; }).filter(function(l){ return l.items.length; });
+    var feTotW=laneMeta.reduce(function(s,l){ return s+l.w+34; },0)-34;
+    var feX0=rnd(-totalW/2-100-feTotW), feTop=top+12, cx=feX0, fepos={};
     laneMeta.forEach(function(l){
-      var hd=E("text",{x:rnd(cx), y:top-14, style:"text-anchor:start;font-size:10.5px;font-weight:800;fill:"+FEKCOL[l.k]});
+      var colH=Math.min(FEWRAP, l.items.length)*FEGY;
+      febg.appendChild(E("rect",{x:rnd(cx-12), y:top-8, width:rnd(l.w+6), height:rnd(colH+24), rx:12,
+        fill:FEKCOL[l.k], "fill-opacity":"0.045", stroke:FEKCOL[l.k], "stroke-opacity":"0.42", "stroke-dasharray":"5 5"}));
+      var hd=E("text",{x:rnd(cx-6), y:top-14, style:"text-anchor:start;font-size:10.5px;font-weight:800;fill:"+FEKCOL[l.k]});
       hd.textContent=l.k.toUpperCase()+" "+l.items.length; feg.appendChild(hd);
       l.items.forEach(function(p,i){ var scq=Math.floor(i/FEWRAP), rwq=i%FEWRAP;
         var x=rnd(cx+scq*FEGX+FEGX/2), y=rnd(feTop+rwq*FEGY+8); fepos[p.id]={x:x,y:y};
         var g=E("g",{class:"fnode", transform:"translate("+x+","+y+")"});
-        halo(g); fGlyph(g, 8, FEKCOL[l.k], p.k==="route", false);
-        g.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:p.ecol}));
-        twoRowLabel(g, p.n||("("+p.k+")"), 0, 17);
+        halo(g); feGlyph(g, 8, p.k, p.ecol);
+        twoRowLabel(g, p.n||("("+p.k+")"), 0, 16);
         var ti=E("title"); ti.textContent=p.n+" · "+p.k+" · "+p.home; g.appendChild(ti);
         (function(pp){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showFePiece(pp.n, pp.k, pp.home); }); })(p);
         regNode(g, "fe:"+p.id, p.n||p.k, p.k); feg.appendChild(g); });
-      cx+=l.w+40; });
+      cx+=l.w+34; });
     feEdges.forEach(function(e){ var a=fepos[e.s], c=fepos[e.t]; if(!a||!c) return;
+      var sc=(feAll[e.s]||{}).ecol||"#888", tc=(feAll[e.t]||{}).ecol||"#888";
       var pth=E("path",{class:"e-fecall", d:curve(a.x,a.y,c.x,c.y,12)});
-      few.appendChild(pth); flowDots(few, pth, "var(--fk-hook)");
+      if(sc===tc){ pth.style.stroke=sc; } else { pth.style.stroke="url(#"+edgeGradient(defs,a,c,sc,tc)+")"; }
+      few.appendChild(pth); flowDots(few, pth, sc);
       regEdge(pth, "fe", "fe:"+e.s, "fe:"+e.t, e.rel+" (frontend call)"); });
-    var flab=E("text",{x:rnd(feX0), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
+    var flab=E("text",{x:rnd(feX0-6), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
     flab.textContent="FRONTEND"; feg.appendChild(flab);
     var blab=E("text",{x:rnd(-totalW/2), y:top-36, style:"text-anchor:start;font-size:13px;fill:var(--ink);font-weight:800;letter-spacing:.09em"});
     blab.textContent="BACKEND"; nLayer.appendChild(blab);
-    var feHidTot=Object.keys(feHidden).reduce(function(s,k){ return s+feHidden[k]; },0);
-    if(feHidTot){ var hn=E("text",{x:rnd(feX0), y:top-21, style:"text-anchor:start;font-size:10px;fill:var(--muted)"});
-      hn.textContent="+ "+feHidTot+" behind (unconnected · fe-types): "+["component","hook","route","store","fe-type"]
-        .filter(function(k){ return feHidden[k]; }).map(function(k){ return feHidden[k]+" "+k; }).join(" · ");
-      feg.appendChild(hn); }
     var feHrows=laneMeta.reduce(function(m,l){ return Math.max(m, Math.min(FEWRAP,l.items.length)*FEGY); },0);
     b.minX=Math.min(b.minX,feX0-40); b.minY=Math.min(b.minY,top-46); b.maxY=Math.max(b.maxY,feTop+feHrows+30);
   }
@@ -1640,10 +1645,13 @@ function drawLayers(){
   var _lleg=[glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
           glyphIt("model","cyl"), glyphIt("schema","s"),
           "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"];
-  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 56 14'>"
-    +"<circle cx='7' cy='7' r='4' fill='none' stroke='var(--fk-route)' stroke-width='2'/><circle cx='20' cy='7' r='4' fill='none' stroke='var(--fk-comp)' stroke-width='2'/>"
-    +"<circle cx='33' cy='7' r='4' fill='none' stroke='var(--fk-hook)' stroke-width='2'/><circle cx='46' cy='7' r='4' fill='none' stroke='var(--fk-store)' stroke-width='2'/></svg>"
-    +"<span class='lglbl'>frontend piece — glyph colour = kind (route · component · hook · store) · dot = entity · wire = calls · unconnected hidden behind</span></span>");
+  if(D.frontend && D.frontend.present) _lleg.push("<span class='it'><svg class='lgico' viewBox='0 0 92 14' fill='none' stroke='currentColor' stroke-width='1.6'>"
+    +"<rect x='2' y='3.5' width='9' height='9' rx='2'/>"                                                     // component
+    +"<path d='M25 3 V8 a3 3 0 1 1 -3 0'/>"                                                                  // hook
+    +"<ellipse cx='40' cy='5' rx='4' ry='1.5'/><path d='M36 5 V10 a4 1.5 0 0 0 8 0 V5'/>"                     // store
+    +"<path d='M58 2 L63 7 L58 12 L53 7 Z'/>"                                                                // route
+    +"<text x='71' y='11.5' stroke='none' fill='currentColor' style='font-size:11px;font-weight:800;font-family:ui-monospace,monospace'>{}</text>"  // fe-type
+    +"</svg><span class='lglbl'>frontend kinds: component · hook · store · route · type — icon = kind · colour = entity · wire = entity blend · unwired = no calls</span></span>");
   legend(_lleg);
 }
 
