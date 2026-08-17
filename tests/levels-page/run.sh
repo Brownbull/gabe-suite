@@ -391,13 +391,32 @@ ck('n._sub=cl+"¦endpoints"' in js and 'er*Math.cos(ea)' in js,
 ck('function _fgGroupKey(' in js and '_EMU.fgGroup' in js and 'n.kind==="usefn"?"fn":n.kind' in js,
    "LAYOUT: per-entity SUB-GROUPS by the clSeg grouping (kind default; fn/model/schema/…)")
 ck('function _fgComputeGroups(' in js and '_EMU.comm' in js and '_EMU.uc' in js,
-   "LAYOUT: community (connected-components) + usecase (census) + tests grouping data precomputed")
+   "LAYOUT: usecase/community/fk/tests grouping data precomputed from real archmap data")
 ck('var MIND=RG*2+22' in js and 'a.vx-=dx*p; a.vy-=dy*p; b.vx+=dx*p; b.vy+=dy*p' in js,
    "LAYOUT: a COLLISION force spaces same-entity nodes ≥ MIND apart (readability)")
 ck('if(v==="guards") return;' in js and '_EMU.fgGroup=v;' in js,
    "LAYOUT: clSeg drives the FG sub-grouping (Guards dropped, per the operator)")
 ck('border-right:1px solid var(--line)' in page and 'id="graphhost"' in page,
    "LAYOUT: the graph area has a right-edge border (panel-divider affordance)")
+
+# operator visual pass #3 (2026-08-17): cumulative-zoom drift fix + meaningful groupings +
+# the 5 adversarial-verify findings on the layout rework.
+ck('_FG.centerAt(c.x+(g1.x-g2.x), c.y+(g1.y-g2.y))' in js,
+   "ZOOM: transform-agnostic zoom-at-cursor (shift centre by the graph-space delta) — no cumulative drift")
+ck('new ResizeObserver(function(){ _fgSize(host)' in js,
+   "ZOOM: a ResizeObserver keeps the canvas == container (no drift back to window size → clip)")
+ck('slug+"·"+ep.m+" "+ep.p' in js and '"·(shared)"' in js,
+   "GROUPS: usecase = by REQUEST flow (endpoint→handler→touched→resp), not the empty census")
+ck('(D.pieces[slug]||{}).intra' in js and '"·fk"' in js,
+   "GROUPS: fk = union-find over INTRA-entity foreign keys (pc.intra), distinct from community")
+ck('"·(unlinked)"' in js and 'cp[cf2(s)]=cf2(t)' in js,
+   "GROUPS: community = connected components; isolated nodes coalesce into one (unlinked) bucket")
+ck('/¦endpoints$/.test(sk)' in js,
+   "FIX: the endpoints sub-group is NOT hulled (it rides the ring — a hull would span the whole entity)")
+ck('if(level==="frontend") return n.kind==="usefn"?"fn":n.kind;' in js,
+   "FIX: the Frontend level forces KIND grouping (its ids match no backend usecase/tests map)")
+ck('_EMU.keepCam=' in js and 'if(_EMU.keepCam){' in js,
+   "FIX: a grouping change PRESERVES the camera (no re-fit), like the SVG clSeg")
 
 print(f"levels-page battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
