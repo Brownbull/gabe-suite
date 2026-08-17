@@ -210,3 +210,23 @@ gizmo is a later nicety.)
 
 **NEXT:** settle each kind's form + link encoding + the clustering encoding here → then
 return to the group spike (recipe+auth) → then replicate the grammar into 5C + the suite.
+
+### 9a · ICONS + panel (operator pass, 2026-08-17)
+
+- **Type icon fixed** — `element-components.html`: Type was `{ }` braces, too close to Schema.
+  Now `< >` (code brackets); the icon is the only identifier, so no two kinds share one.
+- **spike-kinds — an ICON-MODE SELECTOR** (all three use the SAME element-components lucide
+  glyphs, one per kind), so we can iterate and compare:
+  1. **Primitives** — abstract 3D shapes (ring/cube/cylinder/octahedron/cone/knot/panel/…).
+  2. **Billboard 2D** — the flat 2D lucide icon as a camera-facing sprite (crispest, reads
+     exactly like the panel; always legible from any angle).
+  3. **Tube 3D** — the lucide icon **traced as solid 3D tubes** (`SVGLoader` → subpath
+     points → `CatmullRomCurve3` → `TubeGeometry`, y-flipped/centred/scaled): a real 3D
+     object that catches light + rotates, but still *reads* as the 2D icon. (Fill-extruding
+     fails — lucide icons are STROKES, not fills; tubes are the correct 3D-ification.)
+- **Panel = the element-components card** ported into the spike: Usage bar · Connections
+  (with the kind glyphs) · Tests · Identity · Note, plus a **minimize-to-rail** button.
+- Bundle now also exposes `SVGLoader` (esbuild, one three instance).
+
+**Open question for the operator:** which icon mode is 5C's default — Billboard (crisp,
+flat, always legible) or Tube 3D (volumetric, "more 3D")? Primitives stays as a fallback.

@@ -158,6 +158,8 @@ const P={
   store:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14a8 3 0 0 0 16 0V5"/>',
   route:'<path d="M12 2 22 12 12 22 2 12z"/>',
   braces:'<path d="M7 4a2 2 0 0 0-2 2v3a2 2 0 0 1-2 2 2 2 0 0 1 2 2v3a2 2 0 0 0 2 2"/><path d="M17 4a2 2 0 0 1 2 2v3a2 2 0 0 0 2 2 2 2 0 0 0-2 2v3a2 2 0 0 1-2 2"/>',
+  // TYPE: code brackets </> — distinct from schema's braces { } (the ONLY identifier is the icon, per the operator)
+  type:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
 };
 const ico=(n,cls,col)=>{const s=`<svg class="ico ${cls||''}" viewBox="0 0 24 24" ${col?`style="color:${col}"`:''}>${P[n]||""}</svg>`;const d=document.createElement('div');d.innerHTML=s;return d.firstChild;};
 const E=(t,a,...k)=>{const e=document.createElement(t);for(const p in(a||{})){if(p==="class")e.className=a[p];else if(p==="html")e.innerHTML=a[p];else e.setAttribute(p,a[p]);}k.flat().forEach(c=>c!=null&&e.append(c));return e;};
@@ -332,7 +334,7 @@ const CARDS=[
   E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home","recipe"), kv("role","kind","route / URL"), kv("globe","path","/recipes/:id")),
   E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"},"A route maps a URL to the component tree it mounts — the entry the user actually lands on. Orphan URL-domains here feed entity-shape thinking (a candidate entity)."), kv("file","file","recipe.routes.ts")),
 ])],
-["Type", ()=>panel("type","braces","var(--fk-type)","RecipeResponse","TS type / interface",[
+["Type", ()=>panel("type","type","var(--fk-type)","RecipeResponse","TS type / interface",[
   usage(0,"— unlinked (graft emits 0 type-usage edges)"),
   E("div",{class:"sec"}, sechd("table","Shape",4), colsTable([["id","string"],["title","string"],["ingredients","Ingredient[]"],["steps","Step[]"]],[])),
   conns("link","Used by",[ G("annotations","component",0,()=>E("div")) ],{empty:"— none captured (a graft blind spot: types are erased, their usage emits no edge)"}),
