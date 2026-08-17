@@ -262,3 +262,21 @@ and which bubble effects to add (fresnel rim · pulse on select · colour = a me
 
 **NEXT:** tune the cluster boundary (sphere vs hull; the layer-spread makes recipe's sphere
 tall) + the clustering encoding → then scale to recipe+auth real data → then 5C + the suite.
+
+### 9d · clusters as an AURA + sub-clusters (operator, 2026-08-17)
+
+Operator: drop the hard sphere; a cluster should be an **aura** around the elements AND the
+links — and show **sub-clusters inside** the entities.
+
+- **AURA (replaces the wireframe sphere):** soft additive **glow sprites** (a cached radial-
+  gradient texture, `AdditiveBlending`) placed at every member **node** AND at two points
+  along every member **link** — overlapping glows merge into a cloud that wraps the elements
+  and their connectors. Updated each `onEngineTick`.
+- **Two levels:** the **entity** aura is big + faint (colour = ENTITY); the **sub-cluster**
+  aura is tighter + denser, hue-nudged off the entity colour, and **labelled** (frontend ·
+  api · data — the layer band, standing in for kind/usecase/community/fk). So you read the
+  entity as a soft cloud with denser sub-clouds inside.
+- Channels stay separate: **icon = kind · bubble = neutral · entity aura = entity · sub aura
+  = a hue-nudge of the entity**.
+
+Tunable: aura opacity/size, sub-cluster key (layer vs kind vs the 2D grouping), hue spread.
