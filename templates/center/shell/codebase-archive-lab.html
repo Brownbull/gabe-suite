@@ -157,6 +157,13 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .tgl{ font:inherit; background:var(--panel); color:var(--ink); border:1px solid var(--line);
   border-radius:8px; padding:5px 8px; cursor:pointer; display:inline-flex; align-items:center; }
 .tgl.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+/* overlays dropdown rows (guards · hubs · pressure — compressed off the toolbar) */
+.ovrow{ font:inherit; font-size:12.5px; font-weight:600; color:var(--ink); background:var(--panel);
+  border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer; display:flex;
+  align-items:center; gap:9px; width:100%; text-align:left; margin-bottom:5px; }
+.ovrow:last-child{ margin-bottom:0; }
+.ovrow.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.ovrow svg{ width:15px; height:15px; flex:none; }
 .cornerbox{ position:absolute; bottom:10px; z-index:25; max-width:360px; font-size:11px;
   background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 10px; }
 .cornerbox .cbhead{ display:flex; align-items:center; gap:10px; font-size:11px; font-weight:800;
@@ -360,10 +367,15 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       <b id="depthVal" style="color:var(--ink);width:10px;text-align:center">5</b>
     </label>
     <button id="motionbtn" class="tgl on" title="Motion — pause the moving dots"></button>
-    <button id="themebtn" class="tgl" title="Theme — light / dark (follows the OS until toggled; the command center's stamp will drive this once embedded)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
-    <button id="guardsbtn" class="tgl" title="Guards — teal shields mark pieces/endpoints with declared validators"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
-    <button id="hubsbtn" class="tgl" title="Hubs — fan-in rings (width = usage) and red dashed god halos"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='6' fill='none' stroke='currentColor' stroke-width='2.6'/><circle cx='12' cy='12' r='10' fill='none' stroke='currentColor' stroke-width='1.2' stroke-dasharray='4 3'/></svg></button>
-    <button id="pressbtn" class="tgl" title="Pressure — orange heat where the archive shows change concentration"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='8.5' fill='currentColor' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='currentColor'/></svg></button>
+    <div style="position:relative;display:inline-flex">
+    <button id="overlaysbtn" class="tgl" title="Overlays — guards · hubs · pressure" aria-expanded="false"><svg viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round'><line x1='4' y1='7' x2='20' y2='7'/><line x1='4' y1='12' x2='20' y2='12'/><line x1='4' y1='17' x2='20' y2='17'/><circle cx='9' cy='7' r='2.2' fill='var(--panel)'/><circle cx='15' cy='12' r='2.2' fill='var(--panel)'/><circle cx='8' cy='17' r='2.2' fill='var(--panel)'/></svg></button>
+    <div id="overlayspanel" hidden style="position:absolute;z-index:40;top:100%;right:0;margin-top:4px;width:210px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:8px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 4px 7px">Overlays</div>
+      <button id="guardsbtn" class="ovrow" title="Guards — teal shields mark pieces/endpoints with declared validators"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z'/></svg>Guards</button>
+      <button id="hubsbtn" class="ovrow" title="Hubs — fan-in rings (width = usage) and red dashed god halos"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='6' stroke-width='2.6'/><circle cx='12' cy='12' r='10' stroke-width='1.2' stroke-dasharray='4 3'/></svg>Hubs</button>
+      <button id="pressbtn" class="ovrow" title="Pressure — orange heat where the archive shows change concentration"><svg viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='8.5' fill-opacity='0.35'/><circle cx='12' cy='12' r='4'/></svg>Pressure</button>
+    </div>
+    </div>
     <button id="testsbtn" class="tgl" title="Tests — proof badges: count pill (green pass / red fail), hollow dashed = unproven"><svg viewBox='0 0 24 24' width='16' height='16'><rect x='3' y='7' width='18' height='11' rx='5.5' fill='none' stroke='currentColor' stroke-width='2'/><path d='M8.5 12.5 l2.4 2.4 L15.5 10' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
     <button id="behindbtn" class="tgl" title="Code behind — purple count badge (top-left): how many functions are pulled in behind this one (endpoints + functions)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 2 2 7l10 5 10-5-10-5z' fill='none' stroke='currentColor' stroke-width='2'/><path d='m2 17 10 5 10-5 M2 12l10 5 10-5' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
     <button id="usagebtn" class="tgl" title="Used by — accent count badge (bottom-right): how many elements depend on this one (in-degree)"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='18' cy='18' r='3' fill='none' stroke='currentColor' stroke-width='2'/><circle cx='6' cy='6' r='3' fill='none' stroke='currentColor' stroke-width='2'/><path d='M6 21V9a9 9 0 0 0 9 9' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
@@ -455,6 +467,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
 </div>
 
 </div><!-- /labcol -->
+<script src="./assets/a3-settings.js" defer></script>
 <script src="./c4-graph.js"></script>
 <script src="./levels.js"></script>
 <script>
@@ -2947,10 +2960,14 @@ function _sect(icon, label){ return "<div class='k'>"+icon+"<span>"+label+"</spa
     ICONSET=b.getAttribute("data-ico");
     document.querySelectorAll("#icoSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
-  document.getElementById("themebtn").addEventListener("click",function(){
-    var r=document.documentElement, cur=r.getAttribute("data-theme");
-    var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    r.setAttribute("data-theme", dark ? "light" : "dark"); });
+  // theme now lives in the GLOBAL settings cog (assets/a3-settings.js, sidebar) — no
+  // local theme button here (operator: one theme control for the whole center).
+  // overlays dropdown — guards · hubs · pressure (compressed off the toolbar; used rarely)
+  (function(){ var ob=document.getElementById("overlaysbtn"), op=document.getElementById("overlayspanel");
+    if(!ob||!op) return;
+    ob.addEventListener("click",function(e){ e.stopPropagation(); var open=op.hidden; op.hidden=!open; ob.setAttribute("aria-expanded",String(open)); });
+    document.addEventListener("click",function(e){ if(!op.hidden && !op.contains(e.target) && !ob.contains(e.target)) op.hidden=true; });
+  })();
   JRN.list=buildJourneys();
   (function(){ var sel=document.getElementById("jrnSel");
     var h="<option value=''>— pick a journey —</option>";
