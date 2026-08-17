@@ -280,3 +280,19 @@ links — and show **sub-clusters inside** the entities.
   = a hue-nudge of the entity**.
 
 Tunable: aura opacity/size, sub-cluster key (layer vs kind vs the 2D grouping), hue spread.
+
+### 9e · cluster controls: shape × transparency, two-level polygons (operator, 2026-08-17)
+
+- **Bar decluttered** — icon (Billboard), font (Menlo), rotation (Orbit) are LOCKED; their
+  selectors removed to make room.
+- **Bubble** → a dropdown of transparency levels (subtle · medium · strong); never off.
+- **Cluster controls, two levels each a SHAPE × a TRANSPARENCY dropdown:**
+  - **sub-cluster:** aura · polygon · off × subtle/medium/strong.
+  - **entity:** aura · sphere · polygon · off × subtle/medium/strong.
+- **POLYGON = a convex HULL** (`ConvexGeometry` over the member positions, rebuilt each tick;
+  <4 pts → sphere fallback). The **entity hull is padded bigger** (pad 16 vs 5) so it "contains
+  the same elements + more"; sub-cluster hulls sit inside and may **overlap** (fine). So you can
+  now dial: sub = tight inner polygons, entity = a big outer polygon — the nested-containment
+  the operator described. SPHERE and AURA remain as alternative shapes per level.
+- Channels still separate: icon = kind · bubble = neutral · cluster colour = entity (sub =
+  hue-nudge). Bundle now also exposes `ConvexGeometry`.
