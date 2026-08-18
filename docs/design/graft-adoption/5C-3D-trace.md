@@ -687,3 +687,6 @@ should GROW then CONTRACT (dot → lines out → lines back → dot → gone), s
   a touch past them, then fades. Matches the 6-step chain (dot · +line · ++line · contract · dot · gone).
 - Playwright **57/57**. Still frames can't show it (per-node detail + sweep); judge live/zoomed. Sizes +
   cylinder radius are one-line tweaks.
+- **Thinned (operator: still felt like moons on the shell):** dot 0.4→**0.17**, stub cylinder radius
+  0.11→**0.045** — now flush with the wireframe so a firing vertex reads as the lattice line lighting up, not
+  a tube/ball on top. Playwright still **57/57**.
