@@ -690,3 +690,7 @@ should GROW then CONTRACT (dot → lines out → lines back → dot → gone), s
 - **Thinned (operator: still felt like moons on the shell):** dot 0.4→**0.17**, stub cylinder radius
   0.11→**0.045** — now flush with the wireframe so a firing vertex reads as the lattice line lighting up, not
   a tube/ball on top. Playwright still **57/57**.
+- **Vertex-dot slider** (operator wants to dial the centre dot + read the exact graduation): `ENC.dotR`
+  (default 0.17); the dot geometry is a unit sphere and the loop scales it to `ENC.dotR` LIVE (no rebuild).
+  Slider 0.05–0.30 step 0.01 with a `<datalist>` of tick marks at 0.05 intervals + an accent value readout.
+  Awaiting the operator's chosen value.
