@@ -527,3 +527,8 @@ value has no effect on the selected element; and — bold — show EVERY dimensi
 - Load-order: `buildExpl()` now runs at the BOTTOM (after `DIMR`/`drow` exist) — the premature call crashed
   reading `DIMR.node`. Playwright **33/33** (rows show values, mass ungrayed / method grayed for a fn,
   stepper increments the value AND mutates `n.m.behind`, link width row shows weight).
+- **Restore-defaults button** (`↺` in the panel header): the steppers mutate the live metrics, so at load
+  `ORIG_M` (per-node `m` copy) + `ORIG_L` (per-link w/payload/proven) snapshot the pristine values; `n.m` is
+  now a COPY of `METRICS` (decoupled from the shared source). `resetValues()` writes the snapshots back and
+  `applyEnc()` rebuilds — every faked value returns to default in one click. Playwright **35/35** (crank
+  mass 8→10, reset → metric and row both back to 8).
