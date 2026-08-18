@@ -474,3 +474,17 @@ parallel read-only inventories against REAL gustify data, then built a navigable
 - OPEN: cards are keyed by KIND (themed to the canonical node); the 2nd instance of a kind (POST /login,
   User) shows kind-canonical body under its own header — resolves when encoders read real per-node
   c4-graph fields at scale-up.
+
+### 9m · mass off icon-size → sphere · flow-speed control (operator, 2026-08-17)
+
+- **Icons never resize** (operator ruling). Code-behind mass moved off icon-scale onto the **bubble
+  sphere radius** (`massR(n)=BUBR*(0.85+behind/MAX*1.15)`; `bubble(r)` now takes a radius). The icon
+  billboard is a flat `×0.86`, always. Glow (behind depth) stays a separate channel — mass rides the
+  sphere, depth rides the glow. Halo/satellite/label offsets rebased on the (now variable) sphere radius
+  `br`. ENC channel `size`→`mass` (chip relabelled; `heatBy:"mass"` is a distinct key, no clash).
+- **Flow speed is a live slider** in the ENCODE panel (Edges group, slow↔fast, 0.1–1.6). Particles read
+  too fast at every setup; `linkSpeedFn` now multiplies by `ENC.speed` (default **0.4**, ~2.5× slower).
+  `speed` is a GLOBAL viewing-comfort control — NOT in any preset, so switching A/B/C keeps your speed.
+  Live: the slider re-sets `Graph.linkDirectionalParticleSpeed(linkSpeedFn)`, no rebuild. `?speed=` URL hook.
+- Atlas updated (mass → sphere/glow · icons stay fixed · speed added to setup C). Playwright regression:
+  still 19/19.
