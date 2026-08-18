@@ -622,3 +622,18 @@ component orange).
   speed slider is the 5 slow positions at default 0.1).
 - OPEN: dots are small at graph-zoom (readable on a node, faint from afar); real flag set to wire at
   scale-up = god · hot · large-LOC · unguarded (see the handoff answer). Rotation is continuous, not pendulum.
+
+### 9u · belts tied to flow speed · used-by lights the sphere lattice (operator, 2026-08-18)
+
+- **Belt spin ∝ the connection speed** (operator: much slower, aligned with the wires). ORBIT entries now
+  carry a `base` (per-ring, outer slower); the rAF loop rotates by `base × ENC.speed` LIVE — so the same
+  slider drives particle flow AND belt orbit, and both crawl at the slow default. No rebuild on speed change.
+- **used-by can LIGHT THE SPHERE'S LATTICE** (operator's alt to the belt / a "gravity" proxy). New `verts`
+  effect: `bubble(r, glow)` lerps the wireframe grey→bright and raises its opacity by `glow` (= the mapped
+  field normalized, default fanin), plus a soft additive field-glow — a heavily-used element reads as a
+  dense, energized star. Mappable row like the rest; setup B swaps ring3(belt)→verts(glow) for used-by so
+  the two used-by encodings can be compared.
+- On "gravity": no literal gravity animation added — it's abstract to render honestly; the lattice-lighting
+  (density/brightness = importance) is the chosen proxy. An inward particle-pull is possible but heavier;
+  deferred unless asked.
+- Playwright **56/56** (verts defaults to fanin + ENC.verts on in B; ORBIT uses `base` not a fixed `spd`).
