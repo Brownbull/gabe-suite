@@ -670,3 +670,20 @@ into an X** (ink creeping a short way down the carved canals, never reaching the
   the sweep means most vertices are dark at any instant.
 - OPEN: sweep is AZIMUTHAL (a rotating radar around the vertical axis); a translating-plane "through" the
   sphere is a coordinate swap if that reads better. Lines are 1px (WebGL linewidth cap).
+
+### 9x · radar verts, on-lattice + visible stubs + grow/contract (operator notebook, 2026-08-18)
+
+Operator's notebook fixed three things: the dots were floating moons (stubs invisible), and the lifecycle
+should GROW then CONTRACT (dot → lines out → lines back → dot → gone), stubs reaching no more than half-way.
+
+- **Stubs are now thin cylinders**, not 1px `LineSegments` (WebGL can't thicken lines) — so the little `+`
+  that highlights the lattice edges is actually visible. Shared material per vertex, radius 0.11, reach
+  **45%** toward each neighbour (≤ half). Dots shrunk to 0.4.
+- **Dots land ON the wireframe crossings:** `P(i,j)` now matches `THREE.SphereGeometry`'s formula (the `-x`
+  sign), so a lit vertex coincides with a real lattice intersection and its 4 stubs lie along the drawn
+  edges.
+- **Grow→contract lifecycle:** `lineGroup.scale = 0.001 + ls` where `ls=(act-0.24)/0.76` — so as the sweep's
+  `act` rises then falls, the stubs grow out and pull back; the dot (`min(1, act·2.4)`) leads in and lingers
+  a touch past them, then fades. Matches the 6-step chain (dot · +line · ++line · contract · dot · gone).
+- Playwright **57/57**. Still frames can't show it (per-node detail + sweep); judge live/zoomed. Sizes +
+  cylinder radius are one-line tweaks.
