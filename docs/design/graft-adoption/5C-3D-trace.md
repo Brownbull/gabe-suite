@@ -451,3 +451,26 @@ parallel read-only inventories against REAL gustify data, then built a navigable
   it. `.chip` class collision resolved (panel connection chips → `.pchip`; explorer keeps `.chip`).
   `?panel=<id>` URL hook opens a node's card after settle for headless shots.
 - Verified headless: rail collapsed (default) + opened on `r_fn`, graph re-fits, 0 JS errors.
+
+### 9l · Playwright click-test + full element-components card in the rail (operator, 2026-08-17)
+
+- **Real root cause of the `reading 'x'` crash (corrected from §9k):** it was **node-drag**, not
+  `linkPositionUpdate`. Stack = Three controls `'change'` → force-graph's drag handler (`yG`) → reads an
+  undefined drag-subject `.x` on a click that registers as a zero-move drag. Fix: `.enableNodeDrag(false)`
+  (we never drag nodes). The §9k `coords` guard + a `raycast`-noop on decorative cluster objects stay in
+  as defensive hardening. Playwright confirms 0 page errors after the fix.
+- **Rail now renders the FULL element-components card** (was a simplified Usage/Connections/Tests/Identity/
+  Note subset): ported the reference renderer (`element-components.html`) into the spike — `usage()` bar
+  with in-degree tip · `conns()` chip groups (never tabbed) · `tabbed()` Tests (api/web tabs only when >1
+  group is live, else direct) · `colsTable()` Structure/Fields/Shape with FK key glyphs · Keys · Code-behind
+  (fn chips + depth + warn tip) · Composition counts (entity) · Identity kv rows + god `flag` · Docstring.
+  `KINDCARD[kind](node)` builds the body themed to the spike's recipe/auth nodes, reading `n.m` metrics
+  where present. Panel `.chip`→`.pchip` (kept clear of the explorer's `.chip`).
+- **Playwright test** (`_build/pw-panel-test.mjs`, drives system Chrome via `playwright-core`, no browser
+  download): waits for settle, projects a node to screen px via `Graph.graph2ScreenCoords`, clicks it, and
+  asserts — panel starts minimized · opens on click · header name+kind · rail widens to ~340 · Usage /
+  Connections / Code-behind / god-flag / Identity present (function) · Structure table + Keys (model) ·
+  minimize returns to the rail · **zero page/console errors**. Result: **19/19**.
+- OPEN: cards are keyed by KIND (themed to the canonical node); the 2nd instance of a kind (POST /login,
+  User) shows kind-canonical body under its own header — resolves when encoders read real per-node
+  c4-graph fields at scale-up.
