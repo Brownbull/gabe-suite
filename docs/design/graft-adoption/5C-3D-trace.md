@@ -432,3 +432,22 @@ parallel read-only inventories against REAL gustify data, then built a navigable
   hooks for shots. Verified headless A/B/C/heat, 0 JS errors.
 - OPEN: explorer runs on synthetic recipe+auth data (operator's choice) — port encoders to read real
   c4-graph fields when the grammar settles; FE collapses to `web`+`sites` then.
+
+### 9k · runtime-error fix + node panel → docked right rail (operator, 2026-08-17)
+
+- **BUG ("Uncaught TypeError: Cannot read properties of undefined (reading 'x')", masked in my banner as
+  "Script error." because it throws inside the cross-origin file:// bundle):** `linkPositionUpdate` read
+  `coords.start.x` with no guard. On a particle/link re-trigger frame (fired by `applyEnc` re-setting the
+  particle accessors) `coords.start` is momentarily undefined → throw every frame. Fix: guard
+  `if(sprite && coords && coords.start && coords.end)`. Also upgraded the error banner to an
+  `addEventListener("error")` capturing message+file+line+stack for future diagnosis.
+- **Node panel → a docked RIGHT RAIL (operator: "reserved space on the right, start minimized as one
+  column, maximize on element click — not floating over the graph"):** the panel is now `position:fixed`
+  full-height at the right edge, width driven by `--rail` (46px collapsed · 340px open, via
+  `body.panel-open`). `#g` reserves the column (`right:var(--rail)`) so the graph never sits under the
+  panel; on open/close `resizeGraph()` calls `Graph.width()/height()` to re-fit the canvas. Collapsed = a
+  thin rail (expand `‹` + vertical last-element name); a click fills phead/pbody and opens; the header `›`
+  minimizes back to the rail (never disappears). CONFIG + hint offset by `calc(var(--rail)+12px)` to clear
+  it. `.chip` class collision resolved (panel connection chips → `.pchip`; explorer keeps `.chip`).
+  `?panel=<id>` URL hook opens a node's card after settle for headless shots.
+- Verified headless: rail collapsed (default) + opened on `r_fn`, graph re-fits, 0 JS errors.
