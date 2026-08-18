@@ -488,3 +488,21 @@ parallel read-only inventories against REAL gustify data, then built a navigable
   Live: the slider re-sets `Graph.linkDirectionalParticleSpeed(linkSpeedFn)`, no rebuild. `?speed=` URL hook.
 - Atlas updated (mass → sphere/glow · icons stay fixed · speed added to setup C). Playwright regression:
   still 19/19.
+
+### 9n · selectable links + link card + a "Selected" value readout (operator, 2026-08-17)
+
+Operator: for every ON encoding channel, show the SELECTED element's value; make LINKS selectable too,
+with their own right-panel card.
+
+- **Links are selectable** — `.onLinkClick(...)` + `.linkHoverPrecision(8)` (thin lines were unhittable).
+  Node click also now records the selection. Clusters stay non-clickable (decorative).
+- **Link card in the rail** — `KINDCARD.__link(l)` (element-components style): Relation (source→target kind
+  chips + relation), Weight bar, Payload ("carries N fields — <target>"), Trust (proven/inferred), Direction.
+  Header `<src> → <tgt> · CONNECTION · <rel>`.
+- **"Selected" readout in the ENCODE panel** (`#encsel`, `refreshEncSel`) — the name of the clicked
+  element/link + one row per ACTIVE dimension with THIS target's value: node → mass·behind, glow·depth,
+  halo·fan-in + tested, hotspot·god, method, heat·<by>; link → relation, width/flow·weight, payload·fields,
+  trust, direction. Only active channels show (toggling a channel updates the readout live via `applyEnc`).
+  `SEL={kind,data}` drives it; guarded against the load-order where `buildExpl()` fires before `SEL` inits.
+- `?panel=<id>` / `?link=<src>>​<tgt>` URL hooks set the selection for headless shots. Playwright grew to
+  **30/30** (node readout: name + mass·behind + numeric value; link: card sections + readout src→tgt + weight).
