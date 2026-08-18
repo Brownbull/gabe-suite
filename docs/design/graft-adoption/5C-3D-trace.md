@@ -565,3 +565,24 @@ pick, applied to every element's icon.
 - **Icon-size slider** in the ENCODE panel (under Colour, 6–20), live via `rebuildNodes()`. A GLOBAL display
   control like `speed` — not per-setup, not per-element, not in any preset.
 - Playwright **42/42** (slider sets `ENC.iconSize` 10→16 and the node's icon sprite scale follows).
+
+### 9r · one distinct colour per kind + per method, no overlap (operator, 2026-08-17)
+
+Operator: every element kind a unique colour, every HTTP method a unique colour, and **no method colour
+reused by any element kind**. The old palette had exact collisions (component == screen == `#e8590c`),
+near-identical purples (function ≈ endpoint), and method↔kind clashes (GET green ≈ model green, PUT orange ≈
+component orange).
+
+- **METHODS (reserved verb family, no kind may use these):** GET `#22c55e` · POST `#3b82f6` · PUT `#f97316`
+  · PATCH `#eab308` · DELETE `#ef4444`.
+- **KINDS (12, all distinct, none on a method hue):** endpoint `#8b5cf6` · function `#6366f1` · model
+  `#14b8a6` · schema `#06b6d4` · entity `#84cc16` · external `#94a3b8` · route `#38bdf8` · component `#d946ef`
+  · hook `#10b981` · store `#ec4899` · type `#64748b` · screen `#a855f7`. Applied via a `KINDCOL` override on
+  `KINDS[k].col` (before the `nodes` map) so icons/legend/panel-type all pick it up; panel `.pchip` classes
+  updated through the `:root` `--c-*`/`--fk-*` vars (+ new `--c-web`/`--c-external`).
+- **Propagated to the reference** `docs/design/codebase-graph-consolidation/element-components.html` (operator
+  mid-turn) — its `--c-*`/`--fk-*` vars now carry the same palette; the stale dark `--c-model` override dropped.
+- Playwright **45/45** (`window.KINDCOL` all-unique · `window.METHOD` all-unique · no method colour in the
+  kind set). Verified headless: identity mode (distinct kind icons) + method mode (GET green / POST blue).
+- OPEN: edge `RELCOL` still uses some old hexes (edges are a separate encoding the operator didn't raise);
+  tightest kind adjacency is hook-emerald vs model-teal (Δ~14° hue) — legible, tweak a hex if it reads close.
