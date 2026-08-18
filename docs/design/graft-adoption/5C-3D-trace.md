@@ -653,3 +653,20 @@ little onto the edges between vertices. recipeStore (used-by 9) → 8 lit vertic
 - Playwright **57/57** (used-by on tested nodes populates `WAVE`).
 - OPEN: dots are subtle at graph-zoom (clear on a selected/zoomed node); brightness/size are one-line tweaks
   if you want them punchier. Wave is a smooth phase-sweep, not literal edge-to-edge propagation.
+
+### 9w · verts = a RADAR sweep that ignites vertices into little X's (operator, 2026-08-18)
+
+Operator refined again: not a soft glow pulse — a **radar** sweeping the sphere. As the sweep passes a
+vertex it fires: the **dot snaps on** (crisp, no glow), then short **stubs grow along its 4 lattice edges
+into an X** (ink creeping a short way down the carved canals, never reaching the neighbour vertex).
+
+- `radarVerts()` replaces `latticeWave()`. It rebuilds the lat/lon grid parametrically (so each vertex knows
+  its 4 neighbours), picks N interior vertices by stride, and per vertex builds a `sub` group = a crisp dot
+  (opacity 0) + a `lineGroup` of `LineSegments` stubs reaching **40%** toward each neighbour.
+- Loop: a `rad` angle sweeps `[0,2π)` (rate ∝ `ENC.speed`); each vertex fires on a narrow window
+  `act = 1-|az-rad|/0.7`. `dot.opacity = min(1, act·2.2)` (appears first) → `lineGroup.scale/opacity` lag on
+  `(act-0.22)/0.78` (the X grows after the dot). ~1 vertex lit at a time → a radar "reveal" cadence.
+- Playwright **57/57** (unchanged asserts; `WAVE` still populates under verts). Still frames can't show it —
+  the sweep means most vertices are dark at any instant.
+- OPEN: sweep is AZIMUTHAL (a rotating radar around the vertical axis); a translating-plane "through" the
+  sphere is a coordinate swap if that reads better. Lines are 1px (WebGL linewidth cap).
