@@ -532,3 +532,23 @@ value has no effect on the selected element; and — bold — show EVERY dimensi
   now a COPY of `METRICS` (decoupled from the shared source). `resetValues()` writes the snapshots back and
   `applyEnc()` rebuilds — every faked value returns to default in one click. Playwright **35/35** (crank
   mass 8→10, reset → metric and row both back to 8).
+
+### 9p · effect → variable MAPPING, editable per setup (operator, 2026-08-17)
+
+Operator: show which VARIABLE each effect reads, let me change it, and make A/B/C independent maps I can
+retune — so I can play with which field drives which effect for a given selection.
+
+- **Encoders read a MAPPED field, not a hardcoded one.** `MAP={A,B,C}` (each `{effect→field}`, seeded from
+  `DEFMAP`; **B's halo defaults to `tests`** to show maps can differ). `fieldOf(key)=MAP[ENC.setup][key]`.
+  `buildNode` (mass/glow/halo/god/pulse) and the link accessors (width/flow/payload/trust/speed) now read
+  `fieldOf(key)` via `nodeVal`/`linkVal`, normalized by a per-field `MAXES` (behind/depth/fanin/tests/cols/
+  w/payload; bool→1). `truthy()` gates the flag effects. Halo colours green only when its field is `tests`.
+- **Each row carries a variable dropdown** — `NODE_VARS`=behind·depth·fanin·tests·cols·god, `LINK_VARS`=
+  w·payload·proven; `method` stays fixed (the tint is method-specific). Changing it writes
+  `MAP[ENC.setup][key]` and re-renders. The stepper edits whatever field is mapped; the value shown is the
+  mapped field's. `FIELDT` types each field (int/bool/enum) so steppers + gray-out behave.
+- **Per setup:** switching A/B/C rebuilds the rows against that setup's map, so the dropdowns (and the graph)
+  change. Maps start mostly identical (except B·halo) and are independently editable — the operator diverges
+  them to taste. Panel widened 236→256 for the extra control.
+- Playwright **40/40** (mass dropdown = behind; remap mass→depth → value 8→2 + `MAP.A.mass` updated; setup B
+  halo → tests vs setup A halo → fanin).
