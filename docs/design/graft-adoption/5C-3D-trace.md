@@ -637,3 +637,19 @@ component orange).
   (density/brightness = importance) is the chosen proxy. An inward particle-pull is possible but heavier;
   deferred unless asked.
 - Playwright **56/56** (verts defaults to fanin + ENC.verts on in B; ORBIT uses `base` not a fixed `spd`).
+
+### 9v · verts, refined: a LATTICE WAVE of lit vertices (operator, 2026-08-18)
+
+Operator corrected the verts idea: not "brighten the whole lattice" — light **N of the sphere's own
+vertices** (N = used-by, cap 8) with glowing dots that pulse in a **travelling wave**, the glow bleeding a
+little onto the edges between vertices. recipeStore (used-by 9) → 8 lit vertices.
+
+- `bubble()` reverted to its plain grey lattice (segments now the shared `BUBSEG=[18,12]`). `latticeWave()`
+  reads that same sphere's vertices, dedups, picks N by even stride, and drops a soft additive glow sprite +
+  a tiny bright core on each — the additive falloff is the "bleeds onto the connectors" effect.
+- New `WAVE` animation list (cleared in `rebuildNodes` like `PULSE`/`ORBIT`): each dot's opacity + scale
+  oscillate by `sin(g + phase)`, phase from the vertex's own position → a wave sweeps across the sphere.
+  Wave rate rides `ENC.speed` (crawls at the slow default), consistent with the belts/flow.
+- Playwright **57/57** (used-by on tested nodes populates `WAVE`).
+- OPEN: dots are subtle at graph-zoom (clear on a selected/zoomed node); brightness/size are one-line tweaks
+  if you want them punchier. Wave is a smooth phase-sweep, not literal edge-to-edge propagation.
