@@ -506,3 +506,24 @@ with their own right-panel card.
   `SEL={kind,data}` drives it; guarded against the load-order where `buildExpl()` fires before `SEL` inits.
 - `?panel=<id>` / `?link=<src>>​<tgt>` URL hooks set the selection for headless shots. Playwright grew to
   **30/30** (node readout: name + mass·behind + numeric value; link: card sections + readout src→tgt + weight).
+
+### 9o · the ENCODE panel becomes a per-element value PLAYGROUND (operator, 2026-08-17)
+
+Operator: put each dimension's value NEXT TO its toggle (not a separate readout); gray a dimension whose
+value has no effect on the selected element; and — bold — show EVERY dimension for the selection (default
+0 if absent) with ± steppers to FAKE the value and watch the encoding react. Ephemeral; erased on reload.
+
+- **Dimension rows** replace the chip-wrap + the `#encsel` readout. `DIMR` maps each channel to a backing
+  field (mass→behind, glow→depth, halo→fanin, god/pulse→god, method→method enum; width/flow→w, payload→
+  payload, trust→proven). Each `.drow` = the toggle chip (global on/off) · the SELECTED target's value ·
+  `−`/`+`. A `#selhdr` names the selection.
+- **Gray-out by effect** (`dimEff`): a row is `.noeffect` (dimmed label + value) when its value can't show —
+  int ≤ 0, bool false, method `—` or on a non-endpoint, or the dimension's scope ≠ the selection's kind
+  (node dims gray while a link is selected, and vice-versa). Toggling still works when grayed.
+- **Steppers fake the value** (`dimSet`): ± mutates `SEL.data.m[field]` (node) or `SEL.data[field]` (link)
+  then `applyEnc()` rebuilds the graph + refreshes the rows — so cranking `list_recipes()` mass 8→20 grows
+  its sphere immediately. Values are throwaway (live on the in-memory node; gone on reload). Visual growth
+  capped at 3× (`cap3`) so a huge fake value can't fill the screen.
+- Load-order: `buildExpl()` now runs at the BOTTOM (after `DIMR`/`drow` exist) — the premature call crashed
+  reading `DIMR.node`. Playwright **33/33** (rows show values, mass ungrayed / method grayed for a fn,
+  stepper increments the value AND mutates `n.m.behind`, link width row shows weight).
