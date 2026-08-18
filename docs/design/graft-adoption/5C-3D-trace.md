@@ -586,3 +586,21 @@ component orange).
   kind set). Verified headless: identity mode (distinct kind icons) + method mode (GET green / POST blue).
 - OPEN: edge `RELCOL` still uses some old hexes (edges are a separate encoding the operator didn't raise);
   tightest kind adjacency is hook-emerald vs model-teal (Δ~14° hue) — legible, tweak a hex if it reads close.
+
+### 9s · icon-size positions · twin-calibrated behind/depth scale · tested-by orbit rings (operator, 2026-08-18)
+
+- **Icon size = 3 positions** (operator: keep 3/4/5, load on 4). Slider now `8·10·12`, step 2, default **10**
+  (the middle = position 4). "Carry into the config later."
+- **behind/depth scale FIXED from real twins, not the per-graph max** (operator). Measured gastify+gustify
+  (n=346): `behind.fns` min 0 · max 110 · avg 7 · median 3 · **p95 29** · p99 47; `behind.depth` max 7 ·
+  **p95 5**. Set `MAXES.behind=30`, `MAXES.depth=5` (p95) so the typical range fills the band and the rare
+  outliers (110!) saturate via `cap3`. mass→behind, glow→depth stays established; same fixed scale for every
+  graph. (fanin/tests/cols/w/payload still per-graph.)
+- **Tested-by = ORBITING RINGS** (operator's new halo). Halo default remapped to **tests**; `orbitRings()`
+  adds one thin green torus per test (capped 6), each tilted + spun continuously around the sphere via a new
+  `ORBIT` list in the rAF loop (`rotateOnAxis`). Untested → no rings; more tests → more spinning rings. The
+  halo channel stays generic (N rings = the mapped count; green only when the field is `tests`, else icon
+  colour). `ORBIT` cleared in `rebuildNodes` like `PULSE`.
+- Per-setup maps simplified to three independent `DEFMAP` copies (halo=tests everywhere now). Playwright
+  **49/49** (icon slider 8/10/12 + sprite follows; halo defaults to tests; per-setup independence — A.mass
+  remap doesn't leak to B; ORBIT populated when halo on over tested nodes).
