@@ -604,3 +604,21 @@ component orange).
 - Per-setup maps simplified to three independent `DEFMAP` copies (halo=tests everywhere now). Playwright
   **49/49** (icon slider 8/10/12 + sprite follows; halo defaults to tests; per-setup independence — A.mass
   remap doesn't leak to B; ORBIT populated when halo on over tested nodes).
+
+### 9t · speed positions · solid rings → SATELLITE BELTS (tests · flags · used-by) (operator, 2026-08-18)
+
+- **Speed = 5 slow positions** (operator: keep the first five incl. the first). Slider `0.1–0.3` step 0.05,
+  default **0.1** (the slowest/first). Particles now crawl by default.
+- **The solid test-ring is retired; the ring becomes an AXIS carrying SATELLITE dots** (operator's "Starlink
+  chain / planets with moons"). `satelliteRing()` places N small spheres evenly on a tilted orbit + a faint
+  guide torus, and spins the whole belt (the dots travel). One belt per dimension via a tilt index (3 planes).
+- **Three belts replace the single `halo`:** `ring1` tests (green `#22c55e`) · `ring2` flags (red `#ef4444`)
+  · `ring3` used-by (amber `#fbbf24`). N dots = the mapped count (cap 8). Each is a mappable effect row
+  (tests/flags/fanin defaults). Untested/flag-free/unused → no dots. **Code-behind stays on mass/glow** (both
+  used), so it gets no belt — the three former badges (tests · used-by · code-behind) are all covered.
+- **`flags` is a new synthetic field** = count of active issues (`god` + `large` [behind≥15 or fanin≥15 as a
+  LOC proxy] + `hot` [churn]); added to `NODE_VARS`/`FIELDT`/`MAXES` (max 3). At scale-up it reads real flags.
+- Playwright **53/53** (ring1/2/3 default to tests/flags/fanin; setup B spawns belts → ORBIT populated;
+  speed slider is the 5 slow positions at default 0.1).
+- OPEN: dots are small at graph-zoom (readable on a node, faint from afar); real flag set to wire at
+  scale-up = god · hot · large-LOC · unguarded (see the handoff answer). Rotation is continuous, not pendulum.
