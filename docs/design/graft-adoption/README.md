@@ -8,6 +8,17 @@
 > Status: PLAN (draft for operator review). Depends on the "is there an off-the-shelf center"
 > quick check (running) — if that finds nothing adopt-able, this plan stands as-is.
 
+## This folder (the graph-adoption arc)
+
+- **[`FUTURE-SKILL.md`](FUTURE-SKILL.md)** — the intent behind turning this graph work into a skill
+  (codename **GAYGRAPH**): author a graph environment by declaring entities · fields · connections · effects.
+- **[`spike/`](spike/)** — the runnable 5C encoding playground (live spike + build recipe + Playwright
+  battery + screenshots), moved in-repo 2026-08-18 from the external scratch dir. Start at `spike/README.md`.
+- **[`records/`](records/)** — the design record + session handoffs:
+  [`5C-3D-trace.md`](records/5C-3D-trace.md) (step-by-step, §9a–§9x) ·
+  [`5C-HANDOFF.md`](records/5C-HANDOFF.md) / [`HANDOFF-force-graph-5B.md`](records/HANDOFF-force-graph-5B.md) (resume state).
+- **[`artifacts/`](artifacts/)** — the graft-adoption plan / lineage / tier planning HTML.
+
 ## Off-the-shelf check (2026-08-16) — no center to adopt; the split is validated
 
 Scanned portals (Backstage/Port/Cortex), viz/health (CodeCharta/Structurizr/CodeScene/Sourcegraph/

@@ -15,3 +15,10 @@ docs/investigations/**/*.jpg
 # Its own `.ignore` re-admits it to ripgrep; delete that file after every build.
 graft/
 .ignore
+
+# graft-adoption 5C spike — heavy/rebuildable local artifacts, kept local not pushed.
+# screenshots = visual provenance; _build = esbuild recipe + node_modules + Playwright
+# battery (rebuild: see records/5C-3D-trace.md §8). The vendored spike/3d-bundle.js IS
+# committed, so the spike runs standalone without _build.
+docs/design/graft-adoption/spike/screenshots/
+docs/design/graft-adoption/spike/_build/

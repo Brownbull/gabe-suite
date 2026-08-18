@@ -1,0 +1,279 @@
+<title>Graft Adoption Plan</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --panel-2:#fbfcfe; --ink:#182130; --muted:#697588;
+    --line:#e3e8ef; --line-2:#eef1f6; --ghost:#aeb8c6;
+    --graft:#0d9488; --fw:#7c3aed; --proc:#d97706; --gap:#e11d67;
+    --graft-s:rgba(13,148,136,.12); --fw-s:rgba(124,58,237,.12); --proc-s:rgba(217,119,6,.12); --gap-s:rgba(225,29,103,.11);
+    --good:#12b886;
+    --shadow:0 1px 2px rgba(20,30,50,.05),0 10px 26px rgba(20,30,50,.06);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#4a5666;
+    --graft:#2dd4bf; --fw:#a78bfa; --proc:#fbbf24; --gap:#f472a6;
+    --graft-s:rgba(45,212,191,.13); --fw-s:rgba(167,139,250,.14); --proc-s:rgba(251,191,36,.13); --gap-s:rgba(244,114,166,.13);
+    --good:#51cf66;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#4a5666;
+    --graft:#2dd4bf; --fw:#a78bfa; --proc:#fbbf24; --gap:#f472a6;
+    --graft-s:rgba(45,212,191,.13); --fw-s:rgba(167,139,250,.14); --proc-s:rgba(251,191,36,.13); --gap-s:rgba(244,114,166,.13);
+    --good:#51cf66;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1180px;margin:0 auto;padding:40px 24px 72px}
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:9px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--graft)}
+  h1{font-size:31px;line-height:1.12;font-weight:770;letter-spacing:-.022em;margin:13px 0 0;max-width:24ch;text-wrap:balance}
+  .lede{font-size:15px;color:var(--muted);margin:13px 0 0;max-width:72ch}
+  .lede b{color:var(--ink)} .mono,.lede code{font-family:var(--mono)}
+  .lede code{font-size:.9em;color:var(--ink);background:var(--line-2);padding:1px 5px;border-radius:5px}
+  .branches{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .br{font-family:var(--mono);font-size:12px;padding:4px 11px;border-radius:8px;border:1px solid var(--line);background:var(--panel);display:inline-flex;gap:7px;align-items:center}
+  .br .d{width:7px;height:7px;border-radius:50%;background:var(--good)}
+  h2.sec{font-size:12px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:40px 0 6px;display:flex;align-items:center;gap:10px}
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .subhead{font-size:13px;color:var(--muted);margin:0 0 15px;max-width:74ch}
+
+  .keyrow{display:flex;flex-wrap:wrap;gap:16px;margin:2px 0 16px}
+  .key{display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .key .sw{width:11px;height:11px;border-radius:3px;flex:none}
+  .key b{font-weight:640}
+
+  /* gap matrix */
+  .mtx{width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:var(--panel);border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:var(--shadow)}
+  .mtx th{text-align:left;font-size:10.5px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);padding:11px 13px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  .mtx td{padding:9px 13px;border-bottom:1px solid var(--line-2);vertical-align:top}
+  .mtx tr:last-child td{border-bottom:none}
+  .mtx .need{font-weight:640;color:var(--ink)}
+  .mtx .need small{display:block;font-weight:400;color:var(--muted);font-size:11px;margin-top:1px}
+  .cellwrap{overflow-x:auto}
+  .pv{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .pv.graft{background:var(--graft-s);color:var(--graft)} .pv.fw{background:var(--fw-s);color:var(--fw)}
+  .pv.proc{background:var(--proc-s);color:var(--proc)} .pv.gap{background:var(--gap-s);color:var(--gap)}
+  .mtx .note{color:var(--muted);font-size:11.5px}
+
+  .cols2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+  @media(max-width:880px){.cols2{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);padding:16px 17px}
+  .card.retire{border-color:color-mix(in srgb,var(--gap) 26%,var(--line))}
+  .card.keep{border-color:color-mix(in srgb,var(--fw) 26%,var(--line))}
+  .card h3{margin:0 0 4px;font-size:14px;font-weight:730;display:flex;align-items:center;gap:8px}
+  .card h3 .b{width:9px;height:9px;border-radius:3px}
+  .card .cap{font-size:11.5px;color:var(--muted);margin:0 0 11px}
+  .fl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+  .fl li{font-size:12.5px;display:flex;gap:8px;align-items:baseline}
+  .fl .f{font-family:var(--mono);font-size:11.5px;font-weight:600;color:var(--ink);white-space:nowrap}
+  .fl .w{color:var(--muted);font-size:11.5px}
+
+  .steps{display:flex;flex-direction:column;gap:10px}
+  .step{display:grid;grid-template-columns:auto 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 16px}
+  .step .n{width:30px;height:30px;border-radius:9px;background:var(--graft-s);color:var(--graft);font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;font-family:var(--mono)}
+  .step .body{min-width:0}
+  .step h4{margin:0 0 3px;font-size:14px;font-weight:700;display:flex;flex-wrap:wrap;gap:9px;align-items:baseline}
+  .step h4 .cost{font-family:var(--mono);font-size:10.5px;font-weight:700;padding:1.5px 8px;border-radius:20px;background:var(--line-2);color:var(--muted)}
+  .step h4 .cost.lo{background:var(--graft-s);color:var(--graft)} .step h4 .cost.hi{background:var(--proc-s);color:var(--proc)}
+  .step p{margin:2px 0 0;font-size:12.5px;color:var(--muted)}
+  .step p b{color:var(--ink);font-weight:620}
+  .step .impl{margin-top:6px;font-size:11.5px;color:var(--muted);border-left:2px solid var(--line);padding-left:9px}
+  .step .impl b{color:var(--ink)}
+
+  .deep{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:2px}
+  @media(max-width:880px){.deep{grid-template-columns:1fr}}
+  .dcall{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;box-shadow:var(--shadow)}
+  .dcall .dh{font-family:var(--mono);font-size:12.5px;font-weight:700;color:var(--graft)}
+  .dcall .dp{font-size:11.5px;color:var(--muted);margin:4px 0 8px}
+  .dcall .dm{font-family:var(--mono);font-size:10.5px;color:var(--muted);display:flex;flex-wrap:wrap;gap:5px}
+  .dcall .dm span{background:var(--line-2);padding:1px 6px;border-radius:5px}
+
+  .callout{margin-top:14px;background:var(--panel);border:1px solid color-mix(in srgb,var(--proc) 32%,var(--line));border-radius:12px;padding:14px 16px;font-size:13px;color:var(--muted)}
+  .callout b{color:var(--ink)} .callout .mono{background:var(--line-2);padding:1px 5px;border-radius:5px;color:var(--ink);font-size:12px}
+  .rec{margin-top:14px;background:var(--panel);border:1px solid color-mix(in srgb,var(--graft) 34%,var(--line));border-radius:12px;padding:14px 16px;font-size:13px;color:var(--muted)}
+  .rec .tag{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;border-radius:20px;background:var(--graft-s);color:var(--graft);margin-right:8px}
+  .rec b{color:var(--ink)}
+  footer{margin-top:38px;padding-top:16px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>Graft adoption · plan &amp; gap analysis</div>
+  <h1>What graft fills, what the suite keeps, and how the deep layer runs on our side</h1>
+  <p class="lede">The verdict from reading graft's real output: it carries the <b>generic code graph</b> —
+    functions, classes, signatures, six edge kinds — but a route handler is just a <code>function</code>
+    node and a model is just <code>class X(Base)</code>. The <b>framework facts</b> (routes, tables, FKs,
+    fetch paths) and the <b>process data</b> (tests, board, ledger, evidence) are ours to keep. graft retires
+    the re-derivation, not the whole generator layer.</p>
+  <div class="branches">
+    <span class="br"><span class="d"></span>gustify · <span class="mono">graft-pilot</span></span>
+    <span class="br"><span class="d"></span>gabe_lens · <span class="mono">graft-adoption</span></span>
+    <span class="br" style="border-style:dashed"><span class="d" style="background:var(--muted)"></span>fully reversible — delete the branches, zero residue</span>
+  </div>
+
+  <h2 class="sec">The gap matrix — every Center data-need, and who feeds it</h2>
+  <p class="subhead">Rows are what the Command Center's pages render. Each need is filled by graft (generic
+    facts), by the suite's framework-aware parse (graft can't see decorators/ORM), by the suite's process
+    data (KDBP/git/junit), or is a genuine gap.</p>
+  <div class="keyrow">
+    <span class="key"><span class="sw" style="background:var(--graft)"></span><b>graft</b> — generic code facts</span>
+    <span class="key"><span class="sw" style="background:var(--fw)"></span><b>suite · framework</b> — routes/ORM/fetch parse</span>
+    <span class="key"><span class="sw" style="background:var(--proc)"></span><b>suite · process</b> — KDBP/git/junit</span>
+    <span class="key"><span class="sw" style="background:var(--gap)"></span><b>gap</b> — neither, needs building</span>
+  </div>
+  <div class="cellwrap">
+  <table class="mtx">
+    <thead><tr><th style="min-width:200px">Center section / data need</th><th>Fed by</th><th style="min-width:230px">Why</th></tr></thead>
+    <tbody>
+      <tr><td class="need">Functions <small>signatures · calls · layer · god · usage</small></td>
+        <td><span class="pv graft">graft</span> <span class="pv fw">+ layer tag</span></td>
+        <td class="note">graft has signature+calls+exported; suite tags api/service layer + entity</td></tr>
+      <tr><td class="need">Code map <small>call / import / contains graph</small></td>
+        <td><span class="pv graft">graft</span></td>
+        <td class="note">7,643 calls · 5,429 imports · 7,378 contains — richer than today</td></tr>
+      <tr><td class="need">Data model <small>models: table · columns · FK targets</small></td>
+        <td><span class="pv fw">suite · framework</span></td>
+        <td class="note">graft sees <code>class X(Base)</code> only — no <code>__tablename__</code>/Column/ForeignKey</td></tr>
+      <tr><td class="need">Schemas <small>Pydantic fields + types</small></td>
+        <td><span class="pv fw">suite · framework</span></td>
+        <td class="note">contains-edge gives members; typed fields need the suite's parse</td></tr>
+      <tr><td class="need">Endpoints <small>method · path · resp · touch</small></td>
+        <td><span class="pv fw">suite · framework</span></td>
+        <td class="note">a handler is a plain <code>function</code> node — no <code>GET /recipes</code> decorator data</td></tr>
+      <tr><td class="need">Architecture graph <small>C4 nodes + edges + entity grouping</small></td>
+        <td><span class="pv graft">graft edges</span> <span class="pv fw">+ domain</span></td>
+        <td class="note">graft = raw topology; suite groups symbols into domain entities</td></tr>
+      <tr><td class="need">Frontend <small>screens · fetch bridge</small></td>
+        <td><span class="pv graft">graft TS</span> <span class="pv fw">+ fetch path</span></td>
+        <td class="note">graft has 916 TS types + edges; the fetch URL string stays a suite/ast-grep parse</td></tr>
+      <tr><td class="need">Element prose <small>element_detail summary / crux</small></td>
+        <td><span class="pv graft">graft --deep</span></td>
+        <td class="note">the honest-empty prose the Center shows — filled by the deep layer (below)</td></tr>
+      <tr><td class="need">Tests <small>cases · coverage · pass/fail · kind</small></td>
+        <td><span class="pv proc">suite · process</span></td>
+        <td class="note">graft indexes test FILES; results come from junit + test_insight</td></tr>
+      <tr><td class="need">Evidence <small>proof states · C-ids · reach</small></td>
+        <td><span class="pv proc">suite · process</span></td>
+        <td class="note">KDBP verification data — graft has no concept of it</td></tr>
+      <tr><td class="need">Board <small>phase · task · red/green state</small></td>
+        <td><span class="pv proc">suite · process</span></td>
+        <td class="note">KDBP PLAN — welded to the lifecycle, not the code</td></tr>
+      <tr><td class="need">Ledger · releases <small>checkpoints · commits · releases</small></td>
+        <td><span class="pv proc">suite · process</span></td>
+        <td class="note">git + KDBP history</td></tr>
+      <tr><td class="need">Guards <small>validators per route</small></td>
+        <td><span class="pv fw">suite · framework</span></td>
+        <td class="note">graft has the validator fns; the route-file scoping is framework-aware</td></tr>
+      <tr><td class="need">Change-sim <small>in-flight blast radius</small></td>
+        <td><span class="pv proc">suite · process</span> <span class="pv graft">+ graft edges</span></td>
+        <td class="note">git diff + inflight (suite) traversed over graft's richer edges</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p class="subhead" style="margin-top:12px"><b style="color:var(--ink)">Reading:</b> graft owns ~4 of 13
+    needs outright and enriches 3 more; the suite keeps 6 framework/process needs. <b style="color:var(--ink)">No
+    gap is unfillable</b> — the "gaps" are the framework/process parses we already do. Adoption <b style="color:var(--ink)">thins</b>
+    the generators, it doesn't delete them.</p>
+
+  <h2 class="sec">Structure — today → tomorrow</h2>
+  <div class="cols2">
+    <div class="card retire">
+      <h3><span class="b" style="background:var(--gap)"></span>Retires / thins (graft covers)</h3>
+      <p class="cap">generic code facts the suite currently re-derives from source</p>
+      <ul class="fl">
+        <li><span class="f">signature re-parse</span><span class="w">function_insight rebuilds a string graft already stores (15.7k nodes)</span></li>
+        <li><span class="f">generic call/import graph</span><span class="w">_a3_graft's calls/imports → graft's fuller 6-relation edge set</span></li>
+        <li><span class="f">node inventory</span><span class="w">function/class/method/type census → graft's 8.3k nodes</span></li>
+        <li><span class="f">_a3_web topology</span><span class="w">the frontend regex scan → graft's TS nodes/edges (the build we were about to write shrinks)</span></li>
+      </ul>
+    </div>
+    <div class="card keep">
+      <h3><span class="b" style="background:var(--fw)"></span>Stays ours (graft can't see it)</h3>
+      <p class="cap">framework-aware extraction + process data + the render</p>
+      <ul class="fl">
+        <li><span class="f">route / ORM / schema parse</span><span class="w">FastAPI decorators, SQLAlchemy tables+FKs, Pydantic fields</span></li>
+        <li><span class="f">fetch-path extraction</span><span class="w">the screen→endpoint bridge (call-site URL)</span></li>
+        <li><span class="f">test_insight + junit</span><span class="w">cases, coverage, pass/fail, kind</span></li>
+        <li><span class="f">board · ledger · evidence · sim</span><span class="w">KDBP + git process data</span></li>
+        <li><span class="f">entity/domain grouping + the renderer</span><span class="w">the Command Center itself — unchanged</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="sec">The deep layer — run it on our subscription, tied to a beat</h2>
+  <p class="subhead">graft's <code>--deep</code> is three stateless "read code → write prose" calls through one
+    swappable <code>ChatModel</code> interface. No special access — we can run the exact prompts on the
+    Claude subscription and write results into graft's <code>body_hash</code>-keyed cache (Path A, in-bounds).</p>
+  <div class="deep">
+    <div class="dcall"><div class="dh">summarize</div><div class="dp">per file — "document this source, 3–8 sentences, name concrete identifiers"</div><div class="dm"><span>temp 0</span><span>2048 tok</span><span>plain text</span></div></div>
+    <div class="dcall"><div class="dh">crux</div><div class="dp">per symbol — "one sentence: what it's FOR + the ≤8-line span"</div><div class="dm"><span>temp 0</span><span>8192 tok</span><span>record_symbols</span></div></div>
+    <div class="dcall"><div class="dh">synthesize</div><div class="dp">all summaries → architecture — "system/file/concept nodes, typed links"</div><div class="dm"><span>record_graph</span></div></div>
+  </div>
+  <div class="callout">⚠ <b>Probe before plumbing.</b> The gustify session flagged the open question: does graft's
+    injection hook actually <b>consume</b> the deep summaries, or only the structural card? If structural-only,
+    <span class="mono">--deep</span> is optional for the pilot and the keyless graph is already the win. First move
+    is a one-line grep of the injection hook — it decides whether the deep layer is worth reproducing.</div>
+  <div class="rec"><span class="tag">tie to a beat</span>If injection consumes deep prose, run the three prompts
+    <b>on the subscription at <span class="mono">/gabe-commit</span></b> — only the files the commit touched
+    (cached on <code>body_hash</code>), so the map gains deep info exactly as you finish work. <b>/gabe-review</b>
+    and <b>/gabe-cc-entity</b> read the result; they don't generate it.</p></div>
+
+  <h2 class="sec">Regeneration cost — cheap enough to hook</h2>
+  <div class="steps">
+    <div class="step"><div class="n">S</div><div class="body">
+      <h4>Structural build <span class="cost lo">~ms · free</span></h4>
+      <p>graft's AST index is freshness-first (~3ms/query, cached). <b>Cheap enough to hook on every beat</b> —
+        execute, review, red — so the structural map is never stale.</p>
+      <div class="impl"><b>Hook:</b> a PostToolUse rebuild (graft ships this) + a suite pre-beat freshness check.</div>
+    </div></div>
+    <div class="step"><div class="n">D</div><div class="body">
+      <h4>Deep prose (LLM) <span class="cost hi">incremental · subscription</span></h4>
+      <p>The first <code>--deep</code> pass is the one-time cost (~8.3k nodes). After that, summaries cache on
+        <code>body_hash</code> — <b>only changed files re-summarize</b>, so a commit touching 5 files runs ~5
+        calls. Cheap enough to hook on <b>/gabe-commit</b>.</p>
+      <div class="impl"><b>Hook:</b> post-commit, deep-summarize the diff's files on the subscription → write graft's cache. Never blocks the commit.</div>
+    </div></div>
+  </div>
+
+  <h2 class="sec">The path forward</h2>
+  <div class="steps">
+    <div class="step"><div class="n">0</div><div class="body">
+      <h4>Probe + inventory <span class="cost lo">read-only</span></h4>
+      <p>On the gustify pilot branch: grep the injection hook (does it consume deep?), and inventory graft's
+        populated fields/edges vs the gap matrix.</p>
+      <div class="impl"><b>Decides:</b> whether the deep layer is in scope, and confirms the matrix against real data.</div>
+    </div></div>
+    <div class="step"><div class="n">1</div><div class="body">
+      <h4>Consume graft's generic facts <span class="cost lo">2 generators</span></h4>
+      <p>Point <code>_a3_graft</code> + <code>_a3_graph</code> at graft's signature/edges/kinds; <b>drop the
+        signature re-parse</b> + admit method/class/type nodes. Framework parses (routes/ORM) untouched.</p>
+      <div class="impl"><b>Implication:</b> the biggest waste (re-derivation) ends; the badge-vs-panel audit re-runs to prove no regression.</div>
+    </div></div>
+    <div class="step"><div class="n">2</div><div class="body">
+      <h4>Frontend = graft reader <span class="cost lo">supersedes the build</span></h4>
+      <p>Consume graft's TS nodes/edges; keep only the fetch-path parse for the bridge. The from-scratch
+        <code>_a3_web</code> frontend arm shrinks to a reader, verified against the compiler oracle.</p>
+      <div class="impl"><b>Implication:</b> the frontend-model project we scoped mostly evaporates into "read graft."</div>
+    </div></div>
+    <div class="step"><div class="n">3</div><div class="body">
+      <h4>Deep prose + enforcement live <span class="cost hi">if probe says yes</span></h4>
+      <p>Wire the subscription deep-run on <code>/gabe-commit</code>; fill the Center's honest-empty
+        <code>element_detail</code>. graft's injection + MCP already enforce map-use from install.</p>
+      <div class="impl"><b>Implication:</b> the ~3-session loop closes — the map is read without us remembering.</div>
+    </div></div>
+    <div class="step"><div class="n">4</div><div class="body">
+      <h4>Wire the beats to query first <span class="cost lo">un-defer</span></h4>
+      <p>Un-defer <code>gabe-cc-entity</code>'s <code>--entity</code> flag so execute/review consult the
+        graft-fed map before a rescan.</p>
+      <div class="impl"><b>Implication:</b> the spine finally reads its own map; process pages (board/ledger) untouched throughout.</div>
+    </div></div>
+  </div>
+
+  <footer>
+    <span class="mono">branches: gustify/graft-pilot · gabe_lens/graft-adoption</span>
+    <span>docs/design/graft-adoption/README.md · nothing runs against a twin without greenlight</span>
+  </footer>
+</div>

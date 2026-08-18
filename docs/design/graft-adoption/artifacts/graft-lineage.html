@@ -1,0 +1,233 @@
+<title>Field Lineage &amp; Sequence</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --panel-2:#fbfcfe; --ink:#182130; --muted:#697588;
+    --line:#e3e8ef; --line-2:#eef1f6; --ghost:#aeb8c6;
+    --raw:#0d9488; --fw:#7c3aed; --der:#2563eb; --proc:#d97706; --deep:#12b886;
+    --raw-s:rgba(13,148,136,.12); --fw-s:rgba(124,58,237,.12); --der-s:rgba(37,99,235,.12); --proc-s:rgba(217,119,6,.12); --deep-s:rgba(18,184,134,.13);
+    --shadow:0 1px 2px rgba(20,30,50,.05),0 10px 26px rgba(20,30,50,.06);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace; --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#4a5666;
+    --raw:#2dd4bf; --fw:#a78bfa; --der:#60a5fa; --proc:#fbbf24; --deep:#51cf66;
+    --raw-s:rgba(45,212,191,.13); --fw-s:rgba(167,139,250,.14); --der-s:rgba(96,165,250,.14); --proc-s:rgba(251,191,36,.13); --deep-s:rgba(81,207,102,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#4a5666;
+    --raw:#2dd4bf; --fw:#a78bfa; --der:#60a5fa; --proc:#fbbf24; --deep:#51cf66;
+    --raw-s:rgba(45,212,191,.13); --fw-s:rgba(167,139,250,.14); --der-s:rgba(96,165,250,.14); --proc-s:rgba(251,191,36,.13); --deep-s:rgba(81,207,102,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1200px;margin:0 auto;padding:40px 24px 72px}
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:9px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--raw)}
+  h1{font-size:31px;line-height:1.12;font-weight:770;letter-spacing:-.022em;margin:13px 0 0;max-width:22ch;text-wrap:balance}
+  .lede{font-size:15px;color:var(--muted);margin:13px 0 0;max-width:74ch}
+  .lede b{color:var(--ink)} .mono,.lede code{font-family:var(--mono)}
+  .lede code{font-size:.9em;color:var(--ink);background:var(--line-2);padding:1px 5px;border-radius:5px}
+  h2.sec{font-size:12px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:40px 0 6px;display:flex;align-items:center;gap:10px}
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+  .subhead{font-size:13px;color:var(--muted);margin:0 0 15px;max-width:76ch}
+
+  /* map lineage flow */
+  .lineage{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 18px 14px;overflow-x:auto}
+  .lrow{display:flex;align-items:center;gap:8px;min-width:640px;padding:5px 0}
+  .lrow .tag{font-size:10px;font-weight:750;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);width:66px;flex:none}
+  .box{font-family:var(--mono);font-size:11.5px;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--panel-2);white-space:nowrap}
+  .box.src{border-style:dashed;color:var(--muted)}
+  .box.contract{border-color:var(--der);background:var(--der-s);color:var(--der);font-weight:700}
+  .box.render{border-color:var(--proc);background:var(--proc-s);color:var(--proc)}
+  .box.graft{border-color:var(--raw);background:var(--raw-s);color:var(--raw);font-weight:700}
+  .arr{color:var(--ghost);font-weight:700;flex:none}
+  .lnote{font-size:12px;color:var(--muted);margin-top:9px;padding-top:10px;border-top:1px solid var(--line-2)}
+  .lnote b{color:var(--ink)}
+
+  /* legend */
+  .keyrow{display:flex;flex-wrap:wrap;gap:14px;margin:16px 0 14px}
+  .key{display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .key .sw{width:11px;height:11px;border-radius:3px;flex:none}
+  .key b{font-weight:640} .key span{color:var(--muted)}
+
+  /* field ledger */
+  .grp{margin-bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+  .grp>.gh{display:flex;align-items:baseline;gap:10px;padding:11px 15px;background:var(--panel-2);border-bottom:1px solid var(--line)}
+  .gh .gn{font-family:var(--mono);font-size:13px;font-weight:700}
+  .gh .gs{font-size:11.5px;color:var(--muted)}
+  .frow{display:grid;grid-template-columns:1.15fr 1.1fr 1.35fr;gap:10px;padding:8px 15px;border-bottom:1px solid var(--line-2);align-items:center;font-size:12.5px}
+  .frow:last-child{border-bottom:none}
+  @media(max-width:760px){.frow{grid-template-columns:1fr;gap:3px;padding:10px 15px}}
+  .frow .fn{font-family:var(--mono);font-size:12px;font-weight:650;color:var(--ink)}
+  .frow .now{color:var(--muted);font-family:var(--mono);font-size:11px}
+  .frow .now::before{content:"today · ";color:var(--ghost)}
+  .frow .nx{display:flex;align-items:center;gap:7px}
+  .pv{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .pv.raw{background:var(--raw-s);color:var(--raw)} .pv.fw{background:var(--fw-s);color:var(--fw)}
+  .pv.der{background:var(--der-s);color:var(--der)} .pv.proc{background:var(--proc-s);color:var(--proc)} .pv.deep{background:var(--deep-s);color:var(--deep)}
+  .nx .ok{color:var(--raw);font-weight:700;font-size:13px}
+  .nx .word{font-size:11px;color:var(--muted)}
+
+  .guarantee{margin-top:16px;background:var(--panel);border:1px solid color-mix(in srgb,var(--raw) 34%,var(--line));border-radius:13px;box-shadow:var(--shadow);padding:16px 18px;display:flex;gap:14px;align-items:flex-start}
+  .guarantee .big{font-size:30px;font-weight:800;color:var(--raw);font-family:var(--mono);line-height:1;flex:none}
+  .guarantee .t{font-size:13.5px;color:var(--muted)} .guarantee .t b{color:var(--ink)}
+
+  /* sequence timeline */
+  .seq{display:flex;flex-direction:column;gap:9px}
+  .sq{display:grid;grid-template-columns:150px 1fr;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:var(--shadow);padding:12px 15px;align-items:center}
+  @media(max-width:680px){.sq{grid-template-columns:1fr;gap:4px}}
+  .sq .when{font-family:var(--mono);font-size:12px;font-weight:700;color:var(--der);display:flex;align-items:center;gap:8px}
+  .sq .when .cost{font-size:9.5px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;padding:1px 6px;border-radius:12px;background:var(--line-2);color:var(--muted)}
+  .sq .when .cost.lo{background:var(--raw-s);color:var(--raw)} .sq .when .cost.hi{background:var(--proc-s);color:var(--proc)}
+  .sq .what{font-size:12.5px;color:var(--muted)} .sq .what b{color:var(--ink);font-weight:620}
+  .sq .what .mono{font-size:11.5px;background:var(--line-2);padding:1px 5px;border-radius:5px;color:var(--ink)}
+
+  /* enforcement */
+  .gates{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+  @media(max-width:880px){.gates{grid-template-columns:1fr}}
+  .gate{background:var(--panel);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:14px 15px}
+  .gate .gt{font-size:13px;font-weight:720;display:flex;align-items:center;gap:8px;margin-bottom:3px}
+  .gate .gt .b{width:9px;height:9px;border-radius:3px}
+  .gate .strength{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 7px;border-radius:12px;margin-left:auto}
+  .gate .strength.hard{background:var(--raw-s);color:var(--raw)} .gate .strength.soft{background:var(--proc-s);color:var(--proc)}
+  .gate p{margin:5px 0 0;font-size:12px;color:var(--muted)} .gate p b{color:var(--ink)}
+  .gate .mono{font-family:var(--mono);font-size:11px;background:var(--line-2);padding:1px 5px;border-radius:5px;color:var(--ink)}
+  footer{margin-top:38px;padding-top:16px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>Field lineage · nothing lost</div>
+  <h1>Every field, traced from today's script to tomorrow's source</h1>
+  <p class="lede">The reassurance in one line: <code>archmap.json</code> is the <b>stable contract</b>.
+    GABE_C4, GABE_LEVELS, and every page read it — so if its ~40 fields stay populated, nothing downstream
+    changes. Adoption swaps only <b>what fills each field</b>, never the schema or the render. Below: every
+    field, its producer today, and its source tomorrow — all preserved.</p>
+
+  <h2 class="sec">The map lineage — history &amp; where the swap lands</h2>
+  <div class="lineage">
+    <div class="lrow"><span class="tag">Today</span>
+      <span class="box src">source code</span><span class="arr">→</span>
+      <span class="box">_a3_code · _a3_graft</span><span class="arr">→</span>
+      <span class="box contract">archmap.json</span><span class="arr">→</span>
+      <span class="box">_a3_graph → GABE_C4</span><span class="box">_a3_levels → GABE_LEVELS</span><span class="arr">→</span>
+      <span class="box render">the pages</span></div>
+    <div class="lrow"><span class="tag">Tomorrow</span>
+      <span class="box graft">graft (raw + edges)</span><span class="arr">+</span>
+      <span class="box">suite framework/process/deep fill</span><span class="arr">→</span>
+      <span class="box contract">archmap.json</span><span class="arr">→</span>
+      <span class="box">GABE_C4 · GABE_LEVELS</span><span class="arr">→</span>
+      <span class="box render">the pages</span></div>
+    <div class="lnote"><b>History:</b> one archmap → split into GABE_C4 (column station) + GABE_LEVELS (levels lab)
+      → merged into the levels page (done this session). <b>The swap lands left of the contract</b> — the
+      producers change, <code>archmap.json</code>'s schema and everything right of it stay put.</div>
+  </div>
+
+  <h2 class="sec">The field ledger — who produces each</h2>
+  <p class="subhead">Every field in <code>archmap.json</code>, grouped by block. "Today" is the script that
+    emits it now; "tomorrow" is the source after adoption. The green check = preserved.</p>
+  <div class="keyrow">
+    <span class="key"><span class="sw" style="background:var(--raw)"></span><b>graft raw</b><span>— node/signature/edge</span></span>
+    <span class="key"><span class="sw" style="background:var(--der)"></span><b>derived</b><span>— computed over graft's edges (improves)</span></span>
+    <span class="key"><span class="sw" style="background:var(--fw)"></span><b>suite framework</b><span>— routes/ORM/schema parse</span></span>
+    <span class="key"><span class="sw" style="background:var(--deep)"></span><b>suite · deep</b><span>— prose we generate (subscription, no graft --deep)</span></span>
+    <span class="key"><span class="sw" style="background:var(--proc)"></span><b>suite process</b><span>— junit/git/KDBP</span></span>
+  </div>
+  <div id="ledger"></div>
+
+  <div class="guarantee">
+    <span class="big" id="cnt">0/0</span>
+    <div class="t"><b>fields preserved — nothing dropped.</b> graft supplies the raw facts + fuller edges;
+      the derived metrics (usage/god/internal) recompute over those richer edges, so they <b>improve</b>;
+      the framework parses (routes/ORM/fields) and process data (tests/board/ledger) stay exactly as they are;
+      and the <b>suite generates the doc prose itself</b> (on the subscription, tied to a beat — never graft <code>--deep</code>),
+      filling what the Center shows honest-empty today.</div>
+  </div>
+
+  <h2 class="sec">The new sequence — when each part runs</h2>
+  <div class="seq">
+    <div class="sq"><span class="when">install once<span class="cost lo">~min</span></span>
+      <span class="what"><b><span class="mono">graft init + build</span></b> (structural, <b>no <span class="mono">--deep</span></b>) → <span class="mono">wiring.json</span> + enforcement installed. graft's toolchain, minus the LLM pass.</span></div>
+    <div class="sq"><span class="when">every prompt<span class="cost lo">0 tok</span></span>
+      <span class="what"><b>graft's UserPromptSubmit injection</b> (from init) drops map pointers into context before the agent searches — free, no cooperation.</span></div>
+    <div class="sq"><span class="when">every beat<span class="cost lo">~ms</span></span>
+      <span class="what"><b>structural refresh</b> (graft AST, cached) so the map is never stale on execute/review/red.</span></div>
+    <div class="sq"><span class="when">on /gabe-commit<span class="cost hi">changed files</span></span>
+      <span class="what">the <b>SUITE summarizes the diff's elements</b> on the Claude subscription → <span class="mono">archmap</span> prose fields (only what changed; never blocks the commit — this IS the "deep", suite-owned).</span></div>
+    <div class="sq"><span class="when">on center regen<span class="cost lo">seconds</span></span>
+      <span class="what">the suite <b>fills archmap</b> from graft + framework/process, then renders — same downstream as today.</span></div>
+  </div>
+
+  <h2 class="sec">Enforcement — graft's (from init) + a suite wire</h2>
+  <p class="subhead">We run <code>graft init</code>, so graft's own gates install for free. The suite adds one
+    wire so the spine consults the map before a rescan.</p>
+  <div class="gates">
+    <div class="gate"><div class="gt"><span class="b" style="background:var(--raw)"></span>Injection<span class="strength hard">strongest</span></div>
+      <p><b>graft's UserPromptSubmit</b> (from init) runs <span class="mono">graft ask</span> on your prompt and
+        injects the top map pointers <b>before</b> the agent searches. No cooperation — the answer is already in context.</p></div>
+    <div class="gate"><div class="gt"><span class="b" style="background:var(--raw)"></span>Query surface<span class="strength soft">opt-in</span></div>
+      <p>graft's <b>MCP tools</b> + <span class="mono">graft ask</span>/<span class="mono">callers</span> +
+        pre-authorized <span class="mono">Bash(graft:*)</span> + <code>.ignore</code> re-admit so grep lands on a card.</p></div>
+    <div class="gate"><div class="gt"><span class="b" style="background:var(--der)"></span>Beat wiring<span class="strength soft">suite · un-defer</span></div>
+      <p>a CLAUDE.md "the Center answers first" rule + un-deferring <b>gabe-cc-entity</b> so execute/review consult
+        the map before a rescan. The one gate the suite adds.</p></div>
+  </div>
+
+  <footer>
+    <span class="mono">archmap.json = the stable contract · producers swap left of it · render untouched right of it</span>
+    <span>gabe_lens/graft-adoption · gustify/graft-pilot</span>
+  </footer>
+</div>
+
+<script>
+const K={raw:"raw",der:"der",fw:"fw",deep:"deep",proc:"proc"};
+const W={raw:"graft raw",der:"derived · graft edges",fw:"suite framework",deep:"suite · deep",proc:"suite process"};
+const LEDGER = {
+  "function_insight":["per function · 461 today", [
+    ["fn · name","_a3_code","raw"],["file","_a3_code","raw"],
+    ["returns · async · lines","_a3_code re-parse","raw"],["base","_a3_code","raw"],
+    ["doc","_a3_code docstring","deep"],
+    ["handler · method","_a3_code","fw"],["layer","_a3_code","fw"],["entity","_a3_code","fw"],
+    ["usage · internal · api","_a3_code","der"],["god","_a3_code","der"],["sim","_a3_sim","proc"],
+  ]],
+  "model_insight":["per model · 159 today", [
+    ["cls","_a3_code","raw"],["file","_a3_code","raw"],["base","_a3_code","raw"],
+    ["kind","_a3_code","fw"],["fk_in · touches","_a3_code","fw"],
+    ["internal_refs · usage · internal · god","_a3_code","der"],["entity","_a3_code","fw"],["sim","_a3_sim","proc"],
+  ]],
+  "entities · models":["the domain model", [
+    ["cls · file","_a3_graph","raw"],["doc","_a3_graph","deep"],
+    ["table · cols · fks · uqs · rels","_a3_graph ORM","fw"],
+  ]],
+  "entities · schemas":["", [
+    ["cls · file","_a3_graph","raw"],["doc","_a3_graph","deep"],["fields","_a3_graph Pydantic","fw"],
+  ]],
+  "entities · endpoints":["", [
+    ["fn · file","_a3_graph","raw"],["doc","_a3_graph","deep"],
+    ["method · path · resp · status · touches","_a3_graph routes","fw"],
+  ]],
+  "test_insight":["per endpoint/model", [
+    ["cases · cid · name · state · corpus","_a3_tests junit","proc"],
+  ]],
+  "guard_insight":["per route file", [
+    ["path · lines","_a3_guard","raw"],
+    ["declared · exact · names · proven · share · unguarded","_a3_guard validators","fw"],
+  ]],
+  "coverage":["per entity", [
+    ["coverage stats","_a3_tests","proc"],
+  ]],
+};
+let total=0, preserved=0;
+const el=document.getElementById("ledger");
+el.innerHTML = Object.entries(LEDGER).map(([grp,[sub,rows]])=>{
+  const body = rows.map(([f,now,kind])=>{ total++; preserved++;
+    return `<div class="frow"><span class="fn">${f}</span><span class="now">${now}</span>
+      <span class="nx"><span class="pv ${kind}">${W[kind]}</span><span class="ok">✓</span></span></div>`;
+  }).join("");
+  return `<div class="grp"><div class="gh"><span class="gn">${grp}</span><span class="gs">${sub}</span></div>${body}</div>`;
+}).join("");
+document.getElementById("cnt").textContent = preserved+"/"+total;
+</script>

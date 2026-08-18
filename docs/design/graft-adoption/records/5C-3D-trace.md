@@ -148,7 +148,8 @@ Costs: vendoring `3d-force-graph` adds three.js (~single ~1MB min.js, one-time).
 ## 8 · SPIKE 1 — BUILT (2026-08-17)
 
 A live, self-contained 3D spike is at **`/home/khujta/gabe-graph-review/spike-3d/index.html`**
-(open in a browser). It renders **recipe + auth** (77 nodes) in `3d-force-graph` and puts
+(the earlier spike — kept external, superseded by `../spike/`; see `../spike/README.md`).
+It renders **recipe + auth** (77 nodes) in `3d-force-graph` and puts
 **every channel above on a live toggle** so we can compare them:
 
 - **Z axis** toggle: Layer altitude · Call depth · Free 3D. (Layer altitude reads best — the
@@ -188,7 +189,8 @@ right-panel + its links) before the composite graph. Two deliverables:
   per-kind right-panel reference now includes the **frontend kinds** (Component · Hook ·
   Store · Route · Type), each with its own panel (Connections · Identity · Note), beside
   the backend kinds. 12 panels.
-- **`/home/khujta/gabe-graph-review/spike-kinds/index.html`** — a minimal 3D graph, **one
+- **`../spike/index.html`** (the spike/ sibling folder; moved in-repo 2026-08-18 from
+  `/home/khujta/gabe-graph-review/spike-kinds/`) — a minimal 3D graph, **one
   node per kind**, wired FE→API→data through every kind, each kind a **distinct 3D form**:
 
   | kind | 3D form | | kind | 3D form |
@@ -466,7 +468,7 @@ parallel read-only inventories against REAL gustify data, then built a navigable
   (fn chips + depth + warn tip) · Composition counts (entity) · Identity kv rows + god `flag` · Docstring.
   `KINDCARD[kind](node)` builds the body themed to the spike's recipe/auth nodes, reading `n.m` metrics
   where present. Panel `.chip`→`.pchip` (kept clear of the explorer's `.chip`).
-- **Playwright test** (`_build/pw-panel-test.mjs`, drives system Chrome via `playwright-core`, no browser
+- **Playwright test** (`../spike/_build/pw-panel-test.mjs`, local-only — see the spike README; drives system Chrome via `playwright-core`, no browser
   download): waits for settle, projects a node to screen px via `Graph.graph2ScreenCoords`, clicks it, and
   asserts — panel starts minimized · opens on click · header name+kind · rail widens to ~340 · Usage /
   Connections / Code-behind / god-flag / Identity present (function) · Structure table + Keys (model) ·

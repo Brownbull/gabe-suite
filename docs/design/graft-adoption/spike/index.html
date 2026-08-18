@@ -1,0 +1,872 @@
+<!doctype html><html><head><meta charset="utf-8"><title>5C spike — kinds + icons (3D element reference)</title>
+<style>
+  :root{ --bg:#0e1524; --panel:#182136; --ink:#e7ebf3; --muted:#8794ab; --line:#2b3650; --accent:#8b83f5; --ok:#4cbe83;
+    --c-endpoint:#8b5cf6; --c-fn:#6366f1; --c-model:#14b8a6; --c-schema:#06b6d4; --c-entity:#84cc16; --c-external:#94a3b8; --c-web:#a855f7;
+    --fk-comp:#d946ef; --fk-hook:#10b981; --fk-store:#ec4899; --fk-route:#38bdf8; --fk-type:#64748b; --rail:46px; }
+  body.panel-open{ --rail:340px; }
+  *{ box-sizing:border-box; } html,body{ margin:0; height:100%; background:var(--bg); color:var(--ink); font:13px/1.5 ui-sans-serif,system-ui,sans-serif; overflow:hidden; }
+  #g{ position:fixed; top:0; left:0; bottom:0; right:var(--rail); }   /* graph reserves the right rail — never sits under the panel */
+  .bar{ position:fixed; top:12px; left:12px; display:flex; gap:8px; align-items:center; z-index:10; flex-wrap:wrap; max-width:70vw; }
+  .card{ background:rgba(24,33,54,.94); border:1px solid var(--line); border-radius:12px; padding:9px 12px; backdrop-filter:blur(6px); }
+  h1{ font-size:13px; margin:0; font-weight:700; } .sub{ color:var(--muted); font-size:11px; }
+  button.b{ font:inherit; font-size:12px; color:var(--ink); background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:6px 11px; cursor:pointer; }
+  button.b:hover{ border-color:var(--accent); }
+  .seg{ display:inline-flex; gap:4px; } .seg button{ font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
+  .seg button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  .legend{ position:fixed; bottom:12px; left:12px; background:rgba(24,33,54,.94); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:11px; z-index:10; max-width:320px; }
+  .legend .row{ display:flex; align-items:center; gap:8px; margin:3px 0; color:var(--muted); cursor:pointer; }
+  .legend .row:hover{ color:var(--ink); } .legend b{ color:var(--ink); font-weight:600; } .legend svg{ width:15px; height:15px; flex:none; }
+  /* config panel — draggable + minimizable, starts top-right. Legend font (the body sans), icons + pills. */
+  .cfg{ position:fixed; top:12px; right:calc(var(--rail) + 12px); z-index:12; width:246px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; user-select:none; }
+  .cfghead{ display:flex; align-items:center; gap:7px; padding:8px 10px; border-bottom:1px solid var(--line); cursor:grab; }
+  .cfghead:active{ cursor:grabbing; } .cfg.min .cfghead{ border-bottom:none; }
+  .cfgtitle{ flex:1; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; align-items:center; gap:6px; }
+  .cfgtitle svg{ width:13px; height:13px; color:var(--accent); }
+  .cfgmin{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px; width:22px; height:20px; cursor:pointer; font:inherit; line-height:1; }
+  .cfgmin:hover{ color:var(--ink); border-color:var(--accent); }
+  .cfgbody{ padding:9px 10px 11px; } .cfg.min .cfgbody{ display:none; }
+  .grp{ margin:8px 0; } .grp:first-child{ margin-top:2px; }
+  .grplbl{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; }
+  .grplbl svg{ width:12px; height:12px; }
+  .cfgrow{ display:flex; align-items:center; gap:7px; margin:4px 0; }
+  .cfgrow .rlbl{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); width:58px; flex:none; } .cfgrow .rlbl svg{ width:12px; height:12px; }
+  .cfgrow .rend{ font-size:10px; color:var(--muted); flex:none; }
+  /* PILL = a segmented toggle (2–3 options). active = accent. single-option pills toggle on/off. */
+  .pill{ display:inline-flex; background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:2px; gap:2px; }
+  .pill button{ font:inherit; font-size:10.5px; color:var(--muted); background:none; border:none; border-radius:6px; padding:3px 7px; cursor:pointer; display:inline-flex; align-items:center; gap:4px; }
+  .pill button svg{ width:12px; height:12px; }
+  .pill button.on{ background:var(--accent); color:#fff; } .pill button:hover:not(.on){ color:var(--ink); }
+  .pill.off button.on{ background:var(--line); color:var(--muted); }   /* a toggled-OFF single pill */
+  .rng{ -webkit-appearance:none; appearance:none; height:4px; border-radius:3px; background:var(--line); flex:1; outline:none; cursor:pointer; }
+  .rng::-webkit-slider-thumb{ -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; }
+  .rng::-moz-range-thumb{ width:13px; height:13px; border:none; border-radius:50%; background:var(--accent); cursor:pointer; }
+  /* EXPLORER panel — top-left, encoding experiments (NOT saved to config) */
+  .expl{ position:fixed; top:64px; left:12px; z-index:11; width:256px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; }
+  .exhead{ display:flex; align-items:center; gap:7px; padding:8px 10px; border-bottom:1px solid var(--line); }
+  .exhead .et{ flex:1; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; align-items:center; gap:6px; } .exhead .et svg{ width:13px; height:13px; color:var(--accent); }
+  .exhead .es{ font:600 9px/1 var(--mono,ui-monospace); color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+  .exmin{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px; width:22px; height:20px; cursor:pointer; font:inherit; line-height:1; }
+  .exmin:hover{ color:var(--ink); border-color:var(--accent); } .expl.min .exbody{ display:none; } .expl.min .exhead{ border-bottom:none; }
+  .exbody{ padding:8px 10px 10px; } .exg{ margin:7px 0; } .exg:first-child{ margin-top:2px; }
+  .exl{ font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); margin-bottom:5px; display:flex; align-items:center; gap:6px; }
+  .exl .nm{ margin-left:auto; color:var(--accent); font-weight:700; text-transform:none; letter-spacing:0; }
+  .chips{ display:flex; flex-wrap:wrap; gap:5px; }
+  .chip{ font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
+  .chip:hover{ color:var(--ink); } .chip.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
+  /* the SELECTED readout — active dimensions → the clicked element/link's value */
+  .encsel{ margin-top:9px; padding-top:9px; border-top:1px solid var(--line); }
+  .encsel .selname{ font:600 11px/1.3 ui-monospace,Menlo,monospace; color:var(--ink); margin:3px 0 6px; word-break:break-all; }
+  .encrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:11.5px; padding:2px 0; }
+  .encrow .ek{ color:var(--muted); display:inline-flex; align-items:center; gap:5px; } .encrow .ek .d{ width:8px; height:8px; border-radius:2px; flex:none; }
+  .encrow .ev{ font:700 12px/1 ui-monospace,Menlo,monospace; color:var(--ink); font-variant-numeric:tabular-nums; }
+  .encnone{ font-size:11px; color:var(--muted); }
+  /* per-dimension ROWS — toggle · value · +/− steppers (a playground on the selected element) */
+  .selhdr{ font:600 11px/1.3 ui-monospace,Menlo,monospace; color:var(--accent); margin:1px 0 7px; padding-bottom:7px; border-bottom:1px solid var(--line); word-break:break-all; }
+  .selhdr .k{ color:var(--muted); font-weight:400; } .selhdr.empty{ color:var(--muted); }
+  .drow{ display:flex; align-items:center; gap:5px; margin:3px 0; }
+  .drow .dtog{ flex:none; min-width:44px; justify-content:center; padding:3px 6px; }
+  .drow .dvar{ flex:none; font:600 10px/1 ui-monospace,Menlo,monospace; color:var(--ink); background:#0e1524; border:1px solid var(--line); border-radius:6px; padding:3px 3px; cursor:pointer; max-width:62px; }
+  .drow .dvar:hover{ border-color:var(--accent); }
+  .drow .dvarfix{ flex:none; font:600 10px/1 ui-monospace,Menlo,monospace; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:6px; padding:3px 5px; }
+  .drow.noeffect .dvar,.drow.noeffect .dvarfix{ opacity:.5; }
+  .drow .dval{ margin-left:auto; font:700 12px/1 ui-monospace,Menlo,monospace; color:var(--ink); min-width:24px; text-align:right; font-variant-numeric:tabular-nums; }
+  .drow.noeffect .dtog{ opacity:.4; } .drow.noeffect .dval{ color:var(--muted); opacity:.55; }
+  .dpm{ display:inline-flex; gap:2px; } .dpm.off{ opacity:.3; pointer-events:none; }
+  .dpm button{ width:18px; height:18px; line-height:1; padding:0; font:700 13px/1 ui-sans-serif,system-ui; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:5px; cursor:pointer; }
+  .dpm button:hover:not(:disabled){ color:var(--ink); border-color:var(--accent); } .dpm button:disabled{ cursor:default; }
+  /* the right panel — ported from element-components (minimize to a rail, full sections) */
+  /* docked RIGHT RAIL — always present; collapsed = a thin column, opens on element click into reserved space */
+  .panel{ position:fixed; top:0; right:0; bottom:0; width:var(--rail); background:rgba(24,33,54,.97); border-left:1px solid var(--line); z-index:13; display:flex; flex-direction:column; overflow:hidden; }
+  .panel .phead,.panel .pbody{ display:none; }
+  .panel .minbar{ display:flex; flex-direction:column; align-items:center; gap:12px; padding:10px 0; height:100%; }
+  body.panel-open .panel{ overflow:auto; }
+  body.panel-open .panel .phead{ display:flex; } body.panel-open .panel .pbody{ display:block; } body.panel-open .panel .minbar{ display:none; }
+  .phead{ gap:8px; padding:12px 12px 11px 14px; border-bottom:1px solid var(--line); }
+  .ptitle{ flex:1; min-width:0; } .pname{ font:600 15px/1.25 ui-monospace,monospace; word-break:break-word; }
+  .ptype{ display:flex; align-items:center; gap:5px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin-top:4px; font-weight:700; }
+  .ptype svg{ width:15px; height:15px; }
+  .pmin{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px; width:26px; height:24px; cursor:pointer; flex:none; }
+  .pmin:hover{ color:var(--ink); border-color:var(--accent); }
+  .minname{ writing-mode:vertical-rl; transform:rotate(180deg); font:600 12px ui-monospace,monospace; color:var(--muted); white-space:nowrap; letter-spacing:.05em; }
+  .pbody{ padding:11px 14px 14px; } .sec{ margin-bottom:13px; } .sechd{ display:flex; align-items:center; gap:6px; font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin-bottom:6px; }
+  .sechd svg{ width:13px; height:13px; } .sechd .cnt{ margin-left:auto; background:var(--accent); color:#fff; border-radius:9px; padding:1px 7px; font-size:10px; font-weight:700; } .sechd .cnt.ok{ background:var(--ok); }
+  .ubar{ height:5px; background:#0e1524; border-radius:3px; overflow:hidden; margin-bottom:5px; } .ufill{ height:100%; background:var(--accent); }
+  .sublbl{ display:flex; align-items:center; gap:5px; font-size:11px; color:var(--muted); margin:5px 0 4px; } .sublbl svg{ width:12px; height:12px; }
+  .kv{ display:flex; gap:8px; font-size:12px; margin:2px 0; align-items:center; } .kv svg{ width:13px; height:13px; color:var(--muted); flex:none; } .kv .k{ color:var(--muted); width:74px; flex:none; } .kv b{ font-weight:600; }
+  .pchip{ display:inline-flex; align-items:center; gap:4px; font-size:11px; font-weight:600; border:1px solid var(--line); border-radius:6px; padding:1px 7px; margin:0 4px 4px 0; color:var(--muted); background:#0e1524; } .pchip svg{ width:11px; height:11px; }
+  .doc{ font-size:12px; background:#0e1524; border-left:2px solid var(--line); padding:7px 10px; border-radius:0 6px 6px 0; color:var(--ink); }
+  /* ── rich element-components card sections (ported from element-components.html) ── */
+  .pchip.model{ color:var(--c-model); } .pchip.schema{ color:var(--c-schema); } .pchip.web{ color:var(--c-web); } .pchip.route,.pchip.endpoint{ color:var(--c-endpoint); } .pchip.fn,.pchip.function{ color:var(--c-fn); } .pchip.ok{ color:var(--ok); }
+  .pchip.component{ color:var(--fk-comp); } .pchip.hook{ color:var(--fk-hook); } .pchip.store{ color:var(--fk-store); } .pchip.froute{ color:var(--fk-route); } .pchip.type{ color:var(--fk-type); } .pchip.entity{ color:var(--c-entity); } .pchip.key{ color:var(--fk-type); } .pchip.external{ color:var(--c-external); }
+  .connbox .pchip{ cursor:pointer; } .kv .kico{ color:var(--muted); } .kv .k{ width:70px; }
+  .more{ font-weight:600; font-size:11px; color:var(--accent); background:none; border:1px dashed var(--line); border-radius:6px; padding:3px 8px; cursor:pointer; } .more:hover{ border-color:var(--accent); }
+  .flag{ display:inline-flex; align-items:center; gap:4px; font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; color:#d9821f; border:1px solid #d9821f; } .flag svg{ width:11px; height:11px; }
+  .tabbar{ display:flex; gap:3px; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+  .tab{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:11px; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 7px; border-bottom:2px solid transparent; } .tab svg{ width:12px; height:12px; } .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+  .tab .tabn{ background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:0 5px; font-size:10px; font-weight:700; } .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  table.cols{ width:100%; border-collapse:collapse; font-size:12px; } table.cols td{ padding:2px 4px; border-bottom:1px solid var(--line); } table.cols td.ty{ color:var(--c-schema); font-family:ui-monospace,Menlo,monospace; font-size:11px; text-align:right; }
+  .keycol{ display:inline-flex; align-items:center; gap:4px; } .keycol svg{ width:11px; height:11px; }
+  .count{ display:flex; align-items:center; gap:7px; font-size:12.5px; padding:2.5px 0; border-bottom:1px dotted var(--line); } .count .lbl{ flex:1; } .count .n{ font-weight:700; font-variant-numeric:tabular-nums; } .count svg{ width:13px; height:13px; color:var(--muted); }
+  .tipico{ cursor:help; position:relative; display:inline-flex; margin-left:2px; } .tipico.info{ color:var(--accent); } .tipico.warn{ color:#d9821f; } .tipico svg{ width:13px; height:13px; }
+  .tipico .tip{ display:none; position:absolute; top:19px; left:-4px; z-index:6; width:210px; text-transform:none; letter-spacing:0; background:var(--ink); color:var(--bg); font:500 11px/1.45 ui-sans-serif,system-ui,sans-serif; padding:7px 9px; border-radius:7px; box-shadow:0 4px 14px rgba(0,0,0,.35); } .tipico:hover .tip,.tipico.on .tip{ display:block; }
+  .cbeh svg{ width:11px; height:11px; }
+  .hint{ position:fixed; bottom:12px; right:calc(var(--rail) + 12px); background:rgba(24,33,54,.85); border:1px solid var(--line); border-radius:10px; padding:8px 11px; font-size:11px; color:var(--muted); z-index:10; }
+</style></head><body>
+<div id="g"></div>
+<div class="bar">
+  <div class="card"><h1>5C spike · clusters</h1><div class="sub">billboard · orbit · Menlo (locked)</div></div>
+  <div class="card"><button class="b" id="reset">⟳ Reset</button></div>
+</div>
+<div class="cfg" id="cfg"></div>
+<div class="expl" id="expl"></div>
+<div class="panel" id="panel">
+  <div class="minbar"><button class="pmin" id="pexpand" title="element details">‹</button><div class="minname" id="prailname">details</div></div>
+  <div class="phead" id="phead"></div>
+  <div class="pbody" id="pbody"></div>
+</div>
+<div class="legend" id="legend"></div>
+<div class="hint">Orbit: drag = rotate (up stays up) · right-drag = pan · scroll = zoom · click a node</div>
+<script src="./3d-bundle.js"></script>
+<script>
+window.addEventListener("error", function(ev){ var d=document.getElementById("err")||document.createElement("div"); d.id="err";
+  d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99;background:#c0392b;color:#fff;font:11px monospace;padding:6px 10px;white-space:pre-wrap";
+  d.textContent="ERR: "+ev.message+" @ "+String(ev.filename||"").split("/").pop()+":"+ev.lineno+":"+ev.colno+(ev.error&&ev.error.stack?("\n"+ev.error.stack):"");
+  if(!d.parentNode) document.body.appendChild(d); });
+var T=window.THREE, SVGLoader=window.SVGLoader, MarchingCubes=window.MarchingCubes;
+/* the lucide glyphs (SAME as element-components) — one icon per kind */
+var GLYPH={
+  endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  "function":'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+  model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+  entity:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  component:'<rect x="3" y="3" width="18" height="18" rx="3"/><rect x="6" y="6" width="12" height="4" rx="1"/>',
+  hook:'<path d="M15 5v8a5 5 0 0 1-10 0"/><circle cx="15" cy="4" r="1.6"/>',
+  store:'<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v14a8 3 0 0 0 16 0V5"/>',
+  route:'<path d="M12 2 22 12 12 22 2 12z"/>',
+  type:'<polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/>',
+  screen:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+  external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>'
+};
+function svgInline(kind, col, w){ return '<svg viewBox="0 0 24 24" width="'+(w||14)+'" height="'+(w||14)+'" fill="none" stroke="'+(col||'currentColor')+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+GLYPH[kind]+'</svg>'; }
+function svgDoc(kind, col){ return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+GLYPH[kind]+'</svg>'; }
+
+var KINDS={
+  route:{ col:"#339af0", form:"cone", label:"/recipes/:id", type:"Route (screen)", layer:"web", usage:[0,"entry — a URL, nothing depends on it"],
+    conns:[["renders","component","RecipeDetail"]], tests:0, ident:[["home","recipe"],["path","/recipes/:id"]],
+    doc:"A URL → the component tree it mounts. Orphan URL-domains feed entity-shape thinking (a candidate entity)." },
+  component:{ col:"#e8590c", form:"panel", label:"RecipeCard", type:"Component (FE)", layer:"web", usage:[4,"4 components render this one"],
+    conns:[["renders hooks","hook","useRecipe · useT"],["reads store","store","recipeStore"]], tests:2, ident:[["home","recipe"],["language","TSX"]],
+    doc:"A React component. graft captures component→hook calls but barely JSX child renders (a blind spot the Tier-1 arm fills)." },
+  hook:{ col:"#0ca678", form:"knot", label:"useRecipeFilters", type:"Hook (FE)", layer:"web", usage:[6,"6 components call this hook"],
+    conns:[["fetches","endpoint","GET /recipes"],["called by","component","RecipeList · SearchBar"]], tests:1, ident:[["home","recipe"],["kind","React hook"]],
+    doc:"The bridge to the API — its fetch is matched to the endpoint by method+path (the web→API bridge)." },
+  store:{ col:"#e64980", form:"cylinder", label:"recipeStore", type:"Store (FE)", layer:"web", usage:[9,"9 read this store"],
+    conns:[["read by comp","component","RecipeCard · EditRecipe"],["read by hook","hook","useRecipe"]], tests:0, ident:[["home","recipe"],["kind","state / context"]],
+    doc:"The FE data cylinder (Zustand / createContext). A context const has no graft symbol → the *Store file is its only signal (a FLOOR)." },
+  type:{ col:"#8794ab", form:"wire", label:"RecipeResponse", type:"Type", layer:"web", usage:[0,"unlinked (graft emits 0 type-usage edges)"],
+    conns:[["used by","component","— none captured"]], tests:0, ident:[["home","recipe"],["kind","TS type"]],
+    doc:"A TS type/interface — erased at runtime, so graft sees it declared but not USED. The scattered {} nodes are these." },
+  endpoint:{ col:"#8b5cf6", form:"ring", label:"GET /recipes", type:"API endpoint", layer:"endpoints", usage:[1,"1 screen fetches this endpoint"],
+    conns:[["touches","model","Recipe"],["returns","schema","RecipeResponse"],["fetched by","hook","useRecipeFilters"]], tests:3, ident:[["entity","recipe"],["layer","api"],["role","endpoint handler"]],
+    doc:"The exposed surface — a URL the frontend fetches. Wired to its handler ƒ, the models it touches, the schema it returns." },
+  "function":{ col:"#7c5cfc", form:"cube", label:"list_recipes()", type:"Function ƒ", layer:"api", usage:[1,"1 caller (fan-in)"],
+    conns:[["called by","endpoint","GET /recipes"],["touches","model","Recipe"]], tests:0, ident:[["entity","recipe"],["layer","api"],["language","Python"]],
+    doc:"A unit of work — the request handler. Size in the graph = its code-behind mass (the call tree behind it)." },
+  schema:{ col:"#f59f00", form:"octa", label:"RecipeResponse", type:"Schema", layer:"data", usage:[1,"1 endpoint uses this body"],
+    conns:[["returned by","endpoint","GET /recipes"]], tests:1, ident:[["entity","recipe"],["kind","response body"]],
+    doc:"A response/request contract — the shape crossing the API boundary. Its fields are the payload." },
+  model:{ col:"#12b886", form:"cylinder", label:"Recipe", type:"Model", layer:"data", usage:[5,"3 endpoints touch · 2 fns reference"],
+    conns:[["touched by","endpoint","GET /recipes"],["FK →","model","auth.User"]], tests:2, ident:[["entity","recipe"],["table","recipes"],["FKs","1"]],
+    doc:"A DB table. Its FK to another entity's model is the cross-entity wire (drawn, but it does NOT pull the layout across entities)." },
+  screen:{ col:"#e8590c", form:"panel", label:"RecipeScreen", type:"Frontend screen", layer:"web", usage:[0,"entry point — no code depends on a screen"],
+    conns:[["mounts","component","RecipeCard"],["fetches","endpoint","GET /recipes"]], tests:1, ident:[["home","recipe"],["kind","screen"]],
+    doc:"A screen = a fetching surface; its fetch is matched to an endpoint (the web→API bridge). Unmatched fetches mark a coverage gap." },
+  external:{ col:"#868e96", form:"octa", label:"users.id", type:"External (fk target)", layer:"data", usage:[8,"8 models reference this fk target"],
+    conns:[["target entity","entity","auth"],["referenced by","model","Recipe.owner_id"]], tests:0, ident:[["lives in","auth"],["kind","fk target"]],
+    doc:"An fk target in ANOTHER entity (e.g. users.id) — the cross-entity reference. Double-click hops to its owner entity." },
+  entity:{ col:"#0d9488", form:"container", label:"recipe", type:"Entity (container)", layer:"data", usage:[12,"12 inbound cross-entity refs"],
+    conns:[["endpoints","endpoint","21"],["models","model","3"],["schemas","schema","24"]], tests:0, ident:[["status","approved"]],
+    doc:"The container the pieces live in — NOT an icon-node: it's the big translucent boundary around a cluster." }
+};
+/* the LEGEND / reference set = all 12 kinds (icons). ENTITY is the boundary, not a node. */
+var order=["route","component","hook","type","store","screen","endpoint","function","schema","model","external","entity"];
+/* ONE distinct colour per element kind — none reused by another kind, none overlapping a METHOD colour. */
+var KINDCOL={ endpoint:"#8b5cf6", "function":"#6366f1", model:"#14b8a6", schema:"#06b6d4", entity:"#84cc16",
+  component:"#d946ef", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };
+Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; });
+/* the GRAPH = two CLUSTERS (entities). Each node: id · kind (→ icon/panel) · ent (→ cluster
+   colour + boundary) · its own label. Icon colour = KIND; boundary colour = ENTITY. */
+var NODEDEF=[
+ ["r_route","route","recipe","/recipes/:id"],["r_comp","component","recipe","RecipeCard"],["r_hook","hook","recipe","useRecipeFilters"],
+ ["r_type","type","recipe","RecipeResponse (TS)"],["r_store","store","recipe","recipeStore"],["r_screen","screen","recipe","RecipeScreen"],
+ ["r_ep","endpoint","recipe","GET /recipes"],["r_fn","function","recipe","list_recipes()"],["r_schema","schema","recipe","RecipeResponse"],["r_model","model","recipe","Recipe"],
+ ["a_ep","endpoint","auth","POST /login"],["a_fn","function","auth","authenticate()"],["a_model","model","auth","User"],["a_schema","schema","auth","LoginResponse"],["a_ext","external","auth","users.id"]
+];
+var SUBOF={ endpoints:"api", api:"api", web:"frontend", data:"data" };   // the sub-cluster within an entity (its layer band) — stands in for kind/usecase/community/fk
+var nodes=NODEDEF.map(function(d){ var lay=KINDS[d[1]].layer;
+  return {id:d[0], kind:d[1], ent:d[2], label:d[3], col:KINDS[d[1]].col, K:KINDS[d[1]], layer:lay, sub:SUBOF[lay]||"data"}; });
+var links=[
+ {source:"r_route",target:"r_comp",rel:"renders"},{source:"r_screen",target:"r_comp",rel:"mounts"},
+ {source:"r_comp",target:"r_hook",rel:"uses"},{source:"r_comp",target:"r_store",rel:"reads"},{source:"r_comp",target:"r_type",rel:"typed"},
+ {source:"r_hook",target:"r_ep",rel:"fetches"},{source:"r_ep",target:"r_fn",rel:"handler"},{source:"r_fn",target:"r_model",rel:"touch"},{source:"r_fn",target:"r_schema",rel:"resp"},
+ {source:"a_ep",target:"a_fn",rel:"handler"},{source:"a_fn",target:"a_model",rel:"touch"},{source:"a_fn",target:"a_schema",rel:"resp"},{source:"a_model",target:"a_ext",rel:"pk"},
+ {source:"r_model",target:"a_ext",rel:"fk",cross:true}];
+var RELCOL={ renders:"#339af0", mounts:"#e8590c", uses:"#0ca678", reads:"#e64980", typed:"#8794ab", fetches:"#e8590c", handler:"#8b5cf6", touch:"#7c5cfc", resp:"#f59f00", fk:"#12b886", pk:"#868e96" };
+var ENT={ recipe:"#0d9488", auth:"#7048e8" }, EX={ recipe:-190, auth:190 };
+var LZ={ endpoints:150, api:60, web:150, data:-150 };
+/* METHOD colours — the "verb" family, RESERVED: no element kind may use any of these five. */
+var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444" };
+/* ── SYNTHETIC metrics — stand-ins for the REAL archmap fields (behind/god/fk_in/cases/cols/method).
+   Same field NAMES the encoders will read from c4-graph at scale-up. Values chosen so each channel
+   is visible on this 15-node toy. ── */
+var METRICS={
+  r_route:{fanin:0,tests:0}, r_comp:{fanin:4,tests:2}, r_hook:{fanin:6,tests:1}, r_type:{fanin:0,tests:0,cols:6},
+  r_store:{fanin:9,tests:0}, r_screen:{fanin:0,tests:1},
+  r_ep:{behind:12,depth:3,tests:3,method:"GET"}, r_fn:{behind:8,depth:2,god:true,tests:0},
+  r_schema:{cols:6,tests:1}, r_model:{fanin:5,tests:2,cols:8},
+  a_ep:{behind:20,depth:4,tests:3,method:"POST"}, a_fn:{behind:15,depth:3,god:true,tests:0},
+  a_model:{fanin:19,tests:2,cols:10}, a_schema:{cols:4,tests:1}, a_ext:{} };
+var ORIG_M={}; nodes.forEach(function(n){ var m=Object.assign({}, METRICS[n.id]||{});
+  m.large = (m.behind||0)>=15 || (m.fanin||0)>=15;   // synthetic "file too large" proxy (LOC at scale-up)
+  m.hot = (n.id==="r_fn");                            // synthetic churn-hotspot
+  m.flags = (m.god?1:0)+(m.large?1:0)+(m.hot?1:0);    // count of active ISSUES → the red satellite ring
+  n.m=m; ORIG_M[n.id]=Object.assign({}, m); });       // snapshot the pristine metrics for the reset button
+/* per-link: w (coupling weight) · payload (field-count of the structure it carries) · proven (structural vs inferred) */
+var LINKMETA={ renders:{w:3,pv:1}, mounts:{w:2,pv:1}, uses:{w:4,pv:0}, reads:{w:3,pv:0}, typed:{w:2,pv:1,pl:6},
+  fetches:{w:5,pv:0,pl:6}, handler:{w:6,pv:1}, touch:{w:4,pv:1}, resp:{w:3,pv:1}, fk:{w:2,pv:1,pl:1}, pk:{w:1,pv:1} };
+var PAYLOAD={ "r_fn>r_model":8, "r_fn>r_schema":6, "a_fn>a_model":10, "a_fn>a_schema":4, "r_hook>r_ep":6, "r_comp>r_type":6 };
+links.forEach(function(l){ var m=LINKMETA[l.rel]||{w:2,pv:1}; l.w=m.w; l.proven=!!m.pv;
+  l.payload=PAYLOAD[l.source+">"+l.target]!=null?PAYLOAD[l.source+">"+l.target]:(m.pl||0); });
+var ORIG_L=links.map(function(l){ return {w:l.w, payload:l.payload, proven:l.proven}; });   // pristine link values for the reset
+var MAXB=Math.max.apply(null,nodes.map(function(n){return n.m.behind||0;}))||1,
+    MAXD=Math.max.apply(null,nodes.map(function(n){return n.m.depth||0;}))||1,
+    MAXF=Math.max.apply(null,nodes.map(function(n){return n.m.fanin||0;}))||1,
+    MAXT=Math.max.apply(null,nodes.map(function(n){return n.m.tests||0;}))||1,
+    MAXW=Math.max.apply(null,links.map(function(l){return l.w||0;}))||1,
+    MAXPL=Math.max.apply(null,links.map(function(l){return l.payload||0;}))||1,
+    MAXCOLS=Math.max.apply(null,nodes.map(function(n){return n.m.cols||0;}))||1;
+/* behind/depth scale is FIXED to the gastify+gustify p95 (n=346: fns p95≈29, depth p95=5), NOT the
+   per-graph max — so the typical range fills the visual band and rare outliers saturate (cap3). */
+var MAXES={ behind:30,depth:5,fanin:MAXF,tests:MAXT,cols:MAXCOLS,god:1,flags:3,w:MAXW,payload:MAXPL,proven:1 };
+/* ── ENCODING state (the top-left EXPLORER — NOT saved to CONFIG) ── */
+var ENC={ setup:"A", color:"identity", heatBy:"mass",
+  mass:true, glow:false, ring1:false, ring2:false, ring3:false, verts:false, sat:false, pulse:false, method:false,
+  eWidth:true, eTrust:false, eParticles:true, ePayload:false, speed:0.1, iconSize:10, dotR:0.05 };   // dotR LOCKED at 0.05 (tuned); speed·iconSize = GLOBAL display controls
+var PRESETS={
+  A:{ color:"identity", mass:true, glow:false, ring1:false, ring2:false, ring3:false, verts:false, sat:false, pulse:false, method:false, eWidth:true,  eTrust:false, eParticles:true, ePayload:false },
+  B:{ color:"identity", mass:true, glow:false, ring1:true,  ring2:true,  ring3:false, verts:true,  sat:false, pulse:false, method:false, eWidth:true,  eTrust:true,  eParticles:true, ePayload:false },
+  C:{ color:"identity", mass:true, glow:true,  ring1:false, ring2:false, ring3:false, verts:false, sat:false, pulse:false, method:true,  eWidth:false, eTrust:false, eParticles:true, ePayload:true } };
+var SETUPNAME={ A:"Structure", B:"Health & Load", C:"Flow & Behind" };
+function applyPreset(p){ var pr=PRESETS[p]; for(var k in pr) ENC[k]=pr[k]; ENC.setup=p; }
+/* ── EFFECT → VARIABLE mapping, PER SETUP. Each visual effect reads a data FIELD; which field is a
+   per-setup choice you can retune (A/B/C are independent maps). ── */
+var NODE_VARS=["behind","depth","fanin","tests","cols","god","flags"], LINK_VARS=["w","payload","proven"];
+var FIELDT={ behind:"int",depth:"int",fanin:"int",tests:"int",cols:"int",god:"bool",flags:"int",method:"enum",w:"int",payload:"int",proven:"bool" };
+var METHOD_ENUM=["—","GET","POST","PUT","DELETE"];
+var DEFMAP={ mass:"behind",glow:"depth",ring1:"tests",ring2:"flags",ring3:"fanin",verts:"fanin",sat:"god",pulse:"god",method:"method",eWidth:"w",eParticles:"w",ePayload:"payload",eTrust:"proven" };   // belts: tests·flags·used-by · verts = used-by lights the sphere lattice
+var MAP={ A:Object.assign({},DEFMAP), B:Object.assign({},DEFMAP), C:Object.assign({},DEFMAP) };   // independent per-setup maps (edit one, the others are untouched)
+function fieldOf(key){ return (MAP[ENC.setup]||DEFMAP)[key]||DEFMAP[key]; }
+function truthy(v){ return v===true || (typeof v==="number"&&v>0) || (typeof v==="string"&&v&&v!=="—"); }
+function heatVal(n){ var v=ENC.heatBy==="fanin"?(n.m.fanin||0)/MAXF : ENC.heatBy==="tests"?(n.m.tests||0)/MAXT : (n.m.behind||0)/MAXB; return v; }
+function heatCol(t){ t=Math.max(0,Math.min(1,t)); var c=new T.Color(); c.setHSL((1-t)*0.62, 0.72, 0.55); return c.getStyle(); }
+function dimCol(hex,t){ var c=new T.Color(hex); c.lerp(new T.Color("#0e1524"), t); return "#"+c.getHexString(); }
+
+/* ── ICON MODE A · primitive shapes ── */
+function primitiveMesh(k, col){
+  var m=function(c,wire){ return new T.MeshLambertMaterial({color:c, emissive:c, emissiveIntensity:0.35, transparent:true, opacity:0.96, wireframe:!!wire}); };
+  var r=7, f=KINDS[k].form;
+  if(f==="ring") return new T.Mesh(new T.TorusGeometry(r*0.9,r*0.34,12,26), m(col));
+  if(f==="cube") return new T.Mesh(new T.BoxGeometry(r*1.5,r*1.5,r*1.5), m(col));
+  if(f==="cylinder") return new T.Mesh(new T.CylinderGeometry(r*0.85,r*0.85,r*1.8,22), m(col));
+  if(f==="octa") return new T.Mesh(new T.OctahedronGeometry(r*1.15,0), m(col));
+  if(f==="panel") return new T.Mesh(new T.BoxGeometry(r*2.1,r*1.5,r*0.5), m(col));
+  if(f==="knot") return new T.Mesh(new T.TorusKnotGeometry(r*0.62,r*0.24,64,8), m(col));
+  if(f==="cone") return new T.Mesh(new T.ConeGeometry(r*0.95,r*1.9,20), m(col));
+  if(f==="wire") return new T.Mesh(new T.BoxGeometry(r*1.4,r*1.4,r*1.4), m(col,true));
+  if(f==="container") return new T.Mesh(new T.IcosahedronGeometry(r*2.2,0), new T.MeshBasicMaterial({color:col, wireframe:true, transparent:true, opacity:0.4}));
+  return new T.Mesh(new T.SphereGeometry(r,16,12), m(col));
+}
+/* ── ICON MODE B · billboard (the 2D lucide icon as a camera-facing sprite) ── */
+var billTex={};
+function preloadBillboards(done){ var left=order.length; order.forEach(function(k){
+  var img=new Image(); img.onload=function(){ var cv=document.createElement("canvas"); cv.width=160; cv.height=160; var c=cv.getContext("2d");
+    c.drawImage(img,14,14,132,132); billTex[k]=new T.CanvasTexture(cv); if(--left===0) done(); };
+  img.onerror=function(){ if(--left===0) done(); };
+  img.src="data:image/svg+xml;base64,"+btoa(svgDoc(k, "#ffffff")); }); }   // WHITE glyph → tint at runtime (identity/heat/method)
+function billboardMesh(k, col){ var mat=new T.SpriteMaterial({map:billTex[k], color:new T.Color(col||"#ffffff"), transparent:true, depthWrite:false}); var s=new T.Sprite(mat); s.scale.set(15,15,1); return s; }
+/* ── ICON MODE C · TUBE 3D (the icon's strokes traced as 3D tubes — a real 3D-ified icon;
+      lucide icons are STROKES, so tubes read far better than a degenerate fill-extrude) ── */
+function tubeMesh(k, col){
+  try{ var data=new SVGLoader().parse(svgDoc(k,col)); var grp=new T.Group();
+    var mat=new T.MeshLambertMaterial({color:col, emissive:col, emissiveIntensity:0.3});
+    data.paths.forEach(function(path){ (path.subPaths||[]).forEach(function(sub){
+      var pts=sub.getPoints(24); if(pts.length<2) return;
+      var v3=pts.map(function(p){ return new T.Vector3(p.x, p.y, 0); });
+      var curve=new T.CatmullRomCurve3(v3, false, "catmullrom", 0.2);
+      grp.add(new T.Mesh(new T.TubeGeometry(curve, Math.max(8,pts.length*2), 0.9, 6, false), mat));
+      v3.forEach(function(p){ var d=new T.Mesh(new T.SphereGeometry(0.95,8,6), mat); d.position.copy(p); grp.add(d); });   // round the joints
+    }); });
+    if(!grp.children.length) return primitiveMesh(k,col);
+    var box=new T.Box3().setFromObject(grp), c=box.getCenter(new T.Vector3()), sz=box.getSize(new T.Vector3());
+    grp.children.forEach(function(m){ m.geometry.translate(-c.x,-c.y,-c.z); });
+    var s=14/Math.max(sz.x,sz.y,1); grp.scale.set(s,-s,s);   // flip Y (SVG y-down) + fit
+    return grp;
+  }catch(e){ return primitiveMesh(k,col); }
+}
+/* ── ICON MODE D · SOLID (the icon's filled silhouette extruded to a real volume — the
+      2D icon with depth; createShapes closes stroke paths into a fill, then extrude) ── */
+function solidMesh(k, col){
+  try{ var svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="'+col+'">'+GLYPH[k]+'</svg>';
+    var data=new SVGLoader().parse(svg), grp=new T.Group();
+    var mat=new T.MeshLambertMaterial({color:col, emissive:col, emissiveIntensity:0.26, side:T.DoubleSide});
+    data.paths.forEach(function(path){ SVGLoader.createShapes(path).forEach(function(shape){
+      grp.add(new T.Mesh(new T.ExtrudeGeometry(shape,{depth:4, bevelEnabled:true, bevelThickness:0.6, bevelSize:0.5, bevelSegments:2}), mat)); }); });
+    if(!grp.children.length) return primitiveMesh(k,col);
+    var box=new T.Box3().setFromObject(grp), c=box.getCenter(new T.Vector3()), sz=box.getSize(new T.Vector3());
+    grp.children.forEach(function(m){ m.geometry.translate(-c.x,-c.y,-c.z); });
+    var s=13/Math.max(sz.x,sz.y,1); grp.scale.set(s,-s,s);   // flip Y (SVG y-down) + fit
+    return grp;
+  }catch(e){ return primitiveMesh(k,col); }
+}
+/* transparency levels per surface — SIX steps, retuned LIGHT. film < ghost < faint < subtle <
+   medium < strong (film is the barest whisper — below ghost, per operator). */
+var OPMAP={
+  bubble:{ film:0.006, ghost:0.012, faint:0.022, subtle:0.035, medium:0.05, strong:0.075 },
+  aura:{   film:0.012, ghost:0.02,  faint:0.035, subtle:0.05,  medium:0.075, strong:0.11 },
+  sphere:{ film:0.008, ghost:0.015, faint:0.028, subtle:0.04,  medium:0.06,  strong:0.09 },
+  polygon:{film:0.012, ghost:0.02,  faint:0.035, subtle:0.05,  medium:0.075, strong:0.11 },
+  wrap:{   film:0.06,  ghost:0.11,  faint:0.17,  subtle:0.12,  medium:0.17,  strong:0.24 } };
+/* ONE shape (polygon|wrap) for BOTH levels; per-level on/off; a bounded radius that fits the
+   containers tighter/looser; per-surface transparency (faint|ghost|film). */
+var CFG={ shape:"polygon", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost" };
+var RADMIN=0.6, RADMAX=1.6;
+var NR=9;   // a node's visual radius (icon + bubble) — the clearance the boundary must clear
+/* metaball (fused-liquid WRAP) tuning — one iso-surface over the whole cluster so you cannot tell
+   a node blob from a connector tube; they melt together. URL-overridable for tuning. */
+var WRAPCFG={ iso:80, sub:12, entNodeR:26, entTubeR:12, subNodeR:17, subTubeR:8, entRes:96, subRes:64, every:6 };
+/* the BUBBLE — a small NEUTRAL translucent sphere hugging the icon: a touch of volume + the
+   boundary the links reach. NOT the kind/entity colour (that's free for clustering). */
+var BUB="#aab4c6";
+function bubR(){ return ENC.iconSize*0.62; }   // the neutral sphere's base radius tracks the icon size (so the composition stays proportional)
+var BUBSEG=[18,12];   // the wireframe lattice segments — vertex dots sit on THESE vertices
+function bubble(r){ r=r||bubR(); var op=OPMAP.bubble[CFG.bubble], g=new T.Group();
+  g.add(new T.Mesh(new T.SphereGeometry(r,24,18), new T.MeshBasicMaterial({color:BUB, transparent:true, opacity:op, side:T.DoubleSide})));
+  g.add(new T.Mesh(new T.SphereGeometry(r,BUBSEG[0],BUBSEG[1]), new T.MeshBasicMaterial({color:BUB, transparent:true, opacity:op*1.7, wireframe:true})));   // faint rim line
+  return g;
+}
+var iconMode="billboard", fontIdx=0;   // LOCKED (selectors removed)
+function curFont(){ return "Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace"; }
+function labelSprite(txt, size, y, col){ var cv=document.createElement("canvas"); cv.width=256; cv.height=64; var c=cv.getContext("2d");
+  c.font="600 "+(size||26)+"px "+curFont(); c.fillStyle=col||"#cdd6ea"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(txt,128,32);
+  var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false})); s.scale.set(34,8.5,1); if(y!=null) s.position.y=y; return s; }
+/* ── ENCODING channel primitives (billboard sprites → always face camera) ── */
+var ringTex=(function(){ var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d");
+  c.strokeStyle="#fff"; c.lineWidth=9; c.beginPath(); c.arc(64,64,54,0,Math.PI*2); c.stroke(); return new T.CanvasTexture(cv); })();
+function ringSprite(col,size,op){ var s=new T.Sprite(new T.SpriteMaterial({map:ringTex,color:new T.Color(col),transparent:true,opacity:op,depthWrite:false,depthTest:false})); s.scale.set(size,size,1); return s; }
+var PULSE=[], ORBIT=[], WAVE=[], _pt0=Date.now();
+function pulseLoop(){ requestAnimationFrame(pulseLoop); var t=Date.now();
+  if(PULSE.length){ var s=1+0.4*Math.sin((t-_pt0)/145); PULSE.forEach(function(o){ o.scale.set(o.__b*s,o.__b*s,o.__b*s); }); }
+  if(ORBIT.length){ ORBIT.forEach(function(o){ o.m.rotateOnAxis(o.ax, o.base*ENC.speed); }); }   // belt spin ∝ the connection speed (live)
+  if(WAVE.length){ var rad=((t-_pt0)*0.0011*(0.4+ENC.speed*3))%(Math.PI*2);   // the RADAR angle sweeps around the sphere (tied to the flow speed)
+    WAVE.forEach(function(w){ var d=w.az-rad; while(d>Math.PI)d-=6.2832; while(d<-Math.PI)d+=6.2832;
+      var act=Math.max(0, 1-Math.abs(d)/0.7);                 // fire window — the vertex only reacts as the sweep passes it
+      w.dot.material.opacity=Math.min(1, act*2.4); w.dot.scale.setScalar(ENC.dotR);   // 1: DOT appears first (radius = the live dotR slider)
+      var ls=Math.max(0, (act-0.24)/0.76);                    // 2–4: stubs GROW then CONTRACT with the sweep (lag the dot)
+      w.lineGroup.scale.setScalar(0.001+ls); w.smat.opacity=Math.min(1, ls*1.1); }); } }
+requestAnimationFrame(pulseLoop);
+/* USED-BY as a RADAR SWEEP: light N of the sphere's own lattice vertices (N = used-by, cap 8). As the radar
+   passes a vertex it fires — the dot snaps on, then short stubs grow along its 4 edges into a little X (ink
+   creeping a short way down the carved canals, never reaching the neighbour vertex). */
+function radarVerts(grp, r, count){ if(count<=0) return;
+  var LON=BUBSEG[0], LAT=BUBSEG[1], Y=new T.Vector3(0,1,0);
+  function P(i,j){ var th=(i/LAT)*Math.PI, ph=((j%LON+LON)%LON)/LON*Math.PI*2, st=Math.sin(th);
+    return [ -r*st*Math.cos(ph), r*Math.cos(th), r*st*Math.sin(ph) ]; }   // matches THREE.SphereGeometry → dots land ON the wireframe crossings
+  var cands=[]; for(var i=1;i<LAT;i++) for(var j=0;j<LON;j++) cands.push([i,j]);   // interior lattice vertices (skip poles)
+  var N=Math.min(count, cands.length), step=Math.max(1, Math.floor(cands.length/N)), c=0;
+  for(var k=0; k<cands.length && c<N; k+=step, c++){ var ij=cands[k], i=ij[0], j=ij[1], v=P(i,j);
+    var sub=new T.Group(); sub.position.set(v[0],v[1],v[2]);
+    var dot=new T.Mesh(new T.SphereGeometry(1,6,5), new T.MeshBasicMaterial({color:"#eaf2ff", transparent:true, opacity:0})); sub.add(dot);   // unit sphere → the loop scales it to ENC.dotR (live)
+    var smat=new T.MeshBasicMaterial({color:"#dbeafe", transparent:true, opacity:0}), lineGroup=new T.Group();   // thin stubs FLUSH with the wireframe → the lattice line lights up (not a tube on top)
+    [P(i,j-1),P(i,j+1),P(i-1,j),P(i+1,j)].forEach(function(np){ var dv=new T.Vector3(np[0]-v[0],np[1]-v[1],np[2]-v[2]), L=dv.length()*0.45; if(L<0.02) return; dv.normalize();
+      var cyl=new T.Mesh(new T.CylinderGeometry(0.045,0.045,1,5), smat); cyl.scale.y=L; cyl.quaternion.setFromUnitVectors(Y, dv); cyl.position.set(dv.x*L/2, dv.y*L/2, dv.z*L/2); lineGroup.add(cyl); });
+    sub.add(lineGroup); grp.add(sub);
+    WAVE.push({dot:dot, smat:smat, lineGroup:lineGroup, az:Math.atan2(v[2],v[0])}); } }
+/* SATELLITE RING: a chain of small dots orbiting the sphere on a tilted plane (a "moon" belt). One ring
+   per dimension (the tilt index picks the plane); N dots = the count; the ring spins so the dots travel. */
+var RTILT=[ {x:Math.PI/2, y:0}, {x:Math.PI/2.4, y:Math.PI/3}, {x:Math.PI/1.7, y:-Math.PI/4} ];
+function satelliteRing(grp, br, count, color, ti){ if(count<=0) return;
+  var ring=new T.Group(), R=br+2.4+ti*1.4;
+  ring.add(new T.Mesh(new T.TorusGeometry(R, 0.09, 4, 48), new T.MeshBasicMaterial({color:color, transparent:true, opacity:0.28, depthWrite:false})));   // faint guide
+  for(var i=0;i<count;i++){ var a=(i/count)*Math.PI*2;
+    var dot=new T.Mesh(new T.SphereGeometry(0.72,8,6), new T.MeshBasicMaterial({color:color}));
+    dot.position.set(Math.cos(a)*R, Math.sin(a)*R, 0); ring.add(dot); }
+  var t=RTILT[ti]||RTILT[0]; ring.rotation.x=t.x; ring.rotation.y=t.y; grp.add(ring);
+  ORBIT.push({m:ring, ax:new T.Vector3(0,0,1), base:0.06-ti*0.012}); }   // base × ENC.speed each frame → orbit tied to (and much slower than) the flow
+function iconCol(n){ if(ENC.color==="heat") return heatCol(heatVal(n));
+  if(ENC.method && n.kind==="endpoint" && n.m.method) return METHOD[n.m.method]||n.col;
+  return n.col; }   // identity = KIND colour
+function cap3(x){ return Math.min(x,3); }   // faked values can be cranked high — cap the visual so it never fills the screen
+function num(raw){ return typeof raw==="boolean"?(raw?1:0):(+raw||0); }
+function nodeVal(key,n){ var f=fieldOf(key), raw=(n.m||{})[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }   // the effect's MAPPED field, normalized
+function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mass",n).r*1.15); }
+function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
+  var ic, is=ENC.iconSize;
+  if(billTex[n.kind]){ ic=billboardMesh(n.kind,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
+  else { ic=primitiveMesh(n.kind, col); ic.scale.multiplyScalar(is/13); }
+  grp.add(ic);
+  grp.add(bubble(br));
+  if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
+  if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
+  if(ENC.ring1) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring1",n).raw))), "#22c55e", 0);   // tests → green moons
+  if(ENC.ring2) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring2",n).raw))), "#ef4444", 1);   // flags → red moons
+  if(ENC.ring3) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring3",n).raw))), "#fbbf24", 2);   // used-by → amber moons
+  var pSat=ENC.pulse && truthy(nodeVal("pulse",n).raw), sSat=ENC.sat && truthy(nodeVal("sat",n).raw);
+  if(sSat||pSat){ var d=new T.Mesh(new T.SphereGeometry(1.9,10,8), new T.MeshBasicMaterial({color:"#e5484d"})); d.position.set(br*0.82,br*0.82,2); d.__b=1; grp.add(d); if(pSat) PULSE.push(d); }
+  grp.add(labelSprite(n.label, 26, -(br+4.5)));
+  return grp;
+}
+function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }
+/* re-apply ALL encodings: rebuild node objects + re-trigger the edge accessors (they read ENC live) */
+function applyEnc(){ if(!Graph) return; rebuildNodes();
+  Graph.linkWidth(linkWidthFn).linkColor(linkColorFn)
+    .linkDirectionalParticles(linkPartFn).linkDirectionalParticleSpeed(linkSpeedFn).linkDirectionalParticleWidth(linkPWidthFn);
+  refreshEncSel(); }   // the readout reflects the newly on/off dimensions
+/* edge accessors (named so applyEnc can re-set them) */
+function linkVal(key,l){ var f=fieldOf(key), raw=l[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }
+function linkWidthFn(l){ return ENC.eWidth ? 0.4+linkVal("eWidth",l).r*2.4 : 0.7; }
+function linkColorFn(l){ var c=RELCOL[l.rel]||"#889"; return (ENC.eTrust && !truthy(linkVal("eTrust",l).raw)) ? dimCol(c,0.55) : c; }
+function linkPartFn(l){ return ENC.eParticles ? Math.max(1,Math.round(linkVal("eParticles",l).r*3)) : 0; }
+function linkSpeedFn(l){ return (0.004+linkVal("eParticles",l).r*0.012)*ENC.speed; }   // ENC.speed scales the whole flow (slow enough to read)
+function linkPWidthFn(l){ return (ENC.ePayload) ? 1+linkVal("ePayload",l).r*4.5 : 1.6; }
+
+var st={ ctl:"orbit" }, DEF={x:110,y:40,z:430}, Graph=null;
+/* layout: layer on Y (altitude) · ENTITY on X (the two clusters pull apart) */
+function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){
+  n.vy += ((LZ[n.layer]||0)-n.y)*0.05*alpha; n.vx += ((EX[n.ent]||0)-n.x)*0.045*alpha; }); }
+zForce.initialize=function(ns){ zForce.__n=ns; };
+/* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
+   TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
+   enclosing translucent sphere. POLYGON = a rounded convex HULL that ENCLOSES each node (seeded
+   from a sphere of points → curved corners, room to spare); SHADED fill, NO wireframe. WRAP =
+   ONE fused metaball iso-surface (MarchingCubes) over every node + connector — a sticky liquid
+   you cannot decompose into parts. Entity padded bigger → "contains the same + more"; overlap
+   is fine. Two levels: sub (inner) + entity (outer). ── */
+var glowTex=(function(){ var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d");
+  var g=c.createRadialGradient(64,64,0,64,64,64); g.addColorStop(0,"rgba(255,255,255,0.95)"); g.addColorStop(0.45,"rgba(255,255,255,0.32)"); g.addColorStop(1,"rgba(255,255,255,0)");
+  c.fillStyle=g; c.fillRect(0,0,128,128); return new T.CanvasTexture(cv); })();
+function glowSprite(col, size, op){ var s=new T.Sprite(new T.SpriteMaterial({map:glowTex, color:col, transparent:true, opacity:op, blending:T.AdditiveBlending, depthWrite:false, depthTest:false }));
+  s.scale.set(size,size,1); return s; }
+function lid(x){ return (x&&x.id)||x; }
+var UP=new T.Vector3(0,1,0);
+/* the 12 icosahedron directions — a small sphere of points seeded around each node so the
+   convex hull ENCLOSES the node (room to spare) and reads ROUNDED at the corners, not faceted. */
+var DIRS=(function(){ var g=new T.IcosahedronGeometry(1,0), p=g.attributes.position, seen={}, out=[];
+  for(var i=0;i<p.count;i++){ var x=+p.getX(i).toFixed(3), y=+p.getY(i).toFixed(3), z=+p.getZ(i).toFixed(3), k=x+","+y+","+z;
+    if(seen[k]) continue; seen[k]=1; out.push(new T.Vector3(x,y,z)); } return out; })();
+var SUBSHIFT={ frontend:0.10, api:-0.08, data:0.0 };
+var CLUSTERS=[], clusterObjs=[], _npos={}, _wtick=0;
+function addObj(o){ o.traverse(function(c){ c.raycast=function(){}; }); Graph.scene().add(o); clusterObjs.push(o); return o; }   // decorative → invisible to the click picker (else force-graph reads an undefined node.x)
+function clearClusters(){ clusterObjs.forEach(function(o){ Graph.scene().remove(o); if(o.geometry&&o.geometry.dispose)o.geometry.dispose(); }); clusterObjs=[]; CLUSTERS=[]; }
+function memberLinks(memset){ return links.filter(function(l){ return memset[lid(l.source)] && memset[lid(l.target)]; }); }
+function makeCluster(members, color, shape, op, level, label){
+  var memset={}; members.forEach(function(id){ memset[id]=1; });
+  var c={ members:members, memset:memset, shape:shape, level:level, pad:(level==="ent"?26:10) };   // pad = BASE; radius multiplies live in updateClusters
+  if(shape==="aura"){ var nS=level==="ent"?50:26, lS=level==="ent"?38:20; c.sprites=[];
+    members.forEach(function(id){ c.sprites.push({s:addObj(glowSprite(color,nS,op)), node:id}); });
+    memberLinks(memset).forEach(function(l){ [0.35,0.65].forEach(function(t){ c.sprites.push({s:addObj(glowSprite(color,lS,op*0.85)), link:l, t:t}); }); });
+  } else if(shape==="sphere"){
+    c.sph=addObj(new T.Mesh(new T.SphereGeometry(1,24,18), new T.MeshBasicMaterial({color:color, transparent:true, opacity:op, side:T.BackSide, depthWrite:false})));
+    c.rim=addObj(new T.Mesh(new T.SphereGeometry(1,16,12), new T.MeshBasicMaterial({color:color, transparent:true, opacity:op*2.2, wireframe:true, depthWrite:false})));
+  } else if(shape==="polygon"){   // rounded hull — SHADED fill, NO wireframe (lines competed with the links)
+    c.hull=addObj(new T.Mesh(new T.BufferGeometry(), new T.MeshLambertMaterial({color:color, emissive:color, emissiveIntensity:0.10, transparent:true, opacity:op, side:T.DoubleSide, depthWrite:false})));
+  } else if(shape==="wrap"){   // ONE fused iso-surface (metaball) over nodes + connectors — a sticky liquid
+    var isEnt=level==="ent", res=isEnt?WRAPCFG.entRes:WRAPCFG.subRes;
+    c.nodeR=(isEnt?WRAPCFG.entNodeR:WRAPCFG.subNodeR); c.tubeR=(isEnt?WRAPCFG.entTubeR:WRAPCFG.subTubeR);   // BASE; radius multiplies live
+    c.wlinks=memberLinks(memset);
+    var mcMat=new T.MeshLambertMaterial({color:color, emissive:color, emissiveIntensity:0.14, transparent:true, opacity:op, side:T.DoubleSide, depthWrite:false});
+    c.mc=new MarchingCubes(res, mcMat, false, false, 90000); c.mc.isolation=WRAPCFG.iso; addObj(c.mc);
+  }
+  c.lbl=addObj(labelSprite(label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));
+  return c;
+}
+function buildClusters(){ clearClusters();
+  if(CFG.entOn) Object.keys(ENT).forEach(function(e){ var mem=nodes.filter(function(n){return n.ent===e;}).map(function(n){return n.id;});
+    CLUSTERS.push(makeCluster(mem, ENT[e], CFG.shape, OPMAP[CFG.shape][CFG.entOp], "ent", e)); });
+  if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });
+    Object.keys(subs).forEach(function(k){ var mem=subs[k]; if(mem.length<2) return; var e=k.split("|")[0], sub=k.split("|")[1];
+      var col="#"+new T.Color(ENT[e]).offsetHSL(SUBSHIFT[sub]||0,0.05,0.06).getHexString();
+      CLUSTERS.push(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub)); }); }
+}
+/* the hull ENCLOSES each node: seed a sphere of points (radius NR+pad) around every member, so
+   the convex hull leaves room around the icons and rounds at the corners (no centre-anchored spikes). */
+function hull(ms, pad){ var R=NR+pad, pts=[];
+  ms.forEach(function(p){ DIRS.forEach(function(d){ pts.push(new T.Vector3(p.x+d.x*R, p.y+d.y*R, p.z+d.z*R)); }); });
+  try{ return new ConvexGeometry(pts); }catch(e){ return null; } }
+function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ if(n.x!=null) _npos[n.id]={x:n.x,y:n.y,z:n.z}; });
+  CLUSTERS.forEach(function(c){ var ms=c.members.map(function(id){return _npos[id];}).filter(Boolean); if(!ms.length) return;
+    var cx=0,cy=0,cz=0,top=-1e9; ms.forEach(function(p){cx+=p.x;cy+=p.y;cz+=p.z; if(p.y>top)top=p.y;}); cx/=ms.length;cy/=ms.length;cz/=ms.length;
+    if(c.shape==="aura"){ c.sprites.forEach(function(sp){
+        if(sp.node){ var p=_npos[sp.node]; if(p) sp.s.position.set(p.x,p.y,p.z); }
+        else { var s=_npos[lid(sp.link.source)], t=_npos[lid(sp.link.target)]; if(s&&t) sp.s.position.set(s.x+(t.x-s.x)*sp.t,s.y+(t.y-s.y)*sp.t,s.z+(t.z-s.z)*sp.t); } });
+    } else if(c.shape==="sphere"){ var r=0; ms.forEach(function(p){ r=Math.max(r,Math.hypot(p.x-cx,p.y-cy,p.z-cz)); }); r+=c.pad+3;
+      c.sph.position.set(cx,cy,cz); c.sph.scale.setScalar(r); c.rim.position.set(cx,cy,cz); c.rim.scale.setScalar(r);
+    } else if(c.shape==="polygon"){ var g=hull(ms,c.pad*CFG.radius);
+      if(!g){ var r2=0; ms.forEach(function(p){ r2=Math.max(r2,Math.hypot(p.x-cx,p.y-cy,p.z-cz)); }); g=new T.SphereGeometry(r2+NR+c.pad*CFG.radius,14,10); g.translate(cx,cy,cz); }   // hull failed → enclosing sphere
+      g.computeVertexNormals(); c.hull.geometry.dispose(); c.hull.geometry=g;
+    } else if(c.shape==="wrap" && (force || (_wtick % WRAPCFG.every)===0)){   // ONE metaball — costly, so gate the REBUILD only (label still positions below)
+      var nodeR=c.nodeR*CFG.radius, tubeR=c.tubeR*CFG.radius;
+      var mnx=1e9,mny=1e9,mnz=1e9,mxx=-1e9,mxy=-1e9,mxz=-1e9;
+      ms.forEach(function(p){ if(p.x<mnx)mnx=p.x; if(p.y<mny)mny=p.y; if(p.z<mnz)mnz=p.z; if(p.x>mxx)mxx=p.x; if(p.y>mxy)mxy=p.y; if(p.z>mxz)mxz=p.z; });
+      var ctr={x:(mnx+mxx)/2,y:(mny+mxy)/2,z:(mnz+mxz)/2}, span=Math.max(mxx-mnx,mxy-mny,mxz-mnz,1), S=span/2+nodeR*2+14, twoS=2*S;   // headroom: overlapping balls bulge past nodeR + MarchingCubes skips its outer voxel ring (else the blob clips flat)
+      c.mc.position.set(ctr.x,ctr.y,ctr.z); c.mc.scale.set(S,S,S); c.mc.reset();
+      var iso=WRAPCFG.iso, sub=WRAPCFG.sub, strN=(iso+sub)*Math.pow(nodeR/twoS,2), strT=(iso+sub)*Math.pow(tubeR/twoS,2);
+      function ball(px,py,pz,str){ c.mc.addBall((px-ctr.x)/twoS+0.5,(py-ctr.y)/twoS+0.5,(pz-ctr.z)/twoS+0.5,str,sub); }
+      ms.forEach(function(p){ ball(p.x,p.y,p.z,strN); });
+      c.wlinks.forEach(function(l){ var s=_npos[lid(l.source)], t=_npos[lid(l.target)]; if(!s||!t) return;
+        var len=Math.hypot(t.x-s.x,t.y-s.y,t.z-s.z), n=Math.max(2,Math.min(26,Math.ceil(len/(tubeR*0.6))));
+        for(var i=1;i<n;i++){ var u=i/n; ball(s.x+(t.x-s.x)*u, s.y+(t.y-s.y)*u, s.z+(t.z-s.z)*u, strT); } });
+      c.mc.update();
+    }
+    if(c.lbl){ c.lbl.position.set(c.level==="ent"?cx:cx-28, c.level==="ent"?top+26:cy, cz); c.lbl.scale.set(c.level==="ent"?50:30, c.level==="ent"?12.5:7.5, 1); }
+  }); }
+function build(){
+  if(Graph){ try{ Graph._destructor(); }catch(e){} document.getElementById("g").innerHTML=""; }
+  Graph=ForceGraph3D({ controlType: st.ctl })(document.getElementById("g"))
+    .backgroundColor("#0e1524").graphData({nodes:nodes, links:links})
+    .nodeThreeObject(buildNode).nodeLabel(function(n){ return n.K.type+" — "+n.K.label; })
+    .onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })
+    .onLinkClick(function(l){ SEL={kind:"link",data:l}; showLinkPanel(l); refreshEncSel(); })
+    .linkColor(linkColorFn).linkOpacity(0.6).linkWidth(linkWidthFn).linkHoverPrecision(8)
+    .linkThreeObjectExtend(true)
+    .linkThreeObject(function(l){ var cv=document.createElement("canvas"); cv.width=160; cv.height=40; var c=cv.getContext("2d");
+      c.font="600 20px "+curFont(); c.fillStyle="#9aa6be"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(l.rel,80,20);
+      var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false})); s.scale.set(20,5,1); return s; })
+    .linkPositionUpdate(function(sprite,coords){ if(sprite && coords && coords.start && coords.end) sprite.position.set((coords.start.x+coords.end.x)/2,(coords.start.y+coords.end.y)/2,(coords.start.z+coords.end.z)/2); })
+    .linkDirectionalParticles(linkPartFn).linkDirectionalParticleSpeed(linkSpeedFn).linkDirectionalParticleWidth(linkPWidthFn).linkDirectionalParticleColor(function(l){ return RELCOL[l.rel]||"#889"; })
+    .enableNodeDrag(false)   /* no node dragging → removes the controls-change handler that read an undefined subject.x on click */
+    .numDimensions(3).cooldownTicks(240).onEngineTick(updateClusters)
+    .onEngineStop(function(){ updateClusters(true);
+      if(window.__drive && !window.__driveDone){ window.__driveDone=true;   // regression: flip shape AFTER settle (the path that was broken)
+        CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); buildClusters(); updateClusters(true); }
+      if(window.__panel){ var pn=nodes.find(function(x){return x.id===window.__panel;}); if(pn){ SEL={kind:"node",data:pn}; showPanel(pn); refreshEncSel(); } }
+      if(window.__link){ var pr=window.__link.split(">"); var ll=links.find(function(x){ return (x.source.id||x.source)===pr[0] && (x.target.id||x.target)===pr[1]; }); if(ll){ SEL={kind:"link",data:ll}; showLinkPanel(ll); refreshEncSel(); } } });
+  try{ Graph.d3Force("layer", zForce); }catch(e){}
+  try{ Graph.d3Force("charge").strength(-150); }catch(e){}
+  buildClusters();
+  setTimeout(function(){ Graph.cameraPosition(DEF,{x:0,y:0,z:0},700); },1800);
+}
+document.getElementById("reset").onclick=function(){ Graph.cameraPosition(DEF,{x:0,y:0,z:0},600); };
+
+/* ── CONFIG PANEL — draggable · minimizable · icons + pills (no dropdowns; every group is ≤3 opts) ── */
+var ICO={
+  cog:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+  shape:GLYPH.entity, show:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>',
+  radius:'<path d="M3 12h18"/><path d="m7 8-4 4 4 4"/><path d="m17 8 4 4-4 4"/>', opacity:'<path d="M12 3s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
+  bubble:'<circle cx="12" cy="12" r="8"/>', sub:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/>', entity:GLYPH.entity,
+  polygon:'<path d="M12 2 21 9 17 20 7 20 3 9z"/>', wrap:'<path d="M12 2s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
+  wave:'<line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/>' };
+function ico(g,w){ return '<svg viewBox="0 0 24 24" width="'+(w||12)+'" height="'+(w||12)+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICO[g]||"")+'</svg>'; }
+function pill(grp, opts, val){ return '<div class="pill" data-grp="'+grp+'">'+opts.map(function(o){
+  return '<button data-v="'+o.v+'"'+(o.v===val?' class="on"':'')+'>'+(o.ico?ico(o.ico):'')+(o.t?'<span>'+o.t+'</span>':'')+'</button>'; }).join("")+'</div>'; }
+function pillTog(grp, on){ return '<div class="pill'+(on?'':' off')+'" data-grp="'+grp+'" data-tog="1"><button data-v="on"'+(on?' class="on"':'')+'><span>'+(on?'on':'off')+'</span></button></div>'; }
+function buildCfg(){ var trip=[{v:"faint",t:"faint"},{v:"ghost",t:"ghost"},{v:"film",t:"film"}];
+  document.getElementById("cfg").innerHTML=
+    '<div class="cfghead" id="cfghead"><span class="cfgtitle">'+ico("cog",13)+'Config</span><button class="cfgmin" id="cfgmin" title="minimize">–</button></div>'
+   +'<div class="cfgbody">'
+     +'<div class="grp"><div class="grplbl">'+ico("shape")+'Container <span style="font-weight:400;text-transform:none;margin-left:2px">· both levels</span></div>'
+       +'<div class="cfgrow"><span class="rlbl">shape</span>'+pill("shape",[{v:"polygon",ico:"polygon",t:"polygon"},{v:"wrap",ico:"wrap",t:"wrap"}],CFG.shape)+'</div></div>'
+     +'<div class="grp"><div class="grplbl">'+ico("show")+'Show</div>'
+       +'<div class="cfgrow"><span class="rlbl">'+ico("sub")+'sub</span>'+pillTog("subOn",CFG.subOn)+'</div>'
+       +'<div class="cfgrow"><span class="rlbl">'+ico("entity")+'entity</span>'+pillTog("entOn",CFG.entOn)+'</div></div>'
+     +'<div class="grp"><div class="grplbl">'+ico("radius")+'Radius</div>'
+       +'<div class="cfgrow"><span class="rend">tight</span><input type="range" class="rng" id="radRng" min="'+RADMIN+'" max="'+RADMAX+'" step="0.05" value="'+CFG.radius+'"><span class="rend">loose</span></div></div>'
+     +'<div class="grp"><div class="grplbl">'+ico("opacity")+'Transparency</div>'
+       +'<div class="cfgrow"><span class="rlbl">'+ico("bubble")+'bubble</span>'+pill("bubble",trip,CFG.bubble)+'</div>'
+       +'<div class="cfgrow"><span class="rlbl">'+ico("sub")+'sub</span>'+pill("subOp",trip,CFG.subOp)+'</div>'
+       +'<div class="cfgrow"><span class="rlbl">'+ico("entity")+'entity</span>'+pill("entOp",trip,CFG.entOp)+'</div></div>'
+   +'</div>';
+  wireCfg(); }
+function applyCfg(grp){ if(grp==="bubble"){ rebuildNodes(); } else { buildClusters(); updateClusters(true); } }
+function wireCfg(){
+  document.querySelectorAll("#cfg .pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var grp=p.getAttribute("data-grp");
+    if(p.getAttribute("data-tog")){ CFG[grp]=!CFG[grp]; b.classList.toggle("on",CFG[grp]); p.classList.toggle("off",!CFG[grp]); b.querySelector("span").textContent=CFG[grp]?"on":"off"; applyCfg(grp); }
+    else { CFG[grp]=b.getAttribute("data-v"); p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); }); applyCfg(grp); } }); });
+  var rng=document.getElementById("radRng"); if(rng) rng.addEventListener("input",function(){ CFG.radius=+this.value; updateClusters(true); });   // radius is LIVE (no rebuild)
+  document.getElementById("cfgmin").onclick=function(){ var c=document.getElementById("cfg"); c.classList.toggle("min"); this.textContent=c.classList.contains("min")?"+":"–"; };
+  dragCfg(); }
+var _drag={on:false,ox:0,oy:0};
+function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementById("cfghead");
+  h.addEventListener("mousedown",function(e){ if(e.target.closest(".cfgmin")) return; var r=c.getBoundingClientRect();
+    c.style.right="auto"; c.style.left=r.left+"px"; c.style.top=r.top+"px"; _drag.on=true; _drag.ox=e.clientX-r.left; _drag.oy=e.clientY-r.top; e.preventDefault(); });
+  if(!window.__dragBound){ window.__dragBound=true;
+    window.addEventListener("mousemove",function(e){ if(!_drag.on) return; var el=document.getElementById("cfg");
+      el.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-_drag.ox))+"px"; el.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-_drag.oy))+"px"; });
+    window.addEventListener("mouseup",function(){ _drag.on=false; }); } }
+buildCfg();
+
+/* ── ENCODING EXPLORER (top-left) — experiment across setups + channels; NOT saved to CONFIG ── */
+var EL_CH=[["mass","mass"],["glow","glow"],["halo","halo"],["sat","god"],["pulse","pulse"],["method","method"]];
+var ED_CH=[["eWidth","width"],["eTrust","trust"],["eParticles","flow"],["ePayload","payload"]];
+function exPill(er, opts){ return '<div class="pill" data-er="'+er+'">'+opts.map(function(o){
+  return '<button data-v="'+o+'"'+(ENC[er]===o?' class="on"':'')+'>'+o+'</button>'; }).join("")+'</div>'; }
+function exChips(list){ return list.map(function(c){ return '<button class="chip'+(ENC[c[0]]?' on':'')+'" data-eg="'+c[0]+'">'+c[1]+'</button>'; }).join(""); }
+function buildExpl(){ document.getElementById("expl").innerHTML=
+  '<div class="exhead"><span class="et">'+ico("wave")+'Encode</span><span class="es">not saved</span><button class="exmin" id="exreset" title="restore all faked values to default" style="margin-right:4px">↺</button><button class="exmin" id="exmin" title="minimize">–</button></div>'
+ +'<div class="exbody">'
+   +'<div class="selhdr empty" id="selhdr">click an element or a link →</div>'
+   +'<div class="exg"><div class="exl">Setup <span class="nm" id="exname">'+SETUPNAME[ENC.setup]+'</span></div>'+exPill("setup",["A","B","C"])+'</div>'
+   +'<div class="exg"><div class="exl">Colour</div>'+exPill("color",["identity","heat"])+'</div>'
+   +'<div class="exg" id="heatRow" style="'+(ENC.color==="heat"?"":"display:none")+'"><div class="exl">Heat by</div>'+exPill("heatBy",["mass","fanin","tests"])+'</div>'
+   +'<div class="exg"><div class="exl">Icon size <span class="k" style="color:var(--muted);font-weight:400">constant · positions 3–5</span></div><div class="cfgrow"><span class="rend">S</span><input type="range" class="rng" id="iconRng" min="8" max="12" step="2" value="'+ENC.iconSize+'"><span class="rend">L</span></div></div>'
+   +'<div class="exg"><div class="exl">Elements <span class="k" style="color:var(--muted);font-weight:400">toggle · value · ± fake it</span></div>'+DIMR.node.map(drow).join("")+'</div>'
+   +'<div class="exg"><div class="exl">Edges</div>'+DIMR.link.map(drow).join("")
+     +'<div class="cfgrow" style="margin-top:7px"><span class="rend">slow</span><input type="range" class="rng" id="spdRng" min="0.1" max="0.3" step="0.05" value="'+ENC.speed+'"><span class="rend">fast</span></div></div>'
+ +'</div>';
+  wireExpl(); refreshEncSel(); }
+function wireExpl(){
+  document.querySelectorAll("#expl .pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var er=p.getAttribute("data-er"), v=b.getAttribute("data-v");
+    if(er==="setup"){ applyPreset(v); buildExpl(); applyEnc(); return; }
+    ENC[er]=v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    if(er==="color"){ document.getElementById("heatRow").style.display=(v==="heat")?"":"none"; }
+    applyEnc(); }); });
+  document.querySelectorAll("#expl .chip").forEach(function(ch){ ch.addEventListener("click",function(){ var g=ch.getAttribute("data-eg"); ENC[g]=!ENC[g]; ch.classList.toggle("on",ENC[g]); applyEnc(); }); });
+  document.querySelectorAll("#expl .dvar").forEach(function(sel){ sel.addEventListener("change",function(){ MAP[ENC.setup][this.getAttribute("data-eg")]=this.value; applyEnc(); }); });   // remap this effect's variable (per setup)
+  document.querySelectorAll("#expl .dpm button").forEach(function(b){ b.addEventListener("click",function(e){ e.stopPropagation();
+    var row=b.closest(".drow"), d=findDim(row.getAttribute("data-dim")); if(d) dimSet(d, b.getAttribute("data-d")==="+"?1:-1); }); });
+  var spd=document.getElementById("spdRng"); if(spd) spd.addEventListener("input",function(){ ENC.speed=+this.value; if(Graph) Graph.linkDirectionalParticleSpeed(linkSpeedFn); });   // flow speed is LIVE (no rebuild)
+  var isz=document.getElementById("iconRng"); if(isz) isz.addEventListener("input",function(){ ENC.iconSize=+this.value; rebuildNodes(); });   // constant icon size, all elements
+  var rb=document.getElementById("exreset"); if(rb) rb.onclick=resetValues;
+  document.getElementById("exmin").onclick=function(){ var el=document.getElementById("expl"); el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
+}
+/* buildExpl() is invoked at the BOTTOM — after DIMR / drow are defined (avoids a load-order crash) */
+
+/* ── the rich element-components CARD renderer (ported from element-components.html) ── */
+var KINDCARD=(function(){
+  var P={ link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+    test:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+    table:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M12 3v18"/>',
+    key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+    doc:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8M16 17H8M10 9H8"/>',
+    info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+    layers:'<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+    merge:'<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+    role:'<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+    globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+    file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+    down:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+    alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+    endpoint:GLYPH.endpoint, model:GLYPH.model, schema:GLYPH.schema, "function":GLYPH["function"], web:GLYPH.screen, entity:GLYPH.entity, external:GLYPH.external };
+  function pico(n,cls,col){ return '<svg class="ico '+(cls||"")+'" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="'+(col||"currentColor")+'" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(P[n]||GLYPH[n]||"")+'</svg>'; }
+  function icoEl(n,cls){ var d=document.createElement("span"); d.style.display="inline-flex"; d.innerHTML=pico(n,cls); return d.firstChild; }
+  function E(t,a){ var e=document.createElement(t), k=[].slice.call(arguments,2); for(var p in(a||{})){ if(p==="class")e.className=a[p]; else if(p==="html")e.innerHTML=a[p]; else e.setAttribute(p,a[p]); }
+    k.forEach(function f(c){ if(c==null)return; if(Array.isArray(c))c.forEach(f); else e.append(c); }); return e; }
+  function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info"),title:t.text}, icoEl(t.icon), E("span",{class:"tip"},t.text)); w.onclick=function(e){ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
+  function sechd(icoName,label,count,ok,tip){ return E("div",{class:"sechd"}, icoEl(icoName), label, tip?tipIcon(tip):null, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},String(count)):null); }
+  function chipList(items,cls,glyph,cap){ cap=cap||5; var wrap=E("span"), head=items.slice(0,cap), tail=items.slice(cap);
+    var mk=function(x){ return E("span",{class:"pchip "+cls}, glyph?icoEl(glyph):null, x); };
+    head.forEach(function(x){ wrap.append(mk(x)); });
+    if(tail.length){ var hid=E("span",{style:"display:none"}); tail.forEach(function(x){ hid.append(mk(x)); });
+      var b=E("button",{class:"more"},"+"+tail.length+" more"); b.onclick=function(){ hid.style.display="inline"; b.remove(); }; wrap.append(hid,b); } return wrap; }
+  function usage(n,breakdown){ return E("div",{class:"sec"}, sechd("merge","Usage",n,false,{icon:"info",text:"IN-DEGREE — how many elements depend on this one. Break it and this many are affected.",cls:"info"}),
+    E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,n*9)+"%"})), E("div",{class:"sublbl"}, icoEl("link"), breakdown)); }
+  function kv(icoName,k,v){ return E("div",{class:"kv"}, icoName?icoEl(icoName,"kico"):E("span",{style:"width:14px"}), E("span",{class:"k"},k), E("span",{class:"v",html:v})); }
+  var G=function(label,icon,count,nodeFn){ return {label:label,icon:icon,count:count,node:nodeFn}; };
+  function conns(secIcon,title,groups,opt){ opt=opt||{}; var live=groups.filter(function(g){return g.count>0;}), total=live.reduce(function(s,g){return s+g.count;},0), box=E("div",{class:"connbox"});
+    if(!live.length) box.append(E("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+    live.forEach(function(g){ box.append(E("div",{class:"sublbl"}, icoEl(g.icon), g.label+" "+g.count), g.node()); });
+    return E("div",{class:"sec"}, sechd(secIcon,title, opt.showCount?total:null, false, live.length?{icon:"info",text:"hover a connection → highlights that node in the graph.",cls:"info"}:null), box); }
+  function tabbed(secIcon,title,groups,opt){ opt=opt||{}; var live=groups.filter(function(g){return g.count>0;}), total=live.reduce(function(s,g){return s+g.count;},0);
+    var hd=sechd(secIcon,title,opt.showCount?total:null,opt.ok);
+    if(!live.length) return E("div",{class:"sec"}, hd, E("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+    if(live.length===1){ var g=live[0]; return E("div",{class:"sec"}, hd, E("div",{class:"sublbl"}, icoEl(g.icon), g.label+" "+g.count), g.node()); }
+    var bar=E("div",{class:"tabbar"}), body=E("div");
+    var show=function(i){ body.innerHTML=""; body.append(live[i].node()); [].forEach.call(bar.children,function(c,j){ c.classList.toggle("on",j===i); }); };
+    live.forEach(function(g,i){ var t=E("button",{class:"tab"}, icoEl(g.icon), g.label, E("span",{class:"tabn"},String(g.count))); t.onclick=function(){ show(i); }; bar.append(t); });
+    var wrap=E("div",{class:"sec"}, hd, bar, body); show(0); return wrap; }
+  function colsTable(cols,fks){ var fkset={}; (fks||[]).forEach(function(f){ fkset[f[0]]=1; }); var t=E("table",{class:"cols"});
+    cols.forEach(function(c){ t.append(E("tr",null, E("td",null, fkset[c[0]]?E("span",{class:"keycol"},icoEl("key"),c[0]):c[0]), E("td",{class:"ty"},c[1]))); }); return t; }
+  function behind(b,fns){ if(!b) return null; var body=E("div",null, E("div",{class:"sublbl"}, icoEl("function"), "depth "+b.depth+" · the call tree behind this"));
+    var list=E("div"); (fns||[]).forEach(function(f){ list.append(E("span",{class:"pchip function"}, icoEl("function"), f)); }); body.append(list);
+    return E("div",{class:"sec"}, sechd("layers","Code behind", b.fns, false, {icon:"alert",cls:"warn",text:"Names from the graft call-tree floor (inferred-by-design). Count + depth are the live signal."}), body); }
+  var cids=function(arr){ return function(){ var w=E("div"); arr.forEach(function(c){ w.append(E("span",{class:"pchip ok"}, icoEl("test"), c)); }); return w; }; };
+  var A=function(n){ return n.ent==="auth"; };   // theme by entity
+  var C={
+    endpoint:function(n){ return [ usage(1,"1 screen fetches this endpoint"),
+      conns("link","Connections",[ G("routes","endpoint",1,function(){return chipList([n.label],"route","endpoint");}),
+        G("touches","model",1,function(){return chipList([A(n)?"User":"Recipe"],"model","model");}),
+        G("returns","schema",1,function(){return chipList([A(n)?"LoginResponse":"RecipeResponse"],"schema","schema");}),
+        G("fetched by","web",1,function(){return chipList([A(n)?"useLogin":"useRecipeFilters"],"web","web");}) ]),
+      tabbed("test","Tests",[ G("api","test",3,cids(["C137","C143","C144"])), G("web","web",0,function(){return E("div");}) ],{showCount:true,ok:true}),
+      behind({fns:(n.m&&n.m.behind)||8,depth:(n.m&&n.m.depth)||2}, A(n)?["authenticate","_issue_token","_hash"]:["list_recipes","_apply_filters","_serialize"]),
+      E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","entity",n.ent), kv("layers","layer","api"), kv("globe","language","Python"), kv("role","role","endpoint handler"), kv("merge","fan-in","1 caller")),
+      E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"}, A(n)?"Authenticate a user and issue a session token.":"List recipes for the current user (paginated)."),
+        kv("endpoint","signature","async · "+((n.m&&n.m.behind*3)||42)+" lines · → <code>"+(A(n)?"LoginResponse":"RecipeResponse")+"</code>"), kv("info","status",A(n)?"200 OK":"200 OK"), kv("file","file","apps/api/api/"+n.ent+".py:88")) ]; },
+    "function":function(n){ var god=n.m&&n.m.god; return [ usage(1,"1 caller (fan-in)"),
+      conns("link","Connections",[ G("called by","merge",1,function(){return chipList([A(n)?"POST /login":"GET /recipes"],"route","endpoint");}),
+        G("touches","model",1,function(){return chipList([A(n)?"User":"Recipe"],"model","model");}) ]),
+      behind({fns:(n.m&&n.m.behind)||8,depth:(n.m&&n.m.depth)||2}, A(n)?["_issue_token","_hash","_lookup_user"]:["_apply_filters","_serialize","_paginate"]),
+      E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","entity",n.ent), kv("layers","layer","api"), kv("globe","language","Python"), kv("role","role","request handler"),
+        god?E("div",{style:"margin-top:6px"}, E("span",{class:"flag"}, icoEl("alert"),"god fn · hotspot")):null),
+      tabbed("test","Tests",[],{showCount:true,empty:"— no cases claimed yet"}),
+      E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"}, "The request handler — its code-behind mass is the call tree it drives."), kv("file","file","apps/api/api/"+n.ent+".py")) ]; },
+    model:function(n){ var auth=A(n); return [ usage((n.m&&n.m.fanin)||5, auth?"19 inbound FKs (the most-referenced table)":"3 endpoints touch · 2 functions reference"),
+      conns("link","Connections",[ G("touched by","endpoint",auth?1:3,function(){return chipList(auth?["POST /login"]:["GET /recipes","POST /recipes","PUT /recipes/:id"],"route","endpoint");}),
+        G("FK →","model",1,function(){return chipList(["auth.User (users.id)"],"model","model");}) ]),
+      E("div",{class:"sec"}, sechd("table","Structure",(n.m&&n.m.cols)||8), colsTable(auth?[["id","uuid.UUID"],["email","str"],["password_hash","str"],["created_at","datetime"]]:[["id","uuid.UUID"],["title","str"],["owner_id","uuid.UUID"],["servings","int"],["created_at","datetime"]], auth?[]:[["owner_id","users.id"]])),
+      E("div",{class:"sec"}, sechd("key","Keys"), kv("key","foreign", auth?"— none":"owner_id → <code>users.id</code>"), kv("key","unique", auth?"email":"—")),
+      tabbed("test","Tests",[ G("api","test",2,cids(["C1038","C1039"])), G("web","web",0,function(){return E("div");}) ],{showCount:true,ok:true}),
+      E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"}, auth?"The user account table — referenced across every entity.":"A recipe row, owned by a user (FK to auth)."), kv("file","file","apps/api/models/"+n.ent+".py")) ]; },
+    schema:function(n){ var auth=A(n); return [ usage(1,"1 endpoint uses this body"),
+      E("div",{class:"sec"}, sechd("table","Fields",(n.m&&n.m.cols)||4), colsTable(auth?[["token","str"],["expires_at","datetime"],["user","UserOut"]]:[["id","str"],["title","str"],["ingredients","Ingredient[]"],["steps","Step[]"]],[])),
+      conns("link","Connections",[ G("returned by","endpoint",1,function(){return chipList([auth?"POST /login":"GET /recipes"],"route","endpoint");}) ]),
+      tabbed("test","Tests",[ G("api","test",1,cids(["C1102"])) ],{showCount:true,ok:true}),
+      E("div",{class:"sec"}, sechd("doc","Docstring"), E("div",{class:"doc"}, "A response contract — the shape crossing the API boundary."), kv("file","file","apps/api/schemas/"+n.ent+".py")) ]; },
+    type:function(n){ return [ usage(0,"— unlinked (graft emits 0 type-usage edges)"),
+      E("div",{class:"sec"}, sechd("table","Shape",4), colsTable([["id","string"],["title","string"],["ingredients","Ingredient[]"],["steps","Step[]"]],[])),
+      conns("link","Used by",[ G("annotations","component",0,function(){return E("div");}) ],{empty:"— none captured (types are erased; graft emits no usage edge)"}),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "A TS type/interface — erased at runtime, so graft sees it declared but not USED."), kv("file","file","recipe.types.ts")) ]; },
+    web:function(n){ return [ usage(0,"entry point — no code depends on a screen"),
+      conns("down","Fetches",[ G("bridged","endpoint",1,function(){return chipList(["GET /recipes"],"route","endpoint");}), G("unmatched","web",1,function(){return chipList(["GET /api/v1/tags"],"web","web");}) ],{showCount:true}),
+      conns("link","Connections",[ G("reaches","entity",1,function(){return chipList([n.ent],"entity","entity");}) ]),
+      tabbed("test","Tests",[ G("web","web",1,cids(["C2044"])) ],{showCount:true,ok:true}),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "A screen = a fetching surface; its fetch is matched to an endpoint (the web→API bridge)."), kv("file","file",n.label+".tsx")) ]; },
+    component:function(n){ return [ usage((n.m&&n.m.fanin)||4,"4 components render this one"),
+      conns("link","Renders / uses",[ G("hooks","hook",2,function(){return chipList(["useRecipe","useT"],"hook","hook");}),
+        G("reads store","store",1,function(){return chipList(["recipeStore"],"store","store");}),
+        G("child components","component",3,function(){return chipList(["IngredientRow","StepList","AllergenBadge"],"component","component");}) ]),
+      tabbed("test","Tests",[ G("web","web",2,cids(["C2101","C2102"])) ],{showCount:true,ok:true}),
+      E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home",n.ent), kv("role","kind","UI component"), kv("globe","language","TypeScript/TSX")),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "A React component — graft captures component→hook calls but barely JSX child renders (a Tier-1 gap)."), kv("file","file",n.label+".tsx")) ]; },
+    hook:function(n){ return [ usage((n.m&&n.m.fanin)||6,"6 components call this hook"),
+      conns("down","Fetches",[ G("bridged","endpoint",1,function(){return chipList(["GET /recipes"],"route","endpoint");}) ],{showCount:true}),
+      conns("link","Uses",[ G("called by","component",6,function(){return chipList(["RecipeList","SearchBar","FilterPanel"],"component","component");}), G("calls hooks","hook",1,function(){return chipList(["useDebounce"],"hook","hook");}) ]),
+      tabbed("test","Tests",[ G("web","web",1,cids(["C2140"])) ],{showCount:true,ok:true}),
+      E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home",n.ent), kv("role","kind","React hook"), kv("layers","reaches","recipe (via GET /recipes)")),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "A hook is the bridge to the API — its fetch is matched to the endpoint by method+path."), kv("file","file",n.label+".ts")) ]; },
+    store:function(n){ return [ usage((n.m&&n.m.fanin)||9,"9 components / hooks read this store"),
+      conns("link","Read by",[ G("components","component",7,function(){return chipList(["RecipeCard","RecipeList","EditRecipe"],"component","component");}), G("hooks","hook",2,function(){return chipList(["useRecipe","useRecipeFilters"],"hook","hook");}) ]),
+      E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home",n.ent), kv("role","kind","state store / context")),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "A store (Zustand/createContext) is the FE data cylinder — the *Store file is its only graft signal (a FLOOR)."), kv("file","file",n.label+".ts")) ]; },
+    route:function(n){ return [ usage(0,"entry point — a URL, nothing depends on it"),
+      conns("link","Renders",[ G("component","component",1,function(){return chipList(["RecipeDetail"],"component","component");}) ]),
+      conns("down","Reaches",[ G("entity","entity",1,function(){return chipList([n.ent],"entity","entity");}) ],{showCount:true}),
+      E("div",{class:"sec"}, sechd("info","Identity"), kv("entity","home",n.ent), kv("role","kind","route / URL"), kv("globe","path",n.label)),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "A route maps a URL to the component tree it mounts. Orphan URL-domains feed entity-shape thinking."), kv("file","file","recipe.routes.ts")) ]; },
+    entity:function(n){ return [ usage(12,"12 inbound cross-entity references"),
+      E("div",{class:"sec"}, sechd("entity","Composition"),
+        E("div",{class:"count"}, icoEl("endpoint","kico"), E("span",{class:"lbl"},"API endpoints"), E("span",{class:"n"},"21")),
+        E("div",{class:"count"}, icoEl("model","kico"), E("span",{class:"lbl"},"Models"), E("span",{class:"n"},"3")),
+        E("div",{class:"count"}, icoEl("schema","kico"), E("span",{class:"lbl"},"Schemas"), E("span",{class:"n"},"24")),
+        E("div",{class:"count",style:"border:none"}, icoEl("layers","kico"), E("span",{class:"lbl"},"Lines"), E("span",{class:"n"},"5,741"))),
+      tabbed("test","Tests",[ G("api","test",41,cids(["C1038","C1039","C1101","C1102","C1140","C1141"])), G("web","web",3,cids(["C2044","C2045","C2046"])) ],{showCount:true,ok:true}) ]; },
+    external:function(n){ return [ usage(8,"8 models reference this fk target"),
+      conns("link","Reach",[ G("target","entity",1,function(){return chipList(["auth"],"entity","entity");}),
+        G("referenced by","key",2,function(){return chipList(["Recipe.owner_id","PantryItem.owner_id"],"key","key");}) ]),
+      E("div",{class:"sec"}, sechd("doc","Note"), E("div",{class:"doc"}, "An fk target in ANOTHER entity — double-click to hop to its owner entity.")) ]; } };
+  C.screen=C.web;
+  function chipCls(k){ return ({endpoint:"endpoint",route:"froute","function":"function",model:"model",schema:"schema",component:"component",hook:"hook",store:"store",type:"type",screen:"web",web:"web",external:"external",entity:"entity"})[k]||"fn"; }
+  var RELICO={ handler:"endpoint", touch:"model", resp:"schema", fk:"key", pk:"key", fetches:"down", renders:"component", mounts:"web", uses:"link", reads:"store", typed:"table" };
+  C.__link=function(l){ var s=l.source, t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t, sk=(s&&s.kind)||"function", tk=(t&&t.kind)||"function";
+    return [
+      E("div",{class:"sec"}, sechd("link","Relation"),
+        E("div",{style:"display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
+          E("span",{class:"pchip "+chipCls(sk)}, icoEl(sk), sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), E("span",{class:"pchip "+chipCls(tk)}, icoEl(tk), tl)),
+        E("div",{class:"sublbl",style:"margin-top:6px"}, icoEl(RELICO[l.rel]||"link"), "relation: "+l.rel)),
+      E("div",{class:"sec"}, sechd("layers","Weight"), E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,(l.w||1)/6*100)+"%"})), E("div",{class:"sublbl"}, "coupling weight "+(l.w||1))),
+      l.payload?E("div",{class:"sec"}, sechd("table","Payload"), E("div",{class:"sublbl"}, icoEl("table"), "carries "+l.payload+" field"+(l.payload>1?"s":"")+" — "+((tk==="schema"||tk==="model")?tl:"the target structure"))):null,
+      E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", l.proven?"proven · structural (fk / import)":"inferred · graft floor (call)")),
+      E("div",{class:"sec"}, sechd("role","Direction"), kv(null,"flow", sl+" → "+tl))
+    ]; };
+  return C;
+})();
+var LINKGLYPH='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>';
+/* the right RAIL — element-components card; always docked, opens on element click, resizes the graph */
+function resizeGraph(){ if(!Graph) return; requestAnimationFrame(function(){ var g=document.getElementById("g"); try{ Graph.width(g.clientWidth).height(g.clientHeight); }catch(e){} }); }
+function openPanel(){ document.body.classList.add("panel-open"); resizeGraph(); }
+function closePanel(){ document.body.classList.remove("panel-open"); resizeGraph(); }
+/* ── SELECTION → the ENCODE panel readout (active dimension → this element/link's value) ── */
+var SEL={ kind:null, data:null };
+function selLbl(x){ return (x&&x.label)||(x&&x.id)||x; }
+/* every encoding channel = a DIMENSION with a backing field; the panel shows the SELECTED element's
+   value per dimension (default 0 if absent) + steppers to fake it, so you can watch the encoding react. */
+var DIMR={
+  node:[ {key:"mass",lbl:"mass"}, {key:"glow",lbl:"glow"},
+    {key:"ring1",lbl:"tests"}, {key:"ring2",lbl:"flags"}, {key:"ring3",lbl:"used-by"}, {key:"verts",lbl:"verts"},
+    {key:"sat",lbl:"god"}, {key:"pulse",lbl:"pulse"}, {key:"method",lbl:"method",fixed:true,kinds:["endpoint"]} ],
+  link:[ {key:"eWidth",lbl:"width"}, {key:"eParticles",lbl:"flow"}, {key:"ePayload",lbl:"payload"}, {key:"eTrust",lbl:"trust"} ] };
+function findDim(key){ var a=DIMR.node.concat(DIMR.link); for(var i=0;i<a.length;i++) if(a[i].key===key) return a[i]; return null; }
+function dimScope(d){ return DIMR.node.indexOf(d)>=0 ? "node":"link"; }
+function dimApplies(d){ return SEL.data && (dimScope(d)===SEL.kind); }
+function dimF(d){ return fieldOf(d.key); }            // the field this effect is MAPPED to (per setup)
+function dimT(d){ return FIELDT[dimF(d)]||"int"; }
+function dimRaw(d){ return SEL.kind==="node" ? (SEL.data.m||{})[dimF(d)] : SEL.data[dimF(d)]; }
+function dimVal(d){ var raw=dimRaw(d), t=dimT(d); if(t==="enum") return raw||"—"; if(t==="bool") return raw?1:0; return num(raw); }
+function dimEff(d){ if(!dimApplies(d)) return false; var raw=dimRaw(d), t=dimT(d);
+  if(t==="enum") return truthy(raw) && (!d.kinds || d.kinds.indexOf(SEL.data.kind)>=0);
+  return truthy(raw); }
+function dimSet(d, delta){ if(!dimApplies(d)) return; var f=dimF(d), t=dimT(d);
+  var host = SEL.kind==="node" ? (SEL.data.m||(SEL.data.m={})) : SEL.data;
+  if(t==="enum"){ var i=Math.max(0,METHOD_ENUM.indexOf(host[f]||"—")); i=(i+(delta>0?1:METHOD_ENUM.length-1))%METHOD_ENUM.length; host[f]=(METHOD_ENUM[i]==="—")?undefined:METHOD_ENUM[i]; }
+  else if(t==="bool"){ host[f]= delta>0; }
+  else { host[f]=Math.max(0,num(host[f])+(delta>0?1:-1)); }
+  applyEnc(); }   // rebuild the graph from the faked value + refresh the rows
+function varSel(d){ if(d.fixed) return '<span class="dvarfix" title="fixed to the method field">method</span>';
+  var vars=dimScope(d)==="node"?NODE_VARS:LINK_VARS, cur=fieldOf(d.key);
+  return '<select class="dvar" data-eg="'+d.key+'" title="which variable this effect reads">'+vars.map(function(v){ return '<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>'; }).join('')+'</select>'; }
+function drow(d){ var app=dimApplies(d), eff=dimEff(d), v=app?dimVal(d):"—", on=ENC[d.key];
+  return '<div class="drow'+(eff?"":" noeffect")+'" data-dim="'+d.key+'">'
+    +'<button class="chip dtog'+(on?" on":"")+'" data-eg="'+d.key+'">'+d.lbl+'</button>'
+    +varSel(d)
+    +'<span class="dval">'+v+'</span>'
+    +'<span class="dpm'+(app?"":" off")+'"><button data-d="-"'+(app?"":" disabled")+'>−</button><button data-d="+"'+(app?"":" disabled")+'>+</button></span></div>'; }
+function updateSelHdr(){ var h=document.getElementById("selhdr"); if(!h) return;
+  if(!SEL || !SEL.data){ h.className="selhdr empty"; h.textContent="click an element or a link →"; return; }
+  h.className="selhdr";
+  h.innerHTML=(SEL.kind==="node"? selLbl(SEL.data) : selLbl(SEL.data.source)+" → "+selLbl(SEL.data.target))+' <span class="k">· '+SEL.kind+'</span>'; }
+function refreshRows(){ document.querySelectorAll("#expl .drow").forEach(function(row){ var d=findDim(row.getAttribute("data-dim")); if(!d) return;
+  var app=dimApplies(d); row.classList.toggle("noeffect",!dimEff(d));
+  row.querySelector(".dval").textContent = app? dimVal(d) : "—";
+  row.querySelector(".dtog").classList.toggle("on", !!ENC[d.key]);
+  row.querySelector(".dpm").classList.toggle("off",!app);
+  row.querySelectorAll(".dpm button").forEach(function(b){ b.disabled=!app; }); }); }
+function refreshEncSel(){ refreshRows(); updateSelHdr(); }
+function resetValues(){ nodes.forEach(function(n){ n.m=Object.assign({}, ORIG_M[n.id]||{}); });   // restore every faked value to the pristine snapshot
+  links.forEach(function(l,i){ l.w=ORIG_L[i].w; l.payload=ORIG_L[i].payload; l.proven=ORIG_L[i].proven; });
+  applyEnc(); }   // SEL.data is the node/link object itself → its restored .m/fields flow straight into the rebuild
+function showLinkPanel(l){ var s=l.source,t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t;
+  document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+sl+" → "+tl+"</div>"
+      +"<div class='ptype' style='color:var(--accent)'>"+LINKGLYPH+"<span>CONNECTION</span><span style='color:var(--muted);font-weight:600'> · "+l.rel+"</span></div></div>"
+      +"<button class='pmin' title='minimize' onclick=\"closePanel()\">›</button>";
+  var pb=document.getElementById("pbody"); pb.innerHTML=""; KINDCARD.__link(l).forEach(function(nd){ if(nd) pb.append(nd); });
+  document.getElementById("prailname").textContent=sl+" → "+tl; openPanel(); }
+function showPanel(n){ var K=n.K;
+  document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+(n.label||K.label)+"</div>"
+      +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(n.kind,K.col,15)+"<span>"+K.type+"</span>"+(n.ent?"<span style='color:var(--muted);font-weight:600'> · "+n.ent+"</span>":"")+"</div></div>"
+      +"<button class='pmin' title='minimize' onclick=\"closePanel()\">›</button>";
+  var pb=document.getElementById("pbody"); pb.innerHTML="";
+  var card=KINDCARD[n.kind]; (card ? card(n) : []).forEach(function(nd){ if(nd) pb.append(nd); });
+  document.getElementById("prailname").textContent=(n.label||K.label);
+  openPanel();
+}
+document.getElementById("pexpand").onclick=function(){ if(document.getElementById("pbody").innerHTML.trim()) openPanel(); };
+window.addEventListener("resize", resizeGraph);
+document.getElementById("legend").innerHTML="<div style='font-weight:700;color:var(--ink);margin-bottom:6px'>Kind = icon + 3D form <span style='color:var(--muted);font-weight:400'>(12)</span></div>"
+  +order.map(function(k){ var K=KINDS[k];
+    return "<div class='row' data-k='"+k+"'>"+svgInline(k,K.col,15)+"<b>"+K.type+"</b></div>"; }).join("")
+  +"<div style='color:var(--muted);margin-top:6px;border-top:1px solid var(--line);padding-top:6px'>boundary colour = ENTITY (the cluster); icon colour = kind · shapes: polygon · wrap</div>";
+document.getElementById("legend").addEventListener("click",function(e){ var r=e.target.closest("[data-k]"); if(!r) return;
+  var k=r.getAttribute("data-k"), n=nodes.find(function(x){return x.kind===k;}) || {kind:k, K:KINDS[k], label:KINDS[k].label, ent:null}; showPanel(n); });
+
+/* URL presets for scripted comparison shots: ?bubble=faint&subShape=wrap&subOp=faint&entShape=polygon&entOp=ghost */
+(function(){ var q=new URLSearchParams(location.search), changed=false;
+  ["shape","subOp","entOp","bubble"].forEach(function(k){ var v=q.get(k); if(v){ CFG[k]=v; changed=true; } });
+  ["subOn","entOn"].forEach(function(k){ var v=q.get(k); if(v!=null){ CFG[k]=(v!=="0"&&v!=="off"&&v!=="false"); changed=true; } });
+  var rv=q.get("radius"); if(rv!=null){ CFG.radius=Math.max(RADMIN,Math.min(RADMAX,+rv)); changed=true; }
+  ["iso","sub","entNodeR","entTubeR","subNodeR","subTubeR","entRes","subRes","every"].forEach(function(k){ var v=q.get("w"+k); if(v!=null) WRAPCFG[k]=+v; });
+  var ep=q.get("enc"); if(ep&&PRESETS[ep]){ applyPreset(ep); buildExpl(); }
+  var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
+  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); if(changed && document.getElementById("cfg")) buildCfg(); })();
+buildExpl();   // build the encode panel now that DIMR/drow exist
+preloadBillboards(function(){ build(); window.__spikeKindsReady=true; });
+</script></body></html>

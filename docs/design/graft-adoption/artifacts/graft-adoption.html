@@ -1,0 +1,249 @@
+<title>Graft Adoption Map</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --panel-2:#fbfcfe; --ink:#182130; --muted:#697588;
+    --line:#e3e8ef; --line-2:#eef1f6; --ghost:#aeb8c6;
+    --spine:#4c6ef5; --graft:#0d9488; --suite:#7c3aed; --center:#d97706;
+    --bad:#e11d67; --bad-soft:rgba(225,29,103,.10);
+    --good:#12b886; --good-soft:rgba(18,184,134,.12);
+    --shadow:0 1px 2px rgba(20,30,50,.05),0 10px 26px rgba(20,30,50,.06);
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#4a5666;
+    --spine:#6b8afd; --graft:#2dd4bf; --suite:#a78bfa; --center:#fbbf24;
+    --bad:#f472a6; --bad-soft:rgba(244,114,166,.12);
+    --good:#51cf66; --good-soft:rgba(81,207,102,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#4a5666;
+    --spine:#6b8afd; --graft:#2dd4bf; --suite:#a78bfa; --center:#fbbf24;
+    --bad:#f472a6; --bad-soft:rgba(244,114,166,.12);
+    --good:#51cf66; --good-soft:rgba(81,207,102,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.5;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1160px;margin:0 auto;padding:40px 24px 72px}
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);
+    display:flex;align-items:center;gap:9px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--graft)}
+  h1{font-size:32px;line-height:1.1;font-weight:770;letter-spacing:-.022em;margin:13px 0 0;max-width:20ch;
+    text-wrap:balance}
+  .lede{font-size:15.5px;color:var(--muted);margin:13px 0 0;max-width:70ch}
+  .lede b{color:var(--ink)}
+  .lede code,.mono{font-family:var(--mono)}
+  .lede code{font-size:.9em;color:var(--ink);background:var(--line-2);padding:1px 5px;border-radius:5px}
+
+  h2.sec{font-size:12px;font-weight:750;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);
+    margin:38px 0 14px;display:flex;align-items:center;gap:10px}
+  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
+
+  /* ── before/after architecture ── */
+  .ba{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:900px){.ba{grid-template-columns:1fr}}
+  .state{background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);
+    padding:16px 16px 18px;display:flex;flex-direction:column;gap:9px}
+  .state.now{border-color:color-mix(in srgb,var(--bad) 32%,var(--line))}
+  .state.next{border-color:color-mix(in srgb,var(--good) 38%,var(--line))}
+  .st-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:3px}
+  .st-name{font-size:16px;font-weight:740;letter-spacing:-.01em}
+  .st-tag{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 9px;
+    border-radius:20px}
+  .now .st-tag{background:var(--bad-soft);color:var(--bad)}
+  .next .st-tag{background:var(--good-soft);color:var(--good)}
+  .layer{border:1px solid var(--line);border-radius:11px;padding:9px 11px;background:var(--panel-2)}
+  .layer .lname{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    margin-bottom:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:var(--mono);font-size:11.5px;padding:3px 9px;border-radius:7px;border:1px solid var(--line);
+    background:var(--panel);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+  .chip .d{width:7px;height:7px;border-radius:2px;flex:none}
+  .chip.spine .d{background:var(--spine)} .chip.graft .d{background:var(--graft)}
+  .chip.suite .d{background:var(--suite)} .chip.center .d{background:var(--center)}
+  .flow{display:flex;align-items:center;gap:9px;padding:1px 4px;font-size:12px}
+  .flow .arr{font-size:16px;line-height:1}
+  .flow.bad{color:var(--bad)} .flow.good{color:var(--good)}
+  .flow .lbl{font-weight:600}
+  .flow .note{color:var(--muted);font-weight:400;font-size:11.5px}
+  .verdict{margin-top:5px;padding:9px 11px;border-radius:10px;font-size:12.5px;font-weight:600}
+  .now .verdict{background:var(--bad-soft);color:var(--bad)}
+  .next .verdict{background:var(--good-soft);color:var(--good)}
+  .verdict .mono{font-weight:700}
+
+  /* ── three-column ledgers ── */
+  .cols3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  @media(max-width:900px){.cols3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:var(--shadow);
+    padding:15px 16px}
+  .card h3{margin:0 0 11px;font-size:13px;font-weight:730;display:flex;align-items:center;gap:8px}
+  .card h3 .b{width:9px;height:9px;border-radius:3px;flex:none}
+  .fl{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px}
+  .fl li{font-size:12.5px;display:flex;flex-direction:column;gap:2px}
+  .fl .f{font-family:var(--mono);font-size:11.5px;color:var(--ink);font-weight:600}
+  .fl .w{color:var(--muted);font-size:11.5px}
+  .fl .t{font-size:9.5px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:1px 6px;
+    border-radius:12px;align-self:flex-start;margin-bottom:1px}
+  .t.new{background:var(--good-soft);color:var(--good)} .t.chg{background:rgba(76,110,245,.13);color:var(--spine)}
+  .t.ret{background:var(--bad-soft);color:var(--bad)}
+
+  /* ── commands + center ownership ── */
+  .two{display:grid;grid-template-columns:1.05fr 1fr;gap:14px}
+  @media(max-width:900px){.two{grid-template-columns:1fr}}
+  .cmdrow{display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid var(--line-2);font-size:12.5px}
+  .cmdrow:last-child{border-bottom:none}
+  .cmdrow .cmd{font-family:var(--mono);font-size:12px;font-weight:650;color:var(--spine);white-space:nowrap;min-width:132px}
+  .cmdrow .did{color:var(--muted)}
+  .cmdrow .did b{color:var(--ink);font-weight:600}
+  .own{display:flex;flex-direction:column;gap:7px}
+  .ownrow{display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .ownrow .s{font-weight:600;min-width:150px}
+  .badge{font-size:10px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;padding:2px 8px;border-radius:20px;white-space:nowrap}
+  .badge.graft{background:var(--good-soft);color:var(--graft)}
+  .badge.suite{background:rgba(124,58,237,.14);color:var(--suite)}
+
+  .rec{margin-top:34px;background:var(--panel);border:1px solid color-mix(in srgb,var(--graft) 34%,var(--line));
+    border-radius:15px;box-shadow:var(--shadow);padding:20px 22px}
+  .rec h3{margin:0 0 4px;font-size:16px;font-weight:750;display:flex;align-items:center;gap:9px}
+  .rec h3 .pill{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:2px 9px;
+    border-radius:20px;background:var(--good-soft);color:var(--graft)}
+  .rec ol{margin:12px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:9px}
+  .rec li{font-size:13.5px;color:var(--muted)}
+  .rec li b{color:var(--ink);font-weight:640}
+  .rec li .mono{color:var(--ink);font-size:12.5px;background:var(--line-2);padding:1px 5px;border-radius:5px}
+  footer{margin-top:36px;padding-top:16px;border-top:1px solid var(--line-2);font-size:12px;color:var(--muted);
+    display:flex;flex-wrap:wrap;gap:6px 14px}
+  .legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px}
+  .lg{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+  .lg .d{width:9px;height:9px;border-radius:3px}
+</style>
+
+<div class="wrap">
+  <div class="eyebrow"><span class="dot"></span>Command Center · architecture pivot</div>
+  <h1>The map moves to graft. The Center stays ours.</h1>
+  <p class="lede">Today the suite <b>rebuilds</b> a codebase map from scratch every regen, and the process
+    spine <b>rescans</b> the code every task — because nothing forces it to read the map. After adoption,
+    <b>graft</b> owns the facts and enforces its own use; the <b>Command Center</b> becomes graft's renderer,
+    and the spine <b>queries</b> the map instead of grepping. The loop closes.</p>
+  <div class="legend">
+    <span class="lg"><span class="d" style="background:var(--spine)"></span>Gabe Suite spine</span>
+    <span class="lg"><span class="d" style="background:var(--graft)"></span>graft (facts + enforcement)</span>
+    <span class="lg"><span class="d" style="background:var(--suite)"></span>suite (process + domain)</span>
+    <span class="lg"><span class="d" style="background:var(--center)"></span>Command Center (render)</span>
+  </div>
+
+  <h2 class="sec">Current state → future state</h2>
+  <div class="ba">
+    <div class="state now">
+      <div class="st-head"><span class="st-name">Today</span><span class="st-tag">rescan + rebuild</span></div>
+      <div class="layer"><div class="lname">Process spine</div><div class="chips">
+        <span class="chip spine"><span class="d"></span>read</span><span class="chip spine"><span class="d"></span>execute</span>
+        <span class="chip spine"><span class="d"></span>review</span><span class="chip spine"><span class="d"></span>commit</span></div></div>
+      <div class="flow bad"><span class="arr">↓</span><span class="lbl">grep / read</span><span class="note">— rescans the codebase every task</span></div>
+      <div class="layer"><div class="lname">The codebase</div><div class="chips">
+        <span class="chip"><span class="d" style="background:var(--ghost)"></span>apps/api (py)</span>
+        <span class="chip"><span class="d" style="background:var(--ghost)"></span>apps/web (ts)</span></div></div>
+      <div class="flow bad"><span class="arr">↓</span><span class="lbl">re-parse from scratch</span><span class="note">— reads 3 of graft's 13 fields</span></div>
+      <div class="layer"><div class="lname">Map (suite-built)</div><div class="chips">
+        <span class="chip suite"><span class="d"></span>_a3_graft</span><span class="chip suite"><span class="d"></span>_a3_web · regex</span>
+        <span class="chip suite"><span class="d"></span>_a3_graph</span><span class="chip"><span class="d" style="background:var(--ghost)"></span>archmap.json</span></div></div>
+      <div class="flow bad"><span class="arr">↓</span><span class="lbl">renders</span></div>
+      <div class="layer"><div class="lname">Command Center</div><div class="chips">
+        <span class="chip center"><span class="d"></span>graph · tests · board · ledger</span></div></div>
+      <div class="verdict">✗ the map is a dead-end — the spine never reads it; <span class="mono">graft ask</span> (a full local search engine) sits unused</div>
+    </div>
+
+    <div class="state next">
+      <div class="st-head"><span class="st-name">After adoption</span><span class="st-tag">query + consume</span></div>
+      <div class="layer"><div class="lname">Process spine</div><div class="chips">
+        <span class="chip spine"><span class="d"></span>read</span><span class="chip spine"><span class="d"></span>execute</span>
+        <span class="chip spine"><span class="d"></span>review</span><span class="chip spine"><span class="d"></span>commit</span></div></div>
+      <div class="flow good"><span class="arr">↓</span><span class="lbl">graft ask / injection</span><span class="note">— map pointers enter context before a grep</span></div>
+      <div class="layer" style="border-color:color-mix(in srgb,var(--graft) 40%,var(--line))"><div class="lname" style="color:var(--graft)">graft — facts + enforcement</div><div class="chips">
+        <span class="chip graft"><span class="d"></span>whole-repo index (py + ts)</span>
+        <span class="chip graft"><span class="d"></span>--deep summaries</span>
+        <span class="chip graft"><span class="d"></span>all edges</span>
+        <span class="chip graft"><span class="d"></span>MCP + statusline</span></div></div>
+      <div class="flow good"><span class="arr">↓</span><span class="lbl">consume facts</span><span class="note">— no re-parse; suite adds the domain model</span></div>
+      <div class="layer"><div class="lname">Map (graft-fed) + suite domain</div><div class="chips">
+        <span class="chip graft"><span class="d"></span>graft wiring</span><span class="chip suite"><span class="d"></span>entities · board · ledger</span></div></div>
+      <div class="flow good"><span class="arr">↓</span><span class="lbl">renders (richer)</span></div>
+      <div class="layer"><div class="lname">Command Center</div><div class="chips">
+        <span class="chip center"><span class="d"></span>graph · tests · board · ledger</span></div></div>
+      <div class="verdict">✓ graft enforces its own use — the spine reads the map without us remembering to wire it</div>
+    </div>
+  </div>
+
+  <h2 class="sec">Files — created · changed · retired</h2>
+  <div class="cols3">
+    <div class="card">
+      <h3><span class="b" style="background:var(--good)"></span>Created</h3>
+      <ul class="fl">
+        <li><span class="t new">install</span><span class="f">&lt;twin&gt;/graft/</span><span class="w">graft's index (gitignored) from <code>graft build --deep</code></span></li>
+        <li><span class="t new">enforce</span><span class="f">&lt;twin&gt;/.claude/settings.json</span><span class="w">graft's UserPromptSubmit injection + PostToolUse rebuild + <span class="mono">Bash(graft:*)</span> pre-auth</span></li>
+        <li><span class="t new">enforce</span><span class="f">&lt;twin&gt;/.claude/skills/graft/</span><span class="w">graft's own skill + statusline</span></li>
+        <li><span class="t new">rule</span><span class="f">CLAUDE.md snippet</span><span class="w">"the Center + graft answer this first"</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="b" style="background:var(--spine)"></span>Changed (suite)</h3>
+      <ul class="fl">
+        <li><span class="t chg">consume</span><span class="f">_a3_graft.py</span><span class="w">read signature · exported · method/class/type nodes · contains/extends/implements edges</span></li>
+        <li><span class="t chg">consume</span><span class="f">_a3_graph.py</span><span class="w">fold graft edges + --deep prose into element_detail</span></li>
+        <li><span class="t chg">wire</span><span class="f">gabe-cc-entity + execute/review specs</span><span class="w">query the graft-fed map before a rescan</span></li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3><span class="b" style="background:var(--bad)"></span>Retired</h3>
+      <ul class="fl">
+        <li><span class="t ret">shrinks</span><span class="f">_a3_web.py · regex</span><span class="w">the from-scratch frontend arm becomes a graft-TS reader — the build we were about to write evaporates</span></li>
+        <li><span class="t ret">stop</span><span class="f">signature re-derivation</span><span class="w">function_insight no longer re-reads source for a string graft already holds</span></li>
+      </ul>
+    </div>
+  </div>
+
+  <h2 class="sec">What depends on it — commands &amp; Center sections</h2>
+  <div class="two">
+    <div class="card">
+      <h3><span class="b" style="background:var(--spine)"></span>Development commands that query graft</h3>
+      <div class="cmdrow"><span class="cmd">every session</span><span class="did">graft's <b>injection</b> drops map pointers into context — automatic, no cooperation</span></div>
+      <div class="cmdrow"><span class="cmd">gabe-execute</span><span class="did">E4 reuse → <b>graft ask</b> before implementing (not a blind grep)</span></div>
+      <div class="cmdrow"><span class="cmd">gabe-review</span><span class="did">reads the <b>graft-fed archmap</b> for drift checks</span></div>
+      <div class="cmdrow"><span class="cmd">gabe-red</span><span class="did"><b>graft callers</b> for reach (already partly does)</span></div>
+      <div class="cmdrow"><span class="cmd">gabe-cc-entity</span><span class="did">assembles context packs from the <b>graft-fed map</b></span></div>
+      <div class="cmdrow"><span class="cmd">center regen</span><span class="did">consumes <b>graft's wiring.json</b> instead of re-parsing</span></div>
+    </div>
+    <div class="card">
+      <h3><span class="b" style="background:var(--center)"></span>Command Center — who feeds each section</h3>
+      <div class="own">
+        <div class="ownrow"><span class="s">Code overview</span><span class="badge graft">graft facts</span></div>
+        <div class="ownrow"><span class="s">Architecture · code map · data model · functions</span><span class="badge graft">graft edges</span></div>
+        <div class="ownrow"><span class="s">Frontend</span><span class="badge graft">graft TS</span></div>
+        <div class="ownrow"><span class="s">Tests (files)</span><span class="badge graft">graft</span></div>
+        <div class="ownrow"><span class="s">Entities (domain grouping) · index</span><span class="badge suite">suite on graft</span></div>
+        <div class="ownrow"><span class="s">Test-case evidence</span><span class="badge suite">suite (KDBP)</span></div>
+        <div class="ownrow"><span class="s">Board · ledger · releases</span><span class="badge suite">suite (process)</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rec">
+    <h3><span class="pill">Recommendation</span> How to install</h3>
+    <ol>
+      <li><b>Pilot on gustify, on a branch.</b> graft is a dev-session tool — install it where it runs, not a throwaway copy: <span class="mono">npm i @nanonets/graft</span> + <span class="mono">graft init</span>. The branch keeps it fully reversible; <span class="mono">graft/</span> stays gitignored, the <span class="mono">.claude/</span> enforcement is committed (that's the point).</li>
+      <li><b>Run <span class="mono">graft build --deep</span> once</b> with a cheap Claude model (Haiku) for the summary/crux prose. Summaries cache on <span class="mono">body_hash</span>, so only changed nodes re-summarize after — the first pass is the one-time cost, later builds are incremental.</li>
+      <li><b>Measure a few real sessions</b> — does injection fire, do tool-calls drop (graft claims 46% fewer)? If it delivers, merge + propagate to gastify. If not, drop the branch — zero residue.</li>
+      <li><b>Then the suite work</b> — P1 consume graft facts, P2 frontend as a graft reader, verified against the compiler oracle, with the same badge-vs-panel audit that caught the 32 defects.</li>
+    </ol>
+  </div>
+
+  <footer>
+    <span class="mono">docs/design/graft-adoption/README.md</span>
+    <span>graft @nanonets/graft (MIT) · Command Center render layer unchanged · board/ledger/releases stay suite</span>
+  </footer>
+</div>

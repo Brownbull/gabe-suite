@@ -1,0 +1,257 @@
+<title>Frontend Graph Tiers</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --panel:#ffffff; --panel-2:#fbfcfe; --ink:#182130; --muted:#697588;
+    --line:#e3e8ef; --line-2:#eef1f6; --ghost:#aab4c2;
+    --k-component:#4c6ef5; --k-hook:#0d9488; --k-store:#7c3aed; --k-route:#d97706;
+    --k-fetype:#b98900; --k-endpoint:#e11d67; --k-recipe:#2f9e44;
+    --new:#e8590c; --new-soft:rgba(232,89,12,.12);
+    --shadow:0 1px 2px rgba(20,30,50,.06),0 8px 24px rgba(20,30,50,.06);
+    --mono:ui-monospace,"SF Mono","SFMono-Regular",Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  @media (prefers-color-scheme:dark){ :root:not([data-theme="light"]){
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#48546480;
+    --k-component:#6b8afd; --k-hook:#2dd4bf; --k-store:#a78bfa; --k-route:#fbbf24;
+    --k-fetype:#e3b341; --k-endpoint:#f472a6; --k-recipe:#51cf66;
+    --new:#ff8043; --new-soft:rgba(255,128,67,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }}
+  :root[data-theme="dark"]{
+    --bg:#0e1218; --panel:#161c26; --panel-2:#12171f; --ink:#e8edf4; --muted:#8b98aa;
+    --line:#26303d; --line-2:#1c242f; --ghost:#48546480;
+    --k-component:#6b8afd; --k-hook:#2dd4bf; --k-store:#a78bfa; --k-route:#fbbf24;
+    --k-fetype:#e3b341; --k-endpoint:#f472a6; --k-recipe:#51cf66;
+    --new:#ff8043; --new-soft:rgba(255,128,67,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 10px 30px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--sans);
+    line-height:1.5;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:1080px;margin:0 auto;padding:40px 24px 64px}
+  header.head{max-width:760px}
+  .eyebrow{font-size:11.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--muted);display:flex;align-items:center;gap:9px}
+  .eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--k-recipe)}
+  h1{font-size:31px;line-height:1.12;font-weight:760;letter-spacing:-.02em;margin:14px 0 0;
+    text-wrap:balance}
+  .lede{font-size:15.5px;color:var(--muted);margin:14px 0 0;max-width:64ch}
+  .lede code{font-family:var(--mono);font-size:.9em;color:var(--ink);
+    background:var(--line-2);padding:1px 5px;border-radius:5px}
+  .flowline{margin:22px 0 0;padding:12px 15px;background:var(--panel);border:1px solid var(--line);
+    border-radius:11px;box-shadow:var(--shadow);font-size:13.5px;color:var(--muted);
+    display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+  .flowline b{color:var(--ink);font-weight:650}
+  .flowline .mono{font-family:var(--mono);font-size:12.5px;color:var(--ink)}
+  .flowline .arw{color:var(--ghost);font-weight:700}
+
+  .panels{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:30px}
+  @media(max-width:860px){.panels{grid-template-columns:1fr;max-width:420px;margin-inline:auto}}
+  .panel{background:var(--panel);border:1px solid var(--line);border-radius:15px;
+    box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+  .panel.is-full{border-color:color-mix(in srgb,var(--new) 40%,var(--line))}
+  .p-head{padding:15px 17px 13px;border-bottom:1px solid var(--line-2)}
+  .p-tier{display:flex;align-items:baseline;justify-content:space-between;gap:10px}
+  .p-name{font-size:16.5px;font-weight:720;letter-spacing:-.01em}
+  .p-count{font-family:var(--mono);font-size:12px;color:var(--muted);
+    font-variant-numeric:tabular-nums;white-space:nowrap}
+  .p-count b{color:var(--ink);font-size:15px}
+  .p-sub{font-size:12.5px;color:var(--muted);margin-top:4px;min-height:2.6em}
+  .p-sub .plus{color:var(--new);font-weight:650}
+  .p-svg{padding:6px 8px 10px}
+  .p-svg svg{width:100%;height:auto;display:block}
+  .p-foot{margin-top:auto;padding:11px 17px 14px;border-top:1px solid var(--line-2);
+    display:flex;flex-wrap:wrap;gap:6px}
+  .tag{font-size:11px;font-weight:600;font-family:var(--mono);padding:2.5px 8px;border-radius:20px;
+    border:1px solid var(--line);color:var(--muted);display:inline-flex;align-items:center;gap:6px}
+  .tag.new{border-color:color-mix(in srgb,var(--new) 45%,transparent);color:var(--new);background:var(--new-soft)}
+  .tag .sw{width:8px;height:8px;border-radius:2px;flex:none}
+
+  .legend{margin-top:30px;background:var(--panel-2);border:1px solid var(--line);border-radius:13px;
+    padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  @media(max-width:860px){.legend{grid-template-columns:1fr}}
+  .legend h3{font-size:11.5px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+    color:var(--muted);margin:0 0 11px}
+  .legrow{display:flex;flex-wrap:wrap;gap:8px 16px}
+  .kind{display:flex;align-items:center;gap:8px;font-size:12.5px}
+  .kind .g{width:26px;height:20px;flex:none}
+  .kind .kn{font-weight:640}
+  .kind .kd{color:var(--muted)}
+  .edgekey{display:flex;flex-direction:column;gap:9px}
+  .ek{display:flex;align-items:center;gap:10px;font-size:12.5px}
+  .ek svg{flex:none}
+  .ek b{font-weight:640}
+  .ek span{color:var(--muted)}
+
+  .takeaway{margin-top:26px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:860px){.takeaway{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 18px;
+    box-shadow:var(--shadow)}
+  .card.rec{border-color:color-mix(in srgb,var(--k-recipe) 38%,var(--line))}
+  .card h4{margin:0 0 7px;font-size:13.5px;font-weight:720;display:flex;align-items:center;gap:8px}
+  .card h4 .pill{font-size:10.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;
+    padding:2px 7px;border-radius:20px}
+  .card.rec h4 .pill{background:color-mix(in srgb,var(--k-recipe) 16%,transparent);color:var(--k-recipe)}
+  .card.alt h4 .pill{background:var(--line-2);color:var(--muted)}
+  .card p{margin:0;font-size:13px;color:var(--muted)}
+  .card p b{color:var(--ink);font-weight:640}
+  footer{margin-top:34px;padding-top:16px;border-top:1px solid var(--line-2);
+    font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:6px 14px}
+  footer .mono{font-family:var(--mono)}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <div class="eyebrow"><span class="dot"></span>Frontend model · taxonomy choice</div>
+    <h1>What each tier draws for one real flow</h1>
+    <p class="lede">The same gustify flow — browsing saved recipes — graphed three ways.
+      <b style="color:var(--ink)">Today</b> the graph sees only files that call the API, so a whole
+      interactive layer is invisible. Pick how wide the first real cut goes.</p>
+    <div class="flowline">
+      <b>Recipe&nbsp;browse:</b>
+      <span class="mono">screens.tsx</span><span class="arw">→</span>
+      <span class="mono">RecipeBrowseContainer</span><span class="arw">→</span>
+      <span class="mono">useRecipeSearch</span><span class="arw">→</span>
+      <span class="mono">GET&nbsp;/recipes</span>
+    </div>
+  </header>
+
+  <div class="panels" id="panels"></div>
+
+  <section class="legend">
+    <div>
+      <h3>Node kinds</h3>
+      <div class="legrow" id="kindKey"></div>
+    </div>
+    <div>
+      <h3>Edges</h3>
+      <div class="edgekey">
+        <div class="ek"><svg width="34" height="12"><line x1="2" y1="6" x2="32" y2="6" stroke="currentColor" stroke-width="1.7"/></svg><b>renders / uses</b><span>a component renders or calls another piece</span></div>
+        <div class="ek"><svg width="34" height="12"><line x1="2" y1="6" x2="32" y2="6" stroke="currentColor" stroke-width="1.7" stroke-dasharray="4 3"/></svg><b>routes / types</b><span>route → component · type → the piece it shapes</span></div>
+        <div class="ek"><svg width="34" height="12"><line x1="2" y1="6" x2="32" y2="6" stroke="var(--k-recipe)" stroke-width="1.9" stroke-dasharray="1.4 4" stroke-linecap="round"/></svg><b>fetches</b><span>the existing bridge — screen → backend endpoint</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="takeaway">
+    <div class="card rec">
+      <h4><span class="pill">Recommended</span> Core</h4>
+      <p><b>hook · component · store</b> + the fetch bridge. Draws the interactive layer — who
+        renders, who calls, who reads shared state — the part missing today. Proves the node/edge
+        model before adding breadth. <b>5 nodes</b> for this flow.</p>
+    </div>
+    <div class="card alt">
+      <h4><span class="pill">Wider</span> Full</h4>
+      <p>Core <b>+ route + fe-type</b>. Adds the entry point (how the user arrives) and the data
+        shape flowing through. Truer, but routes are framework-specific and types can flood the
+        graph. <b>7 nodes</b> for this flow.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span class="mono">gustify · apps/web/src/features/cooking</span>
+    <span>Real files, read-only. Ghosted = not modeled at that tier.</span>
+  </footer>
+</div>
+
+<script>
+const GLYPH = {
+  component:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+  hook:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+  store:'<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  route:'<circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/>',
+  fetype:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+  endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>'
+};
+const KIND = {
+  component:{c:'--k-component',n:'component',d:'a rendered view'},
+  hook:{c:'--k-hook',n:'hook',d:'useX — data + logic'},
+  store:{c:'--k-store',n:'store',d:'shared state'},
+  route:{c:'--k-route',n:'route',d:'entry point'},
+  fetype:{c:'--k-fetype',n:'fe-type',d:"the frontend's own types"},
+  endpoint:{c:'--k-endpoint',n:'endpoint',d:'backend (the bridge target)'}
+};
+// the real recipe-browse flow — one graph, each node tagged with the tier that first sees it
+const NODES = [
+  {id:'route',    kind:'route',    label:'screens.tsx',            tier:'full',  x:150, y:38},
+  {id:'container',kind:'component',label:'RecipeBrowseContainer',  tier:'core',  x:150, y:112},
+  {id:'view',     kind:'component',label:'renderRecipeBrowseView', tier:'core',  x:66,  y:184},
+  {id:'store',    kind:'store',    label:'useUiStore',             tier:'core',  x:234, y:184},
+  {id:'type',     kind:'fetype',   label:'RecipeListResponse',     tier:'full',  x:56,  y:262},
+  {id:'hook',     kind:'hook',     label:'useRecipeSearch',        tier:'today', x:150, y:262},
+  {id:'ep',       kind:'endpoint', label:'GET /recipes',           tier:'today', x:150, y:342}
+];
+const EDGES = [
+  {s:'route',    t:'container', tier:'full',  style:'dash'},
+  {s:'container',t:'view',      tier:'core',  style:'solid'},
+  {s:'container',t:'store',     tier:'core',  style:'solid'},
+  {s:'container',t:'hook',      tier:'core',  style:'solid'},
+  {s:'type',     t:'hook',      tier:'full',  style:'dash'},
+  {s:'hook',     t:'ep',        tier:'today', style:'fetch'}
+];
+const TIERS = [
+  {key:'today', name:'Today', visible:['today'], sub:'Only files that call the API. The hook and its endpoint — nothing else.'},
+  {key:'core',  name:'Core',  visible:['today','core'], sub:'<span class="plus">+ component · hook · store</span> — the interactive layer appears.'},
+  {key:'full',  name:'Full',  visible:['today','core','full'], sub:'<span class="plus">+ route · fe-type</span> — the entry point and the data shape too.'}
+];
+const NODE = Object.fromEntries(NODES.map(n=>[n.id,n]));
+const VB_W=300, VB_H=384, R=18;
+
+function edgePath(a,b){
+  const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+  const x1=a.x+ux*R, y1=a.y+uy*R, x2=b.x-ux*R, y2=b.y-uy*R;
+  const mx=(x1+x2)/2 - dy/d*10, my=(y1+y2)/2 + dx/d*10;
+  return `M${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`;
+}
+function panelSVG(tier){
+  const on = id => tier.visible.includes(NODE[id].tier);
+  let e='';
+  EDGES.forEach(ed=>{
+    const live = on(ed.s) && on(ed.t);
+    const col = ed.style==='fetch' ? 'var(--k-recipe)' : 'var(--muted)';
+    const dash = ed.style==='dash' ? 'stroke-dasharray="4 3"' : ed.style==='fetch' ? 'stroke-dasharray="1.4 4" stroke-linecap="round"' : '';
+    e += `<path d="${edgePath(NODE[ed.s],NODE[ed.t])}" fill="none" stroke="${col}" stroke-width="${ed.style==='fetch'?1.9:1.6}" ${dash} opacity="${live?(ed.style==='fetch'?.95:.7):.12}"/>`;
+  });
+  let n='';
+  NODES.forEach(nd=>{
+    const live = on(nd.id);
+    const isNew = live && nd.tier===tier.key && tier.key!=='today';
+    const col = `var(${KIND[nd.kind].c})`;
+    const op = live?1:.16;
+    const ring = isNew ? `<circle cx="${nd.x}" cy="${nd.y}" r="${R+4.5}" fill="none" stroke="var(--new)" stroke-width="1.6" stroke-dasharray="3 2.5"/>` : '';
+    const fill = live ? `color-mix(in srgb, ${col} 13%, var(--panel))` : 'var(--panel)';
+    const stroke = live ? col : 'var(--ghost)';
+    const gcol = live ? col : 'var(--ghost)';
+    const labelCol = live ? 'var(--ink)' : 'var(--ghost)';
+    n += `<g opacity="${op}">${ring}
+      <circle cx="${nd.x}" cy="${nd.y}" r="${R}" fill="${fill}" stroke="${stroke}" stroke-width="1.9"/>
+      <g transform="translate(${nd.x-9},${nd.y-9}) scale(.75)" fill="none" stroke="${gcol}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${GLYPH[nd.kind]}</g>
+      <text x="${nd.x}" y="${nd.y+R+13}" text-anchor="middle" font-family="var(--mono)" font-size="9.6" fill="${labelCol}">${nd.label}</text>
+    </g>`;
+  });
+  return `<svg viewBox="0 0 ${VB_W} ${VB_H}" role="img" aria-label="${tier.name} tier graph">${e}${n}</svg>`;
+}
+function kindTags(tier){
+  const kinds=[...new Set(NODES.filter(n=>tier.visible.includes(n.tier)).map(n=>n.kind))];
+  return kinds.map(k=>{
+    const isNew = NODES.some(n=>n.kind===k && n.tier===tier.key) && tier.key!=='today';
+    return `<span class="tag${isNew?' new':''}"><span class="sw" style="background:var(${KIND[k].c})"></span>${KIND[k].n}</span>`;
+  }).join('');
+}
+document.getElementById('panels').innerHTML = TIERS.map(t=>{
+  const count = NODES.filter(n=>t.visible.includes(n.tier)).length;
+  return `<div class="panel ${t.key==='full'?'is-full':''}">
+    <div class="p-head">
+      <div class="p-tier"><span class="p-name">${t.name}</span>
+        <span class="p-count"><b>${count}</b> / 7 nodes</span></div>
+      <div class="p-sub">${t.sub}</div>
+    </div>
+    <div class="p-svg">${panelSVG(t)}</div>
+    <div class="p-foot">${kindTags(t)}</div>
+  </div>`;
+}).join('');
+document.getElementById('kindKey').innerHTML = Object.keys(KIND).map(k=>
+  `<div class="kind"><svg class="g" viewBox="0 0 24 24" fill="none" stroke="var(${KIND[k].c})" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${GLYPH[k]}</svg><span class="kn" style="color:var(${KIND[k].c})">${KIND[k].n}</span><span class="kd">${KIND[k].d}</span></div>`
+).join('');
+</script>
