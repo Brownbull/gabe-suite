@@ -396,3 +396,39 @@ final diagram (a nav bar, later).
 - Verified headless: default/​wrap/​tight/​loose + post-settle `?drive=wrap`, no clip, 0 JS errors.
 - NOT covered (spike-only, deferred to the real build): pill/panel styling will be re-skinned to the
   command-center shell when this ports; the nav-bar home is later.
+
+### 9j · encoding research (3 field inventories) + the top-left ENCODE explorer (operator, 2026-08-17)
+
+Operator pivot: "what dimensions can we express on connectors and elements, using ONLY fields already
+in archmap.json — no new data?" + "how is colour encoded — kind-fixed, or by value?" Answered with three
+parallel read-only inventories against REAL gustify data, then built a navigable explorer.
+
+- **Clip fix (max-radius wrap):** the metaball cube was `S=span/2+nodeR+8`; overlapping balls bulge past
+  nodeR and MarchingCubes never triangulates its outer voxel ring → the blob sheared flat at the cube
+  face. Now `S=span/2+nodeR*2+14`. Gone.
+- **Field inventory (grounded, gustify):** ELEMENT signals real AND populated — `behind.fns` (0–47) /
+  `behind.depth` (0–6), entity `counts.lines` (365–25k), `det.flines`/`det.sig.lines`, `det.cols`,
+  `usage.fk_in` (User=19), `det.cases` (tested-by; **presence only** — all pass), `god` (38/191 fn).
+  CONNECTION signals — L1 `weight` (1–86), edge `kind` (touches/fk/bridge/calls/imports), **kind-as-trust
+  proxy** (calls=inferred floor 454/454, imports/fk=proven; no per-edge trust flag), direction
+  (asymmetric), `via` (FK col / fetch), `behind` projected to endpoint end. DEAD on gustify (don't
+  encode): `usage.api` (always 1), `sig.async` (always true), proof status (0), `gsig` (build disabled),
+  `sim` (not in feed), test pass/fail (all pass). **Frontend sub-kinds don't exist** — every FE node is
+  one `web` kind + a `sites` count (reshapes the FE side at scale-up).
+- **Colour model (the answer):** today colour = IDENTITY for structure (entity on containers, KIND on
+  pieces) and VALUE only for endpoints (HTTP method tint). Recommendation kept: colour stays identity
+  (kind on icon · entity on boundary — two identities on two surfaces), values ride size/glow/halo/motion.
+- **Payload (operator ask, confirmed possible):** a wire carrying a structure (endpoint→schema `resp`,
+  endpoint→model `touches`, web→endpoint `bridge`) knows that structure's `det.cols` field-count AND
+  types → "which wires move the biggest objects" = particle width. No new data.
+- **Atlas artifact:** `Trace Encoding Atlas` (color model · connector table · element table · 3 setups ·
+  don't-encode list) — a reusable reference. Source in scratchpad `encoding-atlas.html`.
+- **ENCODE explorer (top-left, SEPARATE from CONFIG — operator: config is the consolidated hand-off, all
+  custom experiments go top-left):** Setup A·Structure / B·Health&Load / C·Flow&Behind presets; Colour
+  identity|heat × heat-by mass|fanin|tests; ELEMENT toggles size·glow·halo·god·pulse·method; EDGE toggles
+  width·trust·flow·payload. Billboards re-render WHITE + tint at runtime (identity/heat/method all cheap);
+  pulse via a `requestAnimationFrame` loop; synthetic `METRICS`/`LINKMETA` stand in for the real archmap
+  fields under the SAME names the encoders will read at scale-up. `?enc=B&cmode=heat&heatBy=fanin` URL
+  hooks for shots. Verified headless A/B/C/heat, 0 JS errors.
+- OPEN: explorer runs on synthetic recipe+auth data (operator's choice) — port encoders to read real
+  c4-graph fields when the grammar settles; FE collapses to `web`+`sites` then.
