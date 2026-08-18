@@ -552,3 +552,16 @@ retune — so I can play with which field drives which effect for a given select
   them to taste. Panel widened 236→256 for the extra control.
 - Playwright **40/40** (mass dropdown = behind; remap mass→depth → value 8→2 + `MAP.A.mass` updated; setup B
   halo → tests vs setup A halo → fanin).
+
+### 9q · global icon-size control (operator, 2026-08-17)
+
+Operator: icons are too big vs the label font; make them ~font-size and add a control — a CONSTANT size I
+pick, applied to every element's icon.
+
+- **Icons default smaller + operator-set.** `ENC.iconSize` (default 10, was the baked ~13). `buildNode`
+  scales the billboard sprite to `ENC.iconSize` (primitive fallback `×iconSize/13`) — a flat constant, NOT
+  data-driven, same for every element. The neutral sphere's base now tracks it (`bubR()=iconSize·0.62`) so
+  mass-sphere / halo / satellite / label offsets stay proportional as the icon resizes.
+- **Icon-size slider** in the ENCODE panel (under Colour, 6–20), live via `rebuildNodes()`. A GLOBAL display
+  control like `speed` — not per-setup, not per-element, not in any preset.
+- Playwright **42/42** (slider sets `ENC.iconSize` 10→16 and the node's icon sprite scale follows).
