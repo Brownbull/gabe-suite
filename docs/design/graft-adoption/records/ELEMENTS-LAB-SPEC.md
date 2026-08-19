@@ -34,11 +34,11 @@ The Lab stays the design tool (full asset roster + every option). 5C carries **o
 
 | zone | represents | map dimension → drives | asset / effect |
 |---|---|---|---|
-| **defence** (right shell) | tests defending the element | test **KIND** (junit corpus api/web/e2e) → which ship · test **count** (`test_insight.by_function`) → ships/kind · **guard state** (`guard_insight` unguarded→proven) → fleet HEALTH | a ship per kind, team-green, effect `aura` |
+| **defence** (right shell) | tests defending the element | test **KIND** — the three model keys are `unit/integ/e2e` (sourced from the junit corpus, whose kinds are `api/web/e2e`) → which ship · test **count** (`test_insight.by_function`) → ships/kind · **guard state** (`guard_insight` unguarded→proven) → fleet HEALTH | a ship per kind, team-green, effect `aura` |
 | **attack** (left shell) | problems attacking | **god** (`function_insight` size fn≥50/cls≥15) → 1 heavy raider · **unguarded** (`_a3_guard` floor **count**) → N small raiders | ships, team-red, effect `aura` |
-| **conflict** (top cloud) | in-flight change effect | **blast radius/size** (`_a3_sim.blast`) → shock waves · **failing tests** (junit) + **untested element** (`_a3_tests.untested_surface`) → flak | shock rings + flak burst, NO centre sphere |
+| **conflict** (top cloud) | in-flight change effect | **blast radius/size** (`_a3_sim.blast` — a list of entities; size = `len`) → shock waves · **failing tests** (junit) + **untested element** (`_a3_tests.untested_surface` — emits an HTML string, so 5C must re-derive the set from `by_endpoint`/`by_model` + `function_insight`, not read it as a field) → flak | shock rings + flak burst, NO centre sphere |
 | **deployment** | fleets placed around the planet | the war-zone placement law | def right · atk left · conflict top · sats south |
-| **satellites** (south pole) | used-by / callers | **used-by** (`det.usage` fan-in) → count | N starlink sats orbiting, signal waves |
+| **satellites** (south pole) | used-by / callers | **used-by** (`det.usage` fan-in — a compound dict on **endpoint/model L2 nodes only** — `{api,internal}` for endpoints, `{fk_in,internal}` for models; 5C picks a component, e.g. `fk_in+internal`; there is NO `det.usage` per function) → count | N starlink sats orbiting, signal waves |
 
 **Orientation rules (critical — this is where the Lab's time went):**
 - `orientTo(obj, forwardDir, nose)` — aligns the model's detected **nose** to `forwardDir` AND rolls up→world-Y
@@ -51,22 +51,25 @@ The Lab stays the design tool (full asset roster + every option). 5C carries **o
 
 ## Inter-entity connectors (entity ↔ entity)
 
-Connector **type = the relationship kind** (already in `c4-graph.json`, the L1 multi-kind edge). Draw each present
-kind as its own styled line, **reaching the sphere edge** (offset endpoints by R), with a count label:
+Connector **type = the relationship kind**, already in `c4-graph.json`. **fk / calls / imports are L1 multi-kind
+edge kinds** (the `kinds` dict on an entity↔entity L1 edge); **bridge is different** — a top-level `cross_edges`
+piece-level edge (`kind:'bridge'`, screen→endpoint), NOT an L1 kind. Draw each present kind as its own styled line,
+**reaching the sphere edge** (offset endpoints by R), with a count label:
 
 | kind | meaning | source | trust | dialed style |
 |---|---|---|---|---|
-| **fk** | data coupling (foreign keys) | `_a3_graph._l1` `kinds.fk` | trusted (exact join) | dashed · density 2.7 · `#5893ad` |
-| **calls** | cross-entity function calls | `_a3_graft.derive_cross` `kinds.calls` | inferred floor | dashed · density 2 · `#f59e0b` |
-| **imports** | cross-entity imports | `_a3_graft.derive_cross` `kinds.imports` | inferred | dotted · density 2.2 · `#a855f7` |
-| **bridge** | frontend fetch → API endpoint | `_a3_graph` web arm (`stats.web`) | heuristic | dotted · density 1.7 · `#e8f443` |
+| **fk** | data coupling (foreign keys) | `_a3_graph._l1` `kinds.fk` (L1) | trusted (exact join) | dashed · density 2.7 · `#5893ad` |
+| **calls** | cross-entity function calls | `_a3_graft.derive_cross` → `kinds.calls` (L1) | inferred floor | dashed · density 2 · `#f59e0b` |
+| **imports** | cross-entity imports | `_a3_graft.derive_cross` → `kinds.imports` (L1) | inferred | dotted · density 2.2 · `#a855f7` |
+| **bridge** | frontend fetch → API endpoint | `_a3_graph` web arm — a top-level `cross_edges` `kind:'bridge'` (`_bridges` join); `stats.web` is only the summary count, not the edge source | heuristic | dotted · density 1.7 · `#e8f443` |
 
 - Style patterns: solid / dashed / dotted / sparse; **density** scales dash+gap (`base/density`, higher = tighter);
   opacity = trust; thickness/weight → count label.
 - **e2e / integration** is NOT a pairwise connector — it's the multi-stop **journey** of the `clipper` test ship
   (`test_insight.exercises`, an unordered bag). The **ordered** journey path is a GAP; producing it needs a small
   `_a3_graft` tweak (DFS each test's `calls` call-tree from its entry → first-reached entity order `journey_order[]`,
-  static inferred floor).
+  static inferred floor). **This is the e2e-journey tweak** — distinct from the satellites `callers`/in-degree
+  fan-in tweak floated in the trace record; only the `journey_order[]` tweak is in scope for this retrofit.
 
 ## Clusters (groups of planets)
 
@@ -77,7 +80,8 @@ kind as its own styled line, **reaching the sphere edge** (offset endpoints by R
 - **Stars** = elements USED by the cluster's components but never surfaced as one:
   - **count** = `derive_functions.fn_slug` **minus** the drawn `fn_nodes` (hidden functions; exact per-cluster
     set-difference).
-  - **size** = `fn_behind.fns` (transitive callee mass, pre-emitted in `levels.json`) or `function_insight.usage`.
+  - **size** = the transitive callee mass, pre-emitted in `levels.json` at `fn_nodes[].behind.fns` (NOT a top-level
+    `fn_behind.fns` key) — or `function_insight.usage`.
   - alt metrics: **unclaimed tables** (`_a3_graph.__unclaimed__`) · **untested surface** (`untested_surface`).
   - Rendered as glowing **dots** (bright core + soft halo), distributed to fill the cluster's bounding box
     (scatter / cloud=fibonacci-sphere / ring / orbit), glow radius + colour configurable.
@@ -117,21 +121,23 @@ The legend is not decoration — it is the **contract of what this lab designs a
 | legend tab | dimension | map source | rendered as |
 |---|---|---|---|
 | **Elements** (placeholder) | the element node — *not designed here* | `_a3_graph` node kind + 3D body (spike `index.html`) | dashed placeholder only |
-| **Connectors** | entity↔entity relationship kind | `c4-graph.json` L1 multi-kind edge (fk/calls/imports/bridge) | the 4 styled wires |
+| **Connectors** | entity↔entity relationship kind | `c4-graph.json` — fk/calls/imports (L1 edge kinds) + bridge (top-level `cross_edges`) | the 4 styled wires |
 | **Defense** | **test KIND** (unit/integ/e2e) | junit corpus + `test_insight.by_function` | a fleet ship per kind (green team accent) |
 | **Attack** | **problem type** (god/unguarded) | `function_insight` size · `_a3_guard` floor count | a raider ship per type (red team accent) |
-| **Conflict** | **internal function usage** (in-flight) | `_a3_sim.blast` · junit failing · `_a3_tests.untested_surface` | shock (blast) + flak (failing/untested) + team sub-lights |
-| **Field** | **used-by** (sat) + **cross-cluster fns** (stars) | `det.usage` fan-in · `derive_functions.fn_slug` − `fn_nodes` | starlink sat thumbnail + glowing star-dots |
+| **Conflict** | **internal function usage** (in-flight) | `_a3_sim.blast` · junit failing · re-derived untested set | shock (blast) + flak (failing/untested) + team sub-lights |
+| **Field** | **used-by** (sat) + **fns used across the cluster** (stars) | `det.usage` fan-in (endpoint/model L2) · `derive_functions.fn_slug` − `fn_nodes` | starlink sat thumbnail + glowing star-dots |
 
-These six are the **things this lab works on** — the assets for defence/attack, the effects for conflict, the
-satellites, and the cluster stars. 5C **adopts these dimensions**; it does **not** re-adopt the node representation
-(the spike already owns the kind-icon + 3D form).
+These are the **things this lab works on** — **five designed dimensions** (Connectors · Defense · Attack · Conflict ·
+Field) plus **one placeholder** (Elements, the spike-owned node). 5C **adopts the five dimensions**; it does **not**
+re-adopt the node representation (the spike already owns the kind-icon + 3D form).
 
 ## Legend (lift as-is)
 
 A portable, **fixed-size, minimizable** tabbed legend lives bottom-left of the Lab (`#legend` + `LEGEND` data +
-`buildLegend()`). Fixed 300×327 — the box never resizes on tab switch (fixed body height + internal scroll; tab row
-wraps). Per the legend rule every row renders the **actual thing as drawn**, word only as a parenthetical:
+`buildLegend()`). **Fixed 300px wide** with a **fixed 250px scrolling body** → the box never resizes on tab switch
+(the tab row wraps to 2 rows; overall height is not CSS-pinned but is constant because the tab set is constant —
+measured 327px across all six tabs). Per the legend rule every row renders the **actual thing as drawn**, word only
+as a parenthetical:
 
 - **Ship/sat rows** (Defense · Attack · Field) render the **real 3D asset thumbnail** — reusing the ONE shared palette
   renderer (`legThumb` registers a cell into `PAL_CELLS`; `palLoop` scales the 236×208 render into each ~42×36 cell,

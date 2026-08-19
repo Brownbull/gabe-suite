@@ -19,22 +19,24 @@ reference implementation to copy machinery from.
 > **connectors**; groups of planets form **clusters** with a hidden-fn **star field**. 5C already renders entities +
 > typed edges via `_a3_levels`; add the planet rendering below.
 >
-> **Adopt these six DIMENSIONS (the legend is the contract — see spec's table):**
-> 1. **Connectors** — entity↔entity relationship kind (fk/calls/imports/bridge, already in `c4-graph.json` L1
->    multi-kind edges): 4 styled wires reaching the sphere edge, per the dialed config.
+> **Adopt these FIVE designed DIMENSIONS** (the legend is the contract — see spec's table). Elements is NOT a
+> dimension — it is a spike-owned placeholder tab. The legend has **SIX tabs**: `Elements (placeholder) · Connectors ·
+> Defense · Attack · Conflict · Field` — Field holds two groups (satellites + cluster stars) in ONE tab.
+> 1. **Connectors** — entity↔entity relationship kind: fk/calls/imports are `c4-graph.json` **L1 edge kinds**, bridge
+>    is a top-level `cross_edges` edge (NOT L1). 4 styled wires reaching the sphere edge, per the dialed config.
 > 2. **Defense** — test KIND (unit/integ/e2e) → a fleet ship per kind, green team accent.
 > 3. **Attack** — problem type (god=oversized fn/class · unguarded=no-test floor ×N) → a raider per type, red accent.
 > 4. **Conflict** — internal fn usage in-flight → shock (blast size+radius) + flak (failing tests · untested elements).
-> 5. **Field / Satellites** — used-by / callers (`det.usage` fan-in) → starlink sats orbiting the south pole.
-> 6. **Field / Cluster stars** — functions used across the cluster (`derive_functions.fn_slug` − drawn `fn_nodes`)
->    → glowing star-dots inside a polygon/wrap hull.
-> The **node representation itself** (kind icon + 3D form) is ALREADY the spike's — do NOT redesign it; the legend
-> keeps it as a placeholder.
+> 5. **Field** — one tab, two groups: **satellites** = used-by / callers (`det.usage` fan-in, endpoint/model L2) →
+>    starlink sats orbiting the south pole · **cluster stars** = fns used across the cluster
+>    (`derive_functions.fn_slug` − drawn `fn_nodes`) → glowing star-dots inside a polygon/wrap hull.
+> The **node representation itself** (kind icon + 3D form) is ALREADY the spike's — do NOT redesign it; the Elements
+> tab keeps it as a placeholder.
 >
-> **Lift the LEGEND as-is** (fixed-size 300×327, minimizable, 6 dimension tabs, real asset thumbnails via the shared
-> renderer). Copy from `elements-lab.html`: the `#legend` CSS block, `<div id="legend">`, `legThumb`/`legPrune` +
-> the per-cell-size `palLoop` line, the `LEGEND`/`buildLegend()` pair, and the `rebuildAll` ships-ready hook. Swap
-> the thumbnail build closures for 5C's data-driven models; keep colours/patterns in sync with the config.
+> **Lift the LEGEND as-is** (fixed 300px wide + 250px scrolling body, minimizable, the six tabs above, real asset
+> thumbnails via the shared renderer). Copy from `elements-lab.html`: the `#legend` CSS block, `<div id="legend">`,
+> `legThumb`/`legPrune` + the per-cell-size `palLoop` line, the `LEGEND`/`buildLegend()` pair, and the `rebuildAll`
+> ships-ready hook. Swap the thumbnail build closures for 5C's data-driven models; keep colours/patterns in sync.
 >
 > **Use the settled config verbatim** from the spec's JSON block (defense/attack/conflict/deployment/satellites/
 > inter_entity connectors/clusters). Orientation rules are load-bearing: `orientTo` (nose→forward + up→world-Y),

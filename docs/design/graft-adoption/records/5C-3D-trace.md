@@ -1153,3 +1153,29 @@ whether the CURRENT code map already carries the data (constraint: don't touch m
     muted parenthetical. Verified headless (Playwright): tabs `[Zones,Connectors,Effects,Clusters]`, tab-switch +
     minimise work, connector wires + effect glyphs match the 3D, 0 errors. Logged in the spec under **Legend (lift
     as-is)** — copy into 5C and extend `LEGEND`.
+  - **Iteration 33 (legend REDESIGN → dimension tabs + asset thumbnails + adversarial verify):** operator bound the
+    legend as the **contract of what this lab designs**. Rebuilt: **fixed-size** (300px wide · 250px scrolling body ·
+    tab row wraps → constant 327px, measured across all tabs), minimizable, **6 tabs = the adopted dimensions**:
+    `Elements` (dashed **placeholder** — the spike owns the kind-icon+3D node, this lab abstains) · `Connectors`
+    (kept — the only surviving old tab) · `Defense` (unit/integ/e2e) · `Attack` (god/unguarded) · `Conflict`
+    (blast/failing/untested + sub-lights) · `Field` (satellites + cluster stars). **Defense/Attack/Field render REAL
+    3D asset thumbnails** — `legThumb` registers a cell into the ONE shared palette renderer (`palLoop` scales the
+    236×208 render into each 42×36 cell → **no new WebGL contexts**), `legPrune` drops them on re-render so tab-switches
+    don't leak; ships carry their team accent (green/red) as drawn. Folds: old **Effects** tab → Conflict sub-lights;
+    old **Clusters** tab → Field. **"Elem-assets" dropped** as a dictation artifact (DECISION — attack = god+unguarded,
+    confirmed by the operator's five-dimension list). Updated the spec (adopted-dimensions table + rewritten Legend
+    section) + authored **`records/5C-RETROFIT-PROMPT.md`** (paste-able prompt to implement into `index.html`).
+    **Adversarial verify** (5-agent workflow `wf_7a845a96`, 425k tok): ruling PASS (every row a real glyph/thumbnail,
+    placeholder abstains). **2 real code bugs FIXED:** (HIGH) `loadShips` error cb never decremented `left` → one
+    failed GLB hung ready-state forever + froze every viewer/thumbnail → extracted a shared `fin()` fired on
+    success OR failure; (LOW) COLOR_MODE change didn't repaint legend thumbs → added `window.__legRender()` to the
+    tint selector. **Doc-accuracy fixes:** bridge is a top-level `cross_edges` edge NOT an L1 kind · `fn_behind` reads
+    at `fn_nodes[].behind.fns` · `det.usage` is a compound endpoint/model-L2 dict (no per-fn) · `untested_surface`
+    emits HTML (re-derive) · retrofit's "six dimensions" split-Field/no-Elements trap → **five designed dimensions +
+    one placeholder, six tabs** stated explicitly · e2e `journey_order[]` tweak disambiguated from the used-by
+    `callers` tweak. Re-verified: 6 tabs, 327 constant, all thumbnails painted, 0 errors. **DEFERRED (operator's
+    call):** GPU dispose in legPrune/Viewer.set (leak per tab-switch/slider — trigger: if the lab becomes the shipped
+    long-running diagram) · effect/wire/star cells are faithful CSS stills not live draw-fn reuse (trigger: operator
+    wants strict fidelity). **FLAGGED for operator:** defense "side-by-side" (stacked rows vs 3-in-a-row) · default
+    tab opens on the Elements placeholder · literal parens vs muted-italic descriptors. **COMMITTED** `0abcd96` (whole
+    uncommitted arc, 53 files) + this fix/log commit; branch `graft-adoption` LOCAL, unpushed.
