@@ -1,0 +1,801 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Elements Lab — designing Gabe universes</title>
+<style>
+  :root{ --bg:#0e1524; --panel:#161f33; --ink:#e7ebf3; --muted:#8794ab; --line:#2b3650; --accent:#8b83f5;
+    --red:#ef4444; --green:#22c55e; --amber:#f59e0b; --teal:#14b8a6; --ok:#4cbe83; --warn:#d9821f; --gap:#e5484d;
+    --mono:"Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace"; }
+  *{ box-sizing:border-box; } html,body{ margin:0; background:var(--bg); color:var(--ink); font:14px/1.55 ui-sans-serif,system-ui,sans-serif; }
+  .wrap{ max-width:1200px; margin:0 auto; padding:28px 22px 80px; }
+  header h1{ font-size:24px; margin:0 0 4px; } header .sub{ color:var(--muted); font-size:14px; max-width:800px; }
+  .rule{ display:flex; gap:16px; flex-wrap:wrap; margin:16px 0 4px; padding:11px 14px; background:var(--panel); border:1px solid var(--line); border-radius:11px; font-size:12.5px; }
+  .rule b{ font-weight:700; } .tag{ display:inline-flex; align-items:center; gap:6px; }
+  .dot{ width:10px; height:10px; border-radius:3px; flex:none; } .d-ok{ background:var(--ok); } .d-warn{ background:var(--warn); } .d-gap{ background:var(--gap); }
+  h2.znm{ font-size:18px; margin:0 0 2px; display:flex; align-items:center; gap:9px; }
+  .swatch{ width:15px; height:15px; border-radius:5px; flex:none; }
+  .zone{ display:grid; grid-template-columns:1fr 440px; gap:22px; margin:26px 0; padding:20px; background:var(--panel); border:1px solid var(--line); border-radius:15px; align-items:start; }
+  .zone.def{ border-top:3px solid var(--green); } .zone.atk{ border-top:3px solid var(--red); } .zone.cfl{ border-top:3px solid var(--amber); } .zone.dep{ border-top:3px solid var(--teal); }
+  .zmeta{ color:var(--muted); font-size:13px; margin:2px 0 14px; }
+  h3{ font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:16px 0 7px; }
+  table.feas{ width:100%; border-collapse:collapse; font-size:12.5px; }
+  table.feas th{ text-align:left; color:var(--muted); font-weight:600; font-size:10.5px; text-transform:uppercase; letter-spacing:.04em; padding:0 8px 5px 0; border-bottom:1px solid var(--line); }
+  table.feas td{ padding:5px 8px 5px 0; border-bottom:1px solid var(--line); vertical-align:top; }
+  table.feas td.var{ font:600 12px/1.4 var(--mono); color:var(--ink); white-space:nowrap; }
+  table.feas td.src{ color:var(--muted); font-size:12px; } table.feas td.src code{ color:var(--ink); font-size:11.5px; }
+  .st{ display:inline-flex; align-items:center; gap:5px; font-weight:700; font-size:11px; white-space:nowrap; } .st.ok{ color:var(--ok); } .st.warn{ color:var(--warn); } .st.info{ color:var(--accent); } .st.gap{ color:var(--gap); }
+  /* ASSIGNMENT panel (left) — the variable→model/effect wiring */
+  .assign{ margin-top:6px; background:#0e1524; border:1px solid var(--line); border-radius:11px; padding:11px 12px; }
+  .arow{ display:flex; align-items:center; gap:9px; margin:7px 0; font-size:12.5px; }
+  .arow .k{ width:96px; flex:none; font:600 12px/1.3 var(--mono); color:var(--ink); display:inline-flex; align-items:center; gap:6px; }
+  .arow .to{ color:var(--muted); font-size:11px; }
+  .arow input[type=range]{ -webkit-appearance:none; appearance:none; height:4px; border-radius:3px; background:var(--line); flex:1; outline:none; cursor:pointer; }
+  .arow input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:14px; height:14px; border-radius:50%; background:var(--accent); cursor:pointer; }
+  .arow .rv{ width:52px; flex:none; text-align:right; font:600 11px/1 var(--mono); color:var(--ink); }
+  select.mship{ font:600 11px/1 var(--mono); color:var(--ink); background:#182136; border:1px solid var(--line); border-radius:7px; padding:5px 6px; cursor:pointer; }
+  select.mship:hover{ border-color:var(--accent); }
+  input.mcolor{ width:30px; height:24px; padding:0; border:1px solid var(--line); border-radius:6px; background:#182136; cursor:pointer; flex:none; }
+  input.mtext{ flex:1; min-width:160px; font:11px/1.3 var(--mono); color:var(--ink); background:#182136; border:1px solid var(--line); border-radius:6px; padding:4px 7px; }
+  input.mtext:focus{ outline:none; border-color:var(--accent); }
+  .lockb{ font:600 9px/1 var(--mono); text-transform:uppercase; letter-spacing:.03em; color:var(--muted); background:#182136; border:1px solid var(--line); border-radius:6px; padding:4px 6px; cursor:pointer; flex:none; }
+  .lockb.on{ color:var(--amber); border-color:var(--amber); background:#241c10; }
+  .copyb{ font:600 10px/1 var(--mono); color:var(--muted); background:#182136; border:1px solid var(--line); border-radius:6px; padding:5px 9px; cursor:pointer; }
+  .copyb:hover{ color:var(--ink); border-color:var(--accent); }
+  .palcell{ position:relative; }
+  .palcell.locked{ opacity:.34; filter:grayscale(.85); }
+  .palcell.locked::after{ content:'used'; position:absolute; top:5px; right:6px; font:700 8px/1 var(--mono); color:var(--amber); background:#000a; padding:2px 4px; border-radius:4px; letter-spacing:.03em; }
+  .tog{ font:600 11px/1 var(--mono); color:var(--muted); background:#182136; border:1px solid var(--line); border-radius:7px; padding:5px 9px; cursor:pointer; display:inline-flex; align-items:center; gap:6px; }
+  .tog .b{ width:9px; height:9px; border-radius:50%; background:var(--line); flex:none; } .tog.on{ color:var(--ink); border-color:currentColor; }
+  .tog.on.g{ color:var(--green); } .tog.on.g .b{ background:var(--green); } .tog.on.r{ color:var(--red); } .tog.on.r .b{ background:var(--red); }
+  .amap{ margin-left:auto; font:600 10px/1 var(--mono); color:var(--accent); }
+  .zviz{ position:sticky; top:12px; }
+  canvas.cv{ width:100%; height:340px; display:block; background:radial-gradient(circle at 50% 40%, #14203a, #0b1120); border:1px solid var(--line); border-radius:12px; touch-action:none; cursor:grab; } canvas.cv:active{ cursor:grabbing; }
+  .cnote{ margin-top:9px; font-size:12px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:9px; padding:9px 11px; min-height:44px; } .cnote b{ color:var(--ink); }
+  footer{ margin-top:34px; padding:20px; background:var(--panel); border:1px solid var(--line); border-radius:15px; }
+  footer h3{ margin-top:0; } footer ul{ margin:6px 0 14px; padding-left:20px; } footer li{ margin:4px 0; font-size:13px; }
+  .pill{ display:inline-block; font:600 11px/1 var(--mono); background:#0e1524; border:1px solid var(--line); border-radius:6px; padding:3px 7px; color:var(--muted); }
+  @media(max-width:920px){ .zone{ grid-template-columns:1fr; } .zviz{ position:static; } }
+  /* PALETTE — PINNED right rail, scrolls with its own overflow (stays visible while the page scrolls) */
+  body{ padding-right:304px; }
+  .palette{ position:fixed; top:0; right:0; width:304px; height:100vh; overflow-y:auto; margin:0; padding:12px 12px 40px; background:var(--panel); border:none; border-left:1px solid var(--line); border-radius:0; z-index:40; }
+  .palette h2{ font-size:13px; margin:0 0 3px; } .palette>.zmeta{ font-size:10px; margin-bottom:8px; }
+  .palrow{ display:flex; flex-direction:column; align-items:stretch; gap:5px; margin:9px 0; }
+  .pallbl{ width:auto; flex:none; font:700 10.5px/1.3 var(--mono); color:var(--ink); padding-top:0; } .pallbl span{ display:inline; margin-left:6px; color:var(--muted); font-weight:400; font-size:9.5px; }
+  .palgrid{ display:grid; grid-template-columns:1fr 1fr; gap:6px; } .palcell{ width:auto; }   /* EXACTLY two models per row */
+  .palcell canvas{ width:100%; height:auto; aspect-ratio:236 / 208; background:radial-gradient(circle at 50% 40%,#14203a,#0b1120); border:1px solid var(--line); border-radius:8px; display:block; }
+  .palcell .pl{ font:9.5px/1.3 var(--mono); color:var(--muted); padding:2px 2px 0; text-align:center; }
+  @media(max-width:1080px){ body{ padding-right:0; } .palette{ position:static; width:auto; height:auto; border:1px solid var(--line); border-radius:15px; border-top:3px solid var(--accent); margin:22px 0; } .palrow{ flex-direction:row; align-items:flex-start; gap:14px; } .pallbl{ width:150px; } .palgrid{ display:flex; flex-wrap:wrap; } .palcell{ width:132px; } }
+  /* LEGEND — a portable, FIXED-SIZE tabbed key that RENDERS the actual glyphs/wires/asset thumbnails (words only in parentheses); lifts into the 5C spike as-is */
+  #legend{ position:fixed; left:14px; bottom:14px; width:300px; background:var(--panel); border:1px solid var(--line); border-radius:12px; z-index:45; box-shadow:0 8px 30px #0007; }
+  #legend .lghd{ display:flex; align-items:center; justify-content:space-between; padding:8px 10px 0; }
+  #legend .lghd b{ font:700 11px/1 var(--mono); letter-spacing:.05em; text-transform:uppercase; color:var(--ink); }
+  #legend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; }
+  #legend .lgtabs{ display:flex; flex-wrap:wrap; gap:2px; padding:6px 6px 0; }
+  #legend .lgtab{ font:600 9.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:6px 7px; cursor:pointer; border-radius:6px 6px 0 0; }
+  #legend .lgtab.on{ color:var(--ink); background:#0e1524; }
+  #legend .lgbody{ padding:8px 11px 11px; height:250px; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }   /* FIXED height → the box never resizes on tab switch */
+  #legend.min .lgbody, #legend.min .lgtabs{ display:none; }
+  #legend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #legend .lggrp:first-child{ margin-top:2px; } #legend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
+  #legend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
+  #legend .lgvis{ width:44px; flex:none; display:flex; align-items:center; justify-content:center; }
+  #legend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; } #legend .lglbl i{ color:var(--muted); font-style:normal; }
+  #legend .lgsw{ width:16px; height:16px; border-radius:4px; }
+  #legend .lgln{ width:28px; height:0; }
+  #legend .lgcv{ width:42px; height:36px; display:block; border-radius:5px; background:radial-gradient(circle at 50% 40%,#14203a,#0b1120); }   /* real 3D asset thumbnail (shared palette renderer) */
+  #legend .lgph{ width:34px; height:34px; border-radius:7px; border:1px dashed var(--muted); display:flex; align-items:center; justify-content:center; color:var(--muted); font:700 13px/1 var(--mono); }   /* placeholder — the spike owns this */
+</style></head><body>
+<div id="legend"></div>
+<div class="wrap">
+<header>
+  <h1>Elements Lab</h1>
+  <div class="sub">Design surface for a <b>Gabe universe</b>: an <b>element = a planet</b>, and here we define every
+    asset, dimension, and effect around it — <b>defence · attack · conflict · deployment · satellites</b> (the planet
+    itself), plus <b>inter-entity connectors</b> and <b>clusters</b>. Left = the map variable + what it's assigned to;
+    right = the resulting 3D. The settled selections become the structure the 5C spike implements.</div>
+  <div class="rule">
+    <span class="tag"><span class="dot d-ok"></span><b>in the map now</b></span>
+    <span class="tag"><span class="dot d-warn"></span><b>derivable / info-only</b></span>
+    <span class="tag"><span class="dot d-gap"></span><b>discarded</b> (operator)</span>
+  </div>
+</header>
+
+<section class="palette">
+  <h2 class="znm">Model palette — every asset in one place</h2>
+  <div class="zmeta" style="margin-bottom:6px">Every model in one flat group — <b>you</b> assign the tiers. <b>Ships</b> = Kenney fleet + curated Poly Pizza craft (all selectable for any tier on attack + defence). <b>Satellite</b> = real 3D Starlink (solar reflectors). <b>Sphere</b> = the spike bubble now (planets deprecated per operator).</div>
+  <div class="palrow"><div class="pallbl">SHIPS<span>all ships · assign tiers yourself</span></div><div class="palgrid" id="pal-ships"></div></div>
+  <div class="palrow"><div class="pallbl">SHUTTLES<span>data transport</span></div><div class="palgrid" id="pal-shut"></div></div>
+  <div class="palrow"><div class="pallbl">SATELLITES<span>used-by · 3D</span></div><div class="palgrid" id="pal-sat"></div></div>
+  <div class="palrow"><div class="pallbl">SPHERE<span>entity · bubble</span></div><div class="palgrid" id="pal-plan"></div></div>
+</section>
+
+<!-- ───────────── DEFENSE ───────────── -->
+<section class="zone def">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:var(--green)"></span>DEFENSE · right shell · green team</h2>
+    <div class="zmeta"><b>Tests</b> defend the element — a different ship per test KIND.</div>
+    <h3>Variables — in the map</h3>
+    <table class="feas"><tr><th>variable</th><th>map source</th><th>drives</th><th>status</th></tr>
+      <tr><td class="var">test KIND</td><td class="src">junit <b>corpus</b> (api·web·e2e)</td><td class="src">WHICH ship</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">test count</td><td class="src"><code>test_insight.by_function</code></td><td class="src">ships per kind</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">guard state</td><td class="src"><code>guard_insight</code> unguarded/named/<b>proven</b></td><td class="src">fleet HEALTH — the honest per-element defence index</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">pass / fail</td><td class="src">junit <code>case.state</code></td><td class="src">— api/python only (web+e2e carry no per-case state)</td><td><span class="st warn">◐&nbsp;api-only</span></td></tr>
+      <tr><td class="var">C-ids</td><td class="src"><code>cases[].cid</code></td><td class="src">info panel only</td><td><span class="st info">◑&nbsp;info</span></td></tr>
+      <tr><td class="var">coverage</td><td class="src"><code>load_coverage()</code></td><td class="src">dropped (optional)</td><td><span class="st warn">◐&nbsp;optional</span></td></tr>
+    </table>
+    <h3>Assignment — variable → ship</h3>
+    <div class="assign" id="asg-def"></div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-def"></canvas><div class="cnote" id="note-def"></div></div>
+</section>
+
+<!-- ───────────── ATTACK ───────────── -->
+<section class="zone atk">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:var(--red)"></span>ATTACK · left shell · red team</h2>
+    <div class="zmeta"><b>Problems</b> attack — a different ship per dimension. Only god + unguarded survive (the map carries them).</div>
+    <h3>Variables — in the map</h3>
+    <table class="feas"><tr><th>variable</th><th>map source</th><th>drives</th><th>status</th></tr>
+      <tr><td class="var">god flag</td><td class="src"><code>function_insight</code> god (size: fn≥50 / cls≥15)</td><td class="src">1 heavy raider</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">unguarded</td><td class="src"><code>_a3_guard</code> floor</td><td class="src">N raiders</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">large · hot · complexity · bug</td><td class="src">— subsumed / not tracked</td><td class="src">—</td><td><span class="st gap">○&nbsp;discarded</span></td></tr>
+    </table>
+    <h3>Assignment — variable → ship</h3>
+    <div class="assign" id="asg-atk"></div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-atk"></canvas><div class="cnote" id="note-atk"></div></div>
+</section>
+
+<!-- ───────────── CONFLICT ───────────── -->
+<section class="zone cfl">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:var(--amber)"></span>CONFLICT · top cloud · amber</h2>
+    <div class="zmeta"><b>What's happening</b> — a battle effect, quiet at rest, firing when a change is in flight.</div>
+    <h3>Variables — mapped to the effect</h3>
+    <table class="feas"><tr><th>variable</th><th>map source</th><th>drives</th><th>status</th></tr>
+      <tr><td class="var">blast radius</td><td class="src"><code>_a3_sim</code> blast</td><td class="src">center radius</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">blast size</td><td class="src"><code>_a3_sim</code> blast (# entities hit)</td><td class="src">number of waves</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">failing tests</td><td class="src">junit <code>failed</code> — corpus total</td><td class="src">— no per-element red/green rollup</td><td><span class="st gap">○&nbsp;not per-element</span></td></tr>
+      <tr><td class="var">in-flight</td><td class="src"><code>inflight.json</code></td><td class="src">velocity</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+    </table>
+    <h3>Assignment — variable → effect</h3>
+    <div class="assign" id="asg-cfl"></div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-cfl"></canvas><div class="cnote" id="note-cfl"></div></div>
+</section>
+
+<!-- ───────────── DEPLOYMENT ───────────── -->
+<section class="zone dep">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:var(--teal)"></span>DEPLOYMENT · around the entity</h2>
+    <div class="zmeta">Where the fleets sit relative to the <b>entity component</b> (the sphere): defence right, attack
+      left, conflict on top — the spike's war-zone layout, now with real ships. Tune distance, distribution, movement.</div>
+    <h3>Placement controls</h3>
+    <div class="assign" id="asg-dep"></div>
+    <div class="cnote" style="margin-top:12px">These are the <b>same fleets</b> configured above, deployed in their
+      designated zones. <b>distance</b> = off the surface · <b>distribution</b> = spread within the zone ·
+      <b>movement</b> = patrol drift. This is how it reads on a real planet.</div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-dep" style="height:420px"></canvas></div>
+</section>
+
+<!-- ───────────── SATELLITES ───────────── -->
+<section class="zone" style="border-top:3px solid #f59e0b">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:#f59e0b"></span>SATELLITES · south pole · used-by</h2>
+    <div class="zmeta">The <b>functions that USE this element</b> (fan-in) orbit the <b>south pole</b> — inverted
+      from the conflict cap on top. This <b>replaces the old verts glow</b>.</div>
+    <h3>Variables — in the map</h3>
+    <table class="feas"><tr><th>variable</th><th>map source</th><th>drives</th><th>status</th></tr>
+      <tr><td class="var">used-by / fan-in</td><td class="src"><code>hub.usage</code> · graft callers</td><td class="src">satellite count</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+    </table>
+    <h3>Assignment — variable → satellite</h3>
+    <div class="assign" id="asg-sat"></div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-sat"></canvas><div class="cnote" id="note-sat"></div></div>
+</section>
+
+<!-- ───────────── INTER-ENTITY ───────────── -->
+<section class="zone" style="border-top:3px solid #38bdf8">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:#38bdf8"></span>INTER-ENTITY · trade routes + journeys</h2>
+    <div class="zmeta"><b>Shuttles</b> ferry <b>data between entities</b> (the connectors). A <b>test ship</b> runs a
+      <b>cross-entity journey</b> — integration / e2e tests that travel through many elements.</div>
+    <h3>Variables — in the map</h3>
+    <table class="feas"><tr><th>variable</th><th>map source</th><th>drives</th><th>status</th></tr>
+      <tr><td class="var">cross-entity edge</td><td class="src">c4 <code>cross_edges</code> · FK · bridge</td><td class="src">a shuttle route</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">e2e / integration</td><td class="src"><code>test_insight.exercises</code> (per test FILE)</td><td class="src">journey ship's stops (unordered BAG)</td><td><span class="st warn">◐&nbsp;file-floor</span></td></tr>
+      <tr><td class="var">ordered journey path</td><td class="src">— not modeled (refs lack sibling linkage)</td><td class="src">— the ship's ROUTE order</td><td><span class="st gap">○&nbsp;gap → graft tweak</span></td></tr>
+    </table>
+    <h3>Assignment — variable → model</h3>
+    <div class="assign" id="asg-int"></div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-int" style="height:420px"></canvas><div class="cnote" id="note-int"></div></div>
+</section>
+
+<!-- ───────────── CLUSTERS ───────────── -->
+<section class="zone" style="border-top:3px solid #eab308">
+  <div class="ztext">
+    <h2 class="znm"><span class="swatch" style="background:#eab308"></span>CLUSTERS · groups + hidden mass</h2>
+    <div class="zmeta">A <b>cluster</b> wraps a group of entities — <b>polygon</b> (convex hull) or <b>wrap</b> (fused metaball), inherited from the 5C spike. <b>Stars</b> inside = elements USED by the cluster's components but never surfaced as one — the hidden functions under the rug.</div>
+    <h3>Variables — in the map</h3>
+    <table class="feas"><tr><th>variable</th><th>map source</th><th>drives</th><th>status</th></tr>
+      <tr><td class="var">hidden fns</td><td class="src"><code>derive_functions.fn_slug</code> − drawn <code>fn_nodes</code></td><td class="src"># of stars</td><td><span class="st ok">●&nbsp;computable</span></td></tr>
+      <tr><td class="var">callee mass</td><td class="src"><code>fn_behind</code> (levels.json)</td><td class="src">star size</td><td><span class="st ok">●&nbsp;pre-emitted</span></td></tr>
+      <tr><td class="var">unclaimed tables</td><td class="src">c4 <code>__unclaimed__</code></td><td class="src">alt star metric</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+      <tr><td class="var">untested surface</td><td class="src"><code>untested_surface</code></td><td class="src">alt star metric</td><td><span class="st ok">●&nbsp;in map</span></td></tr>
+    </table>
+    <h3>Assignment — shape + stars</h3>
+    <div class="assign" id="asg-clu"></div>
+  </div>
+  <div class="zviz"><canvas class="cv" id="cv-clu" style="height:420px"></canvas><div class="cnote" id="note-clu"></div></div>
+</section>
+
+<footer>
+  <h3>Impact on <span class="pill">element-components.html</span> (once you pick)</h3>
+  <ul>
+    <li>Each kind's <b>Tests</b> panel shows its assigned <b>defence ship</b> + health; C-ids stay in the panel.</li>
+    <li>A <b>Health</b> row shows the <b>attack ships</b> (god raider + unguarded swarm).</li>
+    <li>The <b>in-flight</b> badge = the chosen conflict effect, radius/waves/velocity from blast/failing/in-flight.</li>
+    <li>Deployment (distance/distribution/movement) becomes the spike <code>warZones()</code> placement law — authored once, reused.</li>
+  </ul>
+  <h3>Decision owed</h3>
+  <ul><li>Lock the <b>ship→kind/dimension</b> picks + the <b>conflict effect</b> + the <b>deployment</b> feel — then I wire it into the spike + element-components.</li></ul>
+  <h3>Field-review verdict + the one graft tweak</h3>
+  <ul>
+    <li><b>Honest as-is:</b> satellites = <code>det.usage</code> fan-in count (fk_in for models) · attack = god + unguarded (both standing per-element) · conflict radius←blast · velocity←in-flight · FK/bridge routes.</li>
+    <li><b>Corrected here:</b> defence HEALTH now = <code>guard_insight</code> (unguarded/named/<b>proven</b>), not raw pass/fail (api-only, no per-element rollup) · conflict waves ← <b>blast size</b> (per-element failing has no rollup) · the journey ship rides the test-file <code>exercises</code> bag (an <b>ordered</b> path is a gap).</li>
+    <li><b>One graft tweak</b> (the oft-run <code>_a3_graft.py</code>, ~1–5 lines): <code>res["direct"]=len(adj.get(start))</code> in <code>_behind_of</code> → per-endpoint/fn direct-callee count (lands straight in c4-graph.json); + a <code>callers</code> in-degree pass in <code>derive_node_facts</code> → the honest per-node <b>used-by</b> count that the satellites should ride (today's <code>function_insight.usage</code> undercounts). Ships only after a dry-run + arch-graph battery.</li>
+  </ul>
+  <div style="margin-top:12px; font-size:11px; color:var(--muted)">Assets via <b>Poly Pizza</b> — ships / shuttles / planets are <b>CC0</b> (Quaternius, Kenney); telecom satellites CC-BY (<b>Liz Reddington</b>, <b>Poly by Google</b>).</div>
+</footer>
+</div>
+
+<script src="./3d-bundle.js"></script>
+<script src="./chip-assets.js"></script>
+<script>
+var T=window.THREE, SHIP_NAMES=window.SHIP_NAMES||[];
+function Viewer(id, camZ, tilt0, noSpin){
+  var canvas=document.getElementById(id), r=new T.WebGLRenderer({canvas:canvas, antialias:true, alpha:true});
+  r.setPixelRatio(Math.min(2, window.devicePixelRatio||1));
+  var scene=new T.Scene(), cam=new T.PerspectiveCamera(45,1,0.1,1000); cam.position.set(0,7,camZ||36);
+  scene.add(new T.AmbientLight(0xffffff,0.62));
+  var d1=new T.DirectionalLight(0xffffff,0.95); d1.position.set(7,11,9); scene.add(d1);
+  var d2=new T.DirectionalLight(0x88aaff,0.35); d2.position.set(-8,-4,-7); scene.add(d2);
+  var chip=null, spin=0.5, drag=false, lx=0, ly=0, tilt=(tilt0==null?0.1:tilt0), auto=!noSpin, t0=Date.now();
+  function set(g){ if(chip) scene.remove(chip); chip=g; scene.add(g); }
+  canvas.addEventListener('pointerdown',function(e){ drag=true; lx=e.clientX; ly=e.clientY; auto=false; canvas.setPointerCapture(e.pointerId); });
+  canvas.addEventListener('pointerup',function(){ drag=false; });
+  canvas.addEventListener('pointermove',function(e){ if(drag){ spin+=(e.clientX-lx)*0.01; tilt=Math.max(-1,Math.min(1,tilt+(e.clientY-ly)*0.006)); lx=e.clientX; ly=e.clientY; } });
+  function loop(){ requestAnimationFrame(loop);
+    var w=canvas.clientWidth, h=canvas.clientHeight; if(canvas.width!==w||canvas.height!==h){ r.setSize(w,h,false); cam.aspect=w/h; cam.updateProjectionMatrix(); }
+    if(auto) spin+=0.005;
+    if(chip){ chip.rotation.y=spin; chip.rotation.x=tilt; if(chip.userData.tick) chip.userData.tick((Date.now()-t0)/1000); }
+    r.render(scene,cam); }
+  requestAnimationFrame(loop); return {set:set};
+}
+function mat(hex,emi){ return new T.MeshStandardMaterial({color:hex, emissive:hex, emissiveIntensity:emi==null?0.3:emi, metalness:0.2, roughness:0.4, transparent:true, opacity:0.95}); }
+function fib(i,n){ var ph=Math.acos(1-2*(i+0.5)/n), th=Math.PI*(1+Math.sqrt(5))*i; return new T.Vector3(Math.sin(ph)*Math.cos(th),Math.cos(ph),Math.sin(ph)*Math.sin(th)); }
+var glowTex=(function(){ var cv=document.createElement('canvas'); cv.width=cv.height=64; var c=cv.getContext('2d'); var g=c.createRadialGradient(32,32,0,32,32,32); g.addColorStop(0,'rgba(255,255,255,.9)'); g.addColorStop(1,'rgba(255,255,255,0)'); c.fillStyle=g; c.fillRect(0,0,64,64); return new T.CanvasTexture(cv); })();
+
+/* ── ships ── */
+var SHIPS={}, SATS={}, SHUTTLES={}, SHIPSREADY=false, SATSREADY=false;
+function normShip(gltf){ var raw=gltf.scene; raw.rotation.y=Math.PI; raw.updateWorldMatrix(true,true);   // orient FIRST, then centre on the POST-rotation bbox — else −c cancels the pre-rotation centre and the geometry (and any scaled halo) drifts off-origin
+  var box=new T.Box3().setFromObject(raw), c=box.getCenter(new T.Vector3()), sz=box.getSize(new T.Vector3()), maxD=Math.max(sz.x,sz.y,sz.z);
+  if(maxD>150){   // pathological bbox (a stray far vertex) → refit on the densest mesh cluster so off-origin models don't shrink to a speck
+    var meshes=[];
+    raw.traverse(function(o){ if(o.isMesh&&o.geometry){ o.geometry.computeBoundingBox(); var bb=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); meshes.push({bb:bb,c:bb.getCenter(new T.Vector3()),d:bb.getSize(new T.Vector3()).length(),vc:o.geometry.attributes.position?o.geometry.attributes.position.count:0}); } });
+    if(meshes.length){ meshes.sort(function(a,b){return b.vc-a.vc;}); var prim=meshes[0], nb=prim.bb.clone(); meshes.forEach(function(m){ if(m.c.distanceTo(prim.c)<prim.d*3) nb.union(m.bb); }); box=nb; c=box.getCenter(new T.Vector3()); sz=box.getSize(new T.Vector3()); maxD=Math.max(sz.x,sz.y,sz.z); } }
+  raw.position.set(-c.x,-c.y,-c.z); var g=new T.Group(); g.add(raw); g.userData.fit=7/Math.max(maxD,0.001);
+  var lv=new T.Vector3(0,0,1); if(sz.x>=sz.y&&sz.x>=sz.z) lv.set(1,0,0); else if(sz.z>=sz.x&&sz.z>=sz.y) lv.set(0,0,1); else lv.set(0,1,0);   // the model's LONGEST axis (nose-tail for most craft)
+  g.userData.long=lv;
+  raw.updateWorldMatrix(true,true);   // NOSE = the NARROWER end along the long axis (front is pointed, tail is wide) → every mover leads nose-first regardless of which way the source model faced (fixes the reversed-shuttle bug for ANY craft)
+  var tmin=Infinity,tmax=-Infinity,S=[];
+  raw.traverse(function(o){ if(o.isMesh&&o.geometry&&o.geometry.attributes.position){ var pa=o.geometry.attributes.position, step=Math.max(1,Math.floor(pa.count/160)); for(var i=0;i<pa.count;i+=step){ var v=new T.Vector3().fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld); S.push(v); var t=v.dot(lv); if(t<tmin)tmin=t; if(t>tmax)tmax=t; } } });
+  var span=(tmax-tmin)||1, loP=0,loN=0,hiP=0,hiN=0;
+  S.forEach(function(v){ var t=(v.dot(lv)-tmin)/span, perp=v.clone().addScaledVector(lv,-v.dot(lv)).length(); if(t<0.28){loP+=perp;loN++;} else if(t>0.72){hiP+=perp;hiN++;} });
+  g.userData.nose=lv.clone().multiplyScalar((hiN?hiP/hiN:1)<=(loN?loP/loN:1)?1:-1); return g; }
+function loadShips(){ var jobs=[];
+  (window.SHIP_NAMES||[]).forEach(function(k){ jobs.push([window.SHIP_GLBS[k],SHIPS,k]); });
+  (window.SAT_NAMES||[]).forEach(function(k){ jobs.push([window.SAT_GLBS[k],SATS,k]); });
+  (window.SHUTTLE_NAMES||[]).forEach(function(k){ jobs.push([window.SHUTTLE_GLBS[k],SHUTTLES,k]); });
+  var left=jobs.length; if(!left||!window.GLTFLoader){ console.error('no assets/loader'); return; }
+  jobs.forEach(function(j){ new window.GLTFLoader().load(j[0], function(gltf){ j[1][j[2]]=normShip(gltf);
+    if(--left===0){ SHIPSREADY=true; SATSREADY=true; rebuildAll(); window.__shipsReady=true; } }, undefined, function(e){ console.error('asset failed',j[2],e); }); }); }
+function asset(map, key, tintHex){ var base=map[key]; if(!base) return loadingBox(tintHex||0x9aa6be);
+  var s=base.clone(true); if(tintHex!=null){ var col=new T.Color(tintHex); s.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.emissive=col; o.material.emissiveIntensity=0.18; } }); }
+  s.scale.setScalar(base.userData.fit); return s; }
+function craftBase(key){ return SHIPS[key]||SHUTTLES[key]; }   // ONE roster — ships + shuttles are both selectable everywhere a chip is picked
+var BUB=0xaab4c6;             // spike bubble neutral (index.html BUB="#aab4c6") — the one entity sphere (planet models deprecated + trimmed)
+function entitySphere(R, colHex){ var g=new T.Group(), C=(colHex==null?BUB:colHex);   // the spike bubble — ghost/film translucency + wireframe lattice, tintable per entity
+  g.add(new T.Mesh(new T.SphereGeometry(R,32,24), new T.MeshBasicMaterial({color:C, transparent:true, opacity:0.05, side:T.DoubleSide})));
+  g.add(new T.Mesh(new T.SphereGeometry(R,18,12), new T.MeshBasicMaterial({color:C, transparent:true, opacity:0.13, wireframe:true}))); return g; }
+function orbitPt(R, yFrac, ang){ return new T.Vector3(Math.cos(ang)*R, R*yFrac, Math.sin(ang)*R); }
+/* team identity KEEPS the original model colours — 3 selectable modes, NO ground disc (operator):
+   glow = team-colour emissive + soft aura · paint = a few parts painted team colour · outline = team-colour inverted-hull silhouette. */
+var COLOR_MODE='aura';   // aura = the halo the operator called perfect (default) · glow = NEW centre-light · outline = edges · (paint dropped)
+function teamShip(key, teamHex, health){ var base=craftBase(key); if(!base) return loadingBox(teamHex);
+  var fit=base.userData.fit, team=new T.Color(teamHex), wrap=new T.Group();
+  var s=base.clone(true); s.scale.setScalar(fit); wrap.add(s);
+  var meshes=[]; s.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); meshes.push(o); } });
+  if(COLOR_MODE==='glow'){   // GLOW — a glowing LIGHT emanating from the CENTRE of the asset (team colour); layered additive blooms + a lit interior
+    var b1=new T.Sprite(new T.SpriteMaterial({map:glowTex, color:teamHex, transparent:true, opacity:0.55+0.2*health, depthWrite:false, blending:T.AdditiveBlending})); b1.scale.set(11,11,1); wrap.add(b1);
+    var b2=new T.Sprite(new T.SpriteMaterial({map:glowTex, color:teamHex, transparent:true, opacity:0.9, depthWrite:false, blending:T.AdditiveBlending})); b2.scale.set(4.5,4.5,1); wrap.add(b2);
+    meshes.forEach(function(o){ o.material.emissive=team; o.material.emissiveIntensity=0.22+0.25*health; });   // interior lit by the core
+  } else if(COLOR_MODE==='aura'){   // AURA — the kept halo: shape-matched additive rim, ORIGINAL colours untouched
+    var halo=base.clone(true); halo.scale.setScalar(fit*1.16);
+    halo.traverse(function(o){ if(o.isMesh) o.material=new T.MeshBasicMaterial({color:teamHex, transparent:true, opacity:0.16+0.16*health, blending:T.AdditiveBlending, depthWrite:false, side:T.BackSide}); }); wrap.add(halo);
+  } else {   // OUTLINE — crisp team-colour EDGE lines on the original model
+    meshes.forEach(function(o){ var ls=new T.LineSegments(new T.EdgesGeometry(o.geometry,22), new T.LineBasicMaterial({color:teamHex, transparent:true, opacity:0.95})); o.add(ls); o.material.emissive=team; o.material.emissiveIntensity=0.06; });
+  }
+  if(health<1){ meshes.forEach(function(o){ o.material.transparent=true; o.material.opacity=0.5+0.5*health; }); }
+  return wrap; }
+function loadingBox(hex){ var g=new T.Group(); g.add(new T.Mesh(new T.BoxGeometry(4,4,4), new T.MeshBasicMaterial({color:hex,wireframe:true,transparent:true,opacity:0.35}))); return g; }
+
+/* ── state (variable → model/effect assignment) ── */
+var DEF_KINDS=['unit','integ','e2e'];
+/* 3×3 assignment: EACH dimension gets its OWN T1/T2/T3 model (any ship), + an ACTIVE tier that deploys. */
+/* DEFAULTS = the operator's SETTLED configs (baked so they survive reload); used assets pre-locked in LOCKED below. */
+var DEF_MODELS={ unit:['bomber','cat','jet'], integ:['speederC','speederD','speederB'], e2e:['miner','cargoA','cargoB'] };
+var DEF_ACTIVE={ unit:3, integ:3, e2e:3 };
+var DEFC={unit:true,integ:true,e2e:true,count:1,pass:1};
+var ATK_MODELS={ god:['dart','fighter','cruiser'], ung:['tie'] };
+var ATK_ACTIVE={ god:1, ung:1 };
+var ATKC={god:true,ung:4};
+function defModel(k){ return DEF_MODELS[k][(DEF_ACTIVE[k]||1)-1]; }
+function atkModel(k){ if(k==='ung') return ATK_MODELS.ung[0]; return ATK_MODELS[k][(ATK_ACTIVE[k]||1)-1]; }   // unguarded has NO tiers — one model shown ×N (N = the unguarded floor count from guard_insight)
+var CFLC={rad:1.2,wav:2,vel:0.35};   // radius ← blast radius · waves ← blast size (the SHOCK scales with both); flak ignores these (binary)
+/* LEFT = mappable field · RIGHT = colour + effect + FLAG REASON. blast size + blast radius BOTH → shock (deduped to one). failing tests → flak (binary). god/unguarded dropped (shown in attack). */
+var CFL_DIMS=['blast size','blast radius','failing tests','unproven flow','untested element','unmatched fetch','in-flight','guard state'];
+/* the 3 extra flak candidates are ALREADY-COMPUTED per-element binary flags (junit case fail · unproven flow · untested element · web-bridge unmatched fetch) — default OFF, map to flak as wanted. */
+var CFL_MAP={ 'blast size':{effect:'none',color:0xf59e0b,flag:'many entities hit — wide blast, high coupling'}, 'blast radius':{effect:'shock',color:0xf59e0b,flag:'ripple reaches far — deep dependency chain'}, 'failing tests':{effect:'flak',color:0xef4444,flag:'junit failures during the change — a guard broke'}, 'unproven flow':{effect:'none',color:0xf97316,flag:'a golden flow no test claims (coverage.unproven)'}, 'untested element':{effect:'flak',color:0xef4444,flag:'endpoint/model/fn with no test receipt (untested_surface)'}, 'unmatched fetch':{effect:'none',color:0xf43f5e,flag:'a frontend fetch hitting no declared endpoint (c4 stats.web.unmatched)'}, 'in-flight':{effect:'none',color:0xa855f7,flag:'a change in flight — uncommitted / unmerged risk'}, 'guard state':{effect:'none',color:0x22c55e,flag:'unguarded touched — no test cover on the change'} };
+var DEPC={adDist:3.5, cflDist:1.5, satDist:9.5, spread:1.4, move:0.45, adY:0};   // operator-dialed deployment defaults · adY = attack+defence vertical offset
+
+function defList(){ var out=[]; DEF_KINDS.forEach(function(k){ if(DEFC[k]) for(var i=0;i<DEFC.count;i++) out.push({ship:defModel(k), kind:k, rot:ROT.def[k][DEF_ACTIVE[k]]}); }); return out; }
+function atkList(){ var out=[]; if(ATKC.god) out.push({ship:atkModel('god'), rot:ROT.atk.god[ATK_ACTIVE.god]}); for(var i=0;i<ATKC.ung;i++) out.push({ship:atkModel('ung'), rot:ROT.atk.ung}); return out; }
+
+function defBuild(){ if(!SHIPSREADY) return loadingBox(0x22c55e);   // INSPECTION: planet LEFT · assets RIGHT facing it · static
+  var g=new T.Group(), present=DEF_KINDS.filter(function(k){return DEFC[k];});
+  var pl=entitySphere(6); pl.position.set(-13,0,0); g.add(pl);
+  var items=[]; present.forEach(function(k){ for(var i=0;i<DEFC.count;i++) items.push({key:defModel(k), kind:k, tier:DEF_ACTIVE[k]}); });
+  if(!items.length){ g.add(loadingBox(0x22c55e)); return g; }
+  var rows=Math.min(items.length,3), DL=new T.Vector3(-1,0,0);
+  items.forEach(function(it,i){ var s=teamShip(it.key,0x22c55e,DEFC.pass); s.scale.multiplyScalar(0.62);
+    s.position.set(6+Math.floor(i/3)*8, (i%3-(rows-1)/2)*7, 0); orientTo(s, DL, craftNose(it.key));
+    applyRot(s, DL, ROT.def[it.kind] && ROT.def[it.kind][it.tier]); g.add(s); });   // face the planet (−X) + operator rotation override
+  return g; }
+function atkBuild(){ if(!SHIPSREADY) return loadingBox(0xef4444);   // INSPECTION: planet RIGHT · assets LEFT facing it · static
+  var g=new T.Group();
+  var pl=entitySphere(6); pl.position.set(13,0,0); g.add(pl);
+  var items=[]; if(ATKC.god) items.push({key:atkModel('god'), kind:'god', tier:ATK_ACTIVE.god}); for(var i=0;i<ATKC.ung;i++) items.push({key:atkModel('ung'), kind:'ung', tier:null});
+  if(!items.length){ g.add(loadingBox(0xef4444)); return g; }
+  var rows=Math.min(items.length,3), AL=new T.Vector3(1,0,0);
+  items.forEach(function(it,i){ var s=teamShip(it.key,0xef4444,1); s.scale.multiplyScalar(it.kind==='god'?0.62:0.44);
+    s.position.set(-6-Math.floor(i/3)*8, (i%3-(rows-1)/2)*7, 0); orientTo(s, AL, craftNose(it.key));
+    applyRot(s, AL, it.kind==='god'? (ROT.atk.god && ROT.atk.god[it.tier]) : ROT.atk.ung); g.add(s); });   // face the planet (+X) + operator rotation override
+  if(!ATKC.god&&!ATKC.ung) g.add(loadingBox(0xef4444)); return g; }
+function cflShock(C){ var g=new T.Group(), rings=[];   // NO centre sphere (operator)
+  for(var i=0;i<CFLC.wav;i++){ var tor=new T.Mesh(new T.TorusGeometry(CFLC.rad,0.22,8,44), new T.MeshBasicMaterial({color:C,transparent:true,opacity:0.85})); tor.rotation.x=Math.PI/2; g.add(tor); rings.push({m:tor,ph:i/CFLC.wav}); }
+  g.userData.tick=function(t){ rings.forEach(function(rr){ var p=((t*CFLC.vel+rr.ph)%1), s=1+p*5; rr.m.scale.set(s,s,1); rr.m.material.opacity=0.85*(1-p); }); }; return g; }
+function cflFlak(C){ var g=new T.Group(), N=18, parts=[];   // BINARY — fixed burst (failing tests happen or not); size does NOT scale with the blast sliders. NO centre sphere.
+  for(var i=0;i<N;i++){ var dir=fib(i,N), m=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:C,transparent:true,depthWrite:false})); m.scale.set(2,2,1); g.add(m); parts.push({m:m,dir:dir,ph:i/N}); }
+  g.userData.tick=function(t){ parts.forEach(function(pp){ var p=((t*0.7+pp.ph)%1), d=1.5+p*6; pp.m.position.copy(pp.dir.clone().multiplyScalar(d)); pp.m.material.opacity=(1-p)*0.95; var sc=2.4*(1-p*0.55); pp.m.scale.set(sc,sc,1); }); }; return g; }
+function cflBuild(){ var g=new T.Group(), ticks=[], seen={};   // each EFFECT once (blast size + blast radius both → one shock); first mapped field's colour wins
+  CFL_DIMS.forEach(function(dim){ var m=CFL_MAP[dim]; if(!m||m.effect==='none'||seen[m.effect]) return; seen[m.effect]=1;
+    var fx=(m.effect==='flak')? cflFlak(m.color) : cflShock(m.color); g.add(fx); if(fx.userData.tick) ticks.push(fx.userData.tick); });
+  g.userData.tick=function(t){ for(var i=0;i<ticks.length;i++) ticks[i](t); }; return g; }
+
+/* ── DEPLOYMENT: fleets around the entity sphere ── */
+function placeFleet(list, dir, dist, spread, teamHex, yOff){ var out=[], center=dir.clone().multiplyScalar(dist); center.y+=(yOff||0);
+  var up=new T.Vector3(0,1,0), side=new T.Vector3().crossVectors(dir,up); if(side.length()<0.1) side.set(1,0,0); side.normalize();
+  var up2=new T.Vector3().crossVectors(side,dir).normalize(), n=list.length;
+  list.forEach(function(it,i){ var col=i%3, row=Math.floor(i/3), rows=Math.ceil(n/3);
+    var off=side.clone().multiplyScalar((col-1)*4.5*spread).add(up2.clone().multiplyScalar((row-(rows-1)/2)*4.5*spread));
+    var pos=center.clone().add(off); var s=teamShip(it.ship, teamHex, 1); s.scale.multiplyScalar(0.36); s.position.copy(pos);
+    orientTo(s, pos.clone().negate(), craftNose(it.ship));   // nose → planet centre
+    applyRot(s, pos.clone().negate(), it.rot);               // + the SAME per-slot rotation correction from the def/atk views
+    out.push({obj:s, base:pos.clone(), ph:i}); });
+  return out; }
+function depBuild(){ if(!SHIPSREADY) return loadingBox(0x14b8a6);
+  var g=new T.Group(), R=8; g.add(entitySphere(R));
+  var D=R+DEPC.adDist, sp=DEPC.spread;   // attack + defence share ONE distance (equally distant from the planet)
+  var def=placeFleet(defList(), new T.Vector3(1,0,0), D, sp, 0x22c55e, DEPC.adY);   // defence right
+  var atk=placeFleet(atkList(), new T.Vector3(-1,0,0), D, sp, 0xef4444, DEPC.adY); // attack left
+  var all=def.concat(atk); all.forEach(function(s){ g.add(s.obj); });
+  var eff=cflBuild(); eff.position.set(0, R+DEPC.cflDist, 0); eff.scale.setScalar(0.85); g.add(eff);   // conflict top — own distance
+  var sats=[], SN=SATC.count, SR=R+DEPC.satDist; satRingGuides(g, SR, R);                 // satellites orbit the SOUTH pole — own distance
+  for(var si=0; si<SN; si++){ var st=makeSat(); g.add(st); sats.push({obj:st, ph:si/SN, ri:si%SATC.rings}); }
+  g.userData.tick=function(t){ var m=DEPC.move;
+    all.forEach(function(s){ var b=s.base; s.obj.position.set(b.x+Math.sin(t*(0.5+m)+s.ph)*m*2.2, b.y+Math.cos(t*(0.6+m)+s.ph*1.3)*m*2.2, b.z+Math.sin(t*0.4+s.ph)*m*2.2); });
+    sats.forEach(function(st){ satPose(st.obj, st.ph, t, SR, R, st.ri); });
+    if(eff.userData.tick) eff.userData.tick(t); };
+  return g; }
+/* ── SATELLITES: used-by, as a real 3D Starlink-style satellite (body + solar-panel reflectors, K7kE2DCBY8 · CC-BY)
+   orbiting the SOUTH pole on THREE invisible rings. model · count(=used-by) · size · radius · tilt · speed. ── */
+var SATC={model:'starlink', count:10, rad:2.5, speed:0.2, size:0.12, tilt:0.25, sig:0.45, rings:3, ringOp:0};   // operator default config · ringOp:0 = no visible orbit rings · sig=signal-wave size
+var SAT_RINGS=[{ry:0,tl:1},{ry:2.094,tl:1},{ry:4.189,tl:1}];   // 3 invisible rings, 120° apart around Y
+function makeSat(){ var g=new T.Group();
+  var body=asset(SATS,SATC.model,null); body.scale.multiplyScalar(SATC.size*1.2); g.add(body);   // real 3D Starlink (loadingBox placeholder while the GLB loads)
+  var waves=[]; for(var w=0;w<2;w++){ var ring=new T.Mesh(new T.TorusGeometry(1,0.04,6,18), new T.MeshBasicMaterial({color:0x9ad8ff, transparent:true, opacity:0.45, depthWrite:false})); g.add(ring); waves.push({m:ring, ph:w*0.5}); }
+  g.userData.waves=waves; return g; }
+function satPose(obj, ph, t, SR, R, ri){ var ring=SAT_RINGS[ri%SAT_RINGS.length], a=ph*6.283 + t*SATC.speed;
+  var p=new T.Vector3(Math.cos(a)*SR, 0, Math.sin(a)*SR);
+  p.applyAxisAngle(new T.Vector3(1,0,0), ring.tl*SATC.tilt); p.applyAxisAngle(new T.Vector3(0,1,0), ring.ry); p.y -= R*0.5;
+  obj.position.copy(p);
+  obj.userData.waves.forEach(function(wv){ var q=((t*1.3+wv.ph)%1), sc=(0.25+q*1.5)*SATC.sig; wv.m.scale.set(sc,sc,sc); wv.m.material.opacity=0.5*(1-q); }); }   // signal size ← SATC.sig (was a fixed too-wide radius)
+function satRingGuides(g, SR, R){ for(var i=0;i<SATC.rings;i++){ var ring=SAT_RINGS[i]; if(SATC.ringOp<=0) continue; var tor=new T.Mesh(new T.TorusGeometry(SR,0.05,6,48), new T.MeshBasicMaterial({color:0x9ad8ff, transparent:true, opacity:SATC.ringOp, depthWrite:false}));
+    tor.rotation.x=Math.PI/2; var grp=new T.Group(); grp.add(tor); grp.rotateX(ring.tl*SATC.tilt); grp.rotateY(ring.ry); grp.position.y=-R*0.5; g.add(grp); } }   // draw only SATC.rings rings, at SATC.ringOp opacity
+function satBuild(){ var g=new T.Group(), R=7; g.add(entitySphere(R)); var sats=[], SR=R+SATC.rad; satRingGuides(g, SR, R);
+  for(var i=0;i<SATC.count;i++){ var s=makeSat(); g.add(s); sats.push({obj:s, ph:i/SATC.count, ri:i%SATC.rings}); }
+  g.userData.tick=function(t){ sats.forEach(function(st){ satPose(st.obj, st.ph, t, SR, R, st.ri); }); };
+  return g; }
+/* ── INTER-ENTITY: shuttles = data trade routes between entities; a test ship = a cross-entity (integration/e2e) journey ── */
+var INTC={shuttle:'hauler', testship:'clipper', speed:0.3, nshut:1, size:0.35, shuttleFlip:true, testFlip:false};   // settled config · shuttleFlip:true = hauler nose corrected (auto-detect fails for wide-front cargo craft)
+var ENT_COLORS=[0x38bdf8, 0xf59e0b, 0xa855f7];   // per-entity colours → inter-entity effects VARY by the entity a mover serves
+/* orient a mover so its NOSE leads along the route direction (setFromUnitVectors = shortest-arc; nose = normShip's
+   detected narrow end, so ANY craft leads forward — no more reversed shuttles). */
+function orientAlong(obj, dir, noseVec){ var d=dir.clone(); if(d.length()<1e-4) return; d.normalize(); obj.quaternion.setFromUnitVectors(noseVec, d); }
+/* orient a FLEET ship: nose → fwd, and roll so its up stays world-up (fixes models with a baked-in roll, e.g. the TIE reading 45° tilted under a plain rotation.y). */
+function orientTo(obj, fwd, nose){ fwd=fwd.clone(); if(fwd.length()<1e-4) return; fwd.normalize();
+  var n=(nose||new T.Vector3(0,0,1)).clone().normalize(), q1=new T.Quaternion().setFromUnitVectors(n, fwd);
+  var mUp=new T.Vector3(0,1,0).applyQuaternion(q1); mUp.addScaledVector(fwd,-mUp.dot(fwd));
+  var dUp=new T.Vector3(0,1,0); dUp.addScaledVector(fwd,-dUp.dot(fwd));
+  if(mUp.length()<1e-4||dUp.length()<1e-4){ obj.quaternion.copy(q1); return; }
+  obj.quaternion.copy(new T.Quaternion().setFromUnitVectors(mUp.normalize(), dUp.normalize()).multiply(q1)); }
+var NOSE_FLIP=new Set(['hauler']);   // models whose auto-detected nose points BACKWARDS — corrected everywhere they orient (empirically: only hauler; cargoB/miner/cruiser detect front-forward correctly)
+function craftNose(key){ var b=craftBase(key); var n=((b&&b.userData.nose)||new T.Vector3(0,0,1)).clone(); return NOSE_FLIP.has(key)? n.negate() : n; }
+/* per-slot manual rotation, dialed by the operator via 3-axis sliders — applied on top of the planet-facing pose.
+   x/y/z = degrees around world X (pitch) / Y (yaw) / Z (screen-spin) · scale = size mult. */
+var ROT={ def:{ unit:{1:{y:-90},2:{y:-180},3:{y:90}}, integ:{1:{y:-90},2:{y:90},3:{}}, e2e:{1:{y:-180},2:{},3:{}} },
+          atk:{ god:{1:{y:-90,x:-90,z:0},2:{},3:{}}, ung:{scale:0.35,x:90,y:0,z:90} } };   // operator-dialed defaults · ung scale 0.7→0.35 (50% smaller)
+function applyRot(obj, fwd, r){ if(!r) return;   // LOCAL/intrinsic axes, applied Y→X→Z: yaw to face the planet FIRST, THEN X pitches / Z rolls the already-facing model (so X/Z stay usable after a yaw)
+  if(r.y) obj.rotateY(r.y*Math.PI/180);
+  if(r.x) obj.rotateX(r.x*Math.PI/180);
+  if(r.z) obj.rotateZ(r.z*Math.PI/180);
+  if(r.scale) obj.scale.multiplyScalar(r.scale); }
+/* CONNECTORS = the relationship KIND between two entities (already computed by the center): fk (data coupling, trusted,
+   solid) · calls (graft cross-call, inferred, dashed) · imports (graft, inferred, dotted). style by kind · opacity by
+   trust · a per-route count label. Sample counts stand in for the live c4-graph L1 multi-kind edge weights. */
+var CONN={ fk:{on:true,color:0x5893ad,style:'dashed',density:2.7,trust:0.9,off:0}, bridge:{on:true,color:0xe8f443,style:'dotted',density:1.7,trust:0.55,off:4.8}, calls:{on:true,color:0xf59e0b,style:'dashed',density:2,trust:0.5,off:2.4}, imports:{on:true,color:0xa855f7,style:'dotted',density:2.2,trust:0.42,off:-2.4} };   // operator-dialed connector config
+var CONN_KINDS=['fk','bridge','calls','imports'];   // bridge = frontend fetch → API endpoint (web→backend), heuristic
+var CONN_PATTERNS=['solid','dashed','dotted','sparse'];
+var ROUTE_KINDS=[ {fk:3,calls:5,imports:2,bridge:1}, {fk:1,calls:8,imports:4,bridge:3}, {fk:5,calls:2,imports:1,bridge:0} ];   // per-route {kind:count} — stands in for L1 edge weights
+function textSprite(txt, col){ var cv=document.createElement('canvas'); cv.width=128; cv.height=48; var c=cv.getContext('2d');
+  c.font='bold 30px ui-monospace,monospace'; c.fillStyle=col||'#cde4ff'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(txt,64,24);
+  return new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false})); }
+function connectorLines(g, a, b, ri, R){ var dir=b.clone().sub(a); dir.multiplyScalar(1/(dir.length()||1));
+  var perp=new T.Vector3().crossVectors(dir,new T.Vector3(0,1,0)); if(perp.length()<0.01)perp.set(1,0,0); perp.normalize();
+  var A=a.clone().addScaledVector(dir,R), B=b.clone().addScaledVector(dir,-R);   // reach the sphere SURFACE, not the centre
+  CONN_KINDS.forEach(function(k){ var cfg=CONN[k]; if(!cfg.on) return; var count=(ROUTE_KINDS[ri]||{})[k]||0; if(!count) return;
+    var off=perp.clone().multiplyScalar(cfg.off), pa=A.clone().add(off), pb=B.clone().add(off);
+    var geo=new T.BufferGeometry().setFromPoints([pa,pb]), mat;
+    if(cfg.style==='solid') mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:cfg.trust});
+    else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:cfg.trust, dashSize:base[0]/dn, gapSize:base[1]/dn}); }   // density: higher = tighter pattern
+    var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.computeLineDistances(); g.add(line);
+    var lbl=textSprite(String(count), '#'+new T.Color(cfg.color).getHexString()); lbl.scale.set(4,1.5,1); lbl.position.copy(pa.clone().add(pb).multiplyScalar(0.5)).add(off.clone().multiplyScalar(0.6)); lbl.position.y+=1.4; g.add(lbl); }); }
+function interBuild(){ if(!SATSREADY) return loadingBox(0x38bdf8);
+  var g=new T.Group(), P=[new T.Vector3(-22,0,7), new T.Vector3(22,0,7), new T.Vector3(0,0,-24)];
+  P.forEach(function(p,i){ var e=entitySphere(5, ENT_COLORS[i]); e.position.copy(p); g.add(e); });   // each entity its own colour
+  var routes=[[0,1],[1,2],[2,0]];
+  routes.forEach(function(r,ri){ connectorLines(g, P[r[0]], P[r[1]], ri, 5); });   // TYPED connectors reaching the sphere edge (R=5)
+  var shBase=craftBase(INTC.shuttle), shNose=((shBase&&shBase.userData.nose)||new T.Vector3(0,0,1)).clone(); if(INTC.shuttleFlip) shNose.negate();
+  var tsBase=craftBase(INTC.testship), tsNose=((tsBase&&tsBase.userData.nose)||new T.Vector3(0,0,1)).clone(); if(INTC.testFlip) tsNose.negate();
+  var movers=[];
+  routes.forEach(function(r){ for(var i=0;i<INTC.nshut;i++){ var s=teamShip(INTC.shuttle, ENT_COLORS[r[1]], 1); s.scale.multiplyScalar(INTC.size); g.add(s); movers.push({obj:s, a:P[r[0]], b:P[r[1]], ph:i/INTC.nshut}); } });   // ORIGINAL colours + the current effect in the ENTITY colour
+  var test=teamShip(INTC.testship, 0x22c55e, 1); test.scale.multiplyScalar(0.55); g.add(test);
+  g.userData.tick=function(t){
+    movers.forEach(function(m){ var p=((t*INTC.speed+m.ph)%2), u=p<1?p:2-p; m.obj.position.lerpVectors(m.a,m.b,u);
+      orientAlong(m.obj, (p<1?m.b.clone().sub(m.a):m.a.clone().sub(m.b)), shNose); });   // nose leads the travel direction (flips on return)
+    var tt=(t*INTC.speed*0.6)%3, si=Math.floor(tt), u=tt-si, a=P[si], b=P[(si+1)%3]; test.position.lerpVectors(a,b,u); orientAlong(test, b.clone().sub(a), tsNose); };
+  return g; }
+
+/* ── CLUSTERS: a group of entities wrapped by a polygon (convex hull) or wrap (metaball), inherited from the 5C
+   spike. STARS inside = elements used by the cluster's components but never surfaced as one (hidden fns / unclaimed
+   tables / untested). count ← the metric, size ← callee mass (fn_behind) — sample values stand in for live data. ── */
+var CLU_METRICS={ 'hidden fns':0xeab308, 'unclaimed tables':0xf43f5e, 'untested surface':0xf97316 };
+var CLU_COLORS={ metric:null, white:0xffffff, yellow:0xfde047, gold:0xeab308, orange:0xf97316, cyan:0x67e8f9, rose:0xf43f5e };   // 'metric' = follow the star metric; else a fixed colour
+var CLU_DISTS=['scatter','cloud','ring','orbit'];
+var CLU_LAYOUTS=['irregular','compact','chain','spread','ring'];   // how the MEMBER PLANETS are arranged → the cluster's overall SHAPE (the hull follows)
+var CLUC={ shape:'polygon', metric:'hidden fns', count:40, size:0.15, op:0.18, glow:0.7, color:'white', dist:'scatter', layout:'ring', planets:4 };   // operator-dialed cluster config (final)
+var starTex=(function(){ var cv=document.createElement('canvas'); cv.width=cv.height=64; var c=cv.getContext('2d');   // a GLOWING DOT (bright core + soft halo), like a star on a galaxy map
+  var gr=c.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,'#fff'); gr.addColorStop(0.14,'#fff'); gr.addColorStop(0.35,'rgba(255,255,255,0.55)'); gr.addColorStop(1,'rgba(255,255,255,0)');
+  c.fillStyle=gr; c.fillRect(0,0,64,64); return new T.CanvasTexture(cv); })();
+function starSprite(col,size,glow){ var grp=new T.Group();   // bright DOT + an optional soft HALO (glow radius = size×glow)
+  var dot=new T.Sprite(new T.SpriteMaterial({map:starTex, color:col, transparent:true, depthWrite:false, blending:T.AdditiveBlending})); dot.scale.set(size,size,1); grp.add(dot);
+  if(glow>0){ var halo=new T.Sprite(new T.SpriteMaterial({map:starTex, color:col, transparent:true, opacity:0.32, depthWrite:false, blending:T.AdditiveBlending})); halo.scale.set(size*glow,size*glow,1); grp.add(halo); }
+  return grp; }
+function prand(i,s){ var x=Math.sin(i*12.9898+s*78.233)*43758.5453; return x-Math.floor(x); }   // deterministic per (index,seed) — stable across rebuilds
+function starPos(i, n, ctr, ext, dist){ var sx=ext.max.x-ext.min.x, sy=ext.max.y-ext.min.y, sz=ext.max.z-ext.min.z, rad=Math.max(sx,sy,sz)*0.5;
+  if(dist==='cloud'){ var a=i*2.399, yy=1-(i/((n-1)||1))*2, r=Math.sqrt(Math.max(0,1-yy*yy)), rr=rad*(0.6+prand(i,5)*0.55); return new T.Vector3(ctr.x+Math.cos(a)*r*rr, ctr.y+yy*rr, ctr.z+Math.sin(a)*r*rr); }   // fibonacci sphere, jittered to the edge
+  if(dist==='ring'){ var ang=i/n*6.283+prand(i,6)*0.5, r2=rad*(0.75+prand(i,7)*0.4); return new T.Vector3(ctr.x+Math.cos(ang)*r2, ctr.y+(prand(i,8)-0.5)*sy*0.7, ctr.z+Math.sin(ang)*r2); }
+  if(dist==='orbit'){ var ring=i%3, a2=i/n*6.283*2+prand(i,4)*0.3, r3=rad*(0.45+ring*0.28); return new T.Vector3(ctr.x+Math.cos(a2)*r3, ctr.y+(ring-1)*sy*0.35+(prand(i,9)-0.5)*4, ctr.z+Math.sin(a2)*r3); }
+  return new T.Vector3(ext.min.x+prand(i,1)*sx, ext.min.y+prand(i,2)*sy, ext.min.z+prand(i,3)*sz); }   // SCATTER = fill the whole cluster box, random (reaches the edges)
+function clusterPlanets(){ var n=CLUC.planets, L=CLUC.layout, P=[];   // arrange the member planets → the cluster SHAPE (deterministic via prand)
+  for(var i=0;i<n;i++){ var jx=prand(i,20)-0.5, jy=prand(i,21)-0.5, jz=prand(i,22)-0.5, v;
+    if(L==='compact') v=new T.Vector3(jx*11, jy*8, jz*11);
+    else if(L==='chain'){ var t=(n>1?i/(n-1):0)-0.5; v=new T.Vector3(t*34, jy*6, (jz+(prand(i,23)-0.5))*7); }
+    else if(L==='spread') v=new T.Vector3(jx*32, jy*20, jz*28);
+    else if(L==='ring'){ var a=i/n*6.283; v=new T.Vector3(Math.cos(a)*14, jy*5, Math.sin(a)*14); }
+    else v=new T.Vector3((jx*26)+(prand(i,24)-0.5)*12, jy*17, (jz*22)+(prand(i,25)-0.5)*10);   // irregular = organic scatter (like the 5C spike)
+    P.push(v); } return P; }
+function cluBuild(){ var g=new T.Group(), R=4, col=0xeab308, CLU_P=clusterPlanets();
+  CLU_P.forEach(function(p,i){ var e=entitySphere(R, ENT_COLORS[i%3]); e.position.copy(p); g.add(e); });
+  var ctr=new T.Vector3(); CLU_P.forEach(function(p){ ctr.add(p); }); ctr.multiplyScalar(1/CLU_P.length);
+  if(CLUC.shape==='polygon'){                       // rounded convex HULL enclosing the members
+    var pts=[], D=[[1,1,1],[1,1,-1],[1,-1,1],[1,-1,-1],[-1,1,1],[-1,1,-1],[-1,-1,1],[-1,-1,-1],[1,0,0],[-1,0,0],[0,1,0],[0,-1,0],[0,0,1],[0,0,-1]];
+    CLU_P.forEach(function(p){ D.forEach(function(d){ pts.push(new T.Vector3(p.x+d[0]*(R+2), p.y+d[1]*(R+2), p.z+d[2]*(R+2))); }); });
+    try{ var hg=new window.ConvexGeometry(pts); hg.computeVertexNormals(); g.add(new T.Mesh(hg, new T.MeshLambertMaterial({color:col, emissive:col, emissiveIntensity:0.1, transparent:true, opacity:CLUC.op, side:T.DoubleSide, depthWrite:false}))); }catch(e){}
+  } else {                                          // WRAP = one fused metaball iso-surface over the members
+    var span=26, mc=new window.MarchingCubes(56, new T.MeshLambertMaterial({color:col, emissive:col, emissiveIntensity:0.14, transparent:true, opacity:CLUC.op+0.05, side:T.DoubleSide, depthWrite:false}), true, false, 80000); mc.isolation=70;
+    mc.position.copy(ctr); mc.scale.setScalar(span); mc.reset();
+    CLU_P.forEach(function(p){ var lp=p.clone().sub(ctr).multiplyScalar(1/span); mc.addBall(0.5+lp.x, 0.5+lp.y, 0.5+lp.z, 0.62, 12); }); mc.update(); g.add(mc);
+  }
+  var scol=(CLU_COLORS[CLUC.color]!=null)? CLU_COLORS[CLUC.color] : (CLU_METRICS[CLUC.metric]||0xeab308);   // fixed colour, or follow the metric
+  var mn=CLU_P[0].clone(), mx=CLU_P[0].clone(); CLU_P.forEach(function(p){ mn.min(p); mx.max(p); }); mn.addScalar(-(R+2)); mx.addScalar(R+2); var ext={min:mn,max:mx};   // the cluster's bounding box → stars fill it out to the hull edges
+  for(var i=0;i<CLUC.count;i++){ var st=starSprite(scol, CLUC.size*(0.55+prand(i,10)*0.9), CLUC.glow); st.position.copy(starPos(i, CLUC.count, ctr, ext, CLUC.dist)); g.add(st); }
+  return g; }
+
+/* ── UI helpers ── */
+/* LOCK = reserve an asset (dims it in the palette as "used") · COPY = dump a section's selections to the clipboard */
+var LOCKED=new Set(['bomber','cat','jet','speederC','speederD','speederB','miner','cargoA','cargoB','dart','fighter','cruiser','tie','hauler','clipper','starlink']);   // the operator's SETTLED assets — locked/dimmed in the palette on load
+function refreshPaletteLocks(){ document.querySelectorAll('.palcell').forEach(function(c){ if(c.dataset.k!=null) c.classList.toggle('locked', LOCKED.has(c.dataset.k)); }); }
+function repaintLocks(){ document.querySelectorAll('.lockb').forEach(function(b){ if(b.__val) b.classList.toggle('on', LOCKED.has(b.__val())); }); }
+function lockBtn(getVal){ var b=document.createElement('button'); b.className='lockb'; b.type='button'; b.__val=getVal;
+  b.classList.toggle('on', LOCKED.has(getVal())); b.textContent='lock';
+  b.onclick=function(){ var v=getVal(); if(LOCKED.has(v)) LOCKED['delete'](v); else LOCKED.add(v); refreshPaletteLocks(); repaintLocks(); }; return b; }
+function copyText(txt){ try{ navigator.clipboard.writeText(txt); }catch(e){ var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta); ta.select(); try{document.execCommand('copy');}catch(_){}; document.body.removeChild(ta); } }
+function copyBtn(getObj){ var b=document.createElement('button'); b.className='copyb'; b.type='button'; b.textContent='⧉ copy';
+  b.onclick=function(){ copyText(JSON.stringify(getObj(),null,2)); var o=b.textContent; b.textContent='✓ copied'; setTimeout(function(){ b.textContent=o; },1100); }; return b; }
+function copyHead(getObj){ var h=document.createElement('div'); h.className='arow'; h.style.cssText='justify-content:flex-end;margin:0 0 5px'; h.appendChild(copyBtn(getObj)); return h; }
+function shipSelect(cur, onchange){ var s=document.createElement('select'); s.className='mship';   // ships AND shuttles, one grouped list
+  var g1=document.createElement('optgroup'); g1.label='ships'; (window.SHIP_NAMES||[]).forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; if(n===cur)o.selected=true; g1.appendChild(o); }); s.appendChild(g1);
+  var g2=document.createElement('optgroup'); g2.label='shuttles'; (window.SHUTTLE_NAMES||[]).forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; if(n===cur)o.selected=true; g2.appendChild(o); }); s.appendChild(g2);
+  s.onchange=function(){ onchange(s.value); }; return s; }
+function simpleSelect(opts, cur, onchange){ var s=document.createElement('select'); s.className='mship';
+  opts.forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; if(n===cur)o.selected=true; s.appendChild(o); });
+  s.onchange=function(){ onchange(s.value); }; return s; }
+function colorInput(hex, onchange){ var c=document.createElement('input'); c.type='color'; c.className='mcolor'; c.value='#'+('000000'+(hex>>>0).toString(16)).slice(-6);
+  c.oninput=function(){ onchange(parseInt(c.value.slice(1),16)); }; return c; }
+function textInput(val, onchange){ var i=document.createElement('input'); i.type='text'; i.className='mtext'; i.value=val; i.oninput=function(){ onchange(i.value); }; return i; }
+/* one dimension of the 3×3 assignment: a header (toggle or label) + THREE tier rows, each = active-radio + T-label
+   + a full ship dropdown (all models). The radio picks which tier actually deploys. */
+function rotSliders(spec, tag, id, rerender){ var frag=document.createDocumentFragment();   // X/Y/Z rotation (deg) live-editing a ROT spec
+  ['x','y','z'].forEach(function(ax){ if(spec[ax]==null) spec[ax]=0;
+    frag.appendChild(sliderRow('rot '+ax.toUpperCase(), tag, id+'-'+ax, -180, 180, 5, spec[ax], function(v){return v+'°';}, (function(s,a){return function(v){ s[a]=v; };})(spec,ax), rerender)); });
+  return frag; }
+function matrixKind(key, label, models, active, cls, tGet, tSet, rerender, section, rebuild){ var frag=document.createDocumentFragment();
+  var head=document.createElement('div'); head.className='arow';
+  head.appendChild(tGet ? togBtn(label, cls, tGet, tSet, rerender) : E('<span class="k">'+label+'</span>')); frag.appendChild(head);
+  [1,2,3].forEach(function(ti){ var r=document.createElement('div'); r.className='arow'; r.style.paddingLeft='16px';
+    var rb=document.createElement('input'); rb.type='radio'; rb.name='act-'+cls+'-'+key; rb.checked=(active[key]===ti); rb.title='deploy this tier (its rotation sliders show below)'; rb.style.margin='0 2px 0 0';
+    rb.onchange=function(){ if(rb.checked){ active[key]=ti; rerender(); if(rebuild) rebuild(); } };   // switch active → retarget the rotation sliders
+    r.appendChild(rb); r.appendChild(E('<span class="k" style="min-width:20px">T'+ti+'</span>')); r.appendChild(E('<span class="to">→</span>'));
+    r.appendChild(shipSelect(models[key][ti-1], function(v){ models[key][ti-1]=v; rerender(); repaintLocks(); }));
+    r.appendChild(lockBtn((function(kk,tt){ return function(){ return models[kk][tt-1]; }; })(key,ti))); frag.appendChild(r); });
+  if(section){ var at=active[key], rspec=ROT[section][key][at]||(ROT[section][key][at]={});   // 3-axis rotation for the ACTIVE tier
+    frag.appendChild(E('<div class="k" style="padding-left:16px;opacity:.6;font-size:9.5px;margin:3px 0 1px">rotate T'+at+' (active) — dial, then copy</div>'));
+    frag.appendChild(rotSliders(rspec, 'T'+at, 'rot-'+cls+'-'+key, rerender)); }
+  return frag; }
+function togBtn(lbl, cls, get, set, onchange){ var b=document.createElement('button'); function paint(){ b.className='tog'+(get()?' on '+cls:''); b.innerHTML='<span class="b"></span>'+lbl; } paint();
+  b.onclick=function(){ set(!get()); paint(); onchange(); }; return b; }
+function sliderRow(label, mapVar, id, min, max, step, val, fmt, set, onchange){
+  var row=document.createElement('div'); row.className='arow';
+  row.innerHTML='<span class="k">'+label+'</span>'; var inp=document.createElement('input'); inp.type='range'; inp.min=min; inp.max=max; inp.step=step; inp.value=val;
+  var rv=document.createElement('span'); rv.className='rv'; rv.textContent=fmt(val); var mp=document.createElement('span'); mp.className='amap'; mp.textContent='←'+mapVar;
+  inp.oninput=function(){ set(+inp.value); rv.textContent=fmt(+inp.value); onchange(); };
+  row.appendChild(inp); row.appendChild(rv); row.appendChild(mp); return row; }
+function E(html){ var d=document.createElement('div'); d.innerHTML=html; return d.firstChild; }
+
+/* ── viewers ── */
+var Vdef=Viewer('cv-def',62,0.16,true), Vatk=Viewer('cv-atk',62,0.16,true), Vcfl=Viewer('cv-cfl'), Vdep=Viewer('cv-dep',66,0.42,true), Vsat=Viewer('cv-sat',40,0.22,true), Vint=Viewer('cv-int',74,0.4,true), Vclu=Viewer('cv-clu',52,0.3);   // def/atk STATIC; clusters auto-spin to read the 3D shape
+function rDef(){ Vdef.set(defBuild()); document.getElementById('note-def').innerHTML='<b>Green fleet</b> ('+COLOR_MODE+') — '+DEF_KINDS.filter(function(k){return DEFC[k];}).map(function(k){return k+':T'+DEF_ACTIVE[k]+'('+defModel(k)+')';}).join(' · ')+' · '+DEFC.count+'× · health '+DEFC.pass.toFixed(2)+'.'; }
+function rAtk(){ Vatk.set(atkBuild()); document.getElementById('note-atk').innerHTML='<b>Red raiders</b> ('+COLOR_MODE+') — '+(ATKC.god?'god:T'+ATK_ACTIVE.god+'('+atkModel('god')+')':'no god')+' + '+ATKC.ung+'× unguarded('+atkModel('ung')+').'; }
+function rCfl(){ Vcfl.set(cflBuild()); var on=CFL_DIMS.filter(function(d){return CFL_MAP[d].effect!=='none';}).map(function(d){return d+'→'+CFL_MAP[d].effect;}); document.getElementById('note-cfl').innerHTML='<b>Conflict</b> — '+(on.length?on.join(' · '):'no mapped field')+' · radius←blast dist · waves←blast size · velocity←in-flight.'; }
+function rDep(){ Vdep.set(depBuild()); }
+function rSat(){ Vsat.set(satBuild()); document.getElementById('note-sat').innerHTML='<b>'+SATC.count+'× '+SATC.model+'</b> orbiting the south pole = '+SATC.count+' functions that use this element (used-by).'; }
+function rInt(){ Vint.set(interBuild()); document.getElementById('note-int').innerHTML='<b>Shuttles</b> ('+INTC.shuttle+') ferry data along the routes; the <b>'+INTC.testship+'</b> runs the cross-entity test journey.'; }
+function rClu(){ Vclu.set(cluBuild()); document.getElementById('note-clu').innerHTML='<b>'+CLUC.count+' stars</b> ('+CLUC.metric+') inside a <b>'+CLUC.shape+'</b> cluster of 4 entities — elements used by the components but never surfaced as one.'; }
+var _palDone=false, _palRun=false, PAL_CELLS=[];
+var _palR=null;   // ONE shared renderer for the whole palette (a canvas each = 20+ WebGL contexts > the ~16 browser cap → blanks)
+function palR(){ if(!_palR){ var c=document.createElement('canvas'); c.width=236; c.height=208; _palR=new T.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true}); _palR.setPixelRatio(1); } return _palR; }
+function palCell(host,label,buildObj){ var cell=document.createElement('div'); cell.className='palcell'; cell.dataset.k=label;   // key → dimmed when LOCKED
+  var cv=document.createElement('canvas'); cv.width=236; cv.height=208; var l=document.createElement('div'); l.className='pl'; l.textContent=label;
+  cell.appendChild(cv); cell.appendChild(l); host.appendChild(cell);
+  var raw=buildObj(); if(!raw) return;
+  var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
+  var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;   // geometry centred INSIDE the pivot → rotating the pivot spins it on its axis (rotating raw, whose origin is off-centre, orbited a big circle)
+  var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.75));
+  var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
+  var cam=new T.PerspectiveCamera(45,236/208,0.1,1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+  PAL_CELLS.push({ctx:cv.getContext('2d'), scene:sc, cam:cam, obj:pivot}); }
+function palLoop(){ requestAnimationFrame(palLoop); var R=palR();   // one renderer spins EVERY cell each frame → clear-then-copy (the 2D canvas must be cleared or frames pile into a smear trail)
+  for(var i=0;i<PAL_CELLS.length;i++){ var c=PAL_CELLS[i], w=c.w||236, h=c.h||208; c.obj.rotation.y+=0.012; R.render(c.scene,c.cam); c.ctx.clearRect(0,0,w,h); c.ctx.drawImage(R.domElement,0,0,236,208,0,0,w,h); } }   // scale the shared 236×208 render into each cell (legend thumbs are ~42×36)
+/* legend asset thumbnails reuse the ONE shared palette renderer (no new WebGL contexts) — registered into PAL_CELLS, pruned on every legend re-render so tab-switches don't leak orphaned cells */
+var LEG_CELLS=[], _legReady=false;
+function legPrune(){ if(!LEG_CELLS.length) return; PAL_CELLS=PAL_CELLS.filter(function(c){ return LEG_CELLS.indexOf(c)<0; }); LEG_CELLS=[]; }
+function legThumb(cv,buildObj){ var raw=buildObj(); if(!raw) return;
+  var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
+  var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;   // centre INSIDE the pivot → spins on its axis
+  var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.8));
+  var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
+  var cam=new T.PerspectiveCamera(45,236/208,0.1,1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+  var entry={ctx:cv.getContext('2d'), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height}; PAL_CELLS.push(entry); LEG_CELLS.push(entry); }
+function populatePalette(){ if(_palDone||!SHIPSREADY) return; _palDone=true;
+  var ps=document.getElementById('pal-ships'); (window.SHIP_NAMES||[]).forEach(function(k){ palCell(ps,k,function(){ return asset(SHIPS,k,null); }); });   // FLAT — all ships, one group; operator assigns tiers
+  var psh=document.getElementById('pal-shut'); (window.SHUTTLE_NAMES||[]).forEach(function(k){ palCell(psh,k,function(){ return asset(SHUTTLES,k,null); }); });
+  var psa=document.getElementById('pal-sat'); (window.SAT_NAMES||[]).forEach(function(k){ palCell(psa,k,function(){ return asset(SATS,k,null); }); });
+  var pp=document.getElementById('pal-plan'); palCell(pp,'bubble',function(){ return entitySphere(5); });   // ONE bubble sphere (planets deprecated per operator)
+  refreshPaletteLocks();
+  if(!_palRun){ _palRun=true; palLoop(); } }
+function rebuildAll(){ rDef(); rAtk(); rCfl(); rDep(); rSat(); rInt(); rClu(); populatePalette();
+  if(SHIPSREADY && !_legReady && window.__legRender){ _legReady=true; window.__legRender(); } }   // ships now loaded → re-render legend so its asset thumbnails paint (buildLegend ran before loadShips)
+
+/* ── build ASSIGNMENT panels ── */
+(function(){
+  function buildAssign(){
+    var ad=document.getElementById('asg-def'); ad.innerHTML='';
+    ad.appendChild(copyHead(function(){ return {section:'defense', color_mode:COLOR_MODE, models:DEF_MODELS, active:DEF_ACTIVE, kinds:{unit:DEFC.unit,integ:DEFC.integ,e2e:DEFC.e2e}, count:DEFC.count, health:DEFC.pass, rotations:ROT.def}; }));
+    var cm=document.createElement('div'); cm.style.cssText='border-bottom:1px solid #24304a;padding-bottom:7px;margin-bottom:7px';   // COLOUR MODE — shared by both teams, original colours kept
+    cm.appendChild(E('<div class="k" style="opacity:.65;font-size:10.5px;letter-spacing:.04em;margin-bottom:4px">COLOUR MODE · both teams · original colours kept</div>'));
+    var cmr=document.createElement('div'); cmr.className='arow'; cmr.appendChild(E('<span class="k">tint</span>')); cmr.appendChild(E('<span class="to">→</span>'));
+    cmr.appendChild(simpleSelect(['aura','glow','outline'], COLOR_MODE, function(v){ COLOR_MODE=v; rDef(); rAtk(); rDep(); rInt(); })); cm.appendChild(cmr); ad.appendChild(cm);   // rInt: inter-entity movers also route through teamShip(COLOR_MODE)
+    ad.appendChild(E('<div class="k" style="opacity:.6;font-size:10px;margin:2px 0 4px">3×3 · pick a model per tier · the ⦿ radio deploys that tier</div>'));
+    DEF_KINDS.forEach(function(k){ ad.appendChild(matrixKind(k, k, DEF_MODELS, DEF_ACTIVE, 'g', function(){return DEFC[k];}, function(v){DEFC[k]=v;}, function(){rDef();rDep();}, 'def', buildAssign)); });
+    ad.appendChild(sliderRow('count','test#','asg-def-c',1,3,1,DEFC.count,function(v){return String(v);},function(v){DEFC.count=v;},function(){rDef();rDep();}));
+    ad.appendChild(sliderRow('guard','proven','asg-def-p',0,1,0.05,DEFC.pass,function(v){return v.toFixed(2);},function(v){DEFC.pass=v;},function(){rDef();rDep();}));   // health = guard state (unguarded→proven), not raw pass/fail
+
+    var aa=document.getElementById('asg-atk'); aa.innerHTML='';
+    aa.appendChild(copyHead(function(){ return {section:'attack', color_mode:COLOR_MODE, god:{on:ATKC.god, models:ATK_MODELS.god, active:ATK_ACTIVE.god}, unguarded:{model:ATK_MODELS.ung[0], count:ATKC.ung}, rotations:ROT.atk}; }));
+    aa.appendChild(E('<div class="k" style="opacity:.6;font-size:10px;margin:2px 0 4px">god = 3×3 (⦿ deploys) · unguarded = 1 model shown ×count</div>'));
+    aa.appendChild(matrixKind('god','god', ATK_MODELS, ATK_ACTIVE, 'r', function(){return ATKC.god;}, function(v){ATKC.god=v;}, function(){rAtk();rDep();}, 'atk', buildAssign));
+    var ur=document.createElement('div'); ur.className='arow'; ur.appendChild(E('<span class="k">unguarded</span>')); ur.appendChild(E('<span class="to">→</span>'));   // NO tiers — one model, shown once per unguarded found
+    ur.appendChild(shipSelect(ATK_MODELS.ung[0], function(v){ ATK_MODELS.ung[0]=v; rAtk(); rDep(); repaintLocks(); }));
+    ur.appendChild(lockBtn(function(){ return ATK_MODELS.ung[0]; })); aa.appendChild(ur);
+    aa.appendChild(sliderRow('count','unguarded#','asg-atk-u',0,8,1,ATKC.ung,function(v){return String(v);},function(v){ATKC.ung=v;},function(){rAtk();rDep();}));
+    aa.appendChild(E('<div class="k" style="opacity:.6;font-size:9.5px;margin:3px 0 1px">rotate unguarded — dial, then copy</div>'));
+    aa.appendChild(rotSliders(ROT.atk.ung, 'ung', 'rot-r-ung', function(){rAtk();rDep();}));
+  }
+  buildAssign();
+
+  var ac=document.getElementById('asg-cfl'); ac.appendChild(copyHead(function(){ var m={}; CFL_DIMS.forEach(function(d){ m[d]={effect:CFL_MAP[d].effect, color:'#'+('000000'+CFL_MAP[d].color.toString(16)).slice(-6), flag_reason:CFL_MAP[d].flag}; }); return {section:'conflict', fields:m, radius:CFLC.rad, waves:CFLC.wav, velocity:CFLC.vel}; }));
+  ac.appendChild(E('<div class="k" style="opacity:.6;font-size:10px;margin:2px 0 4px">field → colour · effect · the FLAG REASON (what makes it negative) · none = off</div>'));
+  CFL_DIMS.forEach(function(dim){ var row=document.createElement('div'); row.className='arow'; row.style.flexWrap='wrap';   // LEFT = field · RIGHT = colour · effect · flag reason
+    row.appendChild(E('<span class="k" style="width:82px">'+dim+'</span>')); row.appendChild(E('<span class="to">→</span>'));
+    row.appendChild(colorInput(CFL_MAP[dim].color,(function(d){return function(v){CFL_MAP[d].color=v;rCfl();rDep();};})(dim)));
+    row.appendChild(simpleSelect(['none','shock','flak'], CFL_MAP[dim].effect,(function(d){return function(v){CFL_MAP[d].effect=v;rCfl();rDep();};})(dim)));
+    row.appendChild(E('<span class="to">flag</span>'));
+    row.appendChild(textInput(CFL_MAP[dim].flag,(function(d){return function(v){CFL_MAP[d].flag=v;};})(dim))); ac.appendChild(row); });
+  ac.appendChild(sliderRow('radius','blast','asg-cfl-r',0.5,6,0.1,CFLC.rad,function(v){return v.toFixed(1);},function(v){CFLC.rad=v;},function(){rCfl();rDep();}));
+  ac.appendChild(sliderRow('waves','blast#','asg-cfl-w',1,6,1,CFLC.wav,function(v){return String(v);},function(v){CFLC.wav=v;},function(){rCfl();rDep();}));
+  ac.appendChild(sliderRow('velocity','in-flight','asg-cfl-v',0,1.5,0.05,CFLC.vel,function(v){return v.toFixed(2);},function(v){CFLC.vel=v;},function(){rCfl();rDep();}));
+
+  var ap=document.getElementById('asg-dep'); ap.appendChild(copyHead(function(){ return {section:'deployment', atk_def_dist:DEPC.adDist, conflict_dist:DEPC.cflDist, satellite_dist:DEPC.satDist, spread:DEPC.spread, movement:DEPC.move}; }));
+  var plr=document.createElement('div'); plr.className='arow'; plr.appendChild(E('<span class="k">entity</span>')); plr.appendChild(E('<span class="to">→</span>')); plr.appendChild(E('<span class="mship" style="opacity:.75">bubble (spike sphere · planets deprecated)</span>')); ap.appendChild(plr);   // one neutral bubble for every entity — no planet skins
+  ap.appendChild(sliderRow('atk/def dist','shell','asg-dep-ad',1,8,0.5,DEPC.adDist,function(v){return v.toFixed(1);},function(v){DEPC.adDist=v;},rDep));   // attack + defence share this (equally distant)
+  ap.appendChild(sliderRow('atk/def up-down','height','asg-dep-ady',-15,15,0.5,DEPC.adY,function(v){return v.toFixed(1);},function(v){DEPC.adY=v;},rDep));   // vertical offset for both fleets
+  ap.appendChild(sliderRow('conflict dist','top','asg-dep-cf',1,8,0.5,DEPC.cflDist,function(v){return v.toFixed(1);},function(v){DEPC.cflDist=v;},rDep));
+  ap.appendChild(sliderRow('satellite dist','south','asg-dep-sd',2,20,0.5,DEPC.satDist,function(v){return v.toFixed(1);},function(v){DEPC.satDist=v;},rDep));
+  ap.appendChild(sliderRow('distribution','spread','asg-dep-s',0.3,2.5,0.1,DEPC.spread,function(v){return v.toFixed(1);},function(v){DEPC.spread=v;},rDep));
+  ap.appendChild(sliderRow('movement','patrol','asg-dep-m',0,1,0.05,DEPC.move,function(v){return v.toFixed(2);},function(v){DEPC.move=v;},rDep));
+
+  var as=document.getElementById('asg-sat'); as.appendChild(copyHead(function(){ return {section:'satellites', model:SATC.model, count:SATC.count, size:SATC.size, orbit_r:SATC.rad, tilt:SATC.tilt, speed:SATC.speed}; }));
+  var sr=document.createElement('div'); sr.className='arow';
+  sr.appendChild(E('<span class="k">model</span>')); sr.appendChild(E('<span class="to">→</span>'));
+  var ssel=document.createElement('select'); ssel.className='mship'; (window.SAT_NAMES||[]).forEach(function(n){ var o=document.createElement('option'); o.value=n; o.textContent=n; if(n===SATC.model)o.selected=true; ssel.appendChild(o); }); ssel.onchange=function(){ SATC.model=ssel.value; rSat(); rDep(); }; sr.appendChild(ssel); as.appendChild(sr);
+  as.appendChild(sliderRow('count','used-by','asg-sat-c',1,10,1,SATC.count,function(v){return String(v);},function(v){SATC.count=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('size','—','asg-sat-z',0.08,0.5,0.02,SATC.size,function(v){return v.toFixed(2);},function(v){SATC.size=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('orbit r','distance','asg-sat-r',2,10,0.5,SATC.rad,function(v){return v.toFixed(1);},function(v){SATC.rad=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('tilt','orient','asg-sat-t',0,1.57,0.05,SATC.tilt,function(v){return v.toFixed(2);},function(v){SATC.tilt=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('speed','—','asg-sat-s',0,1.5,0.05,SATC.speed,function(v){return v.toFixed(2);},function(v){SATC.speed=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('signal','emit','asg-sat-sig',0.1,1.5,0.05,SATC.sig,function(v){return v.toFixed(2);},function(v){SATC.sig=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('rings','#','asg-sat-rings',1,3,1,SATC.rings,function(v){return String(v);},function(v){SATC.rings=v;},function(){rSat();rDep();}));
+  as.appendChild(sliderRow('ring opacity','dim','asg-sat-ro',0,0.3,0.01,SATC.ringOp,function(v){return v.toFixed(2);},function(v){SATC.ringOp=v;},function(){rSat();rDep();}));
+
+  var ai=document.getElementById('asg-int');
+  ai.appendChild(copyHead(function(){ var cm={}; CONN_KINDS.forEach(function(k){ cm[k]={on:CONN[k].on, pattern:CONN[k].style, density:CONN[k].density, color:'#'+('000000'+CONN[k].color.toString(16)).slice(-6)}; }); return {section:'inter-entity', color_mode:COLOR_MODE, shuttle:INTC.shuttle, test_ship:INTC.testship, per_route:INTC.nshut, size:INTC.size, speed:INTC.speed, connectors:cm}; }));
+  ai.appendChild(E('<div class="k" style="opacity:.6;font-size:10px;margin:2px 0 3px">CONNECTORS (relationship kind) · on · pattern · colour · density → · opacity=trust · #=count</div>'));   // typed edges between entities
+  CONN_KINDS.forEach(function(k){ var row=document.createElement('div'); row.className='arow'; row.style.flexWrap='wrap';
+    row.appendChild(togBtn(k,'g',(function(kk){return function(){return CONN[kk].on;};})(k),(function(kk){return function(v){CONN[kk].on=v;};})(k),rInt));
+    row.appendChild(simpleSelect(CONN_PATTERNS, CONN[k].style,(function(kk){return function(v){CONN[kk].style=v;rInt();};})(k)));
+    row.appendChild(colorInput(CONN[k].color,(function(kk){return function(v){CONN[kk].color=v;rInt();};})(k)));
+    var dens=document.createElement('input'); dens.type='range'; dens.min=0.4; dens.max=3; dens.step=0.1; dens.value=CONN[k].density; dens.title='pattern density'; dens.style.cssText='flex:1;min-width:56px';
+    dens.oninput=(function(kk,el){return function(){ CONN[kk].density=+el.value; rInt(); };})(k,dens); row.appendChild(dens); ai.appendChild(row); });
+  var shr=document.createElement('div'); shr.className='arow'; shr.appendChild(E('<span class="k">shuttle</span>')); shr.appendChild(E('<span class="to">→ data</span>'));
+  shr.appendChild(shipSelect(INTC.shuttle, function(v){ INTC.shuttle=v; rInt(); repaintLocks(); })); shr.appendChild(lockBtn(function(){ return INTC.shuttle; }));
+  shr.appendChild(togBtn('rev','g',function(){return INTC.shuttleFlip;},function(v){INTC.shuttleFlip=v;},rInt)); ai.appendChild(shr);
+  var tsr=document.createElement('div'); tsr.className='arow'; tsr.appendChild(E('<span class="k">test ship</span>')); tsr.appendChild(E('<span class="to">→ e2e</span>'));
+  tsr.appendChild(shipSelect(INTC.testship, function(v){ INTC.testship=v; rInt(); repaintLocks(); })); tsr.appendChild(lockBtn(function(){ return INTC.testship; }));
+  tsr.appendChild(togBtn('rev','g',function(){return INTC.testFlip;},function(v){INTC.testFlip=v;},rInt)); ai.appendChild(tsr);
+  ai.appendChild(sliderRow('per route','routes','asg-int-n',1,3,1,INTC.nshut,function(v){return String(v);},function(v){INTC.nshut=v;},rInt));
+  ai.appendChild(sliderRow('size','—','asg-int-z',0.2,1,0.05,INTC.size,function(v){return v.toFixed(2);},function(v){INTC.size=v;},rInt));
+  ai.appendChild(sliderRow('speed','flow','asg-int-s',0.1,1,0.05,INTC.speed,function(v){return v.toFixed(2);},function(v){INTC.speed=v;},rInt));
+
+  var acl=document.getElementById('asg-clu');
+  acl.appendChild(copyHead(function(){ return {section:'clusters', shape:CLUC.shape, layout:CLUC.layout, planets:CLUC.planets, star_metric:CLUC.metric, star_count:CLUC.count, star_size:CLUC.size, glow_radius:CLUC.glow, star_color:CLUC.color, distribution:CLUC.dist, hull_opacity:CLUC.op}; }));
+  var clr=document.createElement('div'); clr.className='arow'; clr.appendChild(E('<span class="k">layout</span>')); clr.appendChild(E('<span class="to">→ shape</span>'));
+  clr.appendChild(simpleSelect(CLU_LAYOUTS, CLUC.layout, function(v){ CLUC.layout=v; rClu(); })); acl.appendChild(clr);   // planet arrangement → cluster shape
+  acl.appendChild(sliderRow('planets','members','asg-clu-p',3,8,1,CLUC.planets,function(v){return String(v);},function(v){CLUC.planets=v;},rClu));
+  var csr=document.createElement('div'); csr.className='arow'; csr.appendChild(E('<span class="k">shape</span>')); csr.appendChild(E('<span class="to">→</span>'));
+  csr.appendChild(simpleSelect(['polygon','wrap'], CLUC.shape, function(v){ CLUC.shape=v; rClu(); })); acl.appendChild(csr);
+  var cmr=document.createElement('div'); cmr.className='arow'; cmr.appendChild(E('<span class="k">stars</span>')); cmr.appendChild(E('<span class="to">←</span>'));
+  cmr.appendChild(simpleSelect(Object.keys(CLU_METRICS), CLUC.metric, function(v){ CLUC.metric=v; rClu(); })); acl.appendChild(cmr);
+  var ccr=document.createElement('div'); ccr.className='arow'; ccr.appendChild(E('<span class="k">star colour</span>')); ccr.appendChild(E('<span class="to">→</span>'));
+  ccr.appendChild(simpleSelect(Object.keys(CLU_COLORS), CLUC.color, function(v){ CLUC.color=v; rClu(); })); acl.appendChild(ccr);
+  var cdr=document.createElement('div'); cdr.className='arow'; cdr.appendChild(E('<span class="k">distribution</span>')); cdr.appendChild(E('<span class="to">→</span>'));
+  cdr.appendChild(simpleSelect(CLU_DISTS, CLUC.dist, function(v){ CLUC.dist=v; rClu(); })); acl.appendChild(cdr);
+  acl.appendChild(sliderRow('count','hidden#','asg-clu-c',0,40,1,CLUC.count,function(v){return String(v);},function(v){CLUC.count=v;},rClu));
+  acl.appendChild(sliderRow('star size','callee mass','asg-clu-z',0.1,3,0.05,CLUC.size,function(v){return v.toFixed(2);},function(v){CLUC.size=v;},rClu));
+  acl.appendChild(sliderRow('glow radius','—','asg-clu-g',0,6,0.1,CLUC.glow,function(v){return v.toFixed(1);},function(v){CLUC.glow=v;},rClu));
+  acl.appendChild(sliderRow('hull opacity','—','asg-clu-o',0,0.4,0.01,CLUC.op,function(v){return v.toFixed(2);},function(v){CLUC.op=v;},rClu));
+})();
+
+/* ── LEGEND: a portable tabbed key rendering the ACTUAL glyphs/wires (words in parentheses only) — lifts into 5C ── */
+/* Tabs are the DIMENSIONS this lab designs (assets/effects/stars) + one PLACEHOLDER for the node the spike owns.
+   Every row renders the ACTUAL thing: ship thumbnails via the shared renderer, wires/effect glyphs via CSS. */
+var LEGEND={
+  Elements:[ {t:'grp',l:'element node · <i>spike-owned</i>'},
+    {t:'ph',l:'kind icon + 3D form <i>— defined in the 5C spike (index.html)</i>'},
+    {t:'note',l:'The icon-per-kind and the 3D body live in the spike; this lab does not design them. Everything else below is what the Elements Lab designs around the node.'} ],
+  Connectors:[ {t:'grp',l:'entity ↔ entity · <i>relationship kind</i>'},
+    {t:'ln',c:0x5893ad,s:'dashed',l:'fk <i>data coupling · trusted</i>'},
+    {t:'ln',c:0xf59e0b,s:'dashed',l:'calls <i>cross-call · inferred</i>'},
+    {t:'ln',c:0xa855f7,s:'dotted',l:'imports <i>inferred</i>'},
+    {t:'ln',c:0xe8f443,s:'dotted',l:'bridge <i>web→API · heuristic</i>'} ],
+  Defense:[ {t:'grp',l:'star ships · <i>test kind</i>'},
+    {t:'ship',dim:'def',k:'unit', c:0x22c55e,l:'Unit <i>unit tests</i>'},
+    {t:'ship',dim:'def',k:'integ',c:0x22c55e,l:'Integration <i>integ tests</i>'},
+    {t:'ship',dim:'def',k:'e2e',  c:0x22c55e,l:'End-to-end <i>e2e tests</i>'} ],
+  Attack:[ {t:'grp',l:'raiders · <i>problem type</i>'},
+    {t:'ship',dim:'atk',k:'god',c:0xef4444,l:'God <i>oversized fn / class</i>'},
+    {t:'ship',dim:'atk',k:'ung',c:0xef4444,l:'Unguarded <i>no-test floor ×N</i>'} ],
+  Conflict:[ {t:'grp',l:'in-flight · <i>internal fn usage</i>'},
+    {t:'shock',c:0xf59e0b,l:'Blast <i>size + radius</i>'},
+    {t:'flak',c:0xef4444,l:'Failing <i>tests</i>'},
+    {t:'flak',c:0xef4444,l:'Untested <i>elements</i>'},
+    {t:'grp',l:'sub-lights · <i>team accent</i>'},
+    {t:'aura',c:0x9aa6be,l:'aura <i>team halo</i>'},
+    {t:'glow',c:0x9aa6be,l:'glow <i>centre light</i>'},
+    {t:'outline',c:0x9aa6be,l:'outline <i>edges</i>'} ],
+  Field:[ {t:'grp',l:'satellites · <i>used-by</i>'},
+    {t:'sat',l:'Satellites <i>callers / fan-in</i>'},
+    {t:'grp',l:'cluster stars · <i>cross-cluster fns</i>'},
+    {t:'dot',c:0xffffff,l:'Star <i>function used across the cluster</i>'},
+    {t:'poly',c:0xeab308,l:'polygon <i>hull</i>'},
+    {t:'wrap',c:0xeab308,l:'wrap <i>metaball</i>'} ]
+};
+function buildLegend(){ var el=document.getElementById('legend'), tabs=Object.keys(LEGEND), active=tabs[0];
+  function hx(c){ return '#'+('000000'+c.toString(16)).slice(-6); }
+  function vis(it){ var c=hx(it.c||0xffffff);
+    switch(it.t){
+      case 'ln': return '<div class="lgln" style="border-bottom:2.5px '+it.s+' '+c+'"></div>';
+      case 'aura': return '<div style="width:15px;height:15px;border-radius:50%;background:'+c+'66;box-shadow:0 0 7px 3px '+c+'99"></div>';
+      case 'glow': return '<div style="width:7px;height:7px;border-radius:50%;background:#fff;box-shadow:0 0 9px 4px '+c+'"></div>';
+      case 'outline': return '<div style="width:15px;height:15px;border-radius:4px;border:2px solid '+c+'"></div>';
+      case 'shock': return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:0 0 0 3px '+c+'55,0 0 0 6px '+c+'22"></div>';
+      case 'flak': return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:6px -4px 0 -2px '+c+',-6px 3px 0 -2px '+c+',4px 5px 0 -3px '+c+'"></div>';
+      case 'dot': return '<div style="width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 5px 2px '+c+'"></div>';
+      case 'poly': return '<div style="width:16px;height:16px;background:'+c+'55;border:1px solid '+c+';clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)"></div>';
+      case 'wrap': return '<div style="width:16px;height:14px;background:'+c+'55;border:1px solid '+c+';border-radius:60% 40% 55% 45%/50% 60% 40% 50%"></div>';
+      default: return ''; } }
+  function thumbBuild(it){ return function(){ if(it.t==='sat') return asset(SATS,SATC.model,null);   // real starlink thumbnail (used-by satellites)
+    var key=(it.dim==='atk'? atkModel(it.k) : defModel(it.k)); return teamShip(key, it.c, 1); }; }   // the ACTUAL fleet ship, with its team accent, as drawn in the diagram
+  function render(){ legPrune();
+    var h='<div class="lghd"><b>Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';
+    tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?' on':'')+'" data-t="'+t+'">'+t+'</button>'; });
+    h+='</div><div class="lgbody">';
+    var thumbs=[];   // ship/sat items in DOM order → matched to their canvas by data-i after innerHTML
+    LEGEND[active].forEach(function(it){
+      if(it.t==='grp'){ h+='<div class="lggrp">'+it.l+'</div>'; return; }
+      if(it.t==='note'){ h+='<div class="lglbl" style="opacity:.62;margin:6px 0 2px">'+it.l+'</div>'; return; }
+      if(it.t==='ph'){ h+='<div class="lgrow"><div class="lgvis"><div class="lgph">◈</div></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      if(it.t==='ship'||it.t==='sat'){ var i=thumbs.length; thumbs.push(it);
+        h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
+    el.innerHTML=h+'</div>';
+    el.querySelector('.lgmin').onclick=function(){ el.classList.toggle('min'); this.textContent=el.classList.contains('min')?'+':'–'; };
+    [].forEach.call(el.querySelectorAll('.lgtab'), function(b){ b.onclick=function(){ active=b.dataset.t; render(); }; });
+    if(SHIPSREADY) [].forEach.call(el.querySelectorAll('.lgcv'), function(cv){ legThumb(cv, thumbBuild(thumbs[+cv.dataset.i])); }); }   // paint asset thumbnails once the GLBs are in
+  window.__legRender=render; render(); }
+buildLegend();
+
+rebuildAll();
+loadShips();
+window.__chipLabReady=true;
+</script>
+</body></html>
