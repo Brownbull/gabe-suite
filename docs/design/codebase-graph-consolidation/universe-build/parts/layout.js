@@ -16,7 +16,7 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     var order=[left.shift()];
     while(left.length){ var last=order[order.length-1], best=-1, bi=0;
       left.forEach(function(s,i){ var w=wOf(last,s); if(w>best){ best=w; bi=i; } }); order.push(left.splice(bi,1)[0]); }
-    order.forEach(function(e,i){ EX[e]=n<=1?0:(-300+i*(600/(n-1))); EY[e]=0; EZ[e]=0; });
+    order.forEach(function(e,i){ EX[e]=n<=1?0:(-450+i*(900/(n-1))); EY[e]=0; EZ[e]=0; });   // 900 span (was 600) — entity columns stop overlapping
     return;
   }
   __chainMode=false;
@@ -46,7 +46,25 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
       _ents.forEach(function(s){ V[s].x=(V[s].x-P[s].x*0.003)*0.9; V[s].y=(V[s].y-P[s].y*0.003)*0.9; V[s].z=(V[s].z-P[s].z*0.003)*0.9;
         P[s].x+=V[s].x; P[s].y+=V[s].y; P[s].z+=V[s].z; }); }
   }
-  _ents.forEach(function(s){ EX[s]=Math.round(P[s].x); EY[s]=Math.round(P[s].y); EZ[s]=Math.round(P[s].z); });
+  var SEP=1.55;   // widen the converged anchors — hulls read as distinct bubbles (the containment in zForce holds each cluster inside its radius)
+  _ents.forEach(function(s){ EX[s]=Math.round(P[s].x*SEP); EY[s]=Math.round(P[s].y*SEP); EZ[s]=Math.round(P[s].z*SEP); });
+}
+/* ── batch 9 CLUSTERING — the core drives POSITION, not just hull decoration ──
+   SUBANCHOR[ent][sub] = local offset from the entity anchor per sub-group, laid on a ring
+   (deterministic: groups sorted by size then name, phase staggered per entity). RENT[ent] =
+   the entity's nominal cluster radius — drives the per-kind radial bias + soft containment. */
+function recomputeSubAnchors(){
+  var cnt={}, subs={};
+  nodes.forEach(function(n){ cnt[n.ent]=(cnt[n.ent]||0)+1;
+    (subs[n.ent]=subs[n.ent]||{})[n.sub]=(subs[n.ent][n.sub]||0)+1; });
+  RENT={}; SUBANCHOR={};
+  _ents.forEach(function(e,ei){ var c=cnt[e]||0; RENT[e]=30+9*Math.sqrt(c);
+    var g=subs[e]||{}, ks=Object.keys(g).sort(function(a,b){ return (g[b]-g[a])||(a<b?-1:1); });
+    var m={}; SUBANCHOR[e]=m;
+    if(ks.length<2){ ks.forEach(function(k){ m[k]={x:0,y:0,z:0}; }); return; }   // one group (incl. the honest "other") → centered, no ring
+    var SR=Math.min(RENT[e]*0.55, 26+7*ks.length);
+    ks.forEach(function(k,i){ var a=ei*0.7 + i*(Math.PI*2/ks.length);            // per-entity phase stagger — rings don't all align
+      m[k]={ x:Math.cos(a)*SR, y:__chainMode?0:(((i%2)?1:-1)*SR*0.22), z:Math.sin(a)*SR }; }); });
 }
 /* cluster core — rewrite n.sub (the sub-cluster grouping key). Decoration only (nodes don't move).
    layer/kind/tests are c4-native; usecase/community/fk join GABE_LEVELS group maps by NAME
@@ -99,7 +117,7 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
   }
   links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });   // normalize to string ids before re-seed
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
-  try{ assignSub(CFG.coreBy); buildClusters(); updateClusters(true); }catch(e){}
+  try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // fn nodes change group sizes → re-ring
 }
 /* LINES — moved off the topbar into the config; sets the curved-connector flag + redraws */
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
@@ -144,10 +162,31 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
     if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true; var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } } });
 }
 
-/* mode-aware layout force: chain = layer→Y + entity→X band · force/spread = pull to the 3D entity anchor */
+/* THE MESH-MAKER (measured: bleed 43%, nodes at r≈240 vs a ~105 containment radius): the default
+   d3 link springs pull EVERY edge to rest≈30, dragging linked entities onto each other. Typed rest
+   lengths fix the physics at the source: intra-entity 40 · cross-entity 280 (≈ the anchor spacing). */
+function tuneLinkForce(){ if(typeof Graph==="undefined"||!Graph) return;
+  var lf=Graph.d3Force("link"); if(!lf||!lf.distance) return;
+  lf.distance(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
+    return (s&&t&&s.ent!==t.ent)?280:40; });
+  lf.strength(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];   // soft springs — the anchors own the geometry
+    return (s&&t&&s.ent!==t.ent)?0.04:0.12; }); }
+/* mode-aware layout force: chain = layer→Y + (entity+sub)→X/Z band · force/spread = pull to the
+   3D (entity + sub-ring) anchor, then a per-kind RADIAL bias (endpoints ring the entity EDGE,
+   functions/models/schemas pull to the CORE) + a soft containment past 1.3× the nominal radius. */
+var KRADF={ endpoint:1.25, web:1.25, screen:1.25, external:1.1, "function":0.35, model:0.28, schema:0.28 };
 function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x||0, y=n.y||0, z=n.z||0;
-  if(__chainMode){ n.vy += ((LZ[n.layer]||0)-y)*0.05*alpha; n.vx += ((EX[n.ent]||0)-x)*0.045*alpha; n.vz += (0-z)*0.03*alpha; }
-  else { n.vx += ((EX[n.ent]||0)-x)*0.06*alpha; n.vy += ((EY[n.ent]||0)-y)*0.06*alpha; n.vz += ((EZ[n.ent]||0)-z)*0.06*alpha; } }); }
+  var sa=(SUBANCHOR[n.ent]||{})[n.sub];
+  if(__chainMode){ n.vy += ((LZ[n.layer]||0)-y)*0.05*alpha;
+    n.vx += ((EX[n.ent]||0)+(sa?sa.x:0)-x)*0.045*alpha; n.vz += ((sa?sa.z:0)-z)*0.03*alpha; return; }
+  var ax=EX[n.ent]||0, ay=EY[n.ent]||0, az=EZ[n.ent]||0;
+  n.vx += (ax+(sa?sa.x:0)-x)*0.08*alpha; n.vy += (ay+(sa?sa.y:0)-y)*0.08*alpha; n.vz += (az+(sa?sa.z:0)-z)*0.08*alpha;
+  var dx=x-ax, dy=y-ay, dz=z-az, r=Math.sqrt(dx*dx+dy*dy+dz*dz);
+  if(!(r>1e-3) || !isFinite(r)) return;                     // coincident with the anchor → no radial direction yet (NaN guard)
+  var R0=RENT[n.ent]||60, f=KRADF[n.kind];
+  if(f){ var kr=0.08*alpha*(R0*f-r)/r; n.vx+=dx*kr; n.vy+=dy*kr; n.vz+=dz*kr; }                // kind ring: boundary out, guts in
+  var rmax=R0*1.3; if(r>rmax){ var kc=0.3*alpha*(rmax-r)/r; n.vx+=dx*kc; n.vy+=dy*kc; n.vz+=dz*kc; }   // containment kills the bleed
+}); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
 
 /* re-tab the config into PLANETS | UNIVERSE. The spike's own groups (Container/Show/Transparency/Planet/

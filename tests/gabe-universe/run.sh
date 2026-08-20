@@ -100,7 +100,7 @@ check('__chainMode' in page, "mode-aware zForce (chain vs force/spread) missing"
 check('grp==="entLayout"' in page and 'grp==="coreBy"' in page, "applyCfg missing the entLayout/coreBy branches")
 check('d3ReheatSimulation' in page, "entity-layout change never reheats the sim (nodes would not move)")
 check('window.__uniAddLayoutTab' in page and 'cfgtabbar' in page, "the Display|Layout config tab is missing")
-check('recomputeEX(CFG.entLayout); }catch(e){} build' in page, "the initial layout is not applied before build()")
+check('recomputeEX(CFG.entLayout); recomputeSubAnchors(); }catch(e){} build' in page, "the initial layout + sub-anchors are not applied before build()")
 # FIRE+SILENT: force/spread compute 3D anchors (EY/EZ), not just a flat X band
 check('EY[e]=0; EZ[e]=0;' in page and ('EY[s]=Math.round' in page or 'EZ[s]=Math.round' in page),
       "EY/EZ 3D entity anchors not computed — force/spread would stay flat")
@@ -140,6 +140,22 @@ check('id="trSpeedRng"' in page and 'INTC.speed' in page, "transport-speed slide
 check('id="motionBtn"' in page, "config-header motion play/pause button missing")
 check('id="freezeDragBtn"' in page and '__uniToggleFreezeDrag' in page, "topbar freeze-on-drag toggle missing")
 check('zoneshd{ display:flex; align-items:center; justify-content:flex-start' in page, "Zones toggle not placed next to the title (flex-start)")
+
+# ── 10j. batch-9 CLUSTERING: the core drives POSITION (sub-anchor ring + reheat), endpoints ring the
+#         entity EDGE (per-kind radial), entities separate (typed link rests + capped charge + containment) ──
+check('function recomputeSubAnchors' in page, "sub-anchor ring recompute missing (core cannot re-arrange nodes)")
+check('(SUBANCHOR[n.ent]||{})[n.sub]' in page, "zForce does not read the sub anchor — n.sub still decoration-only")
+check('assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation()' in page,
+      "the coreBy branch does not re-anchor + REHEAT (core change would not move nodes)")
+check('grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters()' not in page,
+      "REGRESSION: coreBy is decoration-only again (assignSub straight to buildClusters, no reheat)")
+check('var KRADF={ endpoint:' in page, "per-kind radial factors missing (endpoints would not ring the edge)")
+check('rmax=R0*1.3' in page, "soft containment missing (nodes bleed across entity hulls)")
+check('function tuneLinkForce' in page and '.ent!==t.ent)?280:40' in page,
+      "typed link rest-lengths missing (default rest≈30 springs collapse entities into one mesh)")
+check('strength(-60).distanceMax(150)' in page, "charge not range-capped (unbounded -150 balloons each cluster)")
+check('.strength(-150)' not in page, "REGRESSION: the unbounded -150 charge is back")
+check('DEF={x:150,y:80,z:780}' in page, "home camera not pulled back for the widened (SEP 1.55) scene")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

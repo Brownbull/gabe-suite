@@ -119,16 +119,29 @@ OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClust
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
   'else if(grp==="transports"){ buildTransports(); } '
-  'else if(grp==="entLayout"){ recomputeEX(CFG.entLayout); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
-  'else if(grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters(); updateClusters(true); } '
+  'else if(grp==="entLayout"){ recomputeEX(CFG.entLayout); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
+  'else if(grp==="coreBy"){ assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
   'else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } '
   'else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } '
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
-                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){}', 1)
+                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){}', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
 text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n', 1)
+
+# ── batch 9: typed link rest-lengths (intra 40 / cross-entity 280) — the default rest≈30 springs
+#    are what collapsed the entities into one mesh; and the unbounded -150 charge BALLOONS each
+#    cluster to r≈180 against a ~105 containment (measured) → cap its range, soften it ──
+OLD_DEF = 'DEF={x:110,y:40,z:430}'
+assert OLD_DEF in text, "camera DEF anchor missing"
+text = text.replace(OLD_DEF, 'DEF={x:150,y:80,z:780}', 1)   # scene widened ×1.55 (anchor SEP) → pull the home camera back to frame it
+
+OLD_CHARGE = '  try{ Graph.d3Force("charge").strength(-150); }catch(e){}'
+assert OLD_CHARGE in text, "charge-force anchor missing"
+text = text.replace(OLD_CHARGE,
+  '  try{ Graph.d3Force("charge").strength(-60).distanceMax(150); }catch(e){}\n'
+  '  try{ tuneLinkForce(); }catch(e){}', 1)
 
 # (orbit-around-click is now a pointerdown re-pivot in __uniSetupOrbit — batch 7; the old click-based
 #  approach never fired on a drag, so it is not re-applied here.)

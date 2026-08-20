@@ -30,6 +30,7 @@ function _methOf(label){ var m=/^(GET|POST|PUT|PATCH|DELETE)\b/.exec(label||"");
 var _ents=((_C4.l1&&_C4.l1.nodes)||[]).map(function(e){ return e.slug||e.id; });
 if(!_ents.length) _ents=Object.keys(_C4.l2||{});
 var ENT={}, EX={}, EY={}, EZ={};   // EY/EZ used by the force/spread entity-layout modes (batch 2)
+var SUBANCHOR={}, RENT={};         // batch 9: per-(ent,sub) local ring offsets + per-entity nominal radius — both filled by recomputeSubAnchors()
 _ents.forEach(function(e,i){ ENT[e]=(_C4.colors&&_C4.colors[e])||"#0d9488";
   EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); EY[e]=0; EZ[e]=0; });
 
