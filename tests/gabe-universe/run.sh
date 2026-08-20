@@ -43,10 +43,21 @@ check('_C4.l2' in page and 'cross_edges' in page, "adapter does not flatten l2 +
 check(page.count('class="navitem on" href="gabe-universe.html"') == 1, "Gabe Universe nav row is not the single active item")
 check('<b>Gabe Universe</b>' in page, "topbar crumb does not name the station")
 
-# ── 4. one-row topbar + the spike's control overlays hidden (kept in DOM, boots untouched) ──
-check(re.search(r'\.bar,\s*#cfg,\s*#expl,\s*#elegend,\s*\.hint\{[^}]*display:\s*none', page) is not None,
-      "the spike control overlays are not hidden (station would show the lab chrome)")
+# ── 4. one-row topbar; the spike's title-bar/explorer/hint are hidden, but the CONFIG + LEGEND are REVEALED ──
+check(re.search(r'\.bar,\s*#expl,\s*\.hint\{[^}]*display:\s*none', page) is not None,
+      "the spike title-bar/explorer/hint are not hidden")
+check('#cfg, #expl' not in page and '#cfg, #elegend' not in page,
+      "regression: #cfg/#elegend still in the hidden-overlay list (config + legend must be revealed)")
 check('<div class="topbar">' in page, "one-row topbar missing")
+# config + legend revealed and repositioned clear of the nav/topbar
+check('#cfg.cfg{ top:calc(var(--topbarh)' in page, "config panel not repositioned below the topbar")
+check('#elegend{ left:calc(var(--navw)' in page, "legend not moved clear of the nav")
+# nav minimize + config gear affordances
+check('id="navgear"' in page and 'window.__uniCfgToggle' in page, "config gear affordance missing")
+check('id="navmin"' in page and 'window.__uniNavToggle' in page, "nav minimize affordance missing")
+check('id="navshow"' in page and 'body.nav-min' in page, "nav restore tab / collapse class missing")
+# web nodes get a billboard ICON (in `order`), not the fallback primitive cube
+check('"screen","web","endpoint"' in page, "web kind not in `order` — web nodes would render as the primitive cube, not the screen icon")
 
 # ── 5. #g is inset by the nav + topbar (not the spike's full-viewport fixed) ──
 check(re.search(r'#g\{[^}]*left:\s*var\(--navw\)', page) is not None, "#g not inset by the nav width")

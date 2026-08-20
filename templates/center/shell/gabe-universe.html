@@ -149,10 +149,30 @@
     --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     --font-mono:Menlo,Consolas,ui-monospace,monospace; }
   /* the graph + panel inset by the nav (left) and the topbar (top); the spike's fixed rail mechanic is kept */
-  #g{ left:var(--navw) !important; top:var(--topbarh) !important; }
+  #g{ left:var(--navw) !important; top:var(--topbarh) !important; transition:left .18s ease; }
   .panel{ top:var(--topbarh) !important; }
-  /* hide the spike's own control chrome — kept in the DOM so the engine boots untouched, hidden per the station mock */
-  .bar, #cfg, #expl, #elegend, .hint{ display:none !important; }
+  /* hide only the spike's title bar + explorer + hint; the CONFIG (#cfg) + LEGEND (#elegend) are REVEALED (operator visual pass) */
+  .bar, #expl, .hint{ display:none !important; }
+  /* config panel: below the one-row topbar, right of the graph (its own drag/minimize kept) */
+  #cfg.cfg{ top:calc(var(--topbarh) + 12px) !important; }
+  /* legend: bottom-left, moved clear of the nav; tracks the nav collapse via --navw */
+  #elegend{ left:calc(var(--navw) + 14px) !important; transition:left .18s ease; }
+  /* ── LEFT-NAV collapse: a body class narrows --navw to 0 and slides the nav out; the graph/topbar/legend expand ── */
+  body.nav-min{ --navw:0px; }
+  body.nav-min nav.side{ transform:translateX(-100%); }
+  nav.side{ transition:transform .18s ease; }
+  .navmin{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:auto; width:100%;
+    font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:6px 8px; cursor:pointer; }
+  .navmin:hover{ color:var(--ink); border-color:var(--accent); } .navmin svg{ width:13px; height:13px; }
+  /* the config gear in the nav brand row — toggles the #cfg panel */
+  .navgear{ margin-left:auto; display:grid; place-items:center; width:26px; height:26px; flex:none;
+    color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
+  .navgear:hover{ color:var(--accent); border-color:var(--accent); } .navgear svg{ width:14px; height:14px; }
+  .navgear.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  /* floating restore tab, shown only while the nav is collapsed */
+  .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
+    width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }
+  body.nav-min .navshow{ display:flex; } .navshow:hover{ border-color:var(--accent); } .navshow svg{ width:16px; height:16px; }
   /* LEFT NAV (from the center shell, dark-tuned to the universe) */
   nav.side{ position:fixed; left:0; top:0; bottom:0; width:var(--navw); background:#0c1322; border-right:1px solid var(--line);
     padding:14px 11px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; z-index:30; font:13px/1.4 var(--font-ui); }
@@ -218,6 +238,7 @@
   <div class="brand">
     <span class="logo"><img src="assets/gabe-icon.png" width="26" height="26" alt="" style="image-rendering:pixelated"></span>
     <span><b>{{PROJECT_NAME}}</b><small>Gabe Center</small></span>
+    <button class="navgear on" id="navgear" title="graph configuration panel" onclick="window.__uniCfgToggle&&window.__uniCfgToggle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </div>
   <div class="navlabel g-now">Now</div>
   <a class="navitem" href="index.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg> Overview</a>
@@ -243,8 +264,10 @@
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
   {{SIDEBAR_LEAF}}
+  <button class="navmin" id="navmin" title="collapse the sidebar — more room for the graph" onclick="window.__uniNavToggle&&window.__uniNavToggle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m16 15-3-3 3-3"/></svg> Minimize</button>
   <div class="foot">regen {{REGEN_STAMP}}<br>HEAD {{HEAD_SHA}} · {{GENERATOR_NAME}}</div>
 </nav>
+<button class="navshow" id="navshow" title="show the sidebar" onclick="window.__uniNavToggle&&window.__uniNavToggle()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/><path d="m14 9 3 3-3 3"/></svg></button>
 <div class="topbar">
   <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
@@ -328,7 +351,7 @@ var KINDS={
     doc:"The container the pieces live in — NOT an icon-node: it's the big translucent boundary around a cluster." }
 };
 /* the LEGEND / reference set = all 12 kinds (icons). ENTITY is the boundary, not a node. */
-var order=["route","component","hook","type","store","screen","endpoint","function","schema","model","external","entity"];
+var order=["route","component","hook","type","store","screen","web","endpoint","function","schema","model","external","entity"];
 /* ONE distinct colour per element kind — none reused by another kind, none overlapping a METHOD colour. */
 var KINDCOL={ endpoint:"#8b5cf6", "function":"#6366f1", model:"#14b8a6", schema:"#06b6d4", entity:"#84cc16",
   component:"#d946ef", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };
@@ -734,6 +757,11 @@ function __uniCurve(A,B,dir,len){ var mid=A.clone().add(B).multiplyScalar(0.5);
 window.__uniToggleCurved=function(){ window.__uniCurved=!window.__uniCurved;
   try{ updateConnectors(); }catch(e){}
   var b=document.getElementById("curveToggle"); if(b) b.classList.toggle("on", !!window.__uniCurved); };
+window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) return;
+  var hidden=(c.style.display==="none"); c.style.display=hidden?"":"none";
+  var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
+window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
+  setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
 function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;
   var dir=b.clone().sub(a); var len=dir.length()||1; dir.multiplyScalar(1/len);
   var A=a.clone().addScaledVector(dir,R), B=b.clone().addScaledVector(dir,-R);   // reach just past each node bubble
