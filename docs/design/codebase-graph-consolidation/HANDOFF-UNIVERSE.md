@@ -85,6 +85,10 @@ Nine visual-pass asks: journeys picker LEFT + grouped (END-TO-END first — emit
 
 Journey command center = topbar MIDDLE ([journeys][style] · name · ‹i/N› · step · ✕; picker opens centered; panel keeps only the TRAIL; banner retired). Fleet gains the labeled VIEW row (planets · wires). Rail chevron parity (collapsed ‹ at the BOTTOM like the expanded footer ›). CHORD: chorded presses fire NO pointerdown (spec) → a left press joining a right-pan now starts the rig drag from the move stream; the chord does BOTH (orbit + half-strength rig drift); right-release keeps the drag. Proofs verify-walk + verify-explore; battery **175 static**.
 
+## BATCH 15 — LANDED (`2072219`): highlight fixed FOR THE EYE · planets/wires matrix · step pill · depth bar
+
+Operator's diagnostic protocol ran first (real-UI journey select → screenshots): counters said working, the SCREEN said noise. Fixes: contrast floors (dim 0.05 · lit 2.6 · halos 64/36) · transports fly the LIT path only · journey select FRAMES the carrier set (`_frameSet`, camera 910 > radius 325) · stepping aims ≥260. Re-shot: unmistakable in both styles. UI: PLANETS+WIRES are fleet MATRIX columns (entity AND cluster, masters; hull stays on planets-off; wires scope exactly; CFG.showElems/showWires retired) · the journey stepper is a WIDE PILL over the diagram (‹ edge · i/N · NAME · edge ›; ✕ in its own pill; topbar HUD gone) · card body scrolls inside the panel (footer chevron always on screen) · depth = draggable 1–5 bar + ArrowUp/Down (Alt+scroll stays). Battery **180 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
