@@ -293,6 +293,7 @@
 <script src="../../assets/3d-bundle.js"></script>
 <script src="../../assets/chip-assets.js"></script>
 <script src="./c4-graph.js"></script>
+<script src="./levels.js"></script>
 <script>
 window.addEventListener("error", function(ev){ var d=document.getElementById("err")||document.createElement("div"); d.id="err";
   d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99;background:#c0392b;color:#fff;font:11px monospace;padding:6px 10px;white-space:pre-wrap";
@@ -909,11 +910,27 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
   }
   _ents.forEach(function(s){ EX[s]=Math.round(P[s].x); EY[s]=Math.round(P[s].y); EZ[s]=Math.round(P[s].z); });
 }
-/* cluster core — rewrite n.sub (the sub-cluster grouping key). Decoration only (nodes don't move). */
-function assignSub(mode){ nodes.forEach(function(n){
-  if(mode==="kind") n.sub=n.kind;
-  else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
-  else n.sub=SUBOF[n.layer]||"data"; }); }
+/* cluster core — rewrite n.sub (the sub-cluster grouping key). Decoration only (nodes don't move).
+   layer/kind/tests are c4-native; usecase/community/fk join GABE_LEVELS group maps by NAME
+   (endpoints by "METHOD /path" = eps; models/schemas by class name = cls). Honest "other" bucket. */
+var _LMAP=null;
+function _levelsGroupMap(){ var D=window.GABE_LEVELS; if(!D||!D.pieces) return null;
+  var out={usecase:{}, community:{}, fk:{}};
+  nodes.forEach(function(n){ var pc=D.pieces[n.ent]; if(!pc) return; var nm=n.label;
+    var uc=pc.usecases||{}; Object.keys(uc).some(function(gp){ var v=uc[gp]||{};
+      if((v.cls||[]).indexOf(nm)>=0 || (v.eps||[]).indexOf(nm)>=0){ out.usecase[n.id]=gp; return true; } return false; });
+    var cm=pc.communities||{}; Object.keys(cm).some(function(gp){ if((cm[gp]||[]).indexOf(nm)>=0){ out.community[n.id]=gp; return true; } return false; });
+    var fk=pc.fk_communities||{}; Object.keys(fk).some(function(gp){ if((fk[gp]||[]).indexOf(nm)>=0){ out.fk[n.id]=gp; return true; } return false; });
+  }); return out; }
+function assignSub(mode){
+  if(mode==="usecase"||mode==="community"||mode==="fk"){
+    if(!_LMAP) _LMAP=_levelsGroupMap();
+    var m=(_LMAP&&_LMAP[mode])||{};
+    nodes.forEach(function(n){ n.sub=m[n.id]||"other"; }); return; }
+  nodes.forEach(function(n){
+    if(mode==="kind") n.sub=n.kind;
+    else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
+    else n.sub=SUBOF[n.layer]||"data"; }); }
 
 /* mode-aware layout force: chain = layer→Y + entity→X band · force/spread = pull to the 3D entity anchor */
 function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){
@@ -928,14 +945,20 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   while(body.firstChild) disp.appendChild(body.firstChild);
   var pillHTML=function(grp, opts, cur){ var s='<div class="pill" data-grp="'+grp+'">';
     opts.forEach(function(o){ s+='<button data-v="'+o.v+'"'+(o.v===cur?' class="on"':'')+'>'+o.t+'</button>'; }); return s+'</div>'; };
+  var hasLevels=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
+  var cores=[{v:"layer",t:"Layer"},{v:"kind",t:"Kind"},{v:"tests",t:"Tests"}];
+  if(hasLevels) cores.push({v:"usecase",t:"Use-case"},{v:"community",t:"Community"},{v:"fk",t:"FK-join"});
+  var coreNote=hasLevels
+    ? "Use-case / Community / FK-join joined from the levels feed by name · Guards needs a guard-count field (not emitted)"
+    : "Use-case / Community / FK-join need the levels feed (not loaded here)";
   var lay=document.createElement("div"); lay.className="cfgpane"; lay.style.display="none";
   lay.innerHTML=
      '<div class="grp"><div class="grplbl">ENTITY LAYOUT</div>'
     + pillHTML("entLayout",[{v:"chain",t:"Chain"},{v:"force",t:"Force"},{v:"spread",t:"Spread"}], CFG.entLayout)
     + '<div style="font-size:10px;color:var(--muted);margin-top:4px">chain = layered plane · force = coupling bubbles · spread = graph-distance</div></div>'
     + '<div class="grp"><div class="grplbl">CLUSTER CORE BY</div>'
-    + pillHTML("coreBy",[{v:"layer",t:"Layer"},{v:"kind",t:"Kind"},{v:"tests",t:"Tests"}], CFG.coreBy)
-    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">Guards · Use-case · Community · FK-join need the levels feed — coming.</div></div>';
+    + pillHTML("coreBy", cores, CFG.coreBy)
+    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+coreNote+'</div></div>';
   var bar=document.createElement("div"); bar.className="cfgtabbar";
   bar.innerHTML='<button class="cfgtab on" data-pane="display">Display</button><button class="cfgtab" data-pane="layout">Layout</button>';
   body.appendChild(bar); body.appendChild(disp); body.appendChild(lay);

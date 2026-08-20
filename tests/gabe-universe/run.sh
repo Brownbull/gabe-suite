@@ -105,6 +105,14 @@ check('recomputeEX(CFG.entLayout); }catch(e){} build' in page, "the initial layo
 check('EY[e]=0; EZ[e]=0;' in page and ('EY[s]=Math.round' in page or 'EZ[s]=Math.round' in page),
       "EY/EZ 3D entity anchors not computed — force/spread would stay flat")
 
+# ── 10e. batch-3: the levels feed drives Use-case / Community / FK-join cores (Guards dropped — no data) ──
+check('src="./levels.js"' in page, "levels feed not loaded — usecase/community/fk cores have no source")
+check('function _levelsGroupMap' in page and 'window.GABE_LEVELS' in page, "levels group-map join missing")
+check('mode==="usecase"' in page and 'mode==="community"' in page and 'mode==="fk"' in page,
+      "assignSub missing the usecase/community/fk levels-backed branches")
+check('fk_communities' in page and 'usecases' in page and 'communities' in page, "levels map fields not read")
+check('data-v="guards"' not in page, "a Guards core button exists but no guard-count data backs it (dead control)")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
