@@ -983,18 +983,38 @@ window.__uniToggleFreezeDrag=function(btn){ ANIM.freezeOnDrag=!ANIM.freezeOnDrag
    onto the plane through the current pivot and move BOTH target and camera by the same offset. The view is
    unchanged (camera↔target relationship preserved), but the drag that follows now orbits the clicked point. */
 var _dragWasPlaying=false;
-function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true;
+/* ORBIT AROUND THE CLICK POINT — take over the left-drag and rotate the camera RIG (camera + look-target)
+   rigidly around the clicked point P. Because the rotation FIXES P, it stays put on screen and the distance
+   to it is constant → no reposition, no zoom drift. OrbitControls is disabled during the drag (its scroll-zoom
+   + right-drag pan are untouched) and re-synced on release. */
+function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quaternion().setFromAxisAngle(axis, ang);
+  cam.position.sub(P).applyQuaternion(q).add(P);   // rotate the camera RIG (position + orientation) rigidly about P
+  target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
+  cam.quaternion.premultiply(q); }
+function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
   g.addEventListener("pointerdown", function(ev){ if(ev.button!==0) return;
-    if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }   // freeze decorations while dragging the camera
     try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls||!ctrls.target) return;
       var r=g.getBoundingClientRect(), mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
       var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, cam);
-      var dir=new T.Vector3(); cam.getWorldDirection(dir);
-      var plane=new T.Plane().setFromNormalAndCoplanarPoint(dir, ctrls.target), P=new T.Vector3();
-      if(rc.ray.intersectPlane(plane, P)){ var off=P.clone().sub(ctrls.target); ctrls.target.add(off); cam.position.add(off); ctrls.update(); }
-    }catch(e){} }, true);   // CAPTURE → runs before OrbitControls records the drag's start pivot
-  window.addEventListener("pointerup", function(){ if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true;    // resume on release
-    var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } } });
+      var vdir=new T.Vector3(); cam.getWorldDirection(vdir);
+      var plane=new T.Plane().setFromNormalAndCoplanarPoint(vdir, ctrls.target), P=new T.Vector3();
+      if(!rc.ray.intersectPlane(plane, P)) return;
+      drag={ P:P, lx:ev.clientX, ly:ev.clientY }; ctrls.enabled=false;   // custom rotation owns this drag
+      if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
+    }catch(e){} }, true);
+  window.addEventListener("pointermove", function(ev){ if(!drag) return;
+    try{ var cam=Graph.camera(), ctrls=Graph.controls();
+      var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
+      var up=new T.Vector3(0,1,0);
+      var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
+      var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
+      _rotRig(cam, ctrls.target, drag.P, up, -dx*0.006);                             // azimuth around world-up through P
+      var nd=vdir.clone().applyAxisAngle(right, -dy*0.006);                          // polar around camera-right (clamp near vertical to avoid a flip)
+      if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, -dy*0.006);
+    }catch(e){} });
+  window.addEventListener("pointerup", function(){
+    if(drag){ var ctrls=Graph.controls(); drag=null; if(ctrls){ ctrls.enabled=true; try{ ctrls.update(); }catch(e){} } }
+    if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true; var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } } });
 }
 
 /* mode-aware layout force: chain = layer→Y + entity→X band · force/spread = pull to the 3D entity anchor */
@@ -1036,7 +1056,11 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(G.container) uni.appendChild(G.container);
   if(G.show) uni.appendChild(G.show);
   if(trows[1]||trows[2]){ var ct=grpWith("Cluster transparency"); if(trows[1])ct.appendChild(trows[1]); if(trows[2])ct.appendChild(trows[2]); uni.appendChild(ct); }
-  if(G.universe) uni.appendChild(G.universe);
+  if(G.universe){ uni.appendChild(G.universe);   // add a transport-speed slider under the Stars/Transports icons
+    var tsp=mk("cfgrow"); tsp.style.marginTop="6px";
+    tsp.innerHTML='<span class="rlbl" style="width:auto;font-size:10px;text-transform:none;letter-spacing:0">transport speed</span>'
+      +'<input type="range" class="rng" id="trSpeedRng" min="0.05" max="1.2" step="0.05" value="'+((typeof INTC!=="undefined"&&INTC.speed)||0.3)+'">';
+    G.universe.appendChild(tsp); }
   var hasLevels=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
   var hasFns=!!(window.GABE_LEVELS && (window.GABE_LEVELS.fn_nodes||[]).length);
   var cores=[{v:"layer",t:"Layer"},{v:"kind",t:"Kind"},{v:"tests",t:"Tests"}];
@@ -1074,6 +1098,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
       if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
       try{ applyCfg(grp); }catch(err){} }); }); });
+  var tsr=document.getElementById("trSpeedRng");   // transport-speed slider → INTC.speed (read live by tickTransports)
+  if(tsr) tsr.addEventListener("input", function(){ if(typeof INTC!=="undefined") INTC.speed=+this.value; });
 };
 /* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
    TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
