@@ -274,6 +274,14 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c){
     return '<span class="flcell" title="'+c.ti+'">'+(typeof ico==="function"?ico(c.icon,13):"")+'</span>'; }).join('')+'</div>';
+  /* presets: All/None live via the SAME preset entry point the in-flight batch will use; the
+     In-flight stub ships DISABLED with the honest-empty reason (undefined = no feed on this page ·
+     null = feed at rest, no change in flight · object = the derivation lands in a later batch). */
+  var _simTitle=(typeof window.GABE_SIM==="undefined") ? "no sim feed on this page (sim.data.js absent)"
+    : (window.GABE_SIM===null ? "no change in flight (sim feed at rest)" : "a change IS in flight — the preset derivation lands in a later batch");
+  h+='<div class="flrow flpresets"><button class="flpre" data-fpre="all">All</button>'
+    +'<button class="flpre" data-fpre="none">None</button>'
+    +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   _ents.forEach(function(e){ h+='<div class="flrow"><span class="flent" title="'+e+'"><i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i>'+e+'</span>'
@@ -286,6 +294,9 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
       _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; }); }
     else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
+  body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
+    if(k==="all"){ _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
+    else if(k==="none"){ _ents.forEach(function(e){ ent[e]={show:0}; }); __uniApplyVisPreset({ent:ent}); } }; });
   __uniFleetSync(); };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), col=b.getAttribute("data-fcol"),

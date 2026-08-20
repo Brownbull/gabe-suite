@@ -61,7 +61,7 @@ const wire = await p.evaluate(() => {
 const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 const fleet = await p.evaluate(() => {
   const e = _ents[0];
-  const rows = document.querySelectorAll('#fleet .flrow:not(.flmaster)').length;
+  const rows = document.querySelectorAll('#fleet .flrow:not(.flmaster):not(.flpresets)').length;
   return { panel: !!document.getElementById('fleet'), rows, ent: e, entCount: _ents.length,
     entNodes: nodes.filter(n => n.ent === e).length };
 });
@@ -165,6 +165,20 @@ const routesAfter = await p2.evaluate(e => ({
 const dimSync = await p2.evaluate(() => { CFG.zDef = false; applyCfg('zDef');
   const d = document.querySelector('#fleet .fltog[data-fcol="zDef"]').classList.contains('mdim');
   CFG.zDef = true; applyCfg('zDef'); return d; });
+// [C] presets: sim feed loaded (GABE_SIM null at rest on the example) · In-flight honestly stubbed ·
+//     None hides everything, All restores — through the same preset entry point
+const presetC = await p2.evaluate(() => ({
+  simDefined: typeof window.GABE_SIM !== 'undefined', simAtRest: window.GABE_SIM === null,
+  stub: (document.querySelector('#fleet .flpre[data-fpre="inflight"]') || {}).disabled === true,
+  stubTitle: (document.querySelector('#fleet .flpre[data-fpre="inflight"]') || {}).title || '' }));
+await p2.evaluate(() => { document.querySelector('#fleet .flpre[data-fpre="none"]').click(); });
+await raf2(); await p2.waitForTimeout(600);
+const noneState = await p2.evaluate(() => ({
+  anyShown: nodes.some(n => n.__threeObj && n.__threeObj.parent), hulls: CLUSTERS.length, movers: MOVERS.length }));
+await p2.evaluate(() => { document.querySelector('#fleet .flpre[data-fpre="all"]').click(); });
+await raf2(); await p2.waitForTimeout(600);
+const allState = await p2.evaluate(() => ({
+  shown: nodes.filter(n => n.__threeObj && n.__threeObj.parent).length, hulls: CLUSTERS.length }));
 await b.close();
 
 console.log('wire styling:', JSON.stringify(wire));
@@ -202,5 +216,10 @@ if (!(ft0 > 0 && ft1 === ft0)) fails.push('FLEETTICK drifts across round-trips w
 if (!(routesBefore.ent > 0 && routesAfter.ent === 0 && routesAfter.all === routesBefore.all - routesBefore.ent))
   fails.push('routes column does not scope to the entity');
 if (!dimSync) fails.push('masters-dim does not track a live global flip');
+console.log('presets(C):', JSON.stringify(presetC), '· none →', JSON.stringify(noneState), '· all →', JSON.stringify(allState));
+if (!(presetC.simDefined && presetC.simAtRest && presetC.stub && /no change in flight/.test(presetC.stubTitle)))
+  fails.push('sim feed / in-flight stub wrong');
+if (!(noneState.anyShown === false && noneState.movers === 0)) fails.push('None preset leaves scene objects');
+if (!(allState.shown > 200 && allState.hulls > 0)) fails.push('All preset does not restore');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
-console.log('FLEET PROOF (A + B1 + B2): ALL PASS');
+console.log('FLEET PROOF (A + B1 + B2 + C): ALL PASS');

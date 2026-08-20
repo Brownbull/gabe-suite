@@ -31,7 +31,7 @@ repl = {
   147: (147, STYLE_CLOSE),
   149: (152, None),                 # drop the spike .bar block (title card + reset → moved to nav/topbar)
   162: (162, '<script src="./assets/3d-bundle.js"></script>'),
-  163: (163, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>'),
+  163: (163, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>'),   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
   234: (282, adapter),              # toy data block -> live adapter
   588: (588, REL2KIND),
   946: (946, GLINE),

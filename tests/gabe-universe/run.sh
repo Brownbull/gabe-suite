@@ -221,6 +221,13 @@ check('k:"zDef"' in page and 'k:"routes"' in page and 'icon:"truck"' in page,
       "zones/routes matrix columns missing")
 check('__uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
       "the URL-preset path rebuilds the config without re-syncing the fleet masters-dim")
+# batch 11-C: the sim feed + presets row (the in-flight seam must exist before that batch, or it debugs a phantom)
+check('<script src="./sim.data.js"></script>' in page,
+      "sim.data.js not loaded — GABE_SIM undefined on EVERY deployment, the in-flight seam is dead")
+check('data-fpre="all"' in page and 'data-fpre="none"' in page and 'data-fpre="inflight"' in page,
+      "presets row (All/None/In-flight) missing")
+check('no sim feed on this page' in page and 'no change in flight' in page,
+      "the In-flight stub does not distinguish its two honest-empty states (undefined vs null)")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
