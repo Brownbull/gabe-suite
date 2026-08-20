@@ -53,6 +53,18 @@ The complaint (big mesh, core-by = decoration only) is fixed and proven headless
 - **Routes tab**: LINES (straight/curved ICONS + curve-amount slider ×0.2–2.5) · per-kind BEAM (fk/bridge/calls/imports, 0 hides · >1 glows additive, sample-wire legends) · Transports toggle + speed.
 - Proof committed: `universe-build/verify-routes.mjs` (tab · freeze interleaves · drag-held · curve geometry · beam · preset boot, 0 errors). Battery **108 static**, all new checks mutation-proven.
 
+## BATCH 11 — LANDED (4 slices, `5a31d33`→`0c9f88d`): wire styling + the FLEET panel
+
+Executed per [PLAN-BATCH11-FLEET.md](PLAN-BATCH11-FLEET.md) (v2, plan-verified) on the operator's "land it":
+- **A** `5a31d33` — per-kind wire COLOR + SHAPE (solid/dashed/dotted/sparse) on the Routes tab; state IS `CONN`; ONE DASHMAP renders row samples AND the legend (Connectors rows now DERIVE from CONN — the frozen literals are gone).
+- **B1** `b57d95c` — the **FLEET panel** (top-left, minimizable/draggable): per-entity show/subs; the `UNIVIS{ent,node,meta}` contract + `visEnt/visN` accessors + `__uniApplyVisPreset` (node/meta reserved for the in-flight batch — GABE_SIM piece ids == universe node ids); six engine seams NIDS-resolved; show routing runs `rebuildNodes` (registry reset) + `buildTransports` (no ghost shuttles); card carries an honest note for a hidden selection.
+- **B2** `5594b6b` — zones (def/atk/cfl/sat) + routes columns, gates = global AND entity; masters-dim (zonesoff pattern) incl. the URL-preset rebuild path.
+- **C** `0c9f88d` — `sim.data.js` loaded by the page (the in-flight seam EXISTS now); presets All/None live via the preset entry point; In-flight DISABLED stub with three honest states (undefined / null / object).
+
+Proof: `universe-build/verify-fleet.mjs` (two pages, one booted `?war=1`; hide/round-trips/subs/zones-mesh-scoping/routes-scoping/FLEETTICK-stability/card-note/preset-namespaces/functions-on NENT case/None-All). Battery **134 static**, all new checks mutation-proven.
+
+**The in-flight batch (NEXT after the visual pass)** picks up: the preset derivation from GABE_SIM (touched/blast/context via `role` on UNIVIS — zones are NOT the role channel, fleets are metric-derived), the "dim" tri-state inside `visN()`, the zone↔lifecycle vocabulary (operator picks), and the FK-only-blast widening ruling — all recorded in the plan §C.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
