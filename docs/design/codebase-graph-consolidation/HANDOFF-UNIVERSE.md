@@ -67,6 +67,16 @@ Proof: `universe-build/verify-fleet.mjs` (two pages, one booted `?war=1`; hide/r
 
 **The in-flight batch (NEXT after the visual pass)** picks up: the preset derivation from GABE_SIM (touched/blast/context via `role` on UNIVIS — zones are NOT the role channel, fleets are metric-derived), the "dim" tri-state inside `visN()`, the zone↔lifecycle vocabulary (operator picks), and the FK-only-blast widening ruling — all recorded in the plan §C.
 
+## BATCH 12 — LANDED (`37062d5`): rulings settled · layer (c) · depth highlight · journeys · icon topbar · chord pan
+
+**Rulings recorded in [PLAN-BATCH11-FLEET.md](PLAN-BATCH11-FLEET.md) §C**: R1=(b) hull tint + stage beacon · R2=DROPPED (fleet-panel hiding IS the context mechanism) · R3=(b) client-side trust-tinted blast widen · Layers=(c) LANDED (the SUBOF collapse retired — layer core groups by the kind's OWN layer: endpoints·api·web·data, auto-grows; (d) frontend-model enrichment HELD on the enforcement trigger).
+
+- **Depth highlight**: select → BFS N hops (1–5); GLOW (halos + dimmed outside wires) or FOCUS (outside hidden, hulls stay); Alt+scroll / click-cycle / Esc; per-wire `hf` factor through `connectorWire`; `_nodeVisibleFn` = fleet ∧ focus (the one visibility truth).
+- **Journeys picker**: topbar button → 135 cross-entity tests (dedup by cid from det.test_journeys); picking one feeds the same highlight machinery (carriers = origin).
+- **Icon topbar**: depth badge · style · journeys · freeze · reset (rich hover titles), repo pills FAR right.
+- **Chord pan**: left-drag orbits; +right button pans the rig (quaternion frozen), release right → orbit resumes around the same point.
+- Proof `universe-build/verify-explore.mjs`; battery **158 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
