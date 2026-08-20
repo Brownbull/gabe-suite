@@ -497,7 +497,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         insight: dict[str, Any] | None = None,
         web_pieces: list[dict] | None = None,
         behind: dict[str, dict] | None = None,
-        journeys: dict[str, dict] | None = None) -> dict[str, list[dict]]:
+        journeys: dict[str, dict] | None = None,
+        schema_fields: dict[str, int] | None = None) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
     wiring, plus honest ``external`` stub nodes for outbound FKs into other
     entities / unclaimed tables — so a drill never hides where the entity reaches.
@@ -578,6 +579,9 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             enode["resp"] = ep["resp"]
         edet = with_journeys(det_of("endpoint", ep),
                              f"{ep.get('file')}::{ep.get('fn')}")
+        _rsp = ep.get("resp")     # response PAYLOAD: field-count of the resp schema (honest-empty if unmodelled)
+        if _rsp and _rsp != "—" and (schema_fields or {}).get(_rsp) is not None:
+            edet["payload"] = {"n": schema_fields[_rsp], "schema": _rsp}
         if edet:
             enode["det"] = edet
         bkey = f"{ep.get('file')}#{ep.get('fn')}"   # the graft call-tree floor behind this handler
@@ -869,12 +873,24 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     import _a3_tests
     journeys = _a3_tests.derive_journeys(ti, amap.get("_file_entity") or {},
                                          amap.get("model_insight") or {})
+    # response PAYLOAD floor: field-count of every modelled class (model cols + schema fields), so an
+    # endpoint can carry the size of the contract it returns. The archmap has no request body — payload
+    # is the RESPONSE shape; an endpoint whose resp names no modelled class stays honest-empty.
+    schema_fields: dict[str, int] = {}
+    for _code in entities.values():
+        for _m in (_code.get("models") or []):
+            if _m.get("cls"):
+                schema_fields[_m["cls"]] = sum(1 for c in (_m.get("cols") or []) if c and len(c) >= 2 and c[0])
+        for _s in (_code.get("schemas") or []):
+            if _s.get("cls"):
+                schema_fields[_s["cls"]] = sum(1 for c in (_s.get("fields") or []) if c and len(c) >= 2 and c[0])
     l2: dict[str, dict] = {}
     for slug in sorted(entities):
         code = entities[slug]
         if not code:
             continue
-        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug), behind, journeys)
+        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug), behind,
+                    journeys, schema_fields)
         _stamp_l2(graph)
         l2[slug] = graph
 

@@ -98,6 +98,16 @@ ck(_fe["ss"] == "orders" and _fe["ds"] == "users" and _fe["rel"] == "calls" and 
    "fn_edge reshaped {s·ss·t·ds·rel·conf} with the graft confidence carried")
 ck(any(n["id"] == "api/users.py#helper" for n in _lvg["fn_nodes"]),
    "the call TARGET joins the drawn set (else the lab drops the edge to an undrawn node)")
+# per-entity HIDDEN functions (fn_slug − drawn_fn) — the star-field floor. FIRE: a homed-but-undrawn fn.
+_GH = {"present": True, "functions": {
+    "fn_slug": {"api/orders.py#list_orders": "orders", "api/orders.py#dead": "orders"}, "calls": []}}
+_lvh = _a3_levels.build_levels(AMAP, graph, graft=_GH)
+_oent = next(e for e in _lvh["entities"] if e["slug"] == "orders")
+ck(_oent["counts"].get("hidden_fns") == 1,
+   "hidden_fns counts fns graft homes but the trace never draws (star-field floor), per entity")
+# SILENT: no graft → no fn_slug → no hidden_fns anywhere (honest-empty, byte-identical)
+ck(all("hidden_fns" not in (e.get("counts") or {}) for e in lv["entities"]),
+   "hidden_fns is honest-empty when graft is absent")
 # fn CODE-BEHIND: graft.fn_behind attaches to the matching drawn fn_node; a fn with no
 # fn_behind entry (a leaf) carries no `behind` — honest-empty, the panel omits the section.
 _lo = [n for n in _lvg["fn_nodes"] if n["id"] == "api/orders.py#list_orders"][0]

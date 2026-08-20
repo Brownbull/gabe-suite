@@ -262,9 +262,14 @@
       h += "</table>";
       if (det.test_journeys_more) h += "<div class='pmore'>+" + det.test_journeys_more + " more journey(s) — the full set lives in the graph</div>";
       return h; }
+    function payloadSect(det) {
+      // response PAYLOAD — the field-count of the resp contract (archmap has no request body).
+      var p = det && det.payload; if (!p) return "";
+      return _sect(_psvg("<path d='M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='m3.3 7 8.7 5 8.7-5 M12 22V12' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"), "payload")
+        + "<div class='pmore'>" + p.n + " field" + (p.n === 1 ? "" : "s") + " ferried · &rarr; <span class='cid'>" + esc(p.schema) + "</span> (response)</div>"; }
     function dossierHTML(det, docLabel, noun) {
       if (!det) return "";
-      return docSect(det, docLabel) + sigSect(det) + structSect(det, noun) + fkSect(det)
+      return docSect(det, docLabel) + sigSect(det) + payloadSect(det) + structSect(det, noun) + fkSect(det)
         + usageRowHTML(det) + fileRowHTML(det) + casesSect(det) + journeysSect(det); }
 
     /* ── the typed id-card chips (Tier 1) — one copy for both stations ── */
@@ -298,7 +303,8 @@
       _psvg: _psvg, _sect: _sect,
       docSect: docSect, fileRowHTML: fileRowHTML, usageRowHTML: usageRowHTML,
       structSect: structSect, fkSect: fkSect, sigSect: sigSect,
-      stateCls: stateCls, casesSect: casesSect, journeysSect: journeysSect, dossierHTML: dossierHTML,
+      stateCls: stateCls, casesSect: casesSect, journeysSect: journeysSect,
+      payloadSect: payloadSect, dossierHTML: dossierHTML,
       chips: { KIND_ICON: KIND_ICON, KIND_CHIP: KIND_CHIP, METHOD_COLOR: METHOD_COLOR,
                TYPE_CLS: TYPE_CLS, icoSvg: icoSvg, tyFamily: tyFamily,
                kindChip: kindChip, epChip: epChip, dtChip: dtChip,

@@ -265,6 +265,19 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
     _fedges.sort(key=lambda e: (e["ss"], e["ds"], e["s"], e["t"]))
     lv["fn_edges"] = _fedges
 
+    # per-entity HIDDEN functions — homed by graft (fn_slug) but NOT drawn on the trace: the honest
+    # star-field count. A SET difference (id-by-id, never len−len which goes negative), grouped by the
+    # fn's owning entity. Honest-empty: graft absent → fn_slug empty → no counts touched → byte-identical.
+    _fn_slug = _gf.get("fn_slug") or {}
+    _hidden: dict[str, int] = {}
+    for _fid, _sl in _fn_slug.items():
+        if _fid not in drawn_fn:
+            _hidden[_sl] = _hidden.get(_sl, 0) + 1
+    for _ent in lv["entities"]:
+        _h = _hidden.get(_ent["slug"])
+        if _h:                                        # new dict — never mutate the shared C4 node counts
+            _ent["counts"] = {**(_ent["counts"] or {}), "hidden_fns": _h}
+
     # ── fn_nodes — the DRAWN functions only, enriched from function_insight where
     #    present; graft/TS fns (no function_insight) default their layer by file ext.
     _fn_behind = (graft or {}).get("fn_behind") or {}   # per-fn call-tree floor (hidden mass)

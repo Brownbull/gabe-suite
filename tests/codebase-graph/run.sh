@@ -149,7 +149,7 @@ check('src="assets/graph-grammar.js"' in station, "the change graph loads the sh
 check("window.GABE_GRAPH_GRAMMAR" in station, "the change graph consumes the factory (guarded)")
 check("function dossierHTML(det" in grammar, "the shared asset defines the dossier renderer")
 check("if (!det) return \"\";" in grammar, "dossier is honest-empty (no det → no dossier)")
-for fn in ["docSect", "structSect", "sigSect", "casesSect", "fkSect", "journeysSect"]:
+for fn in ["docSect", "structSect", "sigSect", "casesSect", "fkSect", "journeysSect", "payloadSect"]:
     check(("function " + fn + "(") in grammar, f"dossier section {fn} in the shared asset")
 check("dossierHTML(n.det" in station, "the L2 card renders the dossier")
 check("dossierHTML(l2n.det" in station, "the sim piece card JOINS the dossier (slice 2)")
@@ -166,6 +166,9 @@ check("casesSect(det) + journeysSect(det)" in grammar,
       "the dossier appends the test-journeys section after cases")
 check("test_journeys" in grammar and "starts here and travels out" in grammar and "reached by a cross-entity test" in grammar,
       "journeys render the traveled entities with kind-specific ENTRY/STOP framing")
+# response PAYLOAD floor — an endpoint's resp-schema field count, rendered after the signature
+check("sigSect(det) + payloadSect(det)" in grammar and "field" in grammar and "ferried" in grammar,
+      "the dossier renders the response payload field-count after the signature")
 # (an earlier `X not in s.replace(X,'')` mutation line was tautological — always
 # true whether or not X existed; for substring pins the presence check IS the gate)
 check("function stateCls" in grammar and "st-skip" in grammar,
