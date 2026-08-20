@@ -125,6 +125,13 @@ check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 check('onBackgroundClick' in page and 'intersectPlane' in page, "orbit-around-cursor (background raycast pivot) missing")
 check('Graph.cameraPosition(_cp,{x:n.x' in page, "node-click orbit pivot (re-aim camera on the clicked node) missing")
 
+# ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
+check('warOn:false' in page, "planet assets are not OFF by default")
+check('grplbl zoneshd' in page, "the Zones title does not carry the inline On/Off master toggle")
+check('zonesoff' in page, "zone icons do not dim when the master toggle is off")
+check('data-grp="coreBy"]{ display:grid' in page, "cluster-core pill is not a 2-column grid (it would overflow)")
+check('if(force || _wtick%3===0) updateConnectors' in page, "per-tick connector rebuild is not throttled (settle stays laggy)")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",

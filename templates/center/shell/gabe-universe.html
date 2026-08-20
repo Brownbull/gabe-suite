@@ -234,6 +234,14 @@
   #cfg .cfgtab{ font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 10px; border-bottom:2px solid transparent; }
   #cfg .cfgtab:hover{ color:var(--ink); }
   #cfg .cfgtab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+  /* Zones title carrying an inline On/Off master toggle; the icons dim when the master is off */
+  #cfg .grplbl.zoneshd{ display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  #cfg .grplbl.zoneshd .pill{ padding:1px; }
+  #cfg .grplbl.zoneshd .pill button{ font-size:9.5px; padding:2px 8px; text-transform:none; letter-spacing:0; }
+  #cfg .grp.zonesoff .itog{ opacity:.38; }
+  /* Cluster-core pill as a 2-column grid so the 7 cores never overflow the panel width */
+  #cfg .pill[data-grp="coreBy"]{ display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+  #cfg .pill[data-grp="coreBy"] button{ justify-content:center; }
   /* keep <code> inline chips readable in the dark card */
   .pbody code{ font-family:var(--font-mono); background:#0e1524; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
   nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}
@@ -543,7 +551,7 @@ var OPMAP={
 var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
   /* SPACE WAR zones — 3 areas around each planet; angle (deg, front XY plane) + one shared distance.
      defaults: attack=left(180) · conflict=top(90) · defense=right(0). warDist = gap outside the sphere. */
-  warOn:true, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
+  warOn:false, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
   conns:true, stars:true, transports:true,   // ELEMENTS-LAB fleets · connectors · star field · transports — all baked ALWAYS ON (settled)
   zDef:true, zAtk:true, zCfl:true, zSat:true };   // per-planet-zone visibility (defence · attack · conflict · satellites), toggled in the Planet group
 var RADMIN=0.6, RADMAX=1.6;
@@ -985,12 +993,13 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     if(/Container/i.test(t))G.container=g; else if(/Show/i.test(t))G.show=g; else if(/Transparency/i.test(t))G.transp=g; else if(/Planet/i.test(t))G.planet=g; else if(/Universe/i.test(t))G.universe=g; });
   var trows=G.transp? [].slice.call(G.transp.querySelectorAll(".cfgrow")) : [];   // [bubble, subOp, entOp]
 
-  // ── PLANETS pane: master on/off · planet transparency (bubble) · planet assets (zones) ──
+  // ── PLANETS pane: planet transparency (bubble) · Zones (title + inline On/Off master, icons only) ──
   var pl=mk("cfgpane");
-  var master=grpWith("Assets · all on / off"); master.querySelector(".grplbl").insertAdjacentHTML("afterend", pillHTML("warOn",[{v:true,t:"All on"},{v:false,t:"All off"}], CFG.warOn));
-  pl.appendChild(master);
   if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); pl.appendChild(pt); }
-  if(G.planet){ G.planet.querySelector(".grplbl").innerHTML='Zones · defence / attack / conflict / satellites'; pl.appendChild(G.planet); }
+  if(G.planet){ var zlbl=G.planet.querySelector(".grplbl"); zlbl.className="grplbl zoneshd";
+    zlbl.innerHTML='<span>Zones</span>'+pillHTML("warOn",[{v:true,t:"On"},{v:false,t:"Off"}], CFG.warOn);   // master on/off inline with the title
+    G.planet.classList.toggle("zonesoff", !CFG.warOn);                                                     // dim the zone icons when the master is off
+    pl.appendChild(G.planet); }
 
   // ── UNIVERSE pane: container · sub-cluster + radius · cluster transparency · stars/transports · layout ──
   var uni=mk("cfgpane"); uni.style.display="none";
@@ -1028,15 +1037,13 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   bar.querySelectorAll(".cfgtab").forEach(function(t){ t.onclick=function(){ var pane=t.getAttribute("data-pane");
     bar.querySelectorAll(".cfgtab").forEach(function(x){ x.classList.toggle("on", x===t); });
     pl.style.display=(pane==="planets")?"":"none"; uni.style.display=(pane==="universe")?"":"none"; }; });
-  // wire the NEW controls only (spike groups keep their wireCfg listeners); master warOn is a boolean pill
-  master.querySelector(".pill").addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
-    CFG.warOn=(b.getAttribute("data-v")==="true"); master.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
-    try{ applyCfg("warOn"); }catch(err){} });
-  uni.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
-    if(["entLayout","coreBy","lineStyle","showFns"].indexOf(grp)<0) return;   // skip the moved spike pills (already wired)
-    p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
-      CFG[grp]=b.getAttribute("data-v"); p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
-      try{ applyCfg(grp); }catch(err){} }); });
+  // wire the NEW controls only (the moved spike pills keep their wireCfg listeners)
+  [pl, uni].forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
+    if(["warOn","entLayout","coreBy","lineStyle","showFns"].indexOf(grp)<0) return;   // skip the moved spike pills (shape/subOp/entOp)
+    p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-v");
+      CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+      if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
+      try{ applyCfg(grp); }catch(err){} }); }); });
 };
 /* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
    TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
@@ -1128,7 +1135,7 @@ function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ i
       c.mc.update();
     }
     if(c.lbl){ c.lbl.position.set(c.level==="ent"?cx:cx-28, c.level==="ent"?top+26:cy, cz); c.lbl.scale.set(c.level==="ent"?50:30, c.level==="ent"?12.5:7.5, 1); }
-  }); updateConnectors(); }
+  }); if(force || _wtick%3===0) updateConnectors(); }
 function build(){
   if(Graph){ try{ Graph._destructor(); }catch(e){} document.getElementById("g").innerHTML=""; }
   Graph=ForceGraph3D({ controlType: st.ctl })(document.getElementById("g"))
