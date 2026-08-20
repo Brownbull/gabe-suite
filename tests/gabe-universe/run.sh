@@ -119,6 +119,12 @@ check('grp==="showFns"' in page and 'grp==="lineStyle"' in page, "applyCfg missi
 check('mode==="guards"' in page and '{v:"guards"' in page, "Guards cluster-core missing (it is data-backed via endpoint.guards)")
 check('isFinite(n.x)) _npos' in page, "the _npos NaN guard is missing (a transient add would spew computeBoundingSphere NaN)")
 
+# ── 10g. batch-5: config re-tabbed Planets|Universe · master planet-assets toggle · orbit-around-click ──
+check('data-pane="planets"' in page and 'data-pane="universe"' in page, "config not re-tabbed into Planets | Universe")
+check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
+check('onBackgroundClick' in page and 'intersectPlane' in page, "orbit-around-cursor (background raycast pivot) missing")
+check('Graph.cameraPosition(_cp,{x:n.x' in page, "node-click orbit pivot (re-aim camera on the clicked node) missing")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
