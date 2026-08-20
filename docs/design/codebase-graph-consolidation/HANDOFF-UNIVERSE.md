@@ -77,6 +77,10 @@ Proof: `universe-build/verify-fleet.mjs` (two pages, one booted `?war=1`; hide/r
 - **Chord pan**: left-drag orbits; +right button pans the rig (quaternion frozen), release right → orbit resumes around the same point.
 - Proof `universe-build/verify-explore.mjs`; battery **158 static**.
 
+## BATCH 13 — LANDED (`cd63623`): the WALK · named+grouped journeys · clusters-only view · decoupled panel
+
+Nine visual-pass asks: journeys picker LEFT + grouped (END-TO-END first — emitter caps web/e2e into "N case(s)" AGGREGATE rows, labeled honestly; then by start entity) + NAMED for free (det.cases carries the test name in the same cid space, 114/135); journey BANNER top-center; **the WALK** ported from the 2D graph (panel-top bar: journey ‹i/N› stepping with camera-aim + card-open + path-stays-lit · 7-step element TRAIL chips · a click during a journey starts a fresh trail); panel chevron → FOOTER (both copies); fleet header ELEMENTS/WIRES global toggles (elements-off = the clusters-only view: 0 nodes/27 hulls; showWires gates connectors AND plain links); `#g right:0` — the panel overlays, canvas width stable across open/close; chip-hover WHITE halo; gear↔config sync (un-minimize on show). Proof `universe-build/verify-walk.mjs`; battery **169 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
