@@ -30,16 +30,27 @@ const jrn = await p.evaluate(() => { __uniJrnToggle();
 await p.evaluate(() => { const rows = document.querySelectorAll('#jrn .jrnrow:not(.jrnnone)'); rows[0].click(); });
 await raf(); await p.waitForTimeout(800);
 const jsel = await p.evaluate(() => ({
-  banner: document.getElementById('jrnhud').style.display !== 'none',
-  bannerName: (document.querySelector('#jrnhud .wjname') || {}).textContent || '',
+  banner: document.getElementById('jrnpill').style.display !== 'none',
+  bannerName: (document.querySelector('#jrnpill .wjname') || {}).textContent || '',
   walkMode: WALK.mode, steps: WALK.steps.length, pos: WALK.i,
   wbShown: document.getElementById('walkbar').style.display === 'none',
   panelOpen: document.body.classList.contains('panel-open') }));
+// VISUAL floors (the operator saw noise, not a highlight): non-lit wires near-invisible, shuttles only
+// on the lit path, and the select FRAMES the whole carrier set from OUTSIDE (no dive into the jungle)
+const visual = await p.evaluate(() => {
+  const dims = [...connGroup.children].filter(w => w.material.blending !== THREE.AdditiveBlending).map(w => w.material.opacity);
+  const moversOnPath = MOVERS.every(m => HL.set[m.src] !== undefined && HL.set[m.tgt] !== undefined);
+  let cx = 0, cy = 0, cz = 0, n = 0; HL.origin.forEach(id => { const nd = NIDS[id]; if (nd) { cx += nd.x; cy += nd.y; cz += nd.z; n++; } });
+  cx /= n; cy /= n; cz /= n; let r = 0;
+  HL.origin.forEach(id => { const nd = NIDS[id]; if (nd) r = Math.max(r, Math.hypot(nd.x - cx, nd.y - cy, nd.z - cz)); });
+  const camD = Graph.camera().position.distanceTo(new THREE.Vector3(cx, cy, cz));
+  return { maxDim: Math.max(...dims, 0), moversOnPath, movers: MOVERS.length, camD: Math.round(camD), setR: Math.round(r) };
+});
 // step forward twice: camera aims, the card opens each carrier, the lit path SURVIVES stepping
 const camBefore = await p.evaluate(() => Graph.camera().position.toArray());
-await p.evaluate(() => { document.querySelector('#jrnhud [data-wgo="1"]').click(); });
+await p.evaluate(() => { document.querySelector('#jrnpill [data-wgo="1"]').click(); });
 await p.waitForTimeout(900);
-const step1 = await p.evaluate(() => ({ i: WALK.i, pos: document.querySelector('#jrnhud .wpos').textContent,
+const step1 = await p.evaluate(() => ({ i: WALK.i, pos: document.querySelector('#jrnpill .wpos').textContent,
   cardName: document.querySelector('#phead .pname').textContent,
   stillLit: HL.on && !!HL.jr, camMoved: true }));
 const camAfter = await p.evaluate(() => Graph.camera().position.toArray());
@@ -58,9 +69,41 @@ const panel = await p.evaluate(() => {
 // Esc → banner + walk clear
 await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
 await raf(); await p.waitForTimeout(400);
-const escd = await p.evaluate(() => ({ banner: document.getElementById('jrnhud').style.display === 'none',
+const escd = await p.evaluate(() => ({ banner: document.getElementById('jrnpill').style.display === 'none',
   walk: WALK.mode === null, hl: !HL.on }));
 
+// [2b] planets/wires MATRIX columns: planets-off hides an entity's nodes but its HULL stays;
+//      wires-off kills only the wires touching it (nodes stay)
+const pw = await p.evaluate(() => new Promise(res => {
+  const e = _ents[0], hulls0 = CLUSTERS.filter(c => c.name === e).length;
+  document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="planets"]`).click();
+  setTimeout(() => {
+    const nodesGone = nodes.filter(n => n.ent === e).every(n => !n.__threeObj || !n.__threeObj.parent);
+    const hullStays = CLUSTERS.filter(c => c.name === e).length === hulls0 && hulls0 === 1;
+    document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="planets"]`).click();
+    setTimeout(() => {
+      document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="wires"]`).click();
+      setTimeout(() => {
+        let touching = 0; connGroup.children.forEach(() => {});
+        const expected = links.filter(l => { const s = NIDS[lid(l.source)], t = NIDS[lid(l.target)];
+          return s && t && s.ent !== e && t.ent !== e; }).length;
+        const wiresNow = connGroup.children.length;
+        const nodesBack = nodes.filter(n => n.ent === e).some(n => n.__threeObj && n.__threeObj.parent);
+        document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="wires"]`).click();
+        setTimeout(() => res({ nodesGone, hullStays, wiresNow, expected, wiresScoped: wiresNow === expected, nodesBack }), 400);
+      }, 500);
+    }, 400);
+  }, 500); }));
+// [2c] depth slider + arrow keys
+const depth = await p.evaluate(() => { const r = document.getElementById('depthRng');
+  r.value = '5'; r.dispatchEvent(new Event('input', { bubbles: true }));
+  const atFive = HL.depth === 5;
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown' }));
+  const down = HL.depth === 4 && document.getElementById('depthNum').textContent === '4' && r.value === '4';
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp' }));
+  const up = HL.depth === 5;
+  r.value = '3'; r.dispatchEvent(new Event('input', { bubbles: true }));
+  return { atFive, down, up }; });
 // [3] the TRAIL: three different node clicks → 3 chips; clicking chip 1 refocuses
 const trail = await p.evaluate(() => {
   const picks = nodes.filter(n => n.kind === 'model').slice(0, 3);
@@ -73,21 +116,12 @@ const trail = await p.evaluate(() => {
 await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
 await p.waitForTimeout(400);
 
-// [4] fleet global toggles: elements off → clusters-only view (0 node objects, hulls remain);
-//     wires off → 0 connector lines
-await p.evaluate(() => { document.querySelector('#fleet .flglob[data-fg="showElems"]').click(); });
-await raf(); await p.waitForTimeout(700);
-const elemsOff = await p.evaluate(() => ({
-  shown: nodes.filter(n => n.__threeObj && n.__threeObj.parent).length, hulls: CLUSTERS.length }));
-await p.evaluate(() => { document.querySelector('#fleet .flglob[data-fg="showElems"]').click(); });
-await raf(); await p.waitForTimeout(700);
-await p.evaluate(() => { document.querySelector('#fleet .flglob[data-fg="showWires"]').click(); });
-await raf(); await p.waitForTimeout(400);
-const wiresOff = await p.evaluate(() => ({ wires: connGroup.children.length, backOn: (document.querySelector('#fleet .flglob[data-fg="showWires"]').click(), true) }));
-await p.waitForTimeout(400);
-const restored = await p.evaluate(() => ({ shown: nodes.filter(n => n.__threeObj && n.__threeObj.parent).length,
-  wires: connGroup.children.length }));
-
+// [4b] the collapse chevron stays ON SCREEN even with a tall card
+const foot = await p.evaluate(() => { const n = nodes.find(x => x.kind === 'model' && x.det && (x.det.cols || []).length > 3);
+  SEL = { kind: 'node', data: n }; showPanel(n);
+  const r = document.querySelector('.panel .pfoot').getBoundingClientRect();
+  return { onScreen: r.bottom <= window.innerHeight + 1 && r.height > 0,
+    bodyScrolls: getComputedStyle(document.getElementById('pbody')).overflowY === 'auto' }; });
 // [5] chip hover → white halo on THAT node; leave clears
 const hover = await p.evaluate(() => new Promise(res => {
   const n = nodes.find(x => x.kind === 'endpoint' && links.some(l => lid(l.source) === x.id || lid(l.target) === x.id));
@@ -113,8 +147,8 @@ await b.close();
 console.log('journeys:', JSON.stringify(jrn));
 console.log('selected:', JSON.stringify(jsel), '· step →', JSON.stringify(step1), 'camMoved', camMoved);
 console.log('panel:', JSON.stringify(panel), '· esc →', JSON.stringify(escd));
+console.log('visual:', JSON.stringify(visual), '· planets/wires:', JSON.stringify(pw), '· depth:', JSON.stringify(depth), '· foot:', JSON.stringify(foot));
 console.log('trail:', JSON.stringify(trail));
-console.log('elemsOff:', JSON.stringify(elemsOff), '· wiresOff:', wiresOff.wires, '· restored:', JSON.stringify(restored));
 console.log('hover:', JSON.stringify(hover));
 console.log('gear:', JSON.stringify(gear));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
@@ -125,10 +159,12 @@ if (!(jrn.centered && jrn.e2eFirst && jrn.named > 50)) fails.push('journeys cent
 if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown)) fails.push('journey HUD (topbar middle) wrong');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
 if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');
+if (!(visual.maxDim <= 0.055 && visual.moversOnPath && visual.camD > visual.setR)) fails.push('highlight visual floors broken (dim/movers/framing)');
+if (!(pw.nodesGone && pw.hullStays && pw.wiresScoped && pw.nodesBack)) fails.push('planets/wires matrix columns broken');
+if (!(depth.atFive && depth.down && depth.up)) fails.push('depth slider / arrow keys broken');
+if (!(foot.onScreen && foot.bodyScrolls)) fails.push('panel footer scrolls off screen');
 if (!(escd.banner && escd.walk && escd.hl)) fails.push('Esc does not clear the walk');
 if (!(trail.chips === 3 && trail.iAfter === 0 && trail.mode === 'trail' && trail.cardIsFirst)) fails.push('trail chips broken');
-if (!(elemsOff.shown === 0 && elemsOff.hulls > 0)) fails.push('elements-off is not the clusters-only view');
-if (!(wiresOff.wires === 0 && restored.shown > 200 && restored.wires > 100)) fails.push('wires toggle broken');
 if (!(hover.chip && hover.whileHover === 1 && hover.afterLeave === 0)) fails.push('chip hover halo broken');
 if (!(gear.hidden && gear.shownFull)) fails.push('gear/config sync broken');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }

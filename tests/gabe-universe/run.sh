@@ -218,7 +218,7 @@ check('nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page, "node 
 check('if(!visEnt(e).show) return; var mem=' in page, "ent-hull seam missing (hidden entity keeps its hull)")
 check('if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return;' in page,
       "sub-hull seam wrong — must skip on !show OR !subs (ghost sub-hulls around a hidden entity)")
-check('fleet-hidden entity' in page, "connector seam missing (wires keep drawing to hidden entities)")
+check('wires-off entity/cluster' in page, "connector seam missing (wires keep drawing to hidden / wires-off entities)")
 check('routes-off entity' in page, "transport seam missing (ghost shuttles fly to hidden entities)")
 check('function linkVisFn(l){ return !CFG.conns; }' not in page, "REGRESSION: linkVisFn back to conns-only (dormant seam dropped)")
 check('if(all||s.nodes||s.zones){ try{ rebuildNodes' in page,
@@ -271,24 +271,30 @@ check('#jrn{ position:fixed; left:50%' in page, "journeys dropdown is not center
 check('function _caseNames' in page and '(aggregated)' in page and 'jrngrp' in page,
       "journeys are not named (det.cases join) / aggregates not labeled / groups missing")
 check("j.e2e=!!j.corpora.e2e" in page, "end-to-end journeys are not detected across corpora (aggregate rows span e2e+web)")
-check('id="jrnhud"' in page and 'function _walkRender' in page and 'var WALK={' in page,
-      "journey HUD / walk machinery missing")
-check('id="hlban"' not in page, "REGRESSION: the floating banner is back (the HUD lives IN the topbar middle)")
-check(page.count('<div class="spacer"></div>') == 2 and page.find('id="jrnBtn"') < page.find('id="hlModeBtn"') < page.find('id="jrnhud"') < page.find('id="depthBtn"'),
-      "topbar middle order wrong (journeys · style · HUD centered; depth/freeze/reset right)")
+check('id="jrnpill"' in page and 'function _walkRender' in page and 'var WALK={' in page,
+      "journey step PILL / walk machinery missing")
+check('id="jrnhud"' not in page, "REGRESSION: the topbar HUD is back (the step pill floats over the diagram)")
+check(page.count('<div class="spacer"></div>') == 2 and page.find('id="jrnBtn"') < page.find('id="hlModeBtn"') < page.find('id="depthBtn"'),
+      "topbar order wrong (journeys · style middle; depth/freeze/reset right)")
+check('class="jpill jxp"' in page and '#jrnpill .jpill{' in page, "the wide step pill + its separate ✕ pill are missing")
+check('id="depthRng"' in page and 'ArrowUp' in page and 'ArrowDown' in page,
+      "depth is not a draggable 1–5 bar with arrow-key fallback")
+check('?0:0.05' in page and 'return 2.6;' in page, "highlight contrast floors missing (dim 0.05 · lit 2.6 — 0.18 read as noise on screen)")
+check('shuttles fly the lit path only' in page, "transports roam off the lit path during a highlight")
+check('function _frameSet' in page, "journey select does not frame the whole carrier set (the camera dived into the wire jungle)")
+check('body.panel-open .panel .pbody{ overflow-y:auto' in page, "the card body does not scroll — the footer chevron leaves the screen on tall cards")
 check('.panel .minbar .pmin{ order:2; margin-top:auto; }' in page,
       "the collapsed rail's expand chevron is not at the BOTTOM (parity with the expanded footer)")
 check('function _rigStart' in page and '(ev.buttons&1) && (ev.buttons&2)' in page,
       "chord late-join missing (chorded presses fire no pointerdown — the move stream must start the drag)")
 check('if(drag && ev.button!==0) return;' in page, "releasing RIGHT mid-chord kills the left drag")
-check('class="flrow flview"' in page and 'flvbtn' in page, "the labeled planets/wires VIEW row is missing")
 check('data-wgo=' in page and 'wchip' in page and 'function _aimAt' in page,
       "walk stepping (journey ‹›/trail chips + camera aim) missing")
 check('class="pfoot"><button class="pmin"' in page and "<button class='pmin' title='minimize'" not in page,
       "the panel collapse chevron is not footer-only (it collides with the walk bar at the top)")
-check('showElems:true, showWires:true' in page and 'if(!CFG.conns||!CFG.showWires) return;' in page,
-      "the clusters-only / wires global gates are missing")
-check('data-fg="showElems"' in page and 'data-fg="showWires"' in page, "fleet global toggles (elements/wires) not built")
+check('planets:1, wires:1' in page and 'k:"planets"' in page and 'k:"wires"' in page,
+      "planets/wires are not fleet MATRIX columns (per entity AND cluster, master row included)")
+check('(!_nodeVisibleFn(_cs)||!visN(_cs).wires)' in page, "the connector seam ignores the per-entity/cluster wires flag")
 check('#g{ right:0 !important; }' in page, "the graph still resizes with the right panel")
 check('__uniHoverHL(x.id)' in page and 'userData.__hov' in page, "connection-chip hover halo missing")
 check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un-minimize the config on show (state drift)")

@@ -265,16 +265,30 @@
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
-  /* journey HUD — lives IN the topbar middle: selected name · ‹ i/N › stepping · step label · clear */
-  #jrnhud{ display:flex; align-items:center; gap:6px; min-width:0; max-width:38vw; font-size:12px; color:var(--ink); }
-  #jrnhud .wjname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
-  #jrnhud .wbtn{ width:22px; height:22px; font:700 12px/1 var(--font-ui); color:var(--ink); background:#0e1524;
-    border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
-  #jrnhud .wbtn:hover{ border-color:var(--accent); }
-  #jrnhud .wpos{ font:700 10px/1 var(--font-mono); color:var(--muted); flex:none; }
-  #jrnhud .wstepname{ font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-  #jrnhud .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; flex:none; }
-  #jrnhud .hlbx:hover{ color:var(--ink); }
+  /* journey STEP PILL — floats over the diagram top: ‹ at the left edge, i/N, the journey NAME, › at
+     the right edge; the ✕ in its own pill beside. The step label rides the hover title + the card. */
+  #jrnpill{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 10px); z-index:41;
+    display:flex; align-items:center; gap:8px; max-width:56vw; }
+  #jrnpill .jpill{ display:flex; align-items:center; gap:10px; padding:5px 8px; min-width:280px;
+    background:rgba(24,33,54,.96); border:1px solid var(--accent); border-radius:999px; font-size:12.5px; color:var(--ink); }
+  #jrnpill .jpill.jxp{ min-width:0; padding:5px 6px; border-color:var(--line); }
+  #jrnpill .wbtn{ width:24px; height:24px; font:700 13px/1 var(--font-ui); color:var(--ink); background:#0e1524;
+    border:1px solid var(--line); border-radius:50%; cursor:pointer; padding:0; flex:none; }
+  #jrnpill .wbtn:hover{ border-color:var(--accent); }
+  #jrnpill .wpos{ font:700 11px/1 var(--font-mono); color:var(--muted); flex:none; }
+  #jrnpill .wjname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  #jrnpill .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 4px; }
+  #jrnpill .hlbx:hover{ color:var(--ink); }
+  /* depth = a draggable 1–5 bar in the topbar */
+  .topbar .tbdepth{ position:relative; display:flex; align-items:center; gap:6px; color:var(--muted);
+    background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:0 8px; height:30px; flex:none; }
+  .topbar .tbdepth svg{ width:14px; height:14px; }
+  .topbar .tbdepth input[type=range]{ width:64px; accent-color:var(--accent); }
+  .topbar .tbdepth .tbnum{ position:static; font:800 10px/1 var(--font-mono); color:#fff; background:var(--accent);
+    border-radius:6px; padding:2px 5px; }
+  /* the expanded panel: the BODY scrolls, the footer chevron stays pinned on screen */
+  body.panel-open .panel{ overflow:hidden !important; }
+  body.panel-open .panel .pbody{ overflow-y:auto; scrollbar-width:thin; }
   /* the collapsed rail's expand chevron sits at the BOTTOM — same corner as the expanded footer chevron */
   .panel .minbar .pmin{ order:2; margin-top:auto; }
   .panel .minbar .minname{ order:1; }
@@ -321,7 +335,7 @@
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
      and navshow(60). */
   #fleet{ position:fixed; left:calc(var(--navw) + 12px); right:auto; top:calc(var(--topbarh) + 10px); z-index:50;
-    width:auto; min-width:186px; max-width:300px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
+    width:auto; min-width:186px; max-width:340px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
     overflow-y:auto; transition:left .18s ease; scrollbar-width:thin; }
   body.nav-min #fleet{ left:48px; }
   #fleet .flhead, #fleet .flrow{ display:flex; align-items:center; gap:3px; padding:1px 0; }
@@ -395,14 +409,14 @@
   <div class="spacer"></div>
   <button class="tbico" id="jrnBtn" title="journeys — cross-entity tests as highlighted paths: pick one, its carrier elements + wires light up; step it with the controls that appear here."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></button>
   <button class="tbico" id="hlModeBtn" title="highlight style — GLOW halos the reached set and dims the rest of the wires · FOCUS hides everything outside the set (hulls stay as geography). Click to switch."><svg id="hlIcoGlow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><svg id="hlIcoFocus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="3.5"/><path d="M2 8V4a2 2 0 0 1 2-2h4M16 2h4a2 2 0 0 1 2 2v4M22 16v4a2 2 0 0 1-2 2h-4M8 22H4a2 2 0 0 1-2-2v-4"/></svg></button>
-  <span id="jrnhud" style="display:none"></span>
   <div class="spacer"></div>
-  <button class="tbico" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops (1–5). Alt+scroll anywhere to change; click to cycle. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><b class="tbnum" id="depthNum">3</b></button>
+  <span class="tbdepth" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops. Drag the bar, Alt+scroll, or Arrow Up/Down. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><input type="range" id="depthRng" min="1" max="5" step="1" value="3"><b class="tbnum" id="depthNum">3</b></span>
   <button class="tbico on" id="freezeDragBtn" title="freeze on drag — pause ALL animations (fleets, transports, pulses) while rotating or moving the camera; they resume the moment you release. On by default; click to toggle." onclick="window.__uniToggleFreezeDrag&&window.__uniToggleFreezeDrag(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5l-5 3-5-3M7 19l5-3 5 3M2 12h20M5 7l3 5-3 5M19 7l-3 5 3 5"/></svg></button>
   <button class="tbico" id="reset" title="reset view — return the camera to the home framing (position, zoom and pivot). Your layout, highlight and panel choices stay."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg></button>
   <div class="statuspills">{{STATUS_PILLS}}</div>
 </div>
 <div id="jrn" style="display:none"></div>
+<div id="jrnpill" style="display:none"></div>
 <div id="g"></div>
 <div class="cfg" id="cfg"></div>
 <div class="expl" id="expl"></div>
@@ -672,7 +686,7 @@ var OPMAP={
   wrap:{   film:0.06,  ghost:0.11,  faint:0.17,  subtle:0.12,  medium:0.17,  strong:0.24 } };
 /* ONE shape (polygon|wrap) for BOTH levels; per-level on/off; a bounded radius that fits the
    containers tighter/looser; per-surface transparency (faint|ghost|film). */
-var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", showElems:true, showWires:true, subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
+var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
   /* SPACE WAR zones — 3 areas around each planet; angle (deg, front XY plane) + one shared distance.
      defaults: attack=left(180) · conflict=top(90) · defense=right(0). warDist = gap outside the sphere. */
   warOn:false, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
@@ -912,9 +926,10 @@ function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;
 var connGroup=null;
 function updateConnectors(){ if(!connGroup) return;
   while(connGroup.children.length){ var ch=connGroup.children.pop(); if(ch.geometry&&ch.geometry.dispose)ch.geometry.dispose(); connGroup.remove(ch); }
-  if(!CFG.conns||!CFG.showWires) return;
+  if(!CFG.conns) return;
   links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind's connector wire
-    var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)]; if((_cs&&!visN(_cs).show)||(_ct&&!visN(_ct).show)) return;   // fleet-hidden entity
+    var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
+    if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
     connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
@@ -929,7 +944,8 @@ function buildTransports(){ if(!moverGroup||!SHIPSREADY) return;
   var sNose=craftNose(INTC.shuttle), tNose=craftNose(INTC.testship);
   links.forEach(function(l){ if(!linkCross(l)) return;
     var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;
-    if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;   // fleet: hidden or routes-off entity/cluster (node-level — sub-aware)
+    if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;
+    if(HL.on && HL.links && !HL.links.has(l)) return;   // a highlight owns the roads — shuttles fly the lit path only   // fleet: hidden or routes-off entity/cluster (node-level — sub-aware)
     var dataScale=INTC.size*(0.5 + (num(l.payload)/MAXPL)*1.3);   // CARGO shuttle grows with the DATA carried (link payload)
     var cargo=teamShip(INTC.shuttle, 0x38bdf8, 1); cargo.scale.multiplyScalar(dataScale); moverGroup.add(cargo);
     MOVERS.push({obj:cargo, src:lid(l.source), tgt:lid(l.target), ph:0, nose:sNose});
@@ -993,7 +1009,7 @@ function linkWidthFn(l){ return ENC.eWidth ? 0.4+linkVal("eWidth",l).r*2.4 : 0.7
 function linkColorFn(l){ var c=RELCOL[l.rel]||"#889"; return (ENC.eTrust && !truthy(linkVal("eTrust",l).raw)) ? dimCol(c,0.55) : c; }
 function linkPartFn(l){ return ENC.eParticles ? Math.max(1,Math.round(linkVal("eParticles",l).r*3)) : 0; }
 function linkVisFn(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
-  if(!CFG.showWires) return false; if((s&&!visN(s).show)||(t&&!visN(t).show)) return false; return !CFG.conns; }   // typed connectors REPLACE every plain edge → hide them all when conns on
+  if((s&&(!_nodeVisibleFn(s)||!visN(s).wires))||(t&&(!_nodeVisibleFn(t)||!visN(t).wires))) return false; return !CFG.conns; }   // typed connectors REPLACE every plain edge → hide them all when conns on
 function linkSpeedFn(l){ return (0.004+linkVal("eParticles",l).r*0.012)*ENC.speed; }   // ENC.speed scales the whole flow (slow enough to read)
 function linkPWidthFn(l){ return (ENC.ePayload) ? 1+linkVal("ePayload",l).r*4.5 : 1.6; }
 
@@ -1237,15 +1253,14 @@ function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   HL.set=depth; HL.links=new Set();
   links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
 window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
-  if(HL.links.has(l)) return 1.9; return HL.mode==="focus"?0:0.18; };
-function _nodeVisibleFn(n){ if(!CFG.showElems) return false;             // the "just clusters & entities" view (fleet global toggle)
-  if(!visN(n).show) return false;                                        // the ONE node-visibility truth (fleet ∧ focus)
+  if(HL.links.has(l)) return 2.6; return HL.mode==="focus"?0:0.05; };   // measured on screen: 0.18 still dominated at density — the lit path must be unmistakable
+function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;   // the ONE node-visibility truth (fleet show ∧ planets ∧ focus)
   if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
 function _hlClearSprites(){ HL.sprites.forEach(function(s){ try{ if(s.parent) s.parent.remove(s); }catch(e){} }); HL.sprites=[]; }
 window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // glow halos ride the node objects — re-added after any rebuild
   _hlClearSprites();
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined||!n.__threeObj) return;
-    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?46:26, d0?0.8:0.5);
+    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?64:36, d0?0.85:0.55);
     n.__threeObj.add(g); HL.sprites.push(g); }); };
 function _hlRestyle(){ _hlClearSprites();
   if(typeof Graph!=="undefined" && Graph){
@@ -1255,6 +1270,7 @@ function _hlRestyle(){ _hlClearSprites();
     try{ buildTransports(); }catch(e){} }
   _hlSyncUI(); }
 function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.textContent=HL.depth;
+  var dr=document.getElementById("depthRng"); if(dr && +dr.value!==HL.depth) dr.value=HL.depth;
   var db=document.getElementById("depthBtn"); if(db) db.classList.toggle("on", HL.on);
   var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
   var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
@@ -1319,27 +1335,36 @@ var WALK={ mode:null, steps:[], i:0 };
 function _aimAt(n){ if(typeof Graph==="undefined"||!Graph||n.x==null) return;
   try{ var cam=Graph.camera(), P={x:n.x,y:n.y,z:n.z};
     var d=new T.Vector3(cam.position.x-P.x, cam.position.y-P.y, cam.position.z-P.z);
-    var len=d.length()||1, keep=Math.max(140, Math.min(len, 320)); d.multiplyScalar(keep/len);
+    var len=d.length()||1, keep=Math.max(260, Math.min(len, 420)); d.multiplyScalar(keep/len);   // never dive INSIDE the wire jungle
     Graph.cameraPosition({x:P.x+d.x, y:P.y+d.y, z:P.z+d.z}, P, 700); }catch(e){} }
+function _frameSet(ids){ if(typeof Graph==="undefined"||!Graph||!ids||!ids.length) return;      // journey select: see the WHOLE path first
+  try{ var cx=0,cy=0,cz=0,n=0; ids.forEach(function(id){ var nd=NIDS[id]; if(nd&&nd.x!=null){ cx+=nd.x; cy+=nd.y; cz+=nd.z; n++; } });
+    if(!n) return; cx/=n; cy/=n; cz/=n; var r=0;
+    ids.forEach(function(id){ var nd=NIDS[id]; if(nd&&nd.x!=null) r=Math.max(r, Math.hypot(nd.x-cx,nd.y-cy,nd.z-cz)); });
+    var cam=Graph.camera(), d=new T.Vector3(cam.position.x-cx, cam.position.y-cy, cam.position.z-cz);
+    var len=d.length()||1, keep=Math.max(r*2.1+220, 420); d.multiplyScalar(keep/len);
+    Graph.cameraPosition({x:cx+d.x, y:cy+d.y, z:cz+d.z}, {x:cx,y:cy,z:cz}, 900); }catch(e){} }
 function _walkGo(di){ if(!WALK.steps.length) return;
   WALK.i=Math.max(0, Math.min(WALK.steps.length-1, WALK.i+di));
   var n=NIDS[WALK.steps[WALK.i]]; if(!n) return;
-  _aimAt(n); SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
+  if(WALK.mode==="journey" && di===0) _frameSet(WALK.steps);   // selection shows the WHOLE path; arrows dive per step
+  else _aimAt(n);
+  SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
   _walkRender(); }
-function _walkRender(){ var wb=document.getElementById("walkbar"), hud=document.getElementById("jrnhud");
-  /* JOURNEY controls live in the TOPBAR MIDDLE (operator): selected name right of the button,
-     ‹ i/N › stepping + step label + clear — the panel keeps only the element TRAIL. */
-  if(hud){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj;
-      hud.style.display="";
-      hud.innerHTML='<b class="wjname" title="'+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'+(j.name||j.cid)+'</b>'
+function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
+  /* JOURNEY controls = a WIDE PILL floating over the diagram top: ‹ at the left edge, step COUNT,
+     the journey NAME at the end, › at the right edge; the ✕ lives in its OWN pill beside. */
+  if(pill){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj, stepN=(NIDS[WALK.steps[WALK.i]]||{}).label||"";
+      pill.style.display="";
+      pill.innerHTML='<div class="jpill" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
         +'<button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
         +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
-        +'<button class="wbtn" data-wgo="1" title="next step">›</button>'
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span>'
-        +'<button class="hlbx" title="clear the journey (Esc)">✕</button>';
-      hud.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
-      hud.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
-    else hud.style.display="none"; }
+        +'<span class="wjname">'+(j.name||j.cid)+'</span>'
+        +'<button class="wbtn" data-wgo="1" title="next step">›</button></div>'
+        +'<div class="jpill jxp"><button class="hlbx" title="clear the journey (Esc)">✕</button></div>';
+      pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
+      pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+    else pill.style.display="none"; }
   if(wb){ if(WALK.mode!=="trail"){ wb.style.display="none"; }
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
@@ -1354,13 +1379,18 @@ window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _ho
   _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite); };
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
-  var db=document.getElementById("depthBtn"); if(db&&!db.__w){ db.__w=1; db.onclick=function(){ __uniHLDepth(HL.depth%5+1); }; }
+  var dr=document.getElementById("depthRng"); if(dr&&!dr.__w){ dr.__w=1;
+    dr.addEventListener("input", function(){ __uniHLDepth(+dr.value); }); }
   var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
   var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
   if(!window.__uniHLKeys){ window.__uniHLKeys=1;
     window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
       __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
-    window.addEventListener("keydown", function(e){ if(e.key==="Escape") __uniHLClear(); }); }
+    window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
+      if(tag==="INPUT"||tag==="TEXTAREA") return;
+      if(e.key==="Escape") __uniHLClear();
+      else if(e.key==="ArrowUp"){ e.preventDefault(); __uniHLDepth(HL.depth+1); }     // arrows mirror Alt+scroll (some setups eat it)
+      else if(e.key==="ArrowDown"){ e.preventDefault(); __uniHLDepth(HL.depth-1); } }); }
   _hlSyncUI(); };
 
 /* ══ FLEET panel (batch 11-B) — per-entity visibility + ops matrix; the in-flight diagram's seed ══
@@ -1368,7 +1398,7 @@ window.__uniWireTopbar=function(){
    keys its stages by piece id and the universe node ids are the SAME strings, so a later per-piece
    join is direct. ALL engine seams read through visEnt/visN — the ONE place a "dim" tri-state and
    per-piece roles land later. An unknown entity resolves to SHOWN (l2-only entities never vanish). */
-var _VISDEF={ show:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
+var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
 window.UNIVIS={ ent:{}, sub:{}, node:{}, meta:{} };   // sub = per-(ent|subgroup) overrides — keys are CURRENT-coreBy groups, regrouped on a core change
 _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
@@ -1377,7 +1407,7 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 function visN(n){ var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
-  return { show:(ev.show&&sv.show)?1:0, subs:ev.subs,
+  return { show:(ev.show&&sv.show)?1:0, planets:(ev.planets&&sv.planets)?1:0, wires:(ev.wires&&sv.wires)?1:0, subs:ev.subs,
     zDef:(ev.zDef&&sv.zDef)?1:0, zAtk:(ev.zAtk&&sv.zAtk)?1:0, zCfl:(ev.zCfl&&sv.zCfl)?1:0,
     zSat:(ev.zSat&&sv.zSat)?1:0, routes:(ev.routes&&sv.routes)?1:0 }; }
 /* applyVis pushes UNIVIS into the engine. scope picks WHICH routines run — never a partial rebuild:
@@ -1388,8 +1418,9 @@ var _visRAF=null, _visScopes={};
 function applyVis(scope){ _visScopes[scope||"all"]=1;
   if(_visRAF) return; _visRAF=requestAnimationFrame(function(){ _visRAF=null; var s=_visScopes; _visScopes={}; _applyVisNow(s); }); }
 function _applyVisNow(s){ if(typeof Graph==="undefined"||!Graph) return; var all=s.all;
-  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}   // fleet ∧ focus — the one truth
-    try{ Graph.linkVisibility(linkVisFn); }catch(e){} }              // dormant while conns is baked on — future-proofing
+  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){} }
+  if(all||s.nodes||s.wires){ try{ Graph.linkVisibility(linkVisFn); }catch(e){}   // dormant while conns is baked on
+    try{ buildClusters(); updateClusters(true); }catch(e){} }        // connector rebuild picks up the per-entity/cluster wires flag
   if(all||s.nodes||s.zones){ try{ rebuildNodes(); }catch(e){} }      // ONLY rebuildNodes resets FLEETTICK/PULSE/ORBIT/WAVE — re-show would duplicate closures otherwise
   if(all||s.nodes||s.clusters){ try{ buildClusters(); updateClusters(true); }catch(e){} }
   if(all||s.nodes||s.routes){ try{ buildTransports(); }catch(e){} }  // MOVERS rebuild nowhere else — ghost shuttles fly to hidden entities otherwise
@@ -1424,6 +1455,8 @@ function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
    icons come from the spike's own ICO set via ico() so the panel speaks the config's language */
 var _FCOLS=[
   { k:"show",   ti:"show entity",         scope:"nodes",    icon:"show",   g:function(){ return true; } },
+  { k:"planets",ti:"planets (element nodes) — hulls stay", scope:"nodes",  icon:"bubble", g:function(){ return true; } },
+  { k:"wires",  ti:"connections touching it",              scope:"wires",  icon:"radius", g:function(){ return true; } },
   { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
   { k:"zDef",   ti:"defense fleet",       scope:"zones",    icon:"shield", g:function(){ return !!(CFG.warOn&&CFG.zDef); } },
   { k:"zAtk",   ti:"attack fleet",        scope:"zones",    icon:"swords", g:function(){ return !!(CFG.warOn&&CFG.zAtk); } },
@@ -1450,9 +1483,6 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     +'<button class="flpre" data-fpre="none">None</button>'
     +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button>'
     +'</div>';
-  h+='<div class="flrow flview"><span class="flent">view</span>'
-    +'<button class="flvbtn flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="show / hide the PLANETS (element nodes) — off = clusters and entities only">'+(typeof ico==="function"?ico("target",11):"")+'planets</button>'
-    +'<button class="flvbtn flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="show / hide the CONNECTIONS between planets (every wire)">'+(typeof ico==="function"?ico("radius",11):"")+'wires</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
@@ -1478,10 +1508,6 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
       Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }   // the ALL row is a bulk gesture — cluster overrides follow it
     else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
-  body.querySelectorAll(".flglob").forEach(function(b){ b.onclick=function(){ var f=b.getAttribute("data-fg");
-    CFG[f]=!CFG[f]; b.classList.toggle("on", !!CFG[f]);
-    if(f==="showElems") applyVis("nodes");
-    else { try{ if(typeof Graph!=="undefined"&&Graph) Graph.linkVisibility(linkVisFn); }catch(e){} try{ updateClusters(true); }catch(e){} } }; });   // showWires: connectors clear via the updateConnectors gate; plain links via linkVisFn
   body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
     if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
       _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }

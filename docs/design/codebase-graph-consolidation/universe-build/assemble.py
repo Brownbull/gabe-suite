@@ -127,7 +127,7 @@ assert OLD_ZFORCE in text, "zForce block anchor missing"
 text = text.replace(OLD_ZFORCE, LAYOUT_JS, 1)
 assert 'var CFG={ shape:"polygon", subOn:true, entOn:true,' in text, "CFG anchor missing"
 text = text.replace('var CFG={ shape:"polygon", subOn:true, entOn:true,',
-                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", showElems:true, showWires:true, subOn:true, entOn:true,', 1)
+                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", subOn:true, entOn:true,', 1)
 OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }'
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
@@ -233,7 +233,8 @@ text = text.replace(OLD_LVIS,
 OLD_CONNLOOP = 'links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind\'s connector wire'
 assert OLD_CONNLOOP in text, "updateConnectors loop anchor missing"
 text = text.replace(OLD_CONNLOOP, OLD_CONNLOOP +
-  '\n    var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)]; if((_cs&&!visN(_cs).show)||(_ct&&!visN(_ct).show)) return;   // fleet-hidden entity', 1)
+  '\n    var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];\n'
+  '    if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster', 1)
 # seam 4: hulls — ent hull skipped when !show; sub hulls when !show OR !subs (their own loop)
 OLD_ENTHULL = 'if(CFG.entOn) Object.keys(ENT).forEach(function(e){ var mem=nodes.filter(function(n){return n.ent===e;}).map(function(n){return n.id;});'
 assert OLD_ENTHULL in text, "buildClusters ent-loop anchor missing"
@@ -292,7 +293,8 @@ OLD_TRV = 'var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_s
 assert OLD_TRV in text, "transports visibility anchor missing"
 text = text.replace(OLD_TRV,
   'var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;\n'
-  '    if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;', 1)
+  '    if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;\n'
+  '    if(HL.on && HL.links && !HL.links.has(l)) return;   // a highlight owns the roads — shuttles fly the lit path only', 1)
 
 # panel boot + master-dim sync on every config change
 OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n'
@@ -323,10 +325,10 @@ assert OLD_PHBTN in text, "phead chevron anchor missing"
 text = text.replace(OLD_PHBTN, '      ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)')   # BOTH copies (link panel + node panel)
 OLD_UCGATE = 'if(!CFG.conns) return;'
 assert OLD_UCGATE in text, "updateConnectors conns gate anchor missing"
-text = text.replace(OLD_UCGATE, 'if(!CFG.conns||!CFG.showWires) return;', 1)
+text = text.replace(OLD_UCGATE, OLD_UCGATE, 1)  # gate unchanged — per-entity/cluster wires filtering happens per link in the seam
 OLD_LV2 = 'if((s&&!visN(s).show)||(t&&!visN(t).show)) return false; return !CFG.conns; }'
 assert OLD_LV2 in text, "linkVisFn anchor missing (wires gate)"
-text = text.replace(OLD_LV2, 'if(!CFG.showWires) return false; if((s&&!visN(s).show)||(t&&!visN(t).show)) return false; return !CFG.conns; }', 1)
+text = text.replace(OLD_LV2, 'if((s&&(!_nodeVisibleFn(s)||!visN(s).wires))||(t&&(!_nodeVisibleFn(t)||!visN(t).wires))) return false; return !CFG.conns; }', 1)
 OLD_CHIP = 'var mk=function(x){ return E("span",{class:"pchip "+cls}, glyph?icoEl(glyph):null, x); };'
 assert OLD_CHIP in text, "chipList mk anchor missing"
 text = text.replace(OLD_CHIP,

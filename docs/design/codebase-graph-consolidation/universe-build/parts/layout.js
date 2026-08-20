@@ -236,15 +236,14 @@ function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   HL.set=depth; HL.links=new Set();
   links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
 window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
-  if(HL.links.has(l)) return 1.9; return HL.mode==="focus"?0:0.18; };
-function _nodeVisibleFn(n){ if(!CFG.showElems) return false;             // the "just clusters & entities" view (fleet global toggle)
-  if(!visN(n).show) return false;                                        // the ONE node-visibility truth (fleet ∧ focus)
+  if(HL.links.has(l)) return 2.6; return HL.mode==="focus"?0:0.05; };   // measured on screen: 0.18 still dominated at density — the lit path must be unmistakable
+function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;   // the ONE node-visibility truth (fleet show ∧ planets ∧ focus)
   if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
 function _hlClearSprites(){ HL.sprites.forEach(function(s){ try{ if(s.parent) s.parent.remove(s); }catch(e){} }); HL.sprites=[]; }
 window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // glow halos ride the node objects — re-added after any rebuild
   _hlClearSprites();
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined||!n.__threeObj) return;
-    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?46:26, d0?0.8:0.5);
+    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?64:36, d0?0.85:0.55);
     n.__threeObj.add(g); HL.sprites.push(g); }); };
 function _hlRestyle(){ _hlClearSprites();
   if(typeof Graph!=="undefined" && Graph){
@@ -254,6 +253,7 @@ function _hlRestyle(){ _hlClearSprites();
     try{ buildTransports(); }catch(e){} }
   _hlSyncUI(); }
 function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.textContent=HL.depth;
+  var dr=document.getElementById("depthRng"); if(dr && +dr.value!==HL.depth) dr.value=HL.depth;
   var db=document.getElementById("depthBtn"); if(db) db.classList.toggle("on", HL.on);
   var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
   var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
@@ -318,27 +318,36 @@ var WALK={ mode:null, steps:[], i:0 };
 function _aimAt(n){ if(typeof Graph==="undefined"||!Graph||n.x==null) return;
   try{ var cam=Graph.camera(), P={x:n.x,y:n.y,z:n.z};
     var d=new T.Vector3(cam.position.x-P.x, cam.position.y-P.y, cam.position.z-P.z);
-    var len=d.length()||1, keep=Math.max(140, Math.min(len, 320)); d.multiplyScalar(keep/len);
+    var len=d.length()||1, keep=Math.max(260, Math.min(len, 420)); d.multiplyScalar(keep/len);   // never dive INSIDE the wire jungle
     Graph.cameraPosition({x:P.x+d.x, y:P.y+d.y, z:P.z+d.z}, P, 700); }catch(e){} }
+function _frameSet(ids){ if(typeof Graph==="undefined"||!Graph||!ids||!ids.length) return;      // journey select: see the WHOLE path first
+  try{ var cx=0,cy=0,cz=0,n=0; ids.forEach(function(id){ var nd=NIDS[id]; if(nd&&nd.x!=null){ cx+=nd.x; cy+=nd.y; cz+=nd.z; n++; } });
+    if(!n) return; cx/=n; cy/=n; cz/=n; var r=0;
+    ids.forEach(function(id){ var nd=NIDS[id]; if(nd&&nd.x!=null) r=Math.max(r, Math.hypot(nd.x-cx,nd.y-cy,nd.z-cz)); });
+    var cam=Graph.camera(), d=new T.Vector3(cam.position.x-cx, cam.position.y-cy, cam.position.z-cz);
+    var len=d.length()||1, keep=Math.max(r*2.1+220, 420); d.multiplyScalar(keep/len);
+    Graph.cameraPosition({x:cx+d.x, y:cy+d.y, z:cz+d.z}, {x:cx,y:cy,z:cz}, 900); }catch(e){} }
 function _walkGo(di){ if(!WALK.steps.length) return;
   WALK.i=Math.max(0, Math.min(WALK.steps.length-1, WALK.i+di));
   var n=NIDS[WALK.steps[WALK.i]]; if(!n) return;
-  _aimAt(n); SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
+  if(WALK.mode==="journey" && di===0) _frameSet(WALK.steps);   // selection shows the WHOLE path; arrows dive per step
+  else _aimAt(n);
+  SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
   _walkRender(); }
-function _walkRender(){ var wb=document.getElementById("walkbar"), hud=document.getElementById("jrnhud");
-  /* JOURNEY controls live in the TOPBAR MIDDLE (operator): selected name right of the button,
-     ‹ i/N › stepping + step label + clear — the panel keeps only the element TRAIL. */
-  if(hud){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj;
-      hud.style.display="";
-      hud.innerHTML='<b class="wjname" title="'+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'+(j.name||j.cid)+'</b>'
+function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
+  /* JOURNEY controls = a WIDE PILL floating over the diagram top: ‹ at the left edge, step COUNT,
+     the journey NAME at the end, › at the right edge; the ✕ lives in its OWN pill beside. */
+  if(pill){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj, stepN=(NIDS[WALK.steps[WALK.i]]||{}).label||"";
+      pill.style.display="";
+      pill.innerHTML='<div class="jpill" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
         +'<button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
         +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
-        +'<button class="wbtn" data-wgo="1" title="next step">›</button>'
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span>'
-        +'<button class="hlbx" title="clear the journey (Esc)">✕</button>';
-      hud.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
-      hud.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
-    else hud.style.display="none"; }
+        +'<span class="wjname">'+(j.name||j.cid)+'</span>'
+        +'<button class="wbtn" data-wgo="1" title="next step">›</button></div>'
+        +'<div class="jpill jxp"><button class="hlbx" title="clear the journey (Esc)">✕</button></div>';
+      pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
+      pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+    else pill.style.display="none"; }
   if(wb){ if(WALK.mode!=="trail"){ wb.style.display="none"; }
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
@@ -353,13 +362,18 @@ window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _ho
   _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite); };
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
-  var db=document.getElementById("depthBtn"); if(db&&!db.__w){ db.__w=1; db.onclick=function(){ __uniHLDepth(HL.depth%5+1); }; }
+  var dr=document.getElementById("depthRng"); if(dr&&!dr.__w){ dr.__w=1;
+    dr.addEventListener("input", function(){ __uniHLDepth(+dr.value); }); }
   var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
   var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
   if(!window.__uniHLKeys){ window.__uniHLKeys=1;
     window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
       __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
-    window.addEventListener("keydown", function(e){ if(e.key==="Escape") __uniHLClear(); }); }
+    window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
+      if(tag==="INPUT"||tag==="TEXTAREA") return;
+      if(e.key==="Escape") __uniHLClear();
+      else if(e.key==="ArrowUp"){ e.preventDefault(); __uniHLDepth(HL.depth+1); }     // arrows mirror Alt+scroll (some setups eat it)
+      else if(e.key==="ArrowDown"){ e.preventDefault(); __uniHLDepth(HL.depth-1); } }); }
   _hlSyncUI(); };
 
 /* ══ FLEET panel (batch 11-B) — per-entity visibility + ops matrix; the in-flight diagram's seed ══
@@ -367,7 +381,7 @@ window.__uniWireTopbar=function(){
    keys its stages by piece id and the universe node ids are the SAME strings, so a later per-piece
    join is direct. ALL engine seams read through visEnt/visN — the ONE place a "dim" tri-state and
    per-piece roles land later. An unknown entity resolves to SHOWN (l2-only entities never vanish). */
-var _VISDEF={ show:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
+var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
 window.UNIVIS={ ent:{}, sub:{}, node:{}, meta:{} };   // sub = per-(ent|subgroup) overrides — keys are CURRENT-coreBy groups, regrouped on a core change
 _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
@@ -376,7 +390,7 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 function visN(n){ var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
-  return { show:(ev.show&&sv.show)?1:0, subs:ev.subs,
+  return { show:(ev.show&&sv.show)?1:0, planets:(ev.planets&&sv.planets)?1:0, wires:(ev.wires&&sv.wires)?1:0, subs:ev.subs,
     zDef:(ev.zDef&&sv.zDef)?1:0, zAtk:(ev.zAtk&&sv.zAtk)?1:0, zCfl:(ev.zCfl&&sv.zCfl)?1:0,
     zSat:(ev.zSat&&sv.zSat)?1:0, routes:(ev.routes&&sv.routes)?1:0 }; }
 /* applyVis pushes UNIVIS into the engine. scope picks WHICH routines run — never a partial rebuild:
@@ -387,8 +401,9 @@ var _visRAF=null, _visScopes={};
 function applyVis(scope){ _visScopes[scope||"all"]=1;
   if(_visRAF) return; _visRAF=requestAnimationFrame(function(){ _visRAF=null; var s=_visScopes; _visScopes={}; _applyVisNow(s); }); }
 function _applyVisNow(s){ if(typeof Graph==="undefined"||!Graph) return; var all=s.all;
-  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}   // fleet ∧ focus — the one truth
-    try{ Graph.linkVisibility(linkVisFn); }catch(e){} }              // dormant while conns is baked on — future-proofing
+  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){} }
+  if(all||s.nodes||s.wires){ try{ Graph.linkVisibility(linkVisFn); }catch(e){}   // dormant while conns is baked on
+    try{ buildClusters(); updateClusters(true); }catch(e){} }        // connector rebuild picks up the per-entity/cluster wires flag
   if(all||s.nodes||s.zones){ try{ rebuildNodes(); }catch(e){} }      // ONLY rebuildNodes resets FLEETTICK/PULSE/ORBIT/WAVE — re-show would duplicate closures otherwise
   if(all||s.nodes||s.clusters){ try{ buildClusters(); updateClusters(true); }catch(e){} }
   if(all||s.nodes||s.routes){ try{ buildTransports(); }catch(e){} }  // MOVERS rebuild nowhere else — ghost shuttles fly to hidden entities otherwise
@@ -423,6 +438,8 @@ function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
    icons come from the spike's own ICO set via ico() so the panel speaks the config's language */
 var _FCOLS=[
   { k:"show",   ti:"show entity",         scope:"nodes",    icon:"show",   g:function(){ return true; } },
+  { k:"planets",ti:"planets (element nodes) — hulls stay", scope:"nodes",  icon:"bubble", g:function(){ return true; } },
+  { k:"wires",  ti:"connections touching it",              scope:"wires",  icon:"radius", g:function(){ return true; } },
   { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
   { k:"zDef",   ti:"defense fleet",       scope:"zones",    icon:"shield", g:function(){ return !!(CFG.warOn&&CFG.zDef); } },
   { k:"zAtk",   ti:"attack fleet",        scope:"zones",    icon:"swords", g:function(){ return !!(CFG.warOn&&CFG.zAtk); } },
@@ -449,9 +466,6 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     +'<button class="flpre" data-fpre="none">None</button>'
     +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button>'
     +'</div>';
-  h+='<div class="flrow flview"><span class="flent">view</span>'
-    +'<button class="flvbtn flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="show / hide the PLANETS (element nodes) — off = clusters and entities only">'+(typeof ico==="function"?ico("target",11):"")+'planets</button>'
-    +'<button class="flvbtn flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="show / hide the CONNECTIONS between planets (every wire)">'+(typeof ico==="function"?ico("radius",11):"")+'wires</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
@@ -477,10 +491,6 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
       Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }   // the ALL row is a bulk gesture — cluster overrides follow it
     else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
-  body.querySelectorAll(".flglob").forEach(function(b){ b.onclick=function(){ var f=b.getAttribute("data-fg");
-    CFG[f]=!CFG[f]; b.classList.toggle("on", !!CFG[f]);
-    if(f==="showElems") applyVis("nodes");
-    else { try{ if(typeof Graph!=="undefined"&&Graph) Graph.linkVisibility(linkVisFn); }catch(e){} try{ updateClusters(true); }catch(e){} } }; });   // showWires: connectors clear via the updateConnectors gate; plain links via linkVisFn
   body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
     if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
       _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }

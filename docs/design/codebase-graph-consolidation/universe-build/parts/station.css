@@ -119,16 +119,30 @@
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
-  /* journey HUD — lives IN the topbar middle: selected name · ‹ i/N › stepping · step label · clear */
-  #jrnhud{ display:flex; align-items:center; gap:6px; min-width:0; max-width:38vw; font-size:12px; color:var(--ink); }
-  #jrnhud .wjname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
-  #jrnhud .wbtn{ width:22px; height:22px; font:700 12px/1 var(--font-ui); color:var(--ink); background:#0e1524;
-    border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
-  #jrnhud .wbtn:hover{ border-color:var(--accent); }
-  #jrnhud .wpos{ font:700 10px/1 var(--font-mono); color:var(--muted); flex:none; }
-  #jrnhud .wstepname{ font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
-  #jrnhud .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; flex:none; }
-  #jrnhud .hlbx:hover{ color:var(--ink); }
+  /* journey STEP PILL — floats over the diagram top: ‹ at the left edge, i/N, the journey NAME, › at
+     the right edge; the ✕ in its own pill beside. The step label rides the hover title + the card. */
+  #jrnpill{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 10px); z-index:41;
+    display:flex; align-items:center; gap:8px; max-width:56vw; }
+  #jrnpill .jpill{ display:flex; align-items:center; gap:10px; padding:5px 8px; min-width:280px;
+    background:rgba(24,33,54,.96); border:1px solid var(--accent); border-radius:999px; font-size:12.5px; color:var(--ink); }
+  #jrnpill .jpill.jxp{ min-width:0; padding:5px 6px; border-color:var(--line); }
+  #jrnpill .wbtn{ width:24px; height:24px; font:700 13px/1 var(--font-ui); color:var(--ink); background:#0e1524;
+    border:1px solid var(--line); border-radius:50%; cursor:pointer; padding:0; flex:none; }
+  #jrnpill .wbtn:hover{ border-color:var(--accent); }
+  #jrnpill .wpos{ font:700 11px/1 var(--font-mono); color:var(--muted); flex:none; }
+  #jrnpill .wjname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  #jrnpill .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 4px; }
+  #jrnpill .hlbx:hover{ color:var(--ink); }
+  /* depth = a draggable 1–5 bar in the topbar */
+  .topbar .tbdepth{ position:relative; display:flex; align-items:center; gap:6px; color:var(--muted);
+    background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:0 8px; height:30px; flex:none; }
+  .topbar .tbdepth svg{ width:14px; height:14px; }
+  .topbar .tbdepth input[type=range]{ width:64px; accent-color:var(--accent); }
+  .topbar .tbdepth .tbnum{ position:static; font:800 10px/1 var(--font-mono); color:#fff; background:var(--accent);
+    border-radius:6px; padding:2px 5px; }
+  /* the expanded panel: the BODY scrolls, the footer chevron stays pinned on screen */
+  body.panel-open .panel{ overflow:hidden !important; }
+  body.panel-open .panel .pbody{ overflow-y:auto; scrollbar-width:thin; }
   /* the collapsed rail's expand chevron sits at the BOTTOM — same corner as the expanded footer chevron */
   .panel .minbar .pmin{ order:2; margin-top:auto; }
   .panel .minbar .minname{ order:1; }
@@ -175,7 +189,7 @@
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
      and navshow(60). */
   #fleet{ position:fixed; left:calc(var(--navw) + 12px); right:auto; top:calc(var(--topbarh) + 10px); z-index:50;
-    width:auto; min-width:186px; max-width:300px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
+    width:auto; min-width:186px; max-width:340px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
     overflow-y:auto; transition:left .18s ease; scrollbar-width:thin; }
   body.nav-min #fleet{ left:48px; }
   #fleet .flhead, #fleet .flrow{ display:flex; align-items:center; gap:3px; padding:1px 0; }
