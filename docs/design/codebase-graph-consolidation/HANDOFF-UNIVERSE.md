@@ -89,6 +89,10 @@ Journey command center = topbar MIDDLE ([journeys][style] · name · ‹i/N› �
 
 Operator's diagnostic protocol ran first (real-UI journey select → screenshots): counters said working, the SCREEN said noise. Fixes: contrast floors (dim 0.05 · lit 2.6 · halos 64/36) · transports fly the LIT path only · journey select FRAMES the carrier set (`_frameSet`, camera 910 > radius 325) · stepping aims ≥260. Re-shot: unmistakable in both styles. UI: PLANETS+WIRES are fleet MATRIX columns (entity AND cluster, masters; hull stays on planets-off; wires scope exactly; CFG.showElems/showWires retired) · the journey stepper is a WIDE PILL over the diagram (‹ edge · i/N · NAME · edge ›; ✕ in its own pill; topbar HUD gone) · card body scrolls inside the panel (footer chevron always on screen) · depth = draggable 1–5 bar + ArrowUp/Down (Alt+scroll stays). Battery **180 static**.
 
+## BATCH 16 — LANDED (`736a269`): stepper centered in the header · Lucide buttons · WASD flight
+
+Journey stepper back IN the header bar, centered ([‹][i/N · name][›][✕], real Lucide chevron/x buttons in 32px squares — the text glyphs sat skewed). FLIGHT: hold W/A/S/D + Space (up) + Ctrl (down) — the whole rig flies, speed scales with zoom, keys clear on blur. Engineering: the fly tick is **setInterval(16), not rAF** — this headless profile starves free-running rAF chains (measured 1 tick/400ms); anything proof-critical must not depend on free-running rAF. Battery **182 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
