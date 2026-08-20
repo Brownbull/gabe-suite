@@ -13,9 +13,27 @@
   button.b:hover{ border-color:var(--accent); }
   .seg{ display:inline-flex; gap:4px; } .seg button{ font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; padding:4px 9px; cursor:pointer; }
   .seg button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
-  .legend{ position:fixed; bottom:12px; left:12px; background:rgba(24,33,54,.94); border:1px solid var(--line); border-radius:12px; padding:10px 12px; font-size:11px; z-index:10; max-width:320px; }
-  .legend .row{ display:flex; align-items:center; gap:8px; margin:3px 0; color:var(--muted); cursor:pointer; }
-  .legend .row:hover{ color:var(--ink); } .legend b{ color:var(--ink); font-weight:600; } .legend svg{ width:15px; height:15px; flex:none; }
+  /* ELEMENTS-LAB dimension legend (lifted as-is): fixed 300×327, minimizable, 6 dimension tabs, real asset thumbnails */
+  #elegend{ position:fixed; left:14px; bottom:14px; width:340px; height:470px; display:flex; flex-direction:column; background:var(--panel); border:1px solid var(--line); border-radius:12px; z-index:45; box-shadow:0 8px 30px #0007; --mono:Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace; }
+  #elegend.min{ height:auto; }   /* FIXED total height (flex body absorbs the optional sub-tab row → same size on every tab) */
+  #elegend .lgsubtabs{ display:flex; gap:2px; padding:5px 8px 0; background:#0e1524; flex:none; }
+  #elegend .lgsub{ font:600 9px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:5px 9px; cursor:pointer; border-radius:5px; }
+  #elegend .lgsub.on{ color:var(--ink); background:#16233f; }
+  #elegend .lghd{ display:flex; align-items:center; justify-content:space-between; padding:8px 10px 0; }
+  #elegend .lghd b{ font:800 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); }   /* match CONFIG / TRANSPORTS header weight */
+  #elegend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; }
+  #elegend .lgtabs{ display:flex; flex-wrap:wrap; gap:2px; padding:6px 6px 0; }
+  #elegend .lgtab{ font:600 9.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:6px 7px; cursor:pointer; border-radius:6px 6px 0 0; }
+  #elegend .lgtab.on{ color:var(--ink); background:#0e1524; }
+  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }   /* flex:1 → fills the fixed box; sub-tab row shrinks it, total stays constant */
+  #elegend.min .lgbody, #elegend.min .lgtabs{ display:none; }
+  #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
+  #elegend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
+  #elegend .lgvis{ width:44px; flex:none; display:flex; align-items:center; justify-content:center; }
+  #elegend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; } #elegend .lglbl i{ color:var(--muted); font-style:normal; }
+  #elegend .lgln{ width:28px; height:0; }
+  #elegend .lgcv{ width:42px; height:36px; display:block; border-radius:5px; background:radial-gradient(circle at 50% 40%,#14203a,#0b1120); }   /* real 3D asset thumbnail (shared palette renderer) */
+  #elegend .lgph{ width:34px; height:34px; border-radius:7px; border:1px dashed var(--muted); display:flex; align-items:center; justify-content:center; color:var(--muted); font:700 13px/1 var(--mono); }   /* placeholder — the spike owns the node */
   /* config panel — draggable + minimizable, starts top-right. Legend font (the body sans), icons + pills. */
   .cfg{ position:fixed; top:12px; right:calc(var(--rail) + 12px); z-index:12; width:246px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; user-select:none; }
   .cfghead{ display:flex; align-items:center; gap:7px; padding:8px 10px; border-bottom:1px solid var(--line); cursor:grab; }
@@ -37,11 +55,26 @@
   .pill button svg{ width:12px; height:12px; }
   .pill button.on{ background:var(--accent); color:#fff; } .pill button:hover:not(.on){ color:var(--ink); }
   .pill.off button.on{ background:var(--line); color:var(--muted); }   /* a toggled-OFF single pill */
-  .rng{ -webkit-appearance:none; appearance:none; height:4px; border-radius:3px; background:var(--line); flex:1; outline:none; cursor:pointer; }
-  .rng::-webkit-slider-thumb{ -webkit-appearance:none; width:13px; height:13px; border-radius:50%; background:var(--accent); cursor:pointer; }
-  .rng::-moz-range-thumb{ width:13px; height:13px; border:none; border-radius:50%; background:var(--accent); cursor:pointer; }
+  /* icon-only toggles — the icon IS the button, one compact row (Show · Planet · Universe) */
+  .itogrow{ display:flex; gap:6px; flex-wrap:wrap; align-items:center; margin:2px 0; }
+  .itog{ display:inline-flex; align-items:center; justify-content:center; width:30px; height:30px; border-radius:8px; border:1px solid var(--line); background:#0e1524; color:var(--muted); cursor:pointer; padding:0; }
+  .itog svg{ width:16px; height:16px; }
+  .itog.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  .itog:hover:not(.on){ color:var(--ink); border-color:var(--accent); }
+  .stp{ display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; flex:none; border-radius:7px; border:1px solid var(--line); background:#0e1524; color:var(--muted); cursor:pointer; font:700 15px/1 ui-monospace,monospace; padding:0; }
+  .stp:hover{ color:var(--ink); border-color:var(--accent); }
+  .rng{ -webkit-appearance:none; appearance:none; height:3px; border-radius:2px; background:var(--line); flex:1; min-width:0; outline:none; cursor:pointer; }   /* min-width:0 → shrinks in a crowded row (else the input's intrinsic width overflows) */
+  .rng::-webkit-slider-thumb{ -webkit-appearance:none; width:11px; height:11px; border-radius:50%; background:var(--accent); cursor:pointer; }
+  .rng::-moz-range-thumb{ width:11px; height:11px; border:none; border-radius:50%; background:var(--accent); cursor:pointer; }
+  /* themed scrollbars — narrow + dark, follow the page theme (default light/wide bar broke the theme) */
+  *{ scrollbar-width:thin; scrollbar-color:var(--line) transparent; }
+  ::-webkit-scrollbar{ width:7px; height:7px; }
+  ::-webkit-scrollbar-track{ background:transparent; }
+  ::-webkit-scrollbar-thumb{ background:var(--line); border-radius:4px; }
+  ::-webkit-scrollbar-thumb:hover{ background:var(--muted); }
   /* EXPLORER panel — top-left, encoding experiments (NOT saved to config) */
-  .expl{ position:fixed; top:64px; left:12px; z-index:11; width:256px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; }
+  .expl{ position:fixed; top:64px; left:12px; z-index:11; width:246px; background:rgba(24,33,54,.95); border:1px solid var(--line); border-radius:12px; backdrop-filter:blur(6px); font:13px/1.4 ui-sans-serif,system-ui,sans-serif; }
+  .cfgrow .rval{ margin-left:auto; width:32px; text-align:right; color:var(--ink); font-variant-numeric:tabular-nums; }   /* right-aligned live slider value */
   .exhead{ display:flex; align-items:center; gap:7px; padding:8px 10px; border-bottom:1px solid var(--line); }
   .exhead .et{ flex:1; font-size:11px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--ink); display:flex; align-items:center; gap:6px; } .exhead .et svg{ width:13px; height:13px; color:var(--accent); }
   .exhead .es{ font:600 9px/1 var(--mono,ui-monospace); color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
@@ -124,9 +157,10 @@
   <div class="phead" id="phead"></div>
   <div class="pbody" id="pbody"></div>
 </div>
-<div class="legend" id="legend"></div>
+<div id="elegend"></div>
 <div class="hint">Orbit: drag = rotate (up stays up) · right-drag = pan · scroll = zoom · click a node</div>
 <script src="./3d-bundle.js"></script>
+<script src="./chip-assets.js"></script>
 <script>
 window.addEventListener("error", function(ev){ var d=document.getElementById("err")||document.createElement("div"); d.id="err";
   d.style.cssText="position:fixed;top:0;left:0;right:0;z-index:99;background:#c0392b;color:#fff;font:11px monospace;padding:6px 10px;white-space:pre-wrap";
@@ -342,7 +376,9 @@ var OPMAP={
 var CFG={ shape:"polygon", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
   /* SPACE WAR zones — 3 areas around each planet; angle (deg, front XY plane) + one shared distance.
      defaults: attack=left(180) · conflict=top(90) · defense=right(0). warDist = gap outside the sphere. */
-  warOn:false, warDist:7, shellH:0.6, concave:0.72, lift:0.65 };   // DEFAULTS from the operator's chosen config (2026-08-18) · shellH=band height · concave=cloud openness · lift=cloud vertical
+  warOn:true, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
+  conns:true, stars:true, transports:true,   // ELEMENTS-LAB fleets · connectors · star field · transports — all baked ALWAYS ON (settled)
+  zDef:true, zAtk:true, zCfl:true, zSat:true };   // per-planet-zone visibility (defence · attack · conflict · satellites), toggled in the Planet group
 var RADMIN=0.6, RADMAX=1.6;
 var NR=9;   // a node's visual radius (icon + bubble) — the clearance the boundary must clear
 /* metaball (fused-liquid WRAP) tuning — one iso-surface over the whole cluster so you cannot tell
@@ -376,7 +412,9 @@ function pulseLoop(){ requestAnimationFrame(pulseLoop); var t=Date.now();
       var act=Math.max(0, 1-Math.abs(d)/0.7);                 // fire window — the vertex only reacts as the sweep passes it
       w.dot.material.opacity=Math.min(1, act*2.4); w.dot.scale.setScalar(ENC.dotR);   // 1: DOT appears first (radius = the live dotR slider)
       var ls=Math.max(0, (act-0.24)/0.76);                    // 2–4: stubs GROW then CONTRACT with the sweep (lag the dot)
-      w.lineGroup.scale.setScalar(0.001+ls); w.smat.opacity=Math.min(1, ls*1.1); }); } }
+      w.lineGroup.scale.setScalar(0.001+ls); w.smat.opacity=Math.min(1, ls*1.1); }); }
+  if(FLEETTICK.length){ var ft=(t-_pt0)/1000; for(var fi=0;fi<FLEETTICK.length;fi++) FLEETTICK[fi](ft); }   // drive the fleet movement / sat orbit / conflict pulse
+  if(MOVERS.length) tickTransports((t-_pt0)/1000); }   // drive the inter-entity transport shuttles
 requestAnimationFrame(pulseLoop);
 /* USED-BY as a RADAR SWEEP: light N of the sphere's own lattice vertices (N = used-by, cap 8). As the radar
    passes a vertex it fires — the dot snaps on, then short stubs grow along its 4 edges into a little X (ink
@@ -406,6 +444,196 @@ function satelliteRing(grp, br, count, color, ti){ if(count<=0) return;
     dot.position.set(Math.cos(a)*R, Math.sin(a)*R, 0); ring.add(dot); }
   var t=RTILT[ti]||RTILT[0]; ring.rotation.x=t.x; ring.rotation.y=t.y; grp.add(ring);
   ORBIT.push({m:ring, ax:new T.Vector3(0,0,1), base:0.06-ti*0.012}); }   // base × ENC.speed each frame → orbit tied to (and much slower than) the flow
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+   ELEMENTS-LAB visual language (ported from spike/elements-lab.html — the settled Gabe-universe grammar).
+   Each node = a planet: real ship/sat fleets replace the primitive warZones dots. Config is VERBATIM from
+   records/ELEMENTS-LAB-SPEC.md. Machinery (normShip/orientTo/NOSE_FLIP/applyRot/placeFleet) copied, not
+   redesigned. Toy per-node metrics (tests/god/fanin/behind) stand in for the real _a3 fields at scale-up.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════ */
+var SHIPS={}, SATS={}, SHUTTLES={}, SHIPSREADY=false, SATSREADY=false;
+function fib(i,n){ var ph=Math.acos(1-2*(i+0.5)/n), th=Math.PI*(1+Math.sqrt(5))*i; return new T.Vector3(Math.sin(ph)*Math.cos(th),Math.cos(ph),Math.sin(ph)*Math.sin(th)); }
+function normShip(gltf){ var raw=gltf.scene; raw.rotation.y=Math.PI; raw.updateWorldMatrix(true,true);   // orient FIRST, then centre on the POST-rotation bbox — else −c cancels the pre-rotation centre and geometry drifts off-origin
+  var box=new T.Box3().setFromObject(raw), c=box.getCenter(new T.Vector3()), sz=box.getSize(new T.Vector3()), maxD=Math.max(sz.x,sz.y,sz.z);
+  if(maxD>150){   // pathological bbox (a stray far vertex) → refit on the densest mesh cluster
+    var meshes=[];
+    raw.traverse(function(o){ if(o.isMesh&&o.geometry){ o.geometry.computeBoundingBox(); var bb=o.geometry.boundingBox.clone().applyMatrix4(o.matrixWorld); meshes.push({bb:bb,c:bb.getCenter(new T.Vector3()),d:bb.getSize(new T.Vector3()).length(),vc:o.geometry.attributes.position?o.geometry.attributes.position.count:0}); } });
+    if(meshes.length){ meshes.sort(function(a,b){return b.vc-a.vc;}); var prim=meshes[0], nb=prim.bb.clone(); meshes.forEach(function(m){ if(m.c.distanceTo(prim.c)<prim.d*3) nb.union(m.bb); }); box=nb; c=box.getCenter(new T.Vector3()); sz=box.getSize(new T.Vector3()); maxD=Math.max(sz.x,sz.y,sz.z); } }
+  raw.position.set(-c.x,-c.y,-c.z); var g=new T.Group(); g.add(raw); g.userData.fit=7/Math.max(maxD,0.001);
+  var lv=new T.Vector3(0,0,1); if(sz.x>=sz.y&&sz.x>=sz.z) lv.set(1,0,0); else if(sz.z>=sz.x&&sz.z>=sz.y) lv.set(0,0,1); else lv.set(0,1,0);
+  g.userData.long=lv; raw.updateWorldMatrix(true,true);   // NOSE = the NARROWER end along the long axis
+  var tmin=Infinity,tmax=-Infinity,S=[];
+  raw.traverse(function(o){ if(o.isMesh&&o.geometry&&o.geometry.attributes.position){ var pa=o.geometry.attributes.position, step=Math.max(1,Math.floor(pa.count/160)); for(var i=0;i<pa.count;i+=step){ var v=new T.Vector3().fromBufferAttribute(pa,i).applyMatrix4(o.matrixWorld); S.push(v); var t=v.dot(lv); if(t<tmin)tmin=t; if(t>tmax)tmax=t; } } });
+  var span=(tmax-tmin)||1, loP=0,loN=0,hiP=0,hiN=0;
+  S.forEach(function(v){ var t=(v.dot(lv)-tmin)/span, perp=v.clone().addScaledVector(lv,-v.dot(lv)).length(); if(t<0.28){loP+=perp;loN++;} else if(t>0.72){hiP+=perp;hiN++;} });
+  g.userData.nose=lv.clone().multiplyScalar((hiN?hiP/hiN:1)<=(loN?loP/loN:1)?1:-1); return g; }
+function loadShips(){ var jobs=[];
+  (window.SHIP_NAMES||[]).forEach(function(k){ jobs.push([window.SHIP_GLBS[k],SHIPS,k]); });
+  (window.SAT_NAMES||[]).forEach(function(k){ jobs.push([window.SAT_GLBS[k],SATS,k]); });
+  (window.SHUTTLE_NAMES||[]).forEach(function(k){ jobs.push([window.SHUTTLE_GLBS[k],SHUTTLES,k]); });
+  var left=jobs.length; if(!left||!window.GLTFLoader){ console.error('no assets/loader'); return; }
+  jobs.forEach(function(j){ new window.GLTFLoader().load(j[0], function(gltf){ j[1][j[2]]=normShip(gltf);
+    if(--left===0){ SHIPSREADY=true; SATSREADY=true; onShipsReady(); } }, undefined, function(e){ console.error('asset failed',j[2],e); }); }); }
+function asset(map, key, tintHex){ var base=map[key]; if(!base) return loadingBox(tintHex||0x9aa6be);
+  var s=base.clone(true); if(tintHex!=null){ var col=new T.Color(tintHex); s.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); o.material.emissive=col; o.material.emissiveIntensity=0.18; } }); }
+  s.scale.setScalar(base.userData.fit); return s; }
+function craftBase(key){ return SHIPS[key]||SHUTTLES[key]; }   // ONE roster — ships + shuttles both selectable
+function loadingBox(hex){ var g=new T.Group(); g.add(new T.Mesh(new T.BoxGeometry(4,4,4), new T.MeshBasicMaterial({color:hex,wireframe:true,transparent:true,opacity:0.35}))); return g; }
+var COLOR_MODE='aura';   // aura = shape-matched additive halo, original colours kept (settled default)
+function teamShip(key, teamHex, health){ var base=craftBase(key); if(!base) return loadingBox(teamHex);
+  var fit=base.userData.fit, team=new T.Color(teamHex), wrap=new T.Group();
+  var s=base.clone(true); s.scale.setScalar(fit); wrap.add(s);
+  var meshes=[]; s.traverse(function(o){ if(o.isMesh){ o.material=o.material.clone(); meshes.push(o); } });
+  if(COLOR_MODE==='glow'){ var b1=new T.Sprite(new T.SpriteMaterial({map:glowTex, color:teamHex, transparent:true, opacity:0.55+0.2*health, depthWrite:false, blending:T.AdditiveBlending})); b1.scale.set(11,11,1); wrap.add(b1);
+    var b2=new T.Sprite(new T.SpriteMaterial({map:glowTex, color:teamHex, transparent:true, opacity:0.9, depthWrite:false, blending:T.AdditiveBlending})); b2.scale.set(4.5,4.5,1); wrap.add(b2);
+    meshes.forEach(function(o){ o.material.emissive=team; o.material.emissiveIntensity=0.22+0.25*health; });
+  } else if(COLOR_MODE==='aura'){ var halo=base.clone(true); halo.scale.setScalar(fit*1.28);   // stronger + larger halo so the team colour reads at distance (operator: red attack ships were invisible far out)
+    halo.traverse(function(o){ if(o.isMesh) o.material=new T.MeshBasicMaterial({color:teamHex, transparent:true, opacity:0.34+0.22*health, blending:T.AdditiveBlending, depthWrite:false, side:T.BackSide}); }); wrap.add(halo);
+    meshes.forEach(function(o){ o.material.emissive=team; o.material.emissiveIntensity=0.14; });   // faint hull emissive → the team colour survives at distance without hiding the original paint
+  } else { meshes.forEach(function(o){ var ls=new T.LineSegments(new T.EdgesGeometry(o.geometry,22), new T.LineBasicMaterial({color:teamHex, transparent:true, opacity:0.95})); o.add(ls); o.material.emissive=team; o.material.emissiveIntensity=0.06; }); }
+  if(health<1){ meshes.forEach(function(o){ o.material.transparent=true; o.material.opacity=0.5+0.5*health; }); }
+  return wrap; }
+/* ── settled config (VERBATIM from ELEMENTS-LAB-SPEC.md §Settled config) ── */
+/* CORPUS is the ONLY generated test axis (ref['corpus']): api=pytest · web=vitest · e2e=playwright. The old
+   unit/integ/e2e labels were LAB-FICTION (round-robin i%3, no data feed — SPEC:37 admitted it). Ships rebound to
+   the corpus. Join-TIER (T1/T2/T3) was RETIRED — element_detail dedupes direct+via-route, so c4 carries no tier. */
+var DEF_KINDS=['api','web','e2e'];
+var DEF_MODELS={ api:['bomber','cat','jet'], web:['speederC','speederD','speederB'], e2e:['miner','cargoA','cargoB'] };
+var DEF_ACTIVE={ api:3, web:3, e2e:3 };   // the ship model drawn per corpus (tier retired — this just picks a ship)
+var ATK_MODELS={ god:['dart','fighter','cruiser'], ung:['tie'] };
+var ATK_ACTIVE={ god:1, ung:1 };
+function defModel(k){ return DEF_MODELS[k][(DEF_ACTIVE[k]||1)-1]; }
+function atkModel(k){ if(k==='ung') return ATK_MODELS.ung[0]; return ATK_MODELS[k][(ATK_ACTIVE[k]||1)-1]; }
+var CFLC={rad:1.2,wav:2,vel:0.35};
+var CFL_MAP={ 'blast radius':{effect:'shock',color:0xf59e0b}, 'failing tests':{effect:'flak',color:0xef4444}, 'untested element':{effect:'flak',color:0xef4444} };
+var DEPC={adDist:3.5, cflDist:1.5, satDist:1.5, spread:1.4, move:0.45, adY:0};   // operator-settled satellite orbit gap (2026-08-19)
+var SATC={model:'starlink', count:8, rad:2.5, speed:0.05, size:0.07, tilt:0.3, sig:0.3, rings:3, ringOp:0};   // operator-settled satellite config (2026-08-19)
+var SAT_RINGS=[{ry:0,tl:1},{ry:2.094,tl:1},{ry:4.189,tl:1}];
+/* per-slot manual rotation, operator-dialed (ELEMENTS-LAB-SPEC) — applied Y→X→Z in LOCAL axes */
+var ROT={ def:{ api:{1:{y:-90},2:{y:-180},3:{y:90}}, web:{1:{y:-90},2:{y:90},3:{}}, e2e:{1:{y:-180},2:{},3:{}} },
+          atk:{ god:{1:{y:-90,x:-90,z:0},2:{},3:{}}, ung:{scale:0.35,x:90,y:0,z:90} } };
+function orientTo(obj, fwd, nose){ fwd=fwd.clone(); if(fwd.length()<1e-4) return; fwd.normalize();   // nose → fwd, roll up→world-up (fixes baked-in rolls, e.g. the tie)
+  var n=(nose||new T.Vector3(0,0,1)).clone().normalize(), q1=new T.Quaternion().setFromUnitVectors(n, fwd);
+  var mUp=new T.Vector3(0,1,0).applyQuaternion(q1); mUp.addScaledVector(fwd,-mUp.dot(fwd));
+  var dUp=new T.Vector3(0,1,0); dUp.addScaledVector(fwd,-dUp.dot(fwd));
+  if(mUp.length()<1e-4||dUp.length()<1e-4){ obj.quaternion.copy(q1); return; }
+  obj.quaternion.copy(new T.Quaternion().setFromUnitVectors(mUp.normalize(), dUp.normalize()).multiply(q1)); }
+function orientAlong(obj, dir, noseVec){ var d=dir.clone(); if(d.length()<1e-4) return; d.normalize(); obj.quaternion.setFromUnitVectors(noseVec, d); }
+var NOSE_FLIP=new Set(['hauler']);   // only hauler's auto-detected nose is genuinely reversed
+function craftNose(key){ var b=craftBase(key); var n=((b&&b.userData.nose)||new T.Vector3(0,0,1)).clone(); return NOSE_FLIP.has(key)? n.negate() : n; }
+function applyRot(obj, fwd, r){ if(!r) return;   // LOCAL axes Y→X→Z: yaw to face FIRST, then X pitch / Z roll
+  if(r.y) obj.rotateY(r.y*Math.PI/180); if(r.x) obj.rotateX(r.x*Math.PI/180); if(r.z) obj.rotateZ(r.z*Math.PI/180);
+  if(r.scale) obj.scale.multiplyScalar(r.scale); }
+/* ── conflict effects (top cloud) — NO centre sphere (operator) ── */
+function cflShock(C){ var g=new T.Group(), rings=[];
+  for(var i=0;i<CFLC.wav;i++){ var tor=new T.Mesh(new T.TorusGeometry(CFLC.rad,0.22,8,44), new T.MeshBasicMaterial({color:C,transparent:true,opacity:0.85})); tor.rotation.x=Math.PI/2; g.add(tor); rings.push({m:tor,ph:i/CFLC.wav}); }
+  g.userData.tick=function(t){ rings.forEach(function(rr){ var p=((t*CFLC.vel+rr.ph)%1), s=1+p*5; rr.m.scale.set(s,s,1); rr.m.material.opacity=0.85*(1-p); }); }; return g; }
+function cflFlak(C){ var g=new T.Group(), N=18, parts=[];   // BINARY — fixed burst (failing/untested happen or not)
+  for(var i=0;i<N;i++){ var dir=fib(i,N), m=new T.Sprite(new T.SpriteMaterial({map:glowTex,color:C,transparent:true,depthWrite:false})); m.scale.set(2,2,1); g.add(m); parts.push({m:m,dir:dir,ph:i/N}); }
+  g.userData.tick=function(t){ parts.forEach(function(pp){ var p=((t*0.7+pp.ph)%1), d=1.5+p*6; pp.m.position.copy(pp.dir.clone().multiplyScalar(d)); pp.m.material.opacity=(1-p)*0.95; var sc=2.4*(1-p*0.55); pp.m.scale.set(sc,sc,1); }); }; return g; }
+function cflSpec(shock, flak){ if(!shock&&!flak) return null; var g=new T.Group(), ticks=[];
+  if(shock){ var s=cflShock(CFL_MAP['blast radius'].color); g.add(s); if(s.userData.tick) ticks.push(s.userData.tick); }
+  if(flak){ var f=cflFlak(CFL_MAP['failing tests'].color); g.add(f); if(f.userData.tick) ticks.push(f.userData.tick); }
+  g.userData.tick=function(t){ ticks.forEach(function(fn){ fn(t); }); }; return g; }
+/* ── deployment: fleets around the planet (war-zone placement law: def +X · atk −X · conflict +Y · sats −Y) ── */
+function placeFleet(list, dir, dist, spread, teamHex, yOff){ var out=[], center=dir.clone().multiplyScalar(dist); center.y+=(yOff||0);
+  var up=new T.Vector3(0,1,0), side=new T.Vector3().crossVectors(dir,up); if(side.length()<0.1) side.set(1,0,0); side.normalize();
+  var up2=new T.Vector3().crossVectors(side,dir).normalize(), n=list.length;
+  list.forEach(function(it,i){ var col=i%3, row=Math.floor(i/3), rows=Math.ceil(n/3);
+    var off=side.clone().multiplyScalar((col-1)*4.5*spread).add(up2.clone().multiplyScalar((row-(rows-1)/2)*4.5*spread));
+    var pos=center.clone().add(off); var s=teamShip(it.ship, teamHex, 1); s.scale.multiplyScalar(0.36); s.position.copy(pos);
+    orientTo(s, pos.clone().negate(), craftNose(it.ship)); applyRot(s, pos.clone().negate(), it.rot);   // nose → planet centre + per-slot rotation
+    out.push({obj:s, base:pos.clone(), ph:i}); });
+  return out; }
+function makeSat(){ var g=new T.Group();
+  var body=asset(SATS,SATC.model,null); body.scale.multiplyScalar(SATC.size*1.2); g.add(body);
+  var waves=[]; for(var w=0;w<2;w++){ var ring=new T.Mesh(new T.TorusGeometry(1,0.04,6,18), new T.MeshBasicMaterial({color:0x9ad8ff, transparent:true, opacity:0.45, depthWrite:false})); g.add(ring); waves.push({m:ring, ph:w*0.5}); }
+  g.userData.waves=waves; return g; }
+function satPose(obj, ph, t, SR, R, ri){ var ring=SAT_RINGS[ri%SAT_RINGS.length], a=ph*6.283 + t*SATC.speed;
+  var p=new T.Vector3(Math.cos(a)*SR, 0, Math.sin(a)*SR);
+  p.applyAxisAngle(new T.Vector3(1,0,0), ring.tl*SATC.tilt); p.applyAxisAngle(new T.Vector3(0,1,0), ring.ry); p.y -= R*0.5; obj.position.copy(p);
+  obj.userData.waves.forEach(function(wv){ var q=((t*1.3+wv.ph)%1), sc=(0.25+q*1.5)*SATC.sig; wv.m.scale.set(sc,sc,sc); wv.m.material.opacity=0.5*(1-q); }); }
+/* ── per-node fleet: the toy metrics → the five zones. Same field NAMES the real _a3 fields carry at scale-up:
+   test count → defence · god / untested → attack · blast/behind → conflict shock · untested → flak · fan-in → satellites. ── */
+function nodeFleet(n){ var m=n.m||{}, tests=Math.min(9,Math.round(num(m.tests)));
+  var def=[]; for(var i=0;i<tests;i++){ var k=DEF_KINDS[i%3]; def.push({ship:defModel(k), rot:ROT.def[k]&&ROT.def[k][DEF_ACTIVE[k]]}); }
+  var atk=[]; if(m.god) atk.push({ship:atkModel('god'), rot:ROT.atk.god[ATK_ACTIVE.god]});
+  var ung=(tests===0 && n.kind!=='entity')? 3 : 0; for(var u=0;u<ung;u++) atk.push({ship:atkModel('ung'), rot:ROT.atk.ung});   // untested surface → unguarded raiders
+  var shock=!!(m.large || num(m.behind)>=15), flak=(tests===0 && n.kind!=='entity');
+  var sats=Math.min(SATC.count, Math.round(num(m.fanin)));
+  return {def:def, atk:atk, shock:shock, flak:flak, sats:sats}; }
+var FLEETTICK=[];
+function fleetZones(grp, br, n){ if(!SHIPSREADY) return;   // ships still loading → onShipsReady() repaints
+  var spec=nodeFleet(n), local=new T.Group(); grp.add(local);
+  var D=br+DEPC.adDist, sp=DEPC.spread;
+  var def=CFG.zDef? placeFleet(spec.def, new T.Vector3(1,0,0), D, sp, 0x22c55e, DEPC.adY) : [];   // defence right
+  var atk=CFG.zAtk? placeFleet(spec.atk, new T.Vector3(-1,0,0), D, sp, 0xef4444, DEPC.adY) : [];  // attack left
+  var all=def.concat(atk); all.forEach(function(s){ local.add(s.obj); });
+  var eff=CFG.zCfl? cflSpec(spec.shock, spec.flak) : null; if(eff){ eff.position.set(0, br+DEPC.cflDist, 0); eff.scale.setScalar(0.85*Math.max(0.5,br/8)); local.add(eff); }   // conflict top
+  var sats=[], SR=br+DEPC.satDist;
+  if(CFG.zSat) for(var si=0; si<spec.sats; si++){ var st=makeSat(); local.add(st); sats.push({obj:st, ph:si/spec.sats, ri:si%SATC.rings}); }   // satellites south
+  var move=DEPC.move;
+  FLEETTICK.push(function(t){ all.forEach(function(s){ var b=s.base; s.obj.position.set(b.x+Math.sin(t*(0.5+move)+s.ph)*move*2.2, b.y+Math.cos(t*(0.6+move)+s.ph*1.3)*move*2.2, b.z+Math.sin(t*0.4+s.ph)*move*2.2); });
+    sats.forEach(function(st){ satPose(st.obj, st.ph, t, SR, br, st.ri); });
+    if(eff&&eff.userData.tick) eff.userData.tick(t); }); }
+function onShipsReady(){ rebuildNodes(); if(Graph) updateClusters(true); buildTransports();
+  if(!_legReady && window.__legRender){ _legReady=true; window.__legRender(); }   // ships in → re-render legend so its asset thumbnails paint
+  window.__shipsReady=true; }
+
+/* ── TYPED CONNECTORS — the ELEMENTS-LAB connector language applied to EVERY link: each edge re-renders as its
+   mapped KIND's styled wire (dashed/dotted · kind colour · trust opacity), and the plain force-graph edges hide.
+   Kind styles VERBATIM from ELEMENTS-LAB-SPEC.md §Inter-entity connectors. ── */
+var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };
+var CONN_KINDS=['fk','bridge','calls','imports'];
+/* each graph REL → its connector KIND (fk=data coupling · calls=fn/data access · imports=component wiring · bridge=web→API fetch) */
+var REL2KIND={ fk:'fk', pk:'fk', handler:'calls', touch:'calls', resp:'calls', uses:'calls', fetches:'bridge', renders:'imports', mounts:'imports', reads:'imports', typed:'imports' };
+function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;
+  var dir=b.clone().sub(a); var len=dir.length()||1; dir.multiplyScalar(1/len);
+  var A=a.clone().addScaledVector(dir,R), B=b.clone().addScaledVector(dir,-R);   // reach just past each node bubble
+  var geo=new T.BufferGeometry().setFromPoints([A,B]), mat;
+  if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:cfg.trust});
+  else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:cfg.trust, dashSize:base[0]/dn, gapSize:base[1]/dn}); }
+  var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
+var connGroup=null;
+function updateConnectors(){ if(!connGroup) return;
+  while(connGroup.children.length){ var ch=connGroup.children.pop(); if(ch.geometry&&ch.geometry.dispose)ch.geometry.dispose(); connGroup.remove(ch); }
+  if(!CFG.conns) return;
+  links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind's connector wire
+    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });
+  connGroup.traverse(function(c){ c.raycast=function(){}; }); }
+/* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
+   nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */
+var NENT={}; nodes.forEach(function(n){ NENT[n.id]=n.ent; });   // node → entity
+function linkCross(l){ return NENT[lid(l.source)]!==NENT[lid(l.target)]; }   // endpoints in different entities = a trade route
+var INTC={ shuttle:'cargoB', testship:'racer', size:0.5, speed:0.3, flip:false };   // TWO movers: cargo shuttle (data, size ∝ payload) + test chip (cross-entity test journey)
+var moverGroup=null, MOVERS=[];
+function buildTransports(){ if(!moverGroup||!SHIPSREADY) return;
+  while(moverGroup.children.length){ moverGroup.remove(moverGroup.children.pop()); }
+  MOVERS=[]; if(!CFG.transports) return;
+  var sNose=craftNose(INTC.shuttle), tNose=craftNose(INTC.testship);
+  links.forEach(function(l){ if(!linkCross(l)) return;
+    var dataScale=INTC.size*(0.5 + (num(l.payload)/MAXPL)*1.3);   // CARGO shuttle grows with the DATA carried (link payload)
+    var cargo=teamShip(INTC.shuttle, 0x38bdf8, 1); cargo.scale.multiplyScalar(dataScale); moverGroup.add(cargo);
+    MOVERS.push({obj:cargo, src:lid(l.source), tgt:lid(l.target), ph:0, nose:sNose});
+    var test=teamShip(INTC.testship, 0x22c55e, 1); test.scale.multiplyScalar(INTC.size*0.9); moverGroup.add(test);   // TEST chip (green) runs the same cross-entity route, phase-offset
+    MOVERS.push({obj:test, src:lid(l.source), tgt:lid(l.target), ph:0.6, nose:tNose}); });
+  moverGroup.traverse(function(c){ c.raycast=function(){}; }); }
+function tickTransports(t){ if(!MOVERS.length) return;
+  MOVERS.forEach(function(m){ var a=_npos[m.src], b=_npos[m.tgt]; if(!a||!b) return;
+    var p=((t*INTC.speed+m.ph)%2), u=p<1?p:2-p;   // ping-pong back and forth along the route
+    m.obj.position.set(a.x+(b.x-a.x)*u, a.y+(b.y-a.y)*u, a.z+(b.z-a.z)*u);
+    var dir=(p<1)? new T.Vector3(b.x-a.x,b.y-a.y,b.z-a.z) : new T.Vector3(a.x-b.x,a.y-b.y,a.z-b.z); orientAlong(m.obj, dir, m.nose); }); }   // nose leads travel
+/* ── CLUSTER STAR FIELD — elements USED by the cluster's components but never surfaced as one. count = hidden fns
+   (derive_functions.fn_slug − drawn fn_nodes at scale-up); toy stand-in = members×5. Glowing dots fill the hull box. ── */
+var starTex=(function(){ var cv=document.createElement("canvas"); cv.width=cv.height=64; var c=cv.getContext("2d");
+  var gr=c.createRadialGradient(32,32,0,32,32,32); gr.addColorStop(0,"#fff"); gr.addColorStop(0.14,"#fff"); gr.addColorStop(0.35,"rgba(255,255,255,0.55)"); gr.addColorStop(1,"rgba(255,255,255,0)");
+  c.fillStyle=gr; c.fillRect(0,0,64,64); return new T.CanvasTexture(cv); })();
+function starSprite(col,size,glow){ var grp=new T.Group();
+  var dot=new T.Sprite(new T.SpriteMaterial({map:starTex, color:col, transparent:true, depthWrite:false, blending:T.AdditiveBlending})); dot.scale.set(size,size,1); grp.add(dot);
+  if(glow>0){ var halo=new T.Sprite(new T.SpriteMaterial({map:starTex, color:col, transparent:true, opacity:0.32, depthWrite:false, blending:T.AdditiveBlending})); halo.scale.set(size*glow,size*glow,1); grp.add(halo); }
+  return grp; }
+function prand(i,s){ var x=Math.sin(i*12.9898+s*78.233)*43758.5453; return x-Math.floor(x); }   // deterministic per (index,seed) — stars cloud around member nodes in updateClusters
+var STARC={ size:0.45, glow:0.1, color:0xffffff, per:5 };   // operator-settled star config (2026-08-19) · per = hidden fns per member (stand-in)
+
 function iconCol(n){ if(ENC.color==="heat") return heatCol(heatVal(n));
   if(ENC.method && n.kind==="endpoint" && n.m.method) return METHOD[n.m.method]||n.col;
   return n.col; }   // identity = KIND colour
@@ -413,46 +641,9 @@ function cap3(x){ return Math.min(x,3); }   // faked values can be cranked high 
 function num(raw){ return typeof raw==="boolean"?(raw?1:0):(+raw||0); }
 function nodeVal(key,n){ var f=fieldOf(key), raw=(n.m||{})[f]; return {f:f, raw:raw, r:cap3(num(raw)/(MAXES[f]||1))}; }   // the effect's MAPPED field, normalized
 function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mass",n).r*1.15); }
-/* ── SPACE WAR positions — three ZONES (areas) around each planet, all OUTSIDE the sphere. Each zone
-   sits at a controllable angle in the node's front (XY) plane, one shared distance out from the surface.
-   The area is a faint radial cylinder (a placeholder volume you can move); its DATA rides as small dots.
-   For now the field→zone bindings are fixed (operator: "for now"): attack=flags · conflict=god · defense
-   =tests. These could later become MAP entries like the belts. ── */
-/* ── SPACE WAR positions (v2 — operator notebook 2026-08-18): the zones HUG the globe, spaceship-war
-   style. ATTACK + DEFENSE = curved half-shell wedges wrapping opposite hemispheres, SEPARATED by front/
-   back gaps (radius areas around the two halves). CONFLICT = a smooth flattened CLOUD dome capping the
-   top (arctic) — a mushroom / volcano-cloud, an expanded circle with a little volume. The zones are
-   AREAS; "star chips" go inside each later (attack chips one half · defense chips the other · they meet
-   and fight at the top). Angle sliders spin each shell's centre azimuth; the distance slider lifts the
-   shells off the surface. ── */
-/* fixed azimuths (operator: don't change the default angles). az 0 = LEFT · az 180 = RIGHT.
-   Colours inverted per operator: RED on the LEFT, GREEN on the RIGHT. Each shell carries its data dots
-   (moved out of the belts): red ← flags · green ← tests. The top cloud carries used-by (fanin) dots. */
-var SHELLZ=[ {az:0,   col:"#ef4444", metric:"flags", name:"attack"  },   // LEFT  — red
-             {az:180, col:"#22c55e", metric:"tests", name:"defense" } ]; // RIGHT — green
-function shellPt(Rd,ph,th){ var st=Math.sin(th); return new T.Vector3(-Rd*st*Math.cos(ph), Rd*Math.cos(th), Rd*st*Math.sin(ph)); }   // matches THREE.SphereGeometry → dots land ON the shell
-function warZones(grp, br, n){
-  var Rd=Math.max(1, br+CFG.warDist), m=n.m||{};   // distance can go NEGATIVE → shell moves inside the globe (clamp radius ≥ 1)
-  var tl=Math.PI*CFG.shellH, t0=(Math.PI-tl)/2, span=Math.PI*0.83;   // equator-centred band; shellH shrinks it → a narrower ring
-  SHELLZ.forEach(function(z){                                                  // ATTACK / DEFENSE — opposite half-shells, separated front/back
-    var c=z.az*Math.PI/180;
-    grp.add(new T.Mesh(new T.SphereGeometry(Rd,24,18,c-span/2,span,t0,tl),
-      new T.MeshBasicMaterial({color:z.col, transparent:true, opacity:0.11, side:T.DoubleSide, depthWrite:false})));
-    grp.add(new T.Mesh(new T.SphereGeometry(Rd*1.004,7,5,c-span/2,span,t0,tl),   // faint ribs (a few longitude lines) = the "petal" look
-      new T.MeshBasicMaterial({color:z.col, transparent:true, opacity:0.10, wireframe:true, depthWrite:false})));
-    var cnt=Math.min(8,Math.round(num(m[z.metric])));                         // DATA DOTS on the shell surface, within the wedge
-    for(var i=0;i<cnt;i++){ var ph=c-span/2+span*((i+0.5)/cnt), th=t0+tl*(0.28+0.44*((i*0.37)%1));
-      var d=new T.Mesh(new T.SphereGeometry(1.05,8,6), new T.MeshBasicMaterial({color:z.col})); d.position.copy(shellPt(Rd,ph,th)); grp.add(d); }
-  });
-  /* CONFLICT — a smooth cloud dome capping the top. concave = openness (flat plane ↔ rounder cup);
-     lift = its vertical position along the orthogonal (Y) axis (closer ↔ farther from the planet). */
-  var capR=Rd*1.16, capTheta=Math.PI*(0.12+0.42*CFG.concave), y=br*CFG.lift;
-  var dome=new T.Mesh(new T.SphereGeometry(capR,28,14,0,Math.PI*2,0,capTheta),
-    new T.MeshBasicMaterial({color:"#cdd8ea", transparent:true, opacity:0.11, side:T.DoubleSide, depthWrite:false}));
-  dome.scale.y=0.5; dome.position.y=y; grp.add(dome);
-  /* used-by is NOT a cloud dot — it's the VERTS radar-lattice effect on the node's own sphere,
-     consolidated into the CONFIG 'used-by' toggle (→ ENC.verts, drawn in buildNode via radarVerts). */
-}
+/* SPACE WAR: the primitive half-shell zones (warZones/SHELLZ/shellPt + the warDist/shellH/concave/lift sliders)
+   were SUPERSEDED by the ELEMENTS-LAB real fleets (fleetZones) — removed. The war-zone placement law now lives in
+   the deployment config (DEPC): def +X · atk −X · conflict +Y · sats −Y. */
 function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   var ic, is=ENC.iconSize;
   if(billTex[n.kind]){ ic=billboardMesh(n.kind,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
@@ -466,11 +657,11 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   if(ENC.ring3) satelliteRing(grp, br, Math.min(8,Math.round(num(nodeVal("ring3",n).raw))), "#fbbf24", 2);   // used-by → amber moons
   var pSat=ENC.pulse && truthy(nodeVal("pulse",n).raw), sSat=ENC.sat && truthy(nodeVal("sat",n).raw);
   if(sSat||pSat){ var d=new T.Mesh(new T.SphereGeometry(1.9,10,8), new T.MeshBasicMaterial({color:"#e5484d"})); d.position.set(br*0.82,br*0.82,2); d.__b=1; grp.add(d); if(pSat) PULSE.push(d); }
-  if(CFG.warOn) warZones(grp, br, n);   // SPACE WAR — attack/conflict/defense areas around the planet
+  if(CFG.warOn) fleetZones(grp, br, n);   // ELEMENTS-LAB fleets — real ship/sat zones replace the primitive warZones dots
   grp.add(labelSprite(n.label, 26, -(br+4.5)));
   return grp;
 }
-function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }
+function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }
 /* re-apply ALL encodings: rebuild node objects + re-trigger the edge accessors (they read ENC live) */
 function applyEnc(){ if(!Graph) return; rebuildNodes();
   Graph.linkWidth(linkWidthFn).linkColor(linkColorFn)
@@ -481,6 +672,7 @@ function linkVal(key,l){ var f=fieldOf(key), raw=l[f]; return {f:f, raw:raw, r:c
 function linkWidthFn(l){ return ENC.eWidth ? 0.4+linkVal("eWidth",l).r*2.4 : 0.7; }
 function linkColorFn(l){ var c=RELCOL[l.rel]||"#889"; return (ENC.eTrust && !truthy(linkVal("eTrust",l).raw)) ? dimCol(c,0.55) : c; }
 function linkPartFn(l){ return ENC.eParticles ? Math.max(1,Math.round(linkVal("eParticles",l).r*3)) : 0; }
+function linkVisFn(l){ return !CFG.conns; }   // typed connectors REPLACE every plain edge → hide them all when conns on
 function linkSpeedFn(l){ return (0.004+linkVal("eParticles",l).r*0.012)*ENC.speed; }   // ENC.speed scales the whole flow (slow enough to read)
 function linkPWidthFn(l){ return (ENC.ePayload) ? 1+linkVal("ePayload",l).r*4.5 : 1.6; }
 
@@ -531,6 +723,9 @@ function makeCluster(members, color, shape, op, level, label){
     var mcMat=new T.MeshLambertMaterial({color:color, emissive:color, emissiveIntensity:0.14, transparent:true, opacity:op, side:T.DoubleSide, depthWrite:false});
     c.mc=new MarchingCubes(res, mcMat, false, false, 90000); c.mc.isolation=WRAPCFG.iso; addObj(c.mc);
   }
+  c.name=label; c.stars=[];   // cluster stars = hidden fns used across the cluster (ent-level only)
+  if(level==="ent" && CFG.stars){ var _sn=Math.min(80, members.length*STARC.per);
+    for(var _si=0;_si<_sn;_si++){ c.stars.push({s:addObj(starSprite(STARC.color, STARC.size*(0.55+prand(_si,10)*0.9), STARC.glow)), i:_si}); } }
   c.lbl=addObj(labelSprite(label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));
   return c;
 }
@@ -550,6 +745,9 @@ function hull(ms, pad){ var R=NR+pad, pts=[];
 function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ if(n.x!=null) _npos[n.id]={x:n.x,y:n.y,z:n.z}; });
   CLUSTERS.forEach(function(c){ var ms=c.members.map(function(id){return _npos[id];}).filter(Boolean); if(!ms.length) return;
     var cx=0,cy=0,cz=0,top=-1e9; ms.forEach(function(p){cx+=p.x;cy+=p.y;cz+=p.z; if(p.y>top)top=p.y;}); cx/=ms.length;cy/=ms.length;cz/=ms.length;
+    if(c.stars&&c.stars.length){ var _rad=(NR+c.pad)*1.1;   // stars CLOUD around the cluster's member NODES, not its bbox (a thin diagonal hull has a huge box → stars everywhere) → they hug the actual footprint
+      c.stars.forEach(function(so){ var m=ms[Math.floor(prand(so.i,4)*ms.length)%ms.length]||ms[0];
+        so.s.position.set(m.x+(prand(so.i,1)-0.5)*_rad*2, m.y+(prand(so.i,2)-0.5)*_rad*2, m.z+(prand(so.i,3)-0.5)*_rad*2); }); }
     if(c.shape==="aura"){ c.sprites.forEach(function(sp){
         if(sp.node){ var p=_npos[sp.node]; if(p) sp.s.position.set(p.x,p.y,p.z); }
         else { var s=_npos[lid(sp.link.source)], t=_npos[lid(sp.link.target)]; if(s&&t) sp.s.position.set(s.x+(t.x-s.x)*sp.t,s.y+(t.y-s.y)*sp.t,s.z+(t.z-s.z)*sp.t); } });
@@ -573,7 +771,7 @@ function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ i
       c.mc.update();
     }
     if(c.lbl){ c.lbl.position.set(c.level==="ent"?cx:cx-28, c.level==="ent"?top+26:cy, cz); c.lbl.scale.set(c.level==="ent"?50:30, c.level==="ent"?12.5:7.5, 1); }
-  }); }
+  }); updateConnectors(); }
 function build(){
   if(Graph){ try{ Graph._destructor(); }catch(e){} document.getElementById("g").innerHTML=""; }
   Graph=ForceGraph3D({ controlType: st.ctl })(document.getElementById("g"))
@@ -581,7 +779,7 @@ function build(){
     .nodeThreeObject(buildNode).nodeLabel(function(n){ return n.K.type+" — "+n.K.label; })
     .onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })
     .onLinkClick(function(l){ SEL={kind:"link",data:l}; showLinkPanel(l); refreshEncSel(); })
-    .linkColor(linkColorFn).linkOpacity(0.6).linkWidth(linkWidthFn).linkHoverPrecision(8)
+    .linkColor(linkColorFn).linkOpacity(0.6).linkWidth(linkWidthFn).linkVisibility(linkVisFn).linkHoverPrecision(8)
     .linkThreeObjectExtend(true)
     .linkThreeObject(function(l){ var cv=document.createElement("canvas"); cv.width=160; cv.height=40; var c=cv.getContext("2d");
       c.font="600 20px "+curFont(); c.fillStyle="#9aa6be"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(l.rel,80,20);
@@ -598,6 +796,8 @@ function build(){
   try{ Graph.d3Force("layer", zForce); }catch(e){}
   try{ Graph.d3Force("charge").strength(-150); }catch(e){}
   buildClusters();
+  connGroup=new T.Group(); Graph.scene().add(connGroup);   // typed connectors live here, refilled each updateClusters
+  moverGroup=new T.Group(); Graph.scene().add(moverGroup);   // inter-entity transport shuttles live here
   setTimeout(function(){ Graph.cameraPosition(window.__cam==="top"?{x:0,y:520,z:2}:DEF,{x:0,y:0,z:0},700); },1800);   // ?cam=top → the above-view (defense/attack/conflict from overhead)
 }
 document.getElementById("reset").onclick=function(){ Graph.cameraPosition(DEF,{x:0,y:0,z:0},600); };
@@ -611,40 +811,54 @@ var ICO={
   polygon:'<path d="M12 2 21 9 17 20 7 20 3 9z"/>', wrap:'<path d="M12 2s6 7 6 11a6 6 0 0 1-12 0c0-4 6-11 6-11z"/>',
   wave:'<line x1="4" x2="4" y1="21" y2="14"/><line x1="4" x2="4" y1="10" y2="3"/><line x1="12" x2="12" y1="21" y2="12"/><line x1="12" x2="12" y1="8" y2="3"/><line x1="20" x2="20" y1="21" y2="16"/><line x1="20" x2="20" y1="12" y2="3"/><line x1="2" x2="6" y1="14" y2="14"/><line x1="10" x2="14" y1="8" y2="8"/><line x1="18" x2="22" y1="16" y2="16"/>',
   target:'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
-  angle:'<path d="M3 21h18"/><path d="M3 21 21 3"/><path d="M7 21a10 10 0 0 0 4-8"/>' };
+  angle:'<path d="M3 21h18"/><path d="M3 21 21 3"/><path d="M7 21a10 10 0 0 0 4-8"/>',
+  /* ── icon-toggle glyphs (Lucide) — defence/attack/conflict/satellites/stars/transport ── */
+  shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  swords:'<polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" x2="19" y1="19" y2="13"/><line x1="16" x2="20" y1="16" y2="20"/><line x1="19" x2="21" y1="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" x2="9" y1="14" y2="18"/><line x1="7" x2="4" y1="17" y2="20"/><line x1="3" x2="5" y1="19" y2="21"/>',
+  burst:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+  star:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',
+  truck:'<path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/>' };
 function ico(g,w){ return '<svg viewBox="0 0 24 24" width="'+(w||12)+'" height="'+(w||12)+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(ICO[g]||"")+'</svg>'; }
 function pill(grp, opts, val){ return '<div class="pill" data-grp="'+grp+'">'+opts.map(function(o){
   return '<button data-v="'+o.v+'"'+(o.v===val?' class="on"':'')+'>'+(o.ico?ico(o.ico):'')+(o.t?'<span>'+o.t+'</span>':'')+'</button>'; }).join("")+'</div>'; }
 function pillTog(grp, on){ return '<div class="pill'+(on?'':' off')+'" data-grp="'+grp+'" data-tog="1"><button data-v="on"'+(on?' class="on"':'')+'><span>'+(on?'on':'off')+'</span></button></div>'; }
+/* icon-only toggle: the icon IS the button (accent when on, dim when off), no wording — compact rows */
+function iconTog(grp, on, icoName, title){ return '<button class="itog'+(on?' on':'')+'" data-itog="'+grp+'" title="'+title+'">'+ico(icoName,16)+'</button>'; }
 function pillTogEnc(field, on){ return '<div class="pill'+(on?'':' off')+'" data-enc="'+field+'"><button data-v="on"'+(on?' class="on"':'')+'><span>'+(on?'on':'off')+'</span></button></div>'; }   // ENC-backed toggle (mass/glow/used-by, consolidated into CONFIG)
+/* ── COPY CONFIG — dump a panel's tunable state as JSON to the clipboard so the operator can hand back exact values
+   they dialed (textarea+execCommand works under file://; clipboard API is the fallback). ── */
+function copyText(txt){ var ok=false;
+  try{ var ta=document.createElement("textarea"); ta.value=txt; ta.style.cssText="position:fixed;top:0;left:0;opacity:0"; document.body.appendChild(ta); ta.focus(); ta.select(); ok=document.execCommand("copy"); document.body.removeChild(ta); }catch(e){}
+  if(!ok && navigator.clipboard){ try{ navigator.clipboard.writeText(txt); ok=true; }catch(e){} }
+  return ok; }
+function hexNums(o){ return JSON.parse(JSON.stringify(o), function(k,v){ return (typeof v==="number" && (k==="color"||k==="col")) ? "#"+("000000"+(v>>>0).toString(16)).slice(-6) : v; }); }   // render colour ints as hex strings so a pasted config is readable
+function configSnapshot(){ return { CFG:CFG, STARC:hexNums(STARC), SATC:SATC, DEPC:DEPC, INTC:INTC, CONN:hexNums(CONN) }; }   // the right-panel tunables
+function encSnapshot(){ return { INTC:INTC }; }   // the left-panel transport calibration (satellites settled + baked)
+function flashBtn(b){ if(!b) return; var t=b.textContent; b.textContent="✓"; setTimeout(function(){ b.textContent=t; },900); }
 function buildCfg(){ var trip=[{v:"faint",t:"faint"},{v:"ghost",t:"ghost"},{v:"film",t:"film"}];
   document.getElementById("cfg").innerHTML=
-    '<div class="cfghead" id="cfghead"><span class="cfgtitle">'+ico("cog",13)+'Config</span><button class="cfgmin" id="cfgmin" title="minimize">–</button></div>'
+    '<div class="cfghead" id="cfghead"><span class="cfgtitle">'+ico("cog",13)+'Config</span><button class="cfgmin" id="cfgcopy" title="copy config JSON to clipboard" style="margin-right:4px">⧉</button><button class="cfgmin" id="cfgmin" title="minimize">–</button></div>'
    +'<div class="cfgbody">'
      +'<div class="grp"><div class="grplbl">'+ico("shape")+'Container <span style="font-weight:400;text-transform:none;margin-left:2px">· both levels</span></div>'
-       +'<div class="cfgrow"><span class="rlbl">shape</span>'+pill("shape",[{v:"polygon",ico:"polygon",t:"polygon"},{v:"wrap",ico:"wrap",t:"wrap"}],CFG.shape)+'</div></div>'
-     +'<div class="grp"><div class="grplbl">'+ico("show")+'Show</div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("sub")+'sub</span>'+pillTog("subOn",CFG.subOn)+'</div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("entity")+'entity</span>'+pillTog("entOn",CFG.entOn)+'</div></div>'
-     +'<div class="grp"><div class="grplbl">'+ico("radius")+'Radius</div>'
-       +'<div class="cfgrow"><span class="rend">tight</span><input type="range" class="rng" id="radRng" min="'+RADMIN+'" max="'+RADMAX+'" step="0.05" value="'+CFG.radius+'"><span class="rend">loose</span></div></div>'
+       +'<div class="cfgrow"><span class="rlbl" style="width:26px">'+ico("shape")+'</span>'+pill("shape",[{v:"polygon",ico:"polygon",t:"polygon"},{v:"wrap",ico:"wrap",t:"wrap"}],CFG.shape)+'</div></div>'
+     +'<div class="grp"><div class="grplbl">'+ico("show")+'Show <span style="font-weight:400;text-transform:none;margin-left:2px">· radius</span></div>'
+       +'<div class="cfgrow" style="gap:6px">'+iconTog("subOn",CFG.subOn,"sub","sub-cluster")+iconTog("entOn",CFG.entOn,"entity","entity boundary")
+         +'<button class="stp" id="radMinus" title="tighter">–</button>'
+         +'<input type="range" class="rng" id="radRng" min="'+RADMIN+'" max="'+RADMAX+'" step="0.05" value="'+CFG.radius+'">'
+         +'<button class="stp" id="radPlus" title="looser">+</button></div></div>'
      +'<div class="grp"><div class="grplbl">'+ico("opacity")+'Transparency</div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("bubble")+'bubble</span>'+pill("bubble",trip,CFG.bubble)+'</div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("sub")+'sub</span>'+pill("subOp",trip,CFG.subOp)+'</div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("entity")+'entity</span>'+pill("entOp",trip,CFG.entOp)+'</div></div>'
-     +'<div class="grp"><div class="grplbl">'+ico("bubble")+'Node <span style="font-weight:400;text-transform:none;margin-left:2px">· size · glow · used-by</span></div>'
-       +'<div class="cfgrow"><span class="rlbl">mass</span>'+pillTogEnc("mass",ENC.mass)+'</div>'
-       +'<div class="cfgrow"><span class="rlbl">glow</span>'+pillTogEnc("glow",ENC.glow)+'</div>'
-       +'<div class="cfgrow"><span class="rlbl">used-by</span>'+pillTogEnc("verts",ENC.verts)+'</div></div>'   /* used-by = the VERTS radar-lattice effect */
-     +'<div class="grp"><div class="grplbl">'+ico("target")+'War zones <span style="font-weight:400;text-transform:none;margin-left:2px">· spaceship war (red L · green R)</span></div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("target")+'show</span>'+pillTog("warOn",CFG.warOn)+'</div>'
-       +'<div class="cfgrow"><span class="rend">in</span><input type="range" class="rng" id="warDistRng" min="-24" max="30" step="1" value="'+CFG.warDist+'"><span class="rend">far</span></div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("angle")+'shell ht</span><input type="range" class="rng" id="shellHRng" min="0.1" max="0.9" step="0.02" value="'+CFG.shellH+'"></div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("wrap")+'concave</span><input type="range" class="rng" id="concaveRng" min="0" max="1" step="0.02" value="'+CFG.concave+'"></div>'
-       +'<div class="cfgrow"><span class="rlbl">'+ico("radius")+'lift</span><input type="range" class="rng" id="liftRng" min="-0.3" max="1.6" step="0.02" value="'+CFG.lift+'"></div></div>'
+       +'<div class="cfgrow"><span class="rlbl" style="width:26px">'+ico("bubble")+'</span>'+pill("bubble",trip,CFG.bubble)+'</div>'
+       +'<div class="cfgrow"><span class="rlbl" style="width:26px">'+ico("sub")+'</span>'+pill("subOp",trip,CFG.subOp)+'</div>'
+       +'<div class="cfgrow"><span class="rlbl" style="width:26px">'+ico("entity")+'</span>'+pill("entOp",trip,CFG.entOp)+'</div></div>'
+     +'<div class="grp"><div class="grplbl">'+ico("target")+'Planet</div>'
+       +'<div class="itogrow">'+iconTog("zDef",CFG.zDef,"shield","defense")+iconTog("zAtk",CFG.zAtk,"swords","attack")+iconTog("zCfl",CFG.zCfl,"burst","conflict")+iconTog("zSat",CFG.zSat,"target","satellites")+'</div></div>'
+     +'<div class="grp"><div class="grplbl">'+ico("shape")+'Universe</div>'
+       +'<div class="itogrow">'+iconTog("stars",CFG.stars,"star","cluster stars")+iconTog("transports",CFG.transports,"truck","transports")+'</div></div>'
+     /* SETTLED baked ALWAYS ON (2026-08-19), no control: connectors · transports · warOn(master) · NODE (mass on/
+        glow off/used-by off) · icon size 4 · colour identity · stars @ size 0.45/glow 0.1. Sat calibration = LEFT panel. */
    +'</div>';
   wireCfg(); }
-function applyCfg(grp){ if(grp==="bubble"||grp==="warOn"){ rebuildNodes(); } else { buildClusters(); updateClusters(true); } }
+function applyCfg(grp){ if(grp==="bubble"||grp==="warOn"||grp==="zDef"||grp==="zAtk"||grp==="zCfl"||grp==="zSat"){ rebuildNodes(); } else if(grp==="conns"){ if(Graph) try{ Graph.linkVisibility(linkVisFn); }catch(e){} updateClusters(true); } else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }   // zone toggles rebuild fleets; conns hide plain edges; transports rebuild shuttles; stars need buildClusters
 function wireCfg(){
   document.querySelectorAll("#cfg .pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
     var enc=p.getAttribute("data-enc");
@@ -652,10 +866,13 @@ function wireCfg(){
     var grp=p.getAttribute("data-grp");
     if(p.getAttribute("data-tog")){ CFG[grp]=!CFG[grp]; b.classList.toggle("on",CFG[grp]); p.classList.toggle("off",!CFG[grp]); b.querySelector("span").textContent=CFG[grp]?"on":"off"; applyCfg(grp); }
     else { CFG[grp]=b.getAttribute("data-v"); p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); }); applyCfg(grp); } }); });
+  document.querySelectorAll("#cfg .itog").forEach(function(btn){ btn.addEventListener("click",function(){ var grp=this.getAttribute("data-itog"); CFG[grp]=!CFG[grp]; this.classList.toggle("on",CFG[grp]); applyCfg(grp); }); });   // icon toggles: the icon IS the button
   var rng=document.getElementById("radRng"); if(rng) rng.addEventListener("input",function(){ CFG.radius=+this.value; updateClusters(true); });   // radius is LIVE (no rebuild)
-  [["warDistRng","warDist"],["shellHRng","shellH"],["concaveRng","concave"],["liftRng","lift"]].forEach(function(p){   // war-zone shape controls — rebuild nodes so the areas change (only when shown)
-    var el=document.getElementById(p[0]); if(el) el.addEventListener("input",function(){ CFG[p[1]]=+this.value; if(CFG.warOn) rebuildNodes(); }); });
+  function stepRad(d){ CFG.radius=Math.max(RADMIN,Math.min(RADMAX,+(CFG.radius+d*0.05).toFixed(2))); if(rng) rng.value=CFG.radius; updateClusters(true); }
+  var rmn=document.getElementById("radMinus"); if(rmn) rmn.onclick=function(){ stepRad(-1); };   // − tighter · + looser (replaces tight/loose labels)
+  var rpl=document.getElementById("radPlus"); if(rpl) rpl.onclick=function(){ stepRad(1); };
   document.getElementById("cfgmin").onclick=function(){ var c=document.getElementById("cfg"); c.classList.toggle("min"); this.textContent=c.classList.contains("min")?"+":"–"; };
+  var cc=document.getElementById("cfgcopy"); if(cc) cc.onclick=function(e){ e.stopPropagation(); copyText(JSON.stringify(configSnapshot(),null,2)); flashBtn(this); };
   dragCfg(); }
 var _drag={on:false,ox:0,oy:0};
 function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementById("cfghead");
@@ -673,32 +890,25 @@ var ED_CH=[["eWidth","width"],["eTrust","trust"],["eParticles","flow"],["ePayloa
 function exPill(er, opts){ return '<div class="pill" data-er="'+er+'">'+opts.map(function(o){
   return '<button data-v="'+o+'"'+(ENC[er]===o?' class="on"':'')+'>'+o+'</button>'; }).join("")+'</div>'; }
 function exChips(list){ return list.map(function(c){ return '<button class="chip'+(ENC[c[0]]?' on':'')+'" data-eg="'+c[0]+'">'+c[1]+'</button>'; }).join(""); }
+/* the LEFT panel — TRANSPORT CALIBRATION (satellites are settled + baked, controls dropped 2026-08-19). Mirrors the
+   right panel's classes (.grp/.grplbl/.cfgrow/.rlbl/.rend) so both option panels look identical. */
+function sldRow(label, id, min, max, step, val){ return '<div class="cfgrow"><span class="rlbl">'+label+'</span>'
+  +'<input type="range" class="rng" id="'+id+'" min="'+min+'" max="'+max+'" step="'+step+'" value="'+val+'"><span class="rend rval" id="'+id+'v">'+val+'</span></div>'; }
 function buildExpl(){ document.getElementById("expl").innerHTML=
-  '<div class="exhead"><span class="et">'+ico("wave")+'Encode</span><span class="es">not saved</span><button class="exmin" id="exreset" title="restore all faked values to default" style="margin-right:4px">↺</button><button class="exmin" id="exmin" title="minimize">–</button></div>'
+  '<div class="exhead"><span class="et">'+ico("truck")+'Transports</span><button class="exmin" id="exlcopy" title="copy transport config JSON to clipboard" style="margin-left:auto;margin-right:4px">⧉</button><button class="exmin" id="exmin" title="minimize">–</button></div>'
  +'<div class="exbody">'
-   +'<div class="selhdr empty" id="selhdr">click an element or a link →</div>'
-   +'<div class="exg"><div class="exl">Setup <span class="nm" id="exname">'+SETUPNAME[ENC.setup]+'</span></div>'+exPill("setup",["A","B","C"])+'</div>'
-   +'<div class="exg"><div class="exl">Colour</div>'+exPill("color",["identity","heat"])+'</div>'
-   +'<div class="exg" id="heatRow" style="'+(ENC.color==="heat"?"":"display:none")+'"><div class="exl">Heat by</div>'+exPill("heatBy",["mass","fanin","tests"])+'</div>'
-   +'<div class="exg"><div class="exl">Icon size <span class="k" style="color:var(--muted);font-weight:400">constant · positions 3–5</span></div><div class="cfgrow"><span class="rend">S</span><input type="range" class="rng" id="iconRng" min="8" max="12" step="2" value="'+ENC.iconSize+'"><span class="rend">L</span></div></div>'
-   +'<div class="exg"><div class="exl">Elements <span class="k" style="color:var(--muted);font-weight:400">toggle · value · ± fake it</span></div>'+DIMR.node.map(drow).join("")+'</div>'
-   +'<div class="exg"><div class="exl">Edges</div>'+DIMR.link.map(drow).join("")
-     +'<div class="cfgrow" style="margin-top:7px"><span class="rend">slow</span><input type="range" class="rng" id="spdRng" min="0.1" max="0.3" step="0.05" value="'+ENC.speed+'"><span class="rend">fast</span></div></div>'
+   +'<div class="grp"><div class="grplbl">'+ico("truck")+'Transports <span style="font-weight:400;text-transform:none;margin-left:2px">· inter-entity movers</span></div>'
+     +sldRow("size","trSize",0.1,1.5,0.05,INTC.size)
+     +sldRow("speed","trSpeed",0.05,1,0.05,INTC.speed)+'</div>'
  +'</div>';
-  wireExpl(); refreshEncSel(); }
+  wireExpl(); }
 function wireExpl(){
-  document.querySelectorAll("#expl .pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var er=p.getAttribute("data-er"), v=b.getAttribute("data-v");
-    if(er==="setup"){ applyPreset(v); buildExpl(); buildCfg(); applyEnc(); return; }   // buildCfg → refresh the consolidated mass/glow toggles after a preset
-    ENC[er]=v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
-    if(er==="color"){ document.getElementById("heatRow").style.display=(v==="heat")?"":"none"; }
-    applyEnc(); }); });
-  document.querySelectorAll("#expl .chip").forEach(function(ch){ ch.addEventListener("click",function(){ var g=ch.getAttribute("data-eg"); ENC[g]=!ENC[g]; ch.classList.toggle("on",ENC[g]); applyEnc(); }); });
-  document.querySelectorAll("#expl .dvar").forEach(function(sel){ sel.addEventListener("change",function(){ MAP[ENC.setup][this.getAttribute("data-eg")]=this.value; applyEnc(); }); });   // remap this effect's variable (per setup)
-  document.querySelectorAll("#expl .dpm button").forEach(function(b){ b.addEventListener("click",function(e){ e.stopPropagation();
-    var row=b.closest(".drow"), d=findDim(row.getAttribute("data-dim")); if(d) dimSet(d, b.getAttribute("data-d")==="+"?1:-1); }); });
-  var spd=document.getElementById("spdRng"); if(spd) spd.addEventListener("input",function(){ ENC.speed=+this.value; if(Graph) Graph.linkDirectionalParticleSpeed(linkSpeedFn); });   // flow speed is LIVE (no rebuild)
-  var isz=document.getElementById("iconRng"); if(isz) isz.addEventListener("input",function(){ ENC.iconSize=+this.value; rebuildNodes(); });   // constant icon size, all elements
-  var rb=document.getElementById("exreset"); if(rb) rb.onclick=resetValues;
+  var _rafT=false; function rebT(){ if(_rafT) return; _rafT=true; requestAnimationFrame(function(){ _rafT=false; buildTransports(); }); }   // throttle transport rebuild to 1/frame
+  function bind(id, set, rebuild){ var el=document.getElementById(id); if(!el) return; el.addEventListener("input",function(){ var v=+this.value; set(v);
+    var lbl=document.getElementById(id+"v"); if(lbl) lbl.textContent=v; if(rebuild) rebuild(); }); }
+  bind("trSize",  function(v){ INTC.size=v; }, rebT);      // shuttle scale set at build → rebuild transports
+  bind("trSpeed", function(v){ INTC.speed=v; }, null);     // read live in tickTransports
+  var lc=document.getElementById("exlcopy"); if(lc) lc.onclick=function(){ copyText(JSON.stringify(encSnapshot(),null,2)); flashBtn(this); };
   document.getElementById("exmin").onclick=function(){ var el=document.getElementById("expl"); el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
 }
 /* buildExpl() is invoked at the BOTTOM — after DIMR / drow are defined (avoids a load-order crash) */
@@ -734,10 +944,15 @@ var KINDCARD=(function(){
     E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,n*9)+"%"})), E("div",{class:"sublbl"}, icoEl("link"), breakdown)); }
   function kv(icoName,k,v){ return E("div",{class:"kv"}, icoName?icoEl(icoName,"kico"):E("span",{style:"width:14px"}), E("span",{class:"k"},k), E("span",{class:"v",html:v})); }
   var G=function(label,icon,count,nodeFn){ return {label:label,icon:icon,count:count,node:nodeFn}; };
+  var TRUST={ "routes":"structural","touches":"structural","returns":"structural","returned by":"structural","touched by":"structural","used by":"structural","target":"structural","referenced by":"structural","FK →":"structural",
+    "called by":"inferred","calls out":"inferred","calls hooks":"inferred","fetched by":"inferred","bridged":"inferred","unmatched":"inferred","reaches":"inferred","hooks":"inferred","reads store":"inferred","child components":"inferred","components":"inferred","component":"inferred","entity":"inferred","annotations":"inferred","used by fns":"inferred" };
+  function trustTag(label){ var tr=TRUST[label]; if(!tr) return null;
+    return E("span",{title:tr==="inferred"?"inferred — a graft-call / web-bridge floor (kind-level, not per-edge proof)":"structural — an exact archmap / FK join",
+      style:"margin-left:6px;font:700 9px/1 var(--mono);text-transform:uppercase;letter-spacing:.03em;padding:1px 5px;border-radius:4px;"+(tr==="inferred"?"color:var(--muted);border:1px dashed var(--edge)":"color:var(--ok);border:1px solid var(--ok)")}, tr); }
   function conns(secIcon,title,groups,opt){ opt=opt||{}; var live=groups.filter(function(g){return g.count>0;}), total=live.reduce(function(s,g){return s+g.count;},0), box=E("div",{class:"connbox"});
     if(!live.length) box.append(E("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
-    live.forEach(function(g){ box.append(E("div",{class:"sublbl"}, icoEl(g.icon), g.label+" "+g.count), g.node()); });
-    return E("div",{class:"sec"}, sechd(secIcon,title, opt.showCount?total:null, false, live.length?{icon:"info",text:"hover a connection → highlights that node in the graph.",cls:"info"}:null), box); }
+    live.forEach(function(g){ box.append(E("div",{class:"sublbl"}, icoEl(g.icon), g.label+" "+g.count, trustTag(g.label)), g.node()); });
+    return E("div",{class:"sec"}, sechd(secIcon,title, opt.showCount?total:null, false, live.length?{icon:"info",text:"hover a connection → highlights that node. Trust is KIND-level (a floor): structural = exact join; inferred = a graft-call / web-bridge edge.",cls:"info"}:null), box); }
   function tabbed(secIcon,title,groups,opt){ opt=opt||{}; var live=groups.filter(function(g){return g.count>0;}), total=live.reduce(function(s,g){return s+g.count;},0);
     var hd=sechd(secIcon,title,opt.showCount?total:null,opt.ok);
     if(!live.length) return E("div",{class:"sec"}, hd, E("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
@@ -748,9 +963,9 @@ var KINDCARD=(function(){
     var wrap=E("div",{class:"sec"}, hd, bar, body); show(0); return wrap; }
   function colsTable(cols,fks){ var fkset={}; (fks||[]).forEach(function(f){ fkset[f[0]]=1; }); var t=E("table",{class:"cols"});
     cols.forEach(function(c){ t.append(E("tr",null, E("td",null, fkset[c[0]]?E("span",{class:"keycol"},icoEl("key"),c[0]):c[0]), E("td",{class:"ty"},c[1]))); }); return t; }
-  function behind(b,fns){ if(!b) return null; var body=E("div",null, E("div",{class:"sublbl"}, icoEl("function"), "depth "+b.depth+" · the call tree behind this"));
+  function behind(b,fns){ if(!b) return null; var body=E("div",null, E("div",{class:"sublbl"}, icoEl("function"), "reach "+b.depth+" · the call tree behind this"));
     var list=E("div"); (fns||[]).forEach(function(f){ list.append(E("span",{class:"pchip function"}, icoEl("function"), f)); }); body.append(list);
-    return E("div",{class:"sec"}, sechd("layers","Code behind", b.fns, false, {icon:"alert",cls:"warn",text:"Names from the graft call-tree floor (inferred-by-design). Count + depth are the live signal."}), body); }
+    return E("div",{class:"sec"}, sechd("layers","Code behind", b.fns, false, {icon:"info",cls:"info",text:"Callee names + count ship live from derive_behind. 'reach' is BFS depth (a floor, not exact), and cross-file callees are inferred by design."}), body); }
   var cids=function(arr){ return function(){ var w=E("div"); arr.forEach(function(c){ w.append(E("span",{class:"pchip ok"}, icoEl("test"), c)); }); return w; }; };
   var A=function(n){ return n.ent==="auth"; };   // theme by entity
   var C={
@@ -912,17 +1127,105 @@ function showPanel(n){ var K=n.K;
 }
 document.getElementById("pexpand").onclick=function(){ if(document.getElementById("pbody").innerHTML.trim()) openPanel(); };
 window.addEventListener("resize", resizeGraph);
-document.getElementById("legend").innerHTML="<div style='font-weight:700;color:var(--ink);margin-bottom:6px'>Kind = icon + 3D form <span style='color:var(--muted);font-weight:400'>(12)</span></div>"
-  +order.map(function(k){ var K=KINDS[k];
-    return "<div class='row' data-k='"+k+"'>"+svgInline(k,K.col,15)+"<b>"+K.type+"</b></div>"; }).join("")
-  +"<div style='color:var(--muted);margin-top:6px;border-top:1px solid var(--line);padding-top:6px'>boundary colour = ENTITY (the cluster); icon colour = kind · shapes: polygon · wrap</div>";
-document.getElementById("legend").addEventListener("click",function(e){ var r=e.target.closest("[data-k]"); if(!r) return;
-  var k=r.getAttribute("data-k"), n=nodes.find(function(x){return x.kind===k;}) || {kind:k, K:KINDS[k], label:KINDS[k].label, ent:null}; showPanel(n); });
+/* ═══ ELEMENTS-LAB LEGEND (lifted from spike/elements-lab.html) — 6 dimension tabs, real asset thumbnails via ONE
+   shared palette renderer (no new WebGL contexts beyond force-graph's + this one). The legend IS the contract of
+   what the lab designs and 5C adopts; the Elements tab is a placeholder (the spike owns the node representation). ═══ */
+var PAL_CELLS=[], _palR=null;
+function palR(){ if(!_palR){ var c=document.createElement("canvas"); c.width=236; c.height=208; _palR=new T.WebGLRenderer({canvas:c,antialias:true,alpha:true,preserveDrawingBuffer:true}); _palR.setPixelRatio(1); } return _palR; }   // ONE shared renderer for every thumbnail (a canvas each = 20+ contexts > the browser cap → blanks)
+function palLoop(){ requestAnimationFrame(palLoop); var R=palR();
+  for(var i=0;i<PAL_CELLS.length;i++){ var c=PAL_CELLS[i], w=c.w||236, h=c.h||208; c.obj.rotation.y+=0.012; R.render(c.scene,c.cam); c.ctx.clearRect(0,0,w,h); c.ctx.drawImage(R.domElement,0,0,236,208,0,0,w,h); } }   // clear-then-copy (else frames pile into a smear); scale the shared 236×208 render into each ~42×36 cell
+var LEG_CELLS=[], _legReady=false;
+function legPrune(){ if(!LEG_CELLS.length) return; PAL_CELLS=PAL_CELLS.filter(function(c){ return LEG_CELLS.indexOf(c)<0; }); LEG_CELLS=[]; }   // drop last render's cells so tab-switches don't leak orphans
+function legThumb(cv,buildObj){ var raw=buildObj(); if(!raw) return;
+  var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
+  var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;   // centre INSIDE the pivot → spins on-axis
+  var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.8));
+  var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
+  var cam=new T.PerspectiveCamera(45,236/208,0.1,1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+  var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height}; PAL_CELLS.push(entry); LEG_CELLS.push(entry); }
+var LEGEND={
+  Types: order.map(function(k){ return {t:"kind",k:k}; }).concat([   // the 12 element KINDS — icon + 3D form (the node representation)
+    {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · container: polygon / wrap"} ]),
+  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
+    {t:"ln",c:0x5893ad,s:"dashed",l:"fk <i>a foreign-key data coupling</i>"},
+    {t:"ln",c:0xf59e0b,s:"dashed",l:"calls <i>a cross-entity function call</i>"},
+    {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
+    {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},
+    {t:"grp",l:"transports · <i>what travels the routes</i>"},
+    {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
+    {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
+  Planet:{ sub:["Defense","Attack","Field"],   // sub-tabs (the full 3×3 defence roster is a lot of rows)
+    Defense:[ {t:"grp",l:"defence · <i>tests by corpus (where they run) — no tier</i>"},
+      {t:"ship",dim:"deft",k:"api",c:0x22c55e,l:"api <i>pytest</i>"},
+      {t:"ship",dim:"deft",k:"web",c:0x22c55e,l:"web <i>vitest</i>"},
+      {t:"ship",dim:"deft",k:"e2e",c:0x22c55e,l:"e2e <i>playwright</i>"} ],
+    Attack:[ {t:"grp",l:"god · <i>oversized fn / class (tiers)</i>"},
+      {t:"ship",dim:"atkg",tier:1,c:0xef4444,l:"T1 <i>oversized</i>"},
+      {t:"ship",dim:"atkg",tier:2,c:0xef4444,l:"T2 <i>very oversized</i>"},
+      {t:"ship",dim:"atkg",tier:3,c:0xef4444,l:"T3 <i>extreme — split it now</i>"},
+      {t:"grp",l:"unguarded · <i>no test cover</i>"},
+      {t:"ship",dim:"atk",k:"ung",c:0xef4444,l:"Unguarded <i>no test covers the change · ×N</i>"} ],
+    Field:[ {t:"grp",l:"conflict · <i>the in-flight change</i>"},
+      {t:"shock",c:0xf59e0b,l:"Blast <i>wide blast radius — high coupling</i>"},
+      {t:"flak",c:0xef4444,l:"Flak <i>failing or untested during the change</i>"},
+      {t:"grp",l:"field · <i>orbit + cluster</i>"},
+      {t:"sat",l:"Satellites <i>callers / fan-in (used-by)</i>"},
+      {t:"dot",c:0xffffff,l:"Star <i>a fn used across the cluster, never surfaced</i>"} ] }
+};
+var _legSub="Defense";   // active sub-tab within Planet
+function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.keys(LEGEND), active=tabs[0];
+  function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }
+  function vis(it){ var c=hx(it.c||0xffffff);
+    switch(it.t){
+      case "ln": return '<div class="lgln" style="border-bottom:2.5px '+it.s+' '+c+'"></div>';
+      case "aura": return '<div style="width:15px;height:15px;border-radius:50%;background:'+c+'66;box-shadow:0 0 7px 3px '+c+'99"></div>';
+      case "shock": return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:0 0 0 3px '+c+'55,0 0 0 6px '+c+'22"></div>';
+      case "flak": return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:6px -4px 0 -2px '+c+',-6px 3px 0 -2px '+c+',4px 5px 0 -3px '+c+'"></div>';
+      case "dot": return '<div style="width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 5px 2px '+c+'"></div>';
+      case "poly": return '<div style="width:16px;height:16px;background:'+c+'55;border:1px solid '+c+';clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)"></div>';
+      case "wrap": return '<div style="width:16px;height:14px;background:'+c+'55;border:1px solid '+c+';border-radius:60% 40% 55% 45%/50% 60% 40% 50%"></div>';
+      default: return ""; } }
+  function thumbBuild(it){ return function(){ if(it.t==="sat") return asset(SATS,SATC.model,null);   // real starlink thumbnail
+    var key = it.dim==="transport" ? INTC.shuttle                      // the cargo shuttle
+            : it.dim==="testchip"  ? INTC.testship                     // the test-journey chip
+            : it.dim==="atkg"      ? ATK_MODELS.god[(it.tier||1)-1]    // god tier T1/T2/T3
+            : it.dim==="atk"       ? atkModel(it.k)                     // unguarded
+            : it.dim==="deft"      ? defModel(it.k)                     // defence: one ship per corpus (tier retired)
+            :                        defModel(it.k);                    // defence kind
+    return teamShip(key, it.c, 1); }; }   // the ACTUAL fleet ship, team accent, as drawn
+  function render(){ legPrune();
+    var entry=LEGEND[active], isSub=!Array.isArray(entry);
+    var h='<div class="lghd"><b>Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';
+    tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'">'+t+'</button>'; });
+    h+='</div>';
+    var items;
+    if(isSub){ if(entry.sub.indexOf(_legSub)<0) _legSub=entry.sub[0];   // nested sub-tabs (Planet: Defense · Attack · Field)
+      h+='<div class="lgsubtabs">';
+      entry.sub.forEach(function(s){ h+='<button class="lgsub'+(s===_legSub?" on":"")+'" data-sub="'+s+'">'+s+'</button>'; });
+      h+='</div>'; items=entry[_legSub];
+    } else { items=entry; }
+    h+='<div class="lgbody">';
+    var thumbs=[];
+    items.forEach(function(it){
+      if(it.t==="grp"){ h+='<div class="lggrp">'+it.l+'</div>'; return; }
+      if(it.t==="note"){ h+='<div class="lglbl" style="opacity:.62;margin:6px 0 2px">'+it.l+'</div>'; return; }
+      if(it.t==="ph"){ h+='<div class="lgrow"><div class="lgvis"><div class="lgph">◈</div></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      if(it.t==="kind"){ var K=KINDS[it.k]; h+='<div class="lgrow"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b></div></div>'; return; }   // the node KIND — its actual icon glyph
+      if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
+        h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
+    el.innerHTML=h+'</div>';
+    el.querySelector(".lgmin").onclick=function(){ el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
+    [].forEach.call(el.querySelectorAll(".lgtab"), function(b){ b.onclick=function(){ active=b.dataset.t; render(); }; });
+    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });
+    if(SHIPSREADY) [].forEach.call(el.querySelectorAll(".lgcv"), function(cv){ legThumb(cv, thumbBuild(thumbs[+cv.dataset.i])); }); }
+  window.__legRender=render; render(); }
+buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails paint when ships load (onShipsReady → __legRender)
 
 /* URL presets for scripted comparison shots: ?bubble=faint&subShape=wrap&subOp=faint&entShape=polygon&entOp=ghost */
 (function(){ var q=new URLSearchParams(location.search), changed=false;
   ["shape","subOp","entOp","bubble"].forEach(function(k){ var v=q.get(k); if(v){ CFG[k]=v; changed=true; } });
-  ["subOn","entOn"].forEach(function(k){ var v=q.get(k); if(v!=null){ CFG[k]=(v!=="0"&&v!=="off"&&v!=="false"); changed=true; } });
+  ["subOn","entOn","conns","stars","transports"].forEach(function(k){ var v=q.get(k); if(v!=null){ CFG[k]=(v!=="0"&&v!=="off"&&v!=="false"); changed=true; } });
   var rv=q.get("radius"); if(rv!=null){ CFG.radius=Math.max(RADMIN,Math.min(RADMAX,+rv)); changed=true; }
   var wv=q.get("war"); if(wv!=null){ CFG.warOn=(wv!=="0"&&wv!=="off"&&wv!=="false"); changed=true; }   // SPACE WAR: ?war=1 · ?warDist=N · ?angAttack/Conflict/Defense=deg
   ["warDist","shellH","concave","lift"].forEach(function(k){ var v=q.get(k); if(v!=null){ CFG[k]=+v; changed=true; } });
@@ -931,5 +1234,5 @@ document.getElementById("legend").addEventListener("click",function(e){ var r=e.
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
   window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")) buildCfg(); })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
-preloadBillboards(function(){ build(); window.__spikeKindsReady=true; });
+preloadBillboards(function(){ build(); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

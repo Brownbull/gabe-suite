@@ -1153,6 +1153,130 @@ whether the CURRENT code map already carries the data (constraint: don't touch m
     muted parenthetical. Verified headless (Playwright): tabs `[Zones,Connectors,Effects,Clusters]`, tab-switch +
     minimise work, connector wires + effect glyphs match the 3D, 0 errors. Logged in the spec under **Legend (lift
     as-is)** — copy into 5C and extend `LEGEND`.
+  - **5C RETROFIT R1 (the Elements-Lab visual language lands in `index.html` — distinct track from the lab ITER-N):**
+    the [5C-RETROFIT-PROMPT] session. Operator ruling (asked): **planet granularity = ALL NODES AT ONCE** — every node blooms its own fleet
+    (not entity-collapsed, not focus-gated). Built in 3 verified slices, all `warOn`/`conns`/`stars`-gated (default
+    OFF, perf-safe).
+    **Slice 1 — fleets:** added `<script src="./chip-assets.js">`; ported the lab machinery VERBATIM (`normShip`
+    bbox-refit + nose-detect · `orientTo`/`orientAlong` · `NOSE_FLIP={hauler}` · `craftNose` · `applyRot` Y→X→Z
+    local · `teamShip` aura · `asset`/`craftBase`/`loadingBox` · `placeFleet` · `cflShock`/`cflFlak`/`cflSpec` ·
+    `makeSat`/`satPose`) + the settled CONFIG (DEF/ATK/CFL/DEP/SAT + `ROT`). `fleetZones(grp,br,n)` replaces the
+    primitive `warZones` dots in `buildNode` (behind the same `CFG.warOn` gate); `nodeFleet(n)` maps the toy metrics
+    to the five zones (test count → defence ships · god / untested → attack raiders · `large`/behind → conflict shock ·
+    untested → flak · fan-in → satellites) — **same field NAMES the real `_a3` fields carry at scale-up**. Ships load
+    async via `loadShips()` (called after `build()`); `onShipsReady()` repaints (`rebuildNodes`+`updateClusters`).
+    Fleet animation (movement / sat orbit / conflict pulse) rides the existing `pulseLoop` via a `FLEETTICK` array
+    (reset in `rebuildNodes`). **Verified (Playwright, system-chrome swiftshader):** 18 ships + starlink + 3 shuttles
+    loaded, **15/15 nodes bloom**, 1 WebGL ctx, `NOSE_FLIP=[hauler]`, war-zone law + nose-to-planet orientation
+    confirmed close-up on `a_model` (shock top + sats) and `r_fn` (god dart + unguarded TIEs LEFT + red flak top),
+    0 errors.
+    **Slice 2 — connectors + stars:** ported `connectorLines`/`connTextSprite` + `CONN`/`CONN_KINDS` (config verbatim)
+    and `starTex`/`starSprite`/`prand`. Connectors REPLACE the plain cross-entity edge: drawn along the **cross-link
+    node endpoints** (each `l` where `linkCross(l)` = endpoints in different entities — here `r_model`→`a_ext`, R=10
+    reach past the bubble), styled per kind, count-labelled, `CONN_OFF=5×` the lab offsets for the long spans; the
+    plain edge hidden via `linkVisFn`→`Graph.linkVisibility` when conns on. **fk count DERIVED from the real cross-fk
+    link (=1)**, calls/imports/bridge = `ENTITY_CONN_SYN` stand-ins for the L1 weights. Cluster stars created per
+    **ent-level** cluster in `makeCluster` (count = members×5 hidden-fn stand-in), **clouded around the member NODES**
+    in `updateClusters` (±(NR+pad)·1.1 per star, prand-picked member). New `CFG.conns`/`CFG.stars` toggles + a CONFIG
+    **Universe** group + `?conns=1&stars=1` URL params. **Verified:** 4 connector kinds drawn with exact config
+    colours (`#5893ad`/`#e8f443`/`#f59e0b`/`#a855f7`), fk=1, 75 stars across 2 clusters, 1 ctx, 0 errors.
+    **Slice 3 — legend (lifted as-is):** the old bottom-left **kind-legend** (`#legend`/`.legend`) REPLACED by the
+    lab's tabbed **dimension-legend** (`#elegend`, fixed **300×327**, minimizable, **6 tabs** Elements · Connectors ·
+    Defense · Attack · Conflict · Field). Ported the ONE shared palette renderer (`palR` preserveDrawingBuffer +
+    `PAL_CELLS` + `palLoop` clear-then-drawImage + `legThumb`/`legPrune`/`LEG_CELLS`) so every ship/sat thumbnail
+    reuses it — **no new contexts per thumb**; `thumbBuild` swapped to 5C's data-driven `defModel`/`atkModel`/`asset`.
+    Elements tab = the dashed `◈` placeholder (the spike owns the node). `onShipsReady` re-renders so thumbnails paint.
+    **DECISION** recorded (replace kind-legend, reversible via git). **Verified:** 6 tabs, fixed 300×327 across all,
+    Defense/Attack/Field thumbnails all painted (real green/red ships + starlink), minimise works, 0 errors.
+    **Combined pass (`?war=1&conns=1&stars=1`):** 15 fleets + 4 connectors + 75 stars + 6-tab legend coexist, **2 WebGL
+    contexts** (force-graph + offscreen palR — force-graph canvas is the only in-DOM one), 0 console errors. Checklist
+    items 1–5 DONE; item 6 (the `journey_order[]` `_a3_graft` DFS tweak for the ordered e2e path) DEFERRED — explicitly
+    optional, needs a dry-run + battery before it ships. `index.html` 935→~1180 lines.
+    **R1 fix (operator live look):** two bugs, both rooted in the toy's clusters being huge, thin, diagonal hulls.
+    (1) Connectors drew centroid→centroid then offset each end inward by the cluster radius → the two offsets nearly
+    met → a stub stranded mid-graph. Fixed: route along the cross-LINK endpoints (`r_model`→`a_ext`) + hide the plain
+    fk edge (`linkVisFn`) → the typed bundle replaces the edge in place. (2) Stars scatter-filled each cluster's
+    axis-aligned BBOX (huge for a thin diagonal hull → stars scene-wide). Fixed: cloud stars around the member NODES.
+    Re-verified: connector span 79 ≈ cross-link dist 99, plain fk edge hidden, star spread 102/67 vs member-diagonal
+    337/183 (per-cluster), 0 errors.
+    **R1 fix 2 (operator 2nd live look):** (1) **connectors → EVERY link** (operator: "change every link between the
+    elements"): dropped the cross-link-only + 4-wire-bundle model; now each graph link re-renders as ONE styled wire
+    of its mapped KIND (`REL2KIND`: fk/pk→fk · handler/touch/resp/uses→calls · fetches→bridge · renders/mounts/reads/
+    typed→imports) via `connectorWire`, and `linkVisFn`→`!CFG.conns` hides ALL plain edges. Verified: 14/14 links →
+    14 wires, all 4 kind colours present, all plain links hidden. (WebGL `THREE.Line` ignores width → wires are 1px/
+    thin — the lab aesthetic; bolder needs Line2/tubes, flagged.) (2) **star size + glow SLIDERS** added to the CONFIG
+    Universe group (live → rebuild stars); default size 2.2→**1.2** (operator: too large). (3) **war-zone sliders
+    HIDDEN** — warDist/shellH/concave/lift drove the primitive shells that `fleetZones` already superseded → removed
+    the sliders + wiring + the dead `warZones`/`SHELLZ`/`shellPt` (the `show` toggle stays). Verified: 0 errors.
+    **R1 fix 3 (operator 3rd live look):** (1) **LIVE inter-entity TRANSPORTS** — data shuttles ferry the cross-entity
+    routes (`buildTransports`+`tickTransports` on `pulseLoop`, `moverGroup`, `INTC` config, ping-pong along the link
+    with nose leading, `CFG.transports` toggle + URL param). Asset = **cargoB** (fit 2.8, world-size 5.2) NOT the
+    settled `hauler` (its GLB has a pathological bbox → fit 0.017 = invisible; deferred fix, trigger: hauler wanted
+    specifically). Verified: 2 shuttles per route, moving (pos 12.9→64.3). (2) **COPY-CONFIG buttons** (`⧉`) in BOTH
+    panel headers — CONFIG dumps `{CFG,STARC,SATC,DEPC,INTC,CONN}`, ENCODE dumps `{ENC}` as JSON to the clipboard
+    (`copyText` textarea+execCommand for file://; colours→hex via `hexNums`) so the operator hands back exact dialed
+    values. Verified: clipboard = valid JSON. (3) **Sats CLOSER** — `DEPC.satDist` 9.5→**4.5**. (4) **Attack aura
+    STRONGER** — aura halo opacity 0.16+0.16→**0.34+0.22**·health, scale 1.16→**1.28**, + a faint hull emissive (0.14)
+    so red reads at distance (operator: red attack ships were invisible far out). All re-verified, 0 errors.
+    **R1 SETTLE (operator consolidation — both panels reach final form):** everything the operator settled is BAKED
+    ALWAYS-ON, its control removed. **RIGHT panel** trims to **Container(shape) · Show(sub/entity) · Radius ·
+    Transparency(bubble/sub/entity)** only — the NODE (mass on·glow off·used-by off), WAR ZONES (fleets), and UNIVERSE
+    (connectors·transports·stars) groups + the star size/glow sliders are gone (baked: `CFG.warOn/conns/stars/
+    transports=true`, `STARC={size:0.45,glow:0.1}`, `ENC.mass=true/glow=false/verts=false/iconSize=10(pos 4)/color=
+    identity`). **LEFT panel** (ENCODE) is REPURPOSED to **Satellite calibration** — the last thing to dial: `satRow`
+    sliders for **count · size** (Satellites), **distance** (`DEPC.satDist`, orbit gap), **tilt · speed · rings ·
+    signal** (Distribution), inherited from the lab's SATC; structural params (count/size/distance/rings) rebuild the
+    fleets (rAF-throttled), tilt/speed/signal are live in `satPose`. Setup/colour/icon-size/Elements/Edges removed
+    (their encodings were taken over by fleets/connectors/stars; DIMR/drow left vestigial). The left `⧉` now copies
+    `{SATC,satDist}`, the right `⧉` the full config. Verified (no URL params → all baked on): 15 fleets · 2 movers ·
+    14 wires · 75 stars render; RIGHT groups = [Container,Show,Radius,Transparency]; LEFT = 7 sat sliders live
+    (count→4, dist→8); 0 errors.
+    **R1 legend + sat bake (operator):** SATC baked to the settled config (`count:8·size:0.07·speed:0.05·tilt:0.3·
+    sig:0.3`, `DEPC.satDist:1.5`). **Legend restructured to 3 tabs** (from 6), box grown to a FIXED **340×434**:
+    (1) **Types** — the 12 element KINDS rendered with their ACTUAL icon glyphs (new `kind` row type via `svgInline`)
+    + the boundary/icon-colour note — this REPLACES the broken dashed placeholder with the old kind-legend content
+    the operator passed back. (2) **Connectors** — the 4 wires + a **Transport** row (cargoB shuttle thumbnail, the
+    data mover on the routes). (3) **Planet** — Defence (unit/integ/e2e, "three tiers") · Attack (God **T1/T2/T3** =
+    dart/fighter/cruiser via new `atkg` dim + Unguarded) · Conflict (shock/flak) · Field (satellite + star). DROPPED:
+    the aura/team-accent group, polygon/wrap glyphs (intuitively understood). Verified: 3 tabs, fixed 340×434, Types
+    12 icons, Connectors transport painted, Planet 8 thumbnails all painted (0 dead), 0 errors. **Tier reading FLAGGED**
+    ("three tiers" = 3 defence kinds + 3 god tiers; if the full T1/T2/T3 roster per ship was meant, expand).
+    **R1 refine 2 (operator):** (1) **themed SCROLLBARS** (narrow 7px, `var(--line)` thumb — the default light/wide
+    bar broke the dark theme) + slimmer `.rng` (3px/11px). (2) **TWO transport kinds** — `INTC` now carries a cargo
+    shuttle (cargoB, **size ∝ link payload** = data carried) + a **test chip** (racer, green, cross-entity test
+    journey), both ping-ponging each cross-link phase-offset; legend Connectors gains both rows. (3) **Right panel
+    regrouped** + per-zone visibility: new **Planet** group (defense/attack/conflict/satellites toggles → `CFG.zDef/
+    zAtk/zCfl/zSat`, gated in `fleetZones`, rebuild on toggle) + **Universe** group (stars toggle re-exposed);
+    groups now Container·Show·Radius·Transparency·Planet·Universe. (4) **Legend Planet fixed** — Defence→**Defense**
+    (S); defense now shows **T1/T2/T3** (unit/integ/e2e) parallel to God T1/T2/T3; every label rewritten to the
+    **CASE it appears in** (asset names dart/fighter/cruiser/etc dropped — operator: "I don't care what the assets
+    are, I care when this appears"). Verified: 2 movers (cargo 3.26 + test 4.66, racer fit 3.456) · Planet toggles
+    live · no asset names leak · "Defense T1" present, "Defence" gone · 0 errors.
+    **R1 refine 3 (operator):** (1) **transport controls** added to the LEFT panel (size + speed sliders → `rebT`
+    throttled `buildTransports`; `encSnapshot` += `INTC`). (2) **Defense tier question answered** — config HAS the
+    full 3 kinds × 3 tiers roster (`DEF_MODELS`), but the fleet deploys only the ACTIVE tier per kind (tiers = roster
+    structure, not yet data-mapped). Documented it: legend **Planet → sub-tabs** (`LEGEND.Planet={sub:[...]}`, render
+    handles nested tabs via `_legSub`) — **Defense** (unit/integ/e2e × T1/T2/T3 = **9 ships** via new `deft` dim =
+    `DEF_MODELS[k][tier-1]`, labelled light/medium/deep coverage) · **Attack** (God tiers + Unguarded) · **Field**
+    (Conflict + Satellites + Star). Legend box → **fixed-height flex column** (470px) so the sub-tab row never changes
+    the size (all 5 tab states measured 470×340). (3) **Config panel → ICON TOGGLES** (`iconTog`/`.itog`, the icon IS
+    the button, accent-on): Show (sub/entity), **Planet in ONE ROW** (shield/swords/alert/target = def/atk/cfl/sat),
+    **Universe** (star/truck = stars/transports — transport toggle re-exposed here); transparency labels iconified;
+    6 Lucide glyphs added. Verified: 8 icon toggles, click toggles + rebuilds, transport sliders live, Defense 9/9
+    thumbs painted, box 470 on every tab, 0 errors.
+    **R1 panel review (Playwright, option-panels only — graph untouched):** metrics-diffed the three panels, fixed 6
+    inconsistencies. (0) operator dropped the **satellite controls** (settled) → LEFT panel rebuilt as **Transports**-
+    only (size/speed), using the RIGHT panel's exact classes (`.grp`/`.grplbl`/`.cfgrow`/`.rlbl`/`.rend`) so both match;
+    `encSnapshot`→`{INTC}`; the redundant "Distance" section + flat section/slider hierarchy vanished with it. (1)
+    legend header weight 700→**800** (config/transports were 800). (2) Container "shape" text label → **icon** (26px)
+    so its pill aligns with the Transparency pills. (3) panel widths 256→**246** (both equal). (4) left header sub-
+    label dropped (CONFIG has none → matched). (5) slider values right-aligned (`.rval`, tabular-nums). Re-verified:
+    headers all 800/11px, widths 246, 0 errors.
+    **R1 panel polish 2 (operator):** merged **Show + Radius into ONE row** — `[sub][entity]` icon toggles + `[−]`
+    slider `[+]` steppers (new `.stp` buttons, ±0.05 clamped RADMIN/MAX) replacing the tight/loose labels. Fixed a
+    flexbox overflow: the range input's intrinsic width pushed `[+]` 10px past the panel edge → `.rng{min-width:0}`
+    lets it shrink (slider 129→84px, `[+]` now 11px inside). Verified: 5 controls one row, steppers step+clamp, 0
+    errors. Branch `graft-adoption` still LOCAL/uncommitted (offer to commit; push only on the operator's word).
   - **Iteration 33 (legend REDESIGN → dimension tabs + asset thumbnails + adversarial verify):** operator bound the
     legend as the **contract of what this lab designs**. Rebuilt: **fixed-size** (300px wide · 250px scrolling body ·
     tab row wraps → constant 327px, measured across all tabs), minimizable, **6 tabs = the adopted dimensions**:
@@ -1179,3 +1303,31 @@ whether the CURRENT code map already carries the data (constraint: don't touch m
     wants strict fidelity). **FLAGGED for operator:** defense "side-by-side" (stacked rows vs 3-in-a-row) · default
     tab opens on the Elements placeholder · literal parens vs muted-italic descriptors. **COMMITTED** `0abcd96` (whole
     uncommitted arc, 53 files) + this fix/log commit; branch `graft-adoption` LOCAL, unpushed.
+  - **TEST-TAXONOMY RECONCILE (R2 — canonical api/web/e2e, feeds the element-components retrofit):** a 5-agent research
+    workflow (`wf_92ef1d3c`) found the graph's defence **unit/integ/e2e was FABRICATED** — `nodeFleet` reads only the
+    scalar `m.tests` and round-robins `k=DEF_KINDS[i%3]`; ELEMENTS-LAB-SPEC:37 admitted the labels don't match data.
+    The suite generates ONE grounded test axis = **CORPUS** (`ref['corpus']`): **api** (pytest) · **web** (vitest) ·
+    **e2e** (playwright), plus a REAL depth signal it ignored — the **join TIER** T1 direct / T2 via-route / T3
+    file-reach. Operator ruling **C+D**: make api/web/e2e canonical + rebind the ship sets + real tiers. SPIKE change:
+    `DEF_KINDS`/`DEF_MODELS`/`DEF_ACTIVE`/`ROT.def` unit/integ/e2e → **api/web/e2e** (same ships, relabelled — api=
+    bomber/cat/jet · web=speederC/D/B · e2e=miner/cargoA/cargoB); legend Defence sub-tab relabelled to `corpus · join
+    tier` with T1/T2/T3 = direct/via-route/file-reach. Verified: DEF_KINDS=[api,web,e2e], 15 fleets, legend groups
+    "api · pytest · join tier" …, 0 errors. `nodeFleet` still round-robins for the toy (real per-credit corpus×tier
+    at scale-up — flagged; full Option C = graph reads the data). Fed the card retrofit (element-components.html:
+    Tests → api/web/e2e × join-tier + failing state, 16 assets re-rendered). Branch `graft-adoption` still LOCAL.
+
+---
+
+§ TIER RETIRED FROM THE SPIKE + PANEL HONESTY SYNC (2026-08-19) — closing the card↔spike honesty gap.
+  The card dropped the invented test tier (T1/T2/T3 not in c4 — element_detail dedupes direct+via-route); the SPIKE
+  still asserted it. Fixed:
+  - DEFENCE legend: the 3×3 T1/T2/T3 join-tier roster (12 rows) → ONE ship per corpus (api pytest · web vitest ·
+    e2e playwright), no tier. Render `deft` branch → `defModel(it.k)` (active corpus ship). Config comments relabelled
+    (join-tier RETIRED). Verified: 0 errors, legend carries no T1/T2/T3.
+  - PANEL (ported `C{}` builders): behind warn→INFO tip + "depth"→"reach" (names ship live from derive_behind; BFS
+    floor) — matches the card. Connections now carry a KIND-level TRUST tag (structural = exact join / inferred =
+    graft-call·web-bridge floor, dashed), inline-styled. Verified (verify-spike-panel.mjs): endpoint panel shows
+    "reach" + trust tags, 0 errors.
+  REMAINING panel parity (additive, not fiction): per-credit test STATE chips (pass/skip/fail), file-coverage,
+  the Payload section, the Journeys section — need panel CSS + per-builder edits (a larger mock port). The god ATTACK
+  legend still shows T1/T2/T3 (a separate severity encoding, not the test-tier fiction) — flagged. Branch LOCAL.
