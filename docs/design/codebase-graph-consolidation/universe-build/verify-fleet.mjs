@@ -56,9 +56,85 @@ const wire = await p.evaluate(() => {
   updateConnectors();
   return out;
 });
+// [B1] FLEET panel: per-entity show/subs — absence proofs match the real mechanism
+//      (hidden = the node's three object REMOVED from the scene, not a visible flag)
+const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+const fleet = await p.evaluate(() => {
+  const e = _ents[0];
+  const rows = document.querySelectorAll('#fleet .flrow:not(.flmaster)').length;
+  return { panel: !!document.getElementById('fleet'), rows, ent: e, entCount: _ents.length,
+    entNodes: nodes.filter(n => n.ent === e).length };
+});
+await p.evaluate(ent => { document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="show"]`).click(); }, fleet.ent);
+await raf(); await p.waitForTimeout(600);
+const hidden = await p.evaluate(ent => {
+  const gone = nodes.filter(n => n.ent === ent).every(n => !n.__threeObj || !n.__threeObj.parent);
+  const hulls = CLUSTERS.filter(c => c.name === ent).length;
+  let wires = 0; connGroup.children.forEach(() => wires++);
+  const expected = links.filter(l => { const s = NIDS[lid(l.source)], t = NIDS[lid(l.target)];
+    return s && t && visN(s).show && visN(t).show; }).length;
+  const shuttles = MOVERS.filter(m => (NIDS[m.src] || {}).ent === ent || (NIDS[m.tgt] || {}).ent === ent).length;
+  return { gone, hulls, wires, expected, shuttles };
+}, fleet.ent);
+// re-show ×3 round-trips — clicks in separate evaluates, waits OUTSIDE (rAF starves inside evaluate)
+for (let i = 0; i < 7; i++) {   // odd count: ends SHOWN (started hidden)
+  await p.evaluate(ent => { document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="show"]`).click(); }, fleet.ent);
+  await raf(); await p.waitForTimeout(300);
+}
+const reg = await p.evaluate(ent => ({
+  restored: nodes.filter(n => n.ent === ent).some(n => n.__threeObj && n.__threeObj.parent),
+  wiresBack: connGroup.children.length }), fleet.ent);
+// subs column: sub-hull count drops for that entity only; masters-dim mirrors CFG.subOn
+const subsBefore = await p.evaluate(ent => ({
+  all: CLUSTERS.filter(c => c.level === 'sub').length,
+  ent: CLUSTERS.filter(c => c.level === 'sub' && c.members.some(id => (NIDS[id] || {}).ent === ent)).length }), fleet.ent);
+await p.evaluate(ent => { document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="subs"]`).click(); }, fleet.ent);
+await raf(); await p.waitForTimeout(400);
+const subs = await p.evaluate(ent => {
+  const after = { all: CLUSTERS.filter(c => c.level === 'sub').length,
+    ent: CLUSTERS.filter(c => c.level === 'sub' && c.members.some(id => (NIDS[id] || {}).ent === ent)).length };
+  document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="subs"]`).click();
+  CFG.subOn = false; applyCfg('subOn');
+  const dimmed = document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="subs"]`).classList.contains('mdim');
+  CFG.subOn = true; applyCfg('subOn');
+  return { after, dimmed };
+}, fleet.ent);
+// card honesty + preset namespace preservation
+await p.evaluate(ent => { const n = nodes.find(x => x.ent === ent); showPanel(n); window.SEL = { kind: 'node', data: n };
+  __uniApplyVisPreset({ ent: { [ent]: { show: 0 } }, node: { 'model:X': { role: 'touched' } }, meta: { stage: 'execute' } }); }, fleet.ent);
+await raf(); await p.waitForTimeout(400);
+const noted = await p.evaluate(() => !!document.querySelector('#pbody .fleethid'));
+await p.evaluate(ent => { __uniApplyVisPreset({ ent: { [ent]: { show: 1 } } }); }, fleet.ent);
+await raf(); await p.waitForTimeout(400);
+const cardNote = await p.evaluate(() => ({
+  noteCleared: !document.querySelector('#pbody .fleethid'),
+  nodeKept: !!(UNIVIS.node['model:X'] && UNIVIS.node['model:X'].role === 'touched'),
+  metaKept: UNIVIS.meta.stage === 'execute' }));
+// [B1-fn] the NENT trap: Functions ON + hidden entity → connector count matches the visible-pair expectation
+await p.evaluate(() => { CFG.showFns = 'on'; applyCfg('showFns'); });
+await p.waitForTimeout(1500);
+await p.evaluate(ent => { document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="show"]`).click(); }, fleet.ent);
+await raf(); await p.waitForTimeout(500);
+const fnCase = await p.evaluate(ent => {
+  let touching = 0; links.forEach(l => { const s = NIDS[lid(l.source)], t = NIDS[lid(l.target)];
+    if ((s && s.ent === ent) || (t && t.ent === ent)) touching++; });
+  const wireCount = connGroup.children.length;
+  const expected = links.filter(l => { const s = NIDS[lid(l.source)], t = NIDS[lid(l.target)];
+    return s && t && visN(s).show && visN(t).show; }).length;
+  return { nodesNow: nodes.length, touching, wireCount, expected, match: wireCount === expected };
+}, fleet.ent);
+await p.evaluate(ent => { document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="show"]`).click();
+  CFG.showFns = 'off'; applyCfg('showFns'); }, fleet.ent);
+await p.waitForTimeout(600);
 await b.close();
 
 console.log('wire styling:', JSON.stringify(wire));
+console.log('fleet panel:', JSON.stringify(fleet));
+console.log('hide entity:', JSON.stringify(hidden));
+console.log('round-trips:', JSON.stringify(reg));
+console.log('subs:', JSON.stringify(subsBefore), '→', JSON.stringify(subs));
+console.log('card noted:', noted, '+', JSON.stringify(cardNote));
+console.log('functions-on case:', JSON.stringify(fnCase));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 const fails = [];
 if (errs.length) fails.push('page/console errors');
@@ -68,5 +144,15 @@ if (!(wire.sampColor && wire.sampSolid)) fails.push('row sample lies');
 if (!wire.legendHasRed) fails.push('legend not derived from CONN');
 if (!(wire.sparseIsSparse && wire.sparseSample)) fails.push('sparse sample broken');
 if (!wire.resetColor) fails.push('stock reset broken');
+if (!(fleet.panel && fleet.rows === fleet.entCount)) fails.push('fleet panel rows != entities');
+if (!hidden.gone) fails.push('hidden entity still has scene objects');
+if (hidden.hulls !== 0) fails.push('hidden entity keeps its hull');
+if (hidden.wires !== hidden.expected) fails.push('connector count != visible-pair expectation');
+if (hidden.shuttles !== 0) fails.push('ghost shuttles to a hidden entity');
+if (!reg.restored) fails.push('re-show does not restore node objects');
+if (!(subs.after.ent === 0 && subs.after.all < subsBefore.all && subs.dimmed)) fails.push('subs toggle / master-dim broken');
+if (!(noted && cardNote.noteCleared)) fails.push('card hidden-entity note broken');
+if (!(cardNote.nodeKept && cardNote.metaKept)) fails.push('preset drops reserved namespaces');
+if (!fnCase.match) fails.push('functions-on: connector count != expectation (the NENT trap)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
-console.log('FLEET PROOF (slice A): ALL PASS');
+console.log('FLEET PROOF (A + B1): ALL PASS');

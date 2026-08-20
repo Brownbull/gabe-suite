@@ -215,6 +215,47 @@ text = text.replace('warOn:true, warDist', 'warOn:false, warDist', 1)
 assert '}); updateConnectors(); }' in text, "updateClusters connector-call anchor missing"
 text = text.replace('}); updateConnectors(); }', '}); if(force || _wtick%3===0) updateConnectors(); }', 1)
 
+# ── batch 11-B: FLEET panel engine seams — every read goes through visEnt/visN (NIDS-resolved,
+#    never NENT: NENT is built once at boot and is stale for toggled-in function nodes) ──
+# seam 1: node visibility (hidden = removed from the mapper; rebuilt via buildNode on re-show)
+OLD_DRAG = '.enableNodeDrag(false)'
+assert OLD_DRAG in text, "enableNodeDrag anchor missing"
+text = text.replace(OLD_DRAG, '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)', 1)
+# seam 2 (dormant while conns is baked on): plain links of a hidden entity stay hidden
+OLD_LVIS = 'function linkVisFn(l){ return !CFG.conns; }'
+assert OLD_LVIS in text, "linkVisFn anchor missing"
+text = text.replace(OLD_LVIS,
+  'function linkVisFn(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];\n'
+  '  if((s&&!visN(s).show)||(t&&!visN(t).show)) return false; return !CFG.conns; }', 1)
+# seam 3: connector wires skip a hidden endpoint entity
+OLD_CONNLOOP = 'links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind\'s connector wire'
+assert OLD_CONNLOOP in text, "updateConnectors loop anchor missing"
+text = text.replace(OLD_CONNLOOP, OLD_CONNLOOP +
+  '\n    var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)]; if((_cs&&!visN(_cs).show)||(_ct&&!visN(_ct).show)) return;   // fleet-hidden entity', 1)
+# seam 4: hulls — ent hull skipped when !show; sub hulls when !show OR !subs (their own loop)
+OLD_ENTHULL = 'if(CFG.entOn) Object.keys(ENT).forEach(function(e){ var mem=nodes.filter(function(n){return n.ent===e;}).map(function(n){return n.id;});'
+assert OLD_ENTHULL in text, "buildClusters ent-loop anchor missing"
+text = text.replace(OLD_ENTHULL,
+  'if(CFG.entOn) Object.keys(ENT).forEach(function(e){ if(!visEnt(e).show) return; var mem=nodes.filter(function(n){return n.ent===e;}).map(function(n){return n.id;});', 1)
+OLD_SUBHULL = 'if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });'
+assert OLD_SUBHULL in text, "buildClusters sub-loop anchor missing"
+text = text.replace(OLD_SUBHULL,
+  'if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return; var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });', 1)
+# seam 6: transports skip a route whose end entity is hidden or routes-off
+OLD_TRLOOP = '  links.forEach(function(l){ if(!linkCross(l)) return;'
+assert OLD_TRLOOP in text, "buildTransports loop anchor missing"
+text = text.replace(OLD_TRLOOP, OLD_TRLOOP +
+  '\n    var _se=(NIDS[lid(l.source)]||{}).ent, _te=(NIDS[lid(l.target)]||{}).ent;\n'
+  '    if(!visEnt(_se).show||!visEnt(_te).show||!visEnt(_se).routes||!visEnt(_te).routes) return;   // fleet: hidden or routes-off entity', 1)
+# panel boot + master-dim sync on every config change
+OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n'
+assert OLD_BOOTCFG in text, "boot buildCfg anchor missing (batch-11 fleet boot)"
+text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
+OLD_APPLYHEAD = 'function applyCfg(grp){ if(grp==="bubble"'
+assert OLD_APPLYHEAD in text, "applyCfg head anchor missing"
+text = text.replace(OLD_APPLYHEAD,
+  'function applyCfg(grp){ if(window.__uniFleetSync) try{ __uniFleetSync(); }catch(e){} if(grp==="bubble"', 1)
+
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")
 print("wrote gabe-universe.html:", len("\n".join(out)), "bytes,", len(out), "lines")

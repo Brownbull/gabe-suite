@@ -193,6 +193,25 @@ check('if(window.__uniSettleDone) window.__uniSettleDone(); });   // release' in
 check(page.count('if(window.__uniAddLayoutTab) __uniAddLayoutTab()') == 3,
       "not all 3 buildCfg call sites re-tab (boot + URL-preset + ?drive) — a preset URL would drop the Routes tab")
 
+# ── 10l. batch 11-B: FLEET panel — UNIVIS contract + six engine seams, all read through visEnt/visN ──
+check('window.UNIVIS={ ent:{}, node:{}, meta:{} }' in page, "UNIVIS 3-namespace contract missing (node/meta are the in-flight seam)")
+check('function visEnt' in page and 'function visN' in page, "vis accessors missing (seams must read through ONE pair)")
+check('nodeVisibility(function(n){ return !!visN(n).show; })' in page, "node visibility seam not wired")
+check('if(!visEnt(e).show) return; var mem=' in page, "ent-hull seam missing (hidden entity keeps its hull)")
+check('if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return; var k=' in page,
+      "sub-hull seam wrong — must skip on !show OR !subs (ghost sub-hulls around a hidden entity)")
+check('fleet-hidden entity' in page, "connector seam missing (wires keep drawing to hidden entities)")
+check('routes-off entity' in page, "transport seam missing (ghost shuttles fly to hidden entities)")
+check('function linkVisFn(l){ return !CFG.conns; }' not in page, "REGRESSION: linkVisFn back to conns-only (dormant seam dropped)")
+check('if(all||s.nodes||s.zones){ try{ rebuildNodes' in page,
+      "show/zone routing skips rebuildNodes — re-show duplicates FLEETTICK/PULSE/ORBIT/WAVE closures")
+check('if(all||s.nodes||s.routes){ try{ buildTransports' in page,
+      "show routing skips buildTransports — MOVERS rebuild nowhere else")
+check('window.__uniBuildFleet) __uniBuildFleet()' in page and 'window.__uniApplyVisPreset=function' in page,
+      "fleet panel not built at boot / preset entry point missing")
+check('body.nav-min #fleet{ left:48px' in page, "fleet panel does not clear the nav-restore tab under nav-min")
+check('.fleethid{' in page and 'fltog.mdim' in page, "card hidden-note CSS / masters-dim CSS missing")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
