@@ -247,6 +247,29 @@
   #cfg .pill.wshape button{ padding:3px 4px; }
   #cfg .wreset{ font:inherit; font-size:11px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:5px; width:20px; height:18px; cursor:pointer; padding:0; flex:none; }
   #cfg .wreset:hover{ color:var(--ink); border-color:var(--accent); }
+  /* ── topbar icon buttons (batch 12): depth · highlight style · journeys · freeze · reset — icons only,
+     the explanation lives in the hover title; the repo pills sit at the FAR right ── */
+  .topbar .tbico{ position:relative; display:grid; place-items:center; width:32px; height:30px; flex:none;
+    color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:8px; cursor:pointer; padding:0; }
+  .topbar .tbico svg{ width:16px; height:16px; }
+  .topbar .tbico:hover{ color:var(--ink); border-color:var(--accent); }
+  .topbar .tbico.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  .topbar .tbnum{ position:absolute; right:-4px; top:-5px; font:800 9px/1 var(--font-mono); color:#fff;
+    background:var(--accent); border-radius:6px; padding:1.5px 4px; }
+  .topbar .tbico.on .tbnum{ background:#0e1524; }
+  /* journeys dropdown — under the topbar, right side */
+  #jrn{ position:fixed; right:12px; top:calc(var(--topbarh) + 6px); z-index:55; width:300px; max-height:46vh; overflow-y:auto;
+    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; }
+  #jrn .jrnhd{ font:700 10px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:4px 6px 6px; }
+  #jrn .jrnrow{ display:flex; align-items:center; gap:7px; padding:4px 7px; border-radius:7px; cursor:pointer; font-size:11.5px; color:var(--ink); }
+  #jrn .jrnrow:hover{ background:#131d31; }
+  #jrn .jrnrow.on{ background:var(--accent); color:#fff; }
+  #jrn .jrnrow b{ font:700 10.5px/1 var(--font-mono); }
+  #jrn .jrncorp{ font:600 9px/1 var(--font-mono); text-transform:uppercase; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 4px; }
+  #jrn .jrnrow.on .jrncorp{ color:#fff; border-color:#ffffff66; }
+  #jrn .jrnn{ margin-left:auto; font-size:10px; color:var(--muted); }
+  #jrn .jrnrow.on .jrnn{ color:#fff; }
+  #jrn .jrnnone{ color:var(--muted); font-style:italic; }
   /* ── FLEET panel (batch 11-B): per-entity visibility + ops matrix, top-left, minimizable + draggable.
      Geometry: tracks --navw like the legend; shifts right under nav-min (the 32px restore tab owns that
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
@@ -324,10 +347,14 @@
 <div class="topbar">
   <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
+  <button class="tbico" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops (1–5). Alt+scroll anywhere to change; click to cycle. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><b class="tbnum" id="depthNum">3</b></button>
+  <button class="tbico" id="hlModeBtn" title="highlight style — GLOW halos the reached set and dims the rest of the wires · FOCUS hides everything outside the set (hulls stay as geography). Click to switch."><svg id="hlIcoGlow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><svg id="hlIcoFocus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="3.5"/><path d="M2 8V4a2 2 0 0 1 2-2h4M16 2h4a2 2 0 0 1 2 2v4M22 16v4a2 2 0 0 1-2 2h-4M8 22H4a2 2 0 0 1-2-2v-4"/></svg></button>
+  <button class="tbico" id="jrnBtn" title="journeys — cross-entity tests as highlighted paths: pick one, its carrier elements + wires light up at the current depth and style."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></button>
+  <button class="tbico on" id="freezeDragBtn" title="freeze on drag — pause ALL animations (fleets, transports, pulses) while rotating or moving the camera; they resume the moment you release. On by default; click to toggle." onclick="window.__uniToggleFreezeDrag&&window.__uniToggleFreezeDrag(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5l-5 3-5-3M7 19l5-3 5 3M2 12h20M5 7l3 5-3 5M19 7l-3 5 3 5"/></svg></button>
+  <button class="tbico" id="reset" title="reset view — return the camera to the home framing (position, zoom and pivot). Your layout, highlight and panel choices stay."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg></button>
   <div class="statuspills"><span class="pill">repo · 2,031 tests · 0 failed</span></div>
-  <button class="reset on" id="freezeDragBtn" title="pause animations while rotating / moving the camera, resume on release" onclick="window.__uniToggleFreezeDrag&&window.__uniToggleFreezeDrag(this)">❄ Freeze on drag</button>
-  <button class="reset" id="reset">⟳ Reset view</button>
 </div>
+<div id="jrn" style="display:none"></div>
 <div id="g"></div>
 <div class="cfg" id="cfg"></div>
 <div class="expl" id="expl"></div>
@@ -417,7 +444,8 @@ Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; 
    Replaces the spike's toy NODEDEF/METRICS. SAME field names the encoders read, now fed live.
    Node m-bag: behind/depth/tests/cols/fanin/god/method (+ large/hot/flags derived, spike-identical).
    Each node also carries det/behind/resp/ids/table/sites so the live card reads real dossiers. */
-var SUBOF={ endpoints:"api", api:"api", web:"frontend", data:"data" };
+/* layer ruling (c) 2026-08-20: the old SUBOF collapse (endpoints→api, web→frontend) is retired —
+   the layer core groups by the kind's OWN layer value, so new kinds bring their layer for free. */
 var LZ={ endpoints:150, api:60, web:150, data:-150 };
 var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444" };
 /* rel → edge colour. c4 kinds: touches · fk · bridge (+ empty→fk on model FK cross-edges). */
@@ -466,7 +494,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
       fanin:0,                                          // filled from in-degree below
       god:false, method:(kind==="endpoint")?_methOf(p.label):null };
     var n={ id:p.id, kind:kind, ent:ent, label:p.label||p.slug||p.id,
-      col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:SUBOF[KINDS[kind].layer]||"data",
+      col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"data",
       m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites };
     nodes.push(n); NIDS[n.id]=n; });
 });
@@ -821,13 +849,14 @@ window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) r
   var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
 window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
   setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
-function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;
+function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;
+  hf=(hf==null)?1:hf; if(!hf) return;   // depth-highlight factor: 0 = outside a FOCUS set (skip) · >1 = in the lit set (brighter, additive)
   var _bm=(window.__uniBeam && window.__uniBeam[kind]!=null)?window.__uniBeam[kind]:1; if(!_bm) return;
   var dir=b.clone().sub(a); var len=dir.length()||1; dir.multiplyScalar(1/len);
   var A=a.clone().addScaledVector(dir,R), B=b.clone().addScaledVector(dir,-R);   // reach just past each node bubble
   var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;
-  if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm), blending:(_bm>1?T.AdditiveBlending:T.NormalBlending)});
-  else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm), blending:(_bm>1?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn}); }
+  if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});
+  else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn}); }
   var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
 var connGroup=null;
 function updateConnectors(){ if(!connGroup) return;
@@ -835,7 +864,7 @@ function updateConnectors(){ if(!connGroup) return;
   if(!CFG.conns) return;
   links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind's connector wire
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)]; if((_cs&&!visN(_cs).show)||(_ct&&!visN(_ct).show)) return;   // fleet-hidden entity
-    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });
+    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
    nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */
@@ -849,7 +878,7 @@ function buildTransports(){ if(!moverGroup||!SHIPSREADY) return;
   var sNose=craftNose(INTC.shuttle), tNose=craftNose(INTC.testship);
   links.forEach(function(l){ if(!linkCross(l)) return;
     var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;
-    if(!_sv.show||!_tv.show||!_sv.routes||!_tv.routes) return;   // fleet: hidden or routes-off entity/cluster (node-level — sub-aware)
+    if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;   // fleet: hidden or routes-off entity/cluster (node-level — sub-aware)
     var dataScale=INTC.size*(0.5 + (num(l.payload)/MAXPL)*1.3);   // CARGO shuttle grows with the DATA carried (link payload)
     var cargo=teamShip(INTC.shuttle, 0x38bdf8, 1); cargo.scale.multiplyScalar(dataScale); moverGroup.add(cargo);
     MOVERS.push({obj:cargo, src:lid(l.source), tgt:lid(l.target), ph:0, nose:sNose});
@@ -900,7 +929,8 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   grp.add(labelSprite(n.label, 26, -(br+4.5)));
   return grp;
 }
-function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }
+function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); });
+  if(window.__uniHLReapply) requestAnimationFrame(__uniHLReapply); }   // glow halos ride node objects — restore after the rebuild
 /* re-apply ALL encodings: rebuild node objects + re-trigger the edge accessors (they read ENC live) */
 function applyEnc(){ if(!Graph) return; rebuildNodes();
   Graph.linkWidth(linkWidthFn).linkColor(linkColorFn)
@@ -1011,14 +1041,14 @@ function assignSub(mode){
   nodes.forEach(function(n){
     if(mode==="kind") n.sub=n.kind;
     else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
-    else n.sub=SUBOF[n.layer]||"data"; }); }
+    else n.sub=n.layer||"data"; }); }   // ruling (c): group by the kind's OWN layer — endpoints · api · web · data today, auto-grows with new kinds
 
 /* ── FUNCTIONS layer (from GABE_LEVELS.fn_nodes + fn_edges) — toggled in/out of the graph ── */
 var _FNNODES=null, _FNLINKS=null, _fnsOn=false;
 function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["function"]){ _FNNODES=[]; _FNLINKS=[]; return; }
   _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
     return { id:f.id, kind:"function", ent:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
-      layer:KINDS["function"].layer, sub:SUBOF[KINDS["function"].layer]||"data", __fn:true,
+      layer:KINDS["function"].layer, sub:KINDS["function"].layer||"data", __fn:true,
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
@@ -1086,9 +1116,15 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       drag={ P:P, lx:ev.clientX, ly:ev.clientY }; ctrls.enabled=false; window.__uniDragging=true;   // custom rotation owns this drag; a settle mid-drag defers its resume
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
     }catch(e){} }, true);
+  g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
   window.addEventListener("pointermove", function(ev){ if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
+      if(ev.buttons&2){                                                     // CHORD (left+right held): the delta PANS the rig —
+        var kd=cam.position.distanceTo(ctrls.target)*0.0011;                // camera+target+pivot slide together; release right → orbit resumes
+        var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
+        var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
+        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); return; }
       var up=new T.Vector3(0,1,0);
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
       var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
@@ -1129,6 +1165,78 @@ function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x
 }); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
 
+/* ══ DEPTH HIGHLIGHT (batch 12) — select an element → light everything within N hops (1–5).
+   Two styles: GLOW (halo the reached set, dim the rest of the wires) · FOCUS (hide everything
+   outside the set; hulls stay as geography). Alt+scroll changes depth; Esc clears. The journeys
+   picker feeds the SAME machinery with a carrier set instead of a single origin. */
+var HL={ on:false, mode:"glow", depth:3, origin:null, jr:null, set:{}, links:null, sprites:[] };
+function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
+  var adj={}; links.forEach(function(l){ var s=lid(l.source), t=lid(l.target);
+    (adj[s]=adj[s]||[]).push(t); (adj[t]=adj[t]||[]).push(s); });
+  var depth={}, q=[];
+  HL.origin.forEach(function(id){ if(NIDS[id] && depth[id]===undefined){ depth[id]=0; q.push(id); } });
+  while(q.length){ var u=q.shift(); if(depth[u]>=HL.depth) continue;
+    (adj[u]||[]).forEach(function(v){ if(depth[v]===undefined){ depth[v]=depth[u]+1; q.push(v); } }); }
+  HL.set=depth; HL.links=new Set();
+  links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
+window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
+  if(HL.links.has(l)) return 1.9; return HL.mode==="focus"?0:0.18; };
+function _nodeVisibleFn(n){ if(!visN(n).show) return false;              // the ONE node-visibility truth (fleet ∧ focus)
+  if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
+function _hlClearSprites(){ HL.sprites.forEach(function(s){ try{ if(s.parent) s.parent.remove(s); }catch(e){} }); HL.sprites=[]; }
+window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // glow halos ride the node objects — re-added after any rebuild
+  _hlClearSprites();
+  nodes.forEach(function(n){ if(HL.set[n.id]===undefined||!n.__threeObj) return;
+    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?46:26, d0?0.8:0.5);
+    n.__threeObj.add(g); HL.sprites.push(g); }); };
+function _hlRestyle(){ _hlClearSprites();
+  if(typeof Graph!=="undefined" && Graph){
+    try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}
+    try{ rebuildNodes(); }catch(e){}
+    try{ buildClusters(); updateClusters(true); }catch(e){}
+    try{ buildTransports(); }catch(e){} }
+  _hlSyncUI(); }
+function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.textContent=HL.depth;
+  var db=document.getElementById("depthBtn"); if(db) db.classList.toggle("on", HL.on);
+  var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
+  var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
+  if(ig&&ifc){ ig.style.display=(HL.mode==="glow")?"":"none"; ifc.style.display=(HL.mode==="focus")?"":"none"; } }
+window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle(); };
+window.__uniHLClear=function(){ if(!HL.on) return; HL.on=false; HL.jr=null; HL.origin=null; HL.set={}; HL.links=null; _hlRestyle(); };
+window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d));
+  if(HL.on){ _hlCompute(); _hlRestyle(); } else _hlSyncUI(); };
+window.__uniHLMode=function(){ HL.mode=(HL.mode==="glow")?"focus":"glow"; if(HL.on) _hlRestyle(); else _hlSyncUI(); };
+/* ── JOURNEYS — cross-entity tests collected from every node's det.test_journeys, deduped by cid ── */
+var JRN=null;
+function _jrnCollect(){ if(JRN) return JRN; var m={};
+  nodes.forEach(function(n){ ((n.det&&n.det.test_journeys)||[]).forEach(function(j){ if(!j.cid) return;
+    var r=m[j.cid]||(m[j.cid]={cid:j.cid, corpus:j.corpus||"", ents:j.entities||[], carriers:[]});
+    r.carriers.push(n.id); }); });
+  JRN=Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){ return b.carriers.length-a.carriers.length; });
+  return JRN; }
+window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
+  if(p.style.display!=="none"){ p.style.display="none"; return; }
+  var js=_jrnCollect();
+  var h='<div class="jrnhd">journeys · '+js.length+' cross-entity tests</div><div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
+  js.forEach(function(j){ h+='<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" · ")+'">'
+    +'<b>'+j.cid+'</b><span class="jrncorp">'+j.corpus+'</span><span class="jrnn">'+j.carriers.length+' carriers · '+j.ents.length+' ents</span></div>'; });
+  p.innerHTML=h; p.style.display="";
+  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ var cid=r.getAttribute("data-jr");
+    p.style.display="none";
+    if(!cid){ __uniHLClear(); return; }
+    var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
+    HL.jr=cid; HL.origin=j.carriers.slice(); HL.on=true; _hlCompute(); _hlRestyle(); }; }); };
+/* topbar wiring + Alt+scroll + Esc — bound once at boot */
+window.__uniWireTopbar=function(){
+  var db=document.getElementById("depthBtn"); if(db&&!db.__w){ db.__w=1; db.onclick=function(){ __uniHLDepth(HL.depth%5+1); }; }
+  var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
+  var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
+  if(!window.__uniHLKeys){ window.__uniHLKeys=1;
+    window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
+      __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
+    window.addEventListener("keydown", function(e){ if(e.key==="Escape") __uniHLClear(); }); }
+  _hlSyncUI(); };
+
 /* ══ FLEET panel (batch 11-B) — per-entity visibility + ops matrix; the in-flight diagram's seed ══
    State contract: UNIVIS{ent,node,meta}. node/meta are RESERVED for the in-flight batch — GABE_SIM
    keys its stages by piece id and the universe node ids are the SAME strings, so a later per-piece
@@ -1154,7 +1262,7 @@ var _visRAF=null, _visScopes={};
 function applyVis(scope){ _visScopes[scope||"all"]=1;
   if(_visRAF) return; _visRAF=requestAnimationFrame(function(){ _visRAF=null; var s=_visScopes; _visScopes={}; _applyVisNow(s); }); }
 function _applyVisNow(s){ if(typeof Graph==="undefined"||!Graph) return; var all=s.all;
-  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return !!visN(n).show; }); }catch(e){}
+  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}   // fleet ∧ focus — the one truth
     try{ Graph.linkVisibility(linkVisFn); }catch(e){} }              // dormant while conns is baked on — future-proofing
   if(all||s.nodes||s.zones){ try{ rebuildNodes(); }catch(e){} }      // ONLY rebuildNodes resets FLEETTICK/PULSE/ORBIT/WAVE — re-show would duplicate closures otherwise
   if(all||s.nodes||s.clusters){ try{ buildClusters(); updateClusters(true); }catch(e){} }
@@ -1294,7 +1402,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   /* the explainers live on HOVER (operator ruling): the section label carries the summary,
      every option carries its own meaning — the note lines below the pills are gone. */
   var cores=[
-    {v:"layer",t:"Layer",ti:"group by architectural layer — api · frontend · data"},
+    {v:"layer",t:"Layer",ti:"group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
     {v:"kind",t:"Kind",ti:"group by element kind — endpoint · model · schema · function · screen"},
     {v:"tests",t:"Tests",ti:"group by test coverage — tested vs untested"}];
   if(hasLevels) cores.push(
@@ -1412,7 +1520,7 @@ var UP=new T.Vector3(0,1,0);
 var DIRS=(function(){ var g=new T.IcosahedronGeometry(1,0), p=g.attributes.position, seen={}, out=[];
   for(var i=0;i<p.count;i++){ var x=+p.getX(i).toFixed(3), y=+p.getY(i).toFixed(3), z=+p.getZ(i).toFixed(3), k=x+","+y+","+z;
     if(seen[k]) continue; seen[k]=1; out.push(new T.Vector3(x,y,z)); } return out; })();
-var SUBSHIFT={ frontend:0.10, api:-0.08, data:0.0 };
+var SUBSHIFT={ endpoints:0.04, api:-0.08, web:0.10, frontend:0.10, data:0.0 };
 var CLUSTERS=[], clusterObjs=[], _npos={}, _wtick=0;
 function addObj(o){ o.traverse(function(c){ c.raycast=function(){}; }); Graph.scene().add(o); clusterObjs.push(o); return o; }   // decorative → invisible to the click picker (else force-graph reads an undefined node.x)
 function clearClusters(){ clusterObjs.forEach(function(o){ Graph.scene().remove(o); if(o.geometry&&o.geometry.dispose)o.geometry.dispose(); }); clusterObjs=[]; CLUSTERS=[]; }
@@ -1491,7 +1599,7 @@ function build(){
   Graph=ForceGraph3D({ controlType: st.ctl })(document.getElementById("g"))
     .backgroundColor("#0e1524").graphData({nodes:nodes, links:links})
     .nodeThreeObject(buildNode).nodeLabel(function(n){ return n.K.type+" — "+(n.label||n.K.label); })
-    .onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })
+    .onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })
     .onLinkClick(function(l){ SEL={kind:"link",data:l}; showLinkPanel(l); refreshEncSel(); })
     .linkColor(linkColorFn).linkOpacity(0.6).linkWidth(linkWidthFn).linkVisibility(linkVisFn).linkHoverPrecision(8)
     .linkThreeObjectExtend(true)
@@ -1500,7 +1608,7 @@ function build(){
       var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false})); s.scale.set(20,5,1); return s; })
     .linkPositionUpdate(function(sprite,coords){ if(sprite && coords && coords.start && coords.end) sprite.position.set((coords.start.x+coords.end.x)/2,(coords.start.y+coords.end.y)/2,(coords.start.z+coords.end.z)/2); })
     .linkDirectionalParticles(linkPartFn).linkDirectionalParticleSpeed(linkSpeedFn).linkDirectionalParticleWidth(linkPWidthFn).linkDirectionalParticleColor(function(l){ return RELCOL[l.rel]||"#889"; })
-    .nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)   /* no node dragging → removes the controls-change handler that read an undefined subject.x on click */
+    .nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)   /* no node dragging → removes the controls-change handler that read an undefined subject.x on click */
     .numDimensions(3).cooldownTicks(240).onEngineTick(updateClusters)
     .onEngineStop(function(){ updateClusters(true); if(window.__uniSettleDone) window.__uniSettleDone();
       if(window.__drive && !window.__driveDone){ window.__driveDone=true;   // regression: flip shape AFTER settle (the path that was broken)
@@ -1597,7 +1705,7 @@ function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementB
     window.addEventListener("mousemove",function(e){ if(!_drag.on) return; var el=document.getElementById("cfg");
       el.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-_drag.ox))+"px"; el.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-_drag.oy))+"px"; });
     window.addEventListener("mouseup",function(){ _drag.on=false; }); } }
-buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();
+buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar();
 
 /* ── ENCODING EXPLORER (top-left) — experiment across setups + channels; NOT saved to CONFIG ── */
 var EL_CH=[["mass","mass"],["glow","glow"],["halo","halo"],["sat","god"],["pulse","pulse"],["method","method"]];

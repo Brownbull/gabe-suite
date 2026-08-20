@@ -91,14 +91,14 @@ function assignSub(mode){
   nodes.forEach(function(n){
     if(mode==="kind") n.sub=n.kind;
     else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
-    else n.sub=SUBOF[n.layer]||"data"; }); }
+    else n.sub=n.layer||"data"; }); }   // ruling (c): group by the kind's OWN layer — endpoints · api · web · data today, auto-grows with new kinds
 
 /* ── FUNCTIONS layer (from GABE_LEVELS.fn_nodes + fn_edges) — toggled in/out of the graph ── */
 var _FNNODES=null, _FNLINKS=null, _fnsOn=false;
 function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["function"]){ _FNNODES=[]; _FNLINKS=[]; return; }
   _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
     return { id:f.id, kind:"function", ent:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
-      layer:KINDS["function"].layer, sub:SUBOF[KINDS["function"].layer]||"data", __fn:true,
+      layer:KINDS["function"].layer, sub:KINDS["function"].layer||"data", __fn:true,
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
@@ -166,9 +166,15 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       drag={ P:P, lx:ev.clientX, ly:ev.clientY }; ctrls.enabled=false; window.__uniDragging=true;   // custom rotation owns this drag; a settle mid-drag defers its resume
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
     }catch(e){} }, true);
+  g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
   window.addEventListener("pointermove", function(ev){ if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
+      if(ev.buttons&2){                                                     // CHORD (left+right held): the delta PANS the rig —
+        var kd=cam.position.distanceTo(ctrls.target)*0.0011;                // camera+target+pivot slide together; release right → orbit resumes
+        var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
+        var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
+        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); return; }
       var up=new T.Vector3(0,1,0);
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
       var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
@@ -209,6 +215,78 @@ function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x
 }); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
 
+/* ══ DEPTH HIGHLIGHT (batch 12) — select an element → light everything within N hops (1–5).
+   Two styles: GLOW (halo the reached set, dim the rest of the wires) · FOCUS (hide everything
+   outside the set; hulls stay as geography). Alt+scroll changes depth; Esc clears. The journeys
+   picker feeds the SAME machinery with a carrier set instead of a single origin. */
+var HL={ on:false, mode:"glow", depth:3, origin:null, jr:null, set:{}, links:null, sprites:[] };
+function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
+  var adj={}; links.forEach(function(l){ var s=lid(l.source), t=lid(l.target);
+    (adj[s]=adj[s]||[]).push(t); (adj[t]=adj[t]||[]).push(s); });
+  var depth={}, q=[];
+  HL.origin.forEach(function(id){ if(NIDS[id] && depth[id]===undefined){ depth[id]=0; q.push(id); } });
+  while(q.length){ var u=q.shift(); if(depth[u]>=HL.depth) continue;
+    (adj[u]||[]).forEach(function(v){ if(depth[v]===undefined){ depth[v]=depth[u]+1; q.push(v); } }); }
+  HL.set=depth; HL.links=new Set();
+  links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
+window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
+  if(HL.links.has(l)) return 1.9; return HL.mode==="focus"?0:0.18; };
+function _nodeVisibleFn(n){ if(!visN(n).show) return false;              // the ONE node-visibility truth (fleet ∧ focus)
+  if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
+function _hlClearSprites(){ HL.sprites.forEach(function(s){ try{ if(s.parent) s.parent.remove(s); }catch(e){} }); HL.sprites=[]; }
+window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // glow halos ride the node objects — re-added after any rebuild
+  _hlClearSprites();
+  nodes.forEach(function(n){ if(HL.set[n.id]===undefined||!n.__threeObj) return;
+    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?46:26, d0?0.8:0.5);
+    n.__threeObj.add(g); HL.sprites.push(g); }); };
+function _hlRestyle(){ _hlClearSprites();
+  if(typeof Graph!=="undefined" && Graph){
+    try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}
+    try{ rebuildNodes(); }catch(e){}
+    try{ buildClusters(); updateClusters(true); }catch(e){}
+    try{ buildTransports(); }catch(e){} }
+  _hlSyncUI(); }
+function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.textContent=HL.depth;
+  var db=document.getElementById("depthBtn"); if(db) db.classList.toggle("on", HL.on);
+  var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
+  var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
+  if(ig&&ifc){ ig.style.display=(HL.mode==="glow")?"":"none"; ifc.style.display=(HL.mode==="focus")?"":"none"; } }
+window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle(); };
+window.__uniHLClear=function(){ if(!HL.on) return; HL.on=false; HL.jr=null; HL.origin=null; HL.set={}; HL.links=null; _hlRestyle(); };
+window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d));
+  if(HL.on){ _hlCompute(); _hlRestyle(); } else _hlSyncUI(); };
+window.__uniHLMode=function(){ HL.mode=(HL.mode==="glow")?"focus":"glow"; if(HL.on) _hlRestyle(); else _hlSyncUI(); };
+/* ── JOURNEYS — cross-entity tests collected from every node's det.test_journeys, deduped by cid ── */
+var JRN=null;
+function _jrnCollect(){ if(JRN) return JRN; var m={};
+  nodes.forEach(function(n){ ((n.det&&n.det.test_journeys)||[]).forEach(function(j){ if(!j.cid) return;
+    var r=m[j.cid]||(m[j.cid]={cid:j.cid, corpus:j.corpus||"", ents:j.entities||[], carriers:[]});
+    r.carriers.push(n.id); }); });
+  JRN=Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){ return b.carriers.length-a.carriers.length; });
+  return JRN; }
+window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
+  if(p.style.display!=="none"){ p.style.display="none"; return; }
+  var js=_jrnCollect();
+  var h='<div class="jrnhd">journeys · '+js.length+' cross-entity tests</div><div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
+  js.forEach(function(j){ h+='<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" · ")+'">'
+    +'<b>'+j.cid+'</b><span class="jrncorp">'+j.corpus+'</span><span class="jrnn">'+j.carriers.length+' carriers · '+j.ents.length+' ents</span></div>'; });
+  p.innerHTML=h; p.style.display="";
+  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ var cid=r.getAttribute("data-jr");
+    p.style.display="none";
+    if(!cid){ __uniHLClear(); return; }
+    var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
+    HL.jr=cid; HL.origin=j.carriers.slice(); HL.on=true; _hlCompute(); _hlRestyle(); }; }); };
+/* topbar wiring + Alt+scroll + Esc — bound once at boot */
+window.__uniWireTopbar=function(){
+  var db=document.getElementById("depthBtn"); if(db&&!db.__w){ db.__w=1; db.onclick=function(){ __uniHLDepth(HL.depth%5+1); }; }
+  var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
+  var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
+  if(!window.__uniHLKeys){ window.__uniHLKeys=1;
+    window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
+      __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
+    window.addEventListener("keydown", function(e){ if(e.key==="Escape") __uniHLClear(); }); }
+  _hlSyncUI(); };
+
 /* ══ FLEET panel (batch 11-B) — per-entity visibility + ops matrix; the in-flight diagram's seed ══
    State contract: UNIVIS{ent,node,meta}. node/meta are RESERVED for the in-flight batch — GABE_SIM
    keys its stages by piece id and the universe node ids are the SAME strings, so a later per-piece
@@ -234,7 +312,7 @@ var _visRAF=null, _visScopes={};
 function applyVis(scope){ _visScopes[scope||"all"]=1;
   if(_visRAF) return; _visRAF=requestAnimationFrame(function(){ _visRAF=null; var s=_visScopes; _visScopes={}; _applyVisNow(s); }); }
 function _applyVisNow(s){ if(typeof Graph==="undefined"||!Graph) return; var all=s.all;
-  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return !!visN(n).show; }); }catch(e){}
+  if(all||s.nodes){ try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}   // fleet ∧ focus — the one truth
     try{ Graph.linkVisibility(linkVisFn); }catch(e){} }              // dormant while conns is baked on — future-proofing
   if(all||s.nodes||s.zones){ try{ rebuildNodes(); }catch(e){} }      // ONLY rebuildNodes resets FLEETTICK/PULSE/ORBIT/WAVE — re-show would duplicate closures otherwise
   if(all||s.nodes||s.clusters){ try{ buildClusters(); updateClusters(true); }catch(e){} }
@@ -374,7 +452,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   /* the explainers live on HOVER (operator ruling): the section label carries the summary,
      every option carries its own meaning — the note lines below the pills are gone. */
   var cores=[
-    {v:"layer",t:"Layer",ti:"group by architectural layer — api · frontend · data"},
+    {v:"layer",t:"Layer",ti:"group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
     {v:"kind",t:"Kind",ti:"group by element kind — endpoint · model · schema · function · screen"},
     {v:"tests",t:"Tests",ti:"group by test coverage — tested vs untested"}];
   if(hasLevels) cores.push(

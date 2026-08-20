@@ -101,6 +101,29 @@
   #cfg .pill.wshape button{ padding:3px 4px; }
   #cfg .wreset{ font:inherit; font-size:11px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:5px; width:20px; height:18px; cursor:pointer; padding:0; flex:none; }
   #cfg .wreset:hover{ color:var(--ink); border-color:var(--accent); }
+  /* ── topbar icon buttons (batch 12): depth · highlight style · journeys · freeze · reset — icons only,
+     the explanation lives in the hover title; the repo pills sit at the FAR right ── */
+  .topbar .tbico{ position:relative; display:grid; place-items:center; width:32px; height:30px; flex:none;
+    color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:8px; cursor:pointer; padding:0; }
+  .topbar .tbico svg{ width:16px; height:16px; }
+  .topbar .tbico:hover{ color:var(--ink); border-color:var(--accent); }
+  .topbar .tbico.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  .topbar .tbnum{ position:absolute; right:-4px; top:-5px; font:800 9px/1 var(--font-mono); color:#fff;
+    background:var(--accent); border-radius:6px; padding:1.5px 4px; }
+  .topbar .tbico.on .tbnum{ background:#0e1524; }
+  /* journeys dropdown — under the topbar, right side */
+  #jrn{ position:fixed; right:12px; top:calc(var(--topbarh) + 6px); z-index:55; width:300px; max-height:46vh; overflow-y:auto;
+    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; }
+  #jrn .jrnhd{ font:700 10px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:4px 6px 6px; }
+  #jrn .jrnrow{ display:flex; align-items:center; gap:7px; padding:4px 7px; border-radius:7px; cursor:pointer; font-size:11.5px; color:var(--ink); }
+  #jrn .jrnrow:hover{ background:#131d31; }
+  #jrn .jrnrow.on{ background:var(--accent); color:#fff; }
+  #jrn .jrnrow b{ font:700 10.5px/1 var(--font-mono); }
+  #jrn .jrncorp{ font:600 9px/1 var(--font-mono); text-transform:uppercase; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 4px; }
+  #jrn .jrnrow.on .jrncorp{ color:#fff; border-color:#ffffff66; }
+  #jrn .jrnn{ margin-left:auto; font-size:10px; color:var(--muted); }
+  #jrn .jrnrow.on .jrnn{ color:#fff; }
+  #jrn .jrnnone{ color:var(--muted); font-style:italic; }
   /* ── FLEET panel (batch 11-B): per-entity visibility + ops matrix, top-left, minimizable + draggable.
      Geometry: tracks --navw like the legend; shifts right under nav-min (the 32px restore tab owns that
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)

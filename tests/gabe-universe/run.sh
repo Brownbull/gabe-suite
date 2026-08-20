@@ -208,13 +208,13 @@ check('.fltog.flstog.on{ background:#0b7a63' in page,
 # batch 11-B4: the ALL row reaches cluster overrides; inherited-off dims; explainers live on hover
 check('the ALL row is a bulk gesture' in page, "the ALL master row does not propagate into cluster overrides")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
-check('ti:"group by architectural layer' in page and 'ti:"a flat layered ribbon' in page,
+check("ti:\"group by the kind's architectural layer" in page and 'ti:"a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers")
 check('ti:"adds "+window.GABE_LEVELS.fn_nodes.length' in page, "the Functions option lost its count-bearing hover explainer")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
       "REGRESSION: the note lines below the pills are back (explainers must live on hover)")
 check('function visEnt' in page and 'function visN' in page, "vis accessors missing (seams must read through ONE pair)")
-check('nodeVisibility(function(n){ return !!visN(n).show; })' in page, "node visibility seam not wired")
+check('nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page, "node visibility seam not wired (fleet ∧ focus fn)")
 check('if(!visEnt(e).show) return; var mem=' in page, "ent-hull seam missing (hidden entity keeps its hull)")
 check('if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return;' in page,
       "sub-hull seam wrong — must skip on !show OR !subs (ghost sub-hulls around a hidden entity)")
@@ -246,6 +246,24 @@ check('data-fpre="all"' in page and 'data-fpre="none"' in page and 'data-fpre="i
       "presets row (All/None/In-flight) missing")
 check('no sim feed on this page' in page and 'no change in flight' in page,
       "the In-flight stub does not distinguish its two honest-empty states (undefined vs null)")
+
+# ── 10n. batch 12: layer ruling (c) · depth highlight · journeys picker · topbar icons · chord pan ──
+check('else n.sub=n.layer||"data"' in page, "layer core still collapses (ruling c: group by the kind's OWN layer)")
+check('SUBOF[n.layer]' not in page and 'SUBOF[KINDS' not in page, "REGRESSION: the SUBOF collapse is back")
+check('var SUBSHIFT={ endpoints:0.04' in page, "hull hue-shift map lacks the un-collapsed layer keys")
+check('function _hlCompute' in page and 'window._hlLinkF' in page and 'function _nodeVisibleFn' in page,
+      "depth-highlight machinery missing (BFS + wire factor + shared visibility fn)")
+check('kind, R, hf)' in page and "8, (window._hlLinkF?_hlLinkF(l):1))" in page,
+      "connector wires ignore the highlight factor")
+check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
+      "node visibility does not go through the shared fn (focus mode dead)")
+check('requestAnimationFrame(__uniHLReapply)' in page, "glow halos are not restored after a node rebuild")
+check('id="depthBtn"' in page and 'id="hlModeBtn"' in page and 'id="jrnBtn"' in page, "topbar depth/mode/journeys buttons missing")
+check(page.find('id="reset"') < page.find('<div class="statuspills">'), "repo pills are not at the FAR right of the topbar")
+check('❄ Freeze on drag' not in page, "REGRESSION: freeze button back to text (icons only, explanation on hover)")
+check('e.altKey' in page and 'key==="Escape"' in page, "Alt+scroll depth / Esc clear not wired")
+check('function _jrnCollect' in page and '__uniJrnToggle' in page, "journeys collector/picker missing")
+check('ev.buttons&2' in page, "chord pan (left+right drag) missing")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

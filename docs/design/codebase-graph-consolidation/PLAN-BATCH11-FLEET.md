@@ -133,14 +133,17 @@ at boot and is STALE for toggled-in function nodes):**
 - Panel header PRESETS row: **[All] [None] [In-flight]**. All/None live. In-flight DISABLED stub
   whose title distinguishes the two honest-empty states: feed absent (`undefined` — page has no
   sim.data.js sibling) vs at rest (`null` — feed present, no change in flight).
-- **Deferred with triggers** (the in-flight batch, not this one):
-  - zone↔lifecycle vocabulary (Red→Execute→Review→Commit mapping) — trigger: operator picks it
-    when that diagram is built; role marking resolves independently of metric-driven fleets (§B).
-  - "dim" third state for context entities — trigger: the in-flight preset lands; lands inside
-    `visN()` only.
-  - blast widening: GABE_SIM.blast is FK-only BY DESIGN while the universe draws calls/imports/
-    bridge — the preset derivation must either widen blast client-side (1-hop over the loaded
-    GABE_C4 l1 multi-kind edges) or record FK-only as a ruling. OPEN — decided at that batch.
+- **RULINGS SETTLED (operator, 2026-08-20)** for the in-flight batch:
+  - **R1 = (b)**: stages mark via HULL TINT per stage + a stage BEACON above the entity — zones
+    stay quality signals (metric-derived fleets cannot carry roles). The Red→Execute→Review→Commit
+    color vocabulary is still the operator's pick at build time.
+  - **R2 = DROPPED**: no "dim" state — the fleet panel's hide controls ARE the context mechanism
+    (keep only related entities/clusters visible). `visN()` stays boolean.
+  - **R3 = (b)**: blast widens CLIENT-SIDE, 1 hop over the loaded GABE_C4 l1 multi-kind edges,
+    TINTED BY TRUST (structural FK-blast vs inferred call/bridge-blast). Emitter untouched.
+  - **Layers = (c), LANDED batch 12**: the layer core groups by the kind's OWN layer
+    (endpoints · api · web · data), auto-grows with new kinds; (d) full frontend-model enrichment
+    stays HELD on its existing trigger (codebase-map enforcement understood first).
 
 ## Slices (each: assemble → land → fill → headless proof → battery, committed separately)
 

@@ -64,7 +64,8 @@ window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) r
   var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
 window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
   setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
-function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;
+function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;
+  hf=(hf==null)?1:hf; if(!hf) return;   // depth-highlight factor: 0 = outside a FOCUS set (skip) · >1 = in the lit set (brighter, additive)
   var _bm=(window.__uniBeam && window.__uniBeam[kind]!=null)?window.__uniBeam[kind]:1; if(!_bm) return;"""
 assert "function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;" in text, "connectorWire anchor missing"
 text = text.replace("function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;", CURVE_HELPERS, 1)
@@ -73,11 +74,11 @@ text = text.replace("function connectorWire(grp, a, b, kind, R){ var cfg=CONN[ki
 OLD_SOLID = 'mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:cfg.trust});'
 assert OLD_SOLID in text, "connector solid-material anchor missing"
 text = text.replace(OLD_SOLID,
-  'mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm), blending:(_bm>1?T.AdditiveBlending:T.NormalBlending)});', 1)
+  'mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});', 1)
 OLD_DASHM = 'mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:cfg.trust, dashSize:base[0]/dn, gapSize:base[1]/dn});'
 assert OLD_DASHM in text, "connector dashed-material anchor missing"
 text = text.replace(OLD_DASHM,
-  'mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm), blending:(_bm>1?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});', 1)
+  'mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});', 1)
 OLD_GEO = "  var geo=new T.BufferGeometry().setFromPoints([A,B]), mat;"
 assert OLD_GEO in text, "connectorWire geometry line missing"
 text = text.replace(OLD_GEO, "  var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;", 1)
@@ -263,6 +264,35 @@ OLD_ZS = 'if(CFG.zSat) for(var si=0;'
 assert OLD_ZS in text, "fleetZones zSat anchor missing"
 text = text.replace(OLD_ZS, 'if(CFG.zSat&&visN(n).zSat) for(var si=0;', 1)
 
+# ── batch 12: layer ruling (c) — sub groups carry the kind's OWN layer (endpoints·api·web·data);
+#    the hull hue-shift map gains the un-collapsed keys ──
+OLD_SUBSHIFT = 'var SUBSHIFT={ frontend:0.10, api:-0.08, data:0.0 };'
+assert OLD_SUBSHIFT in text, "SUBSHIFT anchor missing"
+text = text.replace(OLD_SUBSHIFT, 'var SUBSHIFT={ endpoints:0.04, api:-0.08, web:0.10, frontend:0.10, data:0.0 };', 1)
+
+# ── batch 12: DEPTH HIGHLIGHT — selection hook · per-wire factor · shared visibility fn · reapply ──
+OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
+assert OLD_CLICK in text, "onNodeClick anchor missing"
+text = text.replace(OLD_CLICK,
+  '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })', 1)
+OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
+assert OLD_CWCALL in text, "connectorWire call anchor missing"
+text = text.replace(OLD_CWCALL,
+  "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });", 1)
+OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
+assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
+text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)
+OLD_RBN = 'function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }'
+assert OLD_RBN in text, "rebuildNodes anchor missing"
+text = text.replace(OLD_RBN,
+  'function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); });\n'
+  '  if(window.__uniHLReapply) requestAnimationFrame(__uniHLReapply); }   // glow halos ride node objects — restore after the rebuild', 1)
+OLD_TRV = 'var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;\n    if(!_sv.show||!_tv.show||!_sv.routes||!_tv.routes) return;'
+assert OLD_TRV in text, "transports visibility anchor missing"
+text = text.replace(OLD_TRV,
+  'var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;\n'
+  '    if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;', 1)
+
 # panel boot + master-dim sync on every config change
 OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n'
 assert OLD_BOOTCFG in text, "boot buildCfg anchor missing (batch-11 fleet boot)"
@@ -271,6 +301,11 @@ OLD_APPLYHEAD = 'function applyCfg(grp){ if(grp==="bubble"'
 assert OLD_APPLYHEAD in text, "applyCfg head anchor missing"
 text = text.replace(OLD_APPLYHEAD,
   'function applyCfg(grp){ if(window.__uniFleetSync) try{ __uniFleetSync(); }catch(e){} if(grp==="bubble"', 1)
+
+# batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
+OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();'
+assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
+text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar();', 1)
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")

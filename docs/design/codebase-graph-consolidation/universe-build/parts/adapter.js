@@ -2,7 +2,8 @@
    Replaces the spike's toy NODEDEF/METRICS. SAME field names the encoders read, now fed live.
    Node m-bag: behind/depth/tests/cols/fanin/god/method (+ large/hot/flags derived, spike-identical).
    Each node also carries det/behind/resp/ids/table/sites so the live card reads real dossiers. */
-var SUBOF={ endpoints:"api", api:"api", web:"frontend", data:"data" };
+/* layer ruling (c) 2026-08-20: the old SUBOF collapse (endpoints→api, web→frontend) is retired —
+   the layer core groups by the kind's OWN layer value, so new kinds bring their layer for free. */
 var LZ={ endpoints:150, api:60, web:150, data:-150 };
 var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444" };
 /* rel → edge colour. c4 kinds: touches · fk · bridge (+ empty→fk on model FK cross-edges). */
@@ -51,7 +52,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
       fanin:0,                                          // filled from in-degree below
       god:false, method:(kind==="endpoint")?_methOf(p.label):null };
     var n={ id:p.id, kind:kind, ent:ent, label:p.label||p.slug||p.id,
-      col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:SUBOF[KINDS[kind].layer]||"data",
+      col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"data",
       m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites };
     nodes.push(n); NIDS[n.id]=n; });
 });
