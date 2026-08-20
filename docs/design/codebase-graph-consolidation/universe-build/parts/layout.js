@@ -335,16 +335,18 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
   _walkRender(); }
 function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
-  /* JOURNEY controls = a WIDE PILL floating over the diagram top: ‹ at the left edge, step COUNT,
-     the journey NAME at the end, › at the right edge; the ✕ lives in its OWN pill beside. */
+  /* JOURNEY controls live CENTERED in the header bar: [‹] [i/N · name] [›] [✕] — real buttons,
+     Lucide chevrons (the text glyphs sat skewed in their circles). */
   if(pill){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj, stepN=(NIDS[WALK.steps[WALK.i]]||{}).label||"";
+      var CHL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+      var CHR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+      var XIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
       pill.style.display="";
-      pill.innerHTML='<div class="jpill" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
-        +'<button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
-        +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
-        +'<span class="wjname">'+(j.name||j.cid)+'</span>'
-        +'<button class="wbtn" data-wgo="1" title="next step">›</button></div>'
-        +'<div class="jpill jxp"><button class="hlbx" title="clear the journey (Esc)">✕</button></div>';
+      pill.innerHTML='<button class="tbico wbtn" data-wgo="-1" title="previous step">'+CHL+'</button>'
+        +'<span class="wname" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
+        +'<b class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</b><span class="wjname">'+(j.name||j.cid)+'</span></span>'
+        +'<button class="tbico wbtn" data-wgo="1" title="next step">'+CHR+'</button>'
+        +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
       pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
     else pill.style.display="none"; }
@@ -366,6 +368,29 @@ window.__uniWireTopbar=function(){
     dr.addEventListener("input", function(){ __uniHLDepth(+dr.value); }); }
   var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
   var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
+  if(!window.__uniFly){ window.__uniFly=1; var FK={};
+    var _flyOK=function(e){ var tag=(e.target&&e.target.tagName)||""; return tag!=="INPUT"&&tag!=="TEXTAREA"; };
+    window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
+      if(k==="w"||k==="a"||k==="s"||k==="d"){ FK[k]=1; }
+      else if(k===" "){ FK.up=1; e.preventDefault(); }        // Space = ascend (and never scrolls/clicks)
+      else if(k==="control"){ FK.dn=1; } });
+    window.addEventListener("keyup", function(e){ var k=e.key.toLowerCase();
+      if(k==="w"||k==="a"||k==="s"||k==="d") delete FK[k];
+      else if(k===" ") delete FK.up; else if(k==="control") delete FK.dn; });
+    window.addEventListener("blur", function(){ for(var k in FK) delete FK[k]; });
+    setInterval(function _flyTick(){                                        // setInterval, NOT rAF: headless/background pages starve rAF chains (measured 1 tick/400ms) — the flight must tick everywhere
+      if(typeof Graph==="undefined"||!Graph) return; var any=false; for(var k in FK){ any=true; break; } if(!any) return;
+      try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls) return;
+        var sp=Math.max(2.5, cam.position.distanceTo(ctrls.target)*0.016);   // speed scales with zoom — close = fine, far = fast
+        var fwd=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion).multiplyScalar(sp);
+        var rgt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(sp);
+        var off=new T.Vector3();
+        if(FK.w) off.add(fwd); if(FK.s) off.sub(fwd);
+        if(FK.d) off.add(rgt); if(FK.a) off.sub(rgt);
+        if(FK.up) off.y+=sp; if(FK.dn) off.y-=sp;
+        if(!off.lengthSq()) return;
+        cam.position.add(off); ctrls.target.add(off);          // the whole rig flies — orbiting keeps working wherever you stop
+      }catch(e){} }, 16); }
   if(!window.__uniHLKeys){ window.__uniHLKeys=1;
     window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
       __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});

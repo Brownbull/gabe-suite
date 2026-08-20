@@ -265,20 +265,12 @@
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
-  /* journey STEP PILL — floats over the diagram top: ‹ at the left edge, i/N, the journey NAME, › at
-     the right edge; the ✕ in its own pill beside. The step label rides the hover title + the card. */
-  #jrnpill{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 10px); z-index:41;
-    display:flex; align-items:center; gap:8px; max-width:56vw; }
-  #jrnpill .jpill{ display:flex; align-items:center; gap:10px; padding:5px 8px; min-width:280px;
-    background:rgba(24,33,54,.96); border:1px solid var(--accent); border-radius:999px; font-size:12.5px; color:var(--ink); }
-  #jrnpill .jpill.jxp{ min-width:0; padding:5px 6px; border-color:var(--line); }
-  #jrnpill .wbtn{ width:24px; height:24px; font:700 13px/1 var(--font-ui); color:var(--ink); background:#0e1524;
-    border:1px solid var(--line); border-radius:50%; cursor:pointer; padding:0; flex:none; }
-  #jrnpill .wbtn:hover{ border-color:var(--accent); }
-  #jrnpill .wpos{ font:700 11px/1 var(--font-mono); color:var(--muted); flex:none; }
-  #jrnpill .wjname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
-  #jrnpill .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 4px; }
-  #jrnpill .hlbx:hover{ color:var(--ink); }
+  /* journey STEP controls — CENTERED in the header bar: [‹] [i/N · name] [›] [✕], real Lucide buttons */
+  #jrnpill{ display:flex; align-items:center; gap:6px; min-width:0; max-width:42vw; }
+  #jrnpill .wname{ display:flex; align-items:center; gap:8px; min-width:0; padding:4px 12px; font-size:12px;
+    color:var(--ink); border:1px solid var(--accent); border-radius:999px; background:#0e1524; }
+  #jrnpill .wpos{ font:700 10.5px/1 var(--font-mono); color:var(--muted); flex:none; }
+  #jrnpill .wjname{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
   /* depth = a draggable 1–5 bar in the topbar */
   .topbar .tbdepth{ position:relative; display:flex; align-items:center; gap:6px; color:var(--muted);
     background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:0 8px; height:30px; flex:none; }
@@ -409,6 +401,7 @@
   <div class="spacer"></div>
   <button class="tbico" id="jrnBtn" title="journeys — cross-entity tests as highlighted paths: pick one, its carrier elements + wires light up; step it with the controls that appear here."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></button>
   <button class="tbico" id="hlModeBtn" title="highlight style — GLOW halos the reached set and dims the rest of the wires · FOCUS hides everything outside the set (hulls stay as geography). Click to switch."><svg id="hlIcoGlow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><svg id="hlIcoFocus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="3.5"/><path d="M2 8V4a2 2 0 0 1 2-2h4M16 2h4a2 2 0 0 1 2 2v4M22 16v4a2 2 0 0 1-2 2h-4M8 22H4a2 2 0 0 1-2-2v-4"/></svg></button>
+  <span id="jrnpill" style="display:none"></span>
   <div class="spacer"></div>
   <span class="tbdepth" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops. Drag the bar, Alt+scroll, or Arrow Up/Down. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><input type="range" id="depthRng" min="1" max="5" step="1" value="3"><b class="tbnum" id="depthNum">3</b></span>
   <button class="tbico on" id="freezeDragBtn" title="freeze on drag — pause ALL animations (fleets, transports, pulses) while rotating or moving the camera; they resume the moment you release. On by default; click to toggle." onclick="window.__uniToggleFreezeDrag&&window.__uniToggleFreezeDrag(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5l-5 3-5-3M7 19l5-3 5 3M2 12h20M5 7l3 5-3 5M19 7l-3 5 3 5"/></svg></button>
@@ -416,7 +409,6 @@
   <div class="statuspills"><span class="pill">repo · 2,031 tests · 0 failed</span></div>
 </div>
 <div id="jrn" style="display:none"></div>
-<div id="jrnpill" style="display:none"></div>
 <div id="g"></div>
 <div class="cfg" id="cfg"></div>
 <div class="expl" id="expl"></div>
@@ -1352,16 +1344,18 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
   _walkRender(); }
 function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
-  /* JOURNEY controls = a WIDE PILL floating over the diagram top: ‹ at the left edge, step COUNT,
-     the journey NAME at the end, › at the right edge; the ✕ lives in its OWN pill beside. */
+  /* JOURNEY controls live CENTERED in the header bar: [‹] [i/N · name] [›] [✕] — real buttons,
+     Lucide chevrons (the text glyphs sat skewed in their circles). */
   if(pill){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj, stepN=(NIDS[WALK.steps[WALK.i]]||{}).label||"";
+      var CHL='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>';
+      var CHR='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>';
+      var XIC='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
       pill.style.display="";
-      pill.innerHTML='<div class="jpill" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
-        +'<button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
-        +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
-        +'<span class="wjname">'+(j.name||j.cid)+'</span>'
-        +'<button class="wbtn" data-wgo="1" title="next step">›</button></div>'
-        +'<div class="jpill jxp"><button class="hlbx" title="clear the journey (Esc)">✕</button></div>';
+      pill.innerHTML='<button class="tbico wbtn" data-wgo="-1" title="previous step">'+CHL+'</button>'
+        +'<span class="wname" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
+        +'<b class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</b><span class="wjname">'+(j.name||j.cid)+'</span></span>'
+        +'<button class="tbico wbtn" data-wgo="1" title="next step">'+CHR+'</button>'
+        +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
       pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
     else pill.style.display="none"; }
@@ -1383,6 +1377,29 @@ window.__uniWireTopbar=function(){
     dr.addEventListener("input", function(){ __uniHLDepth(+dr.value); }); }
   var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
   var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
+  if(!window.__uniFly){ window.__uniFly=1; var FK={};
+    var _flyOK=function(e){ var tag=(e.target&&e.target.tagName)||""; return tag!=="INPUT"&&tag!=="TEXTAREA"; };
+    window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
+      if(k==="w"||k==="a"||k==="s"||k==="d"){ FK[k]=1; }
+      else if(k===" "){ FK.up=1; e.preventDefault(); }        // Space = ascend (and never scrolls/clicks)
+      else if(k==="control"){ FK.dn=1; } });
+    window.addEventListener("keyup", function(e){ var k=e.key.toLowerCase();
+      if(k==="w"||k==="a"||k==="s"||k==="d") delete FK[k];
+      else if(k===" ") delete FK.up; else if(k==="control") delete FK.dn; });
+    window.addEventListener("blur", function(){ for(var k in FK) delete FK[k]; });
+    setInterval(function _flyTick(){                                        // setInterval, NOT rAF: headless/background pages starve rAF chains (measured 1 tick/400ms) — the flight must tick everywhere
+      if(typeof Graph==="undefined"||!Graph) return; var any=false; for(var k in FK){ any=true; break; } if(!any) return;
+      try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls) return;
+        var sp=Math.max(2.5, cam.position.distanceTo(ctrls.target)*0.016);   // speed scales with zoom — close = fine, far = fast
+        var fwd=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion).multiplyScalar(sp);
+        var rgt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(sp);
+        var off=new T.Vector3();
+        if(FK.w) off.add(fwd); if(FK.s) off.sub(fwd);
+        if(FK.d) off.add(rgt); if(FK.a) off.sub(rgt);
+        if(FK.up) off.y+=sp; if(FK.dn) off.y-=sp;
+        if(!off.lengthSq()) return;
+        cam.position.add(off); ctrls.target.add(off);          // the whole rig flies — orbiting keeps working wherever you stop
+      }catch(e){} }, 16); }
   if(!window.__uniHLKeys){ window.__uniHLKeys=1;
     window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
       __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});

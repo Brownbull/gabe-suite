@@ -276,7 +276,12 @@ check('id="jrnpill"' in page and 'function _walkRender' in page and 'var WALK={'
 check('id="jrnhud"' not in page, "REGRESSION: the topbar HUD is back (the step pill floats over the diagram)")
 check(page.count('<div class="spacer"></div>') == 2 and page.find('id="jrnBtn"') < page.find('id="hlModeBtn"') < page.find('id="depthBtn"'),
       "topbar order wrong (journeys · style middle; depth/freeze/reset right)")
-check('class="jpill jxp"' in page and '#jrnpill .jpill{' in page, "the wide step pill + its separate ✕ pill are missing")
+check('<span id="jrnpill"' in page and page.find('id="hlModeBtn"') < page.find('id="jrnpill"') < page.find('id="depthBtn"'),
+      "the journey step controls are not centered in the header bar")
+check('#jrnpill .wname{' in page and 'm15 18-6-6 6-6' in page and 'm9 18 6-6-6-6' in page,
+      "step buttons are not proper Lucide chevrons (the text glyphs sat skewed)")
+check('setInterval(function _flyTick(){' in page and 'FK.up' in page and 'k==="control"' in page,
+      "WASD/Space/Ctrl flight missing (setInterval tick — headless/background pages starve rAF)")
 check('id="depthRng"' in page and 'ArrowUp' in page and 'ArrowDown' in page,
       "depth is not a draggable 1–5 bar with arrow-key fallback")
 check('?0:0.05' in page and 'return 2.6;' in page, "highlight contrast floors missing (dim 0.05 · lit 2.6 — 0.18 read as noise on screen)")
