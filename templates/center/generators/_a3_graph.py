@@ -496,7 +496,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         labels: dict[str, str],
         insight: dict[str, Any] | None = None,
         web_pieces: list[dict] | None = None,
-        behind: dict[str, dict] | None = None) -> dict[str, list[dict]]:
+        behind: dict[str, dict] | None = None,
+        journeys: dict[str, dict] | None = None) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
     wiring, plus honest ``external`` stub nodes for outbound FKs into other
     entities / unclaimed tables — so a drill never hides where the entity reaches.
@@ -525,6 +526,15 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
                               ins.get("ti_model") or {}, ins.get("mi") or {},
                               node_facts=ins.get("node_facts") or {})
 
+    def with_journeys(det: dict, key: str) -> dict:
+        # fold the element's cross-entity test journeys into its dossier; honest-empty → det unchanged.
+        jr = (journeys or {}).get(key)
+        if jr:
+            det["test_journeys"] = jr["list"]
+            if jr.get("more"):
+                det["test_journeys_more"] = jr["more"]
+        return det
+
     def ext(owner: str) -> str:
         nid = f"external:{owner}"
         if nid not in externals:
@@ -542,7 +552,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         ids = model_ids(model, code.get("endpoints"))
         if ids:                                   # honest-empty: no card if nothing to show
             node["ids"] = ids
-        det = det_of("model", model)
+        det = with_journeys(det_of("model", model), model.get("cls") or "")
         if det:                                   # honest-empty: no dossier, no key
             node["det"] = det
         add_node(node)
@@ -552,7 +562,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         nid = f"schema:{schema.get('cls')}"
         snode = {"id": nid, "kind": "schema", "slug": slug,
                  "label": schema.get("cls")}
-        sdet = det_of("schema", schema)
+        sdet = with_journeys(det_of("schema", schema), schema.get("cls") or "")
         if sdet:
             snode["det"] = sdet
         add_node(snode)
@@ -566,7 +576,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             enode["fn"] = ep["fn"]                # the handler, for the card's route row
         if ep.get("resp") and ep["resp"] != "—":   # the parser's em-dash default is "none declared"
             enode["resp"] = ep["resp"]
-        edet = det_of("endpoint", ep)
+        edet = with_journeys(det_of("endpoint", ep),
+                             f"{ep.get('file')}::{ep.get('fn')}")
         if edet:
             enode["det"] = edet
         bkey = f"{ep.get('file')}#{ep.get('fn')}"   # the graft call-tree floor behind this handler
@@ -848,12 +859,22 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     # the endpoint call-tree floor (graft): {<file>#<fn> → {fns, depth}} per handler.
     # graft absent → {} → no endpoint carries a behind field → byte-identical build.
     behind = (graft or {}).get("behind") or {}
+    # per-element CROSS-ENTITY test journeys (criterion A) — junit + archmap only. Honest-empty when
+    # test_insight is absent (→ {} → no det.test_journeys anywhere → byte-identical). NOT the station's
+    # wire-journeys (buildJourneys): this is the traveling-test-chip, a per-node test-detail field.
+    import os as _os, sys as _sys
+    _gendir = _os.path.dirname(_os.path.abspath(__file__))   # this module's dir (loadable via importlib too)
+    if _gendir not in _sys.path:
+        _sys.path.insert(0, _gendir)
+    import _a3_tests
+    journeys = _a3_tests.derive_journeys(ti, amap.get("_file_entity") or {},
+                                         amap.get("model_insight") or {})
     l2: dict[str, dict] = {}
     for slug in sorted(entities):
         code = entities[slug]
         if not code:
             continue
-        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug), behind)
+        graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug), behind, journeys)
         _stamp_l2(graph)
         l2[slug] = graph
 

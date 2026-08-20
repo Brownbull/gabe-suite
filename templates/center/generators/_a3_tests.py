@@ -465,6 +465,78 @@ def test_insight(repo: Path) -> dict:
     return out
 
 
+_JRN_CAP = 6   # test-journeys shown per element; the rest counted in a *_more sibling (mirrors cases)
+
+
+def derive_journeys(ti: dict, fent: dict, mi: dict, min_entities: int = 2) -> dict:
+    """Per-element CROSS-ENTITY test journeys (criterion A: a test that EXERCISES more than one
+    entity) — the honest, order-free traveling-test-chip. Keyed to the C4 L2 elements the station
+    draws: endpoints ``file::fn``, models by class name (functions participate in the span but are
+    not L2 nodes, so they get no key). Each element's value is
+    ``{"list": [{cid, corpus, entities:[spanned], comp:<distinct elements the test touches>}], "more": N}``.
+
+    Derived from junit + archmap ONLY (no graft): the span of a test is the union of the entities of
+    every element crediting it (endpoints/functions via ``fent`` file→entity, models via
+    ``mi[cls]['entity']``). The route is a SET, never an order (``journey_order`` is a separate,
+    deferred signal). HONEST-EMPTY: no test_insight (a twin without junit) → ``{}`` → no element
+    carries the field → the c4-graph is byte-identical to a build without this arm. Pure + deterministic."""
+    by_ep = ti.get("by_endpoint") or {}
+    by_fn = ti.get("by_function") or {}
+    by_model = ti.get("by_model") or {}
+    if not (by_ep or by_fn or by_model):
+        return {}
+
+    t_ents: dict[str, set] = {}      # test id -> {entity} it spans
+    t_elems: dict[str, set] = {}     # test id -> {(kind, key)} it touches
+    t_corpus: dict[str, str] = {}    # test id -> corpus
+    t_disp: dict[str, str] = {}      # test id -> display id (cid, else test name)
+
+    def _credit(elem, ent, refs):
+        for ref in refs or []:
+            t = ref.get("cid") or f'{ref.get("name", "")}@@{ref.get("tfile", "")}'
+            t_elems.setdefault(t, set()).add(elem)
+            if ent:
+                t_ents.setdefault(t, set()).add(ent)
+            if ref.get("corpus"):
+                t_corpus.setdefault(t, ref["corpus"])
+            t_disp.setdefault(t, ref.get("cid") or (ref.get("name") or "?"))
+
+    for k, cmap in by_ep.items():
+        ent = fent.get(k.split("::", 1)[0])
+        for refs in (cmap or {}).values():
+            _credit(("ep", k), ent, refs)
+    for k, d in by_fn.items():
+        ent = fent.get(k.split("::", 1)[0])
+        for tier in ("direct", "via_route"):
+            _credit(("fn", k), ent, (d or {}).get(tier))
+    for cls, d in by_model.items():
+        ent = (mi.get(cls) or {}).get("entity")
+        for tier in ("direct", "via_route"):
+            _credit(("model", cls), ent, (d or {}).get(tier))
+
+    xtests = {t for t, ents in t_ents.items() if len(ents) >= min_entities}   # criterion A
+    if not xtests:
+        return {}
+
+    elem_tests: dict[tuple, list] = {}
+    for t in xtests:
+        for elem in t_elems.get(t, ()):
+            if elem[0] in ("ep", "model"):     # only L2 nodes carry the field; functions live on levels
+                elem_tests.setdefault(elem, []).append(t)
+
+    out: dict = {}
+    for elem, tests in sorted(elem_tests.items()):
+        js = [{"cid": t_disp[t], "corpus": t_corpus.get(t, ""),
+               "entities": sorted(t_ents.get(t, ())),
+               "comp": len(t_elems.get(t, ()))} for t in tests]
+        js.sort(key=lambda j: (-j["comp"], str(j["cid"])))
+        rec = {"list": js[:_JRN_CAP]}
+        if len(js) > _JRN_CAP:
+            rec["more"] = len(js) - _JRN_CAP
+        out[elem[1]] = rec       # ep → "file::fn" · model → class name
+    return out
+
+
 def untested_surface(repo: Path, slug: str, app: bool = False) -> str:
     """The one element-shaped section a Tests surface keeps (rulings Q3A/Q6A,
     2026-07-24): GAPS ONLY — an untested element has no case row to carry it,

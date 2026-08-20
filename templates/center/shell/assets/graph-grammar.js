@@ -243,10 +243,29 @@
       (det.case_files || []).forEach(function (f) {
         h += "<div class='pmore'>route-file coverage · " + esc(f.corpus || "") + " · " + esc(f.name || "") + "</div>"; });
       return h; }
+    function journeysSect(det) {
+      // cross-entity test JOURNEYS (criterion A) — the traveling test-chip, per element. det carries no
+      // kind, but only endpoints get sig/status, so that is the honest entry-vs-stop tell.
+      var js = det && det.test_journeys; if (!js || !js.length) return "";
+      var n = js.length + (det.test_journeys_more || 0);
+      var entry = !!(det.sig || det.status);
+      var h = _sect(_psvg("<circle cx='6' cy='19' r='3' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15' fill='none' stroke='var(--muted)' stroke-width='1.7'/><circle cx='18' cy='5' r='3' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),
+        "journeys (" + n + ")");
+      h += "<div class='pmore'>" + (entry ? "entry · a cross-entity test starts here and travels out"
+                                          : "a stop · reached by a cross-entity test that spans other entities") + "</div>";
+      h += "<table class='ptab'><tr><th class='nw'>test</th><th class='nw'>corpus</th><th>travels</th><th class='nw'>comp</th></tr>";
+      js.forEach(function (j) {
+        h += "<tr><td>" + (j.cid ? "<span class='cid'>" + esc(j.cid) + "</span>" : "") + "</td>"
+          + "<td>" + esc(j.corpus || "") + "</td>"
+          + "<td>" + (j.entities || []).map(function (e) { return esc(e); }).join(" · ") + "</td>"
+          + "<td class='nw'>" + (j.comp || 0) + "</td></tr>"; });
+      h += "</table>";
+      if (det.test_journeys_more) h += "<div class='pmore'>+" + det.test_journeys_more + " more journey(s) — the full set lives in the graph</div>";
+      return h; }
     function dossierHTML(det, docLabel, noun) {
       if (!det) return "";
       return docSect(det, docLabel) + sigSect(det) + structSect(det, noun) + fkSect(det)
-        + usageRowHTML(det) + fileRowHTML(det) + casesSect(det); }
+        + usageRowHTML(det) + fileRowHTML(det) + casesSect(det) + journeysSect(det); }
 
     /* ── the typed id-card chips (Tier 1) — one copy for both stations ── */
     var KIND_ICON = {
@@ -279,7 +298,7 @@
       _psvg: _psvg, _sect: _sect,
       docSect: docSect, fileRowHTML: fileRowHTML, usageRowHTML: usageRowHTML,
       structSect: structSect, fkSect: fkSect, sigSect: sigSect,
-      stateCls: stateCls, casesSect: casesSect, dossierHTML: dossierHTML,
+      stateCls: stateCls, casesSect: casesSect, journeysSect: journeysSect, dossierHTML: dossierHTML,
       chips: { KIND_ICON: KIND_ICON, KIND_CHIP: KIND_CHIP, METHOD_COLOR: METHOD_COLOR,
                TYPE_CLS: TYPE_CLS, icoSvg: icoSvg, tyFamily: tyFamily,
                kindChip: kindChip, epChip: epChip, dtChip: dtChip,
