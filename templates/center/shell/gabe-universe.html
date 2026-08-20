@@ -229,6 +229,11 @@
   .face svg{ width:13px; height:13px; }
   .face.fhome{ box-shadow:0 0 0 2px var(--panel), 0 0 0 3.5px var(--accent); }
   .face:hover{ filter:brightness(1.18); }
+  /* config panel: the Display | Layout tab bar (batch 2) */
+  #cfg .cfgtabbar{ display:flex; gap:3px; margin:0 0 9px; border-bottom:1px solid var(--line); }
+  #cfg .cfgtab{ font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 10px; border-bottom:2px solid transparent; }
+  #cfg .cfgtab:hover{ color:var(--ink); }
+  #cfg .cfgtab.on{ color:var(--ink); border-bottom-color:var(--accent); }
   /* keep <code> inline chips readable in the dark card */
   .pbody code{ font-family:var(--font-mono); background:#0e1524; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
   nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}
@@ -386,9 +391,9 @@ function _methOf(label){ var m=/^(GET|POST|PUT|PATCH|DELETE)\b/.exec(label||"");
 /* ENTITIES → cluster colour + X band (spread evenly; the spike drives layout from EX[ent]). */
 var _ents=((_C4.l1&&_C4.l1.nodes)||[]).map(function(e){ return e.slug||e.id; });
 if(!_ents.length) _ents=Object.keys(_C4.l2||{});
-var ENT={}, EX={};
+var ENT={}, EX={}, EY={}, EZ={};   // EY/EZ used by the force/spread entity-layout modes (batch 2)
 _ents.forEach(function(e,i){ ENT[e]=(_C4.colors&&_C4.colors[e])||"#0d9488";
-  EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); });
+  EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); EY[e]=0; EZ[e]=0; });
 
 /* PIECES → nodes. Shared pieces (an external FK target, an endpoint homed under >1 entity)
    recur across l2 subgraphs — DEDUP by id (first home wins) so a shared node is drawn ONCE and
@@ -535,7 +540,7 @@ var OPMAP={
   wrap:{   film:0.06,  ghost:0.11,  faint:0.17,  subtle:0.12,  medium:0.17,  strong:0.24 } };
 /* ONE shape (polygon|wrap) for BOTH levels; per-level on/off; a bounded radius that fits the
    containers tighter/looser; per-surface transparency (faint|ghost|film). */
-var CFG={ shape:"polygon", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
+var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
   /* SPACE WAR zones — 3 areas around each planet; angle (deg, front XY plane) + one shared distance.
      defaults: attack=left(180) · conflict=top(90) · defense=right(0). warDist = gap outside the sphere. */
   warOn:true, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
@@ -854,9 +859,94 @@ function linkPWidthFn(l){ return (ENC.ePayload) ? 1+linkVal("ePayload",l).r*4.5 
 
 var st={ ctl:"orbit" }, DEF={x:110,y:40,z:430}, Graph=null;
 /* layout: layer on Y (altitude) · ENTITY on X (the two clusters pull apart) */
+/* ══ BATCH 2 — entity LAYOUT (chain/force/spread) + cluster CORE (layer/kind/tests), ported to 3D ══
+   The 2D Levels graph positions entity anchors on an {x,y} plane; here every anchor gets a z too and
+   the node sim (zForce) pulls each node to its entity's 3D anchor. Chain keeps the flat layer→Y banding;
+   Force/Spread give entities distinct 3D positions → the clustered "bubbles" the 2D shows. */
+var __chainMode=true;   // chain = layer-banded flat view; force/spread = 3D entity anchors
+function _l1pairs(){ var out=[]; ((_C4.l1&&_C4.l1.edges)||[]).forEach(function(e){
+  if(_ents.indexOf(e.source)>=0 && _ents.indexOf(e.target)>=0){
+    var w=0, ks=e.kinds||{}; for(var k in ks) w+=ks[k]; out.push([e.source,e.target,w]); } }); return out; }
+function recomputeEX(mode){ var n=_ents.length; if(!n) return;
+  if(mode==="chain"){                                   // greedy coupling-ordered line; nodes keep layer→Y
+    __chainMode=true;
+    var W={}, deg={}; _ents.forEach(function(s){ deg[s]=0; });
+    _l1pairs().forEach(function(p){ var key=p[0]<p[1]?p[0]+"|"+p[1]:p[1]+"|"+p[0]; W[key]=(W[key]||0)+p[2]; deg[p[0]]+=p[2]; deg[p[1]]+=p[2]; });
+    var wOf=function(a,b){ return W[a<b?a+"|"+b:b+"|"+a]||0; };
+    var left=_ents.slice().sort(function(a,b){ return deg[b]-deg[a]||(a<b?-1:1); });
+    var order=[left.shift()];
+    while(left.length){ var last=order[order.length-1], best=-1, bi=0;
+      left.forEach(function(s,i){ var w=wOf(last,s); if(w>best){ best=w; bi=i; } }); order.push(left.splice(bi,1)[0]); }
+    order.forEach(function(e,i){ EX[e]=n<=1?0:(-300+i*(600/(n-1))); EY[e]=0; EZ[e]=0; });
+    return;
+  }
+  __chainMode=false;
+  var P={}, V={};                                        // seed on a deterministic Fibonacci sphere
+  _ents.forEach(function(s,i){ var y=(n<=1)?0:(1-(i/(n-1))*2), r=Math.sqrt(Math.max(0,1-y*y)), th=i*2.399963;
+    P[s]={x:Math.cos(th)*r*300, y:y*300, z:Math.sin(th)*r*300}; V[s]={x:0,y:0,z:0}; });
+  if(mode==="spread"){                                   // stress-majorization (MDS) over BFS hop distance
+    var adj={}; _ents.forEach(function(s){ adj[s]=[]; });
+    _l1pairs().forEach(function(p){ adj[p[0]].push(p[1]); adj[p[1]].push(p[0]); });
+    var HOP={}; _ents.forEach(function(s){ var d={}, q=[s]; d[s]=0;
+      while(q.length){ var u=q.shift(); adj[u].forEach(function(v){ if(d[v]===undefined){ d[v]=d[u]+1; q.push(v); } }); } HOP[s]=d; });
+    var far=1; _ents.forEach(function(a){ _ents.forEach(function(b){ if((HOP[a][b]||0)>far) far=HOP[a][b]; }); });
+    for(var st=0; st<200; st++){ _ents.forEach(function(a){ var mx=0,my=0,mz=0,ws=0;
+      _ents.forEach(function(b){ if(a===b) return; var hop=(HOP[a][b]!==undefined)?HOP[a][b]:far+1, target=hop*170;
+        var dx=P[a].x-P[b].x, dy=P[a].y-P[b].y, dz=P[a].z-P[b].z, d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1, w=1/(hop*hop);
+        mx+=w*(P[b].x+dx/d*target); my+=w*(P[b].y+dy/d*target); mz+=w*(P[b].z+dz/d*target); ws+=w; });
+      P[a]={x:mx/ws,y:my/ws,z:mz/ws}; }); }
+  } else {                                               // FORCE — repulsion 13000/d² + FK spring rest 230
+    var E2=_l1pairs();
+    for(var it=0; it<240; it++){
+      for(var i=0;i<n;i++) for(var j=i+1;j<n;j++){ var a=_ents[i], b=_ents[j],
+        dx=P[a].x-P[b].x, dy=P[a].y-P[b].y, dz=P[a].z-P[b].z, d2=dx*dx+dy*dy+dz*dz+60, d=Math.sqrt(d2), f=13000/d2;
+        V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[a].z+=dz/d*f; V[b].x-=dx/d*f; V[b].y-=dy/d*f; V[b].z-=dz/d*f; }
+      E2.forEach(function(p){ var a=p[0], b=p[1], dx=P[b].x-P[a].x, dy=P[b].y-P[a].y, dz=P[b].z-P[a].z,
+        d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1, f=0.02*(d-230);
+        V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[a].z+=dz/d*f; V[b].x-=dx/d*f; V[b].y-=dy/d*f; V[b].z-=dz/d*f; });
+      _ents.forEach(function(s){ V[s].x=(V[s].x-P[s].x*0.003)*0.9; V[s].y=(V[s].y-P[s].y*0.003)*0.9; V[s].z=(V[s].z-P[s].z*0.003)*0.9;
+        P[s].x+=V[s].x; P[s].y+=V[s].y; P[s].z+=V[s].z; }); }
+  }
+  _ents.forEach(function(s){ EX[s]=Math.round(P[s].x); EY[s]=Math.round(P[s].y); EZ[s]=Math.round(P[s].z); });
+}
+/* cluster core — rewrite n.sub (the sub-cluster grouping key). Decoration only (nodes don't move). */
+function assignSub(mode){ nodes.forEach(function(n){
+  if(mode==="kind") n.sub=n.kind;
+  else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
+  else n.sub=SUBOF[n.layer]||"data"; }); }
+
+/* mode-aware layout force: chain = layer→Y + entity→X band · force/spread = pull to the 3D entity anchor */
 function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){
-  n.vy += ((LZ[n.layer]||0)-n.y)*0.05*alpha; n.vx += ((EX[n.ent]||0)-n.x)*0.045*alpha; }); }
+  if(__chainMode){ n.vy += ((LZ[n.layer]||0)-n.y)*0.05*alpha; n.vx += ((EX[n.ent]||0)-n.x)*0.045*alpha; n.vz += (0-n.z)*0.03*alpha; }
+  else { n.vx += ((EX[n.ent]||0)-n.x)*0.06*alpha; n.vy += ((EY[n.ent]||0)-n.y)*0.06*alpha; n.vz += ((EZ[n.ent]||0)-n.z)*0.06*alpha; } }); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
+
+/* the second config TAB — Display (the spike controls) | Layout (these distribution controls) */
+window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(!cfg) return;
+  var body=cfg.querySelector(".cfgbody"); if(!body || cfg.querySelector(".cfgtabbar")) return;
+  var disp=document.createElement("div"); disp.className="cfgpane";
+  while(body.firstChild) disp.appendChild(body.firstChild);
+  var pillHTML=function(grp, opts, cur){ var s='<div class="pill" data-grp="'+grp+'">';
+    opts.forEach(function(o){ s+='<button data-v="'+o.v+'"'+(o.v===cur?' class="on"':'')+'>'+o.t+'</button>'; }); return s+'</div>'; };
+  var lay=document.createElement("div"); lay.className="cfgpane"; lay.style.display="none";
+  lay.innerHTML=
+     '<div class="grp"><div class="grplbl">ENTITY LAYOUT</div>'
+    + pillHTML("entLayout",[{v:"chain",t:"Chain"},{v:"force",t:"Force"},{v:"spread",t:"Spread"}], CFG.entLayout)
+    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">chain = layered plane · force = coupling bubbles · spread = graph-distance</div></div>'
+    + '<div class="grp"><div class="grplbl">CLUSTER CORE BY</div>'
+    + pillHTML("coreBy",[{v:"layer",t:"Layer"},{v:"kind",t:"Kind"},{v:"tests",t:"Tests"}], CFG.coreBy)
+    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">Guards · Use-case · Community · FK-join need the levels feed — coming.</div></div>';
+  var bar=document.createElement("div"); bar.className="cfgtabbar";
+  bar.innerHTML='<button class="cfgtab on" data-pane="display">Display</button><button class="cfgtab" data-pane="layout">Layout</button>';
+  body.appendChild(bar); body.appendChild(disp); body.appendChild(lay);
+  bar.querySelectorAll(".cfgtab").forEach(function(t){ t.onclick=function(){ var pane=t.getAttribute("data-pane");
+    bar.querySelectorAll(".cfgtab").forEach(function(x){ x.classList.toggle("on", x===t); });
+    disp.style.display=(pane==="display")?"":"none"; lay.style.display=(pane==="layout")?"":"none"; }; });
+  lay.querySelectorAll(".pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
+    var grp=p.getAttribute("data-grp"); CFG[grp]=b.getAttribute("data-v");
+    p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    try{ applyCfg(grp); }catch(err){} }); });
+};
 /* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
    TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
    enclosing translucent sphere. POLYGON = a rounded convex HULL that ENCLOSES each node (seeded
@@ -1034,7 +1124,7 @@ function buildCfg(){ var trip=[{v:"faint",t:"faint"},{v:"ghost",t:"ghost"},{v:"f
         glow off/used-by off) · icon size 4 · colour identity · stars @ size 0.45/glow 0.1. Sat calibration = LEFT panel. */
    +'</div>';
   wireCfg(); }
-function applyCfg(grp){ if(grp==="bubble"||grp==="warOn"||grp==="zDef"||grp==="zAtk"||grp==="zCfl"||grp==="zSat"){ rebuildNodes(); } else if(grp==="conns"){ if(Graph) try{ Graph.linkVisibility(linkVisFn); }catch(e){} updateClusters(true); } else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }   // zone toggles rebuild fleets; conns hide plain edges; transports rebuild shuttles; stars need buildClusters
+function applyCfg(grp){ if(grp==="bubble"||grp==="warOn"||grp==="zDef"||grp==="zAtk"||grp==="zCfl"||grp==="zSat"){ rebuildNodes(); } else if(grp==="conns"){ if(Graph) try{ Graph.linkVisibility(linkVisFn); }catch(e){} updateClusters(true); } else if(grp==="transports"){ buildTransports(); } else if(grp==="entLayout"){ recomputeEX(CFG.entLayout); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } else if(grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters(); updateClusters(true); } else { buildClusters(); updateClusters(true); } }   // zone toggles rebuild fleets; conns hide plain edges; transports rebuild shuttles; stars need buildClusters
 function wireCfg(){
   document.querySelectorAll("#cfg .pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
     var enc=p.getAttribute("data-enc");
@@ -1058,7 +1148,7 @@ function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementB
     window.addEventListener("mousemove",function(e){ if(!_drag.on) return; var el=document.getElementById("cfg");
       el.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-_drag.ox))+"px"; el.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-_drag.oy))+"px"; });
     window.addEventListener("mouseup",function(){ _drag.on=false; }); } }
-buildCfg();
+buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();
 
 /* ── ENCODING EXPLORER (top-left) — experiment across setups + channels; NOT saved to CONFIG ── */
 var EL_CH=[["mass","mass"],["glow","glow"],["halo","halo"],["sat","god"],["pulse","pulse"],["method","method"]];
@@ -1477,5 +1567,5 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
   window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")) buildCfg(); })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
-preloadBillboards(function(){ build(); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
+preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); }catch(e){} build(); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

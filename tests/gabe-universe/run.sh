@@ -93,6 +93,18 @@ check('window.__uniCurved?__uniCurve' in page, "connectorWire does not branch st
 check('if(!KINDS.web)' in page, "web kind not injected — c4 web pieces would be silently dropped")
 check('dropped "+_dropped+" piece' in page, "adapter does not warn on dropping an unknown kind (silent drop)")
 
+# ── 10d. batch-2 layout engine: entity-layout (chain/force/spread) + cluster-core (layer/kind/tests) + 2nd tab ──
+check('entLayout:"force"' in page and 'coreBy:"layer"' in page, "CFG missing entLayout/coreBy fields")
+check('function recomputeEX' in page and 'function assignSub' in page, "layout recompute/assignSub functions missing")
+check('__chainMode' in page, "mode-aware zForce (chain vs force/spread) missing")
+check('grp==="entLayout"' in page and 'grp==="coreBy"' in page, "applyCfg missing the entLayout/coreBy branches")
+check('d3ReheatSimulation' in page, "entity-layout change never reheats the sim (nodes would not move)")
+check('window.__uniAddLayoutTab' in page and 'cfgtabbar' in page, "the Display|Layout config tab is missing")
+check('recomputeEX(CFG.entLayout); }catch(e){} build' in page, "the initial layout is not applied before build()")
+# FIRE+SILENT: force/spread compute 3D anchors (EY/EZ), not just a flat X band
+check('EY[e]=0; EZ[e]=0;' in page and ('EY[s]=Math.round' in page or 'EZ[s]=Math.round' in page),
+      "EY/EZ 3D entity anchors not computed — force/spread would stay flat")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
