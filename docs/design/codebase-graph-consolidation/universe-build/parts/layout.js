@@ -316,7 +316,8 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     if(sub!=null){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
       sv[col]=sv[col]?0:1; }
     else if(ent==="*"){ var on=!_ents.every(function(e){ return UNIVIS.ent[e][col]; });   // any off → all on; all on → all off
-      _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; }); }
+      _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; });
+      Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }   // the ALL row is a bulk gesture — cluster overrides follow it
     else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
   body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
@@ -327,8 +328,9 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"),
     col=b.getAttribute("data-fcol"), C=_FCOLS.filter(function(c){ return c.k===col; })[0];
-    if(sub!=null) b.classList.toggle("on", !!(UNIVIS.sub[ent+"|"+sub]||_VISDEF)[col]);
-    else if(ent!=="*") b.classList.toggle("on", !!(UNIVIS.ent[ent]||_VISDEF)[col]);
+    if(sub!=null){ b.classList.toggle("on", !!(UNIVIS.sub[ent+"|"+sub]||_VISDEF)[col]);
+      b.classList.toggle("mdim", !(C&&C.g()) || !(UNIVIS.ent[ent]||_VISDEF)[col]); return; }   // parent entity off → the cluster switch reads inherited-off (dim)
+    if(ent!=="*") b.classList.toggle("on", !!(UNIVIS.ent[ent]||_VISDEF)[col]);
     else b.classList.toggle("on", _ents.every(function(e){ return UNIVIS.ent[e][col]; }));
     b.classList.toggle("mdim", !(C&&C.g())); }); };
 var _flOpen={};   // which entity rows are expanded to their clusters
@@ -369,21 +371,32 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(G.universe) uni.appendChild(G.universe);   // transports itog migrates to ROUTES below; stars stay here
   var hasLevels=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
   var hasFns=!!(window.GABE_LEVELS && (window.GABE_LEVELS.fn_nodes||[]).length);
-  var cores=[{v:"layer",t:"Layer"},{v:"kind",t:"Kind"},{v:"tests",t:"Tests"}];
-  if(hasLevels) cores.push({v:"guards",t:"Guards"},{v:"usecase",t:"Use-case"},{v:"community",t:"Community"},{v:"fk",t:"FK-join"});
-  var coreNote=hasLevels ? "Guards / Use-case / Community / FK-join joined from the levels feed by name"
-                         : "Guards / Use-case / Community / FK-join need the levels feed (not loaded here)";
+  /* the explainers live on HOVER (operator ruling): the section label carries the summary,
+     every option carries its own meaning — the note lines below the pills are gone. */
+  var cores=[
+    {v:"layer",t:"Layer",ti:"group by architectural layer — api · frontend · data"},
+    {v:"kind",t:"Kind",ti:"group by element kind — endpoint · model · schema · function · screen"},
+    {v:"tests",t:"Tests",ti:"group by test coverage — tested vs untested"}];
+  if(hasLevels) cores.push(
+    {v:"guards",t:"Guards",ti:"endpoints by guard status — guarded vs unguarded (levels feed)"},
+    {v:"usecase",t:"Use-case",ti:"group by the use-case flows mapped in the levels feed"},
+    {v:"community",t:"Community",ti:"group by code community — label propagation over the levels feed"},
+    {v:"fk",t:"FK-join",ti:"group by foreign-key join community (levels feed)"});
+  var coreHd=hasLevels ? "what forms the clusters INSIDE each entity — nodes physically regroup on change; hover each option"
+                       : "what forms the clusters INSIDE each entity — Guards/Use-case/Community/FK-join need the levels feed (not loaded here)";
   var layWrap=mk("uniLay");
   layWrap.innerHTML=
-     '<div class="grp"><div class="grplbl">ENTITY LAYOUT</div>'
-    + pillHTML("entLayout",[{v:"chain",t:"Chain"},{v:"force",t:"Force"},{v:"spread",t:"Spread"}], CFG.entLayout)
-    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">chain = layered plane · force = coupling bubbles · spread = graph-distance</div></div>'
-    + '<div class="grp"><div class="grplbl">CLUSTER CORE BY</div>'
-    + pillHTML("coreBy", cores, CFG.coreBy)
-    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+coreNote+'</div></div>'
-    + (hasFns ? ('<div class="grp"><div class="grplbl">FUNCTIONS</div>'
-      + pillHTML("showFns",[{v:"off",t:"Hide"},{v:"on",t:"Show"}], CFG.showFns)
-      + '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+window.GABE_LEVELS.fn_nodes.length+' code functions + call edges from the levels feed</div></div>') : '');
+     '<div class="grp"><div class="grplbl" title="where each ENTITY sits in space — hover each option">ENTITY LAYOUT</div>'
+    + pillHTML("entLayout",[
+        {v:"chain",t:"Chain",ti:"a flat layered ribbon — layers band vertically, entities line up by coupling"},
+        {v:"force",t:"Force",ti:"3D coupling bubbles — entities repel, FK springs pull coupled ones together"},
+        {v:"spread",t:"Spread",ti:"graph-distance spacing — entities placed by hop distance (MDS)"}], CFG.entLayout)+'</div>'
+    + '<div class="grp"><div class="grplbl" title="'+coreHd+'">CLUSTER CORE BY</div>'
+    + pillHTML("coreBy", cores, CFG.coreBy)+'</div>'
+    + (hasFns ? ('<div class="grp"><div class="grplbl" title="the code-function layer — hover each option">FUNCTIONS</div>'
+      + pillHTML("showFns",[
+          {v:"off",t:"Hide",ti:"endpoints · models · schemas · screens only — the lighter graph"},
+          {v:"on",t:"Show",ti:"adds "+window.GABE_LEVELS.fn_nodes.length+" code functions + their call edges (levels feed) — heavier, complete"}], CFG.showFns)+'</div>') : '');
   while(layWrap.firstChild) uni.appendChild(layWrap.firstChild);
 
   // ── ROUTES pane: lines (icon pill + curve amount) · per-kind beam · transports + speed ──

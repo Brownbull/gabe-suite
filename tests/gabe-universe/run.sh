@@ -205,6 +205,14 @@ check('cluster hidden by the fleet panel' in page, "sub-hull seam misses the clu
 check('sub-aware' in page, "transports do not resolve visibility at NODE level (cluster routes-off would leak)")
 check('.fltog.flstog.on{ background:#0b7a63' in page,
       "cluster switches wear the entity color — the two levels must read differently")
+# batch 11-B4: the ALL row reaches cluster overrides; inherited-off dims; explainers live on hover
+check('the ALL row is a bulk gesture' in page, "the ALL master row does not propagate into cluster overrides")
+check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
+check('ti:"group by architectural layer' in page and 'ti:"a flat layered ribbon' in page,
+      "cluster-core / entity-layout options carry no hover explainers")
+check('ti:"adds "+window.GABE_LEVELS.fn_nodes.length' in page, "the Functions option lost its count-bearing hover explainer")
+check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
+      "REGRESSION: the note lines below the pills are back (explainers must live on hover)")
 check('function visEnt' in page and 'function visN' in page, "vis accessors missing (seams must read through ONE pair)")
 check('nodeVisibility(function(n){ return !!visN(n).show; })' in page, "node visibility seam not wired")
 check('if(!visEnt(e).show) return; var mem=' in page, "ent-hull seam missing (hidden entity keeps its hull)")

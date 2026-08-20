@@ -216,6 +216,28 @@ await p2.evaluate(() => { document.querySelector('#fleet .flpre[data-fpre="all"]
 await raf2(); await p2.waitForTimeout(600);
 const allState = await p2.evaluate(() => ({
   shown: nodes.filter(n => n.__threeObj && n.__threeObj.parent).length, hulls: CLUSTERS.length }));
+// [B4-fix] ALL master row propagates into cluster overrides; a cluster switch dims when its entity is off
+const masterFix = await p2.evaluate(() => {
+  const e = _ents[1];
+  if (!_flOpen[e]) document.querySelector(`#fleet .flx[data-flx="${e}"]`).click();
+  const sBtn = document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fsub][data-fcol="show"]`);
+  const sub = sBtn.getAttribute('data-fsub'); sBtn.click();           // cluster override OFF
+  const offBefore = (UNIVIS.sub[e + '|' + sub] || {}).show === 0;
+  const m = document.querySelector('#fleet .flmaster .fltog[data-fcol="show"]');
+  m.click(); m.click();                                               // all OFF, then all ON — the bulk gesture must reach the override
+  const propagated = (UNIVIS.sub[e + '|' + sub] || {}).show === 1;
+  document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="show"]`).click();
+  const dim = document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fsub="${sub}"][data-fcol="show"]`).classList.contains('mdim');
+  document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="show"]`).click();
+  return { offBefore, propagated, dim };
+});
+// hover explainers replaced the three note lines
+const hover = await p2.evaluate(() => ({
+  core: !!document.querySelector('.pill[data-grp="coreBy"] button[data-v="layer"][title]'),
+  lay: !!document.querySelector('.pill[data-grp="entLayout"] button[data-v="force"][title]'),
+  fn: !!document.querySelector('.pill[data-grp="showFns"] button[data-v="on"][title]'),
+  hd: !!document.querySelector('#cfg .grplbl[title]'),
+  notesGone: !document.body.innerHTML.includes('chain = layered plane') && !document.body.innerHTML.includes('joined from the levels feed by name') }));
 await b.close();
 
 console.log('wire styling:', JSON.stringify(wire));
@@ -266,5 +288,9 @@ if (!(presetC.simDefined && presetC.simAtRest && presetC.stub && /no change in f
   fails.push('sim feed / in-flight stub wrong');
 if (!(noneState.anyShown === false && noneState.movers === 0)) fails.push('None preset leaves scene objects');
 if (!(allState.shown > 200 && allState.hulls > 0)) fails.push('All preset does not restore');
+console.log('master+dim(B4):', JSON.stringify(masterFix), '· hover:', JSON.stringify(hover));
+if (!(masterFix.offBefore && masterFix.propagated)) fails.push('ALL master row does not reach cluster overrides');
+if (!masterFix.dim) fails.push('cluster switch does not dim when its entity is off');
+if (!(hover.core && hover.lay && hover.fn && hover.hd && hover.notesGone)) fails.push('hover explainers / note removal wrong');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('FLEET PROOF (A + B1 + B2 + C): ALL PASS');
