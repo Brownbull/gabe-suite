@@ -771,12 +771,12 @@ var FLEETTICK=[];
 function fleetZones(grp, br, n){ if(!SHIPSREADY) return;   // ships still loading → onShipsReady() repaints
   var spec=nodeFleet(n), local=new T.Group(); grp.add(local);
   var D=br+DEPC.adDist, sp=DEPC.spread;
-  var def=CFG.zDef? placeFleet(spec.def, new T.Vector3(1,0,0), D, sp, 0x22c55e, DEPC.adY) : [];   // defence right
-  var atk=CFG.zAtk? placeFleet(spec.atk, new T.Vector3(-1,0,0), D, sp, 0xef4444, DEPC.adY) : [];  // attack left
+  var def=(CFG.zDef&&visN(n).zDef)? placeFleet(spec.def, new T.Vector3(1,0,0), D, sp, 0x22c55e, DEPC.adY) : [];   // defence right
+  var atk=(CFG.zAtk&&visN(n).zAtk)? placeFleet(spec.atk, new T.Vector3(-1,0,0), D, sp, 0xef4444, DEPC.adY) : [];  // attack left
   var all=def.concat(atk); all.forEach(function(s){ local.add(s.obj); });
-  var eff=CFG.zCfl? cflSpec(spec.shock, spec.flak) : null; if(eff){ eff.position.set(0, br+DEPC.cflDist, 0); eff.scale.setScalar(0.85*Math.max(0.5,br/8)); local.add(eff); }   // conflict top
+  var eff=(CFG.zCfl&&visN(n).zCfl)? cflSpec(spec.shock, spec.flak) : null; if(eff){ eff.position.set(0, br+DEPC.cflDist, 0); eff.scale.setScalar(0.85*Math.max(0.5,br/8)); local.add(eff); }   // conflict top
   var sats=[], SR=br+DEPC.satDist;
-  if(CFG.zSat) for(var si=0; si<spec.sats; si++){ var st=makeSat(); local.add(st); sats.push({obj:st, ph:si/spec.sats, ri:si%SATC.rings}); }   // satellites south
+  if(CFG.zSat&&visN(n).zSat) for(var si=0; si<spec.sats; si++){ var st=makeSat(); local.add(st); sats.push({obj:st, ph:si/spec.sats, ri:si%SATC.rings}); }   // satellites south
   var move=DEPC.move;
   FLEETTICK.push(function(t){ all.forEach(function(s){ var b=s.base; s.obj.position.set(b.x+Math.sin(t*(0.5+move)+s.ph)*move*2.2, b.y+Math.cos(t*(0.6+move)+s.ph*1.3)*move*2.2, b.z+Math.sin(t*0.4+s.ph)*move*2.2); });
     sats.forEach(function(st){ satPose(st.obj, st.ph, t, SR, br, st.ri); });
@@ -1158,12 +1158,16 @@ function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
   window.addEventListener("mousemove",function(e){ if(!dg.on) return;
     panel.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-dg.ox))+"px"; panel.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-dg.oy))+"px"; });
   window.addEventListener("mouseup",function(){ dg.on=false; }); }
-/* matrix columns — g() = the GLOBAL master gate (cell dims when off, the zonesoff pattern) */
+/* matrix columns — g() = the GLOBAL master gate (cell dims when off, the zonesoff pattern);
+   icons come from the spike's own ICO set via ico() so the panel speaks the config's language */
 var _FCOLS=[
-  { k:"show", ti:"show entity", scope:"nodes", g:function(){ return true; },
-    ic:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>' },
-  { k:"subs", ti:"sub-cluster hulls", scope:"clusters", g:function(){ return !!CFG.subOn; },
-    ic:'<circle cx="9" cy="13" r="5"/><circle cx="16" cy="9" r="3.5"/>' } ];
+  { k:"show",   ti:"show entity",         scope:"nodes",    icon:"show",   g:function(){ return true; } },
+  { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
+  { k:"zDef",   ti:"defense fleet",       scope:"zones",    icon:"shield", g:function(){ return !!(CFG.warOn&&CFG.zDef); } },
+  { k:"zAtk",   ti:"attack fleet",        scope:"zones",    icon:"swords", g:function(){ return !!(CFG.warOn&&CFG.zAtk); } },
+  { k:"zCfl",   ti:"conflict effects",    scope:"zones",    icon:"burst",  g:function(){ return !!(CFG.warOn&&CFG.zCfl); } },
+  { k:"zSat",   ti:"satellites",          scope:"zones",    icon:"target", g:function(){ return !!(CFG.warOn&&CFG.zSat); } },
+  { k:"routes", ti:"transports (routes)", scope:"routes",   icon:"truck",  g:function(){ return !!CFG.transports; } } ];
 window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   var p=document.createElement("div"); p.className="cfg fleet"; p.id="fleet";
   p.innerHTML='<div class="cfghead" id="fleethead"><span class="cfgtitle">'+(typeof ico==="function"?ico("shape",13):"")+'Fleet</span>'
@@ -1174,7 +1178,7 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   __uniFleetRender(); };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c){
-    return '<span class="flcell" title="'+c.ti+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+c.ic+'</svg></span>'; }).join('')+'</div>';
+    return '<span class="flcell" title="'+c.ti+'">'+(typeof ico==="function"?ico(c.icon,13):"")+'</span>'; }).join('')+'</div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   _ents.forEach(function(e){ h+='<div class="flrow"><span class="flent" title="'+e+'"><i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i>'+e+'</span>'
@@ -1943,7 +1947,7 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   ["iso","sub","entNodeR","entTubeR","subNodeR","subTubeR","entRes","subRes","every"].forEach(function(k){ var v=q.get("w"+k); if(v!=null) WRAPCFG[k]=+v; });
   var ep=q.get("enc"); if(ep&&PRESETS[ep]){ applyPreset(ep); buildExpl(); }
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
-  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); } })();
+  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
 preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

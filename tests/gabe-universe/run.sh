@@ -211,6 +211,16 @@ check('window.__uniBuildFleet) __uniBuildFleet()' in page and 'window.__uniApply
       "fleet panel not built at boot / preset entry point missing")
 check('body.nav-min #fleet{ left:48px' in page, "fleet panel does not clear the nav-restore tab under nav-min")
 check('.fleethid{' in page and 'fltog.mdim' in page, "card hidden-note CSS / masters-dim CSS missing")
+# batch 11-B2: per-entity fleet-zone gates (global AND entity) + zones/routes columns
+check('(CFG.zDef&&visN(n).zDef)? placeFleet(' in page and '(CFG.zAtk&&visN(n).zAtk)? placeFleet(' in page,
+      "def/atk fleet gates are not per-entity")
+check('(CFG.zCfl&&visN(n).zCfl)? cflSpec(' in page and 'CFG.zSat&&visN(n).zSat) for(var si=0;' in page,
+      "cfl/sat gates are not per-entity")
+check('var def=CFG.zDef? placeFleet(' not in page, "REGRESSION: a fleet-zone gate ignores the fleet panel")
+check('k:"zDef"' in page and 'k:"routes"' in page and 'icon:"truck"' in page,
+      "zones/routes matrix columns missing")
+check('__uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
+      "the URL-preset path rebuilds the config without re-syncing the fleet masters-dim")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

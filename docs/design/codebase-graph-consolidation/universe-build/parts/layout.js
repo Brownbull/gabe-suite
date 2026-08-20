@@ -253,12 +253,16 @@ function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
   window.addEventListener("mousemove",function(e){ if(!dg.on) return;
     panel.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-dg.ox))+"px"; panel.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-dg.oy))+"px"; });
   window.addEventListener("mouseup",function(){ dg.on=false; }); }
-/* matrix columns — g() = the GLOBAL master gate (cell dims when off, the zonesoff pattern) */
+/* matrix columns — g() = the GLOBAL master gate (cell dims when off, the zonesoff pattern);
+   icons come from the spike's own ICO set via ico() so the panel speaks the config's language */
 var _FCOLS=[
-  { k:"show", ti:"show entity", scope:"nodes", g:function(){ return true; },
-    ic:'<path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>' },
-  { k:"subs", ti:"sub-cluster hulls", scope:"clusters", g:function(){ return !!CFG.subOn; },
-    ic:'<circle cx="9" cy="13" r="5"/><circle cx="16" cy="9" r="3.5"/>' } ];
+  { k:"show",   ti:"show entity",         scope:"nodes",    icon:"show",   g:function(){ return true; } },
+  { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
+  { k:"zDef",   ti:"defense fleet",       scope:"zones",    icon:"shield", g:function(){ return !!(CFG.warOn&&CFG.zDef); } },
+  { k:"zAtk",   ti:"attack fleet",        scope:"zones",    icon:"swords", g:function(){ return !!(CFG.warOn&&CFG.zAtk); } },
+  { k:"zCfl",   ti:"conflict effects",    scope:"zones",    icon:"burst",  g:function(){ return !!(CFG.warOn&&CFG.zCfl); } },
+  { k:"zSat",   ti:"satellites",          scope:"zones",    icon:"target", g:function(){ return !!(CFG.warOn&&CFG.zSat); } },
+  { k:"routes", ti:"transports (routes)", scope:"routes",   icon:"truck",  g:function(){ return !!CFG.transports; } } ];
 window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   var p=document.createElement("div"); p.className="cfg fleet"; p.id="fleet";
   p.innerHTML='<div class="cfghead" id="fleethead"><span class="cfgtitle">'+(typeof ico==="function"?ico("shape",13):"")+'Fleet</span>'
@@ -269,7 +273,7 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   __uniFleetRender(); };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c){
-    return '<span class="flcell" title="'+c.ti+'"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+c.ic+'</svg></span>'; }).join('')+'</div>';
+    return '<span class="flcell" title="'+c.ti+'">'+(typeof ico==="function"?ico(c.icon,13):"")+'</span>'; }).join('')+'</div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   _ents.forEach(function(e){ h+='<div class="flrow"><span class="flent" title="'+e+'"><i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i>'+e+'</span>'

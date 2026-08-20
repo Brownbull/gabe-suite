@@ -126,6 +126,45 @@ const fnCase = await p.evaluate(ent => {
 await p.evaluate(ent => { document.querySelector(`#fleet .fltog[data-fent="${ent}"][data-fcol="show"]`).click();
   CFG.showFns = 'off'; applyCfg('showFns'); }, fleet.ent);
 await p.waitForTimeout(600);
+
+// [B2] zones + routes on a ?war=1 page (masters ON — otherwise every zone assert is vacuously green)
+const p2 = await b.newPage({ viewport: { width: 1400, height: 860 } });
+p2.on('pageerror', e => errs.push('PE2:' + e.message));
+p2.on('console', m => { if (m.type() === 'error') errs.push('CE2:' + m.text()); });
+await p2.goto('file://' + PAGE + '?war=1');
+await p2.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
+await p2.waitForFunction('window.__shipsReady===true', { timeout: 30000 }).catch(() => {});
+await p2.waitForTimeout(4000);
+const raf2 = () => p2.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+const meshCount = ent => p2.evaluate(e => {
+  let c = 0; nodes.filter(n => n.ent === e).forEach(n => { if (n.__threeObj) n.__threeObj.traverse(() => c++); }); return c; }, ent);
+const zoneBase = await p2.evaluate(() => ({ ent: _ents[0], ctrl: _ents[1], fleettick: FLEETTICK.length,
+  warOn: CFG.warOn, dimmed: document.querySelector(`#fleet .fltog[data-fcol="zDef"]`).classList.contains('mdim') }));
+const entMesh0 = await meshCount(zoneBase.ent), ctrlMesh0 = await meshCount(zoneBase.ctrl);
+await p2.evaluate(e => { document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fcol="zDef"]`).click();
+  document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fcol="zSat"]`).click(); }, zoneBase.ent);
+await raf2(); await p2.waitForTimeout(600);
+const entMesh1 = await meshCount(zoneBase.ent), ctrlMesh1 = await meshCount(zoneBase.ctrl);
+// registry stability with REAL fleets across hide/show round-trips (B1 tested it at 0)
+const ft0 = await p2.evaluate(() => FLEETTICK.length);
+for (let i = 0; i < 4; i++) {   // even: ends shown
+  await p2.evaluate(e => { document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fcol="show"]`).click(); }, zoneBase.ent);
+  await raf2(); await p2.waitForTimeout(350);
+}
+const ft1 = await p2.evaluate(() => FLEETTICK.length);
+// routes column: only that entity's shuttles die
+const routesBefore = await p2.evaluate(e => ({
+  ent: MOVERS.filter(m => (NIDS[m.src] || {}).ent === e || (NIDS[m.tgt] || {}).ent === e).length,
+  all: MOVERS.length }), zoneBase.ent);
+await p2.evaluate(e => { document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fcol="routes"]`).click(); }, zoneBase.ent);
+await raf2(); await p2.waitForTimeout(400);
+const routesAfter = await p2.evaluate(e => ({
+  ent: MOVERS.filter(m => (NIDS[m.src] || {}).ent === e || (NIDS[m.tgt] || {}).ent === e).length,
+  all: MOVERS.length }), zoneBase.ent);
+// masters-dim live sync: flip the zDef global off → the column dims
+const dimSync = await p2.evaluate(() => { CFG.zDef = false; applyCfg('zDef');
+  const d = document.querySelector('#fleet .fltog[data-fcol="zDef"]').classList.contains('mdim');
+  CFG.zDef = true; applyCfg('zDef'); return d; });
 await b.close();
 
 console.log('wire styling:', JSON.stringify(wire));
@@ -135,6 +174,8 @@ console.log('round-trips:', JSON.stringify(reg));
 console.log('subs:', JSON.stringify(subsBefore), '→', JSON.stringify(subs));
 console.log('card noted:', noted, '+', JSON.stringify(cardNote));
 console.log('functions-on case:', JSON.stringify(fnCase));
+console.log(`zones(?war=1): base ft=${zoneBase.fleettick} dim@on=${zoneBase.dimmed} · ent mesh ${entMesh0}→${entMesh1} · ctrl ${ctrlMesh0}→${ctrlMesh1}`);
+console.log(`round-trips w/ fleets: FLEETTICK ${ft0}→${ft1} · routes ${JSON.stringify(routesBefore)}→${JSON.stringify(routesAfter)} · dimSync=${dimSync}`);
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 const fails = [];
 if (errs.length) fails.push('page/console errors');
@@ -154,5 +195,12 @@ if (!(subs.after.ent === 0 && subs.after.all < subsBefore.all && subs.dimmed)) f
 if (!(noted && cardNote.noteCleared)) fails.push('card hidden-entity note broken');
 if (!(cardNote.nodeKept && cardNote.metaKept)) fails.push('preset drops reserved namespaces');
 if (!fnCase.match) fails.push('functions-on: connector count != expectation (the NENT trap)');
+if (!(zoneBase.warOn && !zoneBase.dimmed)) fails.push('?war=1 did not arm the zone masters');
+if (!(entMesh1 < entMesh0)) fails.push('per-entity zone off did not shrink that entity\'s fleet meshes');
+if (ctrlMesh1 !== ctrlMesh0) fails.push('zone toggle bled into the control entity');
+if (!(ft0 > 0 && ft1 === ft0)) fails.push('FLEETTICK drifts across round-trips with fleets on');
+if (!(routesBefore.ent > 0 && routesAfter.ent === 0 && routesAfter.all === routesBefore.all - routesBefore.ent))
+  fails.push('routes column does not scope to the entity');
+if (!dimSync) fails.push('masters-dim does not track a live global flip');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
-console.log('FLEET PROOF (A + B1): ALL PASS');
+console.log('FLEET PROOF (A + B1 + B2): ALL PASS');

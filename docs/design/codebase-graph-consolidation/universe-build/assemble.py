@@ -185,7 +185,7 @@ text = text.replace(OLD_LNCASE,
 OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'
 assert OLD_PRESET in text, "URL-preset buildCfg anchor missing"
 text = text.replace(OLD_PRESET,
-  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); } })();', 1)
+  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
 OLD_DRIVE = 'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); buildClusters(); updateClusters(true); }'
 assert OLD_DRIVE in text, "?drive buildCfg anchor missing"
 text = text.replace(OLD_DRIVE,
@@ -247,6 +247,20 @@ assert OLD_TRLOOP in text, "buildTransports loop anchor missing"
 text = text.replace(OLD_TRLOOP, OLD_TRLOOP +
   '\n    var _se=(NIDS[lid(l.source)]||{}).ent, _te=(NIDS[lid(l.target)]||{}).ent;\n'
   '    if(!visEnt(_se).show||!visEnt(_te).show||!visEnt(_se).routes||!visEnt(_te).routes) return;   // fleet: hidden or routes-off entity', 1)
+# seam 5 (batch 11-B2): the four fleet-zone gates become per-entity — global AND entity
+OLD_ZD = 'var def=CFG.zDef? placeFleet('
+assert OLD_ZD in text, "fleetZones zDef anchor missing"
+text = text.replace(OLD_ZD, 'var def=(CFG.zDef&&visN(n).zDef)? placeFleet(', 1)
+OLD_ZA = 'var atk=CFG.zAtk? placeFleet('
+assert OLD_ZA in text, "fleetZones zAtk anchor missing"
+text = text.replace(OLD_ZA, 'var atk=(CFG.zAtk&&visN(n).zAtk)? placeFleet(', 1)
+OLD_ZC = 'var eff=CFG.zCfl? cflSpec('
+assert OLD_ZC in text, "fleetZones zCfl anchor missing"
+text = text.replace(OLD_ZC, 'var eff=(CFG.zCfl&&visN(n).zCfl)? cflSpec(', 1)
+OLD_ZS = 'if(CFG.zSat) for(var si=0;'
+assert OLD_ZS in text, "fleetZones zSat anchor missing"
+text = text.replace(OLD_ZS, 'if(CFG.zSat&&visN(n).zSat) for(var si=0;', 1)
+
 # panel boot + master-dim sync on every config change
 OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n'
 assert OLD_BOOTCFG in text, "boot buildCfg anchor missing (batch-11 fleet boot)"
