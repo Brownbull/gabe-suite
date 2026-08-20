@@ -100,6 +100,9 @@ ck(_flowbody.count("attachSelection(") >= 3,
 # F1: a direct entity click enters the trace (navTouch) so the header back/forward is its own
 ck(re.search(r'function showEntity\(.*?navTouch\("ent:"\+en\.slug\)', js, re.S) is not None,
    "showEntity enters the node trace (navTouch) — the header trace reflects the entity, not a stale node")
+# hidden-fns star-field floor: the entity Composition renders counts.hidden_fns, honest-empty when absent
+ck("c.hidden_fns" in js and "Hidden fns" in js and "c.hidden_fns?" in js,
+   "the entity Composition renders the hidden-fns count (levels-feed counts.hidden_fns), honest-empty branch")
 # F3: schema usage is a real in-degree (endpoints referencing it), not a false 0 from a missing hub
 ck("reference this body/response" in js,
    "schema Usage derives a real in-degree (endpoints touching/returning it), not hub-0")

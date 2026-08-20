@@ -602,6 +602,37 @@ _gdash = G.build_c4_graph({"head": "d1", "entities": {"e": {"files": [], "models
     "endpoints": [{"method": "GET", "path": "/x", "fn": "g", "resp": "—", "touches": []}]}}})
 check("resp" not in {n["id"]: n for n in _gdash["l2"]["e"]["nodes"]}["endpoint:GET /x"],
       "det: the parser's em-dash resp default never ships as a returns row")
+
+# ══ RESPONSE PAYLOAD floor (det.payload) — FIRE + SILENT + the list[X] unwrap ═══════════════
+check(edet.get("payload") == {"n": 1, "schema": "AOut"},
+      "det: endpoint carries a payload field-count for its modelled resp (AOut → 1 field)")   # gap #4 FIRE
+check("payload" not in {n["id"]: n for n in _gdash["l2"]["e"]["nodes"]}["endpoint:GET /x"].get("det", {}),
+      "det: an em-dash / unmodelled resp emits NO payload (honest-empty)")                    # gap #4 SILENT
+_gwrap = G.build_c4_graph({"head": "w", "entities": {"e": {"files": [], "models": [],
+    "schemas": [{"cls": "WOut", "fields": [["a", "int", ""], ["b", "int", ""]]}],
+    "endpoints": [{"method": "GET", "path": "/w", "fn": "gw", "resp": "list[WOut]", "touches": []}]}}})
+check({n["id"]: n for n in _gwrap["l2"]["e"]["nodes"]}["endpoint:GET /w"]["det"].get("payload") == {"n": 2, "schema": "WOut"},
+      "det: a wrapped resp list[WOut] unwraps to WOut for the payload count")                 # gap #2 regression
+
+# ══ TEST JOURNEYS (det.test_journeys) — an ENDPOINT-mediated cross-entity span, NO _file_entity ═══
+# the fixture carries no _file_entity (build_center_a3's production shape); the emitter must build
+# fent from each entity's files, else endpoint/function journeys are silently dropped (gap #1).
+FIX_JRN = {"head": "j0", "entities": {
+  "alpha": {"files": [["api", "apps/api/alpha.py", 10]], "models": [], "schemas": [],
+            "endpoints": [{"method": "GET", "path": "/a", "fn": "ga", "file": "apps/api/alpha.py", "touches": []}]},
+  "beta":  {"files": [["api", "apps/api/beta.py", 10]], "models": [], "schemas": [],
+            "endpoints": [{"method": "GET", "path": "/b", "fn": "gb", "file": "apps/api/beta.py", "touches": []}]}},
+  "test_insight": {"by_endpoint": {
+    "apps/api/alpha.py::ga": {"api": [{"cid": "C1", "name": "tC1", "state": "pass", "corpus": "api", "tfile": "t.py"}]},
+    "apps/api/beta.py::gb":  {"api": [{"cid": "C1", "name": "tC1", "state": "pass", "corpus": "api", "tfile": "t.py"}]}}}}
+_gj = G.build_c4_graph(FIX_JRN)
+_ja = {n["id"]: n for n in _gj["l2"]["alpha"]["nodes"]}["endpoint:GET /a"].get("det", {})
+check(bool(_ja.get("test_journeys")) and _ja["test_journeys"][0]["cid"] == "C1"
+      and set(_ja["test_journeys"][0]["entities"]) == {"alpha", "beta"},
+      "det: an ENDPOINT-mediated cross-entity test emits a journey (fent built from files — gap #1 guard)")  # gap #5 FIRE
+_gj0 = G.build_c4_graph({**FIX_JRN, "test_insight": {}})
+check(not any((n.get("det") or {}).get("test_journeys") for gg2 in _gj0["l2"].values() for n in gg2["nodes"]),
+      "det: no test_insight → no test_journeys anywhere (honest-empty, byte-identical)")       # gap #5 SILENT
 sdet = dn["schema:AOut"]["det"]
 check(sdet["cols"] == [["x", "str", ""]] and sdet["doc"] == "Out shape.",
       "det: schema fields become cols; schema doc carried")

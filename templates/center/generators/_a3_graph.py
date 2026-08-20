@@ -368,6 +368,14 @@ def _normalize_sig(sig: str, cap: int = 220) -> str:
     return out if len(out) <= cap else out[:cap - 1] + "…"
 
 
+def _bare_cls(resp: str) -> str:
+    """The bare schema class inside a container return (``list[X]`` · ``Optional[X]`` · ``list[X] | None``
+    → ``X``): the LAST CamelCase id. Mirrors ``_a3_levels._bare_cls`` so the C4 payload arm agrees with the
+    levels arm (audit gap #2: a raw ``list[X]`` resp silently dropped the payload badge)."""
+    ids = re.findall(r"[A-Z][A-Za-z0-9_]+", str(resp or ""))
+    return ids[-1] if ids else str(resp or "")
+
+
 def element_detail(kind: str, obj: dict[str, Any],
                    file_lines: dict[str, int],
                    fi: dict[str, Any], ti_ep: dict[str, Any],
@@ -579,7 +587,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             enode["resp"] = ep["resp"]
         edet = with_journeys(det_of("endpoint", ep),
                              f"{ep.get('file')}::{ep.get('fn')}")
-        _rsp = ep.get("resp")     # response PAYLOAD: field-count of the resp schema (honest-empty if unmodelled)
+        _rsp = _bare_cls(ep.get("resp"))     # response PAYLOAD: unwrap list[X]/Optional[X] → X, then the field-count
         if _rsp and _rsp != "—" and (schema_fields or {}).get(_rsp) is not None:
             edet["payload"] = {"n": schema_fields[_rsp], "schema": _rsp}
         if edet:
@@ -871,17 +879,29 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     if _gendir not in _sys.path:
         _sys.path.insert(0, _gendir)
     import _a3_tests
-    journeys = _a3_tests.derive_journeys(ti, amap.get("_file_entity") or {},
-                                         amap.get("model_insight") or {})
+    # file→entity map: merge_amaps emits _file_entity, but build_center_a3's hand-built amap does NOT, so
+    # derive_journeys' endpoint/function entity resolution would be dead (audit gap #1: only model-spans
+    # survived). Build it from each entity's files when the key is absent.
+    fent = amap.get("_file_entity")
+    if not fent:
+        fent = {}
+        for _slug, _code in entities.items():
+            for _f in (_code.get("files") or []):
+                if isinstance(_f, (list, tuple)) and len(_f) >= 2 and _f[1]:
+                    fent[_f[1]] = _slug
+    journeys = _a3_tests.derive_journeys(ti, fent, amap.get("model_insight") or {})
     # response PAYLOAD floor: field-count of every modelled class (model cols + schema fields), so an
     # endpoint can carry the size of the contract it returns. The archmap has no request body — payload
     # is the RESPONSE shape; an endpoint whose resp names no modelled class stays honest-empty.
+    # deterministic + schema-wins on a class-name tie (audit gap #3): models first over sorted entities,
+    # then schemas overwrite — a response payload is the SCHEMA shape, so the schema field-count wins.
     schema_fields: dict[str, int] = {}
-    for _code in entities.values():
-        for _m in (_code.get("models") or []):
+    for _slug in sorted(entities):
+        for _m in (entities[_slug].get("models") or []):
             if _m.get("cls"):
                 schema_fields[_m["cls"]] = sum(1 for c in (_m.get("cols") or []) if c and len(c) >= 2 and c[0])
-        for _s in (_code.get("schemas") or []):
+    for _slug in sorted(entities):
+        for _s in (entities[_slug].get("schemas") or []):
             if _s.get("cls"):
                 schema_fields[_s["cls"]] = sum(1 for c in (_s.get("fields") or []) if c and len(c) >= 2 and c[0])
     l2: dict[str, dict] = {}

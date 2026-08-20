@@ -2322,7 +2322,12 @@ function showEntity(en){
     H("div",{class:"count"}, ecpIco("endpoint","kico"), H("span",{class:"lbl"},"API endpoints"), H("span",{class:"n"}, String(c.endpoints||0))),
     H("div",{class:"count"}, ecpIco("model","kico"), H("span",{class:"lbl"},"Models"), H("span",{class:"n"}, String(c.models||0))),
     H("div",{class:"count"}, ecpIco("schema","kico"), H("span",{class:"lbl"},"Schemas"), H("span",{class:"n"}, String(c.schemas||0))),
-    H("div",{class:"count",style:"border:none"}, ecpIco("layers","kico"), H("span",{class:"lbl"},"Lines"), H("span",{class:"n"}, (c.lines||0).toLocaleString()))));
+    H("div",{class:"count",style:c.hidden_fns?"":"border:none"}, ecpIco("layers","kico"), H("span",{class:"lbl"},"Lines"), H("span",{class:"n"}, (c.lines||0).toLocaleString())),
+    // HIDDEN FNS — graft homes them to this entity but the trace never draws them (the star-field floor,
+    // fn_slug − drawn_fn; a graft FLOOR, inferred-by-design). Honest-empty: no count → no row.
+    c.hidden_fns ? H("div",{class:"count",style:"border:none"}, ecpIco("function","kico"),
+      H("span",{class:"lbl",title:"functions graft homes to this entity but the trace never draws — the star-field floor (a graft FLOOR, inferred)"},"Hidden fns"),
+      H("span",{class:"n"}, String(c.hidden_fns))) : null));
   var api=0, web=0;
   (pc.models||[]).concat(pc.schemas||[]).forEach(function(m){ if(m.tests){ api+=m.tests.api||0; web+=m.tests.web||0; } });
   if(api||web) body.push(H("div",{class:"sec"}, ecpSechd("test","Tests", api+web, true),

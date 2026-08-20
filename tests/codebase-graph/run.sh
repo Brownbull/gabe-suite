@@ -421,3 +421,25 @@ check(_beps and all(isinstance(n["behind"].get("fns"), int)
 print(f"codebase-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
+PYRC=$?
+
+# ── EXECUTED render FIRE+SILENT (gap #6): the python checks string-match the grammar source;
+#    this actually RUNS journeysSect/payloadSect via a node shim (no browser) to prove real output ──
+node -e '
+global.window={}; global.document={createElement:function(){return {style:{},setAttribute:function(){},appendChild:function(){},append:function(){},getContext:function(){return {};}};}};
+var fs=require("fs"); eval(fs.readFileSync(process.argv[1],"utf8"));
+var GG=window.GABE_GRAPH_GRAMMAR(), ok=0, bad=0;
+function a(c,m){ if(c){ok++;}else{bad++;console.error("  render FAIL:",m);} }
+var j=GG.journeysSect({sig:{},test_journeys:[{cid:"C1",corpus:"api",entities:["a","b"],comp:2}],test_journeys_more:3});
+a(/journeys \(4\)/.test(j)&&/starts here/.test(j)&&/C1/.test(j),"journeysSect FIRE (endpoint=ENTRY, count+more)");
+a(GG.journeysSect({})===""&&GG.journeysSect({payload:{n:1}})==="","journeysSect SILENT (no test_journeys)");
+a(/reached by a cross-entity test/.test(GG.journeysSect({test_journeys:[{cid:"C2",corpus:"web",entities:["x","y"],comp:2}]})),"journeysSect STOP framing (model/fn, no sig)");
+var p=GG.payloadSect({payload:{n:3,schema:"WOut"}});
+a(/3 fields ferried/.test(p)&&/WOut/.test(p)&&/\(response\)/.test(p),"payloadSect FIRE (N fields + schema + response)");
+a(GG.payloadSect({})==="","payloadSect SILENT (no payload)");
+a(/1 field ferried/.test(GG.payloadSect({payload:{n:1,schema:"X"}})),"payloadSect singular (1 field)");
+console.log("  render FIRE+SILENT: "+ok+"/"+(ok+bad)+" executed");
+process.exit(bad?1:0);
+' "$SHELL_SRC/assets/graph-grammar.js"
+NODERC=$?
+if [ "$PYRC" -eq 0 ] && [ "$NODERC" -eq 0 ]; then exit 0; else exit 1; fi
