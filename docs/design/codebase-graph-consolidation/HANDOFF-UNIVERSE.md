@@ -47,6 +47,12 @@ The complaint (big mesh, core-by = decoration only) is fixed and proven headless
 - Proofs: `universe-build/verify-clustering.mjs` (committed, re-runnable) + a heavy-case run (456 nodes, usecase core, 343-node "other" bucket — 0 errors, 0 NaN). Battery grew to **93 static** (new 10j section, mutation-proven both ways).
 - `fill-example.py` persisted — the example rebuild is now scripted (`assemble.py` → copy to shell → `fill-example.py`), no history spelunking.
 
+## BATCH 10 — LANDED (`8ac9692`): settle-freeze · ROUTES tab · icon lines + curve amount · per-kind beam
+
+- **Freeze through re-arrange**: entity-layout/core/functions changes pause all decorations; the settle resumes. Ownership hardened by an 11-agent adversarial review (6 confirmed → 3 deduped defects fixed): motionBtn during the window cancels the auto-resume, a mid-drag settle defers to pointerup, URL-preset boots re-tab the config (all 3 `buildCfg` sites).
+- **Routes tab**: LINES (straight/curved ICONS + curve-amount slider ×0.2–2.5) · per-kind BEAM (fk/bridge/calls/imports, 0 hides · >1 glows additive, sample-wire legends) · Transports toggle + speed.
+- Proof committed: `universe-build/verify-routes.mjs` (tab · freeze interleaves · drag-held · curve geometry · beam · preset boot, 0 errors). Battery **108 static**, all new checks mutation-proven.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
