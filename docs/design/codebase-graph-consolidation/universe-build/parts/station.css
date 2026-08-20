@@ -124,6 +124,16 @@
   #fleet .fltog{ width:20px; height:16px; border:1px solid var(--line); border-radius:4px; background:none; cursor:pointer; padding:0; flex:none; }
   #fleet .fltog:hover{ border-color:var(--accent); }
   #fleet .fltog.on{ background:var(--accent); border-color:var(--accent); }
+  /* CLUSTER rows (expanded under an entity): indented, and their switches wear a DISTINCT color
+     (teal) so cluster-level state never reads as entity-level state */
+  #fleet .flx{ cursor:pointer; } #fleet .flx:hover{ color:var(--accent); }
+  #fleet .flcaret{ font-style:normal; font-size:8px; color:var(--muted); width:8px; flex:none; }
+  #fleet .flcnt{ font:700 8.5px/1 var(--font-mono); color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:6px; padding:1px 4px; margin-left:4px; }
+  #fleet .flrow.flsub .flent{ padding-left:16px; font-size:10px; color:var(--muted); width:84px; }
+  #fleet .flspacer{ width:20px; }
+  #fleet .fltog.flstog{ border-radius:8px; }
+  #fleet .fltog.flstog:hover{ border-color:#0ca678; }
+  #fleet .fltog.flstog.on{ background:#0b7a63; border-color:#0ca678; }
   #fleet .fltog.mdim{ opacity:.35; }   /* the column's GLOBAL master is off (zonesoff pattern) — cell does nothing until it flips */
   .fleethid{ font-size:11px; color:var(--red); border:1px dashed var(--red); border-radius:6px; padding:4px 8px; margin:0 0 8px; }
   /* keep <code> inline chips readable in the dark card */

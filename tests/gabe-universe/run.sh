@@ -194,11 +194,21 @@ check(page.count('if(window.__uniAddLayoutTab) __uniAddLayoutTab()') == 3,
       "not all 3 buildCfg call sites re-tab (boot + URL-preset + ?drive) — a preset URL would drop the Routes tab")
 
 # ── 10l. batch 11-B: FLEET panel — UNIVIS contract + six engine seams, all read through visEnt/visN ──
-check('window.UNIVIS={ ent:{}, node:{}, meta:{} }' in page, "UNIVIS 3-namespace contract missing (node/meta are the in-flight seam)")
+check('window.UNIVIS={ ent:{}, sub:{}, node:{}, meta:{} }' in page, "UNIVIS 4-namespace contract missing (sub = cluster overrides; node/meta = the in-flight seam)")
+# batch 11-B3: CLUSTER rows — expand on the entity name, counter, per-cluster switches (distinct color)
+check('(ev.show&&sv.show)?1:0' in page, "visN does not AND-combine entity and cluster flags")
+check('data-fsub=' in page and 'flstog' in page and 'flcnt' in page and 'data-flx=' in page,
+      "cluster rows / counter / expandable entity name missing")
+check('window.__uniFleetRegroup=function' in page and 'updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); }' in page,
+      "a core change does not regroup the panel (stale cluster overrides would linger)")
+check('cluster hidden by the fleet panel' in page, "sub-hull seam misses the cluster-level skip")
+check('sub-aware' in page, "transports do not resolve visibility at NODE level (cluster routes-off would leak)")
+check('.fltog.flstog.on{ background:#0b7a63' in page,
+      "cluster switches wear the entity color — the two levels must read differently")
 check('function visEnt' in page and 'function visN' in page, "vis accessors missing (seams must read through ONE pair)")
 check('nodeVisibility(function(n){ return !!visN(n).show; })' in page, "node visibility seam not wired")
 check('if(!visEnt(e).show) return; var mem=' in page, "ent-hull seam missing (hidden entity keeps its hull)")
-check('if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return; var k=' in page,
+check('if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return;' in page,
       "sub-hull seam wrong — must skip on !show OR !subs (ghost sub-hulls around a hidden entity)")
 check('fleet-hidden entity' in page, "connector seam missing (wires keep drawing to hidden entities)")
 check('routes-off entity' in page, "transport seam missing (ghost shuttles fly to hidden entities)")

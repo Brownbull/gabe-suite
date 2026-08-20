@@ -165,6 +165,43 @@ const routesAfter = await p2.evaluate(e => ({
 const dimSync = await p2.evaluate(() => { CFG.zDef = false; applyCfg('zDef');
   const d = document.querySelector('#fleet .fltog[data-fcol="zDef"]').classList.contains('mdim');
   CFG.zDef = true; applyCfg('zDef'); return d; });
+// [B3] CLUSTER rows: expand via the entity name, counter, per-cluster hide + zone scoping, regroup
+const clus = await p2.evaluate(() => {
+  const e = _ents[1];
+  const distinct = {}; nodes.forEach(n => { if (n.ent === e) distinct[n.sub] = (distinct[n.sub] || 0) + 1; });
+  document.querySelector(`#fleet .flx[data-flx="${e}"]`).click();     // expand (re-renders)
+  const rows = document.querySelectorAll(`#fleet .fltog[data-fent="${e}"][data-fsub]`).length / 6;  // 6 toggles per sub row (subs col is a spacer)
+  const cnt = +document.querySelector(`#fleet .flx[data-flx="${e}"] .flcnt`).textContent;
+  const styled = !!document.querySelector('#fleet .fltog.flstog');
+  const biggest = Object.keys(distinct).sort((a, b) => distinct[b] - distinct[a])[0];
+  return { e, expected: Object.keys(distinct).length, rows, cnt, styled, sub: biggest, subSize: distinct[biggest] };
+});
+await p2.evaluate(c => { document.querySelector(`#fleet .fltog[data-fent="${c.e}"][data-fsub="${c.sub}"][data-fcol="show"]`).click(); }, clus);
+await raf2(); await p2.waitForTimeout(500);
+const clusHide = await p2.evaluate(c => {
+  const inSub = n => n.ent === c.e && n.sub === c.sub;
+  const subGone = nodes.filter(inSub).every(n => !n.__threeObj || !n.__threeObj.parent);
+  const restShown = nodes.filter(n => n.ent === c.e && n.sub !== c.sub).some(n => n.__threeObj && n.__threeObj.parent);
+  const subHull = CLUSTERS.filter(cl => cl.level === 'sub' && cl.members.some(id => { const n = NIDS[id]; return n && inSub(n); })).length;
+  const entHull = CLUSTERS.filter(cl => cl.level === 'ent' && cl.name === c.e).length;
+  return { subGone, restShown, subHull, entHull };
+}, clus);
+await p2.evaluate(c => { document.querySelector(`#fleet .fltog[data-fent="${c.e}"][data-fsub="${c.sub}"][data-fcol="show"]`).click(); }, clus);
+await raf2(); await p2.waitForTimeout(400);
+// per-cluster zone off scopes to the cluster's nodes only
+const subMesh = c => p2.evaluate(cc => { let m = 0;
+  nodes.filter(n => n.ent === cc.e && n.sub === cc.sub).forEach(n => { if (n.__threeObj) n.__threeObj.traverse(() => m++); }); return m; }, c);
+const sm0 = await subMesh(clus);
+await p2.evaluate(c => { document.querySelector(`#fleet .fltog[data-fent="${c.e}"][data-fsub="${c.sub}"][data-fcol="zDef"]`).click();
+  document.querySelector(`#fleet .fltog[data-fent="${c.e}"][data-fsub="${c.sub}"][data-fcol="zSat"]`).click(); }, clus);
+await raf2(); await p2.waitForTimeout(600);
+const sm1 = await subMesh(clus);
+// regroup: a core change re-derives the groups and drops stale overrides
+const regroup = await p2.evaluate(c => { const staleKeys = Object.keys(UNIVIS.sub).length;
+  CFG.coreBy = 'tests'; applyCfg('coreBy');
+  const cnt2 = +document.querySelector(`#fleet .flx[data-flx="${c.e}"] .flcnt`).textContent;
+  const kept = Object.keys(UNIVIS.sub).length;
+  return { staleKeys, cnt2, kept }; }, clus);
 // [C] presets: sim feed loaded (GABE_SIM null at rest on the example) · In-flight honestly stubbed ·
 //     None hides everything, All restores — through the same preset entry point
 const presetC = await p2.evaluate(() => ({
@@ -216,6 +253,14 @@ if (!(ft0 > 0 && ft1 === ft0)) fails.push('FLEETTICK drifts across round-trips w
 if (!(routesBefore.ent > 0 && routesAfter.ent === 0 && routesAfter.all === routesBefore.all - routesBefore.ent))
   fails.push('routes column does not scope to the entity');
 if (!dimSync) fails.push('masters-dim does not track a live global flip');
+console.log('clusters(B3):', JSON.stringify(clus), '· hide →', JSON.stringify(clusHide), `· zone mesh ${sm0}→${sm1} · regroup ${JSON.stringify(regroup)}`);
+if (!(clus.rows === clus.expected && clus.cnt === clus.expected && clus.styled))
+  fails.push('cluster rows/counter/styling wrong');
+if (!(clusHide.subGone && clusHide.restShown && clusHide.subHull === 0 && clusHide.entHull === 1))
+  fails.push('cluster hide does not scope (nodes/hull/siblings/entity)');
+if (!(sm1 < sm0)) fails.push('per-cluster zone off did not shrink its fleet meshes');
+if (!(regroup.cnt2 >= 1 && regroup.kept < regroup.staleKeys))
+  fails.push('core change does not regroup / drop stale cluster overrides');
 console.log('presets(C):', JSON.stringify(presetC), '· none →', JSON.stringify(noneState), '· all →', JSON.stringify(allState));
 if (!(presetC.simDefined && presetC.simAtRest && presetC.stub && /no change in flight/.test(presetC.stubTitle)))
   fails.push('sim feed / in-flight stub wrong');

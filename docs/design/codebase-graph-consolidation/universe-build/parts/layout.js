@@ -119,6 +119,7 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
   links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });   // normalize to string ids before re-seed
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
   try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // fn nodes change group sizes → re-ring
+  if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}   // fn nodes add/remove sub groups → the panel re-derives
 }
 /* LINES — moved off the topbar into the config; sets the curved-connector flag + redraws */
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
@@ -214,10 +215,17 @@ zForce.initialize=function(ns){ zForce.__n=ns; };
    join is direct. ALL engine seams read through visEnt/visN — the ONE place a "dim" tri-state and
    per-piece roles land later. An unknown entity resolves to SHOWN (l2-only entities never vanish). */
 var _VISDEF={ show:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
-window.UNIVIS={ ent:{}, node:{}, meta:{} };
+window.UNIVIS={ ent:{}, sub:{}, node:{}, meta:{} };   // sub = per-(ent|subgroup) overrides — keys are CURRENT-coreBy groups, regrouped on a core change
 _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
-function visN(n){ return (n&&UNIVIS.node[n.id])||visEnt(n&&n.ent); }
+/* effective per-node: node override wins; else the entity flags AND the node's sub-group flags —
+   a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
+function visN(n){ var o=n&&UNIVIS.node[n.id]; if(o) return o;
+  var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
+  if(!sv) return ev;
+  return { show:(ev.show&&sv.show)?1:0, subs:ev.subs,
+    zDef:(ev.zDef&&sv.zDef)?1:0, zAtk:(ev.zAtk&&sv.zAtk)?1:0, zCfl:(ev.zCfl&&sv.zCfl)?1:0,
+    zSat:(ev.zSat&&sv.zSat)?1:0, routes:(ev.routes&&sv.routes)?1:0 }; }
 /* applyVis pushes UNIVIS into the engine. scope picks WHICH routines run — never a partial rebuild:
    nodes = show flips (visibility + rebuildNodes registry reset + hulls + shuttles) · clusters = subs ·
    zones = z* (rebuildNodes only — all-nodes by design, same cost the global zone toggle pays) ·
@@ -241,11 +249,16 @@ function _applyVisNow(s){ if(typeof Graph==="undefined"||!Graph) return; var all
 }
 window.__uniApplyVisPreset=function(preset){ if(!preset) return;     // deep-merge ALL namespaces, PRESERVE unknown keys —
   Object.keys(preset).forEach(function(ns){                          // a later in-flight preset carries node/meta through unchanged
-    if(ns==="ent"){ Object.keys(preset.ent||{}).forEach(function(e){
-      UNIVIS.ent[e]=Object.assign({}, UNIVIS.ent[e]||_VISDEF, preset.ent[e]); }); }
+    if(ns==="ent"||ns==="sub"){ Object.keys(preset[ns]||{}).forEach(function(k){
+      UNIVIS[ns][k]=Object.assign({}, UNIVIS[ns][k]||_VISDEF, preset[ns][k]); }); }
     else if(UNIVIS[ns] && typeof preset[ns]==="object"){ Object.assign(UNIVIS[ns], preset[ns]); }
     else UNIVIS[ns]=preset[ns]; });
   applyVis("all"); if(window.__uniFleetRender) try{ __uniFleetRender(); }catch(e){} };
+/* the sub keys are CURRENT-coreBy groups: a core change (or the functions toggle) regroups —
+   overrides whose (ent|sub) no longer exists are dropped, the panel re-renders live groups. */
+window.__uniFleetRegroup=function(){ var live={}; nodes.forEach(function(n){ live[n.ent+"|"+n.sub]=1; });
+  Object.keys(UNIVIS.sub).forEach(function(k){ if(!live[k]) delete UNIVIS.sub[k]; });
+  if(window.__uniFleetRender) try{ __uniFleetRender(); }catch(e){} };
 /* a second draggable panel — dragCfg is id-hardwired to #cfg, so the fleet gets its own helper */
 function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
   head.addEventListener("mousedown",function(e){ if(e.target.closest(".cfgmin")) return; var r=panel.getBoundingClientRect();
@@ -284,26 +297,41 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
-  _ents.forEach(function(e){ h+='<div class="flrow"><span class="flent" title="'+e+'"><i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i>'+e+'</span>'
-    +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>'; });
+  var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
+  _ents.forEach(function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
+    h+='<div class="flrow"><span class="flent flx" data-flx="'+e+'" title="'+e+' · click for its '+gk.length+' cluster(s)">'
+      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><i class="flcaret">'+(open?"▾":"▸")+'</i>'+e
+      +'<b class="flcnt">'+gk.length+'</b></span>'
+      +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
+    if(open) gk.forEach(function(s){ var key=e+"|"+s;
+      h+='<div class="flrow flsub"><span class="flent flsubname" title="'+s+' · '+gs[s]+' member(s)">'+s+' <b class="flcnt">'+gs[s]+'</b></span>'
+        +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';   // a cluster has no sub-clusters
+          return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
   body.innerHTML=h;
+  body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){
+    var e=sp.getAttribute("data-flx"); _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
-    var ent=b.getAttribute("data-fent"), col=b.getAttribute("data-fcol"),
+    var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"), col=b.getAttribute("data-fcol"),
         C=_FCOLS.filter(function(c){ return c.k===col; })[0];
-    if(ent==="*"){ var on=!_ents.every(function(e){ return UNIVIS.ent[e][col]; });   // any off → all on; all on → all off
+    if(sub!=null){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
+      sv[col]=sv[col]?0:1; }
+    else if(ent==="*"){ var on=!_ents.every(function(e){ return UNIVIS.ent[e][col]; });   // any off → all on; all on → all off
       _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; }); }
     else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
   body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
-    if(k==="all"){ _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
+    if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
+      _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
     else if(k==="none"){ _ents.forEach(function(e){ ent[e]={show:0}; }); __uniApplyVisPreset({ent:ent}); } }; });
   __uniFleetSync(); };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
-  body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), col=b.getAttribute("data-fcol"),
-    C=_FCOLS.filter(function(c){ return c.k===col; })[0];
-    if(ent!=="*") b.classList.toggle("on", !!(UNIVIS.ent[ent]||_VISDEF)[col]);
+  body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"),
+    col=b.getAttribute("data-fcol"), C=_FCOLS.filter(function(c){ return c.k===col; })[0];
+    if(sub!=null) b.classList.toggle("on", !!(UNIVIS.sub[ent+"|"+sub]||_VISDEF)[col]);
+    else if(ent!=="*") b.classList.toggle("on", !!(UNIVIS.ent[ent]||_VISDEF)[col]);
     else b.classList.toggle("on", _ents.every(function(e){ return UNIVIS.ent[e][col]; }));
     b.classList.toggle("mdim", !(C&&C.g())); }); };
+var _flOpen={};   // which entity rows are expanded to their clusters
 
 /* re-tab the config into PLANETS | UNIVERSE. The spike's own groups (Container/Show/Transparency/Planet/
    Universe) are already wired by wireCfg — we MOVE their DOM (preserving listeners) into the two panes,

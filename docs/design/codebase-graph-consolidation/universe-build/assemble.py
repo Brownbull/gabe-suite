@@ -131,7 +131,7 @@ assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
   'else if(grp==="transports"){ buildTransports(); } '
   'else if(grp==="entLayout"){ __uniFreezeForSettle(); recomputeEX(CFG.entLayout); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
-  'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
+  'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); } '
   'else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } '
   'else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } '
   'else { buildClusters(); updateClusters(true); } }', 1)
@@ -240,13 +240,15 @@ text = text.replace(OLD_ENTHULL,
 OLD_SUBHULL = 'if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });'
 assert OLD_SUBHULL in text, "buildClusters sub-loop anchor missing"
 text = text.replace(OLD_SUBHULL,
-  'if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return; var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });', 1)
+  'if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return;\n'
+  '    var _shv=UNIVIS.sub[n.ent+"|"+n.sub]; if(_shv&&!_shv.show) return;   // cluster hidden by the fleet panel\n'
+  '    var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });', 1)
 # seam 6: transports skip a route whose end entity is hidden or routes-off
 OLD_TRLOOP = '  links.forEach(function(l){ if(!linkCross(l)) return;'
 assert OLD_TRLOOP in text, "buildTransports loop anchor missing"
 text = text.replace(OLD_TRLOOP, OLD_TRLOOP +
-  '\n    var _se=(NIDS[lid(l.source)]||{}).ent, _te=(NIDS[lid(l.target)]||{}).ent;\n'
-  '    if(!visEnt(_se).show||!visEnt(_te).show||!visEnt(_se).routes||!visEnt(_te).routes) return;   // fleet: hidden or routes-off entity', 1)
+  '\n    var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;\n'
+  '    if(!_sv.show||!_tv.show||!_sv.routes||!_tv.routes) return;   // fleet: hidden or routes-off entity/cluster (node-level — sub-aware)', 1)
 # seam 5 (batch 11-B2): the four fleet-zone gates become per-entity — global AND entity
 OLD_ZD = 'var def=CFG.zDef? placeFleet('
 assert OLD_ZD in text, "fleetZones zDef anchor missing"
