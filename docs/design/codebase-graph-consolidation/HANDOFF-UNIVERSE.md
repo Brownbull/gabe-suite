@@ -81,6 +81,10 @@ Proof: `universe-build/verify-fleet.mjs` (two pages, one booted `?war=1`; hide/r
 
 Nine visual-pass asks: journeys picker LEFT + grouped (END-TO-END first — emitter caps web/e2e into "N case(s)" AGGREGATE rows, labeled honestly; then by start entity) + NAMED for free (det.cases carries the test name in the same cid space, 114/135); journey BANNER top-center; **the WALK** ported from the 2D graph (panel-top bar: journey ‹i/N› stepping with camera-aim + card-open + path-stays-lit · 7-step element TRAIL chips · a click during a journey starts a fresh trail); panel chevron → FOOTER (both copies); fleet header ELEMENTS/WIRES global toggles (elements-off = the clusters-only view: 0 nodes/27 hulls; showWires gates connectors AND plain links); `#g right:0` — the panel overlays, canvas width stable across open/close; chip-hover WHITE halo; gear↔config sync (un-minimize on show). Proof `universe-build/verify-walk.mjs`; battery **169 static**.
 
+## BATCH 14 — LANDED (`66c2266`): journey HUD in the topbar middle · chord fixed for real mice
+
+Journey command center = topbar MIDDLE ([journeys][style] · name · ‹i/N› · step · ✕; picker opens centered; panel keeps only the TRAIL; banner retired). Fleet gains the labeled VIEW row (planets · wires). Rail chevron parity (collapsed ‹ at the BOTTOM like the expanded footer ›). CHORD: chorded presses fire NO pointerdown (spec) → a left press joining a right-pan now starts the rig drag from the move stream; the chord does BOTH (orbit + half-strength rig drift); right-release keeps the drag. Proofs verify-walk + verify-explore; battery **175 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
