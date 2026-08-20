@@ -111,22 +111,32 @@
   .topbar .tbnum{ position:absolute; right:-4px; top:-5px; font:800 9px/1 var(--font-mono); color:#fff;
     background:var(--accent); border-radius:6px; padding:1.5px 4px; }
   .topbar .tbico.on .tbnum{ background:#0e1524; }
-  /* journeys dropdown — LEFT side (operator), clear of the nav; overlays the fleet panel while open */
-  #jrn{ position:fixed; left:calc(var(--navw) + 12px); top:calc(var(--topbarh) + 6px); z-index:55; width:340px; max-height:56vh; overflow-y:auto;
-    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; transition:left .18s ease; }
+  /* journeys dropdown — CENTERED under the topbar-middle journey button (operator) */
+  #jrn{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 6px); z-index:55; width:360px; max-height:56vh; overflow-y:auto;
+    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; }
   #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
     padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
-  /* journey banner — top centre, visible even with the panel collapsed */
-  #hlban{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 8px); z-index:40;
-    display:flex; align-items:center; gap:8px; padding:5px 12px; background:rgba(24,33,54,.95);
-    border:1px solid var(--accent); border-radius:999px; font-size:12px; color:var(--ink); max-width:46vw; }
-  #hlban b{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #hlban .hlbcid{ font:600 10px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
-  #hlban .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; }
-  #hlban .hlbx:hover{ color:var(--ink); }
+  /* journey HUD — lives IN the topbar middle: selected name · ‹ i/N › stepping · step label · clear */
+  #jrnhud{ display:flex; align-items:center; gap:6px; min-width:0; max-width:38vw; font-size:12px; color:var(--ink); }
+  #jrnhud .wjname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  #jrnhud .wbtn{ width:22px; height:22px; font:700 12px/1 var(--font-ui); color:var(--ink); background:#0e1524;
+    border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
+  #jrnhud .wbtn:hover{ border-color:var(--accent); }
+  #jrnhud .wpos{ font:700 10px/1 var(--font-mono); color:var(--muted); flex:none; }
+  #jrnhud .wstepname{ font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  #jrnhud .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; flex:none; }
+  #jrnhud .hlbx:hover{ color:var(--ink); }
+  /* the collapsed rail's expand chevron sits at the BOTTOM — same corner as the expanded footer chevron */
+  .panel .minbar .pmin{ order:2; margin-top:auto; }
+  .panel .minbar .minname{ order:1; }
+  /* fleet VIEW row — planets / connections, labeled */
+  #fleet .flvbtn{ display:inline-flex; align-items:center; gap:4px; font:600 10px/1 var(--font-ui); color:var(--muted);
+    background:none; border:1px solid var(--line); border-radius:6px; padding:3px 8px; cursor:pointer; }
+  #fleet .flvbtn svg{ width:11px; height:11px; }
+  #fleet .flvbtn.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
   /* the WALK bar — top of the right panel: journey ‹ i/N › or the 7-step trail chips */
   #walkbar{ padding:8px 12px; border-bottom:1px solid var(--line); background:#0e1524; }
   body:not(.panel-open) #walkbar{ display:none !important; }   /* never in the collapsed rail — JS drives display while open */

@@ -257,22 +257,32 @@
   .topbar .tbnum{ position:absolute; right:-4px; top:-5px; font:800 9px/1 var(--font-mono); color:#fff;
     background:var(--accent); border-radius:6px; padding:1.5px 4px; }
   .topbar .tbico.on .tbnum{ background:#0e1524; }
-  /* journeys dropdown — LEFT side (operator), clear of the nav; overlays the fleet panel while open */
-  #jrn{ position:fixed; left:calc(var(--navw) + 12px); top:calc(var(--topbarh) + 6px); z-index:55; width:340px; max-height:56vh; overflow-y:auto;
-    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; transition:left .18s ease; }
+  /* journeys dropdown — CENTERED under the topbar-middle journey button (operator) */
+  #jrn{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 6px); z-index:55; width:360px; max-height:56vh; overflow-y:auto;
+    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; }
   #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
     padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
-  /* journey banner — top centre, visible even with the panel collapsed */
-  #hlban{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 8px); z-index:40;
-    display:flex; align-items:center; gap:8px; padding:5px 12px; background:rgba(24,33,54,.95);
-    border:1px solid var(--accent); border-radius:999px; font-size:12px; color:var(--ink); max-width:46vw; }
-  #hlban b{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #hlban .hlbcid{ font:600 10px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
-  #hlban .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; }
-  #hlban .hlbx:hover{ color:var(--ink); }
+  /* journey HUD — lives IN the topbar middle: selected name · ‹ i/N › stepping · step label · clear */
+  #jrnhud{ display:flex; align-items:center; gap:6px; min-width:0; max-width:38vw; font-size:12px; color:var(--ink); }
+  #jrnhud .wjname{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:700; }
+  #jrnhud .wbtn{ width:22px; height:22px; font:700 12px/1 var(--font-ui); color:var(--ink); background:#0e1524;
+    border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
+  #jrnhud .wbtn:hover{ border-color:var(--accent); }
+  #jrnhud .wpos{ font:700 10px/1 var(--font-mono); color:var(--muted); flex:none; }
+  #jrnhud .wstepname{ font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  #jrnhud .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; flex:none; }
+  #jrnhud .hlbx:hover{ color:var(--ink); }
+  /* the collapsed rail's expand chevron sits at the BOTTOM — same corner as the expanded footer chevron */
+  .panel .minbar .pmin{ order:2; margin-top:auto; }
+  .panel .minbar .minname{ order:1; }
+  /* fleet VIEW row — planets / connections, labeled */
+  #fleet .flvbtn{ display:inline-flex; align-items:center; gap:4px; font:600 10px/1 var(--font-ui); color:var(--muted);
+    background:none; border:1px solid var(--line); border-radius:6px; padding:3px 8px; cursor:pointer; }
+  #fleet .flvbtn svg{ width:11px; height:11px; }
+  #fleet .flvbtn.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
   /* the WALK bar — top of the right panel: journey ‹ i/N › or the 7-step trail chips */
   #walkbar{ padding:8px 12px; border-bottom:1px solid var(--line); background:#0e1524; }
   body:not(.panel-open) #walkbar{ display:none !important; }   /* never in the collapsed rail — JS drives display while open */
@@ -383,15 +393,16 @@
 <div class="topbar">
   <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
-  <button class="tbico" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops (1–5). Alt+scroll anywhere to change; click to cycle. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><b class="tbnum" id="depthNum">3</b></button>
+  <button class="tbico" id="jrnBtn" title="journeys — cross-entity tests as highlighted paths: pick one, its carrier elements + wires light up; step it with the controls that appear here."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></button>
   <button class="tbico" id="hlModeBtn" title="highlight style — GLOW halos the reached set and dims the rest of the wires · FOCUS hides everything outside the set (hulls stay as geography). Click to switch."><svg id="hlIcoGlow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><svg id="hlIcoFocus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="3.5"/><path d="M2 8V4a2 2 0 0 1 2-2h4M16 2h4a2 2 0 0 1 2 2v4M22 16v4a2 2 0 0 1-2 2h-4M8 22H4a2 2 0 0 1-2-2v-4"/></svg></button>
-  <button class="tbico" id="jrnBtn" title="journeys — cross-entity tests as highlighted paths: pick one, its carrier elements + wires light up at the current depth and style."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></button>
+  <span id="jrnhud" style="display:none"></span>
+  <div class="spacer"></div>
+  <button class="tbico" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops (1–5). Alt+scroll anywhere to change; click to cycle. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><b class="tbnum" id="depthNum">3</b></button>
   <button class="tbico on" id="freezeDragBtn" title="freeze on drag — pause ALL animations (fleets, transports, pulses) while rotating or moving the camera; they resume the moment you release. On by default; click to toggle." onclick="window.__uniToggleFreezeDrag&&window.__uniToggleFreezeDrag(this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2v20M17 5l-5 3-5-3M7 19l5-3 5 3M2 12h20M5 7l3 5-3 5M19 7l-3 5 3 5"/></svg></button>
   <button class="tbico" id="reset" title="reset view — return the camera to the home framing (position, zoom and pivot). Your layout, highlight and panel choices stay."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><polyline points="3 4 3 9 8 9"/></svg></button>
   <div class="statuspills">{{STATUS_PILLS}}</div>
 </div>
 <div id="jrn" style="display:none"></div>
-<div id="hlban" style="display:none"></div>
 <div id="g"></div>
 <div class="cfg" id="cfg"></div>
 <div class="expl" id="expl"></div>
@@ -1146,25 +1157,30 @@ function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quater
   target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
   cam.quaternion.premultiply(q); }
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
-  g.addEventListener("pointerdown", function(ev){ if(ev.button!==0) return;
-    try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls||!ctrls.target) return;
-      var r=g.getBoundingClientRect(), mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
+  /* the rig-drag starter — shared by pointerdown (left pressed first) AND the move stream (left
+     JOINS an active right-pan: chorded presses fire NO pointerdown per the pointer-events spec,
+     so a late left press is only visible as buttons&1 appearing in pointermove). */
+  function _rigStart(cx, cy){ try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls||!ctrls.target) return null;
+      var r=g.getBoundingClientRect(), mx=((cx-r.left)/r.width)*2-1, my=-((cy-r.top)/r.height)*2+1;
       var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, cam);
       var vdir=new T.Vector3(); cam.getWorldDirection(vdir);
       var plane=new T.Plane().setFromNormalAndCoplanarPoint(vdir, ctrls.target), P=new T.Vector3();
-      if(!rc.ray.intersectPlane(plane, P)) return;
-      drag={ P:P, lx:ev.clientX, ly:ev.clientY }; ctrls.enabled=false; window.__uniDragging=true;   // custom rotation owns this drag; a settle mid-drag defers its resume
+      if(!rc.ray.intersectPlane(plane, P)) return null;
+      ctrls.enabled=false; window.__uniDragging=true;
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
-    }catch(e){} }, true);
+      return { P:P, lx:cx, ly:cy }; }catch(e){ return null; } }
+  g.addEventListener("pointerdown", function(ev){ if(ev.button!==0) return; drag=_rigStart(ev.clientX, ev.clientY); }, true);
   g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
-  window.addEventListener("pointermove", function(ev){ if(!drag) return;
+  window.addEventListener("pointermove", function(ev){
+    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(!drag) return; }   // left joined a right-pan mid-stream
+    if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
-      if(ev.buttons&2){                                                     // CHORD (left+right held): the delta PANS the rig —
-        var kd=cam.position.distanceTo(ctrls.target)*0.0011;                // camera+target+pivot slide together; release right → orbit resumes
+      if(ev.buttons&2){                                                     // CHORD (left+right): BOTH at once — the rig DRIFTS (half-strength pan)
+        var kd=cam.position.distanceTo(ctrls.target)*0.00055;               // while the same delta keeps orbiting below
         var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
         var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
-        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); return; }
+        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); }
       var up=new T.Vector3(0,1,0);
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
       var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
@@ -1172,7 +1188,8 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       var nd=vdir.clone().applyAxisAngle(right, -dy*0.006);                          // polar around camera-right (clamp near vertical to avoid a flip)
       if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, -dy*0.006);
     }catch(e){} });
-  window.addEventListener("pointerup", function(){
+  window.addEventListener("pointerup", function(ev){
+    if(drag && ev.button!==0) return;   // releasing RIGHT mid-chord keeps the left drag alive — orbit resumes clean
     if(drag){ var ctrls=Graph.controls(); drag=null; window.__uniDragging=false; if(ctrls){ ctrls.enabled=true; try{ ctrls.update(); }catch(e){} } }
     if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true; var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } }
     if(window.__uniSettleDone) window.__uniSettleDone(); });   // release a resume the settle deferred mid-drag (no-op otherwise)
@@ -1309,25 +1326,26 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   var n=NIDS[WALK.steps[WALK.i]]; if(!n) return;
   _aimAt(n); SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
   _walkRender(); }
-function _walkRender(){ var wb=document.getElementById("walkbar"), bn=document.getElementById("hlban");
-  if(wb){ if(!WALK.mode){ wb.style.display="none"; }
-    else if(WALK.mode==="journey"){ var j=HL.jrObj||{};
-      wb.style.display=""; wb.innerHTML='<div class="wjname" title="'+(j.ents||[]).join(" → ")+'">'+((j.name||j.cid||"journey"))+'</div>'
-        +'<div class="wnav"><button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
+function _walkRender(){ var wb=document.getElementById("walkbar"), hud=document.getElementById("jrnhud");
+  /* JOURNEY controls live in the TOPBAR MIDDLE (operator): selected name right of the button,
+     ‹ i/N › stepping + step label + clear — the panel keeps only the element TRAIL. */
+  if(hud){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj;
+      hud.style.display="";
+      hud.innerHTML='<b class="wjname" title="'+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'+(j.name||j.cid)+'</b>'
+        +'<button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
         +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
         +'<button class="wbtn" data-wgo="1" title="next step">›</button>'
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>'; }
+        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span>'
+        +'<button class="hlbx" title="clear the journey (Esc)">✕</button>';
+      hud.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
+      hud.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+    else hud.style.display="none"; }
+  if(wb){ if(WALK.mode!=="trail"){ wb.style.display="none"; }
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
       wb.style.display=""; wb.innerHTML='<div class="wjname">trail</div><div class="wnav">'+chips
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>'; }
-    if(wb.style.display!=="none"){
-      wb.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
-      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; }); } }
-  if(bn){ if(HL.jr && HL.jrObj){ bn.style.display="";
-      bn.innerHTML='<span class="hlbico">⛓</span><b>'+(HL.jrObj.name||HL.jr)+'</b><span class="hlbcid">'+HL.jr+' · '+HL.jrObj.corpus+'</span><button class="hlbx" title="clear the journey (Esc)">✕</button>';
-      bn.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
-    else bn.style.display="none"; } }
+        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
+      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; }); } } }
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;
@@ -1431,9 +1449,10 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   h+='<div class="flrow flpresets"><button class="flpre" data-fpre="all">All</button>'
     +'<button class="flpre" data-fpre="none">None</button>'
     +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button>'
-    +'<span class="flgap"></span>'
-    +'<button class="fltog flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="ELEMENTS — off shows just the clusters and entities (the empty-planets view)">'+(typeof ico==="function"?ico("target",12):"")+'</button>'
-    +'<button class="fltog flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="WIRES — every line between elements (typed connectors); off shows pure clusters">'+(typeof ico==="function"?ico("radius",12):"")+'</button></div>';
+    +'</div>';
+  h+='<div class="flrow flview"><span class="flent">view</span>'
+    +'<button class="flvbtn flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="show / hide the PLANETS (element nodes) — off = clusters and entities only">'+(typeof ico==="function"?ico("target",11):"")+'planets</button>'
+    +'<button class="flvbtn flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="show / hide the CONNECTIONS between planets (every wire)">'+(typeof ico==="function"?ico("radius",11):"")+'wires</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });

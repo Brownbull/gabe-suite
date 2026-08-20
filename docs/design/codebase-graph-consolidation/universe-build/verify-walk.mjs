@@ -24,22 +24,22 @@ const jrn = await p.evaluate(() => { __uniJrnToggle();
   const el = document.getElementById('jrn'), r = el.getBoundingClientRect();
   const grps = [...el.querySelectorAll('.jrngrp')].map(g => g.textContent);
   const named = [...el.querySelectorAll('.jrnrow .jrnname')].filter(x => !/^C\d+$/.test(x.textContent)).length;
-  return { leftAnchored: r.left < window.innerWidth / 3, groups: grps.slice(0, 3),
+  return { centered: Math.abs((r.left + r.width / 2) - window.innerWidth / 2) < 240, groups: grps.slice(0, 3),
     e2eFirst: /end-to-end/.test(grps[0] || ''), rows: el.querySelectorAll('.jrnrow').length, named }; });
 // pick the first e2e journey → banner + walk bar + steps
 await p.evaluate(() => { const rows = document.querySelectorAll('#jrn .jrnrow:not(.jrnnone)'); rows[0].click(); });
 await raf(); await p.waitForTimeout(800);
 const jsel = await p.evaluate(() => ({
-  banner: document.getElementById('hlban').style.display !== 'none',
-  bannerName: (document.querySelector('#hlban b') || {}).textContent || '',
+  banner: document.getElementById('jrnhud').style.display !== 'none',
+  bannerName: (document.querySelector('#jrnhud .wjname') || {}).textContent || '',
   walkMode: WALK.mode, steps: WALK.steps.length, pos: WALK.i,
-  wbShown: document.getElementById('walkbar').style.display !== 'none' && document.body.classList.contains('panel-open'),
+  wbShown: document.getElementById('walkbar').style.display === 'none',
   panelOpen: document.body.classList.contains('panel-open') }));
 // step forward twice: camera aims, the card opens each carrier, the lit path SURVIVES stepping
 const camBefore = await p.evaluate(() => Graph.camera().position.toArray());
-await p.evaluate(() => { document.querySelector('#walkbar [data-wgo="1"]').click(); });
+await p.evaluate(() => { document.querySelector('#jrnhud [data-wgo="1"]').click(); });
 await p.waitForTimeout(900);
-const step1 = await p.evaluate(() => ({ i: WALK.i, pos: document.querySelector('#walkbar .wpos').textContent,
+const step1 = await p.evaluate(() => ({ i: WALK.i, pos: document.querySelector('#jrnhud .wpos').textContent,
   cardName: document.querySelector('#phead .pname').textContent,
   stillLit: HL.on && !!HL.jr, camMoved: true }));
 const camAfter = await p.evaluate(() => Graph.camera().position.toArray());
@@ -50,13 +50,15 @@ const panel = await p.evaluate(() => {
   const headBtn = !!document.querySelector('#phead .pmin');
   const g = document.getElementById('g'), w0 = g.clientWidth;
   closePanel(); const wClosed = g.clientWidth;
+  const railBelow = document.getElementById('pexpand').getBoundingClientRect().top >
+    document.getElementById('prailname').getBoundingClientRect().top;   // collapsed chevron at the BOTTOM too
   openPanel(); const wOpen = g.clientWidth;
-  return { footBtn, headBtn, stable: w0 === wClosed && wClosed === wOpen };
+  return { footBtn, headBtn, railBelow, stable: w0 === wClosed && wClosed === wOpen };
 });
 // Esc → banner + walk clear
 await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
 await raf(); await p.waitForTimeout(400);
-const escd = await p.evaluate(() => ({ banner: document.getElementById('hlban').style.display === 'none',
+const escd = await p.evaluate(() => ({ banner: document.getElementById('jrnhud').style.display === 'none',
   walk: WALK.mode === null, hl: !HL.on }));
 
 // [3] the TRAIL: three different node clicks → 3 chips; clicking chip 1 refocuses
@@ -119,10 +121,10 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 
 const fails = [];
 if (errs.length) fails.push('page/console errors');
-if (!(jrn.leftAnchored && jrn.e2eFirst && jrn.named > 50)) fails.push('journeys left/grouped/named wrong');
-if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen)) fails.push('journey select banner/walk wrong');
+if (!(jrn.centered && jrn.e2eFirst && jrn.named > 50)) fails.push('journeys centered/grouped/named wrong');
+if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown)) fails.push('journey HUD (topbar middle) wrong');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
-if (!(panel.footBtn && !panel.headBtn && panel.stable)) fails.push('panel chevron/geometry wrong');
+if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');
 if (!(escd.banner && escd.walk && escd.hl)) fails.push('Esc does not clear the walk');
 if (!(trail.chips === 3 && trail.iAfter === 0 && trail.mode === 'trail' && trail.cardIsFirst)) fails.push('trail chips broken');
 if (!(elemsOff.shown === 0 && elemsOff.hulls > 0)) fails.push('elements-off is not the clusters-only view');

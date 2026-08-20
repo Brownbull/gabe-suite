@@ -156,25 +156,30 @@ function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quater
   target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
   cam.quaternion.premultiply(q); }
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
-  g.addEventListener("pointerdown", function(ev){ if(ev.button!==0) return;
-    try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls||!ctrls.target) return;
-      var r=g.getBoundingClientRect(), mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
+  /* the rig-drag starter — shared by pointerdown (left pressed first) AND the move stream (left
+     JOINS an active right-pan: chorded presses fire NO pointerdown per the pointer-events spec,
+     so a late left press is only visible as buttons&1 appearing in pointermove). */
+  function _rigStart(cx, cy){ try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls||!ctrls.target) return null;
+      var r=g.getBoundingClientRect(), mx=((cx-r.left)/r.width)*2-1, my=-((cy-r.top)/r.height)*2+1;
       var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, cam);
       var vdir=new T.Vector3(); cam.getWorldDirection(vdir);
       var plane=new T.Plane().setFromNormalAndCoplanarPoint(vdir, ctrls.target), P=new T.Vector3();
-      if(!rc.ray.intersectPlane(plane, P)) return;
-      drag={ P:P, lx:ev.clientX, ly:ev.clientY }; ctrls.enabled=false; window.__uniDragging=true;   // custom rotation owns this drag; a settle mid-drag defers its resume
+      if(!rc.ray.intersectPlane(plane, P)) return null;
+      ctrls.enabled=false; window.__uniDragging=true;
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
-    }catch(e){} }, true);
+      return { P:P, lx:cx, ly:cy }; }catch(e){ return null; } }
+  g.addEventListener("pointerdown", function(ev){ if(ev.button!==0) return; drag=_rigStart(ev.clientX, ev.clientY); }, true);
   g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
-  window.addEventListener("pointermove", function(ev){ if(!drag) return;
+  window.addEventListener("pointermove", function(ev){
+    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(!drag) return; }   // left joined a right-pan mid-stream
+    if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
-      if(ev.buttons&2){                                                     // CHORD (left+right held): the delta PANS the rig —
-        var kd=cam.position.distanceTo(ctrls.target)*0.0011;                // camera+target+pivot slide together; release right → orbit resumes
+      if(ev.buttons&2){                                                     // CHORD (left+right): BOTH at once — the rig DRIFTS (half-strength pan)
+        var kd=cam.position.distanceTo(ctrls.target)*0.00055;               // while the same delta keeps orbiting below
         var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
         var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
-        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); return; }
+        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); }
       var up=new T.Vector3(0,1,0);
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
       var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
@@ -182,7 +187,8 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       var nd=vdir.clone().applyAxisAngle(right, -dy*0.006);                          // polar around camera-right (clamp near vertical to avoid a flip)
       if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, -dy*0.006);
     }catch(e){} });
-  window.addEventListener("pointerup", function(){
+  window.addEventListener("pointerup", function(ev){
+    if(drag && ev.button!==0) return;   // releasing RIGHT mid-chord keeps the left drag alive — orbit resumes clean
     if(drag){ var ctrls=Graph.controls(); drag=null; window.__uniDragging=false; if(ctrls){ ctrls.enabled=true; try{ ctrls.update(); }catch(e){} } }
     if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true; var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } }
     if(window.__uniSettleDone) window.__uniSettleDone(); });   // release a resume the settle deferred mid-drag (no-op otherwise)
@@ -319,25 +325,26 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   var n=NIDS[WALK.steps[WALK.i]]; if(!n) return;
   _aimAt(n); SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
   _walkRender(); }
-function _walkRender(){ var wb=document.getElementById("walkbar"), bn=document.getElementById("hlban");
-  if(wb){ if(!WALK.mode){ wb.style.display="none"; }
-    else if(WALK.mode==="journey"){ var j=HL.jrObj||{};
-      wb.style.display=""; wb.innerHTML='<div class="wjname" title="'+(j.ents||[]).join(" → ")+'">'+((j.name||j.cid||"journey"))+'</div>'
-        +'<div class="wnav"><button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
+function _walkRender(){ var wb=document.getElementById("walkbar"), hud=document.getElementById("jrnhud");
+  /* JOURNEY controls live in the TOPBAR MIDDLE (operator): selected name right of the button,
+     ‹ i/N › stepping + step label + clear — the panel keeps only the element TRAIL. */
+  if(hud){ if(WALK.mode==="journey" && HL.jrObj){ var j=HL.jrObj;
+      hud.style.display="";
+      hud.innerHTML='<b class="wjname" title="'+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'+(j.name||j.cid)+'</b>'
+        +'<button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
         +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
         +'<button class="wbtn" data-wgo="1" title="next step">›</button>'
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>'; }
+        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span>'
+        +'<button class="hlbx" title="clear the journey (Esc)">✕</button>';
+      hud.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
+      hud.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+    else hud.style.display="none"; }
+  if(wb){ if(WALK.mode!=="trail"){ wb.style.display="none"; }
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
       wb.style.display=""; wb.innerHTML='<div class="wjname">trail</div><div class="wnav">'+chips
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>'; }
-    if(wb.style.display!=="none"){
-      wb.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
-      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; }); } }
-  if(bn){ if(HL.jr && HL.jrObj){ bn.style.display="";
-      bn.innerHTML='<span class="hlbico">⛓</span><b>'+(HL.jrObj.name||HL.jr)+'</b><span class="hlbcid">'+HL.jr+' · '+HL.jrObj.corpus+'</span><button class="hlbx" title="clear the journey (Esc)">✕</button>';
-      bn.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
-    else bn.style.display="none"; } }
+        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
+      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; }); } } }
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;
@@ -441,9 +448,10 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   h+='<div class="flrow flpresets"><button class="flpre" data-fpre="all">All</button>'
     +'<button class="flpre" data-fpre="none">None</button>'
     +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button>'
-    +'<span class="flgap"></span>'
-    +'<button class="fltog flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="ELEMENTS — off shows just the clusters and entities (the empty-planets view)">'+(typeof ico==="function"?ico("target",12):"")+'</button>'
-    +'<button class="fltog flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="WIRES — every line between elements (typed connectors); off shows pure clusters">'+(typeof ico==="function"?ico("radius",12):"")+'</button></div>';
+    +'</div>';
+  h+='<div class="flrow flview"><span class="flent">view</span>'
+    +'<button class="flvbtn flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="show / hide the PLANETS (element nodes) — off = clusters and entities only">'+(typeof ico==="function"?ico("target",11):"")+'planets</button>'
+    +'<button class="flvbtn flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="show / hide the CONNECTIONS between planets (every wire)">'+(typeof ico==="function"?ico("radius",11):"")+'wires</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });

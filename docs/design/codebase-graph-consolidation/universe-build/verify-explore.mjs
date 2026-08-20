@@ -79,15 +79,18 @@ await p.waitForTimeout(500);
 const chord = await p.evaluate(() => new Promise(res => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  const cam = Graph.camera(), q0 = cam.quaternion.clone(), p0 = cam.position.clone(), t0 = Graph.controls().target.clone();
-  g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: cx, clientY: cy, bubbles: true }));
-  for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 3, clientX: cx + i * 12, clientY: cy + i * 5, bubbles: true }));
-  const qPan = cam.quaternion.clone(), pPan = cam.position.clone(), tPan = Graph.controls().target.clone();
-  for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx + 72 + i * 12, clientY: cy + 30 + i * 5, bubbles: true }));
+  const cam = Graph.camera(), q0 = cam.quaternion.clone(), t0 = Graph.controls().target.clone();
+  // NO pointerdown — right-first with left joining exists only in the move stream (chorded presses fire no pointerdown)
+  for (let i = 1; i <= 8; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 3, clientX: cx + i * 12, clientY: cy + i * 5, bubbles: true }));
+  const joined = window.__uniDragging === true;
+  const qChord = cam.quaternion.clone(), tChord = Graph.controls().target.clone();
+  window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));   // release RIGHT — the left drag survives
+  const aliveAfterRightUp = window.__uniDragging === true;
+  for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx + 96 + i * 12, clientY: cy + 40 + i * 5, bubbles: true }));
   const qRot = cam.quaternion.clone();
   window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true }));
-  res({ panKeptAngle: q0.angleTo(qPan) < 1e-6, panMoved: p0.distanceTo(pPan) > 5,
-    panTargetMoved: t0.distanceTo(tPan) > 5, rotTurned: qPan.angleTo(qRot) > 0.01 });
+  res({ joined, chordTurned: q0.angleTo(qChord) > 0.01, chordDrifted: t0.distanceTo(tChord) > 3,
+    aliveAfterRightUp, rotContinued: qChord.angleTo(qRot) > 0.01, ended: window.__uniDragging === false });
 }));
 await b.close();
 
@@ -108,6 +111,6 @@ if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.p
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');
 if (!(jrnList.rows === 136 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');
-if (!(chord.panKeptAngle && chord.panMoved && chord.panTargetMoved && chord.rotTurned)) fails.push('chord pan broken');
+if (!(chord.joined && chord.chordTurned && chord.chordDrifted && chord.aliveAfterRightUp && chord.rotContinued && chord.ended)) fails.push('chord both-at-once broken');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('EXPLORE PROOF: ALL PASS');
