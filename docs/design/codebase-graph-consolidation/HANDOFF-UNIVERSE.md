@@ -37,49 +37,27 @@ python3 assemble.py                         # transforms spike-base.html + parts
 
 ---
 
-## NEXT FOCUS — CLUSTERING (the whole reason for the next session)
+## CLUSTERING — LANDED (batch 9, `985f9b0`)
 
-**The complaint**: with polygon containers the diagram is "a big mesh" — entities sit on top of each other, no clear separation; and **changing Cluster Core By does nothing to the actual node arrangement.** In the old 2D graph, choosing a core RE-ARRANGED the elements.
+The complaint (big mesh, core-by = decoration only) is fixed and proven headless:
 
-**The goal**: clearly separated entity groups; inside each, **API endpoints at the cluster EDGE, functions/internals INSIDE**; and Cluster Core By should physically re-arrange nodes.
+- **Core drives position**: `SUBANCHOR[ent][sub]` ring (`recomputeSubAnchors` in `parts/layout.js`) + a sub-anchor term in `zForce`; `applyCfg('coreBy')` now re-anchors + `d3ReheatSimulation()`. Measured: a core flip moves **97.3%** of nodes.
+- **Kind rings**: `KRADF` radial bias — endpoints/web at the entity EDGE, functions/models/schemas at the CORE; soft containment past `1.3×RENT[ent]`. Measured: endpoints meanR 129 vs internals 83 (**1.55× ring**); functions-on (456 nodes): fn 80 vs endpoint 148.
+- **Separation — the measured root cause was NOT the anchors**: default link springs (rest≈30) dragged linked entities together, and the unbounded `-150` charge ballooned clusters to r≈180. Fix: `tuneLinkForce()` typed rests (intra 40 / cross 280, soft strengths) + charge `-60` range-capped 150 + anchor spread ×1.55 + camera `DEF={150,80,780}`. Measured: bleed **43.1% → 1.9%**.
+- Proofs: `universe-build/verify-clustering.mjs` (committed, re-runnable) + a heavy-case run (456 nodes, usecase core, 343-node "other" bucket — 0 errors, 0 NaN). Battery grew to **93 static** (new 10j section, mutation-proven both ways).
+- `fill-example.py` persisted — the example rebuild is now scripted (`assemble.py` → copy to shell → `fill-example.py`), no history spelunking.
 
-### Why the core does nothing today (the root cause)
+### NEXT — operator visual pass + tuning
 
-Node POSITIONS come only from `zForce`, which pulls each node to its **entity** anchor `(EX/EY/EZ)[n.ent]` (+ a `-150` charge repulsion). The cluster-core control calls `assignSub(coreBy)` which rewrites **`n.sub`** — but `n.sub` feeds ONLY `buildClusters` (hull membership `ent|sub` + hull hue), **never position**. So the hulls regroup while the nodes stay put.
+The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
+`KRADF` factors (ring radii per kind) · zForce gains (pull 0.08 / radial 0.08 / containment 0.3) ·
+`SEP` 1.55 (anchor spread) · `tuneLinkForce` rests 40/280 · charge −60/cap 150 (in assemble.py) ·
+`RENT` formula `30+9·√count` · sub-ring `SR=min(0.55·RENT, 26+7·groups)`.
+Edit → `python3 assemble.py` → copy to shell → `python3 fill-example.py` → `node verify-clustering.mjs`.
 
-`applyCfg('coreBy')` today = `assignSub + buildClusters + updateClusters(true)` — **decoration only, no reheat, no position change.**
+### Deferred / open
 
-### The technical path (do these, in order)
-
-1. **Make the core drive POSITION — add a sub-anchor term to `zForce`.**
-   - Build a `SUBANCHOR[ent][sub]` map: within each entity, lay its distinct `sub` groups out on a small ring/grid offset from the entity center (a per-(ent,sub) local offset).
-   - Add a third pull in `zForce`: `n` → `entityAnchor + SUBANCHOR[n.ent][n.sub]` (a weaker pull than the entity term, so sub-groups separate *inside* the entity).
-   - `applyCfg('coreBy')` must then: `assignSub` → recompute `SUBANCHOR` → **`Graph.d3ReheatSimulation()`** → `buildClusters` + `updateClusters`. (The 3d-inject recon flagged exactly this as the unbuilt step.)
-
-2. **Endpoints at the edge, internals inside — a per-kind RADIAL bias.**
-   - In `zForce`, bias each node's target radius from its entity center by kind: `endpoint` → push outward (boundary), `function`/`model`/`schema` → pull inward (core). i.e. add a radial offset along `(node - entityCenter)` scaled by a per-kind factor.
-   - This gives the "endpoints ring the cluster, guts inside" the operator asked for.
-
-3. **Stronger entity separation (kill the overlap).**
-   - `recomputeEX` force/spread currently spreads anchors in `~[-300,300]`; the hulls still overlap because node charge (`-150`) + the entity pull let nodes bleed. Options: widen the anchor spread (×1.5–2), raise the entity-pull strength, and/or add a soft **containment** force (pull a node back if it strays beyond a radius of its entity anchor). Tune so hulls read as distinct bubbles.
-
-### Key code anchors (all in `parts/layout.js`, mirrored in the landed html)
-
-- `function zForce(alpha)` — the single place node positions are nudged. Add the sub-anchor + radial terms here (guard every `n.x||0` — the NaN lesson).
-- `function recomputeEX(mode)` — entity anchors (chain/force/spread). Widen/strengthen for separation.
-- `function assignSub(mode)` — core → `n.sub` (already correct); pair it with a `recomputeSubAnchors()` you add.
-- `function buildClusters()` / `makeCluster()` / `updateClusters(force)` — hull rendering; reads `n.x/y/z`. `<2`-member subs are skipped (line in buildClusters).
-- `applyCfg('coreBy')` branch — change from decoration-only to: assignSub + recompute sub-anchors + **reheat** + rebuild.
-- `EX/EY/EZ` (in `parts/adapter.js`) + a NEW `SUBANCHOR` map.
-
-### Watch-outs
-
-- **NaN frames**: any new node motion + a reheat can start from `undefined`/coincident positions → `computeBoundingSphere NaN` spew. Seed uniquely (golden-angle, as `toggleFns` does) and keep the `isFinite(n.x)` `_npos` guard.
-- **Perf**: fleets are static by default (`ANIM.fleets=false`); the connector rebuild is throttled every 3rd tick; freeze-on-drag pauses during rotation. A reheat over 456 nodes (functions on) is the heavy case — consider fewer `cooldownTicks` on a core/layout reheat, and/or throttle the hull recompute too.
-- **Cluster-core cores that need levels**: guards/usecase/community/fk join `GABE_LEVELS` by name; the "other" bucket holds unmatched (endpoints/web/external aren't in the cls-keyed maps). Sub-anchoring must handle the "other" group gracefully.
-
-### Deferred / open (not blocking the clustering work)
-
-- Push the 9 commits (operator word required; branch has no upstream — needs `-u origin graft-adoption`).
+- Push the 10 commits (operator word required; branch has no upstream — needs `-u origin graft-adoption`).
 - Twin propagation (gustify/gastify) — read-only; do NOT write to them.
 - Optional: lock the horizon upright in the orbit (currently a little roll is allowed to keep the pivot exact).
+- Optional perf: fewer `cooldownTicks` on core/layout reheats (240 today; settle is fine on the 456-node case but untested beyond).
