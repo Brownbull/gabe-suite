@@ -242,6 +242,11 @@
   /* Cluster-core pill as a 2-column grid so the 7 cores never overflow the panel width */
   #cfg .pill[data-grp="coreBy"]{ display:grid; grid-template-columns:1fr 1fr; gap:2px; }
   #cfg .pill[data-grp="coreBy"] button{ justify-content:center; }
+  /* wire-styling rows (Routes tab): color swatch + shape pill + stock reset */
+  #cfg .wcol{ width:22px; height:18px; padding:0; border:1px solid var(--line); border-radius:5px; background:none; cursor:pointer; flex:none; }
+  #cfg .pill.wshape button{ padding:3px 4px; }
+  #cfg .wreset{ font:inherit; font-size:11px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:5px; width:20px; height:18px; cursor:pointer; padding:0; flex:none; }
+  #cfg .wreset:hover{ color:var(--ink); border-color:var(--accent); }
   /* keep <code> inline chips readable in the dark card */
   .pbody code{ font-family:var(--font-mono); background:#0e1524; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
   nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}
@@ -999,6 +1004,10 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
 window.__uniCurveAmt=1;                                   // curve-amount slider → arc height multiplier (read by __uniCurve)
 window.__uniBeam={ fk:1, bridge:1, calls:1, imports:1 };  // per-kind wire beam: 0 hides, 1 stock, >1 glows (additive) — read by connectorWire
+/* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
+   so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
+var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
+var CONN0=null;                                           // boot snapshot of CONN color/style → per-row reset
 /* freeze ALL animations while a layout / core / functions change re-arranges the graph; the engine's
    settle (onEngineStop) resumes them — only if THIS freeze paused them. Ownership rules (review r2):
    a motionBtn click DURING the window takes ownership (clears the flag — no stale auto-resume), and a
@@ -1136,19 +1145,28 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var rt=mk("cfgpane"); rt.style.display="none";
   var LNS='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 20 5"/></svg>';
   var LNC='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 C 8 5 16 5 20 12"/></svg>';
-  var beamRow=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
-    var col="#"+("00000"+(c.color).toString(16)).slice(-6), dash=(c.style==="dotted")?"1.5 3.5":"6 3";
-    return '<div class="cfgrow" style="gap:6px"><span class="rlbl" style="width:36px" title="'+kind+'">'   // legend rule: the ACTUAL wire drawn, word on hover
-      +'<svg viewBox="0 0 36 8" width="36" height="8"><path d="M1 4 H35" fill="none" stroke="'+col+'" stroke-width="2" stroke-dasharray="'+dash+'"/></svg></span>'
-      +'<input type="range" class="rng" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' beam · 0 hides · >1 glows"></div>'; };
+  if(!CONN0 && typeof CONN!=="undefined"){ CONN0={};   // stock snapshot BEFORE any edit (reset target)
+    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style}; }); }
+  var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
+  var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
+    var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
+    return '<svg viewBox="0 0 36 8" width="36" height="8"><path d="M1 4 H35" fill="none" stroke="'+_hx(c.color)+'" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>'; };
+  var wireRow=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
+    var shapes=["solid","dashed","dotted","sparse"].map(function(s){ var d=DASHMAP[s];
+      return '<button data-v="'+s+'"'+(s===c.style?' class="on"':'')+' title="'+s+'"><svg viewBox="0 0 20 6" width="16" height="6"><path d="M1 3 H19" fill="none" stroke="currentColor" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg></button>'; }).join('');
+    return '<div class="cfgrow" style="gap:5px"><span class="rlbl wsamp" data-wsamp="'+kind+'" style="width:36px" title="'+kind+'">'+_sampSVG(kind)+'</span>'
+      +'<input type="color" class="wcol" data-wcol="'+kind+'" value="'+_hx(c.color)+'" title="'+kind+' color">'
+      +'<div class="pill wshape" data-wshape="'+kind+'">'+shapes+'</div>'
+      +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'
+      +'<div class="cfgrow" style="gap:6px;margin-bottom:7px"><input type="range" class="rng" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' beam · 0 hides · >1 glows"></div>'; };
   rt.innerHTML=
      '<div class="grp"><div class="grplbl">LINES</div>'
     + '<div class="cfgrow" style="gap:6px">'
     + pillHTML("lineStyle",[{v:"straight",t:LNS,ti:"straight"},{v:"curved",t:LNC,ti:"curved"}], CFG.lineStyle)
     + '<input type="range" class="rng" id="curveAmtRng" min="0.2" max="2.5" step="0.1" value="'+window.__uniCurveAmt+'" title="curve amount (when curved)"></div></div>'
-    + '<div class="grp"><div class="grplbl">BEAM</div>'
-    + beamRow("fk")+beamRow("bridge")+beamRow("calls")+beamRow("imports")
-    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">per line kind · 0 hides · past 1 glows</div></div>';
+    + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
+    + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
+    + '<div style="font-size:10px;color:var(--muted);margin-top:2px">per kind: sample · color · shape · beam (0 hides · past 1 glows)</div></div>';
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -1181,6 +1199,21 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(car) car.addEventListener("input", function(){ window.__uniCurveAmt=+this.value; if(window.__uniCurved) redraw(); });
   rt.querySelectorAll("input[data-beam]").forEach(function(s){ s.addEventListener("input", function(){
     window.__uniBeam[s.getAttribute("data-beam")]=+s.value; redraw(); }); });
+  /* wire styling: color / shape mutate CONN itself (connectorWire reads it live); the row sample
+     and the CONN-derived legend re-render so neither can drift from the drawn wire. */
+  var updSamp=function(kind){ var el=rt.querySelector('[data-wsamp="'+kind+'"]'); if(el) el.innerHTML=_sampSVG(kind);
+    if(window.__legRender) try{ __legRender(); }catch(e){} };
+  rt.querySelectorAll("input[data-wcol]").forEach(function(inp){ inp.addEventListener("input", function(){
+    var k=inp.getAttribute("data-wcol"); CONN[k].color=parseInt(inp.value.slice(1),16); updSamp(k); redraw(); }); });
+  rt.querySelectorAll(".pill[data-wshape]").forEach(function(p){ p.addEventListener("click", function(e){
+    var b=e.target.closest("button"); if(!b) return; var k=p.getAttribute("data-wshape");
+    CONN[k].style=b.getAttribute("data-v"); p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    updSamp(k); redraw(); }); });
+  rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
+    var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style; }
+    var inp=rt.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
+    var p=rt.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
+    updSamp(k); redraw(); }); });
 };
 /* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
    TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
@@ -1716,10 +1749,10 @@ var LEGEND={
   Types: order.map(function(k){ return {t:"kind",k:k}; }).concat([   // the 12 element KINDS — icon + 3D form (the node representation)
     {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · container: polygon / wrap"} ]),
   Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
-    {t:"ln",c:0x5893ad,s:"dashed",l:"fk <i>a foreign-key data coupling</i>"},
-    {t:"ln",c:0xf59e0b,s:"dashed",l:"calls <i>a cross-entity function call</i>"},
-    {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
-    {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},
+    {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
+    {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
+    {t:"ln",k:"imports",l:"imports <i>a cross-entity import</i>"},
+    {t:"ln",k:"bridge",l:"bridge <i>a frontend fetch reaching an API</i>"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -1746,7 +1779,9 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
   function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }
   function vis(it){ var c=hx(it.c||0xffffff);
     switch(it.t){
-      case "ln": return '<div class="lgln" style="border-bottom:2.5px '+it.s+' '+c+'"></div>';
+      case "ln": var lw=it.k?CONN[it.k]:{color:it.c,style:it.s}, lc=hx(lw.color!=null?lw.color:0xffffff),
+        ld=DASHMAP[lw.style]; if(ld===undefined) ld="6 3";
+        return '<svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+lc+'" stroke-width="2.5"'+(ld?' stroke-dasharray="'+ld+'"':'')+'/></svg>';
       case "aura": return '<div style="width:15px;height:15px;border-radius:50%;background:'+c+'66;box-shadow:0 0 7px 3px '+c+'99"></div>';
       case "shock": return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:0 0 0 3px '+c+'55,0 0 0 6px '+c+'22"></div>';
       case "flak": return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:6px -4px 0 -2px '+c+',-6px 3px 0 -2px '+c+',4px 5px 0 -3px '+c+'"></div>';

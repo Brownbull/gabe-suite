@@ -159,6 +159,27 @@ OLD_STOP = '.onEngineStop(function(){ updateClusters(true);'
 assert OLD_STOP in text, "onEngineStop anchor missing"
 text = text.replace(OLD_STOP, '.onEngineStop(function(){ updateClusters(true); if(window.__uniSettleDone) window.__uniSettleDone();', 1)
 
+# ── batch 11-A: legend Connectors rows DERIVE from CONN (the literals duplicated boot values → lied
+#    after any edit); the ln sample becomes an SVG from DASHMAP (CSS border-style cannot draw sparse;
+#    inline height beats the .lgln{height:0} border-trick rule) ──
+OLD_LEGROWS = '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
+    {t:"ln",c:0x5893ad,s:"dashed",l:"fk <i>a foreign-key data coupling</i>"},
+    {t:"ln",c:0xf59e0b,s:"dashed",l:"calls <i>a cross-entity function call</i>"},
+    {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
+    {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},'''
+assert OLD_LEGROWS in text, "legend Connectors literals anchor missing"
+text = text.replace(OLD_LEGROWS, '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
+    {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
+    {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
+    {t:"ln",k:"imports",l:"imports <i>a cross-entity import</i>"},
+    {t:"ln",k:"bridge",l:"bridge <i>a frontend fetch reaching an API</i>"},''', 1)
+OLD_LNCASE = '''      case "ln": return '<div class="lgln" style="border-bottom:2.5px '+it.s+' '+c+'"></div>';'''
+assert OLD_LNCASE in text, "legend ln-case anchor missing"
+text = text.replace(OLD_LNCASE,
+  '''      case "ln": var lw=it.k?CONN[it.k]:{color:it.c,style:it.s}, lc=hx(lw.color!=null?lw.color:0xffffff),
+        ld=DASHMAP[lw.style]; if(ld===undefined) ld="6 3";
+        return '<svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+lc+'" stroke-width="2.5"'+(ld?' stroke-dasharray="'+ld+'"':'')+'/></svg>';''', 1)
+
 # ── batch 10 (review r2): BOTH bare buildCfg() call sites rebuild the FLAT panel and drop the tabs —
 #    re-tab after each (the .cfgtabbar guard makes __uniAddLayoutTab idempotent, state read from CFG) ──
 OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'

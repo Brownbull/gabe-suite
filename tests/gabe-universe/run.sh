@@ -172,8 +172,16 @@ check('id="curveAmtRng"' in page and '*(window.__uniCurveAmt||1)' in page,
       "curve-amount slider missing or __uniCurve ignores it")
 check('window.__uniBeam={ fk:1' in page and 'if(!_bm) return;' in page and 'cfg.trust*_bm' in page,
       "per-kind beam missing (declare + skip-at-0 + opacity multiply)")
-check('beamRow("fk")+beamRow("bridge")+beamRow("calls")+beamRow("imports")' in page,
-      "the four per-kind beam sliders are not built")
+check('wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")' in page,
+      "the four per-kind wire rows (sample · color · shape · beam) are not built")
+# batch 11-A: wire styling — ONE shared style map, CONN-derived samples + legend (a sample must never lie)
+check('var DASHMAP={ solid:' in page, "the shared style→dasharray map is missing")
+check('data-wcol=' in page and 'data-wshape=' in page and 'data-wreset=' in page,
+      "per-kind color / shape / reset controls missing")
+check('{t:"ln",k:"fk"' in page and '{t:"ln",k:"bridge"' in page,
+      "legend Connectors rows do not reference CONN kinds (frozen literals would lie after an edit)")
+check('{t:"ln",c:0x5893ad' not in page, "REGRESSION: legend Connectors back to hardcoded literals")
+check('case "ln": var lw=it.k?CONN[it.k]' in page, "legend ln sample not derived from CONN at render time")
 check("'[data-itog=\"transports\"]'" in page, "the transports toggle is not DOM-moved into the Routes pane")
 # review r2 (mutation-proven interleaves, all headless-verified):
 check('mo.onclick=function(){ window.__uniSettleCancel();' in page,
