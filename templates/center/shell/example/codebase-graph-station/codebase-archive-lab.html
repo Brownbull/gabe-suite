@@ -17,6 +17,8 @@
   --bg:#f6f7f9; --panel:#ffffff; --ink:#141a24; --muted:#7a8595; --line:#e7e9ee;
   --accent:#4f46e5; --edge:#9aa3ad;
   --c-model:#12b886; --c-schema:#f59f00; --c-fn-api:#4c6ef5; --c-fn-services:#0f766e; --c-fn-web:#e8590c;
+  /* frontend-kind glyph colours (Layers frontend lanes) — glyph = kind, dot = entity */
+  --fk-comp:#e8590c; --fk-hook:#0ca678; --fk-store:#e64980; --fk-route:#339af0;
   --m-get:#16794c; --m-post:#4338ca; --m-put:#b45309; --m-delete:#d1443c;
 }
 @media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
@@ -60,8 +62,6 @@ aside .uqchip{ font-size:9px; font-weight:800; letter-spacing:.04em; color:var(-
   border:1px solid var(--c-schema); border-radius:5px; padding:0 4px; margin-left:4px; }
 aside .st-pass{ color:var(--c-model); font-weight:700; } aside .st-fail{ color:var(--m-delete); font-weight:700; }
 aside .cid{ font-size:10px; font-weight:800; color:var(--accent); }
-#navback{ position:absolute; top:8px; right:10px; z-index:6; font:inherit; font-size:12px; font-weight:700;
-  background:var(--accent); color:#fff; border:1px solid var(--accent); border-radius:8px; padding:3px 10px; cursor:pointer; }
 #panelchev{ position:absolute; bottom:10px; right:10px; z-index:6; width:32px; height:32px;
   display:flex; align-items:center; justify-content:center; line-height:0;
   background:var(--panel); color:var(--muted); border:1px solid var(--line);
@@ -69,7 +69,6 @@ aside .cid{ font-size:10px; font-weight:800; color:var(--accent); }
 #panelchev:hover{ color:var(--ink); border-color:var(--edge); }
 #sidewrap.min{ width:42px; }
 #sidewrap.min aside{ display:none; }
-#sidewrap.min #navback{ display:none; }
 #sidewrap.min #panelchev{ right:5px; }
 aside h3{ font-size:14px; margin-bottom:2px; }
 aside .k{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.07em; font-weight:700; margin:12px 0 4px;
@@ -112,18 +111,38 @@ aside .conrow:hover{ color:var(--accent); }
 aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
   color:var(--muted); flex:none; min-width:52px; }   /* .sub2 kills pointer-events — the expander must stay clickable */
 .legend{ display:block; font-size:11px; color:var(--muted);
-  max-height:44vh; overflow-y:auto; }
-.legend .lg-h{ font-size:10px; font-weight:800; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--muted); opacity:.75; margin:6px 0 2px; }
-.legend .it{ display:flex; align-items:center; gap:6px; }
-.legend svg{ width:16px; height:14px; }
+  max-height:46vh; overflow-y:auto; padding-right:2px; }
+.legend .lg-h{ font-size:9.5px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+  color:var(--accent); opacity:.9; margin:0 0 3px; padding:8px 0 0; border-top:1px solid var(--line);
+  display:flex; align-items:center; gap:5px; }
+.legend .lg-h:first-child{ border-top:none; padding-top:0; }
+.legend .lg-h svg{ width:12px; height:12px; opacity:.85; }
+.legend .it{ display:flex; align-items:baseline; gap:7px; padding:2px 0; line-height:1.4; }
+.legend .it > svg{ width:18px; height:15px; flex:none; align-self:center; }
+.legend .it b{ color:var(--ink); font-weight:650; }
+.legend .cmap{ margin:4px auto 7px; display:block; width:204px !important; height:102px !important; }
+.legend .cmap text{ font-weight:700; }
+/* legend swatches SHOW the real glyph/wire as drawn (operator ruling 2026-08-16: never a
+   word-description of a visual); the parenthetical label is a handle, the hover title the words */
+.legend .it > svg.lgico{ width:32px !important; height:18px !important; }
+.legend .lglbl{ color:var(--muted); }
 /* node vocab */
 .entnode circle.body{ transition:opacity .25s; }
+/* P2b — the FRONTEND companion OCTAGON (folded-in pieces, in the ENTITY's colour) +
+   FE-native bucket octagons (orange, no entity). Octagon = frontend; colour = which entity. */
+.fenode{ cursor:pointer; }
+.fenode polygon.febody{ transition:opacity .2s; }
+.fenode text.felbl{ font-size:10px; text-anchor:middle; fill:var(--ink); font-weight:650; pointer-events:none; }
+.fenode text.fecount{ font-size:11px; text-anchor:middle; font-weight:800; pointer-events:none; }
+.feband{ font-size:12px; fill:var(--ink); font-weight:600; letter-spacing:.03em; pointer-events:none; }
 .lbl{ font-size:12px; font-weight:650; text-anchor:middle; fill:var(--ink); pointer-events:none; }
 .sub2{ font-size:10px; text-anchor:middle; fill:var(--muted); pointer-events:none; }
 .plabel{ font-size:8.5px; text-anchor:middle; fill:var(--ink); pointer-events:none; }
 .container{ fill-opacity:.05; stroke-opacity:.5; stroke-width:1.4; stroke-dasharray:4 4; }
-.piece, .epmark, .fnode{ cursor:pointer; }
+.piece, .epmark, .fnode, .screen{ cursor:pointer; }
+.frontcont{ fill-opacity:.05; stroke-opacity:.6; stroke-width:1.4; stroke-dasharray:5 4; }
+.e-bridge{ fill:none; stroke:var(--c-fn-web); stroke-width:1.5; stroke-dasharray:5 3; opacity:.85; }
+.e-fecall{ fill:none; stroke:var(--fk-hook); stroke-width:1.2; opacity:.42; }
 /* edges */
 .e-fk{ fill:none; stroke:var(--edge); stroke-width:1.8; }
 .e-calls{ fill:none; stroke:var(--accent); stroke-width:1.6; stroke-dasharray:6 5;
@@ -131,11 +150,35 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 .e-imports{ fill:none; stroke:var(--muted); stroke-width:1.4; stroke-dasharray:2 4; }
 .e-touch{ fill:none; stroke:var(--edge); stroke-width:1; opacity:.55; }
 @keyframes dashmove{ to{ stroke-dashoffset:-22; } }
+/* motion pause (toolbar toggle) — freezes CSS animations; the SMIL flow dots are
+   paused separately via svg.pauseAnimations(). Both engines, one button. */
+:root[data-motion="off"] * { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce){ .e-calls{ animation:none; } }
 .dim{ opacity:.12; }
 .tgl{ font:inherit; background:var(--panel); color:var(--ink); border:1px solid var(--line);
   border-radius:8px; padding:5px 8px; cursor:pointer; display:inline-flex; align-items:center; }
 .tgl.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+/* overlays dropdown rows (guards · hubs · pressure — compressed off the toolbar) */
+.ovrow{ font:inherit; font-size:12.5px; font-weight:600; color:var(--ink); background:var(--panel);
+  border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer; display:flex;
+  align-items:center; gap:9px; width:100%; text-align:left; margin-bottom:5px; }
+.ovrow:last-child{ margin-bottom:0; }
+.ovrow.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+.ovrow svg{ width:15px; height:15px; flex:none; }
+/* global settings cog panel (assets/a3-settings.js) — a3.css is not loaded on this lab
+   page, so the ~10 panel rules are inlined here (--surface → --panel). Hidden until the
+   sidebar cog toggles .on. */
+.a3gear{ display:inline-flex; align-items:center; gap:6px; margin-left:8px; background:var(--panel); border:1px solid var(--line); border-radius:20px; padding:3px 7px; font-size:.72rem; font-weight:600; color:var(--muted); cursor:pointer; }
+.a3gear:hover{ color:var(--accent); border-color:var(--accent); }
+.a3panel{ position:fixed; right:20px; top:56px; z-index:60; width:262px; background:var(--panel); border:1px solid var(--line); border-radius:11px; box-shadow:0 12px 34px rgba(0,0,0,.30); padding:14px; display:none; }
+.a3panel.on{ display:block; }
+.a3panel h4{ margin:0 0 10px; font-size:.7rem; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+.a3panel label.row{ display:block; font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:12px 0 5px; }
+.a3panel select{ width:100%; font-size:.82rem; padding:6px 8px; border:1px solid var(--line); border-radius:8px; background:var(--panel); color:var(--ink); font-family:inherit; }
+.a3seg{ display:flex; gap:4px; }
+.a3seg button{ flex:1; font-size:.76rem; font-weight:600; padding:6px 0; border-radius:7px; border:1px solid var(--line); background:var(--panel); color:var(--muted); cursor:pointer; font-family:inherit; }
+.a3seg button.on{ background:var(--accent); border-color:var(--accent); color:#fff; }
+.a3toggle{ display:flex; align-items:center; justify-content:space-between; gap:10px; font-size:.72rem; color:var(--muted); margin-top:10px; }
 .cornerbox{ position:absolute; bottom:10px; z-index:25; max-width:360px; font-size:11px;
   background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:7px 10px; }
 .cornerbox .cbhead{ display:flex; align-items:center; gap:10px; font-size:11px; font-weight:800;
@@ -148,6 +191,87 @@ aside .conrow .ck{ font-size:10.5px; font-weight:800; letter-spacing:.04em; text
 #keysBox .cbbody span{ color:var(--muted); }
 .fixture{ position:absolute; top:10px; left:14px; font-size:10.5px; color:var(--muted);
   background:var(--panel); border:1px dashed var(--line); border-radius:6px; padding:2px 9px; pointer-events:none; }
+/* the top-right element FINDER — type a name, ▲/▼ through matches (WhatsApp-style) */
+.findbar{ position:absolute; top:10px; right:14px; z-index:26; display:flex; align-items:center; gap:6px;
+  background:var(--panel); border:1px solid var(--line); border-radius:8px; padding:3px 6px 3px 8px;
+  box-shadow:0 2px 8px rgba(0,0,0,.06); }
+.findbar .fico{ color:var(--muted); flex:none; }
+.findbar input{ font:inherit; font-size:12px; border:none; outline:none; background:none; color:var(--ink);
+  width:130px; padding:1px 0; }
+.findbar input::placeholder{ color:var(--muted); }
+.findbar .findcount{ font-size:10.5px; color:var(--muted); min-width:44px; text-align:right; font-variant-numeric:tabular-nums; }
+.findbar .findnav{ font:inherit; font-size:11px; line-height:1; background:none; border:none; color:var(--muted);
+  cursor:pointer; padding:2px 3px; border-radius:4px; }
+.findbar .findnav:hover{ background:var(--line); color:var(--ink); }
+
+/* ── ECP panel kit — PORTED from docs/design/codebase-graph-consolidation/
+   element-components.html (operator-locked 2026-08-15), scoped under #panel so it
+   never collides with the lab's own aside styles. The card FOLLOWS the center's
+   content font/size (--font-content / --root-size, written by a3-settings.js once
+   the shell stack loads — Phase-2 task 4); code (paths, types) stays --font-mono.
+   The *-x fallbacks keep it styled before that stack is present. ── */
+#panel .ecp{ --c-endpoint:#4c6ef5; --c-fn:#7048e8; --c-god:#d9821f;
+  --font-content-x:var(--font-content, ui-sans-serif,system-ui,sans-serif);
+  --font-mono-x:var(--font-mono, Menlo,Consolas,ui-monospace,monospace);
+  --root-size-x:var(--root-size, 13px);
+  font-family:var(--font-content-x); font-size:var(--root-size-x); }
+#panel .ecp code{ font-family:var(--font-mono-x); }
+/* P1b review: a signature code value wraps unbroken tokens (generics/Annotated[...]) so a
+   long-but-capped gsig never overflows the 300px panel horizontally. The emitter caps length. */
+#panel .kv .v, #panel .kv .v code{ overflow-wrap:anywhere; word-break:break-word; min-width:0; }
+#panel svg.ico{ width:14px; height:14px; flex:none; stroke-width:2; fill:none; stroke:currentColor; stroke-linecap:round; stroke-linejoin:round; }
+#panel .phead{ display:flex; align-items:flex-start; gap:8px; padding:2px 0 11px; border-bottom:1px solid var(--line); margin-bottom:11px; }
+#panel .ptitle{ flex:1; min-width:0; }
+#panel .pname{ font:600 1.08em/1.3 var(--font-mono-x); word-break:break-all; color:var(--ink); }
+#panel .ptype{ display:flex; align-items:center; gap:5px; font-size:.88em; color:var(--muted); margin-top:3px; }
+#panel .ptype .kglyph{ width:15px; height:15px; }
+#panel .ptype b{ text-transform:uppercase; letter-spacing:.04em; font-size:.81em; }
+#panel .tracenav{ display:flex; align-items:center; gap:1px; flex:none; }
+#panel .tracebtn{ border:1px solid transparent; background:none; color:var(--muted); border-radius:6px; width:22px; height:22px; cursor:pointer; padding:0; display:inline-flex; align-items:center; justify-content:center; }
+#panel .tracebtn:hover:not(:disabled){ border-color:var(--edge); color:var(--ink); }
+#panel .tracebtn:disabled{ opacity:.35; cursor:default; }
+#panel .tracepos{ font:600 10px/1 var(--font-ui); color:var(--muted); min-width:22px; text-align:center; }
+#panel .ecp .sec{ margin:0 0 13px; } #panel .ecp .sec:last-child{ margin-bottom:0; }
+#panel .sechd{ display:flex; align-items:center; gap:6px; font-size:.81em; font-weight:800; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); margin:0 0 7px; }
+#panel .sechd .cnt{ margin-left:auto; font-family:var(--font-ui); font-weight:700; font-size:.77em; color:#fff; background:var(--accent); border-radius:10px; padding:2px 7px; }
+#panel .sechd .cnt.ok{ background:var(--c-model); }
+#panel .sublbl{ display:flex; align-items:center; gap:5px; font-size:.85em; color:var(--muted); margin:4px 0 5px; }
+#panel .ecp .kv{ display:flex; align-items:center; gap:7px; font-size:.96em; padding:1.5px 0; border-top:none; }
+/* stacked kv (long/code value): icon+label as a title row, value full-width below */
+#panel .ecp .kv.stack{ display:grid; grid-template-columns:16px 1fr; grid-template-areas:"ico k" "v v"; column-gap:6px; row-gap:2px; align-items:center; padding:3px 0; }
+#panel .ecp .kv.stack .kico{ grid-area:ico; }
+#panel .ecp .kv.stack .k{ grid-area:k; width:auto; font-weight:600; }
+#panel .ecp .kv.stack .v{ grid-area:v; }
+#panel .kv .kico{ color:var(--muted); }
+#panel .kv .k{ color:var(--muted); flex:none; width:70px; text-transform:none; letter-spacing:0; font-weight:400; font-size:1em; margin:0; display:inline; }
+#panel .kv .v{ color:var(--ink); min-width:0; }
+#panel .chip{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:.85em; line-height:1.5; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 7px; margin:0 4px 4px 0; }
+#panel .chip svg{ width:11px; height:11px; }
+#panel .chip.model{ color:var(--c-model); } #panel .chip.schema{ color:var(--c-schema); } #panel .chip.web{ color:var(--c-fn-web); } #panel .chip.route{ color:var(--c-endpoint); } #panel .chip.fn{ color:var(--c-fn); } #panel .chip.ok{ color:var(--c-model); }
+#panel .chip.hot{ cursor:pointer; transition:border-color .1s, box-shadow .1s; }
+#panel .chip.hot:hover{ border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 22%, transparent); }
+#panel .ecp .doc{ font-size:.96em; color:var(--ink); background:var(--bg); border-left:2px solid var(--edge); padding:7px 10px; border-radius:0 6px 6px 0; margin:0; }
+#panel .more{ font-weight:600; font-size:.85em; line-height:1; color:var(--accent); background:none; border:1px dashed var(--edge); border-radius:6px; padding:4px 8px; cursor:pointer; } #panel .more:hover{ border-color:var(--accent); }
+#panel .flag{ display:inline-flex; align-items:center; gap:4px; font-family:var(--font-ui); font-weight:700; font-size:.77em; text-transform:uppercase; letter-spacing:.04em; padding:3px 7px; border-radius:5px; color:var(--c-god); border:1px solid var(--c-god); }
+#panel .tabbar{ display:flex; gap:3px; margin-bottom:8px; border-bottom:1px solid var(--line); flex-wrap:wrap; }
+#panel .tab{ display:inline-flex; align-items:center; gap:4px; font-weight:600; font-size:.85em; line-height:1; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 7px; border-bottom:2px solid transparent; }
+#panel .tab svg{ width:12px; height:12px; } #panel .tab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+#panel .tab .tabn{ background:var(--bg); border:1px solid var(--line); border-radius:8px; padding:0 5px; font-size:.77em; font-weight:700; }
+#panel .tab.on .tabn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+#panel table.cols{ width:100%; border-collapse:collapse; font-size:.92em; margin-top:2px; } #panel table.cols td{ padding:2px 4px; border-bottom:1px solid var(--line); }
+#panel table.cols td.ty{ color:var(--c-schema); font-family:var(--font-mono-x); font-size:.85em; text-align:right; }
+#panel .keycol{ display:inline-flex; align-items:center; gap:4px; }
+#panel .ecp .count{ display:flex; align-items:center; gap:7px; font-size:.96em; padding:2.5px 0; border-bottom:1px dotted var(--line); } #panel .count .lbl{ flex:1; } #panel .count .n{ font-weight:700; font-variant-numeric:tabular-nums; }
+#panel .hint{ display:flex; align-items:center; gap:5px; font-size:10.5px; color:var(--muted); margin-top:7px; font-style:italic; }
+#panel .hint svg{ width:12px; height:12px; }
+#panel .tipico{ cursor:help; position:relative; display:inline-flex; margin-left:2px; }
+#panel .tipico.info{ color:var(--accent); } #panel .tipico.warn{ color:var(--c-god); }
+#panel .tipico svg{ width:13px; height:13px; }
+#panel .tipico .tip{ display:none; position:absolute; top:19px; left:-4px; z-index:6; width:214px; text-transform:none; letter-spacing:0;
+  background:var(--ink); color:var(--panel); font:500 11px/1.45 var(--font-ui); padding:7px 9px; border-radius:7px; box-shadow:0 4px 14px rgba(0,0,0,.25); }
+#panel .tipico:hover .tip, #panel .tipico.on .tip{ display:block; }
+#panel .ubar{ height:6px; background:var(--bg); border:1px solid var(--line); border-radius:4px; overflow:hidden; margin:1px 0 6px; }
+#panel .ufill{ height:100%; background:var(--accent); }
 
 /* ── center chrome (nav sidebar + topbar) grafted around the lab renderer ── */
 :root{ --sidebar:#101726; --sidebar-2:#1b2436; --sidebar-ink:#c7cfdd; --sidebar-muted:#79839a;
@@ -233,7 +357,7 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   <a class="navitem" href="releases.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg> Releases</a>
   <div class="navlabel g-leaf">Leaf</div>
   <span class="navsub" style="opacity:.5">none wired yet</span>
-  <div class="foot">regen 2026-08-15 23:33Z<br>HEAD fcc3bb73 · build_center_a3.py</div>
+  <div class="foot">regen 2026-08-20 04:02Z<br>HEAD fcc3bb73 · build_center_a3.py</div>
 </nav>
 <div class="labcol">
   <div class="topbar">
@@ -247,9 +371,12 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
     <span class="sub" id="sub">the whole ecosystem, live from the archmap</span>
     <div class="seg" id="levels">
       <button data-lvl="entities" class="on">1 · Entities</button>
+      <button data-lvl="frontend">2 · Frontend</button>
       <button data-lvl="functions">3 · Functions</button>
       <button data-lvl="layers">4 · Layers</button>
+      <button data-lvl="layersfg">4B · Layers ᶠ</button>
       <button data-lvl="trace">5 · Trace</button>
+      <button data-lvl="tracefg">5B · Trace ᶠ</button>
     </div>
   </div>
   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;margin-top:7px;position:relative">
@@ -270,11 +397,19 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       depth <input type="range" id="depthSlider" min="1" max="5" step="1" value="5" style="width:88px;accent-color:var(--accent)">
       <b id="depthVal" style="color:var(--ink);width:10px;text-align:center">5</b>
     </label>
-    <button id="themebtn" class="tgl" title="Theme — light / dark (follows the OS until toggled; the command center's stamp will drive this once embedded)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
-    <button id="guardsbtn" class="tgl" title="Guards — teal shields mark pieces/endpoints with declared validators"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
-    <button id="hubsbtn" class="tgl" title="Hubs — fan-in rings (width = usage) and red dashed god halos"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='6' fill='none' stroke='currentColor' stroke-width='2.6'/><circle cx='12' cy='12' r='10' fill='none' stroke='currentColor' stroke-width='1.2' stroke-dasharray='4 3'/></svg></button>
-    <button id="pressbtn" class="tgl" title="Pressure — orange heat where the archive shows change concentration"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='12' cy='12' r='8.5' fill='currentColor' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='currentColor'/></svg></button>
+    <button id="motionbtn" class="tgl on" title="Motion — pause the moving dots"></button>
+    <div style="position:relative;display:inline-flex">
+    <button id="overlaysbtn" class="tgl" title="Overlays — guards · hubs · pressure" aria-expanded="false"><svg viewBox='0 0 24 24' width='16' height='16' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round'><line x1='4' y1='7' x2='20' y2='7'/><line x1='4' y1='12' x2='20' y2='12'/><line x1='4' y1='17' x2='20' y2='17'/><circle cx='9' cy='7' r='2.2' fill='var(--panel)'/><circle cx='15' cy='12' r='2.2' fill='var(--panel)'/><circle cx='8' cy='17' r='2.2' fill='var(--panel)'/></svg></button>
+    <div id="overlayspanel" hidden style="position:absolute;z-index:40;top:100%;right:0;margin-top:4px;width:210px;background:var(--panel);border:1px solid var(--line);border-radius:11px;box-shadow:0 10px 30px rgba(0,0,0,.18);padding:8px">
+      <div style="font-size:10px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:2px 4px 7px">Overlays</div>
+      <button id="guardsbtn" class="ovrow" title="Guards — teal shields mark pieces/endpoints with declared validators"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z'/></svg>Guards</button>
+      <button id="hubsbtn" class="ovrow" title="Hubs — fan-in rings (width = usage) and red dashed god halos"><svg viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2'><circle cx='12' cy='12' r='6' stroke-width='2.6'/><circle cx='12' cy='12' r='10' stroke-width='1.2' stroke-dasharray='4 3'/></svg>Hubs</button>
+      <button id="pressbtn" class="ovrow" title="Pressure — orange heat where the archive shows change concentration"><svg viewBox='0 0 24 24' fill='currentColor'><circle cx='12' cy='12' r='8.5' fill-opacity='0.35'/><circle cx='12' cy='12' r='4'/></svg>Pressure</button>
+    </div>
+    </div>
     <button id="testsbtn" class="tgl" title="Tests — proof badges: count pill (green pass / red fail), hollow dashed = unproven"><svg viewBox='0 0 24 24' width='16' height='16'><rect x='3' y='7' width='18' height='11' rx='5.5' fill='none' stroke='currentColor' stroke-width='2'/><path d='M8.5 12.5 l2.4 2.4 L15.5 10' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
+    <button id="behindbtn" class="tgl" title="Code behind — purple count badge (top-left): how many functions are pulled in behind this one (endpoints + functions)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M12 2 2 7l10 5 10-5-10-5z' fill='none' stroke='currentColor' stroke-width='2'/><path d='m2 17 10 5 10-5 M2 12l10 5 10-5' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
+    <button id="usagebtn" class="tgl" title="Used by — accent count badge (bottom-right): how many elements depend on this one (in-degree)"><svg viewBox='0 0 24 24' width='16' height='16'><circle cx='18' cy='18' r='3' fill='none' stroke='currentColor' stroke-width='2'/><circle cx='6' cy='6' r='3' fill='none' stroke='currentColor' stroke-width='2'/><path d='M6 21V9a9 9 0 0 0 9 9' fill='none' stroke='currentColor' stroke-width='2'/></svg></button>
     <button id="conns" class="tgl on" title="Connections — cross-entity wires (FKs, returned schemas, uses)"><svg viewBox='0 0 24 24' width='16' height='16'><path d='M3 17 Q12 3 21 12' fill='none' stroke='currentColor' stroke-width='2'/><circle cx='13.5' cy='8.6' r='2.4' fill='currentColor'/></svg></button>
     <button id="gear" title="Layout controls" aria-expanded="false" style="font:inherit;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:6px 8px;cursor:pointer;display:inline-flex">
       <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -322,6 +457,8 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
   </div>
 </header>
 <div class="wrap">
+  <div id="graphhost" style="flex:1;min-width:0;position:relative;display:flex;border-right:1px solid var(--line)">
+  <div id="fgstage" style="display:none;flex:1;min-width:0;position:relative;overflow:hidden"></div>
   <div id="stage">
     <svg id="canvas" xmlns="http://www.w3.org/2000/svg">
       <defs>
@@ -348,24 +485,45 @@ nav.side::-webkit-scrollbar-button{ display:none; height:0; width:0; }
       </div>
     </div>
   </div>
+  <div id="findbar" class="findbar" title="find an element by name — Enter / ▼ next, Shift+Enter / ▲ previous">
+    <svg viewBox="0 0 24 24" width="13" height="13" class="fico"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><line x1="16.3" y1="16.3" x2="21" y2="21" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <input id="findinput" type="text" placeholder="find element…" autocomplete="off" spellcheck="false">
+    <span id="findcount" class="findcount"></span>
+    <button id="findprev" class="findnav" title="previous match (Shift+Enter)">▲</button>
+    <button id="findnext" class="findnav" title="next match (Enter)">▼</button>
+  </div>
+  </div><!-- /graphhost -->
   <div id="sidewrap">
     <div id="panelgrip" title="drag to resize the panel"></div>
     <aside id="panel"></aside>
-    <button id="navback" hidden title="back to the previous element">←</button>
     <button id="panelchev" title="minimize / restore the panel">&#187;</button>
   </div>
 </div>
 
 </div><!-- /labcol -->
+<script src="../../assets/a3-settings.js" defer></script>
+<script src="../../assets/force-graph.min.js"></script>
+<script src="./c4-graph.js"></script>
 <script src="./levels.js"></script>
 <script>
 (function(){
 "use strict";
 var D = window.GABE_LEVELS; if(!D) return;
+// GABE_C4 is the SECOND feed the panel reads (Phase-2 consolidation): the endpoint
+// `behind` floor + the web→API bridges live here, never in GABE_LEVELS (which stays
+// FK-only + byte-identical). Absent → every C4-sourced card row goes honest-empty.
+var C4 = window.GABE_C4 || null;
 var NS = "http://www.w3.org/2000/svg";
 var COLORS = D.colors || {};
 var METHOD = { GET:"var(--m-get)", POST:"var(--m-post)", PUT:"var(--m-put)", PATCH:"var(--m-put)", DELETE:"var(--m-delete)" };
 var FNCOL = { api:"var(--c-fn-api)", services:"var(--c-fn-services)", web:"var(--c-fn-web)" };
+// fn CODE-BEHIND lookup (slug|name → {fns,depth,names}). fn_nodes carry it, but the
+// trace/layers click handlers build MINIMAL f objects, so showFn resolves behind here
+// for every entry path (the Functions level already passes the full node).
+var FN_BEHIND = {};
+// AUDIT #3: dual-key by slug|name (Trace/Layers key) AND the fn id file#name (the
+// Functions level's regNode key is "fn:"+f.id) so nodeMarks resolves on EVERY level.
+(D.fn_nodes||[]).forEach(function(n){ if(n.behind){ FN_BEHIND[n.slug+"|"+n.name]=n.behind; FN_BEHIND[n.id]=n.behind; } });
 var level = "entities";
 var pos = {};                 // POSITION PERSISTENCE: id → {x,y}, survives level switches
 var panX=0, panY=0, zoom=1, fitT=[0,0];
@@ -394,6 +552,16 @@ function icoPath(g, d, col, scale){
 }
 function sBadge(g, r, col){ ICONSETS[ICONSET].schema(g, r, col); }
 function fGlyph(g, r, col, handler, god){ ICONSETS[ICONSET].fn(g, r, col, handler, god); }
+/* frontend KIND icons — a distinct shape per kind (component · hook · store · route ·
+   fe-type), STROKED in the piece's ENTITY colour (colour = grouping, not kind — the kind
+   is the shape). Used by the Layers frontend lanes. */
+function feGlyph(g, r, kind, col){ var sw=1.9;
+  if(kind==="component"){ g.appendChild(E("rect",{x:rnd(-r*0.85), y:rnd(-r*0.85), width:rnd(r*1.7), height:rnd(r*1.7), rx:rnd(r*0.34), fill:"none", stroke:col, "stroke-width":sw})); }
+  else if(kind==="hook"){ g.appendChild(E("path",{d:"M "+rnd(r*0.5)+" "+rnd(-r*0.9)+" V "+rnd(r*0.1)+" A "+rnd(r*0.68)+" "+rnd(r*0.68)+" 0 1 1 "+rnd(-r*0.68)+" 0", fill:"none", stroke:col, "stroke-width":sw, "stroke-linecap":"round"})); }
+  else if(kind==="store"){ g.appendChild(E("ellipse",{cx:0, cy:rnd(-r*0.55), rx:rnd(r*0.82), ry:rnd(r*0.32), fill:"none", stroke:col, "stroke-width":sw}));
+    g.appendChild(E("path",{d:"M "+rnd(-r*0.82)+" "+rnd(-r*0.55)+" V "+rnd(r*0.55)+" A "+rnd(r*0.82)+" "+rnd(r*0.32)+" 0 0 0 "+rnd(r*0.82)+" "+rnd(r*0.55)+" V "+rnd(-r*0.55), fill:"none", stroke:col, "stroke-width":sw})); }
+  else if(kind==="route"){ g.appendChild(E("path",{d:"M 0 "+rnd(-r)+" L "+rnd(r)+" 0 L 0 "+rnd(r)+" L "+rnd(-r)+" 0 Z", fill:"none", stroke:col, "stroke-width":sw, "stroke-linejoin":"round"})); }
+  else { var t=E("text",{x:0, y:rnd(r*0.68), style:"text-anchor:middle;font-weight:800;font-family:ui-monospace,monospace;font-size:"+rnd(r*1.9)+"px;fill:"+col}); t.textContent="{}"; g.appendChild(t); } }
 function epMark(g, r, method){ ICONSETS[ICONSET].ep(g, r, method); }
 var ICONSETS={
   classic:{
@@ -471,7 +639,7 @@ var baseScale=1;
 function zoomless(v){ return v; }
 function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(fitT[1]+panY)+") scale("+(baseScale*zoom)+")"); }
 (function(){ var pan=null;
-  stage.addEventListener("pointerdown",function(e){ if(e.target.closest(".piece,.epmark,.fnode,.entnode")) return;
+  stage.addEventListener("pointerdown",function(e){ if(e.target.closest(".piece,.epmark,.fnode,.entnode,.screen")) return;
     pan={x:e.clientX,y:e.clientY,px:panX,py:panY}; });
   window.addEventListener("pointermove",function(e){ if(!pan) return; panX=pan.px+(e.clientX-pan.x); panY=pan.py+(e.clientY-pan.y); apply(); });
   window.addEventListener("pointerup",function(e2){
@@ -509,6 +677,9 @@ function apply(){ vp.setAttribute("transform","translate("+(fitT[0]+panX)+","+(f
 
 /* ── layouts (deterministic; positions persist per id across levels) ── */
 function rnd(v){ return Math.round(v*100)/100; }         // kill 1e-14 float dust in transforms
+function octPts(r, cx, cy){ cx=cx||0; cy=cy||0; var p=[];        // flat-top octagon
+  for(var i=0;i<8;i++){ var a=Math.PI/180*(22.5+45*i); p.push(rnd(cx+r*Math.cos(a))+","+rnd(cy+r*Math.sin(a))); }
+  return p.join(" "); }
 function rows2(s, max){ s=String(s); if(s.length<=max) return [s];
   var r1=s.slice(0,max), rest=s.slice(max);
   return [r1, rest.length<=max?rest:rest.slice(0,max-1)+"…"]; }   // 2 rows of ~10, dots when longer
@@ -545,13 +716,17 @@ var LINKED = (function(){
   (D.cross_edges||[]).forEach(function(e){ cls[e.fs+"|"+e.f]=1; cls[e.ts+"|"+e.t]=1; });
   return {ep:ep, cls:cls, why:why};
 })();
-function unlinkedNote(kind, key, name){
-  if(kind==="ep"){ if(LINKED.ep[key]) return "";
-    return _sect(_psvg("<path d='M3 12h5 M16 12h5' fill='none' stroke='var(--muted)' stroke-width='2.2' stroke-dasharray='2.5 2.5'/>"),"why is it unlinked?")+"<div class='note'>"+(LINKED.why[key]||[]).join("; and ")
-      +". Raising this ceiling is the graft arm's function-level work, not a drawing gap.</div>"; }
-  if(LINKED.cls[key]) return "";
-  return _sect(_psvg("<path d='M3 12h5 M16 12h5' fill='none' stroke='var(--muted)' stroke-width='2.2' stroke-dasharray='2.5 2.5'/>"),"why is it unlinked?")+"<div class='note'>No documented foreign key, endpoint touch, or response references <b>"+name
-    +"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.</div>";
+// WHY-UNLINKED as an ECP section — the honest-empty explainer that survives the port:
+// when a piece/endpoint draws NO connector, say WHY (from the layout-independent LINKED
+// table) instead of leaving the reader guessing. Returns null (skipped) when it IS linked.
+// The endpoint reasons carry intentional <b> markup, so the note is set as html.
+function ecpUnlinked(kind, key, name){
+  var linked = (kind==="ep") ? LINKED.ep[key] : LINKED.cls[key];
+  if(linked) return null;
+  var reason = (kind==="ep")
+    ? ((LINKED.why[key]||[]).join("; and ")+". Raising this ceiling is the graft arm's function-level work, not a drawing gap.")
+    : ("No documented foreign key, endpoint touch, or response references <b>"+esc(name)+"</b> at this altitude — likely a leaf table or a piece consumed only inside the service layer.");
+  return H("div",{class:"sec"}, ecpSechd("info","Why unlinked"), H("div",{class:"doc",html:reason}));
 }
 var entLayout = "force", insideLayout = "force";   // defaults per operator screenshot: Force · Force
 var showConns = true;      // inter-entity piece connections (D2 + D5), gradient standard
@@ -559,6 +734,8 @@ var showTests = false;     // proof badges OFF by default (operator round 45) �
 var showGuards = false;    // validator shields (guard_insight) — lens, off by default
 var showHubs = false;      // fan-in rings + god halos (model/function_insight)
 var showPress = false;     // change-pressure heat (the phase archive)
+var showBehind = false;    // CODE-BEHIND count badge (top-LEFT) — the hidden call-tree mass
+var showUsage = false;     // USED-BY / in-degree count badge (bottom-RIGHT) — how load-bearing
 var traceCluster = "usecase"; // default per operator screenshot (kind/tests/guards/usecase/community)
 /* RADIAL LABEL: on a ring, a fixed below-the-icon label runs into the ring
    neighbour (measured: 3-5 text collisions + 4 label-over-icon hits). Fanning
@@ -574,12 +751,12 @@ function guardMark(g, r, n){ if(!showGuards || !n) return;
   var m=E("path",{class:"gmark", d:"M0 -5 L4.2 -3 L4.2 1.2 Q4.2 4.6 0 6 Q-4.2 4.6 -4.2 1.2 L-4.2 -3 Z",
     fill:"var(--c-fn-services)", stroke:"var(--panel)", "stroke-width":"1",
     transform:"translate("+(-r-4)+","+(r+4)+")"});
-  var ti=E("title"); ti.textContent=n+" declared validator(s) guard this piece"; m.appendChild(ti);
+  var ti=E("title"); ti.textContent=n+" validator(s) declared in this route FILE (file-scoped, not per-endpoint)"; m.appendChild(ti);   // AUDIT #10
   g.appendChild(m); }
 function hubMark(g, r, hub){ if(!showHubs || !hub) return;
   if((hub.usage||0)>=5){ var ring=E("circle",{class:"hmark hub", r:r+5.5, fill:"none",
       stroke:"var(--accent)", "stroke-width": Math.min(3.4, 1.2+hub.usage/5)});
-    var ti=E("title"); ti.textContent="hub — fan-in usage "+hub.usage+" (fk_in + touches)"; ring.appendChild(ti);
+    var ti=E("title"); ti.textContent="hub — fan-in usage "+hub.usage+" (callers / referencing elements)"; ring.appendChild(ti);
     g.appendChild(ring); }
   if(hub.god){ var gd=E("circle",{class:"hmark god", r:r+9, fill:"none",
       stroke:"var(--m-delete)", "stroke-width":"1.4", "stroke-dasharray":"4 3"});
@@ -597,7 +774,10 @@ function pressMark(g, r, slug, cls){ if(!showPress) return;
 function proofBadge(g, r, tests){
   if(!showTests) return;
   var bx=r*0.95+3, by=-r*0.95-3;
-  if(!tests){ var e=E("circle",{class:"tbadge none",cx:bx,cy:by,r:3.6,fill:"none",
+  // SWEEP-D: a tests OBJECT with n<=0 is still truthy — the old `if(!tests)` let a
+  // 0-case element render a solid green "0 · all passing" badge (gastify's schema
+  // StatementLine node). Zero cases is UNPROVEN, not passing → the hollow glyph.
+  if(!tests || !(tests.n>0)){ var e=E("circle",{class:"tbadge none",cx:bx,cy:by,r:3.6,fill:"none",
       stroke:"var(--muted)","stroke-width":"1.3","stroke-dasharray":"2 2"});
     var ti=E("title"); ti.textContent="no cases name this piece — unproven at this altitude"; e.appendChild(ti);
     g.appendChild(e); return; }
@@ -611,6 +791,73 @@ function proofBadge(g, r, tests){
   bg.appendChild(ti2);
   g.appendChild(bg); g.appendChild(tx);
   if(tests.web>0) g.appendChild(E("circle",{class:"tbadge web",cx:bx,cy:by+9.5,r:2.4,fill:"var(--c-fn-web)"}));
+}
+/* ── CODE-BEHIND badge (top-LEFT) + USED-BY badge (bottom-RIGHT): sibling node marks
+   to the Tests pill (top-right), each with its own toggle. behind = the hidden call-tree
+   mass (purple); usage = in-degree / how load-bearing (accent). Hollow dashed when the
+   node has none at this altitude, matching the Tests "unproven" glyph. ── */
+function behindBadge(g, r, n){
+  if(!showBehind) return;
+  var bx=-(r*0.95+3), by=-r*0.95-3;   // TOP-LEFT
+  if(n==null || n<=0){ var e=E("circle",{class:"bbadge none",cx:bx,cy:by,r:3.6,fill:"none",
+      stroke:"var(--muted)","stroke-width":"1.3","stroke-dasharray":"2 2"});
+    var t0=E("title"); t0.textContent="no call-tree behind this at this altitude"; e.appendChild(t0); g.appendChild(e); return; }
+  var w=9+String(n).length*4.6;
+  var bg=E("rect",{class:"bbadge has",x:bx-w/2,y:by-7,width:w,height:13,rx:6.5,fill:"var(--c-fn)"});
+  var tx=E("text",{x:bx,y:by+3.2,"text-anchor":"middle",style:"font-size:8.6px;font-weight:800",fill:"#fff"}); tx.textContent=n;
+  var ti=E("title"); ti.textContent=n+" function(s) behind this (code-behind — the hidden mass under the rug)"; bg.appendChild(ti);
+  g.appendChild(bg); g.appendChild(tx);
+}
+function usageBadge(g, r, n){
+  if(!showUsage) return;
+  var bx=r*0.95+3, by=r*0.95+3;   // BOTTOM-RIGHT
+  if(n==null || n<=0){ var e=E("circle",{class:"ubadge none",cx:bx,cy:by,r:3.6,fill:"none",
+      stroke:"var(--muted)","stroke-width":"1.3","stroke-dasharray":"2 2"});
+    var t0=E("title"); t0.textContent="nothing depends on this at this altitude"; e.appendChild(t0); g.appendChild(e); return; }
+  var w=9+String(n).length*4.6;
+  var bg=E("rect",{class:"ubadge has",x:bx-w/2,y:by-7,width:w,height:13,rx:6.5,fill:"var(--accent)"});
+  var tx=E("text",{x:bx,y:by+3.2,"text-anchor":"middle",style:"font-size:8.6px;font-weight:800",fill:"#fff"}); tx.textContent=n;
+  var ti=E("title"); ti.textContent=n+" element(s) depend on this (used-by / in-degree — how load-bearing)"; bg.appendChild(ti);
+  g.appendChild(bg); g.appendChild(tx);
+}
+/* the badge DATA, keyed by the node's SELREG key so ONE nodeMarks(g,r,key) call per draw
+   site resolves both. behind: endpoints by m-path (C4 node.behind) · functions by slug|name
+   (FN_BEHIND). usage/in-degree: endpoints = screens fetching (C4 bridges) · models = fan-in
+   hub · functions = callers hub. Built once at init from GABE_C4 + GABE_LEVELS. */
+var _BEHIND_MP={}, _USAGE_MP={}, USAGE_BY_KEY={};
+if(C4){ (C4.l2?Object.keys(C4.l2):[]).forEach(function(s){ (C4.l2[s].nodes||[]).forEach(function(n){
+    if(n.kind==="endpoint" && n.behind) _BEHIND_MP[n.label]=n.behind.fns; }); });
+  (C4.cross_edges||[]).forEach(function(e){ if(e.kind==="bridge"){ var mp=_stripEp(e.to); _USAGE_MP[mp]=(_USAGE_MP[mp]||0)+1; } }); }
+// functions — dual-keyed (slug|name AND the fn id) like FN_BEHIND, so the Functions level resolves (AUDIT #3)
+(D.fn_nodes||[]).forEach(function(n){ if(n.hub){ USAGE_BY_KEY["fn:"+n.slug+"|"+n.name]=n.hub.usage; USAGE_BY_KEY["fn:"+n.id]=n.hub.usage; } });
+// models — fan-in hub (matches showPiece's model usage)
+Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].models||[]).forEach(function(m){
+  if(m.hub) USAGE_BY_KEY["cls:"+s+"|"+m.cls]=m.hub.usage; }); });
+// AUDIT #4: SCHEMAS have no hub — their in-degree is the count of endpoints (ANY entity)
+// that touch/return them, EXACTLY as showPiece computes it. Without this the Used-by badge
+// on every schema rendered hollow while the schema's own panel showed a non-zero count.
+// AUDIT #15: count DISTINCT endpoints per schema (touch OR resp), NOT touch+resp
+// separately — a handler that both takes a body of type X and RETURNS X was scored
+// twice by the badge while showPiece's `||` scan scored it once (badge 11 vs panel 6
+// on CookingSessionResponse). Dedup per endpoint so the badge == the panel in-degree.
+var _schemaIn={};
+Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].endpoints||[]).forEach(function(e){
+  var refd={};
+  (e.touch||[]).forEach(function(c){ refd[c]=1; });
+  if(e.resp) refd[e.resp]=1;
+  Object.keys(refd).forEach(function(c){ _schemaIn[c]=(_schemaIn[c]||0)+1; }); }); });
+Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].schemas||[]).forEach(function(sc){
+  // AUDIT #16: a MODEL of the same name+entity already set this key to its fan-in
+  // (line above). Don't clobber it with the schema in-degree — the drawn piece is the
+  // model, whose panel reads m.hub.usage; overwriting made badge(1) ≠ panel(2).
+  var _k="cls:"+s+"|"+sc.cls; if(USAGE_BY_KEY[_k]==null) USAGE_BY_KEY[_k]=_schemaIn[sc.cls]||0; }); });
+function nodeMarks(g, r, key){
+  if((!showBehind && !showUsage) || !key) return;
+  var behindN, usageN;
+  if(key.indexOf("ep:")===0){ var mp=key.slice(key.indexOf("|")+1); behindN=_BEHIND_MP[mp]; usageN=_USAGE_MP[mp]; }
+  else if(key.indexOf("fn:")===0){ var b=FN_BEHIND[key.slice(3)]; behindN=b?b.fns:undefined; usageN=USAGE_BY_KEY[key]; }
+  else if(key.indexOf("cls:")===0){ usageN=USAGE_BY_KEY[key]; }
+  behindBadge(g, r, behindN); usageBadge(g, r, usageN);
 }
 /* curved wire: a quadratic bow perpendicular to the segment — crossings separate */
 /* LINES (operator round 34): one knob bends every connector — Direct keeps a
@@ -845,6 +1092,23 @@ function edgeGradient(defs, a, c, sCol, tCol){
    still names the direction — the finished-state law. ── */
 var REDUCED = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 var _flowN=0, _lanes={};
+// motion toggle — one button freezes BOTH engines: svg.pauseAnimations() for the SMIL
+// flow dots, [data-motion=off] for the CSS dashes. Re-applied after each render() (a
+// re-draw adds fresh SMIL onto the paused timeline). Reduced-motion users start paused.
+var motionOn = !REDUCED;
+(function(){
+  var mb=document.getElementById("motionbtn");
+  var ICON_PAUSE="<svg viewBox='0 0 24 24' width='16' height='16'><rect x='6' y='5' width='4' height='14' rx='1' fill='currentColor'/><rect x='14' y='5' width='4' height='14' rx='1' fill='currentColor'/></svg>";
+  var ICON_PLAY="<svg viewBox='0 0 24 24' width='16' height='16'><path d='M8 5 L19 12 L8 19 Z' fill='currentColor'/></svg>";
+  window.setMotion=function(on){ motionOn=on;
+    document.documentElement.setAttribute("data-motion", on?"on":"off");
+    try{ on ? svg.unpauseAnimations() : svg.pauseAnimations(); }catch(_){}
+    try{ if(_FG){ on ? _FG.resumeAnimation() : _FG.pauseAnimation(); } }catch(_){}   // force-graph particles
+    if(mb){ mb.classList.toggle("on", on); mb.innerHTML = on?ICON_PAUSE:ICON_PLAY;
+      mb.title = on ? "Motion — pause the moving dots" : "Motion — resume the moving dots"; } };
+  if(mb) mb.addEventListener("click", function(){ window.setMotion(!motionOn); });
+  window.setMotion(!REDUCED);
+})();
 function laneBow(kFrom, kTo, bow){
   var k = kFrom<kTo ? kFrom+"›"+kTo : kTo+"›"+kFrom, rec=_lanes[k];
   if(rec===undefined){ _lanes[k]={dir:kFrom, sign:bow<0?-1:1}; return bow; }
@@ -912,10 +1176,75 @@ function drawEntities(){
     nLayer.appendChild(g);
     b.minX=Math.min(b.minX,p.x-90); b.maxX=Math.max(b.maxX,p.x+90);
     b.minY=Math.min(b.minY,p.y-70); b.maxY=Math.max(b.maxY,p.y+80); });
+  // ── P2b: the FRONTEND companion — a second circle per entity for its folded-in
+  //    frontend pieces (operator's "second circle dedicated for the frontend"), and
+  //    FE-native bucket circles for the pieces no backend entity owns. Honest-empty:
+  //    absent frontend arm ⇒ D.frontend.present false ⇒ this whole block is skipped.
+  var _feAny=false;
+  if(D.frontend && D.frontend.present){
+    D.entities.forEach(function(en){ var pc=D.pieces[en.slug]||{}, fe=pc.frontend;
+      if(!fe || !fe.count) return;
+      var p=entAnchor(en.slug); if(!p) return; _feAny=true;
+      var ePieces=(pc.models||[]).length+(pc.schemas||[]).length+(pc.endpoints||[]).length+((pc.usefns||[]).length);
+      var er=rnd(18+4.6*Math.sqrt(ePieces)), fr=rnd(Math.min(30, 14+1.9*Math.sqrt(fe.count)));
+      var fx=rnd(p.x+er+fr+16), fy=rnd(p.y-er-fr);
+      var ecol=COLORS[en.slug]||"var(--c-fn-web)";                 // the FE octagon wears its entity's hue
+      nLayer.appendChild(E("line",{x1:p.x, y1:p.y, x2:fx, y2:fy, stroke:ecol,"stroke-width":"1.5","stroke-dasharray":"4 3","stroke-opacity":"0.7"}));
+      var fg=E("g",{class:"fenode","data-id":"fe:"+en.slug, transform:"translate("+fx+","+fy+")"});
+      fg.appendChild(E("polygon",{class:"febody", points:octPts(fr), fill:ecol,"fill-opacity":"0.22", stroke:ecol,"stroke-width":"2"}));
+      var ft=E("text",{class:"fecount", y:4, fill:ecol}); ft.textContent=fe.count; fg.appendChild(ft);
+      var fl=E("text",{class:"felbl", y:fr+13}); fl.textContent=en.label; fg.appendChild(fl);
+      var ti=E("title"); ti.textContent=en.label+" frontend — "+feKindSummary(fe.by_kind); fg.appendChild(ti);
+      (function(en2,fe2){ fg.addEventListener("click",function(ev){ ev.stopPropagation(); showFrontend(en2.label, fe2, false); }); })(en, fe);
+      nLayer.appendChild(fg);
+      b.minX=Math.min(b.minX,fx-fr-24); b.maxX=Math.max(b.maxX,fx+fr+24);
+      b.minY=Math.min(b.minY,fy-fr-24); b.maxY=Math.max(b.maxY,fy+fr+30); });
+    var buckets=D.fe_buckets||[];
+    if(buckets.length){
+      _feAny=true;
+      var by=b.maxY+112, bx0=-70, GAPB=162;
+      var bl0=E("text",{class:"feband", x:rnd(bx0-18), y:rnd(by-58), style:"text-anchor:start"});
+      bl0.textContent="frontend · no backend entity"; nLayer.appendChild(bl0);
+      buckets.forEach(function(bk,i){ var fr=rnd(Math.min(30, 14+1.9*Math.sqrt(bk.count))), bx=rnd(bx0+i*GAPB), byy=rnd(by), cand=!!bk.candidate;
+        var bg=E("g",{class:"fenode"+(cand?" cand":""),"data-id":"feb:"+bk.name, transform:"translate("+bx+","+byy+")"});
+        bg.appendChild(E("polygon",{class:"febody", points:octPts(fr), fill:"var(--c-fn-web)","fill-opacity":cand?"0.12":"0.22",
+          stroke:"var(--c-fn-web)","stroke-width":"2","stroke-dasharray":cand?"5 4":"0"}));
+        var bt=E("text",{class:"fecount", y:4, fill:"var(--c-fn-web)"}); bt.textContent=bk.count; bg.appendChild(bt);
+        var bl=E("text",{class:"felbl", y:fr+13}); bl.textContent=bk.name+(cand?" ◆":""); bg.appendChild(bl);
+        var ti=E("title"); ti.textContent=(cand?"candidate entity (UI-only, no backend) — ":"frontend bucket — ")+bk.name+" · "+feKindSummary(bk.by_kind); bg.appendChild(ti);
+        (function(bk2){ bg.addEventListener("click",function(ev){ ev.stopPropagation(); showFrontend(bk2.name, bk2, bk2.candidate); }); })(bk);
+        nLayer.appendChild(bg);
+        b.minX=Math.min(b.minX,bx-fr-40); b.maxX=Math.max(b.maxX,bx+fr+40); b.maxY=Math.max(b.maxY,byy+fr+40); });
+    }
+  }
   frame(b);
-  legend([sw("fk — solid","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
+  var _leg=[sw("fk — solid","line","var(--edge)"), sw("calls — dashed, moving (inferred = floor)","dash","var(--accent)"),
           sw("imports — dotted","dot","var(--muted)"),
-          "<span class='it'>line colour = the two entities it joins (source → target blend) · click any line</span>"]);
+          "<span class='it'>line colour = the two entities it joins (source → target blend) · click any line</span>"];
+  if(_feAny) _leg.push("<span class='it'><svg class='lgico' viewBox='0 0 66 18'>"
+    +"<polygon points='"+octPts(6.5,9,9)+"' fill='var(--accent)' fill-opacity='0.22' stroke='var(--accent)' stroke-width='2'/>"
+    +"<polygon points='"+octPts(6.5,31,9)+"' fill='var(--c-fn-web)' fill-opacity='0.22' stroke='var(--c-fn-web)' stroke-width='2'/>"
+    +"<polygon points='"+octPts(6.5,53,9)+"' fill='var(--c-fn-web)' fill-opacity='0.12' stroke='var(--c-fn-web)' stroke-width='2' stroke-dasharray='4 3'/></svg>"
+    +"<span class='lglbl'>frontend — entity hue folds in · orange = no backend · dashed = candidate</span></span>");
+  legend(_leg);
+}
+function feKindSummary(bk){ if(!bk) return "—";
+  return Object.keys(bk).sort().map(function(k){ return bk[k]+" "+k; }).join(" · "); }
+function showFrontend(label, fe, candidate){
+  var by=fe.by_kind||{};
+  var rows=Object.keys(by).sort().map(function(k){
+    return "<div class='row'><span>"+esc(k)+"</span><b>"+by[k]+"</b></div>"; }).join("");
+  panel.innerHTML="<h3 style='color:var(--c-fn-web)'>"+esc(label)+" · frontend</h3>"
+   +(candidate?"<div class='note' style='border-left:3px solid var(--c-fn-web);padding-left:8px'><b>Candidate entity.</b> A UI-only domain graft found in the frontend with NO backend entity of the same name — worth considering as a new entity.</div>":"")
+   +_sect(_psvg("<circle cx='12' cy='12' r='7' fill='none' stroke='var(--c-fn-web)' stroke-width='2'/>"),"pieces by kind")+rows
+   +"<div class='row'><span>total</span><b>"+(fe.count||0)+"</b></div>"
+   +"<div class='note'>Frontend structure from graft's TS index — components · hooks · stores · types. Composition wires between pieces render in the graph.</div>";
+}
+function showFePiece(name, kind, home){
+  panel.innerHTML="<h3 style='color:var(--c-fn-web)'>"+esc(name||"(anonymous)")+"</h3>"
+   +"<div class='row'><span>kind</span><b>"+esc(kind)+"</b></div>"
+   +"<div class='row'><span>frontend of</span><b>"+esc(home)+"</b></div>"
+   +"<div class='note'>A frontend "+esc(kind)+" from graft's TS index. Click its entity's octagon in 1·Entities for the full frontend slice.</div>";
 }
 function showEdge(ed){
   var rows=Object.keys(ed.kinds).sort().map(function(k){
@@ -1008,6 +1337,7 @@ function drawPieces(){
       var g=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+q.x+","+q.y+")"});
       halo(g); if(it.kind==="model") cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       proofBadge(g, 9, it.m.tests||null);
+      nodeMarks(g, 9, "cls:"+slug+"|"+it.m.cls);
       guardMark(g, 9, it.m.guards||0); hubMark(g, 9, it.m.hub||null); pressMark(g, 9, slug, it.m.cls);
       radialLabel(g, q, p, it.m.cls||"", 17);
       var ti=E("title"); ti.textContent=(it.kind==="model"?"model ":"schema ")+it.m.cls+(it.m.table?" · table "+it.m.table:""); g.appendChild(ti);
@@ -1044,6 +1374,7 @@ function drawPieces(){
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       halo(g); epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null);
+      nodeMarks(g, 7, "ep:"+slug+"|"+ep.m+" "+ep.p);
       guardMark(g, 7, ep.guards||0);
       twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);   // BELOW the icon, like every piece
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" → "+ep.fn+"()"+((ep.touch||[]).length?" · touches "+ep.touch.join(", "):""); g.appendChild(ti);
@@ -1109,6 +1440,7 @@ function drawFunctions(){
       var g=E("g",{class:"fnode","data-layer":f.layer, transform:"translate("+q.x+","+q.y+")"});
       fGlyph(g, 9, FNCOL[f.layer]||"var(--muted)", f.handler, f.god);
       proofBadge(g, 10, f.tests||null);
+      nodeMarks(g, 10, "fn:"+f.id);
       hubMark(g, 10, f.hub||null);
       radialLabel(g, q, anchor, trunc(f.name,14), 19);
       var ti=E("title"); ti.textContent=f.name+" · "+f.layer+(f.handler?" · handler":"")+" · "+f.slug+(f.lang==="ts"?" · TS":""); g.appendChild(ti);
@@ -1187,6 +1519,7 @@ function drawLayers(){
       if(it.kind==="ep"){ var ep=it.ep;
         var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
         halo(g); epMark(g, 6.5, ep.m); proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
+        nodeMarks(g, 7, "ep:"+it.slug+"|"+ep.m+" "+ep.p);
         g.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:colr}));
         twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);
         var ti=E("title"); ti.textContent=ep.m+" "+ep.p+" · "+it.slug+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
@@ -1200,6 +1533,7 @@ function drawLayers(){
         var g2=E("g",{class:"piece","data-kind":it.kind, transform:"translate("+x+","+y+")"});
         halo(g2); if(it.kind==="model") cylinder(g2, 8, "var(--c-model)"); else sBadge(g2, 7, "var(--c-schema)");
         proofBadge(g2, 9, it.m.tests||null); guardMark(g2, 9, it.m.guards||0);
+        nodeMarks(g2, 9, "cls:"+it.slug+"|"+cls);
         hubMark(g2, 9, it.m.hub||null); pressMark(g2, 9, it.slug, cls);
         g2.appendChild(E("circle",{cx:-11, cy:-9, r:2.6, fill:colr}));
         twoRowLabel(g2, cls, 0, 17);
@@ -1212,16 +1546,21 @@ function drawLayers(){
       } else { var nm=it.name;
         var lay=ln==="web"?"web":(it.kind==="usefn"?"services":"api");
         var g3=E("g",{class:"fnode"+(it.kind==="usefn"?" usefn":""),"data-layer":lay, transform:"translate("+x+","+y+")"});
-        halo(g3); fGlyph(g3, 8.5, FNCOL[lay]||"var(--muted)", !!it.handler, false);
-        var fD=D.fn_nodes.filter(function(f){ return f.name===nm && f.slug===it.slug; })[0]||{};
+        // SWEEP-B: resolve the home fn_node with a NAME-ONLY fallback — a cross-home draw
+        // (fn homed to A, drawn under borrowing entity it.slug) misses the name+slug filter,
+        // leaving badges hollow + the panel usage 0. god + overlay key follow the home node.
+        var fD=D.fn_nodes.filter(function(f){ return f.name===nm && f.slug===it.slug; })[0]
+               || D.fn_nodes.filter(function(f){ return f.name===nm; })[0] || {};
+        halo(g3); fGlyph(g3, 8.5, FNCOL[lay]||"var(--muted)", !!it.handler, !!fD.god);
         proofBadge(g3, 9, fD.tests||null);
+        nodeMarks(g3, 9, "fn:"+(fD.slug||it.slug)+"|"+nm);
         g3.appendChild(E("circle",{cx:-10, cy:-8, r:2.6, fill:colr}));
         twoRowLabel(g3, nm, 0, 17);
         var ti3=E("title"); ti3.textContent=nm+"() · "+lay+" · "+it.slug; g3.appendChild(ti3);
         fnAtG[it.slug+"|"+nm]={x:x,y:y};
         regNode(g3, "fn:"+it.slug+"|"+nm, nm+"()", "fn");
         (function(slug2,nm2,lay2,h2,u2,fD2){ g3.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:nm2, slug:slug2, layer:lay2, lang:lay2==="web"?"ts":"py", handler:!!h2, god:false, uses:u2||0, tests:fD2.tests||null, hub:fD2.hub||null});
+          showFn({name:nm2, slug:slug2, id:fD2.id, layer:lay2, lang:lay2==="web"?"ts":"py", handler:!!h2, god:!!fD2.god, uses:u2||0, tests:fD2.tests||null, hub:fD2.hub||null});
           attachSelection("fn:"+slug2+"|"+nm2); }); })(it.slug, nm, lay, it.handler, it.uses, fD);
         nLayer.appendChild(g3);
       } }); });
@@ -1268,10 +1607,13 @@ function drawLayers(){
     eLayer.appendChild(pU);
     flowDots(eLayer, pU, dotFill);
     regEdge(pU, "use", from.key||("fn:"+e2.fs+"|"+e2.fn), "cls:"+e2.ts+"|"+e2.cls, "references the class (archmap)"); });
+  // frontend moved to the '2 · Frontend' force-graph level (library render) — the
+  // Layers view is backend-only again; the SVG frontend lanes were retired 2026-08-17.
   frame(b);
-  legend([glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
+  var _lleg=[glyphIt("endpoint (method colour)","ep"), glyphIt("handler ƒ","f-api"), glyphIt("using fn","f-serv"),
           glyphIt("model","cyl"), glyphIt("schema","s"),
-          "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"]);
+          "<span class='it'>entity dot = who owns it · wires: route · touch · returns · fk · uses</span>"];
+  legend(_lleg);
 }
 
 /* ═══ LEVEL 5 · TRACE — the ONION: diagram 2's container layout with a layered,
@@ -1481,6 +1823,7 @@ function drawTrace(){
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       halo(g); epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
+      nodeMarks(g, 7, "ep:"+slug+"|"+ep.m+" "+ep.p);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
       twoRowLabel(g, ep.p.replace(/^\//,"")||ep.m, 0, 17);   // BELOW the icon, like every piece
       if(ep.fn) epByFnGlobal[slug+"|"+ep.fn]={x:x, y:y, key:"ep:"+slug+"|"+ep.m+" "+ep.p};
@@ -1495,28 +1838,32 @@ function drawTrace(){
     function drawInnerItem(it, x, y, grpLabel){
       if(it.kind==="fn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
         var g=E("g",{class:"fnode","data-layer":"api","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
-        halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
-        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
+        var f2=D.fn_nodes.filter(function(f){ return f.name===it.name && f.slug===slug; })[0]
+               || D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node: slug-match first, then name
+        halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, !!f2.god);   // SWEEP-B: real god, not hardcoded false
         proofBadge(g, 9, f2.tests||null);
+        nodeMarks(g, 9, "fn:"+(f2.slug||slug)+"|"+it.name);   // overlay keyed by HOME slug
         twoRowLabel(g, it.name, 0, 17);
         var ti2=E("title"); ti2.textContent=it.name+"() · handler"; g.appendChild(ti2);
         regNode(g, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
         g.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:it.name, slug:slug, layer:"api", lang:"py", handler:true, god:false, tests:f2.tests||null, hub:f2.hub||null});
+          showFn({name:it.name, slug:slug, id:f2.id, layer:"api", lang:"py", handler:true, god:!!f2.god, tests:f2.tests||null, hub:f2.hub||null});
           attachSelection("fn:"+slug+"|"+it.name); });
         layer.appendChild(g);
       } else if(it.kind==="usefn"){ fnAt[it.name]={x:x,y:y}; fnAtGlobal[slug+"|"+it.name]={x:x,y:y};
         // a USING function — drawn because it references models/schemas (archmap
         // internal_refs), incl. across entities; service-teal, no handler ring
         var gu=E("g",{class:"fnode usefn","data-layer":"services","data-grp":grpLabel, transform:"translate("+x+","+y+")"});
-        halo(gu); fGlyph(gu, 8.5, "var(--c-fn-services)", false, false);
-        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};
+        var fu=D.fn_nodes.filter(function(f){ return f.name===it.name && f.slug===slug; })[0]
+               || D.fn_nodes.filter(function(f){ return f.name===it.name; })[0]||{};   // home node: slug-match first, then name
+        halo(gu); fGlyph(gu, 8.5, "var(--c-fn-services)", false, !!fu.god);   // SWEEP-B: real god
         proofBadge(gu, 9, fu.tests||null);
+        nodeMarks(gu, 9, "fn:"+(fu.slug||slug)+"|"+it.name);   // overlay keyed by HOME slug (cross-home usefn)
         twoRowLabel(gu, it.name, 0, 17);
         var tiu=E("title"); tiu.textContent=it.name+"() · uses "+(it.uses||0)+" class"+((it.uses||0)===1?"":"es"); gu.appendChild(tiu);
         regNode(gu, "fn:"+slug+"|"+it.name, it.name+"()", "fn");
         gu.addEventListener("click",function(ev){ ev.stopPropagation();
-          showFn({name:it.name, slug:slug, layer:"services", lang:"py", handler:false, god:false, uses:it.uses, tests:fu.tests||null, hub:fu.hub||null});
+          showFn({name:it.name, slug:slug, id:fu.id, layer:"services", lang:"py", handler:false, god:!!fu.god, uses:it.uses, tests:fu.tests||null, hub:fu.hub||null});
           attachSelection("fn:"+slug+"|"+it.name); });
         layer.appendChild(gu);
       } else { var cls=it.name;
@@ -1524,6 +1871,7 @@ function drawTrace(){
         var g3=E("g",{class:"piece","data-kind":it.kind,"data-grp":grpLabel, transform:"translate("+x+","+y+")"});
         halo(g3); if(it.kind==="model") cylinder(g3, 8, "var(--c-model)"); else sBadge(g3, 7, "var(--c-schema)");
         proofBadge(g3, 9, (it.m&&it.m.tests)||null);
+        nodeMarks(g3, 9, "cls:"+slug+"|"+cls);
         guardMark(g3, 9, (it.m&&it.m.guards)||0); hubMark(g3, 9, (it.m&&it.m.hub)||null); pressMark(g3, 9, slug, cls);
         twoRowLabel(g3, cls, 0, 17);
         var ti3=E("title"); ti3.textContent=(it.kind==="model"?"model ":"schema ")+cls+(it.m&&it.m.table?" · table "+it.m.table:""); g3.appendChild(ti3);
@@ -1603,11 +1951,12 @@ function drawTrace(){
     (cross?interLayer:wireLayer).appendChild(pu);
     flowDots(cross?interLayer:wireLayer, pu, dotFill);
     regEdge(pu, "use", from.key||("fn:"+e.fs+"|"+e.fn), "cls:"+e.ts+"|"+e.cls, "references the class (archmap)"); });
+  drawFrontend(defs, contLayer, interLayer, layer, b, radii);   // per-entity frontend clusters + bridges
   frame(b);
   legend([glyphIt("border = API endpoints (the exposed surface)","ep"),
           glyphIt("bubble = a cluster ("+(traceCluster==="kind"?"functions · models · schemas":traceCluster)+")","f-api"),
           glyphIt("model","cyl"), glyphIt("schema","s"), glyphIt("using fn (references data)","f-serv"),
-          "<span class='it'>wires: endpoint → ƒ → the data it touches · dashed = returns · fine-dotted = uses · switch the cluster in ⚙</span>"]);
+          "<span class='it'>flow: endpoint → ƒ → the data it touches · switch the cluster in ⚙ (wire styles below)</span>"]);
 }
 // the FLOW option: the original concentric onion (mean-angle placement)
 function drawTraceFlow(){
@@ -1642,8 +1991,10 @@ function drawTraceFlow(){
       var g=E("g",{class:"epmark","data-m":ep.m, transform:"translate("+x+","+y+")"});
       halo(g); epMark(g, 6.5, ep.m);
       proofBadge(g, 7, ep.tests||null); guardMark(g, 7, ep.guards||0);
+      nodeMarks(g, 7, "ep:"+slug+"|"+ep.m+" "+ep.p);
       var ti=E("title"); ti.textContent=ep.m+" "+ep.p+(ep.fn?" → "+ep.fn+"()":""); g.appendChild(ti);
-      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep); });
+      g.addEventListener("click",function(ev){ ev.stopPropagation(); showEndpoint(slug, ep);
+        attachSelection("ep:"+slug+"|"+ep.m+" "+ep.p); });
       layer.appendChild(g); });
     var fnIds=Object.keys(fns).sort();
     shown.forEach(function(ep){ if((ep.touch||[]).length && ep.fn && fns[ep.fn])
@@ -1654,10 +2005,12 @@ function drawTraceFlow(){
         x=rnd(p.x+ring2*Math.cos(a)), y=rnd(p.y+ring2*Math.sin(a));
       fnAt[fn]={x:x,y:y};
       var g=E("g",{class:"fnode","data-layer":"api", transform:"translate("+x+","+y+")"});
-      halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, false);
+      var f3=D.fn_nodes.filter(function(ff){ return ff.name===fn; })[0]||{};   // SWEEP-B: home node
+      halo(g); fGlyph(g, 8.5, "var(--c-fn-api)", true, !!f3.god);
       radialLabel(g, {x:x,y:y}, p, trunc(fn,14), 18);
-      g.addEventListener("click",function(ev){ ev.stopPropagation();
-        showFn({name:fn, slug:slug, layer:"api", lang:"py", handler:true, god:false}); });
+      (function(f3){ g.addEventListener("click",function(ev){ ev.stopPropagation();
+        showFn({name:fn, slug:slug, id:f3.id, layer:"api", lang:"py", handler:true, god:!!f3.god, hub:f3.hub||null});
+        attachSelection("fn:"+slug+"|"+fn); }); })(f3);
       layer.appendChild(g); });
     var clsFnAngles={};
     shown.forEach(function(ep){ (ep.touch||[]).forEach(function(c){
@@ -1674,11 +2027,13 @@ function drawTraceFlow(){
       if(isModel) cylinder(g, 8, "var(--c-model)"); else sBadge(g, 7, "var(--c-schema)");
       var _tm=(pc.models||[]).concat(pc.schemas||[]).filter(function(z){ return z.cls===cls; })[0];
       proofBadge(g, 9, (_tm&&_tm.tests)||null);
+      nodeMarks(g, 9, "cls:"+slug+"|"+cls);
       guardMark(g, 9, (_tm&&_tm.guards)||0); hubMark(g, 9, (_tm&&_tm.hub)||null); pressMark(g, 9, slug, cls);
       radialLabel(g, {x:x,y:y}, p, trunc(cls,13), 17);
       var tti=E("title"); tti.textContent=(isModel?"model ":"schema ")+cls+(_tm&&_tm.table?" · table "+_tm.table:""); g.appendChild(tti);
       g.addEventListener("click",function(ev){ ev.stopPropagation();
-        showPiece(slug, {kind:isModel?"model":"schema", m:_tm||{cls:cls}}); });
+        showPiece(slug, {kind:isModel?"model":"schema", m:_tm||{cls:cls}});
+        attachSelection("cls:"+slug+"|"+cls); });
       layer.appendChild(g); });
     if(!clsL.length){ var note=E("text",{class:"sub2", x:p.x, y:p.y+3});
       note.textContent="no traced flows"; layer.appendChild(note); }
@@ -1704,6 +2059,7 @@ function drawTraceFlow(){
     pth.style.stroke="url(#"+grad+")"; pth.style.opacity="0.8";
     pth.appendChild(E("title")); interLayer.appendChild(pth);
     flowDots(interLayer, pth, "url(#"+grad+")"); });
+  drawFrontend(defs, contLayer, interLayer, layer, b, radii);   // per-entity frontend clusters + bridges
   frame(b);
   legend([glyphIt("border = API endpoints","ep"), glyphIt("middle ring = handler ƒ","f-api"),
           glyphIt("core = models","cyl"), glyphIt("+ schemas","s"),
@@ -1722,21 +2078,236 @@ function glyphIt(label, kind){
          "f-serv":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-services)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-services)'>F</text>",
          "f-web":"<circle cx='8' cy='7' r='6.4' fill='none' stroke='var(--c-fn-web)' stroke-width='1.6'/><text x='8' y='10.5' text-anchor='middle' font-size='9' font-weight='800' fill='var(--c-fn-web)'>F</text>"}[kind];
   return "<span class='it'><svg viewBox='0 0 16 15'>"+g+"</svg>"+esc(label)+"</span>"; }
+// the CORNER MAP — a single node showing which badge sits in which corner (the three
+// toggles read at once): code-behind top-left · tests top-right · used-by bottom-right.
+var LEGEND_CMAP=
+  "<svg class='cmap' viewBox='0 0 208 104' width='204' height='102'>"
+  +"<circle cx='104' cy='52' r='22' fill='none' stroke='var(--edge)' stroke-width='1.8'/>"
+  +"<circle cx='104' cy='52' r='7' fill='var(--muted)' opacity='.3'/>"
+  +"<text x='104' y='55' text-anchor='middle' fill='var(--muted)' style='font-size:7px'>node</text>"
+  // top-left: code-behind (purple)
+  +"<rect x='66' y='22' width='20' height='13' rx='6.5' fill='var(--c-fn)'/><text x='76' y='31.5' text-anchor='middle' fill='#fff' style='font-size:9px'>4</text>"
+  +"<text x='62' y='18' text-anchor='end' fill='var(--c-fn)' style='font-size:8.5px'>code&#8209;behind</text>"
+  // top-right: tests (green)
+  +"<rect x='122' y='22' width='20' height='13' rx='6.5' fill='var(--c-model)'/><text x='132' y='31.5' text-anchor='middle' fill='#fff' style='font-size:9px'>6</text>"
+  +"<text x='146' y='18' text-anchor='start' fill='var(--c-model)' style='font-size:8.5px'>tests</text>"
+  // bottom-right: used-by (accent)
+  +"<rect x='122' y='69' width='20' height='13' rx='6.5' fill='var(--accent)'/><text x='132' y='78.5' text-anchor='middle' fill='#fff' style='font-size:9px'>3</text>"
+  +"<text x='146' y='86' text-anchor='start' fill='var(--accent)' style='font-size:8.5px'>used&#8209;by</text>"
+  +"</svg>";
+var _lgTag="<svg viewBox='0 0 24 24'><path d='M4 5h16M4 12h16M4 19h10' fill='none' stroke='currentColor' stroke-width='2.4'/></svg>";
+// a legend ROW that SHOWS the real glyph/wire (30×18 swatch) + a short parenthetical
+// handle; the full words live in the hover title. NEVER a word-description of a visual.
+function _lgS(inner, label, title){
+  return "<span class='it' title='"+title+"'><svg class='lgico' viewBox='0 0 30 18'>"+inner+"</svg><span class='lglbl'>"+label+"</span></span>"; }
 var LEGEND_TAIL=[
-  "<div class='lg-h'>everywhere</div>",
-  "<span class='it'>moving dot = the direction of a wire (constant speed)</span>",
-  "<span class='it'>two parallel wires = a bidirectional pair (one lane each way)</span>",
-  "<span class='it'>count pill = test cases (green pass · red fail)</span>",
-  "<span class='it'>hollow dashed circle = unproven (no test names it)</span>",
-  "<span class='it'>shield = validator guard (toggle)</span>",
-  "<span class='it'>thick ring = fan-in hub · red dashed halo = god piece (toggle)</span>",
-  "<span class='it'>orange heat = change pressure from the archive (toggle)</span>",
-  "<span class='it'>spinning ring = the selected element</span>",
-  "<span class='it'>wire boldness decays per hop (the depth slider)</span>",
-  "<span class='it'>glowing links + dashed rings = the active journey</span>"];
+  "<div class='lg-h'>"+_lgTag+"node badges (toggle)</div>",
+  LEGEND_CMAP,
+  _lgS("<rect x='3' y='4' width='15' height='10' rx='5' fill='var(--c-model)'/><text x='10.5' y='12' text-anchor='middle' fill='#fff' style='font-size:7.5px;font-weight:800'>6</text><circle cx='25' cy='9' r='4' fill='none' stroke='var(--muted)' stroke-width='1.2' stroke-dasharray='2 2'/>",
+    "count · none", "filled pill = a live count at this altitude · hollow dashed = none"),
+  _lgS("<path d='M0 -5 L4.2 -3 L4.2 1.2 Q4.2 4.6 0 6 Q-4.2 4.6 -4.2 1.2 L-4.2 -3 Z' fill='var(--c-fn-services)' stroke='var(--panel)' stroke-width='1' transform='translate(8,9)'/><circle cx='22' cy='9' r='3.4' fill='var(--muted)' opacity='.3'/><circle cx='22' cy='9' r='6.4' fill='none' stroke='var(--accent)' stroke-width='2.4'/>",
+    "guard · hub", "shield = validator guard on the route file · thick ring = fan-in hub"),
+  _lgS("<circle cx='8' cy='9' r='3.4' fill='var(--muted)' opacity='.3'/><circle cx='8' cy='9' r='6.8' fill='none' stroke='var(--m-delete)' stroke-width='1.4' stroke-dasharray='4 3'/><circle cx='23' cy='9' r='7.2' fill='var(--m-put)' fill-opacity='.4'/><circle cx='23' cy='9' r='3.2' fill='var(--muted)' opacity='.3'/>",
+    "god · heat", "red dashed halo = god piece (oversized) · orange heat = change pressure from the archive"),
+  "<div class='lg-h'>"+_lgTag+"wires</div>",
+  _lgS("<line x1='3' y1='9' x2='27' y2='9' stroke='var(--edge)' stroke-width='1.7'/><circle cx='18' cy='9' r='2.3' fill='var(--accent)'/>",
+    "direction", "a moving dot rides the wire in its direction · boldness decays per hop (depth)"),
+  _lgS("<path d='M3 6 Q15 3 27 6' fill='none' stroke='var(--edge)' stroke-width='1.4'/><path d='M3 12 Q15 15 27 12' fill='none' stroke='var(--edge)' stroke-width='1.4'/>",
+    "two-way", "two lanes = a bidirectional pair"),
+  _lgS("<line x1='3' y1='9' x2='27' y2='9' stroke='var(--edge)' stroke-width='1.6' stroke-dasharray='4 3'/>",
+    "returns", "dashed = an endpoint returns a schema"),
+  _lgS("<line x1='3' y1='9' x2='27' y2='9' stroke='var(--muted)' stroke-width='1.5' stroke-dasharray='2 4'/>",
+    "imports", "fine muted dashes = an import edge"),
+  _lgS("<line x1='3' y1='9' x2='27' y2='9' stroke='var(--c-fn-web)' stroke-width='1.7' stroke-dasharray='1 4' stroke-linecap='round'/>",
+    "fetches", "coloured fine dots = a frontend screen fetches a backend endpoint (bridge); the colour is the entity's"),
+  "<div class='lg-h'>"+_lgTag+"interaction</div>",
+  _lgS("<circle cx='15' cy='9' r='3.8' fill='var(--muted)' opacity='.3'/><circle cx='15' cy='9' r='7' fill='none' stroke='var(--accent)' stroke-width='2' stroke-dasharray='6 5'/>",
+    "selected", "a spinning dashed ring marks the selected element"),
+  _lgS("<line x1='3' y1='9' x2='27' y2='9' stroke='var(--accent)' stroke-width='2.4'/><circle cx='6' cy='9' r='5.6' fill='none' stroke='var(--accent)' stroke-width='1.3' stroke-dasharray='4 3'/><circle cx='24' cy='9' r='5.6' fill='none' stroke='var(--accent)' stroke-width='1.3' stroke-dasharray='4 3'/>",
+    "journey", "glowing links + dashed rings = the active journey")];
 function legend(items){
   document.getElementById("legend").innerHTML=
-    ["<div class='lg-h'>this level</div>"].concat(items).concat(LEGEND_TAIL).join(""); }
+    ["<div class='lg-h'>"+_lgTag+"this level</div>"].concat(items).concat(LEGEND_TAIL).join(""); }
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   ECP — the element-components panel kit, PORTED from
+   docs/design/codebase-graph-consolidation/element-components.html (operator-locked
+   2026-08-15). Per-kind right-panel cards with shared chrome: a restacked header
+   (NAME row1, [glyph TYPE sub] row2, no dot) with the trace back/forward top-right ·
+   a Usage IN-DEGREE bar · always-visible SEMANTIC connection chips (hover → peeks the
+   graph node, click → travels to it) · Tests + Code-behind the ONLY tabbed sections ·
+   a Lucide icon on every section + field · info/warn tip-icons · follows the center's
+   --font-content / --root-size. Reused VERBATIM (renamed the DOM builder E→H to avoid
+   the lab's SVG E, chips wired into the lab's peek/nav), NOT rebuilt — a from-scratch
+   rebuild elsewhere is exactly what forked the two codebase-graph tracks. ═════════ */
+var ECP_P = {
+  link:'<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/>',
+  test:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  table:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M12 3v18"/>',
+  key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  doc:'<path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v5h5"/><path d="M16 13H8M16 17H8M10 9H8"/>',
+  info:'<circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>',
+  layers:'<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+  merge:'<circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M6 21V9a9 9 0 0 0 9 9"/>',
+  role:'<path d="M20 7h-9M14 17H5"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/>',
+  globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>',
+  file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
+  endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
+  model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
+  function:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
+  web:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
+  entity:'<path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  external:'<path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h6"/>',
+  alert:'<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" x2="12" y1="9" y2="13"/><line x1="12" x2="12.01" y1="17" y2="17"/>',
+  arrowL:'<polyline points="15 18 9 12 15 6"/>', arrowR:'<polyline points="9 18 15 12 9 6"/>'
+};
+function H(t,a){ var e=document.createElement(t), i, args=arguments;
+  for(var p in (a||{})){ if(p==="class") e.className=a[p]; else if(p==="html") e.innerHTML=a[p]; else e.setAttribute(p,a[p]); }
+  for(i=2;i<args.length;i++) ecpAppend(e,args[i]);
+  return e; }
+function ecpAppend(e,c){ if(c==null) return; if(Array.isArray(c)){ c.forEach(function(x){ ecpAppend(e,x); }); return; }
+  if(typeof c==="object") e.appendChild(c); else e.appendChild(document.createTextNode(String(c))); }
+function ecpIco(n, cls, col){ var s="<svg class='ico "+(cls||"")+"' viewBox='0 0 24 24' "+(col?"style='color:"+col+"'":"")+">"+(ECP_P[n]||"")+"</svg>";
+  var d=document.createElement("div"); d.innerHTML=s; return d.firstChild; }
+// the lab-wiring hooks (set once, below): a chip's hover peeks its graph node, a click
+// travels to it — the diagram's existing peek/select behaviour, reused not reinvented.
+var ECP={ onPeek:null, onPeekClear:null, onJump:null };
+function ecpChip(item, cls, glyph){
+  var label=(item&&typeof item==="object")?item.label:item;
+  var key=(item&&typeof item==="object")?item.key:null;
+  var c=H("span",{class:"chip "+(cls||"")}, glyph?ecpIco(glyph):null, label);
+  if(key){ c.classList.add("hot");
+    c.addEventListener("mouseenter",function(){ if(ECP.onPeek) ECP.onPeek(key); });
+    c.addEventListener("mouseleave",function(){ if(ECP.onPeekClear) ECP.onPeekClear(); });
+    c.addEventListener("click",function(ev){ ev.stopPropagation(); if(ECP.onJump) ECP.onJump(key); }); }
+  return c; }
+function ecpChipList(items, cls, glyph, cap){ cap=cap||5;
+  var wrap=H("span"), head=items.slice(0,cap), tail=items.slice(cap);
+  head.forEach(function(x){ wrap.append(ecpChip(x,cls,glyph)); });
+  if(tail.length){ var hid=H("span",{style:"display:none"}); tail.forEach(function(x){ hid.append(ecpChip(x,cls,glyph)); });
+    var b=H("button",{class:"more"},"+"+tail.length+" more"); b.onclick=function(){ hid.style.display="inline"; b.remove(); }; wrap.append(hid,b); }
+  return wrap; }
+function ecpTip(tip){ var w=H("span",{class:"tipico "+(tip.cls||"info"),title:tip.text}, ecpIco(tip.icon), H("span",{class:"tip"},tip.text));
+  w.onclick=function(ev){ ev.stopPropagation(); w.classList.toggle("on"); }; return w; }
+function ecpSechd(icoName, label, count, ok, tip){ return H("div",{class:"sechd"}, ecpIco(icoName), label,
+  tip?ecpTip(tip):null, (count!=null)?H("span",{class:"cnt"+(ok?" ok":"")}, String(count)):null); }
+var ECP_CONN_TIP={icon:"info",text:"hover a connection → highlights that node in the graph (the diagram's peek/select behaviour).",cls:"info"};
+function ecpUsage(n, breakdown){ n=n||0;
+  return H("div",{class:"sec"},
+    ecpSechd("merge","Usage", n, false, {icon:"info",text:"IN-DEGREE — how many elements depend on this one. Break it and this many are affected (a load-bearing measure).",cls:"info"}),
+    H("div",{class:"ubar"}, H("div",{class:"ufill",style:"width:"+Math.min(100,n*9)+"%"})),
+    breakdown?H("div",{class:"sublbl"}, ecpIco("link"), breakdown):null); }
+function ecpKv(icoName,k,v){
+  // operator ruling 2026-08-16: a LONG or code value stacks — label+icon on top as a title,
+  // value full-width below — so it uses the whole panel column instead of a cramped right cell.
+  // Short values (entity/layer/returns/status) stay compact side-by-side.
+  var vv=String(v==null?"":v), stack=vv.replace(/<[^>]*>/g,"").length>24;   // by visible-text length, so a SHORT code value (returns MeResponse) stays compact
+  return H("div",{class:"kv"+(stack?" stack":"")}, icoName?ecpIco(icoName,"kico"):H("span",{style:"width:14px"}),
+    H("span",{class:"k"},k), H("span",{class:"v",html:v})); }
+function ecpG(label,icon,count,nodeFn){ return {label:label,icon:icon,count:count,node:nodeFn}; }
+// THE TAB RULE (operator ruling): tabs are for Tests + Code-behind ONLY. groups>1 → tabs;
+// groups==1 → direct; groups==0 → empty note. Connections use ecpConns and are NEVER tabbed.
+function ecpTabbed(secIcon, title, groups, opt){
+  opt=opt||{}; var live=groups.filter(function(g){ return g.count>0; });
+  var total=live.reduce(function(s,g){ return s+g.count; },0);
+  var hd=ecpSechd(secIcon, title, opt.showCount?total:null, opt.ok);
+  if(!live.length) return H("div",{class:"sec"}, hd, H("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+  if(live.length===1){ var g=live[0];
+    return H("div",{class:"sec"}, hd, H("div",{class:"sublbl"}, ecpIco(g.icon), g.label+" "+g.count), g.node()); }
+  var bar=H("div",{class:"tabbar"}), body=H("div");
+  var show=function(i){ body.innerHTML=""; body.append(live[i].node());
+    Array.prototype.forEach.call(bar.children,function(c,j){ c.classList.toggle("on",j===i); }); };
+  live.forEach(function(g,i){ var t=H("button",{class:"tab"}, ecpIco(g.icon), g.label, H("span",{class:"tabn"}, String(g.count))); t.onclick=function(){ show(i); }; bar.append(t); });
+  var wrap=H("div",{class:"sec"}, hd, bar, body); show(0); return wrap; }
+// CONNECTIONS — never tabbed: every group shown at once; chips hover-highlight the node.
+function ecpConns(secIcon, title, groups, opt){
+  opt=opt||{}; var live=groups.filter(function(g){ return g.count>0; });
+  var total=live.reduce(function(s,g){ return s+g.count; },0);
+  var box=H("div",{class:"connbox"});
+  if(!live.length) box.append(H("div",{style:"font-size:12px;color:var(--muted)"}, opt.empty||"— none"));
+  live.forEach(function(g){ box.append(H("div",{class:"sublbl"}, ecpIco(g.icon), g.label+" "+g.count), g.node()); });
+  return H("div",{class:"sec"}, ecpSechd(secIcon,title, opt.showCount?total:null, false, live.length?ECP_CONN_TIP:null), box); }
+function ecpColsTable(cols, fks){
+  var fkset={}; (fks||[]).forEach(function(f){ fkset[f[0]]=1; });
+  var t=H("table",{class:"cols"});
+  cols.forEach(function(c){ t.append(H("tr",null, H("td",null, fkset[c[0]]?H("span",{class:"keycol"},ecpIco("key"),c[0]):c[0]), H("td",{class:"ty"}, c[1]||""))); });
+  return t; }
+// Code behind — ONE category (functions) → shown directly, never gated. The named list
+// rides the C4 behind floor (derive_behind.names, live); an unresolved handler keeps a warn.
+function ecpBehind(b){
+  if(!b) return null;
+  var body=H("div",null, H("div",{class:"sublbl"}, ecpIco("function"), "depth "+(b.depth||0)+" · the call tree behind this"+(b.truncated?" (depth-capped)":"")));
+  var list=H("div"); (b.names||[]).forEach(function(f){ list.append(H("span",{class:"chip fn"}, ecpIco("function"), f)); });
+  if(b.names_more) list.append(H("span",{class:"more"}, "+"+b.names_more+" more"));
+  body.append(list);
+  var warn=(b.names&&b.names.length)?null:{icon:"alert",cls:"warn",text:"The count + depth are live; graft resolved no named callees for this handler (a cross-file inference gap, not a zero)."};
+  return H("div",{class:"sec"}, ecpSechd("layers","Code behind", b.fns||0, false, warn), body); }
+// tests → cid chips (rows carry {cid,name} from the C4 det; a bare string also renders)
+function ecpCids(arr){ return function(){ var w=H("div"); (arr||[]).forEach(function(c){
+  w.append(H("span",{class:"chip ok"}, ecpIco("test"), (c&&typeof c==="object")?(c.cid||c.name||"case"):c)); }); return w; }; }
+// AUDIT #14: det.cases is DISPLAY-CAPPED with the overflow in det.cases_more. The proof
+// BADGE counts the true total (cids + cases_more); the panel listed only the enumerable
+// cids → badge said 26, panel said 6 for the SAME node. Fold cases_more into the group
+// count (so the section total == the badge) + a note explaining the un-listed remainder.
+function ecpCidsMore(arr,more){ return function(){ var w=ecpCids(arr)();
+  if(more>0) w.append(H("div",{class:"sublbl",style:"color:var(--muted);margin-top:4px"},
+    "+"+more+" more attributed (counted in total; no cid on file)")); return w; }; }
+
+/* ── the restacked header + the TRACE back/forward (top-right). The trace is a
+   temporary journey of the nodes you click through — it rides the lab's nav history
+   (navStack) extended with a forward stack. A defined journey's STEP control lives in
+   the top nav (jrnBar); this corner is back/forward only. ── */
+var navFwd=[], ecpCurHead=null, _ecpFwding=false;
+function ecpHeader(kind, kglyph, kcolor, name, typeSub){
+  var back=H("button",{class:"tracebtn",title:"back — previous node in your trace"}, ecpIco("arrowL"));
+  var fwd=H("button",{class:"tracebtn",title:"forward — next node in your trace"}, ecpIco("arrowR"));
+  var posEl=H("span",{class:"tracepos"},"");
+  back.addEventListener("click",function(){ ecpTraceGo(-1); });
+  fwd.addEventListener("click",function(){ ecpTraceGo(1); });
+  var head=H("div",{class:"phead"},
+    H("div",{class:"ptitle"}, H("div",{class:"pname"}, name),
+      H("div",{class:"ptype",style:"color:"+kcolor}, ecpIco(kglyph,"kglyph"), H("b",null,kind), typeSub?H("span",{style:"color:var(--muted)"}, typeSub):null)),
+    H("div",{class:"tracenav",title:"your node trace — back / forward"}, back, posEl, fwd));
+  head._back=back; head._fwd=fwd; head._pos=posEl; return head; }
+function ecpTraceSync(){ if(!ecpCurHead) return;
+  ecpCurHead._back.disabled = navStack.length===0;
+  ecpCurHead._fwd.disabled = navFwd.length===0;
+  var total=navStack.length+navFwd.length+1, cur=navStack.length+1;
+  ecpCurHead._pos.textContent = total>1 ? (cur+"/"+total) : ""; }
+function ecpTraceGo(dir){
+  if(dir<0){ if(!navStack.length) return; if(navCur) navFwd.push(navCur); goBack(); }
+  // PEEK then pop only on a successful land — a forward target not drawn on the current
+  // level (jumpToNode → false) must stay in navFwd, not vanish + desync the counter.
+  else { if(!navFwd.length) return; var k=navFwd[navFwd.length-1]; _ecpFwding=true;
+    var ok=jumpToNode(k); _ecpFwding=false; if(ok!==false) navFwd.pop(); }
+  ecpTraceSync(); }
+
+/* ── C4 lookups — the endpoint `behind` floor + the web→API bridges the panel reads
+   from GABE_C4 (never GABE_LEVELS). Honest-empty: C4 absent ⇒ null / []. ── */
+function c4Endpoint(slug, m, p){ if(!C4 || !C4.l2 || !C4.l2[slug]) return null;
+  var lbl=m+" "+p, ns=C4.l2[slug].nodes||[];
+  for(var i=0;i<ns.length;i++){ if(ns[i].kind==="endpoint" && ns[i].label===lbl) return ns[i]; }
+  return null; }
+function c4BridgesTo(endpointNodeId){ if(!C4 || !C4.cross_edges) return [];
+  return C4.cross_edges.filter(function(e){ return e.kind==="bridge" && e.to===endpointNodeId; }); }
+function c4ScreenLabel(id, slug){ if(!C4 || !C4.l2 || !C4.l2[slug]) return id; var ns=C4.l2[slug].nodes||[];
+  for(var i=0;i<ns.length;i++){ if(ns[i].id===id) return ns[i].label||id; } return id; }
+
+/* ── the ECP card mount: clears the aside, builds the .ecp card (header + body), and
+   leaves an #ecp-conns slot the selection engine fills with the 1-hop connectors. The
+   aside's own #panelgrip (drag) + #panelchev (collapse-to-rail) provide the outer chrome. ── */
+var _ecpExtraConns=null;   // extra connection groups a card contributes from C4 (endpoint screens)
+function ecpConnSlot(){ return H("div",{id:"ecp-conns"}); }
+function mountCard(kind, kglyph, kcolor, name, sub, bodyNodes){
+  panel.innerHTML="";
+  var root=H("div",{class:"ecp"});
+  var head=ecpHeader(kind, kglyph, kcolor, name, sub); ecpCurHead=head;
+  root.append(head);
+  var pbody=H("div",{class:"pbody"});
+  bodyNodes.forEach(function(n){ ecpAppend(pbody,n); });
+  root.append(pbody); panel.append(root);
+  ecpTraceSync(); }
 
 function showDefault(){
   panel.innerHTML="<h3>"+esc({entities:"Entities",pieces:"Pieces",functions:"Functions",layers:"Layers",trace:"Trace"}[level])+"</h3>"
@@ -1748,148 +2319,814 @@ function showDefault(){
      trace:"The merge of Pieces + Functions: each endpoint wired to the handler function it calls, wired to the models/schemas that handler reads or writes — the request's path through the code, end to end. Wires wear the entity's colour."
    }[level]+"</div>"+_sect(_psvg("<ellipse cx='12' cy='6' rx='8' ry='3' fill='none' stroke='var(--muted)' stroke-width='1.5'/><path d='M4 6 v10 a8 3 0 0 0 16 0 v-10' fill='none' stroke='var(--muted)' stroke-width='1.5'/>"),"fixture")+"<div class='note'>"+esc(D.note)+"</div>";
 }
-function showEntity(en){ var pc=D.pieces[en.slug]||{};
-  panel.innerHTML="<h3 style='color:"+(COLORS[en.slug]||"inherit")+"'>"+esc(en.label)+"</h3>"
-   +"<div class='row'><span>endpoints</span><b>"+en.counts.endpoints+"</b></div>"
-   +"<div class='row'><span>models</span><b>"+en.counts.models+"</b></div>"
-   +"<div class='row'><span>schemas</span><b>"+en.counts.schemas+"</b></div>"
-   +"<div class='row'><span>lines</span><b>"+(en.counts.lines||0).toLocaleString()+"</b></div>"
-   +(en.counts.hidden_fns?"<div class='row' title='functions graft homes here but the trace never draws — the star-field floor (inferred)'><span>hidden fns</span><b>"+en.counts.hidden_fns+"</b></div>":"")
-   +"<div class='note'>Switch to <b>2 · Pieces</b> to open it — the endpoints move to the border.</div>"; }
-var _icoDoc="<path d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M14 2v5h5 M16 13H8 M16 17H8' fill='none' stroke='var(--muted)' stroke-width='1.7'/>";
-var _icoTbl="<path d='M3 5h18v14H3z M3 10h18 M9 5v14' fill='none' stroke='var(--muted)' stroke-width='1.7'/>";
-function detailOf(key){ return (D.detail||{})[key]; }
-function docSect(doc, label){
-  if(!doc || doc==="\u2014") return "";
-  return _sect(_psvg(_icoDoc), label)+_snote(esc(doc)); }
-function fileRow(file, lines){
-  if(!file) return "";
-  var over=lines && lines>800;
-  return "<div class='row'><span>file</span><b style='font-weight:500'><code style='font-size:10.5px'>"+esc(file)+"</code>"
-    +(lines?" <span style='color:"+(over?"var(--m-delete)":"var(--muted)")+"'>"+lines+" ln"+(over?" · over the 800 budget":"")+"</span>":"")+"</b></div>"; }
-function usageRows(api, internal){
-  if(api==null && internal==null) return "";
-  var bar=function(n,col){ return "<span class='pbar' style='width:"+Math.min(6*(n||0),84)+"px;background:"+col+"'></span>"+(n||0); };
-  return "<div class='row'><span>usage</span><b>"+bar(api,"var(--c-fn-services)")+" api &nbsp; "+bar(internal,"var(--accent)")+" internal</b></div>"; }
-function twinRow(det){
-  var bits=[];
-  if(det.base) bits.push("base — derives from nothing");
-  if(det.sim) bits.push("twin: "+esc(det.sim)+(det.simj?" ("+Math.round(det.simj*100)+"%)":""));
-  return bits.length ? "<div class='row'><span>shape</span><b>"+bits.join(" · ")+"</b></div>" : ""; }
-function casesSect(det){
-  if(!det || !det.cases || !det.cases.length) return "";
-  var n=det.cases.length+(det.cases_more||0);
-  var h=_sect(_psvg("<rect x='3' y='7' width='18' height='11' rx='5.5' fill='none' stroke='var(--muted)' stroke-width='1.7'/><path d='M8.5 12.5 l2.4 2.4 L15.5 10' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),"tested by ("+n+")");
-  h+="<table class='ptab'><tr><th>kind</th><th>tier</th><th>case</th><th>state</th></tr>";
-  det.cases.forEach(function(c){
-    h+="<tr><td>"+esc(c.corpus)+"</td><td>"+esc(c.tier)+"</td>"
-      +"<td>"+(c.cid?"<span class='cid'>"+esc(c.cid)+"</span> ":"")+esc(c.name)+"</td>"
-      +"<td class='"+(c.state==="pass"?"st-pass":"st-fail")+"'>"+esc(c.state)+"</td></tr>"; });
-  h+="</table>";
-  if(det.cases_more) h+="<div class='pmore'>+"+det.cases_more+" more case(s) — the command center's matrix carries the full ledger</div>";
-  return h; }
-function structSect(det){
-  if(!det || !det.cols || !det.cols.length) return "";
-  var h=_sect(_psvg(_icoTbl),"structure ("+(det.cols.length+(det.cols_more||0))+" columns)");
-  h+="<table class='ptab'><tr><th>column</th><th>type</th><th>description</th></tr>";
-  det.cols.forEach(function(c){
-    h+="<tr><td>"+esc(c[0])+(c[3]?"<span class='uqchip'>unique</span>":"")+"</td>"
-      +"<td style='color:var(--c-schema)'>"+esc(c[1])+"</td><td style='color:var(--muted)'>"+esc(c[2]||"")+"</td></tr>"; });
-  h+="</table>";
-  if(det.cols_more) h+="<div class='pmore'>+"+det.cols_more+" more column(s)</div>";
-  return h; }
-function fkSect(det){
-  if(!det || !det.fks || !det.fks.length) return "";
-  var h=_sect(_psvg("<path d='M9 12h6 M5 12a4 4 0 0 1 4-4h1 M19 12a4 4 0 0 1-4 4h-1' fill='none' stroke='var(--muted)' stroke-width='1.7'/>"),"stored as (foreign keys)");
-  h+="<table class='ptab'><tr><th>fk column</th><th>points at</th></tr>";
-  det.fks.forEach(function(f){ h+="<tr><td>"+esc(f[0])+"</td><td style='color:var(--c-schema)'>"+esc(f[1])+"</td></tr>"; });
-  return h+"</table>"; }
-function sigSect(det){
-  if(!det || (!det.returns && det.async==null)) return "";
-  var h=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--muted)' stroke-width='2'/>"),"signature");
-  h+="<table class='ptab'><tr><th>part</th><th>type</th><th>role</th></tr>";
-  if(det.returns) h+="<tr><td>return</td><td style='color:var(--c-schema)'>"+esc(det.returns)+"</td><td>out</td></tr>";
-  h+="</table>";
-  h+="<div class='pmore'>"+(det.async?"async · ":"")+(det.lines?det.lines+" lines · ":"")
-    +"params live in the center's render pass — they join at the merge</div>";
-  return h; }
-function layerRow(lay){
-  return "<div class='row'><span>layer</span><b style='color:"+(FNCOL[lay]||"var(--c-model)")+"'>"+esc(lay)+"</b></div>"; }
-function entityRow(slug){
-  return "<div class='row'><span>entity</span><b style='display:flex;align-items:center;gap:6px'>"
-    +"<span class='entdot' style='width:9px;height:9px;border-radius:50%;display:inline-block;background:"+(COLORS[slug]||"#888")+"'></span>"
-    +esc(slug)+"</b></div>"; }
+function showEntity(en){
+  _ecpExtraConns=null;
+  // the entity enters the node trace like every other card, so the header back/forward
+  // reflects IT (idempotent: goBack/jumpToNode pre-set navCur, so navTouch early-returns
+  // there; a DIRECT entity click starts a fresh chain). Without this the entity card
+  // showed a trace position + back button pointing at an unrelated node.
+  navTouch("ent:"+en.slug);
+  var pc=D.pieces[en.slug]||{}, c=en.counts||{};
+  // usage IN-DEGREE = inbound cross-entity references (levels cross_edges landing here)
+  var inbound=(D.cross_edges||[]).filter(function(e){ return e.ts===en.slug; }).length;
+  var body=[];
+  body.push(ecpUsage(inbound, inbound?(inbound+" inbound cross-entity reference"+(inbound>1?"s":"")):"no other entity references it"));
+  body.push(H("div",{class:"sec"}, ecpSechd("entity","Composition"),
+    H("div",{class:"count"}, ecpIco("endpoint","kico"), H("span",{class:"lbl"},"API endpoints"), H("span",{class:"n"}, String(c.endpoints||0))),
+    H("div",{class:"count"}, ecpIco("model","kico"), H("span",{class:"lbl"},"Models"), H("span",{class:"n"}, String(c.models||0))),
+    H("div",{class:"count"}, ecpIco("schema","kico"), H("span",{class:"lbl"},"Schemas"), H("span",{class:"n"}, String(c.schemas||0))),
+    H("div",{class:"count",style:c.hidden_fns?"":"border:none"}, ecpIco("layers","kico"), H("span",{class:"lbl"},"Lines"), H("span",{class:"n"}, (c.lines||0).toLocaleString())),
+    // HIDDEN FNS — graft homes them to this entity but the trace never draws them (the star-field floor,
+    // fn_slug − drawn_fn; a graft FLOOR, inferred-by-design). Honest-empty: no count → no row.
+    c.hidden_fns ? H("div",{class:"count",style:"border:none"}, ecpIco("function","kico"),
+      H("span",{class:"lbl",title:"functions graft homes to this entity but the trace never draws — the star-field floor (a graft FLOOR, inferred)"},"Hidden fns"),
+      H("span",{class:"n"}, String(c.hidden_fns))) : null));
+  var api=0, web=0;
+  (pc.models||[]).concat(pc.schemas||[]).forEach(function(m){ if(m.tests){ api+=m.tests.api||0; web+=m.tests.web||0; } });
+  if(api||web) body.push(H("div",{class:"sec"}, ecpSechd("test","Tests", api+web, true),
+    H("div",{class:"sublbl"}, ecpIco("test"), "api "+api+" · web "+web+" — the matrix carries the full ledger")));
+  var principal=(pc.models&&pc.models[0])?pc.models[0].cls:null;
+  mountCard("entity","entity", COLORS[en.slug]||"var(--c-entity)", en.label, principal?("principal "+principal):"", body);
+}
+/* the pre-port panel string-builders (detailOf · docSect · fileRow · usageRows ·
+   twinRow · casesSect · structSect · fkSect · sigSect · layerRow · entityRow +
+   the _ico* glyphs) were retired with the show* rewrite — the ECP kit renders
+   these as DOM cards now. Removed (git carries the history). */
 function showPiece(slug, it){
-  var _o={kind:it.kind, table:it.m.table, tests:it.m.tests||null, guards:it.m.guards||0,
-      hub:it.m.hub||null, press:(D.pressure||{})[slug+"|"+it.m.cls]||0};
-  panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(it.m.cls||"")+"</h3>"
-   +"<div class='note'>"+(it.kind==="model"?"model":"schema")+"</div>"
-   +entityRow(slug)
-   +layerRow("data")
-   +(it.m.table?"<div class='row'><span>table</span><b>"+esc(it.m.table)+"</b></div>":"")
-   +(it.kind==="model"?"<div class='row'><span>foreign keys</span><b>"+(it.m.nfk||0)+"</b></div>":"")
-   +(insideLayout==="tiers"?"<div class='row'><span>tier</span><b>"+(it.kind==="model"?"models — inner ring":"schemas — outer ring")+"</b></div>":"")
-   +(function(){ var det=detailOf("cls:"+slug+"|"+(it.m.cls||""))||{};
-      return fileRow(det.file, det.lines)
-        + usageRows(det.usage, det.internal)
-        + twinRow(det)
-        + docSect(det.doc, "docstring")
-        + structSect(det)
-        + (it.kind==="model" ? fkSect(det) : "")
-        + casesSect(det); })()
-   +indicatorHTML(_o)
-   +unlinkedNote("cls", slug+"|"+(it.m.cls||""), it.m.cls||""); }
+  _ecpExtraConns=null;
+  var cls=it.m.cls||"", m=it.m;
+  // model/schema DETAIL rides GABE_LEVELS.detail["cls:…"].det (the C4 element_detail
+  // dossier the levels feed homes here): cols · fks · uqs · doc · file · cases.
+  // SWEEP-A: read the KIND-aware detail key — a model and a same-named schema keep
+  // separate det records (cls: vs sch:), so the schema panel shows the SCHEMA's own
+  // columns/file, not the model's (gastify StatementLine: 20 fields not the model's 23).
+  var d=D.detail[(it.kind==="model"?"cls:":"sch:")+slug+"|"+cls]||{}, det=d.det||{};
+  // usage IN-DEGREE. A model carries model_insight fan-in on hub.usage; a SCHEMA has no
+  // hub (the levels feed builds schemas as {cls,tests}), so derive its in-degree from the
+  // endpoints that reference it as a body (touch) or response (resp) — else the bar always
+  // read 0 with a false "nothing references it yet" for a heavily-used response schema.
+  var usageN, usageNote;
+  if(it.kind==="model"){ usageN=(m.hub&&m.hub.usage)||0;
+    usageNote = usageN?("fan-in "+usageN+" — endpoints + functions referencing it"):"nothing references it yet"; }
+  else { usageN=0;
+    Object.keys(D.pieces||{}).forEach(function(s){ (D.pieces[s].endpoints||[]).forEach(function(e){
+      if((e.touch||[]).indexOf(cls)>=0 || e.resp===cls) usageN++; }); });
+    usageNote = usageN?(usageN+" endpoint"+(usageN>1?"s":"")+" reference this body/response"):"no endpoint references it directly"; }
+  var body=[];
+  body.push(ecpUsage(usageN, usageNote));
+  body.push(ecpConnSlot());
+  body.push(ecpUnlinked("cls", slug+"|"+cls, cls));
+  if(det.cols && det.cols.length){
+    var tblTitle=(it.kind==="model")?"Structure":"Fields";
+    body.push(H("div",{class:"sec"}, ecpSechd("table",tblTitle, det.cols.length+(det.cols_more||0)),
+      ecpColsTable(det.cols, (it.kind==="model")?det.fks:null),
+      det.cols_more?H("div",{class:"sublbl"}, "+"+det.cols_more+" more column(s)"):null));
+  }
+  if(it.kind==="model" && ((det.fks&&det.fks.length) || (det.uqs&&det.uqs.length))){
+    var keyRows=[];
+    (det.fks||[]).forEach(function(f){ keyRows.push(ecpKv("key","foreign", esc(f[0])+" → <code>"+esc(f[1])+"</code>")); });
+    if(det.uqs&&det.uqs.length) keyRows.push(ecpKv("key","unique", esc(det.uqs.join(", "))));
+    body.push(H("div",{class:"sec"}, ecpSechd("key","Keys"), keyRows));
+  }
+  // P1b: graft's class definition (signature) + exported flag — from node_facts, not re-parsed
+  if(det.gsig) body.push(H("div",{class:"sec"}, ecpSechd("function","Definition"),
+    ecpKv("function","signature","<code>"+esc(det.gsig)+"</code>"),
+    det.exported?ecpKv("globe","visibility","exported · public API"):null));
+  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; }), casesMore=det.cases_more||0;
+  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length+casesMore,ecpCidsMore(apiC,casesMore)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
+  if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(det.doc)), det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
+  else if(det.file) body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(det.file)+"</code>")));
+  if(m.hub&&m.hub.god) body.push(H("div",{class:"sec"}, H("span",{class:"flag"}, ecpIco("info"), "god "+it.kind+" · usage "+usageN)));
+  var kcol=(it.kind==="model")?"var(--c-model)":"var(--c-schema)";
+  var sub=(it.kind==="model")?("table "+(m.table||"—")):"schema";
+  mountCard(it.kind, it.kind, kcol, cls, sub, body);
+}
 function showEndpoint(slug, ep){
-  var _o={kind:"ep", method:ep.m, mcol:METHOD[ep.m]||"var(--muted)", tests:ep.tests||null, guards:ep.guards||0};
-  panel.innerHTML="<h3 style='font-size:13px;display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(ep.m+" "+ep.p)+"</h3>"
-   +"<div class='note'>an entry point on the entity's border</div>"
-   +entityRow(slug)
-   +layerRow("api")
-   +"<div class='row'><span>handler</span><b>"+esc(ep.fn||"—")+"()</b></div>"
-   +(ep.resp?"<div class='row'><span>returns</span><b>"+esc(ep.resp)+"</b></div>":"")
-   +((ep.touch||[]).length?"<div class='row'><span>touches</span><b>"+esc(ep.touch.join(", "))+"</b></div>":"")
-   +(function(){ var det=detailOf("ep:"+slug+"|"+ep.m+" "+ep.p)||{};
-      return (det.status?"<div class='row'><span>status</span><b>"+esc(String(det.status))+"</b></div>":"")
-        + fileRow(det.file, det.lines)
-        + docSect(det.doc, "purpose")
-        + casesSect(det); })()
-   +indicatorHTML(_o)
-   +unlinkedNote("ep", slug+"|"+ep.m+" "+ep.p, ep.p); }
+  var epId="endpoint:"+ep.m+" "+ep.p;
+  // endpoint DETAIL + the `behind` floor ride GABE_C4 (never GABE_LEVELS): the l2 node's
+  // element_detail dossier (doc · status · sig · file · cases) + node.behind {fns,depth,names}.
+  var c4n=c4Endpoint(slug, ep.m, ep.p), det=(c4n&&c4n.det)||{}, behind=(c4n&&c4n.behind)||null;
+  var bridges=c4BridgesTo(epId);
+  var usageN=bridges.length;   // usage IN-DEGREE = screens fetching this endpoint (C4 bridges)
+  // the screens group rides the Connections section as a C4 EXTRA (screens aren't drawn on
+  // the levels grammar yet → the chips carry no node key, so they are shown, not hot).
+  _ecpExtraConns = bridges.length ? [ ecpG("screens","web",bridges.length, (function(bs){ return function(){
+      return ecpChipList(bs.map(function(b){ return {label:c4ScreenLabel(b.from,b.from_slug), key:b.from}; }),"web","web"); }; })(bridges)) ] : null;   // AUDIT #13: b.from already carries the "web:" prefix — no double-prefix
+  var body=[];
+  body.push(ecpUsage(usageN, usageN?(usageN+" screen"+(usageN>1?"s":"")+" fetch this endpoint"):"no screen fetch bridged (entry point)"));
+  body.push(ecpConnSlot());
+  body.push(ecpUnlinked("ep", slug+"|"+ep.m+" "+ep.p, ep.p));
+  var cases=det.cases||[], apiC=cases.filter(function(c){ return c.corpus!=="web"; }), webC=cases.filter(function(c){ return c.corpus==="web"; }), casesMore=det.cases_more||0;
+  body.push(ecpTabbed("test","Tests",[ ecpG("api","test",apiC.length+casesMore,ecpCidsMore(apiC,casesMore)), ecpG("web","web",webC.length,ecpCids(webC)) ],{showCount:true, ok:true, empty:"— no cases claimed yet"}));
+  if(behind) body.push(ecpBehind(behind));
+  var idRows=[ ecpKv("entity","entity", esc(slug)), ecpKv("layers","layer","api"),
+     ecpKv("role","role","endpoint handler"), (ep.guards?ecpKv("info","guards", ep.guards+" validator(s) in the route file"):null) ];   // AUDIT #10: file-scoped
+  body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
+  if(det.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Purpose"), H("div",{class:"doc"}, esc(det.doc)),
+     (det.gsig||det.sig)?ecpKv("endpoint","signature",(det.gsig?"<code>"+esc(det.gsig)+"</code>":((det.sig.async?"async · ":"")+"→ <code>"+esc(det.sig.returns||ep.resp||"—")+"</code>"))+((det.sig&&det.sig.lines)?" · "+det.sig.lines+" lines":"")):null,   // P1b: graft's full signature preferred over the re-derived return type
+     det.status?ecpKv("info","status", esc(String(det.status))):null,
+     det.file?ecpKv("file","file","<code>"+esc(det.file)+"</code>"):null));
+  else {
+    var pr=[];
+    if(det.gsig) pr.push(ecpKv("endpoint","signature","<code>"+esc(det.gsig)+"</code>"));   // P1b: graft's signature even without a docstring
+    if(ep.resp) pr.push(ecpKv("schema","returns", "<code>"+esc(ep.resp)+"</code>"));
+    if(det.status) pr.push(ecpKv("info","status", esc(String(det.status))));
+    if(det.file) pr.push(ecpKv("file","file","<code>"+esc(det.file)+"</code>"));
+    if(pr.length) body.push(H("div",{class:"sec"}, ecpSechd("endpoint","Handler"), pr));
+  }
+  mountCard("endpoint","endpoint","var(--c-endpoint)", ep.m+" "+ep.p, ep.fn?ep.fn+"()":"", body);
+}
 function showFn(f){
-  var _o={kind:"fn", layer:f.layer, fncol:FNCOL[f.layer]||"var(--muted)",
-      tests:f.tests||null, hub:f.hub||null, god:f.god, handler:f.handler, uses:f.uses||0};
-  panel.innerHTML="<h3 style='display:flex;align-items:center;gap:7px'>"+kindIcon(_o)+esc(f.name)+"()</h3>"
-   +entityRow(f.slug)
-   +layerRow(f.layer)
-   +"<div class='row'><span>language</span><b>"+(f.lang==="ts"?"TypeScript":"Python")+"</b></div>"
-   +(function(){ var det=detailOf("fn:"+f.slug+"|"+f.name)||{};
-      return fileRow(det.file, det.flines)
-        + usageRows(det.api, det.internal)
-        + docSect(det.doc, "docstring")
-        + sigSect(det)
-        + casesSect(det); })()
-   +indicatorHTML(_o); }
+  _ecpExtraConns=null;
+  // SWEEP-B: re-resolve the CANONICAL fn_node. A cross-home draw (a usefn drawn under a
+  // borrowing entity) passes the DRAWN slug + a hardcoded god:false, so a fn that is god
+  // with fan-in 3 at home read as usage 0 / "internal helper" on Trace & Layers. Normalize
+  // god/hub/behind/home-slug from the fn_node itself so the panel is level-independent.
+  var _FN=D.fn_nodes||[], _fn0=null;
+  if(f.id) _fn0=_FN.filter(function(n){return n.id===f.id;})[0];
+  if(!_fn0 && f.slug) _fn0=_FN.filter(function(n){return n.name===f.name && n.slug===f.slug;})[0];
+  // name-only fallback ONLY when UNAMBIGUOUS — two entities can define a fn of the same
+  // name; picking the first would show a homonym's god/usage. Draw-site clicks pass f.id
+  // (exact), so this rung fires only for id-less entry paths (breadcrumbs/deep links).
+  if(!_fn0){ var _byName=_FN.filter(function(n){return n.name===f.name;}); if(_byName.length===1) _fn0=_byName[0]; }
+  if(_fn0){ f.slug=_fn0.slug; f.god=!!_fn0.god; if(_fn0.hub) f.hub=_fn0.hub; if(_fn0.behind) f.behind=_fn0.behind; }
+  if(!f.behind) f.behind = FN_BEHIND[f.slug+"|"+f.name];   // resolve for minimal-f entry paths
+  // fn DETAIL rides GABE_LEVELS.detail["fn:…"] (the wider function_insight projection):
+  // doc · file · signature. Fan-in usage is the fn_node's hub.usage (already live).
+  var fd=D.detail["fn:"+f.slug+"|"+f.name]||{};
+  var usageN=(f.hub&&f.hub.usage)||0;
+  var body=[];
+  body.push(ecpUsage(usageN, usageN?(usageN+" caller"+(usageN>1?"s":"")+" (fan-in)"):(f.handler?"endpoint handler — entered by a route, not called internally":"no internal caller recorded")));
+  body.push(ecpConnSlot());
+  // CODE BEHIND (out-degree) — the functions this function pulls in transitively, the
+  // hidden mass "under the rug". Same graft floor as an endpoint's, per drawn function.
+  if(f.behind) body.push(ecpBehind(f.behind));
+  var idRows=[ ecpKv("entity","entity", esc(f.slug)), ecpKv("layers","layer", esc(f.layer||"")),
+     ecpKv("globe","language", f.lang==="ts"?"TypeScript":"Python"),
+     ecpKv("role","role", f.handler?"endpoint handler":(f.god?"god function":"internal helper")) ];
+  body.push(H("div",{class:"sec"}, ecpSechd("info","Identity"), idRows));
+  if(f.god) body.push(H("div",{class:"sec"}, H("span",{class:"flag"}, ecpIco("info"), "god fn · usage "+usageN)));
+  // functions carry no cid-level cases in this feed (fn_nodes.tests is a reference COUNT,
+  // not a test ledger), so — like the element-components fn card — Tests is honest-empty.
+  // No count pill: a "0" pill beside a "N cases cover this" note was self-contradictory.
+  body.push(H("div",{class:"sec"}, ecpSechd("test","Tests"),
+     H("div",{style:"font-size:12px;color:var(--muted)"}, "— no cases claimed for a function (coverage is tracked per endpoint/model)")));
+  var sig=fd.sig||{};
+  if(sig.returns||sig.async) body.push(H("div",{class:"sec"}, ecpSechd("function","Signature"),
+     ecpKv("function","returns",(sig.async?"async · ":"")+(fd.flines?fd.flines+" lines · ":"")+"→ <code>"+esc(sig.returns||"—")+"</code>")));
+  if(fd.doc) body.push(H("div",{class:"sec"}, ecpSechd("doc","Docstring"), H("div",{class:"doc"}, esc(fd.doc)), fd.file?ecpKv("file","file","<code>"+esc(fd.file)+"</code>"):null));
+  else if(fd.file) body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(fd.file)+"</code>")));
+  mountCard("function","function", FNCOL[f.layer]||"var(--c-fn)", f.name+"()", f.handler?"endpoint handler":(f.god?"god function":"internal helper"), body);
+}
+
+/* ── FRONTEND MAPPING (frontend-placement.html option 2 — a dedicated Frontend entity):
+   the web layer is its OWN entity circle drawn beside the backend cluster; screens (the
+   fetching files, from GABE_C4 web nodes) live inside it; dashed bridge wires cross to the
+   backend endpoints they call (GABE_C4 cross_edges kind:'bridge'). Additive OVERLAY — it
+   never enters ENTS/layouts; honest-empty when a project has no frontend (backend-only). ── */
+function _stripEp(id){ return String(id).replace(/^endpoint:/, ""); }
+// resolve a C4 endpoint (node id "endpoint:M p" + its C4 home slug) to the endpoint's
+// SELREG key AS DRAWN on this level. The C4 home can differ from the drawn home (aspect
+// dedup: a route C4 files under allergen but the trace draws under the handler's entity),
+// so fall back to matching the "M p" label against any drawn endpoint.
+function epKeyOf(c4to, to_slug){
+  var mp=_stripEp(c4to), k="ep:"+to_slug+"|"+mp;
+  if(SELREG.nodes[k]) return k;
+  var found=k; Object.keys(SELREG.nodes).some(function(x){
+    if(x.indexOf("ep:")===0 && x.slice(x.indexOf("|")+1)===mp){ found=x; return true; } });
+  return found;
+}
+function c4Screens(){
+  var out={}, order=[];
+  if(C4 && C4.l2) Object.keys(C4.l2).forEach(function(slug){ (C4.l2[slug].nodes||[]).forEach(function(n){
+    if(n.kind==="web" && !out[n.id]){ out[n.id]={id:n.id, slug:n.slug, label:n.label||n.id, sites:n.sites||0}; order.push(n.id); } }); });
+  return { map:out, order:order.sort() };
+}
+// darken a #rrggbb toward black by factor f (operator ruling 2026-08-16: the frontend
+// takes its BACKEND entity's hue, a shade darker — recipe→dark green, pantry→dark orange
+// — not one hardcoded web-orange). Non-hex input passes through unchanged.
+function darken(hex, f){ f=(f==null)?0.62:f; var m=/^#?([0-9a-fA-F]{6})$/.exec(hex||"");
+  if(!m) return hex||"var(--c-fn-web)"; var n=parseInt(m[1],16),
+    r=Math.round(((n>>16)&255)*f), g=Math.round(((n>>8)&255)*f), b=Math.round((n&255)*f);
+  return "#"+((1<<24)+(r<<16)+(g<<8)+b).toString(16).slice(1); }
+// FORCE-spread a bubble's screens around (0,0): repulsion + a gentle centering pull, no
+// coupling edges (screens don't attract each other — we only want them to BREATHE so the
+// labels are readable). Operator ruling 2026-08-16: keep the per-entity bubble, drop the
+// tight ring for a force distribution. Returns {id:{x,y}} offsets from the bubble centre.
+function forceScreens(ids){ var n=ids.length; if(n<=1){ var o={}; if(n) o[ids[0]]={x:0,y:0}; return o; }
+  var P={}, V={};
+  ids.forEach(function(id,i){ var a=2*Math.PI*i/n, R0=Math.max(26, n*11);
+    P[id]={x:R0*Math.cos(a), y:R0*Math.sin(a)}; V[id]={x:0,y:0}; });
+  for(var it=0; it<160; it++){
+    for(var i=0;i<n;i++)for(var j=i+1;j<n;j++){ var a=ids[i], c=ids[j],
+      dx=P[a].x-P[c].x, dy=P[a].y-P[c].y, d2=dx*dx+dy*dy+50, d=Math.sqrt(d2), f=6400/d2;
+      V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[c].x-=dx/d*f; V[c].y-=dy/d*f; }
+    ids.forEach(function(id){ V[id].x=(V[id].x - P[id].x*0.03)*0.85; V[id].y=(V[id].y - P[id].y*0.03)*0.85;
+      P[id].x+=V[id].x; P[id].y+=V[id].y; }); }
+  var out={}; ids.forEach(function(id){ out[id]={x:P[id].x, y:P[id].y}; }); return out; }
+function drawFrontend(defs, contLayer, interLayer, layer, b, radii){
+  var S=c4Screens(); if(!S.order.length) return;      // backend-only project → no frontend clusters
+  var col="var(--c-fn-web)", scCol={};   // scCol: screen id → its bubble's entity-derived colour
+  // PER-ENTITY distribution (operator ruling 2026-08-15): a screen sits in a small frontend
+  // bubble JUST OUTSIDE its backend entity (grouped by the C4 web-node slug), pushed radially
+  // away from the graph centre — so bridges stay SHORT and the frontend hugs its backend,
+  // instead of one far-right Frontend blob with long criss-crossing wires (option-2's con).
+  var cxs=0, cys=0, nE=0; ENTS.forEach(function(s){ var p=entAnchor(s); if(p){ cxs+=p.x; cys+=p.y; nE++; } });
+  var GC={x:nE?cxs/nE:0, y:nE?cys/nE:0};
+  // HOME each screen to the entity where its bridged endpoints actually DRAW (not the C4
+  // file-home) — this is what keeps bridges SHORT under aspect dedup: a route C4-files under
+  // allergen but the trace draws it under auth, so the screen must sit by auth, not allergen.
+  var byEnt={};
+  S.order.forEach(function(id){
+    var tally={};
+    (C4 && C4.cross_edges || []).forEach(function(e){ if(e.kind==="bridge" && e.from===id){
+      var k=epKeyOf(e.to, e.to_slug); if(SELREG.nodes[k]) { var s=k.slice(3, k.indexOf("|")); tally[s]=(tally[s]||0)+1; } } });
+    var best=S.map[id].slug, bn=0; Object.keys(tally).forEach(function(s){ if(tally[s]>bn){ bn=tally[s]; best=s; } });
+    (byEnt[best]=byEnt[best]||[]).push(id);
+  });
+  var scAt={};
+  Object.keys(byEnt).sort().forEach(function(slug){
+    var ids=byEnt[slug], anchor=entAnchor(slug)||GC, R=(radii&&radii[slug])||70;
+    var bcol=darken(COLORS[slug]||"#888");   // the frontend takes its backend entity's hue, a shade darker
+    var dx=anchor.x-GC.x, dy=anchor.y-GC.y, d=Math.hypot(dx,dy)||1, ux=dx/d, uy=dy/d;
+    // FORCE-spread the screens, then size the bubble to the spread (readable, not a tight ring)
+    var pos=forceScreens(ids), spreadR=0;
+    ids.forEach(function(id){ spreadR=Math.max(spreadR, Math.hypot(pos[id].x, pos[id].y)); });
+    var fr=Math.max(34, spreadR+24);
+    var fc={x:rnd(anchor.x+ux*(R+fr+34)), y:rnd(anchor.y+uy*(R+fr+34))};
+    var sub=E("circle",{class:"frontcont", cx:fc.x, cy:fc.y, r:fr, fill:bcol, stroke:bcol});
+    contLayer.appendChild(sub);
+    var flb=E("text",{class:"sub2", x:fc.x, y:fc.y-fr-4}); flb.setAttribute("fill",bcol); flb.textContent="⧉ "+slug+" · web"; layer.appendChild(flb);
+    ids.forEach(function(id){ var x=rnd(fc.x+pos[id].x), y=rnd(fc.y+pos[id].y);
+      scAt[id]={x:x,y:y}; scCol[id]=bcol;
+      var g=E("g",{class:"screen", transform:"translate("+x+","+y+")"});
+      halo(g);
+      g.appendChild(E("rect",{x:-6.5,y:-5,width:13,height:9.5,rx:2, fill:"var(--panel)", stroke:bcol, "stroke-width":"1.7"}));
+      g.appendChild(E("line",{x1:-2.5,y1:6.5,x2:2.5,y2:6.5, stroke:bcol, "stroke-width":"1.5"}));
+      twoRowLabel(g, trunc(S.map[id].label,14), 0, 15);
+      var ti=E("title"); ti.textContent="screen "+S.map[id].label+" → "+slug; g.appendChild(ti);
+      regNode(g, id, S.map[id].label, "web");   // the C4 web id already carries the "web:" prefix
+      (function(sc){ g.addEventListener("click",function(ev){ ev.stopPropagation(); showWeb(sc); attachSelection(sc.id); }); })(S.map[id]);
+      layer.appendChild(g);
+      b.minX=Math.min(b.minX,x-34); b.maxX=Math.max(b.maxX,x+34); b.minY=Math.min(b.minY,y-22); b.maxY=Math.max(b.maxY,y+22); });
+    b.minX=Math.min(b.minX,fc.x-fr); b.maxX=Math.max(b.maxX,fc.x+fr); b.minY=Math.min(b.minY,fc.y-fr-16); b.maxY=Math.max(b.maxY,fc.y+fr);
+  });
+  // bridge wires: screen → the backend endpoint it fetches (short now — screen sits by its entity)
+  (C4 && C4.cross_edges || []).forEach(function(e){
+    if(e.kind!=="bridge") return;
+    var from=scAt[e.from]; if(!from) return;
+    var epkey=epKeyOf(e.to, e.to_slug), w=nodeWorldXY(epkey); if(!w) return;
+    var bc=scCol[e.from]||col;   // the bridge wears its screen's entity hue
+    // fine-DOTTED (operator ruling 2026-08-16: distinct from every solid/dashed backend wire)
+    var pth=E("path",{class:"e-bridge", fill:"none", stroke:bc, "stroke-width":"1.5","stroke-dasharray":"1 4","stroke-linecap":"round",
+      d:curve(from.x,from.y,w.x,w.y, -22)}); pth.style.opacity="0.9";
+    var ti=E("title"); ti.textContent=(S.map[e.from]||{}).label+" fetches "+_stripEp(e.to); pth.appendChild(ti);
+    interLayer.appendChild(pth); flowDots(interLayer, pth, bc);
+    regEdge(pth, "bridge", e.from, epkey, "fetch"); });
+}
+function showWeb(sc){
+  _ecpExtraConns=null;
+  var bridged=((C4&&C4.cross_edges)||[]).filter(function(e){ return e.kind==="bridge" && e.from===sc.id; });
+  var unmatched=(((C4&&C4.stats&&C4.stats.web)||{}).unmatched||[]).filter(function(u){ return u.from===sc.id; });
+  // FETCHES ride the Connections slot as C4 EXTRAS (complete, not the drawn subset): the
+  // bridged endpoints (hot — hover peeks / click travels to the endpoint if on-level) + the
+  // unmatched fetches (no endpoint node → shown, not hot).
+  var extra=[];
+  if(bridged.length) extra.push(ecpG("bridged","endpoint",bridged.length, (function(bs){ return function(){
+      return ecpChipList(bs.map(function(x){ return {label:_stripEp(x.to), key:epKeyOf(x.to, x.to_slug)}; }),"route","endpoint"); }; })(bridged)));
+  if(unmatched.length) extra.push(ecpG("unmatched","web",unmatched.length, (function(us){ return function(){
+      return ecpChipList(us.map(function(u){ return u.m+" "+u.p; }),"web","web"); }; })(unmatched)));
+  _ecpExtraConns = extra.length ? extra : null;
+  // AUDIT #9: the bridge's raw to_slug is the C4 LISTING entity (aspect dedup: allergen wins
+  // the alpha-first tie-break), not where the endpoint DRAWS. Resolve the drawn owner via
+  // epKeyOf so Reaches names the real backend entity (auth), matching the drawn wire.
+  var reaches={}; bridged.forEach(function(x){ var k=epKeyOf(x.to, x.to_slug), bar=k.indexOf("|");
+    reaches[bar>3?k.slice(3,bar):x.to_slug]=1; }); var rk=Object.keys(reaches).sort();
+  var body=[];
+  body.push(ecpUsage(0,"entry point — no code depends on a screen"));
+  body.push(ecpConnSlot());
+  if(rk.length) body.push(ecpConns("link","Reaches",[ ecpG("entities","entity",rk.length, (function(ks){ return function(){
+      return ecpChipList(ks.map(function(s){ return {label:s}; }),"model","entity"); }; })(rk)) ],{showCount:true}));
+  body.push(H("div",{class:"sec"}, ecpSechd("file","File"), ecpKv("file","file","<code>"+esc(sc.id)+"</code>"),
+     sc.sites?ecpKv("web","fetch sites", sc.sites+" call site"+(sc.sites>1?"s":"")):null));
+  mountCard("frontend","web","var(--c-fn-web)", sc.label, sc.id, body);
+}
 
 /* ── level switching (position persistence keeps shared anchors) ── */
 function syncGearApplicability(){
+  var fg=fgIsLevel();
   var inOk = (level==="trace"&&traceCluster!=="flow");   // Inside shapes the trace bubbles (2/3 left the UI; 4 is a fixed grid)
-  var clOk = (level==="trace");
+  var clOk = (level==="trace" || (fg && level!=="frontend"));   // Cluster-core now sub-groups the FG entities too (5B/4B)
   var inRow=document.getElementById("inRow"), clRow=document.getElementById("clRow");
   if(inRow){ inRow.style.opacity=inOk?"1":"0.35"; inRow.style.pointerEvents=inOk?"auto":"none"; }
   if(clRow){ clRow.style.opacity=clOk?"1":"0.35"; clRow.style.pointerEvents=clOk?"auto":"none"; }
+  // sync the clSeg active button to the CURRENT level's grouping; drop Guards on FG (operator ruling)
+  var curG = (level==="frontend") ? "kind" : (fg ? (_EMU.fgGroup||"kind") : traceCluster);
+  document.querySelectorAll("#clSeg button").forEach(function(x){ var v=x.getAttribute("data-cl");
+    x.classList.toggle("on", v===curG);
+    if(v==="guards"){ x.style.opacity=fg?"0.3":""; x.style.pointerEvents=fg?"none":""; } });
+  // FG levels carry NO SVG badge overlays — honestly disable those toggles so none reads
+  // active-but-dead (the divergence). Connections · depth · journeys · motion · the
+  // Entities-layout gear stay live (they DO drive the canvas).
+  ["guardsbtn","hubsbtn","pressbtn","behindbtn","usagebtn","testsbtn","overlaysbtn"].forEach(function(id){
+    var b=document.getElementById(id); if(!b) return;
+    b.style.opacity=fg?"0.3":""; b.style.pointerEvents=fg?"none":""; });
+  // the Lines + Icons gear rows also don't apply on FG (fgLink uses _EMU.curv, fgGlyph is
+  // hardcoded) — dim them so no gear control reads active-but-dead.
+  ["lineSeg","icoSeg"].forEach(function(id){ var s=document.getElementById(id); if(!s) return;
+    s.style.opacity=fg?"0.35":""; s.style.pointerEvents=fg?"none":""; });
+  // journeys are a backend concept — off on the FRONTEND FG level (its ids match no journey)
+  var jr=document.getElementById("journeys");
+  if(jr){ var joff=(level==="frontend"); jr.style.opacity=joff?"0.35":""; jr.style.pointerEvents=joff?"none":""; }
 }
+function markLevelButtons(){ document.querySelectorAll("#levels button").forEach(function(btn){
+  btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); }); }
 function render(){
+  // The FORCE-GRAPH levels ("2 · Frontend" + "5B · Trace") render on their own canvas
+  // (the library, not the SVG stage). Swap the two hosts; the SVG levels are untouched.
+  var isFG = (level==="frontend" || level==="tracefg" || level==="layersfg");
+  document.getElementById("stage").style.display = isFG ? "none" : "";
+  document.getElementById("fgstage").style.display = isFG ? "" : "none";
+  // the element FINDER overlays whichever host is live — it sits in a shared wrapper (#graphhost)
+  // OUTSIDE #fgstage, so force-graph clearing its own container never destroys it.
+  if(isFG){ ({tracefg:drawTraceFG, layersfg:drawLayersFG, frontend:drawFrontendGraph})[level](); markLevelButtons(); syncGearApplicability(); return; }
   vp.textContent=""; panX=0; panY=0; zoom=1; SELREG={nodes:{},edges:[]}; selKey=null; _lanes={}; _edgeHop={i:-1, at:null};
-  navStack=[]; navCur=null; navUI();
+  navStack=[]; navFwd=[]; navCur=null; ecpCurHead=null; navUI();
   ({entities:drawEntities, pieces:drawPieces, functions:drawFunctions, layers:drawLayers, trace:drawTrace})[level]();
   showDefault();
-  document.querySelectorAll("#levels button").forEach(function(btn){
-    btn.classList.toggle("on", btn.getAttribute("data-lvl")===level); });
+  markLevelButtons();
   syncGearApplicability();
+  if(!motionOn){ try{ svg.pauseAnimations(); }catch(_){} }   // keep paused across a re-draw
+}
+/* ══ 5B · EMULATED FORCE-GRAPH (operator ruling 2026-08-17) ══════════════════════════
+   The force-graph library gives us MOVEMENT (particle flow, glow, node-drag) at 60fps;
+   this renderer gives it the SVG diagrams' LOOK & CONTROLS so it stops being "super
+   different". ONE renderer, TWO callers: "5B · Trace" (the richest diagram, the
+   emulation proof) and "2 · Frontend" (graft's TS pieces). It draws the SVG grammar on
+   the canvas — per-KIND icon glyphs (kind = shape + glyph-colour; entity = a small dot,
+   the suite's Layers grammar), curved entity-blend wires whose bow MATCHES force-graph's
+   own particle curve (control = midpoint offset perpendicular by curvature·dist, the
+   library's formula) so the flow rides the drawn wire, and the SVG control scheme
+   (alt=depth · ctrl/⌘=zoom-at-cursor · shift=h-pan · scroll=v-pan · drag-pan). Colours
+   are RESOLVED to hex at build time (canvas can't read CSS vars); the SVG levels are
+   untouched — this owns only the #fgstage canvas. ── */
+var _FG=null, _EMU={spec:null, curv:0.14, fitted:false, fgGroup:"kind"}, RG=8;   // RG = glyph radius (graph units); fgGroup = clSeg sub-grouping (kind default)
+function _rc(v){ if(!v) return "#8a8f98"; if(v.charAt(0)==="#") return v;   // resolve "var(--x)"/hex → hex
+  var m=/var\((--[a-z0-9-]+)\)/i.exec(v);
+  if(m){ var r=getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim(); return r||"#8a8f98"; }
+  return v; }
+function _fgReChrome(){ _EMU.panel=_rc("var(--panel)"); _EMU.ink=_rc("var(--muted)"); _EMU.accent=_rc("var(--accent)");   // canvas chrome (panel/label/ring) resolved to hex; re-run on theme change + every entry
+  if(_FG) try{ _FG.backgroundColor(_rc("var(--bg)")); }catch(_){} }
+/* size the canvas to its CONTAINER — force-graph otherwise defaults to the WINDOW size,
+   so the canvas overflowed #fgstage (clipped under the sidebar) AND its internal centre
+   (window/2) drifted zoom-at-cursor to the right. Explicit width/height fixes both. */
+function _fgSize(host){ if(!_FG||!host) return;
+  try{ _FG.width(host.clientWidth||892).height(host.clientHeight||716); }catch(_){} }
+/* convex hull (Andrew monotone chain) — the boundary hugging a set of points. */
+function _hull(pts){ if(pts.length<3) return pts.slice();
+  var p=pts.map(function(q){ return {x:q.x, y:q.y}; }).sort(function(a,b){ return a.x-b.x || a.y-b.y; });
+  function cr(o,a,b){ return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x); }
+  var lo=[]; for(var i=0;i<p.length;i++){ while(lo.length>=2 && cr(lo[lo.length-2],lo[lo.length-1],p[i])<=0) lo.pop(); lo.push(p[i]); }
+  var up=[]; for(var j=p.length-1;j>=0;j--){ while(up.length>=2 && cr(up[up.length-2],up[up.length-1],p[j])<=0) up.pop(); up.push(p[j]); }
+  lo.pop(); up.pop(); return lo.concat(up); }
+/* draw a padded, rounded hull (a blob hugging the nodes) — the outer OUTLINE per the
+   operator ruling: not a big circle, a boundary around the actual elements. */
+function _drawHull(ctx, pts, cx, cy, pad, col, fillA, strokeA, dash, gs){
+  var h=_hull(pts);
+  if(h.length<3){ var r=(h.length?Math.max.apply(null,h.map(function(p){return Math.hypot(p.x-cx,p.y-cy);})):16)+pad;
+    ctx.beginPath(); ctx.arc(cx,cy,r,0,2*Math.PI); }
+  else { var ex=h.map(function(p){ var dx=p.x-cx, dy=p.y-cy, d=Math.hypot(dx,dy)||1; return {x:p.x+dx/d*pad, y:p.y+dy/d*pad}; });
+    ctx.beginPath();
+    for(var i=0;i<ex.length;i++){ var b=ex[i], nb=ex[(i+1)%ex.length];
+      if(i===0){ var pb=ex[ex.length-1]; ctx.moveTo((pb.x+b.x)/2,(pb.y+b.y)/2); }
+      ctx.quadraticCurveTo(b.x, b.y, (b.x+nb.x)/2, (b.y+nb.y)/2); }
+    ctx.closePath(); }
+  if(fillA){ ctx.globalAlpha=fillA; ctx.fillStyle=col; ctx.fill(); }
+  ctx.globalAlpha=strokeA; ctx.lineWidth=1.4/gs; ctx.strokeStyle=col;
+  if(dash) ctx.setLineDash(dash.map(function(v){ return v/gs; })); ctx.stroke(); ctx.setLineDash([]); }
+/* the sub-group key for a node — the clSeg grouping ported to the FG (guards dropped). */
+function _fgGroupKey(n){ var m=_EMU.fgGroup||"kind";
+  if(level==="frontend") return n.kind==="usefn"?"fn":n.kind;   // FE ids match no backend usecase/tests map → always group by kind (its own control is off)
+  if(m==="tests")     return n.tests?"tested":"untested";
+  if(m==="community") return (_EMU.comm&&_EMU.comm[n.id])||"c0";
+  if(m==="usecase")   return (_EMU.uc&&_EMU.uc[n.id])||"—";
+  if(m==="fk")        return (_EMU.fk&&_EMU.fk[n.id])||n.kind;
+  return n.kind==="usefn"?"fn":n.kind; }   // kind (default): fn · model · schema
+/* precompute the grouping maps from REAL archmap data (gustify's census is empty, and an
+   entity's nodes are all connected, so census-usecase + connected-components both collapse —
+   these use the request flow + intra FKs + label-prop instead, which actually sub-divide). */
+function _fgComputeGroups(spec){
+  var ids={}; spec.nodes.forEach(function(n){ ids[n.id]=1; });
+  // USECASE = by REQUEST: each endpoint's flow (handler ƒ + touched models + resp schema)
+  //   is a sub-group — the "what serves this call" view (the SVG's use-case bubbles).
+  var uc={};
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{};
+    (pc.endpoints||[]).forEach(function(ep){ if(!ep.fn) return; var key=slug+"·"+ep.m+" "+ep.p.replace(/^\//,"");
+      var fnId="fn:"+slug+"|"+ep.fn; if(ids[fnId] && !uc[fnId]) uc[fnId]=key;
+      (ep.touch||[]).forEach(function(c){ var id="cls:"+slug+"|"+c; if(ids[id] && !uc[id]) uc[id]=key; });
+      if(ep.resp){ var own=D.schema_owner[ep.resp]; if(own){ var rid="cls:"+own+"|"+ep.resp; if(ids[rid] && !uc[rid]) uc[rid]=key; } }
+      var epId="ep:"+slug+"|"+ep.m+" "+ep.p; if(ids[epId]) uc[epId]=key; }); });
+  spec.nodes.forEach(function(n){ if(!uc[n.id]) uc[n.id]=n.cl+"·(shared)"; });   // not in any single request
+  _EMU.uc=uc;
+  // FK = union-find over INTRA-entity model foreign keys (pc.intra); non-models by kind.
+  var fp={}; spec.nodes.forEach(function(n){ fp[n.id]=n.id; });
+  function ff(x){ while(fp[x]!==x){ fp[x]=fp[fp[x]]; x=fp[x]; } return x; }
+  ENTS.forEach(function(slug){ (D.pieces[slug]||{}).intra||[] && ((D.pieces[slug]||{}).intra||[]).forEach(function(e){
+    var a="cls:"+slug+"|"+e.s, b="cls:"+slug+"|"+e.t; if(fp[a]!==undefined && fp[b]!==undefined) fp[ff(a)]=ff(b); }); });
+  var fkr={}, fki=0, fk={}; spec.nodes.forEach(function(n){
+    if(n.kind!=="model"){ fk[n.id]=n.cl+"·"+(n.kind==="ep"?"endpoints":n.kind==="usefn"?"fn":n.kind); return; }
+    var r=ff(n.id); if(fkr[r]===undefined) fkr[r]=fki++; fk[n.id]=n.cl+"·fk"+fkr[r]; });
+  _EMU.fk=fk;
+  // COMMUNITY = CONNECTED COMPONENTS over intra links + shared-model CO-TOUCH edges (two
+  //   fns that touch a shared model, two models co-touched by a fn) — this coalesces the
+  //   requests that share data into a few "feature clusters" (label-prop over-fragments a
+  //   sparse tree-ish graph into ~20 singletons per entity; components stay meaningful).
+  var cp={}; spec.nodes.forEach(function(n){ cp[n.id]=n.id; });
+  function cf2(x){ while(cp[x]!==x){ cp[x]=cp[cp[x]]; x=cp[x]; } return x; }
+  (spec.links||[]).forEach(function(l){ if(l.cross) return; var s=(l.source&&l.source.id)||l.source, t=(l.target&&l.target.id)||l.target;
+    if(cp[s]!==undefined && cp[t]!==undefined) cp[cf2(s)]=cf2(t); });
+  var csz={}; spec.nodes.forEach(function(n){ var r=cf2(n.id); csz[r]=(csz[r]||0)+1; });   // isolated nodes (no intra link) coalesce into one "(unlinked)" bucket per entity
+  var cr={}, cci=0, comm={}; spec.nodes.forEach(function(n){ var r=cf2(n.id);
+    if(csz[r]<=1){ comm[n.id]=n.cl+"·(unlinked)"; return; }
+    if(cr[r]===undefined) cr[r]=cci++; comm[n.id]=n.cl+"·k"+cr[r]; });
+  _EMU.comm=comm;
+  // TESTS flag — a node is "tested" if its fn/model/schema carries proof
+  var tset={}; if(typeof D!=="undefined"){ (D.fn_nodes||[]).forEach(function(f){ if(f.tests) tset["fn:"+f.slug+"|"+f.name]=1; });
+    Object.keys(D.pieces||{}).forEach(function(slug){ var pc=D.pieces[slug]||{};
+      (pc.models||[]).concat(pc.schemas||[]).forEach(function(m){ if(m && m.cls && m.tests) tset["cls:"+slug+"|"+m.cls]=1; }); }); }
+  spec.nodes.forEach(function(n){ n.tests=!!tset[n.id]; }); }
+/* the ENTITY + SUB-GROUP hulls — the SVG's onions, emulated as boundaries hugging the
+   nodes: a light hull per sub-group (kind/tests/…), a dashed hull per entity enclosing
+   ALL its nodes (so nothing floats outside its entity). Cluster mode only. */
+function _fgHulls(ctx, gs){ var sp=_EMU.spec; if(!sp || sp.arrange==="lanes") return;
+  var ent={}, sub={};
+  sp.nodes.forEach(function(n){ if(n.x==null) return; (ent[n.cl]=ent[n.cl]||[]).push(n); if(n._sub){ (sub[n._sub]=sub[n._sub]||[]).push(n); } });
+  var fade=_EMU.hl?0.4:1;
+  Object.keys(sub).forEach(function(sk){ if(/¦endpoints$/.test(sk)) return;   // endpoints ride the entity RING (non-compact by design) — no sub-hull, it would span the whole entity
+    var ns=sub[sk]; if(ns.length<2) return;   // sub-group blobs (under)
+    var cx=0,cy=0; ns.forEach(function(n){ cx+=n.x; cy+=n.y; }); cx/=ns.length; cy/=ns.length;
+    ctx.save(); _drawHull(ctx, ns, cx, cy, RG+7, ns[0].glyphCol||"#8a8f98", 0.05*fade, 0.32*fade, null, gs); ctx.restore(); });
+  Object.keys(ent).forEach(function(cl){ var ns=ent[cl];                            // entity outer hull (over the sub-blobs)
+    var cx=0,cy=0, top=1e9; ns.forEach(function(n){ cx+=n.x; cy+=n.y; if(n.y<top) top=n.y; }); cx/=ns.length; cy/=ns.length;
+    var col=ns[0].entCol||"#8a8f98";
+    ctx.save(); _drawHull(ctx, ns, cx, cy, RG+16, col, 0.05*fade, 0.5*fade, [6,4], gs);
+    if(gs>0.22){ ctx.globalAlpha=0.95*fade; ctx.fillStyle=col; ctx.textAlign="center"; ctx.textBaseline="bottom";
+      ctx.font="700 13px ui-sans-serif,system-ui,sans-serif"; ctx.fillText(cl, cx, top-RG-14); }
+    ctx.restore(); }); }
+/* canvas glyphs — the SVG icon vocabulary drawn on ctx. ICO_FN/ICO_SCHEMA (24-viewBox
+   path strings) ride straight onto the canvas via Path2D; the rest are primitives. */
+var _P_FN=new Path2D(ICO_FN), _P_SCH=new Path2D(ICO_SCHEMA),
+    _P_BOLT=new Path2D("M13 2 3 14h9l-1 8 10-12h-9l1-8z"), _GODC="#d1443c";
+function _rrect(ctx,x,y,w,h,rr){ ctx.beginPath();
+  ctx.moveTo(x+rr,y); ctx.arcTo(x+w,y,x+w,y+h,rr); ctx.arcTo(x+w,y+h,x,y+h,rr);
+  ctx.arcTo(x,y+h,x,y,rr); ctx.arcTo(x,y,x+w,y,rr); ctx.closePath(); }
+function _pathIco(ctx,p,x,y,r,col,tr,sw){ ctx.save(); ctx.translate(x-r*tr,y-r*tr); var s=sw*r/24; ctx.scale(s,s);
+  ctx.lineWidth=1.9/s; ctx.strokeStyle=col; ctx.lineJoin="round"; ctx.lineCap="round"; ctx.stroke(p); ctx.restore(); }
+function _cyl(ctx,x,y,r,col,fill){ var rx=r*0.82, ry=r*0.32, hy=r*0.6;
+  ctx.strokeStyle=col; ctx.fillStyle=col; ctx.lineWidth=1.8; ctx.lineJoin="round";
+  ctx.beginPath(); ctx.moveTo(x-rx,y-hy); ctx.lineTo(x-rx,y+hy);
+  ctx.ellipse(x,y+hy,rx,ry,0,Math.PI,0,true); ctx.lineTo(x+rx,y-hy);
+  if(fill){ ctx.globalAlpha=0.9; ctx.fill(); ctx.globalAlpha=1; } else ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(x,y-hy,rx,ry,0,0,2*Math.PI);
+  if(fill){ ctx.fillStyle=col; ctx.fill(); } else ctx.stroke(); }
+function fgGlyph(ctx, kind, x, y, r, gcol, ent, o){ o=o||{};
+  ctx.save(); ctx.lineJoin="round"; ctx.lineCap="round"; ctx.strokeStyle=gcol; ctx.fillStyle=gcol; ctx.lineWidth=1.8;
+  if(kind==="ep"){ ctx.beginPath(); ctx.arc(x,y,r*0.92,0,2*Math.PI); ctx.stroke();
+    ctx.save(); var bs=(1.35*r)/22; ctx.translate(x-13*bs, y-12*bs); ctx.scale(bs,bs); ctx.fillStyle=gcol; ctx.fill(_P_BOLT); ctx.restore(); }
+  else if(kind==="fn"||kind==="usefn"){ _rrect(ctx,x-r,y-r,2*r,2*r,r*0.34); ctx.lineWidth=o.handler?2.6:1.8; ctx.stroke();
+    _pathIco(ctx,_P_FN,x,y,r,gcol,1.2,2.4);
+    if(o.god){ ctx.beginPath(); ctx.arc(x+r*0.9,y-r*0.9,r*0.3,0,2*Math.PI); ctx.fillStyle=_GODC; ctx.fill(); } }
+  else if(kind==="model"){ _cyl(ctx,x,y,r,gcol,true); }
+  else if(kind==="store"){ _cyl(ctx,x,y,r,gcol,false); }
+  else if(kind==="schema"){ _rrect(ctx,x-r*0.95,y-r*0.95,r*1.9,r*1.9,r*0.28); ctx.stroke();
+    _pathIco(ctx,_P_SCH,x,y,r*0.86,gcol,1,2); }
+  else if(kind==="component"){ _rrect(ctx,x-r*0.9,y-r*0.9,r*1.8,r*1.8,r*0.34); ctx.stroke(); }
+  else if(kind==="hook"){ ctx.beginPath(); ctx.moveTo(x+r*0.5,y-r*0.9); ctx.lineTo(x+r*0.5,y+r*0.15);
+    ctx.arc(x-r*0.18,y+r*0.15,r*0.68,0,Math.PI*0.92,false); ctx.stroke(); }
+  else if(kind==="route"){ ctx.beginPath(); ctx.moveTo(x,y-r); ctx.lineTo(x+r,y); ctx.lineTo(x,y+r); ctx.lineTo(x-r,y); ctx.closePath(); ctx.stroke(); }
+  else { ctx.font="800 "+(r*1.7).toFixed(1)+"px ui-monospace,monospace"; ctx.textAlign="center"; ctx.textBaseline="middle";
+    ctx.fillStyle=gcol; ctx.fillText("{}", x, y+r*0.06); }
+  if(ent && o.entDot!==false){ ctx.beginPath(); ctx.arc(x+r*0.82,y+r*0.82,r*0.44,0,2*Math.PI);
+    ctx.fillStyle=ent; ctx.fill(); ctx.lineWidth=Math.max(0.5,r*0.11); ctx.strokeStyle=o.panel||"#fff"; ctx.stroke(); }
+  ctx.restore(); }
+function fgLabel(ctx, txt, x, y, col){ var rows=rows2(txt,12);
+  ctx.font="4.6px ui-sans-serif,system-ui,sans-serif"; ctx.textAlign="center"; ctx.textBaseline="top"; ctx.fillStyle=col;
+  rows.forEach(function(r,i){ ctx.fillText(r, x, y+i*5.2); }); }
+/* the wire: a quadratic whose control point IS force-graph's (midpoint ⊥ curvature·dist)
+   so the drawn curve and the particle flow coincide; entity-blend gradient + per-kind dash. */
+function fgLink(link, ctx){ var e=link.source, t=link.target;
+  if(!e||!t||e.x==null||t.x==null) return;
+  if(!showConns && link.cross) return;                   // Connections toggle hides cross-entity wires
+  var hl=_EMU.hl, on = hl ? hl.links[link._i] : null;    // highlight: lit vs dimmed
+  var dx=t.x-e.x, dy=t.y-e.y, d=Math.hypot(dx,dy)||1, u=d*_EMU.curv;
+  var cx=(e.x+t.x)/2 + u*dy/d, cy=(e.y+t.y)/2 - u*dx/d;
+  var stroke;
+  if(link.scol===link.tcol){ stroke=link.scol; }
+  else { stroke=ctx.createLinearGradient(e.x,e.y,t.x,t.y); stroke.addColorStop(0,link.scol); stroke.addColorStop(1,link.tcol); }
+  ctx.save(); ctx.globalAlpha = hl ? (on?0.95:0.05) : 0.55;
+  ctx.strokeStyle=stroke; ctx.lineWidth=(link.w||0.9)*(on?1.8:1);
+  ctx.setLineDash(link.dash||[]);
+  ctx.beginPath(); ctx.moveTo(e.x,e.y); ctx.quadraticCurveTo(cx,cy,t.x,t.y); ctx.stroke();
+  ctx.restore(); }
+/* SVG control scheme over the canvas — disable force-graph's wheel-zoom, keep its
+   drag-pan + node-drag, and re-wire alt/ctrl/shift/scroll exactly like the SVG stage
+   (lines 625–653). Wired ONCE; reads _FG live. */
+function fgControls(host){
+  try{ _FG.enableZoomInteraction(false); }catch(_){}   // our wheel scheme owns the wheel; drag-pan + node-drag stay
+  var altAcc=0;
+  host.addEventListener("wheel", function(e){ e.preventDefault();
+    var k=_FG.zoom()||1;
+    if(e.ctrlKey || e.metaKey){                          // ZOOM at the cursor (trackpad pinch arrives as ctrl+wheel)
+      _fgSize(host);                                      // re-assert canvas==container (defends against any drift)
+      var rect=host.getBoundingClientRect(), mx=e.clientX-rect.left, my=e.clientY-rect.top;
+      var g1=_FG.screen2GraphCoords(mx,my);              // graph point under the cursor, BEFORE
+      var k2=k*Math.exp(-e.deltaY*0.0022); k2=Math.max(0.05, Math.min(8, k2));
+      _FG.zoom(k2);
+      var g2=_FG.screen2GraphCoords(mx,my);              // same screen point, new zoom, old centre
+      var c=_FG.centerAt(); _FG.centerAt(c.x+(g1.x-g2.x), c.y+(g1.y-g2.y));   // shift centre by EXACTLY the graph-space delta → zero residual (transform-agnostic; no host-width math to drift)
+    } else if(e.shiftKey){                                // horizontal pan
+      var c=_FG.centerAt(); _FG.centerAt(c.x+(e.deltaY+e.deltaX)/k, c.y);
+    } else if(e.altKey){                                  // STEP the highlight depth (like the SVG stage)
+      altAcc+=e.deltaY; if(Math.abs(altAcc)>=40){ applyDepth(selDepth+(altAcc<0?1:-1)); altAcc=0; }
+    } else {                                              // vertical pan (plain scroll)
+      var c2=_FG.centerAt(); _FG.centerAt(c2.x+e.deltaX/k, c2.y+e.deltaY/k);
+    }
+  }, {passive:false});
+  // keep the canvas == the container through panel collapse / window resize (force-graph
+  // otherwise drifts back toward the window size → overflow-clip + zoom-centre mismatch)
+  if(window.ResizeObserver){ try{ new ResizeObserver(function(){ _fgSize(host); if(_EMU.repaint) _EMU.repaint(); }).observe(host); }catch(_){} }
+}
+/* the ONE force-graph instance on #fgstage, (re)driven by a spec. Built once; a level
+   switch swaps graphData + spec (the closures read _EMU.spec live) and re-fits ONCE. */
+function emuFG(spec){
+  if(!spec || typeof ForceGraph==="undefined") return;
+  _EMU.spec=spec; _EMU.curv=spec.curv||0.14; _EMU.fitted=false;
+  var host=document.getElementById("fgstage");
+  _fgReChrome();                                        // re-resolve the theme chrome on EVERY entry (a theme toggled on an SVG level is picked up on return)
+  fgLayout(spec);                                       // per-node target (_tx,_ty) + seed, per spec.arrange + laySeg
+  fgBuildAdj(spec);                                     // adjacency for depth/journey highlight
+  var data={nodes:spec.nodes, links:spec.links};
+  if(_FG){ _EMU.hl=null; _fgSize(host); _FG.linkCurvature(_EMU.curv).graphData(data);
+    _FG.resumeAnimation();                              // RUN until the new layout settles + fits ONCE, THEN onEngineStop re-pauses (paused-state fix: graphData alone never restarts the loop)
+    (spec.def||function(){})(); return; }
+  _EMU.repaint=function(){ if(!_FG||motionOn) return;   // motion ON = the rAF loop already paints every frame; paused = nudge two frames
+    _FG.resumeAnimation(); requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(!motionOn) _FG.pauseAnimation(); }); }); };
+  _FG=ForceGraph()(host)
+    .backgroundColor(_rc("var(--bg)"))
+    .graphData(data)
+    .nodeRelSize(1).nodeVal(1)
+    .nodeCanvasObjectMode(function(){return "replace";})
+    .nodeCanvasObject(function(n, ctx, gs){
+      var hl=_EMU.hl, hop = hl ? hl.nodes[n.id] : undefined, dim = hl && hop===undefined;
+      ctx.save(); if(dim) ctx.globalAlpha=0.12;
+      fgGlyph(ctx, n.kind, n.x, n.y, RG, n.glyphCol, n.entCol, {handler:n.handler, god:n.god, panel:_EMU.panel});
+      if(!dim && gs>0.7 && n.label) fgLabel(ctx, n.label, n.x, n.y+RG+3.5, _EMU.ink);
+      ctx.restore();
+      if(hl && hop!==undefined){ ctx.save();             // selection / journey ring on the lit set
+        ctx.globalAlpha=(hl.center===n.id)?1:Math.max(0.32, 1-hop*0.16);
+        ctx.lineWidth=(hl.center===n.id)?2.6:1.5; ctx.strokeStyle=_EMU.accent;
+        ctx.beginPath(); ctx.arc(n.x, n.y, RG+3.5, 0, 2*Math.PI); ctx.stroke(); ctx.restore(); } })
+    .nodePointerAreaPaint(function(n, color, ctx){ ctx.fillStyle=color; ctx.beginPath(); ctx.arc(n.x,n.y,RG*1.5,0,2*Math.PI); ctx.fill(); })
+    .nodeLabel(function(n){ return esc(n.label)+" · "+n.kind+(n.home?" · "+esc(n.home):(n.slug?" · "+esc(n.slug):"")); })
+    .onRenderFramePre(function(ctx, gs){ _fgHulls(ctx, gs); })   // entity + sub-group hull outlines, under the nodes
+    .linkCurvature(_EMU.curv)
+    .linkCanvasObjectMode(function(){return "replace";})
+    .linkCanvasObject(fgLink)
+    .linkDirectionalParticles(function(l){ return _fgParticleCount(l); })   // Connections toggle hides cross-wire particles
+    .linkDirectionalParticleSpeed(0.006)
+    .linkDirectionalParticleWidth(1.6).linkDirectionalParticleColor(function(l){return l.pcol||l.scol;})
+    .onNodeClick(function(n){ (_EMU.spec.onClick||function(){})(n); fgHighlight(n.id, selDepth); })
+    .onBackgroundClick(function(){ fgClearHL(); (_EMU.spec.def||function(){})(); })
+    .onEngineStop(function(){                             // FIT ONCE, then re-pause if Motion is off (the layout still settled + fitted while paused)
+      if(_EMU.keepCam){ try{ _FG.zoom(_EMU.keepCam.z,0); _FG.centerAt(_EMU.keepCam.c.x, _EMU.keepCam.c.y, 0); }catch(_){}   // a grouping change PRESERVES the view (no re-fit)
+        _EMU.keepCam=null; _EMU.fitted=true; }
+      else if(!_EMU.fitted){ _EMU.fitted=true; try{ _FG.zoomToFit(motionOn?400:1, 40); }catch(_){} }   // instant fit when paused (a 400ms tween would stall with the loop about to stop)
+      if(!motionOn) requestAnimationFrame(function(){ requestAnimationFrame(function(){ if(!motionOn) _FG.pauseAnimation(); }); }); })
+    .cooldownTicks(200);
+  try{ _FG.d3Force("charge").strength(-14); }catch(_){}   // gentle — the COLLISION force below does the readable spacing
+  // CROSS-entity wires are DRAWN but exert ZERO layout pull — otherwise they drag nodes
+  // between clusters (the SVG places nodes deterministically, so its wires never pull).
+  try{ _FG.d3Force("link").distance(function(l){ return l.cross?140:24; }).strength(function(l){ return l.cross?0:0.1; }); }catch(_){}
+  var MIND=RG*2+22;                                       // min centre-to-centre so glyphs + labels never overlap (readability)
+  var CF=function(alpha){ var ns=CF.__n||[], s=_EMU.clStrength||0.16;
+    ns.forEach(function(n){ if(n._tx==null) return; n.vx+=(n._tx-n.x)*s*alpha; n.vy+=(n._ty-n.y)*s*alpha; });   // pull each node to its (endpoint-border / sub-group) target
+    var byCl={}; ns.forEach(function(n){ (byCl[n.cl]=byCl[n.cl]||[]).push(n); });          // COLLISION within an entity → readable separation
+    Object.keys(byCl).forEach(function(cl){ var g=byCl[cl];
+      for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++){ var a=g[i], b=g[j];
+        var dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||0.01;
+        if(d<MIND){ var p=(MIND-d)/d*0.5; a.vx-=dx*p; a.vy-=dy*p; b.vx+=dx*p; b.vy+=dy*p; } } }); };
+  CF.initialize=function(ns){ CF.__n=ns; };
+  try{ _FG.d3Force("cluster", CF); }catch(_){}
+  fgControls(host);
+  _fgSize(host);   // size the canvas to #fgstage (force-graph defaults to the window → overflow + zoom drift)
+  // NB: do NOT pause here even when Motion is off — let the sim tick to onEngineStop so the
+  // layout settles + fits ONCE; onEngineStop then re-pauses. (Fixes the never-fit-when-paused +
+  // reduced-motion cases the pre-emptive pause caused.)
+  (spec.def||function(){})();
+}
+/* fgLayout — assign each node a target (_tx,_ty) the cluster force pulls toward, plus a
+   seed position. spec.arrange: "cluster" (Trace/Frontend — entity onion-blobs on a ring)
+   or "lanes" (4B Layers — LAYER on X columns, ENTITY on Y rows: a grouping axis the flat
+   SVG never had). entLayout (the ONE shared layout pref — laySeg chain/force/spread, also
+   driving the SVG entity levels) tunes the spread + strength; no separate FG state to desync. */
+function fgLayout(spec){
+  var arrange=spec.arrange||"cluster", mode=entLayout||"force";
+  var seen={}, keys=[]; spec.nodes.forEach(function(n){ n.cl=n.slug||n.home||"·"; if(!seen[n.cl]){ seen[n.cl]=1; keys.push(n.cl); } });
+  keys.sort(); _EMU.anchKeys=keys;
+  if(arrange==="lanes"){
+    var LANES=["endpoints","api","services","web","data"];
+    var present=LANES.filter(function(L){ return spec.nodes.some(function(n){ return n.lane===L; }); });
+    var gapX=(mode==="spread"?300:220), lx={}; present.forEach(function(L,i){ lx[L]=(i-(present.length-1)/2)*gapX; });
+    var gapY=(mode==="spread"?122:92), ky={}; keys.forEach(function(k,i){ ky[k]=(i-(keys.length-1)/2)*gapY; });
+    _EMU.laneX=lx; _EMU.clStrength=0.16;
+    spec.nodes.forEach(function(n,i){ n._tx=(lx[n.lane]!=null?lx[n.lane]:0); n._ty=(ky[n.cl]!=null?ky[n.cl]:0);
+      if(n.x==null){ n.x=n._tx+((i%7)-3)*10; n.y=n._ty+(((i*3)%9)-4)*10; } });
+    return;
+  }
+  // ── cluster arrange (Trace / Frontend): entities on a ring; INSIDE each entity the
+  //    ENDPOINTS ride the border + the rest sub-group by the clSeg grouping, each sub-group
+  //    its own region. Collision (in the cluster force) does the readable spacing. ──
+  _fgComputeGroups(spec);                                        // _EMU.comm / uc / fk for the grouping modes
+  var byCl={}; spec.nodes.forEach(function(n){ (byCl[n.cl]=byCl[n.cl]||[]).push(n); });
+  var big=0; keys.forEach(function(k){ big=Math.max(big,(byCl[k]||[]).length); });
+  var spread=(mode==="spread"?1.35:1);
+  var R=Math.max(560, keys.length*95 + Math.sqrt(big)*80)*spread, anch={};   // ring wide enough that entity regions don't collide
+  if(mode==="chain"){ var step=Math.max(420, R*2/Math.max(1,keys.length));
+    keys.forEach(function(k,i){ anch[k]={x:(i-(keys.length-1)/2)*step, y:0}; }); }
+  else keys.forEach(function(k,i){ var a=-Math.PI/2+2*Math.PI*i/keys.length; anch[k]={x:Math.cos(a)*R, y:Math.sin(a)*R}; });
+  _EMU.anch=anch; _EMU.clStrength=(mode==="spread"?0.12:0.17);
+  var entR={};
+  keys.forEach(function(cl){ var ns=byCl[cl]||[], a=anch[cl]||{x:0,y:0};
+    var er=Math.max(110, Math.sqrt(ns.length)*30); entR[cl]=er;                 // entity region radius (endpoints ride this)
+    var eps=ns.filter(function(n){ return n.kind==="ep"; }), rest=ns.filter(function(n){ return n.kind!=="ep"; });
+    eps.forEach(function(n,i){ var ea=-Math.PI/2+2*Math.PI*i/Math.max(1,eps.length);   // endpoints ON the border ring
+      n._tx=a.x+er*Math.cos(ea); n._ty=a.y+er*Math.sin(ea); n._sub=cl+"¦endpoints"; });
+    var subs={}, sord=[]; rest.forEach(function(n){ var g=_fgGroupKey(n); if(!subs[g]){ subs[g]=[]; sord.push(g); } subs[g].push(n); n._sub=cl+"¦"+g; });
+    sord.sort();
+    sord.forEach(function(g,si){ var sa=-Math.PI/2+2*Math.PI*si/Math.max(1,sord.length);
+      var sr=(sord.length>1?er*0.46:0), scx=a.x+sr*Math.cos(sa), scy=a.y+sr*Math.sin(sa);
+      subs[g].forEach(function(n,i2){ n._tx=scx+((i2%7)-3)*20; n._ty=scy+(((i2*3)%7)-3)*20; }); }); });
+  _EMU.entR=entR;
+  spec.nodes.forEach(function(n){ if(n.x==null){ n.x=(n._tx||0)+((n.id.length%9)-4)*3; n.y=(n._ty||0)+((n.id.length%7)-3)*3; } });
+}
+/* adjacency for depth/journey highlight — from the SPEC links (string endpoints here;
+   force-graph mutates source/target to node objects after graphData, hence the ||). */
+function fgBuildAdj(spec){ var adj={}; spec.nodes.forEach(function(n){ adj[n.id]=[]; });
+  spec.links.forEach(function(l,i){ l._i=i; var s=(l.source&&l.source.id)||l.source, t=(l.target&&l.target.id)||l.target;
+    if(adj[s]&&adj[t]){ adj[s].push({id:t,li:i,cross:l.cross}); adj[t].push({id:s,li:i,cross:l.cross}); } });   // carry cross so the BFS can honour the Connections toggle
+  _EMU.adj=adj; }
+/* depth highlight — BFS from a clicked node to `depth` hops; lights the neighbourhood,
+   dims the rest, flows particles only on lit wires (alt+scroll changes the depth). With
+   Connections OFF a hidden cross-entity wire is NOT traversed (its node stays dark). */
+function fgHighlight(centerId, depth){ var adj=_EMU.adj||{}; if(adj[centerId]===undefined) return;
+  var nodes={}, links={}, front=[centerId]; nodes[centerId]=0;
+  for(var h=0; h<Math.max(1,depth); h++){ var next=[];
+    front.forEach(function(id){ (adj[id]||[]).forEach(function(e){ if(!showConns && e.cross) return;   // hidden wire → not a highlight path
+      links[e.li]=1;
+      // a CROSS-entity edge LIGHTS its neighbour (you see the connection) but is NOT expanded
+      // through — else a click follows the FK chain (Location→Household→User→…) across every
+      // entity and lights the whole model universe. The highlight stays THIS entity's flow.
+      if(nodes[e.id]===undefined){ nodes[e.id]=h+1; if(!e.cross) next.push(e.id); } }); });
+    front=next; if(!front.length) break; }
+  _EMU.hl={center:centerId, nodes:nodes, links:links, mode:"sel"}; _fgSyncParticles(); _EMU.repaint(); }
+/* journey highlight — light the ordered path (every resolvable step + the wires among them). */
+function fgJourneyLight(stepIds){ var set={}, present={};
+  stepIds.forEach(function(id){ if(_EMU.adj && _EMU.adj[id]!==undefined){ set[id]=0; present[id]=1; } });
+  var links={}; (_EMU.spec.links||[]).forEach(function(l,i){ var s=(l.source&&l.source.id)||l.source, t=(l.target&&l.target.id)||l.target;
+    if(present[s]&&present[t] && (showConns || !l.cross)) links[i]=1; });
+  _EMU.hl={center:null, nodes:set, links:links, mode:"jrn"}; _fgSyncParticles(); _EMU.repaint(); }
+function fgClearHL(){ _EMU.hl=null; _fgSyncParticles(); if(_EMU.repaint) _EMU.repaint(); }
+function _fgParticleCount(l){ if(!showConns && l.cross) return 0;   // Connections toggle hides cross-wire particles
+  if(_EMU.hl) return _EMU.hl.links[l._i]?3:0; return 2; }           // during a highlight, particles flow ONLY on the lit path
+function _fgSyncParticles(){ if(_FG) _FG.linkDirectionalParticles(function(l){ return _fgParticleCount(l); }); }   // fresh closure → force-graph rebuilds photons
+function fgCenterOn(id){ var n=(_EMU.spec.nodes||[]).filter(function(x){ return x.id===id; })[0];
+  if(n && n.x!=null) _FG.centerAt(n.x, n.y, motionOn?400:0); }   // instant when paused (a tween can't advance with the loop stopped)
+function fgIsLevel(){ return level==="tracefg"||level==="frontend"||level==="layersfg"; }
+var _LK_W={route:1.1, touch:0.9, resp:0.8, xfk:1.0, use:0.9, calls:0.9},
+    _LK_D={resp:[3,3], use:[1.5,3], xfk:[1.5,4]};
+function _lk(s,t,sc,tc,kind,fe,te){ return {source:s, target:t, scol:_rc(sc), tcol:_rc(tc), pcol:_rc(sc),
+  w:_LK_W[kind]||0.9, dash:_LK_D[kind]||null, kind:kind, cross:(fe!=null&&te!=null&&fe!==te)}; }
+/* 5B · TRACE spec — the same data drawTrace wires: endpoints → handler ƒ → the models/
+   schemas it touches → the response, plus cross-entity FKs and use edges. Glyph = kind,
+   dot = entity. This is the richest diagram, so it proves the emulation. */
+function buildTraceSpec(){
+  var nodes={}; var links=[];
+  function nd(id, kind, gc, ent, label, extra){ if(!nodes[id]){
+    nodes[id]={id:id, kind:kind, glyphCol:_rc(gc), entCol:ent, label:label};
+    if(extra) for(var kk in extra) nodes[id][kk]=extra[kk]; } return nodes[id]; }
+  var clsKind={};
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{};
+    (pc.models||[]).forEach(function(m){ if(m.cls) clsKind[slug+"|"+m.cls]="model"; });
+    (pc.schemas||[]).forEach(function(sc){ if(sc.cls) clsKind[slug+"|"+sc.cls]="schema"; }); });
+  var C_API="var(--c-fn-api)", C_SRV="var(--c-fn-services)", C_MOD="var(--c-model)", C_SCH="var(--c-schema)";
+  ENTS.forEach(function(slug){ var pc=D.pieces[slug]||{endpoints:[]}, col=COLORS[slug]||"#8a8f98";
+    (pc.endpoints||[]).forEach(function(ep){
+      var epId="ep:"+slug+"|"+ep.m+" "+ep.p;
+      nd(epId,"ep",METHOD[ep.m]||"var(--muted)",col, ep.p.replace(/^\//,"")||ep.m, {method:ep.m, slug:slug, ep:ep});
+      if(!ep.fn) return;
+      var fnId="fn:"+slug+"|"+ep.fn;
+      nd(fnId,"fn",C_API,col, ep.fn, {handler:true, slug:slug, fnname:ep.fn});
+      links.push(_lk(epId, fnId, col, col, "route", slug, slug));
+      (ep.touch||[]).forEach(function(c){ var k=clsKind[slug+"|"+c]||"model", cid="cls:"+slug+"|"+c;
+        nd(cid, k, k==="model"?C_MOD:C_SCH, col, c, {slug:slug, cls:c});
+        links.push(_lk(fnId, cid, col, col, "touch", slug, slug)); });
+      if(ep.resp){ var own=D.schema_owner[ep.resp];
+        if(own){ var rid="cls:"+own+"|"+ep.resp;
+          nd(rid, "schema", C_SCH, COLORS[own]||col, ep.resp, {slug:own, cls:ep.resp});
+          links.push(_lk(fnId, rid, col, COLORS[own]||col, "resp", slug, own)); } }
+    }); });
+  (D.cross_edges||[]).forEach(function(e){ var a="cls:"+e.fs+"|"+e.f, c="cls:"+e.ts+"|"+e.t;
+    nd(a, clsKind[e.fs+"|"+e.f]||"model", C_MOD, COLORS[e.fs]||"#8a8f98", e.f, {slug:e.fs, cls:e.f});
+    nd(c, clsKind[e.ts+"|"+e.t]||"model", C_MOD, COLORS[e.ts]||"#8a8f98", e.t, {slug:e.ts, cls:e.t});
+    links.push(_lk(a, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "xfk", e.fs, e.ts)); });
+  (D.use_edges||[]).forEach(function(e){ var f="fn:"+e.fs+"|"+e.fn, c="cls:"+e.ts+"|"+e.cls;
+    nd(f, "usefn", C_SRV, COLORS[e.fs]||"#8a8f98", e.fn, {slug:e.fs, fnname:e.fn});
+    nd(c, clsKind[e.ts+"|"+e.cls]||"model", C_MOD, COLORS[e.ts]||"#8a8f98", e.cls, {slug:e.ts, cls:e.cls});
+    links.push(_lk(f, c, COLORS[e.fs]||"#8a8f98", COLORS[e.ts]||"#8a8f98", "use", e.fs, e.ts)); });
+  var arr=Object.keys(nodes).map(function(k){return nodes[k];}), ids={}; arr.forEach(function(n){ ids[n.id]=1; });
+  links=links.filter(function(l){ return ids[l.source] && ids[l.target]; });
+  return {nodes:arr, links:links, onClick:showTraceFGNode, def:showTraceFGDefault, curv:0.14}; }
+function drawTraceFG(){ emuFG(buildTraceSpec()); }
+function showTraceFGDefault(){ var s=_EMU.spec||{nodes:[],links:[]};
+  panel.innerHTML="<h3 style='color:var(--c-fn-api)'>Trace ᶠ — force-graph</h3>"
+   +"<div class='row'><span>nodes</span><b>"+s.nodes.length+"</b></div>"
+   +"<div class='row'><span>wires</span><b>"+s.links.length+"</b></div>"
+   +"<div class='note'>The 5·Trace flow rendered with force-graph: endpoint → handler ƒ → the "
+   +"data it touches → its response, plus cross-entity FKs + use edges. <b>Glyph = kind</b> "
+   +"(◇ endpoint · ƒ handler · cylinder model · {} schema), the small <b>dot = its entity</b>; a "
+   +"wire = a relation (particles = the flow). <b>Scroll</b> pans · <b>Shift+scroll</b> sideways · "
+   +"<b>Ctrl/⌘+scroll</b> zooms at the cursor · <b>drag</b> a node or the canvas. Compare with 5·Trace.</div>"; }
+function showTraceFGNode(n){
+  if(n.kind==="ep" && n.ep){ showEndpoint(n.slug, n.ep); return; }
+  if((n.kind==="fn"||n.kind==="usefn")){ var lay=n.layerWeb?"web":(n.kind==="fn"?"api":"services");
+    showFn({name:n.fnname, slug:n.slug, layer:lay, lang:lay==="web"?"ts":"py", handler:!!n.handler, god:!!n.god}); return; }
+  if(n.kind==="model"||n.kind==="schema"){ showPiece(n.slug, {kind:n.kind, m:{cls:n.cls}}); return; }
+  panel.innerHTML="<h3>"+esc(n.label)+"</h3><div class='row'><span>kind</span><b>"+esc(n.kind)+"</b></div>"; }
+/* 4B · LAYERS spec — the same inventory as 5B, arranged in force LANES: endpoints · api ·
+   services · web · data become X COLUMNS and entities become Y ROWS — a grouping axis the
+   flat SVG Layers never had. Reuses the trace nodes/wires (same keys) + adds the web-fn lane. */
+function buildLayersSpec(){
+  var s=buildTraceSpec();
+  var LANE={ep:"endpoints", fn:"api", usefn:"services", model:"data", schema:"data"};
+  s.nodes.forEach(function(n){ n.lane=n.layerWeb?"web":(LANE[n.kind]||"data"); n.x=null; n.y=null; });
+  var byId={}; s.nodes.forEach(function(n){ byId[n.id]=1; });
+  (D.fn_nodes||[]).forEach(function(f){ if(f.layer!=="web") return;      // graft's web-lane fns (not in the backend trace set)
+    var id="fn:"+f.slug+"|"+f.name; if(byId[id]) return; byId[id]=1;
+    s.nodes.push({id:id, kind:"fn", glyphCol:_rc("var(--c-fn-web)"), entCol:COLORS[f.slug]||_rc("var(--c-fn-web)"),
+      label:f.name, lane:"web", slug:f.slug, fnname:f.name, handler:!!f.handler, god:!!f.god, layerWeb:true, x:null, y:null}); });
+  s.arrange="lanes"; s.onClick=showTraceFGNode; s.def=showLayersFGDefault; s.curv=0.10;
+  return s;
+}
+function drawLayersFG(){ emuFG(buildLayersSpec()); }
+function showLayersFGDefault(){ var s=_EMU.spec||{nodes:[],links:[]};
+  panel.innerHTML="<h3 style='color:var(--c-fn-api)'>Layers ᶠ — force-graph</h3>"
+   +"<div class='row'><span>nodes</span><b>"+s.nodes.length+"</b></div>"
+   +"<div class='row'><span>wires</span><b>"+s.links.length+"</b></div>"
+   +"<div class='note'>Diagram 4 with force-graph: the LAYER is the <b>X axis</b> (endpoints → api → "
+   +"services → web → data), the <b>entity is the Y axis</b> — a grouping the flat SVG never had. Same "
+   +"glyphs + wires as 5B. <b>Click</b> a node to light its neighbourhood · <b>Alt+scroll</b> changes the "
+   +"depth · pick a <b>journey</b> to walk the path · <b>Ctrl/⌘+scroll</b> zooms · <b>drag</b> to move.</div>"; }
+/* 2 · FRONTEND spec — graft's classified TS pieces, same emulated grammar. */
+function buildFrontendSpec(){
+  if(!D.frontend || !D.frontend.present) return null;
+  var KC={ component:"var(--fk-comp)", hook:"var(--fk-hook)", store:"var(--fk-store)", route:"var(--fk-route)", "fe-type":"var(--muted)" };
+  var nodes=[], seen={}, ent={}, homeOf={};
+  function add(list, entCol, home){ (list||[]).forEach(function(p){ if(p.id && !seen[p.id]){ seen[p.id]=1; ent[p.id]=entCol; homeOf[p.id]=home;
+    nodes.push({id:p.id, kind:p.k, glyphCol:_rc(KC[p.k]||"var(--muted)"), entCol:entCol, label:p.n||p.k, home:home}); } }); }
+  (D.entities||[]).forEach(function(en){ var fe=(D.pieces[en.slug]||{}).frontend;
+    if(fe) add(fe.pieces, COLORS[en.slug]||_rc("var(--c-fn-web)"), en.label); });
+  (D.fe_buckets||[]).forEach(function(bk){ add(bk.pieces, _rc("var(--c-fn-web)"), bk.name); });
+  var ids={}; nodes.forEach(function(n){ ids[n.id]=1; });
+  var web=_rc("var(--c-fn-web)");
+  var links=(D.fe_edges||[]).filter(function(e){ return ids[e.s] && ids[e.t]; })
+    .map(function(e){ var sc=ent[e.s]||web, tc=ent[e.t]||sc;
+      return {source:e.s, target:e.t, scol:sc, tcol:tc, pcol:sc, w:0.9, dash:null, kind:e.rel||"calls",
+        cross:(homeOf[e.s]!==homeOf[e.t])}; });
+  return {nodes:nodes, links:links, arrange:"cluster", onClick:function(n){ showFePiece(n.label, n.kind, n.home); }, def:showFrontendDefault, curv:0.12}; }
+function drawFrontendGraph(){ emuFG(buildFrontendSpec()); }
+function showFrontendDefault(){
+  var s=(D.frontend&&D.frontend.total)||0, hid=(D.frontend&&D.frontend.scaffold_total)||0;
+  panel.innerHTML="<h3 style='color:var(--c-fn-web)'>Frontend graph</h3>"
+   +"<div class='row'><span>pieces</span><b>"+s+"</b></div>"
+   +"<div class='note'>graft's classified TS — same grammar as 5B: <b>glyph = kind</b> (▢ component · "
+   +"hook · ⛁ store · ◇ route · {} type), the small <b>dot = its entity</b>; a wire = a call (particles = "
+   +"the flow). <b>Scroll</b> pans · <b>Ctrl/⌘+scroll</b> zooms at the cursor · <b>drag</b> to move. The "
+   +"scattered {} nodes are unwired in graft's call graph (types + JSX are a known blind spot — the "
+   +"linking arm is next).</div>";
 }
 document.getElementById("levels").addEventListener("click",function(e){
   var b=e.target.closest("button"); if(!b) return; level=b.getAttribute("data-lvl"); render(); });
-window.addEventListener("resize", render);
+window.addEventListener("resize", function(){
+  if(fgIsLevel()){ if(_FG){ var h=document.getElementById("fgstage");   // resize the CANVAS only — no rebuild, no highlight/journey clear
+    try{ _FG.width(h.clientWidth).height(h.clientHeight); }catch(_){} if(_EMU.repaint) _EMU.repaint(); } return; }
+  render(); });
+// THEME → the FG bakes colours to hex at build (canvas can't read CSS vars); on a theme
+// switch re-resolve the chrome + rebuild so glyph/wire/ring colours follow the new theme.
+(function(){ var mo=new MutationObserver(function(){
+    if(!fgIsLevel() || !_FG) return;
+    render(); });   // re-entry runs _fgReChrome() + rebuilds the spec → glyph/wire/ring/bg all follow the new theme (a theme change on an SVG level is picked up on the next FG entry)
+  mo.observe(document.documentElement, {attributes:true, attributeFilter:["data-theme"]});
+})();
 
 function lensBtn(id, get, set){ document.getElementById(id).addEventListener("click",function(){
   var v=!get(); set(v);
@@ -1898,6 +3135,8 @@ function lensBtn(id, get, set){ document.getElementById(id).addEventListener("cl
 lensBtn("guardsbtn", function(){return showGuards;}, function(v){showGuards=v;});
 lensBtn("hubsbtn",   function(){return showHubs;},   function(v){showHubs=v;});
 lensBtn("pressbtn",  function(){return showPress;},  function(v){showPress=v;});
+lensBtn("behindbtn", function(){return showBehind;}, function(v){showBehind=v;});   // code-behind badge (top-left)
+lensBtn("usagebtn",  function(){return showUsage;},  function(v){showUsage=v;});    // used-by badge (bottom-right)
 document.getElementById("testsbtn").addEventListener("click",function(){
   showTests=!showTests;
   this.classList.toggle("on",showTests);
@@ -1908,6 +3147,11 @@ document.getElementById("testsbtn").addEventListener("click",function(){
 document.getElementById("conns").addEventListener("click",function(){
   showConns=!showConns;
   this.classList.toggle("on",showConns);
+  if(fgIsLevel()){   // FG: hide cross-wires + their particles, no re-layout — but the highlight BFS now depends on showConns, so RECOMPUTE an active highlight/journey
+    if(_EMU.hl && _EMU.hl.mode==="sel" && _EMU.hl.center) fgHighlight(_EMU.hl.center, selDepth);   // fgHighlight re-syncs particles + repaints
+    else if(JRN.cur && (level==="tracefg"||level==="layersfg")) jrnGo(0);                          // re-light the current journey step under the new showConns
+    else { _fgSyncParticles(); if(_EMU.repaint) _EMU.repaint(); }
+    return; }
   renderKeepView(); });
 
 /* ── SELECTION ENGINE: every node and wire registers itself at draw time; a click
@@ -1920,6 +3164,7 @@ function applyDepth(d){ d=Math.max(1, Math.min(5, d)); if(d===selDepth) return;
   selDepth=d;
   document.getElementById("depthSlider").value=String(d);   // the slider follows, live
   document.getElementById("depthVal").textContent=String(d);
+  if(fgIsLevel()){ if(_EMU.hl && _EMU.hl.mode==="sel" && _EMU.hl.center) fgHighlight(_EMU.hl.center, selDepth); return; }
   if(selKey) selectNode(selKey); }   // re-run the highlight at the new depth
 function regNode(g, key, label, type){ g.setAttribute("data-key", key);
   SELREG.nodes[key]={el:g, label:label, type:type}; }
@@ -1949,15 +3194,13 @@ function regEdge(el, kind, fromKey, toKey, how){
    on an in-chain element changes nothing; a click on an out-of-chain element
    starts a fresh chain (history overridden). ── */
 var navStack=[], navCur=null;
-function navUI(){ var b=document.getElementById("navback");
-  b.hidden = navStack.length===0;
-  b.textContent = "← "+navStack.length; }
+function navUI(){ ecpTraceSync(); }   // the trace back/forward lives in the card header now
 function navVisit(key){                          // a LINK navigation lands on key
   if(navCur && navCur!==key){ navStack.push(navCur); while(navStack.length>6) navStack.shift(); }
-  navCur=key; navUI(); }
+  navCur=key; if(!_ecpFwding) navFwd=[]; navUI(); }      // a fresh branch drops the forward trace
 function navTouch(key){                          // a plain selection
   if(key===navCur || navStack.indexOf(key)>=0) return;   // in-chain: nothing happens
-  navStack=[]; navCur=key; navUI(); }                    // alien: the chain is overridden
+  navStack=[]; navFwd=[]; navCur=key; navUI(); }         // alien: the chain is overridden
 function goBack(){
   if(!navStack.length) return;
   var k=navStack.pop(); navCur=k; navUI();
@@ -2005,6 +3248,16 @@ var JRN={list:[], cur:null, i:0};
 function jrnResolved(){ return JRN.cur ? JRN.cur.steps.filter(function(k){ return !!SELREG.nodes[k]; }) : []; }
 function jrnGo(di){
   if(!JRN.cur) return;
+  if(level==="frontend") return;                                        // journeys are a BACKEND concept — the FE piece ids share no key with them; do NOT force-switch to trace
+  if(level==="tracefg" || level==="layersfg"){                          // journeys light the FG path (same key scheme)
+    var stepsF=(JRN.cur.steps||[]).filter(function(k){ return _EMU.adj && _EMU.adj[k]!==undefined; });
+    if(!stepsF.length) return;
+    JRN.i=Math.max(0, Math.min(stepsF.length-1, JRN.i+di));
+    var keyF=stepsF[JRN.i]; fgJourneyLight(stepsF); fgCenterOn(keyF);
+    var nF=(_EMU.spec.nodes||[]).filter(function(x){ return x.id===keyF; })[0];
+    document.getElementById("jrnPos").textContent=(JRN.i+1)+"/"+stepsF.length;
+    document.getElementById("jrnStep").textContent=nF?nF.label:keyF; return;
+  }
   if(level!=="trace" && level!=="layers"){ level="trace"; render(); }   // journeys walk the trace OR the layers
   var steps=jrnResolved(); if(!steps.length) return;
   JRN.i=Math.max(0, Math.min(steps.length-1, JRN.i+di));
@@ -2032,15 +3285,23 @@ function jrnStart(idx){
 function jrnExit(){ JRN.cur=null; JRN.i=0;
   document.getElementById("jrnBar").hidden=true;
   document.getElementById("jrnSel").value="";
+  if(fgIsLevel()) fgClearHL();
   clearSelection(); }
 /* jump: centre the camera on a node (zoom kept) AND land on it — the node's own
    click handler runs, so the panel becomes that element's card */
 function jumpToNode(key){
-  var w=nodeWorldXY(key); if(!w) return;
+  // entity keys are NOT in SELREG (nodeWorldXY can't resolve them) — land on them the
+  // same way goBack does, so a FORWARD-trace hop onto an entity works instead of silently
+  // dropping the trace (it did before this branch: nodeWorldXY→null returned early).
+  if(key.indexOf("ent:")===0){ navVisit(key); var w0=pos[key]; if(w0) centerCamera(w0);
+    var en=D.entities.filter(function(x){ return "ent:"+x.slug===key; })[0];
+    if(en) showEntity(en); return true; }
+  var w=nodeWorldXY(key); if(!w) return false;   // node not drawn on this level — leave nav untouched
   navVisit(key);
   centerCamera(w);
   var n=SELREG.nodes[key];
   if(n) n.el.dispatchEvent(new MouseEvent("click",{bubbles:false, cancelable:true}));
+  return true;
 }
 /* ── EDGE HOP (operator round 31): dbl-click a connector → the camera JUMPS to
    one of its endpoint nodes — the FAR one first (that's the end you can't see);
@@ -2080,7 +3341,7 @@ function clearSelection(){ selKey=null; peekClear();
   vp.querySelectorAll(".selring,.nbrring,.jrn-ring,.peek-ring").forEach(function(x){ x.remove(); });
   vp.querySelectorAll(".e-hl,.e-faded,.e-jrn,.e-hop1,.e-hop2,.e-hop3,.e-hop4,.e-hop5").forEach(function(x){
     x.classList.remove("e-hl","e-faded","e-jrn","e-hop1","e-hop2","e-hop3","e-hop4","e-hop5"); }); }
-function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses"}[kind]||kind; }
+function edgeWord(kind){ return {touch:"touches", resp:"returns", fk:"fk", xfk:"cross-fk", call:"calls", "import":"imports", route:"routes", use:"uses", bridge:"fetches"}[kind]||kind; }
 function selectNode(key){
   clearSelection(); selKey=key;
   var n=SELREG.nodes[key]; if(!n) return [];
@@ -2104,16 +3365,36 @@ function selectNode(key){
     frontier=next; }
   SELREG.edges.forEach(function(e,i){ if(!seenE[i]) e.el.classList.add("e-faded"); });
   return mine; }
-function connectionsHTML(key, mine){
-  var wireIc=_psvg("<path d='M3 17 Q12 3 21 12' fill='none' stroke='var(--accent)' stroke-width='2'/><circle cx='13.5' cy='8.6' r='2.2' fill='var(--accent)'/>");
-  if(!mine.length) return _sect(wireIc,"connections")+"<div class='note nt'>no drawn connector touches it on this level</div>";
-  var h=_sect(wireIc,"connections ("+mine.length+")");
+/* the SELECTED node's 1-hop connectors, grouped by edge kind into the semantic groups
+   the ECP card shows (routes / touches / returns / uses / calls / fk …) — graph-truthful
+   (from SELREG), rendered as element-components chips each carrying its neighbour's node
+   key so a hover PEEKS that node and a click TRAVELS to it. Returns an array of ecpG. */
+// SWEEP-D: the verb must follow edge DIRECTION. The old code labeled every 1-hop edge
+// with edgeWord(kind) whether the selected node was the SOURCE or the TARGET, so a
+// target node read its verbs backwards — schema MeResponse showed "returns · GET /me"
+// (the endpoints return IT) and model Recipe showed "uses · fn()" (the fns use IT). Pick
+// the active verb when e.from===key, the passive form when e.to===key.
+function edgeWordIn(kind){ return {touch:"touched by", resp:"returned by", fk:"fk from",
+  xfk:"cross-fk from", call:"called by", "import":"imported by", route:"routed by",
+  use:"used by", bridge:"fetched by"}[kind]||("← "+kind); }
+// glyph/chip class keyed by KIND (direction-agnostic) so both verb forms share styling.
+var EDGE_CLS={touch:"model", resp:"schema", route:"fn", use:"model", call:"fn", "import":"web", fk:"model", xfk:"model", bridge:"route"};
+var EDGE_GLY={touch:"model", resp:"schema", route:"function", use:"model", call:"function", "import":"file", fk:"key", xfk:"key", bridge:"endpoint"};
+function ecpGraphConns(key, mine){
+  var groups={};   // display word → {cls, gly, items}
   mine.forEach(function(i){ var e=SELREG.edges[i];
-    var nk=e.from===key?e.to:e.from, nb=SELREG.nodes[nk];
-    var dir=e.from===key?"→":"←";
-    h+="<div class='conrow' data-conn='"+i+"'><span class='ck'>"+edgeWord(e.kind)+"</span>"
-      +"<b class='cgo' data-k='"+esc(nk)+"' title='travel to it'>"+dir+" "+esc(nb?nb.label:nk)+"</b></div>"; });
-  return h; }
+    if(e.kind==="bridge") return;   // web→API bridges are shown from C4 (complete) as a card EXTRA, not the drawn subset
+    var out=(e.from===key), nk=out?e.to:e.from, nb=SELREG.nodes[nk];
+    var w=out?edgeWord(e.kind):edgeWordIn(e.kind);
+    var grp=groups[w]||(groups[w]={cls:EDGE_CLS[e.kind]||"route", gly:EDGE_GLY[e.kind]||"function", items:[]});
+    grp.items.push({label:nb?nb.label:nk, key:nk}); });
+  var ORDER=["routes","routed by","fetches","fetched by","touches","touched by","returns","returned by",
+             "uses","used by","calls","called by","imports","imported by","fk","fk from","cross-fk","cross-fk from"];
+  var words=ORDER.filter(function(w){ return groups[w]; });
+  Object.keys(groups).forEach(function(w){ if(ORDER.indexOf(w)<0) words.push(w); });
+  return words.map(function(w){ var grp=groups[w];
+    return ecpG(w, grp.gly, grp.items.length, (function(items,cls,gl){
+      return function(){ return ecpChipList(items, cls, gl); }; })(grp.items, grp.cls, grp.gly)); }); }
 var _peeks=[];
 function peekClear(){ _peeks.forEach(function(f){ f(); }); _peeks=[]; }
 function peekEdge(i){
@@ -2134,15 +3415,8 @@ function peekNode(k){
   n.el.appendChild(r);
   _peeks.push(function(){ r.remove(); });
 }
-function wireConnRows(){
-  panel.querySelectorAll(".conrow").forEach(function(row){
-    row.addEventListener("click",function(){ selectEdge(+row.getAttribute("data-conn")); });
-    row.addEventListener("dblclick",function(){ edgeHop(+row.getAttribute("data-conn")); });
-    row.addEventListener("mouseenter",function(){ peekEdge(+row.getAttribute("data-conn")); });
-    row.addEventListener("mouseleave",peekClear); });
-  // the OTHER element's name is the transporter — click it to land on that element
-  panel.querySelectorAll(".cgo").forEach(function(b){
-    b.addEventListener("click",function(ev){ ev.stopPropagation(); jumpToNode(b.getAttribute("data-k")); }); }); }
+// wire the ECP chips into the diagram: a chip hover peeks its graph node, a click travels.
+ECP.onPeek=peekNode; ECP.onPeekClear=peekClear; ECP.onJump=jumpToNode;
 function selectEdge(i){
   var e=SELREG.edges[i]; if(!e) return;
   clearSelection();
@@ -2168,63 +3442,33 @@ function selectEdge(i){
     row.addEventListener("mouseenter",function(){ peekNode(row.getAttribute("data-k")); });
     row.addEventListener("mouseleave",peekClear); });
 }
-/* the panel add-on used by every node click */
+/* the panel add-on every node click runs AFTER its show* built the ECP card: it
+   highlights the node + its 1-hop neighbourhood, then fills the card's #ecp-conns slot
+   with the semantic connection groups (graph 1-hop + any C4 extras the card contributed,
+   e.g. an endpoint's bridged screens). Chips self-wire their peek/travel via ECP hooks. */
 function attachSelection(key){
   navTouch(key);
   var mine=selectNode(key);
-  panel.insertAdjacentHTML("beforeend", connectionsHTML(key, mine));
-  wireConnRows(); }
+  var slot=document.getElementById("ecp-conns");
+  if(slot){
+    var groups=ecpGraphConns(key, mine).concat(_ecpExtraConns||[]);
+    slot.innerHTML="";
+    slot.appendChild(ecpConns("link","Connections", groups, {showCount:true, empty:"no drawn connector touches it on this level"}));
+  }
+  ecpTraceSync(); }
 
 /* ── THE INDICATOR CARD: every mark an element wears in the diagram, repeated in
    the panel AS THE SAME ICON, with a label and what it means (operator: numbers
    and symbols must decode themselves on click). ── */
 function _psvg(inner, w){ return "<svg viewBox='0 0 24 24' width='"+(w||17)+"' height='"+(w||17)+"'>"+inner+"</svg>"; }
-function _irow(icon, label, meaning){ return "<div class='irow'>"+icon+"<b>"+label+"</b><span class='im'>"+meaning+"</span></div>"; }
-function kindIcon(o){    // the element's own glyph, inline beside its name
-  if(o.kind==="model") return _psvg("<ellipse cx='12' cy='6' rx='8' ry='3' fill='var(--c-model)'/><path d='M4 6 v10 a8 3 0 0 0 16 0 v-10' fill='var(--c-model)'/>");
-  if(o.kind==="schema") return _psvg("<path d='M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1 M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1' fill='none' stroke='var(--c-schema)' stroke-width='2'/>");
-  if(o.kind==="fn") return _psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='"+(o.fncol||"var(--c-fn-api)")+"' stroke-width='2.2'/>");
-  if(o.kind==="ep") return _psvg("<circle cx='12' cy='12' r='9' fill='"+(o.mcol||"var(--m-get)")+"'/><path d='M13.5 6 L9 13 h2.6 L10.5 18 L15 11 h-2.6 Z' fill='#fff'/>");
-  return ""; }
 /* Section headers CARRY the canvas glyph (operator round 30): the icon an element
    wears in the diagram leads its section title — the pill leads "tests", the shield
    leads "guards" — same geometry, state-aware. Facts sit below as plain lines;
    later the tests section lists the actual cases, linked into the command center. */
 function _sect(icon, label){ return "<div class='k'>"+icon+"<span>"+label+"</span></div>"; }
-function _snote(txt){ return "<div class='note nt'>"+txt+"</div>"; }
-function indicatorHTML(o){
-  var h="";
-  // TESTS — the count pill IS the section icon (hollow dashed when unproven)
-  if(o.tests){ var tc=o.tests.red>0?"var(--m-delete)":"var(--c-model)";
-    h+=_sect(_psvg("<rect x='3' y='7' width='18' height='11' rx='5.5' fill='"+tc+"'/><text x='12' y='15.5' text-anchor='middle' font-size='8.5' font-weight='800' fill='#fff'>"+o.tests.n+"</text>"),"tests");
-    h+=_snote(o.tests.n+" case(s) — "+(o.tests.red>0?o.tests.red+" failing":"all passing")+" · api "+o.tests.api+" · web "+o.tests.web);
-    if(o.tests.web>0) h+=_irow(_psvg("<circle cx='12' cy='12' r='5' fill='var(--c-fn-web)'/>"),
-      "web coverage","on top of the api corpus"); }
-  else { h+=_sect(_psvg("<circle cx='12' cy='12' r='6.5' fill='none' stroke='var(--muted)' stroke-width='1.6' stroke-dasharray='3 3'/>"),"tests");
-    h+=_snote("unproven — no test case names this element"); }
-  // GUARDS — the shield leads (dashed hollow when none)
-  if(o.kind!=="fn"){
-    if(o.guards){ h+=_sect(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='var(--c-fn-services)'/>"),"guards");
-      h+=_snote(o.guards+" validator(s) — declared checks on this element's data"); }
-    else { h+=_sect(_psvg("<path d='M12 3 L19 6.4 L19 12 Q19 18 12 21 Q5 18 5 12 L5 6.4 Z' fill='none' stroke='var(--muted)' stroke-width='1.4' stroke-dasharray='3 3'/>"),"guards");
-      h+=_snote("none declared — no validator guards it"); } }
-  // FAN-IN — the usage ring leads; the god halo keeps its own row
-  if(o.hub || o.god){
-    h+=_sect(_psvg("<circle cx='12' cy='12' r='6' fill='none' stroke='var(--accent)' stroke-width='2.6'/>"),"fan-in");
-    if(o.hub && (o.hub.usage||0)>0)
-      h+=_snote("usage "+o.hub.usage+" — "+(o.hub.usage>=5?"a hub, many pieces depend on it":"foreign keys in + endpoint touches"));
-    if((o.hub&&o.hub.god)||o.god) h+=_irow(_psvg("<circle cx='12' cy='12' r='8' fill='none' stroke='var(--m-delete)' stroke-width='1.6' stroke-dasharray='4 3'/>"),
-      "god piece","oversized — holds many responsibilities"); }
-  // ROLE — the ƒ curve leads, coloured by the function's layer
-  if(o.handler){ h+=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--c-fn-api)' stroke-width='3.4'/>"),"role");
-    h+=_snote("endpoint handler — the function a route calls first"); }
-  else if(o.uses){ h+=_sect(_psvg("<path d='M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3 M9 11h6' fill='none' stroke='var(--c-fn-services)' stroke-width='3.4'/>"),"role");
-    h+=_snote("using function — references "+o.uses+" model/schema class(es)"); }
-  // PRESSURE — the heat dot leads
-  if(o.press){ h+=_sect(_psvg("<circle cx='12' cy='12' r='8.5' fill='var(--m-put)' fill-opacity='0.35'/><circle cx='12' cy='12' r='4' fill='var(--m-put)'/>"),"pressure");
-    h+=_snote("touched in "+o.press+" phase(s) — change concentration from the archive"); }
-  return h;
-}
+/* kindIcon · _irow · indicatorHTML (the pre-port glyph + indicator-decoder
+   builders) were retired with the show* rewrite — the ECP header glyphs +
+   Usage/Tests/Identity/Code-behind sections replace them. */
 
 /* ── the gear: entity layout Ring · Flow · Force (the command center's options) ── */
 (function(){ var gb=document.getElementById("gear"), gp=document.getElementById("gearpanel");
@@ -2232,12 +3476,16 @@ function indicatorHTML(o){
   document.addEventListener("click",function(e){ if(!gp.hidden && !gp.contains(e.target) && !gb.contains(e.target)) gp.hidden=true; });
   document.getElementById("laySeg").addEventListener("click",function(e){
     var b=e.target.closest("button"); if(!b) return;
-    entLayout=b.getAttribute("data-lay");
+    entLayout=b.getAttribute("data-lay");   // ONE shared layout pref (SVG entity levels + FG clustering)
     document.querySelectorAll("#laySeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    if(fgIsLevel()){ render(); return; }    // FG: force=ring blobs · spread=looser · chain=line of clusters
     computeEntityPositions(); render(); });
   document.getElementById("clSeg").addEventListener("click",function(e){
-    var b=e.target.closest("button"); if(!b) return;
-    traceCluster=b.getAttribute("data-cl");
+    var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-cl");
+    if(fgIsLevel()){ if(v==="guards") return;   // FG: the clSeg SUB-GROUPS each entity (kind/tests/usecase/community/fk; guards dropped)
+      if(_FG) _EMU.keepCam={z:_FG.zoom(), c:_FG.centerAt()};   // preserve the view across the re-layout (like the SVG clSeg)
+      _EMU.fgGroup=v; document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); }); render(); return; }
+    traceCluster=v;
     document.querySelectorAll("#clSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });   // a cluster change reshapes the INSIDE — the camera stays put
   document.getElementById("depthSlider").addEventListener("input",function(){
@@ -2252,11 +3500,14 @@ function indicatorHTML(o){
     ICONSET=b.getAttribute("data-ico");
     document.querySelectorAll("#icoSeg button").forEach(function(x){ x.classList.toggle("on", x===b); });
     renderKeepView(); });
-  document.getElementById("themebtn").addEventListener("click",function(){
-    var r=document.documentElement, cur=r.getAttribute("data-theme");
-    var dark = cur ? cur==="dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-    r.setAttribute("data-theme", dark ? "light" : "dark"); });
-  document.getElementById("navback").addEventListener("click",function(){ goBack(); });
+  // theme now lives in the GLOBAL settings cog (assets/a3-settings.js, sidebar) — no
+  // local theme button here (operator: one theme control for the whole center).
+  // overlays dropdown — guards · hubs · pressure (compressed off the toolbar; used rarely)
+  (function(){ var ob=document.getElementById("overlaysbtn"), op=document.getElementById("overlayspanel");
+    if(!ob||!op) return;
+    ob.addEventListener("click",function(e){ e.stopPropagation(); var open=op.hidden; op.hidden=!open; ob.setAttribute("aria-expanded",String(open)); });
+    document.addEventListener("click",function(e){ if(!op.hidden && !op.contains(e.target) && !ob.contains(e.target)) op.hidden=true; });
+  })();
   JRN.list=buildJourneys();
   (function(){ var sel=document.getElementById("jrnSel");
     var h="<option value=''>— pick a journey —</option>";
@@ -2387,9 +3638,96 @@ window.__lvltest = {
       if(seen[key] && seen[key]!==(ed.s<ed.t)){ both++; opposite++; } // one fwd + one rev exists
       seen[key]=(ed.s<ed.t); });
     return {pairsBothDirs:both, opposite:opposite};
-  }
+  },
+  fg:function(){ if(!_FG) return null;
+    var sp=_EMU.spec||{nodes:[],links:[]};
+    return {fitted:_EMU.fitted, zoom:_FG.zoom(), center:_FG.centerAt(),
+      nodes:sp.nodes.length, links:sp.links.length, accent:_EMU.accent,
+      canvas: !!document.querySelector("#fgstage canvas"),
+      kinds:(function(){ var o={}; sp.nodes.forEach(function(n){ o[n.kind]=(o[n.kind]||0)+1; }); return o; })() }; },
+  fgSetZoom:function(k){ if(_FG) _FG.zoom(k); },
+  fgReheat:function(){ try{ _FG.d3ReheatSimulation(); }catch(_){} },
+  fgNodeIds:function(kind){ return (_EMU.spec?_EMU.spec.nodes:[]).filter(function(n){ return !kind||n.kind===kind; }).map(function(n){ return n.id; }); },
+  fgLanes:function(){ var o={}; (_EMU.spec?_EMU.spec.nodes:[]).forEach(function(n){ if(n.lane) o[n.lane]=(o[n.lane]||0)+1; }); return o; },
+  fgClick:function(id){ var n=(_EMU.spec?_EMU.spec.nodes:[]).filter(function(x){ return x.id===id; })[0]; if(!n) return false;
+    (_EMU.spec.onClick||function(){})(n); fgHighlight(n.id, selDepth); return true; },
+  fgHL:function(){ var h=_EMU.hl; if(!h) return null;
+    return {mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}; },
+  fgHLEntities:function(){ var h=_EMU.hl; if(!h) return 0; var byId={}, ents={};
+    (_EMU.spec?_EMU.spec.nodes:[]).forEach(function(n){ byId[n.id]=n.cl; });
+    Object.keys(h.nodes).forEach(function(id){ if(byId[id]) ents[byId[id]]=1; }); return Object.keys(ents).length; },
+  fgArrange:function(){ return entLayout||"force"; },
+  fgClearHL:function(){ fgClearHL(); },
+  fgCanvasFits:function(){ var h=document.getElementById("fgstage"), cv=document.querySelector("#fgstage canvas");
+    return cv ? {ok:(cv.width===h.clientWidth && cv.height===h.clientHeight), cw:cv.width, hw:h.clientWidth} : null; },
+  fgS2G:function(x,y){ return _FG?_FG.screen2GraphCoords(x,y):null; },
+  fgG2S:function(gx,gy){ return _FG?_FG.graph2ScreenCoords(gx,gy):null; },
+  fgContainers:function(){ var sp=_EMU.spec||{nodes:[]}, o={}; sp.nodes.forEach(function(n){ if(n.cl) o[n.cl]=1; }); return Object.keys(o).length; },
+  fgGroup:function(){ return _EMU.fgGroup||"kind"; },
+  fgSetGroup:function(v){ _EMU.fgGroup=v; render(); },
+  fgSubgroups:function(){ var sp=_EMU.spec||{nodes:[]}, o={}; sp.nodes.forEach(function(n){ if(n._sub) o[n._sub]=1; }); return Object.keys(o).length; },
+  fgGroupDist:function(){ var sp=_EMU.spec||{nodes:[]}, sz={}; sp.nodes.forEach(function(n){ if(n._sub) sz[n._sub]=(sz[n._sub]||0)+1; });
+    var vals=Object.keys(sz).map(function(k){return sz[k];}), byEnt={};
+    sp.nodes.forEach(function(n){ (byEnt[n.cl]=byEnt[n.cl]||{})[n._sub]=1; });
+    var subsPerEnt=Object.keys(byEnt).map(function(e){ return Object.keys(byEnt[e]).length; });
+    return { groups:vals.length, maxSize:Math.max.apply(null,vals), minSize:Math.min.apply(null,vals),
+      avgSubsPerEntity:+(subsPerEnt.reduce(function(a,b){return a+b;},0)/subsPerEnt.length).toFixed(1) }; },
+  fgMinGap:function(){ var sp=_EMU.spec||{nodes:[]}, byCl={}, min=1e9;   // tightest same-entity node spacing (readability)
+    sp.nodes.forEach(function(n){ if(n.x!=null)(byCl[n.cl]=byCl[n.cl]||[]).push(n); });
+    Object.keys(byCl).forEach(function(cl){ var g=byCl[cl];
+      for(var i=0;i<g.length;i++)for(var j=i+1;j<g.length;j++){ var d=Math.hypot(g[i].x-g[j].x, g[i].y-g[j].y); if(d<min) min=d; } });
+    return min===1e9?null:min; },
+  fgEpOnBorder:function(){ var sp=_EMU.spec||{nodes:[]}, byCl={}, res={ok:0,bad:0};   // endpoints should sit near their entity's outer radius
+    sp.nodes.forEach(function(n){ if(n.x!=null)(byCl[n.cl]=byCl[n.cl]||[]).push(n); });
+    Object.keys(byCl).forEach(function(cl){ var g=byCl[cl], cx=0,cy=0; g.forEach(function(n){cx+=n.x;cy+=n.y;}); cx/=g.length; cy/=g.length;
+      var mx=0; g.forEach(function(n){ var d=Math.hypot(n.x-cx,n.y-cy); if(d>mx)mx=d; });
+      g.forEach(function(n){ if(n.kind!=="ep")return; var d=Math.hypot(n.x-cx,n.y-cy); (d>mx*0.6?res.ok++:res.bad++); }); });
+    return res; },
+  fgCross:function(){ var t=0,x=0; (_EMU.spec?_EMU.spec.links:[]).forEach(function(l){ t++; if(l.cross) x++; }); return {total:t, cross:x}; },
+  fgParticleOff:function(){ return (_EMU.spec?_EMU.spec.links:[]).filter(function(l){ return _fgParticleCount(l)===0; }).length; },
+  jrnPick:function(i){ jrnStart(i); var h=_EMU.hl; return h?{mode:h.mode, center:h.center, nodes:Object.keys(h.nodes).length, links:Object.keys(h.links).length}:null; }
 };
 render();
+
+/* ── the top-right element FINDER (operator ruling 2026-08-16): type a name, step through
+   matches with Enter/▼ (next) and Shift+Enter/▲ (prev) — each match TRAVELS to + selects
+   the node (reuses jumpToNode + peekNode). Matches the drawn set on the CURRENT level;
+   re-query is live so it follows level switches. ── */
+(function(){
+  var input=document.getElementById("findinput"), countEl=document.getElementById("findcount"),
+      prev=document.getElementById("findprev"), next=document.getElementById("findnext");
+  if(!input) return;
+  var matches=[], mi=-1;
+  function recompute(){ var q=(input.value||"").trim().toLowerCase(); matches=[];
+    if(q){ if(fgIsLevel()){                              // FG levels search the spec nodes (SELREG is SVG-only)
+        (_EMU.spec?_EMU.spec.nodes:[]).forEach(function(n){
+          if((n.label||"").toLowerCase().indexOf(q)>=0 || (n.id||"").toLowerCase().indexOf(q)>=0) matches.push(n.id); });
+        matches.sort(function(a,b){ return a.length-b.length || (a<b?-1:1); });
+      } else { Object.keys(SELREG.nodes).forEach(function(k){ var n=SELREG.nodes[k];
+          if((n.label||"").toLowerCase().indexOf(q)>=0 || k.toLowerCase().indexOf(q)>=0) matches.push(k); });
+        matches.sort(function(a,b){ var la=(SELREG.nodes[a].label||""), lb=(SELREG.nodes[b].label||"");
+          return la.length-lb.length || (la<lb?-1:1); }); } }
+    mi=-1; render(); }
+  function go(step){ if(!matches.length){ render(); return; }
+    mi = (mi<0) ? (step>0?0:matches.length-1) : ((mi+step)+matches.length)%matches.length;
+    var k=matches[mi];
+    if(fgIsLevel()){ fgCenterOn(k); fgHighlight(k, selDepth); }   // travel + light the match on the canvas
+    else { if(!jumpToNode(k)) peekNode(k); }
+    render(); }
+  function render(){ countEl.textContent = matches.length
+      ? ((mi>=0?(mi+1)+" / ":"")+matches.length+(mi>=0?"":" found"))
+      : (input.value.trim()?"none":""); }
+  input.addEventListener("input", recompute);
+  input.addEventListener("keydown", function(e){
+    if(e.key==="Enter"){ e.preventDefault(); go(e.shiftKey?-1:1); }
+    else if(e.key==="Escape"){ input.value=""; recompute(); input.blur(); } });
+  prev.addEventListener("click", function(){ go(-1); });
+  next.addEventListener("click", function(){ go(1); });
+  // Ctrl/Cmd+F focuses the finder instead of the browser's page search
+  window.addEventListener("keydown", function(e){
+    if((e.ctrlKey||e.metaKey) && (e.key==="f"||e.key==="F")){ e.preventDefault(); input.focus(); input.select(); } });
+})();
+
 window.__lvlready = true;
 })();
 </script>
