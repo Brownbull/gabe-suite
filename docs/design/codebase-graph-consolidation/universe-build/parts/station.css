@@ -1,0 +1,102 @@
+  /* ══ GABE UNIVERSE station chrome — nav + one-row topbar + reposition + hide the spike's control overlays ══ */
+  :root{ --navw:240px; --topbarh:46px; --red:#ff6b6b; --edge:#4a525c; --god:#d9821f;
+    --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    --font-mono:Menlo,Consolas,ui-monospace,monospace; }
+  /* the graph + panel inset by the nav (left) and the topbar (top); the spike's fixed rail mechanic is kept */
+  #g{ left:var(--navw) !important; top:var(--topbarh) !important; transition:left .18s ease; }
+  .panel{ top:var(--topbarh) !important; }
+  /* hide only the spike's title bar + explorer + hint; the CONFIG (#cfg) + LEGEND (#elegend) are REVEALED (operator visual pass) */
+  .bar, #expl, .hint{ display:none !important; }
+  /* config panel: below the one-row topbar, right of the graph (its own drag/minimize kept) */
+  #cfg.cfg{ top:calc(var(--topbarh) + 12px) !important; }
+  /* legend: bottom-left, moved clear of the nav; tracks the nav collapse via --navw */
+  #elegend{ left:calc(var(--navw) + 14px) !important; transition:left .18s ease; }
+  /* ── LEFT-NAV collapse: a body class narrows --navw to 0 and slides the nav out; the graph/topbar/legend expand ── */
+  body.nav-min{ --navw:0px; }
+  body.nav-min nav.side{ transform:translateX(-100%); }
+  nav.side{ transition:transform .18s ease; }
+  .navmin{ display:flex; align-items:center; justify-content:center; gap:6px; margin-top:auto; width:100%;
+    font:inherit; font-size:11px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:6px 8px; cursor:pointer; }
+  .navmin:hover{ color:var(--ink); border-color:var(--accent); } .navmin svg{ width:13px; height:13px; }
+  /* the config gear in the nav brand row — toggles the #cfg panel */
+  .navgear{ margin-left:auto; display:grid; place-items:center; width:26px; height:26px; flex:none;
+    color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:7px; cursor:pointer; }
+  .navgear:hover{ color:var(--accent); border-color:var(--accent); } .navgear svg{ width:14px; height:14px; }
+  .navgear.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  /* floating restore tab, shown only while the nav is collapsed */
+  .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
+    width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }
+  body.nav-min .navshow{ display:flex; } .navshow:hover{ border-color:var(--accent); } .navshow svg{ width:16px; height:16px; }
+  /* LEFT NAV (from the center shell, dark-tuned to the universe) */
+  nav.side{ position:fixed; left:0; top:0; bottom:0; width:var(--navw); background:#0c1322; border-right:1px solid var(--line);
+    padding:14px 11px; overflow-y:auto; display:flex; flex-direction:column; gap:3px; z-index:30; font:13px/1.4 var(--font-ui); }
+  nav.side .brand{ display:flex; align-items:center; gap:9px; margin:0 0 12px; padding:0 4px; }
+  nav.side .brand .logo{ width:26px; height:26px; border-radius:7px; overflow:hidden; display:grid; place-items:center; }
+  nav.side .brand b{ font-size:13.5px; color:var(--ink); font-weight:700; letter-spacing:.01em; display:block; }
+  nav.side .brand small{ display:block; font-size:8.5px; letter-spacing:.16em; color:var(--muted); text-transform:uppercase; }
+  nav.side .navlabel{ font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-weight:700; margin:12px 0 3px; padding:0 6px; }
+  nav.side .navitem{ display:flex; align-items:center; gap:9px; padding:6px 9px; border-radius:8px; color:var(--muted); text-decoration:none; font-size:13px; }
+  nav.side .navitem svg{ width:16px; height:16px; color:var(--muted); flex:none; }
+  nav.side .navitem:hover{ background:#131d31; color:var(--ink); }
+  nav.side .navitem.on{ background:var(--accent); color:#fff; } nav.side .navitem.on svg{ color:#fff; }
+  nav.side .navitem .count{ margin-left:auto; font-size:10px; color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:0 6px; }
+  nav.side .navitem .new{ margin-left:auto; font-size:8px; font-weight:800; letter-spacing:.05em; background:var(--accent); color:#fff; border-radius:5px; padding:1px 5px; }
+  nav.side .navitem.on .new{ background:#fff; color:var(--accent); }
+  nav.side .foot{ margin-top:auto; padding:10px 6px 2px; font:600 9px/1.5 var(--font-mono); color:var(--muted); }
+  /* ONE-ROW TOP BAR */
+  .topbar{ position:fixed; left:var(--navw); right:0; top:0; height:var(--topbarh); z-index:29;
+    display:flex; align-items:center; gap:12px; padding:0 18px; background:var(--panel); border-bottom:1px solid var(--line); }
+  .topbar .crumb{ font-size:12.5px; color:var(--muted); display:flex; align-items:center; gap:7px; min-width:0; }
+  .topbar .crumb a{ color:var(--muted); text-decoration:none; } .topbar .crumb a:hover{ color:var(--accent); }
+  .topbar .crumb b{ color:var(--ink); font-weight:700; }
+  .topbar .crumb .csub{ color:var(--muted); font-weight:400; }
+  .topbar .spacer{ flex:1; }
+  .topbar .statuspills{ display:flex; align-items:center; gap:8px; }
+  .topbar .pill{ font-size:11px; color:var(--muted); background:transparent; border:1px solid var(--line); border-radius:999px; padding:3px 10px; white-space:nowrap; }
+  .topbar .reset{ font:inherit; font-size:12px; color:var(--ink); background:#0e1524; border:1px solid var(--line); border-radius:8px; padding:5px 11px; cursor:pointer; }
+  .topbar .reset:hover{ border-color:var(--accent); }
+  .topbar .reset.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  /* ── tri-state tests + file-coverage (element-components → .pchip to avoid the explorer .chip collision) ── */
+  .pchip.st-pass{ color:var(--ok); } .pchip.st-fail{ color:var(--red); border-color:var(--red); } .pchip.st-skip{ color:var(--muted); }
+  .pchip.st-unknown{ color:var(--muted); border-style:dotted; }
+  .pchip.filecov{ color:var(--muted); border-style:dashed; }
+  /* ── trust tags (class-based) + inferred-group dashed chips ── */
+  .ttag{ margin-left:6px; font:700 .7em/1 var(--font-ui); text-transform:uppercase; letter-spacing:.03em; padding:1px 5px; border-radius:4px; }
+  .ttag.structural{ color:var(--ok); border:1px solid var(--ok); }
+  .ttag.inferred{ color:var(--muted); border:1px dashed var(--edge); }
+  .connbox .cinf .pchip{ border-style:dashed; }
+  /* ── Journeys (two-row: meta + scrollable component faces), dark-tuned ── */
+  .jsec{ display:flex; flex-direction:column; gap:1px; }
+  .jsub{ display:flex; align-items:center; gap:5px; color:var(--c-web); font-size:.8em; text-transform:uppercase; letter-spacing:.04em; font-weight:700; margin-bottom:3px; }
+  .jsub svg{ width:12px; height:12px; }
+  .jmeta{ display:flex; align-items:center; gap:6px; font-size:.9em; padding:3px 4px 1px; cursor:pointer; border-radius:6px; }
+  .jmeta:hover{ background:#0e1524; }
+  .jcid{ font:700 .82em/1 var(--font-mono); font-variant-numeric:tabular-nums; color:#fff; background:var(--accent); border-radius:5px; padding:1px 6px; }
+  .jcid.noc{ background:var(--edge); font-weight:600; }
+  .corp{ font:600 .74em/1 var(--font-mono); text-transform:uppercase; letter-spacing:.03em; color:var(--muted); border:1px solid var(--line); border-radius:4px; padding:1px 4px; }
+  .ncomp{ margin-left:auto; color:var(--muted); font-size:.78em; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .jfaces{ display:flex; gap:4px; overflow-x:auto; padding:2px 4px 7px; margin-bottom:1px; border-bottom:1px dotted var(--line);
+    scrollbar-width:thin; scrollbar-color:var(--edge) transparent; }
+  .jfaces:last-child{ border-bottom:none; margin-bottom:0; }
+  .jfaces::-webkit-scrollbar{ height:5px; } .jfaces::-webkit-scrollbar-thumb{ background:var(--line); border-radius:3px; } .jfaces::-webkit-scrollbar-track{ background:transparent; }
+  .face{ flex:none; width:22px; height:22px; border-radius:6px; border:1.5px solid currentColor; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; }
+  .face svg{ width:13px; height:13px; }
+  .face.fhome{ box-shadow:0 0 0 2px var(--panel), 0 0 0 3.5px var(--accent); }
+  .face:hover{ filter:brightness(1.18); }
+  /* config panel: the Display | Layout tab bar (batch 2) */
+  #cfg .cfgtabbar{ display:flex; gap:3px; margin:0 0 9px; border-bottom:1px solid var(--line); }
+  #cfg .cfgtab{ font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); background:none; border:none; cursor:pointer; padding:6px 10px; border-bottom:2px solid transparent; }
+  #cfg .cfgtab:hover{ color:var(--ink); }
+  #cfg .cfgtab.on{ color:var(--ink); border-bottom-color:var(--accent); }
+  /* Zones title carrying an inline On/Off master toggle; the icons dim when the master is off */
+  #cfg .grplbl.zoneshd{ display:flex; align-items:center; justify-content:flex-start; gap:10px; }
+  #cfg .grplbl.zoneshd .pill{ padding:1px; }
+  #cfg .grplbl.zoneshd .pill button{ font-size:9.5px; padding:2px 8px; text-transform:none; letter-spacing:0; }
+  #cfg .grp.zonesoff .itog{ opacity:.38; }
+  /* Cluster-core pill as a 2-column grid so the 7 cores never overflow the panel width */
+  #cfg .pill[data-grp="coreBy"]{ display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+  #cfg .pill[data-grp="coreBy"] button{ justify-content:center; }
+  /* keep <code> inline chips readable in the dark card */
+  .pbody code{ font-family:var(--font-mono); background:#0e1524; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
+  nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}
+  nav.side .navlabel.g-code{color:#9b93e6} nav.side .navlabel.g-test{color:#6fa77d} nav.side .navlabel.g-ledger{color:#d79a3c} nav.side .navlabel.g-rel{color:#b795c9} nav.side .navlabel.g-leaf{color:#8494a4}

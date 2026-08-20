@@ -1,0 +1,7 @@
+# pipeline build artifacts — regenerate with: python3 assemble.py
+gabe-universe.html
+gabe-universe.filled.html
+_engine.js
+levels.js
+c4-graph.js
+assets/

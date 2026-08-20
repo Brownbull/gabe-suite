@@ -1,85 +1,85 @@
-# Handoff — Universe / Underworld (element-components ↔ spike review, then the two-section plan)
+# Gabe Universe — session handoff (next focus: CLUSTERING)
 
-**Paste the “Resume prompt” below into a fresh session.** Context, file map, learnings, and the persistent rules
-follow it. This closes the element-components retrofit arc and opens the review → plan arc.
+## Paste-able resume
+
+> Continue the **Gabe Universe** 3D command-center station. All work is committed **LOCAL on
+> branch `graft-adoption` (no upstream) — nothing is pushed; push only on my explicit word.**
+> gustify/gastify are **read-only twins**; the suite repo **never** gets `.kdbp`. Respond in the
+> Gabe register. This session's focus is **CLUSTERING** — see §"Next focus" below. Rebuild via the
+> persisted pipeline (§Build), verify via headless chrome (§Verify), run `tests/gabe-universe/run.sh`.
+
+## Where it is
+
+- **Station**: [templates/center/shell/gabe-universe.html](../../../templates/center/shell/gabe-universe.html) — the 5C 3D graph (lifted from the graft-adoption spike), fed live by `window.GABE_C4` + `window.GABE_LEVELS`, with the element-components card. Rendered in every project's center (a new nav item, additive — the old "Levels graph" stays).
+- **Example (renderable, real gustify data)**: [templates/center/shell/example/codebase-graph-station/gabe-universe.html](../../../templates/center/shell/example/codebase-graph-station/gabe-universe.html) — loads `./c4-graph.js` + `./levels.js` + `../../assets/{3d-bundle,chip-assets}.js`. Open this in **google-chrome** (WebGL) to review.
+- **Battery**: [tests/gabe-universe/run.sh](../../../tests/gabe-universe/run.sh) — 84 static + nav-consistency + optional headless render. `bash` it; must stay green.
+- **Commits** (9, local on `graft-adoption`): `b0dc75c` station → `414d324` chrome (config/legend/web/nav) → `62939cd` entity-layout + 3 c4 cores → `822f6e4` levels cores → `abdf010` functions+guards+lines → `079c795` Planets|Universe tabs + orbit → `01953c3` planets tidy + perf → `7c5d5a2` static fleets + motion + freeze-on-drag → `ee19b5d` rigid orbit-around-click + transport speed. `git show <sha>` for each rationale.
+- **Memory**: `gabe-universe-station.md` (full arc). Pre-existing, NOT ours: center battery baseline is 129/3 (a duplicate `id="cls:"` in the Levels page — red before this work).
+
+## Build (reproducible pipeline)
+
+The station is **assembled** from a copy of the spike + override parts, NOT hand-edited. Pipeline persisted at [docs/design/codebase-graph-consolidation/universe-build/](universe-build/):
+
+```
+cd docs/design/codebase-graph-consolidation/universe-build
+python3 assemble.py                         # transforms spike-base.html + parts/* → gabe-universe.html (here)
+```
+- **`parts/adapter.js`** — GABE_C4 (l1/l2/cross_edges) → the spike's `{nodes,links}`; `ANIM` state; `ENT/EX/EY/EZ` entity maps.
+- **`parts/layout.js`** — the layout engine: `recomputeEX` (chain/force/spread), `assignSub` (cluster cores), the mode-aware `zForce`, `__uniAddLayoutTab` (the Planets|Universe config), `__uniSetupOrbit` (rigid rotate-around-click), functions toggle.
+- **`parts/card.js`** — the live det-reading card. **`parts/station.css`** — chrome + config CSS. **`parts/chrome.html`** — nav + topbar.
+- **`assemble.py`** — line-splices the parts into `spike-base.html` + str.replace edits (documented inline). Re-running is idempotent; it byte-reproduces the landed station.
+
+**To land after an edit**: copy `universe-build/gabe-universe.html` → `templates/center/shell/gabe-universe.html`; then rebuild the example (fill the SHARED tokens with gustify values + rehome `./assets/`→`../../assets/`, keep `./c4-graph.js`/`./levels.js`). See any prior commit's landing step; the fill dict is in the batteries' history.
+
+## Verify (headless chrome)
+
+`playwright-core` + `google-chrome-stable` live under `docs/design/graft-adoption/spike/_build/node_modules`. Pattern (see `universe-build/verify-latest.mjs`): launch chromium `--use-angle=swiftshader --no-sandbox`, goto the filled dev page, `waitForFunction('window.__spikeKindsReady===true')`, capture `pageerror`+console-error (must be **0**), then `page.evaluate` against the engine globals (`nodes`, `links`, `CFG`, `EX/EY/EZ`, `Graph`, `ANIM`). The dev harness needs `c4-graph.js` + `levels.js` + `assets/` beside the filled page (copy from the example/shell dirs).
 
 ---
 
-## Resume prompt
+## NEXT FOCUS — CLUSTERING (the whole reason for the next session)
 
-> Continue the **codebase-graph consolidation** work. Two phases, in order.
->
-> **Phase A — comparison / mapping / review** between the **card** (`docs/design/codebase-graph-consolidation/
-> element-components.html`) and the **5C graph spike** (`docs/design/graft-adoption/spike/index.html`). Find what is
-> **missing · under-represented · over-represented** on either side. A prior icon/asset gap map exists (artifact
-> `https://claude.ai/code/artifact/559041a9-faa9-4f59-8f5d-195babd81676`) — use it as a REFERENCE, but do a FRESH
-> pass, because the retrofit already reconciled the big items (tests taxonomy, assets, flags). Then **fix** the issues
-> you find (verify each with Playwright over system Chrome; `spike/_build/` has the harness).
->
-> **Phase B — plan the two-section restructure, REUSING what exists (do NOT recreate).** The “codebase graph”
-> area of the command center becomes **Universe**. Rename the **codebase archive lab**
-> (`templates/center/shell/codebase-archive-lab.html`, currently titled “Levels graph”) → **Universe** in the left
-> nav (`docs/site/center/nav.json`). Then add a second section, **Underworld** — the SAME graph, but dedicated to the
-> **code lifecycle STAGES**: `gabe-red` · `gabe-execute` · `gabe-review` · `gabe-commit`. Universe = the code as it IS
-> (structure + the ELEMENTS-LAB dimensions); Underworld = the code as it MOVES through the lifecycle. Produce a PLAN
-> (files touched, what’s reused vs new, the stage→visual mapping) before building — this is a suite/center change, so
-> draft + confirm before writing.
->
-> **Rules that persist:** push ONLY on the operator’s explicit word (branch `graft-adoption` is LOCAL, ~90+ commits,
-> no upstream); gustify/gastify are read-only twins; the suite repo NEVER gets `.kdbp`; respond in the Gabe register;
-> every spike change gets a `docs/design/graft-adoption/records/5C-3D-trace.md` note + a memory line + a Playwright pass.
+**The complaint**: with polygon containers the diagram is "a big mesh" — entities sit on top of each other, no clear separation; and **changing Cluster Core By does nothing to the actual node arrangement.** In the old 2D graph, choosing a core RE-ARRANGED the elements.
 
----
+**The goal**: clearly separated entity groups; inside each, **API endpoints at the cluster EDGE, functions/internals INSIDE**; and Cluster Core By should physically re-arrange nodes.
 
-## Where we are (the arc that just closed)
+### Why the core does nothing today (the root cause)
 
-The **5C spike** graphics/controls are DONE. The **element-components card** was retrofitted to speak the spike’s
-visual language. The **test taxonomy** was researched and reconciled (a 5-agent workflow), landing operator ruling
-**C+D**: `api/web/e2e` canonical + real join-tier depth.
+Node POSITIONS come only from `zForce`, which pulls each node to its **entity** anchor `(EX/EY/EZ)[n.ent]` (+ a `-150` charge repulsion). The cluster-core control calls `assignSub(coreBy)` which rewrites **`n.sub`** — but `n.sub` feeds ONLY `buildClusters` (hull membership `ent|sub` + hull hue), **never position**. So the hulls regroup while the nodes stay put.
 
-- **Spike** (`spike/index.html`) — every ELEMENTS-LAB dimension: per-node fleets (defence · attack · conflict · sats,
-  all-nodes, `warOn`-gated), typed connectors on every link, cluster star field, live inter-entity transports (cargo
-  + test chip), the 6-tab→3-tab **legend** (Types · Connectors · Planet[Defense/Attack/Field sub-tabs]), the config
-  panel (icon toggles, Show·Radius merged row), the left Transports panel, copy-config buttons. **Defence renamed
-  unit/integ/e2e → `api/web/e2e`** (the old labels were FICTION — `nodeFleet` round-robins `k=DEF_KINDS[i%3]`); legend
-  tiers now mean the real **join tier** T1 direct / T2 via-route / T3 file-reach.
-- **Card** (`element-components.html`) — 12 kind cards. Each: 2D kind icon kept; **usage → satellite asset**;
-  **Tests = custom layout** (`testsSection`): total next to the title, TEXT corpus tabs (api/web/e2e), ONE big tile
-  top-right showing the SELECTED corpus’s ship (swaps on click), per-credit **join-tier badge** (T1 green/T2 amber/T3
-  grey) + **failing state** (red chip); **god / unguarded flags** carry the raider / tie asset; **payload → cargo**;
-  asset tiles are **theme-aware** (light slate / deep space) and re-rendered tight so the ship fills the frame.
-  Title-end anomaly-assets were RETIRED (operator: no red icons in the title — they duplicated the flags).
+`applyCfg('coreBy')` today = `assignSub + buildClusters + updateClusters(true)` — **decoration only, no reheat, no position change.**
 
-## Key learnings (don’t re-derive)
+### The technical path (do these, in order)
 
-- **The only generated test axis is CORPUS** (`ref['corpus']`): `api` pytest · `web` vitest · `e2e` playwright. Plus a
-  real depth signal: the **join tier** (`by_*.direct` T1 · `.via_route` T2 · `by_file.reach` T3). `unit/integ/e2e` was
-  never generated — the spec (`ELEMENTS-LAB-SPEC.md:37`) admitted it. Full brief in memory `[[element-components-gap]]`.
-- **Element × test matrix**: endpoint = api+web+e2e (universal meeting point); model/schema/function = api DIRECT +
-  web/e2e VIA-ROUTE; component/hook/store/route/type = web+e2e BY NAME only (not modeled as distinct kinds yet —
-  planned/unbuilt); entity = aggregate; external = none.
-- **Full Option C is not done**: the spike’s `nodeFleet` still round-robins for the toy — at scale it should read the
-  real per-credit `(corpus, tier)`. Underworld/Universe planning may want to close this.
+1. **Make the core drive POSITION — add a sub-anchor term to `zForce`.**
+   - Build a `SUBANCHOR[ent][sub]` map: within each entity, lay its distinct `sub` groups out on a small ring/grid offset from the entity center (a per-(ent,sub) local offset).
+   - Add a third pull in `zForce`: `n` → `entityAnchor + SUBANCHOR[n.ent][n.sub]` (a weaker pull than the entity term, so sub-groups separate *inside* the entity).
+   - `applyCfg('coreBy')` must then: `assignSub` → recompute `SUBANCHOR` → **`Graph.d3ReheatSimulation()`** → `buildClusters` + `updateClusters`. (The 3d-inject recon flagged exactly this as the unbuilt step.)
 
-## File map
+2. **Endpoints at the edge, internals inside — a per-kind RADIAL bias.**
+   - In `zForce`, bias each node's target radius from its entity center by kind: `endpoint` → push outward (boundary), `function`/`model`/`schema` → pull inward (core). i.e. add a radial offset along `(node - entityCenter)` scaled by a per-kind factor.
+   - This gives the "endpoints ring the cluster, guts inside" the operator asked for.
 
-| What | Path |
-|---|---|
-| The card (this review’s left side) | `docs/design/codebase-graph-consolidation/element-components.html` |
-| The 5C graph spike (the right side) | `docs/design/graft-adoption/spike/index.html` |
-| The 16 GLB assets (rendered) | `spike/_build/_assets2.json` (+ `_renderassets2.mjs` recipe; gitignored) |
-| Playwright harness | `spike/_build/*.mjs` (system chrome, swiftshader; gitignored) |
-| Gap artifact (icon/asset map) | `https://claude.ai/code/artifact/559041a9-faa9-4f59-8f5d-195babd81676` |
-| **Codebase archive lab → “Universe”** | `templates/center/shell/codebase-archive-lab.html` (title “Levels graph”) |
-| Codebase-graph station | `templates/center/shell/codebase-graph.html` |
-| Left nav | `docs/site/center/nav.json` |
-| Spike trace log | `docs/design/graft-adoption/records/5C-3D-trace.md` |
-| Memory | `[[element-components-gap]]` · `[[5c-trace-arc]]` |
+3. **Stronger entity separation (kill the overlap).**
+   - `recomputeEX` force/spread currently spreads anchors in `~[-300,300]`; the hulls still overlap because node charge (`-150`) + the entity pull let nodes bleed. Options: widen the anchor spread (×1.5–2), raise the entity-pull strength, and/or add a soft **containment** force (pull a node back if it strays beyond a radius of its entity anchor). Tune so hulls read as distinct bubbles.
 
-## Open / deferred
+### Key code anchors (all in `parts/layout.js`, mirrored in the landed html)
 
-- The **gap artifact** still shows the retired `unit/integ/e2e` + a “taxonomy mismatch” verdict — refresh its Defence
-  row to the reconciled `api/web/e2e × join-tier` and republish (same URL) when convenient.
-- Honest **frontend-binding note** on the fe cards (web/e2e-by-name-only, kinds planned-not-built).
-- **Full Option C**: spike graph reads real per-credit corpus×tier (retire the round-robin).
-- Nothing is committed — branch `graft-adoption` is LOCAL.
+- `function zForce(alpha)` — the single place node positions are nudged. Add the sub-anchor + radial terms here (guard every `n.x||0` — the NaN lesson).
+- `function recomputeEX(mode)` — entity anchors (chain/force/spread). Widen/strengthen for separation.
+- `function assignSub(mode)` — core → `n.sub` (already correct); pair it with a `recomputeSubAnchors()` you add.
+- `function buildClusters()` / `makeCluster()` / `updateClusters(force)` — hull rendering; reads `n.x/y/z`. `<2`-member subs are skipped (line in buildClusters).
+- `applyCfg('coreBy')` branch — change from decoration-only to: assignSub + recompute sub-anchors + **reheat** + rebuild.
+- `EX/EY/EZ` (in `parts/adapter.js`) + a NEW `SUBANCHOR` map.
+
+### Watch-outs
+
+- **NaN frames**: any new node motion + a reheat can start from `undefined`/coincident positions → `computeBoundingSphere NaN` spew. Seed uniquely (golden-angle, as `toggleFns` does) and keep the `isFinite(n.x)` `_npos` guard.
+- **Perf**: fleets are static by default (`ANIM.fleets=false`); the connector rebuild is throttled every 3rd tick; freeze-on-drag pauses during rotation. A reheat over 456 nodes (functions on) is the heavy case — consider fewer `cooldownTicks` on a core/layout reheat, and/or throttle the hull recompute too.
+- **Cluster-core cores that need levels**: guards/usecase/community/fk join `GABE_LEVELS` by name; the "other" bucket holds unmatched (endpoints/web/external aren't in the cls-keyed maps). Sub-anchoring must handle the "other" group gracefully.
+
+### Deferred / open (not blocking the clustering work)
+
+- Push the 9 commits (operator word required; branch has no upstream — needs `-u origin graft-adoption`).
+- Twin propagation (gustify/gastify) — read-only; do NOT write to them.
+- Optional: lock the horizon upright in the orbit (currently a little roll is allowed to keep the pivot exact).
