@@ -83,11 +83,11 @@ for css in (".pchip.st-pass", ".pchip.filecov", ".ttag.inferred", ".connbox .cin
 for tok in ("--red:", "--edge:", "--god:", "--font-ui:", "--font-mono:"):
     check(tok in page, "token not defined (ported CSS would render uncolored): "+tok)
 
-# ── 10b. curved-connector toggle: helper + geometry branch + topbar control all present ──
-check('window.__uniToggleCurved' in page, "curved-connector toggle function missing")
+# ── 10b. curved connectors: geometry branch present; the control lives in the config LINES pill (NOT the topbar) ──
 check('QuadraticBezierCurve3' in page, "curved geometry (QuadraticBezierCurve3 arc) missing")
-check('id="curveToggle"' in page, "topbar Curved toggle button missing")
 check('window.__uniCurved?__uniCurve' in page, "connectorWire does not branch straight/curved on the flag")
+check('id="curveToggle"' not in page, "the topbar Curved button should be REMOVED (moved into the config LINES pill)")
+check('pillHTML("lineStyle"' in page and '__uniSetCurve' in page, "the config LINES (Straight/Curved) control is missing")
 
 # ── 10c. all 5 documented C4 piece kinds are drawable + a silent-drop is impossible ──
 check('if(!KINDS.web)' in page, "web kind not injected — c4 web pieces would be silently dropped")
@@ -111,7 +111,13 @@ check('function _levelsGroupMap' in page and 'window.GABE_LEVELS' in page, "leve
 check('mode==="usecase"' in page and 'mode==="community"' in page and 'mode==="fk"' in page,
       "assignSub missing the usecase/community/fk levels-backed branches")
 check('fk_communities' in page and 'usecases' in page and 'communities' in page, "levels map fields not read")
-check('data-v="guards"' not in page, "a Guards core button exists but no guard-count data backs it (dead control)")
+
+# ── 10f. batch-4: functions layer toggle · Guards core (data-backed) · LINES in config ──
+check('function _buildFnData' in page and 'function toggleFns' in page, "functions layer (fn_nodes toggle) missing")
+check('fn_nodes' in page and 'fn_edges' in page, "functions do not read the levels fn_nodes/fn_edges")
+check('grp==="showFns"' in page and 'grp==="lineStyle"' in page, "applyCfg missing the showFns/lineStyle branches")
+check('mode==="guards"' in page and '{v:"guards"' in page, "Guards cluster-core missing (it is data-backed via endpoint.guards)")
+check('isFinite(n.x)) _npos' in page, "the _npos NaN guard is missing (a transient add would spew computeBoundingSphere NaN)")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

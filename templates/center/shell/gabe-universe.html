@@ -277,7 +277,6 @@
   <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
   <div class="statuspills">{{STATUS_PILLS}}</div>
-  <button class="reset" id="curveToggle" title="curve the connector wires (like the 2D graph)" onclick="window.__uniToggleCurved&&window.__uniToggleCurved()">⌇ Curved</button>
   <button class="reset" id="reset">⟳ Reset view</button>
 </div>
 <div id="g"></div>
@@ -541,7 +540,7 @@ var OPMAP={
   wrap:{   film:0.06,  ghost:0.11,  faint:0.17,  subtle:0.12,  medium:0.17,  strong:0.24 } };
 /* ONE shape (polygon|wrap) for BOTH levels; per-level on/off; a bounded radius that fits the
    containers tighter/looser; per-surface transparency (faint|ghost|film). */
-var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
+var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
   /* SPACE WAR zones — 3 areas around each planet; angle (deg, front XY plane) + one shared distance.
      defaults: attack=left(180) · conflict=top(90) · defense=right(0). warDist = gap outside the sphere. */
   warOn:true, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
@@ -915,27 +914,61 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
    (endpoints by "METHOD /path" = eps; models/schemas by class name = cls). Honest "other" bucket. */
 var _LMAP=null;
 function _levelsGroupMap(){ var D=window.GABE_LEVELS; if(!D||!D.pieces) return null;
-  var out={usecase:{}, community:{}, fk:{}};
+  var out={usecase:{}, community:{}, fk:{}, guards:{}};
   nodes.forEach(function(n){ var pc=D.pieces[n.ent]; if(!pc) return; var nm=n.label;
     var uc=pc.usecases||{}; Object.keys(uc).some(function(gp){ var v=uc[gp]||{};
       if((v.cls||[]).indexOf(nm)>=0 || (v.eps||[]).indexOf(nm)>=0){ out.usecase[n.id]=gp; return true; } return false; });
     var cm=pc.communities||{}; Object.keys(cm).some(function(gp){ if((cm[gp]||[]).indexOf(nm)>=0){ out.community[n.id]=gp; return true; } return false; });
     var fk=pc.fk_communities||{}; Object.keys(fk).some(function(gp){ if((fk[gp]||[]).indexOf(nm)>=0){ out.fk[n.id]=gp; return true; } return false; });
+    if(n.kind==="endpoint"){ var pp=(nm||"").split(" "), mth=pp[0], pth=pp.slice(1).join(" ");   // GUARDS from pieces[ent].endpoints[].guards, joined by method+path
+      var ep=(pc.endpoints||[]).filter(function(e){ return e.m===mth && e.p===pth; })[0];
+      if(ep) out.guards[n.id]=((ep.guards||0)>0)?"guarded":"unguarded"; }
   }); return out; }
 function assignSub(mode){
   if(mode==="usecase"||mode==="community"||mode==="fk"){
     if(!_LMAP) _LMAP=_levelsGroupMap();
     var m=(_LMAP&&_LMAP[mode])||{};
     nodes.forEach(function(n){ n.sub=m[n.id]||"other"; }); return; }
+  if(mode==="guards"){ if(!_LMAP) _LMAP=_levelsGroupMap(); var gm=(_LMAP&&_LMAP.guards)||{};
+    nodes.forEach(function(n){ n.sub=(n.kind==="function")?"functions":(gm[n.id]||(n.kind==="endpoint"?"unguarded":"other")); }); return; }
   nodes.forEach(function(n){
     if(mode==="kind") n.sub=n.kind;
     else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
     else n.sub=SUBOF[n.layer]||"data"; }); }
 
+/* ── FUNCTIONS layer (from GABE_LEVELS.fn_nodes + fn_edges) — toggled in/out of the graph ── */
+var _FNNODES=null, _FNLINKS=null, _fnsOn=false;
+function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["function"]){ _FNNODES=[]; _FNLINKS=[]; return; }
+  _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
+    return { id:f.id, kind:"function", ent:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
+      layer:KINDS["function"].layer, sub:SUBOF[KINDS["function"].layer]||"data", __fn:true,
+      m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
+      det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
+  _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
+}
+function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) return;
+  if(on){
+    _FNNODES.forEach(function(n,i){ if(!NIDS[n.id]){                       // seed on a golden-angle spiral around the entity anchor —
+      var a=i*2.399963, rr=8+i*0.35;                                       // UNIQUE per i (no two coincide → no divide-by-zero → no NaN frame)
+      n.x=(EX[n.ent]||0)+Math.cos(a)*rr; n.y=(EY[n.ent]||0)+Math.sin(a)*rr; n.z=(EZ[n.ent]||0)+((i%23)-11);
+      nodes.push(n); NIDS[n.id]=n; } });
+    _FNLINKS.forEach(function(fl){ if(NIDS[fl.source]&&NIDS[fl.target]&&fl.source!==fl.target){
+      var mm=LINKMETA[fl.rel]||{w:2,pv:1}; links.push({source:fl.source,target:fl.target,rel:fl.rel,w:mm.w,proven:!!mm.pv,payload:0,__fn:true}); } });
+  } else {
+    for(var i=links.length-1;i>=0;i--){ if(links[i].__fn) links.splice(i,1); }
+    for(var j=nodes.length-1;j>=0;j--){ if(nodes[j].__fn){ delete NIDS[nodes[j].id]; nodes.splice(j,1); } }
+  }
+  links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });   // normalize to string ids before re-seed
+  if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
+  try{ assignSub(CFG.coreBy); buildClusters(); updateClusters(true); }catch(e){}
+}
+/* LINES — moved off the topbar into the config; sets the curved-connector flag + redraws */
+function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
+
 /* mode-aware layout force: chain = layer→Y + entity→X band · force/spread = pull to the 3D entity anchor */
-function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){
-  if(__chainMode){ n.vy += ((LZ[n.layer]||0)-n.y)*0.05*alpha; n.vx += ((EX[n.ent]||0)-n.x)*0.045*alpha; n.vz += (0-n.z)*0.03*alpha; }
-  else { n.vx += ((EX[n.ent]||0)-n.x)*0.06*alpha; n.vy += ((EY[n.ent]||0)-n.y)*0.06*alpha; n.vz += ((EZ[n.ent]||0)-n.z)*0.06*alpha; } }); }
+function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x||0, y=n.y||0, z=n.z||0;
+  if(__chainMode){ n.vy += ((LZ[n.layer]||0)-y)*0.05*alpha; n.vx += ((EX[n.ent]||0)-x)*0.045*alpha; n.vz += (0-z)*0.03*alpha; }
+  else { n.vx += ((EX[n.ent]||0)-x)*0.06*alpha; n.vy += ((EY[n.ent]||0)-y)*0.06*alpha; n.vz += ((EZ[n.ent]||0)-z)*0.06*alpha; } }); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
 
 /* the second config TAB — Display (the spike controls) | Layout (these distribution controls) */
@@ -946,11 +979,12 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var pillHTML=function(grp, opts, cur){ var s='<div class="pill" data-grp="'+grp+'">';
     opts.forEach(function(o){ s+='<button data-v="'+o.v+'"'+(o.v===cur?' class="on"':'')+'>'+o.t+'</button>'; }); return s+'</div>'; };
   var hasLevels=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
+  var hasFns=!!(window.GABE_LEVELS && (window.GABE_LEVELS.fn_nodes||[]).length);
   var cores=[{v:"layer",t:"Layer"},{v:"kind",t:"Kind"},{v:"tests",t:"Tests"}];
-  if(hasLevels) cores.push({v:"usecase",t:"Use-case"},{v:"community",t:"Community"},{v:"fk",t:"FK-join"});
+  if(hasLevels) cores.push({v:"guards",t:"Guards"},{v:"usecase",t:"Use-case"},{v:"community",t:"Community"},{v:"fk",t:"FK-join"});
   var coreNote=hasLevels
-    ? "Use-case / Community / FK-join joined from the levels feed by name · Guards needs a guard-count field (not emitted)"
-    : "Use-case / Community / FK-join need the levels feed (not loaded here)";
+    ? "Guards / Use-case / Community / FK-join joined from the levels feed by name"
+    : "Guards / Use-case / Community / FK-join need the levels feed (not loaded here)";
   var lay=document.createElement("div"); lay.className="cfgpane"; lay.style.display="none";
   lay.innerHTML=
      '<div class="grp"><div class="grplbl">ENTITY LAYOUT</div>'
@@ -958,7 +992,12 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + '<div style="font-size:10px;color:var(--muted);margin-top:4px">chain = layered plane · force = coupling bubbles · spread = graph-distance</div></div>'
     + '<div class="grp"><div class="grplbl">CLUSTER CORE BY</div>'
     + pillHTML("coreBy", cores, CFG.coreBy)
-    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+coreNote+'</div></div>';
+    + '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+coreNote+'</div></div>'
+    + '<div class="grp"><div class="grplbl">LINES</div>'
+    + pillHTML("lineStyle",[{v:"straight",t:"Straight"},{v:"curved",t:"Curved"}], CFG.lineStyle)+'</div>'
+    + (hasFns ? ('<div class="grp"><div class="grplbl">FUNCTIONS</div>'
+      + pillHTML("showFns",[{v:"off",t:"Hide"},{v:"on",t:"Show"}], CFG.showFns)
+      + '<div style="font-size:10px;color:var(--muted);margin-top:4px">'+window.GABE_LEVELS.fn_nodes.length+' code functions + call edges from the levels feed</div></div>') : '');
   var bar=document.createElement("div"); bar.className="cfgtabbar";
   bar.innerHTML='<button class="cfgtab on" data-pane="display">Display</button><button class="cfgtab" data-pane="layout">Layout</button>';
   body.appendChild(bar); body.appendChild(disp); body.appendChild(lay);
@@ -1031,7 +1070,7 @@ function buildClusters(){ clearClusters();
 function hull(ms, pad){ var R=NR+pad, pts=[];
   ms.forEach(function(p){ DIRS.forEach(function(d){ pts.push(new T.Vector3(p.x+d.x*R, p.y+d.y*R, p.z+d.z*R)); }); });
   try{ return new ConvexGeometry(pts); }catch(e){ return null; } }
-function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ if(n.x!=null) _npos[n.id]={x:n.x,y:n.y,z:n.z}; });
+function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ if(n.x!=null && isFinite(n.x)) _npos[n.id]={x:n.x,y:n.y,z:n.z}; });
   CLUSTERS.forEach(function(c){ var ms=c.members.map(function(id){return _npos[id];}).filter(Boolean); if(!ms.length) return;
     var cx=0,cy=0,cz=0,top=-1e9; ms.forEach(function(p){cx+=p.x;cy+=p.y;cz+=p.z; if(p.y>top)top=p.y;}); cx/=ms.length;cy/=ms.length;cz/=ms.length;
     if(c.stars&&c.stars.length){ var _rad=(NR+c.pad)*1.1;   // stars CLOUD around the cluster's member NODES, not its bbox (a thin diagonal hull has a huge box → stars everywhere) → they hug the actual footprint
@@ -1147,7 +1186,7 @@ function buildCfg(){ var trip=[{v:"faint",t:"faint"},{v:"ghost",t:"ghost"},{v:"f
         glow off/used-by off) · icon size 4 · colour identity · stars @ size 0.45/glow 0.1. Sat calibration = LEFT panel. */
    +'</div>';
   wireCfg(); }
-function applyCfg(grp){ if(grp==="bubble"||grp==="warOn"||grp==="zDef"||grp==="zAtk"||grp==="zCfl"||grp==="zSat"){ rebuildNodes(); } else if(grp==="conns"){ if(Graph) try{ Graph.linkVisibility(linkVisFn); }catch(e){} updateClusters(true); } else if(grp==="transports"){ buildTransports(); } else if(grp==="entLayout"){ recomputeEX(CFG.entLayout); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } else if(grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters(); updateClusters(true); } else { buildClusters(); updateClusters(true); } }   // zone toggles rebuild fleets; conns hide plain edges; transports rebuild shuttles; stars need buildClusters
+function applyCfg(grp){ if(grp==="bubble"||grp==="warOn"||grp==="zDef"||grp==="zAtk"||grp==="zCfl"||grp==="zSat"){ rebuildNodes(); } else if(grp==="conns"){ if(Graph) try{ Graph.linkVisibility(linkVisFn); }catch(e){} updateClusters(true); } else if(grp==="transports"){ buildTransports(); } else if(grp==="entLayout"){ recomputeEX(CFG.entLayout); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } else if(grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters(); updateClusters(true); } else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } else { buildClusters(); updateClusters(true); } }   // zone toggles rebuild fleets; conns hide plain edges; transports rebuild shuttles; stars need buildClusters
 function wireCfg(){
   document.querySelectorAll("#cfg .pill").forEach(function(p){ p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return;
     var enc=p.getAttribute("data-enc");
