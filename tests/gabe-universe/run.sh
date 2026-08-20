@@ -122,8 +122,6 @@ check('isFinite(n.x)) _npos' in page, "the _npos NaN guard is missing (a transie
 # ── 10g. batch-5: config re-tabbed Planets|Universe · master planet-assets toggle · orbit-around-click ──
 check('data-pane="planets"' in page and 'data-pane="universe"' in page, "config not re-tabbed into Planets | Universe")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
-check('onBackgroundClick' in page and 'intersectPlane' in page, "orbit-around-cursor (background raycast pivot) missing")
-check('Graph.cameraPosition(_cp,{x:n.x' in page, "node-click orbit pivot (re-aim camera on the clicked node) missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
 check('warOn:false' in page, "planet assets are not OFF by default")
@@ -131,6 +129,15 @@ check('grplbl zoneshd' in page, "the Zones title does not carry the inline On/Of
 check('zonesoff' in page, "zone icons do not dim when the master toggle is off")
 check('data-grp="coreBy"]{ display:grid' in page, "cluster-core pill is not a 2-column grid (it would overflow)")
 check('if(force || _wtick%3===0) updateConnectors' in page, "per-tick connector rebuild is not throttled (settle stays laggy)")
+
+# ── 10i. batch-7: static fleets · motion master · freeze-on-drag · orbit re-pivot on pointerdown ──
+check('var ANIM={ fleets:false' in page, "fleets are not static by default (ANIM.fleets should be false)")
+check('if(!ANIM.all) return' in page and 'if(ANIM.fleets && FLEETTICK.length)' in page, "pulseLoop not gated by ANIM (master pause / fleet freeze)")
+check('function __uniSetupOrbit' in page and '__uniSetupOrbit(); }catch' in page, "orbit-pivot setup not wired at boot")
+check('intersectPlane' in page and 'ctrls.target.add(off); cam.position.add(off)' in page, "orbit re-pivot (move target+camera by the cursor offset) missing")
+check('id="motionBtn"' in page, "config-header motion play/pause button missing")
+check('id="freezeDragBtn"' in page and '__uniToggleFreezeDrag' in page, "topbar freeze-on-drag toggle missing")
+check('zoneshd{ display:flex; align-items:center; justify-content:flex-start' in page, "Zones toggle not placed next to the title (flex-start)")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
