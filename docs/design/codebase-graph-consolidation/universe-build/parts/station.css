@@ -111,9 +111,45 @@
   .topbar .tbnum{ position:absolute; right:-4px; top:-5px; font:800 9px/1 var(--font-mono); color:#fff;
     background:var(--accent); border-radius:6px; padding:1.5px 4px; }
   .topbar .tbico.on .tbnum{ background:#0e1524; }
-  /* journeys dropdown — under the topbar, right side */
-  #jrn{ position:fixed; right:12px; top:calc(var(--topbarh) + 6px); z-index:55; width:300px; max-height:46vh; overflow-y:auto;
-    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; }
+  /* journeys dropdown — LEFT side (operator), clear of the nav; overlays the fleet panel while open */
+  #jrn{ position:fixed; left:calc(var(--navw) + 12px); top:calc(var(--topbarh) + 6px); z-index:55; width:340px; max-height:56vh; overflow-y:auto;
+    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; transition:left .18s ease; }
+  #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
+    padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
+  #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
+  #g{ right:0 !important; }
+  /* journey banner — top centre, visible even with the panel collapsed */
+  #hlban{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 8px); z-index:40;
+    display:flex; align-items:center; gap:8px; padding:5px 12px; background:rgba(24,33,54,.95);
+    border:1px solid var(--accent); border-radius:999px; font-size:12px; color:var(--ink); max-width:46vw; }
+  #hlban b{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #hlban .hlbcid{ font:600 10px/1 var(--font-mono); color:var(--muted); white-space:nowrap; }
+  #hlban .hlbx{ font:inherit; color:var(--muted); background:none; border:none; cursor:pointer; padding:0 2px; }
+  #hlban .hlbx:hover{ color:var(--ink); }
+  /* the WALK bar — top of the right panel: journey ‹ i/N › or the 7-step trail chips */
+  #walkbar{ padding:8px 12px; border-bottom:1px solid var(--line); background:#0e1524; }
+  body:not(.panel-open) #walkbar{ display:none !important; }   /* never in the collapsed rail — JS drives display while open */
+  #walkbar .wjname{ font:700 11px/1.4 var(--font-ui); color:var(--ink); text-transform:none; margin-bottom:4px;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #walkbar .wnav{ display:flex; align-items:center; gap:5px; }
+  #walkbar .wbtn{ width:22px; height:20px; font:700 12px/1 var(--font-ui); color:var(--ink); background:none;
+    border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
+  #walkbar .wbtn:hover{ border-color:var(--accent); }
+  #walkbar .wpos{ font:700 10px/1 var(--font-mono); color:var(--muted); }
+  #walkbar .wchip{ width:20px; height:20px; font:700 10px/1 var(--font-mono); background:none;
+    border:1.5px solid currentColor; border-radius:50%; cursor:pointer; padding:0; opacity:.55; }
+  #walkbar .wchip.on{ opacity:1; box-shadow:0 0 0 2px var(--accent); }
+  #walkbar .wstepname{ margin-left:4px; font-size:10.5px; color:var(--muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; min-width:0; }
+  /* panel FOOTER — the collapse chevron lives here (the walk bar owns the top) */
+  .panel .pfoot{ display:none; }
+  body.panel-open .panel .pfoot{ display:flex; justify-content:flex-end; padding:6px 10px; border-top:1px solid var(--line); margin-top:auto; }
+  body.panel-open .panel .pbody{ flex:1; }
+  /* fleet global toggles (elements / wires) in the presets row */
+  #fleet .flgap{ flex:1; }
+  #fleet .flglob{ display:grid; place-items:center; color:var(--muted); }
+  #fleet .flglob svg{ width:12px; height:12px; }
+  #fleet .flglob.on{ color:#fff; }
   #jrn .jrnhd{ font:700 10px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:4px 6px 6px; }
   #jrn .jrnrow{ display:flex; align-items:center; gap:7px; padding:4px 7px; border-radius:7px; cursor:pointer; font-size:11.5px; color:var(--ink); }
   #jrn .jrnrow:hover{ background:#131d31; }

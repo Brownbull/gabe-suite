@@ -231,7 +231,8 @@ function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
 window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
   if(HL.links.has(l)) return 1.9; return HL.mode==="focus"?0:0.18; };
-function _nodeVisibleFn(n){ if(!visN(n).show) return false;              // the ONE node-visibility truth (fleet ∧ focus)
+function _nodeVisibleFn(n){ if(!CFG.showElems) return false;             // the "just clusters & entities" view (fleet global toggle)
+  if(!visN(n).show) return false;                                        // the ONE node-visibility truth (fleet ∧ focus)
   if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
 function _hlClearSprites(){ HL.sprites.forEach(function(s){ try{ if(s.parent) s.parent.remove(s); }catch(e){} }); HL.sprites=[]; }
 window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // glow halos ride the node objects — re-added after any rebuild
@@ -251,31 +252,98 @@ function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.text
   var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
   var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
   if(ig&&ifc){ ig.style.display=(HL.mode==="glow")?"":"none"; ifc.style.display=(HL.mode==="focus")?"":"none"; } }
-window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle(); };
-window.__uniHLClear=function(){ if(!HL.on) return; HL.on=false; HL.jr=null; HL.origin=null; HL.set={}; HL.links=null; _hlRestyle(); };
+window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle();
+  if(WALK.mode!=="trail"){ WALK.mode="trail"; WALK.steps=[]; }        // a user click while a journey walks = a fresh trail (the 2D rule)
+  var ix=WALK.steps.indexOf(n.id);
+  if(ix>=0) WALK.i=ix; else { WALK.steps.push(n.id); if(WALK.steps.length>7) WALK.steps.shift(); WALK.i=WALK.steps.length-1; }
+  _walkRender(); };
+window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; HL.jr=null; HL.jrObj=null; HL.origin=null; HL.set={}; HL.links=null;
+  WALK.mode=null; WALK.steps=[]; WALK.i=0; _hlRestyle(); _walkRender(); };
 window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d));
   if(HL.on){ _hlCompute(); _hlRestyle(); } else _hlSyncUI(); };
 window.__uniHLMode=function(){ HL.mode=(HL.mode==="glow")?"focus":"glow"; if(HL.on) _hlRestyle(); else _hlSyncUI(); };
-/* ── JOURNEYS — cross-entity tests collected from every node's det.test_journeys, deduped by cid ── */
-var JRN=null;
+/* ── JOURNEYS — cross-entity tests from det.test_journeys, deduped by cid. NAMED for free: the same
+   feed's det.cases carries the real test name in the SAME cid space (test_delete_me_requires_auth_C12)
+   → join + humanize, no new information invented. Grouped: END-TO-END (e2e corpus) first — the most
+   interesting — then by the journey's STARTING entity (entities[0]). ── */
+var JRN=null, _CNAMES=null;
+function _caseNames(){ if(_CNAMES) return _CNAMES; _CNAMES={};
+  nodes.forEach(function(n){ ((n.det&&n.det.cases)||[]).forEach(function(c){
+    if(c.cid && c.name && !_CNAMES[c.cid]) _CNAMES[c.cid]=c.name; }); });
+  return _CNAMES; }
+function _jrnName(j){ var nm=_caseNames()[j.cid]; if(!nm) return null;
+  return nm.replace(/^test[_ ]?/,"").replace(/_C\d+$/,"").replace(/_/g," "); }
 function _jrnCollect(){ if(JRN) return JRN; var m={};
   nodes.forEach(function(n){ ((n.det&&n.det.test_journeys)||[]).forEach(function(j){ if(!j.cid) return;
-    var r=m[j.cid]||(m[j.cid]={cid:j.cid, corpus:j.corpus||"", ents:j.entities||[], carriers:[]});
-    r.carriers.push(n.id); }); });
-  JRN=Object.keys(m).map(function(k){ return m[k]; }).sort(function(a,b){ return b.carriers.length-a.carriers.length; });
+    var r=m[j.cid]||(m[j.cid]={cid:j.cid, corpora:{}, ents:j.entities||[], carriers:[]});
+    r.corpora[j.corpus||"?"]=1; r.carriers.push(n.id); }); });
+  JRN=Object.keys(m).map(function(k){ var j=m[k];
+    j.agg=/^\d+ case/.test(j.cid);                              // the emitter caps web/e2e journeys into "N case(s)" AGGREGATE rows — label them honestly
+    j.e2e=!!j.corpora.e2e; j.corpus=Object.keys(j.corpora).sort().join("+");
+    j.name=j.agg ? (j.corpus+" tests · "+j.cid+" (aggregated)") : _jrnName(j);
+    j.start=(j.ents[0]||"other");
+    j.carriers.sort(function(a,b){ var ea=(NIDS[a]||{}).ent||"", eb=(NIDS[b]||{}).ent||"";   // steps walk entity-by-entity along the span
+      var ia=j.ents.indexOf(ea), ib=j.ents.indexOf(eb); if(ia!==ib) return ia-ib; return a<b?-1:1; });
+    return j; });
   return JRN; }
+function _jrnRow(j){ return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" → ")+'">'
+  +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+(j.agg?"agg":j.cid)+'</b><span class="jrncorp">'+j.corpus+'</span>'
+  +'<span class="jrnn">'+j.ents.length+' ents</span></div>'; }
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
   if(p.style.display!=="none"){ p.style.display="none"; return; }
-  var js=_jrnCollect();
+  var js=_jrnCollect(), bySpan=function(a,b){ return (b.ents.length-a.ents.length)||(b.carriers.length-a.carriers.length); };
+  var e2e=js.filter(function(j){ return j.e2e; }).sort(bySpan);
+  var rest=js.filter(function(j){ return !j.e2e; });
+  var groups={}; rest.forEach(function(j){ (groups[j.start]=groups[j.start]||[]).push(j); });
   var h='<div class="jrnhd">journeys · '+js.length+' cross-entity tests</div><div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
-  js.forEach(function(j){ h+='<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" · ")+'">'
-    +'<b>'+j.cid+'</b><span class="jrncorp">'+j.corpus+'</span><span class="jrnn">'+j.carriers.length+' carriers · '+j.ents.length+' ents</span></div>'; });
+  if(e2e.length){ h+='<div class="jrngrp">end-to-end · '+e2e.length+'</div>'; e2e.forEach(function(j){ h+=_jrnRow(j); }); }
+  Object.keys(groups).sort().forEach(function(g){ h+='<div class="jrngrp">'+g+' · '+groups[g].length+'</div>';
+    groups[g].sort(bySpan).forEach(function(j){ h+=_jrnRow(j); }); });
   p.innerHTML=h; p.style.display="";
   p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ var cid=r.getAttribute("data-jr");
     p.style.display="none";
     if(!cid){ __uniHLClear(); return; }
     var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
-    HL.jr=cid; HL.origin=j.carriers.slice(); HL.on=true; _hlCompute(); _hlRestyle(); }; }); };
+    HL.jr=cid; HL.jrObj=j; HL.origin=j.carriers.slice(); HL.on=true; _hlCompute(); _hlRestyle();
+    WALK.mode="journey"; WALK.steps=j.carriers.slice(); WALK.i=0; _walkRender(); _walkGo(0); }; }); };
+/* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
+   card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */
+var WALK={ mode:null, steps:[], i:0 };
+function _aimAt(n){ if(typeof Graph==="undefined"||!Graph||n.x==null) return;
+  try{ var cam=Graph.camera(), P={x:n.x,y:n.y,z:n.z};
+    var d=new T.Vector3(cam.position.x-P.x, cam.position.y-P.y, cam.position.z-P.z);
+    var len=d.length()||1, keep=Math.max(140, Math.min(len, 320)); d.multiplyScalar(keep/len);
+    Graph.cameraPosition({x:P.x+d.x, y:P.y+d.y, z:P.z+d.z}, P, 700); }catch(e){} }
+function _walkGo(di){ if(!WALK.steps.length) return;
+  WALK.i=Math.max(0, Math.min(WALK.steps.length-1, WALK.i+di));
+  var n=NIDS[WALK.steps[WALK.i]]; if(!n) return;
+  _aimAt(n); SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
+  _walkRender(); }
+function _walkRender(){ var wb=document.getElementById("walkbar"), bn=document.getElementById("hlban");
+  if(wb){ if(!WALK.mode){ wb.style.display="none"; }
+    else if(WALK.mode==="journey"){ var j=HL.jrObj||{};
+      wb.style.display=""; wb.innerHTML='<div class="wjname" title="'+(j.ents||[]).join(" → ")+'">'+((j.name||j.cid||"journey"))+'</div>'
+        +'<div class="wnav"><button class="wbtn" data-wgo="-1" title="previous step">‹</button>'
+        +'<span class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
+        +'<button class="wbtn" data-wgo="1" title="next step">›</button>'
+        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>'; }
+    else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
+        return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
+      wb.style.display=""; wb.innerHTML='<div class="wjname">trail</div><div class="wnav">'+chips
+        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>'; }
+    if(wb.style.display!=="none"){
+      wb.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
+      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; }); } }
+  if(bn){ if(HL.jr && HL.jrObj){ bn.style.display="";
+      bn.innerHTML='<span class="hlbico">⛓</span><b>'+(HL.jrObj.name||HL.jr)+'</b><span class="hlbcid">'+HL.jr+' · '+HL.jrObj.corpus+'</span><button class="hlbx" title="clear the journey (Esc)">✕</button>';
+      bn.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+    else bn.style.display="none"; } }
+/* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
+   depth highlight) so the relationship reads instantly */
+var _hovSprite=null;
+window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _hovSprite.parent.remove(_hovSprite); }catch(e){} _hovSprite=null; }
+  if(!id) return; var n=NIDS[id]; if(!n||!n.__threeObj) return;
+  _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite); };
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
   var db=document.getElementById("depthBtn"); if(db&&!db.__w){ db.__w=1; db.onclick=function(){ __uniHLDepth(HL.depth%5+1); }; }
@@ -372,7 +440,10 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     : (window.GABE_SIM===null ? "no change in flight (sim feed at rest)" : "a change IS in flight — the preset derivation lands in a later batch");
   h+='<div class="flrow flpresets"><button class="flpre" data-fpre="all">All</button>'
     +'<button class="flpre" data-fpre="none">None</button>'
-    +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button></div>';
+    +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button>'
+    +'<span class="flgap"></span>'
+    +'<button class="fltog flglob'+(CFG.showElems?" on":"")+'" data-fg="showElems" title="ELEMENTS — off shows just the clusters and entities (the empty-planets view)">'+(typeof ico==="function"?ico("target",12):"")+'</button>'
+    +'<button class="fltog flglob'+(CFG.showWires?" on":"")+'" data-fg="showWires" title="WIRES — every line between elements (typed connectors); off shows pure clusters">'+(typeof ico==="function"?ico("radius",12):"")+'</button></div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
@@ -398,6 +469,10 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
       Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }   // the ALL row is a bulk gesture — cluster overrides follow it
     else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
+  body.querySelectorAll(".flglob").forEach(function(b){ b.onclick=function(){ var f=b.getAttribute("data-fg");
+    CFG[f]=!CFG[f]; b.classList.toggle("on", !!CFG[f]);
+    if(f==="showElems") applyVis("nodes");
+    else { try{ if(typeof Graph!=="undefined"&&Graph) Graph.linkVisibility(linkVisFn); }catch(e){} try{ updateClusters(true); }catch(e){} } }; });   // showWires: connectors clear via the updateConnectors gate; plain links via linkVisFn
   body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
     if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
       _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }

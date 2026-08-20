@@ -61,6 +61,7 @@ window.__uniToggleCurved=function(){ window.__uniCurved=!window.__uniCurved;
   var b=document.getElementById("curveToggle"); if(b) b.classList.toggle("on", !!window.__uniCurved); };
 window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) return;
   var hidden=(c.style.display==="none"); c.style.display=hidden?"":"none";
+  if(hidden) c.classList.remove("min");   // the gear always reveals the FULL panel (its own minimize is a separate state — un-minimize on show keeps the two in sync)
   var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
 window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
   setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
@@ -126,7 +127,7 @@ assert OLD_ZFORCE in text, "zForce block anchor missing"
 text = text.replace(OLD_ZFORCE, LAYOUT_JS, 1)
 assert 'var CFG={ shape:"polygon", subOn:true, entOn:true,' in text, "CFG anchor missing"
 text = text.replace('var CFG={ shape:"polygon", subOn:true, entOn:true,',
-                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", subOn:true, entOn:true,', 1)
+                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", showElems:true, showWires:true, subOn:true, entOn:true,', 1)
 OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }'
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
@@ -301,6 +302,39 @@ OLD_APPLYHEAD = 'function applyCfg(grp){ if(grp==="bubble"'
 assert OLD_APPLYHEAD in text, "applyCfg head anchor missing"
 text = text.replace(OLD_APPLYHEAD,
   'function applyCfg(grp){ if(window.__uniFleetSync) try{ __uniFleetSync(); }catch(e){} if(grp==="bubble"', 1)
+
+# ── batch 13: WALK bar in the panel top · collapse chevron moves to a panel FOOTER · wires gate ·
+#    chipList hover → white halo · the panel never resizes the graph (css) ──
+OLD_PANEL = '''<div class="panel" id="panel">
+  <div class="minbar"><button class="pmin" id="pexpand" title="element details">‹</button><div class="minname" id="prailname">details</div></div>
+  <div class="phead" id="phead"></div>
+  <div class="pbody" id="pbody"></div>
+</div>'''
+assert OLD_PANEL in text, "panel markup anchor missing"
+text = text.replace(OLD_PANEL, '''<div class="panel" id="panel">
+  <div class="minbar"><button class="pmin" id="pexpand" title="element details">‹</button><div class="minname" id="prailname">details</div></div>
+  <div id="walkbar" style="display:none"></div>
+  <div class="phead" id="phead"></div>
+  <div class="pbody" id="pbody"></div>
+  <div class="pfoot"><button class="pmin" title="minimize the panel to its rail" onclick="closePanel()">›</button></div>
+</div>''', 1)
+OLD_PHBTN = '''      +"<button class='pmin' title='minimize' onclick=\\"closePanel()\\">›</button>";'''
+assert OLD_PHBTN in text, "phead chevron anchor missing"
+text = text.replace(OLD_PHBTN, '      ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)')   # BOTH copies (link panel + node panel)
+OLD_UCGATE = 'if(!CFG.conns) return;'
+assert OLD_UCGATE in text, "updateConnectors conns gate anchor missing"
+text = text.replace(OLD_UCGATE, 'if(!CFG.conns||!CFG.showWires) return;', 1)
+OLD_LV2 = 'if((s&&!visN(s).show)||(t&&!visN(t).show)) return false; return !CFG.conns; }'
+assert OLD_LV2 in text, "linkVisFn anchor missing (wires gate)"
+text = text.replace(OLD_LV2, 'if(!CFG.showWires) return false; if((s&&!visN(s).show)||(t&&!visN(t).show)) return false; return !CFG.conns; }', 1)
+OLD_CHIP = 'var mk=function(x){ return E("span",{class:"pchip "+cls}, glyph?icoEl(glyph):null, x); };'
+assert OLD_CHIP in text, "chipList mk anchor missing"
+text = text.replace(OLD_CHIP,
+  'var mk=function(x){ var t=(x&&x.t!==undefined)?x.t:x, el=E("span",{class:"pchip "+cls}, glyph?icoEl(glyph):null, t);\n'
+  '      if(x&&x.id&&window.__uniHoverHL){ el.style.cursor="pointer";\n'
+  '        el.addEventListener("mouseenter",function(){ __uniHoverHL(x.id); });\n'
+  '        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); }); }\n'
+  '      return el; };', 1)
 
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
 OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();'

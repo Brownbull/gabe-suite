@@ -265,6 +265,26 @@ check('e.altKey' in page and 'key==="Escape"' in page, "Alt+scroll depth / Esc c
 check('function _jrnCollect' in page and '__uniJrnToggle' in page, "journeys collector/picker missing")
 check('ev.buttons&2' in page, "chord pan (left+right drag) missing")
 
+# ── 10o. batch 13: journeys LEFT+grouped+NAMED · banner · the WALK (steps + trail) · panel footer ·
+#         clusters-only + wires toggles · graph decoupled from the panel · chip-hover halo · gear sync ──
+check('#jrn{ position:fixed; left:calc' in page and '#jrn{ position:fixed; right:' not in page,
+      "journeys dropdown is not left-anchored")
+check('function _caseNames' in page and '(aggregated)' in page and 'jrngrp' in page,
+      "journeys are not named (det.cases join) / aggregates not labeled / groups missing")
+check("j.e2e=!!j.corpora.e2e" in page, "end-to-end journeys are not detected across corpora (aggregate rows span e2e+web)")
+check('id="hlban"' in page and 'function _walkRender' in page and 'var WALK={' in page,
+      "journey banner / walk machinery missing")
+check('data-wgo=' in page and 'wchip' in page and 'function _aimAt' in page,
+      "walk stepping (journey ‹›/trail chips + camera aim) missing")
+check('class="pfoot"><button class="pmin"' in page and "<button class='pmin' title='minimize'" not in page,
+      "the panel collapse chevron is not footer-only (it collides with the walk bar at the top)")
+check('showElems:true, showWires:true' in page and 'if(!CFG.conns||!CFG.showWires) return;' in page,
+      "the clusters-only / wires global gates are missing")
+check('data-fg="showElems"' in page and 'data-fg="showWires"' in page, "fleet global toggles (elements/wires) not built")
+check('#g{ right:0 !important; }' in page, "the graph still resizes with the right panel")
+check('__uniHoverHL(x.id)' in page and 'userData.__hov' in page, "connection-chip hover halo missing")
+check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un-minimize the config on show (state drift)")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",

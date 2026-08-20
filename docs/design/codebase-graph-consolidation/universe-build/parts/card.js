@@ -51,7 +51,7 @@
     function build(arr, dir){ var by={};
       arr.forEach(function(l){ var other=NIDS[dir==="out"?lid(l.target):lid(l.source)];
         var key=l.rel+"|"+dir+"|"+(other?other.kind:"ext"); if(!by[key]) by[key]={rel:l.rel, dir:dir, kind:other?other.kind:"external", items:[]};
-        by[key].items.push(other?other.label:(dir==="out"?lid(l.target):lid(l.source))); });
+        by[key].items.push(other?{t:other.label,id:other.id}:{t:(dir==="out"?lid(l.target):lid(l.source))}); });   // {t,id} → chip hover lights that node (white halo)
       return Object.keys(by).map(function(k){ var g=by[k];
         return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, function(){ return chipList(g.items, chipCls(g.kind), g.kind); }, g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
     var groups=build(outs,"out").concat(build(ins,"in"));
