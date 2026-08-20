@@ -54,7 +54,7 @@ CURVE_HELPERS = """function __uniCurve(A,B,dir,len){ var mid=A.clone().add(B).mu
   var up=new T.Vector3(0,1,0), perp=new T.Vector3().crossVectors(dir,up);
   if(perp.lengthSq()<1e-4) perp.set(1,0,0);
   perp.normalize(); perp.addScaledVector(up,0.5).normalize();          // bow out, biased slightly up
-  mid.addScaledVector(perp, Math.min(len*0.28, 40));                    // arc height ∝ length, capped
+  mid.addScaledVector(perp, Math.min(len*0.28, 40)*(window.__uniCurveAmt||1));   // arc height ∝ length, capped, × the curve-amount slider
   return new T.QuadraticBezierCurve3(A, mid, B).getPoints(24); }
 window.__uniToggleCurved=function(){ window.__uniCurved=!window.__uniCurved;
   try{ updateConnectors(); }catch(e){}
@@ -64,9 +64,20 @@ window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) r
   var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
 window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
   setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
-function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;"""
+function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;
+  var _bm=(window.__uniBeam && window.__uniBeam[kind]!=null)?window.__uniBeam[kind]:1; if(!_bm) return;"""
 assert "function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;" in text, "connectorWire anchor missing"
 text = text.replace("function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;", CURVE_HELPERS, 1)
+
+# ── batch 10: per-kind BEAM — opacity × beam (capped 1), additive blending past 1 so the wire glows ──
+OLD_SOLID = 'mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:cfg.trust});'
+assert OLD_SOLID in text, "connector solid-material anchor missing"
+text = text.replace(OLD_SOLID,
+  'mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm), blending:(_bm>1?T.AdditiveBlending:T.NormalBlending)});', 1)
+OLD_DASHM = 'mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:cfg.trust, dashSize:base[0]/dn, gapSize:base[1]/dn});'
+assert OLD_DASHM in text, "connector dashed-material anchor missing"
+text = text.replace(OLD_DASHM,
+  'mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm), blending:(_bm>1?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});', 1)
 OLD_GEO = "  var geo=new T.BufferGeometry().setFromPoints([A,B]), mat;"
 assert OLD_GEO in text, "connectorWire geometry line missing"
 text = text.replace(OLD_GEO, "  var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;", 1)
@@ -119,8 +130,8 @@ OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClust
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
   'else if(grp==="transports"){ buildTransports(); } '
-  'else if(grp==="entLayout"){ recomputeEX(CFG.entLayout); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
-  'else if(grp==="coreBy"){ assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
+  'else if(grp==="entLayout"){ __uniFreezeForSettle(); recomputeEX(CFG.entLayout); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
+  'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
   'else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } '
   'else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } '
   'else { buildClusters(); updateClusters(true); } }', 1)
@@ -142,6 +153,22 @@ assert OLD_CHARGE in text, "charge-force anchor missing"
 text = text.replace(OLD_CHARGE,
   '  try{ Graph.d3Force("charge").strength(-60).distanceMax(150); }catch(e){}\n'
   '  try{ tuneLinkForce(); }catch(e){}', 1)
+
+# ── batch 10: the settle RESUMES what __uniFreezeForSettle paused (layout/core/functions changes) ──
+OLD_STOP = '.onEngineStop(function(){ updateClusters(true);'
+assert OLD_STOP in text, "onEngineStop anchor missing"
+text = text.replace(OLD_STOP, '.onEngineStop(function(){ updateClusters(true); if(window.__uniSettleDone) window.__uniSettleDone();', 1)
+
+# ── batch 10 (review r2): BOTH bare buildCfg() call sites rebuild the FLAT panel and drop the tabs —
+#    re-tab after each (the .cfgtabbar guard makes __uniAddLayoutTab idempotent, state read from CFG) ──
+OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'
+assert OLD_PRESET in text, "URL-preset buildCfg anchor missing"
+text = text.replace(OLD_PRESET,
+  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); } })();', 1)
+OLD_DRIVE = 'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); buildClusters(); updateClusters(true); }'
+assert OLD_DRIVE in text, "?drive buildCfg anchor missing"
+text = text.replace(OLD_DRIVE,
+  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); buildClusters(); updateClusters(true); }', 1)
 
 # (orbit-around-click is now a pointerdown re-pivot in __uniSetupOrbit — batch 7; the old click-based
 #  approach never fired on a drag, so it is not re-applied here.)

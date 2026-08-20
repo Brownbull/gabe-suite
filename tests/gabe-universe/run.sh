@@ -157,6 +157,34 @@ check('strength(-60).distanceMax(150)' in page, "charge not range-capped (unboun
 check('.strength(-150)' not in page, "REGRESSION: the unbounded -150 charge is back")
 check('DEF={x:150,y:80,z:780}' in page, "home camera not pulled back for the widened (SEP 1.55) scene")
 
+# ── 10k. batch-10: freeze-through-settle · ROUTES tab · icon LINES + curve amount · per-kind BEAM ──
+check('function __uniFreezeForSettle' in page and 'window.__uniSettleDone' in page, "freeze/resume machinery missing")
+check('updateClusters(true); if(window.__uniSettleDone) window.__uniSettleDone();' in page,
+      "the engine settle does not resume what the layout freeze paused")
+check('grp==="coreBy"){ __uniFreezeForSettle();' in page and 'grp==="entLayout"){ __uniFreezeForSettle();' in page,
+      "layout/core changes do not freeze animations before the reheat")
+check('grp==="coreBy"){ assignSub' not in page and 'grp==="entLayout"){ recomputeEX' not in page,
+      "REGRESSION: a layout/core branch reheats without freezing")
+check('data-pane="routes"' in page, "the ROUTES config tab is missing")
+check('M4 19 20 5' in page and 'M4 19 C 8 5 16 5 20 12' in page, "the LINES pill icons (straight/curved SVG) are missing")
+check('{v:"straight",t:"Straight"}' not in page, "REGRESSION: the LINES pill is back to text labels")
+check('id="curveAmtRng"' in page and '*(window.__uniCurveAmt||1)' in page,
+      "curve-amount slider missing or __uniCurve ignores it")
+check('window.__uniBeam={ fk:1' in page and 'if(!_bm) return;' in page and 'cfg.trust*_bm' in page,
+      "per-kind beam missing (declare + skip-at-0 + opacity multiply)")
+check('beamRow("fk")+beamRow("bridge")+beamRow("calls")+beamRow("imports")' in page,
+      "the four per-kind beam sliders are not built")
+check("'[data-itog=\"transports\"]'" in page, "the transports toggle is not DOM-moved into the Routes pane")
+# review r2 (mutation-proven interleaves, all headless-verified):
+check('mo.onclick=function(){ window.__uniSettleCancel();' in page,
+      "motionBtn does not cancel the pending settle auto-resume (a pause DURING the settle gets stomped)")
+check('if(window.__uniDragging) return;' in page and '__uniDragging=true;' in page,
+      "the settle resume does not defer while a camera drag is held")
+check('if(window.__uniSettleDone) window.__uniSettleDone(); });   // release' in page,
+      "pointerup does not release a settle resume deferred mid-drag")
+check(page.count('if(window.__uniAddLayoutTab) __uniAddLayoutTab()') == 3,
+      "not all 3 buildCfg call sites re-tab (boot + URL-preset + ?drive) — a preset URL would drop the Routes tab")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
