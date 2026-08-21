@@ -93,6 +93,10 @@ Operator's diagnostic protocol ran first (real-UI journey select → screenshots
 
 Journey stepper back IN the header bar, centered ([‹][i/N · name][›][✕], real Lucide chevron/x buttons in 32px squares — the text glyphs sat skewed). FLIGHT: hold W/A/S/D + Space (up) + Ctrl (down) — the whole rig flies, speed scales with zoom, keys clear on blur. Engineering: the fly tick is **setInterval(16), not rAF** — this headless profile starves free-running rAF chains (measured 1 tick/400ms); anything proof-critical must not depend on free-running rAF. Battery **182 static**.
 
+## ALLERGEN REDUCTION — EXECUTED (option B): gustify `52a56d03` + suite `8b49c6c`
+
+The "endpoints piling on allergen" root cause: allergen's gustify config claimed FOUR whole router files → 32 co-homed endpoint clones; the adapter's alphabetical first-home dedup made allergen swallow all of them on screen. Fixed at the MODEL (the deferred half of the 2026-08-14 entity-shape ruling): dropped the router claims — allergen = the honest aspect (6 models + 7 schemas, 0 endpoints), all 67 endpoints single-homed under their domains, **S9 aspect finding CLEARED** (17 domains · 0 unclaimed), gustify chrome harness 524/0. Example feeds rebuilt via the twin-READ-ONLY lab run (`GABE_REPO_ROOT=<twin> GABE_CENTER_OUT=<scratch> python3 templates/center/generators/build_center_a3.py` — THE recipe, twin verified untouched). Proof updates measured-not-loosened: per-entity ring metric (1.76/7 ents), anchor floor 180, journeys pin self-consistent (visible floor 90). Gustify push still owed (operator word).
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
