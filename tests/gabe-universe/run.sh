@@ -295,7 +295,8 @@ check('.panel .minbar .pmin{ order:2; margin-top:auto; }' in page,
       "the collapsed rail's expand chevron is not at the BOTTOM (parity with the expanded footer)")
 check('function _rigStart' in page and '(ev.buttons&1) && (ev.buttons&2)' in page,
       "chord late-join missing (chorded presses fire no pointerdown — the move stream must start the drag)")
-check('if(drag && ev.button!==0) return;' in page, "releasing RIGHT mid-chord kills the left drag")
+check('if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;' in page,
+      "only the drag-owning button may end a drag (chord releases keep it alive)")
 check('data-wgo=' in page and 'wchip' in page and 'function _aimAt' in page,
       "walk stepping (journey ‹›/trail chips + camera aim) missing")
 check('class="pfoot"><button class="pmin"' in page and "<button class='pmin' title='minimize'" not in page,
@@ -313,6 +314,18 @@ check('{v:"ring",t:"Ring"' in page and 'mode==="ring"' in page, "the RING entity
 check('{v:"spread"' not in page and 'mode==="spread"' not in page, "REGRESSION: the useless spread layout is back")
 check('SEP=(mode==="ring")?1.0:1.85' in page, "force-layout anchors are not widened (operator: entities too close)")
 check('RENT[e]*0.78' in page, "sub-cluster rings are not widened (operator: clusters too close inside entities)")
+
+# ── 10r. batch 18: focus rest behaviors · controls panel · Q/E yaw · invert mouse · middle=selection ──
+check('rest:"hide"' in page and 'var _RESTF={ dim:0.25, fade:0.08' in page and 'pillHTML("focusRest"' in page,
+      "FOCUS rest behaviors (dim/fade/wires/hide) missing from the Routes config")
+check('HL.rest==="hide"' in page, "only the HIDE behavior may remove planets (dim/fade/wires keep them)")
+check('id="ctrlp"' in page and '__uniBuildCtrl' in page and 'class="kbd"' in page,
+      "the bottom-right CONTROLS panel is missing")
+check('id="ctlInv"' in page and 'id="ctlPvt"' in page and '__uniApplyMouseMap' in page,
+      "invert-mouse / middle-orbit toggles missing")
+check('k==="q"' in page and 'ya*0.022' in page, "Q/E turn-in-place missing from the flight keys")
+check('UNICTL.invert?2:0' in page and 'drag.btn=1' in page and 'UNICTL.selPivot' in page,
+      "invertable drag button / middle-orbits-selection missing")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

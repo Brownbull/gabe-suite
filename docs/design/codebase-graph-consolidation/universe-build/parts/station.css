@@ -211,6 +211,15 @@
   #fleet .fltog.flstog.on{ background:#0b7a63; border-color:#0ca678; }
   #fleet .fltog.mdim{ opacity:.35; }   /* the column's GLOBAL master is off (zonesoff pattern) — cell does nothing until it flips */
   .fleethid{ font-size:11px; color:var(--red); border:1px dashed var(--red); border-radius:6px; padding:4px 8px; margin:0 0 8px; }
+  /* ── CONTROLS panel: bottom-right square (tracks the card rail), minimizable ── */
+  #ctrlp{ position:fixed; right:calc(var(--rail) + 12px); bottom:12px; top:auto !important; left:auto; z-index:44;
+    width:230px; transition:right .2s ease; }
+  #ctrlp .ctlrow{ display:flex; align-items:center; gap:5px; padding:2px 0; }
+  #ctrlp .kbd{ font:700 9.5px/1 var(--font-mono); color:var(--ink); background:#0e1524; border:1px solid var(--edge);
+    border-bottom-width:2px; border-radius:5px; padding:3px 6px; }
+  #ctrlp .ctll{ font-size:10px; color:var(--muted); margin-right:6px; }
+  #ctrlp .ctltog .fltog{ width:20px; height:16px; border:1px solid var(--line); border-radius:4px; background:none; cursor:pointer; padding:0; flex:none; }
+  #ctrlp .ctltog .fltog.on{ background:var(--accent); border-color:var(--accent); }
   /* keep <code> inline chips readable in the dark card */
   .pbody code{ font-family:var(--font-mono); background:#0e1524; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
   nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}

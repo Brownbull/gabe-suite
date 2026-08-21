@@ -339,7 +339,7 @@ text = text.replace(OLD_CHIP,
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
 OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();'
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
-text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar();', 1)
+text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); if(window.__uniApplyMouseMap) setTimeout(__uniApplyMouseMap, 2500);', 1)   # mouse map lands after the async Graph boot
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")

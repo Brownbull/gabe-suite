@@ -157,6 +157,9 @@ function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quater
   cam.position.sub(P).applyQuaternion(q).add(P);   // rotate the camera RIG (position + orientation) rigidly about P
   target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
   cam.quaternion.premultiply(q); }
+window.UNICTL={ invert:false, selPivot:true };   // controls panel state: swap mouse buttons · middle = orbit the selection
+window.__uniApplyMouseMap=function(){ try{ var c=Graph.controls(); if(!c) return; var M=T.MOUSE;
+  c.mouseButtons={ LEFT: UNICTL.invert?M.PAN:M.ROTATE, MIDDLE: M.DOLLY, RIGHT: UNICTL.invert?M.ROTATE:M.PAN }; }catch(e){} };
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
   /* the rig-drag starter — shared by pointerdown (left pressed first) AND the move stream (left
      JOINS an active right-pan: chorded presses fire NO pointerdown per the pointer-events spec,
@@ -170,14 +173,25 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       ctrls.enabled=false; window.__uniDragging=true;
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
       return { P:P, lx:cx, ly:cy }; }catch(e){ return null; } }
-  g.addEventListener("pointerdown", function(ev){ if(ev.button!==0) return; drag=_rigStart(ev.clientX, ev.clientY); }, true);
+  function _rigStartP(P){ try{ var ctrls=Graph.controls(); if(!ctrls) return null;
+      ctrls.enabled=false; window.__uniDragging=true;
+      if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
+      return { P:new T.Vector3(P.x,P.y,P.z), lx:0, ly:0 }; }catch(e){ return null; } }
+  g.addEventListener("pointerdown", function(ev){
+    var OB=UNICTL.invert?2:0;
+    if(ev.button===1 && UNICTL.selPivot && typeof SEL!=="undefined" && SEL && SEL.kind==="node" && SEL.data && SEL.data.x!=null){
+      ev.preventDefault();                                       // middle = orbit the SELECTED planet (and no browser autoscroll)
+      drag=_rigStartP(SEL.data); if(drag){ drag.lx=ev.clientX; drag.ly=ev.clientY; drag.btn=1; } return; }
+    if(ev.button!==OB) return;
+    drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=OB; }, true);
   g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
   window.addEventListener("pointermove", function(ev){
-    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(!drag) return; }   // left joined a right-pan mid-stream
+    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=UNICTL.invert?2:0; if(!drag) return; }   // orbit button joined a pan mid-stream
     if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
-      if(ev.buttons&2){                                                     // CHORD (left+right): BOTH at once — the rig DRIFTS (half-strength pan)
+      var CB=UNICTL.invert?1:2;                                             // the PAN side of the chord (respects the invert toggle)
+      if(ev.buttons&CB && drag.btn!==1){                                      // CHORD: BOTH at once — the rig DRIFTS (half-strength pan)
         var kd=cam.position.distanceTo(ctrls.target)*0.00055;               // while the same delta keeps orbiting below
         var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
         var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
@@ -190,7 +204,7 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, -dy*0.006);
     }catch(e){} });
   window.addEventListener("pointerup", function(ev){
-    if(drag && ev.button!==0) return;   // releasing RIGHT mid-chord keeps the left drag alive — orbit resumes clean
+    if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;   // only the drag-OWNING button ends it (chord releases keep it alive)
     if(drag){ var ctrls=Graph.controls(); drag=null; window.__uniDragging=false; if(ctrls){ ctrls.enabled=true; try{ ctrls.update(); }catch(e){} } }
     if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true; var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } }
     if(window.__uniSettleDone) window.__uniSettleDone(); });   // release a resume the settle deferred mid-drag (no-op otherwise)
@@ -227,7 +241,7 @@ zForce.initialize=function(ns){ zForce.__n=ns; };
    Two styles: GLOW (halo the reached set, dim the rest of the wires) · FOCUS (hide everything
    outside the set; hulls stay as geography). Alt+scroll changes depth; Esc clears. The journeys
    picker feeds the SAME machinery with a carrier set instead of a single origin. */
-var HL={ on:false, mode:"glow", depth:3, origin:null, jr:null, set:{}, links:null, sprites:[] };
+var HL={ on:false, mode:"glow", depth:3, rest:"hide", origin:null, jr:null, set:{}, links:null, sprites:[] };   // rest = focus's treatment of the OUTSIDE: dim · fade · wires · hide
 function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   var adj={}; links.forEach(function(l){ var s=lid(l.source), t=lid(l.target);
     (adj[s]=adj[s]||[]).push(t); (adj[t]=adj[t]||[]).push(s); });
@@ -237,10 +251,12 @@ function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
     (adj[u]||[]).forEach(function(v){ if(depth[v]===undefined){ depth[v]=depth[u]+1; q.push(v); } }); }
   HL.set=depth; HL.links=new Set();
   links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
+var _RESTF={ dim:0.25, fade:0.08, wires:0, hide:0 };                     // focus rest-factor per behavior
 window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
-  if(HL.links.has(l)) return 2.6; return HL.mode==="focus"?0:1; };      // GLOW brightens the set and leaves the rest ALONE; only FOCUS removes (operator spec)
+  if(HL.links.has(l)) return 2.6;
+  return HL.mode==="focus" ? _RESTF[HL.rest] : 1; };                     // GLOW leaves the rest ALONE; FOCUS applies the chosen rest behavior
 function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;   // the ONE node-visibility truth (fleet show ∧ planets ∧ focus)
-  if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
+  if(HL.on && HL.mode==="focus" && HL.rest==="hide" && HL.set[n.id]===undefined) return false; return true; }   // only the HIDE behavior removes planets — dim/fade/wires keep them
 var hlGroup=null;
 function _hlGroup(){ if(!hlGroup && typeof Graph!=="undefined" && Graph){ hlGroup=new T.Group(); Graph.scene().add(hlGroup); } return hlGroup; }
 function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=hlGroup.children.pop(); hlGroup.remove(s); } } HL.sprites=[]; }
@@ -370,6 +386,24 @@ var _hovSprite=null;
 window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _hovSprite.parent.remove(_hovSprite); }catch(e){} _hovSprite=null; }
   if(!id) return; var n=NIDS[id]; if(!n||!n.__threeObj) return;
   _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite); };
+/* ── CONTROLS panel (bottom-right): the navigation cheat-sheet + mouse toggles ── */
+window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
+  var p=document.createElement("div"); p.className="cfg ctrlp"; p.id="ctrlp";
+  var KB=function(k){ return '<b class="kbd">'+k+'</b>'; };
+  p.innerHTML='<div class="cfghead" id="ctrlphead"><span class="cfgtitle">'+(typeof ico==="function"?ico("target",13):"")+'Controls</span>'
+    +'<button class="cfgmin" id="ctrlpmin" title="minimize">–</button></div>'
+    +'<div class="cfgbody">'
+    +'<div class="ctlrow">'+KB("W")+KB("A")+KB("S")+KB("D")+'<span class="ctll">move</span></div>'
+    +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
+    +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+scroll")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="swap the mouse buttons: left pans, right orbits"></button><span class="ctll">invert mouse (left↔right)</span></div>'
+    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.selPivot?" on":"")+'" id="ctlPvt" title="middle-drag orbits around the SELECTED planet"></button><span class="ctll">middle = orbit selection</span></div>'
+    +'</div>';
+  document.body.appendChild(p);
+  document.getElementById("ctrlpmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
+  document.getElementById("ctlInv").onclick=function(){ UNICTL.invert=!UNICTL.invert; this.classList.toggle("on",UNICTL.invert); __uniApplyMouseMap(); };
+  document.getElementById("ctlPvt").onclick=function(){ UNICTL.selPivot=!UNICTL.selPivot; this.classList.toggle("on",UNICTL.selPivot); }; };
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
   var dr=document.getElementById("depthRng"); if(dr&&!dr.__w){ dr.__w=1;
@@ -379,11 +413,11 @@ window.__uniWireTopbar=function(){
   if(!window.__uniFly){ window.__uniFly=1; var FK={};
     var _flyOK=function(e){ var tag=(e.target&&e.target.tagName)||""; return tag!=="INPUT"&&tag!=="TEXTAREA"; };
     window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
-      if(k==="w"||k==="a"||k==="s"||k==="d"){ FK[k]=1; }
+      if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e"){ FK[k]=1; }
       else if(k===" "){ FK.up=1; e.preventDefault(); }        // Space = ascend (and never scrolls/clicks)
       else if(k==="control"){ FK.dn=1; } });
     window.addEventListener("keyup", function(e){ var k=e.key.toLowerCase();
-      if(k==="w"||k==="a"||k==="s"||k==="d") delete FK[k];
+      if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e") delete FK[k];
       else if(k===" ") delete FK.up; else if(k==="control") delete FK.dn; });
     window.addEventListener("blur", function(){ for(var k in FK) delete FK[k]; });
     setInterval(function _flyTick(){                                        // setInterval, NOT rAF: headless/background pages starve rAF chains (measured 1 tick/400ms) — the flight must tick everywhere
@@ -396,6 +430,11 @@ window.__uniWireTopbar=function(){
         if(FK.w) off.add(fwd); if(FK.s) off.sub(fwd);
         if(FK.d) off.add(rgt); if(FK.a) off.sub(rgt);
         if(FK.up) off.y+=sp; if(FK.dn) off.y-=sp;
+        if(FK.q||FK.e){                                        // Q/E = turn IN PLACE (yaw about world-up through the camera)
+          var ya=(FK.q?1:0)-(FK.e?1:0), qq=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0), ya*0.022);
+          cam.quaternion.premultiply(qq);
+          var rel=new T.Vector3().subVectors(ctrls.target, cam.position).applyQuaternion(qq);
+          ctrls.target.copy(cam.position).add(rel); }
         if(!off.lengthSq()) return;
         cam.position.add(off); ctrls.target.add(off);          // the whole rig flies — orbiting keeps working wherever you stop
       }catch(e){} }, 16); }
@@ -626,6 +665,12 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + '<div class="cfgrow" style="gap:6px">'
     + pillHTML("lineStyle",[{v:"straight",t:LNS,ti:"straight"},{v:"curved",t:LNC,ti:"curved"}], CFG.lineStyle)
     + '<input type="range" class="rng" id="curveAmtRng" min="0.2" max="2.5" step="0.1" value="'+window.__uniCurveAmt+'" title="curve amount (when curved)"></div></div>'
+    + '<div class="grp"><div class="grplbl" title="what FOCUS does to everything OUTSIDE the highlighted set — hover each option">FOCUS</div>'
+    + pillHTML("focusRest",[
+        {v:"dim",t:"Dim",ti:"outside wires drop to 25% — everything stays readable"},
+        {v:"fade",t:"Fade",ti:"outside wires nearly vanish (8%) — planets stay"},
+        {v:"wires",t:"Wires",ti:"outside wires GONE — planets stay as context"},
+        {v:"hide",t:"Hide",ti:"outside wires AND planets gone — hulls stay as geography"}], HL.rest)+'</div>'
     + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
     + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
     + '<div style="font-size:10px;color:var(--muted);margin-top:2px">per kind: sample · color · shape · beam (0 hides · past 1 glows)</div></div>';
@@ -657,6 +702,10 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var tsr=document.getElementById("trSpeedRng");   // transport-speed slider → INTC.speed (read live by tickTransports)
   if(tsr) tsr.addEventListener("input", function(){ if(typeof INTC!=="undefined") INTC.speed=+this.value; });
   var _rAF=null, redraw=function(){ if(_rAF) return; _rAF=requestAnimationFrame(function(){ _rAF=null; try{ updateConnectors(); }catch(e){} }); };
+  rt.querySelectorAll('.pill[data-grp="focusRest"] button').forEach(function(b){ b.addEventListener("click", function(){
+    HL.rest=b.getAttribute("data-v");
+    b.closest(".pill").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    if(HL.on && HL.mode==="focus") _hlRestyle(); }); });
   var car=document.getElementById("curveAmtRng");  // curve amount is LIVE while curved (rAF-debounced full connector redraw)
   if(car) car.addEventListener("input", function(){ window.__uniCurveAmt=+this.value; if(window.__uniCurved) redraw(); });
   rt.querySelectorAll("input[data-beam]").forEach(function(s){ s.addEventListener("input", function(){
