@@ -67,7 +67,9 @@ await p.evaluate(() => { __uniHLMode(); });   // back to glow default for journe
 
 // [5] journeys: picker lists them all; picking one highlights its carriers
 const jrnList = await p.evaluate(() => { __uniJrnToggle();
-  return { rows: document.querySelectorAll('#jrn .jrnrow').length, open: document.getElementById('jrn').style.display !== 'none' }; });
+  const distinct = new Set(); nodes.forEach(n => ((n.det && n.det.test_journeys) || []).forEach(j => j.cid && distinct.add(j.cid)));
+  return { rows: document.querySelectorAll('#jrn .jrnrow').length, distinct: distinct.size,
+    open: document.getElementById('jrn').style.display !== 'none' }; });
 await p.evaluate(() => { document.querySelectorAll('#jrn .jrnrow')[1].click(); });
 await raf(); await p.waitForTimeout(700);
 const jrnSel = await p.evaluate(() => ({ on: HL.on, jr: HL.jr, carriers: HL.origin.length,
@@ -110,7 +112,7 @@ if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dim 
 if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+scroll depth broken');
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');
-if (!(jrnList.rows === 136 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');
+if (!(jrnList.rows === jrnList.distinct + 1 && jrnList.distinct > 40 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');   // rows = every distinct cid + the none row (the visible floor moves with the model)
 if (!(chord.joined && chord.chordTurned && chord.chordDrifted && chord.aliveAfterRightUp && chord.rotContinued && chord.ended)) fails.push('chord both-at-once broken');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('EXPLORE PROOF: ALL PASS');
