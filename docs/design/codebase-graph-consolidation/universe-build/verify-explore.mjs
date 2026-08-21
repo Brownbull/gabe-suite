@@ -20,10 +20,13 @@ const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => 
 
 // [1] layer ruling (c): un-collapsed groups — endpoints + web appear, "frontend" is gone
 const layer = await p.evaluate(() => {
+  const defaultCore = CFG.coreBy;                       // community when the levels feed is present (operator default)
+  CFG.coreBy = 'layer'; assignSub('layer');
   const subs = {}; nodes.forEach(n => { subs[n.sub] = 1; });
   const epSep = nodes.filter(n => n.kind === 'endpoint').every(n => n.sub === 'endpoints');
   const webOwn = nodes.filter(n => n.kind === 'web').every(n => n.sub === 'web');
-  return { groups: Object.keys(subs).sort(), epSep, webOwn, noFrontend: !subs.frontend };
+  CFG.coreBy = defaultCore; assignSub(defaultCore);
+  return { groups: Object.keys(subs).sort(), epSep, webOwn, noFrontend: !subs.frontend, defaultCore };
 });
 
 // [2] topbar: icons only, repo pills FAR right, controls present
@@ -41,9 +44,10 @@ await p.evaluate(() => { const n = nodes.find(x => x.kind === 'endpoint'); windo
 await raf(); await p.waitForTimeout(700);
 const glow = await p.evaluate(() => {
   const inSet = Object.keys(HL.set).length;
-  let lit = 0, dim = 0; connGroup.children.forEach(w => { if (w.material.blending === THREE.AdditiveBlending) lit++;
-    else if (w.material.opacity < 0.3) dim++; });
-  return { on: HL.on, depth: HL.depth, inSet, sprites: HL.sprites.length, lit, dim, total: connGroup.children.length };
+  let lit = 0, dimmed = 0, minRest = 1; connGroup.children.forEach(w => { if (w.material.blending === THREE.AdditiveBlending) lit++;
+    else { if (w.material.opacity < 0.3) dimmed++; minRest = Math.min(minRest, w.material.opacity); } });
+  return { on: HL.on, depth: HL.depth, inSet, sprites: HL.sprites.length, lit, dimmed, minRest: +minRest.toFixed(2),
+    haloGrouped: HL.sprites.every(s => s.parent && s.parent.parent === Graph.scene()), total: connGroup.children.length };
 });
 // Alt+scroll changes depth (recompute follows); click cycles
 await p.evaluate(() => { window.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, altKey: true })); });
@@ -77,6 +81,20 @@ const jrnSel = await p.evaluate(() => ({ on: HL.on, jr: HL.jr, carriers: HL.orig
 await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); });
 await p.waitForTimeout(500);
 
+// [5b] RING layout: circle radii equal, flat, generously spaced
+await p.evaluate(() => { CFG.entLayout = 'ring'; applyCfg('entLayout'); });
+await raf(); await p.waitForTimeout(1200);
+const ring = await p.evaluate(() => {
+  const rs = Object.keys(EX).map(e => Math.hypot(EX[e], EZ[e]));
+  const ys = Object.keys(EX).map(e => Math.abs(EY[e]));
+  let minPair = 1e9; const ks = Object.keys(EX);
+  for (let i = 0; i < ks.length; i++) for (let j = i + 1; j < ks.length; j++)
+    minPair = Math.min(minPair, Math.hypot(EX[ks[i]] - EX[ks[j]], EY[ks[i]] - EY[ks[j]], EZ[ks[i]] - EZ[ks[j]]));
+  return { rSpread: +(Math.max(...rs) - Math.min(...rs)).toFixed(1), rMin: Math.round(Math.min(...rs)),
+    flat: Math.max(...ys) < 1, minPair: Math.round(minPair) };
+});
+await p.evaluate(() => { CFG.entLayout = 'force'; applyCfg('entLayout'); });
+await p.waitForTimeout(1000);
 // [6] chord pan: left-drag rotates (quaternion turns); left+right pans (quaternion frozen, rig translates)
 const chord = await p.evaluate(() => new Promise(res => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
@@ -101,18 +119,20 @@ console.log('topbar:', JSON.stringify(topbar));
 console.log('glow:', JSON.stringify(glow), '· wheel →', JSON.stringify(wheel));
 console.log('focus:', JSON.stringify(focus), '· esc →', JSON.stringify(cleared));
 console.log('journeys:', JSON.stringify(jrnList), '→', JSON.stringify(jrnSel));
+console.log('ring:', JSON.stringify(ring));
 console.log('chord:', JSON.stringify(chord));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
 if (errs.length) fails.push('page/console errors');
-if (!(layer.epSep && layer.webOwn && layer.noFrontend)) fails.push('layer ruling (c) not applied');
+if (!(layer.epSep && layer.webOwn && layer.noFrontend && layer.defaultCore === 'community')) fails.push('layer ruling (c) / community default wrong');
 if (!(topbar.pillsLast && topbar.depth && topbar.mode && topbar.jrn && topbar.freezeIconOnly && topbar.resetIconOnly)) fails.push('topbar rework wrong');
-if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dim > 0)) fails.push('glow highlight broken');
+if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dimmed === 0 && glow.minRest >= 0.4 && glow.haloGrouped)) fails.push('glow highlight broken (rest must stay BRIGHT; halos in the scene group)');
 if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+scroll depth broken');
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');
 if (!(jrnList.rows === jrnList.distinct + 1 && jrnList.distinct > 40 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');   // rows = every distinct cid + the none row (the visible floor moves with the model)
 if (!(chord.joined && chord.chordTurned && chord.chordDrifted && chord.aliveAfterRightUp && chord.rotContinued && chord.ended)) fails.push('chord both-at-once broken');
+if (!(ring.rSpread < 2 && ring.flat && ring.rMin >= 420 && ring.minPair > 250)) fails.push('ring layout broken (circle, flat, spaced)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('EXPLORE PROOF: ALL PASS');

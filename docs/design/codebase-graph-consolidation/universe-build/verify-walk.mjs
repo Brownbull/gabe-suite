@@ -44,7 +44,7 @@ const visual = await p.evaluate(() => {
   cx /= n; cy /= n; cz /= n; let r = 0;
   HL.origin.forEach(id => { const nd = NIDS[id]; if (nd) r = Math.max(r, Math.hypot(nd.x - cx, nd.y - cy, nd.z - cz)); });
   const camD = Graph.camera().position.distanceTo(new THREE.Vector3(cx, cy, cz));
-  return { maxDim: Math.max(...dims, 0), moversOnPath, movers: MOVERS.length, camD: Math.round(camD), setR: Math.round(r) };
+  return { maxDim: Math.max(...dims, 0), minRest: +Math.min(...dims, 1).toFixed(2), moversOnPath, movers: MOVERS.length, camD: Math.round(camD), setR: Math.round(r) };
 });
 // step forward twice: camera aims, the card opens each carrier, the lit path SURVIVES stepping
 const camBefore = await p.evaluate(() => Graph.camera().position.toArray());
@@ -159,7 +159,7 @@ if (!(jrn.centered && jrn.e2eFirst && jrn.named > 50)) fails.push('journeys cent
 if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown)) fails.push('journey HUD (topbar middle) wrong');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
 if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');
-if (!(visual.maxDim <= 0.055 && visual.moversOnPath && visual.camD > visual.setR)) fails.push('highlight visual floors broken (dim/movers/framing)');
+if (!(visual.minRest >= 0.4 && visual.moversOnPath && visual.camD > visual.setR)) fails.push('highlight visual floors broken (glow keeps the rest bright; movers on path; framed outside)');
 if (!(pw.nodesGone && pw.hullStays && pw.wiresScoped && pw.nodesBack)) fails.push('planets/wires matrix columns broken');
 if (!(depth.atFive && depth.down && depth.up)) fails.push('depth slider / arrow keys broken');
 if (!(foot.onScreen && foot.bodyScrolls)) fails.push('panel footer scrolls off screen');

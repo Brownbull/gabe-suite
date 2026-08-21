@@ -56,7 +56,8 @@ FIX = {"head": "cafef00d", "generated": "2026-01-01 00:00Z", "entities": {
     ],
     "schemas": [{"cls": "AlphaOut"}, {"cls": "Dup"}],   # class-name tie with model Dup
     "endpoints": [{"method": "GET", "path": "/alpha", "fn": "get_alpha",
-                   "touches": ["AlphaOut", "Dup"]}],    # own only (real shape)
+                   "touches": ["AlphaOut", "Dup"],      # own only (real shape)
+                   "touches_x": ["B", "SomeLibClass"]}],  # unowned residue: B = beta's model → a cross touches edge; the lib name drops
   },
   "beta": {
     "files": [["api", "apps/api/beta.py", 50]],
@@ -75,6 +76,19 @@ LABELS = {"alpha": "Alpha", "beta": "Beta", "gamma": "Gamma"}
 STATUS = {"alpha": "approved", "beta": "pending"}
 
 g = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
+
+# ── cross-entity TOUCHES (2026-08-20, the allergen-reduction exposure): an endpoint's
+#    unowned residue (touches_x) resolves against the GLOBAL class index → a cross_edges
+#    kind "touches"; unresolvable names (library classes) drop silently; stats count it. ──
+_xt = [e for e in g["cross_edges"] if e.get("kind") == "touches"]
+check(len(_xt) == 1 and _xt[0]["from"] == "endpoint:GET /alpha" and _xt[0]["to"] == "model:B"
+      and _xt[0]["from_slug"] == "alpha" and _xt[0]["to_slug"] == "beta",
+      "touches_x residue does not become ONE resolved cross-entity touches edge")
+check(g["stats"].get("cross_touches") == 1, "stats.cross_touches does not count the aspect wires")
+check(not any("SomeLibClass" in json.dumps(e) for e in g["cross_edges"]),
+      "an unresolvable library class leaked into cross_edges")
+check(all("xtouch" not in sub for sub in g["l2"].values()),
+      "the xtouch working list leaked into the emitted l2 JSON")
 l1n = {n["id"]: n for n in g["l1"]["nodes"]}
 l1e = {(e["source"], e["target"]): e for e in g["l1"]["edges"]}
 
@@ -477,9 +491,10 @@ with tempfile.TemporaryDirectory() as _td:
 # alpha.A has 4 FKs: self a.id (intra) · b.id + b.x (both → beta model:B) · legacy_x
 # (unclaimed). Only the two beta FKs are cross-entity piece edges; intra + unclaimed
 # are excluded. Both target table b → model:B (the deduped owner). via keeps the col.
-xe = g["cross_edges"]
-check(g["stats"]["cross_edges"] == len(xe) == 2,
-      "cross_edges has exactly the 2 cross-entity FKs (intra + unclaimed excluded)")
+xa = g["cross_edges"]
+xe = [e for e in xa if "via" in e]   # FK cross-edges — touches edges carry kind, no via
+check(g["stats"]["cross_edges"] == len(xa) == 3 and len(xe) == 2,
+      "cross_edges = 2 cross-entity FKs + 1 touches (intra + unclaimed excluded)")
 check(all(e["from_slug"] == "alpha" and e["from"] == "model:A"
           and e["to_slug"] == "beta" and e["to"] == "model:B" for e in xe),
       "each cross edge resolves BOTH ends to the specific model piece")

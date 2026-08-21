@@ -100,7 +100,7 @@ check('__chainMode' in page, "mode-aware zForce (chain vs force/spread) missing"
 check('grp==="entLayout"' in page and 'grp==="coreBy"' in page, "applyCfg missing the entLayout/coreBy branches")
 check('d3ReheatSimulation' in page, "entity-layout change never reheats the sim (nodes would not move)")
 check('window.__uniAddLayoutTab' in page and 'cfgtabbar' in page, "the Display|Layout config tab is missing")
-check('recomputeEX(CFG.entLayout); recomputeSubAnchors(); }catch(e){} build' in page, "the initial layout + sub-anchors are not applied before build()")
+check('recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build' in page, "boot does not assign the default core before the sub-anchors")
 # FIRE+SILENT: force/spread compute 3D anchors (EY/EZ), not just a flat X band
 check('EY[e]=0; EZ[e]=0;' in page and ('EY[s]=Math.round' in page or 'EZ[s]=Math.round' in page),
       "EY/EZ 3D entity anchors not computed — force/spread would stay flat")
@@ -257,7 +257,9 @@ check('kind, R, hf)' in page and "8, (window._hlLinkF?_hlLinkF(l):1))" in page,
       "connector wires ignore the highlight factor")
 check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
       "node visibility does not go through the shared fn (focus mode dead)")
-check('requestAnimationFrame(__uniHLReapply)' in page, "glow halos are not restored after a node rebuild")
+check('var hlGroup=' in page and '__uniHLTick' in page and 'if(window.__uniHLTick) __uniHLTick();' in page,
+      "halos are not an independent scene group with a per-tick follow (node rebuilds would kill them)")
+check('requestAnimationFrame(__uniHLReapply)' not in page, "REGRESSION: halos back to riding node objects via a rAF reapply")
 check('id="depthBtn"' in page and 'id="hlModeBtn"' in page and 'id="jrnBtn"' in page, "topbar depth/mode/journeys buttons missing")
 check(page.find('id="reset"') < page.find('<div class="statuspills">'), "repo pills are not at the FAR right of the topbar")
 check('❄ Freeze on drag' not in page, "REGRESSION: freeze button back to text (icons only, explanation on hover)")
@@ -284,7 +286,8 @@ check('setInterval(function _flyTick(){' in page and 'FK.up' in page and 'k==="c
       "WASD/Space/Ctrl flight missing (setInterval tick — headless/background pages starve rAF)")
 check('id="depthRng"' in page and 'ArrowUp' in page and 'ArrowDown' in page,
       "depth is not a draggable 1–5 bar with arrow-key fallback")
-check('?0:0.05' in page and 'return 2.6;' in page, "highlight contrast floors missing (dim 0.05 · lit 2.6 — 0.18 read as noise on screen)")
+check('?0:1' in page and 'return 2.6;' in page, "glow must brighten the set and leave the rest ALONE (dim belongs to focus only)")
+check('?0:0.05' not in page and '?0:0.18' not in page, "REGRESSION: glow dims the rest of the graph again")
 check('shuttles fly the lit path only' in page, "transports roam off the lit path during a highlight")
 check('function _frameSet' in page, "journey select does not frame the whole carrier set (the camera dived into the wire jungle)")
 check('body.panel-open .panel .pbody{ overflow-y:auto' in page, "the card body does not scroll — the footer chevron leaves the screen on tall cards")
@@ -303,6 +306,13 @@ check('(!_nodeVisibleFn(_cs)||!visN(_cs).wires)' in page, "the connector seam ig
 check('#g{ right:0 !important; }' in page, "the graph still resizes with the right panel")
 check('__uniHoverHL(x.id)' in page and 'userData.__hov' in page, "connection-chip hover halo missing")
 check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un-minimize the config on show (state drift)")
+
+# ── 10q. batch 17: community default · ring layout · wider spacing ──
+check('CFG.coreBy="community"' in page, "the community core is not the default when the levels feed is present")
+check('{v:"ring",t:"Ring"' in page and 'mode==="ring"' in page, "the RING entity layout is missing")
+check('{v:"spread"' not in page and 'mode==="spread"' not in page, "REGRESSION: the useless spread layout is back")
+check('SEP=(mode==="ring")?1.0:1.85' in page, "force-layout anchors are not widened (operator: entities too close)")
+check('RENT[e]*0.78' in page, "sub-cluster rings are not widened (operator: clusters too close inside entities)")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

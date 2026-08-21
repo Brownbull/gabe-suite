@@ -512,12 +512,15 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
     entities / unclaimed tables — so a drill never hides where the entity reaches.
 
     Touches are intra-entity by construction (upstream own-class filter), so an
-    endpoint touch always resolves to one of THIS entity's own model/schema nodes;
-    a touch that names no own class is dropped (it cannot name another entity's
-    class under the current archmap)."""
+    endpoint touch resolves to one of THIS entity's own model/schema nodes; a
+    touch that names a class we do not own is REPORTED via ``xtouch`` so the
+    assembler can emit a cross-entity ``touches`` edge (an aspect entity's models
+    must not show disconnected once endpoints stop co-homing under it — the
+    2026-08-20 allergen reduction exposed exactly that)."""
     nodes: list[dict] = []
     node_ids: set[str] = set()
     edges: list[dict] = []
+    xtouch: list[dict] = []            # touches naming a class we do NOT own — the assembler resolves them globally
     own_classes: dict[str, str] = {}   # cls -> node id (this entity only)
     externals: dict[str, dict] = {}    # ext node id -> node
     ins = insight or {}
@@ -600,8 +603,13 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             tgt = own_classes.get(cls)
             if tgt and tgt != nid:
                 edges.append({"source": nid, "target": tgt, "kind": "touches"})
-            # a touch to no own class: not another entity's (upstream own-filter),
-            # an external/library schema with no node → nothing to point at, drop.
+            elif not tgt:
+                # a class we do not own — ANOTHER entity's (report for a global
+                # resolve → cross-entity touches edge) or an external/library
+                # schema (unresolvable there → dropped there, same as before).
+                xtouch.append({"from": nid, "cls": cls})
+        for cls in ep.get("touches_x") or []:   # the raw unowned residue — the assembler's global index filters the noise
+            xtouch.append({"from": nid, "cls": cls})
 
     # web pieces (Path A frontend arm): one node per fetching FILE, homed to this
     # entity by the web arm (by file, or by the endpoint its fetch matched). The
@@ -642,7 +650,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             uniq.append(e)
     uniq.sort(key=lambda e: (e["source"], e["target"], e["kind"]))
     nodes.sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
-    return {"nodes": nodes, "edges": uniq}
+    return {"nodes": nodes, "edges": uniq, "xtouch": xtouch}
 
 
 def _stamp_l1(nodes: list[dict]) -> None:
@@ -914,6 +922,34 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         _stamp_l2(graph)
         l2[slug] = graph
 
+    # ── cross-entity TOUCHES: resolve every entity's unowned touches against a global
+    #    class index (models win a name tie over schemas). Without these edges an aspect
+    #    entity's models (allergen) sit disconnected the moment endpoints stop co-homing
+    #    under it; the archmap always knew the coupling — the emit dropped it at the wall.
+    cls_index: dict[str, tuple[str, str]] = {}
+    for _slug in sorted(entities):
+        for m in (entities[_slug].get("models") or []):
+            if m.get("cls"):
+                cls_index.setdefault(m["cls"], (f"model:{m['cls']}", _slug))
+    for _slug in sorted(entities):
+        for s in (entities[_slug].get("schemas") or []):
+            if s.get("cls"):
+                cls_index.setdefault(s["cls"], (f"schema:{s['cls']}", _slug))
+    _xt_seen: set[tuple[str, str]] = set()
+    cross_touches = 0
+    for _slug, graph in l2.items():
+        for xt in graph.pop("xtouch", []):
+            hit = cls_index.get(xt["cls"])
+            if not hit:
+                continue                      # external/library class — nothing to point at (as before)
+            tgt_nid, tgt_slug = hit
+            if tgt_slug == _slug or (xt["from"], tgt_nid) in _xt_seen:
+                continue
+            _xt_seen.add((xt["from"], tgt_nid))
+            cross_edges.append({"from": xt["from"], "to": tgt_nid, "kind": "touches",
+                                "from_slug": _slug, "to_slug": tgt_slug})
+            cross_touches += 1
+
     return {
         "version": 1,
         "head": amap.get("head"),
@@ -930,6 +966,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "entities": sum(1 for n in l1_nodes if n["kind"] == "entity"),
             "l1_edges": len(l1_edges),
             "cross_edges": len(cross_edges),
+            "cross_touches": cross_touches,   # endpoint→foreign-model/schema touches (the aspect wires)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
             "unresolved_tables": unresolved,

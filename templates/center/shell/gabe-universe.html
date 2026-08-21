@@ -988,8 +988,7 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   grp.add(labelSprite(n.label, 26, -(br+4.5)));
   return grp;
 }
-function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); });
-  if(window.__uniHLReapply) requestAnimationFrame(__uniHLReapply); }   // glow halos ride node objects — restore after the rebuild
+function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }
 /* re-apply ALL encodings: rebuild node objects + re-trigger the edge accessors (they read ENC live) */
 function applyEnc(){ if(!Graph) return; rebuildNodes();
   Graph.linkWidth(linkWidthFn).linkColor(linkColorFn)
@@ -1025,24 +1024,25 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     var order=[left.shift()];
     while(left.length){ var last=order[order.length-1], best=-1, bi=0;
       left.forEach(function(s,i){ var w=wOf(last,s); if(w>best){ best=w; bi=i; } }); order.push(left.splice(bi,1)[0]); }
-    order.forEach(function(e,i){ EX[e]=n<=1?0:(-450+i*(900/(n-1))); EY[e]=0; EZ[e]=0; });   // 900 span (was 600) — entity columns stop overlapping
+    order.forEach(function(e,i){ EX[e]=n<=1?0:(-550+i*(1100/(n-1))); EY[e]=0; EZ[e]=0; });   // 1100 span — entity columns clear of each other
     return;
   }
   __chainMode=false;
   var P={}, V={};                                        // seed on a deterministic Fibonacci sphere
   _ents.forEach(function(s,i){ var y=(n<=1)?0:(1-(i/(n-1))*2), r=Math.sqrt(Math.max(0,1-y*y)), th=i*2.399963;
     P[s]={x:Math.cos(th)*r*300, y:y*300, z:Math.sin(th)*r*300}; V[s]={x:0,y:0,z:0}; });
-  if(mode==="spread"){                                   // stress-majorization (MDS) over BFS hop distance
-    var adj={}; _ents.forEach(function(s){ adj[s]=[]; });
-    _l1pairs().forEach(function(p){ adj[p[0]].push(p[1]); adj[p[1]].push(p[0]); });
-    var HOP={}; _ents.forEach(function(s){ var d={}, q=[s]; d[s]=0;
-      while(q.length){ var u=q.shift(); adj[u].forEach(function(v){ if(d[v]===undefined){ d[v]=d[u]+1; q.push(v); } }); } HOP[s]=d; });
-    var far=1; _ents.forEach(function(a){ _ents.forEach(function(b){ if((HOP[a][b]||0)>far) far=HOP[a][b]; }); });
-    for(var st=0; st<200; st++){ _ents.forEach(function(a){ var mx=0,my=0,mz=0,ws=0;
-      _ents.forEach(function(b){ if(a===b) return; var hop=(HOP[a][b]!==undefined)?HOP[a][b]:far+1, target=hop*170;
-        var dx=P[a].x-P[b].x, dy=P[a].y-P[b].y, dz=P[a].z-P[b].z, d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1, w=1/(hop*hop);
-        mx+=w*(P[b].x+dx/d*target); my+=w*(P[b].y+dy/d*target); mz+=w*(P[b].z+dz/d*target); ws+=w; });
-      P[a]={x:mx/ws,y:my/ws,z:mz/ws}; }); }
+  if(mode==="ring"){                                     // coupling-ordered CIRCLE — even spacing, separation by construction
+    var W2={}, deg2={}; _ents.forEach(function(s){ deg2[s]=0; });
+    _l1pairs().forEach(function(pp){ var key=pp[0]<pp[1]?pp[0]+"|"+pp[1]:pp[1]+"|"+pp[0]; W2[key]=(W2[key]||0)+pp[2]; deg2[pp[0]]+=pp[2]; deg2[pp[1]]+=pp[2]; });
+    var wOf2=function(a,b){ return W2[a<b?a+"|"+b:b+"|"+a]||0; };
+    var left2=_ents.slice().sort(function(a,b){ return deg2[b]-deg2[a]||(a<b?-1:1); });
+    var ord=[left2.shift()];
+    while(left2.length){ var last2=ord[ord.length-1], best2=-1, bi2=0;
+      left2.forEach(function(s,i){ var w=wOf2(last2,s); if(w>best2){ best2=w; bi2=i; } }); ord.push(left2.splice(bi2,1)[0]); }
+    var cnt2={}; nodes.forEach(function(nn){ cnt2[nn.ent]=(cnt2[nn.ent]||0)+1; });
+    var circ=0; _ents.forEach(function(s){ circ += 2.8*(30+9*Math.sqrt(cnt2[s]||0)); });   // per-entity arc ≈ 2.8× its nominal radius
+    var R=Math.max(430, circ/(2*Math.PI));
+    ord.forEach(function(e,i){ var a=i*2*Math.PI/n; P[e]={x:Math.cos(a)*R, y:0, z:Math.sin(a)*R}; });
   } else {                                               // FORCE — repulsion 13000/d² + FK spring rest 230
     var E2=_l1pairs();
     for(var it=0; it<240; it++){
@@ -1055,7 +1055,7 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
       _ents.forEach(function(s){ V[s].x=(V[s].x-P[s].x*0.003)*0.9; V[s].y=(V[s].y-P[s].y*0.003)*0.9; V[s].z=(V[s].z-P[s].z*0.003)*0.9;
         P[s].x+=V[s].x; P[s].y+=V[s].y; P[s].z+=V[s].z; }); }
   }
-  var SEP=1.55;   // widen the converged anchors — hulls read as distinct bubbles (the containment in zForce holds each cluster inside its radius)
+  var SEP=(mode==="ring")?1.0:1.85;   // force converges tight — widen hard; the ring is already sized by construction
   _ents.forEach(function(s){ EX[s]=Math.round(P[s].x*SEP); EY[s]=Math.round(P[s].y*SEP); EZ[s]=Math.round(P[s].z*SEP); });
 }
 /* ── batch 9 CLUSTERING — the core drives POSITION, not just hull decoration ──
@@ -1071,10 +1071,11 @@ function recomputeSubAnchors(){
     var g=subs[e]||{}, ks=Object.keys(g).sort(function(a,b){ return (g[b]-g[a])||(a<b?-1:1); });
     var m={}; SUBANCHOR[e]=m;
     if(ks.length<2){ ks.forEach(function(k){ m[k]={x:0,y:0,z:0}; }); return; }   // one group (incl. the honest "other") → centered, no ring
-    var SR=Math.min(RENT[e]*0.55, 26+7*ks.length);
+    var SR=Math.min(RENT[e]*0.78, 34+9*ks.length);   // clusters inside an entity sit farther apart (operator: more spread, incl. force)
     ks.forEach(function(k,i){ var a=ei*0.7 + i*(Math.PI*2/ks.length);            // per-entity phase stagger — rings don't all align
       m[k]={ x:Math.cos(a)*SR, y:__chainMode?0:(((i%2)?1:-1)*SR*0.22), z:Math.sin(a)*SR }; }); });
 }
+if(window.GABE_LEVELS && window.GABE_LEVELS.pieces) CFG.coreBy="community";   // the operator's default lens — layer only when no levels feed
 /* cluster core — rewrite n.sub (the sub-cluster grouping key). Decoration only (nodes don't move).
    layer/kind/tests are c4-native; usecase/community/fk join GABE_LEVELS group maps by NAME
    (endpoints by "METHOD /path" = eps; models/schemas by class name = cls). Honest "other" bucket. */
@@ -1245,21 +1246,27 @@ function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   HL.set=depth; HL.links=new Set();
   links.forEach(function(l){ if(depth[lid(l.source)]!==undefined && depth[lid(l.target)]!==undefined) HL.links.add(l); }); }
 window._hlLinkF=function(l){ if(!HL.on||!HL.links) return 1;             // per-wire factor read by updateConnectors
-  if(HL.links.has(l)) return 2.6; return HL.mode==="focus"?0:0.05; };   // measured on screen: 0.18 still dominated at density — the lit path must be unmistakable
+  if(HL.links.has(l)) return 2.6; return HL.mode==="focus"?0:1; };      // GLOW brightens the set and leaves the rest ALONE; only FOCUS removes (operator spec)
 function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;   // the ONE node-visibility truth (fleet show ∧ planets ∧ focus)
   if(HL.on && HL.mode==="focus" && HL.set[n.id]===undefined) return false; return true; }
-function _hlClearSprites(){ HL.sprites.forEach(function(s){ try{ if(s.parent) s.parent.remove(s); }catch(e){} }); HL.sprites=[]; }
-window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // glow halos ride the node objects — re-added after any rebuild
-  _hlClearSprites();
-  nodes.forEach(function(n){ if(HL.set[n.id]===undefined||!n.__threeObj) return;
+var hlGroup=null;
+function _hlGroup(){ if(!hlGroup && typeof Graph!=="undefined" && Graph){ hlGroup=new T.Group(); Graph.scene().add(hlGroup); } return hlGroup; }
+function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=hlGroup.children.pop(); hlGroup.remove(s); } } HL.sprites=[]; }
+window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // halos live in an INDEPENDENT scene group —
+  var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
+  nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
     var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?64:36, d0?0.85:0.55);
-    n.__threeObj.add(g); HL.sprites.push(g); }); };
+    g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
+    g0.add(g); HL.sprites.push(g); }); };
+window.__uniHLTick=function(){ if(!hlGroup||!HL.on||HL.mode!=="glow") return;   // follow the sim every cluster tick
+  hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
 function _hlRestyle(){ _hlClearSprites();
   if(typeof Graph!=="undefined" && Graph){
     try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}
     try{ rebuildNodes(); }catch(e){}
     try{ buildClusters(); updateClusters(true); }catch(e){}
     try{ buildTransports(); }catch(e){} }
+  try{ __uniHLReapply(); }catch(e){}                       // direct — the halo group is rebuild-proof, no rAF dependency
   _hlSyncUI(); }
 function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.textContent=HL.depth;
   var dr=document.getElementById("depthRng"); if(dr && +dr.value!==HL.depth) dr.value=HL.depth;
@@ -1595,7 +1602,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + pillHTML("entLayout",[
         {v:"chain",t:"Chain",ti:"a flat layered ribbon — layers band vertically, entities line up by coupling"},
         {v:"force",t:"Force",ti:"3D coupling bubbles — entities repel, FK springs pull coupled ones together"},
-        {v:"spread",t:"Spread",ti:"graph-distance spacing — entities placed by hop distance (MDS)"}], CFG.entLayout)+'</div>'
+        {v:"ring",t:"Ring",ti:"a coupling-ordered circle — even spacing, separation by construction"}], CFG.entLayout)+'</div>'
     + '<div class="grp"><div class="grplbl" title="'+coreHd+'">CLUSTER CORE BY</div>'
     + pillHTML("coreBy", cores, CFG.coreBy)+'</div>'
     + (hasFns ? ('<div class="grp"><div class="grplbl" title="the code-function layer — hover each option">FUNCTIONS</div>'
@@ -1770,7 +1777,7 @@ function updateClusters(force){ _wtick++; _npos={}; nodes.forEach(function(n){ i
       c.mc.update();
     }
     if(c.lbl){ c.lbl.position.set(c.level==="ent"?cx:cx-28, c.level==="ent"?top+26:cy, cz); c.lbl.scale.set(c.level==="ent"?50:30, c.level==="ent"?12.5:7.5, 1); }
-  }); if(force || _wtick%3===0) updateConnectors(); }
+  }); if(window.__uniHLTick) __uniHLTick(); if(force || _wtick%3===0) updateConnectors(); }
 function build(){
   if(Graph){ try{ Graph._destructor(); }catch(e){} document.getElementById("g").innerHTML=""; }
   Graph=ForceGraph3D({ controlType: st.ctl })(document.getElementById("g"))
@@ -2307,5 +2314,5 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
   window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
-preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
+preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

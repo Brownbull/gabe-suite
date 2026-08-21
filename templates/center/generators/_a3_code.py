@@ -381,7 +381,13 @@ def _collect_entity_map(slug: str, repo: Path) -> dict | None:
     files = code_map(repo, layers)
     documented = {m["cls"] for m in models} | {s["cls"] for s in schemas}
     for e in eps:
-        e["touches"] = sorted(e.pop("refs") & documented)
+        _refs = e.pop("refs")
+        e["touches"] = sorted(_refs & documented)
+        # the RESIDUE — bare names the handler touches that WE do not document. Raw on
+        # purpose (this scan cannot see other entities); the C4 assembler intersects it
+        # with the GLOBAL class index, which is what turns an aspect's coupling (allergen
+        # models touched by cooking/pantry handlers) into visible cross-entity wires.
+        e["touches_x"] = sorted(_refs - documented)
     return {
         "endpoints": eps, "models": models, "schemas": schemas,
         "files": [[layer, f, n] for layer, f, n in files],

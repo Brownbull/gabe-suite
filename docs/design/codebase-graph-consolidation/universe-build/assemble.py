@@ -139,7 +139,7 @@ text = text.replace(OLD_APPLY,
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
-                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){}', 1)
+                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){}', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
 text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n', 1)
 
@@ -215,7 +215,7 @@ text = text.replace('warOn:true, warDist', 'warOn:false, warDist', 1)
 # ── batch 6 PERF: throttle the per-tick connector rebuild (the 227+ geometry churn) during settle;
 #    a forced call (onEngineStop / control change) still rebuilds fully, so the settled frame is exact ──
 assert '}); updateConnectors(); }' in text, "updateClusters connector-call anchor missing"
-text = text.replace('}); updateConnectors(); }', '}); if(force || _wtick%3===0) updateConnectors(); }', 1)
+text = text.replace('}); updateConnectors(); }', '}); if(window.__uniHLTick) __uniHLTick(); if(force || _wtick%3===0) updateConnectors(); }', 1)
 
 # ── batch 11-B: FLEET panel engine seams — every read goes through visEnt/visN (NIDS-resolved,
 #    never NENT: NENT is built once at boot and is stale for toggled-in function nodes) ──
@@ -286,9 +286,7 @@ assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)
 OLD_RBN = 'function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }'
 assert OLD_RBN in text, "rebuildNodes anchor missing"
-text = text.replace(OLD_RBN,
-  'function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); });\n'
-  '  if(window.__uniHLReapply) requestAnimationFrame(__uniHLReapply); }   // glow halos ride node objects — restore after the rebuild', 1)
+text = text.replace(OLD_RBN, OLD_RBN, 1)  # halos live in their own scene group now — no reapply hook needed
 OLD_TRV = 'var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;\n    if(!_sv.show||!_tv.show||!_sv.routes||!_tv.routes) return;'
 assert OLD_TRV in text, "transports visibility anchor missing"
 text = text.replace(OLD_TRV,
