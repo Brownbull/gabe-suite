@@ -101,6 +101,10 @@ The "endpoints piling on allergen" root cause: allergen's gustify config claimed
 
 Community = the default core (levels-fed pages). GLOW brightens the set and leaves the field ALONE (dim/removal = focus only). Halos live in an INDEPENDENT scene group ticked from `_npos` — the live-browser vanish class is dead. RING replaces spread (coupling-ordered circle, measured flat/even); force SEP 1.85, chain 1100, sub-rings RENT×0.78. **Cross-entity `touches` edges exist now**: `_a3_code` keeps the unowned residue (`touches_x`), `_a3_graph` resolves it globally → `cross_edges` kind `touches` (11 on gustify; stats.cross_touches; arch-graph battery case added) — found because the allergen reduction orphaned the aspect's models. Disconnected census answered: 64/260 honest strays (44 never-returned schemas the 2D pruned · 9 untouching endpoints · 5 unmatched fetches · 6 service-coupled models — a future model↔service edge kind is the recorded option). Batteries 189 + 167. NOTE: gustify's own generator copy predates `touches_x` — twin propagation still owed.
 
+## BATCH 18 — LANDED (`273a0bc`): focus behaviors · controls panel · Q/E yaw · invert mouse · middle-orbits-selection
+
+FOCUS group in Routes: Dim 25% (the missing mode) · Fade 8% · Wires (outside wires gone, planets stay) · Hide (current); only Hide removes planets. CONTROLS panel bottom-right (kbd cheat-sheet, minimizable, tracks the card rail): Q/E turn-in-place (yaw about world-up at the camera), invert-mouse toggle (drag button + OrbitControls map swap, chord follows), middle-drag orbits the SELECTED planet (constant node distance; no selection → dolly as stock). Drag ownership generalized: only the starting button ends a drag. Proof `verify-ctrl.mjs`; battery **195 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
