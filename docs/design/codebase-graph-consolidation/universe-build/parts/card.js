@@ -210,7 +210,8 @@
     return w; }
   function _entsMap(){ var m={}; nodes.forEach(function(n){ if(n.ent) (m[n.ent]=m[n.ent]||[]).push(n); }); return m; }
   function _selNode(n){ SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); }catch(e){} }
-  function panelAll(){ window.__uniPView={lvl:"all"};
+  function _hulls(ent, sub){ try{ window.__uniHullSel={ent:ent||null, sub:sub!=null?sub:null}; window.__uniApplyHullSel(); }catch(e){} }
+  function panelAll(){ window.__uniPView={lvl:"all"}; _hulls(null,null);
     _phead("Everything","UNIVERSE","entity");
     var pb=document.getElementById("pbody"); pb.innerHTML="";
     var ents=_entsMap(), names=Object.keys(ents).sort();
@@ -237,7 +238,7 @@
       pb.append(w); }
     pb.append(E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, icoEl("info"), "— the top level (Esc returns here)")));
     openPanel(); }
-  function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent};
+  function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent}; _hulls(ent,null);
     var mem=nodes.filter(function(n){ return n.ent===ent; });
     _phead(ent,"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
@@ -254,7 +255,7 @@
     ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     pb.append(ab);
     openPanel(); }
-  function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub};
+  function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
     var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
     _phead(sub,"CLUSTER · "+ent,"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";

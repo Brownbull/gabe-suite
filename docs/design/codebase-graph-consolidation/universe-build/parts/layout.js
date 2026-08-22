@@ -558,6 +558,26 @@ window.__uniCoreIco=function(mode,px){ px=px||13; var PATHS={
   community:'<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.8 7.2 6.2 15.7M13.2 7.2l4.6 8.5M7.5 18h9"/>',
   fk:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>' };
   return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(PATHS[mode]||PATHS.layer)+'</svg>'; };
+/* ── HULL SELECTION LIGHT (batch 25): the selected container(s) BRIGHTEN — the element's cluster
+   and entity, the entity alone, or the cluster+entity, per the panel level; Esc clears. Materials
+   lazily remember their built opacity (__baseOp) so rebuilds re-capture stock and the scale is
+   idempotent; buildClusters is wrapped below so every hull rebuild re-applies the light. ── */
+window.__uniHullSel={ ent:null, sub:null };
+window.__uniApplyHullSel=function(){ try{ var hs=window.__uniHullSel;
+  (typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach(function(c){ if(!c.ekey) return;
+    var hit=false;
+    if(hs.ent && c.ekey===hs.ent) hit = (c.level==="ent") ? true : (hs.sub!=null && c.skey===hs.sub);
+    var f = hit ? (c.level==="ent"?2.2:3.0) : 1;
+    var mats=[];
+    if(c.sph) mats.push(c.sph.material); if(c.rim) mats.push(c.rim.material);
+    if(c.hull) mats.push(c.hull.material);
+    if(c.sprites) c.sprites.forEach(function(sp){ if(sp.s) mats.push(sp.s.material); });
+    mats.forEach(function(m){ if(!m) return; if(m.__baseOp==null) m.__baseOp=m.opacity;
+      m.opacity=Math.min(0.92, m.__baseOp*f); });
+  }); }catch(e){} };
+window.__uniSelHulls=function(n){ window.__uniHullSel={ ent:(n&&n.ent)||null, sub:(n&&n.ent&&n.sub)||null }; __uniApplyHullSel(); };
+if(typeof buildClusters==="function"){ var _bcOrig=buildClusters;
+  buildClusters=function(){ _bcOrig(); try{ __uniApplyHullSel(); }catch(e){} }; }
 window.UNIVIS={ ent:{}, sub:{}, node:{}, meta:{} };   // sub = per-(ent|subgroup) overrides — keys are CURRENT-coreBy groups, regrouped on a core change
 _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }

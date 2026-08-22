@@ -294,6 +294,12 @@ text = text.replace(
   '  w.addEventListener("mouseenter", _tipPlace);\n'
   '  w.onclick=function(e){ e.stopPropagation(); w.classList.toggle("on"); _tipPlace(); }; return w; }', 1)
 
+# ── batch 25: every element display (click, walk, chips, member rows — all flow through showPanel)
+#    lights the element's CLUSTER + ENTITY hulls; Esc/panelAll clears via the same engine. ──
+text = text.replace(
+  'var card=KINDCARD[n.kind]; (card ? card(n) : []).forEach(function(nd){ if(nd) pb.append(nd); });',
+  'var card=KINDCARD[n.kind]; (card ? card(n) : []).forEach(function(nd){ if(nd) pb.append(nd); });\n  if(window.__uniSelHulls) __uniSelHulls(n);', 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,

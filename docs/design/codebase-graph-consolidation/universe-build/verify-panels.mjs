@@ -128,6 +128,27 @@ const bg = await p.evaluate(() => {
   return { keyed, total: CLUSTERS.length, view: window.__uniPView.lvl,
     ent: window.__uniPView.ent, expectEnt: n.ent,
     routed: window.__uniPView.lvl === 'clu' || window.__uniPView.lvl === 'ent' }; });
+// [8] HULL SELECTION LIGHT: entity level lights the entity hull; cluster level lights cluster+entity;
+//     an element display lights ITS cluster+entity; Esc returns every hull to stock
+const hull = await p.evaluate(() => {
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));   // [7] left allergen lit — clean baseline first
+  const op = (lvl, ekey, skey) => { const c = CLUSTERS.find(c => c.level === lvl && c.ekey === ekey && (lvl === 'ent' || c.skey === skey));
+    if (!c) return null; const m = (c.hull || c.sph || (c.sprites && c.sprites[0] && c.sprites[0].s)); return m ? +m.material.opacity.toFixed(4) : null; };
+  const stockA = op('ent', 'allergen'), stockOther = op('ent', 'pantry'), stockSub = op('sub', 'allergen', 'misc');
+  window.__uniPanelEnt('allergen');
+  const entLit = op('ent', 'allergen'), otherStill = op('ent', 'pantry');
+  window.__uniPanelClu('allergen', 'misc');
+  const cluLit = op('sub', 'allergen', 'misc'), entStillLit = op('ent', 'allergen');
+  const n = nodes.find(x => x.ent === 'pantry' && x.sub); showPanel(n);
+  const elemEnt = op('ent', 'pantry'), elemSub = op('sub', n.ent, n.sub), allerBack = op('ent', 'allergen');
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  const cleared = op('ent', 'pantry'), clearedSub = op('sub', n.ent, n.sub);
+  return { stockA, entLit, otherStill: otherStill === stockOther,
+    cluLit, subWasStock: stockSub, entStillLit,
+    elemEnt, elemSub, allerBack: allerBack === stockA,
+    clearedOk: cleared === stockOther && (clearedSub === null || clearedSub === op('sub', n.ent, n.sub)) ,
+    entGain: entLit > stockA * 1.5, cluGain: stockSub === null || cluLit > stockSub * 1.5,
+    elemGain: elemEnt > stockOther * 1.5, escBack: cleared === stockOther }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -139,6 +160,7 @@ console.log('cluster:', JSON.stringify(clu));
 console.log('element:', JSON.stringify(elem));
 console.log('back:', JSON.stringify(back), '· esc:', JSON.stringify(esc));
 console.log('bgClick:', JSON.stringify(bg));
+console.log('hullLight:', JSON.stringify(hull));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -158,5 +180,7 @@ if (!(elem.title === elem.label && elem.selected && elem.hasAbove && elem.upRows
 if (!(back.view === 'clu')) fails.push('element → cluster back-nav broken');
 if (!(esc.view === 'all' && esc.sel && esc.title === 'Everything')) fails.push('Esc does not land on Everything');
 if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expectEnt)) fails.push('background hull click wrong');
+if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
+if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

@@ -387,6 +387,13 @@ check('P.drill=' in page and 'P.up=' in page and 'function dirIco' in page,
       "drill-down / go-up direction markers are gone from the nav rows")
 check('"__core"' in page and 'function coreLead' in page,
       "cluster rows no longer inherit the ACTIVE core strategy's icon")
+# batch 25: hull selection light — containers brighten per panel level, rebuild-proof, Esc clears
+check('window.__uniApplyHullSel=' in page and 'm.__baseOp=m.opacity' in page,
+      "the hull selection light is gone (apply engine + lazy stock capture)")
+check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,
+      "element displays no longer light their cluster+entity hulls (showPanel hook)")
+check('buildClusters=function(){ _bcOrig();' in page,
+      "hull rebuilds drop the selection light (buildClusters wrap missing)")
 check('out.push(aboveSec(n)); return out;' in page,
       "element cards lost their Above section (the way back up)")
 
