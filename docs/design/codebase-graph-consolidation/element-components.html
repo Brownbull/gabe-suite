@@ -162,13 +162,22 @@
   .face svg{ width:13px; height:13px; }
   .face.fhome{ box-shadow:0 0 0 2px var(--panel), 0 0 0 3.5px var(--accent); }
   .face:hover{ filter:brightness(1.18); }
+  /* ── batch 22: panel-hierarchy nav rows (Everything → Entity → Cluster → Element) ── */
+  .pnav{ display:flex; align-items:center; gap:8px; padding:5px 8px; border-radius:7px; cursor:pointer;
+    font-size:.92em; color:var(--ink); border:1px solid transparent; }
+  .pnav:hover{ background:var(--bg); border-color:var(--line); }
+  .pnav .pdot{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .pnav .pnl{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pnav .pnm{ margin-left:auto; font:600 10px/1.2 var(--font-mono); color:var(--muted); background:var(--bg);
+    border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
+  .pnav .pki{ display:inline-flex; flex:none; } .pnav svg{ width:13px; height:13px; flex:none; }
 </style>
 </head>
 <body>
 <header>
   <div class="htext">
     <h1>Element components — the right-panel card per element kind</h1>
-    <div class="sub">Real gustify data. The rule you set: <b>Tests</b> tabs by kind (see <b>Entity · Allergen</b>: api 41 / web 3); <b>Connections are ALWAYS fully visible</b> (never tabbed) and each chip <b>hover-highlights its node in the graph</b>; <b>Code behind</b> (functions only) shows straight through — names ship live. Each <b>Connections</b> group carries a <b>trust</b> marker (<b>structural</b> = an exact archmap/FK join · <b>inferred</b> = a graft-call / web-bridge floor, dashed); a section-level tip is an <b>icon by the title</b> — hover/click to read it.</div>
+    <div class="sub">Real gustify data. The rule you set: <b>Tests</b> tabs by kind (see <b>Entity · Allergen</b>: api 41 / web 3); <b>Connections are ALWAYS fully visible</b> (never tabbed) and each chip <b>hover-highlights its node in the graph</b>; <b>Code behind</b> (functions only) shows straight through — names ship live. Each <b>Connections</b> group carries a <b>trust</b> marker (<b>structural</b> = an exact archmap/FK join · <b>inferred</b> = a graft-call / web-bridge floor, dashed); a section-level tip is an <b>icon by the title</b> — hover/click to read it. <b>Batch 22:</b> the panel is a <b>hierarchy</b> — <b>Everything → Entity → Cluster → Element</b> (the first three columns); every element card ends with an <b>Above</b> section (the way back up) and <b>Esc</b> lands on Everything.</div>
   </div>
   <div class="toprt">
     <select class="tbtn" id="font" title="content font (settings)"></select>
@@ -198,6 +207,8 @@ const P={
   file:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/>',
   endpoint:'<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>',
   model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
+  sub:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/>',
+  bubble:'<circle cx="12" cy="12" r="8"/>',
   schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
   function:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
   web:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
@@ -385,6 +396,66 @@ function panel(kind, kglyph, kcolor, name, typeSub, bodyNodes, titleAssets){
 }
 const cids=arr=>()=>{const w=E("div");arr.forEach(c=>w.append(E("span",{class:"chip ok"},ico("test"),c)));return w;};
 
+/* ── batch 22: the PANEL HIERARCHY — the right panel exists at EVERY level, not just elements.
+   These three specimens mirror the live station builders (__uniPanelAll/Ent/Clu); numbers probed
+   from the real example page (260 field nodes · 8 entities · allergen 17 · misc 13). ── */
+function pnav(lead,label,meta){ const r=E("div",{class:"pnav"},lead,E("span",{class:"pnl"},label),
+  meta!=null?E("span",{class:"pnm"},String(meta)):null); return r; }
+const pdot=c=>E("span",{class:"pdot",style:"background:"+c});
+const pki=(k,c)=>E("span",{class:"pki",style:"color:"+c},ico(k));
+const ENTC={allergen:"#3f6d4c",auth:"#5a53a8",cooking:"#0d6e78","legal-consent":"#0f766e",pantry:"#b45309",progression:"#8e4585",recipe:"#3f6d4c",settings:"#8e4585"};
+function aboveSec(clu, ent){ const w=E("div",{class:"sec"}, sechd("nav","Above",null,false,
+    {icon:"info",cls:"info",text:"The way back up the panel ladder: cluster → entity → everything. Esc anywhere lands on Everything."}));
+  if(clu) w.append(pnav(ico("sub"),"cluster · "+clu));
+  if(ent) w.append(pnav(pdot(ENTC[ent]||"#888"),"entity · "+ent));
+  w.append(pnav(ico("entity"),"everything")); return w; }
+const HIER=[
+["Everything — no selection (boot · Esc)", ()=>panel("everything","entity","var(--accent)","Everything","the principal panel",[
+  (()=>{ const w=E("div",{class:"sec"}, sechd("info","Field",260));
+    [["endpoint",67],["external",2],["model",36],["schema",123],["web",32]].forEach(([k,n])=>w.append(kv(null,k,String(n)))); return w; })(),
+  E("div",{class:"sec"}, sechd("sub","Stars — not drawn",196,false,
+    {icon:"info",cls:"info",text:"What the tables and the field do not show: code functions live in the levels feed but are drawn only when Functions is ON (config › Universe)."}),
+    E("div",{class:"sublbl"}, ico("function"), "196 functions held off the field — enable Functions to draw them"),
+    chipList(["clean_tags","assert_recipe_allergen_safe","iter_candidate_recipes","plan_recipe","unplan_recipe"],"fn","function")),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("info","Feeds"));
+    w.append(kv(null,"cross-entity touches","11")); w.append(kv(null,"web bridge","48 matched · 6 unmatched"));
+    w.append(kv(null,"graft wiring","present")); return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("entity","Inside — entities",8,false,
+      {icon:"info",cls:"info",text:"One row per entity. Click a row to open that entity's panel."}));
+    [["allergen",17],["auth",8],["cooking",45],["legal-consent",8],["pantry",77],["progression",31],["recipe",68],["settings",6]]
+      .forEach(([e,n])=>w.append(pnav(pdot(ENTC[e]),e,n))); return w; })(),
+  E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, ico("info"), "— the top level (Esc returns here)")),
+])],
+["Entity panel — allergen", ()=>panel("entity","entity","var(--c-entity)","allergen","ENTITY",[
+  (()=>{ const w=E("div",{class:"sec"}, sechd("info","Makeup",17));
+    [["external",1],["model",6],["schema",7],["web",3]].forEach(([k,n])=>w.append(kv(null,k,String(n)))); return w; })(),
+  E("div",{class:"sec"}, sechd("sub","Stars — not drawn",12,false,
+    {icon:"info",cls:"info",text:"This entity's functions in the levels feed, drawn only when Functions is ON. Honest-empty when an entity has none."}),
+    E("div",{class:"sublbl"}, ico("function"), "12 functions held off the field — enable Functions to draw them"),
+    chipList(["clean_tags","assert_recipe_allergen_safe","iter_candidate_recipes","plan_recipe","unplan_recipe"],"fn","function")),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("link","Cross-entity",25));
+    [["bridge",1],["fk",20],["touches",4]].forEach(([k,n])=>w.append(kv(null,k,String(n))));
+    w.append(E("div",{class:"sublbl"}, ico("entity"), "with: auth · cooking · legal-consent · pantry · progression · recipe · settings")); return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("sub","Inside — clusters",2,false,
+      {icon:"info",cls:"info",text:"The entity's sub-clusters under the CURRENT core (config › Universe › Cluster core by). Click one to open its panel."}));
+    w.append(pnav(ico("sub"),"misc",13)); w.append(pnav(ico("sub"),"other",4)); return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("nav","Above")); w.append(pnav(ico("entity"),"everything")); return w; })(),
+])],
+["Cluster panel — allergen › misc", ()=>panel("cluster","sub","var(--c-entity)","misc","CLUSTER · allergen",[
+  (()=>{ const w=E("div",{class:"sec"}, sechd("info","Makeup",13));
+    [["model",6],["schema",7]].forEach(([k,n])=>w.append(kv(null,k,String(n)))); return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("bubble","Inside — elements",13,false,
+      {icon:"info",cls:"info",text:"Everything in this cluster. Click an element to open its card (the graph selects it too)."}));
+    [["model","ContextualWarningRule"],["model","DietPreference"],["model","IngredientRestriction"],["model","IngredientWarning"],
+     ["model","Restriction"],["model","UserDietaryProfile"],["schema","DietaryProfileInput"],["schema","ExplorationPreferencesInput"],
+     ["schema","ExplorationPreferencesPatch"],["schema","HouseholdFormatInput"],["schema","NotificationPreferencesInput"],
+     ["schema","PrivacyPermissionsInput"],["schema","UserFormatInput"]]
+      .forEach(([k,l])=>{ const r=pnav(pki(k, k==="model"?"var(--c-model)":"var(--c-schema)"), l); r.append(E("span",{class:"pnm"},k)); w.append(r); });
+    return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("nav","Above"));
+    w.append(pnav(pdot(ENTC.allergen),"entity · allergen")); w.append(pnav(ico("entity"),"everything")); return w; })(),
+])],
+];
 const CARDS=[
 ["API endpoint", ()=>panel("endpoint","endpoint","var(--c-endpoint)","POST /pantry/items/batch","create_pantry_items_batch()",[
   usage(1,"1 screen fetches this endpoint"),
@@ -515,6 +586,14 @@ const CARDS=[
 ];
 
 const lane=document.getElementById("lane");
+/* batch 22: every element card ends with Above (mirrors the live station's kind-card wrap) */
+const ABOVE_AT={"API endpoint":["misc","pantry"],"Model":["misc","allergen"],"Schema":["misc","allergen"],
+  "Function":["misc","allergen"],"Frontend screen":["misc","pantry"],"Component":["misc","recipe"],
+  "Hook":["misc","recipe"],"Store":["misc","recipe"],"Route (screen)":["misc","recipe"],"Type":["misc","recipe"],
+  "Entity (container)":[null,null],"External (fk target)":["misc","auth"]};
+CARDS.forEach(c=>{ const [title,fn]=c; const a=ABOVE_AT[title]||["misc","pantry"];
+  c[1]=()=>{ const el=fn(); const pb=el.querySelector(".pbody"); if(pb) pb.append(aboveSec(a[0],a[1])); return el; }; });
+HIER.slice().reverse().forEach(h=>CARDS.unshift(h));
 CARDS.forEach(([title,fn])=>{ lane.append(E("div",{class:"col"}, E("div",{class:"coltitle"},title), fn())); });
 // the center's content-font roster (from a3-settings.js) — writes --font-content on :root
 const FONTS=[
