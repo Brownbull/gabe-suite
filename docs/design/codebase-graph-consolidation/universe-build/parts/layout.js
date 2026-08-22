@@ -577,7 +577,9 @@ window.__uniApplyHullSel=function(){ try{ var hs=window.__uniHullSel;
       m.opacity = hit ? Math.min(0.92, Math.max(m.__baseOp*2, floor)) : m.__baseOp;
       if(m.emissiveIntensity!==undefined){ if(m.__baseEm==null) m.__baseEm=m.emissiveIntensity;   // shaded hulls also GLOW when lit
         m.emissiveIntensity = hit ? glow : m.__baseEm; } });
-  }); }catch(e){} };
+  });
+  if(window.__uniFleetSpot) __uniFleetSpot(hs.ent, hs.sub);
+  }catch(e){} };
 window.__uniSelHulls=function(n){ window.__uniHullSel={ ent:(n&&n.ent)||null, sub:(n&&n.ent&&n.sub)||null }; __uniApplyHullSel(); };
 if(typeof buildClusters==="function"){ var _bcOrig=buildClusters;
   buildClusters=function(){ _bcOrig(); try{ __uniApplyHullSel(); }catch(e){} }; }
@@ -669,12 +671,12 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
   _ents.forEach(function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
-    h+='<div class="flrow"><span class="flent flx" data-flx="'+e+'" title="'+e+' · click for its '+gk.length+' cluster(s)">'
+    h+='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' · click for its '+gk.length+' cluster(s)">'
       +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><i class="flcaret">'+(open?"▾":"▸")+'</i>'+e
       +'<b class="flcnt">'+gk.length+'</b></span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
     if(open) gk.forEach(function(s){ var key=e+"|"+s;
-      h+='<div class="flrow flsub"><span class="flent flsubname" title="'+s+' · '+gs[s]+' member(s)">'+s+' <b class="flcnt">'+gs[s]+'</b></span>'
+      h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" title="'+s+' · '+gs[s]+' member(s)">'+s+' <b class="flcnt">'+gs[s]+'</b></span>'
         +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';   // a cluster has no sub-clusters
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
   body.innerHTML=h;
@@ -694,7 +696,24 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
       _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
     else if(k==="none"){ _ents.forEach(function(e){ ent[e]={show:0}; }); __uniApplyVisPreset({ent:ent}); } }; });
-  __uniFleetSync(); };
+  __uniFleetSync();
+  if(window.__uniFleetSpotState) __uniFleetSpot(__uniFleetSpotState.ent, __uniFleetSpotState.sub); };
+/* ── FLEET SPOT (batch 26): the fleet panel mirrors the selection — the selected entity's row is
+   marked; a CLUSTER selection also OPENS its entity's cluster rows and marks the cluster. ── */
+window.__uniFleetSpotState=null;
+window.__uniFleetSpot=function(ent, sub){ try{
+  window.__uniFleetSpotState={ent:ent||null, sub:sub!=null?sub:null};
+  if(ent && sub!=null && !_flOpen[ent]){ _flOpen[ent]=1; __uniFleetRender(); return; }   // render re-enters here with the row now present
+  var body=document.getElementById("fleetbody"); if(!body) return;
+  body.querySelectorAll(".flrow.spot").forEach(function(r){ r.classList.remove("spot"); });
+  if(!ent) return;
+  var esc=(window.CSS&&CSS.escape)?CSS.escape:function(x){return x;};
+  var er=body.querySelector('.flrow[data-fle="'+esc(ent)+'"]:not(.flsub)');
+  if(er) er.classList.add("spot");
+  var tr=(sub!=null)?body.querySelector('.flrow.flsub[data-fle="'+esc(ent)+'"][data-fls="'+esc(sub)+'"]'):null;
+  if(tr) tr.classList.add("spot");
+  var f=tr||er; if(f&&f.scrollIntoView) f.scrollIntoView({block:"nearest"});
+}catch(e){} };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"),
     col=b.getAttribute("data-fcol"), C=_FCOLS.filter(function(c){ return c.k===col; })[0];

@@ -149,6 +149,19 @@ const hull = await p.evaluate(() => {
     clearedOk: cleared === stockOther && (clearedSub === null || clearedSub === op('sub', n.ent, n.sub)) ,
     entGain: entLit > stockA * 1.5, cluGain: stockSub === null || cluLit > stockSub * 1.5,
     elemGain: elemEnt > stockOther * 1.5, escBack: cleared === stockOther }; });
+// [9] FLEET SPOT: entity selection marks its fleet row; cluster selection OPENS the entity's
+//     cluster rows and marks the cluster; Esc clears every spot
+const fleet = await p.evaluate(() => {
+  window.__uniPanelEnt('pantry');
+  const entSpot = !!document.querySelector('#fleetbody .flrow.spot[data-fle="pantry"]');
+  window.__uniPanelClu('allergen', 'misc');
+  const opened = !!document.querySelector('#fleetbody .flrow.flsub[data-fle="allergen"][data-fls="misc"]');
+  const cluSpot = !!document.querySelector('#fleetbody .flrow.flsub.spot[data-fle="allergen"][data-fls="misc"]');
+  const entAlso = !!document.querySelector('#fleetbody .flrow.spot[data-fle="allergen"]:not(.flsub)');
+  const pantryDropped = !document.querySelector('#fleetbody .flrow.spot[data-fle="pantry"]');
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  const cleared = document.querySelectorAll('#fleetbody .flrow.spot').length === 0;
+  return { entSpot, opened, cluSpot, entAlso, pantryDropped, cleared }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -161,6 +174,7 @@ console.log('element:', JSON.stringify(elem));
 console.log('back:', JSON.stringify(back), '· esc:', JSON.stringify(esc));
 console.log('bgClick:', JSON.stringify(bg));
 console.log('hullLight:', JSON.stringify(hull));
+console.log('fleetSpot:', JSON.stringify(fleet));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -182,5 +196,6 @@ if (!(esc.view === 'all' && esc.sel && esc.title === 'Everything')) fails.push('
 if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expectEnt)) fails.push('background hull click wrong');
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
+if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

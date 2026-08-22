@@ -392,6 +392,10 @@ check('"__core"' in page and 'function coreLead' in page,
 # batch 25: hull selection light — containers brighten per panel level, rebuild-proof, Esc clears
 check('window.__uniApplyHullSel=' in page and 'm.__baseOp=m.opacity' in page,
       "the hull selection light is gone (apply engine + lazy stock capture)")
+check('window.__uniFleetSpot=' in page and 'data-fle=' in page and '_flOpen[ent]=1; __uniFleetRender(); return;' in page,
+      "the fleet spot is gone (selection no longer mirrors into the fleet panel / cluster no longer opens its entity)")
+check('__uniFleetSpot(hs.ent, hs.sub)' in page and '.flrow.spot' in page,
+      "the hull engine no longer drives the fleet spot (or its CSS is gone)")
 check('Math.max(m.__baseOp*2, floor)' in page and 'm.__baseEm' in page,
       "the entity light lost its absolute floor / emissive glow (a bare ×factor is invisible on big shells)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

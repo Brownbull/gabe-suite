@@ -235,6 +235,9 @@
   .pnav .pnm{ margin-left:auto; font:600 10px/1.2 var(--font-mono); color:var(--muted); background:#0e1524;
     border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
   .pnav .pki{ display:inline-flex; flex:none; }
+  /* fleet spot — the selection mirrored in the fleet panel */
+  #fleet .flrow.spot{ background:#16233c; box-shadow:inset 2px 0 0 var(--accent); border-radius:6px; }
+  #fleet .flrow.spot .flent{ color:#fff; }
   .pnav .pdir{ flex:none; display:inline-flex; color:var(--muted); }
   .pnav:hover .pdir{ color:var(--accent); }
   .pnav .pcore{ color:var(--accent); }
