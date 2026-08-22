@@ -364,6 +364,8 @@
   #ctrlp .kbd{ font:700 9.5px/1 var(--font-mono); color:var(--ink); background:#0e1524; border:1px solid var(--edge);
     border-bottom-width:2px; border-radius:5px; padding:3px 6px; }
   #ctrlp .ctll{ font-size:10px; color:var(--muted); margin-right:6px; }
+  #ctrlp select{ flex:1; font:600 10px/1.3 var(--font-ui); color:var(--ink); background:#0e1524;
+    border:1px solid var(--line); border-radius:6px; padding:3px 5px; min-width:0; }
   #ctrlp .ctltog .fltog{ width:20px; height:16px; border:1px solid var(--line); border-radius:4px; background:none; cursor:pointer; padding:0; flex:none; }
   #ctrlp .ctltog .fltog.on{ background:var(--accent); border-color:var(--accent); }
   /* keep <code> inline chips readable in the dark card */
@@ -1174,7 +1176,7 @@ function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quater
   cam.position.sub(P).applyQuaternion(q).add(P);   // rotate the camera RIG (position + orientation) rigidly about P
   target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
   cam.quaternion.premultiply(q); }
-window.UNICTL={ invert:false, selPivot:true };   // invert = flight-style VERTICAL axis flip (drag up ⇒ look down); buttons never swap
+window.UNICTL={ invert:false, selPivot:true, camMode:"tumble" };   // camMode: tumble · joystick · arcball · look — the left-drag scheme
 /* the CURRENT-ZOOM depth: the nearest visible content ahead (a ~24° cone), never beyond the
    dolly target. Flying close then dragging orbits a NEAR pivot — the giant-sphere feel.
    TOP-LEVEL on purpose: the drag starter AND the Q/E fly tick both call it. */
@@ -1202,7 +1204,7 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       ctrls.target.copy(pp);                                     // scroll-dolly now zooms toward what you orbit (on-axis → no view snap)
       ctrls.enabled=false; window.__uniDragging=true;
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
-      return { P:P, lx:cx, ly:cy }; }catch(e){ return null; } }
+      return { P:P, lx:cx, ly:cy, ax:cx, ay:cy }; }catch(e){ return null; } }   // ax/ay = the CLICK ANCHOR (the joystick scheme's still point)
   function _rigStartP(P){ try{ var ctrls=Graph.controls(); if(!ctrls) return null;
       ctrls.enabled=false; window.__uniDragging=true;
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
@@ -1224,14 +1226,45 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
         var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
         var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
         var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); }
+      var mode=(drag.btn===1)?"tumble":(UNICTL.camMode||"tumble");           // middle-orbit always tumbles around the selection
+      if(mode==="joystick"){ drag.cx=ev.clientX; drag.cy=ev.clientY; return; }   // offset-from-anchor drives a per-frame velocity (the tick below)
       var up=new T.Vector3(0,1,0);
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
       var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
-      _rotRig(cam, ctrls.target, drag.P, up, -dx*0.006);                             // azimuth around world-up through P
       var vs=(UNICTL.invert?1:-1)*0.006;                                             // flight-style invert flips ONLY the vertical axis
+      if(mode==="arcball"){                                                  // virtual trackball: great-circle between the two cursor points
+        var gr=g.getBoundingClientRect();
+        var sph=function(px,py){ var R2=Math.min(gr.width,gr.height)/2;
+          var x=(px-gr.left-gr.width/2)/R2, y=-(py-gr.top-gr.height/2)/R2;
+          var d2=x*x+y*y, z=d2<1?Math.sqrt(1-d2):0; var v=new T.Vector3(x,y,z);
+          return v.lengthSq()>0?v.normalize():new T.Vector3(0,0,1); };
+        var v0=sph(ev.clientX-dx, ev.clientY-dy), v1=sph(ev.clientX, ev.clientY);
+        var axb=new T.Vector3().crossVectors(v1, v0);
+        if(axb.lengthSq()>1e-9){ var angb=Math.acos(Math.max(-1,Math.min(1,v0.dot(v1))));
+          axb.normalize().applyQuaternion(cam.quaternion);                   // camera-space axis → world
+          _rotRig(cam, ctrls.target, drag.P, axb, angb); } return; }
+      if(mode==="look"){                                                     // first-person: turn IN PLACE (the camera is the fixed point)
+        var eye=cam.position.clone();
+        _rotRig(cam, ctrls.target, eye, up, -dx*0.004);
+        var vd2=new T.Vector3().subVectors(ctrls.target, cam.position).normalize();
+        var nd2=vd2.clone().applyAxisAngle(right, -vs*dy*0.66);
+        if(Math.abs(nd2.y)<0.985) _rotRig(cam, ctrls.target, eye, right, -vs*dy*0.66); return; }
+      _rotRig(cam, ctrls.target, drag.P, up, -dx*0.006);                             // TUMBLE (stock): azimuth around world-up through P
       var nd=vdir.clone().applyAxisAngle(right, vs*dy);                                // polar around camera-right (clamp near vertical to avoid a flip)
       if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, vs*dy);
     }catch(e){} });
+  setInterval(function(){                                                    // JOYSTICK tick: offset from the CLICK ANCHOR = angular velocity —
+    try{ if(!drag || drag.btn===1 || (UNICTL.camMode||"tumble")!=="joystick" || drag.cx==null) return;   // hold farther = turn faster (the WoW feel)
+      var ox=drag.cx-drag.ax, oy=drag.cy-drag.ay;
+      if(Math.abs(ox)<8) ox=0; if(Math.abs(oy)<8) oy=0; if(!ox&&!oy) return; // a small deadzone around the anchor
+      var cam=Graph.camera(), ctrls=Graph.controls();
+      var up=new T.Vector3(0,1,0), right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();
+      var vs=(UNICTL.invert?1:-1)*0.00035;
+      _rotRig(cam, ctrls.target, drag.P, up, -ox*0.00035);
+      var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
+      var nd=vdir.clone().applyAxisAngle(right, vs*oy);
+      if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, vs*oy);
+    }catch(e){} }, 16);
   window.addEventListener("pointerup", function(ev){
     if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;   // only the drag-OWNING button ends it (chord releases keep it alive)
     if(drag){ var ctrls=Graph.controls(); drag=null; window.__uniDragging=false; if(ctrls){ ctrls.enabled=true; try{ ctrls.update(); }catch(e){} } }
@@ -1426,12 +1459,19 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
     +'<div class="ctlrow">'+KB("Alt+scroll")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow"><span class="ctll">camera</span><select id="ctlCam" title="how the LEFT drag rotates">'
+    +'<option value="tumble">Tumble — drag = turn (stock)</option>'
+    +'<option value="joystick">Joystick — hold offset = keep turning (WoW)</option>'
+    +'<option value="arcball">Arcball — virtual trackball</option>'
+    +'<option value="look">Look — first-person, turn in place</option></select></div>'
     +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="flight-style: drag up looks DOWN (flips the vertical rotation axis only — buttons stay the same)"></button><span class="ctll">invert vertical (flight-style)</span></div>'
     +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.selPivot?" on":"")+'" id="ctlPvt" title="middle-drag orbits around the SELECTED planet"></button><span class="ctll">middle = orbit selection</span></div>'
     +'</div>';
   document.body.appendChild(p);
   document.getElementById("ctrlpmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
   document.getElementById("ctlInv").onclick=function(){ UNICTL.invert=!UNICTL.invert; this.classList.toggle("on",UNICTL.invert); };
+  var cs=document.getElementById("ctlCam"); if(cs){ cs.value=UNICTL.camMode;
+    cs.addEventListener("change", function(){ UNICTL.camMode=cs.value; }); }
   document.getElementById("ctlPvt").onclick=function(){ UNICTL.selPivot=!UNICTL.selPivot; this.classList.toggle("on",UNICTL.selPivot); }; };
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){

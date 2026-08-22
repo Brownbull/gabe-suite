@@ -332,6 +332,21 @@ check('k==="q"' in page and 'ya*0.022' in page and '_rotRig(cam, ctrls.target, p
       "Q/E must orbit INWARD around the view centre at the zoom depth")
 check('drag.btn=1' in page and 'UNICTL.selPivot' in page, "middle-orbits-selection missing")
 
+# ── 10s. batch 20: the CAMERA-MODE dropdown — tumble (stock) · joystick (WoW anchor-velocity) · arcball · look ──
+check('camMode:"tumble"' in page and 'id="ctlCam"' in page, "camera-mode dropdown missing from the controls panel")
+for v in ('value="tumble"','value="joystick"','value="arcball"','value="look"'):
+    check(v in page, "camera dropdown lost a scheme: "+v)
+check('ax:cx, ay:cy' in page and 'drag.cx-drag.ax' in page,
+      "joystick anchor (ax/ay) or its offset velocity is gone")
+check('JOYSTICK tick' in page and '(UNICTL.camMode||"tumble")!=="joystick"' in page,
+      "the joystick per-frame velocity tick is gone (offset must KEEP turning while held)")
+check('if(Math.abs(ox)<8) ox=0' in page, "the joystick deadzone (8px around the anchor) is gone")
+check('crossVectors(v1, v0)' in page and 'z=d2<1?Math.sqrt(1-d2):0' in page,
+      "the arcball virtual-trackball mapping is gone")
+check('mode==="look"' in page and 'var eye=cam.position.clone()' in page,
+      "look mode must rotate about the CAMERA (turn in place)")
+check('(drag.btn===1)?"tumble"' in page, "middle-orbit must always tumble regardless of the chosen scheme")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",

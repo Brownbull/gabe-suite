@@ -1,5 +1,6 @@
-/* Batch-18 proof: FOCUS rest behaviors (dim/fade/wires/hide) · the CONTROLS panel · Q/E yaw ·
-   invert mouse · middle-button orbit-the-selection. Run: node verify-ctrl.mjs */
+/* Batch-18/20 proof: FOCUS rest behaviors (dim/fade/wires/hide) · the CONTROLS panel · Q/E yaw ·
+   invert mouse · middle-button orbit-the-selection · the CAMERA-MODE dropdown
+   (tumble / joystick / arcball / look). Run: node verify-ctrl.mjs */
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -111,6 +112,52 @@ const mid = await p.evaluate(() => {
   out.noSelNoDrag = window.__uniDragging !== true;
   window.dispatchEvent(new PointerEvent('pointerup', { button: 1, bubbles: true }));
   return out; });
+// [6] CAMERA-MODE dropdown: 4 schemes; joystick = hold-offset KEEPS turning (anchor velocity),
+//     stops on release; arcball turns; look turns IN PLACE (position fixed); default = tumble
+const cmDrop = await p.evaluate(() => {
+  const s = document.getElementById('ctlCam');
+  return { present: !!s, def: s && s.value,
+    opts: s ? [...s.options].map(o => o.value).join(',') : '' }; });
+const setMode = v => p.evaluate(vv => { const s = document.getElementById('ctlCam');
+  s.value = vv; s.dispatchEvent(new Event('change')); }, v);
+const geom = await p.evaluate(() => { const r = document.getElementById('g').getBoundingClientRect();
+  return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; });
+// joystick: press at center, ONE move to a held offset, then the mouse goes STILL
+await setMode('joystick');
+await p.evaluate(c => { const g = document.getElementById('g');
+  g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: c.cx, clientY: c.cy, bubbles: true }));
+  window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: c.cx + 90, clientY: c.cy, bubbles: true }));
+  window.__jq0 = Graph.camera().quaternion.clone(); }, geom);
+await p.waitForTimeout(280);
+const jA = await p.evaluate(() => Graph.camera().quaternion.angleTo(window.__jq0));
+await p.waitForTimeout(320);
+const jB = await p.evaluate(() => Graph.camera().quaternion.angleTo(window.__jq0));
+await p.evaluate(() => { window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true }));
+  window.__jq1 = Graph.camera().quaternion.clone(); });
+await p.waitForTimeout(280);
+const jStop = await p.evaluate(() => Graph.camera().quaternion.angleTo(window.__jq1));
+// deadzone: a held offset UNDER 8px must not rotate
+await p.evaluate(c => { const g = document.getElementById('g');
+  g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: c.cx, clientY: c.cy, bubbles: true }));
+  window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: c.cx + 5, clientY: c.cy + 5, bubbles: true }));
+  window.__jq2 = Graph.camera().quaternion.clone(); }, geom);
+await p.waitForTimeout(280);
+const jDead = await p.evaluate(() => { const a = Graph.camera().quaternion.angleTo(window.__jq2);
+  window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return a; });
+// arcball + look: a plain 6-step drag must turn; look must NOT move the camera position
+const arcLook = await p.evaluate(async c => {
+  const g = document.getElementById('g');
+  const drag6 = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: c.cx, clientY: c.cy, bubbles: true }));
+    const q0 = Graph.camera().quaternion.clone(), p0 = Graph.camera().position.clone();
+    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: c.cx + i * 14, clientY: c.cy + i * 6, bubbles: true }));
+    const out = { turn: Graph.camera().quaternion.angleTo(q0), moved: Graph.camera().position.distanceTo(p0) };
+    window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return out; };
+  const set = v => { const s = document.getElementById('ctlCam'); s.value = v; s.dispatchEvent(new Event('change')); };
+  set('arcball'); const arc = drag6();
+  set('look'); const look = drag6();
+  set('tumble');
+  return { arcTurn: +arc.turn.toFixed(3), lookTurn: +look.turn.toFixed(3),
+    lookStays: look.moved < 1, backTo: UNICTL.camMode }; }, geom);
 await b.close();
 
 console.log('focus rest: dim', JSON.stringify(dim), '· fade', JSON.stringify(fade));
@@ -119,6 +166,9 @@ console.log('panel:', JSON.stringify(panel), '· yaw:', JSON.stringify(yaw), 'fr
 console.log('zoomArc:', JSON.stringify(zoomArc));
 console.log('invert:', JSON.stringify(inv));
 console.log('middle:', JSON.stringify(mid));
+console.log('camModes:', JSON.stringify(cmDrop));
+console.log('joystick: heldA', +jA.toFixed(3), 'heldB', +jB.toFixed(3), 'afterRelease', +jStop.toFixed(4), 'deadzone', +jDead.toFixed(4));
+console.log('arc/look:', JSON.stringify(arcLook));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -132,5 +182,12 @@ if (!(yaw.turned && yaw.sweeps && frozeMid && thawed)) fails.push('Q/E inward or
 if (!zoomArc.scales) fails.push('drag arc does not follow the zoom depth');
 if (!(inv.rightNeverDrags && inv.axisFlips)) fails.push('vertical-axis invert wrong (buttons must stay stock)');
 if (!(mid.drags && mid.orbitsSelection && mid.ends && mid.noSelNoDrag)) fails.push('middle-orbit-selection wrong');
+if (!(cmDrop.present && cmDrop.def === 'tumble' && cmDrop.opts === 'tumble,joystick,arcball,look')) fails.push('camera dropdown wrong');
+if (!(jA > 0.02 && jB > jA * 1.5)) fails.push('joystick does not KEEP turning while held still');
+if (!(jStop < 0.01)) fails.push('joystick does not stop on release');
+if (!(jDead < 0.005)) fails.push('joystick deadzone leaks rotation');
+if (!(arcLook.arcTurn > 0.02)) fails.push('arcball drag does not turn');
+if (!(arcLook.lookTurn > 0.02 && arcLook.lookStays)) fails.push('look mode must turn IN PLACE');
+if (!(arcLook.backTo === 'tumble')) fails.push('mode did not reset to tumble');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('CTRL PROOF: ALL PASS');

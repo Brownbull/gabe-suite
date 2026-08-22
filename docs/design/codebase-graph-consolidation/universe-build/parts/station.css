@@ -218,6 +218,8 @@
   #ctrlp .kbd{ font:700 9.5px/1 var(--font-mono); color:var(--ink); background:#0e1524; border:1px solid var(--edge);
     border-bottom-width:2px; border-radius:5px; padding:3px 6px; }
   #ctrlp .ctll{ font-size:10px; color:var(--muted); margin-right:6px; }
+  #ctrlp select{ flex:1; font:600 10px/1.3 var(--font-ui); color:var(--ink); background:#0e1524;
+    border:1px solid var(--line); border-radius:6px; padding:3px 5px; min-width:0; }
   #ctrlp .ctltog .fltog{ width:20px; height:16px; border:1px solid var(--line); border-radius:4px; background:none; cursor:pointer; padding:0; flex:none; }
   #ctrlp .ctltog .fltog.on{ background:var(--accent); border-color:var(--accent); }
   /* keep <code> inline chips readable in the dark card */
