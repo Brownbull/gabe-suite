@@ -944,8 +944,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
       if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
       try{ applyCfg(grp); }catch(err){} }); }); });
-  var tsr=rt.querySelector("#trSpeedRng");   // transport-speed slider → INTC.speed (rt is DETACHED now — never query the document here)
-  if(tsr) tsr.addEventListener("input", function(){ if(typeof INTC!=="undefined") INTC.speed=+this.value; });
+  // transport speed is a POSITION LADDER now — wired where the Transports pane is assembled below
   var _rAF=null, redraw=function(){ if(_rAF) return; _rAF=requestAnimationFrame(function(){ _rAF=null; try{ updateConnectors(); }catch(e){} }); };
   rt.querySelectorAll('.pill[data-grp="focusRest"] button').forEach(function(b){ b.addEventListener("click", function(){
     HL.rest=b.getAttribute("data-v");
@@ -981,12 +980,25 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(transGrp){ var _tl=transGrp.querySelector(".grplbl"); if(_tl) _tl.remove();   // the pane title already says Transports
     var _ts=transGrp.querySelector("#trSpeedRng");
     if(_ts && !transGrp.querySelector("#trMinus")){
+      /* the SPEED LADDER (operator spec): 7 positions, 0 = the default (two levels below the old
+         0.3), 2 stops left · 4 right, ×√2 per stop → 0.05 · 0.07 · 0.1 · 0.14 · 0.2 · 0.28 · 0.4.
+         The thumb is a numbered DOT (badge rides the thumb; the native thumb goes transparent). */
+      _ts.min="-2"; _ts.max="4"; _ts.step="1"; _ts.value="0";
+      var SPD=function(pos){ return +(0.1*Math.pow(Math.SQRT2,pos)).toFixed(3); };
+      var wrapEl=document.createElement("span"); wrapEl.className="spdwrap";
+      _ts.parentNode.insertBefore(wrapEl,_ts); wrapEl.appendChild(_ts);
+      var badge=document.createElement("span"); badge.className="spdbadge"; badge.id="trSpdBadge"; wrapEl.appendChild(badge);
+      var upd=function(){ var pos=+_ts.value, sp=SPD(pos);
+        if(typeof INTC!=="undefined") INTC.speed=sp;
+        badge.textContent=String(+sp.toFixed(2));
+        var f=(pos+2)/6; badge.style.left="calc("+(f*100)+"% + "+((0.5-f)*22).toFixed(1)+"px)"; };
+      _ts.addEventListener("input", upd);
       var _mk=function(id,txt,ti){ var b=document.createElement("button"); b.className="stp"; b.id=id; b.textContent=txt; b.title=ti; return b; };
-      var m=_mk("trMinus","–","slower"), pl=_mk("trPlus","+","faster");
-      _ts.parentNode.insertBefore(m,_ts); _ts.parentNode.insertBefore(pl,_ts.nextSibling);
-      var _step=function(d){ _ts.value=String(Math.max(+_ts.min||0.05, Math.min(+_ts.max||1.2, (+_ts.value)+d)));
-        _ts.dispatchEvent(new Event("input")); };
-      m.onclick=function(){ _step(-0.1); }; pl.onclick=function(){ _step(0.1); }; } }
+      var m=_mk("trMinus","–","slower (one stop)"), pl=_mk("trPlus","+","faster (one stop)");
+      wrapEl.parentNode.insertBefore(m,wrapEl); wrapEl.parentNode.insertBefore(pl,wrapEl.nextSibling);
+      var _step=function(d){ _ts.value=String(Math.max(-2, Math.min(4, (+_ts.value)+d))); _ts.dispatchEvent(new Event("input")); };
+      m.onclick=function(){ _step(-1); }; pl.onclick=function(){ _step(1); };
+      upd(); } }
   window.__uniFlPanes.routes={ title:"Transports", icon:"truck", groups:transGrp?[transGrp]:[], shared:[] };
   var _st2=document.getElementById("flstash");
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });

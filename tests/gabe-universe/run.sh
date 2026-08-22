@@ -138,8 +138,13 @@ check('id="trMinus"' in page.replace("'",'"') or '"trMinus"' in page,
       "the transport speed lost its −/+ steppers")
 check('overflow-x:hidden' in page,
       "drawer panes may scroll horizontally again (compaction regression)")
-check('rt.querySelector("#trSpeedRng")' in page and 'rt.querySelector("#curveAmtRng")' in page,
-      "REGRESSION: rt-homed sliders bound via document.getElementById — rt is DETACHED, the listeners never attach (dead speed/curve sliders)")
+check('rt.querySelector("#curveAmtRng")' in page,
+      "REGRESSION: the curve slider bound via document.getElementById — rt is DETACHED, the listener never attaches")
+# batch 33: the transport speed LADDER — 7 positions, ×√2 per stop, numbered-dot thumb
+check('_ts.min="-2"; _ts.max="4"; _ts.step="1"; _ts.value="0";' in page and '0.1*Math.pow(Math.SQRT2,pos)' in page,
+      "the speed ladder is gone (−2..+4 positions, default 0.1 = two stops under the old 0.3)")
+check('id="trSpdBadge"' in page.replace("'",'"') or '"trSpdBadge"' in page,
+      "the numbered-dot thumb (speed badge) is gone")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──

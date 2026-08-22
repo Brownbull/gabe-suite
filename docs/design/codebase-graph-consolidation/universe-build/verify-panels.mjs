@@ -221,15 +221,22 @@ const flcfg = await p.evaluate(() => {
   const coreIconOnly = [...document.querySelectorAll('.pill[data-grp="coreBy"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg'));
   const transDots = [...document.querySelectorAll('.pill[data-grp="entOp"] button')].every(b => b.textContent.trim() === '' && /fill-opacity/.test(b.innerHTML));
   window.__uniFlOpen('routes');
-  const s0 = (typeof INTC !== 'undefined') ? INTC.speed : null;
+  const ts = document.querySelector('#flsbody #trSpeedRng');
+  const ladder = ts && ts.min === '-2' && ts.max === '4' && ts.step === '1';
+  const defSpeed = Math.abs(INTC.speed - 0.1) < 0.001 && ts.value === '0';   // default = two stops below the old 0.3
+  const badge = document.getElementById('trSpdBadge');
+  const badgeShows = badge && badge.textContent === '0.1';
   const plusB = document.querySelector('#flsbody #trPlus'); if (plusB) plusB.click();
-  const stepped = plusB && typeof INTC !== 'undefined' && INTC.speed > s0;
+  const stepped = plusB && Math.abs(INTC.speed - 0.141) < 0.002 && badge.textContent === '0.14';
+  const minusB = document.querySelector('#flsbody #trMinus'); if (minusB) { minusB.click(); }
+  const backTo = ts.value === '0' && Math.abs(INTC.speed - 0.1) < 0.001;
   const noRepeatLbl = !document.querySelector('#flsbody .grplbl');
   document.getElementById('flsclose').click();
   const closed = !side.classList.contains('out');
   return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
     standalone, docked, fleetUnstretched, under,
-    oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl }; });
+    oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
+    ladder, defSpeed, badgeShows, backTo }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -274,5 +281,6 @@ if (!(flcfg.tabs.length === 0 && flcfg.order === 'show,subs,planets,wires,routes
 if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity/clusters/planets split, shared radius+container, icons-only shape, zones master)');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
+if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');
