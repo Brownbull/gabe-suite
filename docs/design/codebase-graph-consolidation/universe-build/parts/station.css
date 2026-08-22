@@ -192,8 +192,21 @@
   #fleet .fldot{ width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; }
   #fleet .flcell{ width:20px; display:grid; place-items:center; color:var(--muted); flex:none; }
   #fleet .flcell svg{ width:13px; height:13px; }
-  #fleet #flcfg{ border-bottom:1px solid var(--line); padding:7px 10px 8px; }
-  #fleet #flcfg .grp{ margin:0 0 6px; } #fleet #flcfg .grp:last-child{ margin-bottom:0; }
+  /* the fleet SIDE DRAWER — a FREE-STANDING add-on docked at the fleet's right edge, its own
+     width/height; it slides out from BEHIND the fleet (z-index one below) and back under on close */
+  #flside{ position:fixed; width:250px; max-height:72vh;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    transform:translateX(-104%); transition:transform .22s ease; display:flex; flex-direction:column;
+    box-shadow:0 8px 30px #0006; pointer-events:none; opacity:0; }
+  #flside.out{ transform:translateX(0); pointer-events:auto; opacity:1; }
+  #flside .flshead{ display:flex; align-items:center; gap:6px; padding:7px 9px; border-bottom:1px solid var(--line); }
+  #flside .flstitle{ display:inline-flex; align-items:center; gap:6px; font:700 10.5px/1 var(--font-ui);
+    text-transform:uppercase; letter-spacing:.08em; color:var(--ink); margin-right:auto; }
+  #flside .flsbtn{ display:grid; place-items:center; width:20px; height:20px; color:var(--muted);
+    background:#0e1524; border:1px solid var(--line); border-radius:6px; cursor:pointer; font:700 12px/1 var(--font-ui); }
+  #flside .flsbtn:hover{ color:var(--ink); border-color:var(--accent); }
+  #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; min-height:0; }
+  #flside .flsbody .grp{ margin:0 0 8px; } #flside .flsbody .grp:last-child{ margin-bottom:0; }
   #fleet .flhead .flcfgbtn{ cursor:pointer; border-radius:5px; }
   #fleet .flhead .flcfgbtn:hover{ color:var(--accent); background:#0e1524; }
   #fleet .flhead .flcfgbtn.on{ color:var(--accent); }

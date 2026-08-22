@@ -25,7 +25,8 @@ await p.waitForTimeout(4500);
 const tab = await p.evaluate(() => {
   const rtab = document.querySelector('.cfgtab[data-pane="routes"]'); if (!rtab) return { routesTab: false };
   rtab.click();
-  const pane = rtab.closest('.cfgbody').querySelectorAll('.cfgpane')[2];
+  const panes = rtab.closest('.cfgbody').querySelectorAll('.cfgpane');
+  const pane = panes[panes.length - 1];                       // Routes is the LAST (and now only) pane — batch 30 moved the rest into the fleet
   const q = s => !!pane.querySelector(s);
   return { routesTab: true, paneShown: pane.style.display !== 'none',
     lines: q('.pill[data-grp="lineStyle"]'), lineIcons: q('.pill[data-grp="lineStyle"] button svg'),

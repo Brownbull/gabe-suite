@@ -168,34 +168,51 @@ const numkeys = await p.evaluate(() => {
   const kd = k => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
   window.__uniPanelClu('allergen', 'misc');
   const c0 = (UNIVIS.sub['allergen|misc'] || { planets: 1 }).planets;
-  kd('1'); const c1 = UNIVIS.sub['allergen|misc'].planets;
-  kd('1'); const c2 = UNIVIS.sub['allergen|misc'].planets;
+  kd('2'); const c1 = UNIVIS.sub['allergen|misc'].planets;      // key 2 = planets since the batch-30 reorder
+  kd('2'); const c2 = UNIVIS.sub['allergen|misc'].planets;
   const entUntouched = UNIVIS.ent.allergen.planets === 1;
   window.__uniPanelEnt('pantry');
-  kd('2'); const entWires = UNIVIS.ent.pantry.wires;
-  kd('2'); const entWiresBack = UNIVIS.ent.pantry.wires;
+  kd('3'); const entWires = UNIVIS.ent.pantry.wires;            // key 3 = wires now
+  kd('3'); const entWiresBack = UNIVIS.ent.pantry.wires;
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   kd('4'); const allOff = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 0);
   kd('4'); const allBack = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 1);
   const hdrKeys = document.querySelectorAll('#fleetbody .flhead .flkey').length;
   const spotBg = getComputedStyle(document.querySelector('#fleet') ? document.body : document.body) && true;
   return { c0, c1, c2, entUntouched, entWires, entWiresBack, allOff, allBack, hdrKeys }; });
-// [11] PLANETS config lives in the FLEET now: no Planets tab; the planets header icon opens a
-//      flyout holding the moved transparency row + the Zones master; the four zone buttons are GONE
+// [11] the fleet SIDE DRAWER: config lives per column — Entity (layout·show·radius·transparency·
+//      container·stars·functions) · Clusters (core·show·transparency + the SHARED radius/container)
+//      · Planets (transparency + Zones master); slides out right, X slides it back; Routes-only config
 const flcfg = await p.evaluate(() => {
   const tabs = [...document.querySelectorAll('#cfg .cfgtab')].map(b => b.getAttribute('data-pane'));
-  const btn = document.querySelector('#fleetbody .flhead .flcfgbtn[data-fk="planets"]');
-  btn.click();
-  const slot = document.getElementById('flcfg');
-  const open = slot.style.display !== 'none';
-  const hasTransp = /film/.test(slot.textContent) && /ghost/.test(slot.textContent);
-  const zonePill = slot.querySelector('.pill[data-grp="warOn"]');
-  const w0 = CFG.warOn;
+  const order = _FCOLS.map(c => c.k).slice(0, 4).join(',');
+  const btn = k => document.querySelector(`#fleetbody .flhead .flcfgbtn[data-fk="${k}"]`);
+  const side = document.getElementById('flside'), bodyTxt = () => document.getElementById('flsbody').textContent;
+  btn('show').click();
+  const entOpen = side.classList.contains('out');
+  const U = s => bodyTxt().toUpperCase().includes(s);
+  const entFull = U('ENTITY LAYOUT') && U('RADIUS') && U('TRANSPARENCY') && U('CONTAINER') && U('FUNCTIONS')
+    && !!document.querySelector('#flsbody [data-itog="stars"]') && !!document.querySelector('#flsbody [data-itog="entOn"]')
+    && !document.querySelector('#flsbody [data-itog="subOn"]');
+  btn('subs').click();
+  const cluFull = U('CLUSTER CORE BY') && !!document.querySelector('#flsbody #radRng') && U('CONTAINER')
+    && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
+  btn('planets').click();
+  const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');
+  const plFull = /film/.test(bodyTxt()) && !!zonePill;
   zonePill.querySelector('button[data-v="true"]').click(); const wOn = CFG.warOn === true;
   zonePill.querySelector('button[data-v="false"]').click(); const wOff = CFG.warOn === false;
+  const iconsOnly = [...document.querySelectorAll('.pill[data-grp="shape"] button')].every(b => b.textContent.trim() === '');
   const gates = CFG.zDef && CFG.zAtk && CFG.zCfl && CFG.zSat;
-  btn.click(); const closed = slot.style.display === 'none';
-  return { tabs, open, hasTransp, hasZones: !!zonePill, wOn, wOff, gates, closed }; });
+  const standalone = side.parentNode === document.body;                       // an ADD-ON, not a fleet child
+  const fl = document.getElementById('fleet'), fr = fl.getBoundingClientRect();
+  const docked = Math.abs(parseFloat(side.style.left) - fr.right) < 2 && Math.abs(parseFloat(side.style.top) - fr.top) < 2;   // style, not rect — the slide transition is mid-flight
+  const fleetUnstretched = fl.scrollWidth <= fl.clientWidth + 2;               // the drawer no longer widens the fleet
+  const under = +getComputedStyle(side).zIndex < +(getComputedStyle(fl).zIndex || 40);
+  document.getElementById('flsclose').click();
+  const closed = !side.classList.contains('out');
+  return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
+    standalone, docked, fleetUnstretched, under }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -233,9 +250,11 @@ if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expect
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
-if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 1 must toggle planets for the SELECTED CLUSTER only');
-if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 2 must toggle wires for the selected ENTITY');
+if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 2 must toggle planets for the SELECTED CLUSTER only');
+if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
-if (!(flcfg.tabs.join(',') === 'universe,routes' && flcfg.open && flcfg.hasTransp && flcfg.hasZones && flcfg.wOn && flcfg.wOff && flcfg.gates && flcfg.closed)) fails.push('planets config did not migrate into the fleet flyout (or zone gates not forced on)');
+if (!(flcfg.tabs.join(',') === 'routes' && flcfg.order === 'show,subs,planets,wires')) fails.push('config must be Routes-only and the fleet order Entity·Clusters·Planets·Connections');
+if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity/clusters/planets split, shared radius+container, icons-only shape, zones master)');
+if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

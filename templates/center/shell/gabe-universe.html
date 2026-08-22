@@ -338,8 +338,21 @@
   #fleet .fldot{ width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; }
   #fleet .flcell{ width:20px; display:grid; place-items:center; color:var(--muted); flex:none; }
   #fleet .flcell svg{ width:13px; height:13px; }
-  #fleet #flcfg{ border-bottom:1px solid var(--line); padding:7px 10px 8px; }
-  #fleet #flcfg .grp{ margin:0 0 6px; } #fleet #flcfg .grp:last-child{ margin-bottom:0; }
+  /* the fleet SIDE DRAWER — a FREE-STANDING add-on docked at the fleet's right edge, its own
+     width/height; it slides out from BEHIND the fleet (z-index one below) and back under on close */
+  #flside{ position:fixed; width:250px; max-height:72vh;
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    transform:translateX(-104%); transition:transform .22s ease; display:flex; flex-direction:column;
+    box-shadow:0 8px 30px #0006; pointer-events:none; opacity:0; }
+  #flside.out{ transform:translateX(0); pointer-events:auto; opacity:1; }
+  #flside .flshead{ display:flex; align-items:center; gap:6px; padding:7px 9px; border-bottom:1px solid var(--line); }
+  #flside .flstitle{ display:inline-flex; align-items:center; gap:6px; font:700 10.5px/1 var(--font-ui);
+    text-transform:uppercase; letter-spacing:.08em; color:var(--ink); margin-right:auto; }
+  #flside .flsbtn{ display:grid; place-items:center; width:20px; height:20px; color:var(--muted);
+    background:#0e1524; border:1px solid var(--line); border-radius:6px; cursor:pointer; font:700 12px/1 var(--font-ui); }
+  #flside .flsbtn:hover{ color:var(--ink); border-color:var(--accent); }
+  #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; min-height:0; }
+  #flside .flsbody .grp{ margin:0 0 8px; } #flside .flsbody .grp:last-child{ margin-bottom:0; }
   #fleet .flhead .flcfgbtn{ cursor:pointer; border-radius:5px; }
   #fleet .flhead .flcfgbtn:hover{ color:var(--accent); background:#0e1524; }
   #fleet .flhead .flcfgbtn.on{ color:var(--accent); }
@@ -1690,9 +1703,9 @@ function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
    icons come from the spike's own ICO set via ico() so the panel speaks the config's language */
 var _FCOLS=[
   { k:"show",   ti:"show entity",         scope:"nodes",    icon:"shape",  g:function(){ return true; } },
+  { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
   { k:"planets",ti:"planets (element nodes) — hulls stay", scope:"nodes",  icon:"bubble", g:function(){ return true; } },
   { k:"wires",  ti:"connections touching it",              scope:"wires",  icon:"radius", g:function(){ return true; } },
-  { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
   { k:"zDef",   ti:"defense fleet",       scope:"zones",    icon:"shield", g:function(){ return !!(CFG.warOn&&CFG.zDef); } },
   { k:"zAtk",   ti:"attack fleet",        scope:"zones",    icon:"swords", g:function(){ return !!(CFG.warOn&&CFG.zAtk); } },
   { k:"zCfl",   ti:"conflict effects",    scope:"zones",    icon:"burst",  g:function(){ return !!(CFG.warOn&&CFG.zCfl); } },
@@ -1712,22 +1725,55 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
     +'<button class="flpre" data-fpre="inflight" disabled title="IN-FLIGHT — '+_simTitle+'">'+(typeof ico==="function"?ico("flight",13):"")+'</button>'
     +'</span>'
     +'<button class="cfgmin" id="fleetmin" title="minimize">–</button></div>'
-    +'<div id="flcfg" style="display:none"></div><div class="cfgbody" id="fleetbody"></div>';
+    +'<div class="cfgbody" id="fleetbody"></div>';
   document.body.appendChild(p);
   p.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
     if(k==="all"){ UNIVIS.sub={};
       _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
     else if(k==="none"){ _ents.forEach(function(e){ ent[e]={show:0}; }); __uniApplyVisPreset({ent:ent}); } }; });
   document.getElementById("fleetmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
+  var side=document.getElementById("flside");                    // the drawer is its OWN container — an add-on beside the fleet, not an extension
+  if(!side){ side=document.createElement("div"); side.id="flside";
+    side.innerHTML='<div class="flshead"><span class="flstitle" id="flstitle"></span>'
+      +'<button class="flsbtn" id="flsmin" title="minimize — slides back behind the fleet">‹</button>'
+      +'<button class="flsbtn" id="flsclose" title="close">×</button></div>'
+      +'<div class="flsbody" id="flsbody"></div>';
+    document.body.appendChild(side);
+    document.getElementById("flsmin").onclick=function(){ __uniFlOpen(null); };
+    document.getElementById("flsclose").onclick=function(){ __uniFlOpen(null); };
+    setInterval(function(){ if(side.classList.contains("out")) __uniFlDock(); }, 300); }   // the fleet drags — the add-on follows
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
-/* mount (or re-mount after a config rebuild) the planets flyout into the fleet's slot */
-window.__uniMountPlanetCfg=function(){ var slot=document.getElementById("flcfg");
-  if(!slot || !window.__uniPlanetCfg) return;
-  if(slot.firstChild!==window.__uniPlanetCfg){ slot.innerHTML=""; slot.appendChild(window.__uniPlanetCfg); } };
+/* ── the SIDE DRAWER: slides out from behind the fleet square (left→right); minimize/close slide it
+   back under. One drawer, per-column content — groups move from the #flstash on open, back on close
+   (stashed groups stay in the DOM so their listeners and hover titles never die). ── */
+window.__uniFlOpenKey=null;
+window.__uniFlDock=function(){ try{ var side=document.getElementById("flside"), fl=document.getElementById("fleet");
+  if(!side||!fl) return; var fr=fl.getBoundingClientRect();
+  side.style.left=fr.right+"px"; side.style.top=fr.top+"px";
+  side.style.zIndex=String((parseInt(getComputedStyle(fl).zIndex,10)||40)-1);   // BELOW the fleet — the slide comes out from behind it
+}catch(e){} };
+window.__uniFlOpen=function(key, remount){ try{
+  var side=document.getElementById("flside"), bodyEl=document.getElementById("flsbody"),
+      title=document.getElementById("flstitle"), stash=document.getElementById("flstash");
+  if(!side||!bodyEl) return;
+  if(key===window.__uniFlOpenKey && !remount) key=null;                 // same icon again = toggle shut
+  if(!key){ window.__uniFlOpenKey=null; side.classList.remove("out");
+    if(stash) [].slice.call(bodyEl.children).forEach(function(g){ stash.appendChild(g); });
+    document.querySelectorAll("#fleetbody .flhead .flcfgbtn.on").forEach(function(c){ c.classList.remove("on"); });
+    return; }
+  var pane=(window.__uniFlPanes||{})[key]; if(!pane) return;
+  if(stash) [].slice.call(bodyEl.children).forEach(function(g){ stash.appendChild(g); });   // previous pane's groups go home
+  title.innerHTML=(typeof ico==="function"?ico(pane.icon,13):"")+pane.title;
+  var _seen=[]; pane.groups.concat(pane.shared||[]).forEach(function(g){
+    if(g && _seen.indexOf(g)<0){ _seen.push(g); bodyEl.appendChild(g); } });
+  window.__uniFlOpenKey=key; if(window.__uniFlDock) __uniFlDock(); side.classList.add("out");
+  document.querySelectorAll("#fleetbody .flhead .flcfgbtn").forEach(function(c){
+    c.classList.toggle("on", c.getAttribute("data-fk")===key); });
+}catch(e){} };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
-    var cfgable=(c.k==="planets");                              // config migration: planets first; more columns follow
+    var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs");  // config migration: entity · clusters · planets (more follow)
     return '<span class="flcell'+(cfgable?' flcfgbtn':'')+'" data-fk="'+c.k+'" title="'+c.ti
       +(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')
       +(cfgable?' · CLICK for its configuration':'')+'">'
@@ -1745,10 +1791,9 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
   body.innerHTML=h;
   body.querySelectorAll(".flhead .flcfgbtn").forEach(function(cell){ cell.onclick=function(){
-    var slot=document.getElementById("flcfg"); if(!slot) return;
-    if(window.__uniMountPlanetCfg) __uniMountPlanetCfg();
-    var open=slot.style.display!=="none"; slot.style.display=open?"none":"";
-    cell.classList.toggle("on", !open); }; });
+    if(window.__uniFlOpen) __uniFlOpen(cell.getAttribute("data-fk")); }; });
+  if(window.__uniFlOpenKey){ var oc=body.querySelector('.flhead .flcfgbtn[data-fk="'+window.__uniFlOpenKey+'"]');
+    if(oc) oc.classList.add("on"); }
   body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){
     var e=sp.getAttribute("data-flx"); _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
@@ -1812,24 +1857,38 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var trows=G.transp? [].slice.call(G.transp.querySelectorAll(".cfgrow")) : [];   // [bubble, subOp, entOp]
 
   // ── PLANETS pane: planet transparency (bubble) · Zones (title + inline On/Off master, icons only) ──
-  /* PLANETS config now lives in the FLEET (operator migration): a flyout the planets header icon
-     opens — transparency + the Zones master. The four per-zone buttons are DEPRECATED: their CFG
-     gates are forced ON and the fleet's zone columns become the only control. */
+  /* CONFIG-INTO-FLEET (operator migration): the Universe tab dissolves into per-column side-panel
+     panes — Entity (cube): entity layout · show entity boundary · radius · entity transparency ·
+     container · cluster stars · functions | Clusters: core-by · show sub hulls · radius · cluster
+     transparency · container | Planets: planet transparency · the Zones master. Radius + container
+     are SHARED (one DOM node, both levels) — they ride whichever pane is open. The four per-zone
+     buttons are DEPRECATED (gates forced ON; the fleet's zone columns are the only control). */
   CFG.zDef=CFG.zAtk=CFG.zCfl=CFG.zSat=true;
-  var flyw=document.createElement("div"); flyw.className="flcfgbody";
-  if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); flyw.appendChild(pt); }
+  var planetsPane=[];
+  if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); planetsPane.push(pt); }
   if(G.planet){ var zlbl=G.planet.querySelector(".grplbl"); zlbl.className="grplbl zoneshd";
     zlbl.innerHTML='<span>Zones</span>'+pillHTML("warOn",[{v:true,t:"On"},{v:false,t:"Off"}], CFG.warOn);   // the master survives; the four icons do not
-    var zg=document.createElement("div"); zg.className="grp"; zg.appendChild(zlbl); flyw.appendChild(zg); }
-  window.__uniPlanetCfg=flyw;
-  if(window.__uniMountPlanetCfg) try{ __uniMountPlanetCfg(); }catch(e){}
+    var zg=document.createElement("div"); zg.className="grp"; zg.appendChild(zlbl); planetsPane.push(zg); }
+  var flyw=document.createElement("div"); flyw.className="flcfgbody";   // (binding container reused below)
+  planetsPane.forEach(function(g){ flyw.appendChild(g); })
 
-  // ── UNIVERSE pane: container · sub-cluster + radius · cluster transparency · stars · layout ──
-  var uni=mk("cfgpane"); uni.style.display="none";
-  if(G.container) uni.appendChild(G.container);
-  if(G.show) uni.appendChild(G.show);
-  if(trows[1]||trows[2]){ var ct=grpWith("Cluster transparency"); if(trows[1])ct.appendChild(trows[1]); if(trows[2])ct.appendChild(trows[2]); uni.appendChild(ct); }
-  if(G.universe) uni.appendChild(G.universe);   // transports itog migrates to ROUTES below; stars stay here
+  // ── the ex-UNIVERSE groups, split per pane (the DOM moves; wireCfg listeners ride along) ──
+  var entPane=[], cluPane=[];
+  if(G.container){ G.container.querySelectorAll('.pill[data-grp="shape"] button').forEach(function(b){   // icons ONLY (operator) — the word becomes the hover
+      var tt=(b.textContent||"").trim(); if(tt) b.title=tt;
+      [].slice.call(b.childNodes).forEach(function(nd){ if(nd.nodeType===3 || nd.tagName==="SPAN") b.removeChild(nd); }); }); }
+  var radiusGrp=null, entShowGrp=null, cluShowGrp=null;
+  if(G.show){ var entTog=G.show.querySelector('[data-itog="entOn"]'),
+      subTog=G.show.querySelector('[data-itog="subOn"]'),
+      radRow=document.createElement("div");
+    radRow.className="cfgrow";
+    ["radMinus","radRng","radPlus"].forEach(function(id){ var el=G.show.querySelector("#"+id); if(el) radRow.appendChild(el); });
+    radiusGrp=grpWith("Radius · both levels"); radiusGrp.appendChild(radRow);
+    if(entTog){ entShowGrp=grpWith("Show"); var er=document.createElement("div"); er.className="cfgrow"; er.appendChild(entTog); entShowGrp.appendChild(er); }
+    if(subTog){ cluShowGrp=grpWith("Show"); var sr=document.createElement("div"); sr.className="cfgrow"; sr.appendChild(subTog); cluShowGrp.appendChild(sr); } }
+  var entOpGrp=null, subOpGrp=null;
+  if(trows[2]){ entOpGrp=grpWith("Transparency"); entOpGrp.appendChild(trows[2]); }
+  if(trows[1]){ subOpGrp=grpWith("Transparency"); subOpGrp.appendChild(trows[1]); }
   var hasLevels=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
   var hasFns=!!(window.GABE_LEVELS && (window.GABE_LEVELS.fn_nodes||[]).length);
   /* the explainers live on HOVER (operator ruling): the section label carries the summary,
@@ -1845,7 +1904,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     {v:"fk",t:"FK-join",ic:__uniCoreIco("fk",12),ti:"group by foreign-key join community (levels feed)"});
   var coreHd=hasLevels ? "what forms the clusters INSIDE each entity — nodes physically regroup on change; hover each option"
                        : "what forms the clusters INSIDE each entity — Guards/Use-case/Community/FK-join need the levels feed (not loaded here)";
-  var layWrap=mk("uniLay");
+  var layWrap=document.createElement("div");
   layWrap.innerHTML=
      '<div class="grp"><div class="grplbl" title="where each ENTITY sits in space — hover each option">ENTITY LAYOUT</div>'
     + pillHTML("entLayout",[
@@ -1858,7 +1917,28 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       + pillHTML("showFns",[
           {v:"off",t:"Hide",ti:"endpoints · models · schemas · screens only — the lighter graph"},
           {v:"on",t:"Show",ti:"adds "+window.GABE_LEVELS.fn_nodes.length+" code functions + their call edges (levels feed) — heavier, complete"}], CFG.showFns)+'</div>') : '');
-  while(layWrap.firstChild) uni.appendChild(layWrap.firstChild);
+  var _lw=[].slice.call(layWrap.children);                       // [entity layout, core by, (functions)]
+  var layGrp=_lw[0]||null, coreGrp=_lw[1]||null, fnGrp=_lw[2]||null;
+  if(layGrp) entPane.push(layGrp);
+  if(entShowGrp) entPane.push(entShowGrp);
+  if(radiusGrp) entPane.push(radiusGrp);
+  if(entOpGrp) entPane.push(entOpGrp);
+  if(G.container) entPane.push(G.container);
+  if(G.universe) entPane.push(G.universe);                        // cluster stars (+ whatever the spike keeps here)
+  if(fnGrp) entPane.push(fnGrp);
+  if(coreGrp) cluPane.push(coreGrp);
+  if(cluShowGrp) cluPane.push(cluShowGrp);
+  if(subOpGrp) cluPane.push(subOpGrp);
+  window.__uniFlPanes={
+    show:{ title:"Entity", icon:"shape", groups:entPane, shared:[radiusGrp, G.container] },
+    subs:{ title:"Clusters", icon:"sub", groups:cluPane, shared:[radiusGrp, G.container] },
+    planets:{ title:"Planets", icon:"bubble", groups:planetsPane, shared:[] } };
+  var _stash=document.getElementById("flstash");
+  if(!_stash){ _stash=document.createElement("div"); _stash.id="flstash"; _stash.style.display="none"; document.body.appendChild(_stash); }
+  _stash.innerHTML="";
+  [entPane, cluPane, planetsPane].forEach(function(gs){ gs.forEach(function(g){ if(g&&g.parentNode!==_stash) _stash.appendChild(g); }); });
+  [radiusGrp, G.container].forEach(function(g){ if(g&&g.parentNode!==_stash) _stash.appendChild(g); });
+  if(window.__uniFlOpen) try{ __uniFlOpen(window.__uniFlOpenKey||null, true); }catch(e){}
 
   // ── ROUTES pane: lines (icon pill + curve amount) · per-kind beam · transports + speed ──
   var rt=mk("cfgpane"); rt.style.display="none";
@@ -1904,15 +1984,16 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(G.transp && G.transp.parentNode) G.transp.parentNode.removeChild(G.transp);   // drop the now-empty shell
   body.innerHTML='';
   var bar=mk("cfgtabbar");
-  bar.innerHTML='<button class="cfgtab on" data-pane="universe">Universe</button><button class="cfgtab" data-pane="routes">Routes</button>';
-  body.appendChild(bar); body.appendChild(uni); body.appendChild(rt);
-  uni.style.display="";                                        // Universe leads now that Planets moved into the fleet
-  var PANES={ universe:uni, routes:rt };
+  bar.innerHTML='<button class="cfgtab on" data-pane="routes">Routes</button>';
+  body.appendChild(bar); body.appendChild(rt);
+  rt.style.display="";                                         // the whole Universe estate lives in the FLEET side panel now
+  var PANES={ routes:rt };
   bar.querySelectorAll(".cfgtab").forEach(function(t){ t.onclick=function(){ var pane=t.getAttribute("data-pane");
     bar.querySelectorAll(".cfgtab").forEach(function(x){ x.classList.toggle("on", x===t); });
     Object.keys(PANES).forEach(function(k){ PANES[k].style.display=(k===pane)?"":"none"; }); }; });
   // wire the NEW controls only (the moved spike pills keep their wireCfg listeners)
-  [flyw, uni, rt].forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
+  var _bindRoots=[rt]; entPane.concat(cluPane).concat(planetsPane).forEach(function(g){ if(g) _bindRoots.push(g); });
+  _bindRoots.forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
     if(["warOn","entLayout","coreBy","lineStyle","showFns"].indexOf(grp)<0) return;   // skip the moved spike pills (shape/subOp/entOp)
     p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-v");
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
