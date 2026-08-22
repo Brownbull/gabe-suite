@@ -642,7 +642,7 @@ function _dragPanel(panel, head){ var dg={on:false,ox:0,oy:0};
 /* matrix columns — g() = the GLOBAL master gate (cell dims when off, the zonesoff pattern);
    icons come from the spike's own ICO set via ico() so the panel speaks the config's language */
 var _FCOLS=[
-  { k:"show",   ti:"show entity",         scope:"nodes",    icon:"show",   g:function(){ return true; } },
+  { k:"show",   ti:"show entity",         scope:"nodes",    icon:"shape",  g:function(){ return true; } },
   { k:"planets",ti:"planets (element nodes) — hulls stay", scope:"nodes",  icon:"bubble", g:function(){ return true; } },
   { k:"wires",  ti:"connections touching it",              scope:"wires",  icon:"radius", g:function(){ return true; } },
   { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
@@ -652,10 +652,24 @@ var _FCOLS=[
   { k:"zSat",   ti:"satellites",          scope:"zones",    icon:"target", g:function(){ return !!(CFG.warOn&&CFG.zSat); } },
   { k:"routes", ti:"transports (routes)", scope:"routes",   icon:"truck",  g:function(){ return !!CFG.transports; } } ];
 window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
+  if(typeof ICO!=="undefined"){                                             // presets speak icons now — extend the config's own set
+    ICO.hide='<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
+    ICO.flight='<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>'; }
   var p=document.createElement("div"); p.className="cfg fleet"; p.id="fleet";
+  var _simTitle=(typeof window.GABE_SIM==="undefined") ? "no sim feed on this page (sim.data.js absent)"
+    : (window.GABE_SIM===null ? "no change in flight (sim feed at rest)" : "a change IS in flight — the preset derivation lands in a later batch");
   p.innerHTML='<div class="cfghead" id="fleethead"><span class="cfgtitle">'+(typeof ico==="function"?ico("shape",13):"")+'Fleet</span>'
+    +'<span class="flprehead">'
+    +'<button class="flpre" data-fpre="all" title="ALL — show everything (cluster overrides reset too)">'+(typeof ico==="function"?ico("show",13):"")+'</button>'
+    +'<button class="flpre" data-fpre="none" title="NONE — hide every entity">'+(typeof ico==="function"?ico("hide",13):"")+'</button>'
+    +'<button class="flpre" data-fpre="inflight" disabled title="IN-FLIGHT — '+_simTitle+'">'+(typeof ico==="function"?ico("flight",13):"")+'</button>'
+    +'</span>'
     +'<button class="cfgmin" id="fleetmin" title="minimize">–</button></div><div class="cfgbody" id="fleetbody"></div>';
   document.body.appendChild(p);
+  p.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
+    if(k==="all"){ UNIVIS.sub={};
+      _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
+    else if(k==="none"){ _ents.forEach(function(e){ ent[e]={show:0}; }); __uniApplyVisPreset({ent:ent}); } }; });
   document.getElementById("fleetmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
@@ -663,25 +677,15 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
     return '<span class="flcell" title="'+c.ti+(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')+'">'
       +(typeof ico==="function"?ico(c.icon,13):"")+(i>=1?'<i class="flkey">'+i+'</i>':'')+'</span>'; }).join('')+'</div>';
-  /* presets: All/None live via the SAME preset entry point the in-flight batch will use; the
-     In-flight stub ships DISABLED with the honest-empty reason (undefined = no feed on this page ·
-     null = feed at rest, no change in flight · object = the derivation lands in a later batch). */
-  var _simTitle=(typeof window.GABE_SIM==="undefined") ? "no sim feed on this page (sim.data.js absent)"
-    : (window.GABE_SIM===null ? "no change in flight (sim feed at rest)" : "a change IS in flight — the preset derivation lands in a later batch");
-  h+='<div class="flrow flpresets"><button class="flpre" data-fpre="all">All</button>'
-    +'<button class="flpre" data-fpre="none">None</button>'
-    +'<button class="flpre" data-fpre="inflight" disabled title="'+_simTitle+'">In-flight</button>'
-    +'</div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
   _ents.forEach(function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
     h+='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' · click for its '+gk.length+' cluster(s)">'
-      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><i class="flcaret">'+(open?"▾":"▸")+'</i>'+e
-      +'<b class="flcnt">'+gk.length+'</b></span>'
+      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt">'+gk.length+'</b>'+e+'</span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
     if(open) gk.forEach(function(s){ var key=e+"|"+s;
-      h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" title="'+s+' · '+gs[s]+' member(s)">'+s+' <b class="flcnt">'+gs[s]+'</b></span>'
+      h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" title="'+s+' · '+gs[s]+' member(s)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
         +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';   // a cluster has no sub-clusters
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
   body.innerHTML=h;
@@ -689,10 +693,6 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     var e=sp.getAttribute("data-flx"); _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
     __uniFleetToggle(b.getAttribute("data-fent"), b.getAttribute("data-fsub"), b.getAttribute("data-fcol")); }; });
-  body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
-    if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
-      _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
-    else if(k==="none"){ _ents.forEach(function(e){ ent[e]={show:0}; }); __uniApplyVisPreset({ent:ent}); } }; });
   __uniFleetSync();
   if(window.__uniFleetSpotState) __uniFleetSpot(__uniFleetSpotState.ent, __uniFleetSpotState.sub); };
 /* ── FLEET SPOT (batch 26): the fleet panel mirrors the selection — the selected entity's row is

@@ -170,7 +170,8 @@ const clus = await p2.evaluate(() => {
   const e = _ents[1];
   const distinct = {}; nodes.forEach(n => { if (n.ent === e) distinct[n.sub] = (distinct[n.sub] || 0) + 1; });
   document.querySelector(`#fleet .flx[data-flx="${e}"]`).click();     // expand (re-renders)
-  const rows = document.querySelectorAll(`#fleet .fltog[data-fent="${e}"][data-fsub]`).length / 6;  // 6 toggles per sub row (subs col is a spacer)
+  const rows = new Set([...document.querySelectorAll(`#fleet .fltog[data-fent="${e}"][data-fsub]`)]
+    .map(b => b.getAttribute('data-fsub'))).size;                     // DISTINCT sub keys — stale-proof against column growth
   const cnt = +document.querySelector(`#fleet .flx[data-flx="${e}"] .flcnt`).textContent;
   const styled = !!document.querySelector('#fleet .fltog.flstog');
   const biggest = Object.keys(distinct).sort((a, b) => distinct[b] - distinct[a])[0];
