@@ -129,6 +129,17 @@ check('class="cfgtab' not in page and 'cfgnote' in page,
 check('__uniFlPanes.wires=' in page and '__uniFlPanes.routes=' in page and '"Transports"' in page,
       "the Connections/Transports drawer panes are gone")
 check('(fr.right+10)' in page, "the drawer lost its docking gap beside the fleet")
+# batch 32: compaction — one ×, icon pills, opacity dots, speed steppers, no repeated labels
+check('class="flsx"' in page and 'flsmin' not in page,
+      "the drawer must have ONE plain × (the boxed button pair is back)")
+check('_opGlyph' in page and 'fill-opacity' in page,
+      "transparency pills lost their opacity DOTS (faint/ghost/film words must ride the hover)")
+check('id="trMinus"' in page.replace("'",'"') or '"trMinus"' in page,
+      "the transport speed lost its −/+ steppers")
+check('overflow-x:hidden' in page,
+      "drawer panes may scroll horizontally again (compaction regression)")
+check('rt.querySelector("#trSpeedRng")' in page and 'rt.querySelector("#curveAmtRng")' in page,
+      "REGRESSION: rt-homed sliders bound via document.getElementById — rt is DETACHED, the listeners never attach (dead speed/curve sliders)")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
@@ -216,8 +227,8 @@ check('.fltog.flstog.on{ background:#0b7a63' in page,
 # batch 11-B4: the ALL row reaches cluster overrides; inherited-off dims; explainers live on hover
 check('the ALL row is a bulk gesture' in page, "the ALL master row does not propagate into cluster overrides")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
-check("ti:\"group by the kind's architectural layer" in page and 'ti:"a flat layered ribbon' in page,
-      "cluster-core / entity-layout options carry no hover explainers")
+check("ti:\"Layer — group by the kind's architectural layer" in page and 'ti:"Chain — a flat layered ribbon' in page,
+      "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")
 check('ti:"adds "+window.GABE_LEVELS.fn_nodes.length' in page, "the Functions option lost its count-bearing hover explainer")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
       "REGRESSION: the note lines below the pills are back (explainers must live on hover)")
@@ -318,7 +329,8 @@ check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un
 
 # ── 10q. batch 17: community default · ring layout · wider spacing ──
 check('CFG.coreBy="community"' in page, "the community core is not the default when the levels feed is present")
-check('{v:"ring",t:"Ring"' in page and 'mode==="ring"' in page, "the RING entity layout is missing")
+check('{v:"ring",t:""' in page and 'Ring —' in page and 'mode==="ring"' in page,
+      "the RING entity layout is missing (icon-only pill, word on hover)")
 check('{v:"spread"' not in page and 'mode==="spread"' not in page, "REGRESSION: the useless spread layout is back")
 check('SEP=(mode==="ring")?1.0:1.85' in page, "force-layout anchors are not widened (operator: entities too close)")
 check('RENT[e]*0.78' in page, "sub-cluster rings are not widened (operator: clusters too close inside entities)")

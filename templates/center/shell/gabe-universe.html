@@ -348,10 +348,12 @@
   #flside .flshead{ display:flex; align-items:center; gap:6px; padding:7px 9px; border-bottom:1px solid var(--line); }
   #flside .flstitle{ display:inline-flex; align-items:center; gap:6px; font:700 10.5px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.08em; color:var(--ink); margin-right:auto; }
-  #flside .flsbtn{ display:grid; place-items:center; width:20px; height:20px; color:var(--muted);
-    background:#0e1524; border:1px solid var(--line); border-radius:6px; cursor:pointer; font:700 12px/1 var(--font-ui); }
-  #flside .flsbtn:hover{ color:var(--ink); border-color:var(--accent); }
-  #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; min-height:0; }
+  #flside .flsx{ color:var(--muted); background:none; border:none; cursor:pointer;
+    font:400 17px/1 var(--font-ui); padding:0 3px; }
+  #flside .flsx:hover{ color:var(--ink); }
+  #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; overflow-x:hidden; min-height:0; }
+  #flside .flsbody .cfgrow{ flex-wrap:wrap; }
+  #flside .flsbody .grplbl{ letter-spacing:.06em; }
   #flside .flsbody .grp{ margin:0 0 8px; } #flside .flsbody .grp:last-child{ margin-bottom:0; }
   #fleet .flhead .flcfgbtn{ cursor:pointer; border-radius:5px; }
   #fleet .flhead .flcfgbtn:hover{ color:var(--accent); background:#0e1524; }
@@ -1736,11 +1738,9 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   var side=document.getElementById("flside");                    // the drawer is its OWN container — an add-on beside the fleet, not an extension
   if(!side){ side=document.createElement("div"); side.id="flside";
     side.innerHTML='<div class="flshead"><span class="flstitle" id="flstitle"></span>'
-      +'<button class="flsbtn" id="flsmin" title="minimize — slides back behind the fleet">‹</button>'
-      +'<button class="flsbtn" id="flsclose" title="close">×</button></div>'
+      +'<button class="flsx" id="flsclose" title="close — slides back behind the fleet">×</button></div>'
       +'<div class="flsbody" id="flsbody"></div>';
     document.body.appendChild(side);
-    document.getElementById("flsmin").onclick=function(){ __uniFlOpen(null); };
     document.getElementById("flsclose").onclick=function(){ __uniFlOpen(null); };
     setInterval(function(){ if(side.classList.contains("out")) __uniFlDock(); }, 300); }   // the fleet drags — the add-on follows
   _dragPanel(p, document.getElementById("fleethead"));
@@ -1877,14 +1877,25 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var entPane=[], cluPane=[];
   if(G.container){ G.container.querySelectorAll('.pill[data-grp="shape"] button').forEach(function(b){   // icons ONLY (operator) — the word becomes the hover
       var tt=(b.textContent||"").trim(); if(tt) b.title=tt;
-      [].slice.call(b.childNodes).forEach(function(nd){ if(nd.nodeType===3 || nd.tagName==="SPAN") b.removeChild(nd); }); }); }
+      [].slice.call(b.childNodes).forEach(function(nd){ if(nd.nodeType===3 || nd.tagName==="SPAN") b.removeChild(nd); }); });
+    var _cl=G.container.querySelector(".grplbl");
+    if(_cl){ _cl.title="the boundary shape — applies to entities AND clusters";
+      [].slice.call(_cl.querySelectorAll("span")).forEach(function(s){ s.remove(); }); } }
+  /* transparency pills (faint/ghost/film) → three opacity DOTS, the word on hover */
+  var _opGlyph=function(v){ var op={faint:0.2, ghost:0.5, film:0.85}[v]||0.5;
+    return '<svg viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="'+op+'" stroke="currentColor" stroke-width="1.5"/></svg>'; };
+  [trows[0],trows[1],trows[2]].forEach(function(r){ if(!r) return;   // the rows are detached mid-migration — query THEM, not the document
+    r.querySelectorAll(".pill button").forEach(function(b){
+      var v=b.getAttribute("data-v"), tt=(b.textContent||"").trim();
+      if(tt && /^(faint|ghost|film)$/.test(v||"")){ b.title=tt+" — "+({faint:"barely there",ghost:"soft",film:"solid-ish"}[v]||""); b.innerHTML=_opGlyph(v); } }); });
   var radiusGrp=null, entShowGrp=null, cluShowGrp=null;
   if(G.show){ var entTog=G.show.querySelector('[data-itog="entOn"]'),
       subTog=G.show.querySelector('[data-itog="subOn"]'),
       radRow=document.createElement("div");
     radRow.className="cfgrow";
     ["radMinus","radRng","radPlus"].forEach(function(id){ var el=G.show.querySelector("#"+id); if(el) radRow.appendChild(el); });
-    radiusGrp=grpWith("Radius · both levels"); radiusGrp.appendChild(radRow);
+    radiusGrp=grpWith("Radius"); radiusGrp.appendChild(radRow);
+    var _rl=radiusGrp.querySelector(".grplbl"); if(_rl) _rl.title="applies to entities AND clusters";
     if(entTog){ entShowGrp=grpWith("Show"); var er=document.createElement("div"); er.className="cfgrow"; er.appendChild(entTog); entShowGrp.appendChild(er); }
     if(subTog){ cluShowGrp=grpWith("Show"); var sr=document.createElement("div"); sr.className="cfgrow"; sr.appendChild(subTog); cluShowGrp.appendChild(sr); } }
   var entOpGrp=null, subOpGrp=null;
@@ -1895,24 +1906,24 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   /* the explainers live on HOVER (operator ruling): the section label carries the summary,
      every option carries its own meaning — the note lines below the pills are gone. */
   var cores=[
-    {v:"layer",t:"Layer",ic:__uniCoreIco("layer",12),ti:"group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
-    {v:"kind",t:"Kind",ic:__uniCoreIco("kind",12),ti:"group by element kind — endpoint · model · schema · function · screen"},
-    {v:"tests",t:"Tests",ic:__uniCoreIco("tests",12),ti:"group by test coverage — tested vs untested"}];
+    {v:"layer",t:"",ic:__uniCoreIco("layer",12),ti:"Layer — group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
+    {v:"kind",t:"",ic:__uniCoreIco("kind",12),ti:"Kind — group by element kind — endpoint · model · schema · function · screen"},
+    {v:"tests",t:"",ic:__uniCoreIco("tests",12),ti:"Tests — group by test coverage — tested vs untested"}];
   if(hasLevels) cores.push(
-    {v:"guards",t:"Guards",ic:__uniCoreIco("guards",12),ti:"endpoints by guard status — guarded vs unguarded (levels feed)"},
-    {v:"usecase",t:"Use-case",ic:__uniCoreIco("usecase",12),ti:"group by the use-case flows mapped in the levels feed"},
-    {v:"community",t:"Community",ic:__uniCoreIco("community",12),ti:"group by code community — label propagation over the levels feed"},
-    {v:"fk",t:"FK-join",ic:__uniCoreIco("fk",12),ti:"group by foreign-key join community (levels feed)"});
+    {v:"guards",t:"",ic:__uniCoreIco("guards",12),ti:"Guards — endpoints by guard status — guarded vs unguarded (levels feed)"},
+    {v:"usecase",t:"",ic:__uniCoreIco("usecase",12),ti:"Use-case — group by the use-case flows mapped in the levels feed"},
+    {v:"community",t:"",ic:__uniCoreIco("community",12),ti:"Community — group by code community — label propagation over the levels feed"},
+    {v:"fk",t:"",ic:__uniCoreIco("fk",12),ti:"FK-join — group by foreign-key join community (levels feed)"});
   var coreHd=hasLevels ? "what forms the clusters INSIDE each entity — nodes physically regroup on change; hover each option"
                        : "what forms the clusters INSIDE each entity — Guards/Use-case/Community/FK-join need the levels feed (not loaded here)";
   var layWrap=document.createElement("div");
   layWrap.innerHTML=
-     '<div class="grp"><div class="grplbl" title="where each ENTITY sits in space — hover each option">ENTITY LAYOUT</div>'
+     '<div class="grp"><div class="grplbl" title="where each ENTITY sits in space — hover each option">LAYOUT</div>'
     + pillHTML("entLayout",[
-        {v:"chain",t:"Chain",ti:"a flat layered ribbon — layers band vertically, entities line up by coupling"},
-        {v:"force",t:"Force",ti:"3D coupling bubbles — entities repel, FK springs pull coupled ones together"},
-        {v:"ring",t:"Ring",ti:"a coupling-ordered circle — even spacing, separation by construction"}], CFG.entLayout)+'</div>'
-    + '<div class="grp"><div class="grplbl" title="'+coreHd+'">CLUSTER CORE BY</div>'
+        {v:"chain",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/></svg>',ti:"Chain — a flat layered ribbon: layers band vertically, entities line up by coupling"},
+        {v:"force",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="7" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="12" cy="17" r="2.5"/><path d="M8 9l3 6M15.5 8.5l-2 6.5M8.5 6.7l6-0.5"/></svg>',ti:"Force — 3D coupling bubbles: entities repel, FK springs pull coupled ones together"},
+        {v:"ring",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7" stroke-dasharray="2 3"/><circle cx="12" cy="5" r="1.8"/><circle cx="19" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/><circle cx="5" cy="12" r="1.8"/></svg>',ti:"Ring — a coupling-ordered circle: even spacing, separation by construction"}], CFG.entLayout)+'</div>'
+    + '<div class="grp"><div class="grplbl" title="'+coreHd+'">CORE</div>'
     + pillHTML("coreBy", cores, CFG.coreBy)+'</div>'
     + (hasFns ? ('<div class="grp"><div class="grplbl" title="the code-function layer — hover each option">FUNCTIONS</div>'
       + pillHTML("showFns",[
@@ -1996,14 +2007,14 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
       if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
       try{ applyCfg(grp); }catch(err){} }); }); });
-  var tsr=document.getElementById("trSpeedRng");   // transport-speed slider → INTC.speed (read live by tickTransports)
+  var tsr=rt.querySelector("#trSpeedRng");   // transport-speed slider → INTC.speed (rt is DETACHED now — never query the document here)
   if(tsr) tsr.addEventListener("input", function(){ if(typeof INTC!=="undefined") INTC.speed=+this.value; });
   var _rAF=null, redraw=function(){ if(_rAF) return; _rAF=requestAnimationFrame(function(){ _rAF=null; try{ updateConnectors(); }catch(e){} }); };
   rt.querySelectorAll('.pill[data-grp="focusRest"] button').forEach(function(b){ b.addEventListener("click", function(){
     HL.rest=b.getAttribute("data-v");
     b.closest(".pill").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
     if(HL.on && HL.mode==="focus") _hlRestyle(); }); });
-  var car=document.getElementById("curveAmtRng");  // curve amount is LIVE while curved (rAF-debounced full connector redraw)
+  var car=rt.querySelector("#curveAmtRng");  // curve amount is LIVE while curved (rt is DETACHED — document lookups miss it)
   if(car) car.addEventListener("input", function(){ window.__uniCurveAmt=+this.value; if(window.__uniCurved) redraw(); });
   rt.querySelectorAll("input[data-beam]").forEach(function(s){ s.addEventListener("input", function(){
     window.__uniBeam[s.getAttribute("data-beam")]=+s.value; redraw(); }); });
@@ -2030,6 +2041,15 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     if(g.querySelector && (g.querySelector("#trSpeedRng")||g.querySelector('[data-itog="transports"]'))) transGrp=g;
     else connGrps.push(g); });
   window.__uniFlPanes.wires={ title:"Connections", icon:"radius", groups:connGrps, shared:[] };
+  if(transGrp){ var _tl=transGrp.querySelector(".grplbl"); if(_tl) _tl.remove();   // the pane title already says Transports
+    var _ts=transGrp.querySelector("#trSpeedRng");
+    if(_ts && !transGrp.querySelector("#trMinus")){
+      var _mk=function(id,txt,ti){ var b=document.createElement("button"); b.className="stp"; b.id=id; b.textContent=txt; b.title=ti; return b; };
+      var m=_mk("trMinus","–","slower"), pl=_mk("trPlus","+","faster");
+      _ts.parentNode.insertBefore(m,_ts); _ts.parentNode.insertBefore(pl,_ts.nextSibling);
+      var _step=function(d){ _ts.value=String(Math.max(+_ts.min||0.05, Math.min(+_ts.max||1.2, (+_ts.value)+d)));
+        _ts.dispatchEvent(new Event("input")); };
+      m.onclick=function(){ _step(-0.1); }; pl.onclick=function(){ _step(0.1); }; } }
   window.__uniFlPanes.routes={ title:"Transports", icon:"truck", groups:transGrp?[transGrp]:[], shared:[] };
   var _st2=document.getElementById("flstash");
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });

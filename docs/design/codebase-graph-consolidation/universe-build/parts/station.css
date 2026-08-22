@@ -202,10 +202,12 @@
   #flside .flshead{ display:flex; align-items:center; gap:6px; padding:7px 9px; border-bottom:1px solid var(--line); }
   #flside .flstitle{ display:inline-flex; align-items:center; gap:6px; font:700 10.5px/1 var(--font-ui);
     text-transform:uppercase; letter-spacing:.08em; color:var(--ink); margin-right:auto; }
-  #flside .flsbtn{ display:grid; place-items:center; width:20px; height:20px; color:var(--muted);
-    background:#0e1524; border:1px solid var(--line); border-radius:6px; cursor:pointer; font:700 12px/1 var(--font-ui); }
-  #flside .flsbtn:hover{ color:var(--ink); border-color:var(--accent); }
-  #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; min-height:0; }
+  #flside .flsx{ color:var(--muted); background:none; border:none; cursor:pointer;
+    font:400 17px/1 var(--font-ui); padding:0 3px; }
+  #flside .flsx:hover{ color:var(--ink); }
+  #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; overflow-x:hidden; min-height:0; }
+  #flside .flsbody .cfgrow{ flex-wrap:wrap; }
+  #flside .flsbody .grplbl{ letter-spacing:.06em; }
   #flside .flsbody .grp{ margin:0 0 8px; } #flside .flsbody .grp:last-child{ margin-bottom:0; }
   #fleet .flhead .flcfgbtn{ cursor:pointer; border-radius:5px; }
   #fleet .flhead .flcfgbtn:hover{ color:var(--accent); background:#0e1524; }

@@ -191,15 +191,15 @@ const flcfg = await p.evaluate(() => {
   btn('show').click();
   const entOpen = side.classList.contains('out');
   const U = s => bodyTxt().toUpperCase().includes(s);
-  const entFull = U('ENTITY LAYOUT') && U('RADIUS') && U('TRANSPARENCY') && U('CONTAINER') && U('FUNCTIONS')
+  const entFull = U('LAYOUT') && U('RADIUS') && U('TRANSPARENCY') && U('CONTAINER') && U('FUNCTIONS')
     && !!document.querySelector('#flsbody [data-itog="stars"]') && !!document.querySelector('#flsbody [data-itog="entOn"]')
     && !document.querySelector('#flsbody [data-itog="subOn"]');
   btn('subs').click();
-  const cluFull = U('CLUSTER CORE BY') && !!document.querySelector('#flsbody #radRng') && U('CONTAINER')
+  const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng') && U('CONTAINER')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
   btn('planets').click();
   const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');
-  const plFull = /film/.test(bodyTxt()) && !!zonePill;
+  const plFull = !!document.querySelector('#flsbody .pill[data-grp="bubble"]') && !!zonePill;   // 'film' is a DOT now — the word rides the hover
   zonePill.querySelector('button[data-v="true"]').click(); const wOn = CFG.warOn === true;
   zonePill.querySelector('button[data-v="false"]').click(); const wOff = CFG.warOn === false;
   const iconsOnly = [...document.querySelectorAll('.pill[data-grp="shape"] button')].every(b => b.textContent.trim() === '');
@@ -209,10 +209,27 @@ const flcfg = await p.evaluate(() => {
   const docked = Math.abs(parseFloat(side.style.left) - (fr.right + 10)) < 2 && Math.abs(parseFloat(side.style.top) - fr.top) < 2;   // style, not rect (slide mid-flight); +10 = the breathing gap
   const fleetUnstretched = fl.scrollWidth <= fl.clientWidth + 2;               // the drawer no longer widens the fleet
   const under = +getComputedStyle(side).zIndex < +(getComputedStyle(fl).zIndex || 40);
+  // compaction gates: one plain × (no boxed pair) · no horizontal scroll in ANY pane · icon-only
+  // layout/core/transparency pills (words on hover) · transport steppers drive the speed
+  const oneX = !document.getElementById('flsmin') && !!document.querySelector('#flside .flsx');
+  const bodyEl2 = document.getElementById('flsbody');
+  let noHScroll = true;
+  for (const k of ['show','subs','planets','wires','routes']) { window.__uniFlOpen(k);
+    if (bodyEl2.scrollWidth > bodyEl2.clientWidth + 2) noHScroll = false; }
+  window.__uniFlOpen('show');
+  const layIconOnly = [...document.querySelectorAll('.pill[data-grp="entLayout"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg') && /—/.test(b.title));
+  const coreIconOnly = [...document.querySelectorAll('.pill[data-grp="coreBy"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg'));
+  const transDots = [...document.querySelectorAll('.pill[data-grp="entOp"] button')].every(b => b.textContent.trim() === '' && /fill-opacity/.test(b.innerHTML));
+  window.__uniFlOpen('routes');
+  const s0 = (typeof INTC !== 'undefined') ? INTC.speed : null;
+  const plusB = document.querySelector('#flsbody #trPlus'); if (plusB) plusB.click();
+  const stepped = plusB && typeof INTC !== 'undefined' && INTC.speed > s0;
+  const noRepeatLbl = !document.querySelector('#flsbody .grplbl');
   document.getElementById('flsclose').click();
   const closed = !side.classList.contains('out');
   return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
-    standalone, docked, fleetUnstretched, under }; });
+    standalone, docked, fleetUnstretched, under,
+    oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -256,5 +273,6 @@ if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('n
 if (!(flcfg.tabs.length === 0 && flcfg.order === 'show,subs,planets,wires,routes')) fails.push('config must be TABLESS and the fleet order Entity·Clusters·Planets·Connections·Transports');
 if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity/clusters/planets split, shared radius+container, icons-only shape, zones master)');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
+if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');
