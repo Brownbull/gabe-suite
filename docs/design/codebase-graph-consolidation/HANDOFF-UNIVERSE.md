@@ -105,6 +105,10 @@ Community = the default core (levels-fed pages). GLOW brightens the set and leav
 
 FOCUS group in Routes: Dim 25% (the missing mode) · Fade 8% · Wires (outside wires gone, planets stay) · Hide (current); only Hide removes planets. CONTROLS panel bottom-right (kbd cheat-sheet, minimizable, tracks the card rail): Q/E turn-in-place (yaw about world-up at the camera), invert-mouse toggle (drag button + OrbitControls map swap, chord follows), middle-drag orbits the SELECTED planet (constant node distance; no selection → dolly as stock). Drag ownership generalized: only the starting button ends a drag. Proof `verify-ctrl.mjs`; battery **195 static**.
 
+## BATCH 19 — LANDED (`884c188`): flight-style invert · zoom-depth orbits · inward Q/E · controls freeze
+
+Corrections from the hands-on pass: INVERT = the AXIS (aviation convention — flips only the drag's vertical rotation sign, +178→−154; buttons never swap, `__uniApplyMouseMap` deleted). THE GIANT-SPHERE ORBIT: drag pivot at the CURRENT zoom depth (`_zoomDist` = nearest visible content in a ~24° cone, capped by dolly; the dolly target snaps on-axis to that depth so scroll agrees) — same drag sweeps 190 far → 60 near. Q/E orbit INWARD around the view centre at that depth (keyboard twin of the drag; bug: `_zoomDist` was closure-scoped → the fly tick threw silently — hoisted). EVERY camera control freezes decorations (fly keys freeze/thaw on hold; wheel freezes, thaws 350ms after idle; drags already did). Proof `verify-ctrl.mjs` rewritten; battery **199 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
