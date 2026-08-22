@@ -188,8 +188,8 @@ check('mo.onclick=function(){ window.__uniSettleCancel();' in page,
       "motionBtn does not cancel the pending settle auto-resume (a pause DURING the settle gets stomped)")
 check('if(window.__uniDragging) return;' in page and '__uniDragging=true;' in page,
       "the settle resume does not defer while a camera drag is held")
-check('if(window.__uniSettleDone) window.__uniSettleDone(); });   // release' in page,
-      "pointerup does not release a settle resume deferred mid-drag")
+check('if(window.__uniSettleDone) window.__uniSettleDone(); }' in page and 'function _endDrag' in page,
+      "the shared _endDrag release must fire the settle resume deferred mid-drag")
 check(page.count('if(window.__uniAddLayoutTab) __uniAddLayoutTab()') == 3,
       "not all 3 buildCfg call sites re-tab (boot + URL-preset + ?drive) — a preset URL would drop the Routes tab")
 
@@ -295,8 +295,8 @@ check('.panel .minbar .pmin{ order:2; margin-top:auto; }' in page,
       "the collapsed rail's expand chevron is not at the BOTTOM (parity with the expanded footer)")
 check('function _rigStart' in page and 'ev.button===2' in page and 'ev.button===1' in page,
       "the three-button map (LEFT scheme · RIGHT tumble · MIDDLE pan) is not wired in pointerdown")
-check('if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;' in page,
-      "only the drag-owning button may end a drag (chord releases keep it alive)")
+check('ev.buttons!==0' in page and '(ev.buttons&_bit)===0' in page and 'function _endDrag' in page,
+      "chord-safe release missing: the LAST pointerup must end the drag and the move stream must release on owner-bit loss (stranded-drag fix)")
 check('data-wgo=' in page and 'wchip' in page and 'function _aimAt' in page,
       "walk stepping (journey ‹›/trail chips + camera aim) missing")
 check('class="pfoot"><button class="pmin"' in page and "<button class='pmin' title='minimize'" not in page,

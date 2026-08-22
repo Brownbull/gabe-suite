@@ -1222,6 +1222,8 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
   g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button is the TUMBLE drag, never the menu
   window.addEventListener("pointermove", function(ev){
     if(!drag) return;
+    var _bit=(drag.btn===1)?4:(drag.btn===2)?2:1;
+    if((ev.buttons&_bit)===0){ _endDrag(); return; }             // the OWNING button vanished mid-chord (no pointerup fires for it) → clean release
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
       if(drag.btn===1){                                                     // MIDDLE = PAN: translate the whole rig, orientation untouched
@@ -1268,11 +1270,14 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       var nd=vdir.clone().applyAxisAngle(right, vs*oy);
       if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, vs*oy);
     }catch(e){} }, 16);
-  window.addEventListener("pointerup", function(ev){
-    if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;   // only the drag-OWNING button ends it (chord releases keep it alive)
+  function _endDrag(){                                           // the ONE release path — pointerup and the mid-chord owner-loss both land here
     if(drag){ var ctrls=Graph.controls(); drag=null; window.__uniDragging=false; if(ctrls){ ctrls.enabled=true; try{ ctrls.update(); }catch(e){} } }
     if(_dragWasPlaying){ _dragWasPlaying=false; ANIM.all=true; var mb=document.getElementById("motionBtn"); if(mb){ mb.textContent="⏸"; mb.classList.remove("on"); } }
-    if(window.__uniSettleDone) window.__uniSettleDone(); });   // release a resume the settle deferred mid-drag (no-op otherwise)
+    if(window.__uniSettleDone) window.__uniSettleDone(); }       // release a resume the settle deferred mid-drag (no-op otherwise)
+  window.addEventListener("pointerup", function(ev){
+    if(drag && ev.buttons!==0) return;                           // buttons remain → the drag survives; the LAST release always ends it
+    _endDrag(); });                                              // (chorded mid-releases fire no pointerup per spec — the move recheck below covers them)
+  window.addEventListener("contextmenu", function(e){ if(drag||window.__uniDragging) e.preventDefault(); });   // right-release over an overlay/off-canvas: no native menu mid-gesture
 }
 
 /* THE MESH-MAKER (measured: bleed 43%, nodes at r≈240 vs a ~105 containment radius): the default

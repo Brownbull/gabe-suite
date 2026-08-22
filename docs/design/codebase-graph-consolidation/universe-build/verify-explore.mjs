@@ -1,5 +1,6 @@
-/* Batch-12 proof: layer ruling (c) · depth highlight (glow/focus, Alt+scroll, Esc) · journeys picker ·
-   topbar rework (icons, pills far right) · chord pan (left+right). Run: node verify-explore.mjs */
+/* Batch-12/21b proof: layer ruling (c) · depth highlight (glow/focus, Alt+scroll, Esc) · journeys picker ·
+   topbar rework (icons, pills far right) · drag ownership under chords (owner released mid-chord
+   ends CLEANLY — no stranded drag, controls re-enabled). Run: node verify-explore.mjs */
 import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -95,22 +96,25 @@ const ring = await p.evaluate(() => {
 });
 await p.evaluate(() => { CFG.entLayout = 'force'; applyCfg('entLayout'); });
 await p.waitForTimeout(1000);
-// [6] chord pan: left-drag rotates (quaternion turns); left+right pans (quaternion frozen, rig translates)
+// [6] drag ownership under chords: the spec fires NO pointerdown/pointerup for chorded transitions —
+//     when the OWNING button is released mid-chord (visible only as its bit vanishing from ev.buttons),
+//     the drag must end CLEANLY (controls re-enabled), and the gesture's final mismatched pointerup must not strand anything
 const chord = await p.evaluate(() => new Promise(res => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  const cam = Graph.camera(), q0 = cam.quaternion.clone(), t0 = Graph.controls().target.clone();
-  // NO pointerdown — right-first with left joining exists only in the move stream (chorded presses fire no pointerdown)
-  for (let i = 1; i <= 8; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 3, clientX: cx + i * 12, clientY: cy + i * 5, bubbles: true }));
-  const joined = window.__uniDragging === true;
-  const qChord = cam.quaternion.clone(), tChord = Graph.controls().target.clone();
-  window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));   // release RIGHT — the left drag survives
-  const aliveAfterRightUp = window.__uniDragging === true;
-  for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx + 96 + i * 12, clientY: cy + 40 + i * 5, bubbles: true }));
-  const qRot = cam.quaternion.clone();
-  window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true }));
-  res({ joined, chordTurned: q0.angleTo(qChord) > 0.01, chordDrifted: t0.distanceTo(tChord) > 3,
-    aliveAfterRightUp, rotContinued: qChord.angleTo(qRot) > 0.01, ended: window.__uniDragging === false });
+  g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
+  const owns = window.__uniDragging === true;                                        // right-drag (tumble) starts
+  for (let i = 1; i <= 4; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 3, clientX: cx + i * 12, clientY: cy, bubbles: true }));
+  const aliveChorded = window.__uniDragging === true;                                // left joined (no pointerdown fires) — the right owner keeps it
+  window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx + 60, clientY: cy, bubbles: true }));   // RIGHT released mid-chord: bit 2 gone, only left remains
+  const endedOnOwnerLoss = window.__uniDragging === false;                           // the move recheck released it — no stale-scheme drag
+  const ctrlsBack = Graph.controls().enabled === true;                               // and the controls came back (no dead zoom)
+  window.dispatchEvent(new PointerEvent('pointerup', { button: 0, buttons: 0, bubbles: true }));   // final release (mismatched button) must be harmless
+  const stillClean = window.__uniDragging === false && Graph.controls().enabled === true;
+  g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));   // and a fresh drag starts fine after
+  const restarts = window.__uniDragging === true;
+  window.dispatchEvent(new PointerEvent('pointerup', { button: 2, buttons: 0, bubbles: true }));
+  res({ owns, aliveChorded, endedOnOwnerLoss, ctrlsBack, stillClean, restarts, ended: window.__uniDragging === false });
 }));
 await b.close();
 
@@ -132,7 +136,7 @@ if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.p
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');
 if (!(jrnList.rows === jrnList.distinct + 1 && jrnList.distinct > 40 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');   // rows = every distinct cid + the none row (the visible floor moves with the model)
-if (!(chord.joined && chord.chordTurned && chord.chordDrifted && chord.aliveAfterRightUp && chord.rotContinued && chord.ended)) fails.push('chord both-at-once broken');
+if (!(chord.owns && chord.aliveChorded && chord.endedOnOwnerLoss && chord.ctrlsBack && chord.stillClean && chord.restarts && chord.ended)) fails.push('chord owner-release not clean (stranded drag)');
 if (!(ring.rSpread < 2 && ring.flat && ring.rMin >= 420 && ring.minPair > 250)) fails.push('ring layout broken (circle, flat, spaced)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('EXPLORE PROOF: ALL PASS');

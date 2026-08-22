@@ -115,8 +115,8 @@ const mid = await p.evaluate(() => {
   window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));
   SEL = null; refreshEncSel && refreshEncSel();
   return out; });
-// [6] CAMERA-MODE dropdown: 4 schemes; joystick = hold-offset KEEPS turning (anchor velocity),
-//     stops on release; arcball turns; look turns IN PLACE (position fixed); default = tumble
+// [6] CAMERA-MODE dropdown: 4 LEFT schemes; joystick = hold-offset KEEPS turning (anchor velocity),
+//     stops on release; arcball turns; look turns IN PLACE (position fixed); default = look
 const cmDrop = await p.evaluate(() => {
   const s = document.getElementById('ctlCam');
   return { present: !!s, def: s && s.value,
