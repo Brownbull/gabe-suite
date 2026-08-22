@@ -134,3 +134,107 @@
     entity:function(n){ return [
       E("div",{class:"sec"}, sechd("entity","Entity"), E("div",{class:"doc"}, "The container the pieces live in — a translucent boundary, not an icon-node.")) ]; }
   };
+
+  /* ══ PANEL HIERARCHY (batch 22): Everything → Entity → Cluster → Element, two-way nav.
+     Every level shows its content + an Inside (below) and an Above section; Esc lands on Everything. ══ */
+  function _phead(title, sub, glyph, col){ var c=col||"var(--accent)";
+    document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+title+"</div>"
+      +"<div class='ptype' style='color:"+c+"'>"+pico(glyph||"entity",null, col?col:undefined)+"<span>"+sub+"</span></div></div>"
+      +"<button class='pmin' title='minimize' onclick=\"closePanel()\">›</button>";
+    document.getElementById("prailname").textContent=title; }
+  function navRow(icon, label, meta, col, go){
+    var lead = col ? E("span",{class:"pdot",style:"background:"+col}) : icoEl(icon||"nav");
+    var r=E("div",{class:"pnav"}, lead, E("span",{class:"pnl"},label),
+      meta!=null?E("span",{class:"pnm"},String(meta)):null);
+    r.onclick=go; return r; }
+  function elemRow(n, go){ var r=E("div",{class:"pnav"},
+      E("span",{class:"pki",html:svgInline(n.kind,(n.K&&n.K.col)||"#9aa",13)}),
+      E("span",{class:"pnl"},n.label||n.id), E("span",{class:"pnm"},n.kind));
+    r.onclick=go; return r; }
+  function kindCounts(list){ var by={}; list.forEach(function(n){ by[n.kind]=(by[n.kind]||0)+1; }); return by; }
+  function makeupSec(list, title){ var by=kindCounts(list);
+    var w=E("div",{class:"sec"}, sechd("info", title||"Makeup", list.length));
+    Object.keys(by).sort().forEach(function(k){ w.append(kv(null, k, String(by[k]))); }); return w; }
+  function _fnPool(ent){ try{ if(typeof _buildFnData==="function" && (typeof _FNNODES==="undefined"||!_FNNODES||!_FNNODES.length)) _buildFnData(); }catch(e){}
+    var p=(typeof _FNNODES!=="undefined"&&_FNNODES)?_FNNODES:[];
+    return ent?p.filter(function(f){ return f.ent===ent; }):p; }
+  /* the STARS section — what the graph is NOT drawing right now (hidden functions), honest-empty */
+  function starsSec(ent){ var pool=_fnPool(ent), shown=(typeof _fnsOn!=="undefined")&&_fnsOn;
+    var tip={icon:"info",cls:"info",text:"What the tables and the field do not show: code functions live in the levels feed but are drawn only when Functions is ON (config › Universe)."};
+    var w=E("div",{class:"sec"}, sechd("sub","Stars — not drawn", pool.length||null, false, tip));
+    if(!pool.length){ w.append(E("div",{class:"sublbl"}, icoEl("info"), "— no hidden functions here")); return w; }
+    w.append(E("div",{class:"sublbl"}, icoEl("function"),
+      pool.length+" function"+(pool.length===1?"":"s")+(shown?" — currently SHOWN in the graph":" held off the field — enable Functions to draw them")));
+    w.append(chipList(pool.slice(0,24).map(function(f){return f.label;}), "function", "function", 8));
+    return w; }
+  function crossSec(ent){ var by={}, partners={};
+    links.forEach(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)]; if(!s||!t) return;
+      if(s.ent===t.ent) return; if(s.ent!==ent && t.ent!==ent) return;
+      by[l.rel]=(by[l.rel]||0)+1; partners[s.ent===ent?t.ent:s.ent]=1; });
+    var rels=Object.keys(by).sort(); if(!rels.length) return null;
+    var w=E("div",{class:"sec"}, sechd("link","Cross-entity", rels.reduce(function(s,k){return s+by[k];},0)));
+    rels.forEach(function(k){ w.append(kv(null, k, String(by[k]))); });
+    w.append(E("div",{class:"sublbl"}, icoEl("entity"), "with: "+Object.keys(partners).sort().join(" · ")));
+    return w; }
+  function _entsMap(){ var m={}; nodes.forEach(function(n){ if(n.ent) (m[n.ent]=m[n.ent]||[]).push(n); }); return m; }
+  function _selNode(n){ SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); }catch(e){} }
+  function panelAll(){ window.__uniPView={lvl:"all"};
+    _phead("Everything","UNIVERSE","entity");
+    var pb=document.getElementById("pbody"); pb.innerHTML="";
+    var ents=_entsMap(), names=Object.keys(ents).sort();
+    pb.append(makeupSec(nodes,"Field"));
+    pb.append(starsSec(null));
+    var st=(window.GABE_C4&&window.GABE_C4.stats)||null;
+    if(st){ var w=E("div",{class:"sec"}, sechd("info","Feeds"));
+      if(st.cross_touches!=null) w.append(kv(null,"cross-entity touches",String(st.cross_touches)));
+      if(st.web) w.append(kv(null,"web bridge", (st.web.matched||0)+" matched · "+(st.web.unmatched||0)+" unmatched"));
+      if(st.graft) w.append(kv(null,"graft wiring", st.graft.present===false?"absent ("+(st.graft.reason||"no index")+")":"present"));
+      pb.append(w); }
+    var ins=E("div",{class:"sec"}, sechd("entity","Inside — entities", names.length, false,
+      {icon:"info",cls:"info",text:"One row per entity. Click a row to open that entity's panel."}));
+    names.forEach(function(e){ ins.append(navRow(null, e, ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); })); });
+    pb.append(ins);
+    pb.append(E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, icoEl("info"), "— the top level (Esc returns here)")));
+    openPanel(); }
+  function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent};
+    var mem=nodes.filter(function(n){ return n.ent===ent; });
+    _phead(ent,"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    var pb=document.getElementById("pbody"); pb.innerHTML="";
+    pb.append(makeupSec(mem));
+    pb.append(starsSec(ent));
+    var cx=crossSec(ent); if(cx) pb.append(cx);
+    var subs={}; mem.forEach(function(n){ var k=n.sub||"—"; (subs[k]=subs[k]||[]).push(n); });
+    var sk=Object.keys(subs).sort();
+    var ins=E("div",{class:"sec"}, sechd("sub","Inside — clusters", sk.length, false,
+      {icon:"info",cls:"info",text:"The entity's sub-clusters under the CURRENT core (config › Universe › Cluster core by). Click one to open its panel."}));
+    sk.forEach(function(s){ ins.append(navRow("sub", s, subs[s].length, null, function(){ panelClu(ent, s); })); });
+    pb.append(ins);
+    var ab=E("div",{class:"sec"}, sechd("nav","Above"));
+    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    pb.append(ab);
+    openPanel(); }
+  function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub};
+    var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
+    _phead(sub,"CLUSTER · "+ent,"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    var pb=document.getElementById("pbody"); pb.innerHTML="";
+    pb.append(makeupSec(mem));
+    var ins=E("div",{class:"sec"}, sechd("bubble","Inside — elements", mem.length, false,
+      {icon:"info",cls:"info",text:"Everything in this cluster. Click an element to open its card (the graph selects it too)."}));
+    mem.slice().sort(function(a,b){ return (a.kind+a.label).localeCompare(b.kind+b.label); })
+      .forEach(function(n){ ins.append(elemRow(n, function(){ _selNode(n); })); });
+    pb.append(ins);
+    var ab=E("div",{class:"sec"}, sechd("nav","Above"));
+    ab.append(navRow(null,"entity · "+ent, null, (typeof ENT!=="undefined"&&ENT[ent])||"#888", function(){ panelEnt(ent); }));
+    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    pb.append(ab);
+    openPanel(); }
+  /* the element card's way BACK UP — appended to every kind card below */
+  function aboveSec(n){ if(!n||!n.ent) return null;
+    var w=E("div",{class:"sec"}, sechd("nav","Above"));
+    if(n.sub) w.append(navRow("sub","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }));
+    w.append(navRow(null,"entity · "+n.ent, null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }));
+    w.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    return w; }
+  Object.keys(C).forEach(function(k){ var base=C[k];
+    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });
+  window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu;

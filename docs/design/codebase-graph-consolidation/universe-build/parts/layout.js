@@ -170,7 +170,29 @@ function _zoomDist(){ try{ var cam=Graph.camera(), ctrls=Graph.controls();
       if(off2 < (along*0.45)*(along*0.45) && along<best) best=along; });
     var td=cp.distanceTo(ctrls.target);
     return Math.max(70, Math.min(best===1e9?td:best, td)); }catch(e){ return 400; } }
+/* ── background click → the CLUSTER under the cursor (batch 22): hull meshes are raycast-dead by
+   design (addObj), so the pick is ray-vs-member-cloud — sub hulls beat entity shells, smaller beats bigger ── */
+window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
+    var g=document.getElementById("g"), r=g.getBoundingClientRect();
+    var mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
+    var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, Graph.camera());
+    var best=null;
+    (typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach(function(c){ if(!c.ekey) return;
+      var ms=c.members.map(function(id){ var n=NIDS[id]; return (n&&n.x!=null)?n:null; }).filter(Boolean);
+      if(!ms.length) return;
+      var cx=0,cy=0,cz=0; ms.forEach(function(pt){cx+=pt.x;cy+=pt.y;cz+=pt.z;}); cx/=ms.length; cy/=ms.length; cz/=ms.length;
+      var rad=0; ms.forEach(function(pt){ rad=Math.max(rad, Math.hypot(pt.x-cx,pt.y-cy,pt.z-cz)); }); rad+=(c.pad||10)+14;
+      var C0=new T.Vector3(cx,cy,cz);
+      if(rc.ray.distanceToPoint(C0)>rad) return;
+      if(C0.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;      // behind the camera
+      var score=(c.level==="sub"?0:1)*1e6 + rad;
+      if(!best || score<best.score) best={score:score, c:c}; });
+    if(!best) return;
+    if(best.c.level==="sub" && window.__uniPanelClu) __uniPanelClu(best.c.ekey, best.c.skey);
+    else if(window.__uniPanelEnt) __uniPanelEnt(best.c.ekey);
+  }catch(e){} };
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
+  try{ Graph.onBackgroundClick(window.__uniBgClick); }catch(e){}   // empty-space clicks pick the hull under the cursor
   /* the rig-drag starter — every button routes through here (LEFT=the chosen scheme ·
      RIGHT=tumble · MIDDLE=pan); the starter raycasts the pivot P at the zoom depth and
      snaps the dolly target on-axis so the wheel keeps agreeing with the drag. */
@@ -512,7 +534,9 @@ window.__uniWireTopbar=function(){
       __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
     window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
       if(tag==="INPUT"||tag==="TEXTAREA") return;
-      if(e.key==="Escape") __uniHLClear();
+      if(e.key==="Escape"){ __uniHLClear();
+        try{ SEL=null; refreshEncSel(); }catch(e2){}
+        if(window.__uniPanelAll) __uniPanelAll(); }                 // deselect → the principal (Everything) panel
       else if(e.key==="ArrowUp"){ e.preventDefault(); __uniHLDepth(HL.depth+1); }     // arrows mirror Alt+scroll (some setups eat it)
       else if(e.key==="ArrowDown"){ e.preventDefault(); __uniHLDepth(HL.depth-1); } }); }
   _hlSyncUI(); };

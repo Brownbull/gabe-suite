@@ -372,6 +372,16 @@
   .pbody code{ font-family:var(--font-mono); background:#0e1524; border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
   nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}
   nav.side .navlabel.g-code{color:#9b93e6} nav.side .navlabel.g-test{color:#6fa77d} nav.side .navlabel.g-ledger{color:#d79a3c} nav.side .navlabel.g-rel{color:#b795c9} nav.side .navlabel.g-leaf{color:#8494a4}
+  /* ── batch 22: panel-hierarchy nav rows (Everything → Entity → Cluster → Element) ── */
+  .pnav{ display:flex; align-items:center; gap:8px; padding:5px 8px; border-radius:7px; cursor:pointer;
+    font-size:12px; color:var(--ink); border:1px solid transparent; }
+  .pnav:hover{ background:#0e1524; border-color:var(--line); }
+  .pnav .pdot{ width:10px; height:10px; border-radius:50%; flex:none; }
+  .pnav .pnl{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .pnav .pnm{ margin-left:auto; font:600 10px/1.2 var(--font-mono); color:var(--muted); background:#0e1524;
+    border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
+  .pnav .pki{ display:inline-flex; flex:none; }
+  .pnav svg{ width:13px; height:13px; flex:none; }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -1189,7 +1199,29 @@ function _zoomDist(){ try{ var cam=Graph.camera(), ctrls=Graph.controls();
       if(off2 < (along*0.45)*(along*0.45) && along<best) best=along; });
     var td=cp.distanceTo(ctrls.target);
     return Math.max(70, Math.min(best===1e9?td:best, td)); }catch(e){ return 400; } }
+/* ── background click → the CLUSTER under the cursor (batch 22): hull meshes are raycast-dead by
+   design (addObj), so the pick is ray-vs-member-cloud — sub hulls beat entity shells, smaller beats bigger ── */
+window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
+    var g=document.getElementById("g"), r=g.getBoundingClientRect();
+    var mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
+    var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, Graph.camera());
+    var best=null;
+    (typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach(function(c){ if(!c.ekey) return;
+      var ms=c.members.map(function(id){ var n=NIDS[id]; return (n&&n.x!=null)?n:null; }).filter(Boolean);
+      if(!ms.length) return;
+      var cx=0,cy=0,cz=0; ms.forEach(function(pt){cx+=pt.x;cy+=pt.y;cz+=pt.z;}); cx/=ms.length; cy/=ms.length; cz/=ms.length;
+      var rad=0; ms.forEach(function(pt){ rad=Math.max(rad, Math.hypot(pt.x-cx,pt.y-cy,pt.z-cz)); }); rad+=(c.pad||10)+14;
+      var C0=new T.Vector3(cx,cy,cz);
+      if(rc.ray.distanceToPoint(C0)>rad) return;
+      if(C0.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;      // behind the camera
+      var score=(c.level==="sub"?0:1)*1e6 + rad;
+      if(!best || score<best.score) best={score:score, c:c}; });
+    if(!best) return;
+    if(best.c.level==="sub" && window.__uniPanelClu) __uniPanelClu(best.c.ekey, best.c.skey);
+    else if(window.__uniPanelEnt) __uniPanelEnt(best.c.ekey);
+  }catch(e){} };
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
+  try{ Graph.onBackgroundClick(window.__uniBgClick); }catch(e){}   // empty-space clicks pick the hull under the cursor
   /* the rig-drag starter — every button routes through here (LEFT=the chosen scheme ·
      RIGHT=tumble · MIDDLE=pan); the starter raycasts the pivot P at the zoom depth and
      snaps the dolly target on-axis so the wheel keeps agreeing with the drag. */
@@ -1531,7 +1563,9 @@ window.__uniWireTopbar=function(){
       __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
     window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
       if(tag==="INPUT"||tag==="TEXTAREA") return;
-      if(e.key==="Escape") __uniHLClear();
+      if(e.key==="Escape"){ __uniHLClear();
+        try{ SEL=null; refreshEncSel(); }catch(e2){}
+        if(window.__uniPanelAll) __uniPanelAll(); }                 // deselect → the principal (Everything) panel
       else if(e.key==="ArrowUp"){ e.preventDefault(); __uniHLDepth(HL.depth+1); }     // arrows mirror Alt+scroll (some setups eat it)
       else if(e.key==="ArrowDown"){ e.preventDefault(); __uniHLDepth(HL.depth-1); } }); }
   _hlSyncUI(); };
@@ -1864,13 +1898,13 @@ function makeCluster(members, color, shape, op, level, label){
 }
 function buildClusters(){ clearClusters();
   if(CFG.entOn) Object.keys(ENT).forEach(function(e){ if(!visEnt(e).show) return; var mem=nodes.filter(function(n){return n.ent===e;}).map(function(n){return n.id;});
-    CLUSTERS.push(makeCluster(mem, ENT[e], CFG.shape, OPMAP[CFG.shape][CFG.entOp], "ent", e)); });
+    CLUSTERS.push(Object.assign(makeCluster(mem, ENT[e], CFG.shape, OPMAP[CFG.shape][CFG.entOp], "ent", e), {ekey:e})); });
   if(CFG.subOn){ var subs={}; nodes.forEach(function(n){ if(!visEnt(n.ent).show||!visEnt(n.ent).subs) return;
     var _shv=UNIVIS.sub[n.ent+"|"+n.sub]; if(_shv&&!_shv.show) return;   // cluster hidden by the fleet panel
     var k=n.ent+"|"+n.sub; (subs[k]=subs[k]||[]).push(n.id); });
     Object.keys(subs).forEach(function(k){ var mem=subs[k]; if(mem.length<2) return; var e=k.split("|")[0], sub=k.split("|")[1];
       var col="#"+new T.Color(ENT[e]).offsetHSL(SUBSHIFT[sub]||0,0.05,0.06).getHexString();
-      CLUSTERS.push(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub)); }); }
+      CLUSTERS.push(Object.assign(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub), {ekey:e, skey:sub})); }); }
 }
 /* the hull ENCLOSES each node: seed a sphere of points (radius NR+pad) around every member, so
    the convex hull leaves room around the icons and rounds at the corners (no centre-anchored spikes). */
@@ -2018,7 +2052,7 @@ function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementB
     window.addEventListener("mousemove",function(e){ if(!_drag.on) return; var el=document.getElementById("cfg");
       el.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-_drag.ox))+"px"; el.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-_drag.oy))+"px"; });
     window.addEventListener("mouseup",function(){ _drag.on=false; }); } }
-buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl();
+buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);
 
 /* ── ENCODING EXPLORER (top-left) — experiment across setups + channels; NOT saved to CONFIG ── */
 var EL_CH=[["mass","mass"],["glow","glow"],["halo","halo"],["sat","god"],["pulse","pulse"],["method","method"]];
@@ -2248,6 +2282,110 @@ var KINDCARD=(function(){
     entity:function(n){ return [
       E("div",{class:"sec"}, sechd("entity","Entity"), E("div",{class:"doc"}, "The container the pieces live in — a translucent boundary, not an icon-node.")) ]; }
   };
+
+  /* ══ PANEL HIERARCHY (batch 22): Everything → Entity → Cluster → Element, two-way nav.
+     Every level shows its content + an Inside (below) and an Above section; Esc lands on Everything. ══ */
+  function _phead(title, sub, glyph, col){ var c=col||"var(--accent)";
+    document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+title+"</div>"
+      +"<div class='ptype' style='color:"+c+"'>"+pico(glyph||"entity",null, col?col:undefined)+"<span>"+sub+"</span></div></div>"
+      ;   // the collapse chevron lives in the panel FOOTER now (the walk bar owns the top)
+    document.getElementById("prailname").textContent=title; }
+  function navRow(icon, label, meta, col, go){
+    var lead = col ? E("span",{class:"pdot",style:"background:"+col}) : icoEl(icon||"nav");
+    var r=E("div",{class:"pnav"}, lead, E("span",{class:"pnl"},label),
+      meta!=null?E("span",{class:"pnm"},String(meta)):null);
+    r.onclick=go; return r; }
+  function elemRow(n, go){ var r=E("div",{class:"pnav"},
+      E("span",{class:"pki",html:svgInline(n.kind,(n.K&&n.K.col)||"#9aa",13)}),
+      E("span",{class:"pnl"},n.label||n.id), E("span",{class:"pnm"},n.kind));
+    r.onclick=go; return r; }
+  function kindCounts(list){ var by={}; list.forEach(function(n){ by[n.kind]=(by[n.kind]||0)+1; }); return by; }
+  function makeupSec(list, title){ var by=kindCounts(list);
+    var w=E("div",{class:"sec"}, sechd("info", title||"Makeup", list.length));
+    Object.keys(by).sort().forEach(function(k){ w.append(kv(null, k, String(by[k]))); }); return w; }
+  function _fnPool(ent){ try{ if(typeof _buildFnData==="function" && (typeof _FNNODES==="undefined"||!_FNNODES||!_FNNODES.length)) _buildFnData(); }catch(e){}
+    var p=(typeof _FNNODES!=="undefined"&&_FNNODES)?_FNNODES:[];
+    return ent?p.filter(function(f){ return f.ent===ent; }):p; }
+  /* the STARS section — what the graph is NOT drawing right now (hidden functions), honest-empty */
+  function starsSec(ent){ var pool=_fnPool(ent), shown=(typeof _fnsOn!=="undefined")&&_fnsOn;
+    var tip={icon:"info",cls:"info",text:"What the tables and the field do not show: code functions live in the levels feed but are drawn only when Functions is ON (config › Universe)."};
+    var w=E("div",{class:"sec"}, sechd("sub","Stars — not drawn", pool.length||null, false, tip));
+    if(!pool.length){ w.append(E("div",{class:"sublbl"}, icoEl("info"), "— no hidden functions here")); return w; }
+    w.append(E("div",{class:"sublbl"}, icoEl("function"),
+      pool.length+" function"+(pool.length===1?"":"s")+(shown?" — currently SHOWN in the graph":" held off the field — enable Functions to draw them")));
+    w.append(chipList(pool.slice(0,24).map(function(f){return f.label;}), "function", "function", 8));
+    return w; }
+  function crossSec(ent){ var by={}, partners={};
+    links.forEach(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)]; if(!s||!t) return;
+      if(s.ent===t.ent) return; if(s.ent!==ent && t.ent!==ent) return;
+      by[l.rel]=(by[l.rel]||0)+1; partners[s.ent===ent?t.ent:s.ent]=1; });
+    var rels=Object.keys(by).sort(); if(!rels.length) return null;
+    var w=E("div",{class:"sec"}, sechd("link","Cross-entity", rels.reduce(function(s,k){return s+by[k];},0)));
+    rels.forEach(function(k){ w.append(kv(null, k, String(by[k]))); });
+    w.append(E("div",{class:"sublbl"}, icoEl("entity"), "with: "+Object.keys(partners).sort().join(" · ")));
+    return w; }
+  function _entsMap(){ var m={}; nodes.forEach(function(n){ if(n.ent) (m[n.ent]=m[n.ent]||[]).push(n); }); return m; }
+  function _selNode(n){ SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); }catch(e){} }
+  function panelAll(){ window.__uniPView={lvl:"all"};
+    _phead("Everything","UNIVERSE","entity");
+    var pb=document.getElementById("pbody"); pb.innerHTML="";
+    var ents=_entsMap(), names=Object.keys(ents).sort();
+    pb.append(makeupSec(nodes,"Field"));
+    pb.append(starsSec(null));
+    var st=(window.GABE_C4&&window.GABE_C4.stats)||null;
+    if(st){ var w=E("div",{class:"sec"}, sechd("info","Feeds"));
+      if(st.cross_touches!=null) w.append(kv(null,"cross-entity touches",String(st.cross_touches)));
+      if(st.web) w.append(kv(null,"web bridge", (st.web.matched||0)+" matched · "+(st.web.unmatched||0)+" unmatched"));
+      if(st.graft) w.append(kv(null,"graft wiring", st.graft.present===false?"absent ("+(st.graft.reason||"no index")+")":"present"));
+      pb.append(w); }
+    var ins=E("div",{class:"sec"}, sechd("entity","Inside — entities", names.length, false,
+      {icon:"info",cls:"info",text:"One row per entity. Click a row to open that entity's panel."}));
+    names.forEach(function(e){ ins.append(navRow(null, e, ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); })); });
+    pb.append(ins);
+    pb.append(E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, icoEl("info"), "— the top level (Esc returns here)")));
+    openPanel(); }
+  function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent};
+    var mem=nodes.filter(function(n){ return n.ent===ent; });
+    _phead(ent,"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    var pb=document.getElementById("pbody"); pb.innerHTML="";
+    pb.append(makeupSec(mem));
+    pb.append(starsSec(ent));
+    var cx=crossSec(ent); if(cx) pb.append(cx);
+    var subs={}; mem.forEach(function(n){ var k=n.sub||"—"; (subs[k]=subs[k]||[]).push(n); });
+    var sk=Object.keys(subs).sort();
+    var ins=E("div",{class:"sec"}, sechd("sub","Inside — clusters", sk.length, false,
+      {icon:"info",cls:"info",text:"The entity's sub-clusters under the CURRENT core (config › Universe › Cluster core by). Click one to open its panel."}));
+    sk.forEach(function(s){ ins.append(navRow("sub", s, subs[s].length, null, function(){ panelClu(ent, s); })); });
+    pb.append(ins);
+    var ab=E("div",{class:"sec"}, sechd("nav","Above"));
+    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    pb.append(ab);
+    openPanel(); }
+  function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub};
+    var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
+    _phead(sub,"CLUSTER · "+ent,"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    var pb=document.getElementById("pbody"); pb.innerHTML="";
+    pb.append(makeupSec(mem));
+    var ins=E("div",{class:"sec"}, sechd("bubble","Inside — elements", mem.length, false,
+      {icon:"info",cls:"info",text:"Everything in this cluster. Click an element to open its card (the graph selects it too)."}));
+    mem.slice().sort(function(a,b){ return (a.kind+a.label).localeCompare(b.kind+b.label); })
+      .forEach(function(n){ ins.append(elemRow(n, function(){ _selNode(n); })); });
+    pb.append(ins);
+    var ab=E("div",{class:"sec"}, sechd("nav","Above"));
+    ab.append(navRow(null,"entity · "+ent, null, (typeof ENT!=="undefined"&&ENT[ent])||"#888", function(){ panelEnt(ent); }));
+    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    pb.append(ab);
+    openPanel(); }
+  /* the element card's way BACK UP — appended to every kind card below */
+  function aboveSec(n){ if(!n||!n.ent) return null;
+    var w=E("div",{class:"sec"}, sechd("nav","Above"));
+    if(n.sub) w.append(navRow("sub","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }));
+    w.append(navRow(null,"entity · "+n.ent, null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }));
+    w.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    return w; }
+  Object.keys(C).forEach(function(k){ var base=C[k];
+    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });
+  window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu;
   C.screen=C.web;
   function chipCls(k){ return ({endpoint:"endpoint",route:"froute","function":"function",model:"model",schema:"schema",component:"component",hook:"hook",store:"store",type:"type",screen:"web",web:"web",external:"external",entity:"entity"})[k]||"fn"; }
   var RELICO={ handler:"endpoint", touch:"model", resp:"schema", fk:"key", pk:"key", fetches:"down", renders:"component", mounts:"web", uses:"link", reads:"store", typed:"table" };

@@ -273,6 +273,15 @@ assert OLD_SUBSHIFT in text, "SUBSHIFT anchor missing"
 text = text.replace(OLD_SUBSHIFT, 'var SUBSHIFT={ endpoints:0.04, api:-0.08, web:0.10, frontend:0.10, data:0.0 };', 1)
 
 # ── batch 12: DEPTH HIGHLIGHT — selection hook · per-wire factor · shared visibility fn · reapply ──
+# ── batch 22: cluster hulls carry their keys (ekey/skey) so the background-click picker can route
+#    a hull hit to the entity/cluster panel; the boot chain opens the Everything panel (no selection). ──
+text = text.replace(
+  'CLUSTERS.push(makeCluster(mem, ENT[e], CFG.shape, OPMAP[CFG.shape][CFG.entOp], "ent", e));',
+  'CLUSTERS.push(Object.assign(makeCluster(mem, ENT[e], CFG.shape, OPMAP[CFG.shape][CFG.entOp], "ent", e), {ekey:e}));', 1)
+text = text.replace(
+  'CLUSTERS.push(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub));',
+  'CLUSTERS.push(Object.assign(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub), {ekey:e, skey:sub}));', 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,
@@ -339,7 +348,7 @@ text = text.replace(OLD_CHIP,
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
 OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();'
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
-text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl();', 1)
+text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);', 1)
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")

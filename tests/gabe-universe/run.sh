@@ -351,6 +351,23 @@ check('(drag.btn===2)?"tumble"' in page, "the RIGHT button must always tumble re
 check('vs*dy*0.66' in page and '-vs*dy*0.66' not in page,
       "LOOK must start vertically INVERTED (aviation convention) — the old sign is back")
 
+# ── 10t. batch 22: the PANEL HIERARCHY — Everything → Entity → Cluster → Element, two-way nav ──
+for lit in ('window.__uniPanelAll=panelAll','window.__uniPanelEnt=panelEnt','window.__uniPanelClu=panelClu'):
+    check(lit in page, "panel-hierarchy builder missing: "+lit)
+check('class="pnav"' in page or "class:\"pnav\"" in page or '{class:"pnav"}' in page,
+      "clickable panel nav rows (.pnav) are gone")
+check('if(e.key==="Escape"){ __uniHLClear();' in page and 'if(window.__uniPanelAll) __uniPanelAll(); }' in page,
+      "Esc must clear the selection AND land on the Everything panel")
+check('setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);' in page,
+      "boot must open the Everything panel (deferred one tick past the card IIFE)")
+check('Graph.onBackgroundClick(window.__uniBgClick)' in page,
+      "background clicks are not wired to the hull picker")
+check('{ekey:e}' in page and '{ekey:e, skey:sub}' in page,
+      "cluster hulls lost their routing keys (ekey/skey) — the picker cannot name a panel")
+check('"— no hidden functions here"' in page, "the Stars section lost its honest-empty line")
+check('out.push(aboveSec(n)); return out;' in page,
+      "element cards lost their Above section (the way back up)")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
