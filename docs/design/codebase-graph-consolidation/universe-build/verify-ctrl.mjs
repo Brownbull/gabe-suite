@@ -44,29 +44,53 @@ const panel = await p.evaluate(() => { const el = document.getElementById('ctrlp
   document.getElementById('ctrlpmin').click();
   return { br, kbd, min, inv: !!document.getElementById('ctlInv'), pvt: !!document.getElementById('ctlPvt') }; });
 
-// [3] Q/E yaw in place: quaternion turns, camera POSITION fixed
+// [3] Q/E orbit INWARD around the view centre: quaternion turns AND the camera sweeps; freeze while held
 await p.evaluate(() => { window.__q0 = Graph.camera().quaternion.clone(); window.__p0 = Graph.camera().position.clone();
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q' })); });
-await p.waitForTimeout(300);
+await p.waitForTimeout(120);
+const frozeMid = await p.evaluate(() => ANIM.all === false);
+await p.waitForTimeout(240);
 const yaw = await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q' }));
   return { turned: Graph.camera().quaternion.angleTo(window.__q0) > 0.05,
-    inPlace: Graph.camera().position.distanceTo(window.__p0) < 1 }; });
+    sweeps: Graph.camera().position.distanceTo(window.__p0) > 15 }; });
+await p.waitForTimeout(200);
+const thawed = await p.evaluate(() => ANIM.all === true);
 
-// [4] invert mouse: right button starts OUR drag when inverted; left when not
+// [4] invert = VERTICAL AXIS flip (flight-style): buttons never swap; the same downward drag
+//     tilts the camera the OPPOSITE way when inverted
 const inv = await p.evaluate(() => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2, out = {};
   g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
-  out.rightNoDragStock = window.__uniDragging !== true;
+  out.rightNeverDrags = window.__uniDragging !== true;              // buttons stay stock
   window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));
-  document.getElementById('ctlInv').click();                        // invert ON
-  g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
-  out.rightDragsInverted = window.__uniDragging === true;
-  window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));
-  out.mapSwapped = Graph.controls().mouseButtons.LEFT === THREE.MOUSE.PAN;
-  document.getElementById('ctlInv').click();                        // back
-  out.mapBack = Graph.controls().mouseButtons.LEFT === THREE.MOUSE.ROTATE;
+  const dragDown = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: cx, clientY: cy, bubbles: true }));
+    const y0 = Graph.camera().position.y;
+    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx, clientY: cy + i * 10, bubbles: true }));
+    const dy = Graph.camera().position.y - y0;
+    window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return dy; };
+  const stock = dragDown();
+  document.getElementById('ctlInv').click();
+  const inverted = dragDown();
+  document.getElementById('ctlInv').click();
+  out.stockDy = Math.round(stock); out.invDy = Math.round(inverted);
+  out.axisFlips = Math.sign(stock) !== 0 && Math.sign(stock) === -Math.sign(inverted);
   return out; });
+// [4b] ZOOM-DEPTH pivot: the same drag sweeps a SMALLER arc when the camera is close to content
+const zoomArc = await p.evaluate(() => {
+  const g = document.getElementById('g'), r = g.getBoundingClientRect();
+  const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+  const sweep = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: cx, clientY: cy, bubbles: true }));
+    const p0 = Graph.camera().position.clone();
+    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx + i * 12, clientY: cy, bubbles: true }));
+    const d = Graph.camera().position.distanceTo(p0);
+    window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return d; };
+  const far = sweep();
+  const n = nodes.find(x => x.kind === 'endpoint' && x.x != null);
+  const dir = new THREE.Vector3(Graph.camera().position.x - n.x, Graph.camera().position.y - n.y, Graph.camera().position.z - n.z).normalize();
+  Graph.cameraPosition({ x: n.x + dir.x * 120, y: n.y + dir.y * 120, z: n.z + dir.z * 120 }, { x: n.x, y: n.y, z: n.z }, 0);
+  return new Promise(res => setTimeout(() => { const near = sweep();
+    res({ far: Math.round(far), near: Math.round(near), scales: near < far * 0.6 }); }, 300)); });
 
 // [5] middle button orbits the SELECTION (P = the selected node), only with a selection
 const mid = await p.evaluate(() => {
@@ -91,7 +115,8 @@ await b.close();
 
 console.log('focus rest: dim', JSON.stringify(dim), '· fade', JSON.stringify(fade));
 console.log('            wires', JSON.stringify(wo), '· hide', JSON.stringify(hide));
-console.log('panel:', JSON.stringify(panel), '· yaw:', JSON.stringify(yaw));
+console.log('panel:', JSON.stringify(panel), '· yaw:', JSON.stringify(yaw), 'froze', frozeMid, 'thawed', thawed);
+console.log('zoomArc:', JSON.stringify(zoomArc));
 console.log('invert:', JSON.stringify(inv));
 console.log('middle:', JSON.stringify(mid));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
@@ -103,8 +128,9 @@ if (!(fade.maxRest > 0.02 && fade.maxRest < 0.12 && fade.outsideShown)) fails.pu
 if (!(wo.outsideShown && wo.wires < hide.wires + 200 && wo.maxRest <= 1)) fails.push('wires behavior wrong');
 if (!(hide.outsideShown === false)) fails.push('hide behavior wrong');
 if (!(panel.br && panel.kbd >= 10 && panel.min && panel.inv && panel.pvt)) fails.push('controls panel wrong');
-if (!(yaw.turned && yaw.inPlace)) fails.push('Q/E yaw wrong');
-if (!(inv.rightNoDragStock && inv.rightDragsInverted && inv.mapSwapped && inv.mapBack)) fails.push('invert mouse wrong');
+if (!(yaw.turned && yaw.sweeps && frozeMid && thawed)) fails.push('Q/E inward orbit / control freeze wrong');
+if (!zoomArc.scales) fails.push('drag arc does not follow the zoom depth');
+if (!(inv.rightNeverDrags && inv.axisFlips)) fails.push('vertical-axis invert wrong (buttons must stay stock)');
 if (!(mid.drags && mid.orbitsSelection && mid.ends && mid.noSelNoDrag)) fails.push('middle-orbit-selection wrong');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('CTRL PROOF: ALL PASS');

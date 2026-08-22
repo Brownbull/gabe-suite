@@ -1174,9 +1174,19 @@ function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quater
   cam.position.sub(P).applyQuaternion(q).add(P);   // rotate the camera RIG (position + orientation) rigidly about P
   target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
   cam.quaternion.premultiply(q); }
-window.UNICTL={ invert:false, selPivot:true };   // controls panel state: swap mouse buttons · middle = orbit the selection
-window.__uniApplyMouseMap=function(){ try{ var c=Graph.controls(); if(!c) return; var M=T.MOUSE;
-  c.mouseButtons={ LEFT: UNICTL.invert?M.PAN:M.ROTATE, MIDDLE: M.DOLLY, RIGHT: UNICTL.invert?M.ROTATE:M.PAN }; }catch(e){} };
+window.UNICTL={ invert:false, selPivot:true };   // invert = flight-style VERTICAL axis flip (drag up ⇒ look down); buttons never swap
+/* the CURRENT-ZOOM depth: the nearest visible content ahead (a ~24° cone), never beyond the
+   dolly target. Flying close then dragging orbits a NEAR pivot — the giant-sphere feel.
+   TOP-LEVEL on purpose: the drag starter AND the Q/E fly tick both call it. */
+function _zoomDist(){ try{ var cam=Graph.camera(), ctrls=Graph.controls();
+    var vd=new T.Vector3(); cam.getWorldDirection(vd); var cp=cam.position, best=1e9;
+    nodes.forEach(function(n){ if(n.x==null||!_nodeVisibleFn(n)) return;
+      var dx=n.x-cp.x, dy=n.y-cp.y, dz=n.z-cp.z;
+      var along=dx*vd.x+dy*vd.y+dz*vd.z; if(along<40) return;
+      var off2=(dx*dx+dy*dy+dz*dz)-along*along;
+      if(off2 < (along*0.45)*(along*0.45) && along<best) best=along; });
+    var td=cp.distanceTo(ctrls.target);
+    return Math.max(70, Math.min(best===1e9?td:best, td)); }catch(e){ return 400; } }
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
   /* the rig-drag starter — shared by pointerdown (left pressed first) AND the move stream (left
      JOINS an active right-pan: chorded presses fire NO pointerdown per the pointer-events spec,
@@ -1185,8 +1195,11 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       var r=g.getBoundingClientRect(), mx=((cx-r.left)/r.width)*2-1, my=-((cy-r.top)/r.height)*2+1;
       var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, cam);
       var vdir=new T.Vector3(); cam.getWorldDirection(vdir);
-      var plane=new T.Plane().setFromNormalAndCoplanarPoint(vdir, ctrls.target), P=new T.Vector3();
+      var zd=_zoomDist();                                        // pivot depth = the CURRENT zoom, not the stale dolly target
+      var pp=new T.Vector3().copy(cam.position).addScaledVector(vdir, zd);
+      var plane=new T.Plane().setFromNormalAndCoplanarPoint(vdir, pp), P=new T.Vector3();
       if(!rc.ray.intersectPlane(plane, P)) return null;
+      ctrls.target.copy(pp);                                     // scroll-dolly now zooms toward what you orbit (on-axis → no view snap)
       ctrls.enabled=false; window.__uniDragging=true;
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
       return { P:P, lx:cx, ly:cy }; }catch(e){ return null; } }
@@ -1195,20 +1208,18 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
       return { P:new T.Vector3(P.x,P.y,P.z), lx:0, ly:0 }; }catch(e){ return null; } }
   g.addEventListener("pointerdown", function(ev){
-    var OB=UNICTL.invert?2:0;
     if(ev.button===1 && UNICTL.selPivot && typeof SEL!=="undefined" && SEL && SEL.kind==="node" && SEL.data && SEL.data.x!=null){
       ev.preventDefault();                                       // middle = orbit the SELECTED planet (and no browser autoscroll)
       drag=_rigStartP(SEL.data); if(drag){ drag.lx=ev.clientX; drag.ly=ev.clientY; drag.btn=1; } return; }
-    if(ev.button!==OB) return;
-    drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=OB; }, true);
+    if(ev.button!==0) return;
+    drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=0; }, true);
   g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
   window.addEventListener("pointermove", function(ev){
-    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=UNICTL.invert?2:0; if(!drag) return; }   // orbit button joined a pan mid-stream
+    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=0; if(!drag) return; }   // left joined a right-pan mid-stream
     if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
-      var CB=UNICTL.invert?1:2;                                             // the PAN side of the chord (respects the invert toggle)
-      if(ev.buttons&CB && drag.btn!==1){                                      // CHORD: BOTH at once — the rig DRIFTS (half-strength pan)
+      if(ev.buttons&2 && drag.btn!==1){                                     // CHORD (left+right): BOTH at once — the rig DRIFTS (half-strength pan)
         var kd=cam.position.distanceTo(ctrls.target)*0.00055;               // while the same delta keeps orbiting below
         var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
         var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
@@ -1217,8 +1228,9 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
       var vdir=new T.Vector3().subVectors(cam.position, ctrls.target).normalize();
       _rotRig(cam, ctrls.target, drag.P, up, -dx*0.006);                             // azimuth around world-up through P
-      var nd=vdir.clone().applyAxisAngle(right, -dy*0.006);                          // polar around camera-right (clamp near vertical to avoid a flip)
-      if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, -dy*0.006);
+      var vs=(UNICTL.invert?1:-1)*0.006;                                             // flight-style invert flips ONLY the vertical axis
+      var nd=vdir.clone().applyAxisAngle(right, vs*dy);                                // polar around camera-right (clamp near vertical to avoid a flip)
+      if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, vs*dy);
     }catch(e){} });
   window.addEventListener("pointerup", function(ev){
     if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;   // only the drag-OWNING button ends it (chord releases keep it alive)
@@ -1414,12 +1426,12 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
     +'<div class="ctlrow">'+KB("Alt+scroll")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
-    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="swap the mouse buttons: left pans, right orbits"></button><span class="ctll">invert mouse (left↔right)</span></div>'
+    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="flight-style: drag up looks DOWN (flips the vertical rotation axis only — buttons stay the same)"></button><span class="ctll">invert vertical (flight-style)</span></div>'
     +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.selPivot?" on":"")+'" id="ctlPvt" title="middle-drag orbits around the SELECTED planet"></button><span class="ctll">middle = orbit selection</span></div>'
     +'</div>';
   document.body.appendChild(p);
   document.getElementById("ctrlpmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
-  document.getElementById("ctlInv").onclick=function(){ UNICTL.invert=!UNICTL.invert; this.classList.toggle("on",UNICTL.invert); __uniApplyMouseMap(); };
+  document.getElementById("ctlInv").onclick=function(){ UNICTL.invert=!UNICTL.invert; this.classList.toggle("on",UNICTL.invert); };
   document.getElementById("ctlPvt").onclick=function(){ UNICTL.selPivot=!UNICTL.selPivot; this.classList.toggle("on",UNICTL.selPivot); }; };
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
@@ -1429,13 +1441,23 @@ window.__uniWireTopbar=function(){
   var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
   if(!window.__uniFly){ window.__uniFly=1; var FK={};
     var _flyOK=function(e){ var tag=(e.target&&e.target.tagName)||""; return tag!=="INPUT"&&tag!=="TEXTAREA"; };
+    var _flyFroze=false;
+    function _flyFreeze(){ if(!_flyFroze && ANIM.freezeOnDrag && ANIM.all){ _flyFroze=true; ANIM.all=false; } }
+    function _flyThaw(){ var any=false; for(var k in FK){ any=true; break; }
+      if(!any && _flyFroze){ _flyFroze=false; ANIM.all=true; } }
     window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
-      if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e"){ FK[k]=1; }
-      else if(k===" "){ FK.up=1; e.preventDefault(); }        // Space = ascend (and never scrolls/clicks)
-      else if(k==="control"){ FK.dn=1; } });
+      if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e"){ FK[k]=1; _flyFreeze(); }
+      else if(k===" "){ FK.up=1; _flyFreeze(); e.preventDefault(); }   // Space = ascend (and never scrolls/clicks)
+      else if(k==="control"){ FK.dn=1; _flyFreeze(); } });
     window.addEventListener("keyup", function(e){ var k=e.key.toLowerCase();
       if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e") delete FK[k];
-      else if(k===" ") delete FK.up; else if(k==="control") delete FK.dn; });
+      else if(k===" ") delete FK.up; else if(k==="control") delete FK.dn;
+      _flyThaw(); });
+    var _whT=null;                                              // wheel zoom freezes too, resumes when the scrolling stops
+    window.addEventListener("wheel", function(e){ if(e.altKey) return;
+      if(ANIM.freezeOnDrag && ANIM.all){ _flyFroze=true; ANIM.all=false; }
+      if(_whT) clearTimeout(_whT);
+      _whT=setTimeout(function(){ _whT=null; _flyThaw(); }, 350); }, {passive:true});
     window.addEventListener("blur", function(){ for(var k in FK) delete FK[k]; });
     setInterval(function _flyTick(){                                        // setInterval, NOT rAF: headless/background pages starve rAF chains (measured 1 tick/400ms) — the flight must tick everywhere
       if(typeof Graph==="undefined"||!Graph) return; var any=false; for(var k in FK){ any=true; break; } if(!any) return;
@@ -1447,11 +1469,11 @@ window.__uniWireTopbar=function(){
         if(FK.w) off.add(fwd); if(FK.s) off.sub(fwd);
         if(FK.d) off.add(rgt); if(FK.a) off.sub(rgt);
         if(FK.up) off.y+=sp; if(FK.dn) off.y-=sp;
-        if(FK.q||FK.e){                                        // Q/E = turn IN PLACE (yaw about world-up through the camera)
-          var ya=(FK.q?1:0)-(FK.e?1:0), qq=new T.Quaternion().setFromAxisAngle(new T.Vector3(0,1,0), ya*0.022);
-          cam.quaternion.premultiply(qq);
-          var rel=new T.Vector3().subVectors(ctrls.target, cam.position).applyQuaternion(qq);
-          ctrls.target.copy(cam.position).add(rel); }
+        if(FK.q||FK.e){                                        // Q/E = orbit INWARD around the view centre at the zoom depth
+          var ya=(FK.q?1:0)-(FK.e?1:0);
+          var vdq=new T.Vector3(); cam.getWorldDirection(vdq);
+          var pv=new T.Vector3().copy(cam.position).addScaledVector(vdq, _zoomDist());
+          _rotRig(cam, ctrls.target, pv, new T.Vector3(0,1,0), ya*0.022); }
         if(!off.lengthSq()) return;
         cam.position.add(off); ctrls.target.add(off);          // the whole rig flies — orbiting keeps working wherever you stop
       }catch(e){} }, 16); }
@@ -1947,7 +1969,7 @@ function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementB
     window.addEventListener("mousemove",function(e){ if(!_drag.on) return; var el=document.getElementById("cfg");
       el.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-_drag.ox))+"px"; el.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-_drag.oy))+"px"; });
     window.addEventListener("mouseup",function(){ _drag.on=false; }); } }
-buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); if(window.__uniApplyMouseMap) setTimeout(__uniApplyMouseMap, 2500);
+buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl();
 
 /* ── ENCODING EXPLORER (top-left) — experiment across setups + channels; NOT saved to CONFIG ── */
 var EL_CH=[["mass","mass"],["glow","glow"],["halo","halo"],["sat","god"],["pulse","pulse"],["method","method"]];

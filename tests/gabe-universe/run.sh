@@ -321,11 +321,16 @@ check('rest:"hide"' in page and 'var _RESTF={ dim:0.25, fade:0.08' in page and '
 check('HL.rest==="hide"' in page, "only the HIDE behavior may remove planets (dim/fade/wires keep them)")
 check('id="ctrlp"' in page and '__uniBuildCtrl' in page and 'class="kbd"' in page,
       "the bottom-right CONTROLS panel is missing")
-check('id="ctlInv"' in page and 'id="ctlPvt"' in page and '__uniApplyMouseMap' in page,
-      "invert-mouse / middle-orbit toggles missing")
-check('k==="q"' in page and 'ya*0.022' in page, "Q/E turn-in-place missing from the flight keys")
-check('UNICTL.invert?2:0' in page and 'drag.btn=1' in page and 'UNICTL.selPivot' in page,
-      "invertable drag button / middle-orbits-selection missing")
+check('id="ctlInv"' in page and 'id="ctlPvt"' in page, "invert / middle-orbit toggles missing")
+check('__uniApplyMouseMap' not in page, "REGRESSION: invert swaps the mouse buttons again (it must flip ONLY the vertical axis)")
+check('UNICTL.invert?1:-1' in page, "flight-style vertical inversion missing from the drag's polar term")
+check('function _zoomDist' in page and 'addScaledVector(vdir, zd)' in page,
+      "the drag pivot ignores the current zoom (the giant-sphere depth)")
+check('_flyFreeze' in page and '_flyThaw' in page and '{passive:true});' in page,
+      "camera controls (keys + wheel) do not freeze the decorations")
+check('k==="q"' in page and 'ya*0.022' in page and '_rotRig(cam, ctrls.target, pv,' in page,
+      "Q/E must orbit INWARD around the view centre at the zoom depth")
+check('drag.btn=1' in page and 'UNICTL.selPivot' in page, "middle-orbits-selection missing")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
