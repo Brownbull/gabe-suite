@@ -330,6 +330,8 @@ check('_flyFreeze' in page and '_flyThaw' in page and '{passive:true});' in page
       "camera controls (keys + wheel) do not freeze the decorations")
 check('k==="q"' in page and 'ya*0.022' in page and '_rotRig(cam, ctrls.target, pv,' in page,
       "Q/E must orbit INWARD around the view centre at the zoom depth")
+check('var ya=(FK.e?1:0)-(FK.q?1:0);' in page,
+      "Q/E spin directions must stay SWAPPED (operator ruling: E spins Q's old way)")
 check('drag.btn=1' in page and 'UNICTL.selPivot' in page and 'drag.btn=2' in page,
       "button remap incomplete: middle must own pan (btn=1) and right must own tumble (btn=2, orbit-selection lives there)")
 

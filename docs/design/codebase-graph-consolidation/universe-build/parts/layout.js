@@ -522,7 +522,7 @@ window.__uniWireTopbar=function(){
         if(FK.d) off.add(rgt); if(FK.a) off.sub(rgt);
         if(FK.up) off.y+=sp; if(FK.dn) off.y-=sp;
         if(FK.q||FK.e){                                        // Q/E = orbit INWARD around the view centre at the zoom depth
-          var ya=(FK.q?1:0)-(FK.e?1:0);
+          var ya=(FK.e?1:0)-(FK.q?1:0);                        // swapped (operator): E spins Q's old way, Q spins E's
           var vdq=new T.Vector3(); cam.getWorldDirection(vdq);
           var pv=new T.Vector3().copy(cam.position).addScaledVector(vdq, _zoomDist());
           _rotRig(cam, ctrls.target, pv, new T.Vector3(0,1,0), ya*0.022); }
