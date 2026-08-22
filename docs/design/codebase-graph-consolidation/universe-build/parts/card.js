@@ -142,14 +142,18 @@
       +"<div class='ptype' style='color:"+c+"'>"+pico(glyph||"entity",null, col?col:undefined)+"<span>"+sub+"</span></div></div>"
       +"<button class='pmin' title='minimize' onclick=\"closePanel()\">›</button>";
     document.getElementById("prailname").textContent=title; }
-  function navRow(icon, label, meta, col, go){
-    var lead = col ? E("span",{class:"pdot",style:"background:"+col}) : icoEl(icon||"nav");
+  P.drill='<polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>';       // trailing DOWN-a-level marker
+  P.up='<polyline points="14 9 9 4 4 9"/><path d="M20 20h-7a4 4 0 0 1-4-4V4"/>';             // trailing UP-a-level marker
+  function coreLead(){ return E("span",{class:"pki pcore",html:(window.__uniCoreIco?__uniCoreIco((typeof CFG!=="undefined"&&CFG.coreBy)||"layer",13):"")}); }
+  function dirIco(dir){ return dir?E("span",{class:"pdir "+dir},icoEl(dir==="down"?"drill":"up")):null; }
+  function navRow(icon, label, meta, col, go, dir){
+    var lead = col ? E("span",{class:"pdot",style:"background:"+col}) : (icon==="__core"?coreLead():icoEl(icon||"nav"));
     var r=E("div",{class:"pnav"}, lead, E("span",{class:"pnl"},label),
-      meta!=null?E("span",{class:"pnm"},String(meta)):null);
+      meta!=null?E("span",{class:"pnm"},String(meta)):null, dirIco(dir));
     r.onclick=go; return r; }
   function elemRow(n, go){ var r=E("div",{class:"pnav"},
       E("span",{class:"pki",html:svgInline(n.kind,(n.K&&n.K.col)||"#9aa",13)}),
-      E("span",{class:"pnl"},n.label||n.id), E("span",{class:"pnm"},n.kind));
+      E("span",{class:"pnl"},n.label||n.id), E("span",{class:"pnm"},n.kind), dirIco("down"));
     r.onclick=go; return r; }
   function kindCounts(list){ var by={}; list.forEach(function(n){ by[n.kind]=(by[n.kind]||0)+1; }); return by; }
   var KINDTIP={ endpoint:"an API route handler — one node per METHOD + path; the entity's outward door",
@@ -212,7 +216,7 @@
     var ents=_entsMap(), names=Object.keys(ents).sort();
     var ins=E("div",{class:"sec"}, sechd("entity","Entities", names.length, false,      // NAVIGABLE first — the ladder's next rungs lead the panel
       {icon:"info",cls:"info",text:"The universe's containers — click a row to open that entity's panel (the next level down)."}));
-    names.forEach(function(e){ ins.append(navRow(null, e, ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); })); });
+    names.forEach(function(e){ ins.append(navRow(null, e, ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); }, "down")); });
     pb.append(ins);
     pb.append(makeupSec(nodes,"Elements"));
     pb.append(starsSec(null));
@@ -244,10 +248,10 @@
     var sk=Object.keys(subs).sort();
     var ins=E("div",{class:"sec"}, sechd("sub","Inside — clusters", sk.length, false,
       {icon:"info",cls:"info",text:"The entity's sub-clusters under the CURRENT core (config › Universe › Cluster core by). Click one to open its panel."}));
-    sk.forEach(function(s){ ins.append(navRow("sub", s, subs[s].length, null, function(){ panelClu(ent, s); })); });
+    sk.forEach(function(s){ ins.append(navRow("__core", s, subs[s].length, null, function(){ panelClu(ent, s); }, "down")); });
     pb.append(ins);
     var ab=E("div",{class:"sec"}, sechd("nav","Above"));
-    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     pb.append(ab);
     openPanel(); }
   function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub};
@@ -261,16 +265,16 @@
       .forEach(function(n){ ins.append(elemRow(n, function(){ _selNode(n); })); });
     pb.append(ins);
     var ab=E("div",{class:"sec"}, sechd("nav","Above"));
-    ab.append(navRow(null,"entity · "+ent, null, (typeof ENT!=="undefined"&&ENT[ent])||"#888", function(){ panelEnt(ent); }));
-    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    ab.append(navRow(null,"entity · "+ent, null, (typeof ENT!=="undefined"&&ENT[ent])||"#888", function(){ panelEnt(ent); }, "up"));
+    ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     pb.append(ab);
     openPanel(); }
   /* the element card's way BACK UP — appended to every kind card below */
   function aboveSec(n){ if(!n||!n.ent) return null;
     var w=E("div",{class:"sec"}, sechd("nav","Above"));
-    if(n.sub) w.append(navRow("sub","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }));
-    w.append(navRow(null,"entity · "+n.ent, null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }));
-    w.append(navRow("entity","everything", null, null, function(){ panelAll(); }));
+    if(n.sub) w.append(navRow("__core","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }, "up"));
+    w.append(navRow(null,"entity · "+n.ent, null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
+    w.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     return w; }
   Object.keys(C).forEach(function(k){ var base=C[k];
     C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });

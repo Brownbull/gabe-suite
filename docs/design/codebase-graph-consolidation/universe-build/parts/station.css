@@ -235,6 +235,10 @@
   .pnav .pnm{ margin-left:auto; font:600 10px/1.2 var(--font-mono); color:var(--muted); background:#0e1524;
     border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
   .pnav .pki{ display:inline-flex; flex:none; }
+  .pnav .pdir{ flex:none; display:inline-flex; color:var(--muted); }
+  .pnav:hover .pdir{ color:var(--accent); }
+  .pnav .pcore{ color:var(--accent); }
+  #cfg .pill button{ display:inline-flex; align-items:center; gap:4px; }
   .pnav svg{ width:13px; height:13px; flex:none; }
   /* stat rows (Elements section) — nav-row look, no pointer affordance */
   .pnav.pstat{ cursor:default; }

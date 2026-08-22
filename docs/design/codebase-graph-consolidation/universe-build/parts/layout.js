@@ -547,6 +547,17 @@ window.__uniWireTopbar=function(){
    join is direct. ALL engine seams read through visEnt/visN — the ONE place a "dim" tri-state and
    per-piece roles land later. An unknown entity resolves to SHOWN (l2-only entities never vanish). */
 var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
+/* the seven cluster-core strategies each own an ICON (operator ask) — the config pills carry them
+   and every cluster surface (rows, panels) INHERITS the active core's icon from this one map. */
+window.__uniCoreIco=function(mode,px){ px=px||13; var PATHS={
+  layer:'<path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="m2 17 10 5 10-5"/><path d="m2 12 10 5 10-5"/>',
+  kind:'<path d="M8.3 10a.7.7 0 0 1-.6-1.1L11.4 3a.7.7 0 0 1 1.2 0l3.7 5.9a.7.7 0 0 1-.6 1.1Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/>',
+  tests:'<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  guards:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
+  usecase:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
+  community:'<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.8 7.2 6.2 15.7M13.2 7.2l4.6 8.5M7.5 18h9"/>',
+  fk:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>' };
+  return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(PATHS[mode]||PATHS.layer)+'</svg>'; };
 window.UNIVIS={ ent:{}, sub:{}, node:{}, meta:{} };   // sub = per-(ent|subgroup) overrides — keys are CURRENT-coreBy groups, regrouped on a core change
 _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
@@ -685,7 +696,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var mk=function(cls){ var d=document.createElement("div"); d.className=cls; return d; };
   var grpWith=function(label, child){ var g=mk("grp"); g.innerHTML='<div class="grplbl">'+label+'</div>'; if(child) g.appendChild(child); return g; };
   var pillHTML=function(grp, opts, cur){ var s='<div class="pill" data-grp="'+grp+'">';
-    opts.forEach(function(o){ s+='<button data-v="'+o.v+'"'+(o.v===cur?' class="on"':'')+(o.ti?' title="'+o.ti+'"':'')+'>'+o.t+'</button>'; }); return s+'</div>'; };
+    opts.forEach(function(o){ s+='<button data-v="'+o.v+'"'+(o.v===cur?' class="on"':'')+(o.ti?' title="'+o.ti+'"':'')+'>'+(o.ic||'')+o.t+'</button>'; }); return s+'</div>'; };
   // grab the spike's generated groups by label
   var G={}; [].forEach.call(body.querySelectorAll(":scope > .grp"), function(g){ var t=(g.querySelector(".grplbl")||{}).textContent||"";
     if(/Container/i.test(t))G.container=g; else if(/Show/i.test(t))G.show=g; else if(/Transparency/i.test(t))G.transp=g; else if(/Planet/i.test(t))G.planet=g; else if(/Universe/i.test(t))G.universe=g; });
@@ -710,14 +721,14 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   /* the explainers live on HOVER (operator ruling): the section label carries the summary,
      every option carries its own meaning — the note lines below the pills are gone. */
   var cores=[
-    {v:"layer",t:"Layer",ti:"group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
-    {v:"kind",t:"Kind",ti:"group by element kind — endpoint · model · schema · function · screen"},
-    {v:"tests",t:"Tests",ti:"group by test coverage — tested vs untested"}];
+    {v:"layer",t:"Layer",ic:__uniCoreIco("layer",12),ti:"group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
+    {v:"kind",t:"Kind",ic:__uniCoreIco("kind",12),ti:"group by element kind — endpoint · model · schema · function · screen"},
+    {v:"tests",t:"Tests",ic:__uniCoreIco("tests",12),ti:"group by test coverage — tested vs untested"}];
   if(hasLevels) cores.push(
-    {v:"guards",t:"Guards",ti:"endpoints by guard status — guarded vs unguarded (levels feed)"},
-    {v:"usecase",t:"Use-case",ti:"group by the use-case flows mapped in the levels feed"},
-    {v:"community",t:"Community",ti:"group by code community — label propagation over the levels feed"},
-    {v:"fk",t:"FK-join",ti:"group by foreign-key join community (levels feed)"});
+    {v:"guards",t:"Guards",ic:__uniCoreIco("guards",12),ti:"endpoints by guard status — guarded vs unguarded (levels feed)"},
+    {v:"usecase",t:"Use-case",ic:__uniCoreIco("usecase",12),ti:"group by the use-case flows mapped in the levels feed"},
+    {v:"community",t:"Community",ic:__uniCoreIco("community",12),ti:"group by code community — label propagation over the levels feed"},
+    {v:"fk",t:"FK-join",ic:__uniCoreIco("fk",12),ti:"group by foreign-key join community (levels feed)"});
   var coreHd=hasLevels ? "what forms the clusters INSIDE each entity — nodes physically regroup on change; hover each option"
                        : "what forms the clusters INSIDE each entity — Guards/Use-case/Community/FK-join need the levels feed (not loaded here)";
   var layWrap=mk("uniLay");

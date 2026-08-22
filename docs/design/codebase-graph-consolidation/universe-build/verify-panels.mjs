@@ -59,6 +59,17 @@ const tipEdge = await p.evaluate(() => {
   ico.click();                                                        // toggle back off
   return { right: Math.round(r.right), iw: window.innerWidth, inX, inY }; });
 
+// [1d] direction markers + core icons: entity rows carry a trailing DOWN marker; the config's
+//      core-by pills carry per-strategy icons; cluster rows inherit the ACTIVE core's icon
+const dirIcons = await p.evaluate(() => {
+  const entRows = [...document.querySelectorAll('#pbody .pnav')].filter(r => r.querySelector('.pdot'));
+  const downs = entRows.filter(r => r.querySelector('.pdir.down svg')).length;
+  document.querySelector('.cfgtab[data-pane="universe"]')?.click();
+  const pill = document.querySelector('.pill[data-grp="coreBy"]');
+  const pillBtns = pill ? pill.querySelectorAll('button').length : 0;
+  const pillIcons = pill ? pill.querySelectorAll('button svg').length : 0;
+  return { entRows: entRows.length, downs, pillBtns, pillIcons }; });
+
 // [2] Everything → entity (click the first entity row)
 const ent = await p.evaluate(() => {
   const row = [...document.querySelectorAll('#pbody .pnav')].find(r => r.querySelector('.pdot'));
@@ -68,6 +79,8 @@ const ent = await p.evaluate(() => {
     view: window.__uniPView.lvl,
     stars: heads.some(h => /Stars/.test(h)), inside: heads.some(h => /Inside — clusters/.test(h)),
     above: heads.some(h => /Above/.test(h)),
+    coreRows: [...document.querySelectorAll('#pbody .pnav')].filter(r => r.querySelector('.pcore svg')).length,
+    upRows: [...document.querySelectorAll('#pbody .pnav')].filter(r => r.querySelector('.pdir.up svg')).length,
     cluRows: [...document.querySelectorAll('#pbody .pnav')].length }; });
 
 // [3] entity → cluster (first cluster row under Inside)
@@ -120,6 +133,7 @@ await b.close();
 console.log('boot:', JSON.stringify(boot));
 console.log('stars:', JSON.stringify(stars));
 console.log('tipEdge:', JSON.stringify(tipEdge));
+console.log('dirIcons:', JSON.stringify(dirIcons));
 console.log('entity:', JSON.stringify(ent));
 console.log('cluster:', JSON.stringify(clu));
 console.log('element:', JSON.stringify(elem));
@@ -137,6 +151,8 @@ if (boot.nativeDoubles !== 0) fails.push('an info icon still carries a native ti
 if (!(tipEdge.inX && tipEdge.inY)) fails.push('an edge-adjacent tip still clips the viewport');
 if (!(stars.c0 === 8 && stars.paged && stars.resets && stars.fileTips >= 8)) fails.push('Stars paging wall broken (8 preview → +30 → reset, file tooltips)');
 if (!(ent.title === ent.name && ent.view === 'ent' && ent.stars && ent.inside && ent.above && ent.cluRows > 0)) fails.push('entity panel wrong');
+if (!(dirIcons.downs === dirIcons.entRows && dirIcons.pillBtns >= 7 && dirIcons.pillIcons === dirIcons.pillBtns)) fails.push('direction markers / core-pill icons missing');
+if (!(ent.coreRows > 0 && ent.upRows > 0)) fails.push('cluster rows do not inherit the core icon / Above rows lack UP markers');
 if (!(clu.title === clu.sub && clu.view === 'clu' && clu.elemRows > 0 && clu.aboveRows >= 2)) fails.push('cluster panel wrong');
 if (!(elem.title === elem.label && elem.selected && elem.hasAbove && elem.upRows >= 2)) fails.push('element card lost its Above nav');
 if (!(back.view === 'clu')) fails.push('element → cluster back-nav broken');

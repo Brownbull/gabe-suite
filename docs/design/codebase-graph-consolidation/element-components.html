@@ -171,6 +171,7 @@
   .pnav .pnm{ margin-left:auto; font:600 10px/1.2 var(--font-mono); color:var(--muted); background:var(--bg);
     border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
   .pnav .pki{ display:inline-flex; flex:none; } .pnav svg{ width:13px; height:13px; flex:none; }
+  .pnav .pdir{ flex:none; display:inline-flex; color:var(--muted); } .pnav:hover .pdir{ color:var(--accent); }
 </style>
 </head>
 <body>
@@ -209,6 +210,9 @@ const P={
   model:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14a9 3 0 0 0 18 0V5"/><path d="M3 12a9 3 0 0 0 18 0"/>',
   sub:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3.5"/>',
   bubble:'<circle cx="12" cy="12" r="8"/>',
+  drill:'<polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>',
+  up:'<polyline points="14 9 9 4 4 9"/><path d="M20 20h-7a4 4 0 0 1-4-4V4"/>',
+  community:'<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.8 7.2 6.2 15.7M13.2 7.2l4.6 8.5M7.5 18h9"/>',
   schema:'<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
   function:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/>',
   web:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
@@ -406,22 +410,23 @@ const cids=arr=>()=>{const w=E("div");arr.forEach(c=>w.append(E("span",{class:"c
 /* ── batch 22: the PANEL HIERARCHY — the right panel exists at EVERY level, not just elements.
    These three specimens mirror the live station builders (__uniPanelAll/Ent/Clu); numbers probed
    from the real example page (260 field nodes · 8 entities · allergen 17 · misc 13). ── */
-function pnav(lead,label,meta){ const r=E("div",{class:"pnav"},lead,E("span",{class:"pnl"},label),
-  meta!=null?E("span",{class:"pnm"},String(meta)):null); return r; }
+function pnav(lead,label,meta,dir){ const r=E("div",{class:"pnav"},lead,E("span",{class:"pnl"},label),
+  meta!=null?E("span",{class:"pnm"},String(meta)):null,
+  dir?E("span",{class:"pdir "+dir},ico(dir==="down"?"drill":"up")):null); return r; }
 const pdot=c=>E("span",{class:"pdot",style:"background:"+c});
 const pki=(k,c)=>E("span",{class:"pki",style:"color:"+c},ico(k));
 const ENTC={allergen:"#3f6d4c",auth:"#5a53a8",cooking:"#0d6e78","legal-consent":"#0f766e",pantry:"#b45309",progression:"#8e4585",recipe:"#3f6d4c",settings:"#8e4585"};
 function aboveSec(clu, ent){ const w=E("div",{class:"sec"}, sechd("nav","Above",null,false,
     {icon:"info",cls:"info",text:"The way back up the panel ladder: cluster → entity → everything. Esc anywhere lands on Everything."}));
-  if(clu) w.append(pnav(ico("sub"),"cluster · "+clu));
-  if(ent) w.append(pnav(pdot(ENTC[ent]||"#888"),"entity · "+ent));
-  w.append(pnav(ico("entity"),"everything")); return w; }
+  if(clu) w.append(pnav(ico("community"),"cluster · "+clu,null,"up"));
+  if(ent) w.append(pnav(pdot(ENTC[ent]||"#888"),"entity · "+ent,null,"up"));
+  w.append(pnav(ico("entity"),"everything",null,"up")); return w; }
 const HIER=[
 ["Everything — no selection (boot · Esc)", ()=>panel("everything","entity","var(--accent)","Everything","the principal panel",[
   (()=>{ const w=E("div",{class:"sec"}, sechd("entity","Entities",8,false,      // NAVIGABLE first
       {icon:"info",cls:"info",text:"The universe's containers — click a row to open that entity's panel (the next level down)."}));
     [["allergen",17],["auth",8],["cooking",45],["legal-consent",8],["pantry",77],["progression",31],["recipe",68],["settings",6]]
-      .forEach(([e,n])=>w.append(pnav(pdot(ENTC[e]),e,n))); return w; })(),
+      .forEach(([e,n])=>w.append(pnav(pdot(ENTC[e]),e,n,"down"))); return w; })(),
   (()=>{ const KT={endpoint:"an API route handler — one node per METHOD + path; the entity's outward door",
       external:"an FK target owned by ANOTHER entity — drawn here because a local model points at it",
       model:"a persisted data model — a database table the entity owns",
@@ -476,8 +481,8 @@ const HIER=[
     w.append(E("div",{class:"sublbl"}, ico("entity"), "with: auth · cooking · legal-consent · pantry · progression · recipe · settings")); return w; })(),
   (()=>{ const w=E("div",{class:"sec"}, sechd("sub","Inside — clusters",2,false,
       {icon:"info",cls:"info",text:"The entity's sub-clusters under the CURRENT core (config › Universe › Cluster core by). Click one to open its panel."}));
-    w.append(pnav(ico("sub"),"misc",13)); w.append(pnav(ico("sub"),"other",4)); return w; })(),
-  (()=>{ const w=E("div",{class:"sec"}, sechd("nav","Above")); w.append(pnav(ico("entity"),"everything")); return w; })(),
+    w.append(pnav(ico("community"),"misc",13,"down")); w.append(pnav(ico("community"),"other",4,"down")); return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("nav","Above")); w.append(pnav(ico("entity"),"everything",null,"up")); return w; })(),
 ])],
 ["Cluster panel — allergen › misc", ()=>panel("cluster","sub","var(--c-entity)","misc","CLUSTER · allergen",[
   (()=>{ const w=E("div",{class:"sec"}, sechd("info","Makeup",13));
@@ -488,10 +493,10 @@ const HIER=[
      ["model","Restriction"],["model","UserDietaryProfile"],["schema","DietaryProfileInput"],["schema","ExplorationPreferencesInput"],
      ["schema","ExplorationPreferencesPatch"],["schema","HouseholdFormatInput"],["schema","NotificationPreferencesInput"],
      ["schema","PrivacyPermissionsInput"],["schema","UserFormatInput"]]
-      .forEach(([k,l])=>{ const r=pnav(pki(k, k==="model"?"var(--c-model)":"var(--c-schema)"), l); r.append(E("span",{class:"pnm"},k)); w.append(r); });
+      .forEach(([k,l])=>{ const r=pnav(pki(k, k==="model"?"var(--c-model)":"var(--c-schema)"), l, null, "down"); r.insertBefore(E("span",{class:"pnm"},k), r.querySelector(".pdir")); w.append(r); });
     return w; })(),
   (()=>{ const w=E("div",{class:"sec"}, sechd("nav","Above"));
-    w.append(pnav(pdot(ENTC.allergen),"entity · allergen")); w.append(pnav(ico("entity"),"everything")); return w; })(),
+    w.append(pnav(pdot(ENTC.allergen),"entity · allergen",null,"up")); w.append(pnav(ico("entity"),"everything",null,"up")); return w; })(),
 ])],
 ];
 const CARDS=[

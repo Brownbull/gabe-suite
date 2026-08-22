@@ -378,6 +378,15 @@ check('{class:"tipico "+(t.cls||"info")}' in page and '"info"),title:t.text' not
       "REGRESSION: tipIcon carries a native title again — info icons must show ONLY the styled dark tip")
 check('function _tipPlace' in page and 'r.right>iw-8' in page and 'tip.style.bottom="19px"' in page,
       "edge-aware tip placement is gone — tips clip at the viewport edges again")
+# batch 24: direction markers + per-strategy core icons (pills + inherited by cluster surfaces)
+check('window.__uniCoreIco=' in page and "(o.ic||'')+o.t" in page,
+      "core-strategy icons are gone from the config pills (__uniCoreIco / pillHTML ic slot)")
+check("ic:__uniCoreIco(" in page and page.count("ic:__uniCoreIco(")==7,
+      "the seven cores must EACH carry their icon (layer·kind·tests·guards·usecase·community·fk)")
+check('P.drill=' in page and 'P.up=' in page and 'function dirIco' in page,
+      "drill-down / go-up direction markers are gone from the nav rows")
+check('"__core"' in page and 'function coreLead' in page,
+      "cluster rows no longer inherit the ACTIVE core strategy's icon")
 check('out.push(aboveSec(n)); return out;' in page,
       "element cards lost their Above section (the way back up)")
 
