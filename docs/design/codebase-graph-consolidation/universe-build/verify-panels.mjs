@@ -180,6 +180,22 @@ const numkeys = await p.evaluate(() => {
   const hdrKeys = document.querySelectorAll('#fleetbody .flhead .flkey').length;
   const spotBg = getComputedStyle(document.querySelector('#fleet') ? document.body : document.body) && true;
   return { c0, c1, c2, entUntouched, entWires, entWiresBack, allOff, allBack, hdrKeys }; });
+// [11] PLANETS config lives in the FLEET now: no Planets tab; the planets header icon opens a
+//      flyout holding the moved transparency row + the Zones master; the four zone buttons are GONE
+const flcfg = await p.evaluate(() => {
+  const tabs = [...document.querySelectorAll('#cfg .cfgtab')].map(b => b.getAttribute('data-pane'));
+  const btn = document.querySelector('#fleetbody .flhead .flcfgbtn[data-fk="planets"]');
+  btn.click();
+  const slot = document.getElementById('flcfg');
+  const open = slot.style.display !== 'none';
+  const hasTransp = /film/.test(slot.textContent) && /ghost/.test(slot.textContent);
+  const zonePill = slot.querySelector('.pill[data-grp="warOn"]');
+  const w0 = CFG.warOn;
+  zonePill.querySelector('button[data-v="true"]').click(); const wOn = CFG.warOn === true;
+  zonePill.querySelector('button[data-v="false"]').click(); const wOff = CFG.warOn === false;
+  const gates = CFG.zDef && CFG.zAtk && CFG.zCfl && CFG.zSat;
+  btn.click(); const closed = slot.style.display === 'none';
+  return { tabs, open, hasTransp, hasZones: !!zonePill, wOn, wOff, gates, closed }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -194,6 +210,7 @@ console.log('bgClick:', JSON.stringify(bg));
 console.log('hullLight:', JSON.stringify(hull));
 console.log('fleetSpot:', JSON.stringify(fleet));
 console.log('numKeys:', JSON.stringify(numkeys));
+console.log('flcfg:', JSON.stringify(flcfg));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -219,5 +236,6 @@ if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.p
 if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 1 must toggle planets for the SELECTED CLUSTER only');
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 2 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
+if (!(flcfg.tabs.join(',') === 'universe,routes' && flcfg.open && flcfg.hasTransp && flcfg.hasZones && flcfg.wOn && flcfg.wOff && flcfg.gates && flcfg.closed)) fails.push('planets config did not migrate into the fleet flyout (or zone gates not forced on)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

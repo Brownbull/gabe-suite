@@ -120,7 +120,7 @@ check('mode==="guards"' in page and '{v:"guards"' in page, "Guards cluster-core 
 check('isFinite(n.x)) _npos' in page, "the _npos NaN guard is missing (a transient add would spew computeBoundingSphere NaN)")
 
 # ── 10g. batch-5: config re-tabbed Planets|Universe · master planet-assets toggle · orbit-around-click ──
-check('data-pane="planets"' in page and 'data-pane="universe"' in page, "config not re-tabbed into Planets | Universe")
+check('data-pane="universe"' in page and 'data-pane="routes"' in page, "config tabs wrong (Universe | Routes since the batch-29 planets migration)")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
@@ -403,6 +403,13 @@ check("k>=\"1\"&&k<=\"8\"" in page and 'hs.ent||"*"' in page,
       "the 1–8 number keys no longer toggle fleet columns for the selection")
 check('class="flkey"' in page and 'rgba(76,110,245,.26)' in page,
       "fleet header key labels or the row-background spot styling are gone")
+# batch 29: planets config migrated into the fleet flyout; zone buttons deprecated
+check('data-pane="planets"' not in page and 'window.__uniPlanetCfg=flyw' in page and 'id="flcfg"' in page,
+      "the Planets tab must be GONE and its config stashed for the fleet flyout")
+check('CFG.zDef=CFG.zAtk=CFG.zCfl=CFG.zSat=true;' in page,
+      "the deprecated per-zone gates must be forced ON (fleet columns are the only zone control)")
+check('flcfgbtn' in page and '__uniMountPlanetCfg' in page,
+      "the planets header icon no longer opens its fleet flyout")
 check('Math.max(m.__baseOp*2, floor)' in page and 'm.__baseEm' in page,
       "the entity light lost its absolute floor / emissive glow (a bare ×factor is invisible on big shells)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

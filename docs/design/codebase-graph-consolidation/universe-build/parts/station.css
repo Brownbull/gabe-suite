@@ -192,6 +192,11 @@
   #fleet .fldot{ width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; }
   #fleet .flcell{ width:20px; display:grid; place-items:center; color:var(--muted); flex:none; }
   #fleet .flcell svg{ width:13px; height:13px; }
+  #fleet #flcfg{ border-bottom:1px solid var(--line); padding:7px 10px 8px; }
+  #fleet #flcfg .grp{ margin:0 0 6px; } #fleet #flcfg .grp:last-child{ margin-bottom:0; }
+  #fleet .flhead .flcfgbtn{ cursor:pointer; border-radius:5px; }
+  #fleet .flhead .flcfgbtn:hover{ color:var(--accent); background:#0e1524; }
+  #fleet .flhead .flcfgbtn.on{ color:var(--accent); }
   #fleet .flprehead{ display:inline-flex; gap:4px; margin-left:auto; margin-right:6px; }
   #fleet .flpre{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:20px;
     color:var(--muted); background:none; border:1px solid var(--line); border-radius:6px; padding:0; cursor:pointer; }

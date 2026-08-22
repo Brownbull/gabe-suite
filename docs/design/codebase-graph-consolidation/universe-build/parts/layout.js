@@ -664,7 +664,8 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
     +'<button class="flpre" data-fpre="none" title="NONE — hide every entity">'+(typeof ico==="function"?ico("hide",13):"")+'</button>'
     +'<button class="flpre" data-fpre="inflight" disabled title="IN-FLIGHT — '+_simTitle+'">'+(typeof ico==="function"?ico("flight",13):"")+'</button>'
     +'</span>'
-    +'<button class="cfgmin" id="fleetmin" title="minimize">–</button></div><div class="cfgbody" id="fleetbody"></div>';
+    +'<button class="cfgmin" id="fleetmin" title="minimize">–</button></div>'
+    +'<div id="flcfg" style="display:none"></div><div class="cfgbody" id="fleetbody"></div>';
   document.body.appendChild(p);
   p.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
     if(k==="all"){ UNIVIS.sub={};
@@ -673,9 +674,16 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   document.getElementById("fleetmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
+/* mount (or re-mount after a config rebuild) the planets flyout into the fleet's slot */
+window.__uniMountPlanetCfg=function(){ var slot=document.getElementById("flcfg");
+  if(!slot || !window.__uniPlanetCfg) return;
+  if(slot.firstChild!==window.__uniPlanetCfg){ slot.innerHTML=""; slot.appendChild(window.__uniPlanetCfg); } };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
-    return '<span class="flcell" title="'+c.ti+(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')+'">'
+    var cfgable=(c.k==="planets");                              // config migration: planets first; more columns follow
+    return '<span class="flcell'+(cfgable?' flcfgbtn':'')+'" data-fk="'+c.k+'" title="'+c.ti
+      +(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')
+      +(cfgable?' · CLICK for its configuration':'')+'">'
       +(typeof ico==="function"?ico(c.icon,13):"")+(i>=1?'<i class="flkey">'+i+'</i>':'')+'</span>'; }).join('')+'</div>';
   h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
@@ -689,6 +697,11 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
         +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';   // a cluster has no sub-clusters
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
   body.innerHTML=h;
+  body.querySelectorAll(".flhead .flcfgbtn").forEach(function(cell){ cell.onclick=function(){
+    var slot=document.getElementById("flcfg"); if(!slot) return;
+    if(window.__uniMountPlanetCfg) __uniMountPlanetCfg();
+    var open=slot.style.display!=="none"; slot.style.display=open?"none":"";
+    cell.classList.toggle("on", !open); }; });
   body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){
     var e=sp.getAttribute("data-flx"); _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
@@ -752,12 +765,17 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var trows=G.transp? [].slice.call(G.transp.querySelectorAll(".cfgrow")) : [];   // [bubble, subOp, entOp]
 
   // ── PLANETS pane: planet transparency (bubble) · Zones (title + inline On/Off master, icons only) ──
-  var pl=mk("cfgpane");
-  if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); pl.appendChild(pt); }
+  /* PLANETS config now lives in the FLEET (operator migration): a flyout the planets header icon
+     opens — transparency + the Zones master. The four per-zone buttons are DEPRECATED: their CFG
+     gates are forced ON and the fleet's zone columns become the only control. */
+  CFG.zDef=CFG.zAtk=CFG.zCfl=CFG.zSat=true;
+  var flyw=document.createElement("div"); flyw.className="flcfgbody";
+  if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); flyw.appendChild(pt); }
   if(G.planet){ var zlbl=G.planet.querySelector(".grplbl"); zlbl.className="grplbl zoneshd";
-    zlbl.innerHTML='<span>Zones</span>'+pillHTML("warOn",[{v:true,t:"On"},{v:false,t:"Off"}], CFG.warOn);   // master on/off inline with the title
-    G.planet.classList.toggle("zonesoff", !CFG.warOn);                                                     // dim the zone icons when the master is off
-    pl.appendChild(G.planet); }
+    zlbl.innerHTML='<span>Zones</span>'+pillHTML("warOn",[{v:true,t:"On"},{v:false,t:"Off"}], CFG.warOn);   // the master survives; the four icons do not
+    var zg=document.createElement("div"); zg.className="grp"; zg.appendChild(zlbl); flyw.appendChild(zg); }
+  window.__uniPlanetCfg=flyw;
+  if(window.__uniMountPlanetCfg) try{ __uniMountPlanetCfg(); }catch(e){}
 
   // ── UNIVERSE pane: container · sub-cluster + radius · cluster transparency · stars · layout ──
   var uni=mk("cfgpane"); uni.style.display="none";
@@ -839,14 +857,15 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(G.transp && G.transp.parentNode) G.transp.parentNode.removeChild(G.transp);   // drop the now-empty shell
   body.innerHTML='';
   var bar=mk("cfgtabbar");
-  bar.innerHTML='<button class="cfgtab on" data-pane="planets">Planets</button><button class="cfgtab" data-pane="universe">Universe</button><button class="cfgtab" data-pane="routes">Routes</button>';
-  body.appendChild(bar); body.appendChild(pl); body.appendChild(uni); body.appendChild(rt);
-  var PANES={ planets:pl, universe:uni, routes:rt };
+  bar.innerHTML='<button class="cfgtab on" data-pane="universe">Universe</button><button class="cfgtab" data-pane="routes">Routes</button>';
+  body.appendChild(bar); body.appendChild(uni); body.appendChild(rt);
+  uni.style.display="";                                        // Universe leads now that Planets moved into the fleet
+  var PANES={ universe:uni, routes:rt };
   bar.querySelectorAll(".cfgtab").forEach(function(t){ t.onclick=function(){ var pane=t.getAttribute("data-pane");
     bar.querySelectorAll(".cfgtab").forEach(function(x){ x.classList.toggle("on", x===t); });
     Object.keys(PANES).forEach(function(k){ PANES[k].style.display=(k===pane)?"":"none"; }); }; });
   // wire the NEW controls only (the moved spike pills keep their wireCfg listeners)
-  [pl, uni, rt].forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
+  [flyw, uni, rt].forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
     if(["warOn","entLayout","coreBy","lineStyle","showFns"].indexOf(grp)<0) return;   // skip the moved spike pills (shape/subOp/entOp)
     p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-v");
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
