@@ -284,8 +284,15 @@ text = text.replace(
 
 # ── batch 23b: info icons show ONLY the styled dark tip — the native title doubled it (operator photo) ──
 text = text.replace(
-  'function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info"),title:t.text}, icoEl(t.icon), E("span",{class:"tip"},t.text));',
-  'function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info")}, icoEl(t.icon), E("span",{class:"tip"},t.text));', 1)
+  'function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info"),title:t.text}, icoEl(t.icon), E("span",{class:"tip"},t.text)); w.onclick=function(e){ e.stopPropagation(); w.classList.toggle("on"); }; return w; }',
+  'function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info")}, icoEl(t.icon), E("span",{class:"tip"},t.text)); var tip=w.lastChild;\n'
+  '  function _tipPlace(){ tip.style.left="-4px"; tip.style.top="19px"; tip.style.bottom="auto";\n'
+  '    var r=tip.getBoundingClientRect(), iw=window.innerWidth, ih=window.innerHeight;\n'
+  '    if(r.right>iw-8) tip.style.left=(-4-(r.right-(iw-8)))+"px";              // slide LEFT of the viewport edge\n'
+  '    r=tip.getBoundingClientRect(); if(r.left<8) tip.style.left=(parseFloat(tip.style.left)+(8-r.left))+"px";\n'
+  '    if(r.bottom>ih-8){ tip.style.top="auto"; tip.style.bottom="19px"; } }    // flip ABOVE near the bottom\n'
+  '  w.addEventListener("mouseenter", _tipPlace);\n'
+  '  w.onclick=function(e){ e.stopPropagation(); w.classList.toggle("on"); _tipPlace(); }; return w; }', 1)
 
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"

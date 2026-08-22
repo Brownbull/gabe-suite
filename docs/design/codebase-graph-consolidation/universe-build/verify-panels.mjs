@@ -49,6 +49,16 @@ const stars = await p.evaluate(() => {
   const fileTips = [...sec.querySelectorAll('.pchip')].filter(ch => /\.py|\.ts|\//.test(ch.title || '')).length;
   return { c0, c1, c2, paged: c1 === c0 + 30, resets: c2 === c0, fileTips }; });
 
+// [1c] edge-aware tips: click the Elements-section tip icon (the panel hugs the RIGHT viewport
+//      edge — exactly the operator's clipped case) → the shown tip must sit fully inside the viewport
+const tipEdge = await p.evaluate(() => {
+  const sec = [...document.querySelectorAll('#pbody .sec')].find(s => /Elements/.test(s.querySelector('.sechd').textContent));
+  const ico = sec.querySelector('.sechd .tipico'); ico.click();       // .on shows the tip and runs the placer
+  const r = ico.querySelector('.tip').getBoundingClientRect();
+  const inX = r.right <= window.innerWidth && r.left >= 0, inY = r.bottom <= window.innerHeight && r.top >= 0;
+  ico.click();                                                        // toggle back off
+  return { right: Math.round(r.right), iw: window.innerWidth, inX, inY }; });
+
 // [2] Everything → entity (click the first entity row)
 const ent = await p.evaluate(() => {
   const row = [...document.querySelectorAll('#pbody .pnav')].find(r => r.querySelector('.pdot'));
@@ -109,6 +119,7 @@ await b.close();
 
 console.log('boot:', JSON.stringify(boot));
 console.log('stars:', JSON.stringify(stars));
+console.log('tipEdge:', JSON.stringify(tipEdge));
 console.log('entity:', JSON.stringify(ent));
 console.log('cluster:', JSON.stringify(clu));
 console.log('element:', JSON.stringify(elem));
@@ -123,6 +134,7 @@ if (!(/Entities/.test(boot.firstSec))) fails.push('Entities (navigable) must LEA
 if (!(boot.kindRows >= 4 && boot.withGlyph === boot.kindRows && boot.withTip === boot.kindRows)) fails.push('Elements rows lost their kind glyphs / meaning tooltips');
 if (!(boot.noObjLeak && boot.srcSec)) fails.push('Sources section leaks raw objects or is missing');
 if (boot.nativeDoubles !== 0) fails.push('an info icon still carries a native title (the double-tooltip regression)');
+if (!(tipEdge.inX && tipEdge.inY)) fails.push('an edge-adjacent tip still clips the viewport');
 if (!(stars.c0 === 8 && stars.paged && stars.resets && stars.fileTips >= 8)) fails.push('Stars paging wall broken (8 preview → +30 → reset, file tooltips)');
 if (!(ent.title === ent.name && ent.view === 'ent' && ent.stars && ent.inside && ent.above && ent.cluRows > 0)) fails.push('entity panel wrong');
 if (!(clu.title === clu.sub && clu.view === 'clu' && clu.elemRows > 0 && clu.aboveRows >= 2)) fails.push('cluster panel wrong');

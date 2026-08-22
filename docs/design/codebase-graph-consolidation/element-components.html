@@ -312,7 +312,14 @@ function chipList(items, cls, glyph, cap=5){
   return wrap;
 }
 // tip = {icon:'info'|'alert', text, cls:'info'|'warn'} → an icon by the title, hover/click reveals text
-function tipIcon(tip){ const w=E("span",{class:"tipico "+(tip.cls||"info")}, ico(tip.icon), E("span",{class:"tip"},tip.text)); w.onclick=e=>{ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
+function tipIcon(tip){ const w=E("span",{class:"tipico "+(tip.cls||"info")}, ico(tip.icon), E("span",{class:"tip"},tip.text)); const tp=w.lastChild;
+  const place=()=>{ tp.style.left="-4px"; tp.style.top="19px"; tp.style.bottom="auto";
+    let r=tp.getBoundingClientRect(); const iw=window.innerWidth, ih=window.innerHeight;
+    if(r.right>iw-8) tp.style.left=(-4-(r.right-(iw-8)))+"px";
+    r=tp.getBoundingClientRect(); if(r.left<8) tp.style.left=(parseFloat(tp.style.left)+(8-r.left))+"px";
+    if(r.bottom>ih-8){ tp.style.top="auto"; tp.style.bottom="19px"; } };
+  w.addEventListener("mouseenter", place);
+  w.onclick=e=>{ e.stopPropagation(); w.classList.toggle("on"); place(); }; return w; }
 function sechd(icoName, label, count, ok, tip, asset){ return E("div",{class:"sechd"}, ico(icoName), label, tip?tipIcon(tip):null, asset?aico(asset):null, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},count):null); }
 const CONN_TIP={icon:"info",text:"hover a connection → highlights that node in the graph. Trust is KIND-level (a floor, not per-edge proof): structural = an exact archmap / FK join (solid chips); inferred = a graft-call or web-bridge edge, inferred by design (dashed chips).",cls:"info"};
 // per connection-group TRUST by its role label — structural (exact archmap/FK join) vs inferred (graft call / web bridge FLOOR).

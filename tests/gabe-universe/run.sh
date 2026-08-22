@@ -376,6 +376,8 @@ check('"Sources"' in page and 'sechd("entity","Entities"' in page,
       "Sources section or the leading Entities section is gone")
 check('{class:"tipico "+(t.cls||"info")}' in page and '"info"),title:t.text' not in page,
       "REGRESSION: tipIcon carries a native title again — info icons must show ONLY the styled dark tip")
+check('function _tipPlace' in page and 'r.right>iw-8' in page and 'tip.style.bottom="19px"' in page,
+      "edge-aware tip placement is gone — tips clip at the viewport edges again")
 check('out.push(aboveSec(n)); return out;' in page,
       "element cards lost their Above section (the way back up)")
 
