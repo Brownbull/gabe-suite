@@ -109,6 +109,10 @@ FOCUS group in Routes: Dim 25% (the missing mode) · Fade 8% · Wires (outside w
 
 Corrections from the hands-on pass: INVERT = the AXIS (aviation convention — flips only the drag's vertical rotation sign, +178→−154; buttons never swap, `__uniApplyMouseMap` deleted). THE GIANT-SPHERE ORBIT: drag pivot at the CURRENT zoom depth (`_zoomDist` = nearest visible content in a ~24° cone, capped by dolly; the dolly target snaps on-axis to that depth so scroll agrees) — same drag sweeps 190 far → 60 near. Q/E orbit INWARD around the view centre at that depth (keyboard twin of the drag; bug: `_zoomDist` was closure-scoped → the fly tick threw silently — hoisted). EVERY camera control freezes decorations (fly keys freeze/thaw on hold; wheel freezes, thaws 350ms after idle; drags already did). Proof `verify-ctrl.mjs` rewritten; battery **199 static**.
 
+## BATCH 20 — LANDED (`2dc1de1`): camera-mode dropdown — tumble · joystick (WoW) · arcball · look
+
+Left-drag now picks its scheme from a Controls-panel dropdown (`UNICTL.camMode`, default **tumble** = the stock delta orbit, untouched). **Joystick** is the operator's WoW ask: the click records an ANCHOR (`drag.ax/ay`); the cursor's offset from it becomes an angular VELOCITY (direction = which way, radius = how fast, 8px deadzone) applied by a dedicated 16ms tick — hold still and it KEEPS turning (0.472→1.008 rad measured), release dead-stops (0). **Arcball** = virtual trackball (great-circle between cursor points, camera-space axis lifted to world, rotated about the drag pivot). **Look** = first-person, yaw/pitch about the CAMERA itself (turn 0.365 with position delta <1). Middle-orbit always tumbles; chord-pan works in every scheme. Grounded in the standard taxonomy (three.js Orbit/Arcball/FirstPerson + dual-stick velocity semantics). Proof: verify-ctrl §6; battery **210 static**, joystick-tick pin mutation-proven.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
@@ -119,7 +123,7 @@ Edit → `python3 assemble.py` → copy to shell → `python3 fill-example.py` �
 
 ### Deferred / open
 
-- Push the 10 commits (operator word required; branch has no upstream — needs `-u origin graft-adoption`).
+- Push the branch — 113 commits main..HEAD by batch 20 (operator word required; branch has no upstream — needs `-u origin graft-adoption`).
 - Twin propagation (gustify/gastify) — read-only; do NOT write to them.
 - Optional: lock the horizon upright in the orbit (currently a little roll is allowed to keep the pivot exact).
 - Optional perf: fewer `cooldownTicks` on core/layout reheats (240 today; settle is fine on the 456-node case but untested beyond).
