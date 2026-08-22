@@ -113,6 +113,14 @@ Corrections from the hands-on pass: INVERT = the AXIS (aviation convention — f
 
 Left-drag now picks its scheme from a Controls-panel dropdown (`UNICTL.camMode`, default **tumble** = the stock delta orbit, untouched). **Joystick** is the operator's WoW ask: the click records an ANCHOR (`drag.ax/ay`); the cursor's offset from it becomes an angular VELOCITY (direction = which way, radius = how fast, 8px deadzone) applied by a dedicated 16ms tick — hold still and it KEEPS turning (0.472→1.008 rad measured), release dead-stops (0). **Arcball** = virtual trackball (great-circle between cursor points, camera-space axis lifted to world, rotated about the drag pivot). **Look** = first-person, yaw/pitch about the CAMERA itself (turn 0.365 with position delta <1). Middle-orbit always tumbles; chord-pan works in every scheme. Grounded in the standard taxonomy (three.js Orbit/Arcball/FirstPerson + dual-stick velocity semantics). Proof: verify-ctrl §6; battery **210 static**, joystick-tick pin mutation-proven.
 
+## BATCH 21+21b — LANDED (`e3f7429` + `7863d9a`): the mouse remap + chord hardening
+
+Operator ruling after trying the schemes: LEFT = LOOK (vertical inverted by default — pure sign flip, ctlInv restores) · RIGHT = TUMBLE (absorbs orbit-the-selection when toggled + selected; zoom-depth pivot otherwise) · MIDDLE = PAN (the old right-button drag, full strength). Chord-pan + late-join removed. A 3-lens adversarial verify caught two MAJORS, both fixed in 21b: the STRANDED DRAG (chorded owner-first release swallowed the gesture's only pointerup → camera glued, zoom dead, anim frozen — fix: one shared `_endDrag`, pointerup ends on `ev.buttons===0`, the move stream releases on owner-bit loss) and the RED PROOF (verify-explore [6] proved the removed late-join — rewritten as the stranded-drag proof). Battery **211 static**.
+
+## BATCH 22 — LANDED (`b19a227`): the PANEL HIERARCHY — Everything → Entity → Cluster → Element
+
+The right panel exists at EVERY level: EVERYTHING (boot default + the Esc target — field makeup · Stars = functions not drawn · feed stats · entity rows) → ENTITY (makeup · per-entity Stars · cross-entity counts · Inside = clusters under the CURRENT core · Above) → CLUSTER (members, click = select in graph) → ELEMENT (the card + a new Above section, all kinds wrapped once). Esc clears + lands on Everything. Background clicks pick the hull under the cursor via ray-vs-member-cloud (`__uniBgClick`; hull meshes are raycast-dead by design; sub beats ent, smaller beats bigger; CLUSTERS carry `ekey`/`skey`). Boot call deferred one tick (the card IIFE defines the builders later — the guard skipped silently). Proof `verify-panels.mjs`; battery **221 static**.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
