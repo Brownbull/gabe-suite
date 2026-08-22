@@ -1176,7 +1176,7 @@ function _rotRig(cam, target, P, axis, ang){ if(!ang) return; var q=new T.Quater
   cam.position.sub(P).applyQuaternion(q).add(P);   // rotate the camera RIG (position + orientation) rigidly about P
   target.sub(P).applyQuaternion(q).add(P);         // → P is the fixed point: stays put on screen, distance constant
   cam.quaternion.premultiply(q); }
-window.UNICTL={ invert:false, selPivot:true, camMode:"tumble" };   // camMode: tumble · joystick · arcball · look — the left-drag scheme
+window.UNICTL={ invert:false, selPivot:true, camMode:"look" };   // LEFT-drag scheme (look default, vertical inverted by convention); RIGHT=tumble · MIDDLE=pan
 /* the CURRENT-ZOOM depth: the nearest visible content ahead (a ~24° cone), never beyond the
    dolly target. Flying close then dragging orbits a NEAR pivot — the giant-sphere feel.
    TOP-LEVEL on purpose: the drag starter AND the Q/E fly tick both call it. */
@@ -1190,9 +1190,9 @@ function _zoomDist(){ try{ var cam=Graph.camera(), ctrls=Graph.controls();
     var td=cp.distanceTo(ctrls.target);
     return Math.max(70, Math.min(best===1e9?td:best, td)); }catch(e){ return 400; } }
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
-  /* the rig-drag starter — shared by pointerdown (left pressed first) AND the move stream (left
-     JOINS an active right-pan: chorded presses fire NO pointerdown per the pointer-events spec,
-     so a late left press is only visible as buttons&1 appearing in pointermove). */
+  /* the rig-drag starter — every button routes through here (LEFT=the chosen scheme ·
+     RIGHT=tumble · MIDDLE=pan); the starter raycasts the pivot P at the zoom depth and
+     snaps the dolly target on-axis so the wheel keeps agreeing with the drag. */
   function _rigStart(cx, cy){ try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls||!ctrls.target) return null;
       var r=g.getBoundingClientRect(), mx=((cx-r.left)/r.width)*2-1, my=-((cy-r.top)/r.height)*2+1;
       var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, cam);
@@ -1210,23 +1210,26 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
       if(ANIM.freezeOnDrag && ANIM.all){ _dragWasPlaying=true; ANIM.all=false; }
       return { P:new T.Vector3(P.x,P.y,P.z), lx:0, ly:0 }; }catch(e){ return null; } }
   g.addEventListener("pointerdown", function(ev){
-    if(ev.button===1 && UNICTL.selPivot && typeof SEL!=="undefined" && SEL && SEL.kind==="node" && SEL.data && SEL.data.x!=null){
-      ev.preventDefault();                                       // middle = orbit the SELECTED planet (and no browser autoscroll)
-      drag=_rigStartP(SEL.data); if(drag){ drag.lx=ev.clientX; drag.ly=ev.clientY; drag.btn=1; } return; }
-    if(ev.button!==0) return;
+    if(drag) return;                                             // first button OWNS the drag; extras are ignored
+    if(ev.button===1){ ev.preventDefault();                      // MIDDLE = PAN (drag the graph, no rotation; no browser autoscroll)
+      drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=1; return; }
+    if(ev.button===2){                                           // RIGHT = TUMBLE — orbits the SELECTED planet when toggled, else the zoom-depth pivot
+      if(UNICTL.selPivot && typeof SEL!=="undefined" && SEL && SEL.kind==="node" && SEL.data && SEL.data.x!=null){
+        drag=_rigStartP(SEL.data); if(drag){ drag.lx=ev.clientX; drag.ly=ev.clientY; drag.btn=2; } return; }
+      drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=2; return; }
+    if(ev.button!==0) return;                                    // LEFT = the dropdown's scheme (look by default)
     drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=0; }, true);
-  g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button belongs to pan/chord, never the menu
+  g.addEventListener("contextmenu", function(e){ e.preventDefault(); });   // right button is the TUMBLE drag, never the menu
   window.addEventListener("pointermove", function(ev){
-    if(!drag && (ev.buttons&1) && (ev.buttons&2)){ drag=_rigStart(ev.clientX, ev.clientY); if(drag) drag.btn=0; if(!drag) return; }   // left joined a right-pan mid-stream
     if(!drag) return;
     try{ var cam=Graph.camera(), ctrls=Graph.controls();
       var dx=ev.clientX-drag.lx, dy=ev.clientY-drag.ly; drag.lx=ev.clientX; drag.ly=ev.clientY;
-      if(ev.buttons&2 && drag.btn!==1){                                     // CHORD (left+right): BOTH at once — the rig DRIFTS (half-strength pan)
-        var kd=cam.position.distanceTo(ctrls.target)*0.00055;               // while the same delta keeps orbiting below
+      if(drag.btn===1){                                                     // MIDDLE = PAN: translate the whole rig, orientation untouched
+        var kd=cam.position.distanceTo(ctrls.target)*0.0011;
         var rt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(-dx*kd);
         var upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(dy*kd);
-        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); }
-      var mode=(drag.btn===1)?"tumble":(UNICTL.camMode||"tumble");           // middle-orbit always tumbles around the selection
+        var off=rt.add(upv); cam.position.add(off); ctrls.target.add(off); drag.P.add(off); return; }
+      var mode=(drag.btn===2)?"tumble":(UNICTL.camMode||"look");             // RIGHT always tumbles; LEFT follows the dropdown
       if(mode==="joystick"){ drag.cx=ev.clientX; drag.cy=ev.clientY; return; }   // offset-from-anchor drives a per-frame velocity (the tick below)
       var up=new T.Vector3(0,1,0);
       var right=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).normalize();    // the camera's own right axis (from its orientation)
@@ -1243,18 +1246,18 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
         if(axb.lengthSq()>1e-9){ var angb=Math.acos(Math.max(-1,Math.min(1,v0.dot(v1))));
           axb.normalize().applyQuaternion(cam.quaternion);                   // camera-space axis → world
           _rotRig(cam, ctrls.target, drag.P, axb, angb); } return; }
-      if(mode==="look"){                                                     // first-person: turn IN PLACE (the camera is the fixed point)
-        var eye=cam.position.clone();
+      if(mode==="look"){                                                     // first-person: turn IN PLACE (the camera is the fixed point);
+        var eye=cam.position.clone();                                        // vertical INVERTED by default (operator ruling; ctlInv flips it back)
         _rotRig(cam, ctrls.target, eye, up, -dx*0.004);
         var vd2=new T.Vector3().subVectors(ctrls.target, cam.position).normalize();
-        var nd2=vd2.clone().applyAxisAngle(right, -vs*dy*0.66);
-        if(Math.abs(nd2.y)<0.985) _rotRig(cam, ctrls.target, eye, right, -vs*dy*0.66); return; }
+        var nd2=vd2.clone().applyAxisAngle(right, vs*dy*0.66);
+        if(Math.abs(nd2.y)<0.985) _rotRig(cam, ctrls.target, eye, right, vs*dy*0.66); return; }
       _rotRig(cam, ctrls.target, drag.P, up, -dx*0.006);                             // TUMBLE (stock): azimuth around world-up through P
       var nd=vdir.clone().applyAxisAngle(right, vs*dy);                                // polar around camera-right (clamp near vertical to avoid a flip)
       if(Math.abs(nd.y)<0.985) _rotRig(cam, ctrls.target, drag.P, right, vs*dy);
     }catch(e){} });
   setInterval(function(){                                                    // JOYSTICK tick: offset from the CLICK ANCHOR = angular velocity —
-    try{ if(!drag || drag.btn===1 || (UNICTL.camMode||"tumble")!=="joystick" || drag.cx==null) return;   // hold farther = turn faster (the WoW feel)
+    try{ if(!drag || drag.btn!==0 || (UNICTL.camMode||"look")!=="joystick" || drag.cx==null) return;   // LEFT only; hold farther = turn faster (the WoW feel)
       var ox=drag.cx-drag.ax, oy=drag.cy-drag.ay;
       if(Math.abs(ox)<8) ox=0; if(Math.abs(oy)<8) oy=0; if(!ox&&!oy) return; // a small deadzone around the anchor
       var cam=Graph.camera(), ctrls=Graph.controls();
@@ -1459,13 +1462,14 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
     +'<div class="ctlrow">'+KB("Alt+scroll")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
-    +'<div class="ctlrow"><span class="ctll">camera</span><select id="ctlCam" title="how the LEFT drag rotates">'
+    +'<div class="ctlrow">'+KB("LMB")+'<select id="ctlCam" title="how the LEFT drag rotates">'
+    +'<option value="look">Look — first-person, turn in place</option>'
     +'<option value="tumble">Tumble — drag = turn (stock)</option>'
     +'<option value="joystick">Joystick — hold offset = keep turning (WoW)</option>'
-    +'<option value="arcball">Arcball — virtual trackball</option>'
-    +'<option value="look">Look — first-person, turn in place</option></select></div>'
-    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="flight-style: drag up looks DOWN (flips the vertical rotation axis only — buttons stay the same)"></button><span class="ctll">invert vertical (flight-style)</span></div>'
-    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.selPivot?" on":"")+'" id="ctlPvt" title="middle-drag orbits around the SELECTED planet"></button><span class="ctll">middle = orbit selection</span></div>'
+    +'<option value="arcball">Arcball — virtual trackball</option></select></div>'
+    +'<div class="ctlrow">'+KB("RMB")+'<span class="ctll">tumble (orbit)</span>'+KB("MMB")+'<span class="ctll">pan</span></div>'
+    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="flips the vertical rotation axis of every rotating drag (left look starts inverted; right tumble starts direct)"></button><span class="ctll">invert vertical (flight-style)</span></div>'
+    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.selPivot?" on":"")+'" id="ctlPvt" title="right-drag tumble orbits around the SELECTED planet"></button><span class="ctll">right = orbit selection</span></div>'
     +'</div>';
   document.body.appendChild(p);
   document.getElementById("ctrlpmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };

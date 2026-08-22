@@ -265,7 +265,7 @@ check(page.find('id="reset"') < page.find('<div class="statuspills">'), "repo pi
 check('❄ Freeze on drag' not in page, "REGRESSION: freeze button back to text (icons only, explanation on hover)")
 check('e.altKey' in page and 'key==="Escape"' in page, "Alt+scroll depth / Esc clear not wired")
 check('function _jrnCollect' in page and '__uniJrnToggle' in page, "journeys collector/picker missing")
-check('ev.buttons&2' in page, "chord pan (left+right drag) missing")
+check("drag.btn===1" in page and "*0.0011" in page, "MIDDLE pan (translate the rig, no rotation) missing")
 
 # ── 10o. batch 13: journeys LEFT+grouped+NAMED · banner · the WALK (steps + trail) · panel footer ·
 #         clusters-only + wires toggles · graph decoupled from the panel · chip-hover halo · gear sync ──
@@ -293,8 +293,8 @@ check('function _frameSet' in page, "journey select does not frame the whole car
 check('body.panel-open .panel .pbody{ overflow-y:auto' in page, "the card body does not scroll — the footer chevron leaves the screen on tall cards")
 check('.panel .minbar .pmin{ order:2; margin-top:auto; }' in page,
       "the collapsed rail's expand chevron is not at the BOTTOM (parity with the expanded footer)")
-check('function _rigStart' in page and '(ev.buttons&1) && (ev.buttons&2)' in page,
-      "chord late-join missing (chorded presses fire no pointerdown — the move stream must start the drag)")
+check('function _rigStart' in page and 'ev.button===2' in page and 'ev.button===1' in page,
+      "the three-button map (LEFT scheme · RIGHT tumble · MIDDLE pan) is not wired in pointerdown")
 check('if(drag && ev.button!==(drag.btn!=null?drag.btn:0)) return;' in page,
       "only the drag-owning button may end a drag (chord releases keep it alive)")
 check('data-wgo=' in page and 'wchip' in page and 'function _aimAt' in page,
@@ -330,22 +330,26 @@ check('_flyFreeze' in page and '_flyThaw' in page and '{passive:true});' in page
       "camera controls (keys + wheel) do not freeze the decorations")
 check('k==="q"' in page and 'ya*0.022' in page and '_rotRig(cam, ctrls.target, pv,' in page,
       "Q/E must orbit INWARD around the view centre at the zoom depth")
-check('drag.btn=1' in page and 'UNICTL.selPivot' in page, "middle-orbits-selection missing")
+check('drag.btn=1' in page and 'UNICTL.selPivot' in page and 'drag.btn=2' in page,
+      "button remap incomplete: middle must own pan (btn=1) and right must own tumble (btn=2, orbit-selection lives there)")
 
 # ── 10s. batch 20: the CAMERA-MODE dropdown — tumble (stock) · joystick (WoW anchor-velocity) · arcball · look ──
-check('camMode:"tumble"' in page and 'id="ctlCam"' in page, "camera-mode dropdown missing from the controls panel")
+check('camMode:"look"' in page and 'id="ctlCam"' in page,
+      "the LEFT default must be LOOK (operator remap) with the dropdown present")
 for v in ('value="tumble"','value="joystick"','value="arcball"','value="look"'):
     check(v in page, "camera dropdown lost a scheme: "+v)
 check('ax:cx, ay:cy' in page and 'drag.cx-drag.ax' in page,
       "joystick anchor (ax/ay) or its offset velocity is gone")
-check('JOYSTICK tick' in page and '(UNICTL.camMode||"tumble")!=="joystick"' in page,
+check('JOYSTICK tick' in page and '(UNICTL.camMode||"look")!=="joystick"' in page,
       "the joystick per-frame velocity tick is gone (offset must KEEP turning while held)")
 check('if(Math.abs(ox)<8) ox=0' in page, "the joystick deadzone (8px around the anchor) is gone")
 check('crossVectors(v1, v0)' in page and 'z=d2<1?Math.sqrt(1-d2):0' in page,
       "the arcball virtual-trackball mapping is gone")
 check('mode==="look"' in page and 'var eye=cam.position.clone()' in page,
       "look mode must rotate about the CAMERA (turn in place)")
-check('(drag.btn===1)?"tumble"' in page, "middle-orbit must always tumble regardless of the chosen scheme")
+check('(drag.btn===2)?"tumble"' in page, "the RIGHT button must always tumble regardless of the chosen LEFT scheme")
+check('vs*dy*0.66' in page and '-vs*dy*0.66' not in page,
+      "LOOK must start vertically INVERTED (aviation convention) — the old sign is back")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

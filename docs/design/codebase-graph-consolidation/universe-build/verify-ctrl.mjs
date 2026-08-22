@@ -57,35 +57,34 @@ const yaw = await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('key
 await p.waitForTimeout(200);
 const thawed = await p.evaluate(() => ANIM.all === true);
 
-// [4] invert = VERTICAL AXIS flip (flight-style): buttons never swap; the same downward drag
-//     tilts the camera the OPPOSITE way when inverted
+// [4] RIGHT button = TUMBLE now: a right-drag turns the rig; invert (flight-style) flips the
+//     vertical axis of that tumble — same downward drag, opposite tilt
 const inv = await p.evaluate(() => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2, out = {};
-  g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
-  out.rightNeverDrags = window.__uniDragging !== true;              // buttons stay stock
-  window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));
-  const dragDown = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: cx, clientY: cy, bubbles: true }));
-    const y0 = Graph.camera().position.y;
-    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx, clientY: cy + i * 10, bubbles: true }));
+  SEL = null; if (typeof refreshEncSel === 'function') refreshEncSel();   // no selection → zoom-depth pivot
+  const dragDown = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
+    const y0 = Graph.camera().position.y, drags = window.__uniDragging === true;
+    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 2, clientX: cx, clientY: cy + i * 10, bubbles: true }));
     const dy = Graph.camera().position.y - y0;
-    window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return dy; };
+    window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true })); return { dy, drags }; };
   const stock = dragDown();
+  out.rightDrags = stock.drags;                                       // RIGHT owns the tumble drag now
   document.getElementById('ctlInv').click();
   const inverted = dragDown();
   document.getElementById('ctlInv').click();
-  out.stockDy = Math.round(stock); out.invDy = Math.round(inverted);
-  out.axisFlips = Math.sign(stock) !== 0 && Math.sign(stock) === -Math.sign(inverted);
+  out.stockDy = Math.round(stock.dy); out.invDy = Math.round(inverted.dy);
+  out.axisFlips = Math.sign(stock.dy) !== 0 && Math.sign(stock.dy) === -Math.sign(inverted.dy);
   return out; });
-// [4b] ZOOM-DEPTH pivot: the same drag sweeps a SMALLER arc when the camera is close to content
+// [4b] ZOOM-DEPTH pivot (right-button tumble): the same drag sweeps a SMALLER arc when close
 const zoomArc = await p.evaluate(() => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2;
-  const sweep = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, buttons: 1, clientX: cx, clientY: cy, bubbles: true }));
+  const sweep = () => { g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
     const p0 = Graph.camera().position.clone();
-    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: cx + i * 12, clientY: cy, bubbles: true }));
+    for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 2, clientX: cx + i * 12, clientY: cy, bubbles: true }));
     const d = Graph.camera().position.distanceTo(p0);
-    window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return d; };
+    window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true })); return d; };
   const far = sweep();
   const n = nodes.find(x => x.kind === 'endpoint' && x.x != null);
   const dir = new THREE.Vector3(Graph.camera().position.x - n.x, Graph.camera().position.y - n.y, Graph.camera().position.z - n.z).normalize();
@@ -93,24 +92,28 @@ const zoomArc = await p.evaluate(() => {
   return new Promise(res => setTimeout(() => { const near = sweep();
     res({ far: Math.round(far), near: Math.round(near), scales: near < far * 0.6 }); }, 300)); });
 
-// [5] middle button orbits the SELECTION (P = the selected node), only with a selection
+// [5] MIDDLE = PAN (translate, no rotation) · RIGHT + selection = orbit the SELECTED planet
 const mid = await p.evaluate(() => {
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width / 2, cy = r.top + r.height / 2, out = {};
-  const n = nodes.find(x => x.kind === 'model'); SEL = { kind: 'node', data: n }; showPanel(n);
+  SEL = null; if (typeof refreshEncSel === 'function') refreshEncSel();
   g.dispatchEvent(new PointerEvent('pointerdown', { button: 1, buttons: 4, clientX: cx, clientY: cy, bubbles: true }));
   out.drags = window.__uniDragging === true;
-  const q0 = Graph.camera().quaternion.clone();
-  const d0 = Graph.camera().position.distanceTo(new THREE.Vector3(n.x, n.y, n.z));
+  const q0 = Graph.camera().quaternion.clone(), p0 = Graph.camera().position.clone(), t0 = Graph.controls().target.clone();
   for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 4, clientX: cx + i * 14, clientY: cy + i * 4, bubbles: true }));
-  const d1 = Graph.camera().position.distanceTo(new THREE.Vector3(n.x, n.y, n.z));
-  out.orbitsSelection = Math.abs(d1 - d0) < 1 && Graph.camera().quaternion.angleTo(q0) > 0.02;   // distance to the node CONSTANT while turning
+  const pd = Graph.camera().position.distanceTo(p0), td = Graph.controls().target.distanceTo(t0);
+  out.pans = pd > 5 && Math.abs(pd - td) < 0.5 && Graph.camera().quaternion.angleTo(q0) < 0.001;   // rig slides as one, no turn
   window.dispatchEvent(new PointerEvent('pointerup', { button: 1, bubbles: true }));
   out.ends = window.__uniDragging === false;
+  const n = nodes.find(x => x.kind === 'model'); SEL = { kind: 'node', data: n }; showPanel(n);
+  g.dispatchEvent(new PointerEvent('pointerdown', { button: 2, buttons: 2, clientX: cx, clientY: cy, bubbles: true }));
+  const q1 = Graph.camera().quaternion.clone();
+  const d0 = Graph.camera().position.distanceTo(new THREE.Vector3(n.x, n.y, n.z));
+  for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 2, clientX: cx + i * 14, clientY: cy + i * 4, bubbles: true }));
+  const d1 = Graph.camera().position.distanceTo(new THREE.Vector3(n.x, n.y, n.z));
+  out.rightOrbitsSelection = Math.abs(d1 - d0) < 1 && Graph.camera().quaternion.angleTo(q1) > 0.02;
+  window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true }));
   SEL = null; refreshEncSel && refreshEncSel();
-  g.dispatchEvent(new PointerEvent('pointerdown', { button: 1, buttons: 4, clientX: cx, clientY: cy, bubbles: true }));
-  out.noSelNoDrag = window.__uniDragging !== true;
-  window.dispatchEvent(new PointerEvent('pointerup', { button: 1, bubbles: true }));
   return out; });
 // [6] CAMERA-MODE dropdown: 4 schemes; joystick = hold-offset KEEPS turning (anchor velocity),
 //     stops on release; arcball turns; look turns IN PLACE (position fixed); default = tumble
@@ -118,6 +121,8 @@ const cmDrop = await p.evaluate(() => {
   const s = document.getElementById('ctlCam');
   return { present: !!s, def: s && s.value,
     opts: s ? [...s.options].map(o => o.value).join(',') : '' }; });
+await p.evaluate(() => { const s = document.getElementById('ctlCam');   // [6] runs the LEFT-drag schemes explicitly
+  s.value = 'tumble'; s.dispatchEvent(new Event('change')); });
 const setMode = v => p.evaluate(vv => { const s = document.getElementById('ctlCam');
   s.value = vv; s.dispatchEvent(new Event('change')); }, v);
 const geom = await p.evaluate(() => { const r = document.getElementById('g').getBoundingClientRect();
@@ -155,9 +160,10 @@ const arcLook = await p.evaluate(async c => {
   const set = v => { const s = document.getElementById('ctlCam'); s.value = v; s.dispatchEvent(new Event('change')); };
   set('arcball'); const arc = drag6();
   set('look'); const look = drag6();
-  set('tumble');
+  document.getElementById('ctlInv').click(); const lookInv = drag6();   // invert flips look's vertical too
+  document.getElementById('ctlInv').click(); set('look');
   return { arcTurn: +arc.turn.toFixed(3), lookTurn: +look.turn.toFixed(3),
-    lookStays: look.moved < 1, backTo: UNICTL.camMode }; }, geom);
+    lookStays: look.moved < 1 && lookInv.moved < 1, backTo: UNICTL.camMode }; }, geom);
 await b.close();
 
 console.log('focus rest: dim', JSON.stringify(dim), '· fade', JSON.stringify(fade));
@@ -180,14 +186,14 @@ if (!(hide.outsideShown === false)) fails.push('hide behavior wrong');
 if (!(panel.br && panel.kbd >= 10 && panel.min && panel.inv && panel.pvt)) fails.push('controls panel wrong');
 if (!(yaw.turned && yaw.sweeps && frozeMid && thawed)) fails.push('Q/E inward orbit / control freeze wrong');
 if (!zoomArc.scales) fails.push('drag arc does not follow the zoom depth');
-if (!(inv.rightNeverDrags && inv.axisFlips)) fails.push('vertical-axis invert wrong (buttons must stay stock)');
-if (!(mid.drags && mid.orbitsSelection && mid.ends && mid.noSelNoDrag)) fails.push('middle-orbit-selection wrong');
-if (!(cmDrop.present && cmDrop.def === 'tumble' && cmDrop.opts === 'tumble,joystick,arcball,look')) fails.push('camera dropdown wrong');
+if (!(inv.rightDrags && inv.axisFlips)) fails.push('right-tumble / vertical-axis invert wrong');
+if (!(mid.drags && mid.pans && mid.ends && mid.rightOrbitsSelection)) fails.push('middle-pan / right-orbit-selection wrong');
+if (!(cmDrop.present && cmDrop.def === 'look' && cmDrop.opts === 'look,tumble,joystick,arcball')) fails.push('camera dropdown wrong (LEFT default must be LOOK)');
 if (!(jA > 0.02 && jB > jA * 1.5)) fails.push('joystick does not KEEP turning while held still');
 if (!(jStop < 0.01)) fails.push('joystick does not stop on release');
 if (!(jDead < 0.005)) fails.push('joystick deadzone leaks rotation');
 if (!(arcLook.arcTurn > 0.02)) fails.push('arcball drag does not turn');
 if (!(arcLook.lookTurn > 0.02 && arcLook.lookStays)) fails.push('look mode must turn IN PLACE');
-if (!(arcLook.backTo === 'tumble')) fails.push('mode did not reset to tumble');
+if (!(arcLook.backTo === 'look')) fails.push('mode did not reset to the look default');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('CTRL PROOF: ALL PASS');
