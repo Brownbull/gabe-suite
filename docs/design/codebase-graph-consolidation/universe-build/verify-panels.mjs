@@ -26,7 +26,8 @@ const boot = await p.evaluate(() => {
   const elSec = [...document.querySelectorAll('#pbody .sec')].find(s => /Elements/.test(s.querySelector('.sechd').textContent));
   const kindRows = elSec ? [...elSec.querySelectorAll('.pnav.pstat')] : [];
   const withGlyph = kindRows.filter(r => r.querySelector('.pki svg')).length;
-  const withTip = kindRows.filter(r => r.title && r.title.length > 10).length;
+  const withTip = kindRows.filter(r => r.querySelector('.tipico .tip')).length;   // styled tip ONLY — native titles removed (double-tooltip fix)
+  const nativeDoubles = [...document.querySelectorAll('#pbody .tipico[title]')].length;
   return { open: document.body.classList.contains('panel-open'),
     title: document.querySelector('#phead .pname').textContent,
     view: (window.__uniPView || {}).lvl,
@@ -34,6 +35,7 @@ const boot = await p.evaluate(() => {
     distinct: ents.size,
     firstSec: secs[0], kindRows: kindRows.length, withGlyph, withTip,
     noObjLeak: !document.getElementById('pbody').textContent.includes('[object Object]'),
+    nativeDoubles,
     srcSec: secs.some(s => /Sources/.test(s)) }; });
 // [1b] the Stars clickable wall: preview → +30 page → show less resets
 const stars = await p.evaluate(() => {
@@ -120,6 +122,7 @@ if (!(boot.open && boot.title === 'Everything' && boot.view === 'all' && boot.en
 if (!(/Entities/.test(boot.firstSec))) fails.push('Entities (navigable) must LEAD the Everything panel');
 if (!(boot.kindRows >= 4 && boot.withGlyph === boot.kindRows && boot.withTip === boot.kindRows)) fails.push('Elements rows lost their kind glyphs / meaning tooltips');
 if (!(boot.noObjLeak && boot.srcSec)) fails.push('Sources section leaks raw objects or is missing');
+if (boot.nativeDoubles !== 0) fails.push('an info icon still carries a native title (the double-tooltip regression)');
 if (!(stars.c0 === 8 && stars.paged && stars.resets && stars.fileTips >= 8)) fails.push('Stars paging wall broken (8 preview → +30 → reset, file tooltips)');
 if (!(ent.title === ent.name && ent.view === 'ent' && ent.stars && ent.inside && ent.above && ent.cluRows > 0)) fails.push('entity panel wrong');
 if (!(clu.title === clu.sub && clu.view === 'clu' && clu.elemRows > 0 && clu.aboveRows >= 2)) fails.push('cluster panel wrong');

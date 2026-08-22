@@ -312,7 +312,7 @@ function chipList(items, cls, glyph, cap=5){
   return wrap;
 }
 // tip = {icon:'info'|'alert', text, cls:'info'|'warn'} → an icon by the title, hover/click reveals text
-function tipIcon(tip){ const w=E("span",{class:"tipico "+(tip.cls||"info"),title:tip.text}, ico(tip.icon), E("span",{class:"tip"},tip.text)); w.onclick=e=>{ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
+function tipIcon(tip){ const w=E("span",{class:"tipico "+(tip.cls||"info")}, ico(tip.icon), E("span",{class:"tip"},tip.text)); w.onclick=e=>{ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
 function sechd(icoName, label, count, ok, tip, asset){ return E("div",{class:"sechd"}, ico(icoName), label, tip?tipIcon(tip):null, asset?aico(asset):null, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},count):null); }
 const CONN_TIP={icon:"info",text:"hover a connection → highlights that node in the graph. Trust is KIND-level (a floor, not per-edge proof): structural = an exact archmap / FK join (solid chips); inferred = a graft-call or web-bridge edge, inferred by design (dashed chips).",cls:"info"};
 // per connection-group TRUST by its role label — structural (exact archmap/FK join) vs inferred (graft call / web bridge FLOOR).
@@ -424,7 +424,8 @@ const HIER=[
     const w=E("div",{class:"sec"}, sechd("info","Elements",260,false,
       {icon:"info",cls:"info",text:"What lives here, counted by KIND — the same glyphs the field draws. Hover a row for what the kind means."}));
     [["endpoint",67],["external",2],["model",36],["schema",123],["web",32]].forEach(([k,n])=>{
-      const r=pnav(pki(k in P?k:"entity", KC[k]), k, n); r.classList.add("pstat"); r.title=KT[k]; w.append(r); });
+      const r=pnav(pki(k in P?k:"entity", KC[k]), k, n); r.classList.add("pstat");
+      r.insertBefore(tipIcon({icon:"info",cls:"info",text:KT[k]}), r.querySelector(".pnm")); w.append(r); });
     return w; })(),
   (()=>{ const w=E("div",{class:"sec"}, sechd("sub","Stars — not drawn",196,false,
       {icon:"info",cls:"info",text:"What the tables and the field do not show: code functions live in the levels feed but are drawn only when Functions is ON (config › Universe). Hover a chip for its source file."}),

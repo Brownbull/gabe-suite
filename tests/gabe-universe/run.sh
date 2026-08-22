@@ -374,6 +374,8 @@ check('Array.isArray(st.web.unmatched)' in page,
       "REGRESSION: the web-bridge row stringifies the unmatched ARRAY ([object Object])")
 check('"Sources"' in page and 'sechd("entity","Entities"' in page,
       "Sources section or the leading Entities section is gone")
+check('{class:"tipico "+(t.cls||"info")}' in page and '"info"),title:t.text' not in page,
+      "REGRESSION: tipIcon carries a native title again — info icons must show ONLY the styled dark tip")
 check('out.push(aboveSec(n)); return out;' in page,
       "element cards lost their Above section (the way back up)")
 

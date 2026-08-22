@@ -282,6 +282,11 @@ text = text.replace(
   'CLUSTERS.push(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub));',
   'CLUSTERS.push(Object.assign(makeCluster(mem, col, CFG.shape, OPMAP[CFG.shape][CFG.subOp], "sub", sub), {ekey:e, skey:sub}));', 1)
 
+# ── batch 23b: info icons show ONLY the styled dark tip — the native title doubled it (operator photo) ──
+text = text.replace(
+  'function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info"),title:t.text}, icoEl(t.icon), E("span",{class:"tip"},t.text));',
+  'function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info")}, icoEl(t.icon), E("span",{class:"tip"},t.text));', 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,

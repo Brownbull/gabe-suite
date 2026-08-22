@@ -2110,7 +2110,7 @@ var KINDCARD=(function(){
   function icoEl(n,cls){ var d=document.createElement("span"); d.style.display="inline-flex"; d.innerHTML=pico(n,cls); return d.firstChild; }
   function E(t,a){ var e=document.createElement(t), k=[].slice.call(arguments,2); for(var p in(a||{})){ if(p==="class")e.className=a[p]; else if(p==="html")e.innerHTML=a[p]; else e.setAttribute(p,a[p]); }
     k.forEach(function f(c){ if(c==null)return; if(Array.isArray(c))c.forEach(f); else e.append(c); }); return e; }
-  function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info"),title:t.text}, icoEl(t.icon), E("span",{class:"tip"},t.text)); w.onclick=function(e){ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
+  function tipIcon(t){ var w=E("span",{class:"tipico "+(t.cls||"info")}, icoEl(t.icon), E("span",{class:"tip"},t.text)); w.onclick=function(e){ e.stopPropagation(); w.classList.toggle("on"); }; return w; }
   function sechd(icoName,label,count,ok,tip){ return E("div",{class:"sechd"}, icoEl(icoName), label, tip?tipIcon(tip):null, count!=null?E("span",{class:"cnt"+(ok?" ok":"")},String(count)):null); }
   function chipList(items,cls,glyph,cap){ cap=cap||5; var wrap=E("span"), head=items.slice(0,cap), tail=items.slice(cap);
     var mk=function(x){ var t=(x&&x.t!==undefined)?x.t:x, el=E("span",{class:"pchip "+cls}, glyph?icoEl(glyph):null, t);
@@ -2311,7 +2311,7 @@ var KINDCARD=(function(){
     external:"an FK target owned by ANOTHER entity — drawn here because a local model points at it",
     "function":"a code function from the levels feed — drawn only when Functions is ON" };
   function kindRow(k, count){ var K=(typeof KINDS!=="undefined"&&KINDS[k])||{};
-    var r=E("div",{class:"pnav pstat", title:KINDTIP[k]||k},
+    var r=E("div",{class:"pnav pstat"},
       E("span",{class:"pki",html:svgInline(k, K.col||"#9aa", 13)}),
       E("span",{class:"pnl"}, k), KINDTIP[k]?tipIcon({icon:"info",cls:"info",text:KINDTIP[k]}):null,
       E("span",{class:"pnm"},String(count)));

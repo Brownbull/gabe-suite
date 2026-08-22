@@ -159,7 +159,7 @@
     external:"an FK target owned by ANOTHER entity — drawn here because a local model points at it",
     "function":"a code function from the levels feed — drawn only when Functions is ON" };
   function kindRow(k, count){ var K=(typeof KINDS!=="undefined"&&KINDS[k])||{};
-    var r=E("div",{class:"pnav pstat", title:KINDTIP[k]||k},
+    var r=E("div",{class:"pnav pstat"},
       E("span",{class:"pki",html:svgInline(k, K.col||"#9aa", 13)}),
       E("span",{class:"pnl"}, k), KINDTIP[k]?tipIcon({icon:"info",cls:"info",text:KINDTIP[k]}):null,
       E("span",{class:"pnm"},String(count)));
