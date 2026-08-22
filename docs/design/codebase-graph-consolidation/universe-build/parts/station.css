@@ -236,8 +236,10 @@
     border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
   .pnav .pki{ display:inline-flex; flex:none; }
   /* fleet spot — the selection mirrored in the fleet panel */
-  #fleet .flrow.spot{ background:#16233c; box-shadow:inset 2px 0 0 var(--accent); border-radius:6px; }
+  #fleet .flrow.spot{ background:rgba(76,110,245,.26); border-radius:6px; }
   #fleet .flrow.spot .flent{ color:#fff; }
+  #fleet .flcell{ position:relative; }
+  #fleet .flkey{ position:absolute; right:-2px; bottom:-4px; font:700 8px/1 var(--font-mono); font-style:normal; color:var(--muted); }
   .pnav .pdir{ flex:none; display:inline-flex; color:var(--muted); }
   .pnav:hover .pdir{ color:var(--accent); }
   .pnav .pcore{ color:var(--accent); }

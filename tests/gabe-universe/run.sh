@@ -396,6 +396,13 @@ check('window.__uniFleetSpot=' in page and 'data-fle=' in page and '_flOpen[ent]
       "the fleet spot is gone (selection no longer mirrors into the fleet panel / cluster no longer opens its entity)")
 check('__uniFleetSpot(hs.ent, hs.sub)' in page and '.flrow.spot' in page,
       "the hull engine no longer drives the fleet spot (or its CSS is gone)")
+# batch 27: number-key fleet toggles (1–8 → columns 2–9, selection-scoped) + row-background spot
+check('window.__uniFleetToggle=' in page and page.count('__uniFleetToggle(')>=2,
+      "the shared fleet toggle is gone (clicks + number keys must use ONE path)")
+check("k>=\"1\"&&k<=\"8\"" in page and 'hs.ent||"*"' in page,
+      "the 1–8 number keys no longer toggle fleet columns for the selection")
+check('class="flkey"' in page and 'rgba(76,110,245,.26)' in page,
+      "fleet header key labels or the row-background spot styling are gone")
 check('Math.max(m.__baseOp*2, floor)' in page and 'm.__baseEm' in page,
       "the entity light lost its absolute floor / emissive glow (a bare ×factor is invisible on big shells)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

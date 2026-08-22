@@ -470,6 +470,7 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
     +'<div class="ctlrow">'+KB("Alt+scroll")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<select id="ctlCam" title="how the LEFT drag rotates">'
     +'<option value="look">Look — first-person, turn in place</option>'
     +'<option value="tumble">Tumble — drag = turn (stock)</option>'
@@ -500,7 +501,10 @@ window.__uniWireTopbar=function(){
     window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
       if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e"){ FK[k]=1; _flyFreeze(); }
       else if(k===" "){ FK.up=1; _flyFreeze(); e.preventDefault(); }   // Space = ascend (and never scrolls/clicks)
-      else if(k==="control"){ FK.dn=1; _flyFreeze(); } });
+      else if(k==="control"){ FK.dn=1; _flyFreeze(); }
+      else if(k>="1"&&k<="8"&&!e.altKey&&!e.ctrlKey&&!e.metaKey){        // 1–8 = fleet columns 2–9, applied to the SELECTION (none → the ALL row)
+        var FC=_FCOLS[+k]; if(FC && window.__uniFleetToggle){ var hs=window.__uniHullSel||{};
+          __uniFleetToggle(hs.ent||"*", (hs.ent&&hs.sub!=null)?hs.sub:null, FC.k); } } });
     window.addEventListener("keyup", function(e){ var k=e.key.toLowerCase();
       if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e") delete FK[k];
       else if(k===" ") delete FK.up; else if(k==="control") delete FK.dn;
@@ -656,8 +660,9 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
-  var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c){
-    return '<span class="flcell" title="'+c.ti+'">'+(typeof ico==="function"?ico(c.icon,13):"")+'</span>'; }).join('')+'</div>';
+  var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
+    return '<span class="flcell" title="'+c.ti+(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')+'">'
+      +(typeof ico==="function"?ico(c.icon,13):"")+(i>=1?'<i class="flkey">'+i+'</i>':'')+'</span>'; }).join('')+'</div>';
   /* presets: All/None live via the SAME preset entry point the in-flight batch will use; the
      In-flight stub ships DISABLED with the honest-empty reason (undefined = no feed on this page ·
      null = feed at rest, no change in flight · object = the derivation lands in a later batch). */
@@ -683,15 +688,7 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){
     var e=sp.getAttribute("data-flx"); _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
-    var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"), col=b.getAttribute("data-fcol"),
-        C=_FCOLS.filter(function(c){ return c.k===col; })[0];
-    if(sub!=null){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
-      sv[col]=sv[col]?0:1; }
-    else if(ent==="*"){ var on=!_ents.every(function(e){ return UNIVIS.ent[e][col]; });   // any off → all on; all on → all off
-      _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; });
-      Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }   // the ALL row is a bulk gesture — cluster overrides follow it
-    else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
-    applyVis(C?C.scope:"all"); __uniFleetSync(); }; });
+    __uniFleetToggle(b.getAttribute("data-fent"), b.getAttribute("data-fsub"), b.getAttribute("data-fcol")); }; });
   body.querySelectorAll(".flpre").forEach(function(b){ b.onclick=function(){ var k=b.getAttribute("data-fpre"), ent={};
     if(k==="all"){ UNIVIS.sub={};   // All = truly everything — cluster overrides reset too
       _ents.forEach(function(e){ ent[e]=Object.assign({},_VISDEF); }); __uniApplyVisPreset({ent:ent}); }
@@ -714,6 +711,16 @@ window.__uniFleetSpot=function(ent, sub){ try{
   if(tr) tr.classList.add("spot");
   var f=tr||er; if(f&&f.scrollIntoView) f.scrollIntoView({block:"nearest"});
 }catch(e){} };
+/* the ONE fleet toggle — clicks and the 1–8 number keys both land here (ent "*" = the ALL row) */
+window.__uniFleetToggle=function(ent, sub, col){ try{
+  var C=_FCOLS.filter(function(c){ return c.k===col; })[0];
+  if(sub!=null && ent!=="*"){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
+    sv[col]=sv[col]?0:1; }
+  else if(ent==="*"){ var on=!_ents.every(function(e){ return UNIVIS.ent[e][col]; });   // any off → all on; all on → all off
+    _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; });
+    Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }      // the ALL row is a bulk gesture — cluster overrides follow it
+  else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
+  applyVis(C?C.scope:"all"); __uniFleetSync(); }catch(e){} };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"),
     col=b.getAttribute("data-fcol"), C=_FCOLS.filter(function(c){ return c.k===col; })[0];

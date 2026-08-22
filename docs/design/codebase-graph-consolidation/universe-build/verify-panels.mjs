@@ -162,6 +162,24 @@ const fleet = await p.evaluate(() => {
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   const cleared = document.querySelectorAll('#fleetbody .flrow.spot').length === 0;
   return { entSpot, opened, cluSpot, entAlso, pantryDropped, cleared }; });
+// [10] NUMBER-KEY fleet toggles: 1–8 hit columns 2–9 scoped to the selection —
+//      cluster selected → that cluster only · entity → that entity · nothing → the ALL row
+const numkeys = await p.evaluate(() => {
+  const kd = k => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
+  window.__uniPanelClu('allergen', 'misc');
+  const c0 = (UNIVIS.sub['allergen|misc'] || { planets: 1 }).planets;
+  kd('1'); const c1 = UNIVIS.sub['allergen|misc'].planets;
+  kd('1'); const c2 = UNIVIS.sub['allergen|misc'].planets;
+  const entUntouched = UNIVIS.ent.allergen.planets === 1;
+  window.__uniPanelEnt('pantry');
+  kd('2'); const entWires = UNIVIS.ent.pantry.wires;
+  kd('2'); const entWiresBack = UNIVIS.ent.pantry.wires;
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  kd('4'); const allOff = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 0);
+  kd('4'); const allBack = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 1);
+  const hdrKeys = document.querySelectorAll('#fleetbody .flhead .flkey').length;
+  const spotBg = getComputedStyle(document.querySelector('#fleet') ? document.body : document.body) && true;
+  return { c0, c1, c2, entUntouched, entWires, entWiresBack, allOff, allBack, hdrKeys }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -175,6 +193,7 @@ console.log('back:', JSON.stringify(back), '· esc:', JSON.stringify(esc));
 console.log('bgClick:', JSON.stringify(bg));
 console.log('hullLight:', JSON.stringify(hull));
 console.log('fleetSpot:', JSON.stringify(fleet));
+console.log('numKeys:', JSON.stringify(numkeys));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -197,5 +216,8 @@ if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expect
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
+if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 1 must toggle planets for the SELECTED CLUSTER only');
+if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 2 must toggle wires for the selected ENTITY');
+if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');
