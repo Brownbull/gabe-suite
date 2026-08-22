@@ -26,8 +26,8 @@ page  = (shell / "gabe-universe.html").read_text(encoding="utf-8")
 pass_ = 0; fail = 0
 def t_order(pg):
     i=lambda s: pg.find(s)
-    a,b,c,d=i('k:"show"'),i('k:"subs"'),i('k:"planets"'),i('k:"wires"')
-    return -1 not in (a,b,c,d) and a<b<c<d
+    ks=[i('k:"show"'),i('k:"subs"'),i('k:"planets"'),i('k:"wires"'),i('k:"routes"'),i('k:"zDef"')]
+    return -1 not in ks and ks==sorted(ks)
 def check(cond, msg):
     global pass_, fail
     if cond: pass_ += 1
@@ -124,7 +124,11 @@ check('mode==="guards"' in page and '{v:"guards"' in page, "Guards cluster-core 
 check('isFinite(n.x)) _npos' in page, "the _npos NaN guard is missing (a transient add would spew computeBoundingSphere NaN)")
 
 # ── 10g. batch-5: config re-tabbed Planets|Universe · master planet-assets toggle · orbit-around-click ──
-check('data-pane="routes"' in page, "config tabs wrong (Routes-only since the batch-30 fleet migration)")
+check('class="cfgtab' not in page and 'cfgnote' in page,
+      "the config panel must be TABLESS (batch 31 — everything lives in the fleet; the note explains)")
+check('__uniFlPanes.wires=' in page and '__uniFlPanes.routes=' in page and '"Transports"' in page,
+      "the Connections/Transports drawer panes are gone")
+check('(fr.right+10)' in page, "the drawer lost its docking gap beside the fleet")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
@@ -169,7 +173,7 @@ check('grp==="coreBy"){ __uniFreezeForSettle();' in page and 'grp==="entLayout")
       "layout/core changes do not freeze animations before the reheat")
 check('grp==="coreBy"){ assignSub' not in page and 'grp==="entLayout"){ recomputeEX' not in page,
       "REGRESSION: a layout/core branch reheats without freezing")
-check('data-pane="routes"' in page, "the ROUTES config tab is missing")
+check('"Connections"' in page and '"Transports"' in page, "the Connections/Transports fleet panes are missing (ex-Routes tab)")
 check('M4 19 20 5' in page and 'M4 19 C 8 5 16 5 20 12' in page, "the LINES pill icons (straight/curved SVG) are missing")
 check('{v:"straight",t:"Straight"}' not in page, "REGRESSION: the LINES pill is back to text labels")
 check('id="curveAmtRng"' in page and '*(window.__uniCurveAmt||1)' in page,

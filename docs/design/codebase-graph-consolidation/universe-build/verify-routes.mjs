@@ -21,18 +21,20 @@ await p.goto('file://' + PAGE);
 await p.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
 await p.waitForTimeout(4500);
 
-// [4] ROUTES tab + homing
+// [4] the CONNECTIONS + TRANSPORTS panes in the fleet drawer (batch 31: the Routes tab dissolved)
 const tab = await p.evaluate(() => {
-  const rtab = document.querySelector('.cfgtab[data-pane="routes"]'); if (!rtab) return { routesTab: false };
-  rtab.click();
-  const panes = rtab.closest('.cfgbody').querySelectorAll('.cfgpane');
-  const pane = panes[panes.length - 1];                       // Routes is the LAST (and now only) pane — batch 30 moved the rest into the fleet
+  if (!window.__uniFlOpen) return { routesTab: false };
+  __uniFlOpen('wires');
+  const pane = document.getElementById('flsbody');
   const q = s => !!pane.querySelector(s);
-  return { routesTab: true, paneShown: pane.style.display !== 'none',
+  const out = { routesTab: true, paneShown: document.getElementById('flside').classList.contains('out'),
     lines: q('.pill[data-grp="lineStyle"]'), lineIcons: q('.pill[data-grp="lineStyle"] button svg'),
     curveAmt: q('#curveAmtRng'), beams: pane.querySelectorAll('input[data-beam]').length,
-    transports: q('[data-itog="transports"]'), speed: q('#trSpeedRng') };
-});
+    noTransportsHere: !q('#trSpeedRng') };
+  __uniFlOpen('routes');
+  out.transports = q('[data-itog="transports"]'); out.speed = q('#trSpeedRng');
+  __uniFlOpen(null);
+  return out; });
 
 // [1] freeze on core change → resume on settle; a USER pause stays paused
 const freeze = await p.evaluate(() => { CFG.coreBy = 'tests'; applyCfg('coreBy');
@@ -105,7 +107,7 @@ await p2.goto('file://' + PAGE + '?war=1&radius=1.2');
 await p2.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
 await p2.waitForTimeout(2500);
 const preset = await p2.evaluate(() => ({
-  tabs: !!document.querySelector('.cfgtabbar'), routes: !!document.querySelector('.cfgtab[data-pane="routes"]'),
+  tabs: !document.querySelector('.cfgtab'), routes: !!(window.__uniFlPanes && __uniFlPanes.wires),
   beams: document.querySelectorAll('input[data-beam]').length, motionBtn: !!document.getElementById('motionBtn') }));
 await b.close();
 
@@ -119,7 +121,7 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 
 const fails = [];
 if (errs.length) fails.push('page/console errors');
-if (!(tab.routesTab && tab.paneShown && tab.lines && tab.lineIcons && tab.curveAmt && tab.beams === 4 && tab.transports && tab.speed)) fails.push('routes tab incomplete');
+if (!(tab.routesTab && tab.paneShown && tab.lines && tab.lineIcons && tab.curveAmt && tab.beams === 4 && tab.transports && tab.speed && tab.noTransportsHere)) fails.push('connections/transports panes incomplete');
 if (!(freeze.frozeNow && resumed)) fails.push('freeze/resume broken');
 if (!stillPaused) fails.push('user pause overridden by settle');
 if (!(interleave.pausedDuring && pauseSurvived)) fails.push('motionBtn pause during settle got stomped');

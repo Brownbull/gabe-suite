@@ -210,6 +210,7 @@
   #fleet .flhead .flcfgbtn{ cursor:pointer; border-radius:5px; }
   #fleet .flhead .flcfgbtn:hover{ color:var(--accent); background:#0e1524; }
   #fleet .flhead .flcfgbtn.on{ color:var(--accent); }
+  #cfg .cfgnote{ font:500 11px/1.5 var(--font-ui); color:var(--muted); padding:10px 12px; max-width:230px; }
   #fleet .flprehead{ display:inline-flex; gap:4px; margin-left:auto; margin-right:6px; }
   #fleet .flpre{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:20px;
     color:var(--muted); background:none; border:1px solid var(--line); border-radius:6px; padding:0; cursor:pointer; }

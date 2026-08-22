@@ -22,7 +22,7 @@ const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => 
 // [1] FOCUS rest behaviors through the config pill
 await p.evaluate(() => { const n = nodes.find(x => x.kind === 'endpoint'); SEL = { kind: 'node', data: n };
   showPanel(n); __uniHLSelect(n); __uniHLMode();   // select → switch to FOCUS
-  document.querySelector('.cfgtab[data-pane="routes"]').click(); });
+  if (window.__uniFlOpen) __uniFlOpen('wires'); });   // FOCUS controls live in the fleet's Connections pane now
 await raf(); await p.waitForTimeout(600);
 async function restState(v) {
   await p.evaluate(vv => { document.querySelector(`.pill[data-grp="focusRest"] button[data-v="${vv}"]`).click(); }, v);

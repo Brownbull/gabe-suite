@@ -646,11 +646,11 @@ var _FCOLS=[
   { k:"subs",   ti:"sub-cluster hulls",   scope:"clusters", icon:"sub",    g:function(){ return !!CFG.subOn; } },
   { k:"planets",ti:"planets (element nodes) — hulls stay", scope:"nodes",  icon:"bubble", g:function(){ return true; } },
   { k:"wires",  ti:"connections touching it",              scope:"wires",  icon:"radius", g:function(){ return true; } },
+  { k:"routes", ti:"transports (routes)", scope:"routes",   icon:"truck",  g:function(){ return !!CFG.transports; } },
   { k:"zDef",   ti:"defense fleet",       scope:"zones",    icon:"shield", g:function(){ return !!(CFG.warOn&&CFG.zDef); } },
   { k:"zAtk",   ti:"attack fleet",        scope:"zones",    icon:"swords", g:function(){ return !!(CFG.warOn&&CFG.zAtk); } },
   { k:"zCfl",   ti:"conflict effects",    scope:"zones",    icon:"burst",  g:function(){ return !!(CFG.warOn&&CFG.zCfl); } },
-  { k:"zSat",   ti:"satellites",          scope:"zones",    icon:"target", g:function(){ return !!(CFG.warOn&&CFG.zSat); } },
-  { k:"routes", ti:"transports (routes)", scope:"routes",   icon:"truck",  g:function(){ return !!CFG.transports; } } ];
+  { k:"zSat",   ti:"satellites",          scope:"zones",    icon:"target", g:function(){ return !!(CFG.warOn&&CFG.zSat); } } ];
 window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   if(typeof ICO!=="undefined"){                                             // presets speak icons now — extend the config's own set
     ICO.hide='<path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/>';
@@ -690,7 +690,7 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
 window.__uniFlOpenKey=null;
 window.__uniFlDock=function(){ try{ var side=document.getElementById("flside"), fl=document.getElementById("fleet");
   if(!side||!fl) return; var fr=fl.getBoundingClientRect();
-  side.style.left=fr.right+"px"; side.style.top=fr.top+"px";
+  side.style.left=(fr.right+10)+"px"; side.style.top=fr.top+"px";
   side.style.zIndex=String((parseInt(getComputedStyle(fl).zIndex,10)||40)-1);   // BELOW the fleet — the slide comes out from behind it
 }catch(e){} };
 window.__uniFlOpen=function(key, remount){ try{
@@ -713,7 +713,7 @@ window.__uniFlOpen=function(key, remount){ try{
 }catch(e){} };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
-    var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs");  // config migration: entity · clusters · planets (more follow)
+    var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs"||c.k==="wires"||c.k==="routes");  // every config now lives here
     return '<span class="flcell'+(cfgable?' flcfgbtn':'')+'" data-fk="'+c.k+'" title="'+c.ti
       +(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')
       +(cfgable?' · CLICK for its configuration':'')+'">'
@@ -924,13 +924,9 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(G.transp && G.transp.parentNode) G.transp.parentNode.removeChild(G.transp);   // drop the now-empty shell
   body.innerHTML='';
   var bar=mk("cfgtabbar");
-  bar.innerHTML='<button class="cfgtab on" data-pane="routes">Routes</button>';
-  body.appendChild(bar); body.appendChild(rt);
-  rt.style.display="";                                         // the whole Universe estate lives in the FLEET side panel now
-  var PANES={ routes:rt };
-  bar.querySelectorAll(".cfgtab").forEach(function(t){ t.onclick=function(){ var pane=t.getAttribute("data-pane");
-    bar.querySelectorAll(".cfgtab").forEach(function(x){ x.classList.toggle("on", x===t); });
-    Object.keys(PANES).forEach(function(k){ PANES[k].style.display=(k===pane)?"":"none"; }); }; });
+  var note=document.createElement("div"); note.className="cfgnote";
+  note.textContent="Every control lives in the FLEET now — click a column icon (cube · clusters · planets · connections · transports) for its panel.";
+  body.appendChild(note);                                      // rt stays a detached workbench; its groups leave for the fleet stash below
   // wire the NEW controls only (the moved spike pills keep their wireCfg listeners)
   var _bindRoots=[rt]; entPane.concat(cluPane).concat(planetsPane).forEach(function(g){ if(g) _bindRoots.push(g); });
   _bindRoots.forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
@@ -965,4 +961,15 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     var inp=rt.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
     var p=rt.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
     updSamp(k); redraw(); }); });
+  /* the ROUTES estate splits: transports (toggle + speed) → the TRANSPORT pane; everything else
+     (lines · curve · focus · wire kinds · beams) → the CONNECTIONS pane. Bindings above already
+     attached to the elements, so the move is free. */
+  var transGrp=null, connGrps=[];
+  [].slice.call(rt.children).forEach(function(g){
+    if(g.querySelector && (g.querySelector("#trSpeedRng")||g.querySelector('[data-itog="transports"]'))) transGrp=g;
+    else connGrps.push(g); });
+  window.__uniFlPanes.wires={ title:"Connections", icon:"radius", groups:connGrps, shared:[] };
+  window.__uniFlPanes.routes={ title:"Transports", icon:"truck", groups:transGrp?[transGrp]:[], shared:[] };
+  var _st2=document.getElementById("flstash");
+  if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });
 };
