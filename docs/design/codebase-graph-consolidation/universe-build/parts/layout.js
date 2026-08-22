@@ -571,10 +571,10 @@ window.__uniApplyHullSel=function(){ try{ var hs=window.__uniHullSel;
     if(c.sph) mats.push(c.sph.material); if(c.rim) mats.push(c.rim.material);
     if(c.hull) mats.push(c.hull.material);
     if(c.sprites) c.sprites.forEach(function(sp){ if(sp.s) mats.push(sp.s.material); });
-    var floor=(c.level==="ent")?0.09:0.10;                       // absolute floors (a ×factor alone is invisible on big shells); operator-tuned two dims ent · one dim sub
-    var glow=(c.level==="ent")?0.28:0.38;
+    var floor=(c.level==="ent")?0.05:0.06;                       // absolute floors (a ×factor alone is invisible on big shells); operator-tuned 2026-08-22 (two more dims both)
+    var glow=(c.level==="ent")?0.16:0.24;
     mats.forEach(function(m){ if(!m) return; if(m.__baseOp==null) m.__baseOp=m.opacity;
-      m.opacity = hit ? Math.min(0.92, Math.max(m.__baseOp*3, floor)) : m.__baseOp;
+      m.opacity = hit ? Math.min(0.92, Math.max(m.__baseOp*2, floor)) : m.__baseOp;
       if(m.emissiveIntensity!==undefined){ if(m.__baseEm==null) m.__baseEm=m.emissiveIntensity;   // shaded hulls also GLOW when lit
         m.emissiveIntensity = hit ? glow : m.__baseEm; } });
   }); }catch(e){} };

@@ -392,7 +392,7 @@ check('"__core"' in page and 'function coreLead' in page,
 # batch 25: hull selection light — containers brighten per panel level, rebuild-proof, Esc clears
 check('window.__uniApplyHullSel=' in page and 'm.__baseOp=m.opacity' in page,
       "the hull selection light is gone (apply engine + lazy stock capture)")
-check('Math.max(m.__baseOp*3, floor)' in page and 'm.__baseEm' in page,
+check('Math.max(m.__baseOp*2, floor)' in page and 'm.__baseEm' in page,
       "the entity light lost its absolute floor / emissive glow (a bare ×factor is invisible on big shells)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,
       "element displays no longer light their cluster+entity hulls (showPanel hook)")
