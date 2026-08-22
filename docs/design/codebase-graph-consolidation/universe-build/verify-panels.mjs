@@ -17,14 +17,35 @@ await p.goto('file://' + PAGE);
 await p.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
 await p.waitForTimeout(4500);
 
-// [1] BOOT: no selection → the Everything panel is already up (open, entity rows = distinct entities)
+// [1] BOOT: no selection → the Everything panel is already up; ENTITIES lead (navigable first);
+//     Elements rows carry kind glyphs + meaning tooltips; Stars page behind a clickable wall;
+//     Sources never leak raw objects (the [object Object] regression)
 const boot = await p.evaluate(() => {
   const ents = new Set(nodes.map(n => n.ent).filter(Boolean));
+  const secs = [...document.querySelectorAll('#pbody .sec')].map(s => s.querySelector('.sechd').textContent);
+  const elSec = [...document.querySelectorAll('#pbody .sec')].find(s => /Elements/.test(s.querySelector('.sechd').textContent));
+  const kindRows = elSec ? [...elSec.querySelectorAll('.pnav.pstat')] : [];
+  const withGlyph = kindRows.filter(r => r.querySelector('.pki svg')).length;
+  const withTip = kindRows.filter(r => r.title && r.title.length > 10).length;
   return { open: document.body.classList.contains('panel-open'),
     title: document.querySelector('#phead .pname').textContent,
     view: (window.__uniPView || {}).lvl,
     entRows: [...document.querySelectorAll('#pbody .pnav')].filter(r => r.querySelector('.pdot')).length,
-    distinct: ents.size }; });
+    distinct: ents.size,
+    firstSec: secs[0], kindRows: kindRows.length, withGlyph, withTip,
+    noObjLeak: !document.getElementById('pbody').textContent.includes('[object Object]'),
+    srcSec: secs.some(s => /Sources/.test(s)) }; });
+// [1b] the Stars clickable wall: preview → +30 page → show less resets
+const stars = await p.evaluate(() => {
+  const sec = [...document.querySelectorAll('#pbody .sec')].find(s => /Stars/.test(s.querySelector('.sechd').textContent));
+  const chips = () => sec.querySelectorAll('.pchip').length;
+  const c0 = chips();
+  const more = [...sec.querySelectorAll('button.more')].find(b => /more/.test(b.textContent));
+  if (more) more.click(); const c1 = chips();
+  const less = [...sec.querySelectorAll('button.more')].find(b => /less/.test(b.textContent));
+  if (less) less.click(); const c2 = chips();
+  const fileTips = [...sec.querySelectorAll('.pchip')].filter(ch => /\.py|\.ts|\//.test(ch.title || '')).length;
+  return { c0, c1, c2, paged: c1 === c0 + 30, resets: c2 === c0, fileTips }; });
 
 // [2] Everything → entity (click the first entity row)
 const ent = await p.evaluate(() => {
@@ -44,13 +65,13 @@ const clu = await p.evaluate(() => {
   const row = ins.querySelector('.pnav'); const sub = row.querySelector('.pnl').textContent; row.click();
   return { sub, title: document.querySelector('#phead .pname').textContent,
     view: window.__uniPView.lvl,
-    elemRows: [...document.querySelectorAll('#pbody .pnav')].filter(r => r.querySelector('.pki')).length,
+    elemRows: [...document.querySelectorAll('#pbody .pnav:not(.pstat)')].filter(r => r.querySelector('.pki')).length,
     aboveRows: [...document.querySelectorAll('#pbody .sec')].filter(s => /Above/.test(s.querySelector('.sechd').textContent))
       .flatMap(s => [...s.querySelectorAll('.pnav')]).length }; });
 
 // [4] cluster → element (click a member) → the element card carries the Above section back up
 const elem = await p.evaluate(() => {
-  const row = [...document.querySelectorAll('#pbody .pnav')].find(r => r.querySelector('.pki'));
+  const row = [...document.querySelectorAll('#pbody .pnav:not(.pstat)')].find(r => r.querySelector('.pki'));
   const label = row.querySelector('.pnl').textContent; row.click();
   const heads = [...document.querySelectorAll('#pbody .sechd')].map(h => h.textContent);
   const above = [...document.querySelectorAll('#pbody .sec')].find(s => /Above/.test(s.querySelector('.sechd').textContent));
@@ -85,6 +106,7 @@ const bg = await p.evaluate(() => {
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
+console.log('stars:', JSON.stringify(stars));
 console.log('entity:', JSON.stringify(ent));
 console.log('cluster:', JSON.stringify(clu));
 console.log('element:', JSON.stringify(elem));
@@ -95,6 +117,10 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 const fails = [];
 if (errs.length) fails.push('page/console errors');
 if (!(boot.open && boot.title === 'Everything' && boot.view === 'all' && boot.entRows === boot.distinct && boot.distinct > 3)) fails.push('boot Everything panel wrong');
+if (!(/Entities/.test(boot.firstSec))) fails.push('Entities (navigable) must LEAD the Everything panel');
+if (!(boot.kindRows >= 4 && boot.withGlyph === boot.kindRows && boot.withTip === boot.kindRows)) fails.push('Elements rows lost their kind glyphs / meaning tooltips');
+if (!(boot.noObjLeak && boot.srcSec)) fails.push('Sources section leaks raw objects or is missing');
+if (!(stars.c0 === 8 && stars.paged && stars.resets && stars.fileTips >= 8)) fails.push('Stars paging wall broken (8 preview → +30 → reset, file tooltips)');
 if (!(ent.title === ent.name && ent.view === 'ent' && ent.stars && ent.inside && ent.above && ent.cluRows > 0)) fails.push('entity panel wrong');
 if (!(clu.title === clu.sub && clu.view === 'clu' && clu.elemRows > 0 && clu.aboveRows >= 2)) fails.push('cluster panel wrong');
 if (!(elem.title === elem.label && elem.selected && elem.hasAbove && elem.upRows >= 2)) fails.push('element card lost its Above nav');

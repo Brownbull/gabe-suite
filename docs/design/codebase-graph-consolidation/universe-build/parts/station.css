@@ -236,3 +236,7 @@
     border:1px solid var(--line); border-radius:8px; padding:2px 6px; flex:none; }
   .pnav .pki{ display:inline-flex; flex:none; }
   .pnav svg{ width:13px; height:13px; flex:none; }
+  /* stat rows (Elements section) — nav-row look, no pointer affordance */
+  .pnav.pstat{ cursor:default; }
+  .pnav.pstat:hover{ background:#0e1524; border-color:var(--line); }
+  #pbody .starctl{ display:flex; gap:6px; margin-top:6px; }

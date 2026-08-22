@@ -411,19 +411,49 @@ function aboveSec(clu, ent){ const w=E("div",{class:"sec"}, sechd("nav","Above",
   w.append(pnav(ico("entity"),"everything")); return w; }
 const HIER=[
 ["Everything — no selection (boot · Esc)", ()=>panel("everything","entity","var(--accent)","Everything","the principal panel",[
-  (()=>{ const w=E("div",{class:"sec"}, sechd("info","Field",260));
-    [["endpoint",67],["external",2],["model",36],["schema",123],["web",32]].forEach(([k,n])=>w.append(kv(null,k,String(n)))); return w; })(),
-  E("div",{class:"sec"}, sechd("sub","Stars — not drawn",196,false,
-    {icon:"info",cls:"info",text:"What the tables and the field do not show: code functions live in the levels feed but are drawn only when Functions is ON (config › Universe)."}),
-    E("div",{class:"sublbl"}, ico("function"), "196 functions held off the field — enable Functions to draw them"),
-    chipList(["clean_tags","assert_recipe_allergen_safe","iter_candidate_recipes","plan_recipe","unplan_recipe"],"fn","function")),
-  (()=>{ const w=E("div",{class:"sec"}, sechd("info","Feeds"));
-    w.append(kv(null,"cross-entity touches","11")); w.append(kv(null,"web bridge","48 matched · 6 unmatched"));
-    w.append(kv(null,"graft wiring","present")); return w; })(),
-  (()=>{ const w=E("div",{class:"sec"}, sechd("entity","Inside — entities",8,false,
-      {icon:"info",cls:"info",text:"One row per entity. Click a row to open that entity's panel."}));
+  (()=>{ const w=E("div",{class:"sec"}, sechd("entity","Entities",8,false,      // NAVIGABLE first
+      {icon:"info",cls:"info",text:"The universe's containers — click a row to open that entity's panel (the next level down)."}));
     [["allergen",17],["auth",8],["cooking",45],["legal-consent",8],["pantry",77],["progression",31],["recipe",68],["settings",6]]
       .forEach(([e,n])=>w.append(pnav(pdot(ENTC[e]),e,n))); return w; })(),
+  (()=>{ const KT={endpoint:"an API route handler — one node per METHOD + path; the entity's outward door",
+      external:"an FK target owned by ANOTHER entity — drawn here because a local model points at it",
+      model:"a persisted data model — a database table the entity owns",
+      schema:"a request/response shape — the API contract a payload travels in",
+      web:"a frontend screen/hook — it fetches endpoints over the web bridge"};
+    const KC={endpoint:"var(--c-endpoint)",external:"var(--c-external)",model:"var(--c-model)",schema:"var(--c-schema)",web:"var(--c-web)"};
+    const w=E("div",{class:"sec"}, sechd("info","Elements",260,false,
+      {icon:"info",cls:"info",text:"What lives here, counted by KIND — the same glyphs the field draws. Hover a row for what the kind means."}));
+    [["endpoint",67],["external",2],["model",36],["schema",123],["web",32]].forEach(([k,n])=>{
+      const r=pnav(pki(k in P?k:"entity", KC[k]), k, n); r.classList.add("pstat"); r.title=KT[k]; w.append(r); });
+    return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("sub","Stars — not drawn",196,false,
+      {icon:"info",cls:"info",text:"What the tables and the field do not show: code functions live in the levels feed but are drawn only when Functions is ON (config › Universe). Hover a chip for its source file."}),
+      E("div",{class:"sublbl"}, ico("function"), "196 functions held off the field — enable Functions to draw them"));
+    const POOL=[["clean_tags","apps/api/services/allergen.py"],["assert_recipe_allergen_safe","apps/api/services/allergen.py"],
+      ["iter_candidate_recipes","apps/api/services/planner.py"],["plan_recipe","apps/api/services/planner.py"],
+      ["unplan_recipe","apps/api/services/planner.py"],["get_catalog","apps/api/api/catalog.py"],
+      ["get_taxonomy","apps/api/api/catalog.py"],["_query_domain","apps/api/services/allergen.py"]];
+    const grid=E("div"), ctl=E("div",{class:"starctl"});
+    let shown=5; const render=()=>{ grid.innerHTML="";
+      POOL.slice(0,shown).forEach(([f,file])=>grid.append(E("span",{class:"pchip fn",title:file},ico("function"),f)));
+      ctl.innerHTML="";
+      if(shown<POOL.length){ const b=E("button",{class:"more"},"show 30 more · "+(196-shown)+" hidden"); b.onclick=()=>{shown=POOL.length;render();}; ctl.append(b); }
+      if(shown>5){ const l=E("button",{class:"more"},"show less"); l.onclick=()=>{shown=5;render();}; ctl.append(l); } };
+    render(); w.append(grid, ctl); return w; })(),
+  (()=>{ const sr=(icon,label,val,tip)=>E("div",{class:"kv"}, ico(icon,"kico"),
+      E("span",{class:"k"},label,tipIcon({icon:"info",cls:"info",text:tip})), E("span",{class:"v",html:val}));
+    const w=E("div",{class:"sec"}, sechd("down","Sources",null,false,
+      {icon:"info",cls:"info",text:"The committed feeds this graph is drawn from — each row is one input and what it contributed."}));
+    w.append(sr("model","cross-entity touches","11",
+      "models one entity references while ANOTHER documents them — resolved into the dotted touches wires between entities"));
+    w.append(sr("web","web bridge","48 fetches matched to endpoints · 6 unmatched · 4 dynamic",
+      "every apiFetch call site in the frontend, matched to the endpoint it names — the dashed bridge wires. Unmatched = a fetch naming no declared endpoint (a coverage gap, listed below)."));
+    w.append(chipList(["GET /api/v1/equipment","PUT /api/v1/equipment","GET /api/v1/notifications","GET /api/v1/history/dishes","DELETE ${ENDPOINT}/${id}","PUT ${ENDPOINT}/${id}"],"web","web",3));
+    w.append(sr("link","graft wiring","421 calls · 15 imports",
+      "cross-entity call/import wires from the graft code index — inferred-by-design, a FLOOR never a census"));
+    w.append(sr("layers","levels feed","present — functions · communities · journeys",
+      "the 2D levels-lab export: function nodes (the Stars), community clusters, journey walks"));
+    return w; })(),
   E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, ico("info"), "— the top level (Esc returns here)")),
 ])],
 ["Entity panel — allergen", ()=>panel("entity","entity","var(--c-entity)","allergen","ENTITY",[

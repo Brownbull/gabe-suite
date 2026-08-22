@@ -365,6 +365,15 @@ check('Graph.onBackgroundClick(window.__uniBgClick)' in page,
 check('{ekey:e}' in page and '{ekey:e, skey:sub}' in page,
       "cluster hulls lost their routing keys (ekey/skey) — the picker cannot name a panel")
 check('"— no hidden functions here"' in page, "the Stars section lost its honest-empty line")
+# batch 23 (Everything tuning): navigable first · kind rows w/ meaning · paged stars · Sources
+check('var KINDTIP=' in page and 'function kindRow' in page,
+      "Elements rows lost their kind glyphs + meaning tooltips (KINDTIP/kindRow)")
+check('function fnChips' in page and '"show less"' in page and 'shown+PAGE' in page,
+      "the Stars paging wall (preview → +30 → show less) is gone")
+check('Array.isArray(st.web.unmatched)' in page,
+      "REGRESSION: the web-bridge row stringifies the unmatched ARRAY ([object Object])")
+check('"Sources"' in page and 'sechd("entity","Entities"' in page,
+      "Sources section or the leading Entities section is gone")
 check('out.push(aboveSec(n)); return out;' in page,
       "element cards lost their Above section (the way back up)")
 
