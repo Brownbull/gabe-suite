@@ -220,6 +220,19 @@ const flcfg = await p.evaluate(() => {
   const layIconOnly = [...document.querySelectorAll('.pill[data-grp="entLayout"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg') && /—/.test(b.title));
   const coreIconOnly = [...document.querySelectorAll('.pill[data-grp="coreBy"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg'));
   const transDots = [...document.querySelectorAll('.pill[data-grp="entOp"] button')].every(b => b.textContent.trim() === '' && /fill-opacity/.test(b.innerHTML));
+  // wire kinds: ONE row each, per-kind on/off riding the beam (0 hides), toggle round-trips
+  window.__uniFlOpen('wires');
+  const wk = (() => { const rows = [...document.querySelectorAll('#flsbody .wkrow')];
+    const oneRow = rows.length === 4 && rows.every(r => r.querySelector('[data-wtog]') && r.querySelector('[data-wcol]')
+      && r.querySelector('[data-wshape]') && r.querySelector('[data-beam]') && r.querySelector('[data-wreset]'));
+    const tog = document.querySelector('button[data-wtog="fk"]');
+    const b0 = window.__uniBeam.fk; tog.click();
+    const hid = window.__uniBeam.fk === 0 && !tog.classList.contains('on');
+    tog.click();
+    const back = window.__uniBeam.fk === (b0 || 1) && tog.classList.contains('on');
+    const glowLbl = !!document.querySelector('#flsbody .wglow');
+    const noFooter = !/per kind: sample/.test(document.getElementById('flsbody').textContent);
+    return { oneRow, hid, back, glowLbl, noFooter }; })();
   window.__uniFlOpen('routes');
   const ts = document.querySelector('#flsbody #trSpeedRng');
   const ladder = ts && ts.min === '-2' && ts.max === '4' && ts.step === '1';
@@ -236,7 +249,7 @@ const flcfg = await p.evaluate(() => {
   return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
     standalone, docked, fleetUnstretched, under,
     oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
-    ladder, defSpeed, badgeShows, backTo }; });
+    ladder, defSpeed, badgeShows, backTo, wk }; });
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -282,5 +295,6 @@ if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.w
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
+if (!(flcfg.wk.oneRow && flcfg.wk.hid && flcfg.wk.back && flcfg.wk.glowLbl && flcfg.wk.noFooter)) fails.push('wire-kind rows wrong (one row each, on/off round-trip, glow label, footer gone)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

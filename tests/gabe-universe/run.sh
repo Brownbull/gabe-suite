@@ -145,6 +145,13 @@ check('_ts.min="-2"; _ts.max="4"; _ts.step="1"; _ts.value="0";' in page and '0.1
       "the speed ladder is gone (−2..+4 positions, default 0.1 = two stops under the old 0.3)")
 check('id="trSpdBadge"' in page.replace("'",'"') or '"trSpdBadge"' in page,
       "the numbered-dot thumb (speed badge) is gone")
+# batch 34: one-row wire kinds + per-kind on/off + honest glow label
+check('data-wtog=' in page and '__uniBeamPrev' in page and 'class="cfgrow wkrow"' in page,
+      "wire kinds lost their one-row layout or the per-kind on/off toggle")
+check('NOT speed; speed lives in Transports' in page and 'per kind: sample' not in page,
+      "the glow label must say it is NOT speed (and the old footer note stays gone)")
+check('applies WHILE a focus highlight is active' in page,
+      "the FOCUS group no longer explains WHEN it applies")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──

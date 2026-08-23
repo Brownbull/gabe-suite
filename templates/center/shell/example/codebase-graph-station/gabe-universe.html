@@ -340,7 +340,7 @@
   #fleet .flcell svg{ width:13px; height:13px; }
   /* the fleet SIDE DRAWER — a FREE-STANDING add-on docked at the fleet's right edge, its own
      width/height; it slides out from BEHIND the fleet (z-index one below) and back under on close */
-  #flside{ position:fixed; width:250px; max-height:72vh;
+  #flside{ position:fixed; width:292px; max-height:72vh;
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
     transform:translateX(-104%); transition:transform .22s ease; display:flex; flex-direction:column;
     box-shadow:0 8px 30px #0006; pointer-events:none; opacity:0; }
@@ -359,6 +359,17 @@
   #flside .spdwrap input{ width:100%; }
   #flside .spdwrap input::-webkit-slider-thumb{ opacity:0; width:24px; height:24px; }
   #flside .spdwrap input::-moz-range-thumb{ opacity:0; width:24px; height:24px; }
+  /* one-row wire kinds */
+  #flside .wkrow{ flex-wrap:nowrap !important; align-items:center; gap:3px !important; }
+  #flside .wkrow .wsamp{ width:26px !important; flex:none; }
+  #flside .wkrow .wcol{ width:20px; height:16px; padding:0; border:1px solid var(--line); border-radius:4px; background:none; flex:none; }
+  #flside .wkrow .wshape button{ padding:2px 3px; }
+  #flside .wkrow .wglow{ font-size:9px; color:var(--muted); flex:none; cursor:help; }
+  #flside .wkrow .wbeam{ flex:1; min-width:34px; }
+  #flside .wkrow .wreset{ flex:none; }
+  #flside .wtog{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
+    color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
+  #flside .wtog.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
   #flside .spdbadge{ position:absolute; top:50%; transform:translate(-50%,-50%); width:22px; height:22px;
     border-radius:50%; background:var(--accent); color:#fff; font:700 8.5px/22px var(--font-mono);
     text-align:center; pointer-events:none; box-shadow:0 1px 5px #0006; }
@@ -1972,26 +1983,29 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     return '<svg viewBox="0 0 36 8" width="36" height="8"><path d="M1 4 H35" fill="none" stroke="'+_hx(c.color)+'" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>'; };
   var wireRow=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var shapes=["solid","dashed","dotted","sparse"].map(function(s){ var d=DASHMAP[s];
-      return '<button data-v="'+s+'"'+(s===c.style?' class="on"':'')+' title="'+s+'"><svg viewBox="0 0 20 6" width="16" height="6"><path d="M1 3 H19" fill="none" stroke="currentColor" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg></button>'; }).join('');
-    return '<div class="cfgrow" style="gap:5px"><span class="rlbl wsamp" data-wsamp="'+kind+'" style="width:36px" title="'+kind+'">'+_sampSVG(kind)+'</span>'
+      return '<button data-v="'+s+'"'+(s===c.style?' class="on"':'')+' title="'+s+'"><svg viewBox="0 0 20 6" width="13" height="5"><path d="M1 3 H19" fill="none" stroke="currentColor" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg></button>'; }).join('');
+    var bOn=(window.__uniBeam[kind]==null||window.__uniBeam[kind]>0);
+    return '<div class="cfgrow wkrow" style="gap:4px">'
+      +'<button class="wtog'+(bOn?' on':'')+'" data-wtog="'+kind+'" title="show / hide '+kind+' wires">'+(typeof ico==="function"?ico("show",11):"")+'</button>'
+      +'<span class="rlbl wsamp" data-wsamp="'+kind+'" title="'+kind+'">'+_sampSVG(kind)+'</span>'
       +'<input type="color" class="wcol" data-wcol="'+kind+'" value="'+_hx(c.color)+'" title="'+kind+' color">'
       +'<div class="pill wshape" data-wshape="'+kind+'">'+shapes+'</div>'
-      +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'
-      +'<div class="cfgrow" style="gap:6px;margin-bottom:7px"><input type="range" class="rng" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' beam · 0 hides · >1 glows"></div>'; };
+      +'<span class="wglow" title="glow strength — 0 hides · past 1 glows (NOT speed; speed lives in Transports)">✦</span>'
+      +'<input type="range" class="rng wbeam" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' glow · 0 hides · >1 glows">'
+      +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'; };
   rt.innerHTML=
      '<div class="grp"><div class="grplbl">LINES</div>'
     + '<div class="cfgrow" style="gap:6px">'
     + pillHTML("lineStyle",[{v:"straight",t:LNS,ti:"straight"},{v:"curved",t:LNC,ti:"curved"}], CFG.lineStyle)
     + '<input type="range" class="rng" id="curveAmtRng" min="0.2" max="2.5" step="0.1" value="'+window.__uniCurveAmt+'" title="curve amount (when curved)"></div></div>'
-    + '<div class="grp"><div class="grplbl" title="what FOCUS does to everything OUTSIDE the highlighted set — hover each option">FOCUS</div>'
+    + '<div class="grp"><div class="grplbl" title="applies WHILE a focus highlight is active: select something, switch the topbar highlight mode to the TARGET (focus), and these choose what happens to everything OUTSIDE the lit set. With no focus highlight running, nothing changes.">FOCUS</div>'
     + pillHTML("focusRest",[
         {v:"dim",t:"Dim",ti:"outside wires drop to 25% — everything stays readable"},
         {v:"fade",t:"Fade",ti:"outside wires nearly vanish (8%) — planets stay"},
         {v:"wires",t:"Wires",ti:"outside wires GONE — planets stay as context"},
         {v:"hide",t:"Hide",ti:"outside wires AND planets gone — hulls stay as geography"}], HL.rest)+'</div>'
     + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
-    + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
-    + '<div style="font-size:10px;color:var(--muted);margin-top:2px">per kind: sample · color · shape · beam (0 hides · past 1 glows)</div></div>';
+    + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")+'</div>';
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -2035,6 +2049,17 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     var b=e.target.closest("button"); if(!b) return; var k=p.getAttribute("data-wshape");
     CONN[k].style=b.getAttribute("data-v"); p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
     updSamp(k); redraw(); }); });
+  window.__uniBeamPrev=window.__uniBeamPrev||{};
+  rt.querySelectorAll("button[data-wtog]").forEach(function(b){ b.addEventListener("click", function(){
+    var k=b.getAttribute("data-wtog"), sl=rt.querySelector('input[data-beam="'+k+'"]');
+    var on=b.classList.contains("on");
+    if(on){ __uniBeamPrev[k]=(window.__uniBeam[k]==null?1:window.__uniBeam[k])||1; window.__uniBeam[k]=0; }
+    else { window.__uniBeam[k]=__uniBeamPrev[k]||1; }
+    if(sl) sl.value=String(window.__uniBeam[k]);
+    b.classList.toggle("on", !on); redraw(); }); });
+  rt.querySelectorAll("input[data-beam]").forEach(function(s){ s.addEventListener("input", function(){
+    var k=s.getAttribute("data-beam"), tg=rt.querySelector('button[data-wtog="'+k+'"]');
+    if(tg) tg.classList.toggle("on", +s.value>0); }); });                       // sliding past 0 re-arms the toggle
   rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
     var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style; }
     var inp=rt.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);

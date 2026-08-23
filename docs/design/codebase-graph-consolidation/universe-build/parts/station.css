@@ -194,7 +194,7 @@
   #fleet .flcell svg{ width:13px; height:13px; }
   /* the fleet SIDE DRAWER — a FREE-STANDING add-on docked at the fleet's right edge, its own
      width/height; it slides out from BEHIND the fleet (z-index one below) and back under on close */
-  #flside{ position:fixed; width:250px; max-height:72vh;
+  #flside{ position:fixed; width:292px; max-height:72vh;
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
     transform:translateX(-104%); transition:transform .22s ease; display:flex; flex-direction:column;
     box-shadow:0 8px 30px #0006; pointer-events:none; opacity:0; }
@@ -213,6 +213,17 @@
   #flside .spdwrap input{ width:100%; }
   #flside .spdwrap input::-webkit-slider-thumb{ opacity:0; width:24px; height:24px; }
   #flside .spdwrap input::-moz-range-thumb{ opacity:0; width:24px; height:24px; }
+  /* one-row wire kinds */
+  #flside .wkrow{ flex-wrap:nowrap !important; align-items:center; gap:3px !important; }
+  #flside .wkrow .wsamp{ width:26px !important; flex:none; }
+  #flside .wkrow .wcol{ width:20px; height:16px; padding:0; border:1px solid var(--line); border-radius:4px; background:none; flex:none; }
+  #flside .wkrow .wshape button{ padding:2px 3px; }
+  #flside .wkrow .wglow{ font-size:9px; color:var(--muted); flex:none; cursor:help; }
+  #flside .wkrow .wbeam{ flex:1; min-width:34px; }
+  #flside .wkrow .wreset{ flex:none; }
+  #flside .wtog{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
+    color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
+  #flside .wtog.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
   #flside .spdbadge{ position:absolute; top:50%; transform:translate(-50%,-50%); width:22px; height:22px;
     border-radius:50%; background:var(--accent); color:#fff; font:700 8.5px/22px var(--font-mono);
     text-align:center; pointer-events:none; box-shadow:0 1px 5px #0006; }
