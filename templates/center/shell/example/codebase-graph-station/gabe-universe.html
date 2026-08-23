@@ -384,6 +384,26 @@
   #elegend .lgsub{ font:600 9px/1 var(--font-ui) !important; letter-spacing:.06em; color:var(--muted) !important; }
   #elegend .lgsub.on{ color:var(--accent) !important; }
   #elegend .lgbody{ background:transparent !important; border-radius:0 0 12px 12px !important; }
+  /* ── batch 44: compaction — TYPES reads in TWO columns; the box hugs its content ── */
+  #elegend{ height:auto !important; max-height:56vh; width:328px !important; display:flex; flex-direction:column; }
+  #elegend .lgbody{ flex:1; min-height:0; overflow-y:auto; }
+  #elegend .lgbody.lg-types{ display:grid !important; grid-template-columns:1fr 1fr; gap:0 8px; align-content:start; }
+  #elegend .lgbody.lg-types .lggrp, #elegend .lgbody.lg-types .lglbl[style], #elegend .lgbody.lg-types > div:not(.lgrow){ grid-column:1/-1; }
+  #elegend .lgrow{ display:flex; align-items:center; gap:7px; padding:2.5px 0; }
+  #elegend .lgvis{ width:40px; flex:none; display:flex; justify-content:center; }
+  #elegend .lglbl{ font:500 11px/1.35 var(--font-ui) !important; color:var(--ink); min-width:0; }
+  #elegend .lglbl i{ color:var(--muted); font-style:normal; font-size:10px; }
+  #elegend .lglbl b{ font-weight:600; }
+  /* the PLANET sub-strip + zone groups wear the station format */
+  #elegend .lgsubtabs{ display:flex !important; gap:4px; padding:6px 9px 2px !important; background:transparent !important; }
+  #elegend .lgsub{ font:600 9.5px/1 var(--font-ui) !important; letter-spacing:.05em; text-transform:uppercase;
+    color:var(--muted) !important; background:var(--chip-bg) !important; border:1px solid var(--line) !important;
+    border-radius:6px !important; padding:3px 8px !important; cursor:pointer; }
+  #elegend .lgsub:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
+  #elegend .lgsub.on{ color:#fff !important; background:var(--accent) !important; border-color:var(--accent) !important; }
+  #elegend .lggrp{ font:700 9px/1 var(--font-ui) !important; letter-spacing:.09em; text-transform:uppercase;
+    color:var(--muted) !important; margin:8px 0 3px !important; padding:0 !important; border:none !important; background:transparent !important; }
+  #elegend .lgcv{ border-radius:6px; }
   #flside .splbl{ width:auto !important; font-size:9px; text-transform:uppercase; letter-spacing:.05em; cursor:help; }
   #flside #spreadRng{ flex:1; min-width:60px; }
   /* the transport speed ladder — a numbered dot IS the thumb */
@@ -3003,7 +3023,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       entry.sub.forEach(function(s){ h+='<button class="lgsub'+(s===_legSub?" on":"")+'" data-sub="'+s+'">'+s+'</button>'; });
       h+='</div>'; items=entry[_legSub];
     } else { items=entry; }
-    h+='<div class="lgbody">';
+    h+='<div class="lgbody lg-'+active.toLowerCase().replace(/[^a-z]/g,"")+'">';
     var thumbs=[];
     items.forEach(function(it){
       if(it.t==="grp"){ h+='<div class="lggrp">'+it.l+'</div>'; return; }

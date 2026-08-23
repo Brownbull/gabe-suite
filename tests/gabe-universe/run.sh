@@ -491,6 +491,8 @@ check('className="cfgrow entcombo"' in page,
       "the entity combo/options rows are gone")
 check("'Legend</b>" in page.replace('"',"'") and '#elegend .lghd b svg' in page,
       "the legend lost its panel-chrome refit (iconed caps title + station styling)")
+check("lgbody lg-" in page and 'lg-types' in page and 'grid-template-columns:1fr 1fr' in page,
+      "the legend Types two-column compaction is gone (per-tab body class + grid)")
 check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
       "highlighted wires lost their theme highlight color (white dark · indigo light)")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,

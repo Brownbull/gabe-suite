@@ -360,6 +360,12 @@ assert OLD_LGHD in text, "legend head anchor missing"
 text = text.replace(OLD_LGHD,
   """    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';""", 1)
 
+# ── batch 44: the legend body carries the active tab as a class → per-tab layout (Types = 2 columns) ──
+OLD_LGBODY = """    h+='<div class="lgbody">';"""
+assert OLD_LGBODY in text, "legend body anchor missing"
+text = text.replace(OLD_LGBODY,
+  """    h+='<div class="lgbody lg-'+active.toLowerCase().replace(/[^a-z]/g,"")+'">';""", 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,

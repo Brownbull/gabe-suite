@@ -288,6 +288,9 @@ const flcfg = await p.evaluate(() => {
   const rsOneRow = !!document.querySelector('#flsbody .rsrow #radRng') && !!document.querySelector('#flsbody .rsrow #spreadRng');
   const lg = document.getElementById('elegend');
   const lgStyled = lg && getComputedStyle(lg).borderRadius === '12px' && !!lg.querySelector('.lghd b svg');   // the legend wears the panel chrome + iconed title
+  const lgBody = lg.querySelector('.lgbody');
+  const lgTwoCol = lgBody.classList.contains('lg-types') && getComputedStyle(lgBody).gridTemplateColumns.split(' ').length === 2;   // TYPES compacts into two columns
+  const lgCompact = lg.getBoundingClientRect().height < 420;
   btn('subs').click();
   const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
@@ -365,7 +368,7 @@ const flcfg = await p.evaluate(() => {
   document.getElementById('flsclose').click();
   const closed = !side.classList.contains('out');
   return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
-    fnsOff, spWorks, spBack, spQuarter, rsOneRow, lgStyled,
+    fnsOff, spWorks, spBack, spQuarter, rsOneRow, lgStyled, lgTwoCol, lgCompact,
     standalone, docked, fleetUnstretched, under,
     oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
     ladder, defSpeed, badgeShows, backTo, wk }; });
@@ -427,6 +430,7 @@ if (!(flcfg.tabs.length === 0 && flcfg.order === 'show,subs,planets,wires,routes
 if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity combo/options rows, clusters, planets, zones master)');
 if (!(flcfg.fnsOff && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.push('functions must start OFF / the spread slider must scale RENT (default at a FIFTH of the bar)');
 if (!(flcfg.rsOneRow && flcfg.lgStyled)) fails.push('radius+spread must share one row / the legend must wear the panel chrome');
+if (!(flcfg.lgTwoCol && flcfg.lgCompact)) fails.push('the legend Types tab must read in TWO columns inside a compact box');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
