@@ -243,8 +243,19 @@ const flcfg = await p.evaluate(() => {
     const gradCleared = !CONN.fk.grad && !gb.classList.contains('on');
     updateConnectors();
     const vcGone = ![...connGroup.children].some(l => l.material && l.material.vertexColors === true);
+    // copy-settings: visible on Connections ONLY; the payload round-trips the pane's state
+    const cpy = document.getElementById('flscopy');
+    const cpyVisible = cpy && cpy.style.display !== 'none';
+    cpy.click();
+    let cp = {}; try { cp = JSON.parse(window.__uniLastCopy); } catch (e) {}
+    const cpyPayload = cp.pane === 'connections' && cp.kinds && cp.kinds.fk && /^#/.test(cp.kinds.fk.color)
+      && typeof cp.kinds.fk.on === 'boolean' && 'glow' in cp.kinds.fk && 'grad' in cp.kinds.fk
+      && 'lineStyle' in cp && 'focusRest' in cp;
+    window.__uniFlOpen('planets');
+    const cpyHiddenElsewhere = document.getElementById('flscopy').style.display === 'none';
+    window.__uniFlOpen('wires');
     return { oneRow, hid, back, glowLbl, noFooter, gradBtns: document.querySelectorAll('#flsbody .wgrad').length,
-      gradOn, vc, sampGrad, gradCleared, vcGone }; })();
+      gradOn, vc, sampGrad, gradCleared, vcGone, cpyVisible, cpyPayload, cpyHiddenElsewhere }; })();
   window.__uniFlOpen('routes');
   const ts = document.querySelector('#flsbody #trSpeedRng');
   const ladder = ts && ts.min === '-2' && ts.max === '4' && ts.step === '1';
@@ -309,5 +320,6 @@ if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly &
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
 if (!(flcfg.wk.oneRow && flcfg.wk.hid && flcfg.wk.back && flcfg.wk.glowLbl && flcfg.wk.noFooter)) fails.push('wire-kind rows wrong (one row each, on/off round-trip, glow label, footer gone)');
 if (!(flcfg.wk.gradBtns === 4 && flcfg.wk.gradOn && flcfg.wk.vc && flcfg.wk.sampGrad && flcfg.wk.gradCleared && flcfg.wk.vcGone)) fails.push('entity-gradient toggle wrong (4 buttons, vertex-colored wires on, sample blends, reset clears)');
+if (!(flcfg.wk.cpyVisible && flcfg.wk.cpyPayload && flcfg.wk.cpyHiddenElsewhere)) fails.push('copy-settings wrong (Connections-only button, full JSON payload)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

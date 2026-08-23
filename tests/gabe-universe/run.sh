@@ -157,6 +157,10 @@ check('vertexColors:_gr' in page and 'data-wgrad=' in page and 'ENT[_cs.ent]' in
       "the entity-gradient option is gone (vertex-color wires + per-row toggle + entity colors threaded)")
 check('delete CONN[k].grad' in page,
       "wire reset no longer clears the gradient flag")
+check('id="flscopy"' in page.replace("'",'"') or '"flscopy"' in page,
+      "the Connections copy-settings button is gone")
+check('window.__uniLastCopy=txt' in page and '(key==="wires")?"":"none"' in page,
+      "copy-settings lost its payload stash or its Connections-only gate")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──

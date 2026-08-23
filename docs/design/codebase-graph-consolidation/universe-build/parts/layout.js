@@ -675,10 +675,23 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
   var side=document.getElementById("flside");                    // the drawer is its OWN container — an add-on beside the fleet, not an extension
   if(!side){ side=document.createElement("div"); side.id="flside";
     side.innerHTML='<div class="flshead"><span class="flstitle" id="flstitle"></span>'
+      +'<button class="flsx" id="flscopy" style="display:none" title="copy these settings as JSON — paste them back to adopt an exact configuration">⧉</button>'
       +'<button class="flsx" id="flsclose" title="close — slides back behind the fleet">×</button></div>'
       +'<div class="flsbody" id="flsbody"></div>';
     document.body.appendChild(side);
     document.getElementById("flsclose").onclick=function(){ __uniFlOpen(null); };
+    document.getElementById("flscopy").onclick=function(){ var b=this;
+      try{ var hx=function(v){ return "#"+("000000"+(v>>>0).toString(16)).slice(-6); };
+        var out={ pane:"connections", lineStyle:CFG.lineStyle, curveAmt:(window.__uniCurveAmt!=null?window.__uniCurveAmt:1),
+          focusRest:(typeof HL!=="undefined"?HL.rest:null), kinds:{} };
+        (typeof CONN_KINDS!=="undefined"?CONN_KINDS:["fk","bridge","calls","imports"]).forEach(function(k){ var c=CONN[k]||{};
+          out.kinds[k]={ on:!!(window.__uniBeam[k]==null||window.__uniBeam[k]>0),
+            color:hx(c.color||0), style:c.style||"dashed", glow:(window.__uniBeam[k]!=null?window.__uniBeam[k]:1), grad:!!c.grad }; });
+        var txt=JSON.stringify(out,null,1);
+        window.__uniLastCopy=txt;                                  // proofs + a paste-back fallback read this
+        var ok=(typeof copyText==="function")?copyText(txt):false;
+        b.textContent=ok?"✓":"⧉"; setTimeout(function(){ b.textContent="⧉"; },900);
+      }catch(e){} };
     setInterval(function(){ if(side.classList.contains("out")) __uniFlDock(); }, 300); }   // the fleet drags — the add-on follows
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
@@ -703,6 +716,7 @@ window.__uniFlOpen=function(key, remount){ try{
   var pane=(window.__uniFlPanes||{})[key]; if(!pane) return;
   if(stash) [].slice.call(bodyEl.children).forEach(function(g){ stash.appendChild(g); });   // previous pane's groups go home
   title.innerHTML=(typeof ico==="function"?ico(pane.icon,13):"")+pane.title;
+  var cpy=document.getElementById("flscopy"); if(cpy) cpy.style.display=(key==="wires")?"":"none";   // copy-settings: Connections only (operator ask)
   var _seen=[]; pane.groups.concat(pane.shared||[]).forEach(function(g){
     if(g && _seen.indexOf(g)<0){ _seen.push(g); bodyEl.appendChild(g); } });
   window.__uniFlOpenKey=key; if(window.__uniFlDock) __uniFlDock(); side.classList.add("out");
