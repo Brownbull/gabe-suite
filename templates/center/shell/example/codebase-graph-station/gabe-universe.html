@@ -687,7 +687,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
       god:false, method:(kind==="endpoint")?_methOf(p.label):null };
     var n={ id:p.id, kind:kind, ent:ent, label:p.label||p.slug||p.id,
       col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"data",
-      m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites };
+      m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites, fn:p.fn };
     nodes.push(n); NIDS[n.id]=n; });
 });
 if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unknown kind (add to KINDS)"); }catch(e){}
@@ -1254,6 +1254,12 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
+  /* endpoint → HANDLER wires (batch 46): the endpoint's own handler fn is in the pool — wire it
+     so a data-edge-less endpoint (DELETE …/cupo) joins the call net the moment Functions is ON. */
+  var _fnset={}; _FNNODES.forEach(function(f){ _fnset[f.id]=1; });
+  nodes.forEach(function(n){ if(n.kind!=="endpoint"||!n.fn||!n.det||!n.det.file) return;
+    var key=String(n.det.file).split(":")[0]+"#"+n.fn;
+    if(_fnset[key]) _FNLINKS.push({source:n.id, target:key, rel:"handler"}); });
 }
 function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) return;
   __uniFreezeForSettle();                                  // functions in/out reheats — decorations pause until the settle
@@ -2632,7 +2638,10 @@ var KINDCARD=(function(){
       return Object.keys(by).map(function(k){ var g=by[k];
         return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, function(){ return chipList(g.items, chipCls(g.kind), g.kind); }, g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
     var groups=build(outs,"out").concat(build(ins,"in"));
-    return conns("link","Connections", groups, {showCount:true, empty:"— no edges captured"}); }
+    var _empty="— no edges captured";
+    if(n.behind&&n.behind.fns) _empty="— no data edges captured · its behavior lives in the call tree ("+n.behind.fns+" fns, Code behind) — turn Functions ON to draw those wires";
+    else if(n.kind==="web") _empty="— no edges captured · its fetches may be DYNAMIC (unmatchable templates — see Sources)";
+    return conns("link","Connections", groups, {showCount:true, empty:_empty}); }
   function sigSec(det){ if(!det.gsig && !det.sig) return null; var s=det.sig||{};
     return E("div",{class:"sec"}, sechd("endpoint","Signature"),
       det.gsig?E("div",{class:"doc",style:"font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-word"}, det.gsig):null,

@@ -485,6 +485,11 @@ check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in 
 # batch 42: entity pane rebuild — combo row · options icon-toggles · the SPREAD slider
 check('"fnsTog"' in page, "the FUNCTIONS icon toggle is gone (replaced the Hide/Show pill; starts OFF)")
 # batch 45: consumes + nests rels flow through the universe (the floating-schema fix)
+# batch 46: endpoint→handler wires (Functions ON) + the honest empty-connections message
+check('rel:"handler"' in page and 'fn:p.fn' in page,
+      "endpoint→handler wires are gone (the fn field or the _buildFnData join)")
+check('behavior lives in the call tree' in page and 'DYNAMIC (unmatchable templates' in page,
+      "the empty-Connections message no longer explains WHERE the behavior lives")
 check("consumes:'calls'" in page and "nests:'fk'" in page,
       "REL2KIND lost the consumes/nests mappings — the new wires would fall to the calls default silently")
 check('consumes:"consumed by"' in page.replace("'",'"') or 'consumes:"consumes"' in page,

@@ -55,7 +55,10 @@
       return Object.keys(by).map(function(k){ var g=by[k];
         return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, function(){ return chipList(g.items, chipCls(g.kind), g.kind); }, g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
     var groups=build(outs,"out").concat(build(ins,"in"));
-    return conns("link","Connections", groups, {showCount:true, empty:"— no edges captured"}); }
+    var _empty="— no edges captured";
+    if(n.behind&&n.behind.fns) _empty="— no data edges captured · its behavior lives in the call tree ("+n.behind.fns+" fns, Code behind) — turn Functions ON to draw those wires";
+    else if(n.kind==="web") _empty="— no edges captured · its fetches may be DYNAMIC (unmatchable templates — see Sources)";
+    return conns("link","Connections", groups, {showCount:true, empty:_empty}); }
   function sigSec(det){ if(!det.gsig && !det.sig) return null; var s=det.sig||{};
     return E("div",{class:"sec"}, sechd("endpoint","Signature"),
       det.gsig?E("div",{class:"doc",style:"font-family:ui-monospace,Menlo,monospace;font-size:11px;word-break:break-word"}, det.gsig):null,

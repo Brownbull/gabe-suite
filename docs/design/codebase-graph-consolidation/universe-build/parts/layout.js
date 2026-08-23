@@ -104,6 +104,12 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
+  /* endpoint → HANDLER wires (batch 46): the endpoint's own handler fn is in the pool — wire it
+     so a data-edge-less endpoint (DELETE …/cupo) joins the call net the moment Functions is ON. */
+  var _fnset={}; _FNNODES.forEach(function(f){ _fnset[f.id]=1; });
+  nodes.forEach(function(n){ if(n.kind!=="endpoint"||!n.fn||!n.det||!n.det.file) return;
+    var key=String(n.det.file).split(":")[0]+"#"+n.fn;
+    if(_fnset[key]) _FNLINKS.push({source:n.id, target:key, rel:"handler"}); });
 }
 function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) return;
   __uniFreezeForSettle();                                  // functions in/out reheats — decorations pause until the settle
