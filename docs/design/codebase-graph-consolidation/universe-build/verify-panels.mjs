@@ -180,9 +180,22 @@ const defs = await p.evaluate(() => {
   const halo = () => { let h = null; Graph.scene().traverse(o => { if (o.userData && o.userData.__hov) h = o; }); return !!h; };
   chips[0].dispatchEvent(new MouseEvent('mouseenter'));
   d.chipHaloOn = halo();
+  d.hovWire = window.__uniHovLink === l && [...connGroup.children].some(w => w.material.blending === THREE.AdditiveBlending);   // the wire to the hovered endpoint glows
   chips[0].dispatchEvent(new MouseEvent('mouseleave'));
-  d.chipHaloOff = !halo();
+  d.chipHaloOff = !halo() && window.__uniHovLink === null;
   d.chipCursor = chips.every(c => c.style.cursor === 'pointer');
+  // F toggles glow⇄focus; in FOCUS the SELECTED element alone keeps its halo
+  const m0 = HL.mode; window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }));
+  d.fToggles = HL.mode !== m0; window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }));
+  d.fBack = HL.mode === m0;
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  const n2 = nodes.find(x => x.kind === 'endpoint'); SEL = { kind: 'node', data: n2 }; showPanel(n2); __uniHLSelect(n2);
+  if (HL.mode === 'glow') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }));   // → focus
+  const halos = (typeof hlGroup !== 'undefined' && hlGroup) ? hlGroup.children.length : -1;
+  d.focusOriginGlow = HL.mode === 'focus' && halos === 1;
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }));
+  d.glowMany = (typeof hlGroup !== 'undefined' && hlGroup) ? hlGroup.children.length > 1 : false;
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   return d; });
 
@@ -377,6 +390,9 @@ if (!(defs.selGlows && defs.linkLit)) fails.push('selected wire must GLOW and BF
 if (!(defs.restOpts === 'dim,hide' && defs.restIcons)) fails.push('focus rest must be DIM+HIDE icon pills only');
 if (!(defs.altE && defs.altQ)) fails.push('Alt+Q/Alt+E depth keys broken');
 if (!(defs.chipHaloOn && defs.chipHaloOff && defs.chipCursor)) fails.push('link-card endpoint chips do not hover-light their nodes');
+if (!(defs.hovWire)) fails.push('chip hover must light the WIRE to the hovered element');
+if (!(defs.fToggles && defs.fBack)) fails.push('F does not toggle glow⇄focus');
+if (!(defs.focusOriginGlow && defs.glowMany)) fails.push('FOCUS must keep exactly the selected element glowing (glow keeps the set)');
 if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 2 must toggle planets for the SELECTED CLUSTER only');
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');

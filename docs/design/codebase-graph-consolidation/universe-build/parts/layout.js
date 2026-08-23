@@ -353,13 +353,15 @@ function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;
 var hlGroup=null;
 function _hlGroup(){ if(!hlGroup && typeof Graph!=="undefined" && Graph){ hlGroup=new T.Group(); Graph.scene().add(hlGroup); } return hlGroup; }
 function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=hlGroup.children.pop(); hlGroup.remove(s); } } HL.sprites=[]; }
-window.__uniHLReapply=function(){ if(!HL.on||HL.mode!=="glow") return;   // halos live in an INDEPENDENT scene group —
+window.__uniHLReapply=function(){ if(!HL.on) return;                     // halos live in an INDEPENDENT scene group —
   var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
-    var d0=HL.set[n.id]===0, g=glowSprite(n.col||"#9ecbff", d0?64:36, d0?0.85:0.55);
+    var d0=HL.set[n.id]===0;
+    if(HL.mode!=="glow" && !d0) return;                                    // FOCUS: only the SELECTED element(s) keep the glow
+    var g=glowSprite(n.col||"#9ecbff", d0?64:36, d0?0.85:0.55);
     g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
     g0.add(g); HL.sprites.push(g); }); };
-window.__uniHLTick=function(){ if(!hlGroup||!HL.on||HL.mode!=="glow") return;   // follow the sim every cluster tick
+window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
   hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
 function _hlRestyle(){ _hlClearSprites();
   if(typeof Graph!=="undefined" && Graph){
@@ -480,8 +482,14 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;
 window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _hovSprite.parent.remove(_hovSprite); }catch(e){} _hovSprite=null; }
+  if(window.__uniHovLink){ window.__uniHovLink=null; try{ updateConnectors(); }catch(e){} }
   if(!id) return; var n=NIDS[id]; if(!n||!n.__threeObj) return;
-  _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite); };
+  _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite);
+  var selId=(typeof SEL!=="undefined"&&SEL&&SEL.kind==="node"&&SEL.data)?SEL.data.id:null, hl=null;   // the WIRE to the hovered element glows too
+  for(var i=0;i<links.length;i++){ var l=links[i], s=lid(l.source), tt=lid(l.target);
+    if(selId && ((s===selId&&tt===id)||(tt===selId&&s===id))){ hl=l; break; }
+    if(!selId && window.__uniSelLink===l && (s===id||tt===id)){ hl=l; break; } }
+  if(hl){ window.__uniHovLink=hl; try{ updateConnectors(); }catch(e){} } };
 /* ── CONTROLS panel (bottom-right): the navigation cheat-sheet + mouse toggles ── */
 window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
   var p=document.createElement("div"); p.className="cfg ctrlp"; p.id="ctrlp";
@@ -492,7 +500,7 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("W")+KB("A")+KB("S")+KB("D")+'<span class="ctll">move</span></div>'
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
-    +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("F")+'<span class="ctll">glow⇄focus</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<select id="ctlCam" title="how the LEFT drag rotates">'
     +'<option value="look">Look — first-person, turn in place</option>'
@@ -561,6 +569,7 @@ window.__uniWireTopbar=function(){
 
     window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
       if(tag==="INPUT"||tag==="TEXTAREA") return;
+      if((e.key==="f"||e.key==="F") && !e.altKey && !e.ctrlKey && !e.metaKey){ __uniHLMode(); return; }   // F = glow ⇄ focus
       if(e.key==="Escape"){ __uniHLClear();
         try{ SEL=null; refreshEncSel(); }catch(e2){}
         if(window.__uniPanelAll) __uniPanelAll(); }                 // deselect → the principal (Everything) panel

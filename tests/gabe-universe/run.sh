@@ -474,6 +474,11 @@ check('window.__uniHLSelectLink=' in page and '_whf=Math.max(_whf,1)*2.6' in pag
       "wire selection lost its glow boost or its BFS highlight (batch 38)")
 check('var _lchip=function' in page and page.count('__uniHoverHL(id)')>=1,
       "the link card endpoint chips lost their hover halo (element-card parity, batch 39)")
+# batch 40: F mode toggle · focus keeps the selected glow · hover lights the wire
+check('(e.key==="f"||e.key==="F")' in page and 'HL.mode!=="glow" && !d0' in page,
+      "F mode toggle or the focus-keeps-selected-glow rule is gone")
+check('window.__uniHovLink===l' in page and page.count('__uniHovLink')>=4,
+      "chip hover no longer lights the wire to the hovered element")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,
       "element displays no longer light their cluster+entity hulls (showPanel hook)")
 check('buildClusters=function(){ _bcOrig();' in page,
