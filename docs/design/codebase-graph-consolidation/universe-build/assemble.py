@@ -308,18 +308,19 @@ text = text.replace("function connectorWire(grp, a, b, kind, R, hf){ var cfg=CON
 OLD_GEO2 = "var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;"
 assert OLD_GEO2 in text, "gradient geometry anchor missing"
 text = text.replace(OLD_GEO2, OLD_GEO2 + """
-  var _gr=!!(cfg.grad && ea!=null && eb!=null);
+  var _hlc=(hf>1)?((window.__uniTheme==="light")?0x4f46e5:0xffffff):0;   // a HIGHLIGHTED wire wears the theme highlight color
+  var _gr=!!(cfg.grad && ea!=null && eb!=null) && !_hlc;
   if(_gr){ var _ca=new T.Color(ea), _cb=new T.Color(eb), _n=_pts.length, _arr=new Float32Array(_n*3), _tc=new T.Color();
     for(var _i=0;_i<_n;_i++){ _tc.copy(_ca).lerp(_cb, _n>1?_i/(_n-1):0); _arr[_i*3]=_tc.r; _arr[_i*3+1]=_tc.g; _arr[_i*3+2]=_tc.b; }
     geo.setAttribute("color", new T.BufferAttribute(_arr,3)); }""", 1)
 OLD_MS = "mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});"
 assert OLD_MS in text, "gradient solid-material anchor missing"
 text = text.replace(OLD_MS,
-  "mat=new T.LineBasicMaterial({color:_gr?0xffffff:cfg.color, vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});", 1)
+  "mat=new T.LineBasicMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});", 1)
 OLD_MD = "mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});"
 assert OLD_MD in text, "gradient dashed-material anchor missing"
 text = text.replace(OLD_MD,
-  "mat=new T.LineDashedMaterial({color:_gr?0xffffff:cfg.color, vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});", 1)
+  "mat=new T.LineDashedMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});", 1)
 # ── batch 37: the operator's dialed-in Connections DEFAULTS (pasted config 2026-08-23) ──
 OLD_CONN = "var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };"
 assert OLD_CONN in text, "CONN literal anchor missing"

@@ -479,6 +479,13 @@ check('(e.key==="f"||e.key==="F")' in page and 'HL.mode!=="glow" && !d0' in page
       "F mode toggle or the focus-keeps-selected-glow rule is gone")
 check('window.__uniHovLink===l' in page and page.count('__uniHovLink')>=4,
       "chip hover no longer lights the wire to the hovered element")
+# batch 41: theme toggle + theme-aware highlight wires
+check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in page and ':root[data-theme="light"]' in page,
+      "the dark/light theme toggle is gone (button + apply + light var block)")
+check('0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
+      "highlighted wires lost their theme highlight color (white dark · indigo light)")
+check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,
+      "the station's dark surfaces are hardcoded again (light theme cannot flip them)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,
       "element displays no longer light their cluster+entity hulls (showPanel hook)")
 check('buildClusters=function(){ _bcOrig();' in page,

@@ -481,10 +481,23 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;
+/* ── THEME (batch 41): dark native · light on toggle — chrome flips by CSS vars, the scene by
+   Graph.backgroundColor, highlighted wires by __uniTheme (white on dark · indigo on light). ── */
+window.__uniTheme="dark";
+window.__uniApplyTheme=function(th){ th=(th==="light")?"light":"dark"; window.__uniTheme=th;
+  try{ document.documentElement.setAttribute("data-theme", th); }catch(e){}
+  try{ Graph.backgroundColor(th==="light"?"#e8ecf3":"#0e1524"); }catch(e){}
+  try{ updateConnectors(); }catch(e){}
+  try{ window.localStorage.setItem("gabe:universe:theme", th); }catch(e){}
+  var b=document.getElementById("themeBtn");
+  if(b){ b.classList.toggle("on", th==="light");
+    b.innerHTML=(th==="light")
+      ?'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>'
+      :'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'; } };
 window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _hovSprite.parent.remove(_hovSprite); }catch(e){} _hovSprite=null; }
   if(window.__uniHovLink){ window.__uniHovLink=null; try{ updateConnectors(); }catch(e){} }
   if(!id) return; var n=NIDS[id]; if(!n||!n.__threeObj) return;
-  _hovSprite=glowSprite("#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite);
+  _hovSprite=glowSprite((window.__uniTheme==="light")?"#4f46e5":"#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite);
   var selId=(typeof SEL!=="undefined"&&SEL&&SEL.kind==="node"&&SEL.data)?SEL.data.id:null, hl=null;   // the WIRE to the hovered element glows too
   for(var i=0;i<links.length;i++){ var l=links[i], s=lid(l.source), tt=lid(l.target);
     if(selId && ((s===selId&&tt===id)||(tt===selId&&s===id))){ hl=l; break; }
@@ -522,6 +535,10 @@ window.__uniWireTopbar=function(){
   var dr=document.getElementById("depthRng"); if(dr&&!dr.__w){ dr.__w=1;
     dr.addEventListener("input", function(){ __uniHLDepth(+dr.value); }); }
   var mb=document.getElementById("hlModeBtn"); if(mb&&!mb.__w){ mb.__w=1; mb.onclick=function(){ __uniHLMode(); }; }
+  var tb=document.getElementById("themeBtn"); if(tb&&!tb.__w){ tb.__w=1;
+    tb.onclick=function(){ __uniApplyTheme(window.__uniTheme==="light"?"dark":"light"); };
+    var saved="dark"; try{ saved=window.localStorage.getItem("gabe:universe:theme")||"dark"; }catch(e){}
+    __uniApplyTheme(saved); }
   var jb=document.getElementById("jrnBtn"); if(jb&&!jb.__w){ jb.__w=1; jb.onclick=function(){ __uniJrnToggle(); }; }
   if(!window.__uniFly){ window.__uniFly=1; var FK={};
     var _flyOK=function(e){ var tag=(e.target&&e.target.tagName)||""; return tag!=="INPUT"&&tag!=="TEXTAREA"; };
