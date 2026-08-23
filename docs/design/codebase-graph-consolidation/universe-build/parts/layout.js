@@ -127,7 +127,7 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
 window.__uniCurveAmt=0.6;                                 // curve-amount slider → arc height multiplier (operator default 0.6)
 window.__uniCurved=true;                                  // lines default CURVED (operator config)
-window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.8, imports:1 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire
+window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.5, imports:1 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
@@ -956,9 +956,11 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   optGrp.appendChild(optRow); entPane.push(optGrp);
   /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
   if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";
-    spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a quarter of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
-      +'<input type="range" class="rng" id="spreadRng" min="0.4" max="2.8" step="0.05" value="1">';
-    radiusGrp.appendChild(spRow);
+    spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a FIFTH of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
+      +'<input type="range" class="rng" id="spreadRng" min="0.55" max="2.8" step="0.05" value="1">';
+    var rsRow=document.createElement("div"); rsRow.className="cfgrow rsrow";        // radius + spread: ONE row, two columns
+    if(radRow&&radRow.parentNode===radiusGrp) radiusGrp.removeChild(radRow);
+    rsRow.appendChild(radRow); rsRow.appendChild(spRow); radiusGrp.appendChild(rsRow);
     var _sr=spRow.querySelector("#spreadRng");
     _sr.addEventListener("input", function(){ window.__uniSpread=+_sr.value;
       try{ __uniFreezeForSettle(); }catch(e){}

@@ -159,7 +159,7 @@ check('CONN[k].grad=!!CONN0[k].grad' in page,
       "wire reset must RESTORE the stock gradient flag (fk/calls default ON)")
 check("style:'sparse',density:2.7,trust:0.9,grad:true" in page and "style:'solid',density:2,trust:0.6,grad:true" in page,
       "the operator's stock CONN config (2026-08-23) drifted")
-check('{ fk:0.9, bridge:0.8, calls:0.8, imports:1 }' in page and '__uniCurveAmt=0.6' in page and 'lineStyle:"curved"' in page,
+check('{ fk:0.9, bridge:0.8, calls:0.5, imports:1 }' in page and '__uniCurveAmt=0.6' in page and 'lineStyle:"curved"' in page,
       "the operator's stock glow/curve defaults drifted")
 check('function _raySegDist' in page and 'w=ray.origin.clone().sub(A)' in page and 'showLinkPanel(wbest.l)' in page,
       "wire clicking is gone (ray-segment pick → connection panel)")
@@ -485,10 +485,12 @@ check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in 
 # batch 42: entity pane rebuild — combo row · options icon-toggles · the SPREAD slider
 check('"fnsTog"' in page, "the FUNCTIONS icon toggle is gone (replaced the Hide/Show pill; starts OFF)")
 check('"spreadRng"' in page, "the SPREAD slider is gone (element separation inside entities)")
-check('(window.__uniSpread||1)' in page and 'min="0.4" max="2.8"' in page,
-      "spread must scale RENT with the default at a quarter of the 0.4-2.8 bar")
+check('(window.__uniSpread||1)' in page and 'min="0.55" max="2.8"' in page and 'className="cfgrow rsrow"' in page,
+      "spread must scale RENT (default at a FIFTH of the 0.55-2.8 bar) sharing one row with radius")
 check('className="cfgrow entcombo"' in page,
       "the entity combo/options rows are gone")
+check("'Legend</b>" in page.replace('"',"'") and '#elegend .lghd b svg' in page,
+      "the legend lost its panel-chrome refit (iconed caps title + station styling)")
 check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
       "highlighted wires lost their theme highlight color (white dark · indigo light)")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,

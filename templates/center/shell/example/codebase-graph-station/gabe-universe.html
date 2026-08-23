@@ -362,6 +362,28 @@
   #flside .flsbody .cfgrow{ flex-wrap:wrap; }
   #flside .flsbody .grplbl{ letter-spacing:.06em; }
   #flside .entcombo{ gap:7px !important; flex-wrap:wrap; }
+  #flside .rsrow{ display:flex; gap:10px; align-items:center; }
+  #flside .rsrow .cfgrow{ flex:1; min-width:0; margin:0; }
+  /* ── LEGEND refit (batch 43): the bottom-left panel wears the SAME chrome as the fleet/controls ── */
+  #elegend{ background:var(--panel) !important; border:1px solid var(--line) !important; border-radius:12px !important;
+    box-shadow:0 8px 30px #0006 !important; font:13px/1.4 var(--font-ui) !important; }
+  #elegend .lghd{ display:flex !important; align-items:center; gap:8px; padding:8px 11px !important;
+    border-bottom:1px solid var(--line) !important; background:transparent !important; }
+  #elegend .lghd b{ font:700 10.5px/1 var(--font-ui) !important; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--ink) !important; margin-right:auto; display:inline-flex; gap:6px; align-items:center; }
+  #elegend .lghd b svg{ color:var(--accent); }
+  #elegend .lgmin{ font:400 15px/1 var(--font-ui) !important; color:var(--muted) !important; background:none !important;
+    border:none !important; padding:0 3px !important; cursor:pointer; }
+  #elegend .lgmin:hover{ color:var(--ink) !important; }
+  #elegend .lgtabs{ display:flex !important; gap:4px; padding:7px 9px 0 !important; background:transparent !important; }
+  #elegend .lgtab{ font:600 10px/1 var(--font-ui) !important; letter-spacing:.06em; text-transform:uppercase;
+    color:var(--muted) !important; background:var(--chip-bg) !important; border:1px solid var(--line) !important;
+    border-radius:6px !important; padding:4px 9px !important; cursor:pointer; }
+  #elegend .lgtab:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
+  #elegend .lgtab.on{ color:#fff !important; background:var(--accent) !important; border-color:var(--accent) !important; }
+  #elegend .lgsub{ font:600 9px/1 var(--font-ui) !important; letter-spacing:.06em; color:var(--muted) !important; }
+  #elegend .lgsub.on{ color:var(--accent) !important; }
+  #elegend .lgbody{ background:transparent !important; border-radius:0 0 12px 12px !important; }
   #flside .splbl{ width:auto !important; font-size:9px; text-transform:uppercase; letter-spacing:.05em; cursor:help; }
   #flside #spreadRng{ flex:1; min-width:60px; }
   /* the transport speed ladder — a numbered dot IS the thumb */
@@ -1229,7 +1251,7 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
 window.__uniCurveAmt=0.6;                                 // curve-amount slider → arc height multiplier (operator default 0.6)
 window.__uniCurved=true;                                  // lines default CURVED (operator config)
-window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.8, imports:1 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire
+window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.5, imports:1 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
@@ -2058,9 +2080,11 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   optGrp.appendChild(optRow); entPane.push(optGrp);
   /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
   if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";
-    spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a quarter of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
-      +'<input type="range" class="rng" id="spreadRng" min="0.4" max="2.8" step="0.05" value="1">';
-    radiusGrp.appendChild(spRow);
+    spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a FIFTH of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
+      +'<input type="range" class="rng" id="spreadRng" min="0.55" max="2.8" step="0.05" value="1">';
+    var rsRow=document.createElement("div"); rsRow.className="cfgrow rsrow";        // radius + spread: ONE row, two columns
+    if(radRow&&radRow.parentNode===radiusGrp) radiusGrp.removeChild(radRow);
+    rsRow.appendChild(radRow); rsRow.appendChild(spRow); radiusGrp.appendChild(rsRow);
     var _sr=spRow.querySelector("#spreadRng");
     _sr.addEventListener("input", function(){ window.__uniSpread=+_sr.value;
       try{ __uniFreezeForSettle(); }catch(e){}
@@ -2970,7 +2994,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
     return teamShip(key, it.c, 1); }; }   // the ACTUAL fleet ship, team accent, as drawn
   function render(){ legPrune();
     var entry=LEGEND[active], isSub=!Array.isArray(entry);
-    var h='<div class="lghd"><b>Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';
+    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';
     tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'">'+t+'</button>'; });
     h+='</div>';
     var items;

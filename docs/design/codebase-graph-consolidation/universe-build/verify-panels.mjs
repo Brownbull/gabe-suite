@@ -147,7 +147,7 @@ const bg = await p.evaluate(() => {
 const defs = await p.evaluate(() => {
   const d = { fkStyle: CONN.fk.style, fkGrad: !!CONN.fk.grad, callsStyle: CONN.calls.style, callsGrad: !!CONN.calls.grad,
     bridgeStyle: CONN.bridge.style, impStyle: CONN.imports.style,
-    beams: [__uniBeam.fk, __uniBeam.bridge, __uniBeam.calls, __uniBeam.imports].join(','),
+    beams: [__uniBeam.fk, __uniBeam.bridge, __uniBeam.calls, __uniBeam.imports].join(','),   // operator config 2: calls 0.5
     curved: window.__uniCurved === true, amt: window.__uniCurveAmt, rest: HL.rest, line: CFG.lineStyle };
   // focus BITE: select a node under GLOW, click a rest option → mode flips to focus
   const n = nodes.find(x => x.kind === 'endpoint'); SEL = { kind: 'node', data: n }; showPanel(n); __uniHLSelect(n);
@@ -284,7 +284,10 @@ const flcfg = await p.evaluate(() => {
   const spWorks = Math.abs(window.__uniSpread - 2) < 0.001 && Math.abs(RENT[Object.keys(RENT)[0]] / r0 - 2) < 0.05;
   sp.value = '1'; sp.dispatchEvent(new Event('input'));
   const spBack = Math.abs(RENT[Object.keys(RENT)[0]] - r0) < 0.5;
-  const spQuarter = Math.abs(((1 - 0.4) / (2.8 - 0.4)) - 0.25) < 0.001;                     // default sits at a QUARTER of the bar
+  const spQuarter = Math.abs(((1 - 0.55) / (2.8 - 0.55)) - 0.2) < 0.001;                    // default sits at a FIFTH of the bar (operator rev)
+  const rsOneRow = !!document.querySelector('#flsbody .rsrow #radRng') && !!document.querySelector('#flsbody .rsrow #spreadRng');
+  const lg = document.getElementById('elegend');
+  const lgStyled = lg && getComputedStyle(lg).borderRadius === '12px' && !!lg.querySelector('.lghd b svg');   // the legend wears the panel chrome + iconed title
   btn('subs').click();
   const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
@@ -362,7 +365,7 @@ const flcfg = await p.evaluate(() => {
   document.getElementById('flsclose').click();
   const closed = !side.classList.contains('out');
   return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
-    fnsOff, spWorks, spBack, spQuarter,
+    fnsOff, spWorks, spBack, spQuarter, rsOneRow, lgStyled,
     standalone, docked, fleetUnstretched, under,
     oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
     ladder, defSpeed, badgeShows, backTo, wk }; });
@@ -404,7 +407,7 @@ if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expect
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
-if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' && defs.callsGrad && defs.bridgeStyle === 'sparse' && defs.impStyle === 'dotted' && defs.beams === '0.9,0.8,0.8,1' && defs.curved && Math.abs(defs.amt - 0.6) < 0.001 && defs.rest === 'hide' && defs.line === 'curved')) fails.push('operator connection defaults not adopted');
+if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' && defs.callsGrad && defs.bridgeStyle === 'sparse' && defs.impStyle === 'dotted' && defs.beams === '0.9,0.8,0.5,1' && defs.curved && Math.abs(defs.amt - 0.6) < 0.001 && defs.rest === 'hide' && defs.line === 'curved')) fails.push('operator connection defaults not adopted');
 if (!(defs.modeBefore === 'glow' && defs.modeAfter === 'focus' && defs.restAfter === 'dim')) fails.push('focus options do not BITE (auto-switch to focus mode)');
 if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not clickable (connection panel did not open)');
 if (!(defs.selGlows && defs.linkLit)) fails.push('selected wire must GLOW and BFS-light its endpoints');
@@ -422,7 +425,8 @@ if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 m
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
 if (!(flcfg.tabs.length === 0 && flcfg.order === 'show,subs,planets,wires,routes')) fails.push('config must be TABLESS and the fleet order Entity·Clusters·Planets·Connections·Transports');
 if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity combo/options rows, clusters, planets, zones master)');
-if (!(flcfg.fnsOff && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.push('functions must start OFF / the spread slider must scale RENT (default at a quarter of the bar)');
+if (!(flcfg.fnsOff && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.push('functions must start OFF / the spread slider must scale RENT (default at a FIFTH of the bar)');
+if (!(flcfg.rsOneRow && flcfg.lgStyled)) fails.push('radius+spread must share one row / the legend must wear the panel chrome');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');

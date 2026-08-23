@@ -354,6 +354,12 @@ text = text.replace(OLD_LCHIP,
         E("div",{style:"display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
           _lchip(s,sk,sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), _lchip(t,tk,tl)),""", 1)
 
+# ── batch 43: the legend head wears the panel title format (icon + caps, like fleet/controls) ──
+OLD_LGHD = """    var h='<div class="lghd"><b>Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';"""
+assert OLD_LGHD in text, "legend head anchor missing"
+text = text.replace(OLD_LGHD,
+  """    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';""", 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,
