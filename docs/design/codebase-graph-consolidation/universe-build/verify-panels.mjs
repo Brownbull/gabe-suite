@@ -232,7 +232,19 @@ const flcfg = await p.evaluate(() => {
     const back = window.__uniBeam.fk === (b0 || 1) && tog.classList.contains('on');
     const glowLbl = !!document.querySelector('#flsbody .wglow');
     const noFooter = !/per kind: sample/.test(document.getElementById('flsbody').textContent);
-    return { oneRow, hid, back, glowLbl, noFooter }; })();
+    // entity gradient: per-row toggle → wires wear vertex colors; sample blends; reset clears
+    const gb = document.querySelector('button[data-wgrad="fk"]');
+    gb.click();
+    const gradOn = CONN.fk.grad === true && gb.classList.contains('on');
+    updateConnectors();
+    const vc = [...connGroup.children].some(l => l.material && l.material.vertexColors === true);
+    const sampGrad = /linearGradient/.test(document.querySelector('[data-wsamp="fk"]').innerHTML);
+    document.querySelector('button[data-wreset="fk"]').click();
+    const gradCleared = !CONN.fk.grad && !gb.classList.contains('on');
+    updateConnectors();
+    const vcGone = ![...connGroup.children].some(l => l.material && l.material.vertexColors === true);
+    return { oneRow, hid, back, glowLbl, noFooter, gradBtns: document.querySelectorAll('#flsbody .wgrad').length,
+      gradOn, vc, sampGrad, gradCleared, vcGone }; })();
   window.__uniFlOpen('routes');
   const ts = document.querySelector('#flsbody #trSpeedRng');
   const ladder = ts && ts.min === '-2' && ts.max === '4' && ts.step === '1';
@@ -296,5 +308,6 @@ if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
 if (!(flcfg.wk.oneRow && flcfg.wk.hid && flcfg.wk.back && flcfg.wk.glowLbl && flcfg.wk.noFooter)) fails.push('wire-kind rows wrong (one row each, on/off round-trip, glow label, footer gone)');
+if (!(flcfg.wk.gradBtns === 4 && flcfg.wk.gradOn && flcfg.wk.vc && flcfg.wk.sampGrad && flcfg.wk.gradCleared && flcfg.wk.vcGone)) fails.push('entity-gradient toggle wrong (4 buttons, vertex-colored wires on, sample blends, reset clears)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('PANELS PROOF: ALL PASS');

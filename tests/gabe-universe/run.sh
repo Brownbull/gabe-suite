@@ -152,6 +152,11 @@ check('NOT speed; speed lives in Transports' in page and 'per kind: sample' not 
       "the glow label must say it is NOT speed (and the old footer note stays gone)")
 check('applies WHILE a focus highlight is active' in page,
       "the FOCUS group no longer explains WHEN it applies")
+# batch 35: the entity gradient (the 2D lab device, ported) — per-kind toggle, vertex colors
+check('vertexColors:_gr' in page and 'data-wgrad=' in page and 'ENT[_cs.ent]' in page,
+      "the entity-gradient option is gone (vertex-color wires + per-row toggle + entity colors threaded)")
+check('delete CONN[k].grad' in page,
+      "wire reset no longer clears the gradient flag")
 check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
@@ -284,8 +289,8 @@ check('SUBOF[n.layer]' not in page and 'SUBOF[KINDS' not in page, "REGRESSION: t
 check('var SUBSHIFT={ endpoints:0.04' in page, "hull hue-shift map lacks the un-collapsed layer keys")
 check('function _hlCompute' in page and 'window._hlLinkF' in page and 'function _nodeVisibleFn' in page,
       "depth-highlight machinery missing (BFS + wire factor + shared visibility fn)")
-check('kind, R, hf)' in page and "8, (window._hlLinkF?_hlLinkF(l):1))" in page,
-      "connector wires ignore the highlight factor")
+check('kind, R, hf, ea, eb)' in page and "8, (window._hlLinkF?_hlLinkF(l):1)," in page,
+      "connector wires ignore the highlight factor (or lost the gradient entity args)")
 check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
       "node visibility does not go through the shared fn (focus mode dead)")
 check('var hlGroup=' in page and '__uniHLTick' in page and 'if(window.__uniHLTick) __uniHLTick();' in page,

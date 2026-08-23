@@ -340,7 +340,7 @@
   #fleet .flcell svg{ width:13px; height:13px; }
   /* the fleet SIDE DRAWER — a FREE-STANDING add-on docked at the fleet's right edge, its own
      width/height; it slides out from BEHIND the fleet (z-index one below) and back under on close */
-  #flside{ position:fixed; width:292px; max-height:72vh;
+  #flside{ position:fixed; width:308px; max-height:72vh;
     background:var(--panel); border:1px solid var(--line); border-radius:12px;
     transform:translateX(-104%); transition:transform .22s ease; display:flex; flex-direction:column;
     box-shadow:0 8px 30px #0006; pointer-events:none; opacity:0; }
@@ -367,6 +367,9 @@
   #flside .wkrow .wglow{ font-size:9px; color:var(--muted); flex:none; cursor:help; }
   #flside .wkrow .wbeam{ flex:1; min-width:34px; }
   #flside .wkrow .wreset{ flex:none; }
+  #flside .wgrad{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
+    background:#0e1524; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; opacity:.55; }
+  #flside .wgrad.on{ opacity:1; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }
   #flside .wtog{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
     color:var(--muted); background:#0e1524; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; }
   #flside .wtog.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
@@ -980,14 +983,18 @@ window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) r
   var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
 window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
   setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
-function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;
+function connectorWire(grp, a, b, kind, R, hf, ea, eb){ var cfg=CONN[kind]||CONN.calls;
   hf=(hf==null)?1:hf; if(!hf) return;   // depth-highlight factor: 0 = outside a FOCUS set (skip) · >1 = in the lit set (brighter, additive)
   var _bm=(window.__uniBeam && window.__uniBeam[kind]!=null)?window.__uniBeam[kind]:1; if(!_bm) return;
   var dir=b.clone().sub(a); var len=dir.length()||1; dir.multiplyScalar(1/len);
   var A=a.clone().addScaledVector(dir,R), B=b.clone().addScaledVector(dir,-R);   // reach just past each node bubble
   var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;
-  if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});
-  else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn}); }
+  var _gr=!!(cfg.grad && ea!=null && eb!=null);
+  if(_gr){ var _ca=new T.Color(ea), _cb=new T.Color(eb), _n=_pts.length, _arr=new Float32Array(_n*3), _tc=new T.Color();
+    for(var _i=0;_i<_n;_i++){ _tc.copy(_ca).lerp(_cb, _n>1?_i/(_n-1):0); _arr[_i*3]=_tc.r; _arr[_i*3+1]=_tc.g; _arr[_i*3+2]=_tc.b; }
+    geo.setAttribute("color", new T.BufferAttribute(_arr,3)); }
+  if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:_gr?0xffffff:cfg.color, vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});
+  else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:_gr?0xffffff:cfg.color, vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn}); }
   var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
 var connGroup=null;
 function updateConnectors(){ if(!connGroup) return;
@@ -996,7 +1003,7 @@ function updateConnectors(){ if(!connGroup) return;
   links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind's connector wire
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
     if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
-    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });
+    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null); });
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
    nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */
@@ -1980,6 +1987,10 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
   var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
+    if(c.grad){ var gid="wg-"+kind;                      // gradient mode: the wire wears its ENDPOINT ENTITY colors — sample shows a generic blend
+      return '<svg viewBox="0 0 36 8" width="36" height="8"><defs><linearGradient id="'+gid+'" x1="0" x2="1" y1="0" y2="0">'
+        +'<stop offset="0" stop-color="#d9821f"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs>'
+        +'<path d="M1 4 H35" fill="none" stroke="url(#'+gid+')" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>'; }
     return '<svg viewBox="0 0 36 8" width="36" height="8"><path d="M1 4 H35" fill="none" stroke="'+_hx(c.color)+'" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>'; };
   var wireRow=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var shapes=["solid","dashed","dotted","sparse"].map(function(s){ var d=DASHMAP[s];
@@ -1990,6 +2001,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       +'<span class="rlbl wsamp" data-wsamp="'+kind+'" title="'+kind+'">'+_sampSVG(kind)+'</span>'
       +'<input type="color" class="wcol" data-wcol="'+kind+'" value="'+_hx(c.color)+'" title="'+kind+' color">'
       +'<div class="pill wshape" data-wshape="'+kind+'">'+shapes+'</div>'
+      +'<button class="wgrad'+(c.grad?" on":"")+'" data-wgrad="'+kind+'" title="entity gradient — the wire blends its two endpoint ENTITY colors (the 2D lab device); the dash keeps carrying the kind">'
+      +'<svg viewBox="0 0 20 8" width="14" height="6"><defs><linearGradient id="wgb-'+kind+'" x1="0" x2="1"><stop offset="0" stop-color="#d9821f"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs><path d="M1 4 H19" stroke="url(#wgb-'+kind+')" stroke-width="3" fill="none"/></svg></button>'
       +'<span class="wglow" title="glow strength — 0 hides · past 1 glows (NOT speed; speed lives in Transports)">✦</span>'
       +'<input type="range" class="rng wbeam" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' glow · 0 hides · >1 glows">'
       +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'; };
@@ -2041,7 +2054,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     window.__uniBeam[s.getAttribute("data-beam")]=+s.value; redraw(); }); });
   /* wire styling: color / shape mutate CONN itself (connectorWire reads it live); the row sample
      and the CONN-derived legend re-render so neither can drift from the drawn wire. */
-  var updSamp=function(kind){ var el=rt.querySelector('[data-wsamp="'+kind+'"]'); if(el) el.innerHTML=_sampSVG(kind);
+  var updSamp=function(kind){ var el=document.querySelector('[data-wsamp="'+kind+'"]'); if(el) el.innerHTML=_sampSVG(kind);   // rows live in the DRAWER at runtime
     if(window.__legRender) try{ __legRender(); }catch(e){} };
   rt.querySelectorAll("input[data-wcol]").forEach(function(inp){ inp.addEventListener("input", function(){
     var k=inp.getAttribute("data-wcol"); CONN[k].color=parseInt(inp.value.slice(1),16); updSamp(k); redraw(); }); });
@@ -2051,19 +2064,23 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     updSamp(k); redraw(); }); });
   window.__uniBeamPrev=window.__uniBeamPrev||{};
   rt.querySelectorAll("button[data-wtog]").forEach(function(b){ b.addEventListener("click", function(){
-    var k=b.getAttribute("data-wtog"), sl=rt.querySelector('input[data-beam="'+k+'"]');
+    var k=b.getAttribute("data-wtog"), sl=document.querySelector('input[data-beam="'+k+'"]');
     var on=b.classList.contains("on");
     if(on){ __uniBeamPrev[k]=(window.__uniBeam[k]==null?1:window.__uniBeam[k])||1; window.__uniBeam[k]=0; }
     else { window.__uniBeam[k]=__uniBeamPrev[k]||1; }
     if(sl) sl.value=String(window.__uniBeam[k]);
     b.classList.toggle("on", !on); redraw(); }); });
   rt.querySelectorAll("input[data-beam]").forEach(function(s){ s.addEventListener("input", function(){
-    var k=s.getAttribute("data-beam"), tg=rt.querySelector('button[data-wtog="'+k+'"]');
+    var k=s.getAttribute("data-beam"), tg=document.querySelector('button[data-wtog="'+k+'"]');
     if(tg) tg.classList.toggle("on", +s.value>0); }); });                       // sliding past 0 re-arms the toggle
+  rt.querySelectorAll("button[data-wgrad]").forEach(function(b){ b.addEventListener("click", function(){
+    var k=b.getAttribute("data-wgrad"); CONN[k].grad=!CONN[k].grad;
+    b.classList.toggle("on", !!CONN[k].grad); updSamp(k); redraw(); }); });
   rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
     var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style; }
-    var inp=rt.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
-    var p=rt.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
+    delete CONN[k].grad; var gb=document.querySelector('button[data-wgrad="'+k+'"]'); if(gb) gb.classList.remove("on");
+    var inp=document.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
+    var p=document.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
     updSamp(k); redraw(); }); });
   /* the ROUTES estate splits: transports (toggle + speed) → the TRANSPORT pane; everything else
      (lines · curve · focus · wire kinds · beams) → the CONNECTIONS pane. Bindings above already

@@ -898,6 +898,10 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
   var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
+    if(c.grad){ var gid="wg-"+kind;                      // gradient mode: the wire wears its ENDPOINT ENTITY colors — sample shows a generic blend
+      return '<svg viewBox="0 0 36 8" width="36" height="8"><defs><linearGradient id="'+gid+'" x1="0" x2="1" y1="0" y2="0">'
+        +'<stop offset="0" stop-color="#d9821f"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs>'
+        +'<path d="M1 4 H35" fill="none" stroke="url(#'+gid+')" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>'; }
     return '<svg viewBox="0 0 36 8" width="36" height="8"><path d="M1 4 H35" fill="none" stroke="'+_hx(c.color)+'" stroke-width="2"'+(d?' stroke-dasharray="'+d+'"':'')+'/></svg>'; };
   var wireRow=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var shapes=["solid","dashed","dotted","sparse"].map(function(s){ var d=DASHMAP[s];
@@ -908,6 +912,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       +'<span class="rlbl wsamp" data-wsamp="'+kind+'" title="'+kind+'">'+_sampSVG(kind)+'</span>'
       +'<input type="color" class="wcol" data-wcol="'+kind+'" value="'+_hx(c.color)+'" title="'+kind+' color">'
       +'<div class="pill wshape" data-wshape="'+kind+'">'+shapes+'</div>'
+      +'<button class="wgrad'+(c.grad?" on":"")+'" data-wgrad="'+kind+'" title="entity gradient — the wire blends its two endpoint ENTITY colors (the 2D lab device); the dash keeps carrying the kind">'
+      +'<svg viewBox="0 0 20 8" width="14" height="6"><defs><linearGradient id="wgb-'+kind+'" x1="0" x2="1"><stop offset="0" stop-color="#d9821f"/><stop offset="1" stop-color="#14b8a6"/></linearGradient></defs><path d="M1 4 H19" stroke="url(#wgb-'+kind+')" stroke-width="3" fill="none"/></svg></button>'
       +'<span class="wglow" title="glow strength — 0 hides · past 1 glows (NOT speed; speed lives in Transports)">✦</span>'
       +'<input type="range" class="rng wbeam" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' glow · 0 hides · >1 glows">'
       +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'; };
@@ -959,7 +965,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     window.__uniBeam[s.getAttribute("data-beam")]=+s.value; redraw(); }); });
   /* wire styling: color / shape mutate CONN itself (connectorWire reads it live); the row sample
      and the CONN-derived legend re-render so neither can drift from the drawn wire. */
-  var updSamp=function(kind){ var el=rt.querySelector('[data-wsamp="'+kind+'"]'); if(el) el.innerHTML=_sampSVG(kind);
+  var updSamp=function(kind){ var el=document.querySelector('[data-wsamp="'+kind+'"]'); if(el) el.innerHTML=_sampSVG(kind);   // rows live in the DRAWER at runtime
     if(window.__legRender) try{ __legRender(); }catch(e){} };
   rt.querySelectorAll("input[data-wcol]").forEach(function(inp){ inp.addEventListener("input", function(){
     var k=inp.getAttribute("data-wcol"); CONN[k].color=parseInt(inp.value.slice(1),16); updSamp(k); redraw(); }); });
@@ -969,19 +975,23 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     updSamp(k); redraw(); }); });
   window.__uniBeamPrev=window.__uniBeamPrev||{};
   rt.querySelectorAll("button[data-wtog]").forEach(function(b){ b.addEventListener("click", function(){
-    var k=b.getAttribute("data-wtog"), sl=rt.querySelector('input[data-beam="'+k+'"]');
+    var k=b.getAttribute("data-wtog"), sl=document.querySelector('input[data-beam="'+k+'"]');
     var on=b.classList.contains("on");
     if(on){ __uniBeamPrev[k]=(window.__uniBeam[k]==null?1:window.__uniBeam[k])||1; window.__uniBeam[k]=0; }
     else { window.__uniBeam[k]=__uniBeamPrev[k]||1; }
     if(sl) sl.value=String(window.__uniBeam[k]);
     b.classList.toggle("on", !on); redraw(); }); });
   rt.querySelectorAll("input[data-beam]").forEach(function(s){ s.addEventListener("input", function(){
-    var k=s.getAttribute("data-beam"), tg=rt.querySelector('button[data-wtog="'+k+'"]');
+    var k=s.getAttribute("data-beam"), tg=document.querySelector('button[data-wtog="'+k+'"]');
     if(tg) tg.classList.toggle("on", +s.value>0); }); });                       // sliding past 0 re-arms the toggle
+  rt.querySelectorAll("button[data-wgrad]").forEach(function(b){ b.addEventListener("click", function(){
+    var k=b.getAttribute("data-wgrad"); CONN[k].grad=!CONN[k].grad;
+    b.classList.toggle("on", !!CONN[k].grad); updSamp(k); redraw(); }); });
   rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
     var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style; }
-    var inp=rt.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
-    var p=rt.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
+    delete CONN[k].grad; var gb=document.querySelector('button[data-wgrad="'+k+'"]'); if(gb) gb.classList.remove("on");
+    var inp=document.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
+    var p=document.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
     updSamp(k); redraw(); }); });
   /* the ROUTES estate splits: transports (toggle + speed) → the TRANSPORT pane; everything else
      (lines · curve · focus · wire kinds · beams) → the CONNECTIONS pane. Bindings above already
