@@ -18,7 +18,7 @@ const errs = []; p.on('pageerror', e => errs.push('PE:' + e.message));
 p.on('console', m => { if (m.type() === 'error') errs.push('CE:' + m.text()); });
 await p.goto('file://' + PAGE);
 await p.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
-await p.waitForTimeout(4500);   // let the 240-tick settle finish
+await p.waitForTimeout(9000);   // let the settle finish — measured at 797 planets headless: the kind rings form by ~7-9 s (4.5 s reads mid-settle, ratio 1.23 vs settled 1.51)
 
 const base = await p.evaluate(() => {
   const anchors = Object.keys(EX).map(e => ({ e, x: EX[e], y: EY[e], z: EZ[e] }));

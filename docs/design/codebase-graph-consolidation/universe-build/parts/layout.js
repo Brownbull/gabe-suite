@@ -112,7 +112,9 @@ function assignSub(mode){
   if(mode==="usecase"||mode==="community"||mode==="fk"){
     if(!_LMAP) _LMAP=_levelsGroupMap();
     var m=(_LMAP&&_LMAP[mode])||{};
-    nodes.forEach(function(n){ n.sub=m[n.id]||"other"; }); return; }
+    nodes.forEach(function(n){ n.sub=m[n.id]||"other"; });
+    if(mode!=="fk") try{ _feAssignSub(mode); }catch(e){}   // batch 50: fe pieces get REAL groups (the levels maps only know backend names)
+    return; }
   if(mode==="guards"){ if(!_LMAP) _LMAP=_levelsGroupMap(); var gm=(_LMAP&&_LMAP.guards)||{};
     nodes.forEach(function(n){ n.sub=(n.kind==="function")?"functions":(gm[n.id]||(n.kind==="endpoint"?"unguarded":"other")); }); return; }
   nodes.forEach(function(n){
@@ -120,6 +122,53 @@ function assignSub(mode){
     else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
     else n.sub=n.layer||"data"; }); }   // ruling (c): group by the kind's OWN layer — endpoints · api · web · data today, auto-grows with new kinds
 
+/* ── FE SUB-CLUSTERS (batch 50) — before this, every core except Kind put ALL frontend pieces in one
+   honest "other" blob (the levels group maps are backend-name-keyed). USECASE: screens adopt the
+   dominant use-case of the endpoints they bridge to, then the label spreads 3 rounds over the entity's
+   fe wires — the frontend inherits the backend's use-case geography through real call paths.
+   COMMUNITY: deterministic asynchronous label propagation per entity over the fe wires (sorted order,
+   strict-improvement adoption, 10-round cap — byte-stable across runs); each community is named after
+   its highest-degree member (`c·RecipeCard`), singletons stay "other". ── */
+function _domKey(c){ var best=null; Object.keys(c).sort().forEach(function(k){ if(best===null||c[k]>c[best]) best=k; }); return best; }
+function _feAssignSub(mode){
+  var adj={}, deg={};
+  links.forEach(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
+    if(!s||!t||!s.fe||!t.fe||s.ent!==t.ent) return;
+    (adj[s.id]=adj[s.id]||[]).push(t.id); (adj[t.id]=adj[t.id]||[]).push(s.id);
+    deg[s.id]=(deg[s.id]||0)+1; deg[t.id]=(deg[t.id]||0)+1; });
+  if(mode==="usecase"){
+    var seed={};
+    links.forEach(function(l){ if(l.rel!=="bridge") return; var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
+      if(!s||!t||!s.fe||!t.sub||t.sub==="other") return;
+      (seed[s.id]=seed[s.id]||{})[t.sub]=(seed[s.id][t.sub]||0)+1; });
+    var cur={}; Object.keys(seed).forEach(function(id){ cur[id]=_domKey(seed[id]); });
+    for(var r=0;r<3;r++){ var nx={};
+      nodes.forEach(function(n){ if(!n.fe||cur[n.id]) return;
+        var c={}; (adj[n.id]||[]).forEach(function(v){ if(cur[v]) c[cur[v]]=(c[cur[v]]||0)+1; });
+        var k=_domKey(c); if(k) nx[n.id]=k; });
+      var any=false; Object.keys(nx).forEach(function(id){ cur[id]=nx[id]; any=true; });
+      if(!any) break; }
+    nodes.forEach(function(n){ if(n.fe) n.sub=cur[n.id]||"other"; });
+    return; }
+  var lab={}, ids=nodes.filter(function(n){ return n.fe; }).map(function(n){ return n.id; }).sort();
+  ids.forEach(function(id){ lab[id]=id; });
+  for(var r2=0;r2<10;r2++){ var changed=false;
+    ids.forEach(function(id){ var c={}; (adj[id]||[]).forEach(function(v){ if(lab[v]!=null) c[lab[v]]=(c[lab[v]]||0)+1; });
+      var k2=_domKey(c); if(!k2||k2===lab[id]) return;
+      if((c[k2]||0)>(c[lab[id]]||0) || ((c[k2]||0)===(c[lab[id]]||0) && k2<lab[id])){ lab[id]=k2; changed=true; } });
+    if(!changed) break; }
+  var groups={}; ids.forEach(function(id){ (groups[lab[id]]=groups[lab[id]]||[]).push(id); });
+  var name={}, used={};
+  Object.keys(groups).sort().forEach(function(g){ var mem=groups[g];
+    if(mem.length<2){ name[mem[0]]="other"; return; }
+    var rep=mem.slice().sort(function(a,b){ return (deg[b]||0)-(deg[a]||0) || (a<b?-1:1); })[0];
+    var nm="c·"+(NIDS[rep]?NIDS[rep].label:rep);
+    var ek=(NIDS[rep]?NIDS[rep].ent:"?"), full=nm, n2=2;                   // two hubs can share a LABEL (profileModel ×2 on gustify) —
+    while(used[ek+"|"+full]){ full=nm+"·"+n2; n2++; }                      // an undisambiguated name would FUSE distinct communities downstream
+    used[ek+"|"+full]=1;
+    mem.forEach(function(id){ name[id]=full; }); });
+  nodes.forEach(function(n){ if(n.fe) n.sub=name[n.id]||"other"; });
+}
 /* ── FUNCTIONS layer (from GABE_LEVELS.fn_nodes + fn_edges) — toggled in/out of the graph ── */
 var _FNNODES=null, _FNLINKS=null, _fnsOn=false;
 function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["function"]){ _FNNODES=[]; _FNLINKS=[]; return; }
@@ -366,7 +415,7 @@ function tuneLinkForce(){ if(typeof Graph==="undefined"||!Graph) return;
 /* mode-aware layout force: chain = layer→Y + (entity+sub)→X/Z band · force/spread = pull to the
    3D (entity + sub-ring) anchor, then a per-kind RADIAL bias (endpoints ring the entity EDGE,
    functions/models/schemas pull to the CORE) + a soft containment past 1.3× the nominal radius. */
-var KRADF={ endpoint:1.25, web:1.25, screen:1.25, external:1.1, "function":0.35, model:0.28, schema:0.28,
+var KRADF={ endpoint:1.45, web:1.45, screen:1.45, external:1.1, "function":0.35, model:0.4, schema:0.4,   // 1.45/0.4 (batch 50): the charge floor makes a 0.28-core physically unpackable — the RATIO lives in the outer shell, where few pieces contend
   /* FRONTEND kinds (batch 48) — concentric like the backend: types at the core (the schema-equivalent), modules +
      stores inside, hooks mid, components outer, routes at the rim (entry points, like endpoints). Without these
      every frontend piece defaulted to the rim (factor 1) and the fold ballooned each hull to ~1.8× its radius. */
@@ -380,8 +429,8 @@ function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x
   var dx=x-ax, dy=y-ay, dz=z-az, r=Math.sqrt(dx*dx+dy*dy+dz*dz);
   if(!(r>1e-3) || !isFinite(r)) return;                     // coincident with the anchor → no radial direction yet (NaN guard)
   var R0=RENT[n.ent]||60, f=KRADF[n.kind];
-  if(f){ var kr=0.16*alpha*(R0*f-r)/r; n.vx+=dx*kr; n.vy+=dy*kr; n.vz+=dz*kr; }                // kind ring: boundary out, guts in (0.16: the frontend fold's dense hulls flattened the rings at 0.08)
-  var rmax=R0*1.3; if(r>rmax){ var kc=0.6*alpha*(rmax-r)/r; n.vx+=dx*kc; n.vy+=dy*kc; n.vz+=dz*kc; }   // containment kills the bleed (0.6: the frontend fold's 369-planet hulls ballooned at 0.3)
+  if(f){ var kr=0.30*alpha*(R0*f-r)/r; n.vx+=dx*kr; n.vy+=dy*kr; n.vz+=dz*kr; }                // kind ring: boundary out, guts in (0.30 — third tune: the charge is FIXED (−60) while RENT shrinks with each field change, so the ring gain must dominate at small radii; 0.08 pre-fold · 0.16 at 888 · 0.30 after the scaffold cut tightened hulls)
+  var rmax=R0*1.6; if(r>rmax){ var kc=0.6*alpha*(rmax-r)/r; n.vx+=dx*kc; n.vy+=dy*kc; n.vz+=dz*kc; }   // containment kills the bleed (0.6; boundary 1.6 — it must sit ABOVE the outermost kind ring (endpoints 1.45) or the two forces fight and the shell never forms; the hull floor already budgets 1.6×RENT)
 }); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
 
@@ -591,23 +640,15 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("W")+KB("A")+KB("S")+KB("D")+'<span class="ctll">move</span></div>'
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
-    +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("F")+'<span class="ctll">glow⇄focus</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span></div>'
+    +'<div class="ctlrow">'+KB("F")+'<span class="ctll">glow⇄focus</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
-    +'<div class="ctlrow">'+KB("LMB")+'<select id="ctlCam" title="how the LEFT drag rotates">'
-    +'<option value="look">Look — first-person, turn in place</option>'
-    +'<option value="tumble">Tumble — drag = turn (stock)</option>'
-    +'<option value="joystick">Joystick — hold offset = keep turning (WoW)</option>'
-    +'<option value="arcball">Arcball — virtual trackball</option></select></div>'
-    +'<div class="ctlrow">'+KB("RMB")+'<span class="ctll">tumble (orbit)</span>'+KB("MMB")+'<span class="ctll">pan</span></div>'
-    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.invert?" on":"")+'" id="ctlInv" title="flips the vertical rotation axis of every rotating drag (left look starts inverted; right tumble starts direct)"></button><span class="ctll">invert vertical (flight-style)</span></div>'
-    +'<div class="ctlrow ctltog"><button class="fltog'+(UNICTL.selPivot?" on":"")+'" id="ctlPvt" title="right-drag tumble orbits around the SELECTED planet"></button><span class="ctll">right = orbit selection</span></div>'
+    +'<div class="ctlrow">'+KB("LMB")+'<span class="ctll" title="first-person look — vertical inverted by convention">look — turn in place</span></div>'
+    +'<div class="ctlrow">'+KB("RMB")+'<span class="ctll" title="orbits the SELECTED planet when one is selected, else the zoom depth">tumble (orbit)</span>'+KB("MMB")+'<span class="ctll">pan</span></div>'
     +'</div>';
   document.body.appendChild(p);
   document.getElementById("ctrlpmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
-  document.getElementById("ctlInv").onclick=function(){ UNICTL.invert=!UNICTL.invert; this.classList.toggle("on",UNICTL.invert); };
-  var cs=document.getElementById("ctlCam"); if(cs){ cs.value=UNICTL.camMode;
-    cs.addEventListener("change", function(){ UNICTL.camMode=cs.value; }); }
-  document.getElementById("ctlPvt").onclick=function(){ UNICTL.selPivot=!UNICTL.selPivot; this.classList.toggle("on",UNICTL.selPivot); }; };
+  };   // LMB fixed to LOOK (operator ruling batch 50) — the scheme engine keeps every mode for the proofs; invert/selPivot ride their defaults, their toggle rows retired
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
   var dr=document.getElementById("depthRng"); if(dr&&!dr.__w){ dr.__w=1;
@@ -868,7 +909,7 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
   _ents.forEach(function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
     h+='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' — click to SELECT it (panel + camera); the count expands its clusters">'
-      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt flexp" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+e+'</span>'
+      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt flexp" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+(window.__uniEntLabel?__uniEntLabel(e):e)+'</span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
     if(open) gk.forEach(function(s){ var key=e+"|"+s;
       h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
@@ -1257,8 +1298,9 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
             var fb=document.getElementById("fnsTog"); if(fb) fb.classList.add("on");
             if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
     }
-    _ents.forEach(function(e){ var sc=_score(q, e);
-      if(sc>=0) out.push({g:"entities", sc:sc, label:e, sub:(nodes.filter(function(n){return n.ent===e;}).length)+" pieces",
+    _ents.forEach(function(e){ var el=window.__uniEntLabel?__uniEntLabel(e):e;
+      var _a=_score(q, el, e), _b=_score(q, e), sc=(_a<0)?_b:(_b<0)?_a:Math.min(_a,_b);   // best of display and raw slug — the fe· prefix must not demote a "design…" prefix match
+      if(sc>=0) out.push({g:"entities", sc:sc, label:el, sub:(nodes.filter(function(n){return n.ent===e;}).length)+" pieces",
         ico:'<i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+(ENT[e]||"#888")+'"></i>',
         go:function(){ if(window.__uniPanelEnt) __uniPanelEnt(e);
           _frameSet(nodes.filter(function(n){ return n.ent===e; }).map(function(n){ return n.id; })); } }); });

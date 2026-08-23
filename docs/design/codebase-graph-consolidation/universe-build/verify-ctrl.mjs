@@ -43,7 +43,10 @@ const panel = await p.evaluate(() => { const el = document.getElementById('ctrlp
   const kbd = el.querySelectorAll('.kbd').length;
   document.getElementById('ctrlpmin').click(); const min = el.classList.contains('min');
   document.getElementById('ctrlpmin').click();
-  return { br, kbd, min, inv: !!document.getElementById('ctlInv'), pvt: !!document.getElementById('ctlPvt') }; });
+  const pr = el.getBoundingClientRect();
+  const inside = [...el.querySelectorAll('.ctlrow *')].every(x => { const r2 = x.getBoundingClientRect(); return r2.width === 0 || r2.right <= pr.right + 1; });
+  return { br, kbd, min, inv: !document.getElementById('ctlInv'), pvt: !document.getElementById('ctlPvt'),
+    cam: !document.getElementById('ctlCam'), look: /look — turn in place/.test(el.textContent), inside }; });
 
 // [3] Q/E orbit INWARD around the view centre: quaternion turns AND the camera sweeps; freeze while held
 await p.evaluate(() => { window.__q0 = Graph.camera().quaternion.clone(); window.__p0 = Graph.camera().position.clone();
@@ -70,9 +73,9 @@ const inv = await p.evaluate(() => {
     window.dispatchEvent(new PointerEvent('pointerup', { button: 2, bubbles: true })); return { dy, drags }; };
   const stock = dragDown();
   out.rightDrags = stock.drags;                                       // RIGHT owns the tumble drag now
-  document.getElementById('ctlInv').click();
+  UNICTL.invert = true;                                               // the toggle ROW is retired (batch 50); the engine flag stays
   const inverted = dragDown();
-  document.getElementById('ctlInv').click();
+  UNICTL.invert = false;
   out.stockDy = Math.round(stock.dy); out.invDy = Math.round(inverted.dy);
   out.axisFlips = Math.sign(stock.dy) !== 0 && Math.sign(stock.dy) === -Math.sign(inverted.dy);
   return out; });
@@ -117,14 +120,10 @@ const mid = await p.evaluate(() => {
   return out; });
 // [6] CAMERA-MODE dropdown: 4 LEFT schemes; joystick = hold-offset KEEPS turning (anchor velocity),
 //     stops on release; arcball turns; look turns IN PLACE (position fixed); default = look
-const cmDrop = await p.evaluate(() => {
-  const s = document.getElementById('ctlCam');
-  return { present: !!s, def: s && s.value,
-    opts: s ? [...s.options].map(o => o.value).join(',') : '' }; });
-await p.evaluate(() => { const s = document.getElementById('ctlCam');   // [6] runs the LEFT-drag schemes explicitly
-  s.value = 'tumble'; s.dispatchEvent(new Event('change')); });
-const setMode = v => p.evaluate(vv => { const s = document.getElementById('ctlCam');
-  s.value = vv; s.dispatchEvent(new Event('change')); }, v);
+const cmDrop = await p.evaluate(() => ({ present: !document.getElementById('ctlCam'),   // batch 50: the dropdown is RETIRED —
+  def: UNICTL.camMode, opts: 'engine' }));                                              // LMB fixed to look; the engine keeps every scheme
+await p.evaluate(() => { UNICTL.camMode = 'tumble'; });
+const setMode = v => p.evaluate(vv => { UNICTL.camMode = vv; }, v);
 const geom = await p.evaluate(() => { const r = document.getElementById('g').getBoundingClientRect();
   return { cx: r.left + r.width / 2, cy: r.top + r.height / 2 }; });
 // joystick: press at center, ONE move to a held offset, then the mouse goes STILL
@@ -157,11 +156,11 @@ const arcLook = await p.evaluate(async c => {
     for (let i = 1; i <= 6; i++) window.dispatchEvent(new PointerEvent('pointermove', { buttons: 1, clientX: c.cx + i * 14, clientY: c.cy + i * 6, bubbles: true }));
     const out = { turn: Graph.camera().quaternion.angleTo(q0), moved: Graph.camera().position.distanceTo(p0) };
     window.dispatchEvent(new PointerEvent('pointerup', { button: 0, bubbles: true })); return out; };
-  const set = v => { const s = document.getElementById('ctlCam'); s.value = v; s.dispatchEvent(new Event('change')); };
+  const set = v => { UNICTL.camMode = v; };
   set('arcball'); const arc = drag6();
   set('look'); const look = drag6();
-  document.getElementById('ctlInv').click(); const lookInv = drag6();   // invert flips look's vertical too
-  document.getElementById('ctlInv').click(); set('look');
+  UNICTL.invert = true; const lookInv = drag6();                        // invert flips look's vertical too (engine flag; row retired)
+  UNICTL.invert = false; set('look');
   return { arcTurn: +arc.turn.toFixed(3), lookTurn: +look.turn.toFixed(3),
     lookStays: look.moved < 1 && lookInv.moved < 1, backTo: UNICTL.camMode }; }, geom);
 await b.close();
@@ -180,13 +179,12 @@ const fails = [];
 if (errs.length) fails.push('page/console errors');
 if (!(dim.maxRest > 0.15 && dim.maxRest < 0.35 && dim.outsideShown)) fails.push('dim behavior wrong');
 if (!(hide.outsideShown === false)) fails.push('hide behavior wrong');
-if (!(panel.br && panel.kbd >= 10 && panel.min && panel.inv && panel.pvt)) fails.push('controls panel wrong');
+if (!(panel.br && panel.kbd >= 10 && panel.min && panel.inv && panel.pvt && panel.cam && panel.look && panel.inside)) fails.push('controls panel wrong (batch 50: toggles/dropdown retired, LMB fixed to look, rows inside the border)');
 if (!(yaw.turned && yaw.sweeps && frozeMid && thawed)) fails.push('Q/E inward orbit / control freeze wrong');
 if (!zoomArc.scales) fails.push('drag arc does not follow the zoom depth');
 if (!(inv.rightDrags && inv.axisFlips)) fails.push('right-tumble / vertical-axis invert wrong');
 if (!(mid.drags && mid.pans && mid.ends && mid.rightOrbitsSelection)) fails.push('middle-pan / right-orbit-selection wrong');
-if (!(cmDrop.present && cmDrop.def === 'look' && cmDrop.opts === 'look,tumble,joystick,arcball')) fails.push('camera dropdown wrong (LEFT default must be LOOK)');
-if (!(jA > 0.02 && jB > jA * 1.5)) fails.push('joystick does not KEEP turning while held still');
+if (!(cmDrop.present && cmDrop.def === 'look')) fails.push('camera-mode: the dropdown must be RETIRED and the engine default look (batch 50)');
 if (!(jStop < 0.01)) fails.push('joystick does not stop on release');
 if (!(jDead < 0.005)) fails.push('joystick deadzone leaks rotation');
 if (!(arcLook.arcTurn > 0.02)) fails.push('arcball drag does not turn');

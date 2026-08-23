@@ -255,6 +255,42 @@ codebase map, also let's add a search bar in the header."
   CONTEXT — any topbar child's z-index only ranks against topbar children; document-level surfaces
   (#jrn z-55) beat them regardless. Keep topbar popovers exclusive with document-level panels.
 
+## BATCH 50 — fe· identifier · FE clustering · the scaffold cut · controls trim (operator asks ×4)
+
+- **fe· identifier**: frontend-only homes (design-system · app-shell · profile · shopping · me) wear a
+  `fe · ` DISPLAY prefix on all five name surfaces — fleet rows, Everything rows, entity panel head,
+  search rows, the 3D hull label. The raw slug stays the KEY everywhere. Search scores best-of
+  display/raw so "design…" keeps its prefix rank. **The prefix exposed a pre-existing sprite bug**
+  (the operator's screenshot): labelSprite drew onto a fixed 256px canvas (long labels clipped BOTH
+  ends — "fe · design-system" → "· design-syst") AND updateClusters re-squeezed every label to a fixed
+  50×12.5 each tick. Both fixed: text-fitted canvas + aspect-true rescale; short labels byte-identical.
+- **FE clustering** (`_feAssignSub`): coreBy=usecase seeds screens from their bridged endpoints' groups
+  and propagates 3 rounds over intra-entity fe wires (cooking: sessions 132 · recipes 30 · honest
+  other); coreBy=community runs deterministic async label propagation (sorted order, strict-improvement,
+  10 rounds), communities named `c·<hub>` with a PER-ENTITY dedupe (`·2` — two gustify hubs share the
+  label profileModel; an undisambiguated name FUSED distinct communities downstream). Community
+  5/5/7/3 distinct clusters where every non-Kind core previously produced ONE.
+- **The scaffold cut** (`_a3_fe.py`, MEASURED first): /spikes/ (122 pieces) + /showcase/ (4) had ZERO
+  app in-edges → excluded + counted (23 files · 167 exports incl. stray *Spike exports); fixtures +
+  lib/mockupAssets are APP-WIRED (8 + 90 edges — CookingScreen runs on fixture data) and STAY — the
+  honest answer to "are mockups involved in the app": spikes no, fixtures/mockupAssets yes. Refs into
+  cut scaffold (file- OR export-level) count under `unresolved.scaffold`, never rewire. The fix pass
+  also killed **195 fabricated edges**: the module-scope pass re-attributed every export's refs to the
+  file's PRINCIPAL piece (the extractor's file_refs is a whole-file superset — now claimed-ref-skipped).
+  Feed: 1,148 pieces · 3,188 wires · 797 at rest.
+- **Controls panel**: the overflowing row split + rows wrap inside the border; LMB FIXED to Look
+  (dropdown retired); invert-vertical + orbit-selection toggle rows retired (their behaviors stay the
+  engine defaults; every scheme kept engine-side for the proofs, driven via UNICTL).
+- **Layout at the slimmer field**: the cut tightened hulls and flattened the kind rings (ratio 1.14) —
+  the inner core is physically unpackable under the fixed −60 charge, so the RATIO lives in the outer
+  shell: ring gain 0.30 · endpoints 1.45 · model/schema 0.4 · containment boundary 1.6 (ABOVE the
+  outermost ring — below it the two forces fight and the shell never forms). Settled ratio **1.51**,
+  bleed 0%; the clustering proof's settle window widened to the measured 9 s.
+- **Adversarial review** (3 lenses, 16 agents): 9 confirmed → 4 distinct, ALL FIXED: the half-migrated
+  (dead) ctrl proof — it still CLICKED the retired toggles; community-name fusion; the silent
+  *Spike-export ref rewire; the search prefix demotion. GOTCHA for proof authors: a proof that drives
+  retired UI dies silently outside the battery — migrate PROBES with the UI, not just assertions.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:

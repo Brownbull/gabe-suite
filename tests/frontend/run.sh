@@ -53,7 +53,7 @@ kind = {p["name"]: p["kind"] for p in fe["pieces"]}
 home = {p["name"]: p["home"] for p in fe["pieces"]}
 
 # ── classification: the enumeration, exactly ──────────────────────────────────────────
-check(fe["stats"]["pieces"] == 11, f"11 pieces from 12 files (got {fe['stats']['pieces']})")
+check(fe["stats"]["pieces"] == 11, f"11 pieces from 13 files (got {fe['stats']['pieces']})")
 check(fe["stats"]["by_kind"] == {"component": 2, "fe-type": 2, "hook": 1, "module": 2, "route": 2, "store": 2},
       f"by_kind matches the enumeration ({fe['stats']['by_kind']})")
 check(kind.get("RecipeCard") == "component" and kind.get("Badge") == "component", "JSX-proven exports are components")
@@ -68,6 +68,12 @@ check(kind.get("scoring") == "module" and sorted(P["fe:src/features/recipe/scori
 check(kind.get("api") == "module", "the apiFetch definition file is a module (the fetch arm skips it; this arm draws it)")
 check(fe["stats"]["excluded"]["stories"] == 1 and fe["stats"]["excluded"]["barrels"] == 1,
       "the story and the barrel are EXCLUDED and COUNTED")
+check(fe["stats"]["excluded"].get("scaffold_files") == 1 and fe["stats"]["excluded"].get("scaffold_exports") == 3,
+      "the /spikes/ file + the stray *Spike export are design SCAFFOLD — excluded and COUNTED (batch 50)")
+check(not any("Spike" in p["name"] or "/spikes/" in p["file"] for p in fe["pieces"]),
+      "no spike piece may reach the graph")
+check(fe["stats"]["unresolved"].get("scaffold") == 1,
+      "RecipeCard's ref to the cut ScorePreviewSpike export must COUNT under unresolved.scaffold — never rewire to the principal")
 check("Primary" not in kind and "index" not in kind, "no piece for a story export or a barrel")
 # ── homing ─────────────────────────────────────────────────────────────────────────────
 check(home.get("RecipeCard") == "recipe" and home.get("useRecipe") == "recipe", "features/recipe → the recipe entity")
@@ -91,7 +97,7 @@ check(fe["stats"]["edges"] == 11 and fe["stats"]["by_rel"] == {"fecall": 2, "ren
       f"exactly the enumerated 11 wires ({fe['stats']['by_rel']})")
 check(fe["stats"]["cross"] == 5, f"5 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and len(e) == 3 and isinstance(e[0], int) for e in fe["edges"]), "wires are COMPACT index triples")
-check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0}, "nothing unresolved on the fixture")
+check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1}, "exactly the one NAMED scaffold ref unresolved on the fixture")
 # ── screen absorption ──────────────────────────────────────────────────────────────────
 hook = P["fe:src/features/recipe/useRecipe.ts#useRecipe"]
 check(hook.get("screen") == "web:src/features/recipe/useRecipe" and hook.get("sites") == 1,

@@ -354,6 +354,7 @@
   /* minimize OUTRANKS the per-tab grid (equal-specificity tie previously let lg-types win) */
   #elegend.min .lgbody.lg-types, #elegend.min .lgbody, #elegend.min .lgtabs, #elegend.min .lgsubtabs{ display:none !important; }
 
+  #ctrlp .ctlrow{ flex-wrap:wrap; }   /* batch 50: a long row wraps INSIDE the border, never past it */
   /* ── the header SEARCH (batch 49) ── */
   .topsearch{ position:relative; display:flex; align-items:center; gap:6px; flex:none; width:230px;
     background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:4px 8px; margin-right:8px; }

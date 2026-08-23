@@ -376,6 +376,35 @@ OLD_WIREFORM = '  if(f==="wire") return new T.Mesh(new T.BoxGeometry(r*1.4,r*1.4
 assert OLD_WIREFORM in text, "primitiveMesh wire-form anchor missing"
 text = text.replace(OLD_WIREFORM, OLD_WIREFORM + '\n  if(f==="slab") return new T.Mesh(new T.BoxGeometry(r*2.0,r*0.55,r*2.0), m(col));', 1)
 
+# batch 50: fe-only homes wear the `fe ·` identifier on their HULL LABEL (display only — c.name stays the key)
+# batch 50b: labelSprite sizes its canvas to the TEXT (the fixed 256px canvas clipped both ends of a
+# centered long label — "fe · design-system" rendered as "· design-syst"); the sprite scales
+# proportionally so the on-screen glyph height is unchanged for every label that already fit.
+# batch 50b(2): updateClusters overwrote every label to a FIXED 50x12.5 / 30x7.5 each tick (aspect 4 —
+# the old 256x64 canvas). A text-fitted canvas needs the width to FOLLOW its own aspect or the text squeezes.
+OLD_LSCALE = 'if(c.lbl){ c.lbl.position.set(c.level==="ent"?cx:cx-28, c.level==="ent"?top+26:cy, cz); c.lbl.scale.set(c.level==="ent"?50:30, c.level==="ent"?12.5:7.5, 1); }'
+assert OLD_LSCALE in text, "cluster label rescale anchor missing"
+text = text.replace(OLD_LSCALE,
+  'if(c.lbl){ c.lbl.position.set(c.level==="ent"?cx:cx-28, c.level==="ent"?top+26:cy, cz); '
+  'var _lh=c.level==="ent"?12.5:7.5, _la=(c.lbl.material.map&&c.lbl.material.map.image)?(c.lbl.material.map.image.width/c.lbl.material.map.image.height):4; '
+  'c.lbl.scale.set(_lh*_la, _lh, 1); }', 1)
+
+OLD_LSPR = '''function labelSprite(txt, size, y, col){ var cv=document.createElement("canvas"); cv.width=256; cv.height=64; var c=cv.getContext("2d");
+  c.font="600 "+(size||26)+"px "+curFont(); c.fillStyle=col||"#cdd6ea"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(txt,128,32);
+  var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false})); s.scale.set(34,8.5,1); if(y!=null) s.position.y=y; return s; }'''
+assert OLD_LSPR in text, "labelSprite anchor missing"
+text = text.replace(OLD_LSPR, '''function labelSprite(txt, size, y, col){ var cv=document.createElement("canvas"); var c0=cv.getContext("2d");
+  var fnt="600 "+(size||26)+"px "+curFont(); c0.font=fnt;
+  var tw=Math.ceil(c0.measureText(txt).width)+16;                         // the canvas FITS the text (16px breathing)
+  cv.width=Math.max(256, tw); cv.height=64; var c=cv.getContext("2d");    // resizing resets state — re-set the font
+  c.font=fnt; c.fillStyle=col||"#cdd6ea"; c.textAlign="center"; c.textBaseline="middle"; c.fillText(txt, cv.width/2, 32);
+  var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false}));
+  s.scale.set(34*(cv.width/256),8.5,1); if(y!=null) s.position.y=y; return s; }''', 1)
+
+OLD_CLBL = 'c.lbl=addObj(labelSprite(label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));'
+assert OLD_CLBL in text, "cluster label sprite anchor missing"
+text = text.replace(OLD_CLBL, 'c.lbl=addObj(labelSprite((level==="ent"&&window.__uniEntLabel)?__uniEntLabel(label):label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));', 1)
+
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
 assert OLD_CWCALL in text, "connectorWire call anchor missing"
 text = text.replace(OLD_CWCALL,

@@ -55,6 +55,11 @@ _ROUTER_CALLEES = frozenset({
     "createFileRoute", "createRootRoute", "createRoutesFromElements",
 })
 _TYPE_KINDS = frozenset({"type", "interface", "enum"})
+# design SCAFFOLD, not the app (batch 50, measured on gustify): /spikes/ (122 pieces) and
+# /showcase/ (4) had ZERO app in-edges — excluded and counted. Fixture modules
+# (recipeFixtures, activeShowcaseFixtures) and lib/mockupAssets are APP-WIRED (real screens
+# import them — 8 + 90 edges measured) and STAY. Stories/tests were already excluded.
+_SCAFFOLD_PATH = ("/spikes/", "/showcase/")
 _HOOK_RX = re.compile(r"^use[A-Z0-9]")
 _PASCAL_RX = re.compile(r"^[A-Z]")
 # precedence when two refs hit the same (from, to): the MOST specific relation wins
@@ -106,10 +111,17 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     file_pieces: dict[str, list[str]] = {}          # file → piece ids (in principal order)
     export_piece: dict[tuple[str, str], str] = {}   # (file, export name) → piece id
     stats_x = {"stories": 0, "barrels": 0, "pascal_no_jsx": 0, "module_exports": 0}
+    scaffold_files: set[str] = set()
+    scaffold_cut: set[tuple[str, str]] = set()          # (file, export) name-level cuts — a ref to one must COUNT, never rewire
     for path in sorted(by_file):
         rec = by_file[path]
         if rec.get("story"):
             stats_x["stories"] += 1
+            continue
+        if any(seg in path for seg in _SCAFFOLD_PATH):
+            scaffold_files.add(path)
+            stats_x["scaffold_files"] = stats_x.get("scaffold_files", 0) + 1
+            stats_x["scaffold_exports"] = stats_x.get("scaffold_exports", 0) + len(rec.get("exports") or [])
             continue
         local = [e for e in rec.get("exports") or [] if not e.get("reexport")]
         if not local:
@@ -120,6 +132,10 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         ids: list[str] = []
         leftovers: list[str] = []
         for ex in sorted(local, key=lambda e: e.get("name") or ""):
+            if (ex.get("name") or "").endswith("Spike"):       # a stray spike export in an app path
+                stats_x["scaffold_exports"] = stats_x.get("scaffold_exports", 0) + 1
+                scaffold_cut.add((path, ex.get("name") or ""))
+                continue
             k = classify_export(ex, path)
             if k is None:
                 if _PASCAL_RX.match(ex.get("name") or "") and path.endswith(".tsx") and ex.get("kind") in ("function", "class"):
@@ -161,7 +177,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
 
     # edges: each piece's refs → binding → target piece, typed by the channel
     edges: dict[tuple[str, str], str] = {}
-    unresolved = {"ext": 0, "no_piece": 0}            # ext = a library symbol · no_piece = a bound
+    unresolved = {"ext": 0, "no_piece": 0, "scaffold": 0}   # ext = a library symbol · no_piece = a bound
     local = {"refs": 0}                               #   file with nothing drawn · local = same-file
 
     def target_of(bind: dict[str, Any] | None) -> str | None:
@@ -172,6 +188,9 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
             unresolved["ext"] += 1
             return None
         f, nm = bind.get("file"), bind.get("name")
+        if f in scaffold_files or (f, nm) in scaffold_cut:
+            unresolved["scaffold"] += 1                # an app ref INTO cut scaffold (file- OR export-level) — named, never silent, never rewired to the principal
+            return None
         if nm == "*":
             t = principal.get(f)
         else:
@@ -216,13 +235,23 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 if idn in seen or idn not in binds:
                     continue
                 add(src, target_of(binds.get(idn)), "imports")
-        # module-scope refs (outside any export) ride the principal piece
+        # module-scope refs ride the principal piece. The extractor's file_refs walks the WHOLE
+        # file (a superset), so anything an export already claimed is skipped here — else the same
+        # ref double-counts (unresolved.scaffold read 2 for one fixture ref) and double-processes.
         fr = rec.get("file_refs") or {}
         src = principal.get(path)
         if src:
+            claimed: set[str] = set()
+            for ex in rec.get("exports") or []:
+                for ch in ("jsx", "calls"):
+                    claimed.update(ex.get(ch) or [])
             for tag in fr.get("jsx") or []:
+                if tag in claimed:
+                    continue
                 add(src, target_of(binds.get(tag)), "renders")
             for c in fr.get("calls") or []:
+                if c in claimed:
+                    continue
                 t = target_of(binds.get(c))
                 if t:
                     tk = pieces[t]["kind"]

@@ -198,7 +198,8 @@ check('assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3Reh
 check('grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters()' not in page,
       "REGRESSION: coreBy is decoration-only again (assignSub straight to buildClusters, no reheat)")
 check('var KRADF={ endpoint:' in page, "per-kind radial factors missing (endpoints would not ring the edge)")
-check('rmax=R0*1.3' in page, "soft containment missing (nodes bleed across entity hulls)")
+check('var rmax=R0*1.6; if(r>rmax){ var kc=0.6*alpha*(rmax-r)/r;' in page,
+      "soft containment missing (nodes bleed across entity hulls) — boundary 1.6, above the outermost kind ring")
 check('function tuneLinkForce' in page and '.ent!==t.ent)?280:40' in page,
       "typed link rest-lengths missing (default rest≈30 springs collapse entities into one mesh)")
 check('strength(-60).distanceMax(150)' in page, "charge not range-capped (unbounded -150 balloons each cluster)")
@@ -375,7 +376,8 @@ check('rest:"hide"' in page and 'pillHTML("focusRest"' in page and page.count('{
 check('HL.rest==="hide"' in page, "only the HIDE behavior may remove planets (dim/fade/wires keep them)")
 check('id="ctrlp"' in page and '__uniBuildCtrl' in page and 'class="kbd"' in page,
       "the bottom-right CONTROLS panel is missing")
-check('id="ctlInv"' in page and 'id="ctlPvt"' in page, "invert / middle-orbit toggles missing")
+check('id="ctlInv"' not in page and 'id="ctlPvt"' not in page and 'UNICTL={ invert:false, selPivot:true' in page,
+      "the invert / orbit-selection toggles are RETIRED (batch 50) — their behaviors ride the defaults")
 check('__uniApplyMouseMap' not in page, "REGRESSION: invert swaps the mouse buttons again (it must flip ONLY the vertical axis)")
 check('UNICTL.invert?1:-1' in page, "flight-style vertical inversion missing from the drag's polar term")
 check('function _zoomDist' in page and 'addScaledVector(vdir, zd)' in page,
@@ -390,10 +392,10 @@ check('drag.btn=1' in page and 'UNICTL.selPivot' in page and 'drag.btn=2' in pag
       "button remap incomplete: middle must own pan (btn=1) and right must own tumble (btn=2, orbit-selection lives there)")
 
 # ── 10s. batch 20: the CAMERA-MODE dropdown — tumble (stock) · joystick (WoW anchor-velocity) · arcball · look ──
-check('camMode:"look"' in page and 'id="ctlCam"' in page,
-      "the LEFT default must be LOOK (operator remap) with the dropdown present")
-for v in ('value="tumble"','value="joystick"','value="arcball"','value="look"'):
-    check(v in page, "camera dropdown lost a scheme: "+v)
+check('camMode:"look"' in page and 'id="ctlCam"' not in page and 'look — turn in place' in page,
+      "LMB is FIXED to LOOK (batch 50) — the dropdown is retired, the engine default stays look")
+for v in ('(drag.btn===2)?"tumble":(UNICTL.camMode||"look")','!=="joystick"','"arcball"'):
+    check(v in page, "the camera-scheme ENGINE lost a mode (UI retired, engine kept): "+v)
 check('ax:cx, ay:cy' in page and 'drag.cx-drag.ax' in page,
       "joystick anchor (ax/ay) or its offset velocity is gone")
 check('JOYSTICK tick' in page and '(UNICTL.camMode||"look")!=="joystick"' in page,
@@ -584,6 +586,20 @@ check('visN(NIDS[id]).show' in page, "the journey fe leg no longer respects flee
 check('addEventListener("focusout"' in page, "keyboard blur no longer closes the search dropdown")
 check('_seen.reduce(function(a,gk)' in page, "search group headers can fragment again (regroup after the cap)")
 check('#jrn .jrnrow.on .jrnfe{ color:#fff; }' in page, "the selected journey row's fe chip lost its contrast override")
+
+# ── 10w. batch 50: fe· home identifier · FE community/usecase clusters · scaffold cut · controls trim ──
+check('window.__uniEntLabel=function(e){ return (FE_HOME[e]?"fe · ":"")+e; };' in page,
+      "the fe-home display identifier is gone")
+check('__uniEntLabel(e):e' in page and '__uniEntLabel(ent):ent' in page and '__uniEntLabel(label):label' in page,
+      "an entity-name surface (fleet / panels / hull sprite) lost the fe· prefix")
+check('function _feAssignSub(mode)' in page and 'if(l.rel!=="bridge") return;' in page and '"c·"+' in page,
+      "FE community/usecase clustering is gone (every core except Kind would collapse fe pieces to one blob)")
+check('try{ _feAssignSub(mode); }catch(e){}' in page, "assignSub no longer routes fe pieces through _feAssignSub")
+check('#ctrlp .ctlrow{ flex-wrap:wrap; }' in page, "controls rows can overflow the border again")
+check('measureText(txt).width' in page and 'cv.width=Math.max(256, tw);' in page,
+      "labelSprite lost its text-fitted canvas (a long label clips both ends — 'fe · design-system' rendered '· design-syst')")
+check('c.lbl.scale.set(_lh*_la, _lh, 1);' in page,
+      "cluster label rescale lost the canvas-aspect rule (a text-fitted canvas squeezes at fixed 50x12.5)")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

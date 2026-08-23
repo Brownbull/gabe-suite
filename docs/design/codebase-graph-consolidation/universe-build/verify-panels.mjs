@@ -129,11 +129,15 @@ const bg = await p.evaluate(() => {
       if ((s && (!_nodeVisibleFn(s) || !visN(s).wires)) || (t2 && (!_nodeVisibleFn(t2) || !visN(t2).wires))) return;
       m = Math.min(m, _raySegDist(rc.ray, new THREE.Vector3(a.x, a.y, a.z), new THREE.Vector3(b.x, b.y, b.z))); });
     return m; };
-  let n = null, cx = 0, cy = 0;
-  for (const cand of nodes.filter(x => x.kind === 'model' && x.x != null)) {
+  let n = null, cx = 0, cy = 0, bestD = -1;                            // batch 50: take the candidate FARTHEST from any wire
+  for (const cand of nodes.filter(x => (x.kind === 'model' || x.kind === 'schema' || x.kind === 'store') && x.x != null).slice(0, 300)) {
     const v = new THREE.Vector3(cand.x, cand.y, cand.z).project(cam);
+    if (v.z > 1) continue;                                             // behind the camera
     const px = r.left + (v.x + 1) / 2 * r.width, py = r.top + (1 - v.y) / 2 * r.height;
-    if (wireDist(px, py) > 8) { n = cand; cx = px; cy = py; break; }
+    if (px < r.left + 4 || px > r.right - 4 || py < r.top + 4 || py > r.bottom - 4) continue;
+    const d = wireDist(px, py);
+    if (d > bestD) { bestD = d; n = cand; cx = px; cy = py; }
+    if (d > 24) break;                                                 // comfortably clear — stop scanning
   }
   if (!n) { n = nodes.find(x => x.kind === 'model' && x.x != null);
     const v = new THREE.Vector3(n.x, n.y, n.z).project(cam);

@@ -242,7 +242,7 @@
     var ents=_entsMap(), names=Object.keys(ents).sort();
     var ins=E("div",{class:"sec"}, sechd("entity","Entities", names.length, false,      // NAVIGABLE first — the ladder's next rungs lead the panel
       {icon:"info",cls:"info",text:"The universe's containers — click a row to open that entity's panel (the next level down)."}));
-    names.forEach(function(e){ ins.append(navRow(null, e, ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); }, "down")); });
+    names.forEach(function(e){ ins.append(navRow(null, (window.__uniEntLabel?__uniEntLabel(e):e), ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); }, "down")); });
     pb.append(ins);
     pb.append(makeupSec(nodes,"Elements"));
     pb.append(starsSec(null));
@@ -268,7 +268,7 @@
     openPanel(); }
   function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent}; _hulls(ent,null);
     var mem=nodes.filter(function(n){ return n.ent===ent; });
-    _phead(ent,"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    _phead((window.__uniEntLabel?__uniEntLabel(ent):ent),"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
     pb.append(makeupSec(mem));
     pb.append(starsSec(ent));
