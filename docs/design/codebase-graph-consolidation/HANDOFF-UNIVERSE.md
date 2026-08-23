@@ -1,12 +1,55 @@
-# Gabe Universe — session handoff (next focus: CLUSTERING)
+# Gabe Universe — session handoff (next: SYNC VERIFICATION → FRONTEND EXPANSION)
 
 ## Paste-able resume
 
-> Continue the **Gabe Universe** 3D command-center station. All work is committed **LOCAL on
-> branch `graft-adoption` (no upstream) — nothing is pushed; push only on my explicit word.**
-> gustify/gastify are **read-only twins**; the suite repo **never** gets `.kdbp`. Respond in the
-> Gabe register. This session's focus is **CLUSTERING** — see §"Next focus" below. Rebuild via the
-> persisted pipeline (§Build), verify via headless chrome (§Verify), run `tests/gabe-universe/run.sh`.
+> Continue the **Gabe Universe** 3D command-center station on branch `graft-adoption`
+> (HEAD `e90128f` — batch 47, fleet clicks select; **156 commits main..HEAD, LOCAL, no
+> upstream — push only on my explicit word**). gustify/gastify twins: gustify commits
+> allowed on `graft-pilot` (push owed), gastify read-only; the suite repo **never** gets
+> `.kdbp`. Respond in the Gabe register.
+>
+> READ FIRST: docs/design/codebase-graph-consolidation/HANDOFF-UNIVERSE.md (§Build ·
+> §Verify · the batch ledger below), then docs/design/frontend-model/README.md for task 2.
+>
+> STATE: batches 9–47 all landed + green (battery `tests/gabe-universe` **287 static** +
+> render PASS · `tests/arch-graph` **172**; proofs verify-{panels,ctrl,routes,fleet,
+> explore,walk,clustering}.mjs ALL PASS). Emitter grew CONSUMES+NESTS (floating schemas
+> 44→6) + endpoint→handler wires; example feeds rebuilt twin-read-only @ gustify
+> `52a56d03` with `GABE_GRAFT_BUILD=0` (as-found graft index `1657206d`).
+>
+> TASK 1 (verbatim): "Verify that, with the current scripts and everything that we have
+> in place, what we generate is in sync with what we already have, or whether we deviate
+> from it, and see if there is a deviation and if we can fix them."
+> Concretely: (a) `python3 assemble.py` must byte-reproduce the committed
+> `templates/center/shell/gabe-universe.html` (then `fill-example.py` the example);
+> (b) the twin-read-only regen (`GABE_GRAFT_BUILD=0 GABE_REPO_ROOT=/home/khujta/projects/
+> apps/gustify GABE_CENTER_OUT=<scratch> python3 templates/center/generators/
+> build_center_a3.py`) must reproduce the committed example feeds — NOTE: `c4-graph.js`
+> was rehomed this session but **`levels.js` was NOT regenerated** (known deviation
+> candidate); (c) `scripts/suite-doctor.sh` (≈2–4 min) must be CLEAN; (d) known drift to
+> either fix or record: the TWINS' installed generator copies predate touches_x +
+> consumes/nests + behind — twin propagation is OWED (gustify first).
+>
+> TASK 2 (verbatim): "We will start working on the frontend, so expand this diagram to
+> also show the frontend parts, all the elements, relationships, and so on."
+> The plan exists at docs/design/frontend-model/README.md (dependency-cruiser + ast-grep
+> = Tier-1 "graft-for-frontend"; NOT built). The universe already reserves the seams:
+> REL2KIND carries renders/mounts/reads/typed/imports; the catalog carries Component/
+> Hook/Store/Route/Type specimen cards; the web arm is SCREENS-ONLY today (32 screens ·
+> 48 bridged · 6 unmatched · 4 dynamic); the wire-palette ledger flagged the lab-only
+> `fecall` (frontend-internal call) wire as the missing kind. Expansion = emit frontend
+> pieces + their rels into GABE_C4 (new l2 kinds), adapter/KINDS already draw most.
+>
+> RUNBOOK: build = `cd docs/design/codebase-graph-consolidation/universe-build &&
+> python3 assemble.py && cp gabe-universe.html ../../../../templates/center/shell/ &&
+> python3 fill-example.py`; verify = `node verify-panels.mjs` (+ the sibling proofs) and
+> `bash tests/gabe-universe/run.sh` FROM THE REPO ROOT (relative paths bite); emitter
+> changes also run `bash tests/arch-graph/run.sh` + a twin-read-only regen.
+> GOTCHAS: rt is a DETACHED workbench (bind at build via rt.querySelector, runtime
+> lookups via document — three dead-control bugs came from this) · proofs that light
+> hulls/gradients must Esc-reset baselines and exclude vertexColors materials from
+> white-checks · the battery greps pin EXACT literals (className= not class=) · headless
+> rAF starves (waits outside evaluate; mechanisms on setInterval).
 
 ## Where it is
 
@@ -132,6 +175,10 @@ The right panel exists at EVERY level: EVERYTHING (boot default + the Esc target
 ## BATCHES 31–45 — LANDED (`bec1f8e`→`4a625cb`): connections/transports panes · compaction · wire UX · panels-config · the floating-schema fix
 
 **31** Connections+Transports panes, config TABLESS. **32** drawer compaction (icon pills · opacity dots · one × · speed steppers) + TWO dead-slider fixes (rt is DETACHED — bind via rt.querySelector, runtime lookups via document). **33** transport speed LADDER (7 stops ×√2, default 0.1 at pos 0, numbered-dot thumb). **34** one-row wire kinds + per-kind on/off (beam-0 mechanism) + the honest ✦ glow label. **35** ENTITY GRADIENT per kind (vertex colors; ea/eb threaded; sample blends; reset restores). **36** ⧉ copy-settings (Connections only, __uniLastCopy). **37** operator wire defaults + imports-empty EXPLAINED (0 piece-level imports edges at rest — fn-node rels) + focus BITES (auto-switch to focus) + CLICKABLE WIRES (_raySegDist — w=origin−A! — → showLinkPanel; catalog Connection card). **38** focus=DIM/HIDE icons · selected wire glows ×2.6 + BFS from both endpoints · Alt+Q/E depth (wheel retired; fly alt-guarded). **39** link-card chips hover-halo (_lchip) + the [7] wire-clear probe. **40** F toggles glow⇄focus · FOCUS keeps origin halos · hover lights the wire pair. **41/41b** theme toggle (sun/moon topbar, light var roster, 23 surfaces de-hardcoded, scene bg swap) + WHITE=HOVER-ONLY accent (hov arg; lit/selected keep kind colors; gradient mats are white-by-design — probes exclude vertexColors). **42** entity pane rebuilt (combo row layout·transparency·container / options row boundary·stars·ƒ-toggle OFF) + SPREAD slider (scales RENT — the real separation lever; radius only pads hulls). **43** connector rev 2 (calls glow 0.5) · spread at 20% (0.55–2.8) · radius+spread one row · LEGEND panel-chrome refit. **44/b/c** legend Types 2-col · ONE fixed 330px size every tab · minimize specificity fix. **45** CONSUMES+NESTS: signatures wire ~nothing (0/44 named — they're NESTED components); schema-COMPOSITION (field types) is the real fix → 70 new wires, floating 44→6 (the 6 = unmapped-endpoint shapes); REL2KIND consumes→calls/nests→fk; arch-graph battery 172. Battery **283 static**; example feeds rebuilt twin-read-only @ gustify 52a56d03.
+
+## BATCHES 46–47 — LANDED (`1910360` · `e90128f`): handler wires + fleet selection
+
+**46**: endpoint→HANDLER wires when Functions is ON (adapter keeps `p.fn`; `_buildFnData` joins `det.file#fn` to the fn pool — 67 wires on gustify; the zero-edge DELETE …/cupo case answered: its data work lives in service fns + its fetch is one of the 4 DYNAMIC templates) + the honest empty-Connections message (call-tree pointer · dynamic-fetch hint). **47**: fleet clicks SELECT — entity/cluster NAME = panel + hull light + camera framing (`_frameSet`); the count badge owns expand/collapse (stopPropagation).
 
 ### NEXT — operator visual pass + tuning
 
