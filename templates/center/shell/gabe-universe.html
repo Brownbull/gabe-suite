@@ -2745,10 +2745,16 @@ var KINDCARD=(function(){
   function chipCls(k){ return ({endpoint:"endpoint",route:"froute","function":"function",model:"model",schema:"schema",component:"component",hook:"hook",store:"store",type:"type",screen:"web",web:"web",external:"external",entity:"entity"})[k]||"fn"; }
   var RELICO={ handler:"endpoint", touch:"model", resp:"schema", fk:"key", pk:"key", fetches:"down", renders:"component", mounts:"web", uses:"link", reads:"store", typed:"table" };
   C.__link=function(l){ var s=l.source, t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t, sk=(s&&s.kind)||"function", tk=(t&&t.kind)||"function";
+    var _lchip=function(nd,k,lb){ var el=E("span",{class:"pchip "+chipCls(k)}, icoEl(k), lb);   // hover lights the node — same halo as the element card's chips
+      var id=(nd&&nd.id)||((typeof nd==="string")?nd:null);
+      if(id&&window.__uniHoverHL){ el.style.cursor="pointer";
+        el.addEventListener("mouseenter",function(){ __uniHoverHL(id); });
+        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); }); }
+      return el; };
     return [
       E("div",{class:"sec"}, sechd("link","Relation"),
         E("div",{style:"display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
-          E("span",{class:"pchip "+chipCls(sk)}, icoEl(sk), sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), E("span",{class:"pchip "+chipCls(tk)}, icoEl(tk), tl)),
+          _lchip(s,sk,sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), _lchip(t,tk,tl)),
         E("div",{class:"sublbl",style:"margin-top:6px"}, icoEl(RELICO[l.rel]||"link"), "relation: "+l.rel)),
       E("div",{class:"sec"}, sechd("layers","Weight"), E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,(l.w||1)/6*100)+"%"})), E("div",{class:"sublbl"}, "edge-kind weight "+(l.w||1)+" (fixed per kind)")),
       l.payload?E("div",{class:"sec"}, sechd("table","Payload"), E("div",{class:"sublbl"}, icoEl("table"), "carries "+l.payload+" field"+(l.payload>1?"s":"")+" — "+((tk==="schema"||tk==="model")?tl:"the target structure"))):null,

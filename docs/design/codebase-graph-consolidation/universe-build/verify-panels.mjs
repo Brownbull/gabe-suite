@@ -119,10 +119,25 @@ const esc = await p.evaluate(() => {
 // [7] background click routes to the hull under the cursor: aim the picker at a known node's
 //     projected screen point → its (sub-preferred) cluster panel opens; CLUSTERS carry their keys
 const bg = await p.evaluate(() => {
-  const n = nodes.find(x => x.kind === 'model' && x.x != null);
-  const cam = Graph.camera(); const v = new THREE.Vector3(n.x, n.y, n.z).project(cam);
+  // wires pick FIRST by design — for the HULL check, choose a model whose screen point has no wire within reach
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
-  const cx = r.left + (v.x + 1) / 2 * r.width, cy = r.top + (1 - v.y) / 2 * r.height;
+  const cam = Graph.camera();
+  const wireDist = (cx, cy) => { const mx = ((cx - r.left) / r.width) * 2 - 1, my = -((cy - r.top) / r.height) * 2 + 1;
+    const rc = new THREE.Raycaster(); rc.setFromCamera({ x: mx, y: my }, cam);
+    let m = 1e9; links.forEach(l => { const a = _npos[lid(l.source)], b = _npos[lid(l.target)]; if (!a || !b) return;
+      const s = NIDS[lid(l.source)], t2 = NIDS[lid(l.target)];
+      if ((s && (!_nodeVisibleFn(s) || !visN(s).wires)) || (t2 && (!_nodeVisibleFn(t2) || !visN(t2).wires))) return;
+      m = Math.min(m, _raySegDist(rc.ray, new THREE.Vector3(a.x, a.y, a.z), new THREE.Vector3(b.x, b.y, b.z))); });
+    return m; };
+  let n = null, cx = 0, cy = 0;
+  for (const cand of nodes.filter(x => x.kind === 'model' && x.x != null)) {
+    const v = new THREE.Vector3(cand.x, cand.y, cand.z).project(cam);
+    const px = r.left + (v.x + 1) / 2 * r.width, py = r.top + (1 - v.y) / 2 * r.height;
+    if (wireDist(px, py) > 8) { n = cand; cx = px; cy = py; break; }
+  }
+  if (!n) { n = nodes.find(x => x.kind === 'model' && x.x != null);
+    const v = new THREE.Vector3(n.x, n.y, n.z).project(cam);
+    cx = r.left + (v.x + 1) / 2 * r.width; cy = r.top + (1 - v.y) / 2 * r.height; }
   window.__uniBgClick({ clientX: cx, clientY: cy });
   const keyed = CLUSTERS.filter(c => c.ekey).length;
   return { keyed, total: CLUSTERS.length, view: window.__uniPView.lvl,
@@ -160,6 +175,14 @@ const defs = await p.evaluate(() => {
   d.altE = HL.depth === Math.min(5, d0 + 1);
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', altKey: true }));
   d.altQ = HL.depth === d0;
+  // link-card chips hover-light their node (element-card parity): halo appears on enter, gone on leave
+  const chips = [...document.querySelectorAll('#pbody .pchip')].slice(0, 2);
+  const halo = () => { let h = null; Graph.scene().traverse(o => { if (o.userData && o.userData.__hov) h = o; }); return !!h; };
+  chips[0].dispatchEvent(new MouseEvent('mouseenter'));
+  d.chipHaloOn = halo();
+  chips[0].dispatchEvent(new MouseEvent('mouseleave'));
+  d.chipHaloOff = !halo();
+  d.chipCursor = chips.every(c => c.style.cursor === 'pointer');
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   return d; });
 
@@ -353,6 +376,7 @@ if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not c
 if (!(defs.selGlows && defs.linkLit)) fails.push('selected wire must GLOW and BFS-light its endpoints');
 if (!(defs.restOpts === 'dim,hide' && defs.restIcons)) fails.push('focus rest must be DIM+HIDE icon pills only');
 if (!(defs.altE && defs.altQ)) fails.push('Alt+Q/Alt+E depth keys broken');
+if (!(defs.chipHaloOn && defs.chipHaloOff && defs.chipCursor)) fails.push('link-card endpoint chips do not hover-light their nodes');
 if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 2 must toggle planets for the SELECTED CLUSTER only');
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');

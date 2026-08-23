@@ -470,6 +470,10 @@ check('k:"show"' in page and t_order(page),
       "fleet column order must be Entity(show) · Sub-cluster(subs) · Planets · Connections(wires)")
 check('Math.max(m.__baseOp*2, floor)' in page and 'm.__baseEm' in page,
       "the entity light lost its absolute floor / emissive glow (a bare ×factor is invisible on big shells)")
+check('window.__uniHLSelectLink=' in page and '_whf=Math.max(_whf,1)*2.6' in page,
+      "wire selection lost its glow boost or its BFS highlight (batch 38)")
+check('var _lchip=function' in page and page.count('__uniHoverHL(id)')>=1,
+      "the link card endpoint chips lost their hover halo (element-card parity, batch 39)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,
       "element displays no longer light their cluster+entity hulls (showPanel hook)")
 check('buildClusters=function(){ _bcOrig();' in page,

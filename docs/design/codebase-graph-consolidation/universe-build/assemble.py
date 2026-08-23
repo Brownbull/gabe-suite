@@ -333,6 +333,26 @@ assert OLD_LINEADD in text, "line-add anchor missing"
 text = text.replace(OLD_LINEADD,
   "var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
 
+# ── batch 39: the LINK card's endpoint chips hover-light their nodes (element-card parity) ──
+OLD_LCHIP = """  C.__link=function(l){ var s=l.source, t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t, sk=(s&&s.kind)||"function", tk=(t&&t.kind)||"function";
+    return [
+      E("div",{class:"sec"}, sechd("link","Relation"),
+        E("div",{style:"display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
+          E("span",{class:"pchip "+chipCls(sk)}, icoEl(sk), sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), E("span",{class:"pchip "+chipCls(tk)}, icoEl(tk), tl)),"""
+assert OLD_LCHIP in text, "link-card chips anchor missing"
+text = text.replace(OLD_LCHIP,
+"""  C.__link=function(l){ var s=l.source, t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t, sk=(s&&s.kind)||"function", tk=(t&&t.kind)||"function";
+    var _lchip=function(nd,k,lb){ var el=E("span",{class:"pchip "+chipCls(k)}, icoEl(k), lb);   // hover lights the node — same halo as the element card's chips
+      var id=(nd&&nd.id)||((typeof nd==="string")?nd:null);
+      if(id&&window.__uniHoverHL){ el.style.cursor="pointer";
+        el.addEventListener("mouseenter",function(){ __uniHoverHL(id); });
+        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); }); }
+      return el; };
+    return [
+      E("div",{class:"sec"}, sechd("link","Relation"),
+        E("div",{style:"display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
+          _lchip(s,sk,sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), _lchip(t,tk,tl)),""", 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,
