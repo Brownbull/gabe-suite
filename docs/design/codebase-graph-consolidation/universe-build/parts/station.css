@@ -239,7 +239,10 @@
   #elegend .lgsub.on{ color:var(--accent) !important; }
   #elegend .lgbody{ background:transparent !important; border-radius:0 0 12px 12px !important; }
   /* ── batch 44: compaction — TYPES reads in TWO columns; the box hugs its content ── */
-  #elegend{ height:330px !important; width:328px !important; display:flex; flex-direction:column; }   // ONE fixed size, every tab — bodies scroll
+  #elegend{ height:330px !important; width:328px !important; display:flex; flex-direction:column; }   /* ONE fixed size, every tab — bodies scroll */
+  #elegend.min{ height:auto !important; width:auto !important; min-width:150px; }                      /* the fixed height must NOT beat the minimize */
+  #elegend.min .lgtabs, #elegend.min .lgsubtabs, #elegend.min .lgbody{ display:none !important; }
+  #elegend.min .lghd{ border-bottom:none !important; }
   #elegend .lgbody{ flex:1; min-height:0; overflow-y:auto; }
   #elegend .lgbody.lg-types{ display:grid !important; grid-template-columns:1fr 1fr; gap:0 6px; align-content:start; }
   #elegend .lgbody.lg-types .lggrp, #elegend .lgbody.lg-types .lglbl[style], #elegend .lgbody.lg-types > div:not(.lgrow){ grid-column:1/-1; }
@@ -344,3 +347,6 @@
   .pnav.pstat{ cursor:default; }
   .pnav.pstat:hover{ background:var(--chip-bg); border-color:var(--line); }
   #pbody .starctl{ display:flex; gap:6px; margin-top:6px; }
+
+  /* minimize OUTRANKS the per-tab grid (equal-specificity tie previously let lg-types win) */
+  #elegend.min .lgbody.lg-types, #elegend.min .lgbody, #elegend.min .lgtabs, #elegend.min .lgsubtabs{ display:none !important; }

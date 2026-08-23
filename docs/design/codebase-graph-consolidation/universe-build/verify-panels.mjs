@@ -293,7 +293,10 @@ const flcfg = await p.evaluate(() => {
   const lgH = tab => { [...lg.querySelectorAll('.lgtab')].find(b2 => new RegExp(tab, 'i').test(b2.textContent)).click();
     return Math.round(document.getElementById('elegend').getBoundingClientRect().height); };
   const h1 = lgH('types'), h2 = lgH('connectors'), h3 = lgH('planet'); lgH('types');
-  const lgCompact = h1 === h2 && h2 === h3 && h1 <= 340;                     // ONE size, whatever the tab
+  lg.querySelector('.lgmin').click();
+  const lgMin = lg.getBoundingClientRect().height < 60;                      // minimize collapses to the head
+  lg.querySelector('.lgmin').click();
+  const lgCompact = h1 === h2 && h2 === h3 && h1 <= 340 && lgMin;            // ONE size, whatever the tab — and it minimizes
   btn('subs').click();
   const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
