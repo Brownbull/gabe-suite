@@ -193,7 +193,9 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
         if((_s&&(!_nodeVisibleFn(_s)||!visN(_s).wires))||(_t&&(!_nodeVisibleFn(_t)||!visN(_t).wires))) return;
         var dd=_raySegDist(rc.ray, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z));
         if(dd<WTH && (!wbest||dd<wbest.d)) wbest={d:dd, l:l}; }); }
-    if(wbest){ try{ showLinkPanel(wbest.l); }catch(e2){} return; }
+    if(wbest){ window.__uniSelLink=wbest.l;                                  // the picked wire GLOWS (hf boost in updateConnectors)
+      if(window.__uniHLSelectLink) __uniHLSelectLink(wbest.l);
+      try{ showLinkPanel(wbest.l); }catch(e2){} try{ updateConnectors(); }catch(e3){} return; }
     var best=null;
     (typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach(function(c){ if(!c.ekey) return;
       var ms=c.members.map(function(id){ var n=NIDS[id]; return (n&&n.x!=null)?n:null; }).filter(Boolean);
@@ -378,7 +380,10 @@ window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.o
   var ix=WALK.steps.indexOf(n.id);
   if(ix>=0) WALK.i=ix; else { WALK.steps.push(n.id); if(WALK.steps.length>7) WALK.steps.shift(); WALK.i=WALK.steps.length-1; }
   _walkRender(); };
+window.__uniHLSelectLink=function(l){ if(!l) return; HL.jr=null; HL.jrObj=null;
+  HL.origin=[lid(l.source), lid(l.target)]; HL.on=true; _hlCompute(); _hlRestyle(); };   // a WIRE select seeds the BFS from BOTH endpoints (depth control applies)
 window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; HL.jr=null; HL.jrObj=null; HL.origin=null; HL.set={}; HL.links=null;
+  window.__uniSelLink=null;
   WALK.mode=null; WALK.steps=[]; WALK.i=0; _hlRestyle(); _walkRender(); };
 window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d));
   if(HL.on){ _hlCompute(); _hlRestyle(); } else _hlSyncUI(); };
@@ -487,7 +492,7 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("W")+KB("A")+KB("S")+KB("D")+'<span class="ctll">move</span></div>'
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
-    +'<div class="ctlrow">'+KB("Alt+scroll")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<select id="ctlCam" title="how the LEFT drag rotates">'
     +'<option value="look">Look — first-person, turn in place</option>'
@@ -517,7 +522,8 @@ window.__uniWireTopbar=function(){
     function _flyThaw(){ var any=false; for(var k in FK){ any=true; break; }
       if(!any && _flyFroze){ _flyFroze=false; ANIM.all=true; } }
     window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
-      if(k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e"){ FK[k]=1; _flyFreeze(); }
+      if(e.altKey&&(k==="q"||k==="e")){ e.preventDefault(); if(window.__uniHLDepth) __uniHLDepth(HL.depth+(k==="e"?1:-1)); }   // Alt+Q/E = depth (replaces Alt+scroll)
+      else if((k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e")&&!e.altKey){ FK[k]=1; _flyFreeze(); }
       else if(k===" "){ FK.up=1; _flyFreeze(); e.preventDefault(); }   // Space = ascend (and never scrolls/clicks)
       else if(k==="control"){ FK.dn=1; _flyFreeze(); }
       else if(k>="1"&&k<="8"&&!e.altKey&&!e.ctrlKey&&!e.metaKey){        // 1–8 = fleet columns 2–9, applied to the SELECTION (none → the ALL row)
@@ -552,8 +558,7 @@ window.__uniWireTopbar=function(){
         cam.position.add(off); ctrls.target.add(off);          // the whole rig flies — orbiting keeps working wherever you stop
       }catch(e){} }, 16); }
   if(!window.__uniHLKeys){ window.__uniHLKeys=1;
-    window.addEventListener("wheel", function(e){ if(!e.altKey) return; e.preventDefault();
-      __uniHLDepth(HL.depth+(e.deltaY<0?1:-1)); }, {passive:false});
+
     window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
       if(tag==="INPUT"||tag==="TEXTAREA") return;
       if(e.key==="Escape"){ __uniHLClear();
@@ -954,12 +959,10 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + '<div class="cfgrow" style="gap:6px">'
     + pillHTML("lineStyle",[{v:"straight",t:LNS,ti:"straight"},{v:"curved",t:LNC,ti:"curved"}], CFG.lineStyle)
     + '<input type="range" class="rng" id="curveAmtRng" min="0.2" max="2.5" step="0.1" value="'+window.__uniCurveAmt+'" title="curve amount (when curved)"></div></div>'
-    + '<div class="grp"><div class="grplbl" title="applies WHILE a focus highlight is active: select something, switch the topbar highlight mode to the TARGET (focus), and these choose what happens to everything OUTSIDE the lit set. With no focus highlight running, nothing changes.">FOCUS</div>'
+    + '<div class="grp"><div class="grplbl" title="applies WHILE a focus highlight is active: select something and these choose what happens to everything OUTSIDE the lit set (clicking one switches a glow highlight to focus).">FOCUS</div>'
     + pillHTML("focusRest",[
-        {v:"dim",t:"Dim",ti:"outside wires drop to 25% — everything stays readable"},
-        {v:"fade",t:"Fade",ti:"outside wires nearly vanish (8%) — planets stay"},
-        {v:"wires",t:"Wires",ti:"outside wires GONE — planets stay as context"},
-        {v:"hide",t:"Hide",ti:"outside wires AND planets gone — hulls stay as geography"}], HL.rest)+'</div>'
+        {v:"dim",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.6"/></svg>',ti:"Dim — everything outside the lit set drops to 25%, still readable"},
+        {v:"hide",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>',ti:"Hide — everything outside the lit set is gone; hulls stay as geography (default)"}], HL.rest)+'</div>'
     + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
     + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")+'</div>';
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";

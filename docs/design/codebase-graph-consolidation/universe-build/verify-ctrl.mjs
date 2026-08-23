@@ -33,7 +33,7 @@ async function restState(v) {
     return { rest: HL.rest, wires: connGroup.children.length, maxRest: +Math.max(...rest, 0).toFixed(2), outsideShown };
   });
 }
-const dim = await restState('dim'), fade = await restState('fade'), wo = await restState('wires'), hide = await restState('hide');
+const dim = await restState('dim'), hide = await restState('hide');   // batch 38: DIM + HIDE are the only rest options
 await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' })); __uniHLMode(); });
 await p.waitForTimeout(500);
 
@@ -166,8 +166,7 @@ const arcLook = await p.evaluate(async c => {
     lookStays: look.moved < 1 && lookInv.moved < 1, backTo: UNICTL.camMode }; }, geom);
 await b.close();
 
-console.log('focus rest: dim', JSON.stringify(dim), '· fade', JSON.stringify(fade));
-console.log('            wires', JSON.stringify(wo), '· hide', JSON.stringify(hide));
+console.log('focus rest: dim', JSON.stringify(dim), '· hide', JSON.stringify(hide));
 console.log('panel:', JSON.stringify(panel), '· yaw:', JSON.stringify(yaw), 'froze', frozeMid, 'thawed', thawed);
 console.log('zoomArc:', JSON.stringify(zoomArc));
 console.log('invert:', JSON.stringify(inv));
@@ -180,8 +179,6 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 const fails = [];
 if (errs.length) fails.push('page/console errors');
 if (!(dim.maxRest > 0.15 && dim.maxRest < 0.35 && dim.outsideShown)) fails.push('dim behavior wrong');
-if (!(fade.maxRest > 0.02 && fade.maxRest < 0.12 && fade.outsideShown)) fails.push('fade behavior wrong');
-if (!(wo.outsideShown && wo.wires < hide.wires + 200 && wo.maxRest <= 1)) fails.push('wires behavior wrong');
 if (!(hide.outsideShown === false)) fails.push('hide behavior wrong');
 if (!(panel.br && panel.kbd >= 10 && panel.min && panel.inv && panel.pvt)) fails.push('controls panel wrong');
 if (!(yaw.turned && yaw.sweeps && frozeMid && thawed)) fails.push('Q/E inward orbit / control freeze wrong');

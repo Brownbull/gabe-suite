@@ -51,7 +51,7 @@ const glow = await p.evaluate(() => {
     haloGrouped: HL.sprites.every(s => s.parent && s.parent.parent === Graph.scene()), total: connGroup.children.length };
 });
 // Alt+scroll changes depth (recompute follows); click cycles
-await p.evaluate(() => { window.dispatchEvent(new WheelEvent('wheel', { deltaY: -120, altKey: true })); });
+await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', altKey: true })); });   // Alt+E = depth up (replaced Alt+scroll)
 await raf(); await p.waitForTimeout(400);
 const wheel = await p.evaluate(() => ({ d: HL.depth, badge: document.getElementById('depthNum').textContent,
   grew: Object.keys(HL.set).length }));
@@ -132,7 +132,7 @@ if (errs.length) fails.push('page/console errors');
 if (!(layer.epSep && layer.webOwn && layer.noFrontend && layer.defaultCore === 'community')) fails.push('layer ruling (c) / community default wrong');
 if (!(topbar.pillsLast && topbar.depth && topbar.mode && topbar.jrn && topbar.freezeIconOnly && topbar.resetIconOnly)) fails.push('topbar rework wrong');
 if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dimmed === 0 && glow.minRest >= 0.4 && glow.haloGrouped)) fails.push('glow highlight broken (rest must stay BRIGHT; halos in the scene group)');
-if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+scroll depth broken');
+if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+E depth broken');
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');
 if (!(jrnList.rows === jrnList.distinct + 1 && jrnList.distinct > 40 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');   // rows = every distinct cid + the none row (the visible floor moves with the model)

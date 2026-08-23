@@ -151,6 +151,15 @@ const defs = await p.evaluate(() => {
   window.__uniBgClick({ clientX: gr.left + (mid.x + 1) / 2 * gr.width, clientY: gr.top + (1 - mid.y) / 2 * gr.height });
   d.wirePanel = /CONNECTION/.test(document.querySelector('#phead .ptype')?.textContent || '');
   d.wireTitle = document.querySelector('#phead .pname')?.textContent || '';
+  d.selGlows = window.__uniSelLink === l && [...connGroup.children].some(w => w.userData.kind && w.material.blending === THREE.AdditiveBlending);
+  d.linkLit = HL.on && HL.set[lid(l.source)] !== undefined && HL.set[lid(l.target)] !== undefined;   // wire select BFS-lights both ends
+  const rp = document.querySelector('.pill[data-grp="focusRest"]');
+  d.restOpts = [...rp.querySelectorAll('button')].map(x => x.getAttribute('data-v')).join(',');
+  d.restIcons = [...rp.querySelectorAll('button')].every(x => x.querySelector('svg') && x.textContent.trim() === '');
+  const d0 = HL.depth; window.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', altKey: true }));
+  d.altE = HL.depth === Math.min(5, d0 + 1);
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q', altKey: true }));
+  d.altQ = HL.depth === d0;
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   return d; });
 
@@ -341,6 +350,9 @@ if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.p
 if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' && defs.callsGrad && defs.bridgeStyle === 'sparse' && defs.impStyle === 'dotted' && defs.beams === '0.9,0.8,0.8,1' && defs.curved && Math.abs(defs.amt - 0.6) < 0.001 && defs.rest === 'hide' && defs.line === 'curved')) fails.push('operator connection defaults not adopted');
 if (!(defs.modeBefore === 'glow' && defs.modeAfter === 'focus' && defs.restAfter === 'dim')) fails.push('focus options do not BITE (auto-switch to focus mode)');
 if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not clickable (connection panel did not open)');
+if (!(defs.selGlows && defs.linkLit)) fails.push('selected wire must GLOW and BFS-light its endpoints');
+if (!(defs.restOpts === 'dim,hide' && defs.restIcons)) fails.push('focus rest must be DIM+HIDE icon pills only');
+if (!(defs.altE && defs.altQ)) fails.push('Alt+Q/Alt+E depth keys broken');
 if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 2 must toggle planets for the SELECTED CLUSTER only');
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');

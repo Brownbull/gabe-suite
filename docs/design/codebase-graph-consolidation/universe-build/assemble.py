@@ -347,6 +347,12 @@ OLD_CALL2 = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(
 assert OLD_CALL2 in text, "gradient call-site anchor missing"
 text = text.replace(OLD_CALL2,
   "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });", 1)
+
+# ── batch 38: the SELECTED wire glows — its highlight factor is boosted ×2.6 (additive past 1) ──
+OLD_WHF = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });"
+assert OLD_WHF in text, "selected-wire glow anchor missing"
+text = text.replace(OLD_WHF,
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

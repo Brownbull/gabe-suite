@@ -301,8 +301,8 @@ check('SUBOF[n.layer]' not in page and 'SUBOF[KINDS' not in page, "REGRESSION: t
 check('var SUBSHIFT={ endpoints:0.04' in page, "hull hue-shift map lacks the un-collapsed layer keys")
 check('function _hlCompute' in page and 'window._hlLinkF' in page and 'function _nodeVisibleFn' in page,
       "depth-highlight machinery missing (BFS + wire factor + shared visibility fn)")
-check('kind, R, hf, ea, eb)' in page and "8, (window._hlLinkF?_hlLinkF(l):1)," in page,
-      "connector wires ignore the highlight factor (or lost the gradient entity args)")
+check('kind, R, hf, ea, eb)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
+      "connector wires ignore the highlight factor (or lost the gradient entity args / selected-wire boost)")
 check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
       "node visibility does not go through the shared fn (focus mode dead)")
 check('var hlGroup=' in page and '__uniHLTick' in page and 'if(window.__uniHLTick) __uniHLTick();' in page,
@@ -311,7 +311,10 @@ check('requestAnimationFrame(__uniHLReapply)' not in page, "REGRESSION: halos ba
 check('id="depthBtn"' in page and 'id="hlModeBtn"' in page and 'id="jrnBtn"' in page, "topbar depth/mode/journeys buttons missing")
 check(page.find('id="reset"') < page.find('<div class="statuspills">'), "repo pills are not at the FAR right of the topbar")
 check('❄ Freeze on drag' not in page, "REGRESSION: freeze button back to text (icons only, explanation on hover)")
-check('e.altKey' in page and 'key==="Escape"' in page, "Alt+scroll depth / Esc clear not wired")
+check('e.altKey&&(k==="q"||k==="e")' in page and 'key==="Escape"' in page,
+      "Alt+Q/E depth / Esc clear not wired (Alt+scroll retired batch 38)")
+check('WheelEvent' not in page or 'if(!e.altKey) return; e.preventDefault();' not in page,
+      "the retired Alt+scroll depth wheel is back")
 check('function _jrnCollect' in page and '__uniJrnToggle' in page, "journeys collector/picker missing")
 check("drag.btn===1" in page and "*0.0011" in page, "MIDDLE pan (translate the rig, no rotation) missing")
 
@@ -365,8 +368,9 @@ check('SEP=(mode==="ring")?1.0:1.85' in page, "force-layout anchors are not wide
 check('RENT[e]*0.78' in page, "sub-cluster rings are not widened (operator: clusters too close inside entities)")
 
 # ── 10r. batch 18: focus rest behaviors · controls panel · Q/E yaw · invert mouse · middle=selection ──
-check('rest:"hide"' in page and 'var _RESTF={ dim:0.25, fade:0.08' in page and 'pillHTML("focusRest"' in page,
-      "FOCUS rest behaviors (dim/fade/wires/hide) missing from the Routes config")
+check('rest:"hide"' in page and 'pillHTML("focusRest"' in page and page.count('{v:"dim",t:""')==1 and page.count('{v:"hide",t:""')==1
+      and '{v:"fade"' not in page and '{v:"wires"' not in page,
+      "FOCUS rest must offer DIM + HIDE only, as icon pills (hide default)")
 check('HL.rest==="hide"' in page, "only the HIDE behavior may remove planets (dim/fade/wires keep them)")
 check('id="ctrlp"' in page and '__uniBuildCtrl' in page and 'class="kbd"' in page,
       "the bottom-right CONTROLS panel is missing")
