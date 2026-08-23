@@ -40,7 +40,8 @@ import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
 import _a3_levels  # noqa: E402  (the rich LEVELS graph — the lab-native station feed)
 import _a3_sim  # noqa: E402  (the live change-simulation projection — window.GABE_SIM)
-import _a3_web  # noqa: E402  (the web→API bridge extractor — the frontend arm)
+import _a3_web  # noqa: E402  (the web→API bridge extractor — the fetch arm)
+import _a3_fe  # noqa: E402  (the frontend STRUCTURE arm — compiler-proven pieces + edges)
 import _a3_guard
 import _a3_ledger  # noqa: E402  (the case ledger, rulings 2026-07-24)
 import _a3_tests  # noqa: E402  (model_insight serialization into archmap)
@@ -2013,10 +2014,26 @@ def main() -> int:
                       f"present={_wwas}, this regen derives present={bool(_warm.get('present'))} "
                       f"({_warm.get('reason')}) — the web pieces + bridge edges will "
                       f"{'appear' if _warm.get('present') else 'DISAPPEAR'} in the diff")
+        # the frontend STRUCTURE arm (components · hooks · stores · routes · types · modules +
+        # renders/uses/typed/fecall wires) — the twin's own `typescript` is the provider; its
+        # OWN try/except + presence flag, honest-empty (no node/ts, GABE_FE_EXTRACT=0 for a
+        # twin-read-only dry-run). It rides a SEPARATE `fe` key: FK+graft+web bytes untouched.
+        try:
+            _fearm = _a3_fe.fe_arm(REPO_ROOT, amap.get("entities") or {},
+                                   screens=_warm.get("screens") or [])
+        except Exception as _fe:  # noqa: BLE001
+            _fearm = {"present": False, "reason": f"fe arm error: {_fe}"}
+        with contextlib.suppress(Exception):
+            _fwas = bool((_prev.get("stats", {}).get("fe") or {}).get("present"))
+            if _fwas != bool(_fearm.get("present")):
+                print(f"    ⚠ FRONTEND PRESENCE FLIP: committed c4-graph has fe "
+                      f"present={_fwas}, this regen derives present={bool(_fearm.get('present'))} "
+                      f"({_fearm.get('reason')}) — the frontend pieces + wires will "
+                      f"{'appear' if _fearm.get('present') else 'DISAPPEAR'} in the diff")
         _graph = _a3_graph.build_c4_graph(
             amap, labels=LABELS,
             status={s["entity"]: s.get("status") for s in sections},
-            colors=_gcolors, graft=_garm, web=_warm)
+            colors=_gcolors, graft=_garm, web=_warm, fe=_fearm)
         _a3_graph.emit(_graph, CENTER_OUT)
         wrote.append(("c4-graph.json", 0))
         # the LEVELS graph (window.GABE_LEVELS) — the lab-native station's rich feed:
@@ -2034,6 +2051,11 @@ def main() -> int:
             print(f"    ⚠ levels SKIPPED (derivation error, station degrades to topology): {_le}")
         _st = _graph["stats"]
         _gst = _st.get("graft") or {}
+        _fst = _st.get("fe") or {}
+        print(f"    frontend arm: " + (f"{_fst.get('pieces')} piece(s) · {_fst.get('edges')} wire(s) · "
+              f"{(_fst.get('by_kind') or {}).get('component', 0)} components · "
+              f"{_fst.get('screens_absorbed', 0)} screens absorbed ({_fst.get('reason')})"
+              if _fst.get("present") else f"absent — {_fst.get('reason')}"))
         print(f"    wrote docs/site/center/c4-graph.json — {_st['entities']} node(s) "
               f"· {_st['l1_edges']} L1 edge(s)"
               + (f" · graft {_gst.get('cross_calls', 0)} calls/"

@@ -20,6 +20,19 @@ if(!KINDS.web){ KINDS.web={ col:"#a855f7", form:"panel", label:"", type:"Fronten
 KINDCOL.web="#a855f7"; KINDS.web.col="#a855f7";
 if(typeof GLYPH!=="undefined" && !GLYPH.web) GLYPH.web=GLYPH.screen;   // panel header icon for web nodes (GLYPH lacked web)
 
+/* ── FRONTEND arm (batch 48): c4.fe = compiler-proven pieces (component · hook · store · route · fe-type · module)
+   + typed wires (renders · uses-hook · uses-store · typed · fecall · imports) on a SEPARATE key. The spike's KINDS already
+   draw route/component/hook/store/type; `module` (a file's plain value exports — feature logic, lib, api) is new. */
+KINDS.module={ col:"#f59e0b", form:"slab", label:"recipeScoring", type:"Module (FE)", layer:"web", usage:[0,"called by components / hooks"],
+  conns:[["called by","component","RecipeCard · …"],["imports","fe-type","RecipeScore"]], tests:0, ident:[["home","recipe"],["kind","feature logic / lib / api client"]],
+  doc:"A plain TS module — ONE piece for the file's value exports (feature logic, lib, api client). Components and hooks call into it (fecall) or import its values (imports)." };
+KINDCOL.module="#f59e0b";
+if(typeof GLYPH!=="undefined"){ GLYPH.module='<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'; }
+LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1};
+var FE_HOME_COL={ bucket:"#7c3aed", candidate:"#f97316" };   // a shared FE bucket (design-system · app-shell) · a feature the backend never modeled
+var FE_KIND={ "fe-type":"type" };                              // the feed's kind name → the spike's KINDS key
+var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };       // the feed's rel → LINKMETA/REL2KIND vocabulary
+
 /* animation state: fleets static by default (perf); all = master play/pause; freezeOnDrag = auto-pause
    decorations while the camera is being rotated/moved, resume on release (pulseLoop reads ANIM.all). */
 var ANIM={ fleets:false, all:true, freezeOnDrag:true };
@@ -58,12 +71,48 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
 });
 if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unknown kind (add to KINDS)"); }catch(e){}
 
+/* FRONTEND pieces → nodes. Homes that are not L1 entities (buckets · candidate features) become synthetic
+   clusters (their own colour band); every piece carries a det the card can read (file + lines) — honest-empty
+   for the rest. A piece whose file fetches carries `screen` = the web node it ABSORBS (below, once links exist). */
+var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null, FE_HOME={};
+if(_FE){
+  (_FE.homes||[]).forEach(function(h){ if(h.kind!=="entity"){ FE_HOME[h.id]=h.kind; if(_ents.indexOf(h.id)<0){ _ents.push(h.id); ENT[h.id]=FE_HOME_COL[h.kind]||"#8b5cf6"; } } });
+  _ents.forEach(function(e,i){ EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); if(EY[e]==null) EY[e]=0; if(EZ[e]==null) EZ[e]=0; });   // re-band with the new clusters
+  _FE.pieces.forEach(function(p){ var kind=FE_KIND[p.kind]||p.kind; if(!KINDS[kind]){ _dropped++; return; }
+    if(NIDS[p.id]) return;
+    var det={ file:p.file, flines:p.span?(p.span[0]+"-"+p.span[1]):null, exported:true, fe_kind:p.kind, exports:p.exports||null, doc:"" };
+    var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
+    var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
+      m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate };
+    nodes.push(n); NIDS[n.id]=n; });
+}
+
 /* LINKS: intra-entity l2 edges + cross_edges. Keep only edges whose BOTH ends are drawn nodes. */
 var links=[];
 Object.keys(_C4.l2||{}).forEach(function(ent){
   ((_C4.l2[ent]||{}).edges||[]).forEach(function(e){ links.push({source:e.source,target:e.target,rel:e.kind||"calls"}); }); });
 (_C4.cross_edges||[]).forEach(function(e){ links.push({source:e.from,target:e.to,rel:e.kind||"fk"}); });
+if(_FE){
+  /* fe wires are COMPACT index triples [from, to, rel] over fe.pieces order */
+  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true}); });
+  /* SCREEN ABSORPTION: the piece that fetches replaces its file-level `web` node — the bridge links
+     re-target to the piece, the web node leaves the field (one node per fetching file, not two). */
+  var ABS={}; nodes.forEach(function(n){ if(n.screen && NIDS[n.screen] && NIDS[n.screen].kind==="web") ABS[n.screen]=n.id; });
+  links.forEach(function(l){ if(ABS[l.source]) l.source=ABS[l.source]; if(ABS[l.target]) l.target=ABS[l.target]; });
+  Object.keys(ABS).forEach(function(w){ delete NIDS[w]; }); nodes=nodes.filter(function(n){ return !ABS[n.id]; });
+  window.__uniFeAbsorbed=Object.keys(ABS).length;
+}
 links=links.filter(function(l){ return NIDS[l.source]&&NIDS[l.target]&&l.source!==l.target; });
+/* TYPES start OFF (the Functions precedent): fe-type pieces + every wire touching one are held back in
+   _FETYPES/_FETYPELINKS; toggleTypes(on) seeds them in (layout.js). The field boots at pieces-that-run. */
+var _FETYPES=[], _FETYPELINKS=[];
+if(_FE){
+  nodes.forEach(function(n){ if(n.fe && n.kind==="type"){ n.__ty=true; _FETYPES.push(n); } });
+  if(_FETYPES.length){ var _TY={}; _FETYPES.forEach(function(n){ _TY[n.id]=1; delete NIDS[n.id]; });
+    nodes=nodes.filter(function(n){ return !n.__ty; });
+    _FETYPELINKS=links.filter(function(l){ return _TY[l.source]||_TY[l.target]; }); _FETYPELINKS.forEach(function(l){ l.__ty=true; });
+    links=links.filter(function(l){ return !l.__ty; }); }
+}
 
 /* in-degree → fanin; payload from the target's real resp field-count; enrich w/proven/payload. */
 links.forEach(function(l){ var t=NIDS[l.target]; if(t) t.m.fanin++; });

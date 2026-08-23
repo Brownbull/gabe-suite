@@ -12,7 +12,7 @@ chrome  = rd("parts/chrome.html").rstrip("\n")
 
 TITLE = '<!doctype html><html lang="{{LANG}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gabe Universe · {{PROJECT_NAME}} Command Center</title>'
 STYLE_CLOSE = css + "\n</style></head><body>\n" + chrome
-REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports' };"
+REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls' };"
 GLINE = "  var G=function(label,icon,count,nodeFn,trust){ return {label:label,icon:icon,count:count,node:nodeFn,trust:trust}; };"
 TRUSTCONNS = """  function trustTag(tr){ if(!tr) return null;
     return tr==="inferred"
@@ -111,7 +111,7 @@ text = text.replace(OLD_TRUST,
 #    they fell back to the purple `panel` PRIMITIVE (the pink cubes). Add it so web shows the screen glyph. ──
 OLD_ORDER = 'var order=["route","component","hook","type","store","screen","endpoint","function","schema","model","external","entity"];'
 assert OLD_ORDER in text, "order array anchor missing"
-text = text.replace(OLD_ORDER, 'var order=["route","component","hook","type","store","screen","web","endpoint","function","schema","model","external","entity"];', 1)
+text = text.replace(OLD_ORDER, 'var order=["route","component","hook","type","store","module","screen","web","endpoint","function","schema","model","external","entity"];', 1)
 
 # ── center-battery R10: no center page may carry the banned deadness word "orphan" (case-sensitive);
 #    the only lowercase hit is an inherited spike comment — reword it (no behavior change) ──
@@ -127,7 +127,7 @@ assert OLD_ZFORCE in text, "zForce block anchor missing"
 text = text.replace(OLD_ZFORCE, LAYOUT_JS, 1)
 assert 'var CFG={ shape:"polygon", subOn:true, entOn:true,' in text, "CFG anchor missing"
 text = text.replace('var CFG={ shape:"polygon", subOn:true, entOn:true,',
-                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"curved", showFns:"off", subOn:true, entOn:true,', 1)
+                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"curved", showFns:"off", showTypes:"off", subOn:true, entOn:true,', 1)
 OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }'
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
@@ -136,6 +136,7 @@ text = text.replace(OLD_APPLY,
   'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); } '
   'else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } '
   'else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } '
+  'else if(grp==="showTypes"){ toggleTypes(CFG.showTypes==="on"); } '
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
@@ -370,6 +371,11 @@ OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); r
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,
   '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })', 1)
+# batch 48: the `module` kind's SLAB form (a flat wide box — "a bag of functions") beside the spike's nine forms
+OLD_WIREFORM = '  if(f==="wire") return new T.Mesh(new T.BoxGeometry(r*1.4,r*1.4,r*1.4), m(col,true));'
+assert OLD_WIREFORM in text, "primitiveMesh wire-form anchor missing"
+text = text.replace(OLD_WIREFORM, OLD_WIREFORM + '\n  if(f==="slab") return new T.Mesh(new T.BoxGeometry(r*2.0,r*0.55,r*2.0), m(col));', 1)
+
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
 assert OLD_CWCALL in text, "connectorWire call anchor missing"
 text = text.replace(OLD_CWCALL,

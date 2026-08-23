@@ -4,7 +4,7 @@
 > structure graph — components, hooks, stores, routes, the frontend's own types — mirroring
 > how the backend has models/schemas/endpoints/functions.
 >
-> Status: **PLAN** (research done, not yet built). Triggered 2026-08-16 by the operator's
+> Status: **BUILT (P0–P3, 2026-08-23)** — see §9 for what landed, the measured numbers and what the plan got wrong. Triggered 2026-08-16 by the operator's
 > question "what about the frontend? those pieces do not exist on the frontend" during the
 > levels-graph polish. The polish (color/force/dotted/finder/legend) shipped separately.
 
@@ -219,3 +219,42 @@ dry-run on a COPY with the numbers in the commit message.
 - Adopt `ast-grep`/`dependency-cruiser` as suite dependencies (npm/binary), or vendor a minimal
   equivalent? (They are external tools the twin must have installed — graft already sets this precedent.)
 - Do routes matter for the graph, or is the component/hook/store/fetch core enough for v1?
+
+
+## 9. BUILT — 2026-08-23 (suite `graft-adoption`, Gabe Universe batch 48)
+
+### What the P0 spike measured (gustify `apps/web`, READ-ONLY, the numbers that changed the plan)
+
+| measure | value |
+|---|---|
+| oracle denominator (TS compiler, non-test `.ts/.tsx`) | **488 files · 2,806 import sites (2,401 internal-resolved · 404 external · 1 unresolved) · 2,822 exports** |
+| graft's TS coverage | every file indexed (2,627 fns · 880 types · 85 interfaces) but only **222 import pairs + 715 call pairs = 38.9 %** of the compiler's 2,290 file→file import pairs |
+| graft-convention arm (`derive_frontend`, name/path only) | **637 "components"** vs the compiler's **458 JSX-proven** exported components (over-claims non-JSX Pascal fns + non-exported symbols); 793 fe-types incl. non-exported; 535 `calls` edges, no imports/renders/typed |
+| fast regex classifier vs oracle (files) | 206 component · 44 hook · 5 store · 4 fe-type · 1 route · **113 stories** · **111 plain modules** · 4 other — 2 disagreements left (a container whose JSX the scan missed; a barrel) |
+
+**Three plan corrections the numbers forced:**
+1. **The TypeScript compiler is the extractor, not the oracle-only.** Import resolution (path aliases, barrels, index files) is compiler work; re-implementing it in Python or adding dependency-cruiser is strictly worse than running the `typescript` every TS frontend already ships. ast-grep/dependency-cruiser are not adopted.
+2. **An 8th kind, `module`.** 111 files (23 %) are plain value-export modules (feature logic 52 in cooking, lib, api clients) — the target of 515 component imports. Burying them as "unclassified" would hide a quarter of the frontend; they are an honest named kind (ONE piece per file).
+3. **Stories are excluded, named.** 113 `.stories.tsx` files are documentation, not app elements (they would have been "components").
+
+### What landed
+
+- **`templates/center/generators/_a3_fe_extract.mjs`** — the compiler pass (read-only, temp-file output, 4.2 s on gustify): per file → resolved imports · exported symbols {kind, JSX, hook} · per-export body refs {jsx tags · calls · type refs · idents · useContext args} · checker-resolved import BINDINGS (barrels followed). `GABE_TS_DIR` overrides where `typescript` lives (batteries). Exit 3 = no typescript, 4 = no tsconfig.
+- **`templates/center/generators/_a3_fe.py`** — `fe_arm(root, entities, screens)`: classification per EXPORT (component = Pascal + JSX proof · hook = `useX` fn · store = create/createContext/atom const or `useXStore` · route = router config or `*Route` / under `routes/` · fe-type · module), homing via `_a3_graft._fe_home` (entity / `design-system` · `app-shell` buckets / candidate features), typed wires resolved through bindings (`renders` · `uses-hook` · `uses-store` · `typed` · `fecall` · `imports`, most-specific wins), **screen absorption** (the fetch arm's `web:` node lands on the file's principal piece), honest-empty (`GABE_FE_EXTRACT=0` · no web · no node · no typescript → `present=False` + reason). Wires are compact index triples.
+- **`_a3_graph.fold_fe`** — the arm rides a SEPARATE top-level `fe` key in GABE_C4 (`fe=None` → byte-identical; `present=False` → only `stats.fe`), so the 2D station, the bridge drift detectors and every existing battery see unchanged bytes. `build_center_a3.py` runs it in its own try/except with a presence-flip tripwire.
+- **The Gabe Universe fold** (`universe-build/parts/adapter.js` + `layout.js` + `card.js`): pieces → planets under their home (synthetic coloured clusters for buckets/candidates), `module` kind (slab form + grid glyph), `fe-type`→`type`, wires via `FE_REL`, **Types held back at boot** (`_FETYPES`, the Functions precedent — `T` toggle beside ƒ), the shared frontend card builder (Frontend section: home · absorbed screen · exports), the Everything-panel Sources row, the legend roster. **Layout at scale:** the fold tripled the field (260 → 888 planets at rest, 1,501 with types) and the clustering proof measured **48.5 % bleed**; fixed with frontend `KRADF` layers (types core → routes rim), containment 0.3 → 0.6, and a deterministic **hull-overlap relaxation** (`__uniRelaxHulls`: anchors ≥ 1.05·max(R_a+R_b, 2·max(R_a,R_b)) with R = 1.6×RENT, the measured settled radius) → **2.6 %**.
+
+### Measured on gustify (twin-read-only, `GABE_GRAFT_BUILD=0`)
+
+**1,273 pieces** — 437 components · 83 hooks · 5 stores · 22 routes · 613 fe-types (265 referenced by a running piece) · 113 modules — across 8 entities + 2 buckets (design-system 113 · app-shell 98) + 3 candidate features (profile 97 · shopping 55 · me 2). **3,566 wires** — 935 renders · 436 uses-hook · 28 uses-store · 1,124 typed · 815 fecall · 228 imports; 1,563 cross-home. **32 screens absorbed** (all), 48 bridge wires preserved. Excluded + counted: 113 stories · 2 barrels · 2 pascal-no-jsx. Unresolved: 927 refs into libraries, 112 onto files with nothing drawn. Feed: `c4-graph.js` 327 KB → 747 KB.
+
+### Batteries
+
+`tests/frontend/run.sh` (NEW, 45 cases, mutation-proven): the hand-enumerated fixture app (`tests/frontend/fixture/`, 12 files → 11 pieces · 11 wires, every kind + every rel, barrel + alias + story) as a FROZEN extractor JSON (hermetic) + the LIVE compiler case when a `typescript` resolves (`GABE_TS_DIR` or the twins' web `node_modules`) else SKIPPED by name; honest-empty states; `fold_fe` invariants; determinism; the JSX-removed mutation. `tests/gabe-universe` §10u + a frontend-aware render assertion; `tests/arch-graph` 172 unchanged.
+
+### Deferred (named)
+
+- `fecall`/`renders` as their OWN wire kinds on the Connections pane (today they ride `calls`/`imports` styling) — the pane pins 4 rows.
+- Route → component tree from the router CONFIG object (path → element) — today only the JSX inside it wires.
+- Prop schemas on components (react-docgen) · compiler-resolved reference edges beyond bindings (P4).
+- The levels lab (`codebase-archive-lab.html`) still reads graft's convention arm; it has not been switched to `fe`.

@@ -137,6 +137,21 @@
     entity:function(n){ return [
       E("div",{class:"sec"}, sechd("entity","Entity"), E("div",{class:"doc"}, "The container the pieces live in — a translucent boundary, not an icon-node.")) ]; }
   };
+  /* FRONTEND pieces (batch 48): ONE builder for component · hook · store · route · type · module — compiler-proven
+     pieces (c4.fe). Frontend section = home (entity / shared bucket / candidate feature) · absorbed screen + fetch
+     sites · a module's exports; then the shared identity + file:lines rows. Honest-empty: no tests/doc captured yet. */
+  function feSec(n){ var d=n.det||{}, hk=(typeof FE_HOME!=="undefined"&&FE_HOME[n.ent])||null, rows=[];
+    rows.push(kv("entity","home", n.ent+(hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
+    if(n.screen) rows.push(kv("web","screen", (n.sites||0)+" fetch site(s) — absorbed "+n.screen.replace(/^web:/,"")));
+    if(d.exports&&d.exports.length) rows.push(kv("function","exports", d.exports.slice(0,12).join(" · ")+(d.exports.length>12?" · +"+(d.exports.length-12):"")));
+    rows.push(E("div",{class:"doc"}, KINDTIP[n.kind]||""));   // ONE meaning per kind — the Elements rows + the card share it
+    return E.apply(null,[ "div",{class:"sec"}, sechd(n.kind==="type"?"schema":n.kind,"Frontend") ].concat(rows)); }
+  function feBuilder(n){ var det=n.det||{}; return [
+    usage(usageN(n), usageBreak(n)),
+    liveConns(n),
+    feSec(n),
+    identSec(n), docSec(det), fileRowSec(n) ]; }
+  ["component","hook","store","route","type","module"].forEach(function(k){ if(!C[k]) C[k]=feBuilder; });
 
   /* ══ PANEL HIERARCHY (batch 22): Everything → Entity → Cluster → Element, two-way nav.
      Every level shows its content + an Inside (below) and an Above section; Esc lands on Everything. ══ */
@@ -164,7 +179,14 @@
     schema:"a request/response shape — the API contract a payload travels in",
     web:"a frontend screen/hook — it fetches endpoints over the web bridge",
     external:"an FK target owned by ANOTHER entity — drawn here because a local model points at it",
-    "function":"a code function from the levels feed — drawn only when Functions is ON" };
+    "function":"a code function from the levels feed — drawn only when Functions is ON",
+    /* FRONTEND kinds (batch 48) — compiler-proven pieces from c4.fe */
+    component:"a React component — its body holds JSX (compiler-proven); renders other components, calls hooks, reads stores",
+    hook:"a `useX` function — the frontend's unit of reuse; a fetching hook is a SCREEN (its fetches bridge to endpoints)",
+    store:"a state cylinder — create()/createContext()/atom() const, or a useXStore hook; read by components via useContext/useXStore",
+    route:"a URL surface — the router config or a *Route component; renders the component tree it mounts",
+    type:"a TS type/interface/enum — the frontend's schema-equivalent; held back at boot (Types toggle), wired by `typed`",
+    module:"a plain TS module — ONE piece for the file's value exports (feature logic · lib · api client); called via fecall, imported as values" };
   function kindRow(k, count){ var K=(typeof KINDS!=="undefined"&&KINDS[k])||{};
     var r=E("div",{class:"pnav pstat"},
       E("span",{class:"pki",html:svgInline(k, K.col||"#9aa", 13)}),
@@ -236,6 +258,9 @@
       if(st.graft) w.append(srcRow("link","graft wiring",
         st.graft.present===false?("absent — "+(st.graft.reason||"no index")):((st.graft.cross_calls||0)+" calls · "+(st.graft.cross_imports||0)+" imports"),
         "cross-entity call/import wires from the graft code index — inferred-by-design, a FLOOR never a census"));
+      if(st.fe) w.append(srcRow("component","frontend arm",
+        st.fe.present===false?("absent — "+(st.fe.reason||"no extractor")):((st.fe.pieces||0)+" pieces · "+(st.fe.edges||0)+" wires · "+(st.fe.screens_absorbed||0)+" screens absorbed · "+((st.fe.excluded||{}).stories||0)+" stories excluded"),
+        "the frontend STRUCTURE — components · hooks · stores · routes · types · modules proven by the TypeScript compiler (the twin's own typescript), wired by renders / uses / typed / fecall / imports. Types start OFF (entity pane toggle)."));
       w.append(srcRow("layers","levels feed", window.GABE_LEVELS?"present — functions · communities · journeys":"absent",
         "the 2D levels-lab export: function nodes (the Stars), community clusters, journey walks"));
       pb.append(w); }

@@ -50,7 +50,7 @@ await p.evaluate(() => { window.__q0 = Graph.camera().quaternion.clone(); window
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'q' })); });
 await p.waitForTimeout(120);
 const frozeMid = await p.evaluate(() => ANIM.all === false);
-await p.waitForTimeout(240);
+await p.waitForTimeout(780);   // the 888-planet field ticks the fly interval ~2-3×/s headless — give the hold one scaled tick
 const yaw = await p.evaluate(() => { window.dispatchEvent(new KeyboardEvent('keyup', { key: 'q' }));
   return { turned: Graph.camera().quaternion.angleTo(window.__q0) > 0.05,
     sweeps: Graph.camera().position.distanceTo(window.__p0) > 15 }; });

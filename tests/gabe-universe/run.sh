@@ -333,8 +333,9 @@ check('<span id="jrnpill"' in page and page.find('id="hlModeBtn"') < page.find('
       "the journey step controls are not centered in the header bar")
 check('#jrnpill .wname{' in page and 'm15 18-6-6 6-6' in page and 'm9 18 6-6-6-6' in page,
       "step buttons are not proper Lucide chevrons (the text glyphs sat skewed)")
-check('setInterval(function _flyTick(){' in page and 'FK.up' in page and 'k==="control"' in page,
-      "WASD/Space/Ctrl flight missing (setInterval tick — headless/background pages starve rAF)")
+check('window.__uniFlyStep=function _flyTick(){' in page and 'setInterval(window.__uniFlyStep, 16)' in page
+      and 'FK.up' in page and 'k==="control"' in page and 'window.__uniFlyStep(); }catch(_fe){}' in page,
+      "WASD/Space/Ctrl flight missing (interval tick + IMMEDIATE first step + elapsed-time scaling — batch 48)")
 check('id="depthRng"' in page and 'ArrowUp' in page and 'ArrowDown' in page,
       "depth is not a draggable 1–5 bar with arrow-key fallback")
 check('?0:1' in page and 'return 2.6;' in page, "glow must brighten the set and leave the rest ALONE (dim belongs to focus only)")
@@ -521,6 +522,33 @@ check('buildClusters=function(){ _bcOrig();' in page,
 check('out.push(aboveSec(n)); return out;' in page,
       "element cards lost their Above section (the way back up)")
 
+# ── 10u. batch 48: the FRONTEND fold — c4.fe pieces (component · hook · store · route · type · module) + typed
+#        wires on a SEPARATE key; screens absorbed into their principal piece; Types held back (toggle, OFF) ──
+check('KINDS.module={' in page and 'form:"slab"' in page and 'if(f==="slab")' in page,
+      "the `module` kind (slab form) is gone — plain TS modules have no glyph")
+check("GLYPH.module='<rect x=\"3\" y=\"3\"" in page, "the module legend glyph (grid) is gone")
+check('var FE_KIND={ "fe-type":"type" };' in page and 'var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };' in page,
+      "the feed→spike kind/rel vocabulary maps are gone")
+check('var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null' in page,
+      "the fe fold must gate on a NON-EMPTY pieces list (honest-empty feed = no fold)")
+check('ENT[h.id]=FE_HOME_COL[h.kind]' in page and 'var FE_HOME_COL={ bucket:' in page,
+      "non-entity homes (buckets · candidate features) must become their own coloured clusters")
+check('var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]];' in page,
+      "fe wires must be read as COMPACT index triples over fe.pieces")
+check('NIDS[n.screen].kind==="web") ABS[n.screen]=n.id;' in page and 'window.__uniFeAbsorbed=' in page,
+      "screen absorption is gone (a fetching file would draw TWO nodes: web + piece)")
+check('var _FETYPES=[], _FETYPELINKS=[];' in page and 'function toggleTypes(on){' in page and '"typesTog"' in page,
+      "the Types toggle (fe-type pieces held back at boot, seeded on demand) is gone")
+check('showTypes:"off"' in page and 'else if(grp==="showTypes"){ toggleTypes(CFG.showTypes==="on"); }' in page,
+      "CFG.showTypes must default OFF and route through applyCfg")
+check("fecall:'calls'" in page and 'LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1};' in page,
+      "the fecall/imports rels lost their wire-kind / meta mapping")
+check('["component","hook","store","route","type","module"].forEach(function(k){ if(!C[k]) C[k]=feBuilder; });' in page
+      and 'function feSec(n){' in page, "the shared frontend card builder is gone")
+check('"frontend arm",' in page and 'screens absorbed' in page, "the Everything panel's frontend-arm Sources row is gone")
+check('var order=["route","component","hook","type","store","module","screen","web",' in page,
+      "the legend roster lost `module`")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",
@@ -562,12 +590,20 @@ const { chromium } = require(process.argv[3]);
   await p.waitForTimeout(1800);
   const r=await p.evaluate(()=>{ const pick=(typeof nodes!=='undefined'&&nodes)?nodes.find(n=>n.kind==='endpoint'&&n.det&&n.det.cases&&n.det.cases.length):null;
     if(pick) showPanel(pick); const pb=document.getElementById('pbody');
+    const fePresent=!!(window.GABE_C4&&GABE_C4.fe&&GABE_C4.fe.pieces&&GABE_C4.fe.pieces.length);
+    const fe={ present:fePresent, feNodes:nodes.filter(n=>n.fe).length, webLeft:nodes.filter(n=>n.kind==='web').length,
+      absorbed:window.__uniFeAbsorbed||0, typesHeld:(typeof _FETYPES!=='undefined')?_FETYPES.length:-1, typesDrawn:nodes.filter(n=>n.kind==='type').length,
+      feRels:links.filter(l=>l.fe).length, bridge:links.filter(l=>l.rel==='bridge').length, tog:!!document.getElementById('typesTog') };
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')) }; });
+      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe }; });
   await b.close();
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass;
-  if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face})`);
+  // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
+  // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
+  const f=r.fe, feOk = f.present ? (f.feNodes>0 && f.webLeft===0 && f.absorbed>0 && f.typesHeld>0 && f.typesDrawn===0 && f.feRels>0 && f.bridge>0 && f.tog)
+                                 : (f.feNodes===0 && f.absorbed===0 && f.typesHeld===0 && !f.tog);
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk;
+  if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS

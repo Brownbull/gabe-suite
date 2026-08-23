@@ -32,23 +32,48 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     while(left2.length){ var last2=ord[ord.length-1], best2=-1, bi2=0;
       left2.forEach(function(s,i){ var w=wOf2(last2,s); if(w>best2){ best2=w; bi2=i; } }); ord.push(left2.splice(bi2,1)[0]); }
     var cnt2={}; nodes.forEach(function(nn){ cnt2[nn.ent]=(cnt2[nn.ent]||0)+1; });
-    var circ=0; _ents.forEach(function(s){ circ += 2.8*(30+9*Math.sqrt(cnt2[s]||0)); });   // per-entity arc ≈ 2.8× its nominal radius
+    var arcOf={}, circ=0; _ents.forEach(function(s){ arcOf[s]=Math.max(260, 2.8*(30+9*Math.sqrt(cnt2[s]||0))); circ+=arcOf[s]; });   // per-entity arc ≈ 2.8× its nominal radius, floored so two TINY neighbours still sit ≥250 apart
     var R=Math.max(430, circ/(2*Math.PI));
-    ord.forEach(function(e,i){ var a=i*2*Math.PI/n; P[e]={x:Math.cos(a)*R, y:0, z:Math.sin(a)*R}; });
-  } else {                                               // FORCE — repulsion 13000/d² + FK spring rest 230
+    /* PROPORTIONAL arcs (batch 48): each entity owns an arc sized to ITS radius — a 625-node frontend-folded
+       cooking no longer gets the same slot as a 2-node candidate (even spacing bled a third of the field). */
+    var acc=0; ord.forEach(function(e){ var a=(acc+arcOf[e]/2)/R*(2*Math.PI*R/circ); P[e]={x:Math.cos(a)*R, y:0, z:Math.sin(a)*R}; acc+=arcOf[e]; });
+  } else {                                               // FORCE — repulsion 13000/d² + FK spring rest 230, SIZE-AWARE (batch 48)
     var E2=_l1pairs();
+    var cntF={}; nodes.forEach(function(nn){ cntF[nn.ent]=(cntF[nn.ent]||0)+1; });
+    var radF=function(s){ return 30+9*Math.sqrt(cntF[s]||0); };   // the entity's nominal radius (RENT formula, pre-spread)
     for(var it=0; it<240; it++){
       for(var i=0;i<n;i++) for(var j=i+1;j<n;j++){ var a=_ents[i], b=_ents[j],
         dx=P[a].x-P[b].x, dy=P[a].y-P[b].y, dz=P[a].z-P[b].z, d2=dx*dx+dy*dy+dz*dz+60, d=Math.sqrt(d2), f=13000/d2;
+        var need=(radF(a)+radF(b))*0.7; if(d<need) f+=(need-d)*0.12;   // COLLISION: two hulls may not overlap (radius-sum floor, pre-SEP)
         V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[a].z+=dz/d*f; V[b].x-=dx/d*f; V[b].y-=dy/d*f; V[b].z-=dz/d*f; }
       E2.forEach(function(p){ var a=p[0], b=p[1], dx=P[b].x-P[a].x, dy=P[b].y-P[a].y, dz=P[b].z-P[a].z,
-        d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1, f=0.02*(d-230);
+        d=Math.sqrt(dx*dx+dy*dy+dz*dz)||1, f=0.02*(d-Math.max(230,(radF(a)+radF(b))*0.7));   // the FK spring rests no closer than the hulls allow
         V[a].x+=dx/d*f; V[a].y+=dy/d*f; V[a].z+=dz/d*f; V[b].x-=dx/d*f; V[b].y-=dy/d*f; V[b].z-=dz/d*f; });
       _ents.forEach(function(s){ V[s].x=(V[s].x-P[s].x*0.003)*0.9; V[s].y=(V[s].y-P[s].y*0.003)*0.9; V[s].z=(V[s].z-P[s].z*0.003)*0.9;
         P[s].x+=V[s].x; P[s].y+=V[s].y; P[s].z+=V[s].z; }); }
   }
   var SEP=(mode==="ring")?1.0:1.85;   // force converges tight — widen hard; the ring is already sized by construction
   _ents.forEach(function(s){ EX[s]=Math.round(P[s].x*SEP); EY[s]=Math.round(P[s].y*SEP); EZ[s]=Math.round(P[s].z*SEP); });
+  __uniRelaxHulls();
+}
+/* HULL-OVERLAP RELAXATION (batch 48): whatever force/ring produced, no two entity hulls may overlap —
+   D(a,b) ≥ 1.15·(R_a+R_b) with R the live RENT formula. The frontend fold made cooking a 625-node hull
+   (R≈203) whose far-side planets sat nearer a neighbour's anchor (bleed 48%); the force balance alone
+   cannot promise the floor, a deterministic pairwise relaxation can (60 sweeps, converges in a few). */
+function __uniRelaxHulls(){ var n=_ents.length; if(n<2 || __chainMode || CFG.entLayout==="ring") return;   // ring/chain are sized by construction (the ring's proportional arcs keep it a circle)
+  var cnt={}; nodes.forEach(function(nn){ cnt[nn.ent]=(cnt[nn.ent]||0)+1; });
+  /* R = the SETTLED radius estimate, not the nominal one: measured (gustify, 888 planets) hulls settle at
+     1.6–1.8× RENT under the −60 charge — sizing the floor to RENT alone left the bleed at 46%. */
+  var HULLK=window.__uniHullK||1.6;
+  var R=function(s){ return HULLK*(30+9*Math.sqrt(cnt[s]||0))*(window.__uniSpread||1); };
+  for(var k=0;k<60;k++){ var moved=false;
+    for(var i=0;i<n;i++) for(var j=i+1;j<n;j++){ var a=_ents[i], b=_ents[j],
+      dx=EX[b]-EX[a], dy=EY[b]-EY[a], dz=EZ[b]-EZ[a], d=Math.sqrt(dx*dx+dy*dy+dz*dz), need=1.05*Math.max(R(a)+R(b), 2*Math.max(R(a),R(b)));   // 2·max: a tiny anchor beside a giant hull must clear the giant's FAR side too
+      if(d>=need) continue; moved=true;
+      if(d<1e-6){ dx=Math.cos(i*2.399963); dy=0; dz=Math.sin(i*2.399963); d=1; }   // coincident → a deterministic axis
+      var push=(need-d)/2; EX[a]-=dx/d*push; EY[a]-=dy/d*push; EZ[a]-=dz/d*push; EX[b]+=dx/d*push; EY[b]+=dy/d*push; EZ[b]+=dz/d*push; }
+    if(!moved) break; }
+  _ents.forEach(function(s){ EX[s]=Math.round(EX[s]); EY[s]=Math.round(EY[s]); EZ[s]=Math.round(EZ[s]); });
 }
 /* ── batch 9 CLUSTERING — the core drives POSITION, not just hull decoration ──
    SUBANCHOR[ent][sub] = local offset from the entity anchor per sub-group, laid on a ring
@@ -128,6 +153,26 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
   try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // fn nodes change group sizes → re-ring
   if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}   // fn nodes add/remove sub groups → the panel re-derives
+}
+/* TYPES (batch 48) — the frontend's fe-type pieces + their typed wires, held back at boot (adapter) and seeded in
+   here on demand; the exact toggleFns mechanics (spiral seed · reheat · re-ring · fleet regroup). */
+function toggleTypes(on){ if(typeof _FETYPES==="undefined" || !_FETYPES.length) return;
+  __uniFreezeForSettle();
+  if(on){
+    _FETYPES.forEach(function(n,i){ if(!NIDS[n.id]){
+      var a=i*2.399963, rr=8+i*0.35;
+      n.x=(EX[n.ent]||0)+Math.cos(a)*rr; n.y=(EY[n.ent]||0)+Math.sin(a)*rr; n.z=(EZ[n.ent]||0)+((i%23)-11);
+      nodes.push(n); NIDS[n.id]=n; } });
+    _FETYPELINKS.forEach(function(tl){ var s=lid(tl.source), t=lid(tl.target); if(NIDS[s]&&NIDS[t]&&s!==t){
+      var mm=LINKMETA[tl.rel]||{w:2,pv:1}; links.push({source:s,target:t,rel:tl.rel,w:mm.w,proven:!!mm.pv,payload:0,__ty:true,fe:true}); } });
+  } else {
+    for(var i=links.length-1;i>=0;i--){ if(links[i].__ty) links.splice(i,1); }
+    for(var j=nodes.length-1;j>=0;j--){ if(nodes[j].__ty){ delete NIDS[nodes[j].id]; nodes.splice(j,1); } }
+  }
+  links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });
+  if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
+  try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}
+  if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}
 }
 /* LINES — moved off the topbar into the config; sets the curved-connector flag + redraws */
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
@@ -321,7 +366,11 @@ function tuneLinkForce(){ if(typeof Graph==="undefined"||!Graph) return;
 /* mode-aware layout force: chain = layer→Y + (entity+sub)→X/Z band · force/spread = pull to the
    3D (entity + sub-ring) anchor, then a per-kind RADIAL bias (endpoints ring the entity EDGE,
    functions/models/schemas pull to the CORE) + a soft containment past 1.3× the nominal radius. */
-var KRADF={ endpoint:1.25, web:1.25, screen:1.25, external:1.1, "function":0.35, model:0.28, schema:0.28 };
+var KRADF={ endpoint:1.25, web:1.25, screen:1.25, external:1.1, "function":0.35, model:0.28, schema:0.28,
+  /* FRONTEND kinds (batch 48) — concentric like the backend: types at the core (the schema-equivalent), modules +
+     stores inside, hooks mid, components outer, routes at the rim (entry points, like endpoints). Without these
+     every frontend piece defaulted to the rim (factor 1) and the fold ballooned each hull to ~1.8× its radius. */
+  type:0.3, module:0.45, store:0.5, hook:0.7, component:0.9, route:1.2 };
 function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x||0, y=n.y||0, z=n.z||0;
   var sa=(SUBANCHOR[n.ent]||{})[n.sub];
   if(__chainMode){ n.vy += ((LZ[n.layer]||0)-y)*0.05*alpha;
@@ -331,8 +380,8 @@ function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(function(n){ var x=n.x
   var dx=x-ax, dy=y-ay, dz=z-az, r=Math.sqrt(dx*dx+dy*dy+dz*dz);
   if(!(r>1e-3) || !isFinite(r)) return;                     // coincident with the anchor → no radial direction yet (NaN guard)
   var R0=RENT[n.ent]||60, f=KRADF[n.kind];
-  if(f){ var kr=0.08*alpha*(R0*f-r)/r; n.vx+=dx*kr; n.vy+=dy*kr; n.vz+=dz*kr; }                // kind ring: boundary out, guts in
-  var rmax=R0*1.3; if(r>rmax){ var kc=0.3*alpha*(rmax-r)/r; n.vx+=dx*kc; n.vy+=dy*kc; n.vz+=dz*kc; }   // containment kills the bleed
+  if(f){ var kr=0.16*alpha*(R0*f-r)/r; n.vx+=dx*kr; n.vy+=dy*kr; n.vz+=dz*kr; }                // kind ring: boundary out, guts in (0.16: the frontend fold's dense hulls flattened the rings at 0.08)
+  var rmax=R0*1.3; if(r>rmax){ var kc=0.6*alpha*(rmax-r)/r; n.vx+=dx*kc; n.vy+=dy*kc; n.vz+=dz*kc; }   // containment kills the bleed (0.6: the frontend fold's 369-planet hulls ballooned at 0.3)
 }); }
 zForce.initialize=function(ns){ zForce.__n=ns; };
 
@@ -554,7 +603,8 @@ window.__uniWireTopbar=function(){
       if(!any && _flyFroze){ _flyFroze=false; ANIM.all=true; } }
     window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
       if(e.altKey&&(k==="q"||k==="e")){ e.preventDefault(); if(window.__uniHLDepth) __uniHLDepth(HL.depth+(k==="e"?1:-1)); }   // Alt+Q/E = depth (replaces Alt+scroll)
-      else if((k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e")&&!e.altKey){ FK[k]=1; _flyFreeze(); }
+      else if((k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e")&&!e.altKey){ var _new=!FK[k]; FK[k]=1; _flyFreeze();
+        if(_new&&window.__uniFlyStep) try{ window.__uniFlyStep(); }catch(_fe){} }   // IMMEDIATE first step — a starved interval (heavy field, low fps) must not delay the response
       else if(k===" "){ FK.up=1; _flyFreeze(); e.preventDefault(); }   // Space = ascend (and never scrolls/clicks)
       else if(k==="control"){ FK.dn=1; _flyFreeze(); }
       else if(k>="1"&&k<="8"&&!e.altKey&&!e.ctrlKey&&!e.metaKey){        // 1–8 = fleet columns 2–9, applied to the SELECTION (none → the ALL row)
@@ -570,10 +620,15 @@ window.__uniWireTopbar=function(){
       if(_whT) clearTimeout(_whT);
       _whT=setTimeout(function(){ _whT=null; _flyThaw(); }, 350); }, {passive:true});
     window.addEventListener("blur", function(){ for(var k in FK) delete FK[k]; });
-    setInterval(function _flyTick(){                                        // setInterval, NOT rAF: headless/background pages starve rAF chains (measured 1 tick/400ms) — the flight must tick everywhere
-      if(typeof Graph==="undefined"||!Graph) return; var any=false; for(var k in FK){ any=true; break; } if(!any) return;
+    window.__uniFlyStep=function _flyTick(){                                        // setInterval, NOT rAF: headless/background pages starve rAF chains (measured 1 tick/400ms) — the flight must tick everywhere
+      if(typeof Graph==="undefined"||!Graph) return; var any=false; for(var k in FK){ any=true; break; } if(!any){ _flyTick.__t=0; return; }
+      /* ELAPSED-TIME scaling (batch 48): the step is per 16 ms of wall time, not per tick — a heavy frame (888 planets
+         under swiftshader fired the interval ONCE in 400 ms) must not slow the flight/yaw. Capped at 20 ticks'
+         worth per fire — a 60 fps browser sees dt≈16 → k=1, untouched. */
+      var _now=(typeof performance!=="undefined"&&performance.now)?performance.now():Date.now();
+      var _dt=_flyTick.__t?Math.min(320,_now-_flyTick.__t):16; _flyTick.__t=_now; var _k=_dt/16;
       try{ var cam=Graph.camera(), ctrls=Graph.controls(); if(!cam||!ctrls) return;
-        var sp=Math.max(2.5, cam.position.distanceTo(ctrls.target)*0.016);   // speed scales with zoom — close = fine, far = fast
+        var sp=Math.max(2.5, cam.position.distanceTo(ctrls.target)*0.016)*_k;   // speed scales with zoom — close = fine, far = fast
         var fwd=new T.Vector3(0,0,-1).applyQuaternion(cam.quaternion).multiplyScalar(sp);
         var rgt=new T.Vector3(1,0,0).applyQuaternion(cam.quaternion).multiplyScalar(sp);
         var off=new T.Vector3();
@@ -584,10 +639,10 @@ window.__uniWireTopbar=function(){
           var ya=(FK.e?1:0)-(FK.q?1:0);                        // swapped (operator): E spins Q's old way, Q spins E's
           var vdq=new T.Vector3(); cam.getWorldDirection(vdq);
           var pv=new T.Vector3().copy(cam.position).addScaledVector(vdq, _zoomDist());
-          _rotRig(cam, ctrls.target, pv, new T.Vector3(0,1,0), ya*0.022); }
+          _rotRig(cam, ctrls.target, pv, new T.Vector3(0,1,0), ya*0.022*_k); }
         if(!off.lengthSq()) return;
         cam.position.add(off); ctrls.target.add(off);          // the whole rig flies — orbiting keeps working wherever you stop
-      }catch(e){} }, 16); }
+      }catch(e){} }; setInterval(window.__uniFlyStep, 16); }
   if(!window.__uniHLKeys){ window.__uniHLKeys=1;
 
     window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
@@ -958,7 +1013,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   comboGrp.appendChild(comboRow); entPane.push(comboGrp);
   /* options row — entity boundary · cluster stars · FUNCTIONS (an icon toggle now; starts OFF) */
   var optGrp=grpWith("Options");
-  var _ogl=optGrp.querySelector(".grplbl"); if(_ogl) _ogl.title="entity boundary · cluster stars · code functions — hover each; functions START OFF";
+  var _ogl=optGrp.querySelector(".grplbl"); if(_ogl) _ogl.title="entity boundary · cluster stars · code functions · frontend types — hover each; functions + types START OFF";
   var optRow=document.createElement("div"); optRow.className="cfgrow entcombo";
   var entTog2=entShowGrp?entShowGrp.querySelector('[data-itog="entOn"]'):null;
   var starsTog=G.universe?G.universe.querySelector('[data-itog="stars"]'):null;
@@ -970,6 +1025,13 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     fb.onclick=function(){ CFG.showFns=(CFG.showFns==="on")?"off":"on"; fb.classList.toggle("on", CFG.showFns==="on");
       try{ applyCfg("showFns"); }catch(e){} };
     optRow.appendChild(fb); }
+  if(typeof _FETYPES!=="undefined" && _FETYPES.length){ var tb=document.createElement("button"); tb.className="itog"; tb.id="typesTog";
+    tb.title="types — adds "+_FETYPES.length+" frontend TS types/interfaces + their typed wires (the schema-equivalent; "+((window.GABE_C4&&GABE_C4.stats&&GABE_C4.stats.fe&&GABE_C4.stats.fe.fe_types_referenced)||0)+" referenced by a running piece) — starts OFF";
+    tb.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
+    tb.classList.toggle("on", CFG.showTypes==="on");
+    tb.onclick=function(){ CFG.showTypes=(CFG.showTypes==="on")?"off":"on"; tb.classList.toggle("on", CFG.showTypes==="on");
+      try{ applyCfg("showTypes"); }catch(e){} };
+    optRow.appendChild(tb); }
   optGrp.appendChild(optRow); entPane.push(optGrp);
   /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
   if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";

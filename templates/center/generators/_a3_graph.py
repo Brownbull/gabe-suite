@@ -791,11 +791,28 @@ def _stamp_l2(l2: dict[str, list[dict]]) -> None:
 _L1_RENDER_RELATIONS = ("calls", "imports")
 
 
+def fold_fe(out: dict[str, Any], fe: dict[str, Any] | None) -> dict[str, Any]:
+    """The FRONTEND arm rides a SEPARATE top-level ``fe`` key (pieces · edges · homes), never
+    inside ``l2`` — so the 2D station, the bridge drift detectors and every existing battery
+    see byte-identical bytes; the universe adapter alone folds it (screens absorbed into their
+    principal piece). ``fe=None`` → untouched; ``present=False`` → only ``stats.fe`` names the
+    absence (the graft/web honesty pattern); present → the data + its stats."""
+    if fe is None:
+        return out
+    if not fe.get("present"):
+        out["stats"]["fe"] = {"present": False, "reason": fe.get("reason")}
+        return out
+    out["fe"] = {"pieces": fe["pieces"], "edges": fe["edges"], "homes": fe["homes"]}
+    out["stats"]["fe"] = {"present": True, "reason": fe.get("reason"), **fe["stats"]}
+    return out
+
+
 def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                    status: dict[str, str] | None = None,
                    colors: dict[str, str] | None = None,
                    graft: dict[str, Any] | None = None,
-                   web: dict[str, Any] | None = None) -> dict[str, Any]:
+                   web: dict[str, Any] | None = None,
+                   fe: dict[str, Any] | None = None) -> dict[str, Any]:
     """The whole derivation: L1 entity graph + one L2 graph per entity, laid out.
 
     Pure over ``amap["entities"]`` (+ labels/status/colors), keyed on ``amap["head"]``.
@@ -1004,7 +1021,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                                 "from_slug": _slug, "to_slug": tgt_slug})
             cross_consumes += 1
 
-    return {
+    return fold_fe({
         "version": 1,
         "head": amap.get("head"),
         "colors": dict(colors or {}),   # per-entity palette, carried with the graph
@@ -1058,7 +1075,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                         "max_fns": max((b["fns"] for b in behind.values()), default=0)}
                        if graft_present else {"present": False}),
         },
-    }
+    }, fe)
 
 
 def emit(graph: dict[str, Any], center_out: Path) -> None:
