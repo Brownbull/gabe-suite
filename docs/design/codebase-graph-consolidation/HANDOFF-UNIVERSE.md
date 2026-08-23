@@ -291,6 +291,29 @@ codebase map, also let's add a search bar in the header."
   *Spike-export ref rewire; the search prefix demotion. GOTCHA for proof authors: a proof that drives
   retired UI dies silently outside the battery — migrate PROBES with the UI, not just assertions.
 
+## BATCH 51 — card-chip TRAIL navigation · legend hide-by-kind · fe/backend legend groups
+
+Operator asks ×3 (screenshot session): (1) the card's connection chips are NAVIGATION now — click
+"GET /shopping" / "ShoppingDashboardResponse" → `__uniGoto` selects + frames the target (a HELD
+type/function wakes its T/ƒ toggle first, the search rows' behavior shared) and the existing 7-step
+TRAIL accumulates (walkbar chips = back/forward, the archive-lab pattern). (2) the legend Types rows
+are hide-by-kind CONTROLS: click → that kind vanishes GRAPH-WIDE (one gate at the top of `visN`,
+`__uniKindOff`, applied through the fleet's own `_applyVisNow` path — meshes, hulls, wires, shuttles),
+the row dims + strikes; click again restores. (3) the Types tab is grouped `frontend` / `backend`
+(`.lghd2` headers span the grid; labels sit closer to their icons). Proofs: verify-panels [batch 51]
+block (chip→trail · hide/restore 349 components · groups) + battery 330 static.
+
+## PENDING OPERATOR DECISION — frontend/backend entity SPLIT (analysis delivered, no changes)
+
+Measured: pantry = 78 backend + 208 fe (73% fe) · cooking = 46 + 480 (91%) — the batch-48 fold of
+`features/<x>` into the backend entity is the density complaint. The fe wires are 348/1,019 INTRA;
+the only real seam is the bridge (6/11 fetching screens). Options: A = adapter-side split
+(`fe · pantry` sibling cluster, feed untouched, reversible toggle) · B = sub-band inside the hull
+(rejected: keeps the density) · C = emitter split (`_fe_home` emits fe·<feat> — the end state, re-keys
+every reader). RECOMMENDED: A now default-ON, promote to C after the split survives operator use
+(trigger: the bridge-majority pairing rule never mis-homes a feature across a few sessions). Entity
+establishment mirrors cc-init: feature dirs = the candidate list, the bridge = the confirming lens.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:

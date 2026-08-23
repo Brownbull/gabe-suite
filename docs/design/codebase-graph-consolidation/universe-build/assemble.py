@@ -346,9 +346,10 @@ text = text.replace(OLD_LCHIP,
 """  C.__link=function(l){ var s=l.source, t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t, sk=(s&&s.kind)||"function", tk=(t&&t.kind)||"function";
     var _lchip=function(nd,k,lb){ var el=E("span",{class:"pchip "+chipCls(k)}, icoEl(k), lb);   // hover lights the node — same halo as the element card's chips
       var id=(nd&&nd.id)||((typeof nd==="string")?nd:null);
-      if(id&&window.__uniHoverHL){ el.style.cursor="pointer";
+      if(id&&window.__uniHoverHL){ el.style.cursor="pointer"; el.title=(el.title?el.title+" · ":"")+"click to open (builds the 7-step trail)";
         el.addEventListener("mouseenter",function(){ __uniHoverHL(id); });
-        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); }); }
+        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); });
+        el.addEventListener("click",function(ev){ ev.stopPropagation(); if(window.__uniGoto) __uniGoto(id); }); }
       return el; };
     return [
       E("div",{class:"sec"}, sechd("link","Relation"),
@@ -404,6 +405,30 @@ text = text.replace(OLD_LSPR, '''function labelSprite(txt, size, y, col){ var cv
 OLD_CLBL = 'c.lbl=addObj(labelSprite(label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));'
 assert OLD_CLBL in text, "cluster label sprite anchor missing"
 text = text.replace(OLD_CLBL, 'c.lbl=addObj(labelSprite((level==="ent"&&window.__uniEntLabel)?__uniEntLabel(label):label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));', 1)
+
+# batch 51: the legend Types tab GROUPS (frontend · backend) and each kind row is a hide-by-kind CONTROL
+OLD_TYPES = """  Types: order.map(function(k){ return {t:"kind",k:k}; }).concat([   # the 12 element KINDS — icon + 3D form (the node representation)
+    {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · container: polygon / wrap"} ]),"""
+OLD_TYPES = OLD_TYPES.replace("#", "//")
+assert OLD_TYPES in text, "legend Types list anchor missing"
+NEW_TYPES = """  Types: [{t:"hd",l:"frontend"}].concat(
+    ["route","component","hook","type","store","module","screen","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
+    [{t:"hd",l:"backend"}],
+    ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
+    [ {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · click a row to HIDE that kind graph-wide"} ]),"""
+text = text.replace(OLD_TYPES, NEW_TYPES, 1)
+
+OLD_KROW = '''      if(it.t==="kind"){ var K=KINDS[it.k]; h+=\'<div class="lgrow"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — its actual icon glyph'''
+assert OLD_KROW in text, "legend kind-row anchor missing"
+NEW_KROW = '''      if(it.t==="hd"){ h+=\'<div class="lghd2">\'+it.l+\'</div>\'; return; }   // group header (frontend · backend), spans the grid
+      if(it.t==="kind"){ var K=KINDS[it.k]; var _off=window.__uniKindOff&&__uniKindOff[it.k];
+        h+=\'<div class="lgrow lgk\'+(_off?" lgoff":"")+\'" data-lgk="\'+it.k+\'" title="\'+(_off?"hidden — click to SHOW ":"click to HIDE ")+K.type+\' graph-wide"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — a hide-by-kind CONTROL now'''
+text = text.replace(OLD_KROW, NEW_KROW, 1)
+
+OLD_LGBIND = """    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });"""
+assert OLD_LGBIND in text, "legend binder anchor missing"
+text = text.replace(OLD_LGBIND, OLD_LGBIND + """
+    [].forEach.call(el.querySelectorAll("[data-lgk]"), function(rw){ rw.onclick=function(){ if(window.__uniKindToggle) __uniKindToggle(rw.dataset.lgk); }; });""", 1)
 
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
 assert OLD_CWCALL in text, "connectorWire call anchor missing"
@@ -471,9 +496,10 @@ OLD_CHIP = 'var mk=function(x){ return E("span",{class:"pchip "+cls}, glyph?icoE
 assert OLD_CHIP in text, "chipList mk anchor missing"
 text = text.replace(OLD_CHIP,
   'var mk=function(x){ var t=(x&&x.t!==undefined)?x.t:x, el=E("span",{class:"pchip "+cls}, glyph?icoEl(glyph):null, t);\n'
-  '      if(x&&x.id&&window.__uniHoverHL){ el.style.cursor="pointer";\n'
+  '      if(x&&x.id&&window.__uniHoverHL){ el.style.cursor="pointer"; el.title=(el.title?el.title+" · ":"")+"click to open (builds the 7-step trail)";\n'
   '        el.addEventListener("mouseenter",function(){ __uniHoverHL(x.id); });\n'
-  '        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); }); }\n'
+  '        el.addEventListener("mouseleave",function(){ __uniHoverHL(null); });\n'
+  '        el.addEventListener("click",function(ev){ ev.stopPropagation(); if(window.__uniGoto) __uniGoto(x.id); }); }\n'
   '      return el; };', 1)
 
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)

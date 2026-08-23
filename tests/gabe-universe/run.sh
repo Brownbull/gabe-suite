@@ -601,6 +601,19 @@ check('measureText(txt).width' in page and 'cv.width=Math.max(256, tw);' in page
 check('c.lbl.scale.set(_lh*_la, _lh, 1);' in page,
       "cluster label rescale lost the canvas-aspect rule (a text-fitted canvas squeezes at fixed 50x12.5)")
 
+# ── 10x. batch 51: card-chip navigation (the 7-step trail) · legend hide-by-kind · fe/backend groups ──
+check('window.__uniGoto=function(id)' in page and 'if(window.__uniGoto) __uniGoto(x.id);' in page
+      and 'if(window.__uniGoto) __uniGoto(id);' in page,
+      "card/link chips lost their click navigation (select + frame + the 7-step trail)")
+check('window.__uniKindOff={};' in page and 'if(n && window.__uniKindOff && __uniKindOff[n.kind]) return _KOFF;' in page,
+      "hide-by-kind lost its ONE visibility gate (visN)")
+check('window.__uniKindToggle=function(k)' in page and '__uniKindToggle(rw.dataset.lgk)' in page,
+      "the legend rows are no longer hide-by-kind controls")
+check('class="lghd2"' in page and '{t:"hd",l:"frontend"}' in page and '{t:"hd",l:"backend"}' in page,
+      "the legend Types tab lost its frontend/backend groups")
+check('.lgrow.lgoff{ opacity:.32; }' in page and 'data-lgk=' in page,
+      "a hidden kind's legend row no longer dims")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",

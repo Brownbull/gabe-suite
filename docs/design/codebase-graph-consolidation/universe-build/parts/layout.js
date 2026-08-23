@@ -766,7 +766,8 @@ _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 /* effective per-node: node override wins; else the entity flags AND the node's sub-group flags —
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
-function visN(n){ var o=n&&UNIVIS.node[n.id]; if(o) return o;
+function visN(n){ if(n && window.__uniKindOff && __uniKindOff[n.kind]) return _KOFF;   // hide-by-kind (batch 51) outranks every other gate
+  var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
   return { show:(ev.show&&sv.show)?1:0, planets:(ev.planets&&sv.planets)?1:0, wires:(ev.wires&&sv.wires)?1:0, subs:ev.subs,
@@ -1264,6 +1265,28 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });
 };
 
+/* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
+   a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
+window.__uniGoto=function(id){ if(!id) return;
+  var go=function(){ var nd=NIDS[id]; if(!nd) return false;
+    if(window.__uniSelNode) __uniSelNode(nd); _frameSet([id]); return true; };
+  if(go()) return;
+  if(typeof _FETYPES!=="undefined" && _FETYPES.some(function(n){ return n.id===id; })){
+    CFG.showTypes="on"; try{ toggleTypes(true); }catch(e){}
+    var tb=document.getElementById("typesTog"); if(tb) tb.classList.add("on"); go(); return; }
+  if(!_fnsOn && window.GABE_LEVELS && GABE_LEVELS.fn_nodes){ if(!_FNNODES) try{ _buildFnData(); }catch(e){}
+    if((_FNNODES||[]).some(function(n){ return n.id===id; })){
+      CFG.showFns="on"; try{ toggleFns(true); }catch(e){}
+      var fb=document.getElementById("fnsTog"); if(fb) fb.classList.add("on"); go(); } } };
+/* ── HIDE-BY-KIND (batch 51) — the legend Types rows are CONTROLS: a click hides that kind
+   GRAPH-WIDE (meshes, hulls, wires, shuttles — the same apply path the fleet uses) and dims
+   the row; a second click restores. ── */
+window.__uniKindOff={};
+var _KOFF={show:0,planets:0,wires:0,subs:0,zDef:0,zAtk:0,zCfl:0,zSat:0,routes:0};
+window.__uniKindToggle=function(k){ if(!k) return;
+  if(__uniKindOff[k]) delete __uniKindOff[k]; else __uniKindOff[k]=1;
+  try{ _applyVisNow({all:true}); }catch(e){}
+  if(window.__legRender) try{ __legRender(); }catch(e){} };
 /* ── the header SEARCH (batch 49) — one box over everything the station knows: live elements,
    held types (selecting one turns Types ON first), entities, clusters (current core), journeys.
    `/` focuses · ↑↓ move · Enter opens · Esc closes. Entries rebuild per keystroke from the LIVE

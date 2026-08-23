@@ -405,6 +405,32 @@ const fsel = await p.evaluate(() => new Promise(res => {
     res({ sel, noExpand, flies, expanded, panelStill, cluSel });
   }, 1100);
 }));
+// [batch 51] chip navigation builds the trail · legend rows hide by kind graph-wide
+const b51 = await p.evaluate(() => new Promise(res => {
+  const out = {};
+  const n = nodes.find(x => x.kind === 'schema' && links.some(l => lid(l.source) === x.id || lid(l.target) === x.id));
+  __uniSelNode(n); const first = n.id;
+  setTimeout(() => {
+    const c = [...document.querySelectorAll('#pbody .pchip')].find(x => x.style.cursor === 'pointer' && /trail/.test(x.title));
+    if (!c) { res({ chip: false }); return; }
+    c.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    setTimeout(() => {
+      out.chip = true; out.moved = SEL && SEL.data.id !== first; out.trail = WALK.mode === 'trail' && WALK.steps[0] === first && WALK.steps.length === 2;
+      __uniHLClear();
+      const lg = document.getElementById('elegend');
+      [...lg.querySelectorAll('.lgtab')].find(x => /types/i.test(x.textContent)).click();
+      out.groups = [...lg.querySelectorAll('.lghd2')].map(h => h.textContent).join(',') === 'frontend,backend';
+      lg.querySelector('[data-lgk="component"]').click();
+      setTimeout(() => {
+        out.hidden = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length === 0;
+        out.dimmed = !!document.querySelector('#elegend [data-lgk="component"].lgoff');
+        document.querySelector('#elegend [data-lgk="component"]').click();
+        setTimeout(() => { out.restored = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length > 300;
+          res(out); }, 1600);
+      }, 1600);
+    }, 900);
+  }, 500); }));
+
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -422,6 +448,7 @@ console.log('fleetSpot:', JSON.stringify(fleet));
 console.log('defaults:', JSON.stringify(defs));
 console.log('numKeys:', JSON.stringify(numkeys));
 console.log('flcfg:', JSON.stringify(flcfg));
+console.log('b51:', JSON.stringify(b51));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -467,6 +494,7 @@ if (!(flcfg.fnsOff && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.p
 if (!(flcfg.rsOneRow && flcfg.lgStyled)) fails.push('radius+spread must share one row / the legend must wear the panel chrome');
 if (!(flcfg.lgTwoCol && flcfg.lgCompact)) fails.push('the legend Types tab must read in TWO columns inside a compact box');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
+if (!(b51.chip && b51.moved && b51.trail && b51.groups && b51.hidden && b51.dimmed && b51.restored)) fails.push('batch 51 broken (chip → trail navigation · legend hide-by-kind · fe/backend groups): ' + JSON.stringify(b51));
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
 if (!(flcfg.wk.oneRow && flcfg.wk.hid && flcfg.wk.back && flcfg.wk.glowLbl && flcfg.wk.noFooter)) fails.push('wire-kind rows wrong (one row each, on/off round-trip, glow label, footer gone)');
