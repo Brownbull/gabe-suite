@@ -340,7 +340,7 @@ def load_maturity() -> str:
     return ""
 
 
-_CLOSERS = ("CLOSED", "RESOLVED", "WONT-DO", "WON'T-DO", "SUPERSEDED")
+_CLOSERS = ("CLOSED", "RESOLVED", "FIXED", "WONT-DO", "WON'T-DO", "SUPERSEDED")   # FIXED: backported from gustify (11 LEDGER + 5 PENDING rows use it)
 
 
 def _verdict_closed(status: str) -> bool:
