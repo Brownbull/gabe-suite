@@ -273,11 +273,20 @@ const flcfg = await p.evaluate(() => {
   btn('show').click();
   const entOpen = side.classList.contains('out');
   const U = s => bodyTxt().toUpperCase().includes(s);
-  const entFull = U('LAYOUT') && U('RADIUS') && U('TRANSPARENCY') && U('CONTAINER') && U('FUNCTIONS')
-    && !!document.querySelector('#flsbody [data-itog="stars"]') && !!document.querySelector('#flsbody [data-itog="entOn"]')
-    && !document.querySelector('#flsbody [data-itog="subOn"]');
+  const q2 = s => !!document.querySelector('#flsbody ' + s);
+  const entFull = U('LAYOUT') && U('RADIUS') && U('OPTIONS')
+    && q2('.pill[data-grp="entLayout"]') && q2('.pill[data-grp="entOp"]') && q2('.pill[data-grp="shape"]')   // combo row: layout · transparency · container
+    && q2('[data-itog="entOn"]') && q2('[data-itog="stars"]') && q2('#fnsTog') && q2('#spreadRng')
+    && !q2('[data-itog="subOn"]');
+  const fnsOff = CFG.showFns === 'off' && !document.querySelector('#flsbody #fnsTog.on');   // functions START OFF
+  const r0 = RENT[Object.keys(RENT)[0]];
+  const sp = document.querySelector('#flsbody #spreadRng'); sp.value = '2'; sp.dispatchEvent(new Event('input'));
+  const spWorks = Math.abs(window.__uniSpread - 2) < 0.001 && Math.abs(RENT[Object.keys(RENT)[0]] / r0 - 2) < 0.05;
+  sp.value = '1'; sp.dispatchEvent(new Event('input'));
+  const spBack = Math.abs(RENT[Object.keys(RENT)[0]] - r0) < 0.5;
+  const spQuarter = Math.abs(((1 - 0.4) / (2.8 - 0.4)) - 0.25) < 0.001;                     // default sits at a QUARTER of the bar
   btn('subs').click();
-  const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng') && U('CONTAINER')
+  const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
   btn('planets').click();
   const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');
@@ -353,6 +362,7 @@ const flcfg = await p.evaluate(() => {
   document.getElementById('flsclose').click();
   const closed = !side.classList.contains('out');
   return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
+    fnsOff, spWorks, spBack, spQuarter,
     standalone, docked, fleetUnstretched, under,
     oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
     ladder, defSpeed, badgeShows, backTo, wk }; });
@@ -411,7 +421,8 @@ if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUnt
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
 if (!(flcfg.tabs.length === 0 && flcfg.order === 'show,subs,planets,wires,routes')) fails.push('config must be TABLESS and the fleet order Entity·Clusters·Planets·Connections·Transports');
-if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity/clusters/planets split, shared radius+container, icons-only shape, zones master)');
+if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity combo/options rows, clusters, planets, zones master)');
+if (!(flcfg.fnsOff && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.push('functions must start OFF / the spread slider must scale RENT (default at a quarter of the bar)');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');

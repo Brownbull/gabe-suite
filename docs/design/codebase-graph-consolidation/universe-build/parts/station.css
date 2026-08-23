@@ -215,6 +215,9 @@
   #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; overflow-x:hidden; min-height:0; }
   #flside .flsbody .cfgrow{ flex-wrap:wrap; }
   #flside .flsbody .grplbl{ letter-spacing:.06em; }
+  #flside .entcombo{ gap:7px !important; flex-wrap:wrap; }
+  #flside .splbl{ width:auto !important; font-size:9px; text-transform:uppercase; letter-spacing:.05em; cursor:help; }
+  #flside #spreadRng{ flex:1; min-width:60px; }
   /* the transport speed ladder — a numbered dot IS the thumb */
   #flside .spdwrap{ position:relative; display:inline-flex; flex:1; align-items:center; min-width:0; }
   #flside .spdwrap input{ width:100%; }

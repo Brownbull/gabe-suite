@@ -361,6 +361,9 @@
   #flside .flsbody{ padding:8px 10px 10px; overflow-y:auto; overflow-x:hidden; min-height:0; }
   #flside .flsbody .cfgrow{ flex-wrap:wrap; }
   #flside .flsbody .grplbl{ letter-spacing:.06em; }
+  #flside .entcombo{ gap:7px !important; flex-wrap:wrap; }
+  #flside .splbl{ width:auto !important; font-size:9px; text-transform:uppercase; letter-spacing:.05em; cursor:help; }
+  #flside #spreadRng{ flex:1; min-width:60px; }
   /* the transport speed ladder — a numbered dot IS the thumb */
   #flside .spdwrap{ position:relative; display:inline-flex; flex:1; align-items:center; min-width:0; }
   #flside .spdwrap input{ width:100%; }
@@ -1158,7 +1161,7 @@ function recomputeSubAnchors(){
   nodes.forEach(function(n){ cnt[n.ent]=(cnt[n.ent]||0)+1;
     (subs[n.ent]=subs[n.ent]||{})[n.sub]=(subs[n.ent][n.sub]||0)+1; });
   RENT={}; SUBANCHOR={};
-  _ents.forEach(function(e,ei){ var c=cnt[e]||0; RENT[e]=30+9*Math.sqrt(c);
+  _ents.forEach(function(e,ei){ var c=cnt[e]||0; RENT[e]=(30+9*Math.sqrt(c))*(window.__uniSpread||1);   // spread slider: element separation INSIDE entities
     var g=subs[e]||{}, ks=Object.keys(g).sort(function(a,b){ return (g[b]-g[a])||(a<b?-1:1); });
     var m={}; SUBANCHOR[e]=m;
     if(ks.length<2){ ks.forEach(function(k){ m[k]={x:0,y:0,z:0}; }); return; }   // one group (incl. the honest "other") → centered, no ring
@@ -2030,25 +2033,53 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
           {v:"on",t:"Show",ti:"adds "+window.GABE_LEVELS.fn_nodes.length+" code functions + their call edges (levels feed) — heavier, complete"}], CFG.showFns)+'</div>') : '');
   var _lw=[].slice.call(layWrap.children);                       // [entity layout, core by, (functions)]
   var layGrp=_lw[0]||null, coreGrp=_lw[1]||null, fnGrp=_lw[2]||null;
-  if(layGrp) entPane.push(layGrp);
-  if(entShowGrp) entPane.push(entShowGrp);
-  if(radiusGrp) entPane.push(radiusGrp);
-  if(entOpGrp) entPane.push(entOpGrp);
-  if(G.container) entPane.push(G.container);
-  if(G.universe) entPane.push(G.universe);                        // cluster stars (+ whatever the spike keeps here)
-  if(fnGrp) entPane.push(fnGrp);
+  /* combo row — LAYOUT pills · TRANSPARENCY dots · CONTAINER shapes, three clusters in one row */
+  var comboGrp=grpWith("Layout");
+  var _cbl=comboGrp.querySelector(".grplbl"); if(_cbl) _cbl.title="entity layout (chain · force · ring) — planet transparency — boundary shape (both levels)";
+  var comboRow=document.createElement("div"); comboRow.className="cfgrow entcombo";
+  var lp=layGrp?layGrp.querySelector(".pill"):null, tp2=trows[2]?trows[2].querySelector(".pill"):null,
+      cp2=G.container?G.container.querySelector(".pill"):null;
+  if(lp) comboRow.appendChild(lp); if(tp2) comboRow.appendChild(tp2); if(cp2) comboRow.appendChild(cp2);
+  comboGrp.appendChild(comboRow); entPane.push(comboGrp);
+  /* options row — entity boundary · cluster stars · FUNCTIONS (an icon toggle now; starts OFF) */
+  var optGrp=grpWith("Options");
+  var _ogl=optGrp.querySelector(".grplbl"); if(_ogl) _ogl.title="entity boundary · cluster stars · code functions — hover each; functions START OFF";
+  var optRow=document.createElement("div"); optRow.className="cfgrow entcombo";
+  var entTog2=entShowGrp?entShowGrp.querySelector('[data-itog="entOn"]'):null;
+  var starsTog=G.universe?G.universe.querySelector('[data-itog="stars"]'):null;
+  if(entTog2) optRow.appendChild(entTog2); if(starsTog) optRow.appendChild(starsTog);
+  if(hasFns){ var fb=document.createElement("button"); fb.className="itog"; fb.id="fnsTog";
+    fb.title="functions — adds "+window.GABE_LEVELS.fn_nodes.length+" code functions + their call edges (levels feed) — starts OFF";
+    fb.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/></svg>';
+    fb.classList.toggle("on", CFG.showFns==="on");
+    fb.onclick=function(){ CFG.showFns=(CFG.showFns==="on")?"off":"on"; fb.classList.toggle("on", CFG.showFns==="on");
+      try{ applyCfg("showFns"); }catch(e){} };
+    optRow.appendChild(fb); }
+  optGrp.appendChild(optRow); entPane.push(optGrp);
+  /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
+  if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";
+    spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a quarter of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
+      +'<input type="range" class="rng" id="spreadRng" min="0.4" max="2.8" step="0.05" value="1">';
+    radiusGrp.appendChild(spRow);
+    var _sr=spRow.querySelector("#spreadRng");
+    _sr.addEventListener("input", function(){ window.__uniSpread=+_sr.value;
+      try{ __uniFreezeForSettle(); }catch(e){}
+      try{ recomputeSubAnchors(); }catch(e){}
+      try{ recomputeEX(); }catch(e){}
+      try{ Graph.d3ReheatSimulation(); }catch(e){} });
+    entPane.push(radiusGrp); }
   if(coreGrp) cluPane.push(coreGrp);
   if(cluShowGrp) cluPane.push(cluShowGrp);
   if(subOpGrp) cluPane.push(subOpGrp);
   window.__uniFlPanes={
-    show:{ title:"Entity", icon:"shape", groups:entPane, shared:[radiusGrp, G.container] },
-    subs:{ title:"Clusters", icon:"sub", groups:cluPane, shared:[radiusGrp, G.container] },
+    show:{ title:"Entity", icon:"shape", groups:entPane, shared:[radiusGrp] },
+    subs:{ title:"Clusters", icon:"sub", groups:cluPane, shared:[radiusGrp] },   // container lives in the entity combo row now (it always affected both levels)
     planets:{ title:"Planets", icon:"bubble", groups:planetsPane, shared:[] } };
   var _stash=document.getElementById("flstash");
   if(!_stash){ _stash=document.createElement("div"); _stash.id="flstash"; _stash.style.display="none"; document.body.appendChild(_stash); }
   _stash.innerHTML="";
   [entPane, cluPane, planetsPane].forEach(function(gs){ gs.forEach(function(g){ if(g&&g.parentNode!==_stash) _stash.appendChild(g); }); });
-  [radiusGrp, G.container].forEach(function(g){ if(g&&g.parentNode!==_stash) _stash.appendChild(g); });
+  [radiusGrp].forEach(function(g){ if(g&&g.parentNode!==_stash) _stash.appendChild(g); });
   if(window.__uniFlOpen) try{ __uniFlOpen(window.__uniFlOpenKey||null, true); }catch(e){}
 
   // ── ROUTES pane: lines (icon pill + curve amount) · per-kind beam · transports + speed ──

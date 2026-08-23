@@ -482,7 +482,14 @@ check('window.__uniHovLink===l' in page and page.count('__uniHovLink')>=4,
 # batch 41: theme toggle + theme-aware highlight wires
 check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in page and ':root[data-theme="light"]' in page,
       "the dark/light theme toggle is gone (button + apply + light var block)")
-check('0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
+# batch 42: entity pane rebuild — combo row · options icon-toggles · the SPREAD slider
+check('"fnsTog"' in page, "the FUNCTIONS icon toggle is gone (replaced the Hide/Show pill; starts OFF)")
+check('"spreadRng"' in page, "the SPREAD slider is gone (element separation inside entities)")
+check('(window.__uniSpread||1)' in page and 'min="0.4" max="2.8"' in page,
+      "spread must scale RENT with the default at a quarter of the 0.4-2.8 bar")
+check('className="cfgrow entcombo"' in page,
+      "the entity combo/options rows are gone")
+check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
       "highlighted wires lost their theme highlight color (white dark · indigo light)")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,
       "the station's dark surfaces are hardcoded again (light theme cannot flip them)")
