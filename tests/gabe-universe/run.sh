@@ -301,7 +301,7 @@ check('SUBOF[n.layer]' not in page and 'SUBOF[KINDS' not in page, "REGRESSION: t
 check('var SUBSHIFT={ endpoints:0.04' in page, "hull hue-shift map lacks the un-collapsed layer keys")
 check('function _hlCompute' in page and 'window._hlLinkF' in page and 'function _nodeVisibleFn' in page,
       "depth-highlight machinery missing (BFS + wire factor + shared visibility fn)")
-check('kind, R, hf, ea, eb)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
+check('kind, R, hf, ea, eb, hov)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
       "connector wires ignore the highlight factor (or lost the gradient entity args / selected-wire boost)")
 check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
       "node visibility does not go through the shared fn (focus mode dead)")

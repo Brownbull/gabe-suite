@@ -167,10 +167,10 @@ const defs = await p.evaluate(() => {
   d.wirePanel = /CONNECTION/.test(document.querySelector('#phead .ptype')?.textContent || '');
   d.wireTitle = document.querySelector('#phead .pname')?.textContent || '';
   d.selGlows = window.__uniSelLink === l && [...connGroup.children].some(w => w.userData.kind && w.material.blending === THREE.AdditiveBlending);
-  d.selWhite = [...connGroup.children].some(w => w.material.blending === THREE.AdditiveBlending && w.material.color.getHex() === 0xffffff);   // highlight = WHITE on dark
+  const plainWhite = () => [...connGroup.children].some(w => w.userData.kind && !w.material.vertexColors && w.material.color.getHex() === 0xffffff);   // gradient mats are white by design — exclude them
+  d.litKeepColor = !plainWhite();                                           // a SELECTION (wire + lit set) must NOT recolor anything
   window.__uniApplyTheme('light');
   d.themeLight = document.documentElement.getAttribute('data-theme') === 'light' && Graph.backgroundColor() === '#e8ecf3';
-  d.selIndigo = [...connGroup.children].some(w => w.material.blending === THREE.AdditiveBlending && w.material.color.getHex() === 0x4f46e5);  // …indigo on light
   window.__uniApplyTheme('dark');
   d.themeBack = document.documentElement.getAttribute('data-theme') === 'dark' && !!document.getElementById('themeBtn');
   d.linkLit = HL.on && HL.set[lid(l.source)] !== undefined && HL.set[lid(l.target)] !== undefined;   // wire select BFS-lights both ends
@@ -187,6 +187,11 @@ const defs = await p.evaluate(() => {
   chips[0].dispatchEvent(new MouseEvent('mouseenter'));
   d.chipHaloOn = halo();
   d.hovWire = window.__uniHovLink === l && [...connGroup.children].some(w => w.material.blending === THREE.AdditiveBlending);   // the wire to the hovered endpoint glows
+  const hovColor = hex => [...connGroup.children].some(w => w.userData.kind && !w.material.vertexColors && w.material.blending === THREE.AdditiveBlending && w.material.color.getHex() === hex);
+  d.hovWhite = hovColor(0xffffff);                                          // ONLY the hover pair recolors — white on dark
+  window.__uniApplyTheme('light');
+  d.hovIndigo = hovColor(0x4f46e5);                                         // …indigo on light
+  window.__uniApplyTheme('dark');
   chips[0].dispatchEvent(new MouseEvent('mouseleave'));
   d.chipHaloOff = !halo() && window.__uniHovLink === null;
   d.chipCursor = chips.every(c => c.style.cursor === 'pointer');
@@ -393,7 +398,9 @@ if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' &&
 if (!(defs.modeBefore === 'glow' && defs.modeAfter === 'focus' && defs.restAfter === 'dim')) fails.push('focus options do not BITE (auto-switch to focus mode)');
 if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not clickable (connection panel did not open)');
 if (!(defs.selGlows && defs.linkLit)) fails.push('selected wire must GLOW and BFS-light its endpoints');
-if (!(defs.selWhite && defs.themeLight && defs.selIndigo && defs.themeBack)) fails.push('theme toggle / theme-aware highlight wires wrong (white dark · indigo light)');
+if (!defs.litKeepColor) fails.push('selection recolored a wire — WHITE is reserved for the hover pair');
+if (!(defs.themeLight && defs.themeBack)) fails.push('theme toggle broken');
+if (!(defs.hovWhite && defs.hovIndigo)) fails.push('the HOVER pair wire must recolor (white dark · indigo light)');
 if (!(defs.restOpts === 'dim,hide' && defs.restIcons)) fails.push('focus rest must be DIM+HIDE icon pills only');
 if (!(defs.altE && defs.altQ)) fails.push('Alt+Q/Alt+E depth keys broken');
 if (!(defs.chipHaloOn && defs.chipHaloOff && defs.chipCursor)) fails.push('link-card endpoint chips do not hover-light their nodes');

@@ -991,13 +991,13 @@ window.__uniCfgToggle=function(){ var c=document.getElementById("cfg"); if(!c) r
   var g=document.getElementById("navgear"); if(g) g.classList.toggle("on", hidden); };
 window.__uniNavToggle=function(){ document.body.classList.toggle("nav-min");
   setTimeout(function(){ try{ if(typeof resizeGraph==="function") resizeGraph(); }catch(e){} }, 220); };   // graph refills the reclaimed width after the slide
-function connectorWire(grp, a, b, kind, R, hf, ea, eb){ var cfg=CONN[kind]||CONN.calls;
+function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov){ var cfg=CONN[kind]||CONN.calls;
   hf=(hf==null)?1:hf; if(!hf) return;   // depth-highlight factor: 0 = outside a FOCUS set (skip) · >1 = in the lit set (brighter, additive)
   var _bm=(window.__uniBeam && window.__uniBeam[kind]!=null)?window.__uniBeam[kind]:1; if(!_bm) return;
   var dir=b.clone().sub(a); var len=dir.length()||1; dir.multiplyScalar(1/len);
   var A=a.clone().addScaledVector(dir,R), B=b.clone().addScaledVector(dir,-R);   // reach just past each node bubble
   var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;
-  var _hlc=(hf>1)?((window.__uniTheme==="light")?0x4f46e5:0xffffff):0;   // a HIGHLIGHTED wire wears the theme highlight color
+  var _hlc=hov?((window.__uniTheme==="light")?0x4f46e5:0xffffff):0;   // ONLY the HOVER pair recolors; lit/selected wires keep their kind color
   var _gr=!!(cfg.grad && ea!=null && eb!=null) && !_hlc;
   if(_gr){ var _ca=new T.Color(ea), _cb=new T.Color(eb), _n=_pts.length, _arr=new Float32Array(_n*3), _tc=new T.Color();
     for(var _i=0;_i<_n;_i++){ _tc.copy(_ca).lerp(_cb, _n>1?_i/(_n-1):0); _arr[_i*3]=_tc.r; _arr[_i*3+1]=_tc.g; _arr[_i*3+2]=_tc.b; }
@@ -1013,7 +1013,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
     if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
     var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;
-    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null); });
+    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null, (window.__uniHovLink===l)); });
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
    nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */

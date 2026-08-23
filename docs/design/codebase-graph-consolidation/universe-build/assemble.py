@@ -304,11 +304,11 @@ text = text.replace(
 #    by its endpoint ENTITY colors via vertex colors; the kind keeps carrying the dash STYLE. ──
 assert "function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;" in text
 text = text.replace("function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;",
-  "function connectorWire(grp, a, b, kind, R, hf, ea, eb){ var cfg=CONN[kind]||CONN.calls;", 1)
+  "function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov){ var cfg=CONN[kind]||CONN.calls;", 1)
 OLD_GEO2 = "var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;"
 assert OLD_GEO2 in text, "gradient geometry anchor missing"
 text = text.replace(OLD_GEO2, OLD_GEO2 + """
-  var _hlc=(hf>1)?((window.__uniTheme==="light")?0x4f46e5:0xffffff):0;   // a HIGHLIGHTED wire wears the theme highlight color
+  var _hlc=hov?((window.__uniTheme==="light")?0x4f46e5:0xffffff):0;   // ONLY the HOVER pair recolors; lit/selected wires keep their kind color
   var _gr=!!(cfg.grad && ea!=null && eb!=null) && !_hlc;
   if(_gr){ var _ca=new T.Color(ea), _cb=new T.Color(eb), _n=_pts.length, _arr=new Float32Array(_n*3), _tc=new T.Color();
     for(var _i=0;_i<_n;_i++){ _tc.copy(_ca).lerp(_cb, _n>1?_i/(_n-1):0); _arr[_i*3]=_tc.r; _arr[_i*3+1]=_tc.g; _arr[_i*3+2]=_tc.b; }
@@ -373,7 +373,7 @@ text = text.replace(OLD_CALL2,
 OLD_WHF = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });"
 assert OLD_WHF in text, "selected-wire glow anchor missing"
 text = text.replace(OLD_WHF,
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });", 1)
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l)); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)
