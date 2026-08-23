@@ -307,4 +307,4 @@
     return w; }
   Object.keys(C).forEach(function(k){ var base=C[k];
     C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });
-  window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu;
+  window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu; window.__uniSelNode=_selNode;   // batch 49: the search selects nodes through the ONE select path

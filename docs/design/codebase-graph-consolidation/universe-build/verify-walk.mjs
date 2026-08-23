@@ -78,7 +78,7 @@ const escd = await p.evaluate(() => ({ banner: document.getElementById('jrnpill'
 const pw = await p.evaluate(() => new Promise(res => {
   const e = _ents[0], hulls0 = CLUSTERS.filter(c => c.name === e).length;
   document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="planets"]`).click();
-  setTimeout(() => {
+  setTimeout(() => {                                             // 1200ms: the 888-planet apply lands in ~600-900ms headless (measured 14 left @500 / 0 @900)
     const nodesGone = nodes.filter(n => n.ent === e).every(n => !n.__threeObj || !n.__threeObj.parent);
     const hullStays = CLUSTERS.filter(c => c.name === e).length === hulls0 && hulls0 === 1;
     document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="planets"]`).click();
@@ -92,9 +92,9 @@ const pw = await p.evaluate(() => new Promise(res => {
         const nodesBack = nodes.filter(n => n.ent === e).some(n => n.__threeObj && n.__threeObj.parent);
         document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="wires"]`).click();
         setTimeout(() => res({ nodesGone, hullStays, wiresNow, expected, wiresScoped: wiresNow === expected, nodesBack }), 400);
-      }, 500);
-    }, 400);
-  }, 500); }));
+      }, 1200);
+    }, 1000);
+  }, 1200); }));
 // [2c] depth slider + arrow keys
 const depth = await p.evaluate(() => { const r = document.getElementById('depthRng');
   r.value = '5'; r.dispatchEvent(new Event('input', { bubbles: true }));

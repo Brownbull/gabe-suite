@@ -391,6 +391,12 @@ zForce.initialize=function(ns){ zForce.__n=ns; };
    picker feeds the SAME machinery with a carrier set instead of a single origin. */
 var HL={ on:false, mode:"glow", depth:3, rest:"hide", origin:null, jr:null, set:{}, links:null, sprites:[] };   // rest = focus's treatment of the OUTSIDE: dim · fade · wires · hide
 function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
+  if(HL.exact){                                            // JOURNEY mode (batch 49): the path IS the set — the fe leg
+    var ex={};                                             // sits in the dense frontend cluster, and a depth-BFS from it
+    HL.origin.forEach(function(id){ if(NIDS[id]) ex[id]=0; });   // lit 2,824 wires (screen = noise, the batch-15 lesson).
+    HL.set=ex; HL.links=new Set();                         // exact origin + only the wires BETWEEN its members.
+    links.forEach(function(l){ if(ex[lid(l.source)]!==undefined && ex[lid(l.target)]!==undefined) HL.links.add(l); });
+    return; }
   var adj={}; links.forEach(function(l){ var s=lid(l.source), t=lid(l.target);
     (adj[s]=adj[s]||[]).push(t); (adj[t]=adj[t]||[]).push(s); });
   var depth={}, q=[];
@@ -432,17 +438,17 @@ function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.text
   var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
   var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
   if(ig&&ifc){ ig.style.display=(HL.mode==="glow")?"":"none"; ifc.style.display=(HL.mode==="focus")?"":"none"; } }
-window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle();
+window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle();
   if(WALK.mode!=="trail"){ WALK.mode="trail"; WALK.steps=[]; }        // a user click while a journey walks = a fresh trail (the 2D rule)
   var ix=WALK.steps.indexOf(n.id);
   if(ix>=0) WALK.i=ix; else { WALK.steps.push(n.id); if(WALK.steps.length>7) WALK.steps.shift(); WALK.i=WALK.steps.length-1; }
   _walkRender(); };
-window.__uniHLSelectLink=function(l){ if(!l) return; HL.jr=null; HL.jrObj=null;
+window.__uniHLSelectLink=function(l){ if(!l) return; HL.jr=null; HL.jrObj=null; HL.exact=false;
   HL.origin=[lid(l.source), lid(l.target)]; HL.on=true; _hlCompute(); _hlRestyle(); };   // a WIRE select seeds the BFS from BOTH endpoints (depth control applies)
-window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; HL.jr=null; HL.jrObj=null; HL.origin=null; HL.set={}; HL.links=null;
+window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=null; HL.set={}; HL.links=null;
   window.__uniSelLink=null;
   WALK.mode=null; WALK.steps=[]; WALK.i=0; _hlRestyle(); _walkRender(); };
-window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d));
+window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d)); HL.exact=false;   // widening depth during a journey opts INTO the BFS neighborhood (the exact path was the default)
   if(HL.on){ _hlCompute(); _hlRestyle(); } else _hlSyncUI(); };
 window.__uniHLMode=function(){ HL.mode=(HL.mode==="glow")?"focus":"glow"; if(HL.on) _hlRestyle(); else _hlSyncUI(); };
 /* ── JOURNEYS — cross-entity tests from det.test_journeys, deduped by cid. NAMED for free: the same
@@ -465,13 +471,33 @@ function _jrnCollect(){ if(JRN) return JRN; var m={};
     j.e2e=!!j.corpora.e2e; j.corpus=Object.keys(j.corpora).sort().join("+");
     j.name=j.agg ? (j.corpus+" tests · "+j.cid+" (aggregated)") : _jrnName(j);
     j.start=(j.ents[0]||"other");
+    j.fe=_jrnFeLeg(j.carriers); j.feN=j.fe.users.length+j.fe.screens.length;   // batch 49: the FRONTEND leg this journey's endpoints reach over the bridge
     j.carriers.sort(function(a,b){ var ea=(NIDS[a]||{}).ent||"", eb=(NIDS[b]||{}).ent||"";   // steps walk entity-by-entity along the span
       var ia=j.ents.indexOf(ea), ib=j.ents.indexOf(eb); if(ia!==ib) return ia-ib; return a<b?-1:1; });
     return j; });
   return JRN; }
-function _jrnRow(j){ return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" → ")+'">'
+function _jrnRow(j){ return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+'">'
   +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+(j.agg?"agg":j.cid)+'</b><span class="jrncorp">'+j.corpus+'</span>'
+  +(j.feN?('<span class="jrnfe">'+svgInline("component", KINDCOL.component, 10)+j.feN+'</span>'):"")
   +'<span class="jrnn">'+j.ents.length+' ents</span></div>'; }
+/* ── the FRONTEND LEG (batch 49) — derived from wires the map ALREADY carries, no emitter change:
+   a journey's carrier ENDPOINTS are fetched over `bridge` wires by their screen PIECES (the hook/
+   component that fetches — the web node was absorbed into it, batch 48), and those screens are driven
+   by their direct USERS (`uses`/`renders` sources: the components/routes that call the hook). The leg
+   walks UI → API → data: users → screens → carriers. One hop up on purpose — the full renders chain
+   is the depth slider's job, not the journey's. ── */
+function _jrnFeLeg(carriers){ var cs={}; carriers.forEach(function(id){ cs[id]=1; });
+  var scr={}, use={};
+  links.forEach(function(l){ if(l.rel==="bridge" && cs[lid(l.target)]) scr[lid(l.source)]=1; });
+  links.forEach(function(l){ if((l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads") && scr[lid(l.target)]) use[lid(l.source)]=1; });   // fecall/reads too: a fetching MODULE or store has callers, not renderers
+  Object.keys(scr).forEach(function(id){ delete use[id]; });               // a screen is a screen, never doubled as its own user
+  return { screens:Object.keys(scr).sort(), users:Object.keys(use).sort() }; }
+window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) p.style.display="none";
+  if(!cid){ __uniHLClear(); return; }
+  var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
+  var fe=j.fe?j.fe.users.concat(j.fe.screens).filter(function(id){ return NIDS[id] && visN(NIDS[id]).show; }):[];   // drawn AND fleet-shown — a hidden piece must not be walked to (visN is the fleet truth; NIDS alone never changes on fleet hides)
+  HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();
+  WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; _walkRender(); _walkGo(0); };
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
   if(p.style.display!=="none"){ p.style.display="none"; return; }
   var js=_jrnCollect(), bySpan=function(a,b){ return (b.ents.length-a.ents.length)||(b.carriers.length-a.carriers.length); };
@@ -483,12 +509,7 @@ window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) r
   Object.keys(groups).sort().forEach(function(g){ h+='<div class="jrngrp">'+g+' · '+groups[g].length+'</div>';
     groups[g].sort(bySpan).forEach(function(j){ h+=_jrnRow(j); }); });
   p.innerHTML=h; p.style.display="";
-  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ var cid=r.getAttribute("data-jr");
-    p.style.display="none";
-    if(!cid){ __uniHLClear(); return; }
-    var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
-    HL.jr=cid; HL.jrObj=j; HL.origin=j.carriers.slice(); HL.on=true; _hlCompute(); _hlRestyle();
-    WALK.mode="journey"; WALK.steps=j.carriers.slice(); WALK.i=0; _walkRender(); _walkGo(0); }; }); };
+  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; }); };
 /* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
    card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */
 var WALK={ mode:null, steps:[], i:0 };
@@ -521,7 +542,9 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
       pill.style.display="";
       pill.innerHTML='<button class="tbico wbtn" data-wgo="-1" title="previous step">'+CHL+'</button>'
         +'<span class="wname" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
-        +'<b class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</b><span class="wjname">'+(j.name||j.cid)+'</span></span>'
+        +'<b class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</b><span class="wjname">'+(j.name||j.cid)+'</span>'
+        +(function(){ var wf=WALK.steps.filter(function(id){ return NIDS[id]&&NIDS[id].fe; }).length;
+            return wf?('<span class="wfe" title="'+wf+' frontend piece(s) walk FIRST — the screens fetching this journey\'s endpoints + the components/callers driving them'+(wf<j.feN?(' ('+(j.feN-wf)+' more fleet-hidden)'):'')+'">'+svgInline("component", KINDCOL.component, 11)+wf+'</span>'):""; })()+'</span>'
         +'<button class="tbico wbtn" data-wgo="1" title="next step">'+CHR+'</button>'
         +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
@@ -1199,3 +1222,89 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var _st2=document.getElementById("flstash");
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });
 };
+
+/* ── the header SEARCH (batch 49) — one box over everything the station knows: live elements,
+   held types (selecting one turns Types ON first), entities, clusters (current core), journeys.
+   `/` focuses · ↑↓ move · Enter opens · Esc closes. Entries rebuild per keystroke from the LIVE
+   field — a toggle (ƒ · T · fleet) is reflected on the next character, nothing cached to go stale. ── */
+if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
+  var inp=document.getElementById("tsin"), dd=document.getElementById("tsdd"), box=document.getElementById("tsrch");
+  if(!inp||!dd) return;
+  var ACT=[], act=-1;
+  var _esc=function(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/"/g,"&quot;"); };   // labels are code identifiers (Map<string…) and the echo is raw keyboard text
+  var JGLYPH='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="#8b5cf6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
+  function _score(q, label, extra){ var l=(label||"").toLowerCase();
+    if(l.indexOf(q)===0) return 0; if(l.indexOf(q)>=0) return 1;
+    if(extra && extra.toLowerCase().indexOf(q)>=0) return 2; return -1; }
+  function _collect(q){ var out=[];
+    nodes.forEach(function(n){ var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
+      if(sc>=0) out.push({g:"elements", sc:sc, label:n.label, sub:n.ent, ico:svgInline(n.kind, n.col, 12),
+        go:function(){ if(window.__uniSelNode) __uniSelNode(n); _frameSet([n.id]); } }); });
+    if(typeof _FETYPES!=="undefined") _FETYPES.forEach(function(n){ if(NIDS[n.id]) return;
+      var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
+      if(sc>=0) out.push({g:"types (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns Types ON",
+        ico:svgInline("type", KINDCOL.type, 12),
+        go:function(){ CFG.showTypes="on"; try{ toggleTypes(true); }catch(e){}
+          var tb=document.getElementById("typesTog"); if(tb) tb.classList.add("on");
+          if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
+    if(typeof _fnsOn!=="undefined" && !_fnsOn && window.GABE_LEVELS && GABE_LEVELS.fn_nodes && GABE_LEVELS.fn_nodes.length){
+      if(!_FNNODES) try{ _buildFnData(); }catch(e){}
+      (_FNNODES||[]).forEach(function(n){ if(NIDS[n.id]) return;
+        var sc=_score(q, n.label, n.id);
+        if(sc>=0) out.push({g:"functions (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns ƒ ON",
+          ico:svgInline("function", KINDCOL["function"], 12),
+          go:function(){ CFG.showFns="on"; try{ toggleFns(true); }catch(e){}
+            var fb=document.getElementById("fnsTog"); if(fb) fb.classList.add("on");
+            if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
+    }
+    _ents.forEach(function(e){ var sc=_score(q, e);
+      if(sc>=0) out.push({g:"entities", sc:sc, label:e, sub:(nodes.filter(function(n){return n.ent===e;}).length)+" pieces",
+        ico:'<i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:'+(ENT[e]||"#888")+'"></i>',
+        go:function(){ if(window.__uniPanelEnt) __uniPanelEnt(e);
+          _frameSet(nodes.filter(function(n){ return n.ent===e; }).map(function(n){ return n.id; })); } }); });
+    if(typeof SUBANCHOR!=="undefined") Object.keys(SUBANCHOR).forEach(function(e){
+      Object.keys(SUBANCHOR[e]).forEach(function(sub){ if(!sub) return; var sc=_score(q, sub, e);
+        if(sc>=0) out.push({g:"clusters", sc:sc+0.25, label:sub, sub:e, ico:svgInline("entity", ENT[e]||"#888", 12),
+          go:function(){ if(window.__uniPanelClu) __uniPanelClu(e, sub);
+            _frameSet(nodes.filter(function(n){ return n.ent===e&&n.sub===sub; }).map(function(n){ return n.id; })); } }); });
+    });
+    _jrnCollect().forEach(function(j){ var sc=_score(q, j.name||j.cid, j.cid+" "+j.ents.join(" "));
+      if(sc>=0) out.push({g:"journeys", sc:sc+0.25, label:(j.name||j.cid), sub:j.corpus+(j.feN?(" · "+j.feN+" fe"):""), ico:JGLYPH,
+        go:function(){ window.__uniJrnStart(j.cid); } }); });
+    out.sort(function(a,b){ return (a.sc-b.sc)||(a.label<b.label?-1:1); });
+    return out; }
+  function _close(){ dd.style.display="none"; ACT=[]; act=-1; }
+  function _render(){ var q=inp.value.trim().toLowerCase();
+    if(q.length<2){ _close(); return; }
+    var all=_collect(q), CAP=14; ACT=all.slice(0,CAP); act=ACT.length?0:-1;
+    var _seen=[], _by={}; ACT.forEach(function(r){ if(!_by[r.g]){ _by[r.g]=[]; _seen.push(r.g); } _by[r.g].push(r); });
+    ACT=_seen.reduce(function(a,gk){ return a.concat(_by[gk]); },[]);           // headers render ONCE — the best hit still decides group order
+    var h="", g=null;
+    ACT.forEach(function(r,i){ if(r.g!==g){ g=r.g; h+='<div class="tsgrp">'+g+'</div>'; }
+      h+='<div class="tsrow'+(i===act?" on":"")+'" data-ti="'+i+'">'+r.ico
+        +'<span class="tsl">'+_esc(r.label)+'</span>'
+        +(r.hint?('<span class="tshint">'+_esc(r.hint)+'</span>'):"")
+        +'<span class="tss">'+_esc(r.sub)+'</span></div>'; });
+    if(all.length>CAP) h+='<div class="tsmore">+'+(all.length-CAP)+' more — keep typing</div>';
+    if(!ACT.length) h='<div class="tsmore">no match for “'+_esc(inp.value.trim())+'”</div>';
+    var _jp=document.getElementById("jrn"); if(_jp) _jp.style.display="none";   // exclusive surfaces: #jrn (z-55, document-level) would paint OVER the dropdown and steal its clicks
+    dd.innerHTML=h; dd.style.display="";
+    dd.querySelectorAll(".tsrow").forEach(function(r){
+      r.onmousedown=function(ev){ ev.preventDefault(); _fire(+r.getAttribute("data-ti")); };   // mousedown beats the input blur
+      r.onmouseenter=function(){ _mark(+r.getAttribute("data-ti")); }; }); }
+  function _mark(i){ act=i; dd.querySelectorAll(".tsrow").forEach(function(r){ r.classList.toggle("on", +r.getAttribute("data-ti")===act); }); }
+  function _fire(i){ var r=ACT[i]; if(!r) return; _close(); inp.blur(); try{ r.go(); }catch(e){} }
+  inp.addEventListener("input", _render);
+  inp.addEventListener("focus", _render);
+  inp.addEventListener("keydown", function(e){
+    if(e.key==="ArrowDown"||e.key==="ArrowUp"){ e.preventDefault(); e.stopPropagation();
+      if(!ACT.length) return; _mark((act+(e.key==="ArrowDown"?1:ACT.length-1))%ACT.length);
+      var on=dd.querySelector(".tsrow.on"); if(on&&on.scrollIntoView) on.scrollIntoView({block:"nearest"}); }
+    else if(e.key==="Enter"){ e.preventDefault(); e.stopPropagation(); _fire(act); }
+    else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); _close(); inp.blur(); } });
+  inp.addEventListener("focusout", function(e){ if(!box.contains(e.relatedTarget)) _close(); });   // Tab/keyboard blur — row clicks preventDefault so focus never leaves on them
+  document.addEventListener("mousedown", function(ev){ if(box&&!box.contains(ev.target)) _close(); });
+  window.addEventListener("keydown", function(e){ var tag=(e.target&&e.target.tagName)||"";
+    if(e.key==="/" && tag!=="INPUT" && tag!=="TEXTAREA" && !e.ctrlKey && !e.metaKey && !e.altKey){
+      e.preventDefault(); inp.focus(); inp.select(); } });
+})(); }

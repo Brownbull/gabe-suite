@@ -549,6 +549,42 @@ check('"frontend arm",' in page and 'screens absorbed' in page, "the Everything 
 check('var order=["route","component","hook","type","store","module","screen","web",' in page,
       "the legend roster lost `module`")
 
+# ── 10v. batch 49: journeys walk a FRONTEND leg (bridge+uses/renders, client-side) · the header SEARCH ──
+check('function _jrnFeLeg(carriers)' in page and 'l.rel==="bridge"' in page
+      and '(l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads")' in page,
+      "the journey frontend-leg derivation is gone (bridge -> screens -> users incl. fecall/reads callers)")
+check('j.fe=_jrnFeLeg(j.carriers); j.feN=' in page, "journeys no longer precompute their fe leg (row/pill chips would lie)")
+check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
+      "the factored journey starter is gone (picker rows + search must share ONE start path)")
+check('fe.concat(j.carriers)' in page and 'WALK.mode="journey"; WALK.steps=fe.concat(j.carriers)' in page,
+      "the walk no longer steps the frontend leg FIRST (users -> screens -> carriers)")
+check('if(HL.exact){' in page and 'HL.exact=true; HL.origin=fe.concat(j.carriers)' in page,
+      "journeys lost the EXACT-set highlight (a depth-BFS from the dense fe cluster lit 2,824 wires — screen noise)")
+check('HL.depth=Math.max(1,Math.min(5,d)); HL.exact=false;' in page,
+      "widening depth during a journey must opt INTO the BFS neighborhood (exact stays the default)")
+check('class="wfe"' in page and 'class="jrnfe"' in page and "svgInline(\"component\", KINDCOL.component" in page,
+      "the fe chips (pill + picker rows) lost their ACTUAL component glyph (legend-visual rule)")
+check('id="tsin"' in page and 'id="tsdd"' in page and 'id="tsrch"' in page and '.topsearch' in page,
+      "the header search markup/styles are gone")
+check('window.__uniSrchInit' in page and 'e.key==="/"' in page and 'inp.focus(); inp.select();' in page,
+      "the / shortcut no longer focuses the search")
+check('CFG.showTypes="on"; try{ toggleTypes(true); }catch(e){}' in page and 'turns Types ON' in page,
+      "a held fe-type found via search must turn Types ON before selecting")
+check('window.__uniSelNode=_selNode' in page, "the search lost the ONE node-select path (card export)")
+check('_jrnCollect().forEach' in page and 'Object.keys(SUBANCHOR).forEach' in page,
+      "the search index dropped journeys or clusters")
+# 10v-b: the adversarial-review fixes (15 confirmed findings, 2026-08-23)
+check('var _esc=function(x)' in page and '_esc(r.label)' in page and '_esc(inp.value.trim())' in page,
+      "search innerHTML lost its escaper (labels are code identifiers; the echo is raw keyboard text)")
+check('_jp.style.display="none";   // exclusive surfaces' in page,
+      "opening the search dropdown must CLOSE the journeys picker (#jrn z-55 paints over the trapped dropdown)")
+check('"functions (off)"' in page and 'turns ƒ ON' in page,
+      "held functions (ƒ off) lost their search group — a function search would flat-line at no match")
+check('visN(NIDS[id]).show' in page, "the journey fe leg no longer respects fleet visibility")
+check('addEventListener("focusout"' in page, "keyboard blur no longer closes the search dropdown")
+check('_seen.reduce(function(a,gk)' in page, "search group headers can fragment again (regroup after the cap)")
+check('#jrn .jrnrow.on .jrnfe{ color:#fff; }' in page, "the selected journey row's fe chip lost its contrast override")
+
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──
 SHARED = {"LANG","PROJECT_NAME","HEAD_SHA","REGEN_STAMP","GENERATOR_NAME","ENTITY_COUNT","TESTS_COUNT",

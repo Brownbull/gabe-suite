@@ -225,6 +225,36 @@ the three plan corrections, what landed, deferred). Headlines:
 - Propagated: gustify `51a0da4d` (regen 59 s · chrome 565/0 · the PRESENCE-FLIP tripwire
   announced the arm by design). PUSH OWED with `6338db7b`.
 
+## BATCH 49 — the JOURNEY FRONTEND LEG + the header SEARCH (adversarially reviewed)
+
+Operator ask: "journeys that now can include front end, working with what we already have on the
+codebase map, also let's add a search bar in the header."
+
+- **Journey fe leg** (`_jrnFeLeg`, client-side, NO emitter change): a journey's carrier endpoints
+  reach back over `bridge` wires to their fetching pieces (screens) and one hop up the
+  `uses`/`renders`/`fecall`/`reads` sources (the components/callers driving them). The walk steps
+  UI → API → data (users → screens → carriers); the pill + 45 picker rows wear a component-glyph
+  chip with the count (row = the map's potential reach; pill = the pieces ACTUALLY walking, with
+  "(N more fleet-hidden)" when they differ). Fleet-hidden pieces never enter the walk (`visN`).
+- **EXACT-set journeys**: the old depth-BFS, harmless on sparse backend carriers, lit **2,824**
+  wires from the dense fe cluster (screen = noise, the batch-15 lesson) → journeys light exactly
+  their path (4 movers measured); widening depth (Alt+Q/E, the bar) is the explicit opt-in to the
+  BFS neighborhood (`HL.exact`).
+- **Header search** (`#tsrch`, `/` focuses · ↑↓ · Enter · Esc): live elements, HELD types and HELD
+  functions (each row turns its toggle ON before selecting — the T and ƒ twins), entities,
+  clusters (current core), journeys (searchable by name/cid, firing one starts the walk). Entries
+  rebuild per keystroke from the live field — nothing cached to go stale.
+- **Adversarial review** (4 lenses → per-finding refutation, 20 agents): 15 confirmed findings,
+  deduped to 7 defects, ALL FIXED: the #jrn z-index trap (the picker painted OVER the dropdown and
+  stole clicks → exclusive surfaces), held functions unfindable with ƒ off, innerHTML injection
+  (labels are code identifiers — `_esc` at the seam), the fe-leg fleet-visibility no-op filter +
+  its lying comment + the unfiltered pill count, Tab-blur leaving the dropdown open, fragmented
+  group headers, the on-row chip contrast.
+- Proofs: `verify-search.mjs` (NEW — search · fe leg · exact set · all 7 fix probes) ALL PASS;
+  battery **319 static** + fe-aware render. GOTCHA: `.topbar` (z-29, position:fixed) is a STACKING
+  CONTEXT — any topbar child's z-index only ranks against topbar children; document-level surfaces
+  (#jrn z-55) beat them regardless. Keep topbar popovers exclusive with document-level panels.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
