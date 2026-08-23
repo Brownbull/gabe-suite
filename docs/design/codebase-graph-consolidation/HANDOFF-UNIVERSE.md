@@ -1,4 +1,4 @@
-# Gabe Universe — session handoff (SYNC VERIFICATION ✅ + FRONTEND EXPANSION ✅ 2026-08-23; next: operator visual pass · fleet re-proof · gastify propagation)
+# Gabe Universe — session handoff (SYNC VERIFICATION ✅ + FRONTEND EXPANSION ✅ 2026-08-23; next: operator visual pass · gastify propagation)
 
 ## Paste-able resume
 
@@ -220,8 +220,8 @@ the three plan corrections, what landed, deferred). Headlines:
   step on keydown (headless fired the 16 ms interval once per 400 ms; a real browser k=1).
 - Batteries: **tests/frontend NEW 45** (frozen fixture hermetic + LIVE compiler case,
   mutation-proven) · universe **300 static** + fe-aware render · all neighbours green.
-  Proofs: 6/7 ALL PASS on the final artifact; **fleet** green at 460 s two constant-edits
-  earlier, its rerun hits the 590 s harness cap — re-prove when a faster host is available.
+  Proofs: **7/7 ALL PASS on the final artifact** — fleet included (detached run past the
+  600 s harness cap; it needs ~10+ min on the 888-planet field headless).
 - Propagated: gustify `51a0da4d` (regen 59 s · chrome 565/0 · the PRESENCE-FLIP tripwire
   announced the arm by design). PUSH OWED with `6338db7b`.
 
@@ -237,7 +237,6 @@ Edit → `python3 assemble.py` → copy to shell → `python3 fill-example.py` �
 
 - Push the branch — 161 commits main..HEAD by batch 48 (operator word required; branch has no upstream — needs `-u origin graft-adoption`); gustify `graft-pilot` push owed too (`6338db7b` + `51a0da4d`).
 - gastify propagation (read-only until allowed): same recipe as gustify — generators + shell + `refresh_center.sh regen`; its web (`web/`, typescript 5.9.3) is fe-arm ready.
-- Re-prove verify-fleet on a host where its 8-minute run fits the harness cap (green at 460 s pre-final; mechanics untouched since).
 - Batch-48 deferred (frontend-model §9): fecall/renders as OWN wire kinds · route→component from the router CONFIG · prop schemas / P4 · the levels lab still reads graft's convention arm.
 - Twin propagation (gustify/gastify) — read-only; do NOT write to them.
 - Optional: lock the horizon upright in the orbit (currently a little roll is allowed to keep the pivot exact).
