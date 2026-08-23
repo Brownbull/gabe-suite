@@ -378,6 +378,29 @@ const flcfg = await p.evaluate(() => {
     standalone, docked, fleetUnstretched, under,
     oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
     ladder, defSpeed, badgeShows, backTo, wk }; });
+// [12] fleet clicks SELECT: entity name → entity panel + camera flies to it; the count badge
+//      expands instead; a cluster name selects the cluster (panel + camera)
+const fsel = await p.evaluate(() => new Promise(res => {
+  const name = document.querySelector('#fleetbody .flx[data-flx="pantry"]');
+  const openBefore = !!document.querySelector('#fleetbody .flrow.flsub[data-fle="pantry"]');
+  name.click();
+  const sel = window.__uniPView.lvl === 'ent' && window.__uniPView.ent === 'pantry';
+  const noExpand = !!document.querySelector('#fleetbody .flrow.flsub[data-fle="pantry"]') === openBefore;   // the name never expands
+  const ids = nodes.filter(n => n.ent === 'pantry');
+  const cx = ids.reduce((s, n) => s + n.x, 0) / ids.length, cy = ids.reduce((s, n) => s + n.y, 0) / ids.length, cz = ids.reduce((s, n) => s + n.z, 0) / ids.length;
+  setTimeout(() => {
+    const t2 = Graph.controls().target;
+    const flies = Math.hypot(t2.x - cx, t2.y - cy, t2.z - cz) < 120;      // the camera aims at the entity
+    const exp = document.querySelector('#fleetbody .flx[data-flx="pantry"] .flexp'); exp.click();
+    const expanded = !!document.querySelector('#fleetbody .flrow.flsub[data-fle="pantry"]') !== openBefore;
+    const panelStill = window.__uniPView.lvl === 'ent';                    // expanding must NOT change the selection
+    const sub = document.querySelector('#fleetbody .flsubname[data-fse="pantry"]');
+    let cluSel = true;
+    if (sub) { sub.click(); cluSel = window.__uniPView.lvl === 'clu' && window.__uniPView.ent === 'pantry'; }
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+    res({ sel, noExpand, flies, expanded, panelStill, cluSel });
+  }, 1100);
+}));
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -390,6 +413,7 @@ console.log('element:', JSON.stringify(elem));
 console.log('back:', JSON.stringify(back), '· esc:', JSON.stringify(esc));
 console.log('bgClick:', JSON.stringify(bg));
 console.log('hullLight:', JSON.stringify(hull));
+console.log('fleetSel:', JSON.stringify(fsel));
 console.log('fleetSpot:', JSON.stringify(fleet));
 console.log('defaults:', JSON.stringify(defs));
 console.log('numKeys:', JSON.stringify(numkeys));
@@ -416,6 +440,7 @@ if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expect
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
+if (!(fsel.sel && fsel.noExpand && fsel.flies && fsel.expanded && fsel.panelStill && fsel.cluSel)) fails.push('fleet clicks must SELECT (name → panel+camera; count → expand only; cluster name → cluster)');
 if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' && defs.callsGrad && defs.bridgeStyle === 'sparse' && defs.impStyle === 'dotted' && defs.beams === '0.9,0.8,0.5,1' && defs.curved && Math.abs(defs.amt - 0.6) < 0.001 && defs.rest === 'hide' && defs.line === 'curved')) fails.push('operator connection defaults not adopted');
 if (!(defs.modeBefore === 'glow' && defs.modeAfter === 'focus' && defs.restAfter === 'dim')) fails.push('focus options do not BITE (auto-switch to focus mode)');
 if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not clickable (connection panel did not open)');

@@ -486,6 +486,11 @@ check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in 
 check('"fnsTog"' in page, "the FUNCTIONS icon toggle is gone (replaced the Hide/Show pill; starts OFF)")
 # batch 45: consumes + nests rels flow through the universe (the floating-schema fix)
 # batch 46: endpoint→handler wires (Functions ON) + the honest empty-connections message
+# batch 47: fleet clicks SELECT — name = panel+camera · count badge = expand · cluster name = cluster
+check('class="flcnt flexp"' in page and 'ev.stopPropagation();' in page and '_frameSet(ids)' in page,
+      "fleet selection clicks are gone (name must select+fly; the count badge must own expansion)")
+check('data-fse=' in page and 'data-fss=' in page,
+      "cluster fleet rows lost their select keys")
 check('rel:"handler"' in page and 'fn:p.fn' in page,
       "endpoint→handler wires are gone (the fn field or the _buildFnData join)")
 check('behavior lives in the call tree' in page and 'DYNAMIC (unmatchable templates' in page,

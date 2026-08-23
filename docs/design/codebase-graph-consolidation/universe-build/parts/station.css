@@ -301,6 +301,9 @@
   /* CLUSTER rows (expanded under an entity): indented, and their switches wear a DISTINCT color
      (teal) so cluster-level state never reads as entity-level state */
   #fleet .flx{ cursor:pointer; } #fleet .flx:hover{ color:var(--accent); }
+  #fleet .flexp{ cursor:pointer; }
+  #fleet .flexp:hover{ color:var(--ink); border-color:var(--accent); }
+  #fleet .flsubname{ cursor:pointer; }
   #fleet .flcnt{ font:700 8.5px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:1px 4px; margin-right:5px; flex:none; }
   #fleet .flrow.flsub .flent{ padding-left:16px; font-size:10px; color:var(--muted); width:84px; }
   #fleet .flspacer{ width:20px; }

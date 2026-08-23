@@ -789,11 +789,11 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
   _ents.forEach(function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
-    h+='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' · click for its '+gk.length+' cluster(s)">'
-      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt">'+gk.length+'</b>'+e+'</span>'
+    h+='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' — click to SELECT it (panel + camera); the count expands its clusters">'
+      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt flexp" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+e+'</span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
     if(open) gk.forEach(function(s){ var key=e+"|"+s;
-      h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" title="'+s+' · '+gs[s]+' member(s)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
+      h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
         +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';   // a cluster has no sub-clusters
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
   body.innerHTML=h;
@@ -801,8 +801,19 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     if(window.__uniFlOpen) __uniFlOpen(cell.getAttribute("data-fk")); }; });
   if(window.__uniFlOpenKey){ var oc=body.querySelector('.flhead .flcfgbtn[data-fk="'+window.__uniFlOpenKey+'"]');
     if(oc) oc.classList.add("on"); }
-  body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){
-    var e=sp.getAttribute("data-flx"); _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
+  body.querySelectorAll(".flx .flexp").forEach(function(b){ b.onclick=function(ev){   // the COUNT badge owns expand/collapse now
+    ev.stopPropagation(); var e=b.closest(".flx").getAttribute("data-flx");
+    _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
+  body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){          // the NAME selects: panel + hull light + camera
+    var e=sp.getAttribute("data-flx");
+    if(window.__uniPanelEnt) __uniPanelEnt(e);
+    var ids=nodes.filter(function(n){ return n.ent===e; }).map(function(n){ return n.id; });
+    if(typeof _frameSet==="function") try{ _frameSet(ids); }catch(e2){} }; });
+  body.querySelectorAll(".flsubname").forEach(function(sp){ sp.onclick=function(){    // cluster name = select the cluster
+    var e=sp.getAttribute("data-fse"), s=sp.getAttribute("data-fss");
+    if(window.__uniPanelClu) __uniPanelClu(e, s);
+    var ids=nodes.filter(function(n){ return n.ent===e && (n.sub||"—")===s; }).map(function(n){ return n.id; });
+    if(typeof _frameSet==="function") try{ _frameSet(ids); }catch(e2){} }; });
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
     __uniFleetToggle(b.getAttribute("data-fent"), b.getAttribute("data-fsub"), b.getAttribute("data-fcol")); }; });
   __uniFleetSync();
