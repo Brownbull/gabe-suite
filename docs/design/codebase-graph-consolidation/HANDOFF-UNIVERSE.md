@@ -1,4 +1,4 @@
-# Gabe Universe — session handoff (next: SYNC VERIFICATION → FRONTEND EXPANSION)
+# Gabe Universe — session handoff (SYNC VERIFICATION ✅ + FRONTEND EXPANSION ✅ 2026-08-23; next: operator visual pass · fleet re-proof · gastify propagation)
 
 ## Paste-able resume
 
@@ -180,6 +180,51 @@ The right panel exists at EVERY level: EVERYTHING (boot default + the Esc target
 
 **46**: endpoint→HANDLER wires when Functions is ON (adapter keeps `p.fn`; `_buildFnData` joins `det.file#fn` to the fn pool — 67 wires on gustify; the zero-edge DELETE …/cupo case answered: its data work lives in service fns + its fetch is one of the 4 DYNAMIC templates) + the honest empty-Connections message (call-tree pointer · dynamic-fetch hint). **47**: fleet clicks SELECT — entity/cluster NAME = panel + hull light + camera framing (`_frameSet`); the count badge owns expand/collapse (stopPropagation).
 
+## SYNC PASS — CLOSED 2026-08-23 (`ba025ba` + `9c66a59`)
+
+(a) assemble + fill-example BYTE-IDENTICAL. (b) twin-read-only regen: c4-graph.js SAME;
+levels.js/levels.json were stale (batch 17 / pre-17; batch-45 CONSUMES adds 7 levels
+cross_edges) — rehomed; a feed regen must touch ALL THREE. (c) doctor: tests/center's 129/3
+was a FALSE POSITIVE (`check_center_links.py` ID_RX matched JS literals `var id="cls:"` /
+`rid=` / `cid=`) — left-bounded regex + `<script>` stripped from the dup check, silent case
+added, mutation-proven → 133/0, doctor CLEAN. (d) 4 of 7 proofs were stale vs batches 31–47
+(fleet `.cfgtab`/`.flx`/material-color/frozen-stock · walk+explore absolute 0.4 rest floor ·
+routes curved-boot/material-color) — repaired measured-not-loosened (rest floors RELATIVE to
+the measured resting min; fk by userData.kind; stock = CONN0). Install drift: 6 files + a
+stray `_artshot2.mjs` — `./install.sh` + delete; `FIXED` closer backported from gustify.
+**Twin propagation EXECUTED: gustify `6338db7b` (generators + shell + stations + regen,
+chrome 524→565/0) — PUSH OWED. gastify read-only: same pure-lag drift recorded, owed.**
+
+## BATCH 48 — LANDED (`d06d578`): the FRONTEND ARM — compiler-proven pieces + typed wires
+
+TASK 2 executed per docs/design/frontend-model/README.md — **§9 is the record** (P0 numbers,
+the three plan corrections, what landed, deferred). Headlines:
+
+- **P0 measured** (gustify, read-only): compiler = 488 files · 2,401 resolved import sites ·
+  2,822 exports; graft covers 38.9% of import pairs; graft's convention arm over-claims
+  (637 vs 458 JSX-proven components). → the EXTRACTOR IS the twin's own `typescript`
+  (`_a3_fe_extract.mjs`; ast-grep/dependency-cruiser NOT adopted); 8th kind `module`
+  (111 files); 113 stories excluded+counted.
+- **`_a3_fe.py`**: per-export classification · homing (entity / buckets / candidates) ·
+  wires through checker bindings (renders 935 · uses-hook 436 · uses-store 28 · typed 1,124 ·
+  fecall 815 · imports 228, compact index triples) · SCREEN ABSORPTION (32/32, bridge kept) ·
+  honest-empty. `fold_fe` → a SEPARATE `fe` key in GABE_C4 (fe=None byte-identical — pinned).
+  Feed 327→747 KB. Twin-read-only regen re-verified byte-identical post-commit.
+- **The universe fold**: 13 clusters (8 entities + design-system/app-shell buckets +
+  profile/shopping/me candidates), `module` slab kind, **Types held at boot** (613, T toggle
+  beside ƒ — 888 planets at rest, 1,501 with types), frontend card builder, Sources row.
+- **Layout at scale**: the fold measured **48.5% bleed** → frontend KRADF layers + containment
+  0.6 + `__uniRelaxHulls` (anchors ≥ 1.05·max(Ra+Rb, 2·max(Ra,Rb)), R=1.6×RENT measured) +
+  proportional ring arcs (floor 260) + ring gain 0.16 → **bleed 0.3–2.6%, ratio 1.39**.
+- **Flight at scale**: fly/yaw tick elapsed-time-scaled (cap 320 ms) + an IMMEDIATE first
+  step on keydown (headless fired the 16 ms interval once per 400 ms; a real browser k=1).
+- Batteries: **tests/frontend NEW 45** (frozen fixture hermetic + LIVE compiler case,
+  mutation-proven) · universe **300 static** + fe-aware render · all neighbours green.
+  Proofs: 6/7 ALL PASS on the final artifact; **fleet** green at 460 s two constant-edits
+  earlier, its rerun hits the 590 s harness cap — re-prove when a faster host is available.
+- Propagated: gustify `51a0da4d` (regen 59 s · chrome 565/0 · the PRESENCE-FLIP tripwire
+  announced the arm by design). PUSH OWED with `6338db7b`.
+
 ### NEXT — operator visual pass + tuning
 
 The numbers pass; the LOOK is the operator's call. Live levers, all in `parts/layout.js`:
@@ -190,7 +235,10 @@ Edit → `python3 assemble.py` → copy to shell → `python3 fill-example.py` �
 
 ### Deferred / open
 
-- Push the branch — 113 commits main..HEAD by batch 20 (operator word required; branch has no upstream — needs `-u origin graft-adoption`).
+- Push the branch — 161 commits main..HEAD by batch 48 (operator word required; branch has no upstream — needs `-u origin graft-adoption`); gustify `graft-pilot` push owed too (`6338db7b` + `51a0da4d`).
+- gastify propagation (read-only until allowed): same recipe as gustify — generators + shell + `refresh_center.sh regen`; its web (`web/`, typescript 5.9.3) is fe-arm ready.
+- Re-prove verify-fleet on a host where its 8-minute run fits the harness cap (green at 460 s pre-final; mechanics untouched since).
+- Batch-48 deferred (frontend-model §9): fecall/renders as OWN wire kinds · route→component from the router CONFIG · prop schemas / P4 · the levels lab still reads graft's convention arm.
 - Twin propagation (gustify/gastify) — read-only; do NOT write to them.
 - Optional: lock the horizon upright in the orbit (currently a little roll is allowed to keep the pivot exact).
 - Optional perf: fewer `cooldownTicks` on core/layout reheats (240 today; settle is fine on the 456-node case but untested beyond).
