@@ -638,6 +638,13 @@ build "$DUP" "$SHELL_SRC" >/dev/null
 printf '<i id="dm-chips"></i>' >> "$DUP/docs/site/center/feature-gadget.html"
 [ "$(gate "$DUP")" = 1 ] && ok || bad "gate: a duplicated id must FAIL the crawl"
 grep -q "duplicate id" "$T/gate.out" && ok || bad "gate: dup-id failure names itself"
+# …and stays SILENT on script-literal / non-id-attribute look-alikes (the
+# Levels page carries `var id="cls:"` + `rid="cls:"` in JS — not DOM ids).
+JSD="$T/jsdup"; mk_fixture "$JSD"
+build "$JSD" "$SHELL_SRC" >/dev/null
+printf '<script>var id="dm-chips"; var rid="dm-chips"; var cid="dm-chips";</script><b data-id="dm-chips"></b>' \
+  >> "$JSD/docs/site/center/feature-gadget.html"
+[ "$(gate "$JSD")" = 0 ] && ok || { bad "gate: JS literals + data-id must NOT count as duplicate ids"; cat "$T/gate.out"; }
 # File-qualified fn anchors (H1): same-named defs in different files can't collide.
 grep -q 'id="fn-gadget-src-funcs-py-make-gid"' "$FIX/docs/site/center/feature-gadget.html" \
   && ok || bad "fn anchors must carry the defining file"

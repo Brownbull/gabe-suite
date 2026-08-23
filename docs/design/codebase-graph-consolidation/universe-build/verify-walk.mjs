@@ -26,6 +26,7 @@ const jrn = await p.evaluate(() => { __uniJrnToggle();
   const named = [...el.querySelectorAll('.jrnrow .jrnname')].filter(x => !/^C\d+$/.test(x.textContent)).length;
   return { centered: Math.abs((r.left + r.width / 2) - window.innerWidth / 2) < 240, groups: grps.slice(0, 3),
     e2eFirst: /end-to-end/.test(grps[0] || ''), rows: el.querySelectorAll('.jrnrow').length, named }; });
+const restMin = await p.evaluate(() => { let m = 1; connGroup.children.forEach(w => { if (w.material.blending !== THREE.AdditiveBlending) m = Math.min(m, w.material.opacity); }); return +m.toFixed(2); });   // the RESTING floor (calls sit at 0.3 by operator default) — the highlight must never dim below it
 // pick the first e2e journey → banner + walk bar + steps
 await p.evaluate(() => { const rows = document.querySelectorAll('#jrn .jrnrow:not(.jrnnone)'); rows[0].click(); });
 await raf(); await p.waitForTimeout(800);
@@ -147,7 +148,7 @@ await b.close();
 console.log('journeys:', JSON.stringify(jrn));
 console.log('selected:', JSON.stringify(jsel), '· step →', JSON.stringify(step1), 'camMoved', camMoved);
 console.log('panel:', JSON.stringify(panel), '· esc →', JSON.stringify(escd));
-console.log('visual:', JSON.stringify(visual), '· planets/wires:', JSON.stringify(pw), '· depth:', JSON.stringify(depth), '· foot:', JSON.stringify(foot));
+console.log('restMin:', restMin, '· visual:', JSON.stringify(visual), '· planets/wires:', JSON.stringify(pw), '· depth:', JSON.stringify(depth), '· foot:', JSON.stringify(foot));
 console.log('trail:', JSON.stringify(trail));
 console.log('hover:', JSON.stringify(hover));
 console.log('gear:', JSON.stringify(gear));
@@ -159,7 +160,7 @@ if (!(jrn.centered && jrn.e2eFirst && jrn.named > 50)) fails.push('journeys cent
 if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown)) fails.push('journey HUD (topbar middle) wrong');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
 if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');
-if (!(visual.minRest >= 0.4 && visual.moversOnPath && visual.camD > visual.setR)) fails.push('highlight visual floors broken (glow keeps the rest bright; movers on path; framed outside)');
+if (!(visual.minRest >= restMin - 0.01 && visual.moversOnPath && visual.camD > visual.setR)) fails.push('highlight visual floors broken (glow keeps the rest bright — never below the resting min; movers on path; framed outside)');
 if (!(pw.nodesGone && pw.hullStays && pw.wiresScoped && pw.nodesBack)) fails.push('planets/wires matrix columns broken');
 if (!(depth.atFive && depth.down && depth.up)) fails.push('depth slider / arrow keys broken');
 if (!(foot.onScreen && foot.bodyScrolls)) fails.push('panel footer scrolls off screen');

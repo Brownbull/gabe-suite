@@ -40,13 +40,14 @@ const topbar = await p.evaluate(() => {
     resetIconOnly: !/Reset/.test(document.getElementById('reset').textContent) };
 });
 
+const restMin = await p.evaluate(() => { let m = 1; connGroup.children.forEach(w => { if (w.material.blending !== THREE.AdditiveBlending) m = Math.min(m, w.material.opacity); }); return +m.toFixed(2); });   // the RESTING floor (calls sit at 0.3 by operator default) — the highlight must never dim below it
 // [3] depth highlight — GLOW: select, sprites on the reached set, lit wires additive, others dimmed
-await p.evaluate(() => { const n = nodes.find(x => x.kind === 'endpoint'); window.__testN = n; __uniHLSelect(n); });
+await p.evaluate(rm => { window.__restMin = rm; const n = nodes.find(x => x.kind === 'endpoint'); window.__testN = n; __uniHLSelect(n); }, restMin);
 await raf(); await p.waitForTimeout(700);
 const glow = await p.evaluate(() => {
   const inSet = Object.keys(HL.set).length;
   let lit = 0, dimmed = 0, minRest = 1; connGroup.children.forEach(w => { if (w.material.blending === THREE.AdditiveBlending) lit++;
-    else { if (w.material.opacity < 0.3) dimmed++; minRest = Math.min(minRest, w.material.opacity); } });
+    else { if (w.material.opacity < window.__restMin - 0.01) dimmed++; minRest = Math.min(minRest, w.material.opacity); } });
   return { on: HL.on, depth: HL.depth, inSet, sprites: HL.sprites.length, lit, dimmed, minRest: +minRest.toFixed(2),
     haloGrouped: HL.sprites.every(s => s.parent && s.parent.parent === Graph.scene()), total: connGroup.children.length };
 });
@@ -131,7 +132,7 @@ const fails = [];
 if (errs.length) fails.push('page/console errors');
 if (!(layer.epSep && layer.webOwn && layer.noFrontend && layer.defaultCore === 'community')) fails.push('layer ruling (c) / community default wrong');
 if (!(topbar.pillsLast && topbar.depth && topbar.mode && topbar.jrn && topbar.freezeIconOnly && topbar.resetIconOnly)) fails.push('topbar rework wrong');
-if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dimmed === 0 && glow.minRest >= 0.4 && glow.haloGrouped)) fails.push('glow highlight broken (rest must stay BRIGHT; halos in the scene group)');
+if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dimmed === 0 && glow.minRest >= restMin - 0.01 && glow.haloGrouped)) fails.push('glow highlight broken (rest must stay BRIGHT — never below the resting min; halos in the scene group)');
 if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+E depth broken');
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');

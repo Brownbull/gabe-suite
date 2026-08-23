@@ -57,12 +57,14 @@ const curve = await p.evaluate(() => {
     const AB = B.clone().sub(A), L = AB.length() || 1; let d = 0;
     for (let i = 1; i < n - 1; i++) { const P = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i));
       d = Math.max(d, P.clone().sub(A).cross(AB).length() / L); } return d; }
+  const boot = { line: CFG.lineStyle, amt: window.__uniCurveAmt };                     // operator default boots CURVED (0.6) — measure straight explicitly
+  CFG.lineStyle = 'straight'; __uniSetCurve(false);
   const straightPts = connGroup.children[0] ? connGroup.children[0].geometry.attributes.position.count : -1;
   CFG.lineStyle = 'curved'; __uniSetCurve(true);
   const curvedPts = connGroup.children[0] ? connGroup.children[0].geometry.attributes.position.count : -1;
   window.__uniCurveAmt = 0.2; updateConnectors(); const devLo = maxDev();
   window.__uniCurveAmt = 2.5; updateConnectors(); const devHi = maxDev();
-  window.__uniCurveAmt = 1; CFG.lineStyle = 'straight'; __uniSetCurve(false);
+  window.__uniCurveAmt = boot.amt; CFG.lineStyle = boot.line; __uniSetCurve(boot.line === 'curved');   // restore the boot state
   return { straightPts, curvedPts, devLo: +devLo.toFixed(1), devHi: +devHi.toFixed(1) };
 });
 
@@ -90,11 +92,11 @@ const dragCase = await p.evaluate(() => new Promise(res => {
 
 // [3] beam: fk→0 removes fk wires; fk→2 glows them (AdditiveBlending)
 const beam = await p.evaluate(() => {
-  const count = kind => { let c = 0; connGroup.children.forEach(w => { if (w.material.color.getHex() === CONN[kind].color) c++; }); return c; };
+  const count = kind => { let c = 0; connGroup.children.forEach(w => { if (w.userData.kind === kind) c++; }); return c; };   // by kind — gradient (vertexColors) mats are white-by-design
   const base = count('fk');
   window.__uniBeam.fk = 0; updateConnectors(); const hidden = count('fk');
   window.__uniBeam.fk = 2; updateConnectors();
-  let glow = 0; connGroup.children.forEach(w => { if (w.material.color.getHex() === CONN.fk.color && w.material.blending === THREE.AdditiveBlending) glow++; });
+  let glow = 0; connGroup.children.forEach(w => { if (w.userData.kind === 'fk' && w.material.blending === THREE.AdditiveBlending) glow++; });
   window.__uniBeam.fk = 1; updateConnectors();
   return { base, hidden, glow };
 });

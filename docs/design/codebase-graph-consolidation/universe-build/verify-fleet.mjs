@@ -20,8 +20,11 @@ await p.waitForTimeout(4000);
 
 // [A] wire styling: drive the DOM controls, assert CONN + material + sample + legend agree
 const wire = await p.evaluate(() => {
-  document.querySelector('.cfgtab[data-pane="routes"]').click();
+  window.__uniFlOpen('wires');                                                       // config is TABLESS since batch 31 — the Connections pane lives in the fleet's side drawer
   const out = {};
+  // fk wears the ENTITY GRADIENT by operator default (vertexColors → the material color is white-by-design):
+  // switch it off so the material + sample follow CONN's flat color for this check (reset restores the stock)
+  const gb = document.querySelector('button[data-wgrad="fk"]'); if (CONN.fk.grad) gb.click();
   // color via the input (fk → red)
   const inp = document.querySelector('input[data-wcol="fk"]');
   inp.value = '#ff0000'; inp.dispatchEvent(new Event('input', { bubbles: true }));
@@ -52,7 +55,7 @@ const wire = await p.evaluate(() => {
   // reset restores stock
   document.querySelector('button[data-wreset="fk"]').click();
   document.querySelector('button[data-wreset="calls"]').click();
-  out.resetColor = CONN.fk.color === 0x5893ad && CONN.fk.style === 'dashed' && CONN.calls.style === 'dashed';
+  out.resetColor = CONN.fk.color === CONN0.fk.color && CONN.fk.style === CONN0.fk.style && CONN.fk.grad === CONN0.fk.grad && CONN.calls.style === CONN0.calls.style;   // stock = the boot snapshot (operator defaults), not a frozen literal
   updateConnectors();
   return out;
 });
@@ -169,7 +172,7 @@ const dimSync = await p2.evaluate(() => { CFG.zDef = false; applyCfg('zDef');
 const clus = await p2.evaluate(() => {
   const e = _ents[1];
   const distinct = {}; nodes.forEach(n => { if (n.ent === e) distinct[n.sub] = (distinct[n.sub] || 0) + 1; });
-  document.querySelector(`#fleet .flx[data-flx="${e}"]`).click();     // expand (re-renders)
+  document.querySelector(`#fleet .flx[data-flx="${e}"] .flexp`).click();     // expand (re-renders) — the COUNT badge owns expand since batch 47 (the name SELECTS)
   const rows = new Set([...document.querySelectorAll(`#fleet .fltog[data-fent="${e}"][data-fsub]`)]
     .map(b => b.getAttribute('data-fsub'))).size;                     // DISTINCT sub keys — stale-proof against column growth
   const cnt = +document.querySelector(`#fleet .flx[data-flx="${e}"] .flcnt`).textContent;
@@ -220,7 +223,7 @@ const allState = await p2.evaluate(() => ({
 // [B4-fix] ALL master row propagates into cluster overrides; a cluster switch dims when its entity is off
 const masterFix = await p2.evaluate(() => {
   const e = _ents[1];
-  if (!_flOpen[e]) document.querySelector(`#fleet .flx[data-flx="${e}"]`).click();
+  if (!_flOpen[e]) document.querySelector(`#fleet .flx[data-flx="${e}"] .flexp`).click();
   const sBtn = document.querySelector(`#fleet .fltog[data-fent="${e}"][data-fsub][data-fcol="show"]`);
   const sub = sBtn.getAttribute('data-fsub'); sBtn.click();           // cluster override OFF
   const offBefore = (UNIVIS.sub[e + '|' + sub] || {}).show === 0;
@@ -236,8 +239,8 @@ const masterFix = await p2.evaluate(() => {
 const hover = await p2.evaluate(() => ({
   core: !!document.querySelector('.pill[data-grp="coreBy"] button[data-v="layer"][title]'),
   lay: !!document.querySelector('.pill[data-grp="entLayout"] button[data-v="force"][title]'),
-  fn: !!document.querySelector('.pill[data-grp="showFns"] button[data-v="on"][title]'),
-  hd: !!document.querySelector('#cfg .grplbl[title]'),
+  fn: !!document.querySelector('#fnsTog[title]'),                                   // the ƒ-toggle (batch 42) carries the live-count explainer
+  hd: !!document.querySelector('.grplbl[title]'),                                    // section labels live in the drawer panes (stashed in-document)
   notesGone: !document.body.innerHTML.includes('chain = layered plane') && !document.body.innerHTML.includes('joined from the levels feed by name') }));
 await b.close();
 

@@ -39,7 +39,9 @@ REPO_ROOT = D.REPO_ROOT
 CENTER = D.CENTER_DIR
 
 HREF_RX = re.compile(r'(?:href|src)="([^"]+)"')
-ID_RX = re.compile(r'id="([^"]+)"')
+# Left-bounded: `rid="…"`, `cid="…"`, `data-id="…"` are NOT id attributes
+# (the unbounded form once counted a JS literal `var id="cls:"` four times).
+ID_RX = re.compile(r'(?<![\w-])id="([^"]+)"')
 
 
 def run_checks() -> int:
@@ -59,12 +61,13 @@ def run_checks() -> int:
     # a second id silently hijacks every deep link to it — and the set-based
     # anchor check below is structurally blind to it (review H1).
     from collections import Counter
-    _SVG_RX = re.compile(r"<svg.*?</svg>", re.S)
+    _NONDOM_RX = re.compile(r"<svg.*?</svg>|<script\b.*?</script>", re.S)
     for name, html in pages.items():
-        # Mermaid SVGs legitimately reuse node ids per diagram — the dup
-        # check reads the page with svg blocks stripped; anchor RESOLUTION
-        # below still reads the full page.
-        counts = Counter(ID_RX.findall(_SVG_RX.sub("", html)))
+        # Mermaid SVGs legitimately reuse node ids per diagram, and a script
+        # block's `id="…"` is a string literal, not a DOM id — the dup check
+        # reads the page with both stripped; anchor RESOLUTION below still
+        # reads the full page.
+        counts = Counter(ID_RX.findall(_NONDOM_RX.sub("", html)))
         dup = sorted(i for i, n in counts.items() if n > 1)
         if dup:
             dead.append(f"{name}: duplicate id(s) — deep links land on the "
