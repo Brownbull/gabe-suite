@@ -521,6 +521,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
     node_ids: set[str] = set()
     edges: list[dict] = []
     xtouch: list[dict] = []            # touches naming a class we do NOT own — the assembler resolves them globally
+    xcons: list[dict] = []             # consumed request-shapes we do NOT own — same global resolve (the floating *Input fix)
     own_classes: dict[str, str] = {}   # cls -> node id (this entity only)
     externals: dict[str, dict] = {}    # ext node id -> node
     ins = insight or {}
@@ -570,6 +571,9 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         add_node(node)
         if model.get("cls"):
             own_classes.setdefault(model["cls"], nid)   # a model wins a name tie
+    for schema in code.get("schemas") or []:      # pre-register EVERY schema class so composition
+        if schema.get("cls"):                     # forward-references resolve locally (nests, below)
+            own_classes.setdefault(schema["cls"], f"schema:{schema['cls']}")
     for schema in code.get("schemas") or []:
         nid = f"schema:{schema.get('cls')}"
         snode = {"id": nid, "kind": "schema", "slug": slug,
@@ -578,6 +582,19 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         if sdet:
             snode["det"] = sdet
         add_node(snode)
+        # NESTS — schema COMPOSITION: a field's TYPE names another schema (the archmap's own
+        # field list). This is what actually wires the floating *Input shapes (batch-44 census:
+        # 0 of the 44 appear in any handler signature — they are nested components).
+        for _fld in schema.get("fields") or []:
+            _ftype = (_fld[1] if isinstance(_fld, (list, tuple)) and len(_fld) > 1 else "") or ""
+            for _cls in re.findall(r"[A-Z][A-Za-z0-9_]+", str(_ftype)):
+                if _cls == schema.get("cls"):
+                    continue
+                _tgt = own_classes.get(_cls)
+                if _tgt and _tgt != nid:
+                    edges.append({"source": nid, "target": _tgt, "kind": "nests"})
+                elif not _tgt:
+                    xcons.append({"from": nid, "cls": _cls, "k": "nests"})
         if schema.get("cls"):
             own_classes.setdefault(schema["cls"], nid)
     for ep in code.get("endpoints") or []:
@@ -599,9 +616,11 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         if behind and bkey in behind:               # honest-empty: no key → no badge, never a guess
             enode["behind"] = behind[bkey]
         add_node(enode)
+        _ep_tgts: set[str] = set()
         for cls in ep.get("touches") or []:
             tgt = own_classes.get(cls)
             if tgt and tgt != nid:
+                _ep_tgts.add(tgt)
                 edges.append({"source": nid, "target": tgt, "kind": "touches"})
             elif not tgt:
                 # a class we do not own — ANOTHER entity's (report for a global
@@ -610,6 +629,25 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
                 xtouch.append({"from": nid, "cls": cls})
         for cls in ep.get("touches_x") or []:   # the raw unowned residue — the assembler's global index filters the noise
             xtouch.append({"from": nid, "cls": cls})
+        # CONSUMES — the handler SIGNATURE names its request-body types (the API contract's own
+        # text, structural): wire endpoint → the own-entity schema/model each annotation names.
+        # Fixes the universe's floating *Input schemas (44/260 degree-zero, batch-44 census);
+        # own-entity resolve only, response class skipped (resp already carries it), touches
+        # targets skipped (no double wire), unresolved names never guessed.
+        _sig = (edet or {}).get("gsig") or ""
+        if _sig:
+            _cons_seen: set[str] = set()
+            for _ann in re.findall(r":\s*([A-Za-z_][A-Za-z0-9_\.]*(?:\[[^\]]*\])?)", str(_sig)):
+                for _cls in re.findall(r"[A-Z][A-Za-z0-9_]+", _ann):
+                    if _cls == _rsp or _cls in _cons_seen:
+                        continue
+                    _cons_seen.add(_cls)
+                    _tgt = own_classes.get(_cls)
+                    if _tgt and _tgt != nid and _tgt not in _ep_tgts:
+                        _ep_tgts.add(_tgt)
+                        edges.append({"source": nid, "target": _tgt, "kind": "consumes"})
+                    elif not _tgt:
+                        xcons.append({"from": nid, "cls": _cls})   # another entity's shape — the global resolve decides
 
     # web pieces (Path A frontend arm): one node per fetching FILE, homed to this
     # entity by the web arm (by file, or by the endpoint its fetch matched). The
@@ -650,7 +688,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             uniq.append(e)
     uniq.sort(key=lambda e: (e["source"], e["target"], e["kind"]))
     nodes.sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
-    return {"nodes": nodes, "edges": uniq, "xtouch": xtouch}
+    return {"nodes": nodes, "edges": uniq, "xtouch": xtouch, "xcons": xcons}
 
 
 def _stamp_l1(nodes: list[dict]) -> None:
@@ -949,6 +987,22 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             cross_edges.append({"from": xt["from"], "to": tgt_nid, "kind": "touches",
                                 "from_slug": _slug, "to_slug": tgt_slug})
             cross_touches += 1
+    # ── cross-entity CONSUMES: an endpoint's request-shape living in ANOTHER entity —
+    #    the same global class index resolves it (the 44 floating *Input schemas' fix). ──
+    _xc_seen: set[tuple[str, str]] = set()
+    cross_consumes = 0
+    for _slug, graph in l2.items():
+        for xc in graph.pop("xcons", []):
+            hit = cls_index.get(xc["cls"])
+            if not hit:
+                continue                      # external/library annotation — honest drop
+            tgt_nid, tgt_slug = hit
+            if tgt_slug == _slug or (xc["from"], tgt_nid) in _xc_seen:
+                continue
+            _xc_seen.add((xc["from"], tgt_nid))
+            cross_edges.append({"from": xc["from"], "to": tgt_nid, "kind": xc.get("k", "consumes"),
+                                "from_slug": _slug, "to_slug": tgt_slug})
+            cross_consumes += 1
 
     return {
         "version": 1,
@@ -967,6 +1021,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "l1_edges": len(l1_edges),
             "cross_edges": len(cross_edges),
             "cross_touches": cross_touches,   # endpoint→foreign-model/schema touches (the aspect wires)
+            "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") in ("consumes", "nests")),   # request-shape + composition wires (signatures + field types; local + cross)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
             "unresolved_tables": unresolved,

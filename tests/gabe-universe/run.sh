@@ -484,6 +484,11 @@ check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in 
       "the dark/light theme toggle is gone (button + apply + light var block)")
 # batch 42: entity pane rebuild — combo row · options icon-toggles · the SPREAD slider
 check('"fnsTog"' in page, "the FUNCTIONS icon toggle is gone (replaced the Hide/Show pill; starts OFF)")
+# batch 45: consumes + nests rels flow through the universe (the floating-schema fix)
+check("consumes:'calls'" in page and "nests:'fk'" in page,
+      "REL2KIND lost the consumes/nests mappings — the new wires would fall to the calls default silently")
+check('consumes:"consumed by"' in page.replace("'",'"') or 'consumes:"consumes"' in page,
+      "the card labels for consumes/nests rels are gone")
 check('"spreadRng"' in page, "the SPREAD slider is gone (element separation inside entities)")
 check('(window.__uniSpread||1)' in page and 'min="0.55" max="2.8"' in page and 'className="cfgrow rsrow"' in page,
       "spread must scale RENT (default at a FIFTH of the 0.55-2.8 bar) sharing one row with radius")

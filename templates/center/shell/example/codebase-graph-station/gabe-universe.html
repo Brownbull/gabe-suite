@@ -1026,7 +1026,7 @@ function onShipsReady(){ rebuildNodes(); if(Graph) updateClusters(true); buildTr
 var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };
 var CONN_KINDS=['fk','bridge','calls','imports'];
 /* each graph REL → its connector KIND (fk=data coupling · calls=fn/data access · imports=component wiring · bridge=web→API fetch) */
-var REL2KIND={ fk:'fk', pk:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports' };
+var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports' };
 function __uniCurve(A,B,dir,len){ var mid=A.clone().add(B).multiplyScalar(0.5);
   var up=new T.Vector3(0,1,0), perp=new T.Vector3().crossVectors(dir,up);
   if(perp.lengthSq()<1e-4) perp.set(1,0,0);
@@ -2619,10 +2619,10 @@ var KINDCARD=(function(){
     return E("div",{class:"sec"}, sechd("down","Payload", p.n, false, {icon:"info",cls:"info",text:"The RESPONSE contract's field-count (det.payload — the resp schema). The cargo shuttle's size scales with it in the graph."}),
       E("div",{class:"sublbl"}, icoEl("table"), p.n+" field"+(p.n===1?"":"s")+" ferried · → "+p.schema+" (response)")); }
   /* live connections — grouped from the REAL edges this node touches (honest per-node, not toy). */
-  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler"},
-      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from"};
+  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests"},
+      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in"};
     return (dir==="out"?O:I)[rel]||(rel+(dir==="out"?"":" (in)")); }
-  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema"};
+  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema"};
   function liveConns(n){ var outs=[], ins=[];
     links.forEach(function(l){ var s=lid(l.source), t=lid(l.target); if(s===n.id) outs.push(l); if(t===n.id) ins.push(l); });
     function build(arr, dir){ var by={};

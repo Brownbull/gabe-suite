@@ -915,6 +915,33 @@ check(G._norm_path("/api/v1/orders/${orderId}/lines") == "/orders/{}/lines"
       and G._norm_path("/orders/{order_id}/lines") == "/orders/{}/lines",
       "_norm_path: /api/vN stripped and {x}/${x} collapsed → the two sides meet")
 
+
+# ── batch 45: CONSUMES + NESTS — request-shape + composition wires (the floating-schema fix) ──
+FIX_NEST = {"head": "h", "generated": "g", "entities": {
+  "na": {"models": [], "endpoints": [],
+          "schemas": [{"cls": "NaIn", "file": "a.py", "fields": [["inner", "NaPart", ""], ["other", "NbOut", ""], ["plain", "str", ""]]},
+                       {"cls": "NaPart", "file": "a.py", "fields": [["x", "str", ""]]}]},
+  "nb": {"models": [], "endpoints": [],
+          "schemas": [{"cls": "NbOut", "file": "b.py", "fields": [["y", "int", ""]]}]},
+}}
+gn = G.build_c4_graph(FIX_NEST)
+_ne = [e for e in gn["l2"]["na"]["edges"] if e.get("kind") == "nests"]
+check(len(_ne) == 1 and _ne[0]["source"] == "schema:NaIn" and _ne[0]["target"] == "schema:NaPart",
+      "schema composition does not wire a LOCAL nests edge (field type -> own schema)")
+_nx = [e for e in gn["cross_edges"] if e.get("kind") == "nests"]
+check(len(_nx) == 1 and _nx[0]["from"] == "schema:NaIn" and _nx[0]["to"] == "schema:NbOut",
+      "a field typed with ANOTHER entity's schema does not become a cross nests edge")
+check(gn["stats"].get("consumes") == 2, "stats.consumes must count nests+consumes wires (local + cross)")
+check(not any("str" in str(e.get("to", "")) + str(e.get("target", "")) for e in _ne + _nx),
+      "plain field types leak into composition wires")
+# mutation-proof: no fields -> no wires
+FIX_NEST2 = {"head": "h", "generated": "g", "entities": {"na": {"models": [], "endpoints": [],
+  "schemas": [{"cls": "NaIn", "file": "a.py"}]}}}
+gn2 = G.build_c4_graph(FIX_NEST2)
+check(gn2["stats"].get("consumes") == 0 and not any(e.get("kind") in ("nests", "consumes")
+      for s in gn2["l2"].values() for e in s.get("edges", [])),
+      "field-less schemas must emit ZERO composition wires (the checker can stay silent)")
+
 print(f"arch-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
