@@ -127,7 +127,7 @@ assert OLD_ZFORCE in text, "zForce block anchor missing"
 text = text.replace(OLD_ZFORCE, LAYOUT_JS, 1)
 assert 'var CFG={ shape:"polygon", subOn:true, entOn:true,' in text, "CFG anchor missing"
 text = text.replace('var CFG={ shape:"polygon", subOn:true, entOn:true,',
-                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"straight", showFns:"off", subOn:true, entOn:true,', 1)
+                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"curved", showFns:"off", subOn:true, entOn:true,', 1)
 OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }'
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
@@ -320,6 +320,19 @@ OLD_MD = "mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opaci
 assert OLD_MD in text, "gradient dashed-material anchor missing"
 text = text.replace(OLD_MD,
   "mat=new T.LineDashedMaterial({color:_gr?0xffffff:cfg.color, vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});", 1)
+# ── batch 37: the operator's dialed-in Connections DEFAULTS (pasted config 2026-08-23) ──
+OLD_CONN = "var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };"
+assert OLD_CONN in text, "CONN literal anchor missing"
+text = text.replace(OLD_CONN,
+  "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };", 1)
+
+
+# batch 37: wires remember their KIND (proofs + future pickers read line.userData.kind)
+OLD_LINEADD = "var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }"
+assert OLD_LINEADD in text, "line-add anchor missing"
+text = text.replace(OLD_LINEADD,
+  "var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
+
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,

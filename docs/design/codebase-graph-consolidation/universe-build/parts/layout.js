@@ -125,8 +125,9 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
 }
 /* LINES — moved off the topbar into the config; sets the curved-connector flag + redraws */
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
-window.__uniCurveAmt=1;                                   // curve-amount slider → arc height multiplier (read by __uniCurve)
-window.__uniBeam={ fk:1, bridge:1, calls:1, imports:1 };  // per-kind wire beam: 0 hides, 1 stock, >1 glows (additive) — read by connectorWire
+window.__uniCurveAmt=0.6;                                 // curve-amount slider → arc height multiplier (operator default 0.6)
+window.__uniCurved=true;                                  // lines default CURVED (operator config)
+window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.8, imports:1 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
@@ -172,10 +173,27 @@ function _zoomDist(){ try{ var cam=Graph.camera(), ctrls=Graph.controls();
     return Math.max(70, Math.min(best===1e9?td:best, td)); }catch(e){ return 400; } }
 /* ── background click → the CLUSTER under the cursor (batch 22): hull meshes are raycast-dead by
    design (addObj), so the pick is ray-vs-member-cloud — sub hulls beat entity shells, smaller beats bigger ── */
+function _raySegDist(ray, A, B){ var u=ray.direction, v=B.clone().sub(A), w=ray.origin.clone().sub(A);
+  var a=u.dot(u), b=u.dot(v), c=v.dot(v), d=u.dot(w), e=v.dot(w), D=a*c-b*b, sc, tc;
+  if(D<1e-8){ sc=0; tc=(b>c?d/b:e/c); } else { sc=(b*e-c*d)/D; tc=(a*e-b*d)/D; }
+  sc=Math.max(0,sc); tc=Math.max(0,Math.min(1,tc));
+  var Pr=ray.origin.clone().addScaledVector(u,sc), Ps=A.clone().addScaledVector(v,tc);
+  return Pr.distanceTo(Ps); }
 window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
     var g=document.getElementById("g"), r=g.getBoundingClientRect();
     var mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
     var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, Graph.camera());
+    /* WIRES pick first (the lab could click edges — so can we): nearest visible link within
+       a small ray distance opens the CONNECTION panel; the curve bows are shallow at 0.6 so
+       the straight chord is an honest approximation of the drawn wire. */
+    var wbest=null, WTH=6;
+    if(typeof links!=="undefined" && typeof _npos!=="undefined"){
+      links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;
+        var _s=NIDS[lid(l.source)], _t=NIDS[lid(l.target)];
+        if((_s&&(!_nodeVisibleFn(_s)||!visN(_s).wires))||(_t&&(!_nodeVisibleFn(_t)||!visN(_t).wires))) return;
+        var dd=_raySegDist(rc.ray, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z));
+        if(dd<WTH && (!wbest||dd<wbest.d)) wbest={d:dd, l:l}; }); }
+    if(wbest){ try{ showLinkPanel(wbest.l); }catch(e2){} return; }
     var best=null;
     (typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach(function(c){ if(!c.ekey) return;
       var ms=c.members.map(function(id){ var n=NIDS[id]; return (n&&n.x!=null)?n:null; }).filter(Boolean);
@@ -908,7 +926,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var LNS='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 20 5"/></svg>';
   var LNC='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 C 8 5 16 5 20 12"/></svg>';
   if(!CONN0 && typeof CONN!=="undefined"){ CONN0={};   // stock snapshot BEFORE any edit (reset target)
-    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style}; }); }
+    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style, grad:!!CONN[k].grad}; }); }   // grad rides the snapshot (stock fk/calls ON)
   var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
   var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
@@ -972,6 +990,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   rt.querySelectorAll('.pill[data-grp="focusRest"] button').forEach(function(b){ b.addEventListener("click", function(){
     HL.rest=b.getAttribute("data-v");
     b.closest(".pill").querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
+    if(HL.on && HL.mode!=="focus" && window.__uniHLMode) __uniHLMode();       // a FOCUS option while glowing = switch to focus (the buttons BITE now)
     if(HL.on && HL.mode==="focus") _hlRestyle(); }); });
   var car=rt.querySelector("#curveAmtRng");  // curve amount is LIVE while curved (rt is DETACHED — document lookups miss it)
   if(car) car.addEventListener("input", function(){ window.__uniCurveAmt=+this.value; if(window.__uniCurved) redraw(); });
@@ -1002,8 +1021,9 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     var k=b.getAttribute("data-wgrad"); CONN[k].grad=!CONN[k].grad;
     b.classList.toggle("on", !!CONN[k].grad); updSamp(k); redraw(); }); });
   rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
-    var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style; }
-    delete CONN[k].grad; var gb=document.querySelector('button[data-wgrad="'+k+'"]'); if(gb) gb.classList.remove("on");
+    var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style;
+      CONN[k].grad=!!CONN0[k].grad; }                                          // stock carries grad now (fk/calls default ON) — reset RESTORES it
+    var gb=document.querySelector('button[data-wgrad="'+k+'"]'); if(gb) gb.classList.toggle("on", !!CONN[k].grad);
     var inp=document.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
     var p=document.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
     updSamp(k); redraw(); }); });

@@ -128,6 +128,32 @@ const bg = await p.evaluate(() => {
   return { keyed, total: CLUSTERS.length, view: window.__uniPView.lvl,
     ent: window.__uniPView.ent, expectEnt: n.ent,
     routed: window.__uniPView.lvl === 'clu' || window.__uniPView.lvl === 'ent' }; });
+// [7b] operator DEFAULTS + focus bite + wire click
+const defs = await p.evaluate(() => {
+  const d = { fkStyle: CONN.fk.style, fkGrad: !!CONN.fk.grad, callsStyle: CONN.calls.style, callsGrad: !!CONN.calls.grad,
+    bridgeStyle: CONN.bridge.style, impStyle: CONN.imports.style,
+    beams: [__uniBeam.fk, __uniBeam.bridge, __uniBeam.calls, __uniBeam.imports].join(','),
+    curved: window.__uniCurved === true, amt: window.__uniCurveAmt, rest: HL.rest, line: CFG.lineStyle };
+  // focus BITE: select a node under GLOW, click a rest option → mode flips to focus
+  const n = nodes.find(x => x.kind === 'endpoint'); SEL = { kind: 'node', data: n }; showPanel(n); __uniHLSelect(n);
+  d.modeBefore = HL.mode;
+  window.__uniFlOpen('wires');
+  document.querySelector('.pill[data-grp="focusRest"] button[data-v="dim"]').click();
+  d.modeAfter = HL.mode; d.restAfter = HL.rest;
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  // WIRE CLICK: project a visible link's midpoint → __uniBgClick opens the CONNECTION panel
+  const l = links.find(x => { const a = _npos[lid(x.source)], b = _npos[lid(x.target)];
+    const s = NIDS[lid(x.source)], t2 = NIDS[lid(x.target)];
+    return a && b && s && t2 && _nodeVisibleFn(s) && _nodeVisibleFn(t2); });
+  const a = _npos[lid(l.source)], b = _npos[lid(l.target)];
+  const mid = new THREE.Vector3((a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2).project(Graph.camera());
+  const gr = document.getElementById('g').getBoundingClientRect();
+  window.__uniBgClick({ clientX: gr.left + (mid.x + 1) / 2 * gr.width, clientY: gr.top + (1 - mid.y) / 2 * gr.height });
+  d.wirePanel = /CONNECTION/.test(document.querySelector('#phead .ptype')?.textContent || '');
+  d.wireTitle = document.querySelector('#phead .pname')?.textContent || '';
+  window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+  return d; });
+
 // [8] HULL SELECTION LIGHT: entity level lights the entity hull; cluster level lights cluster+entity;
 //     an element display lights ITS cluster+entity; Esc returns every hull to stock
 const hull = await p.evaluate(() => {
@@ -234,15 +260,16 @@ const flcfg = await p.evaluate(() => {
     const noFooter = !/per kind: sample/.test(document.getElementById('flsbody').textContent);
     // entity gradient: per-row toggle → wires wear vertex colors; sample blends; reset clears
     const gb = document.querySelector('button[data-wgrad="fk"]');
-    gb.click();
-    const gradOn = CONN.fk.grad === true && gb.classList.contains('on');
-    updateConnectors();
-    const vc = [...connGroup.children].some(l => l.material && l.material.vertexColors === true);
+    const fkVC = () => [...connGroup.children].some(l => l.userData.kind === 'fk' && l.material && l.material.vertexColors === true);
+    const stockOn = CONN.fk.grad === true && gb.classList.contains('on');   // operator default: fk gradient ON
     const sampGrad = /linearGradient/.test(document.querySelector('[data-wsamp="fk"]').innerHTML);
-    document.querySelector('button[data-wreset="fk"]').click();
-    const gradCleared = !CONN.fk.grad && !gb.classList.contains('on');
-    updateConnectors();
-    const vcGone = ![...connGroup.children].some(l => l.material && l.material.vertexColors === true);
+    gb.click(); updateConnectors();
+    const gradOn = stockOn && CONN.fk.grad === false && !fkVC();            // first click turns it OFF
+    gb.click(); updateConnectors();
+    const vc = CONN.fk.grad === true && fkVC();                              // back ON → fk wires vertex-colored
+    gb.click(); document.querySelector('button[data-wreset="fk"]').click(); updateConnectors();
+    const gradCleared = CONN.fk.grad === true && gb.classList.contains('on');// reset RESTORES the stock (grad on)
+    const vcGone = fkVC();                                                   // stock = gradient, so fk wires stay vertex-colored
     // copy-settings: visible on Connections ONLY; the payload round-trips the pane's state
     const cpy = document.getElementById('flscopy');
     const cpyVisible = cpy && cpy.style.display !== 'none';
@@ -286,6 +313,7 @@ console.log('back:', JSON.stringify(back), '· esc:', JSON.stringify(esc));
 console.log('bgClick:', JSON.stringify(bg));
 console.log('hullLight:', JSON.stringify(hull));
 console.log('fleetSpot:', JSON.stringify(fleet));
+console.log('defaults:', JSON.stringify(defs));
 console.log('numKeys:', JSON.stringify(numkeys));
 console.log('flcfg:', JSON.stringify(flcfg));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
@@ -310,6 +338,9 @@ if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expect
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
+if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' && defs.callsGrad && defs.bridgeStyle === 'sparse' && defs.impStyle === 'dotted' && defs.beams === '0.9,0.8,0.8,1' && defs.curved && Math.abs(defs.amt - 0.6) < 0.001 && defs.rest === 'hide' && defs.line === 'curved')) fails.push('operator connection defaults not adopted');
+if (!(defs.modeBefore === 'glow' && defs.modeAfter === 'focus' && defs.restAfter === 'dim')) fails.push('focus options do not BITE (auto-switch to focus mode)');
+if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not clickable (connection panel did not open)');
 if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 2 must toggle planets for the SELECTED CLUSTER only');
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
 if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');

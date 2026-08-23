@@ -155,8 +155,16 @@ check('applies WHILE a focus highlight is active' in page,
 # batch 35: the entity gradient (the 2D lab device, ported) — per-kind toggle, vertex colors
 check('vertexColors:_gr' in page and 'data-wgrad=' in page and 'ENT[_cs.ent]' in page,
       "the entity-gradient option is gone (vertex-color wires + per-row toggle + entity colors threaded)")
-check('delete CONN[k].grad' in page,
-      "wire reset no longer clears the gradient flag")
+check('CONN[k].grad=!!CONN0[k].grad' in page,
+      "wire reset must RESTORE the stock gradient flag (fk/calls default ON)")
+check("style:'sparse',density:2.7,trust:0.9,grad:true" in page and "style:'solid',density:2,trust:0.6,grad:true" in page,
+      "the operator's stock CONN config (2026-08-23) drifted")
+check('{ fk:0.9, bridge:0.8, calls:0.8, imports:1 }' in page and '__uniCurveAmt=0.6' in page and 'lineStyle:"curved"' in page,
+      "the operator's stock glow/curve defaults drifted")
+check('function _raySegDist' in page and 'w=ray.origin.clone().sub(A)' in page and 'showLinkPanel(wbest.l)' in page,
+      "wire clicking is gone (ray-segment pick → connection panel)")
+check('__uniHLMode();       // a FOCUS option while glowing' in page,
+      "focus options no longer BITE (auto-switch to focus mode on click)")
 check('id="flscopy"' in page.replace("'",'"') or '"flscopy"' in page,
       "the Connections copy-settings button is gone")
 check('window.__uniLastCopy=txt' in page and '(key==="wires")?"":"none"' in page,
@@ -210,7 +218,7 @@ check('M4 19 20 5' in page and 'M4 19 C 8 5 16 5 20 12' in page, "the LINES pill
 check('{v:"straight",t:"Straight"}' not in page, "REGRESSION: the LINES pill is back to text labels")
 check('id="curveAmtRng"' in page and '*(window.__uniCurveAmt||1)' in page,
       "curve-amount slider missing or __uniCurve ignores it")
-check('window.__uniBeam={ fk:1' in page and 'if(!_bm) return;' in page and 'cfg.trust*_bm' in page,
+check('window.__uniBeam={ fk:0.9' in page and 'if(!_bm) return;' in page and 'cfg.trust*_bm' in page,
       "per-kind beam missing (declare + skip-at-0 + opacity multiply)")
 check('wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")' in page,
       "the four per-kind wire rows (sample · color · shape · beam) are not built")

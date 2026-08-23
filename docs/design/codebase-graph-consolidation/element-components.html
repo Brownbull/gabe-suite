@@ -619,6 +619,22 @@ const CARDS=[
     testGroup("api",[{cid:"C1038",state:"pass"},{cid:"C1101",state:"pass"},{cid:"C1140",state:"skip"},{name:"test_allergen_hard_filter",state:"pass"}],[{name:"test_seed_data.py"}],41),
     testGroup("web",[{cid:"C2044",state:"pass"},{cid:"C2045",state:"pass"},{cid:"C2046",state:"pass"}],[],3)],{ok:true}),   // aggregate; incl. a no-cid name, a skip + file-coverage
 ])],
+["Connection (wire)", ()=>panel("connection","link","var(--c-model)","UserDietaryProfile → users.id","CONNECTION · fk",[
+  (()=>{ const w=E("div",{class:"sec"}, sechd("link","Wire",null,false,
+      {icon:"info",cls:"info",text:"Clicking a wire in the field opens this card: the two endpoints, the wire kind, and its trust. The sample is the wire as DRAWN (stock: sparse dashes, entity-gradient on for fk)."}));
+    w.append(E("div",{class:"cfgrow",style:"display:flex;align-items:center;gap:8px"},
+      (()=>{ const s=E("span"); s.innerHTML='<svg viewBox="0 0 120 10" width="120" height="10"><defs><linearGradient id="cw-fk" x1="0" x2="1"><stop offset="0" stop-color="#14b8a6"/><stop offset="1" stop-color="#94a3b8"/></linearGradient></defs><path d="M2 5 H118" fill="none" stroke="url(#cw-fk)" stroke-width="2.5" stroke-dasharray="4 8"/></svg>'; return s; })(),
+      E("span",{style:"font-size:var(--fs-xs);color:var(--muted)"},"fk · sparse · gradient = the two entities")));
+    return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("key","Kind + trust"));
+    w.append(kv("key","kind","fk — a database foreign key (data coupling)"));
+    w.append(kv("info","trust","0.9 · <b>structural</b> — an exact schema join, not an inference"));
+    w.append(kv("info","direction","UserDietaryProfile <b>→</b> users.id (owner → target)"));
+    return w; })(),
+  (()=>{ const w=E("div",{class:"sec"}, sechd("model","Endpoints"));
+    w.append(chipList(["UserDietaryProfile"],"model","model")); w.append(chipList(["users.id"],"external","entity"));
+    return w; })(),
+]) ],
 ["External (fk target)", ()=>panel("external","external","var(--c-external)","users.id","lives in another entity",[
   usage(8,"8 models reference this fk target"),
   conns("link","Reach",[
@@ -633,7 +649,7 @@ const lane=document.getElementById("lane");
 const ABOVE_AT={"API endpoint":["misc","pantry"],"Model":["misc","allergen"],"Schema":["misc","allergen"],
   "Function":["misc","allergen"],"Frontend screen":["misc","pantry"],"Component":["misc","recipe"],
   "Hook":["misc","recipe"],"Store":["misc","recipe"],"Route (screen)":["misc","recipe"],"Type":["misc","recipe"],
-  "Entity (container)":[null,null],"External (fk target)":["misc","auth"]};
+  "Entity (container)":[null,null],"External (fk target)":["misc","auth"],"Connection (wire)":[null,null]};
 CARDS.forEach(c=>{ const [title,fn]=c; const a=ABOVE_AT[title]||["misc","pantry"];
   c[1]=()=>{ const el=fn(); const pb=el.querySelector(".pbody"); if(pb) pb.append(aboveSec(a[0],a[1])); return el; }; });
 HIER.slice().reverse().forEach(h=>CARDS.unshift(h));
