@@ -290,7 +290,10 @@ const flcfg = await p.evaluate(() => {
   const lgStyled = lg && getComputedStyle(lg).borderRadius === '12px' && !!lg.querySelector('.lghd b svg');   // the legend wears the panel chrome + iconed title
   const lgBody = lg.querySelector('.lgbody');
   const lgTwoCol = lgBody.classList.contains('lg-types') && getComputedStyle(lgBody).gridTemplateColumns.split(' ').length === 2;   // TYPES compacts into two columns
-  const lgCompact = lg.getBoundingClientRect().height < 420;
+  const lgH = tab => { [...lg.querySelectorAll('.lgtab')].find(b2 => new RegExp(tab, 'i').test(b2.textContent)).click();
+    return Math.round(document.getElementById('elegend').getBoundingClientRect().height); };
+  const h1 = lgH('types'), h2 = lgH('connectors'), h3 = lgH('planet'); lgH('types');
+  const lgCompact = h1 === h2 && h2 === h3 && h1 <= 340;                     // ONE size, whatever the tab
   btn('subs').click();
   const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
