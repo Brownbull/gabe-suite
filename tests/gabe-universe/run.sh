@@ -279,6 +279,19 @@ check('SHOW ENTITY is a MASTER over its clusters' in page and 'function _entSubK
       "the show-entity master (entity toggle propagates to clusters) is gone")
 check('a cluster turned ON re-enables its entity' in page,
       "a cluster turned on no longer re-enables its entity")
+# aesthetic (operator): selected-option name after a section title · no left border · legend tabs IN the header
+check('__uniSyncGrpSel=function' in page and 'className="grpsel"' in page,
+      "the selected-option name after a section title (grpsel) is gone")
+check('.grplbl .grpsel{' in page and '#cfg .grp.cgside, #flside .grp.cgside{ padding-left:0;' in page,
+      "the backend/frontend left border was not removed (title-only sections)")
+check('<div class="lghd"><b>\'+(typeof ico==="function"?ico("shape",13):"")+\'Legend</b><div class="lgtabs">' in page,
+      "the legend tabs are not in the header (still a separate row)")
+check('var LGTABICO={' in page and '(LGTABICO[t]||t)' in page,
+      "the legend tabs lost their icons (Types/Connectors/Planet should be icon-only)")
+check('rz.className="flresize"' in page and 'MINW=230, MAXW=520' in page and 'p.style.width=w+"px"' in page,
+      "the fleet width-resize handle (drag + double-click restore) is gone")
+check('#fleet .flent{ flex:1 1 88px' in page,
+      "the fleet label column does not absorb width (cluster titles stay cramped)")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
 check('layer:"Layer — the kind' in page and 'ti:"Chain — a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")

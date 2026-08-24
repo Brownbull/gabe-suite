@@ -19,13 +19,13 @@
   #elegend .lgsubtabs{ display:flex; gap:2px; padding:5px 8px 0; background:#0e1524; flex:none; }
   #elegend .lgsub{ font:600 9px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:5px 9px; cursor:pointer; border-radius:5px; }
   #elegend .lgsub.on{ color:var(--ink); background:#16233f; }
-  #elegend .lghd{ display:flex; align-items:center; justify-content:space-between; padding:8px 10px 0; }
+  #elegend .lghd{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--line); }   /* same height as .cfghead — tabs fit inside, no wrap */
   #elegend .lghd b{ font:800 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); }   /* match CONFIG / TRANSPORTS header weight */
-  #elegend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; }
-  #elegend .lgtabs{ display:flex; flex-wrap:wrap; gap:2px; padding:6px 6px 0; }
-  #elegend .lgtab{ font:600 9.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:6px 7px; cursor:pointer; border-radius:6px 6px 0 0; }
-  #elegend .lgtab.on{ color:var(--ink); background:#0e1524; }
-  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }   /* flex:1 → fills the fixed box; sub-tab row shrinks it, total stays constant */
+  #elegend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; margin-left:auto; }
+  #elegend .lgtabs{ display:flex; gap:3px; padding:0; }   /* IN the header, ONE row — icon tabs */
+  #elegend .lgtab{ display:grid; place-items:center; height:22px; width:26px; color:var(--muted); background:transparent; border:1px solid transparent; padding:0; cursor:pointer; border-radius:6px; }
+  #elegend .lgtab.on{ color:var(--ink); background:#16233f; border-color:#24365c; }
+  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }
   #elegend.min .lgbody, #elegend.min .lgtabs{ display:none; }
   #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
   #elegend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
@@ -336,15 +336,19 @@
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
      and navshow(60). */
   #fleet{ position:fixed; left:calc(var(--navw) + 12px); right:auto; top:calc(var(--topbarh) + 10px); z-index:50;
-    width:auto; min-width:186px; max-width:340px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
+    width:296px; min-width:230px; max-width:520px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
     overflow-y:auto; transition:left .18s ease; scrollbar-width:thin; }
+  #fleet .flresize{ position:absolute; top:0; right:0; width:8px; height:100%; cursor:ew-resize; z-index:2;
+    background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 22%, transparent)); opacity:0; transition:opacity .12s; }
+  #fleet:hover .flresize, #fleet .flresize.on{ opacity:1; }
+  #fleet.resizing{ transition:none; user-select:none; }
   body.nav-min #fleet{ left:48px; }
   #fleet .flhead, #fleet .flrow{ display:flex; align-items:center; gap:3px; padding:1px 0; }
   #fleet .flhead{ margin-bottom:2px; border-bottom:1px solid var(--line); padding-bottom:3px; }
   #fleet .flmaster{ border-bottom:1px dotted var(--line); padding-bottom:3px; margin-bottom:2px; }
   #fleet .flmaster.flgroup2{ margin-top:9px; border-top:1px solid var(--line); padding-top:5px; }   /* the frontend section — a subtle break below the backend block */
   #fleet .flmaster .flent{ font-weight:600; }
-  #fleet .flent{ width:84px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; color:var(--ink); display:flex; align-items:center; gap:5px; flex:none; }
+  #fleet .flent{ flex:1 1 88px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; color:var(--ink); display:flex; align-items:center; gap:3px; }
   #fleet .flmaster .flent{ color:var(--muted); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; }
   #fleet .fldot{ width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; }
   #fleet .flcell{ width:20px; display:grid; place-items:center; color:var(--muted); flex:none; }
@@ -454,8 +458,8 @@
   #fleet .flexp{ cursor:pointer; }
   #fleet .flexp:hover{ color:var(--ink); border-color:var(--accent); }
   #fleet .flsubname{ cursor:pointer; }
-  #fleet .flcnt{ font:700 8.5px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:1px 4px; margin-right:5px; flex:none; }
-  #fleet .flrow.flsub .flent{ padding-left:16px; font-size:10px; color:var(--muted); width:84px; }
+  #fleet .flcnt{ font:700 8.5px/1 var(--font-mono); color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:6px; padding:1px 4px; margin-right:2px; flex:none; }
+  #fleet .flrow.flsub .flent{ padding-left:12px; font-size:10px; color:var(--muted); }
   #fleet .flspacer{ width:20px; }
   #fleet .fltog.flstog{ border-radius:8px; }
   #fleet .fltog.flstog:hover{ border-color:#0ca678; }
@@ -541,11 +545,14 @@
   #cfg .itog.wv.on{ color:var(--accent); border-color:var(--accent); }
 
   /* per-side cluster cores (operator: two cores at once) — backend + frontend sections */
-  #cfg .grp.cgside, #flside .grp.cgside{ border-left:2px solid var(--line); padding-left:7px; margin-left:1px; }
+  #cfg .grp.cgside, #flside .grp.cgside{ padding-left:0; }   /* the title alone marks the section (operator: no left line) */
   #cfg .grplbl.bghd, #flside .grplbl.bghd{ color:#8fb3ff; }   /* backend accent */
   #cfg .grplbl.fghd, #flside .grplbl.fghd{ color:#e8a06b; }   /* frontend accent (matches the fe estate) */
   .cfgrow.shrow{ display:flex; align-items:center; gap:6px; margin-top:3px; }
   .cfgrow.shrow .shlbl{ font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
+  /* selected-option name after a section title (operator aesthetic) — non-title font, lighter */
+  .grplbl .grpsel{ margin-left:7px; font:400 10px/1 var(--mono, ui-monospace, monospace); text-transform:none; letter-spacing:0; color:var(--accent, #6ea8ff); opacity:.95; }
+  #cfg .grplbl, #flside .grplbl{ text-transform:uppercase; }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -2265,6 +2272,23 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
         b.textContent=ok?"✓":"⧉"; setTimeout(function(){ b.textContent="⧉"; },900);
       }catch(e){} };
     setInterval(function(){ if(side.classList.contains("out")) __uniFlDock(); }, 300); }   // the fleet drags — the add-on follows
+  /* WIDTH RESIZE (operator): drag the right edge to widen the fleet within a range; double-click
+     the edge restores the default. Explicit width overrides the CSS default; the label column
+     (.flent flex:1) absorbs the extra so cluster titles get room. */
+  (function(){ var rz=document.createElement("div"); rz.className="flresize"; rz.title="drag to resize · double-click to reset"; p.appendChild(rz);
+    var MINW=230, MAXW=520, drag=null;
+    rz.addEventListener("pointerdown", function(e){ e.preventDefault(); e.stopPropagation();
+      drag={ x:e.clientX, w:p.getBoundingClientRect().width }; rz.classList.add("on"); p.classList.add("resizing");
+      try{ rz.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    rz.addEventListener("pointermove", function(e){ if(!drag) return;
+      var w=Math.max(MINW, Math.min(MAXW, drag.w + (e.clientX - drag.x)));
+      p.style.width=w+"px"; p.style.maxWidth="none"; });
+    rz.addEventListener("pointerup", function(e){ if(!drag) return; drag=null; rz.classList.remove("on"); p.classList.remove("resizing");
+      try{ rz.releasePointerCapture(e.pointerId); }catch(_){} });
+    rz.addEventListener("dblclick", function(e){ e.preventDefault(); e.stopPropagation();
+      p.style.width=""; p.style.maxWidth=""; });   // restore the CSS default
+  })();
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
 /* ── the SIDE DRAWER: slides out from behind the fleet square (left→right); minimize/close slide it
@@ -2292,10 +2316,24 @@ window.__uniFlOpen=function(key, remount){ try{
   var _seen=[]; pane.groups.concat(pane.shared||[]).forEach(function(g){
     if(g && _seen.indexOf(g)<0){ _seen.push(g); bodyEl.appendChild(g); } });
   window.__uniFlOpenKey=key; if(window.__uniFlDock) __uniFlDock(); side.classList.add("out");
+  if(window.__uniSyncGrpSel) __uniSyncGrpSel();
   document.querySelectorAll("#fleetbody .flhead .flcfgbtn").forEach(function(c){
     c.classList.toggle("on", c.getAttribute("data-fk")===key); });
 }catch(e){} };
 window.__uniIsFeEnt=function(e){ return window.__uniEntLabel ? /^fe · /.test(__uniEntLabel(e)) : /^fe·/.test(e); };
+/* SELECTED-OPTION NAME after a section title (operator aesthetic) — for each single-select pill
+   group, echo the chosen option's word next to its label in a lighter, non-title font. Skips
+   numeric/boolean pills (transparency, warOn). Kept in sync by a delegated pill-click listener. */
+window.__uniSyncGrpSel=function(root){ try{ (root||document).querySelectorAll(".grp").forEach(function(g){
+  var lbl=g.querySelector(":scope > .grplbl"); if(!lbl) return;
+  var pills=g.querySelectorAll(".pill[data-grp]"); if(pills.length!==1) return;   // one pill per section only
+  var on=pills[0].querySelector("button.on"), v=on?(on.getAttribute("data-v")||""):"";
+  if(!/^[a-z]/i.test(v) || v==="true" || v==="false"){ var old=lbl.querySelector(".grpsel"); if(old) old.remove(); return; }
+  var sel=lbl.querySelector(".grpsel"); if(!sel){ sel=document.createElement("span"); sel.className="grpsel"; lbl.appendChild(sel); }
+  sel.textContent=v;
+}); }catch(e){} };
+if(!window.__uniGrpSelWired){ window.__uniGrpSelWired=true;
+  document.addEventListener("click", function(e){ if(e.target.closest && e.target.closest(".pill[data-grp] button")) setTimeout(function(){ __uniSyncGrpSel(); }, 0); }, false); }
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
     var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs"||c.k==="wires"||c.k==="routes");  // every config now lives here
@@ -2347,6 +2385,7 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
     __uniFleetToggle(b.getAttribute("data-fent"), b.getAttribute("data-fsub"), b.getAttribute("data-fcol")); }; });
   __uniFleetSync();
+  if(window.__uniSyncGrpSel) __uniSyncGrpSel();
   if(window.__uniFleetSpotState) __uniFleetSpot(__uniFleetSpotState.ent, __uniFleetSpotState.sub); };
 /* ── FLEET SPOT (batch 26): the fleet panel mirrors the selection — the selected entity's row is
    marked; a CLUSTER selection also OPENS its entity's cluster rows and marks the cluster. ── */
@@ -3729,9 +3768,13 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
     return teamShip(key, it.c, 1); }; }   // the ACTUAL fleet ship, team accent, as drawn
   function render(){ legPrune();
     var entry=LEGEND[active], isSub=!Array.isArray(entry);
-    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';
-    tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'">'+t+'</button>'; });
-    h+='</div>';
+    var LGTABICO={
+      Types:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.2 0l3.726 5.921A.7.7 0 0 1 15.7 10Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>',
+      Connectors:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>',
+      Planet:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 21.9a10 10 0 0 0 9.941-15.416"/><path d="M13.5 2.1a10 10 0 0 0-9.841 15.416"/></svg>' };
+    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><div class="lgtabs">';
+    tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'" title="'+t+'">'+(LGTABICO[t]||t)+'</button>'; });
+    h+='</div><button class="lgmin" title="collapse">–</button></div>';
     var items;
     if(isSub){ if(entry.sub.indexOf(_legSub)<0) _legSub=entry.sub[0];   // nested sub-tabs (Planet: Defense · Attack · Field)
       h+='<div class="lgsubtabs">';

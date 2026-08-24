@@ -43,7 +43,7 @@ const wire = await p.evaluate(() => {
   // legend derives from CONN (svg, not the border-bottom div) — open its CONNECTORS tab first
   // (the legend renders only the active tab; rows are built from CONN at render time)
   const ltab = [...document.querySelectorAll('#elegend .lgtab')]
-    .find(el => /connector/i.test(el.textContent)); if (ltab) ltab.click();
+    .find(el => /connector/i.test(el.title || el.textContent)); if (ltab) ltab.click();
   const legRows = [...document.querySelectorAll('#elegend svg.lgln path')];
   out.legendTab = !!ltab; out.legendRows = legRows.length;
   out.legendHasRed = legRows.some(pa => pa.getAttribute('stroke') === '#ff0000' && !pa.getAttribute('stroke-dasharray'));
@@ -268,6 +268,20 @@ const showMaster = await p2.evaluate(() => {
   return { keys: keys.length, allOff, one, visOnly, cycOff, cycOn };
 });
 // backend/frontend split (operator ask): two group masters, each controlling its own subset
+const resize = await p2.evaluate(() => {
+  const fl = document.getElementById('fleet'), rz = fl.querySelector('.flresize');
+  if (!rz) return { hasHandle:false };
+  const w0 = fl.getBoundingClientRect().width, r = rz.getBoundingClientRect(), cx = r.left+3, cy = r.top+40;
+  rz.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:cx,clientY:cy,pointerId:1}));
+  rz.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,clientX:cx+100,clientY:cy,pointerId:1}));
+  const wWide = fl.getBoundingClientRect().width;
+  rz.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,clientX:cx+600,clientY:cy,pointerId:1}));   // over-max
+  const wMax = fl.getBoundingClientRect().width;
+  rz.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,clientX:cx+600,clientY:cy,pointerId:1}));
+  rz.dispatchEvent(new MouseEvent('dblclick',{bubbles:true}));
+  const wReset = fl.getBoundingClientRect().width;
+  return { hasHandle:true, grew: wWide>w0, clamped: Math.round(wMax)===520, restored: Math.round(wReset)===Math.round(w0) };
+});
 const split = await p2.evaluate(() => {
   const body = document.getElementById('fleetbody');
   const masters = [...body.querySelectorAll('.flmaster')].map(m => m.getAttribute('data-fgrp')).join(',');
@@ -338,6 +352,8 @@ if (!(masterFix.offBefore && masterFix.propagated)) fails.push('ALL master row d
 if (!masterFix.dim) fails.push('cluster switch does not dim when its entity is off');
 if (!(hover.core && hover.lay && hover.fn && hover.hd && hover.notesGone)) fails.push('hover explainers / note removal wrong');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
+console.log('resize:', JSON.stringify(resize));
+if (!(resize.hasHandle && resize.grew && resize.clamped && resize.restored)) fails.push('the fleet width-resize (drag + clamp + double-click restore) is broken');
 console.log('showMaster:', JSON.stringify(showMaster));
 if (!(showMaster.keys>1 && showMaster.allOff && showMaster.one && showMaster.visOnly && showMaster.cycOff && showMaster.cycOn))
   fails.push('Show-Entity is not a master over its clusters (off→all off · cluster-on re-enables entity · on→all on)');

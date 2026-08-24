@@ -301,7 +301,7 @@ const flcfg = await p.evaluate(() => {
   const lgStyled = lg && getComputedStyle(lg).borderRadius === '12px' && !!lg.querySelector('.lghd b svg');   // the legend wears the panel chrome + iconed title
   const lgBody = lg.querySelector('.lgbody');
   const lgTwoCol = lgBody.classList.contains('lg-types') && getComputedStyle(lgBody).gridTemplateColumns.split(' ').length === 2;   // TYPES compacts into two columns
-  const lgH = tab => { [...lg.querySelectorAll('.lgtab')].find(b2 => new RegExp(tab, 'i').test(b2.textContent)).click();
+  const lgH = tab => { [...lg.querySelectorAll('.lgtab')].find(b2 => new RegExp(tab, 'i').test(b2.title || b2.textContent)).click();
     return Math.round(document.getElementById('elegend').getBoundingClientRect().height); };
   const h1 = lgH('types'), h2 = lgH('connectors'), h3 = lgH('planet'); lgH('types');
   lg.querySelector('.lgmin').click();
@@ -428,7 +428,7 @@ const b51 = await p.evaluate(() => new Promise(res => {
       out.chip = true; out.moved = SEL && SEL.data.id !== first; out.trail = WALK.mode === 'trail' && WALK.steps[0] === first && WALK.steps.length === 2;
       __uniHLClear();
       const lg = document.getElementById('elegend');
-      [...lg.querySelectorAll('.lgtab')].find(x => /types/i.test(x.textContent)).click();
+      [...lg.querySelectorAll('.lgtab')].find(x => /types/i.test(x.title || x.textContent)).click();
       out.groups = [...lg.querySelectorAll('.lghd2')].map(h => h.textContent).join(',') === 'frontend,backend';
       const c0 = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length;   // capsules stash most — RELATIVE restore check
       lg.querySelector('[data-lgk="component"]').click();
@@ -538,6 +538,9 @@ const b53r = await p.evaluate(() => new Promise(res => { const out = {};
 // per-side core pills must RE-CLUSTER on a real CLICK (the wiring allowlist, not a direct CFG set)
 const coreClick = await p.evaluate(() => new Promise(res => {
   __uniFlOpen('subs');
+  // selected-option name echoes after the section title (operator aesthetic)
+  __uniSyncGrpSel();
+  const selBE0 = document.querySelector('#flsbody .grp.cgside .grplbl .grpsel')?.textContent || null;
   const be0 = CFG.coreByBE;
   const beBtn = document.querySelector('.pill[data-grp="coreByBE"] button[data-v="layer"]');
   const feBtn = document.querySelector('.pill[data-grp="coreByFE"] button[data-v="kind"]');
@@ -545,7 +548,10 @@ const coreClick = await p.evaluate(() => new Promise(res => {
   setTimeout(() => {
     const beOk = CFG.coreByBE === 'layer' && beBtn.classList.contains('on');
     feBtn.click();
-    setTimeout(() => res({ be0, beOk, feOk: CFG.coreByFE === 'kind' && feBtn.classList.contains('on') }), 800);
+    setTimeout(() => { __uniSyncGrpSel();
+      const selBE1 = [...document.querySelectorAll('#flsbody .grp.cgside .grplbl .grpsel')].map(x=>x.textContent);
+      res({ be0, beOk, feOk: CFG.coreByFE === 'kind' && feBtn.classList.contains('on'),
+            selEcho: selBE0 === 'community' && selBE1.includes('layer') && selBE1.includes('kind') }); }, 800);
   }, 800);
 }));
 await b.close();
@@ -619,6 +625,7 @@ if (!(b51.chip && b51.moved && b51.trail && b51.groups && b51.hidden && b51.dimm
 if (!(b52.homes && b52.pair && b52.tint && b52.adjacent && b52.label && b52.wv && b52.r1 && b52.r3 && b52.back)) fails.push('batch 52 broken (paired fe· split · WIRE VIEW toggles): ' + JSON.stringify(b52));
 if (!(b53.caps > 15 && b53.cookFolded && b53.bundles && b53.gotoExpands && b53.refolds)) fails.push('batch 53 broken (capsules fold/expand/refold · bundles): ' + JSON.stringify(b53));
 if (!(coreClick.beOk && coreClick.feOk)) fails.push('per-side core pills do not re-cluster on CLICK (wiring allowlist missing coreByBE/coreByFE)');
+if (!coreClick.selEcho) fails.push('the selected-option name does not echo after the section title (grpsel)');
 if (!(b53r.jrnFold && b53r.stepsKeep && b53r.walkExpand === true && b53r.subKeep && b53r.univisKeep && b53r.coreRegroup && b53r.fnFold && b53r.fnPurge && b53r.census && b53r.flxExpand)) fails.push('review-53 fixes broken (journey/walk stash · capsule sub guard · core regroup · fn fold-cycle · census · fleet expand): ' + JSON.stringify(b53r));
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');

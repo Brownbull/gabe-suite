@@ -19,13 +19,13 @@
   #elegend .lgsubtabs{ display:flex; gap:2px; padding:5px 8px 0; background:#0e1524; flex:none; }
   #elegend .lgsub{ font:600 9px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:5px 9px; cursor:pointer; border-radius:5px; }
   #elegend .lgsub.on{ color:var(--ink); background:#16233f; }
-  #elegend .lghd{ display:flex; align-items:center; justify-content:space-between; padding:8px 10px 0; }
+  #elegend .lghd{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--line); }   /* same height as .cfghead — tabs fit inside, no wrap */
   #elegend .lghd b{ font:800 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); }   /* match CONFIG / TRANSPORTS header weight */
-  #elegend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; }
-  #elegend .lgtabs{ display:flex; flex-wrap:wrap; gap:2px; padding:6px 6px 0; }
-  #elegend .lgtab{ font:600 9.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.02em; color:var(--muted); background:transparent; border:none; padding:6px 7px; cursor:pointer; border-radius:6px 6px 0 0; }
-  #elegend .lgtab.on{ color:var(--ink); background:#0e1524; }
-  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }   /* flex:1 → fills the fixed box; sub-tab row shrinks it, total stays constant */
+  #elegend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; margin-left:auto; }
+  #elegend .lgtabs{ display:flex; gap:3px; padding:0; }   /* IN the header, ONE row — icon tabs */
+  #elegend .lgtab{ display:grid; place-items:center; height:22px; width:26px; color:var(--muted); background:transparent; border:1px solid transparent; padding:0; cursor:pointer; border-radius:6px; }
+  #elegend .lgtab.on{ color:var(--ink); background:#16233f; border-color:#24365c; }
+  #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }
   #elegend.min .lgbody, #elegend.min .lgtabs{ display:none; }
   #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
   #elegend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
@@ -1195,9 +1195,13 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
     return teamShip(key, it.c, 1); }; }   // the ACTUAL fleet ship, team accent, as drawn
   function render(){ legPrune();
     var entry=LEGEND[active], isSub=!Array.isArray(entry);
-    var h='<div class="lghd"><b>Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';
-    tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'">'+t+'</button>'; });
-    h+='</div>';
+    var LGTABICO={
+      Types:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.3 10a.7.7 0 0 1-.626-1.079L11.4 3a.7.7 0 0 1 1.2 0l3.726 5.921A.7.7 0 0 1 15.7 10Z"/><rect x="3" y="14" width="7" height="7" rx="1"/><circle cx="17.5" cy="17.5" r="3.5"/></svg>',
+      Connectors:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>',
+      Planet:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 21.9a10 10 0 0 0 9.941-15.416"/><path d="M13.5 2.1a10 10 0 0 0-9.841 15.416"/></svg>' };
+    var h='<div class="lghd"><b>Legend</b><div class="lgtabs">';
+    tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'" title="'+t+'">'+(LGTABICO[t]||t)+'</button>'; });
+    h+='</div><button class="lgmin" title="collapse">–</button></div>';
     var items;
     if(isSub){ if(entry.sub.indexOf(_legSub)<0) _legSub=entry.sub[0];   // nested sub-tabs (Planet: Defense · Attack · Field)
       h+='<div class="lgsubtabs">';

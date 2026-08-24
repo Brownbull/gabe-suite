@@ -357,10 +357,10 @@ text = text.replace(OLD_LCHIP,
           _lchip(s,sk,sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), _lchip(t,tk,tl)),""", 1)
 
 # ── batch 43: the legend head wears the panel title format (icon + caps, like fleet/controls) ──
-OLD_LGHD = """    var h='<div class="lghd"><b>Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';"""
+OLD_LGHD = """    var h='<div class="lghd"><b>Legend</b><div class="lgtabs">';"""
 assert OLD_LGHD in text, "legend head anchor missing"
 text = text.replace(OLD_LGHD,
-  """    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><button class="lgmin" title="collapse">–</button></div><div class="lgtabs">';""", 1)
+  """    var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><div class="lgtabs">';""", 1)
 
 # ── batch 44: the legend body carries the active tab as a class → per-tab layout (Types = 2 columns) ──
 OLD_LGBODY = """    h+='<div class="lgbody">';"""

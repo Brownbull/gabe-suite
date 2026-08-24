@@ -987,6 +987,23 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
         b.textContent=ok?"✓":"⧉"; setTimeout(function(){ b.textContent="⧉"; },900);
       }catch(e){} };
     setInterval(function(){ if(side.classList.contains("out")) __uniFlDock(); }, 300); }   // the fleet drags — the add-on follows
+  /* WIDTH RESIZE (operator): drag the right edge to widen the fleet within a range; double-click
+     the edge restores the default. Explicit width overrides the CSS default; the label column
+     (.flent flex:1) absorbs the extra so cluster titles get room. */
+  (function(){ var rz=document.createElement("div"); rz.className="flresize"; rz.title="drag to resize · double-click to reset"; p.appendChild(rz);
+    var MINW=230, MAXW=520, drag=null;
+    rz.addEventListener("pointerdown", function(e){ e.preventDefault(); e.stopPropagation();
+      drag={ x:e.clientX, w:p.getBoundingClientRect().width }; rz.classList.add("on"); p.classList.add("resizing");
+      try{ rz.setPointerCapture(e.pointerId); }catch(_){}
+    });
+    rz.addEventListener("pointermove", function(e){ if(!drag) return;
+      var w=Math.max(MINW, Math.min(MAXW, drag.w + (e.clientX - drag.x)));
+      p.style.width=w+"px"; p.style.maxWidth="none"; });
+    rz.addEventListener("pointerup", function(e){ if(!drag) return; drag=null; rz.classList.remove("on"); p.classList.remove("resizing");
+      try{ rz.releasePointerCapture(e.pointerId); }catch(_){} });
+    rz.addEventListener("dblclick", function(e){ e.preventDefault(); e.stopPropagation();
+      p.style.width=""; p.style.maxWidth=""; });   // restore the CSS default
+  })();
   _dragPanel(p, document.getElementById("fleethead"));
   __uniFleetRender(); };
 /* ── the SIDE DRAWER: slides out from behind the fleet square (left→right); minimize/close slide it
@@ -1014,10 +1031,24 @@ window.__uniFlOpen=function(key, remount){ try{
   var _seen=[]; pane.groups.concat(pane.shared||[]).forEach(function(g){
     if(g && _seen.indexOf(g)<0){ _seen.push(g); bodyEl.appendChild(g); } });
   window.__uniFlOpenKey=key; if(window.__uniFlDock) __uniFlDock(); side.classList.add("out");
+  if(window.__uniSyncGrpSel) __uniSyncGrpSel();
   document.querySelectorAll("#fleetbody .flhead .flcfgbtn").forEach(function(c){
     c.classList.toggle("on", c.getAttribute("data-fk")===key); });
 }catch(e){} };
 window.__uniIsFeEnt=function(e){ return window.__uniEntLabel ? /^fe · /.test(__uniEntLabel(e)) : /^fe·/.test(e); };
+/* SELECTED-OPTION NAME after a section title (operator aesthetic) — for each single-select pill
+   group, echo the chosen option's word next to its label in a lighter, non-title font. Skips
+   numeric/boolean pills (transparency, warOn). Kept in sync by a delegated pill-click listener. */
+window.__uniSyncGrpSel=function(root){ try{ (root||document).querySelectorAll(".grp").forEach(function(g){
+  var lbl=g.querySelector(":scope > .grplbl"); if(!lbl) return;
+  var pills=g.querySelectorAll(".pill[data-grp]"); if(pills.length!==1) return;   // one pill per section only
+  var on=pills[0].querySelector("button.on"), v=on?(on.getAttribute("data-v")||""):"";
+  if(!/^[a-z]/i.test(v) || v==="true" || v==="false"){ var old=lbl.querySelector(".grpsel"); if(old) old.remove(); return; }
+  var sel=lbl.querySelector(".grpsel"); if(!sel){ sel=document.createElement("span"); sel.className="grpsel"; lbl.appendChild(sel); }
+  sel.textContent=v;
+}); }catch(e){} };
+if(!window.__uniGrpSelWired){ window.__uniGrpSelWired=true;
+  document.addEventListener("click", function(e){ if(e.target.closest && e.target.closest(".pill[data-grp] button")) setTimeout(function(){ __uniSyncGrpSel(); }, 0); }, false); }
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
     var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs"||c.k==="wires"||c.k==="routes");  // every config now lives here
@@ -1069,6 +1100,7 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   body.querySelectorAll(".fltog").forEach(function(b){ b.onclick=function(){
     __uniFleetToggle(b.getAttribute("data-fent"), b.getAttribute("data-fsub"), b.getAttribute("data-fcol")); }; });
   __uniFleetSync();
+  if(window.__uniSyncGrpSel) __uniSyncGrpSel();
   if(window.__uniFleetSpotState) __uniFleetSpot(__uniFleetSpotState.ent, __uniFleetSpotState.sub); };
 /* ── FLEET SPOT (batch 26): the fleet panel mirrors the selection — the selected entity's row is
    marked; a CLUSTER selection also OPENS its entity's cluster rows and marks the cluster. ── */
