@@ -420,3 +420,20 @@
   #elegend .lghd2.lggrp.gs-all .lggs{ color:var(--accent); border-color:var(--accent); }
   #elegend .lghd2.lggrp.gs-critical .lggs{ color:#e0a44a; border-color:#e0a44a; }
   #elegend .lghd2.lggrp.gs-off .lggs{ opacity:.6; }
+  /* #1 · the Explorer expander — panel-section tree (Code Behind · Connections). ONE primitive. */
+  .xpl{ display:block; }
+  .xpl.xin{ margin-left:11px; padding-left:8px; border-left:1px solid color-mix(in srgb, var(--line) 80%, transparent); }
+  .xrow{ display:block; }
+  .xhead{ display:flex; align-items:center; gap:2px; margin:0 0 2px; }
+  .xtw, .xtwsp{ width:13px; height:13px; flex:0 0 13px; display:inline-flex; align-items:center; justify-content:center; color:var(--muted); font-size:9px; line-height:1; }
+  .xtw::before{ content:"\25B8"; transition:transform .12s ease; }
+  .xrow.xopen > .xhead > .xtw::before{ transform:rotate(90deg); }
+  .xtw:hover{ color:var(--accent); }
+  .xhead .pchip{ margin:0; }
+  .xhead .pchip.xnav{ cursor:pointer; }
+  .xhead .pchip.xnav:hover{ border-color:var(--accent); color:var(--ink); }
+  .xmeta{ font-size:9px; font-weight:600; letter-spacing:.02em; color:var(--muted); text-transform:lowercase; margin-left:3px; opacity:.85; }
+  .xdeep{ color:var(--muted); opacity:.6; margin-left:3px; }
+  .xkids{ margin:0 0 3px; }
+  .xleaf{ font-size:10px; color:var(--muted); margin:1px 0 3px 11px; }
+  .xmore{ padding:2px 7px; margin:1px 0 4px 15px; font-size:10px; }

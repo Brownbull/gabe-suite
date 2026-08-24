@@ -46,6 +46,63 @@
       I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in"};
     return (dir==="out"?O:I)[rel]||(rel+(dir==="out"?"":" (in)")); }
   var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema"};
+  /* ── #1 · the Explorer expander — ONE reusable primitive. A list where a row can reveal its
+     children indented one level (lazy, depth-capped) with a "+N more" count cap. Rows:
+     {label, glyph, cls, meta, title, node, childrenFn}. node → click navigates; childrenFn → a twisty. ── */
+  function _xRow(r, depth, maxD, cap){
+    var row=E("div",{class:"xrow"}), canX=!!(r.childrenFn && depth<maxD);
+    var tw=E("span",{class:canX?"xtw":"xtwsp"});
+    var id=r.id||(r.node&&r.node.id)||null;
+    var chip=E("span",{class:"pchip "+(r.cls||"fn")+(id?" xnav":""), title:r.title||r.label||""},
+      r.glyph?icoEl(r.glyph):null, r.label, r.meta!=null?E("span",{class:"xmeta"},String(r.meta)):null);
+    if(id && window.__uniHoverHL){                                        // SAME wiring as chipList: white-halo hover · trail title · __uniGoto click
+      chip.style.cursor="pointer"; chip.title=(chip.title?chip.title+" · ":"")+"click to open (builds the 7-step trail)";
+      chip.addEventListener("mouseenter",function(){ __uniHoverHL(id); });
+      chip.addEventListener("mouseleave",function(){ __uniHoverHL(null); });
+      chip.addEventListener("click",function(ev){ ev.stopPropagation(); if(window.__uniGoto) __uniGoto(id); }); }
+    else if(r.node){ chip.onclick=function(e){ e.stopPropagation(); try{ _selNode(r.node); }catch(x){} }; }
+    var head=E("div",{class:"xhead"}, tw, chip), kids=E("div",{class:"xkids",style:"display:none"}), built=false, open=false;
+    if(canX){ tw.style.cursor="pointer"; head.classList.add("xhx"); tw.onclick=function(e){ e.stopPropagation(); open=!open;
+        if(open && !built){ built=true; var cs=r.childrenFn()||[];
+          kids.append(cs.length?_xList(cs, depth+1, maxD, cap):E("div",{class:"xleaf"},"— nothing deeper")); }
+        kids.style.display=open?"":"none"; row.classList.toggle("xopen",open); }; }
+    else if(r.childrenFn){ chip.append(E("span",{class:"xdeep",title:"deeper levels not expanded at this depth"},"·")); }
+    row.append(head, kids); return row; }
+  function _xList(rows, depth, maxD, cap){ var box=E("div",{class:"xpl"+(depth?" xin":"")}), shown=Math.min(cap, rows.length);
+    function paint(){ box.innerHTML="";
+      rows.slice(0,shown).forEach(function(r){ box.append(_xRow(r, depth, maxD, cap)); });
+      if(shown<rows.length){ var b=E("button",{class:"more xmore"},"+"+(rows.length-shown)+" more"); b.onclick=function(){ shown=rows.length; paint(); }; box.append(b); } }
+    paint(); return box; }
+  function expander(rows, opt){ opt=opt||{}; return _xList(rows||[], 0, opt.maxDepth!=null?opt.maxDepth:1, opt.cap||8); }
+  /* connection rows — an item {t,id}; a resolved node expands to preview ITS OWN neighbours (one level) */
+  function _neighborRows(node){ var rows=[], seen={};
+    links.forEach(function(l){ var sc=lid(l.source), tg=lid(l.target), oid, dir;
+      if(sc===node.id){ oid=tg; dir="out"; } else if(tg===node.id){ oid=sc; dir="in"; } else return;
+      if(oid===node.id) return; var o=NIDS[oid], key=dir+"|"+l.rel+"|"+oid; if(seen[key]) return; seen[key]=1;
+      rows.push({ label:o?o.label:oid, cls:chipCls(o?o.kind:"external"), glyph:o?o.kind:"external",
+        meta:relLabel(l.rel,dir), title:relLabel(l.rel,dir)+(o?(" · "+o.kind):""), node:o||null }); });
+    return rows; }
+  function _connRows(items, kind){ return (items||[]).map(function(it){ var node=it.id?NIDS[it.id]:null;
+    return { label:it.t, cls:chipCls(kind), glyph:kind, node:node,
+      childrenFn: node ? function(){ return _neighborRows(node); } : null }; }); }
+  /* Code-behind rows — flat callee NAMES (a derive_behind floor); a name that resolves to a LOADED
+     function node expands into its own `calls` (the real tree, only where the data carries it) */
+  function _fnByLabel(){ var m={}; nodes.forEach(function(n){ if(n.kind==="function" && !(n.label in m)) m[n.label]=n; }); return m; }
+  function _callsRows(node, path){ path=path||{}; var rows=[], seen={};
+    links.forEach(function(l){ if(l.rel!=="calls" || lid(l.source)!==node.id) return;
+      var o=NIDS[lid(l.target)]; if(!o || o.id===node.id || seen[o.id] || path[o.id]) return; seen[o.id]=1;   // path[] prunes a calls cycle (A→B→A) from re-listing down one branch
+      var np={}; for(var _k in path) np[_k]=1; np[node.id]=1;
+      rows.push({ label:o.label, cls:"function", glyph:"function", node:o, childrenFn:function(){ return _callsRows(o, np); } }); });
+    return rows; }
+  function behindTree(n){ var b=n&&n.behind; if(!b||!b.fns) return null; var byLabel=_fnByLabel(), names=b.names||[];
+    var rows=names.map(function(nm){ var node=byLabel[nm]||null;
+      return { label:nm, cls:"function", glyph:"function", node:node, childrenFn: node?function(){ var np={}; np[node.id]=1; return _callsRows(node, np); }:null }; });
+    var loaded=rows.some(function(r){ return r.node; });
+    var body=E("div",null,
+      E("div",{class:"sublbl"}, icoEl("function"), "reach "+b.depth+" · "+b.fns+" behind"+(loaded?" · expand a callee to walk its calls":" — turn Functions ON to walk the tree")),
+      expander(rows, {cap:10, maxDepth:3}));
+    return E("div",{class:"sec"}, sechd("layers","Code behind", b.fns, false,
+      {icon:"info",cls:"info",text:"Callee names + count from derive_behind (a BFS floor; cross-file callees inferred by design). Where a callee is a LOADED function node, expand it to walk its own calls."}), body); }
   function liveConns(n){ var outs=[], ins=[];
     links.forEach(function(l){ var s=lid(l.source), t=lid(l.target); if(s===n.id) outs.push(l); if(t===n.id) ins.push(l); });
     function build(arr, dir){ var by={};
@@ -53,7 +110,7 @@
         var key=l.rel+"|"+dir+"|"+(other?other.kind:"ext"); if(!by[key]) by[key]={rel:l.rel, dir:dir, kind:other?other.kind:"external", items:[]};
         by[key].items.push(other?{t:other.label,id:other.id}:{t:(dir==="out"?lid(l.target):lid(l.source))}); });   // {t,id} → chip hover lights that node (white halo)
       return Object.keys(by).map(function(k){ var g=by[k];
-        return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, function(){ return chipList(g.items, chipCls(g.kind), g.kind); }, g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
+        return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, (function(items,kind){ return function(){ return expander(_connRows(items, kind), {cap:6, maxDepth:1}); }; })(g.items, g.kind), g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
     var groups=build(outs,"out").concat(build(ins,"in"));
     var _empty="— no edges captured";
     if(n.behind&&n.behind.fns) _empty="— no data edges captured · its behavior lives in the call tree ("+n.behind.fns+" fns, Code behind) — turn Functions ON to draw those wires";
@@ -97,7 +154,7 @@
       testsSec(det),
       journeysSection(n.ent,"endpoint",det),
       payloadSec(det),
-      (n.behind&&n.behind.fns)?behind(n.behind, n.behind.names||[]):null,
+      behindTree(n),
       identSec(n),
       sigSec(det),
       docSec(det),
@@ -105,7 +162,7 @@
     "function":function(n){ var det=n.det||{}; return [
       usage(usageN(n), usageBreak(n)),
       liveConns(n),
-      (n.behind&&n.behind.fns)?behind(n.behind, n.behind.names||[]):null,
+      behindTree(n),
       testsSec(det),
       identSec(n), sigSec(det), docSec(det), fileRowSec(n) ]; },
     model:function(n){ var det=n.det||{}; return [
