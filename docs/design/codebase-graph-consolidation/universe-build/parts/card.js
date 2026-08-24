@@ -171,10 +171,11 @@
     document.getElementById("prailname").textContent=title; }
   P.drill='<polyline points="15 10 20 15 15 20"/><path d="M4 4v7a4 4 0 0 0 4 4h12"/>';       // trailing DOWN-a-level marker
   P.up='<polyline points="14 9 9 4 4 9"/><path d="M20 20h-7a4 4 0 0 1-4-4V4"/>';             // trailing UP-a-level marker
-  function coreLead(){ return E("span",{class:"pki pcore",html:(window.__uniCoreIco?__uniCoreIco((typeof CFG!=="undefined"&&CFG.coreBy)||"layer",13):"")}); }
+  function coreLead(ent){ var c=(typeof CFG!=="undefined") ? ((ent&&window.__uniIsFeEnt&&__uniIsFeEnt(ent))?CFG.coreByFE:CFG.coreByBE) : null;   // the entity's OWN side core (frontend→coreByFE)
+    return E("span",{class:"pki pcore",html:(window.__uniCoreIco?__uniCoreIco(c||"layer",13):"")}); }
   function dirIco(dir){ return dir?E("span",{class:"pdir "+dir},icoEl(dir==="down"?"drill":"up")):null; }
-  function navRow(icon, label, meta, col, go, dir){
-    var lead = col ? E("span",{class:"pdot",style:"background:"+col}) : (icon==="__core"?coreLead():icoEl(icon||"nav"));
+  function navRow(icon, label, meta, col, go, dir, coreEnt){
+    var lead = col ? E("span",{class:"pdot",style:"background:"+col}) : (icon==="__core"?coreLead(coreEnt):icoEl(icon||"nav"));
     var r=E("div",{class:"pnav"}, lead, E("span",{class:"pnl"},label),
       meta!=null?E("span",{class:"pnm"},String(meta)):null, dirIco(dir));
     r.onclick=go; return r; }
@@ -288,7 +289,7 @@
     var sk=Object.keys(subs).sort();
     var ins=E("div",{class:"sec"}, sechd("sub","Inside — clusters", sk.length, false,
       {icon:"info",cls:"info",text:"The entity's sub-clusters under the CURRENT core (config › Universe › Cluster core by). Click one to open its panel."}));
-    sk.forEach(function(s){ ins.append(navRow("__core", s, subs[s].length, null, function(){ panelClu(ent, s); }, "down")); });
+    sk.forEach(function(s){ ins.append(navRow("__core", s, subs[s].length, null, function(){ panelClu(ent, s); }, "down", ent)); });
     pb.append(ins);
     var ab=E("div",{class:"sec"}, sechd("nav","Above"));
     ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
@@ -312,7 +313,7 @@
   /* the element card's way BACK UP — appended to every kind card below */
   function aboveSec(n){ if(!n||!n.ent) return null;
     var w=E("div",{class:"sec"}, sechd("nav","Above"));
-    if(n.sub) w.append(navRow("__core","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }, "up"));
+    if(n.sub) w.append(navRow("__core","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }, "up", n.ent));
     w.append(navRow(null,"entity · "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent), null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
     w.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     return w; }

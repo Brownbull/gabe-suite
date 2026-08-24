@@ -52,7 +52,7 @@ const base = await p.evaluate(() => {
 });
 
 // flip the core → nodes must MOVE (reheat), not just the hulls recolor
-await p.evaluate(() => { CFG.coreBy = 'kind'; applyCfg('coreBy'); });
+await p.evaluate(() => { CFG.coreByBE = 'kind'; applyCfg('coreByBE'); });
 await p.waitForTimeout(3500);
 const after = await p.evaluate(prev => {
   const M = Object.fromEntries(prev.map(r => [r[0], r]));
@@ -69,7 +69,7 @@ const after = await p.evaluate(prev => {
 // cluster over their call graph (ƒ·<hub>), not into one giant "other".
 await p.evaluate(() => { UNICAP.on = false; __uniApplyCapsules(); });   // unfold to inspect raw pieces
 await p.waitForTimeout(1200);
-await p.evaluate(() => { CFG.coreBy = 'community'; applyCfg('coreBy'); if (CFG.showFns!=='on'){ CFG.showFns='on'; toggleFns(true); } });
+await p.evaluate(() => { CFG.coreByBE = 'community'; applyCfg('coreByBE'); if (CFG.showFns!=='on'){ CFG.showFns='on'; toggleFns(true); } });
 await p.waitForTimeout(3500);
 const fnClust = await p.evaluate(() => {
   // pick the entity with the MOST functions (call structure) — not the alphabetical first
@@ -83,6 +83,20 @@ const fnClust = await p.evaluate(() => {
   return { ent, total: fns.length, clustered: clustered.length, communities: feCommunities.length, fnNamed,
            otherFrac: +((fns.length-clustered.length)/Math.max(1,fns.length)).toFixed(2) };
 });
+// PER-SIDE cores (operator: two cores at once) — backend + frontend carry DIFFERENT cores simultaneously
+const splitCore = await p.evaluate(() => {
+  UNICAP.on = false; __uniApplyCapsules();
+  const cl = e => [...new Set(nodes.filter(n=>n.ent===e && !n.__cap).map(n=>n.sub))].filter(s=>s!=='other').length;
+  const cnt = e => nodes.filter(n=>n.ent===e && !n.__cap).length;
+  const beE = _ents.filter(e => !__uniIsFeEnt(e)).sort((a,b)=>cnt(b)-cnt(a))[0];   // most-pieces backend entity
+  const feE = _ents.filter(e =>  __uniIsFeEnt(e)).sort((a,b)=>cnt(b)-cnt(a))[0];   // most-pieces frontend entity
+  CFG.coreByBE='community'; CFG.coreByFE='screen'; __uniAssignSplit();
+  const beC = cl(beE), feC = cl(feE);
+  CFG.coreByBE='kind'; __uniAssignSplit();               // flip ONLY backend
+  const beKind = cl(beE), feStill = cl(feE);
+  return { beE, feE, beC, feC, beKind, feStill,
+           independent: beKind !== beC && feStill === feC };  // backend core CHANGED it, frontend untouched (direction-agnostic)
+});
 await b.close();
 
 console.log(`nodes ${base.nodes} · entities ${base.ents} · ringed entities ${base.ringedEnts}`);
@@ -90,6 +104,7 @@ console.log(`separation: min anchor pair ${base.minAnchorPair} · bleed ${base.b
 console.log(`kind ring: per-entity ratio ${base.ringRatio} over ${base.ringEnts} entities · pooled ${base.epMeanR}/${base.inMeanR}`);
 console.log(`coreBy flip: mean displacement ${after.meanDisp} · moved>4u ${after.movedPct}% · nonFinite ${after.nonFinite}`);
 console.log(`fn-clustering(${fnClust.ent}): ${fnClust.total} fns → ${fnClust.communities} ƒ· communities · ${fnClust.clustered} clustered · other ${(fnClust.otherFrac*100).toFixed(0)}%`);
+console.log(`split cores: ${splitCore.beE}=community ${splitCore.beC} + ${splitCore.feE}=screen ${splitCore.feC} · flip BE→kind ${splitCore.beKind}, FE still ${splitCore.feStill}`);
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -101,5 +116,6 @@ if (!(after.meanDisp > 5 && after.movedPct > 40)) fails.push('coreBy did not re-
 if (after.nonFinite) fails.push('non-finite node positions');
 if (base.ringedEnts < 1) fails.push('no entity got a sub-anchor ring');
 if (!(fnClust.communities >= 3 && fnClust.fnNamed && fnClust.otherFrac < 0.35)) fails.push('backend functions did not cluster into ƒ· communities (still dumping into other)');
+if (!(splitCore.beC > 3 && splitCore.feC > 3 && splitCore.independent)) fails.push('per-side cores are not independent (backend + frontend do not carry different cores at once)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('CLUSTERING PROOF: ALL PASS');

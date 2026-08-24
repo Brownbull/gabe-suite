@@ -65,9 +65,11 @@ const dirIcons = await p.evaluate(() => {
   const entRows = [...document.querySelectorAll('#pbody .pnav')].filter(r => r.querySelector('.pdot'));
   const downs = entRows.filter(r => r.querySelector('.pdir.down svg')).length;
   document.querySelector('.cfgtab[data-pane="universe"]')?.click();
-  const pill = document.querySelector('.pill[data-grp="coreBy"]');
-  const pillBtns = pill ? pill.querySelectorAll('button').length : 0;
-  const pillIcons = pill ? pill.querySelectorAll('button svg').length : 0;
+  const pill = document.querySelector('.pill[data-grp="coreByBE"]');
+  const pill2 = document.querySelector('.pill[data-grp="coreByFE"]');   // two per-side core groups now
+  const pb = p2 => p2 ? p2.querySelectorAll('button').length : 0, pi = p2 => p2 ? p2.querySelectorAll('button svg').length : 0;
+  const pillBtns = pb(pill) + pb(pill2);
+  const pillIcons = pi(pill) + pi(pill2);
   return { entRows: entRows.length, downs, pillBtns, pillIcons }; });
 
 // [2] Everything → entity (click the first entity row)
@@ -285,8 +287,8 @@ const flcfg = await p.evaluate(() => {
   const q2 = s => !!document.querySelector('#flsbody ' + s);
   const entFull = U('LAYOUT') && U('RADIUS') && U('OPTIONS')
     && q2('.pill[data-grp="entLayout"]') && q2('.pill[data-grp="entOp"]') && q2('.pill[data-grp="shape"]')   // combo row: layout · transparency · container
-    && q2('[data-itog="entOn"]') && q2('[data-itog="stars"]') && q2('#fnsTog') && q2('#spreadRng')
-    && !q2('[data-itog="subOn"]');
+    && q2('[data-itog="entOn"]') && q2('[data-itog="stars"]') && q2('#spreadRng')
+    && !q2('[data-itog="subOn"]') && !q2('#fnsTog');   // functions/types MOVED to the Clusters pane (per-side show)
   const fnsOff = CFG.showFns === 'off' && !document.querySelector('#flsbody #fnsTog.on');   // functions START OFF
   const r0 = RENT[Object.keys(RENT)[0]];
   const sp = document.querySelector('#flsbody #spreadRng'); sp.value = '2'; sp.dispatchEvent(new Event('input'));
@@ -307,7 +309,10 @@ const flcfg = await p.evaluate(() => {
   lg.querySelector('.lgmin').click();
   const lgCompact = h1 === h2 && h2 === h3 && h1 <= 340 && lgMin;            // ONE size, whatever the tab — and it minimizes
   btn('subs').click();
-  const cluFull = U('CORE') && !!document.querySelector('#flsbody #radRng')
+  const cluFull = U('BACKEND') && U('FRONTEND')                                          // two per-side core groups
+    && !!document.querySelector('#flsbody .pill[data-grp="coreByBE"]') && !!document.querySelector('#flsbody .pill[data-grp="coreByFE"]')
+    && !!document.querySelector('#flsbody #fnsTog') && !!document.querySelector('#flsbody #typesTog')   // functions=backend, types=frontend show
+    && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
   btn('planets').click();
   const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');
@@ -330,7 +335,7 @@ const flcfg = await p.evaluate(() => {
     if (bodyEl2.scrollWidth > bodyEl2.clientWidth + 2) noHScroll = false; }
   window.__uniFlOpen('show');
   const layIconOnly = [...document.querySelectorAll('.pill[data-grp="entLayout"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg') && /—/.test(b.title));
-  const coreIconOnly = [...document.querySelectorAll('.pill[data-grp="coreBy"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg'));
+  const coreIconOnly = [...document.querySelectorAll('.pill[data-grp="coreByBE"] button, .pill[data-grp="coreByFE"] button')].every(b => b.textContent.trim() === '' && b.querySelector('svg'));
   const transDots = [...document.querySelectorAll('.pill[data-grp="entOp"] button')].every(b => b.textContent.trim() === '' && /fill-opacity/.test(b.innerHTML));
   // wire kinds: ONE row each, per-kind on/off riding the beam (0 hides), toggle round-trips
   window.__uniFlOpen('wires');
@@ -497,14 +502,14 @@ const b53r = await p.evaluate(() => new Promise(res => { const out = {};
           const cap0 = nodes.filter(n => n.__cap)[0];
           assignSub('kind');
           out.subKeep = cap0.sub === cap0.area;                      // no core may clobber a capsule's area
-          assignSub(CFG.coreBy);
+          __uniAssignSplit();
           const key = _CAPST ? _CAPST.nodes[0].ent + '|' + _CAPST.nodes[0].sub : null;
           UNIVIS.sub[key] = { wires: 0 }; __uniFleetRegroup();
           out.univisKeep = !!UNIVIS.sub[key]; delete UNIVIS.sub[key];
           UNICAP.threshold = 40; __uniApplyCapsules();               // force-fold a BACKEND entity
           setTimeout(() => {
             const pg = k => nodes.filter(n => n.__cap && n.ent === 'pantry').map(n => n.label.split(' · ')[0]).sort().join(',');
-            const g1 = pg(); CFG.coreBy = 'kind'; __uniApplyCapsules();
+            const g1 = pg(); CFG.coreByBE = 'kind'; __uniApplyCapsules();
             setTimeout(() => {
               out.coreRegroup = pg() !== g1 && /endpoint|model|component/.test(pg());   // a core switch REGROUPS a folded entity
               toggleFns(true);
@@ -513,7 +518,7 @@ const b53r = await p.evaluate(() => new Promise(res => { const out = {};
                           && _CAPST.nodes.some(n => n.__fn && n.ent === 'pantry');       // ƒ pieces fold, never loose
                 toggleFns(false);
                 out.fnPurge = _CAPST.nodes.every(n => !n.__fn) && _CAPST.links.every(l => !l.__fn);
-                CFG.coreBy = 'community'; UNICAP.threshold = 80; __uniApplyCapsules();
+                CFG.coreByBE = 'community'; UNICAP.threshold = 80; __uniApplyCapsules();
                 setTimeout(() => {
                   if (window.__uniPanelAll) __uniPanelAll();
                   out.census = document.getElementById('pbody').textContent.includes('folded');   // the open census names the folded mass
@@ -530,6 +535,19 @@ const b53r = await p.evaluate(() => new Promise(res => { const out = {};
     }, 1400);
   }, 1400); }));
 
+// per-side core pills must RE-CLUSTER on a real CLICK (the wiring allowlist, not a direct CFG set)
+const coreClick = await p.evaluate(() => new Promise(res => {
+  __uniFlOpen('subs');
+  const be0 = CFG.coreByBE;
+  const beBtn = document.querySelector('.pill[data-grp="coreByBE"] button[data-v="layer"]');
+  const feBtn = document.querySelector('.pill[data-grp="coreByFE"] button[data-v="kind"]');
+  beBtn.click();
+  setTimeout(() => {
+    const beOk = CFG.coreByBE === 'layer' && beBtn.classList.contains('on');
+    feBtn.click();
+    setTimeout(() => res({ be0, beOk, feOk: CFG.coreByFE === 'kind' && feBtn.classList.contains('on') }), 800);
+  }, 800);
+}));
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -551,6 +569,7 @@ console.log('b51:', JSON.stringify(b51));
 console.log('b52:', JSON.stringify(b52));
 console.log('b53:', JSON.stringify(b53));
 console.log('b53r:', JSON.stringify(b53r));
+console.log('coreClick:', JSON.stringify(coreClick));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -599,6 +618,7 @@ if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)
 if (!(b51.chip && b51.moved && b51.trail && b51.groups && b51.hidden && b51.dimmed && b51.restored)) fails.push('batch 51 broken (chip → trail navigation · legend hide-by-kind · fe/backend groups): ' + JSON.stringify(b51));
 if (!(b52.homes && b52.pair && b52.tint && b52.adjacent && b52.label && b52.wv && b52.r1 && b52.r3 && b52.back)) fails.push('batch 52 broken (paired fe· split · WIRE VIEW toggles): ' + JSON.stringify(b52));
 if (!(b53.caps > 15 && b53.cookFolded && b53.bundles && b53.gotoExpands && b53.refolds)) fails.push('batch 53 broken (capsules fold/expand/refold · bundles): ' + JSON.stringify(b53));
+if (!(coreClick.beOk && coreClick.feOk)) fails.push('per-side core pills do not re-cluster on CLICK (wiring allowlist missing coreByBE/coreByFE)');
 if (!(b53r.jrnFold && b53r.stepsKeep && b53r.walkExpand === true && b53r.subKeep && b53r.univisKeep && b53r.coreRegroup && b53r.fnFold && b53r.fnPurge && b53r.census && b53r.flxExpand)) fails.push('review-53 fixes broken (journey/walk stash · capsule sub guard · core regroup · fn fold-cycle · census · fleet expand): ' + JSON.stringify(b53r));
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');

@@ -101,7 +101,14 @@ function recomputeSubAnchors(){
     ks.forEach(function(k,i){ var a=ei*0.7 + i*(Math.PI*2/ks.length);            // per-entity phase stagger — rings don't all align
       m[k]={ x:Math.cos(a)*SR, y:__chainMode?0:(((i%2)?1:-1)*SR*0.22), z:Math.sin(a)*SR }; }); });
 }
-if(window.GABE_LEVELS && window.GABE_LEVELS.pieces) CFG.coreBy="community";   // the operator's default lens — layer only when no levels feed
+// PER-SIDE cluster cores (operator: two cores at once): backend entities cluster by coreByBE,
+// frontend entities by coreByFE — simultaneously. Defaults chase what actually divides each side
+// (community is the backend spine, screen the frontend spine); without a levels feed, kind on both.
+(function(){ var lv=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
+  if(CFG.coreByBE==null) CFG.coreByBE=lv?"community":"kind";
+  if(CFG.coreByFE==null) CFG.coreByFE="screen";
+  CFG.coreBy=CFG.coreByBE;   // back-compat: any lingering single-core reader sees the backend core
+})();
 /* cluster core — rewrite n.sub (the sub-cluster grouping key). Decoration only (nodes don't move).
    layer/kind/tests are c4-native; usecase/community/fk join GABE_LEVELS group maps by NAME
    (endpoints by "METHOD /path" = eps; models/schemas by class name = cls). Honest "other" bucket. */
@@ -165,6 +172,20 @@ function _fnAssignSub(mode){
     g.ids.forEach(function(id){ name[id]=full; }); });
   nodes.forEach(function(n){ if(n.kind==="function") n.sub=name[n.id]||"other"; });   // only FUNCTIONS move; data pieces keep their levels-join community
 }
+/* PER-SIDE assignment (operator: two cores at once) — run the backend core, capture backend
+   nodes' subs, run the frontend core, then restore the backend nodes. Frontend = its entity is
+   a frontend entity (fe·/bucket/candidate); backend = the rest. Capsules restamp to their area
+   last (mirrors the assignSub wrapper). Each _assignSubImpl already clusters each side with the
+   right sub-algorithm (_feAssignSub for fe, the levels map for backend, _fnAssignSub for fns);
+   this just lets the two SIDES carry different cores. */
+window.__uniAssignSplit=function(){
+  var feSet={}; if(typeof _ents!=="undefined") _ents.forEach(function(e){ if(window.__uniIsFeEnt && __uniIsFeEnt(e)) feSet[e]=1; });
+  _assignSubImpl(CFG.coreByBE||"kind");
+  var be={}; nodes.forEach(function(n){ if(!n.__cap && !feSet[n.ent]) be[n.id]=n.sub; });
+  _assignSubImpl(CFG.coreByFE||"screen");
+  nodes.forEach(function(n){ if(!n.__cap && !feSet[n.ent]) n.sub=be[n.id]; });   // backend nodes revert to their backend-core sub
+  nodes.forEach(function(n){ if(n.__cap) n.sub=n.area||n.sub; });                // capsule sub IS its area (review 53[2])
+};
 function assignSub(mode){ _assignSubImpl(mode);
   nodes.forEach(function(n){ if(n.__cap) n.sub=n.area||n.sub; }); }   // review 53[2]: a capsule's sub IS its area — no core may clobber it
 function _assignSubImpl(mode){
@@ -276,7 +297,7 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
   }
   links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });   // normalize to string ids before re-seed
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
-  try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // fn nodes change group sizes → re-ring
+  try{ __uniAssignSplit(); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // fn nodes change group sizes → re-ring
   if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}   // fn nodes add/remove sub groups → the panel re-derives
   if(window.__uniApplyCapsules&&_CAPST!==undefined) try{ __uniApplyCapsules(); }catch(e){}   // review 53[1]: a collapsed entity re-folds its new fn pieces
 }
@@ -298,7 +319,7 @@ function toggleTypes(on){ if(typeof _FETYPES==="undefined" || !_FETYPES.length) 
   }
   links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
-  try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}
+  try{ __uniAssignSplit(); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}
   if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}
   if(window.__uniApplyCapsules&&_CAPST!==undefined) try{ __uniApplyCapsules(); }catch(e){}   // a collapsed entity re-folds its new pieces
 }
@@ -1165,18 +1186,22 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var hasFns=!!(window.GABE_LEVELS && (window.GABE_LEVELS.fn_nodes||[]).length);
   /* the explainers live on HOVER (operator ruling): the section label carries the summary,
      every option carries its own meaning — the note lines below the pills are gone. */
-  var cores=[
-    {v:"layer",t:"",ic:__uniCoreIco("layer",12),ti:"Layer — group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
-    {v:"kind",t:"",ic:__uniCoreIco("kind",12),ti:"Kind — group by element kind — endpoint · model · schema · function · screen"},
-    {v:"tests",t:"",ic:__uniCoreIco("tests",12),ti:"Tests — group by test coverage — tested vs untested"},
-    {v:"screen",t:"",ic:__uniCoreIco("screen",12),ti:"Screen — frontend pieces group by the SCREEN they serve (nearest fetching piece over the fe wires); backend pieces group by kind"}];
-  if(hasLevels) cores.push(
-    {v:"guards",t:"",ic:__uniCoreIco("guards",12),ti:"Guards — endpoints by guard status — guarded vs unguarded (levels feed)"},
-    {v:"usecase",t:"",ic:__uniCoreIco("usecase",12),ti:"Use-case — group by the use-case flows mapped in the levels feed"},
-    {v:"community",t:"",ic:__uniCoreIco("community",12),ti:"Community — group by code community — label propagation over the levels feed"},
-    {v:"fk",t:"",ic:__uniCoreIco("fk",12),ti:"FK-join — group by foreign-key join community (levels feed)"});
-  var coreHd=hasLevels ? "what forms the clusters INSIDE each entity — nodes physically regroup on change; hover each option"
-                       : "what forms the clusters INSIDE each entity — Guards/Use-case/Community/FK-join need the levels feed (not loaded here)";
+  /* PER-SIDE cores (operator: two cores at once + drop guards). Each side offers only the cores
+     that actually DIVIDE it (measured: layer/tests/guards/fk are dead on frontend; screen is the
+     FE spine, community the BE spine). usecase/community/fk need the levels feed. */
+  var CORE_TI={
+    layer:"Layer — the kind's architectural layer (api · data)",
+    kind:"Kind — element kind (endpoint · model · schema / component · hook · store · route)",
+    tests:"Tests — tested vs untested",
+    screen:"Screen — pieces group by the SCREEN they serve (nearest fetching piece over the fe wires)",
+    usecase:"Use-case — the use-case flows mapped in the levels feed",
+    community:"Community — code communities by label propagation",
+    fk:"FK-join — foreign-key join community" };
+  var CORE_LV={usecase:1, community:1, fk:1};   // need the levels feed
+  var _coreOpts=function(keys){ return keys.filter(function(k){ return !CORE_LV[k] || hasLevels; })
+    .map(function(k){ return {v:k, t:"", ic:__uniCoreIco(k,12), ti:CORE_TI[k]}; }); };
+  var beCores=_coreOpts(["community","usecase","kind","fk","layer","tests"]);
+  var feCores=_coreOpts(["screen","community","kind","usecase"]);
   var layWrap=document.createElement("div");
   layWrap.innerHTML=
      '<div class="grp"><div class="grplbl" title="where each ENTITY sits in space — hover each option">LAYOUT</div>'
@@ -1184,14 +1209,12 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
         {v:"chain",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/><path d="M7 12h3M14 12h3"/></svg>',ti:"Chain — a flat layered ribbon: layers band vertically, entities line up by coupling"},
         {v:"force",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="6" cy="7" r="2.5"/><circle cx="17" cy="6" r="2.5"/><circle cx="12" cy="17" r="2.5"/><path d="M8 9l3 6M15.5 8.5l-2 6.5M8.5 6.7l6-0.5"/></svg>',ti:"Force — 3D coupling bubbles: entities repel, FK springs pull coupled ones together"},
         {v:"ring",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="7" stroke-dasharray="2 3"/><circle cx="12" cy="5" r="1.8"/><circle cx="19" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/><circle cx="5" cy="12" r="1.8"/></svg>',ti:"Ring — a coupling-ordered circle: even spacing, separation by construction"}], CFG.entLayout)+'</div>'
-    + '<div class="grp"><div class="grplbl" title="'+coreHd+'">CORE</div>'
-    + pillHTML("coreBy", cores, CFG.coreBy)+'</div>'
-    + (hasFns ? ('<div class="grp"><div class="grplbl" title="the code-function layer — hover each option">FUNCTIONS</div>'
-      + pillHTML("showFns",[
-          {v:"off",t:"Hide",ti:"endpoints · models · schemas · screens only — the lighter graph"},
-          {v:"on",t:"Show",ti:"adds "+window.GABE_LEVELS.fn_nodes.length+" code functions + their call edges (levels feed) — heavier, complete"}], CFG.showFns)+'</div>') : '');
-  var _lw=[].slice.call(layWrap.children);                       // [entity layout, core by, (functions)]
-  var layGrp=_lw[0]||null, coreGrp=_lw[1]||null, fnGrp=_lw[2]||null;
+    + '<div class="grp cgside"><div class="grplbl bghd" title="clusters INSIDE backend (data-model) entities — hover each core">BACKEND · CORE</div>'
+    + pillHTML("coreByBE", beCores, CFG.coreByBE)+'</div>'
+    + '<div class="grp cgside"><div class="grplbl fghd" title="clusters INSIDE frontend (UI) entities — hover each core">FRONTEND · CORE</div>'
+    + pillHTML("coreByFE", feCores, CFG.coreByFE)+'</div>';
+  var _lw=[].slice.call(layWrap.children);                       // [entity layout, backend core, frontend core]
+  var layGrp=_lw[0]||null, coreBEGrp=_lw[1]||null, coreFEGrp=_lw[2]||null;
   /* combo row — LAYOUT pills · TRANSPARENCY dots · CONTAINER shapes, three clusters in one row */
   var comboGrp=grpWith("Layout");
   var _cbl=comboGrp.querySelector(".grplbl"); if(_cbl) _cbl.title="entity layout (chain · force · ring) — planet transparency — boundary shape (both levels)";
@@ -1213,14 +1236,18 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     fb.classList.toggle("on", CFG.showFns==="on");
     fb.onclick=function(){ CFG.showFns=(CFG.showFns==="on")?"off":"on"; fb.classList.toggle("on", CFG.showFns==="on");
       try{ applyCfg("showFns"); }catch(e){} };
-    optRow.appendChild(fb); }
+    if(coreBEGrp){ var fsr=document.createElement("div"); fsr.className="cfgrow shrow";   // SHOW: functions live under the BACKEND core (operator)
+      fsr.innerHTML='<span class="shlbl">show</span>'; fsr.appendChild(fb); coreBEGrp.appendChild(fsr); }
+    else optRow.appendChild(fb); }
   if(typeof _FETYPES!=="undefined" && _FETYPES.length){ var tb=document.createElement("button"); tb.className="itog"; tb.id="typesTog";
     tb.title="types — adds "+_FETYPES.length+" frontend TS types/interfaces + their typed wires (the schema-equivalent; "+((window.GABE_C4&&GABE_C4.stats&&GABE_C4.stats.fe&&GABE_C4.stats.fe.fe_types_referenced)||0)+" referenced by a running piece) — starts OFF";
     tb.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
     tb.classList.toggle("on", CFG.showTypes==="on");
     tb.onclick=function(){ CFG.showTypes=(CFG.showTypes==="on")?"off":"on"; tb.classList.toggle("on", CFG.showTypes==="on");
       try{ applyCfg("showTypes"); }catch(e){} };
-    optRow.appendChild(tb); }
+    if(coreFEGrp){ var tsr=document.createElement("div"); tsr.className="cfgrow shrow";   // SHOW: types live under the FRONTEND core (operator)
+      tsr.innerHTML='<span class="shlbl">show</span>'; tsr.appendChild(tb); coreFEGrp.appendChild(tsr); }
+    else optRow.appendChild(tb); }
   optGrp.appendChild(optRow); entPane.push(optGrp);
   /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
   if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";
@@ -1236,7 +1263,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       try{ recomputeEX(); }catch(e){}
       try{ Graph.d3ReheatSimulation(); }catch(e){} });
     entPane.push(radiusGrp); }
-  if(coreGrp) cluPane.push(coreGrp);
+  if(coreBEGrp) cluPane.push(coreBEGrp);
+  if(coreFEGrp) cluPane.push(coreFEGrp);
   if(cluShowGrp) cluPane.push(cluShowGrp);
   if(subOpGrp) cluPane.push(subOpGrp);
   window.__uniFlPanes={
@@ -1307,7 +1335,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   // wire the NEW controls only (the moved spike pills keep their wireCfg listeners)
   var _bindRoots=[rt]; entPane.concat(cluPane).concat(planetsPane).forEach(function(g){ if(g) _bindRoots.push(g); });
   _bindRoots.forEach(function(pane){ pane.querySelectorAll(".pill[data-grp]").forEach(function(p){ var grp=p.getAttribute("data-grp");
-    if(["warOn","entLayout","coreBy","lineStyle","showFns"].indexOf(grp)<0) return;   // skip the moved spike pills (shape/subOp/entOp)
+    if(["warOn","entLayout","coreByBE","coreByFE","lineStyle","showFns"].indexOf(grp)<0) return;   // skip the moved spike pills (shape/subOp/entOp) — coreByBE/coreByFE are the per-side cores
     p.addEventListener("click",function(e){ var b=e.target.closest("button"); if(!b) return; var v=b.getAttribute("data-v");
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
       if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
@@ -1406,7 +1434,7 @@ window.__uniApplyCapsules=function(){ try{
     _CAPST.links.forEach(function(l){ links.push(l); });
     _CAPST=null; }
   /* 1.5 · FRESH SUBS before any fold — a core switch must regroup restored pieces (review 53[11]) */
-  try{ assignSub(CFG.coreBy); }catch(e){}
+  try{ __uniAssignSplit(); }catch(e){}
   /* 2 · APPLY per the current threshold/open set */
   if(UNICAP.on){
     var cnt={}; nodes.forEach(function(n){ cnt[n.ent]=(cnt[n.ent]||0)+1; });

@@ -202,7 +202,7 @@ await raf2(); await p2.waitForTimeout(600);
 const sm1 = await subMesh(clus);
 // regroup: a core change re-derives the groups and drops stale overrides
 const regroup = await p2.evaluate(c => { const staleKeys = Object.keys(UNIVIS.sub).length;
-  CFG.coreBy = 'tests'; applyCfg('coreBy');
+  CFG.coreByBE = 'tests'; applyCfg('coreByBE');
   const cnt2 = +document.querySelector(`#fleet .flx[data-flx="${c.e}"] .flcnt`).textContent;
   const kept = Object.keys(UNIVIS.sub).length;
   return { staleKeys, cnt2, kept }; }, clus);
@@ -242,7 +242,7 @@ const masterFix = await p2.evaluate(() => {
 });
 // hover explainers replaced the three note lines
 const hover = await p2.evaluate(() => ({
-  core: !!document.querySelector('.pill[data-grp="coreBy"] button[data-v="layer"][title]'),
+  core: !!document.querySelector('.pill[data-grp="coreByBE"] button[data-v="layer"][title]'),
   lay: !!document.querySelector('.pill[data-grp="entLayout"] button[data-v="force"][title]'),
   fn: !!document.querySelector('#fnsTog[title]'),                                   // the ƒ-toggle (batch 42) carries the live-count explainer
   hd: !!document.querySelector('.grplbl[title]'),                                    // section labels live in the drawer panes (stashed in-document)

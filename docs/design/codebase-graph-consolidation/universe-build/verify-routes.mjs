@@ -37,7 +37,7 @@ const tab = await p.evaluate(() => {
   return out; });
 
 // [1] freeze on core change → resume on settle; a USER pause stays paused
-const freeze = await p.evaluate(() => { CFG.coreBy = 'tests'; applyCfg('coreBy');
+const freeze = await p.evaluate(() => { CFG.coreByBE = 'tests'; applyCfg('coreByBE');
   return { frozeNow: ANIM.all === false, btn: (document.getElementById('motionBtn') || {}).textContent }; });
 await p.waitForFunction('ANIM.all===true', { timeout: 15000 }).catch(() => {});
 const resumed = await p.evaluate(() => ANIM.all === true);
@@ -70,14 +70,14 @@ const curve = await p.evaluate(() => {
 
 // [5] review-r2 interleaves: motionBtn pause DURING the settle window must survive the engine stop;
 //     a drag held across the settle keeps decorations frozen until pointerup
-const interleave = await p.evaluate(() => { CFG.coreBy = 'kind'; applyCfg('coreBy');   // freeze + reheat
+const interleave = await p.evaluate(() => { CFG.coreByBE = 'kind'; applyCfg('coreByBE');   // freeze + reheat
   const mb = document.getElementById('motionBtn'); mb.click(); mb.click();             // resume, then EXPLICIT pause
   return { pausedDuring: ANIM.all === false }; });
 await p.waitForTimeout(6500);                                                          // settle lands
 const pauseSurvived = await p.evaluate(() => ANIM.all === false);
 await p.evaluate(() => { document.getElementById('motionBtn').click(); });             // back to playing
 const dragCase = await p.evaluate(() => new Promise(res => {
-  CFG.coreBy = 'layer'; applyCfg('coreBy');                                            // freeze + reheat
+  CFG.coreByBE = 'layer'; applyCfg('coreByBE');                                            // freeze + reheat
   const g = document.getElementById('g'), r = g.getBoundingClientRect();
   const cx = r.left + r.width * 0.5, cy = r.top + r.height * 0.5;
   g.dispatchEvent(new PointerEvent('pointerdown', { button: 0, clientX: cx, clientY: cy, bubbles: true }));

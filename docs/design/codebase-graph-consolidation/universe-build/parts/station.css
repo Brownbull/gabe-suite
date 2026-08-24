@@ -101,8 +101,10 @@
   #cfg .grplbl.zoneshd .pill button{ font-size:9.5px; padding:2px 8px; text-transform:none; letter-spacing:0; }
   #cfg .grp.zonesoff .itog{ opacity:.38; }
   /* Cluster-core pill as a 2-column grid so the 7 cores never overflow the panel width */
-  #cfg .pill[data-grp="coreBy"]{ display:grid; grid-template-columns:1fr 1fr; gap:2px; }
-  #cfg .pill[data-grp="coreBy"] button{ justify-content:center; }
+  #cfg .pill[data-grp="coreByBE"], #cfg .pill[data-grp="coreByFE"],
+  #flside .pill[data-grp="coreByBE"], #flside .pill[data-grp="coreByFE"]{ display:grid; grid-template-columns:1fr 1fr; gap:2px; }
+  #cfg .pill[data-grp="coreByBE"] button, #cfg .pill[data-grp="coreByFE"] button,
+  #flside .pill[data-grp="coreByBE"] button, #flside .pill[data-grp="coreByFE"] button{ justify-content:center; }
   /* wire-styling rows (Routes tab): color swatch + shape pill + stock reset */
   #cfg .wcol{ width:22px; height:18px; padding:0; border:1px solid var(--line); border-radius:5px; background:none; cursor:pointer; flex:none; }
   #cfg .pill.wshape button{ padding:3px 4px; }
@@ -391,3 +393,10 @@
   #elegend .lgrow.lgoff .lglbl b{ text-decoration:line-through; }
   #cfg .itog.wv{ width:auto; padding:2px 10px; font:700 10px/1.6 var(--font-mono); letter-spacing:.04em; }
   #cfg .itog.wv.on{ color:var(--accent); border-color:var(--accent); }
+
+  /* per-side cluster cores (operator: two cores at once) — backend + frontend sections */
+  #cfg .grp.cgside, #flside .grp.cgside{ border-left:2px solid var(--line); padding-left:7px; margin-left:1px; }
+  #cfg .grplbl.bghd, #flside .grplbl.bghd{ color:#8fb3ff; }   /* backend accent */
+  #cfg .grplbl.fghd, #flside .grplbl.fghd{ color:#e8a06b; }   /* frontend accent (matches the fe estate) */
+  .cfgrow.shrow{ display:flex; align-items:center; gap:6px; margin-top:3px; }
+  .cfgrow.shrow .shlbl{ font-size:9px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }

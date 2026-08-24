@@ -127,20 +127,20 @@ assert OLD_ZFORCE in text, "zForce block anchor missing"
 text = text.replace(OLD_ZFORCE, LAYOUT_JS, 1)
 assert 'var CFG={ shape:"polygon", subOn:true, entOn:true,' in text, "CFG anchor missing"
 text = text.replace('var CFG={ shape:"polygon", subOn:true, entOn:true,',
-                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", lineStyle:"curved", showFns:"off", showTypes:"off", subOn:true, entOn:true,', 1)
+                    'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", coreByBE:null, coreByFE:null, lineStyle:"curved", showFns:"off", showTypes:"off", subOn:true, entOn:true,', 1)
 OLD_APPLY = 'else if(grp==="transports"){ buildTransports(); } else { buildClusters(); updateClusters(true); } }'
 assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
   'else if(grp==="transports"){ buildTransports(); } '
   'else if(grp==="entLayout"){ __uniFreezeForSettle(); recomputeEX(CFG.entLayout); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
-  'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(window.__uniApplyCapsules) __uniApplyCapsules(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); } '
+  'else if(grp==="coreByBE"||grp==="coreByFE"){ __uniFreezeForSettle(); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); if(window.__uniApplyCapsules) __uniApplyCapsules(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); } '
   'else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } '
   'else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } '
   'else if(grp==="showTypes"){ toggleTypes(CFG.showTypes==="on"); } '
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
-                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
+                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
 text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
 

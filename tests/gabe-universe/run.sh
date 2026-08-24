@@ -101,10 +101,10 @@ check('dropped "+_dropped+" piece' in page, "adapter does not warn on dropping a
 check('entLayout:"force"' in page and 'coreBy:"layer"' in page, "CFG missing entLayout/coreBy fields")
 check('function recomputeEX' in page and 'function assignSub' in page, "layout recompute/assignSub functions missing")
 check('__chainMode' in page, "mode-aware zForce (chain vs force/spread) missing")
-check('grp==="entLayout"' in page and 'grp==="coreBy"' in page, "applyCfg missing the entLayout/coreBy branches")
+check('grp==="entLayout"' in page and 'grp==="coreByBE"||grp==="coreByFE"' in page, "applyCfg missing the entLayout/coreByBE|coreByFE branches")
 check('d3ReheatSimulation' in page, "entity-layout change never reheats the sim (nodes would not move)")
 check('window.__uniAddLayoutTab' in page and 'cfgtabbar' in page, "the Display|Layout config tab is missing")
-check('recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build' in page, "boot does not assign the default core before the sub-anchors")
+check('recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build' in page, "boot does not assign the per-side cores before the sub-anchors")
 # FIRE+SILENT: force/spread compute 3D anchors (EY/EZ), not just a flat X band
 check('EY[e]=0; EZ[e]=0;' in page and ('EY[s]=Math.round' in page or 'EZ[s]=Math.round' in page),
       "EY/EZ 3D entity anchors not computed — force/spread would stay flat")
@@ -120,7 +120,9 @@ check('fk_communities' in page and 'usecases' in page and 'communities' in page,
 check('function _buildFnData' in page and 'function toggleFns' in page, "functions layer (fn_nodes toggle) missing")
 check('fn_nodes' in page and 'fn_edges' in page, "functions do not read the levels fn_nodes/fn_edges")
 check('grp==="showFns"' in page and 'grp==="lineStyle"' in page, "applyCfg missing the showFns/lineStyle branches")
-check('mode==="guards"' in page and '{v:"guards"' in page, "Guards cluster-core missing (it is data-backed via endpoint.guards)")
+check('__uniAssignSplit=function' in page and 'CFG.coreByBE' in page and 'CFG.coreByFE' in page,
+      "the PER-SIDE core split (__uniAssignSplit / coreByBE / coreByFE) is gone")
+check('{v:"guards"' not in page, "the guards core must be dropped (operator: no value backend or frontend)")
 check('isFinite(n.x)) _npos' in page, "the _npos NaN guard is missing (a transient add would spew computeBoundingSphere NaN)")
 
 # ── 10g. batch-5: config re-tabbed Planets|Universe · master planet-assets toggle · orbit-around-click ──
@@ -175,7 +177,7 @@ check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
 check('warOn:false' in page, "planet assets are not OFF by default")
 check('grplbl zoneshd' in page, "the Zones title does not carry the inline On/Off master toggle")
 check('zonesoff' in page, "zone icons do not dim when the master toggle is off")
-check('data-grp="coreBy"]{ display:grid' in page, "cluster-core pill is not a 2-column grid (it would overflow)")
+check('data-grp="coreByBE"], #cfg .pill[data-grp="coreByFE"],' in page and '{ display:grid' in page, "the per-side core pills are not a 2-column grid (they would overflow)")
 check('if(force || _wtick%3===0) updateConnectors' in page, "per-tick connector rebuild is not throttled (settle stays laggy)")
 
 # ── 10i. batch-7: static fleets · motion master · freeze-on-drag · orbit re-pivot on pointerdown ──
@@ -193,8 +195,8 @@ check('zoneshd{ display:flex; align-items:center; justify-content:flex-start' in
 #         entity EDGE (per-kind radial), entities separate (typed link rests + capped charge + containment) ──
 check('function recomputeSubAnchors' in page, "sub-anchor ring recompute missing (core cannot re-arrange nodes)")
 check('(SUBANCHOR[n.ent]||{})[n.sub]' in page, "zForce does not read the sub anchor — n.sub still decoration-only")
-check('else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(window.__uniApplyCapsules) __uniApplyCapsules(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} }' in page,
-      "the coreBy branch does not re-anchor + re-fold + REHEAT (core change would not move nodes)")
+check('else if(grp==="coreByBE"||grp==="coreByFE"){ __uniFreezeForSettle(); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); if(window.__uniApplyCapsules) __uniApplyCapsules(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} }' in page,
+      "the per-side core branch does not re-anchor + re-fold + REHEAT (core change would not move nodes)")
 check('grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters()' not in page,
       "REGRESSION: coreBy is decoration-only again (assignSub straight to buildClusters, no reheat)")
 check('var KRADF={ endpoint:' in page, "per-kind radial factors missing (endpoints would not ring the edge)")
@@ -210,7 +212,7 @@ check('DEF={x:150,y:80,z:780}' in page, "home camera not pulled back for the wid
 check('function __uniFreezeForSettle' in page and 'window.__uniSettleDone' in page, "freeze/resume machinery missing")
 check('updateClusters(true); if(window.__uniSettleDone) window.__uniSettleDone();' in page,
       "the engine settle does not resume what the layout freeze paused")
-check('grp==="coreBy"){ __uniFreezeForSettle();' in page and 'grp==="entLayout"){ __uniFreezeForSettle();' in page,
+check('grp==="coreByBE"||grp==="coreByFE"){ __uniFreezeForSettle();' in page and 'grp==="entLayout"){ __uniFreezeForSettle();' in page,
       "layout/core changes do not freeze animations before the reheat")
 check('grp==="coreBy"){ assignSub' not in page and 'grp==="entLayout"){ recomputeEX' not in page,
       "REGRESSION: a layout/core branch reheats without freezing")
@@ -278,9 +280,9 @@ check('SHOW ENTITY is a MASTER over its clusters' in page and 'function _entSubK
 check('a cluster turned ON re-enables its entity' in page,
       "a cluster turned on no longer re-enables its entity")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
-check("ti:\"Layer — group by the kind's architectural layer" in page and 'ti:"Chain — a flat layered ribbon' in page,
+check('layer:"Layer — the kind' in page and 'ti:"Chain — a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")
-check('ti:"adds "+window.GABE_LEVELS.fn_nodes.length' in page, "the Functions option lost its count-bearing hover explainer")
+check('adds "+window.GABE_LEVELS.fn_nodes.length+" code functions' in page, "the Functions toggle lost its count-bearing hover explainer")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
       "REGRESSION: the note lines below the pills are back (explainers must live on hover)")
 check('function visEnt' in page and 'function visN' in page, "vis accessors missing (seams must read through ONE pair)")
@@ -383,7 +385,8 @@ check('__uniHoverHL(x.id)' in page and 'userData.__hov' in page, "connection-chi
 check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un-minimize the config on show (state drift)")
 
 # ── 10q. batch 17: community default · ring layout · wider spacing ──
-check('CFG.coreBy="community"' in page, "the community core is not the default when the levels feed is present")
+check('CFG.coreByBE=lv?"community":"kind"' in page and 'CFG.coreByFE="screen"' in page,
+      "the per-side defaults (backend=community, frontend=screen) are gone")
 check('{v:"ring",t:""' in page and 'Ring —' in page and 'mode==="ring"' in page,
       "the RING entity layout is missing (icon-only pill, word on hover)")
 check('{v:"spread"' not in page and 'mode==="spread"' not in page, "REGRESSION: the useless spread layout is back")
@@ -460,8 +463,9 @@ check('function _tipPlace' in page and 'r.right>iw-8' in page and 'tip.style.bot
 # batch 24: direction markers + per-strategy core icons (pills + inherited by cluster surfaces)
 check('window.__uniCoreIco=' in page and "(o.ic||'')+o.t" in page,
       "core-strategy icons are gone from the config pills (__uniCoreIco / pillHTML ic slot)")
-check("ic:__uniCoreIco(" in page and page.count("ic:__uniCoreIco(")==8,
-      "the eight cores must EACH carry their icon (layer·kind·tests·screen·guards·usecase·community·fk)")
+check("ic:__uniCoreIco(k,12)" in page and '_coreOpts(["community","usecase","kind","fk","layer","tests"])' in page
+      and '_coreOpts(["screen","community","kind","usecase"])' in page,
+      "the per-side core lists (backend 6 · frontend 4) must each map through __uniCoreIco")
 check('P.drill=' in page and 'P.up=' in page and 'function dirIco' in page,
       "drill-down / go-up direction markers are gone from the nav rows")
 check('"__core"' in page and 'function coreLead' in page,
@@ -682,7 +686,7 @@ check('setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules()
       "the boot fold must run AFTER build() and past the engine's first tick (Graph is null in the config-boot line)")
 check('KINDS.capsule={' in page and 'f==="pod"' in page and 'C.capsule=function(n)' in page,
       "the capsule kind lost its form/card")
-check('if(mode==="screen"){' in page and '{v:"screen",t:"",ic:__uniCoreIco("screen",12)' in page,
+check('if(mode==="screen"){' in page and 'screen:"Screen — pieces group by the SCREEN' in page,
       "the SCREEN core strategy (S4) is gone")
 check('"area": _area_of(path, home)' in open('templates/center/generators/_a3_fe.py').read()
       and 'apiAlias' in open('templates/center/generators/_a3_fe_extract.mjs').read(),
@@ -694,8 +698,8 @@ check('elif home == "app-shell":' in open('templates/center/generators/_a3_fe.py
       "review 53[6]: the app-shell area keeps its discriminating first segment")
 check('function assignSub(mode){ _assignSubImpl(mode);' in page and 'if(n.__cap) n.sub=n.area||n.sub;' in page,
       "review 53[2]/[10]: the assignSub wrapper must restamp capsule areas")
-check(page.count('try{ assignSub(CFG.coreBy); }catch(e){}') >= 1 and 'grpOf' not in page,
-      "review 53[11]: capsules fold from FRESH subs (restore → assignSub → fold); grpOf deleted")
+check(page.count('try{ __uniAssignSplit(); }catch(e){}') >= 1 and 'grpOf' not in page,
+      "review 53[11]: capsules fold from FRESH per-side subs (restore → __uniAssignSplit → fold); grpOf deleted")
 check('function _fieldNodes()' in page and '_fieldLinks()' in page and '_fieldN(' in page,
       "review 53[0]: the journey machinery reads the WHOLE field (stash included)")
 check('function _stashPurge(flag)' in page and page.count('_stashPurge(') == 3,
