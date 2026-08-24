@@ -12,7 +12,7 @@ chrome  = rd("parts/chrome.html").rstrip("\n")
 
 TITLE = '<!doctype html><html lang="{{LANG}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gabe Universe · {{PROJECT_NAME}} Command Center</title>'
 STYLE_CLOSE = css + "\n</style></head><body>\n" + chrome
-REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls' };"
+REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls' };"
 GLINE = "  var G=function(label,icon,count,nodeFn,trust){ return {label:label,icon:icon,count:count,node:nodeFn,trust:trust}; };"
 TRUSTCONNS = """  function trustTag(tr){ if(!tr) return null;
     return tr==="inferred"
@@ -133,14 +133,14 @@ assert OLD_APPLY in text, "applyCfg anchor missing"
 text = text.replace(OLD_APPLY,
   'else if(grp==="transports"){ buildTransports(); } '
   'else if(grp==="entLayout"){ __uniFreezeForSettle(); recomputeEX(CFG.entLayout); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); } '
-  'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); } '
+  'else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(window.__uniApplyCapsules) __uniApplyCapsules(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} } buildClusters(); updateClusters(true); if(window.__uniFleetRegroup) __uniFleetRegroup(); } '
   'else if(grp==="lineStyle"){ __uniSetCurve(CFG.lineStyle==="curved"); } '
   'else if(grp==="showFns"){ toggleFns(CFG.showFns==="on"); } '
   'else if(grp==="showTypes"){ toggleTypes(CFG.showTypes==="on"); } '
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
-                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){}', 1)
+                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
 text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
 
@@ -371,11 +371,11 @@ text = text.replace(OLD_LGBODY,
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,
-  '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })', 1)
+  '.onNodeClick(function(n){ if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent); return; } SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })', 1)
 # batch 48: the `module` kind's SLAB form (a flat wide box — "a bag of functions") beside the spike's nine forms
 OLD_WIREFORM = '  if(f==="wire") return new T.Mesh(new T.BoxGeometry(r*1.4,r*1.4,r*1.4), m(col,true));'
 assert OLD_WIREFORM in text, "primitiveMesh wire-form anchor missing"
-text = text.replace(OLD_WIREFORM, OLD_WIREFORM + '\n  if(f==="slab") return new T.Mesh(new T.BoxGeometry(r*2.0,r*0.55,r*2.0), m(col));', 1)
+text = text.replace(OLD_WIREFORM, OLD_WIREFORM + '\n  if(f==="slab") return new T.Mesh(new T.BoxGeometry(r*2.0,r*0.55,r*2.0), m(col));\n  if(f==="pod") return new T.Mesh(new T.SphereGeometry(r*2.1, 12, 9), m(col));', 1)
 
 # batch 50: fe-only homes wear the `fe ·` identifier on their HULL LABEL (display only — c.name stays the key)
 # batch 50b: labelSprite sizes its canvas to the TEXT (the fixed 256px canvas clipped both ends of a
@@ -516,7 +516,7 @@ text = text.replace(OLD_CHIP,
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
 OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();'
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
-text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); if(window.__uniCamFit) __uniCamFit(0); }, 0);', 1)
+text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);', 1)
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")

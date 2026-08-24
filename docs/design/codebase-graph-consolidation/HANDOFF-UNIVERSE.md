@@ -325,14 +325,58 @@ block (chip→trail · hide/restore 349 components · groups) + battery 330 stat
   anywhere is 1.1 world units, so hull-clicking is effectively dead on the split field —
   both point at S1 capsules.
 
-## PENDING OPERATOR DECISION — fe DENSITY: the S options (batch 53)
+## BATCH 53 — the S-COMPOSITION LANDED (operator: "implement so 2 3 4 + agreed changes")
 
-fe·cooking draws ~255 labeled planets in one hull — a label cloud; no wire policy fixes a
-COUNT problem. Options explored (2026-08-23): **S1 collapsed capsules** (big fe entities boot
-with sub-clusters as single compound planets + R3 bundles as their wires; click/fleet-row
-expands — view-only, RECOMMENDED) · S2 emitter `area` element (the data-level promote-later)
-· S3 panel sections (subsumed by S1) · S4 screens-first rest state (a later MODE). The
-operator holds the pick.
+The fe·cooking label cloud (~255 planets, one hull) was a COUNT problem; the S1–S4 options
+all composed, and the operator ordered S2+S3+S4 plus the agreed de-noisers. Built as ONE
+stack — S2 is the data, capsules are the renderer (S1 mechanics honoring S3's sectioning),
+S4 is the semantic core.
+
+- **53a · S2 emitter areas + de-noisers** (`_a3_fe.py` + `_a3_fe_extract.mjs`): every fe
+  piece carries `area` (`_area_of`: first ≤2 path segments under the feature, "root"
+  fallback); homes carry `areas: N`. `apiAlias` compiler flag (type alias RHS matching
+  `components[…]`) CUTS generated API re-exports — 71 gone on gustify, counted in
+  `stats_x.api_aliases` + `unresolved.alias`, never silent. Fixture modules TAGGED
+  (`fixture: true`, `_FIXTURE_RX`) — kept, per the practices ruling (retire on wiring).
+- **53b · capsules** (`layout.js` + `assemble.py`): entities past `UNICAP.threshold` (80)
+  boot FOLDED — one compound planet per AREA, aggregated `rel:"bundle"` wires. Boot field
+  797 → 500 drawn objects; fe·cooking = 16 area capsules (27 graph-wide). One-click
+  expand · re-fold from the card · CAP toggle in WIRE VIEW · `__uniGoto`/search auto-expand
+  a stashed target (search gains a "collapsed" group). Surgery is restore-then-apply
+  (`_CAPST` stash + `rebuildNodes()`); boot call sits AFTER `build()` deferred 400ms —
+  the config-boot line runs before Graph exists (found the hard way).
+- **53c · S4 screen core**: `assignSub("screen")` — every fe piece walks BFS ≤4 hops to its
+  nearest fetching screen; screens become the 8th core pill, so the rest state answers
+  "which screen owns this?" without a mode switch.
+- **Practices handover** (the /goal's first half): gustify
+  `docs/frontend-practices-handover.md` (committed `d66d3546`, graft-pilot) + the staged
+  gastify copy `docs/handoff/frontend-practices-gastify.md` (suite `cba58c5`) — verdict:
+  better-than-typical React, keep the discipline; three cheap noise cuts (unused-export
+  lint, no test-only exports, mapper rename).
+- **Adversarial review (3 lenses · 20 agents · 1.65M tokens): 13 confirmed → 10 subjects,
+  ALL FIXED** (4 rejected honestly; 1 refuter died on an API safeguards flag — its subject
+  independently confirmed by another agent). The majors: journey/walk machinery was BLIND
+  to the capsule stash (feSum 138 vs truth 235; dead walk steps) → `_fieldNodes/_fieldLinks/
+  _fieldN` read the whole field, `_walkGo` expands a stashed step's capsule on arrival,
+  stashed steps kept iff fleet-shown; `toggleFns` bypassed the fold (loose fn planets ·
+  zombie stash) → `_stashPurge` in BOTH toggles + the capsule re-fold tail; a cut apiAlias's
+  body refs REWIRED to the file's principal (fabricated typed edges — fixture-proven) →
+  cut exports skipped as edge sources; `assignSub` clobbered capsule area subs + a core
+  switch never regrouped a folded entity → wrapper restamp + restore→assignSub→fold
+  ordering. Minors: fleet-row expand now real (the promise existed on 3 surfaces, wired
+  nowhere) · UNIVIS overrides survive the fold round-trip · panel census refreshes on fold
+  + KINDTIP.capsule + "N folded" rows · `_area_of` keeps app-shell's discriminating first
+  segment (gustify: the 71-piece "root" blob → routes 23 / i18n 20 / lib/api 14 / …) ·
+  the battery's blind spots closed (6 new fixture files; gutted `_area_of` + reverted
+  alias-skip both KILLED).
+- **Proofs**: 363 static pins (10 new review-fix pins, observed firing pre-landing) ·
+  frontend battery 58/58 (2 mutations killed) · 7 solo proofs ALL PASS on the final
+  artifact incl. the new `b53r` block (10 behavioral probes, one per fix) · detached fleet
+  ALL PASS. Probe recalibrations were measured-not-loosened: b51 restore RELATIVE, b52
+  R-toggles measured with CAP off (their defined semantics), search's fe-leg partition
+  assert capsule-aware — and the `fleetHonest` probe caught a REAL gap in the first walk
+  fix (a stashed piece that was also fleet-hidden could walk) → the filter now checks
+  `visN` on stashed nodes too.
 
 ## RESOLVED — frontend/backend entity SPLIT (analysis delivered, no changes)
 

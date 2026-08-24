@@ -137,6 +137,8 @@ for (const sf of program.getSourceFiles()) {
     const name = (d && d.name && ts.isIdentifier(d.name)) ? d.name.text : e.name;
     const local = df === rel(f);
     const ex = { name, isDefault: e.name === 'default', kind: declKind(d), reexport: local ? null : df };
+    if (d && ts.isTypeAliasDeclaration(d) && /^components\s*\[/.test(d.type.getText(d.getSourceFile())))
+      ex.apiAlias = true;                        // `type X = components["schemas"]["X"]` — a REFERENCE to the generated contract, not a shape
     if (local && d) {
       // the body = the whole declaration (a `const X = memo(() => <jsx/>)` keeps its JSX)
       const body = ts.isVariableDeclaration(d) ? d : d;

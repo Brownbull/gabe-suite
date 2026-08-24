@@ -28,7 +28,12 @@ KINDS.module={ col:"#f59e0b", form:"slab", label:"recipeScoring", type:"Module (
   doc:"A plain TS module — ONE piece for the file's value exports (feature logic, lib, api client). Components and hooks call into it (fecall) or import its values (imports)." };
 KINDCOL.module="#f59e0b";
 if(typeof GLYPH!=="undefined"){ GLYPH.module='<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'; }
-LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1};
+LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1}; LINKMETA.bundle={w:4,pv:1};
+KINDS.capsule={ col:"#94a3b8", form:"pod", label:"model · 160", type:"Capsule (area)", layer:"web", usage:[0,"a folded AREA"],
+  conns:[["bundled wires","capsule","components · 37"]], tests:0, ident:[["kind","a folded area — click to open"]],
+  doc:"A COLLAPSED area of a big entity — one planet standing for its pieces (count in the label). Click it (or its card's Expand, the fleet row, or any search hit inside) to open the entity." };
+KINDCOL.capsule="#94a3b8";
+if(typeof GLYPH!=="undefined"){ GLYPH.capsule='<path d="M2.97 12.92A2 2 0 0 0 2 14.63v3.24a2 2 0 0 0 .97 1.71l3 1.8a2 2 0 0 0 2.06 0L12 19v-5.5l-5-3-4.03 2.42Z"/><path d="M12 13.5V19l3.97 2.38a2 2 0 0 0 2.06 0l3-1.8a2 2 0 0 0 .97-1.71v-3.24a2 2 0 0 0-.97-1.71L17 10.5l-5 3Z"/><path d="M14.97 3.62a2 2 0 0 0-1.94 0l-3 1.8A2 2 0 0 0 9 7.13v3.24a2 2 0 0 0 .97 1.71L12 13.5l2.03-1.42A2 2 0 0 0 15 10.37V7.13a2 2 0 0 0-.97-1.71l-3-1.8Z"/>'; }
 var FE_HOME_COL={ bucket:"#7c3aed", candidate:"#f97316" };   // a shared FE bucket (design-system · app-shell) · a feature the backend never modeled
 var FE_KIND={ "fe-type":"type" };                              // the feed's kind name → the spike's KINDS key
 var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };       // the feed's rel → LINKMETA/REL2KIND vocabulary
@@ -93,7 +98,8 @@ if(_FE){
     var det={ file:p.file, flines:p.span?(p.span[0]+"-"+p.span[1]):null, exported:true, fe_kind:p.kind, exports:p.exports||null, doc:"" };
     var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
-      m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate };
+      m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
+      area:p.area||null, fixture:!!p.fixture };   // batch 53: the AREA (capsule key) + the showcase-data tag ride the node
     nodes.push(n); NIDS[n.id]=n; });
 }
 

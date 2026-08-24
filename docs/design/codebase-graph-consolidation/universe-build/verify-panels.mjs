@@ -425,12 +425,13 @@ const b51 = await p.evaluate(() => new Promise(res => {
       const lg = document.getElementById('elegend');
       [...lg.querySelectorAll('.lgtab')].find(x => /types/i.test(x.textContent)).click();
       out.groups = [...lg.querySelectorAll('.lghd2')].map(h => h.textContent).join(',') === 'frontend,backend';
+      const c0 = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length;   // capsules stash most — RELATIVE restore check
       lg.querySelector('[data-lgk="component"]').click();
       setTimeout(() => {
         out.hidden = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length === 0;
         out.dimmed = !!document.querySelector('#elegend [data-lgk="component"].lgoff');
         document.querySelector('#elegend [data-lgk="component"]').click();
-        setTimeout(() => { out.restored = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length > 300;
+        setTimeout(() => { out.restored = c0 > 30 && nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length === c0;
           res(out); }, 1600);
       }, 1600);
     }, 900);
@@ -447,14 +448,87 @@ const b52 = await p.evaluate(() => new Promise(res => {
   out.adjacent = d < Math.min.apply(null, others) * 1.2;
   out.label = __uniEntLabel('fe·pantry') === 'fe · pantry';
   out.wv = !!document.getElementById('wireview');
+  document.getElementById('wv-cap').click();                       // R semantics are defined on the UNFOLDED field
   const w0 = connGroup.children.length;
   document.getElementById('wv-r1').click();
   setTimeout(() => { out.r1 = connGroup.children.length < w0 * 0.35;
     document.getElementById('wv-r1').click(); document.getElementById('wv-r3').click();
     setTimeout(() => { out.r3 = connGroup.children.filter(c => c.userData.kind === 'bundle').length > 50;
       document.getElementById('wv-r3').click();
-      setTimeout(() => { out.back = connGroup.children.length === w0; res(out); }, 900);
+      setTimeout(() => { out.back = connGroup.children.length === w0;
+        document.getElementById('wv-cap').click(); setTimeout(() => res(out), 1400); }, 900);
     }, 1100); }, 1100); }));
+
+// [batch 53] capsules: boot-folded big entities · click/goto expand · CAP toggle round-trip
+const b53 = await p.evaluate(() => new Promise(res => { const out = {};
+  out.caps = nodes.filter(n => n.kind === 'capsule').length;
+  out.cookFolded = nodes.filter(n => n.ent === 'fe·cooking' && n.kind !== 'capsule').length < 30;
+  out.bundles = links.filter(l => l.rel === 'bundle').length > 100;
+  const someId = _CAPST ? Object.keys(_CAPST.byPiece)[0] : null;
+  __uniGoto(someId);
+  setTimeout(() => { out.gotoExpands = SEL && SEL.data && SEL.data.id === someId;
+    __uniCapCollapse(SEL.data.ent);
+    setTimeout(() => { out.refolds = nodes.filter(n => n.kind === 'capsule').length >= out.caps - 2;
+      res(out); }, 1200); }, 1400); }));
+
+/* b53r — the REVIEW-53 fix wave: journey/walk stash-awareness · assignSub capsule guard ·
+   core-switch regroup · toggleFns fold-cycle · fleet-row expand · UNIVIS survival · census refresh */
+const b53r = await p.evaluate(() => new Promise(res => { const out = {};
+  const feSum = js => js.reduce((a, j) => a + (j.feN || 0), 0);
+  JRN = null; const A = feSum(_jrnCollect());                       // folded collect (stash-aware)
+  document.getElementById('wv-cap').click();                        // CAP off → full field
+  setTimeout(() => {
+    JRN = null; const B = feSum(_jrnCollect());
+    out.jrnFold = A === B && A > 150;                               // fold-independent journey truth (was 138 vs 235)
+    document.getElementById('wv-cap').click();                      // CAP back on
+    setTimeout(() => {
+      const j = _jrnCollect().filter(x => x.feN > 3)[0];
+      __uniJrnStart(j.cid);
+      const stashed = WALK.steps.filter(id => !NIDS[id] && _CAPST && _CAPST.byPiece[id]);
+      out.stepsKeep = stashed.length > 0;                           // stashed steps KEPT, not dropped
+      let hops = 0; while (hops < 60 && NIDS[WALK.steps[WALK.i]] && WALK.i < WALK.steps.length - 1) { WALK.i++; hops++; }
+      const tgt = WALK.steps[WALK.i];
+      if (!NIDS[tgt]) { _walkGo(0); out.walkExpand = !!NIDS[tgt] && SEL && SEL.data.id === tgt; }
+      else out.walkExpand = stashed.length === 0 ? 'no-stashed-step' : 'never-reached';
+      __uniHLClear();
+      setTimeout(() => {
+        __uniApplyCapsules();                                        // re-fold everything opened above
+        setTimeout(() => {
+          const cap0 = nodes.filter(n => n.__cap)[0];
+          assignSub('kind');
+          out.subKeep = cap0.sub === cap0.area;                      // no core may clobber a capsule's area
+          assignSub(CFG.coreBy);
+          const key = _CAPST ? _CAPST.nodes[0].ent + '|' + _CAPST.nodes[0].sub : null;
+          UNIVIS.sub[key] = { wires: 0 }; __uniFleetRegroup();
+          out.univisKeep = !!UNIVIS.sub[key]; delete UNIVIS.sub[key];
+          UNICAP.threshold = 40; __uniApplyCapsules();               // force-fold a BACKEND entity
+          setTimeout(() => {
+            const pg = k => nodes.filter(n => n.__cap && n.ent === 'pantry').map(n => n.label.split(' · ')[0]).sort().join(',');
+            const g1 = pg(); CFG.coreBy = 'kind'; __uniApplyCapsules();
+            setTimeout(() => {
+              out.coreRegroup = pg() !== g1 && /endpoint|model|component/.test(pg());   // a core switch REGROUPS a folded entity
+              toggleFns(true);
+              setTimeout(() => {
+                out.fnFold = nodes.filter(n => n.__fn && n.ent === 'pantry').length === 0
+                          && _CAPST.nodes.some(n => n.__fn && n.ent === 'pantry');       // ƒ pieces fold, never loose
+                toggleFns(false);
+                out.fnPurge = _CAPST.nodes.every(n => !n.__fn) && _CAPST.links.every(l => !l.__fn);
+                CFG.coreBy = 'community'; UNICAP.threshold = 80; __uniApplyCapsules();
+                setTimeout(() => {
+                  if (window.__uniPanelAll) __uniPanelAll();
+                  out.census = document.getElementById('pbody').textContent.includes('folded');   // the open census names the folded mass
+                  const fx = [...document.querySelectorAll('.flx')].find(x => x.getAttribute('data-flx') === 'fe·cooking');
+                  fx.click();
+                  setTimeout(() => { out.flxExpand = !!UNICAP.open['fe·cooking'];
+                    __uniCapCollapse('fe·cooking'); setTimeout(() => res(out), 900); }, 1400);
+                }, 1400);
+              }, 1600);
+            }, 1600);
+          }, 1600);
+        }, 1400);
+      }, 600);
+    }, 1400);
+  }, 1400); }));
 
 await b.close();
 
@@ -475,6 +549,8 @@ console.log('numKeys:', JSON.stringify(numkeys));
 console.log('flcfg:', JSON.stringify(flcfg));
 console.log('b51:', JSON.stringify(b51));
 console.log('b52:', JSON.stringify(b52));
+console.log('b53:', JSON.stringify(b53));
+console.log('b53r:', JSON.stringify(b53r));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -522,6 +598,8 @@ if (!(flcfg.lgTwoCol && flcfg.lgCompact)) fails.push('the legend Types tab must 
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(b51.chip && b51.moved && b51.trail && b51.groups && b51.hidden && b51.dimmed && b51.restored)) fails.push('batch 51 broken (chip → trail navigation · legend hide-by-kind · fe/backend groups): ' + JSON.stringify(b51));
 if (!(b52.homes && b52.pair && b52.tint && b52.adjacent && b52.label && b52.wv && b52.r1 && b52.r3 && b52.back)) fails.push('batch 52 broken (paired fe· split · WIRE VIEW toggles): ' + JSON.stringify(b52));
+if (!(b53.caps > 15 && b53.cookFolded && b53.bundles && b53.gotoExpands && b53.refolds)) fails.push('batch 53 broken (capsules fold/expand/refold · bundles): ' + JSON.stringify(b53));
+if (!(b53r.jrnFold && b53r.stepsKeep && b53r.walkExpand === true && b53r.subKeep && b53r.univisKeep && b53r.coreRegroup && b53r.fnFold && b53r.fnPurge && b53r.census && b53r.flxExpand)) fails.push('review-53 fixes broken (journey/walk stash · capsule sub guard · core regroup · fn fold-cycle · census · fleet expand): ' + JSON.stringify(b53r));
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
 if (!(flcfg.wk.oneRow && flcfg.wk.hid && flcfg.wk.back && flcfg.wk.glowLbl && flcfg.wk.noFooter)) fails.push('wire-kind rows wrong (one row each, on/off round-trip, glow label, footer gone)');

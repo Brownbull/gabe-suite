@@ -153,6 +153,14 @@
     feSec(n),
     identSec(n), docSec(det), fileRowSec(n) ]; }
   ["component","hook","store","route","type","module"].forEach(function(k){ if(!C[k]) C[k]=feBuilder; });
+  C.capsule=function(n){ var rows=[E("div",{class:"sec"}, sechd("layers","Capsule",(n.members||[]).length),
+      E("div",{class:"doc"},"a folded AREA of "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent)+" — "+(n.members||[]).length+" piece(s)"+((n.fixture||0)?(" · "+n.fixture+" showcase-data"):"")),
+      kv("entity","area", n.area||n.sub||n.label))];
+    var ks=n.kinds||{}; Object.keys(ks).sort().forEach(function(k){ rows.push(kv(k==="type"?"schema":k, k, String(ks[k]))); });
+    var btn=E("button",{class:"more",style:"align-self:flex-start"},"Expand "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent));
+    btn.onclick=function(){ if(window.__uniCapExpand) __uniCapExpand(n.ent); };
+    rows.push(E("div",{class:"sec"}, btn));
+    return rows; };
 
   /* ══ PANEL HIERARCHY (batch 22): Everything → Entity → Cluster → Element, two-way nav.
      Every level shows its content + an Inside (below) and an Above section; Esc lands on Everything. ══ */
@@ -176,6 +184,7 @@
     r.onclick=go; return r; }
   function kindCounts(list){ var by={}; list.forEach(function(n){ by[n.kind]=(by[n.kind]||0)+1; }); return by; }
   var KINDTIP={ endpoint:"an API route handler — one node per METHOD + path; the entity's outward door",
+    capsule:"a FOLDED area of a big entity — its pieces are hidden inside, not gone; click to open",
     model:"a persisted data model — a database table the entity owns",
     schema:"a request/response shape — the API contract a payload travels in",
     web:"a frontend screen/hook — it fetches endpoints over the web bridge",
@@ -243,7 +252,8 @@
     var ents=_entsMap(), names=Object.keys(ents).sort();
     var ins=E("div",{class:"sec"}, sechd("entity","Entities", names.length, false,      // NAVIGABLE first — the ladder's next rungs lead the panel
       {icon:"info",cls:"info",text:"The universe's containers — click a row to open that entity's panel (the next level down)."}));
-    names.forEach(function(e){ ins.append(navRow(null, (window.__uniEntLabel?__uniEntLabel(e):e), ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); }, "down")); });
+    names.forEach(function(e){ var capN=ents[e].reduce(function(a,n){ return a+(n.__cap?(n.members||[]).length:0); },0);
+      ins.append(navRow(null, (window.__uniEntLabel?__uniEntLabel(e):e)+(capN?(" · "+capN+" folded"):""), ents[e].length, (typeof ENT!=="undefined"&&ENT[e])||"#888", function(){ panelEnt(e); }, "down")); });
     pb.append(ins);
     pb.append(makeupSec(nodes,"Elements"));
     pb.append(starsSec(null));

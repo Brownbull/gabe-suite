@@ -53,10 +53,12 @@ kind = {p["name"]: p["kind"] for p in fe["pieces"]}
 home = {p["name"]: p["home"] for p in fe["pieces"]}
 
 # ── classification: the enumeration, exactly ──────────────────────────────────────────
-check(fe["stats"]["pieces"] == 11, f"11 pieces from 13 files (got {fe['stats']['pieces']})")
-check(fe["stats"]["by_kind"] == {"component": 2, "fe-type": 2, "hook": 1, "module": 2, "route": 2, "store": 2},
+check(fe["stats"]["pieces"] == 18, f"18 pieces from 21 files (got {fe['stats']['pieces']})")
+check(fe["stats"]["by_kind"] == {"component": 4, "fe-type": 4, "hook": 1, "module": 5, "route": 2, "store": 2},
       f"by_kind matches the enumeration ({fe['stats']['by_kind']})")
-check(kind.get("RecipeCard") == "component" and kind.get("Badge") == "component", "JSX-proven exports are components")
+check(kind.get("RecipeCard") == "component" and kind.get("Badge") == "component"
+      and kind.get("Chip") == "component" and kind.get("RecipeDetailBody") == "component", "JSX-proven exports are components")
+check(kind.get("format") == "module" and kind.get("nav") == "module", "deep app-shell helpers fold into module pieces")
 check(kind.get("useRecipe") == "hook", "a useX function is a hook")
 check(kind.get("ThemeContext") == "store" and kind.get("useUiStore") == "store",
       "createContext() const AND a create()-built useXStore are stores (not hooks)")
@@ -75,6 +77,24 @@ check(not any("Spike" in p["name"] or "/spikes/" in p["file"] for p in fe["piece
 check(fe["stats"]["unresolved"].get("scaffold") == 1,
       "RecipeCard's ref to the cut ScorePreviewSpike export must COUNT under unresolved.scaffold — never rewire to the principal")
 check("Primary" not in kind and "index" not in kind, "no piece for a story export or a barrel")
+# ── 53a: areas · API-alias collapse · fixture tagging ────────────────────────────────
+check(fe["stats"]["excluded"].get("api_aliases") == 3 and "Recipe2" not in kind and "PantryItemDTO" not in kind
+      and "MealDTO" not in kind,
+      "a `type X = components[…]` alias is a REFERENCE to the generated contract — counted, never a piece")
+check(not any(fe["pieces"][a]["name"] == "Meal" for a, b, r in fe["edges"]),
+      "review 53[5]: a CUT alias's own body refs fabricate NO edge from the file's principal")
+check(P["fe:src/features/recipe/recipeFixtures.ts"].get("fixture") is True,
+      "a fixtures module is TAGGED showcase data (kept — real screens import fixtures)")
+check(all(p.get("area") for p in fe["pieces"]) and P["fe:src/features/recipe/scoring.ts"]["area"] == "root"
+      and P["fe:src/design-system/Badge.tsx#Badge"]["area"] == "root",
+      "every piece carries its AREA (the S2 capsule level)")
+check(P["fe:src/features/recipe/components/detail/RecipeDetailBody.tsx#RecipeDetailBody"]["area"] == "components/detail"
+      and P["fe:src/design-system/atoms/Chip.tsx#Chip"]["area"] == "atoms",
+      "nested feature + deep bucket areas derive from the real sub-path (review 53[8])")
+check(P["fe:src/lib/utils/format.ts"]["area"] == "lib/utils" and P["fe:src/routes/utils/nav.ts"]["area"] == "routes/utils"
+      and P["fe:src/routes/HomeRoute.tsx#HomeRoute"]["area"] == "routes" and P["fe:src/lib/api.ts"]["area"] == "lib",
+      "review 53[6]: the synthetic app-shell home keeps its discriminating first segment — lib/utils never merges with routes/utils")
+check(all("areas" in h for h in fe["homes"]), "homes count their areas")
 # ── homing ─────────────────────────────────────────────────────────────────────────────
 check(home.get("RecipeCard") == "fe·recipe" and home.get("useRecipe") == "fe·recipe", "features/recipe → the PAIRED fe·recipe entity (the C split — never folded into the backend twin)")
 check(home.get("Badge") == "design-system", "design-system → its own shared bucket")
@@ -94,12 +114,15 @@ check(E.get(("RecipeCard", "useUiStore")) == "uses-store", "a useXStore call →
 check(E.get(("RecipeCard", "RecipeProps")) == "typed" and E.get(("useRecipe", "Recipe")) == "typed", "type refs → typed")
 check(E.get(("RecipeCard", "scoring")) == "fecall", "a call into a module's helper → fecall onto the MODULE piece")
 check(E.get(("useRecipe", "api")) == "fecall", "apiFetch() → fecall onto the api module")
+check(E.get(("RecipeDetailBody", "Chip")) == "renders" and E.get(("nav", "format")) == "fecall",
+      "the nested component renders the deep-bucket atom; a deep helper call wires module→module")
 check(E.get(("scoring", "Recipe")) == "typed", "a module's type import → typed")
-check(fe["stats"]["edges"] == 11 and fe["stats"]["by_rel"] == {"fecall": 2, "renders": 3, "typed": 3, "uses-hook": 1, "uses-store": 2},
-      f"exactly the enumerated 11 wires ({fe['stats']['by_rel']})")
-check(fe["stats"]["cross"] == 5, f"5 wires cross homes (got {fe['stats']['cross']})")
+check(fe["stats"]["edges"] == 14 and fe["stats"]["by_rel"] == {"fecall": 3, "renders": 4, "typed": 4, "uses-hook": 1, "uses-store": 2},
+      f"exactly the enumerated 14 wires — recipeFixtures typed→Recipe joined ({fe['stats']['by_rel']})")
+check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and len(e) == 3 and isinstance(e[0], int) for e in fe["edges"]), "wires are COMPACT index triples")
-check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1}, "exactly the one NAMED scaffold ref unresolved on the fixture")
+check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1, "alias": 1},
+      "the scaffold ref AND RecipeDetailBody's ref into the cut Recipe2 alias each COUNT, named — never dropped silently")
 # ── screen absorption ──────────────────────────────────────────────────────────────────
 hook = P["fe:src/features/recipe/useRecipe.ts#useRecipe"]
 check(hook.get("screen") == "web:src/features/recipe/useRecipe" and hook.get("sites") == 1,
@@ -127,7 +150,7 @@ off = _a3_graph.fold_fe(copy.deepcopy(base), {"present": False, "reason": "no we
 check("fe" not in off and off["stats"]["fe"] == {"present": False, "reason": "no web source"},
       "present=False → only stats.fe names the absence")
 on = _a3_graph.fold_fe(copy.deepcopy(base), {**fe, "present": True, "reason": "typescript x"})
-check(sorted(on["fe"]) == ["edges", "homes", "pieces"] and on["stats"]["fe"]["present"] and on["stats"]["fe"]["pieces"] == 11,
+check(sorted(on["fe"]) == ["edges", "homes", "pieces"] and on["stats"]["fe"]["present"] and on["stats"]["fe"]["pieces"] == 18,
       "present → the `fe` key (pieces · edges · homes) + stats.fe")
 check("l2" in on and on["l2"] == {}, "the fold never touches l2")
 # ── honest-empty arm states ────────────────────────────────────────────────────────────

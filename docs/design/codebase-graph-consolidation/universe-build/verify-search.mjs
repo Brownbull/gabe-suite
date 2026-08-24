@@ -74,8 +74,10 @@ const jr = await p.evaluate(() => new Promise(res => {
     const back = j.carriers.filter(id => !!NIDS[id]);
     res({ jrRow: row, feN: j.feN, mode: WALK.mode,
       exact: Object.keys(HL.set).length === feIds.length + back.length,   // the path IS the set — no BFS spill
-      feFirst: feIds.length > 0 && head.every(id => id.startsWith('fe:')),
-      backTail: WALK.steps.slice(feIds.length).every(id => !id.startsWith('fe:')),
+      feFirst: (() => { const nFe = WALK.steps.filter(id => id.startsWith('fe:')).length;      // capsule-aware: stashed fe steps ride the head too (review 53)
+        return nFe > 0 && WALK.steps.slice(0, nFe).every(id => id.startsWith('fe:')); })(),
+      backTail: (() => { const nFe = WALK.steps.filter(id => id.startsWith('fe:')).length;
+        return WALK.steps.slice(nFe).every(id => !id.startsWith('fe:')); })(),
       lit: feIds.every(id => HL.set[id] !== undefined),
       pillChip: !!document.querySelector('#jrnpill .wfe'),
       pillChipGlyph: !!document.querySelector('#jrnpill .wfe svg') }); }, 1500); }));
@@ -133,15 +135,28 @@ const fx = await p.evaluate(() => new Promise(res => {
       UNIVIS.ent[victim] = Object.assign({}, UNIVIS.ent[victim] || {}, { show: false });   // fleet-hide the home
       window.__uniJrnStart(j.cid);
       setTimeout(() => {
-        const hiddenWalked = WALK.steps.some(id => NIDS[id] && NIDS[id].fe && NIDS[id].ent === victim);
-        const walkedFe = WALK.steps.filter(id => NIDS[id] && NIDS[id].fe).length;
+        const hiddenWalked = WALK.steps.some(id => { const n = _fieldN(id); return n && n.fe && n.ent === victim; });   // drawn OR stashed — a hidden piece must never walk (capsule-aware, review 53)
+        const walkedFe = WALK.steps.filter(id => { const n = _fieldN(id); return n && n.fe; }).length;                    // the chip counts WALKABLE fe steps (stashed ones expand on arrival)
         const chip = document.querySelector('#jrnpill .wfe');
         out.fleetHonest = !hiddenWalked && (!chip || +chip.textContent.replace(/\D/g, '') === walkedFe);
         delete UNIVIS.ent[victim].show; __uniHLClear();
         res(out); }, 900);
     }, 2600); }, 400); }));
 
+// [batch 53] a STASHED (capsuled) piece is searchable — the row opens its capsule and selects it
+const cap = await p.evaluate(() => new Promise(res => {
+  if (!_CAPST || !Object.keys(_CAPST.byPiece).length) { res({ skip: true }); return; }
+  const target = _CAPST.nodes[0];
+  const inp = document.getElementById('tsin'), dd = document.getElementById('tsdd');
+  inp.value = target.label; inp.dispatchEvent(new Event('input', { bubbles: true }));
+  const row = [...dd.querySelectorAll('.tsrow')].find(r => r.querySelector('.tshint') && /capsule/.test(r.querySelector('.tshint').textContent));
+  if (!row) { res({ row: false, label: target.label }); return; }
+  row.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+  setTimeout(() => res({ row: true, sel: SEL && SEL.data && SEL.data.id === target.id,
+    drawn: !!NIDS[target.id] }), 1800); }));
+
 await b.close();
+console.log('capSearch:', JSON.stringify(cap));
 console.log('fixes:', JSON.stringify(fx));
 console.log('slash:', JSON.stringify(slash));
 console.log('element:', JSON.stringify(el));
@@ -161,5 +176,6 @@ if (!jr.skip && !(jr.jrRow && jr.mode === 'journey' && jr.exact && jr.feFirst &&
 if (!(picker.chips > 0 && picker.glyph)) fails.push('picker rows must wear the fe chip with the ACTUAL component glyph');
 if (!(esc.openBefore && !esc.flew && esc.closed && esc.stillJourney)) fails.push('Esc must close ONLY the dropdown; typing must never fly the camera');
 if (!(fx.exclusive && fx.uniqueHeaders && fx.noXss && fx.heldFn && fx.blurCloses && (fx.fleetSkip || fx.fleetHonest))) fails.push('review fixes broken (exclusive surfaces · unique headers · escaping · held-fns group · blur close · fleet-hidden fe honesty): ' + JSON.stringify(fx));
+if (!cap.skip && !(cap.row && cap.sel && cap.drawn)) fails.push('a capsuled piece must be searchable (row opens the capsule + selects): ' + JSON.stringify(cap));
 if (fails.length) { console.error('FAIL: ' + fails.join(' · ')); process.exit(1); }
 console.log('SEARCH + JOURNEY-FE PROOF: ALL PASS');

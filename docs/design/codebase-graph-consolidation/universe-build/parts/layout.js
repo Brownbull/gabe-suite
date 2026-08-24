@@ -117,7 +117,9 @@ function _levelsGroupMap(){ var D=window.GABE_LEVELS; if(!D||!D.pieces) return n
       var ep=(pc.endpoints||[]).filter(function(e){ return e.m===mth && e.p===pth; })[0];
       if(ep) out.guards[n.id]=((ep.guards||0)>0)?"guarded":"unguarded"; }
   }); return out; }
-function assignSub(mode){
+function assignSub(mode){ _assignSubImpl(mode);
+  nodes.forEach(function(n){ if(n.__cap) n.sub=n.area||n.sub; }); }   // review 53[2]: a capsule's sub IS its area — no core may clobber it
+function _assignSubImpl(mode){
   if(mode==="usecase"||mode==="community"||mode==="fk"){
     if(!_LMAP) _LMAP=_levelsGroupMap();
     var m=(_LMAP&&_LMAP[mode])||{};
@@ -126,6 +128,18 @@ function assignSub(mode){
     return; }
   if(mode==="guards"){ if(!_LMAP) _LMAP=_levelsGroupMap(); var gm=(_LMAP&&_LMAP.guards)||{};
     nodes.forEach(function(n){ n.sub=(n.kind==="function")?"functions":(gm[n.id]||(n.kind==="endpoint"?"unguarded":"other")); }); return; }
+  if(mode==="screen"){                                    // S4 (batch 53): fe pieces adopt their nearest SCREEN —
+    var adjS={};                                          // BFS over fe wires ≤4 hops; backend pieces group by kind
+    links.forEach(function(l){ var s=NIDS[lid(l.source)], t2=NIDS[lid(l.target)];
+      if(!s||!t2||!s.fe||!t2.fe) return;
+      (adjS[s.id]=adjS[s.id]||[]).push(t2.id); (adjS[t2.id]=adjS[t2.id]||[]).push(s.id); });
+    var labS={}, qS=[];
+    nodes.forEach(function(n){ if(n.fe&&n.screen){ labS[n.id]=n.label; qS.push(n.id); } });
+    for(var hop=0; hop<4 && qS.length; hop++){ var nq=[];
+      qS.forEach(function(id){ (adjS[id]||[]).forEach(function(v){ if(labS[v]===undefined){ labS[v]=labS[id]; nq.push(v); } }); });
+      qS=nq; }
+    nodes.forEach(function(n){ n.sub=n.fe?(labS[n.id]||"other"):n.kind; });
+    return; }
   nodes.forEach(function(n){
     if(mode==="kind") n.sub=n.kind;
     else if(mode==="tests") n.sub=((n.m&&n.m.tests)>0)?"tested":"untested";
@@ -194,8 +208,12 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
     var key=String(n.det.file).split(":")[0]+"#"+n.fn;
     if(_fnset[key]) _FNLINKS.push({source:n.id, target:key, rel:"handler"}); });
 }
+function _stashPurge(flag){ if(!_CAPST) return;          // strip toggle-owned pieces from the capsule stash (review 53[9])
+  for(var i=_CAPST.links.length-1;i>=0;i--){ if(_CAPST.links[i][flag]) _CAPST.links.splice(i,1); }
+  for(var j=_CAPST.nodes.length-1;j>=0;j--){ if(_CAPST.nodes[j][flag]){ delete _CAPST.byPiece[_CAPST.nodes[j].id]; _CAPST.nodes.splice(j,1); } } }
 function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) return;
   __uniFreezeForSettle();                                  // functions in/out reheats — decorations pause until the settle
+  _stashPurge("__fn");                                     // review 53[9]: the stash never holds fn entries across a toggle — no zombies, no duplicate wires
   if(on){
     _FNNODES.forEach(function(n,i){ if(!NIDS[n.id]){                       // seed on a golden-angle spiral around the entity anchor —
       var a=i*2.399963, rr=8+i*0.35;                                       // UNIQUE per i (no two coincide → no divide-by-zero → no NaN frame)
@@ -211,11 +229,13 @@ function toggleFns(on){ _fnsOn=on; if(!_FNNODES) _buildFnData(); if(!_FNNODES) r
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
   try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // fn nodes change group sizes → re-ring
   if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}   // fn nodes add/remove sub groups → the panel re-derives
+  if(window.__uniApplyCapsules&&_CAPST!==undefined) try{ __uniApplyCapsules(); }catch(e){}   // review 53[1]: a collapsed entity re-folds its new fn pieces
 }
 /* TYPES (batch 48) — the frontend's fe-type pieces + their typed wires, held back at boot (adapter) and seeded in
    here on demand; the exact toggleFns mechanics (spiral seed · reheat · re-ring · fleet regroup). */
 function toggleTypes(on){ if(typeof _FETYPES==="undefined" || !_FETYPES.length) return;
   __uniFreezeForSettle();
+  _stashPurge("__ty");                                     // review 53[9]: symmetric — the stash never holds fe-type entries across a toggle
   if(on){
     _FETYPES.forEach(function(n,i){ if(!NIDS[n.id]){
       var a=i*2.399963, rr=8+i*0.35;
@@ -231,6 +251,7 @@ function toggleTypes(on){ if(typeof _FETYPES==="undefined" || !_FETYPES.length) 
   if(typeof Graph!=="undefined" && Graph){ try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){} }
   try{ assignSub(CFG.coreBy); recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}
   if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}
+  if(window.__uniApplyCapsules&&_CAPST!==undefined) try{ __uniApplyCapsules(); }catch(e){}   // a collapsed entity re-folds its new pieces
 }
 /* LINES — moved off the topbar into the config; sets the curved-connector flag + redraws */
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
@@ -516,14 +537,20 @@ window.__uniHLMode=function(){ HL.mode=(HL.mode==="glow")?"focus":"glow"; if(HL.
    → join + humanize, no new information invented. Grouped: END-TO-END (e2e corpus) first — the most
    interesting — then by the journey's STARTING entity (entities[0]). ── */
 var JRN=null, _CNAMES=null;
+/* the FIELD = drawn + capsule-stashed — journeys/cases are fold-independent facts (review 53[0]) */
+function _fieldNodes(){ return _CAPST ? nodes.filter(function(n){ return !n.__cap; }).concat(_CAPST.nodes) : nodes; }
+function _fieldLinks(){ return _CAPST ? links.filter(function(l){ return !l.__cap; }).concat(_CAPST.links) : links; }
+function _fieldN(id){ if(NIDS[id]) return NIDS[id];
+  if(_CAPST){ for(var i=0;i<_CAPST.nodes.length;i++) if(_CAPST.nodes[i].id===id) return _CAPST.nodes[i]; }
+  return null; }
 function _caseNames(){ if(_CNAMES) return _CNAMES; _CNAMES={};
-  nodes.forEach(function(n){ ((n.det&&n.det.cases)||[]).forEach(function(c){
+  _fieldNodes().forEach(function(n){ ((n.det&&n.det.cases)||[]).forEach(function(c){
     if(c.cid && c.name && !_CNAMES[c.cid]) _CNAMES[c.cid]=c.name; }); });
   return _CNAMES; }
 function _jrnName(j){ var nm=_caseNames()[j.cid]; if(!nm) return null;
   return nm.replace(/^test[_ ]?/,"").replace(/_C\d+$/,"").replace(/_/g," "); }
 function _jrnCollect(){ if(JRN) return JRN; var m={};
-  nodes.forEach(function(n){ ((n.det&&n.det.test_journeys)||[]).forEach(function(j){ if(!j.cid) return;
+  _fieldNodes().forEach(function(n){ ((n.det&&n.det.test_journeys)||[]).forEach(function(j){ if(!j.cid) return;
     var r=m[j.cid]||(m[j.cid]={cid:j.cid, corpora:{}, ents:j.entities||[], carriers:[]});
     r.corpora[j.corpus||"?"]=1; r.carriers.push(n.id); }); });
   JRN=Object.keys(m).map(function(k){ var j=m[k];
@@ -532,7 +559,7 @@ function _jrnCollect(){ if(JRN) return JRN; var m={};
     j.name=j.agg ? (j.corpus+" tests · "+j.cid+" (aggregated)") : _jrnName(j);
     j.start=(j.ents[0]||"other");
     j.fe=_jrnFeLeg(j.carriers); j.feN=j.fe.users.length+j.fe.screens.length;   // batch 49: the FRONTEND leg this journey's endpoints reach over the bridge
-    j.carriers.sort(function(a,b){ var ea=(NIDS[a]||{}).ent||"", eb=(NIDS[b]||{}).ent||"";   // steps walk entity-by-entity along the span
+    j.carriers.sort(function(a,b){ var ea=(_fieldN(a)||{}).ent||"", eb=(_fieldN(b)||{}).ent||"";   // steps walk entity-by-entity along the span
       var ia=j.ents.indexOf(ea), ib=j.ents.indexOf(eb); if(ia!==ib) return ia-ib; return a<b?-1:1; });
     return j; });
   return JRN; }
@@ -547,15 +574,18 @@ function _jrnRow(j){ return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" dat
    walks UI → API → data: users → screens → carriers. One hop up on purpose — the full renders chain
    is the depth slider's job, not the journey's. ── */
 function _jrnFeLeg(carriers){ var cs={}; carriers.forEach(function(id){ cs[id]=1; });
-  var scr={}, use={};
-  links.forEach(function(l){ if(l.rel==="bridge" && cs[lid(l.target)]) scr[lid(l.source)]=1; });
-  links.forEach(function(l){ if((l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads") && scr[lid(l.target)]) use[lid(l.source)]=1; });   // fecall/reads too: a fetching MODULE or store has callers, not renderers
+  var scr={}, use={}, FL=_fieldLinks();
+  FL.forEach(function(l){ if(l.rel==="bridge" && cs[lid(l.target)]) scr[lid(l.source)]=1; });
+  FL.forEach(function(l){ if((l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads") && scr[lid(l.target)]) use[lid(l.source)]=1; });   // fecall/reads too: a fetching MODULE or store has callers, not renderers
   Object.keys(scr).forEach(function(id){ delete use[id]; });               // a screen is a screen, never doubled as its own user
   return { screens:Object.keys(scr).sort(), users:Object.keys(use).sort() }; }
 window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) p.style.display="none";
   if(!cid){ __uniHLClear(); return; }
   var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
-  var fe=j.fe?j.fe.users.concat(j.fe.screens).filter(function(id){ return NIDS[id] && visN(NIDS[id]).show; }):[];   // drawn AND fleet-shown — a hidden piece must not be walked to (visN is the fleet truth; NIDS alone never changes on fleet hides)
+  var fe=j.fe?j.fe.users.concat(j.fe.screens).filter(function(id){
+    if(NIDS[id]) return visN(NIDS[id]).show;                                  // drawn → the fleet decides
+    var fn=_CAPST&&_CAPST.byPiece[id]?_fieldN(id):null;
+    return !!(fn&&visN(fn).show); }):[];                                      // stashed → KEPT iff fleet-shown; the walk expands its capsule on arrival (review 53[0])
   HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();
   WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; _walkRender(); _walkGo(0); };
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
@@ -587,7 +617,13 @@ function _frameSet(ids){ if(typeof Graph==="undefined"||!Graph||!ids||!ids.lengt
     Graph.cameraPosition({x:cx+d.x, y:cy+d.y, z:cz+d.z}, {x:cx,y:cy,z:cz}, 900); }catch(e){} }
 function _walkGo(di){ if(!WALK.steps.length) return;
   WALK.i=Math.max(0, Math.min(WALK.steps.length-1, WALK.i+di));
-  var n=NIDS[WALK.steps[WALK.i]]; if(!n) return;
+  var id=WALK.steps[WALK.i], n=NIDS[id];
+  if(!n && _CAPST && _CAPST.byPiece[id] && window.__uniCapExpand){            // stashed step → open its capsule, then land (review 53[0])
+    var ce=(_CAPST.byPiece[id]||"").replace(/^cap:/,"").split("|")[0];
+    try{ __uniCapExpand(ce); }catch(e){}
+    n=NIDS[id];
+    if(n&&HL.on) try{ _hlCompute(); _hlRestyle(); }catch(e){} }
+  if(!n){ _walkRender(); return; }                                            // the pill tracks WALK.i even on a dead step
   if(WALK.mode==="journey" && di===0) _frameSet(WALK.steps);   // selection shows the WHOLE path; arrows dive per step
   else _aimAt(n);
   SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
@@ -603,7 +639,7 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
       pill.innerHTML='<button class="tbico wbtn" data-wgo="-1" title="previous step">'+CHL+'</button>'
         +'<span class="wname" title="step '+(WALK.i+1)+': '+stepN+' · '+(j.ents||[]).join(" → ")+' · '+HL.jr+' · '+j.corpus+'">'
         +'<b class="wpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</b><span class="wjname">'+(j.name||j.cid)+'</span>'
-        +(function(){ var wf=WALK.steps.filter(function(id){ return NIDS[id]&&NIDS[id].fe; }).length;
+        +(function(){ var wf=WALK.steps.filter(function(id){ var fn=_fieldN(id); return fn&&fn.fe; }).length;
             return wf?('<span class="wfe" title="'+wf+' frontend piece(s) walk FIRST — the screens fetching this journey\'s endpoints + the components/callers driving them'+(wf<j.feN?(' ('+(j.feN-wf)+' more fleet-hidden)'):'')+'">'+svgInline("component", KINDCOL.component, 11)+wf+'</span>'):""; })()+'</span>'
         +'<button class="tbico wbtn" data-wgo="1" title="next step">'+CHR+'</button>'
         +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
@@ -745,7 +781,8 @@ window.__uniCoreIco=function(mode,px){ px=px||13; var PATHS={
   guards:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/>',
   usecase:'<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/>',
   community:'<circle cx="12" cy="5" r="2.5"/><circle cx="5" cy="18" r="2.5"/><circle cx="19" cy="18" r="2.5"/><path d="M10.8 7.2 6.2 15.7M13.2 7.2l4.6 8.5M7.5 18h9"/>',
-  fk:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>' };
+  fk:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/>',
+  screen:'<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>' };
   return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(PATHS[mode]||PATHS.layer)+'</svg>'; };
 /* ── HULL SELECTION LIGHT (batch 25): the selected container(s) BRIGHTEN — the element's cluster
    and entity, the entity alone, or the cluster+entity, per the panel level; Esc clears. Materials
@@ -816,6 +853,7 @@ window.__uniApplyVisPreset=function(preset){ if(!preset) return;     // deep-mer
 /* the sub keys are CURRENT-coreBy groups: a core change (or the functions toggle) regroups —
    overrides whose (ent|sub) no longer exists are dropped, the panel re-renders live groups. */
 window.__uniFleetRegroup=function(){ var live={}; nodes.forEach(function(n){ live[n.ent+"|"+n.sub]=1; });
+  if(_CAPST) _CAPST.nodes.forEach(function(n){ live[n.ent+"|"+n.sub]=1; });   // review 53[4]: folded pieces are hidden, not gone — their cluster overrides survive the round-trip
   Object.keys(UNIVIS.sub).forEach(function(k){ if(!live[k]) delete UNIVIS.sub[k]; });
   if(window.__uniFleetRender) try{ __uniFleetRender(); }catch(e){} };
 /* a second draggable panel — dragCfg is id-hardwired to #cfg, so the fleet gets its own helper */
@@ -937,6 +975,8 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
     _flOpen[e]=!_flOpen[e]; __uniFleetRender(); }; });
   body.querySelectorAll(".flx").forEach(function(sp){ sp.onclick=function(){          // the NAME selects: panel + hull light + camera
     var e=sp.getAttribute("data-flx");
+    if(_CAPST && window.__uniCapExpand && nodes.some(function(n){ return n.__cap&&n.ent===e; }))
+      try{ __uniCapExpand(e); }catch(e3){}                                            // review 53[3]: the promised fleet-row expand
     if(window.__uniPanelEnt) __uniPanelEnt(e);
     var ids=nodes.filter(function(n){ return n.ent===e; }).map(function(n){ return n.id; });
     if(typeof _frameSet==="function") try{ _frameSet(ids); }catch(e2){} }; });
@@ -1056,7 +1096,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var cores=[
     {v:"layer",t:"",ic:__uniCoreIco("layer",12),ti:"Layer — group by the kind's architectural layer — endpoints · api · web · data (grows with new kinds)"},
     {v:"kind",t:"",ic:__uniCoreIco("kind",12),ti:"Kind — group by element kind — endpoint · model · schema · function · screen"},
-    {v:"tests",t:"",ic:__uniCoreIco("tests",12),ti:"Tests — group by test coverage — tested vs untested"}];
+    {v:"tests",t:"",ic:__uniCoreIco("tests",12),ti:"Tests — group by test coverage — tested vs untested"},
+    {v:"screen",t:"",ic:__uniCoreIco("screen",12),ti:"Screen — frontend pieces group by the SCREEN they serve (nearest fetching piece over the fe wires); backend pieces group by kind"}];
   if(hasLevels) cores.push(
     {v:"guards",t:"",ic:__uniCoreIco("guards",12),ti:"Guards — endpoints by guard status — guarded vs unguarded (levels feed)"},
     {v:"usecase",t:"",ic:__uniCoreIco("usecase",12),ti:"Use-case — group by the use-case flows mapped in the levels feed"},
@@ -1276,6 +1317,70 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });
 };
 
+/* ── CAPSULES (batch 53, S1+S2+S3) — a big entity boots COLLAPSED: its pieces fold into one
+   compound planet per AREA (the emitter's stable sub-directory group, S2), with aggregated
+   bundle wires between capsules. Click a capsule (or its card's Expand, or the fleet row, or
+   any search/chip hit inside it) → the entity opens to its pieces; the CAP toggle in the
+   config flips the whole mechanism. Restore-then-apply keeps the surgery idempotent. ── */
+window.UNICAP={ on:true, threshold:80, open:{} };
+var _CAPST=null;   // {nodes:[...], links:[...], caps:[capIds], byPiece:{pieceId:capId}}
+window.__uniApplyCapsules=function(){ try{
+  if(typeof Graph==="undefined"||!Graph) return;
+  /* 1 · RESTORE any previous capsule state */
+  if(_CAPST){
+    for(var i=nodes.length-1;i>=0;i--){ if(nodes[i].__cap){ delete NIDS[nodes[i].id]; nodes.splice(i,1); } }
+    for(var j=links.length-1;j>=0;j--){ if(links[j].__cap) links.splice(j,1); }
+    _CAPST.nodes.forEach(function(n){ if(!NIDS[n.id]){ nodes.push(n); NIDS[n.id]=n; } });
+    _CAPST.links.forEach(function(l){ links.push(l); });
+    _CAPST=null; }
+  /* 1.5 · FRESH SUBS before any fold — a core switch must regroup restored pieces (review 53[11]) */
+  try{ assignSub(CFG.coreBy); }catch(e){}
+  /* 2 · APPLY per the current threshold/open set */
+  if(UNICAP.on){
+    var cnt={}; nodes.forEach(function(n){ cnt[n.ent]=(cnt[n.ent]||0)+1; });
+    var fold={}; _ents.forEach(function(e){ if((cnt[e]||0)>UNICAP.threshold && !UNICAP.open[e]) fold[e]=1; });
+    if(Object.keys(fold).length){
+      var st={ nodes:[], links:[], byPiece:{} };
+      var caps={};
+      for(var k=nodes.length-1;k>=0;k--){ var n=nodes[k]; if(!fold[n.ent]) continue;
+        var g=(n.fe&&n.area)?n.area:(n.sub||"other");
+        var cid="cap:"+n.ent+"|"+g;
+        if(!caps[cid]){ caps[cid]={ id:cid, kind:"capsule", ent:n.ent, label:g, col:ENT[n.ent]||"#888",
+          K:KINDS.capsule, layer:"web", sub:g, area:g, __cap:true, members:[], kinds:{}, fixture:0,
+          m:{behind:0,depth:0,tests:0,cols:0,fanin:0,god:false,method:null}, det:{doc:""},
+          x:(EX[n.ent]||0)+Math.cos(Object.keys(caps).length*2.4)*24,
+          y:(EY[n.ent]||0)+Math.sin(Object.keys(caps).length*2.4)*24, z:(EZ[n.ent]||0) }; }
+        caps[cid].members.push(n.id); caps[cid].kinds[n.kind]=(caps[cid].kinds[n.kind]||0)+1;
+        if(n.fixture||(n.det&&n.det.fixture)) caps[cid].fixture++;
+        st.byPiece[n.id]=cid; st.nodes.push(n); delete NIDS[n.id]; nodes.splice(k,1); }
+      Object.keys(caps).sort().forEach(function(cid){ var c=caps[cid];
+        c.label=c.label+" · "+c.members.length; nodes.push(c); NIDS[cid]=c; });
+      /* links: stash every link touching a folded piece; re-add AGGREGATED bundles */
+      var agg={};
+      for(var m2=links.length-1;m2>=0;m2--){ var l=links[m2], s=lid(l.source), t2=lid(l.target);
+        var cs=st.byPiece[s], ct=st.byPiece[t2];
+        if(!cs&&!ct) continue;
+        st.links.push(l); links.splice(m2,1);
+        var A=cs||s, B=ct||t2; if(A===B) continue;
+        if(!NIDS[A]||!NIDS[B]) continue;                        // the other end is fleet-toggled away
+        var key=A<B?A+"→"+B:B+"→"+A;
+        if(!agg[key]) agg[key]={a:A,b:B,n:0}; agg[key].n++; }
+      Object.keys(agg).sort().forEach(function(key){ var g2=agg[key];
+        links.push({source:g2.a, target:g2.b, rel:"bundle", w:Math.min(6,1+g2.n*0.2), proven:true,
+                    payload:0, __cap:true, fe:false, count:g2.n }); });
+      _CAPST=st; }
+  }
+  links.forEach(function(l){ l.source=lid(l.source); l.target=lid(l.target); });
+  try{ Graph.graphData({nodes:nodes, links:links}); Graph.d3ReheatSimulation(); }catch(e){}
+  try{ rebuildNodes(); }catch(e){}                       // the ONE sanctioned decoration reset — stale FLEETTICK/PULSE closures on stashed nodes threw otherwise
+  try{ recomputeSubAnchors(); buildClusters(); updateClusters(true); }catch(e){}   // subs already fresh (step 1.5); a tail assignSub clobbered capsule areas (review 53[10])
+  try{ updateConnectors(); buildTransports(); }catch(e){}
+  if(window.__uniFleetRegroup) try{ __uniFleetRegroup(); }catch(e){}
+  if(window.__uniPView&&window.__uniPView.lvl==="all"&&window.__uniPanelAll) try{ __uniPanelAll(); }catch(e){}   // review 53[12]: an open census must not show the pre-fold field
+}catch(e){} };
+window.__uniCapExpand=function(ent){ if(!ent) return; UNICAP.open[ent]=true; __uniApplyCapsules();
+  if(window.__uniPanelEnt) try{ __uniPanelEnt(ent); }catch(e){} };
+window.__uniCapCollapse=function(ent){ if(ent) delete UNICAP.open[ent]; __uniApplyCapsules(); };
 /* ── WIRE VIEW (batch 52) — the R options as LIVE config toggles: each changes only the INK
    (and R4 one spring family); every hidden wire keeps its layout spring, so structure survives
    as proximity. R1 = structure at rest (fe flow wires off) · R2 = utility demotion (fecall into
@@ -1320,14 +1425,18 @@ window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbo
   var g=document.createElement("div"); g.className="grp"; g.id="wireview";
   g.innerHTML='<div class="grplbl" title="the R lab — each toggle changes only the INK on the live graph; hidden wires keep their layout springs, so structure survives as position. Combine freely.">WIRE VIEW</div>';
   var row=document.createElement("div"); row.className="cfgrow";
-  var DEF=[["r1","R1","structure at rest — hides the fe FLOW wires (renders · fecall · uses · imports); fk/touches/nests/bridge/stores stay inked. The render tree survives as proximity."],
+  var DEF=[["cap","CAP","capsules — a big entity boots COLLAPSED into one planet per AREA with bundled wires; click a capsule / its fleet row / any search hit inside it to open. Toggle OFF to always draw every piece."],
+           ["r1","R1","structure at rest — hides the fe FLOW wires (renders · fecall · uses · imports); fk/touches/nests/bridge/stores stay inked. The render tree survives as proximity."],
            ["r2","R2","utility demotion — hides only fecall wires INTO fan-in≥15 sinks (cx · client · mockupAssets): the everything-calls-the-util fans that carry no map information."],
            ["r3","R3","bundling — every fe wire collapses to ONE line per cluster-pair; brightness = how many wires ride the bundle."],
            ["r4","R4","tree containment — sole-parent renders wires hidden and those children spring TIGHT beside their parent; only SHARED components keep render wires (reuse is the signal)."]];
   DEF.forEach(function(d){ var b=document.createElement("button"); b.className="itog wv"; b.id="wv-"+d[0];
     b.title=d[2]; b.textContent=d[1];
-    b.classList.toggle("on", !!UNIWIRE[d[0]]);                    // a config rebuild must not lose the lit state (review 52[3])
-    b.onclick=function(){ UNIWIRE[d[0]]=!UNIWIRE[d[0]]; b.classList.toggle("on", UNIWIRE[d[0]]);
+    b.classList.toggle("on", d[0]==="cap"?!!UNICAP.on:!!UNIWIRE[d[0]]);   // a config rebuild must not lose the lit state (review 52[3])
+    b.onclick=function(){
+      if(d[0]==="cap"){ UNICAP.on=!UNICAP.on; if(!UNICAP.on) UNICAP.open={}; b.classList.toggle("on", UNICAP.on);
+        if(window.__uniApplyCapsules) __uniApplyCapsules(); return; }
+      UNIWIRE[d[0]]=!UNIWIRE[d[0]]; b.classList.toggle("on", UNIWIRE[d[0]]);
       if(d[0]==="r4"){ try{ tuneLinkForce(); if(typeof Graph!=="undefined"&&Graph) Graph.d3ReheatSimulation(); }catch(e){} }
       try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
     row.appendChild(b); });
@@ -1338,6 +1447,8 @@ window.__uniGoto=function(id){ if(!id) return;
   var go=function(){ var nd=NIDS[id]; if(!nd) return false;
     if(window.__uniSelNode) __uniSelNode(nd); _frameSet([id]); return true; };
   if(go()) return;
+  if(_CAPST&&_CAPST.byPiece[id]){ var _ce=(_CAPST.nodes.filter(function(n){ return n.id===id; })[0]||{}).ent;
+    if(_ce){ __uniCapExpand(_ce); if(go()) return; } }
   if(typeof _FETYPES!=="undefined" && _FETYPES.some(function(n){ return n.id===id; })){
     CFG.showTypes="on"; try{ toggleTypes(true); }catch(e){}
     var tb=document.getElementById("typesTog"); if(tb) tb.classList.add("on"); go(); return; }
@@ -1371,6 +1482,11 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
     nodes.forEach(function(n){ var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"elements", sc:sc, label:n.label, sub:n.ent, ico:svgInline(n.kind, n.col, 12),
         go:function(){ if(window.__uniSelNode) __uniSelNode(n); _frameSet([n.id]); } }); });
+    if(typeof _CAPST!=="undefined" && _CAPST) _CAPST.nodes.forEach(function(n){ if(NIDS[n.id]) return;
+      var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
+      if(sc>=0) out.push({g:"collapsed", sc:sc+0.25, label:n.label, sub:n.ent, hint:"opens the capsule",
+        ico:svgInline(n.kind, n.col||"#888", 12),
+        go:function(){ if(window.__uniGoto) __uniGoto(n.id); } }); });
     if(typeof _FETYPES!=="undefined") _FETYPES.forEach(function(n){ if(NIDS[n.id]) return;
       var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"types (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns Types ON",

@@ -193,8 +193,8 @@ check('zoneshd{ display:flex; align-items:center; justify-content:flex-start' in
 #         entity EDGE (per-kind radial), entities separate (typed link rests + capped charge + containment) ──
 check('function recomputeSubAnchors' in page, "sub-anchor ring recompute missing (core cannot re-arrange nodes)")
 check('(SUBANCHOR[n.ent]||{})[n.sub]' in page, "zForce does not read the sub anchor — n.sub still decoration-only")
-check('assignSub(CFG.coreBy); recomputeSubAnchors(); if(Graph){ try{ Graph.d3ReheatSimulation()' in page,
-      "the coreBy branch does not re-anchor + REHEAT (core change would not move nodes)")
+check('else if(grp==="coreBy"){ __uniFreezeForSettle(); assignSub(CFG.coreBy); recomputeSubAnchors(); if(window.__uniApplyCapsules) __uniApplyCapsules(); if(Graph){ try{ Graph.d3ReheatSimulation(); }catch(e){} }' in page,
+      "the coreBy branch does not re-anchor + re-fold + REHEAT (core change would not move nodes)")
 check('grp==="coreBy"){ assignSub(CFG.coreBy); buildClusters()' not in page,
       "REGRESSION: coreBy is decoration-only again (assignSub straight to buildClusters, no reheat)")
 check('var KRADF={ endpoint:' in page, "per-kind radial factors missing (endpoints would not ring the edge)")
@@ -416,7 +416,7 @@ check('class="pnav"' in page or "class:\"pnav\"" in page or '{class:"pnav"}' in 
       "clickable panel nav rows (.pnav) are gone")
 check('if(e.key==="Escape"){ __uniHLClear();' in page and 'if(window.__uniPanelAll) __uniPanelAll(); }' in page,
       "Esc must clear the selection AND land on the Everything panel")
-check('setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); if(window.__uniCamFit) __uniCamFit(0); }, 0);' in page,
+check('setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);' in page,
       "boot must open the Everything panel (deferred one tick past the card IIFE)")
 check('Graph.onBackgroundClick(window.__uniBgClick)' in page,
       "background clicks are not wired to the hull picker")
@@ -439,8 +439,8 @@ check('function _tipPlace' in page and 'r.right>iw-8' in page and 'tip.style.bot
 # batch 24: direction markers + per-strategy core icons (pills + inherited by cluster surfaces)
 check('window.__uniCoreIco=' in page and "(o.ic||'')+o.t" in page,
       "core-strategy icons are gone from the config pills (__uniCoreIco / pillHTML ic slot)")
-check("ic:__uniCoreIco(" in page and page.count("ic:__uniCoreIco(")==7,
-      "the seven cores must EACH carry their icon (layer·kind·tests·guards·usecase·community·fk)")
+check("ic:__uniCoreIco(" in page and page.count("ic:__uniCoreIco(")==8,
+      "the eight cores must EACH carry their icon (layer·kind·tests·screen·guards·usecase·community·fk)")
 check('P.drill=' in page and 'P.up=' in page and 'function dirIco' in page,
       "drill-down / go-up direction markers are gone from the nav rows")
 check('"__core"' in page and 'function coreLead' in page,
@@ -638,13 +638,55 @@ check('window.__uniAddWireView=function()' in page and 'id="wireview"' in page.r
 # ── 10z. batch 52 review fixes (7 confirmed → 6 distinct) ──
 check(page.count('__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))') >= 3,
       "the light-on-demand contract is gone — R-hidden wires must DRAW when lit and stay unpickable/unflown otherwise (draw + picker + transports)")
-check('b.classList.toggle("on", !!UNIWIRE[d[0]]);' in page, "WIRE VIEW buttons lose their lit state on a config rebuild")
-check('try{ buildTransports(); }catch(e){}' in page.split('wv-')[1][:600],
+check('b.classList.toggle("on", d[0]==="cap"?!!UNICAP.on:!!UNIWIRE[d[0]]);' in page, "WIRE VIEW/CAP buttons lose their lit state on a config rebuild")
+check('try{ buildTransports(); }catch(e){}' in page.split("wv-")[1][:1600],
       "a WIRE VIEW flip no longer re-derives the shuttles (ghosts would fly hidden wires)")
 check('window.__uniCamFit=function(ms)' in page and '__uniCamFit(600); else Graph.cameraPosition(DEF' in page
-      and '__uniCamFit(0); }, 0);' in page,
+      and '__uniCamFit(0); }, 400);' in page,
       "the camera no longer fits the live field (19 clusters outgrew the fixed 780) on boot + reset")
 check('" (frontend of "+' in page.replace("'",'"'), "a paired piece's card no longer names its backend twin")
+
+# ── 10aa. batch 53: capsules (S1+S3) · areas (S2) · the screen core (S4) · alias/fixture de-noisers ──
+check('window.UNICAP={ on:true, threshold:80, open:{} };' in page and 'window.__uniApplyCapsules=function()' in page,
+      "the capsule mechanism is gone (big entities would boot as label clouds again)")
+check('rel:"bundle"' in page and 'count:g2.n' in page, "capsule wires lost their aggregated bundles")
+check('try{ rebuildNodes(); }catch(e){}' in page.split('__uniApplyCapsules=function')[1][:5000],
+      "the capsule surgery lost its decoration reset (stale FLEETTICK closures threw)")
+check('if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent); return; }' in page,
+      "one click on a capsule must EXPAND its entity")
+check('if(_CAPST&&_CAPST.byPiece[id])' in page, "goto/search into a folded piece no longer auto-expands")
+check('g:"collapsed"' in page and 'opens the capsule' in page,
+      "stashed pieces vanished from search (the index must list them and expand on open)")
+check('setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);' in page,
+      "the boot fold must run AFTER build() and past the engine's first tick (Graph is null in the config-boot line)")
+check('KINDS.capsule={' in page and 'f==="pod"' in page and 'C.capsule=function(n)' in page,
+      "the capsule kind lost its form/card")
+check('if(mode==="screen"){' in page and '{v:"screen",t:"",ic:__uniCoreIco("screen",12)' in page,
+      "the SCREEN core strategy (S4) is gone")
+check('"area": _area_of(path, home)' in open('templates/center/generators/_a3_fe.py').read()
+      and 'apiAlias' in open('templates/center/generators/_a3_fe_extract.mjs').read(),
+      "the emitter lost areas (S2) or the API-alias flag")
+# ── the review-53 fix wave (13 confirmed findings → 10 subjects) ──
+check('in alias_cut or (path, ex.get("name") or "") in scaffold_cut' in open('templates/center/generators/_a3_fe.py').read(),
+      "review 53[5]: cut exports must never act as edge SOURCES")
+check('elif home == "app-shell":' in open('templates/center/generators/_a3_fe.py').read(),
+      "review 53[6]: the app-shell area keeps its discriminating first segment")
+check('function assignSub(mode){ _assignSubImpl(mode);' in page and 'if(n.__cap) n.sub=n.area||n.sub;' in page,
+      "review 53[2]/[10]: the assignSub wrapper must restamp capsule areas")
+check(page.count('try{ assignSub(CFG.coreBy); }catch(e){}') >= 1 and 'grpOf' not in page,
+      "review 53[11]: capsules fold from FRESH subs (restore → assignSub → fold); grpOf deleted")
+check('function _fieldNodes()' in page and '_fieldLinks()' in page and '_fieldN(' in page,
+      "review 53[0]: the journey machinery reads the WHOLE field (stash included)")
+check('function _stashPurge(flag)' in page and page.count('_stashPurge(') == 3,
+      "review 53[9]: BOTH toggles purge their pieces from the capsule stash")
+check(page.count('__uniApplyCapsules&&_CAPST!==undefined) try{ __uniApplyCapsules(); }catch(e){}') == 2,
+      "review 53[1]: toggleFns AND toggleTypes re-fold a collapsed entity")
+check("nodes.some(function(n){ return n.__cap&&n.ent===e; })" in page,
+      "review 53[3]: the fleet NAME click expands a folded entity")
+check('_CAPST) _CAPST.nodes.forEach(function(n){ live[n.ent+"|"+n.sub]=1; });' in page,
+      "review 53[4]: fleet overrides survive the fold round-trip")
+check('capsule:"a FOLDED area' in page and '" folded"' in page and '__uniPanelAll) try{ __uniPanelAll(); }catch(e){}' in page,
+      "review 53[12]: KINDTIP.capsule + the folded annotation + the census refresh")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

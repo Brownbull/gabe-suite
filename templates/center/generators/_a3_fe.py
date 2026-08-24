@@ -61,6 +61,26 @@ _TYPE_KINDS = frozenset({"type", "interface", "enum"})
 # import them — 8 + 90 edges measured) and STAY. Stories/tests were already excluded.
 _SCAFFOLD_PATH = ("/spikes/", "/showcase/")
 _HOOK_RX = re.compile(r"^use[A-Z0-9]")
+_FIXTURE_RX = re.compile(r"(?:^|/)(?:[A-Za-z]*[Ff]ixtures?|mockupAssets)\.tsx?$")
+
+
+def _area_of(path: str, home: str = "") -> str:
+    """The piece's AREA — the sub-directory group inside its home (S2, batch 53): up to two
+    path segments between the segments the HOME consumed and the file. `cooking/components/
+    recipes/X` → ``components/recipes``; a root-level file → ``root``. The synthetic app-shell
+    home consumed NOTHING, so rest[0] is the discriminator there — dropping it merged
+    lib/utils with routes/utils (review 53[6]). The capsule level renders these."""
+    parts = path.split("/")
+    rest = parts[parts.index("src") + 1:] if "src" in parts else parts
+    if rest and rest[0] == "features" and len(rest) > 2:
+        mid = rest[2:-1]
+    elif home == "app-shell":
+        mid = rest[:-1]
+    elif rest:
+        mid = rest[1:-1]
+    else:
+        mid = []
+    return "/".join(mid[:2]) if mid else "root"
 _PASCAL_RX = re.compile(r"^[A-Z]")
 # precedence when two refs hit the same (from, to): the MOST specific relation wins
 _REL_RANK = {"renders": 0, "uses-store": 1, "uses-hook": 2, "fecall": 3, "typed": 4, "imports": 5}
@@ -111,6 +131,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     file_pieces: dict[str, list[str]] = {}          # file → piece ids (in principal order)
     export_piece: dict[tuple[str, str], str] = {}   # (file, export name) → piece id
     stats_x = {"stories": 0, "barrels": 0, "pascal_no_jsx": 0, "module_exports": 0}
+    alias_cut: set[tuple[str, str]] = set()
     scaffold_files: set[str] = set()
     scaffold_cut: set[tuple[str, str]] = set()          # (file, export) name-level cuts — a ref to one must COUNT, never rewire
     for path in sorted(by_file):
@@ -136,6 +157,10 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 stats_x["scaffold_exports"] = stats_x.get("scaffold_exports", 0) + 1
                 scaffold_cut.add((path, ex.get("name") or ""))
                 continue
+            if ex.get("apiAlias"):                              # a one-line REFERENCE to the generated API
+                stats_x["api_aliases"] = stats_x.get("api_aliases", 0) + 1   # contract — counted, never a piece
+                alias_cut.add((path, ex.get("name") or ""))     # (the map-side de-noiser, source review 2026-08-23)
+                continue
             k = classify_export(ex, path)
             if k is None:
                 if _PASCAL_RX.match(ex.get("name") or "") and path.endswith(".tsx") and ex.get("kind") in ("function", "class"):
@@ -144,7 +169,9 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 continue
             pid = _piece_id(path, ex["name"])
             pieces[pid] = {"id": pid, "name": ex["name"], "kind": k, "file": path, "home": home,
-                           "candidate": bool(cand), "span": ex.get("span")}
+                           "candidate": bool(cand), "span": ex.get("span"), "area": _area_of(path, home)}
+            if _FIXTURE_RX.search(path):
+                pieces[pid]["fixture"] = True                   # showcase data, not domain mass — tagged, kept
             ids.append(pid)
             export_piece[(path, ex["name"])] = pid
         if leftovers:
@@ -154,7 +181,9 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 pid = _piece_id(path, None)            # `module` piece for the file's value exports
                 stem = path.rsplit("/", 1)[-1].rsplit(".", 1)[0]
                 pieces[pid] = {"id": pid, "name": stem, "kind": "module", "file": path, "home": home,
-                               "candidate": bool(cand), "exports": sorted(leftovers)}
+                               "candidate": bool(cand), "exports": sorted(leftovers), "area": _area_of(path, home)}
+                if _FIXTURE_RX.search(path):
+                    pieces[pid]["fixture"] = True
                 ids.append(pid)
         ids.sort(key=lambda i: (_PRINCIPAL.get(pieces[i]["kind"], 9), i))
         file_pieces[path] = ids
@@ -177,7 +206,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
 
     # edges: each piece's refs → binding → target piece, typed by the channel
     edges: dict[tuple[str, str], str] = {}
-    unresolved = {"ext": 0, "no_piece": 0, "scaffold": 0}   # ext = a library symbol · no_piece = a bound
+    unresolved = {"ext": 0, "no_piece": 0, "scaffold": 0, "alias": 0}   # ext = a library symbol · no_piece = a bound
     local = {"refs": 0}                               #   file with nothing drawn · local = same-file
 
     def target_of(bind: dict[str, Any] | None) -> str | None:
@@ -190,6 +219,9 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         f, nm = bind.get("file"), bind.get("name")
         if f in scaffold_files or (f, nm) in scaffold_cut:
             unresolved["scaffold"] += 1                # an app ref INTO cut scaffold (file- OR export-level) — named, never silent, never rewired to the principal
+            return None
+        if (f, nm) in alias_cut:
+            unresolved["alias"] += 1                   # a typed ref to a generated-contract REFERENCE — the contract is the backend schema, already mapped there
             return None
         if nm == "*":
             t = principal.get(f)
@@ -214,6 +246,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         for ex in rec.get("exports") or []:
             if ex.get("reexport"):
                 continue
+            if (path, ex.get("name") or "") in alias_cut or (path, ex.get("name") or "") in scaffold_cut:
+                continue          # a CUT export's body refs are cut noise — never rewired to the principal (review 53[5])
             src = export_piece.get((path, ex.get("name") or "")) or principal.get(path)
             if not src:
                 continue
@@ -273,7 +307,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         kind = ("fe" if pair else
                 "candidate" if any(p["candidate"] for p in pieces.values() if p["home"] == h) else
                 "entity" if h in slugs else "bucket")
-        rec = {"id": h, "kind": kind, "pieces": n}
+        rec = {"id": h, "kind": kind, "pieces": n,
+               "areas": len({p["area"] for p in pieces.values() if p["home"] == h and p.get("area")})}
         if pair:
             rec["pair"] = pair            # the backend twin — seats fe·X beside X, joins the two reads
         homes.append(rec)
