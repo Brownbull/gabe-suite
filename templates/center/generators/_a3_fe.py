@@ -41,7 +41,7 @@ from pathlib import Path
 from typing import Any
 
 from _a3_web import _detect_web_root          # the same web-root roster as the fetch arm
-from _a3_graft import _fe_home                # feature-dir → entity / bucket / candidate
+from _a3_graft import _fe_home, _fe_pair      # feature-dir → fe·entity (paired) / bucket / candidate
 
 EXTRACTOR = Path(__file__).with_name("_a3_fe_extract.mjs")
 
@@ -267,9 +267,16 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     by_rel: dict[str, int] = {}
     for e in edge_list:
         by_rel[e["rel"]] = by_rel.get(e["rel"], 0) + 1
-    homes = [{"id": h, "kind": "entity" if h in slugs else ("candidate" if any(
-        p["candidate"] for p in pieces.values() if p["home"] == h) else "bucket"), "pieces": n}
-        for h, n in sorted(by_home.items())]
+    homes = []
+    for h, n in sorted(by_home.items()):
+        pair = _fe_pair(h)
+        kind = ("fe" if pair else
+                "candidate" if any(p["candidate"] for p in pieces.values() if p["home"] == h) else
+                "entity" if h in slugs else "bucket")
+        rec = {"id": h, "kind": kind, "pieces": n}
+        if pair:
+            rec["pair"] = pair            # the backend twin — seats fe·X beside X, joins the two reads
+        homes.append(rec)
     for p in pieces.values():                          # emit-lean: a false flag is no flag
         if not p.get("candidate"):
             p.pop("candidate", None)

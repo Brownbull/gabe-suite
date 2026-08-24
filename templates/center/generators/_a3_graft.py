@@ -447,11 +447,13 @@ _FEAT2ENT = {"legal": "legal-consent", "recipes": "recipe"}
 
 
 def _fe_home(path: str, entity_slugs: frozenset[str]) -> tuple[str, bool]:
-    """Where a frontend piece belongs in the graph (P2b): an ENTITY slug when its
-    feature folds into one graft's domain model already draws, else an FE-native
-    BUCKET name. Returns (home, is_candidate) — is_candidate flags a feature
-    namespace with NO backend entity (a UI-only domain the model never named, worth
-    considering as a new entity — the frontend twin of entity-shape drift)."""
+    """Where a frontend piece belongs (P2b, re-keyed by the C SPLIT — operator ruling
+    2026-08-23): the frontend is a SEPARATE estate. A feature matching a backend entity
+    homes to ``fe·<entity>`` — a sibling entity PAIRED to its backend twin (the pairing
+    rides ``_fe_pair``), never folded into it (pantry measured 73% frontend / cooking
+    91% — one hull was unreadable). A feature the backend never modeled stays a
+    candidate under its own name; shared code keeps its buckets. Returns
+    (home, is_candidate)."""
     parts = path.split("/")
     rest = parts[parts.index("src") + 1:] if "src" in parts else []
     head = rest[0] if rest else ""
@@ -459,13 +461,19 @@ def _fe_home(path: str, entity_slugs: frozenset[str]) -> tuple[str, bool]:
         feat = rest[1]
         ent = _FEAT2ENT.get(feat, feat)
         if ent in entity_slugs:
-            return (ent, False)          # folds into the backend entity of the same name
+            return ("fe·" + ent, False)  # the backend twin exists → the PAIRED fe entity
         return (feat, True)              # a feature the backend never modeled → candidate entity
     if head in entity_slugs:
-        return (head, False)             # a top-level dir that IS an entity (e.g. auth/)
+        return ("fe·" + head, False)     # a top-level dir that IS an entity (e.g. auth/)
     if head == "design-system":
         return ("design-system", False)  # the shared component kit — its own bucket
     return ("app-shell", False)          # routes · lib · i18n · layout · loose types — structural
+
+
+def _fe_pair(home: str) -> str | None:
+    """The backend twin of a paired fe home (``fe·pantry`` → ``pantry``); None for
+    buckets and candidates. The pairing key every reader joins on."""
+    return home[3:] if home.startswith("fe·") else None
 
 
 def derive_frontend(wiring: dict[str, Any],

@@ -387,3 +387,5 @@
   #elegend .lgrow.lgk:hover{ background:var(--hov-bg); }
   #elegend .lgrow.lgoff{ opacity:.32; }
   #elegend .lgrow.lgoff .lglbl b{ text-decoration:line-through; }
+  #cfg .itog.wv{ width:auto; padding:2px 10px; font:700 10px/1.6 var(--font-mono); letter-spacing:.04em; }
+  #cfg .itog.wv.on{ color:var(--accent); border-color:var(--accent); }

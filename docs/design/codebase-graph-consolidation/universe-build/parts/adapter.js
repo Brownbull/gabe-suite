@@ -74,12 +74,19 @@ if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unkn
 /* FRONTEND pieces → nodes. Homes that are not L1 entities (buckets · candidate features) become synthetic
    clusters (their own colour band); every piece carries a det the card can read (file + lines) — honest-empty
    for the rest. A piece whose file fetches carries `screen` = the web node it ABSORBS (below, once links exist). */
-var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null, FE_HOME={};
+var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null, FE_HOME={}, FE_PAIR={};
 /* the DISPLAY name of an entity/home — frontend-only homes wear the `fe ·` identifier (batch 50);
-   the raw slug stays the KEY everywhere (CLUSTERS.name, ENT, EX, fleet data-attrs, panels). */
-window.__uniEntLabel=function(e){ return (FE_HOME[e]?"fe · ":"")+e; };
+   the raw slug stays the KEY everywhere (CLUSTERS.name, ENT, EX, fleet data-attrs, panels).
+   C-split homes are ALREADY named fe·<twin> in the feed — display just opens the dot. */
+window.__uniEntLabel=function(e){ if(e&&e.indexOf("fe·")===0) return "fe · "+e.slice(3);
+  return (FE_HOME[e]?"fe · ":"")+e; };
 if(_FE){
-  (_FE.homes||[]).forEach(function(h){ if(h.kind!=="entity"){ FE_HOME[h.id]=h.kind; if(_ents.indexOf(h.id)<0){ _ents.push(h.id); ENT[h.id]=FE_HOME_COL[h.kind]||"#8b5cf6"; } } });
+  (_FE.homes||[]).forEach(function(h){ if(h.kind==="entity") return;
+    FE_HOME[h.id]=h.kind; if(h.pair) FE_PAIR[h.id]=h.pair;
+    if(_ents.indexOf(h.id)<0){ _ents.push(h.id);
+      /* a PAIRED fe entity wears a TINT of its backend twin — the pairing is visible as family colour */
+      ENT[h.id]=(h.pair&&ENT[h.pair])?("#"+new T.Color(ENT[h.pair]).lerp(new T.Color("#ffffff"),0.38).getHexString())
+                                     :(FE_HOME_COL[h.kind]||"#8b5cf6"); } });
   _ents.forEach(function(e,i){ EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); if(EY[e]==null) EY[e]=0; if(EZ[e]==null) EZ[e]=0; });   // re-band with the new clusters
   _FE.pieces.forEach(function(p){ var kind=FE_KIND[p.kind]||p.kind; if(!KINDS[kind]){ _dropped++; return; }
     if(NIDS[p.id]) return;

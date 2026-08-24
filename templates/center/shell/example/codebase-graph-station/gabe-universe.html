@@ -533,6 +533,8 @@
   #elegend .lgrow.lgk:hover{ background:var(--hov-bg); }
   #elegend .lgrow.lgoff{ opacity:.32; }
   #elegend .lgrow.lgoff .lglbl b{ text-decoration:line-through; }
+  #cfg .itog.wv{ width:auto; padding:2px 10px; font:700 10px/1.6 var(--font-mono); letter-spacing:.04em; }
+  #cfg .itog.wv.on{ color:var(--accent); border-color:var(--accent); }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -751,12 +753,19 @@ if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unkn
 /* FRONTEND pieces → nodes. Homes that are not L1 entities (buckets · candidate features) become synthetic
    clusters (their own colour band); every piece carries a det the card can read (file + lines) — honest-empty
    for the rest. A piece whose file fetches carries `screen` = the web node it ABSORBS (below, once links exist). */
-var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null, FE_HOME={};
+var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null, FE_HOME={}, FE_PAIR={};
 /* the DISPLAY name of an entity/home — frontend-only homes wear the `fe ·` identifier (batch 50);
-   the raw slug stays the KEY everywhere (CLUSTERS.name, ENT, EX, fleet data-attrs, panels). */
-window.__uniEntLabel=function(e){ return (FE_HOME[e]?"fe · ":"")+e; };
+   the raw slug stays the KEY everywhere (CLUSTERS.name, ENT, EX, fleet data-attrs, panels).
+   C-split homes are ALREADY named fe·<twin> in the feed — display just opens the dot. */
+window.__uniEntLabel=function(e){ if(e&&e.indexOf("fe·")===0) return "fe · "+e.slice(3);
+  return (FE_HOME[e]?"fe · ":"")+e; };
 if(_FE){
-  (_FE.homes||[]).forEach(function(h){ if(h.kind!=="entity"){ FE_HOME[h.id]=h.kind; if(_ents.indexOf(h.id)<0){ _ents.push(h.id); ENT[h.id]=FE_HOME_COL[h.kind]||"#8b5cf6"; } } });
+  (_FE.homes||[]).forEach(function(h){ if(h.kind==="entity") return;
+    FE_HOME[h.id]=h.kind; if(h.pair) FE_PAIR[h.id]=h.pair;
+    if(_ents.indexOf(h.id)<0){ _ents.push(h.id);
+      /* a PAIRED fe entity wears a TINT of its backend twin — the pairing is visible as family colour */
+      ENT[h.id]=(h.pair&&ENT[h.pair])?("#"+new T.Color(ENT[h.pair]).lerp(new T.Color("#ffffff"),0.38).getHexString())
+                                     :(FE_HOME_COL[h.kind]||"#8b5cf6"); } });
   _ents.forEach(function(e,i){ EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); if(EY[e]==null) EY[e]=0; if(EZ[e]==null) EZ[e]=0; });   // re-band with the new clusters
   _FE.pieces.forEach(function(p){ var kind=FE_KIND[p.kind]||p.kind; if(!KINDS[kind]){ _dropped++; return; }
     if(NIDS[p.id]) return;
@@ -1163,8 +1172,9 @@ function updateConnectors(){ if(!connGroup) return;
   links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;   // EVERY link → its kind's connector wire
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
     if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
-    var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;
+    if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return; var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;
     connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null, (window.__uniHovLink===l)); });
+  if(window.__uniDrawBundles) __uniDrawBundles(connGroup);
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
    nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */
@@ -1176,7 +1186,7 @@ function buildTransports(){ if(!moverGroup||!SHIPSREADY) return;
   while(moverGroup.children.length){ moverGroup.remove(moverGroup.children.pop()); }
   MOVERS=[]; if(!CFG.transports) return;
   var sNose=craftNose(INTC.shuttle), tNose=craftNose(INTC.testship);
-  links.forEach(function(l){ if(!linkCross(l)) return;
+  links.forEach(function(l){ if(!linkCross(l)) return; if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))) return;
     var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;
     if((_sn&&!_nodeVisibleFn(_sn))||(_tn&&!_nodeVisibleFn(_tn))||!_sv.routes||!_tv.routes) return;
     if(HL.on && HL.links && !HL.links.has(l)) return;   // a highlight owns the roads — shuttles fly the lit path only   // fleet: hidden or routes-off entity/cluster (node-level — sub-aware)
@@ -1282,6 +1292,9 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     while(left2.length){ var last2=ord[ord.length-1], best2=-1, bi2=0;
       left2.forEach(function(s,i){ var w=wOf2(last2,s); if(w>best2){ best2=w; bi2=i; } }); ord.push(left2.splice(bi2,1)[0]); }
     var cnt2={}; nodes.forEach(function(nn){ cnt2[nn.ent]=(cnt2[nn.ent]||0)+1; });
+    if(typeof FE_PAIR!=="undefined"){ Object.keys(FE_PAIR).forEach(function(fh){   // C split: the ring seats fe·X right AFTER X
+      var bi=ord.indexOf(FE_PAIR[fh]), fi=ord.indexOf(fh);
+      if(bi>=0&&fi>=0&&fi!==bi+1){ ord.splice(fi,1); bi=ord.indexOf(FE_PAIR[fh]); ord.splice(bi+1,0,fh); } }); }
     var arcOf={}, circ=0; _ents.forEach(function(s){ arcOf[s]=Math.max(260, 2.8*(30+9*Math.sqrt(cnt2[s]||0))); circ+=arcOf[s]; });   // per-entity arc ≈ 2.8× its nominal radius, floored so two TINY neighbours still sit ≥250 apart
     var R=Math.max(430, circ/(2*Math.PI));
     /* PROPORTIONAL arcs (batch 48): each entity owns an arc sized to ITS radius — a 625-node frontend-folded
@@ -1289,6 +1302,8 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     var acc=0; ord.forEach(function(e){ var a=(acc+arcOf[e]/2)/R*(2*Math.PI*R/circ); P[e]={x:Math.cos(a)*R, y:0, z:Math.sin(a)*R}; acc+=arcOf[e]; });
   } else {                                               // FORCE — repulsion 13000/d² + FK spring rest 230, SIZE-AWARE (batch 48)
     var E2=_l1pairs();
+    if(typeof FE_PAIR!=="undefined") Object.keys(FE_PAIR).forEach(function(fh){   // C split: fe·X rides a spring to X — the pair sits adjacent
+      if(P[fh]&&P[FE_PAIR[fh]]) E2.push([fh, FE_PAIR[fh], 8]); });
     var cntF={}; nodes.forEach(function(nn){ cntF[nn.ent]=(cntF[nn.ent]||0)+1; });
     var radF=function(s){ return 30+9*Math.sqrt(cntF[s]||0); };   // the entity's nominal radius (RENT formula, pre-spread)
     for(var it=0; it<240; it++){
@@ -1310,6 +1325,10 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
    D(a,b) ≥ 1.15·(R_a+R_b) with R the live RENT formula. The frontend fold made cooking a 625-node hull
    (R≈203) whose far-side planets sat nearer a neighbour's anchor (bleed 48%); the force balance alone
    cannot promise the floor, a deterministic pairwise relaxation can (60 sweeps, converges in a few). */
+window.__uniCamFit=function(ms){ try{ if(typeof Graph==="undefined"||!Graph) return;   // frame the WHOLE field: 19 clusters outgrew the fixed 780 (review 52[6])
+  var maxR=0; _ents.forEach(function(e){ var a=Math.hypot(EX[e]||0,EY[e]||0,EZ[e]||0)+(RENT[e]||60)*1.6; if(a>maxR) maxR=a; });
+  var d=Math.max(780, maxR*1.35+180), cur=Graph.camera().position, L=Math.hypot(cur.x,cur.y,cur.z)||1;
+  Graph.cameraPosition({x:cur.x/L*d, y:cur.y/L*d, z:cur.z/L*d},{x:0,y:0,z:0}, ms==null?600:ms); }catch(e){} };
 function __uniRelaxHulls(){ var n=_ents.length; if(n<2 || __chainMode || CFG.entLayout==="ring") return;   // ring/chain are sized by construction (the ring's proportional arcs keep it a circle)
   var cnt={}; nodes.forEach(function(nn){ cnt[nn.ent]=(cnt[nn.ent]||0)+1; });
   /* R = the SETTLED radius estimate, not the nominal one: measured (gustify, 888 planets) hulls settle at
@@ -1541,6 +1560,7 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
       links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;
         var _s=NIDS[lid(l.source)], _t=NIDS[lid(l.target)];
         if((_s&&(!_nodeVisibleFn(_s)||!visN(_s).wires))||(_t&&(!_nodeVisibleFn(_t)||!visN(_t).wires))) return;
+        if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return;   // an R-hidden wire is unpickable UNLESS it is lit (review 52[1])
         var dd=_raySegDist(rc.ray, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z));
         if(dd<WTH && (!wbest||dd<wbest.d)) wbest={d:dd, l:l}; }); }
     if(wbest){ window.__uniSelLink=wbest.l;                                  // the picked wire GLOWS (hf boost in updateConnectors)
@@ -1659,6 +1679,7 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
 function tuneLinkForce(){ if(typeof Graph==="undefined"||!Graph) return;
   var lf=Graph.d3Force("link"); if(!lf||!lf.distance) return;
   lf.distance(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
+    if(window.UNIWIRE&&UNIWIRE.r4&&l.rel==="renders"&&_SOLEP&&_SOLEP[lid(l.target)]) return 14;   // R4: sole children hug their parent
     return (s&&t&&s.ent!==t.ent)?280:40; });
   lf.strength(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];   // soft springs — the anchors own the geometry
     return (s&&t&&s.ent!==t.ent)?0.04:0.12; }); }
@@ -2515,6 +2536,62 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });
 };
 
+/* ── WIRE VIEW (batch 52) — the R options as LIVE config toggles: each changes only the INK
+   (and R4 one spring family); every hidden wire keeps its layout spring, so structure survives
+   as proximity. R1 = structure at rest (fe flow wires off) · R2 = utility demotion (fecall into
+   fan-in≥15 sinks off) · R3 = bundling (fe wires collapse to one line per cluster-pair, brightness
+   = count) · R4 = tree containment (sole-parent renders wires off, those children spring TIGHT). ── */
+window.UNIWIRE={ r1:false, r2:false, r3:false, r4:false };
+var _UTILSET=null, _SOLEP=null;
+function _wireSets(){ if(_UTILSET) return; _UTILSET={}; _SOLEP={};
+  var fin={}, rin={};
+  links.forEach(function(l){ if(l.rel==="fecall") fin[lid(l.target)]=(fin[lid(l.target)]||0)+1;
+    else if(l.rel==="renders") rin[lid(l.target)]=(rin[lid(l.target)]||0)+1; });
+  Object.keys(fin).forEach(function(id){ if(fin[id]>=15) _UTILSET[id]=1; });
+  Object.keys(rin).forEach(function(id){ if(rin[id]===1) _SOLEP[id]=1; });
+}
+var _FE_FLOW={ renders:1, fecall:1, uses:1, imports:1 };   // the fe FLOW rels (reads = stores stays inked; typed is T-held)
+window.__uniRelHide=function(l){ if(!l||!l.fe) return false;
+  _wireSets();
+  if(UNIWIRE.r3) return true;                                        // bundles replace every per-piece fe wire
+  if(UNIWIRE.r1 && _FE_FLOW[l.rel]) return true;
+  if(UNIWIRE.r2 && l.rel==="fecall" && _UTILSET[lid(l.target)]) return true;
+  if(UNIWIRE.r4 && l.rel==="renders" && _SOLEP[lid(l.target)]) return true;
+  return false; };
+window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
+  var by={}, cen={}, cnt={};
+  var gk=function(n){ return n.ent+"|"+(n.sub||""); };
+  nodes.forEach(function(n){ var p=_npos[n.id]; if(!p) return; var k=gk(n);
+    if(!cen[k]) cen[k]={x:0,y:0,z:0}; cen[k].x+=p.x; cen[k].y+=p.y; cen[k].z+=p.z; cnt[k]=(cnt[k]||0)+1; });
+  Object.keys(cen).forEach(function(k){ cen[k].x/=cnt[k]; cen[k].y/=cnt[k]; cen[k].z/=cnt[k]; });
+  links.forEach(function(l){ if(!l.fe) return; var s=NIDS[lid(l.source)], tt=NIDS[lid(l.target)]; if(!s||!tt) return;
+    if(!(_nodeVisibleFn(s)&&_nodeVisibleFn(tt)&&visN(s).wires&&visN(tt).wires)) return;
+    var ka=gk(s), kb=gk(tt); if(ka===kb) return;
+    var key=ka<kb?ka+"→"+kb:kb+"→"+ka; by[key]=(by[key]||0)+1; });
+  Object.keys(by).sort().forEach(function(key){ var ab=key.split("→"), a=cen[ab[0]], b=cen[ab[1]]; if(!a||!b) return;
+    var geo=new T.BufferGeometry().setFromPoints([new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z)]);
+    var op=Math.min(0.85, 0.18+by[key]/28);                          // brightness = bundle size (count on hover is R3 v2)
+    var mat=new T.LineBasicMaterial({ color:0x8b83f5, transparent:true, opacity:op });
+    var ln=new T.Line(geo, mat); ln.userData.kind="bundle"; ln.userData.__bundle=by[key]; grp.add(ln); });
+};
+
+window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
+  if(!body||document.getElementById("wireview")) return;
+  var g=document.createElement("div"); g.className="grp"; g.id="wireview";
+  g.innerHTML='<div class="grplbl" title="the R lab — each toggle changes only the INK on the live graph; hidden wires keep their layout springs, so structure survives as position. Combine freely.">WIRE VIEW</div>';
+  var row=document.createElement("div"); row.className="cfgrow";
+  var DEF=[["r1","R1","structure at rest — hides the fe FLOW wires (renders · fecall · uses · imports); fk/touches/nests/bridge/stores stay inked. The render tree survives as proximity."],
+           ["r2","R2","utility demotion — hides only fecall wires INTO fan-in≥15 sinks (cx · client · mockupAssets): the everything-calls-the-util fans that carry no map information."],
+           ["r3","R3","bundling — every fe wire collapses to ONE line per cluster-pair; brightness = how many wires ride the bundle."],
+           ["r4","R4","tree containment — sole-parent renders wires hidden and those children spring TIGHT beside their parent; only SHARED components keep render wires (reuse is the signal)."]];
+  DEF.forEach(function(d){ var b=document.createElement("button"); b.className="itog wv"; b.id="wv-"+d[0];
+    b.title=d[2]; b.textContent=d[1];
+    b.classList.toggle("on", !!UNIWIRE[d[0]]);                    // a config rebuild must not lose the lit state (review 52[3])
+    b.onclick=function(){ UNIWIRE[d[0]]=!UNIWIRE[d[0]]; b.classList.toggle("on", UNIWIRE[d[0]]);
+      if(d[0]==="r4"){ try{ tuneLinkForce(); if(typeof Graph!=="undefined"&&Graph) Graph.d3ReheatSimulation(); }catch(e){} }
+      try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
+    row.appendChild(b); });
+  g.appendChild(row); body.appendChild(g); };
 /* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
    a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
 window.__uniGoto=function(id){ if(!id) return;
@@ -2734,7 +2811,7 @@ function build(){
     .numDimensions(3).cooldownTicks(240).onEngineTick(updateClusters)
     .onEngineStop(function(){ updateClusters(true); if(window.__uniSettleDone) window.__uniSettleDone();
       if(window.__drive && !window.__driveDone){ window.__driveDone=true;   // regression: flip shape AFTER settle (the path that was broken)
-        CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); buildClusters(); updateClusters(true); }
+        CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); buildClusters(); updateClusters(true); }
       if(window.__panel){ var pn=nodes.find(function(x){return x.id===window.__panel;}); if(pn){ SEL={kind:"node",data:pn}; showPanel(pn); refreshEncSel(); } }
       if(window.__link){ var pr=window.__link.split(">"); var ll=links.find(function(x){ return (x.source.id||x.source)===pr[0] && (x.target.id||x.target)===pr[1]; }); if(ll){ SEL={kind:"link",data:ll}; showLinkPanel(ll); refreshEncSel(); } } });
   try{ Graph.d3Force("layer", zForce); }catch(e){}
@@ -2745,7 +2822,7 @@ function build(){
   moverGroup=new T.Group(); Graph.scene().add(moverGroup);   // inter-entity transport shuttles live here
   setTimeout(function(){ Graph.cameraPosition(window.__cam==="top"?{x:0,y:520,z:2}:DEF,{x:0,y:0,z:0},700); },1800);   // ?cam=top → the above-view (defense/attack/conflict from overhead)
 }
-document.getElementById("reset").onclick=function(){ Graph.cameraPosition(DEF,{x:0,y:0,z:0},600); };
+document.getElementById("reset").onclick=function(){ if(window.__uniCamFit) __uniCamFit(600); else Graph.cameraPosition(DEF,{x:0,y:0,z:0},600); };
 
 /* ── CONFIG PANEL — draggable · minimizable · icons + pills (no dropdowns; every group is ≤3 opts) ── */
 var ICO={
@@ -2827,7 +2904,7 @@ function dragCfg(){ var c=document.getElementById("cfg"), h=document.getElementB
     window.addEventListener("mousemove",function(e){ if(!_drag.on) return; var el=document.getElementById("cfg");
       el.style.left=Math.max(4,Math.min(window.innerWidth-40,e.clientX-_drag.ox))+"px"; el.style.top=Math.max(4,Math.min(window.innerHeight-30,e.clientY-_drag.oy))+"px"; });
     window.addEventListener("mouseup",function(){ _drag.on=false; }); } }
-buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);
+buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet(); if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); if(window.__uniCamFit) __uniCamFit(0); }, 0);
 
 /* ── ENCODING EXPLORER (top-left) — experiment across setups + channels; NOT saved to CONFIG ── */
 var EL_CH=[["mass","mass"],["glow","glow"],["halo","halo"],["sat","god"],["pulse","pulse"],["method","method"]];
@@ -3072,7 +3149,8 @@ var KINDCARD=(function(){
      pieces (c4.fe). Frontend section = home (entity / shared bucket / candidate feature) · absorbed screen + fetch
      sites · a module's exports; then the shared identity + file:lines rows. Honest-empty: no tests/doc captured yet. */
   function feSec(n){ var d=n.det||{}, hk=(typeof FE_HOME!=="undefined"&&FE_HOME[n.ent])||null, rows=[];
-    rows.push(kv("entity","home", n.ent+(hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
+    var _hl=(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent);
+    rows.push(kv("entity","home", _hl+(hk==="fe"?(" (frontend of "+((typeof FE_PAIR!=="undefined"&&FE_PAIR[n.ent])||"?")+")"):hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
     if(n.screen) rows.push(kv("web","screen", (n.sites||0)+" fetch site(s) — absorbed "+n.screen.replace(/^web:/,"")));
     if(d.exports&&d.exports.length) rows.push(kv("function","exports", d.exports.slice(0,12).join(" · ")+(d.exports.length>12?" · +"+(d.exports.length-12):"")));
     rows.push(E("div",{class:"doc"}, KINDTIP[n.kind]||""));   // ONE meaning per kind — the Elements rows + the card share it
@@ -3216,7 +3294,7 @@ var KINDCARD=(function(){
     openPanel(); }
   function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
     var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
-    _phead(sub,"CLUSTER · "+ent,"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    _phead(sub,"CLUSTER · "+(window.__uniEntLabel?__uniEntLabel(ent):ent),"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
     pb.append(makeupSec(mem));
     var ins=E("div",{class:"sec"}, sechd("bubble","Inside — elements", mem.length, false,
@@ -3233,7 +3311,7 @@ var KINDCARD=(function(){
   function aboveSec(n){ if(!n||!n.ent) return null;
     var w=E("div",{class:"sec"}, sechd("nav","Above"));
     if(n.sub) w.append(navRow("__core","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }, "up"));
-    w.append(navRow(null,"entity · "+n.ent, null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
+    w.append(navRow(null,"entity · "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent), null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
     w.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     return w; }
   Object.keys(C).forEach(function(k){ var base=C[k];
@@ -3446,7 +3524,7 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   ["iso","sub","entNodeR","entTubeR","subNodeR","subTubeR","entRes","subRes","every"].forEach(function(k){ var v=q.get("w"+k); if(v!=null) WRAPCFG[k]=+v; });
   var ep=q.get("enc"); if(ep&&PRESETS[ep]){ applyPreset(ep); buildExpl(); }
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
-  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();
+  window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
 preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

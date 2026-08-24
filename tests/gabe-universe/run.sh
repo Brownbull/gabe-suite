@@ -286,7 +286,7 @@ check('(CFG.zCfl&&visN(n).zCfl)? cflSpec(' in page and 'CFG.zSat&&visN(n).zSat) 
 check('var def=CFG.zDef? placeFleet(' not in page, "REGRESSION: a fleet-zone gate ignores the fleet panel")
 check('k:"zDef"' in page and 'k:"routes"' in page and 'icon:"truck"' in page,
       "zones/routes matrix columns missing")
-check('__uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
+check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
       "the URL-preset path rebuilds the config without re-syncing the fleet masters-dim")
 # batch 11-C: the sim feed + presets row (the in-flight seam must exist before that batch, or it debugs a phantom)
 check('<script src="./sim.data.js"></script>' in page,
@@ -416,7 +416,7 @@ check('class="pnav"' in page or "class:\"pnav\"" in page or '{class:"pnav"}' in 
       "clickable panel nav rows (.pnav) are gone")
 check('if(e.key==="Escape"){ __uniHLClear();' in page and 'if(window.__uniPanelAll) __uniPanelAll(); }' in page,
       "Esc must clear the selection AND land on the Everything panel")
-check('setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);' in page,
+check('setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); if(window.__uniCamFit) __uniCamFit(0); }, 0);' in page,
       "boot must open the Everything panel (deferred one tick past the card IIFE)")
 check('Graph.onBackgroundClick(window.__uniBgClick)' in page,
       "background clicks are not wired to the hull picker")
@@ -533,7 +533,7 @@ check('var FE_KIND={ "fe-type":"type" };' in page and 'var FE_REL={ "uses-hook":
       "the feed→spike kind/rel vocabulary maps are gone")
 check('var _FE=(_C4.fe&&_C4.fe.pieces&&_C4.fe.pieces.length)?_C4.fe:null' in page,
       "the fe fold must gate on a NON-EMPTY pieces list (honest-empty feed = no fold)")
-check('ENT[h.id]=FE_HOME_COL[h.kind]' in page and 'var FE_HOME_COL={ bucket:' in page,
+check('ENT[h.id]=(h.pair&&ENT[h.pair])?' in page and 'var FE_HOME_COL={ bucket:' in page,
       "non-entity homes (buckets · candidate features) must become their own coloured clusters")
 check('var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]];' in page,
       "fe wires must be read as COMPACT index triples over fe.pieces")
@@ -588,7 +588,7 @@ check('_seen.reduce(function(a,gk)' in page, "search group headers can fragment 
 check('#jrn .jrnrow.on .jrnfe{ color:#fff; }' in page, "the selected journey row's fe chip lost its contrast override")
 
 # ── 10w. batch 50: fe· home identifier · FE community/usecase clusters · scaffold cut · controls trim ──
-check('window.__uniEntLabel=function(e){ return (FE_HOME[e]?"fe · ":"")+e; };' in page,
+check('window.__uniEntLabel=function(e){ if(e&&e.indexOf("fe·")===0) return "fe · "+e.slice(3);' in page,
       "the fe-home display identifier is gone")
 check('__uniEntLabel(e):e' in page and '__uniEntLabel(ent):ent' in page and '__uniEntLabel(label):label' in page,
       "an entity-name surface (fleet / panels / hull sprite) lost the fe· prefix")
@@ -613,6 +613,38 @@ check('class="lghd2"' in page and '{t:"hd",l:"frontend"}' in page and '{t:"hd",l
       "the legend Types tab lost its frontend/backend groups")
 check('.lgrow.lgoff{ opacity:.32; }' in page and 'data-lgk=' in page,
       "a hidden kind's legend row no longer dims")
+
+# ── 10y. batch 52: the C SPLIT (paired fe· entities) + the WIRE VIEW R-lab in the config ──
+check('FE_PAIR={}' in page and 'if(h.pair) FE_PAIR[h.id]=h.pair;' in page,
+      "the fe·X pairing map is gone (nothing would seat a split home beside its backend twin)")
+check('lerp(new T.Color("#ffffff"),0.38)' in page,
+      "a paired fe entity lost its TINT of the backend twin's colour (the pairing must be visible as family)")
+check('E2.push([fh, FE_PAIR[fh], 8]);' in page and 'ord.splice(bi+1,0,fh);' in page,
+      "pair seating is gone (force spring + ring adjacency)")
+check('return "fe · "+e.slice(3);' in page, "a fe· home's display name lost its opened dot")
+check('window.UNIWIRE={ r1:false, r2:false, r3:false, r4:false };' in page
+      and 'window.__uniRelHide=function(l)' in page
+      and 'if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return; var _whf=' in page,
+      "the WIRE VIEW rel-hide gate (with the light-on-demand exemption) is gone from the connector build")
+check('window.__uniDrawBundles=function(grp)' in page and 'if(window.__uniDrawBundles) __uniDrawBundles(connGroup);' in page
+      and 'userData.kind="bundle"' in page,
+      "R3 bundling is gone (one line per cluster-pair, brightness = count)")
+check('UNIWIRE.r4&&l.rel==="renders"&&_SOLEP' in page and 'return 14;' in page,
+      "R4 lost its tight sole-child spring in tuneLinkForce")
+check('window.__uniAddWireView=function()' in page and 'id="wireview"' in page.replace("'",'"')
+      and '__uniAddWireView();' in page,
+      "the WIRE VIEW config group is not built at boot / preset re-tabs")
+
+# ── 10z. batch 52 review fixes (7 confirmed → 6 distinct) ──
+check(page.count('__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))') >= 3,
+      "the light-on-demand contract is gone — R-hidden wires must DRAW when lit and stay unpickable/unflown otherwise (draw + picker + transports)")
+check('b.classList.toggle("on", !!UNIWIRE[d[0]]);' in page, "WIRE VIEW buttons lose their lit state on a config rebuild")
+check('try{ buildTransports(); }catch(e){}' in page.split('wv-')[1][:600],
+      "a WIRE VIEW flip no longer re-derives the shuttles (ghosts would fly hidden wires)")
+check('window.__uniCamFit=function(ms)' in page and '__uniCamFit(600); else Graph.cameraPosition(DEF' in page
+      and '__uniCamFit(0); }, 0);' in page,
+      "the camera no longer fits the live field (19 clusters outgrew the fixed 780) on boot + reset")
+check('" (frontend of "+' in page.replace("'",'"'), "a paired piece's card no longer names its backend twin")
 
 # ── 11. every remaining {{TOKEN}} is a token the GLOB loop fills on EVERY page (HUB_TITLE/SYNC_AGE are
 #        PER_FILE / unused here → deliberately EXCLUDED so an accidental orphan is caught, not waved through) ──

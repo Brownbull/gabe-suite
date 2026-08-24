@@ -142,7 +142,7 @@ assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
                     'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); assignSub(CFG.coreBy); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){}', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
-text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n', 1)
+text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
 
 # ── batch 9: typed link rest-lengths (intra 40 / cross-entity 280) — the default rest≈30 springs
 #    are what collapsed the entities into one mesh; and the unbounded -150 charge BALLOONS each
@@ -188,11 +188,11 @@ text = text.replace(OLD_LNCASE,
 OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'
 assert OLD_PRESET in text, "URL-preset buildCfg anchor missing"
 text = text.replace(OLD_PRESET,
-  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
+  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
 OLD_DRIVE = 'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); buildClusters(); updateClusters(true); }'
 assert OLD_DRIVE in text, "?drive buildCfg anchor missing"
 text = text.replace(OLD_DRIVE,
-  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); buildClusters(); updateClusters(true); }', 1)
+  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); buildClusters(); updateClusters(true); }', 1)
 
 # (orbit-around-click is now a pointerdown re-pivot in __uniSetupOrbit — batch 7; the old click-based
 #  approach never fired on a drag, so it is not re-applied here.)
@@ -402,6 +402,17 @@ text = text.replace(OLD_LSPR, '''function labelSprite(txt, size, y, col){ var cv
   var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false}));
   s.scale.set(34*(cv.width/256),8.5,1); if(y!=null) s.position.y=y; return s; }''', 1)
 
+# review 52[4]: shuttles never fly a WIRE VIEW-hidden wire (unless it is lit — the light-on-demand contract)
+OLD_TRLOOP = 'links.forEach(function(l){ if(!linkCross(l)) return;'
+assert OLD_TRLOOP in text, "buildTransports loop anchor missing"
+text = text.replace(OLD_TRLOOP,
+  'links.forEach(function(l){ if(!linkCross(l)) return; if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))) return;', 1)
+
+# review 52[6]: the reset + boot camera FIT the live field (19 clusters outgrew the fixed 780)
+OLD_RESET = 'document.getElementById("reset").onclick=function(){ Graph.cameraPosition(DEF,{x:0,y:0,z:0},600); };'
+assert OLD_RESET in text, "reset handler anchor missing"
+text = text.replace(OLD_RESET, 'document.getElementById("reset").onclick=function(){ if(window.__uniCamFit) __uniCamFit(600); else Graph.cameraPosition(DEF,{x:0,y:0,z:0},600); };', 1)
+
 OLD_CLBL = 'c.lbl=addObj(labelSprite(label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));'
 assert OLD_CLBL in text, "cluster label sprite anchor missing"
 text = text.replace(OLD_CLBL, 'c.lbl=addObj(labelSprite((level==="ent"&&window.__uniEntLabel)?__uniEntLabel(label):label, level==="ent"?34:24, null, level==="ent"?color:"#c9d3e6"));', 1)
@@ -433,7 +444,7 @@ text = text.replace(OLD_LGBIND, OLD_LGBIND + """
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
 assert OLD_CWCALL in text, "connectorWire call anchor missing"
 text = text.replace(OLD_CWCALL,
-  "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });", 1)
+  "if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return; connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });\n  if(window.__uniDrawBundles) __uniDrawBundles(connGroup);", 1)
 
 # batch 35 (after the hf call exists): thread the endpoint ENTITY colors into every wire
 OLD_CALL2 = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1)); });"
@@ -460,9 +471,9 @@ text = text.replace(OLD_TRV,
   '    if(HL.on && HL.links && !HL.links.has(l)) return;   // a highlight owns the roads — shuttles fly the lit path only', 1)
 
 # panel boot + master-dim sync on every config change
-OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab();\n'
+OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n'
 assert OLD_BOOTCFG in text, "boot buildCfg anchor missing (batch-11 fleet boot)"
-text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
+text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
 OLD_APPLYHEAD = 'function applyCfg(grp){ if(grp==="bubble"'
 assert OLD_APPLYHEAD in text, "applyCfg head anchor missing"
 text = text.replace(OLD_APPLYHEAD,
@@ -503,9 +514,9 @@ text = text.replace(OLD_CHIP,
   '      return el; };', 1)
 
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
-OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniBuildFleet) __uniBuildFleet();'
+OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();'
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
-text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);', 1)
+text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); if(window.__uniCamFit) __uniCamFit(0); }, 0);', 1)
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")

@@ -76,11 +76,13 @@ check(fe["stats"]["unresolved"].get("scaffold") == 1,
       "RecipeCard's ref to the cut ScorePreviewSpike export must COUNT under unresolved.scaffold — never rewire to the principal")
 check("Primary" not in kind and "index" not in kind, "no piece for a story export or a barrel")
 # ── homing ─────────────────────────────────────────────────────────────────────────────
-check(home.get("RecipeCard") == "recipe" and home.get("useRecipe") == "recipe", "features/recipe → the recipe entity")
+check(home.get("RecipeCard") == "fe·recipe" and home.get("useRecipe") == "fe·recipe", "features/recipe → the PAIRED fe·recipe entity (the C split — never folded into the backend twin)")
 check(home.get("Badge") == "design-system", "design-system → its own shared bucket")
 check(home.get("ThemeContext") == "app-shell" and home.get("router") == "app-shell", "store/ + app/ → app-shell")
-check({h["id"]: h["kind"] for h in fe["homes"]} == {"app-shell": "bucket", "design-system": "bucket", "recipe": "entity"},
-      f"homes carry their kind (entity / bucket) ({fe['homes']})")
+check({h["id"]: h["kind"] for h in fe["homes"]} == {"app-shell": "bucket", "design-system": "bucket", "fe·recipe": "fe"},
+      f"homes carry their kind (fe / bucket / candidate) ({fe['homes']})")
+check(next(h for h in fe["homes"] if h["id"] == "fe·recipe").get("pair") == "recipe",
+      "a paired fe home must NAME its backend twin (the join key every reader uses)")
 # ── wires: every rel, resolved through bindings (barrel + alias followed) ──────────────
 E = {(fe["pieces"][a]["name"], fe["pieces"][b]["name"]): r for a, b, r in fe["edges"]}
 check(E.get(("RecipeCard", "Badge")) == "renders", "JSX tag → renders (through the @design-system alias)")

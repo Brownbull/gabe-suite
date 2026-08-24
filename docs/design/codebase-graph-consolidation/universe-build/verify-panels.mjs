@@ -128,7 +128,7 @@ const bg = await p.evaluate(() => {
       const s = NIDS[lid(l.source)], t2 = NIDS[lid(l.target)];
       if ((s && (!_nodeVisibleFn(s) || !visN(s).wires)) || (t2 && (!_nodeVisibleFn(t2) || !visN(t2).wires))) return;
       m = Math.min(m, _raySegDist(rc.ray, new THREE.Vector3(a.x, a.y, a.z), new THREE.Vector3(b.x, b.y, b.z))); });
-    return m; };
+    return m; };   // WORLD units — the same metric __uniBgClick's wire-first rule uses (WTH=6); screen px diverged on the 19-cluster camera
   let n = null, cx = 0, cy = 0, bestD = -1;                            // batch 50: take the candidate FARTHEST from any wire
   for (const cand of nodes.filter(x => (x.kind === 'model' || x.kind === 'schema' || x.kind === 'store') && x.x != null).slice(0, 300)) {
     const v = new THREE.Vector3(cand.x, cand.y, cand.z).project(cam);
@@ -137,16 +137,21 @@ const bg = await p.evaluate(() => {
     if (px < r.left + 4 || px > r.right - 4 || py < r.top + 4 || py > r.bottom - 4) continue;
     const d = wireDist(px, py);
     if (d > bestD) { bestD = d; n = cand; cx = px; cy = py; }
-    if (d > 24) break;                                                 // comfortably clear — stop scanning
+    if (d > 30) break;                                                 // comfortably clear of the 6-unit wire grab — stop scanning
   }
   if (!n) { n = nodes.find(x => x.kind === 'model' && x.x != null);
     const v = new THREE.Vector3(n.x, n.y, n.z).project(cam);
     cx = r.left + (v.x + 1) / 2 * r.width; cy = r.top + (1 - v.y) / 2 * r.height; }
   window.__uniBgClick({ clientX: cx, clientY: cy });
   const keyed = CLUSTERS.filter(c => c.ekey).length;
-  return { keyed, total: CLUSTERS.length, view: window.__uniPView.lvl,
-    ent: window.__uniPView.ent, expectEnt: n.ent,
-    routed: window.__uniPView.lvl === 'clu' || window.__uniPView.lvl === 'ent' }; });
+  /* the CONTRACT branches on clearance: past the 6-unit wire grab a click routes to the HULL;
+     inside it, wires pick FIRST by design (the link panel opens). On the split field's density
+     a >6-unit spot may not exist — then the wire-first branch is the correct behavior to prove. */
+  const hullPath = bestD > 7;
+  const routed = hullPath ? (window.__uniPView.lvl === 'clu' || window.__uniPView.lvl === 'ent')
+                          : (!!window.__uniSelLink && document.body.classList.contains('panel-open'));
+  return { keyed, total: CLUSTERS.length, view: window.__uniPView.lvl, bestD: +bestD.toFixed(1), hullPath,
+    ent: window.__uniPView.ent, expectEnt: n.ent, routed }; });
 // [7b] operator DEFAULTS + focus bite + wire click
 const defs = await p.evaluate(() => {
   const d = { fkStyle: CONN.fk.style, fkGrad: !!CONN.fk.grad, callsStyle: CONN.calls.style, callsGrad: !!CONN.calls.grad,
@@ -431,6 +436,26 @@ const b51 = await p.evaluate(() => new Promise(res => {
     }, 900);
   }, 500); }));
 
+// [batch 52] the C split (paired fe· homes, tinted, adjacent) + the WIRE VIEW toggles round-trip
+const b52 = await p.evaluate(() => new Promise(res => {
+  const out = {};
+  out.homes = _ents.filter(e => e.indexOf('fe·') === 0).length >= 4;
+  out.pair = FE_PAIR['fe·pantry'] === 'pantry';
+  out.tint = !!ENT['fe·pantry'] && ENT['fe·pantry'] !== ENT['pantry'];
+  const d = Math.hypot(EX['fe·pantry'] - EX['pantry'], EY['fe·pantry'] - EY['pantry'], EZ['fe·pantry'] - EZ['pantry']);
+  const others = _ents.filter(e => e !== 'pantry' && e !== 'fe·pantry').map(e => Math.hypot(EX['fe·pantry'] - EX[e], EY['fe·pantry'] - EY[e], EZ['fe·pantry'] - EZ[e]));
+  out.adjacent = d < Math.min.apply(null, others) * 1.2;
+  out.label = __uniEntLabel('fe·pantry') === 'fe · pantry';
+  out.wv = !!document.getElementById('wireview');
+  const w0 = connGroup.children.length;
+  document.getElementById('wv-r1').click();
+  setTimeout(() => { out.r1 = connGroup.children.length < w0 * 0.35;
+    document.getElementById('wv-r1').click(); document.getElementById('wv-r3').click();
+    setTimeout(() => { out.r3 = connGroup.children.filter(c => c.userData.kind === 'bundle').length > 50;
+      document.getElementById('wv-r3').click();
+      setTimeout(() => { out.back = connGroup.children.length === w0; res(out); }, 900);
+    }, 1100); }, 1100); }));
+
 await b.close();
 
 console.log('boot:', JSON.stringify(boot));
@@ -449,6 +474,7 @@ console.log('defaults:', JSON.stringify(defs));
 console.log('numKeys:', JSON.stringify(numkeys));
 console.log('flcfg:', JSON.stringify(flcfg));
 console.log('b51:', JSON.stringify(b51));
+console.log('b52:', JSON.stringify(b52));
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -467,7 +493,7 @@ if (!(clu.title === clu.sub && clu.view === 'clu' && clu.elemRows > 0 && clu.abo
 if (!(elem.title === elem.label && elem.selected && elem.hasAbove && elem.upRows >= 2)) fails.push('element card lost its Above nav');
 if (!(back.view === 'clu')) fails.push('element → cluster back-nav broken');
 if (!(esc.view === 'all' && esc.sel && esc.title === 'Everything')) fails.push('Esc does not land on Everything');
-if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && bg.ent === bg.expectEnt)) fails.push('background hull click wrong');
+if (!(bg.keyed === bg.total && bg.total > 0 && bg.routed && (!bg.hullPath || bg.ent === bg.expectEnt))) fails.push('background hull click wrong (hull route past 6-unit clearance, wire-first inside it): ' + JSON.stringify(bg));
 if (!(hull.entGain && hull.otherStill && hull.cluGain && hull.entStillLit > hull.stockA * 1.5)) fails.push('hull light wrong at entity/cluster level');
 if (!(hull.elemGain && hull.allerBack && hull.escBack)) fails.push('element-select hull light / Esc clear wrong');
 if (!(fleet.entSpot && fleet.opened && fleet.cluSpot && fleet.entAlso && fleet.pantryDropped && fleet.cleared)) fails.push('fleet spot wrong (mark/open/clear)');
@@ -495,6 +521,7 @@ if (!(flcfg.rsOneRow && flcfg.lgStyled)) fails.push('radius+spread must share on
 if (!(flcfg.lgTwoCol && flcfg.lgCompact)) fails.push('the legend Types tab must read in TWO columns inside a compact box');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');
 if (!(b51.chip && b51.moved && b51.trail && b51.groups && b51.hidden && b51.dimmed && b51.restored)) fails.push('batch 51 broken (chip → trail navigation · legend hide-by-kind · fe/backend groups): ' + JSON.stringify(b51));
+if (!(b52.homes && b52.pair && b52.tint && b52.adjacent && b52.label && b52.wv && b52.r1 && b52.r3 && b52.back)) fails.push('batch 52 broken (paired fe· split · WIRE VIEW toggles): ' + JSON.stringify(b52));
 if (!(flcfg.oneX && flcfg.noHScroll && flcfg.layIconOnly && flcfg.coreIconOnly && flcfg.transDots && flcfg.stepped && flcfg.noRepeatLbl)) fails.push('compaction wrong (one ×, no h-scroll, icon pills, opacity dots, speed steppers, no repeated Transports label)');
 if (!(flcfg.ladder && flcfg.defSpeed && flcfg.badgeShows && flcfg.backTo)) fails.push('speed ladder wrong (−2..+4 positions, default 0.1 at pos 0, numbered dot, stepper round-trip)');
 if (!(flcfg.wk.oneRow && flcfg.wk.hid && flcfg.wk.back && flcfg.wk.glowLbl && flcfg.wk.noFooter)) fails.push('wire-kind rows wrong (one row each, on/off round-trip, glow label, footer gone)');

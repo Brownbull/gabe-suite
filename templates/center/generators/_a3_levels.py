@@ -542,12 +542,17 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         homed: dict[str, list[dict[str, Any]]] = {}
         for n in fe.get("nodes", []):
             homed.setdefault(n.get("home"), []).append(n)
-        for slug, fnodes in homed.items():                      # fold FE into each entity
-            if slug in ent_slugs:
+        from _a3_graft import _fe_pair                          # the C split renamed matched homes fe·<ent> —
+        folded: set[str] = set()                                # the lab folds them by their PAIR (review 52[0]:
+        for home, fnodes in homed.items():                      # fold-by-slug matched nothing and every paired
+            pair = _fe_pair(home)                               # estate mislabeled as "no backend entity")
+            slug = pair if pair in ent_slugs else (home if home in ent_slugs else None)
+            if slug:
                 lv["pieces"].setdefault(slug, {})["frontend"] = _fe_slim(fnodes)
-        lv["fe_buckets"] = [                                    # pieces belonging to no entity
+                folded.add(home)
+        lv["fe_buckets"] = [                                    # ONLY true buckets + candidate features remain
             {"name": home, "candidate": home in cand, **_fe_slim(fnodes)}
-            for home, fnodes in sorted(homed.items()) if home not in ent_slugs]
+            for home, fnodes in sorted(homed.items()) if home not in folded]
         lv["fe_edges"] = fe.get("edges", [])                   # FE composition wires (cluster render)
         lv["fe_scaffold"] = [{"id": n["id"], "n": n.get("name"), "k": n["kind"], "home": n.get("home")}
                              for n in sorted(fe.get("scaffold", []), key=lambda x: x["id"])]

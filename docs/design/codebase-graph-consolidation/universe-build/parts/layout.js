@@ -32,6 +32,9 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     while(left2.length){ var last2=ord[ord.length-1], best2=-1, bi2=0;
       left2.forEach(function(s,i){ var w=wOf2(last2,s); if(w>best2){ best2=w; bi2=i; } }); ord.push(left2.splice(bi2,1)[0]); }
     var cnt2={}; nodes.forEach(function(nn){ cnt2[nn.ent]=(cnt2[nn.ent]||0)+1; });
+    if(typeof FE_PAIR!=="undefined"){ Object.keys(FE_PAIR).forEach(function(fh){   // C split: the ring seats fe·X right AFTER X
+      var bi=ord.indexOf(FE_PAIR[fh]), fi=ord.indexOf(fh);
+      if(bi>=0&&fi>=0&&fi!==bi+1){ ord.splice(fi,1); bi=ord.indexOf(FE_PAIR[fh]); ord.splice(bi+1,0,fh); } }); }
     var arcOf={}, circ=0; _ents.forEach(function(s){ arcOf[s]=Math.max(260, 2.8*(30+9*Math.sqrt(cnt2[s]||0))); circ+=arcOf[s]; });   // per-entity arc ≈ 2.8× its nominal radius, floored so two TINY neighbours still sit ≥250 apart
     var R=Math.max(430, circ/(2*Math.PI));
     /* PROPORTIONAL arcs (batch 48): each entity owns an arc sized to ITS radius — a 625-node frontend-folded
@@ -39,6 +42,8 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
     var acc=0; ord.forEach(function(e){ var a=(acc+arcOf[e]/2)/R*(2*Math.PI*R/circ); P[e]={x:Math.cos(a)*R, y:0, z:Math.sin(a)*R}; acc+=arcOf[e]; });
   } else {                                               // FORCE — repulsion 13000/d² + FK spring rest 230, SIZE-AWARE (batch 48)
     var E2=_l1pairs();
+    if(typeof FE_PAIR!=="undefined") Object.keys(FE_PAIR).forEach(function(fh){   // C split: fe·X rides a spring to X — the pair sits adjacent
+      if(P[fh]&&P[FE_PAIR[fh]]) E2.push([fh, FE_PAIR[fh], 8]); });
     var cntF={}; nodes.forEach(function(nn){ cntF[nn.ent]=(cntF[nn.ent]||0)+1; });
     var radF=function(s){ return 30+9*Math.sqrt(cntF[s]||0); };   // the entity's nominal radius (RENT formula, pre-spread)
     for(var it=0; it<240; it++){
@@ -60,6 +65,10 @@ function recomputeEX(mode){ var n=_ents.length; if(!n) return;
    D(a,b) ≥ 1.15·(R_a+R_b) with R the live RENT formula. The frontend fold made cooking a 625-node hull
    (R≈203) whose far-side planets sat nearer a neighbour's anchor (bleed 48%); the force balance alone
    cannot promise the floor, a deterministic pairwise relaxation can (60 sweeps, converges in a few). */
+window.__uniCamFit=function(ms){ try{ if(typeof Graph==="undefined"||!Graph) return;   // frame the WHOLE field: 19 clusters outgrew the fixed 780 (review 52[6])
+  var maxR=0; _ents.forEach(function(e){ var a=Math.hypot(EX[e]||0,EY[e]||0,EZ[e]||0)+(RENT[e]||60)*1.6; if(a>maxR) maxR=a; });
+  var d=Math.max(780, maxR*1.35+180), cur=Graph.camera().position, L=Math.hypot(cur.x,cur.y,cur.z)||1;
+  Graph.cameraPosition({x:cur.x/L*d, y:cur.y/L*d, z:cur.z/L*d},{x:0,y:0,z:0}, ms==null?600:ms); }catch(e){} };
 function __uniRelaxHulls(){ var n=_ents.length; if(n<2 || __chainMode || CFG.entLayout==="ring") return;   // ring/chain are sized by construction (the ring's proportional arcs keep it a circle)
   var cnt={}; nodes.forEach(function(nn){ cnt[nn.ent]=(cnt[nn.ent]||0)+1; });
   /* R = the SETTLED radius estimate, not the nominal one: measured (gustify, 888 planets) hulls settle at
@@ -291,6 +300,7 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
       links.forEach(function(l){ var a=_npos[lid(l.source)], b=_npos[lid(l.target)]; if(!a||!b) return;
         var _s=NIDS[lid(l.source)], _t=NIDS[lid(l.target)];
         if((_s&&(!_nodeVisibleFn(_s)||!visN(_s).wires))||(_t&&(!_nodeVisibleFn(_t)||!visN(_t).wires))) return;
+        if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return;   // an R-hidden wire is unpickable UNLESS it is lit (review 52[1])
         var dd=_raySegDist(rc.ray, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z));
         if(dd<WTH && (!wbest||dd<wbest.d)) wbest={d:dd, l:l}; }); }
     if(wbest){ window.__uniSelLink=wbest.l;                                  // the picked wire GLOWS (hf boost in updateConnectors)
@@ -409,6 +419,7 @@ function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orb
 function tuneLinkForce(){ if(typeof Graph==="undefined"||!Graph) return;
   var lf=Graph.d3Force("link"); if(!lf||!lf.distance) return;
   lf.distance(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
+    if(window.UNIWIRE&&UNIWIRE.r4&&l.rel==="renders"&&_SOLEP&&_SOLEP[lid(l.target)]) return 14;   // R4: sole children hug their parent
     return (s&&t&&s.ent!==t.ent)?280:40; });
   lf.strength(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];   // soft springs — the anchors own the geometry
     return (s&&t&&s.ent!==t.ent)?0.04:0.12; }); }
@@ -1265,6 +1276,62 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(_st2) connGrps.concat(transGrp?[transGrp]:[]).forEach(function(g){ _st2.appendChild(g); });
 };
 
+/* ── WIRE VIEW (batch 52) — the R options as LIVE config toggles: each changes only the INK
+   (and R4 one spring family); every hidden wire keeps its layout spring, so structure survives
+   as proximity. R1 = structure at rest (fe flow wires off) · R2 = utility demotion (fecall into
+   fan-in≥15 sinks off) · R3 = bundling (fe wires collapse to one line per cluster-pair, brightness
+   = count) · R4 = tree containment (sole-parent renders wires off, those children spring TIGHT). ── */
+window.UNIWIRE={ r1:false, r2:false, r3:false, r4:false };
+var _UTILSET=null, _SOLEP=null;
+function _wireSets(){ if(_UTILSET) return; _UTILSET={}; _SOLEP={};
+  var fin={}, rin={};
+  links.forEach(function(l){ if(l.rel==="fecall") fin[lid(l.target)]=(fin[lid(l.target)]||0)+1;
+    else if(l.rel==="renders") rin[lid(l.target)]=(rin[lid(l.target)]||0)+1; });
+  Object.keys(fin).forEach(function(id){ if(fin[id]>=15) _UTILSET[id]=1; });
+  Object.keys(rin).forEach(function(id){ if(rin[id]===1) _SOLEP[id]=1; });
+}
+var _FE_FLOW={ renders:1, fecall:1, uses:1, imports:1 };   // the fe FLOW rels (reads = stores stays inked; typed is T-held)
+window.__uniRelHide=function(l){ if(!l||!l.fe) return false;
+  _wireSets();
+  if(UNIWIRE.r3) return true;                                        // bundles replace every per-piece fe wire
+  if(UNIWIRE.r1 && _FE_FLOW[l.rel]) return true;
+  if(UNIWIRE.r2 && l.rel==="fecall" && _UTILSET[lid(l.target)]) return true;
+  if(UNIWIRE.r4 && l.rel==="renders" && _SOLEP[lid(l.target)]) return true;
+  return false; };
+window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
+  var by={}, cen={}, cnt={};
+  var gk=function(n){ return n.ent+"|"+(n.sub||""); };
+  nodes.forEach(function(n){ var p=_npos[n.id]; if(!p) return; var k=gk(n);
+    if(!cen[k]) cen[k]={x:0,y:0,z:0}; cen[k].x+=p.x; cen[k].y+=p.y; cen[k].z+=p.z; cnt[k]=(cnt[k]||0)+1; });
+  Object.keys(cen).forEach(function(k){ cen[k].x/=cnt[k]; cen[k].y/=cnt[k]; cen[k].z/=cnt[k]; });
+  links.forEach(function(l){ if(!l.fe) return; var s=NIDS[lid(l.source)], tt=NIDS[lid(l.target)]; if(!s||!tt) return;
+    if(!(_nodeVisibleFn(s)&&_nodeVisibleFn(tt)&&visN(s).wires&&visN(tt).wires)) return;
+    var ka=gk(s), kb=gk(tt); if(ka===kb) return;
+    var key=ka<kb?ka+"→"+kb:kb+"→"+ka; by[key]=(by[key]||0)+1; });
+  Object.keys(by).sort().forEach(function(key){ var ab=key.split("→"), a=cen[ab[0]], b=cen[ab[1]]; if(!a||!b) return;
+    var geo=new T.BufferGeometry().setFromPoints([new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z)]);
+    var op=Math.min(0.85, 0.18+by[key]/28);                          // brightness = bundle size (count on hover is R3 v2)
+    var mat=new T.LineBasicMaterial({ color:0x8b83f5, transparent:true, opacity:op });
+    var ln=new T.Line(geo, mat); ln.userData.kind="bundle"; ln.userData.__bundle=by[key]; grp.add(ln); });
+};
+
+window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
+  if(!body||document.getElementById("wireview")) return;
+  var g=document.createElement("div"); g.className="grp"; g.id="wireview";
+  g.innerHTML='<div class="grplbl" title="the R lab — each toggle changes only the INK on the live graph; hidden wires keep their layout springs, so structure survives as position. Combine freely.">WIRE VIEW</div>';
+  var row=document.createElement("div"); row.className="cfgrow";
+  var DEF=[["r1","R1","structure at rest — hides the fe FLOW wires (renders · fecall · uses · imports); fk/touches/nests/bridge/stores stay inked. The render tree survives as proximity."],
+           ["r2","R2","utility demotion — hides only fecall wires INTO fan-in≥15 sinks (cx · client · mockupAssets): the everything-calls-the-util fans that carry no map information."],
+           ["r3","R3","bundling — every fe wire collapses to ONE line per cluster-pair; brightness = how many wires ride the bundle."],
+           ["r4","R4","tree containment — sole-parent renders wires hidden and those children spring TIGHT beside their parent; only SHARED components keep render wires (reuse is the signal)."]];
+  DEF.forEach(function(d){ var b=document.createElement("button"); b.className="itog wv"; b.id="wv-"+d[0];
+    b.title=d[2]; b.textContent=d[1];
+    b.classList.toggle("on", !!UNIWIRE[d[0]]);                    // a config rebuild must not lose the lit state (review 52[3])
+    b.onclick=function(){ UNIWIRE[d[0]]=!UNIWIRE[d[0]]; b.classList.toggle("on", UNIWIRE[d[0]]);
+      if(d[0]==="r4"){ try{ tuneLinkForce(); if(typeof Graph!=="undefined"&&Graph) Graph.d3ReheatSimulation(); }catch(e){} }
+      try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
+    row.appendChild(b); });
+  g.appendChild(row); body.appendChild(g); };
 /* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
    a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
 window.__uniGoto=function(id){ if(!id) return;

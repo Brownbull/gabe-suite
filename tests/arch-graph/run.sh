@@ -290,13 +290,13 @@ _W_home = {"nodes": [
   ], "edges": []}
 _h = GG.derive_frontend(_W_home, frozenset({"cooking"}))
 _bh = _h["stats"]["by_home"]
-check(_bh.get("cooking") == 1 and _bh.get("design-system") == 1 and _bh.get("app-shell") == 1,
-      "P2b: pieces home to their entity (cooking), design-system, and the app-shell bucket")
+check(_bh.get("fe·cooking") == 1 and _bh.get("design-system") == 1 and _bh.get("app-shell") == 1,
+      "P2b (C split): a matched feature homes to the PAIRED fe·cooking, plus design-system and app-shell buckets")
 check(_bh.get("profile") == 1 and [c["name"] for c in _h["stats"]["candidate_entities"]] == ["profile"],
       "P2b: a feature with no backend entity homes to itself AND flags as a candidate entity")
 check(_h["stats"]["total"] == 4 and _h["stats"]["scaffold_total"] == 1
-      and len(_h["scaffold"]) == 1 and _h["scaffold"][0]["home"] == "cooking",
-      "P2b: scaffold is carried SEPARATELY (out of total, kept for the toggle, still homed)")
+      and len(_h["scaffold"]) == 1 and _h["scaffold"][0]["home"] == "fe·cooking",
+      "P2b: scaffold is carried SEPARATELY (out of total, kept for the toggle, homed to the fe twin)")
 check(all("home" in n for n in _h["nodes"]),
       "P2b: every shipped piece carries its home")
 

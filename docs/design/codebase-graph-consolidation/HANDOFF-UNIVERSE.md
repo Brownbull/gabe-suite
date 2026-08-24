@@ -303,7 +303,38 @@ the row dims + strikes; click again restores. (3) the Types tab is grouped `fron
 (`.lghd2` headers span the grid; labels sit closer to their icons). Proofs: verify-panels [batch 51]
 block (chip→trail · hide/restore 349 components · groups) + battery 330 static.
 
-## PENDING OPERATOR DECISION — frontend/backend entity SPLIT (analysis delivered, no changes)
+## BATCH 52 — the C SPLIT LANDED + the WIRE VIEW R-lab (operator: "implement C right away")
+
+- **The split is DATA now**: `_fe_home` homes every backend-matched feature to `fe·<entity>`
+  (`_fe_pair` maps it back); homes carry kind `fe` + `pair`. gustify: six paired fe entities
+  (fe·cooking 480 · fe·pantry 208 · fe·auth · fe·settings · fe·legal-consent · fe·recipe),
+  buckets + candidates unchanged. The universe TINTS each fe entity from its twin's colour and
+  SEATS it adjacent (force pair-spring + ring adjacency); cards say "fe · pantry (frontend of
+  pantry)". The levels lab folds fe·X into its PAIR's frontend band (review [0]: fold-by-slug
+  matched nothing and mislabeled paired estates as "no backend entity").
+- **WIRE VIEW** (config, top-right): R1 structure-at-rest (2,373 → 332 wires) · R2 utility
+  demotion (fan-in≥15 fecall sinks) · R3 cluster-pair bundles (brightness = count) · R4 tree
+  containment (sole children spring tight) — independent toggles on the live graph; hidden
+  wires keep their springs. **The light-on-demand contract** (review [5]): a journey/selection
+  DRAWS R-hidden wires; unlit hidden wires are unpickable ([1]) and never flown ([4]); the
+  camera fits the live field on boot + reset ([6]).
+- Review: 3 lenses · 16 agents · 7 confirmed → 6 distinct, ALL FIXED (one refuter died on an
+  API-side flag; its subject — the levels fold — was independently confirmed as [0]).
+- **Navigation findings for batch 53** (measured): cross-hull wires EXIST (48 bridge · 410
+  renders · 316 uses cross) but read invisible at overview distance; max wire clearance
+  anywhere is 1.1 world units, so hull-clicking is effectively dead on the split field —
+  both point at S1 capsules.
+
+## PENDING OPERATOR DECISION — fe DENSITY: the S options (batch 53)
+
+fe·cooking draws ~255 labeled planets in one hull — a label cloud; no wire policy fixes a
+COUNT problem. Options explored (2026-08-23): **S1 collapsed capsules** (big fe entities boot
+with sub-clusters as single compound planets + R3 bundles as their wires; click/fleet-row
+expands — view-only, RECOMMENDED) · S2 emitter `area` element (the data-level promote-later)
+· S3 panel sections (subsumed by S1) · S4 screens-first rest state (a later MODE). The
+operator holds the pick.
+
+## RESOLVED — frontend/backend entity SPLIT (analysis delivered, no changes)
 
 Measured: pantry = 78 backend + 208 fe (73% fe) · cooking = 46 + 480 (91%) — the batch-48 fold of
 `features/<x>` into the backend entity is the density complaint. The fe wires are 348/1,019 INTRA;

@@ -141,7 +141,8 @@
      pieces (c4.fe). Frontend section = home (entity / shared bucket / candidate feature) · absorbed screen + fetch
      sites · a module's exports; then the shared identity + file:lines rows. Honest-empty: no tests/doc captured yet. */
   function feSec(n){ var d=n.det||{}, hk=(typeof FE_HOME!=="undefined"&&FE_HOME[n.ent])||null, rows=[];
-    rows.push(kv("entity","home", n.ent+(hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
+    var _hl=(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent);
+    rows.push(kv("entity","home", _hl+(hk==="fe"?(" (frontend of "+((typeof FE_PAIR!=="undefined"&&FE_PAIR[n.ent])||"?")+")"):hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
     if(n.screen) rows.push(kv("web","screen", (n.sites||0)+" fetch site(s) — absorbed "+n.screen.replace(/^web:/,"")));
     if(d.exports&&d.exports.length) rows.push(kv("function","exports", d.exports.slice(0,12).join(" · ")+(d.exports.length>12?" · +"+(d.exports.length-12):"")));
     rows.push(E("div",{class:"doc"}, KINDTIP[n.kind]||""));   // ONE meaning per kind — the Elements rows + the card share it
@@ -285,7 +286,7 @@
     openPanel(); }
   function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
     var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
-    _phead(sub,"CLUSTER · "+ent,"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
+    _phead(sub,"CLUSTER · "+(window.__uniEntLabel?__uniEntLabel(ent):ent),"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
     pb.append(makeupSec(mem));
     var ins=E("div",{class:"sec"}, sechd("bubble","Inside — elements", mem.length, false,
@@ -302,7 +303,7 @@
   function aboveSec(n){ if(!n||!n.ent) return null;
     var w=E("div",{class:"sec"}, sechd("nav","Above"));
     if(n.sub) w.append(navRow("__core","cluster · "+n.sub, null, null, function(){ panelClu(n.ent, n.sub||"—"); }, "up"));
-    w.append(navRow(null,"entity · "+n.ent, null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
+    w.append(navRow(null,"entity · "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent), null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
     w.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     return w; }
   Object.keys(C).forEach(function(k){ var base=C[k];
