@@ -150,7 +150,7 @@ text = text.replace(OLD_APPLY,
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
-                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
+                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
 text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
 
@@ -441,15 +441,21 @@ text = text.replace(OLD_TYPES, NEW_TYPES, 1)
 
 OLD_KROW = '''      if(it.t==="kind"){ var K=KINDS[it.k]; h+=\'<div class="lgrow"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — its actual icon glyph'''
 assert OLD_KROW in text, "legend kind-row anchor missing"
-NEW_KROW = '''      if(it.t==="hd"){ h+=\'<div class="lghd2">\'+it.l+\'</div>\'; return; }   // group header (frontend · backend), spans the grid
-      if(it.t==="kind"){ var K=KINDS[it.k]; var _off=(it.k==="function")?(CFG.showFns!=="on"):(window.__uniKindOff&&__uniKindOff[it.k]);
-        h+=\'<div class="lgrow lgk\'+(_off?" lgoff":"")+\'" data-lgk="\'+it.k+\'" title="\'+(_off?"hidden — click to SHOW ":"click to HIDE ")+K.type+\' graph-wide"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — a hide-by-kind CONTROL now'''
+NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpState[it.l])||"all";   // group header = a MASTER (click cycles all→critical→off for the whole side)
+        h+=\'<div class="lghd2 lggrp gs-\'+_gs+\'" data-lggrp="\'+it.l+\'" title="\'+it.l+\' — click: ALL -> CRITICAL -> OFF for every \'+it.l+\' kind"><span>\'+it.l+\'</span><span class="lggs">\'+_gs+\'</span></div>\'; return; }
+      if(it.t==="kind"){ var K=KINDS[it.k];
+        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="function"?"off":"all");
+        var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
+        var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
+        var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
+        h+=\'<div class="lgrow lgk \'+_cls+\'" data-lgk="\'+it.k+\'" title="\'+_t+\' · \'+K.type+\'"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — a 3-STATE control (all · critical · off)'''
 text = text.replace(OLD_KROW, NEW_KROW, 1)
 
 OLD_LGBIND = """    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });"""
 assert OLD_LGBIND in text, "legend binder anchor missing"
 text = text.replace(OLD_LGBIND, OLD_LGBIND + """
-    [].forEach.call(el.querySelectorAll("[data-lgk]"), function(rw){ rw.onclick=function(){ if(window.__uniKindToggle) __uniKindToggle(rw.dataset.lgk); }; });""", 1)
+    [].forEach.call(el.querySelectorAll("[data-lgk]"), function(rw){ rw.onclick=function(){ if(window.__uniKindToggle) __uniKindToggle(rw.dataset.lgk); }; });
+    [].forEach.call(el.querySelectorAll("[data-lggrp]"), function(hd){ hd.style.cursor="pointer"; hd.onclick=function(){ if(window.__uniGroupToggle) __uniGroupToggle(hd.dataset.lggrp); }; });""", 1)
 
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
 assert OLD_CWCALL in text, "connectorWire call anchor missing"

@@ -407,3 +407,16 @@
   /* selected-option name after a section title (operator aesthetic) — non-title font, lighter */
   .grplbl .grpsel{ margin-left:7px; font:400 10px/1 var(--mono, ui-monospace, monospace); text-transform:none; letter-spacing:0; color:var(--accent, #6ea8ff); opacity:.95; }
   #cfg .grplbl, #flside .grplbl{ text-transform:uppercase; }
+
+  /* legend 3-state (operator): off = full dim · critical = partial (single-caller helpers hidden) */
+  #elegend .lgrow.lgoff{ opacity:.4; }
+  #elegend .lgrow.lgcrit{ opacity:.72; }
+  #elegend .lgrow.lgcrit .lgvis::after{ content:""; position:absolute; }   /* placeholder — the row-level dim carries it */
+  #elegend .lgrow.lgcrit .lglbl b::after{ content:" · critical"; font-size:8px; font-weight:600; color:var(--muted); letter-spacing:.02em; text-transform:uppercase; }
+  /* clickable group header (backend / frontend) — a MASTER, with its state on the right */
+  #elegend .lghd2.lggrp{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; border-radius:5px; padding:2px 4px; margin:6px 0 2px; }
+  #elegend .lghd2.lggrp:hover{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
+  #elegend .lghd2.lggrp .lggs{ font-size:8px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:1px 6px; border-radius:999px; border:1px solid var(--line); color:var(--muted); }
+  #elegend .lghd2.lggrp.gs-all .lggs{ color:var(--accent); border-color:var(--accent); }
+  #elegend .lghd2.lggrp.gs-critical .lggs{ color:#e0a44a; border-color:#e0a44a; }
+  #elegend .lghd2.lggrp.gs-off .lggs{ opacity:.6; }

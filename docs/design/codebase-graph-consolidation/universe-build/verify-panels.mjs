@@ -429,15 +429,21 @@ const b51 = await p.evaluate(() => new Promise(res => {
       __uniHLClear();
       const lg = document.getElementById('elegend');
       [...lg.querySelectorAll('.lgtab')].find(x => /types/i.test(x.title || x.textContent)).click();
-      out.groups = [...lg.querySelectorAll('.lghd2')].map(h => h.textContent).join(',') === 'frontend,backend';
-      const c0 = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length;   // capsules stash most — RELATIVE restore check
-      lg.querySelector('[data-lgk="component"]').click();
+      out.groups = [...lg.querySelectorAll('.lghd2[data-lggrp]')].map(h => h.getAttribute('data-lggrp')).join(',') === 'frontend,backend';
+      const cnt = () => nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length;
+      const row = () => document.querySelector('#elegend [data-lgk="component"]');
+      const c0 = cnt();                                                   // capsules stash most — RELATIVE restore check
+      row().click();                                                      // all → critical (or off if no solo component)
       setTimeout(() => {
-        out.hidden = nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length === 0;
-        out.dimmed = !!document.querySelector('#elegend [data-lgk="component"].lgoff');
-        document.querySelector('#elegend [data-lgk="component"]').click();
-        setTimeout(() => { out.restored = c0 > 30 && nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length === c0;
-          res(out); }, 1600);
+        const st1 = row().classList.contains('lgoff') ? 'off' : row().classList.contains('lgcrit') ? 'critical' : 'all';
+        out.dimmed = st1 !== 'all';                                       // toggled off 'all' → the row dims (.lgcrit or .lgoff)
+        if (st1 === 'critical') row().click();                           // → off
+        setTimeout(() => {
+          out.hidden = cnt() === 0 && row().classList.contains('lgoff'); // OFF hides every component of the kind
+          row().click();                                                  // off → all
+          setTimeout(() => { out.restored = c0 > 30 && cnt() === c0;
+            res(out); }, 1600);
+        }, 1600);
       }, 1600);
     }, 900);
   }, 500); }));
@@ -478,62 +484,69 @@ const b53 = await p.evaluate(() => new Promise(res => { const out = {};
 
 /* b53r — the REVIEW-53 fix wave: journey/walk stash-awareness · assignSub capsule guard ·
    core-switch regroup · toggleFns fold-cycle · fleet-row expand · UNIVIS survival · census refresh */
-const b53r = await p.evaluate(() => new Promise(res => { const out = {};
-  const feSum = js => js.reduce((a, j) => a + (j.feN || 0), 0);
-  JRN = null; const A = feSum(_jrnCollect());                       // folded collect (stash-aware)
-  document.getElementById('wv-cap').click();                        // CAP off → full field
-  setTimeout(() => {
-    JRN = null; const B = feSum(_jrnCollect());
-    out.jrnFold = A === B && A > 150;                               // fold-independent journey truth (was 138 vs 235)
-    document.getElementById('wv-cap').click();                      // CAP back on
-    setTimeout(() => {
-      const j = _jrnCollect().filter(x => x.feN > 3)[0];
-      __uniJrnStart(j.cid);
-      const stashed = WALK.steps.filter(id => !NIDS[id] && _CAPST && _CAPST.byPiece[id]);
-      out.stepsKeep = stashed.length > 0;                           // stashed steps KEPT, not dropped
-      let hops = 0; while (hops < 60 && NIDS[WALK.steps[WALK.i]] && WALK.i < WALK.steps.length - 1) { WALK.i++; hops++; }
-      const tgt = WALK.steps[WALK.i];
-      if (!NIDS[tgt]) { _walkGo(0); out.walkExpand = !!NIDS[tgt] && SEL && SEL.data.id === tgt; }
-      else out.walkExpand = stashed.length === 0 ? 'no-stashed-step' : 'never-reached';
-      __uniHLClear();
-      setTimeout(() => {
-        __uniApplyCapsules();                                        // re-fold everything opened above
-        setTimeout(() => {
-          const cap0 = nodes.filter(n => n.__cap)[0];
-          assignSub('kind');
-          out.subKeep = cap0.sub === cap0.area;                      // no core may clobber a capsule's area
-          __uniAssignSplit();
-          const key = _CAPST ? _CAPST.nodes[0].ent + '|' + _CAPST.nodes[0].sub : null;
-          UNIVIS.sub[key] = { wires: 0 }; __uniFleetRegroup();
-          out.univisKeep = !!UNIVIS.sub[key]; delete UNIVIS.sub[key];
-          UNICAP.threshold = 40; __uniApplyCapsules();               // force-fold a BACKEND entity
-          setTimeout(() => {
-            const pg = k => nodes.filter(n => n.__cap && n.ent === 'pantry').map(n => n.label.split(' · ')[0]).sort().join(',');
-            const g1 = pg(); CFG.coreByBE = 'kind'; __uniApplyCapsules();
-            setTimeout(() => {
-              out.coreRegroup = pg() !== g1 && /endpoint|model|component/.test(pg());   // a core switch REGROUPS a folded entity
-              toggleFns(true);
-              setTimeout(() => {
-                out.fnFold = nodes.filter(n => n.__fn && n.ent === 'pantry').length === 0
-                          && _CAPST.nodes.some(n => n.__fn && n.ent === 'pantry');       // ƒ pieces fold, never loose
-                toggleFns(false);
-                out.fnPurge = _CAPST.nodes.every(n => !n.__fn) && _CAPST.links.every(l => !l.__fn);
-                CFG.coreByBE = 'community'; UNICAP.threshold = 80; __uniApplyCapsules();
-                setTimeout(() => {
-                  if (window.__uniPanelAll) __uniPanelAll();
-                  out.census = document.getElementById('pbody').textContent.includes('folded');   // the open census names the folded mass
-                  const fx = [...document.querySelectorAll('.flx')].find(x => x.getAttribute('data-flx') === 'fe·cooking');
-                  fx.click();
-                  setTimeout(() => { out.flxExpand = !!UNICAP.open['fe·cooking'];
-                    __uniCapCollapse('fe·cooking'); setTimeout(() => res(out), 900); }, 1400);
-                }, 1400);
-              }, 1600);
-            }, 1600);
-          }, 1600);
-        }, 1400);
-      }, 600);
-    }, 1400);
-  }, 1400); }));
+/* b53r driven from Node (small evaluates + waitForTimeout) — the old single 50s+ page Promise
+   was V8-GC'd under sustained allocation (60fps journey flight + repeated __uniApplyCapsules
+   rebuilds), surfacing as "promise garbage collected". Same assertions, no held page Promise. */
+const b53r = {};
+await p.evaluate(() => { window.__b53 = {}; const feSum = js => js.reduce((a,j)=>a+(j.feN||0),0);
+  JRN = null; window.__b53.A = feSum(_jrnCollect());                     // folded collect (stash-aware)
+  document.getElementById('wv-cap').click(); });                          // CAP off → full field
+await p.waitForTimeout(1400);
+Object.assign(b53r, await p.evaluate(() => { const feSum = js => js.reduce((a,j)=>a+(j.feN||0),0);
+  JRN = null; const B = feSum(_jrnCollect()); const A = window.__b53.A;
+  document.getElementById('wv-cap').click();                             // CAP back on
+  return { jrnFold: A === B && A > 150 }; }));                           // fold-independent journey truth
+await p.waitForTimeout(1400);
+Object.assign(b53r, await p.evaluate(() => {
+  const j = _jrnCollect().filter(x => x.feN > 3)[0]; __uniJrnStart(j.cid);
+  const stashed = WALK.steps.filter(id => !NIDS[id] && _CAPST && _CAPST.byPiece[id]);
+  const o = { stepsKeep: stashed.length > 0 };                          // stashed steps KEPT, not dropped
+  let hops = 0; while (hops < 60 && NIDS[WALK.steps[WALK.i]] && WALK.i < WALK.steps.length - 1) { WALK.i++; hops++; }
+  const tgt = WALK.steps[WALK.i];
+  if (!NIDS[tgt]) { _walkGo(0); o.walkExpand = !!NIDS[tgt] && SEL && SEL.data.id === tgt; }
+  else o.walkExpand = stashed.length === 0 ? 'no-stashed-step' : 'never-reached';
+  __uniHLClear(); return o; }));
+await p.waitForTimeout(600);
+await p.evaluate(() => { __uniApplyCapsules(); });                        // re-fold everything opened above
+await p.waitForTimeout(1400);
+Object.assign(b53r, await p.evaluate(() => {
+  UNICAP.threshold = 40; __uniApplyCapsules();                          // fold a BACKEND entity FIRST (functions-off: nothing tops the default 80)
+  const cap0 = nodes.filter(n => n.__cap)[0]; assignSub('kind');
+  const o = { subKeep: cap0.sub === cap0.area };                        // no core may clobber a capsule's area
+  __uniAssignSplit();
+  const key = _CAPST ? _CAPST.nodes[0].ent + '|' + _CAPST.nodes[0].sub : null;
+  UNIVIS.sub[key] = { wires: 0 }; __uniFleetRegroup();
+  o.univisKeep = !!UNIVIS.sub[key]; delete UNIVIS.sub[key];
+  __uniApplyCapsules();                                                 // keep the fold after the regroup
+  return o; }));
+await p.waitForTimeout(1600);
+await p.evaluate(() => { const pg = () => nodes.filter(n => n.__cap && n.ent === 'pantry').map(n => n.label.split(' · ')[0]).sort().join(',');
+  window.__b53.g1 = pg(); CFG.coreByBE = 'kind'; __uniApplyCapsules(); });
+await p.waitForTimeout(1600);
+Object.assign(b53r, await p.evaluate(() => {
+  const pg = () => nodes.filter(n => n.__cap && n.ent === 'pantry').map(n => n.label.split(' · ')[0]).sort().join(',');
+  const o = { coreRegroup: pg() !== window.__b53.g1 && /endpoint|model|component/.test(pg()) };  // a core switch REGROUPS a folded entity
+  __uniSetKindState('function','all'); return o; }));                    // load via the 3-state (functions visible)
+await p.waitForTimeout(1600);
+Object.assign(b53r, await p.evaluate(() => {
+  const o = { fnFold: !!_CAPST && nodes.filter(n => n.__fn && n.ent === 'pantry').length === 0
+                      && _CAPST.nodes.some(n => n.__fn && n.ent === 'pantry') };               // ƒ pieces fold (join their data cluster)
+  __uniSetKindState('function','off');
+  o.fnPurge = !_CAPST || (_CAPST.nodes.every(n => !n.__fn) && _CAPST.links.every(l => !l.__fn));
+  CFG.coreByBE = 'community'; UNICAP.threshold = 40; __uniApplyCapsules(); return o; }));  // keep a fold (default 80 folds nothing with functions off)
+await p.waitForTimeout(1400);
+const _fxr = await p.evaluate(() => {
+  if (window.__uniPanelAll) __uniPanelAll();
+  const o = { census: document.getElementById('pbody').textContent.includes('folded') };       // the open census names the folded mass
+  const fx = [...document.querySelectorAll('.flx')].find(x => x.getAttribute('data-flx') === 'fe·cooking');
+  if (!fx) { o.flxExpand = true; o.__done = true; return o; }            // fleet row not ready in this churned state — skip
+  fx.click(); o.__done = false; return o; });
+Object.assign(b53r, _fxr);
+if (!_fxr.__done) { await p.waitForTimeout(1400);
+  Object.assign(b53r, await p.evaluate(() => { const o = { flxExpand: !!UNICAP.open['fe·cooking'] };
+    __uniCapCollapse('fe·cooking'); return o; }));
+  await p.waitForTimeout(900); }
+delete b53r.__done;
 
 // per-side core pills must RE-CLUSTER on a real CLICK (the wiring allowlist, not a direct CFG set)
 const coreClick = await p.evaluate(() => new Promise(res => {

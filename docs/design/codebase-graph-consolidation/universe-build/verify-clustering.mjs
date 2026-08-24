@@ -69,7 +69,7 @@ const after = await p.evaluate(prev => {
 // cluster over their call graph (ƒ·<hub>), not into one giant "other".
 await p.evaluate(() => { UNICAP.on = false; __uniApplyCapsules(); });   // unfold to inspect raw pieces
 await p.waitForTimeout(1200);
-await p.evaluate(() => { CFG.coreByBE = 'community'; applyCfg('coreByBE'); if (CFG.showFns!=='on'){ CFG.showFns='on'; toggleFns(true); } });
+await p.evaluate(() => { CFG.coreByBE = 'community'; applyCfg('coreByBE'); __uniSetKindState('function','all'); });   // load via the 3-state API (keeps __uniKindState in sync)
 await p.waitForTimeout(3500);
 const fnClust = await p.evaluate(() => {
   const ent = _ents.slice().sort((a,b) => nodes.filter(n=>n.ent===b&&n.kind==='function').length
@@ -89,15 +89,30 @@ const fnLegend = await p.evaluate(() => {
   const boolGone = !document.getElementById('fnsTog');
   const row = document.querySelector('#elegend [data-lgk="function"]');
   if (!row) return { boolGone, hasRow:false };
-  const wasOn = CFG.showFns === 'on';
-  if (wasOn) { __uniKindToggle('function'); }                      // ensure OFF baseline
+  __uniSetKindState('function','off');                             // OFF = unloaded baseline
   const n0 = nodes.filter(n=>n.kind==='function').length;
-  __uniKindToggle('function');                                     // load
+  __uniSetKindState('function','all');                             // ALL = loaded
   const n1 = nodes.filter(n=>n.kind==='function').length, on1 = CFG.showFns==='on';
-  __uniKindToggle('function');                                     // unload
+  __uniSetKindState('function','off');                             // back to OFF = unloaded
   const n2 = nodes.filter(n=>n.kind==='function').length;
   return { boolGone, hasRow:true, loads: n0===0 && n1>0 && on1, unloads: n2===0 };
 });
+// #2 operator: the legend 3-state — critical hides single-caller-SAME-kind helpers; group master cycles a side
+const critical = await p.evaluate(() => new Promise(res => {
+  __uniSetKindState('function','all');
+  setTimeout(() => { __uniComputeSolo();
+    const solo = nodes.filter(n=>n.kind==='function' && n.__solo).length;
+    const allVis = nodes.filter(n=>n.kind==='function' && !n.__cap && visN(n).show).length;
+    __uniSetKindState('function','critical');
+    const critVis = nodes.filter(n=>n.kind==='function' && !n.__cap && visN(n).show).length;
+    __uniGroupToggle('backend'); const gs1 = __uniGrpState.backend;        // all→critical
+    __uniGroupToggle('backend');                                           // critical→off
+    const modelHidden = nodes.filter(n=>n.kind==='model' && visN(n).show).length === 0;
+    __uniGroupToggle('backend');                                           // off→all
+    __uniSetKindState('function','off');
+    res({ solo, allVis, critVis, critHides: solo>0 && critVis===allVis-solo, gsCrit: gs1==='critical', modelHidden });
+  }, 1600);
+}));
 // review fix: loading functions must NOT fold a backend entity that was under the threshold
 const noSurpriseFold = await p.evaluate(() => new Promise(res => {
   const be = _ents.filter(e=>!__uniIsFeEnt(e) && nodes.filter(n=>n.ent===e&&!n.__cap).length>40 && nodes.filter(n=>n.ent===e&&!n.__cap).length<80)
@@ -131,13 +146,15 @@ console.log(`kind ring: per-entity ratio ${base.ringRatio} over ${base.ringEnts}
 console.log(`coreBy flip: mean displacement ${after.meanDisp} · moved>4u ${after.movedPct}% · nonFinite ${after.nonFinite}`);
 console.log(`fn-join(${fnClust.ent}, use-case): ${fnClust.total} fns → ${fnClust.joined} joined (${fnClust.inDataCluster} into a DATA cluster) · no ƒ· ${fnClust.noFnSep}`);
 console.log('fn-legend:', JSON.stringify(fnLegend));
+console.log('critical:', JSON.stringify(critical));
 console.log('no-surprise-fold:', JSON.stringify(noSurpriseFold));
-if (!(noSurpriseFold.caps0===0 && noSurpriseFold.caps1===0 && noSurpriseFold.fnsVis>0)) fails.push('loading functions folded the entity that holds them (surprise fold)');
-if (!(fnLegend.boolGone && fnLegend.hasRow && fnLegend.loads && fnLegend.unloads)) fails.push('the legend Function row does not load/unload functions (option B — boolean removal)');
 console.log(`split cores: ${splitCore.beE}=community ${splitCore.beC} + ${splitCore.feE}=screen ${splitCore.feC} · flip BE→kind ${splitCore.beKind}, FE still ${splitCore.feStill}`);
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
+if (!(critical.critHides && critical.gsCrit && critical.modelHidden)) fails.push('the 3-state critical filter / group master is broken (single-caller-same-kind not hidden)');
+if (!(noSurpriseFold.caps0===0 && noSurpriseFold.caps1===0 && noSurpriseFold.fnsVis>0)) fails.push('loading functions folded the entity that holds them (surprise fold)');
+if (!(fnLegend.boolGone && fnLegend.hasRow && fnLegend.loads && fnLegend.unloads)) fails.push('the legend Function row does not load/unload functions (option B — boolean removal)');
 if (errs.length) fails.push('page/console errors');
 if (base.minAnchorPair < 180) fails.push('anchors too close (<180)');   // floor, not a fit to one dataset — the entity graph changes with the model
 if (base.bleedPct > 8) fails.push('entity bleed >8%');

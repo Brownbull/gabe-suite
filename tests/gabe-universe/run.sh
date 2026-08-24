@@ -304,8 +304,10 @@ check('layer:"Layer — the kind' in page and 'ti:"Chain — a flat layered ribb
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")
 check('fnsTog' not in page and 'the Functions boolean is GONE' in page,
       "the Functions boolean must be removed (operator: the legend Function row governs load)")
-check('k==="function" && window.toggleFns' in page and 'the legend row LOADS/UNLOADS' in page,
-      "the legend Function row no longer loads/unloads functions (the boolean's replacement)")
+check('k==="function" && window.toggleFns' in page and 'window.__uniSetKindState=function' in page,
+      "the legend Function row no longer loads/unloads functions (via __uniSetKindState)")
+check('window.__uniKindState={}' in page and 'window.__uniGroupToggle=function' in page and 'n.__solo=(ks.length===1 && cs[ks[0]]===n.kind)' in page,
+      "the 3-state legend (all/critical/off) + solo detection + group master are gone")
 check('if(n.kind!=="function") cnt[n.ent]=(cnt[n.ent]||0)+1;' in page,
       "functions must NOT trip the capsule fold (review: loading them must not collapse their entity)")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
@@ -655,12 +657,13 @@ check('c.lbl.scale.set(_lh*_la, _lh, 1);' in page,
 check('window.__uniGoto=function(id)' in page and 'if(window.__uniGoto) __uniGoto(x.id);' in page
       and 'if(window.__uniGoto) __uniGoto(id);' in page,
       "card/link chips lost their click navigation (select + frame + the 7-step trail)")
-check('window.__uniKindOff={};' in page and 'if(n && window.__uniKindOff && __uniKindOff[n.kind]) return _KOFF;' in page,
-      "hide-by-kind lost its ONE visibility gate (visN)")
+check('window.__uniKindOff={};' in page and 'if(_st==="critical" && n.__solo) return _KOFF;' in page,
+      "the 3-state visN gate (off · critical-hides-solo · all) is gone")
 check('window.__uniKindToggle=function(k)' in page and '__uniKindToggle(rw.dataset.lgk)' in page,
       "the legend rows are no longer hide-by-kind controls")
-check('class="lghd2"' in page and '{t:"hd",l:"frontend"}' in page and '{t:"hd",l:"backend"}' in page,
-      "the legend Types tab lost its frontend/backend groups")
+check('lghd2 lggrp gs-' in page and '{t:"hd",l:"frontend"}' in page and '{t:"hd",l:"backend"}' in page
+      and '__uniGroupToggle(hd.dataset.lggrp)' in page,
+      "the legend frontend/backend headers are no longer clickable 3-state masters")
 check('.lgrow.lgoff{ opacity:.32; }' in page and 'data-lgk=' in page,
       "a hidden kind's legend row no longer dims")
 

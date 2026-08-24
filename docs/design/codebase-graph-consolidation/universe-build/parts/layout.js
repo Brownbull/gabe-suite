@@ -867,7 +867,9 @@ _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 /* effective per-node: node override wins; else the entity flags AND the node's sub-group flags —
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
-function visN(n){ if(n && window.__uniKindOff && __uniKindOff[n.kind]) return _KOFF;   // hide-by-kind (batch 51) outranks every other gate
+function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(n.kind==="function"?"off":"all");   // hide-by-kind (batch 51) — now 3-state (off · critical · all)
+    if(_st==="off") return _KOFF;
+    if(_st==="critical" && n.__solo) return _KOFF; }   // critical hides single-caller-SAME-kind helpers
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
@@ -1562,20 +1564,43 @@ window.__uniGoto=function(id){ if(!id) return;
     var tb=document.getElementById("typesTog"); if(tb) tb.classList.add("on"); go(); return; }
   if(!_fnsOn && window.GABE_LEVELS && GABE_LEVELS.fn_nodes){ if(!_FNNODES) try{ _buildFnData(); }catch(e){}
     if((_FNNODES||[]).some(function(n){ return n.id===id; })){
-      CFG.showFns="on"; try{ toggleFns(true); }catch(e){}
-      if(window.__legRender) try{ __legRender(); }catch(e){} go(); } } };
+      if(window.__uniSetKindState) __uniSetKindState("function","all"); else { CFG.showFns="on"; try{ toggleFns(true); }catch(e){} }
+      go(); } } };
 /* ── HIDE-BY-KIND (batch 51) — the legend Types rows are CONTROLS: a click hides that kind
    GRAPH-WIDE (meshes, hulls, wires, shuttles — the same apply path the fleet uses) and dims
    the row; a second click restores. ── */
-window.__uniKindOff={};
+/* ── LEGEND 3-STATE (operator ruling) — each kind cycles ALL → CRITICAL → OFF. "critical" hides a
+   node whose ONLY caller is one node of the SAME kind (a private helper serving a single parent);
+   data kinds (model/schema/endpoint — no callers) have no critical, so it reads as "all" for them.
+   The BACKEND/FRONTEND legend headers are MASTERS that cycle their whole side. Functions are
+   load-based: OFF unloads, CRITICAL/ALL load. ── */
 var _KOFF={show:0,planets:0,wires:0,subs:0,zDef:0,zAtk:0,zCfl:0,zSat:0,routes:0};
+window.__uniKindState={};     // kind → "all" | "critical" | "off"
+window.__uniKindOff={};       // compat mirror (truthy iff state==="off")
+window.__uniGrpState={backend:"all", frontend:"all"};
+function _kindDefault(k){ return k==="function"?"off":"all"; }   // functions load on demand
+var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,imports:1,handler:1,"reads":1};
+window.__uniComputeSolo=function(){ var callers={};
+  links.forEach(function(l){ if(!_SOLO_REL[l.rel]) return; var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;   // a self-loop (recursion) is NOT an external parent (review LOW)
+    (callers[tn.id]=callers[tn.id]||{})[sn.id]=sn.kind; });
+  nodes.forEach(function(n){ var cs=callers[n.id]||{}, ks=Object.keys(cs); n.__solo=(ks.length===1 && cs[ks[0]]===n.kind); }); };
+window.__uniKindHasSolo=function(k){ for(var i=0;i<nodes.length;i++){ if(nodes[i].kind===k && nodes[i].__solo) return true; } return false; };
+window.__uniSetKindState=function(k, st, _defer){
+  __uniKindState[k]=st; if(st==="off") __uniKindOff[k]=1; else delete __uniKindOff[k];
+  if(k==="function" && window.toggleFns){ var want=(st!=="off"); if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } }
+  if(!_defer){ try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} } };
 window.__uniKindToggle=function(k){ if(!k) return;
-  if(k==="function" && window.toggleFns){                        // FUNCTION: the legend row LOADS/UNLOADS (the boolean is gone — operator)
-    var on=(CFG.showFns!=="on"); CFG.showFns=on?"on":"off"; try{ toggleFns(on); }catch(e){}
-    if(window.__legRender) try{ __legRender(); }catch(e){} return; }
-  if(__uniKindOff[k]) delete __uniKindOff[k]; else __uniKindOff[k]=1;
-  try{ _applyVisNow({all:true}); }catch(e){}
-  if(window.__legRender) try{ __legRender(); }catch(e){} };
+  var cur=__uniKindState[k]||_kindDefault(k);
+  var hasCrit=__uniKindHasSolo(k) || (k==="function" && cur==="off");   // no solo nodes → on/off only
+  var next=(cur==="all") ? (hasCrit?"critical":"off") : (cur==="critical") ? "off" : "all";
+  __uniSetKindState(k, next); };
+var _GRPKINDS={ backend:["endpoint","function","schema","model","external","entity"],
+                frontend:["route","component","hook","type","store","module","screen","web"] };
+window.__uniGroupToggle=function(group){ if(!_GRPKINDS[group]) return;
+  var cur=__uniGrpState[group]||"all", next=(cur==="all")?"critical":(cur==="critical")?"off":"all";
+  __uniGrpState[group]=next;
+  _GRPKINDS[group].forEach(function(k){ __uniSetKindState(k, next, true); });   // critical on a data kind reads as "all" in visN (no solos)
+  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
 /* ── the header SEARCH (batch 49) — one box over everything the station knows: live elements,
    held types (selecting one turns Types ON first), entities, clusters (current core), journeys.
    `/` focuses · ↑↓ move · Enter opens · Esc closes. Entries rebuild per keystroke from the LIVE
@@ -1611,8 +1636,7 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
         var sc=_score(q, n.label, n.id);
         if(sc>=0) out.push({g:"functions (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns ƒ ON",
           ico:svgInline("function", KINDCOL["function"], 12),
-          go:function(){ CFG.showFns="on"; try{ toggleFns(true); }catch(e){}
-            if(window.__legRender) try{ __legRender(); }catch(e){}
+          go:function(){ if(window.__uniSetKindState) __uniSetKindState("function","all"); else { CFG.showFns="on"; try{ toggleFns(true); }catch(e){} }
             if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
     }
     _ents.forEach(function(e){ var el=window.__uniEntLabel?__uniEntLabel(e):e;

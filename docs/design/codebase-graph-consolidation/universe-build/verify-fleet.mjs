@@ -61,7 +61,7 @@ const wire = await p.evaluate(() => {
 });
 // [B1] FLEET panel: per-entity show/subs — absence proofs match the real mechanism
 //      (hidden = the node's three object REMOVED from the scene, not a visible flag)
-const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+const raf = () => Promise.race([ p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))), new Promise(r => setTimeout(r, 800)) ]);   // headless: a settled force-graph stops requesting frames → rAF starves; cap it (a waitForTimeout always follows)
 const fleet = await p.evaluate(() => {
   const e = _ents[0];
   const rows = document.querySelectorAll('#fleet .flrow:not(.flmaster):not(.flpresets)').length;
@@ -138,7 +138,7 @@ await p2.goto('file://' + PAGE + '?war=1');
 await p2.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
 await p2.waitForFunction('window.__shipsReady===true', { timeout: 30000 }).catch(() => {});
 await p2.waitForTimeout(4000);
-const raf2 = () => p2.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
+const raf2 = () => Promise.race([ p2.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)))), new Promise(r => setTimeout(r, 800)) ]);   // headless rAF-starvation cap (same as raf)
 const meshCount = ent => p2.evaluate(e => {
   let c = 0; nodes.filter(n => n.ent === e).forEach(n => { if (n.__threeObj) n.__threeObj.traverse(() => c++); }); return c; }, ent);
 const zoneBase = await p2.evaluate(() => ({ ent: _ents[0], ctrl: _ents[1], fleettick: FLEETTICK.length,
