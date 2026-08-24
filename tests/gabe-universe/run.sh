@@ -266,6 +266,12 @@ check('var beEnts=_ents.filter(function(e){ return !__uniIsFeEnt(e); });' in pag
 check('cluster overrides follow only for the group' in page,
       "a group master must propagate ONLY into its own entities' cluster overrides")
 check('#fleet .flmaster.flgroup2{' in page, "the frontend section break (flgroup2) styling is gone")
+# backend-function community pass (operator fix): functions cluster over the call graph (ƒ·<hub>),
+# not into one giant "other" — symmetric to _feAssignSub, wired after it in usecase/community
+check('function _fnAssignSub(mode){' in page and '"ƒ·"+' in page,
+      "the backend-function community pass (_fnAssignSub, ƒ· naming) is gone")
+check('if(mode!=="fk") try{ _fnAssignSub(mode); }catch(e){}' in page,
+      "the fn community pass is not wired into the usecase/community core")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
 check("ti:\"Layer — group by the kind's architectural layer" in page and 'ti:"Chain — a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")

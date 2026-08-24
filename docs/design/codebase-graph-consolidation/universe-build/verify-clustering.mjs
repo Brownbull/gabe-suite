@@ -64,12 +64,32 @@ const after = await p.evaluate(prev => {
   const bad = nodes.filter(n => !isFinite(n.x) || !isFinite(n.y) || !isFinite(n.z)).length;
   return { meanDisp: Math.round(mean), movedPct: +(100 * moved / nodes.length).toFixed(1), nonFinite: bad };
 }, base.pos);
+
+// backend-function community pass (operator fix): with Functions ON + community core, functions
+// cluster over their call graph (ƒ·<hub>), not into one giant "other".
+await p.evaluate(() => { UNICAP.on = false; __uniApplyCapsules(); });   // unfold to inspect raw pieces
+await p.waitForTimeout(1200);
+await p.evaluate(() => { CFG.coreBy = 'community'; applyCfg('coreBy'); if (CFG.showFns!=='on'){ CFG.showFns='on'; toggleFns(true); } });
+await p.waitForTimeout(3500);
+const fnClust = await p.evaluate(() => {
+  // pick the entity with the MOST functions (call structure) — not the alphabetical first
+  const ent = _ents.slice().sort((a,b) => nodes.filter(n=>n.ent===b&&n.kind==='function').length
+    - nodes.filter(n=>n.ent===a&&n.kind==='function').length)[0];
+  assignSub('community');
+  const fns = nodes.filter(n => n.ent===ent && n.kind==='function');
+  const clustered = fns.filter(n => n.sub && n.sub!=='other');
+  const feCommunities = [...new Set(clustered.map(n=>n.sub))];
+  const fnNamed = feCommunities.every(s => /^ƒ·/.test(s));   // function + module communities both wear ƒ·
+  return { ent, total: fns.length, clustered: clustered.length, communities: feCommunities.length, fnNamed,
+           otherFrac: +((fns.length-clustered.length)/Math.max(1,fns.length)).toFixed(2) };
+});
 await b.close();
 
 console.log(`nodes ${base.nodes} · entities ${base.ents} · ringed entities ${base.ringedEnts}`);
 console.log(`separation: min anchor pair ${base.minAnchorPair} · bleed ${base.bleedPct}%`);
 console.log(`kind ring: per-entity ratio ${base.ringRatio} over ${base.ringEnts} entities · pooled ${base.epMeanR}/${base.inMeanR}`);
 console.log(`coreBy flip: mean displacement ${after.meanDisp} · moved>4u ${after.movedPct}% · nonFinite ${after.nonFinite}`);
+console.log(`fn-clustering(${fnClust.ent}): ${fnClust.total} fns → ${fnClust.communities} ƒ· communities · ${fnClust.clustered} clustered · other ${(fnClust.otherFrac*100).toFixed(0)}%`);
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
 const fails = [];
@@ -80,5 +100,6 @@ if (!(base.ringRatio > 1.35 && base.ringEnts >= 3)) fails.push('endpoints not ri
 if (!(after.meanDisp > 5 && after.movedPct > 40)) fails.push('coreBy did not re-arrange nodes');
 if (after.nonFinite) fails.push('non-finite node positions');
 if (base.ringedEnts < 1) fails.push('no entity got a sub-anchor ring');
+if (!(fnClust.communities >= 3 && fnClust.fnNamed && fnClust.otherFrac < 0.35)) fails.push('backend functions did not cluster into ƒ· communities (still dumping into other)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('CLUSTERING PROOF: ALL PASS');

@@ -117,6 +117,54 @@ function _levelsGroupMap(){ var D=window.GABE_LEVELS; if(!D||!D.pieces) return n
       var ep=(pc.endpoints||[]).filter(function(e){ return e.m===mth && e.p===pth; })[0];
       if(ep) out.guards[n.id]=((ep.guards||0)>0)?"guarded":"unguarded"; }
   }); return out; }
+/* ── BACKEND-FUNCTION SUB-CLUSTERS (operator fix) — the levels feed clusters only models/schemas/
+   endpoints + the few HANDLER functions by name; the internal helper functions match no community
+   and dumped into one huge "other" capsule (recipe: 62 → all "other"). Two-pass grouping, same
+   moving set n.kind==="function": (1) deterministic label-propagation over the INTRA-entity
+   function CALL graph (both ends kind==="function"; the same engine as _feAssignSub's community
+   branch — self-seeded, 10-round cap, tie-break by id → byte-stable), communities named
+   ƒ·<highest-degree-member>; (2) FILE fallback — functions the call graph left uncommitted group
+   by SOURCE MODULE (ƒ·<basename>/) when ≥2 share a file. Only n.kind==="function" subs move; every
+   data/fe piece keeps its own community. A lone function in its own file stays "other" (honest).
+   Measured on gustify: recipe 62→58 clustered/4 other · pantry 45/45 · allergen 9/12. ── */
+function _fnAssignSub(mode){
+  // fn↔fn call graph, INTRA-entity (a cross-entity call never merges two entities' clusters).
+  var adj={}, deg={}, ids=[];
+  for(var i=0;i<nodes.length;i++){ if(nodes[i].kind==="function") ids.push(nodes[i].id); }
+  if(!ids.length) return;                                        // Functions is OFF — nothing to cluster
+  ids.sort();
+  links.forEach(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
+    if(!s||!t||s.kind!=="function"||t.kind!=="function"||s.ent!==t.ent) return;
+    (adj[s.id]=adj[s.id]||[]).push(t.id); (adj[t.id]=adj[t.id]||[]).push(s.id);
+    deg[s.id]=(deg[s.id]||0)+1; deg[t.id]=(deg[t.id]||0)+1; });
+  // deterministic label propagation (same engine as _feAssignSub's community branch)
+  var lab={}; ids.forEach(function(id){ lab[id]=id; });
+  for(var r=0;r<10;r++){ var changed=false;
+    ids.forEach(function(id){ var c={}; (adj[id]||[]).forEach(function(v){ if(lab[v]!=null) c[lab[v]]=(c[lab[v]]||0)+1; });
+      var k=_domKey(c); if(!k||k===lab[id]) return;
+      if((c[k]||0)>(c[lab[id]]||0) || ((c[k]||0)===(c[lab[id]]||0) && k<lab[id])){ lab[id]=k; changed=true; } });
+    if(!changed) break; }
+  var groups={}; ids.forEach(function(id){ (groups[lab[id]]=groups[lab[id]]||[]).push(id); });
+  var name={}, used={};
+  Object.keys(groups).sort().forEach(function(g){ var mem=groups[g];
+    if(mem.length<2){ name[mem[0]]="other"; return; }           // a lone function is not a community — honest "other"
+    var rep=mem.slice().sort(function(a,b){ return (deg[b]||0)-(deg[a]||0) || (a<b?-1:1); })[0];
+    var nm="ƒ·"+(NIDS[rep]?NIDS[rep].label:rep), ek=(NIDS[rep]?NIDS[rep].ent:"?"), full=nm, n2=2;   // ƒ· marks a FUNCTION community (vs the c· data communities)
+    while(used[ek+"|"+full]){ full=nm+"·"+n2; n2++; }           // disambiguate same-named hubs within an entity
+    used[ek+"|"+full]=1; mem.forEach(function(id){ name[id]=full; }); });
+  // FILE fallback — functions the call graph left uncommitted (no captured calls, e.g. a sparse
+  // entity) group by their SOURCE MODULE: same-file functions are related even when graft saw no
+  // call. Only when >=2 orphans share a file; a lone orphan stays honest "other".
+  var byFile={};
+  nodes.forEach(function(n){ if(n.kind!=="function" || (name[n.id] && name[n.id]!=="other")) return;   // "other" (call-graph singleton) IS an orphan — let the file fallback try it
+    var f=String(n.id).split("#")[0], base=f.split("/").pop().replace(/\.[^.]+$/,"");   // apps/api/api/account.py → account
+    (byFile[f]=byFile[f]||{base:base, ids:[]}).ids.push(n.id); });
+  Object.keys(byFile).sort().forEach(function(f){ var g=byFile[f]; if(g.ids.length<2) return;
+    var nm="ƒ·"+g.base+"/", ek=(NIDS[g.ids[0]]?NIDS[g.ids[0]].ent:"?"), full=nm, n3=2;   // trailing / marks a MODULE group vs a call community
+    while(used[ek+"|"+full]){ full=nm+n3; n3++; } used[ek+"|"+full]=1;
+    g.ids.forEach(function(id){ name[id]=full; }); });
+  nodes.forEach(function(n){ if(n.kind==="function") n.sub=name[n.id]||"other"; });   // only FUNCTIONS move; data pieces keep their levels-join community
+}
 function assignSub(mode){ _assignSubImpl(mode);
   nodes.forEach(function(n){ if(n.__cap) n.sub=n.area||n.sub; }); }   // review 53[2]: a capsule's sub IS its area — no core may clobber it
 function _assignSubImpl(mode){
@@ -125,6 +173,7 @@ function _assignSubImpl(mode){
     var m=(_LMAP&&_LMAP[mode])||{};
     nodes.forEach(function(n){ n.sub=m[n.id]||"other"; });
     if(mode!=="fk") try{ _feAssignSub(mode); }catch(e){}   // batch 50: fe pieces get REAL groups (the levels maps only know backend names)
+    if(mode!=="fk") try{ _fnAssignSub(mode); }catch(e){}   // operator fix: backend functions cluster over the call graph, not into "other"
     return; }
   if(mode==="guards"){ if(!_LMAP) _LMAP=_levelsGroupMap(); var gm=(_LMAP&&_LMAP.guards)||{};
     nodes.forEach(function(n){ n.sub=(n.kind==="function")?"functions":(gm[n.id]||(n.kind==="endpoint"?"unguarded":"other")); }); return; }
