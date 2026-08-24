@@ -96,20 +96,27 @@ real-mouse clicks, or they hit the container where the pieces still are.
 Note: only the station page ships here — the sidebar's links to sibling center pages
 (board, entities, …) are illustrative chrome, not live in this isolated snapshot.
 
-## Regenerate (portable — no machine paths)
+## Regenerate (one command, portable)
 
-Build a twin's center into a temp dir (the twin's tree is never written), then copy
-the files out:
+The **entire** estate below — all 8 files — regenerates from
+`docs/design/codebase-graph-consolidation/universe-build/regen-example.sh`:
 
 ```bash
-TMP=$(mktemp -d)
-GABE_REPO_ROOT=<twin-repo> \
-GABE_CONFIG=<twin-repo>/docs/site/center/center.config.json \
-GABE_SHELL_SRC="$PWD/templates/center/shell" \
-GABE_CENTER_OUT="$TMP" \
-python3 templates/center/generators/build_center_a3.py
-# 1. rehome  assets/ → ../../assets/  in $TMP/codebase-graph.html, copy it here.
-# 2. copy $TMP/c4-graph.js here.
-# 3. copy shell/example/arch-graph-lab/sim.data.js here as the seeded fixture
-#    ($TMP/sim.data.js is the honest-empty null stub — do NOT ship that one).
+cd <suite-root>/docs/design/codebase-graph-consolidation/universe-build
+bash regen-example.sh            # rebuild + land all 8 files, run the static battery
+bash regen-example.sh --check    # byte-compare a fresh regen vs what's committed (writes nothing)
+GABE_TWIN=<twin-repo> bash regen-example.sh   # a twin center repo (default is the suite maintainer's local gustify)
 ```
+
+What it lands here (see that dir's README for the mechanism):
+
+| File | Source |
+|---|---|
+| `c4-graph.js` · `levels.js` · `levels.json` · `sim-archive.js` | one `GABE_GRAFT_BUILD=0` twin-read-only build (twin tree never written) |
+| `codebase-graph.html` · `codebase-archive.html` | the build's pages, `assets/` rehomed to `../../assets/` |
+| `gabe-universe.html` | `assemble.py` + `fill-example.py` |
+| `sim.data.js` | **DERIVED** from a real twin commit by `derive-seeded-sim.py` — a regenerable seed, **never** the build's `null` stub (that renders the change-graph blank; committing the stub was the 77fe3cd defect) |
+
+`sim-archive.js` is a committed accumulator; the wrapper regenerates it from the twin's
+archive. The proofs (`probes/`, the sibling `verify-*.mjs`) need headless chrome — see the
+universe-build README §Proofs and `../../../../docs/design/graft-adoption/spike/README.md`.

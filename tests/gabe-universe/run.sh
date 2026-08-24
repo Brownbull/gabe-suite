@@ -749,6 +749,7 @@ JS
   RENDER=$?
 else
   echo "  render: SKIP ⚠ — RENDER COVERAGE DID NOT RUN (no chrome/playwright-core/example on this host)."
+  echo "         provision: mkdir -p docs/design/graft-adoption/spike/_build && (cd \$_ && npm i playwright-core) ; system chrome, or set GABE_CHROME_BIN/GABE_PW_DIR (see docs/design/graft-adoption/spike/README.md §Rebuild)."
   echo "           the static contract above still holds, but the inline-engine execution path is UNVERIFIED here."
   RENDER=0
 fi

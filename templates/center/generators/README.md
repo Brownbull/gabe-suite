@@ -77,3 +77,25 @@ the port was proved behavior-preserving by a differential byte-diff — fed gast
 own bindings, the generalized generators reproduce gastify's committed center
 exactly (all 10 pages + `archmap.json` byte-identical modulo the wall-clock stamp).
 `_center_data.py` was split at the P165 seam (931 → 302 data + 144 results-ingest).
+
+## Environment contract (the GABE_* variables)
+
+`build_center_a3.py` and the arms read these; a fresh regen sets them explicitly:
+
+| Var | Meaning |
+|---|---|
+| `GABE_REPO_ROOT` | the project whose center is built (its tree is READ; writes only if `GABE_GRAFT_BUILD=1`) |
+| `GABE_CONFIG` | that project's `docs/site/center/center.config.json` (bindings + capture commands) |
+| `GABE_SHELL_SRC` | the vendored shell skeletons to fill (`templates/center/shell`) |
+| `GABE_CENTER_OUT` | redirect ALL writes here (a temp dir → twin-read-only build); unset = the project's own `docs/site/center` |
+| `GABE_GRAFT_BUILD` | `1` (default) self-provisions graft (`graft build` + scoped `.ignore` edit — **writes into the twin tree**); `0` reads the index as-found, twin tree untouched — use for a read-only regen |
+| `GABE_TS_DIR` | (fe arm) a dir whose `node_modules` has `typescript`; absent → the fe arm is honest-empty |
+| `GABE_FE_EXTRACT` | `0` disables the fe compiler pass (honest-empty) |
+
+**Twin-read-only recipe** (never writes the twin): `GABE_GRAFT_BUILD=0 GABE_REPO_ROOT=<twin>
+GABE_CONFIG=<twin>/docs/site/center/center.config.json GABE_SHELL_SRC=$PWD/templates/center/shell
+GABE_CENTER_OUT=$(mktemp -d) python3 templates/center/generators/build_center_a3.py`.
+
+**Propagate to an adopted twin**: `bash templates/center/generators/propagate.sh <twin-root>`
+(`--check` reports drift, writes nothing) — updates the twin's vendored generators + shell,
+then runs the twin's `scripts/refresh_center.sh regen`.

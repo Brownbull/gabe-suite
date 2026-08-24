@@ -101,8 +101,13 @@ check_invariants() {
       */tests/_archive/*) continue ;;
       */tests/scope-prompt-harness/*) continue ;;  # arg-driven CLI, needs API key — not a zero-arg battery
     esac
-    if ! bash "$h" >/dev/null 2>&1; then
+    _out=$(bash "$h" 2>&1); _rc=$?
+    if [ $_rc -ne 0 ]; then
       report "invariant" "harness FAILING — run: bash ${h#"$REPO"/}"
+    elif echo "$_out" | grep -qiE "SKIP ⚠|DID NOT RUN|SKIPPED-COVERAGE"; then
+      # report-never-gate: a green exit that SKIPPED coverage (no chrome/ts on this host)
+      # must not read as full CLEAN — surface it so a fresh machine knows to provision.
+      echo "  INFO   ${h#"$REPO"/} passed but SKIPPED coverage: $(echo "$_out" | grep -iE "SKIP ⚠|DID NOT RUN" | head -1 | sed 's/^ *//')"
     fi
   done
   # P3 — version parity: SKILL.md metadata.version must match the CLAUDE.md Capabilities row.

@@ -59,12 +59,23 @@
 - **Commits** (9, local on `graft-adoption`): `b0dc75c` station → `414d324` chrome (config/legend/web/nav) → `62939cd` entity-layout + 3 c4 cores → `822f6e4` levels cores → `abdf010` functions+guards+lines → `079c795` Planets|Universe tabs + orbit → `01953c3` planets tidy + perf → `7c5d5a2` static fleets + motion + freeze-on-drag → `ee19b5d` rigid orbit-around-click + transport speed. `git show <sha>` for each rationale.
 - **Memory**: `gabe-universe-station.md` (full arc). Pre-existing, NOT ours: center battery baseline is 129/3 (a duplicate `id="cls:"` in the Levels page — red before this work).
 
-## Build (reproducible pipeline)
+## Build (reproducible pipeline) — ONE COMMAND now
 
-The station is **assembled** from a copy of the spike + override parts, NOT hand-edited. Pipeline persisted at [docs/design/codebase-graph-consolidation/universe-build/](universe-build/):
+Every generated file regenerates (or drift-checks) from ONE wrapper — no session memory,
+no forgotten `cp`. See [universe-build/README.md](universe-build/README.md):
 
 ```
 cd docs/design/codebase-graph-consolidation/universe-build
+bash regen-example.sh            # rebuild + land ALL 8 estate files, run the static battery
+bash regen-example.sh --check    # byte-compare a fresh regen vs committed (writes nothing) — the reproducibility gate
+```
+
+`--check` CLEAN is the contract: content reproduces byte-identically; only provenance stamps
+(twin HEAD · wallclock · graft-index state — the graft arm is an inferred FLOOR) are normalized.
+
+The station is **assembled** from a copy of the spike + override parts, NOT hand-edited:
+
+```
 python3 assemble.py                         # transforms spike-base.html + parts/* → gabe-universe.html (here)
 ```
 - **`parts/adapter.js`** — GABE_C4 (l1/l2/cross_edges) → the spike's `{nodes,links}`; `ANIM` state; `ENT/EX/EY/EZ` entity maps.
@@ -72,13 +83,49 @@ python3 assemble.py                         # transforms spike-base.html + parts
 - **`parts/card.js`** — the live det-reading card. **`parts/station.css`** — chrome + config CSS. **`parts/chrome.html`** — nav + topbar.
 - **`assemble.py`** — line-splices the parts into `spike-base.html` + str.replace edits (documented inline). Re-running is idempotent; it byte-reproduces the landed station.
 
-**To land after an edit**: copy `universe-build/gabe-universe.html` → `templates/center/shell/gabe-universe.html`; then rebuild the example (fill the SHARED tokens with gustify values + rehome `./assets/`→`../../assets/`, keep `./c4-graph.js`/`./levels.js`). See any prior commit's landing step; the fill dict is in the batteries' history.
+**To land after an edit**: `bash regen-example.sh` does the whole chain (assemble → cp to shell → fill-example → battery). The `cp` is no longer a manual step to forget (it was, once — the batch-53 session, battery went red). The example `sim.data.js` is DERIVED from a real twin commit by `derive-seeded-sim.py` (regenerable, coherent with the feeds — never the `null` stub, which renders the change-graph blank).
 
 ## Verify (headless chrome)
 
-`playwright-core` + `google-chrome-stable` live under `docs/design/graft-adoption/spike/_build/node_modules`. Pattern (see `universe-build/verify-latest.mjs`): launch chromium `--use-angle=swiftshader --no-sandbox`, goto the filled dev page, `waitForFunction('window.__spikeKindsReady===true')`, capture `pageerror`+console-error (must be **0**), then `page.evaluate` against the engine globals (`nodes`, `links`, `CFG`, `EX/EY/EZ`, `Graph`, `ANIM`). The dev harness needs `c4-graph.js` + `levels.js` + `assets/` beside the filled page (copy from the example/shell dirs).
+`playwright-core` + `google-chrome-stable` live under `docs/design/graft-adoption/spike/_build/node_modules`. Pattern (see any `universe-build/verify-*.mjs`, e.g. `verify-panels.mjs` — env-overridable via `GABE_PW_DIR`/`GABE_CHROME_BIN`): launch chromium `--use-angle=swiftshader --no-sandbox`, goto the filled dev page, `waitForFunction('window.__spikeKindsReady===true')`, capture `pageerror`+console-error (must be **0**), then `page.evaluate` against the engine globals (`nodes`, `links`, `CFG`, `EX/EY/EZ`, `Graph`, `ANIM`). The dev harness needs `c4-graph.js` + `levels.js` + `assets/` beside the filled page (copy from the example/shell dirs).
 
 ---
+
+## REGEN AUDIT — cold-start reproducibility (2026-08-24)
+
+Operator ask: "be in position to regenerate all the generated from scratch, not depend on
+current context." A 3-lens/26-agent audit (verify phase cut short by a usage-credit limit;
+findings hand-confirmed against the tree). What landed:
+
+- **`regen-example.sh`** — ONE command rebuilds/`--check`s all 8 estate files. `--check` CLEAN
+  proven (content byte-identical; provenance stamps normalized). Folds in the previously-manual
+  `cp`-to-shell that went red once.
+- **`derive-seeded-sim.py`** — the example `sim.data.js` is now DERIVED from a real twin commit
+  (pure `build_sim`, deterministic per twin state), fixing the shipped **null-stub defect**
+  (77fe3cd committed `GABE_SIM=null` → the change-graph rendered blank). Shipped stations render
+  the seeded change 0-error.
+- **`universe-build/README.md`** — the assemble→land→fill→battery order, was memory-only.
+- **`propagate.sh`** (`templates/center/generators/`) — the suite→adopted-twin copy-set
+  (generators→scripts/, shell→shell, then `refresh_center.sh regen`), was memory-only; `--check`
+  confirms gustify in sync.
+- **`tests/frontend/fixture/README.md`** — the `extract.frozen.json` refreeze recipe (verified
+  byte-identical), was written nowhere.
+- **generators `README.md`** — the `GABE_*` environment contract incl. `GABE_GRAFT_BUILD=0` for a
+  twin-read-only build (the old recipe wrongly claimed "never writes the twin").
+- **Proof portability** — deleted two dead harnesses (`verify-latest`/`verify-universe`: bare
+  imports + wiped-scratchpad targets); `verify-search` + all 7 `port*` probes now env-overridable
+  (`GABE_PW_DIR`/`GABE_CHROME_BIN`); the render-SKIP message names the provisioning recipe;
+  suite-doctor now surfaces a battery that passed but SKIPPED coverage (report-never-gate).
+- **shell `README.md`** — added the missing `gabe-universe.html` station row.
+
+**OWED (author-time proof debt — NOT a render defect; deferred, dosed to the ask):** the
+`example/*/probes/port1..7` decay on TWO axes — station-DOM drift (port1/3/6 fail even on the
+correct fixture, from batches 48–53) and fixture-shape coupling (they hardcode the old 2-entity
+change; the derived sim is a 4-entity change). `port2` (nulls the sim) is the only green one —
+same as at HEAD, where the committed sim was the null stub. Re-pin against the current station +
+read involved-entity counts from `window.GABE_SIM` so they survive future regens.
+**Trigger:** next time the change-graph/archive stations are edited, or a deliberate probe pass.
+
 
 ## CLUSTERING — LANDED (batch 9, `985f9b0`)
 

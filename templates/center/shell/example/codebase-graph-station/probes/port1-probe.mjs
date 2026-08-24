@@ -8,13 +8,17 @@
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import path from 'path';
-const require = createRequire('/home/khujta/.npm/_npx/9833c18b2d85bc59/node_modules/');
+// engine: GABE_PW_DIR must be a node_modules that has `playwright` (full — the probes use
+// its chromium). Default = this machine's npx cache; a fresh clone sets GABE_PW_DIR +
+// GABE_CHROME_BIN (see probes/README.md).
+const _PWBASE = process.env.GABE_PW_DIR || '/home/khujta/.npm/_npx/9833c18b2d85bc59/node_modules/';
+const require = createRequire(_PWBASE.replace(/\/?$/, '/') + 'x.js');
 const { chromium } = require('playwright');
 let P=0,F=0; const ok=(c,m)=>{ if(c){P++;} else {F++; console.log('  FAIL:',m);} };
 const here = path.dirname(fileURLToPath(import.meta.url));
 const page_url = 'file://' + path.join(here, '..', 'codebase-graph.html');
 
-const b = await chromium.launch({ executablePath: '/home/khujta/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell' });
+const b = await chromium.launch({ executablePath: process.env.GABE_CHROME_BIN || '/usr/bin/google-chrome-stable' });
 const pg = await b.newPage({ viewport:{ width:1440, height:900 } });
 const errs=[];
 pg.on('console',m=>{ if(m.type()==='error') errs.push(m.text()); });

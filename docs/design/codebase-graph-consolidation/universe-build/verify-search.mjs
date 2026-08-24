@@ -5,11 +5,12 @@
 // [8] Esc closes; typing never flies the camera. 0 page/console errors throughout.
 import path from 'node:path';
 import { createRequire } from 'node:module';
-const req = createRequire('/home/khujta/projects/gabe_lens/docs/design/graft-adoption/spike/_build/package.json');
-const { chromium } = req('playwright-core');
+const D0 = path.dirname(new URL(import.meta.url).pathname);
+const PW = process.env.GABE_PW_DIR || path.resolve(D0, '../../graft-adoption/spike/_build/node_modules/playwright-core');
+const { chromium } = createRequire(PW + '/x.js')('playwright-core');
 const D = path.dirname(new URL(import.meta.url).pathname);
 const PAGE = path.resolve(D, '../../../../templates/center/shell/example/codebase-graph-station/gabe-universe.html');
-const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome-stable', args: ['--use-angle=swiftshader', '--no-sandbox', '--enable-unsafe-swiftshader'] });
+const b = await chromium.launch({ executablePath: process.env.GABE_CHROME_BIN || '/usr/bin/google-chrome-stable', args: ['--use-angle=swiftshader', '--no-sandbox', '--enable-unsafe-swiftshader'] });
 const p = await b.newPage({ viewport: { width: 1400, height: 900 } });
 const errs = []; p.on('pageerror', e => errs.push('PE:' + e.message));
 p.on('console', m => { if (m.type() === 'error') errs.push('CE:' + m.text()); });

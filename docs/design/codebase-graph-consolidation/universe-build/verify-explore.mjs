@@ -5,11 +5,11 @@ import { createRequire } from 'module';
 import path from 'path';
 import { fileURLToPath } from 'url';
 const D = path.dirname(fileURLToPath(import.meta.url));
-const PW = path.resolve(D, '../../graft-adoption/spike/_build/node_modules/playwright-core');
+const PW = process.env.GABE_PW_DIR || path.resolve(D, '../../graft-adoption/spike/_build/node_modules/playwright-core');
 const PAGE = path.resolve(D, '../../../../templates/center/shell/example/codebase-graph-station/gabe-universe.html');
 const { chromium } = createRequire(import.meta.url)(PW);
 
-const b = await chromium.launch({ executablePath: '/usr/bin/google-chrome-stable',
+const b = await chromium.launch({ executablePath: process.env.GABE_CHROME_BIN || '/usr/bin/google-chrome-stable',
   args: ['--use-angle=swiftshader', '--no-sandbox', '--disable-gpu-sandbox'] });
 const p = await b.newPage({ viewport: { width: 1400, height: 860 } });
 const errs = []; p.on('pageerror', e => errs.push('PE:' + e.message));
