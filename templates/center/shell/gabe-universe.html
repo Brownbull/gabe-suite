@@ -2335,17 +2335,23 @@ window.__uniFleetSpot=function(ent, sub){ try{
   var f=tr||er; if(f&&f.scrollIntoView) f.scrollIntoView({block:"nearest"});
 }catch(e){} };
 /* the ONE fleet toggle — clicks and the 1–8 number keys both land here (ent "*" = the ALL row) */
+function _entSubKeys(ent){ var seen={}; nodes.forEach(function(n){ if(n.ent===ent && n.sub!=null) seen[ent+"|"+n.sub]=1; }); return Object.keys(seen); }
 window.__uniFleetToggle=function(ent, sub, col){ try{
   var C=_FCOLS.filter(function(c){ return c.k===col; })[0];
   if(sub!=null && ent!=="*"){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
-    sv[col]=sv[col]?0:1; }
+    var was=sv[col]; sv[col]=sv[col]?0:1;
+    if(col==="show" && !was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent].show) UNIVIS.ent[ent].show=1;   // SHOW: a cluster turned ON re-enables its entity — the LAST click makes it appear (explore-one-cluster)
+  }
   else if(ent==="*"||ent==="*backend"||ent==="*frontend"){
     var sel=(ent==="*backend")?_ents.filter(function(e){return !__uniIsFeEnt(e);})
            :(ent==="*frontend")?_ents.filter(function(e){return __uniIsFeEnt(e);}):_ents;   // group master = its own subset
     var on=!sel.every(function(e){ return UNIVIS.ent[e][col]; });                    // any off → all on; all on → all off
     var sset={}; sel.forEach(function(e){ sset[e]=1; UNIVIS.ent[e][col]=on?1:0; });
     Object.keys(UNIVIS.sub).forEach(function(k){ if(sset[k.split("|")[0]]) UNIVIS.sub[k][col]=on?1:0; }); }   // cluster overrides follow only for the group's entities
-  else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
+  else { UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
+    if(col==="show"){ var eon=UNIVIS.ent[ent].show;                                 // SHOW ENTITY is a MASTER over its clusters: off → turn every cluster off · on → turn them all on
+      _entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF))).show=eon?1:0; }); }
+  }
   applyVis(C?C.scope:"all"); __uniFleetSync(); }catch(e){} };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   body.querySelectorAll(".fltog").forEach(function(b){ var ent=b.getAttribute("data-fent"), sub=b.getAttribute("data-fsub"),

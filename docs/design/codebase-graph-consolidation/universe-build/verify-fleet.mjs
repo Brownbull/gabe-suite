@@ -247,6 +247,26 @@ const hover = await p2.evaluate(() => ({
   fn: !!document.querySelector('#fnsTog[title]'),                                   // the ƒ-toggle (batch 42) carries the live-count explainer
   hd: !!document.querySelector('.grplbl[title]'),                                    // section labels live in the drawer panes (stashed in-document)
   notesGone: !document.body.innerHTML.includes('chain = layered plane') && !document.body.innerHTML.includes('joined from the levels feed by name') }));
+// SHOW ENTITY is a MASTER over its clusters (operator ask): off → all clusters off;
+// a cluster turned on re-enables its entity (last click makes it appear); on → all clusters on.
+const showMaster = await p2.evaluate(() => {
+  const E = _ents.find(e => nodes.filter(n=>n.ent===e && n.sub!=null).length > 3) || 'recipe';
+  const keys = (() => { const s={}; nodes.forEach(n=>{ if(n.ent===E && n.sub!=null) s[E+'|'+n.sub]=1; }); return Object.keys(s); })();
+  const showOf = k => (UNIVIS.sub[k]||{show:1}).show;
+  if (!UNIVIS.ent[E].show) __uniFleetToggle(E,null,'show');            // start ON
+  __uniFleetToggle(E, null, 'show');                                   // entity OFF → all clusters off
+  const allOff = UNIVIS.ent[E].show===0 && keys.every(k=>showOf(k)===0);
+  const sub0 = keys[0].split('|').slice(1).join('|');
+  __uniFleetToggle(E, sub0, 'show');                                   // one cluster ON → entity re-enabled, others still off
+  const one = showOf(keys[0])===1 && UNIVIS.ent[E].show===1 && keys.slice(1).every(k=>showOf(k)===0);
+  const visOnly = nodes.filter(n=>n.ent===E && n.sub===sub0).every(n=>visN(n).show===1)
+    && !nodes.filter(n=>n.ent===E && n.sub!=null && n.sub!==sub0).some(n=>visN(n).show===1);
+  __uniFleetToggle(E, null, 'show');                                   // ON → OFF (master)
+  const cycOff = keys.every(k=>showOf(k)===0);
+  __uniFleetToggle(E, null, 'show');                                   // OFF → ON (master)
+  const cycOn = keys.every(k=>showOf(k)===1);
+  return { keys: keys.length, allOff, one, visOnly, cycOff, cycOn };
+});
 // backend/frontend split (operator ask): two group masters, each controlling its own subset
 const split = await p2.evaluate(() => {
   const body = document.getElementById('fleetbody');
@@ -318,9 +338,12 @@ if (!(masterFix.offBefore && masterFix.propagated)) fails.push('ALL master row d
 if (!masterFix.dim) fails.push('cluster switch does not dim when its entity is off');
 if (!(hover.core && hover.lay && hover.fn && hover.hd && hover.notesGone)) fails.push('hover explainers / note removal wrong');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
+console.log('showMaster:', JSON.stringify(showMaster));
+if (!(showMaster.keys>1 && showMaster.allOff && showMaster.one && showMaster.visOnly && showMaster.cycOff && showMaster.cycOn))
+  fails.push('Show-Entity is not a master over its clusters (off→all off · cluster-on re-enables entity · on→all on)');
 console.log('split(BE/FE):', JSON.stringify(split));
 if (!(split.masters === '*backend,*frontend' && split.labels === 'backend,frontend')) fails.push('fleet is not split into backend + frontend masters');
 if (!(split.be > 0 && split.fe > 0 && split.contiguous)) fails.push('backend/frontend rows not grouped contiguously');
 if (!(split.feHidden && split.beKept && split.feBack)) fails.push('the frontend master does not independently control the frontend group');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
-console.log('FLEET PROOF (A + B1 + B2 + C + SPLIT): ALL PASS');
+console.log('FLEET PROOF (A + B1 + B2 + C + SPLIT + SHOW-MASTER): ALL PASS');

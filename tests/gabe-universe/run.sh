@@ -272,6 +272,11 @@ check('function _fnAssignSub(mode){' in page and '"ƒ·"+' in page,
       "the backend-function community pass (_fnAssignSub, ƒ· naming) is gone")
 check('if(mode!=="fk") try{ _fnAssignSub(mode); }catch(e){}' in page,
       "the fn community pass is not wired into the usecase/community core")
+# Show-Entity is a MASTER over its clusters (operator ask): off→all off · cluster-on re-enables entity · on→all on
+check('SHOW ENTITY is a MASTER over its clusters' in page and 'function _entSubKeys(ent)' in page,
+      "the show-entity master (entity toggle propagates to clusters) is gone")
+check('a cluster turned ON re-enables its entity' in page,
+      "a cluster turned on no longer re-enables its entity")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
 check("ti:\"Layer — group by the kind's architectural layer" in page and 'ti:"Chain — a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")
