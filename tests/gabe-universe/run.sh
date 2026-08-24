@@ -254,8 +254,18 @@ check('cluster hidden by the fleet panel' in page, "sub-hull seam misses the clu
 check('sub-aware' in page, "transports do not resolve visibility at NODE level (cluster routes-off would leak)")
 check('.fltog.flstog.on{ background:#0b7a63' in page,
       "cluster switches wear the entity color — the two levels must read differently")
-# batch 11-B4: the ALL row reaches cluster overrides; inherited-off dims; explainers live on hover
-check('the ALL row is a bulk gesture' in page, "the ALL master row does not propagate into cluster overrides")
+# fleet backend/frontend split (operator ask): two group masters, each iterating its own subset;
+# the split predicate is the capsule-proof display label (fe · …), not the fe· key prefix
+check('window.__uniIsFeEnt=function(e){ return window.__uniEntLabel' in page,
+      "the capsule-proof frontend predicate (__uniIsFeEnt via the display label) is gone")
+check('_masterRow("backend", "*backend"' in page and '_masterRow("frontend", "*frontend"' in page,
+      "the fleet lost its two group masters (backend + frontend)")
+check('var beEnts=_ents.filter(function(e){ return !__uniIsFeEnt(e); });' in page
+      and 'var feEnts=_ents.filter(function(e){ return __uniIsFeEnt(e); });' in page,
+      "the fleet render does not split entities into backend + frontend groups")
+check('cluster overrides follow only for the group' in page,
+      "a group master must propagate ONLY into its own entities' cluster overrides")
+check('#fleet .flmaster.flgroup2{' in page, "the frontend section break (flgroup2) styling is gone")
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
 check("ti:\"Layer — group by the kind's architectural layer" in page and 'ti:"Chain — a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")

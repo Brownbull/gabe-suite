@@ -209,7 +209,12 @@ const regroup = await p2.evaluate(c => { const staleKeys = Object.keys(UNIVIS.su
 // [C] presets: sim feed loaded (GABE_SIM null at rest on the example) · In-flight honestly stubbed ·
 //     None hides everything, All restores — through the same preset entry point
 const presetC = await p2.evaluate(() => ({
-  simDefined: typeof window.GABE_SIM !== 'undefined', simAtRest: window.GABE_SIM === null,
+  simDefined: typeof window.GABE_SIM !== 'undefined',
+  // the example may ship EITHER at-rest (null) OR a seeded in-flight change (derived seed —
+  // the change-graph station needs one to demonstrate); the stub title must MATCH whichever.
+  inflight: window.GABE_SIM !== null && typeof window.GABE_SIM !== 'undefined',
+  stubMatchesState: (() => { const t = (document.querySelector('#fleet .flpre[data-fpre="inflight"]') || {}).title || '';
+    return window.GABE_SIM === null ? /no change in flight/.test(t) : /change IS in flight/.test(t); })(),
   stub: (document.querySelector('#fleet .flpre[data-fpre="inflight"]') || {}).disabled === true,
   stubTitle: (document.querySelector('#fleet .flpre[data-fpre="inflight"]') || {}).title || '' }));
 await p2.evaluate(() => { document.querySelector('#fleet .flpre[data-fpre="none"]').click(); });
@@ -242,6 +247,22 @@ const hover = await p2.evaluate(() => ({
   fn: !!document.querySelector('#fnsTog[title]'),                                   // the ƒ-toggle (batch 42) carries the live-count explainer
   hd: !!document.querySelector('.grplbl[title]'),                                    // section labels live in the drawer panes (stashed in-document)
   notesGone: !document.body.innerHTML.includes('chain = layered plane') && !document.body.innerHTML.includes('joined from the levels feed by name') }));
+// backend/frontend split (operator ask): two group masters, each controlling its own subset
+const split = await p2.evaluate(() => {
+  const body = document.getElementById('fleetbody');
+  const masters = [...body.querySelectorAll('.flmaster')].map(m => m.getAttribute('data-fgrp')).join(',');
+  const labels = [...body.querySelectorAll('.flmaster .flent')].map(m => m.textContent).join(',');
+  const rows = [...body.querySelectorAll('.flrow[data-fle]:not(.flsub)')].map(r => r.getAttribute('data-fle'));
+  const order = rows.map(e => __uniIsFeEnt(e)); const firstFe = order.indexOf(true);
+  const contiguous = firstFe === -1 || order.slice(firstFe).every(x => x);   // all backend, then all frontend
+  const feEnts = _ents.filter(e => __uniIsFeEnt(e)), beEnts = _ents.filter(e => !__uniIsFeEnt(e));
+  // frontend master SHOW off → every frontend entity hidden, backend untouched (the backend-only fallback)
+  document.querySelector('.flmaster[data-fgrp="*frontend"] .fltog[data-fcol="show"]').click();
+  const feHidden = feEnts.every(e => !UNIVIS.ent[e].show), beKept = beEnts.every(e => UNIVIS.ent[e].show);
+  document.querySelector('.flmaster[data-fgrp="*frontend"] .fltog[data-fcol="show"]').click();  // restore
+  const feBack = feEnts.every(e => UNIVIS.ent[e].show);
+  return { masters, labels, be: beEnts.length, fe: feEnts.length, contiguous, feHidden, beKept, feBack };
+});
 await b.close();
 
 console.log('wire styling:', JSON.stringify(wire));
@@ -288,8 +309,8 @@ if (!(sm1 < sm0)) fails.push('per-cluster zone off did not shrink its fleet mesh
 if (!(regroup.cnt2 >= 1 && regroup.kept < regroup.staleKeys))
   fails.push('core change does not regroup / drop stale cluster overrides');
 console.log('presets(C):', JSON.stringify(presetC), '· none →', JSON.stringify(noneState), '· all →', JSON.stringify(allState));
-if (!(presetC.simDefined && presetC.simAtRest && presetC.stub && /no change in flight/.test(presetC.stubTitle)))
-  fails.push('sim feed / in-flight stub wrong');
+if (!(presetC.simDefined && presetC.stub && presetC.stubMatchesState))
+  fails.push('sim feed / in-flight stub wrong (title must match the shipped sim state)');
 if (!(noneState.anyShown === false && noneState.movers === 0)) fails.push('None preset leaves scene objects');
 if (!(allState.shown > 200 && allState.hulls > 0)) fails.push('All preset does not restore');
 console.log('master+dim(B4):', JSON.stringify(masterFix), '· hover:', JSON.stringify(hover));
@@ -297,4 +318,9 @@ if (!(masterFix.offBefore && masterFix.propagated)) fails.push('ALL master row d
 if (!masterFix.dim) fails.push('cluster switch does not dim when its entity is off');
 if (!(hover.core && hover.lay && hover.fn && hover.hd && hover.notesGone)) fails.push('hover explainers / note removal wrong');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
-console.log('FLEET PROOF (A + B1 + B2 + C): ALL PASS');
+console.log('split(BE/FE):', JSON.stringify(split));
+if (!(split.masters === '*backend,*frontend' && split.labels === 'backend,frontend')) fails.push('fleet is not split into backend + frontend masters');
+if (!(split.be > 0 && split.fe > 0 && split.contiguous)) fails.push('backend/frontend rows not grouped contiguously');
+if (!(split.feHidden && split.beKept && split.feBack)) fails.push('the frontend master does not independently control the frontend group');
+if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
+console.log('FLEET PROOF (A + B1 + B2 + C + SPLIT): ALL PASS');

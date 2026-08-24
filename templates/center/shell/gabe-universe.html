@@ -340,6 +340,8 @@
   #fleet .flhead, #fleet .flrow{ display:flex; align-items:center; gap:3px; padding:1px 0; }
   #fleet .flhead{ margin-bottom:2px; border-bottom:1px solid var(--line); padding-bottom:3px; }
   #fleet .flmaster{ border-bottom:1px dotted var(--line); padding-bottom:3px; margin-bottom:2px; }
+  #fleet .flmaster.flgroup2{ margin-top:9px; border-top:1px solid var(--line); padding-top:5px; }   /* the frontend section — a subtle break below the backend block */
+  #fleet .flmaster .flent{ font-weight:600; }
   #fleet .flent{ width:84px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; color:var(--ink); display:flex; align-items:center; gap:5px; flex:none; }
   #fleet .flmaster .flent{ color:var(--muted); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; }
   #fleet .fldot{ width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; }
@@ -2214,6 +2216,7 @@ window.__uniFlOpen=function(key, remount){ try{
   document.querySelectorAll("#fleetbody .flhead .flcfgbtn").forEach(function(c){
     c.classList.toggle("on", c.getAttribute("data-fk")===key); });
 }catch(e){} };
+window.__uniIsFeEnt=function(e){ return window.__uniEntLabel ? /^fe · /.test(__uniEntLabel(e)) : /^fe·/.test(e); };
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
     var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs"||c.k==="wires"||c.k==="routes");  // every config now lives here
@@ -2221,17 +2224,27 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
       +(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')
       +(cfgable?' · CLICK for its configuration':'')+'">'
       +(typeof ico==="function"?ico(c.icon,13):"")+(i>=1?'<i class="flkey">'+i+'</i>':'')+'</span>'; }).join('')+'</div>';
-  h+='<div class="flrow flmaster"><span class="flent">all</span>'+_FCOLS.map(function(c){
-    return '<button class="fltog flall" data-fent="*" data-fcol="'+c.k+'" title="'+c.ti+' — all entities"></button>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
-  _ents.forEach(function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
-    h+='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' — click to SELECT it (panel + camera); the count expands its clusters">'
+  // backend vs frontend split (operator ask): fe·<entity> pieces are the frontend estate;
+  // each group gets its OWN master row so the two are controlled independently — hide the
+  // frontend master's `show` and the graph falls back to the backend-only diagram.
+  var beEnts=_ents.filter(function(e){ return !__uniIsFeEnt(e); });
+  var feEnts=_ents.filter(function(e){ return __uniIsFeEnt(e); });
+  var _entRow=function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
+    var r='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' — click to SELECT it (panel + camera); the count expands its clusters">'
       +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt flexp" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+(window.__uniEntLabel?__uniEntLabel(e):e)+'</span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
-    if(open) gk.forEach(function(s){ var key=e+"|"+s;
-      h+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
-        +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';   // a cluster has no sub-clusters
-          return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join('')+'</div>'; }); });
+    if(open) gk.forEach(function(s){
+      r+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
+        +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';
+          return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join(''); r+='</div>'; });
+    return r; };
+  var _masterRow=function(label, tag, extra){ return '<div class="flrow flmaster'+(extra||'')+'" data-fgrp="'+tag+'"><span class="flent">'+label+'</span>'
+      +_FCOLS.map(function(c){ return '<button class="fltog flall" data-fent="'+tag+'" data-fcol="'+c.k+'" title="'+c.ti+' — all '+label+' entities"></button>'; }).join('')+'</div>'; };
+  h+=_masterRow("backend", "*backend", "");
+  beEnts.forEach(function(e){ h+=_entRow(e); });
+  if(feEnts.length){ h+=_masterRow("frontend", "*frontend", " flgroup2");
+    feEnts.forEach(function(e){ h+=_entRow(e); }); }
   body.innerHTML=h;
   body.querySelectorAll(".flhead .flcfgbtn").forEach(function(cell){ cell.onclick=function(){
     if(window.__uniFlOpen) __uniFlOpen(cell.getAttribute("data-fk")); }; });
@@ -2277,9 +2290,12 @@ window.__uniFleetToggle=function(ent, sub, col){ try{
   var C=_FCOLS.filter(function(c){ return c.k===col; })[0];
   if(sub!=null && ent!=="*"){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
     sv[col]=sv[col]?0:1; }
-  else if(ent==="*"){ var on=!_ents.every(function(e){ return UNIVIS.ent[e][col]; });   // any off → all on; all on → all off
-    _ents.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0; });
-    Object.keys(UNIVIS.sub).forEach(function(k){ UNIVIS.sub[k][col]=on?1:0; }); }      // the ALL row is a bulk gesture — cluster overrides follow it
+  else if(ent==="*"||ent==="*backend"||ent==="*frontend"){
+    var sel=(ent==="*backend")?_ents.filter(function(e){return !__uniIsFeEnt(e);})
+           :(ent==="*frontend")?_ents.filter(function(e){return __uniIsFeEnt(e);}):_ents;   // group master = its own subset
+    var on=!sel.every(function(e){ return UNIVIS.ent[e][col]; });                    // any off → all on; all on → all off
+    var sset={}; sel.forEach(function(e){ sset[e]=1; UNIVIS.ent[e][col]=on?1:0; });
+    Object.keys(UNIVIS.sub).forEach(function(k){ if(sset[k.split("|")[0]]) UNIVIS.sub[k][col]=on?1:0; }); }   // cluster overrides follow only for the group's entities
   else UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
   applyVis(C?C.scope:"all"); __uniFleetSync(); }catch(e){} };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
@@ -2287,8 +2303,11 @@ window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody");
     col=b.getAttribute("data-fcol"), C=_FCOLS.filter(function(c){ return c.k===col; })[0];
     if(sub!=null){ b.classList.toggle("on", !!(UNIVIS.sub[ent+"|"+sub]||_VISDEF)[col]);
       b.classList.toggle("mdim", !(C&&C.g()) || !(UNIVIS.ent[ent]||_VISDEF)[col]); return; }   // parent entity off → the cluster switch reads inherited-off (dim)
-    if(ent!=="*") b.classList.toggle("on", !!(UNIVIS.ent[ent]||_VISDEF)[col]);
-    else b.classList.toggle("on", _ents.every(function(e){ return UNIVIS.ent[e][col]; }));
+    if(ent==="*"||ent==="*backend"||ent==="*frontend"){
+      var sel=(ent==="*backend")?_ents.filter(function(e){return !__uniIsFeEnt(e);})
+             :(ent==="*frontend")?_ents.filter(function(e){return __uniIsFeEnt(e);}):_ents;
+      b.classList.toggle("on", sel.length>0 && sel.every(function(e){ return UNIVIS.ent[e][col]; })); }
+    else b.classList.toggle("on", !!(UNIVIS.ent[ent]||_VISDEF)[col]);
     b.classList.toggle("mdim", !(C&&C.g())); }); };
 var _flOpen={};   // which entity rows are expanded to their clusters
 

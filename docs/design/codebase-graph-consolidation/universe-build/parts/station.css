@@ -194,6 +194,8 @@
   #fleet .flhead, #fleet .flrow{ display:flex; align-items:center; gap:3px; padding:1px 0; }
   #fleet .flhead{ margin-bottom:2px; border-bottom:1px solid var(--line); padding-bottom:3px; }
   #fleet .flmaster{ border-bottom:1px dotted var(--line); padding-bottom:3px; margin-bottom:2px; }
+  #fleet .flmaster.flgroup2{ margin-top:9px; border-top:1px solid var(--line); padding-top:5px; }   /* the frontend section — a subtle break below the backend block */
+  #fleet .flmaster .flent{ font-weight:600; }
   #fleet .flent{ width:84px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:10.5px; color:var(--ink); display:flex; align-items:center; gap:5px; flex:none; }
   #fleet .flmaster .flent{ color:var(--muted); font-size:9.5px; text-transform:uppercase; letter-spacing:.06em; }
   #fleet .fldot{ width:7px; height:7px; border-radius:50%; flex:none; display:inline-block; }
