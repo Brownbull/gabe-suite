@@ -38,6 +38,16 @@ repl = {
   949: (955, TRUSTCONNS),
   969: (1043, card),
 }
+# GUARD (2026): the map keys are HARDCODED spike-base line numbers, so ANY line-count change
+# above a key silently shifts a replacement onto the wrong statement (once truncated `usage`
+# and produced un-parseable JS). Assert each content-bearing START line still holds what its
+# transform expects — a shift now fails LOUD here instead of shipping broken JS downstream.
+_ANCHORS = {234: "var NODEDEF=[", 588: "var REL2KIND={", 946: "var G=function",
+            949: "function trustTag(label){", 969: "var cids=function"}   # first token of each rewritten region
+for _ln, _needle in _ANCHORS.items():
+    _src = lines[_ln-1] if _ln-1 < len(lines) else ""
+    assert _needle in _src, ("assemble line-map STALE at %d: expected %r, found %r — a spike-base "
+        "line-count change shifted the map; re-sync the keys in `repl`." % (_ln, _needle, _src.strip()[:60]))
 out=[]; i=1; N=len(lines)
 while i<=N:
     if i in repl:
@@ -432,7 +442,7 @@ text = text.replace(OLD_TYPES, NEW_TYPES, 1)
 OLD_KROW = '''      if(it.t==="kind"){ var K=KINDS[it.k]; h+=\'<div class="lgrow"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — its actual icon glyph'''
 assert OLD_KROW in text, "legend kind-row anchor missing"
 NEW_KROW = '''      if(it.t==="hd"){ h+=\'<div class="lghd2">\'+it.l+\'</div>\'; return; }   // group header (frontend · backend), spans the grid
-      if(it.t==="kind"){ var K=KINDS[it.k]; var _off=window.__uniKindOff&&__uniKindOff[it.k];
+      if(it.t==="kind"){ var K=KINDS[it.k]; var _off=(it.k==="function")?(CFG.showFns!=="on"):(window.__uniKindOff&&__uniKindOff[it.k]);
         h+=\'<div class="lgrow lgk\'+(_off?" lgoff":"")+\'" data-lgk="\'+it.k+\'" title="\'+(_off?"hidden — click to SHOW ":"click to HIDE ")+K.type+\' graph-wide"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — a hide-by-kind CONTROL now'''
 text = text.replace(OLD_KROW, NEW_KROW, 1)
 

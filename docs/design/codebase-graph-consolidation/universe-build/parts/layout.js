@@ -124,53 +124,36 @@ function _levelsGroupMap(){ var D=window.GABE_LEVELS; if(!D||!D.pieces) return n
       var ep=(pc.endpoints||[]).filter(function(e){ return e.m===mth && e.p===pth; })[0];
       if(ep) out.guards[n.id]=((ep.guards||0)>0)?"guarded":"unguarded"; }
   }); return out; }
-/* ── BACKEND-FUNCTION SUB-CLUSTERS (operator fix) — the levels feed clusters only models/schemas/
-   endpoints + the few HANDLER functions by name; the internal helper functions match no community
-   and dumped into one huge "other" capsule (recipe: 62 → all "other"). Two-pass grouping, same
-   moving set n.kind==="function": (1) deterministic label-propagation over the INTRA-entity
-   function CALL graph (both ends kind==="function"; the same engine as _feAssignSub's community
-   branch — self-seeded, 10-round cap, tie-break by id → byte-stable), communities named
-   ƒ·<highest-degree-member>; (2) FILE fallback — functions the call graph left uncommitted group
-   by SOURCE MODULE (ƒ·<basename>/) when ≥2 share a file. Only n.kind==="function" subs move; every
-   data/fe piece keeps its own community. A lone function in its own file stays "other" (honest).
-   Measured on gustify: recipe 62→58 clustered/4 other · pantry 45/45 · allergen 9/12. ── */
+/* ── BACKEND-FUNCTION PLACEMENT (operator ruling — the artifact's option A) — on a DATA core
+   (community / use-case / fk) a function is NOT its own cluster; it JOINS the data cluster it
+   serves. The seed: a handler function inherits the sub of the ENDPOINT it handles; that label
+   then propagates over the fn↔fn call graph to the helpers the handler calls. Unreached
+   functions stay "other" (honest). Kind/Layer never call this — there "function" IS the axis, so
+   functions form one group beside the data kinds. Measured: recipe 62 fns → 51 join their
+   use-case, 0 separate ƒ· clusters. ── */
 function _fnAssignSub(mode){
-  // fn↔fn call graph, INTRA-entity (a cross-entity call never merges two entities' clusters).
-  var adj={}, deg={}, ids=[];
-  for(var i=0;i<nodes.length;i++){ if(nodes[i].kind==="function") ids.push(nodes[i].id); }
-  if(!ids.length) return;                                        // Functions is OFF — nothing to cluster
+  // Functions JOIN the data cluster they serve (operator ruling — the artifact's option A): a
+  // handler function inherits the community/use-case/fk sub of the ENDPOINT it handles, then that
+  // label propagates over the call graph to the helpers the handler calls. No separate ƒ· geography
+  // on a data core — a function reads as part of the flow it implements. Unreached functions stay
+  // "other" (honest). (Kind/Layer never call this — there "function" IS the grouping axis.)
+  var ids=[]; for(var i=0;i<nodes.length;i++){ if(nodes[i].kind==="function") ids.push(nodes[i].id); }
+  if(!ids.length) return;                                        // Functions not loaded — nothing to place
   ids.sort();
+  var adj={}, cur={};
   links.forEach(function(l){ var s=NIDS[lid(l.source)], t=NIDS[lid(l.target)];
-    if(!s||!t||s.kind!=="function"||t.kind!=="function"||s.ent!==t.ent) return;
-    (adj[s.id]=adj[s.id]||[]).push(t.id); (adj[t.id]=adj[t.id]||[]).push(s.id);
-    deg[s.id]=(deg[s.id]||0)+1; deg[t.id]=(deg[t.id]||0)+1; });
-  // deterministic label propagation (same engine as _feAssignSub's community branch)
-  var lab={}; ids.forEach(function(id){ lab[id]=id; });
-  for(var r=0;r<10;r++){ var changed=false;
-    ids.forEach(function(id){ var c={}; (adj[id]||[]).forEach(function(v){ if(lab[v]!=null) c[lab[v]]=(c[lab[v]]||0)+1; });
-      var k=_domKey(c); if(!k||k===lab[id]) return;
-      if((c[k]||0)>(c[lab[id]]||0) || ((c[k]||0)===(c[lab[id]]||0) && k<lab[id])){ lab[id]=k; changed=true; } });
-    if(!changed) break; }
-  var groups={}; ids.forEach(function(id){ (groups[lab[id]]=groups[lab[id]]||[]).push(id); });
-  var name={}, used={};
-  Object.keys(groups).sort().forEach(function(g){ var mem=groups[g];
-    if(mem.length<2){ name[mem[0]]="other"; return; }           // a lone function is not a community — honest "other"
-    var rep=mem.slice().sort(function(a,b){ return (deg[b]||0)-(deg[a]||0) || (a<b?-1:1); })[0];
-    var nm="ƒ·"+(NIDS[rep]?NIDS[rep].label:rep), ek=(NIDS[rep]?NIDS[rep].ent:"?"), full=nm, n2=2;   // ƒ· marks a FUNCTION community (vs the c· data communities)
-    while(used[ek+"|"+full]){ full=nm+"·"+n2; n2++; }           // disambiguate same-named hubs within an entity
-    used[ek+"|"+full]=1; mem.forEach(function(id){ name[id]=full; }); });
-  // FILE fallback — functions the call graph left uncommitted (no captured calls, e.g. a sparse
-  // entity) group by their SOURCE MODULE: same-file functions are related even when graft saw no
-  // call. Only when >=2 orphans share a file; a lone orphan stays honest "other".
-  var byFile={};
-  nodes.forEach(function(n){ if(n.kind!=="function" || (name[n.id] && name[n.id]!=="other")) return;   // "other" (call-graph singleton) IS an orphan — let the file fallback try it
-    var f=String(n.id).split("#")[0], base=f.split("/").pop().replace(/\.[^.]+$/,"");   // apps/api/api/account.py → account
-    (byFile[f]=byFile[f]||{base:base, ids:[]}).ids.push(n.id); });
-  Object.keys(byFile).sort().forEach(function(f){ var g=byFile[f]; if(g.ids.length<2) return;
-    var nm="ƒ·"+g.base+"/", ek=(NIDS[g.ids[0]]?NIDS[g.ids[0]].ent:"?"), full=nm, n3=2;   // trailing / marks a MODULE group vs a call community
-    while(used[ek+"|"+full]){ full=nm+n3; n3++; } used[ek+"|"+full]=1;
-    g.ids.forEach(function(id){ name[id]=full; }); });
-  nodes.forEach(function(n){ if(n.kind==="function") n.sub=name[n.id]||"other"; });   // only FUNCTIONS move; data pieces keep their levels-join community
+    if(!s||!t||s.ent!==t.ent) return;                            // INTRA-entity only
+    if(l.rel==="handler" && s.kind==="endpoint" && t.kind==="function" && s.sub && s.sub!=="other")
+      cur[t.id]=s.sub;                                           // seed the handler with its endpoint's DATA cluster
+    if(s.kind==="function" && t.kind==="function"){ (adj[s.id]=adj[s.id]||[]).push(t.id); (adj[t.id]=adj[t.id]||[]).push(s.id); }
+  });
+  for(var r=0;r<8;r++){ var nx={};                               // propagate the data label over the call graph
+    ids.forEach(function(id){ if(cur[id]) return;
+      var c={}; (adj[id]||[]).forEach(function(v){ if(cur[v]) c[cur[v]]=(c[cur[v]]||0)+1; });
+      var best=_domKey(c); if(best!=null) nx[id]=best; });
+    if(!Object.keys(nx).length) break;
+    Object.keys(nx).forEach(function(k){ cur[k]=nx[k]; }); }
+  nodes.forEach(function(n){ if(n.kind==="function") n.sub=cur[n.id]||"other"; });   // joins its data cluster, or honest "other"
 }
 /* PER-SIDE assignment (operator: two cores at once) — run the backend core, capture backend
    nodes' subs, run the frontend core, then restore the backend nodes. Frontend = its entity is
@@ -194,7 +177,7 @@ function _assignSubImpl(mode){
     var m=(_LMAP&&_LMAP[mode])||{};
     nodes.forEach(function(n){ n.sub=m[n.id]||"other"; });
     if(mode!=="fk") try{ _feAssignSub(mode); }catch(e){}   // batch 50: fe pieces get REAL groups (the levels maps only know backend names)
-    if(mode!=="fk") try{ _fnAssignSub(mode); }catch(e){}   // operator fix: backend functions cluster over the call graph, not into "other"
+    try{ _fnAssignSub(mode); }catch(e){}   // functions JOIN their served data cluster (community/use-case/fk), not a separate ƒ· geography
     return; }
   if(mode==="guards"){ if(!_LMAP) _LMAP=_levelsGroupMap(); var gm=(_LMAP&&_LMAP.guards)||{};
     nodes.forEach(function(n){ n.sub=(n.kind==="function")?"functions":(gm[n.id]||(n.kind==="endpoint"?"unguarded":"other")); }); return; }
@@ -1262,15 +1245,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var entTog2=entShowGrp?entShowGrp.querySelector('[data-itog="entOn"]'):null;
   var starsTog=G.universe?G.universe.querySelector('[data-itog="stars"]'):null;
   if(entTog2) optRow.appendChild(entTog2); if(starsTog) optRow.appendChild(starsTog);
-  if(hasFns){ var fb=document.createElement("button"); fb.className="itog"; fb.id="fnsTog";
-    fb.title="functions — adds "+window.GABE_LEVELS.fn_nodes.length+" code functions + their call edges (levels feed) — starts OFF";
-    fb.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 17c2 0 3-1 3-3v-4c0-2 1-3 3-3"/><path d="M9 11h6"/></svg>';
-    fb.classList.toggle("on", CFG.showFns==="on");
-    fb.onclick=function(){ CFG.showFns=(CFG.showFns==="on")?"off":"on"; fb.classList.toggle("on", CFG.showFns==="on");
-      try{ applyCfg("showFns"); }catch(e){} };
-    if(coreBEGrp){ var fsr=document.createElement("div"); fsr.className="cfgrow shrow";   // SHOW: functions live under the BACKEND core (operator)
-      fsr.innerHTML='<span class="shlbl">show</span>'; fsr.appendChild(fb); coreBEGrp.appendChild(fsr); }
-    else optRow.appendChild(fb); }
+  /* the Functions boolean is GONE (operator ruling — the artifact's option B): the legend's
+     "Function" row loads/unloads functions now, so there is one control, not two. See __uniKindToggle. */
   if(typeof _FETYPES!=="undefined" && _FETYPES.length){ var tb=document.createElement("button"); tb.className="itog"; tb.id="typesTog";
     tb.title="types — adds "+_FETYPES.length+" frontend TS types/interfaces + their typed wires (the schema-equivalent; "+((window.GABE_C4&&GABE_C4.stats&&GABE_C4.stats.fe&&GABE_C4.stats.fe.fe_types_referenced)||0)+" referenced by a running piece) — starts OFF";
     tb.innerHTML='<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>';
@@ -1469,7 +1445,7 @@ window.__uniApplyCapsules=function(){ try{
   try{ __uniAssignSplit(); }catch(e){}
   /* 2 · APPLY per the current threshold/open set */
   if(UNICAP.on){
-    var cnt={}; nodes.forEach(function(n){ cnt[n.ent]=(cnt[n.ent]||0)+1; });
+    var cnt={}; nodes.forEach(function(n){ if(n.kind!=="function") cnt[n.ent]=(cnt[n.ent]||0)+1; });   // functions NEVER trip the fold (review: loading them via the legend must not collapse the entity that holds them)
     var fold={}; _ents.forEach(function(e){ if((cnt[e]||0)>UNICAP.threshold && !UNICAP.open[e]) fold[e]=1; });
     if(Object.keys(fold).length){
       var st={ nodes:[], links:[], byPiece:{} };
@@ -1587,13 +1563,16 @@ window.__uniGoto=function(id){ if(!id) return;
   if(!_fnsOn && window.GABE_LEVELS && GABE_LEVELS.fn_nodes){ if(!_FNNODES) try{ _buildFnData(); }catch(e){}
     if((_FNNODES||[]).some(function(n){ return n.id===id; })){
       CFG.showFns="on"; try{ toggleFns(true); }catch(e){}
-      var fb=document.getElementById("fnsTog"); if(fb) fb.classList.add("on"); go(); } } };
+      if(window.__legRender) try{ __legRender(); }catch(e){} go(); } } };
 /* ── HIDE-BY-KIND (batch 51) — the legend Types rows are CONTROLS: a click hides that kind
    GRAPH-WIDE (meshes, hulls, wires, shuttles — the same apply path the fleet uses) and dims
    the row; a second click restores. ── */
 window.__uniKindOff={};
 var _KOFF={show:0,planets:0,wires:0,subs:0,zDef:0,zAtk:0,zCfl:0,zSat:0,routes:0};
 window.__uniKindToggle=function(k){ if(!k) return;
+  if(k==="function" && window.toggleFns){                        // FUNCTION: the legend row LOADS/UNLOADS (the boolean is gone — operator)
+    var on=(CFG.showFns!=="on"); CFG.showFns=on?"on":"off"; try{ toggleFns(on); }catch(e){}
+    if(window.__legRender) try{ __legRender(); }catch(e){} return; }
   if(__uniKindOff[k]) delete __uniKindOff[k]; else __uniKindOff[k]=1;
   try{ _applyVisNow({all:true}); }catch(e){}
   if(window.__legRender) try{ __legRender(); }catch(e){} };
@@ -1633,7 +1612,7 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
         if(sc>=0) out.push({g:"functions (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns ƒ ON",
           ico:svgInline("function", KINDCOL["function"], 12),
           go:function(){ CFG.showFns="on"; try{ toggleFns(true); }catch(e){}
-            var fb=document.getElementById("fnsTog"); if(fb) fb.classList.add("on");
+            if(window.__legRender) try{ __legRender(); }catch(e){}
             if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
     }
     _ents.forEach(function(e){ var el=window.__uniEntLabel?__uniEntLabel(e):e;

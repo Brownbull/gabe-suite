@@ -269,11 +269,11 @@ check('cluster overrides follow only for the group' in page,
       "a group master must propagate ONLY into its own entities' cluster overrides")
 check('#fleet .flmaster.flgroup2{' in page, "the frontend section break (flgroup2) styling is gone")
 # backend-function community pass (operator fix): functions cluster over the call graph (ƒ·<hub>),
-# not into one giant "other" — symmetric to _feAssignSub, wired after it in usecase/community
-check('function _fnAssignSub(mode){' in page and '"ƒ·"+' in page,
-      "the backend-function community pass (_fnAssignSub, ƒ· naming) is gone")
-check('if(mode!=="fk") try{ _fnAssignSub(mode); }catch(e){}' in page,
-      "the fn community pass is not wired into the usecase/community core")
+# functions JOIN the data cluster they serve (operator ruling — seed from the handler endpoint, propagate over the call graph)
+check('function _fnAssignSub(mode){' in page and 'l.rel==="handler" && s.kind==="endpoint" && t.kind==="function"' in page and 'cur[t.id]=s.sub;' in page,
+      "the backend-function pass no longer seeds from the handler endpoint's data cluster")
+check('try{ _fnAssignSub(mode); }catch(e){}   // functions JOIN their served data cluster' in page,
+      "the fn pass is not wired into the data cores (community/use-case/fk)")
 # Show-Entity is a MASTER over its clusters (operator ask): off→all off · cluster-on re-enables entity · on→all on
 check('SHOW ENTITY is a MASTER over its clusters' in page and 'function _entSubKeys(ent)' in page,
       "the show-entity master (entity toggle propagates to clusters) is gone")
@@ -288,6 +288,13 @@ check('<div class="lghd"><b>\'+(typeof ico==="function"?ico("shape",13):"")+\'Le
       "the legend tabs are not in the header (still a separate row)")
 check('var LGTABICO={' in page and '(LGTABICO[t]||t)' in page,
       "the legend tabs lost their icons (Types/Connectors/Planet should be icon-only)")
+check('#elegend .lgtab{ display:inline-flex' in page and 'border:1px solid var(--line)' in page
+      and '#elegend .lgtab.on{ color:#fff; background:var(--accent)' in page,
+      "the legend tab buttons do not match the fleet header button style (bordered, accent-on)")
+# the assemble line-map guard (fragility catch — a spike-base line shift must fail loud, not ship broken JS)
+_asm = open('docs/design/codebase-graph-consolidation/universe-build/assemble.py').read()
+check('_ANCHORS = {' in _asm and 'line-map STALE at' in _asm,
+      "the assemble.py line-map anchor guard is gone (a spike-base line shift would silently ship broken JS)")
 check('rz.className="flresize"' in page and 'MINW=230, MAXW=520' in page and 'p.style.width=w+"px"' in page,
       "the fleet width-resize handle (drag + double-click restore) is gone")
 check('#fleet .flent{ flex:1 1 88px' in page,
@@ -295,7 +302,12 @@ check('#fleet .flent{ flex:1 1 88px' in page,
 check('reads inherited-off (dim)' in page, "a cluster switch does not dim when its parent entity is off")
 check('layer:"Layer — the kind' in page and 'ti:"Chain — a flat layered ribbon' in page,
       "cluster-core / entity-layout options carry no hover explainers (word — meaning, since the icon-only pills)")
-check('adds "+window.GABE_LEVELS.fn_nodes.length+" code functions' in page, "the Functions toggle lost its count-bearing hover explainer")
+check('fnsTog' not in page and 'the Functions boolean is GONE' in page,
+      "the Functions boolean must be removed (operator: the legend Function row governs load)")
+check('k==="function" && window.toggleFns' in page and 'the legend row LOADS/UNLOADS' in page,
+      "the legend Function row no longer loads/unloads functions (the boolean's replacement)")
+check('if(n.kind!=="function") cnt[n.ent]=(cnt[n.ent]||0)+1;' in page,
+      "functions must NOT trip the capsule fold (review: loading them must not collapse their entity)")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
       "REGRESSION: the note lines below the pills are back (explainers must live on hover)")
 check('function visEnt' in page and 'function visN' in page, "vis accessors missing (seams must read through ONE pair)")
@@ -524,7 +536,7 @@ check('window.__uniHovLink===l' in page and page.count('__uniHovLink')>=4,
 check('id="themeBtn"' in page.replace("'",'"') and 'window.__uniApplyTheme=' in page and ':root[data-theme="light"]' in page,
       "the dark/light theme toggle is gone (button + apply + light var block)")
 # batch 42: entity pane rebuild — combo row · options icon-toggles · the SPREAD slider
-check('"fnsTog"' in page, "the FUNCTIONS icon toggle is gone (replaced the Hide/Show pill; starts OFF)")
+check('getElementById("fnsTog")' not in page and '"typesTog"' in page, "the Functions boolean must be gone while the Types boolean stays (operator: functions via the legend, types deferred)")
 # batch 45: consumes + nests rels flow through the universe (the floating-schema fix)
 # batch 46: endpoint→handler wires (Functions ON) + the honest empty-connections message
 # batch 47: fleet clicks SELECT — name = panel+camera · count badge = expand · cluster name = cluster

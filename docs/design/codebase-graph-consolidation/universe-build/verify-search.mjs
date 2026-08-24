@@ -120,8 +120,9 @@ const fx = await p.evaluate(() => new Promise(res => {
     const grp = [...dd.querySelectorAll('.tsgrp')].some(g => /functions \(off\)/.test(g.textContent));
     const row = [...dd.querySelectorAll('.tsrow')].find(r => r.querySelector('.tshint') && /ƒ/.test(r.querySelector('.tshint').textContent));
     if (row) row.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-    setTimeout(() => { out.heldFn = !!fn && grp && !!row && CFG.showFns === 'on'
-        && document.getElementById('fnsTog').classList.contains('on') && nodes.some(n => n.__fn);
+    setTimeout(() => { const lrow = document.querySelector('#elegend [data-lgk="function"]');   // the boolean is gone — the LEGEND row reflects the load now
+      out.heldFn = !!fn && grp && !!row && CFG.showFns === 'on'
+        && !!lrow && !lrow.classList.contains('lgoff') && nodes.some(n => n.__fn);
       // E: keyboard blur closes the dropdown
       inp.focus(); inp.value = 'use'; inp.dispatchEvent(new Event('input', { bubbles: true }));
       const open2 = dd.style.display !== 'none';

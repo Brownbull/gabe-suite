@@ -22,9 +22,9 @@
   #elegend .lghd{ display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--line); }   /* same height as .cfghead — tabs fit inside, no wrap */
   #elegend .lghd b{ font:800 11px/1 var(--mono); letter-spacing:.06em; text-transform:uppercase; color:var(--ink); }   /* match CONFIG / TRANSPORTS header weight */
   #elegend .lgmin{ font:700 12px/1 var(--mono); color:var(--muted); background:none; border:none; cursor:pointer; padding:2px 4px; margin-left:auto; }
-  #elegend .lgtabs{ display:flex; gap:3px; padding:0; }   /* IN the header, ONE row — icon tabs */
-  #elegend .lgtab{ display:grid; place-items:center; height:22px; width:26px; color:var(--muted); background:transparent; border:1px solid transparent; padding:0; cursor:pointer; border-radius:6px; }
-  #elegend .lgtab.on{ color:var(--ink); background:#16233f; border-color:#24365c; }
+  #elegend .lgtabs{ display:inline-flex; gap:4px; padding:0; margin-left:2px; }   /* IN the header, ONE row — matches the fleet header button row */
+  #elegend .lgtab{ display:inline-flex; align-items:center; justify-content:center; width:24px; height:20px; color:var(--muted); background:none; border:1px solid var(--line); border-radius:6px; padding:0; cursor:pointer; } #elegend .lgtab:hover{ color:var(--ink); border-color:var(--accent); } #elegend .lgtab svg{ width:13px; height:13px; }
+  #elegend .lgtab.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
   #elegend .lgbody{ padding:8px 11px 11px; flex:1; min-height:0; overflow-y:auto; background:#0e1524; border-radius:0 0 12px 12px; }
   #elegend.min .lgbody, #elegend.min .lgtabs{ display:none; }
   #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }

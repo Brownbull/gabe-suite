@@ -311,7 +311,7 @@ const flcfg = await p.evaluate(() => {
   btn('subs').click();
   const cluFull = U('BACKEND') && U('FRONTEND')                                          // two per-side core groups
     && !!document.querySelector('#flsbody .pill[data-grp="coreByBE"]') && !!document.querySelector('#flsbody .pill[data-grp="coreByFE"]')
-    && !!document.querySelector('#flsbody #fnsTog') && !!document.querySelector('#flsbody #typesTog')   // functions=backend, types=frontend show
+    && !document.querySelector('#flsbody #fnsTog') && !!document.querySelector('#flsbody #typesTog')   // Functions boolean GONE (legend governs); Types stays under frontend
     && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
   btn('planets').click();

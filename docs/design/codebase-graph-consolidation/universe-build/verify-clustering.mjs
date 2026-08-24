@@ -72,17 +72,43 @@ await p.waitForTimeout(1200);
 await p.evaluate(() => { CFG.coreByBE = 'community'; applyCfg('coreByBE'); if (CFG.showFns!=='on'){ CFG.showFns='on'; toggleFns(true); } });
 await p.waitForTimeout(3500);
 const fnClust = await p.evaluate(() => {
-  // pick the entity with the MOST functions (call structure) — not the alphabetical first
   const ent = _ents.slice().sort((a,b) => nodes.filter(n=>n.ent===b&&n.kind==='function').length
     - nodes.filter(n=>n.ent===a&&n.kind==='function').length)[0];
-  assignSub('community');
+  // A (operator ruling): on USE-CASE functions JOIN the data cluster they serve — NO separate ƒ· geography.
+  assignSub('usecase');
   const fns = nodes.filter(n => n.ent===ent && n.kind==='function');
-  const clustered = fns.filter(n => n.sub && n.sub!=='other');
-  const feCommunities = [...new Set(clustered.map(n=>n.sub))];
-  const fnNamed = feCommunities.every(s => /^ƒ·/.test(s));   // function + module communities both wear ƒ·
-  return { ent, total: fns.length, clustered: clustered.length, communities: feCommunities.length, fnNamed,
-           otherFrac: +((fns.length-clustered.length)/Math.max(1,fns.length)).toFixed(2) };
+  const joined = fns.filter(n => n.sub && n.sub!=='other');
+  const noFnSep = !fns.some(n => /^ƒ·/.test(n.sub||''));            // the ƒ· explosion is gone
+  const dataSubs = new Set(nodes.filter(n=>n.ent===ent && n.kind!=='function' && !n.__cap).map(n=>n.sub));
+  const inDataCluster = joined.filter(n => dataSubs.has(n.sub)).length;   // shares a cluster with endpoints/schemas
+  return { ent, total: fns.length, joined: joined.length, inDataCluster, noFnSep,
+           joinFrac: +(joined.length/Math.max(1,fns.length)).toFixed(2) };
 });
+// B (operator ruling): the legend Function row LOADS/UNLOADS functions — the config boolean is gone
+const fnLegend = await p.evaluate(() => {
+  const boolGone = !document.getElementById('fnsTog');
+  const row = document.querySelector('#elegend [data-lgk="function"]');
+  if (!row) return { boolGone, hasRow:false };
+  const wasOn = CFG.showFns === 'on';
+  if (wasOn) { __uniKindToggle('function'); }                      // ensure OFF baseline
+  const n0 = nodes.filter(n=>n.kind==='function').length;
+  __uniKindToggle('function');                                     // load
+  const n1 = nodes.filter(n=>n.kind==='function').length, on1 = CFG.showFns==='on';
+  __uniKindToggle('function');                                     // unload
+  const n2 = nodes.filter(n=>n.kind==='function').length;
+  return { boolGone, hasRow:true, loads: n0===0 && n1>0 && on1, unloads: n2===0 };
+});
+// review fix: loading functions must NOT fold a backend entity that was under the threshold
+const noSurpriseFold = await p.evaluate(() => new Promise(res => {
+  const be = _ents.filter(e=>!__uniIsFeEnt(e) && nodes.filter(n=>n.ent===e&&!n.__cap).length>40 && nodes.filter(n=>n.ent===e&&!n.__cap).length<80)
+    .sort((a,b)=>nodes.filter(n=>n.ent===b).length-nodes.filter(n=>n.ent===a).length)[0] || 'recipe';
+  const caps0 = nodes.filter(n=>n.__cap && n.ent===be).length;
+  if (CFG.showFns!=='on') __uniKindToggle('function');
+  setTimeout(() => { const caps1 = nodes.filter(n=>n.__cap && n.ent===be).length;
+    const fnsVis = nodes.filter(n=>n.ent===be && n.kind==='function' && !n.__cap).length;
+    if (CFG.showFns==='on') __uniKindToggle('function');
+    res({ be, caps0, caps1, fnsVis }); }, 1600);
+}));
 // PER-SIDE cores (operator: two cores at once) — backend + frontend carry DIFFERENT cores simultaneously
 const splitCore = await p.evaluate(() => {
   UNICAP.on = false; __uniApplyCapsules();
@@ -103,7 +129,11 @@ console.log(`nodes ${base.nodes} · entities ${base.ents} · ringed entities ${b
 console.log(`separation: min anchor pair ${base.minAnchorPair} · bleed ${base.bleedPct}%`);
 console.log(`kind ring: per-entity ratio ${base.ringRatio} over ${base.ringEnts} entities · pooled ${base.epMeanR}/${base.inMeanR}`);
 console.log(`coreBy flip: mean displacement ${after.meanDisp} · moved>4u ${after.movedPct}% · nonFinite ${after.nonFinite}`);
-console.log(`fn-clustering(${fnClust.ent}): ${fnClust.total} fns → ${fnClust.communities} ƒ· communities · ${fnClust.clustered} clustered · other ${(fnClust.otherFrac*100).toFixed(0)}%`);
+console.log(`fn-join(${fnClust.ent}, use-case): ${fnClust.total} fns → ${fnClust.joined} joined (${fnClust.inDataCluster} into a DATA cluster) · no ƒ· ${fnClust.noFnSep}`);
+console.log('fn-legend:', JSON.stringify(fnLegend));
+console.log('no-surprise-fold:', JSON.stringify(noSurpriseFold));
+if (!(noSurpriseFold.caps0===0 && noSurpriseFold.caps1===0 && noSurpriseFold.fnsVis>0)) fails.push('loading functions folded the entity that holds them (surprise fold)');
+if (!(fnLegend.boolGone && fnLegend.hasRow && fnLegend.loads && fnLegend.unloads)) fails.push('the legend Function row does not load/unload functions (option B — boolean removal)');
 console.log(`split cores: ${splitCore.beE}=community ${splitCore.beC} + ${splitCore.feE}=screen ${splitCore.feC} · flip BE→kind ${splitCore.beKind}, FE still ${splitCore.feStill}`);
 console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(' ', e));
 
@@ -115,7 +145,7 @@ if (!(base.ringRatio > 1.35 && base.ringEnts >= 3)) fails.push('endpoints not ri
 if (!(after.meanDisp > 5 && after.movedPct > 40)) fails.push('coreBy did not re-arrange nodes');
 if (after.nonFinite) fails.push('non-finite node positions');
 if (base.ringedEnts < 1) fails.push('no entity got a sub-anchor ring');
-if (!(fnClust.communities >= 3 && fnClust.fnNamed && fnClust.otherFrac < 0.35)) fails.push('backend functions did not cluster into ƒ· communities (still dumping into other)');
+if (!(fnClust.noFnSep && fnClust.inDataCluster > 0 && fnClust.joinFrac > 0.5)) fails.push('functions do not JOIN their use-case data cluster (option A — still ƒ· or all-other)');
 if (!(splitCore.beC > 3 && splitCore.feC > 3 && splitCore.independent)) fails.push('per-side cores are not independent (backend + frontend do not carry different cores at once)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }
 console.log('CLUSTERING PROOF: ALL PASS');

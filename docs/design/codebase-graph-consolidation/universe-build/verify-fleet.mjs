@@ -244,7 +244,8 @@ const masterFix = await p2.evaluate(() => {
 const hover = await p2.evaluate(() => ({
   core: !!document.querySelector('.pill[data-grp="coreByBE"] button[data-v="layer"][title]'),
   lay: !!document.querySelector('.pill[data-grp="entLayout"] button[data-v="force"][title]'),
-  fn: !!document.querySelector('#fnsTog[title]'),                                   // the ƒ-toggle (batch 42) carries the live-count explainer
+  fn: (() => { const t=[...document.querySelectorAll('#elegend .lgtab')].find(x=>/types/i.test(x.title||x.textContent)); if(t) t.click();
+    return !!document.querySelector('#elegend [data-lgk="function"][title]'); })(),   // the Functions boolean is gone — the LEGEND row carries the explainer now
   hd: !!document.querySelector('.grplbl[title]'),                                    // section labels live in the drawer panes (stashed in-document)
   notesGone: !document.body.innerHTML.includes('chain = layered plane') && !document.body.innerHTML.includes('joined from the levels feed by name') }));
 // SHOW ENTITY is a MASTER over its clusters (operator ask): off → all clusters off;
