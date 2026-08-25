@@ -464,12 +464,6 @@
   #cfg #badgecfg .mblbl{ flex:0 0 52px; font-size:10px; color:var(--muted); }
   #cfg #badgecfg .mbrng{ flex:1; }
   #cfg #badgecfg .mbval{ flex:0 0 34px; text-align:right; font:600 10px/1 var(--font-mono); color:var(--ink); font-variant-numeric:tabular-nums; }
-  /* operator: the Focus-ring controls in the Temporary Config (#cfg) */
-  #cfg #focuscfg .focrow{ margin:2px 0; }
-  #cfg #focuscfg .focpill{ display:inline-flex; flex-wrap:wrap; gap:3px; margin-left:auto; }
-  #cfg #focuscfg .focpill button{ font-size:9px; padding:2px 6px; text-transform:none; letter-spacing:0; }
-  /* operator: per-section restore/copy buttons in the Focus-ring / Others config headers */
-  #cfg #focuscfg .fochd{ display:flex; align-items:center; justify-content:space-between; }
-  #cfg #focuscfg .fochdbtns{ display:inline-flex; gap:3px; }
-  #cfg #focuscfg .focbtn{ font-size:11px; line-height:1; color:var(--muted); background:none; border:1px solid var(--line); border-radius:4px; width:18px; height:16px; cursor:pointer; padding:0; }
-  #cfg #focuscfg .focbtn:hover{ color:var(--accent); border-color:var(--accent); }
+  /* the focus/highlight controls retired to fixed defaults (operator); the four surviving on/off
+     toggles live in the entity pane as .hltog buttons (styled by the shared .itog rule). */
+  .hltog{ min-width:30px; }

@@ -610,15 +610,9 @@
   #cfg #badgecfg .mblbl{ flex:0 0 52px; font-size:10px; color:var(--muted); }
   #cfg #badgecfg .mbrng{ flex:1; }
   #cfg #badgecfg .mbval{ flex:0 0 34px; text-align:right; font:600 10px/1 var(--font-mono); color:var(--ink); font-variant-numeric:tabular-nums; }
-  /* operator: the Focus-ring controls in the Temporary Config (#cfg) */
-  #cfg #focuscfg .focrow{ margin:2px 0; }
-  #cfg #focuscfg .focpill{ display:inline-flex; flex-wrap:wrap; gap:3px; margin-left:auto; }
-  #cfg #focuscfg .focpill button{ font-size:9px; padding:2px 6px; text-transform:none; letter-spacing:0; }
-  /* operator: per-section restore/copy buttons in the Focus-ring / Others config headers */
-  #cfg #focuscfg .fochd{ display:flex; align-items:center; justify-content:space-between; }
-  #cfg #focuscfg .fochdbtns{ display:inline-flex; gap:3px; }
-  #cfg #focuscfg .focbtn{ font-size:11px; line-height:1; color:var(--muted); background:none; border:1px solid var(--line); border-radius:4px; width:18px; height:16px; cursor:pointer; padding:0; }
-  #cfg #focuscfg .focbtn:hover{ color:var(--accent); border-color:var(--accent); }
+  /* the focus/highlight controls retired to fixed defaults (operator); the four surviving on/off
+     toggles live in the entity pane as .hltog buttons (styled by the shared .itog rule). */
+  .hltog{ min-width:30px; }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -2670,6 +2664,23 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       tsr.innerHTML='<span class="shlbl">show</span>'; tsr.appendChild(tb); coreFEGrp.appendChild(tsr); }
     else optRow.appendChild(tb); }
   optGrp.appendChild(optRow); entPane.push(optGrp);
+  /* HIGHLIGHT — the four surviving selection-highlight toggles (operator: sliders/pills retired to
+     fixed defaults; these on/off masters live in the entity config, GLOBAL for all entities). FOCUS =
+     the selected element (ring · glow); OTHERS = its neighbourhood (glow · same-entity ring). The
+     engine (__uniHLReapply) reads CFG.focRing/focGlow/othGlow/othRing; glyphs, not words (legend law). */
+  if(window.__uniHLSeed) try{ window.__uniHLSeed(); }catch(e){}   // defensive — defaults seeded before the toggles read CFG
+  var _hlRingIco='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8" stroke-dasharray="3 3"/></svg>';
+  var _hlGlowIco='<svg viewBox="0 0 24 24" width="15" height="15"><circle cx="12" cy="12" r="9" fill="currentColor" fill-opacity="0.16"/><circle cx="12" cy="12" r="5.5" fill="currentColor" fill-opacity="0.42"/><circle cx="12" cy="12" r="2.4" fill="currentColor"/></svg>';
+  var _hlBtn=function(key, glyph, ttl){ var b=document.createElement("button"); b.className="itog hltog"; b.setAttribute("data-hl",key);
+    b.title=ttl; b.innerHTML=glyph; b.classList.toggle("on", CFG[key]!==false);
+    b.onclick=function(){ CFG[key]=(CFG[key]===false); b.classList.toggle("on", CFG[key]!==false);   // flip the global boolean
+      try{ if(HL.on && window.__uniHLReapply) __uniHLReapply(); }catch(e){} }; return b; };
+  var hlGrp=grpWith("Highlight");
+  var _hgl=hlGrp.querySelector(".grplbl"); if(_hgl) _hgl.title="selection highlight, global for all entities — FOCUS = the selected element (ring · glow); OTHERS = its neighbourhood (glow · ring). The others-ring lights only same-entity elements.";
+  var _hlRow=function(lbl){ var r=document.createElement("div"); r.className="cfgrow shrow"; r.innerHTML='<span class="shlbl">'+lbl+'</span>'; return r; };
+  var _fRow=_hlRow("focus"); _fRow.appendChild(_hlBtn("focRing", _hlRingIco, "focus RING on the selected element")); _fRow.appendChild(_hlBtn("focGlow", _hlGlowIco, "focus GLOW on the selected element"));
+  var _oRow=_hlRow("others"); _oRow.appendChild(_hlBtn("othGlow", _hlGlowIco, "GLOW on the neighbourhood (every lit entity)")); _oRow.appendChild(_hlBtn("othRing", _hlRingIco, "dim RING on the neighbourhood — same-entity elements only"));
+  hlGrp.appendChild(_fRow); hlGrp.appendChild(_oRow); entPane.push(hlGrp);
   /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
   if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";
     spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a FIFTH of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
@@ -2953,46 +2964,15 @@ window.__uniBadges=[];
     b.scale.set(sz,sz,1); if(b.material) b.material.opacity=op; }
   arr.length=live;
 })();
-window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
-  if(!body||document.getElementById("focuscfg")) return;
-  var DEF={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, pulseMode:"const", pulseAmp:0.13, focThick:2.5, focThickConst:true,
-            focGlow:true, focGlowRad:2.3, focGlowInt:0.85, focGlowFall:0.4,
-            othGlow:true, glowRad:2.1, glowInt:0.25, glowFall:0.15, othRing:true, othRingInt:0.3 };   // operator defaults
-  for(var _dk in DEF){ if(CFG[_dk]==null) CFG[_dk]=DEF[_dk]; }
-  var SEC={ ring:["focRing","focSize","focPat","focAnim","focSpeed","pulseMode","pulseAmp","focThick","focThickConst","focGlow","focGlowRad","focGlowInt","focGlowFall"],
-            oth:["othGlow","glowRad","glowInt","glowFall","othRing","othRingInt"] };
-  var g=document.createElement("div"); g.className="grp"; g.id="focuscfg";
-  var row=function(label, key, opts){ var h='<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill focpill" data-fk="'+key+'">';
-    opts.forEach(function(o){ h+='<button data-v="'+o+'"'+(o===CFG[key]?' class="on"':'')+' title="'+o+'">'+o+'</button>'; }); return h+'</span></div>'; };
-  var trow=function(label, key){ var on=CFG[key]!==false; return '<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill foctpill" data-fk="'+key+'"><button data-v="1"'+(on?' class="on"':'')+'>on</button><button data-v="0"'+(!on?' class="on"':'')+'>off</button></span></div>'; };
-  var srow=function(label, key, mn, mx, st){ return '<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span>'
-    +'<input type="range" class="rng focrng" data-fk="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="rval" data-fv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; };
-  var hdr=function(label, sec){ return '<div class="grplbl fochd" data-sec="'+sec+'">'+label
-    +'<span class="fochdbtns"><button class="focbtn focreset" title="restore this section to defaults">&#8635;</button><button class="focbtn foccopy" title="copy this section as JSON">&#10696;</button></span></div>'; };
-  g.innerHTML=hdr("Focus ring","ring")
-    +trow("ring","focRing")+row("size","focSize",["const","icon","sphere"])+row("pattern","focPat",["spinner","solid","dashed"])+row("anim","focAnim",["spin","pulse","none"])
-    +srow("speed","focSpeed",0.05,4,0.05)+row("pulse","pulseMode",["prop","const"])+srow("p.amp","pulseAmp",0.02,0.8,0.02)+srow("thick","focThick",1,14,0.5)+trow("const","focThickConst")
-    +trow("glow","focGlow")+srow("g.rad","focGlowRad",0.5,4,0.1)+srow("g.int","focGlowInt",0,1,0.05)+srow("falloff","focGlowFall",0,1,0.05)
-    +hdr("Others \u00b7 highlight","oth")
-    +trow("glow","othGlow")+srow("g.rad","glowRad",0.5,4,0.1)+srow("g.int","glowInt",0,1,0.05)+srow("falloff","glowFall",0,1,0.05)
-    +trow("ring","othRing")+srow("r.int","othRingInt",0,1,0.05);
-  body.appendChild(g);
-  var _reapply=function(){ try{ if(HL.on && window.__uniHLReapply) __uniHLReapply(); }catch(e){} };
-  [].forEach.call(g.querySelectorAll(".focpill"), function(pill){ var key=pill.getAttribute("data-fk");
-    [].forEach.call(pill.querySelectorAll("button"), function(bt){ bt.onclick=function(){ CFG[key]=bt.getAttribute("data-v");
-      [].forEach.call(pill.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); }); _reapply(); }; }); });
-  [].forEach.call(g.querySelectorAll(".foctpill"), function(pill){ var key=pill.getAttribute("data-fk");
-    [].forEach.call(pill.querySelectorAll("button"), function(bt){ bt.onclick=function(){ CFG[key]=(bt.getAttribute("data-v")==="1");
-      [].forEach.call(pill.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); }); _reapply(); }; }); });
-  [].forEach.call(g.querySelectorAll(".focrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-fk"); CFG[k]=+inp.value;
-    var vv=g.querySelector('[data-fv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2);
-    if(k==="focSpeed"||k==="pulseAmp") return;    // the _hlSpin loop reads these live per-frame — no sprite rebuild
-    _reapply(); }); });
-  [].forEach.call(g.querySelectorAll(".fochd"), function(hd){ var sec=hd.getAttribute("data-sec");
-    var rb=hd.querySelector(".focreset"); if(rb) rb.onclick=function(e){ e.stopPropagation(); SEC[sec].forEach(function(k){ CFG[k]=DEF[k]; }); g.remove(); window.__uniAddFocusCfg(); _reapply(); };
-    var cb=hd.querySelector(".foccopy"); if(cb) cb.onclick=function(e){ e.stopPropagation(); var o={}; SEC[sec].forEach(function(k){ o[k]=CFG[k]; });
-      var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(_e){}
-      cb.innerHTML="&#10003;"; setTimeout(function(){ cb.innerHTML="&#10696;"; }, 900); }; }); };
+/* The focus/highlight system is FIXED now (operator): the Temporary-Config sliders/pills retired
+   to these defaults; only four on/off toggles survive, re-homed to the entity pane (grpWith("Highlight")
+   in the __uniFlPanes builder). __uniAddFocusCfg is kept as a NAME (assemble.py boot-wires it at 6 sites)
+   but is now a pure SEEDER, no panel. __uniHLReapply reads CFG.focRing/focGlow/othGlow/othRing + these values. */
+window.__uniHLDefaults={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, pulseMode:"const", pulseAmp:0.08, focThick:2.5, focThickConst:true,
+            focGlow:true, focGlowRad:2.2, focGlowInt:0.65, focGlowFall:0.4,
+            othGlow:true, glowRad:2.2, glowInt:0.3, glowFall:0.15, othRing:true, othRingInt:0.3 };   // operator defaults (fixed)
+window.__uniHLSeed=function(){ for(var _dk in window.__uniHLDefaults){ if(CFG[_dk]==null) CFG[_dk]=window.__uniHLDefaults[_dk]; } };
+window.__uniAddFocusCfg=function(){ window.__uniHLSeed(); };   // SEEDER ONLY — the focus/highlight config panel was retired (toggles live in the entity pane)
 window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("wireview")) return;
   var g=document.createElement("div"); g.className="grp"; g.id="wireview";
