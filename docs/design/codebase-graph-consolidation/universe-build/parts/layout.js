@@ -580,22 +580,25 @@ var _hlPhase=0;
   var anim=(typeof CFG!=="undefined"&&CFG.focAnim)||"spin", spd=(typeof CFG!=="undefined"&&CFG.focSpeed!=null)?CFG.focSpeed:1;
   _hlPhase=(_hlPhase + 0.05*spd) % 6.2832;   // BOUNDED phase — Date.now()*k overflowed float precision and froze the spin (operator: spin was dead)
   for(var i=0;i<HL.rings.length;i++){ var m=HL.rings[i]; if(!m||!m.material) continue;
-    if(anim==="pulse"){ var bs=m.__baseSize||22, f=1+0.13*Math.sin(_hlPhase*2); m.scale.set(bs*f,bs*f,1); }
+    if(anim==="pulse"){ var bs=m.__baseSize||22, s2=Math.sin(_hlPhase*2), amp=(typeof CFG!=="undefined"&&CFG.pulseAmp!=null)?CFG.pulseAmp:0.13;
+      if(typeof CFG!=="undefined"&&CFG.pulseMode==="const"){ var sc=Math.max(1, bs+amp*18*s2); m.scale.set(sc,sc,1); }   // CONSTANT world-unit swing — same absolute delta on every sphere (operator: big spheres over-pulsed)
+      else { var f=1+amp*s2; m.scale.set(bs*f,bs*f,1); } }                                                                // PROPORTIONAL — swing scales with ring size (the old behavior)
     else if(anim==="none"){ /* static */ }
     else { m.material.rotation=_hlPhase; } } })();   // spin (default)
 window.__uniHLReapply=function(){ if(!HL.on) return;                     // halos live in an INDEPENDENT scene group —
   var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
   var _add=function(n, g, isRing){ if(!g) return; g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
     g0.add(g); HL.sprites.push(g); if(isRing) HL.rings.push(g); };
+  var _selEnts={}; if(HL.origin) HL.origin.forEach(function(id){ var o=NIDS[id]; if(o&&o.ent!=null) _selEnts[o.ent]=1; });   // entities of the selected element(s) — the dim ring stays inside them
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
     var d0=HL.set[n.id]===0;
     if(HL.mode!=="glow" && !d0) return;                                    // FOCUS mode: only the SELECTED element(s) carry markers
     if(d0){                                                                // SELECTED — ring + optional glow (both layers, operator)
       if(CFG.focRing!==false) _add(n, _ringSprite(n, 0.95), true);
       if(CFG.focGlow) _add(n, _glowFor(n, (CFG.focGlowRad!=null?CFG.focGlowRad:2), (CFG.focGlowInt!=null?CFG.focGlowInt:0.5), (CFG.focGlowFall!=null?CFG.focGlowFall:0)), false);
-    } else {                                                               // NON-SELECTED — glow + optional DIM ring (both layers, operator)
+    } else {                                                               // NON-SELECTED — glow always; DIM ring only inside the selected entity (operator: outer entities glow-only)
       if(CFG.othGlow!==false) _add(n, _glowFor(n, (CFG.glowRad!=null?CFG.glowRad:2), (CFG.glowInt!=null?CFG.glowInt:0.55), (CFG.glowFall!=null?CFG.glowFall:0)), false);
-      if(CFG.othRing) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);   // STATIC — only the FOCUS ring animates (operator)
+      if(CFG.othRing && n.ent!=null && _selEnts[n.ent]) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);   // STATIC — same-entity only, only the FOCUS ring animates (operator)
     } }); };
 window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
   hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
@@ -1599,11 +1602,11 @@ window.__uniBadges=[];
 })();
 window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("focuscfg")) return;
-  var DEF={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, focThick:2.5, focThickConst:true,
-            focGlow:true, focGlowRad:1.7, focGlowInt:0.75, focGlowFall:0,
-            othGlow:true, glowRad:2.1, glowInt:0.45, glowFall:0.15, othRing:true, othRingInt:0.2 };   // operator defaults
+  var DEF={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, pulseMode:"const", pulseAmp:0.13, focThick:2.5, focThickConst:true,
+            focGlow:true, focGlowRad:2.3, focGlowInt:0.85, focGlowFall:0.4,
+            othGlow:true, glowRad:2.1, glowInt:0.25, glowFall:0.15, othRing:true, othRingInt:0.3 };   // operator defaults
   for(var _dk in DEF){ if(CFG[_dk]==null) CFG[_dk]=DEF[_dk]; }
-  var SEC={ ring:["focRing","focSize","focPat","focAnim","focSpeed","focThick","focThickConst","focGlow","focGlowRad","focGlowInt","focGlowFall"],
+  var SEC={ ring:["focRing","focSize","focPat","focAnim","focSpeed","pulseMode","pulseAmp","focThick","focThickConst","focGlow","focGlowRad","focGlowInt","focGlowFall"],
             oth:["othGlow","glowRad","glowInt","glowFall","othRing","othRingInt"] };
   var g=document.createElement("div"); g.className="grp"; g.id="focuscfg";
   var row=function(label, key, opts){ var h='<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill focpill" data-fk="'+key+'">';
@@ -1615,7 +1618,7 @@ window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbo
     +'<span class="fochdbtns"><button class="focbtn focreset" title="restore this section to defaults">&#8635;</button><button class="focbtn foccopy" title="copy this section as JSON">&#10696;</button></span></div>'; };
   g.innerHTML=hdr("Focus ring","ring")
     +trow("ring","focRing")+row("size","focSize",["const","icon","sphere"])+row("pattern","focPat",["spinner","solid","dashed"])+row("anim","focAnim",["spin","pulse","none"])
-    +srow("speed","focSpeed",0.05,4,0.05)+srow("thick","focThick",1,14,0.5)+trow("const","focThickConst")
+    +srow("speed","focSpeed",0.05,4,0.05)+row("pulse","pulseMode",["prop","const"])+srow("p.amp","pulseAmp",0.02,0.8,0.02)+srow("thick","focThick",1,14,0.5)+trow("const","focThickConst")
     +trow("glow","focGlow")+srow("g.rad","focGlowRad",0.5,4,0.1)+srow("g.int","focGlowInt",0,1,0.05)+srow("falloff","focGlowFall",0,1,0.05)
     +hdr("Others \u00b7 highlight","oth")
     +trow("glow","othGlow")+srow("g.rad","glowRad",0.5,4,0.1)+srow("g.int","glowInt",0,1,0.05)+srow("falloff","glowFall",0,1,0.05)
@@ -1630,7 +1633,7 @@ window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbo
       [].forEach.call(pill.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); }); _reapply(); }; }); });
   [].forEach.call(g.querySelectorAll(".focrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-fk"); CFG[k]=+inp.value;
     var vv=g.querySelector('[data-fv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2);
-    if(k==="focSpeed") return;    // the _hlSpin loop reads focSpeed live
+    if(k==="focSpeed"||k==="pulseAmp") return;    // the _hlSpin loop reads these live per-frame — no sprite rebuild
     _reapply(); }); });
   [].forEach.call(g.querySelectorAll(".fochd"), function(hd){ var sec=hd.getAttribute("data-sec");
     var rb=hd.querySelector(".focreset"); if(rb) rb.onclick=function(e){ e.stopPropagation(); SEC[sec].forEach(function(k){ CFG[k]=DEF[k]; }); g.remove(); window.__uniAddFocusCfg(); _reapply(); };
