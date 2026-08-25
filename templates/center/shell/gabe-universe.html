@@ -618,6 +618,13 @@
   canvas.asetthumb{ margin-left:auto; width:46px; height:36px; flex:0 0 auto; border-radius:6px;
     background:linear-gradient(180deg,rgba(120,140,180,0.10),rgba(120,140,180,0.03)); }
   .sechd canvas.asetthumb{ margin-top:-3px; margin-bottom:-3px; }
+  /* risk flag rows (god-object · unguarded · conflict) — carry the red raider asset, operator */
+  .flagssec{ display:flex; flex-direction:column; gap:5px; margin:10px 0; padding:2px 0; }
+  .flagrow{ display:flex; align-items:center; gap:6px; padding:4px 7px; border-radius:7px; font-size:.9em; font-weight:600;
+    border:1px solid var(--line); }
+  .flagrow .flbl{ text-transform:uppercase; letter-spacing:.02em; font-size:.82em; }
+  .flagrow.god{ color:var(--god,#d9821f); border-color:color-mix(in srgb, var(--god,#d9821f) 45%, transparent); background:color-mix(in srgb, var(--god,#d9821f) 8%, transparent); }
+  .flagrow.warn{ color:var(--red,#ff6b6b); border-color:color-mix(in srgb, var(--red,#ff6b6b) 40%, transparent); background:color-mix(in srgb, var(--red,#ff6b6b) 7%, transparent); }
   /* cross-boundary connection-stub hover label (operator): the hidden target's name + where it lives */
   .unistubtip{ position:fixed; z-index:60; pointer-events:none; max-width:280px; padding:5px 8px;
     background:rgba(14,21,36,0.94); border:1px solid var(--accent); border-left-width:3px; border-radius:5px;
@@ -3871,7 +3878,7 @@ var KINDCARD=(function(){
   function _entsMap(){ var m={}; nodes.forEach(function(n){ if(n.ent) (m[n.ent]=m[n.ent]||[]).push(n); }); return m; }
   function _selNode(n){ SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); }catch(e){} }
   function _hulls(ent, sub){ try{ window.__uniHullSel={ent:ent||null, sub:sub!=null?sub:null}; window.__uniApplyHullSel(); }catch(e){} }
-  function panelAll(){ window.__uniPView={lvl:"all"}; _hulls(null,null);
+  function panelAll(){ try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(e){} window.__uniPView={lvl:"all"}; _hulls(null,null);
     _phead("Everything","UNIVERSE","entity");
     var pb=document.getElementById("pbody"); pb.innerHTML="";
     var ents=_entsMap(), names=Object.keys(ents).sort();
@@ -3902,7 +3909,7 @@ var KINDCARD=(function(){
       pb.append(w); }
     pb.append(E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, icoEl("info"), "— the top level (Esc returns here)")));
     openPanel(); }
-  function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent}; _hulls(ent,null);
+  function panelEnt(ent){ try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(e){} window.__uniPView={lvl:"ent",ent:ent}; _hulls(ent,null);
     var mem=nodes.filter(function(n){ return n.ent===ent; });
     _phead((window.__uniEntLabel?__uniEntLabel(ent):ent),"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
@@ -3919,7 +3926,7 @@ var KINDCARD=(function(){
     ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     pb.append(ab);
     openPanel(); }
-  function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
+  function panelClu(ent, sub){ try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(e){} window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
     var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
     _phead(sub,"CLUSTER · "+(window.__uniEntLabel?__uniEntLabel(ent):ent),"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
@@ -3944,18 +3951,19 @@ var KINDCARD=(function(){
   /* FLEET ASSETS (operator): the ships & zones drawn around this planet, as a panel readout — read from
      the SAME per-node metrics nodeFleet() renders (tests→defence · god/untested→attack · large/behind→conflict
      · fan-in→satellites). Honest-empty: a node with no assets gets no section. */
-  function assetsSec(n){ if(!n) return null; var m=n.m||{},
-      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0), fanin=Math.round(+(m.fanin)||0),
+  /* RISK FLAGS (operator screenshot 2): the ATTACK-fleet signals — god-object · untested · conflict — as
+     flag rows carrying their ACTUAL graph asset (a red raider ship). Read from the same n.m nodeFleet renders. */
+  function flagsSec(n){ if(!n) return null; var m=n.m||{},
+      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0),
       untested=(tests===0 && n.kind!=="entity"), god=!!m.god, shock=!!(m.large||behind>=15);
     var rows=[];
-    if(tests>0) rows.push(kv("shield","defence", tests+" test"+(tests>1?"s":"")+" · a green ship each"));
-    if(god||untested){ var atk=[]; if(god) atk.push("god-object"); if(untested) atk.push("untested (raiders)"); rows.push(kv("swords","attack", atk.join(" · "))); }
-    if(shock) rows.push(kv("burst","conflict", "shock · "+(m.large?"large surface":(behind+" behind"))));
-    if(fanin>0) rows.push(kv("target","satellites", fanin+" caller"+(fanin>1?"s":"")+" (fan-in)"));
+    if(god){ var f=E("div",{class:"flagrow god"}, icoEl("alert"), E("span",{class:"flbl"},"god-object · oversized fn / class")); _hdAsset(f, function(){ return window.__uniAssets.god(); }, "god raider — the graph asset"); rows.push(f); }
+    if(untested){ var f2=E("div",{class:"flagrow warn"}, icoEl("alert"), E("span",{class:"flbl"},"unguarded · no test covers this")); _hdAsset(f2, function(){ return window.__uniAssets.ung(); }, "unguarded raider — the graph asset"); rows.push(f2); }
+    if(shock) rows.push(E("div",{class:"flagrow warn"}, icoEl("burst"), E("span",{class:"flbl"},"conflict · "+(m.large?"large surface":(behind+" behind")))));
     if(!rows.length) return null;
-    return E("div",{class:"sec"}, sechd("layers","Fleet assets"), rows, E("div",{class:"sublbl",style:"margin-top:4px"}, "the ships & zones drawn around this planet")); }
+    return E("div",{class:"flagssec"}, rows); }   // NOT a .sec — it has no .sechd header (the flags stand alone), so proofs iterating .sec/.sechd skip it
   Object.keys(C).forEach(function(k){ var base=C[k];
-    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });   // Fleet-assets TEXT section retired — the assets now render as live 3D thumbnails inline on Usage/Tests/Journeys/Payload (operator)
+    C[k]=function(n){ var out=base(n)||[]; var _fl=flagsSec(n); if(_fl) out.push(_fl); out.push(aboveSec(n)); return out; }; });   // Fleet-assets TEXT section retired → the DIMENSION assets render inline on Usage/Tests/Journeys/Payload; the ATTACK/risk signals stay as flag rows with their raider asset (operator)
   window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu; window.__uniSelNode=_selNode;   // batch 49: the search selects nodes through the ONE select path
   C.screen=C.web;
   function chipCls(k){ return ({endpoint:"endpoint",route:"froute","function":"function",model:"model",schema:"schema",component:"component",hook:"hook",store:"store",type:"type",screen:"web",web:"web",external:"external",entity:"entity"})[k]||"fn"; }
@@ -3985,7 +3993,7 @@ var LINKGLYPH='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" strok
 /* the right RAIL — element-components card; always docked, opens on element click, resizes the graph */
 function resizeGraph(){ if(!Graph) return; requestAnimationFrame(function(){ var g=document.getElementById("g"); try{ Graph.width(g.clientWidth).height(g.clientHeight); }catch(e){} }); }
 function openPanel(){ document.body.classList.add("panel-open"); resizeGraph(); }
-function closePanel(){ document.body.classList.remove("panel-open"); resizeGraph(); }
+function closePanel(){  try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}document.body.classList.remove("panel-open"); resizeGraph(); }
 /* ── SELECTION → the ENCODE panel readout (active dimension → this element/link's value) ── */
 var SEL={ kind:null, data:null };
 function selLbl(x){ return (x&&x.label)||(x&&x.id)||x; }
@@ -4071,6 +4079,7 @@ function legThumb(cv,buildObj){ var raw=buildObj(); if(!raw) return;
 window.__uniCardCells=[];
 window.__uniCardPrune=function(){ if(!window.__uniCardCells.length) return; var drop=window.__uniCardCells; PAL_CELLS=PAL_CELLS.filter(function(c){ return drop.indexOf(c)<0; }); window.__uniCardCells=[]; };
 window.__uniAssetThumb=function(buildFn, title){ var cv=document.createElement("canvas"); cv.width=46; cv.height=36; cv.className="asetthumb"; if(title) cv.title=title;
+  if(typeof SHIPSREADY!=="undefined" && !SHIPSREADY) return cv;   // ships not loaded → teamShip would give a stale loadingBox that never refreshes; skip the thumbnail until a reselect after load (review)
   try{ var raw=buildFn(); if(raw){ var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
     var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
     var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.9));

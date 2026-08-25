@@ -436,8 +436,12 @@ check('window.__uniAssetThumb=function' in page and 'window.__uniCardPrune=funct
       "the card asset-thumbnail machinery (shared palR renderer, pruned card cells) must be present")
 check('_hdAsset(jhd, function(){ return window.__uniAssets.testchip(); }' in page and 'window.__uniAssets.cargo()' in page and 'window.__uniAssets.ship(_corp)' in page and 'window.__uniAssets.sat()' in page,
       "the live asset thumbnails must attach to Usage(sat)/Tests(ship)/Journeys(test-chip)/Payload(cargo)")
-check('try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}' in page and 'var _as=assetsSec(n)' not in page,
-      "panel rebuilds must PRUNE the card thumbnail cells (no WebGL leak); the Fleet-assets TEXT section is retired")
+check(page.count('if(window.__uniCardPrune) __uniCardPrune();') >= 6 and 'var _as=assetsSec(n)' not in page,
+      "the card-thumbnail prune must run on EVERY panel rebuild (showPanel/showLinkPanel/panelAll/panelEnt/panelClu/closePanel) — no WebGL leak on nav-up or close (review)")
+check('if(typeof SHIPSREADY!=="undefined" && !SHIPSREADY) return cv;' in page,
+      "an asset thumbnail must skip until SHIPSREADY (else a stale loadingBox that never refreshes, review)")
+check('function flagsSec(n)' in page and 'window.__uniAssets.god()' in page and 'window.__uniAssets.ung()' in page and 'unguarded · no test covers this' in page,
+      "the risk flags (god-object / unguarded / conflict) must render with their raider asset (operator screenshot 2)")
 check('if(real && window.__uniJrnStart){ row.style.cursor="pointer"; row.onclick=function(){ try{ __uniJrnStart(j.cid)' in page and 'an AGGREGATE of web/e2e cases folded' in page,
       "a named journey row must click → __uniJrnStart (top stepper); aggregate 'N case(s)' rows non-clickable + explained")
 check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,

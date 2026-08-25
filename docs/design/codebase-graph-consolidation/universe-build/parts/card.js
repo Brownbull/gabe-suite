@@ -328,7 +328,7 @@
   function _entsMap(){ var m={}; nodes.forEach(function(n){ if(n.ent) (m[n.ent]=m[n.ent]||[]).push(n); }); return m; }
   function _selNode(n){ SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); }catch(e){} }
   function _hulls(ent, sub){ try{ window.__uniHullSel={ent:ent||null, sub:sub!=null?sub:null}; window.__uniApplyHullSel(); }catch(e){} }
-  function panelAll(){ window.__uniPView={lvl:"all"}; _hulls(null,null);
+  function panelAll(){ try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(e){} window.__uniPView={lvl:"all"}; _hulls(null,null);
     _phead("Everything","UNIVERSE","entity");
     var pb=document.getElementById("pbody"); pb.innerHTML="";
     var ents=_entsMap(), names=Object.keys(ents).sort();
@@ -359,7 +359,7 @@
       pb.append(w); }
     pb.append(E("div",{class:"sec"}, sechd("nav","Above"), E("div",{class:"sublbl"}, icoEl("info"), "— the top level (Esc returns here)")));
     openPanel(); }
-  function panelEnt(ent){ window.__uniPView={lvl:"ent",ent:ent}; _hulls(ent,null);
+  function panelEnt(ent){ try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(e){} window.__uniPView={lvl:"ent",ent:ent}; _hulls(ent,null);
     var mem=nodes.filter(function(n){ return n.ent===ent; });
     _phead((window.__uniEntLabel?__uniEntLabel(ent):ent),"ENTITY","entity",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
@@ -376,7 +376,7 @@
     ab.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     pb.append(ab);
     openPanel(); }
-  function panelClu(ent, sub){ window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
+  function panelClu(ent, sub){ try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(e){} window.__uniPView={lvl:"clu",ent:ent,sub:sub}; _hulls(ent,sub);
     var mem=nodes.filter(function(n){ return n.ent===ent && (n.sub||"—")===sub; });
     _phead(sub,"CLUSTER · "+(window.__uniEntLabel?__uniEntLabel(ent):ent),"sub",(typeof ENT!=="undefined"&&ENT[ent])||null);
     var pb=document.getElementById("pbody"); pb.innerHTML="";
@@ -401,16 +401,17 @@
   /* FLEET ASSETS (operator): the ships & zones drawn around this planet, as a panel readout — read from
      the SAME per-node metrics nodeFleet() renders (tests→defence · god/untested→attack · large/behind→conflict
      · fan-in→satellites). Honest-empty: a node with no assets gets no section. */
-  function assetsSec(n){ if(!n) return null; var m=n.m||{},
-      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0), fanin=Math.round(+(m.fanin)||0),
+  /* RISK FLAGS (operator screenshot 2): the ATTACK-fleet signals — god-object · untested · conflict — as
+     flag rows carrying their ACTUAL graph asset (a red raider ship). Read from the same n.m nodeFleet renders. */
+  function flagsSec(n){ if(!n) return null; var m=n.m||{},
+      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0),
       untested=(tests===0 && n.kind!=="entity"), god=!!m.god, shock=!!(m.large||behind>=15);
     var rows=[];
-    if(tests>0) rows.push(kv("shield","defence", tests+" test"+(tests>1?"s":"")+" · a green ship each"));
-    if(god||untested){ var atk=[]; if(god) atk.push("god-object"); if(untested) atk.push("untested (raiders)"); rows.push(kv("swords","attack", atk.join(" · "))); }
-    if(shock) rows.push(kv("burst","conflict", "shock · "+(m.large?"large surface":(behind+" behind"))));
-    if(fanin>0) rows.push(kv("target","satellites", fanin+" caller"+(fanin>1?"s":"")+" (fan-in)"));
+    if(god){ var f=E("div",{class:"flagrow god"}, icoEl("alert"), E("span",{class:"flbl"},"god-object · oversized fn / class")); _hdAsset(f, function(){ return window.__uniAssets.god(); }, "god raider — the graph asset"); rows.push(f); }
+    if(untested){ var f2=E("div",{class:"flagrow warn"}, icoEl("alert"), E("span",{class:"flbl"},"unguarded · no test covers this")); _hdAsset(f2, function(){ return window.__uniAssets.ung(); }, "unguarded raider — the graph asset"); rows.push(f2); }
+    if(shock) rows.push(E("div",{class:"flagrow warn"}, icoEl("burst"), E("span",{class:"flbl"},"conflict · "+(m.large?"large surface":(behind+" behind")))));
     if(!rows.length) return null;
-    return E("div",{class:"sec"}, sechd("layers","Fleet assets"), rows, E("div",{class:"sublbl",style:"margin-top:4px"}, "the ships & zones drawn around this planet")); }
+    return E("div",{class:"flagssec"}, rows); }   // NOT a .sec — it has no .sechd header (the flags stand alone), so proofs iterating .sec/.sechd skip it
   Object.keys(C).forEach(function(k){ var base=C[k];
-    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });   // Fleet-assets TEXT section retired — the assets now render as live 3D thumbnails inline on Usage/Tests/Journeys/Payload (operator)
+    C[k]=function(n){ var out=base(n)||[]; var _fl=flagsSec(n); if(_fl) out.push(_fl); out.push(aboveSec(n)); return out; }; });   // Fleet-assets TEXT section retired → the DIMENSION assets render inline on Usage/Tests/Journeys/Payload; the ATTACK/risk signals stay as flag rows with their raider asset (operator)
   window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu; window.__uniSelNode=_selNode;   // batch 49: the search selects nodes through the ONE select path

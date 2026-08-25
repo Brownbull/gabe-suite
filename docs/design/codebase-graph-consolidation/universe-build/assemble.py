@@ -126,6 +126,7 @@ _ASSET_HELPER = _LEGTHUMB_TAIL + '''
 window.__uniCardCells=[];
 window.__uniCardPrune=function(){ if(!window.__uniCardCells.length) return; var drop=window.__uniCardCells; PAL_CELLS=PAL_CELLS.filter(function(c){ return drop.indexOf(c)<0; }); window.__uniCardCells=[]; };
 window.__uniAssetThumb=function(buildFn, title){ var cv=document.createElement("canvas"); cv.width=46; cv.height=36; cv.className="asetthumb"; if(title) cv.title=title;
+  if(typeof SHIPSREADY!=="undefined" && !SHIPSREADY) return cv;   // ships not loaded → teamShip would give a stale loadingBox that never refreshes; skip the thumbnail until a reselect after load (review)
   try{ var raw=buildFn(); if(raw){ var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
     var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
     var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.9));
@@ -154,7 +155,7 @@ _USAGE_NEW = ('  function usage(n,breakdown){ var _uhd=sechd("merge","Usage",n,f
 text = text.replace(_USAGE_OLD, _USAGE_NEW, 1)
 
 # prune the card asset-thumbnail cells on every panel rebuild (no WebGL leak across selections)
-for _clr in ['function showPanel(n){ var K=n.K;', 'function showLinkPanel(l){']:
+for _clr in ['function showPanel(n){ var K=n.K;', 'function showLinkPanel(l){', 'function closePanel(){ ']:
     assert _clr in text, "panel builder anchor missing: " + _clr
     text = text.replace(_clr, _clr + ' try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}', 1)
 
