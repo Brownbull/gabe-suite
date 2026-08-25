@@ -87,7 +87,7 @@ const pw = await p.evaluate(() => new Promise(res => {
       setTimeout(() => {
         let touching = 0; connGroup.children.forEach(() => {});
         const expected = links.filter(l => { const s = NIDS[lid(l.source)], t = NIDS[lid(l.target)];
-          return s && t && s.ent !== e && t.ent !== e; }).length;
+          return s && t && s.ent !== e && t.ent !== e && visN(s).show && visN(t).show; }).length;   // only VISIBLE pairs draw a wire (critical hides single-caller helpers)
         const wiresNow = connGroup.children.length;
         const nodesBack = nodes.filter(n => n.ent === e).some(n => n.__threeObj && n.__threeObj.parent);
         document.querySelector(`#fleet .fltog[data-fent="${e}"]:not([data-fsub])[data-fcol="wires"]`).click();

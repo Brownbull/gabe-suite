@@ -554,11 +554,10 @@
   .grplbl .grpsel{ margin-left:7px; font:400 10px/1 var(--mono, ui-monospace, monospace); text-transform:none; letter-spacing:0; color:var(--accent, #6ea8ff); opacity:.95; }
   #cfg .grplbl, #flside .grplbl{ text-transform:uppercase; }
 
-  /* legend 3-state (operator): off = full dim · critical = partial (single-caller helpers hidden) */
+  /* legend 3-state (operator): off = dim + strike · critical = DEFAULT (full opacity) + a Ⓒ badge · all = full, no badge */
   #elegend .lgrow.lgoff{ opacity:.4; }
-  #elegend .lgrow.lgcrit{ opacity:.72; }
-  #elegend .lgrow.lgcrit .lgvis::after{ content:""; position:absolute; }   /* placeholder — the row-level dim carries it */
-  #elegend .lgrow.lgcrit .lglbl b::after{ content:" · critical"; font-size:8px; font-weight:600; color:var(--muted); letter-spacing:.02em; text-transform:uppercase; }
+  #elegend .lgrow.lgcrit{ opacity:1; }   /* critical is the default state now — not dimmed; the Ⓒ badge is the only signal */
+  #elegend .lgrow.lgcrit .lglbl b::after{ content:"C"; display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; margin-left:6px; border:1px solid #e0a44a; border-radius:50%; font-size:8px; font-weight:800; line-height:1; color:#e0a44a; vertical-align:middle; }   /* Ⓒ = critical, inline after the kind title (single-caller helpers hidden) */
   /* clickable group header (backend / frontend) — a MASTER, with its state on the right */
   #elegend .lghd2.lggrp{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; border-radius:5px; padding:2px 4px; margin:6px 0 2px; }
   #elegend .lghd2.lggrp:hover{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -583,6 +582,19 @@
   .xkids{ margin:0 0 3px; }
   .xleaf{ font-size:10px; color:var(--muted); margin:1px 0 3px 11px; }
   .xmore{ padding:2px 7px; margin:1px 0 4px 15px; font-size:10px; }
+  /* operator: the legend header wears the FLEET header layout — title left (flex), the three tab
+     buttons + minimize as one bordered button row on the right; tab icons sized to READ, not hint. */
+  #elegend .lghd{ display:flex !important; align-items:center; gap:6px !important; padding:8px 10px !important; }
+  #elegend .lghd b{ flex:1 1 auto !important; }
+  #elegend .lgtabs{ display:inline-flex !important; gap:4px !important; margin:0 !important; padding:0 !important; background:transparent !important; }
+  #elegend .lgtab{ display:inline-flex !important; align-items:center; justify-content:center; width:26px !important; height:22px !important; padding:0 !important; border:1px solid var(--line) !important; border-radius:6px !important; background:none !important; color:var(--muted) !important; }
+  #elegend .lgtab:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
+  #elegend .lgtab.on{ color:#fff !important; background:var(--accent) !important; border-color:var(--accent) !important; }
+  #elegend .lgtab svg{ width:16px !important; height:16px !important; }                     /* bigger — reads like a fleet button, not a hint */
+  #elegend .lgmin{ display:inline-flex !important; align-items:center; justify-content:center; width:26px !important; height:22px !important; margin:0 0 0 2px !important; padding:0 !important; border:1px solid var(--line) !important; border-radius:6px !important; background:none !important; color:var(--muted) !important; font:700 14px/1 var(--font-ui) !important; }
+  #elegend .lgmin:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
+  /* planet-config Zones: the On/Off master pill is gone — a quiet hint that the fleet columns own it */
+  .zonehint{ font-size:9px; color:var(--muted); opacity:.7; margin-left:6px; font-weight:500; }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -977,7 +989,7 @@ var OPMAP={
 var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", coreByBE:null, coreByFE:null, lineStyle:"curved", showFns:"off", showTypes:"off", subOn:true, entOn:true, radius:1.0, bubble:"film", subOp:"faint", entOp:"ghost",
   /* SPACE WAR zones — 3 areas around each planet; angle (deg, front XY plane) + one shared distance.
      defaults: attack=left(180) · conflict=top(90) · defense=right(0). warDist = gap outside the sphere. */
-  warOn:false, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
+  warOn:true, warDist:7, shellH:0.6, concave:0.72, lift:0.65,   // war zones baked ALWAYS ON (operator settle 2026-08-19); warDist/shellH/concave/lift are dead (fleets ignore them)
   conns:true, stars:true, transports:true,   // ELEMENTS-LAB fleets · connectors · star field · transports — all baked ALWAYS ON (settled)
   zDef:true, zAtk:true, zCfl:true, zSat:true };   // per-planet-zone visibility (defence · attack · conflict · satellites), toggled in the Planet group
 var RADMIN=0.6, RADMAX=1.6;
@@ -1420,7 +1432,7 @@ function recomputeSubAnchors(){
 // frontend entities by coreByFE — simultaneously. Defaults chase what actually divides each side
 // (community is the backend spine, screen the frontend spine); without a levels feed, kind on both.
 (function(){ var lv=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
-  if(CFG.coreByBE==null) CFG.coreByBE=lv?"community":"kind";
+  if(CFG.coreByBE==null) CFG.coreByBE=lv?"usecase":"kind";   // operator default: use-case clustering when the levels feed is present
   if(CFG.coreByFE==null) CFG.coreByFE="screen";
   CFG.coreBy=CFG.coreByBE;   // back-compat: any lingering single-core reader sees the backend core
 })();
@@ -2139,7 +2151,7 @@ window.__uniWireTopbar=function(){
    keys its stages by piece id and the universe node ids are the SAME strings, so a later per-piece
    join is direct. ALL engine seams read through visEnt/visN — the ONE place a "dim" tri-state and
    per-piece roles land later. An unknown entity resolves to SHOWN (l2-only entities never vanish). */
-var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
+var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:0, zAtk:0, zCfl:0, zSat:0, routes:1 };   // zones OFF by default — the FLEET zone columns are the only control
 /* the seven cluster-core strategies each own an ICON (operator ask) — the config pills carry them
    and every cluster surface (rows, panels) INHERITS the active core's icon from this one map. */
 window.__uniCoreIco=function(mode,px){ px=px||13; var PATHS={
@@ -2182,7 +2194,7 @@ _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 /* effective per-node: node override wins; else the entity flags AND the node's sub-group flags —
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
-function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(n.kind==="function"?"off":"all");   // hide-by-kind (batch 51) — now 3-state (off · critical · all)
+function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
     if(_st==="off") return _KOFF;
     if(_st==="critical" && n.__solo) return _KOFF; }   // critical hides single-caller-SAME-kind helpers
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
@@ -2481,7 +2493,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var planetsPane=[];
   if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); planetsPane.push(pt); }
   if(G.planet){ var zlbl=G.planet.querySelector(".grplbl"); zlbl.className="grplbl zoneshd";
-    zlbl.innerHTML='<span>Zones</span>'+pillHTML("warOn",[{v:true,t:"On"},{v:false,t:"Off"}], CFG.warOn);   // the master survives; the four icons do not
+    zlbl.innerHTML='<span>Zones</span><span class="zonehint">shown per-entity from the fleet zone columns</span>';   // the On/Off master is GONE — the fleet zone columns are the sole control (operator)
     var zg=document.createElement("div"); zg.className="grp"; zg.appendChild(zlbl); planetsPane.push(zg); }
   var flyw=document.createElement("div"); flyw.className="flcfgbody";   // (binding container reused below)
   planetsPane.forEach(function(g){ flyw.appendChild(g); })
@@ -2892,8 +2904,8 @@ window.__uniGoto=function(id){ if(!id) return;
 var _KOFF={show:0,planets:0,wires:0,subs:0,zDef:0,zAtk:0,zCfl:0,zSat:0,routes:0};
 window.__uniKindState={};     // kind → "all" | "critical" | "off"
 window.__uniKindOff={};       // compat mirror (truthy iff state==="off")
-window.__uniGrpState={backend:"all", frontend:"all"};
-function _kindDefault(k){ return k==="function"?"off":"all"; }   // functions load on demand
+window.__uniGrpState={backend:"critical", frontend:"critical"};   // matches the per-kind critical default (operator)
+function _kindDefault(k){ return k==="type"?"off":"critical"; }   // operator: everything critical-capable boots CRITICAL; no-solo kind reads as ALL in visN; `type` stays held-off
 var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,imports:1,handler:1,"reads":1};
 window.__uniComputeSolo=function(){ var callers={};
   links.forEach(function(l){ if(!_SOLO_REL[l.rel]) return; var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;   // a self-loop (recursion) is NOT an external parent (review LOW)
@@ -3364,7 +3376,9 @@ var KINDCARD=(function(){
      children indented one level (lazy, depth-capped) with a "+N more" count cap. Rows:
      {label, glyph, cls, meta, title, node, childrenFn}. node → click navigates; childrenFn → a twisty. ── */
   function _xRow(r, depth, maxD, cap){
-    var row=E("div",{class:"xrow"}), canX=!!(r.childrenFn && depth<maxD);
+    var row=E("div",{class:"xrow"});
+    var kidSpecs=(r.childrenFn && depth<maxD) ? (r.childrenFn()||[]) : null;   // PEEK one level: only offer a twisty when there is genuinely something deeper (no empty "nothing deeper" arrows)
+    var canX=!!(kidSpecs && kidSpecs.length);
     var tw=E("span",{class:canX?"xtw":"xtwsp"});
     var id=r.id||(r.node&&r.node.id)||null;
     var chip=E("span",{class:"pchip "+(r.cls||"fn")+(id?" xnav":""), title:r.title||r.label||""},
@@ -3375,12 +3389,12 @@ var KINDCARD=(function(){
       chip.addEventListener("mouseleave",function(){ __uniHoverHL(null); });
       chip.addEventListener("click",function(ev){ ev.stopPropagation(); if(window.__uniGoto) __uniGoto(id); }); }
     else if(r.node){ chip.onclick=function(e){ e.stopPropagation(); try{ _selNode(r.node); }catch(x){} }; }
+    if(!canX && r.childrenFn && depth>=maxD){ var deeper=r.childrenFn()||[];   // at the depth cap: a "·" ONLY when the tree really continues (honest cap marker, never a dead arrow)
+      if(deeper.length) chip.append(E("span",{class:"xdeep",title:deeper.length+" deeper — capped at this level"},"·")); }
     var head=E("div",{class:"xhead"}, tw, chip), kids=E("div",{class:"xkids",style:"display:none"}), built=false, open=false;
     if(canX){ tw.style.cursor="pointer"; head.classList.add("xhx"); tw.onclick=function(e){ e.stopPropagation(); open=!open;
-        if(open && !built){ built=true; var cs=r.childrenFn()||[];
-          kids.append(cs.length?_xList(cs, depth+1, maxD, cap):E("div",{class:"xleaf"},"— nothing deeper")); }
+        if(open && !built){ built=true; kids.append(_xList(kidSpecs, depth+1, maxD, cap)); }   // kidSpecs already computed by the peek
         kids.style.display=open?"":"none"; row.classList.toggle("xopen",open); }; }
-    else if(r.childrenFn){ chip.append(E("span",{class:"xdeep",title:"deeper levels not expanded at this depth"},"·")); }
     row.append(head, kids); return row; }
   function _xList(rows, depth, maxD, cap){ var box=E("div",{class:"xpl"+(depth?" xin":"")}), shown=Math.min(cap, rows.length);
     function paint(){ box.innerHTML="";
@@ -3880,7 +3894,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpState[it.l])||"all";   // group header = a MASTER (click cycles all→critical→off for the whole side)
         h+='<div class="lghd2 lggrp gs-'+_gs+'" data-lggrp="'+it.l+'" title="'+it.l+' — click: ALL -> CRITICAL -> OFF for every '+it.l+' kind"><span>'+it.l+'</span><span class="lggs">'+_gs+'</span></div>'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
-        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="function"?"off":"all");
+        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"critical");
         var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
         var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
         var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
@@ -3910,5 +3924,5 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
   window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
-preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
+preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

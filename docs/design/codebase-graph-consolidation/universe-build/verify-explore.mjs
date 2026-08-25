@@ -17,11 +17,14 @@ p.on('console', m => { if (m.type() === 'error') errs.push('CE:' + m.text()); })
 await p.goto('file://' + PAGE);
 await p.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
 await p.waitForTimeout(4000);
+// all kinds VISIBLE for this structural test — CRITICAL (the boot default now) hides solo helpers and would skew the highlight-set / wire counts below
+await p.evaluate(() => { ['backend','frontend'].forEach(g => { var i=0; while(__uniGrpState[g]!=='all' && i++<5) __uniGroupToggle(g); }); });
+await p.waitForTimeout(1500);
 const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
 // [1] layer ruling (c): un-collapsed groups — endpoints + web appear, "frontend" is gone
 const layer = await p.evaluate(() => {
-  const defaultCore = CFG.coreBy;                       // community when the levels feed is present (operator default)
+  const defaultCore = CFG.coreBy;                       // USE-CASE when the levels feed is present (operator default)
   CFG.coreBy = 'layer'; assignSub('layer');
   const subs = {}; nodes.forEach(n => { subs[n.sub] = 1; });
   const epSep = nodes.filter(n => n.kind === 'endpoint').every(n => n.sub === 'endpoints');
@@ -130,7 +133,7 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 
 const fails = [];
 if (errs.length) fails.push('page/console errors');
-if (!(layer.epSep && layer.webOwn && layer.noFrontend && layer.defaultCore === 'community')) fails.push('layer ruling (c) / community default wrong');
+if (!(layer.epSep && layer.webOwn && layer.noFrontend && layer.defaultCore === 'usecase')) fails.push('layer ruling (c) / use-case default wrong');
 if (!(topbar.pillsLast && topbar.depth && topbar.mode && topbar.jrn && topbar.freezeIconOnly && topbar.resetIconOnly)) fails.push('topbar rework wrong');
 if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dimmed === 0 && glow.minRest >= restMin - 0.01 && glow.haloGrouped)) fails.push('glow highlight broken (rest must stay BRIGHT — never below the resting min; halos in the scene group)');
 if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+E depth broken');

@@ -150,7 +150,7 @@ text = text.replace(OLD_APPLY,
   'else { buildClusters(); updateClusters(true); } }', 1)
 assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
-                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
+                    'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
 text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
 
@@ -221,7 +221,7 @@ if 'if(n.x!=null) _npos[n.id]' in text:
 
 # ── batch 6: planet assets OFF by default ──
 assert 'warOn:true, warDist' in text, "warOn anchor missing"
-text = text.replace('warOn:true, warDist', 'warOn:false, warDist', 1)
+# warOn stays TRUE (spike default) — the zone system is always live; the FLEET zone columns are the per-entity control (assets off via _VISDEF zones=0). Operator moved the control off the planet config.
 
 # ── batch 6 PERF: throttle the per-tick connector rebuild (the 227+ geometry churn) during settle;
 #    a forced call (onEngineStop / control change) still rebuilds fully, so the settled frame is exact ──
@@ -444,7 +444,7 @@ assert OLD_KROW in text, "legend kind-row anchor missing"
 NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpState[it.l])||"all";   // group header = a MASTER (click cycles all→critical→off for the whole side)
         h+=\'<div class="lghd2 lggrp gs-\'+_gs+\'" data-lggrp="\'+it.l+\'" title="\'+it.l+\' — click: ALL -> CRITICAL -> OFF for every \'+it.l+\' kind"><span>\'+it.l+\'</span><span class="lggs">\'+_gs+\'</span></div>\'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
-        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="function"?"off":"all");
+        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"critical");
         var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
         var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
         var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));

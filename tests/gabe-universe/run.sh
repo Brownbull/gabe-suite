@@ -171,10 +171,10 @@ check('id="flscopy"' in page.replace("'",'"') or '"flscopy"' in page,
       "the Connections copy-settings button is gone")
 check('window.__uniLastCopy=txt' in page and '(key==="wires")?"":"none"' in page,
       "copy-settings lost its payload stash or its Connections-only gate")
-check('pillHTML("warOn"' in page, "master planet-assets on/off toggle missing")
+check('pillHTML("warOn"' not in page and 'zonehint' in page, "the Zones On/Off master pill must be GONE (fleet zone columns own it) with a zonehint in its place")
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
-check('warOn:false' in page, "planet assets are not OFF by default")
+check('zDef:0, zAtk:0' in page, "the four war zones must default OFF per entity (the fleet zone columns are the only control)")
 check('grplbl zoneshd' in page, "the Zones title does not carry the inline On/Off master toggle")
 check('zonesoff' in page, "zone icons do not dim when the master toggle is off")
 check('data-grp="coreByBE"], #cfg .pill[data-grp="coreByFE"],' in page and '{ display:grid' in page, "the per-side core pills are not a 2-column grid (they would overflow)")
@@ -412,7 +412,7 @@ check('__uniHoverHL(x.id)' in page and 'userData.__hov' in page, "connection-chi
 check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un-minimize the config on show (state drift)")
 
 # ── 10q. batch 17: community default · ring layout · wider spacing ──
-check('CFG.coreByBE=lv?"community":"kind"' in page and 'CFG.coreByFE="screen"' in page,
+check('CFG.coreByBE=lv?"usecase":"kind"' in page and 'CFG.coreByFE="screen"' in page,
       "the per-side defaults (backend=community, frontend=screen) are gone")
 check('{v:"ring",t:""' in page and 'Ring —' in page and 'mode==="ring"' in page,
       "the RING entity layout is missing (icon-only pill, word on hover)")
@@ -710,8 +710,8 @@ check('if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent
 check('if(_CAPST&&_CAPST.byPiece[id])' in page, "goto/search into a folded piece no longer auto-expands")
 check('g:"collapsed"' in page and 'opens the capsule' in page,
       "stashed pieces vanished from search (the index must list them and expand on open)")
-check('setTimeout(function(){ if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);' in page,
-      "the boot fold must run AFTER build() and past the engine's first tick (Graph is null in the config-boot line)")
+check('__uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);' in page,
+      "the boot must, in the 400ms settle (AFTER build + first tick), load functions to critical THEN fold")
 check('KINDS.capsule={' in page and 'f==="pod"' in page and 'C.capsule=function(n)' in page,
       "the capsule kind lost its form/card")
 check('if(mode==="screen"){' in page and 'screen:"Screen — pieces group by the SCREEN' in page,

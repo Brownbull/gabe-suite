@@ -105,6 +105,7 @@ const critical = await p.evaluate(() => new Promise(res => {
     const allVis = nodes.filter(n=>n.kind==='function' && !n.__cap && visN(n).show).length;
     __uniSetKindState('function','critical');
     const critVis = nodes.filter(n=>n.kind==='function' && !n.__cap && visN(n).show).length;
+    var _gn=0; while(__uniGrpState.backend!=='all' && _gn++<5) __uniGroupToggle('backend');   // the group defaults CRITICAL now — normalize to 'all' first
     __uniGroupToggle('backend'); const gs1 = __uniGrpState.backend;        // all→critical
     __uniGroupToggle('backend');                                           // critical→off
     const modelHidden = nodes.filter(n=>n.kind==='model' && visN(n).show).length === 0;

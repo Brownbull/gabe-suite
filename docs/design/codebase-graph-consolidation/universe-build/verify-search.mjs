@@ -115,6 +115,7 @@ const fx = await p.evaluate(() => new Promise(res => {
   inp.dispatchEvent(new Event('input', { bubbles: true }));
   setTimeout(() => { out.noXss = window.__xss === 0 && !dd.querySelector('img') && /no match/.test(dd.textContent);
     // B: a held function is findable with ƒ OFF and its row turns ƒ ON
+    __uniSetKindState('function','off');   // functions boot LOADED (critical) now — establish the held (off) baseline this sub-test exercises
     const fn = (window.GABE_LEVELS.fn_nodes || [])[0];
     inp.value = fn ? fn.name : ''; inp.dispatchEvent(new Event('input', { bubbles: true }));   // the RAW feed field is `name` (label is the MAPPED node's)
     const grp = [...dd.querySelectorAll('.tsgrp')].some(g => /functions \(off\)/.test(g.textContent));

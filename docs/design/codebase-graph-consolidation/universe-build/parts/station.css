@@ -408,11 +408,10 @@
   .grplbl .grpsel{ margin-left:7px; font:400 10px/1 var(--mono, ui-monospace, monospace); text-transform:none; letter-spacing:0; color:var(--accent, #6ea8ff); opacity:.95; }
   #cfg .grplbl, #flside .grplbl{ text-transform:uppercase; }
 
-  /* legend 3-state (operator): off = full dim · critical = partial (single-caller helpers hidden) */
+  /* legend 3-state (operator): off = dim + strike · critical = DEFAULT (full opacity) + a Ⓒ badge · all = full, no badge */
   #elegend .lgrow.lgoff{ opacity:.4; }
-  #elegend .lgrow.lgcrit{ opacity:.72; }
-  #elegend .lgrow.lgcrit .lgvis::after{ content:""; position:absolute; }   /* placeholder — the row-level dim carries it */
-  #elegend .lgrow.lgcrit .lglbl b::after{ content:" · critical"; font-size:8px; font-weight:600; color:var(--muted); letter-spacing:.02em; text-transform:uppercase; }
+  #elegend .lgrow.lgcrit{ opacity:1; }   /* critical is the default state now — not dimmed; the Ⓒ badge is the only signal */
+  #elegend .lgrow.lgcrit .lglbl b::after{ content:"C"; display:inline-flex; align-items:center; justify-content:center; width:12px; height:12px; margin-left:6px; border:1px solid #e0a44a; border-radius:50%; font-size:8px; font-weight:800; line-height:1; color:#e0a44a; vertical-align:middle; }   /* Ⓒ = critical, inline after the kind title (single-caller helpers hidden) */
   /* clickable group header (backend / frontend) — a MASTER, with its state on the right */
   #elegend .lghd2.lggrp{ display:flex; align-items:center; justify-content:space-between; cursor:pointer; border-radius:5px; padding:2px 4px; margin:6px 0 2px; }
   #elegend .lghd2.lggrp:hover{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
@@ -437,3 +436,16 @@
   .xkids{ margin:0 0 3px; }
   .xleaf{ font-size:10px; color:var(--muted); margin:1px 0 3px 11px; }
   .xmore{ padding:2px 7px; margin:1px 0 4px 15px; font-size:10px; }
+  /* operator: the legend header wears the FLEET header layout — title left (flex), the three tab
+     buttons + minimize as one bordered button row on the right; tab icons sized to READ, not hint. */
+  #elegend .lghd{ display:flex !important; align-items:center; gap:6px !important; padding:8px 10px !important; }
+  #elegend .lghd b{ flex:1 1 auto !important; }
+  #elegend .lgtabs{ display:inline-flex !important; gap:4px !important; margin:0 !important; padding:0 !important; background:transparent !important; }
+  #elegend .lgtab{ display:inline-flex !important; align-items:center; justify-content:center; width:26px !important; height:22px !important; padding:0 !important; border:1px solid var(--line) !important; border-radius:6px !important; background:none !important; color:var(--muted) !important; }
+  #elegend .lgtab:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
+  #elegend .lgtab.on{ color:#fff !important; background:var(--accent) !important; border-color:var(--accent) !important; }
+  #elegend .lgtab svg{ width:16px !important; height:16px !important; }                     /* bigger — reads like a fleet button, not a hint */
+  #elegend .lgmin{ display:inline-flex !important; align-items:center; justify-content:center; width:26px !important; height:22px !important; margin:0 0 0 2px !important; padding:0 !important; border:1px solid var(--line) !important; border-radius:6px !important; background:none !important; color:var(--muted) !important; font:700 14px/1 var(--font-ui) !important; }
+  #elegend .lgmin:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
+  /* planet-config Zones: the On/Off master pill is gone — a quiet hint that the fleet columns own it */
+  .zonehint{ font-size:9px; color:var(--muted); opacity:.7; margin-left:6px; font-weight:500; }

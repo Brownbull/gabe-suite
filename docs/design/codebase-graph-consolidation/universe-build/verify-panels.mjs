@@ -227,11 +227,11 @@ const hull = await p.evaluate(() => {
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));   // [7] left allergen lit — clean baseline first
   const op = (lvl, ekey, skey) => { const c = CLUSTERS.find(c => c.level === lvl && c.ekey === ekey && (lvl === 'ent' || c.skey === skey));
     if (!c) return null; const m = (c.hull || c.sph || (c.sprites && c.sprites[0] && c.sprites[0].s)); return m ? +m.material.opacity.toFixed(4) : null; };
-  const stockA = op('ent', 'allergen'), stockOther = op('ent', 'pantry'), stockSub = op('sub', 'allergen', 'misc');
+  const stockA = op('ent', 'allergen'), stockOther = op('ent', 'pantry'), stockSub = op('sub', 'allergen', 'other');
   window.__uniPanelEnt('allergen');
   const entLit = op('ent', 'allergen'), otherStill = op('ent', 'pantry');
-  window.__uniPanelClu('allergen', 'misc');
-  const cluLit = op('sub', 'allergen', 'misc'), entStillLit = op('ent', 'allergen');
+  window.__uniPanelClu('allergen', 'other');
+  const cluLit = op('sub', 'allergen', 'other'), entStillLit = op('ent', 'allergen');
   const n = nodes.find(x => x.ent === 'pantry' && x.sub); showPanel(n);
   const elemEnt = op('ent', 'pantry'), elemSub = op('sub', n.ent, n.sub), allerBack = op('ent', 'allergen');
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
@@ -247,10 +247,15 @@ const hull = await p.evaluate(() => {
 const fleet = await p.evaluate(() => {
   window.__uniPanelEnt('pantry');
   const entSpot = !!document.querySelector('#fleetbody .flrow.spot[data-fle="pantry"]');
-  window.__uniPanelClu('allergen', 'misc');
-  const opened = !!document.querySelector('#fleetbody .flrow.flsub[data-fle="allergen"][data-fls="misc"]');
-  const cluSpot = !!document.querySelector('#fleetbody .flrow.flsub.spot[data-fle="allergen"][data-fls="misc"]');
-  const entAlso = !!document.querySelector('#fleetbody .flrow.spot[data-fle="allergen"]:not(.flsub)');
+  // a MULTI-cluster entity (≠ pantry) whose fleet row expands into sub-rows — core-agnostic
+  // (a single-cluster entity like allergen|other under the use-case core has no expandable sub-row)
+  const subsOf = e => [...new Set(nodes.filter(n=>n.ent===e && n.sub!=null && !n.__cap).map(n=>n.sub))];
+  const ce = _ents.find(e => e!=='pantry' && subsOf(e).filter(x=>x!=='other').length>=2);
+  const cs = subsOf(ce).find(x=>x!=='other');
+  window.__uniPanelClu(ce, cs);
+  const opened = !!document.querySelector(`#fleetbody .flrow.flsub[data-fle="${ce}"][data-fls="${cs}"]`);
+  const cluSpot = !!document.querySelector(`#fleetbody .flrow.flsub.spot[data-fle="${ce}"][data-fls="${cs}"]`);
+  const entAlso = !!document.querySelector(`#fleetbody .flrow.spot[data-fle="${ce}"]:not(.flsub)`);
   const pantryDropped = !document.querySelector('#fleetbody .flrow.spot[data-fle="pantry"]');
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
   const cleared = document.querySelectorAll('#fleetbody .flrow.spot').length === 0;
@@ -259,20 +264,20 @@ const fleet = await p.evaluate(() => {
 //      cluster selected → that cluster only · entity → that entity · nothing → the ALL row
 const numkeys = await p.evaluate(() => {
   const kd = k => window.dispatchEvent(new KeyboardEvent('keydown', { key: k }));
-  window.__uniPanelClu('allergen', 'misc');
-  const c0 = (UNIVIS.sub['allergen|misc'] || { planets: 1 }).planets;
-  kd('2'); const c1 = UNIVIS.sub['allergen|misc'].planets;      // key 2 = planets since the batch-30 reorder
-  kd('2'); const c2 = UNIVIS.sub['allergen|misc'].planets;
+  window.__uniPanelClu('allergen', 'other');
+  const c0 = (UNIVIS.sub['allergen|other'] || { planets: 1 }).planets;
+  kd('2'); const c1 = UNIVIS.sub['allergen|other'].planets;      // key 2 = planets since the batch-30 reorder
+  kd('2'); const c2 = UNIVIS.sub['allergen|other'].planets;
   const entUntouched = UNIVIS.ent.allergen.planets === 1;
   window.__uniPanelEnt('pantry');
   kd('3'); const entWires = UNIVIS.ent.pantry.wires;            // key 3 = wires now
   kd('3'); const entWiresBack = UNIVIS.ent.pantry.wires;
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
-  kd('5'); const allOff = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 0);   // key 5 = defence since transports slid in at 4
-  kd('5'); const allBack = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 1);
+  kd('5'); const allOn = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 1);   // zDef defaults 0 now → key 5 (defence) turns it ON first
+  kd('5'); const allBack = Object.keys(UNIVIS.ent).every(e => UNIVIS.ent[e].zDef === 0);   // second toggle back to the default OFF
   const hdrKeys = document.querySelectorAll('#fleetbody .flhead .flkey').length;
   const spotBg = getComputedStyle(document.querySelector('#fleet') ? document.body : document.body) && true;
-  return { c0, c1, c2, entUntouched, entWires, entWiresBack, allOff, allBack, hdrKeys }; });
+  return { c0, c1, c2, entUntouched, entWires, entWiresBack, allOn, allBack, hdrKeys }; });
 // [11] the fleet SIDE DRAWER: config lives per column — Entity (layout·show·radius·transparency·
 //      container·stars·functions) · Clusters (core·show·transparency + the SHARED radius/container)
 //      · Planets (transparency + Zones master); slides out right, X slides it back; Routes-only config
@@ -289,7 +294,7 @@ const flcfg = await p.evaluate(() => {
     && q2('.pill[data-grp="entLayout"]') && q2('.pill[data-grp="entOp"]') && q2('.pill[data-grp="shape"]')   // combo row: layout · transparency · container
     && q2('[data-itog="entOn"]') && q2('[data-itog="stars"]') && q2('#spreadRng')
     && !q2('[data-itog="subOn"]') && !q2('#fnsTog');   // functions/types MOVED to the Clusters pane (per-side show)
-  const fnsOff = CFG.showFns === 'off' && !document.querySelector('#flsbody #fnsTog.on');   // functions START OFF
+  const fnsOn = CFG.showFns === 'on' && !document.querySelector('#flsbody #fnsTog');   // functions START loaded (critical) — the boolean is gone (operator: legend governs, critical by default)
   const r0 = RENT[Object.keys(RENT)[0]];
   const sp = document.querySelector('#flsbody #spreadRng'); sp.value = '2'; sp.dispatchEvent(new Event('input'));
   const spWorks = Math.abs(window.__uniSpread - 2) < 0.001 && Math.abs(RENT[Object.keys(RENT)[0]] / r0 - 2) < 0.05;
@@ -315,10 +320,9 @@ const flcfg = await p.evaluate(() => {
     && !!document.querySelector('#flsbody #radRng')
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
   btn('planets').click();
-  const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');
-  const plFull = !!document.querySelector('#flsbody .pill[data-grp="bubble"]') && !!zonePill;   // 'film' is a DOT now — the word rides the hover
-  zonePill.querySelector('button[data-v="true"]').click(); const wOn = CFG.warOn === true;
-  zonePill.querySelector('button[data-v="false"]').click(); const wOff = CFG.warOn === false;
+  const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');                  // GONE — the fleet zone columns own it now (operator)
+  const plFull = !!document.querySelector('#flsbody .pill[data-grp="bubble"]') && !zonePill && !!document.querySelector('#flsbody .zonehint');
+  const warGone = !zonePill && CFG.warOn === true;                                              // no master pill; the zone system stays live for the fleet columns
   const iconsOnly = [...document.querySelectorAll('.pill[data-grp="shape"] button')].every(b => b.textContent.trim() === '');
   const gates = CFG.zDef && CFG.zAtk && CFG.zCfl && CFG.zSat;
   const standalone = side.parentNode === document.body;                       // an ADD-ON, not a fleet child
@@ -387,8 +391,8 @@ const flcfg = await p.evaluate(() => {
   const noRepeatLbl = !document.querySelector('#flsbody .grplbl');
   document.getElementById('flsclose').click();
   const closed = !side.classList.contains('out');
-  return { tabs, order, entOpen, entFull, cluFull, plFull, wOn, wOff, iconsOnly, gates, closed,
-    fnsOff, spWorks, spBack, spQuarter, rsOneRow, lgStyled, lgTwoCol, lgCompact,
+  return { tabs, order, entOpen, entFull, cluFull, plFull, warGone, iconsOnly, gates, closed,
+    fnsOn, spWorks, spBack, spQuarter, rsOneRow, lgStyled, lgTwoCol, lgCompact,
     standalone, docked, fleetUnstretched, under,
     oneX, noHScroll, layIconOnly, coreIconOnly, transDots, stepped, noRepeatLbl,
     ladder, defSpeed, badgeShows, backTo, wk }; });
@@ -432,19 +436,22 @@ const b51 = await p.evaluate(() => new Promise(res => {
       out.groups = [...lg.querySelectorAll('.lghd2[data-lggrp]')].map(h => h.getAttribute('data-lggrp')).join(',') === 'frontend,backend';
       const cnt = () => nodes.filter(x => x.kind === 'component' && x.__threeObj && x.__threeObj.parent).length;
       const row = () => document.querySelector('#elegend [data-lgk="component"]');
-      const c0 = cnt();                                                   // capsules stash most — RELATIVE restore check
-      row().click();                                                      // all → critical (or off if no solo component)
+      __uniSetKindState('component', 'all');                             // known 'all' baseline (kinds default CRITICAL now — solos hidden)
       setTimeout(() => {
-        const st1 = row().classList.contains('lgoff') ? 'off' : row().classList.contains('lgcrit') ? 'critical' : 'all';
-        out.dimmed = st1 !== 'all';                                       // toggled off 'all' → the row dims (.lgcrit or .lgoff)
-        if (st1 === 'critical') row().click();                           // → off
+        const c0 = cnt();                                                // full component count — RELATIVE restore check
+        row().click();                                                    // all → critical (or off if no solo component)
         setTimeout(() => {
-          out.hidden = cnt() === 0 && row().classList.contains('lgoff'); // OFF hides every component of the kind
-          row().click();                                                  // off → all
-          setTimeout(() => { out.restored = c0 > 30 && cnt() === c0;
-            res(out); }, 1600);
+          const st1 = row().classList.contains('lgoff') ? 'off' : row().classList.contains('lgcrit') ? 'critical' : 'all';
+          out.dimmed = st1 !== 'all';                                     // toggled off 'all' → the row dims (.lgcrit or .lgoff)
+          if (st1 === 'critical') row().click();                         // → off
+          setTimeout(() => {
+            out.hidden = cnt() === 0 && row().classList.contains('lgoff'); // OFF hides every component of the kind
+            row().click();                                                // off → all
+            setTimeout(() => { out.restored = c0 > 30 && cnt() === c0;
+              res(out); }, 1600);
+          }, 1600);
         }, 1600);
-      }, 1600);
+      }, 600);
     }, 900);
   }, 500); }));
 
@@ -564,7 +571,7 @@ const coreClick = await p.evaluate(() => new Promise(res => {
     setTimeout(() => { __uniSyncGrpSel();
       const selBE1 = [...document.querySelectorAll('#flsbody .grp.cgside .grplbl .grpsel')].map(x=>x.textContent);
       res({ be0, beOk, feOk: CFG.coreByFE === 'kind' && feBtn.classList.contains('on'),
-            selEcho: selBE0 === 'community' && selBE1.includes('layer') && selBE1.includes('kind') }); }, 800);
+            selEcho: selBE0 === 'usecase' && selBE1.includes('layer') && selBE1.includes('kind') }); }, 800);
   }, 800);
 }));
 await b.close();
@@ -627,10 +634,10 @@ if (!(defs.fToggles && defs.fBack)) fails.push('F does not toggle glow⇄focus')
 if (!(defs.focusOriginGlow && defs.glowMany)) fails.push('FOCUS must keep exactly the selected element glowing (glow keeps the set)');
 if (!(numkeys.c0 === 1 && numkeys.c1 === 0 && numkeys.c2 === 1 && numkeys.entUntouched)) fails.push('key 2 must toggle planets for the SELECTED CLUSTER only');
 if (!(numkeys.entWires === 0 && numkeys.entWiresBack === 1)) fails.push('key 3 must toggle wires for the selected ENTITY');
-if (!(numkeys.allOff && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
+if (!(numkeys.allOn && numkeys.allBack && numkeys.hdrKeys === 8)) fails.push('no-selection number keys must hit the ALL row / header key labels missing');
 if (!(flcfg.tabs.length === 0 && flcfg.order === 'show,subs,planets,wires,routes')) fails.push('config must be TABLESS and the fleet order Entity·Clusters·Planets·Connections·Transports');
-if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.wOn && flcfg.wOff && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity combo/options rows, clusters, planets, zones master)');
-if (!(flcfg.fnsOff && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.push('functions must start OFF / the spread slider must scale RENT (default at a FIFTH of the bar)');
+if (!(flcfg.entOpen && flcfg.entFull && flcfg.cluFull && flcfg.plFull && flcfg.warGone && flcfg.iconsOnly && flcfg.gates && flcfg.closed)) fails.push('the fleet side drawer panes are wrong (entity combo/options rows, clusters, planets, Zones master REMOVED + hint)');
+if (!(flcfg.fnsOn && flcfg.spWorks && flcfg.spBack && flcfg.spQuarter)) fails.push('functions must start LOADED (critical) / the spread slider must scale RENT (default at a FIFTH of the bar)');
 if (!(flcfg.rsOneRow && flcfg.lgStyled)) fails.push('radius+spread must share one row / the legend must wear the panel chrome');
 if (!(flcfg.lgTwoCol && flcfg.lgCompact)) fails.push('the legend Types tab must read in TWO columns inside a compact box');
 if (!(flcfg.standalone && flcfg.docked && flcfg.fleetUnstretched && flcfg.under)) fails.push('the drawer must be a FREE-STANDING add-on docked at the fleet edge (own box, z-under, fleet unstretched)');

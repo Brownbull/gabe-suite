@@ -50,7 +50,9 @@
      children indented one level (lazy, depth-capped) with a "+N more" count cap. Rows:
      {label, glyph, cls, meta, title, node, childrenFn}. node → click navigates; childrenFn → a twisty. ── */
   function _xRow(r, depth, maxD, cap){
-    var row=E("div",{class:"xrow"}), canX=!!(r.childrenFn && depth<maxD);
+    var row=E("div",{class:"xrow"});
+    var kidSpecs=(r.childrenFn && depth<maxD) ? (r.childrenFn()||[]) : null;   // PEEK one level: only offer a twisty when there is genuinely something deeper (no empty "nothing deeper" arrows)
+    var canX=!!(kidSpecs && kidSpecs.length);
     var tw=E("span",{class:canX?"xtw":"xtwsp"});
     var id=r.id||(r.node&&r.node.id)||null;
     var chip=E("span",{class:"pchip "+(r.cls||"fn")+(id?" xnav":""), title:r.title||r.label||""},
@@ -61,12 +63,12 @@
       chip.addEventListener("mouseleave",function(){ __uniHoverHL(null); });
       chip.addEventListener("click",function(ev){ ev.stopPropagation(); if(window.__uniGoto) __uniGoto(id); }); }
     else if(r.node){ chip.onclick=function(e){ e.stopPropagation(); try{ _selNode(r.node); }catch(x){} }; }
+    if(!canX && r.childrenFn && depth>=maxD){ var deeper=r.childrenFn()||[];   // at the depth cap: a "·" ONLY when the tree really continues (honest cap marker, never a dead arrow)
+      if(deeper.length) chip.append(E("span",{class:"xdeep",title:deeper.length+" deeper — capped at this level"},"·")); }
     var head=E("div",{class:"xhead"}, tw, chip), kids=E("div",{class:"xkids",style:"display:none"}), built=false, open=false;
     if(canX){ tw.style.cursor="pointer"; head.classList.add("xhx"); tw.onclick=function(e){ e.stopPropagation(); open=!open;
-        if(open && !built){ built=true; var cs=r.childrenFn()||[];
-          kids.append(cs.length?_xList(cs, depth+1, maxD, cap):E("div",{class:"xleaf"},"— nothing deeper")); }
+        if(open && !built){ built=true; kids.append(_xList(kidSpecs, depth+1, maxD, cap)); }   // kidSpecs already computed by the peek
         kids.style.display=open?"":"none"; row.classList.toggle("xopen",open); }; }
-    else if(r.childrenFn){ chip.append(E("span",{class:"xdeep",title:"deeper levels not expanded at this depth"},"·")); }
     row.append(head, kids); return row; }
   function _xList(rows, depth, maxD, cap){ var box=E("div",{class:"xpl"+(depth?" xin":"")}), shown=Math.min(cap, rows.length);
     function paint(){ box.innerHTML="";

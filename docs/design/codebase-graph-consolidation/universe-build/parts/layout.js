@@ -105,7 +105,7 @@ function recomputeSubAnchors(){
 // frontend entities by coreByFE — simultaneously. Defaults chase what actually divides each side
 // (community is the backend spine, screen the frontend spine); without a levels feed, kind on both.
 (function(){ var lv=!!(window.GABE_LEVELS && window.GABE_LEVELS.pieces);
-  if(CFG.coreByBE==null) CFG.coreByBE=lv?"community":"kind";
+  if(CFG.coreByBE==null) CFG.coreByBE=lv?"usecase":"kind";   // operator default: use-case clustering when the levels feed is present
   if(CFG.coreByFE==null) CFG.coreByFE="screen";
   CFG.coreBy=CFG.coreByBE;   // back-compat: any lingering single-core reader sees the backend core
 })();
@@ -824,7 +824,7 @@ window.__uniWireTopbar=function(){
    keys its stages by piece id and the universe node ids are the SAME strings, so a later per-piece
    join is direct. ALL engine seams read through visEnt/visN — the ONE place a "dim" tri-state and
    per-piece roles land later. An unknown entity resolves to SHOWN (l2-only entities never vanish). */
-var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:1, zAtk:1, zCfl:1, zSat:1, routes:1 };
+var _VISDEF={ show:1, planets:1, wires:1, subs:1, zDef:0, zAtk:0, zCfl:0, zSat:0, routes:1 };   // zones OFF by default — the FLEET zone columns are the only control
 /* the seven cluster-core strategies each own an ICON (operator ask) — the config pills carry them
    and every cluster surface (rows, panels) INHERITS the active core's icon from this one map. */
 window.__uniCoreIco=function(mode,px){ px=px||13; var PATHS={
@@ -867,7 +867,7 @@ _ents.forEach(function(e){ UNIVIS.ent[e]=Object.assign({},_VISDEF); });
 function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 /* effective per-node: node override wins; else the entity flags AND the node's sub-group flags —
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
-function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(n.kind==="function"?"off":"all");   // hide-by-kind (batch 51) — now 3-state (off · critical · all)
+function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
     if(_st==="off") return _KOFF;
     if(_st==="critical" && n.__solo) return _KOFF; }   // critical hides single-caller-SAME-kind helpers
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
@@ -1166,7 +1166,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var planetsPane=[];
   if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); planetsPane.push(pt); }
   if(G.planet){ var zlbl=G.planet.querySelector(".grplbl"); zlbl.className="grplbl zoneshd";
-    zlbl.innerHTML='<span>Zones</span>'+pillHTML("warOn",[{v:true,t:"On"},{v:false,t:"Off"}], CFG.warOn);   // the master survives; the four icons do not
+    zlbl.innerHTML='<span>Zones</span><span class="zonehint">shown per-entity from the fleet zone columns</span>';   // the On/Off master is GONE — the fleet zone columns are the sole control (operator)
     var zg=document.createElement("div"); zg.className="grp"; zg.appendChild(zlbl); planetsPane.push(zg); }
   var flyw=document.createElement("div"); flyw.className="flcfgbody";   // (binding container reused below)
   planetsPane.forEach(function(g){ flyw.appendChild(g); })
@@ -1577,8 +1577,8 @@ window.__uniGoto=function(id){ if(!id) return;
 var _KOFF={show:0,planets:0,wires:0,subs:0,zDef:0,zAtk:0,zCfl:0,zSat:0,routes:0};
 window.__uniKindState={};     // kind → "all" | "critical" | "off"
 window.__uniKindOff={};       // compat mirror (truthy iff state==="off")
-window.__uniGrpState={backend:"all", frontend:"all"};
-function _kindDefault(k){ return k==="function"?"off":"all"; }   // functions load on demand
+window.__uniGrpState={backend:"critical", frontend:"critical"};   // matches the per-kind critical default (operator)
+function _kindDefault(k){ return k==="type"?"off":"critical"; }   // operator: everything critical-capable boots CRITICAL; no-solo kind reads as ALL in visN; `type` stays held-off
 var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,imports:1,handler:1,"reads":1};
 window.__uniComputeSolo=function(){ var callers={};
   links.forEach(function(l){ if(!_SOLO_REL[l.rel]) return; var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;   // a self-loop (recursion) is NOT an external parent (review LOW)
