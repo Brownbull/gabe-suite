@@ -310,7 +310,7 @@ def model_ids(model: dict[str, Any],
 
 
 _DET_COLS_CAP = 10    # STRUCTURE rows shown; the rest becomes "+N more"
-_DET_CASES_CAP = 6    # TESTED-BY rows shown; the matrix carries the full ledger
+_DET_CASES_CAP = 60   # cases LOADED into the card (the card display-caps at 6 with a "+N more" ⇄ "see less" expander); overflow beyond this stays in the evidence matrix
 
 
 def _normalize_sig(sig: str, cap: int = 220) -> str:

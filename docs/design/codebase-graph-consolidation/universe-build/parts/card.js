@@ -12,9 +12,16 @@
     var corp={}; Object.keys(byc).forEach(function(k){corp[k]=1;}); Object.keys(filc).forEach(function(k){corp[k]=1;});
     var okAll=cases.length>0 && cases.every(function(c){return c.state==="pass";});   // green badge only when EVERY case affirmatively passes
     var groups=Object.keys(corp).map(function(k){ var cs=byc[k]||[], fs=filc[k]||[];
-      return G(k,"test", cs.length||fs.length, function(){ var w=E("div");
-        cs.forEach(function(c){ w.append(testCredit(c)); });
-        if(moreN && k===Object.keys(corp)[0]) w.append(E("span",{class:"more",style:"cursor:default"},"+"+moreN+" more"));
+      return G(k,"test", cs.length||fs.length, function(){ var w=E("div"), DCAP=6;
+        cs.slice(0,DCAP).forEach(function(c){ w.append(testCredit(c)); });
+        if(cs.length>DCAP){ var rest=cs.slice(DCAP), extra=E("div",{style:"display:none"});   // EXPANDABLE (operator): first DCAP shown, the rest fold behind "+N more" ⇄ "see less"
+          rest.forEach(function(c){ extra.append(testCredit(c)); }); w.append(extra);
+          var mb=E("span",{class:"more",style:"cursor:pointer"},"+"+rest.length+" more"),
+              lb=E("span",{class:"more",style:"cursor:pointer;display:none"},"see less");
+          mb.onclick=function(){ extra.style.display=""; mb.style.display="none"; lb.style.display=""; };
+          lb.onclick=function(){ extra.style.display="none"; mb.style.display=""; lb.style.display="none"; };
+          w.append(mb); w.append(lb); }
+        if(moreN && k===Object.keys(corp)[0]) w.append(E("div",{class:"sublbl",style:"margin-top:6px"}, "+"+moreN+" more in the evidence matrix (beyond the loaded set)"));   // emitter overflow → honest note, not a dead button
         if(fs.length){ w.append(E("div",{class:"sublbl",style:"margin-top:7px"}, icoEl("file"), "file-coverage · "+fs.length+" (reaches it, names no case)"));
           fs.forEach(function(f){ w.append(fileCredit(f)); }); }
         return w; }); });

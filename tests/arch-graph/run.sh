@@ -569,7 +569,7 @@ FIX_DET = {"head": "de7a11", "entities": {
   "test_insight": {
     "by_endpoint": {"apps/api/alpha.py::get_a":
         {"api": [{"cid": f"C{i}", "name": f"t{i}_C{i}", "state": "pass", "corpus": "api",
-                  "tfile": "tests/t.py"} for i in range(8)]
+                  "tfile": "tests/t.py"} for i in range(G._DET_CASES_CAP + 2)]
               + [{"cid": "", "name": "3 case(s)", "state": "file", "corpus": "web",
                   "tfile": "tests/w.spec.ts"}]}},   # 8 → 6 + 2 more; the file row splits out
     "by_model": {"A": {"direct": [{"cid": "C9", "name": "t9_C9", "state": "fail",
@@ -603,8 +603,8 @@ check(edet["doc"] == "Reads A." and edet["status"] == "200",
 check(edet["sig"] == {"returns": "AOut", "async": True, "lines": 42},
       "det: SIGNATURE from function_insight (returns/async/lines)")
 check(edet["usage"] == {"api": 3, "internal": 1}, "det: endpoint usage from function_insight")
-check(len(edet["cases"]) == 6 and edet["cases_more"] == 2,
-      "det: TESTED-BY capped at 6 with cases_more (8 REAL cases; the file row never counts)")
+check(len(edet["cases"]) == G._DET_CASES_CAP and edet["cases_more"] == 2,
+      "det: TESTED-BY capped at _DET_CASES_CAP with cases_more (CAP+2 REAL cases; the file row never counts)")
 check(all(c["state"] != "file" for c in edet["cases"]),
       "det: route-literal FILE credits never impersonate cases")
 check(edet["case_files"] == [{"corpus": "web", "name": "3 case(s)"}],

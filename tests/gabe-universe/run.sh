@@ -443,6 +443,8 @@ check('_hovSprite.position.set(_hp.x,_hp.y,_hp.z); try{ Graph.scene().add(_hovSp
       "hovering a HIDDEN node must place the white halo in the scene at its ghost position (invisible __threeObj would swallow it)")
 check('if(_n0 && window.__uniReveal && typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(_n0)){ try{ __uniReveal(id)' in page,
       "a panel chip whose target is FLEET-hidden must REVEAL it first (ghost-click parity)")
+check('var rest=cs.slice(DCAP)' in page and '"see less"' in page and 'evidence matrix (beyond the loaded set)' in page,
+      "the Tests section must EXPAND: first 6 shown, the rest fold behind +N more ⇄ see less (operator)")
 check('pulseMode:"const"' in page and 'pulseAmp:0.08' in page and 'CFG.pulseMode==="const"' in page and 'bs+amp*18*s2' in page and 'srow("p.amp"' not in page,
       "the pulse must be a fixed const default (amp 0.08) + engine, slider retired")
 check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,
