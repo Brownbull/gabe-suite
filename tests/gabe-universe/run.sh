@@ -264,8 +264,8 @@ check('_masterRow("backend", "*backend"' in page and '_masterRow("frontend", "*f
 check('var beEnts=_ents.filter(function(e){ return !__uniIsFeEnt(e); });' in page
       and 'var feEnts=_ents.filter(function(e){ return __uniIsFeEnt(e); });' in page,
       "the fleet render does not split entities into backend + frontend groups")
-check('cluster overrides follow only for the group' in page,
-      "a group master must propagate ONLY into its own entities' cluster overrides")
+check('group master = its own subset' in page,
+      "a group master must propagate ONLY into its own group's entities (backend/frontend subset)")
 check('#fleet .flmaster.flgroup2{' in page, "the frontend section break (flgroup2) styling is gone")
 # backend-function community pass (operator fix): functions cluster over the call graph (ƒ·<hub>),
 # functions JOIN the data cluster they serve (operator ruling — seed from the handler endpoint, propagate over the call graph)
@@ -436,10 +436,17 @@ check('function _ringTex(' in page and 'function _ringSprite(' in page and 'func
 # connection GHOSTS (operator: hidden connected nodes shown as faint stars AT their own position, no lines)
 check('window.__uniDrawStubs=function' in page and 'if(window.__uniDrawStubs) __uniDrawStubs(connGroup)' in page and 'var _fleetShown=function' in page and 'var _kindShown=function' in page and '!_fleetShown(t) && _kindShown(t)' in page and 'glowSprite(col, 22, 0.45)' in page and '!ch.isSprite' in page,
       "connection GHOSTS: one faint star per hidden connected node, gated fleet-hide-not-kind, shared-sprite-geometry never disposed")
-check('window.__uniReveal=function' in page and 'if(gbest && window.__uniReveal) __uniReveal(gbest.st.hid)' in page and 'cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; })' in page,
+check('window.__uniReveal=function' in page and 'if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid)' in page and 'cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; })' in page,
       "clicking a ghost star (AFTER the hull pick) must REVEAL the hidden target in place (force-on entity+cluster)")
 check('window.__uniStubHoverInit=function' in page and 'unistubtip' in page and 'click to reveal' in page and 'svgInline(hn.kind' in page and 'rc.ray.distanceToPoint' in page,
       "hovering a ghost star must show its ICON + name (unistubtip, point-picked)")
+# ghost click = SELECT (panel + trail); fleet master cascades to clusters; Alt+A/D trail nav
+check('SEL={kind:"node",data:_gn}' in page and 'if(window.__uniHLSelect) __uniHLSelect(_gn)' in page,
+      "clicking a ghost must SELECT the node (panel via showPanel + trail via __uniHLSelect)")
+check('_entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF)))[col]=on?1:0; })' in page,
+      "the fleet group master (backend/frontend) must cascade to EVERY cluster (init missing) — no waiting-on clusters")
+check('else if(e.altKey&&(k==="a"||k==="d")){' in page and '_walkGo(k==="d"?1:-1)' in page and 'trail prev / next' in page,
+      "Alt+A/D must step the trail (prev/next) + appear in the controls cheat-sheet")
 check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,
       "the focus ring does not transport to the selected TRAIL step")
 check('the Zones config section is GONE' in page and 'grplbl zoneshd' not in page,

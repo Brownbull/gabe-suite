@@ -1754,7 +1754,8 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
       window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
         if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;     // behind the camera
         var d=rc.ray.distanceToPoint(P); if(d<13 && (!gbest||d<gbest.d)) gbest={d:d, st:st}; });
-      if(gbest && window.__uniReveal) __uniReveal(gbest.st.hid); }
+      if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid);   // reveal the cluster/entity IN PLACE, then SELECT the node (operator: panel + trail)
+        var _gn=NIDS[_gid]; if(_gn){ SEL={kind:"node",data:_gn}; try{ showPanel(_gn); }catch(e5){} try{ if(typeof refreshEncSel==="function") refreshEncSel(); }catch(e6){} try{ if(window.__uniHLSelect) __uniHLSelect(_gn); }catch(e7){} } } }
   }catch(e){} };
 /* ── CONNECTION GHOSTS (operator): a hidden node still CONNECTED to a rendered node is shown as a faint
    glow STAR at its OWN position (where it sits in its cluster/entity) — NO line to the selection, no
@@ -2220,6 +2221,7 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Space")+'<span class="ctll">up</span>'+KB("Ctrl")+'<span class="ctll">down</span></div>'
     +'<div class="ctlrow">'+KB("Q")+KB("E")+'<span class="ctll">turn in place</span></div>'
     +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+A")+KB("Alt+D")+'<span class="ctll">trail prev / next</span></div>'
     +'<div class="ctlrow">'+KB("F")+'<span class="ctll">glow⇄focus</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<span class="ctll" title="first-person look — vertical inverted by convention">look — turn in place</span></div>'
@@ -2246,6 +2248,7 @@ window.__uniWireTopbar=function(){
       if(!any && _flyFroze){ _flyFroze=false; ANIM.all=true; } }
     window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
       if(e.altKey&&(k==="q"||k==="e")){ e.preventDefault(); if(window.__uniHLDepth) __uniHLDepth(HL.depth+(k==="e"?1:-1)); }   // Alt+Q/E = depth (replaces Alt+scroll)
+      else if(e.altKey&&(k==="a"||k==="d")){ e.preventDefault(); try{ if(typeof _walkGo==="function") _walkGo(k==="d"?1:-1); }catch(_we){} }   // Alt+A/D = trail prev/next (operator)
       else if((k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e")&&!e.altKey){ var _new=!FK[k]; FK[k]=1; _flyFreeze();
         if(_new&&window.__uniFlyStep) try{ window.__uniFlyStep(); }catch(_fe){} }   // IMMEDIATE first step — a starved interval (heavy field, low fps) must not delay the response
       else if(k===" "){ FK.up=1; _flyFreeze(); e.preventDefault(); }   // Space = ascend (and never scrolls/clicks)
@@ -2597,8 +2600,8 @@ window.__uniFleetToggle=function(ent, sub, col){ try{
     var sel=(ent==="*backend")?_ents.filter(function(e){return !__uniIsFeEnt(e);})
            :(ent==="*frontend")?_ents.filter(function(e){return __uniIsFeEnt(e);}):_ents;   // group master = its own subset
     var on=!sel.every(function(e){ return UNIVIS.ent[e][col]; });                    // any off → all on; all on → all off
-    var sset={}; sel.forEach(function(e){ sset[e]=1; UNIVIS.ent[e][col]=on?1:0; });
-    Object.keys(UNIVIS.sub).forEach(function(k){ if(sset[k.split("|")[0]]) UNIVIS.sub[k][col]=on?1:0; }); }   // cluster overrides follow only for the group's entities
+    sel.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0;
+      _entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF)))[col]=on?1:0; }); }); }   // cascade to EVERY cluster (init the missing ones) — no cluster is left "waiting on" under a hidden entity (operator)
   else { UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     if(col==="show"){ var eon=UNIVIS.ent[ent].show;                                 // SHOW ENTITY is a MASTER over its clusters: off → turn every cluster off · on → turn them all on
       _entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF))).show=eon?1:0; }); }
