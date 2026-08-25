@@ -1734,6 +1734,19 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
     if(wbest){ window.__uniSelLink=wbest.l;                                  // the picked wire GLOWS (hf boost in updateConnectors)
       if(window.__uniHLSelectLink) __uniHLSelectLink(wbest.l);
       try{ showLinkPanel(wbest.l); }catch(e2){} try{ updateConnectors(); }catch(e3){} return; }
+    /* CONNECTION GHOST pick — the star is the SMALL, intentional target, so it takes PRIORITY over the
+       big entity hull whose bounding sphere the ray merely crosses (operator: clicking a star must select
+       THE STAR, not the entity behind it). The point threshold is tight → it only fires when the cursor is
+       genuinely on a star. Reveal its cluster+entity IN PLACE, then SELECT the node (panel + trail). */
+    if(window.__uniStubs && window.__uniStubs.length){ var gbest=null;
+      window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
+        if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;     // behind the camera
+        var d=rc.ray.distanceToPoint(P); if(d<13 && (!gbest||d<gbest.d)) gbest={d:d, st:st}; });
+      if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid);   // reveal the cluster/entity IN PLACE, then SELECT the node
+        var _gn=NIDS[_gid];
+        if(_gn){ if(_gn.kind==="capsule"){ if(window.__uniCapExpand) try{ __uniCapExpand(_gn.ent); }catch(_ce){} }   // a capsule ghost EXPANDS (matches onNodeClick) — never lands in SEL/trail
+          else { SEL={kind:"node",data:_gn}; try{ showPanel(_gn); }catch(e5){} try{ if(typeof refreshEncSel==="function") refreshEncSel(); }catch(e6){} try{ if(window.__uniHLSelect) __uniHLSelect(_gn); }catch(e7){} } }
+        return; } }
     var best=null;
     (typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach(function(c){ if(!c.ekey) return;
       var ms=c.members.map(function(id){ var n=NIDS[id]; return (n&&n.x!=null)?n:null; }).filter(Boolean);
@@ -1747,15 +1760,6 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
       if(!best || score<best.score) best={score:score, c:c}; });
     if(best){ if(best.c.level==="sub" && window.__uniPanelClu) __uniPanelClu(best.c.ekey, best.c.skey);
       else if(window.__uniPanelEnt) __uniPanelEnt(best.c.ekey); return; }
-    /* no hull under the cursor → a CONNECTION GHOST (a hidden connected node shown as a faint star at
-       its OWN position) reveals its cluster+entity IN PLACE (operator: no new links, no reposition).
-       Ghost-pick is SUBORDINATE to the hull pick — a click resolving to a cluster never reveals. */
-    if(window.__uniStubs && window.__uniStubs.length){ var gbest=null;
-      window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
-        if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;     // behind the camera
-        var d=rc.ray.distanceToPoint(P); if(d<13 && (!gbest||d<gbest.d)) gbest={d:d, st:st}; });
-      if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid);   // reveal the cluster/entity IN PLACE, then SELECT the node (operator: panel + trail)
-        var _gn=NIDS[_gid]; if(_gn){ SEL={kind:"node",data:_gn}; try{ showPanel(_gn); }catch(e5){} try{ if(typeof refreshEncSel==="function") refreshEncSel(); }catch(e6){} try{ if(window.__uniHLSelect) __uniHLSelect(_gn); }catch(e7){} } } }
   }catch(e){} };
 /* ── CONNECTION GHOSTS (operator): a hidden node still CONNECTED to a rendered node is shown as a faint
    glow STAR at its OWN position (where it sits in its cluster/entity) — NO line to the selection, no
@@ -2246,9 +2250,9 @@ window.__uniWireTopbar=function(){
     function _flyFreeze(){ if(!_flyFroze && ANIM.freezeOnDrag && ANIM.all){ _flyFroze=true; ANIM.all=false; } }
     function _flyThaw(){ var any=false; for(var k in FK){ any=true; break; }
       if(!any && _flyFroze){ _flyFroze=false; ANIM.all=true; } }
-    window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase();
-      if(e.altKey&&(k==="q"||k==="e")){ e.preventDefault(); if(window.__uniHLDepth) __uniHLDepth(HL.depth+(k==="e"?1:-1)); }   // Alt+Q/E = depth (replaces Alt+scroll)
-      else if(e.altKey&&(k==="a"||k==="d")){ e.preventDefault(); try{ if(typeof _walkGo==="function") _walkGo(k==="d"?1:-1); }catch(_we){} }   // Alt+A/D = trail prev/next (operator)
+    window.addEventListener("keydown", function(e){ if(!_flyOK(e)) return; var k=e.key.toLowerCase(), kc=e.code||"";   // kc = physical key — macOS Option composes e.key into a glyph, so Alt+letter needs e.code (review)
+      if(e.altKey&&(k==="q"||k==="e"||kc==="KeyQ"||kc==="KeyE")){ e.preventDefault(); if(window.__uniHLDepth) __uniHLDepth(HL.depth+((k==="e"||kc==="KeyE")?1:-1)); }   // Alt+Q/E = depth (replaces Alt+scroll)
+      else if(e.altKey&&(k==="a"||k==="d"||kc==="KeyA"||kc==="KeyD")){ e.preventDefault(); try{ if(typeof _walkGo==="function") _walkGo((k==="d"||kc==="KeyD")?1:-1); }catch(_we){} }   // Alt+A/D = trail prev/next (operator)
       else if((k==="w"||k==="a"||k==="s"||k==="d"||k==="q"||k==="e")&&!e.altKey){ var _new=!FK[k]; FK[k]=1; _flyFreeze();
         if(_new&&window.__uniFlyStep) try{ window.__uniFlyStep(); }catch(_fe){} }   // IMMEDIATE first step — a starved interval (heavy field, low fps) must not delay the response
       else if(k===" "){ FK.up=1; _flyFreeze(); e.preventDefault(); }   // Space = ascend (and never scrolls/clicks)
@@ -2601,10 +2605,10 @@ window.__uniFleetToggle=function(ent, sub, col){ try{
            :(ent==="*frontend")?_ents.filter(function(e){return __uniIsFeEnt(e);}):_ents;   // group master = its own subset
     var on=!sel.every(function(e){ return UNIVIS.ent[e][col]; });                    // any off → all on; all on → all off
     sel.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0;
-      _entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF)))[col]=on?1:0; }); }); }   // cascade to EVERY cluster (init the missing ones) — no cluster is left "waiting on" under a hidden entity (operator)
+      _entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[e]||_VISDEF)))[col]=on?1:0; }); }); }   // cascade to EVERY cluster (init the missing ones FROM the entity, not zone-off _VISDEF — a fresh sub must inherit the entity's zones/etc, review) — no cluster left "waiting on" under a hidden entity (operator)
   else { UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
     if(col==="show"){ var eon=UNIVIS.ent[ent].show;                                 // SHOW ENTITY is a MASTER over its clusters: off → turn every cluster off · on → turn them all on
-      _entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF))).show=eon?1:0; }); }
+      _entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF))).show=eon?1:0; }); }   // seed a fresh sub FROM the entity (keeps its zones), not zone-off _VISDEF (review)
   }
   applyVis(C?C.scope:"all"); __uniFleetSync(); }catch(e){} };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;

@@ -361,7 +361,7 @@ check('requestAnimationFrame(__uniHLReapply)' not in page, "REGRESSION: halos ba
 check('id="depthBtn"' in page and 'id="hlModeBtn"' in page and 'id="jrnBtn"' in page, "topbar depth/mode/journeys buttons missing")
 check(page.find('id="reset"') < page.find('<div class="statuspills">'), "repo pills are not at the FAR right of the topbar")
 check('❄ Freeze on drag' not in page, "REGRESSION: freeze button back to text (icons only, explanation on hover)")
-check('e.altKey&&(k==="q"||k==="e")' in page and 'key==="Escape"' in page,
+check('e.altKey&&(k==="q"||k==="e"||kc==="KeyQ"||kc==="KeyE")' in page and 'key==="Escape"' in page,
       "Alt+Q/E depth / Esc clear not wired (Alt+scroll retired batch 38)")
 check('WheelEvent' not in page or 'if(!e.altKey) return; e.preventDefault();' not in page,
       "the retired Alt+scroll depth wheel is back")
@@ -437,16 +437,20 @@ check('function _ringTex(' in page and 'function _ringSprite(' in page and 'func
 check('window.__uniDrawStubs=function' in page and 'if(window.__uniDrawStubs) __uniDrawStubs(connGroup)' in page and 'var _fleetShown=function' in page and 'var _kindShown=function' in page and '!_fleetShown(t) && _kindShown(t)' in page and 'glowSprite(col, 22, 0.45)' in page and '!ch.isSprite' in page,
       "connection GHOSTS: one faint star per hidden connected node, gated fleet-hide-not-kind, shared-sprite-geometry never disposed")
 check('window.__uniReveal=function' in page and 'if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid)' in page and 'cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; })' in page,
-      "clicking a ghost star (AFTER the hull pick) must REVEAL the hidden target in place (force-on entity+cluster)")
+      "clicking a ghost star (PRIORITY over the hull pick) must REVEAL the hidden target in place (force-on entity+cluster)")
+_gi = page.find('if(window.__uniStubs && window.__uniStubs.length){ var gbest=null;')
+_ci = page.find('(typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach')
+check(_gi != -1 and _ci != -1 and _gi < _ci,
+      "the ghost-pick must run BEFORE the cluster/hull pick — the small star wins, the big entity hull never preempts it (operator)")
 check('window.__uniStubHoverInit=function' in page and 'unistubtip' in page and 'click to reveal' in page and 'svgInline(hn.kind' in page and 'rc.ray.distanceToPoint' in page,
       "hovering a ghost star must show its ICON + name (unistubtip, point-picked)")
 # ghost click = SELECT (panel + trail); fleet master cascades to clusters; Alt+A/D trail nav
-check('SEL={kind:"node",data:_gn}' in page and 'if(window.__uniHLSelect) __uniHLSelect(_gn)' in page,
-      "clicking a ghost must SELECT the node (panel via showPanel + trail via __uniHLSelect)")
-check('_entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},_VISDEF)))[col]=on?1:0; })' in page,
-      "the fleet group master (backend/frontend) must cascade to EVERY cluster (init missing) — no waiting-on clusters")
-check('else if(e.altKey&&(k==="a"||k==="d")){' in page and '_walkGo(k==="d"?1:-1)' in page and 'trail prev / next' in page,
-      "Alt+A/D must step the trail (prev/next) + appear in the controls cheat-sheet")
+check('SEL={kind:"node",data:_gn}' in page and 'if(window.__uniHLSelect) __uniHLSelect(_gn)' in page and 'if(_gn.kind==="capsule"){ if(window.__uniCapExpand)' in page,
+      "clicking a ghost must SELECT the node (panel + trail); a capsule ghost EXPANDS instead (onNodeClick parity)")
+check('_entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[e]||_VISDEF)))[col]=on?1:0; })' in page,
+      "the fleet group master must cascade to EVERY cluster, seeding a fresh sub FROM the entity (keeps zones), not zone-off _VISDEF")
+check('else if(e.altKey&&(k==="a"||k==="d"||kc==="KeyA"||kc==="KeyD")){' in page and '_walkGo((k==="d"||kc==="KeyD")?1:-1)' in page and 'trail prev / next' in page,
+      "Alt+A/D must step the trail (prev/next, e.code fallback for macOS) + appear in the controls cheat-sheet")
 check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,
       "the focus ring does not transport to the selected TRAIL step")
 check('the Zones config section is GONE' in page and 'grplbl zoneshd' not in page,
