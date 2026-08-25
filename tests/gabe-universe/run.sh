@@ -175,7 +175,6 @@ check('pillHTML("warOn"' not in page and 'zonehint' in page, "the Zones On/Off m
 
 # ── 10h. batch-6: assets OFF default · Zones inline master toggle · core 2-col grid · connector throttle ──
 check('zDef:0, zAtk:0' in page, "the four war zones must default OFF per entity (the fleet zone columns are the only control)")
-check('grplbl zoneshd' in page, "the Zones title does not carry the inline On/Off master toggle")
 check('zonesoff' in page, "zone icons do not dim when the master toggle is off")
 check('data-grp="coreByBE"], #cfg .pill[data-grp="coreByFE"],' in page and '{ display:grid' in page, "the per-side core pills are not a 2-column grid (they would overflow)")
 check('if(force || _wtick%3===0) updateConnectors' in page, "per-tick connector rebuild is not throttled (settle stays laggy)")
@@ -336,7 +335,7 @@ check('(CFG.zCfl&&visN(n).zCfl)? cflSpec(' in page and 'CFG.zSat&&visN(n).zSat) 
 check('var def=CFG.zDef? placeFleet(' not in page, "REGRESSION: a fleet-zone gate ignores the fleet panel")
 check('k:"zDef"' in page and 'k:"routes"' in page and 'icon:"truck"' in page,
       "zones/routes matrix columns missing")
-check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
+check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
       "the URL-preset path rebuilds the config without re-syncing the fleet masters-dim")
 # batch 11-C: the sim feed + presets row (the in-flight seam must exist before that batch, or it debugs a phantom)
 check('<script src="./sim.data.js"></script>' in page,
@@ -417,8 +416,10 @@ check('function methodBadge(' in page and 'grp.add(methodBadge(' in page and 'c.
       "the endpoint METHOD badge (coloured circle + method GLYPH, stacked at the icon corner) is gone")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
-check('__uniAddBadgeCfg=function' in page and 'id="badgecfg"' in page and '_mbRow("opacity","mbOp")' in page and 'CFG.mbOp!=null' in page and 'id="mbcopy"' in page,
-      "the API-method BADGE config (opacity/size/x/y sliders + copy) is gone from #cfg")
+check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,
+      "the GLOBAL badge-opacity slider must live in the Planets pane (not #cfg); the #cfg badge panel must be gone")
+check('the Zones config section is GONE' in page and 'grplbl zoneshd' not in page,
+      "the Zones config section must be removed from the Planets pane (zones are fleet-only now)")
 check('window.__uniBadges=[]' in page and 'function _mbTick()' in page and 'e[0]*ox+e[4]*oy+e[8]*3' in page and 'window.__uniBadges.push(s)' in page,
       "the method badge is not ICON-relative (must ride the camera right/up basis, pinned to the component icon, never the sphere)")
 check('new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)' in page and 'if(FK.up) off.add(_upv); if(FK.dn) off.sub(_upv);' in page,

@@ -1177,9 +1177,16 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   CFG.zDef=CFG.zAtk=CFG.zCfl=CFG.zSat=true;
   var planetsPane=[];
   if(trows[0]){ var pt=grpWith("Transparency"); pt.appendChild(trows[0]); planetsPane.push(pt); }
-  if(G.planet){ var zlbl=G.planet.querySelector(".grplbl"); zlbl.className="grplbl zoneshd";
-    zlbl.innerHTML='<span>Zones</span><span class="zonehint">shown per-entity from the fleet zone columns</span>';   // the On/Off master is GONE — the fleet zone columns are the sole control (operator)
-    var zg=document.createElement("div"); zg.className="grp"; zg.appendChild(zlbl); planetsPane.push(zg); }
+  // BADGE OPACITY (operator): one GLOBAL control for every badge we stack on planet icons (method today,
+  // more later) — lives in the Planets pane; size/offset are fixed defaults, opacity is the live knob.
+  if(CFG.mbOp==null) CFG.mbOp=0.6; if(CFG.mbSize==null) CFG.mbSize=3.5; if(CFG.mbX==null) CFG.mbX=2; if(CFG.mbY==null) CFG.mbY=-2.5;
+  var bg=mk("grp"); bg.innerHTML='<div class="grplbl">Badges</div>'
+    +'<div class="cfgrow"><span class="rlbl" style="width:46px" title="transparency of every badge stacked on a planet icon (method badge today)">opacity</span>'
+    +'<input type="range" class="rng" id="mbOpRng" min="0" max="1" step="0.05" value="'+CFG.mbOp+'">'
+    +'<span class="rval" id="mbOpVal">'+(+CFG.mbOp).toFixed(2)+'</span></div>';
+  var _mbi=bg.querySelector("#mbOpRng"); if(_mbi) _mbi.addEventListener("input", function(){ CFG.mbOp=+_mbi.value; var vv=bg.querySelector("#mbOpVal"); if(vv) vv.textContent=(+_mbi.value).toFixed(2); });   // _mbTick applies it live to every badge — no rebuild
+  planetsPane.push(bg);
+  // (the Zones config section is GONE — zones are controlled only from the fleet zone columns now, operator)
   var flyw=document.createElement("div"); flyw.className="flcfgbody";   // (binding container reused below)
   planetsPane.forEach(function(g){ flyw.appendChild(g); })
 
@@ -1546,29 +1553,14 @@ window.__uniBadges=[];
 (function _mbTick(){ requestAnimationFrame(_mbTick);
   var arr=window.__uniBadges; if(!arr||!arr.length||typeof Graph==="undefined"||!Graph) return;
   var cam=Graph.camera(); if(!cam) return; var e=cam.matrixWorld.elements;   // cols: [0..2]=right · [4..6]=up · [8..10]=toward-viewer
-  var ox=(typeof CFG!=="undefined"&&CFG.mbX!=null)?CFG.mbX:5, oy=(typeof CFG!=="undefined"&&CFG.mbY!=null)?CFG.mbY:-5,
-      sz=(typeof CFG!=="undefined"&&CFG.mbSize!=null)?CFG.mbSize:6.5, op=(typeof CFG!=="undefined"&&CFG.mbOp!=null)?CFG.mbOp:1;
+  var ox=(typeof CFG!=="undefined"&&CFG.mbX!=null)?CFG.mbX:2, oy=(typeof CFG!=="undefined"&&CFG.mbY!=null)?CFG.mbY:-2.5,
+      sz=(typeof CFG!=="undefined"&&CFG.mbSize!=null)?CFG.mbSize:3.5, op=(typeof CFG!=="undefined"&&CFG.mbOp!=null)?CFG.mbOp:0.6;
   var live=0;
   for(var i=0;i<arr.length;i++){ var b=arr[i]; if(!b||!b.parent) continue; arr[live++]=b;   // prune disposed badges in place (bounded)
     b.position.set(e[0]*ox+e[4]*oy+e[8]*3, e[1]*ox+e[5]*oy+e[9]*3, e[2]*ox+e[6]*oy+e[10]*3);   // ICON-relative: pinned to the camera's right/up so it rides the billboard icon, never the sphere (operator)
     b.scale.set(sz,sz,1); if(b.material) b.material.opacity=op; }
   arr.length=live;
 })();
-function _mbRow(label, key){ var mn=(key==="mbOp")?0:(key==="mbSize")?2:-16, mx=(key==="mbOp")?1:16, st=(key==="mbOp")?0.05:0.5;
-  return '<div class="mbrow"><span class="rlbl mblbl">'+label+'</span><input type="range" class="rng mbrng" data-mb="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="mbval" data-mbv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; }
-window.__uniAddBadgeCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
-  if(!body||document.getElementById("badgecfg")) return;
-  if(CFG.mbOp==null) CFG.mbOp=1; if(CFG.mbSize==null) CFG.mbSize=6.5; if(CFG.mbX==null) CFG.mbX=5; if(CFG.mbY==null) CFG.mbY=-5;
-  var g=document.createElement("div"); g.className="grp"; g.id="badgecfg";
-  g.innerHTML='<div class="grplbl" title="the HTTP-method badge on endpoint icons — transparency · size · offset from the icon center">API METHOD BADGE<button class="mbcopy" id="mbcopy" title="copy this badge configuration as JSON">&#10696;</button></div>'
-    +_mbRow("opacity","mbOp")+_mbRow("size","mbSize")+_mbRow("x offset","mbX")+_mbRow("y offset","mbY");
-  body.appendChild(g);
-  [].forEach.call(g.querySelectorAll("input.mbrng"), function(inp){ inp.addEventListener("input", function(){
-    var k=inp.getAttribute("data-mb"); CFG[k]=+inp.value; var vv=g.querySelector('[data-mbv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2); }); });   // the badge tick applies pos/size/opacity live — no rebuild
-  var cp=g.querySelector("#mbcopy"); if(cp) cp.onclick=function(e){ e.stopPropagation();
-    var txt=JSON.stringify({mbOp:CFG.mbOp, mbSize:CFG.mbSize, mbX:CFG.mbX, mbY:CFG.mbY}, null, 2);
-    window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(_e){}
-    cp.innerHTML="&#10003;"; setTimeout(function(){ cp.innerHTML="&#10696;"; }, 1000); }; };
 window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("wireview")) return;
   var g=document.createElement("div"); g.className="grp"; g.id="wireview";

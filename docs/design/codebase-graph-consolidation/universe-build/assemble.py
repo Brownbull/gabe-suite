@@ -152,7 +152,7 @@ assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
                     'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
-text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg();\n', 1)
+text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
 
 # ── batch 9: typed link rest-lengths (intra 40 / cross-entity 280) — the default rest≈30 springs
 #    are what collapsed the entities into one mesh; and the unbounded -150 charge BALLOONS each
@@ -198,11 +198,11 @@ text = text.replace(OLD_LNCASE,
 OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'
 assert OLD_PRESET in text, "URL-preset buildCfg anchor missing"
 text = text.replace(OLD_PRESET,
-  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
+  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
 OLD_DRIVE = 'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); buildClusters(); updateClusters(true); }'
 assert OLD_DRIVE in text, "?drive buildCfg anchor missing"
 text = text.replace(OLD_DRIVE,
-  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg(); buildClusters(); updateClusters(true); }', 1)
+  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); buildClusters(); updateClusters(true); }', 1)
 
 # (orbit-around-click is now a pointerdown re-pivot in __uniSetupOrbit — batch 7; the old click-based
 #  approach never fired on a drag, so it is not re-applied here.)
@@ -278,7 +278,7 @@ assert OLD_ZS in text, "fleetZones zSat anchor missing"
 text = text.replace(OLD_ZS, 'if(CFG.zSat&&visN(n).zSat) for(var si=0;', 1)
 
 # ── operator: METHOD BADGE — a coloured HTTP-method chip at the endpoint icon's lower-right ──
-_METHOD_BADGE = "function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); c.strokeStyle='#0b0f18'; c.fillStyle='#0b0f18'; c.lineWidth=13; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); if(m==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); } else if(m==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); } else if(m==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); } else if(m==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); } else if(m==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); } else { c.arc(64,64,15,0,6.2832); } c.stroke(); var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:1; var _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:6.5; var _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:5; var _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }\n"
+_METHOD_BADGE = "function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); c.strokeStyle='#0b0f18'; c.fillStyle='#0b0f18'; c.lineWidth=13; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); if(m==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); } else if(m==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); } else if(m==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); } else if(m==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); } else if(m==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); } else { c.arc(64,64,15,0,6.2832); } c.stroke(); var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6; var _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5; var _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2; var _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }\n"
 assert 'function buildNode(n){' in text, "buildNode anchor missing (method badge)"
 text = text.replace('function buildNode(n){', _METHOD_BADGE + 'function buildNode(n){', 1)
 assert '  grp.add(ic);' in text, "grp.add(ic) anchor missing (method badge)"
@@ -494,9 +494,9 @@ text = text.replace(OLD_TRV,
   '    if(HL.on && HL.links && !HL.links.has(l)) return;   // a highlight owns the roads — shuttles fly the lit path only', 1)
 
 # panel boot + master-dim sync on every config change
-OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg();\n'
+OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n'
 assert OLD_BOOTCFG in text, "boot buildCfg anchor missing (batch-11 fleet boot)"
-text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
+text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
 OLD_APPLYHEAD = 'function applyCfg(grp){ if(grp==="bubble"'
 assert OLD_APPLYHEAD in text, "applyCfg head anchor missing"
 text = text.replace(OLD_APPLYHEAD,
@@ -537,7 +537,7 @@ text = text.replace(OLD_CHIP,
   '      return el; };', 1)
 
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
-OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg(); if(window.__uniBuildFleet) __uniBuildFleet();'
+OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();'
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
 text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);', 1)
 

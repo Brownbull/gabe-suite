@@ -321,8 +321,8 @@ const flcfg = await p.evaluate(() => {
     && !!document.querySelector('#flsbody [data-itog="subOn"]') && !document.querySelector('#flsbody [data-itog="entOn"]');
   btn('planets').click();
   const zonePill = document.querySelector('#flsbody .pill[data-grp="warOn"]');                  // GONE — the fleet zone columns own it now (operator)
-  const plFull = !!document.querySelector('#flsbody .pill[data-grp="bubble"]') && !zonePill && !!document.querySelector('#flsbody .zonehint');
-  const warGone = !zonePill && CFG.warOn === true;                                              // no master pill; the zone system stays live for the fleet columns
+  const plFull = !!document.querySelector('#flsbody .pill[data-grp="bubble"]') && !zonePill && !!document.querySelector('#flsbody #mbOpRng');   // planets pane = transparency + the GLOBAL badge-opacity slider (Zones section removed)
+  const warGone = !zonePill && !/Zones/.test((document.getElementById('flsbody')||{}).textContent||'') && CFG.warOn === true;                  // no master pill, no Zones section; the zone system stays live for the fleet columns
   const iconsOnly = [...document.querySelectorAll('.pill[data-grp="shape"] button')].every(b => b.textContent.trim() === '');
   const gates = CFG.zDef && CFG.zAtk && CFG.zCfl && CFG.zSat;
   const standalone = side.parentNode === document.body;                       // an ADD-ON, not a fleet child
