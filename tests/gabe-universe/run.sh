@@ -436,6 +436,13 @@ check('function assetsSec(n)' in page and 'sechd("layers","Fleet assets")' in pa
       "the element card must carry a Fleet-assets section (defence/attack/conflict/satellites from n.m)")
 check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,
       "the wire card must carry a Transit section tying cargo↔payload + test-chip↔proven (cross-entity only)")
+# panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
+check('var body=E("div",{class:"jsec"});' in page and 'A stop · reached by a test that spans other entities.' in page and 'class="jsub"' not in page,
+      "the journeys entry/stop legend must live in the info TOOLTIP, not an inline .jsub line")
+check('_hovSprite.position.set(_hp.x,_hp.y,_hp.z); try{ Graph.scene().add(_hovSprite)' in page,
+      "hovering a HIDDEN node must place the white halo in the scene at its ghost position (invisible __threeObj would swallow it)")
+check('if(_n0 && window.__uniReveal && typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(_n0)){ try{ __uniReveal(id)' in page,
+      "a panel chip whose target is FLEET-hidden must REVEAL it first (ghost-click parity)")
 check('pulseMode:"const"' in page and 'pulseAmp:0.08' in page and 'CFG.pulseMode==="const"' in page and 'bs+amp*18*s2' in page and 'srow("p.amp"' not in page,
       "the pulse must be a fixed const default (amp 0.08) + engine, slider retired")
 check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,

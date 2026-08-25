@@ -854,8 +854,10 @@ window.__uniApplyTheme=function(th){ th=(th==="light")?"light":"dark"; window.__
       :'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>'; } };
 window.__uniHoverHL=function(id){ if(_hovSprite){ try{ if(_hovSprite.parent) _hovSprite.parent.remove(_hovSprite); }catch(e){} _hovSprite=null; }
   if(window.__uniHovLink){ window.__uniHovLink=null; try{ updateConnectors(); }catch(e){} }
-  if(!id) return; var n=NIDS[id]; if(!n||!n.__threeObj) return;
-  _hovSprite=glowSprite((window.__uniTheme==="light")?"#4f46e5":"#ffffff", 40, 0.9); _hovSprite.userData.__hov=1; n.__threeObj.add(_hovSprite);
+  if(!id) return; var n=NIDS[id]; if(!n) return;
+  _hovSprite=glowSprite((window.__uniTheme==="light")?"#4f46e5":"#ffffff", 40, 0.9); _hovSprite.userData.__hov=1;
+  if((typeof _nodeVisibleFn!=="function"||_nodeVisibleFn(n)) && n.__threeObj){ n.__threeObj.add(_hovSprite); }   // VISIBLE → halo rides the node
+  else { var _hp=_npos[id]; if(!_hp){ _hovSprite=null; return; } _hovSprite.position.set(_hp.x,_hp.y,_hp.z); try{ Graph.scene().add(_hovSprite); }catch(_he){ _hovSprite=null; return; } }   // HIDDEN → the node's __threeObj is invisible, so the halo would vanish; put the WHITE halo in the scene at its ghost position instead (operator)
   var selId=(typeof SEL!=="undefined"&&SEL&&SEL.kind==="node"&&SEL.data)?SEL.data.id:null, hl=null;   // the WIRE to the hovered element glows too
   for(var i=0;i<links.length;i++){ var l=links[i], s=lid(l.source), tt=lid(l.target);
     if(selId && ((s===selId&&tt===id)||(tt===selId&&s===id))){ hl=l; break; }
@@ -1735,6 +1737,8 @@ window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbo
 /* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
    a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
 window.__uniGoto=function(id){ if(!id) return;
+  var _n0=NIDS[id];   // a panel chip whose target is FLEET-hidden → reveal its cluster+entity IN PLACE first, then select (same as clicking the ghost star; operator)
+  if(_n0 && window.__uniReveal && typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(_n0)){ try{ __uniReveal(id); }catch(_re){} }
   var go=function(){ var nd=NIDS[id]; if(!nd) return false;
     if(window.__uniSelNode) __uniSelNode(nd); _frameSet([id]); return true; };
   if(go()) return;

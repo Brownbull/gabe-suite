@@ -31,8 +31,9 @@
     return strip; }
   function journeysSection(home, kind, det){ var journeys=det.test_journeys||[]; if(!journeys.length) return null;
     var entry=(kind==="endpoint"), moreN=det.test_journeys_more||0;
-    var tip={icon:"info",cls:"info",text:"Cross-entity tests this element takes part in (criterion A — the test exercises more than one entity). Row 1 = the test, its corpus + component COUNT; row 2 = the ENTITIES it spans (a real SET, colored per entity). Live from det.test_journeys."};
-    var body=E("div",{class:"jsec"}, E("div",{class:"jsub"}, icoEl("nav"), entry?"entry · a test starts here and travels out":"a stop · reached by a test that spans other entities"));
+    var _leg=entry?"Entry · a test starts here and travels out.":"A stop · reached by a test that spans other entities.";
+    var tip={icon:"info",cls:"info",text:_leg+" Cross-entity tests this element takes part in (criterion A — the test exercises more than one entity). Row 1 = the test, its corpus + component COUNT; row 2 = the ENTITIES it spans (a real SET, colored per entity). Live from det.test_journeys."};
+    var body=E("div",{class:"jsec"});   // the entry/stop legend moved INTO the info tooltip (operator)
     journeys.forEach(function(j){ body.append(E("div",{class:"jmeta",title:"select this journey (navigation coming)"},
       E("span",{class:"jcid"+(/^C\d/.test(j.cid)?"":" noc")}, j.cid), E("span",{class:"corp"}, j.corpus), E("span",{class:"ncomp"}, (j.comp||0)+" comp")));
       body.append(journeyFaces(home, j.entities)); });
