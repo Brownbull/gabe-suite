@@ -42,10 +42,16 @@
   function journeysSection(home, kind, det){ var journeys=det.test_journeys||[]; if(!journeys.length) return null;
     var entry=(kind==="endpoint"), moreN=det.test_journeys_more||0;
     var _leg=entry?"Entry · a test starts here and travels out.":"A stop · reached by a test that spans other entities.";
-    var tip={icon:"info",cls:"info",text:_leg+" Cross-entity tests this element takes part in (criterion A — the test exercises more than one entity). Row 1 = the test, its corpus + component COUNT; row 2 = the ENTITIES it spans (a real SET, colored per entity). Live from det.test_journeys."};
+    var tip={icon:"info",cls:"info",text:_leg+" Cross-entity tests this element takes part in (criterion A — the test exercises more than one entity). Row 1 = the test (click a named C-id to drive the top stepper), its corpus + component COUNT; row 2 = the ENTITIES it spans (a real SET, colored per entity)."
+      +(moreN?(" The badge reads "+journeys.length+"+"+moreN+": "+journeys.length+" shown here + "+moreN+" more cross-entity tests not loaded (capped; the full ledger is in the evidence matrix)."):"")
+      +" A row like “N case(s)” is an AGGREGATE — web/e2e tests folded into one row (no single C-id to open). Live from det.test_journeys."};
     var body=E("div",{class:"jsec"});   // the entry/stop legend moved INTO the info tooltip (operator)
-    journeys.forEach(function(j){ body.append(E("div",{class:"jmeta",title:"select this journey (navigation coming)"},
-      E("span",{class:"jcid"+(/^C\d/.test(j.cid)?"":" noc")}, j.cid), E("span",{class:"corp"}, j.corpus), E("span",{class:"ncomp"}, (j.comp||0)+" comp")));
+    journeys.forEach(function(j){ var real=/^C\d/.test(j.cid||"");   // a named case → clickable; an aggregate ("N case(s)") is not
+      var row=E("div",{class:"jmeta"+(real?"":" jagg"), title: real?"select this journey — drives the top stepper":"an AGGREGATE of web/e2e cases folded into one row (no single case id to open)"},
+        E("span",{class:"jcid"+(real?"":" noc")}, j.cid), E("span",{class:"corp"}, j.corpus), E("span",{class:"ncomp"}, (j.comp||0)+" comp"));
+      if(real && window.__uniJrnStart){ row.style.cursor="pointer"; row.onclick=function(){ try{ __uniJrnStart(j.cid); }catch(e){} }; }
+      else row.style.cursor="default";
+      body.append(row);
       body.append(journeyFaces(home, j.entities)); });
     var jhd=sechd("journey","Journeys", journeys.length+(moreN?"+"+moreN:""), false, tip);
     _hdAsset(jhd, function(){ return window.__uniAssets.testchip(); }, "test chip — the graph asset that flies cross-entity tests");

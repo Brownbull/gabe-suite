@@ -438,6 +438,8 @@ check('_hdAsset(jhd, function(){ return window.__uniAssets.testchip(); }' in pag
       "the live asset thumbnails must attach to Usage(sat)/Tests(ship)/Journeys(test-chip)/Payload(cargo)")
 check('try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}' in page and 'var _as=assetsSec(n)' not in page,
       "panel rebuilds must PRUNE the card thumbnail cells (no WebGL leak); the Fleet-assets TEXT section is retired")
+check('if(real && window.__uniJrnStart){ row.style.cursor="pointer"; row.onclick=function(){ try{ __uniJrnStart(j.cid)' in page and 'an AGGREGATE of web/e2e cases folded' in page,
+      "a named journey row must click → __uniJrnStart (top stepper); aggregate 'N case(s)' rows non-clickable + explained")
 check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,
       "the wire card must carry a Transit section tying cargo↔payload + test-chip↔proven (cross-entity only)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
