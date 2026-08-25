@@ -412,6 +412,15 @@ check('__uniHoverHL(x.id)' in page and 'userData.__hov' in page, "connection-chi
 check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un-minimize the config on show (state drift)")
 
 # ── 10q. batch 17: community default · ring layout · wider spacing ──
+# ── operator polish (2026-08-25): method badge · spinning focus ring · zone header toggle · trail focus ──
+check('function methodBadge(' in page and 'n.kind==="endpoint" && n.m && n.m.method' in page and 'grp.add(methodBadge(' in page,
+      "the endpoint METHOD badge is gone (coloured HTTP-method chip at the icon)")
+check('function _spinRing(' in page and 'HL.rings.push(' in page and 'material.rotation=' in page,
+      "the spinning FOCUS ring is gone (replaces the glow on the selected element)")
+check('flztog' in page and '__uniFleetToggle(hs.ent||"*"' in page,
+      "the ZONE column headers are not click-to-toggle (bulk zone show from the fleet)")
+check('n.ent&&EX[n.ent]!=null?{x:EX[n.ent]' in page,
+      "trail focus lost its entity-anchor fallback (an unpositioned step must still fly the camera)")
 check('CFG.coreByBE=lv?"usecase":"kind"' in page and 'CFG.coreByFE="screen"' in page,
       "the per-side defaults (backend=community, frontend=screen) are gone")
 check('{v:"ring",t:""' in page and 'Ring —' in page and 'mode==="ring"' in page,

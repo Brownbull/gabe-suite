@@ -523,7 +523,7 @@ zForce.initialize=function(ns){ zForce.__n=ns; };
    Two styles: GLOW (halo the reached set, dim the rest of the wires) · FOCUS (hide everything
    outside the set; hulls stay as geography). Alt+scroll changes depth; Esc clears. The journeys
    picker feeds the SAME machinery with a carrier set instead of a single origin. */
-var HL={ on:false, mode:"glow", depth:3, rest:"hide", origin:null, jr:null, set:{}, links:null, sprites:[] };   // rest = focus's treatment of the OUTSIDE: dim · fade · wires · hide
+var HL={ on:false, mode:"glow", depth:3, rest:"hide", origin:null, jr:null, set:{}, links:null, sprites:[], rings:[] };   // rings = the spinning focus rings (operator)   // rest = focus's treatment of the OUTSIDE: dim · fade · wires · hide
 function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   if(HL.exact){                                            // JOURNEY mode (batch 49): the path IS the set — the fe leg
     var ex={};                                             // sits in the dense frontend cluster, and a depth-BFS from it
@@ -547,13 +547,19 @@ function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;
   if(HL.on && HL.mode==="focus" && HL.rest==="hide" && HL.set[n.id]===undefined) return false; return true; }   // only the HIDE behavior removes planets — dim/fade/wires keep them
 var hlGroup=null;
 function _hlGroup(){ if(!hlGroup && typeof Graph!=="undefined" && Graph){ hlGroup=new T.Group(); Graph.scene().add(hlGroup); } return hlGroup; }
-function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=hlGroup.children.pop(); hlGroup.remove(s); } } HL.sprites=[]; }
+function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=hlGroup.children.pop(); hlGroup.remove(s); } } HL.sprites=[]; HL.rings=[]; }
+var _spinTex=null;
+function _spinRing(col, size){ if(!_spinTex){ var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d"); c.strokeStyle="#fff"; c.lineWidth=9; c.lineCap="round"; c.beginPath(); c.arc(64,64,50,-Math.PI*0.5,Math.PI*1.15); c.stroke(); _spinTex=new T.CanvasTexture(cv); }
+  var s=new T.Sprite(new T.SpriteMaterial({map:_spinTex, color:new T.Color(col||"#9ecbff"), transparent:true, opacity:0.95, depthWrite:false, depthTest:false })); s.scale.set(size,size,1); return s; }
+(function _hlSpin(){ requestAnimationFrame(_hlSpin); if(HL.on && HL.rings && HL.rings.length){ var r=Date.now()*0.0026; for(var i=0;i<HL.rings.length;i++){ var m=HL.rings[i]; if(m&&m.material) m.material.rotation=r; } } })();   // per-frame spin of the focus rings
 window.__uniHLReapply=function(){ if(!HL.on) return;                     // halos live in an INDEPENDENT scene group —
   var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
     var d0=HL.set[n.id]===0;
-    if(HL.mode!=="glow" && !d0) return;                                    // FOCUS: only the SELECTED element(s) keep the glow
-    var g=glowSprite(n.col||"#9ecbff", d0?64:36, d0?0.85:0.55);
+    if(HL.mode!=="glow" && !d0) return;                                    // FOCUS: only the SELECTED element(s) keep the marker
+    var g;
+    if(d0){ g=_spinRing(n.col||"#9ecbff", 22); HL.rings.push(g); }         // the FOCUSED element → a spinning ring around the icon, FIXED radius (operator: not the sphere radius)
+    else { g=glowSprite(n.col||"#9ecbff", 36, 0.55); }
     g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
     g0.add(g); HL.sprites.push(g); }); };
 window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
@@ -656,8 +662,10 @@ window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) r
 /* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
    card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */
 var WALK={ mode:null, steps:[], i:0 };
-function _aimAt(n){ if(typeof Graph==="undefined"||!Graph||n.x==null) return;
-  try{ var cam=Graph.camera(), P={x:n.x,y:n.y,z:n.z};
+function _aimAt(n){ if(typeof Graph==="undefined"||!Graph||!n) return;
+  var P=(n.x!=null)?{x:n.x,y:n.y,z:n.z}:(n.ent&&EX[n.ent]!=null?{x:EX[n.ent],y:EY[n.ent]||0,z:EZ[n.ent]||0}:null);   // unpositioned/hidden node → fly to its entity anchor so trail focus ALWAYS moves (operator)
+  if(!P) return;
+  try{ var cam=Graph.camera();
     var d=new T.Vector3(cam.position.x-P.x, cam.position.y-P.y, cam.position.z-P.z);
     var len=d.length()||1, keep=Math.max(260, Math.min(len, 420)); d.multiplyScalar(keep/len);   // never dive INSIDE the wire jungle
     Graph.cameraPosition({x:P.x+d.x, y:P.y+d.y, z:P.z+d.z}, P, 700); }catch(e){} }
@@ -703,8 +711,9 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
       wb.style.display=""; wb.innerHTML='<div class="wjname">trail</div><div class="wnav">'+chips
-        +'<span class="wstepname">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
-      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; }); } } }
+        +'<span class="wstepname" title="focus this step">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
+      wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; });
+      var _sn=wb.querySelector(".wstepname"); if(_sn){ _sn.style.cursor="pointer"; _sn.onclick=function(){ _walkGo(0); }; } } } }
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;
@@ -1037,8 +1046,9 @@ if(!window.__uniGrpSelWired){ window.__uniGrpSelWired=true;
 window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
   var h='<div class="flhead"><span class="flent"></span>'+_FCOLS.map(function(c,i){
     var cfgable=(c.k==="planets"||c.k==="show"||c.k==="subs"||c.k==="wires"||c.k==="routes");  // every config now lives here
-    return '<span class="flcell'+(cfgable?' flcfgbtn':'')+'" data-fk="'+c.k+'" title="'+c.ti
-      +(i>=1?' — key '+i+' toggles it for the SELECTION (nothing selected = all)':'')
+    var ztog=(c.k==="zDef"||c.k==="zAtk"||c.k==="zCfl"||c.k==="zSat");   // zone columns TOGGLE on header click (operator: zones off by default, one click shows a zone for all)
+    return '<span class="flcell'+(cfgable?' flcfgbtn':'')+(ztog?' flztog':'')+'" data-fk="'+c.k+'" title="'+c.ti
+      +(i>=1?(ztog?' — CLICK (or key '+i+') toggles this zone for the SELECTION (nothing selected = all entities)':' — key '+i+' toggles it for the SELECTION (nothing selected = all)'):'')
       +(cfgable?' · CLICK for its configuration':'')+'">'
       +(typeof ico==="function"?ico(c.icon,13):"")+(i>=1?'<i class="flkey">'+i+'</i>':'')+'</span>'; }).join('')+'</div>';
   var groups={}; nodes.forEach(function(n){ (groups[n.ent]=groups[n.ent]||{})[n.sub]=(groups[n.ent][n.sub]||0)+1; });
@@ -1065,6 +1075,8 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   body.innerHTML=h;
   body.querySelectorAll(".flhead .flcfgbtn").forEach(function(cell){ cell.onclick=function(){
     if(window.__uniFlOpen) __uniFlOpen(cell.getAttribute("data-fk")); }; });
+  body.querySelectorAll(".flhead .flztog").forEach(function(cell){ cell.style.cursor="pointer"; cell.onclick=function(){   // zone header = a bulk toggle for the selection (all when none) — the discoverable path (operator)
+    var hs=window.__uniHullSel||{}; if(window.__uniFleetToggle) __uniFleetToggle(hs.ent||"*", (hs.ent&&hs.sub!=null)?hs.sub:null, cell.getAttribute("data-fk")); }; });
   if(window.__uniFlOpenKey){ var oc=body.querySelector('.flhead .flcfgbtn[data-fk="'+window.__uniFlOpenKey+'"]');
     if(oc) oc.classList.add("on"); }
   body.querySelectorAll(".flx .flexp").forEach(function(b){ b.onclick=function(ev){   // the COUNT badge owns expand/collapse now

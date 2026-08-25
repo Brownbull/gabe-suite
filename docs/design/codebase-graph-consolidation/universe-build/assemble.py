@@ -277,6 +277,13 @@ OLD_ZS = 'if(CFG.zSat) for(var si=0;'
 assert OLD_ZS in text, "fleetZones zSat anchor missing"
 text = text.replace(OLD_ZS, 'if(CFG.zSat&&visN(n).zSat) for(var si=0;', 1)
 
+# ── operator: METHOD BADGE — a coloured HTTP-method chip at the endpoint icon's lower-right ──
+_METHOD_BADGE = "function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=128; cv.height=64; var c=cv.getContext('2d'); var w=cv.width,h=cv.height,r=16; c.fillStyle=col; c.beginPath(); c.moveTo(r,0); c.arcTo(w,0,w,h,r); c.arcTo(w,h,0,h,r); c.arcTo(0,h,0,0,r); c.arcTo(0,0,w,0,r); c.closePath(); c.fill(); c.font='800 34px '+curFont(); c.fillStyle='#0b0f18'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(m,w/2,h/2+1); var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false, depthTest:false })); var wd=Math.max(5.5, 2.6+m.length*1.4); s.scale.set(wd,4.2,1); s.position.set(br*0.62+wd*0.42, -br*0.5, 3); s.raycast=function(){}; return s; }\n"
+assert 'function buildNode(n){' in text, "buildNode anchor missing (method badge)"
+text = text.replace('function buildNode(n){', _METHOD_BADGE + 'function buildNode(n){', 1)
+assert '  grp.add(ic);' in text, "grp.add(ic) anchor missing (method badge)"
+text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }   // operator: HTTP-method badge at the icon lower-right', 1)
+
 # ── batch 12: layer ruling (c) — sub groups carry the kind's OWN layer (endpoints·api·web·data);
 #    the hull hue-shift map gains the un-collapsed keys ──
 OLD_SUBSHIFT = 'var SUBSHIFT={ frontend:0.10, api:-0.08, data:0.0 };'

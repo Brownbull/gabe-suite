@@ -449,3 +449,10 @@
   #elegend .lgmin:hover{ color:var(--ink) !important; border-color:var(--accent) !important; }
   /* planet-config Zones: the On/Off master pill is gone — a quiet hint that the fleet columns own it */
   .zonehint{ font-size:9px; color:var(--muted); opacity:.7; margin-left:6px; font-weight:500; }
+  /* operator: the Types tab must keep ONE row per item even with the Ⓒ badge — compress the label */
+  #elegend .lgbody.lg-types .lgrow.lgk{ min-width:0; gap:5px; }
+  #elegend .lgbody.lg-types .lglbl{ min-width:0; overflow:hidden; }
+  #elegend .lgbody.lg-types .lglbl b{ font-size:9.5px !important; white-space:nowrap; }   /* label + Ⓒ fit one line */
+  #elegend .lgbody.lg-types .lgrow.lgcrit .lglbl b::after{ width:11px; height:11px; margin-left:4px; font-size:7.5px; }
+  /* zone column header = a clickable bulk toggle */
+  #fleet .flhead .flztog:hover{ color:var(--accent); }
