@@ -419,9 +419,9 @@ check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.en
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,
       "the GLOBAL badge-opacity slider must live in the Planets pane (not #cfg); the #cfg badge panel must be gone")
 check("Temporary Config</span>" in page, "the top-right config panel must be renamed 'Temporary Config'")
-check('__uniAddFocusCfg=function' in page and 'id="focuscfg"' in page and 'srow("speed","focSpeed",0.05,4' in page and 'srow("thick","focThick"' in page and 'srow("glow r","glowRad"' in page and 'srow("falloff","glowFall"' in page and 'row("pattern","focPat",["spinner","solid","dashed"])' in page and 'row("color","focColor"' not in page and 'class="focbtn focreset"' in page and 'class="focbtn foccopy"' in page,
-      "the FOCUS RING config is wrong (speed slider must reach 0.05; each section needs restore + copy buttons; pattern spinner/solid/dashed; no color control)")
-check('function _ringTex(' in page and 'function _focRing(' in page and 'function _nonSelMarker(' in page and 'CFG.focAnim' in page,
+check('__uniAddFocusCfg=function' in page and 'id="focuscfg"' in page and 'srow("speed","focSpeed",0.05,4' in page and 'trow("ring","focRing")' in page and 'trow("glow","focGlow")' in page and 'trow("glow","othGlow")' in page and 'trow("ring","othRing")' in page and 'trow("const","focThickConst")' in page and 'row("pattern","focPat",["spinner","solid","dashed"])' in page and 'row("color","focColor"' not in page and 'class="focbtn focreset"' in page and 'class="focbtn foccopy"' in page,
+      "the FOCUS RING config is wrong (need ring+glow layer toggles on both sections, speed 0.05, const toggle, spinner/solid/dashed, no color, restore+copy)")
+check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,
       "the configurable focus-ring engine (pattern texture · size mode · animation · non-selected marker) is gone")
 check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,
       "the focus ring does not transport to the selected TRAIL step")
@@ -431,7 +431,7 @@ check('window.__uniBadges=[]' in page and 'function _mbTick()' in page and 'e[0]
       "the method badge is not ICON-relative (must ride the camera right/up basis, pinned to the component icon, never the sphere)")
 check('new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)' in page and 'if(FK.up) off.add(_upv); if(FK.dn) off.sub(_upv);' in page,
       "Space/Ctrl up-down is not camera-relative (must move along the camera up axis like WASD, not world-Y)")
-check('function _focRing(' in page and 'HL.rings.push(' in page and 'material.rotation=_hlPhase' in page and '_hlPhase + 0.05*spd' in page and 'br*rad*fall' in page,
+check('function _ringSprite(' in page and 'HL.rings.push(' in page and 'material.rotation=_hlPhase' in page and '_hlPhase + 0.05*spd' in page and 'br*rad*fall' in page,
       "the configurable focus ring is gone (replaces the glow on the selected element)")
 check('flztog' in page and '__uniFleetToggle(hs.ent||"*"' in page,
       "the ZONE column headers are not click-to-toggle (bulk zone show from the fleet)")

@@ -559,15 +559,18 @@ function _ringTex(pat, thick){ pat=pat||"spinner"; thick=thick||4; var key=pat+"
   _ringTexCache[key]=new T.CanvasTexture(cv); return _ringTexCache[key]; }
 function _focSizeFor(n){ var m=(typeof CFG!=="undefined"&&CFG.focSize)||"const";
   if(m==="sphere"){ var br=(typeof massR==="function")?massR(n):8; return Math.max(16, br*2.4); } if(m==="icon") return 20; return 22; }
-function _focRing(n){ var thick=(typeof CFG!=="undefined"&&CFG.focThick!=null)?CFG.focThick:4;   // colour is ALWAYS the node's (operator)
-  var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex(typeof CFG!=="undefined"?CFG.focPat:null, thick), color:new T.Color((n&&n.col)||"#9ecbff"), transparent:true, opacity:0.95, depthWrite:false, depthTest:false }));
-  var sz=_focSizeFor(n); s.scale.set(sz,sz,1); s.__baseSize=sz; return s; }
-function _nonSelMarker(n){ var m=(typeof CFG!=="undefined"&&CFG.hlNonSel)||"glow"; if(m==="none"||m==="dim") return null;
-  if(m==="ring"){ var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex("solid",4), color:new T.Color((n&&n.col)||"#9ecbff"), transparent:true, opacity:0.6, depthWrite:false, depthTest:false })); s.scale.set(15,15,1); return s; }
-  // GLOW — sphere-relative size, config radius/intensity, and a depth falloff from the origin (operator)
-  var br=(typeof massR==="function")?massR(n):8, depth=(HL.set&&HL.set[n.id])||1;
-  var rad=(typeof CFG!=="undefined"&&CFG.glowRad!=null)?CFG.glowRad:2, inten=(typeof CFG!=="undefined"&&CFG.glowInt!=null)?CFG.glowInt:0.55;
-  var fallK=(typeof CFG!=="undefined"&&CFG.glowFall!=null)?CFG.glowFall:0, fall=1-fallK*Math.min(1,(depth-1)/Math.max(1,HL.depth));
+/* the RING sprite — shape (size/pattern/thick) shared; opacity varies (bright on the selected, dim on
+   the non-selected). The colour is ALWAYS the node's. `const` thickness holds the on-screen line width
+   fixed by scaling the texture stroke inversely to the ring size (operator). */
+function _ringSprite(n, opacity){ var sz=_focSizeFor(n);
+  var thick=(typeof CFG!=="undefined"&&CFG.focThick!=null)?CFG.focThick:4;
+  if(typeof CFG!=="undefined"&&CFG.focThickConst) thick=Math.max(0.5, Math.round(thick*22/Math.max(6,sz)*2)/2);   // constant on-screen stroke: inverse to the ring size
+  var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex(typeof CFG!=="undefined"?CFG.focPat:null, thick), color:new T.Color((n&&n.col)||"#9ecbff"), transparent:true, opacity:opacity, depthWrite:false, depthTest:false }));
+  s.scale.set(sz,sz,1); s.__baseSize=sz; return s; }
+/* the GLOW sprite — sphere-relative size, given radius/intensity, optional depth falloff from the origin */
+function _glowFor(n, rad, inten, useFall){ var br=(typeof massR==="function")?massR(n):8, depth=(HL.set&&HL.set[n.id])||1;
+  var fallK=(typeof CFG!=="undefined"&&CFG.glowFall!=null)?CFG.glowFall:0;
+  var fall=useFall?(1-fallK*Math.min(1,(depth-1)/Math.max(1,HL.depth))):1;
   return glowSprite((n&&n.col)||"#9ecbff", Math.max(6, br*rad*fall), inten*fall); }
 var _hlPhase=0;
 (function _hlSpin(){ requestAnimationFrame(_hlSpin); if(!(HL.on && HL.rings && HL.rings.length)) return;
@@ -579,14 +582,18 @@ var _hlPhase=0;
     else { m.material.rotation=_hlPhase; } } })();   // spin (default)
 window.__uniHLReapply=function(){ if(!HL.on) return;                     // halos live in an INDEPENDENT scene group —
   var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
+  var _add=function(n, g, isRing){ if(!g) return; g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
+    g0.add(g); HL.sprites.push(g); if(isRing) HL.rings.push(g); };
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
     var d0=HL.set[n.id]===0;
-    if(HL.mode!=="glow" && !d0) return;                                    // FOCUS: only the SELECTED element(s) keep the marker
-    var g;
-    if(d0){ g=_focRing(n); HL.rings.push(g); }                             // the FOCUSED element → the configurable focus ring, CENTRED on the element (operator)
-    else { g=_nonSelMarker(n); if(!g) return; }                            // non-selected highlight per CFG.hlNonSel (glow/ring/dim/none)
-    g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
-    g0.add(g); HL.sprites.push(g); }); };
+    if(HL.mode!=="glow" && !d0) return;                                    // FOCUS mode: only the SELECTED element(s) carry markers
+    if(d0){                                                                // SELECTED — ring + optional glow (both layers, operator)
+      if(CFG.focRing!==false) _add(n, _ringSprite(n, 0.95), true);
+      if(CFG.focGlow) _add(n, _glowFor(n, (CFG.focGlowRad!=null?CFG.focGlowRad:2), (CFG.focGlowInt!=null?CFG.focGlowInt:0.5), false), false);
+    } else {                                                               // NON-SELECTED — glow + optional DIM ring (both layers, operator)
+      if(CFG.othGlow!==false) _add(n, _glowFor(n, (CFG.glowRad!=null?CFG.glowRad:2), (CFG.glowInt!=null?CFG.glowInt:0.55), true), false);
+      if(CFG.othRing) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), true);
+    } }); };
 window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
   hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
 function _hlRestyle(){ _hlClearSprites();
@@ -1589,37 +1596,40 @@ window.__uniBadges=[];
 })();
 window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("focuscfg")) return;
-  var DEF={ focSize:"const", focPat:"spinner", focAnim:"spin", focSpeed:1, focThick:4, hlNonSel:"glow", glowRad:2, glowInt:0.55, glowFall:0 };
+  var DEF={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, focThick:1.5, focThickConst:false,
+            focGlow:false, focGlowRad:2, focGlowInt:0.5,
+            othGlow:true, glowRad:2.1, glowInt:0.3, glowFall:0.1, othRing:false, othRingInt:0.35 };   // operator defaults
   for(var _dk in DEF){ if(CFG[_dk]==null) CFG[_dk]=DEF[_dk]; }
-  var SEC={ ring:["focSize","focPat","focAnim","focSpeed","focThick"], oth:["hlNonSel","glowRad","glowInt","glowFall"] };
+  var SEC={ ring:["focRing","focSize","focPat","focAnim","focSpeed","focThick","focThickConst","focGlow","focGlowRad","focGlowInt"],
+            oth:["othGlow","glowRad","glowInt","glowFall","othRing","othRingInt"] };
   var g=document.createElement("div"); g.className="grp"; g.id="focuscfg";
   var row=function(label, key, opts){ var h='<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill focpill" data-fk="'+key+'">';
     opts.forEach(function(o){ h+='<button data-v="'+o+'"'+(o===CFG[key]?' class="on"':'')+' title="'+o+'">'+o+'</button>'; }); return h+'</span></div>'; };
+  var trow=function(label, key){ var on=CFG[key]!==false; return '<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill foctpill" data-fk="'+key+'"><button data-v="1"'+(on?' class="on"':'')+'>on</button><button data-v="0"'+(!on?' class="on"':'')+'>off</button></span></div>'; };
   var srow=function(label, key, mn, mx, st){ return '<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span>'
     +'<input type="range" class="rng focrng" data-fk="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="rval" data-fv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; };
   var hdr=function(label, sec){ return '<div class="grplbl fochd" data-sec="'+sec+'">'+label
     +'<span class="fochdbtns"><button class="focbtn focreset" title="restore this section to defaults">&#8635;</button><button class="focbtn foccopy" title="copy this section as JSON">&#10696;</button></span></div>'; };
   g.innerHTML=hdr("Focus ring","ring")
-    +row("size","focSize",["const","icon","sphere"])
-    +row("pattern","focPat",["spinner","solid","dashed"])
-    +row("anim","focAnim",["spin","pulse","none"])
-    +srow("speed","focSpeed",0.05,4,0.05)
-    +srow("thick","focThick",1,14,0.5)
+    +trow("ring","focRing")+row("size","focSize",["const","icon","sphere"])+row("pattern","focPat",["spinner","solid","dashed"])+row("anim","focAnim",["spin","pulse","none"])
+    +srow("speed","focSpeed",0.05,4,0.05)+srow("thick","focThick",1,14,0.5)+trow("const","focThickConst")
+    +trow("glow","focGlow")+srow("g.rad","focGlowRad",0.5,4,0.1)+srow("g.int","focGlowInt",0,1,0.05)
     +hdr("Others \u00b7 highlight","oth")
-    +row("style","hlNonSel",["glow","ring","dim","none"])
-    +srow("glow r","glowRad",0.5,4,0.1)
-    +srow("glow i","glowInt",0,1,0.05)
-    +srow("falloff","glowFall",0,1,0.05);
+    +trow("glow","othGlow")+srow("g.rad","glowRad",0.5,4,0.1)+srow("g.int","glowInt",0,1,0.05)+srow("falloff","glowFall",0,1,0.05)
+    +trow("ring","othRing")+srow("r.int","othRingInt",0,1,0.05);
   body.appendChild(g);
   var _reapply=function(){ try{ if(HL.on && window.__uniHLReapply) __uniHLReapply(); }catch(e){} };
   [].forEach.call(g.querySelectorAll(".focpill"), function(pill){ var key=pill.getAttribute("data-fk");
     [].forEach.call(pill.querySelectorAll("button"), function(bt){ bt.onclick=function(){ CFG[key]=bt.getAttribute("data-v");
       [].forEach.call(pill.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); }); _reapply(); }; }); });
+  [].forEach.call(g.querySelectorAll(".foctpill"), function(pill){ var key=pill.getAttribute("data-fk");
+    [].forEach.call(pill.querySelectorAll("button"), function(bt){ bt.onclick=function(){ CFG[key]=(bt.getAttribute("data-v")==="1");
+      [].forEach.call(pill.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); }); _reapply(); }; }); });
   [].forEach.call(g.querySelectorAll(".focrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-fk"); CFG[k]=+inp.value;
     var vv=g.querySelector('[data-fv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2);
-    if(k==="focSpeed") return;    // the _hlSpin loop reads focSpeed live \u2014 no rebuild
-    _reapply(); }); });   // thickness/glow rebuild the sprites; speed is live
-  [].forEach.call(g.querySelectorAll(".fochd"), function(hd){ var sec=hd.getAttribute("data-sec");   // per-section restore-defaults + copy-JSON (operator)
+    if(k==="focSpeed") return;    // the _hlSpin loop reads focSpeed live
+    _reapply(); }); });
+  [].forEach.call(g.querySelectorAll(".fochd"), function(hd){ var sec=hd.getAttribute("data-sec");
     var rb=hd.querySelector(".focreset"); if(rb) rb.onclick=function(e){ e.stopPropagation(); SEC[sec].forEach(function(k){ CFG[k]=DEF[k]; }); g.remove(); window.__uniAddFocusCfg(); _reapply(); };
     var cb=hd.querySelector(".foccopy"); if(cb) cb.onclick=function(e){ e.stopPropagation(); var o={}; SEC[sec].forEach(function(k){ o[k]=CFG[k]; });
       var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(_e){}
