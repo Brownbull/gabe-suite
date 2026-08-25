@@ -419,8 +419,8 @@ check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.en
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,
       "the GLOBAL badge-opacity slider must live in the Planets pane (not #cfg); the #cfg badge panel must be gone")
 check("Temporary Config</span>" in page, "the top-right config panel must be renamed 'Temporary Config'")
-check('__uniAddFocusCfg=function' in page and 'id="focuscfg"' in page and 'srow("speed","focSpeed"' in page and 'srow("thick","focThick"' in page and 'srow("glow r","glowRad"' in page and 'srow("falloff","glowFall"' in page and 'row("pattern","focPat",["spinner","solid","dashed"])' in page and 'row("color","focColor"' not in page,
-      "the FOCUS RING config is wrong (need speed/thick + glow radius/intensity/falloff sliders; pattern = spinner/solid/dashed only; NO color control)")
+check('__uniAddFocusCfg=function' in page and 'id="focuscfg"' in page and 'srow("speed","focSpeed",0.05,4' in page and 'srow("thick","focThick"' in page and 'srow("glow r","glowRad"' in page and 'srow("falloff","glowFall"' in page and 'row("pattern","focPat",["spinner","solid","dashed"])' in page and 'row("color","focColor"' not in page and 'class="focbtn focreset"' in page and 'class="focbtn foccopy"' in page,
+      "the FOCUS RING config is wrong (speed slider must reach 0.05; each section needs restore + copy buttons; pattern spinner/solid/dashed; no color control)")
 check('function _ringTex(' in page and 'function _focRing(' in page and 'function _nonSelMarker(' in page and 'CFG.focAnim' in page,
       "the configurable focus-ring engine (pattern texture · size mode · animation · non-selected marker) is gone")
 check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,

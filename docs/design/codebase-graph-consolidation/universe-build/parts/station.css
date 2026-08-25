@@ -468,3 +468,8 @@
   #cfg #focuscfg .focrow{ margin:2px 0; }
   #cfg #focuscfg .focpill{ display:inline-flex; flex-wrap:wrap; gap:3px; margin-left:auto; }
   #cfg #focuscfg .focpill button{ font-size:9px; padding:2px 6px; text-transform:none; letter-spacing:0; }
+  /* operator: per-section restore/copy buttons in the Focus-ring / Others config headers */
+  #cfg #focuscfg .fochd{ display:flex; align-items:center; justify-content:space-between; }
+  #cfg #focuscfg .fochdbtns{ display:inline-flex; gap:3px; }
+  #cfg #focuscfg .focbtn{ font-size:11px; line-height:1; color:var(--muted); background:none; border:1px solid var(--line); border-radius:4px; width:18px; height:16px; cursor:pointer; padding:0; }
+  #cfg #focuscfg .focbtn:hover{ color:var(--accent); border-color:var(--accent); }

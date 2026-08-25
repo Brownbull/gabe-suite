@@ -1589,21 +1589,23 @@ window.__uniBadges=[];
 })();
 window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("focuscfg")) return;
-  if(CFG.focSize==null) CFG.focSize="const"; if(CFG.focPat==null) CFG.focPat="spinner"; if(CFG.focAnim==null) CFG.focAnim="spin";
-  if(CFG.focSpeed==null) CFG.focSpeed=1; if(CFG.focThick==null) CFG.focThick=4; if(CFG.hlNonSel==null) CFG.hlNonSel="glow";
-  if(CFG.glowRad==null) CFG.glowRad=2; if(CFG.glowInt==null) CFG.glowInt=0.55; if(CFG.glowFall==null) CFG.glowFall=0;
+  var DEF={ focSize:"const", focPat:"spinner", focAnim:"spin", focSpeed:1, focThick:4, hlNonSel:"glow", glowRad:2, glowInt:0.55, glowFall:0 };
+  for(var _dk in DEF){ if(CFG[_dk]==null) CFG[_dk]=DEF[_dk]; }
+  var SEC={ ring:["focSize","focPat","focAnim","focSpeed","focThick"], oth:["hlNonSel","glowRad","glowInt","glowFall"] };
   var g=document.createElement("div"); g.className="grp"; g.id="focuscfg";
   var row=function(label, key, opts){ var h='<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill focpill" data-fk="'+key+'">';
     opts.forEach(function(o){ h+='<button data-v="'+o+'"'+(o===CFG[key]?' class="on"':'')+' title="'+o+'">'+o+'</button>'; }); return h+'</span></div>'; };
   var srow=function(label, key, mn, mx, st){ return '<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span>'
     +'<input type="range" class="rng focrng" data-fk="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="rval" data-fv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; };
-  g.innerHTML='<div class="grplbl">Focus ring</div>'
+  var hdr=function(label, sec){ return '<div class="grplbl fochd" data-sec="'+sec+'">'+label
+    +'<span class="fochdbtns"><button class="focbtn focreset" title="restore this section to defaults">&#8635;</button><button class="focbtn foccopy" title="copy this section as JSON">&#10696;</button></span></div>'; };
+  g.innerHTML=hdr("Focus ring","ring")
     +row("size","focSize",["const","icon","sphere"])
     +row("pattern","focPat",["spinner","solid","dashed"])
     +row("anim","focAnim",["spin","pulse","none"])
-    +srow("speed","focSpeed",0.2,4,0.1)
+    +srow("speed","focSpeed",0.05,4,0.05)
     +srow("thick","focThick",1,14,0.5)
-    +'<div class="grplbl" style="margin-top:5px">Others \u00b7 highlight</div>'
+    +hdr("Others \u00b7 highlight","oth")
     +row("style","hlNonSel",["glow","ring","dim","none"])
     +srow("glow r","glowRad",0.5,4,0.1)
     +srow("glow i","glowInt",0,1,0.05)
@@ -1616,7 +1618,12 @@ window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbo
   [].forEach.call(g.querySelectorAll(".focrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-fk"); CFG[k]=+inp.value;
     var vv=g.querySelector('[data-fv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2);
     if(k==="focSpeed") return;    // the _hlSpin loop reads focSpeed live \u2014 no rebuild
-    _reapply(); }); }); };   // thickness/glow rebuild the sprites; speed is live
+    _reapply(); }); });   // thickness/glow rebuild the sprites; speed is live
+  [].forEach.call(g.querySelectorAll(".fochd"), function(hd){ var sec=hd.getAttribute("data-sec");   // per-section restore-defaults + copy-JSON (operator)
+    var rb=hd.querySelector(".focreset"); if(rb) rb.onclick=function(e){ e.stopPropagation(); SEC[sec].forEach(function(k){ CFG[k]=DEF[k]; }); g.remove(); window.__uniAddFocusCfg(); _reapply(); };
+    var cb=hd.querySelector(".foccopy"); if(cb) cb.onclick=function(e){ e.stopPropagation(); var o={}; SEC[sec].forEach(function(k){ o[k]=CFG[k]; });
+      var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(_e){}
+      cb.innerHTML="&#10003;"; setTimeout(function(){ cb.innerHTML="&#10696;"; }, 900); }; }); };
 window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("wireview")) return;
   var g=document.createElement("div"); g.className="grp"; g.id="wireview";
