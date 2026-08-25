@@ -419,6 +419,10 @@ check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.en
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('__uniAddBadgeCfg=function' in page and 'id="badgecfg"' in page and '_mbRow("opacity","mbOp")' in page and 'CFG.mbOp!=null' in page and 'id="mbcopy"' in page,
       "the API-method BADGE config (opacity/size/x/y sliders + copy) is gone from #cfg")
+check('window.__uniBadges=[]' in page and 'function _mbTick()' in page and 'e[0]*ox+e[4]*oy+e[8]*3' in page and 'window.__uniBadges.push(s)' in page,
+      "the method badge is not ICON-relative (must ride the camera right/up basis, pinned to the component icon, never the sphere)")
+check('new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)' in page and 'if(FK.up) off.add(_upv); if(FK.dn) off.sub(_upv);' in page,
+      "Space/Ctrl up-down is not camera-relative (must move along the camera up axis like WASD, not world-Y)")
 check('function _spinRing(' in page and 'HL.rings.push(' in page and 'material.rotation=' in page,
       "the spinning FOCUS ring is gone (replaces the glow on the selected element)")
 check('flztog' in page and '__uniFleetToggle(hs.ent||"*"' in page,

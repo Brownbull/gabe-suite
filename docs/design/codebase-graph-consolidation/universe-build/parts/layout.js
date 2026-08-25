@@ -807,7 +807,7 @@ window.__uniWireTopbar=function(){
         var off=new T.Vector3();
         if(FK.w) off.add(fwd); if(FK.s) off.sub(fwd);
         if(FK.d) off.add(rgt); if(FK.a) off.sub(rgt);
-        if(FK.up) off.y+=sp; if(FK.dn) off.y-=sp;
+        if(FK.up||FK.dn){ var _upv=new T.Vector3(0,1,0).applyQuaternion(cam.quaternion).multiplyScalar(sp); if(FK.up) off.add(_upv); if(FK.dn) off.sub(_upv); }   // up/down along the CAMERA up axis (operator: camera-relative like WASD, was world-Y)
         if(FK.q||FK.e){                                        // Q/E = orbit INWARD around the view centre at the zoom depth
           var ya=(FK.e?1:0)-(FK.q?1:0);                        // swapped (operator): E spins Q's old way, Q spins E's
           var vdq=new T.Vector3(); cam.getWorldDirection(vdq);
@@ -1542,6 +1542,18 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
     var ln=new T.Line(geo, mat); ln.userData.kind="bundle"; ln.userData.__bundle=by[key]; grp.add(ln); });
 };
 
+window.__uniBadges=[];
+(function _mbTick(){ requestAnimationFrame(_mbTick);
+  var arr=window.__uniBadges; if(!arr||!arr.length||typeof Graph==="undefined"||!Graph) return;
+  var cam=Graph.camera(); if(!cam) return; var e=cam.matrixWorld.elements;   // cols: [0..2]=right · [4..6]=up · [8..10]=toward-viewer
+  var ox=(typeof CFG!=="undefined"&&CFG.mbX!=null)?CFG.mbX:5, oy=(typeof CFG!=="undefined"&&CFG.mbY!=null)?CFG.mbY:-5,
+      sz=(typeof CFG!=="undefined"&&CFG.mbSize!=null)?CFG.mbSize:6.5, op=(typeof CFG!=="undefined"&&CFG.mbOp!=null)?CFG.mbOp:1;
+  var live=0;
+  for(var i=0;i<arr.length;i++){ var b=arr[i]; if(!b||!b.parent) continue; arr[live++]=b;   // prune disposed badges in place (bounded)
+    b.position.set(e[0]*ox+e[4]*oy+e[8]*3, e[1]*ox+e[5]*oy+e[9]*3, e[2]*ox+e[6]*oy+e[10]*3);   // ICON-relative: pinned to the camera's right/up so it rides the billboard icon, never the sphere (operator)
+    b.scale.set(sz,sz,1); if(b.material) b.material.opacity=op; }
+  arr.length=live;
+})();
 function _mbRow(label, key){ var mn=(key==="mbOp")?0:(key==="mbSize")?2:-16, mx=(key==="mbOp")?1:16, st=(key==="mbOp")?0.05:0.5;
   return '<div class="mbrow"><span class="rlbl mblbl">'+label+'</span><input type="range" class="rng mbrng" data-mb="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="mbval" data-mbv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; }
 window.__uniAddBadgeCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
@@ -1552,8 +1564,7 @@ window.__uniAddBadgeCfg=function(){ var body=document.querySelector("#cfg .cfgbo
     +_mbRow("opacity","mbOp")+_mbRow("size","mbSize")+_mbRow("x offset","mbX")+_mbRow("y offset","mbY");
   body.appendChild(g);
   [].forEach.call(g.querySelectorAll("input.mbrng"), function(inp){ inp.addEventListener("input", function(){
-    var k=inp.getAttribute("data-mb"); CFG[k]=+inp.value; var vv=g.querySelector('[data-mbv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2);
-    if(window.rebuildNodes) try{ rebuildNodes(); }catch(e){} }); });
+    var k=inp.getAttribute("data-mb"); CFG[k]=+inp.value; var vv=g.querySelector('[data-mbv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2); }); });   // the badge tick applies pos/size/opacity live — no rebuild
   var cp=g.querySelector("#mbcopy"); if(cp) cp.onclick=function(e){ e.stopPropagation();
     var txt=JSON.stringify({mbOp:CFG.mbOp, mbSize:CFG.mbSize, mbX:CFG.mbX, mbY:CFG.mbY}, null, 2);
     window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(_e){}
