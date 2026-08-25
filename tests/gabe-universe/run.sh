@@ -431,6 +431,11 @@ check('if(CFG.othRing && n.ent!=null && _selEnts[n.ent]) _add(n, _ringSprite(n, 
       "the non-selected dim ring must be STATIC and confined to the selected element's entity (outer entities glow-only)")
 check('if(!d0 && !_nodeVisibleFn(n)) return;' in page,
       "the highlight neighborhood glow must NOT draw on HIDDEN nodes (colored-halo noise vs the clickable ghost stars, operator)")
+# fleet ASSETS in the element card + TRANSIT correspondence in the wire card (operator)
+check('function assetsSec(n)' in page and 'sechd("layers","Fleet assets")' in page and 'var _as=assetsSec(n); if(_as) out.push(_as);' in page and 'kv("shield","defence"' in page and 'kv("target","satellites"' in page,
+      "the element card must carry a Fleet-assets section (defence/attack/conflict/satellites from n.m)")
+check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,
+      "the wire card must carry a Transit section tying cargo↔payload + test-chip↔proven (cross-entity only)")
 check('pulseMode:"const"' in page and 'pulseAmp:0.08' in page and 'CFG.pulseMode==="const"' in page and 'bs+amp*18*s2' in page and 'srow("p.amp"' not in page,
       "the pulse must be a fixed const default (amp 0.08) + engine, slider retired")
 check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,

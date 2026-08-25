@@ -117,6 +117,16 @@ assert OLD_TRUST in text
 text = text.replace(OLD_TRUST,
   'kv(null,"kind", ({fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor"}[l.rel]) || (l.proven?"structural join":"inferred floor"))', 1)
 
+# ── FLEET TRANSIT (operator): tie the traveling CARGO/TEST-CHIP assets to the wire's data (cargo ∝ l.payload;
+#    test chip ↔ l.proven; ships fly cross-entity wires only). Inserted BEFORE the Trust section in __link. ──
+_TRUST_ANCHOR = 'E("div",{class:"sec"}, sechd("info","Trust"),'
+assert _TRUST_ANCHOR in text, "link-card Trust anchor missing — cannot insert the Transit section"
+_TRANSIT = ('E("div",{class:"sec"}, sechd("truck","Transit"),'
+  ' kv("truck","cargo", l.payload? ("carries "+l.payload+" data field"+(l.payload>1?"s":"")+" · the shuttle grows with the payload") : "no payload · no cargo shuttle"),'
+  ' kv("test","test chip", l.proven? "test-proven route · the green chip flies it" : "not test-proven · no green chip"),'
+  ' E("div",{class:"sublbl"}, (typeof linkCross==="function"&&linkCross(l))? "ships fly this cross-entity wire" : "same-entity wire · no ships transit"))')
+text = text.replace(_TRUST_ANCHOR, _TRANSIT + ',\n      ' + _TRUST_ANCHOR, 1)
+
 # ── review-2 fix: 'web' was missing from `order`, so no billboard icon was rasterized for web nodes →
 #    they fell back to the purple `panel` PRIMITIVE (the pink cubes). Add it so web shows the screen glyph. ──
 OLD_ORDER = 'var order=["route","component","hook","type","store","screen","endpoint","function","schema","model","external","entity"];'

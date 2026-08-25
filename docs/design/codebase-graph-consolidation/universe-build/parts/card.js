@@ -376,6 +376,19 @@
     w.append(navRow(null,"entity · "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent), null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
     w.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     return w; }
+  /* FLEET ASSETS (operator): the ships & zones drawn around this planet, as a panel readout — read from
+     the SAME per-node metrics nodeFleet() renders (tests→defence · god/untested→attack · large/behind→conflict
+     · fan-in→satellites). Honest-empty: a node with no assets gets no section. */
+  function assetsSec(n){ if(!n) return null; var m=n.m||{},
+      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0), fanin=Math.round(+(m.fanin)||0),
+      untested=(tests===0 && n.kind!=="entity"), god=!!m.god, shock=!!(m.large||behind>=15);
+    var rows=[];
+    if(tests>0) rows.push(kv("shield","defence", tests+" test"+(tests>1?"s":"")+" · a green ship each"));
+    if(god||untested){ var atk=[]; if(god) atk.push("god-object"); if(untested) atk.push("untested (raiders)"); rows.push(kv("swords","attack", atk.join(" · "))); }
+    if(shock) rows.push(kv("burst","conflict", "shock · "+(m.large?"large surface":(behind+" behind"))));
+    if(fanin>0) rows.push(kv("target","satellites", fanin+" caller"+(fanin>1?"s":"")+" (fan-in)"));
+    if(!rows.length) return null;
+    return E("div",{class:"sec"}, sechd("layers","Fleet assets"), rows, E("div",{class:"sublbl",style:"margin-top:4px"}, "the ships & zones drawn around this planet")); }
   Object.keys(C).forEach(function(k){ var base=C[k];
-    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });
+    C[k]=function(n){ var out=base(n)||[]; var _as=assetsSec(n); if(_as) out.push(_as); out.push(aboveSec(n)); return out; }; });
   window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu; window.__uniSelNode=_selNode;   // batch 49: the search selects nodes through the ONE select path

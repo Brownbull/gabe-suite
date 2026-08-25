@@ -3910,8 +3910,21 @@ var KINDCARD=(function(){
     w.append(navRow(null,"entity · "+(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent), null, (typeof ENT!=="undefined"&&ENT[n.ent])||"#888", function(){ panelEnt(n.ent); }, "up"));
     w.append(navRow("entity","everything", null, null, function(){ panelAll(); }, "up"));
     return w; }
+  /* FLEET ASSETS (operator): the ships & zones drawn around this planet, as a panel readout — read from
+     the SAME per-node metrics nodeFleet() renders (tests→defence · god/untested→attack · large/behind→conflict
+     · fan-in→satellites). Honest-empty: a node with no assets gets no section. */
+  function assetsSec(n){ if(!n) return null; var m=n.m||{},
+      tests=Math.round(+(m.tests)||0), behind=Math.round(+(m.behind)||0), fanin=Math.round(+(m.fanin)||0),
+      untested=(tests===0 && n.kind!=="entity"), god=!!m.god, shock=!!(m.large||behind>=15);
+    var rows=[];
+    if(tests>0) rows.push(kv("shield","defence", tests+" test"+(tests>1?"s":"")+" · a green ship each"));
+    if(god||untested){ var atk=[]; if(god) atk.push("god-object"); if(untested) atk.push("untested (raiders)"); rows.push(kv("swords","attack", atk.join(" · "))); }
+    if(shock) rows.push(kv("burst","conflict", "shock · "+(m.large?"large surface":(behind+" behind"))));
+    if(fanin>0) rows.push(kv("target","satellites", fanin+" caller"+(fanin>1?"s":"")+" (fan-in)"));
+    if(!rows.length) return null;
+    return E("div",{class:"sec"}, sechd("layers","Fleet assets"), rows, E("div",{class:"sublbl",style:"margin-top:4px"}, "the ships & zones drawn around this planet")); }
   Object.keys(C).forEach(function(k){ var base=C[k];
-    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });
+    C[k]=function(n){ var out=base(n)||[]; var _as=assetsSec(n); if(_as) out.push(_as); out.push(aboveSec(n)); return out; }; });
   window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu; window.__uniSelNode=_selNode;   // batch 49: the search selects nodes through the ONE select path
   C.screen=C.web;
   function chipCls(k){ return ({endpoint:"endpoint",route:"froute","function":"function",model:"model",schema:"schema",component:"component",hook:"hook",store:"store",type:"type",screen:"web",web:"web",external:"external",entity:"entity"})[k]||"fn"; }
@@ -3931,6 +3944,7 @@ var KINDCARD=(function(){
         E("div",{class:"sublbl",style:"margin-top:6px"}, icoEl(RELICO[l.rel]||"link"), "relation: "+l.rel)),
       E("div",{class:"sec"}, sechd("layers","Weight"), E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,(l.w||1)/6*100)+"%"})), E("div",{class:"sublbl"}, "edge-kind weight "+(l.w||1)+" (fixed per kind)")),
       l.payload?E("div",{class:"sec"}, sechd("table","Payload"), E("div",{class:"sublbl"}, icoEl("table"), "carries "+l.payload+" field"+(l.payload>1?"s":"")+" — "+((tk==="schema"||tk==="model")?tl:"the target structure"))):null,
+      E("div",{class:"sec"}, sechd("truck","Transit"), kv("truck","cargo", l.payload? ("carries "+l.payload+" data field"+(l.payload>1?"s":"")+" · the shuttle grows with the payload") : "no payload · no cargo shuttle"), kv("test","test chip", l.proven? "test-proven route · the green chip flies it" : "not test-proven · no green chip"), E("div",{class:"sublbl"}, (typeof linkCross==="function"&&linkCross(l))? "ships fly this cross-entity wire" : "same-entity wire · no ships transit")),
       E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", ({fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor"}[l.rel]) || (l.proven?"structural join":"inferred floor"))),
       E("div",{class:"sec"}, sechd("role","Direction"), kv(null,"flow", sl+" → "+tl))
     ]; };
