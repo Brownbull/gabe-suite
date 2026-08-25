@@ -464,3 +464,7 @@
   #cfg #badgecfg .mblbl{ flex:0 0 52px; font-size:10px; color:var(--muted); }
   #cfg #badgecfg .mbrng{ flex:1; }
   #cfg #badgecfg .mbval{ flex:0 0 34px; text-align:right; font:600 10px/1 var(--font-mono); color:var(--ink); font-variant-numeric:tabular-nums; }
+  /* operator: the Focus-ring controls in the Temporary Config (#cfg) */
+  #cfg #focuscfg .focrow{ margin:2px 0; }
+  #cfg #focuscfg .focpill{ display:inline-flex; flex-wrap:wrap; gap:3px; margin-left:auto; }
+  #cfg #focuscfg .focpill button{ font-size:9px; padding:2px 6px; text-transform:none; letter-spacing:0; }

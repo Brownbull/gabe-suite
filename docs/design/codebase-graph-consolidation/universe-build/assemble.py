@@ -135,6 +135,8 @@ OLD_ZFORCE = ('function zForce(alpha){ var ns=zForce.__n||[]; ns.forEach(functio
               'zForce.initialize=function(ns){ zForce.__n=ns; };')
 assert OLD_ZFORCE in text, "zForce block anchor missing"
 text = text.replace(OLD_ZFORCE, LAYOUT_JS, 1)
+# ── operator: the top-right config panel is the TEMPORARY-controls home ──
+text = text.replace('ico("cog",13)+\'Config</span>', 'ico("cog",13)+\'Temporary Config</span>', 1)
 assert 'var CFG={ shape:"polygon", subOn:true, entOn:true,' in text, "CFG anchor missing"
 text = text.replace('var CFG={ shape:"polygon", subOn:true, entOn:true,',
                     'var CFG={ shape:"polygon", entLayout:"force", coreBy:"layer", coreByBE:null, coreByFE:null, lineStyle:"curved", showFns:"off", showTypes:"off", subOn:true, entOn:true,', 1)
@@ -152,7 +154,7 @@ assert 'preloadBillboards(function(){ build();' in text, "boot anchor missing"
 text = text.replace('preloadBillboards(function(){ build();',
                     'preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);', 1)
 assert '\nbuildCfg();\n' in text, "boot buildCfg anchor missing"
-text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n', 1)
+text = text.replace('\nbuildCfg();\n', '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg();\n', 1)
 
 # ── batch 9: typed link rest-lengths (intra 40 / cross-entity 280) — the default rest≈30 springs
 #    are what collapsed the entities into one mesh; and the unbounded -150 charge BALLOONS each
@@ -198,11 +200,11 @@ text = text.replace(OLD_LNCASE,
 OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'
 assert OLD_PRESET in text, "URL-preset buildCfg anchor missing"
 text = text.replace(OLD_PRESET,
-  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
+  'if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();', 1)
 OLD_DRIVE = 'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); buildClusters(); updateClusters(true); }'
 assert OLD_DRIVE in text, "?drive buildCfg anchor missing"
 text = text.replace(OLD_DRIVE,
-  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); buildClusters(); updateClusters(true); }', 1)
+  'CFG.shape=window.__drive; CFG.subOn=true; CFG.entOn=true; buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); buildClusters(); updateClusters(true); }', 1)
 
 # (orbit-around-click is now a pointerdown re-pivot in __uniSetupOrbit — batch 7; the old click-based
 #  approach never fired on a drag, so it is not re-applied here.)
@@ -494,9 +496,9 @@ text = text.replace(OLD_TRV,
   '    if(HL.on && HL.links && !HL.links.has(l)) return;   // a highlight owns the roads — shuttles fly the lit path only', 1)
 
 # panel boot + master-dim sync on every config change
-OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView();\n'
+OLD_BOOTCFG = '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg();\n'
 assert OLD_BOOTCFG in text, "boot buildCfg anchor missing (batch-11 fleet boot)"
-text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
+text = text.replace(OLD_BOOTCFG, '\nbuildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); if(window.__uniBuildFleet) __uniBuildFleet();\n', 1)
 OLD_APPLYHEAD = 'function applyCfg(grp){ if(grp==="bubble"'
 assert OLD_APPLYHEAD in text, "applyCfg head anchor missing"
 text = text.replace(OLD_APPLYHEAD,
@@ -537,7 +539,7 @@ text = text.replace(OLD_CHIP,
   '      return el; };', 1)
 
 # batch 12: topbar wiring joins the boot chain (after the panel-boot replace creates the anchor)
-OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniBuildFleet) __uniBuildFleet();'
+OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); if(window.__uniBuildFleet) __uniBuildFleet();'
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
 text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);', 1)
 

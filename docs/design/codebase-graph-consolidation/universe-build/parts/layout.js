@@ -548,18 +548,39 @@ function _nodeVisibleFn(n){ var v=visN(n); if(!v.show||!v.planets) return false;
 var hlGroup=null;
 function _hlGroup(){ if(!hlGroup && typeof Graph!=="undefined" && Graph){ hlGroup=new T.Group(); Graph.scene().add(hlGroup); } return hlGroup; }
 function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=hlGroup.children.pop(); hlGroup.remove(s); } } HL.sprites=[]; HL.rings=[]; }
-var _spinTex=null;
-function _spinRing(col, size){ if(!_spinTex){ var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d"); c.strokeStyle="#fff"; c.lineWidth=9; c.lineCap="round"; c.beginPath(); c.arc(64,64,50,-Math.PI*0.5,Math.PI*1.15); c.stroke(); _spinTex=new T.CanvasTexture(cv); }
-  var s=new T.Sprite(new T.SpriteMaterial({map:_spinTex, color:new T.Color(col||"#9ecbff"), transparent:true, opacity:0.95, depthWrite:false, depthTest:false })); s.scale.set(size,size,1); return s; }
-(function _hlSpin(){ requestAnimationFrame(_hlSpin); if(HL.on && HL.rings && HL.rings.length){ var r=Date.now()*0.0026; for(var i=0;i<HL.rings.length;i++){ var m=HL.rings[i]; if(m&&m.material) m.material.rotation=r; } } })();   // per-frame spin of the focus rings
+/* the FOCUS RING — configurable (operator): pattern (spinner/solid/dashed/dotted), colour,
+   size mode (const/icon/sphere, always CENTRED), animation (spin/pulse/none). */
+var _ringTexCache={};
+function _ringTex(pat){ pat=pat||"spinner"; if(_ringTexCache[pat]) return _ringTexCache[pat];
+  var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d"); c.strokeStyle="#fff"; c.lineCap="round";
+  if(pat==="solid"){ c.lineWidth=9; c.beginPath(); c.arc(64,64,50,0,6.2832); c.stroke(); }
+  else if(pat==="dashed"){ c.lineWidth=9; c.setLineDash([15,11]); c.beginPath(); c.arc(64,64,50,0,6.2832); c.stroke(); }
+  else if(pat==="dotted"){ c.lineWidth=12; c.setLineDash([1,15]); c.beginPath(); c.arc(64,64,50,0,6.2832); c.stroke(); }
+  else { c.lineWidth=9; c.beginPath(); c.arc(64,64,50,-Math.PI*0.5,Math.PI*1.15); c.stroke(); }   // spinner (gapped arc)
+  _ringTexCache[pat]=new T.CanvasTexture(cv); return _ringTexCache[pat]; }
+var _FOCCOL={ white:"#ffffff", amber:"#fbbf24", cyan:"#22d3ee", magenta:"#e879f9", indigo:"#818cf8" };
+function _focColor(n){ var c=(typeof CFG!=="undefined"&&CFG.focColor)||"node"; return _FOCCOL[c]||(n&&n.col)||"#9ecbff"; }
+function _focSizeFor(n){ var m=(typeof CFG!=="undefined"&&CFG.focSize)||"const";
+  if(m==="sphere"){ var br=(typeof massR==="function")?massR(n):8; return Math.max(16, br*2.4); } if(m==="icon") return 20; return 22; }
+function _focRing(n){ var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex(typeof CFG!=="undefined"?CFG.focPat:null), color:new T.Color(_focColor(n)), transparent:true, opacity:0.95, depthWrite:false, depthTest:false }));
+  var sz=_focSizeFor(n); s.scale.set(sz,sz,1); s.__baseSize=sz; return s; }
+function _nonSelMarker(n){ var m=(typeof CFG!=="undefined"&&CFG.hlNonSel)||"glow"; if(m==="none"||m==="dim") return null;
+  if(m==="ring"){ var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex("solid"), color:new T.Color((n&&n.col)||"#9ecbff"), transparent:true, opacity:0.6, depthWrite:false, depthTest:false })); s.scale.set(15,15,1); return s; }
+  return glowSprite((n&&n.col)||"#9ecbff", 36, 0.55); }
+(function _hlSpin(){ requestAnimationFrame(_hlSpin); if(!(HL.on && HL.rings && HL.rings.length)) return;
+  var anim=(typeof CFG!=="undefined"&&CFG.focAnim)||"spin", t=Date.now();
+  for(var i=0;i<HL.rings.length;i++){ var m=HL.rings[i]; if(!m||!m.material) continue;
+    if(anim==="pulse"){ var bs=m.__baseSize||22, f=1+0.13*Math.sin(t*0.005); m.scale.set(bs*f,bs*f,1); }
+    else if(anim==="none"){ /* static */ }
+    else { m.material.rotation=t*0.0026; } } })();   // spin (default)
 window.__uniHLReapply=function(){ if(!HL.on) return;                     // halos live in an INDEPENDENT scene group —
   var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
     var d0=HL.set[n.id]===0;
     if(HL.mode!=="glow" && !d0) return;                                    // FOCUS: only the SELECTED element(s) keep the marker
     var g;
-    if(d0){ g=_spinRing(n.col||"#9ecbff", 22); HL.rings.push(g); }         // the FOCUSED element → a spinning ring around the icon, FIXED radius (operator: not the sphere radius)
-    else { g=glowSprite(n.col||"#9ecbff", 36, 0.55); }
+    if(d0){ g=_focRing(n); HL.rings.push(g); }                             // the FOCUSED element → the configurable focus ring, CENTRED on the element (operator)
+    else { g=_nonSelMarker(n); if(!g) return; }                            // non-selected highlight per CFG.hlNonSel (glow/ring/dim/none)
     g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
     g0.add(g); HL.sprites.push(g); }); };
 window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
@@ -687,7 +708,8 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   if(!n){ _walkRender(); return; }                                            // the pill tracks WALK.i even on a dead step
   if(WALK.mode==="journey" && di===0) _frameSet(WALK.steps);   // selection shows the WHOLE path; arrows dive per step
   else _aimAt(n);
-  SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook (the lit path stays)
+  SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook
+  if(WALK.mode==="trail" && HL.on){ HL.origin=[n.id]; HL.exact=false; try{ _hlCompute(); _hlRestyle(); }catch(e){} }   // the focus RING transports to the trail step (operator)
   _walkRender(); }
 function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
   /* JOURNEY controls live CENTERED in the header bar: [‹] [i/N · name] [›] [✕] — real buttons,
@@ -1561,6 +1583,24 @@ window.__uniBadges=[];
     b.scale.set(sz,sz,1); if(b.material) b.material.opacity=op; }
   arr.length=live;
 })();
+window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
+  if(!body||document.getElementById("focuscfg")) return;
+  if(CFG.focSize==null) CFG.focSize="const"; if(CFG.focColor==null) CFG.focColor="node"; if(CFG.focPat==null) CFG.focPat="spinner"; if(CFG.focAnim==null) CFG.focAnim="spin"; if(CFG.hlNonSel==null) CFG.hlNonSel="glow";
+  var g=document.createElement("div"); g.className="grp"; g.id="focuscfg";
+  var row=function(label, key, opts){ var h='<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill focpill" data-fk="'+key+'">';
+    opts.forEach(function(o){ h+='<button data-v="'+o+'"'+(o===CFG[key]?' class="on"':'')+' title="'+o+'">'+o+'</button>'; }); return h+'</span></div>'; };
+  g.innerHTML='<div class="grplbl">Focus ring</div>'
+    +row("size","focSize",["const","icon","sphere"])
+    +row("color","focColor",["node","white","amber","cyan","magenta"])
+    +row("pattern","focPat",["spinner","solid","dashed","dotted"])
+    +row("anim","focAnim",["spin","pulse","none"])
+    +'<div class="grplbl" style="margin-top:5px">Others \u00b7 highlight</div>'
+    +row("style","hlNonSel",["glow","ring","dim","none"]);
+  body.appendChild(g);
+  [].forEach.call(g.querySelectorAll(".focpill"), function(pill){ var key=pill.getAttribute("data-fk");
+    [].forEach.call(pill.querySelectorAll("button"), function(bt){ bt.onclick=function(){ CFG[key]=bt.getAttribute("data-v");
+      [].forEach.call(pill.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); });
+      try{ if(HL.on && window.__uniHLReapply) __uniHLReapply(); }catch(e){} }; }); }); };
 window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("wireview")) return;
   var g=document.createElement("div"); g.className="grp"; g.id="wireview";

@@ -335,7 +335,7 @@ check('(CFG.zCfl&&visN(n).zCfl)? cflSpec(' in page and 'CFG.zSat&&visN(n).zSat) 
 check('var def=CFG.zDef? placeFleet(' not in page, "REGRESSION: a fleet-zone gate ignores the fleet panel")
 check('k:"zDef"' in page and 'k:"routes"' in page and 'icon:"truck"' in page,
       "zones/routes matrix columns missing")
-check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
+check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
       "the URL-preset path rebuilds the config without re-syncing the fleet masters-dim")
 # batch 11-C: the sim feed + presets row (the in-flight seam must exist before that batch, or it debugs a phantom)
 check('<script src="./sim.data.js"></script>' in page,
@@ -418,14 +418,21 @@ check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.en
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,
       "the GLOBAL badge-opacity slider must live in the Planets pane (not #cfg); the #cfg badge panel must be gone")
+check("Temporary Config</span>" in page, "the top-right config panel must be renamed 'Temporary Config'")
+check('__uniAddFocusCfg=function' in page and 'id="focuscfg"' in page and 'row("pattern","focPat"' in page and 'row("style","hlNonSel"' in page,
+      "the FOCUS RING config (size/color/pattern/anim + non-selected highlight) is gone from the Temporary Config")
+check('function _ringTex(' in page and 'function _focRing(' in page and 'function _nonSelMarker(' in page and 'CFG.focAnim' in page,
+      "the configurable focus-ring engine (pattern texture · size mode · animation · non-selected marker) is gone")
+check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,
+      "the focus ring does not transport to the selected TRAIL step")
 check('the Zones config section is GONE' in page and 'grplbl zoneshd' not in page,
       "the Zones config section must be removed from the Planets pane (zones are fleet-only now)")
 check('window.__uniBadges=[]' in page and 'function _mbTick()' in page and 'e[0]*ox+e[4]*oy+e[8]*3' in page and 'window.__uniBadges.push(s)' in page,
       "the method badge is not ICON-relative (must ride the camera right/up basis, pinned to the component icon, never the sphere)")
 check('new T.Vector3(0,1,0).applyQuaternion(cam.quaternion)' in page and 'if(FK.up) off.add(_upv); if(FK.dn) off.sub(_upv);' in page,
       "Space/Ctrl up-down is not camera-relative (must move along the camera up axis like WASD, not world-Y)")
-check('function _spinRing(' in page and 'HL.rings.push(' in page and 'material.rotation=' in page,
-      "the spinning FOCUS ring is gone (replaces the glow on the selected element)")
+check('function _focRing(' in page and 'HL.rings.push(' in page and 'material.rotation=t*0.0026' in page,
+      "the configurable focus ring is gone (replaces the glow on the selected element)")
 check('flztog' in page and '__uniFleetToggle(hs.ent||"*"' in page,
       "the ZONE column headers are not click-to-toggle (bulk zone show from the fleet)")
 check('n.ent&&EX[n.ent]!=null?{x:EX[n.ent]' in page,
