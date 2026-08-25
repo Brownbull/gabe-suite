@@ -117,6 +117,47 @@ assert OLD_TRUST in text
 text = text.replace(OLD_TRUST,
   'kv(null,"kind", ({fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor"}[l.rel]) || (l.proven?"structural join":"inferred floor"))', 1)
 
+# ── CARD ASSET THUMBNAILS (operator): the ACTUAL 3D GLB ship/sat the graph draws, rendered inline in the
+#    panel sections (Usage→sat · Tests→corpus ship · Journeys→test-chip · Payload→cargo). Uses the SAME shared
+#    palR renderer as the legend, into a separate __uniCardCells list pruned on every panel rebuild (no leak).
+_LEGTHUMB_TAIL = 'var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height}; PAL_CELLS.push(entry); LEG_CELLS.push(entry); }'
+assert _LEGTHUMB_TAIL in text, "legThumb tail anchor missing — cannot add the card asset-thumbnail helper"
+_ASSET_HELPER = _LEGTHUMB_TAIL + '''
+window.__uniCardCells=[];
+window.__uniCardPrune=function(){ if(!window.__uniCardCells.length) return; var drop=window.__uniCardCells; PAL_CELLS=PAL_CELLS.filter(function(c){ return drop.indexOf(c)<0; }); window.__uniCardCells=[]; };
+window.__uniAssetThumb=function(buildFn, title){ var cv=document.createElement("canvas"); cv.width=46; cv.height=36; cv.className="asetthumb"; if(title) cv.title=title;
+  try{ var raw=buildFn(); if(raw){ var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
+    var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
+    var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.9));
+    var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
+    var cam=new T.PerspectiveCamera(45, cv.width/cv.height, 0.1, 1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+    var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height};
+    PAL_CELLS.push(entry); window.__uniCardCells.push(entry); } }catch(e){}
+  return cv; };
+window.__uniAssets={
+  sat:function(){ return (typeof makeSat==="function")?makeSat():null; },
+  ship:function(corpus){ return (typeof teamShip==="function")?teamShip(defModel(({api:"api",web:"web",e2e:"e2e"}[corpus]||"api")), 0x22c55e, 1):null; },
+  testchip:function(){ return (typeof teamShip==="function")?teamShip(INTC.testship, 0x22c55e, 1):null; },
+  cargo:function(){ return (typeof teamShip==="function")?teamShip(INTC.shuttle, 0x38bdf8, 1):null; },
+  god:function(){ return (typeof teamShip==="function")?teamShip(atkModel("god"), 0xef4444, 1):null; },
+  ung:function(){ return (typeof teamShip==="function")?teamShip(atkModel("ung"), 0xef4444, 1):null; } };'''
+text = text.replace(_LEGTHUMB_TAIL, _ASSET_HELPER, 1)
+
+# Usage section (spike-base) → the SATELLITE asset thumbnail (fan-in = orbiting satellites)
+_USAGE_OLD = ('  function usage(n,breakdown){ return E("div",{class:"sec"}, sechd("merge","Usage",n,false,'
+  '{icon:"info",text:"IN-DEGREE — how many elements depend on this one. Break it and this many are affected.",cls:"info"}),')
+assert _USAGE_OLD in text, "usage() anchor missing — cannot add the satellite thumbnail"
+_USAGE_NEW = ('  function usage(n,breakdown){ var _uhd=sechd("merge","Usage",n,false,'
+  '{icon:"info",text:"IN-DEGREE — how many elements depend on this one. Break it and this many are affected. In the graph: N satellites orbit the node.",cls:"info"});'
+  ' try{ if(n>0 && window.__uniAssetThumb) _uhd.append(window.__uniAssetThumb(function(){ return window.__uniAssets.sat(); }, "satellites \\u2014 one per caller (fan-in)")); }catch(_e){}'
+  ' return E("div",{class:"sec"}, _uhd,')
+text = text.replace(_USAGE_OLD, _USAGE_NEW, 1)
+
+# prune the card asset-thumbnail cells on every panel rebuild (no WebGL leak across selections)
+for _clr in ['function showPanel(n){ var K=n.K;', 'function showLinkPanel(l){']:
+    assert _clr in text, "panel builder anchor missing: " + _clr
+    text = text.replace(_clr, _clr + ' try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}', 1)
+
 # ── FLEET TRANSIT (operator): tie the traveling CARGO/TEST-CHIP assets to the wire's data (cargo ∝ l.payload;
 #    test chip ↔ l.proven; ships fly cross-entity wires only). Inserted BEFORE the Trust section in __link. ──
 _TRUST_ANCHOR = 'E("div",{class:"sec"}, sechd("info","Trust"),'

@@ -25,7 +25,10 @@
         if(fs.length){ w.append(E("div",{class:"sublbl",style:"margin-top:7px"}, icoEl("file"), "file-coverage · "+fs.length+" (reaches it, names no case)"));
           fs.forEach(function(f){ w.append(fileCredit(f)); }); }
         return w; }); });
-    return tabbed("test","Tests", groups, {showCount:true, ok:okAll}); }
+    var _ts=tabbed("test","Tests", groups, {showCount:true, ok:okAll});
+    try{ var _tshd=_ts.querySelector(".sechd"), _corp=Object.keys(corp)[0]||"api";
+      _hdAsset(_tshd, function(){ return window.__uniAssets.ship(_corp); }, "defence fleet — a green ship per test"); }catch(e){}
+    return _ts; }
   /* Journeys — cross-entity test membership, live from det.test_journeys (field is j.entities). */
   function entHue(s){ var h=0; s=String(s||""); for(var i=0;i<s.length;i++) h=(h*31+s.charCodeAt(i))>>>0; return h%360; }
   /* faces = one per REAL entity the test spans (deduped, home marked). NOT synthetic component identities —
@@ -44,11 +47,16 @@
     journeys.forEach(function(j){ body.append(E("div",{class:"jmeta",title:"select this journey (navigation coming)"},
       E("span",{class:"jcid"+(/^C\d/.test(j.cid)?"":" noc")}, j.cid), E("span",{class:"corp"}, j.corpus), E("span",{class:"ncomp"}, (j.comp||0)+" comp")));
       body.append(journeyFaces(home, j.entities)); });
-    return E("div",{class:"sec"}, sechd("journey","Journeys", journeys.length+(moreN?"+"+moreN:""), false, tip), body); }
+    var jhd=sechd("journey","Journeys", journeys.length+(moreN?"+"+moreN:""), false, tip);
+    _hdAsset(jhd, function(){ return window.__uniAssets.testchip(); }, "test chip — the graph asset that flies cross-entity tests");
+    return E("div",{class:"sec"}, jhd, body); }
   /* Payload — endpoint response contract field-count, live from det.payload {n,schema}. */
   function payloadSec(det){ var p=det.payload; if(!p) return null;
-    return E("div",{class:"sec"}, sechd("down","Payload", p.n, false, {icon:"info",cls:"info",text:"The RESPONSE contract's field-count (det.payload — the resp schema). The cargo shuttle's size scales with it in the graph."}),
-      E("div",{class:"sublbl"}, icoEl("table"), p.n+" field"+(p.n===1?"":"s")+" ferried · → "+p.schema+" (response)")); }
+    var hd=sechd("down","Payload", p.n, false, {icon:"info",cls:"info",text:"The RESPONSE contract's field-count (det.payload — the resp schema). The cargo shuttle's size scales with it in the graph."});
+    _hdAsset(hd, function(){ return window.__uniAssets.cargo(); }, "cargo shuttle — the graph asset for the payload");
+    return E("div",{class:"sec"}, hd, E("div",{class:"sublbl"}, icoEl("table"), p.n+" field"+(p.n===1?"":"s")+" ferried · → "+p.schema+" (response)")); }
+  /* append the ACTUAL 3D graph asset (live thumbnail) to a section header, right-aligned (operator) */
+  function _hdAsset(hd, buildFn, title){ try{ if(hd && window.__uniAssetThumb) hd.append(window.__uniAssetThumb(buildFn, title)); }catch(e){} return hd; }
   /* live connections — grouped from the REAL edges this node touches (honest per-node, not toy). */
   function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests"},
       I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in"};
@@ -398,5 +406,5 @@
     if(!rows.length) return null;
     return E("div",{class:"sec"}, sechd("layers","Fleet assets"), rows, E("div",{class:"sublbl",style:"margin-top:4px"}, "the ships & zones drawn around this planet")); }
   Object.keys(C).forEach(function(k){ var base=C[k];
-    C[k]=function(n){ var out=base(n)||[]; var _as=assetsSec(n); if(_as) out.push(_as); out.push(aboveSec(n)); return out; }; });
+    C[k]=function(n){ var out=base(n)||[]; out.push(aboveSec(n)); return out; }; });   // Fleet-assets TEXT section retired — the assets now render as live 3D thumbnails inline on Usage/Tests/Journeys/Payload (operator)
   window.__uniPanelAll=panelAll; window.__uniPanelEnt=panelEnt; window.__uniPanelClu=panelClu; window.__uniSelNode=_selNode;   // batch 49: the search selects nodes through the ONE select path

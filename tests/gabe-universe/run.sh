@@ -431,9 +431,13 @@ check('if(CFG.othRing && n.ent!=null && _selEnts[n.ent]) _add(n, _ringSprite(n, 
       "the non-selected dim ring must be STATIC and confined to the selected element's entity (outer entities glow-only)")
 check('if(!d0 && !_nodeVisibleFn(n)) return;' in page,
       "the highlight neighborhood glow must NOT draw on HIDDEN nodes (colored-halo noise vs the clickable ghost stars, operator)")
-# fleet ASSETS in the element card + TRANSIT correspondence in the wire card (operator)
-check('function assetsSec(n)' in page and 'sechd("layers","Fleet assets")' in page and 'var _as=assetsSec(n); if(_as) out.push(_as);' in page and 'kv("shield","defence"' in page and 'kv("target","satellites"' in page,
-      "the element card must carry a Fleet-assets section (defence/attack/conflict/satellites from n.m)")
+# fleet ASSETS = live 3D thumbnails inline on the sections (operator: the ACTUAL graph asset, not a text summary)
+check('window.__uniAssetThumb=function' in page and 'window.__uniCardPrune=function' in page and 'window.__uniCardCells.push(entry)' in page and 'window.__uniAssets={' in page,
+      "the card asset-thumbnail machinery (shared palR renderer, pruned card cells) must be present")
+check('_hdAsset(jhd, function(){ return window.__uniAssets.testchip(); }' in page and 'window.__uniAssets.cargo()' in page and 'window.__uniAssets.ship(_corp)' in page and 'window.__uniAssets.sat()' in page,
+      "the live asset thumbnails must attach to Usage(sat)/Tests(ship)/Journeys(test-chip)/Payload(cargo)")
+check('try{ if(window.__uniCardPrune) __uniCardPrune(); }catch(_cp){}' in page and 'var _as=assetsSec(n)' not in page,
+      "panel rebuilds must PRUNE the card thumbnail cells (no WebGL leak); the Fleet-assets TEXT section is retired")
 check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,
       "the wire card must carry a Transit section tying cargo↔payload + test-chip↔proven (cross-entity only)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals

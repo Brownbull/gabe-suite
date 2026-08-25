@@ -467,6 +467,11 @@
   /* the focus/highlight controls retired to fixed defaults (operator); the four surviving on/off
      toggles live in the entity pane as .hltog buttons (styled by the shared .itog rule). */
   .hltog{ min-width:30px; }
+  /* card section ASSET THUMBNAIL (operator): the live 3D graph asset (ship/sat/cargo) drawn inline in the
+     section header, right-aligned — the SAME asset the graph draws for that dimension. */
+  canvas.asetthumb{ margin-left:auto; width:46px; height:36px; flex:0 0 auto; border-radius:6px;
+    background:linear-gradient(180deg,rgba(120,140,180,0.10),rgba(120,140,180,0.03)); }
+  .sechd canvas.asetthumb{ margin-top:-3px; margin-bottom:-3px; }
   /* cross-boundary connection-stub hover label (operator): the hidden target's name + where it lives */
   .unistubtip{ position:fixed; z-index:60; pointer-events:none; max-width:280px; padding:5px 8px;
     background:rgba(14,21,36,0.94); border:1px solid var(--accent); border-left-width:3px; border-radius:5px;
