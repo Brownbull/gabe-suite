@@ -674,6 +674,7 @@ window.__uniHLReapply=function(){ if(!HL.on) return;                     // halo
   var _selEnts={}; if(HL.origin) HL.origin.forEach(function(id){ var o=NIDS[id]; if(o&&o.ent!=null) _selEnts[o.ent]=1; });   // entities of the selected element(s) — the dim ring stays inside them
   nodes.forEach(function(n){ if(HL.set[n.id]===undefined) return;
     var d0=HL.set[n.id]===0;
+    if(!d0 && !_nodeVisibleFn(n)) return;                                  // a HIDDEN neighbour draws NO glow — its colored halo was confusing noise vs the clickable ghost stars (operator); connection ghosts already mark hidden connected nodes
     if(HL.mode!=="glow" && !d0) return;                                    // FOCUS mode: only the SELECTED element(s) carry markers
     if(d0){                                                                // SELECTED — ring + optional glow (both layers, operator)
       if(CFG.focRing!==false) _add(n, _ringSprite(n, 0.95), true);

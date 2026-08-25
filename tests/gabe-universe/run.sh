@@ -429,6 +429,8 @@ check('dashN=(pat==="dashed")?Math.max(10, Math.round(sz*0.8))' in page and 'Mat
       "the dashed ring must scale its resolution + dash COUNT with the sphere size (big spheres pixelated)")
 check('if(CFG.othRing && n.ent!=null && _selEnts[n.ent]) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);' in page and 'var _selEnts={};' in page,
       "the non-selected dim ring must be STATIC and confined to the selected element's entity (outer entities glow-only)")
+check('if(!d0 && !_nodeVisibleFn(n)) return;' in page,
+      "the highlight neighborhood glow must NOT draw on HIDDEN nodes (colored-halo noise vs the clickable ghost stars, operator)")
 check('pulseMode:"const"' in page and 'pulseAmp:0.08' in page and 'CFG.pulseMode==="const"' in page and 'bs+amp*18*s2' in page and 'srow("p.amp"' not in page,
       "the pulse must be a fixed const default (amp 0.08) + engine, slider retired")
 check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,
