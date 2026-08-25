@@ -413,8 +413,10 @@ check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un
 
 # ── 10q. batch 17: community default · ring layout · wider spacing ──
 # ── operator polish (2026-08-25): method badge · spinning focus ring · zone header toggle · trail focus ──
-check('function methodBadge(' in page and 'n.kind==="endpoint" && n.m && n.m.method' in page and 'grp.add(methodBadge(' in page,
-      "the endpoint METHOD badge is gone (coloured HTTP-method chip at the icon)")
+check('function methodBadge(' in page and 'grp.add(methodBadge(' in page and 'c.arc(64,64,58' in page and "m==='DELETE'" in page,
+      "the endpoint METHOD badge (coloured circle + method GLYPH, stacked at the icon corner) is gone")
+check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
+      "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('function _spinRing(' in page and 'HL.rings.push(' in page and 'material.rotation=' in page,
       "the spinning FOCUS ring is gone (replaces the glow on the selected element)")
 check('flztog' in page and '__uniFleetToggle(hs.ent||"*"' in page,

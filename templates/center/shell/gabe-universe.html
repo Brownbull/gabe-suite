@@ -1297,7 +1297,7 @@ function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mas
 /* SPACE WAR: the primitive half-shell zones (warZones/SHELLZ/shellPt + the warDist/shellH/concave/lift sliders)
    were SUPERSEDED by the ELEMENTS-LAB real fleets (fleetZones) — removed. The war-zone placement law now lives in
    the deployment config (DEPC): def +X · atk −X · conflict +Y · sats −Y. */
-function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=128; cv.height=64; var c=cv.getContext('2d'); var w=cv.width,h=cv.height,r=16; c.fillStyle=col; c.beginPath(); c.moveTo(r,0); c.arcTo(w,0,w,h,r); c.arcTo(w,h,0,h,r); c.arcTo(0,h,0,0,r); c.arcTo(0,0,w,0,r); c.closePath(); c.fill(); c.font='800 34px '+curFont(); c.fillStyle='#0b0f18'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(m,w/2,h/2+1); var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false, depthTest:false })); var wd=Math.max(5.5, 2.6+m.length*1.4); s.scale.set(wd,4.2,1); s.position.set(br*0.62+wd*0.42, -br*0.5, 3); s.raycast=function(){}; return s; }
+function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); c.strokeStyle='#0b0f18'; c.fillStyle='#0b0f18'; c.lineWidth=13; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); if(m==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); } else if(m==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); } else if(m==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); } else if(m==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); } else if(m==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); } else { c.arc(64,64,15,0,6.2832); } c.stroke(); var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false, depthTest:false })); s.scale.set(6.5,6.5,1); s.position.set(5,-5,4); s.raycast=function(){}; return s; }
 function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   var ic, is=ENC.iconSize;
   if(billTex[n.kind]){ ic=billboardMesh(n.kind,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
@@ -2457,7 +2457,7 @@ window.__uniFleetToggle=function(ent, sub, col){ try{
   var C=_FCOLS.filter(function(c){ return c.k===col; })[0];
   if(sub!=null && ent!=="*"){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
     var was=sv[col]; sv[col]=sv[col]?0:1;
-    if(col==="show" && !was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent].show) UNIVIS.ent[ent].show=1;   // SHOW: a cluster turned ON re-enables its entity — the LAST click makes it appear (explore-one-cluster)
+    if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;   // ANY column: a cluster turned ON re-enables its entity for THAT column — the last click makes it appear (operator: clusters behave like the entity column)
   }
   else if(ent==="*"||ent==="*backend"||ent==="*frontend"){
     var sel=(ent==="*backend")?_ents.filter(function(e){return !__uniIsFeEnt(e);})

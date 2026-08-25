@@ -1121,7 +1121,7 @@ window.__uniFleetToggle=function(ent, sub, col){ try{
   var C=_FCOLS.filter(function(c){ return c.k===col; })[0];
   if(sub!=null && ent!=="*"){ var key=ent+"|"+sub, sv=UNIVIS.sub[key]||(UNIVIS.sub[key]=Object.assign({},_VISDEF));
     var was=sv[col]; sv[col]=sv[col]?0:1;
-    if(col==="show" && !was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent].show) UNIVIS.ent[ent].show=1;   // SHOW: a cluster turned ON re-enables its entity — the LAST click makes it appear (explore-one-cluster)
+    if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;   // ANY column: a cluster turned ON re-enables its entity for THAT column — the last click makes it appear (operator: clusters behave like the entity column)
   }
   else if(ent==="*"||ent==="*backend"||ent==="*frontend"){
     var sel=(ent==="*backend")?_ents.filter(function(e){return !__uniIsFeEnt(e);})
