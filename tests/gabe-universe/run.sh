@@ -336,7 +336,7 @@ check('(CFG.zCfl&&visN(n).zCfl)? cflSpec(' in page and 'CFG.zSat&&visN(n).zSat) 
 check('var def=CFG.zDef? placeFleet(' not in page, "REGRESSION: a fleet-zone gate ignores the fleet panel")
 check('k:"zDef"' in page and 'k:"routes"' in page and 'icon:"truck"' in page,
       "zones/routes matrix columns missing")
-check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
+check('__uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddBadgeCfg) __uniAddBadgeCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();' in page,
       "the URL-preset path rebuilds the config without re-syncing the fleet masters-dim")
 # batch 11-C: the sim feed + presets row (the in-flight seam must exist before that batch, or it debugs a phantom)
 check('<script src="./sim.data.js"></script>' in page,
@@ -417,6 +417,8 @@ check('function methodBadge(' in page and 'grp.add(methodBadge(' in page and 'c.
       "the endpoint METHOD badge (coloured circle + method GLYPH, stacked at the icon corner) is gone")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
+check('__uniAddBadgeCfg=function' in page and 'id="badgecfg"' in page and '_mbRow("opacity","mbOp")' in page and 'CFG.mbOp!=null' in page and 'id="mbcopy"' in page,
+      "the API-method BADGE config (opacity/size/x/y sliders + copy) is gone from #cfg")
 check('function _spinRing(' in page and 'HL.rings.push(' in page and 'material.rotation=' in page,
       "the spinning FOCUS ring is gone (replaces the glow on the selected element)")
 check('flztog' in page and '__uniFleetToggle(hs.ent||"*"' in page,

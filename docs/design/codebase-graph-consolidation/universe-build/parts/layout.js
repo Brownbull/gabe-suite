@@ -1542,6 +1542,22 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
     var ln=new T.Line(geo, mat); ln.userData.kind="bundle"; ln.userData.__bundle=by[key]; grp.add(ln); });
 };
 
+function _mbRow(label, key){ var mn=(key==="mbOp")?0:(key==="mbSize")?2:-16, mx=(key==="mbOp")?1:16, st=(key==="mbOp")?0.05:0.5;
+  return '<div class="mbrow"><span class="rlbl mblbl">'+label+'</span><input type="range" class="rng mbrng" data-mb="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="mbval" data-mbv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; }
+window.__uniAddBadgeCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
+  if(!body||document.getElementById("badgecfg")) return;
+  if(CFG.mbOp==null) CFG.mbOp=1; if(CFG.mbSize==null) CFG.mbSize=6.5; if(CFG.mbX==null) CFG.mbX=5; if(CFG.mbY==null) CFG.mbY=-5;
+  var g=document.createElement("div"); g.className="grp"; g.id="badgecfg";
+  g.innerHTML='<div class="grplbl" title="the HTTP-method badge on endpoint icons — transparency · size · offset from the icon center">API METHOD BADGE<button class="mbcopy" id="mbcopy" title="copy this badge configuration as JSON">&#10696;</button></div>'
+    +_mbRow("opacity","mbOp")+_mbRow("size","mbSize")+_mbRow("x offset","mbX")+_mbRow("y offset","mbY");
+  body.appendChild(g);
+  [].forEach.call(g.querySelectorAll("input.mbrng"), function(inp){ inp.addEventListener("input", function(){
+    var k=inp.getAttribute("data-mb"); CFG[k]=+inp.value; var vv=g.querySelector('[data-mbv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2);
+    if(window.rebuildNodes) try{ rebuildNodes(); }catch(e){} }); });
+  var cp=g.querySelector("#mbcopy"); if(cp) cp.onclick=function(e){ e.stopPropagation();
+    var txt=JSON.stringify({mbOp:CFG.mbOp, mbSize:CFG.mbSize, mbX:CFG.mbX, mbY:CFG.mbY}, null, 2);
+    window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(_e){}
+    cp.innerHTML="&#10003;"; setTimeout(function(){ cp.innerHTML="&#10696;"; }, 1000); }; };
 window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("wireview")) return;
   var g=document.createElement("div"); g.className="grp"; g.id="wireview";
