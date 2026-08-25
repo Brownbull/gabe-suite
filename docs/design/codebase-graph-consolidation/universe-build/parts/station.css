@@ -467,3 +467,10 @@
   /* the focus/highlight controls retired to fixed defaults (operator); the four surviving on/off
      toggles live in the entity pane as .hltog buttons (styled by the shared .itog rule). */
   .hltog{ min-width:30px; }
+  /* cross-boundary connection-stub hover label (operator): the hidden target's name + where it lives */
+  .unistubtip{ position:fixed; z-index:60; pointer-events:none; max-width:280px; padding:5px 8px;
+    background:rgba(14,21,36,0.94); border:1px solid var(--accent); border-left-width:3px; border-radius:5px;
+    font:500 11px/1.35 var(--font-mono); color:var(--ink); box-shadow:0 4px 16px rgba(0,0,0,0.45); }
+  .unistubtip .ustname{ display:flex; align-items:center; gap:5px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
+  .unistubtip .ustname svg{ flex:0 0 auto; }
+  .unistubtip .ustmeta{ display:block; margin-top:2px; font-size:9.5px; color:var(--muted); text-transform:none; }

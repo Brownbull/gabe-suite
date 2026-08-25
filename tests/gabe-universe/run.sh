@@ -433,6 +433,13 @@ check('pulseMode:"const"' in page and 'pulseAmp:0.08' in page and 'CFG.pulseMode
       "the pulse must be a fixed const default (amp 0.08) + engine, slider retired")
 check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,
       "the configurable focus-ring engine (pattern texture · size mode · animation · non-selected marker) is gone")
+# connection GHOSTS (operator: hidden connected nodes shown as faint stars AT their own position, no lines)
+check('window.__uniDrawStubs=function' in page and 'if(window.__uniDrawStubs) __uniDrawStubs(connGroup)' in page and 'var _fleetShown=function' in page and 'var _kindShown=function' in page and '!_fleetShown(t) && _kindShown(t)' in page and 'glowSprite(col, 22, 0.45)' in page and '!ch.isSprite' in page,
+      "connection GHOSTS: one faint star per hidden connected node, gated fleet-hide-not-kind, shared-sprite-geometry never disposed")
+check('window.__uniReveal=function' in page and 'if(gbest && window.__uniReveal) __uniReveal(gbest.st.hid)' in page and 'cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; })' in page,
+      "clicking a ghost star (AFTER the hull pick) must REVEAL the hidden target in place (force-on entity+cluster)")
+check('window.__uniStubHoverInit=function' in page and 'unistubtip' in page and 'click to reveal' in page and 'svgInline(hn.kind' in page and 'rc.ray.distanceToPoint' in page,
+      "hovering a ghost star must show its ICON + name (unistubtip, point-picked)")
 check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,
       "the focus ring does not transport to the selected TRAIL step")
 check('the Zones config section is GONE' in page and 'grplbl zoneshd' not in page,

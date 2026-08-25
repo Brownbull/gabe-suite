@@ -391,12 +391,89 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
       if(C0.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;      // behind the camera
       var score=(c.level==="sub"?0:1)*1e6 + rad;
       if(!best || score<best.score) best={score:score, c:c}; });
-    if(!best) return;
-    if(best.c.level==="sub" && window.__uniPanelClu) __uniPanelClu(best.c.ekey, best.c.skey);
-    else if(window.__uniPanelEnt) __uniPanelEnt(best.c.ekey);
+    if(best){ if(best.c.level==="sub" && window.__uniPanelClu) __uniPanelClu(best.c.ekey, best.c.skey);
+      else if(window.__uniPanelEnt) __uniPanelEnt(best.c.ekey); return; }
+    /* no hull under the cursor → a CONNECTION GHOST (a hidden connected node shown as a faint star at
+       its OWN position) reveals its cluster+entity IN PLACE (operator: no new links, no reposition).
+       Ghost-pick is SUBORDINATE to the hull pick — a click resolving to a cluster never reveals. */
+    if(window.__uniStubs && window.__uniStubs.length){ var gbest=null;
+      window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
+        if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;     // behind the camera
+        var d=rc.ray.distanceToPoint(P); if(d<13 && (!gbest||d<gbest.d)) gbest={d:d, st:st}; });
+      if(gbest && window.__uniReveal) __uniReveal(gbest.st.hid); }
   }catch(e){} };
+/* ── CONNECTION GHOSTS (operator): a hidden node still CONNECTED to a rendered node is shown as a faint
+   glow STAR at its OWN position (where it sits in its cluster/entity) — NO line to the selection, no
+   reposition. Hover → the node's icon + name (a preview, "as if selected"); click → reveal its cluster
+   + entity IN PLACE (__uniReveal un-hides the real node, already at that spot). The stars live in their
+   OWN scene group (never connGroup → wire counts untouched) and are point-picked manually. ── */
+window.__uniStubs=[];   // [{p:{x,y,z}, hid, col}] — one ghost per hidden connected node, for the manual pick
+window.__uniDrawStubs=function(){ window.__uniStubs=[]; try{
+  if(typeof Graph==="undefined"||!Graph||!Graph.scene) return;
+  var grp=window.__uniStubGroup;
+  if(!grp){ grp=window.__uniStubGroup=new T.Group(); }
+  try{ var _sc=Graph.scene(); if(_sc && grp.parent!==_sc) _sc.add(grp); }catch(e){}   // (re)attach — survive a scene reset
+  while(grp.children.length){ var ch=grp.children.pop(); if(ch.geometry&&ch.geometry.dispose&&!ch.isSprite) ch.geometry.dispose(); if(ch.material&&ch.material.dispose) ch.material.dispose(); grp.remove(ch); }   // NEVER dispose the SHARED sprite geometry (review: the gh singleton)
+  if(!CFG.conns || typeof links==="undefined" || typeof _npos==="undefined") return;
+  /* a ghost target is hidden by the FLEET (show∧planets) but NOT by kind (types-off / solo-helper) —
+     __uniReveal only clears fleet flags, so a kind-hidden node could never surface (review). The visible
+     end must be actually RENDERED (_nodeVisibleFn, focus included — review: focus-hidden ≠ a source). */
+  var _fleetShown=function(n){ if(!n||typeof UNIVIS==="undefined") return false;
+    var o=UNIVIS.node[n.id]; if(o) return !!(o.show&&o.planets);
+    var ev=visEnt(n.ent), sv=(n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
+    if(sv) return !!(ev.show&&sv.show&&ev.planets&&sv.planets);
+    return !!(ev.show&&ev.planets); };
+  var _kindShown=function(n){ if(!n) return false;
+    var st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));
+    if(st==="off") return false; if(st==="critical" && n.__solo) return false; return true; };
+  var seen={};
+  links.forEach(function(l){ var sid=lid(l.source), tid=lid(l.target); var s=NIDS[sid], t=NIDS[tid]; if(!s||!t) return;
+    if(window.__uniRelHide && __uniRelHide(l)) return;               // respect the R-lab hides
+    var H=null, hidId=null;
+    if(_nodeVisibleFn(s) && !_fleetShown(t) && _kindShown(t)){ H=t; hidId=tid; }        // s rendered, t a revealable fleet-hidden ghost
+    else if(_nodeVisibleFn(t) && !_fleetShown(s) && _kindShown(s)){ H=s; hidId=sid; }   // t rendered, s the ghost
+    else return;
+    if(seen[hidId]) return; seen[hidId]=1;                          // ONE star per hidden node (operator)
+    var p=_npos[hidId]||((H.ent!=null && typeof EX!=="undefined" && EX[H.ent]!=null) ? {x:EX[H.ent],y:EY[H.ent]||0,z:EZ[H.ent]||0} : null); if(!p) return;
+    var col=(H&&H.col)||"#8590a8";
+    var star=glowSprite(col, 22, 0.45); star.position.set(p.x,p.y,p.z); star.raycast=function(){}; grp.add(star);   // faint glow AT the hidden node's own spot — no line
+    window.__uniStubs.push({ p:{x:p.x,y:p.y,z:p.z}, hid:hidId, col:col }); }); }catch(e){} };
+window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var ent=h.ent, sub=h.sub, cols=["show","planets","wires"];
+  if(typeof UNIVIS==="undefined"||typeof _VISDEF==="undefined") return;
+  if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
+  cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; });               // force the hidden entity ON for show + planets + wires
+  if(sub!=null){ var k=ent+"|"+sub; if(!UNIVIS.sub[k]) UNIVIS.sub[k]=Object.assign({},_VISDEF); cols.forEach(function(c){ UNIVIS.sub[k][c]=1; }); }   // and its cluster
+  if(typeof HL!=="undefined" && HL.on && HL.mode==="focus" && HL.rest==="hide" && HL.set && HL.set[hidId]===undefined){ HL.set[hidId]=(HL.depth||1); }   // focus-hide would still cull the revealed node → exempt it (review)
+  var _gh=window.__uniGhostHov; if(_gh) _gh.visible=false;          // drop the lingering hover preview the instant we reveal (review)
+  var _tip=document.getElementById("unistubtip"); if(_tip) _tip.style.display="none";
+  var _g=document.getElementById("g"); if(_g && _g.style.cursor==="pointer") _g.style.cursor="";
+  try{ applyVis("all"); }catch(e){} try{ if(window.__uniFleetSync) __uniFleetSync(); }catch(e){} try{ updateConnectors(); }catch(e){} }catch(e){} };
+window.__uniStubHoverInit=function(){ var g=document.getElementById("g"); if(!g || g.__stubHov) return; g.__stubHov=true;
+  var tip=document.getElementById("unistubtip");
+  if(!tip){ tip=document.createElement("div"); tip.id="unistubtip"; tip.className="unistubtip"; tip.style.display="none"; document.body.appendChild(tip); }
+  var _last=0;
+  var _clear=function(){ if(tip.style.display!=="none") tip.style.display="none"; if(g.style.cursor==="pointer") g.style.cursor=""; if(window.__uniGhostHov) window.__uniGhostHov.visible=false; };
+  g.addEventListener("pointermove", function(ev){
+    if(ev.buttons){ _clear(); return; }                             // suppress + reset cursor while dragging (review: cursor stuck)
+    var now=(window.performance&&performance.now)?performance.now():+new Date(); if(now-_last<45) return; _last=now;   // throttle the raycast
+    if(!window.__uniStubs || !window.__uniStubs.length){ _clear(); return; }
+    try{ var r=g.getBoundingClientRect(), mx=((ev.clientX-r.left)/r.width)*2-1, my=-((ev.clientY-r.top)/r.height)*2+1;
+      var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, Graph.camera());
+      var best=null; window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
+        if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;   // behind the camera
+        var d=rc.ray.distanceToPoint(P); if(d<13 && (!best||d<best.d)) best={d:d, st:st, P:P}; });
+      if(best){ var hn=NIDS[best.st.hid]||{}, ent=hn.ent||"?", sub=(hn.sub!=null?hn.sub:null);
+        var ico=(typeof svgInline==="function" && hn.kind)?svgInline(hn.kind, (typeof KINDCOL!=="undefined"&&KINDCOL[hn.kind])||best.st.col, 13):"";   // the STAR's icon (operator: icon + name)
+        tip.innerHTML='<span class="ustname">'+ico+'<b>'+(hn.label||best.st.hid)+'</b></span><span class="ustmeta">'+ent+(sub!=null?(" · "+sub):"")+' · hidden — click to reveal</span>';
+        tip.style.left=(ev.clientX+14)+"px"; tip.style.top=(ev.clientY+12)+"px"; tip.style.borderColor=best.st.col; tip.style.display="block"; g.style.cursor="pointer";
+        try{ if(!window.__uniGhostHov){ window.__uniGhostHov=glowSprite("#ffffff", 40, 0.95); window.__uniGhostHov.raycast=function(){}; Graph.scene().add(window.__uniGhostHov); }   // brighten the star — "as if selected but not actively selected"
+          window.__uniGhostHov.material.color.set(best.st.col); window.__uniGhostHov.position.copy(best.P); window.__uniGhostHov.visible=true; }catch(_e){} }
+      else { _clear(); }
+    }catch(e){ tip.style.display="none"; } });
+  g.addEventListener("pointerleave", function(){ _clear(); }); };
 function __uniSetupOrbit(){ var g=document.getElementById("g"); if(!g || g.__orbitBound) return; g.__orbitBound=true; var drag=null;
   try{ Graph.onBackgroundClick(window.__uniBgClick); }catch(e){}   // empty-space clicks pick the hull under the cursor
+  try{ if(window.__uniStubHoverInit) __uniStubHoverInit(); }catch(e){}   // cross-boundary stub hover labels (same #g)
   /* the rig-drag starter — every button routes through here (LEFT=the chosen scheme ·
      RIGHT=tumble · MIDDLE=pan); the starter raycasts the pivot P at the zoom depth and
      snaps the dolly target on-axis so the wheel keeps agreeing with the drag. */

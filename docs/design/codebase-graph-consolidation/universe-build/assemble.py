@@ -543,6 +543,12 @@ OLD_BOOT2 = 'buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(wi
 assert OLD_BOOT2 in text, "boot anchor missing (topbar wiring)"
 text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWireTopbar(); if(window.__uniBuildCtrl) __uniBuildCtrl(); setTimeout(function(){ if(window.__uniPanelAll) __uniPanelAll(); }, 0);', 1)
 
+# CROSS-BOUNDARY STUBS (operator): draw outward stubs for wires whose far end is fleet-hidden,
+# right after the bundle pass in updateConnectors. One targeted append on the final __uniDrawBundles line.
+assert 'if(window.__uniDrawBundles) __uniDrawBundles(connGroup);' in text, "the __uniDrawBundles hook is missing — stub patch anchor gone"
+text = text.replace('if(window.__uniDrawBundles) __uniDrawBundles(connGroup);',
+  'if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);', 1)
+
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")
 print("wrote gabe-universe.html:", len("\n".join(out)), "bytes,", len(out), "lines")
