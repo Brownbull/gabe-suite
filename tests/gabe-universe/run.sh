@@ -421,6 +421,12 @@ check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.
 check("Temporary Config</span>" in page, "the top-right config panel must be renamed 'Temporary Config'")
 check('__uniAddFocusCfg=function' in page and 'id="focuscfg"' in page and 'srow("speed","focSpeed",0.05,4' in page and 'trow("ring","focRing")' in page and 'trow("glow","focGlow")' in page and 'trow("glow","othGlow")' in page and 'trow("ring","othRing")' in page and 'trow("const","focThickConst")' in page and 'row("pattern","focPat",["spinner","solid","dashed"])' in page and 'row("color","focColor"' not in page and 'class="focbtn focreset"' in page and 'class="focbtn foccopy"' in page,
       "the FOCUS RING config is wrong (need ring+glow layer toggles on both sections, speed 0.05, const toggle, spinner/solid/dashed, no color, restore+copy)")
+check('srow("falloff","focGlowFall"' in page and 'focGlowFall!=null?CFG.focGlowFall:0' in page,
+      "the FOCUS glow falloff slider is missing")
+check('dashN=(pat==="dashed")?Math.max(10, Math.round(sz*0.8))' in page and 'Math.round(sz/16)*128' in page and '_ringTex(typeof CFG!=="undefined"?CFG.focPat:null, thick, sz)' in page,
+      "the dashed ring must scale its resolution + dash COUNT with the sphere size (big spheres pixelated)")
+check('if(CFG.othRing) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);' in page,
+      "the non-selected dim ring must be STATIC (only the focus ring animates)")
 check('function _ringTex(' in page and 'function _ringSprite(' in page and 'function _glowFor(' in page and 'CFG.focAnim' in page,
       "the configurable focus-ring engine (pattern texture · size mode · animation · non-selected marker) is gone")
 check('WALK.mode==="trail" && HL.on){ HL.origin=[n.id]' in page,

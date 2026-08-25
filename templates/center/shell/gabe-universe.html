@@ -1904,11 +1904,15 @@ function _hlClearSprites(){ if(hlGroup){ while(hlGroup.children.length){ var s=h
 /* the FOCUS RING — configurable (operator): pattern (spinner/solid/dashed/dotted), colour,
    size mode (const/icon/sphere, always CENTRED), animation (spin/pulse/none). */
 var _ringTexCache={};
-function _ringTex(pat, thick){ pat=pat||"spinner"; thick=thick||4; var key=pat+"|"+thick; if(_ringTexCache[key]) return _ringTexCache[key];
-  var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d"); c.strokeStyle="#fff"; c.lineCap="round"; c.lineWidth=thick;
-  if(pat==="solid"){ c.beginPath(); c.arc(64,64,50,0,6.2832); c.stroke(); }
-  else if(pat==="dashed"){ c.setLineDash([15,11]); c.beginPath(); c.arc(64,64,50,0,6.2832); c.stroke(); }
-  else { c.beginPath(); c.arc(64,64,50,-Math.PI*0.5,Math.PI*1.15); c.stroke(); }   // spinner (gapped arc) — no "dotted" (operator)
+function _ringTex(pat, thick, sz){ pat=pat||"spinner"; thick=thick||4; sz=sz||22;
+  var res=Math.min(512, Math.max(128, Math.round(sz/16)*128));                    // texture res scales with the ring (bucketed 128..512) — big rings stop pixelating
+  var dashN=(pat==="dashed")?Math.max(10, Math.round(sz*0.8)):14;                 // dash COUNT scales with the sphere radius (operator: more, crisper dashes when big)
+  var key=pat+"|"+thick+"|"+res+"|"+dashN; if(_ringTexCache[key]) return _ringTexCache[key];
+  var cv=document.createElement("canvas"); cv.width=cv.height=res; var c=cv.getContext("2d"); var R=res*0.39, ctr=res/2, lw=thick*(res/128);
+  c.strokeStyle="#fff"; c.lineCap="round"; c.lineWidth=lw;
+  if(pat==="solid"){ c.beginPath(); c.arc(ctr,ctr,R,0,6.2832); c.stroke(); }
+  else if(pat==="dashed"){ var period=(2*Math.PI*R)/dashN; c.setLineDash([period*0.5, period*0.5]); c.beginPath(); c.arc(ctr,ctr,R,0,6.2832); c.stroke(); }
+  else { c.beginPath(); c.arc(ctr,ctr,R,-Math.PI*0.5,Math.PI*1.15); c.stroke(); }   // spinner (gapped arc)
   _ringTexCache[key]=new T.CanvasTexture(cv); return _ringTexCache[key]; }
 function _focSizeFor(n){ var m=(typeof CFG!=="undefined"&&CFG.focSize)||"const";
   if(m==="sphere"){ var br=(typeof massR==="function")?massR(n):8; return Math.max(16, br*2.4); } if(m==="icon") return 20; return 22; }
@@ -1918,12 +1922,11 @@ function _focSizeFor(n){ var m=(typeof CFG!=="undefined"&&CFG.focSize)||"const";
 function _ringSprite(n, opacity){ var sz=_focSizeFor(n);
   var thick=(typeof CFG!=="undefined"&&CFG.focThick!=null)?CFG.focThick:4;
   if(typeof CFG!=="undefined"&&CFG.focThickConst) thick=Math.max(0.5, Math.round(thick*22/Math.max(6,sz)*2)/2);   // constant on-screen stroke: inverse to the ring size
-  var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex(typeof CFG!=="undefined"?CFG.focPat:null, thick), color:new T.Color((n&&n.col)||"#9ecbff"), transparent:true, opacity:opacity, depthWrite:false, depthTest:false }));
+  var s=new T.Sprite(new T.SpriteMaterial({map:_ringTex(typeof CFG!=="undefined"?CFG.focPat:null, thick, sz), color:new T.Color((n&&n.col)||"#9ecbff"), transparent:true, opacity:opacity, depthWrite:false, depthTest:false }));
   s.scale.set(sz,sz,1); s.__baseSize=sz; return s; }
 /* the GLOW sprite — sphere-relative size, given radius/intensity, optional depth falloff from the origin */
-function _glowFor(n, rad, inten, useFall){ var br=(typeof massR==="function")?massR(n):8, depth=(HL.set&&HL.set[n.id])||1;
-  var fallK=(typeof CFG!=="undefined"&&CFG.glowFall!=null)?CFG.glowFall:0;
-  var fall=useFall?(1-fallK*Math.min(1,(depth-1)/Math.max(1,HL.depth))):1;
+function _glowFor(n, rad, inten, fallK){ var br=(typeof massR==="function")?massR(n):8, depth=(HL.set&&HL.set[n.id])||1;
+  var fall=(fallK>0)?(1-fallK*Math.min(1,Math.max(0,depth-1)/Math.max(1,HL.depth))):1;   // depth-0 (selected) never fades
   return glowSprite((n&&n.col)||"#9ecbff", Math.max(6, br*rad*fall), inten*fall); }
 var _hlPhase=0;
 (function _hlSpin(){ requestAnimationFrame(_hlSpin); if(!(HL.on && HL.rings && HL.rings.length)) return;
@@ -1942,10 +1945,10 @@ window.__uniHLReapply=function(){ if(!HL.on) return;                     // halo
     if(HL.mode!=="glow" && !d0) return;                                    // FOCUS mode: only the SELECTED element(s) carry markers
     if(d0){                                                                // SELECTED — ring + optional glow (both layers, operator)
       if(CFG.focRing!==false) _add(n, _ringSprite(n, 0.95), true);
-      if(CFG.focGlow) _add(n, _glowFor(n, (CFG.focGlowRad!=null?CFG.focGlowRad:2), (CFG.focGlowInt!=null?CFG.focGlowInt:0.5), false), false);
+      if(CFG.focGlow) _add(n, _glowFor(n, (CFG.focGlowRad!=null?CFG.focGlowRad:2), (CFG.focGlowInt!=null?CFG.focGlowInt:0.5), (CFG.focGlowFall!=null?CFG.focGlowFall:0)), false);
     } else {                                                               // NON-SELECTED — glow + optional DIM ring (both layers, operator)
-      if(CFG.othGlow!==false) _add(n, _glowFor(n, (CFG.glowRad!=null?CFG.glowRad:2), (CFG.glowInt!=null?CFG.glowInt:0.55), true), false);
-      if(CFG.othRing) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), true);
+      if(CFG.othGlow!==false) _add(n, _glowFor(n, (CFG.glowRad!=null?CFG.glowRad:2), (CFG.glowInt!=null?CFG.glowInt:0.55), (CFG.glowFall!=null?CFG.glowFall:0)), false);
+      if(CFG.othRing) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);   // STATIC — only the FOCUS ring animates (operator)
     } }); };
 window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
   hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
@@ -2949,11 +2952,11 @@ window.__uniBadges=[];
 })();
 window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbody")||document.getElementById("cfg");
   if(!body||document.getElementById("focuscfg")) return;
-  var DEF={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, focThick:1.5, focThickConst:false,
-            focGlow:false, focGlowRad:2, focGlowInt:0.5,
-            othGlow:true, glowRad:2.1, glowInt:0.3, glowFall:0.1, othRing:false, othRingInt:0.35 };   // operator defaults
+  var DEF={ focRing:true, focSize:"sphere", focPat:"dashed", focAnim:"pulse", focSpeed:0.15, focThick:2.5, focThickConst:true,
+            focGlow:true, focGlowRad:1.7, focGlowInt:0.75, focGlowFall:0,
+            othGlow:true, glowRad:2.1, glowInt:0.45, glowFall:0.15, othRing:true, othRingInt:0.2 };   // operator defaults
   for(var _dk in DEF){ if(CFG[_dk]==null) CFG[_dk]=DEF[_dk]; }
-  var SEC={ ring:["focRing","focSize","focPat","focAnim","focSpeed","focThick","focThickConst","focGlow","focGlowRad","focGlowInt"],
+  var SEC={ ring:["focRing","focSize","focPat","focAnim","focSpeed","focThick","focThickConst","focGlow","focGlowRad","focGlowInt","focGlowFall"],
             oth:["othGlow","glowRad","glowInt","glowFall","othRing","othRingInt"] };
   var g=document.createElement("div"); g.className="grp"; g.id="focuscfg";
   var row=function(label, key, opts){ var h='<div class="cfgrow focrow"><span class="rlbl" style="width:48px">'+label+'</span><span class="pill focpill" data-fk="'+key+'">';
@@ -2966,7 +2969,7 @@ window.__uniAddFocusCfg=function(){ var body=document.querySelector("#cfg .cfgbo
   g.innerHTML=hdr("Focus ring","ring")
     +trow("ring","focRing")+row("size","focSize",["const","icon","sphere"])+row("pattern","focPat",["spinner","solid","dashed"])+row("anim","focAnim",["spin","pulse","none"])
     +srow("speed","focSpeed",0.05,4,0.05)+srow("thick","focThick",1,14,0.5)+trow("const","focThickConst")
-    +trow("glow","focGlow")+srow("g.rad","focGlowRad",0.5,4,0.1)+srow("g.int","focGlowInt",0,1,0.05)
+    +trow("glow","focGlow")+srow("g.rad","focGlowRad",0.5,4,0.1)+srow("g.int","focGlowInt",0,1,0.05)+srow("falloff","focGlowFall",0,1,0.05)
     +hdr("Others \u00b7 highlight","oth")
     +trow("glow","othGlow")+srow("g.rad","glowRad",0.5,4,0.1)+srow("g.int","glowInt",0,1,0.05)+srow("falloff","glowFall",0,1,0.05)
     +trow("ring","othRing")+srow("r.int","othRingInt",0,1,0.05);

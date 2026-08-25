@@ -214,7 +214,8 @@ const defs = await p.evaluate(() => {
   const n2 = nodes.find(x => x.kind === 'endpoint'); SEL = { kind: 'node', data: n2 }; showPanel(n2); __uniHLSelect(n2);
   if (HL.mode === 'glow') window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }));   // → focus
   const halos = (typeof hlGroup !== 'undefined' && hlGroup) ? hlGroup.children.length : -1;
-  d.focusOriginGlow = HL.mode === 'focus' && halos === 1;
+  const selLayers = (CFG.focRing !== false ? 1 : 0) + (CFG.focGlow ? 1 : 0);   // the selected element's markers = ring + optional glow (operator: both layers)
+  d.focusOriginGlow = HL.mode === 'focus' && halos === selLayers && halos >= 1;
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'f' }));
   d.glowMany = (typeof hlGroup !== 'undefined' && hlGroup) ? hlGroup.children.length > 1 : false;
   window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
