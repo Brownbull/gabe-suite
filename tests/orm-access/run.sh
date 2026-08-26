@@ -87,6 +87,18 @@ o, _ = ops('def d():\n    cs = CookingSession()\n    return cs', "d")
 check(("w", "CookingSession", "cooking_sessions") not in o,
       "constructing without add() is NOT a write (mutation guard) (%r)" % o)
 
+# ── C4 · non-ORM SINK floor (_detect_sinks) ──
+def sinks(src, name):
+    return C._detect_sinks(fn(src, name))
+check(sinks('def f():\n    open("out.txt", "w").write("x")', "f") == ["file"], "sink: open(_, 'w') → file")
+check(sinks('def f():\n    Path(p).write_text(s)', "f") == ["file"], "sink: .write_text → file")
+check(sinks('def q():\n    bus.publish(evt)', "q") == ["queue"], "sink: bus.publish → queue")
+check(sinks('def c():\n    redis.set(k, v)', "c") == ["cache"], "sink: redis.set → cache")
+check(sinks('def h():\n    httpx.post(url, json=d)', "h") == ["http"], "sink: httpx.post → http")
+# SILENT — a bare .set()/.get()/write on a non-sink receiver, or open() without a write mode
+check(sinks('def n():\n    d.set(k, v)\n    mylist.get(0)\n    open("in.txt")\n    total += 1', "n") == [],
+      "sinks: non-sink receivers + read-open stay SILENT (no false positives)")
+
 print(f"orm-access: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY

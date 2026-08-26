@@ -629,7 +629,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
                 if _at and _at != nid:
                     edges.append({"source": nid, "target": _at, "kind": _ak})
                 elif not _at:
-                    xaccess.append({"from": nid, "cls": _op.get("model"), "k": _ak})
+                    xaccess.append({"from": nid, "cls": _op.get("model"),
+                                    "table": _op.get("table"), "k": _ak})
         add_node(enode)
         _ep_tgts: set[str] = set()
         for cls in ep.get("touches") or []:
@@ -1040,19 +1041,42 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     #    entity (complete_session → pantry/dish_history) — the same class index resolves it.
     _xa_seen: set[tuple[str, str, str]] = set()
     access_edges = 0
+    _minted: dict[str, str] = {}          # C3 — cls → node-id, minted for absent access-target models
+    _um_nodes: list[dict] = []            # collected here; l2[UNCLAIMED] is added AFTER the loop (no mid-iteration key add)
     for _slug, graph in l2.items():
         for xa in graph.pop("xaccess", []):
+            k = xa.get("k", "reads_from")
             hit = cls_index.get(xa["cls"])
             if not hit:
-                continue                      # a model no entity declares (absent node) — honest drop (C3 mints it)
+                # C3 — MINT the absent model so its access edge can land (a model off the
+                # graph can never receive an edge). Homed to the unclaimed bucket, minimal
+                # node (no det — it is outside the mapped domain), the table carried honest.
+                _tbl, _cls = xa.get("table"), xa.get("cls")
+                if not _tbl or not _cls:
+                    continue               # not a real model — honest drop
+                nid2 = _minted.get(_cls)
+                if nid2 is None:
+                    nid2 = f"model:{_cls}"
+                    _minted[_cls] = nid2
+                    _um_nodes.append({"id": nid2, "kind": "model", "slug": _UNCLAIMED,
+                                      "label": _cls, "table": _tbl, "unmapped": True})
+                    cls_index[_cls] = (nid2, _UNCLAIMED)
+                hit = (nid2, _UNCLAIMED)
             tgt_nid, tgt_slug = hit
-            k = xa.get("k", "reads_from")
             if tgt_slug == _slug or (xa["from"], tgt_nid, k) in _xa_seen:
                 continue
             _xa_seen.add((xa["from"], tgt_nid, k))
             cross_edges.append({"from": xa["from"], "to": tgt_nid, "kind": k,
                                 "from_slug": _slug, "to_slug": tgt_slug})
             access_edges += 1
+    if _minted:   # C3 — add the unclaimed bucket (AFTER the l2 iteration), its L1 node, and lay it out
+        _umg = l2.setdefault(_UNCLAIMED, {"nodes": [], "edges": []})
+        _umg["nodes"].extend(_um_nodes)
+        _umg["nodes"].sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
+        _stamp_l2(_umg)
+        if not any(n["kind"] == "unclaimed" for n in l1_nodes):
+            l1_nodes.append({"id": _UNCLAIMED, "label": "unclaimed", "kind": "unclaimed",
+                             "slug": _UNCLAIMED, "status": None, "counts": None})
     _acc_intra = sum(1 for _s in l2.values() for _e in _s.get("edges", [])
                      if _e.get("kind") in ("writes_to", "reads_from"))
 
@@ -1074,6 +1098,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "cross_edges": len(cross_edges),
             "cross_touches": cross_touches,   # endpoint→foreign-model/schema touches (the aspect wires)
             "access_edges": _acc_intra + access_edges,   # A2: drawn endpoint→model writes_to/reads_from (intra + cross) — the write graft couldn't see
+            "minted_models": len(_minted),   # C3: absent access-target models minted into the unclaimed bucket so their edge can land
             "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") in ("consumes", "nests")),   # request-shape + composition wires (signatures + field types; local + cross)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),

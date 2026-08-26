@@ -703,6 +703,43 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
     return {"ops": out, "commits": commits} if (out or commits) else {}
 
 
+# ── C4 · NON-ORM SINK floor (file · cache · queue/event · http) ─────────────
+# A coarse CATEGORY floor (view-only, honest), NOT an edge — a file/cache/queue has no
+# model node to point at. Conservative idioms keep false-positives low: a bare `.set(`/
+# `.send(` never fires — the receiver must name the sink (redis/cache/bus/…), or the call
+# must be an unambiguous write (open(…, "w"), .write_text). Borrowed shape: codesight's
+# sink-category tag. Middleware (a decorator/route-dep scan) is a separate follow-up.
+_FILE_WRITE_MODES = ("w", "a", "x")
+
+
+def _detect_sinks(fnnode) -> list[str]:
+    """The non-ORM sink CATEGORIES this function reaches, sorted. [] when none (honest)."""
+    cats: set[str] = set()
+    for n in ast.walk(fnnode):
+        if not isinstance(n, ast.Call):
+            continue
+        func = n.func
+        attr = func.attr if isinstance(func, ast.Attribute) else None
+        bare = func.id if isinstance(func, ast.Name) else None
+        recv = (func.value.id.lower()
+                if isinstance(func, ast.Attribute) and isinstance(func.value, ast.Name) else "")
+        if bare == "open" and len(n.args) >= 2 and isinstance(n.args[1], ast.Constant) \
+                and isinstance(n.args[1].value, str) \
+                and any(m in n.args[1].value for m in _FILE_WRITE_MODES):
+            cats.add("file")
+        if attr in ("write_text", "write_bytes"):
+            cats.add("file")
+        if ("redis" in recv or "cache" in recv) and attr in ("set", "setex", "delete", "hset", "expire", "incr"):
+            cats.add("cache")
+        if attr in ("publish", "emit", "dispatch", "enqueue") \
+                and (attr == "enqueue" or "bus" in recv or "event" in recv or "queue" in recv):
+            cats.add("queue")
+        if ("requests" in recv or "httpx" in recv or "aiohttp" in recv or "client" in recv or "session" in recv) \
+                and attr in ("post", "put", "patch", "delete", "get"):
+            cats.add("http")
+    return sorted(cats)
+
+
 def function_insight(repo: Path) -> dict:
     """{'<file>::<qual>': signals} for every def in the mapped backend files,
     computed once per build. Serialized into archmap.json as
@@ -763,6 +800,9 @@ def function_insight(repo: Path) -> dict:
                 "ids": {i for i in _re_mod.findall(
                     r"[A-Za-z_][A-Za-z0-9_]{3,}", body)} - _PY_KEYWORDS,
             }
+            _snk = _detect_sinks(node)                       # C4: non-ORM sink categories (honest-empty)
+            if _snk:
+                fns[f"{f}::{qual}"]["sinks"] = _snk
 
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

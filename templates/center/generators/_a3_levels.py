@@ -281,6 +281,7 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
     # ── fn_nodes — the DRAWN functions only, enriched from function_insight where
     #    present; graft/TS fns (no function_insight) default their layer by file ext.
     _fn_behind = (graft or {}).get("fn_behind") or {}   # per-fn call-tree floor (hidden mass)
+    _fn_roles = (graft or {}).get("fn_roles") or {}      # C1: accessor/caller/gate/pure per function
     for fid in sorted(drawn_fn):
         slug = drawn_fn[fid]
         rfile, _, name = fid.partition("#")
@@ -306,6 +307,16 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         _bh = _fn_behind.get(fid)
         if _bh:
             _node["behind"] = _bh
+        _role = _fn_roles.get(fid)   # C1: accessor/caller/gate/pure — the function-badge data (honest-empty without graft)
+        if _role:
+            _node["role"] = _role
+        if _role == "accessor":      # the DB-accessor's own ops, from the C2 access block
+            _acc = (FI.get(rfile + "::" + name, {}) or {}).get("access")
+            if _acc and _acc.get("ops"):
+                _node["access"] = _acc
+        _sk = (FI.get(rfile + "::" + name, {}) or {}).get("sinks")   # C4: non-ORM sink categories (floor)
+        if _sk:
+            _node["sinks"] = _sk
         lv["fn_nodes"].append(_node)
         # fn DETAIL — the wider projection of function_insight the panel's Function
         # card reads (detailOf("fn:"+slug+"|"+name)), keyed exactly like the cls: rows.

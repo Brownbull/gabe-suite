@@ -319,6 +319,7 @@ def derive_endpoint_access(wiring: dict[str, Any], entities: dict[str, Any],
                 depth += 1
             ops: dict[tuple, dict] = {}
             commits = False
+            sinks: set[str] = set()
             for fid in seen:                                   # graft id <file>#<fn> → function_insight <file>::<fn>
                 a = faccess.get(fid.replace("#", "::", 1))
                 if not a:
@@ -327,9 +328,63 @@ def derive_endpoint_access(wiring: dict[str, Any], entities: dict[str, Any],
                     commits = True
                 for o in a.get("ops") or []:
                     ops[(o["model"], o["rw"])] = {"model": o["model"], "table": o["table"], "rw": o["rw"]}
-            if ops or commits:
+                for s in a.get("sinks") or []:                 # C4: non-ORM sink categories via the call-tree
+                    sinks.add(s)
+            if ops or commits or sinks:
                 out[key] = {"ops": sorted(ops.values(), key=lambda x: (x["rw"], x["model"])),
                             "commits": commits}
+                if sinks:
+                    out[key]["sinks"] = sorted(sinks)
+    return {k: out[k] for k in sorted(out)}
+
+
+_GATE_PREFIXES = ("require_", "assert_", "ensure_", "verify_", "check_", "guard_", "authoriz")
+
+
+def _is_gate_name(sym: str) -> bool:
+    s = sym.rsplit(".", 1)[-1].lower()        # Class.method → method
+    return s.startswith(_GATE_PREFIXES) or "authoriz" in s or "permission" in s
+
+
+def derive_fn_roles(wiring: dict[str, Any], faccess: dict[str, Any] | None) -> dict[str, str]:
+    """{<file>#<fn> → 'accessor'|'caller'|'gate'|'pure'} for every graft-indexed function (C1).
+
+    accessor = performs an ORM op (C2 access non-empty); caller = its call-tree REACHES an
+    accessor (a reverse-BFS from the accessor set — the accessor-vs-caller split that makes a
+    write locatable); gate = a gate-named guard; pure = none of the above. This is graft's
+    genuine contribution: it can't see the op, but it DOES resolve the fn→fn calls, so it
+    labels the functions AROUND the accessors C2 found. faccess joins on <file>::<qual>.
+    Honest-empty: no faccess (graft-less / no access) → {} (byte-identical build)."""
+    if not faccess:
+        return {}
+    fn_ids, adj = _behind_context(wiring)
+    accessors = {g for g in fn_ids
+                 if (faccess.get(g.replace("#", "::", 1)) or {}).get("ops")}
+    radj: dict[str, list[str]] = {}           # reverse adjacency for one BFS from all accessors
+    for u, vs in adj.items():
+        for v in vs:
+            radj.setdefault(v, []).append(u)
+    reaches = set(accessors)
+    frontier = list(accessors)
+    while frontier:
+        nxt: list[str] = []
+        for v in frontier:
+            for u in radj.get(v, ()):
+                if u not in reaches:
+                    reaches.add(u)
+                    nxt.append(u)
+        frontier = nxt
+    out: dict[str, str] = {}
+    for g in fn_ids:
+        sym = g.split("#", 1)[1] if "#" in g else g
+        if g in accessors:
+            out[g] = "accessor"
+        elif _is_gate_name(sym):
+            out[g] = "gate"
+        elif g in reaches:
+            out[g] = "caller"
+        else:
+            out[g] = "pure"
     return {k: out[k] for k in sorted(out)}
 
 
@@ -614,6 +669,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         fout = derive_functions(wiring, entities)
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
         endpoint_access = derive_endpoint_access(wiring, entities, faccess)  # A2: ORM access via the call-tree
+        fn_roles = derive_fn_roles(wiring, faccess)  # C1: accessor/caller/gate/pure per function
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
@@ -624,6 +680,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws
             "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
             "endpoint_access": endpoint_access,  # A2: per-endpoint ORM read/write ops via the call-tree
+            "fn_roles": fn_roles,   # C1: {<file>#<fn> → accessor/caller/gate/pure} for the function badges
             "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
             "node_facts": node_facts,  # P1: raw graft facts (kind/signature/exported) — in-process, not emitted raw
             "frontend": frontend,      # P2a: classified TS frontend structure {nodes,edges,stats} — data-only

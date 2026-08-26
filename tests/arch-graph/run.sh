@@ -396,6 +396,31 @@ _gna = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
 check(not any(e.get("kind") in ("writes_to", "reads_from") for _s in _gna["l2"].values() for e in _s["edges"])
       and _gna["stats"].get("access_edges", 0) == 0,
       "A2 honest-empty: no endpoint_access → no access edges (0)")
+# ── C3 · mint an ABSENT access-target model (not in FIX) → unclaimed bucket + landed edge ──
+_gc3 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+    graft={"present": True, "reason": "t", "index_hash": "x", "index_nodes": 1, "index_edges": 1,
+           "pairs": {}, "stats": {},
+           "endpoint_access": {"None#get_alpha": {"ops": [{"model": "Ghost", "table": "ghosts", "rw": "w"}], "commits": False}}})
+_um = _gc3["l2"].get("__unclaimed__", {"nodes": []})
+check(any(n["id"] == "model:Ghost" and n.get("unmapped") for n in _um["nodes"])
+      and _gc3["stats"].get("minted_models", 0) == 1,
+      "C3: an absent access-target model is MINTED into the unclaimed bucket (unmapped node)")
+check(any(e.get("to") == "model:Ghost" and e.get("kind") == "writes_to" for e in _gc3["cross_edges"])
+      and any(n["kind"] == "unclaimed" for n in _gc3["l1"]["nodes"]),
+      "C3: the write edge LANDS on the minted model + the unclaimed L1 node exists")
+check(_gna["stats"].get("minted_models", 0) == 0,
+      "C3 honest-empty: no absent-model access → nothing minted (0)")
+# ── C1 · function roles (accessor / caller / gate / pure) ──
+_wr = {"nodes": [{"id": "a.py#handler", "kind": "function", "path": "a.py"},
+                 {"id": "a.py#svc_write", "kind": "function", "path": "a.py"},
+                 {"id": "a.py#require_auth", "kind": "function", "path": "a.py"},
+                 {"id": "a.py#helper", "kind": "function", "path": "a.py"}],
+       "edges": [{"source": "a.py#handler", "target": "a.py#svc_write", "relation": "calls"}]}
+_fr = GG.derive_fn_roles(_wr, {"a.py::svc_write": {"ops": [{"model": "M", "table": "m", "rw": "w"}]}})
+check(_fr.get("a.py#svc_write") == "accessor" and _fr.get("a.py#handler") == "caller"
+      and _fr.get("a.py#require_auth") == "gate" and _fr.get("a.py#helper") == "pure",
+      "derive_fn_roles: accessor (own op) · caller (reaches it) · gate (name) · pure (leaf)")
+check(GG.derive_fn_roles(_wr, None) == {}, "derive_fn_roles: no faccess → {} (honest-empty)")
 # the named-fn list caps at _BEHIND_NAMES_CAP (12) with a +N remainder
 _wc = {"nodes": [{"id": f"c/{i}.py#f{i}", "kind": "function", "path": f"c/{i}.py"} for i in range(15)]
                 + [{"id": "c/h.py#h", "kind": "function", "path": "c/h.py"}],
