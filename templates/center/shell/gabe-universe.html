@@ -1763,7 +1763,7 @@ window.__uniBgClick=function(ev){ try{ if(!ev || ev.clientX==null) return;
     if(window.__uniStubs && window.__uniStubs.length){ var gbest=null;
       window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
         if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;     // behind the camera
-        var d=rc.ray.distanceToPoint(P); if(d<13 && (!gbest||d<gbest.d)) gbest={d:d, st:st}; });
+        var d=rc.ray.distanceToPoint(P); if(d<22 && (!gbest||d<gbest.d)) gbest={d:d, st:st}; });
       if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid);   // reveal the cluster/entity IN PLACE, then SELECT the node
         var _gn=NIDS[_gid];
         if(_gn){ if(_gn.kind==="capsule"){ if(window.__uniCapExpand) try{ __uniCapExpand(_gn.ent); }catch(_ce){} }   // a capsule ghost EXPANDS (matches onNodeClick) — never lands in SEL/trail
@@ -1842,7 +1842,7 @@ window.__uniStubHoverInit=function(){ var g=document.getElementById("g"); if(!g 
       var rc=new T.Raycaster(); rc.setFromCamera({x:mx,y:my}, Graph.camera());
       var best=null; window.__uniStubs.forEach(function(st){ var P=new T.Vector3(st.p.x,st.p.y,st.p.z);
         if(P.clone().sub(rc.ray.origin).dot(rc.ray.direction)<0) return;   // behind the camera
-        var d=rc.ray.distanceToPoint(P); if(d<13 && (!best||d<best.d)) best={d:d, st:st, P:P}; });
+        var d=rc.ray.distanceToPoint(P); if(d<22 && (!best||d<best.d)) best={d:d, st:st, P:P}; });
       if(best){ var hn=NIDS[best.st.hid]||{}, ent=hn.ent||"?", sub=(hn.sub!=null?hn.sub:null);
         var ico=(typeof svgInline==="function" && hn.kind)?svgInline(hn.kind, (typeof KINDCOL!=="undefined"&&KINDCOL[hn.kind])||best.st.col, 13):"";   // the STAR's icon (operator: icon + name)
         tip.innerHTML='<span class="ustname">'+ico+'<b>'+(hn.label||best.st.hid)+'</b></span><span class="ustmeta">'+ent+(sub!=null?(" · "+sub):"")+' · hidden — click to reveal</span>';

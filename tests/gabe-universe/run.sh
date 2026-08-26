@@ -473,6 +473,8 @@ check('window.__uniDrawStubs=function' in page and 'if(window.__uniDrawStubs) __
       "connection GHOSTS: one faint star per hidden connected node, gated fleet-hide-not-kind, shared-sprite-geometry never disposed")
 check('window.__uniReveal=function' in page and 'if(gbest && window.__uniReveal){ var _gid=gbest.st.hid; __uniReveal(_gid)' in page and 'cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; })' in page,
       "clicking a ghost star (PRIORITY over the hull pick) must REVEAL the hidden target in place (force-on entity+cluster)")
+check(page.count('rc.ray.distanceToPoint(P); if(d<22') == 2,
+      "the ghost pick/hover threshold must be forgiving (22, matches the glow's world footprint) so an edge-click on the star still reveals — operator: same-entity ghost clicks missed at 13")
 _gi = page.find('if(window.__uniStubs && window.__uniStubs.length){ var gbest=null;')
 _ci = page.find('(typeof CLUSTERS!=="undefined"?CLUSTERS:[]).forEach')
 check(_gi != -1 and _ci != -1 and _gi < _ci,
