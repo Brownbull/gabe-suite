@@ -1986,7 +1986,9 @@ def main() -> int:
         # absence is a named stats entry, and the FK topology is unchanged.
         _garm = _a3_graft.graft_arm(
             REPO_ROOT, amap.get("entities") or {},
-            allow_build=os.environ.get("GABE_GRAFT_BUILD", "1") != "0")
+            allow_build=os.environ.get("GABE_GRAFT_BUILD", "1") != "0",
+            faccess={_k: _v["access"] for _k, _v in _a3_code.function_insight(REPO_ROOT).items()
+                     if _v.get("access")})   # A2: the C2 access map, joined onto the call-tree
         # the web→API bridge arm (Path A frontend): a SEPARATE module with its own
         # try/except so a fetch-parser bug degrades the bridge to honest-empty and
         # NEVER masquerades as graft absence (two arms, two presence flags). Read-only

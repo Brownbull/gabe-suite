@@ -506,7 +506,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         web_pieces: list[dict] | None = None,
         behind: dict[str, dict] | None = None,
         journeys: dict[str, dict] | None = None,
-        schema_fields: dict[str, int] | None = None) -> dict[str, list[dict]]:
+        schema_fields: dict[str, int] | None = None,
+        endpoint_access: dict[str, dict] | None = None) -> dict[str, list[dict]]:
     """L2 = one entity's internal pieces (endpoints · models · schemas) and their
     wiring, plus honest ``external`` stub nodes for outbound FKs into other
     entities / unclaimed tables — so a drill never hides where the entity reaches.
@@ -522,6 +523,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
     edges: list[dict] = []
     xtouch: list[dict] = []            # touches naming a class we do NOT own — the assembler resolves them globally
     xcons: list[dict] = []             # consumed request-shapes we do NOT own — same global resolve (the floating *Input fix)
+    xaccess: list[dict] = []           # ORM read/write access naming a model we do NOT own — global resolve (A2)
     own_classes: dict[str, str] = {}   # cls -> node id (this entity only)
     externals: dict[str, dict] = {}    # ext node id -> node
     ins = insight or {}
@@ -615,6 +617,19 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         bkey = f"{ep.get('file')}#{ep.get('fn')}"   # the graft call-tree floor behind this handler
         if behind and bkey in behind:               # honest-empty: no key → no badge, never a guess
             enode["behind"] = behind[bkey]
+        # A2 — ORM data-access reachable through the handler's call-tree (C2 detected the ops;
+        # here they become drawn endpoint→model writes_to/reads_from edges, mirroring `touches`:
+        # own-model resolves to an intra edge, a foreign model rides xaccess for the global resolve).
+        if endpoint_access and bkey in endpoint_access:
+            _acc = endpoint_access[bkey]
+            enode["access"] = _acc              # card/detail field (like `behind`), honest-empty otherwise
+            for _op in _acc.get("ops", []):
+                _ak = "writes_to" if _op.get("rw") == "w" else "reads_from"
+                _at = own_classes.get(_op.get("model"))
+                if _at and _at != nid:
+                    edges.append({"source": nid, "target": _at, "kind": _ak})
+                elif not _at:
+                    xaccess.append({"from": nid, "cls": _op.get("model"), "k": _ak})
         add_node(enode)
         _ep_tgts: set[str] = set()
         for cls in ep.get("touches") or []:
@@ -688,7 +703,7 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             uniq.append(e)
     uniq.sort(key=lambda e: (e["source"], e["target"], e["kind"]))
     nodes.sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
-    return {"nodes": nodes, "edges": uniq, "xtouch": xtouch, "xcons": xcons}
+    return {"nodes": nodes, "edges": uniq, "xtouch": xtouch, "xcons": xcons, "xaccess": xaccess}
 
 
 def _stamp_l1(nodes: list[dict]) -> None:
@@ -934,6 +949,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     # the endpoint call-tree floor (graft): {<file>#<fn> → {fns, depth}} per handler.
     # graft absent → {} → no endpoint carries a behind field → byte-identical build.
     behind = (graft or {}).get("behind") or {}
+    endpoint_access = (graft or {}).get("endpoint_access") or {}   # A2: per-endpoint ORM access via the call-tree
     # per-element CROSS-ENTITY test journeys (criterion A) — junit + archmap only. Honest-empty when
     # test_insight is absent (→ {} → no det.test_journeys anywhere → byte-identical). NOT the station's
     # wire-journeys (buildJourneys): this is the traveling-test-chip, a per-node test-detail field.
@@ -973,7 +989,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         if not code:
             continue
         graph = _l2(slug, code, tbl2slug, labels, insight, web_by_slug.get(slug), behind,
-                    journeys, schema_fields)
+                    journeys, schema_fields, endpoint_access=endpoint_access)
         _stamp_l2(graph)
         l2[slug] = graph
 
@@ -1020,6 +1036,25 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             cross_edges.append({"from": xc["from"], "to": tgt_nid, "kind": xc.get("k", "consumes"),
                                 "from_slug": _slug, "to_slug": tgt_slug})
             cross_consumes += 1
+    # ── A2 · cross-entity ORM ACCESS: an endpoint writing/reading a model owned by ANOTHER
+    #    entity (complete_session → pantry/dish_history) — the same class index resolves it.
+    _xa_seen: set[tuple[str, str, str]] = set()
+    access_edges = 0
+    for _slug, graph in l2.items():
+        for xa in graph.pop("xaccess", []):
+            hit = cls_index.get(xa["cls"])
+            if not hit:
+                continue                      # a model no entity declares (absent node) — honest drop (C3 mints it)
+            tgt_nid, tgt_slug = hit
+            k = xa.get("k", "reads_from")
+            if tgt_slug == _slug or (xa["from"], tgt_nid, k) in _xa_seen:
+                continue
+            _xa_seen.add((xa["from"], tgt_nid, k))
+            cross_edges.append({"from": xa["from"], "to": tgt_nid, "kind": k,
+                                "from_slug": _slug, "to_slug": tgt_slug})
+            access_edges += 1
+    _acc_intra = sum(1 for _s in l2.values() for _e in _s.get("edges", [])
+                     if _e.get("kind") in ("writes_to", "reads_from"))
 
     return fold_fe({
         "version": 1,
@@ -1038,6 +1073,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "l1_edges": len(l1_edges),
             "cross_edges": len(cross_edges),
             "cross_touches": cross_touches,   # endpoint→foreign-model/schema touches (the aspect wires)
+            "access_edges": _acc_intra + access_edges,   # A2: drawn endpoint→model writes_to/reads_from (intra + cross) — the write graft couldn't see
             "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") in ("consumes", "nests")),   # request-shape + composition wires (signatures + field types; local + cross)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),

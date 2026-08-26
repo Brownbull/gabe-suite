@@ -367,6 +367,35 @@ _bt = GG.derive_behind(_wt, {"e": {"endpoints": [{"file": "a0.py", "fn": "f", "m
 GG._BEHIND_DEPTH_CAP = _saved_cap
 check(_bt["a0.py#f"].get("truncated") is True and _bt["a0.py#f"]["depth"] == 2,
       "derive_behind: the depth cap sets truncated:True (no silent cap)")
+
+# ══ A2 · ENDPOINT ORM ACCESS via the call-tree (derive_endpoint_access + fold) ══
+# WIRING: alpha.py#do_a → calls → beta.py#do_b → calls → beta.py#do_b2. faccess puts the
+# ACCESS on the 2-hops-down callee, so the write must surface at the do_a endpoint.
+_facc = {"apps/api/beta.py::do_b2": {"ops": [{"model": "Beta", "table": "betas", "rw": "w"}], "commits": True}}
+_ea = GG.derive_endpoint_access(WIRING,
+    {"e": {"endpoints": [{"file": "apps/api/alpha.py", "fn": "do_a", "method": "POST", "path": "/x"}]}}, _facc)
+check(_ea.get("apps/api/alpha.py#do_a", {}).get("ops") == [{"model": "Beta", "table": "betas", "rw": "w"}]
+      and _ea["apps/api/alpha.py#do_a"].get("commits") is True,
+      "derive_endpoint_access: a WRITE delegated 2 hops down the call-tree surfaces at the endpoint + commits")
+check(GG.derive_endpoint_access(WIRING, {"e": {"endpoints": [{"file": "apps/api/alpha.py", "fn": "do_a", "method": "P", "path": "/x"}]}}, None) == {},
+      "derive_endpoint_access: no faccess → {} (honest-empty)")
+check(GG.derive_endpoint_access(WIRING, {"e": {"endpoints": [{"file": "apps/api/stray.py", "fn": "s", "method": "G", "path": "/y"}]}},
+    {"apps/api/nowhere.py::z": {"ops": [{"model": "Q", "table": "q", "rw": "r"}]}}) == {},
+      "derive_endpoint_access: a handler whose tree touches no data gets NO entry")
+# FOLD — build_c4_graph draws writes_to/reads_from from endpoint_access (intra or cross)
+_gacc = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+    graft={"present": True, "reason": "t", "index_hash": "x", "index_nodes": 1, "index_edges": 1,
+           "pairs": {}, "stats": {},
+           "endpoint_access": {"None#get_alpha": {"ops": [{"model": "A", "table": "a", "rw": "w"}], "commits": True}}})
+_wall = ([e for _s in _gacc["l2"].values() for e in _s["edges"] if e.get("kind") == "writes_to"]
+         + [e for e in _gacc["cross_edges"] if e.get("kind") == "writes_to"])
+check(any((e.get("target") or e.get("to")) == "model:A" for e in _wall) and _gacc["stats"].get("access_edges", 0) >= 1,
+      "A2 fold: endpoint_access → a drawn writes_to edge to the model + stats.access_edges counts it")
+_gna = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
+    graft={"present": True, "reason": "t", "index_hash": "x", "index_nodes": 1, "index_edges": 1, "pairs": {}, "stats": {}})
+check(not any(e.get("kind") in ("writes_to", "reads_from") for _s in _gna["l2"].values() for e in _s["edges"])
+      and _gna["stats"].get("access_edges", 0) == 0,
+      "A2 honest-empty: no endpoint_access → no access edges (0)")
 # the named-fn list caps at _BEHIND_NAMES_CAP (12) with a +N remainder
 _wc = {"nodes": [{"id": f"c/{i}.py#f{i}", "kind": "function", "path": f"c/{i}.py"} for i in range(15)]
                 + [{"id": "c/h.py#h", "kind": "function", "path": "c/h.py"}],

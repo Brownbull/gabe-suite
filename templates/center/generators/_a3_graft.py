@@ -277,6 +277,62 @@ def derive_fn_behind(wiring: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {k: out[k] for k in sorted(out)}
 
 
+def derive_endpoint_access(wiring: dict[str, Any], entities: dict[str, Any],
+                           faccess: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
+    """Per API endpoint, the ORM data-access reachable THROUGH its handler's call-tree:
+    ``{<file>#<fn> → {'ops':[{model,table,rw}], 'commits'}}``. ``faccess`` is
+    ``{'<file>::<qual>': {ops,commits}}`` from _a3_code.function_insight (the C2 AST pass).
+
+    graft cannot see session.add/select itself, but it DOES resolve the fn→fn calls; so the
+    write the handler delegates to a service surfaces by UNIONING each reached function's
+    access. TRUST: the in-file idiom→model binding inside ``faccess`` is census; the call-tree
+    REACH here is graft's ``calls`` (an inferred FLOOR — cross-file calls are inferred by
+    design). Honest-empty: a handler graft can't resolve, or whose tree touches no data, gets
+    NO entry (never a guess). Keyed like ``derive_behind`` so _a3_graph joins on the same key."""
+    if not faccess:
+        return {}
+    fn_ids, adj = _behind_context(wiring)
+    out: dict[str, dict[str, Any]] = {}
+    for ent in entities.values():
+        if not ent:                       # a slug with no code map — the sibling guard
+            continue
+        for ep in ent.get("endpoints") or []:
+            f, fn = ep.get("file"), ep.get("fn")
+            if not f or not fn:
+                continue
+            key = f"{f}#{fn}"
+            if key not in fn_ids or key in out:
+                continue
+            seen = {key}
+            frontier = [key]
+            depth = 0
+            while frontier and depth < _BEHIND_DEPTH_CAP:      # the handler + its transitive callees
+                nxt: list[str] = []
+                for u in frontier:
+                    for v in adj.get(u) or ():
+                        if v not in seen:
+                            seen.add(v)
+                            nxt.append(v)
+                if not nxt:
+                    break
+                frontier = nxt
+                depth += 1
+            ops: dict[tuple, dict] = {}
+            commits = False
+            for fid in seen:                                   # graft id <file>#<fn> → function_insight <file>::<fn>
+                a = faccess.get(fid.replace("#", "::", 1))
+                if not a:
+                    continue
+                if a.get("commits"):
+                    commits = True
+                for o in a.get("ops") or []:
+                    ops[(o["model"], o["rw"])] = {"model": o["model"], "table": o["table"], "rw": o["rw"]}
+            if ops or commits:
+                out[key] = {"ops": sorted(ops.values(), key=lambda x: (x["rw"], x["model"])),
+                            "commits": commits}
+    return {k: out[k] for k in sorted(out)}
+
+
 def derive_cross(wiring: dict[str, Any],
                  entities: dict[str, Any]) -> dict[str, Any]:
     """The cross-entity coupling slice: {(src_slug, dst_slug): {relation: count}}.
@@ -535,7 +591,8 @@ def derive_frontend(wiring: dict[str, Any],
 
 
 def graft_arm(root: Path, entities: dict[str, Any],
-              allow_build: bool = True) -> dict[str, Any]:
+              allow_build: bool = True,
+              faccess: dict[str, Any] | None = None) -> dict[str, Any]:
     """The whole arm, one call: ensure → load → derive. NEVER raises.
 
     Returns ``{present, reason, index_hash?, index_nodes?, index_edges?,
@@ -556,6 +613,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         out = derive_cross(wiring, entities)
         fout = derive_functions(wiring, entities)
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
+        endpoint_access = derive_endpoint_access(wiring, entities, faccess)  # A2: ORM access via the call-tree
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
@@ -565,6 +623,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "pairs": out["pairs"], "stats": out["stats"],
             "functions": fout,   # {fn_slug, calls} — the fn-level slice the LEVELS graph draws
             "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
+            "endpoint_access": endpoint_access,  # A2: per-endpoint ORM read/write ops via the call-tree
             "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
             "node_facts": node_facts,  # P1: raw graft facts (kind/signature/exported) — in-process, not emitted raw
             "frontend": frontend,      # P2a: classified TS frontend structure {nodes,edges,stats} — data-only
