@@ -165,14 +165,19 @@ for _clr in ['function showPanel(n){ var K=n.K;', 'function showLinkPanel(l){', 
 #    test chip ↔ l.proven; ships fly cross-entity wires only). Inserted BEFORE the Trust section in __link. ──
 _TRUST_ANCHOR = 'E("div",{class:"sec"}, sechd("info","Trust"),'
 assert _TRUST_ANCHOR in text, "link-card Trust anchor missing — cannot insert the Transit section"
-_TRANSIT = ('E("div",{class:"sec"}, (function(){ var _th=sechd("truck","Transit");'
-  ' try{ if(window.__uniAssetThumb){ var _tw=document.createElement("span"); _tw.className="asetrow";'   # the ACTUAL cargo + test-chip 3D assets the wire carries (operator)
-  ' _tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }, "cargo shuttle \\u2014 the wire\\u0027s payload asset"));'
-  ' _tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.testchip(); }, "test chip \\u2014 the wire\\u0027s cross-entity test asset"));'
-  ' _th.append(_tw); } }catch(_te){} return _th; })(),'
-  ' kv("truck","cargo", l.payload? ("carries "+l.payload+" data field"+(l.payload>1?"s":"")+" · the shuttle grows with the payload") : "no payload · no cargo shuttle"),'
-  ' kv("test","test chip", l.proven? "test-proven route · the green chip flies it" : "not test-proven · no green chip"),'
-  ' E("div",{class:"sublbl"}, (typeof linkCross==="function"&&linkCross(l))? "ships fly this cross-entity wire" : "same-entity wire · no ships transit"))')
+# TWO sections (operator): CARGO + TEST CHIP, each = 2D icon · title · 3D asset (header) + a present/absent flag.
+# A ship transits ONLY a cross-entity wire; cargo carries the payload, the test chip flies test-proven routes.
+_TRANSIT = (
+  'E("div",{class:"sec"}, (function(){ var _ch=sechd("truck","Cargo");'
+  ' try{ if(window.__uniAssetThumb) _ch.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }, "cargo shuttle \\u2014 the graph asset")); }catch(_e){} return _ch; })(),'
+  ' (function(){ var _x=(typeof linkCross==="function"&&linkCross(l)); return _x'
+  '   ? E("div",{class:"flagrow ok"}, icoEl("test"), E("span",{class:"flbl"}, l.payload? ("present \\u00b7 carries "+l.payload+" data field"+(l.payload>1?"s":"")) : "present \\u00b7 empty (no payload)"))'
+  '   : E("div",{class:"flagrow"}, icoEl("skip"), E("span",{class:"flbl"}, "no cargo \\u00b7 same-entity wire (no transit)")); })()),'
+  'E("div",{class:"sec"}, (function(){ var _tc=sechd("test","Test chip");'
+  ' try{ if(window.__uniAssetThumb) _tc.append(window.__uniAssetThumb(function(){ return window.__uniAssets.testchip(); }, "test chip \\u2014 the graph asset")); }catch(_e){} return _tc; })(),'
+  ' (function(){ var _x=(typeof linkCross==="function"&&linkCross(l)); return _x'
+  '   ? E("div",{class:"flagrow ok"}, icoEl("test"), E("span",{class:"flbl"}, l.proven? "present \\u00b7 test-proven route" : "present \\u00b7 route not test-proven"))'
+  '   : E("div",{class:"flagrow"}, icoEl("skip"), E("span",{class:"flbl"}, "no test chip \\u00b7 same-entity wire (no transit)")); })())')
 text = text.replace(_TRUST_ANCHOR, _TRANSIT + ',\n      ' + _TRUST_ANCHOR, 1)
 
 # ── review-2 fix: 'web' was missing from `order`, so no billboard icon was rasterized for web nodes →

@@ -447,14 +447,14 @@ check('if(real && window.__uniJrnStart){ row.style.cursor="pointer"; row.onclick
 # panel/fleet/legend polish batch (operator)
 check('getBoundingSphere(new T.Sphere()).radius' in page,
       "asset thumbnails must FRAME-FIT — fill the square regardless of native asset size (the sat was tiny)")
-check('.sechd .cnt{ margin-left:0 !important; }' in page and 'height:500px !important' in page and 'width:344px' in page,
-      "section counter LEFT-aligned next to its title · legend taller (500, no scroll) · fleet wider (344)")
+check('.sechd .cnt{ margin-left:0 !important; }' in page and 'height:384px !important' in page and 'width:344px' in page,
+      "section counter LEFT-aligned next to its title · legend sized to the Types tab (384, no scroll) · fleet wider (344)")
 check('<b class="flcnt flexp" style="--flc:' in page and '#fleet .flrow:not(.flsub):not(.flmaster) .fldot{ display:none; }' in page,
       "the fleet entity counter merges the dot + count into ONE entity-colored counter (no separate dot)")
-check('_tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }' in page and '_tw.className="asetrow"' in page and 'window.__uniAssets.testchip()' in page,
-      "the wire (Transit) card must carry the cargo + test-chip 3D asset thumbnails")
-check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,
-      "the wire card must carry a Transit section tying cargo↔payload + test-chip↔proven (cross-entity only)")
+check('sechd("truck","Cargo")' in page and 'window.__uniAssets.cargo()' in page and 'sechd("test","Test chip")' in page and 'window.__uniAssets.testchip()' in page,
+      "the wire card must have SEPARATE Cargo + Test-chip sections, each with its 3D asset thumbnail (operator)")
+check('class:"flagrow ok"' in page and 'no cargo ' in page and 'no test chip ' in page and 'same-entity wire (no transit)' in page,
+      "each wire section must carry a present/absent FLAG (cross-entity → present; same-entity → no transit)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
 check('var body=E("div",{class:"jsec"});' in page and 'A stop · reached by a test that spans other entities.' in page and 'class="jsub"' not in page,
       "the journeys entry/stop legend must live in the info TOOLTIP, not an inline .jsub line")
@@ -651,8 +651,8 @@ check('className="cfgrow entcombo"' in page,
       "the entity combo/options rows are gone")
 check("'Legend</b>" in page.replace('"',"'") and '#elegend .lghd b svg' in page,
       "the legend lost its panel-chrome refit (iconed caps title + station styling)")
-check('height:500px !important' in page,
-      "the legend must hold ONE fixed size across every tab (taller, no scroll)")
+check('height:384px !important' in page,
+      "the legend must hold ONE fixed size across every tab (sized to the Types tab, no scroll)")
 check("lgbody lg-" in page and 'lg-types' in page and 'grid-template-columns:1fr 1fr' in page,
       "the legend Types two-column compaction is gone (per-tab body class + grid)")
 check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,

@@ -233,9 +233,11 @@
   .sechd .cnt{ margin-left:0 !important; }
   /* FLEET row: the colored dot + counter MERGE into ONE entity-colored counter; the entity counter is bigger and IS the show/hide-clusters button (operator) */
   #fleet .flrow:not(.flsub):not(.flmaster) .fldot{ display:none; }
-  #fleet .flcnt{ color:#fff !important; background:var(--flc, var(--muted)) !important; border-color:transparent !important; }
+  /* OUTLINE counter (operator): entity color on a THICK border + the number, NOT a filled background —
+     the fleet's dark ground shows through, so the number reads against the ground, not the entity fill. */
+  #fleet .flcnt{ color:var(--flc, var(--muted)) !important; background:transparent !important; border:2px solid var(--flc, var(--muted)) !important; font-weight:800 !important; }
   #fleet .flrow:not(.flsub):not(.flmaster) .flcnt.flexp{ font-size:10px; padding:2px 6px; min-width:20px; text-align:center; }
-  #fleet .flrow.flsub .flcnt{ color:#fff !important; }
+  #fleet .flrow.flsub .flcnt{ color:var(--flc, var(--muted)) !important; }
   #elegend .lghd{ display:flex !important; align-items:center; gap:8px; padding:8px 11px !important;
     border-bottom:1px solid var(--line) !important; background:transparent !important; }
   #elegend .lghd b{ font:700 10.5px/1 var(--font-ui) !important; text-transform:uppercase; letter-spacing:.08em;
@@ -254,7 +256,7 @@
   #elegend .lgsub.on{ color:var(--accent) !important; }
   #elegend .lgbody{ background:transparent !important; border-radius:0 0 12px 12px !important; }
   /* ── batch 44: compaction — TYPES reads in TWO columns; the box hugs its content ── */
-  #elegend{ height:500px !important; width:328px !important; display:flex; flex-direction:column; }   /* taller (was 330) → the legend body fits without a scrollbar (operator) */
+  #elegend{ height:384px !important; width:328px !important; display:flex; flex-direction:column; }   /* fits the TALLEST tab (Types, ~372px natural) exactly — no scrollbar, no wasted space (operator) */
   #elegend.min{ height:auto !important; width:auto !important; min-width:150px; }                      /* the fixed height must NOT beat the minimize */
   #elegend.min .lgtabs, #elegend.min .lgsubtabs, #elegend.min .lgbody{ display:none !important; }
   #elegend.min .lghd{ border-bottom:none !important; }
@@ -489,6 +491,7 @@
   .flagrow .flbl{ text-transform:uppercase; letter-spacing:.02em; font-size:.82em; }
   .flagrow.god{ color:var(--god,#d9821f); border-color:color-mix(in srgb, var(--god,#d9821f) 45%, transparent); background:color-mix(in srgb, var(--god,#d9821f) 8%, transparent); }
   .flagrow.warn{ color:var(--red,#ff6b6b); border-color:color-mix(in srgb, var(--red,#ff6b6b) 40%, transparent); background:color-mix(in srgb, var(--red,#ff6b6b) 7%, transparent); }
+  .flagrow.ok{ color:var(--ok,#22c55e); border-color:color-mix(in srgb, var(--ok,#22c55e) 42%, transparent); background:color-mix(in srgb, var(--ok,#22c55e) 8%, transparent); }
   /* cross-boundary connection-stub hover label (operator): the hidden target's name + where it lives */
   .unistubtip{ position:fixed; z-index:60; pointer-events:none; max-width:280px; padding:5px 8px;
     background:rgba(14,21,36,0.94); border:1px solid var(--accent); border-left-width:3px; border-radius:5px;
