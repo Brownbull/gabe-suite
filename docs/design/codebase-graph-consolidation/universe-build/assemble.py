@@ -28,22 +28,22 @@ TRUSTCONNS = """  function trustTag(tr){ if(!tr) return null;
 # ranges keyed by 1-indexed START line -> (END line inclusive, replacement or None to drop)
 repl = {
   1:   (1,   TITLE),
-  157: (157, STYLE_CLOSE),
-  159: (162, None),                 # drop the spike .bar block (title card + reset → moved to nav/topbar)
-  172: (172, '<script src="./assets/3d-bundle.js"></script>'),
-  173: (173, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>'),   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
-  244: (292, adapter),              # toy data block -> live adapter
-  598: (598, REL2KIND),
-  956: (956, GLINE),
-  959: (965, TRUSTCONNS),
-  979: (1053, card),
+  160: (160, STYLE_CLOSE),
+  162: (165, None),                 # drop the spike .bar block (title card + reset → moved to nav/topbar)
+  175: (175, '<script src="./assets/3d-bundle.js"></script>'),
+  176: (176, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>'),   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
+  247: (295, adapter),              # toy data block -> live adapter
+  601: (601, REL2KIND),
+  959: (959, GLINE),
+  962: (968, TRUSTCONNS),
+  982: (1056, card),
 }
 # GUARD (2026): the map keys are HARDCODED spike-base line numbers, so ANY line-count change
 # above a key silently shifts a replacement onto the wrong statement (once truncated `usage`
 # and produced un-parseable JS). Assert each content-bearing START line still holds what its
 # transform expects — a shift now fails LOUD here instead of shipping broken JS downstream.
-_ANCHORS = {244: "var NODEDEF=[", 598: "var REL2KIND={", 956: "var G=function",
-            959: "function trustTag(label){", 979: "var cids=function"}   # first token of each rewritten region
+_ANCHORS = {247: "var NODEDEF=[", 601: "var REL2KIND={", 959: "var G=function",
+            962: "function trustTag(label){", 982: "var cids=function"}   # first token of each rewritten region
 for _ln, _needle in _ANCHORS.items():
     _src = lines[_ln-1] if _ln-1 < len(lines) else ""
     assert _needle in _src, ("assemble line-map STALE at %d: expected %r, found %r — a spike-base "
@@ -52,7 +52,7 @@ for _ln, _needle in _ANCHORS.items():
 # so a line-count change INSIDE the card region shifts its END boundary undetected — the old block's
 # tail leaks past the replacement as a stray fragment → un-parseable JS. Pin the first pass-through
 # line AFTER the last range too, so end-drift fails LOUD here instead of shipping broken JS.
-_END_ANCHORS = {1054: "C.screen=C.web"}
+_END_ANCHORS = {1057: "C.screen=C.web"}
 for _ln, _needle in _END_ANCHORS.items():
     _src = lines[_ln-1] if _ln-1 < len(lines) else ""
     assert _needle in _src, ("assemble line-map STALE at END-anchor %d: expected %r, found %r — a "

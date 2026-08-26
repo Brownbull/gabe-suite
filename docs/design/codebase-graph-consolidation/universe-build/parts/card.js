@@ -136,6 +136,16 @@
     return E("div",{class:"sec"}, sechd("key","Guards", mw.length, false,
       {icon:"info",cls:"info",text:"The gates/deps that run BEFORE the handler body — Depends()/Security() (signature Annotated + = default, and route dependencies=[]) + any non-route decorator. A FLOOR: a dep nested inside another Depends is not walked. 'gate' is a NAME hint (auth/consent/idempotency/tenant), never a claim. "+nGate+" of "+mw.length+" look like gates."}),
       E("div",null, rows)); }
+  /* Accesses — the DB tables a FUNCTION reads/writes (C2 _orm_access, on n.access). Endpoints draw
+     these as writes_to/reads_from wires already; a function keeps them here so an ACCESSOR badge has
+     its evidence (which model, read vs write) instead of an unexplained claim. */
+  function accessSec(n){ var a=n.access; if(!a || !(a.ops && a.ops.length)) return null;
+    var rows=a.ops.map(function(o){ var w=(o.rw==="w");
+      return E("div",{class:"sublbl"}, icoEl(w?"key":"table"),
+        (w?"writes → ":"reads → ")+o.model+" ", E("span",{style:"color:var(--muted);font-size:10px"}, "· "+o.table)); });
+    return E("div",{class:"sec"}, sechd("table","Accesses", a.ops.length, false,
+      {icon:"info",cls:"info",text:"The DB tables this function reads/writes — an AST pass over its body (select(Model) · session.add/get · Core insert/update/delete). A FLOOR: an object bound OUTSIDE the fn is an under-count, never a wrong table."+(a.commits?" This fn also commits/flushes (a durable write boundary).":"")}),
+      E("div",null, rows)); }
   function liveConns(n){ var outs=[], ins=[];
     links.forEach(function(l){ var s=lid(l.source), t=lid(l.target); if(s===n.id) outs.push(l); if(t===n.id) ins.push(l); });
     function build(arr, dir){ var by={};
@@ -196,6 +206,7 @@
     "function":function(n){ var det=n.det||{}; return [
       usage(usageN(n), usageBreak(n)),
       liveConns(n),
+      accessSec(n),
       behindTree(n),
       testsSec(det),
       identSec(n), sigSec(det), docSec(det), fileRowSec(n) ]; },

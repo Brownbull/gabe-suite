@@ -128,6 +128,9 @@
   .ptitle{ flex:1; min-width:0; } .pname{ font:600 15px/1.25 ui-monospace,monospace; word-break:break-word; }
   .ptype{ display:flex; align-items:center; gap:5px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin-top:4px; font-weight:700; }
   .ptype svg{ width:15px; height:15px; }
+  .pheadbadge{ display:inline-flex; align-items:center; }   /* the node's own badge (endpoint METHOD · function ROLE), drawn with __badgeGlyph */
+  .pheadbadge canvas{ width:16px; height:16px; display:block; }
+  .pbadgedesc{ font:400 10.5px/1.35 ui-monospace,monospace; color:var(--muted); text-transform:none; letter-spacing:0; margin-top:3px; }   /* the badge's meaning, one line under the kind row */
   .pmin{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px; width:26px; height:24px; cursor:pointer; flex:none; }
   .pmin:hover{ color:var(--ink); border-color:var(--accent); }
   .minname{ writing-mode:vertical-rl; transform:rotate(180deg); font:600 12px ui-monospace,monospace; color:var(--muted); white-space:nowrap; letter-spacing:.05em; }
@@ -1127,9 +1130,18 @@ function showLinkPanel(l){ var s=l.source,t=l.target, sl=(s&&s.label)||s, tl=(t&
   var pb=document.getElementById("pbody"); pb.innerHTML=""; KINDCARD.__link(l).forEach(function(nd){ if(nd) pb.append(nd); });
   document.getElementById("prailname").textContent=sl+" → "+tl; openPanel(); }
 function showPanel(n){ var K=n.K;
+  // the node's OWN badge on the kind row: endpoint → HTTP method, function → role (accessor/caller/gate/pure).
+  // The badge icon sits after the kind, its meaning drops onto a line below, the entity stays after the dot.
+  var _bk = (n.kind==="endpoint" && n.m && n.m.method) ? {kind:"method", key:n.m.method}
+          : (n.kind==="function" && n.role) ? {kind:"role", key:n.role} : null;
+  var _bdesc = (_bk && window.__BADGE_DESC && window.__BADGE_DESC[_bk.kind]) ? window.__BADGE_DESC[_bk.kind][_bk.key] : null;
   document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+(n.label||K.label)+"</div>"
-      +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(n.kind,K.col,15)+"<span>"+K.type+"</span>"+(n.ent?"<span style='color:var(--muted);font-weight:600'> · "+n.ent+"</span>":"")+"</div></div>"
+      +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(n.kind,K.col,15)+"<span>"+K.type+"</span>"
+      +(_bk?"<span class='pheadbadge' id='pheadbadge'></span>":"")
+      +(n.ent?"<span style='color:var(--muted);font-weight:600'> · "+n.ent+"</span>":"")+"</div>"
+      +(_bdesc?"<div class='pbadgedesc'>"+_bdesc+"</div>":"")+"</div>"
       +"<button class='pmin' title='minimize' onclick=\"closePanel()\">›</button>";
+  if(_bk){ var _hb=document.getElementById("pheadbadge"); if(_hb && window.__badgeGlyph){ var _cv=document.createElement("canvas"); _cv.width=_cv.height=32; var _c=_cv.getContext("2d"); _c.scale(32/128,32/128); window.__badgeGlyph(_c,_bk.kind,_bk.key); _hb.appendChild(_cv); } }
   var pb=document.getElementById("pbody"); pb.innerHTML="";
   var card=KINDCARD[n.kind]; (card ? card(n) : []).forEach(function(nd){ if(nd) pb.append(nd); });
   document.getElementById("prailname").textContent=(n.label||K.label);
