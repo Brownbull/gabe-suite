@@ -285,7 +285,7 @@ text = text.replace(OLD_ACCROW, '''    {t:"ln",k:"access",l:"access <i>function�
 
 OLD_LNK = '''      if(it.t==="ln"&&it.k){ var _lon='''
 assert OLD_LNK in text, "legend ln&&k branch anchor missing"
-text = text.replace(OLD_LNK, '''      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+text = text.replace(OLD_LNK, '''      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
       ''' + OLD_LNK, 1)
 
@@ -293,6 +293,27 @@ OLD_LGCONN_H = '''    [].forEach.call(el.querySelectorAll(".lgconn"), function(r
 assert OLD_LGCONN_H in text, "lgconn handler anchor missing"
 text = text.replace(OLD_LGCONN_H, '''    [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });
 ''' + OLD_LGCONN_H, 1)
+
+# ── connector legend declutter (operator): the row's <i>description</i> moves behind an info ⓘ whose
+#    hover shows a styled popup — same idea as the endpoint/function badge popups. The row keeps just
+#    swatch + name; _lglbl(l) splits "name <i>desc</i>" → name + a .tipico info icon carrying desc. ──
+OLD_HX = 'function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }'
+assert OLD_HX in text, "legend hx anchor missing"
+text = text.replace(OLD_HX, OLD_HX + r'''
+  function _lglbl(l){ var i=l.indexOf("<i>"); if(i<0) return l; var j=l.indexOf("</i>", i);
+    var nm=l.slice(0,i).replace(/\s+$/,""), ds=l.slice(i+3, (j<0?l.length:j));
+    return nm+' <span class="tipico info lgtip"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11.5v4.5" stroke-linecap="round"></path><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"></circle></svg><span class="tip">'+ds+'</span></span>'; }''', 1)
+
+OLD_LGBI_CSS = '#elegend .lgbi:hover, #elegend .lgbi:focus{ color:var(--accent); outline:none; }'
+assert OLD_LGBI_CSS in text, "legend lgbi CSS anchor missing"
+text = text.replace(OLD_LGBI_CSS, OLD_LGBI_CSS +
+  '\n  #elegend .lglbl .tipico{ color:var(--muted); vertical-align:middle; } #elegend .lglbl .tipico:hover{ color:var(--accent); }'
+  ' #elegend .lglbl .tipico .tip{ top:auto; bottom:18px; left:-2px; width:200px; white-space:normal; }', 1)
+
+# apply _lglbl to the connector KIND rows (ln&&it.k) — unique anchor via the ' wires"' title context
+OLD_LN_LBL = ' wires"><div class="lgvis">\'+vis(it)+\'</div><div class="lglbl">\'+it.l+\'</div></div>'
+assert OLD_LN_LBL in text, "legend ln-branch label anchor missing"
+text = text.replace(OLD_LN_LBL, ' wires"><div class="lgvis">\'+vis(it)+\'</div><div class="lglbl">\'+_lglbl(it.l)+\'</div></div>', 1)
 
 # ── batch 10 (review r2): BOTH bare buildCfg() call sites rebuild the FLAT panel and drop the tabs —
 #    re-tab after each (the .cfgtabbar guard makes __uniAddLayoutTab idempotent, state read from CFG) ──

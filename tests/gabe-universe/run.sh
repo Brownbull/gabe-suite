@@ -747,6 +747,9 @@ check('window.__uniRevealNeighbors=function' in page and 'hop.forEach(_force)' i
       "the double-click one-hop reveal (__uniRevealNeighbors) is missing")
 check('window.__uniLastClick' in page and '_ct-_lc.t)<350' in page and 'window.__uniRevealNeighbors(n)' in page,
       "the onNodeClick double-click detection (same node <350ms → reveal) is missing")
+# connector legend declutter: the row <i>description</i> moves behind an info ⓘ hover popup (operator)
+check('function _lglbl' in page and page.count('_lglbl(it.l)')>=2 and 'lglbl .tipico .tip' in page,
+      "the connector-legend info-popup declutter (_lglbl on the ln + band rows) is missing")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,
       "the station's dark surfaces are hardcoded again (light theme cannot flip them)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

@@ -33,6 +33,7 @@
   #elegend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; display:flex; align-items:center; gap:6px; } #elegend .lglbl i{ color:var(--muted); font-style:normal; }
   #elegend .lgbi{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; padding:0; color:var(--muted); background:none; border:none; cursor:help; border-radius:50%; }
   #elegend .lgbi:hover, #elegend .lgbi:focus{ color:var(--accent); outline:none; }
+  #elegend .lglbl .tipico{ color:var(--muted); vertical-align:middle; } #elegend .lglbl .tipico:hover{ color:var(--accent); } #elegend .lglbl .tipico .tip{ top:auto; bottom:18px; left:-2px; width:200px; white-space:normal; }
   /* the badge-key popup — the icon + its meaning, drawn with the node's real badge glyph */
   .badgepop{ position:fixed; z-index:60; width:270px; max-width:calc(100vw - 16px); background:var(--panel,#0e1524); border:1px solid var(--line,#26324b); border-radius:10px; box-shadow:0 10px 34px #000a; padding:9px 11px 11px; --mono:Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace; pointer-events:none; }
   .badgepop .bph{ font:700 9px/1.3 var(--mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted,#8794ab); padding-bottom:7px; margin-bottom:5px; border-bottom:1px solid var(--line,#26324b); }
@@ -4437,6 +4438,9 @@ window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badge
 window.__badgePopHide=function(){ var p=document.getElementById("badgepop"); if(p) p.remove(); };
 function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.keys(LEGEND), active=tabs[0];
   function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }
+  function _lglbl(l){ var i=l.indexOf("<i>"); if(i<0) return l; var j=l.indexOf("</i>", i);
+    var nm=l.slice(0,i).replace(/\s+$/,""), ds=l.slice(i+3, (j<0?l.length:j));
+    return nm+' <span class="tipico info lgtip"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11.5v4.5" stroke-linecap="round"></path><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"></circle></svg><span class="tip">'+ds+'</span></span>'; }
   function vis(it){ var c=hx(it.c||0xffffff);
     switch(it.t){
       case "ln": var lw=it.k?CONN[it.k]:{color:it.c,style:it.s}, lc=hx(lw.color!=null?lw.color:0xffffff),
@@ -4490,10 +4494,10 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
-      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
             if(it.t==="ln"&&it.k){ var _lon=!(window.__uniBeam)||(__uniBeam[it.k]==null||__uniBeam[it.k]>0);   // a CONNECTOR kind → click the row to show / hide that wire (like the node-kind toggles)
-        h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; return; }
+        h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
     el.innerHTML=h+'</div>';
     [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });

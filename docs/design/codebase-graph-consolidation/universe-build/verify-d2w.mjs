@@ -69,6 +69,10 @@ const legend = await p.evaluate(() => {
   const html = el.innerHTML;
   const toggle = html.indexOf('data-d2wtog') >= 0;
   const swatches = (html.match(/lgln/g) || []).length;
+  // declutter: connector rows carry the description in a .tipico .tip (hover popup), not inline text
+  const tipRows = el.querySelectorAll('.lgrow .tipico .tip');
+  let tipHasText = false; el.querySelectorAll('.lgconn .tipico .tip, .lgrow .tipico .tip').forEach(t => { if ((t.textContent || '').length > 8) tipHasText = true; });
+  const declutter = tipRows.length >= 5 && tipHasText;
   // config panel (open the wires drawer)
   let cfg = false, inputs = 0, resetRefreshed = false;
   try {
@@ -82,7 +86,7 @@ const legend = await p.evaluate(() => {
         resetRefreshed = (inp0.value.toLowerCase() === stock.toLowerCase()); }
       __uniFlOpen(null); }
   } catch (e) {}
-  return { toggle, cfg, inputs, swatches, resetRefreshed };
+  return { toggle, cfg, inputs, swatches, resetRefreshed, declutter, tipRows: tipRows.length };
 });
 
 const bandsSeen = Object.keys(sample.tally).length;
@@ -102,6 +106,8 @@ ok('legend carries the d2w on/off toggle + band swatches', legend.toggle && lege
 ok('config panel carries the band calibrate rows (5 colour inputs)', legend.cfg && legend.inputs === 5,
    `cfg=${legend.cfg} inputs=${legend.inputs}`);
 ok('band reset refreshes the live colour pickers (not the detached rt)', legend.resetRefreshed === true);
+ok('connector legend descriptions moved into info-ⓘ hover popups (declutter)', legend.declutter === true,
+   `tipRows=${legend.tipRows}`);
 ok('no page/console errors', errs.length === 0, errs.slice(0, 3).join(' | '));
 
 console.log(R.join('\n'));
