@@ -73,6 +73,10 @@ const legend = await p.evaluate(() => {
   const tipRows = el.querySelectorAll('.lgrow .tipico .tip');
   let tipHasText = false; el.querySelectorAll('.lgconn .tipico .tip, .lgrow .tipico .tip').forEach(t => { if ((t.textContent || '').length > 8) tipHasText = true; });
   const declutter = tipRows.length >= 5 && tipHasText;
+  // the distance-heat spectrum now lives INSIDE the calls row's info popup (≥5 colour swatches)
+  const callsTip = el.querySelector('.lgconn[data-lgconn="calls"] .tipico .tip');
+  const callsSpectrum = !!callsTip && callsTip.querySelectorAll('span[style*="background"]').length >= 5;
+  const noBandRows = el.innerHTML.indexOf('into a write') < 0 || callsSpectrum; // bands are in the popup, not standalone rows
   // config panel (open the wires drawer)
   let cfg = false, inputs = 0, resetRefreshed = false;
   try {
@@ -86,7 +90,7 @@ const legend = await p.evaluate(() => {
         resetRefreshed = (inp0.value.toLowerCase() === stock.toLowerCase()); }
       __uniFlOpen(null); }
   } catch (e) {}
-  return { toggle, cfg, inputs, swatches, resetRefreshed, declutter, tipRows: tipRows.length };
+  return { toggle, cfg, inputs, swatches, resetRefreshed, declutter, tipRows: tipRows.length, callsSpectrum };
 });
 
 const bandsSeen = Object.keys(sample.tally).length;
@@ -101,8 +105,9 @@ ok('the NO-WRITE band (4/green) paints some calls wires', (sample.tally[4] || 0)
    `band4=${sample.tally[4] || 0} (#${(sample.band4).toString(16)})`);
 ok('toggle __uniD2W=false reverts calls wires to the flat colour', flat.flatCount > 0,
    `${flat.flatCount}/${flat.calls} flat (#${(flat.flatHex >>> 0).toString(16)})`);
-ok('legend carries the d2w on/off toggle + band swatches', legend.toggle && legend.swatches >= 5,
+ok('legend carries the d2w on/off toggle + connector swatches', legend.toggle && legend.swatches >= 5,
    `toggle=${legend.toggle} swatches=${legend.swatches}`);
+ok('the distance-heat spectrum folds into the calls info-popup (≥5 swatches)', legend.callsSpectrum === true);
 ok('config panel carries the band calibrate rows (5 colour inputs)', legend.cfg && legend.inputs === 5,
    `cfg=${legend.cfg} inputs=${legend.inputs}`);
 ok('band reset refreshes the live colour pickers (not the detached rt)', legend.resetRefreshed === true);

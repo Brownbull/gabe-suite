@@ -67,8 +67,23 @@ const r = await p.evaluate(() => {
   return out;
 });
 
+// search-select === click+focus: __uniGoto reveals a fleet-hidden node then selects+frames it
+const gotoR = await p.evaluate(() => {
+  let hid = null;
+  for (const n of nodes) { if (n && n.ent) { UNIVIS.ent[n.ent] = Object.assign({}, _VISDEF); UNIVIS.ent[n.ent].show = 0; applyVis('all');
+    if (!_nodeVisibleFn(n)) { hid = n; break; } UNIVIS.ent[n.ent] = Object.assign({}, _VISDEF); applyVis('all'); } }
+  if (!hid) return { skip: true };
+  const before = !_nodeVisibleFn(hid);
+  window.__uniGoto(hid.id);
+  return { skip: false, before, nowVisible: _nodeVisibleFn(hid),
+    selected: (typeof SEL !== 'undefined' && SEL && SEL.data && SEL.data.id === hid.id), id: hid.id };
+});
+
 const R = [];
 const ok = (name, cond, extra) => R.push((cond ? 'PASS  ' : 'FAIL  ') + name + (extra ? '  — ' + extra : ''));
+ok('search-select path (__uniGoto) reveals a hidden node then selects+frames it (= click+focus)',
+   gotoR.skip || (gotoR.before && gotoR.nowVisible && gotoR.selected),
+   gotoR.skip ? 'skip' : `${gotoR.id} before-hidden=${gotoR.before} now-visible=${gotoR.nowVisible} selected=${gotoR.selected}`);
 if (r.skip) { console.log('SKIP  no cross-entity neighbour found (unexpected)'); await b.close(); process.exit(1); }
 ok('setup: the chosen neighbour started HIDDEN', r.hiddenBefore, `${r.node} → ${r.neighbour} (${r.nbEnt})`);
 ok('double-click reveals the one-hop neighbour', r.hiddenBefore && r.neighbourNowVisible,

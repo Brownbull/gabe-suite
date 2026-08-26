@@ -3405,7 +3405,7 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
   function _collect(q){ var out=[];
     nodes.forEach(function(n){ var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"elements", sc:sc, label:n.label, sub:n.ent, ico:svgInline(n.kind, n.col, 12),
-        go:function(){ if(window.__uniSelNode) __uniSelNode(n); _frameSet([n.id]); } }); });
+        go:function(){ if(window.__uniGoto) __uniGoto(n.id); else if(window.__uniSelNode){ __uniSelNode(n); _frameSet([n.id]); } } }); });
     if(typeof _CAPST!=="undefined" && _CAPST) _CAPST.nodes.forEach(function(n){ if(NIDS[n.id]) return;
       var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"collapsed", sc:sc+0.25, label:n.label, sub:n.ent, hint:"opens the capsule",
@@ -3415,17 +3415,14 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
       var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"types (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns Types ON",
         ico:svgInline("type", KINDCOL.type, 12),
-        go:function(){ CFG.showTypes="on"; try{ toggleTypes(true); }catch(e){}
-          var tb=document.getElementById("typesTog"); if(tb) tb.classList.add("on");
-          if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
+        go:function(){ if(window.__uniGoto) __uniGoto(n.id); } }); });   // __uniGoto wakes Types ON + reveals + selects (one path)
     if(typeof _fnsOn!=="undefined" && !_fnsOn && window.GABE_LEVELS && GABE_LEVELS.fn_nodes && GABE_LEVELS.fn_nodes.length){
       if(!_FNNODES) try{ _buildFnData(); }catch(e){}
       (_FNNODES||[]).forEach(function(n){ if(NIDS[n.id]) return;
         var sc=_score(q, n.label, n.id);
         if(sc>=0) out.push({g:"functions (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns ƒ ON",
           ico:svgInline("function", KINDCOL["function"], 12),
-          go:function(){ if(window.__uniSetKindState) __uniSetKindState("function","all"); else { CFG.showFns="on"; try{ toggleFns(true); }catch(e){} }
-            if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
+          go:function(){ if(window.__uniGoto) __uniGoto(n.id); } }); });   // __uniGoto wakes ƒ ON + reveals + selects (one path)
     }
     _ents.forEach(function(e){ var el=window.__uniEntLabel?__uniEntLabel(e):e;
       var _a=_score(q, el, e), _b=_score(q, e), sc=(_a<0)?_b:(_b<0)?_a:Math.min(_a,_b);   // best of display and raw slug — the fe· prefix must not demote a "design…" prefix match
@@ -4382,20 +4379,14 @@ var LEGEND={
     [{t:"hd",l:"backend"}],
     ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
     [ {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · click a row to HIDE that kind graph-wide"} ]),
-  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind — click a row to show / hide it</i>"},
+  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
     {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
     {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
     {t:"ln",k:"imports",l:"imports <i>a cross-entity import</i>"},
     {t:"ln",k:"bridge",l:"bridge <i>a frontend fetch reaching an API</i>"},
     {t:"ln",k:"rollup",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
     {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
-    {t:"grp",l:"calls · distance to a write <i>— a call wire cools from orange (its target reaches a write) to green (never); the red access wire above is the write itself</i>"},
     {t:"d2wtog"},
-    {t:"band",i:0,l:"into a write <i>this call reaches the writing function (orange — the hottest a call gets)</i>"},
-    {t:"band",i:1,l:"1 hop back <i>one call before a write</i>"},
-    {t:"band",i:2,l:"2 hops back"},
-    {t:"band",i:3,l:"3+ hops back"},
-    {t:"band",i:4,l:"no write <i>never reaches a write — frontend, pure logic</i>"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -4438,9 +4429,17 @@ window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badge
 window.__badgePopHide=function(){ var p=document.getElementById("badgepop"); if(p) p.remove(); };
 function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.keys(LEGEND), active=tabs[0];
   function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }
-  function _lglbl(l){ var i=l.indexOf("<i>"); if(i<0) return l; var j=l.indexOf("</i>", i);
-    var nm=l.slice(0,i).replace(/\s+$/,""), ds=l.slice(i+3, (j<0?l.length:j));
-    return nm+' <span class="tipico info lgtip"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11.5v4.5" stroke-linecap="round"></path><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"></circle></svg><span class="tip">'+ds+'</span></span>'; }
+  var _INFOSVG='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11.5v4.5" stroke-linecap="round"></path><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"></circle></svg>';
+  function _bandSpectrumHTML(){ var lbls=["into a write (reaches the writing fn)","1 hop back","2 hops back","3+ hops back","never reaches a write"];
+    var s='<b>distance to a write</b> — a call’s colour = hops until a permanent write:<br>';
+    for(var i=0;i<5;i++){ var c=hx((window.BANDPAL&&window.BANDPAL[i]!=null)?window.BANDPAL[i]:0x888888);
+      s+='<span style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="width:16px;height:3px;background:'+c+';display:inline-block;flex:none"></span>'+lbls[i]+'</span>'; }
+    s+='<span style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="width:16px;height:3px;background:'+hx((window.CONN&&CONN.access)?CONN.access.color:0xe5484d)+';display:inline-block;flex:none"></span>the red <b>access</b> wire is the write itself</span>';
+    return s; }
+  function _lglbl(l, extra){ var i=l.indexOf("<i>"), nm, ds;
+    if(i<0){ nm=l; ds=""; } else { var j=l.indexOf("</i>", i); nm=l.slice(0,i).replace(/\s+$/,""); ds=l.slice(i+3, (j<0?l.length:j)); }
+    if(!ds && !extra) return l;
+    return nm+' <span class="tipico info lgtip">'+_INFOSVG+'<span class="tip">'+ds+(extra?((ds?'<br>':'')+extra):'')+'</span></span>'; }
   function vis(it){ var c=hx(it.c||0xffffff);
     switch(it.t){
       case "ln": var lw=it.k?CONN[it.k]:{color:it.c,style:it.s}, lc=hx(lw.color!=null?lw.color:0xffffff),
@@ -4497,7 +4496,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
             if(it.t==="ln"&&it.k){ var _lon=!(window.__uniBeam)||(__uniBeam[it.k]==null||__uniBeam[it.k]>0);   // a CONNECTOR kind → click the row to show / hide that wire (like the node-kind toggles)
-        h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
+        h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+_lglbl(it.l, it.k==="calls"?_bandSpectrumHTML():"")+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
     el.innerHTML=h+'</div>';
     [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });

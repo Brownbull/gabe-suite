@@ -736,8 +736,8 @@ check('var _band=(_gk==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;' in page
       "the call site no longer computes the d2w band for calls wires or threads it into connectorWire")
 check('d2w:f.d2w' in page,
       "the levels fn_node d2w no longer rides onto the render node (call-wire heat lost its source)")
-check('t:"d2wtog"' in page and 't:"band",i:0' in page and 'calls · distance to a write' in page,
-      "the D2W band legend group (5 swatches + on/off toggle) is missing")
+check('t:"d2wtog"' in page and 'function _bandSpectrumHTML' in page and 'it.k==="calls"?_bandSpectrumHTML()' in page,
+      "the D2W band spectrum no longer folds into the calls info-popup (+ the on/off toggle row)")
 check('data-d2wtog' in page and 'window.__uniD2W=!window.__uniD2W' in page,
       "the legend d2w on/off toggle no longer flips __uniD2W")
 check('CALLS · DISTANCE HEAT' in page and 'data-band=' in page and 'data-bandcopy=' in page and 'BANDPAL0' in page,
@@ -748,8 +748,11 @@ check('window.__uniRevealNeighbors=function' in page and 'hop.forEach(_force)' i
 check('window.__uniLastClick' in page and '_ct-_lc.t)<350' in page and 'window.__uniRevealNeighbors(n)' in page,
       "the onNodeClick double-click detection (same node <350ms → reveal) is missing")
 # connector legend declutter: the row <i>description</i> moves behind an info ⓘ hover popup (operator)
-check('function _lglbl' in page and page.count('_lglbl(it.l)')>=2 and 'lglbl .tipico .tip' in page,
+check('function _lglbl' in page and page.count('_lglbl(it.l')>=2 and 'lglbl .tipico .tip' in page,
       "the connector-legend info-popup declutter (_lglbl on the ln + band rows) is missing")
+# search-select routes through the SAME path as click+focus (__uniGoto: reveal-if-hidden + select + frame)
+check(page.count('__uniGoto(n.id)')>=3,
+      "the search-result select no longer routes through __uniGoto (reveal+select+frame, like a click)")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,
       "the station's dark surfaces are hardcoded again (light theme cannot flip them)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

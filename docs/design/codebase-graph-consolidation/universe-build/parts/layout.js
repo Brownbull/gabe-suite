@@ -1973,7 +1973,7 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
   function _collect(q){ var out=[];
     nodes.forEach(function(n){ var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"elements", sc:sc, label:n.label, sub:n.ent, ico:svgInline(n.kind, n.col, 12),
-        go:function(){ if(window.__uniSelNode) __uniSelNode(n); _frameSet([n.id]); } }); });
+        go:function(){ if(window.__uniGoto) __uniGoto(n.id); else if(window.__uniSelNode){ __uniSelNode(n); _frameSet([n.id]); } } }); });
     if(typeof _CAPST!=="undefined" && _CAPST) _CAPST.nodes.forEach(function(n){ if(NIDS[n.id]) return;
       var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"collapsed", sc:sc+0.25, label:n.label, sub:n.ent, hint:"opens the capsule",
@@ -1983,17 +1983,14 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
       var sc=_score(q, n.label, (n.det&&n.det.file)||n.id);
       if(sc>=0) out.push({g:"types (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns Types ON",
         ico:svgInline("type", KINDCOL.type, 12),
-        go:function(){ CFG.showTypes="on"; try{ toggleTypes(true); }catch(e){}
-          var tb=document.getElementById("typesTog"); if(tb) tb.classList.add("on");
-          if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
+        go:function(){ if(window.__uniGoto) __uniGoto(n.id); } }); });   // __uniGoto wakes Types ON + reveals + selects (one path)
     if(typeof _fnsOn!=="undefined" && !_fnsOn && window.GABE_LEVELS && GABE_LEVELS.fn_nodes && GABE_LEVELS.fn_nodes.length){
       if(!_FNNODES) try{ _buildFnData(); }catch(e){}
       (_FNNODES||[]).forEach(function(n){ if(NIDS[n.id]) return;
         var sc=_score(q, n.label, n.id);
         if(sc>=0) out.push({g:"functions (off)", sc:sc+0.5, label:n.label, sub:n.ent, hint:"turns ƒ ON",
           ico:svgInline("function", KINDCOL["function"], 12),
-          go:function(){ if(window.__uniSetKindState) __uniSetKindState("function","all"); else { CFG.showFns="on"; try{ toggleFns(true); }catch(e){} }
-            if(NIDS[n.id]){ if(window.__uniSelNode) __uniSelNode(NIDS[n.id]); _frameSet([n.id]); } } }); });
+          go:function(){ if(window.__uniGoto) __uniGoto(n.id); } }); });   // __uniGoto wakes ƒ ON + reveals + selects (one path)
     }
     _ents.forEach(function(e){ var el=window.__uniEntLabel?__uniEntLabel(e):e;
       var _a=_score(q, el, e), _b=_score(q, e), sc=(_a<0)?_b:(_b<0)?_a:Math.min(_a,_b);   // best of display and raw slug — the fe· prefix must not demote a "design…" prefix match

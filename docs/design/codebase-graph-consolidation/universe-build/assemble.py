@@ -255,7 +255,7 @@ OLD_LEGROWS = '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship
     {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
     {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},'''
 assert OLD_LEGROWS in text, "legend Connectors literals anchor missing"
-text = text.replace(OLD_LEGROWS, '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind — click a row to show / hide it</i>"},
+text = text.replace(OLD_LEGROWS, '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
     {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
     {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
     {t:"ln",k:"imports",l:"imports <i>a cross-entity import</i>"},
@@ -274,13 +274,7 @@ OLD_ACCROW = '''    {t:"ln",k:"access",l:"access <i>function→model — the TRU
     {t:"grp",l:"transports · <i>what travels the routes</i>"},'''
 assert OLD_ACCROW in text, "legend access→transports anchor missing"
 text = text.replace(OLD_ACCROW, '''    {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
-    {t:"grp",l:"calls · distance to a write <i>— a call wire cools from orange (its target reaches a write) to green (never); the red access wire above is the write itself</i>"},
     {t:"d2wtog"},
-    {t:"band",i:0,l:"into a write <i>this call reaches the writing function (orange — the hottest a call gets)</i>"},
-    {t:"band",i:1,l:"1 hop back <i>one call before a write</i>"},
-    {t:"band",i:2,l:"2 hops back"},
-    {t:"band",i:3,l:"3+ hops back"},
-    {t:"band",i:4,l:"no write <i>never reaches a write — frontend, pure logic</i>"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},''', 1)
 
 OLD_LNK = '''      if(it.t==="ln"&&it.k){ var _lon='''
@@ -300,9 +294,17 @@ text = text.replace(OLD_LGCONN_H, '''    [].forEach.call(el.querySelectorAll("[d
 OLD_HX = 'function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }'
 assert OLD_HX in text, "legend hx anchor missing"
 text = text.replace(OLD_HX, OLD_HX + r'''
-  function _lglbl(l){ var i=l.indexOf("<i>"); if(i<0) return l; var j=l.indexOf("</i>", i);
-    var nm=l.slice(0,i).replace(/\s+$/,""), ds=l.slice(i+3, (j<0?l.length:j));
-    return nm+' <span class="tipico info lgtip"><svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11.5v4.5" stroke-linecap="round"></path><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"></circle></svg><span class="tip">'+ds+'</span></span>'; }''', 1)
+  var _INFOSVG='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"></circle><path d="M12 11.5v4.5" stroke-linecap="round"></path><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"></circle></svg>';
+  function _bandSpectrumHTML(){ var lbls=["into a write (reaches the writing fn)","1 hop back","2 hops back","3+ hops back","never reaches a write"];
+    var s='<b>distance to a write</b> — a call’s colour = hops until a permanent write:<br>';
+    for(var i=0;i<5;i++){ var c=hx((window.BANDPAL&&window.BANDPAL[i]!=null)?window.BANDPAL[i]:0x888888);
+      s+='<span style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="width:16px;height:3px;background:'+c+';display:inline-block;flex:none"></span>'+lbls[i]+'</span>'; }
+    s+='<span style="display:flex;align-items:center;gap:6px;margin:3px 0"><span style="width:16px;height:3px;background:'+hx((window.CONN&&CONN.access)?CONN.access.color:0xe5484d)+';display:inline-block;flex:none"></span>the red <b>access</b> wire is the write itself</span>';
+    return s; }
+  function _lglbl(l, extra){ var i=l.indexOf("<i>"), nm, ds;
+    if(i<0){ nm=l; ds=""; } else { var j=l.indexOf("</i>", i); nm=l.slice(0,i).replace(/\s+$/,""); ds=l.slice(i+3, (j<0?l.length:j)); }
+    if(!ds && !extra) return l;
+    return nm+' <span class="tipico info lgtip">'+_INFOSVG+'<span class="tip">'+ds+(extra?((ds?'<br>':'')+extra):'')+'</span></span>'; }''', 1)
 
 OLD_LGBI_CSS = '#elegend .lgbi:hover, #elegend .lgbi:focus{ color:var(--accent); outline:none; }'
 assert OLD_LGBI_CSS in text, "legend lgbi CSS anchor missing"
@@ -313,7 +315,7 @@ text = text.replace(OLD_LGBI_CSS, OLD_LGBI_CSS +
 # apply _lglbl to the connector KIND rows (ln&&it.k) — unique anchor via the ' wires"' title context
 OLD_LN_LBL = ' wires"><div class="lgvis">\'+vis(it)+\'</div><div class="lglbl">\'+it.l+\'</div></div>'
 assert OLD_LN_LBL in text, "legend ln-branch label anchor missing"
-text = text.replace(OLD_LN_LBL, ' wires"><div class="lgvis">\'+vis(it)+\'</div><div class="lglbl">\'+_lglbl(it.l)+\'</div></div>', 1)
+text = text.replace(OLD_LN_LBL, ' wires"><div class="lgvis">\'+vis(it)+\'</div><div class="lglbl">\'+_lglbl(it.l, it.k==="calls"?_bandSpectrumHTML():"")+\'</div></div>', 1)
 
 # ── batch 10 (review r2): BOTH bare buildCfg() call sites rebuild the FLAT panel and drop the tabs —
 #    re-tab after each (the .cfgtabbar guard makes __uniAddLayoutTab idempotent, state read from CFG) ──
