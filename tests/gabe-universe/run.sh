@@ -455,6 +455,8 @@ check('sechd("truck","Cargo")' in page and 'window.__uniAssets.cargo()' in page 
       "the wire card must have SEPARATE Cargo + Test-chip sections, each with its 3D asset thumbnail (operator)")
 check('class:"flagrow ok"' in page and 'no cargo ' in page and 'no test chip ' in page and 'same-entity wire (no transit)' in page,
       "each wire section must carry a present/absent FLAG (cross-entity → present; same-entity → no transit)")
+check('var _tube=new T.TubeGeometry(_crv' in page and 'window.__uniHovLink===l||window.__uniSelLink===l' in page,
+      "a SELECTED (or hovered) wire must render as a thick WHITE tube, not just a slightly brighter kind-color line (operator)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
 check('var body=E("div",{class:"jsec"});' in page and 'A stop · reached by a test that spans other entities.' in page and 'class="jsub"' not in page,
       "the journeys entry/stop legend must live in the info TOOLTIP, not an inline .jsub line")

@@ -415,7 +415,11 @@ text = text.replace(OLD_CONN,
 OLD_LINEADD = "var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }"
 assert OLD_LINEADD in text, "line-add anchor missing"
 text = text.replace(OLD_LINEADD,
-  "var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
+  # SELECTED / HOVER wire → a thick WHITE tube (operator: the selection was invisible — same kind color, only slightly brighter)
+  "if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts); var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), 0.9, 6, false);"
+  " var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:0.95, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});"
+  " var _tmesh=new T.Mesh(_tube,_tm); _tmesh.userData.kind=kind; grp.add(_tmesh); return; }catch(_te){} }"
+  " var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
 
 # ── batch 39: the LINK card's endpoint chips hover-light their nodes (element-card parity) ──
 OLD_LCHIP = """  C.__link=function(l){ var s=l.source, t=l.target, sl=(s&&s.label)||s, tl=(t&&t.label)||t, sk=(s&&s.kind)||"function", tk=(t&&t.kind)||"function";
@@ -544,7 +548,7 @@ text = text.replace(OLD_CALL2,
 OLD_WHF = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });"
 assert OLD_WHF in text, "selected-wire glow anchor missing"
 text = text.replace(OLD_WHF,
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l)); });", 1)
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l)); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

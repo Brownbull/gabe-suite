@@ -179,7 +179,7 @@ const defs = await p.evaluate(() => {
   d.wireTitle = document.querySelector('#phead .pname')?.textContent || '';
   d.selGlows = window.__uniSelLink === l && [...connGroup.children].some(w => w.userData.kind && w.material.blending === THREE.AdditiveBlending);
   const plainWhite = () => [...connGroup.children].some(w => w.userData.kind && !w.material.vertexColors && w.material.color.getHex() === 0xffffff);   // gradient mats are white by design — exclude them
-  d.litKeepColor = !plainWhite();                                           // a SELECTION (wire + lit set) must NOT recolor anything
+  d.selWhite = plainWhite();                                                // a SELECTED wire NOW renders as a thick WHITE tube (operator) — white is no longer hover-only
   window.__uniApplyTheme('light');
   d.themeLight = document.documentElement.getAttribute('data-theme') === 'light' && Graph.backgroundColor() === '#e8ecf3';
   window.__uniApplyTheme('dark');
@@ -624,7 +624,7 @@ if (!(defs.fkStyle === 'sparse' && defs.fkGrad && defs.callsStyle === 'solid' &&
 if (!(defs.modeBefore === 'glow' && defs.modeAfter === 'focus' && defs.restAfter === 'dim')) fails.push('focus options do not BITE (auto-switch to focus mode)');
 if (!(defs.wirePanel && /→/.test(defs.wireTitle))) fails.push('wires are not clickable (connection panel did not open)');
 if (!(defs.selGlows && defs.linkLit)) fails.push('selected wire must GLOW and BFS-light its endpoints');
-if (!defs.litKeepColor) fails.push('selection recolored a wire — WHITE is reserved for the hover pair');
+if (!defs.selWhite) fails.push('selected wire must render as a thick WHITE tube (operator)');
 if (!(defs.themeLight && defs.themeBack)) fails.push('theme toggle broken');
 if (!(defs.hovWhite && defs.hovIndigo)) fails.push('the HOVER pair wire must recolor (white dark · indigo light)');
 if (!(defs.restOpts === 'dim,hide' && defs.restIcons)) fails.push('focus rest must be DIM+HIDE icon pills only');

@@ -1281,7 +1281,7 @@ function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov){ var cfg=CONN[kind]|
     geo.setAttribute("color", new T.BufferAttribute(_arr,3)); }
   if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});
   else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn}); }
-  var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
+  if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts); var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), 0.9, 6, false); var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:0.95, blending:T.AdditiveBlending, depthWrite:false, depthTest:false}); var _tmesh=new T.Mesh(_tube,_tm); _tmesh.userData.kind=kind; grp.add(_tmesh); return; }catch(_te){} } var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
 var connGroup=null;
 function updateConnectors(){ if(!connGroup) return;
   while(connGroup.children.length){ var ch=connGroup.children.pop(); if(ch.geometry&&ch.geometry.dispose)ch.geometry.dispose(); connGroup.remove(ch); }
@@ -1290,7 +1290,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
     if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
     if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return; var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;
-    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null, (window.__uniHovLink===l)); });
+    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l)); });
   if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
