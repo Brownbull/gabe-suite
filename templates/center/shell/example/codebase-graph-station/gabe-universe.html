@@ -622,6 +622,10 @@
   /* the focus/highlight controls retired to fixed defaults (operator); the four surviving on/off
      toggles live in the entity pane as .hltog buttons (styled by the shared .itog rule). */
   .hltog{ min-width:30px; }
+  /* SELECTED LINE config (operator): opacity/thick/pattern + a copy button in the grplbl */
+  #cfg #selline .grplbl{ display:flex; align-items:center; }
+  #cfg #selline .slcopy{ margin-left:auto; font-size:11px; line-height:1; color:var(--muted); background:none; border:1px solid var(--line); border-radius:4px; width:20px; height:17px; cursor:pointer; padding:0; }
+  #cfg #selline .slcopy:hover{ color:var(--accent); border-color:var(--accent); }
   /* card section ASSET THUMBNAIL (operator): the live 3D graph asset (ship/sat/cargo) drawn inline in the
      section header, right-aligned — the SAME asset the graph draws for that dimension. */
   canvas.asetthumb{ margin-left:auto; width:46px; height:36px; flex:0 0 auto; border-radius:6px;
@@ -1281,7 +1285,7 @@ function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov){ var cfg=CONN[kind]|
     geo.setAttribute("color", new T.BufferAttribute(_arr,3)); }
   if(cfg.style==="solid") mat=new T.LineBasicMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});
   else{ var base=({dashed:[1.7,1.0], dotted:[0.35,0.95], sparse:[1.4,2.8]})[cfg.style]||[1.2,1.0], dn=cfg.density||1; mat=new T.LineDashedMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn}); }
-  if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts); var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), 0.9, 6, false); var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:0.95, blending:T.AdditiveBlending, depthWrite:false, depthTest:false}); var _tmesh=new T.Mesh(_tube,_tm); _tmesh.userData.kind=kind; grp.add(_tmesh); return; }catch(_te){} } var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
+  if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts); var _sr=(typeof CFG!=="undefined"&&CFG.selThick!=null)?CFG.selThick:0.5, _so=(typeof CFG!=="undefined"&&CFG.selOpacity!=null)?CFG.selOpacity:0.95, _sp=(typeof CFG!=="undefined"&&CFG.selPattern)?CFG.selPattern:"solid"; var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:_so, blending:T.AdditiveBlending, depthWrite:false, depthTest:false}); if(_sp==="solid"){ var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), _sr, 6, false); var _m=new T.Mesh(_tube,_tm); _m.userData.kind=kind; grp.add(_m); } else { var _dn=(_sp==="dotted")?26:13; for(var _di=0;_di<_dn;_di+=2){ var _a=_di/_dn, _b2=Math.min(1,(_di+1)/_dn); var _sc=new T.CatmullRomCurve3([_crv.getPoint(_a), _crv.getPoint((_a+_b2)/2), _crv.getPoint(_b2)]); var _dm=new T.Mesh(new T.TubeGeometry(_sc, 3, _sr, 6, false), _tm); _dm.userData.kind=kind; grp.add(_dm); } } return; }catch(_te){} } var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }
 var connGroup=null;
 function updateConnectors(){ if(!connGroup) return;
   while(connGroup.children.length){ var ch=connGroup.children.pop(); if(ch.geometry&&ch.geometry.dispose)ch.geometry.dispose(); connGroup.remove(ch); }
@@ -3112,7 +3116,18 @@ window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbo
       if(d[0]==="r4"){ try{ tuneLinkForce(); if(typeof Graph!=="undefined"&&Graph) Graph.d3ReheatSimulation(); }catch(e){} }
       try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
     row.appendChild(b); });
-  g.appendChild(row); body.appendChild(g); };
+  g.appendChild(row); body.appendChild(g);
+  /* ── SELECTED LINE (operator: the white tube is brutal — dial opacity/thick/pattern, copy, settle) ── */
+  if(typeof CFG!=="undefined"){ if(CFG.selOpacity==null) CFG.selOpacity=0.95; if(CFG.selThick==null) CFG.selThick=0.5; if(CFG.selPattern==null) CFG.selPattern="solid"; }
+  var sg=document.createElement("div"); sg.className="grp"; sg.id="selline";
+  var _srow=function(label,key,mn,mx,st){ return '<div class="cfgrow"><span class="rlbl" style="width:52px">'+label+'</span><input type="range" class="rng slrng" data-sk="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="rval" data-sv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; };
+  var _pat='<div class="cfgrow"><span class="rlbl" style="width:52px">pattern</span><span class="pill selpat" data-sk="selPattern">'+["solid","dashed","dotted"].map(function(o){ return '<button data-v="'+o+'"'+(o===CFG.selPattern?' class="on"':'')+'>'+o+'</button>'; }).join('')+'</span></div>';
+  sg.innerHTML='<div class="grplbl" title="the SELECTED wire’s look — the white highlight tube">SELECTED LINE<button class="slcopy" title="copy this config as JSON">⬘</button></div>'
+    +_srow("opacity","selOpacity",0.1,1,0.05)+_srow("thick","selThick",0.2,2.5,0.1)+_pat;
+  body.appendChild(sg);
+  [].forEach.call(sg.querySelectorAll(".slrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-sk"); CFG[k]=+inp.value; var vv=sg.querySelector('[data-sv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2); try{ updateConnectors(); }catch(e){} }); });
+  [].forEach.call(sg.querySelectorAll(".selpat button"), function(bt){ bt.onclick=function(){ CFG.selPattern=bt.getAttribute("data-v"); [].forEach.call(sg.querySelectorAll(".selpat button"), function(x){ x.classList.toggle("on", x===bt); }); try{ updateConnectors(); }catch(e){} }; });
+  var _sc=sg.querySelector(".slcopy"); if(_sc) _sc.onclick=function(){ var o={selOpacity:CFG.selOpacity, selThick:CFG.selThick, selPattern:CFG.selPattern}; var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(e){} _sc.innerHTML="✓"; setTimeout(function(){ _sc.innerHTML="⬘"; }, 900); }; };
 /* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
    a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
 window.__uniGoto=function(id){ if(!id) return;

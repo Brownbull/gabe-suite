@@ -1733,7 +1733,18 @@ window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbo
       if(d[0]==="r4"){ try{ tuneLinkForce(); if(typeof Graph!=="undefined"&&Graph) Graph.d3ReheatSimulation(); }catch(e){} }
       try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
     row.appendChild(b); });
-  g.appendChild(row); body.appendChild(g); };
+  g.appendChild(row); body.appendChild(g);
+  /* ── SELECTED LINE (operator: the white tube is brutal — dial opacity/thick/pattern, copy, settle) ── */
+  if(typeof CFG!=="undefined"){ if(CFG.selOpacity==null) CFG.selOpacity=0.95; if(CFG.selThick==null) CFG.selThick=0.5; if(CFG.selPattern==null) CFG.selPattern="solid"; }
+  var sg=document.createElement("div"); sg.className="grp"; sg.id="selline";
+  var _srow=function(label,key,mn,mx,st){ return '<div class="cfgrow"><span class="rlbl" style="width:52px">'+label+'</span><input type="range" class="rng slrng" data-sk="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="rval" data-sv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; };
+  var _pat='<div class="cfgrow"><span class="rlbl" style="width:52px">pattern</span><span class="pill selpat" data-sk="selPattern">'+["solid","dashed","dotted"].map(function(o){ return '<button data-v="'+o+'"'+(o===CFG.selPattern?' class="on"':'')+'>'+o+'</button>'; }).join('')+'</span></div>';
+  sg.innerHTML='<div class="grplbl" title="the SELECTED wire’s look — the white highlight tube">SELECTED LINE<button class="slcopy" title="copy this config as JSON">⬘</button></div>'
+    +_srow("opacity","selOpacity",0.1,1,0.05)+_srow("thick","selThick",0.2,2.5,0.1)+_pat;
+  body.appendChild(sg);
+  [].forEach.call(sg.querySelectorAll(".slrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-sk"); CFG[k]=+inp.value; var vv=sg.querySelector('[data-sv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2); try{ updateConnectors(); }catch(e){} }); });
+  [].forEach.call(sg.querySelectorAll(".selpat button"), function(bt){ bt.onclick=function(){ CFG.selPattern=bt.getAttribute("data-v"); [].forEach.call(sg.querySelectorAll(".selpat button"), function(x){ x.classList.toggle("on", x===bt); }); try{ updateConnectors(); }catch(e){} }; });
+  var _sc=sg.querySelector(".slcopy"); if(_sc) _sc.onclick=function(){ var o={selOpacity:CFG.selOpacity, selThick:CFG.selThick, selPattern:CFG.selPattern}; var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(e){} _sc.innerHTML="✓"; setTimeout(function(){ _sc.innerHTML="⬘"; }, 900); }; };
 /* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
    a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
 window.__uniGoto=function(id){ if(!id) return;

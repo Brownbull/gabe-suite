@@ -476,6 +476,10 @@
   /* the focus/highlight controls retired to fixed defaults (operator); the four surviving on/off
      toggles live in the entity pane as .hltog buttons (styled by the shared .itog rule). */
   .hltog{ min-width:30px; }
+  /* SELECTED LINE config (operator): opacity/thick/pattern + a copy button in the grplbl */
+  #cfg #selline .grplbl{ display:flex; align-items:center; }
+  #cfg #selline .slcopy{ margin-left:auto; font-size:11px; line-height:1; color:var(--muted); background:none; border:1px solid var(--line); border-radius:4px; width:20px; height:17px; cursor:pointer; padding:0; }
+  #cfg #selline .slcopy:hover{ color:var(--accent); border-color:var(--accent); }
   /* card section ASSET THUMBNAIL (operator): the live 3D graph asset (ship/sat/cargo) drawn inline in the
      section header, right-aligned — the SAME asset the graph draws for that dimension. */
   canvas.asetthumb{ margin-left:auto; width:46px; height:36px; flex:0 0 auto; border-radius:6px;

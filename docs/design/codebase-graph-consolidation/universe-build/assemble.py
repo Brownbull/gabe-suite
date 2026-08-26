@@ -416,9 +416,12 @@ OLD_LINEADD = "var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.c
 assert OLD_LINEADD in text, "line-add anchor missing"
 text = text.replace(OLD_LINEADD,
   # SELECTED / HOVER wire → a thick WHITE tube (operator: the selection was invisible — same kind color, only slightly brighter)
-  "if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts); var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), 0.9, 6, false);"
-  " var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:0.95, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});"
-  " var _tmesh=new T.Mesh(_tube,_tm); _tmesh.userData.kind=kind; grp.add(_tmesh); return; }catch(_te){} }"
+  "if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts);"
+  " var _sr=(typeof CFG!==\"undefined\"&&CFG.selThick!=null)?CFG.selThick:0.5, _so=(typeof CFG!==\"undefined\"&&CFG.selOpacity!=null)?CFG.selOpacity:0.95, _sp=(typeof CFG!==\"undefined\"&&CFG.selPattern)?CFG.selPattern:\"solid\";"   # operator: dial the selected line (opacity/thick/pattern) from the Temporary Config
+  " var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:_so, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});"
+  " if(_sp===\"solid\"){ var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), _sr, 6, false); var _m=new T.Mesh(_tube,_tm); _m.userData.kind=kind; grp.add(_m); }"
+  " else { var _dn=(_sp===\"dotted\")?26:13; for(var _di=0;_di<_dn;_di+=2){ var _a=_di/_dn, _b2=Math.min(1,(_di+1)/_dn); var _sc=new T.CatmullRomCurve3([_crv.getPoint(_a), _crv.getPoint((_a+_b2)/2), _crv.getPoint(_b2)]); var _dm=new T.Mesh(new T.TubeGeometry(_sc, 3, _sr, 6, false), _tm); _dm.userData.kind=kind; grp.add(_dm); } }"
+  " return; }catch(_te){} }"
   " var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
 
 # ── batch 39: the LINK card's endpoint chips hover-light their nodes (element-card parity) ──

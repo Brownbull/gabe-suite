@@ -455,8 +455,10 @@ check('sechd("truck","Cargo")' in page and 'window.__uniAssets.cargo()' in page 
       "the wire card must have SEPARATE Cargo + Test-chip sections, each with its 3D asset thumbnail (operator)")
 check('class:"flagrow ok"' in page and 'no cargo ' in page and 'no test chip ' in page and 'same-entity wire (no transit)' in page,
       "each wire section must carry a present/absent FLAG (cross-entity → present; same-entity → no transit)")
-check('var _tube=new T.TubeGeometry(_crv' in page and 'window.__uniHovLink===l||window.__uniSelLink===l' in page,
-      "a SELECTED (or hovered) wire must render as a thick WHITE tube, not just a slightly brighter kind-color line (operator)")
+check('window.__uniHovLink===l||window.__uniSelLink===l' in page and 'CFG.selThick!=null)?CFG.selThick:0.5' in page and 'CFG.selPattern)?CFG.selPattern:"solid"' in page,
+      "a SELECTED (or hovered) wire must render as a WHITE tube whose opacity/thickness/pattern read from CFG (operator)")
+check('sg.id="selline"' in page and 'SELECTED LINE' in page and '_srow("opacity","selOpacity"' in page and '_srow("thick","selThick"' in page and 'data-sk="selPattern"' in page and 'class="slcopy"' in page,
+      "the Temporary Config must carry a SELECTED LINE section (opacity · thick · pattern sliders + copy button) — operator")
 check('if(col!=="subs"){ var eon=UNIVIS.ent[ent][col];' in page and '_entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF)))[col]=eon?1:0; })' in page,
       "the fleet ENTITY column button must cascade to ALL its clusters for EVERY column except subs — no partial dimmed state (operator)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
