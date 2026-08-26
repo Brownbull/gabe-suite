@@ -431,10 +431,11 @@ check('data-badgeinfo=' in page and 'window.__badgePop=function' in page and 'cl
 check('function guardsSec(' in page and 'guardsSec(n)' in page and 'middleware:p.middleware' in page
       and 'The gates/deps that run BEFORE the handler body' in page,
       "the endpoint GUARDS section (C4 middleware floor → card, adapter-carried) is gone")
-# panel HEADER badge — the node's own badge (endpoint method · function role) + its meaning, on the kind row (operator)
+# panel HEADER badge — the node's own badge (endpoint method · function role) on the kind row; its
+# meaning is on the badge HOVER (title), not an always-on line (operator)
 check("class='pheadbadge'" in page and 'window.__badgeGlyph(_c,_bk.kind,_bk.key)' in page
-      and "class='pbadgedesc'" in page and 'window.__BADGE_DESC' in page,
-      "the panel-header badge + description (method/role badge on the kind row) is gone")
+      and '(_bdesc||_bk.key)' in page and 'window.__BADGE_DESC' in page,
+      "the panel-header badge + hover-meaning (title) is gone")
 # function ACCESSES — an accessor's evidence (which model it reads/writes, from n.access) in the fn card
 check('function accessSec(' in page and 'accessSec(n)' in page and 'The DB tables this function reads/writes' in page,
       "the function ACCESSES section (accessor badge → which model it reads/writes) is gone")
