@@ -3191,7 +3191,11 @@ window.__uniBadges=[];
   var ox=(typeof CFG!=="undefined"&&CFG.mbX!=null)?CFG.mbX:2, oy=(typeof CFG!=="undefined"&&CFG.mbY!=null)?CFG.mbY:-2.5,
       sz=(typeof CFG!=="undefined"&&CFG.mbSize!=null)?CFG.mbSize:3.5, op=(typeof CFG!=="undefined"&&CFG.mbOp!=null)?CFG.mbOp:0.6;
   var live=0;
-  for(var i=0;i<arr.length;i++){ var b=arr[i]; if(!b||!b.parent) continue; arr[live++]=b;   // prune disposed badges in place (bounded)
+  // PRUNE (bounded): drop a badge whose node group force-graph detached on rebuild. scene.remove(grp)
+  // nulls grp.parent but NOT the badge's .parent (still the grp), so `!b.parent` alone never fires and
+  // __uniBadges grew ~+263/toggle (696→2274 over 6). A LIVE badge's grp is still in the scene tree
+  // (b.parent.parent truthy); a stale one's grp.parent is null → drop it. Keeps live badges (no flicker).
+  for(var i=0;i<arr.length;i++){ var b=arr[i]; if(!b||!b.parent||!b.parent.parent) continue; arr[live++]=b;   // prune detached badges in place (bounded)
     b.position.set(e[0]*ox+e[4]*oy+e[8]*3, e[1]*ox+e[5]*oy+e[9]*3, e[2]*ox+e[6]*oy+e[10]*3);   // ICON-relative: pinned to the camera's right/up so it rides the billboard icon, never the sphere (operator)
     b.scale.set(sz,sz,1); if(b.material) b.material.opacity=op; }
   arr.length=live;

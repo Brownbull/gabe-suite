@@ -129,15 +129,35 @@ m = epmw('@idempotent\n@router.post("/z")\ndef make():\n    pass')
 check([x for x in m if x["via"] == "decorator" and x["name"] == "idempotent"],
       "custom decorator → decorator middleware (%r)" % m)
 
-# FIRE 4 — Depends(Checker("admin")) → the callable name, not the string
+# FIRE 4 — Depends(Checker("admin")) → the full dep EXPRESSION (unparsed, so two Checkers stay distinct)
 m = epmw('@router.get("/w")\ndef w(scope=Depends(RoleChecker("admin"))):\n    pass')
-check(m and m[0]["name"] == "RoleChecker", "Depends(Checker(..)) → callable name (%r)" % m)
+check(m and m[0]["name"] == "RoleChecker('admin')", "Depends(Checker(..)) → unparsed dep expr (%r)" % m)
 
 # FIRE 5 — the MODERN idiom: x: Annotated[T, Depends(fn)] (Depends lives in the annotation, not the default)
 m = epmw('@router.get("/a")\ndef a(ctx: Annotated[AuthContext, Depends(get_auth_context)], db: Annotated[Session, Depends(get_session)]):\n    pass')
 names = [x["name"] for x in m]
 check("get_auth_context" in names and "get_session" in names, "Annotated[T, Depends(..)] deps found (%r)" % names)
 check(all(x["via"] == "param-dep" for x in m), "Annotated deps carry via=param-dep")
+
+# FIRE 6 — attribute-qualified callee: fastapi.Depends(fn) + typing.Annotated[T, fastapi.Security(fn)]
+m = epmw('@router.get("/q")\ndef q(u=fastapi.Depends(get_current_user)):\n    pass')
+check(m and m[0]["name"] == "get_current_user" and m[0]["gate"] is True, "fastapi.Depends(fn) (Attribute callee) resolved + gated (%r)" % m)
+m = epmw('@router.get("/q2")\ndef q2(u: typing.Annotated[User, fastapi.Security(require_scope)]):\n    pass')
+check(m and m[0]["name"] == "require_scope", "typing.Annotated[T, fastapi.Security(..)] (both Attribute forms) resolved (%r)" % m)
+
+# FIRE 7 — DISTINCT deps that share a leaf name stay separate (unparse, not leaf-collapse)
+m = epmw('@router.get("/v")\ndef v(a=Depends(auth.verify), b=Depends(billing.verify)):\n    pass')
+names = sorted(x["name"] for x in m)
+check(names == ["auth.verify", "billing.verify"], "distinct dotted deps do NOT collapse on the leaf 'verify' (%r)" % names)
+
+# FIRE 8 — gate heuristic is TOKEN-based: no over-flag on scoped/required, catches check_/enforce_/current_user
+def gate(name): return C._is_mw_gate(name)
+check(gate("get_user_scoped_query") is False and gate("parse_required_filters") is False,
+      "token gate: 'scoped'/'required' do NOT over-flag (scope⊄scoped, require⊄required)")
+check(gate("check_ownership") and gate("enforce_quota") and gate("get_current_user") and gate("require_household"),
+      "token gate: check_/enforce_/current_user/require_ all flagged")
+check(gate("get_session") is False and gate("get_settings") is False and gate("get_db") is False,
+      "token gate: resource deps (session/settings/db) stay non-gate")
 
 # SILENT 1 — a plain handler with no deps/decorators → [] (the route decorator is NEVER middleware)
 check(epmw('@router.get("/p")\ndef plain(q=None):\n    pass') == [],

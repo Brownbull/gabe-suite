@@ -431,6 +431,13 @@ check('data-badgeinfo=' in page and 'window.__badgePop=function' in page and 'cl
 check('function guardsSec(' in page and 'guardsSec(n)' in page and 'middleware:p.middleware' in page
       and 'The gates/deps that run BEFORE the handler body' in page,
       "the endpoint GUARDS section (C4 middleware floor → card, adapter-carried) is gone")
+# badge LEAK fix — _mbTick prunes badges whose node group force-graph detached (grp.parent nulled on
+# rebuild). `!b.parent` alone missed them (they kept b.parent=grp), so __uniBadges grew ~263/toggle;
+# `!b.parent.parent` drops the detached ones while KEEPING live cached-node badges (no flicker).
+check('if(!b||!b.parent||!b.parent.parent) continue; arr[live++]=b;' in page,
+      "the _mbTick badge prune must drop grp-detached badges (!b.parent.parent) — the leak fix is gone")
+check('window.__uniBadges.length=0; if(Graph) Graph.nodeThreeObject' not in page,
+      "rebuildNodes must NOT wholesale-clear __uniBadges (that orphaned live cached-node badges)")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,

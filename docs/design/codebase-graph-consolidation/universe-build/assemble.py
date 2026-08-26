@@ -571,7 +571,12 @@ assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)
 OLD_RBN = 'function rebuildNodes(){ PULSE=[]; ORBIT=[]; WAVE=[]; FLEETTICK=[]; if(Graph) Graph.nodeThreeObject(function(n){ return buildNode(n); }); }'
 assert OLD_RBN in text, "rebuildNodes anchor missing"
-text = text.replace(OLD_RBN, OLD_RBN, 1)  # halos live in their own scene group now — no reapply hook needed
+# NB (leak finding, REFUTED empirically): a naive `__uniBadges.length=0` here is WRONG — force-graph
+# CACHES unchanged node threeObjects, so buildNode does NOT re-run for endpoints on a fleet/zone
+# rebuild; clearing the array orphaned their live method badges (billboarding froze, count flickered
+# 183→0). Measured: __uniBadges is STABLE across repeated rebuilds (buildNode isn't re-run for cached
+# nodes → no new badges accrue), so there is no growth to fix. Prune stays in _mbTick. Left as a no-op.
+text = text.replace(OLD_RBN, OLD_RBN, 1)
 OLD_TRV = 'var _sn=NIDS[lid(l.source)], _tn=NIDS[lid(l.target)], _sv=_sn?visN(_sn):_VISDEF, _tv=_tn?visN(_tn):_VISDEF;\n    if(!_sv.show||!_tv.show||!_sv.routes||!_tv.routes) return;'
 assert OLD_TRV in text, "transports visibility anchor missing"
 text = text.replace(OLD_TRV,

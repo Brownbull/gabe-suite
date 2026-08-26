@@ -752,29 +752,46 @@ def _detect_sinks(fnnode) -> list[str]:
 # A FLOOR by design — a dependency nested INSIDE another Depends is not walked (honest under-count);
 # `gate` is a name heuristic (a hint, never a claim). Borrowed shape: codesight's per-route dep chain.
 _DEPENDS = frozenset({"Depends", "Security"})
-_MW_GATE_KW = ("auth", "require", "permission", "consent", "idempoten", "verify",
-               "guard", "ensure", "current_user", "get_current", "csrf", "ratelimit",
-               "throttle", "scope", "role", "login", "tenant", "household")
-# NB: not "session" — get_session provides the DB handle, it is a resource dep, not a guard.
+# TOKEN set, not substrings — `scope` must NOT fire on `scoped_query`, `require` not on `required_filters`.
+# NB: no "session"/"settings" — get_session/get_settings are resource deps, not guards.
+_MW_GATE_TOKENS = frozenset({
+    "auth", "authenticate", "authenticated", "authorize", "authorization", "authz",
+    "require", "permission", "permissions", "consent", "idempotent", "idempotency",
+    "verify", "guard", "ensure", "csrf", "ratelimit", "throttle", "scope", "scopes",
+    "role", "roles", "login", "tenant", "household", "check", "assert", "enforce",
+    "block", "owner", "ownership", "allowed", "forbid", "deny", "protect", "secure", "restrict",
+})
+# compound auth idioms a token split can't catch as one token
+_MW_GATE_SUBSTR = ("current_user", "currentuser", "get_current")
+_MW_CAMEL = _re_mod.compile(r"([a-z0-9])([A-Z])")
+
+
+def _mw_tokens(name: str) -> list[str]:
+    """snake + camelCase → lowercased word tokens (RoleChecker → [role, checker])."""
+    snake = _MW_CAMEL.sub(r"\1_\2", name)
+    return [t for t in _re_mod.split(r"[^a-z0-9]+", snake.lower()) if t]
 
 
 def _is_mw_gate(name: str | None) -> bool:
     n = (name or "").lower()
-    return any(k in n for k in _MW_GATE_KW)
+    if any(s in n for s in _MW_GATE_SUBSTR):
+        return True
+    return any(t in _MW_GATE_TOKENS for t in _mw_tokens(name or ""))
 
 
 def _depends_target(call) -> str | None:
-    """`Depends(fn)` / `Security(fn, ...)` / `Depends(Checker("x"))` → the callable name."""
-    if not (isinstance(call, ast.Call) and getattr(call.func, "id", None) in _DEPENDS and call.args):
+    """`Depends(fn)` / `fastapi.Depends(fn)` / `Security(fn, ...)` / `Depends(Checker("x"))`
+    → the dependency EXPRESSION, unparsed. `.attr` on the callee catches the qualified form
+    (`fastapi.Depends`); unparsing the ARG (not just its leaf) keeps distinct deps distinct —
+    `auth.verify` ≠ `billing.verify`, `RoleChecker('a')` ≠ `RoleChecker('b')`.
+    HONEST FLOOR: an ALIASED import (`from fastapi import Depends as Dep`) is not resolved —
+    that needs per-file import tracking; such a file under-counts, never mis-names."""
+    if not isinstance(call, ast.Call) or not call.args:
         return None
-    a = call.args[0]
-    if isinstance(a, ast.Name):
-        return a.id
-    if isinstance(a, ast.Attribute):
-        return a.attr
-    if isinstance(a, ast.Call):
-        return getattr(a.func, "id", None) or getattr(a.func, "attr", None)
-    return None
+    callee = getattr(call.func, "id", None) or getattr(call.func, "attr", None)
+    if callee not in _DEPENDS:
+        return None
+    return ast.unparse(call.args[0])
 
 
 def _dec_name(dec) -> str | None:
@@ -789,15 +806,18 @@ def _dec_name(dec) -> str | None:
 
 def _annotated_depends(ann) -> list[str]:
     """`x: Annotated[T, Depends(fn), ...]` — the modern FastAPI idiom carries the Depends INSIDE
-    the annotation, not the default. Return each dep name it names (or [])."""
+    the annotation, not the default. Return each dep name it names (or []). Both the bare
+    `Annotated[...]` and the qualified `typing.Annotated[...]` (Attribute value) forms match."""
     out: list[str] = []
-    if isinstance(ann, ast.Subscript) and getattr(ann.value, "id", None) == "Annotated":
-        sl = ann.slice
-        elts = sl.elts if isinstance(sl, ast.Tuple) else [sl]
-        for el in elts:
-            t = _depends_target(el)
-            if t:
-                out.append(t)
+    if isinstance(ann, ast.Subscript):
+        v = ann.value
+        if getattr(v, "id", None) == "Annotated" or getattr(v, "attr", None) == "Annotated":
+            sl = ann.slice
+            elts = sl.elts if isinstance(sl, ast.Tuple) else [sl]
+            for el in elts:
+                t = _depends_target(el)
+                if t:
+                    out.append(t)
     return out
 
 
