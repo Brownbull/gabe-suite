@@ -22,10 +22,11 @@ const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => 
 // [1] journeys: left-anchored dropdown, e2e group first, rows carry humanized NAMES
 const jrn = await p.evaluate(() => { __uniJrnToggle();
   const el = document.getElementById('jrn'), r = el.getBoundingClientRect();
-  const grps = [...el.querySelectorAll('.jrngrp')].map(g => g.textContent);
+  const kinds = [...el.querySelectorAll('.jrnkindtabs button')].map(b => b.getAttribute('data-jk'));
+  const grps = [...el.querySelectorAll('.jgcl')].map(g => g.textContent);   // collapsible by-start-entity group headers
   const named = [...el.querySelectorAll('.jrnrow .jrnname')].filter(x => !/^C\d+$/.test(x.textContent)).length;
-  return { centered: Math.abs((r.left + r.width / 2) - window.innerWidth / 2) < 240, groups: grps.slice(0, 3),
-    e2eFirst: /end-to-end/.test(grps[0] || ''), rows: el.querySelectorAll('.jrnrow').length, named }; });
+  return { centered: Math.abs((r.left + r.width / 2) - window.innerWidth / 2) < 240, kinds,
+    hasE2ETab: kinds.indexOf('e2e') >= 0, groups: grps.length, rows: el.querySelectorAll('.jrnrow').length, named }; });
 const restMin = await p.evaluate(() => { let m = 1; connGroup.children.forEach(w => { if (w.material.blending !== THREE.AdditiveBlending) m = Math.min(m, w.material.opacity); }); return +m.toFixed(2); });   // the RESTING floor (calls sit at 0.3 by operator default) — the highlight must never dim below it
 // pick the first e2e journey → banner + walk bar + steps
 await p.evaluate(() => { const rows = document.querySelectorAll('#jrn .jrnrow:not(.jrnnone)'); rows[0].click(); });
@@ -156,7 +157,7 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 
 const fails = [];
 if (errs.length) fails.push('page/console errors');
-if (!(jrn.centered && jrn.e2eFirst && jrn.named > 50)) fails.push('journeys centered/grouped/named wrong');
+if (!(jrn.centered && jrn.hasE2ETab && jrn.kinds.length === 3 && jrn.groups > 0 && jrn.named > 50)) fails.push('journeys picker structure wrong (kind tabs / groups / names)');
 if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown)) fails.push('journey HUD (topbar middle) wrong');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
 if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');

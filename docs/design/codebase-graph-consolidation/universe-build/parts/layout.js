@@ -782,18 +782,42 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
     return !!(fn&&visN(fn).show); }):[];                                      // stashed → KEPT iff fleet-shown; the walk expands its capsule on arrival (review 53[0])
   HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();
   WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; _walkRender(); _walkGo(0); };
+/* ── the journeys PICKER (operator): PERSISTENT entity chips on top (click to hide that entity's group) ·
+   KIND TABS below (end-to-end / by-entity / aggregated) · the selected kind's journeys grouped by START
+   entity into COLLAPSIBLE groups (click a group title to fold its tests). __uniJrnExcl = hidden start-
+   entities; __uniJrnKind = the open kind tab; __uniJrnCollapse = folded groups. ── */
+window.__uniJrnExcl=window.__uniJrnExcl||{}; window.__uniJrnKind=window.__uniJrnKind||"ent"; window.__uniJrnCollapse=window.__uniJrnCollapse||{};
+var _JRNKINDS=[["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
+var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+function _jrnKindOf(j){ return j.e2e?"e2e":(j.agg?"agg":"ent"); }                         // priority e2e > agg > by-entity
+function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
+function _jrnVisible(j){ return j.ents.some(function(e){ return !window.__uniJrnExcl[e]; }); }   // SPAN filter: a journey shows iff its span touches ≥1 INCLUDED entity
+function _jrnKindCount(k){ return _jrnCollect().filter(function(j){ return _jrnKindOf(j)===k && _jrnVisible(j); }).length; }
+function _jrnChipsHTML(){ var c=_jrnTouch();
+  var h='<div class="jrnenthint">click an entity to drop it from the journey filter (span-based)</div><div class="jrnentgrid">';
+  Object.keys(c).sort().forEach(function(e){ var off=!!window.__uniJrnExcl[e];
+    h+='<span class="jrnent'+(off?" off":"")+'" data-e="'+e+'" style="--ec:'+(ENT[e]||"#888")+'" title="'+c[e]+' journey(s) touch '+e+'"><i></i>'+e+'<b>'+c[e]+'</b></span>'; });
+  return h+'</div>'; }
+function _jrnTabsHTML(){ var sel=window.__uniJrnKind;
+  return '<div class="jrnkindtabs">'+_JRNKINDS.map(function(kd){ return '<button data-jk="'+kd[0]+'"'+(kd[0]===sel?' class="on"':'')+'>'+kd[1]+'<b>'+_jrnKindCount(kd[0])+'</b></button>'; }).join('')+'</div>'; }
+function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ return (b.ents.length-a.ents.length)||(b.carriers.length-a.carriers.length); };
+  var vis=_jrnCollect().filter(function(j){ return _jrnKindOf(j)===sel && _jrnVisible(j); });
+  var h='<div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
+  if(!vis.length) return h+'<div class="jrnnone" style="padding:8px 7px">no '+sel+' journeys for the included entities</div>';
+  var groups={}; vis.forEach(function(j){ (groups[j.start]=groups[j.start]||[]).push(j); });
+  Object.keys(groups).sort().forEach(function(g){ var cl=!!window.__uniJrnCollapse[g];
+    h+='<div class="jrngrp jgcl'+(cl?" cl":"")+'" data-ge="'+g+'" style="color:'+(ENT[g]||"var(--muted)")+'"><span class="jcar">'+_JCHEV+'</span>'+g+' · '+groups[g].length+'</div>';
+    if(!cl) groups[g].sort(bySpan).forEach(function(j){ h+=_jrnRow(j); }); });
+  return h; }
+function _jrnPaint(p){ var js=_jrnCollect();
+  p.innerHTML='<div class="jrnhd">journeys · '+js.length+' cross-entity tests</div>'+_jrnChipsHTML()+_jrnTabsHTML()+'<div class="jrnlist">'+_jrnGroupsHTML()+'</div>';
+  p.querySelectorAll(".jrnent").forEach(function(c){ c.onclick=function(){ var e=c.getAttribute("data-e"); if(window.__uniJrnExcl[e]) delete window.__uniJrnExcl[e]; else window.__uniJrnExcl[e]=1; _jrnPaint(p); }; });
+  p.querySelectorAll(".jrnkindtabs button").forEach(function(b){ b.onclick=function(){ window.__uniJrnKind=b.getAttribute("data-jk"); _jrnPaint(p); }; });
+  p.querySelectorAll(".jgcl").forEach(function(g){ g.onclick=function(){ var e=g.getAttribute("data-ge"); if(window.__uniJrnCollapse[e]) delete window.__uniJrnCollapse[e]; else window.__uniJrnCollapse[e]=1; _jrnPaint(p); }; });
+  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; }); }
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
   if(p.style.display!=="none"){ p.style.display="none"; return; }
-  var js=_jrnCollect(), bySpan=function(a,b){ return (b.ents.length-a.ents.length)||(b.carriers.length-a.carriers.length); };
-  var e2e=js.filter(function(j){ return j.e2e; }).sort(bySpan);
-  var rest=js.filter(function(j){ return !j.e2e; });
-  var groups={}; rest.forEach(function(j){ (groups[j.start]=groups[j.start]||[]).push(j); });
-  var h='<div class="jrnhd">journeys · '+js.length+' cross-entity tests</div><div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
-  if(e2e.length){ h+='<div class="jrngrp">end-to-end · '+e2e.length+'</div>'; e2e.forEach(function(j){ h+=_jrnRow(j); }); }
-  Object.keys(groups).sort().forEach(function(g){ h+='<div class="jrngrp">'+g+' · '+groups[g].length+'</div>';
-    groups[g].sort(bySpan).forEach(function(j){ h+=_jrnRow(j); }); });
-  p.innerHTML=h; p.style.display="";
-  p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; }); };
+  _jrnPaint(p); p.style.display=""; };
 /* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
    card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */
 var WALK={ mode:null, steps:[], i:0 };

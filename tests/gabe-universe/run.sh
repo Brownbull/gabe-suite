@@ -366,6 +366,10 @@ check('e.altKey&&(k==="q"||k==="e"||kc==="KeyQ"||kc==="KeyE")' in page and 'key=
 check('WheelEvent' not in page or 'if(!e.altKey) return; e.preventDefault();' not in page,
       "the retired Alt+scroll depth wheel is back")
 check('function _jrnCollect' in page and '__uniJrnToggle' in page, "journeys collector/picker missing")
+check('window.__uniJrnExcl=window.__uniJrnExcl' in page and 'window.__uniJrnCollapse=window.__uniJrnCollapse' in page and 'function _jrnPaint' in page and 'function _jrnChipsHTML' in page and 'function _jrnTouch' in page and 'function _jrnGroupsHTML' in page and 'class="jrnkindtabs"' in page and 'data-jk="' in page and 'class="jrnent' in page and 'class="jrngrp jgcl' in page and 'j.ents.some(function(e){ return !window.__uniJrnExcl[e]' in page,
+      "the journeys picker = ONE view: ALL-entity chips (span-based filter) + KIND TABS (e2e/by-entity/agg) + COLLAPSIBLE by-start-entity groups — operator")
+check('width:min(520px, calc(100vw - 16px))' in page and '#jrn{ position:fixed' in page,
+      "the #jrn picker must be theme-aware (var(--panel) bg, not a dark literal) + viewport-clamped width (no narrow-screen overflow) — review fixes")
 check("drag.btn===1" in page and "*0.0011" in page, "MIDDLE pan (translate the rig, no rotation) missing")
 
 # ── 10o. batch 13: journeys LEFT+grouped+NAMED · banner · the WALK (steps + trail) · panel footer ·

@@ -76,9 +76,9 @@ await p.evaluate(() => { __uniHLMode(); });   // back to glow default for journe
 
 // [5] journeys: picker lists them all; picking one highlights its carriers
 const jrnList = await p.evaluate(() => { __uniJrnToggle();
-  const distinct = new Set(); nodes.forEach(n => ((n.det && n.det.test_journeys) || []).forEach(j => j.cid && distinct.add(j.cid)));
-  return { rows: document.querySelectorAll('#jrn .jrnrow').length, distinct: distinct.size,
-    open: document.getElementById('jrn').style.display !== 'none' }; });
+  const el = document.getElementById('jrn');   // one kind tab at a time now (default by-entity)
+  return { rows: el.querySelectorAll('.jrnrow:not(.jrnnone)').length, kindTabs: el.querySelectorAll('.jrnkindtabs button').length,
+    open: el.style.display !== 'none' }; });
 await p.evaluate(() => { document.querySelectorAll('#jrn .jrnrow')[1].click(); });
 await raf(); await p.waitForTimeout(700);
 const jrnSel = await p.evaluate(() => ({ on: HL.on, jr: HL.jr, carriers: HL.origin.length,
@@ -139,7 +139,7 @@ if (!(glow.on && glow.inSet > 1 && glow.sprites > 0 && glow.lit > 0 && glow.dimm
 if (!(wheel.d === 4 && wheel.badge === '4' && wheel.grew >= glow.inSet)) fails.push('Alt+E depth broken');
 if (!(focus.mode === 'focus' && focus.shown === focus.inSet && focus.wires === focus.setLinks)) fails.push('focus mode broken');
 if (!(cleared.on === false && cleared.shown > 200 && cleared.sprites === 0)) fails.push('Esc does not clear');
-if (!(jrnList.rows === jrnList.distinct + 1 && jrnList.distinct > 40 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');   // rows = every distinct cid + the none row (the visible floor moves with the model)
+if (!(jrnList.rows > 40 && jrnList.kindTabs === 3 && jrnSel.on && jrnSel.jr && jrnSel.carriers > 0 && jrnSel.inSet >= jrnSel.carriers && jrnSel.btnOn)) fails.push('journeys picker broken');   // by-entity tab lists its rows; picking one lights its carriers
 if (!(chord.owns && chord.aliveChorded && chord.endedOnOwnerLoss && chord.ctrlsBack && chord.stillClean && chord.restarts && chord.ended)) fails.push('chord owner-release not clean (stranded drag)');
 if (!(ring.rSpread < 2 && ring.flat && ring.rMin >= 420 && ring.minPair > 250)) fails.push('ring layout broken (circle, flat, spaced)');
 if (fails.length) { console.error('FAIL:', fails.join(' · ')); process.exit(1); }

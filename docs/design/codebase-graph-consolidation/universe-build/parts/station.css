@@ -121,8 +121,24 @@
     background:var(--accent); border-radius:6px; padding:1.5px 4px; }
   .topbar .tbico.on .tbnum{ background:var(--chip-bg); }
   /* journeys dropdown — CENTERED under the topbar-middle journey button (operator) */
-  #jrn{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 6px); z-index:55; width:360px; max-height:56vh; overflow-y:auto;
-    background:rgba(24,33,54,.97); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; }
+  #jrn{ position:fixed; left:50%; transform:translateX(-50%); top:calc(var(--topbarh) + 6px); z-index:55; width:min(520px, calc(100vw - 16px)); max-height:64vh; overflow-y:auto;
+    background:var(--panel); border:1px solid var(--line); border-radius:10px; padding:6px; scrollbar-width:thin; box-shadow:0 8px 30px #0007; }
+  #jrn .jrnkindtabs{ display:flex; gap:5px; padding:2px 6px 7px; border-top:1px dotted var(--line); margin-top:2px; }
+  #jrn .jrnkindtabs button{ flex:1; display:inline-flex; align-items:center; justify-content:center; gap:6px; font:700 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em; padding:7px 8px; border:1px solid var(--line); border-radius:7px; background:transparent; color:var(--muted); cursor:pointer; }
+  #jrn .jrnkindtabs button.on{ background:var(--accent); color:#fff; border-color:var(--accent); }
+  #jrn .jrnkindtabs button b{ font:700 10px/1 var(--font-mono); color:var(--ink); }
+  #jrn .jrnkindtabs button.on b{ color:#fff; }
+  #jrn .jgcl{ display:flex; align-items:center; gap:5px; cursor:pointer; padding:7px 6px 5px; }
+  #jrn .jgcl:hover{ background:var(--hov-bg); border-radius:6px; }
+  #jrn .jgcl .jcar{ display:inline-flex; transition:transform .12s; }
+  #jrn .jgcl.cl .jcar{ transform:rotate(-90deg); }
+  #jrn .jrnenthint{ font:italic 400 10px/1.4 var(--font-ui); color:var(--muted); padding:1px 7px 8px; }
+  #jrn .jrnentgrid{ display:flex; flex-wrap:wrap; gap:7px; padding:0 6px 6px; }
+  #jrn .jrnent{ display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-ui); color:var(--ink); border:1.5px solid var(--ec); border-radius:999px; padding:5px 10px; cursor:pointer; background:transparent; }
+  #jrn .jrnent:hover{ background:var(--hov-bg); }
+  #jrn .jrnent i{ width:8px; height:8px; border-radius:50%; background:var(--ec); flex:0 0 auto; }
+  #jrn .jrnent b{ font:700 10px/1 var(--font-mono); color:var(--muted); }
+  #jrn .jrnent.off{ opacity:.45; border-style:dashed; text-decoration:line-through; }
   #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
     padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
