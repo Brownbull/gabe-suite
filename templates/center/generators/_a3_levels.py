@@ -282,6 +282,7 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
     #    present; graft/TS fns (no function_insight) default their layer by file ext.
     _fn_behind = (graft or {}).get("fn_behind") or {}   # per-fn call-tree floor (hidden mass)
     _fn_roles = (graft or {}).get("fn_roles") or {}      # C1: accessor/caller/gate/pure per function
+    _fn_d2w = (graft or {}).get("distance_to_write") or {}  # D2W: fn → hops-to-a-write (call-wire heat)
     for fid in sorted(drawn_fn):
         slug = drawn_fn[fid]
         rfile, _, name = fid.partition("#")
@@ -310,6 +311,9 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         _role = _fn_roles.get(fid)   # C1: accessor/caller/gate/pure — the function-badge data (honest-empty without graft)
         if _role:
             _node["role"] = _role
+        _dw = _fn_d2w.get(fid)       # D2W: hops-to-a-write — 0 is a real value (a writer), so test `is not None`
+        if _dw is not None:
+            _node["d2w"] = _dw
         if _role == "accessor":      # the DB-accessor's own ops, from the C2 access block
             _acc = (FI.get(rfile + "::" + name, {}) or {}).get("access")
             if _acc and _acc.get("ops"):

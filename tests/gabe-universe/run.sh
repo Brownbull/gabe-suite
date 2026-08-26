@@ -155,7 +155,7 @@ check('NOT speed; speed lives in Transports' in page and 'per kind: sample' not 
 check('applies WHILE a focus highlight is active' in page,
       "the FOCUS group no longer explains WHEN it applies")
 # batch 35: the entity gradient (the 2D lab device, ported) — per-kind toggle, vertex colors
-check('vertexColors:_gr' in page and 'data-wgrad=' in page and 'ENT[_cs.ent]' in page,
+check('vertexColors:(_gr&&band==null)' in page and 'data-wgrad=' in page and 'ENT[_cs.ent]' in page,
       "the entity-gradient option is gone (vertex-color wires + per-row toggle + entity colors threaded)")
 check('CONN[k].grad=!!CONN0[k].grad' in page,
       "wire reset must RESTORE the stock gradient flag (fk/calls default ON)")
@@ -351,7 +351,7 @@ check('SUBOF[n.layer]' not in page and 'SUBOF[KINDS' not in page, "REGRESSION: t
 check('var SUBSHIFT={ endpoints:0.04' in page, "hull hue-shift map lacks the un-collapsed layer keys")
 check('function _hlCompute' in page and 'window._hlLinkF' in page and 'function _nodeVisibleFn' in page,
       "depth-highlight machinery missing (BFS + wire factor + shared visibility fn)")
-check('kind, R, hf, ea, eb, hov, sel)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
+check('kind, R, hf, ea, eb, hov, sel, band)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
       "connector wires ignore the highlight factor (or lost the gradient entity args / selected-wire boost)")
 check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
       "node visibility does not go through the shared fn (focus mode dead)")
@@ -451,9 +451,9 @@ check("'rollup'" in page and "'access'" in page and "reads_from:'rollup'" in pag
       "the rollup/access connector kinds + the fn→model access wire (Option A) are gone")
 # Option A · the connector CONFIG (color·pattern·density·transparency·thickness) for rollup+access,
 # calibratable + copyable; thickness renders a TUBE (a flat line is 1px), the copy carries the new fields
-# BAKED calibration (operator JSON): rollup HIDDEN (beam 0), access MAROON (#a71649) glow 0.7, calls flat
-# #817536 grad OFF; the access fine-tuning controls (den/α/thickness) stay
-check("access:{color:0xa71649" in page and 'rollup:0, access:0.7' in page
+# BAKED calibration (operator JSON): rollup HIDDEN (beam 0), access RED (#e5484d = THE WRITE) glow 0.7,
+# calls flat #817536 grad OFF; the access fine-tuning controls (den/α/thickness) stay
+check("access:{color:0xe5484d" in page and 'rollup:0, access:0.7' in page
       and 'calls:{color:0x817536' in page and "grad:false,thick:1,gmode:'type'" in page
       and 'var wireRow2=function' in page and 'wireRow2("access")' in page,
       "the baked calls/access defaults or the access fine controls drifted")
@@ -726,8 +726,22 @@ check('height:384px !important' in page,
       "the legend must hold ONE fixed size across every tab (sized to the Types tab, no scroll)")
 check("lgbody lg-" in page and 'lg-types' in page and 'grid-template-columns:1fr 1fr' in page,
       "the legend Types two-column compaction is gone (per-tab body class + grid)")
-check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
+check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(band!=null?band:(_gr?0xffffff:cfg.color))' in page,
       "highlighted wires lost their theme highlight color (white dark · indigo light)")
+# D2W — the calls-wire heat spectrum (Proposal A, discrete bands). Emitter attaches d2w to fn_nodes;
+# render colours a calls wire by its TARGET function's distance-to-write via BANDPAL.
+check('window.BANDPAL=[' in page and 'window.__uniD2W=true' in page and 'window.__d2wBand=function' in page,
+      "the D2W band palette / toggle / helper is missing (calls-wire heat spectrum)")
+check('var _band=(_gk==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;' in page and '===l), _band); });' in page,
+      "the call site no longer computes the d2w band for calls wires or threads it into connectorWire")
+check('d2w:f.d2w' in page,
+      "the levels fn_node d2w no longer rides onto the render node (call-wire heat lost its source)")
+check('t:"d2wtog"' in page and 't:"band",i:0' in page and 'calls · distance to a write' in page,
+      "the D2W band legend group (5 swatches + on/off toggle) is missing")
+check('data-d2wtog' in page and 'window.__uniD2W=!window.__uniD2W' in page,
+      "the legend d2w on/off toggle no longer flips __uniD2W")
+check('CALLS · DISTANCE HEAT' in page and 'data-band=' in page and 'data-bandcopy=' in page and 'BANDPAL0' in page,
+      "the D2W band calibrate/copy config (5 colour inputs + copy + reset) is missing")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,
       "the station's dark surfaces are hardcoded again (light theme cannot flip them)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

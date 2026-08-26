@@ -399,6 +399,51 @@ def derive_fn_roles(wiring: dict[str, Any], faccess: dict[str, Any] | None) -> d
     return {k: out[k] for k in sorted(out)}
 
 
+def derive_distance_to_write(wiring: dict[str, Any],
+                             faccess: dict[str, Any] | None) -> dict[str, int]:
+    """{<file>#<fn> → fewest CALL hops until a permanent write} for every function that can
+    reach a write (D2W — the call-connector heat metric).
+
+    A WRITE-ANCHOR (distance 0) is a function that persists: a write ORM op (``rw=="w"``) OR a
+    ``commit()`` — the permanent-store moment. From that anchor set a multi-source reverse BFS
+    over the fn→fn calls graph assigns each caller its shortest hop-count to a write (a caller of
+    an anchor is 1, its caller 2, …), so a ``calls`` wire coloured by its TARGET's distance cools
+    from red (0, at the write) to green (never reaches a write, hence absent here). Same substrate
+    and reverse-adjacency as :func:`derive_fn_roles`, so the write-anchors are a subset of its
+    accessors and the noise filter is shared. Only REACHABLE functions are emitted (an unreachable
+    fn gets no key → the render reads it as green), so the map is small and honest-empty: no
+    faccess (graft-less / no ORM access) → ``{}`` (byte-identical build)."""
+    if not faccess:
+        return {}
+    fn_ids, adj = _behind_context(wiring)
+    writers = {
+        g for g in fn_ids
+        if (lambda a: bool(a) and (a.get("commits")
+                                   or any((o or {}).get("rw") == "w"
+                                          for o in (a.get("ops") or []))))
+           (faccess.get(g.replace("#", "::", 1)))
+    }
+    if not writers:
+        return {}
+    radj: dict[str, list[str]] = {}           # reverse adjacency: callee → [callers]
+    for u, vs in adj.items():
+        for v in vs:
+            radj.setdefault(v, []).append(u)
+    dist: dict[str, int] = {g: 0 for g in writers}   # multi-source layered BFS (order-independent)
+    frontier = list(writers)
+    depth = 0
+    while frontier:
+        depth += 1
+        nxt: list[str] = []
+        for v in frontier:
+            for u in radj.get(v, ()):
+                if u not in dist:
+                    dist[u] = depth
+                    nxt.append(u)
+        frontier = nxt
+    return {k: dist[k] for k in sorted(dist)}
+
+
 def derive_cross(wiring: dict[str, Any],
                  entities: dict[str, Any]) -> dict[str, Any]:
     """The cross-entity coupling slice: {(src_slug, dst_slug): {relation: count}}.
@@ -681,6 +726,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
         endpoint_access = derive_endpoint_access(wiring, entities, faccess)  # A2: ORM access via the call-tree
         fn_roles = derive_fn_roles(wiring, faccess)  # C1: accessor/caller/gate/pure per function
+        distance_to_write = derive_distance_to_write(wiring, faccess)  # D2W: fn → hops-to-a-write
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
@@ -692,6 +738,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "behind": behind,    # the endpoint call-tree floor (a view-only complexity signal)
             "endpoint_access": endpoint_access,  # A2: per-endpoint ORM read/write ops via the call-tree
             "fn_roles": fn_roles,   # C1: {<file>#<fn> → accessor/caller/gate/pure} for the function badges
+            "distance_to_write": distance_to_write,  # D2W: {<file>#<fn> → hops-to-a-write} — call-wire heat
             "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
             "node_facts": node_facts,  # P1: raw graft facts (kind/signature/exported) — in-process, not emitted raw
             "frontend": frontend,      # P2a: classified TS frontend structure {nodes,edges,stats} — data-only

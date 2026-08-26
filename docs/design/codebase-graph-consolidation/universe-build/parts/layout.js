@@ -251,7 +251,7 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
     return { id:f.id, kind:"function", ent:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
       layer:KINDS["function"].layer, sub:KINDS["function"].layer||"data", __fn:true,
-      role:f.role, access:f.access, sinks:f.sinks,   // C1/C2/C4: the function role badge + its ops/sinks (sinks-arm)
+      role:f.role, access:f.access, sinks:f.sinks, d2w:f.d2w,   // C1/C2/C4: role badge + ops/sinks; D2W: hops-to-a-write (call-wire heat, 0 is real → keep undefined distinct)
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
@@ -318,6 +318,17 @@ function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }c
 window.__uniCurveAmt=0.6;                                 // curve-amount slider → arc height multiplier (operator default 0.6)
 window.__uniCurved=true;                                  // lines default CURVED (operator config)
 window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.5, imports:1, rollup:0, access:0.7 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire. rollup HIDDEN by default (beam 0)
+/* D2W — the CALLS-wire heat spectrum (Proposal A, discrete bands). A calls wire never IS the write —
+   it APPROACHES one; the actual write is the red ACCESS wire (accessor→model). So a calls wire is
+   coloured by its TARGET function's distance-to-write: band 0 = the call reaching the writing function
+   (ORANGE, the hottest a call gets), cooling through amber/yellow as the target sits further back, to
+   GREEN where the target never reaches a write (or isn't a function). Distances 3,4,5… all clamp into
+   band 3 ("3+ hops"); band 4 (green) is reserved for undefined = never-reaches. RED is the access wire,
+   not a call. The distance rides the levels fn_node (emitter: derive_distance_to_write). */
+window.BANDPAL=[0xf2711c, 0xf59f00, 0xf5d90a, 0xbcd12f, 0x46a758];  // 0 closest→orange · 1 · 2 · 3+ · 4/none→green (calibratable; red is the ACCESS write wire)
+window.__uniD2W=true;                                     // calls wires coloured by distance-to-write by default (legend toggle falls back to flat)
+window.__d2wBand=function(n){ if(!window.__uniD2W||!n) return null;   // → band colour for a calls TARGET, or null (flat cfg.color)
+  var d=n.d2w; return window.BANDPAL[(d==null)?4:Math.min(d|0,3)]; };  // reaching fns clamp into band 3; band 4 (green) is never-reaches only
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
@@ -1509,6 +1520,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var LNC='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 C 8 5 16 5 20 12"/></svg>';
   if(!CONN0 && typeof CONN!=="undefined"){ CONN0={};   // stock snapshot BEFORE any edit (reset target)
     CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style, grad:!!CONN[k].grad, gmode:CONN[k].gmode, density:CONN[k].density, trust:CONN[k].trust, thick:CONN[k].thick}; }); }   // grad/gmode + density/trust/thick ride the snapshot (reset restores the stock look)
+  if(!window.BANDPAL0 && window.BANDPAL) window.BANDPAL0=window.BANDPAL.slice();   // D2W band-palette stock snapshot (reset target)
   var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
   var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
@@ -1539,6 +1551,19 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       +'<span class="wk2l" title="'+kind+' TRANSPARENCY (opacity)">α</span><input type="range" class="rng wtru" data-wtru="'+kind+'" min="0.05" max="1" step="0.05" value="'+(c.trust!=null?c.trust:0.6)+'">'
       +'<span class="wk2l" title="'+kind+' THICKNESS (>1 draws a tube)">wt</span><input type="range" class="rng wthk" data-wthk="'+kind+'" min="0.5" max="4" step="0.1" value="'+(c.thick!=null?c.thick:1)+'">'
       +'</div>'; };
+  /* D2W band palette — the calls-wire heat calibrator (Proposal A): 5 colour swatches (write→green)
+     + an on/off toggle + copy/reset, mirroring the per-kind wire calibrate loop. Mutates window.BANDPAL
+     live (connectorWire reads it), the legend re-renders so its swatches never drift from the wires. */
+  var BANDLBL=["into write","1 hop","2 hops","3+ hops","no write"];
+  var bandCfg=function(){ var d2on=!!window.__uniD2W;
+    var rows=(window.BANDPAL||[]).map(function(c,i){ return '<div class="cfgrow" style="gap:5px;align-items:center">'
+      +'<span class="wk2l" style="width:54px" title="distance '+(i<4?i:"4+ / none")+' — hops from a call target to a write">'+BANDLBL[i]+'</span>'
+      +'<input type="color" class="wcol" data-band="'+i+'" value="'+_hx(c)+'" title="band '+i+' colour"></div>'; }).join('');
+    return '<div class="grp"><div class="grplbl" style="display:flex;align-items:center;gap:6px" title="a calls wire is coloured by its TARGET hops-to-a-write: 0 = lands on a DB write (red), each call further cools toward green.">CALLS · DISTANCE HEAT'
+      +'<button class="wtog'+(d2on?" on":"")+'" data-d2wtog2="1" title="colour calls by distance-to-write (off = the flat calls colour)" style="margin-left:auto">'+(typeof ico==="function"?ico("show",11):"◑")+'</button>'
+      +'<button class="wreset" data-bandreset="1" title="reset the band palette to stock">&#8634;</button>'
+      +'<button class="wreset" data-bandcopy="1" title="copy the band palette as JSON">⧉</button></div>'
+      + rows + '</div>'; };
   rt.innerHTML=
      '<div class="grp"><div class="grplbl">LINES</div>'
     + '<div class="cfgrow" style="gap:6px">'
@@ -1551,7 +1576,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
     + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
     + '<div class="grplbl" style="margin-top:9px" title="the DATA-ACCESS connectors (Option A): endpoint→model ROLLUP (the direct call-tree shortcut, method-coloured, hidden by default) vs the true function→model ACCESS wire (role-coloured when its gradient is on).">DATA-ACCESS</div>'
-    + wireRow("rollup")+wireRow("access")+wireRow2("access")+'</div>';
+    + wireRow("rollup")+wireRow("access")+wireRow2("access")+'</div>'
+    + bandCfg();
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -1592,6 +1618,21 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     if(window.__legRender) try{ __legRender(); }catch(e){} };
   rt.querySelectorAll("input[data-wcol]").forEach(function(inp){ inp.addEventListener("input", function(){
     var k=inp.getAttribute("data-wcol"); CONN[k].color=parseInt(inp.value.slice(1),16); updSamp(k); redraw(); }); });
+  /* D2W band-palette calibrators: mutate window.BANDPAL live (connectorWire reads it) + re-render the
+     legend so its band swatches track the wires; the toggle flips __uniD2W (calibrate-and-bake loop). */
+  var _legRe=function(){ if(window.__legRender) try{ __legRender(); }catch(e){} };
+  rt.querySelectorAll("input[data-band]").forEach(function(inp){ inp.addEventListener("input", function(){
+    var i=+inp.getAttribute("data-band"); if(window.BANDPAL){ window.BANDPAL[i]=parseInt(inp.value.slice(1),16); if(window.__uniD2W) redraw(); _legRe(); } }); });
+  rt.querySelectorAll("[data-d2wtog2]").forEach(function(b){ b.addEventListener("click", function(){
+    window.__uniD2W=!window.__uniD2W; b.classList.toggle("on", !!window.__uniD2W); redraw(); _legRe(); }); });
+  rt.querySelectorAll("[data-bandreset]").forEach(function(b){ b.addEventListener("click", function(){
+    if(window.BANDPAL0){ window.BANDPAL=window.BANDPAL0.slice();
+      document.querySelectorAll("input[data-band]").forEach(function(inp){ inp.value=_hx(window.BANDPAL[+inp.getAttribute("data-band")]); });   // rt is a DETACHED workbench; the rows MOVE to the fleet stash — query the live document (like the wire reset)
+      if(window.__uniD2W) redraw(); _legRe(); } }); });
+  rt.querySelectorAll("[data-bandcopy]").forEach(function(b){ b.addEventListener("click", function(){
+    try{ var txt=JSON.stringify({ d2w:!!window.__uniD2W, bands:(window.BANDPAL||[]).map(function(c){ return _hx(c); }) }, null, 1);
+      window.__uniLastCopy=txt; var ok=(typeof copyText==="function")?copyText(txt):false;
+      b.textContent=ok?"✓":"⧉"; setTimeout(function(){ b.textContent="⧉"; },900); }catch(e){} }); });
   // the DATA-ACCESS fine sliders (density · transparency · thickness); the gradient MODE is baked (no selector)
   rt.querySelectorAll("input[data-wden]").forEach(function(s){ s.addEventListener("input", function(){ var k=s.getAttribute("data-wden"); CONN[k].density=+s.value; updSamp(k); redraw(); }); });
   rt.querySelectorAll("input[data-wtru]").forEach(function(s){ s.addEventListener("input", function(){ CONN[s.getAttribute("data-wtru")].trust=+s.value; redraw(); }); });

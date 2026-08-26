@@ -267,6 +267,33 @@ text = text.replace(OLD_LNCASE,
         ld=DASHMAP[lw.style]; if(ld===undefined) ld="6 3";
         return '<svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+lc+'" stroke-width="2.5"'+(ld?' stroke-dasharray="'+ld+'"':'')+'/></svg>';''', 1)
 
+# ── D2W: the calls-wire heat legend — a distance-to-write band group + an on/off toggle (Proposal A).
+#    The band swatch reads window.BANDPAL live (calibratable → never goes stale); the toggle flips
+#    window.__uniD2W (on = calls coloured by distance, off = flat CONN.calls colour). ──
+OLD_ACCROW = '''    {t:"ln",k:"access",l:"access <i>function→model — the TRUE data access (this fn reads/writes the table)</i>"},
+    {t:"grp",l:"transports · <i>what travels the routes</i>"},'''
+assert OLD_ACCROW in text, "legend access→transports anchor missing"
+text = text.replace(OLD_ACCROW, '''    {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
+    {t:"grp",l:"calls · distance to a write <i>— a call wire cools from orange (its target reaches a write) to green (never); the red access wire above is the write itself</i>"},
+    {t:"d2wtog"},
+    {t:"band",i:0,l:"into a write <i>this call reaches the writing function (orange — the hottest a call gets)</i>"},
+    {t:"band",i:1,l:"1 hop back <i>one call before a write</i>"},
+    {t:"band",i:2,l:"2 hops back"},
+    {t:"band",i:3,l:"3+ hops back"},
+    {t:"band",i:4,l:"no write <i>never reaches a write — frontend, pure logic</i>"},
+    {t:"grp",l:"transports · <i>what travels the routes</i>"},''', 1)
+
+OLD_LNK = '''      if(it.t==="ln"&&it.k){ var _lon='''
+assert OLD_LNK in text, "legend ln&&k branch anchor missing"
+text = text.replace(OLD_LNK, '''      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
+      ''' + OLD_LNK, 1)
+
+OLD_LGCONN_H = '''    [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;'''
+assert OLD_LGCONN_H in text, "lgconn handler anchor missing"
+text = text.replace(OLD_LGCONN_H, '''    [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });
+''' + OLD_LGCONN_H, 1)
+
 # ── batch 10 (review r2): BOTH bare buildCfg() call sites rebuild the FLAT panel and drop the tabs —
 #    re-tab after each (the .cfgtabbar guard makes __uniAddLayoutTab idempotent, state read from CFG) ──
 OLD_PRESET = 'if(changed && document.getElementById("cfg")) buildCfg(); })();'
@@ -407,7 +434,7 @@ text = text.replace(
 #    by its endpoint ENTITY colors via vertex colors; the kind keeps carrying the dash STYLE. ──
 assert "function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;" in text
 text = text.replace("function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;",
-  "function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov, sel){ var cfg=CONN[kind]||CONN.calls;", 1)
+  "function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov, sel, band){ var cfg=CONN[kind]||CONN.calls;", 1)
 OLD_GEO2 = "var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;"
 assert OLD_GEO2 in text, "gradient geometry anchor missing"
 text = text.replace(OLD_GEO2, OLD_GEO2 + """
@@ -419,11 +446,11 @@ text = text.replace(OLD_GEO2, OLD_GEO2 + """
 OLD_MS = "mat=new T.LineBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});"
 assert OLD_MS in text, "gradient solid-material anchor missing"
 text = text.replace(OLD_MS,
-  "mat=new T.LineBasicMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});", 1)
+  "mat=new T.LineBasicMaterial({color:_hlc||(band!=null?band:(_gr?0xffffff:cfg.color)), vertexColors:(_gr&&band==null), transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending)});", 1)
 OLD_MD = "mat=new T.LineDashedMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});"
 assert OLD_MD in text, "gradient dashed-material anchor missing"
 text = text.replace(OLD_MD,
-  "mat=new T.LineDashedMaterial({color:_hlc||(_gr?0xffffff:cfg.color), vertexColors:_gr, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});", 1)
+  "mat=new T.LineDashedMaterial({color:_hlc||(band!=null?band:(_gr?0xffffff:cfg.color)), vertexColors:(_gr&&band==null), transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), dashSize:base[0]/dn, gapSize:base[1]/dn});", 1)
 # ── batch 37: the operator's dialed-in Connections DEFAULTS (pasted config 2026-08-23) ──
 OLD_CONN = "var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };"
 assert OLD_CONN in text, "CONN literal anchor missing"
@@ -431,8 +458,9 @@ text = text.replace(OLD_CONN,
   # gmode = gradient SOURCE per end: ent=entity→entity · type=source-type→target-type (endpoint METHOD ↔
   # function ROLE badge colours) · type-ent=source-type→target-entity · ent-type=entity→target-type.
   "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1,gmode:'ent'}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1,gmode:'ent'}, calls:{color:0x817536,style:'solid',density:2,trust:0.6,grad:false,thick:1,gmode:'type'}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1,gmode:'ent'}, "
-  # operator's baked calibration: rollup dim+sparse+method-grad+HIDDEN; access MAROON solid thick, role-grad ready
-  "rollup:{color:0x8b5cf6,style:'sparse',density:0.9,trust:0.4,thick:1,grad:true,gmode:'type-ent'}, access:{color:0xa71649,style:'solid',density:2.5,trust:0.85,thick:1.6,grad:false,gmode:'type-ent'} };", 1)
+  # operator's baked calibration: rollup dim+sparse+method-grad+HIDDEN; access is THE WRITE → RED, solid thick
+  # (the accessor→model wire is where a value actually reaches the store; the calls approaching it top out at orange)
+  "rollup:{color:0x8b5cf6,style:'sparse',density:0.9,trust:0.4,thick:1,grad:true,gmode:'type-ent'}, access:{color:0xe5484d,style:'solid',density:2.5,trust:0.85,thick:1.6,grad:false,gmode:'type-ent'} };", 1)
 
 
 # batch 37: wires remember their KIND (proofs + future pickers read line.userData.kind)
@@ -450,7 +478,7 @@ text = text.replace(OLD_LINEADD,
   # THICKNESS: a THREE.Line is 1px on every GPU, so cfg.thick>1 draws a TUBE instead (radius ∝ thick).
   # Dashed/dotted styles keep their pattern as tube SEGMENTS (density = segment count); solid = one tube.
   " if(cfg.thick&&cfg.thick>1.05){ try{ var _tc=new T.CatmullRomCurve3(_pts), _tr=0.12*cfg.thick,"
-  "   _tm2=new T.MeshBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), depthWrite:false});"
+  "   _tm2=new T.MeshBasicMaterial({color:(band!=null?band:cfg.color), transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), depthWrite:false});"
   "   if(cfg.style==='solid'){ var _tb=new T.Mesh(new T.TubeGeometry(_tc, Math.max(2,_pts.length-1), _tr, 6, false), _tm2); _tb.userData.kind=kind; _tb.raycast=function(){}; grp.add(_tb); }"
   "   else { var _sn=Math.max(6, Math.round((cfg.density||2)*6)); for(var _ti=0;_ti<_sn;_ti+=2){ var _ta=_ti/_sn, _tbb=Math.min(1,(_ti+1)/_sn); var _dtb=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([_tc.getPoint(_ta), _tc.getPoint((_ta+_tbb)/2), _tc.getPoint(_tbb)]),3,_tr,6,false), _tm2); _dtb.userData.kind=kind; _dtb.raycast=function(){}; grp.add(_dtb); } }"
   "   return; }catch(_tk){} }"
@@ -598,7 +626,7 @@ text = text.replace(OLD_WHF,
   # HTTP-METHOD colour (GET green · POST blue · PUT orange · PATCH yellow · DELETE red); an ACCESS wire's
   # start is the source FUNCTION-ROLE colour (accessor/caller/gate/pure). Both fade to the model's entity
   # colour — so the wire reads by its source TYPE. Other kinds keep the entity-gradient start.
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';\n    var _tcol=function(n){ if(!n) return null; if(n.kind===\"endpoint\"&&n.m&&n.m.method&&typeof METHOD!==\"undefined\"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind===\"function\"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };\n    var _ea=(((_gm===\"type\"||_gm===\"type-ent\")&&_tcol(_cs))||((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null));\n    var _eb=(((_gm===\"type\"||_gm===\"ent-type\")&&_tcol(_ct))||((_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null));\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });", 1)
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';\n    var _tcol=function(n){ if(!n) return null; if(n.kind===\"endpoint\"&&n.m&&n.m.method&&typeof METHOD!==\"undefined\"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind===\"function\"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };\n    var _ea=(((_gm===\"type\"||_gm===\"type-ent\")&&_tcol(_cs))||((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null));\n    var _eb=(((_gm===\"type\"||_gm===\"ent-type\")&&_tcol(_ct))||((_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null));\n    var _band=(_gk===\"calls\"&&window.__d2wBand)?__d2wBand(_ct):null;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

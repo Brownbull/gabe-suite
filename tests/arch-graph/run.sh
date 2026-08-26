@@ -382,6 +382,17 @@ check(GG.derive_endpoint_access(WIRING, {"e": {"endpoints": [{"file": "apps/api/
 check(GG.derive_endpoint_access(WIRING, {"e": {"endpoints": [{"file": "apps/api/stray.py", "fn": "s", "method": "G", "path": "/y"}]}},
     {"apps/api/nowhere.py::z": {"ops": [{"model": "Q", "table": "q", "rw": "r"}]}}) == {},
       "derive_endpoint_access: a handler whose tree touches no data gets NO entry")
+# ── D2W · distance-to-write: reverse-BFS from the write-anchors over the fn→fn calls graph ──
+# WIRING chain: alpha.py#do_a → do_b → do_b2 (writes); stray.py#s → do_b. do_a→bundle.js#x is noise.
+_d2w = GG.derive_distance_to_write(WIRING, _facc)
+check(_d2w.get("apps/api/beta.py#do_b2") == 0 and _d2w.get("apps/api/beta.py#do_b") == 1
+      and _d2w.get("apps/api/alpha.py#do_a") == 2 and _d2w.get("apps/api/stray.py#s") == 2,
+      "derive_distance_to_write: write-anchor=0, each caller +1 (reverse-BFS over the calls graph)")
+check("web/dist/bundle.js#x" not in _d2w and all(isinstance(v, int) and v >= 0 for v in _d2w.values()),
+      "derive_distance_to_write: build-output noise excluded; only reachable fns carry a distance")
+check(GG.derive_distance_to_write(WIRING, None) == {}
+      and GG.derive_distance_to_write(WIRING, {"apps/api/beta.py::do_b2": {"ops": [{"model": "Beta", "table": "betas", "rw": "r"}]}}) == {},
+      "derive_distance_to_write: no faccess OR read-only (no write-anchor) → {} (honest-empty)")
 # FOLD — build_c4_graph draws writes_to/reads_from from endpoint_access (intra or cross)
 _gacc = G.build_c4_graph(FIX, labels=LABELS, status=STATUS,
     graft={"present": True, "reason": "t", "index_hash": "x", "index_nodes": 1, "index_edges": 1,
