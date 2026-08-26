@@ -260,6 +260,45 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         drawn_fn.setdefault(c["t"], c["ts"])
         _fedges.append({"s": c["s"], "ss": c["ss"], "t": c["t"], "ds": c["ts"],
                         "rel": "calls", "conf": c.get("conf", "inferred")})
+    # 3b · WRITE-PATH enrichment — the mid-chain calls the handler-only rule hides.
+    #     distance_to_write (reverse-BFS hops-to-a-write, per fn) makes write paths
+    #     computable without drawing the whole call graph: an edge s→t is a step on a
+    #     shortest write-path iff it DESCENDS the gradient (d2w(t) == d2w(s)−1); from a
+    #     WRITE-ANCHOR (d2w 0 — own write op or commit) ANY write-reaching callee is a
+    #     write path — the commit-boundary → writer hop (complete_setup → _upsert_*, both
+    #     anchors, 0→0) and the boundary → DELEGATING writer hop (0→1, the delegate's own
+    #     anchor sits one deeper: _upsert_exploration → upsert_exploration_preferences).
+    #     BFS from the already-drawn set to fixpoint. Still a FLOOR, two ways: calls are
+    #     graft-inferred, and d2w is computed over a WIDER substrate (functions AND class
+    #     methods) than derive_functions draws — a write path whose next hop is a method
+    #     (e.g. repo-class .save) carries d2w but dead-ends here undrawn. Honest-empty:
+    #     no distance_to_write (graft absent / no faccess) → no new edges/nodes →
+    #     byte-identical output.
+    _d2w = (graft or {}).get("distance_to_write") or {}
+    if _d2w:
+        _adj: dict[str, list[dict[str, Any]]] = {}
+        for c in _gf.get("calls") or []:
+            _adj.setdefault(c["s"], []).append(c)
+        _have = {(e["s"], e["t"]) for e in _fedges}
+        _q = sorted(f for f in drawn_fn if f in _d2w)
+        _seen = set(_q)
+        while _q:
+            _s = _q.pop(0)
+            _ds = _d2w.get(_s)
+            if _ds is None:
+                continue
+            for c in _adj.get(_s, []):
+                _t, _dt = c["t"], _d2w.get(c["t"])
+                if _dt is None or (_ds > 0 and _dt > _ds - 1):
+                    continue                       # not a step toward the write
+                drawn_fn.setdefault(_t, c["ts"])
+                if (_s, _t) not in _have:
+                    _have.add((_s, _t))
+                    _fedges.append({"s": _s, "ss": c["ss"], "t": _t, "ds": c["ts"],
+                                    "rel": "calls", "conf": c.get("conf", "inferred")})
+                if _t not in _seen:
+                    _seen.add(_t)
+                    _q.append(_t)
     # both endpoints are now in drawn_fn by construction; keep the edge only if so
     _fedges = [e for e in _fedges if e["s"] in drawn_fn and e["t"] in drawn_fn]
     _fedges.sort(key=lambda e: (e["ss"], e["ds"], e["s"], e["t"]))

@@ -3371,7 +3371,11 @@ var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,im
 window.__uniComputeSolo=function(){ var callers={};
   links.forEach(function(l){ if(!_SOLO_REL[l.rel]) return; var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;   // a self-loop (recursion) is NOT an external parent (review LOW)
     (callers[tn.id]=callers[tn.id]||{})[sn.id]=sn.kind; });
-  nodes.forEach(function(n){ var cs=callers[n.id]||{}, ks=Object.keys(cs); n.__solo=(ks.length===1 && cs[ks[0]]===n.kind); }); };
+  /* WRITE-FABRIC exemption: a fn on a write path (d2w set — incl. 0, the anchor) or holding its
+     own access ops (red/pink wire) is never a mere helper — critical keeps the journey walkable
+     end-to-end; single-caller fns that never reach a write (serializers, response builders) fold. */
+  nodes.forEach(function(n){ var cs=callers[n.id]||{}, ks=Object.keys(cs);
+    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length)); }); };
 window.__uniKindHasSolo=function(k){ for(var i=0;i<nodes.length;i++){ if(nodes[i].kind===k && nodes[i].__solo) return true; } return false; };
 window.__uniSetKindState=function(k, st, _defer){
   __uniKindState[k]=st; if(st==="off") __uniKindOff[k]=1; else delete __uniKindOff[k];

@@ -108,6 +108,52 @@ ck(_oent["counts"].get("hidden_fns") == 1,
 # SILENT: no graft → no fn_slug → no hidden_fns anywhere (honest-empty, byte-identical)
 ck(all("hidden_fns" not in (e.get("counts") or {}) for e in lv["entities"]),
    "hidden_fns is honest-empty when graft is absent")
+# 3b · WRITE-PATH enrichment — the d2w gradient draws the mid-chain calls the handler
+# rule hides: descent (d2w−1), the 0→0 writer→writer hop, the 0→1 anchor→delegating-
+# writer hop; a LATERAL step (1→1, non-shortest) stays undrawn. SILENT without d2w.
+_GW = {"present": True, "functions": {
+    "fn_slug": {"api/orders.py#list_orders": "orders", "svc/o.py#svc_write": "orders",
+                "svc/o.py#writer": "orders", "svc/o.py#boundary_peer": "orders",
+                "svc/o.py#delegate": "orders", "svc/o.py#deep_writer": "orders",
+                "svc/o.py#lateral": "orders", "svc/o.py#reader": "orders"},
+    "calls": [
+        {"s": "api/orders.py#list_orders", "t": "svc/o.py#svc_write", "ss": "orders", "ts": "orders", "conf": "extracted"},
+        {"s": "svc/o.py#svc_write", "t": "svc/o.py#writer", "ss": "orders", "ts": "orders", "conf": "inferred"},
+        {"s": "svc/o.py#writer", "t": "svc/o.py#boundary_peer", "ss": "orders", "ts": "orders", "conf": "inferred"},
+        {"s": "svc/o.py#boundary_peer", "t": "svc/o.py#delegate", "ss": "orders", "ts": "orders", "conf": "inferred"},
+        {"s": "svc/o.py#delegate", "t": "svc/o.py#deep_writer", "ss": "orders", "ts": "orders", "conf": "inferred"},
+        {"s": "svc/o.py#svc_write", "t": "svc/o.py#lateral", "ss": "orders", "ts": "orders", "conf": "inferred"},
+        # lateral's own path to an anchor (1→0) keeps its d2w=1 DERIVABLE, yet lateral is
+        # never seeded/reached → stays undrawn; reader has NO d2w entry (a pure read path)
+        {"s": "svc/o.py#lateral", "t": "svc/o.py#boundary_peer", "ss": "orders", "ts": "orders", "conf": "inferred"},
+        {"s": "svc/o.py#writer", "t": "svc/o.py#reader", "ss": "orders", "ts": "orders", "conf": "inferred"}]},
+    "distance_to_write": {"api/orders.py#list_orders": 2, "svc/o.py#svc_write": 1,
+                          "svc/o.py#writer": 0, "svc/o.py#boundary_peer": 0,
+                          "svc/o.py#delegate": 1, "svc/o.py#deep_writer": 0,
+                          "svc/o.py#lateral": 1}}
+_lvw = _a3_levels.build_levels(AMAP, graph, graft=_GW)
+_we = {(e["s"], e["t"]) for e in _lvw["fn_edges"]}
+ck(("svc/o.py#svc_write", "svc/o.py#writer") in _we,
+   "3b FIRE: the d2w gradient draws the mid-chain call the handler rule hides")
+ck(("svc/o.py#writer", "svc/o.py#boundary_peer") in _we,
+   "3b: the writer→writer (0→0) commit-boundary hop is drawn")
+ck(("svc/o.py#boundary_peer", "svc/o.py#delegate") in _we and ("svc/o.py#delegate", "svc/o.py#deep_writer") in _we,
+   "3b: anchor→delegating-writer (0→1) + its own descent (1→0) are drawn")
+ck(("svc/o.py#svc_write", "svc/o.py#lateral") not in _we,
+   "3b: a LATERAL step (1→1, non-shortest write path) stays undrawn")
+ck(("svc/o.py#writer", "svc/o.py#reader") not in _we,
+   "3b: a call to a NO-d2w target (pure read path) is skipped, not crashed on")
+_wids = {n["id"] for n in _lvw["fn_nodes"]}
+ck("svc/o.py#deep_writer" in _wids and "svc/o.py#lateral" not in _wids and "svc/o.py#reader" not in _wids,
+   "3b: write-path fns join the drawn set; lateral + reader stay hidden stars")
+ck(next((n for n in _lvw["fn_nodes"] if n["id"] == "svc/o.py#writer"), {}).get("d2w") == 0,
+   "3b: d2w rides onto the newly drawn write-path fn_nodes (0 is real)")
+ck(json.dumps(_lvw, sort_keys=True) == json.dumps(_a3_levels.build_levels(AMAP, graph, graft=_GW), sort_keys=True),
+   "3b: the enriched build is byte-deterministic (double-build equality ON the d2w arm)")
+_GW0 = {"present": True, "functions": _GW["functions"]}
+_lvw0 = _a3_levels.build_levels(AMAP, graph, graft=_GW0)
+ck(len(_lvw0["fn_edges"]) == 1 and _lvw0["fn_edges"][0]["t"] == "svc/o.py#svc_write",
+   "3b SILENT: no distance_to_write → handler-rooted edges only (honest-empty enrichment)")
 # fn CODE-BEHIND: graft.fn_behind attaches to the matching drawn fn_node; a fn with no
 # fn_behind entry (a leaf) carries no `behind` — honest-empty, the panel omits the section.
 _lo = [n for n in _lvg["fn_nodes"] if n["id"] == "api/orders.py#list_orders"][0]

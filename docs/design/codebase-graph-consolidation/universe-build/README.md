@@ -66,9 +66,9 @@ The `verify-*.mjs` need a browser + `playwright-core`, resolved from the **gitig
 `GABE_CHROME_BIN` at your own. Run them **solo-sequential** (concurrent chrome runs starve):
 
 ```bash
-for v in panels search walk clustering explore routes ctrl; do node verify-$v.mjs; done
+for v in panels search walk clustering explore routes ctrl d2w dblclick jrntabs jrnstep selanim backend-journeys; do node verify-$v.mjs; done
 # fleet is long (~10min) — run detached: nohup node verify-fleet.mjs &
 ```
 
 `tests/gabe-universe/run.sh` (from repo root) is the committed static+render battery
-(363 static pins + a render proof) — the one suite-doctor runs.
+(431 static pins + a render proof) — the one suite-doctor runs.

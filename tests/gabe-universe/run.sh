@@ -305,8 +305,10 @@ check('fnsTog' not in page and 'the Functions boolean is GONE' in page,
       "the Functions boolean must be removed (operator: the legend Function row governs load)")
 check('k==="function" && window.toggleFns' in page and 'window.__uniSetKindState=function' in page,
       "the legend Function row no longer loads/unloads functions (via __uniSetKindState)")
-check('window.__uniKindState={}' in page and 'window.__uniGroupToggle=function' in page and 'n.__solo=(ks.length===1 && cs[ks[0]]===n.kind)' in page,
+check('window.__uniKindState={}' in page and 'window.__uniGroupToggle=function' in page and 'n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null' in page,
       "the 3-state legend (all/critical/off) + solo detection + group master are gone")
+check('!(n.access&&n.access.ops&&n.access.ops.length)' in page,
+      "the WRITE-FABRIC solo exemption (d2w/access fns never fold at critical) is gone")
 check('if(n.kind!=="function") cnt[n.ent]=(cnt[n.ent]||0)+1;' in page,
       "functions must NOT trip the capsule fold (review: loading them must not collapse their entity)")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
