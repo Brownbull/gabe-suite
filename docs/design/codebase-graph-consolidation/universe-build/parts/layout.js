@@ -1775,6 +1775,8 @@ window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row" },
   role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" } };
+/* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
+window.__CONNDESC={ fk:"foreign-key data coupling", calls:"a function / handler call", imports:"a component / module import", bridge:"a frontend fetch reaching an API", rollup:"endpoint→model — the call-tree ROLLUP (reaches this table through its functions)", access:"function→model — the TRUE data access (this fn reads/writes this table)" };
 window.__badgeGlyph=function(c, kind, key){
   var col=((window.__BADGE_COL[kind]||{})[key])||"#8794ab";
   c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();

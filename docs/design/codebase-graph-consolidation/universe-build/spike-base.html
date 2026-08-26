@@ -128,7 +128,7 @@
   .ptitle{ flex:1; min-width:0; } .pname{ font:600 15px/1.25 ui-monospace,monospace; word-break:break-word; }
   .ptype{ display:flex; align-items:center; gap:5px; font-size:11px; text-transform:uppercase; letter-spacing:.05em; margin-top:4px; font-weight:700; }
   .ptype svg{ width:15px; height:15px; }
-  .pheadbadge{ display:inline-flex; align-items:center; cursor:help; }   /* the node's own badge (endpoint METHOD · function ROLE); its meaning is on the title HOVER */
+  .pheadbadge{ display:inline-flex; align-items:center; cursor:pointer; }   /* the node's own badge (endpoint METHOD · function ROLE); dimmed to graph opacity, its meaning on an instant click/hover popup */
   .pheadbadge canvas{ width:16px; height:16px; display:block; }
   .pbadgedesc{ display:none; }   /* retired: the meaning moved to the badge hover (title); rule kept so the line-map holds */
   .pmin{ background:none; border:1px solid var(--line); color:var(--muted); border-radius:6px; width:26px; height:24px; cursor:pointer; flex:none; }
@@ -1137,10 +1137,14 @@ function showPanel(n){ var K=n.K;
   var _bdesc = (_bk && window.__BADGE_DESC && window.__BADGE_DESC[_bk.kind]) ? window.__BADGE_DESC[_bk.kind][_bk.key] : null;
   document.getElementById("phead").innerHTML="<div class='ptitle'><div class='pname'>"+(n.label||K.label)+"</div>"
       +"<div class='ptype' style='color:"+K.col+"'>"+svgInline(n.kind,K.col,15)+"<span>"+K.type+"</span>"
-      +(_bk?"<span class='pheadbadge' id='pheadbadge' title='"+(_bdesc||_bk.key)+"'></span>":"")   // meaning on HOVER, not an always-on line (operator)
+      +(_bk?"<span class='pheadbadge' id='pheadbadge'></span>":"")   // meaning on the INSTANT popup below (operator: no native-title delay)
       +(n.ent?"<span style='color:var(--muted);font-weight:600'> · "+n.ent+"</span>":"")+"</div></div>"
       +"<button class='pmin' title='minimize' onclick=\"closePanel()\">›</button>";
-  if(_bk){ var _hb=document.getElementById("pheadbadge"); if(_hb && window.__badgeGlyph){ var _cv=document.createElement("canvas"); _cv.width=_cv.height=32; var _c=_cv.getContext("2d"); _c.scale(32/128,32/128); window.__badgeGlyph(_c,_bk.kind,_bk.key); _hb.appendChild(_cv); } }
+  if(_bk){ var _hb=document.getElementById("pheadbadge"); if(_hb && window.__badgeGlyph){ var _cv=document.createElement("canvas"); _cv.width=_cv.height=32; var _c=_cv.getContext("2d"); _c.scale(32/128,32/128); window.__badgeGlyph(_c,_bk.kind,_bk.key);
+    _cv.style.opacity=(typeof CFG!=="undefined"&&CFG.mbOp!=null)?CFG.mbOp:0.6; _hb.appendChild(_cv);   // DIM to the graph's badge opacity (operator: match the graph, not full intensity)
+    _hb.onmouseenter=function(){ if(window.__badgePop) __badgePop(_hb,_bk.kind,_bk.key); };            // INSTANT styled popup (like the legend info dot), no native-title delay
+    _hb.onmouseleave=function(){ if(window.__badgePopHide) __badgePopHide(); };
+    _hb.onclick=function(ev){ ev.stopPropagation(); if(window.__badgePop) __badgePop(_hb,_bk.kind,_bk.key); }; } }
   var pb=document.getElementById("pbody"); pb.innerHTML="";
   var card=KINDCARD[n.kind]; (card ? card(n) : []).forEach(function(nd){ if(nd) pb.append(nd); });
   document.getElementById("prailname").textContent=(n.label||K.label);
@@ -1172,6 +1176,8 @@ var LEGEND={
     {t:"ln",c:0xf59e0b,s:"dashed",l:"calls <i>a cross-entity function call</i>"},
     {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
     {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},
+    {t:"ln",c:0x8b5cf6,s:"dashed",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
+    {t:"ln",c:0x0f9d8f,s:"solid",l:"access <i>function→model — the TRUE data access (this fn reads/writes the table)</i>"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -1197,10 +1203,11 @@ var _legSub="Defense";   // active sub-tab within Planet
 /* ── BADGE-KEY POPUP (operator) — the legend's info dot opens a small key: each badge drawn with the
    SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
    HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
-window.__badgePop=function(anchor, kind){ if(window.__badgePopHide) __badgePopHide();
-  var keys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];
+window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badgePopHide();
+  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];
+  var keys=key?[key]:allKeys;   // key given (the node's OWN badge) → single row; else the whole key
   var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
-  var head=(kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":"function role — what it does with the data store";
+  var head=key?((kind==="method")?"HTTP method":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":"function role — what it does with the data store");
   var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
   var html='<div class="bph">'+head+'</div>';
   keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+k+'</b><span>'+(desc[k]||"")+'</span></div></div>'; });

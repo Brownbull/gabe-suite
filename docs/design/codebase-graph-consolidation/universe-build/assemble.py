@@ -430,7 +430,7 @@ assert OLD_CONN in text, "CONN literal anchor missing"
 text = text.replace(OLD_CONN,
   "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true,thick:1}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1}, "
   # NEW (Option A) — the data-access connectors: rollup = endpoint→model DIRECT (call-tree rollup, dim/dashed, hides the accessor); access = function→model TRUE accessor wire (bright/solid/thicker)
-  "rollup:{color:0x8b5cf6,style:'dashed',density:2.4,trust:0.4,thick:1}, access:{color:0x0f9d8f,style:'solid',density:2.5,trust:0.85,thick:1.6} };", 1)
+  "rollup:{color:0x8b5cf6,style:'dashed',density:2.4,trust:0.4,thick:1,grad:true}, access:{color:0x0f9d8f,style:'solid',density:2.5,trust:0.85,thick:1.6} };", 1)
 
 
 # batch 37: wires remember their KIND (proofs + future pickers read line.userData.kind)
@@ -471,6 +471,15 @@ text = text.replace(OLD_LCHIP,
         el.addEventListener("click",function(ev){ ev.stopPropagation(); if(window.__uniGoto) __uniGoto(id); }); }
       return el; };
     return [
+      (function(){ var _ck=(typeof REL2KIND!=="undefined"&&REL2KIND[l.rel])||"calls";
+        var _cc=(typeof CONN!=="undefined"&&CONN[_ck])||{color:0x8794ab,style:"dashed"};
+        var _hxc="#"+("000000"+((_cc.color||0)>>>0).toString(16)).slice(-6);
+        var _dm=({solid:"",dashed:"6 3",dotted:"1.5 3.5",sparse:"5 10"})[_cc.style]; if(_dm===undefined) _dm="6 3";
+        var _svg='<svg viewBox="0 0 40 8" width="36" height="8"><path d="M2 4 H38" fill="none" stroke="'+_hxc+'" stroke-width="'+(2.5*(_cc.thick||1))+'"'+(_dm?' stroke-dasharray="'+_dm+'"':'')+' stroke-linecap="round"/></svg>';
+        var _d=(window.__CONNDESC&&__CONNDESC[_ck])||"";
+        return E("div",{class:"sec"}, sechd("link","Connection"),
+          E("div",{class:"sublbl",style:"gap:8px"}, E("span",{html:_svg,style:"display:inline-flex;flex:none;align-items:center"}), E("b",{style:"color:"+_hxc+";text-transform:uppercase;letter-spacing:.03em"}, _ck)),
+          _d?E("div",{class:"doc",style:"font-size:11px;margin-top:2px"}, _d):null); })(),
       E("div",{class:"sec"}, sechd("link","Relation"),
         E("div",{style:"display:flex;align-items:center;gap:6px;flex-wrap:wrap"},
           _lchip(s,sk,sl), E("span",{style:"color:var(--muted);font-weight:700"},"→"), _lchip(t,tk,tl)),""", 1)
@@ -583,7 +592,10 @@ text = text.replace(OLD_CALL2,
 OLD_WHF = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });"
 assert OLD_WHF in text, "selected-wire glow anchor missing"
 text = text.replace(OLD_WHF,
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });", 1)
+  # ROLLUP gradient (operator): a rollup wire's grad START colour is the source endpoint's HTTP-METHOD
+  # colour (GET green · POST blue · PUT orange · PATCH yellow · DELETE red), fading to the model's entity
+  # colour — so an endpoint→model wire reads by method. Other kinds keep the entity-gradient start.
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, ((REL2KIND[l.rel]===\"rollup\"&&_cs&&_cs.m&&typeof METHOD!==\"undefined\"&&METHOD[_cs.m.method])?METHOD[_cs.m.method]:((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null)), (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

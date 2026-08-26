@@ -431,11 +431,16 @@ check('data-badgeinfo=' in page and 'window.__badgePop=function' in page and 'cl
 check('function guardsSec(' in page and 'guardsSec(n)' in page and 'middleware:p.middleware' in page
       and 'The gates/deps that run BEFORE the handler body' in page,
       "the endpoint GUARDS section (C4 middleware floor → card, adapter-carried) is gone")
-# panel HEADER badge — the node's own badge (endpoint method · function role) on the kind row; its
-# meaning is on the badge HOVER (title), not an always-on line (operator)
+# panel HEADER badge — dimmed to the graph's badge opacity (mbOp) + its meaning on an INSTANT styled
+# popup (click/hover), not the native-title delay (operator)
 check("class='pheadbadge'" in page and 'window.__badgeGlyph(_c,_bk.kind,_bk.key)' in page
-      and '(_bdesc||_bk.key)' in page and 'window.__BADGE_DESC' in page,
-      "the panel-header badge + hover-meaning (title) is gone")
+      and '_cv.style.opacity=(typeof CFG' in page and '__badgePop(_hb,_bk.kind,_bk.key)' in page
+      and 'window.__BADGE_DESC' in page,
+      "the panel-header badge (dimmed to graph opacity + instant click/hover popup) is gone")
+# connection TYPE on the link card + the two new kinds in the connectors legend (operator)
+check('sechd("link","Connection")' in page and 'REL2KIND[l.rel]' in page and 'window.__CONNDESC' in page
+      and 'rollup <i>endpoint' in page and 'access <i>function' in page,
+      "the link-card Connection type (kind + wire sample + meaning) + rollup/access legend rows are gone")
 # function ACCESSES — an accessor's evidence (which model it reads/writes, from n.access) in the fn card
 check('function accessSec(' in page and 'accessSec(n)' in page and 'The DB tables this function reads/writes' in page,
       "the function ACCESSES section (accessor badge → which model it reads/writes) is gone")
