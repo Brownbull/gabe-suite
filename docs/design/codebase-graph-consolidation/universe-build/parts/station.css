@@ -314,6 +314,10 @@
   #flside .wkrow .wglow{ font-size:9px; color:var(--muted); flex:none; cursor:help; }
   #flside .wkrow .wbeam{ flex:1; min-width:34px; }
   #flside .wkrow .wreset{ flex:none; }
+  /* DATA-ACCESS second config row: density · transparency · thickness (Option A calibration) */
+  #flside .wkrow2{ flex-wrap:nowrap !important; align-items:center; gap:4px !important; padding-left:22px; margin-top:-2px; }
+  #flside .wkrow2 .wk2l{ font-size:9px; color:var(--muted); flex:none; cursor:help; min-width:15px; text-align:center; }
+  #flside .wkrow2 .rng{ flex:1; min-width:20px; }
   #flside .wgrad{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
     background:var(--chip-bg); border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; opacity:.55; }
   #flside .wgrad.on{ opacity:1; border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset; }

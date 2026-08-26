@@ -1152,7 +1152,8 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
           focusRest:(typeof HL!=="undefined"?HL.rest:null), kinds:{} };
         (typeof CONN_KINDS!=="undefined"?CONN_KINDS:["fk","bridge","calls","imports"]).forEach(function(k){ var c=CONN[k]||{};
           out.kinds[k]={ on:!!(window.__uniBeam[k]==null||window.__uniBeam[k]>0),
-            color:hx(c.color||0), style:c.style||"dashed", glow:(window.__uniBeam[k]!=null?window.__uniBeam[k]:1), grad:!!c.grad }; });
+            color:hx(c.color||0), style:c.style||"dashed", glow:(window.__uniBeam[k]!=null?window.__uniBeam[k]:1), grad:!!c.grad,
+            density:(c.density!=null?c.density:null), trust:(c.trust!=null?c.trust:null), thick:(c.thick!=null?c.thick:null) }; });
         var txt=JSON.stringify(out,null,1);
         window.__uniLastCopy=txt;                                  // proofs + a paste-back fallback read this
         var ok=(typeof copyText==="function")?copyText(txt):false;
@@ -1507,7 +1508,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var LNS='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 20 5"/></svg>';
   var LNC='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 C 8 5 16 5 20 12"/></svg>';
   if(!CONN0 && typeof CONN!=="undefined"){ CONN0={};   // stock snapshot BEFORE any edit (reset target)
-    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style, grad:!!CONN[k].grad}; }); }   // grad rides the snapshot (stock fk/calls ON)
+    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style, grad:!!CONN[k].grad, density:CONN[k].density, trust:CONN[k].trust, thick:CONN[k].thick}; }); }   // grad + density/trust/thick ride the snapshot (reset restores the stock look)
   var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
   var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
@@ -1530,6 +1531,16 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       +'<span class="wglow" title="glow strength — 0 hides · past 1 glows (NOT speed; speed lives in Transports)">✦</span>'
       +'<input type="range" class="rng wbeam" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' glow · 0 hides · >1 glows">'
       +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'; };
+  // second config row (the DATA-ACCESS connectors) — density · transparency (α) · thickness sliders
+  var wireRow2=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{density:2,trust:0.6,thick:1};
+    return '<div class="cfgrow wkrow2" style="gap:5px">'
+      +'<span class="wk2l" title="'+kind+' — pattern DENSITY: higher packs the dashes/dots tighter">den</span>'
+      +'<input type="range" class="rng wden" data-wden="'+kind+'" min="0.6" max="6" step="0.1" value="'+(c.density!=null?c.density:2)+'">'
+      +'<span class="wk2l" title="'+kind+' — TRANSPARENCY (opacity): 0 invisible · 1 solid">α</span>'
+      +'<input type="range" class="rng wtru" data-wtru="'+kind+'" min="0.05" max="1" step="0.05" value="'+(c.trust!=null?c.trust:0.6)+'">'
+      +'<span class="wk2l" title="'+kind+' — THICKNESS: >1 draws a real TUBE (a flat line is always 1px on the GPU)">wt</span>'
+      +'<input type="range" class="rng wthk" data-wthk="'+kind+'" min="0.5" max="4" step="0.1" value="'+(c.thick!=null?c.thick:1)+'">'
+      +'</div>'; };
   rt.innerHTML=
      '<div class="grp"><div class="grplbl">LINES</div>'
     + '<div class="cfgrow" style="gap:6px">'
@@ -1540,7 +1551,9 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
         {v:"dim",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13"><circle cx="12" cy="12" r="8" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.6"/></svg>',ti:"Dim — everything outside the lit set drops to 25%, still readable"},
         {v:"hide",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>',ti:"Hide — everything outside the lit set is gone; hulls stay as geography (default)"}], HL.rest)+'</div>'
     + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
-    + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")+'</div>';
+    + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
+    + '<div class="grplbl" style="margin-top:9px" title="the DATA-ACCESS connectors (Option A): endpoint→model ROLLUP (the direct call-tree shortcut) vs the true function→model ACCESS wire. Calibrate colour · pattern · density · transparency · thickness, then copy (⧉) the config back.">DATA-ACCESS · calibrate + copy</div>'
+    + wireRow("rollup")+wireRow2("rollup")+wireRow("access")+wireRow2("access")+'</div>';
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -1581,6 +1594,10 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     if(window.__legRender) try{ __legRender(); }catch(e){} };
   rt.querySelectorAll("input[data-wcol]").forEach(function(inp){ inp.addEventListener("input", function(){
     var k=inp.getAttribute("data-wcol"); CONN[k].color=parseInt(inp.value.slice(1),16); updSamp(k); redraw(); }); });
+  // DATA-ACCESS controls: density · transparency (trust) · thickness → mutate CONN live, redraw
+  rt.querySelectorAll("input[data-wden]").forEach(function(s){ s.addEventListener("input", function(){ var k=s.getAttribute("data-wden"); CONN[k].density=+s.value; updSamp(k); redraw(); }); });
+  rt.querySelectorAll("input[data-wtru]").forEach(function(s){ s.addEventListener("input", function(){ CONN[s.getAttribute("data-wtru")].trust=+s.value; redraw(); }); });
+  rt.querySelectorAll("input[data-wthk]").forEach(function(s){ s.addEventListener("input", function(){ CONN[s.getAttribute("data-wthk")].thick=+s.value; redraw(); }); });
   rt.querySelectorAll(".pill[data-wshape]").forEach(function(p){ p.addEventListener("click", function(e){
     var b=e.target.closest("button"); if(!b) return; var k=p.getAttribute("data-wshape");
     CONN[k].style=b.getAttribute("data-v"); p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
@@ -1601,10 +1618,14 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     b.classList.toggle("on", !!CONN[k].grad); updSamp(k); redraw(); }); });
   rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
     var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style;
-      CONN[k].grad=!!CONN0[k].grad; }                                          // stock carries grad now (fk/calls default ON) — reset RESTORES it
+      CONN[k].grad=!!CONN0[k].grad;
+      if(CONN0[k].density!=null) CONN[k].density=CONN0[k].density; if(CONN0[k].trust!=null) CONN[k].trust=CONN0[k].trust; if(CONN0[k].thick!=null) CONN[k].thick=CONN0[k].thick; }   // density/trust/thick RESTORED too
     var gb=document.querySelector('button[data-wgrad="'+k+'"]'); if(gb) gb.classList.toggle("on", !!CONN[k].grad);
     var inp=document.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
     var p=document.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
+    var _rd=document.querySelector('[data-wden="'+k+'"]'); if(_rd) _rd.value=CONN[k].density;   // DATA-ACCESS sliders reflect the reset
+    var _rt=document.querySelector('[data-wtru="'+k+'"]'); if(_rt) _rt.value=CONN[k].trust;
+    var _rk=document.querySelector('[data-wthk="'+k+'"]'); if(_rk) _rk.value=CONN[k].thick;
     updSamp(k); redraw(); }); });
   /* the ROUTES estate splits: transports (toggle + speed) → the TRANSPORT pane; everything else
      (lines · curve · focus · wire kinds · beams) → the CONNECTIONS pane. Bindings above already

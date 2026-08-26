@@ -445,6 +445,13 @@ text = text.replace(OLD_LINEADD,
   " if(_sp===\"solid\"){ var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), _sr, 6, false); var _m=new T.Mesh(_tube,_tm); _m.userData.kind=kind; _m.userData.__selBaseOp=_so; grp.add(_m); if(_isSel) window.__uniSelMeshes.push(_m); }"
   " else { var _dn=(_sp===\"dotted\")?26:13; for(var _di=0;_di<_dn;_di+=2){ var _a=_di/_dn, _b2=Math.min(1,(_di+1)/_dn); var _sc=new T.CatmullRomCurve3([_crv.getPoint(_a), _crv.getPoint((_a+_b2)/2), _crv.getPoint(_b2)]); var _dm=new T.Mesh(new T.TubeGeometry(_sc, 3, _sr, 6, false), _tm); _dm.userData.kind=kind; _dm.userData.__selBaseOp=_so; grp.add(_dm); if(_isSel) window.__uniSelMeshes.push(_dm); } }"
   " return; }catch(_te){} }"
+  # THICKNESS: a THREE.Line is 1px on every GPU, so cfg.thick>1 draws a TUBE instead (radius ∝ thick).
+  # Dashed/dotted styles keep their pattern as tube SEGMENTS (density = segment count); solid = one tube.
+  " if(cfg.thick&&cfg.thick>1.05){ try{ var _tc=new T.CatmullRomCurve3(_pts), _tr=0.12*cfg.thick,"
+  "   _tm2=new T.MeshBasicMaterial({color:cfg.color, transparent:true, opacity:Math.min(1,cfg.trust*_bm*hf), blending:((_bm>1||hf>1)?T.AdditiveBlending:T.NormalBlending), depthWrite:false});"
+  "   if(cfg.style==='solid'){ var _tb=new T.Mesh(new T.TubeGeometry(_tc, Math.max(2,_pts.length-1), _tr, 6, false), _tm2); _tb.userData.kind=kind; _tb.raycast=function(){}; grp.add(_tb); }"
+  "   else { var _sn=Math.max(6, Math.round((cfg.density||2)*6)); for(var _ti=0;_ti<_sn;_ti+=2){ var _ta=_ti/_sn, _tbb=Math.min(1,(_ti+1)/_sn); var _dtb=new T.Mesh(new T.TubeGeometry(new T.CatmullRomCurve3([_tc.getPoint(_ta), _tc.getPoint((_ta+_tbb)/2), _tc.getPoint(_tbb)]),3,_tr,6,false), _tm2); _dtb.userData.kind=kind; _dtb.raycast=function(){}; grp.add(_dtb); } }"
+  "   return; }catch(_tk){} }"
   " var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
 
 # ── batch 39: the LINK card's endpoint chips hover-light their nodes (element-card parity) ──

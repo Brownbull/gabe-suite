@@ -444,6 +444,14 @@ check('function accessSec(' in page and 'accessSec(n)' in page and 'The DB table
 check("'rollup'" in page and "'access'" in page and "reads_from:'rollup'" in page and "fnreads:'access'" in page
       and "rel:(o.rw===\"w\"?\"fnwrites\":\"fnreads\"), access:true" in page,
       "the rollup/access connector kinds + the fn→model access wire (Option A) are gone")
+# Option A · the connector CONFIG (color·pattern·density·transparency·thickness) for rollup+access,
+# calibratable + copyable; thickness renders a TUBE (a flat line is 1px), the copy carries the new fields
+check('var wireRow2=function' in page and 'data-wden="' in page and 'data-wtru="' in page and 'data-wthk="' in page
+      and 'wireRow2("rollup")' in page and 'wireRow2("access")' in page and 'DATA-ACCESS · calibrate + copy' in page,
+      "the DATA-ACCESS config rows (density/transparency/thickness for rollup+access) are gone")
+check('if(cfg.thick&&cfg.thick>1.05){' in page and 'new T.TubeGeometry(_tc' in page
+      and 'density:(c.density!=null?c.density:null), trust:(c.trust!=null?c.trust:null), thick:(c.thick!=null?c.thick:null)' in page,
+      "the thickness TUBE render + the copy carrying density/trust/thick are gone")
 # badge LEAK fix — _mbTick prunes badges whose node group force-graph detached (grp.parent nulled on
 # rebuild). `!b.parent` alone missed them (they kept b.parent=grp), so __uniBadges grew ~263/toggle;
 # `!b.parent.parent` drops the detached ones while KEEPING live cached-node badges (no flicker).
