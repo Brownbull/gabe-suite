@@ -1176,8 +1176,8 @@ var LEGEND={
     {t:"ln",c:0xf59e0b,s:"dashed",l:"calls <i>a cross-entity function call</i>"},
     {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
     {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},
-    {t:"ln",c:0x8b5cf6,s:"dashed",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
-    {t:"ln",c:0x0f9d8f,s:"solid",l:"access <i>function→model — the TRUE data access (this fn reads/writes the table)</i>"},
+    {t:"ln",k:"rollup",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
+    {t:"ln",k:"access",l:"access <i>function→model — the TRUE data access (this fn reads/writes the table)</i>"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -1262,8 +1262,18 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       if(it.t==="kind"){ var K=KINDS[it.k]; h+='<div class="lgrow"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b></div></div>'; return; }   // the node KIND — its actual icon glyph
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      if(it.t==="ln"&&it.k){ var _lon=!(window.__uniBeam)||(__uniBeam[it.k]==null||__uniBeam[it.k]>0);   // a CONNECTOR kind → click the row to show / hide that wire (like the node-kind toggles)
+        h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
     el.innerHTML=h+'</div>';
+    [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;
+      var on=(__uniBeam[k]==null||__uniBeam[k]>0);
+      if(on){ window.__uniBeamPrev=window.__uniBeamPrev||{}; __uniBeamPrev[k]=(__uniBeam[k]==null?1:__uniBeam[k])||1; __uniBeam[k]=0; }
+      else { __uniBeam[k]=(window.__uniBeamPrev&&__uniBeamPrev[k])||1; }
+      try{ updateConnectors(); }catch(e){}
+      var tg=document.querySelector('button[data-wtog="'+k+'"]'); if(tg) tg.classList.toggle("on", __uniBeam[k]>0);   // keep the config toggle in sync
+      var sl=document.querySelector('input[data-beam="'+k+'"]'); if(sl) sl.value=String(__uniBeam[k]);
+      render(); }; });
     el.querySelector(".lgmin").onclick=function(){ el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
     [].forEach.call(el.querySelectorAll(".lgtab"), function(b){ b.onclick=function(){ active=b.dataset.t; render(); }; });
     [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });

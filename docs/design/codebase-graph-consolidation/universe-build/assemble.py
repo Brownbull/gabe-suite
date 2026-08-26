@@ -255,7 +255,7 @@ OLD_LEGROWS = '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship
     {t:"ln",c:0xa855f7,s:"dotted",l:"imports <i>a cross-entity import</i>"},
     {t:"ln",c:0xe8f443,s:"dotted",l:"bridge <i>a frontend fetch reaching an API</i>"},'''
 assert OLD_LEGROWS in text, "legend Connectors literals anchor missing"
-text = text.replace(OLD_LEGROWS, '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
+text = text.replace(OLD_LEGROWS, '''  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind — click a row to show / hide it</i>"},
     {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
     {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
     {t:"ln",k:"imports",l:"imports <i>a cross-entity import</i>"},
@@ -428,9 +428,11 @@ text = text.replace(OLD_MD,
 OLD_CONN = "var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };"
 assert OLD_CONN in text, "CONN literal anchor missing"
 text = text.replace(OLD_CONN,
-  "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true,thick:1}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1}, "
-  # NEW (Option A) — the data-access connectors: rollup = endpoint→model DIRECT (call-tree rollup, dim/dashed, hides the accessor); access = function→model TRUE accessor wire (bright/solid/thicker)
-  "rollup:{color:0x8b5cf6,style:'dashed',density:2.4,trust:0.4,thick:1,grad:true}, access:{color:0x0f9d8f,style:'solid',density:2.5,trust:0.85,thick:1.6} };", 1)
+  # gmode = gradient SOURCE per end: ent=entity→entity · type=source-type→target-type (endpoint METHOD ↔
+  # function ROLE badge colours) · type-ent=source-type→target-entity · ent-type=entity→target-type.
+  "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1,gmode:'ent'}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1,gmode:'ent'}, calls:{color:0x817536,style:'solid',density:2,trust:0.6,grad:false,thick:1,gmode:'type'}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1,gmode:'ent'}, "
+  # operator's baked calibration: rollup dim+sparse+method-grad+HIDDEN; access MAROON solid thick, role-grad ready
+  "rollup:{color:0x8b5cf6,style:'sparse',density:0.9,trust:0.4,thick:1,grad:true,gmode:'type-ent'}, access:{color:0xa71649,style:'solid',density:2.5,trust:0.85,thick:1.6,grad:false,gmode:'type-ent'} };", 1)
 
 
 # batch 37: wires remember their KIND (proofs + future pickers read line.userData.kind)
@@ -592,10 +594,11 @@ text = text.replace(OLD_CALL2,
 OLD_WHF = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });"
 assert OLD_WHF in text, "selected-wire glow anchor missing"
 text = text.replace(OLD_WHF,
-  # ROLLUP gradient (operator): a rollup wire's grad START colour is the source endpoint's HTTP-METHOD
-  # colour (GET green · POST blue · PUT orange · PATCH yellow · DELETE red), fading to the model's entity
-  # colour — so an endpoint→model wire reads by method. Other kinds keep the entity-gradient start.
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, ((REL2KIND[l.rel]===\"rollup\"&&_cs&&_cs.m&&typeof METHOD!==\"undefined\"&&METHOD[_cs.m.method])?METHOD[_cs.m.method]:((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null)), (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });", 1)
+  # ROLLUP/ACCESS gradient (operator): a rollup wire's grad START colour is the source endpoint's
+  # HTTP-METHOD colour (GET green · POST blue · PUT orange · PATCH yellow · DELETE red); an ACCESS wire's
+  # start is the source FUNCTION-ROLE colour (accessor/caller/gate/pure). Both fade to the model's entity
+  # colour — so the wire reads by its source TYPE. Other kinds keep the entity-gradient start.
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';\n    var _tcol=function(n){ if(!n) return null; if(n.kind===\"endpoint\"&&n.m&&n.m.method&&typeof METHOD!==\"undefined\"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind===\"function\"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };\n    var _ea=(((_gm===\"type\"||_gm===\"type-ent\")&&_tcol(_cs))||((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null));\n    var _eb=(((_gm===\"type\"||_gm===\"ent-type\")&&_tcol(_ct))||((_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null));\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

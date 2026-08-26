@@ -159,10 +159,10 @@ check('vertexColors:_gr' in page and 'data-wgrad=' in page and 'ENT[_cs.ent]' in
       "the entity-gradient option is gone (vertex-color wires + per-row toggle + entity colors threaded)")
 check('CONN[k].grad=!!CONN0[k].grad' in page,
       "wire reset must RESTORE the stock gradient flag (fk/calls default ON)")
-check("style:'sparse',density:2.7,trust:0.9,grad:true" in page and "style:'solid',density:2,trust:0.6,grad:true" in page,
-      "the operator's stock CONN config (2026-08-23) drifted")
-check('{ fk:0.9, bridge:0.8, calls:0.5, imports:1 }' in page and '__uniCurveAmt=0.6' in page and 'lineStyle:"curved"' in page,
-      "the operator's stock glow/curve defaults drifted")
+check("style:'sparse',density:2.7,trust:0.9,grad:true" in page and "style:'solid',density:2,trust:0.6,grad:false,thick:1,gmode:'type'" in page,
+      "the operator's stock CONN config drifted (fk grad on; calls flat #817536, grad off, gmode type)")
+check('{ fk:0.9, bridge:0.8, calls:0.5, imports:1, rollup:0, access:0.7 }' in page and '__uniCurveAmt=0.6' in page and 'lineStyle:"curved"' in page,
+      "the operator's stock glow/curve defaults drifted (rollup hidden = beam 0, access glow 0.7)")
 check('function _raySegDist' in page and 'w=ray.origin.clone().sub(A)' in page and 'showLinkPanel(wbest.l)' in page,
       "wire clicking is gone (ray-segment pick → connection panel)")
 check('__uniHLMode();       // a FOCUS option while glowing' in page,
@@ -451,9 +451,20 @@ check("'rollup'" in page and "'access'" in page and "reads_from:'rollup'" in pag
       "the rollup/access connector kinds + the fn→model access wire (Option A) are gone")
 # Option A · the connector CONFIG (color·pattern·density·transparency·thickness) for rollup+access,
 # calibratable + copyable; thickness renders a TUBE (a flat line is 1px), the copy carries the new fields
-check('var wireRow2=function' in page and 'data-wden="' in page and 'data-wtru="' in page and 'data-wthk="' in page
-      and 'wireRow2("rollup")' in page and 'wireRow2("access")' in page and 'DATA-ACCESS · calibrate + copy' in page,
-      "the DATA-ACCESS config rows (density/transparency/thickness for rollup+access) are gone")
+# BAKED calibration (operator JSON): rollup HIDDEN (beam 0), access MAROON (#a71649) glow 0.7, calls flat
+# #817536 grad OFF; the access fine-tuning controls (den/α/thickness) stay
+check("access:{color:0xa71649" in page and 'rollup:0, access:0.7' in page
+      and 'calls:{color:0x817536' in page and "grad:false,thick:1,gmode:'type'" in page
+      and 'var wireRow2=function' in page and 'wireRow2("access")' in page,
+      "the baked calls/access defaults or the access fine controls drifted")
+# gmode GRADIENT LOGIC (baked; the selector was REMOVED per operator): per-end type-badge colour
+# (endpoint METHOD / function ROLE) driven by CONN.gmode; calls gmode='type', access 'type-ent'
+check("gmode:'type'" in page and "gmode:'type-ent'" in page and '__BADGE_COL.role[n.role]' in page
+      and 'METHOD[n.m.method]' in page and '_gm==="type"' in page and 'data-wgmode' not in page,
+      "the gmode gradient LOGIC drifted, or the removed mode-selector came back")
+# connectors legend rows CLICK-TO-TOGGLE their wire (show/hide), like the node-kind toggles
+check('data-lgconn="' in page and 'it.t==="ln"&&it.k' in page and 'k:"rollup"' in page and 'k:"access"' in page,
+      "the connectors-legend show/hide toggle (+ rollup/access rows) is gone")
 check('if(cfg.thick&&cfg.thick>1.05){' in page and 'new T.TubeGeometry(_tc' in page
       and 'density:(c.density!=null?c.density:null), trust:(c.trust!=null?c.trust:null), thick:(c.thick!=null?c.thick:null)' in page,
       "the thickness TUBE render + the copy carrying density/trust/thick are gone")

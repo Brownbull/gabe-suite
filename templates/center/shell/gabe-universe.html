@@ -473,9 +473,9 @@
   #flside .wkrow .wglow{ font-size:9px; color:var(--muted); flex:none; cursor:help; }
   #flside .wkrow .wbeam{ flex:1; min-width:34px; }
   #flside .wkrow .wreset{ flex:none; }
-  /* DATA-ACCESS second config row: density · transparency · thickness (Option A calibration) */
+  /* second config row: the fine controls (density · transparency · thickness) for access */
   #flside .wkrow2{ flex-wrap:nowrap !important; align-items:center; gap:4px !important; padding-left:22px; margin-top:-2px; }
-  #flside .wkrow2 .wk2l{ font-size:9px; color:var(--muted); flex:none; cursor:help; min-width:15px; text-align:center; }
+  #flside .wkrow2 .wk2l{ font-size:9px; color:var(--muted); flex:none; cursor:help; min-width:14px; text-align:center; }
   #flside .wkrow2 .rng{ flex:1; min-width:20px; }
   #flside .wgrad{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px;
     background:var(--chip-bg); border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; flex:none; opacity:.55; }
@@ -586,6 +586,8 @@
   #elegend .lghd2{ grid-column:1/-1; font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.09em; color:var(--muted); padding:3px 2px 1px; border-bottom:1px solid var(--line); margin-bottom:2px; }
   #elegend .lgrow.lgk{ cursor:pointer; border-radius:7px; padding:1px 4px; gap:7px; }   /* the label sits CLOSER to its icon */
   #elegend .lgrow.lgk:hover{ background:var(--hov-bg); }
+  #elegend .lgrow.lgconn{ cursor:pointer; border-radius:7px; padding:1px 4px; }   /* connector rows toggle their wire (show/hide) */
+  #elegend .lgrow.lgconn:hover{ background:var(--hov-bg); }
   #elegend .lgrow.lgoff{ opacity:.32; }
   #elegend .lgrow.lgoff .lglbl b{ text-decoration:line-through; }
   #cfg .itog.wv{ width:auto; padding:2px 10px; font:700 10px/1.6 var(--font-mono); letter-spacing:.04em; }
@@ -1292,7 +1294,7 @@ function onShipsReady(){ rebuildNodes(); if(Graph) updateClusters(true); buildTr
 /* ── TYPED CONNECTORS — the ELEMENTS-LAB connector language applied to EVERY link: each edge re-renders as its
    mapped KIND's styled wire (dashed/dotted · kind colour · trust opacity), and the plain force-graph edges hide.
    Kind styles VERBATIM from ELEMENTS-LAB-SPEC.md §Inter-entity connectors. ── */
-var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true,thick:1}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1}, rollup:{color:0x8b5cf6,style:'dashed',density:2.4,trust:0.4,thick:1,grad:true}, access:{color:0x0f9d8f,style:'solid',density:2.5,trust:0.85,thick:1.6} };
+var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1,gmode:'ent'}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1,gmode:'ent'}, calls:{color:0x817536,style:'solid',density:2,trust:0.6,grad:false,thick:1,gmode:'type'}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1,gmode:'ent'}, rollup:{color:0x8b5cf6,style:'sparse',density:0.9,trust:0.4,thick:1,grad:true,gmode:'type-ent'}, access:{color:0xa71649,style:'solid',density:2.5,trust:0.85,thick:1.6,grad:false,gmode:'type-ent'} };
 var CONN_KINDS=['fk','bridge','calls','imports','rollup','access'];
 /* each graph REL → its connector KIND (fk=data coupling · calls=fn/data access · imports=component wiring · bridge=web→API fetch) */
 var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access' };
@@ -1333,7 +1335,11 @@ function updateConnectors(){ if(!connGroup) return;
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
     if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
     if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return; var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;
-    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, ((REL2KIND[l.rel]==="rollup"&&_cs&&_cs.m&&typeof METHOD!=="undefined"&&METHOD[_cs.m.method])?METHOD[_cs.m.method]:((_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null)), (_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });
+    var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';
+    var _tcol=function(n){ if(!n) return null; if(n.kind==="endpoint"&&n.m&&n.m.method&&typeof METHOD!=="undefined"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind==="function"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };
+    var _ea=(((_gm==="type"||_gm==="type-ent")&&_tcol(_cs))||((_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null));
+    var _eb=(((_gm==="type"||_gm==="ent-type")&&_tcol(_ct))||((_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null));
+    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });
   if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
@@ -1741,7 +1747,7 @@ function toggleTypes(on){ if(typeof _FETYPES==="undefined" || !_FETYPES.length) 
 function __uniSetCurve(on){ window.__uniCurved=!!on; try{ updateConnectors(); }catch(e){} }
 window.__uniCurveAmt=0.6;                                 // curve-amount slider → arc height multiplier (operator default 0.6)
 window.__uniCurved=true;                                  // lines default CURVED (operator config)
-window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.5, imports:1 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire
+window.__uniBeam={ fk:0.9, bridge:0.8, calls:0.5, imports:1, rollup:0, access:0.7 };  // per-kind wire glow (operator defaults) — 0 hides, >1 glows; read by connectorWire. rollup HIDDEN by default (beam 0)
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
@@ -2576,7 +2582,7 @@ window.__uniBuildFleet=function(){ if(document.getElementById("fleet")) return;
           focusRest:(typeof HL!=="undefined"?HL.rest:null), kinds:{} };
         (typeof CONN_KINDS!=="undefined"?CONN_KINDS:["fk","bridge","calls","imports"]).forEach(function(k){ var c=CONN[k]||{};
           out.kinds[k]={ on:!!(window.__uniBeam[k]==null||window.__uniBeam[k]>0),
-            color:hx(c.color||0), style:c.style||"dashed", glow:(window.__uniBeam[k]!=null?window.__uniBeam[k]:1), grad:!!c.grad,
+            color:hx(c.color||0), style:c.style||"dashed", glow:(window.__uniBeam[k]!=null?window.__uniBeam[k]:1), grad:!!c.grad, gmode:(c.gmode||"ent"),
             density:(c.density!=null?c.density:null), trust:(c.trust!=null?c.trust:null), thick:(c.thick!=null?c.thick:null) }; });
         var txt=JSON.stringify(out,null,1);
         window.__uniLastCopy=txt;                                  // proofs + a paste-back fallback read this
@@ -2932,7 +2938,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   var LNS='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 20 5"/></svg>';
   var LNC='<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19 C 8 5 16 5 20 12"/></svg>';
   if(!CONN0 && typeof CONN!=="undefined"){ CONN0={};   // stock snapshot BEFORE any edit (reset target)
-    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style, grad:!!CONN[k].grad, density:CONN[k].density, trust:CONN[k].trust, thick:CONN[k].thick}; }); }   // grad + density/trust/thick ride the snapshot (reset restores the stock look)
+    CONN_KINDS.forEach(function(k){ CONN0[k]={color:CONN[k].color, style:CONN[k].style, grad:!!CONN[k].grad, gmode:CONN[k].gmode, density:CONN[k].density, trust:CONN[k].trust, thick:CONN[k].thick}; }); }   // grad/gmode + density/trust/thick ride the snapshot (reset restores the stock look)
   var _hx=function(c){ return "#"+("00000"+(c).toString(16)).slice(-6); };
   var _sampSVG=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{color:0x8794ab,style:"dashed"};
     var d=DASHMAP[c.style]; if(d===undefined) d="6 3";   // sample renders the ACTUAL wire (legend ruling), word on hover
@@ -2955,15 +2961,13 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       +'<span class="wglow" title="glow strength — 0 hides · past 1 glows (NOT speed; speed lives in Transports)">✦</span>'
       +'<input type="range" class="rng wbeam" data-beam="'+kind+'" min="0" max="2" step="0.1" value="'+(window.__uniBeam[kind]!=null?window.__uniBeam[kind]:1)+'" title="'+kind+' glow · 0 hides · >1 glows">'
       +'<button class="wreset" data-wreset="'+kind+'" title="reset '+kind+' to stock">&#8634;</button></div>'; };
-  // second config row (the DATA-ACCESS connectors) — density · transparency (α) · thickness sliders
+  /* second config row — the fine controls (density · transparency · thickness). The per-kind gradient MODE
+     is baked (operator ruling: modes settled, the selector removed); only access still fine-tunes here. */
   var wireRow2=function(kind){ var c=(typeof CONN!=="undefined"&&CONN[kind])||{density:2,trust:0.6,thick:1};
     return '<div class="cfgrow wkrow2" style="gap:5px">'
-      +'<span class="wk2l" title="'+kind+' — pattern DENSITY: higher packs the dashes/dots tighter">den</span>'
-      +'<input type="range" class="rng wden" data-wden="'+kind+'" min="0.6" max="6" step="0.1" value="'+(c.density!=null?c.density:2)+'">'
-      +'<span class="wk2l" title="'+kind+' — TRANSPARENCY (opacity): 0 invisible · 1 solid">α</span>'
-      +'<input type="range" class="rng wtru" data-wtru="'+kind+'" min="0.05" max="1" step="0.05" value="'+(c.trust!=null?c.trust:0.6)+'">'
-      +'<span class="wk2l" title="'+kind+' — THICKNESS: >1 draws a real TUBE (a flat line is always 1px on the GPU)">wt</span>'
-      +'<input type="range" class="rng wthk" data-wthk="'+kind+'" min="0.5" max="4" step="0.1" value="'+(c.thick!=null?c.thick:1)+'">'
+      +'<span class="wk2l" title="'+kind+' pattern DENSITY">den</span><input type="range" class="rng wden" data-wden="'+kind+'" min="0.6" max="6" step="0.1" value="'+(c.density!=null?c.density:2)+'">'
+      +'<span class="wk2l" title="'+kind+' TRANSPARENCY (opacity)">α</span><input type="range" class="rng wtru" data-wtru="'+kind+'" min="0.05" max="1" step="0.05" value="'+(c.trust!=null?c.trust:0.6)+'">'
+      +'<span class="wk2l" title="'+kind+' THICKNESS (>1 draws a tube)">wt</span><input type="range" class="rng wthk" data-wthk="'+kind+'" min="0.5" max="4" step="0.1" value="'+(c.thick!=null?c.thick:1)+'">'
       +'</div>'; };
   rt.innerHTML=
      '<div class="grp"><div class="grplbl">LINES</div>'
@@ -2976,8 +2980,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
         {v:"hide",t:"",ic:'<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"/><path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"/><path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"/><line x1="2" x2="22" y1="2" y2="22"/></svg>',ti:"Hide — everything outside the lit set is gone; hulls stay as geography (default)"}], HL.rest)+'</div>'
     + '<div class="grp"><div class="grplbl">WIRE KINDS</div>'
     + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
-    + '<div class="grplbl" style="margin-top:9px" title="the DATA-ACCESS connectors (Option A): endpoint→model ROLLUP (the direct call-tree shortcut) vs the true function→model ACCESS wire. Calibrate colour · pattern · density · transparency · thickness, then copy (⧉) the config back.">DATA-ACCESS · calibrate + copy</div>'
-    + wireRow("rollup")+wireRow2("rollup")+wireRow("access")+wireRow2("access")+'</div>';
+    + '<div class="grplbl" style="margin-top:9px" title="the DATA-ACCESS connectors (Option A): endpoint→model ROLLUP (the direct call-tree shortcut, method-coloured, hidden by default) vs the true function→model ACCESS wire (role-coloured when its gradient is on).">DATA-ACCESS</div>'
+    + wireRow("rollup")+wireRow("access")+wireRow2("access")+'</div>';
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -3018,7 +3022,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     if(window.__legRender) try{ __legRender(); }catch(e){} };
   rt.querySelectorAll("input[data-wcol]").forEach(function(inp){ inp.addEventListener("input", function(){
     var k=inp.getAttribute("data-wcol"); CONN[k].color=parseInt(inp.value.slice(1),16); updSamp(k); redraw(); }); });
-  // DATA-ACCESS controls: density · transparency (trust) · thickness → mutate CONN live, redraw
+  // the DATA-ACCESS fine sliders (density · transparency · thickness); the gradient MODE is baked (no selector)
   rt.querySelectorAll("input[data-wden]").forEach(function(s){ s.addEventListener("input", function(){ var k=s.getAttribute("data-wden"); CONN[k].density=+s.value; updSamp(k); redraw(); }); });
   rt.querySelectorAll("input[data-wtru]").forEach(function(s){ s.addEventListener("input", function(){ CONN[s.getAttribute("data-wtru")].trust=+s.value; redraw(); }); });
   rt.querySelectorAll("input[data-wthk]").forEach(function(s){ s.addEventListener("input", function(){ CONN[s.getAttribute("data-wthk")].thick=+s.value; redraw(); }); });
@@ -3042,8 +3046,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     b.classList.toggle("on", !!CONN[k].grad); updSamp(k); redraw(); }); });
   rt.querySelectorAll("button[data-wreset]").forEach(function(b){ b.addEventListener("click", function(){
     var k=b.getAttribute("data-wreset"); if(CONN0&&CONN0[k]){ CONN[k].color=CONN0[k].color; CONN[k].style=CONN0[k].style;
-      CONN[k].grad=!!CONN0[k].grad;
-      if(CONN0[k].density!=null) CONN[k].density=CONN0[k].density; if(CONN0[k].trust!=null) CONN[k].trust=CONN0[k].trust; if(CONN0[k].thick!=null) CONN[k].thick=CONN0[k].thick; }   // density/trust/thick RESTORED too
+      CONN[k].grad=!!CONN0[k].grad; if(CONN0[k].gmode) CONN[k].gmode=CONN0[k].gmode;
+      if(CONN0[k].density!=null) CONN[k].density=CONN0[k].density; if(CONN0[k].trust!=null) CONN[k].trust=CONN0[k].trust; if(CONN0[k].thick!=null) CONN[k].thick=CONN0[k].thick; }   // grad/gmode + density/trust/thick RESTORED
     var gb=document.querySelector('button[data-wgrad="'+k+'"]'); if(gb) gb.classList.toggle("on", !!CONN[k].grad);
     var inp=document.querySelector('[data-wcol="'+k+'"]'); if(inp) inp.value=_hx(CONN[k].color);
     var p=document.querySelector('.pill[data-wshape="'+k+'"]'); if(p) p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x.getAttribute("data-v")===CONN[k].style); });
@@ -4314,13 +4318,13 @@ var LEGEND={
     [{t:"hd",l:"backend"}],
     ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
     [ {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · click a row to HIDE that kind graph-wide"} ]),
-  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
+  Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind — click a row to show / hide it</i>"},
     {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
     {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
     {t:"ln",k:"imports",l:"imports <i>a cross-entity import</i>"},
     {t:"ln",k:"bridge",l:"bridge <i>a frontend fetch reaching an API</i>"},
-    {t:"ln",c:0x8b5cf6,s:"dashed",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
-    {t:"ln",c:0x0f9d8f,s:"solid",l:"access <i>function→model — the TRUE data access (this fn reads/writes the table)</i>"},
+    {t:"ln",k:"rollup",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
+    {t:"ln",k:"access",l:"access <i>function→model — the TRUE data access (this fn reads/writes the table)</i>"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -4416,8 +4420,18 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
+      if(it.t==="ln"&&it.k){ var _lon=!(window.__uniBeam)||(__uniBeam[it.k]==null||__uniBeam[it.k]>0);   // a CONNECTOR kind → click the row to show / hide that wire (like the node-kind toggles)
+        h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
     el.innerHTML=h+'</div>';
+    [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;
+      var on=(__uniBeam[k]==null||__uniBeam[k]>0);
+      if(on){ window.__uniBeamPrev=window.__uniBeamPrev||{}; __uniBeamPrev[k]=(__uniBeam[k]==null?1:__uniBeam[k])||1; __uniBeam[k]=0; }
+      else { __uniBeam[k]=(window.__uniBeamPrev&&__uniBeamPrev[k])||1; }
+      try{ updateConnectors(); }catch(e){}
+      var tg=document.querySelector('button[data-wtog="'+k+'"]'); if(tg) tg.classList.toggle("on", __uniBeam[k]>0);   // keep the config toggle in sync
+      var sl=document.querySelector('input[data-beam="'+k+'"]'); if(sl) sl.value=String(__uniBeam[k]);
+      render(); }; });
     el.querySelector(".lgmin").onclick=function(){ el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
     [].forEach.call(el.querySelectorAll(".lgtab"), function(b){ b.onclick=function(){ active=b.dataset.t; render(); }; });
     [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });
