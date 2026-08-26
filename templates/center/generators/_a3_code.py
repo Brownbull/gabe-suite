@@ -610,6 +610,99 @@ _PY_KEYWORDS = frozenset(
     "type isinstance issubclass super property staticmethod classmethod".split())
 
 
+# ── ORM data-access detection (C2) — the write graft cannot see ─────────────
+# graft resolves 0 edges for session.add/select/execute (untyped receiver → an
+# un-indexed library method). So we read the access off the AST we already walk:
+# READS are a near-census (the model is a LITERAL arg — select(Model)); WRITES use
+# a per-function var→class symtab built from `x = Model(...)` constructor assigns —
+# the dominant idiom. The honest floor: an object bound OUTSIDE the function is an
+# under-count, never a wrong table. Model→table via __tablename__ (already parsed).
+_ORM_WRITE_M = frozenset({"add", "add_all", "delete", "merge",
+                          "bulk_save_objects", "bulk_insert_mappings"})   # session.<m>(obj)
+_ORM_WRITE_CORE = frozenset({"insert", "update", "delete"})              # <core>(Model)
+_ORM_READ_CORE = frozenset({"select"})                                  # select(Model)
+_ORM_COMMIT = frozenset({"commit", "flush"})
+
+
+def _model_table_map(trees: dict) -> dict[str, str]:
+    """{ModelClassName: table} across all parsed files — a write can target a model
+    declared in another file, so the map is global before the per-fn walk."""
+    m2t: dict[str, str] = {}
+    for tree in trees.values():
+        for node in getattr(tree, "body", []):
+            if not isinstance(node, ast.ClassDef):
+                continue
+            for item in node.body:
+                if (isinstance(item, ast.Assign) and item.targets
+                        and getattr(item.targets[0], "id", "") == "__tablename__"
+                        and isinstance(item.value, ast.Constant)
+                        and isinstance(item.value.value, str)):
+                    m2t[node.name] = item.value.value
+    return m2t
+
+
+def _call_attr(func) -> str | None:      # x.method(...) → "method"
+    return func.attr if isinstance(func, ast.Attribute) else None
+
+
+def _call_bare(func) -> str | None:      # foo(...) / Model(...) → "foo" / "Model"
+    return func.id if isinstance(func, ast.Name) else None
+
+
+def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
+    """{'ops': [{'model','table','rw'}], 'commits': bool} for one function, or {}."""
+    if not m2t:
+        return {}
+    symtab: dict[str, str] = {}   # local var → model class (constructor / annotation)
+    for n in ast.walk(fnnode):
+        if (isinstance(n, ast.Assign) and len(n.targets) == 1
+                and isinstance(n.targets[0], ast.Name)
+                and isinstance(n.value, ast.Call)):
+            b = _call_bare(n.value.func)
+            if b in m2t:
+                symtab[n.targets[0].id] = b
+        elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.annotation is not None:
+            a = ast.unparse(n.annotation)
+            if a in m2t:
+                symtab[n.target.id] = a
+
+    def _arg_model(arg) -> str | None:            # session.add(x) — x local or inline Model(...)
+        if isinstance(arg, ast.Name):
+            return symtab.get(arg.id)
+        if isinstance(arg, ast.Call) and _call_bare(arg.func) in m2t:
+            return _call_bare(arg.func)
+        return None
+
+    def _name_model(arg) -> str | None:           # select(Model) — the class is the literal
+        return arg.id if isinstance(arg, ast.Name) and arg.id in m2t else None
+
+    ops: dict[tuple, dict] = {}
+    commits = False
+
+    def _put(model, rw):
+        if model:
+            ops[(model, rw)] = {"model": model, "table": m2t[model], "rw": rw}
+
+    for n in ast.walk(fnnode):
+        if not isinstance(n, ast.Call):
+            continue
+        attr, bare = _call_attr(n.func), _call_bare(n.func)
+        if attr in _ORM_WRITE_M and n.args:
+            _put(_arg_model(n.args[0]), "w")
+        if attr == "get" and n.args:                                  # session.get(Model, id)
+            _put(_name_model(n.args[0]), "r")
+        if bare in _ORM_READ_CORE:
+            for a in n.args:
+                _put(_name_model(a), "r")
+        if bare in _ORM_WRITE_CORE:                                   # Core insert/update/delete(Model)
+            for a in n.args:
+                _put(_name_model(a), "w")
+        if attr in _ORM_COMMIT:
+            commits = True
+    out = sorted(ops.values(), key=lambda x: (x["rw"], x["model"]))
+    return {"ops": out, "commits": commits} if (out or commits) else {}
+
+
 def function_insight(repo: Path) -> dict:
     """{'<file>::<qual>': signals} for every def in the mapped backend files,
     computed once per build. Serialized into archmap.json as
@@ -633,12 +726,19 @@ def function_insight(repo: Path) -> dict:
     texts = {f: (repo / f).read_text() for f in sorted(file_layer)
              if (repo / f).exists()}
     _PY_TEXTS.update(texts)
-    fns: dict[str, dict] = {}
+    # pre-parse once (each tree reused for the model-map AND the fn walk), then
+    # build the GLOBAL model→table map before any fn is inspected — a write can
+    # target a model class declared in another file (C2).
+    trees: dict[str, ast.AST] = {}
     for f, text in texts.items():
         try:
-            tree = ast.parse(text)
+            trees[f] = ast.parse(text)
         except SyntaxError:
             continue
+    model2table = _model_table_map(trees)
+    fns: dict[str, dict] = {}
+    for f, tree in trees.items():
+        text = texts[f]
         lines = text.splitlines()
 
         def _add(node, cls: str | None):
@@ -659,6 +759,7 @@ def function_insight(repo: Path) -> dict:
                            for a in node.args.args if a.arg != "self"],
                 "returns": ast.unparse(node.returns) if node.returns else "",
                 "doc": _first_sentence(ast.get_docstring(node)),
+                "access": _orm_access(node, model2table),   # C2: ORM read/write ops → model/table
                 "ids": {i for i in _re_mod.findall(
                     r"[A-Za-z_][A-Za-z0-9_]{3,}", body)} - _PY_KEYWORDS,
             }
