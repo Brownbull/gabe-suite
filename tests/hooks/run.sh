@@ -318,6 +318,14 @@ git checkout -q "$CURB" 2>/dev/null || true
 [ "$(pg '{"tool_input":{"command":"git push --mirror origin"}}')" = 2 ] && ok || bad "push-gate: --mirror → must BLOCK"
 [ "$(pg '{"tool_input":{"command":"git push origin main&&true"}}')" = 2 ] && ok || bad "push-gate: operator glued to the refspec → fail closed"
 [ "$(pg '{"tool_input":{"command":"git push origin main;echo done"}}')" = 2 ] && ok || bad "push-gate: semicolon glued to the refspec → fail closed"
+# review finding 9: a STANDALONE sequence operator is a CLEAN segment boundary (shlex emits it as its
+# own token). A non-terminal push chained after it must ALLOW; the fused forms above still fail closed.
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging && gh pr create --fill"}}')" = 0 ] && ok || bad "push-gate: non-terminal push && (standalone) another cmd → ALLOW (the common staging+PR flow)"
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging | tee push.log"}}')" = 0 ] && ok || bad "push-gate: non-terminal push | (standalone) pipe → ALLOW"
+[ "$(pg '{"tool_input":{"command":"git push origin main && gh pr create"}}')" = 2 ] && ok || bad "push-gate: TERMINAL push && another cmd → still BLOCK (destination is evaluated)"
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging && git push origin main"}}')" = 2 ] && ok || bad "push-gate: staging && push main → the SECOND (main) segment BLOCKs (outer loop resumes past the operator)"
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging && echo `whoami`"}}')" = 2 ] && ok || bad "push-gate: a SUBSTITUTION anywhere (could hide a push in backticks) → fail closed, even with a clean leading segment"
+[ "$(pg '{"tool_input":{"command":"git push origin HEAD:staging && echo done $(date)"}}')" = 2 ] && ok || bad "push-gate: \$( ) substitution anywhere → fail closed"
 [ "$(pg '{"tool_input":{"command":"git --git-dir=/x/.git push origin main"}}')" = 2 ] && ok || bad "push-gate: repo-redirect flag → cannot prove repo → fail closed"
 [ "$(pg '{"tool_input":{"command":"git -C /other/repo push origin staging"}}')" = 2 ] && ok || bad "push-gate: -C redirect (validates the WRONG repo's PUSH.md) → fail closed"
 [ "$(pg '{"tool_input":{"command":"git push origin refs/heads/*:refs/heads/*"}}')" = 2 ] && ok || bad "push-gate: glob refspec → cannot prove it misses terminal → fail closed"

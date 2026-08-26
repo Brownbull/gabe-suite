@@ -48,6 +48,15 @@ for _ln, _needle in _ANCHORS.items():
     _src = lines[_ln-1] if _ln-1 < len(lines) else ""
     assert _needle in _src, ("assemble line-map STALE at %d: expected %r, found %r — a spike-base "
         "line-count change shifted the map; re-sync the keys in `repl`." % (_ln, _needle, _src.strip()[:60]))
+# END-anchor (review finding 10): the FINAL repl range (card, 979→1053) has no following start-anchor,
+# so a line-count change INSIDE the card region shifts its END boundary undetected — the old block's
+# tail leaks past the replacement as a stray fragment → un-parseable JS. Pin the first pass-through
+# line AFTER the last range too, so end-drift fails LOUD here instead of shipping broken JS.
+_END_ANCHORS = {1054: "C.screen=C.web"}
+for _ln, _needle in _END_ANCHORS.items():
+    _src = lines[_ln-1] if _ln-1 < len(lines) else ""
+    assert _needle in _src, ("assemble line-map STALE at END-anchor %d: expected %r, found %r — a "
+        "spike-base line-count change inside the FINAL range shifted its end; re-sync `repl`." % (_ln, _needle, _src.strip()[:60]))
 out=[]; i=1; N=len(lines)
 while i<=N:
     if i in repl:

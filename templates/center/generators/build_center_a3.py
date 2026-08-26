@@ -63,6 +63,10 @@ CENTER = D.CENTER_DIR               # READ root (config, adoption, cards, archma
 # a scratch dir so a lab run can read a real project and never mutate it.
 CENTER_OUT = (Path(os.environ["GABE_CENTER_OUT"])
               if os.environ.get("GABE_CENTER_OUT") else CENTER)
+# LAB = the run was pointed at ANOTHER project's tree (a twin / dry-run). In LAB mode the graft
+# index build defaults OFF (opt-in via GABE_GRAFT_BUILD=1), so a run that forgets the flag can never
+# mutate the foreign tree; a normal self-build (no GABE_REPO_ROOT) keeps graft build ON as before.
+LAB = bool(os.environ.get("GABE_REPO_ROOT"))
 CFG = D.CFG
 # The corpora a project verifies with — key · runner · kind, declared in
 # center.config.json so no test-suite name is hardcoded here. Defaults to the
@@ -1901,6 +1905,11 @@ def main() -> int:
         print(f"  ⚠ WRITE redirected to {CENTER_OUT} (GABE_CENTER_OUT set) — "
               f"reads still come from {CENTER}. LAB run: the real center was "
               f"NOT touched.")
+    elif LAB:
+        # GABE_REPO_ROOT points at a foreign tree but GABE_CENTER_OUT is UNSET — the whole center is
+        # about to be written INTO that project. Say so; the twin recipe always pairs the two.
+        print(f"  ⚠ LAB run (GABE_REPO_ROOT set) with NO GABE_CENTER_OUT — the center is being written "
+              f"INTO the foreign project at {CENTER}. Set GABE_CENTER_OUT to redirect writes to a scratch dir.")
     CENTER_OUT.mkdir(parents=True, exist_ok=True)
     (CENTER_OUT / "assets").mkdir(exist_ok=True)
     # Assets may nest (e.g. assets/evidence-states/*.png — the navigator's
@@ -1986,7 +1995,11 @@ def main() -> int:
         # absence is a named stats entry, and the FK topology is unchanged.
         _garm = _a3_graft.graft_arm(
             REPO_ROOT, amap.get("entities") or {},
-            allow_build=os.environ.get("GABE_GRAFT_BUILD", "1") != "0",
+            # LAB (twin/dry-run) → build ONLY on explicit GABE_GRAFT_BUILD=1, so a forgotten flag can't
+            # mutate the foreign tree (graft writes graft/ + .gitignore + .ignore into REPO_ROOT).
+            # Self-build → default ON as before ("1" unless explicitly "0").
+            allow_build=((os.environ.get("GABE_GRAFT_BUILD") == "1") if LAB
+                         else (os.environ.get("GABE_GRAFT_BUILD", "1") != "0")),
             faccess={_k: {"ops": (_v.get("access") or {}).get("ops"),
                           "commits": (_v.get("access") or {}).get("commits"),
                           "sinks": _v.get("sinks")}

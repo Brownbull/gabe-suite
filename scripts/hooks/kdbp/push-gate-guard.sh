@@ -129,11 +129,21 @@ REDIRECT = ("-C", "--git-dir", "--work-tree", "--namespace", "--exec-path", "--c
 VALUE_FLAGS = {"-o", "--push-option", "--receive-pack", "--exec", "--repo", "-C", "-c",
                "--git-dir", "--work-tree", "--namespace", "--exec-path", "--config-env"}
 GLUE = ("&&", "||", ";", "|", "`", "$(", "\n")
+# SEQ = the CLEAN sequence/pipe boundaries. A STANDALONE one (its own shlex token) ends this push's
+# segment trustworthily — the segment before it is fully parseable, so evaluate it and let the outer
+# loop pick up whatever follows. Only a FUSED operator (staging&&echo) or a substitution token
+# (` / $( / newline) makes the parse untrustworthy → fail closed. (Backtick/$(/newline are NOT in SEQ.)
+SEQ = ("&&", "||", ";", "|")
 
 try:
     toks = shlex.split(cmd)
 except ValueError:
     out("REQUIRE unparseable")  # unbalanced quoting on a push-shaped command → fail closed
+# A command SUBSTITUTION (`…` or $(…)) or an embedded newline can hide a push the token walk never
+# sees as `git` (e.g. `… && echo \`git push origin main\``) → fail closed for the WHOLE command,
+# regardless of any clean leading segment. Sequence operators (&&/||/;/|) are handled per-segment below.
+if any(("`" in t) or ("$(" in t) or ("\n" in t) for t in toks):
+    out("REQUIRE substitution")
 
 def resolve_current():
     up = git(["rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{upstream}"])
@@ -164,9 +174,13 @@ while i < len(toks):
     # collect this push's segment up to a shell operator
     seg, k = [], j + 1
     while k < len(toks):
-        if any(g in toks[k] for g in GLUE):
-            out("REQUIRE shell-glue")   # operator glued to a token → parse cannot be trusted
-        seg.append(toks[k]); k += 1
+        tk = toks[k]
+        if tk in SEQ:                   # STANDALONE sequence operator → clean boundary: this segment is
+            k += 1                      # complete + parseable. Stop here; the outer loop (i = k) resumes
+            break                       # past it — a later `git push` gets its own segment, `gh …` is ignored.
+        if any(g in tk for g in GLUE):  # operator FUSED into a token, or a substitution/newline → untrustworthy
+            out("REQUIRE shell-glue")
+        seg.append(tk); k += 1
     if any(f in seg for f in ("--all", "--mirror", "--tags")):
         out("REQUIRE push-all")         # updates branches wholesale, main among them
     deleting = ("--delete" in seg) or ("-d" in seg)
