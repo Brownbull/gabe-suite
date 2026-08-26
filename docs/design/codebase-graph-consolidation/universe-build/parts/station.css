@@ -171,8 +171,13 @@
   /* the WALK bar — top of the right panel: journey ‹ i/N › or the 7-step trail chips */
   #walkbar{ padding:8px 12px; border-bottom:1px solid var(--line); background:var(--chip-bg); }
   body:not(.panel-open) #walkbar{ display:none !important; }   /* never in the collapsed rail — JS drives display while open */
-  #walkbar .wjname{ font:700 11px/1.4 var(--font-ui); color:var(--ink); text-transform:none; margin-bottom:4px;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #walkbar .wjhd{ display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+  #walkbar .wjname{ font:700 11px/1.4 var(--font-ui); color:var(--ink); text-transform:none;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+  #walkbar .wclear{ flex:0 0 auto; width:20px; height:18px; display:inline-flex; align-items:center; justify-content:center;
+    color:var(--muted); background:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
+  #walkbar .wclear:hover{ color:var(--ink); border-color:var(--accent); }
+  #walkbar .wclear svg{ width:12px; height:12px; }
   #walkbar .wnav{ display:flex; align-items:center; gap:5px; }
   #walkbar .wbtn{ width:22px; height:20px; font:700 12px/1 var(--font-ui); color:var(--ink); background:none;
     border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }

@@ -716,6 +716,8 @@ check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttri
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
       "a journey/trail STEP must reveal its element's cluster+entity when the fleet has it hidden (operator: stepping = selecting)")
+check('_wActive=(WALK.mode==="trail"||WALK.mode==="journey") && WALK.steps.length' in page and 'class="wclear tbico"' in page and 'HL.jrObj.name||HL.jrObj.cid):"trail"' in page,
+      "a selected JOURNEY becomes the current trail (trail bar shows for journey mode, titled with the journey name) + a CLEAR button next to the title — operator")
 check('fe.concat(j.carriers)' in page and 'WALK.mode="journey"; WALK.steps=fe.concat(j.carriers)' in page,
       "the walk no longer steps the frontend leg FIRST (users -> screens -> carriers)")
 check('if(HL.exact){' in page and 'HL.exact=true; HL.origin=fe.concat(j.carriers)' in page,

@@ -35,7 +35,9 @@ const jsel = await p.evaluate(() => ({
   banner: document.getElementById('jrnpill').style.display !== 'none',
   bannerName: (document.querySelector('#jrnpill .wjname') || {}).textContent || '',
   walkMode: WALK.mode, steps: WALK.steps.length, pos: WALK.i,
-  wbShown: document.getElementById('walkbar').style.display === 'none',
+  wbShown: document.getElementById('walkbar').style.display !== 'none',            // the selected journey now IS the trail → trail bar shows
+  wbClear: !!document.querySelector('#walkbar .wclear'),                            // with a clear button next to its title
+  wbTitleName: (document.querySelector('#walkbar .wjname') || {}).textContent || '',
   panelOpen: document.body.classList.contains('panel-open') }));
 // VISUAL floors (the operator saw noise, not a highlight): non-lit wires near-invisible, shuttles only
 // on the lit path, and the select FRAMES the whole carrier set from OUTSIDE (no dive into the jungle)
@@ -158,7 +160,7 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 const fails = [];
 if (errs.length) fails.push('page/console errors');
 if (!(jrn.centered && jrn.hasE2ETab && jrn.kinds.length === 3 && jrn.groups > 0 && jrn.named > 50)) fails.push('journeys picker structure wrong (kind tabs / groups / names)');
-if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown)) fails.push('journey HUD (topbar middle) wrong');
+if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown && jsel.wbClear && jsel.wbTitleName.length > 0)) fails.push('journey HUD wrong (pill + trail-bar-as-journey with clear button)');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
 if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');
 if (!(visual.minRest >= restMin - 0.01 && visual.moversOnPath && visual.camD > visual.setR)) fails.push('highlight visual floors broken (glow keeps the rest bright — never below the resting min; movers on path; framed outside)');

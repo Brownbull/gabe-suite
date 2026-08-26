@@ -317,8 +317,13 @@
   /* the WALK bar — top of the right panel: journey ‹ i/N › or the 7-step trail chips */
   #walkbar{ padding:8px 12px; border-bottom:1px solid var(--line); background:var(--chip-bg); }
   body:not(.panel-open) #walkbar{ display:none !important; }   /* never in the collapsed rail — JS drives display while open */
-  #walkbar .wjname{ font:700 11px/1.4 var(--font-ui); color:var(--ink); text-transform:none; margin-bottom:4px;
-    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #walkbar .wjhd{ display:flex; align-items:center; gap:6px; margin-bottom:4px; }
+  #walkbar .wjname{ font:700 11px/1.4 var(--font-ui); color:var(--ink); text-transform:none;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1; min-width:0; }
+  #walkbar .wclear{ flex:0 0 auto; width:20px; height:18px; display:inline-flex; align-items:center; justify-content:center;
+    color:var(--muted); background:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
+  #walkbar .wclear:hover{ color:var(--ink); border-color:var(--accent); }
+  #walkbar .wclear svg{ width:12px; height:12px; }
   #walkbar .wnav{ display:flex; align-items:center; gap:5px; }
   #walkbar .wbtn{ width:22px; height:20px; font:700 12px/1 var(--font-ui); color:var(--ink); background:none;
     border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
@@ -2267,13 +2272,19 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
       pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
     else pill.style.display="none"; }
-  if(wb){ if(WALK.mode!=="trail"){ wb.style.display="none"; }
+  /* the TRAIL bar shows for a TRAIL and for a selected JOURNEY (operator: a journey becomes the current
+     trail — navigable by the same chips + Alt+A/D, with a CLEAR button next to its title). */
+  if(wb){ var _wActive=(WALK.mode==="trail"||WALK.mode==="journey") && WALK.steps.length;
+    if(!_wActive){ wb.style.display="none"; }
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
-      wb.style.display=""; wb.innerHTML='<div class="wjname">trail</div><div class="wnav">'+chips
-        +'<span class="wstepname" title="focus this step">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
+      var _wtitle=(WALK.mode==="journey" && HL.jrObj)?(HL.jrObj.name||HL.jrObj.cid):"trail";   // a journey trail wears the journey's name
+      var _WX='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+      wb.style.display=""; wb.innerHTML='<div class="wjhd"><span class="wjname" title="'+(WALK.mode==="journey"?"the selected journey IS the current trail — navigate with the chips or Alt+A/D":"trail")+'">'+_wtitle+'</span><button class="wclear tbico" title="clear the trail (Esc)">'+_WX+'</button></div>'
+        +'<div class="wnav">'+chips+'<span class="wstepname" title="focus this step">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
       wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; });
-      var _sn=wb.querySelector(".wstepname"); if(_sn){ _sn.style.cursor="pointer"; _sn.onclick=function(){ _walkGo(0); }; } } } }
+      var _sn=wb.querySelector(".wstepname"); if(_sn){ _sn.style.cursor="pointer"; _sn.onclick=function(){ _walkGo(0); }; }
+      var _cl=wb.querySelector(".wclear"); if(_cl) _cl.onclick=function(){ __uniHLClear(); }; } } }
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;
