@@ -261,6 +261,12 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   nodes.forEach(function(n){ if(n.kind!=="endpoint"||!n.fn||!n.det||!n.det.file) return;
     var key=String(n.det.file).split(":")[0]+"#"+n.fn;
     if(_fnset[key]) _FNLINKS.push({source:n.id, target:key, rel:"handler"}); });
+  /* fn → MODEL access wire (Option A) — each accessor's OWN reads/writes (C2 access.ops) become a
+     DRAWN edge to the model node it touches, when that model is in the graph. This is the TRUE data
+     access the endpoint→model ROLLUP hides; kind 'access' (fnreads/fnwrites), separately configurable. */
+  _FNNODES.forEach(function(f){ var a=f.access; if(!a||!a.ops) return;
+    a.ops.forEach(function(o){ var mid="model:"+o.model;
+      if(NIDS[mid]) _FNLINKS.push({source:f.id, target:mid, rel:(o.rw==="w"?"fnwrites":"fnreads"), access:true}); }); });
 }
 function _stashPurge(flag){ if(!_CAPST) return;          // strip toggle-owned pieces from the capsule stash (review 53[9])
   for(var i=_CAPST.links.length-1;i>=0;i--){ if(_CAPST.links[i][flag]) _CAPST.links.splice(i,1); }

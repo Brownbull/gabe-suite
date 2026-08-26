@@ -1288,10 +1288,10 @@ function onShipsReady(){ rebuildNodes(); if(Graph) updateClusters(true); buildTr
 /* ── TYPED CONNECTORS — the ELEMENTS-LAB connector language applied to EVERY link: each edge re-renders as its
    mapped KIND's styled wire (dashed/dotted · kind colour · trust opacity), and the plain force-graph edges hide.
    Kind styles VERBATIM from ELEMENTS-LAB-SPEC.md §Inter-entity connectors. ── */
-var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };
-var CONN_KINDS=['fk','bridge','calls','imports'];
+var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true,thick:1}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1}, rollup:{color:0x8b5cf6,style:'dashed',density:2.4,trust:0.4,thick:1}, access:{color:0x0f9d8f,style:'solid',density:2.5,trust:0.85,thick:1.6} };
+var CONN_KINDS=['fk','bridge','calls','imports','rollup','access'];
 /* each graph REL → its connector KIND (fk=data coupling · calls=fn/data access · imports=component wiring · bridge=web→API fetch) */
-var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls' };
+var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access' };
 function __uniCurve(A,B,dir,len){ var mid=A.clone().add(B).multiplyScalar(0.5);
   var up=new T.Vector3(0,1,0), perp=new T.Vector3().crossVectors(dir,up);
   if(perp.lengthSq()<1e-4) perp.set(1,0,0);
@@ -1681,6 +1681,12 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   nodes.forEach(function(n){ if(n.kind!=="endpoint"||!n.fn||!n.det||!n.det.file) return;
     var key=String(n.det.file).split(":")[0]+"#"+n.fn;
     if(_fnset[key]) _FNLINKS.push({source:n.id, target:key, rel:"handler"}); });
+  /* fn → MODEL access wire (Option A) — each accessor's OWN reads/writes (C2 access.ops) become a
+     DRAWN edge to the model node it touches, when that model is in the graph. This is the TRUE data
+     access the endpoint→model ROLLUP hides; kind 'access' (fnreads/fnwrites), separately configurable. */
+  _FNNODES.forEach(function(f){ var a=f.access; if(!a||!a.ops) return;
+    a.ops.forEach(function(o){ var mid="model:"+o.model;
+      if(NIDS[mid]) _FNLINKS.push({source:f.id, target:mid, rel:(o.rw==="w"?"fnwrites":"fnreads"), access:true}); }); });
 }
 function _stashPurge(flag){ if(!_CAPST) return;          // strip toggle-owned pieces from the capsule stash (review 53[9])
   for(var i=_CAPST.links.length-1;i>=0;i--){ if(_CAPST.links[i][flag]) _CAPST.links.splice(i,1); }

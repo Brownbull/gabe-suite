@@ -439,6 +439,11 @@ check("class='pheadbadge'" in page and 'window.__badgeGlyph(_c,_bk.kind,_bk.key)
 # function ACCESSES — an accessor's evidence (which model it reads/writes, from n.access) in the fn card
 check('function accessSec(' in page and 'accessSec(n)' in page and 'The DB tables this function reads/writes' in page,
       "the function ACCESSES section (accessor badge → which model it reads/writes) is gone")
+# Option A · the DATA-ACCESS connectors — rollup (endpoint→model) + access (fn→model) as distinct kinds,
+# and _buildFnData draws the fn→model access wire from n.access.ops (the TRUE accessor connection)
+check("'rollup'" in page and "'access'" in page and "reads_from:'rollup'" in page and "fnreads:'access'" in page
+      and "rel:(o.rw===\"w\"?\"fnwrites\":\"fnreads\"), access:true" in page,
+      "the rollup/access connector kinds + the fn→model access wire (Option A) are gone")
 # badge LEAK fix — _mbTick prunes badges whose node group force-graph detached (grp.parent nulled on
 # rebuild). `!b.parent` alone missed them (they kept b.parent=grp), so __uniBadges grew ~263/toggle;
 # `!b.parent.parent` drops the detached ones while KEEPING live cached-node badges (no flicker).

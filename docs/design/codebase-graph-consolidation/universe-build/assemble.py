@@ -12,7 +12,7 @@ chrome  = rd("parts/chrome.html").rstrip("\n")
 
 TITLE = '<!doctype html><html lang="{{LANG}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gabe Universe · {{PROJECT_NAME}} Command Center</title>'
 STYLE_CLOSE = css + "\n</style></head><body>\n" + chrome
-REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls' };"
+REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access' };"
 GLINE = "  var G=function(label,icon,count,nodeFn,trust){ return {label:label,icon:icon,count:count,node:nodeFn,trust:trust}; };"
 TRUSTCONNS = """  function trustTag(tr){ if(!tr) return null;
     return tr==="inferred"
@@ -428,7 +428,9 @@ text = text.replace(OLD_MD,
 OLD_CONN = "var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };"
 assert OLD_CONN in text, "CONN literal anchor missing"
 text = text.replace(OLD_CONN,
-  "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };", 1)
+  "var CONN={ fk:{color:0x5893ad,style:'sparse',density:2.7,trust:0.9,grad:true,thick:1}, bridge:{color:0xe8f443,style:'sparse',density:1.7,trust:0.62,thick:1}, calls:{color:0xf59e0b,style:'solid',density:2,trust:0.6,grad:true,thick:1}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52,thick:1}, "
+  # NEW (Option A) — the data-access connectors: rollup = endpoint→model DIRECT (call-tree rollup, dim/dashed, hides the accessor); access = function→model TRUE accessor wire (bright/solid/thicker)
+  "rollup:{color:0x8b5cf6,style:'dashed',density:2.4,trust:0.4,thick:1}, access:{color:0x0f9d8f,style:'solid',density:2.5,trust:0.85,thick:1.6} };", 1)
 
 
 # batch 37: wires remember their KIND (proofs + future pickers read line.userData.kind)

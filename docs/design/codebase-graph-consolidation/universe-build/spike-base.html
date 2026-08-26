@@ -596,7 +596,7 @@ function onShipsReady(){ rebuildNodes(); if(Graph) updateClusters(true); buildTr
    mapped KIND's styled wire (dashed/dotted · kind colour · trust opacity), and the plain force-graph edges hide.
    Kind styles VERBATIM from ELEMENTS-LAB-SPEC.md §Inter-entity connectors. ── */
 var CONN={ fk:{color:0x5893ad,style:'dashed',density:2.7,trust:0.9}, bridge:{color:0xe8f443,style:'dotted',density:1.7,trust:0.62}, calls:{color:0xf59e0b,style:'dashed',density:2,trust:0.6}, imports:{color:0xa855f7,style:'dotted',density:2.2,trust:0.52} };
-var CONN_KINDS=['fk','bridge','calls','imports'];
+var CONN_KINDS=['fk','bridge','calls','imports','rollup','access'];
 /* each graph REL → its connector KIND (fk=data coupling · calls=fn/data access · imports=component wiring · bridge=web→API fetch) */
 var REL2KIND={ fk:'fk', pk:'fk', handler:'calls', touch:'calls', resp:'calls', uses:'calls', fetches:'bridge', renders:'imports', mounts:'imports', reads:'imports', typed:'imports' };
 function connectorWire(grp, a, b, kind, R){ var cfg=CONN[kind]||CONN.calls;
