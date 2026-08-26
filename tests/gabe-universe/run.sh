@@ -455,12 +455,12 @@ check('sechd("truck","Cargo")' in page and 'window.__uniAssets.cargo()' in page 
       "the wire card must have SEPARATE Cargo + Test-chip sections, each with its 3D asset thumbnail (operator)")
 check('class:"flagrow ok"' in page and 'no cargo ' in page and 'no test chip ' in page and 'same-entity wire (no transit)' in page,
       "each wire section must carry a present/absent FLAG (cross-entity → present; same-entity → no transit)")
-check('window.__uniHovLink===l||window.__uniSelLink===l' in page and 'CFG.selThick!=null)?CFG.selThick:0.5' in page and 'CFG.selPattern)?CFG.selPattern:"solid"' in page,
+check('window.__uniHovLink===l||window.__uniSelLink===l' in page and 'CFG.selThick!=null)?CFG.selThick:0.2' in page and 'CFG.selPattern)?CFG.selPattern:"solid"' in page,
       "a SELECTED (or hovered) wire must render as a WHITE tube whose opacity/thickness/pattern read from CFG (operator)")
-check('sg.id="selline"' in page and 'SELECTED LINE' in page and '_srow("opacity","selOpacity"' in page and '_srow("thick","selThick"' in page and '_pill("pattern","selPattern"' in page and 'class="slcopy"' in page,
-      "the Temporary Config must carry a SELECTED LINE section (opacity · thick · pattern sliders + copy button) — operator")
-check('_pill("motion","selAnim",["none","pulse","flow"]' in page and '_pill("glow","selGlow",["off","on"]' in page and '_srow("speed","selAnimSpeed"' in page and 'selGlowInt",0,1,0.05' in page and 'class="pill selpill"' in page,
-      "SELECTED LINE must also carry a motion pill (none/pulse/flow) + speed slider + a SEPARATE glow toggle + glow-intensity slider (operator)")
+check('CFG.selOpacity=0.5' in page and 'CFG.selThick=0.2' in page and 'CFG.selAnim="pulse"' in page and 'CFG.selAnimSpeed=0.3' in page and 'CFG.selGlow=true' in page and 'CFG.selGlowInt=0.05' in page,
+      "the SELECTED-LINE look is SETTLED as the connection default (opacity .5 · thick .2 · pulse · speed .3 · glow-on @.05) — baked as a seeder, panel retired")
+check('sg.id="selline"' not in page and 'class="slcopy"' not in page and 'class="pill selpill"' not in page and '_pill("motion","selAnim"' not in page,
+      "the SELECTED LINE config PANEL must be retired from the Temporary Config (no #selline, no sliders/pills/copy) — operator")
 check('window.__uniSelMeshes=[]' in page and 'CFG.selGlow){ var _gm=' in page and '_sr*2.6' in page and 'window.__uniSelCurve=_crv' in page and 'function _selAnim()' in page and '_selPhase=(_selPhase + 0.05*spd)' in page,
       "the selected wire must track its meshes+curve, build a wider GLOW tube on selGlow, and animate via a bounded-phase _selAnim rAF (pulse opacity · flow marching dots) — operator")
 check('if(col!=="subs"){ var eon=UNIVIS.ent[ent][col];' in page and '_entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF)))[col]=eon?1:0; })' in page,

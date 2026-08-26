@@ -1,8 +1,8 @@
-/* Proof: the SELECTED LINE motion + glow options actually animate.
-   [1] selGlow=on adds a wider GLOW tube (mesh count grows; a mesh carries selGlowInt as its base opacity)
-   [2] selAnim=pulse breathes the tube opacity over time (uneven samples differ)
+/* Proof: the SELECTED LINE look is SETTLED as the connection default, and the render machinery still animates.
+   [0] boot defaults baked (opacity .5 · thick .2 · pulse · speed .3 · glow-on @.05); the config PANEL is gone (#selline null)
+   [1] a boot-selected wire ALREADY carries a glow tube (selGlow default true); toggling selGlow off drops it
+   [2] pulse breathes the MAIN tube opacity over time (uneven samples differ)
    [3] selAnim=flow spawns __uniSelFlow (3 marching dots) whose position moves over time
-   [4] the copy button emits JSON carrying selAnim / selGlow / selGlowInt
    Run: node verify-selanim.mjs */
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -21,27 +21,33 @@ await p.goto('file://' + PAGE);
 await p.waitForFunction('window.__spikeKindsReady===true', { timeout: 30000 }).catch(() => {});
 await p.waitForTimeout(4500);
 
-// select a real DRAWN link — the module-scope `links` array is what updateConnectors iterates;
-// try each until one produces a tube (its endpoints pass the fleet visibility gate)
+// [0] baked defaults + panel gone. select the first DRAWN link WITHOUT touching CFG (defaults must stand).
 const sel = await p.evaluate(() => {
-  CFG.selAnim = 'none'; CFG.selGlow = false;
+  const d = { selOpacity: CFG.selOpacity, selThick: CFG.selThick, selPattern: CFG.selPattern,
+    selAnim: CFG.selAnim, selAnimSpeed: CFG.selAnimSpeed, selGlow: CFG.selGlow, selGlowInt: CFG.selGlowInt };
+  const panelGone = !document.getElementById('selline') && !document.querySelector('#cfg .slcopy') && !document.querySelector('#cfg .selpill');
   for (let i = 0; i < links.length; i++) { window.__uniSelLink = links[i]; updateConnectors();
-    const n = (window.__uniSelMeshes || []).length; if (n > 0) return { picked: true, base: n, idx: i }; }
-  window.__uniSelLink = null; return { picked: false, base: 0 };
+    const n = (window.__uniSelMeshes || []).length; if (n > 0) return { picked: true, base: n, idx: i, d, panelGone }; }
+  window.__uniSelLink = null; return { picked: false, base: 0, d, panelGone };
 });
+const defOk = sel.d.selOpacity === 0.5 && sel.d.selThick === 0.2 && sel.d.selPattern === 'solid'
+  && sel.d.selAnim === 'pulse' && sel.d.selAnimSpeed === 0.3 && sel.d.selGlow === true && sel.d.selGlowInt === 0.05;
 
-// [1] glow adds a wider tube + a mesh whose base opacity is selGlowInt
+// [1] glow default ON → base already carries a glow mesh; toggling it off drops the count
 const glow = await p.evaluate(() => {
-  CFG.selGlow = true; CFG.selGlowInt = 0.4; updateConnectors();
-  const ms = window.__uniSelMeshes || [];
-  return { count: ms.length, hasGlowMesh: ms.some(m => m.userData && Math.abs((m.userData.__selBaseOp || 0) - 0.4) < 1e-6) };
+  const on = (window.__uniSelMeshes || []).length;
+  CFG.selGlow = false; updateConnectors(); const off = (window.__uniSelMeshes || []).length;
+  CFG.selGlow = true; updateConnectors(); const back = (window.__uniSelMeshes || []).length;
+  return { on, off, back };
 });
 
-// [2] pulse breathes opacity — sample at UNEVEN gaps to defeat aliasing
-await p.evaluate(() => { CFG.selGlow = false; CFG.selAnim = 'pulse'; CFG.selAnimSpeed = 3; updateConnectors(); });
+// [2] pulse breathes the MAIN tube (largest __selBaseOp) — speed up to sample clearly, uneven gaps defeat aliasing
+await p.evaluate(() => { CFG.selAnim = 'pulse'; CFG.selAnimSpeed = 3; updateConnectors(); });
 const op = [];
 for (const w of [200, 900, 400, 700]) { await p.waitForTimeout(w);
-  op.push(await p.evaluate(() => { const m = (window.__uniSelMeshes || [])[0]; return m ? +m.material.opacity.toFixed(3) : -1; })); }
+  op.push(await p.evaluate(() => { const ms = window.__uniSelMeshes || []; if (!ms.length) return -1;
+    let m = ms[0]; for (const x of ms) if ((x.userData.__selBaseOp || 0) > (m.userData.__selBaseOp || 0)) m = x;
+    return +m.material.opacity.toFixed(3); })); }
 const opSpread = +(Math.max(...op) - Math.min(...op)).toFixed(3);
 
 // [3] flow spawns the marching dots + moves them
@@ -54,22 +60,14 @@ const f2 = await p.evaluate(() => { const q = (window.__uniSelFlow && window.__u
   return q ? { x: q.x, y: q.y, z: q.z } : null; });
 const flowMoved = (f1 && f2) ? +Math.hypot(f2.x - f1.x, f2.y - f1.y, f2.z - f1.z).toFixed(3) : -1;
 
-// [4] copy JSON carries the new keys
-const copy = await p.evaluate(() => {
-  const btn = document.querySelector('#selline .slcopy'); if (!btn) return { has: false };
-  btn.click(); const t = window.__uniLastCopy || '';
-  return { has: /"selAnim"/.test(t) && /"selGlow"/.test(t) && /"selGlowInt"/.test(t), txt: t.replace(/\s+/g, ' ').slice(0, 120) };
-});
-
 await b.close();
 
-const pass = sel.picked && glow.count > sel.base && glow.hasGlowMesh && opSpread > 0.05
-  && f1 && f1.visible && f1.kids === 3 && flowMoved > 0.5 && copy.has && errs.length === 0;
-console.log('picked=' + sel.picked + ' base=' + sel.base);
-console.log('[1] glow: count=' + glow.count + ' (>base) hasGlowMesh=' + glow.hasGlowMesh);
-console.log('[2] pulse opacity samples=' + JSON.stringify(op) + ' spread=' + opSpread + ' (>0.05)');
+const pass = sel.picked && defOk && sel.panelGone && glow.on >= 2 && glow.off < glow.on && glow.back >= 2
+  && opSpread > 0.05 && f1 && f1.visible && f1.kids === 3 && flowMoved > 0.5 && errs.length === 0;
+console.log('[0] defaults ' + JSON.stringify(sel.d) + ' ok=' + defOk + '  panelGone=' + sel.panelGone + '  base=' + sel.base);
+console.log('[1] glow default-on: base=' + glow.on + ' off=' + glow.off + ' back=' + glow.back);
+console.log('[2] pulse main-tube opacity samples=' + JSON.stringify(op) + ' spread=' + opSpread + ' (>0.05)');
 console.log('[3] flow: visible=' + (f1 && f1.visible) + ' kids=' + (f1 && f1.kids) + ' moved=' + flowMoved + ' (>0.5)');
-console.log('[4] copy has selAnim/selGlow/selGlowInt=' + copy.has + '  ' + (copy.txt || ''));
 console.log('errors=' + errs.length + (errs.length ? ' :: ' + errs.slice(0, 3).join(' | ') : ''));
 console.log(pass ? 'SELANIM: PASS' : 'SELANIM: FAIL');
 process.exit(pass ? 0 : 1);
