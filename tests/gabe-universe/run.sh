@@ -273,9 +273,9 @@ check('function _fnAssignSub(mode){' in page and 'l.rel==="handler" && s.kind===
       "the backend-function pass no longer seeds from the handler endpoint's data cluster")
 check('try{ _fnAssignSub(mode); }catch(e){}   // functions JOIN their served data cluster' in page,
       "the fn pass is not wired into the data cores (community/use-case/fk)")
-# Show-Entity is a MASTER over its clusters (operator ask): off→all off · cluster-on re-enables entity · on→all on
-check('SHOW ENTITY is a MASTER over its clusters' in page and 'function _entSubKeys(ent)' in page,
-      "the show-entity master (entity toggle propagates to clusters) is gone")
+# the ENTITY column is a MASTER over its clusters for EVERY column except subs (operator): off→all off · on→all on
+check('the entity column is a MASTER over its clusters for EVERY column except' in page and 'function _entSubKeys(ent)' in page,
+      "the entity column master (entity toggle propagates to clusters for all cols but subs) is gone")
 check('a cluster turned ON re-enables its entity' in page,
       "a cluster turned on no longer re-enables its entity")
 # aesthetic (operator): selected-option name after a section title · no left border · legend tabs IN the header
@@ -457,6 +457,8 @@ check('class:"flagrow ok"' in page and 'no cargo ' in page and 'no test chip ' i
       "each wire section must carry a present/absent FLAG (cross-entity → present; same-entity → no transit)")
 check('var _tube=new T.TubeGeometry(_crv' in page and 'window.__uniHovLink===l||window.__uniSelLink===l' in page,
       "a SELECTED (or hovered) wire must render as a thick WHITE tube, not just a slightly brighter kind-color line (operator)")
+check('if(col!=="subs"){ var eon=UNIVIS.ent[ent][col];' in page and '_entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF)))[col]=eon?1:0; })' in page,
+      "the fleet ENTITY column button must cascade to ALL its clusters for EVERY column except subs — no partial dimmed state (operator)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
 check('var body=E("div",{class:"jsec"});' in page and 'A stop · reached by a test that spans other entities.' in page and 'class="jsub"' not in page,
       "the journeys entry/stop legend must live in the info TOOLTIP, not an inline .jsub line")

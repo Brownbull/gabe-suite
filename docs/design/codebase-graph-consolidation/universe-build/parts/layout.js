@@ -1256,8 +1256,8 @@ window.__uniFleetToggle=function(ent, sub, col){ try{
     sel.forEach(function(e){ UNIVIS.ent[e][col]=on?1:0;
       _entSubKeys(e).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[e]||_VISDEF)))[col]=on?1:0; }); }); }   // cascade to EVERY cluster (init the missing ones FROM the entity, not zone-off _VISDEF — a fresh sub must inherit the entity's zones/etc, review) — no cluster left "waiting on" under a hidden entity (operator)
   else { UNIVIS.ent[ent][col]=UNIVIS.ent[ent][col]?0:1;
-    if(col==="show"){ var eon=UNIVIS.ent[ent].show;                                 // SHOW ENTITY is a MASTER over its clusters: off → turn every cluster off · on → turn them all on
-      _entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF))).show=eon?1:0; }); }   // seed a fresh sub FROM the entity (keeps its zones), not zone-off _VISDEF (review)
+    if(col!=="subs"){ var eon=UNIVIS.ent[ent][col];                                  // the entity column is a MASTER over its clusters for EVERY column except "subs" (the clusters column keeps per-cluster options) — off → all clusters off · on → all on (operator)
+      _entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF)))[col]=eon?1:0; }); }   // seed a fresh sub FROM the entity (keeps other columns), not zone-off _VISDEF (review)
   }
   applyVis(C?C.scope:"all"); __uniFleetSync(); }catch(e){} };
 window.__uniFleetSync=function(){ var body=document.getElementById("fleetbody"); if(!body) return;
