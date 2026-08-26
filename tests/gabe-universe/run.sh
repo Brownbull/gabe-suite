@@ -742,6 +742,11 @@ check('data-d2wtog' in page and 'window.__uniD2W=!window.__uniD2W' in page,
       "the legend d2w on/off toggle no longer flips __uniD2W")
 check('CALLS · DISTANCE HEAT' in page and 'data-band=' in page and 'data-bandcopy=' in page and 'BANDPAL0' in page,
       "the D2W band calibrate/copy config (5 colour inputs + copy + reset) is missing")
+# DOUBLE-CLICK a node → reveal + light its one-hop neighbourhood (operator)
+check('window.__uniRevealNeighbors=function' in page and 'hop.forEach(_force)' in page,
+      "the double-click one-hop reveal (__uniRevealNeighbors) is missing")
+check('window.__uniLastClick' in page and '_ct-_lc.t)<350' in page and 'window.__uniRevealNeighbors(n)' in page,
+      "the onNodeClick double-click detection (same node <350ms → reveal) is missing")
 check('--chip-bg:#0e1524' in page and page.count('var(--chip-bg)')>=15,
       "the station's dark surfaces are hardcoded again (light theme cannot flip them)")
 check('if(window.__uniSelHulls) __uniSelHulls(n);' in page,

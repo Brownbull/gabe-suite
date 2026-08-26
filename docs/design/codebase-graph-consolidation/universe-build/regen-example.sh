@@ -98,5 +98,5 @@ if [ "$CHECK" = 1 ]; then
 else
   echo "── batteries"
   ( cd "$ROOT" && bash tests/gabe-universe/run.sh ) | tail -1
-  echo "Estate landed. Solo proofs: node verify-{panels,search,walk,clustering,explore,routes,ctrl,d2w}.mjs (SOLO-sequential; fleet detached)."
+  echo "Estate landed. Solo proofs: node verify-{panels,search,walk,clustering,explore,routes,ctrl,d2w,dblclick}.mjs (SOLO-sequential; fleet detached)."
 fi

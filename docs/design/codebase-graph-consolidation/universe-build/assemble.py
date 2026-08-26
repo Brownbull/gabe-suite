@@ -529,7 +529,11 @@ text = text.replace(OLD_LGBODY,
 OLD_CLICK = '.onNodeClick(function(n){ SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); })'
 assert OLD_CLICK in text, "onNodeClick anchor missing"
 text = text.replace(OLD_CLICK,
-  '.onNodeClick(function(n){ if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent); return; } SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })', 1)
+  '.onNodeClick(function(n){ if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent); return; }'
+  ' var _lc=window.__uniLastClick||{}, _ct=Date.now();'   # DOUBLE-CLICK (same node <350ms) → reveal + light the one-hop neighbourhood (operator)
+  ' if(n&&_lc.id===n.id&&(_ct-_lc.t)<350&&window.__uniRevealNeighbors){ window.__uniLastClick={id:null,t:0}; window.__uniRevealNeighbors(n); return; }'
+  ' window.__uniLastClick={id:(n&&n.id)||null,t:_ct};'
+  ' SEL={kind:"node",data:n}; showPanel(n); refreshEncSel(); if(window.__uniHLSelect) __uniHLSelect(n); })', 1)
 # batch 48: the `module` kind's SLAB form (a flat wide box — "a bag of functions") beside the spike's nine forms
 OLD_WIREFORM = '  if(f==="wire") return new T.Mesh(new T.BoxGeometry(r*1.4,r*1.4,r*1.4), m(col,true));'
 assert OLD_WIREFORM in text, "primitiveMesh wire-form anchor missing"

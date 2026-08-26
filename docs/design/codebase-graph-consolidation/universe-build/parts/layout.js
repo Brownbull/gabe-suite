@@ -471,6 +471,27 @@ window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var e
   var _tip=document.getElementById("unistubtip"); if(_tip) _tip.style.display="none";
   var _g=document.getElementById("g"); if(_g && _g.style.cursor==="pointer") _g.style.cursor="";
   try{ applyVis("all"); }catch(e){} try{ if(window.__uniFleetSync) __uniFleetSync(); }catch(e){} try{ updateConnectors(); }catch(e){} }catch(e){} };
+/* DOUBLE-CLICK a node → reveal + light its ONE-HOP neighbourhood (operator): every element directly
+   connected to n is un-hidden (its element + cluster + entity forced ON if the fleet had it hidden),
+   as if you had walked to each connected element and switched it on, then the whole set is selected
+   (the depth-1 highlight lights the neighbours). Batches the flag-writes → ONE applyVis/updateConnectors
+   (not N), then selects through the shared _selNode path. One hop only — the direct connections. */
+window.__uniRevealNeighbors=function(n){ try{ if(!n) return 0;
+  if(typeof UNIVIS==="undefined"||typeof _VISDEF==="undefined"||typeof links==="undefined") return 0;
+  var nid=n.id, seen={}, hop=[];
+  links.forEach(function(l){ var s=lid(l.source), t=lid(l.target);
+    var o=(s===nid)?t:(t===nid?s:null); if(o!=null && !seen[o]){ seen[o]=1; hop.push(o); } });
+  var cols=["show","planets","wires"];
+  var _force=function(id){ var m=NIDS[id]; if(!m) return; var ent=m.ent, sub=m.sub;
+    if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
+    cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; });
+    if(sub!=null){ var k=ent+"|"+sub; if(!UNIVIS.sub[k]) UNIVIS.sub[k]=Object.assign({},_VISDEF); cols.forEach(function(c){ UNIVIS.sub[k][c]=1; }); }
+    if(typeof HL!=="undefined" && HL.on && HL.mode==="focus" && HL.rest==="hide" && HL.set && HL.set[id]===undefined) HL.set[id]=(HL.depth||1); };   // focus-hide would re-cull a revealed node
+  _force(nid); hop.forEach(_force);                                 // the clicked node (if hidden) + every 1-hop neighbour
+  var _gh=window.__uniGhostHov; if(_gh) _gh.visible=false;
+  try{ applyVis("all"); }catch(e){} try{ if(window.__uniFleetSync) __uniFleetSync(); }catch(e){} try{ updateConnectors(); }catch(e){}
+  if(window.__uniSelNode) try{ __uniSelNode(n); }catch(e){}         // select through the ONE path → panel + depth-1 highlight lights the revealed set
+  return hop.length; }catch(e){ return 0; } };
 window.__uniStubHoverInit=function(){ var g=document.getElementById("g"); if(!g || g.__stubHov) return; g.__stubHov=true;
   var tip=document.getElementById("unistubtip");
   if(!tip){ tip=document.createElement("div"); tip.id="unistubtip"; tip.className="unistubtip"; tip.style.display="none"; document.body.appendChild(tip); }
