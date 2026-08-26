@@ -895,7 +895,8 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
       god:false, method:(kind==="endpoint")?_methOf(p.label):null };
     var n={ id:p.id, kind:kind, ent:ent, label:p.label||p.slug||p.id,
       col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"data",
-      m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites, fn:p.fn };
+      m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites, fn:p.fn,
+      middleware:p.middleware };   // C4: the endpoint's level-2 gate/dep floor → the card's Guards section
     nodes.push(n); NIDS[n.id]=n; });
 });
 if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unknown kind (add to KINDS)"); }catch(e){}
@@ -3805,6 +3806,15 @@ var KINDCARD=(function(){
       expander(rows, {cap:10, maxDepth:3}));
     return E("div",{class:"sec"}, sechd("layers","Code behind", b.fns, false,
       {icon:"info",cls:"info",text:"Callee names + count from derive_behind (a BFS floor; cross-file callees inferred by design). Where a callee is a LOADED function node, expand it to walk its own calls."}), body); }
+  /* Guards — the level-2 gates/deps that run BEFORE the handler body (C4 _endpoint_middleware):
+     Depends()/Security() (signature + route) + non-route decorators. A FLOOR; `gate` is a name hint. */
+  function guardsSec(n){ var mw=n.middleware; if(!mw||!mw.length) return null;
+    var nGate=mw.filter(function(m){ return m.gate; }).length;
+    var rows=mw.map(function(m){ return E("div",{class:"sublbl"}, icoEl(m.gate?"key":"link"),
+      m.name+" ", E("span",{style:"color:var(--muted);font-size:10px"}, "· "+m.via+(m.gate?" · gate":""))); });
+    return E("div",{class:"sec"}, sechd("key","Guards", mw.length, false,
+      {icon:"info",cls:"info",text:"The gates/deps that run BEFORE the handler body — Depends()/Security() (signature Annotated + = default, and route dependencies=[]) + any non-route decorator. A FLOOR: a dep nested inside another Depends is not walked. 'gate' is a NAME hint (auth/consent/idempotency/tenant), never a claim. "+nGate+" of "+mw.length+" look like gates."}),
+      E("div",null, rows)); }
   function liveConns(n){ var outs=[], ins=[];
     links.forEach(function(l){ var s=lid(l.source), t=lid(l.target); if(s===n.id) outs.push(l); if(t===n.id) ins.push(l); });
     function build(arr, dir){ var by={};
@@ -3856,6 +3866,7 @@ var KINDCARD=(function(){
       testsSec(det),
       journeysSection(n.ent,"endpoint",det),
       payloadSec(det),
+      guardsSec(n),
       behindTree(n),
       identSec(n),
       sigSec(det),

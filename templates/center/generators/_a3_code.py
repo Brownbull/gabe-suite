@@ -153,13 +153,17 @@ def parse_endpoints(repo: Path, files: list[str]) -> list[dict]:
                 # Every bare name the handler's body touches — intersected later
                 # with model/schema class names to derive endpoint↔type links.
                 refs = {n.id for n in ast.walk(node) if isinstance(n, ast.Name)}
-                out.append({
+                ep = {
                     "method": method.upper(), "path": (prefix + sub) or "/",
                     "fn": node.name, "file": rel, "refs": refs,
                     "doc": _first_sentence(ast.get_docstring(node)),
                     "resp": (resp or "—").removeprefix("PaginatedResponse[").removesuffix("]"),
                     "status": status or "200",
-                })
+                }
+                mw = _endpoint_middleware(node, dec)      # C4: the level-2 gates (auth/consent/idempotency) run before the body
+                if mw:
+                    ep["middleware"] = mw
+                out.append(ep)
     return out
 
 
@@ -708,7 +712,7 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
 # model node to point at. Conservative idioms keep false-positives low: a bare `.set(`/
 # `.send(` never fires — the receiver must name the sink (redis/cache/bus/…), or the call
 # must be an unambiguous write (open(…, "w"), .write_text). Borrowed shape: codesight's
-# sink-category tag. Middleware (a decorator/route-dep scan) is a separate follow-up.
+# sink-category tag. Middleware (the decorator/route-dep gate scan) lands below in _endpoint_middleware.
 _FILE_WRITE_MODES = ("w", "a", "x")
 
 
@@ -738,6 +742,97 @@ def _detect_sinks(fnnode) -> list[str]:
                 and attr in ("post", "put", "patch", "delete", "get"):
             cats.add("http")
     return sorted(cats)
+
+
+# ── C4 follow-up · ENDPOINT MIDDLEWARE floor (the level-2 gates: auth / consent / idempotency) ──
+# The operator's backend model: (1) receive → (2) MIDDLEWARE / business / legal gates → (3) access
+# methods. C1's role BFS walks direct calls in the handler BODY; the framework injects Depends()/
+# Security() BEFORE the body runs, so a call-tree walk never sees them. This reads the ROUTE surface:
+# the handler's Depends()/Security() (signature + `dependencies=[...]`) + any non-route decorator.
+# A FLOOR by design — a dependency nested INSIDE another Depends is not walked (honest under-count);
+# `gate` is a name heuristic (a hint, never a claim). Borrowed shape: codesight's per-route dep chain.
+_DEPENDS = frozenset({"Depends", "Security"})
+_MW_GATE_KW = ("auth", "require", "permission", "consent", "idempoten", "verify",
+               "guard", "ensure", "current_user", "get_current", "csrf", "ratelimit",
+               "throttle", "scope", "role", "login", "tenant", "household")
+# NB: not "session" — get_session provides the DB handle, it is a resource dep, not a guard.
+
+
+def _is_mw_gate(name: str | None) -> bool:
+    n = (name or "").lower()
+    return any(k in n for k in _MW_GATE_KW)
+
+
+def _depends_target(call) -> str | None:
+    """`Depends(fn)` / `Security(fn, ...)` / `Depends(Checker("x"))` → the callable name."""
+    if not (isinstance(call, ast.Call) and getattr(call.func, "id", None) in _DEPENDS and call.args):
+        return None
+    a = call.args[0]
+    if isinstance(a, ast.Name):
+        return a.id
+    if isinstance(a, ast.Attribute):
+        return a.attr
+    if isinstance(a, ast.Call):
+        return getattr(a.func, "id", None) or getattr(a.func, "attr", None)
+    return None
+
+
+def _dec_name(dec) -> str | None:
+    if isinstance(dec, ast.Call):
+        dec = dec.func
+    if isinstance(dec, ast.Name):
+        return dec.id
+    if isinstance(dec, ast.Attribute):
+        return dec.attr
+    return None
+
+
+def _annotated_depends(ann) -> list[str]:
+    """`x: Annotated[T, Depends(fn), ...]` — the modern FastAPI idiom carries the Depends INSIDE
+    the annotation, not the default. Return each dep name it names (or [])."""
+    out: list[str] = []
+    if isinstance(ann, ast.Subscript) and getattr(ann.value, "id", None) == "Annotated":
+        sl = ann.slice
+        elts = sl.elts if isinstance(sl, ast.Tuple) else [sl]
+        for el in elts:
+            t = _depends_target(el)
+            if t:
+                out.append(t)
+    return out
+
+
+def _endpoint_middleware(node, route_dec) -> list[dict]:
+    """[{'name','via','gate'}] — the gates/deps that run before the handler body, or []
+    (honest). via ∈ {route-dep, param-dep, decorator}; gate-first, then name-sorted."""
+    found: dict[str, dict] = {}
+
+    def _add(name, via):
+        if name and name not in found:
+            found[name] = {"name": name, "via": via, "gate": _is_mw_gate(name)}
+
+    for kw in getattr(route_dec, "keywords", []):                 # 1 · @router.x(..., dependencies=[Depends(..)])
+        if kw.arg == "dependencies" and isinstance(kw.value, (ast.List, ast.Tuple)):
+            for el in kw.value.elts:
+                _add(_depends_target(el), "route-dep")
+    args = node.args                                              # 2 · def h(..., x = Depends(fn))
+    params = list(getattr(args, "posonlyargs", [])) + list(args.args)
+    defs = list(args.defaults)
+    for p, d in zip(params[len(params) - len(defs):], defs):
+        _add(_depends_target(d), "param-dep")
+    for d in args.kw_defaults:
+        if d is not None:
+            _add(_depends_target(d), "param-dep")
+    for p in params + list(args.kwonlyargs):                      # 2b · x: Annotated[T, Depends(fn)] (the modern idiom)
+        if p.annotation is not None:
+            for nm in _annotated_depends(p.annotation):
+                _add(nm, "param-dep")
+    for dec in node.decorator_list:                               # 3 · non-route decorator (@require_household)
+        if dec is route_dec:
+            continue
+        nm = _dec_name(dec)
+        if nm and nm not in ("get", "post", "put", "patch", "delete"):
+            _add(nm, "decorator")
+    return sorted(found.values(), key=lambda m: (not m["gate"], m["name"]))
 
 
 def function_insight(repo: Path) -> dict:

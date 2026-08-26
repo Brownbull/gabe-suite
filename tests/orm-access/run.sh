@@ -99,6 +99,58 @@ check(sinks('def h():\n    httpx.post(url, json=d)', "h") == ["http"], "sink: ht
 check(sinks('def n():\n    d.set(k, v)\n    mylist.get(0)\n    open("in.txt")\n    total += 1', "n") == [],
       "sinks: non-sink receivers + read-open stay SILENT (no false positives)")
 
+# ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
+def epmw(src):
+    tree = ast.parse(src)
+    for node in ast.walk(tree):
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            for dec in node.decorator_list:
+                if (isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute)
+                        and dec.func.attr in ("get", "post", "put", "patch", "delete")):
+                    return C._endpoint_middleware(node, dec)
+    return None
+
+# FIRE 1 — signature Depends: one gate dep + one plain dep, both param-dep; gate-first order
+m = epmw('@router.post("/x")\ndef create(body, ctx=Depends(get_auth_context), db=Depends(get_db)):\n    pass')
+names = [x["name"] for x in m]
+check(("get_auth_context" in names and "get_db" in names), "signature Depends → both deps found (%r)" % names)
+check(next(x for x in m if x["name"] == "get_auth_context")["gate"] is True, "auth dep flagged gate=True")
+check(next(x for x in m if x["name"] == "get_db")["gate"] is False, "get_db is NOT a gate")
+check(all(x["via"] == "param-dep" for x in m), "signature deps carry via=param-dep")
+check(m[0]["name"] == "get_auth_context", "gate-first sort (gate before non-gate)")
+
+# FIRE 2 — route-decorator dependencies=[Depends(..)]
+m = epmw('@router.get("/y", dependencies=[Depends(require_household)])\ndef read():\n    pass')
+check(m == [{"name": "require_household", "via": "route-dep", "gate": True}],
+      "route dependencies=[Depends(..)] → route-dep gate (%r)" % m)
+
+# FIRE 3 — non-route decorator (@idempotent) rides as a decorator middleware
+m = epmw('@idempotent\n@router.post("/z")\ndef make():\n    pass')
+check([x for x in m if x["via"] == "decorator" and x["name"] == "idempotent"],
+      "custom decorator → decorator middleware (%r)" % m)
+
+# FIRE 4 — Depends(Checker("admin")) → the callable name, not the string
+m = epmw('@router.get("/w")\ndef w(scope=Depends(RoleChecker("admin"))):\n    pass')
+check(m and m[0]["name"] == "RoleChecker", "Depends(Checker(..)) → callable name (%r)" % m)
+
+# FIRE 5 — the MODERN idiom: x: Annotated[T, Depends(fn)] (Depends lives in the annotation, not the default)
+m = epmw('@router.get("/a")\ndef a(ctx: Annotated[AuthContext, Depends(get_auth_context)], db: Annotated[Session, Depends(get_session)]):\n    pass')
+names = [x["name"] for x in m]
+check("get_auth_context" in names and "get_session" in names, "Annotated[T, Depends(..)] deps found (%r)" % names)
+check(all(x["via"] == "param-dep" for x in m), "Annotated deps carry via=param-dep")
+
+# SILENT 1 — a plain handler with no deps/decorators → [] (the route decorator is NEVER middleware)
+check(epmw('@router.get("/p")\ndef plain(q=None):\n    pass') == [],
+      "no deps/decorators → [] and the @router.get is not counted (honest-empty)")
+
+# SILENT 2 — a non-Depends default is not middleware (false-positive guard)
+check(epmw('@router.get("/d")\ndef d(limit=SomeHelper(10)):\n    pass') == [],
+      "a non-Depends default stays SILENT (%r)" % epmw('@router.get("/d")\ndef d(limit=SomeHelper(10)):\n    pass'))
+
+# MUTATION — drop the Depends wrapper: the gate must disappear (proves Depends drives it, not the name)
+check(epmw('@router.get("/m")\ndef m(ctx=get_auth_context):\n    pass') == [],
+      "a bare default (no Depends) is NOT middleware (mutation guard)")
+
 print(f"orm-access: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY

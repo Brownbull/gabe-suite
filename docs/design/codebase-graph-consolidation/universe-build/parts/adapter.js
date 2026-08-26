@@ -71,7 +71,8 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
       god:false, method:(kind==="endpoint")?_methOf(p.label):null };
     var n={ id:p.id, kind:kind, ent:ent, label:p.label||p.slug||p.id,
       col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"data",
-      m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites, fn:p.fn };
+      m:m, det:det, behind:beh, resp:p.resp, ids:p.ids, table:p.table, sites:p.sites, fn:p.fn,
+      middleware:p.middleware };   // C4: the endpoint's level-2 gate/dep floor → the card's Guards section
     nodes.push(n); NIDS[n.id]=n; });
 });
 if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unknown kind (add to KINDS)"); }catch(e){}

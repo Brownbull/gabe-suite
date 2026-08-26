@@ -127,6 +127,15 @@
       expander(rows, {cap:10, maxDepth:3}));
     return E("div",{class:"sec"}, sechd("layers","Code behind", b.fns, false,
       {icon:"info",cls:"info",text:"Callee names + count from derive_behind (a BFS floor; cross-file callees inferred by design). Where a callee is a LOADED function node, expand it to walk its own calls."}), body); }
+  /* Guards — the level-2 gates/deps that run BEFORE the handler body (C4 _endpoint_middleware):
+     Depends()/Security() (signature + route) + non-route decorators. A FLOOR; `gate` is a name hint. */
+  function guardsSec(n){ var mw=n.middleware; if(!mw||!mw.length) return null;
+    var nGate=mw.filter(function(m){ return m.gate; }).length;
+    var rows=mw.map(function(m){ return E("div",{class:"sublbl"}, icoEl(m.gate?"key":"link"),
+      m.name+" ", E("span",{style:"color:var(--muted);font-size:10px"}, "· "+m.via+(m.gate?" · gate":""))); });
+    return E("div",{class:"sec"}, sechd("key","Guards", mw.length, false,
+      {icon:"info",cls:"info",text:"The gates/deps that run BEFORE the handler body — Depends()/Security() (signature Annotated + = default, and route dependencies=[]) + any non-route decorator. A FLOOR: a dep nested inside another Depends is not walked. 'gate' is a NAME hint (auth/consent/idempotency/tenant), never a claim. "+nGate+" of "+mw.length+" look like gates."}),
+      E("div",null, rows)); }
   function liveConns(n){ var outs=[], ins=[];
     links.forEach(function(l){ var s=lid(l.source), t=lid(l.target); if(s===n.id) outs.push(l); if(t===n.id) ins.push(l); });
     function build(arr, dir){ var by={};
@@ -178,6 +187,7 @@
       testsSec(det),
       journeysSection(n.ent,"endpoint",det),
       payloadSec(det),
+      guardsSec(n),
       behindTree(n),
       identSec(n),
       sigSec(det),

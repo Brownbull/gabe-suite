@@ -421,6 +421,19 @@ check(_fr.get("a.py#svc_write") == "accessor" and _fr.get("a.py#handler") == "ca
       and _fr.get("a.py#require_auth") == "gate" and _fr.get("a.py#helper") == "pure",
       "derive_fn_roles: accessor (own op) · caller (reaches it) · gate (name) · pure (leaf)")
 check(GG.derive_fn_roles(_wr, None) == {}, "derive_fn_roles: no faccess → {} (honest-empty)")
+# ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
+_fixmw = json.loads(json.dumps(FIX))
+_fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [
+    {"name": "get_auth_context", "via": "param-dep", "gate": True},
+    {"name": "get_session", "via": "param-dep", "gate": False}]
+_gmw = G.build_c4_graph(_fixmw, labels=LABELS, status=STATUS)
+_epn = [n for _s in _gmw["l2"].values() for n in _s["nodes"] if n["kind"] == "endpoint" and n.get("middleware")]
+check(_epn and _epn[0]["middleware"][0]["name"] == "get_auth_context",
+      "C4: the endpoint node carries its middleware floor (gate-first order preserved)")
+check(_gmw["stats"].get("middleware_endpoints", 0) == 1 and _gmw["stats"].get("gate_endpoints", 0) == 1,
+      "C4 stats: middleware_endpoints + gate_endpoints count the folded gates")
+check(_gna["stats"].get("middleware_endpoints", 0) == 0 and _gna["stats"].get("gate_endpoints", 0) == 0,
+      "C4 honest-empty: no middleware on any endpoint → both counts 0")
 # the named-fn list caps at _BEHIND_NAMES_CAP (12) with a +N remainder
 _wc = {"nodes": [{"id": f"c/{i}.py#f{i}", "kind": "function", "path": f"c/{i}.py"} for i in range(15)]
                 + [{"id": "c/h.py#h", "kind": "function", "path": "c/h.py"}],

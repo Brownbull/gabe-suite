@@ -427,6 +427,10 @@ check('function roleBadge(' in page and 'grp.add(roleBadge(n.role))' in page and
 check('data-badgeinfo=' in page and 'window.__badgePop=function' in page and 'class="bpcv"' in page
       and 'window.__badgeGlyph(c, kind, cv.dataset.k)' in page and 'window.__BADGE_DESC=' in page,
       "the legend badge-key popup (endpoint methods · function roles, drawn with the real badge glyph) is gone")
+# C4 follow-up · endpoint GUARDS — the middleware floor (Depends/decorators before the body) → the card, carried by the adapter
+check('function guardsSec(' in page and 'guardsSec(n)' in page and 'middleware:p.middleware' in page
+      and 'The gates/deps that run BEFORE the handler body' in page,
+      "the endpoint GUARDS section (C4 middleware floor → card, adapter-carried) is gone")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,

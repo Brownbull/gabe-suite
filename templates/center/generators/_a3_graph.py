@@ -607,6 +607,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             enode["fn"] = ep["fn"]                # the handler, for the card's route row
         if ep.get("resp") and ep["resp"] != "—":   # the parser's em-dash default is "none declared"
             enode["resp"] = ep["resp"]
+        if ep.get("middleware"):                    # C4: the level-2 gates run before the handler body (auth/consent/idempotency)
+            enode["middleware"] = ep["middleware"]
         edet = with_journeys(det_of("endpoint", ep),
                              f"{ep.get('file')}::{ep.get('fn')}")
         _rsp = _bare_cls(ep.get("resp"))     # response PAYLOAD: unwrap list[X]/Optional[X] → X, then the field-count
@@ -1099,6 +1101,8 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "cross_touches": cross_touches,   # endpoint→foreign-model/schema touches (the aspect wires)
             "access_edges": _acc_intra + access_edges,   # A2: drawn endpoint→model writes_to/reads_from (intra + cross) — the write graft couldn't see
             "minted_models": len(_minted),   # C3: absent access-target models minted into the unclaimed bucket so their edge can land
+            "middleware_endpoints": sum(1 for _s in l2.values() for _n in _s.get("nodes", []) if _n.get("kind") == "endpoint" and _n.get("middleware")),   # C4: endpoints carrying a level-2 gate/dep floor
+            "gate_endpoints": sum(1 for _s in l2.values() for _n in _s.get("nodes", []) if _n.get("kind") == "endpoint" and any(_m.get("gate") for _m in (_n.get("middleware") or []))),   # C4: of those, ones with a gate-named dep (auth/consent/idempotency)
             "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") in ("consumes", "nests")),   # request-shape + composition wires (signatures + field types; local + cross)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
