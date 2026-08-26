@@ -28,22 +28,22 @@ TRUSTCONNS = """  function trustTag(tr){ if(!tr) return null;
 # ranges keyed by 1-indexed START line -> (END line inclusive, replacement or None to drop)
 repl = {
   1:   (1,   TITLE),
-  147: (147, STYLE_CLOSE),
-  149: (152, None),                 # drop the spike .bar block (title card + reset → moved to nav/topbar)
-  162: (162, '<script src="./assets/3d-bundle.js"></script>'),
-  163: (163, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>'),   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
-  234: (282, adapter),              # toy data block -> live adapter
-  588: (588, REL2KIND),
-  946: (946, GLINE),
-  949: (955, TRUSTCONNS),
-  969: (1043, card),
+  157: (157, STYLE_CLOSE),
+  159: (162, None),                 # drop the spike .bar block (title card + reset → moved to nav/topbar)
+  172: (172, '<script src="./assets/3d-bundle.js"></script>'),
+  173: (173, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>'),   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
+  244: (292, adapter),              # toy data block -> live adapter
+  598: (598, REL2KIND),
+  956: (956, GLINE),
+  959: (965, TRUSTCONNS),
+  979: (1053, card),
 }
 # GUARD (2026): the map keys are HARDCODED spike-base line numbers, so ANY line-count change
 # above a key silently shifts a replacement onto the wrong statement (once truncated `usage`
 # and produced un-parseable JS). Assert each content-bearing START line still holds what its
 # transform expects — a shift now fails LOUD here instead of shipping broken JS downstream.
-_ANCHORS = {234: "var NODEDEF=[", 588: "var REL2KIND={", 946: "var G=function",
-            949: "function trustTag(label){", 969: "var cids=function"}   # first token of each rewritten region
+_ANCHORS = {244: "var NODEDEF=[", 598: "var REL2KIND={", 956: "var G=function",
+            959: "function trustTag(label){", 979: "var cids=function"}   # first token of each rewritten region
 for _ln, _needle in _ANCHORS.items():
     _src = lines[_ln-1] if _ln-1 < len(lines) else ""
     assert _needle in _src, ("assemble line-map STALE at %d: expected %r, found %r — a spike-base "
@@ -343,11 +343,22 @@ assert OLD_ZS in text, "fleetZones zSat anchor missing"
 text = text.replace(OLD_ZS, 'if(CFG.zSat&&visN(n).zSat) for(var si=0;', 1)
 
 # ── operator: METHOD BADGE — a coloured HTTP-method chip at the endpoint icon's lower-right ──
-_METHOD_BADGE = "function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); c.strokeStyle='#0b0f18'; c.fillStyle='#0b0f18'; c.lineWidth=13; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); if(m==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); } else if(m==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); } else if(m==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); } else if(m==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); } else if(m==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); } else { c.arc(64,64,15,0,6.2832); } c.stroke(); var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6; var _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5; var _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2; var _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }\n"
+# methodBadge / roleBadge share ONE glyph source (window.__badgeGlyph, layout.js) so the 3D chip and
+# its legend swatch never drift — legend-visual law. The circle+glyph paths (incl. c.arc(64,64,58 and the
+# DELETE/accessor glyphs) live there; here we only wrap the canvas into a camera-facing Sprite.
+_BADGE_WRAP = ("var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; "
+  "var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }\n")
+_METHOD_BADGE = ("function methodBadge(m, br){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); "
+  "if(window.__badgeGlyph) window.__badgeGlyph(c,'method',m); else { var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } "
+  + _BADGE_WRAP)
+# ── C1: FUNCTION ROLE badge — accessor/caller/gate/pure, same slot/machinery as the method badge ──
+_ROLE_BADGE = ("function roleBadge(role){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); "
+  "if(window.__badgeGlyph) window.__badgeGlyph(c,'role',role); else { c.fillStyle='#8794ab'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } "
+  + _BADGE_WRAP)
 assert 'function buildNode(n){' in text, "buildNode anchor missing (method badge)"
-text = text.replace('function buildNode(n){', _METHOD_BADGE + 'function buildNode(n){', 1)
+text = text.replace('function buildNode(n){', _METHOD_BADGE + _ROLE_BADGE + 'function buildNode(n){', 1)
 assert '  grp.add(ic);' in text, "grp.add(ic) anchor missing (method badge)"
-text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }   // operator: HTTP-method badge at the icon lower-right', 1)
+text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right', 1)
 
 # ── batch 12: layer ruling (c) — sub groups carry the kind's OWN layer (endpoints·api·web·data);
 #    the hull hue-shift map gains the un-collapsed keys ──
@@ -528,7 +539,9 @@ NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpStat
         var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
         var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
         var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
-        h+=\'<div class="lgrow lgk \'+_cls+\'" data-lgk="\'+it.k+\'" title="\'+_t+\' · \'+K.type+\'"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — a 3-STATE control (all · critical · off)'''
+        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles
+        var _bi=_bik?(\'<button class="lgbi" data-badgeinfo="\'+_bik+\'" title="badge key — \'+(_bik==="method"?"the HTTP methods":"the four function roles")+\'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>\'):\'\';
+        h+=\'<div class="lgrow lgk \'+_cls+\'" data-lgk="\'+it.k+\'" title="\'+_t+\' · \'+K.type+\'"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b>\'+_bi+\'</div></div>\'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot'''
 text = text.replace(OLD_KROW, NEW_KROW, 1)
 
 OLD_LGBIND = """    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });"""

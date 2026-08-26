@@ -30,7 +30,17 @@
   #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
   #elegend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
   #elegend .lgvis{ width:44px; flex:none; display:flex; align-items:center; justify-content:center; }
-  #elegend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; } #elegend .lglbl i{ color:var(--muted); font-style:normal; }
+  #elegend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; display:flex; align-items:center; gap:6px; } #elegend .lglbl i{ color:var(--muted); font-style:normal; }
+  #elegend .lgbi{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; padding:0; color:var(--muted); background:none; border:none; cursor:help; border-radius:50%; }
+  #elegend .lgbi:hover, #elegend .lgbi:focus{ color:var(--accent); outline:none; }
+  /* the badge-key popup — the icon + its meaning, drawn with the node's real badge glyph */
+  .badgepop{ position:fixed; z-index:60; width:270px; max-width:calc(100vw - 16px); background:var(--panel,#0e1524); border:1px solid var(--line,#26324b); border-radius:10px; box-shadow:0 10px 34px #000a; padding:9px 11px 11px; --mono:Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace; pointer-events:none; }
+  .badgepop .bph{ font:700 9px/1.3 var(--mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted,#8794ab); padding-bottom:7px; margin-bottom:5px; border-bottom:1px solid var(--line,#26324b); }
+  .badgepop .bprow{ display:flex; align-items:center; gap:9px; margin:7px 0; }
+  .badgepop .bpcv{ width:26px; height:26px; flex:none; display:block; }
+  .badgepop .bpt{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+  .badgepop .bpt b{ font:700 11px/1.2 var(--mono); color:var(--ink,#e6ecf7); text-transform:uppercase; letter-spacing:.02em; }
+  .badgepop .bpt span{ font:400 10.5px/1.35 var(--mono); color:var(--muted,#8794ab); }
   #elegend .lgln{ width:28px; height:0; }
   #elegend .lgcv{ width:42px; height:36px; display:block; border-radius:5px; background:radial-gradient(circle at 50% 40%,#14203a,#0b1120); }   /* real 3D asset thumbnail (shared palette renderer) */
   #elegend .lgph{ width:34px; height:34px; border-radius:7px; border:1px dashed var(--muted); display:flex; align-items:center; justify-content:center; color:var(--muted); font:700 13px/1 var(--mono); }   /* placeholder — the spike owns the node */
@@ -1173,6 +1183,23 @@ var LEGEND={
       {t:"dot",c:0xffffff,l:"Star <i>a fn used across the cluster, never surfaced</i>"} ] }
 };
 var _legSub="Defense";   // active sub-tab within Planet
+/* ── BADGE-KEY POPUP (operator) — the legend's info dot opens a small key: each badge drawn with the
+   SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
+   HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
+window.__badgePop=function(anchor, kind){ if(window.__badgePopHide) __badgePopHide();
+  var keys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];
+  var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
+  var head=(kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":"function role — what it does with the data store";
+  var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
+  var html='<div class="bph">'+head+'</div>';
+  keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+k+'</b><span>'+(desc[k]||"")+'</span></div></div>'; });
+  pop.innerHTML=html; document.body.appendChild(pop);
+  [].forEach.call(pop.querySelectorAll(".bpcv"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128); if(window.__badgeGlyph) window.__badgeGlyph(c, kind, cv.dataset.k); });
+  var r=anchor.getBoundingClientRect();
+  var left=Math.max(8, Math.min(window.innerWidth-pop.offsetWidth-8, r.left-4));
+  var top=r.top-pop.offsetHeight-8; if(top<8) top=r.bottom+8;
+  pop.style.left=left+"px"; pop.style.top=top+"px"; };
+window.__badgePopHide=function(){ var p=document.getElementById("badgepop"); if(p) p.remove(); };
 function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.keys(LEGEND), active=tabs[0];
   function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }
   function vis(it){ var c=hx(it.c||0xffffff);
@@ -1222,6 +1249,12 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
     el.querySelector(".lgmin").onclick=function(){ el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
     [].forEach.call(el.querySelectorAll(".lgtab"), function(b){ b.onclick=function(){ active=b.dataset.t; render(); }; });
     [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });
+    [].forEach.call(el.querySelectorAll(".lgbi"), function(b){   // badge-key dot → hover popup (endpoint methods · function roles)
+      b.onmouseenter=function(){ if(window.__badgePop) __badgePop(b, b.dataset.badgeinfo); };
+      b.onmouseleave=function(){ if(window.__badgePopHide) __badgePopHide(); };
+      b.onfocus=function(){ if(window.__badgePop) __badgePop(b, b.dataset.badgeinfo); };
+      b.onblur=function(){ if(window.__badgePopHide) __badgePopHide(); };
+      b.onclick=function(ev){ ev.stopPropagation(); }; });
     if(SHIPSREADY) [].forEach.call(el.querySelectorAll(".lgcv"), function(cv){ legThumb(cv, thumbBuild(thumbs[+cv.dataset.i])); }); }
   window.__legRender=render; render(); }
 buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails paint when ships load (onShipsReady → __legRender)

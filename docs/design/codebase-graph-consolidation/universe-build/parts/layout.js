@@ -251,6 +251,7 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
     return { id:f.id, kind:"function", ent:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
       layer:KINDS["function"].layer, sub:KINDS["function"].layer||"data", __fn:true,
+      role:f.role, access:f.access, sinks:f.sinks,   // C1/C2/C4: the function role badge + its ops/sinks (sinks-arm)
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
@@ -1737,6 +1738,35 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
     var ln=new T.Line(geo, mat); ln.userData.kind="bundle"; ln.userData.__bundle=by[key]; grp.add(ln); });
 };
 
+/* ── ONE badge-glyph source (legend law — the legend cell reuses the very draw fn the 3D badge uses).
+   kind:"method" → HTTP-verb chip (endpoints, colour = METHOD) · kind:"role" → function-role chip
+   (accessor/caller/gate/pure, colour = __BADGE_COL.role). Draws the coloured disc + dark glyph onto a
+   128² canvas context; methodBadge/roleBadge wrap it into a Sprite, the legend popup paints it onto a
+   DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
+window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444"},
+                     role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"} };
+window.__BADGE_DESC={
+  method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row" },
+  role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" } };
+window.__badgeGlyph=function(c, kind, key){
+  var col=((window.__BADGE_COL[kind]||{})[key])||"#8794ab";
+  c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();
+  c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
+  if(kind==="role"){
+    if(key==='accessor'){ c.ellipse(64,42,26,10,0,0,6.2832); c.moveTo(38,42); c.lineTo(38,86); c.moveTo(90,42); c.lineTo(90,86); c.moveTo(38,64); c.bezierCurveTo(38,74,90,74,90,64); c.moveTo(38,86); c.bezierCurveTo(38,96,90,96,90,86); }
+    else if(key==='caller'){ c.moveTo(40,64); c.lineTo(70,64); c.moveTo(70,44); c.lineTo(70,84); c.moveTo(70,44); c.lineTo(90,44); c.moveTo(70,84); c.lineTo(90,84); }
+    else if(key==='gate'){ c.moveTo(64,32); c.lineTo(92,44); c.lineTo(92,66); c.bezierCurveTo(92,86,64,96,64,96); c.bezierCurveTo(64,96,36,86,36,66); c.lineTo(36,44); c.closePath(); }
+    else { c.moveTo(64,32); c.lineTo(72,56); c.lineTo(96,64); c.lineTo(72,72); c.lineTo(64,96); c.lineTo(56,72); c.lineTo(32,64); c.lineTo(56,56); c.closePath(); }
+  } else {
+    if(key==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); }
+    else if(key==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); }
+    else if(key==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); }
+    else if(key==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); }
+    else if(key==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); }
+    else { c.arc(64,64,15,0,6.2832); }
+  }
+  c.stroke();
+};
 window.__uniBadges=[];
 (function _mbTick(){ requestAnimationFrame(_mbTick);
   var arr=window.__uniBadges; if(!arr||!arr.length||typeof Graph==="undefined"||!Graph) return;

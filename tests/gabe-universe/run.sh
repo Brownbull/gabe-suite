@@ -416,8 +416,17 @@ check('if(hidden) c.classList.remove("min");' in page, "the nav gear does not un
 
 # ── 10q. batch 17: community default · ring layout · wider spacing ──
 # ── operator polish (2026-08-25): method badge · spinning focus ring · zone header toggle · trail focus ──
-check('function methodBadge(' in page and 'grp.add(methodBadge(' in page and 'c.arc(64,64,58' in page and "m==='DELETE'" in page,
-      "the endpoint METHOD badge (coloured circle + method GLYPH, stacked at the icon corner) is gone")
+check('function methodBadge(' in page and 'grp.add(methodBadge(' in page and 'c.arc(64,64,58' in page and "key==='DELETE'" in page
+      and 'window.__badgeGlyph=function' in page and "window.__badgeGlyph(c,'method',m)" in page,
+      "the endpoint METHOD badge (coloured circle + method GLYPH, from the shared __badgeGlyph source) is gone")
+# C1 · FUNCTION ROLE badge — accessor/caller/gate/pure, same slot/machinery as the method badge, one glyph source
+check('function roleBadge(' in page and 'grp.add(roleBadge(n.role))' in page and "window.__badgeGlyph(c,'role',role)" in page
+      and "key==='accessor'" in page and 'role:f.role' in page,
+      "the FUNCTION role badge (roleBadge → shared glyph, wired on n.kind==='function' && n.role, role carried onto the fn node) is gone")
+# badge-KEY popup — the legend info dot renders each badge with the SAME __badgeGlyph + its meaning (legend-visual law)
+check('data-badgeinfo=' in page and 'window.__badgePop=function' in page and 'class="bpcv"' in page
+      and 'window.__badgeGlyph(c, kind, cv.dataset.k)' in page and 'window.__BADGE_DESC=' in page,
+      "the legend badge-key popup (endpoint methods · function roles, drawn with the real badge glyph) is gone")
 check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.ent[ent][col]=1;' in page,
       "a cluster toggle no longer re-enables its entity for THAT column (must match the entity-column behaviour)")
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,

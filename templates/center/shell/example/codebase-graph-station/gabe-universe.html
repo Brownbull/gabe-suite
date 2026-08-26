@@ -30,7 +30,17 @@
   #elegend .lggrp{ font:700 8.5px/1 var(--mono); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:12px 0 4px; border-bottom:1px solid var(--line); padding-bottom:4px; } #elegend .lggrp:first-child{ margin-top:2px; } #elegend .lggrp i{ font-style:normal; color:#7f8ba3; font-weight:400; }
   #elegend .lgrow{ display:flex; align-items:center; gap:10px; margin:7px 0; }
   #elegend .lgvis{ width:44px; flex:none; display:flex; align-items:center; justify-content:center; }
-  #elegend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; } #elegend .lglbl i{ color:var(--muted); font-style:normal; }
+  #elegend .lglbl{ color:var(--ink); font-size:11px; line-height:1.25; display:flex; align-items:center; gap:6px; } #elegend .lglbl i{ color:var(--muted); font-style:normal; }
+  #elegend .lgbi{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; padding:0; color:var(--muted); background:none; border:none; cursor:help; border-radius:50%; }
+  #elegend .lgbi:hover, #elegend .lgbi:focus{ color:var(--accent); outline:none; }
+  /* the badge-key popup — the icon + its meaning, drawn with the node's real badge glyph */
+  .badgepop{ position:fixed; z-index:60; width:270px; max-width:calc(100vw - 16px); background:var(--panel,#0e1524); border:1px solid var(--line,#26324b); border-radius:10px; box-shadow:0 10px 34px #000a; padding:9px 11px 11px; --mono:Menlo,Consolas,'DejaVu Sans Mono',ui-monospace,monospace; pointer-events:none; }
+  .badgepop .bph{ font:700 9px/1.3 var(--mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted,#8794ab); padding-bottom:7px; margin-bottom:5px; border-bottom:1px solid var(--line,#26324b); }
+  .badgepop .bprow{ display:flex; align-items:center; gap:9px; margin:7px 0; }
+  .badgepop .bpcv{ width:26px; height:26px; flex:none; display:block; }
+  .badgepop .bpt{ display:flex; flex-direction:column; gap:1px; min-width:0; }
+  .badgepop .bpt b{ font:700 11px/1.2 var(--mono); color:var(--ink,#e6ecf7); text-transform:uppercase; letter-spacing:.02em; }
+  .badgepop .bpt span{ font:400 10.5px/1.35 var(--mono); color:var(--muted,#8794ab); }
   #elegend .lgln{ width:28px; height:0; }
   #elegend .lgcv{ width:42px; height:36px; display:block; border-radius:5px; background:radial-gradient(circle at 50% 40%,#14203a,#0b1120); }   /* real 3D asset thumbnail (shared palette renderer) */
   #elegend .lgph{ width:34px; height:34px; border-radius:7px; border:1px dashed var(--muted); display:flex; align-items:center; justify-content:center; color:var(--muted); font:700 13px/1 var(--mono); }   /* placeholder — the spike owns the node */
@@ -1365,13 +1375,15 @@ function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mas
 /* SPACE WAR: the primitive half-shell zones (warZones/SHELLZ/shellPt + the warDist/shellH/concave/lift sliders)
    were SUPERSEDED by the ELEMENTS-LAB real fleets (fleetZones) — removed. The war-zone placement law now lives in
    the deployment config (DEPC): def +X · atk −X · conflict +Y · sats −Y. */
-function methodBadge(m, br){ var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); c.strokeStyle='#0b0f18'; c.fillStyle='#0b0f18'; c.lineWidth=13; c.lineCap='round'; c.lineJoin='round'; c.beginPath(); if(m==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); } else if(m==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); } else if(m==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); } else if(m==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); } else if(m==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); } else { c.arc(64,64,15,0,6.2832); } c.stroke(); var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6; var _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5; var _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2; var _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
+function methodBadge(m, br){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'method',m); else { var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
+function roleBadge(role){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'role',role); else { c.fillStyle='#8794ab'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
 function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   var ic, is=ENC.iconSize;
   if(billTex[n.kind]){ ic=billboardMesh(n.kind,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
   else { ic=primitiveMesh(n.kind, col); ic.scale.multiplyScalar(is/13); }
   grp.add(ic);
-  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }   // operator: HTTP-method badge at the icon lower-right
+  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }
+  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right
   grp.add(bubble(br));
   if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
   if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
@@ -1655,6 +1667,7 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   _FNNODES=D.fn_nodes.map(function(f){ var beh=f.behind||{};
     return { id:f.id, kind:"function", ent:f.slug, label:f.name, col:KINDS["function"].col, K:KINDS["function"],
       layer:KINDS["function"].layer, sub:KINDS["function"].layer||"data", __fn:true,
+      role:f.role, access:f.access, sinks:f.sinks,   // C1/C2/C4: the function role badge + its ops/sinks (sinks-arm)
       m:{ behind:_num(beh.fns), depth:_num(beh.depth), tests:0, cols:0, fanin:_num(f.hub&&f.hub.usage), god:!!f.god, method:null },
       det:{ file:(f.id||"").split("#")[0], doc:"" }, behind:beh }; });
   _FNLINKS=(D.fn_edges||[]).map(function(e){ return {source:e.s, target:e.t, rel:e.rel||"calls"}; });
@@ -3141,6 +3154,35 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
     var ln=new T.Line(geo, mat); ln.userData.kind="bundle"; ln.userData.__bundle=by[key]; grp.add(ln); });
 };
 
+/* ── ONE badge-glyph source (legend law — the legend cell reuses the very draw fn the 3D badge uses).
+   kind:"method" → HTTP-verb chip (endpoints, colour = METHOD) · kind:"role" → function-role chip
+   (accessor/caller/gate/pure, colour = __BADGE_COL.role). Draws the coloured disc + dark glyph onto a
+   128² canvas context; methodBadge/roleBadge wrap it into a Sprite, the legend popup paints it onto a
+   DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
+window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444"},
+                     role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"} };
+window.__BADGE_DESC={
+  method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row" },
+  role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" } };
+window.__badgeGlyph=function(c, kind, key){
+  var col=((window.__BADGE_COL[kind]||{})[key])||"#8794ab";
+  c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();
+  c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
+  if(kind==="role"){
+    if(key==='accessor'){ c.ellipse(64,42,26,10,0,0,6.2832); c.moveTo(38,42); c.lineTo(38,86); c.moveTo(90,42); c.lineTo(90,86); c.moveTo(38,64); c.bezierCurveTo(38,74,90,74,90,64); c.moveTo(38,86); c.bezierCurveTo(38,96,90,96,90,86); }
+    else if(key==='caller'){ c.moveTo(40,64); c.lineTo(70,64); c.moveTo(70,44); c.lineTo(70,84); c.moveTo(70,44); c.lineTo(90,44); c.moveTo(70,84); c.lineTo(90,84); }
+    else if(key==='gate'){ c.moveTo(64,32); c.lineTo(92,44); c.lineTo(92,66); c.bezierCurveTo(92,86,64,96,64,96); c.bezierCurveTo(64,96,36,86,36,66); c.lineTo(36,44); c.closePath(); }
+    else { c.moveTo(64,32); c.lineTo(72,56); c.lineTo(96,64); c.lineTo(72,72); c.lineTo(64,96); c.lineTo(56,72); c.lineTo(32,64); c.lineTo(56,56); c.closePath(); }
+  } else {
+    if(key==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); }
+    else if(key==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); }
+    else if(key==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); }
+    else if(key==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); }
+    else if(key==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); }
+    else { c.arc(64,64,15,0,6.2832); }
+  }
+  c.stroke();
+};
 window.__uniBadges=[];
 (function _mbTick(){ requestAnimationFrame(_mbTick);
   var arr=window.__uniBadges; if(!arr||!arr.length||typeof Graph==="undefined"||!Graph) return;
@@ -4216,6 +4258,23 @@ var LEGEND={
       {t:"dot",c:0xffffff,l:"Star <i>a fn used across the cluster, never surfaced</i>"} ] }
 };
 var _legSub="Defense";   // active sub-tab within Planet
+/* ── BADGE-KEY POPUP (operator) — the legend's info dot opens a small key: each badge drawn with the
+   SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
+   HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
+window.__badgePop=function(anchor, kind){ if(window.__badgePopHide) __badgePopHide();
+  var keys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];
+  var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
+  var head=(kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":"function role — what it does with the data store";
+  var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
+  var html='<div class="bph">'+head+'</div>';
+  keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+k+'</b><span>'+(desc[k]||"")+'</span></div></div>'; });
+  pop.innerHTML=html; document.body.appendChild(pop);
+  [].forEach.call(pop.querySelectorAll(".bpcv"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128); if(window.__badgeGlyph) window.__badgeGlyph(c, kind, cv.dataset.k); });
+  var r=anchor.getBoundingClientRect();
+  var left=Math.max(8, Math.min(window.innerWidth-pop.offsetWidth-8, r.left-4));
+  var top=r.top-pop.offsetHeight-8; if(top<8) top=r.bottom+8;
+  pop.style.left=left+"px"; pop.style.top=top+"px"; };
+window.__badgePopHide=function(){ var p=document.getElementById("badgepop"); if(p) p.remove(); };
 function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.keys(LEGEND), active=tabs[0];
   function hx(c){ return "#"+("000000"+c.toString(16)).slice(-6); }
   function vis(it){ var c=hx(it.c||0xffffff);
@@ -4266,7 +4325,9 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
         var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
         var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
-        h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b></div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off)
+        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles
+        var _bi=_bik?('<button class="lgbi" data-badgeinfo="'+_bik+'" title="badge key — '+(_bik==="method"?"the HTTP methods":"the four function roles")+'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>'):'';
+        h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
@@ -4276,6 +4337,12 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
     [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });
     [].forEach.call(el.querySelectorAll("[data-lgk]"), function(rw){ rw.onclick=function(){ if(window.__uniKindToggle) __uniKindToggle(rw.dataset.lgk); }; });
     [].forEach.call(el.querySelectorAll("[data-lggrp]"), function(hd){ hd.style.cursor="pointer"; hd.onclick=function(){ if(window.__uniGroupToggle) __uniGroupToggle(hd.dataset.lggrp); }; });
+    [].forEach.call(el.querySelectorAll(".lgbi"), function(b){   // badge-key dot → hover popup (endpoint methods · function roles)
+      b.onmouseenter=function(){ if(window.__badgePop) __badgePop(b, b.dataset.badgeinfo); };
+      b.onmouseleave=function(){ if(window.__badgePopHide) __badgePopHide(); };
+      b.onfocus=function(){ if(window.__badgePop) __badgePop(b, b.dataset.badgeinfo); };
+      b.onblur=function(){ if(window.__badgePopHide) __badgePopHide(); };
+      b.onclick=function(ev){ ev.stopPropagation(); }; });
     if(SHIPSREADY) [].forEach.call(el.querySelectorAll(".lgcv"), function(cv){ legThumb(cv, thumbBuild(thumbs[+cv.dataset.i])); }); }
   window.__legRender=render; render(); }
 buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails paint when ships load (onShipsReady → __legRender)
