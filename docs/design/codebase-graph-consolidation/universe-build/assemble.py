@@ -387,7 +387,7 @@ text = text.replace(
 #    by its endpoint ENTITY colors via vertex colors; the kind keeps carrying the dash STYLE. ──
 assert "function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;" in text
 text = text.replace("function connectorWire(grp, a, b, kind, R, hf){ var cfg=CONN[kind]||CONN.calls;",
-  "function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov){ var cfg=CONN[kind]||CONN.calls;", 1)
+  "function connectorWire(grp, a, b, kind, R, hf, ea, eb, hov, sel){ var cfg=CONN[kind]||CONN.calls;", 1)
 OLD_GEO2 = "var _pts=window.__uniCurved?__uniCurve(A,B,dir,len):[A,B]; var geo=new T.BufferGeometry().setFromPoints(_pts), mat;"
 assert OLD_GEO2 in text, "gradient geometry anchor missing"
 text = text.replace(OLD_GEO2, OLD_GEO2 + """
@@ -416,11 +416,12 @@ OLD_LINEADD = "var line=new T.Line(geo,mat); if(mat.isLineDashedMaterial) line.c
 assert OLD_LINEADD in text, "line-add anchor missing"
 text = text.replace(OLD_LINEADD,
   # SELECTED / HOVER wire → a thick WHITE tube (operator: the selection was invisible — same kind color, only slightly brighter)
-  "if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts);"
+  "if(hov){ try{ var _crv=new T.CatmullRomCurve3(_pts); var _isSel=!!sel; if(_isSel){ window.__uniSelCurve=_crv; window.__uniSelMeshes=[]; }"   # the SELECTED wire alone drives the flow+pulse animation (hover wires never animate)
   " var _sr=(typeof CFG!==\"undefined\"&&CFG.selThick!=null)?CFG.selThick:0.5, _so=(typeof CFG!==\"undefined\"&&CFG.selOpacity!=null)?CFG.selOpacity:0.95, _sp=(typeof CFG!==\"undefined\"&&CFG.selPattern)?CFG.selPattern:\"solid\";"   # operator: dial the selected line (opacity/thick/pattern) from the Temporary Config
+  " if(typeof CFG!==\"undefined\"&&CFG.selGlow){ var _gm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:(CFG.selGlowInt!=null?CFG.selGlowInt:0.35), blending:T.AdditiveBlending, depthWrite:false, depthTest:false}); var _gt=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), _sr*2.6, 6, false); var _gme=new T.Mesh(_gt,_gm); _gme.userData.kind=kind; _gme.userData.__selBaseOp=(CFG.selGlowInt!=null?CFG.selGlowInt:0.35); grp.add(_gme); if(_isSel) window.__uniSelMeshes.push(_gme); }"   # separate GLOW: a wider soft halo tube (operator)
   " var _tm=new T.MeshBasicMaterial({color:_hlc||0xffffff, transparent:true, opacity:_so, blending:T.AdditiveBlending, depthWrite:false, depthTest:false});"
-  " if(_sp===\"solid\"){ var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), _sr, 6, false); var _m=new T.Mesh(_tube,_tm); _m.userData.kind=kind; grp.add(_m); }"
-  " else { var _dn=(_sp===\"dotted\")?26:13; for(var _di=0;_di<_dn;_di+=2){ var _a=_di/_dn, _b2=Math.min(1,(_di+1)/_dn); var _sc=new T.CatmullRomCurve3([_crv.getPoint(_a), _crv.getPoint((_a+_b2)/2), _crv.getPoint(_b2)]); var _dm=new T.Mesh(new T.TubeGeometry(_sc, 3, _sr, 6, false), _tm); _dm.userData.kind=kind; grp.add(_dm); } }"
+  " if(_sp===\"solid\"){ var _tube=new T.TubeGeometry(_crv, Math.max(2,_pts.length-1), _sr, 6, false); var _m=new T.Mesh(_tube,_tm); _m.userData.kind=kind; _m.userData.__selBaseOp=_so; grp.add(_m); if(_isSel) window.__uniSelMeshes.push(_m); }"
+  " else { var _dn=(_sp===\"dotted\")?26:13; for(var _di=0;_di<_dn;_di+=2){ var _a=_di/_dn, _b2=Math.min(1,(_di+1)/_dn); var _sc=new T.CatmullRomCurve3([_crv.getPoint(_a), _crv.getPoint((_a+_b2)/2), _crv.getPoint(_b2)]); var _dm=new T.Mesh(new T.TubeGeometry(_sc, 3, _sr, 6, false), _tm); _dm.userData.kind=kind; _dm.userData.__selBaseOp=_so; grp.add(_dm); if(_isSel) window.__uniSelMeshes.push(_dm); } }"
   " return; }catch(_te){} }"
   " var line=new T.Line(geo,mat); line.userData.kind=kind; if(mat.isLineDashedMaterial) line.computeLineDistances(); grp.add(line); }", 1)
 
@@ -551,7 +552,7 @@ text = text.replace(OLD_CALL2,
 OLD_WHF = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, (window._hlLinkF?_hlLinkF(l):1), (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null); });"
 assert OLD_WHF in text, "selected-wire glow anchor missing"
 text = text.replace(OLD_WHF,
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l)); });", 1)
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8, _whf, (_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null, (_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l)); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

@@ -667,6 +667,20 @@ var _hlPhase=0;
       else { var f=1+amp*s2; m.scale.set(bs*f,bs*f,1); } }                                                                // PROPORTIONAL — swing scales with ring size (the old behavior)
     else if(anim==="none"){ /* static */ }
     else { m.material.rotation=_hlPhase; } } })();   // spin (default)
+/* ── SELECTED LINE motion (operator: pulse / flow + separate glow) — same bounded phase as _hlSpin; NEVER Date.now()*k (that froze the spin) ── */
+var _selPhase=0;
+(function _selAnim(){ requestAnimationFrame(_selAnim);
+  if(typeof CFG==="undefined") return;
+  var sel=!!window.__uniSelLink, anim=CFG.selAnim||"none", spd=(CFG.selAnimSpeed!=null)?CFG.selAnimSpeed:1;
+  if(window.__uniSelFlow && (!sel || anim!=="flow")) window.__uniSelFlow.visible=false;   // park the marching dots when idle
+  if(!sel || anim==="none") return;
+  _selPhase=(_selPhase + 0.05*spd) % 6.2832;
+  if(anim==="pulse"){ var ms=window.__uniSelMeshes; if(ms) for(var i=0;i<ms.length;i++){ var m=ms[i]; if(!m||!m.material) continue;
+      var b=(m.userData&&m.userData.__selBaseOp!=null)?m.userData.__selBaseOp:0.95; m.material.opacity=b*(0.35+0.65*(0.5+0.5*Math.sin(_selPhase))); } }   // breathe the tube's opacity between .35×base and 1×base
+  else if(anim==="flow"){ var crv=window.__uniSelCurve; if(!crv||typeof Graph==="undefined"||!Graph) return;
+    if(!window.__uniSelFlow){ try{ var _fg=new T.Group(); for(var k=0;k<3;k++){ var _d=new T.Mesh(new T.SphereGeometry(1,12,10), new T.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0.98, blending:T.AdditiveBlending, depthWrite:false, depthTest:false})); _d.raycast=function(){}; _d.renderOrder=999; _fg.add(_d); } window.__uniSelFlow=_fg; Graph.scene().add(_fg); }catch(e){ return; } }
+    var fg=window.__uniSelFlow; fg.visible=true; var base=_selPhase/6.2832, fs=((CFG.selThick!=null)?CFG.selThick:0.5)*2.6;   // 3 dots march source→target for a directional read
+    for(var j=0;j<fg.children.length;j++){ var tt=(base + j/3)%1, p2=crv.getPoint(tt); if(p2) fg.children[j].position.copy(p2); fg.children[j].scale.setScalar(fs); } } })();
 window.__uniHLReapply=function(){ if(!HL.on) return;                     // halos live in an INDEPENDENT scene group —
   var g0=_hlGroup(); if(!g0) return; _hlClearSprites();                   // node-object recreation can never kill them
   var _add=function(n, g, isRing){ if(!g) return; g.userData.nid=n.id; g.raycast=function(){}; g.position.set(n.x||0,n.y||0,n.z||0);
@@ -1734,17 +1748,22 @@ window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbo
       try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
     row.appendChild(b); });
   g.appendChild(row); body.appendChild(g);
-  /* ── SELECTED LINE (operator: the white tube is brutal — dial opacity/thick/pattern, copy, settle) ── */
-  if(typeof CFG!=="undefined"){ if(CFG.selOpacity==null) CFG.selOpacity=0.95; if(CFG.selThick==null) CFG.selThick=0.5; if(CFG.selPattern==null) CFG.selPattern="solid"; }
+  /* ── SELECTED LINE (operator: the white tube is brutal — dial opacity/thick/pattern + animation/glow, copy, settle) ── */
+  if(typeof CFG!=="undefined"){ if(CFG.selOpacity==null) CFG.selOpacity=0.95; if(CFG.selThick==null) CFG.selThick=0.5; if(CFG.selPattern==null) CFG.selPattern="solid";
+    if(CFG.selAnim==null) CFG.selAnim="none"; if(CFG.selAnimSpeed==null) CFG.selAnimSpeed=1; if(CFG.selGlow==null) CFG.selGlow=false; if(CFG.selGlowInt==null) CFG.selGlowInt=0.35; }
   var sg=document.createElement("div"); sg.className="grp"; sg.id="selline";
   var _srow=function(label,key,mn,mx,st){ return '<div class="cfgrow"><span class="rlbl" style="width:52px">'+label+'</span><input type="range" class="rng slrng" data-sk="'+key+'" min="'+mn+'" max="'+mx+'" step="'+st+'" value="'+CFG[key]+'"><span class="rval" data-sv="'+key+'">'+(+CFG[key]).toFixed(2)+'</span></div>'; };
-  var _pat='<div class="cfgrow"><span class="rlbl" style="width:52px">pattern</span><span class="pill selpat" data-sk="selPattern">'+["solid","dashed","dotted"].map(function(o){ return '<button data-v="'+o+'"'+(o===CFG.selPattern?' class="on"':'')+'>'+o+'</button>'; }).join('')+'</span></div>';
+  var _pill=function(label,key,opts,cur){ return '<div class="cfgrow"><span class="rlbl" style="width:52px">'+label+'</span><span class="pill selpill" data-sk="'+key+'">'+opts.map(function(o){ return '<button data-v="'+o+'"'+(o===cur?' class="on"':'')+'>'+o+'</button>'; }).join('')+'</span></div>'; };
+  var _pat=_pill("pattern","selPattern",["solid","dashed","dotted"],CFG.selPattern);
+  var _anim=_pill("motion","selAnim",["none","pulse","flow"],CFG.selAnim);
+  var _glow=_pill("glow","selGlow",["off","on"],CFG.selGlow?"on":"off");
   sg.innerHTML='<div class="grplbl" title="the SELECTED wire’s look — the white highlight tube">SELECTED LINE<button class="slcopy" title="copy this config as JSON">⬘</button></div>'
-    +_srow("opacity","selOpacity",0.1,1,0.05)+_srow("thick","selThick",0.2,2.5,0.1)+_pat;
+    +_srow("opacity","selOpacity",0.1,1,0.05)+_srow("thick","selThick",0.2,2.5,0.1)+_pat
+    +_anim+_srow("speed","selAnimSpeed",0.2,3,0.1)+_glow+_srow("glow ↑","selGlowInt",0,1,0.05);
   body.appendChild(sg);
   [].forEach.call(sg.querySelectorAll(".slrng"), function(inp){ inp.addEventListener("input", function(){ var k=inp.getAttribute("data-sk"); CFG[k]=+inp.value; var vv=sg.querySelector('[data-sv="'+k+'"]'); if(vv) vv.textContent=(+inp.value).toFixed(2); try{ updateConnectors(); }catch(e){} }); });
-  [].forEach.call(sg.querySelectorAll(".selpat button"), function(bt){ bt.onclick=function(){ CFG.selPattern=bt.getAttribute("data-v"); [].forEach.call(sg.querySelectorAll(".selpat button"), function(x){ x.classList.toggle("on", x===bt); }); try{ updateConnectors(); }catch(e){} }; });
-  var _sc=sg.querySelector(".slcopy"); if(_sc) _sc.onclick=function(){ var o={selOpacity:CFG.selOpacity, selThick:CFG.selThick, selPattern:CFG.selPattern}; var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(e){} _sc.innerHTML="✓"; setTimeout(function(){ _sc.innerHTML="⬘"; }, 900); }; };
+  [].forEach.call(sg.querySelectorAll(".selpill"), function(pl){ [].forEach.call(pl.querySelectorAll("button"), function(bt){ bt.onclick=function(){ var k=pl.getAttribute("data-sk"), v=bt.getAttribute("data-v"); CFG[k]=(k==="selGlow")?(v==="on"):v; [].forEach.call(pl.querySelectorAll("button"), function(x){ x.classList.toggle("on", x===bt); }); try{ updateConnectors(); }catch(e){} }; }); });
+  var _sc=sg.querySelector(".slcopy"); if(_sc) _sc.onclick=function(){ var o={selOpacity:CFG.selOpacity, selThick:CFG.selThick, selPattern:CFG.selPattern, selAnim:CFG.selAnim, selAnimSpeed:CFG.selAnimSpeed, selGlow:CFG.selGlow, selGlowInt:CFG.selGlowInt}; var txt=JSON.stringify(o,null,2); window.__uniLastCopy=txt; try{ if(navigator.clipboard) navigator.clipboard.writeText(txt); }catch(e){} _sc.innerHTML="✓"; setTimeout(function(){ _sc.innerHTML="⬘"; }, 900); }; };
 /* ── GOTO (batch 51) — ONE navigation path for card/link chips: select + frame a drawn node;
    a HELD fe-type or function wakes its toggle first (the search rows' behavior, shared). ── */
 window.__uniGoto=function(id){ if(!id) return;

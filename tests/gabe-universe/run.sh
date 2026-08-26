@@ -351,7 +351,7 @@ check('SUBOF[n.layer]' not in page and 'SUBOF[KINDS' not in page, "REGRESSION: t
 check('var SUBSHIFT={ endpoints:0.04' in page, "hull hue-shift map lacks the un-collapsed layer keys")
 check('function _hlCompute' in page and 'window._hlLinkF' in page and 'function _nodeVisibleFn' in page,
       "depth-highlight machinery missing (BFS + wire factor + shared visibility fn)")
-check('kind, R, hf, ea, eb, hov)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
+check('kind, R, hf, ea, eb, hov, sel)' in page and "var _whf=(window._hlLinkF?_hlLinkF(l):1);" in page and "8, _whf," in page,
       "connector wires ignore the highlight factor (or lost the gradient entity args / selected-wire boost)")
 check('.nodeVisibility(function(n){ return _nodeVisibleFn(n); })' in page,
       "node visibility does not go through the shared fn (focus mode dead)")
@@ -419,7 +419,7 @@ check('if(!was && sv[col] && UNIVIS.ent[ent] && !UNIVIS.ent[ent][col]) UNIVIS.en
 check('id="mbOpRng"' in page and 'BADGE OPACITY (operator)' in page and 'if(CFG.mbOp==null) CFG.mbOp=0.6' in page and 'id="badgecfg"' not in page,
       "the GLOBAL badge-opacity slider must live in the Planets pane (not #cfg); the #cfg badge panel must be gone")
 check("Temporary Config</span>" in page, "the top-right config panel must be renamed 'Temporary Config'")
-check('window.__uniAddFocusCfg=function(){ window.__uniHLSeed()' in page and 'window.__uniHLDefaults={' in page and 'id="focuscfg"' not in page and 'focrng' not in page and 'srow("speed"' not in page,
+check('window.__uniAddFocusCfg=function(){ window.__uniHLSeed()' in page and 'window.__uniHLDefaults={' in page and 'id="focuscfg"' not in page and 'focrng' not in page and 'srow("speed","focSpeed"' not in page,
       "the focus/highlight CONFIG PANEL must be retired to a seeder (no #focuscfg, no sliders/pills)")
 check('grpWith("Highlight")' in page and '_hlBtn("focRing"' in page and '_hlBtn("focGlow"' in page and '_hlBtn("othGlow"' in page and '_hlBtn("othRing"' in page and 'entPane.push(hlGrp)' in page,
       "the four highlight toggles (focus ring/glow · others glow/ring) must live in the entity pane")
@@ -457,8 +457,12 @@ check('class:"flagrow ok"' in page and 'no cargo ' in page and 'no test chip ' i
       "each wire section must carry a present/absent FLAG (cross-entity → present; same-entity → no transit)")
 check('window.__uniHovLink===l||window.__uniSelLink===l' in page and 'CFG.selThick!=null)?CFG.selThick:0.5' in page and 'CFG.selPattern)?CFG.selPattern:"solid"' in page,
       "a SELECTED (or hovered) wire must render as a WHITE tube whose opacity/thickness/pattern read from CFG (operator)")
-check('sg.id="selline"' in page and 'SELECTED LINE' in page and '_srow("opacity","selOpacity"' in page and '_srow("thick","selThick"' in page and 'data-sk="selPattern"' in page and 'class="slcopy"' in page,
+check('sg.id="selline"' in page and 'SELECTED LINE' in page and '_srow("opacity","selOpacity"' in page and '_srow("thick","selThick"' in page and '_pill("pattern","selPattern"' in page and 'class="slcopy"' in page,
       "the Temporary Config must carry a SELECTED LINE section (opacity · thick · pattern sliders + copy button) — operator")
+check('_pill("motion","selAnim",["none","pulse","flow"]' in page and '_pill("glow","selGlow",["off","on"]' in page and '_srow("speed","selAnimSpeed"' in page and 'selGlowInt",0,1,0.05' in page and 'class="pill selpill"' in page,
+      "SELECTED LINE must also carry a motion pill (none/pulse/flow) + speed slider + a SEPARATE glow toggle + glow-intensity slider (operator)")
+check('window.__uniSelMeshes=[]' in page and 'CFG.selGlow){ var _gm=' in page and '_sr*2.6' in page and 'window.__uniSelCurve=_crv' in page and 'function _selAnim()' in page and '_selPhase=(_selPhase + 0.05*spd)' in page,
+      "the selected wire must track its meshes+curve, build a wider GLOW tube on selGlow, and animate via a bounded-phase _selAnim rAF (pulse opacity · flow marching dots) — operator")
 check('if(col!=="subs"){ var eon=UNIVIS.ent[ent][col];' in page and '_entSubKeys(ent).forEach(function(k){ (UNIVIS.sub[k]||(UNIVIS.sub[k]=Object.assign({},UNIVIS.ent[ent]||_VISDEF)))[col]=eon?1:0; })' in page,
       "the fleet ENTITY column button must cascade to ALL its clusters for EVERY column except subs — no partial dimmed state (operator)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
