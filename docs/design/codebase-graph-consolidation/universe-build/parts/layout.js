@@ -844,6 +844,7 @@ function _walkGo(di){ if(!WALK.steps.length) return;
     n=NIDS[id];
     if(n&&HL.on) try{ _hlCompute(); _hlRestyle(); }catch(e){} }
   if(!n){ _walkRender(); return; }                                            // the pill tracks WALK.i even on a dead step
+  if(n && window.__uniReveal && typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(n)){ try{ __uniReveal(n.id); }catch(_re){} }   // a step SELECTS its element → reveal its cluster+entity if the fleet has it hidden (operator)
   if(WALK.mode==="journey" && di===0) _frameSet(WALK.steps);   // selection shows the WHOLE path; arrows dive per step
   else _aimAt(n);
   SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook
