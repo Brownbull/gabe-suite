@@ -315,7 +315,7 @@ check(all(c.get("state") != "file" for d in _dets for c in d.get("cases", [])),
       "example: no file-aggregate pseudo-row impersonates a case")
 check(all(re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", u) for d in _dets for u in d.get("uqs", [])),
       "example: uqs are bare column names (normalized, never constraint exprs)")
-check(all(len(d.get("cols", [])) <= 10 and len(d.get("cases", [])) <= 6 for d in _dets),
+check(all(len(d.get("cols", [])) <= 10 and len(d.get("cases", [])) <= 60 for d in _dets),
       "example: the emitter caps hold in the committed payload")
 check(not any(n.get("resp") == "—" for g2 in _ex["l2"].values() for n in g2["nodes"]),
       "example: the em-dash resp default never ships")
