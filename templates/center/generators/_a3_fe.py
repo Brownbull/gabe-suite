@@ -370,6 +370,9 @@ def fe_arm(root: Path, entities: dict[str, Any] | frozenset[str] | None,
         data, reason = run_extractor(pkg, root)
         if data is None:
             return {"present": False, "reason": reason}
+        if not data.get("files"):   # a tsconfig resolved but matched 0 source files → HONEST-EMPTY, never a false present=True/0-pieces (the Vite references-stub trap)
+            return {"present": False,
+                    "reason": f"typescript {data.get('ts')} · 0 source files (tsconfig matched none — references not followed or empty include)"}
         out = build_fe(data, entities, screens)
         out["present"] = True
         out["reason"] = f"typescript {data.get('ts')} · {data.get('files')} files"

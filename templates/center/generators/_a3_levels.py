@@ -50,7 +50,7 @@ def _bare_cls(resp: str) -> str:
     it. Returns resp unchanged when there is no wrapper. Grabs the LAST CamelCase identifier
     (the payload type), which handles nested/optional/union wrappers without a real parser."""
     s = str(resp or "")
-    ids = re.findall(r"[A-Z][A-Za-z0-9_]+", s)
+    ids = [i for i in re.findall(r"[A-Z][A-Za-z0-9_]+", s) if i != "None"]   # PEP-604 `X | None` ends in None; it is not the payload
     return ids[-1] if ids else s
 
 

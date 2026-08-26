@@ -372,7 +372,7 @@ def _bare_cls(resp: str) -> str:
     """The bare schema class inside a container return (``list[X]`` · ``Optional[X]`` · ``list[X] | None``
     → ``X``): the LAST CamelCase id. Mirrors ``_a3_levels._bare_cls`` so the C4 payload arm agrees with the
     levels arm (audit gap #2: a raw ``list[X]`` resp silently dropped the payload badge)."""
-    ids = re.findall(r"[A-Z][A-Za-z0-9_]+", str(resp or ""))
+    ids = [i for i in re.findall(r"[A-Z][A-Za-z0-9_]+", str(resp or "")) if i != "None"]   # PEP-604 `X | None` ends in None; drop it so X is the payload
     return ids[-1] if ids else str(resp or "")
 
 

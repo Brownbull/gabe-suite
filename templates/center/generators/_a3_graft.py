@@ -106,7 +106,13 @@ def _defuse_ignore(root: Path) -> None:
         kept, dropped = [], 0
         for line in ignore.read_text(encoding="utf-8", errors="replace").splitlines():
             s = line.strip()
-            if s in _GRAFT_IGNORE_LINES or (s.startswith("#") and "graft" in s.lower()):
+            _low = s.lower()
+            # graft's block is two comments + three patterns; its SECOND comment names ".gitignore"/
+            # "re-admit"/"ripgrep", not "graft", so the old "graft"-only filter left it as a growing
+            # orphan (graft re-appends the whole block each build → +1 line/regen). Drop the whole signature.
+            if (s in _GRAFT_IGNORE_LINES
+                    or (s.startswith("#") and ("graft" in _low or "re-admit" in _low
+                                               or "ripgrep" in _low or ".gitignore" in _low))):
                 dropped += 1
                 continue
             kept.append(line)
@@ -121,9 +127,14 @@ def _defuse_ignore(root: Path) -> None:
 
 
 def load_wiring(idx: Path) -> tuple[dict[str, Any], str]:
-    """Read the index and fingerprint its bytes (sha256 → 12 hex chars)."""
+    """Read the index and fingerprint its bytes (sha256 → 12 hex chars). A parseable-but-
+    non-object payload (list/int/str/null from a graft error or schema change) raises ValueError
+    so the caller names the STATE, never leaks a `.get` AttributeError into the committed reason."""
     raw = Path(idx).read_bytes()
-    return json.loads(raw), hashlib.sha256(raw).hexdigest()[:12]
+    data = json.loads(raw)
+    if not isinstance(data, dict):
+        raise ValueError("graft index is not a JSON object")
+    return data, hashlib.sha256(raw).hexdigest()[:12]
 
 
 def _is_noise(path: str) -> bool:
@@ -237,8 +248,8 @@ def _behind_of(start: str, adj: dict[str, list[str]]) -> dict[str, Any]:
         res["names"] = names[:_BEHIND_NAMES_CAP]
         if len(names) > _BEHIND_NAMES_CAP:
             res["names_more"] = len(names) - _BEHIND_NAMES_CAP
-    if frontier and depth >= _BEHIND_DEPTH_CAP:   # the cap clipped a deeper walk
-        res["truncated"] = True
+    if depth >= _BEHIND_DEPTH_CAP and any(v not in seen for u in frontier for v in (adj.get(u) or ())):
+        res["truncated"] = True   # the cap clipped a walk that STILL had an unvisited callee — not a complete walk that merely ended at depth==cap
     return res
 
 
@@ -659,7 +670,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             return {"present": False, "reason": reason}
         try:
             wiring, fp = load_wiring(idx)
-        except (json.JSONDecodeError, UnicodeDecodeError):
+        except (json.JSONDecodeError, UnicodeDecodeError, ValueError):
             # a truncated/corrupt index (graft writes non-atomically; a timeout can
             # kill it mid-write) — name the STATE, never leak a parser traceback
             # into the committed stats. The next successful build self-heals it.

@@ -30,7 +30,25 @@ const cfgPath = ts.findConfigFile(WEB, ts.sys.fileExists, 'tsconfig.json');
 if (!cfgPath) { process.stderr.write('fe-extract: no tsconfig.json at or above ' + WEB + '\n'); process.exit(4); }
 const cfg = ts.readConfigFile(cfgPath, ts.sys.readFile);
 const parsed = ts.parseJsonConfigFileContent(cfg.config || {}, ts.sys, path.dirname(cfgPath));
-const program = ts.createProgram({ rootNames: parsed.fileNames, options: parsed.options });
+// PROJECT REFERENCES: the default Vite React+TS root tsconfig is a stub — files:[] + references to
+// tsconfig.app.json/tsconfig.node.json, no include. Its own fileNames is empty, so expand the
+// referenced configs and union their fileNames, else the WHOLE frontend silently drops (147 files → 0).
+let fileNames = parsed.fileNames || [];
+let options = parsed.options;
+if (fileNames.length === 0 && parsed.projectReferences && parsed.projectReferences.length) {
+  const seen = new Set(); const merged = [];
+  for (const ref of parsed.projectReferences) {
+    let rp = ref && ref.path; if (!rp) continue;
+    if (ts.sys.directoryExists && ts.sys.directoryExists(rp)) rp = ts.findConfigFile(rp, ts.sys.fileExists, 'tsconfig.json');
+    if (!rp || !ts.sys.fileExists(rp)) continue;
+    const rcfg = ts.readConfigFile(rp, ts.sys.readFile);
+    const rparsed = ts.parseJsonConfigFileContent(rcfg.config || {}, ts.sys, path.dirname(rp));
+    for (const fn of (rparsed.fileNames || [])) { if (!seen.has(fn)) { seen.add(fn); merged.push(fn); } }
+    options = Object.assign({}, rparsed.options, options);   // root options keep precedence
+  }
+  if (merged.length) fileNames = merged;
+}
+const program = ts.createProgram({ rootNames: fileNames, options });
 const checker = program.getTypeChecker();
 
 // the repo root = nearest ancestor of WEB holding .git (else WEB's grandparent); paths are

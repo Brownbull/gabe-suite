@@ -1009,6 +1009,33 @@ check(gn2["stats"].get("consumes") == 0 and not any(e.get("kind") in ("nests", "
       for s in gn2["l2"].values() for e in s.get("edges", [])),
       "field-less schemas must emit ZERO composition wires (the checker can stay silent)")
 
+# ── GRAFT ROBUSTNESS (review findings 11·12·13) ──
+_adjc = {}
+for _i in range(GG._BEHIND_DEPTH_CAP): _adjc.setdefault(f"a{_i}", []).append(f"a{_i+1}")
+_rc = GG._behind_of("a0", _adjc)
+check(_rc["depth"] == GG._BEHIND_DEPTH_CAP and "truncated" not in _rc,
+      "F11: a COMPLETE chain ending exactly at the depth cap is NOT flagged truncated")
+_adjd = {}
+for _i in range(GG._BEHIND_DEPTH_CAP + 10): _adjd.setdefault(f"b{_i}", []).append(f"b{_i+1}")
+check(GG._behind_of("b0", _adjd).get("truncated") is True,
+      "F11: a chain that truly exceeds the cap IS flagged truncated (guard can fire)")
+_td = pathlib.Path(tempfile.mkdtemp())
+_ix = _td / "wiring.json"; _ix.write_text("[]")
+try:
+    GG.load_wiring(_ix); check(False, "F12: non-object index should raise")
+except ValueError:
+    check(True, "F12: a non-object index raises ValueError (routed to the honest 'unreadable' reason, not a leaked AttributeError)")
+except Exception as _e:
+    check(False, f"F12: wrong exception {_e!r}")
+_ig = _td / ".ignore"
+_ig.write_text("# graft's cards are gitignored...\n# .ignore before .gitignore, so this re-admits the tree to search only.\n!graft/\ngraft/.cache/\ngraft/.graph/\n")
+GG._defuse_ignore(_td)
+check(not _ig.exists(), "F13: a graft-ONLY .ignore (incl. its non-'graft' second comment) is UNLINKED, not left as a growing orphan")
+_ig.write_text("# my rule\nbuild/\n!graft/\ngraft/.cache/\n")
+GG._defuse_ignore(_td)
+check(_ig.exists() and "build/" in _ig.read_text() and "graft" not in _ig.read_text(),
+      "F13: a user's real .ignore patterns survive; only graft's signature is stripped")
+
 print(f"arch-graph battery: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY

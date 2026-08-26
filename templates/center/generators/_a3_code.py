@@ -117,6 +117,29 @@ def _first_sentence(doc: str | None) -> str:
     return " ".join(doc.strip().split("\n\n")[0].split())
 
 
+def _safe_read(path) -> str | None:
+    """A file's text, never raising on a bad encoding (errors='replace') or a vanished
+    file (OSError → None). One non-UTF-8 file must not abort the whole regen (E3)."""
+    try:
+        return path.read_text(errors="replace")
+    except OSError:
+        return None
+
+
+def _safe_parse(path):
+    """(tree, src) for a Python file, or (None, src|None) — NEVER raises. A file that
+    is not valid Python for the running interpreter (a WIP syntax error, newer syntax on
+    an older interpreter, or non-Python mapped into a Python layer) is skipped, not fatal.
+    Mirrors the try/except the newer detectors (function_insight/_def_spans) already use."""
+    src = _safe_read(path)
+    if src is None:
+        return None, None
+    try:
+        return ast.parse(src), src
+    except (SyntaxError, ValueError):
+        return None, src
+
+
 def parse_endpoints(repo: Path, files: list[str]) -> list[dict]:
     """FastAPI surface via ast: decorator method+path, router prefix, the
     handler's REAL docstring, response_model and status_code when literal."""
@@ -125,13 +148,16 @@ def parse_endpoints(repo: Path, files: list[str]) -> list[dict]:
         path = repo / rel
         if not path.exists():
             continue
-        tree = ast.parse(path.read_text())
+        tree, _src = _safe_parse(path)
+        if tree is None:                       # unparseable file → skip, don't abort the build
+            continue
         prefix = ""
         for node in ast.walk(tree):
             if (isinstance(node, ast.Call)
                     and getattr(node.func, "id", "") == "APIRouter"):
                 for kw in node.keywords:
-                    if kw.arg == "prefix" and isinstance(kw.value, ast.Constant):
+                    if (kw.arg == "prefix" and isinstance(kw.value, ast.Constant)
+                            and isinstance(kw.value.value, str)):   # a non-str prefix would break (prefix + sub)
                         prefix = kw.value.value
         for node in ast.walk(tree):
             if not isinstance(node, (ast.AsyncFunctionDef, ast.FunctionDef)):
@@ -142,7 +168,8 @@ def parse_endpoints(repo: Path, files: list[str]) -> list[dict]:
                 method = dec.func.attr
                 if method not in ("get", "post", "put", "patch", "delete"):
                     continue
-                has_path = dec.args and isinstance(dec.args[0], ast.Constant)
+                has_path = (dec.args and isinstance(dec.args[0], ast.Constant)
+                            and isinstance(dec.args[0].value, str))   # str-only → (prefix + sub) can't TypeError
                 sub = dec.args[0].value if has_path else ""
                 resp = status = None
                 for kw in dec.keywords:
@@ -175,9 +202,11 @@ def parse_schemas(repo: Path, files: list[str]) -> list[dict]:
         path = repo / rel
         if not path.exists():
             continue
-        src = path.read_text()
+        tree, src = _safe_parse(path)
+        if tree is None:                       # unparseable schema file → skip, don't abort
+            continue
         src_lines = src.splitlines()
-        for node in ast.parse(src).body:
+        for node in tree.body:
             if not isinstance(node, ast.ClassDef):
                 continue
             fields = [(i.target.id, ast.unparse(i.annotation),
@@ -204,14 +233,15 @@ def parse_defines(repo: Path, rel: str) -> list[str]:
         return []
     if rel.endswith(".py"):
         names = []
-        for node in ast.parse(path.read_text()).body:
+        _tree, _ = _safe_parse(path)
+        for node in (_tree.body if _tree is not None else []):   # unparseable → no defines, not fatal
             if isinstance(node, ast.ClassDef):
                 names.append(node.name)
             elif (isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
                   and not node.name.startswith("_")):
                 names.append(f"{node.name}()")
         return names
-    src = path.read_text()
+    src = _safe_read(path) or ""   # non-UTF-8 TS/JS never aborts the regen
     names = _re.findall(
         r"export\s+(?:default\s+)?(?:async\s+)?"
         r"(?:function|const|class|interface|type)\s+([A-Za-z_]\w*)", src)
@@ -281,9 +311,10 @@ def parse_models(repo: Path, files: list[str], only: list[str] | None) -> list[d
         path = repo / rel
         if not path.exists():
             continue
-        _src = path.read_text()
+        tree, _src = _safe_parse(path)
+        if tree is None:                       # unparseable model file → skip, don't abort
+            continue
         _src_lines = _src.splitlines()
-        tree = ast.parse(_src)
         for node in tree.body:
             if not isinstance(node, ast.ClassDef):
                 continue
@@ -295,8 +326,10 @@ def parse_models(repo: Path, files: list[str], only: list[str] | None) -> list[d
             rels: list[dict] = []
             uqs: list[str] = []
             for item in node.body:
-                if (isinstance(item, ast.Assign) and
-                        getattr(item.targets[0], "id", "") == "__tablename__"):
+                if (isinstance(item, ast.Assign) and item.targets
+                        and getattr(item.targets[0], "id", "") == "__tablename__"
+                        and isinstance(item.value, ast.Constant)
+                        and isinstance(item.value.value, str)):   # a computed/f-string/prefixed name stays UNDOCUMENTED, never crashes (mirrors _model_table_map)
                     tab = item.value.value
                 if (isinstance(item, ast.Assign) and
                         getattr(item.targets[0], "id", "") == "__table_args__"):
@@ -350,7 +383,7 @@ def code_map(repo: Path, layers: dict) -> list[tuple[str, str, int]]:
                 p = Path(f)
                 if p.is_file() and ".test." not in p.name:
                     rows.append((layer, str(p.relative_to(repo)),
-                                 len(p.read_text().splitlines())))
+                                 len((_safe_read(p) or "").splitlines())))
     return rows
 
 
@@ -509,7 +542,7 @@ def model_insight(repo: Path) -> dict:
     for f in sorted(py_files):
         p = repo / f
         if p.exists():
-            texts[f] = p.read_text()
+            texts[f] = _safe_read(p) or ""
     names = set(classes)
     for c in classes.values():
         c["touches"] = sum(1 for e in all_eps if c["cls"] in e.get("touches", []))
@@ -875,8 +908,8 @@ def function_insight(repo: Path) -> dict:
                 file_entity.setdefault(f, slug)
         for e in v["endpoints"]:
             handlers.add((e["fn"], e["file"]))
-    texts = {f: (repo / f).read_text() for f in sorted(file_layer)
-             if (repo / f).exists()}
+    texts = {f: (_safe_read(repo / f) or "") for f in sorted(file_layer)
+             if (repo / f).exists()}   # encoding-safe: a legacy-encoded file must not abort function_insight
     _PY_TEXTS.update(texts)
     # pre-parse once (each tree reused for the model-map AND the fn walk), then
     # build the GLOBAL model→table map before any fn is inspected — a write can

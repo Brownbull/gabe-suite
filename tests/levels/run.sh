@@ -294,6 +294,12 @@ _lsw2 = _a3_levels.build_levels(_msw2, _a3_graph.build_c4_graph(_msw2))
 ck("NeverUsed" not in {s["cls"] for s in _lsw2["pieces"]["users"]["schemas"]},
    "SWEEP-C MUTATION: a schema referenced by NO endpoint (any entity) is still pruned")
 
+# ── _bare_cls · PEP-604 optional (review finding 3) — `X | None` must resolve to X, not the literal 'None' ──
+for _s, _exp in (("list[Recipe] | None", "Recipe"), ("Recipe | None", "Recipe"),
+                 ("dict[str,Recipe] | None", "Recipe"), ("Optional[Recipe]", "Recipe"), ("list[Recipe]", "Recipe")):
+    ck(_a3_levels._bare_cls(_s) == _exp and _a3_graph._bare_cls(_s) == _exp,
+       f"_bare_cls({_s!r})→{_exp!r} in BOTH arms (was 'None' on the | None form)")
+
 print(f"levels battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

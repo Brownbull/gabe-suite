@@ -174,6 +174,30 @@ if ts_dir and shutil.which("node"):
     same = json.dumps({k: live.get(k) for k in ("pieces", "edges", "homes")}, sort_keys=True) == \
            json.dumps({k: fe[k] for k in ("pieces", "edges", "homes")}, sort_keys=True)
     check(same, "LIVE: the compiler pass re-derives the FROZEN fixture graph exactly (pieces · edges · homes)")
+    # ── review finding 2: a files:[]+references tsconfig (the default Vite React+TS stub) must be FOLLOWED ──
+    import tempfile
+    _td = Path(tempfile.mkdtemp())
+    try:
+        (_td / "src").mkdir()
+        (_td / "src" / "Thing.tsx").write_text("export function Thing(){ return null as any }\n")
+        (_td / "package.json").write_text('{"name":"refstub","version":"0.0.0","dependencies":{"react":"*"}}\n')
+        (_td / "tsconfig.json").write_text('{"files":[],"references":[{"path":"./tsconfig.app.json"}]}\n')
+        (_td / "tsconfig.app.json").write_text('{"compilerOptions":{"jsx":"react-jsx","module":"esnext","moduleResolution":"bundler","skipLibCheck":true},"include":["src"]}\n')
+        os.environ["GABE_TS_DIR"] = ts_dir
+        _ref = _a3_fe.fe_arm(_td, {}, [])
+        del os.environ["GABE_TS_DIR"]
+        check(_ref.get("present") is True and any("Thing" in p.get("name", "") for p in _ref.get("pieces", [])),
+              f"LIVE: a files:[]+references tsconfig is FOLLOWED — frontend recovered, not silently dropped ({_ref.get('reason')})")
+        # and a tsconfig that genuinely matches 0 files degrades HONESTLY (present=False), never present=True/0
+        (_td / "tsconfig.json").write_text('{"include":["does-not-exist"]}\n')
+        (_td / "tsconfig.app.json").unlink()
+        os.environ["GABE_TS_DIR"] = ts_dir
+        _emp = _a3_fe.fe_arm(_td, {}, [])
+        del os.environ["GABE_TS_DIR"]
+        check(_emp.get("present") is False and "0 source files" in _emp.get("reason", ""),
+              f"LIVE: a tsconfig matching 0 files → present=False (honest-empty, not a false success) ({_emp.get('reason')})")
+    finally:
+        shutil.rmtree(_td, ignore_errors=True)
 else:
     skipped.append("LIVE extractor case — no `typescript` resolvable (set GABE_TS_DIR)")
 

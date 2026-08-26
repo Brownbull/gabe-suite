@@ -171,6 +171,44 @@ check(epmw('@router.get("/d")\ndef d(limit=SomeHelper(10)):\n    pass') == [],
 check(epmw('@router.get("/m")\ndef m(ctx=get_auth_context):\n    pass') == [],
       "a bare default (no Depends) is NOT middleware (mutation guard)")
 
+# ── PARSE ROBUSTNESS (review findings 1·6·7·8) — a bad file must NEVER abort the whole regen ──
+class _FP:
+    def __init__(self, t=None, raw=None): self._t=t; self._raw=raw
+    def exists(self): return True
+    def read_text(self, errors=None):
+        return self._raw.decode("utf-8", errors=errors or "strict") if self._raw is not None else self._t
+    def relative_to(self, o): return self
+def _repo(t=None, raw=None):
+    fp=_FP(t, raw)
+    class R:
+        def __truediv__(self, rel): return fp
+    return R()
+
+# F1 — a non-literal __tablename__ (computed/f-string/prefixed) must not crash parse_models (stays undocumented)
+for _tn in ("TBL", 'f"{P}_users"', 'P + "users"'):
+    try:
+        _r = C.parse_models(_repo(f'class U(Base):\n    __tablename__ = {_tn}\n    id: Mapped[int]\n'), ["m.py"], None)
+        check(isinstance(_r, list), f"non-literal __tablename__={_tn} → no crash (%r)" % _r)
+    except Exception as _e:
+        check(False, f"non-literal __tablename__={_tn} CRASHED: {_e!r}")
+check(C.parse_models(_repo('class U(Base):\n    __tablename__ = "users"\n    id: Mapped[int]\n'), ["m.py"], None)[0]["table"] == "users",
+      "a literal __tablename__ still resolves")
+
+# F6 — one unparseable file is SKIPPED, not fatal, in every legacy detector
+check(C.parse_endpoints(_repo('def f(:\n  pass'), ["a.py"]) == [], "syntax-error endpoint file → [] (skipped)")
+check(C.parse_schemas(_repo('class X(:\n'), ["s.py"]) == [], "syntax-error schema file → [] (skipped)")
+check(C.parse_models(_repo('class X(:\n'), ["m.py"], None) == [], "syntax-error model file → [] (skipped)")
+
+# F7 — a non-UTF-8 file decodes with replacement, never raises
+check(isinstance(C.parse_endpoints(_repo(raw=b'x = "caf\xe9"\n@router.get("/x")\ndef h(): pass'), ["e.py"]), list),
+      "non-UTF-8 source → safe read, no crash")
+
+# F8 — a non-string route prefix / path does not TypeError the build
+check(all(isinstance(e["path"], str) for e in C.parse_endpoints(_repo('router = APIRouter(prefix=123)\n@router.get("/x")\ndef h(): pass'), ["e.py"])),
+      "int APIRouter prefix → no (prefix + sub) TypeError, path stays str")
+check(isinstance(C.parse_endpoints(_repo('@router.get(b"/x")\ndef h(): pass'), ["e.py"]), list),
+      "bytes route path → no crash")
+
 print(f"orm-access: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
