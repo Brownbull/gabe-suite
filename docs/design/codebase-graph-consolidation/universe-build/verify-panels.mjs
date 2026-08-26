@@ -313,7 +313,7 @@ const flcfg = await p.evaluate(() => {
   lg.querySelector('.lgmin').click();
   const lgMin = lg.getBoundingClientRect().height < 60;                      // minimize collapses to the head
   lg.querySelector('.lgmin').click();
-  const lgCompact = h1 === h2 && h2 === h3 && h1 <= 340 && lgMin;            // ONE size, whatever the tab — and it minimizes
+  const lgCompact = h1 === h2 && h2 === h3 && h1 <= 520 && lgMin;            // ONE size, whatever the tab — and it minimizes (height raised 330→500, operator: no scrollbar)
   btn('subs').click();
   const cluFull = U('BACKEND') && U('FRONTEND')                                          // two per-side core groups
     && !!document.querySelector('#flsbody .pill[data-grp="coreByBE"]') && !!document.querySelector('#flsbody .pill[data-grp="coreByFE"]')

@@ -131,7 +131,9 @@ window.__uniAssetThumb=function(buildFn, title){ var cv=document.createElement("
     var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
     var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.9));
     var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
-    var cam=new T.PerspectiveCamera(45, cv.width/cv.height, 0.1, 1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+    var cam=new T.PerspectiveCamera(45, cv.width/cv.height, 0.1, 1000);
+    var R=(new T.Box3().setFromObject(pivot)).getBoundingSphere(new T.Sphere()).radius||1;   // FRAME-FIT: fill the square regardless of the asset's native size (the sat was tiny) — operator
+    var _d=(R/Math.tan(45*Math.PI/360))*1.12; cam.position.copy(new T.Vector3(2.5,4,18).normalize().multiplyScalar(_d)); cam.lookAt(0,0,0);
     var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height};
     PAL_CELLS.push(entry); window.__uniCardCells.push(entry); } }catch(e){}
   return cv; };
@@ -163,7 +165,11 @@ for _clr in ['function showPanel(n){ var K=n.K;', 'function showLinkPanel(l){', 
 #    test chip ↔ l.proven; ships fly cross-entity wires only). Inserted BEFORE the Trust section in __link. ──
 _TRUST_ANCHOR = 'E("div",{class:"sec"}, sechd("info","Trust"),'
 assert _TRUST_ANCHOR in text, "link-card Trust anchor missing — cannot insert the Transit section"
-_TRANSIT = ('E("div",{class:"sec"}, sechd("truck","Transit"),'
+_TRANSIT = ('E("div",{class:"sec"}, (function(){ var _th=sechd("truck","Transit");'
+  ' try{ if(window.__uniAssetThumb){ var _tw=document.createElement("span"); _tw.className="asetrow";'   # the ACTUAL cargo + test-chip 3D assets the wire carries (operator)
+  ' _tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }, "cargo shuttle \\u2014 the wire\\u0027s payload asset"));'
+  ' _tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.testchip(); }, "test chip \\u2014 the wire\\u0027s cross-entity test asset"));'
+  ' _th.append(_tw); } }catch(_te){} return _th; })(),'
   ' kv("truck","cargo", l.payload? ("carries "+l.payload+" data field"+(l.payload>1?"s":"")+" · the shuttle grows with the payload") : "no payload · no cargo shuttle"),'
   ' kv("test","test chip", l.proven? "test-proven route · the green chip flies it" : "not test-proven · no green chip"),'
   ' E("div",{class:"sublbl"}, (typeof linkCross==="function"&&linkCross(l))? "ships fly this cross-entity wire" : "same-entity wire · no ships transit"))')

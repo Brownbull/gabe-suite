@@ -190,7 +190,7 @@
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
      and navshow(60). */
   #fleet{ position:fixed; left:calc(var(--navw) + 12px); right:auto; top:calc(var(--topbarh) + 10px); z-index:50;
-    width:296px; min-width:230px; max-width:520px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
+    width:344px; min-width:230px; max-width:520px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
     overflow-y:auto; transition:left .18s ease; scrollbar-width:thin; }
   #fleet .flresize{ position:absolute; top:0; right:0; width:8px; height:100%; cursor:ew-resize; z-index:2;
     background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 22%, transparent)); opacity:0; transition:opacity .12s; }
@@ -229,6 +229,13 @@
   /* ── LEGEND refit (batch 43): the bottom-left panel wears the SAME chrome as the fleet/controls ── */
   #elegend{ background:var(--panel) !important; border:1px solid var(--line) !important; border-radius:12px !important;
     box-shadow:0 8px 30px #0006 !important; font:13px/1.4 var(--font-ui) !important; }
+  /* SECTION COUNTER moves LEFT — next to its title/info, not right-aligned (operator): icon · title · info · badge */
+  .sechd .cnt{ margin-left:0 !important; }
+  /* FLEET row: the colored dot + counter MERGE into ONE entity-colored counter; the entity counter is bigger and IS the show/hide-clusters button (operator) */
+  #fleet .flrow:not(.flsub):not(.flmaster) .fldot{ display:none; }
+  #fleet .flcnt{ color:#fff !important; background:var(--flc, var(--muted)) !important; border-color:transparent !important; }
+  #fleet .flrow:not(.flsub):not(.flmaster) .flcnt.flexp{ font-size:10px; padding:2px 6px; min-width:20px; text-align:center; }
+  #fleet .flrow.flsub .flcnt{ color:#fff !important; }
   #elegend .lghd{ display:flex !important; align-items:center; gap:8px; padding:8px 11px !important;
     border-bottom:1px solid var(--line) !important; background:transparent !important; }
   #elegend .lghd b{ font:700 10.5px/1 var(--font-ui) !important; text-transform:uppercase; letter-spacing:.08em;
@@ -247,7 +254,7 @@
   #elegend .lgsub.on{ color:var(--accent) !important; }
   #elegend .lgbody{ background:transparent !important; border-radius:0 0 12px 12px !important; }
   /* ── batch 44: compaction — TYPES reads in TWO columns; the box hugs its content ── */
-  #elegend{ height:330px !important; width:328px !important; display:flex; flex-direction:column; }   /* ONE fixed size, every tab — bodies scroll */
+  #elegend{ height:500px !important; width:328px !important; display:flex; flex-direction:column; }   /* taller (was 330) → the legend body fits without a scrollbar (operator) */
   #elegend.min{ height:auto !important; width:auto !important; min-width:150px; }                      /* the fixed height must NOT beat the minimize */
   #elegend.min .lgtabs, #elegend.min .lgsubtabs, #elegend.min .lgbody{ display:none !important; }
   #elegend.min .lghd{ border-bottom:none !important; }
@@ -472,6 +479,9 @@
   canvas.asetthumb{ margin-left:auto; width:46px; height:36px; flex:0 0 auto; border-radius:6px;
     background:linear-gradient(180deg,rgba(120,140,180,0.10),rgba(120,140,180,0.03)); }
   .sechd canvas.asetthumb{ margin-top:-3px; margin-bottom:-3px; }
+  /* wire-card Transit: cargo + test-chip thumbnails sit TOGETHER on the right (operator) */
+  .asetrow{ margin-left:auto; display:inline-flex; gap:4px; align-items:center; }
+  .asetrow canvas.asetthumb{ margin-left:0; }
   /* risk flag rows (god-object · unguarded · conflict) — carry the red raider asset, operator */
   .flagssec{ display:flex; flex-direction:column; gap:5px; margin:10px 0; padding:2px 0; }
   .flagrow{ display:flex; align-items:center; gap:6px; padding:4px 7px; border-radius:7px; font-size:.9em; font-weight:600;

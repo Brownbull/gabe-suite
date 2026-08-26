@@ -1185,10 +1185,10 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   var feEnts=_ents.filter(function(e){ return __uniIsFeEnt(e); });
   var _entRow=function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
     var r='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' — click to SELECT it (panel + camera); the count expands its clusters">'
-      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt flexp" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+(window.__uniEntLabel?__uniEntLabel(e):e)+'</span>'
+      +'<b class="flcnt flexp" style="--flc:'+(ENT[e]||"#888")+'" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+(window.__uniEntLabel?__uniEntLabel(e):e)+'</span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
     if(open) gk.forEach(function(s){
-      r+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
+      r+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt" style="--flc:'+(ENT[e]||"#888")+'">'+gs[s]+'</b>'+s+'</span>'
         +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join(''); r+='</div>'; });
     return r; };

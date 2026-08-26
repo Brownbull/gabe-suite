@@ -336,7 +336,7 @@
      corner); max-height stays clear of the 470px legend below (min floor 240px). z between legend(45)
      and navshow(60). */
   #fleet{ position:fixed; left:calc(var(--navw) + 12px); right:auto; top:calc(var(--topbarh) + 10px); z-index:50;
-    width:296px; min-width:230px; max-width:520px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
+    width:344px; min-width:230px; max-width:520px; max-height:max(240px, calc(100vh - var(--topbarh) - 500px));
     overflow-y:auto; transition:left .18s ease; scrollbar-width:thin; }
   #fleet .flresize{ position:absolute; top:0; right:0; width:8px; height:100%; cursor:ew-resize; z-index:2;
     background:linear-gradient(90deg, transparent, color-mix(in srgb, var(--accent) 22%, transparent)); opacity:0; transition:opacity .12s; }
@@ -375,6 +375,13 @@
   /* ── LEGEND refit (batch 43): the bottom-left panel wears the SAME chrome as the fleet/controls ── */
   #elegend{ background:var(--panel) !important; border:1px solid var(--line) !important; border-radius:12px !important;
     box-shadow:0 8px 30px #0006 !important; font:13px/1.4 var(--font-ui) !important; }
+  /* SECTION COUNTER moves LEFT — next to its title/info, not right-aligned (operator): icon · title · info · badge */
+  .sechd .cnt{ margin-left:0 !important; }
+  /* FLEET row: the colored dot + counter MERGE into ONE entity-colored counter; the entity counter is bigger and IS the show/hide-clusters button (operator) */
+  #fleet .flrow:not(.flsub):not(.flmaster) .fldot{ display:none; }
+  #fleet .flcnt{ color:#fff !important; background:var(--flc, var(--muted)) !important; border-color:transparent !important; }
+  #fleet .flrow:not(.flsub):not(.flmaster) .flcnt.flexp{ font-size:10px; padding:2px 6px; min-width:20px; text-align:center; }
+  #fleet .flrow.flsub .flcnt{ color:#fff !important; }
   #elegend .lghd{ display:flex !important; align-items:center; gap:8px; padding:8px 11px !important;
     border-bottom:1px solid var(--line) !important; background:transparent !important; }
   #elegend .lghd b{ font:700 10.5px/1 var(--font-ui) !important; text-transform:uppercase; letter-spacing:.08em;
@@ -393,7 +400,7 @@
   #elegend .lgsub.on{ color:var(--accent) !important; }
   #elegend .lgbody{ background:transparent !important; border-radius:0 0 12px 12px !important; }
   /* ── batch 44: compaction — TYPES reads in TWO columns; the box hugs its content ── */
-  #elegend{ height:330px !important; width:328px !important; display:flex; flex-direction:column; }   /* ONE fixed size, every tab — bodies scroll */
+  #elegend{ height:500px !important; width:328px !important; display:flex; flex-direction:column; }   /* taller (was 330) → the legend body fits without a scrollbar (operator) */
   #elegend.min{ height:auto !important; width:auto !important; min-width:150px; }                      /* the fixed height must NOT beat the minimize */
   #elegend.min .lgtabs, #elegend.min .lgsubtabs, #elegend.min .lgbody{ display:none !important; }
   #elegend.min .lghd{ border-bottom:none !important; }
@@ -618,6 +625,9 @@
   canvas.asetthumb{ margin-left:auto; width:46px; height:36px; flex:0 0 auto; border-radius:6px;
     background:linear-gradient(180deg,rgba(120,140,180,0.10),rgba(120,140,180,0.03)); }
   .sechd canvas.asetthumb{ margin-top:-3px; margin-bottom:-3px; }
+  /* wire-card Transit: cargo + test-chip thumbnails sit TOGETHER on the right (operator) */
+  .asetrow{ margin-left:auto; display:inline-flex; gap:4px; align-items:center; }
+  .asetrow canvas.asetthumb{ margin-left:0; }
   /* risk flag rows (god-object · unguarded · conflict) — carry the red raider asset, operator */
   .flagssec{ display:flex; flex-direction:column; gap:5px; margin:10px 0; padding:2px 0; }
   .flagrow{ display:flex; align-items:center; gap:6px; padding:4px 7px; border-radius:7px; font-size:.9em; font-weight:600;
@@ -2551,10 +2561,10 @@ window.__uniFleetRender=function(){ var body=document.getElementById("fleetbody"
   var feEnts=_ents.filter(function(e){ return __uniIsFeEnt(e); });
   var _entRow=function(e){ var gs=groups[e]||{}, gk=Object.keys(gs).sort(), open=!!_flOpen[e];
     var r='<div class="flrow" data-fle="'+e+'"><span class="flent flx" data-flx="'+e+'" title="'+e+' — click to SELECT it (panel + camera); the count expands its clusters">'
-      +'<i class="fldot" style="background:'+(ENT[e]||"#888")+'"></i><b class="flcnt flexp" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+(window.__uniEntLabel?__uniEntLabel(e):e)+'</span>'
+      +'<b class="flcnt flexp" style="--flc:'+(ENT[e]||"#888")+'" title="expand / collapse the '+gk.length+' cluster(s)">'+gk.length+'</b>'+(window.__uniEntLabel?__uniEntLabel(e):e)+'</span>'
       +_FCOLS.map(function(c){ return '<button class="fltog" data-fent="'+e+'" data-fcol="'+c.k+'" title="'+c.ti+'"></button>'; }).join('')+'</div>';
     if(open) gk.forEach(function(s){
-      r+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt">'+gs[s]+'</b>'+s+'</span>'
+      r+='<div class="flrow flsub" data-fle="'+e+'" data-fls="'+s+'"><span class="flent flsubname" data-fse="'+e+'" data-fss="'+s+'" title="'+s+' · '+gs[s]+' member(s) — click to SELECT this cluster (panel + camera)"><b class="flcnt" style="--flc:'+(ENT[e]||"#888")+'">'+gs[s]+'</b>'+s+'</span>'
         +_FCOLS.map(function(c){ if(c.k==="subs") return '<span class="flcell flspacer"></span>';
           return '<button class="fltog flstog" data-fent="'+e+'" data-fsub="'+s+'" data-fcol="'+c.k+'" title="'+c.ti+' — cluster '+s+'"></button>'; }).join(''); r+='</div>'; });
     return r; };
@@ -3983,7 +3993,7 @@ var KINDCARD=(function(){
         E("div",{class:"sublbl",style:"margin-top:6px"}, icoEl(RELICO[l.rel]||"link"), "relation: "+l.rel)),
       E("div",{class:"sec"}, sechd("layers","Weight"), E("div",{class:"ubar"}, E("div",{class:"ufill",style:"width:"+Math.min(100,(l.w||1)/6*100)+"%"})), E("div",{class:"sublbl"}, "edge-kind weight "+(l.w||1)+" (fixed per kind)")),
       l.payload?E("div",{class:"sec"}, sechd("table","Payload"), E("div",{class:"sublbl"}, icoEl("table"), "carries "+l.payload+" field"+(l.payload>1?"s":"")+" — "+((tk==="schema"||tk==="model")?tl:"the target structure"))):null,
-      E("div",{class:"sec"}, sechd("truck","Transit"), kv("truck","cargo", l.payload? ("carries "+l.payload+" data field"+(l.payload>1?"s":"")+" · the shuttle grows with the payload") : "no payload · no cargo shuttle"), kv("test","test chip", l.proven? "test-proven route · the green chip flies it" : "not test-proven · no green chip"), E("div",{class:"sublbl"}, (typeof linkCross==="function"&&linkCross(l))? "ships fly this cross-entity wire" : "same-entity wire · no ships transit")),
+      E("div",{class:"sec"}, (function(){ var _th=sechd("truck","Transit"); try{ if(window.__uniAssetThumb){ var _tw=document.createElement("span"); _tw.className="asetrow"; _tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }, "cargo shuttle \u2014 the wire\u0027s payload asset")); _tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.testchip(); }, "test chip \u2014 the wire\u0027s cross-entity test asset")); _th.append(_tw); } }catch(_te){} return _th; })(), kv("truck","cargo", l.payload? ("carries "+l.payload+" data field"+(l.payload>1?"s":"")+" · the shuttle grows with the payload") : "no payload · no cargo shuttle"), kv("test","test chip", l.proven? "test-proven route · the green chip flies it" : "not test-proven · no green chip"), E("div",{class:"sublbl"}, (typeof linkCross==="function"&&linkCross(l))? "ships fly this cross-entity wire" : "same-entity wire · no ships transit")),
       E("div",{class:"sec"}, sechd("info","Trust"), kv(null,"kind", ({fk:"structural · foreign-key join", touches:"structural · archmap touch", bridge:"inferred · web-bridge floor (method+path)", calls:"inferred · graft call floor", imports:"inferred · import floor"}[l.rel]) || (l.proven?"structural join":"inferred floor"))),
       E("div",{class:"sec"}, sechd("role","Direction"), kv(null,"flow", sl+" → "+tl))
     ]; };
@@ -4084,7 +4094,9 @@ window.__uniAssetThumb=function(buildFn, title){ var cv=document.createElement("
     var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
     var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.9));
     var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
-    var cam=new T.PerspectiveCamera(45, cv.width/cv.height, 0.1, 1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+    var cam=new T.PerspectiveCamera(45, cv.width/cv.height, 0.1, 1000);
+    var R=(new T.Box3().setFromObject(pivot)).getBoundingSphere(new T.Sphere()).radius||1;   // FRAME-FIT: fill the square regardless of the asset's native size (the sat was tiny) — operator
+    var _d=(R/Math.tan(45*Math.PI/360))*1.12; cam.position.copy(new T.Vector3(2.5,4,18).normalize().multiplyScalar(_d)); cam.lookAt(0,0,0);
     var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height};
     PAL_CELLS.push(entry); window.__uniCardCells.push(entry); } }catch(e){}
   return cv; };

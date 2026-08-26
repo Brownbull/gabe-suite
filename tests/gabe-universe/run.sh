@@ -444,6 +444,15 @@ check('function flagsSec(n)' in page and 'window.__uniAssets.god()' in page and 
       "the risk flags (god-object / unguarded / conflict) must render with their raider asset (operator screenshot 2)")
 check('if(real && window.__uniJrnStart){ row.style.cursor="pointer"; row.onclick=function(){ try{ __uniJrnStart(j.cid)' in page and 'an AGGREGATE of web/e2e cases folded' in page,
       "a named journey row must click → __uniJrnStart (top stepper); aggregate 'N case(s)' rows non-clickable + explained")
+# panel/fleet/legend polish batch (operator)
+check('getBoundingSphere(new T.Sphere()).radius' in page,
+      "asset thumbnails must FRAME-FIT — fill the square regardless of native asset size (the sat was tiny)")
+check('.sechd .cnt{ margin-left:0 !important; }' in page and 'height:500px !important' in page and 'width:344px' in page,
+      "section counter LEFT-aligned next to its title · legend taller (500, no scroll) · fleet wider (344)")
+check('<b class="flcnt flexp" style="--flc:' in page and '#fleet .flrow:not(.flsub):not(.flmaster) .fldot{ display:none; }' in page,
+      "the fleet entity counter merges the dot + count into ONE entity-colored counter (no separate dot)")
+check('_tw.append(window.__uniAssetThumb(function(){ return window.__uniAssets.cargo(); }' in page and '_tw.className="asetrow"' in page and 'window.__uniAssets.testchip()' in page,
+      "the wire (Transit) card must carry the cargo + test-chip 3D asset thumbnails")
 check('sechd("truck","Transit")' in page and 'kv("truck","cargo"' in page and 'kv("test","test chip"' in page and 'ships fly this cross-entity wire' in page,
       "the wire card must carry a Transit section tying cargo↔payload + test-chip↔proven (cross-entity only)")
 # panel polish: journeys legend → tooltip; hidden-node hover halo; panel-chip click reveals
@@ -640,8 +649,8 @@ check('className="cfgrow entcombo"' in page,
       "the entity combo/options rows are gone")
 check("'Legend</b>" in page.replace('"',"'") and '#elegend .lghd b svg' in page,
       "the legend lost its panel-chrome refit (iconed caps title + station styling)")
-check('height:330px !important' in page,
-      "the legend must hold ONE fixed size across every tab")
+check('height:500px !important' in page,
+      "the legend must hold ONE fixed size across every tab (taller, no scroll)")
 check("lgbody lg-" in page and 'lg-types' in page and 'grid-template-columns:1fr 1fr' in page,
       "the legend Types two-column compaction is gone (per-tab body class + grid)")
 check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(_gr?0xffffff:cfg.color)' in page,
