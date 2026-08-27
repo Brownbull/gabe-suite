@@ -446,10 +446,15 @@ def derive_fn_roles(wiring: dict[str, Any], faccess: dict[str, Any] | None) -> d
     out: dict[str, str] = {}
     for g in fn_ids:
         sym = g.split("#", 1)[1] if "#" in g else g
-        if g in accessors:
-            out[g] = "accessor"
-        elif _is_gate_name(sym):
+        # GATE BEFORE ACCESSOR (B0, 2026-08-27): a guard that READS is still a guard. A
+        # gate-named fn with ops used to disappear into `accessor` the moment its reads landed
+        # (role precedence erased the only gate on the household journey). It stays in the
+        # `accessors` set above (so it still anchors the write-path reaches BFS + keeps its d2w),
+        # but it is LABELED gate — and levels attaches its access for ANY op-carrying role now.
+        if _is_gate_name(sym):
             out[g] = "gate"
+        elif g in accessors:
+            out[g] = "accessor"
         elif g in reaches:
             out[g] = "caller"
         else:

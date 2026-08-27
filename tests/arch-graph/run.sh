@@ -476,6 +476,12 @@ check(_fr.get("a.py#svc_write") == "accessor" and _fr.get("a.py#handler") == "ca
       and _fr.get("a.py#require_auth") == "gate" and _fr.get("a.py#helper") == "pure",
       "derive_fn_roles: accessor (own op) · caller (reaches it) · gate (name) · pure (leaf)")
 check(GG.derive_fn_roles(_wr, None) == {}, "derive_fn_roles: no faccess → {} (honest-empty)")
+# B0 precedence swap: a gate-named fn that ALSO carries ops is labeled GATE, not accessor (a guard
+# that reads is still a guard); it stays in the accessor set (write-path anchor) but wears gate.
+_frb = GG.derive_fn_roles(_wr, {"a.py::svc_write": {"ops": [{"model": "M", "table": "m", "rw": "w"}]},
+                                "a.py::require_auth": {"ops": [{"model": "H", "table": "h", "rw": "r"}]}})
+check(_frb.get("a.py#require_auth") == "gate" and _frb.get("a.py#handler") == "caller",
+      "B0: a gate-named fn WITH ops is GATE not accessor; its caller still reaches the write-path")
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

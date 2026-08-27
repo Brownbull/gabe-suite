@@ -35,7 +35,8 @@ AMAP = {
   "function_insight": {
     "api/orders.py::list_orders": {"fn": "list_orders", "entity": "orders", "file": "api/orders.py", "layer": "api", "handler": True, "god": False, "internal": 2, "api": 3, "web": 0, "doc": "List all orders for the user.", "lines": 12, "returns": "OrderResponse", "async": True},
     "api/orders.py::add_line": {"fn": "add_line", "entity": "orders", "file": "api/orders.py", "layer": "api", "handler": True, "god": False, "internal": 0, "api": 1, "web": 0},
-    "api/users.py::list_users": {"fn": "list_users", "entity": "users", "file": "api/users.py", "layer": "api", "handler": True, "god": False, "internal": 0, "api": 1, "web": 0}},
+    "api/users.py::list_users": {"fn": "list_users", "entity": "users", "file": "api/users.py", "layer": "api", "handler": True, "god": False, "internal": 0, "api": 1, "web": 0},
+    "svc/o.py::writer": {"fn": "writer", "entity": "orders", "file": "svc/o.py", "layer": "services", "handler": False, "god": False, "internal": 1, "api": 0, "web": 0, "access": {"ops": [{"model": "W", "table": "w", "rw": "w"}], "commits": True}}},
   "model_insight": {
     "Order": {"cls": "Order", "entity": "orders", "usage": 5, "god": True, "internal_refs": [{"file": "api/users.py", "defs": ["list_users"]}]},
     "User": {"cls": "User", "entity": "users", "usage": 1, "god": False, "internal_refs": []}},
@@ -148,6 +149,11 @@ ck("svc/o.py#deep_writer" in _wids and "svc/o.py#lateral" not in _wids and "svc/
    "3b: write-path fns join the drawn set; lateral + reader stay hidden stars")
 ck(next((n for n in _lvw["fn_nodes"] if n["id"] == "svc/o.py#writer"), {}).get("d2w") == 0,
    "3b: d2w rides onto the newly drawn write-path fn_nodes (0 is real)")
+# P3 (B0): a drawn fn's own access draws for ANY role, not just accessor — writer has no fn_roles
+# entry (role None) yet its access.ops must attach (else the precedence swap would strip a gate's writes)
+_wn = next((n for n in _lvw["fn_nodes"] if n["id"] == "svc/o.py#writer"), {})
+ck(bool(_wn.get("access") and _wn["access"].get("ops")),
+   "P3: a drawn fn's access.ops attach regardless of role (access-for-any-role, not accessor-only)")
 ck(json.dumps(_lvw, sort_keys=True) == json.dumps(_a3_levels.build_levels(AMAP, graph, graft=_GW), sort_keys=True),
    "3b: the enriched build is byte-deterministic (double-build equality ON the d2w arm)")
 _GW0 = {"present": True, "functions": _GW["functions"]}
