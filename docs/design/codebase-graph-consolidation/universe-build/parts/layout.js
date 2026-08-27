@@ -267,6 +267,10 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   _FNNODES.forEach(function(f){ var a=f.access; if(!a||!a.ops) return;
     a.ops.forEach(function(o){ var mid="model:"+o.model;
       if(NIDS[mid]) _FNLINKS.push({source:f.id, target:mid, rel:(o.rw==="w"?"fnwrites":"fnreads"), access:true}); }); });
+  /* fn → SCHEMA wires (schema homing, 2026-08-27) — the levels `schema_edges` feed: a claimed function
+     returns / takes / uses a schema. Drawn when both ends are in the field; a schema with one of these
+     is a CONTRACT (never folds as a nested-only helper). */
+  (D.schema_edges||[]).forEach(function(e){ if(_fnset[e.s] && NIDS[e.t]) _FNLINKS.push({source:e.s, target:e.t, rel:e.rel||"uses", schema:true}); });
 }
 function _stashPurge(flag){ if(!_CAPST) return;          // strip toggle-owned pieces from the capsule stash (review 53[9])
   for(var i=_CAPST.links.length-1;i>=0;i--){ if(_CAPST.links[i][flag]) _CAPST.links.splice(i,1); }
@@ -1961,15 +1965,19 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
    128² canvas context; methodBadge/roleBadge wrap it into a Sprite, the legend popup paints it onto a
    DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
 window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444"},
-                     role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"} };
+                     role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
+                     count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row" },
-  role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" } };
+  role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" },
+  count:{ "*":"nested-only schemas folded into this one — composition helpers no endpoint or function names; double-click the parent to reveal them" } };
 /* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
 window.__CONNDESC={ fk:"foreign-key data coupling", calls:"a function / handler call", imports:"a component / module import", bridge:"a frontend fetch reaching an API", rollup:"endpoint→model — the call-tree ROLLUP (reaches this table through its functions)", access:"function→model — the TRUE data access (this fn reads/writes this table)" };
 window.__badgeGlyph=function(c, kind, key){
-  var col=((window.__BADGE_COL[kind]||{})[key])||"#8794ab";
+  var col=((window.__BADGE_COL[kind]||{})[key])||((window.__BADGE_COL[kind]||{})["*"])||"#8794ab";
   c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();
+  if(kind==="count"){ var t=String(key==null?"":key); c.fillStyle='#0b0f18'; c.textAlign='center'; c.textBaseline='middle';
+    c.font='700 '+(t.length>1?60:72)+'px ui-monospace, Menlo, Consolas, monospace'; c.fillText(t, 64, 68); return; }   // the digits ARE the glyph
   c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
   if(kind==="role"){
     if(key==='accessor'){ c.ellipse(64,42,26,10,0,0,6.2832); c.moveTo(38,42); c.lineTo(38,86); c.moveTo(90,42); c.lineTo(90,86); c.moveTo(38,64); c.bezierCurveTo(38,74,90,74,90,64); c.moveTo(38,86); c.bezierCurveTo(38,96,90,96,90,86); }
@@ -2073,7 +2081,33 @@ window.__uniComputeSolo=function(){ var callers={};
      own access ops (red/pink wire) is never a mere helper — critical keeps the journey walkable
      end-to-end; single-caller fns that never reach a write (serializers, response builders) fold. */
   nodes.forEach(function(n){ var cs=callers[n.id]||{}, ks=Object.keys(cs);
-    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length)); }); };
+    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length)); });
+  /* SCHEMA fold (operator, 2026-08-27): a schema whose ONLY wires are `nests` — a composition helper
+     (the six *Input fields of SetupCompleteRequest, the seven Blocks of SettingsResponse) — is a
+     nested-only schema: it folds into its parent under the schema kind's CRITICAL state, and the
+     parent wears a COUNT badge (__foldN = folded DIRECT children). A schema an ENDPOINT wires
+     (touches · consumes · resp · bridge) is a contract and never folds; a FUNCTION wire alone
+     (returns · takes · uses — the builder that constructs the Block, the upsert that takes the
+     Input) is how composition is processed, not an exposure, so it does not block the fold.
+     Multi-parent helpers fold too (each parent counts them); the reveal (double-click) pins them
+     back, like every other fold. */
+  var _sW={}, _sP={};
+  links.forEach(function(l){ var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;
+    if(l.rel==="nests"){ if(tn.kind==="schema") (_sP[tn.id]=_sP[tn.id]||[]).push(sn.id); return; }
+    if(sn.kind==="function"||tn.kind==="function") return;   // fn wires never make a contract
+    if(sn.kind==="schema") _sW[sn.id]=1; if(tn.kind==="schema") _sW[tn.id]=1; });
+  nodes.forEach(function(n){ if(n.kind==="schema") n.__foldN=0; });
+  nodes.forEach(function(n){ if(n.kind!=="schema") return; var no=!!_sP[n.id] && !_sW[n.id]; n.__solo=no;
+    if(no) _sP[n.id].forEach(function(pid){ var pn=NIDS[pid]; if(pn && pn.kind==="schema") pn.__foldN=(pn.__foldN||0)+1; }); });
+  if(window.__uniSyncCountBadges) try{ __uniSyncCountBadges(); }catch(e){} };
+/* the COUNT badge follows __foldN: (re)built after every solo recompute — a fn toggle adds schema
+   wires (levels schema_edges) and can un-fold a kid, so the number is never a boot-time constant. */
+window.__uniSyncCountBadges=function(){ if(typeof nodes==="undefined"||typeof countBadge!=="function") return;
+  nodes.forEach(function(n){ if(n.kind!=="schema") return; var grp=n.__threeObj; if(!grp) return;
+    var want=n.__foldN||0, have=grp.__cnt||null;
+    if(have && have.__n===want) return;
+    if(have){ grp.remove(have); var i=(window.__uniBadges||[]).indexOf(have); if(i>=0) window.__uniBadges.splice(i,1); grp.__cnt=null; }
+    if(want>0){ try{ var cb=countBadge(want); cb.__n=want; grp.add(cb); grp.__cnt=cb; }catch(e){} } }); };
 window.__uniKindHasSolo=function(k){ for(var i=0;i<nodes.length;i++){ if(nodes[i].kind===k && nodes[i].__solo) return true; } return false; };
 window.__uniSetKindState=function(k, st, _defer){
   __uniKindState[k]=st; if(st==="off") __uniKindOff[k]=1; else delete __uniKindOff[k];

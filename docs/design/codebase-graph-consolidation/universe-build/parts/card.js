@@ -64,10 +64,10 @@
   /* append the ACTUAL 3D graph asset (live thumbnail) to a section header, right-aligned (operator) */
   function _hdAsset(hd, buildFn, title){ try{ if(hd && window.__uniAssetThumb) hd.append(window.__uniAssetThumb(buildFn, title)); }catch(e){} return hd; }
   /* live connections — grouped from the REAL edges this node touches (honest per-node, not toy). */
-  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests"},
-      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in"};
+  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests", returns:"returns", takes:"takes", uses:"uses"},
+      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in", returns:"returned by", takes:"taken by", uses:"used by"};
     return (dir==="out"?O:I)[rel]||(rel+(dir==="out"?"":" (in)")); }
-  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema"};
+  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema", returns:"schema", takes:"schema", uses:"schema"};
   /* ── #1 · the Explorer expander — ONE reusable primitive. A list where a row can reveal its
      children indented one level (lazy, depth-capped) with a "+N more" count cap. Rows:
      {label, glyph, cls, meta, title, node, childrenFn}. node → click navigates; childrenFn → a twisty. ── */
@@ -153,7 +153,7 @@
         var key=l.rel+"|"+dir+"|"+(other?other.kind:"ext"); if(!by[key]) by[key]={rel:l.rel, dir:dir, kind:other?other.kind:"external", items:[]};
         by[key].items.push(other?{t:other.label,id:other.id}:{t:(dir==="out"?lid(l.target):lid(l.source))}); });   // {t,id} → chip hover lights that node (white halo)
       return Object.keys(by).map(function(k){ var g=by[k];
-        return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, (function(items,kind){ return function(){ return expander(_connRows(items, kind), {cap:6, maxDepth:1}); }; })(g.items, g.kind), g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
+        return G(relLabel(g.rel,g.dir)+((g.rel==="nests"&&g.dir==="out"&&n.__foldN)?(" · "+n.__foldN+" folded"):""), CONNICO[g.rel]||"link", g.items.length, (function(items,kind){ return function(){ return expander(_connRows(items, kind), {cap:6, maxDepth:1}); }; })(g.items, g.kind), g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
     var groups=build(outs,"out").concat(build(ins,"in"));
     var _empty="— no edges captured";
     if(n.behind&&n.behind.fns) _empty="— no data edges captured · its behavior lives in the call tree ("+n.behind.fns+" fns, Code behind) — turn Functions ON to draw those wires";
@@ -179,6 +179,7 @@
     return E("div",{class:"sec"}, sechd("file","Source"),
       kv("file","file", det.file+(det.flines?(":"+det.flines):"")),
       det.status?kv("info","status", det.status):null,
+      det.homed?kv("link","home", "homed from "+det.homed.from+" — "+String(det.homed.why||"").replace(/^consumed-by:/,"consumed by ").replace(/^fn-consumed-by:/,"consumed by fn ").replace(/^nested-in:/,"nested in ")):null,   // schema homing provenance
       (det.exported!=null)?kv("role","exported", det.exported?"yes":"no"):null,
       (n.table)?kv("table","table", n.table):null); }
   function usageN(n){ var u=(n.det&&n.det.usage); if(u) return (u.api||0)+(u.internal||0); return (n.m&&n.m.fanin)||0; }   // badge matches its own breakdown (det.usage when present, else graph in-degree)

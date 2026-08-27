@@ -29,6 +29,7 @@ KINDS.module={ col:"#f59e0b", form:"slab", label:"recipeScoring", type:"Module (
 KINDCOL.module="#f59e0b";
 if(typeof GLYPH!=="undefined"){ GLYPH.module='<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'; }
 LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1}; LINKMETA.bundle={w:4,pv:1};
+LINKMETA.returns={w:2,pv:1}; LINKMETA.takes={w:2,pv:1}; LINKMETA.uses={w:2,pv:0};   // fn→schema wires (levels schema_edges): returns/takes are signature facts, uses a body-name floor
 KINDS.capsule={ col:"#94a3b8", form:"pod", label:"model · 160", type:"Capsule (area)", layer:"web", usage:[0,"a folded AREA"],
   conns:[["bundled wires","capsule","components · 37"]], tests:0, ident:[["kind","a folded area — click to open"]],
   doc:"A COLLAPSED area of a big entity — one planet standing for its pieces (count in the label). Click it (or its card's Expand, the fleet row, or any search hit inside) to open the entity." };

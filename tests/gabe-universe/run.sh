@@ -440,6 +440,19 @@ check('function roleBadge(' in page and 'grp.add(roleBadge(n.role))' in page and
 check('data-badgeinfo=' in page and 'window.__badgePop=function' in page and 'class="bpcv"' in page
       and 'window.__badgeGlyph(c, kind, cv.dataset.k)' in page and 'window.__BADGE_DESC=' in page,
       "the legend badge-key popup (endpoint methods · function roles, drawn with the real badge glyph) is gone")
+# SCHEMA FOLD + COUNT badge (operator, 2026-08-27): nested-only schemas fold under critical; the parent wears the count
+check('SCHEMA fold (operator, 2026-08-27)' in page and 'n.__foldN=0' in page and 'if(sn.kind==="function"||tn.kind==="function") return;' in page
+      and 'window.__uniSyncCountBadges=function' in page,
+      "the schema FOLD clause in __uniComputeSolo (nested-only → __solo, __foldN on the parent, fn wires never a contract) is gone")
+check('function countBadge(' in page and "window.__badgeGlyph(c,'count',nn)" in page and 'grp.add(_cb); grp.__cnt=_cb;' in page
+      and 'if(kind==="count")' in page and 'c.fillText(t, 64, 68)' in page,
+      "the schema COUNT badge (countBadge → shared glyph with the digits, attached on n.kind==='schema' && n.__foldN>0) is gone")
+check('(it.k==="schema")?"count"' in page and '(kind==="count")?["5"]' in page and 'count:{ "*":' in page,
+      "the legend badge-key row for the fold count (same glyph fn, one sample row) is gone")
+check('D.schema_edges' in page and 'rel:e.rel||"uses", schema:true' in page and 'LINKMETA.returns=' in page,
+      "the fn→schema wires (levels schema_edges: returns/takes/uses) are not linked into the field")
+check('det.homed?kv("link","home"' in page and '" folded"' in page,
+      "the card's schema-homing provenance row / the '(N folded)' nests group label is gone")
 # C4 follow-up · endpoint GUARDS — the middleware floor (Depends/decorators before the body) → the card, carried by the adapter
 check('function guardsSec(' in page and 'guardsSec(n)' in page and 'middleware:p.middleware' in page
       and 'The gates/deps that run BEFORE the handler body' in page,

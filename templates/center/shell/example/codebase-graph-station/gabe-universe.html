@@ -884,6 +884,7 @@ KINDS.module={ col:"#f59e0b", form:"slab", label:"recipeScoring", type:"Module (
 KINDCOL.module="#f59e0b";
 if(typeof GLYPH!=="undefined"){ GLYPH.module='<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>'; }
 LINKMETA.fecall={w:3,pv:1}; LINKMETA.imports={w:2,pv:1}; LINKMETA.bundle={w:4,pv:1};
+LINKMETA.returns={w:2,pv:1}; LINKMETA.takes={w:2,pv:1}; LINKMETA.uses={w:2,pv:0};   // fn→schema wires (levels schema_edges): returns/takes are signature facts, uses a body-name floor
 KINDS.capsule={ col:"#94a3b8", form:"pod", label:"model · 160", type:"Capsule (area)", layer:"web", usage:[0,"a folded AREA"],
   conns:[["bundled wires","capsule","components · 37"]], tests:0, ident:[["kind","a folded area — click to open"]],
   doc:"A COLLAPSED area of a big entity — one planet standing for its pieces (count in the label). Click it (or its card's Expand, the fleet row, or any search hit inside) to open the entity." };
@@ -1414,6 +1415,7 @@ function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mas
    the deployment config (DEPC): def +X · atk −X · conflict +Y · sats −Y. */
 function methodBadge(m, br){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'method',m); else { var col=(typeof METHOD!=='undefined'&&METHOD[m])||'#8794ab'; c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
 function roleBadge(role){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'role',role); else { c.fillStyle='#8794ab'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
+function countBadge(nn){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); if(window.__badgeGlyph) window.__badgeGlyph(c,'count',nn); else { c.fillStyle='#0e9aa7'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } var _o=(typeof CFG!=='undefined'&&CFG.mbOp!=null)?CFG.mbOp:0.6, _z=(typeof CFG!=='undefined'&&CFG.mbSize!=null)?CFG.mbSize:3.5, _x=(typeof CFG!=='undefined'&&CFG.mbX!=null)?CFG.mbX:2, _y=(typeof CFG!=='undefined'&&CFG.mbY!=null)?CFG.mbY:-2.5; var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, opacity:_o, depthWrite:false, depthTest:false })); s.scale.set(_z,_z,1); s.position.set(_x,_y,4); s.raycast=function(){}; if(window.__uniBadges) window.__uniBadges.push(s); return s; }
 function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   var ic, is=ENC.iconSize;
   if(billTex[n.kind]){ ic=billboardMesh(n.kind,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
@@ -1421,6 +1423,7 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   grp.add(ic);
   if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }
   else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right
+  else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)
   grp.add(bubble(br));
   if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
   if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
@@ -1720,6 +1723,10 @@ function _buildFnData(){ var D=window.GABE_LEVELS; if(!D||!D.fn_nodes||!KINDS["f
   _FNNODES.forEach(function(f){ var a=f.access; if(!a||!a.ops) return;
     a.ops.forEach(function(o){ var mid="model:"+o.model;
       if(NIDS[mid]) _FNLINKS.push({source:f.id, target:mid, rel:(o.rw==="w"?"fnwrites":"fnreads"), access:true}); }); });
+  /* fn → SCHEMA wires (schema homing, 2026-08-27) — the levels `schema_edges` feed: a claimed function
+     returns / takes / uses a schema. Drawn when both ends are in the field; a schema with one of these
+     is a CONTRACT (never folds as a nested-only helper). */
+  (D.schema_edges||[]).forEach(function(e){ if(_fnset[e.s] && NIDS[e.t]) _FNLINKS.push({source:e.s, target:e.t, rel:e.rel||"uses", schema:true}); });
 }
 function _stashPurge(flag){ if(!_CAPST) return;          // strip toggle-owned pieces from the capsule stash (review 53[9])
   for(var i=_CAPST.links.length-1;i>=0;i--){ if(_CAPST.links[i][flag]) _CAPST.links.splice(i,1); }
@@ -3414,15 +3421,19 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
    128² canvas context; methodBadge/roleBadge wrap it into a Sprite, the legend popup paints it onto a
    DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
 window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444"},
-                     role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"} };
+                     role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
+                     count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row" },
-  role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" } };
+  role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" },
+  count:{ "*":"nested-only schemas folded into this one — composition helpers no endpoint or function names; double-click the parent to reveal them" } };
 /* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
 window.__CONNDESC={ fk:"foreign-key data coupling", calls:"a function / handler call", imports:"a component / module import", bridge:"a frontend fetch reaching an API", rollup:"endpoint→model — the call-tree ROLLUP (reaches this table through its functions)", access:"function→model — the TRUE data access (this fn reads/writes this table)" };
 window.__badgeGlyph=function(c, kind, key){
-  var col=((window.__BADGE_COL[kind]||{})[key])||"#8794ab";
+  var col=((window.__BADGE_COL[kind]||{})[key])||((window.__BADGE_COL[kind]||{})["*"])||"#8794ab";
   c.fillStyle=col; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill();
+  if(kind==="count"){ var t=String(key==null?"":key); c.fillStyle='#0b0f18'; c.textAlign='center'; c.textBaseline='middle';
+    c.font='700 '+(t.length>1?60:72)+'px ui-monospace, Menlo, Consolas, monospace'; c.fillText(t, 64, 68); return; }   // the digits ARE the glyph
   c.strokeStyle='#0b0f18'; c.lineWidth=(kind==="role"?11:13); c.lineCap='round'; c.lineJoin='round'; c.beginPath();
   if(kind==="role"){
     if(key==='accessor'){ c.ellipse(64,42,26,10,0,0,6.2832); c.moveTo(38,42); c.lineTo(38,86); c.moveTo(90,42); c.lineTo(90,86); c.moveTo(38,64); c.bezierCurveTo(38,74,90,74,90,64); c.moveTo(38,86); c.bezierCurveTo(38,96,90,96,90,86); }
@@ -3526,7 +3537,33 @@ window.__uniComputeSolo=function(){ var callers={};
      own access ops (red/pink wire) is never a mere helper — critical keeps the journey walkable
      end-to-end; single-caller fns that never reach a write (serializers, response builders) fold. */
   nodes.forEach(function(n){ var cs=callers[n.id]||{}, ks=Object.keys(cs);
-    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length)); }); };
+    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length)); });
+  /* SCHEMA fold (operator, 2026-08-27): a schema whose ONLY wires are `nests` — a composition helper
+     (the six *Input fields of SetupCompleteRequest, the seven Blocks of SettingsResponse) — is a
+     nested-only schema: it folds into its parent under the schema kind's CRITICAL state, and the
+     parent wears a COUNT badge (__foldN = folded DIRECT children). A schema an ENDPOINT wires
+     (touches · consumes · resp · bridge) is a contract and never folds; a FUNCTION wire alone
+     (returns · takes · uses — the builder that constructs the Block, the upsert that takes the
+     Input) is how composition is processed, not an exposure, so it does not block the fold.
+     Multi-parent helpers fold too (each parent counts them); the reveal (double-click) pins them
+     back, like every other fold. */
+  var _sW={}, _sP={};
+  links.forEach(function(l){ var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;
+    if(l.rel==="nests"){ if(tn.kind==="schema") (_sP[tn.id]=_sP[tn.id]||[]).push(sn.id); return; }
+    if(sn.kind==="function"||tn.kind==="function") return;   // fn wires never make a contract
+    if(sn.kind==="schema") _sW[sn.id]=1; if(tn.kind==="schema") _sW[tn.id]=1; });
+  nodes.forEach(function(n){ if(n.kind==="schema") n.__foldN=0; });
+  nodes.forEach(function(n){ if(n.kind!=="schema") return; var no=!!_sP[n.id] && !_sW[n.id]; n.__solo=no;
+    if(no) _sP[n.id].forEach(function(pid){ var pn=NIDS[pid]; if(pn && pn.kind==="schema") pn.__foldN=(pn.__foldN||0)+1; }); });
+  if(window.__uniSyncCountBadges) try{ __uniSyncCountBadges(); }catch(e){} };
+/* the COUNT badge follows __foldN: (re)built after every solo recompute — a fn toggle adds schema
+   wires (levels schema_edges) and can un-fold a kid, so the number is never a boot-time constant. */
+window.__uniSyncCountBadges=function(){ if(typeof nodes==="undefined"||typeof countBadge!=="function") return;
+  nodes.forEach(function(n){ if(n.kind!=="schema") return; var grp=n.__threeObj; if(!grp) return;
+    var want=n.__foldN||0, have=grp.__cnt||null;
+    if(have && have.__n===want) return;
+    if(have){ grp.remove(have); var i=(window.__uniBadges||[]).indexOf(have); if(i>=0) window.__uniBadges.splice(i,1); grp.__cnt=null; }
+    if(want>0){ try{ var cb=countBadge(want); cb.__n=want; grp.add(cb); grp.__cnt=cb; }catch(e){} } }); };
 window.__uniKindHasSolo=function(k){ for(var i=0;i<nodes.length;i++){ if(nodes[i].kind===k && nodes[i].__solo) return true; } return false; };
 window.__uniSetKindState=function(k, st, _defer){
   __uniKindState[k]=st; if(st==="off") __uniKindOff[k]=1; else delete __uniKindOff[k];
@@ -4004,10 +4041,10 @@ var KINDCARD=(function(){
   /* append the ACTUAL 3D graph asset (live thumbnail) to a section header, right-aligned (operator) */
   function _hdAsset(hd, buildFn, title){ try{ if(hd && window.__uniAssetThumb) hd.append(window.__uniAssetThumb(buildFn, title)); }catch(e){} return hd; }
   /* live connections — grouped from the REAL edges this node touches (honest per-node, not toy). */
-  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests"},
-      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in"};
+  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests", returns:"returns", takes:"takes", uses:"uses"},
+      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in", returns:"returned by", takes:"taken by", uses:"used by"};
     return (dir==="out"?O:I)[rel]||(rel+(dir==="out"?"":" (in)")); }
-  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema"};
+  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema", returns:"schema", takes:"schema", uses:"schema"};
   /* ── #1 · the Explorer expander — ONE reusable primitive. A list where a row can reveal its
      children indented one level (lazy, depth-capped) with a "+N more" count cap. Rows:
      {label, glyph, cls, meta, title, node, childrenFn}. node → click navigates; childrenFn → a twisty. ── */
@@ -4093,7 +4130,7 @@ var KINDCARD=(function(){
         var key=l.rel+"|"+dir+"|"+(other?other.kind:"ext"); if(!by[key]) by[key]={rel:l.rel, dir:dir, kind:other?other.kind:"external", items:[]};
         by[key].items.push(other?{t:other.label,id:other.id}:{t:(dir==="out"?lid(l.target):lid(l.source))}); });   // {t,id} → chip hover lights that node (white halo)
       return Object.keys(by).map(function(k){ var g=by[k];
-        return G(relLabel(g.rel,g.dir), CONNICO[g.rel]||"link", g.items.length, (function(items,kind){ return function(){ return expander(_connRows(items, kind), {cap:6, maxDepth:1}); }; })(g.items, g.kind), g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
+        return G(relLabel(g.rel,g.dir)+((g.rel==="nests"&&g.dir==="out"&&n.__foldN)?(" · "+n.__foldN+" folded"):""), CONNICO[g.rel]||"link", g.items.length, (function(items,kind){ return function(){ return expander(_connRows(items, kind), {cap:6, maxDepth:1}); }; })(g.items, g.kind), g.rel==="fk"||g.rel==="touches"?"structural":"inferred"); }); }
     var groups=build(outs,"out").concat(build(ins,"in"));
     var _empty="— no edges captured";
     if(n.behind&&n.behind.fns) _empty="— no data edges captured · its behavior lives in the call tree ("+n.behind.fns+" fns, Code behind) — turn Functions ON to draw those wires";
@@ -4119,6 +4156,7 @@ var KINDCARD=(function(){
     return E("div",{class:"sec"}, sechd("file","Source"),
       kv("file","file", det.file+(det.flines?(":"+det.flines):"")),
       det.status?kv("info","status", det.status):null,
+      det.homed?kv("link","home", "homed from "+det.homed.from+" — "+String(det.homed.why||"").replace(/^consumed-by:/,"consumed by ").replace(/^fn-consumed-by:/,"consumed by fn ").replace(/^nested-in:/,"nested in ")):null,   // schema homing provenance
       (det.exported!=null)?kv("role","exported", det.exported?"yes":"no"):null,
       (n.table)?kv("table","table", n.table):null); }
   function usageN(n){ var u=(n.det&&n.det.usage); if(u) return (u.api||0)+(u.internal||0); return (n.m&&n.m.fanin)||0; }   // badge matches its own breakdown (det.usage when present, else graph in-degree)
@@ -4569,13 +4607,13 @@ var _legSub="Defense";   // active sub-tab within Planet
    SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
    HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
 window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badgePopHide();
-  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];
+  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:(kind==="count")?["5"]:["accessor","caller","gate","pure"];
   var keys=key?[key]:allKeys;   // key given (the node's OWN badge) → single row; else the whole key
   var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
-  var head=key?((kind==="method")?"HTTP method":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":"function role — what it does with the data store");
+  var head=key?((kind==="method")?"HTTP method":(kind==="count")?"folded schemas":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":"function role — what it does with the data store");
   var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
   var html='<div class="bph">'+head+'</div>';
-  keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+k+'</b><span>'+(desc[k]||"")+'</span></div></div>'; });
+  keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+(kind==="count"?"N":k)+'</b><span>'+(desc[k]||desc["*"]||"")+'</span></div></div>'; });
   pop.innerHTML=html; document.body.appendChild(pop);
   [].forEach.call(pop.querySelectorAll(".bpcv"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128); if(window.__badgeGlyph) window.__badgeGlyph(c, kind, cv.dataset.k); });
   var r=anchor.getBoundingClientRect();
@@ -4658,8 +4696,8 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
         var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
         var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
-        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles
-        var _bi=_bik?('<button class="lgbi" data-badgeinfo="'+_bik+'" title="badge key — '+(_bik==="method"?"the HTTP methods":"the four function roles")+'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>'):'';
+        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count
+        var _bi=_bik?('<button class="lgbi" data-badgeinfo="'+_bik+'" title="badge key — '+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":"the nested-only fold count")+'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>'):'';
         h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }

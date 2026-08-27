@@ -438,10 +438,14 @@ _METHOD_BADGE = ("function methodBadge(m, br){ var cv=document.createElement('ca
 _ROLE_BADGE = ("function roleBadge(role){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); "
   "if(window.__badgeGlyph) window.__badgeGlyph(c,'role',role); else { c.fillStyle='#8794ab'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } "
   + _BADGE_WRAP)
+# ── schema FOLD COUNT badge (2026-08-27) — the folded-children count on a schema parent, same slot/machinery ──
+_COUNT_BADGE = ("function countBadge(nn){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); "
+  "if(window.__badgeGlyph) window.__badgeGlyph(c,'count',nn); else { c.fillStyle='#0e9aa7'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } "
+  + _BADGE_WRAP)
 assert 'function buildNode(n){' in text, "buildNode anchor missing (method badge)"
-text = text.replace('function buildNode(n){', _METHOD_BADGE + _ROLE_BADGE + 'function buildNode(n){', 1)
+text = text.replace('function buildNode(n){', _METHOD_BADGE + _ROLE_BADGE + _COUNT_BADGE + 'function buildNode(n){', 1)
 assert '  grp.add(ic);' in text, "grp.add(ic) anchor missing (method badge)"
-text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right', 1)
+text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right\n  else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)', 1)
 
 # ── batch 12: layer ruling (c) — sub groups carry the kind's OWN layer (endpoints·api·web·data);
 #    the hull hue-shift map gains the un-collapsed keys ──
@@ -647,10 +651,21 @@ NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpStat
         var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
         var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
         var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
-        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles
-        var _bi=_bik?(\'<button class="lgbi" data-badgeinfo="\'+_bik+\'" title="badge key — \'+(_bik==="method"?"the HTTP methods":"the four function roles")+\'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>\'):\'\';
+        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count
+        var _bi=_bik?(\'<button class="lgbi" data-badgeinfo="\'+_bik+\'" title="badge key — \'+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":"the nested-only fold count")+\'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>\'):\'\';
         h+=\'<div class="lgrow lgk \'+_cls+\'" data-lgk="\'+it.k+\'" title="\'+_t+\' · \'+K.type+\'"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b>\'+_bi+\'</div></div>\'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot'''
 text = text.replace(OLD_KROW, NEW_KROW, 1)
+
+# badge-key popup — the schema fold COUNT joins method/role (one row, a sample "5" drawn by the same glyph fn)
+OLD_BPKEYS = 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];'
+assert OLD_BPKEYS in text, "badge popup keys anchor missing"
+text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:(kind==="count")?["5"]:["accessor","caller","gate","pure"];', 1)
+OLD_BPHEAD = 'var head=key?((kind==="method")?"HTTP method":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":"function role — what it does with the data store");'
+assert OLD_BPHEAD in text, "badge popup head anchor missing"
+text = text.replace(OLD_BPHEAD, 'var head=key?((kind==="method")?"HTTP method":(kind==="count")?"folded schemas":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":"function role — what it does with the data store");', 1)
+OLD_BPDESC = "html+='<div class=\"bprow\"><canvas class=\"bpcv\" width=\"30\" height=\"30\" data-k=\"'+k+'\"></canvas><div class=\"bpt\"><b>'+k+'</b><span>'+(desc[k]||\"\")+'</span></div></div>';"
+assert OLD_BPDESC in text, "badge popup row anchor missing"
+text = text.replace(OLD_BPDESC, "html+='<div class=\"bprow\"><canvas class=\"bpcv\" width=\"30\" height=\"30\" data-k=\"'+k+'\"></canvas><div class=\"bpt\"><b>'+(kind===\"count\"?\"N\":k)+'</b><span>'+(desc[k]||desc[\"*\"]||\"\")+'</span></div></div>';", 1)
 
 OLD_LGBIND = """    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });"""
 assert OLD_LGBIND in text, "legend binder anchor missing"
