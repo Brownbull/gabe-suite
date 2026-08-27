@@ -86,3 +86,24 @@ FIELDS. `levels.json fn_nodes[*]`: `tier` (int 0–4) + `why` (code string); `c4
 - tiers v1: L0 68/3 (starved skeleton — models needed 2 FKs), L1 212/298, L2 365/592, L3 447/920, L4 489/946; the template journey broke at L1 (handler a tier above its boundary).
 - tiers v2 (FK-first skeleton, handler-on-write-path = fabric): L0 105/66 · L1 214/301 · L2 365/592 · L3 447/920 · L4 489/946; template chain walkable at L1.
 - Projected additions by tier after the gap fixes: T0 +15 · T1 +40 · T2 +140 · T3 +337 · T4 +88.
+
+## What the map holds nothing of (gustify, 2026-08-27) — value for the journeys
+
+| element class | count | in the map today | value | what is lost while absent |
+|---|---|---|---|---|
+| API routes | 80 | 67 endpoint nodes · 13 in unclaimed files absent | HIGH | 13 whole journeys the map cannot start |
+| WebSocket / SSE routes | 4 | none (not an endpoint kind) | MED | the AI-creation stream has no entry node |
+| backend functions | 2,133 | 210 drawn · 238 in unclaimed files absent · rest hidden by design | HIGH | request-path fns in unclaimed files (ownership · idempotency · reference) |
+| class methods | 206 | none (kind filter; 482 calls dead-end) | HIGH | the 409 gate on 47 handlers · allergen snapshot reads · AI pipeline stages |
+| SQLAlchemy tables | 57 | 55 drawn (census) · 2 admin-lane | DONE | — |
+| Pydantic schemas | 146 | 123 drawn · 23 absent · schema→table 0 edges | MED | the response leg; request vs response direction |
+| event types + handlers | 5 | none (registry dispatch) | HIGH | cooking's second write leg |
+| background / lifespan writers | 38 | none (only root = handler) | MED | where the reference corpus comes from; reminders |
+| app-level middleware | 3 | none (Depends names only) | MED | rate-limit gate on 23 endpoints; the auth dependency's User commit |
+| integrations (Gemini · breaker) | 12 | none (real external sink untagged) | HIGH | the create-recipe journey's only external hop |
+| guardrails | 10 | partial (1 gate fn, reads invisible) | HIGH | the safety decision on cook/plan/explore |
+| reference data (catalogs · normalize · fuzzy) | 46 | none (unclaimed) | MED | the pure layer gating write paths |
+| feature flags / config | 3 | none | HIGH | a flag walls whole surfaces (RECIPE_CREATION_ENABLED) |
+| AI prompts · i18n · observability · CLI scripts · FE styles/assets · infra/CI | — | none | LOW | never on a data journey — deliberately not nodes |
+| backend tests | 98 files | as DETAIL (det.cases · test journeys), never nodes | DONE | evidence ON a node, not a hop |
+| frontend pieces · screens | 1,077 · 32 | drawn (FE arm) · 48/54 bridged | DONE | the FE ladder is unmeasured under the tiers |
