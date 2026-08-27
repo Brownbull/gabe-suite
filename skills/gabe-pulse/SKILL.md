@@ -138,8 +138,8 @@ structural scan overdue (S2), journey proof missing (S3), published docs stale (
 (S5), entity context worth loading (S6), an explanation worth drawing (S7), workflow-census
 capture debt (S8), entity-shape drift (S9), a diff-added fetch that named no declared endpoint
 (S10), model-census drift (S11 — a table class no entity's config claims) and schema-homing
-residue (S12 — a schema consumed by several entities, or unwired in a live file; dormant contract
-lanes are counted, never nagged) — each naming the satellite that would find it now, or reporting **unavailable** with what
+residue (S12 — a schema unwired in a live file: dead, or in code the config never claimed; multi-consumer
+shapes and dormant contract lanes are counted, never nagged) — each naming the satellite that would find it now, or reporting **unavailable** with what
 would unlock it. Spine beats print its `--one-line` output verbatim; it emits at most one row and
 nothing when nothing fires.
 

@@ -25,7 +25,8 @@ THE OPERATOR'S ORDER OF WORK (2026-08-27 ruling) — tiers are TABLED until 1 an
 
 RUNBOOK + GOTCHAS: absolute paths in chained proofs (relative `cd` chains skipped the battery twice) · `git -C` when the cwd drifted · a runtime script loader still trips the string link gate — seed the file · usecase core clusters a handler's fns WITH its endpoint (re-hide after goto in proofs) · `__d2wBand()` returns a colour int · popups born inside a fixed-height panel must be body-level + fixed.
 
-## State snapshot
-- Landed: through the tiers proposal docs; tree clean.
-- In-flight: none. Push (both repos) on operator word.
-- Owed: proof re-pins (panels/walk/explore/routes) · the 2 admin-lane models' home · gastify propagation.
+## State snapshot (updated 2026-08-27, session 2)
+- Landed: ITEM 1 SCHEMA HOMING — `a81fb42` (emitter rule + S12 + batteries + estate) · `cff92ce` (fold + count badge + proof). Record: `SCHEMA-HOMING.md` + artifact **Schema Homing** 🏠 `f1994c49-f28e-4516-bcc5-8be3a8cb861a` (builder in `artifacts/`). Operator agreed all recommendations; the 6 unwired = 2 unclaimed route files (claimed on the twin) + the dormant gastify contract lane (S12 counts, never nags).
+- Twin (gustify graft-pilot): config claims api/notifications.py + api/history.py → cooking, models/admin_review.py → pantry (closes the 2 admin-lane models); `propagate.sh` ran → COMMIT the twin on graft-pilot (config + scripts + center regen). Push both repos on operator word.
+- In-flight: ITEM 2 coverage-class fix map — workflow `wf_37cd71af-e77` (14 finders + anatomy cross-check → 14 refuters); inputs staged in the scratchpad: `chain.py` (drawn BEFORE chain per endpoint), `before-chains.txt` (34 endpoints), `trace-anatomy.txt`. Deliverable = `COVERAGE-FIX-MAP.md` + a GabeArtifact (operator rule: every order-of-work item ships its own artifact).
+- Owed: proof re-pins (panels/walk/explore/routes) · gastify propagation · then ITEM 3 tiers (operator proposes the control design).

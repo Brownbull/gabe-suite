@@ -182,10 +182,10 @@ run "$r" | grep -q "model-census drift" && bad "S11 fired without a center" || o
 
 # ── S12 · schema-homing residue — ambiguous / unwired-in-live-file schemas (reads archmap.schema_homing); dormant never nags ──
 r=$(repo s12a); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[{"cls":"MeResponse","from":"progression","to":"auth","why":"consumed-by:GET /me"}],"ambiguous":[{"cls":"DietaryBlock","home":"progression","consumers":["auth","settings"]}],"unwired":[{"cls":"Ghost","home":"cooking","file":"s/g.py","dormant":false},{"cls":"ReceiptIngestRequest","home":"pantry","file":"s/gastify.py","dormant":true}],"fn_wires":[]}}'
-out=$(run "$r"); echo "$out" | grep -q "schema homing — 1 multi-consumer (DietaryBlock), 1 unwired in live files (Ghost) · 1 dormant" && ok "S12 fires: ambiguous + live-unwired named, dormant counted" || bad "S12 did not fire / wrong line: $out"
-# SILENT: only dormant shapes — a contract lane not yet wired never nags
-r=$(repo s12b); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[],"ambiguous":[],"unwired":[{"cls":"ReceiptIngestRequest","home":"pantry","file":"s/gastify.py","dormant":true}],"fn_wires":[]}}'
-run "$r" | grep -q "schema homing" && bad "S12 nagged on dormant-only shapes" || ok "S12 silent when only dormant shapes remain"
+out=$(run "$r"); echo "$out" | grep -q "schema homing — 1 unwired in live files (Ghost) · 1 multi-consumer · 1 dormant" && ok "S12 fires: live-unwired named; multi-consumer + dormant counted as context" || bad "S12 did not fire / wrong line: $out"
+# SILENT: only dormant / multi-consumer shapes — neither is an action (a contract lane wakes itself; shared Blocks stay by ruling)
+r=$(repo s12b); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[],"ambiguous":[{"cls":"DietaryBlock","home":"progression","consumers":["auth","settings"]}],"unwired":[{"cls":"ReceiptIngestRequest","home":"pantry","file":"s/gastify.py","dormant":true}],"fn_wires":[]}}'
+run "$r" | grep -q "schema homing" && bad "S12 nagged on dormant + multi-consumer shapes" || ok "S12 silent when only dormant / multi-consumer shapes remain"
 # SILENT: moves alone are the rule working, not residue
 r=$(repo s12c); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[{"cls":"X","from":"a","to":"b","why":"consumed-by:GET /x"}],"ambiguous":[],"unwired":[],"fn_wires":[]}}'
 run "$r" | grep -q "schema homing" && bad "S12 fired on moves alone" || ok "S12 silent when every schema homed cleanly"
