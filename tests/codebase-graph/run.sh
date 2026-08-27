@@ -373,6 +373,15 @@ check('web:"#e8590c"' in station and 'web:"Screens"' in station,
       "the web piece kind is registered (KIND_COLOR/KIND_LABEL Screens)")
 check('else if(n.kind==="web"){' in station,
       "the L2 drill draws a web 'screen' glyph")
+# ── PRE-C: the column station survives a wave-C kind (middleware/provider/flag/prompt) — no NaN column ──
+check('middleware:"#7048e8"' in station and 'middleware:"Middleware"' in station,
+      "pre-C: the 4 wave-C kinds are registered in KIND_COLOR/KIND_LABEL")
+check('if(ord2.indexOf(k)<0) ord2.push(k)' in station and 'if(ord3.indexOf(k)<0) ord3.push(k)' in station,
+      "pre-C: ord2/ord3 append an unknown kind from layout.l2.order (aligned columns + headers)")
+check('kc[n.kind]!=null?kc[n.kind]:ord2.length' in station,
+      "pre-C: the column x guards kc[n.kind] — an unknown kind gets a real column, never undefined*COLW=NaN")
+check('(KIND_LABEL[kind]||kind)' in station,
+      "pre-C: the column header falls back to the raw kind name for a newer emitter's kind")
 check('e.kind==="bridge" && e.from_slug===slug' in station,
       "the L2 drill draws a bridge pass over DATA.cross_edges (from_slug === drill)")
 check('bridgeStub[e.to]' in station and 'reached by a fetch bridge' in station,

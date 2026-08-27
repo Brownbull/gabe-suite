@@ -39,6 +39,43 @@ var FE_HOME_COL={ bucket:"#7c3aed", candidate:"#f97316" };   // a shared FE buck
 var FE_KIND={ "fe-type":"type" };                              // the feed's kind name → the spike's KINDS key
 var FE_REL={ "uses-hook":"uses", "uses-store":"reads" };       // the feed's rel → LINKMETA/REL2KIND vocabulary
 
+/* ══ PRE-C: wave-C kind + wire extensibility (2026-08-27) — plumbing only, draws NO nodes until
+   wave C emits them. The four L2 floors (middleware · provider · flag · prompt) get real KINDS
+   entries so the adapter DRAWS them instead of dropping (the _dropped++ guard below now falls back
+   to a generic glyph for anything still unknown — never a silent drop). The seven new rels get
+   RELCOL + LINKMETA rows (pv:0 — every one is an inferred/extracted floor, so it must NOT default
+   to LINKMETA's pv:1 and lie "proven"); REL2KIND lives in assemble.py, relLabel in card.js. */
+KINDS.middleware={ col:"#7048e8", form:"slab", label:"", type:"Middleware (gate)", layer:"api", usage:[0,"runs before the handler"],
+  conns:[["gates","endpoint","every request"]], tests:0, ident:[["kind","a Depends/add_middleware gate"]],
+  doc:"A dependency or middleware that runs BEFORE the handler body — the auth/rate-limit/idempotency gate every request crosses." };
+KINDS.provider={ col:"#e8590c", form:"panel", label:"", type:"Provider (external)", layer:"data", usage:[0,"reached by a service fn"],
+  conns:[["reached by","function","the SDK call site"]], tests:0, ident:[["kind","a third-party SDK / API the code reaches"]],
+  doc:"An external provider (an LLM, an auth SDK, a payment API) a function reaches — the edge of the system, past the last owned line." };
+KINDS.flag={ col:"#e03131", form:"slab", label:"", type:"Feature flag", layer:"api", usage:[0,"walls a route or lane"],
+  conns:[["walls","endpoint","OFF → 403"]], tests:0, ident:[["kind","a settings bool that gates a lane"]],
+  doc:"A feature flag — a config bool whose OFF state walls a route or a pipeline lane (a 403 that never runs in prod, or a dormant path)." };
+KINDS.prompt={ col:"#ae3ec9", form:"panel", label:"", type:"AI prompt", layer:"data", usage:[0,"rendered by a builder fn"],
+  conns:[["rendered by","function","the prompt builder"]], tests:0, ident:[["kind","a template string an LLM lane renders"]],
+  doc:"An LLM prompt template — a module string a builder function renders before the model call (words + placeholders)." };
+KINDCOL.middleware="#7048e8"; KINDCOL.provider="#e8590c"; KINDCOL.flag="#e03131"; KINDCOL.prompt="#ae3ec9";
+if(typeof GLYPH!=="undefined"){
+  if(!GLYPH.middleware) GLYPH.middleware='<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>';
+  if(!GLYPH.provider)   GLYPH.provider='<path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/>';
+  if(!GLYPH.flag)       GLYPH.flag='<path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" y1="22" x2="4" y2="15"/>';
+  if(!GLYPH.prompt)     GLYPH.prompt='<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>';
+  if(!GLYPH.__generic)  GLYPH.__generic='<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="12"/><circle cx="12" cy="16" r="0.5"/>';
+}
+/* the seven wave-C wire kinds: colour + weight, pv:0 (inferred/extracted floor — never "proven"). */
+RELCOL.depends="#6366f1"; RELCOL.gated_by="#7048e8"; RELCOL.dispatches="#f76707";
+RELCOL.serializes="#0ca678"; RELCOL.reaches="#e8590c"; RELCOL.walls="#e03131"; RELCOL.fnprompts="#ae3ec9";
+LINKMETA.depends={w:4,pv:0}; LINKMETA.gated_by={w:5,pv:0}; LINKMETA.dispatches={w:4,pv:0};
+LINKMETA.serializes={w:2,pv:0}; LINKMETA.reaches={w:3,pv:0}; LINKMETA.walls={w:4,pv:0}; LINKMETA.fnprompts={w:2,pv:0};
+/* a synthetic generic KINDS entry for a kind no registry knows — so a NEWER emitter's kind draws
+   (grey, generic glyph, its raw name) instead of vanishing. Called by the drop guard below. */
+function _genericKind(kind){ return { col:"#8a8f98", form:"panel", label:"", type:kind, layer:"data",
+  usage:[0,""], conns:[], tests:0, ident:[["kind","(unrecognised — this station predates the emitter)"]],
+  doc:"A node kind this station does not recognise yet — drawn generically so nothing is silently dropped. Update the station to give it a glyph and a home." }; }
+
 /* animation state: fleets static by default (perf); all = master play/pause; freezeOnDrag = auto-pause
    decorations while the camera is being rotated/moved, resume on release (pulseLoop reads ANIM.all). */
 var ANIM={ fleets:false, all:true, freezeOnDrag:true };
@@ -60,10 +97,10 @@ _ents.forEach(function(e,i){ ENT[e]=(_C4.colors&&_C4.colors[e])||"#0d9488";
 function _testFloor(det){ var n=(det.cases||[]).length + _num(det.cases_more);
   (det.case_files||[]).forEach(function(f){ var mm=/(\d+)\s*case/.exec(f.name||""); if(mm) n+=+mm[1]; });
   return n; }   // true test floor: visible cases + capped overflow + file-coverage case counts
-var nodes=[], NIDS={}, _dropped=0;
+var nodes=[], NIDS={}, _dropped=0, _generic=0;
 Object.keys(_C4.l2||{}).forEach(function(ent){
   ((_C4.l2[ent]||{}).nodes||[]).forEach(function(p){
-    var kind=p.kind; if(!KINDS[kind]){ _dropped++; return; }   // kind the spike can't draw
+    var kind=p.kind; if(!KINDS[kind]){ KINDS[kind]=_genericKind(kind); KINDCOL[kind]="#8a8f98"; if(typeof GLYPH!=="undefined"&&!GLYPH[kind]) GLYPH[kind]=GLYPH.__generic; _generic++; }   // an unknown kind (a NEWER emitter's) draws GENERICALLY — never a silent drop
     if(NIDS[p.id]) return;                                     // dedup: a shared piece is drawn once
     var det=p.det||{}, beh=p.behind||{};
     var m={ behind:_num(beh.fns), depth:_num(beh.depth),
@@ -76,7 +113,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
       middleware:p.middleware };   // C4: the endpoint's level-2 gate/dep floor → the card's Guards section
     nodes.push(n); NIDS[n.id]=n; });
 });
-if(_dropped) try{ console.warn("[universe] dropped "+_dropped+" piece(s) of unknown kind (add to KINDS)"); }catch(e){}
+if(_generic) try{ console.warn("[universe] "+_generic+" piece(s) drawn GENERICALLY (kind unknown to this station — a newer emitter; add to KINDS to give it a glyph)"); }catch(e){}
 
 /* FRONTEND pieces → nodes. Homes that are not L1 entities (buckets · candidate features) become synthetic
    clusters (their own colour band); every piece carries a det the card can read (file + lines) — honest-empty
@@ -95,7 +132,7 @@ if(_FE){
       ENT[h.id]=(h.pair&&ENT[h.pair])?("#"+new T.Color(ENT[h.pair]).lerp(new T.Color("#ffffff"),0.38).getHexString())
                                      :(FE_HOME_COL[h.kind]||"#8b5cf6"); } });
   _ents.forEach(function(e,i){ EX[e]=_ents.length<=1?0:(-300+i*(600/(_ents.length-1))); if(EY[e]==null) EY[e]=0; if(EZ[e]==null) EZ[e]=0; });   // re-band with the new clusters
-  _FE.pieces.forEach(function(p){ var kind=FE_KIND[p.kind]||p.kind; if(!KINDS[kind]){ _dropped++; return; }
+  _FE.pieces.forEach(function(p){ var kind=FE_KIND[p.kind]||p.kind; if(!KINDS[kind]){ KINDS[kind]=_genericKind(kind); KINDCOL[kind]="#8a8f98"; if(typeof GLYPH!=="undefined"&&!GLYPH[kind]) GLYPH[kind]=GLYPH.__generic; _generic++; }   // unknown FE kind draws generically too
     if(NIDS[p.id]) return;
     var det={ file:p.file, flines:p.span?(p.span[0]+"-"+p.span[1]):null, exported:true, fe_kind:p.kind, exports:p.exports||null, doc:"" };
     var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };

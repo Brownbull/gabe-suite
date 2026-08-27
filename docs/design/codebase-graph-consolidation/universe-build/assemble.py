@@ -12,7 +12,7 @@ chrome  = rd("parts/chrome.html").rstrip("\n")
 
 TITLE = '<!doctype html><html lang="{{LANG}}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Gabe Universe · {{PROJECT_NAME}} Command Center</title>'
 STYLE_CLOSE = css + "\n</style></head><body>\n" + chrome
-REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access' };"
+REL2KIND = "var REL2KIND={ fk:'fk', pk:'fk', nests:'fk', handler:'calls', touch:'calls', touches:'calls', resp:'calls', uses:'calls', calls:'calls', consumes:'calls', fetches:'bridge', bridge:'bridge', renders:'imports', mounts:'imports', reads:'imports', imports:'imports', typed:'imports', fecall:'calls', bundle:'calls', reads_from:'rollup', writes_to:'rollup', fnreads:'access', fnwrites:'access', depends:'calls', gated_by:'calls', dispatches:'calls', serializes:'fk', reaches:'calls', walls:'access', fnprompts:'calls' };"
 GLINE = "  var G=function(label,icon,count,nodeFn,trust){ return {label:label,icon:icon,count:count,node:nodeFn,trust:trust}; };"
 TRUSTCONNS = """  function trustTag(tr){ if(!tr) return null;
     return tr==="inferred"

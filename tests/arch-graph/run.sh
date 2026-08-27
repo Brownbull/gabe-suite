@@ -36,6 +36,13 @@ def check(cond, msg):
     if cond: pass_ += 1
     else: fail += 1; print("  FAIL:", msg)
 
+# ── PRE-C: _L2_KINDS is APPEND-ONLY — new kinds join at the END so existing kinds keep their
+# indices (every drawn node's stamped x/y byte-identical; only the emitted layout.l2.order grows) ──
+check(G._L2_KINDS[:5] == ("endpoint", "model", "schema", "external", "web"),
+      "pre-C: the historical 5 L2 kinds keep their order + indices (append-only, byte-identity)")
+check(G._L2_KINDS[5:] == ("middleware", "provider", "flag", "prompt"),
+      "pre-C: the 4 wave-C kinds are appended after web (they draw no nodes until wave C emits them)")
+
 # ── fixture: entities exercising every REAL derivation path ─────────────────
 #   alpha: model A(table=a, fks: self a.id · TWO to beta b.id/b.x · one unmodelled)
 #          endpoint touches its OWN schema AlphaOut (the only touch shape upstream

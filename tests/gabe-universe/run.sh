@@ -93,9 +93,19 @@ check('window.__uniCurved?__uniCurve' in page, "connectorWire does not branch st
 check('id="curveToggle"' not in page, "the topbar Curved button should be REMOVED (moved into the config LINES pill)")
 check('pillHTML("lineStyle"' in page and '__uniSetCurve' in page, "the config LINES (Straight/Curved) control is missing")
 
-# ── 10c. all 5 documented C4 piece kinds are drawable + a silent-drop is impossible ──
+# ── 10c. all C4 piece kinds are drawable + a silent-drop is IMPOSSIBLE (pre-C: generic fallback) ──
 check('if(!KINDS.web)' in page, "web kind not injected — c4 web pieces would be silently dropped")
-check('dropped "+_dropped+" piece' in page, "adapter does not warn on dropping an unknown kind (silent drop)")
+check('_genericKind(kind)' in page and 'drawn GENERICALLY' in page,
+      "pre-C: an unknown kind must draw GENERICALLY (never a silent drop) + warn")
+check('_dropped++;return' not in page.replace(" ", ""),
+      "pre-C: the old silent-drop (_dropped++; return) is gone — the guard registers + draws")
+# the 4 wave-C L2 kinds are registered so wave C draws them (no NaN, no drop)
+for _k in ("middleware", "provider", "flag", "prompt"):
+    check(('KINDS.'+_k+'=') in page.replace(" ", ""), "pre-C: KINDS.%s not registered" % _k)
+# the 7 wave-C rels carry colour + weight + REL2KIND bucket (pv:0 — inferred floor, never "proven")
+for _r in ("depends", "gated_by", "dispatches", "serializes", "reaches", "walls", "fnprompts"):
+    check(('RELCOL.'+_r+'=') in page.replace(" ", "") and ('LINKMETA.'+_r+'=') in page.replace(" ", "")
+          and (_r+":'") in page.replace(" ", ""), "pre-C: rel %s missing from RELCOL/LINKMETA/REL2KIND" % _r)
 
 # ── 10d. batch-2 layout engine: entity-layout (chain/force/spread) + cluster-core (layer/kind/tests) + 2nd tab ──
 check('entLayout:"force"' in page and 'coreBy:"layer"' in page, "CFG missing entLayout/coreBy fields")

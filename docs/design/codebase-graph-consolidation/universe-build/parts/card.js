@@ -64,10 +64,13 @@
   /* append the ACTUAL 3D graph asset (live thumbnail) to a section header, right-aligned (operator) */
   function _hdAsset(hd, buildFn, title){ try{ if(hd && window.__uniAssetThumb) hd.append(window.__uniAssetThumb(buildFn, title)); }catch(e){} return hd; }
   /* live connections — grouped from the REAL edges this node touches (honest per-node, not toy). */
-  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests", returns:"returns", takes:"takes", uses:"uses"},
-      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in", returns:"returned by", takes:"taken by", uses:"used by"};
+  function relLabel(rel, dir){ var O={touches:"touches", fk:"FK →", bridge:"fetches", calls:"calls", imports:"imports", resp:"returns", handler:"handler", consumes:"consumes", nests:"nests", returns:"returns", takes:"takes", uses:"uses",
+        depends:"depends on", gated_by:"gated by", dispatches:"dispatches", serializes:"serializes", reaches:"reaches", walls:"walls (403)", fnprompts:"renders prompt"},   // pre-C: wave-C rels
+      I={touches:"touched by", fk:"FK'd by", bridge:"fetched by", calls:"called by", imports:"imported by", resp:"returned to", handler:"handled from", consumes:"consumed by", nests:"nested in", returns:"returned by", takes:"taken by", uses:"used by",
+        depends:"depended on by", gated_by:"gates", dispatches:"dispatched by", serializes:"serialized by", reaches:"reached by", walls:"walled by", fnprompts:"prompt of"};
     return (dir==="out"?O:I)[rel]||(rel+(dir==="out"?"":" (in)")); }
-  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema", returns:"schema", takes:"schema", uses:"schema"};
+  var CONNICO={touches:"model", fk:"key", bridge:"down", calls:"merge", imports:"link", resp:"schema", consumes:"down", nests:"schema", returns:"schema", takes:"schema", uses:"schema",
+      depends:"link", gated_by:"key", dispatches:"merge", serializes:"schema", reaches:"link", walls:"key", fnprompts:"schema"};
   /* ── #1 · the Explorer expander — ONE reusable primitive. A list where a row can reveal its
      children indented one level (lazy, depth-capped) with a "+N more" count cap. Rows:
      {label, glyph, cls, meta, title, node, childrenFn}. node → click navigates; childrenFn → a twisty. ── */

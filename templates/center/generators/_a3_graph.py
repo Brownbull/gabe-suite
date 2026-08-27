@@ -68,9 +68,16 @@ _L1_FLOW_COL_W = 210.0   # column stride for the flow (dependency-gradient) layo
 _L1_FLOW_ROW_H = 118.0   # row stride within a flow column
 _L2_COL_W = 240.0    # column stride for the columns-by-kind L2 layout
 _L2_ROW_H = 64.0     # row stride within a column
-_L2_KINDS = ("endpoint", "model", "schema", "external", "web")  # column order, left→right
+_L2_KINDS = ("endpoint", "model", "schema", "external", "web",
+             "middleware", "provider", "flag", "prompt")  # column order, left→right
 #            web is APPENDED (not prepended) so adding the frontend arm leaves every
 #            existing piece's stamped x/y byte-identical — only web nodes get a new column.
+#            THE APPEND-ONLY RULE (pre-C, 2026-08-27): every new L2 kind joins at the END so the
+#            existing kinds keep indices 0-4 and every drawn node's stamped x/y stays byte-identical
+#            — only the emitted `layout.l2.order` grows. middleware/provider/flag/prompt are the
+#            wave-C floors (they draw NO nodes until wave C emits them); reserving their slots now
+#            is what stops `_L2_KINDS.index()` here and in both stations from crashing/NaN-ing on a
+#            kind a newer emitter produces. The arch-graph battery pins this tuple append-only.
 
 
 def _index_tables(entities: dict[str, Any]) -> dict[str, str]:
