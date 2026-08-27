@@ -1,12 +1,12 @@
 # Handoff — Gabe Universe: backend journeys walked, write-path enrichment landed
 
-> Generated 2026-08-27 · branch `graft-adoption` · HEAD `497b535` · no `.kdbp` (suite advisory arm).
+> Generated 2026-08-27 · branch `graft-adoption` · HEAD `12d133a` · no `.kdbp` (suite advisory arm).
 > Durable state: `~/.claude/projects/-home-khujta-projects-gabe-lens/memory/gabe-universe-station.md`.
 > This file is the paste-able resume prompt for the next session.
 
 ## Resume prompt
 
-Continue the **Gabe Universe** station on branch `graft-adoption` (HEAD `497b535` — "the MODEL CENSUS", on top of `2de272a` — "workflow + backend journeys · step note · walk pin"). No `.kdbp` in this repo by design (advisory arm: suite-doctor + batteries + dry-run-on-a-copy). ~232 commits ahead of `main`; **no upstream** (push = `git push -u origin graft-adoption`).
+Continue the **Gabe Universe** station on branch `graft-adoption` (HEAD `12d133a` — current-step selection + themed legend tips, on `497b535` "the MODEL CENSUS" and `2de272a` — "workflow + backend journeys · step note · walk pin"). No `.kdbp` in this repo by design (advisory arm: suite-doctor + batteries + dry-run-on-a-copy). ~232 commits ahead of `main`; **no upstream** (push = `git push -u origin graft-adoption`).
 
 READ FIRST: the memory topic `~/.claude/projects/-home-khujta-projects-gabe-lens/memory/gabe-universe-station.md` (the full arc + every lesson), then `docs/design/codebase-graph-consolidation/universe-build/BACKEND-JOURNEYS.md` (the verified journey catalog + walk grammar) and `universe-build/README.md` (the assemble→regen pipeline).
 
