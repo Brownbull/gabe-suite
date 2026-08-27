@@ -5,7 +5,7 @@ when_to_use: "After a long or sprawling stretch: did everything that should have
 context: fork
 agent: Explore
 metadata:
-  version: 1.6.0
+  version: 1.7.0
 ---
 
 # Gabe Pulse — is anything important owed?
@@ -133,11 +133,13 @@ $ARGUMENTS
 
 ## The ANGLE family (1.1.0)
 
-`scripts/angles.py` computes ten evidence-backed triggers — adversarial pass owed (S1),
+`scripts/angles.py` computes twelve evidence-backed triggers — adversarial pass owed (S1),
 structural scan overdue (S2), journey proof missing (S3), published docs stale (S4), scope drift
 (S5), entity context worth loading (S6), an explanation worth drawing (S7), workflow-census
-capture debt (S8), entity-shape drift (S9), and a diff-added fetch that named no declared endpoint
-(S10) — each naming the satellite that would find it now, or reporting **unavailable** with what
+capture debt (S8), entity-shape drift (S9), a diff-added fetch that named no declared endpoint
+(S10), model-census drift (S11 — a table class no entity's config claims) and schema-homing
+residue (S12 — a schema consumed by several entities, or unwired in a live file; dormant contract
+lanes are counted, never nagged) — each naming the satellite that would find it now, or reporting **unavailable** with what
 would unlock it. Spine beats print its `--one-line` output verbatim; it emits at most one row and
 nothing when nothing fires.
 

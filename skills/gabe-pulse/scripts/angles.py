@@ -379,6 +379,44 @@ def s11_model_census(root: Path, plan: dict | None, cfg: dict | None):
             f"({names}{more})", "/gabe-cc-init")
 
 
+def s12_schema_homing(root: Path, plan: dict | None, cfg: dict | None):
+    """Schema-homing residue — the homing pass (a schema lives where its CONSUMER lives, not
+    where its file was claimed; operator ruling 2026-08-27) leaves two states a human must
+    settle: AMBIGUOUS (consumed by several entities — accept the file home or pin one) and
+    UNWIRED in a LIVE file (no route and no claimed function names it — a dead shape, or code
+    the config does not claim: /gabe-cc-init). DORMANT shapes — unwired in a file no route
+    reaches at all, a contract lane not yet wired (gustify's gastify exchange) — never nag:
+    the map surfaces them the build a route or claimed function names them; the line only
+    counts them so the lane is not forgotten. READS the committed archmap's `schema_homing`
+    (computed at build time; nothing stored to go stale)."""
+    if cfg is None:
+        return Unavailable("no center config — homing lives in archmap.json")
+    amap_path = root / "docs" / "site" / "center" / "archmap.json"
+    if not amap_path.exists():
+        return Unavailable("no archmap yet — the center regen runs the homing pass")
+    try:
+        amap = json.loads(amap_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return Unavailable("archmap.json unreadable")
+    sh = amap.get("schema_homing")
+    if not isinstance(sh, dict):
+        return Unavailable("archmap predates schema homing — regen the center")
+    amb = sh.get("ambiguous") or []
+    live = [u for u in (sh.get("unwired") or []) if not u.get("dormant")]
+    dormant = [u for u in (sh.get("unwired") or []) if u.get("dormant")]
+    if not amb and not live:
+        return None
+    parts = []
+    if amb:
+        parts.append(f"{len(amb)} multi-consumer ({', '.join(a.get('cls', '?') for a in amb[:3])}"
+                     f"{' +%d' % (len(amb) - 3) if len(amb) > 3 else ''})")
+    if live:
+        parts.append(f"{len(live)} unwired in live files ({', '.join(u.get('cls', '?') for u in live[:3])}"
+                     f"{' +%d' % (len(live) - 3) if len(live) > 3 else ''})")
+    tail = f" · {len(dormant)} dormant" if dormant else ""
+    return ("schema homing — " + ", ".join(parts) + tail, "/gabe-cc-init")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -391,6 +429,7 @@ SIGNALS = [
     ("S9", "entity shape", s9_entity_shape),
     ("S10", "web bridge", s10_web_bridge),
     ("S11", "model census", s11_model_census),
+    ("S12", "schema homing", s12_schema_homing),
 ]
 
 

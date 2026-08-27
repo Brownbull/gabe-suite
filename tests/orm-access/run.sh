@@ -213,6 +213,84 @@ print(f"orm-access: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
 
+# ── SCHEMA HOMING (operator ruling 2026-08-27: a schema lives where its CONSUMER lives) ──
+# Endpoint consumer → move · nested-only → follow the parent (transitive) · multi-consumer stays
+# (ambiguous) · function consumer (returns) → move + a fn wire · unwired + dormant-file tag ·
+# honest-empty + deterministic. FIRE and SILENT both exercised; the control case proves the rule
+# can NOT move a schema when the consumer evidence is removed (mutation-proven).
+python3 - "$GEN" <<'PY'
+import sys, copy
+gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_code as C
+p = f = 0
+def ck(c, m):
+    global p, f
+    if c: p += 1
+    else: f += 1; print("  FAIL:", m)
+def fixture():
+    return {
+      "auth": {"schemas": [{"cls": "SetupReq", "file": "s/setup.py", "fields": [["dietary", "DietIn", ""]]}],
+               "endpoints": [{"method": "POST", "path": "/setup", "touches": ["SetupReq"], "touches_x": ["MeOut"], "resp": "MeOut"}]},
+      "allergen": {"schemas": [{"cls": "DietIn", "file": "s/prefs.py", "fields": []},
+                               {"cls": "ExplIn", "file": "s/prefs.py", "fields": []}], "endpoints": []},
+      "progression": {"schemas": [{"cls": "MeOut", "file": "s/resp.py", "fields": [["user", "UserSum", ""]]},
+                                  {"cls": "UserSum", "file": "s/resp.py", "fields": []},
+                                  {"cls": "Shared", "file": "s/resp.py", "fields": []},
+                                  {"cls": "Ghost", "file": "s/ghost.py", "fields": []},
+                                  {"cls": "Lane", "file": "s/lane.py", "fields": []}],
+                      "endpoints": [{"method": "GET", "path": "/profile", "touches": ["Shared"], "touches_x": [], "resp": ""}]},
+      "settings": {"schemas": [], "endpoints": [{"method": "PATCH", "path": "/settings", "touches": [], "touches_x": ["ExplIn", "Shared"], "resp": ""}]},
+      "pantry": {"schemas": [], "endpoints": []},
+    }
+FI = {"svc/lane.py::ingest": {"entity": "pantry", "file": "svc/lane.py", "fn": "ingest", "handler": False,
+                              "returns": "Lane", "params": [("cfg", "Ghost")], "ids": set()}}
+E = fixture(); st = C.home_schemas(E, FI)
+mv = {m["cls"]: m for m in st["moved"]}
+ck(set(mv) == {"DietIn", "ExplIn", "MeOut", "UserSum", "Lane", "Ghost"}, "FIRE: exactly the six consumer-homed schemas move (%r)" % sorted(mv))
+ck(mv["Ghost"]["to"] == "pantry" and mv["Ghost"]["why"] == "fn-consumed-by:svc/lane.py#ingest", "a claimed function's PARAM annotation (takes) homes a schema too")
+ck(mv["ExplIn"]["to"] == "settings" and mv["ExplIn"]["why"] == "consumed-by:PATCH /settings", "an endpoint consumer (touches_x) homes the schema")
+ck(mv["MeOut"]["to"] == "auth" and mv["MeOut"]["why"].startswith("consumed-by:POST /setup"), "resp + touches_x resolve to ONE consumer entity")
+ck(mv["DietIn"]["to"] == "auth" and mv["DietIn"]["why"] == "nested-in:SetupReq", "a nested-only schema follows its parent")
+ck(mv["UserSum"]["to"] == "auth" and mv["UserSum"]["why"] == "nested-in:MeOut", "TRANSITIVE: nested in a schema that itself moved → same home")
+ck(mv["Lane"]["to"] == "pantry" and mv["Lane"]["why"] == "fn-consumed-by:svc/lane.py#ingest", "a claimed function's return type homes a schema no route names")
+ck([a["cls"] for a in st["ambiguous"]] == ["Shared"] and st["ambiguous"][0]["consumers"] == ["progression", "settings"], "SILENT: a multi-consumer schema stays, reported ambiguous with its consumers")
+ck(st["unwired"] == [], "nothing unwired once every shape has a route or function consumer")
+ck([(w["cls"], w["rel"]) for w in st["fn_wires"]] == [("Ghost", "takes"), ("Lane", "returns")], "fn wires: returns + takes, sorted (%r)" % st["fn_wires"])
+ck([x["cls"] for x in E["allergen"]["schemas"]] == [], "the file home LOSES the moved dicts")
+ck([x["cls"] for x in E["auth"]["schemas"]] == ["SetupReq", "DietIn", "MeOut", "UserSum"], "the consumer home GAINS them, appended in class order (untouched order kept)")
+ck(E["auth"]["schemas"][1].get("homed_from") == "allergen" and E["auth"]["schemas"][1].get("homed_why") == "nested-in:SetupReq", "provenance stamped on the moved dict")
+ck(E["progression"]["schemas"][0]["cls"] == "Shared" and "homed_from" not in E["progression"]["schemas"][0], "a staying schema carries no provenance")
+# dormant: unwired in a file NO route reaches; live: unwired in a file some route reaches
+E2 = fixture(); st2 = C.home_schemas(E2, {})
+u = {x["cls"]: x for x in st2["unwired"]}
+ck(set(u) == {"Ghost", "Lane"} and u["Ghost"]["dormant"] is True and u["Lane"]["dormant"] is True, "without function insight, Ghost + Lane are unwired and DORMANT (their files have no endpoint consumer)")
+E3 = fixture(); E3["progression"]["endpoints"][0]["touches_x"] = ["Lane"]; st3 = C.home_schemas(E3, {})
+u3 = {x["cls"]: x for x in st3["unwired"]}
+ck("Lane" not in u3 and u3["Ghost"]["dormant"] is True, "the dormant tag clears for a file the moment a route names any of its classes (Lane consumed → moved)")
+E4 = fixture(); E4["progression"]["schemas"].append({"cls": "Live", "file": "s/resp.py", "fields": []}); st4 = C.home_schemas(E4, {})
+ck({x["cls"]: x["dormant"] for x in st4["unwired"]}.get("Live") is False, "unwired in a LIVE file (a route consumes a sibling) is NOT dormant")
+# CONTROL (mutation-proof): remove the consumer evidence → the schema does not move
+E5 = fixture(); E5["auth"]["endpoints"][0]["touches_x"] = []; E5["auth"]["endpoints"][0]["resp"] = ""; st5 = C.home_schemas(E5, {})
+ck("MeOut" not in {m["cls"] for m in st5["moved"]} and E5["progression"]["schemas"][0]["cls"] == "MeOut", "CONTROL: no consumer names MeOut → it stays in its file home")
+# a schema's OWN validator/helper method never counts as a consumer (gustify: DietaryProfileInput._fold_diet…
+# returned its own class and made the schema "ambiguous" between allergen and auth)
+E8 = fixture(); st8 = C.home_schemas(E8, {"s/prefs.py::DietIn._fold": {"entity": "allergen", "file": "s/prefs.py", "fn": "DietIn._fold", "method": True, "handler": False, "returns": "DietIn", "params": [], "ids": set()}})
+ck({m["cls"]: m["to"] for m in st8["moved"]}.get("DietIn") == "auth" and not [w for w in st8["fn_wires"] if w["cls"] == "DietIn"], "a schema's own method is not a consumer: DietIn still follows its parent, no self wire")
+# endpoint consumers OUTRANK function consumers
+E6 = fixture(); st6 = C.home_schemas(E6, {"svc/x.py::mk": {"entity": "pantry", "file": "svc/x.py", "fn": "mk", "handler": False, "returns": "ExplIn", "params": [], "ids": set()}})
+ck({m["cls"]: m["to"] for m in st6["moved"]}["ExplIn"] == "settings", "a route consumer outranks a function consumer (ExplIn → settings, not pantry)")
+# honest-empty + deterministic
+ck(C.home_schemas({}, {}) == {"moved": [], "ambiguous": [], "unwired": [], "fn_wires": []}, "honest-empty: no entities → empty stats")
+E7 = {"a": {"schemas": [{"cls": "X", "file": "f", "fields": []}], "endpoints": [{"method": "GET", "path": "/x", "touches": ["X"], "touches_x": [], "resp": "X"}]}}
+E7c = copy.deepcopy(E7); st7 = C.home_schemas(E7, {})
+ck(st7["moved"] == [] and E7 == E7c, "honest-empty: an own-consumed schema moves nothing and the entities dict is untouched")
+A, B = fixture(), fixture(); sa, sb = C.home_schemas(A, FI), C.home_schemas(B, FI)
+ck(sa == sb and A == B, "deterministic: two runs, identical stats and identical entities")
+print(f"schema-homing: {p} passed, {f} failed")
+sys.exit(1 if f else 0)
+PY
+[ $? -eq 0 ] || exit 1
+
 # ── MODEL CENSUS (operator ruling 2026-08-27: config = ownership, never existence) ──
 # A table class in an UNCLAIMED model file, or filtered by an entity's class allowlist,
 # is reported (never silently dropped); mixins without __tablename__ never count.

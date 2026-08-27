@@ -346,6 +346,16 @@ for _s, _exp in (("list[Recipe] | None", "Recipe"), ("Recipe | None", "Recipe"),
     ck(_a3_levels._bare_cls(_s) == _exp and _a3_graph._bare_cls(_s) == _exp,
        f"_bare_cls({_s!r})→{_exp!r} in BOTH arms (was 'None' on the | None form)")
 
+# ── schema_edges (2026-08-27 schema homing): the fn→schema wires ride a SEPARATE feed, never fn_edges ──
+ck(lv.get("schema_edges") == [], "honest-empty: no schema_homing block upstream → schema_edges []")
+_hm = copy.deepcopy(AMAP); _hm["schema_homing"] = {"moved": [], "ambiguous": [], "unwired": [],
+    "fn_wires": [{"fn": "svc/lane.py#ingest", "cls": "OrderResponse", "rel": "returns", "slug": "orders"},
+                 {"fn": "svc/a.py#mk", "cls": "OrderResponse", "rel": "uses", "slug": "orders"}]}
+_lh = _a3_levels.build_levels(_hm, graph)
+ck(_lh["schema_edges"] == [{"s": "svc/a.py#mk", "t": "schema:OrderResponse", "rel": "uses"},
+                           {"s": "svc/lane.py#ingest", "t": "schema:OrderResponse", "rel": "returns"}], "schema_edges emitted from fn_wires, sorted, schema: ids (%r)" % _lh["schema_edges"])
+ck(_lh["fn_edges"] == lv["fn_edges"], "fn_edges untouched by the homing feed (its consumers assume fn→fn)")
+
 print(f"levels battery: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY

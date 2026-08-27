@@ -180,6 +180,21 @@ run "$r" | grep -q "model-census drift" && bad "S11 fired on an archmap without 
 r=$(repo s11d); commits "$r" 1 "feat: work"
 run "$r" | grep -q "model-census drift" && bad "S11 fired without a center" || ok "S11 silent with no center config"
 
+# ── S12 · schema-homing residue — ambiguous / unwired-in-live-file schemas (reads archmap.schema_homing); dormant never nags ──
+r=$(repo s12a); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[{"cls":"MeResponse","from":"progression","to":"auth","why":"consumed-by:GET /me"}],"ambiguous":[{"cls":"DietaryBlock","home":"progression","consumers":["auth","settings"]}],"unwired":[{"cls":"Ghost","home":"cooking","file":"s/g.py","dormant":false},{"cls":"ReceiptIngestRequest","home":"pantry","file":"s/gastify.py","dormant":true}],"fn_wires":[]}}'
+out=$(run "$r"); echo "$out" | grep -q "schema homing — 1 multi-consumer (DietaryBlock), 1 unwired in live files (Ghost) · 1 dormant" && ok "S12 fires: ambiguous + live-unwired named, dormant counted" || bad "S12 did not fire / wrong line: $out"
+# SILENT: only dormant shapes — a contract lane not yet wired never nags
+r=$(repo s12b); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[],"ambiguous":[],"unwired":[{"cls":"ReceiptIngestRequest","home":"pantry","file":"s/gastify.py","dormant":true}],"fn_wires":[]}}'
+run "$r" | grep -q "schema homing" && bad "S12 nagged on dormant-only shapes" || ok "S12 silent when only dormant shapes remain"
+# SILENT: moves alone are the rule working, not residue
+r=$(repo s12c); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"schema_homing":{"moved":[{"cls":"X","from":"a","to":"b","why":"consumed-by:GET /x"}],"ambiguous":[],"unwired":[],"fn_wires":[]}}'
+run "$r" | grep -q "schema homing" && bad "S12 fired on moves alone" || ok "S12 silent when every schema homed cleanly"
+# SILENT + honest: a pre-homing archmap never fabricates
+r=$(repo s12d); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}}}'
+run "$r" | grep -q "schema homing" && bad "S12 fired on an archmap without the homing block" || ok "S12 silent (unavailable) on a pre-homing archmap"
+r=$(repo s12e); commits "$r" 1 "feat: work"
+run "$r" | grep -q "schema homing" && bad "S12 fired without a center" || ok "S12 silent with no center config"
+
 # ── S5 · scope drift — computable since the scope mirror (ruling 2026-08-07) ──
 # no scope field on the current phase → honest unavailable, never a proxy guess
 r=$(repo s5a); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"}}]}'

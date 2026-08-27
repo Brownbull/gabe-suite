@@ -210,6 +210,12 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         "detail": {},
         "fn_nodes": [],
         "fn_edges": [],
+        # function → schema wires from the homing pass (returns · takes · uses): a SEPARATE feed,
+        # never folded into fn_edges (whose consumers assume fn→fn calls). Honest-empty [].
+        "schema_edges": sorted(({"s": w["fn"], "t": "schema:" + w["cls"], "rel": w["rel"]}
+                                for w in ((amap.get("schema_homing") or {}).get("fn_wires") or [])
+                                if w.get("fn") and w.get("cls")),
+                               key=lambda e: (e["s"], e["t"], e["rel"])),
         "use_edges": [],
         "pressure": {},
         "census": {},

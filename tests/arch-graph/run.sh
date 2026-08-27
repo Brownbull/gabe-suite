@@ -25,7 +25,7 @@ REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 GEN="$REPO/templates/center/generators"
 
 python3 - "$GEN" <<'PY'
-import sys, json, importlib.util, tempfile, pathlib
+import sys, json, copy, importlib.util, tempfile, pathlib
 gen = sys.argv[1]
 spec = importlib.util.spec_from_file_location("_a3_graph", gen + "/_a3_graph.py")
 G = importlib.util.module_from_spec(spec); spec.loader.exec_module(G)
@@ -76,6 +76,31 @@ LABELS = {"alpha": "Alpha", "beta": "Beta", "gamma": "Gamma"}
 STATUS = {"alpha": "approved", "beta": "pending"}
 
 g = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
+
+# ── SCHEMA HOMING provenance (2026-08-27): a homed schema dict carries homed_from/homed_why → the
+#    node + its det say so; the archmap's schema_homing block → stats counts; absent → key absent.
+_hf = copy.deepcopy(FIX)
+_hf["entities"]["alpha"]["schemas"].append({"cls": "MovedIn", "homed_from": "beta", "homed_why": "consumed-by:GET /alpha"})
+_hf["schema_homing"] = {"moved": [{"cls": "MovedIn", "from": "beta", "to": "alpha", "why": "consumed-by:GET /alpha"}],
+                        "ambiguous": [{"cls": "Sh", "home": "beta", "consumers": ["alpha", "gamma"]}],
+                        "unwired": [{"cls": "U1", "home": "gamma", "file": "f", "dormant": True}, {"cls": "U2", "home": "gamma", "file": "g", "dormant": False}], "fn_wires": []}
+_hg = G.build_c4_graph(_hf, labels=LABELS, status=STATUS)
+_mn = next(n for n in _hg["l2"]["alpha"]["nodes"] if n["id"] == "schema:MovedIn")
+check(_mn.get("homed") == {"from": "beta", "why": "consumed-by:GET /alpha"} and (_mn.get("det") or {}).get("homed") == _mn["homed"],
+      "a homed schema node carries {from, why} on the node AND in its det (the card reads det)")
+check(_hg["stats"].get("schema_homing") == {"moved": 1, "ambiguous": 1, "unwired": 2, "dormant": 1}, "stats.schema_homing counts moved/ambiguous/unwired/dormant")
+check("schema_homing" not in g["stats"] and all("homed" not in n for n in g["l2"]["alpha"]["nodes"]), "honest-empty: no homing block upstream → no stats key, no homed field (byte-identical)")
+# a HOMED-IN class named in the endpoint's RESIDUE (touches_x — split at parse time, before the move) must
+# land as an INTRA edge, never be dropped by the cross-resolver's same-entity guard (the wire vanished
+# exactly when the class arrived: ExplorationPreferencesInput lost PATCH /settings/exploration)
+_hi = copy.deepcopy(FIX)
+_hi["entities"]["alpha"]["schemas"].append({"cls": "HomedIn", "homed_from": "beta", "homed_why": "consumed-by:GET /alpha", "fields": []})
+_hi["entities"]["alpha"]["endpoints"][0]["touches_x"] = _hi["entities"]["alpha"]["endpoints"][0]["touches_x"] + ["HomedIn"]
+_hig = G.build_c4_graph(_hi, labels=LABELS, status=STATUS)
+check({"source": "endpoint:GET /alpha", "target": "schema:HomedIn", "kind": "touches"} in _hig["l2"]["alpha"]["edges"],
+      "a residue name resolving to a HOMED-IN own class lands as an intra touches edge")
+check(not any(e["to"] == "schema:HomedIn" for e in _hig["cross_edges"]), "…and never as a cross edge (same entity)")
+check(len(_hig["cross_edges"]) == len(g["cross_edges"]), "other cross edges unchanged")
 
 # ── cross-entity TOUCHES (2026-08-20, the allergen-reduction exposure): an endpoint's
 #    unowned residue (touches_x) resolves against the GLOBAL class index → a cross_edges

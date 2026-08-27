@@ -575,6 +575,143 @@ def model_census(repo: Path, entity_code: dict | None = None,
     return out
 
 
+def home_schemas(entities: dict, function_insight: dict | None = None) -> dict:
+    """SCHEMA HOMING (operator ruling 2026-08-27): a schema lives where its CONSUMER lives,
+    not where its FILE was claimed. center.config.json claims schema FILES per entity, and a
+    file is one entity's — so gustify drew allergen's ``schemas/preferences.py`` shapes under
+    allergen though every one of them is a field of auth's ``SetupCompleteRequest`` or the body
+    of a settings route, and progression's ``responses.py`` carried ``MeResponse`` (auth) and
+    ``SettingsResponse`` (settings). A file claim cannot split a file; this pass can.
+
+    Inputs are the archmap's OWN facts — no new source read:
+      * endpoint consumers — an endpoint of entity S names the class in
+        ``touches ∪ touches_x ∪ resp`` (the same bare-name floor the touches wire rides);
+      * function consumers — a claimed (entity-stamped, non-handler) function ``returns`` it,
+        ``takes`` it (param annotation) or ``uses`` it (a body identifier) — the service-consumed
+        schemas no handler ever names (gustify's gastify exchange contract);
+      * parents — a schema whose field TYPE names the class (the ``nests`` source).
+    Rule, per schema, endpoint consumers OUTRANKING function consumers (a route is the stronger
+    ownership signal): exactly ONE consumer entity → move there; no consumer but parents that all
+    resolve to ONE entity → follow the parent (transitive, cycle-safe); otherwise stay
+    (``own`` | ``ambiguous`` | ``unwired``) — never guessed, always reported.
+
+    MUTATES ``entities`` in place: the schema dict moves between ``entities[*]["schemas"]``
+    (appended, sorted by class — untouched entities keep their byte order) and is stamped
+    ``homed_from`` + ``homed_why`` (the C4 node and its card carry the provenance). Returns the
+    stats block for ``amap["schema_homing"]`` → pulse S12 / ``c4.stats.schema_homing`` /
+    the levels ``schema_edges`` feed:
+      {"moved": [{cls, from, to, why}], "ambiguous": [{cls, home, consumers}],
+       "unwired": [{cls, home, file, dormant}], "fn_wires": [{fn, cls, rel, slug}]}
+    ``dormant`` = unwired AND no class of its FILE is endpoint-consumed — a contract lane no
+    route reaches yet; the tag self-clears the build a route names any class of that file.
+    Honest-empty: no schema, or nothing to move → empty lists and ``entities`` untouched
+    (every downstream feed byte-identical). Deterministic: sorted slugs, classes, functions."""
+    import re as _re
+    idx: dict[str, tuple[str, dict]] = {}          # cls → (file-home slug, schema dict); first wins
+    for slug in sorted(entities):
+        for sc in ((entities.get(slug) or {}).get("schemas") or []):
+            if sc.get("cls"):
+                idx.setdefault(sc["cls"], (slug, sc))
+    empty = {"moved": [], "ambiguous": [], "unwired": [], "fn_wires": []}
+    if not idx:
+        return empty
+    _cls_rx = _re.compile(r"[A-Z][A-Za-z0-9_]+")
+    ep_cons: dict[str, dict[str, str]] = {c: {} for c in idx}   # cls → {slug: first endpoint label}
+    file_hit: set[str] = set()                                    # files with ≥1 endpoint-consumed class
+    for slug in sorted(entities):
+        for ep in ((entities.get(slug) or {}).get("endpoints") or []):
+            label = f"{ep.get('method', '')} {ep.get('path', '')}".strip()
+            names = set(ep.get("touches") or []) | set(ep.get("touches_x") or [])
+            names |= {m for m in _cls_rx.findall(str(ep.get("resp") or "")) if m != "None"}
+            for c in sorted(names):
+                if c in idx:
+                    ep_cons[c].setdefault(slug, label)
+                    file_hit.add(idx[c][1].get("file") or "")
+    fn_cons: dict[str, dict[str, str]] = {c: {} for c in idx}
+    fn_wires: list[dict] = []
+    for key in sorted(function_insight or {}):
+        rec = function_insight[key] or {}
+        ent = rec.get("entity")
+        if not ent or rec.get("handler"):          # a handler's consumption IS its endpoint's
+            continue
+        fid = f"{rec.get('file', '')}#{rec.get('fn', '')}"
+        _own = str(rec.get("fn") or "").split(".", 1)[0] if rec.get("method") else None   # a schema's OWN
+        rets = {m for m in _cls_rx.findall(str(rec.get("returns") or "")) if m in idx}
+        takes: set[str] = set()
+        for _p in (rec.get("params") or []):
+            ann = _p[1] if isinstance(_p, (list, tuple)) and len(_p) > 1 else ""
+            takes |= {m for m in _cls_rx.findall(str(ann or "")) if m in idx}
+        uses = {m for m in (rec.get("ids") or ()) if m in idx} - rets - takes
+        for rel, group in (("returns", rets), ("takes", takes - rets), ("uses", uses)):
+            for c in sorted(group):
+                if c == _own:                      # validator/helper method on the class itself — not a consumer
+                    continue
+                fn_cons[c].setdefault(ent, fid)
+                fn_wires.append({"fn": fid, "cls": c, "rel": rel, "slug": ent})
+    parents: dict[str, set[str]] = {c: set() for c in idx}
+    for c, (_slug, sc) in idx.items():
+        for fld in (sc.get("fields") or []):
+            ftype = fld[1] if isinstance(fld, (list, tuple)) and len(fld) > 1 else ""
+            for m in _cls_rx.findall(str(ftype or "")):
+                if m in idx and m != c:
+                    parents[m].add(c)
+    home = {c: slug for c, (slug, _sc) in idx.items()}
+    resolved: dict[str, str] = {}
+    why: dict[str, str] = {}
+
+    def _resolve(c: str, stack: tuple = ()) -> str:
+        if c in resolved:
+            return resolved[c]
+        if c in stack:                              # composition cycle → the file home, no recursion
+            return home[c]
+        cons = ep_cons[c] or fn_cons[c]
+        if len(cons) == 1:
+            slug = next(iter(cons))
+            r = slug
+            why[c] = ("consumed-by:" if ep_cons[c] else "fn-consumed-by:") + cons[slug]
+        elif len(cons) > 1:
+            r = home[c]
+            why[c] = "ambiguous:" + ",".join(sorted(cons))
+        elif parents[c]:
+            ph = {_resolve(p, stack + (c,)) for p in sorted(parents[c])}
+            if len(ph) == 1:
+                r = ph.pop()
+                why[c] = "nested-in:" + ",".join(sorted(parents[c]))
+            else:
+                r = home[c]
+                why[c] = "ambiguous-parents:" + ",".join(sorted(ph))
+        else:
+            r = home[c]
+            why[c] = "unwired"
+        resolved[c] = r
+        return r
+
+    for c in sorted(idx):
+        _resolve(c)
+    moved: list[dict] = []
+    for c in sorted(idx):
+        src, to = home[c], resolved[c]
+        if to == src or to not in entities or entities.get(to) is None:
+            continue
+        sc = idx[c][1]
+        lst = (entities.get(src) or {}).get("schemas") or []
+        if sc in lst:
+            lst.remove(sc)
+        sc["homed_from"] = src
+        sc["homed_why"] = why[c]
+        entities[to].setdefault("schemas", []).append(sc)
+        moved.append({"cls": c, "from": src, "to": to, "why": why[c]})
+    ambiguous = [{"cls": c, "home": home[c],
+                  "consumers": sorted((ep_cons[c] or fn_cons[c]) if why[c].startswith("ambiguous:")
+                                      else set(why[c].split(":", 1)[1].split(",")))}
+                 for c in sorted(idx) if why[c].startswith("ambiguous")]
+    unwired = [{"cls": c, "home": home[c], "file": idx[c][1].get("file") or "",
+                "dormant": (idx[c][1].get("file") or "") not in file_hit}
+               for c in sorted(idx) if why[c] == "unwired"]
+    return {"moved": moved, "ambiguous": ambiguous, "unwired": unwired,
+            "fn_wires": sorted(fn_wires, key=lambda w: (w["fn"], w["cls"], w["rel"]))}
+
+
 def model_insight(repo: Path) -> dict:
     """{cls: signals} across EVERY documented class app-wide — computed once
     per build off the cached entity maps + one word-boundary scan of the

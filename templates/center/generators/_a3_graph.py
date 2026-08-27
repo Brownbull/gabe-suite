@@ -581,6 +581,10 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
         snode = {"id": nid, "kind": "schema", "slug": slug,
                  "label": schema.get("cls")}
         sdet = with_journeys(det_of("schema", schema), schema.get("cls") or "")
+        if schema.get("homed_from"):               # schema homing provenance — the card says where it came from
+            snode["homed"] = {"from": schema["homed_from"], "why": schema.get("homed_why") or ""}
+            sdet = dict(sdet or {})
+            sdet["homed"] = snode["homed"]
         if sdet:
             snode["det"] = sdet
         add_node(snode)
@@ -1017,9 +1021,16 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             if not hit:
                 continue                      # external/library class — nothing to point at (as before)
             tgt_nid, tgt_slug = hit
-            if tgt_slug == _slug or (xt["from"], tgt_nid) in _xt_seen:
+            if (xt["from"], tgt_nid) in _xt_seen:
                 continue
             _xt_seen.add((xt["from"], tgt_nid))
+            if tgt_slug == _slug:
+                # a HOMED-IN class (schema homing moved it here after the parse split own/residue):
+                # the wire is intra now — land it in this entity's L2 instead of dropping it
+                _ie = {"source": xt["from"], "target": tgt_nid, "kind": "touches"}
+                if _ie not in graph["edges"] and xt["from"] != tgt_nid:
+                    graph["edges"].append(_ie)
+                continue
             cross_edges.append({"from": xt["from"], "to": tgt_nid, "kind": "touches",
                                 "from_slug": _slug, "to_slug": tgt_slug})
             cross_touches += 1
@@ -1033,9 +1044,14 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             if not hit:
                 continue                      # external/library annotation — honest drop
             tgt_nid, tgt_slug = hit
-            if tgt_slug == _slug or (xc["from"], tgt_nid) in _xc_seen:
+            if (xc["from"], tgt_nid) in _xc_seen:
                 continue
             _xc_seen.add((xc["from"], tgt_nid))
+            if tgt_slug == _slug:                 # homed-in class → intra edge (same as touches above)
+                _ie = {"source": xc["from"], "target": tgt_nid, "kind": xc.get("k", "consumes")}
+                if _ie not in graph["edges"] and xc["from"] != tgt_nid:
+                    graph["edges"].append(_ie)
+                continue
             cross_edges.append({"from": xc["from"], "to": tgt_nid, "kind": xc.get("k", "consumes"),
                                 "from_slug": _slug, "to_slug": tgt_slug})
             cross_consumes += 1
@@ -1112,6 +1128,12 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             "consumes": cross_consumes + sum(1 for _s in l2.values() for _e in _s.get("edges", []) if _e.get("kind") in ("consumes", "nests")),   # request-shape + composition wires (signatures + field types; local + cross)
             "l1_flow_cols": flow_cols,
             "unclaimed": any(n["kind"] == "unclaimed" for n in l1_nodes),
+            # schema homing (archmap pass) — counts only; absent upstream → key absent (byte-identical)
+            **({"schema_homing": {"moved": len(_sh.get("moved") or []),
+                                  "ambiguous": len(_sh.get("ambiguous") or []),
+                                  "unwired": len(_sh.get("unwired") or []),
+                                  "dormant": sum(1 for _u in (_sh.get("unwired") or []) if _u.get("dormant"))}}
+               if isinstance((_sh := amap.get("schema_homing")), dict) else {}),
             "unresolved_tables": unresolved,
             # the graft arm's honesty record: absent → named absent, never silent;
             # present → the index fingerprint + the floor-not-census trust split.

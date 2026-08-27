@@ -1960,6 +1960,11 @@ def main() -> int:
             # silently dropped (the cc-init lens / pulse S11 read this; honest-empty {})
             "model_census": _a3_code.model_census(REPO_ROOT),
             "entities": {s: collect_entity_map(s, REPO_ROOT) for s in ENTITY_CODE}}
+    # SCHEMA HOMING — a schema lives where its CONSUMER lives, not where its file was claimed.
+    # Runs ONCE here, on the archmap's own facts, BEFORE every consumer of entities[*]["schemas"]
+    # (C4 · levels · data-model page · cc-entity) reads it — one class, one home, on every page.
+    # The stats block feeds pulse S12 + c4.stats; honest-empty {} when nothing moves.
+    amap["schema_homing"] = _a3_code.home_schemas(amap["entities"], _a3_code.function_insight(REPO_ROOT))
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
     amap["guard_insight"] = _a3_guard.guard_insight(
