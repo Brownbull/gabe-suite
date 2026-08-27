@@ -1951,7 +1951,10 @@ def main() -> int:
     # build, diffable in PRs. Consumers read THIS instead of re-analyzing code.
     # `coverage` carries each carded entity's flow-coverage verdict so agents
     # read the machine numbers here instead of scraping the Evidence tab.
-    amap = {"version": 1, "head": HEAD_SHA, "generated": STAMP,
+    # version 2 (2026-08-27): the archmap schema now carries the route/file census. The census
+    # keys are non-empty-only (P5), so their ABSENCE cannot alone tell "full coverage" from "an
+    # archmap a pre-census build wrote" — pulse S13 reads this version to make that call honestly.
+    amap = {"version": 2, "head": HEAD_SHA, "generated": STAMP,
             "coverage": ctx.flow_coverage,
             "model_insight": _a3_code.insight_serial(REPO_ROOT),
             "test_insight": _a3_tests.test_insight(REPO_ROOT),
@@ -1965,6 +1968,28 @@ def main() -> int:
     # (C4 · levels · data-model page · cc-entity) reads it — one class, one home, on every page.
     # The stats block feeds pulse S12 + c4.stats; honest-empty {} when nothing moves.
     amap["schema_homing"] = _a3_code.home_schemas(amap["entities"], _a3_code.function_insight(REPO_ROOT))
+    # ROUTE + FILE census — the coverage-loss the map would silently drop (same ruling as
+    # model_census: config decides ownership, never existence). Emitted ONLY when non-empty
+    # (P5): a project with full coverage carries NO census key, byte-identical. The file census's
+    # unclaimed entries gain an optional `reach` (min call-hops from a mapped handler) from a
+    # read-as-found graft pass — the "how close to the request path" rank the cc-init adopt rail
+    # and pulse S13 read; honest-empty without a built index. A claim under a layer center.config
+    # never declared is a silent no-op today → report it so the operator sees the drop.
+    _rcen = _a3_code.route_census(REPO_ROOT)
+    if _rcen:
+        amap["route_census"] = _rcen
+    _fcen = _a3_code.file_census(REPO_ROOT)
+    if _fcen:
+        _reach = _a3_graft.reach_arm(REPO_ROOT, amap["entities"],
+                                     [u["file"] for u in _fcen["unclaimed"]])
+        # enrich into FRESH dicts — never mutate _fcen's rows, which are the module cache
+        # (_a3_code._FILE_CENSUS); a second reader of file_census() must see the un-enriched census.
+        amap["file_census"] = {**_fcen, "unclaimed": [
+            ({**_u, "reach": _reach[_u["file"]]} if _u["file"] in _reach else _u)
+            for _u in _fcen["unclaimed"]]}
+    for _slug, _layer in _a3_code.undeclared_layers():
+        print(f"    ⚠ center.config entity '{_slug}' claims layer '{_layer}' not in "
+              f"code_layers — those files are dropped (add '{_layer}' to code_layers)")
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
     amap["guard_insight"] = _a3_guard.guard_insight(

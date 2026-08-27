@@ -290,3 +290,32 @@ Rails, so no session has to remember it:
   spine beat until the list is empty; `/gabe-review` prices a diff-added table class the same way
   the web-bridge subject prices a stray fetch (follow-on).
 
+## Route + file census — the same ruling, widened to routes and backend files
+
+The model-census ruling extends to two more coverage classes the config used to drop silently.
+An entity lists its route FILES (`code.api`) and its backend FILES (`code.services` and any
+declared layer); a route-bearing `.py` in an api dir the api list omits loses its endpoints, and
+a backend `.py` no code list names loses its functions AND every call touching them (graft homes
+by file → entity, so `function_insight` never walks it and the `behind` pill counts fns the walk
+cannot reach). The build now scans every `.py` in the API dirs and the backend code dirs and
+reports the unclaimed ones as `archmap.json → route_census.unclaimed` (`{file, routes, methods,
+reason}`) and `file_census.unclaimed` (`{file, routes, fns, tables, reason, reach?}`). Both keys
+are emitted NON-EMPTY-ONLY, so their absence is full coverage, never a stale block. The optional
+`reach` on a file entry is the minimum call-hops from a mapped handler — how close the file sits
+to the request path, so the closest-to-live file is claimed first.
+
+Rails, so no session has to remember it:
+- **`rank`** — the candidate table SHOULD list `route_census.unclaimed` and `file_census.unclaimed`
+  (count + the reach-nearest names) beside the model-census claim column; a route file that
+  belongs to a candidate entity is claimed into its `code.api`, a backend file into the right
+  layer. A claim is the operator's — the census only makes the file visible.
+- **`section <entity>`** — when a shortlisted entity owns any unclaimed route/backend file, claim
+  it in the same pass (route → `code.api`, service → the layer list). A file deliberately left
+  unclaimed (a runtime not yet on the map) is recorded in the tracker with a reason; silence is
+  never an exclusion. **A claim under a layer `code_layers` does not declare is a silent no-op**
+  — the build prints a report line naming it; add the layer to `code_layers` (config) so the
+  files are read.
+- **Standing reminder** — pulse angle **S13** prints the unclaimed route/file count at the end of
+  every spine beat until the list is empty (reach-nearest first); `/gabe-review`'s entity-shape
+  subject prices a diff-added route landing in an unowned URL domain the same way.
+

@@ -195,6 +195,24 @@ run "$r" | grep -q "schema homing" && bad "S12 fired on an archmap without the h
 r=$(repo s12e); commits "$r" 1 "feat: work"
 run "$r" | grep -q "schema homing" && bad "S12 fired without a center" || ok "S12 silent with no center config"
 
+# ── S13 · route/file-census drift — route + backend files no entity claims (reads archmap.route_census + file_census; non-empty-only keys; version≥2 gates predates) ──
+# FIRE: route + file census both present (archmap version 2) → both counts named
+r=$(repo s13a); mkarchmap "$r" '{"version":2,"entities":{"pantry":{"endpoints":[]}},"route_census":{"scanned_dirs":["api"],"claimed":5,"unclaimed":[{"file":"api/equipment.py","routes":2,"methods":["GET","POST"],"reason":"unclaimed route file"}]},"file_census":{"scanned_dirs":["api","svc"],"claimed":10,"unclaimed":[{"file":"svc/ownership.py","routes":0,"fns":3,"tables":1,"reason":"unclaimed backend file","reach":1}]}}'
+run "$r" | grep -q "route/file census drift — 1 route file(s) + 1 backend file(s) no entity claims" && ok "S13 fires: route + file census both named" || bad "S13 did not fire on route + file census"
+# FIRE: file-only census, reach-nearest file LEADS the list (near reach 1 before far reach 5, though 'far' < 'near' alphabetically)
+r=$(repo s13b); mkarchmap "$r" '{"version":2,"entities":{"pantry":{"endpoints":[]}},"file_census":{"scanned_dirs":["svc"],"claimed":10,"unclaimed":[{"file":"svc/far.py","routes":0,"fns":2,"tables":0,"reason":"unclaimed backend file","reach":5},{"file":"svc/near.py","routes":0,"fns":2,"tables":0,"reason":"unclaimed backend file","reach":1}]}}'
+run "$r" | grep -q "route/file census drift — 2 backend file(s) no entity claims (svc/near.py, svc/far.py)" && ok "S13 fires file-only, reach-nearest file first" || bad "S13 did not fire file-only / wrong reach order"
+# QUIET (not unavailable): a version-2 archmap with the census keys ABSENT is genuine full coverage
+r=$(repo s13c); mkarchmap "$r" '{"version":2,"entities":{"pantry":{"endpoints":[]}}}'
+run "$r" --why | grep -qE "S13 +quiet" && ok "S13 quiet (full coverage) when a v2 archmap has no census keys" || bad "S13 not quiet on a v2 full-coverage archmap"
+# UNAVAILABLE (honest, never a false all-clear): a pre-census archmap (version<2) cannot prove coverage
+r=$(repo s13e); mkarchmap "$r" '{"version":1,"entities":{"pantry":{"endpoints":[]}}}'
+run "$r" --why | grep -qE "S13 +UNAVAILABLE.*predates the route/file census" && ok "S13 unavailable (not silent) on a pre-census archmap — the false-clean guard" || bad "S13 reported clean on a pre-census archmap (silent-signal bug)"
+run "$r" | grep -q "route/file census drift" && bad "S13 nagged on a pre-census archmap" || ok "S13 does not NAG on a pre-census archmap (unavailable ≠ fire)"
+# SILENT: no center config
+r=$(repo s13d); commits "$r" 1 "feat: work"
+run "$r" | grep -q "route/file census" && bad "S13 fired without a center" || ok "S13 silent with no center config"
+
 # ── S5 · scope drift — computable since the scope mirror (ruling 2026-08-07) ──
 # no scope field on the current phase → honest unavailable, never a proxy guess
 r=$(repo s5a); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"}}]}'

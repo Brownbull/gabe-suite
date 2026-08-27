@@ -393,6 +393,18 @@ GG._BEHIND_DEPTH_CAP = _saved_cap
 check(_bt["a0.py#f"].get("truncated") is True and _bt["a0.py#f"]["depth"] == 2,
       "derive_behind: the depth cap sets truncated:True (no silent cap)")
 
+# ══ FILE-CENSUS REACH (derive_reach) — min call-hops from a mapped handler ══════════
+# WIRING: alpha.py#do_a → calls → beta.py#do_b (hop 1); do_a → bundle.js (build-output noise,
+# dropped); stray.py#s is NOT reachable from do_a. Handler = do_a.
+_rent = {"e": {"endpoints": [{"file": "apps/api/alpha.py", "fn": "do_a", "method": "G", "path": "/x"}]}}
+_rch = GG.derive_reach(WIRING, _rent, ["apps/api/beta.py", "apps/api/stray.py", "web/dist/bundle.js"])
+check(_rch == {"apps/api/beta.py": 1},
+      "derive_reach: FIRE — a census file reached at min-hop 1; the unreachable file + build-output noise carry no reach (%r)" % _rch)
+check(GG.derive_reach(WIRING, _rent, []) == {}, "derive_reach: no census files → {} (honest-empty)")
+check(GG.derive_reach({}, _rent, ["apps/api/beta.py"]) == {}, "derive_reach: no wiring → {} (honest-empty, graft absent)")
+check(GG.derive_reach(WIRING, {"e": {"endpoints": [{"file": "nope.py", "fn": "g"}]}}, ["apps/api/beta.py"]) == {},
+      "derive_reach: no indexed handler roots a walk → {} (never a guess)")
+
 # ══ A2 · ENDPOINT ORM ACCESS via the call-tree (derive_endpoint_access + fold) ══
 # WIRING: alpha.py#do_a → calls → beta.py#do_b → calls → beta.py#do_b2. faccess puts the
 # ACCESS on the 2-hops-down callee, so the write must surface at the do_a endpoint.

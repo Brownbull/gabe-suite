@@ -323,3 +323,57 @@ print(f"model-census: {p} passed, {f} failed")
 sys.exit(1 if f else 0)
 PY
 [ $? -eq 0 ] || exit 1
+
+# ── ROUTE + FILE CENSUS (the model-census ruling widened to routes + backend files, wave A) ──
+# A route file the api list omits, or a backend .py no code list names, is REPORTED (never
+# silently dropped). Non-empty-only keys: full coverage → {} (no census key at all). Undeclared
+# layers are reported so a claim under a layer code_layers never declares is not a silent no-op.
+python3 - "$GEN" <<'PY'
+import sys, tempfile, pathlib
+gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_code as C
+p = f = 0
+def ck(c, m):
+    global p, f
+    if c: p += 1
+    else: f += 1; print("  FAIL:", m)
+root = pathlib.Path(tempfile.mkdtemp())
+(root / "api").mkdir(parents=True); (root / "svc").mkdir(parents=True)
+(root / "api/auth.py").write_text("from fastapi import APIRouter\nrouter=APIRouter()\n@router.get('/me')\ndef me():\n    return helper()\n")
+(root / "api/equipment.py").write_text("from fastapi import APIRouter\nrouter=APIRouter(prefix='/eq')\n@router.get('/')\ndef ls():\n    return 1\n@router.post('/')\ndef add():\n    return 2\n")
+(root / "api/__init__.py").write_text("")                       # a bare package file is never nagged
+(root / "api/test_routes.py").write_text("from fastapi import APIRouter\nrouter=APIRouter()\n@router.get('/t')\ndef t():\n    return 1\n")  # a TEST router in an api dir is not a prod route
+(root / "svc/ownership.py").write_text("class Foo:\n    __tablename__='foos'\ndef resolve_user():\n    return 1\ndef load_ctx():\n    return 2\n")
+(root / "svc/auth_svc.py").write_text("def helper():\n    return 3\n")
+(root / "svc/consts.py").write_text("X = 1\nY = 2\n")            # no route/fn/table → not nagged
+(root / "svc/test_ownership.py").write_text("def test_it():\n    assert 1\n")  # test_* skipped
+EC = {"auth": {"api": ["api/auth.py"], "services": ["svc/auth_svc.py"]}}
+
+# route_census — FIRE: the unclaimed route file, its methods, its reason
+rc = C.route_census(root, EC)
+ru = {x["file"]: x for x in rc.get("unclaimed", [])}
+ck(rc.get("scanned_dirs") == ["api"] and rc.get("claimed") == 1, "route census: scanned api dir + claimed count (%r)" % rc)
+ck("api/equipment.py" in ru and ru["api/equipment.py"]["routes"] == 2, "FIRE: an unclaimed route file is reported with its route count")
+ck(ru["api/equipment.py"]["methods"] == ["GET", "POST"], "route census carries the sorted methods")
+ck("api/auth.py" not in ru and "api/__init__.py" not in ru and "api/test_routes.py" not in ru, "the claimed route file + a bare __init__ + a test_* router never appear (test-route skip)")
+ck(C.route_census(root, {"auth": {"api": ["api/auth.py", "api/equipment.py"]}}) == {}, "SILENT: every route file claimed → {} (non-empty-only)")
+ck(C.route_census(root, {}) == {}, "honest-empty: no api config → {}")
+
+# file_census — FIRE: unclaimed backend files with route/fn/table counts; noise skipped
+fc = C.file_census(root, EC)
+fu = {x["file"]: x for x in fc.get("unclaimed", [])}
+ck(set(fc.get("scanned_dirs", [])) == {"api", "svc"}, "file census scans every python code dir (%r)" % fc.get("scanned_dirs"))
+ck("svc/ownership.py" in fu and fu["svc/ownership.py"]["fns"] == 2 and fu["svc/ownership.py"]["tables"] == 1, "FIRE: unclaimed backend file with fn + table counts")
+ck("api/equipment.py" in fu and fu["api/equipment.py"]["routes"] == 2, "the unclaimed route file also appears in the file census with its route count")
+ck("svc/consts.py" not in fu and "svc/test_ownership.py" not in fu and "api/test_routes.py" not in fu and "api/__init__.py" not in fu, "a constants/test/bare-init module is never nagged (no route/fn/table, or noise)")
+ck([x["file"] for x in fc["unclaimed"]] == sorted(x["file"] for x in fc["unclaimed"]), "deterministic file order")
+ck(C.file_census(root, EC) == fc, "deterministic: a second call returns the same census")
+ck(C.file_census(root, {}) == {}, "honest-empty: no python code config → {}")
+
+# undeclared_layers — a claim under a layer code_layers never declares is surfaced
+ck(C.undeclared_layers({"x": {"api": ["a.py"], "reference": ["r.py"]}}) == [("x", "reference")], "FIRE: a claim under an undeclared layer is reported")
+ck(C.undeclared_layers({"x": {"api": ["a.py"], "services": ["s.py"]}}) == [], "SILENT: every claimed layer is declared → []")
+print(f"route/file-census: {p} passed, {f} failed")
+sys.exit(1 if f else 0)
+PY
+[ $? -eq 0 ] || exit 1

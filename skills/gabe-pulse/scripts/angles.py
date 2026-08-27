@@ -412,6 +412,55 @@ def s12_schema_homing(root: Path, plan: dict | None, cfg: dict | None):
     return (f"schema homing — {len(live)} unwired in live files ({names})" + tail, "/gabe-cc-init")
 
 
+def s13_route_file_census(root: Path, plan: dict | None, cfg: dict | None):
+    """Route/file-census drift — a ``.py`` sitting in a scanned code dir that no entity's
+    config claims (operator ruling 2026-08-27, the model-census ruling widened to routes and
+    backend files: the config decides OWNERSHIP, never EXISTENCE). A route file the api list
+    omits loses its endpoints; a backend file no code list names loses its functions AND every
+    call touching them (graft homes by file → entity), so ``function_insight`` never walks it
+    and the ``behind`` pill counts fns the walk cannot reach.
+
+    The STANDING reminder → ``/gabe-cc-init``: keep the unclaimed set visible every beat until
+    each file is claimed (or recorded as excluded). READS the committed archmap's
+    ``route_census`` / ``file_census`` (emitted non-empty-only, so their ABSENCE is full
+    coverage — silent, never a false nag; the file entries carry an optional ``reach`` = min
+    call-hops from a mapped handler, so the closest-to-the-request-path file leads the list).
+    Nothing here globs source; nothing goes stale between regens."""
+    if cfg is None:
+        return Unavailable("no center config — the census lives in archmap.json")
+    amap_path = root / "docs" / "site" / "center" / "archmap.json"
+    if not amap_path.exists():
+        return Unavailable("no archmap yet — the center regen builds the census")
+    try:
+        amap = json.loads(amap_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return Unavailable("archmap.json unreadable")
+    # The census keys are non-empty-only (P5), so their ABSENCE alone cannot tell "full coverage"
+    # from "a pre-census build wrote this archmap" — the archmap VERSION does (route/file census
+    # landed at version 2). Without it, a stale archmap would read as a false all-clear — the exact
+    # silent-signal failure this family exists to prevent (see the module docstring). S11/S12 lean
+    # on their keys being written unconditionally; S13's keys are not, so it leans on the version.
+    if amap.get("version", 1) < 2:
+        return Unavailable("archmap predates the route/file census — regen the center")
+    rc = amap.get("route_census") if isinstance(amap.get("route_census"), dict) else {}
+    fc = amap.get("file_census") if isinstance(amap.get("file_census"), dict) else {}
+    routes = rc.get("unclaimed") or []
+    files = fc.get("unclaimed") or []
+    if not routes and not files:            # version ≥ 2 + non-empty-only keys absent → full coverage
+        return None
+    # closest-to-the-request-path first: a file with a reach hop leads, nearest hop wins, then name
+    files = sorted(files, key=lambda u: (u.get("reach", 10 ** 6), u.get("file", "")))
+    lead = files or routes
+    names = ", ".join(u.get("file", "?") for u in lead[:3]) + (f" +{len(lead) - 3}" if len(lead) > 3 else "")
+    parts = []
+    if routes:
+        parts.append(f"{len(routes)} route file(s)")
+    if files:
+        parts.append(f"{len(files)} backend file(s)")
+    return (f"route/file census drift — {' + '.join(parts)} no entity claims ({names})",
+            "/gabe-cc-init")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -425,6 +474,7 @@ SIGNALS = [
     ("S10", "web bridge", s10_web_bridge),
     ("S11", "model census", s11_model_census),
     ("S12", "schema homing", s12_schema_homing),
+    ("S13", "route/file census", s13_route_file_census),
 ]
 
 

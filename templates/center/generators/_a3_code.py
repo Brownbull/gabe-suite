@@ -499,6 +499,8 @@ def _def_spans(f: str, text: str) -> list:
 
 
 _CENSUS: dict | None = None
+_ROUTE_CENSUS: dict | None = None
+_FILE_CENSUS: dict | None = None
 
 
 def _table_classes(tree) -> list[tuple[str, str]]:
@@ -573,6 +575,146 @@ def model_census(repo: Path, entity_code: dict | None = None,
     if entity_code is None and entity_models is None:
         _CENSUS = out
     return out
+
+
+def _count_callables(tree) -> int:
+    """Every ``def``/``async def`` ANYWHERE in the file — top-level functions, class methods
+    AND nested/local helpers (``ast.walk`` descends into bodies). A rough callable-mass signal
+    for the file census's ranking, never a gate; an over-count of nested closures is acceptable."""
+    return sum(1 for n in ast.walk(tree)
+               if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef)))
+
+
+# Files a census must never nag about even when they sit unclaimed in a scanned dir.
+_CENSUS_SKIP = ("__init__.py", "conftest.py")
+
+
+def route_census(repo: Path, entity_code: dict | None = None) -> dict:
+    """The ROUTE-FILE census BEYOND the config api allowlists — same ruling as
+    :func:`model_census` (config decides ownership, never existence). center.config.json
+    lists an entity's route FILES (``code.api``); a route-bearing ``.py`` sitting in one of
+    those api dirs but claimed by no entity used to vanish — every downstream arm keys off
+    ``entities[*].endpoints`` (gustify: equipment/meal_plan/e2e_seed/locale/health routes).
+
+    Scans every ``.py`` in the API DIRS (the directories holding any configured api file) for
+    route decorators (:func:`parse_endpoints`), skips the claimed set, and returns
+    ``{scanned_dirs, claimed, unclaimed:[{file, routes, methods, reason}]}``. Emitted-only-when-
+    non-empty is the P5 rule: ``{}`` when there is no api config OR nothing unclaimed to report,
+    so a project with full route coverage carries NO ``route_census`` key (byte-identical).
+    Deterministic: sorted dirs, files, methods. Cached like the sibling censuses."""
+    global _ROUTE_CENSUS
+    if _ROUTE_CENSUS is not None and entity_code is None:
+        return _ROUTE_CENSUS
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    claimed: set[str] = set()
+    for slug in sorted(ec):
+        for f in (ec[slug].get("api") or []):
+            claimed.add(f)
+    out: dict = {}
+    if claimed:
+        dirs = sorted({str(Path(f).parent) for f in claimed})
+        unclaimed: list[dict] = []
+        for d in dirs:
+            dp = repo / d
+            if not dp.is_dir():
+                continue
+            for py in sorted(dp.glob("*.py")):
+                rel = str(py.relative_to(repo))
+                if (rel in claimed or py.name in _CENSUS_SKIP
+                        or py.name.startswith("test_") or ".test." in py.name):   # test routers are not prod routes (parity with file_census)
+                    continue
+                routes = parse_endpoints(repo, [rel])
+                if not routes:
+                    continue
+                unclaimed.append({"file": rel, "routes": len(routes),
+                                  "methods": sorted({r["method"] for r in routes}),
+                                  "reason": "route file not in any entity's api list"})
+        unclaimed.sort(key=lambda u: u["file"])
+        if unclaimed:                              # P5: no key at all when nothing to nag about
+            out = {"scanned_dirs": dirs, "claimed": len(claimed), "unclaimed": unclaimed}
+    if entity_code is None:
+        _ROUTE_CENSUS = out
+    return out
+
+
+def file_census(repo: Path, entity_code: dict | None = None) -> dict:
+    """The BACKEND-FILE census BEYOND the config code allowlists — the broad sibling of
+    :func:`route_census`. An entity's ``code.<layer>`` lists name its files; a ``.py`` in one
+    of those dirs that no entity claims drops the file AND every call touching it (graft homes
+    by file → entity), so ``function_insight`` never walks it and the ``behind`` pill counts
+    fns the walk cannot reach (gustify: 52 files · 233 callables in unclaimed files).
+
+    Scans every ``.py`` in the CODE DIRS (the directories holding any configured PYTHON file,
+    across every declared layer), skips the claimed set, and returns
+    ``{scanned_dirs, claimed, unclaimed:[{file, routes, fns, tables, reason}]}`` — the block
+    pulse S13 and the cc-init adopt rail read; a build-time :func:`~_a3_graft.reach_arm` pass
+    adds an optional ``reach`` (min call-hops from a mapped handler) per entry. A file with no
+    route, fn or table (a bare ``__init__``/constants module) is not nagged. P5 honest-empty:
+    ``{}`` when there is no python code config OR nothing unclaimed (byte-identical). Only the
+    dirs the config already reaches are scanned — a fully-orphan dir (no claimed sibling) is
+    surfaced by the layer report + the operator's claims, never guessed here.
+    Deterministic: sorted dirs, files. Cached."""
+    global _FILE_CENSUS
+    if _FILE_CENSUS is not None and entity_code is None:
+        return _FILE_CENSUS
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    claimed: set[str] = set()
+    dirs_set: set[str] = set()
+    for slug in sorted(ec):
+        for layer in _CODE_LAYERS:
+            for pat in (ec[slug].get(layer) or []):
+                for f in sorted(_glob.glob(str(repo / pat))):
+                    p = Path(f)
+                    if p.is_file() and p.suffix == ".py":
+                        rel = str(p.relative_to(repo))
+                        claimed.add(rel)
+                        dirs_set.add(str(Path(rel).parent))
+    out: dict = {}
+    if dirs_set:
+        dirs = sorted(dirs_set)
+        unclaimed: list[dict] = []
+        for d in dirs:
+            dp = repo / d
+            if not dp.is_dir():
+                continue
+            for py in sorted(dp.glob("*.py")):
+                rel = str(py.relative_to(repo))
+                if (rel in claimed or py.name in _CENSUS_SKIP
+                        or py.name.startswith("test_") or ".test." in py.name):
+                    continue
+                tree, _ = _safe_parse(py)
+                if tree is None:
+                    continue
+                routes = len(parse_endpoints(repo, [rel]))
+                fns = _count_callables(tree)
+                tables = len(_table_classes(tree))
+                if routes == 0 and fns == 0 and tables == 0:   # bare __init__/constants — nothing to home
+                    continue
+                unclaimed.append({"file": rel, "routes": routes, "fns": fns,
+                                  "tables": tables,
+                                  "reason": "file not in any entity's code map"})
+        unclaimed.sort(key=lambda u: u["file"])
+        if unclaimed:                              # P5: no key at all when nothing to nag about
+            out = {"scanned_dirs": dirs, "claimed": len(claimed), "unclaimed": unclaimed}
+    if entity_code is None:
+        _FILE_CENSUS = out
+    return out
+
+
+def undeclared_layers(entity_code: dict | None = None) -> list[tuple[str, str]]:
+    """(slug, layer) pairs where an entity's ``code`` block names a layer that ``_CODE_LAYERS``
+    does NOT declare — a SILENT no-op today (``code_map`` iterates ``_CODE_LAYERS`` only, so a
+    ``code.reference`` list a project adds is dropped with no trace). The build prints a report
+    line from this so a claim under an unlisted layer is visible, never lost. Sorted; ``[]``
+    when every claimed layer is declared (the common case)."""
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    declared = set(_CODE_LAYERS)
+    out: list[tuple[str, str]] = []
+    for slug in sorted(ec):
+        for layer in (ec[slug] or {}):
+            if layer not in declared:
+                out.append((slug, layer))
+    return sorted(out)
 
 
 def home_schemas(entities: dict, function_insight: dict | None = None) -> dict:

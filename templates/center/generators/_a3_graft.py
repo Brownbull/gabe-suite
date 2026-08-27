@@ -150,9 +150,23 @@ def _file_of(node_id: str) -> str:
 
 
 def _file2slug(entities: dict[str, Any]) -> dict[str, str]:
-    """Map every archmap-listed file to its owning entity (first claim wins)."""
+    """Map every archmap-listed file to its owning entity (first claim wins).
+
+    First-claim-wins is resolved in CONFIG ORDER — the insertion order of ``entities``, which is
+    ``center.config.json``'s entity order (unified 2026-08-27 from the old ``sorted(entities)``,
+    P8). ``function_insight`` already homed shared files config-first; graft homed them
+    alphabetically, so a file serving several entities (e.g. a shared ``catalogs.py``) could wear
+    two different owners across the two arms. One rule now: the config-first entity owns it — the
+    operator orders the claims, not the alphabet. Deterministic: config order is stable JSON.
+
+    INVARIANT the caller must hold: ``entities`` must be the IN-MEMORY, config-ordered dict
+    (``amap["entities"]`` built by ``build_center_a3`` from ``ENTITY_CODE``). It must NOT be
+    re-derived from the committed ``archmap.json`` — that file is written ``sort_keys=True``, so
+    its ``entities`` object is ALPHABETISED and iterating it here would silently revert to the
+    old alphabetical first-claim-wins (the very bug this change fixed). Every live call site
+    passes the in-memory dict; a future reader loading the archmap must re-establish config order first."""
     f2s: dict[str, str] = {}
-    for slug in sorted(entities):
+    for slug in entities:
         code = entities[slug]
         if not code:
             continue
@@ -251,6 +265,50 @@ def _behind_of(start: str, adj: dict[str, list[str]]) -> dict[str, Any]:
     if depth >= _BEHIND_DEPTH_CAP and any(v not in seen for u in frontier for v in (adj.get(u) or ())):
         res["truncated"] = True   # the cap clipped a walk that STILL had an unvisited callee — not a complete walk that merely ended at depth==cap
     return res
+
+
+def derive_reach(wiring: dict[str, Any], entities: dict[str, Any],
+                 census_files: list[str] | set[str]) -> dict[str, int]:
+    """Min call-hops from ANY mapped handler to each unclaimed census file — the "how close to
+    the request path" signal that ranks which unclaimed file to claim first. Multi-source BFS
+    from every endpoint handler's ``<file>#<fn>`` (kept only where graft actually indexed it)
+    over the ``calls`` adjacency; per census file, the minimum hop at which any of its nodes is
+    reached. Same noise-filter and depth cap as :func:`derive_behind`. Honest-empty ``{}``
+    without a wiring, without census files, or when no handler is indexed (never a guess).
+    Deterministic: multi-source layered BFS is order-independent; keys sorted."""
+    census = set(census_files or ())
+    if not wiring or not census:
+        return {}
+    handlers: set[str] = set()
+    for ent in entities.values():
+        if not ent:
+            continue
+        for ep in ent.get("endpoints") or []:
+            fn, file = ep.get("fn"), ep.get("file")
+            if fn and file:
+                handlers.add(f"{file}#{fn}")
+    fn_ids, adj = _behind_context(wiring)
+    handlers &= fn_ids                              # only handlers graft indexed can root a walk
+    if not handlers:
+        return {}
+    reach: dict[str, int] = {}
+    seen = set(handlers)
+    frontier = list(handlers)
+    depth = 0
+    while frontier and depth < _BEHIND_DEPTH_CAP:
+        depth += 1
+        nxt: list[str] = []
+        for u in frontier:
+            for v in adj.get(u) or ():
+                if v in seen:
+                    continue
+                seen.add(v)
+                nxt.append(v)
+                f = _file_of(v)
+                if f in census and f not in reach:   # first (min-hop) sighting wins
+                    reach[f] = depth
+        frontier = nxt
+    return {k: reach[k] for k in sorted(reach)}
 
 
 def derive_behind(wiring: dict[str, Any],
@@ -699,6 +757,32 @@ def derive_frontend(wiring: dict[str, Any],
                   "scaffold_total": len(scaffold), "scaffold_by_kind": dict(sorted(sc_by_kind.items())),
                   "candidate_entities": [{"name": k, "pieces": candidates[k]} for k in sorted(candidates)]},
     }
+
+
+def reach_arm(root: Path, entities: dict[str, Any],
+              census_files: list[str] | set[str]) -> dict[str, int]:
+    """:func:`derive_reach` over a READ-AS-FOUND wiring — ``allow_build=False`` so it never
+    builds and never mutates a foreign tree (the file census is enriched BEFORE the archmap
+    write, ahead of the main graft arm's build). Honest-empty ``{}`` when the census is empty,
+    the index is absent, or the index is unreadable; NEVER raises.
+
+    ``reach`` is a FLOOR by design, one regen behind on a SELF-BUILD (``allow_build=True``): the
+    main ``graft_arm`` rebuilds the index LATER in the same build, after the archmap is written,
+    so a file just wired into a handler's call tree THIS regen is still invisible to this pass
+    (it read the previous index) and surfaces next regen. On a twin-read-only build
+    (``GABE_GRAFT_BUILD=0``) both passes read the SAME as-found index, so reach is exact there.
+    A first build with no index yet reads empty and self-heals the same way. Never a false hop —
+    an absent ``reach`` means "not reached in the index read", not "verified unreachable"."""
+    if not census_files:
+        return {}
+    try:
+        idx, _ = ensure_index(Path(root), allow_build=False)
+        if idx is None:
+            return {}
+        wiring, _ = load_wiring(idx)
+        return derive_reach(wiring, entities, census_files)
+    except Exception:  # noqa: BLE001 — the reach signal enhances, never breaks, the build
+        return {}
 
 
 def graft_arm(root: Path, entities: dict[str, Any],

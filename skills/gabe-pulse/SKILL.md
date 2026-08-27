@@ -5,7 +5,7 @@ when_to_use: "After a long or sprawling stretch: did everything that should have
 context: fork
 agent: Explore
 metadata:
-  version: 1.7.0
+  version: 1.7.1
 ---
 
 # Gabe Pulse — is anything important owed?
@@ -133,13 +133,15 @@ $ARGUMENTS
 
 ## The ANGLE family (1.1.0)
 
-`scripts/angles.py` computes twelve evidence-backed triggers — adversarial pass owed (S1),
+`scripts/angles.py` computes thirteen evidence-backed triggers — adversarial pass owed (S1),
 structural scan overdue (S2), journey proof missing (S3), published docs stale (S4), scope drift
 (S5), entity context worth loading (S6), an explanation worth drawing (S7), workflow-census
 capture debt (S8), entity-shape drift (S9), a diff-added fetch that named no declared endpoint
-(S10), model-census drift (S11 — a table class no entity's config claims) and schema-homing
+(S10), model-census drift (S11 — a table class no entity's config claims), schema-homing
 residue (S12 — a schema unwired in a live file: dead, or in code the config never claimed; multi-consumer
-shapes and dormant contract lanes are counted, never nagged) — each naming the satellite that would find it now, or reporting **unavailable** with what
+shapes and dormant contract lanes are counted, never nagged) and route/file-census drift
+(S13 — a route or backend `.py` in a scanned code dir that no entity claims, closest-to-the-request-path
+first via the reach hop; absence is full coverage, never a false nag) — each naming the satellite that would find it now, or reporting **unavailable** with what
 would unlock it. Spine beats print its `--one-line` output verbatim; it emits at most one row and
 nothing when nothing fires.
 
@@ -150,5 +152,5 @@ python3 skills/gabe-pulse/scripts/angles.py . --json     # machine output
 ```
 
 Full contract in `references/pulse-spec.md` §5, including the decay rule and this mechanism's own
-kill condition. Battery: `tests/pulse-angles/run.sh` — 33 cases, every live signal proven to FIRE
+kill condition. Battery: `tests/pulse-angles/run.sh` — 46 cases, every live signal proven to FIRE
 and stay SILENT, plus the cap, the silence, and the decay.
