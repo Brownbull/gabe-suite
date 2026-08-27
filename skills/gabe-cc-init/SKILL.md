@@ -24,7 +24,7 @@ This skill runs under the suite execution contract — E1 EVIDENCE · E2 RUN-BEF
 | Mode | What it does | Gate |
 |------|--------------|------|
 | **init** | Inventory existing docs + any hand-built center → operator picks what gets ARCHIVED (`docs/_archive/<date>-pre-adoption/`, moved never deleted) → bootstrap the center shell from suite `templates/center/` → write the adoption tracker | Archive list approved before any move |
-| **rank** | Machine-derive the candidate entity list (SCOPE, PLAN incl. archives, routes/modules, test density, churn, walks) → propose critical/high/medium | Operator trims + approves the shortlist; nothing unranked gets built |
+| **rank** | Machine-derive the candidate entity list (SCOPE, PLAN incl. archives, routes/modules, test density, churn, walks) → propose critical/high/medium; lists `model_census.unclaimed` — table classes no entity claims (config = ownership, never existence) | Operator trims + approves the shortlist; nothing unranked gets built, and no unclaimed table class is left silent |
 | **section \<entity\>** | ONE entity per run: testing inventory (angles present, gaps NAMED) → legacy mining (carry forward only what re-verifies; list what was dropped) → build card/diagrams/testing page/proofs → regen, gate green → checklist | Operator approval, recorded as a walk (`adopt:<entity>`) |
 | **status** | Render the adoption board from the tracker + walks.jsonl: approved / building / awaiting / pending, convergence, suggested next entity | — |
 

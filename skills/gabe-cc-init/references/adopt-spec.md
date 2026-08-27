@@ -269,3 +269,24 @@ feature-spec (card contract). This section states what adoption must OBEY.
 - No standalone doc placement (`/gabe-docsite`), no scope/plan edits, no deletion — ever.
 - No auto-approval: a section without its walk record is not approved, whatever the prose says.
 - No synthesized history: the section's changelog derives from git; adoption never backdates.
+
+## Model census — the config decides ownership, never existence
+
+`center.config.json` is a double allowlist: an entity lists its model FILES (`code.models`) and
+its model CLASSES (`models`). Operator ruling (2026-08-27, gustify): a table class in an unlisted
+file, or filtered by the class list, must NEVER vanish from the map. The build now scans every
+`.py` in the model directories for classes with a string `__tablename__` and reports the ones no
+entity claims as `archmap.json → model_census.unclaimed` (`{cls, table, file, reason}`); their
+write/read access wires still land (the C3 arm mints them into the `__unclaimed__` bucket).
+
+Rails, so no session has to remember it:
+- **`rank`** — the candidate table MUST list `model_census.unclaimed` (count + names) as a claim
+  column; an entity is not approvable while a table class its handlers write sits unclaimed.
+- **`section <entity>`** — the checklist gains one line: *every table class this entity's
+  endpoints write or read is in its `models` list, and its file in `code.models`* — verified
+  against `model_census`, not by eye. A deliberate exclusion (a table hidden from the map on
+  purpose) is recorded in the tracker with a reason; silence is never an exclusion.
+- **Standing reminder** — pulse angle **S11** prints the unclaimed count at the end of every
+  spine beat until the list is empty; `/gabe-review` prices a diff-added table class the same way
+  the web-bridge subject prices a stray fetch (follow-on).
+

@@ -498,6 +498,83 @@ def _def_spans(f: str, text: str) -> list:
     return _DEF_SPANS[f]
 
 
+_CENSUS: dict | None = None
+
+
+def _table_classes(tree) -> list[tuple[str, str]]:
+    """[(cls, table)] — every top-level class with a string `__tablename__` (a REAL
+    table; mixins/abstract bases without one never count)."""
+    out = []
+    for node in tree.body:
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for item in node.body:
+            if (isinstance(item, ast.Assign) and item.targets
+                    and getattr(item.targets[0], "id", "") == "__tablename__"
+                    and isinstance(item.value, ast.Constant)
+                    and isinstance(item.value.value, str)):
+                out.append((node.name, item.value.value))
+                break
+    return out
+
+
+def model_census(repo: Path, entity_code: dict | None = None,
+                 entity_models: dict | None = None) -> dict:
+    """The TABLE-CLASS census BEYOND the config allowlists (operator ruling 2026-08-27:
+    the config decides OWNERSHIP, never EXISTENCE). center.config.json is a double
+    allowlist — an entity lists its model FILES (code.models) and its model CLASSES
+    (models); a table class in an unlisted file, or filtered by the class list, used
+    to vanish from the map with no trace (gustify: ShoppingItem, SubscriptionEntitlement,
+    SetupCompletionState, IdempotencyKey, AiSpendLog — real writes, no red wire).
+
+    Scans every .py in the MODEL DIRS (the directories holding any configured model
+    file) for classes with a string `__tablename__`, compares against the claimed
+    census, and returns {scanned_dirs, claimed, unclaimed:[{cls, table, file, reason}]}
+    — the block the C4 builder, the cc-init lens and pulse S11 read. Their model→table
+    entries also feed the ORM-access map (fn_insight), so the C3 arm MINTS them into the
+    `__unclaimed__` bucket and their access wires LAND. Honest-empty: no configured
+    model file → {} (byte-identical). Deterministic: sorted dirs, files, classes."""
+    global _CENSUS
+    if _CENSUS is not None and entity_code is None and entity_models is None:
+        return _CENSUS
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    em = ENTITY_MODELS if entity_models is None else entity_models
+    claimed_files: dict[str, str] = {}          # rel file → owning slug (first wins)
+    for slug in sorted(ec):
+        for f in (ec[slug].get("models") or []):
+            claimed_files.setdefault(f, slug)
+    if not claimed_files:
+        out: dict = {}
+    else:
+        claimed_cls: set[str] = set()
+        for slug in sorted(ec):
+            for m in parse_models(repo, ec[slug].get("models", []), em.get(slug)):
+                claimed_cls.add(m["cls"])
+        dirs = sorted({str(Path(f).parent) for f in claimed_files})
+        unclaimed: list[dict] = []
+        for d in dirs:
+            dp = repo / d
+            if not dp.is_dir():
+                continue
+            for py in sorted(dp.glob("*.py")):
+                rel = str(py.relative_to(repo))
+                tree, _ = _safe_parse(py)
+                if tree is None:
+                    continue
+                for cls, table in _table_classes(tree):
+                    if cls in claimed_cls:
+                        continue
+                    owner = claimed_files.get(rel)
+                    reason = (f"class not in {owner}'s models allowlist" if owner
+                              else "file not in any entity's models list")
+                    unclaimed.append({"cls": cls, "table": table, "file": rel, "reason": reason})
+        unclaimed.sort(key=lambda u: (u["file"], u["cls"]))
+        out = {"scanned_dirs": dirs, "claimed": len(claimed_cls), "unclaimed": unclaimed}
+    if entity_code is None and entity_models is None:
+        _CENSUS = out
+    return out
+
+
 def model_insight(repo: Path) -> dict:
     """{cls: signals} across EVERY documented class app-wide — computed once
     per build off the cached entity maps + one word-boundary scan of the
@@ -920,7 +997,16 @@ def function_insight(repo: Path) -> dict:
             trees[f] = ast.parse(text)
         except SyntaxError:
             continue
-    model2table = _model_table_map(trees)
+    # the model→table map ALSO sees the UNCLAIMED table classes (model_census) — so a
+    # write to a table the config never claimed is still attributed (C2) and minted (C3);
+    # the fn walk below stays on the MAPPED trees only (no fns from unclaimed files).
+    _m2t_trees = dict(trees)
+    for _u in (model_census(repo).get("unclaimed") or []):
+        if _u["file"] not in _m2t_trees:
+            _t, _ = _safe_parse(repo / _u["file"])
+            if _t is not None:
+                _m2t_trees[_u["file"]] = _t
+    model2table = _model_table_map(_m2t_trees)
     fns: dict[str, dict] = {}
     for f, tree in trees.items():
         text = texts[f]

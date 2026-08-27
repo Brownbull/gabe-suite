@@ -212,3 +212,36 @@ check(isinstance(C.parse_endpoints(_repo('@router.get(b"/x")\ndef h(): pass'), [
 print(f"orm-access: {pass_} passed, {fail} failed")
 sys.exit(1 if fail else 0)
 PY
+
+# ── MODEL CENSUS (operator ruling 2026-08-27: config = ownership, never existence) ──
+# A table class in an UNCLAIMED model file, or filtered by an entity's class allowlist,
+# is reported (never silently dropped); mixins without __tablename__ never count.
+python3 - "$GEN" <<'PY'
+import sys, json, tempfile, pathlib
+gen = sys.argv[1]; sys.path.insert(0, gen)
+import _a3_code as C
+p = f = 0
+def ck(c, m):
+    global p, f
+    if c: p += 1
+    else: f += 1; print("  FAIL:", m)
+root = pathlib.Path(tempfile.mkdtemp())
+(root / "app/models").mkdir(parents=True)
+(root / "app/models/pantry.py").write_text('class Base: pass\nclass PantryItem(Base):\n    __tablename__ = "pantry_items"\nclass ShelfMixin:\n    x = 1\nclass Location(Base):\n    __tablename__ = "locations"\n')
+(root / "app/models/shopping.py").write_text('class ShoppingItem(Base):\n    __tablename__ = "shopping_items"\nclass Draft(Base):\n    __tablename__ = 42\n')
+EC = {"pantry": {"models": ["app/models/pantry.py"]}}
+EM = {"pantry": ["PantryItem"]}                       # Location filtered by the class allowlist
+cen = C.model_census(root, EC, EM)
+u = {x["cls"]: x for x in cen.get("unclaimed", [])}
+ck(cen.get("claimed") == 1 and cen.get("scanned_dirs") == ["app/models"], "census: claimed count + scanned model dirs (%r)" % cen)
+ck("Location" in u and "allowlist" in u["Location"]["reason"], "FIRE: a class the entity's allowlist filtered is reported with its reason")
+ck("ShoppingItem" in u and u["ShoppingItem"]["reason"].startswith("file not in any"), "FIRE: a table class in an UNCLAIMED model file is reported")
+ck("ShelfMixin" not in u and "Draft" not in u and "Base" not in u, "a mixin / non-string __tablename__ / base never counts (no false positives)")
+ck([x["cls"] for x in cen["unclaimed"]] == ["Location", "ShoppingItem"], "deterministic order (file, cls)")
+cen2 = C.model_census(root, {"pantry": {"models": ["app/models/pantry.py", "app/models/shopping.py"]}}, {})
+ck(cen2["unclaimed"] == [] and cen2["claimed"] >= 3, "SILENT: everything claimed (no class allowlist) → no unclaimed rows (claimed counts every parsed class)")
+ck(C.model_census(root, {}, {}) == {}, "honest-empty: no configured model file → {}")
+print(f"model-census: {p} passed, {f} failed")
+sys.exit(1 if f else 0)
+PY
+[ $? -eq 0 ] || exit 1

@@ -1956,6 +1956,9 @@ def main() -> int:
             "model_insight": _a3_code.insight_serial(REPO_ROOT),
             "test_insight": _a3_tests.test_insight(REPO_ROOT),
             "function_insight": _a3_code.fn_insight_serial(REPO_ROOT),
+            # the table-class census BEYOND the config allowlists — what the map would have
+            # silently dropped (the cc-init lens / pulse S11 read this; honest-empty {})
+            "model_census": _a3_code.model_census(REPO_ROOT),
             "entities": {s: collect_entity_map(s, REPO_ROOT) for s in ENTITY_CODE}}
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
@@ -2127,6 +2130,21 @@ def main() -> int:
         _simf.write_text("// no change in flight — honest-empty at rest (derivation error)\n"
                          "window.GABE_SIM = null;\n")
         print(f"    ⚠ sim.data.js honest-empty (derivation skipped): {_e}")
+
+    # The curated USER-WORKFLOWS feed for the Universe station's journeys picker
+    # (window.GABE_WORKFLOWS — the operator's user stories as ordered endpoints). CURATED
+    # content, never built: the build only ENSURES the file exists so a clean center has
+    # no dead script target — an honest-empty placeholder when absent, the center's own
+    # curated file copied through when the build writes elsewhere, never overwritten.
+    _wff = CENTER_OUT / "workflows.js"
+    _wfsrc = CENTER / "workflows.js"
+    if _wfsrc.is_file() and _wfsrc.resolve() != _wff.resolve():
+        _wff.write_text(_wfsrc.read_text(encoding="utf-8"), encoding="utf-8")
+    elif not _wff.is_file():
+        _wff.write_text("// curated user workflows for the Gabe Universe journeys picker — none yet.\n"
+                        "// window.GABE_WORKFLOWS = [{name, note, steps:[\"METHOD /path\", …]}]; see the\n"
+                        "// suite's example/codebase-graph-station/workflows.js. Honest-empty until curated.\n"
+                        "window.GABE_WORKFLOWS = [];\n", encoding="utf-8")
 
     # The per-phase ARCHIVE (Graph 2 replays past changes) — accumulate the CURRENT
     # phase's projection, keyed by phase id; completed phases stay frozen. COMMITTED +

@@ -346,6 +346,39 @@ def s10_web_bridge(root: Path, plan: dict | None, cfg: dict | None):
             f"({names}{more})", "/gabe-cc-init")
 
 
+def s11_model_census(root: Path, plan: dict | None, cfg: dict | None):
+    """Model-census drift — a TABLE class (string `__tablename__`) that lives in the
+    project's model directories but no entity's config allowlist claims (operator
+    ruling 2026-08-27: the config decides OWNERSHIP, never EXISTENCE — gustify lost
+    ShoppingItem, SubscriptionEntitlement, SetupCompletionState, IdempotencyKey and
+    AiSpendLog this way, real writes with no red wire).
+
+    The STANDING reminder: the build already MINTS these into the `__unclaimed__`
+    bucket so their access wires land; this angle keeps the unclaimed list visible
+    every beat until each class is homed (or its exclusion recorded). READS the
+    committed archmap's `model_census` — the census is computed at build time, so
+    nothing here globs source and nothing goes stale between regens."""
+    if cfg is None:
+        return Unavailable("no center config — the census lives in archmap.json")
+    amap_path = root / "docs" / "site" / "center" / "archmap.json"
+    if not amap_path.exists():
+        return Unavailable("no archmap yet — the center regen builds the census")
+    try:
+        amap = json.loads(amap_path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return Unavailable("archmap.json unreadable")
+    census = amap.get("model_census")
+    if not isinstance(census, dict):
+        return Unavailable("archmap predates the model census — regen the center")
+    unclaimed = census.get("unclaimed") or []
+    if not unclaimed:
+        return None
+    names = ", ".join(u.get("cls", "?") for u in unclaimed[:3])
+    more = f" +{len(unclaimed) - 3}" if len(unclaimed) > 3 else ""
+    return (f"model-census drift — {len(unclaimed)} table class(es) no entity claims "
+            f"({names}{more})", "/gabe-cc-init")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -357,6 +390,7 @@ SIGNALS = [
     ("S5", "scope", s5_scope),
     ("S9", "entity shape", s9_entity_shape),
     ("S10", "web bridge", s10_web_bridge),
+    ("S11", "model census", s11_model_census),
 ]
 
 

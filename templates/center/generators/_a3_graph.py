@@ -1045,6 +1045,8 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     access_edges = 0
     _minted: dict[str, str] = {}          # C3 — cls → node-id, minted for absent access-target models
     _um_nodes: list[dict] = []            # collected here; l2[UNCLAIMED] is added AFTER the loop (no mid-iteration key add)
+    # the model census names WHY a minted model is unclaimed (file + reason) — carried onto the node
+    _census_by_cls = {u.get("cls"): u for u in ((amap.get("model_census") or {}).get("unclaimed") or [])}
     for _slug, graph in l2.items():
         for xa in graph.pop("xaccess", []):
             k = xa.get("k", "reads_from")
@@ -1060,8 +1062,12 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                 if nid2 is None:
                     nid2 = f"model:{_cls}"
                     _minted[_cls] = nid2
-                    _um_nodes.append({"id": nid2, "kind": "model", "slug": _UNCLAIMED,
-                                      "label": _cls, "table": _tbl, "unmapped": True})
+                    _un = {"id": nid2, "kind": "model", "slug": _UNCLAIMED,
+                           "label": _cls, "table": _tbl, "unmapped": True}
+                    _cu = _census_by_cls.get(_cls)
+                    if _cu:                                  # census-known: say where it lives + why it is unclaimed
+                        _un["file"] = _cu.get("file"); _un["reason"] = _cu.get("reason")
+                    _um_nodes.append(_un)
                     cls_index[_cls] = (nid2, _UNCLAIMED)
                 hit = (nid2, _UNCLAIMED)
             tgt_nid, tgt_slug = hit

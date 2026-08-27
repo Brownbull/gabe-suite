@@ -167,6 +167,19 @@ run "$r" | grep -q "web-bridge drift" && bad "S10 fired when the web arm is abse
 r=$(repo s10d); commits "$r" 1 "feat: work"
 run "$r" | grep -q "web-bridge drift" && bad "S10 fired without a center" || ok "S10 silent with no center config"
 
+# ── S11 · model-census drift — table classes no entity's config allowlist claims (reads archmap.model_census) ──
+r=$(repo s11a); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"model_census":{"scanned_dirs":["app/models"],"claimed":9,"unclaimed":[{"cls":"ShoppingItem","table":"shopping_items","file":"app/models/shopping.py","reason":"file not in any entity'"'"'s models list"},{"cls":"IdempotencyKey","table":"idempotency_keys","file":"app/models/idempotency.py","reason":"file not in any entity'"'"'s models list"}]}}'
+run "$r" | grep -q "model-census drift — 2 table class(es).*ShoppingItem" && ok "S11 fires: unclaimed table classes named" || bad "S11 did not fire on unclaimed table classes"
+# SILENT: the census is present and empty
+r=$(repo s11b); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"model_census":{"scanned_dirs":["app/models"],"claimed":9,"unclaimed":[]}}'
+run "$r" | grep -q "model-census drift" && bad "S11 fired on an empty unclaimed list" || ok "S11 silent when every table class is claimed"
+# SILENT + honest: an archmap that predates the census never fabricates a count
+r=$(repo s11c); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}}}'
+run "$r" | grep -q "model-census drift" && bad "S11 fired on an archmap without a census" || ok "S11 silent (unavailable) on a pre-census archmap"
+# SILENT: no center at all
+r=$(repo s11d); commits "$r" 1 "feat: work"
+run "$r" | grep -q "model-census drift" && bad "S11 fired without a center" || ok "S11 silent with no center config"
+
 # ── S5 · scope drift — computable since the scope mirror (ruling 2026-08-07) ──
 # no scope field on the current phase → honest unavailable, never a proxy guess
 r=$(repo s5a); plan "$r" '{"goal":"g","current_phase":"1","phases":[{"id":"1","cells":{"exec":"done"}}]}'
