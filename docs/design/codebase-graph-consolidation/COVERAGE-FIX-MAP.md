@@ -194,6 +194,90 @@ ASSUMED: every twin regenerates once per wave; the batteries pin numbers, not sh
 BREAKS IF: a twin cannot absorb wave B's move in one regen (then split B by file: _a3_code first, _a3_graft second — two regens, stated)
 ```
 
+## 3′ · Pre-flight amendments (review 2026-08-27, before wave A)
+
+An 8-lens review of this map against the real seams (workflow `wf_8e7f30b3-f84`, 7 lenses returned before the
+run was stopped on budget; findings in `fix-map/preflight-digest.txt`). Seven BLOCKERs collapse into three
+defects in the plan as written; the rest are absorbed below. Operator agreed the plan; these amend it.
+
+**P1 · Kind extensibility is a PRE-C prerequisite, station-first (BLOCKER ×4: C-1, CONS-1, F1/F2, C5).**
+Every new L2 node kind (`middleware` · `provider` · `flag` · `prompt`) hits a FIXED kind list three times:
+`_a3_graph._L2_KINDS` (`:71`; `.index()` at `:712/:803/:1099` raises on an unknown kind — the build crashes),
+the column station's `x = kc[kind]*COLW` (NaN poisons the drill's bounding box), and the Universe adapter's
+`if(!KINDS[kind])` DROP (nodes vanish silently). Amend wave C: one commit BEFORE the first floor — append
+the four kinds to `_L2_KINDS` in ONE step (a stated one-time `layout.l2.order` byte move; re-land the
+estate; an arch-graph pin that the tuple is append-only), an unknown-kind guard in both stations (generic
+glyph + legend note, never NaN or drop), and the wire rows for every new rel — `depends · gated_by ·
+dispatches · serializes · reaches · walls · fnprompts` in REL2KIND + RELCOL + LINKMETA (pv stated) +
+card `relLabel` — else each renders as a PROVEN `calls` wire in the accent colour (CONS-3, RP-4). The
+"station work deferred to wave D" line is withdrawn: kinds and wires land station-first, per floor.
+
+**P2 · `serializes` would un-fold the landed schema fold (BLOCKER CONS-2 = C1).** The fold predicate
+(`__uniComputeSolo`, landed `cff92ce`) marks a schema WIRED on any non-function wire; `serializes` is
+schema→model. Amend class 5: the fold treats `serializes` as composition (excluded from the wired test,
+like `nests`) — one line + a pin in `verify-schemafold.mjs` (measured: every Block would otherwise reappear).
+
+**P3 · The gate-precedence swap needs its levels half (BLOCKER B-1).** `_a3_levels` attaches a fn node's
+`access` ONLY when `role == "accessor"`, so a fn re-labelled `gate` loses its drawn reads — the W2/W4/W8
+AFTERs would not draw. Amend wave B: attach `access` for ANY role that carries ops. Also (B-3) land the
+precedence swap FIRST as its own byte-identical commit (no gustify fn is affected until the root-walk
+lands), so the DECISION block's fallback order reads: precedence → `_a3_code` root-walk/symtab →
+`_a3_graft` methods. (B-4/RP-7) the http-lib guard cannot live in `_detect_sinks` (it sees the fn node
+only) — thread the module's `_file_imports` into it; rule: `session.<verb>` is http only when the module
+imports an http lib, name-based `client.<verb>` stays (the import-less orm-access fixture keeps passing).
+(B-2/C7) the commits/flushes/savepoint split is a LABEL change: a flush-only fn STAYS a d2w anchor
+(services flush / the edge commits — the walk's anchors survive). (RP-6) wave B's ~30 pure→accessor flips
+meet the write-fabric solo exemption (any fn with ops, reads included, never folds) — decide at build
+time whether the exemption narrows to w-ops; state the fold count either way.
+
+**P4 · The second twin (BLOCKER T1; CONS-5, RP-10, C-5/CONS-6/RP-8, C-7, T4, F3, C8).** gastify vendors
+`_a3_code` + `build_center_a3` but NONE of the graph-arm modules and has no committed c4/levels;
+`propagate.sh` is update-only, so "every twin regenerates once per wave" is gustify-only as written.
+Amend wave A: a one-time gastify GRAPH-ARM ADOPTION (copy `_a3_graft/_a3_graph/_a3_levels/_a3_web/_a3_fe`
++ the shell station; first landing, not a re-pin) so B/C can propagate; carry gastify's numbers per wave
+(T6). The second idioms enter the detectors as idioms, never as gustify-shaped registries: Depends declared
+as module-level `Annotated` aliases (class 8 sees nothing on gastify today) · `pydantic_ai` as an LLM
+provider (class 9's allowlist would tag `httpx` and miss the LLM) · BACKGROUND TASKS
+(`background_tasks.add_task(fn, …)`, gastify's two critical write paths) as a root kind beside boot/cli/
+migrate (class 7) · Starlette `websocket_connect` for the WS test join (class 2, one token).
+(T7) item 3's `_a3_tiers.py` is a NEW module → the same adoption step, stated in the tiers plan.
+
+**P5 · Honest-empty as a rule, not a hope (C-2, C-9, C-3).** Every new key — archmap `boot_roots ·
+dispatch_map · dispatch_tables · app_middleware · flags · providers · route/file_census`, c4 `stats.<floor>`,
+endpoint `transport`/`flags`, fn `flags`/`externals` — is emitted ONLY when non-empty (the `schema_homing`
+idiom), never `[]`/`0`/`present:False`; per-floor honest-empty pins in arch-graph. `regen-example.sh
+--check` normalizes only four `dropped` reasons — extend the normalizer for any new index-state counter.
+Synthetic `dispatches`/`depends` fold into the ADJACENCY + `functions.calls` only, never into
+`wiring["edges"]` (L1 kinds, `stats.graft.cross_calls` and the confidence split would move).
+
+**P6 · No new pseudo-entities (C-4, C9).** `__unclaimed__` is special-cased by literal name at 25 sites
+in 6 files; a `boot` bucket or a `__config__` home would need every one. Amend classes 7 and 12: the BOOT
+node and unhomed flags live in the EXISTING `__unclaimed__` bucket (its label becomes "unclaimed ·
+platform" in item 3); gastify's L1 already carries the bucket, so the layout seat exists.
+
+**P7 · Walkability needs the walk to know the new rels (CONS-4, RP-3, C6, C3).** The station's backend
+chain collector (`_bkCollect`), the card's calls list and the tiers' reach walk follow `rel === "calls"`
+(+handler +access) only — J3's dispatch leg and K1's Hop 0.5 would draw but not WALK. Amend wave D: one
+constant, the walkable rel set, gains `dispatches` and `depends`; the tiers doc gains floor rows + `why`
+codes for every new kind (C2 — today it has none; item 3 is not "a re-run").
+
+**P8 · Re-pins, claims, tests (RP-1/2/9, T2/T3/T5, F4/F5/F6).** The fixture batteries pin no gustify
+number; the pins wave B moves are the Universe proofs (`verify-d2w · workflows · backend-journeys ·
+jrnstep`) + the committed estate — and the four decayed proofs fail on chrome/panel pins, not data, so the
+honest minimum before B is a recorded baseline run, not a re-pin. The `_BASE` route-id fix renames four
+node ids → wave B, not A. The claims commit moves the L1 coupling picture — say so in wave A's row.
+First-claim-wins is TWO rules today (function_insight: config order; graft: alphabetical slug) — unify to
+config order in `_a3_graft._file2slug` before the claims. A claim under an undeclared `code_layers` layer
+is a SILENT no-op — add a build-time report line. Methods can never be test-credited by name (the join
+requires an imported name) and the new node kinds carry no case join by design — the card must render
+"n/a", never the red "unguarded"; the `trigger` field (row 1) has no emitter seat → dropped from wave A.
+
+Waves after amendment: **A** census + claims + first-claim rule + layer report + gastify graph-arm
+adoption · **pre-C** kind extensibility (station-first) · **B** precedence (byte-identical) → root-walk +
+symtab + attr writes + sinks guard + role split + levels access-for-any-role → methods + hub fold ·
+**C** per floor, each with its honest-empty pin and its station rows · **D** the reveal rule + the walkable
+rel set · then tiers with floor rows for every kind.
+
 ## 4 · Gaps the map does not close
 
 - **Residual floors** after every class: cross-file helper returns bind nothing (`owned_mode` in an
