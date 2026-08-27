@@ -90,6 +90,24 @@ wires to five preference models) → `_upsert_exploration` (amber delegator) →
    COMMITS before any handler body runs (auth/context.py:79). No journey covers it; it is
    the one write path with no endpoint of its own.
 
+## The gap audit (2026-08-27) — hops the source takes that the map does not draw
+
+Seven classes, ranked by workflow reach; evidence + fixes in the artifact **Trace Anatomy**
+(`https://claude.ai/code/artifact/a58e4089-789b-4ef6-932a-0c27b7614a30`), measured by a 7-lens
+workflow (36 confirmed findings, 1 refuted) over gustify source + the committed map:
+1. **Files no entity claims** — 55/150 backend files, 238 fns, 13 endpoints, 23 schemas
+   (`services/ownership.py` carries setup's first write; `reference/resolution.py` the allergen
+   reads). The model census, generalised to files.
+2. **ORM idioms the access pass cannot see** — unit-of-work writes, column/join reads (23
+   readers drawn pure), query-bound deletes mislabelled as http sinks.
+3. **The dependency path** — `Depends(get_auth_context)` commits a User on every request and
+   feeds a method gate on 47 handlers; drawn as a name, never a hop.
+4. **The response leg** — schema→model has no edge kind; request/response share one `touches`.
+5. **Event bus** — `bus.publish(CookedMealCreated)` → progression writers, invisible to graft.
+6. **Writes with no request root** — lifespan seeders, sandbox reseed, migrations, SSE persist.
+7. **Idempotency claim mislabelled** — falls out of 1 + 2.
+Raw SQL cleared (41 `text()` sites, 0 app-table writes). Fixes are NOT built — operator picks.
+
 ## The critic's five missing journeys (future catalog slots)
 
 1. The auth/identity provisioning commit that rides every request (GAP 1, 100% of traffic).
