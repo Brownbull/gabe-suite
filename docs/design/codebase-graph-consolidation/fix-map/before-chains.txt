@@ -1,0 +1,396 @@
+
+=== POST /consent · entity legal-consent · resp=ConsentStatusResponse · behind=2 fns/depth 1
+  screens → ['useConsent']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_consent [caller · d2w=0 · legal-consent]
+     h1 _status [pure · d2w=– · legal-consent · extracted]
+     h1 record_consent [accessor · d2w=0 · legal-consent · inferred]  → WRITES ['ConsentRecord']  (commits)
+  fns drawn on chain: 3
+  schema wires: []
+  rollup: [('writes_to', 'ConsentRecord')]
+
+=== POST /setup/complete · entity auth · resp=MeResponse · behind=29 fns/depth 5
+  screens → ['useCompleteSetup']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}, {'gate': False, 'name': 'get_settings', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 setup_complete [caller · d2w=1 · auth]
+     h1 _me_response_from_result [pure · d2w=– · auth · extracted]
+     h1 complete_setup [accessor · d2w=0 · auth · inferred]  ← reads ['SetupCompletionState']  (commits)
+       h2 _discard_claim [accessor · d2w=0 · auth · extracted]  ← reads ['IdempotencyKey']  (commits)
+       h2 _stamp_completion [accessor · d2w=0 · auth · extracted]  → WRITES ['SetupCompletionState']  ← reads ['SetupCompletionState']  (commits)
+       h2 _upsert_dietary [accessor · d2w=0 · auth · extracted]  → WRITES ['UserDietaryProfile']  ← reads ['UserDietaryProfile']  (commits)
+       h2 _upsert_exploration [caller · d2w=1 · auth · extracted]
+       h2 _upsert_format_prefs [accessor · d2w=0 · auth · extracted]  → WRITES ['HouseholdFormatPreferences']  ← reads ['HouseholdFormatPreferences']  (commits)
+       h2 _upsert_notifications [accessor · d2w=0 · auth · extracted]  → WRITES ['UserNotificationPreferences']  ← reads ['UserNotificationPreferences']  (commits)
+       h2 _upsert_privacy [accessor · d2w=0 · auth · extracted]  → WRITES ['UserPrivacyPermissions']  ← reads ['UserPrivacyPermissions']  (commits)
+       h2 _upsert_subscription [accessor · d2w=0 · auth · extracted]  → WRITES ['SubscriptionEntitlement']  ← reads ['SubscriptionEntitlement']  (commits)
+       h2 _upsert_user_format [accessor · d2w=0 · auth · extracted]  → WRITES ['UserFormatPreferences']  ← reads ['UserFormatPreferences']  (commits)
+         h3 upsert_exploration_preferences [accessor · d2w=0 · recipe · inferred]  → WRITES ['UserExplorationPreferences']  ← reads ['UserExplorationPreferences']  (commits)
+  fns drawn on chain: 13
+  schema wires: [('touches', 'SetupCompleteRequest'), ('touches', 'MeResponse')]
+  rollup: [('reads_from', 'IdempotencyKey'), ('reads_from', 'SetupCompletionState'), ('writes_to', 'SetupCompletionState'), ('reads_from', 'SubscriptionEntitlement'), ('writes_to', 'SubscriptionEntitlement'), ('reads_from', 'ConsentRecord'), ('reads_from', 'HouseholdFormatPreferences'), ('reads_from', 'UserDietaryProfile'), ('reads_from', 'UserExplorationPreferences'), ('reads_from', 'UserFormatPreferences'), ('reads_from', 'UserNotificationPreferences'), ('reads_from', 'UserPrivacyPermissions'), ('writes_to', 'HouseholdFormatPreferences'), ('writes_to', 'UserDietaryProfile'), ('writes_to', 'UserExplorationPreferences'), ('writes_to', 'UserFormatPreferences'), ('writes_to', 'UserNotificationPreferences'), ('writes_to', 'UserPrivacyPermissions')]
+
+=== GET /me · entity auth · resp=MeResponse · behind=7 fns/depth 5
+  screens → ['useMe']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}, {'gate': False, 'name': 'get_settings', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_me [caller · d2w=– · auth]
+     h1 _build_me_response [accessor · d2w=– · auth · extracted]  ← reads ['HouseholdFormatPreferences', 'SubscriptionEntitlement', 'UserDietaryProfile', 'UserExplorationPreferences', 'UserFormatPreferences', 'UserNotificationPreferences', 'UserPrivacyPermissions']
+  fns drawn on chain: 2
+  schema wires: [('touches', 'MeResponse')]
+  rollup: [('reads_from', 'SubscriptionEntitlement'), ('reads_from', 'HouseholdFormatPreferences'), ('reads_from', 'UserDietaryProfile'), ('reads_from', 'UserExplorationPreferences'), ('reads_from', 'UserFormatPreferences'), ('reads_from', 'UserNotificationPreferences'), ('reads_from', 'UserPrivacyPermissions')]
+
+=== GET /settings · entity settings · resp=SettingsResponse · behind=7 fns/depth 4
+  screens → ['useSettings']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}, {'gate': False, 'name': 'get_settings', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_settings_route [caller · d2w=– · settings]
+     h1 _build_settings [accessor · d2w=– · settings · extracted]  ← reads ['HouseholdFormatPreferences', 'SubscriptionEntitlement', 'UserDietaryProfile', 'UserFormatPreferences', 'UserNotificationPreferences', 'UserPrivacyPermissions']
+  fns drawn on chain: 2
+  schema wires: [('touches', 'SettingsResponse')]
+  rollup: [('reads_from', 'HouseholdFormatPreferences'), ('reads_from', 'UserExplorationPreferences'), ('reads_from', 'UserFormatPreferences'), ('reads_from', 'UserNotificationPreferences'), ('reads_from', 'UserPrivacyPermissions'), ('reads_from', 'SubscriptionEntitlement'), ('reads_from', 'UserDietaryProfile')]
+
+=== GET /recipes/explore · entity recipe · resp=ExploreResponse · behind=38 fns/depth 4
+  screens → ['useExplore']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 explore_recipes [caller · d2w=– · recipe]
+     h1 build_candidate [pure · d2w=– · recipe · inferred]
+     h1 build_cooked_ledger [pure · d2w=– · recipe · inferred]
+     h1 filter_candidates [pure · d2w=– · recipe · inferred]
+     h1 rerank_by_preferences [pure · d2w=– · recipe · inferred]
+     h1 get_exploration_preferences [accessor · d2w=– · recipe · inferred]  ← reads ['UserExplorationPreferences']
+     h1 compute_recipe_availability [pure · d2w=– · pantry · inferred]
+     h1 iter_candidate_recipes [accessor · d2w=– · allergen · inferred]  ← reads ['Recipe']
+     h1 load_user_allergens [accessor · d2w=– · recipe · inferred]  ← reads ['UserDietaryProfile']
+  fns drawn on chain: 9
+  schema wires: [('touches', 'ExploreResponse'), ('touches', 'RecipeAvailability'), ('touches', 'RecipeListItem')]
+  rollup: [('reads_from', 'Recipe'), ('reads_from', 'UserDietaryProfile'), ('reads_from', 'UserExplorationPreferences')]
+
+=== GET /recipes · entity recipe · resp=RecipeListResponse · behind=48 fns/depth 4
+  screens → ['useRecipeSearch']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 search_recipes [caller · d2w=– · recipe]
+     h1 search_recipes._norm_codes [pure · d2w=– · recipe · extracted]
+     h1 build_score_input [pure · d2w=– · progression · inferred]
+     h1 load_user_match_context [pure · d2w=– · progression · inferred]
+     h1 match_score [pure · d2w=– · recipe · inferred]
+     h1 compute_recipe_availability [pure · d2w=– · pantry · inferred]
+     h1 get_user_cooked_recipe_ids [pure · d2w=– · recipe · inferred]
+     h1 get_user_flags_map [pure · d2w=– · recipe · inferred]
+     h1 get_user_equipment_codes [pure · d2w=– · allergen · inferred]
+     h1 list_recipes [accessor · d2w=– · recipe · inferred]  ← reads ['Recipe']
+     h1 load_user_allergens [accessor · d2w=– · recipe · inferred]  ← reads ['UserDietaryProfile']
+  fns drawn on chain: 11
+  schema wires: [('touches', 'RecipeAvailability'), ('touches', 'RecipeListItem'), ('touches', 'RecipeListResponse')]
+  rollup: [('reads_from', 'Recipe'), ('reads_from', 'UserDietaryProfile')]
+
+=== GET /recipes/{recipe_id} · entity recipe · resp=RecipeDetailResponse · behind=14 fns/depth 3
+  screens → ['useRecipeDetail']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_recipe [caller · d2w=– · recipe]
+     h1 get_pantry_ingredient_codes [pure · d2w=– · pantry · inferred]
+     h1 get_recipe_detail [accessor · d2w=– · recipe · inferred]  ← reads ['Recipe', 'RecipeEquipment', 'RecipeIngredient', 'RecipeNote', 'RecipeStep']
+     h1 get_user_flags_map [pure · d2w=– · recipe · inferred]
+     h1 recipe_cooked_by_user [pure · d2w=– · recipe · inferred]
+     h1 assert_recipe_allergen_safe [gate · d2w=– · allergen · inferred]
+     h1 load_user_allergens [accessor · d2w=– · recipe · inferred]  ← reads ['UserDietaryProfile']
+     h1 recipe_planned_by_household [pure · d2w=– · allergen · inferred]
+     h1 avisos_for_ingredient_codes [accessor · d2w=– · allergen · inferred]  ← reads ['ContextualWarningRule', 'IngredientWarning']
+  fns drawn on chain: 9
+  schema wires: [('touches', 'AvisoResponse'), ('touches', 'RecipeAvailability'), ('touches', 'RecipeDetailResponse'), ('touches', 'RecipeEquipmentItem'), ('touches', 'RecipeIngredientResponse'), ('touches', 'RecipeStepResponse')]
+  rollup: [('reads_from', 'Recipe'), ('reads_from', 'RecipeEquipment'), ('reads_from', 'RecipeIngredient'), ('reads_from', 'RecipeNote'), ('reads_from', 'RecipeStep'), ('reads_from', 'ContextualWarningRule'), ('reads_from', 'IngredientWarning'), ('reads_from', 'UserDietaryProfile')]
+
+=== GET /taxonomy · entity recipe · resp=TaxonomyTreeResponse · behind=0 fns/depth 0
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_taxonomy [accessor · d2w=– · recipe]  ← reads ['TaxonomyDimension', 'TaxonomyValue']
+  fns drawn on chain: 1
+  schema wires: []
+  rollup: [('reads_from', 'TaxonomyDimension'), ('reads_from', 'TaxonomyValue')]
+
+=== GET /repertorio/cupos · entity recipe · resp=CuposResponse · behind=5 fns/depth 2
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_cupos [caller · d2w=– · recipe]
+     h1 list_cupos [accessor · d2w=– · recipe · inferred]  ← reads ['RecipeFilterMode']
+  fns drawn on chain: 2
+  schema wires: [('touches', 'CupoResponse'), ('touches', 'CuposResponse')]
+  rollup: [('reads_from', 'RecipeFilterMode')]
+
+=== PUT /recipe-filter-modes/{mode_id}/cupo · entity recipe · resp=CupoResponse · behind=9 fns/depth 3
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 put_cupo [caller · d2w=0 · recipe]
+     h1 _parse_mode_id [pure · d2w=– · recipe · extracted]
+     h1 attach_cupo [pure · d2w=0 · recipe · inferred]
+     h1 list_cupos [accessor · d2w=– · recipe · inferred]  ← reads ['RecipeFilterMode']
+     h1 valid_tipo_codes [pure · d2w=– · recipe · inferred]
+  fns drawn on chain: 5
+  schema wires: [('touches', 'CupoAttachRequest'), ('touches', 'CupoResponse')]
+  rollup: [('reads_from', 'RecipeFilterMode')]
+
+=== PATCH /recipes/{recipe_id}/flags · entity recipe · resp=RecipeFlagsResponse · behind=1 fns/depth 1
+  screens → ['useRecipeFlags']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 patch_recipe_flags [caller · d2w=0 · recipe]
+     h1 upsert_recipe_flags [accessor · d2w=0 · recipe · inferred]  → WRITES ['UserRecipeFlag']  ← reads ['Recipe', 'UserRecipeFlag']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'RecipeFlagsResponse'), ('touches', 'RecipeFlagsUpdate')]
+  rollup: [('reads_from', 'Recipe'), ('reads_from', 'UserRecipeFlag'), ('writes_to', 'UserRecipeFlag')]
+
+=== POST /cooking/sessions · entity cooking · resp=CookingSessionResponse · behind=18 fns/depth 4
+  screens → ['useCookingSessions']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_start_session [caller · d2w=0 · cooking]
+     h1 _attach_photos [caller · d2w=– · cooking · extracted]
+     h1 concurrent_cook_cap_for_tier [pure · d2w=– · cooking · inferred]
+     h1 start_session [accessor · d2w=0 · cooking · inferred]  → WRITES ['CookingSession']  ← reads ['CookingSession', 'Recipe']  (commits)
+       h2 seed_stage_schedule [caller · d2w=1 · cooking · inferred]
+         h3 _schedule_next [accessor · d2w=0 · cooking · extracted]  → WRITES ['CookingStageReminder']
+  fns drawn on chain: 6
+  schema wires: [('touches', 'CookingSessionResponse'), ('touches', 'SessionCreateRequest')]
+  rollup: [('reads_from', 'CookingPhoto'), ('reads_from', 'CookingSession'), ('writes_to', 'CookingSession'), ('writes_to', 'CookingStageReminder'), ('reads_from', 'Recipe')]
+
+=== PATCH /cooking/sessions/{session_id}/stage · entity cooking · resp=CookingSessionResponse · behind=5 fns/depth 2
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 patch_stage [caller · d2w=0 · cooking]
+     h1 _attach_photos [caller · d2w=– · cooking · extracted]
+     h1 update_stage [accessor · d2w=0 · cooking · inferred]  → WRITES ['CookingSession']  ← reads ['CookingSession']
+  fns drawn on chain: 3
+  schema wires: [('touches', 'CookingSessionResponse'), ('touches', 'StageUpdate')]
+  rollup: [('reads_from', 'CookingPhoto'), ('reads_from', 'CookingSession'), ('writes_to', 'CookingSession')]
+
+=== PATCH /cooking/sessions/{session_id}/steps/{step_id} · entity cooking · resp=StepProgressResponse · behind=6 fns/depth 4
+  screens → ['useCookingSessions']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 patch_step_progress [caller · d2w=0 · cooking]
+     h1 update_step_progress [accessor · d2w=0 · cooking · inferred]  → WRITES ['CookingStepProgress']  ← reads ['CookingSession', 'CookingStepProgress']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'StepProgressResponse'), ('touches', 'StepProgressUpdate')]
+  rollup: [('reads_from', 'CookingSession'), ('reads_from', 'CookingStepProgress'), ('writes_to', 'CookingStepProgress')]
+
+=== PATCH /cooking/sessions/{session_id}/timer · entity cooking · resp=CookingSessionResponse · behind=8 fns/depth 2
+  screens → ['useCookingSessions']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 patch_session_timer [caller · d2w=0 · cooking]
+     h1 _attach_photos [caller · d2w=– · cooking · extracted]
+     h1 get_completed_step_ids [pure · d2w=– · cooking · inferred]
+     h1 set_session_timer [accessor · d2w=0 · cooking · inferred]  → WRITES ['CookingSession']  ← reads ['CookingSession', 'Recipe', 'RecipeStep']
+       h2 clear_pending_cooking_timer_notifications [accessor · d2w=0 · cooking · inferred]  → WRITES ['Notification']
+       h2 schedule_cooking_timer [accessor · d2w=0 · cooking · inferred]  → WRITES ['Notification']  (commits)
+  fns drawn on chain: 6
+  schema wires: [('touches', 'CookingSessionResponse'), ('touches', 'SessionTimerRequest')]
+  rollup: [('reads_from', 'CookingPhoto'), ('reads_from', 'CookingSession'), ('writes_to', 'CookingSession'), ('writes_to', 'Notification'), ('reads_from', 'Recipe'), ('reads_from', 'RecipeStep')]
+
+=== POST /cooking/sessions/{session_id}/complete · entity cooking · resp=CompletionResponse · behind=13 fns/depth 4
+  screens → ['useCookingSessions']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_complete [caller · d2w=0 · cooking]
+     h1 complete_session [accessor · d2w=0 · cooking · inferred]  → WRITES ['CookingSession', 'DishHistoryEvent', 'IngredientHistoryEvent', 'PantryItem']  ← reads ['CookingSession', 'Recipe', 'RecipeIngredient']  (commits)
+       h2 clear_pending_cooking_timer_notifications [accessor · d2w=0 · cooking · inferred]  → WRITES ['Notification']
+  fns drawn on chain: 3
+  schema wires: [('touches', 'CompletionRequest'), ('touches', 'CompletionResponse')]
+  rollup: [('reads_from', 'CookingSession'), ('writes_to', 'CookingSession'), ('reads_from', 'DishHistoryEvent'), ('writes_to', 'DishHistoryEvent'), ('writes_to', 'Notification'), ('reads_from', 'PantryItem'), ('reads_from', 'Recipe'), ('reads_from', 'RecipeIngredient'), ('writes_to', 'IngredientHistoryEvent'), ('writes_to', 'PantryItem')]
+
+=== POST /pantry/items · entity pantry · resp=PantryItemResponse · behind=2 fns/depth 1
+  screens → ['usePantryMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 create_pantry_item [caller · d2w=0 · pantry]
+     h1 add_pantry_item [accessor · d2w=0 · pantry · inferred]  → WRITES ['IngredientHistoryEvent', 'PantryItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'PantryItemCreate'), ('touches', 'PantryItemResponse')]
+  rollup: [('writes_to', 'IngredientHistoryEvent'), ('writes_to', 'PantryItem')]
+
+=== POST /pantry/items/batch · entity pantry · resp=CreateBatchResponse · behind=2 fns/depth 1
+  screens → ['useBatchAdd']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 create_pantry_items_batch [caller · d2w=0 · pantry]
+     h1 add_pantry_item [accessor · d2w=0 · pantry · inferred]  → WRITES ['IngredientHistoryEvent', 'PantryItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'BatchItemResult'), ('touches', 'CreateBatchRequest'), ('touches', 'CreateBatchResponse'), ('touches', 'PantryItemCreate'), ('touches', 'PantryItemResponse')]
+  rollup: [('writes_to', 'IngredientHistoryEvent'), ('writes_to', 'PantryItem')]
+
+=== PATCH /pantry/items/{item_id} · entity pantry · resp=PantryItemResponse · behind=2 fns/depth 1
+  screens → ['usePantryMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 update_pantry_item [caller · d2w=0 · pantry]
+     h1 edit_pantry_item [accessor · d2w=0 · pantry · inferred]  → WRITES ['PantryItem']  ← reads ['PantryItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'PantryItemResponse'), ('touches', 'PantryItemUpdate')]
+  rollup: [('reads_from', 'PantryItem'), ('writes_to', 'PantryItem')]
+
+=== GET /pantry/overview · entity pantry · resp=PantryOverviewResponse · behind=30 fns/depth 5
+  screens → ['usePantryOverview']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_pantry_overview [caller · d2w=– · pantry]
+     h1 list_pantry_items [accessor · d2w=– · pantry · inferred]  ← reads ['PantryItem']
+     h1 compute_cookability_summary [caller · d2w=– · pantry · inferred]
+  fns drawn on chain: 3
+  schema wires: [('touches', 'PantryItemResponse'), ('touches', 'PantryOverviewResponse')]
+  rollup: [('reads_from', 'PantryItem'), ('reads_from', 'UserDietaryProfile')]
+
+=== POST /pantry/locations · entity pantry · resp=LocationResponse · behind=2 fns/depth 1
+  screens → ['usePantryMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 create_location [caller · d2w=0 · pantry]
+     h1 add_location [accessor · d2w=0 · pantry · inferred]  → WRITES ['Location']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'LocationCreate'), ('touches', 'LocationResponse')]
+  rollup: [('writes_to', 'Location')]
+
+=== POST /pantry/items/{item_id}/assign-location · entity pantry · resp=PantryItemResponse · behind=2 fns/depth 1
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 assign_location [accessor · d2w=0 · pantry]  ← reads ['Location']  (commits)
+     h1 edit_pantry_item [accessor · d2w=0 · pantry · inferred]  → WRITES ['PantryItem']  ← reads ['PantryItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'AssignLocationRequest'), ('touches', 'PantryItemResponse'), ('touches', 'PantryItemUpdate')]
+  rollup: [('reads_from', 'Location'), ('reads_from', 'PantryItem'), ('writes_to', 'PantryItem')]
+
+=== PATCH /pantry/locations/{location_id} · entity pantry · resp=LocationResponse · behind=2 fns/depth 1
+  screens → ['usePantryMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 update_location [caller · d2w=0 · pantry]
+     h1 edit_location [accessor · d2w=0 · pantry · inferred]  → WRITES ['Location']  ← reads ['Location']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'LocationResponse'), ('touches', 'LocationUpdate')]
+  rollup: [('reads_from', 'Location'), ('writes_to', 'Location')]
+
+=== DELETE /pantry/locations/{location_id} · entity pantry · resp=None · behind=2 fns/depth 1
+  screens → ['usePantryMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 remove_location [caller · d2w=0 · pantry]
+     h1 delete_location [accessor · d2w=0 · pantry · inferred]  → WRITES ['PantryItem']  ← reads ['Location']  (commits)
+  fns drawn on chain: 2
+  schema wires: []
+  rollup: [('reads_from', 'Location'), ('writes_to', 'PantryItem')]
+
+=== POST /shopping/items · entity pantry · resp=ShoppingItemResponse · behind=2 fns/depth 1
+  screens → ['useShoppingMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 create_shopping_item [caller · d2w=0 · pantry]
+     h1 add_shopping_item [accessor · d2w=0 · pantry · inferred]  → WRITES ['ShoppingItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'ShoppingItemCreate'), ('touches', 'ShoppingItemResponse')]
+  rollup: [('writes_to', 'ShoppingItem')]
+
+=== POST /shopping/from-planned-recipes · entity pantry · resp=FromPlannedRecipesResponse · behind=8 fns/depth 3
+  screens → ['useGenerateFromPlanned']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_from_planned_recipes [caller · d2w=0 · pantry]
+     h1 generate_from_planned_recipes [accessor · d2w=0 · pantry · inferred]  → WRITES ['ShoppingItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'FromPlannedRecipesResponse'), ('touches', 'ShoppingItemResponse')]
+  rollup: [('writes_to', 'ShoppingItem'), ('reads_from', 'RecipeIngredient'), ('reads_from', 'UserDietaryProfile')]
+
+=== GET /shopping · entity pantry · resp=ShoppingDashboardResponse · behind=10 fns/depth 3
+  screens → ['useShoppingDashboard']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 get_shopping_dashboard [caller · d2w=– · pantry]
+     h1 frequent_candidates [pure · d2w=– · pantry · inferred]
+     h1 list_shopping [accessor · d2w=– · pantry · inferred]  ← reads ['ShoppingItem']
+     h1 suggested_candidates [caller · d2w=– · pantry · inferred]
+  fns drawn on chain: 4
+  schema wires: [('touches', 'ItemCandidate'), ('touches', 'ShoppingDashboardResponse'), ('touches', 'ShoppingItemResponse')]
+  rollup: [('reads_from', 'ShoppingItem'), ('reads_from', 'RecipeIngredient'), ('reads_from', 'UserDietaryProfile')]
+
+=== POST /shopping/items/{item_id}/confirm-bought · entity pantry · resp=BoughtConfirmationResponse · behind=2 fns/depth 1
+  screens → ['useShoppingMutations']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_confirm_bought [caller · d2w=0 · pantry]
+     h1 confirm_bought [accessor · d2w=0 · pantry · inferred]  → WRITES ['IngredientHistoryEvent', 'PantryItem', 'ShoppingItem']  ← reads ['IngredientHistoryEvent', 'PantryItem', 'ShoppingItem']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'BoughtConfirmationResponse')]
+  rollup: [('reads_from', 'IngredientHistoryEvent'), ('writes_to', 'IngredientHistoryEvent'), ('reads_from', 'PantryItem'), ('writes_to', 'PantryItem'), ('reads_from', 'ShoppingItem'), ('writes_to', 'ShoppingItem')]
+
+=== POST /recipes/{recipe_id}/plan · entity recipe · resp=PlannedRecipeResponse · behind=9 fns/depth 4
+  screens → ['usePlanRecipe']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_plan_recipe [caller · d2w=0 · recipe]
+     h1 load_user_allergens [accessor · d2w=– · recipe · inferred]  ← reads ['UserDietaryProfile']
+     h1 plan_recipe [accessor · d2w=0 · allergen · inferred]  → WRITES ['PlannedRecipe']  ← reads ['Recipe']  (commits)
+     h1 plan_into_cupo [caller · d2w=1 · recipe · inferred]
+  fns drawn on chain: 4
+  schema wires: [('touches', 'PlanRecipeRequest'), ('touches', 'PlannedRecipeResponse')]
+  rollup: [('writes_to', 'PlannedRecipe'), ('reads_from', 'Recipe'), ('reads_from', 'UserDietaryProfile')]
+
+=== DELETE /recipes/{recipe_id}/plan · entity recipe · resp=None · behind=2 fns/depth 1
+  screens → ['useUnplanRecipe']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 delete_plan_recipe [caller · d2w=0 · recipe]
+     h1 unplan_recipe_by_recipe [accessor · d2w=0 · allergen · inferred]  ← reads ['PlannedRecipe']  (commits)
+  fns drawn on chain: 2
+  schema wires: []
+  rollup: [('reads_from', 'PlannedRecipe')]
+
+=== DELETE /me · entity auth · resp=None · behind=5 fns/depth 3
+  screens → ['useDeleteAccount']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 delete_me [caller · d2w=0 · auth]
+     h1 delete_identity [pure · d2w=– · auth · inferred]
+     h1 delete_account [accessor · d2w=0 · legal-consent · inferred]  → WRITES ['AiSpendLog', 'DishHistoryEvent', 'Household', 'IdempotencyKey', 'Membership', 'Recipe', 'User']
+  fns drawn on chain: 3
+  schema wires: []
+  rollup: [('writes_to', 'Household'), ('writes_to', 'IdempotencyKey'), ('writes_to', 'Membership'), ('writes_to', 'User'), ('writes_to', 'AiSpendLog'), ('writes_to', 'DishHistoryEvent'), ('writes_to', 'Recipe')]
+
+=== POST /recipe-creation/manual · entity recipe · resp=CreationRequestResponse · behind=11 fns/depth 6
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}, {'gate': False, 'name': 'get_settings', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_create_manual [caller · d2w=0 · recipe]
+     h1 create_recipe_manual [accessor · d2w=0 · recipe · inferred]  → WRITES ['Recipe', 'RecipeCreationRequest', 'RecipeIngredient', 'RecipeStep']  ← reads ['Recipe', 'RecipeCreationRequest']  (commits)
+  fns drawn on chain: 2
+  schema wires: [('touches', 'CreationRequestResponse'), ('touches', 'ManualRecipeCreate')]
+  rollup: [('reads_from', 'Recipe'), ('writes_to', 'Recipe'), ('reads_from', 'RecipeCreationRequest'), ('writes_to', 'RecipeCreationRequest'), ('writes_to', 'RecipeIngredient'), ('writes_to', 'RecipeStep')]
+
+=== POST /recipe-creation/gustify · entity recipe · resp=GustifyCreationResponse · behind=47 fns/depth 5
+  screens → none bridged
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}, {'gate': False, 'name': 'get_settings', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_create_gustify [caller · d2w=0 · recipe]
+     h1 _gustify_response [pure · d2w=– · recipe · extracted]
+     h1 _raise_for_pipeline_error [pure · d2w=– · recipe · extracted]
+     h1 generate_gustify_recipe [accessor · d2w=0 · recipe · inferred]  → WRITES ['RecipeCreationRequest']  (commits)
+       h2 reclaim_if_abandoned [pure · d2w=0 · recipe · extracted]
+       h2 enqueue_unknown_ingredients [accessor · d2w=0 · allergen · inferred]  → WRITES ['IngredientReconciliationQueue']
+  fns drawn on chain: 6
+  schema wires: [('touches', 'GustifyCreateRequest'), ('touches', 'GustifyCreationResponse')]
+  rollup: [('reads_from', 'RecipeCreationRequest'), ('writes_to', 'RecipeCreationRequest'), ('reads_from', 'UserDietaryProfile'), ('writes_to', 'IngredientReconciliationQueue')]
+
+=== POST /recipes/demand · entity recipe · resp=RecipeDemandResponse · behind=0 fns/depth 0
+  screens → ['useCreateRecipeDemand']
+  gates (names only): [{'gate': True, 'name': 'get_auth_context', 'via': 'param-dep'}, {'gate': False, 'name': 'get_session', 'via': 'param-dep'}]
+  chain (drawn calls BFS):
+   h0 post_recipe_demand [accessor · d2w=0 · recipe]  → WRITES ['RecipeDemand']  (commits)
+  fns drawn on chain: 1
+  schema wires: [('touches', 'RecipeDemandCreate'), ('touches', 'RecipeDemandResponse')]
+  rollup: [('writes_to', 'RecipeDemand')]
