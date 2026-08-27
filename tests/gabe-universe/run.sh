@@ -501,7 +501,7 @@ check('focGlowFall:0.4' in page and 'focGlowFall!=null?CFG.focGlowFall:0' in pag
       "focus-glow falloff must survive as a fixed default (0.4) + engine read")
 check('dashN=(pat==="dashed")?Math.max(10, Math.round(sz*0.8))' in page and 'Math.round(sz/16)*128' in page and '_ringTex(typeof CFG!=="undefined"?CFG.focPat:null, thick, sz)' in page,
       "the dashed ring must scale its resolution + dash COUNT with the sphere size (big spheres pixelated)")
-check('if(CFG.othRing && n.ent!=null && _selEnts[n.ent]) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);' in page and 'var _selEnts={};' in page,
+check('if(CFG.othRing && n.ent!=null && _selEnts[n.ent] && !(WALK.mode==="journey" && HL.exact)) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);' in page and 'var _selEnts={};' in page,
       "the non-selected dim ring must be STATIC and confined to the selected element's entity (outer entities glow-only)")
 check('if(!d0 && !_nodeVisibleFn(n)) return;' in page,
       "the highlight neighborhood glow must NOT draw on HIDDEN nodes (colored-halo noise vs the clickable ghost stars, operator)")

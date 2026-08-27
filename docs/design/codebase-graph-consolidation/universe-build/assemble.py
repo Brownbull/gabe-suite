@@ -310,7 +310,31 @@ OLD_LGBI_CSS = '#elegend .lgbi:hover, #elegend .lgbi:focus{ color:var(--accent);
 assert OLD_LGBI_CSS in text, "legend lgbi CSS anchor missing"
 text = text.replace(OLD_LGBI_CSS, OLD_LGBI_CSS +
   '\n  #elegend .lglbl .tipico{ color:var(--muted); vertical-align:middle; } #elegend .lglbl .tipico:hover{ color:var(--accent); }'
-  ' #elegend .lglbl .tipico .tip{ top:auto; bottom:18px; left:-2px; width:200px; white-space:normal; }', 1)
+  ' #elegend .lglbl .tipico .tip{ display:none !important; }'   # the inline .tip is the SOURCE only — the legend paints it through the themed body-level popup (below)
+  ' .badgepop.lgpop .bpbody{ font:500 11px/1.45 var(--font-ui); color:var(--ink); text-transform:none; letter-spacing:0; max-width:260px; }'
+  ' .badgepop.lgpop .bpbody b{ color:var(--ink); }', 1)
+
+# ── legend tips ride the SAME themed body-level popup as the badge key (operator, 2026-08-27): the CSS
+#    .tip opened UPWARD inside the legend's clipped box (cut at the top) and used the inverted ink/bg
+#    colours (out of theme). Now: hover a .lgtip → a .badgepop (same panel styling) placed from the
+#    icon's rect — above it, flipped below when the top would clip, clamped to the viewport. ──
+OLD_LGTIP_JS = 'window.__badgePopHide=function(){ var p=document.getElementById("badgepop"); if(p) p.remove(); };'
+assert OLD_LGTIP_JS in text, "badgePopHide anchor missing (legend tips)"
+text = text.replace(OLD_LGTIP_JS, OLD_LGTIP_JS + r'''
+window.__lgTipPop=function(anchor){ if(window.__badgePopHide) __badgePopHide();
+  var src=anchor.querySelector(".tip"); if(!src) return;
+  var row=anchor.closest(".lgrow"), nm=row?(row.querySelector(".lglbl")||{}).textContent||"":"";
+  nm=String(nm).replace(/\s+/g," ").trim();
+  var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop lgpop";
+  pop.innerHTML='<div class="bph">'+(nm?(nm+" — connector"):"legend")+'</div><div class="bpbody">'+src.innerHTML+'</div>';
+  document.body.appendChild(pop);
+  var r=anchor.getBoundingClientRect();
+  var left=Math.max(8, Math.min(window.innerWidth-pop.offsetWidth-8, r.left-4));
+  var top=r.top-pop.offsetHeight-8; if(top<8) top=r.bottom+8;                     // flip BELOW when the top would clip
+  pop.style.left=left+"px"; pop.style.top=top+"px"; };
+(function(){ var el=document.getElementById("elegend"); if(!el||el.__lgtip) return; el.__lgtip=true;
+  el.addEventListener("mouseover", function(e){ var a=e.target.closest&&e.target.closest(".lgtip"); if(a) __lgTipPop(a); });
+  el.addEventListener("mouseout", function(e){ var a=e.target.closest&&e.target.closest(".lgtip"); if(a && !(e.relatedTarget&&a.contains(e.relatedTarget))) __badgePopHide(); }); })();''', 1)
 
 # apply _lglbl to the connector KIND rows (ln&&it.k) — unique anchor via the ' wires"' title context
 OLD_LN_LBL = ' wires"><div class="lgvis">\'+vis(it)+\'</div><div class="lglbl">\'+it.l+\'</div></div>'

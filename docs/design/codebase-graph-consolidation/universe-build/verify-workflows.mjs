@@ -90,6 +90,21 @@ const c = await p.evaluate(() => {
 ck(c.chips === c.drawn && c.wrap === 'wrap' && Math.abs(c.w0 - 20) < 1 && c.rows >= 2,
   'walkbar chips: one per DRAWN step, fixed 20px, wrapped into rows', JSON.stringify(c));
 
+/* [3b] the SELECTION while walking = the CURRENT step only (operator): exactly one depth-0 member, it moves with the step */
+const sel = await p.evaluate(() => {
+  __uniJrnStart('wf:0'); const zeros = () => Object.keys(HL.set).filter(id => HL.set[id] === 0);
+  const z0 = zeros(), at0 = WALK.steps[WALK.i], ctx0 = Object.keys(HL.set).filter(id => HL.set[id] === 1).length;
+  _walkGo(1); const z1 = zeros(), at1 = WALK.steps[WALK.i];
+  /* ring sprites live in HL.sprites with a ring texture; context members (depth 1) must carry NONE while a journey walks */
+  const ringTex = new Set(Object.values(_ringTexCache || {}));
+  const ctxRings = HL.sprites.filter(s => s.material && ringTex.has(s.material.map) && s.userData.nid !== at1).length;
+  const curRings = HL.sprites.filter(s => s.material && ringTex.has(s.material.map) && s.userData.nid === at1).length;
+  return { z0, at0, ctx0, z1, at1, n: WALK.steps.length, ctxRings, curRings };
+});
+ck(sel.curRings === 1 && sel.ctxRings === 0, 'only the current step wears a ring; path context is glow-only', 'cur=' + sel.curRings + ' ctx=' + sel.ctxRings);
+ck(sel.z0.length === 1 && sel.z0[0] === sel.at0 && sel.ctx0 >= 1, 'walking: exactly ONE depth-0 node (the current step); the path is depth-1 context', JSON.stringify({ z0: sel.z0, ctx: sel.ctx0 }));
+ck(sel.z1.length === 1 && sel.z1[0] === sel.at1 && sel.at1 !== sel.at0, 'the depth-0 selection MOVES with the step', sel.at1);
+
 /* [4b] the WALK PIN — a step the critical fold would hide is visible during the walk; Esc clears the pins */
 const pin = await p.evaluate(() => {
   __uniSetKindState('function', 'critical'); __uniComputeSolo();

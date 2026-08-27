@@ -77,6 +77,13 @@ const legend = await p.evaluate(() => {
   const callsTip = el.querySelector('.lgconn[data-lgconn="calls"] .tipico .tip');
   const callsSpectrum = !!callsTip && callsTip.querySelectorAll('span[style*="background"]').length >= 5;
   const noBandRows = el.innerHTML.indexOf('into a write') < 0 || callsSpectrum; // bands are in the popup, not standalone rows
+  /* operator (2026-08-27): the legend tip is a THEMED body-level popup, never clipped by the legend box */
+  let pop = null; const lgtip = el.querySelector('.lgconn[data-lgconn="calls"] .lgtip');
+  if (lgtip) { lgtip.dispatchEvent(new MouseEvent('mouseover', { bubbles: true })); const p = document.getElementById('badgepop');
+    if (p) { const pr = p.getBoundingClientRect(), cs = getComputedStyle(p);
+      pop = { cls: p.className, top: pr.top, bg: cs.backgroundColor, inView: pr.top >= 0 && pr.bottom <= window.innerHeight && pr.left >= 0,
+        hasHead: !!p.querySelector('.bph'), hasSpectrum: p.querySelectorAll('.bpbody span[style*="background"]').length >= 5 };
+      lgtip.dispatchEvent(new MouseEvent('mouseout', { bubbles: true, relatedTarget: document.body })); pop.gone = !document.getElementById('badgepop'); } }
   // config panel (open the wires drawer)
   let cfg = false, inputs = 0, resetRefreshed = false;
   try {
@@ -90,7 +97,7 @@ const legend = await p.evaluate(() => {
         resetRefreshed = (inp0.value.toLowerCase() === stock.toLowerCase()); }
       __uniFlOpen(null); }
   } catch (e) {}
-  return { toggle, cfg, inputs, swatches, resetRefreshed, declutter, tipRows: tipRows.length, callsSpectrum };
+  return { pop,  toggle, cfg, inputs, swatches, resetRefreshed, declutter, tipRows: tipRows.length, callsSpectrum };
 });
 
 const bandsSeen = Object.keys(sample.tally).length;
@@ -111,6 +118,9 @@ ok('the distance-heat spectrum folds into the calls info-popup (≥5 swatches)',
 ok('config panel carries the band calibrate rows (5 colour inputs)', legend.cfg && legend.inputs === 5,
    `cfg=${legend.cfg} inputs=${legend.inputs}`);
 ok('band reset refreshes the live colour pickers (not the detached rt)', legend.resetRefreshed === true);
+ok('legend tip = THEMED body-level popup, in view, spectrum inside, gone on mouseout',
+   !!(legend.pop && legend.pop.cls.indexOf('lgpop') >= 0 && legend.pop.inView && legend.pop.hasHead && legend.pop.hasSpectrum && legend.pop.gone && legend.pop.bg !== 'rgba(0, 0, 0, 0)'),
+   legend.pop ? ('top=' + Math.round(legend.pop.top) + ' bg=' + legend.pop.bg) : 'no popup');
 ok('connector legend descriptions moved into info-ⓘ hover popups (declutter)', legend.declutter === true,
    `tipRows=${legend.tipRows}`);
 ok('no page/console errors', errs.length === 0, errs.slice(0, 3).join(' | '));

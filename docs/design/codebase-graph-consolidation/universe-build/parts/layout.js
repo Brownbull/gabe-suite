@@ -649,7 +649,10 @@ var HL={ on:false, mode:"glow", depth:3, rest:"hide", origin:null, jr:null, set:
 function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   if(HL.exact){                                            // JOURNEY mode (batch 49): the path IS the set — the fe leg
     var ex={};                                             // sits in the dense frontend cluster, and a depth-BFS from it
-    HL.origin.forEach(function(id){ if(NIDS[id]) ex[id]=0; });   // lit 2,824 wires (screen = noise, the batch-15 lesson).
+    /* operator (2026-08-27): while a journey WALKS, only the CURRENT step is the selection (depth 0 →
+       the focus ring); the rest of the path stays lit as CONTEXT at depth 1 (glow, no focus ring). */
+    var cur=(WALK.mode==="journey" && WALK.steps.length) ? WALK.steps[WALK.i] : null;
+    HL.origin.forEach(function(id){ if(NIDS[id]) ex[id]=(cur && id!==cur) ? 1 : 0; });   // lit 2,824 wires (screen = noise, the batch-15 lesson).
     HL.set=ex; HL.links=new Set();                         // exact origin + only the wires BETWEEN its members.
     links.forEach(function(l){ if(ex[lid(l.source)]!==undefined && ex[lid(l.target)]!==undefined) HL.links.add(l); });
     return; }
@@ -735,7 +738,7 @@ window.__uniHLReapply=function(){ if(!HL.on) return;                     // halo
       if(CFG.focGlow) _add(n, _glowFor(n, (CFG.focGlowRad!=null?CFG.focGlowRad:2), (CFG.focGlowInt!=null?CFG.focGlowInt:0.5), (CFG.focGlowFall!=null?CFG.focGlowFall:0)), false);
     } else {                                                               // NON-SELECTED — glow always; DIM ring only inside the selected entity (operator: outer entities glow-only)
       if(CFG.othGlow!==false) _add(n, _glowFor(n, (CFG.glowRad!=null?CFG.glowRad:2), (CFG.glowInt!=null?CFG.glowInt:0.55), (CFG.glowFall!=null?CFG.glowFall:0)), false);
-      if(CFG.othRing && n.ent!=null && _selEnts[n.ent]) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);   // STATIC — same-entity only, only the FOCUS ring animates (operator)
+      if(CFG.othRing && n.ent!=null && _selEnts[n.ent] && !(WALK.mode==="journey" && HL.exact)) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);   // STATIC — same-entity only, only the FOCUS ring animates (operator); a walking journey's path context wears NO ring — the current step alone does
     } }); };
 window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
   hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
@@ -1013,6 +1016,7 @@ function _walkGo(di){ if(!WALK.steps.length) return;
   else _aimAt(n);
   SEL={kind:"node",data:n}; try{ showPanel(n); refreshEncSel(); }catch(e){}   // programmatic — does NOT re-run the select hook
   if(WALK.mode==="trail" && HL.on){ HL.origin=[n.id]; HL.exact=false; try{ _hlCompute(); _hlRestyle(); }catch(e){} }   // the focus RING transports to the trail step (operator)
+  else if(WALK.mode==="journey" && HL.on && HL.exact){ try{ _hlCompute(); _hlRestyle(); }catch(e){} }                  // journey: the ring follows the CURRENT step, the path keeps its context glow
   _walkRender(); }
 function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document.getElementById("jrnpill");
   /* JOURNEY controls live CENTERED in the header bar: [‹] [i/N · name] [›] [✕] — real buttons,
