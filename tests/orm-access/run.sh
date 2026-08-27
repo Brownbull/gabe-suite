@@ -87,6 +87,28 @@ o, _ = ops('def d():\n    cs = CookingSession()\n    return cs', "d")
 check(("w", "CookingSession", "cooking_sessions") not in o,
       "constructing without add() is NOT a write (mutation guard) (%r)" % o)
 
+# ── B1 · ORM substrate widening (attr-writes · column-select root-walk · 3 new binders) ──
+# attribute write on a Model-annotated PARAM (the 61-site gap): obj.col = v / += is a WRITE
+o, _ = ops('def f(r: Recipe):\n    r.title = "x"\n    r.views += 1', "f")
+check(("w", "Recipe", "recipes") in o, "B1 FIRE: an attribute write on a Model-annotated param is a WRITE")
+# session.get(Model) binds the result → the get is a read, its attr-write a write
+o, _ = ops('def f(s):\n    c = s.get(CookingSession, 1)\n    c.state = "done"', "f")
+check(("r", "CookingSession", "cooking_sessions") in o and ("w", "CookingSession", "cooking_sessions") in o,
+      "B1 FIRE: session.get(Model) result binds → read + its attr-write")
+# column select select(Model.col) + .join(Model) — the old bare-Name rule ignored the attribute select
+o, _ = ops('def f():\n    q = select(Recipe.id).join(CookingSession)', "f")
+check(("r", "Recipe", "recipes") in o and ("r", "CookingSession", "cooking_sessions") in o,
+      "B1 FIRE: select(Model.col) + .join(Model) resolve to the model READ")
+# `for u in <Model-annotated collection>` carries the model to the loop var + its attr-write
+o, _ = ops('def f(items: list[Recipe]):\n    for u in items:\n        u.flagged = True', "f")
+check(("w", "Recipe", "recipes") in o, "B1 FIRE: `for u in <Model-annotated collection>` carries the model")
+# an attribute write on a NON-Model var is never a table write (no false positive)
+o, _ = ops('def f():\n    cfg = 1\n    cfg.value = 2', "f")
+check(o == set(), "B1 SILENT: an attribute write on a non-Model var is never a table write")
+# an UNANNOTATED param binds nothing → its attr-write stays an honest floor (no wrong table)
+o, _ = ops('def f(x):\n    x.title = "y"', "f")
+check(o == set(), "B1 SILENT: an attribute write on an UNANNOTATED param stays a floor (never guessed)")
+
 # ── C4 · non-ORM SINK floor (_detect_sinks) ──
 def sinks(src, name):
     return C._detect_sinks(fn(src, name))
@@ -98,6 +120,14 @@ check(sinks('def h():\n    httpx.post(url, json=d)', "h") == ["http"], "sink: ht
 # SILENT — a bare .set()/.get()/write on a non-sink receiver, or open() without a write mode
 check(sinks('def n():\n    d.set(k, v)\n    mylist.get(0)\n    open("in.txt")\n    total += 1', "n") == [],
       "sinks: non-sink receivers + read-open stay SILENT (no false positives)")
+# B1 · the http guard: `session.<verb>` is http ONLY when the module imports an http client —
+# a SQLAlchemy session.delete is not an http sink (the 5 false gustify sinks vanish)
+check(C._detect_sinks(fn('def f(session):\n    session.delete(x)', "f"), http_lib=False) == [],
+      "B1 SILENT: session.delete with NO http import is SQLAlchemy, not an http sink")
+check(C._detect_sinks(fn('def f(session):\n    session.post(url)', "f"), http_lib=True) == ["http"],
+      "B1 FIRE: session.post WITH an http import IS an http sink (aiohttp ClientSession kept)")
+check(C._detect_sinks(fn('def f():\n    httpx.post(url)', "f"), http_lib=False) == ["http"],
+      "B1: a named http lib (httpx) stays an http sink regardless of the import flag")
 
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):

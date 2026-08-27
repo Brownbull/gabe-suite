@@ -1043,21 +1043,52 @@ def _call_bare(func) -> str | None:      # foo(...) / Model(...) → "foo" / "Mo
 
 
 def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
-    """{'ops': [{'model','table','rw'}], 'commits': bool} for one function, or {}."""
+    """{'ops': [{'model','table','rw'}], 'commits': bool} for one function, or {}.
+
+    B1 (the ORM substrate, 2026-08-27) widened the near-census: the symtab now binds a var
+    from four more idioms besides the constructor (a Model-annotated PARAM · ``x = session.get
+    (Model, id)`` · ``for row in <bound>``), an ATTRIBUTE-WRITE (``user.col = v`` / ``+=`` on a
+    bound Model — the write that has no flush yet, decision 3: NOT flush-gated), and the ROOT of a
+    ``select(Model.col)`` / ``.join(Model)`` / ``.select_from(Model)`` chain (a column select the
+    old bare-Name rule ignored). Residual floors stay honest: a cross-file helper return, a
+    dict-comprehension binding and a multi-model select still under-count, never mis-table."""
     if not m2t:
         return {}
-    symtab: dict[str, str] = {}   # local var → model class (constructor / annotation)
+
+    def _name_model(arg) -> str | None:           # select(Model) — a bare class literal
+        return arg.id if isinstance(arg, ast.Name) and arg.id in m2t else None
+
+    def _root_model(arg) -> str | None:           # the Model at the ROOT of an attr/select chain:
+        while isinstance(arg, ast.Attribute):     # Model.col → Model ; a.b.c → a
+            arg = arg.value
+        return arg.id if isinstance(arg, ast.Name) and arg.id in m2t else None
+
+    symtab: dict[str, str] = {}   # local var / param → model class
+    # (B1) Model-annotated PARAMS: def f(x: Model) / f(x: Model | None) → x is that Model
+    _params = (list(getattr(fnnode.args, "posonlyargs", []))
+               + list(getattr(fnnode.args, "args", []))
+               + list(getattr(fnnode.args, "kwonlyargs", [])))
+    for _a in _params:
+        if _a.annotation is not None:
+            for _tok in _re_mod.findall(r"[A-Za-z_][A-Za-z0-9_]*", ast.unparse(_a.annotation)):
+                if _tok in m2t:
+                    symtab[_a.arg] = _tok
+                    break
     for n in ast.walk(fnnode):
         if (isinstance(n, ast.Assign) and len(n.targets) == 1
-                and isinstance(n.targets[0], ast.Name)
-                and isinstance(n.value, ast.Call)):
+                and isinstance(n.targets[0], ast.Name) and isinstance(n.value, ast.Call)):
             b = _call_bare(n.value.func)
-            if b in m2t:
+            if b in m2t:                                               # x = Model(...)
                 symtab[n.targets[0].id] = b
+            elif _call_attr(n.value.func) == "get" and n.value.args and _name_model(n.value.args[0]):
+                symtab[n.targets[0].id] = _name_model(n.value.args[0])  # (B1) x = session.get(Model, id)
         elif isinstance(n, ast.AnnAssign) and isinstance(n.target, ast.Name) and n.annotation is not None:
             a = ast.unparse(n.annotation)
             if a in m2t:
                 symtab[n.target.id] = a
+        elif (isinstance(n, ast.For) and isinstance(n.target, ast.Name)
+              and isinstance(n.iter, ast.Name) and n.iter.id in symtab):
+            symtab[n.target.id] = symtab[n.iter.id]                     # (B1) for row in <bound> → row is that model
 
     def _arg_model(arg) -> str | None:            # session.add(x) — x local or inline Model(...)
         if isinstance(arg, ast.Name):
@@ -1065,9 +1096,6 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
         if isinstance(arg, ast.Call) and _call_bare(arg.func) in m2t:
             return _call_bare(arg.func)
         return None
-
-    def _name_model(arg) -> str | None:           # select(Model) — the class is the literal
-        return arg.id if isinstance(arg, ast.Name) and arg.id in m2t else None
 
     ops: dict[tuple, dict] = {}
     commits = False
@@ -1077,6 +1105,12 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
             ops[(model, rw)] = {"model": model, "table": m2t[model], "rw": rw}
 
     for n in ast.walk(fnnode):
+        # (B1) ATTRIBUTE WRITE: <bound>.col = v / <bound>.col += v — a pending write on a bound
+        # Model (not flush-gated, decision 3). A non-Model receiver binds nothing → no-op.
+        if isinstance(n, (ast.Assign, ast.AugAssign)):
+            for _t in (n.targets if isinstance(n, ast.Assign) else [n.target]):
+                if isinstance(_t, ast.Attribute) and isinstance(_t.value, ast.Name):
+                    _put(symtab.get(_t.value.id), "w")
         if not isinstance(n, ast.Call):
             continue
         attr, bare = _call_attr(n.func), _call_bare(n.func)
@@ -1084,12 +1118,14 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
             _put(_arg_model(n.args[0]), "w")
         if attr == "get" and n.args:                                  # session.get(Model, id)
             _put(_name_model(n.args[0]), "r")
-        if bare in _ORM_READ_CORE:
+        if bare in _ORM_READ_CORE:                                    # select(Model) OR select(Model.col) (B1)
             for a in n.args:
-                _put(_name_model(a), "r")
-        if bare in _ORM_WRITE_CORE:                                   # Core insert/update/delete(Model)
+                _put(_name_model(a) or _root_model(a), "r")
+        if attr in ("join", "select_from") and n.args:                # (B1) .join(Model) / .select_from(Model)
+            _put(_name_model(n.args[0]) or _root_model(n.args[0]), "r")
+        if bare in _ORM_WRITE_CORE:                                   # Core insert/update/delete(Model[.col])
             for a in n.args:
-                _put(_name_model(a), "w")
+                _put(_name_model(a) or _root_model(a), "w")
         if attr in _ORM_COMMIT:
             commits = True
     out = sorted(ops.values(), key=lambda x: (x["rw"], x["model"]))
@@ -1105,8 +1141,17 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
 _FILE_WRITE_MODES = ("w", "a", "x")
 
 
-def _detect_sinks(fnnode) -> list[str]:
-    """The non-ORM sink CATEGORIES this function reaches, sorted. [] when none (honest)."""
+# Import names that make a `session.<verb>` call HTTP, not SQLAlchemy (B1 sink guard).
+_HTTP_IMPORT_NAMES = frozenset({"httpx", "aiohttp", "requests", "ClientSession", "AsyncClient"})
+
+
+def _detect_sinks(fnnode, http_lib: bool = False) -> list[str]:
+    """The non-ORM sink CATEGORIES this function reaches, sorted. [] when none (honest).
+
+    ``http_lib`` (B1): whether the MODULE imports an http client. ``session.<verb>`` is HTTP only
+    then — otherwise ``session`` is SQLAlchemy's and the old blanket rule invented http sinks on
+    ORM code (the 5 false ``session.delete`` http entries on gustify). A ``requests``/``httpx``/
+    ``aiohttp`` receiver stays http by name regardless (aiohttp's ``ClientSession`` keeps its sink)."""
     cats: set[str] = set()
     for n in ast.walk(fnnode):
         if not isinstance(n, ast.Call):
@@ -1127,8 +1172,9 @@ def _detect_sinks(fnnode) -> list[str]:
         if attr in ("publish", "emit", "dispatch", "enqueue") \
                 and (attr == "enqueue" or "bus" in recv or "event" in recv or "queue" in recv):
             cats.add("queue")
-        if ("requests" in recv or "httpx" in recv or "aiohttp" in recv or "client" in recv or "session" in recv) \
-                and attr in ("post", "put", "patch", "delete", "get"):
+        if ("requests" in recv or "httpx" in recv or "aiohttp" in recv or "client" in recv
+                or ("session" in recv and http_lib)) \
+                and attr in ("post", "put", "patch", "delete", "get"):   # B1: `session` is http only with an http import
             cats.add("http")
     return sorted(cats)
 
@@ -1290,6 +1336,7 @@ def function_insight(repo: Path) -> dict:
     for f, tree in trees.items():
         text = texts[f]
         lines = text.splitlines()
+        _hl = bool(set(_file_imports(f)) & _HTTP_IMPORT_NAMES)   # B1: does THIS module import an http client?
 
         def _add(node, cls: str | None):
             if node.name.startswith("__") or len(node.name) < 3:
@@ -1313,7 +1360,7 @@ def function_insight(repo: Path) -> dict:
                 "ids": {i for i in _re_mod.findall(
                     r"[A-Za-z_][A-Za-z0-9_]{3,}", body)} - _PY_KEYWORDS,
             }
-            _snk = _detect_sinks(node)                       # C4: non-ORM sink categories (honest-empty)
+            _snk = _detect_sinks(node, http_lib=_hl)         # C4: non-ORM sink categories (honest-empty)
             if _snk:
                 fns[f"{f}::{qual}"]["sinks"] = _snk
 
