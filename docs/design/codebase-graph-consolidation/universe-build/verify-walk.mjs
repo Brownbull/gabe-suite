@@ -20,7 +20,7 @@ await p.waitForTimeout(4000);
 const raf = () => p.evaluate(() => new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r))));
 
 // [1] journeys: left-anchored dropdown, e2e group first, rows carry humanized NAMES
-const jrn = await p.evaluate(() => { __uniJrnToggle();
+const jrn = await p.evaluate(() => { window.__uniJrnKind = 'ent'; __uniJrnToggle();   // measure the TEST kind's names (the picker now opens on workflows)
   const el = document.getElementById('jrn'), r = el.getBoundingClientRect();
   const kinds = [...el.querySelectorAll('.jrnkindtabs button')].map(b => b.getAttribute('data-jk'));
   const grps = [...el.querySelectorAll('.jgcl')].map(g => g.textContent);   // collapsible by-start-entity group headers
@@ -159,7 +159,7 @@ console.log(`errors ${errs.length}`); errs.slice(0, 6).forEach(e => console.log(
 
 const fails = [];
 if (errs.length) fails.push('page/console errors');
-if (!(jrn.centered && jrn.hasE2ETab && jrn.kinds.length === 3 && jrn.groups > 0 && jrn.named > 50)) fails.push('journeys picker structure wrong (kind tabs / groups / names)');
+if (!(jrn.centered && jrn.hasE2ETab && jrn.kinds.length === 5 && jrn.groups > 0 && jrn.named > 50)) fails.push('journeys picker structure wrong (kind tabs / groups / names)');
 if (!(jsel.banner && jsel.bannerName.length > 3 && jsel.walkMode === 'journey' && jsel.steps > 1 && jsel.panelOpen && jsel.wbShown && jsel.wbClear && jsel.wbTitleName.length > 0)) fails.push('journey HUD wrong (pill + trail-bar-as-journey with clear button)');
 if (!(step1.i === 1 && /2\//.test(step1.pos) && step1.cardName.length > 0 && step1.stillLit && camMoved)) fails.push('journey stepping broken');
 if (!(panel.footBtn && !panel.headBtn && panel.railBelow && panel.stable)) fails.push('panel chevron/geometry wrong');

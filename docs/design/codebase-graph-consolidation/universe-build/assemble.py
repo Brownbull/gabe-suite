@@ -31,7 +31,7 @@ repl = {
   160: (160, STYLE_CLOSE),
   162: (165, None),                 # drop the spike .bar block (title card + reset → moved to nav/topbar)
   175: (175, '<script src="./assets/3d-bundle.js"></script>'),
-  176: (176, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>'),   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
+  176: (176, '<script src="./assets/chip-assets.js"></script>\n<script src="./c4-graph.js"></script>\n<script src="./levels.js"></script>\n<script src="./sim.data.js"></script>\n<script>(function(){ var s=document.createElement("script"); s.src="./workflows.js"; s.onerror=function(){}; document.head.appendChild(s); })();</script>'),   # curated USER WORKFLOWS (window.GABE_WORKFLOWS) — loaded at runtime with onerror ignored: optional per project, honest-empty when absent, invisible to the static link gate   # sim feed: GABE_SIM (live when a change is in flight · null at rest · file absent = undefined)
   247: (295, adapter),              # toy data block -> live adapter
   601: (601, REL2KIND),
   959: (959, GLINE),

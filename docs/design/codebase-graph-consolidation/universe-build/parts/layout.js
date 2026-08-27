@@ -448,7 +448,7 @@ window.__uniDrawStubs=function(){ window.__uniStubs=[]; try{
     return !!(ev.show&&ev.planets); };
   var _kindShown=function(n){ if(!n) return false;
     var st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));
-    if(st==="off") return false; if(st==="critical" && n.__solo) return false; return true; };
+    if(st==="off") return false; if(st==="critical" && n.__solo && !(window.__uniPin||{})[n.id]) return false; return true; };   // a walk/reveal PIN clears the solo fold here too (ghost stars agree with visN)
   var seen={};
   links.forEach(function(l){ var sid=lid(l.source), tid=lid(l.target); var s=NIDS[sid], t=NIDS[tid]; if(!s||!t) return;
     if(window.__uniRelHide && __uniRelHide(l)) return;               // respect the R-lab hides
@@ -470,6 +470,7 @@ window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var e
   var _gh=window.__uniGhostHov; if(_gh) _gh.visible=false;          // drop the lingering hover preview the instant we reveal (review)
   var _tip=document.getElementById("unistubtip"); if(_tip) _tip.style.display="none";
   var _g=document.getElementById("g"); if(_g && _g.style.cursor==="pointer") _g.style.cursor="";
+  window.__uniPin[hidId]=1;                                          // a revealed node must not stay folded as a solo helper (review minor)
   try{ applyVis("all"); }catch(e){} try{ if(window.__uniFleetSync) __uniFleetSync(); }catch(e){} try{ updateConnectors(); }catch(e){} }catch(e){} };
 /* DOUBLE-CLICK a node → reveal + light its ONE-HOP neighbourhood (operator): every element directly
    connected to n is un-hidden (its element + cluster + entity forced ON if the fleet had it hidden),
@@ -482,7 +483,7 @@ window.__uniRevealNeighbors=function(n){ try{ if(!n) return 0;
   links.forEach(function(l){ var s=lid(l.source), t=lid(l.target);
     var o=(s===nid)?t:(t===nid?s:null); if(o!=null && !seen[o]){ seen[o]=1; hop.push(o); } });
   var cols=["show","planets","wires"];
-  var _force=function(id){ var m=NIDS[id]; if(!m) return; var ent=m.ent, sub=m.sub;
+  var _force=function(id){ var m=NIDS[id]; if(!m) return; var ent=m.ent, sub=m.sub; window.__uniPin[id]=1;   // past the solo fold too
     if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
     cols.forEach(function(c){ UNIVIS.ent[ent][c]=1; });
     if(sub!=null){ var k=ent+"|"+sub; if(!UNIVIS.sub[k]) UNIVIS.sub[k]=Object.assign({},_VISDEF); cols.forEach(function(c){ UNIVIS.sub[k][c]=1; }); }
@@ -759,7 +760,8 @@ window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.e
   _walkRender(); };
 window.__uniHLSelectLink=function(l){ if(!l) return; HL.jr=null; HL.jrObj=null; HL.exact=false;
   HL.origin=[lid(l.source), lid(l.target)]; HL.on=true; _hlCompute(); _hlRestyle(); };   // a WIRE select seeds the BFS from BOTH endpoints (depth control applies)
-window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=null; HL.set={}; HL.links=null;
+window.__uniPin=window.__uniPin||{};   // nodes a journey walk / reveal pinned past the critical solo fold — cleared with the walk
+window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; window.__uniPin={}; try{ _applyVisNow({all:true}); }catch(e){} HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=null; HL.set={}; HL.links=null;
   window.__uniSelLink=null;
   WALK.mode=null; WALK.steps=[]; WALK.i=0; _hlRestyle(); _walkRender(); };
 window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d)); HL.exact=false;   // widening depth during a journey opts INTO the BFS neighborhood (the exact path was the default)
@@ -795,9 +797,68 @@ function _jrnCollect(){ if(JRN) return JRN; var m={};
     j.carriers.sort(function(a,b){ var ea=(_fieldN(a)||{}).ent||"", eb=(_fieldN(b)||{}).ent||"";   // steps walk entity-by-entity along the span
       var ia=j.ents.indexOf(ea), ib=j.ents.indexOf(eb); if(ia!==ib) return ia-ib; return a<b?-1:1; });
     return j; });
+  var bk=[]; try{ bk=_bkCollect(); }catch(e){}            // derived BACKEND journeys — honest-empty on any failure
+  var wf=[]; try{ wf=_wfCollect(bk); }catch(e){}          // curated USER WORKFLOWS over those chains
+  JRN=wf.concat(bk).concat(JRN);
   return JRN; }
-function _jrnRow(j){ return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+'">'
-  +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+(j.agg?"agg":j.cid)+'</b><span class="jrncorp">'+j.corpus+'</span>'
+/* ── BACKEND journeys (operator, 2026-08-27): a test journey is a COVERAGE SET (every element one
+   test touches, sorted entity-by-entity) — not an execution order, so it reads as noise. A backend
+   journey is the graph's OWN trace, ordered by hops: endpoint → handler → calls (BFS) → each
+   writer's models right after it. Derived client-side from the fn feed the map already carries
+   (_FNLINKS: handler · calls · fnwrites/fnreads) — no emitter change, no curation. Steps carry
+   META {hop, why, from} so the step note can say what is happening. Capped per journey (honest
+   "+N" in the name). ── */
+var _BK_CAP=28;
+function _bkFeLeg(eps){ var l=_jrnFeLeg(eps); return { screens:l.screens, users:[] }; }   // backend/workflow journeys carry the SCREENS that fetch them, not every UI user (a union balloons)
+function _fnById(id){ if(NIDS[id]) return NIDS[id]; var f=_fieldN(id); if(f) return f;
+  if(_FNNODES){ for(var i=0;i<_FNNODES.length;i++) if(_FNNODES[i].id===id) return _FNNODES[i]; } return null; }
+function _bkCollect(){ if(!_FNNODES){ try{ _buildFnData(); }catch(e){} } if(!_FNLINKS) return [];
+  var calls={}, handler={}, acc={};
+  _FNLINKS.forEach(function(l){ if(l.rel==="calls") (calls[l.source]=calls[l.source]||[]).push(l.target);
+    else if(l.rel==="handler") handler[l.source]=l.target;
+    else if(l.access){ var A=(acc[l.source]=acc[l.source]||{}); A[l.target]=A[l.target]||(l.rel==="fnwrites"); } });   // read+write on one model = a WRITER of it (write wins)
+  Object.keys(acc).forEach(function(k){ acc[k]=Object.keys(acc[k]).sort().map(function(t){ return {t:t, w:acc[k][t]}; }); });
+  var _d2wOf=function(id){ var f=_fnById(id); return (f&&f.d2w!=null)?f.d2w:99; };
+  Object.keys(calls).forEach(function(k){ calls[k].sort(function(a,b){ return (_d2wOf(a)-_d2wOf(b))||(a<b?-1:1); }); });   // within a hop, the write path leads (d2w ascending), then name
+  var out=[];
+  _fieldNodes().forEach(function(ep){ if(ep.kind!=="endpoint") return; var h=handler[ep.id]; if(!h) return;
+    var steps=[{id:ep.id, hop:0, why:"endpoint"}], seen={}; seen[ep.id]=1; seen[h]=1;
+    var q=[[h,1]], ents={}; ents[ep.ent]=1; var writes=0, reads=0, more=0;
+    while(q.length){ var cur=q.shift(), fid=cur[0], hop=cur[1], f=_fnById(fid); if(!f) continue;
+      if(steps.length>=_BK_CAP){ more++; continue; }
+      steps.push({id:fid, hop:hop, why:"fn"}); if(f.ent) ents[f.ent]=1;
+      (acc[fid]||[]).forEach(function(a){ var key=a.t+"|"+fid; if(seen[key]) return; seen[key]=1;
+        if(steps.length>=_BK_CAP){ more++; return; }
+        steps.push({id:a.t, hop:hop+1, why:a.w?"write":"read", from:fid}); if(a.w) writes++; else reads++;
+        var mn=_fieldN(a.t); if(mn&&mn.ent) ents[mn.ent]=1; });
+      (calls[fid]||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; q.push([t,hop+1]); } }); }
+    if(steps.length<2) return;
+    out.push({ cid:"bk:"+ep.id, bk:true, ep:ep.id, corpora:{backend:1}, corpus:"backend", agg:false, e2e:false,
+      ents:Object.keys(ents), carriers:steps.map(function(s){ return s.id; }), meta:steps,
+      writes:writes, reads:reads, more:more, method:String(ep.label||"").split(" ")[0],
+      name:(ep.label||ep.id)+(more?(" (+"+more+"+ more — capped at "+_BK_CAP+" steps)"):""), start:ep.ent||"other", fe:_bkFeLeg([ep.id]) });   // a FLOOR: fns cut at the cap never count their own subtrees
+    out[out.length-1].feN=out[out.length-1].fe.users.length+out[out.length-1].fe.screens.length; });
+  out.sort(function(a,b){ return (b.writes-a.writes)||(b.carriers.length-a.carriers.length)||(a.name<b.name?-1:1); });
+  return out; }
+/* curated USER WORKFLOWS — window.GABE_WORKFLOWS = [{name, steps:["METHOD /path", …], note}] (the
+   center's workflows.js; absent → no tab content, never fabricated). A workflow = its endpoints'
+   backend chains walked in the curated order; an endpoint the map has no chain for is COUNTED
+   in the row (unmapped), never silently dropped. */
+function _wfCollect(bk){ var W=window.GABE_WORKFLOWS; if(!W||!W.length) return [];
+  var byLabel={}; bk.forEach(function(j){ var ep=_fieldN(j.ep); if(ep&&ep.label) byLabel[ep.label]=j; });
+  return W.map(function(w,i){ var steps=[], ents={}, miss=[], writes=0, epn=0;
+    (w.steps||[]).forEach(function(lbl){ var j=byLabel[lbl]; if(!j){ miss.push(lbl); return; } epn++;
+      j.meta.forEach(function(m){ steps.push({id:m.id, hop:m.hop, why:m.why, from:m.from, ep:j.ep}); });
+      j.ents.forEach(function(e){ ents[e]=1; }); writes+=j.writes; });
+    var eps=(w.steps||[]).filter(function(l){ return byLabel[l]; }).map(function(l){ return byLabel[l].ep; });
+    return { cid:"wf:"+i, wf:true, corpora:{workflow:1}, corpus:"workflow", agg:false, e2e:false,
+      ents:Object.keys(ents), carriers:steps.map(function(s){ return s.id; }), meta:steps, writes:writes,
+      epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:"user workflows",
+      fe:_bkFeLeg(eps), feN:0 }; }).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; }); }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
+function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.agg?"agg":j.cid));
+  var tt=j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s) · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
+  return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+tt.replace(/"/g,"&quot;")+'">'
+  +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+badge+'</b><span class="jrncorp">'+j.corpus+'</span>'
   +(j.feN?('<span class="jrnfe">'+svgInline("component", KINDCOL.component, 10)+j.feN+'</span>'):"")
   +'<span class="jrnn">'+j.ents.length+' ents</span></div>'; }
 /* ── the FRONTEND LEG (batch 49) — derived from wires the map ALREADY carries, no emitter change:
@@ -814,26 +875,36 @@ function _jrnFeLeg(carriers){ var cs={}; carriers.forEach(function(id){ cs[id]=1
   return { screens:Object.keys(scr).sort(), users:Object.keys(use).sort() }; }
 window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) p.style.display="none";
   if(!cid){ __uniHLClear(); return; }
-  var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j) return;
+  var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j||!j.carriers.length) return;
   var fe=j.fe?j.fe.users.concat(j.fe.screens).filter(function(id){
     if(NIDS[id]) return visN(NIDS[id]).show;                                  // drawn → the fleet decides
     var fn=_CAPST&&_CAPST.byPiece[id]?_fieldN(id):null;
     return !!(fn&&visN(fn).show); }):[];                                      // stashed → KEPT iff fleet-shown; the walk expands its capsule on arrival (review 53[0])
+  if((j.bk||j.wf) && window.__uniKindState && window.__uniSetKindState){   // the chain's steps are fns — an OFF function layer would make every step dead
+    var _fs=__uniKindState["function"]||(typeof _kindDefault==="function"?_kindDefault("function"):"critical");
+    if(_fs==="off") __uniSetKindState("function","critical"); }
   HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();
-  WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; _walkRender(); _walkGo(0); };
+  WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; WALK.feLen=fe.length;
+  window.__uniPin={}; WALK.steps.forEach(function(id){ window.__uniPin[id]=1; });   // pins belong to THIS walk (no accumulation across journeys)
+  if(window.__uniKindState && window.__uniSetKindState){ var _woke={};                 // an OFF kind (model/endpoint/schema…) would hide its steps — wake it to critical
+    WALK.steps.forEach(function(id){ var sn=_fnById(id); if(!sn||_woke[sn.kind]) return; _woke[sn.kind]=1;
+      var st=__uniKindState[sn.kind]||(typeof _kindDefault==="function"?_kindDefault(sn.kind):"all"); if(st==="off") __uniSetKindState(sn.kind,"critical",true); }); }
+  try{ _applyVisNow({all:true}); }catch(e){}   // every step visible past the solo fold
+  _walkRender(); _walkGo(0); };
 /* ── the journeys PICKER (operator): PERSISTENT entity chips on top (click to hide that entity's group) ·
    KIND TABS below (end-to-end / by-entity / aggregated) · the selected kind's journeys grouped by START
    entity into COLLAPSIBLE groups (click a group title to fold its tests). __uniJrnExcl = hidden start-
    entities; __uniJrnKind = the open kind tab; __uniJrnCollapse = folded groups. ── */
-window.__uniJrnExcl=window.__uniJrnExcl||{}; window.__uniJrnKind=window.__uniJrnKind||"ent"; window.__uniJrnCollapse=window.__uniJrnCollapse||{};
-var _JRNKINDS=[["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
+window.__uniJrnExcl=window.__uniJrnExcl||{}; window.__uniJrnKind=window.__uniJrnKind||null; window.__uniJrnCollapse=window.__uniJrnCollapse||{};   // default tab resolved LAZILY at first paint (workflows.js loads at runtime)
+var _JRNKINDS=[["wf","workflows"],["bk","backend"],["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
 var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
-function _jrnKindOf(j){ return j.e2e?"e2e":(j.agg?"agg":"ent"); }                         // priority e2e > agg > by-entity
+function _jrnKindOf(j){ return j.wf?"wf":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent"))); }   // workflows · backend · then the test kinds (e2e > agg > by-entity)
 function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
-function _jrnVisible(j){ return j.ents.some(function(e){ return !window.__uniJrnExcl[e]; }); }   // SPAN filter: a journey shows iff its span touches ≥1 INCLUDED entity
+function _jrnVisible(j){ if(j.wf && !j.ents.length) return true;                                // an ALL-UNMAPPED workflow has no span — it stays visible so its 'unmapped' badge can say so
+  return j.ents.some(function(e){ return !window.__uniJrnExcl[e]; }); }   // SPAN filter: a journey shows iff its span touches ≥1 INCLUDED entity
 function _jrnKindCount(k){ return _jrnCollect().filter(function(j){ return _jrnKindOf(j)===k && _jrnVisible(j); }).length; }
 function _jrnChipsHTML(){ var c=_jrnTouch();
-  var h='<div class="jrnenthint">click an entity to drop it from the journey filter (span-based)</div><div class="jrnentgrid">';
+  var h='<div class="jrnenthint">click an entity to drop it from the filter · middle-click = only that one</div><div class="jrnentgrid">';
   Object.keys(c).sort().forEach(function(e){ var off=!!window.__uniJrnExcl[e];
     h+='<span class="jrnent'+(off?" off":"")+'" data-e="'+e+'" style="--ec:'+(ENT[e]||"#888")+'" title="'+c[e]+' journey(s) touch '+e+'"><i></i>'+e+'<b>'+c[e]+'</b></span>'; });
   return h+'</div>'; }
@@ -846,17 +917,71 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
   var groups={}; vis.forEach(function(j){ (groups[j.start]=groups[j.start]||[]).push(j); });
   Object.keys(groups).sort().forEach(function(g){ var cl=!!window.__uniJrnCollapse[g];
     h+='<div class="jrngrp jgcl'+(cl?" cl":"")+'" data-ge="'+g+'" style="color:'+(ENT[g]||"var(--muted)")+'"><span class="jcar">'+_JCHEV+'</span>'+g+' · '+groups[g].length+'</div>';
-    if(!cl) groups[g].sort(bySpan).forEach(function(j){ h+=_jrnRow(j); }); });
+    if(!cl) (g==="user workflows"?groups[g]:groups[g].sort(bySpan)).forEach(function(j){ h+=_jrnRow(j); }); });   // curated order is the operator's — never re-sorted
   return h; }
-function _jrnPaint(p){ var js=_jrnCollect();
-  p.innerHTML='<div class="jrnhd">journeys · '+js.length+' cross-entity tests</div>'+_jrnChipsHTML()+_jrnTabsHTML()+'<div class="jrnlist">'+_jrnGroupsHTML()+'</div>';
-  p.querySelectorAll(".jrnent").forEach(function(c){ c.onclick=function(){ var e=c.getAttribute("data-e"); if(window.__uniJrnExcl[e]) delete window.__uniJrnExcl[e]; else window.__uniJrnExcl[e]=1; _jrnPaint(p); }; });
+function _jrnPaint(p){ if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk");   // workflows when curated, else the derived backend chains
+  var js=_jrnCollect();
+  var _nt=js.filter(function(j){ return !j.bk&&!j.wf; }).length, _nb=js.filter(function(j){ return j.bk; }).length, _nw=js.filter(function(j){ return j.wf; }).length;
+  p.innerHTML='<div class="jrnhd">journeys · '+_nw+' workflow(s) · '+_nb+' backend chain(s) · '+_nt+' cross-entity test(s)</div>'+_jrnChipsHTML()+_jrnTabsHTML()+'<div class="jrnlist">'+_jrnGroupsHTML()+'</div>';
+  p.querySelectorAll(".jrnent").forEach(function(c){ c.onclick=function(){ var e=c.getAttribute("data-e"); if(window.__uniJrnExcl[e]) delete window.__uniJrnExcl[e]; else window.__uniJrnExcl[e]=1; _jrnPaint(p); };
+    c.onauxclick=function(ev){ if(ev.button!==1) return; ev.preventDefault(); window.__uniJrnSolo(c.getAttribute("data-e")); _jrnPaint(p); };   // middle-click = SOLO this entity (operator)
+    c.onmousedown=function(ev){ if(ev.button===1) ev.preventDefault(); }; });   // no autoscroll on the wheel button
   p.querySelectorAll(".jrnkindtabs button").forEach(function(b){ b.onclick=function(){ window.__uniJrnKind=b.getAttribute("data-jk"); _jrnPaint(p); }; });
   p.querySelectorAll(".jgcl").forEach(function(g){ g.onclick=function(){ var e=g.getAttribute("data-ge"); if(window.__uniJrnCollapse[e]) delete window.__uniJrnCollapse[e]; else window.__uniJrnCollapse[e]=1; _jrnPaint(p); }; });
   p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; }); }
+window.__uniJrnSolo=function(e){ var all=Object.keys(_jrnTouch()); var only=all.length&&all.every(function(x){ return x===e||window.__uniJrnExcl[x]; })&&!window.__uniJrnExcl[e];
+  window.__uniJrnExcl={}; if(!only) all.forEach(function(x){ if(x!==e) window.__uniJrnExcl[x]=1; }); };   // already solo → middle-click again restores all
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
-  if(p.style.display!=="none"){ p.style.display="none"; return; }
-  _jrnPaint(p); p.style.display=""; };
+  if(p.style.display!=="none"){ p.style.display="none"; _stepNote(); return; }
+  _jrnPaint(p); p.style.display=""; _stepNote(); };
+/* ── the STEP NOTE — "what the hell is happening at this step" (operator): DERIVED per node kind from
+   the map's own facts (role · d2w · access ops · middleware · behind · doc) + the journey META (hop ·
+   why · from). Top-centre over the graph while a walk is live; hidden under the picker. ── */
+function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return;
+  var jp=document.getElementById("jrn"), pickerOpen=jp&&jp.style.display!=="none";
+  var active=(WALK.mode==="trail"||WALK.mode==="journey")&&WALK.steps.length;
+  if(!active||pickerOpen){ el.style.display="none"; return; }
+  var id=WALK.steps[WALK.i], n=_fnById(id), j=HL.jrObj, meta=null;
+  if(j&&j.meta){ var mi=WALK.i-(WALK.feLen||0);                                    // META aligns with the CARRIERS (steps = fe leg + carriers) — by INDEX, so a repeated model keeps its own writer
+    if(mi>=0 && mi<j.meta.length && j.meta[mi].id===id) meta=j.meta[mi];
+    else { for(var k=0;k<j.meta.length;k++){ if(j.meta[k].id===id){ meta=j.meta[k]; break; } } } }
+  var esc=function(s){ return String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;"); };
+  var lbl=n?(n.label||id):id.split("#").pop(), kind=n?n.kind:"?", ent=n&&n.ent||"", col=(ENT[ent]||(n&&n.col))||"#888";
+  var what="", doc=(n&&n.det&&n.det.doc)?(function(d){ var m=/^[\s\S]*?[.!?](?=\s|$)/.exec(d); return m?m[0]:d; })(String(n.det.doc)):"";
+  var accTxt=function(a){ if(!a||!a.ops||!a.ops.length) return ""; var w=[],r=[]; a.ops.forEach(function(o){ (o.rw==="w"?w:r).push(o.model); });
+    return (w.length?('<span class="snw">writes</span> '+esc(w.join(", "))):"")+(w.length&&r.length?" · ":"")+(r.length?('<span class="snr">reads</span> '+esc(r.join(", "))):""); };
+  if(kind==="endpoint"){ var gates=(n.middleware||[]).filter(function(m){ return m.gate; }).map(function(m){ return m.name; });
+    what="API endpoint — the entity's outward door. "+(gates.length?("Gated by "+esc(gates.join(", "))+". "):"")+(n.m&&n.m.behind?("Pulls in "+n.m.behind+" function(s) behind its handler. "):"");
+    var ea=n.access&&n.access.ops?accTxt(n.access):""; if(ea) what+="Rollup: "+ea+"."; }
+  else if(kind==="function"){ var d=n.d2w, role=n.role||"function";
+    var band=(d===0)?"a WRITE-ANCHOR — writes here or holds the commit":(d===1)?"one hop from a write":(d==null)?"never reaches a write (read / serialize path)":(d+" hops from a write");
+    what=esc(role)+" function · "+band+". "; var fa=accTxt(n.access); if(fa) what+=fa+". ";
+    if(n.m&&n.m.behind) what+="Calls "+n.m.behind+" function(s) beneath it. "; }
+  else if(kind==="model"){ var wby=[], rby=[], _seenW={}; (_FNLINKS||[]).forEach(function(l){ if(l.access&&l.target===id){ var f=_fnById(l.source), nm=f?f.label:l.source.split("#").pop(), kk=l.rel+"|"+nm; if(_seenW[kk]) return; _seenW[kk]=1; (l.rel==="fnwrites"?wby:rby).push(nm); } });
+    what="data model"+(n.m&&n.m.cols?(" · "+n.m.cols+(n.m.cols>=10?"+":"")+" column(s)"):"")+". "+(wby.length?('<span class="snw">written by</span> '+esc(wby.join(", "))+". "):"")+(rby.length?('<span class="snr">read by</span> '+esc(rby.join(", "))+". "):"");
+    if(!wby.length&&!rby.length) what+="No drawn function touches it directly (endpoint rollups only)."; }
+  else if(kind==="schema"){ what="request/response shape — the data contract this journey carries over the wire."; }
+  else if(n&&n.fe){ what=esc(kind)+" (frontend) — "+(kind==="screen"||kind==="web"?"the screen that fetches this journey's endpoint":"a piece on the UI side of the bridge")+"."; }
+  else { what=esc(kind)+"."; }
+  var hop="";
+  if(meta){ var frm=meta.from?_fnById(meta.from):null, frmL=frm?(frm.label||meta.from):(meta.from||"");
+    var _epN=0,_epI=0; if(meta.why==="endpoint"&&j&&j.meta){ j.meta.forEach(function(m,ii){ if(m.why==="endpoint"){ _epN++; if(ii<=(WALK.i-(WALK.feLen||0))) _epI++; } }); }
+    var _heat=(window.__uniD2W!==false);
+    hop=(meta.why==="endpoint")?("<b>Hop 0</b> · "+(_epN>1?("endpoint "+_epI+" of "+_epN+" in this workflow — a new chain starts here"):"the journey's entry point")):
+        (meta.why==="write")?("<b>Hop "+meta.hop+"</b> · <span class=\"snw\">WRITTEN</span> by "+esc(frmL)+" — the red access wire"):
+        (meta.why==="read")?("<b>Hop "+meta.hop+"</b> · <span class=\"snr\">read</span> by "+esc(frmL)):
+        ("<b>Hop "+meta.hop+"</b> · reached by a calls wire"+(_heat&&n&&n.d2w===0?" (orange — at the write)":_heat&&n&&n.d2w===1?" (amber — one hop out)":"")); }
+  else if(WALK.mode==="journey"&&j&&(j.bk||j.wf)&&n&&n.fe){ hop="<b>UI leg</b> · a screen that fetches this journey's endpoint over the bridge — the backend chain starts at the first endpoint step"; }
+  else if(WALK.mode==="journey"&&j&&!j.bk&&!j.wf){ hop="test-journey step — an element this test touches (coverage set, entity-by-entity; not an execution order)"; }
+  el.innerHTML='<div class="snhd"><span class="snpos">'+(WALK.i+1)+'/'+WALK.steps.length+'</span>'
+    +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(kind, col, 14)+'</span>'):"")
+    +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(kind)+'</span>'
+    +(ent?('<span class="snent" style="background:'+col+'">'+esc(ent)+'</span>'):"")
+    +'<span class="snnav"><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
+    +'<div class="snwhat">'+what+'</div>'+(hop?('<div class="snhop">'+hop+'</div>'):"")
+    +(doc?('<div class="sndoc">'+esc(doc)+'</div>'):"");
+  el.querySelectorAll("[data-sd]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-sd")); }; });
+  el.style.display=""; }
 /* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
    card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */
 var WALK={ mode:null, steps:[], i:0 };
@@ -910,7 +1035,7 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
   /* the TRAIL bar shows for a TRAIL and for a selected JOURNEY (operator: a journey becomes the current
      trail — navigable by the same chips + Alt+A/D, with a CLEAR button next to its title). */
   if(wb){ var _wActive=(WALK.mode==="trail"||WALK.mode==="journey") && WALK.steps.length;
-    if(!_wActive){ wb.style.display="none"; }
+    if(!_wActive){ wb.style.display="none"; try{ _stepNote(); }catch(e){} }   // a cleared walk takes the step note down with it
     else { var chips=WALK.steps.map(function(id,i){ var n=NIDS[id]; if(!n) return "";
         return '<button class="wchip'+(i===WALK.i?" on":"")+'" data-wi="'+i+'" title="'+n.label+' · '+n.ent+'" style="color:'+(n.col||"#9ab")+'">'+(i+1)+'</button>'; }).join("");
       var _wtitle=(WALK.mode==="journey" && HL.jrObj)?(HL.jrObj.name||HL.jrObj.cid):"trail";   // a journey trail wears the journey's name
@@ -918,6 +1043,7 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
       wb.style.display=""; wb.innerHTML='<div class="wjhd"><span class="wjname" title="'+(WALK.mode==="journey"?"the selected journey IS the current trail — navigate with the chips or Alt+A/D":"trail")+'">'+_wtitle+'</span><button class="wclear tbico" title="clear the trail (Esc)">'+_WX+'</button></div>'
         +'<div class="wnav">'+chips+'<span class="wstepname" title="focus this step">'+((NIDS[WALK.steps[WALK.i]]||{}).label||"")+'</span></div>';
       wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; });
+      try{ _stepNote(); }catch(e){}
       var _sn=wb.querySelector(".wstepname"); if(_sn){ _sn.style.cursor="pointer"; _sn.onclick=function(){ _walkGo(0); }; }
       var _cl=wb.querySelector(".wclear"); if(_cl) _cl.onclick=function(){ __uniHLClear(); }; } } }
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
@@ -1088,7 +1214,7 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
 function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
     if(_st==="off") return _KOFF;
-    if(_st==="critical" && n.__solo) return _KOFF; }   // critical hides single-caller-SAME-kind helpers
+    if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF; }   // critical hides single-caller-SAME-kind helpers — unless a walk/reveal PINNED it
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
@@ -2028,6 +2154,7 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
     if(all.length>CAP) h+='<div class="tsmore">+'+(all.length-CAP)+' more — keep typing</div>';
     if(!ACT.length) h='<div class="tsmore">no match for “'+_esc(inp.value.trim())+'”</div>';
     var _jp=document.getElementById("jrn"); if(_jp) _jp.style.display="none";   // exclusive surfaces: #jrn (z-55, document-level) would paint OVER the dropdown and steal its clicks
+    try{ _stepNote(); }catch(e){}                                                     // the note follows the picker's state
     dd.innerHTML=h; dd.style.display="";
     dd.querySelectorAll(".tsrow").forEach(function(r){
       r.onmousedown=function(ev){ ev.preventDefault(); _fire(+r.getAttribute("data-ti")); };   // mousedown beats the input blur

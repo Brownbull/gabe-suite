@@ -309,6 +309,17 @@ check('window.__uniKindState={}' in page and 'window.__uniGroupToggle=function' 
       "the 3-state legend (all/critical/off) + solo detection + group master are gone")
 check('!(n.access&&n.access.ops&&n.access.ops.length)' in page,
       "the WRITE-FABRIC solo exemption (d2w/access fns never fold at critical) is gone")
+# ── journeys batch (operator 2026-08-27): backend chains · curated workflows · step note · chip rows · middle-click solo
+check('function _bkCollect(){' in page and 'function _wfCollect(bk){' in page and '[["wf","workflows"],["bk","backend"]' in page,
+      "the derived BACKEND journeys + curated WORKFLOWS journey kinds are gone from the picker")
+check('window.__uniJrnSolo=function(e)' in page and 'c.onauxclick=function(ev){ if(ev.button!==1) return;' in page,
+      "middle-click SOLO on the journey entity chips is gone")
+check('id="stepnote"' in page and 'function _stepNote(){' in page and '#stepnote .snhop' in page,
+      "the top-centre STEP NOTE (derived per-step guidance) is gone")
+check('#walkbar .wnav{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }' in page and '#walkbar .wchip{ flex:0 0 20px;' in page,
+      "walkbar chips no longer keep a fixed size and wrap into rows")
+check('s.src="./workflows.js"; s.onerror=function(){};' in page and 'if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk")' in page,
+      "the optional curated workflows feed (runtime-loaded, onerror-ignored) or the lazy default tab is gone")
 check('if(n.kind!=="function") cnt[n.ent]=(cnt[n.ent]||0)+1;' in page,
       "functions must NOT trip the capsule fold (review: loading them must not collapse their entity)")
 check('chain = layered plane · force = coupling bubbles' not in page and 'joined from the levels feed by name' not in page,
@@ -849,7 +860,7 @@ check('c.lbl.scale.set(_lh*_la, _lh, 1);' in page,
 check('window.__uniGoto=function(id)' in page and 'if(window.__uniGoto) __uniGoto(x.id);' in page
       and 'if(window.__uniGoto) __uniGoto(id);' in page,
       "card/link chips lost their click navigation (select + frame + the 7-step trail)")
-check('window.__uniKindOff={};' in page and 'if(_st==="critical" && n.__solo) return _KOFF;' in page,
+check('window.__uniKindOff={};' in page and 'if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF;' in page,
       "the 3-state visN gate (off · critical-hides-solo · all) is gone")
 check('window.__uniKindToggle=function(k)' in page and '__uniKindToggle(rw.dataset.lgk)' in page,
       "the legend rows are no longer hide-by-kind controls")

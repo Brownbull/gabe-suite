@@ -31,6 +31,25 @@ terminal; after it, **31/31** — the five invisible-write endpoints all resolve
   double-clicking hop after hop. Boot ("critical") keeps the whole write fabric visible —
   fns with d2w or access ops never fold as solo helpers.
 
+## In the station — three journey kinds (2026-08-27)
+
+The journeys picker (topbar) now carries five tabs; the first two are new:
+
+| Tab | Source | Order |
+|---|---|---|
+| **workflows** | `workflows.js` beside the center data — `window.GABE_WORKFLOWS = [{name, steps:["METHOD /path"…], note}]`, the operator's user stories (gustify: initial setup · look for recipes · filter · cook · store ingredients · locations · shopping · plan) | each endpoint's backend chain, in the curated order; unmapped endpoints counted on the row |
+| **backend** | derived at view time from the fn feed the map already carries (`_FNLINKS`: handler · calls · fnwrites/fnreads) — one chain per endpoint, 67 on gustify | BFS by hop, write path leading within a hop, each writer's models right after it |
+| end-to-end · by-entity · aggregated | `det.test_journeys` — one test case's COVERAGE SET (every element it touches) | entity-by-entity, then by name — not an execution order |
+
+While a walk is live, the **step note** (top-centre over the graph) says what the current step is:
+kind · entity · what the piece does (role · hops-to-a-write · reads/writes · gates · behind) ·
+`Hop k` and how you got here (called / written by / read by) · the docstring's first line. Everything
+in it is derived from the map; nothing is curated prose. The trail chips in the right panel keep a fixed
+size and wrap into rows; a middle-click on an entity chip in the picker solos that entity.
+
+A journey walk PINS its steps past the legend's critical solo-fold (`window.__uniPin`), as does every
+reveal (ghost click, double-click) — a read-path helper on a chain is never an invisible step.
+
 ## The catalog
 
 | # | Journey | Shape | Drawn chain |

@@ -53,7 +53,8 @@ const e2e = await p.evaluate(() => {
 const excl = await p.evaluate(() => {
   const all = _jrnCollect();
   const ents = [...new Set(all.flatMap(j => j.ents))];
-  const sumCounts = () => ['e2e', 'ent', 'agg'].reduce((s, k) => s + (+document.querySelector('#jrn [data-jk="' + k + '"] b').textContent), 0);
+  // every tab counts: workflows + backend joined the picker
+  const sumCounts = () => ['wf', 'bk', 'e2e', 'ent', 'agg'].reduce((s, k) => s + (+document.querySelector('#jrn [data-jk="' + k + '"] b').textContent), 0);
   // exclude everything → OR-of-included leaves nothing
   window.__uniJrnExcl = {}; ents.forEach(e => window.__uniJrnExcl[e] = 1); __uniJrnToggle(); __uniJrnToggle();
   const emptied = document.querySelectorAll('#jrn .jrnrow:not(.jrnnone)').length;
@@ -86,8 +87,8 @@ const coll = await p.evaluate(() => {
 
 await b.close();
 
-const pass = open.chips === excl.entsAll && open.chips >= 6 && open.kindTabs === 3 && open.groups > 0 && open.rows > 0 && open.defaultOn === 'ent'
-  && open.noOldTabs && open.width > 480 && open.tabCounts.length === 3
+const pass = open.chips === excl.entsAll && open.chips >= 6 && open.kindTabs === 5 && open.groups > 0 && open.rows > 0 && open.defaultOn === 'ent'
+  && open.noOldTabs && open.width > 480 && open.tabCounts.length === 5
   && e2e.on === 'e2e' && e2e.rows === e2e.badge
   && excl.emptied === 0 && excl.emptiedCounts === 0 && excl.keptSum === excl.expect && excl.keptSum > 0 && excl.keptSum < excl.total && excl.chipOff && excl.back === excl.total
   && coll.collapsedClass && coll.totalAfter < coll.totalBefore && coll.totalBack === coll.totalBefore

@@ -36,6 +36,11 @@ Into `../../../../templates/center/shell/example/codebase-graph-station/`:
 - `sim.data.js` — DERIVED from a real twin commit (**never** the build's `null` stub, which
   renders the change-graph blank — the 77fe3cd defect this wrapper exists to prevent)
 - `gabe-universe.html` — `assemble.py` + `fill-example.py`
+- `workflows.js` — CURATED (not built): `window.GABE_WORKFLOWS = [{name, steps:["METHOD /path"…], note}]`,
+  the operator's user workflows for the journeys picker's **workflows** tab. One file per project,
+  beside the center's data; the build SEEDS an honest-empty placeholder when a center has none
+  (never overwrites a curated one), so the page's script target always exists. The **backend**
+  tab needs no file (chains are derived from the fn feed at view time).
 
 And `../../../../templates/center/shell/gabe-universe.html` — the landed shell station (the
 assembled page, shell tokens intact). The `cp` to the shell is done BY the wrapper; it is no
@@ -66,7 +71,7 @@ The `verify-*.mjs` need a browser + `playwright-core`, resolved from the **gitig
 `GABE_CHROME_BIN` at your own. Run them **solo-sequential** (concurrent chrome runs starve):
 
 ```bash
-for v in panels search walk clustering explore routes ctrl d2w dblclick jrntabs jrnstep selanim backend-journeys; do node verify-$v.mjs; done
+for v in panels search walk clustering explore routes ctrl d2w dblclick jrntabs jrnstep selanim backend-journeys workflows; do node verify-$v.mjs; done
 # fleet is long (~10min) — run detached: nohup node verify-fleet.mjs &
 ```
 
