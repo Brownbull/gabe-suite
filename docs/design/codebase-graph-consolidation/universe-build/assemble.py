@@ -635,22 +635,27 @@ OLD_TYPES = """  Types: order.map(function(k){ return {t:"kind",k:k}; }).concat(
     {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · container: polygon / wrap"} ]),"""
 OLD_TYPES = OLD_TYPES.replace("#", "//")
 assert OLD_TYPES in text, "legend Types list anchor missing"
-NEW_TYPES = """  Types: [{t:"hd",l:"frontend"}].concat(
+NEW_TYPES = """  Types: [{t:"fold"},{t:"hd",l:"frontend"}].concat(
     ["route","component","hook","type","store","module","screen","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
+    ((window.GABE_C4&&GABE_C4.fe)? [{t:"hd",l:"component classes"}].concat(["view","private","connector","container","leaf"].map(function(fc){ return {t:"feclass",fc:fc}; })) : []),
     [{t:"hd",l:"backend"}],
     ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
-    [ {t:"note",l:"boundary colour = ENTITY (the cluster) · icon colour = kind · click a row to HIDE that kind graph-wide"} ]),"""
+    [ {t:"note",l:"boundary colour = ENTITY · icon colour = kind · click a row to hide it (on/off) · fold helpers hides single-caller helpers"} ]),"""
 text = text.replace(OLD_TYPES, NEW_TYPES, 1)
 
 OLD_KROW = '''      if(it.t==="kind"){ var K=KINDS[it.k]; h+=\'<div class="lgrow"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — its actual icon glyph'''
 assert OLD_KROW in text, "legend kind-row anchor missing"
 NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpState[it.l])||"all";   // group header = a MASTER (click cycles all→critical→off for the whole side)
-        h+=\'<div class="lghd2 lggrp gs-\'+_gs+\'" data-lggrp="\'+it.l+\'" title="\'+it.l+\' — click: ALL -> CRITICAL -> OFF for every \'+it.l+\' kind"><span>\'+it.l+\'</span><span class="lggs">\'+_gs+\'</span></div>\'; return; }
+        h+=\'<div class="lghd2 lggrp gs-\'+_gs+\'" data-lggrp="\'+it.l+\'" title="\'+it.l+\' — click to toggle every \'+it.l+\' kind on/off"><span>\'+it.l+\'</span><span class="lggs">\'+_gs+\'</span></div>\'; return; }
+      if(it.t==="fold"){ var _fh=(window.__uniFoldHelpers!==false);
+        h+=\'<div class="lgrow lgfold\'+(_fh?"":" lgoff")+\'" data-lgfold="1" style="cursor:pointer" title="fold single-caller helper nodes to declutter — click to \'+(_fh?"show them":"fold them")+\'"><div class="lgvis"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg></div><div class="lglbl"><b>fold helpers</b> <i>\'+(_fh?"on":"off")+\'</i></div></div>\'; return; }
+      if(it.t==="feclass"){ var _fcoff=(window.__uniFeClassState&&window.__uniFeClassState[it.fc]===false);
+        var _fccol=(it.fc==="view")?"#339af0":(it.fc==="connector")?"#0ca678":(it.fc==="leaf")?"#c026d3":(it.fc==="container")?"#8a8f98":"#e8590c";
+        h+=\'<div class="lgrow lgk lgfc\'+(_fcoff?" lgoff":"")+\'" data-lgfc="\'+it.fc+\'" title="component class \'+it.fc+\' — click to \'+(_fcoff?"show":"hide")+\'"><div class="lgvis">\'+svgInline("component",_fccol,15)+\'</div><div class="lglbl"><b style="color:\'+_fccol+\'">\'+it.fc+\'</b></div></div>\'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
-        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"critical");
-        var _hasCrit=(window.__uniKindHasSolo?__uniKindHasSolo(it.k):false);
-        var _cls=(_st==="off")?"lgoff":((_st==="critical"&&_hasCrit)?"lgcrit":"");
-        var _t=(_st==="off")?("hidden — click to show"+(_hasCrit?" critical":"")):((_st==="critical"&&_hasCrit)?"critical only (single-caller helpers hidden) — click to hide all":("showing"+(_hasCrit?" — click for critical only":" — click to hide")));
+        var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"all");
+        var _cls=(_st==="off")?"lgoff":"";
+        var _t=(_st==="off")?"hidden — click to show":"showing — click to hide";
         var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count
         var _bi=_bik?(\'<button class="lgbi" data-badgeinfo="\'+_bik+\'" title="badge key — \'+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":"the nested-only fold count")+\'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>\'):\'\';
         h+=\'<div class="lgrow lgk \'+_cls+\'" data-lgk="\'+it.k+\'" title="\'+_t+\' · \'+K.type+\'"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b>\'+_bi+\'</div></div>\'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot'''
@@ -671,6 +676,8 @@ OLD_LGBIND = """    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ 
 assert OLD_LGBIND in text, "legend binder anchor missing"
 text = text.replace(OLD_LGBIND, OLD_LGBIND + """
     [].forEach.call(el.querySelectorAll("[data-lgk]"), function(rw){ rw.onclick=function(){ if(window.__uniKindToggle) __uniKindToggle(rw.dataset.lgk); }; });
+    [].forEach.call(el.querySelectorAll("[data-lgfc]"), function(rw){ rw.onclick=function(){ if(window.__uniFeClassToggle) __uniFeClassToggle(rw.dataset.lgfc); }; });
+    [].forEach.call(el.querySelectorAll("[data-lgfold]"), function(rw){ rw.onclick=function(){ if(window.__uniSetFoldHelpers) __uniSetFoldHelpers(window.__uniFoldHelpers===false); }; });
     [].forEach.call(el.querySelectorAll("[data-lggrp]"), function(hd){ hd.style.cursor="pointer"; hd.onclick=function(){ if(window.__uniGroupToggle) __uniGroupToggle(hd.dataset.lggrp); }; });""", 1)
 
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"

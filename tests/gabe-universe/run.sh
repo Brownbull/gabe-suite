@@ -901,8 +901,13 @@ check('c.lbl.scale.set(_lh*_la, _lh, 1);' in page,
 check('window.__uniGoto=function(id)' in page and 'if(window.__uniGoto) __uniGoto(x.id);' in page
       and 'if(window.__uniGoto) __uniGoto(id);' in page,
       "card/link chips lost their click navigation (select + frame + the 7-step trail)")
-check('window.__uniKindOff={};' in page and 'if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF;' in page,
-      "the 3-state visN gate (off · critical-hides-solo · all) is gone")
+check('window.__uniKindOff={};' in page and 'if(window.__uniFoldHelpers!==false && n.__solo && !window.__uniPin[n.id]) return _KOFF;' in page,
+      "the BINARY visN gate (off / on + the GLOBAL helper-fold) is gone")
+# binary legend + component-class rows + the fold-helpers toggle (control-system phase 2)
+check("__uniKindToggle=function(k){ if(!k) return;   // BINARY" in page and 'cur==="off"?"all":"off"' in page and 'window.__uniFoldHelpers=true;' in page,
+      "the legend is no longer BINARY (on/off) with a global fold-helpers toggle")
+check('t:"feclass"' in page and 'data-lgfc=' in page and '__uniFeClassToggle(rw.dataset.lgfc)' in page and 'data-lgfold=' in page,
+      "the component-class legend rows + the fold-helpers row are gone")
 check('window.__uniKindToggle=function(k)' in page and '__uniKindToggle(rw.dataset.lgk)' in page,
       "the legend rows are no longer hide-by-kind controls")
 check('lghd2 lggrp gs-' in page and '{t:"hd",l:"frontend"}' in page and '{t:"hd",l:"backend"}' in page

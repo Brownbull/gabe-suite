@@ -452,7 +452,7 @@ window.__uniDrawStubs=function(){ window.__uniStubs=[]; try{
     return !!(ev.show&&ev.planets); };
   var _kindShown=function(n){ if(!n) return false;
     var st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));
-    if(st==="off") return false; if(st==="critical" && n.__solo && !(window.__uniPin||{})[n.id]) return false; return true; };   // a walk/reveal PIN clears the solo fold here too (ghost stars agree with visN)
+    if(st==="off") return false; if(window.__uniFoldHelpers!==false && n.__solo && !(window.__uniPin||{})[n.id]) return false; return true; };   // ghost stars agree with visN's GLOBAL helper-fold; a walk/reveal PIN clears it
   var seen={};
   links.forEach(function(l){ var sid=lid(l.source), tid=lid(l.target); var s=NIDS[sid], t=NIDS[tid]; if(!s||!t) return;
     if(window.__uniRelHide && __uniRelHide(l)) return;               // respect the R-lab hides
@@ -911,14 +911,14 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
     var fn=_CAPST&&_CAPST.byPiece[id]?_fieldN(id):null;
     return !!(fn&&visN(fn).show); }):[];                                      // stashed → KEPT iff fleet-shown; the walk expands its capsule on arrival (review 53[0])
   if((j.bk||j.wf) && window.__uniKindState && window.__uniSetKindState){   // the chain's steps are fns — an OFF function layer would make every step dead
-    var _fs=__uniKindState["function"]||(typeof _kindDefault==="function"?_kindDefault("function"):"critical");
-    if(_fs==="off") __uniSetKindState("function","critical"); }
+    var _fs=__uniKindState["function"]||(typeof _kindDefault==="function"?_kindDefault("function"):"all");
+    if(_fs==="off") __uniSetKindState("function","all"); }
   HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();
   WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; WALK.feLen=fe.length;
   window.__uniPin={}; WALK.steps.forEach(function(id){ window.__uniPin[id]=1; });   // pins belong to THIS walk (no accumulation across journeys)
   if(window.__uniKindState && window.__uniSetKindState){ var _woke={};                 // an OFF kind (model/endpoint/schema…) would hide its steps — wake it to critical
     WALK.steps.forEach(function(id){ var sn=_fnById(id); if(!sn||_woke[sn.kind]) return; _woke[sn.kind]=1;
-      var st=__uniKindState[sn.kind]||(typeof _kindDefault==="function"?_kindDefault(sn.kind):"all"); if(st==="off") __uniSetKindState(sn.kind,"critical",true); }); }
+      var st=__uniKindState[sn.kind]||(typeof _kindDefault==="function"?_kindDefault(sn.kind):"all"); if(st==="off") __uniSetKindState(sn.kind,"all",true); }); }
   try{ _applyVisNow({all:true}); }catch(e){}   // every step visible past the solo fold
   _walkRender(); _walkGo(0); };
 /* ── the journeys PICKER (operator): PERSISTENT entity chips on top (click to hide that entity's group) ·
@@ -1247,7 +1247,7 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
 function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
     if(_st==="off") return _KOFF;
-    if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF;   // critical hides single-caller-SAME-kind helpers — unless a walk/reveal PINNED it
+    if(window.__uniFoldHelpers!==false && n.__solo && !window.__uniPin[n.id]) return _KOFF;   // GLOBAL helper-fold (was per-kind "critical") — unless a walk/reveal PINNED it
     if(n.feClass && window.__uniFeClassState && window.__uniFeClassState[n.feClass]===false && !window.__uniPin[n.id]) return _KOFF; }   // class-visibility control — a tier/fleet toggle hides a component CLASS (phase 2)
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
@@ -2100,8 +2100,9 @@ window.__uniGoto=function(id){ if(!id) return;
 var _KOFF={show:0,planets:0,wires:0,subs:0,zDef:0,zAtk:0,zCfl:0,zSat:0,routes:0};
 window.__uniKindState={};     // kind → "all" | "critical" | "off"
 window.__uniKindOff={};       // compat mirror (truthy iff state==="off")
-window.__uniGrpState={backend:"critical", frontend:"critical"};   // matches the per-kind critical default (operator)
-function _kindDefault(k){ return k==="type"?"off":"critical"; }   // operator: everything critical-capable boots CRITICAL; no-solo kind reads as ALL in visN; `type` stays held-off
+window.__uniGrpState={backend:"all", frontend:"all"};   // BINARY legend (operator): sides boot ON
+window.__uniFoldHelpers=true;   // fold single-caller SAME-kind helpers (the old per-kind "critical") — now ONE global control, default on, so the boot render is unchanged
+function _kindDefault(k){ return k==="type"?"off":"all"; }   // BINARY legend: every kind boots ON except `type`; the helper-fold is global, not a per-kind state
 /* ── DISCLOSURE TIERS (operator: simplification is CONTROL-driven, never a click-to-expand). A tier is
    a PRESET over kind-visibility + the FE component CLASS visibility (feClass). Coarse→fine: T0 shows the
    skeleton (doors + tables + screens), each tier reveals more kinds/classes, T3 is everything. Bound to
@@ -2126,8 +2127,10 @@ window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier
   if(window.__legRender) try{ __legRender(); }catch(e){}
   if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){} };
 window.__uniFeClassToggle=function(fc){ if(!fc) return; var s=window.__uniFeClassState||{};
-  s[fc]=(s[fc]===false); window.__uniFeClassState=s; window.__uniTier=null;   // a manual class toggle leaves the preset
+  s[fc]=(s[fc]===false); window.__uniFeClassState=s; window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI();   // a manual class toggle leaves the preset
   try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
+window.__uniSetFoldHelpers=function(on){ window.__uniFoldHelpers=(on!==false);   // the old per-kind "critical", now ONE toggle: fold single-caller helpers
+  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
 window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel"); if(!g) return;
   [].forEach.call(g.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-tier"))===window.__uniTier); }); };
 (function(){ var _init=function(){ var g=document.getElementById("tiersel"); if(!g||g.__wired) return; g.__wired=1;
@@ -2184,18 +2187,17 @@ window.__uniSetKindState=function(k, st, _defer){
   __uniKindState[k]=st; if(st==="off") __uniKindOff[k]=1; else delete __uniKindOff[k];
   if(k==="function" && window.toggleFns){ var want=(st!=="off"); if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } }
   if(!_defer){ try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} } };
-window.__uniKindToggle=function(k){ if(!k) return;
+window.__uniKindToggle=function(k){ if(!k) return;   // BINARY legend (operator): on ↔ off, no 3-state
   var cur=__uniKindState[k]||_kindDefault(k);
-  var hasCrit=__uniKindHasSolo(k) || (k==="function" && cur==="off");   // no solo nodes → on/off only
-  var next=(cur==="all") ? (hasCrit?"critical":"off") : (cur==="critical") ? "off" : "all";
-  __uniSetKindState(k, next); };
+  __uniSetKindState(k, cur==="off"?"all":"off"); if(window.__uniTier!=null){ window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI(); } };
 var _GRPKINDS={ backend:["endpoint","function","schema","model","external","entity"],
                 frontend:["route","component","hook","type","store","module","screen","web"] };
 window.__uniGroupToggle=function(group){ if(!_GRPKINDS[group]) return;
-  var cur=__uniGrpState[group]||"all", next=(cur==="all")?"critical":(cur==="critical")?"off":"all";
+  var cur=__uniGrpState[group]||"all", next=(cur==="off")?"all":"off";   // BINARY: the whole side on ↔ off
   __uniGrpState[group]=next;
-  _GRPKINDS[group].forEach(function(k){ __uniSetKindState(k, next, true); });   // critical on a data kind reads as "all" in visN (no solos)
-  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
+  _GRPKINDS[group].forEach(function(k){ __uniSetKindState(k, next, true); });
+  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){}
+  if(window.__uniTier!=null){ window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI(); } };
 /* ── the header SEARCH (batch 49) — one box over everything the station knows: live elements,
    held types (selecting one turns Types ON first), entities, clusters (current core), journeys.
    `/` focuses · ↑↓ move · Enter opens · Esc closes. Entries rebuild per keystroke from the LIVE

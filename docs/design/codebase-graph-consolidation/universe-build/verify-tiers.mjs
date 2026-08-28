@@ -53,6 +53,27 @@ await p.waitForTimeout(300);
 const afterKey = await p.evaluate(() => window.__uniTier);
 ck(afterKey === 0, 'key "1" selects T0 (keyboard shortcut)', 'tier=' + afterKey);
 
+// the legend is BINARY + carries component-class rows + a fold-helpers toggle (phase 2)
+const leg = await p.evaluate(() => {
+  const el = document.getElementById('elegend'); if (!el) return { ok: false };
+  // open the Types tab so its rows render
+  const tab = el.querySelector('.lgtab[data-t="Types"]'); if (tab) tab.click();
+  return { ok: true, fc: el.querySelectorAll('[data-lgfc]').length, fold: el.querySelectorAll('[data-lgfold]').length,
+    crit: el.querySelectorAll('.lgcrit').length };
+});
+ck(leg.ok && leg.fc === 5 && leg.fold === 1, 'the legend Types tab carries 5 component-class rows + a fold-helpers toggle', 'fc=' + leg.fc + ' fold=' + leg.fold);
+ck(leg.crit === 0, 'the legend has NO 3-state (lgcrit) rows left — it is binary', 'lgcrit=' + leg.crit);
+// clicking a class row hides that class; clicking the fold toggle flips __uniFoldHelpers
+const clk = await p.evaluate(() => {
+  window.__uniFeClassState = {};
+  const row = document.querySelector('[data-lgfc="leaf"]'); if (row) row.click();
+  const hid = window.__uniFeClassState.leaf === false;
+  const fh0 = window.__uniFoldHelpers; const fb = document.querySelector('[data-lgfold]'); if (fb) fb.click();
+  return { hid, foldFlipped: window.__uniFoldHelpers !== fh0 };
+});
+ck(clk.hid, 'clicking the "leaf" class legend row hides the leaf class (__uniFeClassState)');
+ck(clk.foldFlipped, 'clicking the fold-helpers row flips __uniFoldHelpers');
+
 ck(errs.length === 0, 'no page/console errors', errs.slice(0, 3).join(' | '));
 console.log(`\n${pass}/${pass + fail} tier checks passed`);
 await b.close();
