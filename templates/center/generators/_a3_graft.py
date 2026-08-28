@@ -405,6 +405,7 @@ def derive_endpoint_access(wiring: dict[str, Any], entities: dict[str, Any],
             ops: dict[tuple, dict] = {}
             commits = False
             sinks: set[str] = set()
+            externals: set[str] = set()
             for fid in seen:                                   # graft id <file>#<fn> → function_insight <file>::<fn>
                 a = faccess.get(fid.replace("#", "::", 1))
                 if not a:
@@ -415,11 +416,15 @@ def derive_endpoint_access(wiring: dict[str, Any], entities: dict[str, Any],
                     ops[(o["model"], o["rw"])] = {"model": o["model"], "table": o["table"], "rw": o["rw"]}
                 for s in a.get("sinks") or []:                 # C4: non-ORM sink categories via the call-tree
                     sinks.add(s)
-            if ops or commits or sinks:
+                for x in a.get("externals") or []:             # class 9: providers reached via the call-tree
+                    externals.add(x)
+            if ops or commits or sinks or externals:
                 out[key] = {"ops": sorted(ops.values(), key=lambda x: (x["rw"], x["model"])),
                             "commits": commits}
                 if sinks:
                     out[key]["sinks"] = sorted(sinks)
+                if externals:
+                    out[key]["externals"] = sorted(externals)
     return {k: out[k] for k in sorted(out)}
 
 

@@ -1267,6 +1267,34 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                                  "slug": _UNCLAIMED, "status": None, "counts": None})
     _app_mw_n = len(_mw_nodes)
 
+    # class 9 · PROVIDERS — the external SDK/LLM edge a fn reaches. Mint provider:<name> L2 nodes
+    # homed by the tagged fn's entity (or __unclaimed__), from function_insight.externals; the
+    # `reaches` fn→provider wire is drawn in levels. Honest-empty: no externals → nothing (P5).
+    _fi_prov = amap.get("function_insight") or {}
+    _prov_home: dict[str, str] = {}
+    for _pk in sorted(_fi_prov):
+        for _p in (_fi_prov[_pk].get("externals") or []):
+            _prov_home.setdefault(_p, _fi_prov[_pk].get("entity") or _UNCLAIMED)
+    _prov_by: dict[str, int] = {}
+    if _prov_home:
+        _pnodes_by_home: dict[str, list] = {}
+        for _p in sorted(_prov_home):
+            _home = _prov_home[_p]
+            _pn = {"id": f"provider:{_p}", "kind": "provider", "slug": _home, "label": _p, "det": {"provider": _p}}
+            if _home == _UNCLAIMED:
+                _pn["unmapped"] = True
+            _pnodes_by_home.setdefault(_home, []).append(_pn)
+            _prov_by[_p] = 1
+        for _home, _nodes in _pnodes_by_home.items():
+            _hg = l2.setdefault(_home, {"nodes": [], "edges": []})
+            _hg["nodes"].extend(_nodes)
+            _hg["nodes"].sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
+            _stamp_l2(_hg)
+            if _home == _UNCLAIMED and not any(n["kind"] == "unclaimed" for n in l1_nodes):
+                l1_nodes.append({"id": _UNCLAIMED, "label": "unclaimed", "kind": "unclaimed",
+                                 "slug": _UNCLAIMED, "status": None, "counts": None})
+    _prov_n = len(_prov_by)
+
     return fold_fe({
         "version": 1,
         "head": amap.get("head"),
@@ -1306,6 +1334,8 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                if _serializes_n else {}),
             # class 8: app-level middleware nodes + gated_by wires (count-only when saturated); P5.
             **({"app_middleware": {"count": _app_mw_n, "gated_by": _gated_by}} if _app_mw_n else {}),
+            # class 9: external providers reached (SDK/LLM edges); absent when none (P5).
+            **({"providers": {"count": _prov_n, "by_provider": dict(sorted(_prov_by.items()))}} if _prov_n else {}),
             "unresolved_tables": unresolved,
             # the graft arm's honesty record: absent → named absent, never silent;
             # present → the index fingerprint + the floor-not-census trust split.

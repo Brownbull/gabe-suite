@@ -585,6 +585,17 @@ _gbt0 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
 check(not any(str(n.get("label", "")).startswith("BOOT") for g in _gbt0["l2"].values() for n in g["nodes"]),
       "class 7 honest-empty: no boot_roots → no BOOT node (byte-identical)")
 
+# ── class 9 (wave C) · provider mint: function_insight.externals → provider:<name> L2 node ──
+_fixpv = json.loads(json.dumps(FIX))
+_fixpv["function_insight"] = {"apps/api/alpha.py::do_a": {"entity": "alpha", "externals": ["gemini"]}}
+_gpv = G.build_c4_graph(_fixpv, labels=LABELS, status=STATUS)
+_pvn = [n for g in _gpv["l2"].values() for n in g["nodes"] if n.get("kind") == "provider"]
+check(len(_pvn) == 1 and _pvn[0]["id"] == "provider:gemini" and _pvn[0]["slug"] == "alpha",
+      "class 9: a fn's externals mints provider:<name> homed to the tagged fn's entity")
+check(_gpv["stats"]["providers"] == {"count": 1, "by_provider": {"gemini": 1}}, "class 9: stats.providers {count, by_provider}")
+check("providers" not in G.build_c4_graph(FIX, labels=LABELS, status=STATUS)["stats"],
+      "class 9 honest-empty: no externals → no provider node + no stats key (byte-identical)")
+
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

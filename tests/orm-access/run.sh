@@ -220,6 +220,20 @@ check(any(r["fn"] == "on_boot" for r in _boot2), "parse_boot_roots FIRE: @app.on
 check(C.parse_boot_roots(_pl.Path(_tf.mkdtemp()), entity_code={"e": {"api": []}}) == [],
       "parse_boot_roots SILENT: no lifespan/startup → [] (honest-empty, byte-identical)")
 
+# ── class 9 (wave C) · providers (_file_providers allowlist + _detect_externals RULE A/B) ──
+_PB = {"firebase_auth": "firebase", "genai": "gemini"}   # provider binds for _detect_externals
+# RULE A: a Call whose attribute-chain root ∈ binds
+check(C._detect_externals(fn('def f():\n    firebase_auth.verify_id_token(tok)', "f"), _PB) == ["firebase"],
+      "class 9 RULE A: firebase_auth.verify_id_token(...) reaches provider:firebase")
+check(C._detect_externals(fn('def f():\n    genai.Client(x=1)', "f"), _PB) == ["gemini"],
+      "class 9 RULE A: genai.Client(...) reaches provider:gemini")
+# RULE B: a bound attr passed AS a Call arg (the asyncio.to_thread idiom)
+check(C._detect_externals(fn('def f():\n    asyncio.to_thread(firebase_auth.delete_user, uid)', "f"), _PB) == ["firebase"],
+      "class 9 RULE B: a bound SDK attr passed as a Call arg (to_thread) reaches the provider")
+check(C._detect_externals(fn('def f():\n    session.commit()\n    plain.call()', "f"), _PB) == [],
+      "class 9 SILENT: a non-provider receiver never reaches a provider (no false positive)")
+check(C._detect_externals(fn('def f():\n    x.y()', "f"), {}) == [], "class 9 SILENT: empty binds → [] (honest-empty)")
+
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):
     tree = ast.parse(src)

@@ -324,7 +324,13 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
                     _q.append(_t)
     # both endpoints are now in drawn_fn by construction; keep the edge only if so
     _fedges = [e for e in _fedges if e["s"] in drawn_fn and e["t"] in drawn_fn]
-    _fedges.sort(key=lambda e: (e["ss"], e["ds"], e["s"], e["t"]))
+    # class 9 · reaches — a drawn fn → provider:<name> (external SDK/LLM edge). The provider is NOT a
+    # drawn fn, so it is appended AFTER the drawn-fn filter. A leaf wire (a provider has no outgoing).
+    for _fid, _fslug in sorted(drawn_fn.items()):
+        for _p in ((FI.get(_fid.replace("#", "::", 1), {}) or {}).get("externals") or []):
+            _fedges.append({"s": _fid, "ss": _fslug, "t": "provider:" + _p, "ds": _fslug,
+                            "rel": "reaches", "conf": "inferred"})
+    _fedges.sort(key=lambda e: (e["ss"], e["ds"], e["s"], e["t"], e.get("rel", "")))
     lv["fn_edges"] = _fedges
 
     # per-entity HIDDEN functions — homed by graft (fn_slug) but NOT drawn on the trace: the honest
@@ -388,6 +394,9 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         _flg = (FI.get(rfile + "::" + name, {}) or {}).get("flags")  # class 12: fn-level feature-flag walls (the step note)
         if _flg:
             _node["flags"] = _flg
+        _ext = (FI.get(rfile + "::" + name, {}) or {}).get("externals")  # class 9: providers this fn reaches
+        if _ext:
+            _node["externals"] = _ext
         lv["fn_nodes"].append(_node)
         # fn DETAIL — the wider projection of function_insight the panel's Function
         # card reads (detailOf("fn:"+slug+"|"+name)), keyed exactly like the cls: rows.

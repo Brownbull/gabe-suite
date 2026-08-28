@@ -2057,9 +2057,10 @@ def main() -> int:
                          else (os.environ.get("GABE_GRAFT_BUILD", "1") != "0")),
             faccess={_k: {"ops": (_v.get("access") or {}).get("ops"),
                           "commits": (_v.get("access") or {}).get("commits"),
-                          "sinks": _v.get("sinks")}
+                          "sinks": _v.get("sinks"),
+                          "externals": _v.get("externals")}   # class 9: providers this fn reaches
                      for _k, _v in _a3_code.function_insight(REPO_ROOT).items()
-                     if _v.get("access") or _v.get("sinks")},   # A2+C4: the C2 access + C4 sink map, joined onto the call-tree
+                     if _v.get("access") or _v.get("sinks") or _v.get("externals")},   # A2+C4+prov: joined onto the call-tree
             dispatches=(_dm.get("dispatches") or []),   # class 6: event-bus edges folded into the adjacency + drawn distinct
             boot_roots=(amap.get("boot_roots") or []))  # class 7: home main.py → __unclaimed__ for the boot behind/calls
         # the web→API bridge arm (Path A frontend): a SEPARATE module with its own

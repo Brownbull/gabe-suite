@@ -1349,6 +1349,81 @@ _FILE_WRITE_MODES = ("w", "a", "x")
 # Import names that make a `session.<verb>` call HTTP, not SQLAlchemy (B1 sink guard).
 _HTTP_IMPORT_NAMES = frozenset({"httpx", "aiohttp", "requests", "ClientSession", "AsyncClient"})
 
+# class 9 · the PROVIDER allowlist — a ROOT PACKAGE → provider name map (curated, never "tag every
+# third-party import" — the gustify-only-heuristics guard). A fn that reaches one of these bound
+# names draws a `reaches provider:<name>` wire to the edge of the system.
+_PROVIDER_ROOTS = {
+    "google": "gemini", "genai": "gemini", "firebase_admin": "firebase",
+    "sentry_sdk": "sentry", "openai": "openai", "anthropic": "anthropic",
+    "stripe": "stripe", "boto3": "aws", "redis": "redis",
+    "httpx": "http", "requests": "http", "aiohttp": "http",
+}
+_FILE_PROVIDERS: dict[str, dict] = {}
+
+
+def _file_providers(f: str) -> dict:
+    """{local imported name → provider} for one file's SDK imports (class 9). An ``import
+    firebase_admin`` / ``from google import genai`` whose root ∈ ``_PROVIDER_ROOTS``, PLUS an
+    ``x = importlib.import_module('firebase_admin.auth')`` string binding (the verifier idiom).
+    ``{}`` when the file imports no known provider (byte-identical, P5). Cached like _file_imports."""
+    if f in _FILE_PROVIDERS:
+        return _FILE_PROVIDERS[f]
+    if f not in _PY_TEXTS:
+        return {}
+    out: dict = {}
+    try:
+        for node in ast.walk(ast.parse(_PY_TEXTS[f])):
+            if isinstance(node, ast.ImportFrom):
+                p = _PROVIDER_ROOTS.get((node.module or "").split(".")[0])
+                if p:
+                    for a in node.names:
+                        out[a.asname or a.name] = p
+            elif isinstance(node, ast.Import):
+                for a in node.names:
+                    p = _PROVIDER_ROOTS.get(a.name.split(".")[0])
+                    if p:
+                        out[(a.asname or a.name).split(".")[0]] = p
+            elif (isinstance(node, ast.Assign) and len(node.targets) == 1
+                  and isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call)
+                  and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == "import_module"
+                  and node.value.args and isinstance(node.value.args[0], ast.Constant)):
+                p = _PROVIDER_ROOTS.get(str(node.value.args[0].value).split(".")[0])
+                if p:
+                    out[node.targets[0].id] = p
+    except SyntaxError:
+        pass
+    _FILE_PROVIDERS[f] = out
+    return out
+
+
+def _detect_externals(fnnode, binds: dict) -> list[str]:
+    """The external PROVIDERS a fn reaches (class 9), from ``binds`` (``_file_providers``). RULE A:
+    a Call whose attribute-chain ROOT Name ∈ binds (``firebase_admin.auth.verify_id_token(...)`` ·
+    ``genai.Client(...)``). RULE B: a bound attr/name passed AS a Call arg
+    (``asyncio.to_thread(firebase_auth.delete_user, uid)`` — the bound-attribute-as-argument idiom).
+    Sorted providers, ``[]`` honest-empty. A cross-scope binding (``self._client = genai.Client()``)
+    is an under-count residual, never a wrong provider."""
+    if not binds:
+        return []
+
+    def _root(node):
+        while isinstance(node, ast.Attribute):
+            node = node.value
+        return node.id if isinstance(node, ast.Name) else None
+
+    provs: set = set()
+    for n in ast.walk(fnnode):
+        if not isinstance(n, ast.Call):
+            continue
+        r = _root(n.func)                               # RULE A: the call's receiver root
+        if r in binds:
+            provs.add(binds[r])
+        for a in n.args:                                # RULE B: a bound attr/name passed as an arg
+            ar = _root(a) if isinstance(a, (ast.Attribute, ast.Name)) else None
+            if ar in binds:
+                provs.add(binds[ar])
+    return sorted(provs)
+
 
 def _detect_sinks(fnnode, http_lib: bool = False) -> list[str]:
     """The non-ORM sink CATEGORIES this function reaches, sorted. [] when none (honest).
@@ -1542,6 +1617,7 @@ def function_insight(repo: Path) -> dict:
         text = texts[f]
         lines = text.splitlines()
         _hl = bool(set(_file_imports(f)) & _HTTP_IMPORT_NAMES)   # B1: does THIS module import an http client?
+        _pv = _file_providers(f)                                 # class 9: this module's SDK imports → provider binds
 
         def _add(node, cls: str | None):
             if node.name.startswith("__") or len(node.name) < 3:
@@ -1571,6 +1647,9 @@ def function_insight(repo: Path) -> dict:
             _flg = _flag_gates(node, parse_flags(repo))      # class 12: fn-level feature-flag walls (spend-cap etc.)
             if _flg:
                 fns[f"{f}::{qual}"]["flags"] = _flg
+            _ext = _detect_externals(node, _pv)              # class 9: external providers this fn reaches
+            if _ext:
+                fns[f"{f}::{qual}"]["externals"] = _ext
 
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
