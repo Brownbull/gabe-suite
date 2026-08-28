@@ -206,6 +206,7 @@
   #stepnote .snnav button{ width:22px; height:20px; font:700 12px/1 var(--font-ui); color:var(--ink); background:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
   #stepnote .snnav button:hover{ border-color:var(--accent); }
   #stepnote .snw{ color:#e5484d; font-weight:700; } #stepnote .snr{ color:#d977a8; font-weight:700; }
+  #stepnote .sng{ color:#6366f1; font-weight:700; } #stepnote .snd{ color:#f76707; font-weight:700; }   /* wave D: gate (depends) · dispatch (event bus) */
   /* panel FOOTER — the collapse chevron lives here (the walk bar owns the top) */
   .panel .pfoot{ display:none; }
   body.panel-open .panel .pfoot{ display:flex; justify-content:flex-end; padding:6px 10px; border-top:1px solid var(--line); margin-top:auto; }

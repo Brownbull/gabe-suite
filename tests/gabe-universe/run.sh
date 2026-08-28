@@ -324,6 +324,12 @@ check('var _HUB_FANIN=15' in page and 'n.role==="gate" && ks.length>=_HUB_FANIN'
 # ── journeys batch (operator 2026-08-27): backend chains · curated workflows · step note · chip rows · middle-click solo
 check('function _bkCollect(){' in page and 'function _wfCollect(bk){' in page and '[["wf","workflows"],["bk","backend"]' in page,
       "the derived BACKEND journeys + curated WORKFLOWS journey kinds are gone from the picker")
+# wave D (P7): the backend-journey walk WALKS depends (Hop-0.5 gate) + dispatches (event-bus leg), not just draws them
+check('(dep[l.source]=dep[l.source]||[]).push' in page and '(disp[l.source]=disp[l.source]||[]).push' in page
+      and 'gsteps.push({id:g, hop:0.5, why:"gate", from:h})' in page and 'q.push([t,hop+1,"dispatch",fid])' in page,
+      "wave D: the backend walk no longer traverses depends (Hop-0.5 gate) + dispatches (event-bus leg)")
+check('meta.why==="gate"' in page and 'meta.why==="dispatch"' in page and '#stepnote .sng' in page and '#stepnote .snd' in page,
+      "wave D: the step note no longer renders the gate + dispatch why (with their CSS)")
 check('window.__uniJrnSolo=function(e)' in page and 'c.onauxclick=function(ev){ if(ev.button!==1) return;' in page,
       "middle-click SOLO on the journey entity chips is gone")
 check('id="stepnote"' in page and 'function _stepNote(){' in page and '#stepnote .snhop' in page,

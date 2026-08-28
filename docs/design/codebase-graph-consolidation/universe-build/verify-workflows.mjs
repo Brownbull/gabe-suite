@@ -45,14 +45,17 @@ const o = await p.evaluate(() => {
   const ix = id => j.carriers.indexOf(id);
   let mono = true, accessOk = true, lastFnHop = -1;
   j.meta.forEach(m => { if (m.why === 'fn' || m.why === 'endpoint') { if (m.hop < lastFnHop) mono = false; lastFnHop = m.hop; }
-    else { const from = j.meta.filter(x => x.id === m.from)[0]; if (!from || m.hop !== from.hop + 1) accessOk = false; } });
+    else if (m.why === 'gate') { if (m.hop !== 0.5) accessOk = false; }   // wave D: a gate is a Hop-0.5 PRE-hop (runs BEFORE the handler)
+    else { const from = j.meta.filter(x => x.id === m.from)[0];
+      const exp = (from && from.why === 'gate') ? from.hop : (from ? from.hop + 1 : NaN);   // a gate's read sits WITH the gate; a chain access = writer.hop+1
+      if (m.hop !== exp) accessOk = false; } });
   return { writes: j.writes, n: j.carriers.length, mono, accessOk,
     ep: ix('endpoint:POST /setup/complete'), h: ix('apps/api/api/setup.py#setup_complete'), b: ix('apps/api/services/setup.py#complete_setup'),
     w: ix('apps/api/services/setup.py#_upsert_dietary'), m: ix('model:UserDietaryProfile'),
     metaWrite: (j.meta.filter(x => x.id === 'model:UserDietaryProfile')[0] || {}).why };
 });
-ck(!o.missing && o.ep === 0 && o.h === 1 && o.h < o.b && o.b < o.w && o.w < o.m && o.m === o.w + 1 && o.mono && o.accessOk,
-  'backend journey is ORDERED BY HOPS: fn hops never decrease, every model step = its writer\'s hop+1, right after it',
+ck(!o.missing && o.ep === 0 && o.ep < o.h && o.h < o.b && o.b < o.w && o.w < o.m && o.m === o.w + 1 && o.mono && o.accessOk,
+  'backend journey is ORDERED BY HOPS: endpoint → (gate pre-hop) → handler → boundary → writer → model, model = writer.hop+1',
   JSON.stringify(o));
 ck(o.writes >= 6 && o.metaWrite === 'write', 'the chain carries write meta (red access wires)', 'writes=' + o.writes + ' why=' + o.metaWrite);
 

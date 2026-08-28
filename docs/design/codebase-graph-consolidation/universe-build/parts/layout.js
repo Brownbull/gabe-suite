@@ -815,34 +815,57 @@ function _jrnCollect(){ if(JRN) return JRN; var m={};
    (_FNLINKS: handler · calls · fnwrites/fnreads) — no emitter change, no curation. Steps carry
    META {hop, why, from} so the step note can say what is happening. Capped per journey (honest
    "+N" in the name). ── */
-var _BK_CAP=28;
+var _BK_CAP=28, _GATE_CAP=8;   // the write chain gets _BK_CAP; the gate pre-hop is bounded separately (review [0])
 function _bkFeLeg(eps){ var l=_jrnFeLeg(eps); return { screens:l.screens, users:[] }; }   // backend/workflow journeys carry the SCREENS that fetch them, not every UI user (a union balloons)
 function _fnById(id){ if(NIDS[id]) return NIDS[id]; var f=_fieldN(id); if(f) return f;
   if(_FNNODES){ for(var i=0;i<_FNNODES.length;i++) if(_FNNODES[i].id===id) return _FNNODES[i]; } return null; }
 function _bkCollect(){ if(!_FNNODES){ try{ _buildFnData(); }catch(e){} } if(!_FNLINKS) return [];
-  var calls={}, handler={}, acc={};
+  var calls={}, handler={}, acc={}, dep={}, disp={};
   _FNLINKS.forEach(function(l){ if(l.rel==="calls") (calls[l.source]=calls[l.source]||[]).push(l.target);
+    else if(l.rel==="depends") (dep[l.source]=dep[l.source]||[]).push(l.target);           // K1 gate chain — WALK it, not just draw (wave D / P7)
+    else if(l.rel==="dispatches") (disp[l.source]=disp[l.source]||[]).push(l.target);        // J3 event-bus leg — WALK it, not just draw (wave D / P7)
     else if(l.rel==="handler") handler[l.source]=l.target;
     else if(l.access){ var A=(acc[l.source]=acc[l.source]||{}); A[l.target]=A[l.target]||(l.rel==="fnwrites"); } });   // read+write on one model = a WRITER of it (write wins)
   Object.keys(acc).forEach(function(k){ acc[k]=Object.keys(acc[k]).sort().map(function(t){ return {t:t, w:acc[k][t]}; }); });
   var _d2wOf=function(id){ var f=_fnById(id); return (f&&f.d2w!=null)?f.d2w:99; };
   Object.keys(calls).forEach(function(k){ calls[k].sort(function(a,b){ return (_d2wOf(a)-_d2wOf(b))||(a<b?-1:1); }); });   // within a hop, the write path leads (d2w ascending), then name
+  [dep, disp].forEach(function(M){ Object.keys(M).forEach(function(k){ M[k].sort(function(a,b){ return (_d2wOf(a)-_d2wOf(b))||(a<b?-1:1); }); }); });   // deterministic walk order
   var out=[];
   _fieldNodes().forEach(function(ep){ if(ep.kind!=="endpoint") return; var h=handler[ep.id]; if(!h) return;
     var steps=[{id:ep.id, hop:0, why:"endpoint"}], seen={}; seen[ep.id]=1; seen[h]=1;
-    var q=[[h,1]], ents={}; ents[ep.ent]=1; var writes=0, reads=0, more=0;
-    while(q.length){ var cur=q.shift(), fid=cur[0], hop=cur[1], f=_fnById(fid); if(!f) continue;
+    var q=[[h,1,"fn",null]], ents={}; ents[ep.ent]=1; var writes=0, reads=0, more=0, disps=0;
+    // ── the write CHAIN first: handler → calls (BFS) → dispatched handlers, each writer's models.
+    //    Owns the FULL _BK_CAP; gates are a bounded pre-hop added AFTER (review [0]: a gate-heavy handler
+    //    must not starve its own write chain), and never touch this `seen` (review [1]/[4]: a fn that is
+    //    both a gate AND a deep call-target is walked DEEP here, not claimed shallow).
+    while(q.length){ var cur=q.shift(), fid=cur[0], hop=cur[1], cwhy=cur[2]||"fn", cfrom=cur[3]||null, f=_fnById(fid); if(!f) continue;
       if(steps.length>=_BK_CAP){ more++; continue; }
-      steps.push({id:fid, hop:hop, why:"fn"}); if(f.ent) ents[f.ent]=1;
+      steps.push({id:fid, hop:hop, why:cwhy, from:cfrom}); if(f.ent) ents[f.ent]=1;
+      if(cwhy==="dispatch") disps++;
       (acc[fid]||[]).forEach(function(a){ var key=a.t+"|"+fid; if(seen[key]) return; seen[key]=1;
         if(steps.length>=_BK_CAP){ more++; return; }
         steps.push({id:a.t, hop:hop+1, why:a.w?"write":"read", from:fid}); if(a.w) writes++; else reads++;
         var mn=_fieldN(a.t); if(mn&&mn.ent) ents[mn.ent]=1; });
-      (calls[fid]||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; q.push([t,hop+1]); } }); }
+      (calls[fid]||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; q.push([t,hop+1,"fn",fid]); } });
+      (disp[fid]||[]).forEach(function(t){ if(!seen[t]){ seen[t]=1; q.push([t,hop+1,"dispatch",fid]); } }); }   // the event bus continues the trace
+    // ── the GATE pre-hop (Hop 0.5): the handler's Depends() gates the chain didn't already walk, each
+    //    SHALLOW (itself + its OWN model reads). A gate already in the chain is shown deep there (skip it).
+    //    Bounded by _GATE_CAP so it decorates the chain without ballooning; inserted before the handler.
+    //    FLOOR: a gate's writes that live ONLY in its private callee subtree are not walked (deliberate —
+    //    gates are auth/validation; a deep-writing gate is dormant on gustify). Trigger to revisit: a
+    //    journey whose gate reads a model but its deeper write is absent.
+    var gsteps=[], gates=0, gseen={};
+    (dep[h]||[]).forEach(function(g){ if(seen[g]||gseen[g]) return; var gf=_fnById(g); if(!gf) return;
+      if(gates>=_GATE_CAP){ more++; return; }
+      gseen[g]=1; gsteps.push({id:g, hop:0.5, why:"gate", from:h}); gates++; if(gf.ent) ents[gf.ent]=1;
+      (acc[g]||[]).forEach(function(a){ var key=a.t+"|"+g; if(seen[key]||gseen[key]) return; gseen[key]=1;
+        gsteps.push({id:a.t, hop:0.5, why:a.w?"write":"read", from:g}); if(a.w) writes++; else reads++;
+        var mn=_fieldN(a.t); if(mn&&mn.ent) ents[mn.ent]=1; }); });
+    if(gsteps.length) steps=[steps[0]].concat(gsteps, steps.slice(1));   // gates render right after the endpoint, before the handler
     if(steps.length<2) return;
     out.push({ cid:"bk:"+ep.id, bk:true, ep:ep.id, corpora:{backend:1}, corpus:"backend", agg:false, e2e:false,
       ents:Object.keys(ents), carriers:steps.map(function(s){ return s.id; }), meta:steps,
-      writes:writes, reads:reads, more:more, method:String(ep.label||"").split(" ")[0],
+      writes:writes, reads:reads, more:more, gates:gates, disps:disps, method:String(ep.label||"").split(" ")[0],
       name:(ep.label||ep.id)+(more?(" (+"+more+"+ more — capped at "+_BK_CAP+" steps)"):""), start:ep.ent||"other", fe:_bkFeLeg([ep.id]) });   // a FLOOR: fns cut at the cap never count their own subtrees
     out[out.length-1].feN=out[out.length-1].fe.users.length+out[out.length-1].fe.screens.length; });
   out.sort(function(a,b){ return (b.writes-a.writes)||(b.carriers.length-a.carriers.length)||(a.name<b.name?-1:1); });
@@ -863,7 +886,7 @@ function _wfCollect(bk){ var W=window.GABE_WORKFLOWS; if(!W||!W.length) return [
       epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:"user workflows",
       fe:_bkFeLeg(eps), feN:0 }; }).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; }); }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
 function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.agg?"agg":j.cid));
-  var tt=j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s) · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
+  var tt=j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s)"+(j.gates?(" · "+j.gates+" gate(s)"):"")+(j.disps?(" · "+j.disps+" dispatch(es)"):"")+" · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
   return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+tt.replace(/"/g,"&quot;")+'">'
   +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+badge+'</b><span class="jrncorp">'+j.corpus+'</span>'
   +(j.feN?('<span class="jrnfe">'+svgInline("component", KINDCOL.component, 10)+j.feN+'</span>'):"")
@@ -975,6 +998,8 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
     var _epN=0,_epI=0; if(meta.why==="endpoint"&&j&&j.meta){ j.meta.forEach(function(m,ii){ if(m.why==="endpoint"){ _epN++; if(ii<=(WALK.i-(WALK.feLen||0))) _epI++; } }); }
     var _heat=(window.__uniD2W!==false);
     hop=(meta.why==="endpoint")?("<b>Hop 0</b> · "+(_epN>1?("endpoint "+_epI+" of "+_epN+" in this workflow — a new chain starts here"):"the journey's entry point")):
+        (meta.why==="gate")?("<b>Hop 0.5</b> · <span class=\"sng\">GATE</span> — runs BEFORE the handler body (a Depends() dependency of "+esc(frmL)+"), reached by a depends wire"):
+        (meta.why==="dispatch")?("<b>Hop "+meta.hop+"</b> · <span class=\"snd\">DISPATCHED</span> — the event bus routes here after "+esc(frmL)+" publishes (its own writes/reads follow, if any)"):
         (meta.why==="write")?("<b>Hop "+meta.hop+"</b> · <span class=\"snw\">WRITTEN</span> by "+esc(frmL)+" — the red access wire"):
         (meta.why==="read")?("<b>Hop "+meta.hop+"</b> · <span class=\"snr\">read</span> by "+esc(frmL)):
         ("<b>Hop "+meta.hop+"</b> · reached by a calls wire"+(_heat&&n&&n.d2w===0?" (orange — at the write)":_heat&&n&&n.d2w===1?" (amber — one hop out)":"")); }

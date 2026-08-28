@@ -99,6 +99,58 @@ ck(r.photoDrawn && r.photoRed && r.photoEdge,
   'invisible writer #2 drawn+wired: cancel_session→delete_session_photos→CookingPhoto (red)',
   'drawn=' + r.photoDrawn + ' red=' + r.photoRed + ' edge=' + r.photoEdge);
 
+/* ── [4b] WAVE D (P7): the backend-journey walk WALKS depends + dispatches, not just draws them.
+   The K1 gate chain becomes a Hop-0.5 pre-step before the handler body; the J3 event-bus leg
+   continues the trace THROUGH a dispatched handler (the second write leg). Data-level asserts on
+   _jrnCollect() so they survive graft call-wire drift; floors, not exact counts. */
+const wd = await p.evaluate(() => {
+  try {
+    var jrns = (typeof _jrnCollect === 'function') ? _jrnCollect() : (window.JRN || []);
+    var bk = jrns.filter(function (j) { return j.bk; });
+    var comp = bk.filter(function (j) { return /\/cooking\/sessions\/.*\/complete/.test(String(j.ep || '')); })[0];
+    return {
+      ok: true,
+      bkN: bk.length,
+      gateJourneys: bk.filter(function (j) { return (j.gates || 0) > 0; }).length,
+      dispJourneys: bk.filter(function (j) { return (j.disps || 0) > 0; }).length,
+      compFound: !!comp,
+      compDisps: comp ? (comp.disps || 0) : null,
+      compWhys: comp ? comp.meta.map(function (m) { return m.why; }) : [],
+      gateBeforeHandler: comp ? (comp.meta.findIndex(function (m) { return m.why === 'gate'; }) <
+                                 comp.meta.findIndex(function (m) { return m.why === 'fn'; })) : null
+    };
+  } catch (e) { return { ok: false, err: String(e) }; }
+});
+ck(wd.ok, 'wave D: _jrnCollect() runs and yields backend journeys', wd.ok ? ('bk=' + wd.bkN) : wd.err);
+ck(wd.gateJourneys >= 40, 'wave D: the gate chain (depends) is WALKED — most backend journeys gain a Hop-0.5 gate step',
+  wd.gateJourneys + ' of ' + wd.bkN + ' journeys carry a gate step (floor 40; measured 79 on gustify)');
+ck(wd.dispJourneys >= 1 && wd.compFound && wd.compDisps === 2,
+  'wave D: the event-bus leg (dispatches) is WALKED — complete-session walks its 2 dispatched handlers (J3 second write leg)',
+  'dispJourneys=' + wd.dispJourneys + ' compDisps=' + wd.compDisps);
+ck(wd.compWhys.indexOf('gate') >= 0 && wd.compWhys.indexOf('dispatch') >= 0 && wd.gateBeforeHandler === true,
+  'wave D: the complete-session journey carries BOTH a gate (before the handler) and a dispatch step',
+  'whys=' + JSON.stringify(wd.compWhys.filter(function (w, i, a) { return a.indexOf(w) === i; })));
+
+/* the step note RENDERS the new whys: start the complete-session journey, step to the gate, read #stepnote. */
+const sn = await p.evaluate(async () => {
+  try {
+    if (window.__uniHLClear) __uniHLClear();
+    var jrns = (typeof _jrnCollect === 'function') ? _jrnCollect() : [];
+    var comp = jrns.filter(function (j) { return j.bk && /\/cooking\/sessions\/.*\/complete/.test(String(j.ep || '')); })[0];
+    if (!comp || !window.__uniJrnStart) return { ok: false };
+    __uniJrnStart(comp.cid);
+    var gi = (WALK.feLen || 0) + comp.meta.findIndex(function (m) { return m.why === 'gate'; });
+    if (typeof _walkGo === 'function') { WALK.i = gi; _walkGo(0); }
+    var el = document.getElementById('stepnote');
+    return { ok: true, txt: el ? el.textContent : '' };
+  } catch (e) { return { ok: false, err: String(e) }; }
+});
+ck(sn.ok && /GATE/.test(sn.txt) && /Hop 0\.5/.test(sn.txt),
+  'wave D: the step note renders the GATE step ("Hop 0.5 · GATE — runs BEFORE the handler body")',
+  sn.ok ? ('note="' + String(sn.txt).slice(0, 70) + '…"') : sn.err);
+await p.evaluate(() => { if (window.__uniHLClear) __uniHLClear(); });
+await p.waitForTimeout(400);
+
 /* ── [5] the WALK itself: hide the boundary's CLUSTER first (hidden-before is asserted — a
    reveal that stops revealing must turn this section red), then walk: select the endpoint,
    double-click the handler, double-click the boundary. Reveal calls are DIRECT — a renamed

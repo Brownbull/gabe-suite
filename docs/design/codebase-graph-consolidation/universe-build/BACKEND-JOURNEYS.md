@@ -38,12 +38,13 @@ The journeys picker (topbar) now carries five tabs; the first two are new:
 | Tab | Source | Order |
 |---|---|---|
 | **workflows** | `workflows.js` beside the center data — `window.GABE_WORKFLOWS = [{name, steps:["METHOD /path"…], note}]`, the operator's user stories (gustify: initial setup · look for recipes · filter · cook · store ingredients · locations · shopping · plan) | each endpoint's backend chain, in the curated order; unmapped endpoints counted on the row |
-| **backend** | derived at view time from the fn feed the map already carries (`_FNLINKS`: handler · calls · fnwrites/fnreads) — one chain per endpoint, 67 on gustify | BFS by hop, write path leading within a hop, each writer's models right after it |
+| **backend** | derived at view time from the fn feed the map already carries (`_FNLINKS`: handler · calls · fnwrites/fnreads · **depends · dispatches**) — one chain per endpoint, 81 on gustify | BFS by hop, write path leading within a hop, each writer's models right after it; **the handler's gate deps walk FIRST at Hop 0.5, and a publisher's dispatched handler continues the trace** |
 | end-to-end · by-entity · aggregated | `det.test_journeys` — one test case's COVERAGE SET (every element it touches) | entity-by-entity, then by name — not an execution order |
 
 While a walk is live, the **step note** (top-centre over the graph) says what the current step is:
 kind · entity · what the piece does (role · hops-to-a-write · reads/writes · gates · behind) ·
-`Hop k` and how you got here (called / written by / read by) · the docstring's first line. Everything
+`Hop k` and how you got here (called / written by / read by / **gate — runs before the handler body** /
+**dispatched — the event bus routes here after a publish**) · the docstring's first line. Everything
 in it is derived from the map; nothing is curated prose. The trail chips in the right panel keep a fixed
 size and wrap into rows; a middle-click on an entity chip in the picker solos that entity.
 
