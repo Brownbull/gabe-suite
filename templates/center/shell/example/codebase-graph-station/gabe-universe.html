@@ -3189,6 +3189,23 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   if(coreFEGrp) cluPane.push(coreFEGrp);
   if(cluShowGrp) cluPane.push(cluShowGrp);
   if(subOpGrp) cluPane.push(subOpGrp);
+  /* ── DISCLOSURE-TIER controls in the FLEET (operator: the tier configs live in the fleet section
+     as multi-state pills). The header T0–T3 selector + the legend class rows are the quick surfaces;
+     this is the fleet-side config. Prepended to the Entity pane so it opens with the "show" column. ── */
+  var tierGrp=mk("grp"); tierGrp.innerHTML='<div class="grplbl">Disclosure tier</div>'
+    +pillHTML("tier",[{v:"0",t:"T0",ti:"Skeleton — doors, tables & screens"},{v:"1",t:"T1",ti:"Surface — + schemas, stores, data-connectors"},{v:"2",t:"T2",ti:"Trace — + functions & private components"},{v:"3",t:"T3",ti:"Everything"}], String(window.__uniTier));
+  [].forEach.call(tierGrp.querySelectorAll('.pill[data-grp="tier"] button'), function(btn){ btn.onclick=function(){ if(window.__uniSetTier) __uniSetTier(+btn.getAttribute("data-v")); }; });
+  var foldGrp=mk("grp"); foldGrp.innerHTML='<div class="grplbl">Fold helpers</div>'
+    +pillHTML("fold",[{v:"on",t:"on",ti:"fold single-caller helper nodes"},{v:"off",t:"off",ti:"show every node"}], window.__uniFoldHelpers!==false?"on":"off");
+  [].forEach.call(foldGrp.querySelectorAll('.pill[data-grp="fold"] button'), function(btn){ btn.onclick=function(){ if(window.__uniSetFoldHelpers) __uniSetFoldHelpers(btn.getAttribute("data-v")==="on"); [].forEach.call(foldGrp.querySelectorAll("button"),function(x){ x.classList.toggle("on",x===btn); }); }; });
+  var fcGrp=mk("grp"); fcGrp.innerHTML='<div class="grplbl">Component classes</div>';   // multi-toggle (each class on/off independently)
+  var fcPill=document.createElement("div"); fcPill.className="pill fcpill";
+  ["view","private","connector","container","leaf"].forEach(function(fc){ var bn=document.createElement("button");
+    bn.setAttribute("data-fc",fc); bn.title="toggle the "+fc+" component class"; bn.textContent=fc;
+    bn.className=(window.__uniFeClassState&&window.__uniFeClassState[fc]===false)?"":"on";
+    bn.onclick=function(){ if(window.__uniFeClassToggle) __uniFeClassToggle(fc); bn.classList.toggle("on", !(window.__uniFeClassState&&window.__uniFeClassState[fc]===false)); }; fcPill.appendChild(bn); });
+  fcGrp.appendChild(fcPill);
+  entPane.unshift(foldGrp); entPane.unshift(fcGrp); entPane.unshift(tierGrp);   // tier first, then classes, then fold — atop the Entity pane
   window.__uniFlPanes={
     show:{ title:"Entity", icon:"shape", groups:entPane, shared:[radiusGrp] },
     subs:{ title:"Clusters", icon:"sub", groups:cluPane, shared:[radiusGrp] },   // container lives in the entity combo row now (it always affected both levels)
@@ -3635,9 +3652,15 @@ window.__uniFeClassToggle=function(fc){ if(!fc) return; var s=window.__uniFeClas
   s[fc]=(s[fc]===false); window.__uniFeClassState=s; window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI();   // a manual class toggle leaves the preset
   try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
 window.__uniSetFoldHelpers=function(on){ window.__uniFoldHelpers=(on!==false);   // the old per-kind "critical", now ONE toggle: fold single-caller helpers
-  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
-window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel"); if(!g) return;
-  [].forEach.call(g.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-tier"))===window.__uniTier); }); };
+  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){} };
+window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel");
+  if(g) [].forEach.call(g.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-tier"))===window.__uniTier); });
+  var fp=document.querySelector('.pill[data-grp="tier"]');   // the fleet-side tier pill mirrors the header
+  if(fp) [].forEach.call(fp.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-v"))===window.__uniTier); });
+  var fld=document.querySelector('.pill[data-grp="fold"]');
+  if(fld) [].forEach.call(fld.querySelectorAll("button"), function(b){ b.classList.toggle("on", (b.getAttribute("data-v")==="on")===(window.__uniFoldHelpers!==false)); });
+  var fc=document.querySelector('.fcpill');
+  if(fc) [].forEach.call(fc.querySelectorAll("button"), function(b){ b.classList.toggle("on", !(window.__uniFeClassState&&window.__uniFeClassState[b.getAttribute("data-fc")]===false)); }); };
 (function(){ var _init=function(){ var g=document.getElementById("tiersel"); if(!g||g.__wired) return; g.__wired=1;
     [].forEach.call(g.querySelectorAll("button"), function(b){ b.onclick=function(){ __uniSetTier(+b.getAttribute("data-tier")); }; });
     document.addEventListener("keydown", function(e){                                   // keys 1–4 select a tier (not while typing)

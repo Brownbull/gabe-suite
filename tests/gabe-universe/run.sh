@@ -908,6 +908,9 @@ check("__uniKindToggle=function(k){ if(!k) return;   // BINARY" in page and 'cur
       "the legend is no longer BINARY (on/off) with a global fold-helpers toggle")
 check('t:"feclass"' in page and 'data-lgfc=' in page and '__uniFeClassToggle(rw.dataset.lgfc)' in page and 'data-lgfold=' in page,
       "the component-class legend rows + the fold-helpers row are gone")
+# fleet-side tier config pills (control-system phase 3)
+check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
+      "the fleet Entity pane's tier + fold + component-class pills are gone")
 check('window.__uniKindToggle=function(k)' in page and '__uniKindToggle(rw.dataset.lgk)' in page,
       "the legend rows are no longer hide-by-kind controls")
 check('lghd2 lggrp gs-' in page and '{t:"hd",l:"frontend"}' in page and '{t:"hd",l:"backend"}' in page

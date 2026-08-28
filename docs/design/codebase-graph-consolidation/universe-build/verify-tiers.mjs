@@ -74,6 +74,22 @@ const clk = await p.evaluate(() => {
 ck(clk.hid, 'clicking the "leaf" class legend row hides the leaf class (__uniFeClassState)');
 ck(clk.foldFlipped, 'clicking the fold-helpers row flips __uniFoldHelpers');
 
+// the FLEET Entity pane carries the tier + fold + class pills (phase 3)
+const fleet = await p.evaluate(() => {
+  window.__uniSetTier(3);
+  if (window.__uniFlOpen) window.__uniFlOpen('show');
+  const tp = document.querySelector('.pill[data-grp="tier"]'), fp = document.querySelector('.pill[data-grp="fold"]'), fc = document.querySelector('.fcpill');
+  const out = { tier: tp ? tp.querySelectorAll('button').length : 0, fold: fp ? fp.querySelectorAll('button').length : 0, fc: fc ? fc.querySelectorAll('button').length : 0 };
+  if (tp) { const b1 = tp.querySelector('button[data-v="1"]'); if (b1) b1.click(); }
+  out.afterClick = window.__uniTier;
+  out.tpLit = tp ? tp.querySelector('button[data-v="1"]').classList.contains('on') : false;
+  return out;
+});
+ck(fleet.tier === 4 && fleet.fold === 2 && fleet.fc === 5,
+  'the fleet Entity pane carries the tier (4) + fold (2) + class (5) pills', JSON.stringify(fleet));
+ck(fleet.afterClick === 1 && fleet.tpLit,
+  'clicking the fleet tier pill sets the tier + lights (fleet ↔ header sync)', 'tier=' + fleet.afterClick);
+
 ck(errs.length === 0, 'no page/console errors', errs.slice(0, 3).join(' | '));
 console.log(`\n${pass}/${pass + fail} tier checks passed`);
 await b.close();
