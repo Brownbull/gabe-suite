@@ -529,6 +529,7 @@ _CENSUS: dict | None = None
 _ROUTE_CENSUS: dict | None = None
 _FILE_CENSUS: dict | None = None
 _FLAGS: dict | None = None
+_DISPATCH: dict | None = None
 
 
 def _table_classes(tree) -> list[tuple[str, str]]:
@@ -1642,6 +1643,105 @@ def parse_app_middleware(repo: Path, entity_code: dict | None = None) -> list[di
     out.sort(key=lambda m: (m["file"], m["line"]))
     for _i, _m in enumerate(out):
         _m["order"] = _i
+    return out
+
+
+_DISPATCH_REG = frozenset({"register", "register_once", "subscribe", "add_handler", "on"})
+
+
+def dispatch_map(repo: Path) -> dict:
+    """Event-bus DISPATCH edges (class 6): a publisher fn → each handler registered for the event it
+    publishes. A type-keyed registry (``register_once(EventCls, handler)``) is NO call graft can see,
+    and handlers are imported FUNCTION-LOCALLY under aliases (``from services.skills import
+    on_cooked_meal_created as _han``) — so the edge from ``bus.publish(EventCls(...))`` to the handler
+    is invisible. This resolves the handler alias (fn-local + module-level ImportFrom → module → file
+    by path-suffix) and joins publisher→handler. Returns ``{dispatches: [{s, t, event, conf}], stats}``
+    or ``{}`` honest-empty (no register + no publish → byte-identical, P5). conf 'extracted' (a census)."""
+    global _DISPATCH
+    if _DISPATCH is not None:
+        return _DISPATCH
+    trees: dict[str, ast.AST] = {}
+    for slug in ENTITY_CODE:
+        v = collect_entity_map(slug, repo)
+        if not v:
+            continue
+        for _layer, f, _n in v.get("files", []):
+            if f.endswith(".py") and f not in trees:
+                t, _ = _safe_parse(repo / f)
+                if t is not None:
+                    trees[f] = t
+    name2file: dict[str, list[str]] = {}
+    module_imp: dict[str, dict[str, tuple]] = {}         # file → {alias: (module, orig)}
+    for f, t in trees.items():
+        module_imp[f] = {}
+        for node in t.body:
+            if isinstance(node, ast.ImportFrom):
+                for a in node.names:
+                    module_imp[f][a.asname or a.name] = (node.module, a.name)
+        for node in ast.walk(t):
+            if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                name2file.setdefault(node.name, []).append(f)
+
+    def _mod2file(module):
+        if not module:
+            return None
+        parts = module.split(".")
+        for f in trees:
+            fp = f[:-3].split("/")
+            if len(fp) >= len(parts) and fp[-len(parts):] == parts:
+                return f
+        return None
+
+    def _resolve(name, f, local):
+        src = local.get(name) or module_imp.get(f, {}).get(name)
+        if src:
+            hf = _mod2file(src[0])
+            if hf:
+                return f"{hf}#{src[1]}"
+        cands = name2file.get(name)
+        return f"{cands[0]}#{name}" if cands and len(cands) == 1 else None
+
+    registry: dict[str, list[str]] = {}                 # EventClsName → [handler_id]
+    for f, t in trees.items():
+        for fnnode in ast.walk(t):
+            if not isinstance(fnnode, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            local = {}
+            for n in ast.walk(fnnode):
+                if isinstance(n, ast.ImportFrom):
+                    for a in n.names:
+                        local[a.asname or a.name] = (n.module, a.name)
+            for n in ast.walk(fnnode):
+                if (isinstance(n, ast.Call) and _call_attr(n.func) in _DISPATCH_REG and len(n.args) >= 2):
+                    ev = _call_bare(n.args[0]) or (n.args[0].attr if isinstance(n.args[0], ast.Attribute) else None)
+                    hn = _call_bare(n.args[1])
+                    if not ev or not hn:
+                        continue
+                    hid = _resolve(hn, f, local)
+                    if hid:
+                        registry.setdefault(ev, []).append(hid)
+    dispatches: list[tuple] = []
+    for f, t in trees.items():
+        for fnnode in ast.walk(t):
+            if not isinstance(fnnode, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                continue
+            pid = f"{f}#{fnnode.name}"
+            for n in ast.walk(fnnode):
+                if isinstance(n, ast.Call) and _call_attr(n.func) == "publish":
+                    for a in n.args:                    # publish(event) OR publish(session, event) — scan every arg
+                        ev = (_call_bare(a.func) if isinstance(a, ast.Call)
+                              else _call_bare(a) if isinstance(a, ast.Name) else None)
+                        for hid in registry.get(ev, []):
+                            if hid != pid:
+                                dispatches.append((pid, hid, ev))
+    edges = [{"s": s, "t": t, "event": e, "conf": "extracted"}
+             for (s, t, e) in sorted(set(dispatches))]
+    out = ({"dispatches": edges,
+            "stats": {"events": len(registry),
+                      "handlers": len({h for hs in registry.values() for h in hs}),
+                      "edges": len(edges)}}
+           if edges else {})
+    _DISPATCH = out
     return out
 
 

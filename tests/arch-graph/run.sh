@@ -558,6 +558,19 @@ check(_gmw3["stats"]["app_middleware"]["gated_by"] == 0,
 check("app_middleware" not in G.build_c4_graph(FIX, labels=LABELS, status=STATUS)["stats"],
       "class 8 honest-empty: no app_middleware → no middleware node + no stats key (byte-identical)")
 
+# ── class 6 (wave C) · dispatches: event-bus edges appended to derive_functions.calls as a rel ──
+_df_disp = GG.derive_functions(WIRING, FIX["entities"],
+                               dispatches=[{"s": "apps/api/alpha.py#do_a", "t": "apps/api/beta.py#do_b", "conf": "extracted"}])
+_disp_e = [c for c in _df_disp["calls"] if c.get("rel") == "dispatches"]
+check(len(_disp_e) == 1 and _disp_e[0]["s"] == "apps/api/alpha.py#do_a" and _disp_e[0]["t"] == "apps/api/beta.py#do_b"
+      and _disp_e[0]["conf"] == "extracted",
+      "class 6 derive_functions: a dispatch edge is appended to calls with rel:'dispatches' (extracted)")
+check(all("rel" not in c for c in GG.derive_functions(WIRING, FIX["entities"])["calls"]),
+      "class 6 honest-empty: no dispatches → calls carry NO rel key (byte-identical)")
+check(GG.derive_functions(WIRING, FIX["entities"], dispatches=[{"s": "nope#x", "t": "apps/api/beta.py#do_b"}])["calls"]
+      == GG.derive_functions(WIRING, FIX["entities"])["calls"],
+      "class 6: a dispatch edge with an unhomed end is dropped (never guessed)")
+
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

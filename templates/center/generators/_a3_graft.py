@@ -177,12 +177,17 @@ def _file2slug(entities: dict[str, Any]) -> dict[str, str]:
 
 
 def derive_functions(wiring: dict[str, Any],
-                     entities: dict[str, Any]) -> dict[str, Any]:
+                     entities: dict[str, Any],
+                     dispatches: list[dict] | None = None) -> dict[str, Any]:
     """The function-level slice the LEVELS graph draws: every graft FUNCTION node homed
     to its entity (``id`` = ``path#symbol``, homed by file → entity) + the ``calls``
     edges between two homed functions. ``_a3_levels`` selects the trace-relevant subset
     (cross-entity callers/callees + model users) and clusters on it. Honest: a call whose
-    endpoints don't both map to entities is dropped (counted), never guessed."""
+    endpoints don't both map to entities is dropped (counted), never guessed.
+
+    ``dispatches`` (class 6): event-bus edges (publisher→handler) appended to ``calls`` with
+    ``rel:'dispatches'`` — a distinct wire the station draws apart from calls. Both ends must be
+    homed. Existing call entries keep NO ``rel`` key (byte-identical); the sort re-orders deterministically."""
     f2s = _file2slug(entities)
     fn_slug: dict[str, str] = {}
     for n in wiring.get("nodes") or []:
@@ -208,7 +213,12 @@ def derive_functions(wiring: dict[str, Any],
         if s in fn_slug and t in fn_slug and s != t:
             calls.append({"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
                           "conf": e.get("confidence", "inferred")})
-    calls.sort(key=lambda c: (c["ss"], c["ts"], c["s"], c["t"]))
+    for d in dispatches or []:                         # class 6: dispatch edges as a DISTINCT rel
+        s, t = d.get("s"), d.get("t")
+        if s in fn_slug and t in fn_slug and s != t:
+            calls.append({"s": s, "t": t, "ss": fn_slug[s], "ts": fn_slug[t],
+                          "conf": d.get("conf", "extracted"), "rel": "dispatches"})
+    calls.sort(key=lambda c: (c["ss"], c["ts"], c["s"], c["t"], c.get("rel", "")))
     return {"fn_slug": fn_slug, "calls": calls}
 
 
@@ -837,7 +847,8 @@ def reach_arm(root: Path, entities: dict[str, Any],
 
 def graft_arm(root: Path, entities: dict[str, Any],
               allow_build: bool = True,
-              faccess: dict[str, Any] | None = None) -> dict[str, Any]:
+              faccess: dict[str, Any] | None = None,
+              dispatches: list[dict] | None = None) -> dict[str, Any]:
     """The whole arm, one call: ensure → load → derive. NEVER raises.
 
     Returns ``{present, reason, index_hash?, index_nodes?, index_edges?,
@@ -855,13 +866,25 @@ def graft_arm(root: Path, entities: dict[str, Any],
             # into the committed stats. The next successful build self-heals it.
             return {"present": False, "reason": "index unreadable (corrupt or truncated)"}
         meta = wiring.get("meta") or {}
-        out = derive_cross(wiring, entities)
-        fout = derive_functions(wiring, entities)
-        behind = derive_behind(wiring, entities)   # {<file>#<fn> → {fns, depth}} per endpoint handler
-        endpoint_access = derive_endpoint_access(wiring, entities, faccess)  # A2: ORM access via the call-tree
-        fn_roles = derive_fn_roles(wiring, faccess)  # C1: accessor/caller/gate/pure per function
-        distance_to_write = derive_distance_to_write(wiring, faccess)  # D2W: fn → hops-to-a-write
-        fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
+        # class 6 · fold the dispatch edges (event-bus publisher→handler) into a COPY of the wiring
+        # for the ADJACENCY-consuming derives (behind/access/roles/d2w/fn_behind) — so a handler's
+        # reach through a dispatched event is seen. derive_cross reads the ORIGINAL (P5: L1 kinds /
+        # cross_calls / confidence never move); derive_functions gets the dispatch edges as a
+        # DISTINCT rel. Byte-identical when there are no dispatches (_w2 is wiring).
+        _disp = dispatches or []
+        _w2 = wiring
+        if _disp:
+            _w2 = dict(wiring)
+            _w2["edges"] = list(wiring.get("edges") or []) + [
+                {"source": _e["s"], "target": _e["t"], "relation": "calls", "confidence": "extracted"}
+                for _e in _disp]
+        out = derive_cross(wiring, entities)       # ORIGINAL wiring — L1 kinds untouched (P5)
+        fout = derive_functions(wiring, entities, dispatches=_disp)
+        behind = derive_behind(_w2, entities)      # {<file>#<fn> → {fns, depth}} per endpoint handler
+        endpoint_access = derive_endpoint_access(_w2, entities, faccess)  # A2: ORM access via the call-tree
+        fn_roles = derive_fn_roles(_w2, faccess)   # C1: accessor/caller/gate/pure per function
+        distance_to_write = derive_distance_to_write(_w2, faccess)  # D2W: fn → hops-to-a-write
+        fn_behind = derive_fn_behind(_w2)          # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
         depends = derive_depends(wiring, entities)  # class 8: endpoint→gate-dep signature edges (the K1 chain)

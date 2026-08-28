@@ -2002,6 +2002,11 @@ def main() -> int:
     _amw = _a3_code.parse_app_middleware(REPO_ROOT)
     if _amw:
         amap["app_middleware"] = _amw
+    # class 6 (dispatches): event-bus publisher→handler edges — folded into the graft adjacency +
+    # drawn as a distinct `dispatches` wire. Emitted to the archmap non-empty-only (P5).
+    _dm = _a3_code.dispatch_map(REPO_ROOT)
+    if _dm:
+        amap["dispatch"] = _dm
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
     amap["guard_insight"] = _a3_guard.guard_insight(
@@ -2049,7 +2054,8 @@ def main() -> int:
                           "commits": (_v.get("access") or {}).get("commits"),
                           "sinks": _v.get("sinks")}
                      for _k, _v in _a3_code.function_insight(REPO_ROOT).items()
-                     if _v.get("access") or _v.get("sinks")})   # A2+C4: the C2 access + C4 sink map, joined onto the call-tree
+                     if _v.get("access") or _v.get("sinks")},   # A2+C4: the C2 access + C4 sink map, joined onto the call-tree
+            dispatches=(_dm.get("dispatches") or []))   # class 6: event-bus edges folded into the adjacency + drawn distinct
         # the web→API bridge arm (Path A frontend): a SEPARATE module with its own
         # try/except so a fetch-parser bug degrades the bridge to honest-empty and
         # NEVER masquerades as graft absence (two arms, two presence flags). Read-only

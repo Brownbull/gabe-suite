@@ -182,6 +182,31 @@ check([m["cls"] for m in _am] == ["CORSMiddleware", "RateLimitMiddleware"] and a
 check(C.parse_app_middleware(_pl.Path(_tf.mkdtemp()), entity_code={"e": {"api": []}}) == [],
       "parse_app_middleware SILENT: no add_middleware → [] (honest-empty, byte-identical)")
 
+# ── class 6 (wave C) · dispatch_map (event-bus registry + publish resolution, fn-local alias) ──
+_dr = _pl.Path(_tf.mkdtemp()); (_dr / "app").mkdir()
+(_dr / "app/bus.py").write_text("def register_handlers():\n    from app.skills import on_cook as han\n    bus.register_once(CookedEvent, han)\n")
+(_dr / "app/skills.py").write_text("def on_cook(session, event):\n    return 1\n")
+(_dr / "app/cooking.py").write_text("def post_complete():\n    bus.publish(session, CookedEvent(x=1))\n")
+_sv_ec, _sv_cache, _sv_disp = C.ENTITY_CODE, dict(C._EMAP_CACHE), C._DISPATCH
+C.ENTITY_CODE = {"e": {"services": ["app/bus.py", "app/skills.py", "app/cooking.py"]}}
+C._EMAP_CACHE.clear(); C._DISPATCH = None
+try:
+    _dm = C.dispatch_map(_dr)
+finally:
+    C.ENTITY_CODE = _sv_ec; C._EMAP_CACHE.clear(); C._EMAP_CACHE.update(_sv_cache); C._DISPATCH = _sv_disp
+_de = [(e["s"].split("#")[-1], e["t"].split("#")[-1], e["event"]) for e in _dm.get("dispatches", [])]
+check(_de == [("post_complete", "on_cook", "CookedEvent")],
+      "dispatch_map FIRE: register_once(Event, alias) + publish(session, Event()) → publisher→handler edge (fn-local alias resolved, event is arg[1])")
+# honest-empty: a repo with no register/publish → {}
+C._DISPATCH = None
+_dr0 = _pl.Path(_tf.mkdtemp()); (_dr0 / "app").mkdir(); (_dr0 / "app/plain.py").write_text("def f():\n    return 1\n")
+_sv_ec2 = C.ENTITY_CODE; C.ENTITY_CODE = {"e": {"services": ["app/plain.py"]}}; C._EMAP_CACHE.clear(); C._DISPATCH = None
+try:
+    _dm0 = C.dispatch_map(_dr0)
+finally:
+    C.ENTITY_CODE = _sv_ec2; C._EMAP_CACHE.clear(); C._EMAP_CACHE.update(_sv_cache); C._DISPATCH = _sv_disp
+check(_dm0 == {}, "dispatch_map SILENT: no register/publish → {} (honest-empty, byte-identical)")
+
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):
     tree = ast.parse(src)
