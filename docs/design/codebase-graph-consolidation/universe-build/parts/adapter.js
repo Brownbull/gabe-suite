@@ -149,7 +149,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
 (_C4.cross_edges||[]).forEach(function(e){ links.push({source:e.from,target:e.to,rel:e.kind||"fk"}); });
 if(_FE){
   /* fe wires are COMPACT index triples [from, to, rel] over fe.pieces order */
-  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true}); });
+  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true, chrome:(e[3]==="chrome")}); });   // channel (F2): a chrome call wire is presentation plumbing, not data
   /* SCREEN ABSORPTION: the piece that fetches replaces its file-level `web` node — the bridge links
      re-target to the piece, the web node leaves the field (one node per fetching file, not two). */
   var ABS={}; nodes.forEach(function(n){ if(n.screen && NIDS[n.screen] && NIDS[n.screen].kind==="web") ABS[n.screen]=n.id; });

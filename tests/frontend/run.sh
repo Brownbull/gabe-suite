@@ -81,7 +81,7 @@ check("Primary" not in kind and "index" not in kind, "no piece for a story expor
 check(fe["stats"]["excluded"].get("api_aliases") == 3 and "Recipe2" not in kind and "PantryItemDTO" not in kind
       and "MealDTO" not in kind,
       "a `type X = components[…]` alias is a REFERENCE to the generated contract — counted, never a piece")
-check(not any(fe["pieces"][a]["name"] == "Meal" for a, b, r in fe["edges"]),
+check(not any(fe["pieces"][a]["name"] == "Meal" for a, b, r, *_ in fe["edges"]),
       "review 53[5]: a CUT alias's own body refs fabricate NO edge from the file's principal")
 check(P["fe:src/features/recipe/recipeFixtures.ts"].get("fixture") is True,
       "a fixtures module is TAGGED showcase data (kept — real screens import fixtures)")
@@ -104,7 +104,7 @@ check({h["id"]: h["kind"] for h in fe["homes"]} == {"app-shell": "bucket", "desi
 check(next(h for h in fe["homes"] if h["id"] == "fe·recipe").get("pair") == "recipe",
       "a paired fe home must NAME its backend twin (the join key every reader uses)")
 # ── wires: every rel, resolved through bindings (barrel + alias followed) ──────────────
-E = {(fe["pieces"][a]["name"], fe["pieces"][b]["name"]): r for a, b, r in fe["edges"]}
+E = {(fe["pieces"][a]["name"], fe["pieces"][b]["name"]): r for a, b, r, *_ in fe["edges"]}
 check(E.get(("RecipeCard", "Badge")) == "renders", "JSX tag → renders (through the @design-system alias)")
 check(E.get(("HomeRoute", "RecipeCard")) == "renders", "renders resolved THROUGH the barrel (features/recipe/index.ts)")
 check(E.get(("router", "HomeRoute")) == "renders", "a route config's JSX element → renders")
@@ -129,7 +129,7 @@ _X2 = {"byFile": {"src/features/panel/Panel.tsx": {
                 {"name": "Header", "kind": "function", "hasJsx": True, "jsx": []}],
     "bindings": {}}}}
 _fe2 = _a3_fe.build_fe(_X2, {"panel": {}}, [])
-_E2 = {(_fe2["pieces"][a]["name"], _fe2["pieces"][b]["name"]): r for a, b, r in _fe2["edges"]}
+_E2 = {(_fe2["pieces"][a]["name"], _fe2["pieces"][b]["name"]): r for a, b, r, *_ in _fe2["edges"]}
 check(_E2.get(("Panel", "Header")) == "renders" and _fe2["stats"].get("samefile_renders") == 1,
       "SAME-FILE render FIRE: a same-file JSX tag resolves to its sibling export (Panel → Header)")
 check(("Panel", "div") not in _E2,
@@ -147,8 +147,25 @@ check(_cls.get("Dash") == "view" and _cls.get("Row") == "private" and _cls.get("
       "feClass (F4 engine): 0 render-parents=view · 1=private · 2+ shared no-data=leaf")
 check(_fe3["stats"]["by_feclass"] == {"leaf": 1, "private": 1, "view": 1},
       "feClass: the by_feclass stat tallies the component classes")
+
+# ── STORE DETECTOR (F2): a call reaching a store/fetch is STATE; cx/util plumbing is CHROME (cx=fecall fix) ──
+_X4 = {"byFile": {
+    "src/store/dash.ts": {"exports": [{"name": "useDashStore", "kind": "call:create", "hasJsx": False}], "bindings": {}},
+    "src/util/cx.ts": {"exports": [{"name": "cx", "kind": "function", "hasJsx": False}], "bindings": {}},
+    "src/features/dash/Panel.tsx": {"exports": [
+        {"name": "Panel", "kind": "function", "hasJsx": True, "jsx": ["Child"], "calls": ["useDashStore", "cx"]},
+        {"name": "Child", "kind": "function", "hasJsx": True, "jsx": []}],
+        "bindings": {"useDashStore": {"file": "src/store/dash.ts", "name": "useDashStore"},
+                     "cx": {"file": "src/util/cx.ts", "name": "cx"}}}}}
+_fe4 = _a3_fe.build_fe(_X4, {"dash": {}}, [])
+_pan4 = next((p for p in _fe4["pieces"] if p["name"] == "Panel"), None)
+check(_pan4 and _pan4.get("state") is True,
+      "STORE DETECTOR: a component whose call reaches a store TOUCHES STATE")
+check(_fe4["stats"]["by_channel"] == {"state": 1, "chrome": 1},
+      "STORE DETECTOR: the store call is STATE, the cx (util module) call is CHROME (the cx=fecall bug fixed)")
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
-check(all(isinstance(e, list) and len(e) == 3 and isinstance(e[0], int) for e in fe["edges"]), "wires are COMPACT index triples")
+check(all(isinstance(e, list) and 3 <= len(e) <= 4 and isinstance(e[0], int) for e in fe["edges"]),
+      "wires are COMPACT index triples (a call wire may carry a 4th channel element: state/chrome)")
 check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1, "alias": 1},
       "the scaffold ref AND RecipeDetailBody's ref into the cut Recipe2 alias each COUNT, named — never dropped silently")
 # ── screen absorption ──────────────────────────────────────────────────────────────────
@@ -168,7 +185,7 @@ fm = _a3_fe.build_fe(Xm, {"recipe": {}}, screens)
 km = {p["name"]: p["kind"] for p in fm["pieces"]}
 check(km.get("Badge") == "module" and fm["stats"]["excluded"]["pascal_no_jsx"] == 1,
       "MUTATION: JSX removed → Badge is a module piece (the file's value export) and pascal_no_jsx counts it")
-Em = {(fm["pieces"][a]["name"], fm["pieces"][b]["name"]): r for a, b, r in fm["edges"]}
+Em = {(fm["pieces"][a]["name"], fm["pieces"][b]["name"]): r for a, b, r, *_ in fm["edges"]}
 check(Em.get(("RecipeCard", "Badge")) == "renders", "MUTATION: the JSX tag still wires (renders) onto the module piece")
 # ── the C4 fold ────────────────────────────────────────────────────────────────────────
 base = {"version": 1, "stats": {"entities": 1}, "l2": {}}

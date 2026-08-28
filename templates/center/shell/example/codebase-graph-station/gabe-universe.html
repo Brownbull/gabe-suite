@@ -1016,7 +1016,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
 (_C4.cross_edges||[]).forEach(function(e){ links.push({source:e.from,target:e.to,rel:e.kind||"fk"}); });
 if(_FE){
   /* fe wires are COMPACT index triples [from, to, rel] over fe.pieces order */
-  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true}); });
+  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true, chrome:(e[3]==="chrome")}); });   // channel (F2): a chrome call wire is presentation plumbing, not data
   /* SCREEN ABSORPTION: the piece that fetches replaces its file-level `web` node — the bridge links
      re-target to the piece, the web node leaves the field (one node per fetching file, not two). */
   var ABS={}; nodes.forEach(function(n){ if(n.screen && NIDS[n.screen] && NIDS[n.screen].kind==="web") ABS[n.screen]=n.id; });
@@ -1407,6 +1407,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _cs=NIDS[lid(l.source)], _ct=NIDS[lid(l.target)];
     if((_cs&&(!_nodeVisibleFn(_cs)||!visN(_cs).wires))||(_ct&&(!_nodeVisibleFn(_ct)||!visN(_ct).wires))) return;   // fleet: hidden node OR wires-off entity/cluster
     if(window.__uniRelHide&&__uniRelHide(l)&&!(HL.on&&HL.links&&HL.links.has(l))&&l!==window.__uniSelLink) return; var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;
+    if(l.chrome) _whf*=0.4;   // F2: chrome plumbing (cx/useT/layout) recedes — not a data wire
     var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';
     var _tcol=function(n){ if(!n) return null; if(n.kind==="endpoint"&&n.m&&n.m.method&&typeof METHOD!=="undefined"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind==="function"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };
     var _ea=(((_gm==="type"||_gm==="type-ent")&&_tcol(_cs))||((_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null));

@@ -309,29 +309,46 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
 
     edge_list = [{"from": s, "to": t, "rel": r, "cross": pieces[s]["home"] != pieces[t]["home"]}
                  for (s, t), r in sorted(edges.items())]
-    # ── feClass — the fold-CONTROL class per COMPONENT (the F4 engine; every control reads it to
-    #    hide a class). view = entry (0 render-parents) · private = exactly one parent · connector =
-    #    shared + touches data · container = shared + renders children only · leaf = shared, neither.
-    #    Coarse for now: the chrome-vs-state split of `connector` is F2 (the FE spine detector).
+    # ── STORE DETECTOR (F2) + feClass. A call wire is STATE if it (transitively) reaches a STORE or a
+    #    FETCH, else CHROME (cx/useT/layout plumbing). PRINCIPLED reachability over the call edges — the
+    #    sinks are the store kind + the fetching pieces (the `screen` flag), never a gustify name-list.
+    #    feClass per COMPONENT then reads it: view = 0 render-parents · private = exactly 1 · connector =
+    #    shared AND reaches state · container = shared, renders children only · leaf = shared, neither. ──
+    _STATE_CALL = ("fecall", "uses-hook", "uses-store")
     _rin: dict[str, set] = {}          # component id → its render-parents
     _rchild: dict[str, bool] = {}      # component id → renders at least one child component
-    _dout: dict[str, bool] = {}        # piece id → has a data-ish outgoing wire (fecall/hook/store)
+    _callers: dict[str, list] = {}     # target → callers, over CALL edges only (state propagates backward)
     for e in edge_list:
         s, t, r = e["from"], e["to"], e["rel"]
         if r == "renders" and pieces[t]["kind"] == "component":
             _rin.setdefault(t, set()).add(s)
             if pieces[s]["kind"] == "component":
                 _rchild[s] = True
-        if r in ("fecall", "uses-hook", "uses-store"):
-            _dout[s] = True
+        if r in _STATE_CALL:
+            _callers.setdefault(t, []).append(s)
+    _sink = set(pid for pid, p in pieces.items() if p["kind"] == "store" or p.get("screen"))
+    touches_state = set(_sink); _stk = list(_sink)
+    while _stk:                        # a caller of anything that touches state itself touches state
+        _t = _stk.pop()
+        for _s in _callers.get(_t, ()):
+            if _s not in touches_state:
+                touches_state.add(_s); _stk.append(_s)
+    by_channel = {"state": 0, "chrome": 0}
+    for e in edge_list:                # tag each call wire's data channel (uses-store is always state)
+        if e["rel"] in _STATE_CALL:
+            _st = (e["rel"] == "uses-store") or (e["to"] in touches_state)
+            e["channel"] = "state" if _st else "chrome"
+            by_channel["state" if _st else "chrome"] += 1
     by_class: dict[str, int] = {}
     for pid, p in pieces.items():
         if p["kind"] != "component":
             continue
         fi = len(_rin.get(pid, ()))
         fc = ("view" if fi == 0 else "private" if fi == 1
-              else "connector" if _dout.get(pid) else "container" if _rchild.get(pid) else "leaf")
+              else "connector" if pid in touches_state else "container" if _rchild.get(pid) else "leaf")
         p["feClass"] = fc
+        if pid in touches_state:
+            p["state"] = True
         by_class[fc] = by_class.get(fc, 0) + 1
     by_kind: dict[str, int] = {}
     by_home: dict[str, int] = {}
@@ -360,13 +377,15 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         "pieces": [pieces[k] for k in sorted(pieces)],
         # COMPACT wires: [from_idx, to_idx, rel] over `pieces` order (the two ~70-char ids
         # repeated per wire tripled the feed); `cross` = homes differ, derived by the reader
-        "edges": [[order[e["from"]], order[e["to"]], e["rel"]] for e in edge_list],
+        "edges": [([order[e["from"]], order[e["to"]], e["rel"], e["channel"]] if e.get("channel")
+                   else [order[e["from"]], order[e["to"]], e["rel"]]) for e in edge_list],
         "homes": homes,
         "stats": {"files": len(by_file), "pieces": len(pieces), "by_kind": dict(sorted(by_kind.items())),
                   "by_home": dict(sorted(by_home.items())), "edges": len(edge_list),
                   "by_rel": dict(sorted(by_rel.items())), "cross": sum(1 for e in edge_list if e["cross"]),
                   "screens_absorbed": absorbed, "unresolved": unresolved, "local_refs": local["refs"],
                   "samefile_renders": local.get("samefile", 0), "by_feclass": dict(sorted(by_class.items())),
+                  "by_channel": by_channel, "state_pieces": len(touches_state),
                   "fe_types_referenced": len({e["to"] for e in edge_list if pieces[e["to"]]["kind"] == "fe-type"
                                               and pieces[e["from"]]["kind"] != "fe-type"}),
                   "excluded": stats_x,
