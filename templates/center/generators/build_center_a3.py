@@ -1990,6 +1990,11 @@ def main() -> int:
     for _slug, _layer in _a3_code.undeclared_layers():
         print(f"    ⚠ center.config entity '{_slug}' claims layer '{_layer}' not in "
               f"code_layers — those files are dropped (add '{_layer}' to code_layers)")
+    # FEATURE-FLAG census (class 12) — the config bools whose OFF walls a route/lane; the C4 flag
+    # node reads this for its det. Non-empty-only (P5): no Settings bool / module Final[bool] → no key.
+    _flg = _a3_code.parse_flags(REPO_ROOT)
+    if _flg:
+        amap["flags"] = _flg
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
     amap["guard_insight"] = _a3_guard.guard_insight(

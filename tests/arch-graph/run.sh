@@ -488,6 +488,25 @@ _frb = GG.derive_fn_roles(_wr, {"a.py::svc_write": {"ops": [{"model": "M", "tabl
                                 "a.py::require_auth": {"ops": [{"model": "H", "table": "h", "rw": "r"}]}})
 check(_frb.get("a.py#require_auth") == "gate" and _frb.get("a.py#handler") == "caller",
       "B0: a gate-named fn WITH ops is GATE not accessor; its caller still reaches the write-path")
+
+# ── class 12 (wave C) · feature-flag walls: mint a flag:<NAME> node + a walls edge ──
+_fixfl = json.loads(json.dumps(FIX))
+_fixfl["entities"]["alpha"]["endpoints"][0]["flags"] = [{"name": "FEAT", "on": "off", "on_fail": "403", "line": 5}]
+_fixfl["flags"] = {"FEAT": {"src": "config.py", "line": 5, "default": False}}
+_gfl = G.build_c4_graph(_fixfl, labels=LABELS, status=STATUS)
+_flnodes = [n for g in _gfl["l2"].values() for n in g["nodes"] if n["kind"] == "flag"]
+check(len(_flnodes) == 1 and _flnodes[0]["id"] == "flag:FEAT" and _flnodes[0]["slug"] == "alpha",
+      "class 12 FIRE: a flag walling an endpoint mints flag:<NAME> homed to the reader entity (intra)")
+_wedges = [e for g in _gfl["l2"].values() for e in g.get("edges", []) if e.get("kind") == "walls"] \
+          + [e for e in _gfl["cross_edges"] if e.get("kind") == "walls"]
+check(len(_wedges) == 1 and _wedges[0]["from"] == "flag:FEAT" and _wedges[0]["on_fail"] == "403",
+      "class 12 FIRE: a walls edge flag→endpoint carries on_fail")
+check(_gfl["stats"].get("flags") == {"declared": 1, "drawn": 1}, "class 12: stats.flags {declared, drawn}")
+# honest-empty: no amap.flags + no endpoint.flags → no flag node, no walls edge, no stats.flags key
+_gfl0 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
+check(not any(n["kind"] == "flag" for g in _gfl0["l2"].values() for n in g["nodes"]) and "flags" not in _gfl0["stats"],
+      "class 12 honest-empty: no flags upstream → no flag node + no stats.flags key (byte-identical)")
+
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

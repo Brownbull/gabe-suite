@@ -129,6 +129,33 @@ check(C._detect_sinks(fn('def f(session):\n    session.post(url)', "f"), http_li
 check(C._detect_sinks(fn('def f():\n    httpx.post(url)', "f"), http_lib=False) == ["http"],
       "B1: a named http lib (httpx) stays an http sink regardless of the import flag")
 
+# ── class 12 (wave C) · feature-flag walls (parse_flags census + _flag_gates polarity) ──
+FL = {"recipe_creation_enabled": {}, "RECIPE_CREATION_ENABLED": {}, "seed_controls_enabled": {}}
+def fg(src, name="h"): return C._flag_gates(fn(src, name), FL)
+check(fg('def h():\n    if not settings.recipe_creation_enabled:\n        raise HTTPException(status_code=403)')
+      == [{"name": "recipe_creation_enabled", "on": "off", "on_fail": "403", "line": 2}],
+      "flag FIRE: `if not flag: raise` walls OFF with polarity + status")
+w = fg('def h():\n    if not (RECIPE_CREATION_ENABLED or settings.recipe_creation_enabled):\n        raise HTTPException(403)')
+check({x["name"] for x in w} == {"RECIPE_CREATION_ENABLED", "recipe_creation_enabled"} and all(x["on"] == "off" for x in w),
+      "flag FIRE: `not (A or B)` walls BOTH flags (the effective-flag idiom)")
+check(fg('def h():\n    if not get_settings().seed_controls_enabled:\n        raise RuntimeError()')[0]["name"] == "seed_controls_enabled",
+      "flag FIRE: receiver-agnostic leaf (get_settings().x)")
+check(fg('def h():\n    if not settings.recipe_creation_enabled:\n        return None') == [],
+      "flag SILENT: `if not flag: return` is an ARM, never a wall (raise-only)")
+check(fg('def h():\n    if not settings.other_thing:\n        raise X()') == [], "flag SILENT: a non-flag name never walls")
+check(C._flag_gates(fn('def h():\n    if not x:\n        raise X()', "h"), {}) == [], "flag SILENT: empty census → [] (honest-empty)")
+# parse_flags on a SYNTHETIC repo (not gustify — the honest-empty must hold on a flagless project too)
+import tempfile as _tf, pathlib as _pl
+_fr = _pl.Path(_tf.mkdtemp()); (_fr / "api").mkdir()
+(_fr / "api/routes.py").write_text("def f():\n    return 1\n")
+check(C.parse_flags(_fr, entity_code={"x": {"api": ["api/routes.py"]}}) == {},
+      "parse_flags SILENT: no Settings bool / no module Final[bool] → {} (honest-empty, byte-identical)")
+(_fr / "config.py").write_text("class Settings(BaseSettings):\n    recipe_creation_enabled: bool = False\n    name: str = 'x'\n")
+(_fr / "constants.py").write_text("from typing import Final\nSEED: Final[bool] = True\n")
+_pf = C.parse_flags(_fr, entity_code={"x": {"api": ["api/routes.py"]}})
+check("recipe_creation_enabled" in _pf and "SEED" in _pf and "name" not in _pf,
+      "parse_flags FIRE: a Settings bool + a module Final[bool] are flags; a str field is not")
+
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):
     tree = ast.parse(src)

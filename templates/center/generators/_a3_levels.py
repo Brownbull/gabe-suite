@@ -368,6 +368,9 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         _sk = (FI.get(rfile + "::" + name, {}) or {}).get("sinks")   # C4: non-ORM sink categories (floor)
         if _sk:
             _node["sinks"] = _sk
+        _flg = (FI.get(rfile + "::" + name, {}) or {}).get("flags")  # class 12: fn-level feature-flag walls (the step note)
+        if _flg:
+            _node["flags"] = _flg
         lv["fn_nodes"].append(_node)
         # fn DETAIL — the wider projection of function_insight the panel's Function
         # card reads (detailOf("fn:"+slug+"|"+name)), keyed exactly like the cls: rows.

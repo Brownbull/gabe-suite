@@ -190,6 +190,9 @@ def parse_endpoints(repo: Path, files: list[str]) -> list[dict]:
                 mw = _endpoint_middleware(node, dec)      # C4: the level-2 gates (auth/consent/idempotency) run before the body
                 if mw:
                     ep["middleware"] = mw
+                _fl = _flag_gates(node, parse_flags(repo))   # class 12: the feature-flag walls in the handler body
+                if _fl:
+                    ep["flags"] = _fl
                 out.append(ep)
     return out
 
@@ -501,6 +504,7 @@ def _def_spans(f: str, text: str) -> list:
 _CENSUS: dict | None = None
 _ROUTE_CENSUS: dict | None = None
 _FILE_CENSUS: dict | None = None
+_FLAGS: dict | None = None
 
 
 def _table_classes(tree) -> list[tuple[str, str]]:
@@ -715,6 +719,121 @@ def undeclared_layers(entity_code: dict | None = None) -> list[tuple[str, str]]:
             if layer not in declared:
                 out.append((slug, layer))
     return sorted(out)
+
+
+def parse_flags(repo: Path, entity_code: dict | None = None) -> dict:
+    """FEATURE-FLAG census (coverage class 12): the config bools whose OFF state walls a route or a
+    lane. Two idioms, from the SAME dirs the code map reaches PLUS their immediate parents (a
+    ``config.py`` / ``constants.py`` sits ABOVE the api/services dirs): a pydantic ``BaseSettings``/
+    ``Settings`` class's ``bool`` fields, and a module-level ``Final[bool]`` constant. Returns
+    ``{name: {src, line, default}}`` — the block the walls detector keys against and the C4 flag node
+    reads. ``{}`` honest-empty (no Settings bool, no module ``Final[bool]`` → byte-identical, P5).
+    Deterministic: sorted dirs, files, fields. Cached."""
+    global _FLAGS
+    if _FLAGS is not None and entity_code is None:
+        return _FLAGS
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    dirs: set = set()
+    for slug in sorted(ec):
+        for layer in _CODE_LAYERS:
+            for pat in (ec[slug].get(layer) or []):
+                for f in sorted(_glob.glob(str(repo / pat))):
+                    p = Path(f)
+                    if p.is_file() and p.suffix == ".py":
+                        dirs.add(p.parent)
+                        dirs.add(p.parent.parent)   # config.py/constants.py live one dir up
+    flags: dict = {}
+
+    def _bool_const(val):
+        return val.value if isinstance(val, ast.Constant) and isinstance(val.value, bool) else None
+
+    for d in sorted(dirs, key=str):
+        if not d.is_dir():
+            continue
+        for py in sorted(d.glob("*.py")):
+            tree, _ = _safe_parse(py)
+            if tree is None:
+                continue
+            rel = str(py.relative_to(repo))
+            for node in tree.body:
+                if isinstance(node, ast.ClassDef) and any(
+                        (getattr(b, "id", "") or getattr(b, "attr", "")) in ("BaseSettings", "Settings")
+                        for b in node.bases):
+                    for item in node.body:
+                        if (isinstance(item, ast.AnnAssign) and isinstance(item.target, ast.Name)
+                                and ast.unparse(item.annotation).strip() in ("bool", "Final[bool]")):
+                            flags.setdefault(item.target.id, {"src": rel, "line": item.lineno,
+                                                              "default": _bool_const(item.value)})
+                elif (isinstance(node, ast.AnnAssign) and isinstance(node.target, ast.Name)
+                      and ast.unparse(node.annotation).strip() == "Final[bool]"):
+                    flags.setdefault(node.target.id, {"src": rel, "line": node.lineno,
+                                                      "default": _bool_const(node.value)})
+    out = dict(sorted(flags.items()))
+    if entity_code is None:
+        _FLAGS = out
+    return out
+
+
+def _flag_leaves(test, flags: dict) -> list[tuple[str, str]]:
+    """Every flag-name leaf in an ``ast.If`` test + its polarity. ``if not FLAG:`` → (FLAG, 'off',
+    OFF walls); ``if FLAG:`` → (FLAG, 'on'). A leaf is a bare ``Name`` (a constant) OR an
+    ``Attribute`` whose ``.attr`` names the field, regardless of receiver (``settings.x`` AND
+    ``get_settings().x`` both → ``x``). A COMPOUND test — ``not (RECIPE_CREATION_ENABLED or
+    settings.recipe_creation_enabled)``, the effective-flag idiom — walls on BOTH flags (the
+    ``BoolOp`` is walked). Only names IN ``flags`` count; ``[]`` when the test names no flag."""
+    on = "on"
+    if isinstance(test, ast.UnaryOp) and isinstance(test.op, ast.Not):
+        test, on = test.operand, "off"
+    leaves: list[str] = []
+
+    def _collect(node):
+        if isinstance(node, ast.BoolOp):
+            for v in node.values:
+                _collect(v)
+        elif isinstance(node, ast.Name) and node.id in flags:
+            leaves.append(node.id)
+        elif isinstance(node, ast.Attribute) and node.attr in flags:
+            leaves.append(node.attr)
+
+    _collect(test)
+    return [(n, on) for n in leaves]
+
+
+def _raise_status(rz) -> str:
+    """The 403/404 (or the exception class name) a ``raise`` carries — the wall's ``on_fail``."""
+    exc = rz.exc
+    if isinstance(exc, ast.Call):
+        for kw in exc.keywords:
+            if kw.arg == "status_code" and isinstance(kw.value, ast.Constant):
+                return str(kw.value.value)
+        for a in exc.args:
+            if isinstance(a, ast.Constant) and isinstance(a.value, int):
+                return str(a.value)
+        return _call_bare(exc.func) or (exc.func.attr if isinstance(exc.func, ast.Attribute) else "raise")
+    return exc.id if isinstance(exc, ast.Name) else "raise"
+
+
+def _flag_gates(fnnode, flags: dict) -> list[dict]:
+    """The feature-flag WALLS in one function: an ``if <flag>: raise`` clock. A wall fires ONLY
+    when the guarded body RAISES — ``if not flag: return`` is an ARM, not a wall (honest floor, a
+    later ``arms`` wire). ``[{name, on, on_fail, line}]`` sorted, ``[]`` when none (P5)."""
+    if not flags:
+        return []
+    out: list[dict] = []
+    for n in ast.walk(fnnode):
+        if not isinstance(n, ast.If):
+            continue
+        leaves = _flag_leaves(n.test, flags)
+        if not leaves:
+            continue
+        rz = next((s for stmt in n.body for s in ast.walk(stmt) if isinstance(s, ast.Raise)), None)
+        if rz is None:                              # if not flag: return → an ARM, never a wall
+            continue
+        _of = _raise_status(rz)
+        for name, on in leaves:
+            out.append({"name": name, "on": on, "on_fail": _of, "line": n.lineno})
+    out.sort(key=lambda w: (w["name"], w["line"]))
+    return out
 
 
 def home_schemas(entities: dict, function_insight: dict | None = None) -> dict:
@@ -1363,6 +1482,9 @@ def function_insight(repo: Path) -> dict:
             _snk = _detect_sinks(node, http_lib=_hl)         # C4: non-ORM sink categories (honest-empty)
             if _snk:
                 fns[f"{f}::{qual}"]["sinks"] = _snk
+            _flg = _flag_gates(node, parse_flags(repo))      # class 12: fn-level feature-flag walls (spend-cap etc.)
+            if _flg:
+                fns[f"{f}::{qual}"]["flags"] = _flg
 
         for node in tree.body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):

@@ -70,6 +70,9 @@ _L2_COL_W = 240.0    # column stride for the columns-by-kind L2 layout
 _L2_ROW_H = 64.0     # row stride within a column
 _L2_KINDS = ("endpoint", "model", "schema", "external", "web",
              "middleware", "provider", "flag", "prompt")  # column order, left→right
+_FLAG_SAT = 20   # class 12: a feature flag walling MORE than this many endpoints is an app-level
+#                  clock (rate-limit-style) — its node + walls edges are suppressed (it belongs on a
+#                  middleware node, not a per-endpoint star). gustify's busiest flag walls 3.
 #            web is APPENDED (not prepended) so adding the frontend arm leaves every
 #            existing piece's stamped x/y byte-identical — only web nodes get a new column.
 #            THE APPEND-ONLY RULE (pre-C, 2026-08-27): every new L2 kind joins at the END so the
@@ -620,6 +623,8 @@ def _l2(slug: str, code: dict[str, Any], tbl2slug: dict[str, str],
             enode["resp"] = ep["resp"]
         if ep.get("middleware"):                    # C4: the level-2 gates run before the handler body (auth/consent/idempotency)
             enode["middleware"] = ep["middleware"]
+        if ep.get("flags"):                         # class 12: the feature-flag walls on this endpoint
+            enode["flags"] = ep["flags"]
         edet = with_journeys(det_of("endpoint", ep),
                              f"{ep.get('file')}::{ep.get('fn')}")
         _rsp = _bare_cls(ep.get("resp"))     # response PAYLOAD: unwrap list[X]/Optional[X] → X, then the field-count
@@ -1111,6 +1116,55 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     _acc_intra = sum(1 for _s in l2.values() for _e in _s.get("edges", [])
                      if _e.get("kind") in ("writes_to", "reads_from"))
 
+    # class 12 · FEATURE-FLAG walls — mint a flag:<NAME> L2 node per flag whose OFF-state walls a
+    # route (an `if not flag: raise` clock, from parse_flags/_flag_gates), + a `walls` edge
+    # flag→endpoint. A flag read by ONE entity homes INTRA (its l2 + an intra edge); read across
+    # entities homes to __unclaimed__ (P6 — reuse the bucket, no __config__ pseudo-entity) with a
+    # cross `walls` edge. SATURATION guard: a flag walling > _FLAG_SAT endpoints is suppressed.
+    _flags_drawn = 0
+    _flag_census = amap.get("flags") or {}
+    if _flag_census:
+        _fw: dict[str, list] = {}
+        for _fslug, _fgraph in l2.items():
+            for _fn in _fgraph.get("nodes", []):
+                if _fn.get("kind") == "endpoint":
+                    for _w in (_fn.get("flags") or []):
+                        _fw.setdefault(_w["name"], []).append((_fn["id"], _fslug, _w))
+        _by_home: dict[str, list] = {}
+        for _flagname in sorted(_fw):
+            _walls = _fw[_flagname]
+            if len(_walls) > _FLAG_SAT:                     # app-level saturation → a middleware concern, not a per-endpoint star
+                continue
+            _readers = {_s for (_e, _s, _w) in _walls}
+            _home = next(iter(_readers)) if len(_readers) == 1 else _UNCLAIMED
+            _meta = _flag_census.get(_flagname) or {}
+            _fnid = f"flag:{_flagname}"
+            _node = {"id": _fnid, "kind": "flag", "slug": _home, "label": _flagname,
+                     "det": {"src": _meta.get("src"), "line": _meta.get("line"),
+                             "default": _meta.get("default"),
+                             "walls": [{"endpoint": _e, "on": _w.get("on"), "on_fail": _w.get("on_fail")}
+                                       for (_e, _s, _w) in _walls]}}
+            if _home == _UNCLAIMED:
+                _node["unmapped"] = True
+            _by_home.setdefault(_home, []).append(_node)
+            _flags_drawn += 1
+            for (_e, _s, _w) in _walls:
+                _edge = {"from": _fnid, "to": _e, "kind": "walls",
+                         "on_fail": _w.get("on_fail"), "on": _w.get("on")}
+                if _home == _s:                             # intra: the flag lives in this entity's l2
+                    l2[_s].setdefault("edges", []).append(_edge)
+                else:                                       # cross: a flag read across entities
+                    _edge["from_slug"], _edge["to_slug"] = _home, _s
+                    cross_edges.append(_edge)
+        for _home, _nodes in _by_home.items():
+            _hg = l2.setdefault(_home, {"nodes": [], "edges": []})
+            _hg["nodes"].extend(_nodes)
+            _hg["nodes"].sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
+            _stamp_l2(_hg)                                  # re-stamp: flag nodes take the new flag column, existing nodes byte-identical
+            if _home == _UNCLAIMED and not any(n["kind"] == "unclaimed" for n in l1_nodes):
+                l1_nodes.append({"id": _UNCLAIMED, "label": "unclaimed", "kind": "unclaimed",
+                                 "slug": _UNCLAIMED, "status": None, "counts": None})
+
     return fold_fe({
         "version": 1,
         "head": amap.get("head"),
@@ -1141,6 +1195,10 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                                   "unwired": len(_sh.get("unwired") or []),
                                   "dormant": sum(1 for _u in (_sh.get("unwired") or []) if _u.get("dormant"))}}
                if isinstance((_sh := amap.get("schema_homing")), dict) else {}),
+            # class 12: feature-flag walls — declared census vs flags that DREW a wall; absent when
+            # nothing walled a route (byte-identical, P5), never flags:0.
+            **({"flags": {"declared": len(_flag_census), "drawn": _flags_drawn}}
+               if _flags_drawn else {}),
             "unresolved_tables": unresolved,
             # the graft arm's honesty record: absent → named absent, never silent;
             # present → the index fingerprint + the floor-not-census trust split.
