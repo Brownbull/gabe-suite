@@ -1993,7 +1993,7 @@ window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#
                      role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
                      count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
-  method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row" },
+  method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row", BOOT:"boot — runs ONCE at app startup (the lifespan seeder), not a request verb" },
   role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" },
   count:{ "*":"nested-only schemas folded into this one — composition helpers no endpoint or function names; double-click the parent to reveal them" } };
 /* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
@@ -2015,6 +2015,9 @@ window.__badgeGlyph=function(c, kind, key){
     else if(key==='POST'){ c.moveTo(34,64); c.lineTo(94,64); c.moveTo(64,34); c.lineTo(64,94); }
     else if(key==='DELETE'){ c.moveTo(43,43); c.lineTo(85,85); c.moveTo(85,43); c.lineTo(43,85); }
     else if(key==='PATCH'){ c.moveTo(38,72); c.quadraticCurveTo(54,44,64,64); c.quadraticCurveTo(74,84,90,56); }
+    else if(key==='BOOT'){ c.moveTo(64,30); c.lineTo(64,60);                                   // power/startup symbol — a lifecycle mark, not a CRUD verb
+      c.moveTo(64+28*Math.cos(-Math.PI/2+0.5), 72+28*Math.sin(-Math.PI/2+0.5));
+      c.arc(64,72,28,-Math.PI/2+0.5,-Math.PI/2-0.5+Math.PI*2,false); }
     else { c.arc(64,64,15,0,6.2832); }
   }
   c.stroke();

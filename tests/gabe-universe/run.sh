@@ -465,8 +465,13 @@ check('SCHEMA fold (operator, 2026-08-27)' in page and 'n.__foldN=0' in page and
 check('function countBadge(' in page and "window.__badgeGlyph(c,'count',nn)" in page and 'grp.add(_cb); grp.__cnt=_cb;' in page
       and 'if(kind==="count")' in page and 'c.fillText(t, 64, 68)' in page,
       "the schema COUNT badge (countBadge → shared glyph with the digits, attached on n.kind==='schema' && n.__foldN>0) is gone")
-check('(it.k==="schema")?"count"' in page and '(kind==="count")?["5"]' in page and 'count:{ "*":' in page,
+check('(it.k==="schema")?"count"' in page and '(kind==="count")?["N"]' in page and 'count:{ "*":' in page,
       "the legend badge-key row for the fold count (same glyph fn, one sample row) is gone")
+# BOOT method badge (implemented): a designed power glyph + a description + the key list entry (not the generic dot)
+check("key==='BOOT'" in page and 'c.arc(64,72,28' in page,
+      "the BOOT method badge draws its power glyph (regressed to the generic dot)")
+check('DELETE","BOOT"]' in page and 'BOOT:"boot — runs ONCE' in page and 'key==="BOOT"?"boot event' in page,
+      "BOOT is missing from the method key list / description / popup header")
 check('D.schema_edges' in page and 'rel:e.rel||"uses", schema:true' in page and 'LINKMETA.returns=' in page,
       "the fn→schema wires (levels schema_edges: returns/takes/uses) are not linked into the field")
 check('det.homed?kv("link","home"' in page and '" folded"' in page,

@@ -659,10 +659,10 @@ text = text.replace(OLD_KROW, NEW_KROW, 1)
 # badge-key popup — the schema fold COUNT joins method/role (one row, a sample "5" drawn by the same glyph fn)
 OLD_BPKEYS = 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];'
 assert OLD_BPKEYS in text, "badge popup keys anchor missing"
-text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:(kind==="count")?["5"]:["accessor","caller","gate","pure"];', 1)
+text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:["accessor","caller","gate","pure"];', 1)
 OLD_BPHEAD = 'var head=key?((kind==="method")?"HTTP method":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":"function role — what it does with the data store");'
 assert OLD_BPHEAD in text, "badge popup head anchor missing"
-text = text.replace(OLD_BPHEAD, 'var head=key?((kind==="method")?"HTTP method":(kind==="count")?"folded schemas":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":"function role — what it does with the data store");', 1)
+text = text.replace(OLD_BPHEAD, 'var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":"function role — what it does with the data store");', 1)
 OLD_BPDESC = "html+='<div class=\"bprow\"><canvas class=\"bpcv\" width=\"30\" height=\"30\" data-k=\"'+k+'\"></canvas><div class=\"bpt\"><b>'+k+'</b><span>'+(desc[k]||\"\")+'</span></div></div>';"
 assert OLD_BPDESC in text, "badge popup row anchor missing"
 text = text.replace(OLD_BPDESC, "html+='<div class=\"bprow\"><canvas class=\"bpcv\" width=\"30\" height=\"30\" data-k=\"'+k+'\"></canvas><div class=\"bpt\"><b>'+(kind===\"count\"?\"N\":k)+'</b><span>'+(desc[k]||desc[\"*\"]||\"\")+'</span></div></div>';", 1)
