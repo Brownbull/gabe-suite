@@ -190,6 +190,11 @@
     color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:7px; cursor:pointer; }
   .navgear:hover{ color:var(--accent); border-color:var(--accent); } .navgear svg{ width:14px; height:14px; }
   .navgear.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  /* DISCLOSURE TIER selector — segmented control in the topbar, left of search (keys 1–4) */
+  .tiersel{ display:flex; gap:2px; background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:2px; flex:none; }
+  .tiersel button{ font:inherit; font-size:11px; font-weight:700; letter-spacing:.03em; color:var(--muted); background:transparent; border:0; border-radius:6px; padding:3px 9px; cursor:pointer; line-height:1.3; }
+  .tiersel button:hover{ color:var(--ink); background:var(--hov-bg); }
+  .tiersel button.on{ color:#fff; background:var(--accent); }
   /* floating restore tab, shown only while the nav is collapsed */
   .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
     width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }
@@ -748,6 +753,12 @@
 <div class="topbar">
   <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
+  <div class="tiersel" id="tiersel" role="group" aria-label="disclosure tier" title="disclosure tier — how much of the graph is shown, coarse to fine. Keys 1–4.">
+    <button type="button" data-tier="0" title="T0 · Skeleton — the doors, tables & screens only (key 1)">T0</button>
+    <button type="button" data-tier="1" title="T1 · Surface — + schemas, stores, providers & data-connectors (key 2)">T1</button>
+    <button type="button" data-tier="2" title="T2 · Trace — + functions, gates & private components (key 3)">T2</button>
+    <button type="button" data-tier="3" title="T3 · Everything — every kind & every component class (key 4)">T3</button>
+  </div>
   <div class="topsearch" id="tsrch">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
     <input id="tsin" type="text" autocomplete="off" spellcheck="false" placeholder="search the universe" title="search elements · entities · clusters · journeys — press / to focus, ↑↓ to move, Enter to open, Esc to close">
@@ -994,7 +1005,7 @@ if(_FE){
     var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
-      area:p.area||null, fixture:!!p.fixture };   // batch 53: the AREA (capsule key) + the showcase-data tag ride the node
+      area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null };   // AREA + showcase tag + the fold-control class (phase 1)
     nodes.push(n); NIDS[n.id]=n; });
 }
 
@@ -2741,7 +2752,8 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
 function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
     if(_st==="off") return _KOFF;
-    if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF; }   // critical hides single-caller-SAME-kind helpers — unless a walk/reveal PINNED it
+    if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF;   // critical hides single-caller-SAME-kind helpers — unless a walk/reveal PINNED it
+    if(n.feClass && window.__uniFeClassState && window.__uniFeClassState[n.feClass]===false && !window.__uniPin[n.id]) return _KOFF; }   // class-visibility control — a tier/fleet toggle hides a component CLASS (phase 2)
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
@@ -3595,6 +3607,41 @@ window.__uniKindState={};     // kind → "all" | "critical" | "off"
 window.__uniKindOff={};       // compat mirror (truthy iff state==="off")
 window.__uniGrpState={backend:"critical", frontend:"critical"};   // matches the per-kind critical default (operator)
 function _kindDefault(k){ return k==="type"?"off":"critical"; }   // operator: everything critical-capable boots CRITICAL; no-solo kind reads as ALL in visN; `type` stays held-off
+/* ── DISCLOSURE TIERS (operator: simplification is CONTROL-driven, never a click-to-expand). A tier is
+   a PRESET over kind-visibility + the FE component CLASS visibility (feClass). Coarse→fine: T0 shows the
+   skeleton (doors + tables + screens), each tier reveals more kinds/classes, T3 is everything. Bound to
+   keys 1–4; the header selector calls __uniSetTier. Any kind/class stays overridable afterwards (a tier
+   is a bundle of toggles, not a lock) → picking a tier again re-applies it. ── */
+window.__uniFeClassState={};   // feClass → true/false (a component CLASS hidden by a tier/fleet toggle); empty = all shown
+window.__uniTier=null;         // the active tier index (null = custom / boot state)
+var _FCALL=["view","private","connector","container","leaf"];
+var _KTIER=["endpoint","model","schema","external","function","web","screen","component","hook","store","route","module","type","middleware","flag","provider","prompt"];
+var _TIER_PRESETS=[
+  { name:"Skeleton", koff:["function","schema","hook","module","type","middleware","flag","provider","prompt","external","store"], fcoff:["private","connector","container","leaf"] },
+  { name:"Surface",  koff:["function","hook","module","type","prompt"],                                                            fcoff:["private","leaf"] },
+  { name:"Trace",    koff:["module","type"],                                                                                       fcoff:["leaf"] },
+  { name:"Everything", koff:["type"],                                                                                             fcoff:[] } ];
+window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier=t;
+  var p=_TIER_PRESETS[t], koff={}; p.koff.forEach(function(k){ koff[k]=1; });
+  _KTIER.forEach(function(k){ __uniKindState[k]=koff[k]?"off":"all"; if(koff[k]) __uniKindOff[k]=1; else delete __uniKindOff[k];
+    if(k==="function" && window.toggleFns){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });
+  window.__uniFeClassState={}; _FCALL.forEach(function(fc){ window.__uniFeClassState[fc]=(p.fcoff.indexOf(fc)<0); });
+  __uniGrpState.backend=__uniGrpState.frontend="all";
+  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){}
+  if(window.__legRender) try{ __legRender(); }catch(e){}
+  if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){} };
+window.__uniFeClassToggle=function(fc){ if(!fc) return; var s=window.__uniFeClassState||{};
+  s[fc]=(s[fc]===false); window.__uniFeClassState=s; window.__uniTier=null;   // a manual class toggle leaves the preset
+  try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
+window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel"); if(!g) return;
+  [].forEach.call(g.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-tier"))===window.__uniTier); }); };
+(function(){ var _init=function(){ var g=document.getElementById("tiersel"); if(!g||g.__wired) return; g.__wired=1;
+    [].forEach.call(g.querySelectorAll("button"), function(b){ b.onclick=function(){ __uniSetTier(+b.getAttribute("data-tier")); }; });
+    document.addEventListener("keydown", function(e){                                   // keys 1–4 select a tier (not while typing)
+      if(e.key>="1" && e.key<="4" && !e.metaKey && !e.ctrlKey && !e.altKey
+         && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.key-1); e.preventDefault(); } });
+    if(window.__uniTierSyncUI) __uniTierSyncUI(); };
+  if(document.readyState!=="loading") _init(); else document.addEventListener("DOMContentLoaded", _init); })();
 var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,imports:1,handler:1,"reads":1};
 window.__uniComputeSolo=function(){ var callers={};
   links.forEach(function(l){ if(!_SOLO_REL[l.rel]) return; var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;   // a self-loop (recursion) is NOT an external parent (review LOW)

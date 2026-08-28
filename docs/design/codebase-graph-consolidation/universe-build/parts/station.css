@@ -30,6 +30,11 @@
     color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:7px; cursor:pointer; }
   .navgear:hover{ color:var(--accent); border-color:var(--accent); } .navgear svg{ width:14px; height:14px; }
   .navgear.on{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  /* DISCLOSURE TIER selector — segmented control in the topbar, left of search (keys 1–4) */
+  .tiersel{ display:flex; gap:2px; background:var(--chip-bg); border:1px solid var(--line); border-radius:8px; padding:2px; flex:none; }
+  .tiersel button{ font:inherit; font-size:11px; font-weight:700; letter-spacing:.03em; color:var(--muted); background:transparent; border:0; border-radius:6px; padding:3px 9px; cursor:pointer; line-height:1.3; }
+  .tiersel button:hover{ color:var(--ink); background:var(--hov-bg); }
+  .tiersel button.on{ color:#fff; background:var(--accent); }
   /* floating restore tab, shown only while the nav is collapsed */
   .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
     width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }

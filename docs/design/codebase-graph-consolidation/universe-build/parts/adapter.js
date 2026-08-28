@@ -138,7 +138,7 @@ if(_FE){
     var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
-      area:p.area||null, fixture:!!p.fixture };   // batch 53: the AREA (capsule key) + the showcase-data tag ride the node
+      area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null };   // AREA + showcase tag + the fold-control class (phase 1)
     nodes.push(n); NIDS[n.id]=n; });
 }
 

@@ -1247,7 +1247,8 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
 function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
     if(_st==="off") return _KOFF;
-    if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF; }   // critical hides single-caller-SAME-kind helpers — unless a walk/reveal PINNED it
+    if(_st==="critical" && n.__solo && !window.__uniPin[n.id]) return _KOFF;   // critical hides single-caller-SAME-kind helpers — unless a walk/reveal PINNED it
+    if(n.feClass && window.__uniFeClassState && window.__uniFeClassState[n.feClass]===false && !window.__uniPin[n.id]) return _KOFF; }   // class-visibility control — a tier/fleet toggle hides a component CLASS (phase 2)
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
   var ev=visEnt(n&&n.ent), sv=(n&&n.sub!=null)?UNIVIS.sub[n.ent+"|"+n.sub]:null;
   if(!sv) return ev;
@@ -2101,6 +2102,41 @@ window.__uniKindState={};     // kind → "all" | "critical" | "off"
 window.__uniKindOff={};       // compat mirror (truthy iff state==="off")
 window.__uniGrpState={backend:"critical", frontend:"critical"};   // matches the per-kind critical default (operator)
 function _kindDefault(k){ return k==="type"?"off":"critical"; }   // operator: everything critical-capable boots CRITICAL; no-solo kind reads as ALL in visN; `type` stays held-off
+/* ── DISCLOSURE TIERS (operator: simplification is CONTROL-driven, never a click-to-expand). A tier is
+   a PRESET over kind-visibility + the FE component CLASS visibility (feClass). Coarse→fine: T0 shows the
+   skeleton (doors + tables + screens), each tier reveals more kinds/classes, T3 is everything. Bound to
+   keys 1–4; the header selector calls __uniSetTier. Any kind/class stays overridable afterwards (a tier
+   is a bundle of toggles, not a lock) → picking a tier again re-applies it. ── */
+window.__uniFeClassState={};   // feClass → true/false (a component CLASS hidden by a tier/fleet toggle); empty = all shown
+window.__uniTier=null;         // the active tier index (null = custom / boot state)
+var _FCALL=["view","private","connector","container","leaf"];
+var _KTIER=["endpoint","model","schema","external","function","web","screen","component","hook","store","route","module","type","middleware","flag","provider","prompt"];
+var _TIER_PRESETS=[
+  { name:"Skeleton", koff:["function","schema","hook","module","type","middleware","flag","provider","prompt","external","store"], fcoff:["private","connector","container","leaf"] },
+  { name:"Surface",  koff:["function","hook","module","type","prompt"],                                                            fcoff:["private","leaf"] },
+  { name:"Trace",    koff:["module","type"],                                                                                       fcoff:["leaf"] },
+  { name:"Everything", koff:["type"],                                                                                             fcoff:[] } ];
+window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier=t;
+  var p=_TIER_PRESETS[t], koff={}; p.koff.forEach(function(k){ koff[k]=1; });
+  _KTIER.forEach(function(k){ __uniKindState[k]=koff[k]?"off":"all"; if(koff[k]) __uniKindOff[k]=1; else delete __uniKindOff[k];
+    if(k==="function" && window.toggleFns){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });
+  window.__uniFeClassState={}; _FCALL.forEach(function(fc){ window.__uniFeClassState[fc]=(p.fcoff.indexOf(fc)<0); });
+  __uniGrpState.backend=__uniGrpState.frontend="all";
+  try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){}
+  if(window.__legRender) try{ __legRender(); }catch(e){}
+  if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){} };
+window.__uniFeClassToggle=function(fc){ if(!fc) return; var s=window.__uniFeClassState||{};
+  s[fc]=(s[fc]===false); window.__uniFeClassState=s; window.__uniTier=null;   // a manual class toggle leaves the preset
+  try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
+window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel"); if(!g) return;
+  [].forEach.call(g.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-tier"))===window.__uniTier); }); };
+(function(){ var _init=function(){ var g=document.getElementById("tiersel"); if(!g||g.__wired) return; g.__wired=1;
+    [].forEach.call(g.querySelectorAll("button"), function(b){ b.onclick=function(){ __uniSetTier(+b.getAttribute("data-tier")); }; });
+    document.addEventListener("keydown", function(e){                                   // keys 1–4 select a tier (not while typing)
+      if(e.key>="1" && e.key<="4" && !e.metaKey && !e.ctrlKey && !e.altKey
+         && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.key-1); e.preventDefault(); } });
+    if(window.__uniTierSyncUI) __uniTierSyncUI(); };
+  if(document.readyState!=="loading") _init(); else document.addEventListener("DOMContentLoaded", _init); })();
 var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,imports:1,handler:1,"reads":1};
 window.__uniComputeSolo=function(){ var callers={};
   links.forEach(function(l){ if(!_SOLO_REL[l.rel]) return; var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;   // a self-loop (recursion) is NOT an external parent (review LOW)

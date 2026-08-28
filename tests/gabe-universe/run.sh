@@ -330,6 +330,11 @@ check('(dep[l.source]=dep[l.source]||[]).push' in page and '(disp[l.source]=disp
       "wave D: the backend walk no longer traverses depends (Hop-0.5 gate) + dispatches (event-bus leg)")
 check('meta.why==="gate"' in page and 'meta.why==="dispatch"' in page and '#stepnote .sng' in page and '#stepnote .snd' in page,
       "wave D: the step note no longer renders the gate + dispatch why (with their CSS)")
+# DISCLOSURE TIERS (control-driven, no click-to-expand): T0–T3 header selector + presets + feClass gate
+check('id="tiersel"' in page and 'data-tier="0"' in page and 'data-tier="3"' in page and 'window.__uniSetTier=function' in page,
+      "the disclosure-tier selector (T0–T3, keys 1–4) + __uniSetTier are gone")
+check('window.__uniFeClassState' in page and 'window.__uniFeClassState[n.feClass]===false' in page and '_TIER_PRESETS=[' in page,
+      "the feClass visibility gate + the tier presets are gone")
 check('window.__uniJrnSolo=function(e)' in page and 'c.onauxclick=function(ev){ if(ev.button!==1) return;' in page,
       "middle-click SOLO on the journey entity chips is gone")
 check('id="stepnote"' in page and 'function _stepNote(){' in page and '#stepnote .snhop' in page,
