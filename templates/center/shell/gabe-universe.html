@@ -1411,7 +1411,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _tcol=function(n){ if(!n) return null; if(n.kind==="endpoint"&&n.m&&n.m.method&&typeof METHOD!=="undefined"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind==="function"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };
     var _ea=(((_gm==="type"||_gm==="type-ent")&&_tcol(_cs))||((_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null));
     var _eb=(((_gm==="type"||_gm==="ent-type")&&_tcol(_ct))||((_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null));
-    var _band=(_gk==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;
+    var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;
     connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });
   if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }

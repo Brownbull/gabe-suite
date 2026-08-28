@@ -786,8 +786,8 @@ check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(band!=null
 # render colours a calls wire by its TARGET function's distance-to-write via BANDPAL.
 check('window.BANDPAL=[' in page and 'window.__uniD2W=true' in page and 'window.__d2wBand=function' in page,
       "the D2W band palette / toggle / helper is missing (calls-wire heat spectrum)")
-check('var _band=(_gk==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;' in page and '===l), _band); });' in page,
-      "the call site no longer computes the d2w band for calls wires or threads it into connectorWire")
+check('var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;' in page and '===l), _band); });' in page,
+      "the heat band no longer keys on the true `calls` REL (F2: it leaked onto every rel bucketed into calls)")
 check('d2w:f.d2w' in page,
       "the levels fn_node d2w no longer rides onto the render node (call-wire heat lost its source)")
 check('t:"d2wtog"' in page and 'function _bandSpectrumHTML' in page and 'it.k==="calls"?_bandSpectrumHTML()' in page,
