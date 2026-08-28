@@ -770,6 +770,45 @@ def derive_frontend(wiring: dict[str, Any],
     }
 
 
+def derive_depends(wiring: dict[str, Any], entities: dict[str, Any]) -> list[dict[str, Any]]:
+    """The K1 gate chain (class 8): a ``depends`` edge from each endpoint HANDLER to its resolved
+    gate dependency (``get_auth_context`` / ``require_household``). A SIGNATURE fact the framework
+    injects BEFORE the body — graft resolves 0 call edges into a ``Depends()`` target, so the map
+    never drew it. Reads the middleware entries ``resolve_middleware_targets`` stamped with ``fn``;
+    keeps only a handler + dep BOTH graft indexed (``<file>#<fn>``). Honest-empty ``[]`` without a
+    resolved dep. Shape matches the levels ``calls`` fn-edge (``s·ss·t·ts·rel·conf``) so
+    ``_a3_levels`` draws it beside the calls. Synthetic — NEVER folded into ``wiring['edges']`` (P5:
+    stays out of the L1 kinds / cross_calls / confidence split)."""
+    if not wiring:
+        return []
+    fn_ids, _ = _behind_context(wiring)
+    f2s = _file2slug(entities)
+    out: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for slug in sorted(entities):
+        e = entities.get(slug)
+        if not e:
+            continue
+        for ep in e.get("endpoints") or []:
+            fn, file = ep.get("fn"), ep.get("file")
+            if not (fn and file):
+                continue
+            src = f"{file}#{fn}"
+            if src not in fn_ids:
+                continue
+            for mw in ep.get("middleware") or []:
+                if not mw.get("gate") or not mw.get("fn"):
+                    continue
+                tgt = mw["fn"].replace("::", "#", 1)
+                if tgt not in fn_ids or tgt == src or (src, tgt) in seen:
+                    continue
+                seen.add((src, tgt))
+                out.append({"s": src, "t": tgt, "ss": slug, "ts": f2s.get(_file_of(tgt)),
+                            "rel": "depends", "conf": "extracted"})
+    out.sort(key=lambda d: (d["s"], d["t"]))
+    return out
+
+
 def reach_arm(root: Path, entities: dict[str, Any],
               census_files: list[str] | set[str]) -> dict[str, int]:
     """:func:`derive_reach` over a READ-AS-FOUND wiring — ``allow_build=False`` so it never
@@ -825,6 +864,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
         fn_behind = derive_fn_behind(wiring)       # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function
         node_facts = derive_node_facts(wiring)     # P1: {id → {kind, signature?, exported?}} — raw facts to consume
         frontend = derive_frontend(wiring, frozenset(entities))  # P2a classify + P2b home/scaffold, data-only
+        depends = derive_depends(wiring, entities)  # class 8: endpoint→gate-dep signature edges (the K1 chain)
         return {
             "present": True, "reason": reason, "index_hash": fp,
             "index_nodes": meta.get("nodeCount"), "index_edges": meta.get("edgeCount"),
@@ -837,6 +877,7 @@ def graft_arm(root: Path, entities: dict[str, Any],
             "fn_behind": fn_behind,  # the per-function call-tree floor (the hidden mass a fn pulls in)
             "node_facts": node_facts,  # P1: raw graft facts (kind/signature/exported) — in-process, not emitted raw
             "frontend": frontend,      # P2a: classified TS frontend structure {nodes,edges,stats} — data-only
+            **({"depends": depends} if depends else {}),   # class 8: the K1 gate chain (non-empty-only, P5)
         }
     except Exception as exc:  # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"graft arm error: {exc}"}

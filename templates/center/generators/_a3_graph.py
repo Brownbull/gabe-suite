@@ -1211,6 +1211,40 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                 l1_nodes.append({"id": _UNCLAIMED, "label": "unclaimed", "kind": "unclaimed",
                                  "slug": _UNCLAIMED, "status": None, "counts": None})
 
+    # class 8 · APP-LEVEL MIDDLEWARE — the CORS/rate-limit/idempotency stack wrapping EVERY request.
+    # Mint one `middleware:<Cls>` L2 node per add_middleware site (into __unclaimed__, P6), carrying
+    # its scope + a `gates` COUNT. SATURATION: a scope-'all' middleware gates every endpoint (>>
+    # _FLAG_SAT) → count-only, NO per-endpoint 72-edge hub; a narrow middleware (≤ _FLAG_SAT) draws
+    # its gated_by wires. Each endpoint's own gate DEPS draw as the fn-level `depends` chain (levels).
+    _app_mw = amap.get("app_middleware") or []
+    _mw_nodes: list[dict] = []
+    _gated_by = 0
+    if _app_mw:
+        _all_eps = [(_n["id"], _sl) for _sl, _g in l2.items()
+                    for _n in _g.get("nodes", []) if _n.get("kind") == "endpoint"]
+        for _m in _app_mw:
+            _scope = _m.get("scope", "all")
+            _gated = _all_eps if _scope == "all" else []   # only 'all' scope is computed today (never a guessed subset)
+            _mnid = f"middleware:{_m['cls']}"
+            _mw_nodes.append({"id": _mnid, "kind": "middleware", "slug": _UNCLAIMED, "label": _m["cls"],
+                              "unmapped": True, "det": {"file": _m.get("file"), "line": _m.get("line"),
+                                                        "scope": _scope, "order": _m.get("order"),
+                                                        "gates": len(_gated)}})
+            if 0 < len(_gated) <= _FLAG_SAT:               # narrow enough to draw the wires, not a saturation hub
+                for (_eid, _es) in _gated:
+                    cross_edges.append({"from": _eid, "to": _mnid, "kind": "gated_by",
+                                        "from_slug": _es, "to_slug": _UNCLAIMED, "scope": _scope, "order": _m.get("order")})
+                    _gated_by += 1
+        if _mw_nodes:
+            _umg2 = l2.setdefault(_UNCLAIMED, {"nodes": [], "edges": []})
+            _umg2["nodes"].extend(_mw_nodes)
+            _umg2["nodes"].sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
+            _stamp_l2(_umg2)
+            if not any(n["kind"] == "unclaimed" for n in l1_nodes):
+                l1_nodes.append({"id": _UNCLAIMED, "label": "unclaimed", "kind": "unclaimed",
+                                 "slug": _UNCLAIMED, "status": None, "counts": None})
+    _app_mw_n = len(_mw_nodes)
+
     return fold_fe({
         "version": 1,
         "head": amap.get("head"),
@@ -1248,6 +1282,8 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             # class 5b: serializes (schema→model) — site vs naming; absent when 0 pairs (P5).
             **({"serializes": {"pairs": _serializes_n, "site": _ser_site, "naming": _ser_naming}}
                if _serializes_n else {}),
+            # class 8: app-level middleware nodes + gated_by wires (count-only when saturated); P5.
+            **({"app_middleware": {"count": _app_mw_n, "gated_by": _gated_by}} if _app_mw_n else {}),
             "unresolved_tables": unresolved,
             # the graft arm's honesty record: absent → named absent, never silent;
             # present → the index fingerprint + the floor-not-census trust split.

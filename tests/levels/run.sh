@@ -156,6 +156,17 @@ ck(bool(_wn.get("access") and _wn["access"].get("ops")),
    "P3: a drawn fn's access.ops attach regardless of role (access-for-any-role, not accessor-only)")
 ck(json.dumps(_lvw, sort_keys=True) == json.dumps(_a3_levels.build_levels(AMAP, graph, graft=_GW), sort_keys=True),
    "3b: the enriched build is byte-deterministic (double-build equality ON the d2w arm)")
+# class 8 (wave C): a graft `depends` edge draws a handler→gate-dep fn_edge (the K1 chain)
+_GWd = {"present": True, "functions": {"fn_slug": {}, "calls": []},
+        "depends": [{"s": "api/orders.py#list_orders", "t": "svc/auth.py#get_auth_context",
+                     "ss": "orders", "ts": "orders", "rel": "depends", "conf": "extracted"}]}
+_lvd = _a3_levels.build_levels(AMAP, graph, graft=_GWd)
+_de = [e for e in _lvd["fn_edges"] if e.get("rel") == "depends"]
+ck(len(_de) == 1 and _de[0]["s"] == "api/orders.py#list_orders" and _de[0]["t"] == "svc/auth.py#get_auth_context"
+   and any(n["id"] == "svc/auth.py#get_auth_context" for n in _lvd["fn_nodes"]),
+   "class 8: a graft depends edge draws a handler→gate-dep fn_edge + the dep joins the drawn set")
+ck([e for e in _a3_levels.build_levels(AMAP, graph, graft={"present": True, "functions": {"fn_slug": {}, "calls": []}})["fn_edges"] if e.get("rel") == "depends"] == [],
+   "class 8 honest-empty: no graft.depends → no depends fn_edge")
 _GW0 = {"present": True, "functions": _GW["functions"]}
 _lvw0 = _a3_levels.build_levels(AMAP, graph, graft=_GW0)
 ck(len(_lvw0["fn_edges"]) == 1 and _lvw0["fn_edges"][0]["t"] == "svc/o.py#svc_write",

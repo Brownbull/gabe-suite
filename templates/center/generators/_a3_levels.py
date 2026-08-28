@@ -266,6 +266,17 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
         drawn_fn.setdefault(c["t"], c["ts"])
         _fedges.append({"s": c["s"], "ss": c["ss"], "t": c["t"], "ds": c["ts"],
                         "rel": "calls", "conf": c.get("conf", "inferred")})
+    # 3a · class 8 · DEPENDS edges (the K1 gate chain): endpoint handler → its gate dependency —
+    #      a SIGNATURE fact the framework injects before the body (graft has 0 call edges into a
+    #      Depends target). Handler-rooted like calls; the dep joins drawn_fn so §3b descends its
+    #      OWN write-path (get_auth_context → build_auth_context → the User commit) unaided.
+    for d in (graft or {}).get("depends") or []:
+        if d["s"] not in _handlers:
+            continue
+        drawn_fn.setdefault(d["s"], d["ss"])
+        drawn_fn.setdefault(d["t"], d.get("ts") or d["ss"])
+        _fedges.append({"s": d["s"], "ss": d["ss"], "t": d["t"], "ds": d.get("ts") or d["ss"],
+                        "rel": "depends", "conf": d.get("conf", "extracted")})
     # 3b · WRITE-PATH enrichment — the mid-chain calls the handler-only rule hides.
     #     distance_to_write (reverse-BFS hops-to-a-write, per fn) makes write paths
     #     computable without drawing the whole call graph: an edge s→t is a step on a

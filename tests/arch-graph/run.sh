@@ -529,6 +529,35 @@ _gsr0 = G.build_c4_graph(_fixsr0, labels={"e": "E"}, status={})
 check(not any(e.get("kind") == "serializes" for g in _gsr0["l2"].values() for e in g.get("edges", [])) and "serializes" not in _gsr0["stats"],
       "class 5b honest-empty: no orm schema + no site → no serializes edge + no stats key")
 
+# ── class 8 (wave C) · middleware: derive_depends (K1 gate chain) + app-middleware mint ──
+_dep_ent = {"e": {"endpoints": [{"file": "apps/api/alpha.py", "fn": "do_a", "method": "G", "path": "/x",
+             "middleware": [{"name": "get_auth_context", "via": "param-dep", "gate": True, "fn": "apps/api/beta.py::do_b"},
+                            {"name": "get_session", "via": "param-dep", "gate": False, "fn": "apps/api/beta.py::do_b2"}]}]}}
+_dep = GG.derive_depends(WIRING, _dep_ent)
+check(len(_dep) == 1 and _dep[0]["s"] == "apps/api/alpha.py#do_a" and _dep[0]["t"] == "apps/api/beta.py#do_b" and _dep[0]["rel"] == "depends",
+      "class 8 derive_depends: a GATE dep with a resolved fn → a depends edge (::→#); a non-gate dep is skipped")
+check(GG.derive_depends({}, _dep_ent) == [], "derive_depends: no wiring → [] (honest-empty)")
+check(GG.derive_depends(WIRING, {"e": {"endpoints": [{"file": "apps/api/alpha.py", "fn": "do_a", "middleware": [{"name": "x", "gate": True}]}]}}) == [],
+      "derive_depends: a gate dep with NO resolved fn → no edge (honest floor)")
+# app-middleware mint: one node per site, homed to __unclaimed__, carrying a gates COUNT
+_fixmw2 = json.loads(json.dumps(FIX))
+_fixmw2["app_middleware"] = [{"cls": "CORSMiddleware", "file": "main.py", "line": 5, "order": 0, "scope": "all"}]
+_neps = sum(len(v.get("endpoints") or []) for v in FIX["entities"].values() if v)
+_gmw2 = G.build_c4_graph(_fixmw2, labels=LABELS, status=STATUS)
+_mwn = [n for g in _gmw2["l2"].values() for n in g["nodes"] if n["kind"] == "middleware"]
+check(len(_mwn) == 1 and _mwn[0]["id"] == "middleware:CORSMiddleware" and _mwn[0]["slug"] == "__unclaimed__"
+      and _mwn[0]["det"]["gates"] == _neps,
+      "class 8: an add_middleware site mints a middleware:<Cls> node in __unclaimed__ with a gates count")
+check(_gmw2["stats"]["app_middleware"]["count"] == 1, "class 8: stats.app_middleware count")
+# SATURATION: force the threshold to 0 → a scope-'all' middleware becomes count-only (0 gated_by, no hub)
+_sat = G._FLAG_SAT; G._FLAG_SAT = 0
+_gmw3 = G.build_c4_graph(_fixmw2, labels=LABELS, status=STATUS)
+G._FLAG_SAT = _sat
+check(_gmw3["stats"]["app_middleware"]["gated_by"] == 0,
+      "class 8 SATURATION: a middleware over the threshold draws count-only (0 gated_by edges, no per-endpoint hub)")
+check("app_middleware" not in G.build_c4_graph(FIX, labels=LABELS, status=STATUS)["stats"],
+      "class 8 honest-empty: no app_middleware → no middleware node + no stats key (byte-identical)")
+
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

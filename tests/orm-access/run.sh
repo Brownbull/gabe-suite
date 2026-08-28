@@ -172,6 +172,16 @@ check(a.get("serializes") == [{"cls": "RecipeResponse", "model": None, "line": 2
 check("serializes" not in C._orm_access(fn('def f():\n    return 1', "f"), m2t),
       "serializes SILENT: no model_validate → no serializes key (honest-empty)")
 
+# ── class 8 (wave C) · app-level middleware census (parse_app_middleware finds add_middleware) ──
+_mr = _pl.Path(_tf.mkdtemp()); (_mr / "app" / "api").mkdir(parents=True)
+(_mr / "app" / "api" / "routes.py").write_text("from fastapi import APIRouter\nrouter=APIRouter()\n@router.get('/x')\ndef h():\n    return 1\n")
+(_mr / "app" / "main.py").write_text("app = FastAPI()\napp.add_middleware(CORSMiddleware)\napp.add_middleware(RateLimitMiddleware)\n")
+_am = C.parse_app_middleware(_mr, entity_code={"e": {"api": ["app/api/routes.py"]}})
+check([m["cls"] for m in _am] == ["CORSMiddleware", "RateLimitMiddleware"] and all(m["scope"] == "all" for m in _am),
+      "parse_app_middleware FIRE: finds add_middleware(Cls) in the api dir's PARENT (main.py), scope 'all'")
+check(C.parse_app_middleware(_pl.Path(_tf.mkdtemp()), entity_code={"e": {"api": []}}) == [],
+      "parse_app_middleware SILENT: no add_middleware → [] (honest-empty, byte-identical)")
+
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):
     tree = ast.parse(src)

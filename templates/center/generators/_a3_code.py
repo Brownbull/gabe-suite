@@ -1575,6 +1575,76 @@ def function_insight(repo: Path) -> dict:
     return fns
 
 
+def resolve_middleware_targets(entities: dict, repo: Path) -> int:
+    """Resolve each endpoint's GATE middleware dep (``get_auth_context``, ``require_household``, …)
+    to its function_insight id ``<file>::<fn>`` and stamp ``mw['fn']`` — the target ``derive_depends``
+    draws the K1 gate chain onto. By NAME (a gate dep name is unique on gustify; a method also keys
+    on its bare name so ``require_household`` matches ``AuthContext.require_household``); an ambiguous
+    or unresolvable name gets NO ``fn`` key (honest floor). Non-gate deps (get_session/get_settings —
+    ``_is_mw_gate`` False) are skipped (Decision #6: only gate=True deps draw). MUTATES ``entities``
+    in place; returns the count resolved. Runs AFTER function_insight (its keys are the source)."""
+    fi = function_insight(repo)
+    by_name: dict[str, list[str]] = {}
+    for key, v in fi.items():
+        _fn = v.get("fn") or key.rsplit("::", 1)[-1]
+        by_name.setdefault(_fn, []).append(key)
+        if "." in _fn:                                  # a method: also resolvable by its bare name
+            by_name.setdefault(_fn.rsplit(".", 1)[-1], []).append(key)
+    resolved = 0
+    for slug in sorted(entities):
+        e = entities.get(slug)
+        if not e:
+            continue
+        for ep in e.get("endpoints") or []:
+            for mw in ep.get("middleware") or []:
+                if not mw.get("gate") or mw.get("fn"):
+                    continue
+                cands = by_name.get(mw["name"])
+                if cands and len(cands) == 1:           # unique → resolve; ambiguous → honest floor
+                    mw["fn"] = cands[0]
+                    resolved += 1
+    return resolved
+
+
+def parse_app_middleware(repo: Path, entity_code: dict | None = None) -> list[dict]:
+    """The app-level middleware STACK (class 8): every ``app.add_middleware(Cls, …)`` — the CORS /
+    rate-limit / idempotency gates that wrap EVERY request. Scans the api dirs' PARENTS (``main.py``
+    sits ABOVE the route dirs the census reaches), matches ``add_middleware(`` calls, and carries a
+    ``scope`` floor of ``'all'`` (a computed per-route scope is never guessed — the endpoints already
+    name their own gate deps). Returns ``[{cls, file, line, order, scope}]`` sorted by add order,
+    ``[]`` honest-empty (no ``add_middleware`` → byte-identical, P5). Deterministic."""
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    dirs: set = set()
+    for slug in sorted(ec):
+        for pat in (ec[slug].get("api") or []):
+            for f in sorted(_glob.glob(str(repo / pat))):
+                p = Path(f)
+                if p.is_file():
+                    dirs.add(p.parent)
+                    dirs.add(p.parent.parent)          # main.py lives one dir up from the routes
+    out: list[dict] = []
+    for d in sorted(dirs, key=str):
+        if not d.is_dir():
+            continue
+        for py in sorted(d.glob("*.py")):
+            tree, _ = _safe_parse(py)
+            if tree is None:
+                continue
+            rel = str(py.relative_to(repo))
+            for node in ast.walk(tree):
+                if (isinstance(node, ast.Call) and isinstance(node.func, ast.Attribute)
+                        and node.func.attr == "add_middleware" and node.args):
+                    _a0 = node.args[0]
+                    cls = (_a0.id if isinstance(_a0, ast.Name)
+                           else _a0.attr if isinstance(_a0, ast.Attribute) else None)
+                    if cls:
+                        out.append({"cls": cls, "file": rel, "line": node.lineno, "scope": "all"})
+    out.sort(key=lambda m: (m["file"], m["line"]))
+    for _i, _m in enumerate(out):
+        _m["order"] = _i
+    return out
+
+
 def fn_insight_serial(repo: Path) -> dict:
     return {k: {kk: vv for kk, vv in v.items()
                 if kk not in ("ids", "span", "params", "ref_files")}

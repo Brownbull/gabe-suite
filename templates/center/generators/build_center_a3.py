@@ -1995,6 +1995,13 @@ def main() -> int:
     _flg = _a3_code.parse_flags(REPO_ROOT)
     if _flg:
         amap["flags"] = _flg
+    # class 8 (middleware): resolve each endpoint's GATE dep to its fn id — the K1 gate chain that
+    # derive_depends (in the graft arm) draws — and census the app-level middleware stack. BEFORE
+    # the archmap write so the endpoint nodes carry mw['fn'], BEFORE the graft arm reads the entries.
+    _a3_code.resolve_middleware_targets(amap["entities"], REPO_ROOT)
+    _amw = _a3_code.parse_app_middleware(REPO_ROOT)
+    if _amw:
+        amap["app_middleware"] = _amw
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
     amap["guard_insight"] = _a3_guard.guard_insight(
