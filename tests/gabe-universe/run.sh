@@ -319,6 +319,8 @@ check('window.__uniKindState={}' in page and 'window.__uniGroupToggle=function' 
       "the 3-state legend (all/critical/off) + solo detection + group master are gone")
 check('!(n.access&&n.access.ops&&n.access.ops.length)' in page,
       "the WRITE-FABRIC solo exemption (d2w/access fns never fold at critical) is gone")
+check('var _HUB_FANIN=15' in page and 'n.role==="gate" && ks.length>=_HUB_FANIN' in page,
+      "B2 HUB FOLD (a high-fan-in gate like require_household folds under critical, no 50-spoke star) is gone")
 # ── journeys batch (operator 2026-08-27): backend chains · curated workflows · step note · chip rows · middle-click solo
 check('function _bkCollect(){' in page and 'function _wfCollect(bk){' in page and '[["wf","workflows"],["bk","backend"]' in page,
       "the derived BACKEND journeys + curated WORKFLOWS journey kinds are gone from the picker")

@@ -235,6 +235,12 @@ check(_nf.get("apps/api/alpha.py#Cls", {}).get("signature") == "class Cls(Base)"
 _fnb2 = GG.derive_fn_behind(_W2)
 check("apps/api/alpha.py#Cls.meth" in _fnb2 and _fnb2["apps/api/alpha.py#Cls.meth"]["fns"] == 1,
       "P1: a METHOD's call-tree counts in the hidden mass (methods were dropped before P1)")
+# B2: derive_functions now ADMITS methods to the DRAWN fn graph (was kind != "function")
+_df2 = GG.derive_functions(_W2, FIX["entities"])
+check("apps/api/alpha.py#Cls.meth" in _df2["fn_slug"],
+      "B2: derive_functions admits a METHOD into the drawn fn graph (was dropped)")
+check(any(c["s"] == "apps/api/alpha.py#Cls.meth" and c["t"] == "apps/api/beta.py#leaf" for c in _df2["calls"]),
+      "B2: a method→fn call edge draws once both ends are homed")
 
 # P1b: element_detail folds graft's node_facts (signature + exported) into the dossier by file#symbol
 _nf_fix = {"apps/api/beta.py#leaf": {"kind": "function", "signature": "def leaf() -> int", "exported": True}}

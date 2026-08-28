@@ -186,7 +186,13 @@ def derive_functions(wiring: dict[str, Any],
     f2s = _file2slug(entities)
     fn_slug: dict[str, str] = {}
     for n in wiring.get("nodes") or []:
-        if n.get("kind") != "function":
+        # B2 (2026-08-27): admit METHODS to the drawn fn graph, not just top-level functions.
+        # _CALLABLE_KINDS already gates the behind/d2w/roles substrate; the only channel that kept
+        # methods OUT of the DRAWN levels graph was this filter, so a handler's `AuthContext.
+        # require_household` gate call never drew. Methods carry `Class.method` ids; the noise
+        # filter + first-claim homing apply unchanged. (The station folds a high-fan-in gate
+        # method into each caller's badge — see the hub fold — so admission ≠ a 47-spoke star.)
+        if n.get("kind") not in _CALLABLE_KINDS:
             continue
         f = _file_of(n["id"])
         if _is_noise(f):

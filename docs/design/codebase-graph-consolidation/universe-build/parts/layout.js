@@ -2080,8 +2080,14 @@ window.__uniComputeSolo=function(){ var callers={};
   /* WRITE-FABRIC exemption: a fn on a write path (d2w set — incl. 0, the anchor) or holding its
      own access ops (red/pink wire) is never a mere helper — critical keeps the journey walkable
      end-to-end; single-caller fns that never reach a write (serializers, response builders) fold. */
+  /* B2 HUB FOLD (2026-08-27): admitting methods draws a gate like AuthContext.require_household
+     with a fan-in of 50 — a 50-spoke star. A gate called by many is CONTEXT, and its gate already
+     rides every endpoint's middleware badge, so a high-fan-in gate folds under critical (its wires
+     gone) exactly like a solo helper. Threshold well above the next-busiest node (gustify: 50 vs 5). */
+  var _HUB_FANIN=15;
   nodes.forEach(function(n){ var cs=callers[n.id]||{}, ks=Object.keys(cs);
-    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length)); });
+    n.__solo=(ks.length===1 && cs[ks[0]]===n.kind && n.d2w==null && !(n.access&&n.access.ops&&n.access.ops.length))
+      || (n.role==="gate" && ks.length>=_HUB_FANIN); });
   /* SCHEMA fold (operator, 2026-08-27): a schema whose ONLY wires are `nests` — a composition helper
      (the six *Input fields of SetupCompleteRequest, the seven Blocks of SettingsResponse) — is a
      nested-only schema: it folds into its parent under the schema kind's CRITICAL state, and the
