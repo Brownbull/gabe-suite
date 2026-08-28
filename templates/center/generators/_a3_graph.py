@@ -1115,7 +1115,11 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             _cand = _scn
             while _STRIP.search(_cand):                # strip repeatedly (RecipeDetailResponse → RecipeDetail → Recipe)
                 _cand = _STRIP.sub("", _cand)
-            if _cand != _scn and _cand in _model_names:   # a model class is unique in cls_index → this IS exactly-one
+            # the schema side must ALSO resolve to a schema: node (review fix [2]): cls_index is
+            # models-first, so a class that is both a model and an orm schema derefs to model: →
+            # a structurally-invalid model→model serializes. The SITE arm guards this; so must NAMING.
+            if (_cand != _scn and _cand in _model_names
+                    and _scn in cls_index and cls_index[_scn][0].startswith("schema:")):
                 _ser_pairs.append((_scn, _cand, "inferred"))
     _ser_seen: set[tuple[str, str]] = set()
     _ser_site = _ser_naming = 0
@@ -1167,9 +1171,17 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                     cls_index[_cls] = (nid2, _UNCLAIMED)
                 hit = (nid2, _UNCLAIMED)
             tgt_nid, tgt_slug = hit
-            if tgt_slug == _slug or (xa["from"], tgt_nid, k) in _xa_seen:
+            if (xa["from"], tgt_nid, k) in _xa_seen:
                 continue
             _xa_seen.add((xa["from"], tgt_nid, k))
+            if tgt_slug == _slug:
+                # co-homed (a boot root + its minted model both in __unclaimed__): land the wire INTRA
+                # instead of dropping it (review fix [9]: mirrors cross_touches/cross_consumes above —
+                # the seeder write-path edge vanished for exactly the unmapped tables it names).
+                _ie = {"source": xa["from"], "target": tgt_nid, "kind": k}
+                if _ie not in graph["edges"] and xa["from"] != tgt_nid:
+                    graph["edges"].append(_ie)
+                continue
             cross_edges.append({"from": xa["from"], "to": tgt_nid, "kind": k,
                                 "from_slug": _slug, "to_slug": tgt_slug})
             access_edges += 1
@@ -1217,13 +1229,16 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             _by_home.setdefault(_home, []).append(_node)
             _flags_drawn += 1
             for (_e, _s, _w) in _walls:
-                _edge = {"from": _fnid, "to": _e, "kind": "walls",
-                         "on_fail": _w.get("on_fail"), "on": _w.get("on")}
-                if _home == _s:                             # intra: the flag lives in this entity's l2
-                    l2[_s].setdefault("edges", []).append(_edge)
-                else:                                       # cross: a flag read across entities
-                    _edge["from_slug"], _edge["to_slug"] = _home, _s
-                    cross_edges.append(_edge)
+                if _home == _s:                             # intra: the flag lives in this entity's l2 —
+                    # an INTRA L2 edge uses source/target (the station reads those); from/to is the
+                    # cross_edges schema (review fix [0]: the intra walls were silently dropped).
+                    l2[_s].setdefault("edges", []).append(
+                        {"source": _fnid, "target": _e, "kind": "walls",
+                         "on_fail": _w.get("on_fail"), "on": _w.get("on")})
+                else:                                       # cross: a flag read across entities → from/to
+                    cross_edges.append({"from": _fnid, "to": _e, "kind": "walls",
+                                        "on_fail": _w.get("on_fail"), "on": _w.get("on"),
+                                        "from_slug": _home, "to_slug": _s})
         for _home, _nodes in _by_home.items():
             _hg = l2.setdefault(_home, {"nodes": [], "edges": []})
             _hg["nodes"].extend(_nodes)
@@ -1242,12 +1257,19 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
     _mw_nodes: list[dict] = []
     _gated_by = 0
     if _app_mw:
+        # HTTP-request endpoints only (review fix [12]): the BOOT pseudo-endpoint is a lifespan root,
+        # not a request CORS/rate-limit middleware wraps — counting it inflates `gates` + draws a false wire.
         _all_eps = [(_n["id"], _sl) for _sl, _g in l2.items()
-                    for _n in _g.get("nodes", []) if _n.get("kind") == "endpoint"]
+                    for _n in _g.get("nodes", [])
+                    if _n.get("kind") == "endpoint" and not _n["id"].startswith("endpoint:BOOT ")]
+        _mw_seen: set = set()                              # review fix [5]: node ids are unique — dedup the mint
         for _m in _app_mw:
             _scope = _m.get("scope", "all")
             _gated = _all_eps if _scope == "all" else []   # only 'all' scope is computed today (never a guessed subset)
             _mnid = f"middleware:{_m['cls']}"
+            if _mnid in _mw_seen:                           # two sites, same class leaf-name → one node
+                continue
+            _mw_seen.add(_mnid)
             _mw_nodes.append({"id": _mnid, "kind": "middleware", "slug": _UNCLAIMED, "label": _m["cls"],
                               "unmapped": True, "det": {"file": _m.get("file"), "line": _m.get("line"),
                                                         "scope": _scope, "order": _m.get("order"),

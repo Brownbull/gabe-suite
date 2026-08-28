@@ -219,6 +219,17 @@ _boot2 = C.parse_boot_roots(_br, entity_code={"e": {"api": ["app/api/routes.py"]
 check(any(r["fn"] == "on_boot" for r in _boot2), "parse_boot_roots FIRE: @app.on_event('startup') is a BOOT root too")
 check(C.parse_boot_roots(_pl.Path(_tf.mkdtemp()), entity_code={"e": {"api": []}}) == [],
       "parse_boot_roots SILENT: no lifespan/startup → [] (honest-empty, byte-identical)")
+# review fix [10]: two lifespan roots with the SAME fn name in different services get distinct paths
+# (else `endpoint:BOOT lifespan` collides and add_node drops the second). Single-boot stays byte-identical.
+_br3 = _pl.Path(_tf.mkdtemp())
+(_br3 / "svcA" / "api").mkdir(parents=True); (_br3 / "svcB" / "api").mkdir(parents=True)
+(_br3 / "svcA" / "api" / "r.py").write_text("x = 1\n"); (_br3 / "svcB" / "api" / "r.py").write_text("x = 1\n")
+(_br3 / "svcA" / "main.py").write_text("async def lifespan(app):\n    yield\napp = FastAPI(lifespan=lifespan)\n")
+(_br3 / "svcB" / "main.py").write_text("async def lifespan(app):\n    yield\napp = FastAPI(lifespan=lifespan)\n")
+_bc3 = C.parse_boot_roots(_br3, entity_code={"a": {"api": ["svcA/api/r.py"]}, "b": {"api": ["svcB/api/r.py"]}})
+check(len(_bc3) == 2 and len({r["path"] for r in _bc3}) == 2 and all(r["path"] != "lifespan" for r in _bc3),
+      "parse_boot_roots [10]: two same-name lifespan roots in different services get distinct disambiguated paths")
+check(_boot[0]["path"] == "lifespan", "parse_boot_roots [10]: a single lifespan root keeps its bare path (byte-identical)")
 
 # ── class 9 (wave C) · providers (_file_providers allowlist + _detect_externals RULE A/B) ──
 _PB = {"firebase_auth": "firebase", "genai": "gemini"}   # provider binds for _detect_externals
@@ -233,6 +244,44 @@ check(C._detect_externals(fn('def f():\n    asyncio.to_thread(firebase_auth.dele
 check(C._detect_externals(fn('def f():\n    session.commit()\n    plain.call()', "f"), _PB) == [],
       "class 9 SILENT: a non-provider receiver never reaches a provider (no false positive)")
 check(C._detect_externals(fn('def f():\n    x.y()', "f"), {}) == [], "class 9 SILENT: empty binds → [] (honest-empty)")
+
+# ── review fix [11] · _file_providers: google.oauth2/cloud/auth are NOT gemini — only the genai SDK ──
+def _fprov(name, src):
+    C._PY_TEXTS[name] = src; C._FILE_PROVIDERS.pop(name, None)
+    return C._file_providers(name)
+check(_fprov("_g_oauth.py", "from google.oauth2 import id_token\n") == {},
+      "provider [11]: `from google.oauth2 import id_token` is NOT a gemini bind (the common signin idiom)")
+check(_fprov("_g_cloud.py", "from google.cloud import storage\n") == {},
+      "provider [11]: `from google.cloud import storage` is NOT a gemini bind")
+check(_fprov("_g_genai.py", "from google import genai\n") == {"genai": "gemini"},
+      "provider [11]: `from google import genai` IS gemini (only the genai name)")
+check(_fprov("_g_gen2.py", "import google.generativeai as gg\n") == {"gg": "gemini"},
+      "provider [11]: `import google.generativeai as gg` IS gemini")
+
+# ── review fix [4] · a root-level api file (grandparent sits ABOVE the repo) must NOT abort the build ──
+_base = _pl.Path(_tf.mkdtemp()); _rp = _base / "proj"; _rp.mkdir()
+(_base / "outside.py").write_text("x = 1\n")               # a parseable sibling ABOVE the repo root
+(_rp / "main.py").write_text("app = FastAPI()\napp.add_middleware(CORSMiddleware)\n")
+(_rp / "config.py").write_text("from pydantic import BaseSettings\nclass S(BaseSettings):\n    x: bool = False\n")
+check([m["cls"] for m in C.parse_app_middleware(_rp, entity_code={"e": {"api": ["main.py"]}})] == ["CORSMiddleware"],
+      "parse_app_middleware [4]: a root-level api file does NOT abort on a sibling above repo (relative_to guard)")
+check("x" in C.parse_flags(_rp, entity_code={"e": {"api": ["main.py"]}}),
+      "parse_flags [4]: a root-level api file does NOT abort on a sibling above repo (relative_to guard)")
+
+# ── review fix [6] · a publish() inside a NESTED fn is credited to the INNER fn only (no double-attribution) ──
+C._DISPATCH = None
+_nr = _pl.Path(_tf.mkdtemp()); (_nr / "app").mkdir()
+(_nr / "app/reg.py").write_text("def setup():\n    from app.h import handle as han\n    bus.register_once(Ev, han)\n")
+(_nr / "app/h.py").write_text("def handle(s, e):\n    return 1\n")
+(_nr / "app/pub.py").write_text("def outer():\n    def inner():\n        bus.publish(session, Ev(x=1))\n    return inner\n")
+_sv3 = C.ENTITY_CODE; C.ENTITY_CODE = {"e": {"services": ["app/reg.py", "app/h.py", "app/pub.py"]}}
+C._EMAP_CACHE.clear(); C._DISPATCH = None
+try:
+    _dmn = C.dispatch_map(_nr)
+finally:
+    C.ENTITY_CODE = _sv3; C._EMAP_CACHE.clear(); C._EMAP_CACHE.update(_sv_cache); C._DISPATCH = _sv_disp
+check({e["s"].split("#")[-1] for e in _dmn.get("dispatches", [])} == {"inner"},
+      "dispatch_map [6]: a nested-fn publish is credited to inner only, never the encloser")
 
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):

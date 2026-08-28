@@ -792,6 +792,15 @@ def parse_boot_roots(repo: Path, entity_code: dict | None = None) -> list[dict]:
                 seen.add((rel, fn))
                 out.append({"method": "BOOT", "path": fn, "fn": fn, "file": rel,
                             "touches": [], "touches_x": [], "doc": "—", "resp": "—", "status": "boot"})
+    # disambiguate the node id (BOOT method + path) ONLY on a real collision (review fix [10]: two
+    # `lifespan` roots in different services share `endpoint:BOOT lifespan` → add_node drops the
+    # second). Single-boot repos are untouched → byte-identical (P5).
+    _fn_ct: dict = {}
+    for r in out:
+        _fn_ct[r["fn"]] = _fn_ct.get(r["fn"], 0) + 1
+    for r in out:
+        if _fn_ct[r["fn"]] > 1:
+            r["path"] = f"{r['fn']} @{Path(r['file']).parent.name or Path(r['file']).stem}"
     out.sort(key=lambda r: (r["file"], r["fn"]))
     return out
 
@@ -826,6 +835,8 @@ def parse_flags(repo: Path, entity_code: dict | None = None) -> dict:
         if not d.is_dir():
             continue
         for py in sorted(d.glob("*.py")):
+            if repo not in py.parents:                  # grandparent-of-a-root-file can sit ABOVE repo
+                continue                                 # (review fix [4]: relative_to would abort the whole build)
             tree, _ = _safe_parse(py)
             if tree is None:
                 continue
@@ -908,7 +919,14 @@ def _flag_gates(fnnode, flags: dict) -> list[dict]:
         for name, on in leaves:
             out.append({"name": name, "on": on, "on_fail": _of, "line": n.lineno})
     out.sort(key=lambda w: (w["name"], w["line"]))
-    return out
+    _seen: set = set()                                  # one wall per (flag, on) — review fix [1]: a
+    _dedup = []                                          # doubly-guarded handler otherwise double-counts
+    for w in out:                                        # toward _FLAG_SAT and draws two identical wires
+        if (w["name"], w["on"]) in _seen:
+            continue
+        _seen.add((w["name"], w["on"]))
+        _dedup.append(w)
+    return _dedup
 
 
 def home_schemas(entities: dict, function_insight: dict | None = None) -> dict:
@@ -1353,11 +1371,14 @@ _HTTP_IMPORT_NAMES = frozenset({"httpx", "aiohttp", "requests", "ClientSession",
 # third-party import" — the gustify-only-heuristics guard). A fn that reaches one of these bound
 # names draws a `reaches provider:<name>` wire to the edge of the system.
 _PROVIDER_ROOTS = {
-    "google": "gemini", "genai": "gemini", "firebase_admin": "firebase",
+    "genai": "gemini", "firebase_admin": "firebase",
     "sentry_sdk": "sentry", "openai": "openai", "anthropic": "anthropic",
     "stripe": "stripe", "boto3": "aws", "redis": "redis",
     "httpx": "http", "requests": "http", "aiohttp": "http",
 }
+# `google` is NOT a provider root (review fix [11]): google.oauth2/google.cloud/google.auth are NOT
+# the Gemini LLM — only the genai SDK is. Matched by the specific submodule below, never by root.
+_GEMINI_GOOGLE = ("google.genai", "google.generativeai")
 _FILE_PROVIDERS: dict[str, dict] = {}
 
 
@@ -1374,12 +1395,23 @@ def _file_providers(f: str) -> dict:
     try:
         for node in ast.walk(ast.parse(_PY_TEXTS[f])):
             if isinstance(node, ast.ImportFrom):
-                p = _PROVIDER_ROOTS.get((node.module or "").split(".")[0])
+                _mod = node.module or ""
+                if _mod == "google" or _mod.startswith(_GEMINI_GOOGLE):
+                    # `from google import genai` / `from google.genai import ...` — the ONLY google→gemini
+                    # bind (review fix [11]): oauth2/cloud/auth share the root but are not the LLM.
+                    for a in node.names:
+                        if _mod.startswith(_GEMINI_GOOGLE) or a.name == "genai":
+                            out[a.asname or a.name] = "gemini"
+                    continue
+                p = _PROVIDER_ROOTS.get(_mod.split(".")[0])
                 if p:
                     for a in node.names:
                         out[a.asname or a.name] = p
             elif isinstance(node, ast.Import):
                 for a in node.names:
+                    if a.name.startswith(_GEMINI_GOOGLE):     # import google.generativeai as genai
+                        out[(a.asname or a.name).split(".")[0]] = "gemini"
+                        continue
                     p = _PROVIDER_ROOTS.get(a.name.split(".")[0])
                     if p:
                         out[(a.asname or a.name).split(".")[0]] = p
@@ -1387,7 +1419,8 @@ def _file_providers(f: str) -> dict:
                   and isinstance(node.targets[0], ast.Name) and isinstance(node.value, ast.Call)
                   and isinstance(node.value.func, ast.Attribute) and node.value.func.attr == "import_module"
                   and node.value.args and isinstance(node.value.args[0], ast.Constant)):
-                p = _PROVIDER_ROOTS.get(str(node.value.args[0].value).split(".")[0])
+                _arg = str(node.value.args[0].value)
+                p = "gemini" if _arg.startswith(_GEMINI_GOOGLE) else _PROVIDER_ROOTS.get(_arg.split(".")[0])
                 if p:
                     out[node.targets[0].id] = p
     except SyntaxError:
@@ -1712,7 +1745,15 @@ def resolve_middleware_targets(entities: dict, repo: Path) -> int:
     on its bare name so ``require_household`` matches ``AuthContext.require_household``); an ambiguous
     or unresolvable name gets NO ``fn`` key (honest floor). Non-gate deps (get_session/get_settings —
     ``_is_mw_gate`` False) are skipped (Decision #6: only gate=True deps draw). MUTATES ``entities``
-    in place; returns the count resolved. Runs AFTER function_insight (its keys are the source)."""
+    in place; returns the count resolved. Runs AFTER function_insight (its keys are the source).
+
+    KNOWN over-claim (review finding [3], DEFERRED - no risk-free fix): ``by_name`` spans MAPPED files
+    only, so uniqueness is measured there. A bare gate dep whose REAL target is an UNMAPPED file can
+    match a same-named mapped method via the leaf alias below and bind wrongly. The confident fix
+    (drop the leaf alias) would regress the intended require_household -> AuthContext.require_household,
+    indistinguishable from the wrong case using ``fi`` alone. Dormant on gustify (0 measured). TRIGGER
+    to revisit: the first project whose endpoint detail panel shows a gate chain landing on a
+    semantically-wrong fn - then gate resolution needs an unmapped-file scan, not a leaf alias."""
     fi = function_insight(repo)
     by_name: dict[str, list[str]] = {}
     for key, v in fi.items():
@@ -1757,6 +1798,8 @@ def parse_app_middleware(repo: Path, entity_code: dict | None = None) -> list[di
         if not d.is_dir():
             continue
         for py in sorted(d.glob("*.py")):
+            if repo not in py.parents:                  # grandparent-of-a-root-file can sit ABOVE repo
+                continue                                 # (review fix [4]: relative_to would abort the whole build)
             tree, _ = _safe_parse(py)
             if tree is None:
                 continue
@@ -1830,17 +1873,27 @@ def dispatch_map(repo: Path) -> dict:
         cands = name2file.get(name)
         return f"{cands[0]}#{name}" if cands and len(cands) == 1 else None
 
+    def _own_nodes(fn):
+        # descendants of fn's OWN body, NOT descending into a nested def/lambda (review fix [6]:
+        # ast.walk(fn) crosses into closures, so a nested-fn publish got credited to every encloser).
+        stack = list(ast.iter_child_nodes(fn))
+        while stack:
+            n = stack.pop()
+            yield n
+            if not isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef, ast.Lambda)):
+                stack.extend(ast.iter_child_nodes(n))
+
     registry: dict[str, list[str]] = {}                 # EventClsName → [handler_id]
     for f, t in trees.items():
         for fnnode in ast.walk(t):
             if not isinstance(fnnode, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
             local = {}
-            for n in ast.walk(fnnode):
+            for n in _own_nodes(fnnode):
                 if isinstance(n, ast.ImportFrom):
                     for a in n.names:
                         local[a.asname or a.name] = (n.module, a.name)
-            for n in ast.walk(fnnode):
+            for n in _own_nodes(fnnode):
                 if (isinstance(n, ast.Call) and _call_attr(n.func) in _DISPATCH_REG and len(n.args) >= 2):
                     ev = _call_bare(n.args[0]) or (n.args[0].attr if isinstance(n.args[0], ast.Attribute) else None)
                     hn = _call_bare(n.args[1])
@@ -1855,11 +1908,12 @@ def dispatch_map(repo: Path) -> dict:
             if not isinstance(fnnode, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 continue
             pid = f"{f}#{fnnode.name}"
-            for n in ast.walk(fnnode):
+            for n in _own_nodes(fnnode):                # innermost fn only (review fix [6])
                 if isinstance(n, ast.Call) and _call_attr(n.func) == "publish":
                     for a in n.args:                    # publish(event) OR publish(session, event) — scan every arg
-                        ev = (_call_bare(a.func) if isinstance(a, ast.Call)
-                              else _call_bare(a) if isinstance(a, ast.Name) else None)
+                        if not isinstance(a, ast.Call):  # only a CONSTRUCTED event counts (review fix [7]: a
+                            continue                     # bare Name arg fabricates edges on a class-name collision)
+                        ev = _call_bare(a.func) or (a.func.attr if isinstance(a.func, ast.Attribute) else None)  # [8]
                         for hid in registry.get(ev, []):
                             if hid != pid:
                                 dispatches.append((pid, hid, ev))

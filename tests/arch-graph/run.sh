@@ -497,11 +497,29 @@ _gfl = G.build_c4_graph(_fixfl, labels=LABELS, status=STATUS)
 _flnodes = [n for g in _gfl["l2"].values() for n in g["nodes"] if n["kind"] == "flag"]
 check(len(_flnodes) == 1 and _flnodes[0]["id"] == "flag:FEAT" and _flnodes[0]["slug"] == "alpha",
       "class 12 FIRE: a flag walling an endpoint mints flag:<NAME> homed to the reader entity (intra)")
-_wedges = [e for g in _gfl["l2"].values() for e in g.get("edges", []) if e.get("kind") == "walls"] \
-          + [e for e in _gfl["cross_edges"] if e.get("kind") == "walls"]
-check(len(_wedges) == 1 and _wedges[0]["from"] == "flag:FEAT" and _wedges[0]["on_fail"] == "403",
-      "class 12 FIRE: a walls edge flag→endpoint carries on_fail")
+_intra_w = [e for g in _gfl["l2"].values() for e in g.get("edges", []) if e.get("kind") == "walls"]
+_cross_w = [e for e in _gfl["cross_edges"] if e.get("kind") == "walls"]
+# review fix [0]: the INTRA walls edge MUST use source/target (the station reads those) — from/to is
+# the cross_edges schema, so an intra walls with from/to renders NOTHING. Pin both keys here.
+check(len(_intra_w) == 1 and not _cross_w
+      and _intra_w[0].get("source") == "flag:FEAT" and _intra_w[0].get("target") == "endpoint:GET /alpha"
+      and "from" not in _intra_w[0] and _intra_w[0]["on_fail"] == "403",
+      "class 12 FIRE: an INTRA walls edge flag→endpoint uses source/target (renders) + carries on_fail")
 check(_gfl["stats"].get("flags") == {"declared": 1, "drawn": 1}, "class 12: stats.flags {declared, drawn}")
+# CROSS walls: a flag read by TWO entities homes to __unclaimed__ → a cross_edge with from/to
+_fixfx = {"head": "h", "entities": {
+    "one": {"endpoints": [{"method": "GET", "path": "/one", "fn": "get_one",
+                           "flags": [{"name": "SHARED", "on": "off", "on_fail": "403", "line": 5}]}],
+            "models": [], "schemas": [], "files": []},
+    "two": {"endpoints": [{"method": "GET", "path": "/two", "fn": "get_two",
+                           "flags": [{"name": "SHARED", "on": "off", "on_fail": "403", "line": 9}]}],
+            "models": [], "schemas": [], "files": []}},
+    "flags": {"SHARED": {"src": "config.py", "line": 5, "default": False}}}
+_gfx = G.build_c4_graph(_fixfx, labels=LABELS, status=STATUS)
+_cw = [e for e in _gfx["cross_edges"] if e.get("kind") == "walls"]
+check(len(_cw) == 2 and all(e["from"] == "flag:SHARED" and "source" not in e
+                            and e.get("from_slug") == "__unclaimed__" for e in _cw),
+      "class 12 FIRE: a CROSS walls edge (flag read by 2 entities) uses from/to + from_slug=__unclaimed__")
 # honest-empty: no amap.flags + no endpoint.flags → no flag node, no walls edge, no stats.flags key
 _gfl0 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
 check(not any(n["kind"] == "flag" for g in _gfl0["l2"].values() for n in g["nodes"]) and "flags" not in _gfl0["stats"],
@@ -528,6 +546,17 @@ _fixsr0 = {"head": "h", "entities": {"e": {"endpoints": [], "models": [{"cls": "
 _gsr0 = G.build_c4_graph(_fixsr0, labels={"e": "E"}, status={})
 check(not any(e.get("kind") == "serializes" for g in _gsr0["l2"].values() for e in g.get("edges", [])) and "serializes" not in _gsr0["stats"],
       "class 5b honest-empty: no orm schema + no site → no serializes edge + no stats key")
+# review fix [2]: a name that is BOTH a model and an orm schema derefs to model: (cls_index is
+# models-first) — the NAMING arm must require the schema side resolve to schema:, else it emits an
+# invalid model→model serializes edge
+_fixsr3 = {"head": "h", "entities": {"e": {"endpoints": [],
+           "models": [{"cls": "Recipe", "table": "recipes"}, {"cls": "RecipeResponse", "table": "recipe_responses"}],
+           "schemas": [{"cls": "RecipeResponse", "orm": True}], "files": []}}, "function_insight": {}}
+_gsr3 = G.build_c4_graph(_fixsr3, labels={"e": "E"}, status={})
+_se3 = [e for g in _gsr3["l2"].values() for e in g.get("edges", []) if e.get("kind") == "serializes"] \
+       + [e for e in _gsr3["cross_edges"] if e.get("kind") == "serializes"]
+check(_se3 == [],
+      "class 5b [2]: a name that is both a model and an orm schema draws NO invalid model→model serializes edge")
 
 # ── class 8 (wave C) · middleware: derive_depends (K1 gate chain) + app-middleware mint ──
 _dep_ent = {"e": {"endpoints": [{"file": "apps/api/alpha.py", "fn": "do_a", "method": "G", "path": "/x",
@@ -557,6 +586,13 @@ check(_gmw3["stats"]["app_middleware"]["gated_by"] == 0,
       "class 8 SATURATION: a middleware over the threshold draws count-only (0 gated_by edges, no per-endpoint hub)")
 check("app_middleware" not in G.build_c4_graph(FIX, labels=LABELS, status=STATUS)["stats"],
       "class 8 honest-empty: no app_middleware → no middleware node + no stats key (byte-identical)")
+# review fix [5]: two add_middleware sites sharing a class leaf-name mint ONE node (node ids unique)
+_fixmwd = json.loads(json.dumps(FIX))
+_fixmwd["app_middleware"] = [{"cls": "CORSMiddleware", "file": "main.py", "line": 5, "order": 0, "scope": "all"},
+                             {"cls": "CORSMiddleware", "file": "sub.py", "line": 9, "order": 1, "scope": "all"}]
+_gmwd = G.build_c4_graph(_fixmwd, labels=LABELS, status=STATUS)
+check(len([n for g in _gmwd["l2"].values() for n in g["nodes"] if n["kind"] == "middleware"]) == 1,
+      "class 8 [5]: two add_middleware sites with the same class leaf-name mint ONE node (id dedup)")
 
 # ── class 6 (wave C) · dispatches: event-bus edges appended to derive_functions.calls as a rel ──
 _df_disp = GG.derive_functions(WIRING, FIX["entities"],
@@ -584,6 +620,26 @@ check(any(n["kind"] == "unclaimed" for n in _gbt["l1"]["nodes"]),
 _gbt0 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
 check(not any(str(n.get("label", "")).startswith("BOOT") for g in _gbt0["l2"].values() for n in g["nodes"]),
       "class 7 honest-empty: no boot_roots → no BOOT node (byte-identical)")
+# review fix [9]: a boot endpoint writing an UNMAPPED model is co-homed in __unclaimed__ → the write
+# edge must land INTRA (source/target), not be dropped as a self-slug skip
+_gb9 = G.build_c4_graph(_fixbt, labels=LABELS, status=STATUS,
+    graft={"present": True, "reason": "t", "index_hash": "x", "index_nodes": 1, "index_edges": 1, "pairs": {}, "stats": {},
+           "endpoint_access": {"apps/api/main.py#lifespan": {"ops": [{"model": "Country", "table": "countries", "rw": "w"}], "commits": True}}})
+_um9 = _gb9["l2"].get("__unclaimed__", {"nodes": [], "edges": []})
+check(any(n["id"] == "model:Country" for n in _um9["nodes"])
+      and any(e.get("kind") == "writes_to" and e.get("source") == "endpoint:BOOT lifespan"
+              and e.get("target") == "model:Country" for e in _um9["edges"]),
+      "class 7 [9]: a boot write to an UNMAPPED model draws an INTRA writes_to edge (co-homed, not dropped)")
+# review fix [12]: app-middleware must NOT count the BOOT pseudo-endpoint as a gated HTTP request —
+# gates counts HTTP endpoints only, and no gated_by wire is drawn from a BOOT node
+_fixb12 = json.loads(json.dumps(_fixbt)); _fixb12["app_middleware"] = [{"cls": "CORSMiddleware", "file": "main.py", "line": 5, "order": 0, "scope": "all"}]
+_gb12 = G.build_c4_graph(_fixb12, labels=LABELS, status=STATUS)
+_mw12 = [n for g in _gb12["l2"].values() for n in g["nodes"] if n["kind"] == "middleware"][0]
+_neps12 = sum(len(v.get("endpoints") or []) for v in FIX["entities"].values() if v)
+check(_mw12["det"]["gates"] == _neps12
+      and not any(e.get("kind") == "gated_by" and str(e.get("from", "")).startswith("endpoint:BOOT ")
+                  for e in _gb12["cross_edges"]),
+      "class 8 [12]: app-middleware excludes the BOOT pseudo-endpoint from gates + draws no BOOT gated_by wire")
 
 # ── class 9 (wave C) · provider mint: function_insight.externals → provider:<name> L2 node ──
 _fixpv = json.loads(json.dumps(FIX))
