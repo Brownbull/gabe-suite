@@ -134,6 +134,19 @@ check(_E2.get(("Panel", "Header")) == "renders" and _fe2["stats"].get("samefile_
       "SAME-FILE render FIRE: a same-file JSX tag resolves to its sibling export (Panel → Header)")
 check(("Panel", "div") not in _E2,
       "SAME-FILE render: an HTML tag (div) is not an export → resolves to nothing, no spurious edge")
+
+# ── feClass — the F4 fold-control class per component (view/private/leaf/connector/container) ──
+_X3 = {"byFile": {"src/features/dash/Dash.tsx": {
+    "exports": [{"name": "Dash", "kind": "function", "hasJsx": True, "jsx": ["Row", "Icon"]},
+                {"name": "Row", "kind": "function", "hasJsx": True, "jsx": ["Icon"]},
+                {"name": "Icon", "kind": "function", "hasJsx": True, "jsx": []}],
+    "bindings": {}}}}
+_fe3 = _a3_fe.build_fe(_X3, {"dash": {}}, [])
+_cls = {p["name"]: p.get("feClass") for p in _fe3["pieces"] if p["kind"] == "component"}
+check(_cls.get("Dash") == "view" and _cls.get("Row") == "private" and _cls.get("Icon") == "leaf",
+      "feClass (F4 engine): 0 render-parents=view · 1=private · 2+ shared no-data=leaf")
+check(_fe3["stats"]["by_feclass"] == {"leaf": 1, "private": 1, "view": 1},
+      "feClass: the by_feclass stat tallies the component classes")
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and len(e) == 3 and isinstance(e[0], int) for e in fe["edges"]), "wires are COMPACT index triples")
 check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1, "alias": 1},

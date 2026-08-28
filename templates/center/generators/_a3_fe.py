@@ -309,6 +309,30 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
 
     edge_list = [{"from": s, "to": t, "rel": r, "cross": pieces[s]["home"] != pieces[t]["home"]}
                  for (s, t), r in sorted(edges.items())]
+    # ── feClass — the fold-CONTROL class per COMPONENT (the F4 engine; every control reads it to
+    #    hide a class). view = entry (0 render-parents) · private = exactly one parent · connector =
+    #    shared + touches data · container = shared + renders children only · leaf = shared, neither.
+    #    Coarse for now: the chrome-vs-state split of `connector` is F2 (the FE spine detector).
+    _rin: dict[str, set] = {}          # component id → its render-parents
+    _rchild: dict[str, bool] = {}      # component id → renders at least one child component
+    _dout: dict[str, bool] = {}        # piece id → has a data-ish outgoing wire (fecall/hook/store)
+    for e in edge_list:
+        s, t, r = e["from"], e["to"], e["rel"]
+        if r == "renders" and pieces[t]["kind"] == "component":
+            _rin.setdefault(t, set()).add(s)
+            if pieces[s]["kind"] == "component":
+                _rchild[s] = True
+        if r in ("fecall", "uses-hook", "uses-store"):
+            _dout[s] = True
+    by_class: dict[str, int] = {}
+    for pid, p in pieces.items():
+        if p["kind"] != "component":
+            continue
+        fi = len(_rin.get(pid, ()))
+        fc = ("view" if fi == 0 else "private" if fi == 1
+              else "connector" if _dout.get(pid) else "container" if _rchild.get(pid) else "leaf")
+        p["feClass"] = fc
+        by_class[fc] = by_class.get(fc, 0) + 1
     by_kind: dict[str, int] = {}
     by_home: dict[str, int] = {}
     for p in pieces.values():
@@ -342,7 +366,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                   "by_home": dict(sorted(by_home.items())), "edges": len(edge_list),
                   "by_rel": dict(sorted(by_rel.items())), "cross": sum(1 for e in edge_list if e["cross"]),
                   "screens_absorbed": absorbed, "unresolved": unresolved, "local_refs": local["refs"],
-                  "samefile_renders": local.get("samefile", 0),
+                  "samefile_renders": local.get("samefile", 0), "by_feclass": dict(sorted(by_class.items())),
                   "fe_types_referenced": len({e["to"] for e in edge_list if pieces[e["to"]]["kind"] == "fe-type"
                                               and pieces[e["from"]]["kind"] != "fe-type"}),
                   "excluded": stats_x,
