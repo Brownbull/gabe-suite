@@ -156,6 +156,22 @@ _pf = C.parse_flags(_fr, entity_code={"x": {"api": ["api/routes.py"]}})
 check("recipe_creation_enabled" in _pf and "SEED" in _pf and "name" not in _pf,
       "parse_flags FIRE: a Settings bool + a module Final[bool] are flags; a str field is not")
 
+# ── class 5b (wave C) · serializes (parse_schemas orm flag + _orm_access model_validate site) ──
+def scls(src, name): return next(n for n in ast.walk(ast.parse(src)) if isinstance(n, ast.ClassDef) and n.name == name)
+check(C._schema_orm(scls("class R(BaseModel):\n    x: int\n    model_config = ConfigDict(from_attributes=True)", "R")) is True,
+      "schema orm FIRE: model_config = ConfigDict(from_attributes=True) → orm (v2)")
+check(C._schema_orm(scls("class R(BaseModel):\n    x: int\n    class Config:\n        orm_mode = True", "R")) is True,
+      "schema orm FIRE: nested class Config: orm_mode = True → orm (v1)")
+check(C._schema_orm(scls("class R(BaseModel):\n    x: int", "R")) is False, "schema orm SILENT: a plain schema → no orm flag")
+a = C._orm_access(fn('def f(u: Recipe):\n    return RecipeResponse.model_validate(u)', "f"), m2t)
+check(a.get("serializes") == [{"cls": "RecipeResponse", "model": "Recipe", "line": 2}],
+      "serializes SITE FIRE: X.model_validate(bound) records schema→model via the B1 symtab")
+a = C._orm_access(fn('def f():\n    return RecipeResponse.model_validate(mystery)', "f"), m2t)
+check(a.get("serializes") == [{"cls": "RecipeResponse", "model": None, "line": 2}],
+      "serializes: an unresolvable arg records model:None (honest floor, never guessed)")
+check("serializes" not in C._orm_access(fn('def f():\n    return 1', "f"), m2t),
+      "serializes SILENT: no model_validate → no serializes key (honest-empty)")
+
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):
     tree = ast.parse(src)

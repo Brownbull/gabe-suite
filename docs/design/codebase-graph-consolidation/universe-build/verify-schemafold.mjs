@@ -37,10 +37,14 @@ const r = await p.evaluate(() => {
   out.hasCrit = !!(window.__uniKindHasSolo && __uniKindHasSolo('schema'));
   // independent fold predicate (from the live links): nests-in ≥1 AND no non-nests wire
   const wired = {}, parents = {}; let fnWires = 0;
+  let serWires = 0;
   links.forEach(l => { const s = id(l.source), t = id(l.target); const sn = NIDS[s], tn = NIDS[t]; if (!sn || !tn) return;
     if (l.rel === 'nests') { if (tn.kind === 'schema') (parents[t] = parents[t] || []).push(s); return; }
+    if (l.rel === 'serializes') { serWires++; return; }   // P2: schema→model is a mapping, mirrors layout.js — must NOT mark the schema wired
     if (sn.kind === 'function' || tn.kind === 'function') { if (tn.kind === 'schema') fnWires++; return; }   // fn wires never make a contract
     if (sn.kind === 'schema') wired[s] = 1; if (tn.kind === 'schema') wired[t] = 1; });
+  out.serWires = serWires;
+  out.serFoldOK = S.filter(n => n.__solo && links.some(l => id(l.source) === n.id && l.rel === 'serializes')).length;
   const nestedOnly = S.filter(n => parents[n.id] && !wired[n.id]).map(n => n.id);
   out.nestedOnly = nestedOnly.length;
   out.soloMatches = S.every(n => !!n.__solo === (!!parents[n.id] && !wired[n.id]));
@@ -86,6 +90,7 @@ ok('[6] ALL shows every schema · OFF hides every schema · CRITICAL folds again
 ok('[6] the badge survives the kind cycle', r.badgeAfterCycle === 5, `badge=${r.badgeAfterCycle}`);
 ok('[7] fn→schema wires are drawn (functions ON), and an ENDPOINT-wired schema never folds', r.fnWires > 0 && r.epWiredFolded === 0, `${r.fnWires} fn→schema wires · ${r.epWiredFolded} endpoint-wired folded`);
 ok('[7] a function wire alone does not block the fold (the upsert that takes an Input)', r.fnOnlyFolded > 0, `${r.fnOnlyFolded} folded helpers carry a fn wire`);
+ok('[P2] serializes wires drew and did NOT un-fold any schema (soloMatches above already holds them out)', r.serWires > 0, `${r.serWires} serializes wires · ${r.serFoldOK} folded schemas also serialize a model`);
 ok('no page/console errors', errs.length === 0, errs.slice(0, 3).join(' | '));
 R.forEach(l => console.log(l));
 const failed = R.filter(x => x.startsWith('FAIL')).length;

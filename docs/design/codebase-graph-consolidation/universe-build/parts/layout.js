@@ -2100,6 +2100,7 @@ window.__uniComputeSolo=function(){ var callers={};
   var _sW={}, _sP={};
   links.forEach(function(l){ var sn=NIDS[lid(l.source)], tn=NIDS[lid(l.target)]; if(!sn||!tn||sn.id===tn.id) return;
     if(l.rel==="nests"){ if(tn.kind==="schema") (_sP[tn.id]=_sP[tn.id]||[]).push(sn.id); return; }
+    if(l.rel==="serializes") return;   // P2 (wave-C floor 2): schema→model is a MAPPING, not an exposure — like nests it must not un-fold a nested-only schema (a *Block that serializes a model still folds)
     if(sn.kind==="function"||tn.kind==="function") return;   // fn wires never make a contract
     if(sn.kind==="schema") _sW[sn.id]=1; if(tn.kind==="schema") _sW[tn.id]=1; });
   nodes.forEach(function(n){ if(n.kind==="schema") n.__foldN=0; });

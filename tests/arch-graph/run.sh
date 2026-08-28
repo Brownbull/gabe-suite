@@ -507,6 +507,28 @@ _gfl0 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
 check(not any(n["kind"] == "flag" for g in _gfl0["l2"].values() for n in g["nodes"]) and "flags" not in _gfl0["stats"],
       "class 12 honest-empty: no flags upstream → no flag node + no stats.flags key (byte-identical)")
 
+# ── class 5b (wave C) · serializes (schema→model): NAMING arm + SITE-wins + honest-empty ──
+_fixsr = {"head": "h", "entities": {"e": {"endpoints": [],
+          "models": [{"cls": "Recipe", "table": "recipes"}],
+          "schemas": [{"cls": "RecipeResponse", "orm": True}, {"cls": "PlainOut"}], "files": []}},
+          "function_insight": {}}
+_gsr = G.build_c4_graph(_fixsr, labels={"e": "E"}, status={})
+_se = [e for g in _gsr["l2"].values() for e in g.get("edges", []) if e.get("kind") == "serializes"] \
+      + [e for e in _gsr["cross_edges"] if e.get("kind") == "serializes"]
+_pairs = {(e.get("source", e.get("from")), e.get("target", e.get("to"))) for e in _se}
+check(("schema:RecipeResponse", "model:Recipe") in _pairs and len(_se) == 1,
+      "class 5b NAMING: an orm:True schema strips to exactly one model → serializes edge (PlainOut, no orm, no edge)")
+check(_gsr["stats"]["serializes"] == {"pairs": 1, "site": 0, "naming": 1}, "class 5b: stats.serializes {pairs, site, naming}")
+_fixsr2 = json.loads(json.dumps(_fixsr))
+_fixsr2["function_insight"] = {"e.py::f": {"access": {"serializes": [{"cls": "RecipeResponse", "model": "Recipe", "line": 3}]}}}
+_gsr2 = G.build_c4_graph(_fixsr2, labels={"e": "E"}, status={})
+check(_gsr2["stats"]["serializes"]["site"] == 1 and _gsr2["stats"]["serializes"]["naming"] == 0,
+      "class 5b SITE-WINS: a model_validate site is the extracted pair; the schema's naming edge is suppressed")
+_fixsr0 = {"head": "h", "entities": {"e": {"endpoints": [], "models": [{"cls": "Recipe", "table": "recipes"}], "schemas": [{"cls": "RecipeResponse"}], "files": []}}}
+_gsr0 = G.build_c4_graph(_fixsr0, labels={"e": "E"}, status={})
+check(not any(e.get("kind") == "serializes" for g in _gsr0["l2"].values() for e in g.get("edges", [])) and "serializes" not in _gsr0["stats"],
+      "class 5b honest-empty: no orm schema + no site → no serializes edge + no stats key")
+
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

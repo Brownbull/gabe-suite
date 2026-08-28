@@ -1067,6 +1067,52 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             cross_edges.append({"from": xc["from"], "to": tgt_nid, "kind": xc.get("k", "consumes"),
                                 "from_slug": _slug, "to_slug": tgt_slug})
             cross_consumes += 1
+    # ── class 5b · SERIALIZES: a pydantic schema MAPPING a DB model — the schema→model edge the
+    #    map lacked (schema→model was 0 edges). SITE arm: `X.model_validate(v)` sites, resolved
+    #    through the B1 symtab (function_insight access.serializes, conf 'extracted'). NAMING arm:
+    #    an orm:True schema whose name strips (Response|Summary|Item|Ref|Block|Out) to EXACTLY ONE
+    #    model, SITE-WINS (a schema with a site pair never draws a naming edge — conf 'inferred').
+    #    Each pair → intra edge (co-homed) or cross_edge, routed through cls_index like cross_touches.
+    _ser_pairs: list[tuple[str, str, str]] = []      # (schema_cls, model_cls, conf)
+    _sited_schemas: set[str] = set()
+    _fi = amap.get("function_insight") or {}
+    for _fk in sorted(_fi):
+        for _sr in ((_fi[_fk].get("access") or {}).get("serializes") or []):
+            _sch, _mdl = _sr.get("cls"), _sr.get("model")
+            if (_sch and _mdl and _sch in cls_index and _mdl in cls_index
+                    and cls_index[_sch][0].startswith("schema:") and cls_index[_mdl][0].startswith("model:")):
+                _ser_pairs.append((_sch, _mdl, "extracted"))
+                _sited_schemas.add(_sch)
+    _model_names = {c for c, (nid, _) in cls_index.items() if nid.startswith("model:")}
+    _STRIP = re.compile(r"(Response|Summary|Item|Ref|Block|Out)$")
+    for _sslug in sorted(entities):
+        for _sc in (entities[_sslug].get("schemas") or []):
+            _scn = _sc.get("cls")
+            if not _sc.get("orm") or not _scn or _scn in _sited_schemas:   # site-wins: a sited schema never names
+                continue
+            _cand = _scn
+            while _STRIP.search(_cand):                # strip repeatedly (RecipeDetailResponse → RecipeDetail → Recipe)
+                _cand = _STRIP.sub("", _cand)
+            if _cand != _scn and _cand in _model_names:   # a model class is unique in cls_index → this IS exactly-one
+                _ser_pairs.append((_scn, _cand, "inferred"))
+    _ser_seen: set[tuple[str, str]] = set()
+    _ser_site = _ser_naming = 0
+    for (_sch, _mdl, _conf) in sorted(set(_ser_pairs)):
+        _snid, _sh_slug = cls_index[_sch]
+        _mnid, _md_slug = cls_index[_mdl]
+        if _snid == _mnid or (_snid, _mnid) in _ser_seen:
+            continue
+        _ser_seen.add((_snid, _mnid))
+        if _sh_slug == _md_slug:                       # co-homed → intra edge
+            l2[_sh_slug].setdefault("edges", []).append({"source": _snid, "target": _mnid, "kind": "serializes", "conf": _conf})
+        else:                                          # cross-entity → cross_edge (routed via cls_index)
+            cross_edges.append({"from": _snid, "to": _mnid, "kind": "serializes",
+                                "from_slug": _sh_slug, "to_slug": _md_slug, "conf": _conf})
+        if _conf == "extracted":
+            _ser_site += 1
+        else:
+            _ser_naming += 1
+    _serializes_n = len(_ser_seen)
     # ── A2 · cross-entity ORM ACCESS: an endpoint writing/reading a model owned by ANOTHER
     #    entity (complete_session → pantry/dish_history) — the same class index resolves it.
     _xa_seen: set[tuple[str, str, str]] = set()
@@ -1199,6 +1245,9 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
             # nothing walled a route (byte-identical, P5), never flags:0.
             **({"flags": {"declared": len(_flag_census), "drawn": _flags_drawn}}
                if _flags_drawn else {}),
+            # class 5b: serializes (schema→model) — site vs naming; absent when 0 pairs (P5).
+            **({"serializes": {"pairs": _serializes_n, "site": _ser_site, "naming": _ser_naming}}
+               if _serializes_n else {}),
             "unresolved_tables": unresolved,
             # the graft arm's honesty record: absent → named absent, never silent;
             # present → the index fingerprint + the floor-not-census trust split.

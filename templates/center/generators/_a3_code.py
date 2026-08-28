@@ -197,6 +197,27 @@ def parse_endpoints(repo: Path, files: list[str]) -> list[dict]:
     return out
 
 
+def _schema_orm(node: ast.ClassDef) -> bool:
+    """True when a pydantic schema reads from ORM ATTRIBUTES — ``model_config =
+    ConfigDict(from_attributes=True)`` (v2) or a nested ``class Config:`` with ``orm_mode = True`` /
+    ``from_attributes = True`` (v1). The signal the serializes NAMING arm requires: a schema that
+    MAPS a model (so ``PantryItemResponse`` → ``PantryItem`` is a real serialization, not a coincidence)."""
+    for item in node.body:
+        if (isinstance(item, ast.Assign) and item.targets
+                and getattr(item.targets[0], "id", "") == "model_config"
+                and isinstance(item.value, ast.Call)):
+            for kw in item.value.keywords:
+                if kw.arg == "from_attributes" and isinstance(kw.value, ast.Constant) and kw.value.value is True:
+                    return True
+        if isinstance(item, ast.ClassDef) and item.name == "Config":
+            for sub in item.body:
+                if (isinstance(sub, ast.Assign) and sub.targets
+                        and getattr(sub.targets[0], "id", "") in ("orm_mode", "from_attributes")
+                        and isinstance(sub.value, ast.Constant) and sub.value.value is True):
+                    return True
+    return False
+
+
 def parse_schemas(repo: Path, files: list[str]) -> list[dict]:
     """Pydantic request/response shapes — the classes the Returns column names.
     Same honesty rule: parsed from source, never listed by hand."""
@@ -217,8 +238,11 @@ def parse_schemas(repo: Path, files: list[str]) -> list[dict]:
                       for i in node.body
                       if isinstance(i, ast.AnnAssign) and isinstance(i.target, ast.Name)]
             if fields:
-                out.append({"cls": node.name, "file": rel, "fields": fields,
-                            "doc": _first_sentence(ast.get_docstring(node))})
+                _sd = {"cls": node.name, "file": rel, "fields": fields,
+                       "doc": _first_sentence(ast.get_docstring(node))}
+                if _schema_orm(node):                # class 5b: this schema maps a model (serializes NAMING arm)
+                    _sd["orm"] = True
+                out.append(_sd)
     return out
 
 
@@ -1218,6 +1242,7 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
 
     ops: dict[tuple, dict] = {}
     commits = False
+    serial: list[dict] = []                    # class 5b: X.model_validate(v) sites → schema serializes model
 
     def _put(model, rw):
         if model:
@@ -1233,6 +1258,13 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
         if not isinstance(n, ast.Call):
             continue
         attr, bare = _call_attr(n.func), _call_bare(n.func)
+        # (class 5b) SITE arm: `Schema.model_validate(v)` / `.model_validate_json(v)` — the schema
+        # SERIALIZES the model bound to v (resolved through the B1 symtab). The schema name is raw
+        # here (not in m2t); build_c4_graph resolves it to a schema node. model:None = a residual
+        # floor (a callee-return/tuple arg the symtab can't bind) — recorded, never guessed.
+        if (attr in ("model_validate", "model_validate_json")
+                and isinstance(n.func, ast.Attribute) and isinstance(n.func.value, ast.Name) and n.args):
+            serial.append({"cls": n.func.value.id, "model": _arg_model(n.args[0]), "line": n.lineno})
         if attr in _ORM_WRITE_M and n.args:
             _put(_arg_model(n.args[0]), "w")
         if attr == "get" and n.args:                                  # session.get(Model, id)
@@ -1248,7 +1280,10 @@ def _orm_access(fnnode, m2t: dict[str, str]) -> dict:
         if attr in _ORM_COMMIT:
             commits = True
     out = sorted(ops.values(), key=lambda x: (x["rw"], x["model"]))
-    return {"ops": out, "commits": commits} if (out or commits) else {}
+    res: dict = {"ops": out, "commits": commits}
+    if serial:                                 # class 5b: emit only when a model_validate site exists (P5)
+        res["serializes"] = sorted(serial, key=lambda s: (s["cls"], s["line"]))
+    return res if (out or commits or serial) else {}
 
 
 # ── C4 · NON-ORM SINK floor (file · cache · queue/event · http) ─────────────
