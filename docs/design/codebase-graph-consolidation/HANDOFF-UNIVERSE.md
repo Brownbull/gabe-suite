@@ -49,4 +49,13 @@ AFTER THAT: pre-C kind extensibility (station-first) → wave B (precedence firs
 - B2 `4da8b79` — methods admission + hub fold (require_household fan-in 50 folds under critical). methods drawn 2→5, fn_edges 191→243.
 - Baseline recorded (P8): the 4 decayed proofs fail on PANEL pins, 0 console errors — not data. All 3 --check CLEAN, install 29/29, every data battery green + mutation-proven.
 
-**PUSH all 3 repos on operator word.** **NEXT = wave C** (per-floor roots+wires, each with an honest-empty pin + station rows, using the pre-C plumbing: depends/gated_by middleware · BOOT root into graft_arm only · dispatches bus+PIPELINE_STAGES tables · serializes site>naming — must NOT un-fold the schema fold (P2) · provider/reaches · flag/walls polarity · WS/transport) → wave D (reveal rule + walkable rel set) → item 3 tiers. Then the deferred B1 label splits + touches split.
+**WAVE C COMPLETE 2026-08-27 (6 floors, graft-adoption LOCAL, each honest-empty byte-identical, --check CLEAN):**
+- flag `59fe75c` — feature-flag walls (flag node + walls edge, polarity, effective-flag BoolOp)
+- serializes `fe2cffc` — schema→model (SITE+NAMING, site-wins) + the P2 fold guard (verify-schemafold 15/15)
+- middleware `2846b63` — the K1 gate chain (depends) + app-middleware nodes (81 depends edges, 3 mw nodes count-only)
+- dispatches `7dcebe8` — event bus (J3's second write leg: post_complete→handlers→Skill/NodeProgress)
+- boot `9bd6d0e` — BOOT lifespan root (behind 135/depth 7, BOOT method value)
+- provider `813de07` — external SDK edge (provider:gemini; reaches wire dormant until the SDK fn draws)
+Batteries at HEAD: orm-access 80 · arch-graph 232 · levels 68 · gabe-universe ALL PASS. install 29/29.
+
+**PUSH all 3 repos on operator word.** **NEXT = wave D** (the reveal rule + the WALKABLE REL SET gains depends/dispatches — P7, so K1's Hop 0.5 + J3's dispatch leg WALK not just draw) → item 3 tiers. Deferred across wave C: the B1 commits/flushes + touches splits; PIPELINE_STAGES dispatch-tables (K3); the queue-sink demotion; the deploy-only gate floor; gastify propagation (needs its graph-arm land first, P4).
