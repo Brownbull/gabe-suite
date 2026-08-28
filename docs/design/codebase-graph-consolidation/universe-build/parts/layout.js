@@ -1964,7 +1964,7 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
    (accessor/caller/gate/pure, colour = __BADGE_COL.role). Draws the coloured disc + dark glyph onto a
    128² canvas context; methodBadge/roleBadge wrap it into a Sprite, the legend popup paints it onto a
    DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
-window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444"},
+window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444",BOOT:"#8a8f98"},
                      role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
                      count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={

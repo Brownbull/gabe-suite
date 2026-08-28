@@ -1012,6 +1012,28 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
         _stamp_l2(graph)
         l2[slug] = graph
 
+    # class 7 · BOOT root: mint the `BOOT lifespan` node into __unclaimed__ (P6) via _l2 so it
+    # carries its behind pill + the seeder write-path rollup (main.py was homed to __unclaimed__ in
+    # the graft arm, so behind[main.py#lifespan] + its endpoint_access resolve). Merges with the
+    # existing bucket if the census already made one. Honest-empty: no boot root → nothing.
+    _broots = amap.get("boot_roots") or []
+    if _broots:
+        _bcode = {"endpoints": _broots, "models": [], "schemas": [],
+                  "files": [["boot", _r["file"], 0] for _r in _broots]}
+        _bg = _l2(_UNCLAIMED, _bcode, tbl2slug, labels, insight, None, behind,
+                  journeys, schema_fields, endpoint_access=endpoint_access)
+        if _UNCLAIMED in l2:
+            l2[_UNCLAIMED]["nodes"].extend(_bg["nodes"])
+            l2[_UNCLAIMED]["edges"].extend(_bg["edges"])
+            l2[_UNCLAIMED]["nodes"].sort(key=lambda n: (_L2_KINDS.index(n["kind"]), n["id"]))
+            _stamp_l2(l2[_UNCLAIMED])
+        else:
+            _stamp_l2(_bg)
+            l2[_UNCLAIMED] = _bg
+        if not any(n["kind"] == "unclaimed" for n in l1_nodes):
+            l1_nodes.append({"id": _UNCLAIMED, "label": "unclaimed", "kind": "unclaimed",
+                             "slug": _UNCLAIMED, "status": None, "counts": None})
+
     # ── cross-entity TOUCHES: resolve every entity's unowned touches against a global
     #    class index (models win a name tie over schemas). Without these edges an aspect
     #    entity's models (allergen) sit disconnected the moment endpoints stop co-homing

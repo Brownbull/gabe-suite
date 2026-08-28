@@ -207,6 +207,19 @@ finally:
     C.ENTITY_CODE = _sv_ec2; C._EMAP_CACHE.clear(); C._EMAP_CACHE.update(_sv_cache); C._DISPATCH = _sv_disp
 check(_dm0 == {}, "dispatch_map SILENT: no register/publish → {} (honest-empty, byte-identical)")
 
+# ── class 7 (wave C) · parse_boot_roots (FastAPI(lifespan=) / @app.on_event('startup')) ──
+_br = _pl.Path(_tf.mkdtemp()); (_br / "app" / "api").mkdir(parents=True)
+(_br / "app" / "api" / "routes.py").write_text("from fastapi import APIRouter\nrouter=APIRouter()\n@router.get('/x')\ndef h():\n    return 1\n")
+(_br / "app" / "main.py").write_text("async def lifespan(app):\n    seed_all()\n    yield\napp = FastAPI(lifespan=lifespan)\n")
+_boot = C.parse_boot_roots(_br, entity_code={"e": {"api": ["app/api/routes.py"]}})
+check([(r["fn"], r["method"]) for r in _boot] == [("lifespan", "BOOT")] and _boot[0]["file"] == "app/main.py",
+      "parse_boot_roots FIRE: FastAPI(lifespan=F) in the api dir's PARENT → a BOOT root")
+(_br / "app" / "app.py").write_text("@app.on_event('startup')\nasync def on_boot():\n    warm()\n")
+_boot2 = C.parse_boot_roots(_br, entity_code={"e": {"api": ["app/api/routes.py"]}})
+check(any(r["fn"] == "on_boot" for r in _boot2), "parse_boot_roots FIRE: @app.on_event('startup') is a BOOT root too")
+check(C.parse_boot_roots(_pl.Path(_tf.mkdtemp()), entity_code={"e": {"api": []}}) == [],
+      "parse_boot_roots SILENT: no lifespan/startup → [] (honest-empty, byte-identical)")
+
 # ── C4 follow-up · ENDPOINT MIDDLEWARE (_endpoint_middleware) — the level-2 gate/dep floor ──
 def epmw(src):
     tree = ast.parse(src)

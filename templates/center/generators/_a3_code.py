@@ -746,6 +746,56 @@ def undeclared_layers(entity_code: dict | None = None) -> list[tuple[str, str]]:
     return sorted(out)
 
 
+def parse_boot_roots(repo: Path, entity_code: dict | None = None) -> list[dict]:
+    """BOOT roots (class 7): the lifespan / startup fn that runs ONCE at app boot — ``FastAPI(
+    lifespan=F)`` or ``@app.on_event('startup')``. main.py is UNCLAIMED (it sits above the route
+    dirs), so its boot writers (the catalog/reference seeders) never drew. Scans main.py/app.py in
+    the api dirs and returns endpoint-shaped records ``{method:'BOOT', path, fn, file, touches,
+    touches_x, doc, resp, status}`` — the C4 mints a ``BOOT lifespan`` node from them, homed to
+    __unclaimed__. ``[]`` honest-empty (no lifespan/startup → byte-identical, P5). Deterministic."""
+    ec = ENTITY_CODE if entity_code is None else entity_code
+    _dset: set = set()
+    for slug in sorted(ec):
+        for f in (ec[slug].get("api") or []):
+            _dset.add(str(Path(f).parent))
+            _dset.add(str(Path(f).parent.parent))       # main.py/app.py sit one dir up from the routes
+    out: list[dict] = []
+    seen: set = set()
+    for d in sorted(_dset):
+        dp = repo / d
+        for name in ("main.py", "app.py"):
+            py = dp / name
+            if not py.is_file():
+                continue
+            rel = str(py.relative_to(repo))
+            tree, _ = _safe_parse(py)
+            if tree is None:
+                continue
+            roots: list[str] = []
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Call) and getattr(node.func, "id", "") == "FastAPI":
+                    for kw in node.keywords:
+                        if kw.arg == "lifespan":
+                            fn = (kw.value.id if isinstance(kw.value, ast.Name)
+                                  else kw.value.attr if isinstance(kw.value, ast.Attribute) else None)
+                            if fn:
+                                roots.append(fn)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                    for dec in node.decorator_list:
+                        if (isinstance(dec, ast.Call) and isinstance(dec.func, ast.Attribute)
+                                and dec.func.attr == "on_event" and dec.args
+                                and isinstance(dec.args[0], ast.Constant) and dec.args[0].value == "startup"):
+                            roots.append(node.name)
+            for fn in roots:
+                if (rel, fn) in seen:
+                    continue
+                seen.add((rel, fn))
+                out.append({"method": "BOOT", "path": fn, "fn": fn, "file": rel,
+                            "touches": [], "touches_x": [], "doc": "—", "resp": "—", "status": "boot"})
+    out.sort(key=lambda r: (r["file"], r["fn"]))
+    return out
+
+
 def parse_flags(repo: Path, entity_code: dict | None = None) -> dict:
     """FEATURE-FLAG census (coverage class 12): the config bools whose OFF state walls a route or a
     lane. Two idioms, from the SAME dirs the code map reaches PLUS their immediate parents (a

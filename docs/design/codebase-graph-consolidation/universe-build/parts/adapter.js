@@ -5,7 +5,7 @@
 /* layer ruling (c) 2026-08-20: the old SUBOF collapse (endpoints→api, web→frontend) is retired —
    the layer core groups by the kind's OWN layer value, so new kinds bring their layer for free. */
 var LZ={ endpoints:150, api:60, web:150, data:-150 };
-var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444" };
+var METHOD={ GET:"#22c55e", POST:"#3b82f6", PUT:"#f97316", PATCH:"#eab308", DELETE:"#ef4444", BOOT:"#8a8f98" };
 /* rel → edge colour. c4 kinds: touches · fk · bridge (+ empty→fk on model FK cross-edges). */
 var RELCOL={ touches:"#7c5cfc", fk:"#12b886", bridge:"#e8f443", calls:"#f59e0b", imports:"#a855f7",
   renders:"#339af0", mounts:"#e8590c", uses:"#0ca678", reads:"#e64980", typed:"#8794ab", fetches:"#e8590c", handler:"#8b5cf6", resp:"#f59f00", pk:"#868e96" };
@@ -81,7 +81,7 @@ function _genericKind(kind){ return { col:"#8a8f98", form:"panel", label:"", typ
 var ANIM={ fleets:false, all:true, freezeOnDrag:true };
 var _C4=window.GABE_C4||{l1:{nodes:[],edges:[]},l2:{},cross_edges:[],colors:{}};
 function _num(x){ return (typeof x==="number"&&isFinite(x))?x:(+x||0); }
-function _methOf(label){ var m=/^(GET|POST|PUT|PATCH|DELETE)\b/.exec(label||""); return m?m[1]:null; }
+function _methOf(label){ var m=/^(GET|POST|PUT|PATCH|DELETE|BOOT)\b/.exec(label||""); return m?m[1]:null; }
 
 /* ENTITIES → cluster colour + X band (spread evenly; the spike drives layout from EX[ent]). */
 var _ents=((_C4.l1&&_C4.l1.nodes)||[]).map(function(e){ return e.slug||e.id; });

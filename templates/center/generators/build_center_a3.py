@@ -2007,6 +2007,11 @@ def main() -> int:
     _dm = _a3_code.dispatch_map(REPO_ROOT)
     if _dm:
         amap["dispatch"] = _dm
+    # class 7 (boot): the lifespan/startup root — main.py is unclaimed, so its seeder write-path
+    # never drew. Emit non-empty-only (P5); the graft arm homes main.py → __unclaimed__ for it.
+    _boot = _a3_code.parse_boot_roots(REPO_ROOT)
+    if _boot:
+        amap["boot_roots"] = _boot
     # The GUARD lens — "if I change this, would anything tell me?" Joined from
     # the three maps above, so it costs one pass and re-reads no source.
     amap["guard_insight"] = _a3_guard.guard_insight(
@@ -2055,7 +2060,8 @@ def main() -> int:
                           "sinks": _v.get("sinks")}
                      for _k, _v in _a3_code.function_insight(REPO_ROOT).items()
                      if _v.get("access") or _v.get("sinks")},   # A2+C4: the C2 access + C4 sink map, joined onto the call-tree
-            dispatches=(_dm.get("dispatches") or []))   # class 6: event-bus edges folded into the adjacency + drawn distinct
+            dispatches=(_dm.get("dispatches") or []),   # class 6: event-bus edges folded into the adjacency + drawn distinct
+            boot_roots=(amap.get("boot_roots") or []))  # class 7: home main.py → __unclaimed__ for the boot behind/calls
         # the web→API bridge arm (Path A frontend): a SEPARATE module with its own
         # try/except so a fetch-parser bug degrades the bridge to honest-empty and
         # NEVER masquerades as graft absence (two arms, two presence flags). Read-only

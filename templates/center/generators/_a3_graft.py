@@ -848,7 +848,8 @@ def reach_arm(root: Path, entities: dict[str, Any],
 def graft_arm(root: Path, entities: dict[str, Any],
               allow_build: bool = True,
               faccess: dict[str, Any] | None = None,
-              dispatches: list[dict] | None = None) -> dict[str, Any]:
+              dispatches: list[dict] | None = None,
+              boot_roots: list[dict] | None = None) -> dict[str, Any]:
     """The whole arm, one call: ensure → load → derive. NEVER raises.
 
     Returns ``{present, reason, index_hash?, index_nodes?, index_edges?,
@@ -878,10 +879,21 @@ def graft_arm(root: Path, entities: dict[str, Any],
             _w2["edges"] = list(wiring.get("edges") or []) + [
                 {"source": _e["s"], "target": _e["t"], "relation": "calls", "confidence": "extracted"}
                 for _e in _disp]
-        out = derive_cross(wiring, entities)       # ORIGINAL wiring — L1 kinds untouched (P5)
-        fout = derive_functions(wiring, entities, dispatches=_disp)
-        behind = derive_behind(_w2, entities)      # {<file>#<fn> → {fns, depth}} per endpoint handler
-        endpoint_access = derive_endpoint_access(_w2, entities, faccess)  # A2: ORM access via the call-tree
+        # class 7 · home the BOOT root's file (main.py — unclaimed) into __unclaimed__ so its
+        # lifespan fn homes and the graft calls behind it survive the both-ends-homed drop. Only for
+        # the FUNCTION/behind/access derives; derive_cross reads the ORIGINAL entities (P5: L1 pairs
+        # + cross_calls + confidence byte-identical). Byte-identical when no boot root.
+        bentities = entities
+        if boot_roots:
+            bentities = {**entities}
+            _bu = dict(bentities.get("__unclaimed__") or {})
+            _bu["files"] = list(_bu.get("files") or []) + [["boot", r["file"], 0] for r in boot_roots]
+            _bu["endpoints"] = list(_bu.get("endpoints") or []) + list(boot_roots)
+            bentities["__unclaimed__"] = _bu
+        out = derive_cross(wiring, entities)       # ORIGINAL wiring + entities — L1 kinds untouched (P5)
+        fout = derive_functions(wiring, bentities, dispatches=_disp)   # ORIGINAL calls + dispatches appended once; boot-homed
+        behind = derive_behind(_w2, bentities)     # {<file>#<fn> → {fns, depth}} per endpoint handler (+ the BOOT root)
+        endpoint_access = derive_endpoint_access(_w2, bentities, faccess)  # A2: ORM access via the call-tree
         fn_roles = derive_fn_roles(_w2, faccess)   # C1: accessor/caller/gate/pure per function
         distance_to_write = derive_distance_to_write(_w2, faccess)  # D2W: fn → hops-to-a-write
         fn_behind = derive_fn_behind(_w2)          # {<file>#<fn> → {fns, depth}} per CALL-SOURCE function

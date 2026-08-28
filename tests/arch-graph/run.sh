@@ -571,6 +571,20 @@ check(GG.derive_functions(WIRING, FIX["entities"], dispatches=[{"s": "nope#x", "
       == GG.derive_functions(WIRING, FIX["entities"])["calls"],
       "class 6: a dispatch edge with an unhomed end is dropped (never guessed)")
 
+# ── class 7 (wave C) · boot root: mint the BOOT lifespan node into __unclaimed__ ──
+_fixbt = json.loads(json.dumps(FIX))
+_fixbt["boot_roots"] = [{"method": "BOOT", "path": "lifespan", "fn": "lifespan", "file": "apps/api/main.py",
+                         "touches": [], "touches_x": [], "doc": "—", "resp": "—", "status": "boot"}]
+_gbt = G.build_c4_graph(_fixbt, labels=LABELS, status=STATUS)
+_bootn = [n for g in _gbt["l2"].values() for n in g["nodes"] if n.get("kind") == "endpoint" and str(n.get("label", "")).startswith("BOOT")]
+check(len(_bootn) == 1 and _bootn[0]["slug"] == "__unclaimed__",
+      "class 7: a boot root mints a BOOT endpoint node in __unclaimed__ (P6)")
+check(any(n["kind"] == "unclaimed" for n in _gbt["l1"]["nodes"]),
+      "class 7: the __unclaimed__ L1 bucket exists so the boot node has a cluster")
+_gbt0 = G.build_c4_graph(FIX, labels=LABELS, status=STATUS)
+check(not any(str(n.get("label", "")).startswith("BOOT") for g in _gbt0["l2"].values() for n in g["nodes"]),
+      "class 7 honest-empty: no boot_roots → no BOOT node (byte-identical)")
+
 # ── C4 follow-up · endpoint MIDDLEWARE floor folded to the node + stats ──
 _fixmw = json.loads(json.dumps(FIX))
 _fixmw["entities"]["alpha"]["endpoints"][0]["middleware"] = [

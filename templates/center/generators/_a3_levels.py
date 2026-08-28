@@ -237,6 +237,12 @@ def build_levels(amap: dict[str, Any], graph: dict[str, Any],
             _hid = _f["file"] + "#" + _f["fn"]
             drawn_fn.setdefault(_hid, _f["entity"])
             _handlers.add(_hid)
+    # rule 0 · class 7 · BOOT roots join the handler set (homed to __unclaimed__, main.py is
+    # unclaimed) so rule 3 admits lifespan's graft calls and rule 3b pulls the seeder write-path.
+    for _r in amap.get("boot_roots") or []:
+        _bid = str(_r.get("file")) + "#" + str(_r.get("fn"))
+        drawn_fn.setdefault(_bid, "__unclaimed__")
+        _handlers.add(_bid)
     # 2 · use_edges + usefns — a fn references a model owned elsewhere
     usefns_by: dict[str, dict[str, int]] = {}
     for cls in sorted(MI):
