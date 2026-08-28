@@ -243,6 +243,22 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
     for path, ids in file_pieces.items():
         rec = by_file[path]
         binds = rec.get("bindings") or {}
+
+        def _render_target(tag: str, _p: str = path, _b: dict = binds) -> str | None:
+            """A JSX tag → the piece it renders. A tag with NO binding is a SAME-FILE symbol —
+            resolve it to a same-file EXPORT (blocker 2: `target_of` dropped every same-file
+            render edge, so 52/67 views + 10/18 leaves were mis-classified). HTML tags / non-
+            exported locals still resolve to None (a real ref, not a gap)."""
+            b = _b.get(tag)
+            if b is not None:
+                return target_of(b)
+            t = export_piece.get((_p, tag))
+            if t is None:
+                local["refs"] += 1
+            else:
+                local["samefile"] = local.get("samefile", 0) + 1
+            return t
+
         for ex in rec.get("exports") or []:
             if ex.get("reexport"):
                 continue
@@ -253,7 +269,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 continue
             seen: set[str] = set()
             for tag in ex.get("jsx") or []:
-                seen.add(tag); add(src, target_of(binds.get(tag)), "renders")
+                seen.add(tag); add(src, _render_target(tag), "renders")
             for c in ex.get("ctxArgs") or []:
                 seen.add(c); add(src, target_of(binds.get(c)), "uses-store")
             for c in ex.get("calls") or []:
@@ -282,7 +298,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
             for tag in fr.get("jsx") or []:
                 if tag in claimed:
                     continue
-                add(src, target_of(binds.get(tag)), "renders")
+                add(src, _render_target(tag), "renders")
             for c in fr.get("calls") or []:
                 if c in claimed:
                     continue
@@ -326,6 +342,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                   "by_home": dict(sorted(by_home.items())), "edges": len(edge_list),
                   "by_rel": dict(sorted(by_rel.items())), "cross": sum(1 for e in edge_list if e["cross"]),
                   "screens_absorbed": absorbed, "unresolved": unresolved, "local_refs": local["refs"],
+                  "samefile_renders": local.get("samefile", 0),
                   "fe_types_referenced": len({e["to"] for e in edge_list if pieces[e["to"]]["kind"] == "fe-type"
                                               and pieces[e["from"]]["kind"] != "fe-type"}),
                   "excluded": stats_x,

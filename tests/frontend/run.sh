@@ -119,6 +119,21 @@ check(E.get(("RecipeDetailBody", "Chip")) == "renders" and E.get(("nav", "format
 check(E.get(("scoring", "Recipe")) == "typed", "a module's type import → typed")
 check(fe["stats"]["edges"] == 14 and fe["stats"]["by_rel"] == {"fecall": 3, "renders": 4, "typed": 4, "uses-hook": 1, "uses-store": 2},
       f"exactly the enumerated 14 wires — recipeFixtures typed→Recipe joined ({fe['stats']['by_rel']})")
+check(fe["stats"].get("samefile_renders", 0) == 0,
+      "SAME-FILE render (blocker 2) SILENT: a corpus with no co-located render adds no edge (byte-identical)")
+
+# ── SAME-FILE render (blocker 2) FIRE: a JSX tag with NO binding is a same-file symbol; resolve it
+#    to the sibling EXPORT (target_of used to drop it, mis-classifying co-located views/leaves). ──
+_X2 = {"byFile": {"src/features/panel/Panel.tsx": {
+    "exports": [{"name": "Panel", "kind": "function", "hasJsx": True, "jsx": ["Header", "div"]},
+                {"name": "Header", "kind": "function", "hasJsx": True, "jsx": []}],
+    "bindings": {}}}}
+_fe2 = _a3_fe.build_fe(_X2, {"panel": {}}, [])
+_E2 = {(_fe2["pieces"][a]["name"], _fe2["pieces"][b]["name"]): r for a, b, r in _fe2["edges"]}
+check(_E2.get(("Panel", "Header")) == "renders" and _fe2["stats"].get("samefile_renders") == 1,
+      "SAME-FILE render FIRE: a same-file JSX tag resolves to its sibling export (Panel → Header)")
+check(("Panel", "div") not in _E2,
+      "SAME-FILE render: an HTML tag (div) is not an export → resolves to nothing, no spurious edge")
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and len(e) == 3 and isinstance(e[0], int) for e in fe["edges"]), "wires are COMPACT index triples")
 check(fe["stats"]["unresolved"] == {"ext": 0, "no_piece": 0, "scaffold": 1, "alias": 1},
