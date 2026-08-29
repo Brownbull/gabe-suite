@@ -307,6 +307,16 @@
   #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
     padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* dev-onboarding TIER (operator): a level group header + a per-row pip, an emerald→amber→purple
+     expertise ramp — panel chrome, deliberately outside the graph's heat/entity palettes */
+  #jrn .jglvl{ display:flex; align-items:center; gap:6px; color:var(--ink); border-top-color:var(--line); }
+  #jrn .jglvlico{ display:inline-flex; align-items:center; }
+  #jrn .jglvl[data-ge="lvl1"] .jglvlico{ color:#10b981; }
+  #jrn .jglvl[data-ge="lvl2"] .jglvlico{ color:#f59e0b; }
+  #jrn .jglvl[data-ge="lvl3"] .jglvlico{ color:#a855f7; }
+  #jrn .jrnlvl{ display:inline-flex; align-items:center; flex:none; }
+  #jrn .jrnlvl.l1{ color:#10b981; } #jrn .jrnlvl.l2{ color:#f59e0b; } #jrn .jrnlvl.l3{ color:#a855f7; }
+  #jrn .jrnrow.on .jrnlvl{ color:#fff; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
   /* journey STEP controls — CENTERED in the header bar: [‹] [i/N · name] [›] [✕], real Lucide buttons */
@@ -2466,10 +2476,12 @@ function _wfCollect(bk){ var W=window.GABE_WORKFLOWS; if(!W||!W.length) return [
     return { cid:"wf:"+i, wf:true, corpora:{workflow:1}, corpus:"workflow", agg:false, e2e:false,
       ents:Object.keys(ents), carriers:steps.map(function(s){ return s.id; }), meta:steps, writes:writes,
       epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:"user workflows",
+      level:w.level||0,                                        // dev-onboarding expertise tier (1/2/3; 0 = unleveled → "other")
       fe:_bkFeLeg(eps), feN:0 }; }).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; }); }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
 function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.agg?"agg":j.cid));
   var tt=j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s)"+(j.gates?(" · "+j.gates+" gate(s)"):"")+(j.disps?(" · "+j.disps+" dispatch(es)"):"")+" · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
   return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+tt.replace(/"/g,"&quot;")+'">'
+  +(j.wf&&j.level&&_JRNLEVELS[j.level]?('<span class="jrnlvl l'+j.level+'" title="tier '+j.level+' · '+_JRNLEVELS[j.level].label+'">'+_JRNLEVELS[j.level].ico+'</span>'):"")
   +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+badge+'</b><span class="jrncorp">'+j.corpus+'</span>'
   +(j.feN?('<span class="jrnfe">'+svgInline("component", KINDCOL.component, 10)+j.feN+'</span>'):"")
   +'<span class="jrnn">'+j.ents.length+' ents</span></div>'; }
@@ -2532,6 +2544,15 @@ var _JRNKINDICO={
   ent:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
   agg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"/></svg>' };
 var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
+// dev-onboarding expertise tiers (operator): a filled-bar RAMP — N bars for level N — reads as
+// "level" without a word; the label rides beside it in the group header.
+function _lvlBars(n){ var b=''; for(var i=0;i<3;i++){ var on=i<n, h=6+i*4, y=20-h;
+    b+='<rect x="'+(3+i*6)+'" y="'+y+'" width="4" height="'+h+'" rx="1" '+(on?'fill="currentColor"':'fill="currentColor" opacity="0.22"')+'/>'; }
+  return '<svg viewBox="0 0 24 24" width="13" height="13">'+b+'</svg>'; }
+var _JRNLEVELS={
+  1:{label:"Orientation",  hint:"get your bearings — how you get in, how data flows out", ico:_lvlBars(1)},
+  2:{label:"Core",         hint:"the critical flows the app exists for", ico:_lvlBars(2)},
+  3:{label:"Specialized",  hint:"the deep end — AI, GDPR, config, cross-cutting edges", ico:_lvlBars(3)} };
 function _jrnKindOf(j){ return j.wf?"wf":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent"))); }   // workflows · backend · then the test kinds (e2e > agg > by-entity)
 function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
 function _jrnVisible(j){ if(j.wf && !j.ents.length) return true;                                // an ALL-UNMAPPED workflow has no span — it stays visible so its 'unmapped' badge can say so
@@ -2548,6 +2569,15 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
   var vis=_jrnCollect().filter(function(j){ return _jrnKindOf(j)===sel && _jrnVisible(j); });
   var h='<div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
   if(!vis.length) return h+'<div class="jrnnone" style="padding:8px 7px">no '+sel+' journeys for the included entities</div>';
+  if(sel==="wf"){                                              // WORKFLOWS group by DEV-ONBOARDING LEVEL (operator): a new dev reads ①→②→③ top-down
+    var byLvl={}; vis.forEach(function(j){ var L=j.level||99; (byLvl[L]=byLvl[L]||[]).push(j); });
+    Object.keys(byLvl).map(Number).sort(function(a,b){ return a-b; }).forEach(function(L){
+      var m=_JRNLEVELS[L]||{label:"other",hint:"unleveled",ico:_lvlBars(0)}, key="lvl"+L, cl=!!window.__uniJrnCollapse[key];
+      h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+'"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span>'+m.label+' · '+byLvl[L].length+'</div>';
+      if(!cl) byLvl[L].forEach(function(j){ h+=_jrnRow(j); });   // curated order within a tier — never re-sorted
+    });
+    return h;
+  }
   var groups={}; vis.forEach(function(j){ (groups[j.start]=groups[j.start]||[]).push(j); });
   Object.keys(groups).sort().forEach(function(g){ var cl=!!window.__uniJrnCollapse[g];
     h+='<div class="jrngrp jgcl'+(cl?" cl":"")+'" data-ge="'+g+'" style="color:'+(ENT[g]||"var(--muted)")+'"><span class="jcar">'+_JCHEV+'</span>'+g+' · '+groups[g].length+'</div>';
@@ -3882,7 +3912,7 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
             _frameSet(nodes.filter(function(n){ return n.ent===e&&n.sub===sub; }).map(function(n){ return n.id; })); } }); });
     });
     _jrnCollect().forEach(function(j){ var sc=_score(q, j.name||j.cid, j.cid+" "+j.ents.join(" "));
-      if(sc>=0) out.push({g:"journeys", sc:sc+0.25, label:(j.name||j.cid), sub:j.corpus+(j.feN?(" · "+j.feN+" fe"):""), ico:JGLYPH,
+      if(sc>=0) out.push({g:"journeys", sc:sc+0.25, label:(j.name||j.cid), sub:(j.wf&&j.level&&_JRNLEVELS[j.level]?(_JRNLEVELS[j.level].label+" · "):"")+j.corpus+(j.feN?(" · "+j.feN+" fe"):""), ico:JGLYPH,
         go:function(){ window.__uniJrnStart(j.cid); } }); });
     out.sort(function(a,b){ return (a.sc-b.sc)||(a.label<b.label?-1:1); });
     return out; }

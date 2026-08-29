@@ -147,6 +147,16 @@
   #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
     padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  /* dev-onboarding TIER (operator): a level group header + a per-row pip, an emerald→amber→purple
+     expertise ramp — panel chrome, deliberately outside the graph's heat/entity palettes */
+  #jrn .jglvl{ display:flex; align-items:center; gap:6px; color:var(--ink); border-top-color:var(--line); }
+  #jrn .jglvlico{ display:inline-flex; align-items:center; }
+  #jrn .jglvl[data-ge="lvl1"] .jglvlico{ color:#10b981; }
+  #jrn .jglvl[data-ge="lvl2"] .jglvlico{ color:#f59e0b; }
+  #jrn .jglvl[data-ge="lvl3"] .jglvlico{ color:#a855f7; }
+  #jrn .jrnlvl{ display:inline-flex; align-items:center; flex:none; }
+  #jrn .jrnlvl.l1{ color:#10b981; } #jrn .jrnlvl.l2{ color:#f59e0b; } #jrn .jrnlvl.l3{ color:#a855f7; }
+  #jrn .jrnrow.on .jrnlvl{ color:#fff; }
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
   /* journey STEP controls — CENTERED in the header bar: [‹] [i/N · name] [›] [✕], real Lucide buttons */
