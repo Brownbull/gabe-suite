@@ -74,7 +74,7 @@ function __uniRelaxHulls(){ var n=_ents.length; if(n<2 || __chainMode || CFG.ent
   /* R = the SETTLED radius estimate, not the nominal one: measured (gustify, 888 planets) hulls settle at
      1.6–1.8× RENT under the −60 charge — sizing the floor to RENT alone left the bleed at 46%. */
   var HULLK=window.__uniHullK||1.6;
-  var R=function(s){ return HULLK*(30+9*Math.sqrt(cnt[s]||0))*(window.__uniSpread||1); };
+  var R=function(s){ return HULLK*(30+9*Math.sqrt(cnt[s]||0))*(window.__uniSpread||1.4); };
   for(var k=0;k<60;k++){ var moved=false;
     for(var i=0;i<n;i++) for(var j=i+1;j<n;j++){ var a=_ents[i], b=_ents[j],
       dx=EX[b]-EX[a], dy=EY[b]-EY[a], dz=EZ[b]-EZ[a], d=Math.sqrt(dx*dx+dy*dy+dz*dz), need=1.05*Math.max(R(a)+R(b), 2*Math.max(R(a),R(b)));   // 2·max: a tiny anchor beside a giant hull must clear the giant's FAR side too
@@ -93,11 +93,11 @@ function recomputeSubAnchors(){
   nodes.forEach(function(n){ cnt[n.ent]=(cnt[n.ent]||0)+1;
     (subs[n.ent]=subs[n.ent]||{})[n.sub]=(subs[n.ent][n.sub]||0)+1; });
   RENT={}; SUBANCHOR={};
-  _ents.forEach(function(e,ei){ var c=cnt[e]||0; RENT[e]=(30+9*Math.sqrt(c))*(window.__uniSpread||1);   // spread slider: element separation INSIDE entities
+  _ents.forEach(function(e,ei){ var c=cnt[e]||0; RENT[e]=(30+9*Math.sqrt(c))*(window.__uniSpread||1.4);   // spread slider: element separation INSIDE entities
     var g=subs[e]||{}, ks=Object.keys(g).sort(function(a,b){ return (g[b]-g[a])||(a<b?-1:1); });
     var m={}; SUBANCHOR[e]=m;
     if(ks.length<2){ ks.forEach(function(k){ m[k]={x:0,y:0,z:0}; }); return; }   // one group (incl. the honest "other") → centered, no ring
-    var SR=Math.min(RENT[e]*0.78, 34+9*ks.length);   // clusters inside an entity sit farther apart (operator: more spread, incl. force)
+    var SR=Math.min(RENT[e]*0.78, 44+13*ks.length);   // clusters inside an entity sit farther apart — cap raised (operator: dense entities overlapped; 34+9→44+13 lets a busy entity's clusters use more of RENT*0.78)
     ks.forEach(function(k,i){ var a=ei*0.7 + i*(Math.PI*2/ks.length);            // per-entity phase stagger — rings don't all align
       m[k]={ x:Math.cos(a)*SR, y:__chainMode?0:(((i%2)?1:-1)*SR*0.22), z:Math.sin(a)*SR }; }); });
 }
@@ -799,7 +799,12 @@ window.__uniPin=window.__uniPin||{};   // nodes a journey walk / reveal pinned p
 window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; window.__uniPin={}; try{ _applyVisNow({all:true}); }catch(e){} HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=null; HL.set={}; HL.links=null;
   window.__uniSelLink=null;
   WALK.mode=null; WALK.steps=[]; WALK.i=0; _hlRestyle(); _walkRender(); };
-window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d)); HL.exact=false;   // widening depth during a journey opts INTO the BFS neighborhood (the exact path was the default)
+window.__uniHLDepth=function(d){ HL.depth=Math.max(1,Math.min(5,d));
+  // During a JOURNEY the path IS the set — a depth BFS from all ~67 path nodes FLOODS the view and can't
+  // be undone (operator). So the depth slider does NOT widen a walking journey: it keeps the exact clean
+  // path. (Depth still drives SELECTION highlighting outside a journey.) The number updates for later use.
+  if(HL.jr){ _hlSyncUI(); return; }
+  HL.exact=false;
   if(HL.on){ _hlCompute(); _hlRestyle(); } else _hlSyncUI(); };
 window.__uniHLMode=function(){ HL.mode=(HL.mode==="glow")?"focus":"glow"; if(HL.on) _hlRestyle(); else _hlSyncUI(); };
 /* ── JOURNEYS — cross-entity tests from det.test_journeys, deduped by cid. NAMED for free: the same
@@ -1711,7 +1716,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
   /* radius (hull pad, live) + SPREAD (internal separation — default at a QUARTER of the bar) */
   if(radiusGrp){ var spRow=document.createElement("div"); spRow.className="cfgrow";
     spRow.innerHTML='<span class="rlbl splbl" title="element separation INSIDE entities — the default sits at a FIFTH of the bar; drag right for a LOT more room, left to pack tighter">spread</span>'
-      +'<input type="range" class="rng" id="spreadRng" min="0.55" max="2.8" step="0.05" value="1">';
+      +'<input type="range" class="rng" id="spreadRng" min="0.55" max="2.8" step="0.05" value="1.4">';
     var rsRow=document.createElement("div"); rsRow.className="cfgrow rsrow";        // radius + spread: ONE row, two columns
     if(radRow&&radRow.parentNode===radiusGrp) radiusGrp.removeChild(radRow);
     rsRow.appendChild(radRow); rsRow.appendChild(spRow); radiusGrp.appendChild(rsRow);

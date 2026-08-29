@@ -770,8 +770,8 @@ check("consumes:'calls'" in page and "nests:'fk'" in page,
 check('consumes:"consumed by"' in page.replace("'",'"') or 'consumes:"consumes"' in page,
       "the card labels for consumes/nests rels are gone")
 check('"spreadRng"' in page, "the SPREAD slider is gone (element separation inside entities)")
-check('(window.__uniSpread||1)' in page and 'min="0.55" max="2.8"' in page and 'className="cfgrow rsrow"' in page,
-      "spread must scale RENT (default at a FIFTH of the 0.55-2.8 bar) sharing one row with radius")
+check('(window.__uniSpread||1.4)' in page and 'min="0.55" max="2.8"' in page and 'value="1.4"' in page and 'className="cfgrow rsrow"' in page,
+      "spread scales RENT, default bumped to 1.4 (operator: dense entities overlapped) — the slider matches")
 check('className="cfgrow entcombo"' in page,
       "the entity combo/options rows are gone")
 check("'Legend</b>" in page.replace('"',"'") and '#elegend .lghd b svg' in page,
@@ -881,8 +881,8 @@ check('fe.concat(j.carriers)' in page and 'WALK.mode="journey"; WALK.steps=fe.co
       "the walk no longer steps the frontend leg FIRST (users -> screens -> carriers)")
 check('if(HL.exact){' in page and 'HL.exact=true; HL.origin=fe.concat(j.carriers)' in page,
       "journeys lost the EXACT-set highlight (a depth-BFS from the dense fe cluster lit 2,824 wires — screen noise)")
-check('HL.depth=Math.max(1,Math.min(5,d)); HL.exact=false;' in page,
-      "widening depth during a journey must opt INTO the BFS neighborhood (exact stays the default)")
+check('if(HL.jr){ _hlSyncUI(); return; }' in page and 'HL.depth=Math.max(1,Math.min(5,d));' in page,
+      "the depth slider does NOT flood a walking journey (operator): during a journey it keeps the exact clean path, no BFS from the ~67-node path")
 check('class="wfe"' in page and 'class="jrnfe"' in page and "svgInline(\"component\", KINDCOL.component" in page,
       "the fe chips (pill + picker rows) lost their ACTUAL component glyph (legend-visual rule)")
 check('id="tsin"' in page and 'id="tsdd"' in page and 'id="tsrch"' in page and '.topsearch' in page,
@@ -1113,7 +1113,12 @@ const { chromium } = require(process.argv[3]);
     var jrn=null; try{ var _wi=(window.GABE_WORKFLOWS||[]).findIndex(function(w){ return w.name==='Cook a recipe — the cooking session'; });
       if(_wi>=0 && window.__uniJrnStart){ window.__uniJrnStart('wf:'+_wi);
         var _f0=(typeof WALK!=='undefined'&&WALK.steps.length)?_fnById(WALK.steps[0]):null;
-        jrn={ feLen:(typeof WALK!=='undefined'?WALK.feLen:0), firstKind:_f0?_f0.kind:null };
+        // the depth slider must NOT flood a walking journey (operator): exact stays, the set doesn't grow.
+        var _setBefore=(typeof HL!=='undefined'&&HL.set)?Object.keys(HL.set).length:0, _exBefore=(typeof HL!=='undefined')?HL.exact:null;
+        if(window.__uniHLDepth) window.__uniHLDepth(5);
+        var _setAfter=(typeof HL!=='undefined'&&HL.set)?Object.keys(HL.set).length:0, _exAfter=(typeof HL!=='undefined')?HL.exact:null;
+        jrn={ feLen:(typeof WALK!=='undefined'?WALK.feLen:0), firstKind:_f0?_f0.kind:null,
+          depthNoFlood:(_exBefore===true && _exAfter===true && _setAfter<=_setBefore) };
         if(window.__uniHLClear) __uniHLClear(); } }catch(e){}
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
@@ -1132,7 +1137,7 @@ const { chromium } = require(process.argv[3]);
   const iconsOk = r.iconsBuilt===6;   // flag/provider/module/web/middleware/prompt each build a billboard icon (no cube)
   const hdrOk = r.hdr && r.hdr.moved<=1 && r.hdr.slotEmpty>=240 && r.hdr.slotFull>=240 && Math.abs(r.hdr.slotEmpty-r.hdr.slotFull)<=1;   // the reserved walker slot keeps a constant width → tiers don't shift when a journey enters/leaves
   const _FE_KINDS=['hook','component','module','store','route','web','screen','type'];
-  const jrnOk = r.jrn && r.jrn.feLen>=1 && _FE_KINDS.indexOf(r.jrn.firstKind)>=0;   // a workflow walk STARTS at the frontend (not the API endpoint), even at a tier that hides that kind
+  const jrnOk = r.jrn && r.jrn.feLen>=1 && _FE_KINDS.indexOf(r.jrn.firstKind)>=0 && r.jrn.depthNoFlood===true;   // a workflow walk STARTS at the frontend (not the API endpoint) even at a tier that hides that kind; and the depth slider does NOT flood a walking journey
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
