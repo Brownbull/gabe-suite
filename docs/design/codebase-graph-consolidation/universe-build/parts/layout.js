@@ -1090,10 +1090,13 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
     +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(kind, col, 14)+'</span>'):"")
     +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(kind)+'</span>'
     +(ent?('<span class="snent" style="background:'+col+'">'+esc(ent)+'</span>'):"")
-    +'<span class="snnav"><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
+    +'<span class="snnav"><button class="snmin" title="minimize to the title / expand">–</button><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
     +'<div class="snwhat">'+what+'</div>'+(hop?('<div class="snhop">'+hop+'</div>'):"")
     +(doc?('<div class="sndoc">'+esc(doc)+'</div>'):"");
   el.querySelectorAll("[data-sd]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-sd")); }; });
+  el.classList.toggle("min", !!window.__uniStepMin);                              // collapse to the title row (persisted across steps — operator)
+  var _mb=el.querySelector(".snmin"); if(_mb){ _mb.textContent=window.__uniStepMin?"+":"–";
+    _mb.onclick=function(){ window.__uniStepMin=!window.__uniStepMin; el.classList.toggle("min", !!window.__uniStepMin); _mb.textContent=window.__uniStepMin?"+":"–"; }; }
   el.style.display=""; }
 /* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
    card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */

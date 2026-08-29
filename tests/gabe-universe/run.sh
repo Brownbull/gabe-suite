@@ -345,6 +345,8 @@ check('window.__uniDrawJourneyNums=function' in page and 'if(window.__uniDrawJou
       "journey STEP-NUMBER badges (operator): the pass exists + is hooked (updateConnectors + walk render) — a sequence number overlaid on each step node during a walk")
 check('window.__uniJn = window.__uniJn || { size:5, line:4.5, disc:0.6, font:0, off:-9 };' in page and 'id="jnSize"' not in page and 'id="jncopy"' not in page,
       "the step-number badge uses the operator-tuned DEFAULT config; the live tuner was removed once settled")
+check('width:min(720px, calc(100vw - 16px))' in page and 'font:14px/1.5 var(--font-ui)' in page and 'class="snmin"' in page and '#stepnote.min .snwhat, #stepnote.min .snhop, #stepnote.min .sndoc{ display:none; }' in page and 'window.__uniStepMin' in page,
+      "the step note is ENLARGED (720px/14px) + a minimize button collapses it to the title row (operator)")
 check('#walkbar .wnav{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }' in page and '#walkbar .wchip{ flex:0 0 20px;' in page,
       "walkbar chips no longer keep a fixed size and wrap into rows")
 check('s.src="./workflows.js"; s.onerror=function(){};' in page and 'if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk")' in page,

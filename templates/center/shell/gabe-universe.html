@@ -358,20 +358,22 @@
   /* ── STEP NOTE (operator): what is happening at the current journey step — top-centre over the
         graph, DERIVED from the map (kind · role · hop · reads/writes · doc), never curated prose. */
   #stepnote{ position:fixed; left:50%; transform:translateX(-50%); bottom:46px; z-index:54;   /* bottom-middle (operator): same horizontal centre, moved off the top to clear the header + tiers */
-    width:min(600px, calc(100vw - 16px)); background:var(--panel, var(--chip-bg)); color:var(--ink);
-    border:1px solid var(--line); border-radius:10px; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); padding:9px 12px 8px;
-    font:12px/1.45 var(--font-ui); pointer-events:auto; }
-  #stepnote .snhd{ display:flex; align-items:center; gap:8px; min-width:0; }
-  #stepnote .snpos{ font:700 10.5px/1 var(--font-mono); color:var(--muted); flex:none; }
-  #stepnote .snlbl{ font:700 12.5px/1.3 var(--font-mono); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  #stepnote .snent{ font:700 9.5px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:#fff; border-radius:999px; padding:3px 7px; flex:none; }
-  #stepnote .snkind{ font:600 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); flex:none; }
-  #stepnote .snwhat{ margin-top:5px; color:var(--ink); }
-  #stepnote .snhop{ margin-top:3px; color:var(--muted); font-size:11px; }
+    width:min(720px, calc(100vw - 16px)); background:var(--panel, var(--chip-bg)); color:var(--ink);
+    border:1px solid var(--line); border-radius:11px; box-shadow:0 10px 30px -12px rgba(0,0,0,.6); padding:12px 16px 12px;
+    font:14px/1.5 var(--font-ui); pointer-events:auto; }   /* bigger card + font (operator) */
+  #stepnote.min{ padding-bottom:11px; }                                          /* minimized → just the title row */
+  #stepnote.min .snwhat, #stepnote.min .snhop, #stepnote.min .sndoc{ display:none; }
+  #stepnote .snhd{ display:flex; align-items:center; gap:9px; min-width:0; }
+  #stepnote .snpos{ font:700 12px/1 var(--font-mono); color:var(--muted); flex:none; }
+  #stepnote .snlbl{ font:700 15px/1.3 var(--font-mono); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #stepnote .snent{ font:700 11px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:#fff; border-radius:999px; padding:3px 9px; flex:none; }
+  #stepnote .snkind{ font:600 11.5px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.05em; color:var(--muted); flex:none; }
+  #stepnote .snwhat{ margin-top:7px; color:var(--ink); }
+  #stepnote .snhop{ margin-top:4px; color:var(--muted); font-size:13px; }
   #stepnote .snhop b{ color:var(--ink); }
-  #stepnote .sndoc{ margin-top:4px; color:var(--muted); font-size:11px; font-style:italic; border-top:1px dotted var(--line); padding-top:4px; }
+  #stepnote .sndoc{ margin-top:5px; color:var(--muted); font-size:13px; font-style:italic; border-top:1px dotted var(--line); padding-top:5px; }
   #stepnote .snnav{ display:flex; align-items:center; gap:6px; margin-left:auto; flex:none; }
-  #stepnote .snnav button{ width:22px; height:20px; font:700 12px/1 var(--font-ui); color:var(--ink); background:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
+  #stepnote .snnav button{ width:24px; height:22px; font:700 14px/1 var(--font-ui); color:var(--ink); background:none; border:1px solid var(--line); border-radius:5px; cursor:pointer; padding:0; }
   #stepnote .snnav button:hover{ border-color:var(--accent); }
   #stepnote .snw{ color:#e5484d; font-weight:700; } #stepnote .snr{ color:#d977a8; font-weight:700; }
   #stepnote .sng{ color:#6366f1; font-weight:700; } #stepnote .snd{ color:#f76707; font-weight:700; }   /* wave D: gate (depends) · dispatch (event bus) */
@@ -2600,10 +2602,13 @@ function _stepNote(){ var el=document.getElementById("stepnote"); if(!el) return
     +(typeof svgInline==="function"&&kind!=="?"?('<span style="display:inline-flex;flex:none">'+svgInline(kind, col, 14)+'</span>'):"")
     +'<span class="snlbl" title="'+esc(lbl)+'">'+esc(lbl)+'</span><span class="snkind">'+esc(kind)+'</span>'
     +(ent?('<span class="snent" style="background:'+col+'">'+esc(ent)+'</span>'):"")
-    +'<span class="snnav"><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
+    +'<span class="snnav"><button class="snmin" title="minimize to the title / expand">–</button><button title="previous step (Alt+A)" data-sd="-1">‹</button><button title="next step (Alt+D)" data-sd="1">›</button></span></div>'
     +'<div class="snwhat">'+what+'</div>'+(hop?('<div class="snhop">'+hop+'</div>'):"")
     +(doc?('<div class="sndoc">'+esc(doc)+'</div>'):"");
   el.querySelectorAll("[data-sd]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-sd")); }; });
+  el.classList.toggle("min", !!window.__uniStepMin);                              // collapse to the title row (persisted across steps — operator)
+  var _mb=el.querySelector(".snmin"); if(_mb){ _mb.textContent=window.__uniStepMin?"+":"–";
+    _mb.onclick=function(){ window.__uniStepMin=!window.__uniStepMin; el.classList.toggle("min", !!window.__uniStepMin); _mb.textContent=window.__uniStepMin?"+":"–"; }; }
   el.style.display=""; }
 /* ── THE WALK (ported from the 2D graph): journey steps ‹ i/N › jump the camera + open each carrier's
    card while the whole path stays lit; element clicks build a TRAIL (up to 7) of step chips. ── */
