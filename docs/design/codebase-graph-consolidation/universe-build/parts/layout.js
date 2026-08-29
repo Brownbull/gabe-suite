@@ -474,6 +474,25 @@ window.__uniDrawStubs=function(){ window.__uniStubs=[]; try{
     var col=(H&&H.col)||"#8590a8";
     var star=glowSprite(col, 22, 0.45); star.position.set(p.x,p.y,p.z); star.raycast=function(){}; grp.add(star);   // faint glow AT the hidden node's own spot — no line
     window.__uniStubs.push({ p:{x:p.x,y:p.y,z:p.z}, hid:hidId, col:col }); }); }catch(e){} };
+/* ── WRITE-SPINE RINGS (operator D2): a ring HALO on every rendered write-spine node (`fed2w` set),
+   coloured by its fed2w band (FEBAND — magenta at the write → blue far), the NODE signal that
+   complements the wire gradient. A SEPARATE toggle (`__uniWriteRing`), DEFAULT OFF. Its own scene
+   group, rebuilt each updateConnectors like the stubs; `ringSprite` is the crisp halo primitive. ── */
+window.__uniWriteRingGroup=null;
+window.__uniDrawWriteRings=function(){ try{
+  if(typeof Graph==="undefined"||!Graph||!Graph.scene) return;
+  var grp=window.__uniWriteRingGroup;
+  if(!grp){ grp=window.__uniWriteRingGroup=new T.Group(); }
+  try{ var _sc=Graph.scene(); if(_sc && grp.parent!==_sc) _sc.add(grp); }catch(e){}   // (re)attach — survive a scene reset
+  while(grp.children.length){ var ch=grp.children.pop(); if(ch.material&&ch.material.dispose) ch.material.dispose(); grp.remove(ch); }
+  if(!window.__uniWriteRing) return;                              // DEFAULT OFF — the toggle gates the whole pass
+  if(typeof nodes==="undefined"||typeof _npos==="undefined"||typeof ringSprite!=="function") return;
+  var pal=window.FEBAND||[0xc026d3];
+  nodes.forEach(function(n){ if(!n||n.fed2w==null) return;        // write-spine nodes only (fed2w = hops-to-a-write)
+    if(typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(n)) return;   // only actually-rendered nodes
+    var p=_npos[n.id]; if(!p) return;
+    var col=pal[Math.min(n.fed2w|0, pal.length-1)];
+    var r=ringSprite(col, 30, 0.72); r.position.set(p.x,p.y,p.z); r.raycast=function(){}; grp.add(r); }); }catch(e){} };
 window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var ent=h.ent, sub=h.sub, cols=["show","planets","wires"];
   if(typeof UNIVIS==="undefined"||typeof _VISDEF==="undefined") return;
   if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
@@ -936,6 +955,15 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
    entities; __uniJrnKind = the open kind tab; __uniJrnCollapse = folded groups. ── */
 window.__uniJrnExcl=window.__uniJrnExcl||{}; window.__uniJrnKind=window.__uniJrnKind||null; window.__uniJrnCollapse=window.__uniJrnCollapse||{};   // default tab resolved LAZILY at first paint (workflows.js loads at runtime)
 var _JRNKINDS=[["wf","workflows"],["bk","backend"],["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
+// journey-kind TAB icons (operator: replace the type-title selectors with icons; the WORD stays on
+// hover via title=, per the legend-visual ruling — the tab shows the glyph, not the word). route ·
+// server · bullseye · box · layers — currentColor so each inherits the tab's muted/on colour.
+var _JRNKINDICO={
+  wf:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>',
+  bk:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>',
+  e2e:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  ent:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  agg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"/></svg>' };
 var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 function _jrnKindOf(j){ return j.wf?"wf":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent"))); }   // workflows · backend · then the test kinds (e2e > agg > by-entity)
 function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
@@ -948,7 +976,7 @@ function _jrnChipsHTML(){ var c=_jrnTouch();
     h+='<span class="jrnent'+(off?" off":"")+'" data-e="'+e+'" style="--ec:'+(ENT[e]||"#888")+'" title="'+c[e]+' journey(s) touch '+e+'"><i></i>'+e+'<b>'+c[e]+'</b></span>'; });
   return h+'</div>'; }
 function _jrnTabsHTML(){ var sel=window.__uniJrnKind;
-  return '<div class="jrnkindtabs">'+_JRNKINDS.map(function(kd){ return '<button data-jk="'+kd[0]+'"'+(kd[0]===sel?' class="on"':'')+'>'+kd[1]+'<b>'+_jrnKindCount(kd[0])+'</b></button>'; }).join('')+'</div>'; }
+  return '<div class="jrnkindtabs">'+_JRNKINDS.map(function(kd){ return '<button data-jk="'+kd[0]+'" title="'+kd[1]+'"'+(kd[0]===sel?' class="on"':'')+'>'+(_JRNKINDICO[kd[0]]||kd[1])+'<b>'+_jrnKindCount(kd[0])+'</b></button>'; }).join('')+'</div>'; }
 function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ return (b.ents.length-a.ents.length)||(b.carriers.length-a.carriers.length); };
   var vis=_jrnCollect().filter(function(j){ return _jrnKindOf(j)===sel && _jrnVisible(j); });
   var h='<div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';

@@ -276,6 +276,7 @@ assert OLD_ACCROW in text, "legend access→transports anchor missing"
 text = text.replace(OLD_ACCROW, '''    {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
     {t:"d2wtog"},
     {t:"fed2wtog"},
+    {t:"writeringtog"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},''', 1)
 
 OLD_LNK = '''      if(it.t==="ln"&&it.k){ var _lon='''
@@ -283,12 +284,14 @@ assert OLD_LNK in text, "legend ln&&k branch anchor missing"
 text = text.replace(OLD_LNK, '''      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
       if(it.t==="fed2wtog"){ var _fon=!!window.__uniFED2W; h+='<div class="lgrow lgd2w'+(_fon?"":" lgoff")+'" data-fed2wtog="1" style="cursor:pointer" title="click to '+(_fon?"hide the frontend write heat":"colour FRONTEND write wires by distance-to-write (blue→magenta)")+'"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="#c026d3" stroke-width="3"/></svg></div><div class="lglbl">FE write heat <i>'+(_fon?"on":"off")+'</i></div></div>'; return; }
+      if(it.t==="writeringtog"){ var _ron=!!window.__uniWriteRing; h+='<div class="lgrow lgd2w'+(_ron?"":" lgoff")+'" data-writeringtog="1" style="cursor:pointer" title="click to '+(_ron?"hide the write-spine node rings":"ring each write-spine NODE (a halo, coloured by distance-to-write)")+'"><div class="lgvis"><svg class="lgln" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="#c026d3" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></div><div class="lglbl">write rings <i>'+(_ron?"on":"off")+'</i></div></div>'; return; }
       ''' + OLD_LNK, 1)
 
 OLD_LGCONN_H = '''    [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;'''
 assert OLD_LGCONN_H in text, "lgconn handler anchor missing"
 text = text.replace(OLD_LGCONN_H, '''    [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });
     [].forEach.call(el.querySelectorAll("[data-fed2wtog]"), function(row){ row.onclick=function(){ window.__uniFED2W=!window.__uniFED2W; try{ updateConnectors(); }catch(e){} render(); }; });
+    [].forEach.call(el.querySelectorAll("[data-writeringtog]"), function(row){ row.onclick=function(){ window.__uniWriteRing=!window.__uniWriteRing; try{ updateConnectors(); }catch(e){} render(); }; });
 ''' + OLD_LGCONN_H, 1)
 
 # ── connector legend declutter (operator): the row's <i>description</i> moves behind an info ⓘ whose
@@ -773,7 +776,7 @@ text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWir
 # right after the bundle pass in updateConnectors. One targeted append on the final __uniDrawBundles line.
 assert 'if(window.__uniDrawBundles) __uniDrawBundles(connGroup);' in text, "the __uniDrawBundles hook is missing — stub patch anchor gone"
 text = text.replace('if(window.__uniDrawBundles) __uniDrawBundles(connGroup);',
-  'if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);', 1)
+  'if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup); if(window.__uniDrawWriteRings) __uniDrawWriteRings();', 1)
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")

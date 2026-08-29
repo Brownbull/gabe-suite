@@ -797,6 +797,13 @@ check('data-fed2wtog="1"' in page and 'FE write heat <i>' in page,
       "the legend carries the SEPARATE FE-write-heat toggle row")
 check('window.__uniWriteRing=false;' in page,
       "the write-spine node ring is a SEPARATE toggle (operator D2), DEFAULT OFF")
+# ── the write-spine node RING pass (D2) + journey-tab ICONS (operator) ──
+check('window.__uniDrawWriteRings=function' in page and 'if(window.__uniDrawWriteRings) __uniDrawWriteRings();' in page,
+      "the write-ring pass is defined AND hooked into updateConnectors (rides the stub hook)")
+check('data-writeringtog="1"' in page and 'write rings <i>' in page,
+      "the legend carries the write-ring toggle row")
+check('var _JRNKINDICO={' in page and '''title="'+kd[1]+'"''' in page and '(_JRNKINDICO[kd[0]]||kd[1])' in page,
+      "the journey-kind tabs render ICONS with the type-word on hover (title=), not the title text")
 check('d2w:f.d2w' in page,
       "the levels fn_node d2w no longer rides onto the render node (call-wire heat lost its source)")
 check('t:"d2wtog"' in page and 'function _bandSpectrumHTML' in page and 'it.k==="calls"?_bandSpectrumHTML()' in page,
@@ -1056,6 +1063,14 @@ const { chromium } = require(process.argv[3]);
       few.hotAtWrite = window.__feD2WBand(Object.assign({},wn,{fed2w:0}))===0xc026d3;
       few.coolFar = window.__feD2WBand(Object.assign({},wn,{fed2w:4}))===0x2563eb;
       window.__uniFED2W=false; }
+    // the write-spine node RING (D2): a pass exists, default OFF, and toggling it ON draws ring sprites
+    // for rendered write-spine nodes then clears them OFF — behaviour, not just a string.
+    few.ringDraw = typeof window.__uniDrawWriteRings==='function';
+    few.ringOffDefault = window.__uniWriteRing===false;
+    if(few.ringDraw){ window.__uniWriteRing=true; try{ window.__uniDrawWriteRings(); }catch(e){}
+      few.ringsDrawn = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0;
+      window.__uniWriteRing=false; try{ window.__uniDrawWriteRings(); }catch(e){}
+      few.ringsCleared = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0; }
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
       stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe, few }; });
@@ -1064,7 +1079,8 @@ const { chromium } = require(process.argv[3]);
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
   const f=r.fe, feOk = f.present ? (f.feNodes>0 && f.webLeft===0 && f.absorbed>0 && f.typesHeld>0 && f.typesDrawn===0 && f.feRels>0 && f.bridge>0 && f.tog)
                                  : (f.feNodes===0 && f.absorbed===0 && f.typesHeld===0 && !f.tog);
-  const w=r.few, fewOk = !f.present ? true : (w.band0 && w.offDefault && w.writeNode && w.flatWhenOff && w.hotAtWrite && w.coolFar);
+  const w=r.few, fewOk = !f.present ? true : (w.band0 && w.offDefault && w.writeNode && w.flatWhenOff && w.hotAtWrite && w.coolFar
+    && w.ringDraw && w.ringOffDefault && w.ringsDrawn>0 && w.ringsCleared===0);
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

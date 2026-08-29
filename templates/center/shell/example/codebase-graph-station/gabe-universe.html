@@ -1415,7 +1415,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _eb=(((_gm==="type"||_gm==="ent-type")&&_tcol(_ct))||((_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null));
     var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):(l.write&&window.__feD2WBand)?__feD2WBand(_ct):null;   // FE write wires ride the SEPARATE fed2w gradient (blue→magenta)
     connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });
-  if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);
+  if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup); if(window.__uniDrawWriteRings) __uniDrawWriteRings();
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
    nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */
@@ -1981,6 +1981,25 @@ window.__uniDrawStubs=function(){ window.__uniStubs=[]; try{
     var col=(H&&H.col)||"#8590a8";
     var star=glowSprite(col, 22, 0.45); star.position.set(p.x,p.y,p.z); star.raycast=function(){}; grp.add(star);   // faint glow AT the hidden node's own spot — no line
     window.__uniStubs.push({ p:{x:p.x,y:p.y,z:p.z}, hid:hidId, col:col }); }); }catch(e){} };
+/* ── WRITE-SPINE RINGS (operator D2): a ring HALO on every rendered write-spine node (`fed2w` set),
+   coloured by its fed2w band (FEBAND — magenta at the write → blue far), the NODE signal that
+   complements the wire gradient. A SEPARATE toggle (`__uniWriteRing`), DEFAULT OFF. Its own scene
+   group, rebuilt each updateConnectors like the stubs; `ringSprite` is the crisp halo primitive. ── */
+window.__uniWriteRingGroup=null;
+window.__uniDrawWriteRings=function(){ try{
+  if(typeof Graph==="undefined"||!Graph||!Graph.scene) return;
+  var grp=window.__uniWriteRingGroup;
+  if(!grp){ grp=window.__uniWriteRingGroup=new T.Group(); }
+  try{ var _sc=Graph.scene(); if(_sc && grp.parent!==_sc) _sc.add(grp); }catch(e){}   // (re)attach — survive a scene reset
+  while(grp.children.length){ var ch=grp.children.pop(); if(ch.material&&ch.material.dispose) ch.material.dispose(); grp.remove(ch); }
+  if(!window.__uniWriteRing) return;                              // DEFAULT OFF — the toggle gates the whole pass
+  if(typeof nodes==="undefined"||typeof _npos==="undefined"||typeof ringSprite!=="function") return;
+  var pal=window.FEBAND||[0xc026d3];
+  nodes.forEach(function(n){ if(!n||n.fed2w==null) return;        // write-spine nodes only (fed2w = hops-to-a-write)
+    if(typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(n)) return;   // only actually-rendered nodes
+    var p=_npos[n.id]; if(!p) return;
+    var col=pal[Math.min(n.fed2w|0, pal.length-1)];
+    var r=ringSprite(col, 30, 0.72); r.position.set(p.x,p.y,p.z); r.raycast=function(){}; grp.add(r); }); }catch(e){} };
 window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var ent=h.ent, sub=h.sub, cols=["show","planets","wires"];
   if(typeof UNIVIS==="undefined"||typeof _VISDEF==="undefined") return;
   if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
@@ -2443,6 +2462,15 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
    entities; __uniJrnKind = the open kind tab; __uniJrnCollapse = folded groups. ── */
 window.__uniJrnExcl=window.__uniJrnExcl||{}; window.__uniJrnKind=window.__uniJrnKind||null; window.__uniJrnCollapse=window.__uniJrnCollapse||{};   // default tab resolved LAZILY at first paint (workflows.js loads at runtime)
 var _JRNKINDS=[["wf","workflows"],["bk","backend"],["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
+// journey-kind TAB icons (operator: replace the type-title selectors with icons; the WORD stays on
+// hover via title=, per the legend-visual ruling — the tab shows the glyph, not the word). route ·
+// server · bullseye · box · layers — currentColor so each inherits the tab's muted/on colour.
+var _JRNKINDICO={
+  wf:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>',
+  bk:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>',
+  e2e:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
+  ent:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
+  agg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"/></svg>' };
 var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 function _jrnKindOf(j){ return j.wf?"wf":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent"))); }   // workflows · backend · then the test kinds (e2e > agg > by-entity)
 function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
@@ -2455,7 +2483,7 @@ function _jrnChipsHTML(){ var c=_jrnTouch();
     h+='<span class="jrnent'+(off?" off":"")+'" data-e="'+e+'" style="--ec:'+(ENT[e]||"#888")+'" title="'+c[e]+' journey(s) touch '+e+'"><i></i>'+e+'<b>'+c[e]+'</b></span>'; });
   return h+'</div>'; }
 function _jrnTabsHTML(){ var sel=window.__uniJrnKind;
-  return '<div class="jrnkindtabs">'+_JRNKINDS.map(function(kd){ return '<button data-jk="'+kd[0]+'"'+(kd[0]===sel?' class="on"':'')+'>'+kd[1]+'<b>'+_jrnKindCount(kd[0])+'</b></button>'; }).join('')+'</div>'; }
+  return '<div class="jrnkindtabs">'+_JRNKINDS.map(function(kd){ return '<button data-jk="'+kd[0]+'" title="'+kd[1]+'"'+(kd[0]===sel?' class="on"':'')+'>'+(_JRNKINDICO[kd[0]]||kd[1])+'<b>'+_jrnKindCount(kd[0])+'</b></button>'; }).join('')+'</div>'; }
 function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ return (b.ents.length-a.ents.length)||(b.carriers.length-a.carriers.length); };
   var vis=_jrnCollect().filter(function(j){ return _jrnKindOf(j)===sel && _jrnVisible(j); });
   var h='<div class="jrnrow jrnnone" data-jr="">— none (clear)</div>';
@@ -4745,6 +4773,7 @@ var LEGEND={
     {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
     {t:"d2wtog"},
     {t:"fed2wtog"},
+    {t:"writeringtog"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -4872,12 +4901,14 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
       if(it.t==="fed2wtog"){ var _fon=!!window.__uniFED2W; h+='<div class="lgrow lgd2w'+(_fon?"":" lgoff")+'" data-fed2wtog="1" style="cursor:pointer" title="click to '+(_fon?"hide the frontend write heat":"colour FRONTEND write wires by distance-to-write (blue→magenta)")+'"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="#c026d3" stroke-width="3"/></svg></div><div class="lglbl">FE write heat <i>'+(_fon?"on":"off")+'</i></div></div>'; return; }
+      if(it.t==="writeringtog"){ var _ron=!!window.__uniWriteRing; h+='<div class="lgrow lgd2w'+(_ron?"":" lgoff")+'" data-writeringtog="1" style="cursor:pointer" title="click to '+(_ron?"hide the write-spine node rings":"ring each write-spine NODE (a halo, coloured by distance-to-write)")+'"><div class="lgvis"><svg class="lgln" style="width:16px;height:16px" viewBox="0 0 24 24" fill="none" stroke="#c026d3" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/></svg></div><div class="lglbl">write rings <i>'+(_ron?"on":"off")+'</i></div></div>'; return; }
             if(it.t==="ln"&&it.k){ var _lon=!(window.__uniBeam)||(__uniBeam[it.k]==null||__uniBeam[it.k]>0);   // a CONNECTOR kind → click the row to show / hide that wire (like the node-kind toggles)
         h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+_lglbl(it.l, it.k==="calls"?_bandSpectrumHTML():"")+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
     el.innerHTML=h+'</div>';
     [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });
     [].forEach.call(el.querySelectorAll("[data-fed2wtog]"), function(row){ row.onclick=function(){ window.__uniFED2W=!window.__uniFED2W; try{ updateConnectors(); }catch(e){} render(); }; });
+    [].forEach.call(el.querySelectorAll("[data-writeringtog]"), function(row){ row.onclick=function(){ window.__uniWriteRing=!window.__uniWriteRing; try{ updateConnectors(); }catch(e){} render(); }; });
     [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;
       var on=(__uniBeam[k]==null||__uniBeam[k]>0);
       if(on){ window.__uniBeamPrev=window.__uniBeamPrev||{}; __uniBeamPrev[k]=(__uniBeam[k]==null?1:__uniBeam[k])||1; __uniBeam[k]=0; }
