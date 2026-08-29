@@ -879,6 +879,8 @@ check('function _jrnFeLeg(carriers)' in page and 'l.rel==="bridge"' in page
       and '(l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads")' in page,
       "the journey frontend-leg derivation is gone (bridge -> screens -> users incl. fecall/reads callers)")
 check('j.fe=_jrnFeLeg(j.carriers); j.feN=' in page, "journeys no longer precompute their fe leg (row/pill chips would lie)")
+check('WRAPPER CLIMB' in page and 'sn.kind==="module"' in page and 'c.ent!==sn.ent' in page,
+      "the FE-leg WRAPPER CLIMB: a bridged shared-lib MODULE with a cross-entity caller (an SSE client like lib/api/sse) is swapped for its feature callers, so the leg reaches the feature screen not the lib — proven on gustify: Create-a-recipe 0→2 → useRecipeStream → GustifyGenerateSheet")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,

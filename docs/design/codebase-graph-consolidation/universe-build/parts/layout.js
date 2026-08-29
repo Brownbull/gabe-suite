@@ -970,6 +970,17 @@ function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(
 function _jrnFeLeg(carriers){ var cs={}; carriers.forEach(function(id){ cs[id]=1; });
   var scr={}, use={}, FL=_fieldLinks();
   FL.forEach(function(l){ if(l.rel==="bridge" && cs[lid(l.target)]) scr[lid(l.source)]=1; });
+  // WRAPPER CLIMB: a bridged screen that is a plain shared MODULE whose non-module callers live
+  // in a DIFFERENT entity is a cross-cutting lib client (an SSE wrapper like lib/api/sse.ts,
+  // homed to app-shell) — transparent, not a feature surface. Swap it for those callers so the
+  // leg reaches the real feature piece and _bkFeLeg's same-feature filter homes to the caller's
+  // entity, not the lib's. A component/hook/route/store screen, or a module whose callers share
+  // its own entity (a feature's own container), is already a feature surface and is KEPT.
+  Object.keys(scr).forEach(function(sid){ var sn=_fnById(sid); if(!(sn && sn.kind==="module")) return;
+    var callers=[];
+    FL.forEach(function(l){ if((l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads") && lid(l.target)===sid){
+      var c=_fnById(lid(l.source)); if(c && c.kind!=="module" && c.ent && c.ent!==sn.ent) callers.push(lid(l.source)); } });
+    if(callers.length){ delete scr[sid]; callers.forEach(function(c){ scr[c]=1; }); } });
   FL.forEach(function(l){ if((l.rel==="uses"||l.rel==="renders"||l.rel==="fecall"||l.rel==="reads") && scr[lid(l.target)]) use[lid(l.source)]=1; });   // fecall/reads too: a fetching MODULE or store has callers, not renderers
   Object.keys(scr).forEach(function(id){ delete use[id]; });               // a screen is a screen, never doubled as its own user
   return { screens:Object.keys(scr).sort(), users:Object.keys(use).sort() }; }

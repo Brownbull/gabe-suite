@@ -32,8 +32,8 @@ window.GABE_WORKFLOWS = [
     steps: ["POST /recipes/{recipe_id}/plan", "POST /shopping/from-planned-recipes", "DELETE /recipes/{recipe_id}/plan"] },
   // ── added 2026-08-29 from the journeys review (the settled FE spine now traces these end-to-end) ──
   { name: "Create a recipe",
-    note: "the two creation paths — hand-authored, and the gustify AI generator (external spend: reconciliation queue + AiSpendLog)",
-    steps: ["POST /recipe-creation/manual", "POST /recipe-creation/gustify"] },
+    note: "the two creation paths — hand-authored, and the gustify AI generator (POST trigger + the SSE result stream; external spend: reconciliation queue + AiSpendLog)",
+    steps: ["POST /recipe-creation/manual", "POST /recipe-creation/gustify", "GET /recipe-creation/gustify/stream"] },
   { name: "Request a recipe on demand",
     note: "a 0-result search becomes a RecipeDemand — the one creation endpoint a screen actually reaches (RecipeBrowseContainer)",
     steps: ["GET /recipes/explore", "POST /recipes/demand"] },
