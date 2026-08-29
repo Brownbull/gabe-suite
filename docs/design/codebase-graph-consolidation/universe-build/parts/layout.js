@@ -844,7 +844,10 @@ function _jrnCollect(){ if(JRN) return JRN; var m={};
    META {hop, why, from} so the step note can say what is happening. Capped per journey (honest
    "+N" in the name). ── */
 var _BK_CAP=28, _GATE_CAP=8;   // the write chain gets _BK_CAP; the gate pre-hop is bounded separately (review [0])
-function _bkFeLeg(eps){ var l=_jrnFeLeg(eps); return { screens:l.screens, users:[] }; }   // backend/workflow journeys carry the SCREENS that fetch them, not every UI user (a union balloons)
+function _bkFeLeg(eps){ var l=_jrnFeLeg(eps);   // a user reaches an endpoint from a SCREEN → keep the driving components, but only SAME-FEATURE ones (operator): a fetching hook is used by several screens across features; keep only those in the fetching hook's OWN feature, dropping big shared containers. The walk orders users→screens→endpoint, so it starts at the on-feature screen.
+  var _fEnts={}; l.screens.forEach(function(id){ var n=_fnById(id); if(n&&n.ent) _fEnts[n.ent]=1; });
+  var users=l.users.filter(function(id){ var n=_fnById(id); return !!(n && _fEnts[n.ent]); });
+  return { screens:l.screens, users:users }; }
 function _fnById(id){ if(NIDS[id]) return NIDS[id]; var f=_fieldN(id); if(f) return f;
   if(_FNNODES){ for(var i=0;i<_FNNODES.length;i++) if(_FNNODES[i].id===id) return _FNNODES[i]; } return null; }
 function _bkCollect(){ if(!_FNNODES){ try{ _buildFnData(); }catch(e){} } if(!_FNLINKS) return [];
