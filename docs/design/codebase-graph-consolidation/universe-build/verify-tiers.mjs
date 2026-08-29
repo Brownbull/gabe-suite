@@ -90,6 +90,16 @@ ck(fleet.tier === 4 && fleet.fold === 2 && fleet.fc === 5,
 ck(fleet.afterClick === 1 && fleet.tpLit,
   'clicking the fleet tier pill sets the tier + lights (fleet ↔ header sync)', 'tier=' + fleet.afterClick);
 
+// a tier change ENDS an in-flight walk — its pins can't survive kinds being unloaded (toggleFns
+// purges fn nodes), so __uniSetTier must clear WALK + pins rather than strand ghost steps (review MED)
+const walk = await p.evaluate(() => {
+  window.__uniPin = { __ghost: 1 };
+  if (typeof WALK !== 'undefined') { WALK.mode = 'journey'; WALK.steps = ['__ghost']; WALK.i = 0; }
+  window.__uniSetTier(1);
+  return { mode: (typeof WALK !== 'undefined') ? WALK.mode : 'n/a', pins: Object.keys(window.__uniPin || {}).length };
+});
+ck(walk.mode === null && walk.pins === 0, 'a tier change ends an in-flight walk (WALK cleared + pins dropped)', JSON.stringify(walk));
+
 ck(errs.length === 0, 'no page/console errors', errs.slice(0, 3).join(' | '));
 console.log(`\n${pass}/${pass + fail} tier checks passed`);
 await b.close();

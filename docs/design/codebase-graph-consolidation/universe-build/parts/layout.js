@@ -2135,6 +2135,7 @@ var _TIER_PRESETS=[
   { name:"Trace",    koff:["module","type"],                                                                                       fcoff:["leaf"] },
   { name:"Everything", koff:["type"],                                                                                             fcoff:[] } ];
 window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier=t;
+  if((typeof WALK!=="undefined"&&WALK.mode) && window.__uniHLClear){ try{ __uniHLClear(); }catch(e){} }   // a tier is a GLOBAL disclosure reset — an in-flight walk's pins can't survive kinds being unloaded (toggleFns PURGES fn nodes from NIDS), so end the walk honestly rather than strand it over ghost steps (review MED: tier×walk collision)
   var p=_TIER_PRESETS[t], koff={}; p.koff.forEach(function(k){ koff[k]=1; });
   _KTIER.forEach(function(k){ __uniKindState[k]=koff[k]?"off":"all"; if(koff[k]) __uniKindOff[k]=1; else delete __uniKindOff[k];
     if(k==="function" && window.toggleFns){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });

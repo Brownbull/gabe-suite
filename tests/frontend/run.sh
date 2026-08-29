@@ -163,6 +163,14 @@ check(_pan4 and _pan4.get("state") is True,
       "STORE DETECTOR: a component whose call reaches a store TOUCHES STATE")
 check(_fe4["stats"]["by_channel"] == {"state": 1, "chrome": 1},
       "STORE DETECTOR: the store call is STATE, the cx (util module) call is CHROME (the cx=fecall bug fixed)")
+# the by_channel STAT above is computed off the edge DICTS; the RENDERER instead reads the channel
+# off the serialized wire's 4th slot (e[3]) — assert THAT, or a serialization drop ships green.
+_ch4 = {(_fe4["pieces"][e[0]]["name"], _fe4["pieces"][e[1]]["name"]): (e[3] if len(e) > 3 else None)
+        for e in _fe4["edges"]}
+check(_ch4.get(("Panel", "useDashStore")) == "state" and _ch4.get(("Panel", "cx")) == "chrome"
+      and _ch4.get(("Panel", "Child")) is None,
+      "STORE DETECTOR: the channel SERIALIZES onto the wire at e[3] (store→state, cx→chrome) and a "
+      "renders wire carries NO 4th slot — the exact shape chrome:(e[3]===\"chrome\") consumes")
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and 3 <= len(e) <= 4 and isinstance(e[0], int) for e in fe["edges"]),
       "wires are COMPACT index triples (a call wire may carry a 4th channel element: state/chrome)")

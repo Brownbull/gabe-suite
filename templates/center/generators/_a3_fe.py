@@ -247,8 +247,9 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         def _render_target(tag: str, _p: str = path, _b: dict = binds) -> str | None:
             """A JSX tag → the piece it renders. A tag with NO binding is a SAME-FILE symbol —
             resolve it to a same-file EXPORT (blocker 2: `target_of` dropped every same-file
-            render edge, so 52/67 views + 10/18 leaves were mis-classified). HTML tags / non-
-            exported locals still resolve to None (a real ref, not a gap)."""
+            render edge, so 36/67 root-views were mis-classified — they were sub-components
+            rendered in their own file; per commit 62c2e8a: private 183→194, shared 99→124).
+            HTML tags / non-exported locals still resolve to None (a real ref, not a gap)."""
             b = _b.get(tag)
             if b is not None:
                 return target_of(b)

@@ -1059,5 +1059,23 @@ else
   RENDER=0
 fi
 
-[ "$STATIC" = 0 ] && [ "$MISS" = 0 ] && [ "$RENDER" = 0 ] && { echo "gabe-universe battery: ALL PASS"; exit 0; }
+# ── 13b. OPTIONAL tier-engine behavioral proof (the arc's headline feature) ──
+#    The static checks above only assert the tier STRINGS exist; a logic regression (a non-nested
+#    preset breaking monotonic reveal, __uniSetTier no-op'ing, a broken feClass gate / key / sync,
+#    a tier×walk collision) keeps every string check green. verify-tiers.mjs TOGGLES __uniSetTier
+#    against the committed example and asserts the actual behavior — wire it here so suite-doctor runs it.
+VTIERS="$REPO/docs/design/codebase-graph-consolidation/universe-build/verify-tiers.mjs"
+if [ -x "$CHROME" ] && [ -d "$PWDIR" ] && [ -f "$EXPAGE" ] && [ -f "$VTIERS" ]; then
+  if GABE_CHROME_BIN="$CHROME" GABE_PW_DIR="$PWDIR" node "$VTIERS"; then
+    TIERS=0
+  else
+    TIERS=1; echo "  tiers: FAIL — verify-tiers.mjs reported a tier-engine regression (see PASS/FAIL lines above)"
+  fi
+else
+  echo "  tiers: SKIP ⚠ — TIER-ENGINE COVERAGE DID NOT RUN (no chrome/playwright-core/example on this host)."
+  echo "         the static tier-string contract above still holds, but the toggle logic is UNVERIFIED here."
+  TIERS=0
+fi
+
+[ "$STATIC" = 0 ] && [ "$MISS" = 0 ] && [ "$RENDER" = 0 ] && [ "$TIERS" = 0 ] && { echo "gabe-universe battery: ALL PASS"; exit 0; }
 echo "gabe-universe battery: FAILURES ABOVE"; exit 1
