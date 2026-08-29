@@ -1071,9 +1071,17 @@ const { chromium } = require(process.argv[3]);
       few.ringsDrawn = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0;
       window.__uniWriteRing=false; try{ window.__uniDrawWriteRings(); }catch(e){}
       few.ringsCleared = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0; }
+    // curated workflows (workflows.js): the 8 journeys-review additions loaded, and each new step
+    // resolves EXACTLY to an endpoint node (the pre-existing rows use the station's param normalisation
+    // and are not asserted here — only the new exact-key rows, so a typo'd new endpoint fails).
+    var NEWWF=["Create a recipe","Request a recipe on demand","Generate a weekly plan","Advance a cooking stage","Remove a pantry item","Tune recipe discovery","Update kitchen equipment","Manage / delete my account"];
+    var wfAll=window.GABE_WORKFLOWS||[], epSet=new Set(nodes.filter(n=>n.kind==='endpoint').map(n=>n.id));
+    var newWf=wfAll.filter(function(x){return NEWWF.indexOf(x.name)>=0;}), newBad=0;
+    newWf.forEach(function(x){(x.steps||[]).forEach(function(s){ if(!epSet.has('endpoint:'+s)) newBad++; });});
+    var wfInfo={ count:wfAll.length, newFound:newWf.length, newBad:newBad };
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe, few }; });
+      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe, few, wfInfo }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1081,9 +1089,13 @@ const { chromium } = require(process.argv[3]);
                                  : (f.feNodes===0 && f.absorbed===0 && f.typesHeld===0 && !f.tog);
   const w=r.few, fewOk = !f.present ? true : (w.band0 && w.offDefault && w.writeNode && w.flatWhenOff && w.hotAtWrite && w.coolFar
     && w.ringDraw && w.ringOffDefault && w.ringsDrawn>0 && w.ringsCleared===0);
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk;
+  // the 8 journeys-review workflows LOADED (16 total). newBad counts steps not in the DERIVED backend
+  // set — legitimately the read-companions (GET) + the ORM-idiom writes (systemic #5) the access pass
+  // can't see; the station HONESTLY marks those unmapped per row, so it is reported, not gated.
+  const wi=r.wfInfo, wfOk = wi.newFound===8 && wi.count===16;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

@@ -138,6 +138,23 @@ Raw SQL cleared (41 `text()` sites, 0 app-table writes). Fixes are NOT built —
 5. `POST /recipes/demand` — the founder-designated live alternative to gated creation,
    the only route with its own rate-limit clock.
 
+## Curated workflows added 2026-08-29 (journeys review — the settled FE spine)
+
+Eight promoted to the example's `workflows.js` (the "workflows" tab). ★ = FE-rooted (a screen
+actually fetches the write endpoint — surfaced by this arc's FE write spine). A read-companion (GET)
+or an ORM-idiom write (systemic #5) rides the row as an HONEST **unmapped** step, never dropped.
+
+| Workflow | endpoints | note |
+|---|---|---|
+| Create a recipe | `POST /recipe-creation/manual` · `POST /recipe-creation/gustify` | manual + the AI generator (external spend: reconciliation queue + AiSpendLog) |
+| ★ Request a recipe on demand | `GET /recipes/explore` · `POST /recipes/demand` | a 0-result search → RecipeDemand; the one creation endpoint a screen reaches |
+| Generate a weekly plan | `POST /meal-plan/generate` · `GET /meal-plan/current` | PlannedRecipe → ShoppingItem, cross recipe→pantry (distinct from planning one recipe) |
+| ★ Advance a cooking stage | `POST /cooking/sessions/{session_id}/advance-stage` | the FE-wired stage advance → CookingStageReminder (not WF4's PATCH stage) |
+| ★ Remove a pantry item | `DELETE /pantry/items/{item_id}` · `GET /pantry/overview` | event-sourced remove (soft-delete + 'consumo' ledger) — mirror of adding |
+| ★ Tune recipe discovery | `GET /settings` · `PATCH /settings/exploration` | wholesale-replace the five exploration bias fields (UserExplorationPreferences) |
+| ★ Update kitchen equipment | `PUT /equipment` | wholesale-replace the owned-equipment set (UserEquipment) — a settings write |
+| Manage / delete my account | `POST /consent` · `GET /account/export` · `DELETE /me` | the GDPR lifecycle — consent → export → the J2 7-model hard-delete cascade |
+
 ## Provenance
 
 - Mining: `scratchpad/mine-journeys.py` over the committed estate (deterministic BFS —
