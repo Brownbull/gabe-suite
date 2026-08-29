@@ -3448,7 +3448,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
    bundle wires between capsules. Click a capsule (or its card's Expand, or the fleet row, or
    any search/chip hit inside it) → the entity opens to its pieces; the CAP toggle in the
    config flips the whole mechanism. Restore-then-apply keeps the surgery idempotent. ── */
-window.UNICAP={ on:true, threshold:80, open:{} };
+window.UNICAP={ on:false, threshold:80, open:{} };   // DEFAULT OFF (operator): simplification is control-driven (tiers) now, not the capsule click-fold — the CAP fleet toggle can still turn the legacy fold back on
 var _CAPST=null;   // {nodes:[...], links:[...], caps:[capIds], byPiece:{pieceId:capId}}
 window.__uniApplyCapsules=function(){ try{
   if(typeof Graph==="undefined"||!Graph) return;
@@ -4946,5 +4946,5 @@ buildLegend(); palLoop();   // legend renders now (placeholders); thumbnails pai
   var hb=q.get("heatBy"); if(hb){ ENC.heatBy=hb; } var cm=q.get("cmode"); if(cm){ ENC.color=cm; buildExpl(); } var sp=q.get("speed"); if(sp!=null){ ENC.speed=+sp; buildExpl(); }
   window.__drive=q.get("drive"); window.__panel=q.get("panel"); window.__link=q.get("link"); window.__cam=q.get("cam"); if(changed && document.getElementById("cfg")){ buildCfg(); if(window.__uniAddLayoutTab) __uniAddLayoutTab(); if(window.__uniAddWireView) __uniAddWireView(); if(window.__uniAddFocusCfg) __uniAddFocusCfg(); if(window.__uniFleetSync) __uniFleetSync(); } })();
 buildExpl();   // build the encode panel now that DIMR/drow exist
-preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
+preloadBillboards(function(){ try{ recomputeEX(CFG.entLayout); (window.__uniAssignSplit?__uniAssignSplit():assignSub(CFG.coreByBE||"kind")); recomputeSubAnchors(); }catch(e){} build(); try{ if(window.__uniComputeSolo) __uniComputeSolo(); }catch(e){} try{ __uniSetupOrbit(); }catch(e){} setTimeout(function(){ try{ if(window.__uniSetKindState) __uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniSetTier){ try{ __uniSetTier(1); }catch(e){} } if(window.__uniCamFit) __uniCamFit(0); }, 400); window.__spikeKindsReady=true; loadShips(); });   // load the ship/sat GLBs → onShipsReady() repaints fleets
 </script></body></html>

@@ -1941,7 +1941,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
    bundle wires between capsules. Click a capsule (or its card's Expand, or the fleet row, or
    any search/chip hit inside it) → the entity opens to its pieces; the CAP toggle in the
    config flips the whole mechanism. Restore-then-apply keeps the surgery idempotent. ── */
-window.UNICAP={ on:true, threshold:80, open:{} };
+window.UNICAP={ on:false, threshold:80, open:{} };   // DEFAULT OFF (operator): simplification is control-driven (tiers) now, not the capsule click-fold — the CAP fleet toggle can still turn the legacy fold back on
 var _CAPST=null;   // {nodes:[...], links:[...], caps:[capIds], byPiece:{pieceId:capId}}
 window.__uniApplyCapsules=function(){ try{
   if(typeof Graph==="undefined"||!Graph) return;

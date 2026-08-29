@@ -968,8 +968,10 @@ check('window.__uniCamFit=function(ms)' in page and '__uniCamFit(600); else Grap
 check('" (frontend of "+' in page.replace("'",'"'), "a paired piece's card no longer names its backend twin")
 
 # ── 10aa. batch 53: capsules (S1+S3) · areas (S2) · the screen core (S4) · alias/fixture de-noisers ──
-check('window.UNICAP={ on:true, threshold:80, open:{} };' in page and 'window.__uniApplyCapsules=function()' in page,
-      "the capsule mechanism is gone (big entities would boot as label clouds again)")
+check('window.UNICAP={ on:false, threshold:80, open:{} };' in page and 'window.__uniApplyCapsules=function()' in page,
+      "capsules DEFAULT OFF (operator: control-driven simplification) — the mechanism survives as the CAP legacy toggle")
+check('if(window.__uniSetTier){ try{ __uniSetTier(1); }catch(e){} }' in page,
+      "the station BOOTS simplified via the T1 tier (the tier replaces the capsule fold as boot-time simplification)")
 check('rel:"bundle"' in page and 'count:g2.n' in page, "capsule wires lost their aggregated bundles")
 check('try{ rebuildNodes(); }catch(e){}' in page.split('__uniApplyCapsules=function')[1][:5000],
       "the capsule surgery lost its decoration reset (stale FLEETTICK closures threw)")
@@ -978,8 +980,8 @@ check('if(n&&n.kind==="capsule"){ if(window.__uniCapExpand) __uniCapExpand(n.ent
 check('if(_CAPST&&_CAPST.byPiece[id])' in page, "goto/search into a folded piece no longer auto-expands")
 check('g:"collapsed"' in page and 'opens the capsule' in page,
       "stashed pieces vanished from search (the index must list them and expand on open)")
-check('__uniSetKindState("function","critical"); }catch(e){} if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniCamFit) __uniCamFit(0); }, 400);' in page,
-      "the boot must, in the 400ms settle (AFTER build + first tick), load functions to critical THEN fold")
+check('if(window.__uniApplyCapsules) __uniApplyCapsules(); if(window.__uniSetTier){ try{ __uniSetTier(1); }catch(e){} } if(window.__uniCamFit) __uniCamFit(0); }, 400);' in page,
+      "the boot 400ms settle applies the T1 tier (capsules default off → the tier is the boot-time simplification)")
 check('KINDS.capsule={' in page and 'f==="pod"' in page and 'C.capsule=function(n)' in page,
       "the capsule kind lost its form/card")
 check('if(mode==="screen"){' in page and 'screen:"Screen — pieces group by the SCREEN' in page,
@@ -1048,8 +1050,15 @@ const { chromium } = require(process.argv[3]);
   await p.goto('file://'+path.resolve(process.argv[2]));
   await p.waitForFunction('window.__spikeKindsReady===true',{timeout:30000}).catch(()=>{});
   await p.waitForTimeout(1800);
-  const r=await p.evaluate(()=>{ const pick=(typeof nodes!=='undefined'&&nodes)?nodes.find(n=>n.kind==='endpoint'&&n.det&&n.det.cases&&n.det.cases.length):null;
+  const r=await p.evaluate(()=>{
+    // deterministic pick: an endpoint whose card WILL carry a passing chip + journey faces — robust to
+    // the node-array order (which shifted when capsules default off unfolded ~190 pieces).
+    const _eps=(typeof nodes!=='undefined'&&nodes)?nodes.filter(n=>n.kind==='endpoint'&&n.det&&n.det.cases&&n.det.cases.length):[];
+    const pick=_eps.find(n=>n.det.cases.some(c=>c.state==='pass')&&n.det.test_journeys&&n.det.test_journeys.length)||_eps.find(n=>n.det.cases.some(c=>c.state==='pass'))||_eps[0]||null;
     if(pick) showPanel(pick); const pb=document.getElementById('pbody');
+    // CAPTURE the card state NOW — the few ring block below toggles the tier (T3→T1) which re-renders
+    // the panel; reading these after that would see a clobbered card (the boot-T1 regression).
+    const stPassV=!!(pb&&pb.querySelector('.pchip.st-pass')), faceV=!!(pb&&pb.querySelector('.jfaces .face'));
     const fePresent=!!(window.GABE_C4&&GABE_C4.fe&&GABE_C4.fe.pieces&&GABE_C4.fe.pieces.length);
     const fe={ present:fePresent, feNodes:nodes.filter(n=>n.fe).length, webLeft:nodes.filter(n=>n.kind==='web').length,
       absorbed:window.__uniFeAbsorbed||0, typesHeld:(typeof _FETYPES!=='undefined')?_FETYPES.length:-1, typesDrawn:nodes.filter(n=>n.kind==='type').length,
@@ -1067,10 +1076,12 @@ const { chromium } = require(process.argv[3]);
     // for rendered write-spine nodes then clears them OFF — behaviour, not just a string.
     few.ringDraw = typeof window.__uniDrawWriteRings==='function';
     few.ringOffDefault = window.__uniWriteRing===false;
-    if(few.ringDraw){ window.__uniWriteRing=true; try{ window.__uniDrawWriteRings(); }catch(e){}
+    if(few.ringDraw){ var _pt=window.__uniTier; if(window.__uniSetTier) window.__uniSetTier(3);   // rings draw only for VISIBLE write-spine nodes — force T3 so the count is boot-tier-independent (boot is now T1)
+      window.__uniWriteRing=true; try{ window.__uniDrawWriteRings(); }catch(e){}
       few.ringsDrawn = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0;
       window.__uniWriteRing=false; try{ window.__uniDrawWriteRings(); }catch(e){}
-      few.ringsCleared = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0; }
+      few.ringsCleared = (window.__uniWriteRingGroup && window.__uniWriteRingGroup.children.length) || 0;
+      if(window.__uniSetTier && _pt!=null) window.__uniSetTier(_pt); }
     // curated workflows (workflows.js): the 8 journeys-review additions loaded, and each new step
     // resolves EXACTLY to an endpoint node (the pre-existing rows use the station's param normalisation
     // and are not asserted here — only the new exact-key rows, so a typo'd new endpoint fails).
@@ -1081,7 +1092,7 @@ const { chromium } = require(process.argv[3]);
     var wfInfo={ count:wfAll.length, newFound:newWf.length, newBad:newBad };
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe, few, wfInfo }; });
+      stPass:stPassV, face:faceV, fe, few, wfInfo }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
