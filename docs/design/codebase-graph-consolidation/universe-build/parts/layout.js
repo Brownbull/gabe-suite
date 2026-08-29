@@ -934,10 +934,12 @@ function _jrnFeLeg(carriers){ var cs={}; carriers.forEach(function(id){ cs[id]=1
 window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) p.style.display="none";
   if(!cid){ __uniHLClear(); return; }
   var j=_jrnCollect().filter(function(x){ return x.cid===cid; })[0]; if(!j||!j.carriers.length) return;
+  // The FRONTEND leg is part of the journey — a user reaches an endpoint THROUGH the frontend, so the
+  // walk starts there (operator). Include every fe piece that EXISTS as a node/stash, exactly like the
+  // backend carriers below; the wake loop then surfaces their kind. Do NOT drop a TIER-hidden screen
+  // (the old visN filter emptied the leg at T1, where hooks are hidden → journeys started at the endpoint).
   var fe=j.fe?j.fe.users.concat(j.fe.screens).filter(function(id){
-    if(NIDS[id]) return visN(NIDS[id]).show;                                  // drawn → the fleet decides
-    var fn=_CAPST&&_CAPST.byPiece[id]?_fieldN(id):null;
-    return !!(fn&&visN(fn).show); }):[];                                      // stashed → KEPT iff fleet-shown; the walk expands its capsule on arrival (review 53[0])
+    return !!(NIDS[id] || (_CAPST&&_CAPST.byPiece[id]&&_fieldN(id))); }):[];
   if((j.bk||j.wf) && window.__uniKindState && window.__uniSetKindState){   // the chain's steps are fns — an OFF function layer would make every step dead
     var _fs=__uniKindState["function"]||(typeof _kindDefault==="function"?_kindDefault("function"):"all");
     if(_fs==="off") __uniSetKindState("function","all"); }

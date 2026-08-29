@@ -901,7 +901,8 @@ check('_jp.style.display="none";   // exclusive surfaces' in page,
       "opening the search dropdown must CLOSE the journeys picker (#jrn z-55 paints over the trapped dropdown)")
 check('"functions (off)"' in page and 'turns ƒ ON' in page,
       "held functions (ƒ off) lost their search group — a function search would flat-line at no match")
-check('visN(NIDS[id]).show' in page, "the journey fe leg no longer respects fleet visibility")
+check('return !!(NIDS[id] || (_CAPST&&_CAPST.byPiece[id]&&_fieldN(id)));' in page,
+      "the journey FE leg is included regardless of tier-visibility (a workflow STARTS at the frontend, the wake surfaces its kind — operator); a genuinely fleet-hidden entity still shows the 'node not drawn' note")
 check('addEventListener("focusout"' in page, "keyboard blur no longer closes the search dropdown")
 check('_seen.reduce(function(a,gk)' in page, "search group headers can fragment again (regroup after the cap)")
 check('#jrn .jrnrow.on .jrnfe{ color:#fff; }' in page, "the selected journey row's fe chip lost its contrast override")
@@ -1107,9 +1108,16 @@ const { chromium } = require(process.argv[3]);
     var _leftFull=_tsr?Math.round(_tsr.getBoundingClientRect().left):-1, _wFull=_jp?Math.round(_jp.getBoundingClientRect().width):-1;
     if(_jp) _jp.innerHTML='';
     var hdr={ moved:Math.abs(_leftEmpty-_leftFull), slotEmpty:_wEmpty, slotFull:_wFull };
+    // a user reaches an endpoint THROUGH the frontend — a workflow walk must START at a frontend piece,
+    // not the API endpoint, even when the boot tier hides that piece's kind (operator). Run this LAST.
+    var jrn=null; try{ var _wi=(window.GABE_WORKFLOWS||[]).findIndex(function(w){ return w.name==='Cook a recipe — the cooking session'; });
+      if(_wi>=0 && window.__uniJrnStart){ window.__uniJrnStart('wf:'+_wi);
+        var _f0=(typeof WALK!=='undefined'&&WALK.steps.length)?_fnById(WALK.steps[0]):null;
+        jrn={ feLen:(typeof WALK!=='undefined'?WALK.feLen:0), firstKind:_f0?_f0.kind:null };
+        if(window.__uniHLClear) __uniHLClear(); } }catch(e){}
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr }; });
+      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1123,9 +1131,11 @@ const { chromium } = require(process.argv[3]);
   const wi=r.wfInfo, wfOk = wi.newFound===8 && wi.count===16;
   const iconsOk = r.iconsBuilt===6;   // flag/provider/module/web/middleware/prompt each build a billboard icon (no cube)
   const hdrOk = r.hdr && r.hdr.moved<=1 && r.hdr.slotEmpty>=240 && r.hdr.slotFull>=240 && Math.abs(r.hdr.slotEmpty-r.hdr.slotFull)<=1;   // the reserved walker slot keeps a constant width → tiers don't shift when a journey enters/leaves
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk;
+  const _FE_KINDS=['hook','component','module','store','route','web','screen','type'];
+  const jrnOk = r.jrn && r.jrn.feLen>=1 && _FE_KINDS.indexOf(r.jrn.firstKind)>=0;   // a workflow walk STARTS at the frontend (not the API endpoint), even at a tier that hides that kind
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?
