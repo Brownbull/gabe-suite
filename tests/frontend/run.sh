@@ -171,6 +171,30 @@ check(_ch4.get(("Panel", "useDashStore")) == "state" and _ch4.get(("Panel", "cx"
       and _ch4.get(("Panel", "Child")) is None,
       "STORE DETECTOR: the channel SERIALIZES onto the wire at e[3] (store→state, cx→chrome) and a "
       "renders wire carries NO 4th slot — the exact shape chrome:(e[3]===\"chrome\") consumes")
+# ── CACHE DETECTOR (F1): a hook calling a query-library idiom (useQuery/useSWR) with no project
+#    binding is a CACHE sink → it touches server state, so its caller's wire is STATE not chrome. ──
+_X5 = {"byFile": {
+    "src/features/me/useMe.ts": {"exports": [{"name": "useMe", "kind": "function", "hasJsx": False,
+        "calls": ["useQuery"]}], "bindings": {"useQuery": {"ext": True}}},   # react-query import → ext, no project piece
+    "src/features/me/MeCard.tsx": {"exports": [{"name": "MeCard", "kind": "function", "hasJsx": True,
+        "jsx": [], "calls": ["useMe"]}], "bindings": {"useMe": {"file": "src/features/me/useMe.ts", "name": "useMe"}}}}}
+_fe5 = _a3_fe.build_fe(_X5, {"me": {}}, [])
+_useMe = next((p for p in _fe5["pieces"] if p["name"] == "useMe"), None)
+_meCard = next((p for p in _fe5["pieces"] if p["name"] == "MeCard"), None)
+check(_useMe and _useMe.get("cache") is True and _fe5["stats"]["cache_pieces"] == 1,
+      "CACHE DETECTOR: a hook calling useQuery (no project binding) is a cache sink (react-query idiom)")
+check(_meCard and _meCard.get("state") is True,
+      "CACHE DETECTOR: the component calling that cache hook TOUCHES state (reachability through the sink)")
+_ch5 = {(_fe5["pieces"][e[0]]["name"], _fe5["pieces"][e[1]]["name"]): (e[3] if len(e) > 3 else None) for e in _fe5["edges"]}
+check(_ch5.get(("MeCard", "useMe")) == "state",
+      "CACHE DETECTOR: the MeCard→useMe wire serializes channel=state (a query hook is not chrome plumbing)")
+# honest-empty: a project with NO query lib gets NO `cache` key on any piece (byte-identical)
+_X6 = {"byFile": {"src/features/x/useX.ts": {"exports": [{"name": "useX", "kind": "function",
+    "hasJsx": False, "calls": ["useState", "cx"]}], "bindings": {"cx": {"ext": True}}}}}
+_fe6 = _a3_fe.build_fe(_X6, {"x": {}}, [])
+check(all("cache" not in p for p in _fe6["pieces"]) and _fe6["stats"]["cache_pieces"] == 0,
+      "CACHE DETECTOR honest-empty: no query-lib call → no `cache` key on any piece (byte-identical)")
+
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and 3 <= len(e) <= 4 and isinstance(e[0], int) for e in fe["edges"]),
       "wires are COMPACT index triples (a call wire may carry a 4th channel element: state/chrome)")

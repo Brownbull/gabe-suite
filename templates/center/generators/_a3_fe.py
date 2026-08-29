@@ -54,6 +54,17 @@ _ROUTER_CALLEES = frozenset({
     "createBrowserRouter", "createHashRouter", "createMemoryRouter", "createRouter",
     "createFileRoute", "createRootRoute", "createRoutesFromElements",
 })
+# server-CACHE / query-library hooks (react-query · swr · apollo): a piece that CALLS one READS or
+# WRITES the server cache = state (F1). A LIBRARY idiom, not a project name-list (same class as
+# _STORE_CALLEES) — and it counts ONLY when the callee has no project binding, since a project's own
+# useQuery would resolve to a piece; so honest-empty holds (no query lib → no cache piece → byte-
+# identical). RTK-Query's generated useGetXQuery/useXMutation hooks are pattern-named, not in this
+# fixed roster — a known follow-on gap, reported never guessed.
+_CACHE_CALLEES = frozenset({
+    "useQuery", "useQueries", "useInfiniteQuery", "useSuspenseQuery", "useSuspenseQueries",
+    "useSuspenseInfiniteQuery", "useMutation", "useMutationState", "useLazyQuery",
+    "useSWR", "useSWRInfinite", "useSWRMutation", "useSWRSubscription",
+})
 _TYPE_KINDS = frozenset({"type", "interface", "enum"})
 # design SCAFFOLD, not the app (batch 50, measured on gustify): /spikes/ (122 pieces) and
 # /showcase/ (4) had ZERO app in-edges — excluded and counted. Fixture modules
@@ -277,6 +288,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 seen.add(c)
                 t = target_of(binds.get(c))
                 if not t:
+                    if c in _CACHE_CALLEES:              # a library query/cache hook (react-query/swr):
+                        pieces[src]["cache"] = True      # this piece TOUCHES the server cache = state (F1)
                     continue
                 tk = pieces[t]["kind"]
                 add(src, t, "uses-store" if tk == "store" else "uses-hook" if tk == "hook" else "fecall")
@@ -307,12 +320,15 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 if t:
                     tk = pieces[t]["kind"]
                     add(src, t, "uses-store" if tk == "store" else "uses-hook" if tk == "hook" else "fecall")
+                elif c in _CACHE_CALLEES:                 # a module-scope query/cache call → cache sink (F1)
+                    pieces[src]["cache"] = True
 
     edge_list = [{"from": s, "to": t, "rel": r, "cross": pieces[s]["home"] != pieces[t]["home"]}
                  for (s, t), r in sorted(edges.items())]
-    # ── STORE DETECTOR (F2) + feClass. A call wire is STATE if it (transitively) reaches a STORE or a
-    #    FETCH, else CHROME (cx/useT/layout plumbing). PRINCIPLED reachability over the call edges — the
-    #    sinks are the store kind + the fetching pieces (the `screen` flag), never a gustify name-list.
+    # ── STORE DETECTOR (F2) + feClass. A call wire is STATE if it (transitively) reaches a STORE, a
+    #    FETCH, or a query/CACHE hook, else CHROME (cx/useT/layout plumbing). PRINCIPLED reachability
+    #    over the call edges — the sinks are the store kind + fetching pieces (`screen`) + cache-hook
+    #    pieces (`cache`, F1: react-query/swr library idioms), never a gustify name-list.
     #    feClass per COMPONENT then reads it: view = 0 render-parents · private = exactly 1 · connector =
     #    shared AND reaches state · container = shared, renders children only · leaf = shared, neither. ──
     _STATE_CALL = ("fecall", "uses-hook", "uses-store")
@@ -327,7 +343,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                 _rchild[s] = True
         if r in _STATE_CALL:
             _callers.setdefault(t, []).append(s)
-    _sink = set(pid for pid, p in pieces.items() if p["kind"] == "store" or p.get("screen"))
+    _sink = set(pid for pid, p in pieces.items() if p["kind"] == "store" or p.get("screen") or p.get("cache"))
     touches_state = set(_sink); _stk = list(_sink)
     while _stk:                        # a caller of anything that touches state itself touches state
         _t = _stk.pop()
@@ -387,6 +403,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                   "screens_absorbed": absorbed, "unresolved": unresolved, "local_refs": local["refs"],
                   "samefile_renders": local.get("samefile", 0), "by_feclass": dict(sorted(by_class.items())),
                   "by_channel": by_channel, "state_pieces": len(touches_state),
+                  "cache_pieces": sum(1 for p in pieces.values() if p.get("cache")),
                   "fe_types_referenced": len({e["to"] for e in edge_list if pieces[e["to"]]["kind"] == "fe-type"
                                               and pieces[e["from"]]["kind"] != "fe-type"}),
                   "excluded": stats_x,
