@@ -341,6 +341,8 @@ check('id="stepnote"' in page and 'function _stepNote(){' in page and '#stepnote
       "the STEP NOTE (derived per-step guidance) is gone")
 check('#stepnote{ position:fixed; left:50%; transform:translateX(-50%); bottom:46px;' in page,
       "the step note sits BOTTOM-centre (operator: moved off the top, same horizontal centre)")
+check('window.__uniDrawJourneyNums=function' in page and 'if(window.__uniDrawJourneyNums) __uniDrawJourneyNums();' in page and 'function _numBadgeSprite' in page,
+      "journey STEP-NUMBER badges (operator): the pass exists + is hooked (updateConnectors + walk render) — a sequence number overlaid on each step node during a walk")
 check('#walkbar .wnav{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }' in page and '#walkbar .wchip{ flex:0 0 20px;' in page,
       "walkbar chips no longer keep a fixed size and wrap into rows")
 check('s.src="./workflows.js"; s.onerror=function(){};' in page and 'if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk")' in page,
@@ -1119,9 +1121,14 @@ const { chromium } = require(process.argv[3]);
         var _setBefore=(typeof HL!=='undefined'&&HL.set)?Object.keys(HL.set).length:0, _exBefore=(typeof HL!=='undefined')?HL.exact:null;
         if(window.__uniHLDepth) window.__uniHLDepth(5);
         var _setAfter=(typeof HL!=='undefined'&&HL.set)?Object.keys(HL.set).length:0, _exAfter=(typeof HL!=='undefined')?HL.exact:null;
+        // step-number badges: a walking journey overlays each RENDERED step with its sequence number.
+        if(window.__uniDrawJourneyNums) __uniDrawJourneyNums();
+        var _badges=(window.__uniJrnNumGroup&&window.__uniJrnNumGroup.children.length)||0;
+        if(window.__uniHLClear) __uniHLClear();
+        var _badgesCleared=(window.__uniJrnNumGroup&&window.__uniJrnNumGroup.children.length)||0;   // clearing the journey removes them
         jrn={ feLen:(typeof WALK!=='undefined'?WALK.feLen:0), firstKind:_f0?_f0.kind:null,
-          depthNoFlood:(_exBefore===true && _exAfter===true && _setAfter<=_setBefore) };
-        if(window.__uniHLClear) __uniHLClear(); } }catch(e){}
+          depthNoFlood:(_exBefore===true && _exAfter===true && _setAfter<=_setBefore),
+          badges:_badges, badgesCleared:_badgesCleared }; } }catch(e){}
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
       stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn }; });
@@ -1139,7 +1146,8 @@ const { chromium } = require(process.argv[3]);
   const iconsOk = r.iconsBuilt===6;   // flag/provider/module/web/middleware/prompt each build a billboard icon (no cube)
   const hdrOk = r.hdr && r.hdr.moved<=1 && r.hdr.slotEmpty>=240 && r.hdr.slotFull>=240 && Math.abs(r.hdr.slotEmpty-r.hdr.slotFull)<=1;   // the reserved walker slot keeps a constant width → tiers don't shift when a journey enters/leaves
   const _FE_KINDS=['hook','component','module','store','route','web','screen','type'];
-  const jrnOk = r.jrn && r.jrn.feLen>=1 && _FE_KINDS.indexOf(r.jrn.firstKind)>=0 && r.jrn.depthNoFlood===true;   // a workflow walk STARTS at the frontend (not the API endpoint) even at a tier that hides that kind; and the depth slider does NOT flood a walking journey
+  const jrnOk = r.jrn && r.jrn.feLen>=1 && _FE_KINDS.indexOf(r.jrn.firstKind)>=0 && r.jrn.depthNoFlood===true
+    && r.jrn.badges>0 && r.jrn.badgesCleared===0;   // + the walk overlays step-NUMBER badges on rendered steps, cleared when the journey ends
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

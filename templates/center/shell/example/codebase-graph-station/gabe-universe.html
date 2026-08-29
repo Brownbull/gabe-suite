@@ -1418,7 +1418,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _eb=(((_gm==="type"||_gm==="ent-type")&&_tcol(_ct))||((_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null));
     var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):(l.write&&window.__feD2WBand)?__feD2WBand(_ct):null;   // FE write wires ride the SEPARATE fed2w gradient (blue→magenta)
     connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });
-  if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup); if(window.__uniDrawWriteRings) __uniDrawWriteRings();
+  if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup); if(window.__uniDrawWriteRings) __uniDrawWriteRings(); if(window.__uniDrawJourneyNums) __uniDrawJourneyNums();
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
 /* ── INTER-ENTITY TRANSPORTS — data shuttles ferrying the cross-entity routes, LIVE (ping-pong along the link,
    nose leading). cargoB = a good-fit cargo hauler (the settled 'hauler' GLB has a broken bbox — deferred). ── */
@@ -2003,6 +2003,31 @@ window.__uniDrawWriteRings=function(){ try{
     var p=_npos[n.id]; if(!p) return;
     var col=pal[Math.min(n.fed2w|0, pal.length-1)];
     var r=ringSprite(col, 30, 0.72); r.position.set(p.x,p.y,p.z); r.raycast=function(){}; grp.add(r); }); }catch(e){} };
+/* ── JOURNEY STEP NUMBERS (operator): while a journey/trail WALKS, overlay each step node with its
+   SEQUENCE number (1..N) — a badge in the entity colour, centred on the icon, on top (depthTest off),
+   the CURRENT step brighter/bigger. Mirrors the trail chips in the panel, drawn onto the 3D nodes so the
+   order reads from a distance. Own scene group, rebuilt on each walk render + updateConnectors; the
+   badges track the sim via __uniHLTick (userData.nid). It ADDS an overlay, never replaces the icon. ── */
+function _numBadgeSprite(num, col, size, cur){ var cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d");
+  var C=col||"#9ecbff";
+  c.beginPath(); c.arc(64,64,54,0,Math.PI*2); c.fillStyle="#0b0f18"; c.globalAlpha=cur?0.9:0.82; c.fill(); c.globalAlpha=1;   // dark disc so the number reads over the bright scene glows
+  c.lineWidth=cur?11:8; c.strokeStyle=C; c.stroke();                                                                        // the ENTITY-colour ring (trail coloring); current step = thicker
+  var t=String(num); c.font="800 "+(t.length>2?42:t.length>1?56:70)+"px "+curFont(); c.textAlign="center"; c.textBaseline="middle";
+  c.lineWidth=4; c.strokeStyle="#0b0f18"; c.strokeText(t,64,69); c.fillStyle=cur?"#ffffff":C; c.fillText(t,64,69);           // number in the entity colour (current = white), dark outline for contrast on any hue
+  var s=new T.Sprite(new T.SpriteMaterial({map:new T.CanvasTexture(cv), transparent:true, depthWrite:false, depthTest:false})); s.scale.set(size,size,1); return s; }
+window.__uniJrnNumGroup=null;
+window.__uniDrawJourneyNums=function(){ try{
+  if(typeof Graph==="undefined"||!Graph||!Graph.scene) return;
+  var grp=window.__uniJrnNumGroup; if(!grp){ grp=window.__uniJrnNumGroup=new T.Group(); grp.renderOrder=9; }
+  try{ var _sc=Graph.scene(); if(_sc && grp.parent!==_sc) _sc.add(grp); }catch(e){}   // (re)attach — survive a scene reset
+  while(grp.children.length){ var ch=grp.children.pop(); if(ch.material){ if(ch.material.map&&ch.material.map.dispose) ch.material.map.dispose(); if(ch.material.dispose) ch.material.dispose(); } grp.remove(ch); }
+  if(typeof WALK==="undefined" || !(WALK.mode==="journey"||WALK.mode==="trail") || !WALK.steps.length) return;   // ONLY while a walk is active
+  if(typeof _npos==="undefined") return;
+  WALK.steps.forEach(function(id, i){ var n=(typeof _fnById==="function")?_fnById(id):(typeof NIDS!=="undefined"&&NIDS[id]); if(!n) return;
+    if(typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(n)) return;                       // only actually-rendered steps
+    var p=_npos[id]; if(!p) return;
+    var cur=(i===WALK.i), col=(n.col||(typeof ENT!=="undefined"&&ENT[n.ent])||"#9ecbff");
+    var s=_numBadgeSprite(i+1, col, cur?18:14, cur); s.position.set(p.x,p.y,p.z); s.userData.nid=id; s.raycast=function(){}; grp.add(s); }); }catch(e){} };
 window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var ent=h.ent, sub=h.sub, cols=["show","planets","wires"];
   if(typeof UNIVIS==="undefined"||typeof _VISDEF==="undefined") return;
   if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
@@ -2282,8 +2307,9 @@ window.__uniHLReapply=function(){ if(!HL.on) return;                     // halo
       if(CFG.othGlow!==false) _add(n, _glowFor(n, (CFG.glowRad!=null?CFG.glowRad:2), (CFG.glowInt!=null?CFG.glowInt:0.55), (CFG.glowFall!=null?CFG.glowFall:0)), false);
       if(CFG.othRing && n.ent!=null && _selEnts[n.ent] && !(WALK.mode==="journey" && HL.exact)) _add(n, _ringSprite(n, (CFG.othRingInt!=null?CFG.othRingInt:0.35)), false);   // STATIC — same-entity only, only the FOCUS ring animates (operator); a walking journey's path context wears NO ring — the current step alone does
     } }); };
-window.__uniHLTick=function(){ if(!hlGroup||!HL.on) return;                     // follow the sim every cluster tick (focus keeps origin halos)
-  hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };
+window.__uniHLTick=function(){                                                  // follow the sim every cluster tick (focus keeps origin halos)
+  if(hlGroup && HL.on) hlGroup.children.forEach(function(s){ var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); });
+  var jg=window.__uniJrnNumGroup; if(jg && jg.children.length) jg.children.forEach(function(s){ if(!s.userData.nid) return; var p=_npos[s.userData.nid]; if(p) s.position.set(p.x,p.y,p.z); }); };   // journey step-number badges track the sim too
 function _hlRestyle(){ _hlClearSprites();
   if(typeof Graph!=="undefined" && Graph){
     try{ Graph.nodeVisibility(function(n){ return _nodeVisibleFn(n); }); }catch(e){}
@@ -2635,7 +2661,8 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
       wb.querySelectorAll("[data-wi]").forEach(function(b){ b.onclick=function(){ WALK.i=+b.getAttribute("data-wi"); _walkGo(0); }; });
       try{ _stepNote(); }catch(e){}
       var _sn=wb.querySelector(".wstepname"); if(_sn){ _sn.style.cursor="pointer"; _sn.onclick=function(){ _walkGo(0); }; }
-      var _cl=wb.querySelector(".wclear"); if(_cl) _cl.onclick=function(){ __uniHLClear(); }; } } }
+      var _cl=wb.querySelector(".wclear"); if(_cl) _cl.onclick=function(){ __uniHLClear(); }; } }
+  if(window.__uniDrawJourneyNums) try{ __uniDrawJourneyNums(); }catch(e){} }   // refresh the step-number badges on every walk start / step / clear
 /* hover a connection chip in the card → that node gets a WHITE halo (a different color than the
    depth highlight) so the relationship reads instantly */
 var _hovSprite=null;

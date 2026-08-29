@@ -776,7 +776,7 @@ text = text.replace(OLD_BOOT2, OLD_BOOT2 + ' if(window.__uniWireTopbar) __uniWir
 # right after the bundle pass in updateConnectors. One targeted append on the final __uniDrawBundles line.
 assert 'if(window.__uniDrawBundles) __uniDrawBundles(connGroup);' in text, "the __uniDrawBundles hook is missing — stub patch anchor gone"
 text = text.replace('if(window.__uniDrawBundles) __uniDrawBundles(connGroup);',
-  'if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup); if(window.__uniDrawWriteRings) __uniDrawWriteRings();', 1)
+  'if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup); if(window.__uniDrawWriteRings) __uniDrawWriteRings(); if(window.__uniDrawJourneyNums) __uniDrawJourneyNums();', 1)
 
 io.open(os.path.join(D,"gabe-universe.html"),"w",encoding="utf-8").write(text)
 out = text.split("\n")
