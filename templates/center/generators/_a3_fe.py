@@ -65,6 +65,12 @@ _CACHE_CALLEES = frozenset({
     "useSuspenseInfiniteQuery", "useMutation", "useMutationState", "useLazyQuery",
     "useSWR", "useSWRInfinite", "useSWRMutation", "useSWRSubscription",
 })
+# FE d2w — the read/WRITE direction is the HTTP METHOD of the fetch a piece reaches (via the web
+# bridge's per-site (method, path)), NOT a hook name: deterministic + LIBRARY-AGNOSTIC (works whether
+# the write rides react-query useMutation, axios.post, or raw fetch, on ANY twin). A write-method fetch
+# = this piece WRITES; GET = reads. Store-object writes (zustand set()) aren't method-visible → not
+# claimed here (deferred: revisit when a twin shows a material store-write population the bridge misses).
+_WRITE_METHODS = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 _TYPE_KINDS = frozenset({"type", "interface", "enum"})
 # design SCAFFOLD, not the app (batch 50, measured on gustify): /spikes/ (122 pieces) and
 # /showcase/ (4) had ZERO app in-edges — excluded and counted. Fixture modules
@@ -210,8 +216,12 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         for ext in (".tsx", ".ts"):
             pid = principal.get(rel + ext)
             if pid:
+                calls = sc.get("calls") or []
                 pieces[pid]["screen"] = sid
-                pieces[pid]["sites"] = len(sc.get("calls") or [])
+                pieces[pid]["sites"] = len(calls)
+                w = sum(1 for c in calls if (c.get("method") or "GET").upper() in _WRITE_METHODS)
+                if w:                                  # FE d2w: a POST/PUT/PATCH/DELETE fetch WRITES (HTTP verb, library-agnostic)
+                    pieces[pid]["wsites"] = w          # write-method fetch count (a subset of `sites`)
                 absorbed += 1
                 break
 
@@ -350,12 +360,21 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         for _s in _callers.get(_t, ()):
             if _s not in touches_state:
                 touches_state.add(_s); _stk.append(_s)
-    by_channel = {"state": 0, "chrome": 0}
-    for e in edge_list:                # tag each call wire's data channel (uses-store is always state)
-        if e["rel"] in _STATE_CALL:
-            _st = (e["rel"] == "uses-store") or (e["to"] in touches_state)
-            e["channel"] = "state" if _st else "chrome"
-            by_channel["state" if _st else "chrome"] += 1
+    _wsink = set(pid for pid, p in pieces.items() if p.get("wsites"))   # FE d2w write sinks: a write-method fetch
+    touches_write = set(_wsink); _wstk = list(_wsink)
+    while _wstk:                       # a caller reaching a write-method fetch is on the WRITE spine (⊆ touches_state)
+        _t = _wstk.pop()
+        for _s in _callers.get(_t, ()):
+            if _s not in touches_write:
+                touches_write.add(_s); _wstk.append(_s)
+    by_channel = {"chrome": 0, "read": 0, "write": 0}
+    for e in edge_list:                # tag each call wire chrome | READ | WRITE — read/write is the HTTP method
+        if e["rel"] in _STATE_CALL:    # the wire reaches (deterministic, library-agnostic), never a hook name
+            to = e["to"]
+            ch = ("write" if to in touches_write else
+                  "read" if (e["rel"] == "uses-store" or to in touches_state) else "chrome")
+            e["channel"] = ch
+            by_channel[ch] += 1
     by_class: dict[str, int] = {}
     for pid, p in pieces.items():
         if p["kind"] != "component":
@@ -366,6 +385,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
         p["feClass"] = fc
         if pid in touches_state:
             p["state"] = True
+        if pid in touches_write:
+            p["write"] = True                          # on the FE d2w WRITE spine (reaches a write-method fetch)
         by_class[fc] = by_class.get(fc, 0) + 1
     by_kind: dict[str, int] = {}
     by_home: dict[str, int] = {}
@@ -404,6 +425,8 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                   "samefile_renders": local.get("samefile", 0), "by_feclass": dict(sorted(by_class.items())),
                   "by_channel": by_channel, "state_pieces": len(touches_state),
                   "cache_pieces": sum(1 for p in pieces.values() if p.get("cache")),
+                  "write_pieces": len(touches_write),
+                  "write_sites": sum(p.get("wsites", 0) for p in pieces.values()),
                   "fe_types_referenced": len({e["to"] for e in edge_list if pieces[e["to"]]["kind"] == "fe-type"
                                               and pieces[e["from"]]["kind"] != "fe-type"}),
                   "excluded": stats_x,

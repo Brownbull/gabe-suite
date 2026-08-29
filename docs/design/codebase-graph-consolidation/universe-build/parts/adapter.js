@@ -138,7 +138,8 @@ if(_FE){
     var m={ behind:0, depth:0, tests:0, cols:0, fanin:0, god:false, method:null };
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
-      area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null };   // AREA + showcase tag + the fold-control class (phase 1)
+      area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null,   // AREA + showcase tag + the fold-control class (phase 1)
+      write:!!p.write, wsites:p.wsites||0 };   // FE d2w: on the WRITE spine · write-method fetch count (HTTP verb)
     nodes.push(n); NIDS[n.id]=n; });
 }
 
@@ -149,7 +150,7 @@ Object.keys(_C4.l2||{}).forEach(function(ent){
 (_C4.cross_edges||[]).forEach(function(e){ links.push({source:e.from,target:e.to,rel:e.kind||"fk"}); });
 if(_FE){
   /* fe wires are COMPACT index triples [from, to, rel] over fe.pieces order */
-  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true, chrome:(e[3]==="chrome")}); });   // channel (F2): a chrome call wire is presentation plumbing, not data
+  var _P=_FE.pieces; (_FE.edges||[]).forEach(function(e){ var a=_P[e[0]], b=_P[e[1]]; if(!a||!b) return; links.push({source:a.id, target:b.id, rel:FE_REL[e[2]]||e[2], fe:true, chrome:(e[3]==="chrome"), write:(e[3]==="write")}); });   // channel: chrome = presentation plumbing · write = reaches a write-method fetch (FE d2w, the HTTP verb)
   /* SCREEN ABSORPTION: the piece that fetches replaces its file-level `web` node — the bridge links
      re-target to the piece, the web node leaves the field (one node per fetching file, not two). */
   var ABS={}; nodes.forEach(function(n){ if(n.screen && NIDS[n.screen] && NIDS[n.screen].kind==="web") ABS[n.screen]=n.id; });

@@ -161,15 +161,15 @@ _fe4 = _a3_fe.build_fe(_X4, {"dash": {}}, [])
 _pan4 = next((p for p in _fe4["pieces"] if p["name"] == "Panel"), None)
 check(_pan4 and _pan4.get("state") is True,
       "STORE DETECTOR: a component whose call reaches a store TOUCHES STATE")
-check(_fe4["stats"]["by_channel"] == {"state": 1, "chrome": 1},
-      "STORE DETECTOR: the store call is STATE, the cx (util module) call is CHROME (the cx=fecall bug fixed)")
+check(_fe4["stats"]["by_channel"] == {"chrome": 1, "read": 1, "write": 0},
+      "STORE DETECTOR: the store call is READ (touches state, no write reached), cx is CHROME (cx=fecall fixed)")
 # the by_channel STAT above is computed off the edge DICTS; the RENDERER instead reads the channel
 # off the serialized wire's 4th slot (e[3]) — assert THAT, or a serialization drop ships green.
 _ch4 = {(_fe4["pieces"][e[0]]["name"], _fe4["pieces"][e[1]]["name"]): (e[3] if len(e) > 3 else None)
         for e in _fe4["edges"]}
-check(_ch4.get(("Panel", "useDashStore")) == "state" and _ch4.get(("Panel", "cx")) == "chrome"
+check(_ch4.get(("Panel", "useDashStore")) == "read" and _ch4.get(("Panel", "cx")) == "chrome"
       and _ch4.get(("Panel", "Child")) is None,
-      "STORE DETECTOR: the channel SERIALIZES onto the wire at e[3] (store→state, cx→chrome) and a "
+      "STORE DETECTOR: the channel SERIALIZES onto the wire at e[3] (store→read, cx→chrome) and a "
       "renders wire carries NO 4th slot — the exact shape chrome:(e[3]===\"chrome\") consumes")
 # ── CACHE DETECTOR (F1): a hook calling a query-library idiom (useQuery/useSWR) with no project
 #    binding is a CACHE sink → it touches server state, so its caller's wire is STATE not chrome. ──
@@ -186,14 +186,43 @@ check(_useMe and _useMe.get("cache") is True and _fe5["stats"]["cache_pieces"] =
 check(_meCard and _meCard.get("state") is True,
       "CACHE DETECTOR: the component calling that cache hook TOUCHES state (reachability through the sink)")
 _ch5 = {(_fe5["pieces"][e[0]]["name"], _fe5["pieces"][e[1]]["name"]): (e[3] if len(e) > 3 else None) for e in _fe5["edges"]}
-check(_ch5.get(("MeCard", "useMe")) == "state",
-      "CACHE DETECTOR: the MeCard→useMe wire serializes channel=state (a query hook is not chrome plumbing)")
+check(_ch5.get(("MeCard", "useMe")) == "read",
+      "CACHE DETECTOR: the MeCard→useMe wire serializes channel=read (a query hook touches state, not chrome)")
 # honest-empty: a project with NO query lib gets NO `cache` key on any piece (byte-identical)
 _X6 = {"byFile": {"src/features/x/useX.ts": {"exports": [{"name": "useX", "kind": "function",
     "hasJsx": False, "calls": ["useState", "cx"]}], "bindings": {"cx": {"ext": True}}}}}
 _fe6 = _a3_fe.build_fe(_X6, {"x": {}}, [])
 check(all("cache" not in p for p in _fe6["pieces"]) and _fe6["stats"]["cache_pieces"] == 0,
       "CACHE DETECTOR honest-empty: no query-lib call → no `cache` key on any piece (byte-identical)")
+
+# ── FE d2w WRITE DETECTOR: the read/write direction is the HTTP METHOD of the fetch a piece reaches
+#    (via the web bridge's per-site method) — deterministic + library-agnostic, NEVER a hook name. ──
+_X7 = {"byFile": {
+    "src/features/save/useSave.ts": {"exports": [{"name": "useSave", "kind": "function", "hasJsx": False,
+        "calls": ["apiFetch"]}], "bindings": {"apiFetch": {"ext": True}}},
+    "src/features/save/SaveBtn.tsx": {"exports": [{"name": "SaveBtn", "kind": "function", "hasJsx": True,
+        "jsx": [], "calls": ["useSave"]}], "bindings": {"useSave": {"file": "src/features/save/useSave.ts", "name": "useSave"}}}}}
+_screens7 = [{"id": "web:src/features/save/useSave", "file": "src/features/save/useSave.ts",
+              "calls": [{"method": "POST", "path": "/save"}], "dynamic": 0}]
+_fe7 = _a3_fe.build_fe(_X7, {"save": {}}, _screens7)
+_useSave = next((p for p in _fe7["pieces"] if p["name"] == "useSave"), None)
+_saveBtn = next((p for p in _fe7["pieces"] if p["name"] == "SaveBtn"), None)
+check(_useSave and _useSave.get("wsites") == 1 and _fe7["stats"]["write_pieces"] == 2,
+      "FE d2w WRITE: a POST fetch makes its piece a write sink (wsites), and the write spine reaches 2 pieces (sink + caller)")
+check(_saveBtn and _saveBtn.get("write") is True and _saveBtn.get("state") is True,
+      "FE d2w WRITE: the component reaching the write-fetch is on the WRITE spine (reachability)")
+_ch7 = {(_fe7["pieces"][e[0]]["name"], _fe7["pieces"][e[1]]["name"]): (e[3] if len(e) > 3 else None) for e in _fe7["edges"]}
+check(_ch7.get(("SaveBtn", "useSave")) == "write",
+      "FE d2w WRITE: the SaveBtn→useSave wire serializes channel=write (the HTTP verb, not a hook name)")
+# a GET-only fetch is a READ (no write flag) — the method, not the presence of a fetch, decides
+_X8 = {"byFile": {"src/features/list/List.tsx": {"exports": [{"name": "List", "kind": "function",
+    "hasJsx": True, "jsx": [], "calls": ["apiFetch"]}], "bindings": {"apiFetch": {"ext": True}}}}}
+_screens8 = [{"id": "web:src/features/list/List", "file": "src/features/list/List.tsx",
+              "calls": [{"method": "GET", "path": "/list"}], "dynamic": 0}]
+_fe8 = _a3_fe.build_fe(_X8, {"list": {}}, _screens8)
+_ls = next((p for p in _fe8["pieces"] if p["name"] == "List"), None)
+check(_ls and _ls.get("screen") and "wsites" not in _ls and "write" not in _ls and _fe8["stats"]["write_pieces"] == 0,
+      "FE d2w READ: a GET-only fetch carries NO write flag — the method decides, honest-empty of writes")
 
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and 3 <= len(e) <= 4 and isinstance(e[0], int) for e in fe["edges"]),
