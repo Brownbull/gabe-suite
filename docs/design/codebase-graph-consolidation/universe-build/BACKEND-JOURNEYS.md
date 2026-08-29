@@ -23,10 +23,12 @@ terminal; after it, **31/31** — the five invisible-write endpoints all resolve
   2. **Delegating writer** — no ORM op of its own, forwards to the real writer one hop
      down (`_upsert_exploration`, amber at d2w 1 → `upsert_exploration_preferences`, the
      D109 shared path).
-  3. **Writer to an UNDRAWN model** — the write is real but its model class is absent from
-     the archmap census, so no red wire can land (`_upsert_subscription` →
-     SubscriptionEntitlement, `_stamp_completion` → SetupCompletionState, idempotency-key
-     rows, `ShoppingItem` in J6). Archmap-coverage debt on the twin, not a graph bug.
+  3. **Writer the access-pass can't SEE** — the write is real but derives no red wire. The
+     former sub-cause (model absent from the census) is RESOLVED — every example that lived
+     here (`_upsert_subscription`→SubscriptionEntitlement, `_stamp_completion`→
+     SetupCompletionState, idempotency rows, `ShoppingItem`) is drawn since the 50f9aac7
+     census. The LIVE residual is the ORM-idiom gap (systemic #5): a `setattr`-mutation or a
+     query-bound delete the access pass never observes → no write op, no red wire.
 - **Double-click** a node = reveal + light its one-hop neighbourhood; walk a chain by
   double-clicking hop after hop. Boot ("critical") keeps the whole write fabric visible —
   fns with d2w or access ops never fold as solo helpers.
@@ -55,12 +57,12 @@ reveal (ghost click, double-click) — a read-path helper on a chain is never an
 
 | # | Journey | Shape | Drawn chain |
 |---|---------|-------|-------------|
-| J1 | `POST /setup/complete` | **Idempotent commit-boundary orchestrator with fan-out upserts** — the template | 13 fns / h3: handler → `complete_setup` (boundary) → 5 `_upsert_*` red terminals at h2 + the 6th via the h3 exploration delegation |
-| J2 | `DELETE /me` | **Hard-delete cascade with an external-identity tail** — wipe + commit FIRST, then Firebase identity delete | `delete_account`@h1 → 5 models, one hop, five red wires |
+| J1 | `POST /setup/complete` | **Idempotent commit-boundary orchestrator with fan-out upserts** — the template | 13 fns / h3: handler → `complete_setup` (boundary) → **6 `_upsert_*` red terminals at h2** (incl. `_upsert_subscription`→SubscriptionEntitlement, now drawn — was 5) + the 7th via the h3 exploration delegation |
+| J2 | `DELETE /me` | **Hard-delete cascade with an external-identity tail** — wipe + commit FIRST, then Firebase identity delete | `delete_account`@h1 → **7 models, one hop, seven red wires** (AiSpendLog + IdempotencyKey now drawn since the 50f9aac7 census — was 5) |
 | J3 | `POST /cooking/sessions/{id}/complete` | **Domain-event completion** — state flip + 2 append-only ledgers + leftovers→pantry, then a second commit for the event handler | `complete_session`@h1 → 4 models; `clear_pending_…`@h2 → Notification |
 | J4 | `POST /cooking/sessions` | **Idempotent aggregate-create with a conditional schedule seed** (long-prep) | `start_session`@h1 → CookingSession; `_schedule_next`@h3 → CookingStageReminder |
 | J5 | `POST /pantry/items` | **Event-sourced CRUD** — inventory row + immutable "compra" ledger event, back-linked | `add_pantry_item`@h1 → PantryItem + IngredientHistoryEvent |
-| J6 | `POST /shopping/items/{id}/confirm-bought` | **Cross-entity domain event with audit trail** — bought item → NEW PantryItem (create, never increment) + ledger | `confirm_bought`@h1 → 2 red wires (the ShoppingItem bulk-UPDATE writes an undrawn model) |
+| J6 | `POST /shopping/items/{id}/confirm-bought` | **Cross-entity domain event with audit trail** — bought item → NEW PantryItem (create, never increment) + ledger | `confirm_bought`@h1 → **3 red wires** (ShoppingItem is now a drawn pantry model — was 2; its state transition is visible) |
 | J7 | `POST /recipe-creation/manual` | **Aggregate write with an idempotency envelope** — root + 2 child collections + request ledger in a SAVEPOINT | `create_recipe_manual`@h1 → 4 models |
 | J8 | `POST /consent` | **Minimal append-only compliance** — server stamps the policy version, newest row wins, nothing ever updated | `record_consent`@h1 → ConsentRecord |
 
@@ -77,11 +79,12 @@ wires to five preference models) → `_upsert_exploration` (amber delegator) →
    d2w anchor verdicts survive (those fns hold real write ops), but the flag mislabels
    the boundary. *Fix: split the flag (`commits` vs `flushes`) in `_a3_code` + orm-access
    battery. Trigger: next `_a3_code` session.*
-2. **Undrawn-model class** — ShoppingItem, SubscriptionEntitlement, SetupCompletionState,
-   IdempotencyKey, AiSpendLog… are absent from the archmap census → invisible to C2 ops,
-   red wires, and endpoint rollups (J2's rollup says 5 models, source writes 7; J6 loses
-   its state transition). *Fix: archmap coverage on the twin (center.config.json), then
-   regen. Trigger: next gustify adoption session.*
+2. **~~Undrawn-model class~~ RESOLVED 2026-08-29** — ShoppingItem, SubscriptionEntitlement,
+   SetupCompletionState, IdempotencyKey, AiSpendLog are ALL DRAWN now (the 50f9aac7 census
+   claimed the 14 request-path files: idempotency/ownership→auth · ai_credits/ai_spend→
+   progression · shopping→pantry). J2 is 7 red wires, J6 is 3, J1 is 6 — the counts above
+   are corrected. The residual write-INVISIBILITY is a DIFFERENT cause, now finding #5 (the
+   access-pass ORM-idiom gap), not a census gap.
 3. **Rollups under-count nested/event writes** — J3's completion also writes SkillProgress
    + NodeProgress via the synchronous `CookedMealCreated` handler; setup's transaction also
    writes Household/Membership/Location. The rollup is a floor, and now the drawn chain
@@ -90,6 +93,20 @@ wires to five preference models) → `_upsert_exploration` (amber delegator) →
 4. **Auth writes on EVERY request** — `build_auth_context` get-or-creates the User and
    COMMITS before any handler body runs (auth/context.py:79). No journey covers it; it is
    the one write path with no endpoint of its own.
+5. **Write endpoints reading 0-write (access-pass ORM-idiom gap)** — a `setattr(target,field)`
+   mutation (PATCH /settings/preferences · /settings/household) or a query-bound delete
+   (DELETE /recipes/{id}/plan) writes nothing the access pass can SEE, so the endpoint derives
+   `writes=0`. Measured: 11 write-method endpoints read 0-write, and TWO are steps INSIDE curated
+   workflows ("Plan a recipe" unplan · "Filter recipes" cupo) — so a curated user story now has a
+   write step that reads pure-read. *Fix: an ORM setattr/query-delete detector in `_a3_code`'s
+   access pass. Trigger: next `_a3_code` session (pairs with #1).*
+6. **Route paths that collapse to `/` (twin archmap gap, NOT a suite bug)** — gustify's
+   `recipe_filter_modes.py` uses a MODULE VARIABLE `_BASE='/recipe-filter-modes'` in the FastAPI
+   decorators (`@router.get(_BASE)`), which gustify's archmap scanner cannot resolve → the path
+   collapses to `/` IN `archmap.json`. The suite reads `ep.path` faithfully, so 4 endpoints label
+   `GET/POST/PUT/DELETE /` and 2 `${ENDPOINT}/${id}` fetches land in `stats.web.unmatched`. *Fix is
+   TWIN-SIDE (resolve module-string constants in the arch scanner); the suite is honest. Flag for
+   the next gustify adoption session.*
 
 ## The gap audit (2026-08-27) — hops the source takes that the map does not draw
 
