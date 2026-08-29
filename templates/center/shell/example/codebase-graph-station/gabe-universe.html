@@ -310,7 +310,10 @@
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
   /* journey STEP controls — CENTERED in the header bar: [‹] [i/N · name] [›] [✕], real Lucide buttons */
-  #jrnpill{ display:flex; align-items:center; gap:6px; min-width:0; max-width:42vw; }
+  /* a FIXED-width RESERVED slot (operator): the journey walker lives here, but the slot is ALWAYS present
+     (empty + invisible when no journey) so entering/leaving a journey never shifts the tiers/search in the
+     centred header cluster. The journey name truncates (.wjname ellipsis) to stay within the slot. */
+  #jrnpill{ display:flex; align-items:center; justify-content:center; gap:6px; width:248px; flex:none; overflow:hidden; }
   #jrnpill .wname{ display:flex; align-items:center; gap:8px; min-width:0; padding:4px 12px; font-size:12px;
     color:var(--ink); border:1px solid var(--accent); border-radius:999px; background:var(--chip-bg); }
   #jrnpill .wpos{ font:700 10.5px/1 var(--font-mono); color:var(--muted); flex:none; }
@@ -767,7 +770,7 @@
   </div>
   <button class="tbico" id="jrnBtn" title="journeys — cross-entity tests as highlighted paths: pick one, its carrier elements + wires light up; step it with the controls that appear here."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg></button>
   <button class="tbico" id="hlModeBtn" title="highlight style — GLOW halos the reached set and dims the rest of the wires · FOCUS hides everything outside the set (hulls stay as geography). Click to switch."><svg id="hlIcoGlow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/></svg><svg id="hlIcoFocus" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="display:none"><circle cx="12" cy="12" r="3.5"/><path d="M2 8V4a2 2 0 0 1 2-2h4M16 2h4a2 2 0 0 1 2 2v4M22 16v4a2 2 0 0 1-2 2h-4M8 22H4a2 2 0 0 1-2-2v-4"/></svg></button>
-  <span id="jrnpill" style="display:none"></span>
+  <span id="jrnpill"></span><!-- reserved fixed-width slot (station.css) — always present so the walker never shifts the header -->
   <div class="spacer"></div>
   <span class="tbdepth" id="depthBtn" title="connection depth — selecting an element highlights everything within N hops. Drag the bar, Alt+scroll, or Arrow Up/Down. Esc clears the highlight."><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="2.5"/><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="10"/></svg><input type="range" id="depthRng" min="1" max="5" step="1" value="3"><b class="tbnum" id="depthNum">3</b></span>
   <button class="reset" id="themeBtn" title="theme — dark / light"></button>
@@ -2608,7 +2611,7 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
         +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
       pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
-    else pill.style.display="none"; }
+    else { pill.style.display=""; pill.innerHTML=""; } }   // keep the RESERVED slot present + empty (no display:none) so the header never shifts (operator)
   /* the TRAIL bar shows for a TRAIL and for a selected JOURNEY (operator: a journey becomes the current
      trail — navigable by the same chips + Alt+A/D, with a CLEAR button next to its title). */
   if(wb){ var _wActive=(WALK.mode==="trail"||WALK.mode==="journey") && WALK.steps.length;

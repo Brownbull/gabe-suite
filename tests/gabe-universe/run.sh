@@ -797,6 +797,8 @@ check('data-fed2wtog="1"' in page and 'FE write heat <i>' in page,
       "the legend carries the SEPARATE FE-write-heat toggle row")
 check('window.__uniWriteRing=false;' in page,
       "the write-spine node ring is a SEPARATE toggle (operator D2), DEFAULT OFF")
+check('#jrnpill{ display:flex; align-items:center; justify-content:center; gap:6px; width:248px; flex:none' in page,
+      "the journey-walker slot is a FIXED-WIDTH reserve (operator: the header must not shift when a journey enters/leaves)")
 # ── the write-spine node RING pass (D2) + journey-tab ICONS (operator) ──
 check('window.__uniDrawWriteRings=function' in page and 'if(window.__uniDrawWriteRings) __uniDrawWriteRings();' in page,
       "the write-ring pass is defined AND hooked into updateConnectors (rides the stub hook)")
@@ -1098,9 +1100,16 @@ const { chromium } = require(process.argv[3]);
     // the previously-cube kinds now build a billboard ICON texture (billTex[k]) — proof, not a string check
     var _iconKinds=["flag","provider","module","web","middleware","prompt"];
     var iconsBuilt=(typeof billTex!=='undefined')?_iconKinds.filter(function(k){ return billTex[k]; }).length:-1;
+    // the journey-walker slot is a FIXED-WIDTH reserve (operator): filling the pill must NOT move the tiers.
+    var _tsr=document.getElementById('tiersel'), _jp=document.getElementById('jrnpill');
+    var _leftEmpty=_tsr?Math.round(_tsr.getBoundingClientRect().left):-1, _wEmpty=_jp?Math.round(_jp.getBoundingClientRect().width):-1;
+    if(_jp) _jp.innerHTML='<span class="wname"><b class="wpos">1/48</b><span class="wjname">A very long journey name that should truncate inside the reserved slot</span></span>';
+    var _leftFull=_tsr?Math.round(_tsr.getBoundingClientRect().left):-1, _wFull=_jp?Math.round(_jp.getBoundingClientRect().width):-1;
+    if(_jp) _jp.innerHTML='';
+    var hdr={ moved:Math.abs(_leftEmpty-_leftFull), slotEmpty:_wEmpty, slotFull:_wFull };
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt }; });
+      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1113,9 +1122,10 @@ const { chromium } = require(process.argv[3]);
   // can't see; the station HONESTLY marks those unmapped per row, so it is reported, not gated.
   const wi=r.wfInfo, wfOk = wi.newFound===8 && wi.count===16;
   const iconsOk = r.iconsBuilt===6;   // flag/provider/module/web/middleware/prompt each build a billboard icon (no cube)
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk;
+  const hdrOk = r.hdr && r.hdr.moved<=1 && r.hdr.slotEmpty>=240 && r.hdr.slotFull>=240 && Math.abs(r.hdr.slotEmpty-r.hdr.slotFull)<=1;   // the reserved walker slot keeps a constant width → tiers don't shift when a journey enters/leaves
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

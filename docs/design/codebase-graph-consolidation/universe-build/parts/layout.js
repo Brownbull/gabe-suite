@@ -1101,7 +1101,7 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
         +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
       pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
-    else pill.style.display="none"; }
+    else { pill.style.display=""; pill.innerHTML=""; } }   // keep the RESERVED slot present + empty (no display:none) so the header never shifts (operator)
   /* the TRAIL bar shows for a TRAIL and for a selected JOURNEY (operator: a journey becomes the current
      trail — navigable by the same chips + Alt+A/D, with a CLEAR button next to its title). */
   if(wb){ var _wActive=(WALK.mode==="trail"||WALK.mode==="journey") && WALK.steps.length;
