@@ -1116,6 +1116,127 @@ with tempfile.TemporaryDirectory() as _td:
     check(json.dumps(_wa, sort_keys=True) == json.dumps(_wdet, sort_keys=True),
           "web_arm deterministic: same tree → identical output")
 
+# ── SSE: an ALWAYS-ON additive pass that COEXISTS with the winning REST idiom ──
+# A stream is opened by a primitive (new EventSource / fetchEventSource) the winner-
+# take-all _detect_idiom can NEVER select, so it is extracted on every file alongside
+# the dominant idiom and enters the coverage denominator (sse_sites) instead of staying
+# invisible. This is the fix for the recipe-creation feN=0: its screens fetch over SSE.
+with tempfile.TemporaryDirectory() as _ts:
+    _sr = pathlib.Path(_ts) / "apps" / "web" / "src" / "features"
+    _sr.mkdir(parents=True)
+    (_sr / "Rest.tsx").write_text(                         # apiFetch DOMINATES (2 sites)
+        'import { apiFetch } from "@lib/api/client";\n'
+        'export const a=()=>apiFetch<T>("/api/v1/orders");\n'
+        'export const b=()=>apiFetch<T>("/api/v1/pantry", { method:"POST" });\n', encoding="utf-8")
+    (_sr / "sseClient.ts").write_text(                     # the SSE wrapper: stream + POST trigger
+        'export function openRecipeStream(args){\n'
+        '  const es = new EventSource(`/recipe-creation/gustify/stream`);\n'
+        '  return fetchEventSource("/recipe-creation/gustify", { method: "POST", body: args });\n'
+        '}\n', encoding="utf-8")
+    _ws = W.web_arm(pathlib.Path(_ts), {"orders": {"files": []}})
+    check(_ws["extractor"] == "apiFetch",
+          "SSE coexists: apiFetch still WINS the idiom (SSE never competes for the roster slot)")
+    _sse_s = [s for s in _ws["screens"] if s["file"].endswith("sseClient.ts")]
+    _sse_calls = {(c["method"], c["path"]) for c in _sse_s[0]["calls"]} if _sse_s else set()
+    check(("GET", "/recipe-creation/gustify/stream") in _sse_calls,
+          "SSE: new EventSource(literal) → a GET call site (EventSource is GET by spec)")
+    check(("POST", "/recipe-creation/gustify") in _sse_calls,
+          "SSE: fetchEventSource(literal, {method:POST}) → the POST trigger, method from options")
+    check(bool(_sse_s) and all(c.get("sse") for c in _sse_s[0]["calls"]),
+          "SSE calls are TAGGED sse:True (a stream is distinguishable from a one-shot)")
+    check(_ws["stats"]["sse_sites"] == 2,
+          "stats.sse_sites counts the streams → they enter the coverage denominator")
+    _rest = [s for s in _ws["screens"] if s["file"].endswith("Rest.tsx")]
+    check(bool(_rest) and not any(c.get("sse") for c in _rest[0]["calls"]),
+          "SSE pass stays SILENT on plain REST calls (no false sse tag)")
+    check(json.dumps(_ws, sort_keys=True) == json.dumps(W.web_arm(pathlib.Path(_ts), {"orders": {"files": []}}), sort_keys=True),
+          "SSE-bearing web_arm output is byte-deterministic")
+    # SSE-ONLY app: no REST idiom, but the streams still surface → extractor == 'sse'
+    _tso = pathlib.Path(_ts) / "solo" / "web" / "src"; _tso.mkdir(parents=True)
+    (_tso / "Chat.tsx").write_text('export const c=()=> new EventSource("/chat/stream");\n', encoding="utf-8")
+    _wso = W.web_arm(pathlib.Path(_ts) / "solo", {})
+    check(_wso["extractor"] == "sse" and _wso["stats"]["sse_sites"] == 1 and bool(_wso["screens"]),
+          "an SSE-ONLY app (no REST idiom) reports extractor='sse', not an honest-empty zero")
+    # HONEST-EMPTY: a no-SSE tree → sse_sites 0, no call sse-tagged (pre-SSE build unchanged)
+    _tsn = pathlib.Path(_ts) / "none" / "web" / "src"; _tsn.mkdir(parents=True)
+    (_tsn / "Only.tsx").write_text(
+        'import { apiFetch } from "@lib/api/client";\nexport const d=()=>apiFetch<T>("/x");\n', encoding="utf-8")
+    _wsn = W.web_arm(pathlib.Path(_ts) / "none", {})
+    check(_wsn["stats"]["sse_sites"] == 0 and not any(c.get("sse") for s in _wsn["screens"] for c in s["calls"]),
+          "SSE honest-empty: a no-stream app has sse_sites 0 and no call is sse-tagged")
+
+# ── SSE regex PRECISION (verify-workflow findings F1/F4/F5) — _extract_sse unit checks ──
+def _sse(code): c, d, fl = W._extract_sse(code); return c, d, fl
+# F1: the name is ANCHORED — an event-sourcing / CQRS class is NOT an SSE site (byte-identity
+# for a repo that has NO Server-Sent Events).
+for _neg in ('const s=new EventSourceStore("orders");',
+             'new EventSourcedAggregate("acct-1");',
+             'new EventSourceRepository(config);'):
+    _c, _d, _f = _sse(_neg)
+    check(_c == [] and _d == 0 and _f == [],
+          f"SSE F1: EventSource-PREFIXED non-SSE identifier is NOT a site ({_neg[:34]}…)")
+# F5: a commented-out / block-commented stream example is not a site
+for _cm in ('// new EventSource("/legacy") is deprecated', '/* new EventSource("/old") */'):
+    check(_sse(_cm)[0] == [], f"SSE F5: a COMMENTED EventSource emits no phantom site ({_cm[:24]}…)")
+# F4: false-negatives recovered — namespaced native, polyfill, and a generic fetchEventSource
+check(_sse('new window.EventSource("/api/stream");')[0] == [{"method": "GET", "path": "/api/stream", "sse": True}],
+      "SSE F4: new window.EventSource(literal) is recovered (namespace allowed)")
+check(_sse('fetchEventSource<Ev>("/x", {method:"POST"});')[0] == [{"method": "POST", "path": "/x", "sse": True}],
+      "SSE F4: fetchEventSource<Generic>(literal, {method}) is recovered (generic arg allowed)")
+# Tier-2 FLOOR: the real twin idiom — a const path + a dynamic EventSource(var) → harvested GET floor
+_t2 = ('const STREAM_PATH = "/api/v1/recipe-creation/gustify/stream";\n'
+       'const url = new URL(`${API_BASE}${STREAM_PATH}`); url.searchParams.set("t", token);\n'
+       'return new EventSource(url.toString());\n')
+_t2c, _t2d, _t2f = _sse(_t2)
+check(_t2c == [] and _t2d == 1 and _t2f == [{"method": "GET", "path": "/api/v1/recipe-creation/gustify/stream", "sse": True, "floor": True}],
+      "SSE Tier-2: a dynamic EventSource(var) harvests the file's api-path const as a GET floor (the gustify idiom)")
+# Tier-2 query strip: gastify inlines the path+query in a template → path harvested, query dropped
+check(_sse('const url = `${API_BASE}/api/v1/scans/${id}/events?token=${t}`; new EventSource(url);')[2]
+      == [{"method": "GET", "path": "${API_BASE}/api/v1/scans/${id}/events", "sse": True, "floor": True}],
+      "SSE Tier-2: a template-literal stream URL harvests the path (raw, base kept for _norm_path), DROPS the ?query (the gastify idiom)")
+
+# ── Tier-2 through web_arm: a dynamic-only stream file surfaces as a screen (dyn-drop fix) ──
+with tempfile.TemporaryDirectory() as _t2t:
+    _t2r = pathlib.Path(_t2t) / "web" / "src"; _t2r.mkdir(parents=True)
+    (_t2r / "streamClient.ts").write_text(
+        'const STREAM_PATH = "/api/v1/orders/stream";\n'
+        'export function open(t){ const u=new URL(`${API_BASE}${STREAM_PATH}?token=${t}`); return new EventSource(u.toString()); }\n',
+        encoding="utf-8")
+    (_t2r / "Bare.ts").write_text(              # a dynamic stream with NO harvestable path literal
+        'export function go(u){ return new EventSource(u); }\n', encoding="utf-8")
+    _w2 = W.web_arm(pathlib.Path(_t2t), {})
+    _sc = [s for s in _w2["screens"] if s["file"].endswith("streamClient.ts")]
+    check(bool(_sc) and any(c["path"] == "/api/v1/orders/stream" and c.get("floor") for c in _sc[0]["calls"]),
+          "SSE Tier-2 (web_arm): a const-homed stream path is recovered as a floored screen call")
+    _bare = [s for s in _w2["screens"] if s["file"].endswith("Bare.ts")]
+    check(bool(_bare) and _bare[0]["dynamic"] >= 1 and _bare[0]["calls"] == [],
+          "SSE dyn-drop fix: a dynamic-only stream file (no literal) still SURFACES as a screen with dynamic≥1")
+    check(_w2["extractor"] == "sse" and _w2["stats"]["sse_floor"] >= 1,
+          "an SSE-only app reports extractor=sse and stats.sse_floor counts the Tier-2 harvest")
+
+# ── build_c4_graph(web=): an SSE call BRIDGES to its endpoint end-to-end ──────
+FIX_SSE = {"head": "sse1", "entities": {
+  "recipe": {"files": [], "models": [], "schemas": [],
+             "endpoints": [
+                 {"method": "POST", "path": "/recipe-creation/gustify", "fn": "gen", "touches": []},
+                 {"method": "GET", "path": "/recipe-creation/gustify/stream", "fn": "stream", "touches": []}]},
+}}
+WSSE = {"present": True, "reason": "apiFetch · 1 files",
+        "stats": {"extractor": "apiFetch", "fetch_sites": 2, "dynamic": 0, "sse_sites": 2},
+        "screens": [
+            {"id": "web:sseClient", "file": "apps/web/sseClient.ts", "slug": None,
+             "label": "sseClient", "sites": 2,
+             "calls": [{"method": "GET", "path": "/recipe-creation/gustify/stream", "sse": True},
+                       {"method": "POST", "path": "/recipe-creation/gustify", "sse": True}]}]}
+gsse = G.build_c4_graph(FIX_SSE, web=WSSE)
+gsse_br = [e for e in gsse["cross_edges"] if e.get("kind") == "bridge"]
+check(any(e["from"] == "web:sseClient" and e["to"] == "endpoint:POST /recipe-creation/gustify" for e in gsse_br),
+      "SSE end-to-end: a fetchEventSource POST bridges to its endpoint PIECE")
+check(any(e["from"] == "web:sseClient" and e["to"] == "endpoint:GET /recipe-creation/gustify/stream" for e in gsse_br),
+      "SSE end-to-end: an EventSource GET bridges to its stream endpoint")
+check(gsse["stats"]["web"]["sse"] == 2,
+      "stats.web.sse carries the stream count into the graph (coverage denominator honest)")
+
 # ── multi-layout web-root detection: web/src (not apps/web/src) is found ──────
 # gastify's frontend lives at web/src, not gustify's apps/web/src — the arm detects
 # the root across common layouts instead of assuming one (else frontend = false-empty).

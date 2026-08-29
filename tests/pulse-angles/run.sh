@@ -167,6 +167,23 @@ run "$r" | grep -q "web-bridge drift" && bad "S10 fired when the web arm is abse
 r=$(repo s10d); commits "$r" 1 "feat: work"
 run "$r" | grep -q "web-bridge drift" && bad "S10 fired without a center" || ok "S10 silent with no center config"
 
+# S10 DIFF-ARM: the review side (diff_new_fetches) must also price a NEW literal SSE fetch,
+# so review flags exactly what the standing S10 nags after regen (the two arms stay in sync).
+if python3 - "$REPO/skills/gabe-pulse/scripts/fetch_bridge.py" <<'PY'
+import importlib.util, sys
+spec = importlib.util.spec_from_file_location("fb", sys.argv[1])
+fb = importlib.util.module_from_spec(spec); spec.loader.exec_module(fb)
+d = ('+  const es = new EventSource("/api/v1/recipe-creation/gustify/stream");\n'
+     '+  fetchEventSource("/api/v1/recipe-creation/gustify", { method: "POST" });\n'
+     '+  apiFetch("/api/v1/orders");')
+got = set(fb.diff_new_fetches(d))
+assert ("GET", "/api/v1/recipe-creation/gustify/stream") in got, got   # EventSource → GET
+assert ("POST", "/api/v1/recipe-creation/gustify") in got, got         # fetchEventSource → options method
+assert ("GET", "/api/v1/orders") in got, got                           # apiFetch still works
+assert fb.diff_new_fetches(' new EventSource("/api/v1/ctx");') == []    # a non-added (+) line is ignored
+PY
+then ok "S10 diff-arm prices a new literal SSE fetch (review ↔ pulse consistency)"; else bad "diff_new_fetches missed an SSE call"; fi
+
 # ── S11 · model-census drift — table classes no entity's config allowlist claims (reads archmap.model_census) ──
 r=$(repo s11a); mkarchmap "$r" '{"entities":{"pantry":{"endpoints":[]}},"model_census":{"scanned_dirs":["app/models"],"claimed":9,"unclaimed":[{"cls":"ShoppingItem","table":"shopping_items","file":"app/models/shopping.py","reason":"file not in any entity'"'"'s models list"},{"cls":"IdempotencyKey","table":"idempotency_keys","file":"app/models/idempotency.py","reason":"file not in any entity'"'"'s models list"}]}}'
 run "$r" | grep -q "model-census drift — 2 table class(es).*ShoppingItem" && ok "S11 fires: unclaimed table classes named" || bad "S11 did not fire on unclaimed table classes"

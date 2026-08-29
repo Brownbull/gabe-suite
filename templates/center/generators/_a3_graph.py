@@ -1382,6 +1382,7 @@ def build_c4_graph(amap: dict[str, Any], labels: dict[str, str] | None = None,
                      "fetch_sites": (web.get("stats") or {}).get("fetch_sites", 0),
                      "matched": len(_bridges),
                      "unmatched": _unmatched,
+                     "sse": (web.get("stats") or {}).get("sse_sites", 0),   # streams now in the denominator, not invisible
                      "dynamic": (web.get("stats") or {}).get("dynamic", 0)}
                     if web_present else
                     {"present": False,

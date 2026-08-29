@@ -18,6 +18,13 @@ An app with NO REST idiom (tRPC / GraphQL) yields ``present=True, screens=[]`` �
 honest zero, never a crash. A backend-only repo (no ``apps/web/src``) yields
 ``present=False`` with a named reason.
 
+SSE is handled SEPARATELY from the roster: a streaming endpoint uses a different
+primitive (``new EventSource`` / ``fetchEventSource``) that coexists with the primary
+idiom, and ``_detect_idiom`` is winner-take-all, so SSE could never win a roster slot.
+It runs as an ALWAYS-ON additive pass on every file, merged into that file's calls and
+counted in ``stats.sse_sites`` — so a stream enters the coverage denominator instead of
+staying invisible. An SSE-only app reports ``extractor="sse"``.
+
 Homing: a web file already listed in an archmap entity's file rows homes by file
 (``_file2slug``); a file the archmap does not carry is left ``slug=None`` for
 ``_a3_graph`` to home by the endpoint its fetch matched (the bridge fallback). The
@@ -82,6 +89,67 @@ _CALL_DYN: dict[str, re.Pattern] = {
     "fetch": re.compile(r"""(?<![\w.])fetch\s*\(\s*[A-Za-z_$][\w$]*\s*[,)]"""),
     "openapiFetch": re.compile(r"""(?<![\w.])[A-Za-z_$][\w$]*\s*\.\s*(?:GET|POST|PUT|PATCH|DELETE)\s*\(\s*[A-Za-z_$][\w$]*\s*[,)]"""),
 }
+# ── SSE (Server-Sent Events) — an ALWAYS-ON ADDITIVE pass, NOT a roster idiom ──
+# A streaming endpoint is opened by a DIFFERENT primitive than a one-shot REST call,
+# and it COEXISTS with the app's primary idiom (a chat app still fetches its settings
+# over apiFetch). `_detect_idiom` is winner-take-all, so an SSE matcher placed in the
+# roster could never win against the dominant REST idiom and its sites would drop. So
+# SSE is extracted on EVERY file, in parallel with the winning idiom, and merged in.
+# Library-agnostic — keyed on the two STANDARD browser/TS primitives, never a project
+# wrapper name:
+#   * `new EventSource(<url>)`         — the native API; the spec fixes the method to GET.
+#   * `fetchEventSource(<url>, {…})`   — @microsoft/@fortaine fetch-event-source; POST-able,
+#                                        so the method rides its options object (default GET).
+# A raw `fetch(url,{headers:{Accept:'text/event-stream'}})` is already caught WHEN `fetch`
+# is the winning idiom; catching it when it is NOT would need the event-stream marker in
+# the call window and risks false positives, so it is a documented non-goal here.
+#
+# TWO TIERS, because a stream URL is almost never an inline literal — it carries a token /
+# query, so real code builds it in a variable (measured across BOTH twins: gustify homes
+# the path in `const STREAM_PATH="/api/v1/…"` then `new EventSource(href)`; gastify inlines
+# it in a template `const url=\`${API_BASE}/api/v1/…\`` then `new EventSource(url)`):
+#   * TIER 1 (precise): the SSE call's first arg IS a literal → exact (method, path).
+#   * TIER 2 (floor):   the arg is a VARIABLE (a dynamic SSE site) → the path is indirected,
+#     so HARVEST the api-path literals from the file (comments + query strings stripped) and
+#     emit each as a GET floor, tagged floor:True. The bridge's endpoint match is the safety
+#     net — a harvested non-endpoint path becomes a NAMED-unmatched fetch, never a false edge.
+# the name is ANCHORED, not an open `EventSource[A-Za-z]*` — that suffix matched an
+# event-sourcing/CQRS class (`new EventSourceStore(…)`, `new EventSourcedAggregate(…)`)
+# in a repo with NO Server-Sent Events, minting phantom sites. Accepted forms: the native
+# `EventSource`, the common `EventSourcePolyfill`, an optional namespace (`window.EventSource`),
+# and fetchEventSource's generic arg (`fetchEventSource<Ev>(…)`).
+_SSE_HEAD = r"""new\s+(?:[\w$]+\.)?EventSource(?:Polyfill)?\s*\("""
+_FES_HEAD = r"""(?<![\w.])fetchEventSource\s*(?:<[^>]*>)?\s*\("""
+_SSE_RES: dict[str, re.Pattern] = {
+    "EventSource": re.compile(_SSE_HEAD + r"""\s*[`'"](?P<path>[^`'"]+)[`'"]"""),
+    "fetchEventSource": re.compile(_FES_HEAD + r"""\s*[`'"](?P<path>[^`'"]+)[`'"]"""),
+}
+# a NON-LITERAL first arg (a variable, member access, or call — anything not a quote) is a
+# dynamic SSE site → the path is indirected, Tier 2 harvests it. The negative lookahead
+# excludes the literal case (Tier 1 owns it) and the empty `()` call.
+_SSE_DYN: dict[str, re.Pattern] = {
+    "EventSource": re.compile(_SSE_HEAD + r"""\s*(?![`'")])\S"""),
+    "fetchEventSource": re.compile(_FES_HEAD + r"""\s*(?![`'")])\S"""),
+}
+# TIER-2 harvest machinery: strip comments (`:`-guard keeps https://), take every string /
+# template literal, and keep the ones shaped like an API path (contains /api/ or /vN/, or a
+# rooted multi-segment path). Query + fragment are dropped so ?token=… never defeats the match.
+_BLOCK_COMMENT_RE = re.compile(r"/\*.*?\*/", re.S)
+_LINE_COMMENT_RE = re.compile(r"(?<!:)//[^\n]*")
+_STR_LIT_RE = re.compile(r"""[`'"]([^`'"]*)[`'"]""")
+_API_PATH_FALLBACK = re.compile(r"^/[A-Za-z][\w-]*(?:/[\w{}$.:-]+)+/?$")
+
+
+def _strip_comments(text: str) -> str:
+    return _LINE_COMMENT_RE.sub("", _BLOCK_COMMENT_RE.sub("", text))
+
+
+def _looks_api_path(s: str) -> bool:
+    """A string literal shaped like an API route — the Tier-2 harvest filter."""
+    if "/api/" in s or re.search(r"/v\d+/", s):
+        return True
+    return bool(_API_PATH_FALLBACK.match(re.sub(r"\$\{[^}]*\}", "", s)))
+
 # the wrapper's OWN definition file (apiFetch is defined here, not called) — its
 # internal `path` param calls are not real call sites; skip the file entirely.
 _DEF_RE = re.compile(r"""(?:export\s+)?(?:async\s+)?function\s+apiFetch|const\s+apiFetch\s*=""")
@@ -158,6 +226,36 @@ def _extract_file(text: str, idiom: str) -> tuple[list[dict[str, str]], int]:
     return uniq, dyn
 
 
+def _extract_sse(text: str) -> tuple[list[dict[str, str]], int, list[dict[str, str]]]:
+    """Return ``(literal_calls, dynamic_count, floor_calls)`` for this file.
+
+    Tier 1 ``literal_calls``: `new EventSource("/x")` / `fetchEventSource("/x", …)` — a
+    precise (method, path). EventSource is GET by spec; fetchEventSource may POST, so its
+    method is read from the options object (default GET). Each is tagged ``sse: True``.
+
+    Tier 2 ``floor_calls`` (only when a DYNAMIC SSE call exists): the stream URL is built
+    in a variable, so harvest the file's api-path literals as GET floors, tagged
+    ``sse: True, floor: True``. The bridge match filters non-endpoints to named-unmatched.
+
+    The bridge reads only method+path, so the extra tags ride harmlessly."""
+    text = _strip_comments(text)               # a commented-out `new EventSource("…")` is not a site
+    calls: list[dict[str, str]] = []
+    for name, rx in _SSE_RES.items():
+        for m in rx.finditer(text):
+            method = "GET" if name == "EventSource" else _method_after(text, m.start())
+            calls.append({"method": method, "path": m.group("path"), "sse": True})
+    dyn = sum(len(rx.findall(text)) for rx in _SSE_DYN.values())
+    floors: list[dict[str, str]] = []
+    if dyn:                                    # a variable arg → recover the indirected path
+        seen: set[str] = set()
+        for m in _STR_LIT_RE.finditer(text):
+            path = m.group(1).split("?", 1)[0].split("#", 1)[0]   # drop query + fragment
+            if path not in seen and _looks_api_path(path):
+                seen.add(path)
+                floors.append({"method": "GET", "path": path, "sse": True, "floor": True})
+    return calls, dyn, floors
+
+
 def _rel(f: Path, root: Path) -> str:
     """Repo-relative posix path — the key _file2slug and the archmap file rows use."""
     try:
@@ -194,16 +292,27 @@ def web_arm(root: Path, entities: dict[str, Any]) -> dict[str, Any]:
                 continue                       # the apiFetch definition, not a caller
             texts.append((f, src))
         idiom, counts = _detect_idiom([t for _, t in texts])
-        if idiom is None:
-            return {"present": True, "reason": "no REST api-call idiom detected",
-                    "extractor": None, "screens": [],
-                    "stats": {"screens": 0, "fetch_sites": 0, "dynamic": 0,
-                              "extractor": None, "idiom_hits": counts}}
         f2s = _file2slug(entities)
         screens: list[dict[str, Any]] = []
-        total_sites = total_dyn = 0
+        total_sites = total_dyn = total_sse = total_floor = 0
         for f, src in texts:
-            calls, dyn = _extract_file(src, idiom)
+            # the winning REST idiom (byte-identical when no SSE joins) + the always-on
+            # SSE pass, MERGED and re-deduped by (method, path). A no-SSE file's `calls`
+            # stay exactly the idiom output — only an SSE-bearing file changes.
+            calls, dyn = _extract_file(src, idiom) if idiom else ([], 0)
+            scalls, sdyn, sfloors = _extract_sse(src)
+            dyn += sdyn                          # ALWAYS count SSE dynamics — a dynamic-only stream
+                                                 # file with no harvestable literal must not vanish
+            if scalls or sfloors:
+                merged: dict[tuple[str, str], dict[str, str]] = {
+                    (c["method"], c["path"]): c for c in calls}
+                for c in scalls:
+                    merged.setdefault((c["method"], c["path"]), c)   # Tier-1 precise SSE
+                precise_paths = {c["path"] for c in merged.values()}  # any-method claim on a path
+                for c in sfloors:                                     # Tier-2 floor — only unclaimed paths
+                    if c["path"] not in precise_paths:
+                        merged.setdefault((c["method"], c["path"]), c)
+                calls = sorted(merged.values(), key=lambda c: (c["method"], c["path"]))
             if not calls and not dyn:
                 continue
             rel = _rel(f, root)
@@ -217,12 +326,25 @@ def web_arm(root: Path, entities: dict[str, Any]) -> dict[str, Any]:
             })
             total_sites += len(calls)
             total_dyn += dyn
+            total_sse += sum(1 for c in calls if c.get("sse"))
+            total_floor += sum(1 for c in calls if c.get("floor"))
+        # no REST idiom AND no SSE anywhere → the honest 'nothing to extract' record
+        # (byte-identical to the pre-SSE build; `idiom_hits` kept for the debug trail).
+        if idiom is None and total_sse == 0:
+            return {"present": True, "reason": "no REST api-call idiom detected",
+                    "extractor": None, "screens": [],
+                    "stats": {"screens": 0, "fetch_sites": 0, "dynamic": 0,
+                              "sse_sites": 0, "sse_floor": 0, "extractor": None, "idiom_hits": counts}}
         screens.sort(key=lambda s: s["id"])
+        extractor = idiom or "sse"    # SSE-only app → the extractor IS sse
+        reason = (f"{idiom} · {len(screens)} fetching files" if idiom
+                  else f"sse · {len(screens)} fetching files")
         return {
-            "present": True, "reason": f"{idiom} · {len(screens)} fetching files",
-            "extractor": idiom, "screens": screens,
+            "present": True, "reason": reason,
+            "extractor": extractor, "screens": screens,
             "stats": {"screens": len(screens), "fetch_sites": total_sites,
-                      "dynamic": total_dyn, "extractor": idiom},
+                      "dynamic": total_dyn, "sse_sites": total_sse, "sse_floor": total_floor,
+                      "extractor": extractor},
         }
     except Exception as exc:   # noqa: BLE001 — the arm enhances, never breaks, the build
         return {"present": False, "reason": f"web arm error: {exc}"}

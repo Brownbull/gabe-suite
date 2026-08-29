@@ -12,9 +12,13 @@ typo'd path, or model drift. Two arms surface it on the rails that already fire:
     is S9's exactly — it goes stale only if the center is never regenerated. Nothing
     stored beyond the single committed emitter output; no sidecar.
 
-  * ``--diff`` (gabe-review): regex a NEW ``apiFetch(path,{method})`` on ADDED (+) diff
+  * ``--diff`` (gabe-review): regex a NEW ``apiFetch(path,{method})`` OR a literal SSE call
+    (``new EventSource("/x")`` / ``fetchEventSource("/x", {method})``) on ADDED (+) diff
     lines and match it against the committed endpoint key-space, so review prices a new
-    unmatched fetch on the diff that caused it, BEFORE the center regenerates.
+    unmatched fetch on the diff that caused it, BEFORE the center regenerates. The SSE
+    forms are kept in sync with ``_a3_web``'s SSE arm so review flags exactly what the
+    standing S10 will nag after regen (a dynamic-arg stream has no single-line literal to
+    price here — S10, reading the persisted ``unmatched``, owns that case).
 
 Report-only, no stored artifact, exit 0 always (report-never-gate). The tiny
 ``norm_path`` mirrors ``_a3_graph._norm_path`` (the bridge's match contract) — a
@@ -80,10 +84,16 @@ def load_endpoint_keys(root: Path) -> set[tuple[str, str]]:
 # ── diff mode — a NEW apiFetch the diff ADDS, resolving to no declared endpoint ──
 _FETCH_RE = re.compile(r"""apiFetch\w*\s*(?:<[^>]*>)?\s*\(\s*[`'"]([^`'"]+)[`'"]""")
 _METHOD_RE = re.compile(r"""method\s*:\s*[`'"](GET|POST|PUT|PATCH|DELETE)""", re.I)
+# a NEW SSE call with a LITERAL path — kept in sync with _a3_web's SSE arm so the review
+# diff-arm prices exactly what pulse S10 (reading stats.web.unmatched) will later nag.
+# EventSource is GET by spec; fetchEventSource reads its options method (default GET). A
+# dynamic-arg stream (the Tier-2 case) has no single-line literal to price here — S10 owns it.
+_SSE_RE = re.compile(
+    r"""(?P<es>new\s+(?:[\w$]+\.)?EventSource(?:Polyfill)?|fetchEventSource)\s*(?:<[^>]*>)?\s*\(\s*[`'"]([^`'"]+)[`'"]""")
 
 
 def diff_new_fetches(diff_text: str) -> list[tuple[str, str]]:
-    """``[(METHOD, path)]`` for apiFetch calls on ADDED (+) diff lines."""
+    """``[(METHOD, path)]`` for apiFetch AND literal SSE calls on ADDED (+) diff lines."""
     out: list[tuple[str, str]] = []
     for line in diff_text.splitlines():
         if not line.startswith("+") or line.startswith("+++"):
@@ -92,6 +102,14 @@ def diff_new_fetches(diff_text: str) -> list[tuple[str, str]]:
         if m:
             mm = _METHOD_RE.search(line)
             out.append(((mm.group(1).upper() if mm else "GET"), m.group(1)))
+        s = _SSE_RE.search(line)
+        if s:
+            # EventSource → GET; fetchEventSource → its options method (default GET)
+            if s.group("es").startswith("new"):
+                out.append(("GET", s.group(2)))
+            else:
+                sm = _METHOD_RE.search(line)
+                out.append(((sm.group(1).upper() if sm else "GET"), s.group(2)))
     return out
 
 
