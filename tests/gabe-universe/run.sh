@@ -338,7 +338,9 @@ check('window.__uniFeClassState' in page and 'window.__uniFeClassState[n.feClass
 check('window.__uniJrnSolo=function(e)' in page and 'c.onauxclick=function(ev){ if(ev.button!==1) return;' in page,
       "middle-click SOLO on the journey entity chips is gone")
 check('id="stepnote"' in page and 'function _stepNote(){' in page and '#stepnote .snhop' in page,
-      "the top-centre STEP NOTE (derived per-step guidance) is gone")
+      "the STEP NOTE (derived per-step guidance) is gone")
+check('#stepnote{ position:fixed; left:50%; transform:translateX(-50%); bottom:46px;' in page,
+      "the step note sits BOTTOM-centre (operator: moved off the top, same horizontal centre)")
 check('#walkbar .wnav{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }' in page and '#walkbar .wchip{ flex:0 0 20px;' in page,
       "walkbar chips no longer keep a fixed size and wrap into rows")
 check('s.src="./workflows.js"; s.onerror=function(){};' in page and 'if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk")' in page,
