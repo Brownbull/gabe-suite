@@ -90,15 +90,23 @@ ck(fleet.tier === 4 && fleet.fold === 2 && fleet.fc === 5,
 ck(fleet.afterClick === 1 && fleet.tpLit,
   'clicking the fleet tier pill sets the tier + lights (fleet ↔ header sync)', 'tier=' + fleet.afterClick);
 
-// a tier change ENDS an in-flight walk — its pins can't survive kinds being unloaded (toggleFns
-// purges fn nodes), so __uniSetTier must clear WALK + pins rather than strand ghost steps (review MED)
+// a tier change PRESERVES an in-flight walk (operator): it must NOT clear the journey/selection, and it
+// must skip toggleFns (which reheats the sim → positions jump). WALK.mode + the pins survive; the walk's
+// pinned fn-kind is NOT purged (functions stay loaded so the pinned steps can still draw via the pin-exempt).
 const walk = await p.evaluate(() => {
+  window.__uniSetTier(3);   // load functions first (NO walk) so the purge-vs-keep test below is meaningful
   window.__uniPin = { __ghost: 1 };
+  const fnBefore = (typeof NIDS !== 'undefined') ? Object.keys(NIDS).filter(id => (NIDS[id] || {}).kind === 'function').length : 0;
   if (typeof WALK !== 'undefined') { WALK.mode = 'journey'; WALK.steps = ['__ghost']; WALK.i = 0; }
-  window.__uniSetTier(1);
-  return { mode: (typeof WALK !== 'undefined') ? WALK.mode : 'n/a', pins: Object.keys(window.__uniPin || {}).length };
+  window.__uniSetTier(0);   // T0 hides functions — but with a walk active it must NOT purge them
+  const fnAfter = (typeof NIDS !== 'undefined') ? Object.keys(NIDS).filter(id => (NIDS[id] || {}).kind === 'function').length : 0;
+  const out = { mode: (typeof WALK !== 'undefined') ? WALK.mode : 'n/a', pins: Object.keys(window.__uniPin || {}).length, fnBefore, fnAfter };
+  if (typeof WALK !== 'undefined') { WALK.mode = null; WALK.steps = []; }   // reset the synthetic walk
+  window.__uniPin = {};
+  return out;
 });
-ck(walk.mode === null && walk.pins === 0, 'a tier change ends an in-flight walk (WALK cleared + pins dropped)', JSON.stringify(walk));
+ck(walk.mode === 'journey' && walk.pins >= 1 && walk.fnAfter === walk.fnBefore,
+  'a tier press during a walk PRESERVES it (mode + pins kept, functions NOT purged → positions static)', JSON.stringify(walk));
 
 ck(errs.length === 0, 'no page/console errors', errs.slice(0, 3).join(' | '));
 console.log(`\n${pass}/${pass + fail} tier checks passed`);

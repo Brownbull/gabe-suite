@@ -2790,7 +2790,7 @@ function visEnt(slug){ return UNIVIS.ent[slug]||_VISDEF; }
 /* effective per-node: node override wins; else the entity flags AND the node's sub-group flags —
    a sub-cluster is visible/armed only when its entity is too (the panel refines downward). */
 function visN(n){ if(n){ var _st=(window.__uniKindState||{})[n.kind]||(typeof _kindDefault==="function"?_kindDefault(n.kind):(n.kind==="function"?"off":"all"));   // hide-by-kind (batch 51) — 3-state; the fallback MUST match _kindDefault/legend/masters (operator: critical by default)
-    if(_st==="off") return _KOFF;
+    if(_st==="off" && !(window.__uniPin&&window.__uniPin[n.id])) return _KOFF;   // a walk/reveal PIN survives kind-off too (operator: a tier must not strand a journey's steps) — matches the two gates below
     if(window.__uniFoldHelpers!==false && n.__solo && !window.__uniPin[n.id]) return _KOFF;   // GLOBAL helper-fold (was per-kind "critical") — unless a walk/reveal PINNED it
     if(n.feClass && window.__uniFeClassState && window.__uniFeClassState[n.feClass]===false && !window.__uniPin[n.id]) return _KOFF; }   // class-visibility control — a tier/fleet toggle hides a component CLASS (phase 2)
   var o=n&&UNIVIS.node[n.id]; if(o) return o;
@@ -3679,10 +3679,14 @@ var _TIER_PRESETS=[
   { name:"Trace",    koff:["module","type"],                                                                                       fcoff:["leaf"] },
   { name:"Everything", koff:["type"],                                                                                             fcoff:[] } ];
 window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier=t;
-  if((typeof WALK!=="undefined"&&WALK.mode) && window.__uniHLClear){ try{ __uniHLClear(); }catch(e){} }   // a tier is a GLOBAL disclosure reset — an in-flight walk's pins can't survive kinds being unloaded (toggleFns PURGES fn nodes from NIDS), so end the walk honestly rather than strand it over ghost steps (review MED: tier×walk collision)
+  // A tier press during a WALK must PRESERVE the journey + selection and keep positions STATIC (operator):
+  // never clear the walk, and never toggleFns (adding/removing fn nodes reheats the sim → the graph jumps).
+  // During a walk, functions hide by VISIBILITY (visN kind-off) instead — the pinned steps survive via the
+  // visN pin-exemption, non-step functions recede, and nothing re-lays-out.
+  var _walk=(typeof WALK!=="undefined" && WALK.mode && WALK.steps && WALK.steps.length);
   var p=_TIER_PRESETS[t], koff={}; p.koff.forEach(function(k){ koff[k]=1; });
   _KTIER.forEach(function(k){ __uniKindState[k]=koff[k]?"off":"all"; if(koff[k]) __uniKindOff[k]=1; else delete __uniKindOff[k];
-    if(k==="function" && window.toggleFns){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });
+    if(k==="function" && window.toggleFns && !_walk){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });
   window.__uniFeClassState={}; _FCALL.forEach(function(fc){ window.__uniFeClassState[fc]=(p.fcoff.indexOf(fc)<0); });
   __uniGrpState.backend=__uniGrpState.frontend="all";
   try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){}
