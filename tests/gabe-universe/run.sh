@@ -343,8 +343,8 @@ check('#stepnote{ position:fixed; left:50%; transform:translateX(-50%); bottom:4
       "the step note sits BOTTOM-centre (operator: moved off the top, same horizontal centre)")
 check('window.__uniDrawJourneyNums=function' in page and 'if(window.__uniDrawJourneyNums) __uniDrawJourneyNums();' in page and 'function _numBadgeSprite' in page,
       "journey STEP-NUMBER badges (operator): the pass exists + is hooked (updateConnectors + walk render) — a sequence number overlaid on each step node during a walk")
-check('window.__uniJn = window.__uniJn ||' in page and 'var _JN_FONTS' in page and 'id="jnSize"' in page and 'id="jnLine"' in page and 'id="jnOff"' in page and 'id="jncopy"' in page,
-      "the step-number badge is CONFIG-driven (small default) with a live tuner — size/ring/disc/offset/font + a copy-config button (operator)")
+check('window.__uniJn = window.__uniJn || { size:5, line:4.5, disc:0.6, font:0, off:-9 };' in page and 'id="jnSize"' not in page and 'id="jncopy"' not in page,
+      "the step-number badge uses the operator-tuned DEFAULT config; the live tuner was removed once settled")
 check('#walkbar .wnav{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; }' in page and '#walkbar .wchip{ flex:0 0 20px;' in page,
       "walkbar chips no longer keep a fixed size and wrap into rows")
 check('s.src="./workflows.js"; s.onerror=function(){};' in page and 'if(!window.__uniJrnKind) window.__uniJrnKind=((window.GABE_WORKFLOWS||[]).length?"wf":"bk")' in page,

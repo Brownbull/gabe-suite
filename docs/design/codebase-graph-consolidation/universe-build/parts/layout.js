@@ -500,7 +500,7 @@ window.__uniDrawWriteRings=function(){ try{
    badges track the sim via __uniHLTick (userData.nid). It ADDS an overlay, never replaces the icon. ── */
 // live config (operator-tunable via the Controls panel, copyable): scoped SMALL by default so a badge
 // does NOT cover the sphere's encoding — a small centred number with a faint disc + thin ring.
-window.__uniJn = window.__uniJn || { size:8, line:3, disc:0.3, font:0, off:0 };
+window.__uniJn = window.__uniJn || { size:5, line:4.5, disc:0.6, font:0, off:-9 };   // operator-tuned default (2026-08-29); the live tuner was removed once settled
 var _JN_FONTS = ["Menlo,Consolas,ui-monospace,monospace", "'Segoe UI',system-ui,sans-serif", "Georgia,'Times New Roman',serif", "'Arial Narrow','Arial',sans-serif"];
 function _numBadgeSprite(num, col, cur){ var cfg=window.__uniJn||{}, cv=document.createElement("canvas"); cv.width=cv.height=128; var c=cv.getContext("2d");
   var C=col||"#9ecbff";
@@ -1204,27 +1204,9 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<span class="ctll" title="first-person look — vertical inverted by convention">look — turn in place</span></div>'
     +'<div class="ctlrow">'+KB("RMB")+'<span class="ctll" title="orbits the SELECTED planet when one is selected, else the zoom depth">tumble (orbit)</span>'+KB("MMB")+'<span class="ctll">pan</span></div>'
-    // ── JOURNEY NUMBERS tuner (operator): live-tune the step-number badge + copy the config as JSON ──
-    +'<div class="ctlrow jnhd" style="margin-top:9px;border-top:1px dotted var(--line);padding-top:8px"><span class="ctll" style="color:var(--ink);font-weight:700;letter-spacing:.04em">JOURNEY NUMBERS</span><button id="jncopy" class="flsx" title="copy this config as JSON — paste it back to me to set the default" style="margin-left:auto">⧉</button></div>'
-    +'<div class="ctlrow"><span class="ctll" style="width:46px">size</span><input type="range" class="rng" id="jnSize" min="3" max="20" step="0.5" value="8" style="flex:1"><b id="jnSizeN" class="jnv">8</b></div>'
-    +'<div class="ctlrow"><span class="ctll" style="width:46px">ring</span><input type="range" class="rng" id="jnLine" min="0" max="12" step="0.5" value="3" style="flex:1"><b id="jnLineN" class="jnv">3</b></div>'
-    +'<div class="ctlrow"><span class="ctll" style="width:46px" title="disc opacity — 0 = no disc, the sphere shows through">disc</span><input type="range" class="rng" id="jnDisc" min="0" max="1" step="0.05" value="0.3" style="flex:1"><b id="jnDiscN" class="jnv">0.3</b></div>'
-    +'<div class="ctlrow"><span class="ctll" style="width:46px" title="vertical offset from the node centre">offset</span><input type="range" class="rng" id="jnOff" min="-20" max="20" step="1" value="0" style="flex:1"><b id="jnOffN" class="jnv">0</b></div>'
-    +'<div class="ctlrow"><span class="ctll" style="width:46px">font</span><button id="jnFont" class="flsx" style="flex:1;text-align:left;padding:2px 8px">mono</button></div>'
     +'</div>';
   document.body.appendChild(p);
   document.getElementById("ctrlpmin").onclick=function(){ p.classList.toggle("min"); this.textContent=p.classList.contains("min")?"+":"–"; };
-  (function(){ var _jn=window.__uniJn||(window.__uniJn={size:8,line:3,disc:0.3,font:0,off:0});
-    var _up=function(){ if(window.__uniDrawJourneyNums) try{ __uniDrawJourneyNums(); }catch(e){} };
-    [["jnSize","size","jnSizeN"],["jnLine","line","jnLineN"],["jnDisc","disc","jnDiscN"],["jnOff","off","jnOffN"]].forEach(function(r){
-      var el=document.getElementById(r[0]); if(!el) return; var nn=document.getElementById(r[2]);
-      el.value=_jn[r[1]]; if(nn) nn.textContent=_jn[r[1]];
-      el.addEventListener("input", function(){ _jn[r[1]]=+el.value; if(nn) nn.textContent=el.value; _up(); }); });
-    var _FN=["mono","sans","serif","narrow"], _fb=document.getElementById("jnFont");
-    if(_fb){ _fb.textContent=_FN[_jn.font|0]; _fb.onclick=function(){ _jn.font=((_jn.font|0)+1)%_FN.length; _fb.textContent=_FN[_jn.font]; _up(); }; }
-    var _cp=document.getElementById("jncopy");
-    if(_cp) _cp.onclick=function(){ var b=this, txt=JSON.stringify(window.__uniJn); window.__uniLastCopy=txt;
-      var ok=(typeof copyText==="function")?copyText(txt):false; b.textContent=ok?"✓":"⧉"; setTimeout(function(){ b.textContent="⧉"; },900); }; })();
   };   // LMB fixed to LOOK (operator ruling batch 50) — the scheme engine keeps every mode for the proofs; invert/selPivot ride their defaults, their toggle rows retired
 /* topbar wiring + Alt+scroll + Esc — bound once at boot */
 window.__uniWireTopbar=function(){
