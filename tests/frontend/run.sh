@@ -211,6 +211,8 @@ check(_useSave and _useSave.get("wsites") == 1 and _fe7["stats"]["write_pieces"]
       "FE d2w WRITE: a POST fetch makes its piece a write sink (wsites), and the write spine reaches 2 pieces (sink + caller)")
 check(_saveBtn and _saveBtn.get("write") is True and _saveBtn.get("state") is True,
       "FE d2w WRITE: the component reaching the write-fetch is on the WRITE spine (reachability)")
+check(_useSave.get("fed2w") == 0 and _saveBtn.get("fed2w") == 1 and _fe7["stats"]["fed2w_max"] == 1,
+      "FE d2w DEPTH: the write sink is fed2w 0 (at the write), its caller fed2w 1 (one hop) — the gradient's number")
 _ch7 = {(_fe7["pieces"][e[0]]["name"], _fe7["pieces"][e[1]]["name"]): (e[3] if len(e) > 3 else None) for e in _fe7["edges"]}
 check(_ch7.get(("SaveBtn", "useSave")) == "write",
       "FE d2w WRITE: the SaveBtn→useSave wire serializes channel=write (the HTTP verb, not a hook name)")
@@ -221,8 +223,9 @@ _screens8 = [{"id": "web:src/features/list/List", "file": "src/features/list/Lis
               "calls": [{"method": "GET", "path": "/list"}], "dynamic": 0}]
 _fe8 = _a3_fe.build_fe(_X8, {"list": {}}, _screens8)
 _ls = next((p for p in _fe8["pieces"] if p["name"] == "List"), None)
-check(_ls and _ls.get("screen") and "wsites" not in _ls and "write" not in _ls and _fe8["stats"]["write_pieces"] == 0,
-      "FE d2w READ: a GET-only fetch carries NO write flag — the method decides, honest-empty of writes")
+check(_ls and _ls.get("screen") and "wsites" not in _ls and "write" not in _ls and "fed2w" not in _ls
+      and _fe8["stats"]["write_pieces"] == 0 and _fe8["stats"]["fed2w_max"] == 0,
+      "FE d2w READ: a GET-only fetch carries NO write/fed2w — the method decides, honest-empty of writes")
 
 check(fe["stats"]["cross"] == 6, f"6 wires cross homes (got {fe['stats']['cross']})")
 check(all(isinstance(e, list) and 3 <= len(e) <= 4 and isinstance(e[0], int) for e in fe["edges"]),

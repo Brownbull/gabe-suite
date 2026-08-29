@@ -1006,7 +1006,7 @@ if(_FE){
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
       area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null,   // AREA + showcase tag + the fold-control class (phase 1)
-      write:!!p.write, wsites:p.wsites||0 };   // FE d2w: on the WRITE spine · write-method fetch count (HTTP verb)
+      write:!!p.write, wsites:p.wsites||0, fed2w:(p.fed2w==null?null:p.fed2w) };   // FE d2w: on the WRITE spine · write-method fetch count · hops-to-write (the gradient's number, 0 at the write)
     nodes.push(n); NIDS[n.id]=n; });
 }
 
@@ -1413,7 +1413,7 @@ function updateConnectors(){ if(!connGroup) return;
     var _tcol=function(n){ if(!n) return null; if(n.kind==="endpoint"&&n.m&&n.m.method&&typeof METHOD!=="undefined"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind==="function"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };
     var _ea=(((_gm==="type"||_gm==="type-ent")&&_tcol(_cs))||((_cs&&typeof ENT!=="undefined"&&ENT[_cs.ent])||null));
     var _eb=(((_gm==="type"||_gm==="ent-type")&&_tcol(_ct))||((_ct&&typeof ENT!=="undefined"&&ENT[_ct.ent])||null));
-    var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;
+    var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):(l.write&&window.__feD2WBand)?__feD2WBand(_ct):null;   // FE write wires ride the SEPARATE fed2w gradient (blue→magenta)
     connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });
   if(window.__uniDrawBundles) __uniDrawBundles(connGroup); if(window.__uniDrawStubs) __uniDrawStubs(connGroup);
   connGroup.traverse(function(c){ c.raycast=function(){}; }); }
@@ -1840,6 +1840,15 @@ window.BANDPAL=[0xf2711c, 0xf59f00, 0xf5d90a, 0xbcd12f, 0x46a758];  // 0 closest
 window.__uniD2W=true;                                     // calls wires coloured by distance-to-write by default (legend toggle falls back to flat)
 window.__d2wBand=function(n){ if(!window.__uniD2W||!n) return null;   // → band colour for a calls TARGET, or null (flat cfg.color)
   var d=n.d2w; return window.BANDPAL[(d==null)?4:Math.min(d|0,3)]; };  // reaching fns clamp into band 3; band 4 (green) is never-reaches only
+// ── FE WRITE-SPINE heat (operator D1/D3/D4): a SEPARATE gradient from the backend's, in the
+//    previously-decided FE range (option A · blue→magenta): 0 AT the write→magenta, rising outward
+//    to blue. It has its OWN toggle (D4, default OFF) so the FE spine can be read without the backend
+//    heat, and it colours a FE WRITE wire by its target's fed2w (hops-to-a-write-fetch). ──
+window.FEBAND=[0xc026d3, 0x9c33e0, 0x7c3aed, 0x4f52ea, 0x2563eb];   // 0 at-the-write→magenta · 1 · 2 · 3 · 4/far→blue
+window.__uniFED2W=false;                                   // FE write heat — separate toggle, DEFAULT OFF (operator D4)
+window.__feD2WBand=function(n){ if(!window.__uniFED2W||!n||n.fed2w==null) return null;   // → band for a FE WRITE wire's target, or null (flat)
+  return window.FEBAND[Math.min(n.fed2w|0,4)]; };
+window.__uniWriteRing=false;                               // the write-spine node RING — separate toggle, DEFAULT OFF (operator D2)
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
@@ -4375,6 +4384,8 @@ var KINDCARD=(function(){
     var _hl=(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent);
     rows.push(kv("entity","home", _hl+(hk==="fe"?(" (frontend of "+((typeof FE_PAIR!=="undefined"&&FE_PAIR[n.ent])||"?")+")"):hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
     if(n.screen) rows.push(kv("web","screen", (n.sites||0)+" fetch site(s) — absorbed "+n.screen.replace(/^web:/,"")));
+    if(n.wsites) rows.push(kv("alert","writes", n.wsites+" write-method fetch(es) — POST/PUT/PATCH/DELETE (a FE d2w write source)"));   // the wsites count, surfaced (operator D2: the pill's fact lives here)
+    if(n.fed2w!=null) rows.push(kv("route","write spine", n.fed2w===0?"AT a write-method fetch (fed2w 0)":n.fed2w+" hop(s) from the nearest write-method fetch"));
     if(d.exports&&d.exports.length) rows.push(kv("function","exports", d.exports.slice(0,12).join(" · ")+(d.exports.length>12?" · +"+(d.exports.length-12):"")));
     rows.push(E("div",{class:"doc"}, KINDTIP[n.kind]||""));   // ONE meaning per kind — the Elements rows + the card share it
     return E.apply(null,[ "div",{class:"sec"}, sechd(n.kind==="type"?"schema":n.kind,"Frontend") ].concat(rows)); }
@@ -4733,6 +4744,7 @@ var LEGEND={
     {t:"ln",k:"rollup",l:"rollup <i>endpoint→model — the call-tree ROLLUP (reaches the table via its functions)</i>"},
     {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
     {t:"d2wtog"},
+    {t:"fed2wtog"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},
     {t:"ship",dim:"transport",c:0x38bdf8,l:"Cargo <i>data ferried between entities (size = payload)</i>"},
     {t:"ship",dim:"testchip",c:0x22c55e,l:"Test chip <i>a cross-entity test journey</i>"} ],
@@ -4859,11 +4871,13 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }
       if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
+      if(it.t==="fed2wtog"){ var _fon=!!window.__uniFED2W; h+='<div class="lgrow lgd2w'+(_fon?"":" lgoff")+'" data-fed2wtog="1" style="cursor:pointer" title="click to '+(_fon?"hide the frontend write heat":"colour FRONTEND write wires by distance-to-write (blue→magenta)")+'"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="#c026d3" stroke-width="3"/></svg></div><div class="lglbl">FE write heat <i>'+(_fon?"on":"off")+'</i></div></div>'; return; }
             if(it.t==="ln"&&it.k){ var _lon=!(window.__uniBeam)||(__uniBeam[it.k]==null||__uniBeam[it.k]>0);   // a CONNECTOR kind → click the row to show / hide that wire (like the node-kind toggles)
         h+='<div class="lgrow lgconn'+(_lon?"":" lgoff")+'" data-lgconn="'+it.k+'" title="click to '+(_lon?"hide":"show")+' '+it.k+' wires"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+_lglbl(it.l, it.k==="calls"?_bandSpectrumHTML():"")+'</div></div>'; return; }
       h+='<div class="lgrow"><div class="lgvis">'+vis(it)+'</div><div class="lglbl">'+it.l+'</div></div>'; });
     el.innerHTML=h+'</div>';
     [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });
+    [].forEach.call(el.querySelectorAll("[data-fed2wtog]"), function(row){ row.onclick=function(){ window.__uniFED2W=!window.__uniFED2W; try{ updateConnectors(); }catch(e){} render(); }; });
     [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;
       var on=(__uniBeam[k]==null||__uniBeam[k]>0);
       if(on){ window.__uniBeamPrev=window.__uniBeamPrev||{}; __uniBeamPrev[k]=(__uniBeam[k]==null?1:__uniBeam[k])||1; __uniBeam[k]=0; }

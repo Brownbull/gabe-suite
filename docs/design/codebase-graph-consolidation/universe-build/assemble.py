@@ -275,17 +275,20 @@ OLD_ACCROW = '''    {t:"ln",k:"access",l:"access <i>function→model — the TRU
 assert OLD_ACCROW in text, "legend access→transports anchor missing"
 text = text.replace(OLD_ACCROW, '''    {t:"ln",k:"access",l:"access <i>function→model — THE WRITE: the accessor actually reads/writes the table (red)</i>"},
     {t:"d2wtog"},
+    {t:"fed2wtog"},
     {t:"grp",l:"transports · <i>what travels the routes</i>"},''', 1)
 
 OLD_LNK = '''      if(it.t==="ln"&&it.k){ var _lon='''
 assert OLD_LNK in text, "legend ln&&k branch anchor missing"
 text = text.replace(OLD_LNK, '''      if(it.t==="band"){ var _bc=hx((window.BANDPAL&&window.BANDPAL[it.i]!=null)?window.BANDPAL[it.i]:0x888888); h+='<div class="lgrow"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="'+_bc+'" stroke-width="3"/></svg></div><div class="lglbl">'+_lglbl(it.l)+'</div></div>'; return; }
       if(it.t==="d2wtog"){ var _d2on=!!window.__uniD2W; h+='<div class="lgrow lgd2w'+(_d2on?"":" lgoff")+'" data-d2wtog="1" style="cursor:pointer" title="click to '+(_d2on?"use the flat calls colour":"colour calls by distance-to-write")+'"><div class="lgvis">'+vis({t:"ln",k:"calls"})+'</div><div class="lglbl">distance heat <i>'+(_d2on?"on":"off")+'</i></div></div>'; return; }
+      if(it.t==="fed2wtog"){ var _fon=!!window.__uniFED2W; h+='<div class="lgrow lgd2w'+(_fon?"":" lgoff")+'" data-fed2wtog="1" style="cursor:pointer" title="click to '+(_fon?"hide the frontend write heat":"colour FRONTEND write wires by distance-to-write (blue→magenta)")+'"><div class="lgvis"><svg class="lgln" style="width:30px;height:8px" viewBox="0 0 30 8"><path d="M1 4 H29" fill="none" stroke="#c026d3" stroke-width="3"/></svg></div><div class="lglbl">FE write heat <i>'+(_fon?"on":"off")+'</i></div></div>'; return; }
       ''' + OLD_LNK, 1)
 
 OLD_LGCONN_H = '''    [].forEach.call(el.querySelectorAll(".lgconn"), function(row){ row.onclick=function(){ var k=row.getAttribute("data-lgconn"); if(!window.__uniBeam) return;'''
 assert OLD_LGCONN_H in text, "lgconn handler anchor missing"
 text = text.replace(OLD_LGCONN_H, '''    [].forEach.call(el.querySelectorAll("[data-d2wtog]"), function(row){ row.onclick=function(){ window.__uniD2W=!window.__uniD2W; try{ updateConnectors(); }catch(e){} render(); }; });
+    [].forEach.call(el.querySelectorAll("[data-fed2wtog]"), function(row){ row.onclick=function(){ window.__uniFED2W=!window.__uniFED2W; try{ updateConnectors(); }catch(e){} render(); }; });
 ''' + OLD_LGCONN_H, 1)
 
 # ── connector legend declutter (operator): the row's <i>description</i> moves behind an info ⓘ whose
@@ -699,7 +702,7 @@ text = text.replace(OLD_WHF,
   # HTTP-METHOD colour (GET green · POST blue · PUT orange · PATCH yellow · DELETE red); an ACCESS wire's
   # start is the source FUNCTION-ROLE colour (accessor/caller/gate/pure). Both fade to the model's entity
   # colour — so the wire reads by its source TYPE. Other kinds keep the entity-gradient start.
-  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    if(l.chrome) _whf*=0.4;   // F2: chrome plumbing (cx/useT/layout) recedes — not a data wire\n    var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';\n    var _tcol=function(n){ if(!n) return null; if(n.kind===\"endpoint\"&&n.m&&n.m.method&&typeof METHOD!==\"undefined\"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind===\"function\"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };\n    var _ea=(((_gm===\"type\"||_gm===\"type-ent\")&&_tcol(_cs))||((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null));\n    var _eb=(((_gm===\"type\"||_gm===\"ent-type\")&&_tcol(_ct))||((_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null));\n    var _band=(l.rel===\"calls\"&&window.__d2wBand)?__d2wBand(_ct):null;\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });", 1)
+  "var _whf=(window._hlLinkF?_hlLinkF(l):1); if(window.__uniSelLink===l||window.__uniHovLink===l) _whf=Math.max(_whf,1)*2.6;\n    if(l.chrome) _whf*=0.4;   // F2: chrome plumbing (cx/useT/layout) recedes — not a data wire\n    var _gk=REL2KIND[l.rel]||'calls', _gm=(CONN[_gk]&&CONN[_gk].gmode)||'ent';\n    var _tcol=function(n){ if(!n) return null; if(n.kind===\"endpoint\"&&n.m&&n.m.method&&typeof METHOD!==\"undefined\"&&METHOD[n.m.method]) return METHOD[n.m.method]; if(n.kind===\"function\"&&n.role&&window.__BADGE_COL&&__BADGE_COL.role&&__BADGE_COL.role[n.role]) return __BADGE_COL.role[n.role]; return null; };\n    var _ea=(((_gm===\"type\"||_gm===\"type-ent\")&&_tcol(_cs))||((_cs&&typeof ENT!==\"undefined\"&&ENT[_cs.ent])||null));\n    var _eb=(((_gm===\"type\"||_gm===\"ent-type\")&&_tcol(_ct))||((_ct&&typeof ENT!==\"undefined\"&&ENT[_ct.ent])||null));\n    var _band=(l.rel===\"calls\"&&window.__d2wBand)?__d2wBand(_ct):(l.write&&window.__feD2WBand)?__feD2WBand(_ct):null;   // FE write wires ride the SEPARATE fed2w gradient (blue→magenta)\n    connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), _gk, 8, _whf, _ea, _eb, (window.__uniHovLink===l||window.__uniSelLink===l), (window.__uniSelLink===l), _band); });", 1)
 OLD_NVIS = '.nodeVisibility(function(n){ return !!visN(n).show; }).enableNodeDrag(false)'
 assert OLD_NVIS in text, "nodeVisibility seam anchor missing"
 text = text.replace(OLD_NVIS, '.nodeVisibility(function(n){ return _nodeVisibleFn(n); }).enableNodeDrag(false)', 1)

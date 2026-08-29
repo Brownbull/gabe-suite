@@ -250,6 +250,8 @@
     var _hl=(window.__uniEntLabel?__uniEntLabel(n.ent):n.ent);
     rows.push(kv("entity","home", _hl+(hk==="fe"?(" (frontend of "+((typeof FE_PAIR!=="undefined"&&FE_PAIR[n.ent])||"?")+")"):hk==="bucket"?" (shared frontend bucket)":hk==="candidate"?" (candidate entity — a feature the backend never modeled)":"")));
     if(n.screen) rows.push(kv("web","screen", (n.sites||0)+" fetch site(s) — absorbed "+n.screen.replace(/^web:/,"")));
+    if(n.wsites) rows.push(kv("alert","writes", n.wsites+" write-method fetch(es) — POST/PUT/PATCH/DELETE (a FE d2w write source)"));   // the wsites count, surfaced (operator D2: the pill's fact lives here)
+    if(n.fed2w!=null) rows.push(kv("route","write spine", n.fed2w===0?"AT a write-method fetch (fed2w 0)":n.fed2w+" hop(s) from the nearest write-method fetch"));
     if(d.exports&&d.exports.length) rows.push(kv("function","exports", d.exports.slice(0,12).join(" · ")+(d.exports.length>12?" · +"+(d.exports.length-12):"")));
     rows.push(E("div",{class:"doc"}, KINDTIP[n.kind]||""));   // ONE meaning per kind — the Elements rows + the card share it
     return E.apply(null,[ "div",{class:"sec"}, sechd(n.kind==="type"?"schema":n.kind,"Frontend") ].concat(rows)); }

@@ -786,8 +786,17 @@ check('_hlc=hov?' in page and '0x4f46e5:0xffffff' in page and '_hlc||(band!=null
 # render colours a calls wire by its TARGET function's distance-to-write via BANDPAL.
 check('window.BANDPAL=[' in page and 'window.__uniD2W=true' in page and 'window.__d2wBand=function' in page,
       "the D2W band palette / toggle / helper is missing (calls-wire heat spectrum)")
-check('var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):null;' in page and '===l), _band); });' in page,
-      "the heat band no longer keys on the true `calls` REL (F2: it leaked onto every rel bucketed into calls)")
+check('var _band=(l.rel==="calls"&&window.__d2wBand)?__d2wBand(_ct):(l.write&&window.__feD2WBand)?__feD2WBand(_ct):null;' in page and '===l), _band); });' in page,
+      "the BACKEND heat still keys on the true `calls` REL (F2), and the FE write heat rides the SEPARATE `l.write`+fed2w branch (blue→magenta)")
+# ── FE WRITE-SPINE heat (operator D1/D3/D4): a distinct blue→magenta gradient, its OWN toggle, default off ──
+check('window.FEBAND=[0xc026d3,' in page,
+      "the FE write gradient is the previously-decided option-A palette (0xc026d3 magenta AT the write → blue far), NOT the BE BANDPAL")
+check('window.__uniFED2W=false;' in page,
+      "the FE write heat has a SEPARATE toggle (operator D4), DEFAULT OFF")
+check('data-fed2wtog="1"' in page and 'FE write heat <i>' in page,
+      "the legend carries the SEPARATE FE-write-heat toggle row")
+check('window.__uniWriteRing=false;' in page,
+      "the write-spine node ring is a SEPARATE toggle (operator D2), DEFAULT OFF")
 check('d2w:f.d2w' in page,
       "the levels fn_node d2w no longer rides onto the render node (call-wire heat lost its source)")
 check('t:"d2wtog"' in page and 'function _bandSpectrumHTML' in page and 'it.k==="calls"?_bandSpectrumHTML()' in page,
@@ -1038,17 +1047,27 @@ const { chromium } = require(process.argv[3]);
     const fe={ present:fePresent, feNodes:nodes.filter(n=>n.fe).length, webLeft:nodes.filter(n=>n.kind==='web').length,
       absorbed:window.__uniFeAbsorbed||0, typesHeld:(typeof _FETYPES!=='undefined')?_FETYPES.length:-1, typesDrawn:nodes.filter(n=>n.kind==='type').length,
       feRels:links.filter(l=>l.fe).length, bridge:links.filter(l=>l.rel==='bridge').length, tog:!!document.getElementById('typesTog') };
+    // FE write-spine heat (operator D1/D3/D4): a distinct blue→magenta gradient, its OWN toggle default OFF,
+    // banding a write wire by its target's fed2w. Prove the toggle BEHAVES, not just that the string exists.
+    const wn = nodes.find(n=>n.fe && n.fed2w!=null);
+    const few = { band0: !!window.FEBAND && window.FEBAND[0]===0xc026d3, offDefault: window.__uniFED2W===false,
+      writeNode: !!wn, flatWhenOff: window.__feD2WBand ? window.__feD2WBand(wn)===null : false };
+    if(window.__feD2WBand && wn){ window.__uniFED2W=true;
+      few.hotAtWrite = window.__feD2WBand(Object.assign({},wn,{fed2w:0}))===0xc026d3;
+      few.coolFar = window.__feD2WBand(Object.assign({},wn,{fed2w:4}))===0x2563eb;
+      window.__uniFED2W=false; }
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe }; });
+      stPass:!!(pb&&pb.querySelector('.pchip.st-pass')), face:!!(pb&&pb.querySelector('.jfaces .face')), fe, few }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
   const f=r.fe, feOk = f.present ? (f.feNodes>0 && f.webLeft===0 && f.absorbed>0 && f.typesHeld>0 && f.typesDrawn===0 && f.feRels>0 && f.bridge>0 && f.tog)
                                  : (f.feNodes===0 && f.absorbed===0 && f.typesHeld===0 && !f.tog);
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk;
-  if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  const w=r.few, fewOk = !f.present ? true : (w.band0 && w.offDefault && w.writeNode && w.flatWhenOff && w.hotAtWrite && w.coolFar);
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk;
+  if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

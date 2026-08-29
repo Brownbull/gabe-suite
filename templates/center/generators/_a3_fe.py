@@ -361,12 +361,19 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
             if _s not in touches_state:
                 touches_state.add(_s); _stk.append(_s)
     _wsink = set(pid for pid, p in pieces.items() if p.get("wsites"))   # FE d2w write sinks: a write-method fetch
-    touches_write = set(_wsink); _wstk = list(_wsink)
-    while _wstk:                       # a caller reaching a write-method fetch is on the WRITE spine (⊆ touches_state)
-        _t = _wstk.pop()
-        for _s in _callers.get(_t, ()):
-            if _s not in touches_write:
-                touches_write.add(_s); _wstk.append(_s)
+    touches_write = set(_wsink)        # a caller reaching a write-method fetch is on the WRITE spine (⊆ touches_state)
+    _fed2w = {pid: 0 for pid in _wsink}   # hops to the nearest write sink (0 = the sink itself) — the FE d2w DEPTH
+    _frontier, _depth = set(_wsink), 0    # level-order BFS: first reach = the minimum distance (deterministic on sets)
+    while _frontier:
+        _depth += 1
+        _next: set[str] = set()
+        for _t in _frontier:
+            for _s in _callers.get(_t, ()):
+                if _s not in touches_write:
+                    touches_write.add(_s); _fed2w[_s] = _depth; _next.add(_s)
+        _frontier = _next
+    for _pid, _d in _fed2w.items():
+        pieces[_pid]["fed2w"] = _d      # the gradient's number: 0 at the write, rising outward (station bands it)
     by_channel = {"chrome": 0, "read": 0, "write": 0}
     for e in edge_list:                # tag each call wire chrome | READ | WRITE — read/write is the HTTP method
         if e["rel"] in _STATE_CALL:    # the wire reaches (deterministic, library-agnostic), never a hook name
@@ -427,6 +434,7 @@ def build_fe(extract: dict[str, Any], entities: dict[str, Any] | frozenset[str] 
                   "cache_pieces": sum(1 for p in pieces.values() if p.get("cache")),
                   "write_pieces": len(touches_write),
                   "write_sites": sum(p.get("wsites", 0) for p in pieces.values()),
+                  "fed2w_max": max(_fed2w.values(), default=0),
                   "fe_types_referenced": len({e["to"] for e in edge_list if pieces[e["to"]]["kind"] == "fe-type"
                                               and pieces[e["from"]]["kind"] != "fe-type"}),
                   "excluded": stats_x,

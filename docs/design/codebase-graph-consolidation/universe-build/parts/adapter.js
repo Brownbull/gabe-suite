@@ -139,7 +139,7 @@ if(_FE){
     var n={ id:p.id, kind:kind, ent:p.home, label:p.name, col:KINDS[kind].col, K:KINDS[kind], layer:KINDS[kind].layer, sub:KINDS[kind].layer||"web",
       m:m, det:det, behind:{}, fe:true, screen:p.screen||null, sites:p.sites||0, candidate:!!p.candidate,
       area:p.area||null, fixture:!!p.fixture, feClass:p.feClass||null,   // AREA + showcase tag + the fold-control class (phase 1)
-      write:!!p.write, wsites:p.wsites||0 };   // FE d2w: on the WRITE spine · write-method fetch count (HTTP verb)
+      write:!!p.write, wsites:p.wsites||0, fed2w:(p.fed2w==null?null:p.fed2w) };   // FE d2w: on the WRITE spine · write-method fetch count · hops-to-write (the gradient's number, 0 at the write)
     nodes.push(n); NIDS[n.id]=n; });
 }
 

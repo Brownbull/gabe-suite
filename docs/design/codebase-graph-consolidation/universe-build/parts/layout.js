@@ -333,6 +333,15 @@ window.BANDPAL=[0xf2711c, 0xf59f00, 0xf5d90a, 0xbcd12f, 0x46a758];  // 0 closest
 window.__uniD2W=true;                                     // calls wires coloured by distance-to-write by default (legend toggle falls back to flat)
 window.__d2wBand=function(n){ if(!window.__uniD2W||!n) return null;   // → band colour for a calls TARGET, or null (flat cfg.color)
   var d=n.d2w; return window.BANDPAL[(d==null)?4:Math.min(d|0,3)]; };  // reaching fns clamp into band 3; band 4 (green) is never-reaches only
+// ── FE WRITE-SPINE heat (operator D1/D3/D4): a SEPARATE gradient from the backend's, in the
+//    previously-decided FE range (option A · blue→magenta): 0 AT the write→magenta, rising outward
+//    to blue. It has its OWN toggle (D4, default OFF) so the FE spine can be read without the backend
+//    heat, and it colours a FE WRITE wire by its target's fed2w (hops-to-a-write-fetch). ──
+window.FEBAND=[0xc026d3, 0x9c33e0, 0x7c3aed, 0x4f52ea, 0x2563eb];   // 0 at-the-write→magenta · 1 · 2 · 3 · 4/far→blue
+window.__uniFED2W=false;                                   // FE write heat — separate toggle, DEFAULT OFF (operator D4)
+window.__feD2WBand=function(n){ if(!window.__uniFED2W||!n||n.fed2w==null) return null;   // → band for a FE WRITE wire's target, or null (flat)
+  return window.FEBAND[Math.min(n.fed2w|0,4)]; };
+window.__uniWriteRing=false;                               // the write-spine node RING — separate toggle, DEFAULT OFF (operator D2)
 /* ONE style→svg-dasharray map — the Routes row samples AND the legend rows render from it,
    so a sample can never lie (CSS border-style cannot draw "sparse"; SVG dasharray draws all four). */
 var DASHMAP={ solid:"", dashed:"6 3", dotted:"1.5 3.5", sparse:"5 10" };
