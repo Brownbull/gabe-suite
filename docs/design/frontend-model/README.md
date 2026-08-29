@@ -258,3 +258,35 @@ dry-run on a COPY with the numbers in the commit message.
 - Route → component tree from the router CONFIG object (path → element) — today only the JSX inside it wires.
 - Prop schemas on components (react-docgen) · compiler-resolved reference edges beyond bindings (P4).
 - The levels lab (`codebase-archive-lab.html`) still reads graft's convention arm; it has not been switched to `fe`.
+
+## 10. BUILT — 2026-08-28/29 (the FE data-flow spine + write-spine heat)
+
+§9's arm modeled STRUCTURE (pieces + reference edges). This arc added the DATA-FLOW spine on top — which pieces touch state, in which DIRECTION — and rendered it on the Gabe Universe station. Commits LOCAL on `graft-adoption` (`62c2e8a`→`7bd9f31`).
+
+### The four detector decisions (durable rulings)
+
+1. **Same-file render fix** (`62c2e8a`) — `target_of` dropped every co-located JSX render edge, so the batch-48 component taxonomy was wrong for ~half the files. A `_render_target` resolving a no-binding tag to its sibling export fixed it: **36/67 root-views reclassified** (private 183→194, shared 99→124). The taxonomy the tier controls key on is now honest.
+
+2. **F1 cache detector** (`7f888a4`) — a piece calling a query-library hook (`useQuery`/`useMutation`/`useSWR`/…) with **no project binding** is a server-CACHE sink. RULING: a LIBRARY-IDIOM roster (`_CACHE_CALLEES`, same class as `_STORE_`/`_ROUTER_CALLEES`), **never a project name-list**, counting ONLY when the callee resolves to no project piece — a project's own `useQuery` would bind, so honest-empty holds (no query lib → no `cache` key → byte-identical). Known follow-on: RTK-Query's generated `useGetXQuery` hooks are pattern-named — reported, not guessed into the roster. Measured gustify: cache_pieces 56.
+
+3. **The chrome·read·write wire CHANNEL** (`f16a3b3` + `b430a5c`) — every FE call wire is classified by BACKWARD reachability from the sinks (store kind + `screen` fetch + `cache`): a wire reaching a sink is data, else chrome plumbing (muted ×0.4 at the render). The `cx=fecall` false-connector bug is fixed by construction (cx reaches no sink → chrome).
+
+4. **The method-based write DIRECTION** (`b430a5c`) — the KEY ruling. read vs write is the **HTTP METHOD** of the fetch a piece reaches (`_WRITE_METHODS` = POST/PUT/PATCH/DELETE), read from the web arm's per-site method. **Chosen deliberately OVER a react-query `useMutation`/`useQuery` split**, which is single-stack (breaks the moment a twin uses swr, zustand, or raw fetch — gastify has all three). The verb is deterministic and universal, so the FE write spine is the frontend END of the SAME write fabric the backend d2w computes — not a parallel FE-only invention. This is the suite's "no single-stack / gustify-shaped heuristic" principle applied. `fed2w` DEPTH (a level-order BFS, hops-to-a-write-fetch) rides every write-spine piece; a store-object write (`zustand set()`) is NOT method-visible → not claimed (deferred until a twin shows a material store-write population). Measured gustify: 500 state wires split 474 read / 26 write; write_pieces 28; fed2w_max 2.
+
+`feClass` per component (view/private/connector/container/leaf) is the class the disclosure T0–T3 preset keys on; `connector` requires touches-state.
+
+### The write-spine HEAT — operator rulings D1–D4 (the Write-Spine Heat artifact → `7bd9f31`)
+
+A published decision surface (four live-sample forks) → the operator ruled:
+- **D1 · GRADIENT** (not binary) — a FE write wire bands by its target's `fed2w`.
+- **D2 · wire + pill** — the WIRE carries the gradient; the `wsites` count + write-depth surface in the node CARD; the node RING is a SEPARATE toggle, **default OFF** (state var `__uniWriteRing` wired; the 3D ring/pill SPRITE is a deferred pass — Universe nodes are WebGL spheres).
+- **D3 · a DISTINCT palette** — `FEBAND` blue→magenta (`#2563eb` far → `#7c3aed` → `#c026d3` at-the-write), the **previously-decided option A** from the `universe-build` scratchpad `two-spines.html`. RATIONALE: the FE spine IS the same write fabric, but a distinct gradient means a frontend write never reads as a backend one — `FEBAND` sits BESIDE the backend `BANDPAL` (green→orange), never merged.
+- **D4 · a SEPARATE toggle** (`__uniFED2W`, default OFF) — its own "FE write heat" legend row, so the frontend spine reads without the backend heat. The wire branch is `l.write && __feD2WBand`, parallel to the backend `rel==="calls" && __d2wBand`; neither leaks.
+
+### Batteries
+`tests/frontend` 45→77 (cache sink both ways · the write channel serialized on `e[3]` · fed2w depth · honest-empty). `tests/gabe-universe` render proof BEHAVIORALLY gates the FE-heat toggle (off-by-default, bands fed2w 0→magenta / 4→blue) + static pins for `FEBAND`/`__uniFED2W`/the legend row/the ring toggle. `tests/arch-graph` 237 (honest-empty pinned).
+
+### Deferred (this arc)
+- The node RING / `wsites` 3D pill sprite (D2) — awaiting the operator's look at the wire gradient.
+- RTK-Query generated-hook detection (pattern-named, not in the `_CACHE_CALLEES` roster).
+- Store-object (`zustand set()`) write detection — not method-visible; revisit on a store-write-heavy twin.
