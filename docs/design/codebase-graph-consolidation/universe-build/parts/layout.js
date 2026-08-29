@@ -517,12 +517,15 @@ window.__uniDrawJourneyNums=function(){ try{
   while(grp.children.length){ var ch=grp.children.pop(); if(ch.material){ if(ch.material.map&&ch.material.map.dispose) ch.material.map.dispose(); if(ch.material.dispose) ch.material.dispose(); } grp.remove(ch); }
   if(typeof WALK==="undefined" || !(WALK.mode==="journey"||WALK.mode==="trail") || !WALK.steps.length) return;   // ONLY while a walk is active
   if(typeof _npos==="undefined") return;
-  var off=(window.__uniJn&&window.__uniJn.off)||0;
-  WALK.steps.forEach(function(id, i){ var n=(typeof _fnById==="function")?_fnById(id):(typeof NIDS!=="undefined"&&NIDS[id]); if(!n) return;
+  var off=(window.__uniJn&&window.__uniJn.off)||0, _cur=WALK.i, _byNode={};
+  WALK.steps.forEach(function(id, i){ (_byNode[id]=_byNode[id]||[]).push(i); });              // a node can be MANY steps — one badge each, never stacked
+  Object.keys(_byNode).forEach(function(id){ var n=(typeof _fnById==="function")?_fnById(id):(typeof NIDS!=="undefined"&&NIDS[id]); if(!n) return;
     if(typeof _nodeVisibleFn==="function" && !_nodeVisibleFn(n)) return;                       // only actually-rendered steps
     var p=_npos[id]; if(!p) return;
-    var cur=(i===WALK.i), col=(n.col||(typeof ENT!=="undefined"&&ENT[n.ent])||"#9ecbff");
-    var s=_numBadgeSprite(i+1, col, cur); s.position.set(p.x,p.y+off,p.z); s.userData.nid=id; s.raycast=function(){}; grp.add(s); }); }catch(e){} };
+    var idxs=_byNode[id], best=idxs[0];                                                        // ONE number per node: the step CLOSEST to the current; on a distance tie, the GREATER (forward) index (operator)
+    for(var k=1;k<idxs.length;k++){ var i=idxs[k], db=Math.abs(best-_cur), di=Math.abs(i-_cur); if(di<db || (di===db && i>best)) best=i; }
+    var col=(n.col||(typeof ENT!=="undefined"&&ENT[n.ent])||"#9ecbff");
+    var s=_numBadgeSprite(best+1, col, best===_cur); s.position.set(p.x,p.y+off,p.z); s.userData.nid=id; s.raycast=function(){}; grp.add(s); }); }catch(e){} };
 window.__uniReveal=function(hidId){ try{ var h=NIDS[hidId]; if(!h) return; var ent=h.ent, sub=h.sub, cols=["show","planets","wires"];
   if(typeof UNIVIS==="undefined"||typeof _VISDEF==="undefined") return;
   if(!UNIVIS.ent[ent]) UNIVIS.ent[ent]=Object.assign({},_VISDEF);
