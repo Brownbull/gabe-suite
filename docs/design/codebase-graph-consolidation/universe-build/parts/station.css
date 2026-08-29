@@ -393,6 +393,12 @@
     border:1px solid var(--line); border-radius:6px; padding:3px 5px; min-width:0; }
   #ctrlp .ctltog .fltog{ width:20px; height:16px; border:1px solid var(--line); border-radius:4px; background:none; cursor:pointer; padding:0; flex:none; }
   #ctrlp .ctltog .fltog.on{ background:var(--accent); border-color:var(--accent); }
+  /* journey-numbers tuner (operator) */
+  #ctrlp .jnhd{ margin-top:9px; }
+  #ctrlp .flsx{ color:var(--muted); background:var(--chip-bg); border:1px solid var(--line); border-radius:5px; cursor:pointer; font-size:12px; padding:2px 8px; }
+  #ctrlp .flsx:hover{ color:var(--ink); border-color:var(--accent); }
+  #ctrlp .rng{ flex:1; min-width:44px; height:14px; }
+  #ctrlp .jnv{ font:700 10px/1 var(--font-mono); color:var(--ink); min-width:28px; text-align:right; flex:none; }
   /* keep <code> inline chips readable in the dark card */
   .pbody code{ font-family:var(--font-mono); background:var(--chip-bg); border:1px solid var(--line); border-radius:4px; padding:0 4px; font-size:.92em; }
   nav.side .navlabel.g-now{color:#3bb3bd} nav.side .navlabel.g-board{color:#6aa6f5} nav.side .navlabel.g-ent{color:#4fc3a8} nav.side .navlabel.g-docs{color:#c98bbb}
