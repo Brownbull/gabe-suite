@@ -804,6 +804,11 @@ check('data-writeringtog="1"' in page and 'write rings <i>' in page,
       "the legend carries the write-ring toggle row")
 check('var _JRNKINDICO={' in page and '''title="'+kd[1]+'"''' in page and '(_JRNKINDICO[kd[0]]||kd[1])' in page,
       "the journey-kind tabs render ICONS with the type-word on hover (title=), not the title text")
+# ── icon-less kinds now iconed (operator: the cubes — flag/provider/module/web/middleware/prompt) ──
+_order = page.split("var order=[", 1)[1].split("]", 1)[0] if "var order=[" in page else ""
+for _k in ("flag", "provider", "module", "web", "middleware", "prompt"):
+    check(f"{_k}:'<" in page and f'"{_k}"' in _order,
+          f"the '{_k}' kind has a Lucide GLYPH and is registered in the billboard `order` (was a cube)")
 check('d2w:f.d2w' in page,
       "the levels fn_node d2w no longer rides onto the render node (call-wire heat lost its source)")
 check('t:"d2wtog"' in page and 'function _bandSpectrumHTML' in page and 'it.k==="calls"?_bandSpectrumHTML()' in page,
@@ -1090,9 +1095,12 @@ const { chromium } = require(process.argv[3]);
     var newWf=wfAll.filter(function(x){return NEWWF.indexOf(x.name)>=0;}), newBad=0;
     newWf.forEach(function(x){(x.steps||[]).forEach(function(s){ if(!epSet.has('endpoint:'+s)) newBad++; });});
     var wfInfo={ count:wfAll.length, newFound:newWf.length, newBad:newBad };
+    // the previously-cube kinds now build a billboard ICON texture (billTex[k]) — proof, not a string check
+    var _iconKinds=["flag","provider","module","web","middleware","prompt"];
+    var iconsBuilt=(typeof billTex!=='undefined')?_iconKinds.filter(function(k){ return billTex[k]; }).length:-1;
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:stPassV, face:faceV, fe, few, wfInfo }; });
+      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1104,9 +1112,10 @@ const { chromium } = require(process.argv[3]);
   // set — legitimately the read-companions (GET) + the ORM-idiom writes (systemic #5) the access pass
   // can't see; the station HONESTLY marks those unmapped per row, so it is reported, not gated.
   const wi=r.wfInfo, wfOk = wi.newFound===8 && wi.count===16;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk;
+  const iconsOk = r.iconsBuilt===6;   // flag/provider/module/web/middleware/prompt each build a billboard icon (no cube)
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

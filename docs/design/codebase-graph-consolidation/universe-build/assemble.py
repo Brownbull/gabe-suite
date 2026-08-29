@@ -193,7 +193,7 @@ text = text.replace(_TRUST_ANCHOR, _TRANSIT + ',\n      ' + _TRUST_ANCHOR, 1)
 #    they fell back to the purple `panel` PRIMITIVE (the pink cubes). Add it so web shows the screen glyph. ──
 OLD_ORDER = 'var order=["route","component","hook","type","store","screen","endpoint","function","schema","model","external","entity"];'
 assert OLD_ORDER in text, "order array anchor missing"
-text = text.replace(OLD_ORDER, 'var order=["route","component","hook","type","store","module","screen","web","endpoint","function","schema","model","external","entity"];', 1)
+text = text.replace(OLD_ORDER, 'var order=["route","component","hook","type","store","module","screen","web","endpoint","function","schema","model","external","entity","flag","provider","middleware","prompt"];', 1)   # + the 4 icon-less kinds (flag/provider/middleware/prompt) so the billboard preload builds their glyph textures — no more cubes (operator); module+web were already here (needed the GLYPH added in spike-base)
 
 # ── center-battery R10: no center page may carry the banned deadness word "orphan" (case-sensitive);
 #    the only lowercase hit is an inherited spike comment — reword it (no behavior change) ──
