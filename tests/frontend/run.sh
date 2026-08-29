@@ -310,7 +310,7 @@ if ts_dir and shutil.which("node"):
 else:
     skipped.append("LIVE extractor case — no `typescript` resolvable (set GABE_TS_DIR)")
 
-for s in skipped: print("  SKIP:", s)
+for s in skipped: print("  SKIP ⚠:", s)   # the doctor-recognized coverage-skip marker (else a skipped LIVE-extractor case reads as false CLEAN)
 print(f"frontend battery: {pass_} passed, {fail} failed" + (f", {len(skipped)} skipped" if skipped else ""))
 sys.exit(1 if fail else 0)
 PY

@@ -11,7 +11,7 @@ let pass = 0, fail = 0;
 const ck = (c, m, x) => { if (c) { pass++; console.log('PASS  ' + m + (x ? '  — ' + x : '')); } else { fail++; console.log('FAIL  ' + m + (x ? '  — ' + x : '')); } };
 
 const b = await chromium.launch({ executablePath: process.env.GABE_CHROME_BIN || '/usr/bin/google-chrome-stable',
-  args: ['--use-angle=swiftshader', '--no-sandbox', '--disable-gpu-sandbox'] });
+  args: ['--use-angle=swiftshader', '--no-sandbox', '--disable-gpu-sandbox', '--disable-dev-shm-usage'] });
 const p = await b.newPage({ viewport: { width: 1400, height: 860 } });
 const errs = []; p.on('pageerror', e => errs.push('PE:' + e.message)); p.on('console', m => { if (m.type() === 'error') errs.push('CE:' + m.text()); });
 await p.goto('file://' + PAGE);

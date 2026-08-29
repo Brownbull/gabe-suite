@@ -1035,7 +1035,7 @@ if [ -x "$CHROME" ] && [ -d "$PWDIR" ] && [ -f "$EXPAGE" ]; then
 const path=require('path');
 const { chromium } = require(process.argv[3]);
 (async()=>{
-  const b=await chromium.launch({executablePath:'/usr/bin/google-chrome-stable',args:['--use-angle=swiftshader','--no-sandbox','--disable-gpu-sandbox']});
+  const b=await chromium.launch({executablePath:'/usr/bin/google-chrome-stable',args:['--use-angle=swiftshader','--no-sandbox','--disable-gpu-sandbox','--disable-dev-shm-usage']});
   const p=await b.newPage({viewport:{width:1100,height:760}});
   const errs=[]; p.on('pageerror',e=>errs.push(e.message)); p.on('console',m=>{if(m.type()==='error')errs.push(m.text());});
   await p.goto('file://'+path.resolve(process.argv[2]));
