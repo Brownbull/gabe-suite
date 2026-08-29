@@ -873,8 +873,29 @@ function _jrnCollect(){ if(JRN) return JRN; var m={};
     return j; });
   var bk=[]; try{ bk=_bkCollect(); }catch(e){}            // derived BACKEND journeys — honest-empty on any failure
   var wf=[]; try{ wf=_wfCollect(bk); }catch(e){}          // curated USER WORKFLOWS over those chains
-  JRN=wf.concat(bk).concat(JRN);
+  var cm=[]; try{ cm=_commitCollect(); }catch(e){}        // recent COMMITS as coverage journeys (window.GABE_COMMITS)
+  JRN=wf.concat(bk).concat(cm).concat(JRN);
   return JRN; }
+/* ── COMMIT journeys — each recent commit (window.GABE_COMMITS, from _a3_commits) becomes a
+   COVERAGE journey: its carriers are the CURRENT-graph nodes it touched (a touched id that no
+   longer exists is dropped — honest). Not an ordered chain; walked entity-by-entity like a test.
+   The date BUCKET (today/this week/…) is computed HERE at view time (the emitter forbids
+   wallclock). Absent feed → no rows, never fabricated. ── */
+function _commitBucket(iso){ var t=Date.parse(iso); if(isNaN(t)) return "older";
+  var d=(Date.now()-t)/86400000; return d<1?"today":(d<7?"this week":(d<30?"this month":"older")); }
+function _commitCollect(){ var C=window.GABE_COMMITS; if(!C||!C.length) return [];
+  return C.map(function(c){
+    var carriers=(c.touched||[]).filter(function(id){ return !!_fnById(id); });   // only nodes still on the map
+    var ents={}; carriers.forEach(function(id){ var n=_fnById(id); if(n&&n.ent) ents[n.ent]=1; });
+    carriers.sort(function(a,b){ var na=_fnById(a)||{}, nb=_fnById(b)||{}; var ea=na.ent||"", eb=nb.ent||"";
+      return ea<eb?-1:(ea>eb?1:(a<b?-1:1)); });                                    // entity-by-entity coverage order
+    return { cid:"commit:"+c.sha, commit:true, corpora:{commit:1}, corpus:"commit", agg:false, e2e:false,
+      ents:Object.keys(ents), carriers:carriers,
+      meta:carriers.map(function(id){ return { id:id, why:"touched", from:null }; }),   // step note: "touched by this commit"
+      name:(c.short?c.short+" ":"")+(c.subject||c.sha), short:c.short, date:c.date, author:c.author,
+      nFiles:c.nFiles||0, nTouched:carriers.length, start:_commitBucket(c.date),
+      fe:{screens:[],users:[]}, feN:0 }; })
+    .filter(function(j){ return j.carriers.length; }); }   // a commit that touched nothing ON THE MAP has no journey
 /* ── BACKEND journeys (operator, 2026-08-27): a test journey is a COVERAGE SET (every element one
    test touches, sorted entity-by-entity) — not an execution order, so it reads as noise. A backend
    journey is the graph's OWN trace, ordered by hops: endpoint → handler → calls (BFS) → each
@@ -956,8 +977,8 @@ function _wfCollect(bk){ var W=window.GABE_WORKFLOWS; if(!W||!W.length) return [
       epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:"user workflows",
       level:(w.level>=1&&w.level<=3)?w.level:0,                // dev-onboarding level (1/2/3; anything else → 0 = unleveled, ONE "other" bucket)
       fe:_bkFeLeg(eps), feN:0 }; }).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; }); }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
-function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.agg?"agg":j.cid));
-  var tt=j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s)"+(j.gates?(" · "+j.gates+" gate(s)"):"")+(j.disps?(" · "+j.disps+" dispatch(es)"):"")+" · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
+function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.commit?(j.nTouched+" el"):(j.agg?"agg":j.cid)));
+  var tt=(j.commit?("commit "+(j.short||"")+(j.date?(" · "+String(j.date).slice(0,10)):"")+(j.author?(" · "+j.author):"")+" · touched "+j.nTouched+" element(s) across "+(j.nFiles||0)+" file(s)"+(j.ents.length?(" · "+j.ents.join(", ")):"")):(j.ents.join(" → ")))+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s)"+(j.gates?(" · "+j.gates+" gate(s)"):"")+(j.disps?(" · "+j.disps+" dispatch(es)"):"")+" · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
   return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+tt.replace(/"/g,"&quot;")+'">'
   +(j.wf&&j.level&&_JRNLEVELS[j.level]?('<span class="jrnlvl l'+j.level+'" title="level '+j.level+' · '+_JRNLEVELS[j.level].label+'">'+_JRNLEVELS[j.level].ico+'</span>'):"")
   +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+badge+'</b><span class="jrncorp">'+j.corpus+'</span>'
@@ -1011,7 +1032,7 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
    entity into COLLAPSIBLE groups (click a group title to fold its tests). __uniJrnExcl = hidden start-
    entities; __uniJrnKind = the open kind tab; __uniJrnCollapse = folded groups. ── */
 window.__uniJrnExcl=window.__uniJrnExcl||{}; window.__uniJrnKind=window.__uniJrnKind||null; window.__uniJrnCollapse=window.__uniJrnCollapse||{};   // default tab resolved LAZILY at first paint (workflows.js loads at runtime)
-var _JRNKINDS=[["wf","workflows"],["bk","backend"],["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
+var _JRNKINDS=[["wf","workflows"],["commit","commits"],["bk","backend"],["e2e","end-to-end"],["ent","by-entity"],["agg","aggregated"]];
 // journey-kind TAB icons (operator: replace the type-title selectors with icons; the WORD stays on
 // hover via title=, per the legend-visual ruling — the tab shows the glyph, not the word). route ·
 // server · bullseye · box · layers — currentColor so each inherits the tab's muted/on colour.
@@ -1020,7 +1041,8 @@ var _JRNKINDICO={
   bk:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="8" x="2" y="2" rx="2"/><rect width="20" height="8" x="2" y="14" rx="2"/><line x1="6" x2="6.01" y1="6" y2="6"/><line x1="6" x2="6.01" y1="18" y2="18"/></svg>',
   e2e:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>',
   ent:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></svg>',
-  agg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"/></svg>' };
+  agg:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 11-3.5 1.6a1 1 0 0 0 0 1.81l8.6 3.91a2 2 0 0 0 1.65 0l8.58-3.9a1 1 0 0 0 0-1.83L17.9 11"/></svg>',
+  commit:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><line x1="3" x2="9" y1="12" y2="12"/><line x1="15" x2="21" y1="12" y2="12"/></svg>' };
 var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>';
 // dev-onboarding expertise tiers (operator): a filled-bar RAMP — N bars for level N — reads as
 // "level" without a word; the label rides beside it in the group header.
@@ -1031,7 +1053,7 @@ var _JRNLEVELS={
   1:{label:"Orientation",  hint:"get your bearings — how you get in, how data flows out", ico:_lvlBars(1)},
   2:{label:"Core",         hint:"the critical flows the app exists for", ico:_lvlBars(2)},
   3:{label:"Specialized",  hint:"the deep end — AI, GDPR, config, cross-cutting edges", ico:_lvlBars(3)} };
-function _jrnKindOf(j){ return j.wf?"wf":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent"))); }   // workflows · backend · then the test kinds (e2e > agg > by-entity)
+function _jrnKindOf(j){ return j.wf?"wf":(j.commit?"commit":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent")))); }   // workflows · commits · backend · then the test kinds (e2e > agg > by-entity)
 function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
 function _jrnVisible(j){ if(j.wf && !j.ents.length) return true;                                // an ALL-UNMAPPED workflow has no span — it stays visible so its 'unmapped' badge can say so
   return j.ents.some(function(e){ return !window.__uniJrnExcl[e]; }); }   // SPAN filter: a journey shows iff its span touches ≥1 INCLUDED entity
@@ -1055,6 +1077,14 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
       h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+' — middle-click to focus"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span><span class="jglvlnm">'+m.label+'</span><b class="jglvln">'+byLvl[L].length+'</b><span class="jglvlhint">'+m.hint+'</span></div>';
       if(!cl) byLvl[L].forEach(function(j){ h+=_jrnRow(j); });   // curated order within a level — never re-sorted
     });
+    return h;
+  }
+  if(sel==="commit"){                                          // COMMITS group by DATE BUCKET, newest first (emitter order preserved within a bucket)
+    var BORD=["today","this week","this month","older"], byB={}; vis.forEach(function(j){ (byB[j.start]=byB[j.start]||[]).push(j); });
+    h+='<div class="jrnlede">each commit is a coverage journey — walk the elements it touched. newest first.</div>';
+    BORD.filter(function(b){ return byB[b]; }).forEach(function(b){ var key="cm:"+b, cl=!!window.__uniJrnCollapse[key];
+      h+='<div class="jrngrp jgcl'+(cl?" cl":"")+'" data-ge="'+key+'"><span class="jcar">'+_JCHEV+'</span>'+b+' · '+byB[b].length+'</div>';
+      if(!cl) byB[b].forEach(function(j){ h+=_jrnRow(j); }); });
     return h;
   }
   var groups={}; vis.forEach(function(j){ (groups[j.start]=groups[j.start]||[]).push(j); });

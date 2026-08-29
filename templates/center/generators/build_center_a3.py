@@ -40,6 +40,7 @@ import _a3_graft  # noqa: E402  (the graft-wiring arm — topology provider)
 import _a3_graph  # noqa: E402  (the C4 codebase-graph derivation)
 import _a3_levels  # noqa: E402  (the rich LEVELS graph — the lab-native station feed)
 import _a3_sim  # noqa: E402  (the live change-simulation projection — window.GABE_SIM)
+import _a3_commits  # noqa: E402  (recent git commits → the elements they touched — window.GABE_COMMITS)
 import _a3_web  # noqa: E402  (the web→API bridge extractor — the fetch arm)
 import _a3_fe  # noqa: E402  (the frontend STRUCTURE arm — compiler-proven pieces + edges)
 import _a3_guard
@@ -2185,6 +2186,22 @@ def main() -> int:
         _simf.write_text("// no change in flight — honest-empty at rest (derivation error)\n"
                          "window.GABE_SIM = null;\n")
         print(f"    ⚠ sim.data.js honest-empty (derivation skipped): {_e}")
+
+    # Recent COMMITS as journeys (_a3_commits, C2 mirror): each commit → the graph
+    # elements it touched, walkable in the picker's "commits" kind. Derived from git +
+    # the built graph's file→node index; honest-empty without git. commits.js is a
+    # beat-tail artifact, gitignored like sim.data.js (gabe-init seeds it) — churns per commit.
+    try:
+        _g = locals().get("_graph")
+        _commits = _a3_commits.build_commits(REPO_ROOT, _g) if _g else None
+        _a3_commits.emit(_commits, CENTER_OUT)
+        if _commits:
+            print(f"    wrote docs/site/center/commits.js — {len(_commits)} commit(s); "
+                  f"latest touches {_commits[0]['nTouched']} element(s)")
+    except Exception as _ce:  # noqa: BLE001 — honest-empty on any error
+        (CENTER_OUT / "commits.js").write_text(
+            "// commit journeys honest-empty (derivation error)\nwindow.GABE_COMMITS = [];\n")
+        print(f"    ⚠ commits.js honest-empty (derivation skipped): {_ce}")
 
     # The curated USER-WORKFLOWS feed for the Universe station's journeys picker
     # (window.GABE_WORKFLOWS — the operator's user stories as ordered endpoints). CURATED

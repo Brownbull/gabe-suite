@@ -322,8 +322,8 @@ check('!(n.access&&n.access.ops&&n.access.ops.length)' in page,
 check('var _HUB_FANIN=15' in page and 'n.role==="gate" && ks.length>=_HUB_FANIN' in page,
       "B2 HUB FOLD (a high-fan-in gate like require_household folds under critical, no 50-spoke star) is gone")
 # ── journeys batch (operator 2026-08-27): backend chains · curated workflows · step note · chip rows · middle-click solo
-check('function _bkCollect(){' in page and 'function _wfCollect(bk){' in page and '[["wf","workflows"],["bk","backend"]' in page,
-      "the derived BACKEND journeys + curated WORKFLOWS journey kinds are gone from the picker")
+check('function _bkCollect(){' in page and 'function _wfCollect(bk){' in page and '[["wf","workflows"],["commit","commits"],["bk","backend"]' in page,
+      "the derived BACKEND journeys + curated WORKFLOWS journey kinds are gone from the picker (+ the commits kind)")
 # wave D (P7): the backend-journey walk WALKS depends (Hop-0.5 gate) + dispatches (event-bus leg), not just draws them
 check('(dep[l.source]=dep[l.source]||[]).push' in page and '(disp[l.source]=disp[l.source]||[]).push' in page
       and 'gsteps.push({id:g, hop:0.5, why:"gate", from:h})' in page and 'q.push([t,hop+1,"dispatch",fid])' in page,
@@ -887,6 +887,10 @@ check('if(sel==="wf"){' in page and 'byLvl' in page and 'jglvl' in page and 'fun
       "the workflows tab GROUPS by onboarding level (①→②→③ top-down) with a filled-bar ramp + a visible lede — a new dev reads it as a ladder, not a flat 'user workflows' list")
 check('window.__uniJrnLvlSolo=function' in page and 'jglvlhint' in page,
       "a LEVEL is discoverable + focusable: a visible per-tier hint + a middle-click tier-solo (mirrors the entity solo) — the onboarding persona can isolate ① in one gesture")
+check('function _commitCollect()' in page and '["commit","commits"]' in page and 'j.commit?"commit"' in page and 'if(sel==="commit"){' in page and 'commits.js' in page,
+      "COMMIT journeys (operator): each recent commit is a journey KIND — window.GABE_COMMITS → _commitCollect → the 'commits' tab, grouped by date bucket, walked like any journey")
+check('return !!_fnById(id);' in page and 'commit:true, corpora:{commit:1}' in page,
+      "a commit-journey's carriers are only nodes STILL on the map (a touched id that no longer resolves is dropped — honest coverage view)")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -1158,9 +1162,19 @@ const { chromium } = require(process.argv[3]);
             hasLede:(_gh.indexOf('jrnlede')>=0),
             collapseIsolates:( (_rowsFull-_rowsColl) === _byN(2) && _rowsColl>0 ),             // collapsing lvl2 drops ONLY lvl2's rows (isolation)
             grouped:(_gh.indexOf('Orientation')>=0 && _gh.indexOf('Core')>=0 && _gh.indexOf('Specialized')>=0) }; }catch(e){}
+    // COMMIT journeys: window.GABE_COMMITS → the 'commits' kind; each carries only nodes still on
+    // the map, and walking one runs the shared journey walk. (Example seeds a gustify commits.js.)
+    var cm=null; try{ window.__uniJrnKind='commit'; window.__uniJrnCollapse={};
+      var _cmj=_jrnCollect().filter(function(j){ return j.commit; });
+      var _cok = _cmj.every(function(j){ return j.carriers.length>0 && j.carriers.every(function(id){ return !!_fnById(id); }); });
+      var _cgh=_jrnGroupsHTML(); var walked=null;
+      if(_cmj.length){ window.__uniJrnStart(_cmj[0].cid);
+        walked={ mode:(typeof WALK!=='undefined'?WALK.mode:null), steps:(typeof WALK!=='undefined'?WALK.steps.length:0) };
+        if(window.__uniHLClear) __uniHLClear(); }
+      cm={ n:_cmj.length, carriersOnMap:_cok, tab:_cgh.indexOf('coverage journey')>=0, walked:walked }; }catch(e){ cm={err:String(e)}; }
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn, lvl }; });
+      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn, lvl, cm }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1182,9 +1196,13 @@ const { chromium } = require(process.argv[3]);
   // grouped, and collapsing one level isolates only its rows.
   const lv=r.lvl, levelsOk = lv && lv.outOfRange===0 && lv.leveled>0 && lv.sumMatches===true
     && lv.headers>=1 && lv.pips===lv.leveled && lv.hasLede===true && lv.grouped===true && lv.collapseIsolates===true;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk;
+  // COMMIT journeys: the example seeds a gustify commits.js → >=1 commit journey, all carriers on
+  // the map, the commit tab renders, and walking one runs the shared walk.
+  const cm=r.cm, commitsOk = cm && !cm.err && cm.n>0 && cm.carriersOnMap===true && cm.tab===true
+    && cm.walked && cm.walked.mode==='journey' && cm.walked.steps>0;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?
