@@ -881,10 +881,12 @@ check('function _jrnFeLeg(carriers)' in page and 'l.rel==="bridge"' in page
 check('j.fe=_jrnFeLeg(j.carriers); j.feN=' in page, "journeys no longer precompute their fe leg (row/pill chips would lie)")
 check('WRAPPER CLIMB' in page and 'sn.kind==="module"' in page and 'c.ent!==sn.ent' in page,
       "the FE-leg WRAPPER CLIMB: a bridged shared-lib MODULE with a cross-entity caller (an SSE client like lib/api/sse) is swapped for its feature callers, so the leg reaches the feature screen not the lib — proven on gustify: Create-a-recipe 0→2 → useRecipeStream → GustifyGenerateSheet")
-check('var _JRNLEVELS={' in page and 'Orientation' in page and 'Core' in page and 'Specialized' in page and 'level:w.level||0' in page,
-      "journey EXPERTISE LEVELS (operator): workflows carry a curated `level` (1/2/3) + the 3-tier onboarding roster (Orientation/Core/Specialized)")
-check('if(sel==="wf"){' in page and 'byLvl' in page and 'jglvl' in page and 'function _lvlBars' in page,
-      "the workflows tab GROUPS by onboarding level (①→②→③ top-down) with a filled-bar ramp — a new dev reads it as a ladder, not a flat 'user workflows' list")
+check('var _JRNLEVELS={' in page and 'Orientation' in page and 'Core' in page and 'Specialized' in page and 'level:(w.level>=1&&w.level<=3)?w.level:0' in page,
+      "journey EXPERTISE LEVELS (operator): workflows carry a curated `level` CLAMPED to 1/2/3 (out-of-range → 0 = one 'other' bucket) + the 3-tier onboarding roster")
+check('if(sel==="wf"){' in page and 'byLvl' in page and 'jglvl' in page and 'function _lvlBars' in page and 'jrnlede' in page,
+      "the workflows tab GROUPS by onboarding level (①→②→③ top-down) with a filled-bar ramp + a visible lede — a new dev reads it as a ladder, not a flat 'user workflows' list")
+check('window.__uniJrnLvlSolo=function' in page and 'jglvlhint' in page,
+      "a LEVEL is discoverable + focusable: a visible per-tier hint + a middle-click tier-solo (mirrors the entity solo) — the onboarding persona can isolate ① in one gesture")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -1140,15 +1142,21 @@ const { chromium } = require(process.argv[3]);
         jrn={ feLen:(typeof WALK!=='undefined'?WALK.feLen:0), firstKind:_f0?_f0.kind:null,
           depthNoFlood:(_exBefore===true && _exAfter===true && _setAfter<=_setBefore),
           badges:_badges, badgesUnique:_badgesUnique, badgesCleared:_badgesCleared }; } }catch(e){}
-    // EXPERTISE LEVELS (operator): the workflows tab groups by a curated onboarding tier (1/2/3);
-    // every workflow carries a level in range, and the rendered wf tab shows the ①→②→③ headers.
-    var lvl=null; try{ window.__uniJrnKind='wf'; var _wfj=_jrnCollect().filter(function(j){ return j.wf; });
+    // EXPERTISE LEVELS (operator): the workflows tab is a dev-onboarding ladder. Assert the INVARIANT,
+    // not the census (no hardcoded 16): a LEVELED wf is in 1..3, the sum matches the leveled count,
+    // one tier pip per leveled row, the lede is visible, and the named tiers group.
+    var lvl=null; try{ window.__uniJrnKind='wf'; window.__uniJrnCollapse={}; var _wfj=_jrnCollect().filter(function(j){ return j.wf; });
       var _gh=_jrnGroupsHTML();
-      lvl={ allLeveled:(_wfj.length>0 && _wfj.every(function(j){ return j.level>=1 && j.level<=3; })),
-            headers:(_gh.match(/jglvl/g)||[]).length,
-            byLevel:{1:_wfj.filter(function(j){return j.level===1;}).length,
-                     2:_wfj.filter(function(j){return j.level===2;}).length,
-                     3:_wfj.filter(function(j){return j.level===3;}).length},
+      var _byN=function(n){ return _wfj.filter(function(j){ return j.level===n; }).length; };
+      var _rowsFull=(_gh.match(/data-jr="wf:/g)||[]).length;
+      window.__uniJrnCollapse={"lvl2":1}; var _ghC=_jrnGroupsHTML(); var _rowsColl=(_ghC.match(/data-jr="wf:/g)||[]).length; window.__uniJrnCollapse={};
+      lvl={ outOfRange:_wfj.filter(function(j){ return j.level>3 || j.level<0; }).length,     // clamp must keep this 0
+            leveled:_wfj.filter(function(j){ return j.level>=1 && j.level<=3; }).length,
+            headers:(_gh.match(/data-ge="lvl/g)||[]).length,                                   // distinct tier headers (not the double-counting /jglvl/)
+            sumMatches:( _byN(1)+_byN(2)+_byN(3) === _wfj.filter(function(j){ return j.level>=1&&j.level<=3; }).length ),
+            pips:(_gh.match(/class="jrnlvl /g)||[]).length,                                     // one per-row tier pip per leveled wf (critic gap)
+            hasLede:(_gh.indexOf('jrnlede')>=0),
+            collapseIsolates:( (_rowsFull-_rowsColl) === _byN(2) && _rowsColl>0 ),             // collapsing lvl2 drops ONLY lvl2's rows (isolation)
             grouped:(_gh.indexOf('Orientation')>=0 && _gh.indexOf('Core')>=0 && _gh.indexOf('Specialized')>=0) }; }catch(e){}
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
@@ -1169,9 +1177,11 @@ const { chromium } = require(process.argv[3]);
   const _FE_KINDS=['hook','component','module','store','route','web','screen','type'];
   const jrnOk = r.jrn && r.jrn.feLen>=1 && _FE_KINDS.indexOf(r.jrn.firstKind)>=0 && r.jrn.depthNoFlood===true
     && r.jrn.badges>0 && r.jrn.badgesUnique===true && r.jrn.badgesCleared===0;   // + the walk overlays step-NUMBER badges (ONE per node, no stacking), cleared when the journey ends
-  // the workflows tab is a DEV-ONBOARDING LADDER: every workflow leveled 1..3, grouped ①→②→③
-  const lv=r.lvl, levelsOk = lv && lv.allLeveled===true && lv.headers>=3 && lv.grouped===true
-    && (lv.byLevel[1]+lv.byLevel[2]+lv.byLevel[3])===16;
+  // the workflows tab is a DEV-ONBOARDING LADDER — assert INVARIANTS (not the 16-workflow census):
+  // no out-of-range level, leveled>0, sum matches, one pip per leveled row, lede shown, ①→②→③
+  // grouped, and collapsing one level isolates only its rows.
+  const lv=r.lvl, levelsOk = lv && lv.outOfRange===0 && lv.leveled>0 && lv.sumMatches===true
+    && lv.headers>=1 && lv.pips===lv.leveled && lv.hasLede===true && lv.grouped===true && lv.collapseIsolates===true;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }

@@ -307,16 +307,17 @@
   #jrn .jrngrp{ font:700 9px/1.4 var(--font-ui); text-transform:uppercase; letter-spacing:.08em; color:var(--muted);
     padding:6px 6px 2px; border-top:1px dotted var(--line); margin-top:4px; }
   #jrn .jrnname{ flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  /* dev-onboarding TIER (operator): a level group header + a per-row pip, an emerald→amber→purple
-     expertise ramp — panel chrome, deliberately outside the graph's heat/entity palettes */
-  #jrn .jglvl{ display:flex; align-items:center; gap:6px; color:var(--ink); border-top-color:var(--line); }
-  #jrn .jglvlico{ display:inline-flex; align-items:center; }
-  #jrn .jglvl[data-ge="lvl1"] .jglvlico{ color:#10b981; }
-  #jrn .jglvl[data-ge="lvl2"] .jglvlico{ color:#f59e0b; }
-  #jrn .jglvl[data-ge="lvl3"] .jglvlico{ color:#a855f7; }
-  #jrn .jrnlvl{ display:inline-flex; align-items:center; flex:none; }
-  #jrn .jrnlvl.l1{ color:#10b981; } #jrn .jrnlvl.l2{ color:#f59e0b; } #jrn .jrnlvl.l3{ color:#a855f7; }
-  #jrn .jrnrow.on .jrnlvl{ color:#fff; }
+  /* dev-onboarding LEVEL (operator): a level group header + a per-row pip. The LEVEL is encoded by
+     the filled-BAR COUNT (_lvlBars), not by hue — one accent tone for all levels, so it never
+     collides with the graph's d2w (green→orange) or FE-write (magenta→blue) heat bands. */
+  #jrn .jrnlede{ font:400 9.5px/1.35 var(--font-ui); color:var(--muted); padding:5px 7px 3px; }
+  #jrn .jglvl{ display:flex; align-items:center; flex-wrap:wrap; gap:6px; color:var(--ink); border-top-color:var(--line); }
+  #jrn .jglvlico{ display:inline-flex; align-items:center; color:var(--accent); }
+  #jrn .jglvlnm{ font-weight:700; }
+  #jrn .jglvln{ font:700 9px/1 var(--font-mono); color:var(--muted); }
+  #jrn .jglvlhint{ flex-basis:100%; font:400 9px/1.3 var(--font-ui); text-transform:none; letter-spacing:0; color:var(--muted); padding-left:18px; }
+  #jrn .jrnlvl{ display:inline-flex; align-items:center; flex:none; color:var(--accent); }
+  #jrn .jrnrow.on .jrnlvl{ color:#fff; }   /* on the selected (accent-bg) row the bars go white for contrast; the count still reads */
   /* the graph NEVER resizes with the right panel — the panel overlays the canvas */
   #g{ right:0 !important; }
   /* journey STEP controls — CENTERED in the header bar: [‹] [i/N · name] [›] [✕], real Lucide buttons */
@@ -2476,12 +2477,12 @@ function _wfCollect(bk){ var W=window.GABE_WORKFLOWS; if(!W||!W.length) return [
     return { cid:"wf:"+i, wf:true, corpora:{workflow:1}, corpus:"workflow", agg:false, e2e:false,
       ents:Object.keys(ents), carriers:steps.map(function(s){ return s.id; }), meta:steps, writes:writes,
       epn:epn, miss:miss, note:w.note||"", name:w.name||("workflow "+(i+1)), start:"user workflows",
-      level:w.level||0,                                        // dev-onboarding expertise tier (1/2/3; 0 = unleveled → "other")
+      level:(w.level>=1&&w.level<=3)?w.level:0,                // dev-onboarding level (1/2/3; anything else → 0 = unleveled, ONE "other" bucket)
       fe:_bkFeLeg(eps), feN:0 }; }).map(function(j){ j.feN=j.fe.users.length+j.fe.screens.length; return j; }); }   // an all-unmapped workflow KEEPS its row (unmapped counted) — the start is a no-op
 function _jrnRow(j){ var badge=j.bk?j.method:(j.wf?(j.epn+" ep"+(j.miss.length?(" · "+j.miss.length+" unmapped"):"")):(j.agg?"agg":j.cid));
   var tt=j.ents.join(" → ")+(j.feN?(" · reaches "+j.feN+" frontend piece(s) over the bridge"):"")+(j.bk?(" · "+j.writes+" write(s) · "+j.reads+" read(s)"+(j.gates?(" · "+j.gates+" gate(s)"):"")+(j.disps?(" · "+j.disps+" dispatch(es)"):"")+" · ordered by hops"):"")+(j.wf?(" · "+(j.note||"curated user workflow")+(j.miss.length?(" · unmapped: "+j.miss.join(", ")):"")):"");
   return '<div class="jrnrow'+(HL.jr===j.cid?" on":"")+'" data-jr="'+j.cid+'" title="'+tt.replace(/"/g,"&quot;")+'">'
-  +(j.wf&&j.level&&_JRNLEVELS[j.level]?('<span class="jrnlvl l'+j.level+'" title="tier '+j.level+' · '+_JRNLEVELS[j.level].label+'">'+_JRNLEVELS[j.level].ico+'</span>'):"")
+  +(j.wf&&j.level&&_JRNLEVELS[j.level]?('<span class="jrnlvl l'+j.level+'" title="level '+j.level+' · '+_JRNLEVELS[j.level].label+'">'+_JRNLEVELS[j.level].ico+'</span>'):"")
   +'<span class="jrnname">'+(j.name||j.cid)+'</span><b>'+badge+'</b><span class="jrncorp">'+j.corpus+'</span>'
   +(j.feN?('<span class="jrnfe">'+svgInline("component", KINDCOL.component, 10)+j.feN+'</span>'):"")
   +'<span class="jrnn">'+j.ents.length+' ents</span></div>'; }
@@ -2571,10 +2572,11 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
   if(!vis.length) return h+'<div class="jrnnone" style="padding:8px 7px">no '+sel+' journeys for the included entities</div>';
   if(sel==="wf"){                                              // WORKFLOWS group by DEV-ONBOARDING LEVEL (operator): a new dev reads ①→②→③ top-down
     var byLvl={}; vis.forEach(function(j){ var L=j.level||99; (byLvl[L]=byLvl[L]||[]).push(j); });
+    h+='<div class="jrnlede">a learning ladder — start at the top and work down. click a level to collapse it · middle-click to focus just that level.</div>';
     Object.keys(byLvl).map(Number).sort(function(a,b){ return a-b; }).forEach(function(L){
-      var m=_JRNLEVELS[L]||{label:"other",hint:"unleveled",ico:_lvlBars(0)}, key="lvl"+L, cl=!!window.__uniJrnCollapse[key];
-      h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+'"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span>'+m.label+' · '+byLvl[L].length+'</div>';
-      if(!cl) byLvl[L].forEach(function(j){ h+=_jrnRow(j); });   // curated order within a tier — never re-sorted
+      var m=_JRNLEVELS[L]||{label:"other",hint:"unleveled — no level assigned",ico:_lvlBars(0)}, key="lvl"+L, cl=!!window.__uniJrnCollapse[key];
+      h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+' — middle-click to focus"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span><span class="jglvlnm">'+m.label+'</span><b class="jglvln">'+byLvl[L].length+'</b><span class="jglvlhint">'+m.hint+'</span></div>';
+      if(!cl) byLvl[L].forEach(function(j){ h+=_jrnRow(j); });   // curated order within a level — never re-sorted
     });
     return h;
   }
@@ -2592,7 +2594,15 @@ function _jrnPaint(p){ if(!window.__uniJrnKind) window.__uniJrnKind=((window.GAB
     c.onmousedown=function(ev){ if(ev.button===1) ev.preventDefault(); }; });   // no autoscroll on the wheel button
   p.querySelectorAll(".jrnkindtabs button").forEach(function(b){ b.onclick=function(){ window.__uniJrnKind=b.getAttribute("data-jk"); _jrnPaint(p); }; });
   p.querySelectorAll(".jgcl").forEach(function(g){ g.onclick=function(){ var e=g.getAttribute("data-ge"); if(window.__uniJrnCollapse[e]) delete window.__uniJrnCollapse[e]; else window.__uniJrnCollapse[e]=1; _jrnPaint(p); }; });
+  p.querySelectorAll(".jglvl").forEach(function(g){                                    // middle-click a LEVEL header = FOCUS just that level (mirror the entity solo — operator gap)
+    g.onauxclick=function(ev){ if(ev.button!==1) return; ev.preventDefault(); window.__uniJrnLvlSolo(g.getAttribute("data-ge")); _jrnPaint(p); };
+    g.onmousedown=function(ev){ if(ev.button===1) ev.preventDefault(); }; });          // no autoscroll on the wheel button
   p.querySelectorAll(".jrnrow").forEach(function(r){ r.onclick=function(){ __uniJrnStart(r.getAttribute("data-jr")); }; }); }
+window.__uniJrnLvlSolo=function(key){ var keys={}; _jrnCollect().forEach(function(j){ if(j.wf) keys["lvl"+(j.level||99)]=1; }); keys=Object.keys(keys);
+  var others=keys.filter(function(k){ return k!==key; });
+  var soloed=others.length && others.every(function(k){ return window.__uniJrnCollapse[k]; }) && !window.__uniJrnCollapse[key];
+  keys.forEach(function(k){ delete window.__uniJrnCollapse[k]; });                       // clear, then collapse the rest (repeat middle-click = restore all)
+  if(!soloed) others.forEach(function(k){ window.__uniJrnCollapse[k]=1; }); };
 window.__uniJrnSolo=function(e){ var all=Object.keys(_jrnTouch()); var only=all.length&&all.every(function(x){ return x===e||window.__uniJrnExcl[x]; })&&!window.__uniJrnExcl[e];
   window.__uniJrnExcl={}; if(!only) all.forEach(function(x){ if(x!==e) window.__uniJrnExcl[x]=1; }); };   // already solo → middle-click again restores all
 window.__uniJrnToggle=function(){ var p=document.getElementById("jrn"); if(!p) return;
