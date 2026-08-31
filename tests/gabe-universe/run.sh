@@ -891,8 +891,8 @@ check('function _commitCollect()' in page and '["commit","commits"]' in page and
       "COMMIT journeys (operator): each recent commit is a journey KIND — window.GABE_COMMITS → _commitCollect → the 'commits' tab, grouped by date bucket, walked like any journey")
 check('return !!_fnById(id);' in page and 'commit:true, corpora:{commit:1}' in page,
       "a commit-journey's carriers are only nodes STILL on the map (a touched id that no longer resolves is dropped — honest coverage view)")
-check('window.__uniRenderTierIcons=function' in page and 'window.__uniSetTierIcoSet=function' in page and 'data-grp="tierIco"' in page and 'var _TICO={' in page and 'function _tierIcoPill()' in page and 'body.insertAdjacentHTML("beforeend", _tierIcoPill())' in page,
-      "TIER ICON SETS (operator): the header T0–T3 buttons wear a switchable icon set (labels/bars/dots/layers/grid); the switcher sits in the VISIBLE config body beside WIRE VIEW (__uniAddWireView), not the hidden connections pane")
+check('window.__uniRenderTierIcons=function' in page and 'var _TICO={' in page and 'window.__uniTierIcoSet="grid";' in page and 'function _tierIcoPill()' not in page and 'data-grp="tierIco"' not in page,
+      "TIER ICONS SETTLED (operator): the header T0–T3 buttons wear the DETAIL GRID set everywhere; the switcher UI is retired (no config control, no other sets)")
 check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOpen' in page and 'COLLAPSED by default' in page,
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
@@ -1181,16 +1181,17 @@ const { chromium } = require(process.argv[3]);
     // three MIDDLE-SECTION refinements (operator): tier-icon set switch · collapsed entity picker · level info icons
     var ui3=null; try{
       var _t3=function(){ return document.querySelector('#tiersel button[data-tier="3"]'); };
-      var _txt=_t3()?_t3().textContent.trim():"";                          // default 'labels' set → "T3" text
-      window.__uniSetTierIcoSet('bars'); var _svg=!!(_t3()&&_t3().querySelector('svg'));   // a set switch → an icon
-      window.__uniSetTierIcoSet('labels'); var _back=((_t3()?_t3().textContent.trim():"")==="T3");
+      if(window.__uniRenderTierIcons) window.__uniRenderTierIcons();        // SETTLED: grid everywhere, no switcher
+      var _grid=(window.__uniTierIcoSet==="grid"), _gsvg=!!(_t3()&&_t3().querySelector('svg')),   // T3 wears the grid icon (an svg, not a T-label)
+          _t0svg=(document.querySelector('#tiersel button[data-tier="0"]')||{}).querySelector&&document.querySelector('#tiersel button[data-tier="0"]').querySelector('svg'),
+          _noSwitcher=!document.getElementById('tiericogrp');
       window.__uniJrnKind='wf'; window.__uniJrnEntOpen=false; _jrnPaint(document.getElementById('jrn'));
       var _collapsed=document.querySelectorAll('#jrn .jrnent').length;     // COLLAPSED default → 0 chips
       window.__uniJrnEntOpen=true; _jrnPaint(document.getElementById('jrn'));
       var _expanded=document.querySelectorAll('#jrn .jrnent').length;      // expanded → chips
       window.__uniJrnEntOpen=false; _jrnPaint(document.getElementById('jrn'));
       var _infos=[].map.call(document.querySelectorAll('#jrn .jglvlinfo'), function(i){ return (i.getAttribute('title')||'').indexOf('Classified here:')===0; });
-      ui3={ tierSwitch:(_txt==="T3" && _svg && _back), entCollapse:(_collapsed===0 && _expanded>0),
+      ui3={ tierGridSettled:(_grid && _gsvg && !!_t0svg && _noSwitcher), entCollapse:(_collapsed===0 && _expanded>0),
             infoIcons:_infos.length, infoHaveVars:_infos.every(Boolean) }; }catch(e){ ui3={err:String(e)}; }
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
@@ -1222,7 +1223,7 @@ const { chromium } = require(process.argv[3]);
     && cm.walked && cm.walked.mode==='journey' && cm.walked.steps>0;
   // the 3 middle-section refinements behave: tier-icon set switch (text↔svg↔back), entity picker
   // collapsed-by-default (0 chips → expands), and one classification info icon per level.
-  const u3=r.ui3, ui3Ok = u3 && !u3.err && u3.tierSwitch===true && u3.entCollapse===true && u3.infoIcons>=3 && u3.infoHaveVars===true;
+  const u3=r.ui3, ui3Ok = u3 && !u3.err && u3.tierGridSettled===true && u3.entCollapse===true && u3.infoIcons>=3 && u3.infoHaveVars===true;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
   else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
