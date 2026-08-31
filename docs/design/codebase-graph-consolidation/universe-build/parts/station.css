@@ -35,6 +35,7 @@
   .tiersel button{ font:inherit; font-size:11px; font-weight:700; letter-spacing:.03em; color:var(--muted); background:transparent; border:0; border-radius:6px; padding:3px 9px; cursor:pointer; line-height:1.3; }
   .tiersel button:hover{ color:var(--ink); background:var(--hov-bg); }
   .tiersel button.on{ color:#fff; background:var(--accent); }
+  .tiersel button svg{ display:block; }   /* the tier button may wear an icon set instead of the T-label (operator) */
   /* floating restore tab, shown only while the nav is collapsed */
   .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
     width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }
@@ -138,6 +139,16 @@
   #jrn .jgcl .jcar{ display:inline-flex; transition:transform .12s; }
   #jrn .jgcl.cl .jcar{ transform:rotate(-90deg); }
   #jrn .jrnenthint{ font:italic 400 10px/1.4 var(--font-ui); color:var(--muted); padding:1px 7px 8px; }
+  /* the ENTITY picker is COLLAPSED behind a one-line toggle (operator) */
+  #jrn .jrnenttog{ display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 7px; margin:1px 0 2px;
+    font:700 9.5px/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border-radius:6px; }
+  #jrn .jrnenttog:hover{ background:var(--hov-bg); color:var(--ink); }
+  #jrn .jrnenttog .jcar{ display:inline-flex; transition:transform .12s; }
+  #jrn .jrnenttog:not(.open) .jcar{ transform:rotate(-90deg); }
+  #jrn .jrnenttog b{ color:var(--ink); font-weight:700; }  #jrn .jrnenttog b.hid{ color:var(--accent); }
+  /* the classification INFO icon on a level header (operator) — hover shows what puts a journey here */
+  #jrn .jglvlinfo{ display:inline-flex; align-items:center; color:var(--muted); cursor:help; opacity:.65; }
+  #jrn .jglvlinfo:hover{ color:var(--accent); opacity:1; }
   #jrn .jrnentgrid{ display:flex; flex-wrap:wrap; gap:7px; padding:0 6px 6px; }
   #jrn .jrnent{ display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-ui); color:var(--ink); border:1.5px solid var(--ec); border-radius:999px; padding:5px 10px; cursor:pointer; background:transparent; }
   #jrn .jrnent:hover{ background:var(--hov-bg); }

@@ -891,6 +891,12 @@ check('function _commitCollect()' in page and '["commit","commits"]' in page and
       "COMMIT journeys (operator): each recent commit is a journey KIND — window.GABE_COMMITS → _commitCollect → the 'commits' tab, grouped by date bucket, walked like any journey")
 check('return !!_fnById(id);' in page and 'commit:true, corpora:{commit:1}' in page,
       "a commit-journey's carriers are only nodes STILL on the map (a touched id that no longer resolves is dropped — honest coverage view)")
+check('window.__uniRenderTierIcons=function' in page and 'window.__uniSetTierIcoSet=function' in page and 'data-grp="tierIco"' in page and 'var _TICO={' in page and 'function _tierIcoPill()' in page,
+      "TIER ICON SETS (operator): the header T0–T3 buttons wear a switchable icon set (labels/bars/dots/layers/grid); the switcher lives in the config panel's connections workbench")
+check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOpen' in page and 'COLLAPSED by default' in page,
+      "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
+check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
+      "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -1172,9 +1178,23 @@ const { chromium } = require(process.argv[3]);
         walked={ mode:(typeof WALK!=='undefined'?WALK.mode:null), steps:(typeof WALK!=='undefined'?WALK.steps.length:0) };
         if(window.__uniHLClear) __uniHLClear(); }
       cm={ n:_cmj.length, carriersOnMap:_cok, tab:_cgh.indexOf('coverage journey')>=0, walked:walked }; }catch(e){ cm={err:String(e)}; }
+    // three MIDDLE-SECTION refinements (operator): tier-icon set switch · collapsed entity picker · level info icons
+    var ui3=null; try{
+      var _t3=function(){ return document.querySelector('#tiersel button[data-tier="3"]'); };
+      var _txt=_t3()?_t3().textContent.trim():"";                          // default 'labels' set → "T3" text
+      window.__uniSetTierIcoSet('bars'); var _svg=!!(_t3()&&_t3().querySelector('svg'));   // a set switch → an icon
+      window.__uniSetTierIcoSet('labels'); var _back=((_t3()?_t3().textContent.trim():"")==="T3");
+      window.__uniJrnKind='wf'; window.__uniJrnEntOpen=false; _jrnPaint(document.getElementById('jrn'));
+      var _collapsed=document.querySelectorAll('#jrn .jrnent').length;     // COLLAPSED default → 0 chips
+      window.__uniJrnEntOpen=true; _jrnPaint(document.getElementById('jrn'));
+      var _expanded=document.querySelectorAll('#jrn .jrnent').length;      // expanded → chips
+      window.__uniJrnEntOpen=false; _jrnPaint(document.getElementById('jrn'));
+      var _infos=[].map.call(document.querySelectorAll('#jrn .jglvlinfo'), function(i){ return (i.getAttribute('title')||'').indexOf('Classified here:')===0; });
+      ui3={ tierSwitch:(_txt==="T3" && _svg && _back), entCollapse:(_collapsed===0 && _expanded>0),
+            infoIcons:_infos.length, infoHaveVars:_infos.every(Boolean) }; }catch(e){ ui3={err:String(e)}; }
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
-      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn, lvl, cm }; });
+      stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn, lvl, cm, ui3 }; });
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1200,9 +1220,12 @@ const { chromium } = require(process.argv[3]);
   // the map, the commit tab renders, and walking one runs the shared walk.
   const cm=r.cm, commitsOk = cm && !cm.err && cm.n>0 && cm.carriersOnMap===true && cm.tab===true
     && cm.walked && cm.walked.mode==='journey' && cm.walked.steps>0;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk;
+  // the 3 middle-section refinements behave: tier-icon set switch (text↔svg↔back), entity picker
+  // collapsed-by-default (0 chips → expands), and one classification info icon per level.
+  const u3=r.ui3, ui3Ok = u3 && !u3.err && u3.tierSwitch===true && u3.entCollapse===true && u3.infoIcons>=3 && u3.infoHaveVars===true;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

@@ -195,6 +195,7 @@
   .tiersel button{ font:inherit; font-size:11px; font-weight:700; letter-spacing:.03em; color:var(--muted); background:transparent; border:0; border-radius:6px; padding:3px 9px; cursor:pointer; line-height:1.3; }
   .tiersel button:hover{ color:var(--ink); background:var(--hov-bg); }
   .tiersel button.on{ color:#fff; background:var(--accent); }
+  .tiersel button svg{ display:block; }   /* the tier button may wear an icon set instead of the T-label (operator) */
   /* floating restore tab, shown only while the nav is collapsed */
   .navshow{ position:fixed; left:8px; top:calc(var(--topbarh) + 10px); z-index:60; display:none; align-items:center; justify-content:center;
     width:32px; height:32px; color:var(--ink); background:var(--panel); border:1px solid var(--line); border-radius:8px; cursor:pointer; box-shadow:0 4px 14px #0006; }
@@ -298,6 +299,16 @@
   #jrn .jgcl .jcar{ display:inline-flex; transition:transform .12s; }
   #jrn .jgcl.cl .jcar{ transform:rotate(-90deg); }
   #jrn .jrnenthint{ font:italic 400 10px/1.4 var(--font-ui); color:var(--muted); padding:1px 7px 8px; }
+  /* the ENTITY picker is COLLAPSED behind a one-line toggle (operator) */
+  #jrn .jrnenttog{ display:flex; align-items:center; gap:6px; cursor:pointer; padding:6px 7px; margin:1px 0 2px;
+    font:700 9.5px/1.3 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--muted); border-radius:6px; }
+  #jrn .jrnenttog:hover{ background:var(--hov-bg); color:var(--ink); }
+  #jrn .jrnenttog .jcar{ display:inline-flex; transition:transform .12s; }
+  #jrn .jrnenttog:not(.open) .jcar{ transform:rotate(-90deg); }
+  #jrn .jrnenttog b{ color:var(--ink); font-weight:700; }  #jrn .jrnenttog b.hid{ color:var(--accent); }
+  /* the classification INFO icon on a level header (operator) — hover shows what puts a journey here */
+  #jrn .jglvlinfo{ display:inline-flex; align-items:center; color:var(--muted); cursor:help; opacity:.65; }
+  #jrn .jglvlinfo:hover{ color:var(--accent); opacity:1; }
   #jrn .jrnentgrid{ display:flex; flex-wrap:wrap; gap:7px; padding:0 6px 6px; }
   #jrn .jrnent{ display:inline-flex; align-items:center; gap:6px; font:600 11px/1 var(--font-ui); color:var(--ink); border:1.5px solid var(--ec); border-radius:999px; padding:5px 10px; cursor:pointer; background:transparent; }
   #jrn .jrnent:hover{ background:var(--hov-bg); }
@@ -2573,18 +2584,26 @@ var _JCHEV='<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="
 function _lvlBars(n){ var b=''; for(var i=0;i<3;i++){ var on=i<n, h=6+i*4, y=20-h;
     b+='<rect x="'+(3+i*6)+'" y="'+y+'" width="4" height="'+h+'" rx="1" '+(on?'fill="currentColor"':'fill="currentColor" opacity="0.22"')+'/>'; }
   return '<svg viewBox="0 0 24 24" width="13" height="13">'+b+'</svg>'; }
+// info glyph (ⓘ) — the classification explainer per level header, hover shows `vars` (legend law: word on hover)
+var _JINFO='<svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="16" y2="12"/><line x1="12" x2="12.01" y1="8" y2="8"/></svg>';
 var _JRNLEVELS={
-  1:{label:"Orientation",  hint:"get your bearings — how you get in, how data flows out", ico:_lvlBars(1)},
-  2:{label:"Core",         hint:"the critical flows the app exists for", ico:_lvlBars(2)},
-  3:{label:"Specialized",  hint:"the deep end — AI, GDPR, config, cross-cutting edges", ico:_lvlBars(3)} };
+  1:{label:"Orientation",  hint:"get your bearings — how you get in, how data flows out", ico:_lvlBars(1),
+     vars:"Classified here: entry + read paths — auth/setup and browsing; low or no writes; the foundational entities you meet first."},
+  2:{label:"Core",         hint:"the critical flows the app exists for", ico:_lvlBars(2),
+     vars:"Classified here: the load-bearing write-loops — the central create/update flows the app exists for; moderate-to-high writes across the domain."},
+  3:{label:"Specialized",  hint:"the deep end — AI, GDPR, config, cross-cutting edges", ico:_lvlBars(3),
+     vars:"Classified here: the edges — AI/streaming, GDPR/account, config/settings, and cross-cutting or external-spend flows."} };
 function _jrnKindOf(j){ return j.wf?"wf":(j.commit?"commit":(j.bk?"bk":(j.e2e?"e2e":(j.agg?"agg":"ent")))); }   // workflows · commits · backend · then the test kinds (e2e > agg > by-entity)
 function _jrnTouch(){ var c={}; _jrnCollect().forEach(function(j){ var s={}; j.ents.forEach(function(e){ if(!s[e]){ s[e]=1; c[e]=(c[e]||0)+1; } }); }); return c; }   // journeys TOUCHING each entity (span) — ALL entities, not just group heads
 function _jrnVisible(j){ if(j.wf && !j.ents.length) return true;                                // an ALL-UNMAPPED workflow has no span — it stays visible so its 'unmapped' badge can say so
   return j.ents.some(function(e){ return !window.__uniJrnExcl[e]; }); }   // SPAN filter: a journey shows iff its span touches ≥1 INCLUDED entity
 function _jrnKindCount(k){ return _jrnCollect().filter(function(j){ return _jrnKindOf(j)===k && _jrnVisible(j); }).length; }
-function _jrnChipsHTML(){ var c=_jrnTouch();
-  var h='<div class="jrnenthint">click an entity to drop it from the filter · middle-click = only that one</div><div class="jrnentgrid">';
-  Object.keys(c).sort().forEach(function(e){ var off=!!window.__uniJrnExcl[e];
+function _jrnChipsHTML(){ var c=_jrnTouch(); var ks=Object.keys(c).sort();   // COLLAPSED by default (operator): all-at-once was too much — tuck the picker behind a toggle
+  var nHid=ks.filter(function(e){ return window.__uniJrnExcl[e]; }).length, nShown=ks.length-nHid, open=!!window.__uniJrnEntOpen;
+  var h='<div class="jrnenttog'+(open?" open":"")+'" id="jrnEntTog" title="entity filter — click to '+(open?"collapse":"expand")+'"><span class="jcar">'+_JCHEV+'</span>entities · <b>'+nShown+'</b> shown'+(nHid?(' · <b class="hid">'+nHid+'</b> hidden'):"")+'</div>';
+  if(!open) return h;                                        // collapsed → just the one-line toggle
+  h+='<div class="jrnenthint">click an entity to drop it from the filter · middle-click = only that one</div><div class="jrnentgrid">';
+  ks.forEach(function(e){ var off=!!window.__uniJrnExcl[e];
     h+='<span class="jrnent'+(off?" off":"")+'" data-e="'+e+'" style="--ec:'+(ENT[e]||"#888")+'" title="'+c[e]+' journey(s) touch '+e+'"><i></i>'+e+'<b>'+c[e]+'</b></span>'; });
   return h+'</div>'; }
 function _jrnTabsHTML(){ var sel=window.__uniJrnKind;
@@ -2598,7 +2617,7 @@ function _jrnGroupsHTML(){ var sel=window.__uniJrnKind, bySpan=function(a,b){ re
     h+='<div class="jrnlede">a learning ladder — start at the top and work down. click a level to collapse it · middle-click to focus just that level.</div>';
     Object.keys(byLvl).map(Number).sort(function(a,b){ return a-b; }).forEach(function(L){
       var m=_JRNLEVELS[L]||{label:"other",hint:"unleveled — no level assigned",ico:_lvlBars(0)}, key="lvl"+L, cl=!!window.__uniJrnCollapse[key];
-      h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+' — middle-click to focus"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span><span class="jglvlnm">'+m.label+'</span><b class="jglvln">'+byLvl[L].length+'</b><span class="jglvlhint">'+m.hint+'</span></div>';
+      h+='<div class="jrngrp jgcl jglvl'+(cl?" cl":"")+'" data-ge="'+key+'" title="'+m.hint+' — middle-click to focus"><span class="jcar">'+_JCHEV+'</span><span class="jglvlico">'+m.ico+'</span><span class="jglvlnm">'+m.label+'</span><b class="jglvln">'+byLvl[L].length+'</b><span class="jglvlinfo" title="'+String(m.vars||"").replace(/"/g,"&quot;")+'">'+_JINFO+'</span><span class="jglvlhint">'+m.hint+'</span></div>';
       if(!cl) byLvl[L].forEach(function(j){ h+=_jrnRow(j); });   // curated order within a level — never re-sorted
     });
     return h;
@@ -2620,6 +2639,7 @@ function _jrnPaint(p){ if(!window.__uniJrnKind) window.__uniJrnKind=((window.GAB
   var js=_jrnCollect();
   var _nt=js.filter(function(j){ return !j.bk&&!j.wf; }).length, _nb=js.filter(function(j){ return j.bk; }).length, _nw=js.filter(function(j){ return j.wf; }).length;
   p.innerHTML='<div class="jrnhd">journeys · '+_nw+' workflow(s) · '+_nb+' backend chain(s) · '+_nt+' cross-entity test(s)</div>'+_jrnChipsHTML()+_jrnTabsHTML()+'<div class="jrnlist">'+_jrnGroupsHTML()+'</div>';
+  var _et=p.querySelector("#jrnEntTog"); if(_et) _et.onclick=function(){ window.__uniJrnEntOpen=!window.__uniJrnEntOpen; _jrnPaint(p); };   // COLLAPSE/expand the entity picker (operator)
   p.querySelectorAll(".jrnent").forEach(function(c){ c.onclick=function(){ var e=c.getAttribute("data-e"); if(window.__uniJrnExcl[e]) delete window.__uniJrnExcl[e]; else window.__uniJrnExcl[e]=1; _jrnPaint(p); };
     c.onauxclick=function(ev){ if(ev.button!==1) return; ev.preventDefault(); window.__uniJrnSolo(c.getAttribute("data-e")); _jrnPaint(p); };   // middle-click = SOLO this entity (operator)
     c.onmousedown=function(ev){ if(ev.button===1) ev.preventDefault(); }; });   // no autoscroll on the wheel button
@@ -3454,7 +3474,8 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
     + '<div class="grplbl" style="margin-top:9px" title="the DATA-ACCESS connectors (Option A): endpoint→model ROLLUP (the direct call-tree shortcut, method-coloured, hidden by default) vs the true function→model ACCESS wire (role-coloured when its gradient is on).">DATA-ACCESS</div>'
     + wireRow("rollup")+wireRow("access")+wireRow2("access")+'</div>'
-    + bandCfg();
+    + bandCfg()
+    + _tierIcoPill();                                        // the header T0–T3 icon-set switcher (operator)
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -3478,6 +3499,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
       if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
       try{ applyCfg(grp); }catch(err){} }); }); });
+  rt.querySelectorAll('.pill[data-grp="tierIco"] button').forEach(function(b){ b.addEventListener("click", function(){ window.__uniSetTierIcoSet(b.getAttribute("data-v")); }); });   // TIER ICON set switcher (operator)
   // transport speed is a POSITION LADDER now — wired where the Transports pane is assembled below
   var _rAF=null, redraw=function(){ if(_rAF) return; _rAF=requestAnimationFrame(function(){ _rAF=null; try{ updateConnectors(); }catch(e){} }); };
   rt.querySelectorAll('.pill[data-grp="focusRest"] button').forEach(function(b){ b.addEventListener("click", function(){
@@ -3832,6 +3854,26 @@ window.__uniFeClassToggle=function(fc){ if(!fc) return; var s=window.__uniFeClas
   try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
 window.__uniSetFoldHelpers=function(on){ window.__uniFoldHelpers=(on!==false);   // the old per-kind "critical", now ONE toggle: fold single-caller helpers
   try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){} };
+/* TIER ICONS (operator): the header T0–T3 buttons can wear an ICON SET instead of the text labels.
+   Several sets ship; the choice lives in the config panel (the connections workbench, beside the
+   wire-view options). The LEVEL reads from the icon's ramp/fill; the T-number stays on hover (title=). */
+function _tsvg(inner){ return '<svg viewBox="0 0 24 24" width="13" height="13">'+inner+'</svg>'; }
+var _TICO={
+  labels:function(t){ return "T"+t; },
+  bars:function(t){ var b=''; for(var i=0;i<4;i++){ var h=4+i*3.6, y=20-h; b+='<rect x="'+(3+i*4.6)+'" y="'+y+'" width="3" height="'+h+'" rx="0.8" fill="currentColor"'+(i<=t?'':' opacity="0.25"')+'/>'; } return _tsvg(b); },
+  dots:function(t){ var b=''; for(var i=0;i<4;i++){ b+='<circle cx="'+(4.5+i*5)+'" cy="12" r="1.9" fill="currentColor"'+(i<=t?'':' opacity="0.25"')+'/>'; } return _tsvg(b); },
+  layers:function(t){ var n=t+1, b=''; for(var i=0;i<n;i++){ var y=18.5-i*4.4; b+='<rect x="4" y="'+y+'" width="16" height="3.1" rx="1.3" fill="currentColor" opacity="'+(0.5+i*0.16).toFixed(2)+'"/>'; } return _tsvg(b); },
+  grid:function(t){ var n=t+1, b='', step=16/n, r=Math.max(0.85, 2.6-n*0.32); for(var y=0;y<n;y++) for(var x=0;x<n;x++){ b+='<circle cx="'+(4+step*(x+0.5)).toFixed(1)+'" cy="'+(4+step*(y+0.5)).toFixed(1)+'" r="'+r.toFixed(2)+'" fill="currentColor"/>'; } return _tsvg(b); } };
+var _TICO_ORDER=[["labels","T0…T3 labels"],["bars","rising bars"],["dots","filled dots"],["layers","stacked layers"],["grid","detail grid"]];
+window.__uniTierIcoSet=window.__uniTierIcoSet||"labels";
+window.__uniRenderTierIcons=function(){ var fn=_TICO[window.__uniTierIcoSet]||_TICO.labels;
+  var g=document.getElementById("tiersel"); if(g) [].forEach.call(g.querySelectorAll("button"), function(b){ b.innerHTML=fn(+b.getAttribute("data-tier")); });
+  var fp=document.querySelector('.pill[data-grp="tier"]'); if(fp) [].forEach.call(fp.querySelectorAll("button"), function(b){ b.innerHTML=fn(+b.getAttribute("data-v")); }); };   // the fleet tier pill mirrors the header
+window.__uniSetTierIcoSet=function(s){ if(!_TICO[s]) s="labels"; window.__uniTierIcoSet=s; window.__uniRenderTierIcons();
+  var pill=document.querySelector('.pill[data-grp="tierIco"]'); if(pill) [].forEach.call(pill.querySelectorAll("button"), function(b){ b.classList.toggle("on", b.getAttribute("data-v")===s); }); };
+function _tierIcoPill(){ var s='<div class="grp"><div class="grplbl" title="the header T0–T3 tier buttons wear this icon set — the level reads from the ramp; the T-number stays on hover">TIER ICONS</div><div class="pill" data-grp="tierIco">';
+  _TICO_ORDER.forEach(function(o){ s+='<button data-v="'+o[0]+'"'+(o[0]===window.__uniTierIcoSet?' class="on"':'')+' title="'+o[1]+'">'+_TICO[o[0]](3)+'</button>'; });   // preview each set with its T3 glyph
+  return s+'</div></div>'; }
 window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel");
   if(g) [].forEach.call(g.querySelectorAll("button"), function(b){ b.classList.toggle("on", (+b.getAttribute("data-tier"))===window.__uniTier); });
   var fp=document.querySelector('.pill[data-grp="tier"]');   // the fleet-side tier pill mirrors the header
@@ -3845,7 +3887,8 @@ window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel");
     document.addEventListener("keydown", function(e){                                   // keys 1–4 select a tier (not while typing)
       if(e.key>="1" && e.key<="4" && !e.metaKey && !e.ctrlKey && !e.altKey
          && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.key-1); e.preventDefault(); } });
-    if(window.__uniTierSyncUI) __uniTierSyncUI(); };
+    if(window.__uniTierSyncUI) __uniTierSyncUI();
+    if(window.__uniRenderTierIcons) __uniRenderTierIcons(); };   // wear the chosen tier icon set from boot (operator)
   if(document.readyState!=="loading") _init(); else document.addEventListener("DOMContentLoaded", _init); })();
 var _SOLO_REL={calls:1,renders:1,uses:1,"uses-hook":1,"uses-store":1,fecall:1,imports:1,handler:1,"reads":1};
 window.__uniComputeSolo=function(){ var callers={};
