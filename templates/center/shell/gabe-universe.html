@@ -1548,7 +1548,7 @@ function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }
   else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right
   else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)
-  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   // component CLASS badge (operator) — connector/container/leaf; view=screen icon, private=plain
+  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon
   grp.add(bubble(br));
   if(ENC.verts){ var vv=Math.min(8,Math.round(num(nodeVal("verts",n).raw))); if(vv>0) radarVerts(grp, br, vv); }   // N sphere vertices lit by a radar sweep = used-by
   if(ENC.glow){ var g=nodeVal("glow",n); if(g.r>0) grp.add(glowSprite(col, 14+g.r*22, 0.5)); }
@@ -3754,12 +3754,12 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
    DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
 window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444",BOOT:"#8a8f98"},
                      role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
-                     feclass:{connector:"#0ca678",container:"#8a8f98",leaf:"#c026d3"},   // component CLASS badge (operator) — connector=data-in · container=compose · leaf=atom
+                     feclass:{connector:"#3b82f6",container:"#8a8f98",leaf:"#22c55e",private:"#8794ab"},   // component CLASS badge (operator palette) — connector=blue data-in · container=gray compose · leaf=green atom · private=gray internal (pure-like)
                      count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row", BOOT:"boot — runs ONCE at app startup (the lifespan seeder), not a request verb" },
   role:{ accessor:"touches the store — reads/writes a DB table or a durable sink", caller:"orchestrates — calls other functions, no store of its own", gate:"guards — auth / consent / idempotency before the work runs", pure:"pure — computes from its inputs, no store, no callee that writes" },
-  feclass:{ connector:"connector — wires data into a view (the FE's controller)", container:"container — composes children, the screen's structure", leaf:"leaf — a shared, reused atom (Button, Chip…)" },
+  feclass:{ connector:"connector — wires data into a view (the FE's controller)", container:"container — composes children, the screen's structure", leaf:"leaf — a shared, reused atom (Button, Chip…)", private:"private — internal to one view, not shared or reused" },
   count:{ "*":"nested-only schemas folded into this one — composition helpers no endpoint or function names; double-click the parent to reveal them" } };
 /* connection KINDS (REL2KIND buckets) — shown on the link card + the connectors legend */
 window.__CONNDESC={ fk:"foreign-key data coupling", calls:"a function / handler call", imports:"a component / module import", bridge:"a frontend fetch reaching an API", rollup:"endpoint→model — the call-tree ROLLUP (reaches this table through its functions)", access:"function→model — the TRUE data access (this fn reads/writes this table)" };
@@ -3777,7 +3777,8 @@ window.__badgeGlyph=function(c, kind, key){
   } else if(kind==="feclass"){
     if(key==='connector'){ c.moveTo(36,64); c.lineTo(76,64); c.moveTo(60,48); c.lineTo(80,64); c.lineTo(60,80); }   // data-in arrow (the FE's controller)
     else if(key==='container'){ c.moveTo(40,50); c.lineTo(88,50); c.moveTo(40,66); c.lineTo(88,66); c.moveTo(40,82); c.lineTo(88,82); }   // stacked layers (composes children)
-    else { c.rect(48,48,32,32); }                                                                                   // leaf = an atom brick (a shared, reused piece)
+    else if(key==='private'){ c.moveTo(64,34); c.lineTo(72,56); c.lineTo(94,64); c.lineTo(72,72); c.lineTo(64,94); c.lineTo(56,72); c.lineTo(34,64); c.lineTo(56,56); c.closePath(); }   // a compact star (internal / self-contained — the FE's "pure", gray)
+    else { c.moveTo(64,32); c.bezierCurveTo(93,46,93,84,64,98); c.bezierCurveTo(35,84,35,46,64,32); c.moveTo(64,40); c.lineTo(64,90); }   // leaf = an actual leaf + midrib (a shared, reused atom)
   } else {
     if(key==='GET'){ c.moveTo(64,34); c.lineTo(64,94); c.moveTo(46,78); c.lineTo(64,94); c.lineTo(82,78); }
     else if(key==='PUT'){ c.moveTo(64,94); c.lineTo(64,34); c.moveTo(46,50); c.lineTo(64,34); c.lineTo(82,50); }
@@ -4108,37 +4109,59 @@ window.__uniLegRef=function(){
   // off-field (stars); their example carries NO id → __uniSearchGo runs the search, which wakes ƒ + focuses.
   function _exNode(pred){ for(var i=0;i<nodes.length;i++){ if(pred(nodes[i])) return {label:nodes[i].label, id:nodes[i].id}; } return null; }
   function _fnPool(){ if(!window._FNNODES){ try{ if(typeof _buildFnData==="function") _buildFnData(); }catch(e){} } return window._FNNODES||[]; }
-  function _exKind(k){ if(k==="function"){ var p=_fnPool(); return p[0]?{label:p[0].label}:null; } return _exNode(function(n){ return n.kind===k; }); }
+  // types + functions ride off-field (Types / ƒ held off) and entities are clusters — derive their example by
+  // LABEL (no id) so __uniSearchGo runs the search, which WAKES the held layer / entity and focuses it.
+  function _exKind(k){ if(k==="function"){ var p=_fnPool(); return p[0]?{label:p[0].label}:null; }
+    if(k==="type"){ var t=(window._FETYPES||[]); return t[0]?{label:t[0].label}:null; }
+    if(k==="entity"){ var e=(typeof _ents!=="undefined"&&_ents.length)?_ents[0]:null; return e?{label:(window.__uniEntLabel?__uniEntLabel(e):e)}:null; }
+    return _exNode(function(n){ return n.kind===k; }); }
   function _exFc(fc){ return _exNode(function(n){ return n.kind==="component" && n.feClass===fc; }); }
   function _exMethod(m){ return _exNode(function(n){ return n.kind==="endpoint" && n.m && n.m.method===m; }); }
   function _exRole(r){ var p=_fnPool(); for(var i=0;i<p.length;i++){ if(p[i].role===r) return {label:p[i].label}; } return null; }
   function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-  function _exChip(ex){ if(!ex||!ex.label) return '<span class="lrno">enable ƒ to search</span>';
+  // a real example → a clickable chip; genuinely none (a count badge, or an absorbed kind) → an honest dash, not "enable ƒ"
+  function _exChip(ex){ if(!ex||!ex.label) return '<span class="lrno" title="no single element to point at — a marker/badge concept, not a searchable node">—</span>';
     return '<button class="lrex" data-s="'+_esc(ex.label)+'"'+(ex.id?(' data-id="'+_esc(ex.id)+'"'):'')+' title="find it in the graph">'+_esc(ex.label)+'</button>'; }
   function _badgeCanvas(kind,key){ return '<canvas class="lrbc" width="34" height="34" data-bk="'+kind+'" data-bkey="'+_esc(key)+'"></canvas>'; }
-  // a TYPE row: flag toggle · icon · name · description · example
-  function _typeRow(k){ var Kd=K[k]||{col:"#8794ab",type:k,usage:[0,""]};
+  // REPRESENTATIVE descriptions (operator): each says what the element IS / its ROLE in the app graph — not a
+  // toy usage count. Falls back to KINDS.usage only for a kind not listed here.
+  var _LRDESC={ route:"a URL page — one of the app's addressable screens",
+    component:"a UI building block — renders part of a screen",
+    hook:"reusable stateful logic shared across components",
+    type:"a TypeScript shape — the contract for data the UI passes around",
+    store:"shared client state — the frontend's data layer",
+    module:"a shared helper / utility imported across the frontend",
+    web:"a fetch call site — where a screen calls the API",
+    endpoint:"an HTTP route the API exposes",
+    "function":"backend logic — the code behind the endpoints",
+    schema:"a request / response body shape — the API's data contract",
+    model:"a database table — a persistent domain record",
+    external:"a table in another entity, reached by a foreign key",
+    entity:"a domain area — the cluster grouping one feature's elements" };
+  // a TYPE row: flag toggle · icon · name · description · example. noEx = a PARENT (its examples live on its
+  // sub-badges) — no header example, so a container type never borrows a child's node (operator: no overlap).
+  function _typeRow(k, noEx){ var Kd=K[k]||{col:"#8794ab",type:k,usage:[0,""]};
     var _st=(window.__uniKindState&&__uniKindState[k])||(k==="type"||k==="function"?"off":"all");
     var _on=(_st!=="off"); var ico=(typeof svgInline==="function")?svgInline(k, Kd.col, 18):"";
+    var _desc=_LRDESC[k]||((Kd.usage&&Kd.usage[1])||"");
     return '<div class="lrrow"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
       +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
-      +'<i>'+_esc((Kd.usage&&Kd.usage[1])||"")+'</i></div>'+_exChip(_exKind(k))+'</div>'; }
+      +'<i>'+_esc(_desc)+'</i></div>'+(noEx?'':_exChip(_exKind(k)))+'</div>'; }
   // a BADGE row (indented under its type): badge glyph · name · description · example
   function _badgeRow(kind,key,name,desc,ex){ return '<div class="lrrow lrb"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
       +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_exChip(ex)+'</div>'; }
   var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
   function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
-    ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return; h+=_typeRow(k);
-      if(k==="component" && hasFe){                                                    // the component CLASSES ride under it (the ⓘ popup, expanded here)
-        ["connector","container","leaf"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc)); });
-        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrplain" title="a plain cube — no badge"></span></span><div class="lrtx"><b>private</b><i>private — internal to one view, no badge</i></div>'+_exChip(_exFc("private"))+'</div>';
-      } });
+    ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return;
+      var _kids=(k==="component" && hasFe); h+=_typeRow(k, _kids);                      // component is a PARENT — no header example
+      if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc)); }); } });
     if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
       var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false);
       h+='<div class="lrrow"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_exChip(_exFc("view"))+'</div>'; }
     return h+'</div>'; }
   function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
-    ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return; h+=_typeRow(k);
+    ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return;
+      var _kids=(k==="endpoint"||k==="function"); h+=_typeRow(k, _kids);               // endpoint + function are PARENTS — no header example
       if(k==="endpoint"){ ["GET","POST","PUT","PATCH","DELETE","BOOT"].forEach(function(m){ h+=_badgeRow("method", m, m, (BD.method&&BD.method[m])||"", _exMethod(m)); }); }
       else if(k==="function"){ ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r)); }); }
       else if(k==="schema"){ h+=_badgeRow("count", "N", "fold count", (BD.count&&BD.count["*"])||"", null); } });
@@ -5125,14 +5148,14 @@ var _legSub="Defense";   // active sub-tab within Planet
    SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
    HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
 window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badgePopHide();
-  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf"]:["accessor","caller","gate","pure"];
+  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf","private"]:["accessor","caller","gate","pure"];
   var keys=key?[key]:allKeys;   // key given (the node's OWN badge) → single row; else the whole key
   var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
   var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":(kind==="feclass")?"component class":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":(kind==="feclass")?"component class — how each component is drawn":"function role — what it does with the data store");
   var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
   var html='<div class="bph">'+head+'</div>';
   keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+(kind==="count"?"N":k)+'</b><span>'+(desc[k]||desc["*"]||"")+'</span></div></div>'; });
-  if(kind==="feclass" && !key){ html+='<div class="bpnote">view — its own type row (the screen glyph) · private — a plain cube, no badge</div>'; } pop.innerHTML=html; document.body.appendChild(pop);
+  if(kind==="feclass" && !key){ html+='<div class="bpnote">view — its own type row (the screen glyph), not a badge</div>'; } pop.innerHTML=html; document.body.appendChild(pop);
   [].forEach.call(pop.querySelectorAll(".bpcv"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128); if(window.__badgeGlyph) window.__badgeGlyph(c, kind, cv.dataset.k); });
   var r=anchor.getBoundingClientRect();
   var left=Math.max(8, Math.min(window.innerWidth-pop.offsetWidth-8, r.left-4));

@@ -902,9 +902,9 @@ check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOp
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
       "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
-check('feclass:{connector:"#0ca678"' in page and 'function feclassBadge(fc)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
+check('feclass:{connector:"#3b82f6",container:"#8a8f98",leaf:"#22c55e",private:"#8794ab"}' in page and 'function feclassBadge(fc)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
       and '(it.fc==="view")?svgInline("screen",_COMPCOL,15)' in page,
-      "COMPONENT CLASS representation (operator): view wears the SCREEN glyph; connector/container/leaf get a bottom-right badge (shared method/role badge machinery); private stays a plain cube; the LEGEND renders the same (view screen + badge dots)")
+      "COMPONENT CLASS representation (operator palette): view=SCREEN glyph; connector=blue arrow · container=gray layers · leaf=green leaf · private=gray star — ALL FOUR classes carry a bottom-right badge now (private no longer plain)")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -972,8 +972,8 @@ check('["route","component","hook","type","store","module","web"]' in page and '
       "the FE legend group dropped the phantom screen row / kept the component-classes group / lost the View type row")
 check('(it.k==="component")?"feclass"' in page and 'the component classes (how each is drawn)' in page,
       "the Component (FE) legend row has no ⓘ badge-key dot (feclass)")
-check('kind==="feclass")?["connector","container","leaf"]' in page and '(kind==="feclass")?"component class"' in page,
-      "__badgePop does not handle the feclass kind (the component ⓘ popup would be empty)")
+check('kind==="feclass")?["connector","container","leaf","private"]' in page and '(kind==="feclass")?"component class"' in page,
+      "__badgePop does not list all FOUR feclass badges (connector/container/leaf/private) in the component ⓘ popup")
 check('view — its own type row' in page and '.badgepop .bpnote{' in page,
       "the feclass popup footer note (view = own type · private = plain) + its CSS are gone")
 # FEATURE B (operator): the legend header ⓘ opens a full graph-area REFERENCE (__uniLegRef) — every FE/BE type +
@@ -986,6 +986,12 @@ check('function _exNode(pred)' in page and 'function _exMethod(m)' in page and '
       "the reference derives examples from real loaded nodes (per kind/feClass/method) into clickable chips — gone")
 check('if(id && window.__uniGoto){ _close(); if(inp) inp.blur(); try{ __uniGoto(id); }catch(e){} return true; }' in page,
       "__uniSearchGo no longer prefers __uniGoto(id) (would reintroduce best-match ambiguity for example chips)")
+# reference refinements (operator): representative descriptions (_LRDESC) · PARENTs get no header example (noEx) ·
+# private is one of the FOUR badged classes in the loop · Type/Entity derive off-field examples · honest dash fallback.
+check('var _LRDESC={' in page and 'a URL page — one of the app' in page and 'backend logic — the code behind the endpoints' in page and "noEx?''" in page,
+      "the reference lost its representative _LRDESC descriptions or the parent no-example (noEx) suppression")
+check('["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass"' in page and 'if(k==="type"){ var t=(window._FETYPES' in page and 'if(k==="entity"){ var e=' in page and 'a marker/badge concept, not a searchable node' in page,
+      "private not in the reference badged loop / Type+Entity examples not derived / the honest-dash fallback is gone")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1225,7 +1231,7 @@ const { chromium } = require(process.argv[3]);
       cardOpen:document.body.classList.contains('panel-open'),
       stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn, lvl, cm, ui3 }; });
   // COMPONENT CLASS representation (operator) — a SEPARATE pass at T3 with a settle wait, since setTier
-  // triggers an async node rebuild: view=SCREEN glyph (no badge) · connector/container/leaf=cube+badge · private=plain cube.
+  // triggers an async node rebuild: view=SCREEN glyph (no badge) · connector/container/leaf/private=cube+badge (all four classes badged).
   await p.evaluate(() => { if (window.__uniSetTier) window.__uniSetTier(3); });
   await p.waitForTimeout(1600);
   const fcb = await p.evaluate(() => {
@@ -1235,7 +1241,7 @@ const { chromium } = require(process.argv[3]);
       return { screen:tex===billTex.screen, comp:tex===billTex.component, badge:bdg }; };
     const v=s('view'), cn=s('connector'), ct=s('container'), pv=s('private'), lf=s('leaf');
     return { view:!!(v&&v.screen&&!v.badge), connector:!!(cn&&cn.comp&&cn.badge), container:!!(ct&&ct.comp&&ct.badge),
-             leaf:!!(lf&&lf.comp&&lf.badge), priv:!!(pv&&pv.comp&&!pv.badge) };
+             leaf:!!(lf&&lf.comp&&lf.badge), priv:!!(pv&&pv.comp&&pv.badge) };
   }).catch(e => ({ err: String(e) }));
   // FOCUS/TIER regression (operator bug): a CLICK focuses TIGHT (focus-hide at the depth-1 default → a
   // small visible set), and a TIER press CLEARS the click focus (deterministic, no glow-flood carryover).
@@ -1270,6 +1276,14 @@ const { chromium } = require(process.argv[3]);
       conn:!![].find.call(ov.querySelectorAll('.lrsh'), h=>/CONNECTORS/.test(h.textContent)),
       planet:!![].find.call(ov.querySelectorAll('.lrsh'), h=>/FLEET/.test(h.textContent)),
       viewRow:!![].find.call(ov.querySelectorAll('.lrtx b'), x=>x.textContent==='View') };
+    // refinements (operator): PARENT rows (component/endpoint/function) carry NO header example; Type/Entity
+    // derive one (held-off → search wakes them); private is a BADGED class now; the "enable ƒ" text is gone.
+    const rowOf=(nm)=>[].find.call(ov.querySelectorAll('.lrrow'), r=>((r.querySelector('.lrtx b')||{}).textContent||'')===nm);
+    const hasEx=(nm)=>{ const r=rowOf(nm); return !!(r&&r.querySelector('.lrex')); };
+    const ref={ compNoEx:!hasEx('Component (FE)'), endpNoEx:!hasEx('API endpoint'), fnNoEx:!hasEx('Function ƒ'),
+      typeEx:hasEx('Type'), entityEx:hasEx('Entity (container)'),
+      privBadge:!!(rowOf('private')&&rowOf('private').querySelector('.lrbc')),
+      noEnableF:!/enable ƒ/.test(ov.innerHTML) };
     const chip=ov.querySelector('.lrex'); const s=chip&&chip.getAttribute('data-s'); if(chip) chip.click();
     const jump={ closed:!document.getElementById('uni-legref'), barVal:(document.getElementById('tsin')||{}).value,
       hlOn:(typeof HL!=='undefined'&&HL.on), hlMode:(typeof HL!=='undefined'&&HL.mode), s:s };
@@ -1277,7 +1291,7 @@ const { chromium } = require(process.argv[3]);
     const ov2=document.getElementById('uni-legref'); const f=ov2&&ov2.querySelector('.lrflag[data-flagk="endpoint"]');
     const before=(window.__uniKindState||{}).endpoint; if(f) f.click(); const after=(window.__uniKindState||{}).endpoint;
     const ov3=document.getElementById('uni-legref'); if(ov3) window.__uniLegRef();   // close so it never bleeds into later checks
-    return { open, jump, flag:{ before, after, rebuilt:!!ov3 } };
+    return { open, ref, jump, flag:{ before, after, rebuilt:!!ov3 } };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1307,7 +1321,7 @@ const { chromium } = require(process.argv[3]);
   // the 3 middle-section refinements behave: tier-icon set switch (text↔svg↔back), entity picker
   // collapsed-by-default (0 chips → expands), and one classification info icon per level.
   const u3=r.ui3, ui3Ok = u3 && !u3.err && u3.tierGridSettled===true && u3.entCollapse===true && u3.infoIcons>=3 && u3.infoHaveVars===true;
-  // component classes are visually distinct: view=screen glyph (no badge), connector/container/leaf=cube+badge, private=plain cube
+  // component classes are visually distinct: view=screen glyph (no badge), connector/container/leaf/private=cube+badge (all four badged)
   const fc=fcb, fcbOk = fc && !fc.err && fc.view===true && fc.connector===true && fc.container===true && fc.leaf===true && fc.priv===true;
   // a click focuses tight (focus mode, depth 1, small set) and a tier press CLEARS it → full graph, deterministic
   const focusOk = clickFocus && !clickFocus.err && clickFocus.ok && clickFocus.mode==='focus' && clickFocus.on===true
@@ -1319,6 +1333,7 @@ const { chromium } = require(process.argv[3]);
   // a chip fills the bar and focuses (HL focus mode) and closes the overlay; a flag hides its kind (all→off)
   const lr=legRef, legRefOk = lr && !lr.err && lr.open && lr.open.secs===2 && lr.open.chips>0 && lr.open.badges>0
     && lr.open.flags>0 && lr.open.conn && lr.open.planet && lr.open.viewRow
+    && lr.ref && lr.ref.compNoEx && lr.ref.endpNoEx && lr.ref.fnNoEx && lr.ref.typeEx && lr.ref.entityEx && lr.ref.privBadge && lr.ref.noEnableF
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk;

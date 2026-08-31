@@ -90,7 +90,7 @@ const clk = await p.evaluate(() => {
   return { hid, popRows, hasNote, foldFlipped: window.__uniFoldHelpers !== fh0 };
 });
 ck(clk.hid, 'clicking the View row toggles the view class (__uniFeClassState.view)');
-ck(clk.popRows === 3 && clk.hasNote, 'the component ⓘ popup lists connector/container/leaf + the view/private note', 'rows=' + clk.popRows + ' note=' + clk.hasNote);
+ck(clk.popRows === 4 && clk.hasNote, 'the component ⓘ popup lists connector/container/leaf/private (all badged) + the view note', 'rows=' + clk.popRows + ' note=' + clk.hasNote);
 ck(clk.foldFlipped, 'clicking the fold-helpers row flips __uniFoldHelpers');
 
 // the FLEET Entity pane carries the tier + fold + class pills (phase 3)

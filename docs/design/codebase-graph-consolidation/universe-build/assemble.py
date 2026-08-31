@@ -457,7 +457,7 @@ _FECLASS_BADGE = ("function feclassBadge(fc){ var cv=document.createElement('can
 assert 'function buildNode(n){' in text, "buildNode anchor missing (method badge)"
 text = text.replace('function buildNode(n){', _METHOD_BADGE + _ROLE_BADGE + _COUNT_BADGE + _FECLASS_BADGE + 'function buildNode(n){', 1)
 assert '  grp.add(ic);' in text, "grp.add(ic) anchor missing (method badge)"
-text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right\n  else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)\n  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   // component CLASS badge (operator) — connector/container/leaf; view=screen icon, private=plain', 1)
+text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right\n  else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)\n  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   // component CLASS badge (operator) — connector/container/leaf/private all badged; view wears the screen icon', 1)
 
 # ── batch 12: layer ruling (c) — sub groups carry the kind's OWN layer (endpoints·api·web·data);
 #    the hull hue-shift map gains the un-collapsed keys ──
@@ -680,7 +680,7 @@ text = text.replace(OLD_KROW, NEW_KROW, 1)
 # badge-key popup — the schema fold COUNT joins method/role (one row, a sample "5" drawn by the same glyph fn)
 OLD_BPKEYS = 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];'
 assert OLD_BPKEYS in text, "badge popup keys anchor missing"
-text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf"]:["accessor","caller","gate","pure"];', 1)
+text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf","private"]:["accessor","caller","gate","pure"];', 1)
 OLD_BPHEAD = 'var head=key?((kind==="method")?"HTTP method":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":"function role — what it does with the data store");'
 assert OLD_BPHEAD in text, "badge popup head anchor missing"
 text = text.replace(OLD_BPHEAD, 'var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":(kind==="feclass")?"component class":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":(kind==="feclass")?"component class — how each component is drawn":"function role — what it does with the data store");', 1)
@@ -692,7 +692,7 @@ text = text.replace(OLD_BPDESC, "html+='<div class=\"bprow\"><canvas class=\"bpc
 # private = a plain cube) — the 3 badged classes draw above, these two get a text note so the class key is complete.
 OLD_BPFILL = 'pop.innerHTML=html; document.body.appendChild(pop);'
 assert OLD_BPFILL in text, "badge popup fill anchor missing"
-text = text.replace(OLD_BPFILL, 'if(kind==="feclass" && !key){ html+=\'<div class="bpnote">view — its own type row (the screen glyph) · private — a plain cube, no badge</div>\'; } pop.innerHTML=html; document.body.appendChild(pop);', 1)
+text = text.replace(OLD_BPFILL, 'if(kind==="feclass" && !key){ html+=\'<div class="bpnote">view — its own type row (the screen glyph), not a badge</div>\'; } pop.innerHTML=html; document.body.appendChild(pop);', 1)
 OLD_BPCSS = '  .badgepop .bpcv{ width:26px; height:26px; flex:none; display:block; }'
 assert OLD_BPCSS in text, "badge popup bpcv CSS anchor missing"
 text = text.replace(OLD_BPCSS, OLD_BPCSS + '\n  .badgepop .bpnote{ font-size:10px; line-height:1.4; color:var(--muted); margin-top:8px; padding-top:7px; border-top:1px solid var(--line); }', 1)
