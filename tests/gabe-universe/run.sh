@@ -902,9 +902,9 @@ check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOp
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
       "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
-check('feclass:{connector:"#3b82f6",container:"#8a8f98",leaf:"#22c55e",private:"#8794ab"}' in page and 'function feclassBadge(fc)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
+check('feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"}' in page and 'function feclassBadge(fc)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"||n.feClass==="private"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
       and '(it.fc==="view")?svgInline("screen",_COMPCOL,15)' in page,
-      "COMPONENT CLASS representation (operator palette): view=SCREEN glyph; connector=blue arrow · container=gray layers · leaf=green leaf · private=gray star — ALL FOUR classes carry a bottom-right badge now (private no longer plain)")
+      "COMPONENT CLASS palette (operator): view=SCREEN glyph; connector=blue arrow · container=VIOLET layers · leaf=LIME leaf · private=gray star — container off gray (2-gray clash), leaf off green (GET/hook collision); all four badged")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -992,6 +992,12 @@ check('var _LRDESC={' in page and 'a URL page — one of the app' in page and 'b
       "the reference lost its representative _LRDESC descriptions or the parent no-example (noEx) suppression")
 check('["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass"' in page and 'if(k==="type"){ var t=(window._FETYPES' in page and 'if(k==="entity"){ var e=' in page and 'a marker/badge concept, not a searchable node' in page,
       "private not in the reference badged loop / Type+Entity examples not derived / the honest-dash fallback is gone")
+# TIER column (operator): each row shows the min tier it appears at (from _TIER_PRESETS), the header shows/sets the
+# current tier, rows above it dim; connectors/ships read "any", type reads "manual"; fold count now derives an example.
+check('function _minTierKind(k){' in page and 'function _minTierFc(fc){' in page and 'function _tierCell(t, mode){' in page and 'class="lrtdots' in page and 'lrtiersel' not in page and 'n.kind==="schema" && n.__foldN>0' in page and 'uni-legref") && window.__uniLegRef' in page,
+      "the reference TIER-DOT column (min-tier from _TIER_PRESETS · the 4-dot cell · NO in-overlay selector · the header-sync refresh in __uniSetTier · the fold-count example) is gone")
+check('component:{ col:"#f97316"' in page,
+      "the Component (FE) glyph is no longer #f97316 (operator: was too close to view's fuchsia)")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1270,6 +1276,7 @@ const { chromium } = require(process.argv[3]);
   // connectors · planets); an example chip fills the search bar + focuses the node + closes; a flag hides its kind.
   const legRef = await p.evaluate(() => {
     const btn=document.querySelector('#elegend .lgref'); if(!btn) return {err:'no lgref button'};
+    window.__uniSetTier(1);   // a known tier so the tier-column assertions are deterministic
     btn.click(); const ov=document.getElementById('uni-legref'); if(!ov) return {err:'overlay did not open'};
     const open={ secs:[].filter.call(ov.querySelectorAll('.lrsh'), h=>/FRONTEND|BACKEND/.test(h.textContent)).length,
       chips:ov.querySelectorAll('.lrex').length, badges:ov.querySelectorAll('.lrbc').length, flags:ov.querySelectorAll('.lrflag').length,
@@ -1284,6 +1291,19 @@ const { chromium } = require(process.argv[3]);
       typeEx:hasEx('Type'), entityEx:hasEx('Entity (container)'),
       privBadge:!!(rowOf('private')&&rowOf('private').querySelector('.lrbc')),
       noEnableF:!/enable ƒ/.test(ov.innerHTML) };
+    // TIER column as DOTS (operator): a row of 4 dots filled where the element is drawn — route(T0)=4 filled,
+    // hook(T2)=2 + dim at T1, leaf(T3)=1, type=manual (0 filled). NO duplicate selector in the overlay (header
+    // only). connectors/ships read "any". fold count now derives an example.
+    const dotsOf=(nm)=>{ const r=rowOf(nm); const cell=r&&r.querySelector('.lrtdots'); if(!cell) return null;
+      const filled=[].slice.call(cell.querySelectorAll('circle')).filter(c=>c.getAttribute('fill')==='currentColor').length;
+      return { filled, any:cell.classList.contains('lrtany'), man:cell.classList.contains('lrtman'), dim:r.classList.contains('lrdim') }; };
+    const foldR=[].find.call(ov.querySelectorAll('.lrrow'), r=>((r.querySelector('.lrtx b')||{}).textContent||'')==='fold count');
+    const D=(nm)=>dotsOf(nm)||{};
+    const tier={ noOverlaySel:!ov.querySelector('.lrtiersel'), cells:ov.querySelectorAll('.lrtdots').length,
+      routeDots:D('Route (screen)').filled, routeDim:D('Route (screen)').dim,
+      hookDots:D('Hook (FE)').filled, hookDim:D('Hook (FE)').dim, leafDots:D('leaf').filled,
+      typeMan:D('Type').man, anyCells:ov.querySelectorAll('.lrtany').length,
+      foldEx:!!(foldR&&foldR.querySelector('.lrex')) };
     const chip=ov.querySelector('.lrex'); const s=chip&&chip.getAttribute('data-s'); if(chip) chip.click();
     const jump={ closed:!document.getElementById('uni-legref'), barVal:(document.getElementById('tsin')||{}).value,
       hlOn:(typeof HL!=='undefined'&&HL.on), hlMode:(typeof HL!=='undefined'&&HL.mode), s:s };
@@ -1291,7 +1311,7 @@ const { chromium } = require(process.argv[3]);
     const ov2=document.getElementById('uni-legref'); const f=ov2&&ov2.querySelector('.lrflag[data-flagk="endpoint"]');
     const before=(window.__uniKindState||{}).endpoint; if(f) f.click(); const after=(window.__uniKindState||{}).endpoint;
     const ov3=document.getElementById('uni-legref'); if(ov3) window.__uniLegRef();   // close so it never bleeds into later checks
-    return { open, ref, jump, flag:{ before, after, rebuilt:!!ov3 } };
+    return { open, ref, tier, jump, flag:{ before, after, rebuilt:!!ov3 } };
   }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
@@ -1334,11 +1354,12 @@ const { chromium } = require(process.argv[3]);
   const lr=legRef, legRefOk = lr && !lr.err && lr.open && lr.open.secs===2 && lr.open.chips>0 && lr.open.badges>0
     && lr.open.flags>0 && lr.open.conn && lr.open.planet && lr.open.viewRow
     && lr.ref && lr.ref.compNoEx && lr.ref.endpNoEx && lr.ref.fnNoEx && lr.ref.typeEx && lr.ref.entityEx && lr.ref.privBadge && lr.ref.noEnableF
+    && lr.tier && lr.tier.noOverlaySel && lr.tier.cells>0 && lr.tier.routeDots===4 && !lr.tier.routeDim && lr.tier.hookDots===2 && lr.tier.hookDim && lr.tier.leafDots===1 && lr.tier.typeMan && lr.tier.anyCells>0 && lr.tier.foldEx
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

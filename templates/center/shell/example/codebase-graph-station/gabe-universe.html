@@ -786,6 +786,14 @@
   #uni-legref .lrex:hover{ background:color-mix(in srgb, var(--accent) 20%, transparent); border-color:var(--accent); }
   #uni-legref .lrno{ flex:none; font:400 10px/1 var(--font-ui); color:var(--muted); font-style:italic; }
   #uni-legref .lrfoot{ margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font:400 10.5px/1.4 var(--font-ui); color:var(--muted); }
+
+  /* ── legend reference: the TIER column (operator) — a row of 4 dots (T0–T3), filled in the accent where
+     each element is DRAWN; the current tier's dot wears a ring. The tier SELECTOR stays in the header only. ── */
+  #uni-legref .lrtdots{ flex:none; width:40px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px; color:var(--accent); }
+  #uni-legref .lrtdots svg{ display:block; }
+  #uni-legref .lrtdots.lrtman, #uni-legref .lrtdots.lrtany{ color:var(--muted); }   /* type = off every tier · wires/ships = not tier-gated */
+  #uni-legref .lrrow.lrdim{ opacity:.42; }   /* the row is hidden in the graph at the current tier */
+  #uni-legref .lrrow.lrdim .lrex{ opacity:.7; }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -895,7 +903,7 @@ var KINDS={
   route:{ col:"#339af0", form:"cone", label:"/recipes/:id", type:"Route (screen)", layer:"web", usage:[0,"entry — a URL, nothing depends on it"],
     conns:[["renders","component","RecipeDetail"]], tests:0, ident:[["home","recipe"],["path","/recipes/:id"]],
     doc:"A URL → the component tree it mounts. Orphan URL-domains feed entity-shape thinking (a candidate entity)." },
-  component:{ col:"#e8590c", form:"panel", label:"RecipeCard", type:"Component (FE)", layer:"web", usage:[4,"4 components render this one"],
+  component:{ col:"#f97316", form:"panel", label:"RecipeCard", type:"Component (FE)", layer:"web", usage:[4,"4 components render this one"],
     conns:[["renders hooks","hook","useRecipe · useT"],["reads store","store","recipeStore"]], tests:2, ident:[["home","recipe"],["language","TSX"]],
     doc:"A React component. graft captures component→hook calls but barely JSX child renders (a blind spot the Tier-1 arm fills)." },
   hook:{ col:"#0ca678", form:"knot", label:"useRecipeFilters", type:"Hook (FE)", layer:"web", usage:[6,"6 components call this hook"],
@@ -3754,7 +3762,7 @@ window.__uniDrawBundles=function(grp){ if(!UNIWIRE.r3) return;
    DOM <canvas>. Change a glyph HERE and both the 3D badge and its legend swatch move together. ── */
 window.__BADGE_COL={ method:{GET:"#22c55e",POST:"#3b82f6",PUT:"#f97316",PATCH:"#eab308",DELETE:"#ef4444",BOOT:"#8a8f98"},
                      role:{accessor:"#ef4444",caller:"#3b82f6",gate:"#eab308",pure:"#8794ab"},
-                     feclass:{connector:"#3b82f6",container:"#8a8f98",leaf:"#22c55e",private:"#8794ab"},   // component CLASS badge (operator palette) — connector=blue data-in · container=gray compose · leaf=green atom · private=gray internal (pure-like)
+                     feclass:{connector:"#3b82f6",container:"#a855f7",leaf:"#84cc16",private:"#8794ab"},   // component CLASS badge (operator palette) — connector=blue data-in · container=violet compose · leaf=lime atom · private=gray internal (pure-like); container off gray (private owns gray), leaf off green (collided with GET/hook/view)
                      count:{"*":(typeof KINDS!=="undefined"&&KINDS.schema&&KINDS.schema.col)||"#0e9aa7"} };   // schema fold count — the schema colour
 window.__BADGE_DESC={
   method:{ GET:"reads — returns data, no write", POST:"creates — writes a new row", PUT:"replaces — overwrites a row", PATCH:"updates — mutates fields", DELETE:"removes — deletes a row", BOOT:"boot — runs ONCE at app startup (the lifespan seeder), not a request verb" },
@@ -3906,7 +3914,8 @@ window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier
   __uniGrpState.backend=__uniGrpState.frontend="all";
   try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){}
   if(window.__legRender) try{ __legRender(); }catch(e){}
-  if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){} };
+  if(window.__uniTierSyncUI) try{ __uniTierSyncUI(); }catch(e){}
+  if(document.getElementById("uni-legref") && window.__uniLegRef){ try{ __uniLegRef(); __uniLegRef(); }catch(e){} } };   // keep the reference's tier-dot column + dimming in sync with the header selector (operator: one selector, in the header)
 window.__uniFeClassToggle=function(fc){ if(!fc) return; var s=window.__uniFeClassState||{};
   s[fc]=(s[fc]===false); window.__uniFeClassState=s; window.__uniTier=null; if(window.__uniTierSyncUI) __uniTierSyncUI();   // a manual class toggle leaves the preset
   try{ _applyVisNow({all:true}); }catch(e){} if(window.__legRender) try{ __legRender(); }catch(e){} };
@@ -4138,54 +4147,74 @@ window.__uniLegRef=function(){
     model:"a database table — a persistent domain record",
     external:"a table in another entity, reached by a foreign key",
     entity:"a domain area — the cluster grouping one feature's elements" };
-  // a TYPE row: flag toggle · icon · name · description · example. noEx = a PARENT (its examples live on its
-  // sub-badges) — no header example, so a container type never borrows a child's node (operator: no overlap).
-  function _typeRow(k, noEx){ var Kd=K[k]||{col:"#8794ab",type:k,usage:[0,""]};
+  // TIER GATING (operator): each kind/class turns visible at a MIN tier, read LIVE from _TIER_PRESETS
+  // (koff = kinds hidden at that tier · fcoff = classes hidden). null → never in a preset: a manual-only kind
+  // (type) or, for a wire/ship, not tier-gated at all ("any"). The current tier is window.__uniTier.
+  var _TP=(typeof _TIER_PRESETS!=="undefined")?_TIER_PRESETS:null;
+  var _curTier=(typeof window.__uniTier==="number")?window.__uniTier:null;
+  function _minTierKind(k){ if(!_TP) return null; for(var t=0;t<_TP.length;t++){ if((_TP[t].koff||[]).indexOf(k)<0) return t; } return null; }
+  function _minTierFc(fc){ if(!_TP) return null; for(var t=0;t<_TP.length;t++){ if((_TP[t].fcoff||[]).indexOf(fc)<0) return t; } return null; }
+  // the TIER cell — a DEDICATED column of 4 DOTS (operator), the same dots the header tier selector uses.
+  // A dot fills (accent purple) at every tier where this element is DRAWN: once it turns on at its min tier
+  // it stays on through T3. "any" (a wire / ship, no tier gates it) → all four filled · "manual" (a kind off
+  // in every preset, e.g. type) → all hollow. The CURRENT tier's dot wears a ring so the column reads against
+  // the header selection.
+  function _tierCell(t, mode){ var isAny=(mode==="any"), isMan=(t==null && !isAny), d='';
+    for(var i=0;i<4;i++){ var vis=isAny?true:(isMan?false:(i>=t)), cur=(_curTier===i), cx=6+i*8.5;
+      if(cur) d+='<circle cx="'+cx+'" cy="7" r="4.4" fill="none" stroke="currentColor" stroke-width="1" opacity="0.45"/>';   // ring = the current tier
+      d+='<circle cx="'+cx+'" cy="7" r="2.7" '+(vis?'fill="currentColor"':'fill="none" stroke="currentColor" stroke-width="1.1"')+' opacity="'+(vis?(cur?1:0.9):0.3)+'"/>'; }
+    var ttl=isAny?"shown at every tier — not gated (a wire appears when both endpoints do; a ship is always in the fleet)"
+      :isMan?"off in every tier preset — toggle it on with its flag, or search it"
+      :("drawn from T"+t+" onward"+(_curTier!=null?(" · current tier is T"+_curTier):""));
+    return '<span class="lrtdots'+(isAny?" lrtany":(isMan?" lrtman":""))+'" title="'+ttl+'"><svg width="35" height="14" viewBox="0 0 35 14">'+d+'</svg></span>'; }
+  function _dimCls(t){ return (t!=null && _curTier!=null && t>_curTier)?" lrdim":""; }
+  // a TYPE row: flag · icon · name · description · TIER · example. noEx = a PARENT (examples live on its sub-badges).
+  function _typeRow(k, noEx){ var Kd=K[k]||{col:"#8794ab",type:k,usage:[0,""]}, _t=_minTierKind(k);
     var _st=(window.__uniKindState&&__uniKindState[k])||(k==="type"||k==="function"?"off":"all");
     var _on=(_st!=="off"); var ico=(typeof svgInline==="function")?svgInline(k, Kd.col, 18):"";
     var _desc=_LRDESC[k]||((Kd.usage&&Kd.usage[1])||"");
-    return '<div class="lrrow"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
+    return '<div class="lrrow'+_dimCls(_t)+'"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
       +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
-      +'<i>'+_esc(_desc)+'</i></div>'+(noEx?'':_exChip(_exKind(k)))+'</div>'; }
-  // a BADGE row (indented under its type): badge glyph · name · description · example
-  function _badgeRow(kind,key,name,desc,ex){ return '<div class="lrrow lrb"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
-      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_exChip(ex)+'</div>'; }
+      +'<i>'+_esc(_desc)+'</i></div>'+_tierCell(_t,"kind")+(noEx?'':_exChip(_exKind(k)))+'</div>'; }
+  // a BADGE row (indented under its type): badge glyph · name · description · TIER · example
+  function _badgeRow(kind,key,name,desc,ex,tier){ return '<div class="lrrow lrb'+_dimCls(tier)+'"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
+      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_tierCell(tier,"kind")+_exChip(ex)+'</div>'; }
   var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
   function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
     ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return;
       var _kids=(k==="component" && hasFe); h+=_typeRow(k, _kids);                      // component is a PARENT — no header example
-      if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc)); }); } });
+      if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc), _minTierFc(fc)); }); } });
     if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
-      var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false);
-      h+='<div class="lrrow"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_exChip(_exFc("view"))+'</div>'; }
+      var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false), _vt=_minTierFc("view");
+      h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_tierCell(_vt,"kind")+_exChip(_exFc("view"))+'</div>'; }
     return h+'</div>'; }
   function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
     ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return;
       var _kids=(k==="endpoint"||k==="function"); h+=_typeRow(k, _kids);               // endpoint + function are PARENTS — no header example
-      if(k==="endpoint"){ ["GET","POST","PUT","PATCH","DELETE","BOOT"].forEach(function(m){ h+=_badgeRow("method", m, m, (BD.method&&BD.method[m])||"", _exMethod(m)); }); }
-      else if(k==="function"){ ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r)); }); }
-      else if(k==="schema"){ h+=_badgeRow("count", "N", "fold count", (BD.count&&BD.count["*"])||"", null); } });
+      if(k==="endpoint"){ var _et=_minTierKind("endpoint"); ["GET","POST","PUT","PATCH","DELETE","BOOT"].forEach(function(m){ h+=_badgeRow("method", m, m, (BD.method&&BD.method[m])||"", _exMethod(m), _et); }); }
+      else if(k==="function"){ var _ft=_minTierKind("function"); ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r), _ft); }); }
+      else if(k==="schema"){ h+=_badgeRow("count", "N", "fold count", (BD.count&&BD.count["*"])||"", _exNode(function(n){ return n.kind==="schema" && n.__foldN>0; }), _minTierKind("schema")); } });   // fold count = a badge ON a schema that folds nested-only children → its example is such a schema (operator: why no example)
     return h+'</div>'; }
   function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
     var h='<div class="lrsec lrwide"><div class="lrsh">CONNECTORS · what wires elements together</div>';
     items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
       if(it.t==="ln"){ var col=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8", da=(it.s==="dotted")?"2 3":(it.s==="dashed")?"6 3":"";
-        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+col+'" stroke-width="2.4" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l.replace(/<i>/g,'<i>').replace(/<\/i>/g,'</i>')+'</div></div>'; return; }
+        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+col+'" stroke-width="2.4" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l.replace(/<i>/g,'<i>').replace(/<\/i>/g,'</i>')+'</div>'+_tierCell(null,"any")+'</div>'; return; }
       if(it.t==="ship"){ var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#38bdf8";
-        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+it.l+'</div></div>'; return; } });
+        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; } });
     return h+'</div>'; }
   function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
     var h='<div class="lrsec lrwide"><div class="lrsh">FLEET · planets & ships</div>';
     (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
       var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8";
-      h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+(it.l||"")+'</div></div>'; }); });
+      h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+(it.l||"")+'</div>'+_tierCell(null,"any")+'</div>'; }); });
     return h+'</div>'; }
   var ov=document.createElement("div"); ov.id="uni-legref";
   var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
-    +'<span class="lrsubtitle">every type &amp; badge, with a live example — click an example to find it in the graph</span>'
+    +'<span class="lrsubtitle">every type &amp; badge — its tier column, and a live example. click an example to find it in the graph</span>'
     +'<button class="lrclose" title="close (Esc)">✕</button></div>';
   var body='<div class="lrbody"><div class="lrcols">'+_feSection()+_beSection()+'</div>'+_connSection()+_planetSection()
-    +'<div class="lrfoot">click a flag ● to show / hide that type · click an example to jump to it</div></div>';
+    +'<div class="lrfoot">click a flag ● to show / hide a type · the <b>tier</b> pill shows where a row appears (a dim row is hidden at the current tier) · click an example to jump to it</div></div>';
   ov.innerHTML=head+body; document.body.appendChild(ov);
   // paint each badge glyph onto its canvas (the SAME __badgeGlyph the 3D badges use — legend-visual law)
   [].forEach.call(ov.querySelectorAll(".lrbc"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128);
