@@ -2303,7 +2303,7 @@ var _TIER_PRESETS=[
   { name:"Skeleton", koff:["function","schema","hook","module","type","middleware","flag","provider","prompt","external","store"], fcoff:["private","connector","container","leaf"] },
   { name:"Surface",  koff:["function","hook","module","type","prompt"],                                                            fcoff:["private","leaf"] },
   { name:"Trace",    koff:["module","type"],                                                                                       fcoff:["leaf"] },
-  { name:"Everything", koff:["type"],                                                                                             fcoff:[] } ];
+  { name:"Everything", koff:[],                                                                                                   fcoff:[] } ];   // T3 = truly everything, incl. the 508 fe-types (operator); type is off at T0–T2, ON at T3
 window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier=t;
   // A tier press during a WALK must PRESERVE the journey + selection and keep positions STATIC (operator):
   // never clear the walk, and never toggleFns (adding/removing fn nodes reheats the sim → the graph jumps).
@@ -2320,7 +2320,8 @@ window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier
     try{ _hlClearSprites(); }catch(e){} try{ _walkRender(); }catch(e){} }
   var p=_TIER_PRESETS[t], koff={}; p.koff.forEach(function(k){ koff[k]=1; });
   _KTIER.forEach(function(k){ __uniKindState[k]=koff[k]?"off":"all"; if(koff[k]) __uniKindOff[k]=1; else delete __uniKindOff[k];
-    if(k==="function" && window.toggleFns && !_walk){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });
+    if(k==="function" && window.toggleFns && !_walk){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } }
+    if(k==="type" && window.toggleTypes && !_walk){ var wantT=!koff[k]; if((CFG.showTypes==="on")!==wantT){ CFG.showTypes=wantT?"on":"off"; try{ toggleTypes(wantT); }catch(e){} } } });   // types ride off-field like fns — T3 (koff has no "type") wakes the 508 fe-types (operator: T3 = everything)
   window.__uniFeClassState={}; _FCALL.forEach(function(fc){ window.__uniFeClassState[fc]=(p.fcoff.indexOf(fc)<0); });
   __uniGrpState.backend=__uniGrpState.frontend="all";
   try{ __uniComputeSolo(); }catch(e){} try{ _applyVisNow({all:true}); }catch(e){}
@@ -2631,9 +2632,13 @@ window.__uniLegRef=function(){
             : it.dim==="atk"       ? atkModel(it.k)
             :                        defModel(it.k);
     return (typeof teamShip==="function")?teamShip(key, it.c, 1):null; }; }
-  function _refThumb(cv, buildObj){ if(typeof T==="undefined") return; try{ var raw=buildObj(); if(!raw) return;
+  function _refThumb(cv, buildObj, fixedScale){ if(typeof T==="undefined") return; try{ var raw=buildObj(); if(!raw) return;
     var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3()), sz=bb.getSize(new T.Vector3());
-    var maxd=Math.max(sz.x,sz.y,sz.z)||1, fit=Math.max(0.2, Math.min(60, 6.4/maxd));   // AUTO-FIT every asset to ONE frame (operator: apply the satellite's framing to all — the attack models render TINY at native scale, so T1/T2/tie looked like the same blob; normalizing makes them distinct). 6.4 of a ~15-unit view = a hair of margin ("a little zoom out"); clamped so a degenerate bbox can't explode.
+    // AUTO-FIT every asset to ONE frame (operator: apply the satellite's framing to all — the attack models render
+    // TINY at native scale, so T1/T2/tie looked like the same blob; normalizing makes them distinct). 6.4 of a
+    // ~15-unit view = a hair of margin; clamped so a degenerate bbox can't explode. The SATELLITE is exempt: its
+    // wide solar-panel bbox fools the fit (the body then reads tiny), so it takes a FIXED scale instead (operator).
+    var maxd=Math.max(sz.x,sz.y,sz.z)||1, fit=(fixedScale!=null)?fixedScale:Math.max(0.2, Math.min(60, 6.4/maxd));
     var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.scale.setScalar(fit); pivot.rotation.y=0.7;
     var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.8));
     var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
@@ -2693,7 +2698,7 @@ window.__uniLegRef=function(){
   [].forEach.call(ov.querySelectorAll(".lrbc"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128);
     if(window.__badgeGlyph) try{ __badgeGlyph(c, cv.dataset.bk, cv.dataset.bkey); }catch(e){} });
   // paint the REAL 3D ship thumbnails (operator) — the continuous spin, same as the small legend's Planet tab
-  [].forEach.call(ov.querySelectorAll(".lrcv"), function(cv){ var it=_thumbs[+cv.dataset.ti]; if(it) _refThumb(cv, _thumbBuild(it)); });
+  [].forEach.call(ov.querySelectorAll(".lrcv"), function(cv){ var it=_thumbs[+cv.dataset.ti]; if(it) _refThumb(cv, _thumbBuild(it), it.t==="sat"?2.8:null); });   // sats take a FIXED scale (auto-fit shrinks them); ships auto-fit
   // example chip → fill the bar + focus + close the overlay
   [].forEach.call(ov.querySelectorAll(".lrex"), function(b){ b.onclick=function(){ var s=b.getAttribute("data-s"), id=b.getAttribute("data-id");
     if(window.__uniSearchGo) __uniSearchGo(s, id||null); __uniLegRef(); }; });

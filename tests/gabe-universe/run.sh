@@ -996,6 +996,10 @@ check('["connector","container","leaf","private"].forEach(function(fc){ h+=_badg
 # current tier, rows above it dim; connectors/ships read "any", type reads "manual"; fold count now derives an example.
 check('function _minTierKind(k){' in page and 'function _minTierFc(fc){' in page and 'function _tierCell(t, mode){' in page and 'class="lrtdots' in page and 'lrtiersel' not in page and 'n.kind==="schema" && n.__foldN>0' in page and 'uni-legref") && window.__uniLegRef' in page,
       "the reference TIER-DOT column (min-tier from _TIER_PRESETS · the 4-dot cell · NO in-overlay selector · the header-sync refresh in __uniSetTier · the fold-count example) is gone")
+# T3 "Everything" truly shows everything incl. the 508 fe-types (operator): its preset koff is EMPTY, and
+# __uniSetTier wakes the type layer (toggleTypes) the way it wakes functions (toggleFns).
+check('name:"Everything", koff:[],' in page and 'if(k==="type" && window.toggleTypes && !_walk){' in page,
+      "T3 no longer shows everything — the Everything preset re-hid type, or __uniSetTier stopped waking the type layer")
 # Component (FE) glyph: the REAL color source is KINDCOL (line `KINDS[k].col=KINDCOL[k]` overwrites the KINDS
 # literal), and KINDCOL.component was #d946ef — IDENTICAL to view's hardcoded #d946ef. Now #ff8c00 orange.
 check('component:"#ff8c00"' in page and 'KINDS[k].col=KINDCOL[k]' in page and 'component:"#d946ef"' not in page,
@@ -1006,7 +1010,7 @@ check('var _CONNSTOCK={ fk:{col:"#5893ad"' in page and 'calls:{col:"#f59e0b"' in
       "the reference connector wires no longer resolve from the _CONNSTOCK canonical palette (would render gray again)")
 # REAL 3D asset thumbnails in the reference fleet/ship rows (operator) — replicate thumbBuild + a PAL_CELLS spin
 # cell marked __ref so it PRUNES on close (legThumb's LEG_CELLS is shared with the small legend).
-check('function _thumbBuild(it){' in page and 'function _refThumb(cv, buildObj){' in page and 'class="lrcv"' in page and 'PAL_CELLS.filter(function(c){ return !c.__ref; })' in page,
+check('function _thumbBuild(it){' in page and 'function _refThumb(cv, buildObj, fixedScale){' in page and 'class="lrcv"' in page and 'PAL_CELLS.filter(function(c){ return !c.__ref; })' in page,
       "the reference lost its real 3D ship thumbnails (_thumbBuild/_refThumb/.lrcv) or the __ref prune-on-close")
 # the ⓘ opens the reference AND sits right after the "Legend" title (post the upstream shape-icon prefix), an
 # inline info dot like the .lgbi row dots — NOT boxed at the far right.
@@ -1017,8 +1021,8 @@ check('#elegend .lghd b{ flex:0 0 auto !important; margin-right:0 !important; }'
       "the ⓘ no longer hugs the Legend title (the title's margin-right:auto is not overridden / the tabs lost the auto)")
 # Field/fleet: NON-ship items (Blast/Flak/Star = shock/flak/dot) render the 2D marker shapes, ships/sats the 3D
 # thumbnail, via one _refIco dispatcher; the satellite is scaled up; descriptions revised to the FE/BE angle.
-check('function _vis2d(it){' in page and 'function _refIco(it){' in page and 'var _REFDESC={ fk:"a foreign-key link' in page and 'pivot.scale.setScalar(fit)' in page and 'fit=Math.max(0.2, Math.min(60, 6.4/maxd))' in page,
-      "the fleet lost its 2D marker shapes (_vis2d) / the _refIco dispatcher / the revised _REFDESC / the per-asset AUTO-FIT (normalizes every 3D model to one frame)")
+check('function _vis2d(it){' in page and 'function _refIco(it){' in page and 'var _REFDESC={ fk:"a foreign-key link' in page and 'pivot.scale.setScalar(fit)' in page and 'fit=(fixedScale!=null)?fixedScale:Math.max(0.2, Math.min(60, 6.4/maxd))' in page and 'it.t==="sat"?2.8:null' in page,
+      "the fleet lost its 2D markers / _refIco / _REFDESC / the AUTO-FIT / the satellite's fixed-scale exemption (auto-fit shrinks it)")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1297,6 +1301,7 @@ const { chromium } = require(process.argv[3]);
   // connectors · planets); an example chip fills the search bar + focuses the node + closes; a flag hides its kind.
   const legRef = await p.evaluate(() => {
     const btn=document.querySelector('#elegend .lgref'); if(!btn) return {err:'no lgref button'};
+    window.__uniSetTier(3); const t3ShowTypes=(typeof CFG!=='undefined'&&CFG.showTypes==='on');   // T3 = Everything incl. the 508 fe-types (operator): the type layer wakes
     window.__uniSetTier(1);   // a known tier so the tier-column assertions are deterministic
     btn.click(); const ov=document.getElementById('uni-legref'); if(!ov) return {err:'overlay did not open'};
     const open={ secs:[].filter.call(ov.querySelectorAll('.lrsh'), h=>/FRONTEND|BACKEND/.test(h.textContent)).length,
@@ -1323,7 +1328,7 @@ const { chromium } = require(process.argv[3]);
     const tier={ noOverlaySel:!ov.querySelector('.lrtiersel'), cells:ov.querySelectorAll('.lrtdots').length,
       routeDots:D('Route (screen)').filled, routeDim:D('Route (screen)').dim,
       hookDots:D('Hook (FE)').filled, hookDim:D('Hook (FE)').dim, leafDots:D('leaf').filled,
-      typeMan:D('Type').man, anyCells:ov.querySelectorAll('.lrtany').length,
+      typeDots:D('Type').filled, typeHasFlag:!!(rowOf('Type')&&rowOf('Type').querySelector('.lrflag')), t3ShowTypes, anyCells:ov.querySelectorAll('.lrtany').length,
       foldEx:!!(foldR&&foldR.querySelector('.lrex')) };
     // LAYOUT (operator): two 2-col grids (FE|BE · CONN|FLEET) · tier dots are the LAST cell (one right axis) ·
     // connector wires carry DISTINCT semantic colors (not all gray) · component glyph is orange, not view-fuchsia.
@@ -1405,7 +1410,7 @@ const { chromium } = require(process.argv[3]);
   const lr=legRef, legRefOk = lr && !lr.err && lr.open && lr.open.secs===2 && lr.open.chips>0 && lr.open.badges>0
     && lr.open.flags>0 && lr.open.conn && lr.open.planet && lr.open.viewRow
     && lr.ref && lr.ref.compNoEx && lr.ref.endpNoEx && lr.ref.fnNoEx && lr.ref.typeEx && lr.ref.entityEx && lr.ref.privBadge && lr.ref.noEnableF
-    && lr.tier && lr.tier.noOverlaySel && lr.tier.cells>0 && lr.tier.routeDots===4 && !lr.tier.routeDim && lr.tier.hookDots===2 && lr.tier.hookDim && lr.tier.leafDots===1 && lr.tier.typeMan && lr.tier.anyCells>0 && lr.tier.foldEx
+    && lr.tier && lr.tier.noOverlaySel && lr.tier.cells>0 && lr.tier.routeDots===4 && !lr.tier.routeDim && lr.tier.hookDots===2 && lr.tier.hookDim && lr.tier.leafDots===1 && lr.tier.typeDots===1 && lr.tier.typeHasFlag && lr.tier.t3ShowTypes && lr.tier.anyCells>0 && lr.tier.foldEx
     && lr.layout && lr.layout.grids===2 && lr.layout.tierLast && lr.layout.connFleetSameGrid && lr.layout.wireUniq>=5 && lr.layout.wireNotAllGray && lr.layout.compOrange
     && lr.layout.thumbs>0 && lr.layout.refCells>0 && lr.layout.hdrRefAfterTitle && lr.layout.iconHug<20 && lr.layout.starIs2d && lr.layout.satIsThumb && lr.layout.fkDescRevised
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
