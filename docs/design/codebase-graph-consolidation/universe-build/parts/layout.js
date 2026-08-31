@@ -2586,10 +2586,10 @@ window.__uniLegRef=function(){
     var _desc=_LRDESC[k]||((Kd.usage&&Kd.usage[1])||"");
     return '<div class="lrrow'+_dimCls(_t)+'"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
       +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
-      +'<i>'+_esc(_desc)+'</i></div>'+_tierCell(_t,"kind")+(noEx?'':_exChip(_exKind(k)))+'</div>'; }
-  // a BADGE row (indented under its type): badge glyph · name · description · TIER · example
+      +'<i>'+_esc(_desc)+'</i></div>'+(noEx?'':_exChip(_exKind(k)))+_tierCell(_t,"kind")+'</div>'; }   // TIER is the LAST column (operator: one right axis)
+  // a BADGE row (indented under its type): badge glyph · name · description · example · TIER (last)
   function _badgeRow(kind,key,name,desc,ex,tier){ return '<div class="lrrow lrb'+_dimCls(tier)+'"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
-      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_tierCell(tier,"kind")+_exChip(ex)+'</div>'; }
+      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_exChip(ex)+_tierCell(tier,"kind")+'</div>'; }
   var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
   function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
     ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return;
@@ -2597,7 +2597,7 @@ window.__uniLegRef=function(){
       if(_kids){ ["connector","container","leaf","private"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc), _minTierFc(fc)); }); } });
     if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
       var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false), _vt=_minTierFc("view");
-      h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_tierCell(_vt,"kind")+_exChip(_exFc("view"))+'</div>'; }
+      h+='<div class="lrrow'+_dimCls(_vt)+'"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_exChip(_exFc("view"))+_tierCell(_vt,"kind")+'</div>'; }
     return h+'</div>'; }
   function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
     ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return;
@@ -2606,26 +2606,36 @@ window.__uniLegRef=function(){
       else if(k==="function"){ var _ft=_minTierKind("function"); ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r), _ft); }); }
       else if(k==="schema"){ h+=_badgeRow("count", "N", "fold count", (BD.count&&BD.count["*"])||"", _exNode(function(n){ return n.kind==="schema" && n.__foldN>0; }), _minTierKind("schema")); } });   // fold count = a badge ON a schema that folds nested-only children → its example is such a schema (operator: why no example)
     return h+'</div>'; }
+  function _hx(c){ return "#"+("000000"+(((c|0)>>>0)&0xffffff).toString(16)).slice(-6); }
+  // resolve a connector wire's COLOUR + dash. The built LEGEND.Connectors rows carry it.k (NOT it.c) — reading
+  // it.c is why every wire previously rendered gray/solid (operator: icons wrong). We use a CANONICAL stock
+  // palette, not live CONN: CONN.calls is recoloured at runtime by the d2w heat, so the live value reads olive
+  // instead of the semantic amber. rollup/access aren't in CONN at all (access = red per __CONNDESC).
+  var _CONNSTOCK={ fk:{col:"#5893ad",style:"dashed"}, calls:{col:"#f59e0b",style:"dashed"}, imports:{col:"#a855f7",style:"dotted"},
+    bridge:{col:"#e8f443",style:"dotted"}, rollup:{col:"#8794ab",style:"dashed"}, access:{col:"#ef4444",style:"solid"} };
+  function _connCS(it){ if(it.c!=null) return {col:_hx(it.c), style:it.s||"solid"};
+    return _CONNSTOCK[it.k] || {col:"#8590a8",style:"solid"}; }
+  function _dash(style){ if(typeof DASHMAP!=="undefined" && DASHMAP[style]!=null) return DASHMAP[style]; return style==="dotted"?"1.5 3.5":style==="dashed"?"6 3":""; }
   function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
-    var h='<div class="lrsec lrwide"><div class="lrsh">CONNECTORS · what wires elements together</div>';
+    var h='<div class="lrsec"><div class="lrsh">CONNECTORS · what wires elements together</div>';
     items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
-      if(it.t==="ln"){ var col=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8", da=(it.s==="dotted")?"2 3":(it.s==="dashed")?"6 3":"";
-        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+col+'" stroke-width="2.4" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l.replace(/<i>/g,'<i>').replace(/<\/i>/g,'</i>')+'</div>'+_tierCell(null,"any")+'</div>'; return; }
-      if(it.t==="ship"){ var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#38bdf8";
+      if(it.t==="ln"){ var cs=_connCS(it), da=_dash(cs.style);
+        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+cs.col+'" stroke-width="2.6" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; }
+      if(it.t==="ship"){ var sc=it.c!=null?_hx(it.c):"#38bdf8";
         h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; } });
     return h+'</div>'; }
   function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
-    var h='<div class="lrsec lrwide"><div class="lrsh">FLEET · planets & ships</div>';
+    var h='<div class="lrsec"><div class="lrsh">FLEET · planets &amp; ships</div>';
     (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
-      var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8";
+      var sc=it.c!=null?_hx(it.c):"#8590a8";
       h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+(it.l||"")+'</div>'+_tierCell(null,"any")+'</div>'; }); });
     return h+'</div>'; }
   var ov=document.createElement("div"); ov.id="uni-legref";
   var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
     +'<span class="lrsubtitle">every type &amp; badge — its tier column, and a live example. click an example to find it in the graph</span>'
     +'<button class="lrclose" title="close (Esc)">✕</button></div>';
-  var body='<div class="lrbody"><div class="lrcols">'+_feSection()+_beSection()+'</div>'+_connSection()+_planetSection()
-    +'<div class="lrfoot">click a flag ● to show / hide a type · the <b>tier</b> pill shows where a row appears (a dim row is hidden at the current tier) · click an example to jump to it</div></div>';
+  var body='<div class="lrbody"><div class="lrcols">'+_feSection()+_beSection()+'</div><div class="lrcols">'+_connSection()+_planetSection()+'</div>'
+    +'<div class="lrfoot">click a flag ● to show / hide a type · the <b>tier</b> dots (last column) show where a row appears — a dim row is hidden at the current tier · click an example to jump to it</div></div>';
   ov.innerHTML=head+body; document.body.appendChild(ov);
   // paint each badge glyph onto its canvas (the SAME __badgeGlyph the 3D badges use — legend-visual law)
   [].forEach.call(ov.querySelectorAll(".lrbc"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128);

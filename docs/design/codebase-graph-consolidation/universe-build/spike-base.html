@@ -202,7 +202,7 @@ var KINDS={
   route:{ col:"#339af0", form:"cone", label:"/recipes/:id", type:"Route (screen)", layer:"web", usage:[0,"entry — a URL, nothing depends on it"],
     conns:[["renders","component","RecipeDetail"]], tests:0, ident:[["home","recipe"],["path","/recipes/:id"]],
     doc:"A URL → the component tree it mounts. Orphan URL-domains feed entity-shape thinking (a candidate entity)." },
-  component:{ col:"#f97316", form:"panel", label:"RecipeCard", type:"Component (FE)", layer:"web", usage:[4,"4 components render this one"],
+  component:{ col:"#ff8c00", form:"panel", label:"RecipeCard", type:"Component (FE)", layer:"web", usage:[4,"4 components render this one"],
     conns:[["renders hooks","hook","useRecipe · useT"],["reads store","store","recipeStore"]], tests:2, ident:[["home","recipe"],["language","TSX"]],
     doc:"A React component. graft captures component→hook calls but barely JSX child renders (a blind spot the Tier-1 arm fills)." },
   hook:{ col:"#0ca678", form:"knot", label:"useRecipeFilters", type:"Hook (FE)", layer:"web", usage:[6,"6 components call this hook"],
@@ -240,7 +240,7 @@ var KINDS={
 var order=["route","component","hook","type","store","screen","endpoint","function","schema","model","external","entity"];
 /* ONE distinct colour per element kind — none reused by another kind, none overlapping a METHOD colour. */
 var KINDCOL={ endpoint:"#8b5cf6", "function":"#6366f1", model:"#14b8a6", schema:"#06b6d4", entity:"#84cc16",
-  component:"#d946ef", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };
+  component:"#ff8c00", hook:"#10b981", store:"#ec4899", route:"#38bdf8", type:"#64748b", screen:"#a855f7", external:"#94a3b8" };
 Object.keys(KINDCOL).forEach(function(k){ if(KINDS[k]) KINDS[k].col=KINDCOL[k]; });
 /* the GRAPH = two CLUSTERS (entities). Each node: id · kind (→ icon/panel) · ent (→ cluster
    colour + boundary) · its own label. Icon colour = KIND; boundary colour = ENTITY. */

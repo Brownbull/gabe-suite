@@ -628,7 +628,7 @@
 
   /* ── legend reference: the TIER column (operator) — a row of 4 dots (T0–T3), filled in the accent where
      each element is DRAWN; the current tier's dot wears a ring. The tier SELECTOR stays in the header only. ── */
-  #uni-legref .lrtdots{ flex:none; width:40px; display:inline-flex; align-items:center; justify-content:center; margin-right:5px; color:var(--accent); }
+  #uni-legref .lrtdots{ flex:none; width:40px; display:inline-flex; align-items:center; justify-content:flex-end; margin-left:8px; color:var(--accent); }
   #uni-legref .lrtdots svg{ display:block; }
   #uni-legref .lrtdots.lrtman, #uni-legref .lrtdots.lrtany{ color:var(--muted); }   /* type = off every tier · wires/ships = not tier-gated */
   #uni-legref .lrrow.lrdim{ opacity:.42; }   /* the row is hidden in the graph at the current tier */
