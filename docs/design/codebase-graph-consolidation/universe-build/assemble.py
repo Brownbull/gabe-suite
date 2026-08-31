@@ -448,10 +448,16 @@ _ROLE_BADGE = ("function roleBadge(role){ var cv=document.createElement('canvas'
 _COUNT_BADGE = ("function countBadge(nn){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); "
   "if(window.__badgeGlyph) window.__badgeGlyph(c,'count',nn); else { c.fillStyle='#0e9aa7'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } "
   + _BADGE_WRAP)
+# ── operator: COMPONENT CLASS badge — connector/container/leaf get a coloured chip at the icon's
+#    lower-right, the same slot/machinery as the method+role badges (view gets its own SCREEN icon
+#    instead; private stays a plain cube — the baseline the badges stand out against). ──
+_FECLASS_BADGE = ("function feclassBadge(fc){ var cv=document.createElement('canvas'); cv.width=cv.height=128; var c=cv.getContext('2d'); "
+  "if(window.__badgeGlyph) window.__badgeGlyph(c,'feclass',fc); else { c.fillStyle='#8a8f98'; c.beginPath(); c.arc(64,64,58,0,6.2832); c.fill(); } "
+  + _BADGE_WRAP)
 assert 'function buildNode(n){' in text, "buildNode anchor missing (method badge)"
-text = text.replace('function buildNode(n){', _METHOD_BADGE + _ROLE_BADGE + _COUNT_BADGE + 'function buildNode(n){', 1)
+text = text.replace('function buildNode(n){', _METHOD_BADGE + _ROLE_BADGE + _COUNT_BADGE + _FECLASS_BADGE + 'function buildNode(n){', 1)
 assert '  grp.add(ic);' in text, "grp.add(ic) anchor missing (method badge)"
-text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right\n  else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)', 1)
+text = text.replace('  grp.add(ic);', '  grp.add(ic);\n  if(n.kind==="endpoint" && n.m && n.m.method){ try{ grp.add(methodBadge(n.m.method, br)); }catch(_mb){} }\n  else if(n.kind==="function" && n.role){ try{ grp.add(roleBadge(n.role)); }catch(_rb){} }   // C1: function ROLE badge (accessor/caller/gate/pure) at the icon lower-right\n  else if(n.kind==="schema" && n.__foldN>0){ try{ var _cb=countBadge(n.__foldN); _cb.__n=n.__foldN; grp.add(_cb); grp.__cnt=_cb; }catch(_cb0){} }   // schema FOLD COUNT badge (kept in sync by __uniSyncCountBadges)\n  else if(n.kind==="component" && (n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf")){ try{ grp.add(feclassBadge(n.feClass)); }catch(_fb){} }   // component CLASS badge (operator) — connector/container/leaf; view=screen icon, private=plain', 1)
 
 # ── batch 12: layer ruling (c) — sub groups carry the kind's OWN layer (endpoints·api·web·data);
 #    the hull hue-shift map gains the un-collapsed keys ──
@@ -656,8 +662,11 @@ NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpStat
       if(it.t==="fold"){ var _fh=(window.__uniFoldHelpers!==false);
         h+=\'<div class="lgrow lgfold\'+(_fh?"":" lgoff")+\'" data-lgfold="1" style="cursor:pointer" title="fold single-caller helper nodes to declutter — click to \'+(_fh?"show them":"fold them")+\'"><div class="lgvis"><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M7 12h10M10 17h4"/></svg></div><div class="lglbl"><b>fold helpers</b> <i>\'+(_fh?"on":"off")+\'</i></div></div>\'; return; }
       if(it.t==="feclass"){ var _fcoff=(window.__uniFeClassState&&window.__uniFeClassState[it.fc]===false);
-        var _fccol=(it.fc==="view")?"#339af0":(it.fc==="connector")?"#0ca678":(it.fc==="leaf")?"#c026d3":(it.fc==="container")?"#8a8f98":"#e8590c";
-        h+=\'<div class="lgrow lgk lgfc\'+(_fcoff?" lgoff":"")+\'" data-lgfc="\'+it.fc+\'" title="component class \'+it.fc+\' — click to \'+(_fcoff?"show":"hide")+\'"><div class="lgvis">\'+svgInline("component",_fccol,15)+\'</div><div class="lglbl"><b style="color:\'+_fccol+\'">\'+it.fc+\'</b></div></div>\'; return; }
+        var _COMPCOL="#d946ef", _bcol=(it.fc==="connector")?"#0ca678":(it.fc==="container")?"#8a8f98":(it.fc==="leaf")?"#c026d3":"";   // the 3 BADGED classes carry a badge colour; view/private do not
+        var _fcico=(it.fc==="view")?svgInline("screen",_COMPCOL,15):svgInline("component",_COMPCOL,15);   // legend-visual law: view = the SCREEN glyph, the rest = the component cube (as the node draws)
+        var _dot=_bcol?(\'<span style="position:absolute;right:0;bottom:0;width:6px;height:6px;border-radius:999px;background:\'+_bcol+\'"></span>\'):\'\';
+        var _tag=(it.fc==="view")?" · own icon":(it.fc==="private")?" · plain":"";
+        h+=\'<div class="lgrow lgk lgfc\'+(_fcoff?" lgoff":"")+\'" data-lgfc="\'+it.fc+\'" title="component class \'+it.fc+\' — click to \'+(_fcoff?"show":"hide")+\'"><div class="lgvis" style="position:relative">\'+_fcico+_dot+\'</div><div class="lglbl"><b style="color:\'+(_bcol||_COMPCOL)+\'">\'+it.fc+\'</b>\'+(_tag?(\'<i style="color:var(--muted)">\'+_tag+\'</i>\'):\'\')+\'</div></div>\'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
         var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"all");
         var _cls=(_st==="off")?"lgoff":"";

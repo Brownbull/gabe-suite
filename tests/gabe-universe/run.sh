@@ -897,6 +897,9 @@ check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOp
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,
       "each LEVEL header carries a classification INFO icon (operator): hover shows what variables put a journey in that tier (like the connector legend)")
+check('feclass:{connector:"#0ca678"' in page and 'function feclassBadge(fc)' in page and 'n.feClass==="connector"||n.feClass==="container"||n.feClass==="leaf"' in page and 'n.feClass==="view"&&billTex["screen"]' in page
+      and '(it.fc==="view")?svgInline("screen",_COMPCOL,15)' in page,
+      "COMPONENT CLASS representation (operator): view wears the SCREEN glyph; connector/container/leaf get a bottom-right badge (shared method/role badge machinery); private stays a plain cube; the LEGEND renders the same (view screen + badge dots)")
 check('window.__uniJrnStart=function(cid)' in page and '__uniJrnStart(r.getAttribute("data-jr"))' in page,
       "the factored journey starter is gone (picker rows + search must share ONE start path)")
 check('!_nodeVisibleFn(n)){ try{ __uniReveal(n.id)' in page and 'a step SELECTS its element' in page,
@@ -1196,6 +1199,19 @@ const { chromium } = require(process.argv[3]);
     return { nodes:(typeof nodes!=='undefined'&&nodes)?nodes.length:-1, err:!!document.getElementById('err'),
       cardOpen:document.body.classList.contains('panel-open'),
       stPass:stPassV, face:faceV, fe, few, wfInfo, iconsBuilt, hdr, jrn, lvl, cm, ui3 }; });
+  // COMPONENT CLASS representation (operator) — a SEPARATE pass at T3 with a settle wait, since setTier
+  // triggers an async node rebuild: view=SCREEN glyph (no badge) · connector/container/leaf=cube+badge · private=plain cube.
+  await p.evaluate(() => { if (window.__uniSetTier) window.__uniSetTier(3); });
+  await p.waitForTimeout(1600);
+  const fcb = await p.evaluate(() => {
+    const inB = new Set(window.__uniBadges || []);
+    const s = (fc) => { const n = nodes.find(x => x.kind==='component' && x.feClass===fc && x.__threeObj); if(!n) return null;
+      let tex=null, bdg=false; n.__threeObj.children.forEach(ch => { if(ch.type==='Sprite'){ if(ch.material&&ch.material.map&&tex===null) tex=ch.material.map; if(inB.has(ch)) bdg=true; } });
+      return { screen:tex===billTex.screen, comp:tex===billTex.component, badge:bdg }; };
+    const v=s('view'), cn=s('connector'), ct=s('container'), pv=s('private'), lf=s('leaf');
+    return { view:!!(v&&v.screen&&!v.badge), connector:!!(cn&&cn.comp&&cn.badge), container:!!(ct&&ct.comp&&ct.badge),
+             leaf:!!(lf&&lf.comp&&lf.badge), priv:!!(pv&&pv.comp&&!pv.badge) };
+  }).catch(e => ({ err: String(e) }));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1224,9 +1240,11 @@ const { chromium } = require(process.argv[3]);
   // the 3 middle-section refinements behave: tier-icon set switch (text↔svg↔back), entity picker
   // collapsed-by-default (0 chips → expands), and one classification info icon per level.
   const u3=r.ui3, ui3Ok = u3 && !u3.err && u3.tierGridSettled===true && u3.entCollapse===true && u3.infoIcons>=3 && u3.infoHaveVars===true;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok;
+  // component classes are visually distinct: view=screen glyph (no badge), connector/container/leaf=cube+badge, private=plain cube
+  const fc=fcb, fcbOk = fc && !fc.err && fc.view===true && fc.connector===true && fc.container===true && fc.leaf===true && fc.priv===true;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

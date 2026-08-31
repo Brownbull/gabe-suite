@@ -659,7 +659,7 @@ function massR(n){ if(!ENC.mass) return bubR(); return bubR()*(0.85+nodeVal("mas
    the deployment config (DEPC): def +X · atk −X · conflict +Y · sats −Y. */
 function buildNode(n){ var grp=new T.Group(); var col=iconCol(n), br=massR(n);
   var ic, is=ENC.iconSize;
-  if(billTex[n.kind]){ ic=billboardMesh(n.kind,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
+  var _ik=(n.kind==="component"&&n.feClass==="view"&&billTex["screen"])?"screen":n.kind;   /* VIEW wears the SCREEN glyph (operator) */ if(billTex[_ik]){ ic=billboardMesh(_ik,col); ic.scale.set(is,is,1); }   // ICON = a CONSTANT display size (operator-set), same for every element
   else { ic=primitiveMesh(n.kind, col); ic.scale.multiplyScalar(is/13); }
   grp.add(ic);
   grp.add(bubble(br));
