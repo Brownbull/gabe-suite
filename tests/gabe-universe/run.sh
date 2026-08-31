@@ -891,8 +891,8 @@ check('function _commitCollect()' in page and '["commit","commits"]' in page and
       "COMMIT journeys (operator): each recent commit is a journey KIND — window.GABE_COMMITS → _commitCollect → the 'commits' tab, grouped by date bucket, walked like any journey")
 check('return !!_fnById(id);' in page and 'commit:true, corpora:{commit:1}' in page,
       "a commit-journey's carriers are only nodes STILL on the map (a touched id that no longer resolves is dropped — honest coverage view)")
-check('window.__uniRenderTierIcons=function' in page and 'window.__uniSetTierIcoSet=function' in page and 'data-grp="tierIco"' in page and 'var _TICO={' in page and 'function _tierIcoPill()' in page,
-      "TIER ICON SETS (operator): the header T0–T3 buttons wear a switchable icon set (labels/bars/dots/layers/grid); the switcher lives in the config panel's connections workbench")
+check('window.__uniRenderTierIcons=function' in page and 'window.__uniSetTierIcoSet=function' in page and 'data-grp="tierIco"' in page and 'var _TICO={' in page and 'function _tierIcoPill()' in page and 'body.insertAdjacentHTML("beforeend", _tierIcoPill())' in page,
+      "TIER ICON SETS (operator): the header T0–T3 buttons wear a switchable icon set (labels/bars/dots/layers/grid); the switcher sits in the VISIBLE config body beside WIRE VIEW (__uniAddWireView), not the hidden connections pane")
 check('id="jrnEntTog"' in page and 'window.__uniJrnEntOpen=!window.__uniJrnEntOpen' in page and 'COLLAPSED by default' in page,
       "the ENTITY picker is COLLAPSED behind a one-line toggle (operator: all-at-once was too much)")
 check('class="jglvlinfo"' in page and 'vars:"Classified here:' in page and 'var _JINFO=' in page,

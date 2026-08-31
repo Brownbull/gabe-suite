@@ -1939,8 +1939,7 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
     + wireRow("fk")+wireRow("bridge")+wireRow("calls")+wireRow("imports")
     + '<div class="grplbl" style="margin-top:9px" title="the DATA-ACCESS connectors (Option A): endpoint→model ROLLUP (the direct call-tree shortcut, method-coloured, hidden by default) vs the true function→model ACCESS wire (role-coloured when its gradient is on).">DATA-ACCESS</div>'
     + wireRow("rollup")+wireRow("access")+wireRow2("access")+'</div>'
-    + bandCfg()
-    + _tierIcoPill();                                        // the header T0–T3 icon-set switcher (operator)
+    + bandCfg();
   var tg=grpWith("TRANSPORTS"); var trow=mk("cfgrow"); trow.style.gap="6px";
   var trBtn=G.universe && G.universe.querySelector('[data-itog="transports"]');
   if(trBtn) trow.appendChild(trBtn);                       // DOM-move keeps its wireCfg listener
@@ -1964,7 +1963,6 @@ window.__uniAddLayoutTab=function(){ var cfg=document.getElementById("cfg"); if(
       CFG[grp]=(grp==="warOn")?(v==="true"):v; p.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on", x===b); });
       if(grp==="warOn" && G.planet) G.planet.classList.toggle("zonesoff", !CFG.warOn);
       try{ applyCfg(grp); }catch(err){} }); }); });
-  rt.querySelectorAll('.pill[data-grp="tierIco"] button').forEach(function(b){ b.addEventListener("click", function(){ window.__uniSetTierIcoSet(b.getAttribute("data-v")); }); });   // TIER ICON set switcher (operator)
   // transport speed is a POSITION LADDER now — wired where the Transports pane is assembled below
   var _rAF=null, redraw=function(){ if(_rAF) return; _rAF=requestAnimationFrame(function(){ _rAF=null; try{ updateConnectors(); }catch(e){} }); };
   rt.querySelectorAll('.pill[data-grp="focusRest"] button').forEach(function(b){ b.addEventListener("click", function(){
@@ -2252,6 +2250,12 @@ window.__uniAddWireView=function(){ var body=document.querySelector("#cfg .cfgbo
       try{ updateConnectors(); }catch(e){} try{ buildTransports(); }catch(e){} };   // shuttles re-derive — none fly hidden wires (review 52[4])
     row.appendChild(b); });
   g.appendChild(row); body.appendChild(g);
+  // TIER ICONS group (operator): the header T0–T3 icon-set switcher, in the SAME visible config
+  // body as WIRE VIEW (not the hidden connections pane), single-select pill.
+  if(!document.getElementById("tiericogrp")){ body.insertAdjacentHTML("beforeend", _tierIcoPill());
+    var _tgp=document.querySelector('#tiericogrp .pill[data-grp="tierIco"]');
+    if(_tgp) _tgp.querySelectorAll("button").forEach(function(b){ b.addEventListener("click", function(){ window.__uniSetTierIcoSet(b.getAttribute("data-v")); }); });
+    if(window.__uniRenderTierIcons) __uniRenderTierIcons(); }
   /* ── SELECTED-LINE look SETTLED (operator config baked as the connection default; the Temporary-Config panel retired like the focus-ring one) ── */
   if(typeof CFG!=="undefined"){ if(CFG.selOpacity==null) CFG.selOpacity=0.5; if(CFG.selThick==null) CFG.selThick=0.2; if(CFG.selPattern==null) CFG.selPattern="solid";
     if(CFG.selAnim==null) CFG.selAnim="pulse"; if(CFG.selAnimSpeed==null) CFG.selAnimSpeed=0.3; if(CFG.selGlow==null) CFG.selGlow=true; if(CFG.selGlowInt==null) CFG.selGlowInt=0.05; } };
@@ -2336,7 +2340,7 @@ window.__uniRenderTierIcons=function(){ var fn=_TICO[window.__uniTierIcoSet]||_T
   var fp=document.querySelector('.pill[data-grp="tier"]'); if(fp) [].forEach.call(fp.querySelectorAll("button"), function(b){ b.innerHTML=fn(+b.getAttribute("data-v")); }); };   // the fleet tier pill mirrors the header
 window.__uniSetTierIcoSet=function(s){ if(!_TICO[s]) s="labels"; window.__uniTierIcoSet=s; window.__uniRenderTierIcons();
   var pill=document.querySelector('.pill[data-grp="tierIco"]'); if(pill) [].forEach.call(pill.querySelectorAll("button"), function(b){ b.classList.toggle("on", b.getAttribute("data-v")===s); }); };
-function _tierIcoPill(){ var s='<div class="grp"><div class="grplbl" title="the header T0–T3 tier buttons wear this icon set — the level reads from the ramp; the T-number stays on hover">TIER ICONS</div><div class="pill" data-grp="tierIco">';
+function _tierIcoPill(){ var s='<div class="grp" id="tiericogrp"><div class="grplbl" title="the header T0–T3 tier buttons wear this icon set — the level reads from the ramp; the T-number stays on hover">TIER ICONS</div><div class="pill" data-grp="tierIco">';
   _TICO_ORDER.forEach(function(o){ s+='<button data-v="'+o[0]+'"'+(o[0]===window.__uniTierIcoSet?' class="on"':'')+' title="'+o[1]+'">'+_TICO[o[0]](3)+'</button>'; });   // preview each set with its T3 glyph
   return s+'</div></div>'; }
 window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel");
