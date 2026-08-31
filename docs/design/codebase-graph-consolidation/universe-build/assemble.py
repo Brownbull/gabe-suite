@@ -705,6 +705,15 @@ text = text.replace(OLD_LGBIND, OLD_LGBIND + """
     [].forEach.call(el.querySelectorAll("[data-lgfold]"), function(rw){ rw.onclick=function(){ if(window.__uniSetFoldHelpers) __uniSetFoldHelpers(window.__uniFoldHelpers===false); }; });
     [].forEach.call(el.querySelectorAll("[data-lggrp]"), function(hd){ hd.style.cursor="pointer"; hd.onclick=function(){ if(window.__uniGroupToggle) __uniGroupToggle(hd.dataset.lggrp); }; });""", 1)
 
+# FEATURE B (operator): an ⓘ button in the legend header opens the full-screen LEGEND REFERENCE (__uniLegRef).
+OLD_LGHEADBTN = '''h+='</div><button class="lgmin" title="collapse">–</button></div>';'''
+assert OLD_LGHEADBTN in text, "legend header min-button anchor missing"
+text = text.replace(OLD_LGHEADBTN, '''h+='</div><button class="lgref" title="open the full legend reference — every type & badge, with a searchable example"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button><button class="lgmin" title="collapse">–</button></div>';''', 1)
+OLD_LGMINWIRE = '''el.querySelector(".lgmin").onclick=function(){ el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };'''
+assert OLD_LGMINWIRE in text, "legend min-button wire anchor missing"
+text = text.replace(OLD_LGMINWIRE, OLD_LGMINWIRE + '''
+    var _lref=el.querySelector(".lgref"); if(_lref) _lref.onclick=function(){ if(window.__uniLegRef) __uniLegRef(); };''', 1)
+
 OLD_CWCALL = "connectorWire(connGroup, new T.Vector3(a.x,a.y,a.z), new T.Vector3(b.x,b.y,b.z), REL2KIND[l.rel]||'calls', 8); });"
 assert OLD_CWCALL in text, "connectorWire call anchor missing"
 text = text.replace(OLD_CWCALL,

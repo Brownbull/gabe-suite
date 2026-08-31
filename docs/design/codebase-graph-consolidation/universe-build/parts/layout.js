@@ -2494,6 +2494,12 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
       r.onmouseenter=function(){ _mark(+r.getAttribute("data-ti")); }; }); }
   function _mark(i){ act=i; dd.querySelectorAll(".tsrow").forEach(function(r){ r.classList.toggle("on", +r.getAttribute("data-ti")===act); }); }
   function _fire(i){ var r=ACT[i]; if(!r) return; _close(); inp.blur(); try{ r.go(); }catch(e){} }
+  // ONE programmatic entry (the legend-reference example chips call this): fill the bar VISIBLY, then focus.
+  // With a known node id → __uniGoto directly (deterministic, no best-match ambiguity); else run the search
+  // and fire the top hit (the string resolves the node, waking a held-off ƒ / Types layer if needed).
+  window.__uniSearchGo=function(s, id){ if(inp) inp.value=(s==null?"":s);
+    if(id && window.__uniGoto){ _close(); if(inp) inp.blur(); try{ __uniGoto(id); }catch(e){} return true; }
+    _render(); if(ACT.length){ _fire(0); return true; } return false; };
   inp.addEventListener("input", _render);
   inp.addEventListener("focus", _render);
   inp.addEventListener("keydown", function(e){
@@ -2508,3 +2514,87 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
     if(e.key==="/" && tag!=="INPUT" && tag!=="TEXTAREA" && !e.ctrlKey && !e.metaKey && !e.altKey){
       e.preventDefault(); inp.focus(); inp.select(); } });
 })(); }
+
+/* ── THE LEGEND REFERENCE (operator) — the ⓘ beside the legend opens a full graph-area overlay: every
+   FRONTEND and BACKEND type + every badge, drawn with its ACTUAL glyph (legend-visual law), each with an
+   on/off flag AND a live search EXAMPLE derived from the loaded nodes. Click an example → it fills the
+   search bar, focuses that node (__uniSearchGo → __uniGoto), and closes the overlay. Connectors + the
+   fleet/planet legend ride along as reference (no example — they are wires/ships, not searchable nodes). ── */
+window.__uniLegRef=function(){
+  var old=document.getElementById("uni-legref"); if(old){ old.remove(); document.removeEventListener("keydown", _lrEsc, true); return; }   // toggle
+  var K=(typeof KINDS!=="undefined")?KINDS:{};
+  // ONE example per type/class/method — a REAL loaded node so the search always resolves. Functions ride
+  // off-field (stars); their example carries NO id → __uniSearchGo runs the search, which wakes ƒ + focuses.
+  function _exNode(pred){ for(var i=0;i<nodes.length;i++){ if(pred(nodes[i])) return {label:nodes[i].label, id:nodes[i].id}; } return null; }
+  function _fnPool(){ if(!window._FNNODES){ try{ if(typeof _buildFnData==="function") _buildFnData(); }catch(e){} } return window._FNNODES||[]; }
+  function _exKind(k){ if(k==="function"){ var p=_fnPool(); return p[0]?{label:p[0].label}:null; } return _exNode(function(n){ return n.kind===k; }); }
+  function _exFc(fc){ return _exNode(function(n){ return n.kind==="component" && n.feClass===fc; }); }
+  function _exMethod(m){ return _exNode(function(n){ return n.kind==="endpoint" && n.m && n.m.method===m; }); }
+  function _exRole(r){ var p=_fnPool(); for(var i=0;i<p.length;i++){ if(p[i].role===r) return {label:p[i].label}; } return null; }
+  function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function _exChip(ex){ if(!ex||!ex.label) return '<span class="lrno">enable ƒ to search</span>';
+    return '<button class="lrex" data-s="'+_esc(ex.label)+'"'+(ex.id?(' data-id="'+_esc(ex.id)+'"'):'')+' title="find it in the graph">'+_esc(ex.label)+'</button>'; }
+  function _badgeCanvas(kind,key){ return '<canvas class="lrbc" width="34" height="34" data-bk="'+kind+'" data-bkey="'+_esc(key)+'"></canvas>'; }
+  // a TYPE row: flag toggle · icon · name · description · example
+  function _typeRow(k){ var Kd=K[k]||{col:"#8794ab",type:k,usage:[0,""]};
+    var _st=(window.__uniKindState&&__uniKindState[k])||(k==="type"||k==="function"?"off":"all");
+    var _on=(_st!=="off"); var ico=(typeof svgInline==="function")?svgInline(k, Kd.col, 18):"";
+    return '<div class="lrrow"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
+      +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
+      +'<i>'+_esc((Kd.usage&&Kd.usage[1])||"")+'</i></div>'+_exChip(_exKind(k))+'</div>'; }
+  // a BADGE row (indented under its type): badge glyph · name · description · example
+  function _badgeRow(kind,key,name,desc,ex){ return '<div class="lrrow lrb"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
+      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_exChip(ex)+'</div>'; }
+  var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
+  function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
+    ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return; h+=_typeRow(k);
+      if(k==="component" && hasFe){                                                    // the component CLASSES ride under it (the ⓘ popup, expanded here)
+        ["connector","container","leaf"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc)); });
+        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrplain" title="a plain cube — no badge"></span></span><div class="lrtx"><b>private</b><i>private — internal to one view, no badge</i></div>'+_exChip(_exFc("private"))+'</div>';
+      } });
+    if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
+      var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false);
+      h+='<div class="lrrow"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_exChip(_exFc("view"))+'</div>'; }
+    return h+'</div>'; }
+  function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
+    ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return; h+=_typeRow(k);
+      if(k==="endpoint"){ ["GET","POST","PUT","PATCH","DELETE","BOOT"].forEach(function(m){ h+=_badgeRow("method", m, m, (BD.method&&BD.method[m])||"", _exMethod(m)); }); }
+      else if(k==="function"){ ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r)); }); }
+      else if(k==="schema"){ h+=_badgeRow("count", "N", "fold count", (BD.count&&BD.count["*"])||"", null); } });
+    return h+'</div>'; }
+  function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
+    var h='<div class="lrsec lrwide"><div class="lrsh">CONNECTORS · what wires elements together</div>';
+    items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
+      if(it.t==="ln"){ var col=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8", da=(it.s==="dotted")?"2 3":(it.s==="dashed")?"6 3":"";
+        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+col+'" stroke-width="2.4" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l.replace(/<i>/g,'<i>').replace(/<\/i>/g,'</i>')+'</div></div>'; return; }
+      if(it.t==="ship"){ var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#38bdf8";
+        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+it.l+'</div></div>'; return; } });
+    return h+'</div>'; }
+  function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
+    var h='<div class="lrsec lrwide"><div class="lrsh">FLEET · planets & ships</div>';
+    (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
+      var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8";
+      h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+(it.l||"")+'</div></div>'; }); });
+    return h+'</div>'; }
+  var ov=document.createElement("div"); ov.id="uni-legref";
+  var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
+    +'<span class="lrsubtitle">every type &amp; badge, with a live example — click an example to find it in the graph</span>'
+    +'<button class="lrclose" title="close (Esc)">✕</button></div>';
+  var body='<div class="lrbody"><div class="lrcols">'+_feSection()+_beSection()+'</div>'+_connSection()+_planetSection()
+    +'<div class="lrfoot">click a flag ● to show / hide that type · click an example to jump to it</div></div>';
+  ov.innerHTML=head+body; document.body.appendChild(ov);
+  // paint each badge glyph onto its canvas (the SAME __badgeGlyph the 3D badges use — legend-visual law)
+  [].forEach.call(ov.querySelectorAll(".lrbc"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128);
+    if(window.__badgeGlyph) try{ __badgeGlyph(c, cv.dataset.bk, cv.dataset.bkey); }catch(e){} });
+  // example chip → fill the bar + focus + close the overlay
+  [].forEach.call(ov.querySelectorAll(".lrex"), function(b){ b.onclick=function(){ var s=b.getAttribute("data-s"), id=b.getAttribute("data-id");
+    if(window.__uniSearchGo) __uniSearchGo(s, id||null); __uniLegRef(); }; });
+  // flag toggle → show/hide the kind / feClass, then rebuild the overlay so the pill reflects the new state
+  [].forEach.call(ov.querySelectorAll(".lrflag"), function(b){ b.onclick=function(){ var k=b.getAttribute("data-flagk"), fc=b.getAttribute("data-flagfc");
+    if(k && window.__uniKindToggle) __uniKindToggle(k); else if(fc && window.__uniFeClassToggle) __uniFeClassToggle(fc);
+    __uniLegRef(); __uniLegRef(); }; });   // rebuild (toggle off then on = refresh in place)
+  ov.querySelector(".lrclose").onclick=function(){ __uniLegRef(); };
+  ov.addEventListener("mousedown", function(ev){ if(ev.target===ov) __uniLegRef(); });   // backdrop click closes
+  document.addEventListener("keydown", _lrEsc, true);
+};
+function _lrEsc(e){ if(e.key==="Escape" && document.getElementById("uni-legref")){ e.preventDefault(); e.stopPropagation(); window.__uniLegRef(); } }

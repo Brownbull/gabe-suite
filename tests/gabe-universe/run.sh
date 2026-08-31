@@ -976,6 +976,16 @@ check('kind==="feclass")?["connector","container","leaf"]' in page and '(kind===
       "__badgePop does not handle the feclass kind (the component ⓘ popup would be empty)")
 check('view — its own type row' in page and '.badgepop .bpnote{' in page,
       "the feclass popup footer note (view = own type · private = plain) + its CSS are gone")
+# FEATURE B (operator): the legend header ⓘ opens a full graph-area REFERENCE (__uniLegRef) — every FE/BE type +
+# badge with its actual glyph + a live search example; the example chip fills the bar + focuses (__uniSearchGo) + closes.
+check('window.__uniLegRef=function' in page and 'window.__uniSearchGo=function' in page and 'class="lgref"' in page and 'if(window.__uniLegRef) __uniLegRef();' in page,
+      "the legend-reference overlay (__uniLegRef) + its search-go bridge + the header ⓘ button + wiring are gone")
+check('id="uni-legref"' in page and '#uni-legref{' in page and 'left:var(--navw); right:0; top:var(--topbarh)' in page,
+      "the #uni-legref overlay markup/CSS (full graph-area, theme-var positioned) is gone")
+check('function _exNode(pred)' in page and 'function _exMethod(m)' in page and 'function _exFc(fc)' in page and 'class="lrex"' in page,
+      "the reference derives examples from real loaded nodes (per kind/feClass/method) into clickable chips — gone")
+check('if(id && window.__uniGoto){ _close(); if(inp) inp.blur(); try{ __uniGoto(id); }catch(e){} return true; }' in page,
+      "__uniSearchGo no longer prefers __uniGoto(id) (would reintroduce best-match ambiguity for example chips)")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1250,6 +1260,25 @@ const { chromium } = require(process.argv[3]);
     K('Digit1',true); const map1=window.__uniTier;                 // Alt+1 → T0
     return { t0, afterPlain, afterAlt, afterAltx3, map4, map1 };
   }).catch(e=>({err:String(e)}));
+  // LEGEND REFERENCE (Feature B): the ⓘ opens the full graph-area overlay (FE+BE types · badges · example chips ·
+  // connectors · planets); an example chip fills the search bar + focuses the node + closes; a flag hides its kind.
+  const legRef = await p.evaluate(() => {
+    const btn=document.querySelector('#elegend .lgref'); if(!btn) return {err:'no lgref button'};
+    btn.click(); const ov=document.getElementById('uni-legref'); if(!ov) return {err:'overlay did not open'};
+    const open={ secs:[].filter.call(ov.querySelectorAll('.lrsh'), h=>/FRONTEND|BACKEND/.test(h.textContent)).length,
+      chips:ov.querySelectorAll('.lrex').length, badges:ov.querySelectorAll('.lrbc').length, flags:ov.querySelectorAll('.lrflag').length,
+      conn:!![].find.call(ov.querySelectorAll('.lrsh'), h=>/CONNECTORS/.test(h.textContent)),
+      planet:!![].find.call(ov.querySelectorAll('.lrsh'), h=>/FLEET/.test(h.textContent)),
+      viewRow:!![].find.call(ov.querySelectorAll('.lrtx b'), x=>x.textContent==='View') };
+    const chip=ov.querySelector('.lrex'); const s=chip&&chip.getAttribute('data-s'); if(chip) chip.click();
+    const jump={ closed:!document.getElementById('uni-legref'), barVal:(document.getElementById('tsin')||{}).value,
+      hlOn:(typeof HL!=='undefined'&&HL.on), hlMode:(typeof HL!=='undefined'&&HL.mode), s:s };
+    document.querySelector('#elegend .lgref').click();   // re-open
+    const ov2=document.getElementById('uni-legref'); const f=ov2&&ov2.querySelector('.lrflag[data-flagk="endpoint"]');
+    const before=(window.__uniKindState||{}).endpoint; if(f) f.click(); const after=(window.__uniKindState||{}).endpoint;
+    const ov3=document.getElementById('uni-legref'); if(ov3) window.__uniLegRef();   // close so it never bleeds into later checks
+    return { open, jump, flag:{ before, after, rebuilt:!!ov3 } };
+  }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1286,9 +1315,15 @@ const { chromium } = require(process.argv[3]);
     && afterTier && !afterTier.err && afterTier.on===false && afterTier.walk===null && afterTier.vis>clickFocus.vis;
   // tiers on Alt+Digit only: plain 2 leaves the tier untouched; Alt+2 → T1 and stays T1 on repeat (deterministic); Alt+4→T3, Alt+1→T0
   const kr=keyReg, keyOk = kr && !kr.err && kr.t0===3 && kr.afterPlain===3 && kr.afterAlt===1 && kr.afterAltx3===1 && kr.map4===3 && kr.map1===0;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk;
+  // the reference opens with both sides + example chips + badges + flags + connectors + planets + the View row;
+  // a chip fills the bar and focuses (HL focus mode) and closes the overlay; a flag hides its kind (all→off)
+  const lr=legRef, legRefOk = lr && !lr.err && lr.open && lr.open.secs===2 && lr.open.chips>0 && lr.open.badges>0
+    && lr.open.flags>0 && lr.open.conn && lr.open.planet && lr.open.viewRow
+    && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
+    && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

@@ -743,6 +743,49 @@
   .unistubtip .ustname{ display:flex; align-items:center; gap:5px; font-weight:700; color:#fff; letter-spacing:-0.01em; }
   .unistubtip .ustname svg{ flex:0 0 auto; }
   .unistubtip .ustmeta{ display:block; margin-top:2px; font-size:9.5px; color:var(--muted); text-transform:none; }
+
+  /* ══ THE LEGEND REFERENCE (operator) — full graph-area overlay opened by the legend header's ⓘ ══ */
+  #elegend .lgref{ display:inline-flex; align-items:center; justify-content:center; width:22px; height:20px; margin-left:auto;
+    color:var(--muted); background:none; border:1px solid var(--line); border-radius:6px; padding:0; cursor:pointer; }
+  #elegend .lgref:hover{ color:var(--accent); border-color:var(--accent); }
+  #elegend .lgref + .lgmin{ margin-left:4px; }   /* the ⓘ took the auto-margin; keep the minus snug beside it */
+  #uni-legref{ position:fixed; left:var(--navw); right:0; top:var(--topbarh); bottom:0; z-index:120;
+    background:color-mix(in srgb, var(--panel) 97%, transparent); backdrop-filter:blur(3px);
+    display:flex; flex-direction:column; animation:lrfade .16s ease; }
+  @keyframes lrfade{ from{ opacity:0; } to{ opacity:1; } }
+  #uni-legref .lrhd{ display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line); flex:none; }
+  #uni-legref .lrhd b{ display:inline-flex; align-items:center; gap:7px; font:800 13px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.06em; color:var(--ink); }
+  #uni-legref .lrhd b svg{ color:var(--accent); }
+  #uni-legref .lrsubtitle{ font:400 11px/1.3 var(--font-ui); color:var(--muted); }
+  #uni-legref .lrclose{ margin-left:auto; font:400 17px/1 var(--font-ui); color:var(--muted); background:none; border:1px solid var(--line); border-radius:7px; width:28px; height:28px; cursor:pointer; }
+  #uni-legref .lrclose:hover{ color:var(--ink); border-color:var(--accent); }
+  #uni-legref .lrbody{ flex:1; min-height:0; overflow-y:auto; padding:16px 18px 22px; }
+  #uni-legref .lrcols{ display:grid; grid-template-columns:1fr 1fr; gap:0 26px; align-items:start; }
+  @media (max-width:900px){ #uni-legref .lrcols{ grid-template-columns:1fr; } }
+  #uni-legref .lrsec{ margin-bottom:16px; }
+  #uni-legref .lrsh{ font:800 10px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.09em; color:var(--accent);
+    padding-bottom:6px; margin-bottom:6px; border-bottom:1px solid var(--line); }
+  #uni-legref .lrgrp{ font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.07em; color:var(--muted); margin:11px 0 5px; }
+  #uni-legref .lrgrp.lrsub{ margin-left:4px; opacity:.85; }
+  #uni-legref .lrrow{ display:flex; align-items:center; gap:9px; padding:4px 2px; border-radius:7px; }
+  #uni-legref .lrrow:hover{ background:var(--hov-bg); }
+  #uni-legref .lrrow.lrb{ margin-left:24px; }   /* badges/classes sit indented under their type */
+  #uni-legref .lrflag{ flex:none; width:13px; height:13px; border-radius:50%; border:1.5px solid var(--muted); background:transparent; cursor:pointer; padding:0; }
+  #uni-legref .lrflag.on{ background:var(--accent); border-color:var(--accent); box-shadow:0 0 0 2px color-mix(in srgb, var(--accent) 25%, transparent); }
+  #uni-legref .lrflag:not(.on){ opacity:.5; }
+  #uni-legref .lrico{ flex:none; width:36px; display:flex; align-items:center; justify-content:center; }
+  #uni-legref .lrbc{ width:17px; height:17px; display:block; }
+  #uni-legref .lrplain{ width:15px; height:15px; border-radius:3px; background:color-mix(in srgb, #d946ef 55%, transparent); border:1px solid #d946ef; }
+  #uni-legref .lrswatch{ width:14px; height:14px; border-radius:4px; display:inline-block; }
+  #uni-legref .lrtx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  #uni-legref .lrtx b{ font:600 12px/1.2 var(--font-ui); color:var(--ink); }
+  #uni-legref .lrtx i{ font:400 10.5px/1.35 var(--font-ui); font-style:normal; color:var(--muted); }
+  #uni-legref .lrex{ flex:none; max-width:190px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    font:500 11px/1 var(--font-mono); color:var(--accent); background:color-mix(in srgb, var(--accent) 10%, transparent);
+    border:1px solid color-mix(in srgb, var(--accent) 35%, transparent); border-radius:6px; padding:4px 8px; cursor:pointer; }
+  #uni-legref .lrex:hover{ background:color-mix(in srgb, var(--accent) 20%, transparent); border-color:var(--accent); }
+  #uni-legref .lrno{ flex:none; font:400 10px/1 var(--font-ui); color:var(--muted); font-style:italic; }
+  #uni-legref .lrfoot{ margin-top:12px; padding-top:10px; border-top:1px solid var(--line); font:400 10.5px/1.4 var(--font-ui); color:var(--muted); }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -4032,6 +4075,12 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
       r.onmouseenter=function(){ _mark(+r.getAttribute("data-ti")); }; }); }
   function _mark(i){ act=i; dd.querySelectorAll(".tsrow").forEach(function(r){ r.classList.toggle("on", +r.getAttribute("data-ti")===act); }); }
   function _fire(i){ var r=ACT[i]; if(!r) return; _close(); inp.blur(); try{ r.go(); }catch(e){} }
+  // ONE programmatic entry (the legend-reference example chips call this): fill the bar VISIBLY, then focus.
+  // With a known node id → __uniGoto directly (deterministic, no best-match ambiguity); else run the search
+  // and fire the top hit (the string resolves the node, waking a held-off ƒ / Types layer if needed).
+  window.__uniSearchGo=function(s, id){ if(inp) inp.value=(s==null?"":s);
+    if(id && window.__uniGoto){ _close(); if(inp) inp.blur(); try{ __uniGoto(id); }catch(e){} return true; }
+    _render(); if(ACT.length){ _fire(0); return true; } return false; };
   inp.addEventListener("input", _render);
   inp.addEventListener("focus", _render);
   inp.addEventListener("keydown", function(e){
@@ -4046,6 +4095,90 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
     if(e.key==="/" && tag!=="INPUT" && tag!=="TEXTAREA" && !e.ctrlKey && !e.metaKey && !e.altKey){
       e.preventDefault(); inp.focus(); inp.select(); } });
 })(); }
+
+/* ── THE LEGEND REFERENCE (operator) — the ⓘ beside the legend opens a full graph-area overlay: every
+   FRONTEND and BACKEND type + every badge, drawn with its ACTUAL glyph (legend-visual law), each with an
+   on/off flag AND a live search EXAMPLE derived from the loaded nodes. Click an example → it fills the
+   search bar, focuses that node (__uniSearchGo → __uniGoto), and closes the overlay. Connectors + the
+   fleet/planet legend ride along as reference (no example — they are wires/ships, not searchable nodes). ── */
+window.__uniLegRef=function(){
+  var old=document.getElementById("uni-legref"); if(old){ old.remove(); document.removeEventListener("keydown", _lrEsc, true); return; }   // toggle
+  var K=(typeof KINDS!=="undefined")?KINDS:{};
+  // ONE example per type/class/method — a REAL loaded node so the search always resolves. Functions ride
+  // off-field (stars); their example carries NO id → __uniSearchGo runs the search, which wakes ƒ + focuses.
+  function _exNode(pred){ for(var i=0;i<nodes.length;i++){ if(pred(nodes[i])) return {label:nodes[i].label, id:nodes[i].id}; } return null; }
+  function _fnPool(){ if(!window._FNNODES){ try{ if(typeof _buildFnData==="function") _buildFnData(); }catch(e){} } return window._FNNODES||[]; }
+  function _exKind(k){ if(k==="function"){ var p=_fnPool(); return p[0]?{label:p[0].label}:null; } return _exNode(function(n){ return n.kind===k; }); }
+  function _exFc(fc){ return _exNode(function(n){ return n.kind==="component" && n.feClass===fc; }); }
+  function _exMethod(m){ return _exNode(function(n){ return n.kind==="endpoint" && n.m && n.m.method===m; }); }
+  function _exRole(r){ var p=_fnPool(); for(var i=0;i<p.length;i++){ if(p[i].role===r) return {label:p[i].label}; } return null; }
+  function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function _exChip(ex){ if(!ex||!ex.label) return '<span class="lrno">enable ƒ to search</span>';
+    return '<button class="lrex" data-s="'+_esc(ex.label)+'"'+(ex.id?(' data-id="'+_esc(ex.id)+'"'):'')+' title="find it in the graph">'+_esc(ex.label)+'</button>'; }
+  function _badgeCanvas(kind,key){ return '<canvas class="lrbc" width="34" height="34" data-bk="'+kind+'" data-bkey="'+_esc(key)+'"></canvas>'; }
+  // a TYPE row: flag toggle · icon · name · description · example
+  function _typeRow(k){ var Kd=K[k]||{col:"#8794ab",type:k,usage:[0,""]};
+    var _st=(window.__uniKindState&&__uniKindState[k])||(k==="type"||k==="function"?"off":"all");
+    var _on=(_st!=="off"); var ico=(typeof svgInline==="function")?svgInline(k, Kd.col, 18):"";
+    return '<div class="lrrow"><button class="lrflag'+(_on?" on":"")+'" data-flagk="'+k+'" title="'+(_on?"drawn — click to hide":"hidden — click to show")+'"></button>'
+      +'<span class="lrico">'+ico+'</span><div class="lrtx"><b style="color:'+Kd.col+'">'+_esc(Kd.type||k)+'</b>'
+      +'<i>'+_esc((Kd.usage&&Kd.usage[1])||"")+'</i></div>'+_exChip(_exKind(k))+'</div>'; }
+  // a BADGE row (indented under its type): badge glyph · name · description · example
+  function _badgeRow(kind,key,name,desc,ex){ return '<div class="lrrow lrb"><span class="lrico">'+_badgeCanvas(kind,key)+'</span>'
+      +'<div class="lrtx"><b>'+_esc(name)+'</b><i>'+_esc(desc)+'</i></div>'+_exChip(ex)+'</div>'; }
+  var BD=(window.__BADGE_DESC)||{}, hasFe=!!(window.GABE_C4&&GABE_C4.fe);
+  function _feSection(){ var h='<div class="lrsec"><div class="lrsh">FRONTEND</div>';
+    ["route","component","hook","type","store","module","web"].forEach(function(k){ if(!K[k]) return; h+=_typeRow(k);
+      if(k==="component" && hasFe){                                                    // the component CLASSES ride under it (the ⓘ popup, expanded here)
+        ["connector","container","leaf"].forEach(function(fc){ h+=_badgeRow("feclass", fc, fc, (BD.feclass&&BD.feclass[fc])||"", _exFc(fc)); });
+        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrplain" title="a plain cube — no badge"></span></span><div class="lrtx"><b>private</b><i>private — internal to one view, no badge</i></div>'+_exChip(_exFc("private"))+'</div>';
+      } });
+    if(hasFe){ var vico=(typeof svgInline==="function")?svgInline("screen","#d946ef",18):"";   // View = a screen-glyph type (the merged view+screen), toggled as a feClass
+      var _von=!(window.__uniFeClassState&&__uniFeClassState.view===false);
+      h+='<div class="lrrow"><button class="lrflag'+(_von?" on":"")+'" data-flagfc="view" title="'+(_von?"drawn — click to hide":"hidden — click to show")+'"></button><span class="lrico">'+vico+'</span><div class="lrtx"><b style="color:#d946ef">View</b><i>a screen — the top-level view component</i></div>'+_exChip(_exFc("view"))+'</div>'; }
+    return h+'</div>'; }
+  function _beSection(){ var h='<div class="lrsec"><div class="lrsh">BACKEND</div>';
+    ["endpoint","function","schema","model","external","entity"].forEach(function(k){ if(!K[k]) return; h+=_typeRow(k);
+      if(k==="endpoint"){ ["GET","POST","PUT","PATCH","DELETE","BOOT"].forEach(function(m){ h+=_badgeRow("method", m, m, (BD.method&&BD.method[m])||"", _exMethod(m)); }); }
+      else if(k==="function"){ ["accessor","caller","gate","pure"].forEach(function(r){ h+=_badgeRow("role", r, r, (BD.role&&BD.role[r])||"", _exRole(r)); }); }
+      else if(k==="schema"){ h+=_badgeRow("count", "N", "fold count", (BD.count&&BD.count["*"])||"", null); } });
+    return h+'</div>'; }
+  function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
+    var h='<div class="lrsec lrwide"><div class="lrsh">CONNECTORS · what wires elements together</div>';
+    items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
+      if(it.t==="ln"){ var col=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8", da=(it.s==="dotted")?"2 3":(it.s==="dashed")?"6 3":"";
+        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+col+'" stroke-width="2.4" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l.replace(/<i>/g,'<i>').replace(/<\/i>/g,'</i>')+'</div></div>'; return; }
+      if(it.t==="ship"){ var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#38bdf8";
+        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+it.l+'</div></div>'; return; } });
+    return h+'</div>'; }
+  function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
+    var h='<div class="lrsec lrwide"><div class="lrsh">FLEET · planets & ships</div>';
+    (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
+      var sc=it.c!=null?("#"+("000000"+it.c.toString(16)).slice(-6)):"#8590a8";
+      h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+(it.l||"")+'</div></div>'; }); });
+    return h+'</div>'; }
+  var ov=document.createElement("div"); ov.id="uni-legref";
+  var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
+    +'<span class="lrsubtitle">every type &amp; badge, with a live example — click an example to find it in the graph</span>'
+    +'<button class="lrclose" title="close (Esc)">✕</button></div>';
+  var body='<div class="lrbody"><div class="lrcols">'+_feSection()+_beSection()+'</div>'+_connSection()+_planetSection()
+    +'<div class="lrfoot">click a flag ● to show / hide that type · click an example to jump to it</div></div>';
+  ov.innerHTML=head+body; document.body.appendChild(ov);
+  // paint each badge glyph onto its canvas (the SAME __badgeGlyph the 3D badges use — legend-visual law)
+  [].forEach.call(ov.querySelectorAll(".lrbc"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128);
+    if(window.__badgeGlyph) try{ __badgeGlyph(c, cv.dataset.bk, cv.dataset.bkey); }catch(e){} });
+  // example chip → fill the bar + focus + close the overlay
+  [].forEach.call(ov.querySelectorAll(".lrex"), function(b){ b.onclick=function(){ var s=b.getAttribute("data-s"), id=b.getAttribute("data-id");
+    if(window.__uniSearchGo) __uniSearchGo(s, id||null); __uniLegRef(); }; });
+  // flag toggle → show/hide the kind / feClass, then rebuild the overlay so the pill reflects the new state
+  [].forEach.call(ov.querySelectorAll(".lrflag"), function(b){ b.onclick=function(){ var k=b.getAttribute("data-flagk"), fc=b.getAttribute("data-flagfc");
+    if(k && window.__uniKindToggle) __uniKindToggle(k); else if(fc && window.__uniFeClassToggle) __uniFeClassToggle(fc);
+    __uniLegRef(); __uniLegRef(); }; });   // rebuild (toggle off then on = refresh in place)
+  ov.querySelector(".lrclose").onclick=function(){ __uniLegRef(); };
+  ov.addEventListener("mousedown", function(ev){ if(ev.target===ov) __uniLegRef(); });   // backdrop click closes
+  document.addEventListener("keydown", _lrEsc, true);
+};
+function _lrEsc(e){ if(e.key==="Escape" && document.getElementById("uni-legref")){ e.preventDefault(); e.stopPropagation(); window.__uniLegRef(); } }
 /* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
    TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
    enclosing translucent sphere. POLYGON = a rounded convex HULL that ENCLOSES each node (seeded
@@ -5061,7 +5194,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       Planet:'<svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><circle cx="19" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><path d="M10.4 21.9a10 10 0 0 0 9.941-15.416"/><path d="M13.5 2.1a10 10 0 0 0-9.841 15.416"/></svg>' };
     var h='<div class="lghd"><b>'+(typeof ico==="function"?ico("shape",13):"")+'Legend</b><div class="lgtabs">';
     tabs.forEach(function(t){ h+='<button class="lgtab'+(t===active?" on":"")+'" data-t="'+t+'" title="'+t+'">'+(LGTABICO[t]||t)+'</button>'; });
-    h+='</div><button class="lgmin" title="collapse">–</button></div>';
+    h+='</div><button class="lgref" title="open the full legend reference — every type & badge, with a searchable example"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button><button class="lgmin" title="collapse">–</button></div>';
     var items;
     if(isSub){ if(entry.sub.indexOf(_legSub)<0) _legSub=entry.sub[0];   // nested sub-tabs (Planet: Defense · Attack · Field)
       h+='<div class="lgsubtabs">';
@@ -5114,6 +5247,7 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
       var sl=document.querySelector('input[data-beam="'+k+'"]'); if(sl) sl.value=String(__uniBeam[k]);
       render(); }; });
     el.querySelector(".lgmin").onclick=function(){ el.classList.toggle("min"); this.textContent=el.classList.contains("min")?"+":"–"; };
+    var _lref=el.querySelector(".lgref"); if(_lref) _lref.onclick=function(){ if(window.__uniLegRef) __uniLegRef(); };
     [].forEach.call(el.querySelectorAll(".lgtab"), function(b){ b.onclick=function(){ active=b.dataset.t; render(); }; });
     [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });
     [].forEach.call(el.querySelectorAll("[data-lgk]"), function(rw){ rw.onclick=function(){ if(window.__uniKindToggle) __uniKindToggle(rw.dataset.lgk); }; });
