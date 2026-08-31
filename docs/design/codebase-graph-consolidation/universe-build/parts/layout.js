@@ -710,7 +710,7 @@ zForce.initialize=function(ns){ zForce.__n=ns; };
    Two styles: GLOW (halo the reached set, dim the rest of the wires) · FOCUS (hide everything
    outside the set; hulls stay as geography). Alt+scroll changes depth; Esc clears. The journeys
    picker feeds the SAME machinery with a carrier set instead of a single origin. */
-var HL={ on:false, mode:"glow", depth:3, rest:"hide", origin:null, jr:null, set:{}, links:null, sprites:[], rings:[] };   // rings = the spinning focus rings (operator)   // rest = focus's treatment of the OUTSIDE: dim · fade · wires · hide
+var HL={ on:false, mode:"glow", depth:1, rest:"hide", origin:null, jr:null, set:{}, links:null, sprites:[], rings:[] };   // depth DEFAULT 1 (operator): a click focuses the IMMEDIATE neighbourhood, not a depth-3 flood · rest = focus's treatment of the OUTSIDE: dim · fade · wires · hide
 function _hlCompute(){ if(!HL.origin){ HL.set={}; HL.links=null; return; }
   if(HL.exact){                                            // JOURNEY mode (batch 49): the path IS the set — the fe leg
     var ex={};                                             // sits in the dense frontend cluster, and a depth-BFS from it
@@ -822,13 +822,13 @@ function _hlSyncUI(){ var dn=document.getElementById("depthNum"); if(dn) dn.text
   var jb=document.getElementById("jrnBtn"); if(jb) jb.classList.toggle("on", !!HL.jr);
   var ig=document.getElementById("hlIcoGlow"), ifc=document.getElementById("hlIcoFocus");
   if(ig&&ifc){ ig.style.display=(HL.mode==="glow")?"":"none"; ifc.style.display=(HL.mode==="focus")?"":"none"; } }
-window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle();
+window.__uniHLSelect=function(n){ if(!n) return; HL.jr=null; HL.jrObj=null; HL.exact=false; HL.mode="focus"; HL.origin=[n.id]; HL.on=true; _hlCompute(); _hlRestyle();   // a CLICK focuses+HIDES the outside (operator: "show THIS + its immediate neighbours") — at the depth-1 default; F toggles back to glow for context
   if(WALK.mode!=="trail"){ WALK.mode="trail"; WALK.steps=[]; }        // a user click while a journey walks = a fresh trail (the 2D rule)
   var ix=WALK.steps.indexOf(n.id);
   if(ix>=0) WALK.i=ix; else { WALK.steps.push(n.id); if(WALK.steps.length>7) WALK.steps.shift(); WALK.i=WALK.steps.length-1; }
   _walkRender(); };
-window.__uniHLSelectLink=function(l){ if(!l) return; HL.jr=null; HL.jrObj=null; HL.exact=false;
-  HL.origin=[lid(l.source), lid(l.target)]; HL.on=true; _hlCompute(); _hlRestyle(); };   // a WIRE select seeds the BFS from BOTH endpoints (depth control applies)
+window.__uniHLSelectLink=function(l){ if(!l) return; HL.jr=null; HL.jrObj=null; HL.exact=false; HL.mode="focus";
+  HL.origin=[lid(l.source), lid(l.target)]; HL.on=true; _hlCompute(); _hlRestyle(); };   // a WIRE select seeds the BFS from BOTH endpoints, focus+hide (depth control applies)
 window.__uniPin=window.__uniPin||{};   // nodes a journey walk / reveal pinned past the critical solo fold — cleared with the walk
 window.__uniHLClear=function(){ if(!HL.on && !WALK.mode) return; HL.on=false; window.__uniPin={}; try{ _applyVisNow({all:true}); }catch(e){} HL.jr=null; HL.jrObj=null; HL.exact=false; HL.origin=null; HL.set={}; HL.links=null;
   window.__uniSelLink=null;
@@ -1019,7 +1019,7 @@ window.__uniJrnStart=function(cid){ var p=document.getElementById("jrn"); if(p) 
   if((j.bk||j.wf) && window.__uniKindState && window.__uniSetKindState){   // the chain's steps are fns — an OFF function layer would make every step dead
     var _fs=__uniKindState["function"]||(typeof _kindDefault==="function"?_kindDefault("function"):"all");
     if(_fs==="off") __uniSetKindState("function","all"); }
-  HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();
+  HL.jr=cid; HL.jrObj=j; HL.exact=true; HL.mode="glow"; HL.origin=fe.concat(j.carriers); HL.on=true; _hlCompute(); _hlRestyle();   // a JOURNEY keeps CONTEXT (glow), never focus-hide — the click→focus default must not leak into a walk
   WALK.mode="journey"; WALK.steps=fe.concat(j.carriers); WALK.i=0; WALK.feLen=fe.length;
   window.__uniPin={}; WALK.steps.forEach(function(id){ window.__uniPin[id]=1; });   // pins belong to THIS walk (no accumulation across journeys)
   if(window.__uniKindState && window.__uniSetKindState){ var _woke={};                 // an OFF kind (model/endpoint/schema…) would hide its steps — wake it to critical
@@ -2307,7 +2307,15 @@ window.__uniSetTier=function(t){ t=Math.max(0,Math.min(3,t|0)); window.__uniTier
   // never clear the walk, and never toggleFns (adding/removing fn nodes reheats the sim → the graph jumps).
   // During a walk, functions hide by VISIBILITY (visN kind-off) instead — the pinned steps survive via the
   // visN pin-exemption, non-step functions recede, and nothing re-lays-out.
-  var _walk=(typeof WALK!=="undefined" && WALK.mode && WALK.steps && WALK.steps.length);
+  // Only a REAL JOURNEY freezes the fn layer + survives a tier press. A click-TRAIL focus is CLEARED
+  // here (operator bug: leaving a click's focus/glow across tiers made the SAME tier render icons-or-glow
+  // depending on cycle history). The card (SEL) is untouched — only the focus overlay + trail clear.
+  var _journey=(typeof WALK!=="undefined" && WALK.mode==="journey" && WALK.steps && WALK.steps.length);
+  var _walk=_journey;
+  if(!_journey && typeof HL!=="undefined" && (HL.on || (typeof WALK!=="undefined" && WALK.mode))){
+    HL.on=false; HL.set={}; HL.links=null; HL.origin=null; HL.exact=false; HL.jr=null; HL.jrObj=null; window.__uniSelLink=null;
+    if(typeof WALK!=="undefined"){ WALK.mode=null; WALK.steps=[]; WALK.i=0; } window.__uniPin={};
+    try{ _hlClearSprites(); }catch(e){} try{ _walkRender(); }catch(e){} }
   var p=_TIER_PRESETS[t], koff={}; p.koff.forEach(function(k){ koff[k]=1; });
   _KTIER.forEach(function(k){ __uniKindState[k]=koff[k]?"off":"all"; if(koff[k]) __uniKindOff[k]=1; else delete __uniKindOff[k];
     if(k==="function" && window.toggleFns && !_walk){ var want=!koff[k]; if((CFG.showFns==="on")!==want){ CFG.showFns=want?"on":"off"; try{ toggleFns(want); }catch(e){} } } });

@@ -908,8 +908,8 @@ check('_wActive=(WALK.mode==="trail"||WALK.mode==="journey") && WALK.steps.lengt
       "a selected JOURNEY becomes the current trail (trail bar shows for journey mode, titled with the journey name) + a CLEAR button next to the title — operator")
 check('fe.concat(j.carriers)' in page and 'WALK.mode="journey"; WALK.steps=fe.concat(j.carriers)' in page,
       "the walk no longer steps the frontend leg FIRST (users -> screens -> carriers)")
-check('if(HL.exact){' in page and 'HL.exact=true; HL.origin=fe.concat(j.carriers)' in page,
-      "journeys lost the EXACT-set highlight (a depth-BFS from the dense fe cluster lit 2,824 wires — screen noise)")
+check('if(HL.exact){' in page and 'HL.exact=true; HL.mode="glow"; HL.origin=fe.concat(j.carriers)' in page,
+      "journeys keep the EXACT-set highlight in GLOW/context mode (a depth-BFS from the dense fe cluster lit 2,824 wires — screen noise; and a journey must not inherit the click→focus-hide default)")
 check('if(HL.jr){ _hlSyncUI(); return; }' in page and 'HL.depth=Math.max(1,Math.min(5,d));' in page,
       "the depth slider does NOT flood a walking journey (operator): during a journey it keeps the exact clean path, no BFS from the ~67-node path")
 check('class="wfe"' in page and 'class="jrnfe"' in page and "svgInline(\"component\", KINDCOL.component" in page,
@@ -1212,6 +1212,15 @@ const { chromium } = require(process.argv[3]);
     return { view:!!(v&&v.screen&&!v.badge), connector:!!(cn&&cn.comp&&cn.badge), container:!!(ct&&ct.comp&&ct.badge),
              leaf:!!(lf&&lf.comp&&lf.badge), priv:!!(pv&&pv.comp&&!pv.badge) };
   }).catch(e => ({ err: String(e) }));
+  // FOCUS/TIER regression (operator bug): a CLICK focuses TIGHT (focus-hide at the depth-1 default → a
+  // small visible set), and a TIER press CLEARS the click focus (deterministic, no glow-flood carryover).
+  await p.evaluate(() => { window.__uniSetTier(3); if(window.__uniHLClear) window.__uniHLClear(); if(window.__uniHLDepth) window.__uniHLDepth(1);   // fresh state: a prior test raised HL.depth — reset to the depth-1 default a real click sees
+    var cn=nodes.find(x=>x.kind==='component'&&x.feClass==='container'&&x.__threeObj); if(cn) window.__uniHLSelect(cn); window.__ffOk=!!cn; });
+  await p.waitForTimeout(1000);
+  const clickFocus = await p.evaluate(() => ({ ok:window.__ffOk, mode:HL.mode, on:HL.on, depth:HL.depth, walk:WALK.mode, vis:nodes.filter(n=>_nodeVisibleFn(n)).length, setN:Object.keys(HL.set).length })).catch(e=>({err:String(e)}));
+  await p.evaluate(() => window.__uniSetTier(2));
+  await p.waitForTimeout(1000);
+  const afterTier = await p.evaluate(() => ({ on:HL.on, walk:WALK.mode, vis:nodes.filter(n=>_nodeVisibleFn(n)).length })).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1242,9 +1251,13 @@ const { chromium } = require(process.argv[3]);
   const u3=r.ui3, ui3Ok = u3 && !u3.err && u3.tierGridSettled===true && u3.entCollapse===true && u3.infoIcons>=3 && u3.infoHaveVars===true;
   // component classes are visually distinct: view=screen glyph (no badge), connector/container/leaf=cube+badge, private=plain cube
   const fc=fcb, fcbOk = fc && !fc.err && fc.view===true && fc.connector===true && fc.container===true && fc.leaf===true && fc.priv===true;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk;
+  // a click focuses tight (focus mode, depth 1, small set) and a tier press CLEARS it → full graph, deterministic
+  const focusOk = clickFocus && !clickFocus.err && clickFocus.ok && clickFocus.mode==='focus' && clickFocus.on===true
+    && clickFocus.depth===1 && clickFocus.vis<150
+    && afterTier && !afterTier.err && afterTier.on===false && afterTier.walk===null && afterTier.vis>clickFocus.vis;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?
