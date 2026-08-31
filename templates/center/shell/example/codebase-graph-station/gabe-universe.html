@@ -4218,7 +4218,7 @@ window.__uniLegRef=function(){
   // we must own our cells' lifecycle instead).
   var _thumbs=[];
   function _thumbBuild(it){ return function(){
-    if(it.t==="sat"){ if(typeof asset!=="function") return null; var m=asset(SATS, SATC.model, null); if(m) m.scale.multiplyScalar(3.2); return m; }   // the satellite reads tiny — scale it up (operator)
+    if(it.t==="sat") return (typeof asset==="function")?asset(SATS, SATC.model, null):null;   // size handled by the auto-fit in _refThumb
     var key = it.dim==="transport" ? INTC.shuttle
             : it.dim==="testchip"  ? INTC.testship
             : it.dim==="atkg"      ? ATK_MODELS.god[(it.tier||1)-1]
@@ -4226,8 +4226,9 @@ window.__uniLegRef=function(){
             :                        defModel(it.k);
     return (typeof teamShip==="function")?teamShip(key, it.c, 1):null; }; }
   function _refThumb(cv, buildObj){ if(typeof T==="undefined") return; try{ var raw=buildObj(); if(!raw) return;
-    var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
-    var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
+    var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3()), sz=bb.getSize(new T.Vector3());
+    var maxd=Math.max(sz.x,sz.y,sz.z)||1, fit=Math.max(0.2, Math.min(60, 6.4/maxd));   // AUTO-FIT every asset to ONE frame (operator: apply the satellite's framing to all — the attack models render TINY at native scale, so T1/T2/tie looked like the same blob; normalizing makes them distinct). 6.4 of a ~15-unit view = a hair of margin ("a little zoom out"); clamped so a degenerate bbox can't explode.
+    var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.scale.setScalar(fit); pivot.rotation.y=0.7;
     var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.8));
     var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
     var cam=new T.PerspectiveCamera(45,236/208,0.1,1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);

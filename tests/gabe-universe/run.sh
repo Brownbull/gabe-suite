@@ -1017,8 +1017,8 @@ check('#elegend .lghd b{ flex:0 0 auto !important; margin-right:0 !important; }'
       "the ⓘ no longer hugs the Legend title (the title's margin-right:auto is not overridden / the tabs lost the auto)")
 # Field/fleet: NON-ship items (Blast/Flak/Star = shock/flak/dot) render the 2D marker shapes, ships/sats the 3D
 # thumbnail, via one _refIco dispatcher; the satellite is scaled up; descriptions revised to the FE/BE angle.
-check('function _vis2d(it){' in page and 'function _refIco(it){' in page and 'var _REFDESC={ fk:"a foreign-key link' in page and 'm.scale.multiplyScalar(3.2)' in page,
-      "the fleet lost its 2D marker shapes (_vis2d) / the _refIco dispatcher / the revised _REFDESC / the bigger satellite")
+check('function _vis2d(it){' in page and 'function _refIco(it){' in page and 'var _REFDESC={ fk:"a foreign-key link' in page and 'pivot.scale.setScalar(fit)' in page and 'fit=Math.max(0.2, Math.min(60, 6.4/maxd))' in page,
+      "the fleet lost its 2D marker shapes (_vis2d) / the _refIco dispatcher / the revised _REFDESC / the per-asset AUTO-FIT (normalizes every 3D model to one frame)")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
