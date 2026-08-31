@@ -648,11 +648,11 @@ OLD_TYPES = """  Types: order.map(function(k){ return {t:"kind",k:k}; }).concat(
 OLD_TYPES = OLD_TYPES.replace("#", "//")
 assert OLD_TYPES in text, "legend Types list anchor missing"
 NEW_TYPES = """  Types: [{t:"fold"},{t:"hd",l:"frontend"}].concat(
-    ["route","component","hook","type","store","module","screen","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
-    ((window.GABE_C4&&GABE_C4.fe)? [{t:"hd",l:"component classes"}].concat(["view","private","connector","container","leaf"].map(function(fc){ return {t:"feclass",fc:fc}; })) : []),
+    ["route","component","hook","type","store","module","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
+    ((window.GABE_C4&&GABE_C4.fe)? [{t:"feclass",fc:"view"}] : []),
     [{t:"hd",l:"backend"}],
     ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
-    [ {t:"note",l:"boundary colour = ENTITY · icon colour = kind · click a row to hide it (on/off) · fold helpers hides single-caller helpers"} ]),"""
+    [ {t:"note",l:"boundary colour = ENTITY · icon colour = kind · click a row to hide it (on/off) · the ⓘ on component opens the class key · fold helpers hides single-caller helpers"} ]),"""
 text = text.replace(OLD_TYPES, NEW_TYPES, 1)
 
 OLD_KROW = '''      if(it.t==="kind"){ var K=KINDS[it.k]; h+=\'<div class="lgrow"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b></div></div>\'; return; }   // the node KIND — its actual icon glyph'''
@@ -665,27 +665,37 @@ NEW_KROW = '''      if(it.t==="hd"){ var _gs=(window.__uniGrpState&&__uniGrpStat
         var _COMPCOL="#d946ef", _bcol=(it.fc==="connector")?"#0ca678":(it.fc==="container")?"#8a8f98":(it.fc==="leaf")?"#c026d3":"";   // the 3 BADGED classes carry a badge colour; view/private do not
         var _fcico=(it.fc==="view")?svgInline("screen",_COMPCOL,15):svgInline("component",_COMPCOL,15);   // legend-visual law: view = the SCREEN glyph, the rest = the component cube (as the node draws)
         var _dot=_bcol?(\'<span style="position:absolute;right:0;bottom:0;width:6px;height:6px;border-radius:999px;background:\'+_bcol+\'"></span>\'):\'\';
-        var _tag=(it.fc==="view")?" · own icon":(it.fc==="private")?" · plain":"";
-        h+=\'<div class="lgrow lgk lgfc\'+(_fcoff?" lgoff":"")+\'" data-lgfc="\'+it.fc+\'" title="component class \'+it.fc+\' — click to \'+(_fcoff?"show":"hide")+\'"><div class="lgvis" style="position:relative">\'+_fcico+_dot+\'</div><div class="lglbl"><b style="color:\'+(_bcol||_COMPCOL)+\'">\'+it.fc+\'</b>\'+(_tag?(\'<i style="color:var(--muted)">\'+_tag+\'</i>\'):\'\')+\'</div></div>\'; return; }
+        var _tag=(it.fc==="view")?" · a screen":(it.fc==="private")?" · plain":"";
+        var _flbl=(it.fc==="view")?"View":it.fc, _ftit=(it.fc==="view")?"the View type — a screen-level component (the merged view + screen)":("component class "+it.fc);
+        h+=\'<div class="lgrow lgk lgfc\'+(_fcoff?" lgoff":"")+\'" data-lgfc="\'+it.fc+\'" title="\'+_ftit+\' — click to \'+(_fcoff?"show":"hide")+\'"><div class="lgvis" style="position:relative">\'+_fcico+_dot+\'</div><div class="lglbl"><b style="color:\'+(_bcol||_COMPCOL)+\'">\'+_flbl+\'</b>\'+(_tag?(\'<i style="color:var(--muted)">\'+_tag+\'</i>\'):\'\')+\'</div></div>\'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
         var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"all");
         var _cls=(_st==="off")?"lgoff":"";
         var _t=(_st==="off")?"hidden — click to show":"showing — click to hide";
-        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count
-        var _bi=_bik?(\'<button class="lgbi" data-badgeinfo="\'+_bik+\'" title="badge key — \'+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":"the nested-only fold count")+\'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>\'):\'\';
+        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":(it.k==="component")?"feclass":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count · component classes
+        var _bi=_bik?(\'<button class="lgbi" data-badgeinfo="\'+_bik+\'" title="badge key — \'+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":(_bik==="feclass")?"the component classes (how each is drawn)":"the nested-only fold count")+\'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>\'):\'\';
         h+=\'<div class="lgrow lgk \'+_cls+\'" data-lgk="\'+it.k+\'" title="\'+_t+\' · \'+K.type+\'"><div class="lgvis">\'+svgInline(it.k,K.col,17)+\'</div><div class="lglbl"><b style="color:\'+K.col+\'">\'+K.type+\'</b>\'+_bi+\'</div></div>\'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot'''
 text = text.replace(OLD_KROW, NEW_KROW, 1)
 
 # badge-key popup — the schema fold COUNT joins method/role (one row, a sample "5" drawn by the same glyph fn)
 OLD_BPKEYS = 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE"]:["accessor","caller","gate","pure"];'
 assert OLD_BPKEYS in text, "badge popup keys anchor missing"
-text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:["accessor","caller","gate","pure"];', 1)
+text = text.replace(OLD_BPKEYS, 'var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf"]:["accessor","caller","gate","pure"];', 1)
 OLD_BPHEAD = 'var head=key?((kind==="method")?"HTTP method":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":"function role — what it does with the data store");'
 assert OLD_BPHEAD in text, "badge popup head anchor missing"
-text = text.replace(OLD_BPHEAD, 'var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":"function role — what it does with the data store");', 1)
+text = text.replace(OLD_BPHEAD, 'var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":(kind==="feclass")?"component class":"function role"):((kind==="method")?"HTTP method — the endpoint\'s verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":(kind==="feclass")?"component class — how each component is drawn":"function role — what it does with the data store");', 1)
 OLD_BPDESC = "html+='<div class=\"bprow\"><canvas class=\"bpcv\" width=\"30\" height=\"30\" data-k=\"'+k+'\"></canvas><div class=\"bpt\"><b>'+k+'</b><span>'+(desc[k]||\"\")+'</span></div></div>';"
 assert OLD_BPDESC in text, "badge popup row anchor missing"
 text = text.replace(OLD_BPDESC, "html+='<div class=\"bprow\"><canvas class=\"bpcv\" width=\"30\" height=\"30\" data-k=\"'+k+'\"></canvas><div class=\"bpt\"><b>'+(kind===\"count\"?\"N\":k)+'</b><span>'+(desc[k]||desc[\"*\"]||\"\")+'</span></div></div>';", 1)
+
+# feclass popup FOOTER (operator): view + private carry NO badge glyph (view = the screen icon, its own type row;
+# private = a plain cube) — the 3 badged classes draw above, these two get a text note so the class key is complete.
+OLD_BPFILL = 'pop.innerHTML=html; document.body.appendChild(pop);'
+assert OLD_BPFILL in text, "badge popup fill anchor missing"
+text = text.replace(OLD_BPFILL, 'if(kind==="feclass" && !key){ html+=\'<div class="bpnote">view — its own type row (the screen glyph) · private — a plain cube, no badge</div>\'; } pop.innerHTML=html; document.body.appendChild(pop);', 1)
+OLD_BPCSS = '  .badgepop .bpcv{ width:26px; height:26px; flex:none; display:block; }'
+assert OLD_BPCSS in text, "badge popup bpcv CSS anchor missing"
+text = text.replace(OLD_BPCSS, OLD_BPCSS + '\n  .badgepop .bpnote{ font-size:10px; line-height:1.4; color:var(--muted); margin-top:8px; padding-top:7px; border-top:1px solid var(--line); }', 1)
 
 OLD_LGBIND = """    [].forEach.call(el.querySelectorAll(".lgsub"), function(b){ b.onclick=function(){ _legSub=b.dataset.sub; render(); }; });"""
 assert OLD_LGBIND in text, "legend binder anchor missing"

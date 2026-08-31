@@ -39,6 +39,7 @@
   .badgepop .bph{ font:700 9px/1.3 var(--mono); text-transform:uppercase; letter-spacing:.05em; color:var(--muted,#8794ab); padding-bottom:7px; margin-bottom:5px; border-bottom:1px solid var(--line,#26324b); }
   .badgepop .bprow{ display:flex; align-items:center; gap:9px; margin:7px 0; }
   .badgepop .bpcv{ width:26px; height:26px; flex:none; display:block; }
+  .badgepop .bpnote{ font-size:10px; line-height:1.4; color:var(--muted); margin-top:8px; padding-top:7px; border-top:1px solid var(--line); }
   .badgepop .bpt{ display:flex; flex-direction:column; gap:1px; min-width:0; }
   .badgepop .bpt b{ font:700 11px/1.2 var(--mono); color:var(--ink,#e6ecf7); text-transform:uppercase; letter-spacing:.02em; }
   .badgepop .bpt span{ font:400 10.5px/1.35 var(--mono); color:var(--muted,#8794ab); }
@@ -4950,11 +4951,11 @@ window.__uniAssets={
   ung:function(){ return (typeof teamShip==="function")?teamShip(atkModel("ung"), 0xef4444, 1):null; } };
 var LEGEND={
   Types: [{t:"fold"},{t:"hd",l:"frontend"}].concat(
-    ["route","component","hook","type","store","module","screen","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
-    ((window.GABE_C4&&GABE_C4.fe)? [{t:"hd",l:"component classes"}].concat(["view","private","connector","container","leaf"].map(function(fc){ return {t:"feclass",fc:fc}; })) : []),
+    ["route","component","hook","type","store","module","web"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
+    ((window.GABE_C4&&GABE_C4.fe)? [{t:"feclass",fc:"view"}] : []),
     [{t:"hd",l:"backend"}],
     ["endpoint","function","schema","model","external","entity"].filter(function(k){ return order.indexOf(k)>=0; }).map(function(k){ return {t:"kind",k:k}; }),
-    [ {t:"note",l:"boundary colour = ENTITY · icon colour = kind · click a row to hide it (on/off) · fold helpers hides single-caller helpers"} ]),
+    [ {t:"note",l:"boundary colour = ENTITY · icon colour = kind · click a row to hide it (on/off) · the ⓘ on component opens the class key · fold helpers hides single-caller helpers"} ]),
   Connectors:[ {t:"grp",l:"entity ↔ entity · <i>relationship kind</i>"},
     {t:"ln",k:"fk",l:"fk <i>a foreign-key data coupling</i>"},
     {t:"ln",k:"calls",l:"calls <i>a cross-entity function call</i>"},
@@ -4991,14 +4992,14 @@ var _legSub="Defense";   // active sub-tab within Planet
    SAME __badgeGlyph the 3D chip uses (legend-visual law), beside its one-line meaning. method → the five
    HTTP verbs · role → the four function roles (accessor/caller/gate/pure). ── */
 window.__badgePop=function(anchor, kind, key){ if(window.__badgePopHide) __badgePopHide();
-  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:["accessor","caller","gate","pure"];
+  var allKeys=(kind==="method")?["GET","POST","PUT","PATCH","DELETE","BOOT"]:(kind==="count")?["N"]:(kind==="feclass")?["connector","container","leaf"]:["accessor","caller","gate","pure"];
   var keys=key?[key]:allKeys;   // key given (the node's OWN badge) → single row; else the whole key
   var desc=(window.__BADGE_DESC&&window.__BADGE_DESC[kind])||{};
-  var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":"function role — what it does with the data store");
+  var head=key?((kind==="method")?(key==="BOOT"?"boot event — runs once at startup":"HTTP method"):(kind==="count")?"folded schemas":(kind==="feclass")?"component class":"function role"):((kind==="method")?"HTTP method — the endpoint's verb (what it does to the row)":(kind==="count")?"fold count — nested-only schemas hidden under this one (critical); double-click to reveal":(kind==="feclass")?"component class — how each component is drawn":"function role — what it does with the data store");
   var pop=document.createElement("div"); pop.id="badgepop"; pop.className="badgepop";
   var html='<div class="bph">'+head+'</div>';
   keys.forEach(function(k){ html+='<div class="bprow"><canvas class="bpcv" width="30" height="30" data-k="'+k+'"></canvas><div class="bpt"><b>'+(kind==="count"?"N":k)+'</b><span>'+(desc[k]||desc["*"]||"")+'</span></div></div>'; });
-  pop.innerHTML=html; document.body.appendChild(pop);
+  if(kind==="feclass" && !key){ html+='<div class="bpnote">view — its own type row (the screen glyph) · private — a plain cube, no badge</div>'; } pop.innerHTML=html; document.body.appendChild(pop);
   [].forEach.call(pop.querySelectorAll(".bpcv"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128); if(window.__badgeGlyph) window.__badgeGlyph(c, kind, cv.dataset.k); });
   var r=anchor.getBoundingClientRect();
   var left=Math.max(8, Math.min(window.innerWidth-pop.offsetWidth-8, r.left-4));
@@ -5081,14 +5082,15 @@ function buildLegend(){ var el=document.getElementById("elegend"), tabs=Object.k
         var _COMPCOL="#d946ef", _bcol=(it.fc==="connector")?"#0ca678":(it.fc==="container")?"#8a8f98":(it.fc==="leaf")?"#c026d3":"";   // the 3 BADGED classes carry a badge colour; view/private do not
         var _fcico=(it.fc==="view")?svgInline("screen",_COMPCOL,15):svgInline("component",_COMPCOL,15);   // legend-visual law: view = the SCREEN glyph, the rest = the component cube (as the node draws)
         var _dot=_bcol?('<span style="position:absolute;right:0;bottom:0;width:6px;height:6px;border-radius:999px;background:'+_bcol+'"></span>'):'';
-        var _tag=(it.fc==="view")?" · own icon":(it.fc==="private")?" · plain":"";
-        h+='<div class="lgrow lgk lgfc'+(_fcoff?" lgoff":"")+'" data-lgfc="'+it.fc+'" title="component class '+it.fc+' — click to '+(_fcoff?"show":"hide")+'"><div class="lgvis" style="position:relative">'+_fcico+_dot+'</div><div class="lglbl"><b style="color:'+(_bcol||_COMPCOL)+'">'+it.fc+'</b>'+(_tag?('<i style="color:var(--muted)">'+_tag+'</i>'):'')+'</div></div>'; return; }
+        var _tag=(it.fc==="view")?" · a screen":(it.fc==="private")?" · plain":"";
+        var _flbl=(it.fc==="view")?"View":it.fc, _ftit=(it.fc==="view")?"the View type — a screen-level component (the merged view + screen)":("component class "+it.fc);
+        h+='<div class="lgrow lgk lgfc'+(_fcoff?" lgoff":"")+'" data-lgfc="'+it.fc+'" title="'+_ftit+' — click to '+(_fcoff?"show":"hide")+'"><div class="lgvis" style="position:relative">'+_fcico+_dot+'</div><div class="lglbl"><b style="color:'+(_bcol||_COMPCOL)+'">'+_flbl+'</b>'+(_tag?('<i style="color:var(--muted)">'+_tag+'</i>'):'')+'</div></div>'; return; }
       if(it.t==="kind"){ var K=KINDS[it.k];
         var _st=(window.__uniKindState&&__uniKindState[it.k])||(it.k==="type"?"off":"all");
         var _cls=(_st==="off")?"lgoff":"";
         var _t=(_st==="off")?"hidden — click to show":"showing — click to hide";
-        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count
-        var _bi=_bik?('<button class="lgbi" data-badgeinfo="'+_bik+'" title="badge key — '+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":"the nested-only fold count")+'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>'):'';
+        var _bik=(it.k==="endpoint")?"method":(it.k==="function")?"role":(it.k==="schema")?"count":(it.k==="component")?"feclass":null;   // badged kinds carry a badge-KEY info dot (operator): endpoint methods · function roles · schema fold count · component classes
+        var _bi=_bik?('<button class="lgbi" data-badgeinfo="'+_bik+'" title="badge key — '+(_bik==="method"?"the HTTP methods":(_bik==="role")?"the four function roles":(_bik==="feclass")?"the component classes (how each is drawn)":"the nested-only fold count")+'"><svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg></button>'):'';
         h+='<div class="lgrow lgk '+_cls+'" data-lgk="'+it.k+'" title="'+_t+' · '+K.type+'"><div class="lgvis">'+svgInline(it.k,K.col,17)+'</div><div class="lglbl"><b style="color:'+K.col+'">'+K.type+'</b>'+_bi+'</div></div>'; return; }   // the node KIND — a 3-STATE control (all · critical · off) + badge-key dot
       if(it.t==="ship"||it.t==="sat"){ var i=thumbs.length; thumbs.push(it);
         h+='<div class="lgrow"><div class="lgvis"><canvas class="lgcv" width="42" height="36" data-i="'+i+'"></canvas></div><div class="lglbl">'+it.l+'</div></div>'; return; }

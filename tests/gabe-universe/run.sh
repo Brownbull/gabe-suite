@@ -966,6 +966,16 @@ check("__uniKindToggle=function(k){ if(!k) return;   // BINARY" in page and 'cur
       "the legend is no longer BINARY (on/off) with a global fold-helpers toggle")
 check('t:"feclass"' in page and 'data-lgfc=' in page and '__uniFeClassToggle(rw.dataset.lgfc)' in page and 'data-lgfold=' in page,
       "the component-class legend rows + the fold-helpers row are gone")
+# FEATURE A (operator): view MERGED into a Frontend TYPE row (the phantom screen kind dropped, 0 nodes) + the OTHER
+# classes (connector/container/leaf/private) moved behind a component ⓘ that reuses the __badgePop key machinery.
+check('["route","component","hook","type","store","module","web"]' in page and '{t:"feclass",fc:"view"}' in page and '{t:"hd",l:"component classes"}' not in page,
+      "the FE legend group dropped the phantom screen row / kept the component-classes group / lost the View type row")
+check('(it.k==="component")?"feclass"' in page and 'the component classes (how each is drawn)' in page,
+      "the Component (FE) legend row has no ⓘ badge-key dot (feclass)")
+check('kind==="feclass")?["connector","container","leaf"]' in page and '(kind==="feclass")?"component class"' in page,
+      "__badgePop does not handle the feclass kind (the component ⓘ popup would be empty)")
+check('view — its own type row' in page and '.badgepop .bpnote{' in page,
+      "the feclass popup footer note (view = own type · private = plain) + its CSS are gone")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")

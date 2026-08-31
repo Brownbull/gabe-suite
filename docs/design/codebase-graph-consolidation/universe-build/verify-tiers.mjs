@@ -59,25 +59,38 @@ await p.waitForTimeout(300);
 const afterPlain = await p.evaluate(() => window.__uniTier);
 ck(afterPlain === 3, 'plain "1" does NOT change the tier (fleet-column key, no collision)', 'tier=' + afterPlain);
 
-// the legend is BINARY + carries component-class rows + a fold-helpers toggle (phase 2)
+// the legend is BINARY; Types tab has View as its OWN type row + the classes behind the component ⓘ (operator merge)
 const leg = await p.evaluate(() => {
   const el = document.getElementById('elegend'); if (!el) return { ok: false };
   // open the Types tab so its rows render
   const tab = el.querySelector('.lgtab[data-t="Types"]'); if (tab) tab.click();
-  return { ok: true, fc: el.querySelectorAll('[data-lgfc]').length, fold: el.querySelectorAll('[data-lgfold]').length,
+  return { ok: true, fc: el.querySelectorAll('[data-lgfc]').length,          // only the View type row remains a feclass legend row
+    viewRow: !!el.querySelector('[data-lgfc="view"]'),
+    compInfo: !!el.querySelector('[data-badgeinfo="feclass"]'),               // the component ⓘ — connector/container/leaf/private moved here
+    screenRow: !!el.querySelector('[data-lgk="screen"]'),                     // the phantom screen-kind row must be GONE (0 nodes)
+    fold: el.querySelectorAll('[data-lgfold]').length,
     crit: el.querySelectorAll('.lgcrit').length };
 });
-ck(leg.ok && leg.fc === 5 && leg.fold === 1, 'the legend Types tab carries 5 component-class rows + a fold-helpers toggle', 'fc=' + leg.fc + ' fold=' + leg.fold);
+ck(leg.ok && leg.fc === 1 && leg.viewRow && leg.compInfo && !leg.screenRow && leg.fold === 1,
+   'legend Types: View is its own row · classes behind the component ⓘ · no phantom screen row',
+   'fc=' + leg.fc + ' view=' + leg.viewRow + ' compInfo=' + leg.compInfo + ' screenRow=' + leg.screenRow + ' fold=' + leg.fold);
 ck(leg.crit === 0, 'the legend has NO 3-state (lgcrit) rows left — it is binary', 'lgcrit=' + leg.crit);
-// clicking a class row hides that class; clicking the fold toggle flips __uniFoldHelpers
+// the View row toggles the view class; the component ⓘ popup lists the 3 badged classes + the view/private note; fold flips
 const clk = await p.evaluate(() => {
   window.__uniFeClassState = {};
-  const row = document.querySelector('[data-lgfc="leaf"]'); if (row) row.click();
-  const hid = window.__uniFeClassState.leaf === false;
+  const vrow = document.querySelector('[data-lgfc="view"]'); if (vrow) vrow.click();
+  const hid = window.__uniFeClassState.view === false;
+  let popRows = 0, hasNote = false;
+  const dot = document.querySelector('[data-badgeinfo="feclass"]');
+  if (dot && window.__badgePop) { window.__badgePop(dot, 'feclass');
+    const pop = document.getElementById('badgepop');
+    if (pop) { popRows = pop.querySelectorAll('.bprow').length; hasNote = !!pop.querySelector('.bpnote'); }
+    if (window.__badgePopHide) window.__badgePopHide(); }
   const fh0 = window.__uniFoldHelpers; const fb = document.querySelector('[data-lgfold]'); if (fb) fb.click();
-  return { hid, foldFlipped: window.__uniFoldHelpers !== fh0 };
+  return { hid, popRows, hasNote, foldFlipped: window.__uniFoldHelpers !== fh0 };
 });
-ck(clk.hid, 'clicking the "leaf" class legend row hides the leaf class (__uniFeClassState)');
+ck(clk.hid, 'clicking the View row toggles the view class (__uniFeClassState.view)');
+ck(clk.popRows === 3 && clk.hasNote, 'the component ⓘ popup lists connector/container/leaf + the view/private note', 'rows=' + clk.popRows + ' note=' + clk.hasNote);
 ck(clk.foldFlipped, 'clicking the fold-helpers row flips __uniFoldHelpers');
 
 // the FLEET Entity pane carries the tier + fold + class pills (phase 3)
