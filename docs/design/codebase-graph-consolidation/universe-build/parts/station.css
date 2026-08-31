@@ -584,10 +584,14 @@
   .unistubtip .ustmeta{ display:block; margin-top:2px; font-size:9.5px; color:var(--muted); text-transform:none; }
 
   /* ══ THE LEGEND REFERENCE (operator) — full graph-area overlay opened by the legend header's ⓘ ══ */
-  /* the ⓘ sits inline right after the "Legend" title — an info dot like the .lgbi row dots, not a boxed button */
-  #elegend .lgref{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; margin-left:5px;
+  /* the ⓘ sits inline right after the "Legend" title — an info dot like the .lgbi row dots, not a boxed button.
+     margin-right:auto shoves the tabs + minimise to the far right so the ⓘ hugs the title (not the tab cluster). */
+  #elegend .lghd b{ flex:0 0 auto !important; margin-right:0 !important; }   /* the title's OWN margin-right:auto (line ~317) shoved the ⓘ right; the tabs' margin-left:auto now does the pushing */
+  #elegend .lgref{ display:inline-flex; align-items:center; justify-content:center; width:17px; height:17px; flex:none; margin-left:5px;
     color:var(--muted); background:none; border:none; border-radius:50%; padding:0; cursor:pointer; vertical-align:middle; }
   #elegend .lgref:hover, #elegend .lgref:focus{ color:var(--accent); outline:none; }
+  #elegend .lghd .lgtabs{ margin-left:auto !important; }   /* the tab cluster + minimise shove to the far right, so the ⓘ hugs the "Legend" title */
+  #elegend .lghd .lgmin{ margin-left:6px !important; }
   #uni-legref{ position:fixed; left:var(--navw); right:0; top:var(--topbarh); bottom:0; z-index:120;
     background:color-mix(in srgb, var(--panel) 97%, transparent); backdrop-filter:blur(3px);
     display:flex; flex-direction:column; animation:lrfade .16s ease; }

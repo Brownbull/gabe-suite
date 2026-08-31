@@ -1012,6 +1012,13 @@ check('function _thumbBuild(it){' in page and 'function _refThumb(cv, buildObj){
 # inline info dot like the .lgbi row dots — NOT boxed at the far right.
 check('Legend</b><button class="lgref"' in page and 'if(window.__uniLegRef) __uniLegRef();' in page,
       "the legend-reference ⓘ is not inline right after the Legend title (moved off the far-right button slot)")
+# the ⓘ hugs the title: the title's own margin-right:auto (which shoved it right) is overridden, the tabs own the auto
+check('#elegend .lghd b{ flex:0 0 auto !important; margin-right:0 !important; }' in page and '#elegend .lghd .lgtabs{ margin-left:auto !important; }' in page,
+      "the ⓘ no longer hugs the Legend title (the title's margin-right:auto is not overridden / the tabs lost the auto)")
+# Field/fleet: NON-ship items (Blast/Flak/Star = shock/flak/dot) render the 2D marker shapes, ships/sats the 3D
+# thumbnail, via one _refIco dispatcher; the satellite is scaled up; descriptions revised to the FE/BE angle.
+check('function _vis2d(it){' in page and 'function _refIco(it){' in page and 'var _REFDESC={ fk:"a foreign-key link' in page and 'm.scale.multiplyScalar(3.2)' in page,
+      "the fleet lost its 2D marker shapes (_vis2d) / the _refIco dispatcher / the revised _REFDESC / the bigger satellite")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1329,14 +1336,25 @@ const { chromium } = require(process.argv[3]);
     // 3D thumbnails: .lrcv canvases in the fleet/ship rows, each registered as a __ref spin-cell in PAL_CELLS.
     const thumbs=ov.querySelectorAll('.lrcv').length;
     const refCells=(typeof PAL_CELLS!=='undefined')?PAL_CELLS.filter(c=>c.__ref).length:0;
-    // the ⓘ sits right after the <b>Legend</b> title, before the tabs (an inline dot, not the far-right slot)
+    // the ⓘ sits right after the <b>Legend</b> title, before the tabs (an inline dot, not the far-right slot),
+    // and HUGS the title (small gap — the title's margin-right:auto override + the tabs' auto)
     const hd=document.querySelector('#elegend .lghd');
     const kids=hd?[].slice.call(hd.children):[];
     const bi=kids.findIndex(c=>c.tagName==='B'), ri=kids.findIndex(c=>c.classList&&c.classList.contains('lgref')), tabi=kids.findIndex(c=>c.classList&&c.classList.contains('lgtabs'));
+    const _b=hd&&hd.querySelector('b'), _ref=hd&&hd.querySelector('.lgref');
+    const iconHug=(_b&&_ref)?(_ref.getBoundingClientRect().left-(_b.getBoundingClientRect().left+_b.getBoundingClientRect().width)):999;
+    // FLEET: a NON-ship Field item (Star = a dot) renders a 2D marker (a div), not a canvas; a ship/sat renders a
+    // canvas. Descriptions revised to the FE/BE angle (fk → "a foreign-key link…").
+    const fRow=(nm)=>fleetSec?[].find.call(fleetSec.querySelectorAll('.lrrow'), r=>((r.querySelector('.lrtx b')||{}).textContent||'')===nm):null;
+    const starRow=fRow('Star'), satRow=fRow('Satellites');
+    const fkRow=connSec?[].find.call(connSec.querySelectorAll('.lrrow'), r=>((r.querySelector('.lrtx b')||{}).textContent||'')==='fk'):null;
     const layout={ grids:ov.querySelectorAll('.lrcols').length, tierLast:(tI>exI && exI>=0),
       connFleetSameGrid:!!(connSec&&fleetSec&&connSec.parentElement===fleetSec.parentElement&&connSec.parentElement.classList.contains('lrcols')),
       wireUniq:wireCols.length, wireNotAllGray:wireCols.some(c=>c&&c.toLowerCase()!=='#8590a8'), compOrange:compStroke==='#ff8c00',
-      thumbs, refCells, hdrRefAfterTitle:(ri===bi+1 && ri>=0 && ri<tabi) };
+      thumbs, refCells, hdrRefAfterTitle:(ri===bi+1 && ri>=0 && ri<tabi), iconHug:Math.round(iconHug),
+      starIs2d:!!(starRow&&starRow.querySelector('.lrico > div')&&!starRow.querySelector('.lrcv')),
+      satIsThumb:!!(satRow&&satRow.querySelector('.lrcv')),
+      fkDescRevised:!!(fkRow&&/foreign-key link/.test((fkRow.querySelector('.lrtx i')||{}).textContent||'')) };
     const chip=ov.querySelector('.lrex'); const s=chip&&chip.getAttribute('data-s'); if(chip) chip.click();
     const jump={ closed:!document.getElementById('uni-legref'), barVal:(document.getElementById('tsin')||{}).value,
       hlOn:(typeof HL!=='undefined'&&HL.on), hlMode:(typeof HL!=='undefined'&&HL.mode), s:s };
@@ -1389,7 +1407,7 @@ const { chromium } = require(process.argv[3]);
     && lr.ref && lr.ref.compNoEx && lr.ref.endpNoEx && lr.ref.fnNoEx && lr.ref.typeEx && lr.ref.entityEx && lr.ref.privBadge && lr.ref.noEnableF
     && lr.tier && lr.tier.noOverlaySel && lr.tier.cells>0 && lr.tier.routeDots===4 && !lr.tier.routeDim && lr.tier.hookDots===2 && lr.tier.hookDim && lr.tier.leafDots===1 && lr.tier.typeMan && lr.tier.anyCells>0 && lr.tier.foldEx
     && lr.layout && lr.layout.grids===2 && lr.layout.tierLast && lr.layout.connFleetSameGrid && lr.layout.wireUniq>=5 && lr.layout.wireNotAllGray && lr.layout.compOrange
-    && lr.layout.thumbs>0 && lr.layout.refCells>0 && lr.layout.hdrRefAfterTitle
+    && lr.layout.thumbs>0 && lr.layout.refCells>0 && lr.layout.hdrRefAfterTitle && lr.layout.iconHug<20 && lr.layout.starIs2d && lr.layout.satIsThumb && lr.layout.fkDescRevised
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk;

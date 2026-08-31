@@ -2624,7 +2624,7 @@ window.__uniLegRef=function(){
   // we must own our cells' lifecycle instead).
   var _thumbs=[];
   function _thumbBuild(it){ return function(){
-    if(it.t==="sat") return (typeof asset==="function")?asset(SATS, SATC.model, null):null;
+    if(it.t==="sat"){ if(typeof asset!=="function") return null; var m=asset(SATS, SATC.model, null); if(m) m.scale.multiplyScalar(3.2); return m; }   // the satellite reads tiny — scale it up (operator)
     var key = it.dim==="transport" ? INTC.shuttle
             : it.dim==="testchip"  ? INTC.testship
             : it.dim==="atkg"      ? ATK_MODELS.god[(it.tier||1)-1]
@@ -2640,17 +2640,46 @@ window.__uniLegRef=function(){
     var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height, __ref:true};
     if(typeof PAL_CELLS!=="undefined") PAL_CELLS.push(entry); }catch(e){} }
   function _thumbCell(it){ _thumbs.push(it); return '<canvas class="lrcv" width="40" height="34" data-ti="'+(_thumbs.length-1)+'"></canvas>'; }
+  // the 2D marker shapes (aura/shock/flak/dot/poly/wrap) — Field items like Blast/Flak/Star are NOT ships, so
+  // replicate the small legend's vis() glyphs (operator: the Field section showed nothing because we tried to
+  // render these as 3D thumbnails).
+  function _vis2d(it){ var c=_hx(it.c!=null?it.c:0xffffff);
+    switch(it.t){
+      case "aura": return '<div style="width:15px;height:15px;border-radius:50%;background:'+c+'66;box-shadow:0 0 7px 3px '+c+'99"></div>';
+      case "shock": return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:0 0 0 3px '+c+'55,0 0 0 6px '+c+'22"></div>';
+      case "flak": return '<div style="width:7px;height:7px;border-radius:50%;background:'+c+';box-shadow:6px -4px 0 -2px '+c+',-6px 3px 0 -2px '+c+',4px 5px 0 -3px '+c+'"></div>';
+      case "dot": return '<div style="width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 5px 2px '+c+'"></div>';
+      case "poly": return '<div style="width:16px;height:16px;background:'+c+'55;border:1px solid '+c+';clip-path:polygon(50% 0,93% 25%,93% 75%,50% 100%,7% 75%,7% 25%)"></div>';
+      case "wrap": return '<div style="width:16px;height:14px;background:'+c+'55;border:1px solid '+c+';border-radius:60% 40% 55% 45%/50% 60% 40% 50%"></div>';
+      default: return ''; } }
+  // REVISED descriptions (operator: match the FE/BE angle — say what it IS / its role, not a terse tag). Keyed by
+  // the item's NAME (the text before the <i>). Falls back to the item's own inline description.
+  var _REFDESC={ fk:"a foreign-key link — one table points at a row in another",
+    calls:"a function call that crosses entity boundaries", imports:"one component or module importing another across entities",
+    bridge:"a frontend fetch that reaches a backend endpoint", rollup:"endpoint → table, through the call tree (reaches the table via its functions)",
+    access:"function → table — the real read or write of a row",
+    Cargo:"data ferried between entities — the ship's size is its payload", "Test chip":"a test journey that crosses entities",
+    api:"the API test suite for this corpus (pytest)", web:"the web test suite for this corpus (vitest)", e2e:"the end-to-end suite for this corpus (playwright)",
+    T1:"an oversized function or class — the mild tier", T2:"a very oversized function or class", T3:"an extremely oversized function or class",
+    Blast:"a change with a wide blast radius — high coupling", Flak:"code failing or untested during the change",
+    Satellites:"the callers that use this piece (its fan-in)", Star:"a function used across the cluster but never surfaced" };
+  function _splitLabel(l){ var s=String(l||""); var i=s.indexOf('<i>'); if(i<0) return {name:s.trim(), desc:""};
+    return {name:s.slice(0,i).trim(), desc:s.slice(i+3).replace(/<\/i>[\s\S]*$/,'').trim()}; }
+  function _refTx(l){ var sp=_splitLabel(l), d=_REFDESC[sp.name]||sp.desc; return '<b>'+sp.name+'</b>'+(d?(' <i>'+d+'</i>'):''); }
+  // one icon dispatcher for connector + fleet rows: a wire (ln) → dashed SVG · a ship/sat → 3D thumbnail ·
+  // everything else (aura/shock/flak/dot/poly/wrap) → the 2D marker shape.
+  function _refIco(it){ if(it.t==="ship"||it.t==="sat") return _thumbCell(it);
+    if(it.t==="ln"){ var cs=_connCS(it), da=_dash(cs.style); return '<svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+cs.col+'" stroke-width="2.6" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg>'; }
+    return _vis2d(it); }
   function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
     var h='<div class="lrsec"><div class="lrsh">CONNECTORS · what wires elements together</div>';
     items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
-      if(it.t==="ln"){ var cs=_connCS(it), da=_dash(cs.style);
-        h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+cs.col+'" stroke-width="2.6" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; }
-      if(it.t==="ship"||it.t==="sat"){ h+='<div class="lrrow lrb"><span class="lrico">'+_thumbCell(it)+'</span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; } });
+      h+='<div class="lrrow lrb"><span class="lrico">'+_refIco(it)+'</span><div class="lrtx">'+_refTx(it.l)+'</div>'+_tierCell(null,"any")+'</div>'; });
     return h+'</div>'; }
   function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
     var h='<div class="lrsec"><div class="lrsh">FLEET · planets &amp; ships</div>';
     (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
-      h+='<div class="lrrow lrb"><span class="lrico">'+_thumbCell(it)+'</span><div class="lrtx">'+(it.l||"")+'</div>'+_tierCell(null,"any")+'</div>'; }); });
+      h+='<div class="lrrow lrb"><span class="lrico">'+_refIco(it)+'</span><div class="lrtx">'+_refTx(it.l)+'</div>'+_tierCell(null,"any")+'</div>'; }); });
     return h+'</div>'; }
   var ov=document.createElement("div"); ov.id="uni-legref";
   var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
