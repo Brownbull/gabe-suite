@@ -293,8 +293,8 @@ check('__uniSyncGrpSel=function' in page and 'className="grpsel"' in page,
       "the selected-option name after a section title (grpsel) is gone")
 check('.grplbl .grpsel{' in page and '#cfg .grp.cgside, #flside .grp.cgside{ padding-left:0;' in page,
       "the backend/frontend left border was not removed (title-only sections)")
-check('<div class="lghd"><b>\'+(typeof ico==="function"?ico("shape",13):"")+\'Legend</b><div class="lgtabs">' in page,
-      "the legend tabs are not in the header (still a separate row)")
+check('<div class="lghd"><b>\'+(typeof ico==="function"?ico("shape",13):"")+\'Legend</b><button class="lgref"' in page and '</button><div class="lgtabs">' in page,
+      "the legend tabs are not in the header, or the ⓘ is not inline between the title and the tabs")
 check('var LGTABICO={' in page and '(LGTABICO[t]||t)' in page,
       "the legend tabs lost their icons (Types/Connectors/Planet should be icon-only)")
 check('#elegend .lgtab{ display:inline-flex' in page and 'border:1px solid var(--line)' in page
@@ -1004,6 +1004,14 @@ check('component:"#ff8c00"' in page and 'KINDS[k].col=KINDCOL[k]' in page and 'c
 # built LEGEND.Connectors rows carry it.k not it.c, so the old it.c read rendered every wire gray/solid.
 check('var _CONNSTOCK={ fk:{col:"#5893ad"' in page and 'calls:{col:"#f59e0b"' in page and 'access:{col:"#ef4444"' in page and 'function _connCS(it){' in page,
       "the reference connector wires no longer resolve from the _CONNSTOCK canonical palette (would render gray again)")
+# REAL 3D asset thumbnails in the reference fleet/ship rows (operator) — replicate thumbBuild + a PAL_CELLS spin
+# cell marked __ref so it PRUNES on close (legThumb's LEG_CELLS is shared with the small legend).
+check('function _thumbBuild(it){' in page and 'function _refThumb(cv, buildObj){' in page and 'class="lrcv"' in page and 'PAL_CELLS.filter(function(c){ return !c.__ref; })' in page,
+      "the reference lost its real 3D ship thumbnails (_thumbBuild/_refThumb/.lrcv) or the __ref prune-on-close")
+# the ⓘ opens the reference AND sits right after the "Legend" title (post the upstream shape-icon prefix), an
+# inline info dot like the .lgbi row dots — NOT boxed at the far right.
+check('Legend</b><button class="lgref"' in page and 'if(window.__uniLegRef) __uniLegRef();' in page,
+      "the legend-reference ⓘ is not inline right after the Legend title (moved off the far-right button slot)")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1318,9 +1326,17 @@ const { chromium } = require(process.argv[3]);
     const fleetSec=(()=>{ const h=[].find.call(ov.querySelectorAll('.lrsh'), x=>/FLEET/.test(x.textContent)); return h&&h.closest('.lrsec'); })();
     const wireCols=connSec?[...new Set([].map.call(connSec.querySelectorAll('.lrico svg path'), p=>p.getAttribute('stroke')))]:[];
     const compRow=rowOf('Component (FE)'); const compStroke=compRow&&compRow.querySelector('.lrico svg')&&compRow.querySelector('.lrico svg').getAttribute('stroke');
+    // 3D thumbnails: .lrcv canvases in the fleet/ship rows, each registered as a __ref spin-cell in PAL_CELLS.
+    const thumbs=ov.querySelectorAll('.lrcv').length;
+    const refCells=(typeof PAL_CELLS!=='undefined')?PAL_CELLS.filter(c=>c.__ref).length:0;
+    // the ⓘ sits right after the <b>Legend</b> title, before the tabs (an inline dot, not the far-right slot)
+    const hd=document.querySelector('#elegend .lghd');
+    const kids=hd?[].slice.call(hd.children):[];
+    const bi=kids.findIndex(c=>c.tagName==='B'), ri=kids.findIndex(c=>c.classList&&c.classList.contains('lgref')), tabi=kids.findIndex(c=>c.classList&&c.classList.contains('lgtabs'));
     const layout={ grids:ov.querySelectorAll('.lrcols').length, tierLast:(tI>exI && exI>=0),
       connFleetSameGrid:!!(connSec&&fleetSec&&connSec.parentElement===fleetSec.parentElement&&connSec.parentElement.classList.contains('lrcols')),
-      wireUniq:wireCols.length, wireNotAllGray:wireCols.some(c=>c&&c.toLowerCase()!=='#8590a8'), compOrange:compStroke==='#ff8c00' };
+      wireUniq:wireCols.length, wireNotAllGray:wireCols.some(c=>c&&c.toLowerCase()!=='#8590a8'), compOrange:compStroke==='#ff8c00',
+      thumbs, refCells, hdrRefAfterTitle:(ri===bi+1 && ri>=0 && ri<tabi) };
     const chip=ov.querySelector('.lrex'); const s=chip&&chip.getAttribute('data-s'); if(chip) chip.click();
     const jump={ closed:!document.getElementById('uni-legref'), barVal:(document.getElementById('tsin')||{}).value,
       hlOn:(typeof HL!=='undefined'&&HL.on), hlMode:(typeof HL!=='undefined'&&HL.mode), s:s };
@@ -1373,6 +1389,7 @@ const { chromium } = require(process.argv[3]);
     && lr.ref && lr.ref.compNoEx && lr.ref.endpNoEx && lr.ref.fnNoEx && lr.ref.typeEx && lr.ref.entityEx && lr.ref.privBadge && lr.ref.noEnableF
     && lr.tier && lr.tier.noOverlaySel && lr.tier.cells>0 && lr.tier.routeDots===4 && !lr.tier.routeDim && lr.tier.hookDots===2 && lr.tier.hookDim && lr.tier.leafDots===1 && lr.tier.typeMan && lr.tier.anyCells>0 && lr.tier.foldEx
     && lr.layout && lr.layout.grids===2 && lr.layout.tierLast && lr.layout.connFleetSameGrid && lr.layout.wireUniq>=5 && lr.layout.wireNotAllGray && lr.layout.compOrange
+    && lr.layout.thumbs>0 && lr.layout.refCells>0 && lr.layout.hdrRefAfterTitle
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
   const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk;

@@ -2523,7 +2523,8 @@ if(!window.__uniSrchInit){ window.__uniSrchInit=1; (function(){
    search bar, focuses that node (__uniSearchGo → __uniGoto), and closes the overlay. Connectors + the
    fleet/planet legend ride along as reference (no example — they are wires/ships, not searchable nodes). ── */
 window.__uniLegRef=function(){
-  var old=document.getElementById("uni-legref"); if(old){ old.remove(); document.removeEventListener("keydown", _lrEsc, true); return; }   // toggle
+  var old=document.getElementById("uni-legref"); if(old){ old.remove(); document.removeEventListener("keydown", _lrEsc, true);
+    if(typeof PAL_CELLS!=="undefined") PAL_CELLS=PAL_CELLS.filter(function(c){ return !c.__ref; }); return; }   // toggle + prune our spin-cells
   var K=(typeof KINDS!=="undefined")?KINDS:{};
   // ONE example per type/class/method — a REAL loaded node so the search always resolves. Functions ride
   // off-field (stars); their example carries NO id → __uniSearchGo runs the search, which wakes ƒ + focuses.
@@ -2616,19 +2617,40 @@ window.__uniLegRef=function(){
   function _connCS(it){ if(it.c!=null) return {col:_hx(it.c), style:it.s||"solid"};
     return _CONNSTOCK[it.k] || {col:"#8590a8",style:"solid"}; }
   function _dash(style){ if(typeof DASHMAP!=="undefined" && DASHMAP[style]!=null) return DASHMAP[style]; return style==="dotted"?"1.5 3.5":style==="dashed"?"6 3":""; }
+  // REAL 3D asset thumbnails (operator: the actual ships, like the small legend's Planet tab). thumbBuild is
+  // local to buildLegend, so replicate it from the global model builders (teamShip/defModel/atkModel/asset/
+  // INTC/ATK_MODELS/SATC). _refThumb mirrors legThumb but marks its cell __ref so we can PRUNE it from the
+  // shared PAL_CELLS spin-loop on close (legThumb also pushes to LEG_CELLS, which the small legend prunes —
+  // we must own our cells' lifecycle instead).
+  var _thumbs=[];
+  function _thumbBuild(it){ return function(){
+    if(it.t==="sat") return (typeof asset==="function")?asset(SATS, SATC.model, null):null;
+    var key = it.dim==="transport" ? INTC.shuttle
+            : it.dim==="testchip"  ? INTC.testship
+            : it.dim==="atkg"      ? ATK_MODELS.god[(it.tier||1)-1]
+            : it.dim==="atk"       ? atkModel(it.k)
+            :                        defModel(it.k);
+    return (typeof teamShip==="function")?teamShip(key, it.c, 1):null; }; }
+  function _refThumb(cv, buildObj){ if(typeof T==="undefined") return; try{ var raw=buildObj(); if(!raw) return;
+    var bb=new T.Box3().setFromObject(raw), cc=bb.getCenter(new T.Vector3());
+    var pivot=new T.Group(); raw.position.sub(cc); pivot.add(raw); pivot.rotation.y=0.7;
+    var sc=new T.Scene(); sc.add(pivot); sc.add(new T.AmbientLight(0xffffff,0.8));
+    var dl=new T.DirectionalLight(0xffffff,1); dl.position.set(5,8,6); sc.add(dl); var dl2=new T.DirectionalLight(0x88aaff,0.4); dl2.position.set(-5,-3,-5); sc.add(dl2);
+    var cam=new T.PerspectiveCamera(45,236/208,0.1,1000); cam.position.set(2.5,4,18); cam.lookAt(0,0,0);
+    var entry={ctx:cv.getContext("2d"), scene:sc, cam:cam, obj:pivot, w:cv.width, h:cv.height, __ref:true};
+    if(typeof PAL_CELLS!=="undefined") PAL_CELLS.push(entry); }catch(e){} }
+  function _thumbCell(it){ _thumbs.push(it); return '<canvas class="lrcv" width="40" height="34" data-ti="'+(_thumbs.length-1)+'"></canvas>'; }
   function _connSection(){ var items=(typeof LEGEND!=="undefined"&&LEGEND.Connectors)||[];
     var h='<div class="lrsec"><div class="lrsh">CONNECTORS · what wires elements together</div>';
     items.forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp">'+it.l+'</div>'; return; }
       if(it.t==="ln"){ var cs=_connCS(it), da=_dash(cs.style);
         h+='<div class="lrrow lrb"><span class="lrico"><svg width="30" height="10" viewBox="0 0 30 10"><path d="M1 5H29" stroke="'+cs.col+'" stroke-width="2.6" fill="none"'+(da?(' stroke-dasharray="'+da+'"'):'')+'/></svg></span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; }
-      if(it.t==="ship"){ var sc=it.c!=null?_hx(it.c):"#38bdf8";
-        h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; } });
+      if(it.t==="ship"||it.t==="sat"){ h+='<div class="lrrow lrb"><span class="lrico">'+_thumbCell(it)+'</span><div class="lrtx">'+it.l+'</div>'+_tierCell(null,"any")+'</div>'; return; } });
     return h+'</div>'; }
   function _planetSection(){ var P=(typeof LEGEND!=="undefined"&&LEGEND.Planet)||null; if(!P) return "";
     var h='<div class="lrsec"><div class="lrsh">FLEET · planets &amp; ships</div>';
     (P.sub||[]).forEach(function(sk){ h+='<div class="lrgrp">'+sk+'</div>'; (P[sk]||[]).forEach(function(it){ if(it.t==="grp"){ h+='<div class="lrgrp lrsub">'+it.l+'</div>'; return; }
-      var sc=it.c!=null?_hx(it.c):"#8590a8";
-      h+='<div class="lrrow lrb"><span class="lrico"><span class="lrswatch" style="background:'+sc+'"></span></span><div class="lrtx">'+(it.l||"")+'</div>'+_tierCell(null,"any")+'</div>'; }); });
+      h+='<div class="lrrow lrb"><span class="lrico">'+_thumbCell(it)+'</span><div class="lrtx">'+(it.l||"")+'</div>'+_tierCell(null,"any")+'</div>'; }); });
     return h+'</div>'; }
   var ov=document.createElement("div"); ov.id="uni-legref";
   var head='<div class="lrhd"><b><svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 11.5v4.5" stroke-linecap="round"/><circle cx="12" cy="8" r="1" fill="currentColor" stroke="none"/></svg> Legend reference</b>'
@@ -2640,6 +2662,8 @@ window.__uniLegRef=function(){
   // paint each badge glyph onto its canvas (the SAME __badgeGlyph the 3D badges use — legend-visual law)
   [].forEach.call(ov.querySelectorAll(".lrbc"), function(cv){ var c=cv.getContext("2d"); c.scale(cv.width/128, cv.height/128);
     if(window.__badgeGlyph) try{ __badgeGlyph(c, cv.dataset.bk, cv.dataset.bkey); }catch(e){} });
+  // paint the REAL 3D ship thumbnails (operator) — the continuous spin, same as the small legend's Planet tab
+  [].forEach.call(ov.querySelectorAll(".lrcv"), function(cv){ var it=_thumbs[+cv.dataset.ti]; if(it) _refThumb(cv, _thumbBuild(it)); });
   // example chip → fill the bar + focus + close the overlay
   [].forEach.call(ov.querySelectorAll(".lrex"), function(b){ b.onclick=function(){ var s=b.getAttribute("data-s"), id=b.getAttribute("data-id");
     if(window.__uniSearchGo) __uniSearchGo(s, id||null); __uniLegRef(); }; });
