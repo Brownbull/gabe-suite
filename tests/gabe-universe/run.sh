@@ -332,7 +332,12 @@ check('meta.why==="gate"' in page and 'meta.why==="dispatch"' in page and '#step
       "wave D: the step note no longer renders the gate + dispatch why (with their CSS)")
 # DISCLOSURE TIERS (control-driven, no click-to-expand): T0–T3 header selector + presets + feClass gate
 check('id="tiersel"' in page and 'data-tier="0"' in page and 'data-tier="3"' in page and 'window.__uniSetTier=function' in page,
-      "the disclosure-tier selector (T0–T3, keys 1–4) + __uniSetTier are gone")
+      "the disclosure-tier selector (T0–T3, Alt+1–4) + __uniSetTier are gone")
+# tiers moved to Alt+1–4 (plain 1–8 own the fleet columns on their own keydown; plain 1–4 fired BOTH → same tier rendered differently each press). The tier keydown REQUIRES altKey and reads e.code Digit1–4 (macOS Option-compose safe); the fleet keydown still guards !e.altKey so Alt+digit can't reach it.
+check('/^Digit[1-4]$/.test(e.code' in page and 'e.altKey && !e.metaKey && !e.ctrlKey && /^Digit[1-4]$/' in page and '__uniSetTier(+e.code.slice(5)-1)' in page,
+      "the tier keydown no longer requires Alt / no longer reads e.code (plain 1–4 would collide with the fleet-column keys again)")
+check('k>="1"&&k<="8"&&!e.altKey' in page,
+      "the fleet-column keydown dropped its !e.altKey guard (Alt+digit would toggle a fleet column AND set a tier)")
 check('window.__uniFeClassState' in page and 'window.__uniFeClassState[n.feClass]===false' in page and '_TIER_PRESETS=[' in page,
       "the feClass visibility gate + the tier presets are gone")
 check('window.__uniJrnSolo=function(e)' in page and 'c.onauxclick=function(ev){ if(ev.button!==1) return;' in page,
@@ -1221,6 +1226,20 @@ const { chromium } = require(process.argv[3]);
   await p.evaluate(() => window.__uniSetTier(2));
   await p.waitForTimeout(1000);
   const afterTier = await p.evaluate(() => ({ on:HL.on, walk:WALK.mode, vis:nodes.filter(n=>_nodeVisibleFn(n)).length })).catch(e=>({err:String(e)}));
+  // TIER KEY regression (operator bug): plain 1–4 fired the tier handler AND the fleet-column handler
+  // (two listeners, preventDefault can't stop the second) → the same tier rendered differently each
+  // press. Tiers now require Alt+Digit1–4; plain digits must NO LONGER move the tier, and Alt+Digit is
+  // deterministic (same key → same tier every time).
+  const keyReg = await p.evaluate(() => {
+    const K=(code,alt)=>document.dispatchEvent(new KeyboardEvent('keydown',{key:code.slice(5),code,altKey:!!alt,bubbles:true}));
+    window.__uniSetTier(3); const t0=window.__uniTier;
+    K('Digit2',false); const afterPlain=window.__uniTier;          // plain 2 → must NOT change the tier
+    K('Digit2',true);  const afterAlt=window.__uniTier;            // Alt+2 → T1
+    K('Digit2',true); K('Digit2',true); const afterAltx3=window.__uniTier;  // same key again → still T1 (deterministic)
+    K('Digit4',true); const map4=window.__uniTier;                 // Alt+4 → T3
+    K('Digit1',true); const map1=window.__uniTier;                 // Alt+1 → T0
+    return { t0, afterPlain, afterAlt, afterAltx3, map4, map1 };
+  }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1255,9 +1274,11 @@ const { chromium } = require(process.argv[3]);
   const focusOk = clickFocus && !clickFocus.err && clickFocus.ok && clickFocus.mode==='focus' && clickFocus.on===true
     && clickFocus.depth===1 && clickFocus.vis<150
     && afterTier && !afterTier.err && afterTier.on===false && afterTier.walk===null && afterTier.vis>clickFocus.vis;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk;
+  // tiers on Alt+Digit only: plain 2 leaves the tier untouched; Alt+2 → T1 and stays T1 on repeat (deterministic); Alt+4→T3, Alt+1→T0
+  const kr=keyReg, keyOk = kr && !kr.err && kr.t0===3 && kr.afterPlain===3 && kr.afterAlt===1 && kr.afterAltx3===1 && kr.map4===3 && kr.map1===0;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?

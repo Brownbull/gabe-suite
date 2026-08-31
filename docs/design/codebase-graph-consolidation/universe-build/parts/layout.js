@@ -1283,6 +1283,7 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span></div>'
     +'<div class="ctlrow">'+KB("Alt+A")+KB("Alt+D")+'<span class="ctll">trail prev / next</span></div>'
     +'<div class="ctlrow">'+KB("F")+'<span class="ctll">glow⇄focus</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+1")+'…'+KB("Alt+4")+'<span class="ctll">disclosure tier T0–T3</span></div>'
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<span class="ctll" title="first-person look — vertical inverted by convention">look — turn in place</span></div>'
     +'<div class="ctlrow">'+KB("RMB")+'<span class="ctll" title="orbits the SELECTED planet when one is selected, else the zoom depth">tumble (orbit)</span>'+KB("MMB")+'<span class="ctll">pan</span></div>'
@@ -2355,9 +2356,9 @@ window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel");
   if(fc) [].forEach.call(fc.querySelectorAll("button"), function(b){ b.classList.toggle("on", !(window.__uniFeClassState&&window.__uniFeClassState[b.getAttribute("data-fc")]===false)); }); };
 (function(){ var _init=function(){ var g=document.getElementById("tiersel"); if(!g||g.__wired) return; g.__wired=1;
     [].forEach.call(g.querySelectorAll("button"), function(b){ b.onclick=function(){ __uniSetTier(+b.getAttribute("data-tier")); }; });
-    document.addEventListener("keydown", function(e){                                   // keys 1–4 select a tier (not while typing)
-      if(e.key>="1" && e.key<="4" && !e.metaKey && !e.ctrlKey && !e.altKey
-         && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.key-1); e.preventDefault(); } });
+    document.addEventListener("keydown", function(e){                                   // Alt+1–4 select a tier. Alt is REQUIRED: plain 1–8 toggle fleet columns on a SEPARATE keydown listener, and preventDefault does not stop a second listener — so plain 1–4 fired BOTH (tier + a fleet-column flip → same tier rendered differently each press; operator bug). e.code (Digit1–4) survives the macOS Option-compose that turns Alt+1 into a glyph (review, same reason as Alt+Q/E above).
+      if(e.altKey && !e.metaKey && !e.ctrlKey && /^Digit[1-4]$/.test(e.code||"")
+         && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.code.slice(5)-1); e.preventDefault(); } });
     if(window.__uniTierSyncUI) __uniTierSyncUI();
     if(window.__uniRenderTierIcons) __uniRenderTierIcons(); };   // wear the chosen tier icon set from boot (operator)
   if(document.readyState!=="loading") _init(); else document.addEventListener("DOMContentLoaded", _init); })();

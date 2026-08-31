@@ -780,11 +780,11 @@
 <div class="topbar">
   <div class="crumb"><a href="index.html">Overview</a> › <b>Gabe Universe</b> <span class="csub">· the ecosystem as a 5C universe · click an element for its card</span></div>
   <div class="spacer"></div>
-  <div class="tiersel" id="tiersel" role="group" aria-label="disclosure tier" title="disclosure tier — how much of the graph is shown, coarse to fine. Keys 1–4.">
-    <button type="button" data-tier="0" title="T0 · Skeleton — the doors, tables & screens only (key 1)">T0</button>
-    <button type="button" data-tier="1" title="T1 · Surface — + schemas, stores, providers & data-connectors (key 2)">T1</button>
-    <button type="button" data-tier="2" title="T2 · Trace — + functions, gates & private components (key 3)">T2</button>
-    <button type="button" data-tier="3" title="T3 · Everything — every kind & every component class (key 4)">T3</button>
+  <div class="tiersel" id="tiersel" role="group" aria-label="disclosure tier" title="disclosure tier — how much of the graph is shown, coarse to fine. Keys Alt+1…Alt+4 (plain 1–8 select fleet columns).">
+    <button type="button" data-tier="0" title="T0 · Skeleton — the doors, tables & screens only (Alt+1)">T0</button>
+    <button type="button" data-tier="1" title="T1 · Surface — + schemas, stores, providers & data-connectors (Alt+2)">T1</button>
+    <button type="button" data-tier="2" title="T2 · Trace — + functions, gates & private components (Alt+3)">T2</button>
+    <button type="button" data-tier="3" title="T3 · Everything — every kind & every component class (Alt+4)">T3</button>
   </div>
   <div class="topsearch" id="tsrch">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
@@ -2820,6 +2820,7 @@ window.__uniBuildCtrl=function(){ if(document.getElementById("ctrlp")) return;
     +'<div class="ctlrow">'+KB("Alt+Q")+KB("Alt+E")+KB("↑")+KB("↓")+'<span class="ctll">depth</span></div>'
     +'<div class="ctlrow">'+KB("Alt+A")+KB("Alt+D")+'<span class="ctll">trail prev / next</span></div>'
     +'<div class="ctlrow">'+KB("F")+'<span class="ctll">glow⇄focus</span>'+KB("Esc")+'<span class="ctll">clear</span></div>'
+    +'<div class="ctlrow">'+KB("Alt+1")+'…'+KB("Alt+4")+'<span class="ctll">disclosure tier T0–T3</span></div>'
     +'<div class="ctlrow">'+KB("1")+'…'+KB("8")+'<span class="ctll">fleet columns — for the selection (none = all)</span></div>'
     +'<div class="ctlrow">'+KB("LMB")+'<span class="ctll" title="first-person look — vertical inverted by convention">look — turn in place</span></div>'
     +'<div class="ctlrow">'+KB("RMB")+'<span class="ctll" title="orbits the SELECTED planet when one is selected, else the zoom depth">tumble (orbit)</span>'+KB("MMB")+'<span class="ctll">pan</span></div>'
@@ -3892,9 +3893,9 @@ window.__uniTierSyncUI=function(){ var g=document.getElementById("tiersel");
   if(fc) [].forEach.call(fc.querySelectorAll("button"), function(b){ b.classList.toggle("on", !(window.__uniFeClassState&&window.__uniFeClassState[b.getAttribute("data-fc")]===false)); }); };
 (function(){ var _init=function(){ var g=document.getElementById("tiersel"); if(!g||g.__wired) return; g.__wired=1;
     [].forEach.call(g.querySelectorAll("button"), function(b){ b.onclick=function(){ __uniSetTier(+b.getAttribute("data-tier")); }; });
-    document.addEventListener("keydown", function(e){                                   // keys 1–4 select a tier (not while typing)
-      if(e.key>="1" && e.key<="4" && !e.metaKey && !e.ctrlKey && !e.altKey
-         && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.key-1); e.preventDefault(); } });
+    document.addEventListener("keydown", function(e){                                   // Alt+1–4 select a tier. Alt is REQUIRED: plain 1–8 toggle fleet columns on a SEPARATE keydown listener, and preventDefault does not stop a second listener — so plain 1–4 fired BOTH (tier + a fleet-column flip → same tier rendered differently each press; operator bug). e.code (Digit1–4) survives the macOS Option-compose that turns Alt+1 into a glyph (review, same reason as Alt+Q/E above).
+      if(e.altKey && !e.metaKey && !e.ctrlKey && /^Digit[1-4]$/.test(e.code||"")
+         && !/^(input|textarea)$/i.test((e.target && e.target.tagName) || "")){ __uniSetTier(+e.code.slice(5)-1); e.preventDefault(); } });
     if(window.__uniTierSyncUI) __uniTierSyncUI();
     if(window.__uniRenderTierIcons) __uniRenderTierIcons(); };   // wear the chosen tier icon set from boot (operator)
   if(document.readyState!=="loading") _init(); else document.addEventListener("DOMContentLoaded", _init); })();

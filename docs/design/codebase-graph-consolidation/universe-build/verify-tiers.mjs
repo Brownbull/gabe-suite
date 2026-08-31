@@ -44,14 +44,20 @@ ck(c0.vis > 0 && c0.vis < c1.vis && c1.vis <= c2.vis && c2.vis < c3.vis,
 ck(!(c0.cls.private > 0) && !(c0.cls.leaf > 0), 'T0 hides private + leaf components', JSON.stringify(c0.cls));
 ck((c3.cls.leaf || 0) > 0 && (c3.cls.private || 0) > 0, 'T3 shows every component class', JSON.stringify(c3.cls));
 
-// the active button lights, and key "1" selects T0
+// the active button lights, and Alt+1 selects T0 (tiers moved to Alt+Digit1–4; plain 1–8 own the fleet columns)
 await p.evaluate(() => window.__uniSetTier(2));
 const litT2 = await p.evaluate(() => document.querySelector('#tiersel button[data-tier="2"]').classList.contains('on'));
 ck(litT2, 'the active tier button lights (T2)');
-await p.evaluate(() => { document.body.focus(); document.dispatchEvent(new KeyboardEvent('keydown', { key: '1', bubbles: true })); });
+await p.evaluate(() => { document.body.focus(); document.dispatchEvent(new KeyboardEvent('keydown', { key: '1', code: 'Digit1', altKey: true, bubbles: true })); });
 await p.waitForTimeout(300);
 const afterKey = await p.evaluate(() => window.__uniTier);
-ck(afterKey === 0, 'key "1" selects T0 (keyboard shortcut)', 'tier=' + afterKey);
+ck(afterKey === 0, 'Alt+1 selects T0 (keyboard shortcut)', 'tier=' + afterKey);
+// plain "1" must NOT move the tier (it toggles a fleet column) — the collision fix
+await p.evaluate(() => window.__uniSetTier(3));
+await p.evaluate(() => { document.body.focus(); document.dispatchEvent(new KeyboardEvent('keydown', { key: '1', code: 'Digit1', altKey: false, bubbles: true })); });
+await p.waitForTimeout(300);
+const afterPlain = await p.evaluate(() => window.__uniTier);
+ck(afterPlain === 3, 'plain "1" does NOT change the tier (fleet-column key, no collision)', 'tier=' + afterPlain);
 
 // the legend is BINARY + carries component-class rows + a fold-helpers toggle (phase 2)
 const leg = await p.evaluate(() => {
