@@ -281,6 +281,39 @@ else bad "still offering after $DECAY_AFTER declines: $third"; fi
 if [ -f "$r/.kdbp/PULSE.jsonl" ]; then ok "the decay record is written where .kdbp exists"
 else bad "no .kdbp/PULSE.jsonl written"; fi
 
+# ── S14 · map-delta debt — active missed-edge tally per generator arm (reads the ledger; cold self-silences) ──
+led14() { printf '%s\n' "${@:2}" > "$1/.kdbp/map-deltas-rollup.jsonl"; }
+r=$(repo s14a); mkdir -p "$r/.kdbp"
+led14 "$r" \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(a)","file":"x/a.py","count":5,"first_n":1,"last_n":1,"last_pointer":"x/a.py:1"}' \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(b)","file":"x/b.py","count":2,"first_n":1,"last_n":1,"last_pointer":"x/b.py:1"}' \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(c)","file":"x/c.py","count":1,"first_n":1,"last_n":1,"last_pointer":"x/c.py:1"}'
+run "$r" | grep -q "map-delta debt — _a3_graft.calls: 3 active" && ok "S14 fires: 3 active missed edges of one arm" || bad "S14 did not fire on 3 active edges"
+
+r=$(repo s14b); mkdir -p "$r/.kdbp"
+led14 "$r" \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(a)","file":"x/a.py","count":9,"first_n":1,"last_n":1,"last_pointer":"x/a.py:1"}' \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(b)","file":"x/b.py","count":9,"first_n":1,"last_n":1,"last_pointer":"x/b.py:1"}'
+run "$r" | grep -q "map-delta debt" && bad "S14 fired with only 2 active edges (below breadth threshold 3)" || ok "S14 silent below the breadth threshold"
+
+r=$(repo s14c); mkdir -p "$r/.kdbp"; commits "$r" 45 "feat: work"
+led14 "$r" \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(a)","file":"x/a.py","count":20,"first_n":1,"last_n":1,"last_pointer":"x/a.py:1"}' \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(b)","file":"x/b.py","count":20,"first_n":1,"last_n":1,"last_pointer":"x/b.py:1"}' \
+ '{"v":2,"gen":"_a3_graft.calls","subject":"callers(c)","file":"x/c.py","count":20,"first_n":1,"last_n":1,"last_pointer":"x/c.py:1"}'
+run "$r" | grep -q "map-delta debt" && bad "S14 fired on all-cold edges (past the 40-commit horizon)" || ok "S14 silent when every edge is cold — a fixed/dormant arm self-silences"
+
+r=$(repo s14d); mkdir -p "$r/.kdbp"
+run "$r" | grep -q "map-delta debt" && bad "S14 fired with no ledger" || ok "S14 silent (Unavailable) with no ledger"
+
+# a not-yet-migrated v1 rollup (3 raw lines, SAME edge) must NOT be per-line counted (build-review false fire)
+r=$(repo s14e); mkdir -p "$r/.kdbp"
+led14 "$r" \
+ '{"v":1,"type":"add","subject":"callers(a)","found":"e","pointer":"x/a.py:1","gen":"_a3_graft.calls","ctx":{"cmd":"red","entity":"","head":"h"}}' \
+ '{"v":1,"type":"add","subject":"callers(a)","found":"e","pointer":"x/a.py:2","gen":"_a3_graft.calls","ctx":{"cmd":"red","entity":"","head":"h"}}' \
+ '{"v":1,"type":"add","subject":"callers(a)","found":"e","pointer":"x/a.py:3","gen":"_a3_graft.calls","ctx":{"cmd":"red","entity":"","head":"h"}}'
+run "$r" | grep -q "map-delta debt" && bad "S14 false-fired on a not-yet-migrated v1 rollup (per-line count)" || ok "S14 skips a v1 rollup — reads only the v2 tally the sweep authors"
+
 # ── a repo with no .kdbp degrades statelessly, and still works ─────────────
 r=$(repo nokdbp); commits "$r" 30 "feat: work"
 out=$(python3 "$ANGLES" "$r" --one-line 2>&1)

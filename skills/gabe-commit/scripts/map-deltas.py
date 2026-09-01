@@ -35,6 +35,7 @@ from collections import defaultdict
 TYPES = ("add", "subtract", "modify")
 LIVE = "map-deltas.jsonl"
 ROLL = "map-deltas-rollup.jsonl"
+H_HORIZON = int(os.environ.get("MAP_DELTAS_H", "40"))  # commits since last recurrence → COLD (computed, never stored)
 
 
 def _git_root():
@@ -81,65 +82,146 @@ def append(a):
     return 0
 
 
+def _commit_count(root):
+    try:
+        r = subprocess.run(["git", "rev-list", "--count", "HEAD"],
+                           capture_output=True, text=True, cwd=root)
+        s = r.stdout.strip()
+        return int(s) if r.returncode == 0 and s.isdigit() else 0
+    except Exception:
+        return 0
+
+
+def _edge_file(pointer):
+    """The stable half of a pointer — drop a trailing :line so the tally survives line drift."""
+    p = pointer or ""
+    if ":" in p:
+        head, tail = p.rsplit(":", 1)
+        if tail.isdigit():
+            return head
+    return p
+
+
+def _read_live(live):
+    """→ (new_deltas, malformed_count). new_deltas are v1 delta dicts."""
+    new, malformed = [], 0
+    if not os.path.exists(live):
+        return new, malformed
+    with open(live) as f:
+        for ln in f.read().splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                o = json.loads(ln)
+            except Exception:
+                malformed += 1
+                continue
+            if not isinstance(o, dict):        # valid JSON, wrong shape ([1], "s", 5) — skip, never crash
+                malformed += 1
+                continue
+            if o.get("type") in TYPES and o.get("gen"):
+                new.append(o)
+            else:
+                malformed += 1
+    return new, malformed
+
+
+def _bump(edges, d, n):
+    """Upsert one v1 delta into the edge ledger at commit-count n (0 = legacy fold, unknown → cold)."""
+    file = _edge_file(d.get("pointer", ""))
+    key = (d["gen"], d.get("subject", ""), file)
+    ptr = d.get("pointer", "")
+    e = edges.get(key)
+    if e:
+        e["count"] += 1
+        e["last_n"] = max(e.get("last_n", 0), n)
+        if ptr:
+            e["last_pointer"] = ptr
+    else:
+        edges[key] = {"v": 2, "gen": d["gen"], "subject": d.get("subject", ""),
+                      "file": file, "count": 1, "first_n": n, "last_n": n, "last_pointer": ptr}
+
+
+def _load_ledger(path, fold_n=0):
+    """Edge-keyed tally {(gen, subject, file): v2 record}. Folds any v1 legacy rollup lines once,
+    stamping them last_n=fold_n (the migration commit count) so the accumulated backlog surfaces
+    at migration and ages out on its own, rather than reading cold from the first beat."""
+    edges = {}
+    if not os.path.exists(path):
+        return edges
+    with open(path) as f:
+        for ln in f.read().splitlines():
+            ln = ln.strip()
+            if not ln:
+                continue
+            try:
+                o = json.loads(ln)
+            except Exception:
+                continue
+            if not isinstance(o, dict):
+                continue
+            if o.get("v") == 2 and o.get("gen") and "file" in o:
+                edges[(o["gen"], o.get("subject", ""), o["file"])] = o
+            elif o.get("type") in TYPES and o.get("gen"):   # v1 legacy raw delta → fold at migration
+                _bump(edges, o, fold_n)
+    return edges
+
+
+def _write_ledger(path, edges):
+    tmp = path + ".tmp"
+    with open(tmp, "w") as f:
+        for e in edges.values():
+            f.write(json.dumps(e, separators=(",", ":")) + "\n")
+        f.flush()
+        os.fsync(f.fileno())
+    os.replace(tmp, path)   # atomic rewrite — a crash leaves the prior ledger intact
+
+
 def analyze(threshold, sweep):
     root = _git_root()
     kd = _kdbp(root)
     if not kd:
         return 0  # honest-empty: no .kdbp
     live = os.path.join(kd, LIVE)
-    if not os.path.exists(live):
-        return 0
-    with open(live) as f:
-        raw = [ln.strip() for ln in f.read().splitlines() if ln.strip()]
-    if not raw:
-        return 0
-    valid, malformed = [], 0
-    for ln in raw:
-        try:
-            o = json.loads(ln)
-        except Exception:
-            malformed += 1
-            continue
-        if o.get("type") in TYPES and o.get("gen"):
-            valid.append(o)
-        else:
-            malformed += 1
+    ledger_path = os.path.join(kd, ROLL)
+    new, malformed = _read_live(live)
 
-    if not valid:
-        if sweep:
-            open(live, "w").close()  # drop malformed junk quietly
+    # No new deltas this sweep: the standing reminder is pulse S14's job (it reads the ledger),
+    # not the commit digest's — so exit quiet. Drop a junk-only live file if sweeping.
+    if not new:
+        if sweep and malformed and os.path.exists(live):
+            open(live, "w").close()
         return 0
 
-    by_gen = defaultdict(lambda: defaultdict(int))
-    gen_total = defaultdict(int)
-    for o in valid:
-        by_gen[o["gen"]][o["type"]] += 1
-        gen_total[o["gen"]] += 1
-    ranked = sorted(gen_total.items(), key=lambda kv: (-kv[1], kv[0]))
+    cur_n = _commit_count(root)
+    edges = _load_ledger(ledger_path, cur_n)   # folds a v1 legacy rollup, stamped as seen now
+    for d in new:
+        _bump(edges, d, cur_n)
+    if sweep:
+        # Ledger written + fsync'd BEFORE live is truncated, so a crash never LOSES a delta; a crash
+        # in the window between them only re-counts this batch next sweep — a benign over-count of a
+        # coarse persistence tally, never loss (report-never-gate).
+        _write_ledger(ledger_path, edges)
+        open(live, "w").close()   # accumulator back to empty
 
-    head_parts = []
-    for gen, n in ranked[:5]:
-        ts = by_gen[gen]
-        tstr = "/".join(t[:3] for t in sorted(ts, key=lambda t: (-ts[t], t)))
-        head_parts.append("%s x%d (%s)" % (gen, n, tstr))
+    # Digest the ACTIVE edges — tier computed fresh, never stored (current_n − last_n < H).
+    active = [e for e in edges.values() if cur_n - e.get("last_n", 0) < H_HORIZON]
+    if not active:
+        return 0
+    by_gen = defaultdict(list)
+    for e in active:
+        by_gen[e["gen"]].append(e)
+    ranked = sorted(by_gen.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+    parts = ["%s x%d (top %dx)" % (gen, len(es), max(e["count"] for e in es))
+             for gen, es in ranked[:5]]
     more = "" if len(ranked) <= 5 else " · +%d more" % (len(ranked) - 5)
     mf = " · %d malformed skipped" % malformed if malformed else ""
-    print("MAP DELTAS · %d since last sweep · %s%s%s"
-          % (len(valid), " · ".join(head_parts), more, mf))
-    for gen, n in ranked:
-        if n >= threshold:
-            print("  consider: %s — %d deltas; pointers in .kdbp/%s" % (gen, n, ROLL))
-
-    if sweep:
-        # Durability order: the rollup is fully written + fsync'd BEFORE the live file is
-        # truncated, so a crash can never lose deltas. A crash in the window between fsync and
-        # truncate only re-sweeps the same lines next run — benign rollup duplicates, never loss.
-        with open(os.path.join(kd, ROLL), "a") as rf:
-            for o in valid:
-                rf.write(json.dumps(o, separators=(",", ":")) + "\n")
-            rf.flush()
-            os.fsync(rf.fileno())
-        open(live, "w").close()  # accumulator back to empty — never write-only
+    print("MAP DELTAS · %d active edges · %s%s%s" % (len(active), " · ".join(parts), more, mf))
+    for gen, es in ranked:
+        if len(es) >= threshold:
+            print("  consider: %s — %d active missed edges (top recurs %dx); ledger in .kdbp/%s"
+                  % (gen, len(es), max(e["count"] for e in es), ROLL))
     return 2
 
 

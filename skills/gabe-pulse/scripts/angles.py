@@ -29,6 +29,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -47,6 +48,11 @@ THRESHOLDS = {
     "prism_layers": 2,
     "prism_actors": 3,
     "scope_outside": 1,
+    # S14 — a codebase-map generator arm whose ACTIVE missed edges have this many
+    # distinct entries is diverging enough to be worth a generator look; horizon =
+    # commits since an edge last recurred beyond which it reads COLD (self-silencing).
+    "map_delta_active": 3,
+    "map_delta_horizon": 40,
 }
 
 # Offered twice for the same evidence and not taken ⇒ silent until the evidence
@@ -461,6 +467,55 @@ def s13_route_file_census(root: Path, plan: dict | None, cfg: dict | None):
             "/gabe-cc-init")
 
 
+def s14_map_deltas(root: Path, plan: dict | None, cfg: dict | None):
+    """Map↔grep delta debt — a codebase-map generator arm whose ACTIVE missed edges
+    have accumulated past the threshold, so the map keeps diverging from what grep
+    finds during real dev (red/execute/review emit the divergences; /gabe-commit's
+    sweep tallies them).
+
+    The ONE accumulator-backed angle: a delta cannot be re-derived without re-running
+    grep, so — unlike S8-S13 — this reads a stored tally. But the tally is a TALLY
+    (dedup by edge, count = persistence), and the active/cold split is computed FRESH
+    from the current commit count vs each edge's last_n, so nothing that can go stale
+    is stored. A fixed or dormant arm's edges fall COLD on their own and this goes
+    silent. The rollup ledger is written by /gabe-commit's sweep (11a)."""
+    ledger = root / ".kdbp" / "map-deltas-rollup.jsonl"
+    if not ledger.is_file():
+        return Unavailable("no map-delta ledger yet — /gabe-commit's sweep builds it from red/execute/review emits")
+    try:
+        n_now = int((sh(["git", "rev-list", "--count", "HEAD"], root).strip() or "0"))
+    except ValueError:
+        n_now = 0
+    # Same horizon source as /gabe-commit's sweep (MAP_DELTAS_H), so the tier the sweep
+    # digests and the tier S14 nags can never disagree; default = the coarse threshold.
+    horizon = int(os.environ.get("MAP_DELTAS_H", THRESHOLDS["map_delta_horizon"]))
+    by_gen: dict[str, list[int]] = {}
+    for line in ledger.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            o = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        # Read ONLY the v2 tally the sweep authors. A pre-11a v1 rollup is raw append lines (no
+        # dedup, no last_n) — the next /gabe-commit sweep migrates it, so skip it here rather than
+        # mis-count each raw line as its own active edge (the false-fire the build review caught).
+        if not isinstance(o, dict) or o.get("v") != 2 or not o.get("gen"):
+            continue
+        if n_now - o.get("last_n", 0) < horizon:            # ACTIVE, computed fresh
+            by_gen.setdefault(o["gen"], []).append(o.get("count", 1))
+    hot = {g: cs for g, cs in by_gen.items() if len(cs) >= THRESHOLDS["map_delta_active"]}
+    if not hot:
+        return None                                         # all cold / below threshold — silent
+    ranked = sorted(hot.items(), key=lambda kv: (-len(kv[1]), kv[0]))
+    top_gen, top_cs = ranked[0]
+    extra = f" +{len(ranked) - 1} more arm(s)" if len(ranked) > 1 else ""
+    ev = (f"map-delta debt — {top_gen}: {len(top_cs)} active missed edges "
+          f"(top recurs {max(top_cs)}x){extra}")
+    return (ev, "inspect .kdbp/map-deltas-rollup.jsonl → improve the arm")
+
+
 SIGNALS = [
     ("S1", "adversarial", s1_roast),
     ("S8", "evidence debt", s8_evidence),
@@ -475,6 +530,7 @@ SIGNALS = [
     ("S11", "model census", s11_model_census),
     ("S12", "schema homing", s12_schema_homing),
     ("S13", "route/file census", s13_route_file_census),
+    ("S14", "map deltas", s14_map_deltas),
 ]
 
 

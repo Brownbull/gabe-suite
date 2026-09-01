@@ -151,3 +151,62 @@ CHEAP fixes, defer the heavy one.
   when a `gen` accumulates unactioned suggestions, so the digest stops dying at one commit line.
 - **Fix 3 — axis 1 (DEFERRED).** Wire `gabe-cc-entity` into execute E4 as a required first-look map read
   = graft-adoption **P4**. Trigger: greenlight P4, or the rollup shows red-only emit is too sparse.
+
+## 11 · The delta lifecycle & the virtuous cycle (Fix 2, re-planned)
+
+The append-only rollup + recent-window nag was rejected (operator, 2026-09-01): old chronic gaps age out
+silently and nothing ever prunes. A 42-agent design review then found the full park/resurface/decision-debt
+arm holed in ~15 ways (29 confirmed findings), so Fix 2 **SPLITS**: **11a** (the tally core, built now) and
+**11b** (the decision-debt arm — its own designed-and-reviewed pass; the review's holes are its brief).
+
+### 11a · The tally ledger + S14 nag (BUILD NOW)
+
+**The edge — keyed `(gen, subject, file)`, never the line.** The review's top hole: a `file:line` key
+resets the tally on every edit, so `count` never climbs where the design needs it. The line is drift; the
+FILE + logical `subject` is the stable identity. The ledger (`.kdbp/map-deltas-rollup.jsonl`) holds ONE
+**v2** record per edge: `{v:2, gen, subject, file, count, first_n, last_n, last_pointer}` — `last_pointer`
+is the most-recent `file:line` (evidence, non-key); `n` is the repo commit count (`git rev-list --count
+HEAD`) at sweep, so staleness survives a squash/rebase that a stored SHA would not.
+
+**Upsert, never append.** `analyze --sweep` groups the live deltas by edge key and UPSERTS into the ledger
+(bump `count` + `last_n` + `last_pointer`, or insert), then truncates live. Churn no longer grows the file:
+it is bounded by DISTINCT missed edges, so **nothing is ever deleted — and therefore nothing is orphaned**
+(the review's parked-edge-pruned and prune-gating holes dissolve: there is no delete pass to gate).
+
+**Two tiers, COMPUTED fresh — nothing stored goes stale.** An edge is **active** when
+`current_n − last_n < H` (recurred recently), else **cold** — derived at read time from `last_n` vs the
+current commit count, never a stored flag, honouring the pulse S-signal ethos. A fixed generator stops
+emitting the edge → it is never re-upserted → it goes cold on its own (quiet, but its `count` preserved).
+Touch that code again and if it still diverges the next delta **re-promotes** it and the tally RESUMES —
+a cold chronic gap is demoted, never forgotten (the review's "chronic gap in cold code vanishes" hole).
+
+**Honest about resolution.** Cold ≠ resolved. Going cold means "stopped recurring" (fixed OR dormant OR
+deleted) — 11a does NOT claim the map now covers it. True RESOLUTION (re-validate a rebuilt map covers the
+edge, then retire it) is a cc-update-regen job, deferred to 11b; 11a only demotes to cold, honestly labelled.
+
+**S14 (pulse ANGLE).** Nags per `gen` on ACTIVE breadth × persistence — `_a3_graft.calls: 8 active missed
+edges, top recurs 14×`. Cold edges are silent. S14 is declared the ONE accumulator-backed angle (a delta
+cannot be re-derived without re-running grep) and reports Unavailable when the ledger is absent.
+
+**Migration.** A v1 rollup (Fix 1's raw append lines) is folded once on the first upsert-sweep — grouped
+by the new key, `count = occurrences`, each folded edge stamped `last_n = migration commit count` so the
+accumulated backlog surfaces ACTIVE at migration and ages out on its own (rather than reading cold from
+the first beat). pulse S14 reads ONLY the v2 tally the sweep authors — a not-yet-migrated v1 rollup is
+skipped there, never per-line mis-counted. **Durability of the sweep:** the ledger is written + fsync'd
+BEFORE live is truncated, so a crash never loses a delta; a crash in the window between them only
+re-counts that batch next sweep — a benign over-count of a coarse persistence tally, never loss.
+
+**Scope of 11a:** amend `map-deltas.py analyze --sweep` (append → upsert), add S14 to `angles.py` +
+pulse-spec, migration + battery (upsert dedup, computed tier, v1→v2 fold, honest-empty, mutation-proven).
+Ledger stays gitignored in 11a (like the live accumulator); durability (commit-in-twins) rides 11b, where a
+durable DECISION is first at stake.
+
+### 11b · Park + resurface + decision-debt (DEFERRED — own pass)
+
+The review confirmed this arm needs a dedicated design, not a bolt-on. Its brief = the confirmed holes:
+machine-readable JOIN between a ledger edge and its `DECISIONS.md` row · pick ONE grain (park was gen-level,
+resurface edge-level) · park's silence contingent on a COMMITTED record ("proposed, never auto-written" vs
+"silence S14 now") · a terminal **won't-fix** disposition distinct from revisit-later · route the
+deferred-escalation to the ledger that actually has it (DECISIONS.md has no `deferred ≥2×`; PENDING.md does)
+· commit the ledger in twins so parked state survives a clone/CI · honest resolution via re-validation at
+cc-update regen. **Trigger to start 11b:** 11a in use and the rollup shows real gaps worth formally parking.
