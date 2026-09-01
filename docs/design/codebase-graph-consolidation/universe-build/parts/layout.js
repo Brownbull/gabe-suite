@@ -2724,6 +2724,41 @@ window.__uniJrnDetail=function(){
   function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
   function _entLbl(e){ return (window.__uniEntLabel?__uniEntLabel(e):e)||"—"; }
   var _fe=0, _be=0; WALK.steps.forEach(function(id){ var n=NIDS[id]; if(!n) return; if(n.fe) _fe++; else _be++; });
+  // one edge index (source → its links) from the drawn links + the always-available function links, so a step's
+  // READ/WRITE targets resolve even when the ƒ layer is off.
+  var _srcIdx={}; function _idx(arr){ if(!arr) return; for(var q=0;q<arr.length;q++){ var l=arr[q]; (_srcIdx[l.source]=_srcIdx[l.source]||[]).push(l); } }
+  if(typeof links!=="undefined") _idx(links); if(typeof _FNLINKS!=="undefined") _idx(_FNLINKS);
+  function _tgtsOf(id, rels){ var o={}, ls=_srcIdx[id]||[]; for(var q=0;q<ls.length;q++){ var l=ls[q]; if(rels.indexOf(l.rel)>=0){ var t=NIDS[l.target]||(typeof _fnById==="function"?_fnById(l.target):null); var nm=(t&&t.label)||String(l.target).split("#").pop(); if(nm) o[nm]=1; } } return Object.keys(o); }
+  // DETERMINISTIC per-step data semantics (operator): the OPERATION (read/write/guard/…) · the models it touches ·
+  // the FIELDS of a structure · the CONDITION a gate asks — all from data the graph already carries (endpoint
+  // method · function role · the reads_from/writes_to/fnreads/fnwrites edges · det.cols · det.gates). Honest-empty
+  // where a step has no derivable operation.
+  function _stepData(n){ var op="", opk="", tgts=[], fields=null, note="";
+    if(n.kind==="endpoint"){ var m=(n.m&&n.m.method)||"";
+      if(m==="GET"){ op="reads"; opk="read"; tgts=_tgtsOf(n.id,["reads_from","touches"]); }
+      else if(m==="POST"||m==="PUT"||m==="PATCH"){ op="writes"; opk="write"; tgts=_tgtsOf(n.id,["writes_to","touches"]); }
+      else if(m==="DELETE"){ op="deletes"; opk="write"; tgts=_tgtsOf(n.id,["writes_to","touches"]); }
+      else if(m==="BOOT"){ op="boots once"; opk="boot"; } else { op="handles"; opk="call"; } }
+    else if(n.kind==="function"){
+      if(n.role==="accessor"){ var w=_tgtsOf(n.id,["fnwrites","writes_to"]), r=_tgtsOf(n.id,["fnreads","reads_from"]);
+        if(w.length&&r.length){ op="reads / writes"; opk="write"; tgts=w.concat(r.filter(function(x){return w.indexOf(x)<0;})); }
+        else if(w.length){ op="writes"; opk="write"; tgts=w; } else { op="reads"; opk="read"; tgts=r.length?r:_tgtsOf(n.id,["touches"]); } }
+      else if(n.role==="gate"){ op="guards"; opk="gate"; note="evaluates "+(n.label||""); }
+      else if(n.role==="pure"){ op="computes"; opk="pure"; }
+      else { op="calls"; opk="call"; tgts=_tgtsOf(n.id,["calls"]).slice(0,3); } }
+    else if(n.kind==="component"||n.kind==="hook"){ op=n.write?"writes":"reads / renders"; opk=n.write?"write":"read"; }
+    else if(n.kind==="model"){ op="a table"; opk="model"; fields=(n.det&&n.det.cols)||null; }
+    else if(n.kind==="schema"){ op="a body shape"; opk="schema"; fields=(n.det&&n.det.cols)||null; }
+    else if(n.kind==="middleware"){ op="gates"; opk="gate"; if(n.det&&n.det.gates) note="gates "+n.det.gates; }
+    else if(n.kind==="route"){ op="a screen"; opk="call"; } else if(n.kind==="web"){ op="fetches"; opk="call"; }
+    return {op:op, opk:opk, tgts:tgts, fields:fields, note:note}; }
+  function _dataHTML(sd){ if(!sd.op) return '<span class="jdno">—</span>';
+    var h='<div class="jddline"><span class="jdop jdop-'+sd.opk+'">'+_esc(sd.op)+'</span>';
+    if(sd.tgts&&sd.tgts.length){ h+='<span class="jdtgt">'+sd.tgts.slice(0,3).map(_esc).join(" · ")+(sd.tgts.length>3?(' <i>+'+(sd.tgts.length-3)+'</i>'):'')+'</span>'; }
+    h+='</div>';
+    if(sd.fields&&sd.fields.length){ h+='<div class="jdfields"><i>'+sd.fields.length+' field'+(sd.fields.length>1?"s":"")+':</i> '+sd.fields.slice(0,6).map(function(c){return _esc(c[0]);}).join(" · ")+(sd.fields.length>6?(' +'+(sd.fields.length-6)):'')+'</div>'; }
+    if(sd.note){ h+='<div class="jdnote">'+_esc(sd.note.length>96?sd.note.slice(0,94)+"…":sd.note)+'</div>'; }
+    return h; }
   var jg='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
   var meta=[WALK.steps.length+" steps", (j.ents&&j.ents.length?j.ents.length+" entities":""), (_fe?_fe+" frontend":""), (_be?_be+" backend":""), (j.corpus||"")].filter(Boolean).join(" · ");
   var ov=document.createElement("div"); ov.id="uni-jrnref";
@@ -2732,9 +2767,12 @@ window.__uniJrnDetail=function(){
   WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
     if(n.ent!==lastEnt){ body+='<div class="jdgrp">'+_esc(_entLbl(n.ent))+'</div>'; lastEnt=n.ent; }
     var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
+    var entC=((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568"), sd=_stepData(n);
     body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'"><span class="jdnum">'+(i+1)+'</span><span class="jdico">'+ic+'</span>'
-      +'<div class="jdtx"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
-      +'<span class="jdent" style="background:'+((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568")+'">'+_esc(n.ent||"")+'</span></div>'; });
+      +'<div class="jdmain"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
+      +'<div class="jdent" title="entity"><span class="jdentdot" style="background:'+entC+'"></span>'+_esc(_entLbl(n.ent))+'</div>'
+      +'<div class="jdclu" title="cluster">'+_esc(n.sub||"—")+'</div>'
+      +'<div class="jddata">'+_dataHTML(sd)+'</div></div>'; });
   body+='</div>';
   ov.innerHTML=head+body; document.body.appendChild(ov);
   // a step row → jump the graph walk to that step, then close (the 3D view follows)
