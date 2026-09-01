@@ -137,19 +137,24 @@ AND `graft grep <sym>`, deduped. One arm alone scored 4/10 on the blind-spot bat
 8/10, because re-exports, test callers and the Python↔TypeScript boundary are only reachable textually.
 Never `graft ask` (it prints full signatures — one gustify query returned a ~3,000-token blob).
 
-**Emit the arm difference (map↔grep delta loop).** Both arms are already run — where they DISAGREE is
-free feedback for the map's call-graph generator, at zero added cost. When `graft grep <sym>` finds a
-reference in a file that `graft callers <sym>` did NOT return, that is an index-missed caller; append one
-delta line (non-blocking; emit nothing on agreement, nothing with no index):
+**One command produces the record AND the emit — `reach-emit.py`.** Once the index is fresh (the build
+step below), run the mechanized reach instead of the two arms by hand. It runs both arms, prints the
+Reach line to paste here, AND auto-emits the arm-difference as map-delta lines. Because the Reach record
+is gated (the red checkpoint), it can no longer be produced without the emit — that is the map↔grep
+loop's axis-2 wire, closing the "notice + remember to append" discretion that leaves emit advisory:
 
 ```
-python3 "${ECC_ROOT:-$HOME/.claude}/skills/gabe-commit/scripts/map-deltas.py" \
-  append --type add --gen _a3_graft.calls --cmd red \
-  --subject "callers(<sym>)" --found "<file>:<line>" --pointer "<file>:<line>"
+python3 "${ECC_ROOT:-$HOME/.claude}/skills/gabe-red/scripts/reach-emit.py" <sym>...
 ```
 
-The accumulator (`.kdbp/map-deltas.jsonl`) is clustered, digested and swept by `/gabe-commit`; no `.kdbp`
-→ silent no-op. Design record: `../../../docs/design/map-delta-loop/README.md`.
+It queries `graft callers <sym>` ∪ `graft grep '\b<sym>\b'` — the **word boundary** matters: a short name
+must not match inside a longer identifier (measured on gustify, `_auth` collapses 60 substring hits to 1
+real caller edge). The union is deduped and noise-filtered to source files. Each grep-found reference that
+`graft callers` did NOT return — a test caller, a re-export, the Python↔TS boundary — is an index-missed
+caller → one `type:add, gen:_a3_graft.calls` delta, written through the one validated writer
+(`map-deltas.py append`). No `graft` index → it prints `no index` and emits nothing; no `.kdbp` → the
+append is a silent no-op. `--dry-run` previews without writing. The accumulator (`.kdbp/map-deltas.jsonl`)
+is clustered, digested and swept by `/gabe-commit`. Design record: `../../../docs/design/map-delta-loop/README.md`.
 
 `graft@<sha>` stamps the state it described, so review can tell *the graph missed an edge* from
 *the change grew past its cases*. Build first — always, never conditionally: warm rebuild measured

@@ -132,3 +132,22 @@ Not a gate (never blocks a commit) · not a new graph element (the accumulator n
 data model is unchanged — the `_orm_access` fix produces more of the SAME `access.ops`, no new kind) ·
 not automatic generator edits (analyze SUGGESTS; a human decides) · not a suite-repo artifact (the
 accumulator is per-project, gitignored, twins only).
+
+## 10 · Post-audit enforcement
+
+An 18-agent, 3-axis wiring audit (artifact "Map Loop Wiring Audit") found the shipped foundation
+**correct but SOFT on every axis** — 0 broken, but each step leaned on unenforced agent discretion or
+dead-ended, the same class as the retired TASK CONTRACT (0-for-19). The operator chose: land the two
+CHEAP fixes, defer the heavy one.
+
+- **Fix 1 — axis 2 → WIRED (LANDED).** `skills/gabe-red/scripts/reach-emit.py` runs the two-arm graft
+  query (`callers` ∪ word-boundary `grep '\b<sym>\b'`), prints the Reach line AND auto-emits the
+  arm-difference (`grep_files − caller_files − def_files`, noise-filtered, through `map-deltas.py append`).
+  red-spec now calls it in place of the manual two-arm + hand-typed append, so producing the gated Reach
+  record can no longer skip the emit. Battery `tests/reach-emit/run.sh` (17 asserts, 3-mutant-proven).
+  Validated against gustify read-only: word-boundary grep collapses `_auth` 60→1 substring hits;
+  `apply_recipe_filters` surfaces 2 real test-caller edges graft's index missed.
+- **Fix 2 — axis 3 → WIRED (planned).** A `gabe-pulse` S14 ANGLE that reads the rollup and nags per beat
+  when a `gen` accumulates unactioned suggestions, so the digest stops dying at one commit line.
+- **Fix 3 — axis 1 (DEFERRED).** Wire `gabe-cc-entity` into execute E4 as a required first-look map read
+  = graft-adoption **P4**. Trigger: greenlight P4, or the rollup shows red-only emit is too sparse.
