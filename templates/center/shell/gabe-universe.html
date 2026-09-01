@@ -799,6 +799,30 @@
   #uni-legref .lrtdots.lrtman, #uni-legref .lrtdots.lrtany{ color:var(--muted); }   /* type = off every tier · wires/ships = not tier-gated */
   #uni-legref .lrrow.lrdim{ opacity:.42; }   /* the row is hidden in the graph at the current tier */
   #uni-legref .lrrow.lrdim .lrex{ opacity:.7; }
+
+  /* ── THE JOURNEY DETAIL overlay (operator) — full graph-area, same chrome as the legend reference ── */
+  #uni-jrnref{ position:fixed; left:var(--navw); right:0; top:var(--topbarh); bottom:0; z-index:120;
+    background:color-mix(in srgb, var(--panel) 97%, transparent); backdrop-filter:blur(3px);
+    display:flex; flex-direction:column; animation:lrfade .16s ease; }
+  #uni-jrnref .jdhd{ display:flex; align-items:center; gap:12px; padding:12px 18px; border-bottom:1px solid var(--line); flex:none; }
+  #uni-jrnref .jdhd b{ display:inline-flex; align-items:center; gap:7px; font:800 13px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.04em; color:var(--ink); }
+  #uni-jrnref .jdhd b svg{ color:var(--accent); }
+  #uni-jrnref .jdsub{ font:400 11px/1.3 var(--font-ui); color:var(--muted); }
+  #uni-jrnref .jdclose{ margin-left:auto; font:400 17px/1 var(--font-ui); color:var(--muted); background:none; border:1px solid var(--line); border-radius:7px; width:28px; height:28px; cursor:pointer; }
+  #uni-jrnref .jdclose:hover{ color:var(--ink); border-color:var(--accent); }
+  #uni-jrnref .jdbody{ flex:1; min-height:0; overflow-y:auto; padding:12px 18px 22px; max-width:920px; }
+  #uni-jrnref .jdgrp{ font:700 9px/1 var(--font-ui); text-transform:uppercase; letter-spacing:.09em; color:var(--accent); margin:14px 0 6px; padding-bottom:5px; border-bottom:1px solid var(--line); }
+  #uni-jrnref .jdgrp:first-child{ margin-top:2px; }
+  #uni-jrnref .jdstep{ display:flex; align-items:center; gap:11px; padding:6px 8px; border-radius:8px; cursor:pointer; }
+  #uni-jrnref .jdstep:hover{ background:var(--hov-bg); }
+  #uni-jrnref .jdstep.on{ background:color-mix(in srgb, var(--accent) 14%, transparent); }
+  #uni-jrnref .jdnum{ flex:none; width:26px; height:26px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font:600 11px/1 var(--font-mono); color:var(--muted); border:1px solid var(--line); }
+  #uni-jrnref .jdstep.on .jdnum{ color:#fff; background:var(--accent); border-color:var(--accent); }
+  #uni-jrnref .jdico{ flex:none; width:22px; display:flex; align-items:center; justify-content:center; }
+  #uni-jrnref .jdtx{ flex:1; min-width:0; display:flex; flex-direction:column; gap:1px; }
+  #uni-jrnref .jdtx b{ font:600 12.5px/1.2 var(--font-ui); color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  #uni-jrnref .jdtx i{ font:400 10.5px/1.3 var(--font-ui); font-style:normal; color:var(--muted); }
+  #uni-jrnref .jdent{ flex:none; font:600 9.5px/1 var(--font-ui); color:#fff; padding:3px 8px; border-radius:999px; letter-spacing:.02em; }
 </style></head><body>
 <nav class="side">
   <div class="brand">
@@ -2820,7 +2844,8 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
         +'<button class="tbico wbtn" data-wgo="1" title="next step">'+CHR+'</button>'
         +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
-      pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+      pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); };
+      var _wn=pill.querySelector(".wname"); if(_wn){ _wn.style.cursor="pointer"; _wn.onclick=function(){ if(window.__uniJrnDetail) __uniJrnDetail(); }; }   /* click the journey name → the full-detail overlay (operator) */ }
     else { pill.style.display=""; pill.innerHTML=""; } }   // keep the RESERVED slot present + empty (no display:none) so the header never shifts (operator)
   /* the TRAIL bar shows for a TRAIL and for a selected JOURNEY (operator: a journey becomes the current
      trail — navigable by the same chips + Alt+A/D, with a CLEAR button next to its title). */
@@ -4305,6 +4330,41 @@ window.__uniLegRef=function(){
   document.addEventListener("keydown", _lrEsc, true);
 };
 function _lrEsc(e){ if(e.key==="Escape" && document.getElementById("uni-legref")){ e.preventDefault(); e.stopPropagation(); window.__uniLegRef(); } }
+
+/* ── THE JOURNEY DETAIL (operator) — clicking the journey name in the walk-bar pill opens a full graph-area
+   overlay (same chrome as the legend reference) listing EVERY step of the selected journey with its kind icon,
+   label, entity and leg — far more room than the tiny walk chips. A step row → walk the graph to that step +
+   close. Only opens while a JOURNEY walk is active. ── */
+window.__uniJrnDetail=function(){
+  var old=document.getElementById("uni-jrnref"); if(old){ old.remove(); document.removeEventListener("keydown", _jdEsc, true); return; }   // toggle
+  if(typeof WALK==="undefined" || WALK.mode!=="journey" || !WALK.steps || !WALK.steps.length || typeof HL==="undefined" || !HL.jrObj) return;
+  var j=HL.jrObj, KC=(typeof KINDCOL!=="undefined")?KINDCOL:{};
+  function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function _entLbl(e){ return (window.__uniEntLabel?__uniEntLabel(e):e)||"—"; }
+  var _fe=0, _be=0; WALK.steps.forEach(function(id){ var n=NIDS[id]; if(!n) return; if(n.fe) _fe++; else _be++; });
+  var jg='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
+  var meta=[WALK.steps.length+" steps", (j.ents&&j.ents.length?j.ents.length+" entities":""), (_fe?_fe+" frontend":""), (_be?_be+" backend":""), (j.corpus||"")].filter(Boolean).join(" · ");
+  var ov=document.createElement("div"); ov.id="uni-jrnref";
+  var head='<div class="jdhd"><b>'+jg+' '+_esc(j.name||j.cid)+'</b><span class="jdsub">'+_esc(meta)+'</span><button class="jdclose" title="close (Esc)">✕</button></div>';
+  var body='<div class="jdbody">', lastEnt=null;
+  WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
+    if(n.ent!==lastEnt){ body+='<div class="jdgrp">'+_esc(_entLbl(n.ent))+'</div>'; lastEnt=n.ent; }
+    var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
+    body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'"><span class="jdnum">'+(i+1)+'</span><span class="jdico">'+ic+'</span>'
+      +'<div class="jdtx"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
+      +'<span class="jdent" style="background:'+((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568")+'">'+_esc(n.ent||"")+'</span></div>'; });
+  body+='</div>';
+  ov.innerHTML=head+body; document.body.appendChild(ov);
+  // a step row → jump the graph walk to that step, then close (the 3D view follows)
+  [].forEach.call(ov.querySelectorAll("[data-si]"), function(r){ r.onclick=function(){ var i=+r.getAttribute("data-si");
+    if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} } __uniJrnDetail(); }; });
+  // scroll the current step into view
+  var _cur=ov.querySelector(".jdstep.on"); if(_cur) try{ _cur.scrollIntoView({block:"center"}); }catch(e){}
+  ov.querySelector(".jdclose").onclick=function(){ __uniJrnDetail(); };
+  ov.addEventListener("mousedown", function(ev){ if(ev.target===ov) __uniJrnDetail(); });   // backdrop closes
+  document.addEventListener("keydown", _jdEsc, true);
+};
+function _jdEsc(e){ if(e.key==="Escape" && document.getElementById("uni-jrnref")){ e.preventDefault(); e.stopPropagation(); window.__uniJrnDetail(); } }
 /* ── CLUSTERS — each cluster (entity OR sub-cluster) renders in a chosen SHAPE at a chosen
    TRANSPARENCY. AURA = soft additive glow at member nodes + along member links. SPHERE = the
    enclosing translucent sphere. POLYGON = a rounded convex HULL that ENCLOSES each node (seeded

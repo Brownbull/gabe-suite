@@ -1226,7 +1226,8 @@ function _walkRender(){ var wb=document.getElementById("walkbar"), pill=document
         +'<button class="tbico wbtn" data-wgo="1" title="next step">'+CHR+'</button>'
         +'<button class="tbico hlbx" title="clear the journey (Esc)">'+XIC+'</button>';
       pill.querySelectorAll("[data-wgo]").forEach(function(b){ b.onclick=function(){ _walkGo(+b.getAttribute("data-wgo")); }; });
-      pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); }; }
+      pill.querySelector(".hlbx").onclick=function(){ __uniHLClear(); };
+      var _wn=pill.querySelector(".wname"); if(_wn){ _wn.style.cursor="pointer"; _wn.onclick=function(){ if(window.__uniJrnDetail) __uniJrnDetail(); }; }   /* click the journey name → the full-detail overlay (operator) */ }
     else { pill.style.display=""; pill.innerHTML=""; } }   // keep the RESERVED slot present + empty (no display:none) so the header never shifts (operator)
   /* the TRAIL bar shows for a TRAIL and for a selected JOURNEY (operator: a journey becomes the current
      trail — navigable by the same chips + Alt+A/D, with a CLEAR button next to its title). */
@@ -2711,3 +2712,38 @@ window.__uniLegRef=function(){
   document.addEventListener("keydown", _lrEsc, true);
 };
 function _lrEsc(e){ if(e.key==="Escape" && document.getElementById("uni-legref")){ e.preventDefault(); e.stopPropagation(); window.__uniLegRef(); } }
+
+/* ── THE JOURNEY DETAIL (operator) — clicking the journey name in the walk-bar pill opens a full graph-area
+   overlay (same chrome as the legend reference) listing EVERY step of the selected journey with its kind icon,
+   label, entity and leg — far more room than the tiny walk chips. A step row → walk the graph to that step +
+   close. Only opens while a JOURNEY walk is active. ── */
+window.__uniJrnDetail=function(){
+  var old=document.getElementById("uni-jrnref"); if(old){ old.remove(); document.removeEventListener("keydown", _jdEsc, true); return; }   // toggle
+  if(typeof WALK==="undefined" || WALK.mode!=="journey" || !WALK.steps || !WALK.steps.length || typeof HL==="undefined" || !HL.jrObj) return;
+  var j=HL.jrObj, KC=(typeof KINDCOL!=="undefined")?KINDCOL:{};
+  function _esc(x){ return String(x==null?"":x).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function _entLbl(e){ return (window.__uniEntLabel?__uniEntLabel(e):e)||"—"; }
+  var _fe=0, _be=0; WALK.steps.forEach(function(id){ var n=NIDS[id]; if(!n) return; if(n.fe) _fe++; else _be++; });
+  var jg='<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="19" r="3"/><path d="M9 19h8.5a3.5 3.5 0 0 0 0-7h-11a3.5 3.5 0 0 1 0-7H15"/><circle cx="18" cy="5" r="3"/></svg>';
+  var meta=[WALK.steps.length+" steps", (j.ents&&j.ents.length?j.ents.length+" entities":""), (_fe?_fe+" frontend":""), (_be?_be+" backend":""), (j.corpus||"")].filter(Boolean).join(" · ");
+  var ov=document.createElement("div"); ov.id="uni-jrnref";
+  var head='<div class="jdhd"><b>'+jg+' '+_esc(j.name||j.cid)+'</b><span class="jdsub">'+_esc(meta)+'</span><button class="jdclose" title="close (Esc)">✕</button></div>';
+  var body='<div class="jdbody">', lastEnt=null;
+  WALK.steps.forEach(function(id,i){ var n=NIDS[id]; if(!n) return;
+    if(n.ent!==lastEnt){ body+='<div class="jdgrp">'+_esc(_entLbl(n.ent))+'</div>'; lastEnt=n.ent; }
+    var ic=(typeof svgInline==="function")?svgInline(n.kind, KC[n.kind]||n.col||"#9ecbff", 16):"";
+    body+='<div class="jdstep'+(i===WALK.i?" on":"")+'" data-si="'+i+'"><span class="jdnum">'+(i+1)+'</span><span class="jdico">'+ic+'</span>'
+      +'<div class="jdtx"><b>'+_esc(n.label||id)+'</b><i>'+_esc(n.kind||"")+(n.fe?" · frontend":" · backend")+'</i></div>'
+      +'<span class="jdent" style="background:'+((typeof ENT!=="undefined"&&ENT[n.ent])||"#4a5568")+'">'+_esc(n.ent||"")+'</span></div>'; });
+  body+='</div>';
+  ov.innerHTML=head+body; document.body.appendChild(ov);
+  // a step row → jump the graph walk to that step, then close (the 3D view follows)
+  [].forEach.call(ov.querySelectorAll("[data-si]"), function(r){ r.onclick=function(){ var i=+r.getAttribute("data-si");
+    if(typeof WALK!=="undefined"){ WALK.i=i; try{ _walkGo(0); }catch(e){} } __uniJrnDetail(); }; });
+  // scroll the current step into view
+  var _cur=ov.querySelector(".jdstep.on"); if(_cur) try{ _cur.scrollIntoView({block:"center"}); }catch(e){}
+  ov.querySelector(".jdclose").onclick=function(){ __uniJrnDetail(); };
+  ov.addEventListener("mousedown", function(ev){ if(ev.target===ov) __uniJrnDetail(); });   // backdrop closes
+  document.addEventListener("keydown", _jdEsc, true);
+};
+function _jdEsc(e){ if(e.key==="Escape" && document.getElementById("uni-jrnref")){ e.preventDefault(); e.stopPropagation(); window.__uniJrnDetail(); } }

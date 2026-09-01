@@ -1023,6 +1023,12 @@ check('#elegend .lghd b{ flex:0 0 auto !important; margin-right:0 !important; }'
 # thumbnail, via one _refIco dispatcher; the satellite is scaled up; descriptions revised to the FE/BE angle.
 check('function _vis2d(it){' in page and 'function _refIco(it){' in page and 'var _REFDESC={ fk:"a foreign-key link' in page and 'pivot.scale.setScalar(fit)' in page and 'fit=(fixedScale!=null)?fixedScale:Math.max(0.2, Math.min(60, 6.4/maxd))' in page and 'it.t==="sat"?2.8:null' in page,
       "the fleet lost its 2D markers / _refIco / _REFDESC / the AUTO-FIT / the satellite's fixed-scale exemption (auto-fit shrinks it)")
+# JOURNEY DETAIL overlay (operator): clicking the walk-bar journey NAME opens a full graph-area list of EVERY
+# step (kind icon + entity groups); a step row walks the graph to it + closes. Same chrome as the legend ref.
+check('window.__uniJrnDetail=function' in page and 'id="uni-jrnref"' in page and '#uni-jrnref{' in page and 'if(window.__uniJrnDetail) __uniJrnDetail();' in page,
+      "the journey-detail overlay (__uniJrnDetail) / its #uni-jrnref markup+CSS / the walk-bar name trigger are gone")
+check('class="jdstep' in page and 'data-si="' in page and 'WALK.i=i; try{ _walkGo(0); }catch(e){}' in page and 'left:var(--navw); right:0; top:var(--topbarh)' in page,
+      "the journey-detail step rows / their walk-to-step click / the full graph-area coverage are gone")
 # fleet-side tier config pills (control-system phase 3)
 check('pillHTML("tier"' in page and 'fcPill.className="pill fcpill"' in page and 'entPane.unshift(tierGrp)' in page,
       "the fleet Entity pane's tier + fold + component-class pills are gone")
@@ -1369,6 +1375,21 @@ const { chromium } = require(process.argv[3]);
     const ov3=document.getElementById('uni-legref'); if(ov3) window.__uniLegRef();   // close so it never bleeds into later checks
     return { open, ref, tier, layout, jump, flag:{ before, after, rebuilt:!!ov3 } };
   }).catch(e=>({err:String(e)}));
+  // JOURNEY DETAIL (operator): start a journey, click the walk-bar name pill → a full graph-area overlay lists
+  // every step with its kind icon + entity grouping; a step row walks the graph to it + closes.
+  const jrnDetail = await p.evaluate(() => {
+    const js=(typeof _jrnCollect==='function')?_jrnCollect():[]; if(!js.length) return {err:'no journeys'};
+    window.__uniJrnStart(js[0].cid); const nsteps=WALK.steps.length;
+    const wn=document.querySelector('#jrnpill .wname'); const clickable=!!(wn&&wn.onclick); if(wn) wn.onclick();
+    const ov=document.getElementById('uni-jrnref'); if(!ov) return {err:'overlay did not open', clickable};
+    const steps=ov.querySelectorAll('.jdstep').length, groups=ov.querySelectorAll('.jdgrp').length, icons=ov.querySelectorAll('.jdico svg').length;
+    const s=ov.querySelector('.jdstep[data-si="2"]'); if(s) s.onclick();
+    const closed=!document.getElementById('uni-jrnref'), walkI=WALK.i;
+    // Esc/backdrop path: re-open then close via the toggle so nothing bleeds forward
+    if(document.querySelector('#jrnpill .wname')) document.querySelector('#jrnpill .wname').onclick();
+    if(document.getElementById('uni-jrnref')) window.__uniJrnDetail();
+    return { clickable, nsteps, steps, groups, icons, stepsMatch:(steps===nsteps), walkedToStep:(closed && walkI===2) };
+  }).catch(e=>({err:String(e)}));
   await b.close();
   // the frontend fold, when the feed carries it: pieces drawn · every web node absorbed · bridge wires survive ·
   // types held back (toggle present) — a feed WITHOUT fe must leave all of that at zero (honest-empty)
@@ -1415,9 +1436,12 @@ const { chromium } = require(process.argv[3]);
     && lr.layout.thumbs>0 && lr.layout.refCells>0 && lr.layout.hdrRefAfterTitle && lr.layout.iconHug<20 && lr.layout.starIs2d && lr.layout.satIsThumb && lr.layout.fkDescRevised
     && lr.jump && lr.jump.closed===true && lr.jump.barVal===lr.jump.s && lr.jump.hlOn===true && lr.jump.hlMode==='focus'
     && lr.flag && lr.flag.before==='all' && lr.flag.after==='off' && lr.flag.rebuilt===true;
-  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk;
+  // the journey-detail overlay opens from the walk-bar name, lists every step (icon + entity groups), and a
+  // step row walks the graph to it + closes.
+  const jd=jrnDetail, jrnDetailOk = jd && !jd.err && jd.clickable && jd.steps>0 && jd.stepsMatch && jd.groups>0 && jd.icons===jd.steps && jd.walkedToStep;
+  const ok = r.nodes>0 && !r.err && errs.length===0 && r.cardOpen && r.stPass && feOk && fewOk && wfOk && iconsOk && hdrOk && jrnOk && levelsOk && commitsOk && ui3Ok && fcbOk && focusOk && keyOk && legRefOk && jrnDetailOk;
   if(ok) console.log(`  render: PASS — ${r.nodes} live nodes, 0 errors, card renders (st-pass=${r.stPass}, faces=${r.face}); frontend ${f.present?`${f.feNodes} pieces · ${f.absorbed} screens absorbed · ${f.typesHeld} types held · FE-write heat off-by-default, bands blue→magenta`:'absent (honest-empty)'}`);
-  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
+  else { console.error('  render FAIL:', JSON.stringify(r), 'fewOk='+fewOk, 'wfOk='+wfOk, 'iconsOk='+iconsOk, 'hdrOk='+hdrOk, 'jrnOk='+jrnOk, 'levelsOk='+levelsOk, 'commitsOk='+commitsOk, 'ui3Ok='+ui3Ok, 'fcbOk='+fcbOk+' '+JSON.stringify(fcb), 'focusOk='+focusOk+' click='+JSON.stringify(clickFocus)+' tier='+JSON.stringify(afterTier), 'keyOk='+keyOk+' '+JSON.stringify(keyReg), 'legRefOk='+legRefOk+' '+JSON.stringify(legRef).slice(0,600), 'jrnDetailOk='+jrnDetailOk+' '+JSON.stringify(jrnDetail), 'errs='+errs.slice(0,4).join(' | ')); process.exit(1); }
 })();
 JS
   RENDER=$?
