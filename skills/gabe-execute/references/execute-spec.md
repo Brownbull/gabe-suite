@@ -203,6 +203,11 @@ For each task T_i in order:
      naming a reference (mockup/story/spec/legacy screen) is rebuilt TO that reference.
    - **E4 REUSE FIRST.** Search before authoring anything new (globs/greps/stories); re-authoring a
      lookalike of an existing artifact is a DEFECT, not a style choice.
+   - **Map-delta emit (trust-but-verify).** The map is the first-look surface (the entity's
+     `access`/callers slice = context A); the confirming grep is context B. When B surfaces a file or
+     symbol A did NOT name, append one delta — free feedback for the map generator (non-blocking; only
+     on a CLEAR contradiction, never a hunch; nothing with no `.kdbp`):
+     `python3 "${ECC_ROOT:-$HOME/.claude}/skills/gabe-commit/scripts/map-deltas.py" append --type add --gen <arm> --cmd execute --entity <slug> --subject "<map claim>" --found "<what grep saw>" --pointer "<file>:<line>"` — `<arm>` is the fix target (`_a3_code.access` for a missed model access, `_a3_graft.calls` for a missed caller). `/gabe-commit` clusters + sweeps it.
    - **Cases bind completion.** When the phase carries a `Cases:` record, each task's trailer lists
      the ids it advances, and the phase may not finish until every declared case is green AND every
      guard is still green. Tests are not a task class — they are the contract ON tasks.

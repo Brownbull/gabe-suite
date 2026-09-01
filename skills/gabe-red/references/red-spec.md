@@ -137,6 +137,20 @@ AND `graft grep <sym>`, deduped. One arm alone scored 4/10 on the blind-spot bat
 8/10, because re-exports, test callers and the Python↔TypeScript boundary are only reachable textually.
 Never `graft ask` (it prints full signatures — one gustify query returned a ~3,000-token blob).
 
+**Emit the arm difference (map↔grep delta loop).** Both arms are already run — where they DISAGREE is
+free feedback for the map's call-graph generator, at zero added cost. When `graft grep <sym>` finds a
+reference in a file that `graft callers <sym>` did NOT return, that is an index-missed caller; append one
+delta line (non-blocking; emit nothing on agreement, nothing with no index):
+
+```
+python3 "${ECC_ROOT:-$HOME/.claude}/skills/gabe-commit/scripts/map-deltas.py" \
+  append --type add --gen _a3_graft.calls --cmd red \
+  --subject "callers(<sym>)" --found "<file>:<line>" --pointer "<file>:<line>"
+```
+
+The accumulator (`.kdbp/map-deltas.jsonl`) is clustered, digested and swept by `/gabe-commit`; no `.kdbp`
+→ silent no-op. Design record: `../../../docs/design/map-delta-loop/README.md`.
+
 `graft@<sha>` stamps the state it described, so review can tell *the graph missed an edge* from
 *the change grew past its cases*. Build first — always, never conditionally: warm rebuild measured
 **1.6–1.8 s** against `graft check`'s 13.3 s, so asking whether the index is stale costs more than

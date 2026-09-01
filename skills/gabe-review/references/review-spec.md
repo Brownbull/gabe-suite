@@ -249,6 +249,13 @@ into a hook block, never into silence.
   the project has no graft index; NEVER report zero findings when the check could not run — print
   `REACH DRIFT NOT RUN` with the reason. **`unreached` is the running measurement** of whether the
   graph's edges are complete, and it is the evidence the twin-propagation decision waits on.
+  **Map-delta emit.** When `unreached` is attributed to a MISSING EDGE (the diff sits at/before the
+  record's `graft@<sha>`, so growth cannot explain it), append the light delta cousin to the map↔grep
+  loop — the priced finding above stays exactly as-is; the delta only accumulates for `/gabe-commit`'s
+  generator sweep (non-blocking; nothing with no `.kdbp`):
+  `python3 "${ECC_ROOT:-$HOME/.claude}/skills/gabe-commit/scripts/map-deltas.py" append --type add --gen _a3_graft.calls --cmd review --subject "reach(<phase>)" --found "<unreached file>" --pointer "<unreached file>"`.
+  A WEB-BRIDGE DRIFT unmatched fetch emits the same way with `--gen _a3_web.bridge`, an ENTITY-SHAPE
+  DRIFT orphan route with `--gen route_census` — one line each, the drift subject that fired names the arm.
 - **ENTITY DRIFT** — the phase's declared `entities` (PLAN.json, written at plan time from the
   operator-confirmed Entities bullet — ruling 2026-08-07) and the entities the diff actually
   touched disagree. Touched = changed files matched against `center.config.json` `entities{}.code`
