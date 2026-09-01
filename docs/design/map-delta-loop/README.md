@@ -210,3 +210,92 @@ resurface edge-level) · park's silence contingent on a COMMITTED record ("propo
 deferred-escalation to the ledger that actually has it (DECISIONS.md has no `deferred ≥2×`; PENDING.md does)
 · commit the ledger in twins so parked state survives a clone/CI · honest resolution via re-validation at
 cc-update regen. **Trigger to start 11b:** 11a in use and the rollup shows real gaps worth formally parking.
+
+## 12 · Fix 3-full — the gated `Map:` receipt (axis 1) — **ABANDONED, see §13**
+
+> **Status: NOT BUILT — abandoned after a 37-agent re-review.** Kept as the record of why gating the map
+> read fails. The re-review proved axis 1 cannot be closed by a gate: a receipt witnesses that the reader
+> was RUN, never that the agent CONSUMED the slice (re-derivable counts can be pasted at commit); and
+> `checkpoint-trailer.sh` is report-never-gate, so a missing/false receipt still ships. Forcing an LLM to
+> consume context is not gate-achievable. **Axis 1 pivots to Path C (a native map-query tool) — see §13.**
+
+A 32-agent design review killed the read-STEP design: a more-specific prose instruction is still the
+0-for-19 advisory shape (the retired TASK CONTRACT was precise too — the lack was never precision, it was a
+gated CONSUMER). Axis 1 closes only when the read rides a GATED artifact, exactly as Fix 1's reach-emit rides
+the mandatory `Reach:` record. Execute already requires one such artifact: the **checkpoint-commit trailer**
+(`Cases:`/`Class:`, validated by `checkpoint-trailer.sh`). Fix 3-full folds a map-read RECEIPT into it.
+
+**The reframe (reader content — the review's other truth).** `entity-context.py --json` returns a STRUCTURAL
+slice (endpoints · models · schemas · files-by-layer · FK relations), NOT the `access.ops` read/write map.
+So context A is a **reuse-first / anti-duplication** first-look, not the §1 access-recall gap. The execute
+emit re-targets to STRUCTURAL divergences (a grep/diff-found endpoint/model/file/FK the slice did not name →
+an `_a3_code`-family gen), scoped to files that EXISTED pre-phase (git-exclude the phase's own added files —
+the emit-noise fix). The access-recall claim is dropped from Fix 3.
+
+**The wire (once per phase, Step 1/2 context load — not per task).** For EVERY declared entity in PLAN.json
+`entities` (a LIST — iterate all, never `entities[0]`), run
+`python3 "${ECC_ROOT:-$HOME/.claude}/skills/gabe-cc-entity/scripts/entity-context.py" <slug> --json`
+(installed path; auto-resolves the center up from the repo) and print the union of slices as **context A**.
+ANY non-zero exit / STOP is SWALLOWED → "no context A, proceed unscoped"; the reader's E6 route-to-cc-init is
+advisory-only in this reuse and must NEVER halt execute.
+
+**The gated receipt.** The read stamps a `Map:` line into the phase's checkpoint-commit trailer, beside
+`Cases:`/`Class:`:
+- `Map: recipe → 12 ep/5 mo · ingredient → 3/2` (per declared slug: endpoint/model counts from the reader)
+- `Map: none (no entity)` · `Map: none (no center)` · `Map: recipe not-in-center (renamed?)` — the branch is
+  NAMED, so honest-empty is recorded, not an undetectable escape hatch.
+
+`checkpoint-trailer.sh` (gabe-commit) validates it and — the forcing function — **RE-DERIVES** it: it re-runs
+`entity-context.py` for the phase's declared slugs and checks the `Map:` counts match (E1 no-fabrication made
+mechanical). A `Task:`-footered checkpoint for a phase that declares entities AND has a center MUST carry a
+truthful `Map:` line, so producing the gated checkpoint can no longer skip the map read. **That is the axis-1
+close** — the read rides a required, re-derivable artifact, not a memory.
+
+**Floor, never ceiling — context B as a run too.** The slice names where to look FIRST, never bounds the
+search (scoping to the map scored 0.560 recall vs unscoped grep's 0.900). To keep that antidote from staying
+prose, E4 records the unscoped grep/glob it actually ran in the Step 4.4 VERIFY block (populated only from
+commands run this session), so a scoped-short task is visible. REACH DRIFT `unreached` still measures map
+completeness on the diff.
+
+**Scope:** execute-spec E4 (the read + receipt + VERIFY grep row) + `checkpoint-trailer.sh` (validate +
+re-derive the `Map:` line) + `tests/commit-scripts` (Map validation, fabrication caught) + the reader reuse
+(no new reader) + batteries. ~11a-scale; higher blast than 11a because it touches the core execute beat AND
+the commit trailer validator — hence the second design review before build.
+
+## 13 · Axis 1 → Path C: a native map-query tool (MCP) — NEXT SESSION
+
+Two reviews (32-agent + 37-agent) proved axis 1 has **no gate-close**: you can force a reader to RUN and
+record its output, never force the agent to CONSUME the slice as reasoning context. So forcing is a dead
+end. The leverage is the opposite — make the map the **path of least resistance**: package it as a tool the
+agent reaches for by default. That is **Path C**, the suite's first RUNTIME SURFACE (distinct from all its
+beat-machinery scripts).
+
+**Why a tool fixes it (the script/tool + CLI/MCP frame).** Agents skip the map because it is *data behind
+scripts*, never *a tool in the agent's tool list*. A CLI must be REMEMBERED (doc-based discovery → skipped
+for grep); an **MCP tool is advertised** to the harness every session → reached-for by default. Discovery is
+the axis-1 bottleneck; MCP is the only packaging that closes it. (Full frame: the session's artifacts —
+"Scripts, Tools, CLI & MCP", "Map Access on the Dev Cycle", "An MCP Server for the Suite".)
+
+**Decision (operator, this session): build the MCP server, not-overkill shape.**
+- **Transport = stdio** (a process the harness launches per session — no port, no daemon, warm-for-the-session).
+- **Scope = user** (`claude mcp add … --scope user`) — one registration, available in the suite + every twin,
+  each reading its OWN committed map. Rides the suite's existing install-to-`~/.claude` model.
+- **Thin server** over the committed `archmap.json`/`c4-graph.json`, reusing the `gabe-cc-entity`
+  (`entity-context.py`) + c4 readers — no new source-reading. Honest-empty when a project has no center.
+- **Tool roster (starting scope):** `who_calls`, `touches`, `entity_shape`, `entity_context` — codebase-graph
+  creation/exploration/update queries.
+- Home in the repo (`skills/gabe-map/` or a top-level `mcp/`), installed by `install.sh`, ask-first register.
+- **Confirm the exact `claude mcp add`/config mechanics against the current harness (claude-code-guide skill)
+  — not from memory.**
+
+**Second next-session task — the tool-roster EXPLORATION (operator ask):** survey the WHOLE suite for OTHER
+processes that should become MCP tools so the existing skills become more RELIABLE (the recurring enforcement
+problem — a skill that must REMEMBER to run a script is soft; a tool it reaches for is firm). Candidates to
+weigh: the map/graph queries (in scope), the two-arm reach (`reach-emit`/graft), the drift detectors
+(`entity_shape.py`, `fetch_bridge.py`), the readers, the map-delta emit/analyze. The question per candidate:
+does a skill currently depend on *remembering* to run it, and would exposing it as a discoverable tool make
+that skill fire reliably? This reframes the MCP from "codebase-graph tool" to "the suite's reliability surface."
+
+**Discipline:** Path C is a real new capability — design pass → multi-agent review → land-it → build → verify
+→ commit+push BOTH remotes, same as 11a/Fix-1. Deferred siblings still open: **11b** (park + resurface +
+decision-debt, its brief in §11b) and the map loop's axes 2+3 already shipped (§10, §11a).
