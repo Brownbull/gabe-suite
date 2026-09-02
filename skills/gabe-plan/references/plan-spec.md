@@ -825,7 +825,7 @@ File shape:
 |---|---|---|---|---|
 ```
 
-- `Entry` is the writing command's tag: `PLAN` · `EXEC` · `COMMIT` · `REVIEW` · `PUSH` · `HANDOFF` (satellite commands that log use their own tag, e.g. `SCOPE`, `ALIGN`, `MOCKUP`).
+- `Entry` is the writing command's tag, in LIFECYCLE order (the order `/gabe-next` routes them): `PLAN` · `RED` · `EXEC` · `REVIEW` · `COMMIT` · `PUSH` · `CENTER` · `HANDOFF` (satellite commands that log use their own tag, e.g. `SCOPE`, `ALIGN`, `MOCKUP`). `RED` is the red beat's own record (ruling 2026-09-02, red-spec § The LEDGER row) beside the `COMMIT` row its checkpoint sha also gets; `CENTER` is /gabe-cc-update's. No reader enforces the vocabulary — `mcp__gabe-kdbp__kdbp_snapshot` shows the tags a project actually uses.
 - `Commits` carries the short sha(s) the row is about (`—` when none). This column is how scope is later resolved — `git show --name-only <sha>` replaces the old in-ledger file lists.
 - Each writing command's own spec defines its row content; every writer appends exactly ONE row per checkpoint.
 - If LEDGER.md is missing, create it with the header above. Legacy multi-entry ledgers are rotated to `archive/` per the KDBP-lite migration — never converted in place.

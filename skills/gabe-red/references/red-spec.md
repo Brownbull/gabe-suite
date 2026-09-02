@@ -214,6 +214,30 @@ guard still green; validated by `/gabe-commit`'s `scripts/checkpoint-trailer.sh`
 2026-08-07) · the center's testing pages (ever-red, verification changelog) · the enforcement warn
 (`pre-checkpoint.sh`: declared ids must grep ≥1 in the corpus — warn-tier, never a block).
 
+## The LEDGER row (`RED`) — the beat's own record (ruling 2026-09-02)
+
+The red checkpoint's `COMMIT` row (written by `/gabe-commit`) records the GATE's findings for that sha. It does not
+record what the BEAT decided and proved — which ids were declared and how (NEW · REUSE · BUMP · GUARD), how many
+failed by assertion and under which runner, which skip code fired, how many guards were proven. Both twins had already
+grown hand-shaped `RED` rows (gustify 8, gastify 1) because sessions felt that gap; this section makes the row
+specified. Append exactly ONE row per red beat to `.kdbp/LEDGER.md`, newest first under the header, in the house format
+(`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"):
+
+```
+| [YYYY-MM-DD] | RED | Phase [N] [name] — [n] NEW · [m] REUSE · [k] BUMP · [g] GUARD | [red sha] | RED: [n] failing ([runner], exit [c]) · skip:[code] · guards proven [p]/[g] · Red ✅ |
+```
+
+- `Commits` = the red checkpoint's short sha; guard-only refactors (no red commit, red-spec § The red checkpoint
+  commit) write `(plan-state)` there, exactly as the twins already do.
+- `Gates / results` copies THIS run's `RED:` line verbatim (E2), then the skip code when one fired, then the guard
+  proof count from `scripts/prove-guard.py`, then the cell state written (`Red ✅` or `Red 🔄` for a tranche).
+- Compose it with `mcp__gabe-kdbp__ledger_row_preview` (`entry: RED`; it returns the row in the FILE's own column
+  order) and write it with the harness Write/Edit — never through a tool — so the D7 hooks see the write.
+- Two rows per sha is the house pattern (EXEC and COMMIT rows share shas). Readers that change: the center's
+  `phase_clock` now dates a phase's start at red (truer); `mcp__gabe-kdbp__review_target` adds the red commit to the
+  review's changed files, so REACH DRIFT and CASE DRIFT see the declared cases. `ledger-gap.sh` is unaffected (the sha
+  is already registered by the COMMIT row).
+
 ## The red→green thread (record states)
 
 The Cases record is a two-state thread, machine-observed at both ends: `red@<sha>` (this skill —

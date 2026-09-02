@@ -489,3 +489,45 @@ LEDGER shas → changed files + base; git-diff fallback) · `next_beat` (next.mj
 Parsers are header-resolved (gustify's `| # | Phase | Description | … |` and `| # | Gate | Finding |` both parse) and
 closure-aware (Status token OR a following `<!-- P<n> resolved -->` comment). Registration: `./install.sh --register-mcp`
 registers both servers; `mcp-status.py --server` · `probe.py --server` · the checker print one line per server.
+
+**RED ledger row (ruling 2026-09-02, during the sweep):** the red beat now writes its own `RED` LEDGER row (red-spec § The LEDGER row; `RED`/`CENTER` added to plan-spec's Entry vocabulary). Blast radius measured: `phase_clock` dates a phase at red (truer), `review_target` widens the review to the red commit (pinned in tests/gabe-kdbp), `ledger-gap.sh` unaffected, no reader enforces the vocabulary. Both twins had hand-shaped RED rows already (gustify 8 · gastify 1).
+
+## 16 · Tools review (2026-09-02) — 7 lenses, applied vs owed
+
+A 7-lens review of all 22 tools + the shared `mcpwire.py` (skeptic pass lost to a limit reset; findings verified
+individually before applying). Full findings: [tools-review-findings.json](tools-review-findings.json) (3 critical · 13 high ·
+22 medium · 30 low). The wire lens exercised the framework with a 615-call adversarial client and found it SOUND.
+
+**APPLIED this session (8 findings, all verified on a twin + pinned by a battery assert):**
+- **F1 (critical):** `tools.py` never imported `json`, so `who_calls` crashed (`NameError`) on any project with a
+  `.kdbp/map-deltas-rollup.jsonl`. The battery missed it (its who_calls fixture had no rollup). Fixed + pinned.
+- **WS-1 (critical):** a model-supplied git ref reached `git diff`/`git show` unguarded (`--output=<path>` could write a
+  file from a read-only tool). `--end-of-options` before every user ref in `tools.py` (entity_shape), `tools_wave2.py`
+  (map_diff, review_drift ×2), `mapquery.py` (freshness). Verified: `--output=` no longer creates a file.
+- **K1/K2/K3 (high):** `_table` took the FIRST keyword table — on gustify the 3-col production-gate map (7 rows) instead
+  of the canonical 11-col PENDING (87 rows). Now: require a `|---|` separator (K3, no header fabricated from prose),
+  skip blank/comment lines (K2), pick the WIDEST keyword table (K1). Both twins now read the right table.
+- **LEDGER headerless fallback:** gastify keeps 129 thin-index rows with no header/separator (legacy). K3 alone gave
+  honest-empty and lost them; the old code fabricated a header from prose. New: parse rows matching the exact
+  thin-index shape (`| date | TAG | … |`), never prose. + **K4:** newest-first by Date across both paths.
+- **W2-1 (high):** `outline` joined graft method nodes to `function_insight` by BARE name, so every same-named method
+  got the first method's record. Now joins on the qualified name from the node id (`Class.method`).
+- **W2-2 (high):** `review_drift`'s `reach` subject used the FIRST `Reach:` in PLAN.md (oldest phase); now resolves the
+  phase once (PLAN.json `current_phase` default) for all subjects.
+- **F2 (high):** `cases_for`'s CID grep excluded `_`-before-C, missing every `_C<n>` pytest name; aligned to red-spec's
+  canonical token `(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)`.
+
+**OWED (verify + apply next pass; none blocks the tools' current use):**
+- **WS-2 (high, OPERATOR RULING):** `center_status` and `review_drift`'s workflow_census run Python from the TARGET
+  repo (`<root>/scripts/*.py`). For a user-scope server that auto-loads on any project the user opens, that executes
+  arbitrary target-repo code. Options: run the suite's installed copy with `-I`; or gate on a trust marker; or accept it
+  (same trust model as the suite's own generators). Decide before wide twin use.
+- **High:** F3 `_census_entry` says `claimed:true` for paths outside `scanned_dirs`/nonexistent · F4 path normalization
+  (`lstrip("./")` char-strip, no abs→rel) in owner_of/touches/cases_for · Q1 `classify_hit` treats f-string middle text
+  as code on 3.12 (false map-delta) · Q2 freshness false "uncommitted regen" when `head` is not an ancestor on a clean tree.
+- **Medium (18):** F5 endpoint dup-key winner differs touches-vs-cases_for · F6 who_calls `direction=out` still emits a
+  callers-shaped reach_line · F8 map_diff caps at 20 but counts `more` against 40 · F9 web_unmatched_fetches filters a key
+  that never fires · W2-3/4/5/6 blast reading / census claimed / center_overview web block / outline reason · Q3 graft
+  exit-1 unindexed → "unavailable" not "absent" · Q4 find_center walks above the git toplevel · Q5 freshness omits test
+  files · K5/K6/K7 behavior_facts regex / results_out trailing comment / _state em-dash+obsolete · WS-3 map-deltas append
+  symlink/containment · plus 2 battery-quality (a vacuous assert, review_drift unknown-subject) · and 30 low.

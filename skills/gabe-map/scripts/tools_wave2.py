@@ -117,9 +117,10 @@ def t_outline(args: dict, roots) -> dict:
     defs = []
     if wiring and path in wiring["by_file"]:
         for n in sorted(wiring["by_file"][path], key=lambda x: int((x.get("span") or "L0").split("-")[0].lstrip("L") or 0)):
-            key = "%s::%s" % (path, n.get("name"))
-            rec = fi.get(key) or next((fi[k] for k in idx["fn_by_file"].get(path, []) if k.split("::", 1)[1].split(".")[-1] == n.get("name")), {})
-            defs.append({"span": n.get("span"), "kind": n.get("kind"), "name": n.get("name"), "signature": (n.get("signature") or "")[:200],
+            nid = n.get("id") or ""
+            qual = nid.split("#", 1)[1] if "#" in nid else n.get("name")   # W2-1: qualified (Class.method), never the bare name
+            rec = fi.get("%s::%s" % (path, qual)) or fi.get("%s::%s" % (path, n.get("name"))) or {}
+            defs.append({"span": n.get("span"), "kind": n.get("kind"), "name": qual, "signature": (n.get("signature") or "")[:200],
                          "exported": n.get("exported"), "returns": rec.get("returns"), "async": rec.get("async"),
                          "access_ops": (rec.get("access") or {}).get("ops"), "doc": (rec.get("doc") or "")[:120] or None})
         out["signatures"] = "graft index (%s)" % wiring["hash"]
@@ -282,7 +283,7 @@ def _map_at(root: str, ref: str | None):
     if ref in (None, "", "WORKTREE"):
         p = Path(root) / rel
         return (json.loads(p.read_text(encoding="utf-8")) if p.is_file() else None), "worktree"
-    rc, out, err = mq.sh(["git", "-C", root, "show", "%s:%s" % (ref, rel)])
+    rc, out, err = mq.sh(["git", "-C", root, "show", "--end-of-options", "%s:%s" % (ref, rel)])
     if rc != 0:
         return None, "git show failed: %s" % err.strip()[:120]
     try:
@@ -384,10 +385,18 @@ def t_review_drift(args: dict, roots) -> dict:
         raise mq.MapStop("base is required (the ref the phase's diff is measured against)")
     want = args.get("subjects")
     want = set(want) if isinstance(want, list) else None
-    rc, diff, err = mq.sh(["git", "-C", root, "diff", base], timeout=60)
+    phase = (args.get("phase") or "").strip()
+    if not phase:                                    # W2-2: default to PLAN.json current_phase for ALL subjects, not just entity
+        pj = Path(root) / ".kdbp" / "PLAN.json"
+        if pj.is_file():
+            try:
+                phase = (json.loads(pj.read_text(encoding="utf-8")).get("current_phase") or "").strip()
+            except json.JSONDecodeError:
+                phase = ""
+    rc, diff, err = mq.sh(["git", "-C", root, "diff", "--end-of-options", base], timeout=60)
     if rc != 0:
         raise mq.MapStop("git diff %s failed: %s" % (base, err.strip()[:120]))
-    rc, names, _ = mq.sh(["git", "-C", root, "diff", "--name-only", base])
+    rc, names, _ = mq.sh(["git", "-C", root, "diff", "--name-only", "--end-of-options", base])
     changed = sorted(l.strip() for l in names.splitlines() if l.strip()) if rc == 0 else []
     changed_src = [f for f in changed if f.endswith(mq.SRC_EXT) and not mq.noise(f)]
     out = T._base(center, root, source)
@@ -417,7 +426,7 @@ def t_review_drift(args: dict, roots) -> dict:
         except Exception as exc:
             subj["web_bridge"] = {"ran": False, "reason": "%s: %s" % (type(exc).__name__, exc)}
     if run("reach"):
-        reach, sha, why = _phase_reach(root, args.get("phase"))
+        reach, sha, why = _phase_reach(root, phase or None)
         if why:
             subj["reach"] = {"ran": False, "reason": why}
         else:
@@ -432,8 +441,7 @@ def t_review_drift(args: dict, roots) -> dict:
         if pj.is_file():
             try:
                 plan = json.loads(pj.read_text(encoding="utf-8"))
-                cur = plan.get("current_phase")
-                ph = next((p for p in plan.get("phases") or [] if p.get("id") == (args.get("phase") or cur)), None)
+                ph = next((p for p in plan.get("phases") or [] if p.get("id") == phase), None)
                 declared = (ph or {}).get("entities")
             except json.JSONDecodeError:
                 declared = None

@@ -53,22 +53,45 @@ def _cells(line: str) -> list[str]:
     return [c.strip() for c in line.strip().strip("|").split("|")]
 
 
+_SEP = re.compile(r"^\s*\|[\s:|.-]+\|?\s*$")
+
+
+def _is_header(lines: list[str], i: int, keyword: str) -> bool:
+    """A real markdown header: a `|` line carrying the keyword whose NEXT line is a `|---|` separator (K3 —
+    a data row that merely contains the word is not a header, so gastify's headerless LEDGER reads honest-empty)."""
+    ln = lines[i]
+    return (ln.lstrip().startswith("|") and keyword.lower() in ln.lower()
+            and i + 1 < len(lines) and bool(_SEP.match(lines[i + 1])))
+
+
 def _table(text: str, header_must_have: str) -> tuple[list[str], list[tuple[list[str], int]]]:
-    """First markdown table whose header row contains `header_must_have` → (header cells, [(row cells, line_no)])."""
+    """The BEST markdown table whose header carries `header_must_have` → (header cells, [(row cells, line_no)]).
+
+    Among every real header (K3: separator required), pick the one with the MOST columns (K1/F2 — on a twin
+    that keeps a 3-column production-gate map beside the 11-column canonical PENDING table, the canonical wins;
+    ties → first). Rows skip blank lines and HTML comments (K2 — twins group rows with blank lines) and end
+    only at the NEXT real header or the first non-table prose line."""
     lines = text.splitlines()
-    for i, ln in enumerate(lines):
-        if ln.startswith("|") and header_must_have.lower() in ln.lower():
-            hdr = _cells(ln)
-            rows = []
-            for j in range(i + 2, len(lines)):
-                l2 = lines[j]
-                if l2.lstrip().startswith("<!--"):      # a closure comment between rows never ends the table
-                    continue
-                if not l2.startswith("|"):
-                    break
-                rows.append((_cells(l2), j))
-            return hdr, rows
-    return [], []
+    heads = [i for i in range(len(lines)) if _is_header(lines, i, header_must_have)]
+    if not heads:
+        return [], []
+    other_heads = {i for i in range(len(lines))
+                   for kw in ("|",) if lines[i].lstrip().startswith("|") and i + 1 < len(lines) and _SEP.match(lines[i + 1])}
+    best = max(heads, key=lambda i: (len(_cells(lines[i])), -i))
+    hdr = _cells(lines[best])
+    rows: list[tuple[list[str], int]] = []
+    for j in range(best + 2, len(lines)):
+        l2 = lines[j]
+        if not l2.strip() or l2.lstrip().startswith("<!--"):     # blank rows / closure comments never end the table
+            continue
+        if not l2.lstrip().startswith("|"):
+            break                                                # first prose line after the table ends it
+        if j in other_heads:                                      # a new table starts
+            break
+        if _SEP.match(l2):                                        # a stray separator (defensive)
+            continue
+        rows.append((_cells(l2), j))
+    return hdr, rows
 
 
 def _col(hdr: list[str], *names: str) -> int | None:
@@ -93,7 +116,9 @@ def plan_rows(text: str) -> list[dict]:
         return []
     low = [h.lower() for h in hdr]
     if "#" in low:
-        id_col, name_col = low.index("#"), _col(hdr, "Description", "Name", "Title", "Phase")
+        # `#` is the id; the short title is Name/Title, else the "Phase" column (gustify: | # | Phase | Description |),
+        # and Description only as a last resort — it is the long text, not the name
+        id_col, name_col = low.index("#"), _col(hdr, "Name", "Title", "Phase", "Description")
     else:
         id_col, name_col = _col(hdr, "Phase", "ID", "Id"), _col(hdr, "Name", "Title", "Description")
     ci = {"id": id_col, "name": name_col, "tier": _col(hdr, "Tier"),
@@ -164,14 +189,35 @@ def pending_rows(text: str) -> tuple[list[dict], list[str]]:
 
 
 # ── LEDGER ─────────────────────────────────────────────────────────────────────
+_LED_ROW = re.compile(r"^\|\s*\d{4}-\d{2}-\d{2}\s*\|\s*[A-Z][A-Z-]{1,}\s*\|")
+_LED_CANON = ["Date", "Entry", "Theme / scope", "Commits", "Gates / results"]
+
+
+def _ledger_headerless(text: str) -> tuple[list[dict], list[str]]:
+    """A twin (gastify) keeps 100+ thin-index rows with NO `| Date | Entry |` header/separator — a legacy
+    LEDGER whose header got separated. Rather than lose them (honest-empty) or fabricate a header from prose
+    (the old first-keyword bug, K3), parse ONLY lines matching the exact thin-index shape (a date, then an
+    ALLCAPS entry tag) with the canonical 5-column order. Newest-first is enforced by ledger_rows' sort."""
+    lines = text.splitlines()
+    rows = [(_cells(l), i) for i, l in enumerate(lines) if _LED_ROW.match(l)]
+    if not rows:
+        return [], []
+    return ([{"date": _at(cells, 0), "entry": _at(cells, 1), "theme": _at(cells, 2),
+              "commits": _at(cells, 3), "gates": _at(cells, 4), "line": ln + 1, "headerless": True}
+             for cells, ln in rows], _LED_CANON)
+
+
 def ledger_rows(text: str, n: int = 5) -> tuple[list[dict], list[str]]:
     hdr, rows = _table(text, "Entry")
     if not hdr:
-        return [], hdr
-    ci = {"date": _col(hdr, "Date"), "entry": _col(hdr, "Entry"), "theme": _col(hdr, "Theme"), "commits": _col(hdr, "Commits"), "gates": _col(hdr, "Gates")}
-    out = []
-    for cells, ln in rows[:n]:
-        out.append({k: _at(cells, v) for k, v in ci.items()} | {"line": ln + 1})
+        out, hdr = _ledger_headerless(text)              # gastify: headerless legacy thin-index
+    else:
+        ci = {"date": _col(hdr, "Date"), "entry": _col(hdr, "Entry"), "theme": _col(hdr, "Theme"), "commits": _col(hdr, "Commits"), "gates": _col(hdr, "Gates")}
+        out = [{k: _at(cells, v) for k, v in ci.items()} | {"line": ln + 1} for cells, ln in rows]
+    # newest-first by the Date cell (K4: twins disagree on append order — some newest-at-top, some at-bottom).
+    # Stable: same-date rows keep file order; an unparsable date sinks to the end.
+    out.sort(key=lambda r: (r.get("date") or "0000", r["line"]), reverse=True)
+    return out[:n], hdr
     return out, hdr
 
 

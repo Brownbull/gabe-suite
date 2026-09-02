@@ -52,7 +52,10 @@ W = mapfx.write
 def make_repo(T: str) -> tuple[str, dict]:
     """A KDBP project with a center: returns (root, shas)."""
     root = mapfx.make_repo(T)                      # source + center + 3 commits, .kdbp/ dir exists
-    # two more commits "for phase P2" so review_target can resolve LEDGER shas
+    # the RED checkpoint (declares a case) then two exec commits "for phase P2" — review_target resolves all three
+    W(root, "apps/api/tests/test_things_api.py", 'def test_get_thing_C8():\n    assert False  # red\n')
+    git(root, "add", "-A"); git(root, "commit", "-q", "-m", "red(P2): C8 declared")
+    sha0 = git(root, "rev-parse", "--short", "HEAD")
     W(root, "apps/api/services/thing.py", '"""Service for things."""\n\n\ndef thing():\n    return 2\n')
     git(root, "add", "-A"); git(root, "commit", "-q", "-m", "P2: thing returns 2")
     sha1 = git(root, "rev-parse", "--short", "HEAD")
@@ -94,6 +97,15 @@ P2
         {"id": "P3", "name": "Widgets", "tier": "enterprise", "cells": {"red": "todo", "exec": "todo", "review": "todo", "commit": "todo", "push": "todo", "center": "todo"}, "entities": [], "scope": []}]}))
     W(root, ".kdbp/PENDING.md", """# Pending
 
+<!-- a production-gate MAP (3 cols) sits above the canonical table on real twins (gustify) -->
+
+| # | Gate | Finding |
+|---|---|---|
+| G1 | founder | a gate note, not a deferred finding |
+| G2 | founder | another gate note |
+
+## Rows
+
 | # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
 |---|---|---|---|---|---|---|---|---|---|---|
 | P1 | 2026-08-01 | review | [security] thing leaks ids | apps/api/services/thing.py | mvp | high | data | 2 |  | @abc1234 2026-08-01 |
@@ -107,9 +119,9 @@ P2
 | Date | Entry | Theme / scope | Commits | Gates / results |
 |---|---|---|---|---|
 | 2026-09-02 | EXEC | Phase P2 — tasks 2/2 | %s %s | lint ✓ · tests 3 passed |
-| 2026-09-01 | RED | Phase P2 — C9 declared | %s | 1 NEW fails by assertion |
+| 2026-09-01 | RED | Phase P2 — 1 NEW · 1 REUSE | %s | RED: 1 failing (pytest, exit 1) · guards proven 0/0 · Red ✅ |
 | 2026-08-30 | PUSH | main ← main @ deadbee | deadbee | push ✓ |
-""" % (sha1, sha2, sha1))
+""" % (sha1, sha2, sha0))
     W(root, ".kdbp/BEHAVIOR.md", """# Behavior
 
 **Maturity:** mvp
@@ -125,14 +137,14 @@ P2
     W(root, ".kdbp/DECISIONS.md", "# Decisions\n\n| # | Date | Decision |\n|---|---|---|\n| D1 | 2026-08-01 | keep things |\n| D2 | 2026-08-02 | drop widgets |\n")
     W(root, ".kdbp/archive/PENDING-resolved_2026-08.md", "| # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |\n|---|---|---|---|---|---|---|---|---|---|---|\n| P9 | 2026-07-01 | review | old | x.py | mvp | low | none | 1 | RESOLVED | @a 2026-07-01 |\n")
     git(root, "add", "-A"); git(root, "commit", "-q", "-m", "kdbp fixture")
-    return root, {"sha1": sha1, "sha2": sha2}
+    return root, {"sha0": sha0, "sha1": sha1, "sha2": sha2}
 
 
 def make_variant(T: str) -> str:
     root = os.path.join(T, "variant"); os.makedirs(os.path.join(root, ".kdbp"))
     sh(["git", "init", "-q", root]); git(root, "config", "user.email", "t@t"); git(root, "config", "user.name", "t")
     W(root, ".kdbp/PENDING.md", "# Pending\n\n| # | Gate | Finding |\n|---|---|---|\n| #20 | founder | Multi-user deferred FAR |\n| #21 | review | Closed one |\n<!-- #21 resolved 2026-08-01 -->\n")
-    W(root, ".kdbp/PLAN.md", "# Plan\n\n## Phases\n\n| # | Phase | Exec | Review |\n|---|---|---|---|\n| 1 | Alpha | 🔄 | ⬜ |\n")
+    W(root, ".kdbp/PLAN.md", "# Plan\n\n## Phases\n\n| # | Phase | Description | Exec | Review |\n|---|---|---|---|---|\n| 1 | Alpha | #105 — the long description text | 🔄 | ⬜ |\n")
     W(root, "package.json", json.dumps({"name": "v", "scripts": {"lint": "eslint .", "typecheck": "tsc --noEmit", "test": "vitest run"}}))
     W(root, "README.md", "v\n")
     git(root, "add", "-A"); git(root, "commit", "-q", "-m", "variant")
@@ -181,9 +193,10 @@ def run(T):
     ok(d and d["plan"]["current_phase"] == "P2" and [p["id"] for p in d["plan"]["phases"]] == ["P1", "P2", "P3"], "plan table parsed header-resolved (3 phases, current P2)", d and d.get("plan"))
     ok(d and d["plan"]["phases"][1]["cells"] == {"red": "done", "exec": "done", "review": "todo", "commit": "todo", "push": "todo", "center": "todo"}, "cell states normalized", d and d["plan"]["phases"][1])
     ok(d and d["plan"]["phases"][0]["cells"]["center"] == "skipped", "⏸ deferred reads as skipped", d and d["plan"]["phases"][0])
+    ok(d and d["pending"]["columns"] == ["#", "Date", "Source", "Finding", "File", "Scale", "Priority", "Impact", "Times Deferred", "Status", "Verified"], "K1/F2: the WIDEST keyword table wins — the canonical 11-col PENDING, not the 3-col gate-map decoy above it", d and d["pending"].get("columns"))
     ok(d and d["pending"]["open"] == 2 and d["pending"]["closed"] == 2, "PENDING closure: token-closed + comment-closed = 2 closed, 2 open", d and d.get("pending"))
     ok(d and d["pending"]["top"][0]["id"] == "P4" and d["pending"]["top"][0]["priority"] == "critical", "open rows ranked critical first", d and d["pending"]["top"])
-    ok(d and d["ledger"]["last"][0]["entry"] == "EXEC" and shas["sha1"] in d["ledger"]["last"][0]["commits"], "ledger rows parsed newest-first", d and d.get("ledger"))
+    ok(d and [r["entry"] for r in d["ledger"]["last"]] == ["EXEC", "RED", "PUSH"], "K4: ledger rows sorted newest-first by Date (EXEC 09-02 · RED 09-01 · PUSH 08-30)", d and [(r["date"], r["entry"]) for r in d["ledger"]["last"]])
     ok(d and d["decisions"]["rows"] == 2 and d["git"]["branch"] and d["git"]["dirty"]["total"] == 0, "decisions count + git facts", d and {k: d.get(k) for k in ("decisions", "git")})
     ok(len(text) < 6000, "snapshot stays small (%d bytes)" % len(text))
     # ── phase_context ──
@@ -200,8 +213,9 @@ def run(T):
     ok(d and "reason" in d["plan_json"] and "reason" in d["plan_md_row"], "unknown phase → reasons, not a crash", d)
     # ── review_target ──
     d, _, _, _ = call_json(c, "review_target", {})
-    ok(d and d["target"]["phase"] == "P2" and set(d["commits"]) == {shas["sha1"], shas["sha2"]}, "review_target: P2 (Exec ✅ Review ⬜) via LEDGER shas", d and {k: d.get(k) for k in ("target", "commits")})
-    ok(d and set(d["changed_files"]) == {"apps/api/services/thing.py", "apps/api/other.py"} and d["base"] == git(root, "rev-parse", "--short", shas["sha1"] + "^"), "changed files = union of the phase commits; base = parent of the earliest", d and {k: d.get(k) for k in ("changed_files", "base", "source")})
+    ok(d and d["target"]["phase"] == "P2" and set(d["commits"]) == {shas["sha0"], shas["sha1"], shas["sha2"]}, "review_target: P2 (Exec ✅ Review ⬜) via LEDGER shas — the RED row's commit included", d and {k: d.get(k) for k in ("target", "commits")})
+    ok(d and set(d["changed_files"]) == {"apps/api/tests/test_things_api.py", "apps/api/services/thing.py", "apps/api/other.py"} and d["base"] == git(root, "rev-parse", "--short", shas["sha0"] + "^"),
+       "changed files = union of RED + EXEC commits (the declared case rides along); base = parent of the EARLIEST (the red checkpoint)", d and {k: d.get(k) for k in ("changed_files", "base", "source")})
     d, _, _, _ = call_json(c, "review_target", {"phase": "P3"})
     ok(d and d["target"]["phase"] == "P3" and "git diff HEAD" in d["source"], "forced phase without LEDGER rows falls back to git diff", d and d.get("source"))
     # ── next_beat ──
@@ -228,13 +242,24 @@ def run(T):
     c = spawn(v, T); c.initialize()
     d, _, _, _ = call_json(c, "kdbp_snapshot", {})
     ok(d and d["pending"]["open"] == 1 and d["pending"]["closed"] == 1 and d["pending"]["columns"] == ["#", "Gate", "Finding"], "3-column PENDING parsed; #21 closed by comment", d and d.get("pending"))
-    ok(d and d["plan"]["phases"] and d["plan"]["phases"][0]["cells"]["exec"] == "active", "variant PLAN table (# | Phase | Exec | Review) resolves by header", d and d.get("plan"))
+    ok(d and d["plan"]["phases"] and d["plan"]["phases"][0]["cells"]["exec"] == "active" and d["plan"]["phases"][0]["name"] == "Alpha", "variant PLAN table (# | Phase | Description | Exec | Review): id from #, NAME from Phase (not Description)", d and d.get("plan"))
     d, _, _, _ = call_json(c, "verify_commands", {})
     ok(d and d["source"].startswith("b:") and d["commands"]["lint"] == ["npm run lint"] and d["commands"]["types"] == ["npm run typecheck"] and d["commands"]["tests"] == ["npm run test"] and d.get("offer"), "verify_commands: package.json candidates with the BEHAVIOR offer", d and d.get("commands"))
     d, _, _, _ = call_json(c, "pending_row_preview", {"flag": {"description": "new debt"}})
     ok(d and d["row"] == "| #22 | review | new debt |", "preview follows the file's own 3 columns and #-style ids", d and d.get("row"))
     d, _, _, _ = call_json(c, "review_target", {})
     ok(d and d["target"]["phase"] == "1" and d["target"]["cells"]["exec"] == "active", "review_target picks Exec 🔄 + Review ⬜ in the variant table", d and d.get("target"))
+    c.close()
+    # ── headerless legacy LEDGER (gastify shape): rows present, no header/separator ──
+    hl = os.path.join(T, "headerless"); os.makedirs(os.path.join(hl, ".kdbp"))
+    sh(["git", "init", "-q", hl]); git(hl, "config", "user.email", "t@t"); git(hl, "config", "user.name", "t")
+    W(hl, ".kdbp/PLAN.md", "# Plan\n\n## Phases\n\n| Phase | Exec | Review |\n|---|---|---|\n| P1 | ✅ | ⬜ |\n")
+    W(hl, ".kdbp/LEDGER.md", "# Session Ledger\n\n## legacy prose block — mentions the word Entry in text\nSCOPE: an entry of prose, not a table.\n\n| 2026-08-30 | COMMIT | old work | aaa1111 | ok |\n| 2026-09-01 | PUSH | ship it | bbb2222 | ok |\n")
+    W(hl, "README.md", "h\n"); git(hl, "add", "-A"); git(hl, "commit", "-q", "-m", "headerless")
+    c = spawn(hl, T); c.initialize()
+    d, _, _, _ = call_json(c, "kdbp_snapshot", {})
+    led = d.get("ledger", {}).get("last", [])
+    ok(led and led[0]["entry"] == "PUSH" and led[0].get("headerless") and len(led) == 2, "K3+fallback: a headerless legacy LEDGER parses its thin-index rows (newest-first), never fabricates a header from prose", d and d.get("ledger"))
     c.close()
     # ── honest-empty ──
     plain = os.path.join(T, "plain"); os.makedirs(plain); sh(["git", "init", "-q", plain])

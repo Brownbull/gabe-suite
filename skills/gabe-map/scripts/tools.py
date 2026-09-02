@@ -8,6 +8,7 @@ crash. Contracts: skills/gabe-map/references/map-spec.md.
 """
 from __future__ import annotations
 import hashlib
+import json
 import os
 import re
 import sys
@@ -497,7 +498,7 @@ def t_entity_shape(args: dict, roots) -> dict:
                          "reason": None if owners else "no declared endpoint under /%s" % domain}
     base = (args.get("diff") or "").strip()
     if base:
-        rc, text, err = mq.sh(["git", "-C", root, "diff", base])
+        rc, text, err = mq.sh(["git", "-C", root, "diff", "--end-of-options", base])
         if rc != 0:
             out["diff"] = {"reason": "git diff %s failed: %s" % (base, err.strip()[:120])}
         else:
@@ -511,7 +512,7 @@ def t_entity_shape(args: dict, roots) -> dict:
 
 
 # ── cases_for ──────────────────────────────────────────────────────────────────
-_CID_TOKEN = re.compile(r"(?<![A-Za-z0-9_])C(\d{1,6})(?:v\d+)?(?![A-Za-z0-9])")
+_CID_TOKEN = re.compile(r"(?<![A-Za-z0-9])C(\d{1,5})(?:v\d+)?(?![0-9])")   # red-spec's canonical token (underscore-prefixed pytest names DO count)
 
 
 def t_cases_for(args: dict, roots) -> dict:
@@ -567,12 +568,12 @@ def t_cases_for(args: dict, roots) -> dict:
         if m:
             maxmap = max(maxmap, int(m.group(1)))
     out["max_cid_in_map"] = maxmap or None
-    rc, grep, _ = mq.sh(["git", "-C", root, "grep", "-ohIE", "(^|[^A-Za-z0-9_])C[0-9]{1,6}(v[0-9]+)?([^A-Za-z0-9]|$)", "--",
-                         ":(glob)**/*test*", ":(glob)**/*spec*", ":(glob)**/tests/**"], timeout=60)
+    rc, grep, _ = mq.sh(["git", "-C", root, "grep", "-ohIE", "(^|[^A-Za-z0-9])C[0-9]{1,5}(v[0-9]+)?([^0-9]|$)", "--",
+                         ":(glob)**/*test*", ":(glob)**/*spec*", ":(glob)**/*Test*", ":(glob)**/tests/**"], timeout=60)
     if rc in (0, 1):
         found = [int(m.group(1)) for m in _CID_TOKEN.finditer(grep)]
         mx = max(found) if found else 0
-        out["corpus"] = {"searched": "git grep -ohIE '(^|[^A-Za-z0-9_])C[0-9]{1,6}(v[0-9]+)?([^A-Za-z0-9]|$)' -- '**/*test*' '**/*spec*' '**/tests/**'",
+        out["corpus"] = {"searched": "git grep -ohIE '(^|[^A-Za-z0-9])C[0-9]{1,5}(v[0-9]+)?([^0-9]|$)' -- '**/*test*' '**/*spec*' '**/tests/**'",
                          "max_cid_seen": mx or None, "next_cid_floor": (mx + 1) if mx else None,
                          "note": "the corpus is the registry; the map may lag — re-grep before minting"}
     else:

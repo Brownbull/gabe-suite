@@ -419,6 +419,12 @@ def run(T):
     ok(d and d["map_claim"].startswith("absent") and d["emitted"] == 0 and len(live_lines(root)) == 1, "empty graft arm → no claim → no emit", d and {k: d.get(k) for k in ("map_claim", "emitted", "emit_skipped")})
     d, _, _, _ = call_json(c, "who_calls", {"symbol": "thing", "emit": False})
     ok(d and d["emitted"] == 0 and d["gates"]["emit_requested"] is False, "emit:false → no write", d and d.get("gates"))
+    # F1: a rollup ledger present must not crash who_calls (json was unimported) — map_confidence answers
+    with open(os.path.join(root, ".kdbp", "map-deltas-rollup.jsonl"), "w") as fh:
+        fh.write(json.dumps({"v": 2, "gen": "_a3_graft.calls", "subject": "callers(x)", "file": "a.py", "count": 3, "last_n": 999999}) + "\n")
+    d, is_err, _, _ = call_json(c, "who_calls", {"symbol": "thing", "emit": False})
+    ok(not is_err and d and (d.get("map_confidence") or {}).get("active_missed_edges") == 1, "who_calls with a rollup ledger → map_confidence (F1: json import)", d and d.get("map_confidence"))
+    os.remove(os.path.join(root, ".kdbp", "map-deltas-rollup.jsonl"))
     d, is_err, _, _ = call_json(c, "who_calls", {"symbol": "bad symbol; rm -rf"})
     ok(is_err and d and "identifier" in d.get("stop", ""), "non-identifier symbol → stop", d)
     c.close()

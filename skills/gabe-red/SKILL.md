@@ -3,7 +3,7 @@ name: gabe-red
 description: "TDD's first half as a lifecycle beat — after /gabe-plan, before any source edit: declare case ids (REUSE vs NEW), write failing tests against stubs, prove RED, commit the red checkpoint."
 when_to_use: "The phase is planned and about to be executed. Refactors declare GUARDs instead of a fake red; genuinely un-testable phases self-skip with an enumerated code."
 metadata:
-  version: 1.9.4
+  version: 1.9.5
 ---
 
 # Gabe Red — the failing state, given an address
@@ -32,7 +32,7 @@ Runs after `/gabe-plan` (needs the phase row + its `proof_type`) and **before ex
 4. **Write the cases** — id inside the test NAME (`test_..._C147v2` / `it('C147v2 · ...')`). Where the subject doesn't exist yet, add a **returning stub** (returns a wrong-but-typed value; NEVER raises — a raising stub blinds the tautology guard).
 5. **Run them.** Classify each case against FOUR outcomes: **RED** (fails by assertion, caused by the absent behavior — evidence) · **NOT-RED** (import/collection error — non-evidence, fix before proceeding) · **TAUTOLOGY** (passes on unchanged code — halt; the case asserts nothing) · **RED-WRONG-REASON** (fails by assertion but NOT from the declared absence — indistinguishable from RED at the console; prove the cause with the spec's FLIP test). Runtime-evidence cases also obey the async-boundary rules: bounded waits, an explicit sync point before every post-mutation assertion, and assertions against the source of truth rather than a re-derived rendering.
    *The tautology check is a MINT-TIME check, and its proof is perishable.* A case that was genuinely red here goes **VOID** later — a refactor severs the assertion, a missing cleanup leaves state that satisfies it, a config change excludes it from the run — and a void guard is indistinguishable from a real one until the day it fails to catch something (a twin measured its own void rate at **1 in 6** while trying not to write one). `scripts/prove-guard.py` is the standing form of this step: it mutates the line a case claims to protect and asserts the case goes red. Re-run it when the claim matters, not only when it is written.
-6. **Commit the red checkpoint** through `/gabe-commit` with the `RED:` trailer + `Cases:` line (formats in the spec). Write the phase's `Cases:` **and `Reach:`** records into PLAN.md Phase Details, tick the `Red` cell ✅, mirror PLAN.json (E5).
+6. **Commit the red checkpoint** through `/gabe-commit` with the `RED:` trailer + `Cases:` line (formats in the spec). Write the phase's `Cases:` **and `Reach:`** records into PLAN.md Phase Details, tick the `Red` cell ✅, mirror PLAN.json (E5), and **log ONE `RED` row to `.kdbp/LEDGER.md`** (spec § The LEDGER row — compose it with `mcp__gabe-kdbp__ledger_row_preview`, write it with Write/Edit; `(plan-state)` in Commits for guard-only reds).
 7. **Report** (E7): ids declared (new/reused/bumped/guards), the red run's output line, the red commit sha.
 
 ## Scripts

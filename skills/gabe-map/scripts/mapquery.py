@@ -247,7 +247,7 @@ def freshness(center: Center) -> dict:
     rc, cnt, _ = sh(["git", "-C", root, "rev-list", "--count", "%s..HEAD" % head])
     out["commits_since"] = int(cnt.strip()) if rc == 0 and cnt.strip().isdigit() else None
     changed: set[str] = set()
-    rc, diff, _ = sh(["git", "-C", root, "diff", "--name-only", base])          # index+worktree vs base
+    rc, diff, _ = sh(["git", "-C", root, "diff", "--name-only", "--end-of-options", base])   # index+worktree vs base (base is server-derived; guarded defensively)
     if rc == 0:
         changed.update(l.strip() for l in diff.splitlines() if l.strip())
     rc, st, _ = sh(["git", "-C", root, "status", "--porcelain", "--untracked-files=all"])
