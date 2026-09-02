@@ -5,7 +5,7 @@
 > (artifact "Gabe Suite Tool Surface", source: [tool-surface-analysis.html](tool-surface-analysis.html);
 > scored data: [tool-surface-scoring.json](tool-surface-scoring.json)). The design below (v1) went through
 > 4 of 7 review lenses — 53 findings, [design-review-findings.json](design-review-findings.json) — and the
-> skeptic pass did NOT run (session limit). **Next session:** apply the §12 amendments, run the 3 missing
+> skeptic pass did NOT run (session limit). §2 gained the DEFERRAL rows (2026-09-02) and D7 was amended accordingly. **Next session:** apply the §12 amendments, run the 3 missing
 > lenses (battery · axis-1 · write-safety) + skeptics, then build. Nothing under `skills/gabe-map/` exists yet.
 
 
@@ -40,6 +40,7 @@ offered S6 · 0 `Reach:` records in the live PLAN · inflight.json 20 commits be
 | `--allowedTools "mcp__probe__.*"`, `"mcp__probe__*"` and bare `mcp__probe` each permitted the call (1 `tools/call` received per form) | probe runs | the e2e uses the documented server-level form `mcp__gabe-map`; assert the call via the server's log, never via exit code |
 | Under `MCP_PROTOCOL_NEGOTIATION=auto` (client 2.1.258) the FIRST frame is `server/discover` with a STRING id and `_meta` protocolVersion `2026-07-28`; a `-32601` reply with the id echoed makes the client fall back to `initialize` | probe log | pre-initialize unknown method → `-32601`, id echoed verbatim (string ids preserved), never exit |
 | TS SDK accepts `[2025-11-25, 2025-06-18, 2025-03-26, 2024-11-05, 2024-10-07]`; batching only in 2025-03-26 | SDK constants | no batch handling |
+| **MCP tool schemas are ALWAYS deferred** (probe 2026-09-02, client 2.1.258): a 7-tool probe server was deferred in a normal gustify session (124 deferred tools · 0 MCP schemas loaded — Gmail 29 · Drive 11 · Calendar 9 · Excalidraw 5 · Mermaid 1 · notebooklm 30 · pixellab 8 · **graft 6 — `graft mcp` is LIVE in gustify**) AND alone under `--strict-mcp-config` (22 deferred · 0 loaded). The `instructions` block was injected in full both times (marker quoted). | two probe runs | deferral is the policy, not a threshold: trimming other servers never makes a tool eager. The discovery surface = tool NAMES + `instructions`; descriptions/schemas load per tool on demand (ToolSearch). → D7 amended below. |
 
 ## 3 · Settled decisions
 
@@ -75,7 +76,16 @@ offered S6 · 0 `Reach:` records in the live PLAN · inflight.json 20 commits be
   (c) **dedupe** — one emit per `(symbol, file)` per server process, and skip when an identical un-swept
   `(gen, subject, file)` line already sits in `.kdbp/map-deltas.jsonl` (`_read_live` never dedupes, so N appends
   → `count += N` — confirmed). `emit:false` or `GABE_MAP_NO_EMIT=1` (the twin dry-run switch) → nothing.
-- **D7 the nudge (`instructions`, ≤ 8 lines):** when the project has a command center, call `touches` / `who_calls`
+- **D7 the nudge (`instructions`, ≤ ~1,000 chars) — AMENDED 2026-09-02:** because every MCP schema is deferred (§2), the
+  `instructions` block and the seven tool NAMES are the ENTIRE always-on discovery surface; a tool description is read only
+  after the model loads that one tool. So the instructions block must ROUTE, one line per tool
+  (`who calls X / where is X used → mcp__gabe-map__who_calls` · `what touches this file/model/endpoint → touches` ·
+  `which entity owns this path → owner_of` · `cases covering X / next C-id → cases_for` · `an entity's slice → entity_context`
+  · `who owns URL domain /x → entity_shape` · `is there a map here, how stale → map_status`), state the floor law once, and
+  name `map_status` as the first call when unsure. Names stay verbs/nouns that read as the question. The ≤7 rule is a
+  discoverability rule (names in the deferred list + one routing block), not a token rule: 7 names ≈ 85 tokens always-on.
+  Original text follows —
+  **D7 the nudge (`instructions`, ≤ 8 lines):** when the project has a command center, call `touches` / `who_calls`
   / `entity_context` BEFORE grepping for callers, owners, usages or an entity's surface; the map is a FLOOR
   (absence is never proof — `who_calls` already runs the grep arm and says which files are code vs prose);
   every answer stamps freshness; `map_status` first when unsure the project has a map.
