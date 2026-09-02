@@ -3,7 +3,7 @@ name: gabe-push
 description: "Push, PR, CI watch, promotion — env-aware shipping via .kdbp/PUSH.md; detects remote drift, offers branch cleanup. Terminal-env and --epic pushes run the production gates: /gabe-health three-lens scan, findings presented, ONE blocking proceed/hold question that mints the gate marker the machine-wide push-gate-guard hook requires — a raw terminal push without it fails closed."
 when_to_use: "Push, deploy, promote, ship to staging/production, babysit a pipeline after committing."
 metadata:
-  version: 2.6.2
+  version: 2.6.3
 ---
 
 # Gabe Push — env-aware shipping workflow
@@ -23,7 +23,7 @@ Env-aware shipping. One command pushes local work to the configured target env, 
 1. Treat any text after the invocation as `$ARGUMENTS`.
 2. Read `references/push-spec.md` (in this skill directory) IN FULL before executing — it is the binding spec: PUSH.md setup, env resolution, drift detection, push/PR/CI logic, DEPLOYMENTS.md capture, bookkeeping auto-commit, and branch cleanup. If it is missing, E6 applies — STOP.
 3. Summary of the spec's main flow:
-   - **Step 1** — validate `gh` CLI + auth + git remote; read `.kdbp/PUSH.md` if present.
+   - **Step 1** — validate `gh` CLI + auth + git remote; read `.kdbp/PUSH.md` if present; open `mcp__gabe-kdbp__kdbp_snapshot` once for the branch/ahead/dirty, PLAN row and open PENDING rows the later steps otherwise re-derive — orientation only, the git commands still decide.
    - **Non-interactive defaults** — when no human answer is available, safety-critical prompts (uncommitted changes, direct-push-to-target, CI failure) default to abort/stop, never proceed.
    - **Step 2** — first-run setup: detect remote/default-branch/CI provider/PR template, ask the deploy pattern (production-only / staging-then-prod / custom), scaffold envs, ask `branch_cleanup` policy per env, write `.kdbp/PUSH.md`. `--reconfigure` clears and re-runs this step.
    - **Step 2.5** — resolve which env this invocation targets from `$ARGUMENTS` (default env, named env, or interview for an unknown env).
@@ -34,7 +34,7 @@ Env-aware shipping. One command pushes local work to the configured target env, 
    - **Step 6.7** — deploy verify: live-target smoke probe is the closing evidence, not CI-green alone.
    - **Step 7** — final summary; promotion to a further env only happens on a separate invocation (never recurses across envs).
    - **Step 7.5 / 7.5b** — append a row to `.kdbp/DEPLOYMENTS.md` (deterministic aggregation, zero LLM) and run the operational-decision classifier (Haiku, trigger-gated on CI-config/infra/deploy-config changes, rollback commits, trunk-first pushes, skipped promotions) with interactive triage.
-   - **Step 8** — record to `.kdbp/LEDGER.md`.
+   - **Step 8** — record to `.kdbp/LEDGER.md` (row composed with `mcp__gabe-kdbp__ledger_row_preview`, `entry: PUSH`; a PREVIEW — the write stays a harness Write/Edit so the D7 hooks see it).
    - **Step 8.5** — auto-commit post-push bookkeeping (PUSH.md/DEPLOYMENTS.md/LEDGER.md/DECISIONS.md/PENDING.md writes) as a local, unpushed commit through the normal hook chain — never `git add -A`, never a hook bypass.
    - **Step 9** — retired (was a legacy `/gabe-teach topics` suggestion; the skill is archived and KNOWLEDGE.md left the default inventory — always a no-op now).
    - **Step 10** — auto-tick the `Push` column in PLAN.md via the shared auto-tick helper (`/gabe-plan`'s "Shared: auto-tick phase column"), only when push succeeded, CI is green, the env is the configured final environment, and promotion reached the final link; prints the decision record before ticking or skipping.

@@ -3,7 +3,7 @@ name: gabe-next
 description: "Zero-logic router — a deterministic script over PLAN state dispatches the next gabe command; no LLM decisions, no side effects."
 when_to_use: "What's next, where were we, continue the lifecycle."
 metadata:
-  version: 2.4.1
+  version: 2.4.2
 ---
 
 # Gabe Next — zero-logic lifecycle router
@@ -35,7 +35,7 @@ Run `node <this skill dir>/scripts/next.mjs` (add `--json` for machine output). 
 
 ### Step 1: Parse PLAN.md (prose fallback — only when next.mjs exited 2)
 
-Read `.kdbp/PLAN.md`. Extract:
+Ask `mcp__gabe-kdbp__kdbp_snapshot` first — `plan.phases[]` is this same table read header-resolved (cells keyed by column name, so an optional `Red`/`Center` column is never read off a shifted position; each cell arrives normalised as `todo` / `active` / `done` / `skipped`, NOT the raw ⬜ 🔄 ✅, and a column the plan lacks is simply absent — the always-✅ rule below still applies; capped at 40 rows with a `+N more` note). Then read `.kdbp/PLAN.md` for what it does not carry: the `## Current Phase` pointer (the snapshot takes that from the PLAN.json mirror, which is unusable on this path), `project_type`, `Types`, and any row past the cap. Extract:
 
 1. **Current Phase pointer.** Line matching `## Current Phase` → next non-blank line → leading integer `N` from `Phase N: ...`. If missing or unparseable → print `⚠ PLAN.md: Current Phase section missing or malformed.` and exit.
 2. **Phases table columns.** Detect column names from header row. Expected: `# | Phase | Description | Types | Tier | Complexity | Red | Exec | Review | Commit | Push | Center`. Three columns are optional: legacy plans may lack `Exec`; only TDD-adopting projects carry `Red` (before Exec); only command-center projects carry `Center` — treat any **missing column as always-✅** (skip that step). `Red` present-and-⬜ means the phase's failing cases are not yet committed; `Center` present-and-⬜ means the shipped phase is not yet covered in the command center.

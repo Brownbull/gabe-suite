@@ -74,7 +74,7 @@ Emitted by `--preset=mockup-project`. Phases + canonical types + scope hints:
 | 1 | Design language + tokens | `design-system` | high | Theme matrix + stress-test render across `--platforms` + token lock → `tokens.css` |
 | 2 | Atomic components | `design-system, ui-kit` | low | Button / input / pill / badge / avatar / chip / skeleton / progress / spinner |
 | 3 | Molecular components | `design-system, ui-kit` | med | Cards / modals / toast / banner / nav / FAB / filters / sheets / drawers / forms / state-tabs |
-| 4 | Flow map + INDEX + CRUD×entity | `mockup-flows, mockup-index` | med | Enumerate flows, seed `docs/mockups/INDEX.md` (4 tables), populate CRUD from the entity list in `SCOPE.md` (or the project's data model) |
+| 4 | Flow map + INDEX + CRUD×entity | `mockup-flows, mockup-index` | med | Enumerate flows, seed `docs/mockups/INDEX.md` (4 tables), populate CRUD from the entity list in `SCOPE.md` (on a command-center project, `mcp__gabe-map__entity_context` with no slug returns the registered entity list; otherwise the project's data model) |
 | 5 | Auth + onboarding + consent | `user-facing, auth` | med | Login / register / forgot / verify / welcome / jurisdiction consent / PWA install / push |
 | 6 | Core capture/primary loop | `user-facing` | high | Dashboard + primary interaction + 5-state variants (idle / processing / reviewing / saving / error) |
 | 7 | Batch / bulk flows | `user-facing` | high | Batch capture + review + reconciliation |
@@ -91,7 +91,7 @@ Preset writes `## Current Phase` pointing to Phase 1. User reviews + can `/gabe-
 
 ### Step 1: Check for active plan
 
-Read `.kdbp/PLAN.md`. If it contains `status: active`:
+Read `.kdbp/PLAN.md` — `mcp__gabe-kdbp__kdbp_snapshot` is the cheap first look (`plan{status, current_phase, goal, phases[{id, name, cells}]}` — the cells read from the PLAN.md table, `status`/`current_phase`/`goal` from the PLAN.json mirror — plus the open PENDING count and the last LEDGER rows, under 1k tokens, honest-empty without `.kdbp/`), but PLAN.md's own `status:` marker decides here, and it carries the `Created` / `Last Updated` / Phase Details the snapshot does not. If it contains `status: active`:
 
 1. Show the active plan summary:
    ```
@@ -117,7 +117,7 @@ Read `.kdbp/PLAN.md`. If it contains `status: active`:
 
 1. Read `.kdbp/BEHAVIOR.md` for `maturity`, `domain`, `tech`.
 2. If no goal in $ARGUMENTS, ask: "What are you planning to build or change?"
-3. Read `.kdbp/PENDING.md` — surface any open items related to the goal (show max 5).
+3. Surface open PENDING items related to the goal (show max 5) from `mcp__gabe-kdbp__kdbp_snapshot`'s `pending{open, top[≤10]}` — ranked by priority then Times Deferred, not by relatedness — and read `.kdbp/PENDING.md` itself when `open` exceeds that cap or nothing in the top rows touches the goal.
 
 ### Step 3: Plan
 
@@ -127,11 +127,11 @@ Execute the standard planning process:
 2. **Break into phases** — Specific, actionable steps. Each phase has:
    - Name
    - Description (one sentence)
-   - Key files likely affected
+   - Key files likely affected — name them from `mcp__gabe-map__find` (the map's index of entities, endpoints, models, schemas, functions and screens) and `mcp__gabe-map__entity_context` before reaching for Glob/Grep, and where the phase touches code that already exists, `mcp__gabe-map__blast_radius` on those files reads what else they reach; all three are FLOORS feeding Dependencies and Risks — a file the map does not name may still be affected, so Glob/Grep close the list and the phase's Scope is never the map's answer
    - Estimated complexity: low / medium / high
    - **Types** — phase type tags (drives Step 3.5 section assembly). Examples: `[ai-agent, integration]`, `[data-migration, multi-tenant]`, `[user-facing, client-state]`. Tags MUST come from the canonical closed list (mirrors `tier-section-index.md` so it survives a missing index): `{data-migration, persistence, multi-tenant, org-scoped, ai-agent, llm, user-facing, external-api, perf-sensitive, client-state, spa, pwa, auth, session, async-worker, queue, realtime, streaming, sse, migration, rollout, upload, storage, cdn, email, push, sms, design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`. Freeform tags (`frontend`, `ui-screens`) silently disable `/gabe-next` hybrid dispatch and `/gabe-execute` evidence classification — reject them and re-ask. See `~/.claude/templates/gabe/tier-sections/tier-section-index.md` for the full section mapping.
    - **Runtime journey evidence** — for phases tagged `{user-facing, native-mobile, mobile-web, web, upload, realtime, streaming, file-media, auth, session, notifications}`, include a concrete verification checkpoint that exercises the changed path on the target runtime and captures artifacts. Unit/static checks are not enough for these phase types.
-   - **Entities (command-center projects only, ruling 2026-08-07)** — PROPOSE the center entity slug(s) this phase's work touches by matching the phase's Scope files/globs against `docs/site/center/center.config.json` `entities{}.code` globs (and the archmap); present the proposal with the plan and let the operator confirm or correct it. A phase whose work maps to no registered entity declares `none — <reason>` — an honest blank, NEVER a guessed slug (the board's own attribution law: path-derived or absent). Declared entities are what the center's in-flight view can trust BEFORE any code exists; `/gabe-review` verifies declared-vs-touched drift after.
+   - **Entities (command-center projects only, ruling 2026-08-07)** — PROPOSE the center entity slug(s) this phase's work touches by asking `mcp__gabe-map__owner_of` with the phase's Scope paths (a glob-shaped Scope entry: pass its directory) — it returns each path's archmap owners, its `center.config.json` `entities{}.code` glob owners, and a `note` NAMING where the map is blind, which is the reason an honest `none` cites; present the proposal with the plan and let the operator confirm or correct it. A phase whose work maps to no registered entity declares `none — <reason>` — an honest blank, NEVER a guessed slug (the board's own attribution law: path-derived or absent). Declared entities are what the center's in-flight view can trust BEFORE any code exists; `/gabe-review` verifies declared-vs-touched drift after.
 3. **Identify dependencies** between phases.
 4. **Assess risks** — Flag anything that could block progress.
 5. **Present the plan** and WAIT for user confirmation.
@@ -450,8 +450,8 @@ Only after user confirms. Write with this structure:
 - **Tier:** [mvp | ent | scale]
 - **Prototype:** [yes | no]
 - **Scope:** <files/globs this phase may touch — e.g. web/src/routes/items.tsx, api/routers/items.py>
-- **Entities:** <command-center projects only — center entity slug(s) this phase touches, e.g. `repertorio`, `pantry`; or `none — <reason>`. Proposed by /gabe-plan from Scope × center.config code globs, operator-confirmed. Mirrored to PLAN.json `entities`; read by the board's in-flight view and verified by /gabe-review (declared-vs-touched). Omit the bullet entirely in projects without a center.>
-- **References:** <existing modules/patterns/docs to reuse — e.g. src/components/ListView, docs/api-conventions.md>
+- **Entities:** <command-center projects only — center entity slug(s) this phase touches, e.g. `repertorio`, `pantry`; or `none — <reason>`. Proposed by /gabe-plan from Scope × center.config code globs (`mcp__gabe-map__owner_of` performs that join), operator-confirmed. Mirrored to PLAN.json `entities`; read by the board's in-flight view and verified by /gabe-review (declared-vs-touched). Omit the bullet entirely in projects without a center.>
+- **References:** <existing modules/patterns/docs to reuse — e.g. src/components/ListView, docs/api-conventions.md; found with `mcp__gabe-map__find` / `mcp__gabe-map__entity_context` first (E4), Grep second>
 - **Acceptance:** <observable signal — e.g. "GET /api/items renders seeded rows in the browser">
 - **Checkpoint:** <verification command(s) — e.g. npm run build && npx playwright test items>
 - **Sections considered:** Core, [matched sections]
@@ -592,7 +592,7 @@ When archiving a plan (from Step 1 or when completing later):
 
 **6c. For `defer` only — add to PENDING.md:**
 
-Add a row to `.kdbp/PENDING.md`:
+Compose the row with `mcp__gabe-kdbp__pending_row_preview` — one `flag` object (`description:` `Plan deferred: "[goal]"`, `source: gabe-plan`, `file:` the archive path, `scale:` the maturity, `severity`/`impact` as asked) — which returns the row in the file's OWN column order, with the next `P[N]` minted over live AND archived rows and the `Verified: @<sha> <date>` anchor filled. Write it to `.kdbp/PENDING.md` with the harness Write/Edit so the D7 hooks see the write (the preview writes nothing), or through the writer the preview names where the project carries `scripts/disposition.py --defer` (the disposition contract's sanctioned writer — plan is one of its six named adopt sites). Where the server is unregistered, author the canonical row below by hand:
 
 | # | Date | Source | Finding | File | Scale | Priority | Impact | Times Deferred | Status | Verified |
 |---|------|--------|---------|------|-------|----------|--------|----------------|--------|----------|
@@ -756,7 +756,7 @@ If the user runs `/gabe-plan update` or `/gabe-plan status`:
   ```
   If `## Review Artifacts` lists an HTML artifact, refresh it from the updated plan. If no artifact exists but the updated plan now matches Step 3.75 complexity heuristics, offer to create one unless `--no-html-artifact` is present.
 
-- **`status`**: Read `.kdbp/PLAN.md`, show current state:
+- **`status`**: read the state from `mcp__gabe-kdbp__kdbp_snapshot` (`plan{status, current_phase, goal, phases[{cells}]}` — completed vs remaining IS the cells read) plus `.kdbp/PLAN.md` for `Last Updated` and the HTML artifact path; fall back to PLAN.md alone when the snapshot reports no PLAN.json mirror or the server is unregistered. Show current state:
   ```
   PLAN STATUS: [goal]
   Phase: [current] of [total]
@@ -827,7 +827,7 @@ File shape:
 
 - `Entry` is the writing command's tag, in LIFECYCLE order (the order `/gabe-next` routes them): `PLAN` · `RED` · `EXEC` · `REVIEW` · `COMMIT` · `PUSH` · `CENTER` · `HANDOFF` (satellite commands that log use their own tag, e.g. `SCOPE`, `ALIGN`, `MOCKUP`). `RED` is the red beat's own record (ruling 2026-09-02, red-spec § The LEDGER row) beside the `COMMIT` row its checkpoint sha also gets; `CENTER` is /gabe-cc-update's. No reader enforces the vocabulary — `mcp__gabe-kdbp__kdbp_snapshot` shows the tags a project actually uses.
 - `Commits` carries the short sha(s) the row is about (`—` when none). This column is how scope is later resolved — `git show --name-only <sha>` replaces the old in-ledger file lists.
-- Each writing command's own spec defines its row content; every writer appends exactly ONE row per checkpoint.
+- Each writing command's own spec defines its row content; every writer appends exactly ONE row per checkpoint. Compose the row with `mcp__gabe-kdbp__ledger_row_preview` (`entry` + `theme` required; it returns the row in THIS file's own column order, with the `Gates / results` cell copied verbatim) and write it with the harness Write/Edit — never through a tool — so the D7 hooks see the write. Where the server is unregistered, author the row against the header above.
 - If LEDGER.md is missing, create it with the header above. Legacy multi-entry ledgers are rotated to `archive/` per the KDBP-lite migration — never converted in place.
 
 ---
@@ -837,7 +837,7 @@ File shape:
 When reading PLAN.md at Step 1, also check `Last Updated`:
 - >14 days: show `⚠ Plan last updated [N] days ago`
 - >30 days: show `⚠ STALE PLAN — last updated [N] days ago. Consider: [complete] [defer] [cancel] [update]`
-- Row-state consistency: any row < Current Phase N with a non-✅ cell → `⚠ INCOMPLETE PRIOR PHASES: [<phase>: <columns>]` (always print, never block).
+- Row-state consistency: any row < Current Phase N with a non-✅ cell → `⚠ INCOMPLETE PRIOR PHASES: [<phase>: <columns>]` (always print, never block) — `mcp__gabe-kdbp__kdbp_snapshot`'s `plan.phases[].cells` is that same read without re-opening the file.
 
 ### Scope integration (if SCOPE.md exists)
 

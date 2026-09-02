@@ -3,7 +3,7 @@ name: gabe-review
 description: "Code review — risk pricing, confidence scoring, interactive triage, deferred-item tracking, plan alignment, the cost of NOT fixing each finding."
 when_to_use: "Review this diff/PR/phase/commit before merging; also 'is this on-scope?', stale verified anchors, deferred follow-up."
 metadata:
-  version: 1.18.1
+  version: 1.18.2
 ---
 
 # Gabe Review — Code Review with Risk Pricing
@@ -24,7 +24,7 @@ This is NOT a generic checklist review. Every finding gets a **Defer Risk** (con
 
 | Mode | Target | What happens |
 |---|---|---|
-| (no args) | Resolved via KDBP plan + LEDGER, else `git diff HEAD` | Full review + confidence score + triage |
+| (no args) | `mcp__gabe-kdbp__review_target` (KDBP plan + LEDGER), else `git diff HEAD` | Full review + confidence score + triage |
 | `brief` | same resolution | Findings + score + verdict only (final, no triage) |
 | `fix` | same resolution | Full review, then triage with "Fix all" pre-selected |
 | `deferred` | none | Deferred-item dashboard (Risk Dashboard) + triage |
@@ -38,9 +38,9 @@ This is NOT a generic checklist review. Every finding gets a **Defer Risk** (con
 
 1. Treat any text after the invocation as `$ARGUMENTS`.
 2. Read `references/review-spec.md` IN FULL before executing — the binding spec for target resolution, dimension scoring, tier-drift detection, plan alignment, confidence scoring, and triage. If missing, E6 applies — STOP.
-3. Resolve target (KDBP-plan-first, git-diff fallback) and maturity, then score the diff across review dimensions (security, data integrity, error handling, test coverage, runtime evidence, logic, tier drift, performance, style), pricing each finding with Fix Cost + Defer Risk + Maturity Gate + churn annotation.
+3. Resolve target with `mcp__gabe-kdbp__review_target` (the pending PLAN row, its LEDGER commits → changed files + a base ref; git-diff fallback, honest when the project has no `.kdbp/`) and maturity, then score the diff across review dimensions (security, data integrity, error handling, test coverage, runtime evidence, logic, tier drift, performance, style), pricing each finding with Fix Cost + Defer Risk + Maturity Gate + churn annotation.
 4. Compute the Review Confidence Score (0-100) with fix-tier projections. When a KDBP plan is active, render the Plan Alignment sub-checks (phase compliance, stale verified anchors, architectural-decision candidates, tier drift), then render the output-only Gabe-Lens block.
-5. Offer Triage (severity × maturity matrix, shared next-action menu, custom expressions, one-by-one loop) — skipped in `brief`/`inbox`/`deferred`/`close`/`discard` modes. Persist deferred items to `.kdbp/PENDING.md`; archive `.kdbp/REVIEW.md` and always append one LEDGER row on completion.
+5. Offer Triage (severity × maturity matrix, shared next-action menu, custom expressions, one-by-one loop) — skipped in `brief`/`inbox`/`deferred`/`close`/`discard` modes. Persist deferred items to `.kdbp/PENDING.md`; archive `.kdbp/REVIEW.md` and always append one LEDGER row on completion — both rows composed with `mcp__gabe-kdbp__pending_row_preview` / `ledger_row_preview` and written with Write/Edit, never through a tool, so the D7 hooks see the write.
 6. `post-review` arg → read `references/post-review.md` now.
 
 ## Output contract (summary)

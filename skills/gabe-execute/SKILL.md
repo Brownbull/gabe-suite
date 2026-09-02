@@ -3,7 +3,7 @@ name: gabe-execute
 description: "Execute the current .kdbp/PLAN.md phase — tasks under the tier cap, checkpoint commits, escalation gate, Exec column state."
 when_to_use: "Implement the phase, continue the plan, keep going, do task N."
 metadata:
-  version: 2.6.3
+  version: 2.6.4
 ---
 
 # Gabe Execute — phase implementation runner
@@ -24,7 +24,7 @@ Executes phase tasks from `.kdbp/PLAN.md`. Complements `/gabe-plan` (write plan)
 2. Read `references/execute-spec.md` (in this skill directory) IN FULL before executing — it is the binding spec: task decomposition, tier-cap enforcement, escalation gate, commit invocation, deviation handling, and phase-complete invariants. If it is missing, E6 applies — STOP.
 3. Summary of the spec's main flow:
    - **Step 0** — parse args (empty/`task`/`all`/`<N>`/`--auto-commit`/`--dry-run`); preconditions: `.kdbp/` exists, PLAN.md is active with an `Exec` column; project-type preflight redirects `mockup` plans (and mockup-typed phases of `hybrid` plans) to `/gabe-mockup` instead of proceeding.
-   - **Step 1** — load execution context: Current Phase row (name, tier, complexity, Exec state, per-dim tier overrides from Phase Details YAML), BEHAVIOR.md maturity/execute mode, PENDING.md open items for this phase's files, tier-cap heuristics, and a deterministic classification of whether runtime journey evidence (and staging proof) is required for this phase's types.
+   - **Step 1** — load execution context: Current Phase row (name, tier, complexity, Exec state, per-dim tier overrides from Phase Details YAML), BEHAVIOR.md maturity/execute mode, PENDING.md open items for this phase's files, tier-cap heuristics, and a deterministic classification of whether runtime journey evidence (and staging proof) is required for this phase's types. `mcp__gabe-kdbp__phase_context` returns that preflight in ONE call — the PLAN row and its `Cases:`/`Reach:` records, the BEHAVIOR facts + Verify Commands binding, the PENDING rows in scope, the declared entities' briefs; the file reads stay for what it does not carry (the Phase Details YAML `dim_overrides`, the tier-cap heuristics) and for a project whose tools answer `no .kdbp/`.
    - **Step 2** — decompose the phase into tasks via deterministic heuristics first (comma/semicolon-separated actions, distinct Scope files, multiple References specs), falling back to Haiku only when heuristics yield <2 or >10 tasks; prune tasks above the effective tier unless justified; append a mandatory runtime-journey-evidence task when required.
    - **Step 3** — tick Exec ⬜ → 🔄.
    - **Step 4** — execute tasks one at a time with per-task verification.

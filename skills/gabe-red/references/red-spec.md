@@ -18,6 +18,10 @@
   `<test roots>` + 1 (PCRE `(?<![A-Za-z0-9])C[0-9]{1,5}(?![0-9])`; ERE shell form
   `(^|[^A-Za-z0-9])C[0-9]{1,5}([^0-9]|$)` — never the bare `C[0-9]+`, which over-matches
   `RFC1234`/`SEC101` and inflates allocation).
+  On a command-center project, `mcp__gabe-map__cases_for <subject>` runs that same anchored scan while
+  answering which cases cover the subject, and hands back `corpus{searched, max_cid_seen,
+  next_cid_floor}` — a free first read of the floor. It is honest-empty without a center, and the grep
+  over the test roots stays the allocating authority either way, because the map may lag the corpus.
   History = `git log -S "C147"` → first commit → did it carry a `RED:` trailer → has this case
   ever been observed failing?
 - **Version bumps:** bump ONLY when the case's CLAIM changes (asserting something different).
@@ -103,7 +107,7 @@ Cases: NEW C148 · BUMP C147→v2 · GUARD C091, C120
 
 Written by this skill under the phase's details; mirrored to the PLAN.json phase's `cases` field
 (E5) — the field the `plan-proof-guard` hook reads (Red ✅ without a cases record is BLOCKED, D7).
-**If the phase has no Phase Details block** (brownfield table-only plans), create it first:
+**If the phase has no Phase Details block** (`mcp__gabe-kdbp__phase_context` returns `details_excerpt: null`; brownfield table-only plans), create it first:
 `### Phase <id> — <name>` under `## Phase Details`, then the `- **Cases:**` bullet inside it —
 that exact heading is what the PLAN.json mirror regeneration parses; a Cases line anywhere else
 is invisible to the mirror and the guard blocks the Red ✅ as record-less. Cell writes: this
@@ -187,16 +191,22 @@ this beat's report.
 unchanged. A reach that names nothing is honest; a phase scoped to its reach is the measured recall trap
 (map-as-scope reached 0.560 recall against plain search's 0.900).
 
-**A reach is a POSITIVE LIST, never a proof of absence.** It names places the graph found; it says
+**A reach is a POSITIVE LIST, never a proof of absence — and neither is a `mcp__gabe-map__who_calls` answer, whose two arms are that same index and that same word-boundary search.** It names places the graph found; it says
 nothing about places the graph cannot see. Reproduced: a symbol referenced from `run.sh`, `README.md`
 and its own definition returned `no indexed callers` from `graft callers` AND a single hit from
 `graft grep`, while `grep -rn` found three — a unanimous clean zero on live code, because graft
 indexes only `.py`/`.ts`/`.tsx`/`.js`/`.jsx` (**47% of gustify's non-binary tracked files, 10% of this
 suite's**). `grep -rn` remains the ONLY admissible absence proof; an empty reach is never one.
 
-Allowed arms: `build` · `callers` · `grep` · `skeleton` · `map`. **Never `ask`** (prints full
-signatures — one query returned ~3,000 tokens), **never `--deep`** (an LLM pass), **never `graft mcp`
-or `graft init`** (puts a third-party binary's directives into every tool result).
+Allowed arms: `build` — map creation, the index the reach and the generators read (ruling 2026-09-02:
+graft serves map creation; the skills ask the suite's tools). The agent-facing questions go to gabe-map —
+`mcp__gabe-map__who_calls` for callers, `mcp__gabe-map__outline` for a file's definitions,
+`mcp__gabe-map__center_overview` for the repo map — with `callers`/`grep` kept as the by-hand fallback
+where the server is unregistered; `outline`/`center_overview` are additionally honest-empty on a project
+with no command center, while `who_calls` runs both arms with or without one, and `skeleton`/`map` go
+unused by this beat. **Never `ask`** (prints full signatures — one query returned ~3,000 tokens),
+**never `--deep`** (an LLM pass), **never `graft mcp` or `graft init`** (puts a third-party binary's
+directives into every tool result).
 
 Non-guard phases print the run-bearing form in the report — required, byte-identical shape:
 

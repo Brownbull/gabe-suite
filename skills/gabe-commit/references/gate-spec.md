@@ -26,12 +26,12 @@ The `docs-audit` subcommand is explicit only — NOT automatically chained. It's
 
 1. Check that there are staged changes or unstaged changes to commit
 2. If no commit message in `$ARGUMENTS`, generate one following the **Commit message body structure** section below
-3. Read `.kdbp/BEHAVIOR.md` for `maturity` field (defaults to `mvp` if missing)
+3. Bind `maturity` from `mcp__gabe-kdbp__phase_context` (`behavior.maturity`) — one call that also carries this phase's row states, its `Cases:`/`Reach:` records, the `## Verify Commands` binding Step 2.0 needs, and the open PENDING rows in the phase's scope. No `.kdbp/`, no active phase (the tool then returns only a `no active plan` warning and NO `behavior` block), or the tool absent → read `.kdbp/BEHAVIOR.md` directly. Missing either way defaults to `mvp`
 
 ### Step 1b: Surface active plan (context only, no check)
 
 If `.kdbp/PLAN.md` exists and contains `status: active`:
-- Read the `## Current Phase` section
+- Ask `mcp__gabe-kdbp__kdbp_snapshot` — its `plan{status, current_phase, goal, phases[{id, name, cells}]}` block carries this info line's content, with the table's columns resolved BY NAME rather than assumed. `status`, `current_phase` and `goal` come from the PLAN.json mirror: when `plan.mirror` reports none — or there is no `.kdbp/`, or the tool is absent — read the `## Current Phase` section directly
 - Display as info line in Step 4 output: `ℹ PLAN: [goal] — Phase [N]: [name]`
 - This is informational context, not a blocking check. Zero cost.
 
@@ -47,11 +47,11 @@ A check may be marked ✅ ONLY if its command executed via the Bash tool this se
 
 Every printed number is copy-pasted from this run's output — never composed. Status glyphs are 3-state: ✅ / ❌ / ⤫ skipped(<reason>) — rendering a skip as ✅ is a defect.
 
-**Step 2.0 — Resolve commands (never guess).** Bind lint/types/tests in order:
+**Step 2.0 — Resolve commands (never guess).** `mcp__gabe-kdbp__verify_commands` resolves this binding: `source: a: …` when BEHAVIOR's `## Verify Commands` binds (`commands{lint, types, tests, results_out}`), else `source: b: …` candidates read from package.json scripts / pyproject / Makefile with the `offer` that writes the binding back, else `source: none: …`. It never runs a command and never invents a reporter flag (`probed: false` always) — the gate runs them. When Step 1 already took `phase_context`, that answer's `behavior.verify_commands` is the same rung-(a) binding and this call is redundant. The order is unchanged:
 
-- (a) `## Verify Commands` section of `.kdbp/BEHAVIOR.md`
-- (b) package.json scripts / pyproject / Makefile / CI job definitions
-- (c) the per-language fallbacks below, only if (a)-(b) yield nothing
+- (a) `## Verify Commands` section of `.kdbp/BEHAVIOR.md` — the tool's `source: a:`
+- (b) package.json scripts / pyproject / Makefile / CI job definitions — the tool's `source: b:`, plus any CI job definition it does not read
+- (c) the per-language fallbacks below, only if (a)-(b) yield nothing, or when the project has no `.kdbp/` and the tool answers honest-empty
 
 A checker that cannot fail (exit-0 no-op, 0 tests collected, continue-on-error) is NON-EVIDENCE → report `⤫ skipped(non-evidence: <reason>)`. When resolved via (b), offer to write the binding into BEHAVIOR.md `## Verify Commands` so it is never re-derived.
 
@@ -283,14 +283,14 @@ After all actions resolved:
 
 1. Stage changes: `git add` the relevant files
 2. Commit: `git commit -m "[message]"`
-3. Log to `.kdbp/LEDGER.md` — one thin-index row:
+3. Log to `.kdbp/LEDGER.md` — one thin-index row. Compose it with `mcp__gabe-kdbp__ledger_row_preview` (`entry: COMMIT`, `theme` = the commit subject ≤8 words, `commits` = the short hash, `gates` = the Gates cell below, copied verbatim; it returns the row in the FILE's own column order) and write it with the harness Write/Edit — never through a tool — so the D7 hooks see the write. No `.kdbp/`, or no resolvable LEDGER header (`header_found: false`), → the preview says so and the canonical template stands:
 ```
 | [YYYY-MM-DD] | COMMIT | [commit subject, ≤8 words] | [short hash] | findings [raw]→[survived] · deferred [n] · size-budget [ok/warn] · evidence [ok/warn/—] · docs-budget [ok/warn] · map-deltas [n active edges/—] |
 ```
 If the commit went through `force-commit: <reason>` (Blocked-commit rule above), append `· FORCED: [reason]` to this row's Gates column.
 
 4. If any items deferred, update `.kdbp/PENDING.md`:
-   - Add new row with date, source=`gabe-commit`, finding, file, scale (from BEHAVIOR.md maturity), priority, impact, times_deferred=1, status=open, verified=`@<sha> <date>` when the item was derived against a checked tree this session, else `-` (CHECK 6 warns on prose)
+   - Compose each new row with `mcp__gabe-kdbp__pending_row_preview` (`flag{description, dimension: the class tag, source: gabe-commit, file, priority, impact, scale}`) — it returns the row in the file's OWN column order, mints the next id over live **and** archive rows, prefixes the Finding cell with the class tag, and anchors `Verified: @<sha> <date>` itself (replace it with `-` when the item was not derived against a checked tree this session — CHECK 6 warns on prose). Set the `Status` cell to `open`: the preview leaves it blank. Then write the row with the harness Write/Edit, never through a tool, so the D7 hooks see the write. Its `recurring_candidates` (open rows on the same File sharing ≥3 words) is what the next bullet's "already exists" test reads. No `.kdbp/` → the preview says so; add the row by hand with date, source=`gabe-commit`, finding, file, scale (from BEHAVIOR.md maturity), priority, impact, times_deferred=1, status=open, verified=`@<sha> <date>` when the item was derived against a checked tree this session, else `-`
    - If item already exists in PENDING.md, increment `Times Deferred`
    - `Times Deferred` ≥ 3 → no further silent deferral: force a user decision `fix-now | accept-close (rationale recorded in the row) | drop`
    - Each deferred row carries a short class tag as a prefix inside its Finding cell (e.g. `[reference-fidelity] …`, `[test-gap] …`, `[doc-drift] …`) — never a new column (that rule is about class tags; `Verified` is the schema's own 11th column, not a tag). When ≥2 OPEN rows share a class, print `⚠ repeated class <tag>: N items — possible systemic drift from intent; confirm direction before deferring again.`
@@ -531,7 +531,7 @@ Execute each user action in order:
 |---|---|---|---|
 | Doc target missing | `create` | Write new file with `# {filename-derived}` H1 + required `## {Section}` subheadings from all DOCS.md mappings pointing at this target + the standards marker `<!-- Standards: see ~/.claude/skills/gabe-docs/SKILL.md -->`. Leave section bodies as HTML-comment placeholders identical to `/gabe-init` doc stubs. | No |
 | | `skip` | One-time dismissal (session-scoped) | No |
-| | `defer` | Append row to PENDING.md: `P[N] \| {today} \| docs-audit \| Create {target} \| {target} \| large \| {priority} \| high \| 0 \| open \| -` | No |
+| | `defer` | Compose the row with `mcp__gabe-kdbp__pending_row_preview` (`flag{description: "Create {target}", source: docs-audit, file: {target}, priority: {priority}, impact: high, scale: large}`) — file's own column order, next id minted over live + archive — then correct the cells it cannot know (`Status: open`, `Times Deferred: 0`, `Verified: -`) and append it with the harness Write/Edit. No `.kdbp/` binding → the canonical shape `P[N] \| {today} \| docs-audit \| Create {target} \| {target} \| large \| {priority} \| high \| 0 \| open \| -` | No |
 | Doc section missing | `create-section` (new action) | Append `## {Section}\n\n<!-- TODO: populate from DOCS.md mapping {pattern} -->\n` to the target file | No |
 | | `skip` / `defer` | as above | No |
 | Doc section empty | `update-docs` | Invoke the existing per-diff `update-docs` triage action but scoped to (a) the specific section and (b) recent commits that touched source files mapped to this section. Seeds from `git log --oneline -10 -- {glob from mapping}` and the current file content of the section. LLM edits proposed, human confirms. | **Yes** |
@@ -545,7 +545,7 @@ Execute each user action in order:
 | | `skip` | One-time dismissal | No |
 | Diagram placeholder (well-level, A3) | `upgrade-diagram` | Read well's verified topics from KNOWLEDGE.md Topics table + `## Purpose` + `## Key Decisions` from the well doc. Determine diagram type from per-well recommendation table in `gabe-docs/SKILL.md` (not re-decided — respect scaffold intent). Generate diagram body per gabe-docs upgrade rules (≤10 nodes, intent-labeled, analogy-consistent). Consult `gabe-docs/diagrams-library.md` if the well covers ≥3 layers or needs subgraph grouping. Replace stub fence content. LLM edits proposed, human confirms before write. | **Yes** |
 | | `skip` / `defer` | as above | No |
-| Diagram missing (non-well doc, A2 step 4) | `add-diagram` | Read `section` content + source files matching `pattern` (via `git log --oneline -10 -- {pattern-glob}` + file reads). Determine diagram type from per-doc-type matrix in `gabe-docs/SKILL.md` (matrix row dictates the type). Generate diagram body per SKILL.md skeletons (≤10 nodes, intent-labeled). Consult `diagrams-library.md` only if ≥3 layers/actors. Insert a new mermaid fence at end of `section`, before the next heading. LLM edits proposed, human confirms before write. | **Yes** |
+| Diagram missing (non-well doc, A2 step 4) | `add-diagram` | Read `section` content + source files matching `pattern` — where the project has a command center, ask `mcp__gabe-map__outline` per matched file for its definitions, spans and signatures, and `mcp__gabe-map__entity_context` when the target section is an entity's `Data Model` (models) or `API Endpoints` (endpoints), before falling back to `git log --oneline -10 -- {pattern-glob}` + file reads for what the map does not carry. Determine diagram type from per-doc-type matrix in `gabe-docs/SKILL.md` (matrix row dictates the type). Generate diagram body per SKILL.md skeletons (≤10 nodes, intent-labeled). Consult `diagrams-library.md` only if ≥3 layers/actors. Insert a new mermaid fence at end of `section`, before the next heading. LLM edits proposed, human confirms before write. | **Yes** |
 | | `skip` / `defer` | as above | No |
 | Diagram stub (non-well doc, A2 step 4) | `upgrade-diagram` | Same handler as well-level upgrade above, but seeds from mapped source files + section prose (no KNOWLEDGE.md topic lookup for non-well targets). Respects matrix-dictated type. | **Yes** |
 | | `skip` / `defer` | as above | No |
@@ -661,7 +661,7 @@ Task: T[i]/[K] — [task description]
 
 - Conventional commit format: `type(scope): imperative`
 - `type` ∈ {feat, fix, refactor, chore, docs, test, perf, ci, build}
-- `scope` = topmost touched module or well (e.g., `triage`, `pipeline`, `docs`)
+- `scope` = topmost touched module or well (e.g., `triage`, `pipeline`, `docs`) — where the project has a command center, ask `mcp__gabe-map__owner_of` with the staged paths first and use the owning entity's slug, so a commit scope reads as the same name the center, the plan and the ledger already use; a path the map does not claim falls back to the topmost touched module
 - Subject ≤72 chars, imperative mood, no trailing period
 
 **Gabe-lens brief**

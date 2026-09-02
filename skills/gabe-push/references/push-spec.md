@@ -14,7 +14,7 @@ Env-aware shipping. One command pushes local work to the configured target env, 
 1. Verify `gh` CLI: `gh --version 2>/dev/null`. If missing: "Install GitHub CLI: https://cli.github.com/" — stop.
 2. Verify auth: `gh auth status 2>/dev/null`. If not authenticated: "Run `gh auth login` first" — stop.
 3. Verify git repo with remote: `git remote -v`. If no remote: "No remote configured. Run `git remote add origin <url>` first" — stop.
-4. Read `.kdbp/PUSH.md`. If it exists, skip to Step 2.5. If not, continue to Step 2.
+4. Read `.kdbp/PUSH.md`. If it exists, skip to Step 2.5. If not, continue to Step 2. No tool serves PUSH.md — it is push's own config. Open `mcp__gabe-kdbp__kdbp_snapshot` once here for the state the rest of this run otherwise re-derives by hand: `git{branch, ahead, behind, dirty}` for Step 3's pre-flight, `plan{status, current_phase, phases[{cells}]}` for Step 10's orientation (`status`/`current_phase` come from the PLAN.json mirror — `plan.mirror` names its absence), and `pending{columns, open, top}` for Step 7.5b's classifier re-surface. It ORIENTS; the git commands in Step 3 still decide — a safety abort reads the working tree, never a snapshot.
 
 ### Non-interactive defaults
 
@@ -267,7 +267,7 @@ Only runs when Step 4 (push) completed successfully. Otherwise skip silently —
 
 - `.kdbp/` exists (required for all of push anyway).
 - If `.kdbp/DEPLOYMENTS.md` doesn't exist: copy it from `~/.claude/templates/gabe/DEPLOYMENTS.md` before appending. Never overwrite existing.
-- **Terminal-env pointer (non-blocking, one line):** when this row's env is the TERMINAL env (no `promote_from` chain continues past it) AND the project has a command center (`docs/site/center/center.config.json`), print: `release: terminal-env ship → /gabe-cc-update release --since <previous terminal row>`. No center → print nothing. Never a gate, never a question.
+- **Terminal-env pointer (non-blocking, one line):** when this row's env is the TERMINAL env (no `promote_from` chain continues past it) AND the project has a command center — ask `mcp__gabe-map__map_status`, which answers presence AND freshness in one call (`docs/site/center/center.config.json` is the file it reads) — print: `release: terminal-env ship → /gabe-cc-update release --since <previous terminal row>`. No center → print nothing. Never a gate, never a question.
 
 **Assemble the row** (pure deterministic aggregation of data push already collected — zero LLM):
 
@@ -323,7 +323,7 @@ Only runs when Step 7.5a appended a row AND the BEHAVIOR.md frontmatter doesn't 
 
 **Pre-step — Re-surface deferred classifier candidates (runs BEFORE trigger layer):**
 
-Read `.kdbp/PENDING.md`. For every row where `Source` column = `classifier` AND `Status` column = `open`:
+Ask `mcp__gabe-kdbp__kdbp_snapshot` first — `pending{columns, open, top}` names the file's OWN headers and the open count this pass reconciles against. Then read `.kdbp/PENDING.md` for the full row set — `top` caps at 10 and does not carry the Source cell — and take every row where the `Source` column (a twin may head it `Gate`) = `classifier` AND the `Status` column = `open`:
 
 1. Render each as an original proposal block using the same format as the Interactive triage output below. Use the `Finding` column as `title`. Rationale/alternatives/review_trigger are not re-stored in PENDING.md — if present from the original defer, pull from a `Notes` suffix; otherwise render the row as a minimal candidate (title only + "originally deferred YYYY-MM-DD") and skip alternatives.
 2. User picks `[accept]` / `[note]` / `[defer]` / `[drop]` per row. Action handlers behave identically to current-run handlers. `accept`/`note`/`drop` set the PENDING row's `Status` to `resolved` with today's date. `defer` (explicit or drop-through) keeps `Status = open` and increments `Times Deferred`.
@@ -388,7 +388,7 @@ Actions:
 |--------|----------|
 | `accept` | Append to DECISIONS.md using same mechanism as review 5b. `Status` column = `active,operational`. Dedup: existing DECISIONS.md row with matching title case-insensitively → drop instead of append. Mark any open PENDING.md classifier row with matching title as `resolved` (today's date). |
 | `note` | Find today's DEPLOYMENTS.md row (the one Step 7.5a just wrote, by `Date` and `PR` match). Update its `Decisions` column from `—` to a one-liner of `title`. Never appends a new row; updates the one already written. Mark any open PENDING.md classifier row with matching title as `resolved` (today's date). |
-| `defer` | Append to PENDING.md: `\| P[N] \| today \| classifier \| [title] \| - \| [maturity] \| medium \| low \| 0 \| open \| - \|`. Source column = `classifier`. Title stored verbatim in Finding for dedup on re-surface. If an open classifier row already exists with matching title (case-insensitive), increment `Times Deferred` on that row instead of creating a duplicate. |
+| `defer` | Compose the row with `mcp__gabe-kdbp__pending_row_preview` (`flag{description: [title], source: classifier, file: "-", priority: medium, impact: low, scale: [maturity]}`) — file's own column order, next id minted over live + archive — then correct the cells it cannot know (`Status: open`, `Times Deferred: 0`, `Verified: -`) and append it with the harness Write/Edit, never through a tool, so the D7 hooks see the write; no `.kdbp/` binding → the canonical shape `\| P[N] \| today \| classifier \| [title] \| - \| [maturity] \| medium \| low \| 0 \| open \| - \|`. Source column = `classifier`. Title stored verbatim in Finding for dedup on re-surface. If an open classifier row already exists with matching title (case-insensitive), increment `Times Deferred` on that row instead of creating a duplicate. |
 | `drop` | No write. Session-scoped dedup on title. Also mark any open PENDING.md classifier row with matching title as `resolved` (today's date) to prevent re-surface loop. |
 
 **Default-on-drop-through:** If the command completes without the user picking an action (common in non-interactive flow — agent continues before user can choose), treat as `defer`. The unresolved candidate is persisted to PENDING.md so it re-surfaces instead of vanishing. Session-scoped dedup still applies per-title to prevent double-persist within a single run.
@@ -407,7 +407,7 @@ Humans can disable the classifier entirely by adding `push_operational_classifie
 
 ### Step 8: Record to ledger
 
-Append one row to `.kdbp/LEDGER.md` per the thin-index house format (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index"):
+Compose the row with `mcp__gabe-kdbp__ledger_row_preview` (`entry: PUSH`, `theme` = `[env] ← [branch] @ [short sha]`, `commits` = the short sha, `gates` = the results cell below, copied verbatim; it returns the row in the FILE's own column order) and append it with the harness Write/Edit — never through a tool — so the D7 hooks see the write. The thin-index house format it renders (`gabe-plan/references/plan-spec.md` § "Shared: LEDGER.md thin session index") stands when the tool is honest-empty:
 
 ```
 | [YYYY-MM-DD] | PUSH | [env] ← [branch] @ [short sha] | [short sha] | push ✓ · CI [result/none] · promotion [state] |
@@ -589,7 +589,7 @@ All three render as plain markdown at runtime — the bare fences here are spec-
 
 When writing a DEPLOYMENTS.md row for this push, enrich with scope linkage:
 
-1. Read PLAN.md `## Current Phase` → extract phase ID N.
+1. Take phase ID N from `mcp__gabe-kdbp__kdbp_snapshot` (`plan.current_phase`, read from the PLAN.json mirror); no `.kdbp/`, or `plan.mirror` reporting no mirror → read PLAN.md `## Current Phase`. (Step 2's SCOPE.md read has no tool — no server reads SCOPE.md.)
 2. Read SCOPE.md `## Phases` phase N row → extract `Covers REQs`. (Pre-A2 projects that still carry a separate `.kdbp/ROADMAP.md` — or its archived copy under `.kdbp/archive/retired/` — read the same field there.)
 3. DEPLOYMENTS.md row gets extra columns: `Phase: {N}` and `REQs: {REQ-01, REQ-02, ...}`.
 4. If CI passes AND the current phase's Exit criteria were satisfied in this push, propose flipping Phase {N}'s status to `complete` in SCOPE.md `## Phases` — but route the write through `/gabe-scope-change` (never write SCOPE.md directly from gabe-push).

@@ -19,15 +19,15 @@ Run `scripts/size-budget.sh` (this skill) alongside the gate's other determinist
 **Offer** (do not auto-run) a quality-only pass when ANY of:
 
 1. the size-budget check WARNed on this commit,
-2. the phase touched a file recorded as a known monolith (RULES.md / PENDING.md / a health or
-   code-audit finding),
+2. the phase touched a file recorded as a known monolith — `mcp__gabe-kdbp__kdbp_snapshot`'s `pending.top` surfaces the standing rows and their File cells without opening the file (capped at 10 by priority, so a miss there is not an absence; RULES.md / PENDING.md / a health or
+   code-audit finding remain the record),
 3. the operator asks for it.
 
 Shape — parallel quality-only agents over the **changed code only**:
 
 | Lens | Question |
 |---|---|
-| reuse | does an existing component/helper/module already do this? (the re-implemented-helper signature) |
+| reuse | does an existing component/helper/module already do this? (the re-implemented-helper signature) — ask `mcp__gabe-map__find` by name/doc first, then `mcp__gabe-map__who_calls` on a candidate it returns to see whether that helper is already the shared one; the map is a floor, so `grep -rn` still settles absence (E1) |
 | simplification | dead branches, needless indirection, nameable seams in files growing past cohesion |
 | efficiency | obvious waste — N+1 loops, repeated computation, unbounded reads |
 

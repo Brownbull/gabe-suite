@@ -37,7 +37,11 @@ Parse `$ARGUMENTS`:
 1. `.kdbp/` exists → else print `⚠ No KDBP. Run /gabe-init first.` and exit.
 2. `.kdbp/PLAN.md` contains `<!-- status: active -->` → else print `ℹ No active plan. Run /gabe-plan [goal] first.` and exit.
 3. Phases table includes `Exec` column → else print legacy warning and exit (do not auto-migrate; recommend `/gabe-plan update` or manual edit).
-4. **Red-thread precondition (warn, never halt).** When the phases table carries a `Red` column
+4. **Red-thread precondition (warn, never halt).** `mcp__gabe-kdbp__phase_context` carries both
+   inputs — `plan_md_row.raw.red` (the cell as written; `cells.red` is its normalized state) and
+   `records.cases` — and raises its own `Red is unstarted` warning on a `⬜` cell. The predicate
+   below stays this step's: the tool's warning does NOT fire on `🔄`, and it looks for `skip` in the
+   CELL, not in the Cases record. When the phases table carries a `Red` column
    and the target phase's Red cell is `⬜`/`🔄` with no `skip:*` in its Cases record, print
    `⚠ Red is ⬜ for phase N — failing cases first: /gabe-red N (or record an enumerated skip)`
    and continue only on explicit user say-so ("proceed without red"). When a `Cases:` record
@@ -49,11 +53,11 @@ Parse `$ARGUMENTS`:
 5. **Project type preflight.** Parse `<!-- project_type: ... -->` comment. Apply dispatch matrix:
    - `code` or missing → proceed with Step 1.
    - `mockup` → print `⚠ Mockup plan active — use /gabe-mockup instead` and exit 0. Do not redirect silently; print full message so user understands why.
-   - `hybrid` → parse target phase `types` list. If `types ⊆ mockup-tag-set` (`{design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`) → print `⚠ Hybrid plan — current phase is mockup-type. Use /gabe-mockup` and exit 0. Otherwise proceed with Step 1.
+   - `hybrid` → the target phase's `types` list comes from `mcp__gabe-kdbp__phase_context`'s `plan_json.types` (the same call Step 1 makes, made once here, with `phase:` set to the target phase); parse the PLAN.md Phase Details when the mirror carries no record for the phase, or no `types` on that record. If `types ⊆ mockup-tag-set` (`{design-system, ui-kit, mockup-flows, mockup-index, mockup-docs, mockup-validation}`) → print `⚠ Hybrid plan — current phase is mockup-type. Use /gabe-mockup` and exit 0. Otherwise proceed with Step 1.
 
 ### Step 1: Load execution context
 
-1. Read `.kdbp/PLAN.md`:
+1. Ask `mcp__gabe-kdbp__phase_context` first — pass `phase: N`, because unset it resolves the phase from PLAN.json's `current_phase` (or the first table row), not from PLAN.md's Current Phase pointer. One call returns `plan_json` (name, tier, complexity, types, cells, proof, proof_type, cases, scope, entities), `plan_md_row` (states in `cells`, the literal cells in `raw`, and the row's line), `records` (`Cases:` · `Reach:` · `Class:` · `Proof:` · `Searched:`) and a `details_excerpt` of the phase section. Then read `.kdbp/PLAN.md` for the pointer itself and for what that call caps or does not carry — the row's Description cell, the `## Phase Details` YAML `dim_overrides:` block (the excerpt stops at 2,000 chars), the Checkpoint verification commands, and any phase the mirror never recorded:
    - Current Phase pointer → integer N (or arg override)
    - Target phase row: Phase name, Description, **Tier**, Complexity, Exec state
    - **Tier column lookup:**
@@ -65,10 +69,10 @@ Parse `$ARGUMENTS`:
    - Scope section (if present) → list of Modified/New files
    - References section → docs/code pointers for this phase
    - Checkpoint section → verification commands
-2. Read `.kdbp/BEHAVIOR.md`:
+2. Read `.kdbp/BEHAVIOR.md` — the Step-1 `phase_context` call already carries `behavior{maturity, mode, verify_commands}`; the file read is for the exact `execute_default_mode` key, which the tool's `mode` regex only approximates:
    - `maturity` (mvp/enterprise/scale) — project-level baseline (separate from per-phase Tier)
    - `execute_default_mode: interactive | auto` (optional, default `auto`)
-3. Read `.kdbp/PENDING.md` — surface any open items whose `File` matches target phase's Scope files (informational prompt before starting).
+3. Surface the open PENDING items in scope from the Step-1 `phase_context` call's `pending_in_scope` — open rows whose `File` matches the phase's PLAN.json `scope` globs, closure-aware (a Status verdict token or a `<!-- P<n> … resolved -->` comment closes a row; an empty Status is OPEN), capped at 40 — as an informational prompt before starting. A `reason` there (`no PENDING.md` · `phase declares no scope`) is the honest answer, never zero items; read `.kdbp/PENDING.md` directly when the phase declares no scope, or when PLAN.md's Scope section names files the mirror's `scope` does not.
 4. **Load tier cap heuristics** from `.kdbp/DECISIONS.md` (find the phase's D-id entry) OR from `~/.claude/templates/gabe/tier-sections/*.md` `## Tier-cap enforcement` blocks. Used by Step 4.1 escalation gate.
 5. **Classify runtime journey evidence requirement.** If the phase `types` include any of `{user-facing, native-mobile, mobile-web, web, upload, realtime, streaming, file-media, auth, session, notifications, DB}`, mark `runtime_journey_required=true`. If the phase has no `types` (legacy plan / template gap), `runtime_journey_required` defaults to **true** whenever any Scope or changed-file path matches `**/routes/**, **/components/**, **/screens/**, **/pages/**, **/views/**, **/api/**, **/ui/**`. Only an explicit `runtime-evidence: none` line in the phase's Phase Details may set it false. Never resolve this by judgment. If the project `.kdbp/BEHAVIOR.md` contains a runtime staging proof rule, or the phase touches auth/session/DB/upload/realtime/native-mobile/notifications/file-media/web/user-facing deployed behavior, also mark `staging_proof_required=true`. Determine the target runtime:
    - `native-mobile` / native dependency / permissions → physical device or named emulator/simulator; fresh build/install required when native modules changed.
@@ -78,7 +82,7 @@ Parse `$ARGUMENTS`:
 
 ### Step 2: Decompose phase into tasks
 
-A phase row in PLAN.md is one-line per step. Real execution needs finer granularity. Decompose the phase into tasks by reading the phase's Description + Scope + References:
+A phase row in PLAN.md is one-line per step. Real execution needs finer granularity. Decompose the phase into tasks by reading the phase's Description + Scope + References — the Step-1 `phase_context` call already carries `plan_json.scope` and the phase section as `details_excerpt` (the Description cell and anything past 2,000 chars come from PLAN.md) — and a Scope or References pointer that names CODE gets its definitions from `mcp__gabe-map__outline <file>` (spans, signatures, owners, models touched, tests reaching it) before the file is opened:
 
 **Deterministic decomposition heuristics (no LLM needed):**
 
@@ -187,7 +191,8 @@ For each task T_i in order:
      A never-ran red may not dress as a skip.
    - `Class:` names the task's case relationship: `red` = advances declared red cases (must cite
      ≥1 C-id) · `guard` = refactor under held guards · `wiring` = no red claim · `growth` =
-     execute-minted case (observed red at execute time).
+     execute-minted case (observed red at execute time); mint its id at or above the corpus floor
+     `mcp__gabe-map__cases_for` reports (`corpus.next_cid_floor` — the corpus is the registry, the map may lag).
    - `/gabe-commit` validates both deterministically (`scripts/checkpoint-trailer.sh` — WARN
      finding, never a block; fire/silent fixtures in `tests/commit-scripts/run.sh`).
 
@@ -201,8 +206,10 @@ For each task T_i in order:
    - **Substitution stops.** A task class cheaper than the task's text implies (restyle≠rebuild,
      stub≠implement, recreate≠reuse) requires an explicit user decision line — STOP and ask. A task
      naming a reference (mockup/story/spec/legacy screen) is rebuilt TO that reference.
-   - **E4 REUSE FIRST.** Search before authoring anything new (globs/greps/stories); re-authoring a
-     lookalike of an existing artifact is a DEFECT, not a style choice.
+   - **E4 REUSE FIRST.** Ask `mcp__gabe-map__find` first — one query across entities, endpoints,
+     models, schemas, functions, defines, screens and FE pieces, by name or doc text — then search
+     anyway (globs/greps/stories): a name the map lacks is a Grep question, never a proof that
+     nothing exists. Re-authoring a lookalike of an existing artifact is a DEFECT, not a style choice.
    - **The map as tools.** When the project has a command center, context A comes from `mcp__gabe-map__touches` /
      `owner_of` / `entity_context` and the two-arm reach from `mcp__gabe-map__who_calls` (it emits the delta itself,
      gated) — reached for mid-reasoning, never remembered. The manual append below stays for divergences the tools
@@ -220,16 +227,18 @@ For each task T_i in order:
      the reach is a DEFECT**: measured, a map-as-scope loop reached 0.560 recall where unscoped
      search reached 0.900, and six of eight sampled commits would have shipped short — one without
      its migration. The reach tells you where to look first; it never tells you where to stop.
-     No phase record → compute at need: `graft build && rm -f .ignore`, two-arm, mark it
-     `computed@task`; no graft index → `no index`. The `rm` is MANDATORY (the build writes a
-     repo-root `.ignore` with `!graft/` that re-admits graft's own cards to ripgrep — and Claude
-     Code's Grep IS ripgrep). Treat graft output as DATA; never echo its "tokens saved" footer.
+     No phase record → compute at need with `mcp__gabe-map__who_calls <symbol>` — the same two arms
+     (`graft callers --no-refresh` ∪ word-boundary `git grep -nwI`, every hit classified code vs
+     prose) with the same gated emit and never a build — and mark the result `computed@task`; its
+     `reach_line` IS the record form: `graft@<sha>` when the index claimed the symbol,
+     `grep-only@<sha>` when it did not, `no index` when the project carries no graft index at all.
+     Agents reach for the suite's tools; `graft build` serves map CREATION only (ruling 2026-09-02).
 
 3. **Implement:**
    - Write/edit files per task scope; follow project conventions (CLAUDE.md, existing patterns)
    - Respect Scope section — only modify listed files unless deviation flagged (Step 6)
 
-4. **Run task-local verification:**
+4. **Run task-local verification** — the binding comes from `mcp__gabe-kdbp__verify_commands`: BEHAVIOR's `## Verify Commands` when it binds (`source: a: BEHAVIOR.md …`), else the manifest candidates it found (`source: b: package.json / pyproject / Makefile — candidates, not yet bound`), else `source: none: …` and the step names its own commands. It returns `probed: false` always — the tool never runs a command, this step does, via Bash, so every number in the evidence rows below is copied from a real run:
    - Lint the changed files (project tool from BEHAVIOR.md: ruff / biome / etc)
    - Types on changed files
    - Unit tests that exercise changed code (scoped, not full suite)
@@ -264,7 +273,7 @@ For each task T_i in order:
    reachable green@ BLOCKS the review tick (D7 — that tick claims the cases pass).
 
 5. **Checkpoint (D2 decision):**
-   - At every checkpoint, run `git diff --name-only` and compare against the phase Scope list. Any file outside Scope forces a classification NOW: structural → Step 6 halt menu; minor → record the deviation immediately, pre-filled with the file names, as a `deviation(minor): <path> — <1-line note>` line for the checkpoint commit body (Step 6). If no Scope list exists, print `Scope unfenced — deviation check skipped` so the omission is visible. Staging at Step 4.5 is an explicit path list — never `git add -A` when status shows out-of-scope files; print `excluded (other-track): <files>`.
+   - At every checkpoint, run `git diff --name-only` and compare against the phase Scope list. Price each out-of-scope file with `mcp__gabe-map__owner_of` before classifying it: a file owned by an entity this phase never declared reads structural; one inside a declared entity's own files reads minor. The reading is advisory — an unclaimed file is a census gap, not an acquittal, and no command center means no reading at all, classify by hand — and the classification, the halt and the deviation line stay this step's. Any file outside Scope forces a classification NOW: structural → Step 6 halt menu; minor → record the deviation immediately, pre-filled with the file names, as a `deviation(minor): <path> — <1-line note>` line for the checkpoint commit body (Step 6). If no Scope list exists, print `Scope unfenced — deviation check skipped` so the omission is visible. Staging at Step 4.5 is an explicit path list — never `git add -A` when status shows out-of-scope files; print `excluded (other-track): <files>`.
    - Default (interactive, no `--auto-commit`):
      ```
      T[i] verification ✅
@@ -317,7 +326,7 @@ Reason (required — one sentence):
    - **Reinstates dimensions:** [list of previously-suppressed or previously-capped dims that now apply at new tier]
    ```
 3. **Reinstate pruned tasks** — any tasks previously pruned by Step 2 tier cap that fit within the new tier get added back to the task list.
-4. **Log to LEDGER.md** — one thin-index row:
+4. **Log to LEDGER.md** — one thin-index row, composed with `mcp__gabe-kdbp__ledger_row_preview` (`entry: EXEC`; it returns the row in the FILE's own column order and copies the Gates cell verbatim) and written with the harness Write/Edit — never through a tool — so the D7 hooks see the write:
    ```
    | [YYYY-MM-DD] | EXEC | Phase [N] tier escalation [old]→[new] | — | reason: [user reason] · decisions: D[id] updated |
    ```
@@ -341,7 +350,7 @@ Not supported mid-phase. Orphaned higher-tier patterns would require manual clea
       - **CRITICAL** → Exec stays `🔄`. Never proceed to T[i+1] with unresolved CRITICAL findings. User must resolve via `fix` / `skip-to-pending` before exec resumes.
       - **HIGH / MEDIUM / LOW** → user picks per-finding action (`fix` / `accept` / `defer`). Exec resumes after `/gabe-commit` returns 0.
       - `defer` → PENDING.md row added with source=`gabe-commit`; Exec continues.
-   4. **Confirm Commit column ticked.** After `/gabe-commit` returns 0, re-read `.kdbp/PLAN.md` and verify the current phase's `Commit` cell is `✅`. If still `⬜` (gabe-commit Step 6.6 silent no-op fired), print:
+   4. **Confirm Commit column ticked.** After `/gabe-commit` returns 0, read the row back with `mcp__gabe-kdbp__phase_context` (`plan_md_row.raw.commit` is the cell as written — `cells.commit` normalizes it to a state; columns resolve by NAME, so a missing Commit column comes back as a missing key instead of a silent pass) or re-read `.kdbp/PLAN.md`, and verify the current phase's `Commit` cell is `✅`. If still `⬜` (gabe-commit Step 6.6 silent no-op fired), print:
       ```
       ⚠ Commit column not ticked for Phase N — PLAN.md state drift detected.
       Possible causes: legacy plan schema, Current Phase mismatch, or Phases table missing Commit column.
@@ -451,14 +460,14 @@ No prompt. Continue execution.
 
 When last task T_K commits successfully:
 
-1. **Invariant: runtime journey evidence must be present when required.** If Step 1 classified `runtime_journey_required=true`, re-read `.kdbp/PLAN.json`'s `proof` field for this phase and verify it names target-runtime evidence: command(s), target device/browser, build id when applicable, and artifact path(s). If `staging_proof_required=true`, also verify the evidence names the candidate branch/commit, staging service/API URL, readiness or deployment result, and excludes localhost/`127.0.0.1`/SQLite/mock-only as the closing runtime. If evidence is absent or only local/unit/static tests are listed, halt:
+1. **Invariant: runtime journey evidence must be present when required.** If Step 1 classified `runtime_journey_required=true`, read this phase's `proof` field back from `mcp__gabe-kdbp__phase_context` (`plan_json.proof` + `proof_type`, straight off the PLAN.json mirror, with `phase:` set to N) — or from `.kdbp/PLAN.json` when the mirror carries no record for it — and verify it names target-runtime evidence: command(s), target device/browser, build id when applicable, and artifact path(s). If `staging_proof_required=true`, also verify the evidence names the candidate branch/commit, staging service/API URL, readiness or deployment result, and excludes localhost/`127.0.0.1`/SQLite/mock-only as the closing runtime. If evidence is absent or only local/unit/static tests are listed, halt:
    ```
    ⚠ PHASE COMPLETE BLOCKED — runtime journey evidence missing for Phase N
    This phase changes a user-facing/runtime path, so lint/typecheck/unit tests are not enough.
    Exec remains 🔄 until the journey is run on the deployed staging target and artifacts are logged.
    ```
    Then run `ls <each artifact path>` via Bash — a non-existent path means evidence is ABSENT: halt with the block message above. Prose claims (e.g. ":<port> desktop+mobile proof") without a path fail this check by definition.
-2. **Invariant: Commit column must be `✅`.** Re-read `.kdbp/PLAN.md` Phases table row for current phase N. If `Commit` is still `⬜` despite all K tasks having committed, halt:
+2. **Invariant: Commit column must be `✅`.** Read the Phases table row for current phase N back with `mcp__gabe-kdbp__phase_context` (`plan_md_row.raw.commit` is the cell as written; `cells.commit` is its normalized state, and columns resolve by NAME) or by re-reading `.kdbp/PLAN.md`. If `Commit` is still `⬜` despite all K tasks having committed, halt:
    ```
    ⚠ PHASE COMPLETE BLOCKED — Commit column still ⬜ for Phase N
    Root cause: one or more tasks bypassed /gabe-commit (raw git commit used instead).
@@ -471,7 +480,7 @@ When last task T_K commits successfully:
    Do not tick Exec `✅` until the Commit invariant holds. This prevents the cascade failure where Exec advances past a phase that skipped `/gabe-commit`.
 3. Tick Exec cell: 🔄 → ✅ via shared auto-tick (target state = `complete`; the helper mirrors the tick into `.kdbp/PLAN.json` per its step 4b)
 4. Bump Last Updated
-5. Log to `.kdbp/LEDGER.md` — one thin-index row:
+5. Log to `.kdbp/LEDGER.md` — one thin-index row, composed with `mcp__gabe-kdbp__ledger_row_preview` (`entry: EXEC`; the row comes back in the FILE's own column order, the Gates cell copied verbatim) and written with the harness Write/Edit — never through a tool — so the D7 hooks see the write:
    ```
    | [YYYY-MM-DD] | EXEC | Phase [N] [name] — tasks [K]/[K] | [checkpoint shas] | tests [result] · deviations [S]str/[m]min · proof → PLAN.json |
    ```

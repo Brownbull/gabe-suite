@@ -3,7 +3,7 @@ name: gabe-plan
 description: "KDBP planning — lifecycle management + per-phase tier decision (MVP/enterprise/scale), optional HTML review artifacts."
 when_to_use: "Plan, phases, tier decision, break down this goal — create, update, check, complete, defer, cancel, or replace .kdbp/PLAN.md."
 metadata:
-  version: 2.7.3
+  version: 2.7.4
 ---
 
 # Gabe Plan — KDBP-aware planner
@@ -26,7 +26,7 @@ KDBP-aware planner. Same planning logic as `/plan`, but persists to `.kdbp/PLAN.
    - **Step 0** — subcommand dispatch on first token of `$ARGUMENTS`: `check` → Step CHK (structural compliance + retrofit); `update` → Step UPD (modify active plan in place); `complete`/`defer`/`cancel`/`replace` → Step 1 branches; anything else is treated as a goal.
    - **Step 0 (validate KDBP)** — require `.kdbp/`, ensure `archive/` and `PLAN.md` exist.
    - **Step 0.5 (preset dispatch)** — parses `--html-artifact`/`--no-html-artifact`/`--html-path`; `--preset=mockup-project` emits the canonical 13-phase mockup template (Step 3.PRESET) instead of free-form planning, then still runs the per-phase tier decision.
-   - **Step 1** — if an active plan exists, offer complete/defer/cancel/continue/replace; `continue` stops here.
+   - **Step 1** — if an active plan exists (`mcp__gabe-kdbp__kdbp_snapshot` is the cheap first look at plan status, current phase and the phase-table cells; PLAN.md stays the authority, and the tool is honest-empty without `.kdbp/`), offer complete/defer/cancel/continue/replace; `continue` stops here.
    - **Step 2** — gather context from `.kdbp/BEHAVIOR.md` (maturity, domain, tech); ask for the goal if none given.
    - **Step 3** — draft the phase list; user confirms.
    - **Step 3.5** — tier decision per phase (MVP/Enterprise/Scale): assemble the trade-off matrix from `templates/gabe/tier-sections/*` (Core always renders unfiltered; `--full-catalog` skips the Layer-2 LLM dimension filter), render the decision prompt, user picks a tier, log to DECISIONS.md (including per-dim tier overrides and suppressed dimensions), store tier + overrides in PLAN.md.

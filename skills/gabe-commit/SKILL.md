@@ -3,7 +3,7 @@ name: gabe-commit
 description: "Commit quality gate — deterministic checks incl. the 800-line size budget and the checkpoint task-record trailer (Cases/Class on any Task:-footered message), interactive triage, evidence-triggered simplify pass; docs-audit mode for accumulated drift."
 when_to_use: "Commit, save, checkpoint, ship this work — any request to record completed work in git in a KDBP project."
 metadata:
-  version: 2.7.6
+  version: 2.7.7
 ---
 
 # Gabe Commit — commit quality gate
@@ -24,12 +24,12 @@ Deterministic commit quality gate. Runs checks (lint, types, tests, coverage, sh
 2. Read `references/gate-spec.md` (in this skill directory) IN FULL before executing — it is the binding spec: deterministic checks, triage flow, commit message rules, PLAN auto-tick, LEDGER writes, and the docs-audit subcommand. If it is missing, E6 applies — STOP.
 3. Summary of the spec's main flow:
    - **Step 0** — dispatch: `$ARGUMENTS` starting with `docs-audit` jumps to Step A (docs-audit mode); otherwise `$ARGUMENTS` is the commit message and normal flow (Steps 1–6) runs.
-   - **Step 1 / 1b** — validate git context; surface the active plan (context only).
-   - **Step 2** — run deterministic checks: CHECK 1 Lint, CHECK 2 Types, CHECK 3 Tests (commands resolved via Step 2.0, never guessed), CHECK 4 Coverage (enterprise/scale maturity only), CHECK 5 Shape (active when >30 source files AND >2000 lines), CHECK 6 Deferred, CHECK 7 Doc Drift (4 layers: universal safe cards, DOCS.md pattern matching, gravity-well docs drift, mockup INDEX freshness), CHECK 8 Structure (requires STRUCTURE.md).
+   - **Step 1 / 1b** — validate git context; surface the active plan from `mcp__gabe-kdbp__kdbp_snapshot` and the maturity from `mcp__gabe-kdbp__phase_context`, falling back to the spec's direct `.kdbp/` reads when either is honest-empty (context only).
+   - **Step 2** — run deterministic checks: CHECK 1 Lint, CHECK 2 Types, CHECK 3 Tests (commands resolved via Step 2.0 — `mcp__gabe-kdbp__verify_commands` resolves rungs (a)/(b); never guessed), CHECK 4 Coverage (enterprise/scale maturity only), CHECK 5 Shape (active when >30 source files AND >2000 lines), CHECK 6 Deferred, CHECK 7 Doc Drift (4 layers: universal safe cards, DOCS.md pattern matching, gravity-well docs drift, mockup INDEX freshness), CHECK 8 Structure (requires STRUCTURE.md).
    - **Step 3** — assign severity to findings.
    - **Step 4** — present results.
    - **Step 5** — execute actions per finding (defer/accept/fix).
-   - **Step 6** — commit + record to LEDGER.md; maturity-driven check selection governs which checks apply.
+   - **Step 6** — commit + record to LEDGER.md (row composed with `mcp__gabe-kdbp__ledger_row_preview`, deferrals with `pending_row_preview` — PREVIEWS: the write stays a harness Write/Edit so the D7 hooks see it); maturity-driven check selection governs which checks apply.
    - **Step A (docs-audit)** — A1 gather universe, A2 DOCS.md audit, A3 well-docs audit, A4 orphaned-doc detection, A5 source-coverage gap detection, A6 render report + interactive triage, A7 action handlers, A8 log to LEDGER.md, A8.5 notable-updates digest, A9 closing summary.
    - Commit message body structure, generation rules, model routing (Sonnet for conceptual changes, Haiku for mechanical/dep-bump), and override; scope-edit audit when SCOPE.md (including its `## Phases` section) is in the diff.
 
