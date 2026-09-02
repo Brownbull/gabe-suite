@@ -44,12 +44,16 @@ current_phase, goal ≤200, phases[{id, name ≤60, cells{col: state}}] ≤40, m
 priority then Times Deferred desc: id, finding ≤120, file, priority, times_deferred], note}` · `ledger{last[≤5]}` ·
 `decisions{rows}` · `files[]`. Target ≤ 1k tokens (gustify: ~3 KB).
 
+**`plan` reads two sources, and they can disagree.** `status`, `current_phase` and `goal` come from **PLAN.json only**; `phases` comes from **PLAN.md**'s table. On a project whose mirror is stale or absent, the first three are `null` while `phases` populates normally — that is the honest state of the files, not an empty plan. Read `mirror` before treating a `null` `current_phase` as "no active phase"; the phase table is the fallback the other tools already use.
+
 ### 4.2 `phase_context(phase?)`
 `phase` (default PLAN.json `current_phase`, else the first table row) · `plan_json{id, name, tier, complexity, types, cells,
 proof, proof_type, cases, scope, entities}` · `plan_md_row{cells (states), raw, line}` · `records{cases, reach, class, proof,
 searched}` · `details_excerpt` (≤ 2,000 chars of the phase section) · `behavior{maturity?, mode?, verify_commands}` ·
 `pending_in_scope[]` (open rows whose File matches the phase's `scope` globs) · `entities{slug: brief}` via gabe-map's
 `entity_context` (or a `reason`) · `warnings[]` — "Red is unstarted…", "Exec already ✅", "no declared entities…".
+
+**`behavior` is conditional, not guaranteed.** When no phase resolves — no `phase` argument, no PLAN.json `current_phase`, and no table rows — the tool returns early with its `reason` and the answer carries **no `behavior` block at all**. A KDBP project between plans is the normal way to hit this. A caller that needs the verify binding on its own asks `verify_commands()` directly rather than reaching into `behavior`.
 
 ### 4.3 `review_target(phase?)`
 The first PLAN row with Review `todo` and Exec `done|active` (or the forced `phase`) → LEDGER rows whose Theme/Entry name
@@ -73,6 +77,8 @@ commands, the tool never does, and a reporter flag is never invented.
 column order (canonical 11 columns when the file is new), `next_id` minted over live + archive rows (`#N` or `PN` following
 the file's style), `Verified: @<sha> <date>`, `recurring_candidates` (open rows with the same File and ≥3 shared words),
 `writer` (names `scripts/disposition.py --defer` when the project has it). `writes: nothing`.
+
+**Two cells are fixed, not derived:** `Times Deferred` is always `1` (a preview composes a NEW row; a repeat finding is the `recurring_candidates` path, where the existing row's counter is bumped instead) and `Status` is always blank (a row is born open; closure is the disposition step's verdict token). A caller that wants either cell to say something else edits the composed row before the Write.
 
 ### 4.7 `ledger_row_preview(entry, theme, commits?, gates?)` — PREVIEW
 `entry ∈ PLAN RED EXEC REVIEW COMMIT PUSH CENTER HANDOFF SCOPE ASSESS`; `row` in the LEDGER header's order (canonical 5 columns

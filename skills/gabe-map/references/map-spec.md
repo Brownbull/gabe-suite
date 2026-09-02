@@ -7,7 +7,7 @@
 
 `gabe-map` is a stdio MCP server (Python stdlib only) registered once at **user scope**. In every project it serves
 that project's OWN committed codebase map — `docs/site/center/{center.config,archmap,c4-graph,adoption}.json` — as
-seven tools. It is the suite's **reliability surface** for questions an agent asks mid-reasoning; it is **not a rail**
+fifteen tools. It is the suite's **reliability surface** for questions an agent asks mid-reasoning; it is **not a rail**
 (lifecycle moments stay on hooks and gates), **not a mutation channel** (no `.kdbp`, center or source writes), **not a
 data dump** (every list capped, every cap named), and **not graft** (graft builds the structural index the map is
 generated from; the tools sit on top and add entities · ownership · cases · coverage · drift · deltas — ruling
@@ -32,7 +32,7 @@ generated from; the tools sit on top and add entities · ownership · cases · c
   (the harness hides the text block when it is present). `text` = header `gabe-map · <tool> · map@<head> · <freshness>`
   (or `· no map`) + the JSON result (`indent=1`). Every human-facing string lives INSIDE that JSON.
 - **Deferral.** The harness defers every MCP tool's schema (verified: names only in context, loaded on demand). The
-  discovery surface is therefore the seven NAMES plus the `instructions` block — both must route the question to the
+  discovery surface is therefore the fifteen NAMES plus the `instructions` block — both must route the question to the
   tool. Descriptions are read only after a tool is loaded.
 - **Laziness.** Nothing heavy before `initialize` is answered; the map loads on the first call and is cached per
   `(path, mtime, size)`; indexes rebuild when archmap/c4 change on disk.

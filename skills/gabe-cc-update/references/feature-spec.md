@@ -238,6 +238,20 @@ Contents v1 (design record D3): curated proof shots + diagrams + each feature's 
 custody is decided at the first real release. Pure re-runnable join over committed data: no new
 state, no config key, nobody is asked "is this a release?".
 
+**What the map says changed — the one machine-derived block.** The covered set names WHICH features
+shipped; it does not say what the codebase gained. `mcp__gabe-map__map_diff` answers that from the two
+committed maps alone. `head` = the release sha. `base` is RESOLVED, never guessed: the `.kdbp/DEPLOYMENTS.md`
+terminal-env row that bounds the covered set carries no sha column — its shas live in free text inside the
+Notes cell — so the base comes from that ship's `.kdbp/LEDGER.md` `PUSH` row, whose `Commits` cell is a
+sha field. No PUSH row, or a `Commits` cell that names none → the block renders as a named gap; a base
+read out of prose is not a base. Render two things from its answer and nothing
+else — per-entity endpoints/models/schemas/files added and removed (`per_entity`, capped at 20 each with
+the cap named), and the `census_delta` reading: unclaimed files/models/routes at base vs at head, which
+says whether adoption CLOSED blindness this release or grew it. Both are floors, not audits (L1) — the
+block says "the map records", never "the release contains". No map · no prior terminal row · the base
+sha's map absent → the tool names the reason and the block renders as a named gap, exactly like the
+video slots. Nothing here is authored, so it never goes stale.
+
 ## Wave-2 notes (recorded, not built)
 
 gabe-commit runs the crawl gate when `docs/site/center/**` is staged · diagram

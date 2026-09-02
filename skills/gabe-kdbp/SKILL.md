@@ -4,7 +4,7 @@ description: "The suite's second MCP server — a project's .kdbp/ lifecycle sta
 when_to_use: "Manage the gabe-kdbp MCP server: registered at user scope, disabled in this project, install parity. Human-initiated only; the TOOLS are reached for by /gabe-execute, /gabe-review, /gabe-commit, /gabe-handoff, /gabe-next through mcp__gabe-kdbp__*."
 disable-model-invocation: true
 metadata:
-  version: 1.0.0
+  version: 1.0.1
 ---
 
 # Gabe KDBP — the lifecycle state as tools

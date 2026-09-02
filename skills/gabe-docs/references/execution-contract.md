@@ -8,22 +8,49 @@
 
 These are floors, not ceilings — a skill's own gate may be stricter, never looser.
 
-- **E1 EVIDENCE** — every claim about code/state cites file:line or a command run THIS session; no citation → mark it `(assumed)` and verify before building on it. Absence claims ("no X exists") require a recorded search → 0 hits.
-- **E2 RUN-BEFORE-✅** — ✅ only after the command executed here (paste cmd + exit/count). Skipped = `⤫ skipped(<reason>)`, never ✅. Every printed number is copied from this run's output — never estimated.
+- **E1 EVIDENCE** — every claim about code/state cites file:line or a command run THIS session; no citation → mark it `(assumed)` and verify before building on it. Absence claims ("no X exists") require a recorded search → 0 hits. A `mcp__gabe-map__*` / `mcp__gabe-kdbp__*` answer IS such a citation — a map answer stamps `map@<head> · <fresh|stale|unknown>`, a kdbp answer names the root it parsed `.kdbp/` from — but an EMPTY answer is NOT: the map is a FLOOR, never a scope, so the absence proof stays the recorded `grep -rn` → 0 hits.
+- **E2 RUN-BEFORE-✅** — ✅ only after the command executed here (paste cmd + exit/count). The command comes from the project's binding, never a guessed flag — `mcp__gabe-kdbp__verify_commands` relays it (`.kdbp/BEHAVIOR.md ## Verify Commands` first, else manifest candidates) and never runs it; you do. Skipped = `⤫ skipped(<reason>)`, never ✅. Every printed number is copied from this run's output — never estimated.
 - **E3 NO SILENT DOWNGRADE** — quote the task text verbatim before implementing; if your plan delivers a cheaper class (restyle≠rebuild, stub≠implement, recreate≠reuse), STOP and ask. Substitution requires an explicit user decision line.
-- **E4 REUSE FIRST** — before creating anything, print: `REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)`. Recreating an existing artifact is a defect.
-- **E5 STATE SYNC** — actions that change reality (commit/merge/defer/pivot) write their state row in the SAME turn; a skipped write prints an enumerated skip code, never silence.
+- **E4 REUSE FIRST** — before creating anything, print: `REUSE <path> | EXTEND <path> | NEW (searched <where> — none fit)`. The search behind a `NEW` starts at the map, not at Grep: `mcp__gabe-map__find` (by name or doc text) and `mcp__gabe-map__touches` (by file · model · endpoint · function) FIRST, then Grep/Glob — a `NEW` is an absence claim, so the Grep/Glob arm always runs (E1) and `<where>` names both. No map → the tool says so and Grep/Glob is the whole search. Recreating an existing artifact is a defect.
+- **E5 STATE SYNC** — actions that change reality (commit/merge/defer/pivot) write their state row in the SAME turn; a skipped write prints an enumerated skip code, never silence. Where the row is authored by hand, `mcp__gabe-kdbp__pending_row_preview` / `ledger_row_preview` compose it first — the file's own column order, the next `P-id`, the `Verified` anchor, the recurring flag, `Gates` verbatim — and the harness Write/Edit persists it; the previews write nothing, and the D7 hooks only ever see the Write.
 - **E6 MISSING ANCHOR = STOP** — referenced template/spec/catalog absent → print ⛔ and stop; never reconstruct it from memory.
 - **E7 REPORT WHERE** — end user-visible work with: exact URL/screen · env (local :port vs deployed) · what to look at · absolute artifact paths.
+
+## The tool floor — stated once, ruled 2026-09-02
+
+The suite ships two read-only MCP servers, registered once at user scope and answering from the
+project the session is in: **gabe-map** — the committed command-center map as tools — and
+**gabe-kdbp** — a project's `.kdbp/` lifecycle state as tools. The rosters live in
+`../../gabe-map/SKILL.md` and `../../gabe-kdbp/SKILL.md` and the servers advertise them every
+session; they are not re-listed here. Five laws govern how a skill reaches for them:
+
+- **ASK FIRST, THEN THE OLD METHOD.** Any step that asks *where · who calls · what touches ·
+  which entity owns · which cases cover · where does the project stand* asks the tool BEFORE it
+  greps, globs, or re-reads PLAN/PENDING/LEDGER by hand. The old method stays as the second arm,
+  never as the first.
+- **THE MAP IS A FLOOR, NEVER A SCOPE (E1).** An empty answer is not an absence proof and never
+  narrows a change's scope; `grep -rn` → 0 hits remains the absence proof.
+- **HONEST-EMPTY.** No center · no `.kdbp/` → the tool says so and names the reason; the servers
+  unregistered → the `mcp__*` tools are not in the session at all. Every step still completes on
+  both paths; a step that only works with the tools is a defect.
+- **TOOLS ARE NOT RAILS.** Enforcement stays on hooks, gates, and the deterministic scripts a
+  skill already owns; the D7 hooks watch Write/Edit, never `mcp__*` — a `_preview` tool composes
+  a row, the harness Write persists it. A tool supersedes a script only where it relays that same
+  script verbatim (`center_status` → `scripts/center_status.py`).
+- **READ-ONLY, WITH ONE EXCEPTION.** Every tool answers without writing — except `who_calls`,
+  whose default run appends the gitignored map-delta line for a code hit the map missed. A
+  read-only or `context: fork` beat passes `emit: false`, or asks with `direction=out`, which
+  never emits: the emit happens inside the server's own process, so an `agent: Explore`
+  Write/Edit restriction does not stop it.
 
 ## The findings contract — stated once, ruled 2026-08-10
 
 Any beat whose output ends in a **list of actionable findings** — things the operator must go fix, check, or act on — renders each finding as a **clickable local link plus a concrete remediation step**, so nothing has to be hunted for and no "next action" is a bare label:
 
-- **LINK** — every location a finding names (a `file:line`, a PENDING/registry row, an entity page, a god-file, a diff hunk) renders as a workspace-relative markdown link: `[file:line](path#Lnn)` when a line is known, `[label](path)` otherwise. A finding the operator cannot click is one they have to go find — never emit one. Local, workspace-relative links are fine (the IDE/terminal makes them clickable). Links render only as **markdown, never inside a ``` code fence** — a report that fences its rows for column alignment emits the linkable rows as rendered markdown (a table or plain lines) instead, or the link is inert text.
+- **LINK** — every location a finding names (a `file:line`, a PENDING/registry row, an entity page, a god-file, a diff hunk) renders as a workspace-relative markdown link: `[file:line](path#Lnn)` when a line is known, `[label](path)` otherwise. A finding the operator cannot click is one they have to go find — never emit one. Where a finding names a symbol rather than a line, `mcp__gabe-map__outline` gives the file's definitions with kind, signature and — where the graft index resolves the file — the span, and `mcp__gabe-map__touches` resolves a bare symbol to its `file::fn` owner; the `#Lnn` comes from there before it comes from a grep, and from the grep whenever the map or the index is blind there. Local, workspace-relative links are fine (the IDE/terminal makes them clickable). Links render only as **markdown, never inside a ``` code fence** — a report that fences its rows for column alignment emits the linkable rows as rendered markdown (a table or plain lines) instead, or the link is inert text.
 - **STEP** — every finding ends in the exact next move: a command to run (`/gabe-… <args>`) or a precise edit ("add `# DIAGRAM WORKFLOW` to the card"). "report X" / "surface" / "flag" / "next action" without the concrete move is half a finding.
 
-Where a deterministic script already owns the findings AND their paths (a gate, a scanner, a committed census), the script emits the link + step itself and the skill relays it verbatim — never re-composing a link by hand (reference implementation: gabe-cc-update `status` → `center_status.py`). Where the findings are model-derived (a code review, a gap roast, a myopic trap), this contract is the mandate the skill's output section points at.
+Where a deterministic script already owns the findings AND their paths (a gate, a scanner, a committed census), the script emits the link + step itself and the skill relays it verbatim — never re-composing a link by hand (reference implementation: gabe-cc-update `status` → `center_status.py`, reachable in any project as `mcp__gabe-map__center_status`, which runs that same script and relays its links and → next steps verbatim; no `scripts/center_status.py` there → the tool names the absence). Where the findings are model-derived (a code review, a gap roast, a myopic trap), this contract is the mandate the skill's output section points at.
 
 ## The beat brief — stated once, ruled 2026-08-07 (ask C)
 
@@ -48,6 +75,11 @@ duplicates it. Beat-specific richness EXTENDS this block where it already exists
 where it lives: execute's `PLATFORM PROGRESS` (BUILT / NOW POSSIBLE / STILL NOT POSSIBLE /
 HANDLE — execute-spec) and commit's commit-shaped brief (gate-spec) print after these three
 lines, never instead of them.
+
+The plan record behind ENTITY and FEATURE is asked for, not re-read: `mcp__gabe-kdbp__phase_context`
+returns the phase's `plan_json` record (`entities`, `name`, `tier`, `proof`, `cells`) and its
+`records` (`Cases:` / `Reach:`) in one answer — `none declared` stays the honest blank when
+`entities` is empty, never a guess. No `.kdbp/` → the tool says so and PLAN.json/PLAN.md are the read.
 
 ## The beat tail (E8) — stated once, ruled 2026-08-07
 
