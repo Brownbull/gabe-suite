@@ -1,0 +1,234 @@
+{
+ "entity_context": {
+  "when_pain": "Already — the slice is unreachable mid-reasoning, so agents re-derive from source; nobody pastes a 146 KB pack by hand either.",
+  "instead": "A human types /gabe-cc-entity; execute enters phases with no context A."
+ },
+ "who_calls": {
+  "when_pain": "Already — zero emits ever recorded from execute and review, and the mandatory 'remove .ignore' step is prose nobody validates.",
+  "instead": "Run graft build, delete .ignore, then reach-emit.py — three commands in fixed order recalled from two specs, once per red beat."
+ },
+ "touches": {
+  "when_pain": "Already — 0 ASSESS rows on gustify: the 'what else does this touch' question arrives mid-edit and has no call to make.",
+  "instead": "The agent opens a center page or hand-reads the 1.28 MB c4-graph.json — or skips both and judges from whatever it happened to read."
+ },
+ "owner_of": {
+  "when_pain": "Already — every downstream tool inherits a hand-guessed slug, and 82% of map misses are coverage gaps nothing surfaces.",
+  "instead": "Eyeball center.config globs to pick the slug; the changed-files half already rides S6/S7 and write-inflight."
+ },
+ "blast_radius": {
+  "when_pain": "When v1 uptake shows — touches and entity_context in half of execute/red beats, Reach above 1/8 plans — and D1 still answers from memory.",
+  "instead": "touches plus owner_of give D1 its floor; build_sim runs only inside a full regen, so GABE_SIM sits null between them."
+ },
+ "entity_shape": {
+  "when_pain": "Already — three remembered invocations, none at the moment a route is being named; the drift subject has never once been raised.",
+  "instead": "Ask after the fact: review's --diff arm if someone runs it, else pulse S9 on the next tail; entity_shape.py is a 0.05 s CLI call."
+ },
+ "endpoint_for": {
+  "when_pain": "When fetch-writing gets frequent and unmatched paths outgrow the 2 dynamic ones pulse S10 already owns on gustify.",
+  "instead": "review's --diff arm if remembered, else S10 nags after the next regen; fetch_bridge.py is a 0.04 s CLI call."
+ },
+ "cases_for": {
+  "when_pain": "Already — every red beat re-derives 'grep C-ids, take max+1' by hand and id burn stays invisible; Cases land in a minority of plans.",
+  "instead": "Whichever of the three regex copies the agent recalls, run over test files by hand — a bare C-digit pattern inflates the next id."
+ },
+ "map_census": {
+  "when_pain": "When the four rails' near-identical loaders actually diverge, and the uninstalled census scripts get an install path and a denominator ruling.",
+  "instead": "owner_of's claimed_by_census carries the read; S11/S13 nag coverage on the tail — gustify fires on 5 unclaimed backend files."
+ },
+ "map_status": {
+  "when_pain": "Already — staleness surfaces only as a wrong file:line after the fact, on a map 1 commit behind and an inflight 20 commits behind.",
+  "instead": "The operator eyeballs the 'A3 regen @ stamp · HEAD sha' line on the center index; no beat computes commits_behind."
+ },
+ "map_delta_status": {
+  "when_pain": "When a twin's map-deltas-rollup.jsonl carries at least one active edge — every rollup is empty today, so there is nothing to serve.",
+  "instead": "The /gabe-commit sweep at commit time, plus the S14 line on the tail when it wins the pulse row."
+ },
+ "map_diff": {
+  "when_pain": "When a twin shows two different archmap heads between review shas — gustify shares one, so the answer would be 'not regenerated'.",
+  "instead": "Reviewers read the raw git diff of a 2.1 MB sorted JSON, or skip the architecture change in the PR entirely."
+ },
+ "center_overview": {
+  "when_pain": "After the twin's competing graft SessionStart injection is ruled on, and server_instructions alone has had a measurement window.",
+  "instead": "Orientation stays the visual center stations plus CLAUDE.md prose — which is the operator's own ruling."
+ },
+ "file_api": {
+  "when_pain": "Once owner_of and cases_for ship (they ARE the domain columns) and graft coexistence in twins is ruled; bare, it duplicates graft.",
+  "instead": "The agent Reads the whole file; graft's cards stay out of grep because the suite removes .ignore on purpose."
+ },
+ "find_code": {
+  "when_pain": "Not a tool's pain — Grep holds it, and graft's own find_code where enabled; a ranker would re-teach map-as-scope.",
+  "instead": "Leave lexical search to Grep, and scope it with owner_of when an entity boundary is what you actually want."
+ },
+ "find_all": {
+  "when_pain": "No pain to remove — Grep already gives totality and who_calls' grep arm supplies the symbol grouping that was the only add.",
+  "instead": "Keep raw Grep as E4 context B: its totality over unindexed files is the only absence proof red-spec accepts."
+ },
+ "center_status": {
+  "when_pain": "When the question gets asked mid-beat rather than at a human's status run, and map_status ships so the answer can be dated.",
+  "instead": "/gabe-cc-update status, paying a 15-23 s regen for a list that computes in 0.03 s."
+ },
+ "review_drift": {
+  "when_pain": "When the --diff script lands and REVIEW rows start naming drift subjects; today 20 REVIEW vs 113 COMMIT rows and 0 drift mentions.",
+  "instead": "The reviewer walks ~8 sub-procedures out of a 1,335-line spec, three of them 3-10 git commands re-derived from prose."
+ },
+ "workflow_census_drift": {
+  "when_pain": "Only once a workflows census is actually authored on a twin — gustify has none, so every site prints 'unavailable' and exits 2.",
+  "instead": "Nothing — the gap stays open until a census exists; then it lands as one subject inside review_drift, not its own tool."
+ },
+ "map_delta_emit": {
+  "when_pain": "Not a tool's pain — it belongs to the tools that compute the divergence; who_calls, touches and review_drift emit as a side effect.",
+  "instead": "reach-emit.py already emits red's arm; execute and review keep the 'a clear contradiction, never a hunch' friction."
+ },
+ "graft_index_refresh": {
+  "when_pain": "Not a tool's pain — who_calls builds and defuses the index inside its own call, so the mandatory rm cannot be forgotten.",
+  "instead": "Fold ensure_index plus the .ignore defuse into who_calls, cwd-project only, and report the index reason in the result."
+ },
+ "center_regen": {
+  "when_pain": "Not a tool's pain — refresh_center.sh is already one entry point, and 'is a regen owed?' is map_status's question.",
+  "instead": "Keep it a visible CLI run under /gabe-cc-update so the operator sees PRESENCE FLIP and LAB warnings, which are stdout not exit codes."
+ },
+ "map_build_preview": {
+  "when_pain": "Once a hermetic fixture proves zero writes outside the scratch dir, mermaid cache included, and results cache per HEAD and dirty tree.",
+  "instead": "Run the recipe by hand from the generators README when someone remembers; map_status reports staleness without it."
+ },
+ "evidence_capture": {
+  "when_pain": "Not a tool's pain — it is the operator's scheduling call; a partial minutes-long run would poison the committed run-history.",
+  "instead": "Keep captures human-initiated through refresh_center.sh, and expose junit head_sha freshness as a map_status field."
+ },
+ "map_claim": {
+  "when_pain": "Once owner_of and the census read ship so the preview is a pure join; the apply half never earns a seat at all.",
+  "instead": "Hand-edit center.config.json, pay a 15-23 s regen to see which globs resolved, then trim — one cycle per attempt."
+ },
+ "census_scaffold": {
+  "when_pain": "Not a tool's pain — the operator's ASK (author · extend · defer · decline) is the design, and the dispositions S8 reads.",
+  "instead": "Keep it a skill step behind that ask; the script already runs the moment the operator answers 'author now'."
+ },
+ "center_bootstrap_preview": {
+  "when_pain": "No pain to remove — propagate.sh --check already reports the drift in under a second, operator-run.",
+  "instead": "Leave it as propagate.sh --check; the copy half stays human-initiated with its archive checkpoint and approved shortlist."
+ },
+ "rank_signals": {
+  "when_pain": "Only if a second brownfield adoption shows re-ranks are frequent, and once owner_of, entity_shape and the census read exist.",
+  "instead": "cc-init walks the seven machine sources by hand, once per adoption — human-speed review is the feature there."
+ },
+ "center_gate": {
+  "when_pain": "Not a tool's pain — it is a gate: exit 1 under set -e in refresh_center.sh and suite-doctor beats any 'dead links: 3' line.",
+  "instead": "Leave both checks chained where their exit codes stop the build; a node-absent skip must never be allowed to read as green."
+ },
+ "beat_tail": {
+  "when_pain": "Not a tool's pain — a forgotten leg inside a tail that IS invoked is a rail problem, held by the wave-0 PLAN-write hook.",
+  "instead": "A PostToolUse hook on .kdbp/PLAN writes calls write-inflight.py; standing S9-S14 nags stay the after-the-fact backstop."
+ },
+ "next": {
+  "when_pain": "Once the wave-0 inflight hook is live, so a router call is convenience rather than the rail keeping lifecycle state fresh.",
+  "instead": "One node command whose ECC_ROOT path is recalled verbatim in six places, with a 50-line prose branch on exit 2."
+ },
+ "pulse": {
+  "when_pain": "After pulse-spec §7 ('never fires automatically… never writes') is revised; until then a call forges offers and decays true signals.",
+  "instead": "The model runs 6+ commands and ranks them by prose; the tail's one-line angle already carries the top signal."
+ },
+ "commit_gate": {
+  "when_pain": "Once the wave-0 fail-closed hook is live and verify_commands ships — inside the beat it cannot touch 34 raw commits vs 1 gate run.",
+  "instead": "The model orchestrates 8 checks and 5 aux scripts per checkpoint; the two writing scripts stay on the rail regardless."
+ },
+ "verify_commands": {
+  "when_pain": "When commit_gate or case_thread need a bound runner — the condition already holds, gustify's Verify Commands section is empty.",
+  "instead": "Every gate run re-derives lint, type and test from prose; the offer to write the binding back into BEHAVIOR.md never landed."
+ },
+ "case_thread": {
+  "when_pain": "Once verify_commands is bound so run_cmd can never be guessed; the thread itself is already hook-forced at both ends.",
+  "instead": "Four skills instruct the same runner in prose with a hand-built -k expression; the hook blocks a Review tick with no green@."
+ },
+ "prove_guard": {
+  "when_pain": "Not a tool's pain — a tool would not make it fire; gustify proved 158 guards from its own script while the suite sink stayed absent.",
+  "instead": "Mechanize it into /gabe-red step 5 per GUARD id, or WARN at pre-checkpoint when Cases names GUARD ids with no PROVEN record."
+ },
+ "plan_write": {
+  "when_pain": "Once plan-proof-guard's python is a shared module the tool refuses on, or an mcp__ matcher is proven to fire in this harness.",
+  "instead": "Eight writers implement the paired write from prose; pre-checkpoint WARNs on shell writes the guard cannot see."
+ },
+ "pending_defer": {
+  "when_pain": "When disposition.py gets an install path and a two-twin PENDING schema battery passes — the schemas diverge 11-col vs variants today.",
+  "instead": "Six writers Read-then-Edit a 120 KB table; CHECK 6 warns after the fact when the Verified cell lands as prose."
+ },
+ "ledger_append": {
+  "when_pain": "While vocabulary drift stays measurable — 21 Entry tags on gustify, several off-spec — and the parsers keep regexing around them.",
+  "instead": "Every beat hand-appends a row newest-first; ledger-gap.sh and review Step 0.3 absorb the free-form drift downstream."
+ },
+ "kdbp_snapshot": {
+  "when_pain": "When the two-twin PENDING schema battery passes, so header-resolved parsers can be trusted on either twin's table shape.",
+  "instead": "Handoff and help re-read both tables whole; three session hooks re-parse the same rows in bash."
+ },
+ "phase_context": {
+  "when_pain": "When entity_context's capped pack measures inside budget on gustify's largest entity, so execute can be handed every declared slice.",
+  "instead": "Execute re-reads 4-5 files with regexes each run, and the entity slice is skipped rather than composed."
+ },
+ "phase_complete_check": {
+  "when_pain": "Same gate as plan_write: the guard's evidence check must become one importable module, or tool PASS and hook BLOCK will disagree.",
+  "instead": "The agent ls-es each proof path and re-reads PLAN; the hook catches the lie after the write, costing a blocked retry."
+ },
+ "review_target": {
+  "when_pain": "When ledger_append hardens the Commits column its regex leans on — a free-prose 'Phase N' scan is just as brittle inside a tool.",
+  "instead": "The model parses two markdown tables, runs N git shows, unions the files and prints the banner by hand."
+ },
+ "plan_check": {
+  "when_pain": "Once regen-mirror.py gains --dry-run, and only if next.mjs exit-2 refusals start recurring — plans change rarely.",
+  "instead": "The twelve CHK rules get walked by prose per phase; regen-mirror computes drift but writes the mirror while doing it."
+ },
+ "push_preflight": {
+  "when_pain": "Once the PUSH.md parser is extracted from the 255-line hook with its battery green — two 'is this gated' answers must not disagree.",
+  "instead": "Push walks ~10 shell commands out of a 604-line spec, and push-gate-guard fails closed on a raw terminal push."
+ },
+ "health_scan": {
+  "when_pain": "Once a LEDGER PUSH row proves Step 3.7 actually dispatched /gabe-health — pulse offered the scan 16 times, taken 0.",
+  "instead": "The four pipelines are retyped per run inside the fork, under the rule that every number comes from a command run that session."
+ },
+ "scope_validate": {
+  "when_pain": "Only after a spec step or a hook on scope-session.json names the installed validator; the flow itself runs a handful of times.",
+  "instead": "Wire the installed validator in as that spec step or hook — /gabe-scope says 'validate coverage and anchors' with no command."
+ },
+ "artifact_gate": {
+  "when_pain": "Once the WSL system-chrome fallback lives inside verify-artifact-chrome.mjs instead of a memory file, and the hook shape is ruled.",
+  "instead": "Make it a PreToolUse hook on the Artifact tool; today two node gates are remembered and the fallback is tribal knowledge."
+ },
+ "prism_gate": {
+  "when_pain": "Not a tool's pain — these are suite-repo gates inside gabe-imagine's build loop, where the I2 ASK is the real control point.",
+  "instead": "Keep it the I5 step in that loop; a user-scope server would advertise suite-only paths to every twin session."
+ },
+ "docsite_build": {
+  "when_pain": "No pain to remove — the chain already has one entry point and pulse S4 nags staleness on the beat tail.",
+  "instead": "Leave it the CLI step inside /gabe-docsite, and put the mode and diagram-path lines in the skill's own report."
+ },
+ "mockup_resolve": {
+  "when_pain": "Once a screen-map schema and a fixture manifest exist — neither does, and the skill auto-triggers, so a wrong verdict STOPs work.",
+  "instead": "L0 parses the YAML block and matches the screen name by hand; hand-composed beats a resolver with no contract behind it."
+ },
+ "meme_render": {
+  "when_pain": "Not a tool's pain — concept approval is the control, and the model must still look at the PNG to see whether the joke landed.",
+  "instead": "Keep the encoder gotchas in /gabe-meme's reference where the render already happens; a skill-local helper at most."
+ },
+ "commit_hook_fail_closed": {
+  "when_pain": "Not a tool's pain — this IS the hook: 34 raw commits against 1 gate run while the advisory reminder fired every single time.",
+  "instead": "Ship the wave-0 blocking-ask/marker hook on the push-gate pattern, with a loud emergency escape and FIRE/SILENT fixtures."
+ },
+ "existing_hook_rails": {
+  "when_pain": "No pain to remove — they already fire without memory; the risk is thinning them because tools appear to cover the same ground.",
+  "instead": "Change nothing: tools inform before the edit, rails hold at it, nags remind after — and MCP writes go dark to Write/Edit matchers."
+ },
+ "graft_mcp": {
+  "when_pain": "Not a tool's pain — a standing ruling holds it: a third-party binary's directives would ride inside every tool result.",
+  "instead": "Keep the ban, and rule the twin's contradictory graft config before v1 registers; names must not collide on a bare noun."
+ },
+ "maintenance_scripts": {
+  "when_pain": "Not a tool's pain — ruling R8 and their own nature keep them operator-run; none is a per-beat process.",
+  "instead": "Leave every one an operator CLI; a user-scope server would point suite maintenance at whichever tree a twin session is in."
+ },
+ "judgment_satellites": {
+  "when_pain": "Not a tool's pain — reasoning is what is missing, and the nags do fire: S1 offered 12x taken 1, S2 offered 16x taken 0.",
+  "instead": "Put their deterministic inputs on the roster — touches, owner_of, entity_shape — and leave the satellites human-called."
+ },
+ "out_of_roster_external_shapes": {
+  "when_pain": "No pain to remove — memory belongs to the harness, the durable record is PLAN/LEDGER/PENDING, and edits are Claude Code's own.",
+  "instead": "Leave them out as the boundary marker; graphify's 'a PR already covers this area' could compose blast_radius with gh, much later."
+ }
+}
