@@ -531,3 +531,40 @@ individually before applying). Full findings: [tools-review-findings.json](tools
   exit-1 unindexed → "unavailable" not "absent" · Q4 find_center walks above the git toplevel · Q5 freshness omits test
   files · K5/K6/K7 behavior_facts regex / results_out trailing comment / _state em-dash+obsolete · WS-3 map-deltas append
   symlink/containment · plus 2 battery-quality (a vacuous assert, review_drift unknown-subject) · and 30 low.
+
+## 17 · Skill sweep (2026-09-02) — Tier 0 landed, 211 edits staged
+
+An 11-batch Workflow sweep audited every tool-touching step in all 30 skills against the 22-tool roster and
+adversarially refuted each proposal before it could survive: **219 edits survived, 14 refuted**, across 48 spec files
+and 24 skills. Full record: [skill-sweep-findings.json](skill-sweep-findings.json) — `applied` (8) · `staged` (211) ·
+`refuted` (14) · the completeness critic's apply plan, gap check and price.
+
+**LANDED (`a56131d`, Tier 0 + the three defects the sweep exposed):**
+- **The tool floor** — a new section in `gabe-docs/references/execution-contract.md` states five laws once
+  (ask-first-then-the-old-method · the map is a FLOOR never a scope · honest-empty · tools are not rails · read-only
+  except `who_calls`), plus grafts onto E1/E2/E4/E5, the LINK rule, the relay carve-out and the beat brief. All 30
+  SKILL.md files point at this file, so it changes every skill without editing 30 specs.
+- **Defect 1 — a read-only skill could write.** `who_calls` emits by default (`tools.py:453`), four skills are
+  `context: fork`, three `agent: Explore`, and `gabe-health/SKILL.md:19` claims "never modifies files". The Explore
+  restriction cannot stop it — the emit runs in the server's own process. `emit: false` exists (`tools.py:650`) and no
+  proposed edit named it; the fifth law now does.
+- **Defect 2 — the delta loop silently no-ops in new projects.** `emit_delta` gates on `git check-ignore`
+  (`mapquery.py:438`) and init-spec's seed list carried neither accumulator path. Verified ABSENT on both twins, so
+  every delta there is dropped at the gate today. Seeded, with the reason.
+- **Defect 3 — binding contracts that lie.** map-spec said "seven tools" while `tests/gabe-map/checks.py:238` asserts
+  15. kdbp-spec omitted three verified behaviors that seven consumer edits had each rediscovered independently: the
+  PLAN.json-vs-PLAN.md `plan` asymmetry, `phase_context`'s early return before `behavior`, and
+  `pending_row_preview`'s hardcoded `Times Deferred`/`Status`. Stated at the source.
+- **`map_diff` earns its keep** (operator ruling) — it was the one wave-2 tool no edit reached for. cc-update
+  `release` gains a machine-derived "what the map says changed" block; its base resolves from the LEDGER `PUSH` row's
+  `Commits` sha, because `.kdbp/DEPLOYMENTS.md` was checked and has NO sha column.
+
+**STAGED (211 edits, ranked in the critic report inside the JSON):** Tier 1 spine — gabe-review 29 · execute 17 ·
+commit 13 · plan 12 · push 8 · red 7 · next 1. Tier 2 center — cc-init 13 · cc-update 10 · cc-entity 5. Tier 3
+sweeps/routers — help 12 (incl. the two legacy `.planning/` scan defects) · handoff 11 · pulse 11 · health 7 ·
+assess 7 · roast 4 · myopic 1. Tier 4 authoring — mockup 19 · docs 6 · init 7 · map 5 · imagine 4 · scope-change 1 ·
+scope-pivot 1. Apply hazards recorded per file (descending-by-line where a tier has an INSERT or a RETIRE).
+
+**Price to land the rest:** 44 more spec files, 20 more skills, and every one needs its CLAUDE.md version cell in the
+same commit (doctor P3 parity). No live battery asserts on skill markdown — verified — so spec edits cannot turn a
+battery red; a green doctor proves parity, not correctness.
