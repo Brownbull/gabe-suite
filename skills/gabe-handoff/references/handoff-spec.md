@@ -109,7 +109,7 @@ Any cell fixed here also mirrors into `.kdbp/PLAN.json` (`phases[id==N].cells.<c
 - `HEAD [short sha]` — the current HEAD sha at handoff time (cites where the repo stood, not necessarily new work).
 - Richer detail — landed work, in-flight task, gates run this session, PLAN cells changed, new PENDING rows, the next command — lives in the resume prompt (Step 4) and `.kdbp/HANDOFF.md` (Step 5), not in this thin row.
 
-**3c — PENDING.md.** For each IN-FLIGHT-that-could-be-dropped or DEFERRED item not already tracked, compose the row with `mcp__gabe-kdbp__pending_row_preview` (the file's own columns, the next P-id, the `Verified` anchor and the recurring-row flag; it writes nothing) and add it with Write/Edit. Don't duplicate an open row — match by file + finding overlap, as `/gabe-review` does.
+**3c — PENDING.md.** For each IN-FLIGHT-that-could-be-dropped or DEFERRED item not already tracked, compose the row with `mcp__gabe-kdbp__pending_row_preview` (the file's own columns, the next P-id, the `Verified` anchor and the recurring-row flag; it writes nothing) — then correct the two cells the preview FIXES rather than derives (kdbp-spec §4.6): `Status: open` (it leaves Status blank, and every re-surface filter reads the literal `open`) and `Times Deferred: 0` (it stamps `1`; the ladder counts from 0) — and add it with Write/Edit. Don't duplicate an open row — match by file + finding overlap, as `/gabe-review` does.
 
 **3d — Print the sync report** (E5, visible — every state write is shown):
 

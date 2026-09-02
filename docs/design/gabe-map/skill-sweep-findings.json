@@ -3101,7 +3101,7 @@
     "fix": "consumers-found ⇒ EXTEND was stated; empty-answer ⇒ nothing-licensed was not. Added: an empty who_calls is a floor; edit-in-place needs the grep-arm 0-hit search cited in the ledger and no string-keyed registry reach; default EXTEND."
    }
   ],
-  "status": "batch 1 (15) + batch 2 (41 defects · 58 sites · 3 source fixes) FIXED; 3 new batteries mutation-proven",
+  "status": "batch 1 (15) + batch 2 (41 defects · 58 sites · 3 source fixes) + 3 adjacent sites FIXED; 3 new batteries mutation-proven",
   "batch2": {
    "lenses": {
     "seam": 8,
@@ -3130,6 +3130,15 @@
     "applier residue the sentence detector could not see: intra-paragraph re-emits (feature-spec ×2, entity-spec, init-spec ×2, adopt-spec doubled marker)"
    ],
    "not_fixed_by_ruling": "the triage's 'Not worth fixing — do not re-raise' list (r2-triage.md tail) — recorded in the design README §17"
+  },
+  "batch2_adjacent": {
+   "class": "same as R1/P2 — PENDING row composed from pending_row_preview with Status blank / Times Deferred 1 left uncorrected",
+   "sites": [
+    "gabe-handoff/references/handoff-spec.md:112",
+    "gabe-mockup/SKILL.md:77",
+    "gabe-mockup/references/refine.md:38"
+   ],
+   "status": "flagged unconfirmed by the triage; CONFIRMED by reading each site (none names Status or Times Deferred); fixed with the same correction clause"
   }
  }
 }
